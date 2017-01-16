@@ -2037,11 +2037,7 @@ static void	zbx_db_escape_string(const char *src, char *dst, size_t len)
 {
 	const char	*s;
 	char		*d;
-#if defined(HAVE_MYSQL)
-#	define ZBX_DB_ESC_CH	'\\'
-#elif !defined(HAVE_POSTGRESQL)
-#	define ZBX_DB_ESC_CH	'\''
-#endif
+
 	assert(dst);
 
 	len--;	/* '\0' */
@@ -2057,8 +2053,10 @@ static void	zbx_db_escape_string(const char *src, char *dst, size_t len)
 				break;
 #if defined(HAVE_POSTGRESQL)
 			*d++ = *s;
+#elif defined(HAVE_MYSQL)
+			*d++ = '\\';
 #else
-			*d++ = ZBX_DB_ESC_CH;
+			*d++ = '\'';
 #endif
 			len--;
 		}
