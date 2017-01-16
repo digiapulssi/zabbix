@@ -2051,10 +2051,11 @@ static void	zbx_db_escape_string(const char *src, char *dst, size_t len)
 		{
 			if (2 > len)
 				break;
-#if defined(HAVE_POSTGRESQL)
-			*d++ = *s;
-#elif defined(HAVE_MYSQL)
+
+#if defined(HAVE_MYSQL)
 			*d++ = '\\';
+#elif defined(HAVE_POSTGRESQL)
+			*d++ = *s;
 #else
 			*d++ = '\'';
 #endif
