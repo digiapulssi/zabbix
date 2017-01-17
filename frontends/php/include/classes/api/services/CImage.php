@@ -81,7 +81,8 @@ class CImage extends CApiService {
 		$options = zbx_array_merge($defOptions, $options);
 
 		// editable + PERMISSION CHECK
-		if (!is_null($options['editable']) && self::$userData['type'] < USER_TYPE_ZABBIX_ADMIN) {
+		if (!is_null($options['editable']) && self::$userData['type'] != USER_TYPE_ZABBIX_ADMIN
+				&& self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			return $result;
 		}
 
@@ -369,7 +370,7 @@ class CImage extends CApiService {
 			self::exception(ZBX_API_ERROR_PARAMETERS, _('Empty parameters'));
 		}
 
-		if (self::$userData['type'] < USER_TYPE_ZABBIX_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_ZABBIX_ADMIN && self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
 		}
 
@@ -441,7 +442,7 @@ class CImage extends CApiService {
 	 */
 	protected function validateCreate(array $images) {
 		// validate permissions
-		if (self::$userData['type'] < USER_TYPE_ZABBIX_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_ZABBIX_ADMIN && self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
 		}
 
@@ -488,7 +489,7 @@ class CImage extends CApiService {
 	 * @throws APIException if image with same name already exists.
 	 */
 	protected function validateUpdate(array $images) {
-		if (self::$userData['type'] < USER_TYPE_ZABBIX_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_ZABBIX_ADMIN && self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
 		}
 

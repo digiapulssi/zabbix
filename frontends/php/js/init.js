@@ -21,7 +21,7 @@
 jQuery(function($) {
 
 	if ($('#search').length) {
-		createSuggest('search');
+		createSuggest('search', null);
 	}
 
 	if (IE) {

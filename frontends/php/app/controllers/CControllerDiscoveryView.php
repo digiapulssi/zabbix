@@ -45,7 +45,7 @@ class CControllerDiscoveryView extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() < USER_TYPE_ZABBIX_ADMIN) {
+		if ($this->getUserType() != USER_TYPE_ZABBIX_ADMIN && $this->getUserType() != USER_TYPE_SUPER_ADMIN) {
 			return false;
 		}
 

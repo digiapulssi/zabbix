@@ -681,11 +681,6 @@ class CHostGroup extends CApiService {
 			'value_id' => $groupids
 		]);
 
-		// TODO: remove audit
-		foreach ($groupids as $groupid) {
-			add_audit_ext(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_HOST_GROUP, $groupid, $delGroups[$groupid]['name'], 'groups', null, null);
-		}
-
 		return ['groupids' => $groupids];
 	}
 

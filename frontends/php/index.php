@@ -85,7 +85,12 @@ if (isset($_REQUEST['enter']) && $_REQUEST['enter'] == _('Sign in')) {
 			$url = CWebUser::$data['url'];
 		}
 		else {
-			$url = ZBX_DEFAULT_URL;
+			if (CWebUser::$data['type'] == USER_TYPE_EBERO) {
+				$url = 'rsm.rollingweekstatus.php';
+			}
+			else {
+				$url = ZBX_DEFAULT_URL;
+			}
 		}
 		redirect($url);
 		exit;
