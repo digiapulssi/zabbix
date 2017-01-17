@@ -36,7 +36,9 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 	$zbx_menu = [
 		'view' => [
 			'label' => _('Monitoring'),
-			'user_type' => USER_TYPE_ZABBIX_USER,
+			'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+				USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
+			],
 			'default_page_id' => 0,
 			'pages' => [
 				[
@@ -60,7 +62,10 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 				[
 					'url' => 'latest.php',
 					'label' => _('Latest data'),
-					'sub_pages' => ['history.php', 'chart.php']
+					'sub_pages' => ['history.php', 'chart.php'],
+					'user_type'	=> [USER_TYPE_EBERO, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
+						USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
+					],
 				],
 				[
 					'url' => 'tr_status.php',
@@ -101,7 +106,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 					'action' => 'discovery.view',
 					'active_if' => ['discovery.view'],
 					'label' => _('Discovery'),
-					'user_type' => USER_TYPE_ZABBIX_ADMIN
+					'user_type' => [USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN],
 				],
 				[
 					'url' => 'srv_status.php',
@@ -123,9 +128,49 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 				]
 			]
 		],
+		'rsm' => array(
+			'label'				=> _('SLA monitoring'),
+			'user_type'			=> [USER_TYPE_EBERO, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
+				USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
+			],
+			'default_page_id'	=> 0,
+			'pages' => array(
+				array(
+					'url' => 'rsm.rollingweekstatus.php',
+					'label' => _('Rolling week status')
+				),
+				array(
+					'url' => 'rsm.incidents.php',
+					'label' => _('Incidents'),
+					'sub_pages' => array(
+						'rsm.incidentdetails.php',
+						'rsm.tests.php',
+						'rsm.particulartests.php',
+						'rsm.particularproxys.php'
+					)
+				),
+				array(
+					'url' => 'rsm.monthlyreports.php',
+					'label' => _('Monthly reports'),
+					'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+						USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
+					],
+				),
+				array(
+					'url' => 'rsm.slareports.php',
+					'label' => _('SLA reports'),
+					'sub_pages' => array('rsm.screens.php'),
+					'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+						USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
+					]
+				)
+			)
+		),
 		'cm' => [
 			'label' => _('Inventory'),
-			'user_type' => USER_TYPE_ZABBIX_USER,
+			'user_type' => [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+				USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
+			],
 			'default_page_id' => 0,
 			'pages' => [
 				[
@@ -140,7 +185,9 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		],
 		'reports' => [
 			'label' => _('Reports'),
-			'user_type' => USER_TYPE_ZABBIX_USER,
+			'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+				USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
+			],
 			'default_page_id' => 0,
 			'pages' => [
 				[
@@ -148,7 +195,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 					'action' => 'report.status',
 					'active_if' => ['report.status'],
 					'label' => _('Status of Zabbix'),
-					'user_type' => USER_TYPE_SUPER_ADMIN
+					'user_type' => [USER_TYPE_SUPER_ADMIN]
 				],
 				[
 					'url' => 'report2.php',
@@ -161,17 +208,17 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 				[
 					'url' => 'auditlogs.php',
 					'label' => _('Audit'),
-					'user_type' => USER_TYPE_SUPER_ADMIN
+					'user_type' => [USER_TYPE_SUPER_ADMIN]
 				],
 				[
 					'url' => 'auditacts.php',
 					'label' => _('Action log'),
-					'user_type' => USER_TYPE_SUPER_ADMIN
+					'user_type' => [USER_TYPE_SUPER_ADMIN]
 				],
 				[
 					'url' => 'report4.php',
 					'label' => _('Notifications'),
-					'user_type' => USER_TYPE_ZABBIX_ADMIN
+					'user_type' => [USER_TYPE_ZABBIX_ADMIN]
 				],
 				[
 					'url' => 'popup.php'
@@ -183,7 +230,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		],
 		'config' => [
 			'label' => _('Configuration'),
-			'user_type' => USER_TYPE_ZABBIX_ADMIN,
+			'user_type' => [USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN],
 			'default_page_id' => 0,
 			'pages' => [
 				[
@@ -240,7 +287,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		],
 		'admin' => [
 			'label' => _('Administration'),
-			'user_type' => USER_TYPE_SUPER_ADMIN,
+			'user_type' => [USER_TYPE_SUPER_ADMIN],
 			'default_page_id' => 0,
 			'pages' => [
 				[
@@ -300,7 +347,9 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		],
 		'login' => [
 			'label' => _('Login'),
-			'user_type' => 0,
+			'user_type'	=> [USER_TYPE_EBERO, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
+				USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
+			],
 			'default_page_id' => 0,
 			'pages' => [
 				[
@@ -319,7 +368,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		$show_menu = true;
 
 		if (isset($menu['user_type'])) {
-			$show_menu &= ($menu['user_type'] <= CWebUser::$data['type']);
+			$show_menu &= (in_array(CWebUser::$data['type'], $menu['user_type']));
 		}
 		if ($label == 'login') {
 			$show_menu = false;
@@ -338,7 +387,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 			if (!isset($sub_page['user_type'])) {
 				$sub_page['user_type'] = $menu['user_type'];
 			}
-			if (CWebUser::$data['type'] < $sub_page['user_type']) {
+			if (!in_array(CWebUser::$data['type'], $sub_page['user_type'])) {
 				$show_sub_menu = false;
 			}
 
@@ -378,7 +427,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 
 			if ($sub_menu_active) {
 				// permission check
-				$deny &= (CWebUser::$data['type'] < $menu['user_type'] || CWebUser::$data['type'] < $sub_page['user_type']);
+				$deny &= (!in_array(CWebUser::$data['type'], $sub_page['user_type']));
 
 				$menu_class = 'selected';
 				$page_exists = true;

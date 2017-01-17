@@ -382,6 +382,7 @@ if (!$this->data['is_profile']) {
 	$permissionsFormList = new CFormList('permissionsFormList');
 
 	$userTypeComboBox = new CComboBox('user_type', $this->data['user_type'], 'submit();', [
+		USER_TYPE_EBERO => user_type2str(USER_TYPE_EBERO),
 		USER_TYPE_ZABBIX_USER => user_type2str(USER_TYPE_ZABBIX_USER),
 		USER_TYPE_ZABBIX_ADMIN => user_type2str(USER_TYPE_ZABBIX_ADMIN),
 		USER_TYPE_SUPER_ADMIN => user_type2str(USER_TYPE_SUPER_ADMIN)

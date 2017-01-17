@@ -45,7 +45,7 @@ $fields = [
 	'surname' =>			[T_ZBX_STR, O_OPT, null,	null,		null, _('Surname')],
 	'password1' =>			[T_ZBX_STR, O_OPT, null,	null,		'(isset({add}) || isset({update})) && isset({form}) && {form} != "update" && isset({change_password})'],
 	'password2' =>			[T_ZBX_STR, O_OPT, null,	null,		'(isset({add}) || isset({update})) && isset({form}) && {form} != "update" && isset({change_password})'],
-	'user_type' =>			[T_ZBX_INT, O_OPT, null,	IN('1,2,3'),'isset({add}) || isset({update})'],
+	'user_type' =>			[T_ZBX_INT, O_OPT, null,	IN('1,2,3,4,5,6'),'isset({add}) || isset({update})'],
 	'user_groups' =>		[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	null],
 	'user_groups_to_del' =>	[T_ZBX_INT, O_OPT, null,	DB_ID,		null],
 	'user_medias' =>		[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	null],

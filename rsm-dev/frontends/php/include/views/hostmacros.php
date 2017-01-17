@@ -77,7 +77,7 @@ else {
 			$macro_cell[] = new CVar('macros['.$i.'][type]', $macro['type']);
 		}
 
-		$value_input = (new CTextBox('macros['.$i.'][value]', $macro['value'], false, 255))
+		$value_input = (new CTextBox('macros['.$i.'][value]', $macro['value'], false, 65535))
 			->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
 			->setReadOnly(
 				$data['readonly'] || ($data['show_inherited_macros'] && !($macro['type'] & MACRO_TYPE_HOSTMACRO))

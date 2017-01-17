@@ -48,6 +48,7 @@ switch ($data['method']) {
 		$result = API::Host()->get([
 			'startSearch' => true,
 			'search' => $data['params']['search'],
+			'tlds' => array_key_exists('tlds', $data['params']) ? $data['params']['tlds'] : null,
 			'output' => ['hostid', 'host', 'name'],
 			'sortfield' => 'name',
 			'limit' => 15

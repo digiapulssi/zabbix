@@ -19,9 +19,9 @@
 
 var LCL_SUGGESTS = [];
 
-function createSuggest(oid){
+function createSuggest(oid, tlds){
 	var sid = LCL_SUGGESTS.length;
-	LCL_SUGGESTS[sid] = new CSuggest(sid, oid);
+	LCL_SUGGESTS[sid] = new CSuggest(sid, oid, tlds);
 
 return sid;
 }
@@ -64,13 +64,14 @@ var CSuggest = Class.create({
 
 'mouseOverSuggest':	false,	// indicates if mouse is over suggests
 
-initialize: function(id, objid){
+initialize: function(id, objid, tlds){
 	this.id = id;
 //--
 
 	this.cleanCache();
 
 	this.dom.input = $(objid);
+	this.tlds = tlds;
 
 	addListener(this.dom.input, 'keyup', this.keyPressed.bindAsEventListener(this));
 	addListener(this.dom.input, 'blur', this.suggestBlur.bindAsEventListener(this));
@@ -116,6 +117,7 @@ searchServer: function(needle){
 		'params': {
 			'startSearch': 1,
 			'search': {'name': needle},
+			'tlds': this.tlds,
 			'output': ['hostid', 'name', 'host'],
 			'sortfield': 'name',
 			'limit': this.suggestLimit

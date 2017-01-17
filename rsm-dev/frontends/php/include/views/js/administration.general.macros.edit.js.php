@@ -6,7 +6,7 @@
 			->setWidth(ZBX_TEXTAREA_MACRO_WIDTH)
 			->setAttribute('placeholder', '{$MACRO}'),
 		'&rArr;',
-		(new CTextBox('macros[#{rowNum}][value]', '', false, 255))
+		(new CTextBox('macros[#{rowNum}][value]', '', false, 65535))
 			->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
 			->setAttribute('placeholder', _('value')),
 		(new CCol(

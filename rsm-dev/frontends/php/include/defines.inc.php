@@ -166,33 +166,34 @@ define('AUDIT_ACTION_LOGOUT',	4);
 define('AUDIT_ACTION_ENABLE',	5);
 define('AUDIT_ACTION_DISABLE',	6);
 
-define('AUDIT_RESOURCE_USER',			0);
-define('AUDIT_RESOURCE_ZABBIX_CONFIG',	2);
-define('AUDIT_RESOURCE_MEDIA_TYPE',		3);
-define('AUDIT_RESOURCE_HOST',			4);
-define('AUDIT_RESOURCE_ACTION',			5);
-define('AUDIT_RESOURCE_GRAPH',			6);
-define('AUDIT_RESOURCE_GRAPH_ELEMENT',	7);
-define('AUDIT_RESOURCE_USER_GROUP',		11);
-define('AUDIT_RESOURCE_APPLICATION',	12);
-define('AUDIT_RESOURCE_TRIGGER',		13);
-define('AUDIT_RESOURCE_HOST_GROUP',		14);
-define('AUDIT_RESOURCE_ITEM',			15);
-define('AUDIT_RESOURCE_IMAGE',			16);
-define('AUDIT_RESOURCE_VALUE_MAP',		17);
-define('AUDIT_RESOURCE_IT_SERVICE',		18);
-define('AUDIT_RESOURCE_MAP',			19);
-define('AUDIT_RESOURCE_SCREEN',			20);
-define('AUDIT_RESOURCE_SCENARIO',		22);
-define('AUDIT_RESOURCE_DISCOVERY_RULE',	23);
-define('AUDIT_RESOURCE_SLIDESHOW',		24);
-define('AUDIT_RESOURCE_SCRIPT',			25);
-define('AUDIT_RESOURCE_PROXY',			26);
-define('AUDIT_RESOURCE_MAINTENANCE',	27);
-define('AUDIT_RESOURCE_REGEXP',			28);
-define('AUDIT_RESOURCE_MACRO',			29);
-define('AUDIT_RESOURCE_TEMPLATE',		30);
-define('AUDIT_RESOURCE_TRIGGER_PROTOTYPE', 31);
+define('AUDIT_RESOURCE_USER',				0);
+define('AUDIT_RESOURCE_ZABBIX_CONFIG',		2);
+define('AUDIT_RESOURCE_MEDIA_TYPE',			3);
+define('AUDIT_RESOURCE_HOST',				4);
+define('AUDIT_RESOURCE_ACTION',				5);
+define('AUDIT_RESOURCE_GRAPH',				6);
+define('AUDIT_RESOURCE_GRAPH_ELEMENT',		7);
+define('AUDIT_RESOURCE_USER_GROUP',			11);
+define('AUDIT_RESOURCE_APPLICATION',		12);
+define('AUDIT_RESOURCE_TRIGGER',			13);
+define('AUDIT_RESOURCE_HOST_GROUP',			14);
+define('AUDIT_RESOURCE_ITEM',				15);
+define('AUDIT_RESOURCE_IMAGE',				16);
+define('AUDIT_RESOURCE_VALUE_MAP',			17);
+define('AUDIT_RESOURCE_IT_SERVICE',			18);
+define('AUDIT_RESOURCE_MAP',				19);
+define('AUDIT_RESOURCE_SCREEN',				20);
+define('AUDIT_RESOURCE_SCENARIO',			22);
+define('AUDIT_RESOURCE_DISCOVERY_RULE',		23);
+define('AUDIT_RESOURCE_SLIDESHOW',			24);
+define('AUDIT_RESOURCE_SCRIPT',				25);
+define('AUDIT_RESOURCE_PROXY',				26);
+define('AUDIT_RESOURCE_MAINTENANCE',		27);
+define('AUDIT_RESOURCE_REGEXP',				28);
+define('AUDIT_RESOURCE_MACRO',				29);
+define('AUDIT_RESOURCE_TEMPLATE',			30);
+define('AUDIT_RESOURCE_TRIGGER_PROTOTYPE',	31);
+define('AUDIT_RESOURCE_INCIDENT',			32);
 
 define('CONDITION_TYPE_HOST_GROUP',			0);
 define('CONDITION_TYPE_HOST',				1);
@@ -644,9 +645,12 @@ define('SERVICE_TIME_TYPE_UPTIME',				0);
 define('SERVICE_TIME_TYPE_DOWNTIME',			1);
 define('SERVICE_TIME_TYPE_ONETIME_DOWNTIME',	2);
 
-define('USER_TYPE_ZABBIX_USER',		1);
-define('USER_TYPE_ZABBIX_ADMIN',	2);
-define('USER_TYPE_SUPER_ADMIN',		3);
+define('USER_TYPE_ZABBIX_USER',			1);
+define('USER_TYPE_ZABBIX_ADMIN',		2);
+define('USER_TYPE_SUPER_ADMIN',			3);
+define('USER_TYPE_EBERO',				4);
+define('USER_TYPE_TEHNICAL_SERVICE',	5);
+define('USER_TYPE_COMPLIANCE',			6);
 
 define('ZBX_NOT_INTERNAL_GROUP',	0);
 define('ZBX_INTERNAL_GROUP',		1);
@@ -1251,6 +1255,223 @@ define('HTTPS', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS
 define('MACRO_TYPE_INHERITED',	0x01);
 define('MACRO_TYPE_HOSTMACRO',	0x02);
 define('MACRO_TYPE_BOTH',		0x03);	// MACRO_TYPE_INHERITED | MACRO_TYPE_HOSTMACRO
+
+/*
+ * These numbers must be in sync with Backend!
+ */
+// server delay time in seconds
+define('RSM_ROLLWEEK_SHIFT_BACK', 180);
+
+// SLA monitoring start year
+define('SLA_MONITORING_START_YEAR',	2014);
+
+// SLA monitoring extra filter value
+define('SLA_MONITORING_SLV_FILTER_NON_ZERO',	-1);
+
+// SLA monitoring services
+define('RSM_DNS',			0);
+define('RSM_DNSSEC',		1);
+define('RSM_RDDS',			2);
+define('RSM_EPP',			3);
+
+// SLA monitoring macros
+define('RSM_SLV_MACRO_DNS_AVAIL',	'{$RSM.SLV.DNS.AVAIL}');
+define('RSM_SLV_MACRO_RDDS_AVAIL',	'{$RSM.SLV.RDDS.AVAIL}');
+define('RSM_SLV_MACRO_EPP_AVAIL',	'{$RSM.SLV.EPP.AVAIL}');
+define('RSM_PAGE_SLV',				'{$RSM.ROLLWEEK.THRESHOLDS}');
+define('RSM_ROLLWEEK_SECONDS',		'{$RSM.ROLLWEEK.SECONDS}');
+define('RSM_MIN_DNS_COUNT',			'{$RSM.DNS.AVAIL.MINNS}');
+define('RSM_DNS_UDP_DELAY',			'{$RSM.DNS.UDP.DELAY}');
+define('RSM_RDDS_DELAY',			'{$RSM.RDDS.DELAY}');
+define('RSM_TLD_DNSSEC_ENABLED',	'{$RSM.TLD.DNSSEC.ENABLED}');
+define('RSM_TLD_EPP_ENABLED',		'{$RSM.TLD.EPP.ENABLED}');
+define('RSM_TLD_RDDS43_ENABLED',	'{$RSM.TLD.RDDS43.ENABLED}');
+define('RSM_TLD_RDDS80_ENABLED',	'{$RSM.TLD.RDDS80.ENABLED}');
+define('RSM_TLD_RDAP_ENABLED',		'{$RSM.TLD.RDAP.ENABLED}');
+define('RSM_SLV_NS_AVAIL',			'{$RSM.SLV.NS.AVAIL}');
+define('RSM_SLV_DNS_TCP_RTT',		'{$RSM.SLV.DNS.TCP.RTT}');
+define('RSM_DNS_TCP_RTT_LOW',		'{$RSM.DNS.TCP.RTT.LOW}');
+define('RSM_SLV_DNS_UDP_RTT',		'{$RSM.SLV.DNS.UDP.RTT}');
+define('RSM_DNS_UDP_RTT_LOW',		'{$RSM.DNS.UDP.RTT.LOW}');
+define('RSM_SLV_DNS_NS_UPD',		'{$RSM.SLV.DNS.NS.UPD}');
+define('RSM_DNS_UPDATE_TIME',		'{$RSM.DNS.UPDATE.TIME}');
+define('RSM_SLV_RDDS_UPD',			'{$RSM.SLV.RDDS.UPD}');
+define('RSM_RDDS_UPDATE_TIME',		'{$RSM.RDDS.UPDATE.TIME}');
+define('RSM_SLV_EPP_LOGIN',			'{$RSM.SLV.EPP.LOGIN}');
+define('RSM_EPP_LOGIN_RTT_LOW',		'{$RSM.EPP.LOGIN.RTT.LOW}');
+define('RSM_SLV_EPP_INFO',			'{$RSM.SLV.EPP.INFO}');
+define('RSM_EPP_INFO_RTT_LOW',		'{$RSM.EPP.INFO.RTT.LOW}');
+define('RSM_SLV_EPP_UPDATE',		'{$RSM.SLV.EPP.UPDATE}');
+define('RSM_EPP_UPDATE_RTT_LOW',	'{$RSM.EPP.UPDATE.RTT.LOW}');
+
+// SLA monitoring rolling week items keys
+define('RSM_SLV_DNS_ROLLWEEK',		'rsm.slv.dns.rollweek');
+define('RSM_SLV_DNSSEC_ROLLWEEK',	'rsm.slv.dnssec.rollweek');
+define('RSM_SLV_RDDS_ROLLWEEK',		'rsm.slv.rdds.rollweek');
+define('RSM_SLV_EPP_ROLLWEEK',		'rsm.slv.epp.rollweek');
+
+// SLA monitoring availability items keys
+define('RSM_SLV_DNS_AVAIL',					'rsm.slv.dns.avail');
+define('RSM_SLV_DNS_DOWNTIME',				'rsm.slv.dns.downtime');
+define('RSM_SLV_DNS_NS_DOWNTIME',			'rsm.slv.dns.ns.downtime');
+define('RSM_SLV_DNS_TCP_RTT_PFAILED',		'rsm.slv.dns.tcp.rtt.pfailed');
+define('RSM_SLV_DNS_TCP_RTT_FAILED',		'rsm.slv.dns.tcp.rtt.failed');
+define('RSM_SLV_DNS_TCP_RTT_MAX',			'rsm.slv.dns.tcp.rtt.max');
+define('RSM_SLV_DNS_UDP_RTT_PFAILED',		'rsm.slv.dns.udp.rtt.pfailed');
+define('RSM_SLV_DNS_UDP_RTT_FAILED',		'rsm.slv.dns.udp.rtt.failed');
+define('RSM_SLV_DNS_UDP_RTT_MAX',			'rsm.slv.dns.udp.rtt.max');
+define('RSM_SLV_DNS_UDP_UPD_PFAILED',		'rsm.slv.dns.udp.upd.pfailed');
+define('RSM_SLV_DNS_UDP_UPD_FAILED',		'rsm.slv.dns.udp.upd.failed');
+define('RSM_SLV_DNS_UDP_UPD_MAX',			'rsm.slv.dns.udp.upd.max');
+define('RSM_SLV_RDDS_DOWNTIME',				'rsm.slv.rdds.downtime');
+define('RSM_SLV_RDDS_UPD_PFAILED',			'rsm.slv.rdds.upd.pfailed');
+define('RSM_SLV_RDDS_UPD_FAILED',			'rsm.slv.rdds.upd.failed');
+define('RSM_SLV_RDDS_UPD_MAX',				'rsm.slv.rdds.upd.max');
+define('RSM_SLV_EPP_DOWNTIME',				'rsm.slv.epp.downtime');
+define('RSM_SLV_EPP_RTT_LOGIN_PFAILED',		'rsm.slv.epp.rtt.login.pfailed');
+define('RSM_SLV_EPP_RTT_LOGIN_FAILED',		'rsm.slv.epp.rtt.login.failed');
+define('RSM_SLV_EPP_RTT_LOGIN_MAX',			'rsm.slv.epp.rtt.login.max');
+define('RSM_SLV_EPP_RTT_INFO_PFAILED',		'rsm.slv.epp.rtt.info.pfailed');
+define('RSM_SLV_EPP_RTT_INFO_FAILED',		'rsm.slv.epp.rtt.info.failed');
+define('RSM_SLV_EPP_RTT_INFO_MAX',			'rsm.slv.epp.rtt.info.max');
+define('RSM_SLV_EPP_RTT_UPDATE_PFAILED',	'rsm.slv.epp.rtt.update.pfailed');
+define('RSM_SLV_EPP_RTT_UPDATE_FAILED',		'rsm.slv.epp.rtt.update.failed');
+define('RSM_SLV_EPP_RTT_UPDATE_MAX',		'rsm.slv.epp.rtt.update.max');
+define('RSM_SLV_RDDS_AVAIL',				'rsm.slv.rdds.avail');
+define('RSM_SLV_EPP_AVAIL',					'rsm.slv.epp.avail');
+define('RSM_SLV_DNSSEC_AVAIL',				'rsm.slv.dnssec.avail');
+define('RSM_SLV_RDDS_RTT',					'rsm.slv.rdds.rtt.pfailed');
+
+// SLA reports graph names
+define('DNS_SERVICE_AVAILABILITY_GRAPH_1',		'DNS Service Availability - Accumulated minutes of downtime');
+define('DNS_NS_AVAILABILITY_GRAPH_1',			'DNS NS Availability - [$NS$] Accumulated minutes of downtime');
+define('DNS_NS_AVAILABILITY_GRAPH_2',			'DNS NS Availability - [$NS$] UP/DOWN');
+define('TCP_DNS_RESOLUTION_RTT_TCP_GRAPH_1',	'DNS TCP Resolution RTT - Average');
+define('TCP_DNS_RESOLUTION_RTT_TCP_GRAPH_2',	'DNS TCP Resolution RTT - Ratio of Failed tests');
+define('UDP_DNS_RESOLUTION_RTT_UDP_GRAPH_1',	'DNS UDP Resolution RTT - Average');
+define('UDP_DNS_RESOLUTION_RTT_UDP_GRAPH_2',	'DNS UDP Resolution RTT - Ratio of Failed tests');
+define('DNS_UPDATE_TIME_GRAPH_1',				'DNS UDP Update Time – Average');
+define('RDDS_AVAILABILITY_GRAPH_1',				'RDDS Availability – Accumulated minutes of downtime');
+define('RDDS_QUERY_RTT_GRAPH_1',				'RDDS Query RTT – Average');
+define('RDDS_QUERY_RTT_GRAPH_2',				'RDDS Query RTT – Ratio of Failed tests');
+define('RDDS_43_QUERY_RTT_GRAPH_1',				'RDDS 43 Query RTT – Average');
+define('RDDS_80_QUERY_RTT_GRAPH_1',				'RDDS 80 Query RTT – Average');
+define('RDDS_UPDATE_TIME_GRAPH_1',				'RDDS Update Time – Average');
+define('RDDS_UPDATE_TIME_GRAPH_2',				'RDDS Update Time – Ratio of Failed tests');
+define('EPP_SERVICE_AVAILABILITY_GRAPH_1',		'EPP Service Availability – Accumulated minutes of downtime');
+define('EPP_SESSION_COMMAND_RTT_GRAPH_1',		'EPP Session-Command RTT – Average');
+define('EPP_SESSION_COMMAND_RTT_GRAPH_2',		'EPP Session-Command RTT – Ratio of Failed tests');
+define('EPP_TRANSFORM_COMMAND_RTT_GRAPH_1',		'EPP Transform-Command RTT – Average');
+define('EPP_TRANSFORM_COMMAND_RTT_GRAPH_2',		'EPP Transform-Command RTT – Ratio of Failed tests');
+define('EPP_QUERY_COMMAND_RTT_GRAPH_1',			'EPP Query-Command RTT – Average');
+define('EPP_QUERY_COMMAND_RTT_GRAPH_2',			'EPP Query-Command RTT – Ratio of Failed tests');
+
+define('RSM_SLA_SCREEN_TYPE_GRAPH_1',		0);
+define('RSM_SLA_SCREEN_TYPE_GRAPH_2',		1);
+define('RSM_SLA_SCREEN_TYPE_SCREEN',		2);
+define('RSM_SLA_SCREEN_TYPE_GRAPH_3',		3);
+define('RSM_SLA_SCREEN_TYPE_GRAPH_4',		4);
+define('RSM_SLA_SCREEN_TYPE_GRAPH_5',		5);
+define('RSM_SLA_SCREEN_TYPE_GRAPH_6',		6);
+
+// SLA monitoring incident status
+define('INCIDENT_ACTIVE',			0);
+define('INCIDENT_RESOLVED',			1);
+define('INCIDENT_FALSE_POSITIVE',	2);
+define('INCIDENT_RESOLVED_NO_DATA',	3);
+
+// false positive event status
+define('INCIDENT_FLAG_NORMAL',			0);
+define('INCIDENT_FLAG_FALSE_POSITIVE',	1);
+
+// SLA monitoring incident status
+define('DNS_NO_REPLY_ERROR_CODE',	-200);
+define('DNSSEC_FAIL_ERROR_CODE',	-204);
+
+define('MIN_PROBE_OK_RESULT_PERCENTAGE',	49);
+
+// SLA monitoring calculated items keys
+define('CALCULATED_ITEM_DNS_FAIL',				'rsm.configvalue[RSM.INCIDENT.DNS.FAIL]');
+define('CALCULATED_ITEM_DNS_RECOVERY',			'rsm.configvalue[RSM.INCIDENT.DNS.RECOVER]');
+define('CALCULATED_ITEM_DNSSEC_FAIL',			'rsm.configvalue[RSM.INCIDENT.DNSSEC.FAIL]');
+define('CALCULATED_ITEM_DNSSEC_RECOVERY',		'rsm.configvalue[RSM.INCIDENT.DNSSEC.RECOVER]');
+define('CALCULATED_ITEM_RDDS_FAIL',				'rsm.configvalue[RSM.INCIDENT.RDDS.FAIL]');
+define('CALCULATED_ITEM_RDDS_RECOVERY',			'rsm.configvalue[RSM.INCIDENT.RDDS.RECOVER]');
+define('CALCULATED_ITEM_EPP_FAIL',				'rsm.configvalue[RSM.INCIDENT.EPP.FAIL]');
+define('CALCULATED_ITEM_EPP_RECOVERY',			'rsm.configvalue[RSM.INCIDENT.EPP.RECOVER]');
+define('CALCULATED_ITEM_DNS_DELAY',				'rsm.configvalue[RSM.DNS.UDP.DELAY]');
+define('CALCULATED_ITEM_RDDS_DELAY',			'rsm.configvalue[RSM.RDDS.DELAY]');
+define('CALCULATED_ITEM_EPP_DELAY',				'rsm.configvalue[RSM.EPP.DELAY]');
+define('CALCULATED_ITEM_DNS_AVAIL_MINNS',		'rsm.configvalue[RSM.DNS.AVAIL.MINNS]');
+define('CALCULATED_ITEM_DNS_UDP_RTT_HIGH',		'rsm.configvalue[RSM.DNS.UDP.RTT.HIGH]');
+define('CALCULATED_ITEM_SLV_DNS_NS_RTT_UDP',	'rsm.configvalue[RSM.SLV.DNS.UDP.RTT]');
+define('CALCULATED_ITEM_SLV_DNS_NS_RTT_TCP',	'rsm.configvalue[RSM.SLV.DNS.TCP.RTT]');
+define('CALCULATED_ITEM_SLV_DNS_NS_UPD',		'rsm.configvalue[RSM.SLV.DNS.NS.UPD]');
+define('CALCULATED_ITEM_SLV_DNS_NS',			'rsm.configvalue[RSM.SLV.NS.AVAIL]');
+define('CALCULATED_ITEM_SLV_RDDS43_RTT',		'rsm.configvalue[RSM.SLV.RDDS43.RTT]');
+define('CALCULATED_ITEM_SLV_RDDS80_RTT',		'rsm.configvalue[RSM.SLV.RDDS80.RTT]');
+define('CALCULATED_ITEM_SLV_RDDS_UPD',			'rsm.configvalue[RSM.SLV.RDDS.UPD]');
+define('CALCULATED_ITEM_SLV_EPP_INFO',			'rsm.configvalue[RSM.SLV.EPP.INFO]');
+define('CALCULATED_ITEM_SLV_EPP_LOGIN',			'rsm.configvalue[RSM.SLV.EPP.LOGIN]');
+define('CALCULATED_ITEM_EPP_UPDATE',			'rsm.configvalue[RSM.SLV.EPP.UPDATE]');
+define('CALCULATED_DNS_ROLLWEEK_SLA',			'rsm.configvalue[RSM.DNS.ROLLWEEK.SLA]');
+define('CALCULATED_RDDS_ROLLWEEK_SLA',			'rsm.configvalue[RSM.RDDS.ROLLWEEK.SLA]');
+define('CALCULATED_EPP_ROLLWEEK_SLA',			'rsm.configvalue[RSM.EPP.ROLLWEEK.SLA]');
+
+// SLA monitoring probe status items keys
+define('PROBE_STATUS_AUTOMATIC',	'rsm.probe.status[automatic,"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"]');
+define('PROBE_STATUS_MANUAL',		'rsm.probe.status[manual]');
+define('PROBE_DNS_UDP_ITEM',		'rsm.dns.udp[{$RSM.TLD}]');
+define('PROBE_DNS_UDP_ITEM_RTT',	'rsm.dns.udp.rtt[');
+define('PROBE_RDDS_ITEM',			'rsm.rdds[');
+define('PROBE_EPP_RESULT',			'rsm.epp[');
+define('PROBE_EPP_IP',				'rsm.epp.ip[{$RSM.TLD}]');
+define('PROBE_EPP_UPDATE',			'rsm.epp.rtt[{$RSM.TLD},update]');
+define('PROBE_EPP_INFO',			'rsm.epp.rtt[{$RSM.TLD},info]');
+define('PROBE_EPP_LOGIN',			'rsm.epp.rtt[{$RSM.TLD},login]');
+define('PROBE_RDDS43_IP',			'rsm.rdds.43.ip[{$RSM.TLD}]');
+define('PROBE_RDDS43_RTT',			'rsm.rdds.43.rtt[{$RSM.TLD}]');
+define('PROBE_RDDS43_UPD',			'rsm.rdds.43.upd[{$RSM.TLD}]');
+define('PROBE_RDDS80_IP',			'rsm.rdds.80.ip[{$RSM.TLD}]');
+define('PROBE_RDDS80_RTT',			'rsm.rdds.80.rtt[{$RSM.TLD}]');
+define('PROBE_RDAP_IP',				'rsm.rdds.rdap.ip[{$RSM.TLD}]');
+define('PROBE_RDAP_RTT',			'rsm.rdds.rdap.rtt[{$RSM.TLD}]');
+
+// SLA monitoring NS names
+define('NS_NO_RESULT',	0);
+define('NS_DOWN',		1);
+define('NS_UP',			2);
+
+// SLA monitoring probe status
+define('PROBE_DOWN',	0);
+define('PROBE_UP',		1);
+
+// SLA monitoring monthly reports item
+define('MONTHLY_REPORTS_APPLICATION',	'SLV monthly');
+
+// SLA monitoring monthly reports item keys
+define('MONTHLY_REPORTS_DNS_NS_RTT_UDP',	'rsm.slv.dns.ns.rtt.udp.month');
+define('MONTHLY_REPORTS_DNS_NS_RTT_TCP',	'rsm.slv.dns.ns.rtt.tcp.month');
+define('MONTHLY_REPORTS_DNS_NS_UPD',		'rsm.slv.dns.ns.upd.month');
+define('MONTHLY_REPORTS_DNS_NS',			'rsm.slv.dns.ns.month');
+define('MONTHLY_REPORTS_RDDS43_RTT',		'rsm.slv.rdds.43.rtt.month');
+define('MONTHLY_REPORTS_RDDS80_RTT',		'rsm.slv.rdds.80.rtt.month');
+define('MONTHLY_REPORTS_RDDS_UPD',			'rsm.slv.rdds.upd.month');
+define('MONTHLY_REPORTS_EPP_INFO',			'rsm.slv.epp.rtt.info.month');
+define('MONTHLY_REPORTS_EPP_LOGIN',			'rsm.slv.epp.rtt.login.month');
+define('MONTHLY_REPORTS_EPP_UPDATE',		'rsm.slv.epp.rtt.update.month');
+
+// SLA monitoring "rsm" host name
+define('RSM_HOST',	'rsm');
+
+// SLA monitoring TLDs group
+define('RSM_TLDS_GROUP',	'TLDs');
+
+// TLD types
+define('RSM_CC_TLD_GROUP',		'ccTLD');
+define('RSM_G_TLD_GROUP',		'gTLD');
+define('RSM_OTHER_TLD_GROUP',	'otherTLD');
+define('RSM_TEST_GROUP',		'testTLD');
 
 // if magic quotes on, then get rid of them
 if (get_magic_quotes_gpc()) {

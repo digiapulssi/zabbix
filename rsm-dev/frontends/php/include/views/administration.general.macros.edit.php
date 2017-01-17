@@ -39,7 +39,7 @@ foreach ($data['macros'] as $i => $macro) {
 		->setWidth(ZBX_TEXTAREA_MACRO_WIDTH)
 		->setAttribute('placeholder', '{$MACRO}');
 
-	$value_input = (new CTextBox('macros['.$i.'][value]', $macro['value'], false, 255))
+	$value_input = (new CTextBox('macros['.$i.'][value]', $macro['value'], false, 65535))
 		->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
 		->setAttribute('placeholder', _('value'));
 
