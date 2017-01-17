@@ -38,7 +38,7 @@ $csvRows[] = array(
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
-$data = array();
+$data = [];
 
 // get TLDs
 $tlds = API::Host()->get(array(
@@ -62,14 +62,14 @@ foreach ($tlds as $data['tld']) {
 	));
 
 	if ($items) {
-		$dnsItems = array();
-		$dnssecItems = array();
-		$rddsItems = array();
-		$eppItems = array();
-		$dnsAvailItem = array();
-		$dnssecAvailItem = array();
-		$rddsAvailItem = array();
-		$eppAvailItem = array();
+		$dnsItems = [];
+		$dnssecItems = [];
+		$rddsItems = [];
+		$eppItems = [];
+		$dnsAvailItem = [];
+		$dnssecAvailItem = [];
+		$rddsAvailItem = [];
+		$eppAvailItem = [];
 
 		foreach ($items as $item) {
 			switch ($item['key_']) {
@@ -77,25 +77,25 @@ foreach ($tlds as $data['tld']) {
 					$data['dns']['itemid'] = $item['itemid'];
 					$data['dns']['slv'] = sprintf('%.3f', $item['lastvalue']);
 					$data['dns']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
-					$data['dns']['events'] = array();
+					$data['dns']['events'] = [];
 					break;
 				case RSM_SLV_DNSSEC_ROLLWEEK:
 					$data['dnssec']['itemid'] = $item['itemid'];
 					$data['dnssec']['slv'] = sprintf('%.3f', $item['lastvalue']);
 					$data['dnssec']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
-					$data['dnssec']['events'] = array();
+					$data['dnssec']['events'] = [];
 					break;
 				case RSM_SLV_RDDS_ROLLWEEK:
 					$data['rdds']['itemid'] = $item['itemid'];
 					$data['rdds']['slv'] = sprintf('%.3f', $item['lastvalue']);
 					$data['rdds']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
-					$data['rdds']['events'] = array();
+					$data['rdds']['events'] = [];
 					break;
 				case RSM_SLV_EPP_ROLLWEEK:
 					$data['epp']['itemid'] = $item['itemid'];
 					$data['epp']['slv'] = sprintf('%.3f', $item['lastvalue']);
 					$data['epp']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
-					$data['epp']['events'] = array();
+					$data['epp']['events'] = [];
 					break;
 				case RSM_SLV_DNS_AVAIL:
 					$data['dns']['availItemId'] = $item['itemid'];
@@ -136,10 +136,10 @@ foreach ($tlds as $data['tld']) {
 
 		$triggerIds = array_keys($triggers);
 
-		$dnsTriggers = array();
-		$dnssecTriggers = array();
-		$rddsTriggers = array();
-		$eppTriggers = array();
+		$dnsTriggers = [];
+		$dnssecTriggers = [];
+		$rddsTriggers = [];
+		$eppTriggers = [];
 		foreach ($triggers as $trigger) {
 			$triggerItem = reset($trigger['items']);
 
@@ -169,8 +169,8 @@ foreach ($tlds as $data['tld']) {
 		CArrayHelper::sort($events, array('objectid', 'clock'));
 
 		$i = 0;
-		$incidents = array();
-		$lastEventValue = array();
+		$incidents = [];
+		$lastEventValue = [];
 
 		// data generation
 		foreach ($events as $event) {
@@ -442,7 +442,7 @@ foreach ($tlds as $data['tld']) {
 		$data['rdds']['inIncident'] = 0;
 		$data['epp']['inIncident'] = 0;
 
-		$availItems = array();
+		$availItems = [];
 		if ($dnsAvailItem) {
 			$availItems[] = $dnsAvailItem;
 		}
@@ -488,17 +488,17 @@ foreach ($tlds as $data['tld']) {
 		}
 
 		// input into rolling week calculation block
-		$services = array();
+		$services = [];
 
 		// get deleay items
-		$itemKeys = array();
+		$itemKeys = [];
 		if (isset($data['dns']['events']) || isset($data['dnssec']['events'])) {
 			array_push($itemKeys, CALCULATED_ITEM_DNS_DELAY, CALCULATED_DNS_ROLLWEEK_SLA);
 			if (isset($data['dns']['events'])) {
-				$services['dns'] = array();
+				$services['dns'] = [];
 			}
 			if (isset($data['dnssec']['events'])) {
-				$services['dnssec'] = array();
+				$services['dnssec'] = [];
 			}
 		}
 		if (isset($data['rdds']['events'])) {

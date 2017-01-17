@@ -68,7 +68,7 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
-$data = array();
+$data = [];
 
 /*
  * Filter
@@ -148,7 +148,7 @@ $tldGroups = API::HostGroup()->get(array(
 	)
 ));
 
-$selectedGroups = array();
+$selectedGroups = [];
 $data['allowedGroups'] = array(
 	RSM_CC_TLD_GROUP => false,
 	RSM_G_TLD_GROUP => false,
@@ -227,7 +227,7 @@ if ($data['filter_slv'] !== ''
 				' AND '.dbConditionString('i.key_', $items['key'])
 		);
 
-		$hostIds = array();
+		$hostIds = [];
 		while ($hostId = DBfetch($itemsHostids)) {
 			$hostIds[] = $hostId['hostid'];
 		}
@@ -247,7 +247,7 @@ if ($notEmptyResult) {
 	// tld type filter
 	if ($data['filter_cctld_group'] || $data['filter_gtld_group'] || $data['filter_othertld_group']
 			|| $data['filter_test_group']) {
-		$groupNames = array();
+		$groupNames = [];
 
 		if ($data['filter_cctld_group']) {
 			$groupNames[] = RSM_CC_TLD_GROUP;
@@ -275,7 +275,7 @@ if ($notEmptyResult) {
 		}
 	}
 
-	$hostIds = array();
+	$hostIds = [];
 
 	// get TLDs
 	$whereCondition[] = dbConditionInt('hg.groupid', $selectedGroups);
@@ -332,7 +332,7 @@ if ($notEmptyResult) {
 	}
 }
 
-$data['tld'] = array();
+$data['tld'] = [];
 
 if ($hostIds) {
 	$sortField = getPageSortField('name');
@@ -354,7 +354,7 @@ if ($hostIds) {
 
 	if ($items) {
 		if ($sortField !== 'name') {
-			$sortItems = array();
+			$sortItems = [];
 			foreach ($items as $item) {
 				if (($item['key_'] == RSM_SLV_DNS_ROLLWEEK && $sortField == 'dns')
 						|| ($item['key_'] == RSM_SLV_DNSSEC_ROLLWEEK && $sortField == 'dnssec')
@@ -431,7 +431,7 @@ if ($hostIds) {
 		}
 
 		// disabled services check
-		$templateName = array();
+		$templateName = [];
 		foreach ($tlds as $tld) {
 			$templateName[$tld['hostid']] = 'Template '.$tld['host'];
 			$hostIdByTemplateName['Template '.$tld['host']] = $tld['hostid'];
@@ -526,7 +526,7 @@ if ($hostIds) {
 		foreach ($triggers as $trigger) {
 			if ($trigger['value'] == TRIGGER_VALUE_TRUE) {
 				$trItem = $trigger['itemid'];
-				$problem = array();
+				$problem = [];
 				switch ($items[$trItem]['key_']) {
 					case RSM_SLV_DNS_AVAIL:
 						$data['tld'][$items[$trItem]['hostid']][RSM_DNS]['incident'] = getLastEvent(

@@ -55,8 +55,8 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
-$data = array();
-$data['services'] = array();
+$data = [];
+$data['services'] = [];
 
 $year = date('Y', time());
 $month = date('m', time());
@@ -147,7 +147,7 @@ if ($data['filter_search']) {
 				'output' => array('itemid', 'name', 'key_', 'value_type')
 			));
 
-			$usedMacro = array();
+			$usedMacro = [];
 
 			foreach ($items as $item) {
 				$itemKey = new CItemKey($item['key_']);

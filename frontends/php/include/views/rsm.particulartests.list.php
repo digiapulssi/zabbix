@@ -100,7 +100,7 @@ foreach ($this->data['probes'] as $probe) {
 	else {
 		if ($this->data['type'] == RSM_DNS) {
 			if (isset($probe['value'])) {
-				$values = array();
+				$values = [];
 
 				if ($probe['result'] === null) {
 					$noResultProbes++;
@@ -128,7 +128,7 @@ foreach ($this->data['probes'] as $probe) {
 		}
 		elseif ($this->data['type'] == RSM_DNSSEC) {
 			if (isset($probe['value'])) {
-				$values = array();
+				$values = [];
 				$okResults = false;
 				$failResults = false;
 				$noResults = false;

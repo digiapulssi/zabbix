@@ -37,7 +37,7 @@ $fields = array(
 );
 check_fields($fields);
 
-$data['probes'] = array();
+$data['probes'] = [];
 $data['host'] = null;
 $data['time'] = null;
 $data['slvItemId'] = null;
@@ -247,7 +247,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		'preservekeys' => true
 	));
 
-	$hostIds = array();
+	$hostIds = [];
 	foreach ($hosts as $host) {
 		$hostIds[] = $host['hostid'];
 	}
@@ -285,7 +285,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 
 	// get manual data
-	$ignoredHostIds = array();
+	$ignoredHostIds = [];
 
 	foreach ($manualItemIds as $itemId) {
 		$itemValue = DBfetch(DBselect(DBaddLimit(
@@ -336,7 +336,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		'preservekeys' => true
 	));
 
-	$hostIds = array();
+	$hostIds = [];
 	foreach ($hosts as $host) {
 		$hostIds[] = $host['hostid'];
 	}
@@ -366,7 +366,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			$probeItemKey
 	);
 
-	$nsArray = array();
+	$nsArray = [];
 
 	// get items value
 	while ($item = DBfetch($items)) {

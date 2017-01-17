@@ -63,7 +63,7 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
-$data['tests'] = array();
+$data['tests'] = [];
 
 $macro = API::UserMacro()->get(array(
 	'globalmacro' => true,
@@ -232,7 +232,7 @@ if ($mainEvent) {
 					'macro' => array(RSM_TLD_RDDS43_ENABLED, RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED)
 				)));
 
-				$data['tld']['subservices'] = array();
+				$data['tld']['subservices'] = [];
 				foreach ($template_macros as $template_macro) {
 					$data['tld']['subservices'][$template_macro['macro']] = $template_macro['value'];
 				}
@@ -362,7 +362,7 @@ if ($mainEvent) {
 		);
 	}
 
-	$data['tests'] = array();
+	$data['tests'] = [];
 	while ($test = DBfetch($tests)) {
 		$data['tests'][] = array(
 			'clock' => $test['clock'],

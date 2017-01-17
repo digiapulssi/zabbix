@@ -138,7 +138,7 @@ if (isset($_REQUEST['mark_incident']) && (CWebUser::getType() == USER_TYPE_ZABBI
 }
 
 $host = getRequest('host');
-$data = array();
+$data = [];
 
 $macro = API::UserMacro()->get(array(
 	'globalmacro' => true,
@@ -246,14 +246,14 @@ if ($host || $data['filter_search']) {
 		));
 
 		if ($items) {
-			$dnsItems = array();
-			$dnssecItems = array();
-			$rddsItems = array();
-			$eppItems = array();
-			$dnsAvailItem = array();
-			$dnssecAvailItem = array();
-			$rddsAvailItem = array();
-			$eppAvailItem = array();
+			$dnsItems = [];
+			$dnssecItems = [];
+			$rddsItems = [];
+			$eppItems = [];
+			$dnsAvailItem = [];
+			$dnssecAvailItem = [];
+			$rddsAvailItem = [];
+			$eppAvailItem = [];
 
 			foreach ($items as $item) {
 				switch ($item['key_']) {
@@ -261,25 +261,25 @@ if ($host || $data['filter_search']) {
 						$data['dns']['itemid'] = $item['itemid'];
 						$data['dns']['slv'] = sprintf('%.3f', $item['lastvalue']);
 						$data['dns']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
-						$data['dns']['events'] = array();
+						$data['dns']['events'] = [];
 						break;
 					case RSM_SLV_DNSSEC_ROLLWEEK:
 						$data['dnssec']['itemid'] = $item['itemid'];
 						$data['dnssec']['slv'] = sprintf('%.3f', $item['lastvalue']);
 						$data['dnssec']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
-						$data['dnssec']['events'] = array();
+						$data['dnssec']['events'] = [];
 						break;
 					case RSM_SLV_RDDS_ROLLWEEK:
 						$data['rdds']['itemid'] = $item['itemid'];
 						$data['rdds']['slv'] = sprintf('%.3f', $item['lastvalue']);
 						$data['rdds']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
-						$data['rdds']['events'] = array();
+						$data['rdds']['events'] = [];
 						break;
 					case RSM_SLV_EPP_ROLLWEEK:
 						$data['epp']['itemid'] = $item['itemid'];
 						$data['epp']['slv'] = sprintf('%.3f', $item['lastvalue']);
 						$data['epp']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
-						$data['epp']['events'] = array();
+						$data['epp']['events'] = [];
 						break;
 					case RSM_SLV_DNS_AVAIL:
 						$data['dns']['availItemId'] = $item['itemid'];
@@ -320,10 +320,10 @@ if ($host || $data['filter_search']) {
 
 			$triggerIds = array_keys($triggers);
 
-			$dnsTriggers = array();
-			$dnssecTriggers = array();
-			$rddsTriggers = array();
-			$eppTriggers = array();
+			$dnsTriggers = [];
+			$dnssecTriggers = [];
+			$rddsTriggers = [];
+			$eppTriggers = [];
 			foreach ($triggers as $trigger) {
 				$triggerItem = reset($trigger['items']);
 
@@ -342,7 +342,7 @@ if ($host || $data['filter_search']) {
 			}
 
 			// select events, where time_from < filter_from and value TRIGGER_VALUE_TRUE
-			$newEventIds = array();
+			$newEventIds = [];
 			foreach ($triggerIds as $triggerId) {
 				$beginEvent = DBfetch(DBselect(
 					'SELECT e.eventid,e.value'.
@@ -384,8 +384,8 @@ if ($host || $data['filter_search']) {
 			CArrayHelper::sort($events, array('objectid', 'clock'));
 
 			$i = 0;
-			$incidents = array();
-			$lastEventValue = array();
+			$incidents = [];
+			$lastEventValue = [];
 
 			// data generation
 			foreach ($events as $event) {
@@ -789,7 +789,7 @@ if ($host || $data['filter_search']) {
 			$data['rdds']['inIncident'] = 0;
 			$data['epp']['inIncident'] = 0;
 
-			$availItems = array();
+			$availItems = [];
 			if ($dnsAvailItem) {
 				$availItems[] = $dnsAvailItem;
 			}
@@ -837,17 +837,17 @@ if ($host || $data['filter_search']) {
 			}
 
 			// input into rolling week calculation block
-			$services = array();
+			$services = [];
 
 			// get deleay items
-			$itemKeys = array();
+			$itemKeys = [];
 			if (isset($data['dns']['events']) || isset($data['dnssec']['events'])) {
 				array_push($itemKeys, CALCULATED_ITEM_DNS_DELAY, CALCULATED_DNS_ROLLWEEK_SLA);
 				if (isset($data['dns']['events'])) {
-					$services['dns'] = array();
+					$services['dns'] = [];
 				}
 				if (isset($data['dnssec']['events'])) {
-					$services['dnssec'] = array();
+					$services['dnssec'] = [];
 				}
 			}
 			if (isset($data['rdds']['events'])) {

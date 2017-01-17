@@ -26,6 +26,7 @@ $widget = (new CWidget())->setTitle(_('SLA report'));
 $filterForm = new CFilter('web.rsm.slareports.filter.state');
 
 $filterColumn = new CFormList();
+$filterColumn->addVar('filter_set', 1);
 $filterColumn->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
 	->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 	->setAttribute('autocomplete', 'off')
@@ -47,10 +48,19 @@ $filterColumn->addRow(_('Period'), [
 	new CComboBox('filter_year', $this->data['filter_year'], null, $years)
 ]);
 
-$filterForm->addColumn($filterColumn)
-	->addNavigator();
+$filterForm->addColumn($filterColumn);
 
 $widget->addItem($filterForm);
+
+if ($data['tld']) {
+	$infoBlock = (new CTable(null, 'filter info-block'))
+		->addRow([[
+		bold(_('Month')), ':', SPACE, date('F', mktime(0, 0, 0, $data['filter_month'], 1, $data['filter_year'])), BR(),
+		bold(_('Generation time')), ':', SPACE, date('dS F Y, H:i:s e', time()), BR(),
+		bold(_('TLD')), ':', SPACE, $data['tld']['name']
+	]]);
+	$widget->additem($infoBlock);
+}
 
 // create form
 $form = (new CForm())
@@ -65,7 +75,7 @@ $table = (new CTableInfo())
 		_('SLV'),
 		_('Monthly SLR'),
 		SPACE
-	]);
+]);
 
 
 foreach ($data['services'] as $name => $service) {
