@@ -141,28 +141,6 @@ out:
 	return ret;
 }
 
-/******************************************************************************
- *                                                                            *
- * Function: OCI_handle_commit_error                                          *
- *                                                                            *
- * Purpose:  determine if txn_error has to be set to 1 or not                 *
- *                                                                            *
- * Parameters: oci_error - [IN] the return code from failed Oracle operation  *
- *                                                                            *
- * Return value: ZBX_DB_DOWN - database connection is down                    *
- *               ZBX_DB_FAIL - otherwise                                      *
- *                                                                            *
- ******************************************************************************/
-static int	OCI_handle_commit_error(sword oci_error)
-{
-	int	ret;
-
-	if (ZBX_DB_FAIL == (ret = OCI_handle_sql_error(ERR_Z3005, oci_error, NULL)));
-		txn_error = 1;
-
-	return ret;
-}
-
 #endif	/* HAVE_ORACLE */
 
 #ifdef HAVE___VA_ARGS__
@@ -762,18 +740,21 @@ int	zbx_db_commit(void)
 	if (ZBX_DB_OK != rc)
 	{
 		zbx_ibm_db2_log_errors(SQL_HANDLE_DBC, ibm_db2.hdbc, ERR_Z3005, "<commit>");
-		if (ZBX_DB_FAIL == (rc = (SQL_CD_TRUE == IBM_DB2server_status() ? ZBX_DB_FAIL : ZBX_DB_DOWN)));
-			goto rollback;
+		rc = (SQL_CD_TRUE == IBM_DB2server_status() ? ZBX_DB_FAIL : ZBX_DB_DOWN);
 	}
-#elif defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL) || defined(HAVE_SQLITE3)
-	rc = zbx_db_execute("%s", "commit;");
 #elif defined(HAVE_ORACLE)
 	if (OCI_SUCCESS != (err = OCITransCommit(oracle.svchp, oracle.errhp, OCI_DEFAULT)))
-		rc = OCI_handle_commit_error(err);
+		rc = OCI_handle_sql_error(ERR_Z3005, err, NULL);
+#elif defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL) || defined(HAVE_SQLITE3)
+	rc = zbx_db_execute("%s", "commit;");
 #endif
 
-	if (1 == txn_error)
-		goto rollback;
+	if (ZBX_DB_FAIL == rc)
+	{
+rollback:
+		zabbix_log(LOG_LEVEL_DEBUG, "commit called on failed transaction, doing a rollback instead");
+		return zbx_db_rollback();
+	}
 
 #ifdef HAVE_SQLITE3
 	zbx_mutex_unlock(&sqlite_access);
@@ -783,10 +764,6 @@ int	zbx_db_commit(void)
 		txn_level--;
 
 	return rc;
-rollback:
-	zabbix_log(LOG_LEVEL_DEBUG, "commit called on failed transaction, doing a rollback instead");
-
-	return zbx_db_rollback();
 }
 
 /******************************************************************************
