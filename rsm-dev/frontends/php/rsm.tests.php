@@ -60,7 +60,7 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
-$data['tests'] = array();
+$data['tests'] = [];
 
 $macro = API::UserMacro()->get(array(
 	'globalmacro' => true,
@@ -196,10 +196,10 @@ if ($items) {
 	CArrayHelper::sort($events, array('objectid', 'clock'));
 
 	$i = 0;
-	$incidents = array();
+	$incidents = [];
 
 	// data generation
-	$incidentsData = array();
+	$incidentsData = [];
 
 	foreach ($events as $event) {
 		if ($event['value'] == TRIGGER_VALUE_TRUE) {

@@ -32,7 +32,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = array(
 	'export' =>			array(T_ZBX_INT, O_OPT,	P_ACT,	null,		null),
 	// filter
-	'filter_set' =>		array(T_ZBX_STR, O_OPT,	P_ACT,	null,		null),
+	'filter_set' =>		array(T_ZBX_STR, O_OPT,  null,	null,		null),
 	'filter_search' =>	array(T_ZBX_STR, O_OPT,  null,	null,		null),
 	'filter_year' =>	array(T_ZBX_INT, O_OPT,  null,	null,		null),
 	'filter_month' =>	array(T_ZBX_INT, O_OPT,  null,	null,		null),
@@ -55,9 +55,9 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
-$data = array();
-$data['tld'] = array();
-$data['services'] = array();
+$data = [];
+$data['tld'] = [];
+$data['services'] = [];
 
 $year = date('Y', time());
 $month = date('m', time());
@@ -97,6 +97,7 @@ if ($data['filter_search']) {
 			'name' => $data['filter_search']
 		)
 	));
+
 	$data['tld'] = reset($tld);
 
 	if ($data['tld']) {
@@ -168,7 +169,7 @@ if ($data['filter_search']) {
 		$items = zbx_toHash($items, 'key_');
 
 		if (count($item_keys) != count($items)) {
-			$missed_items = array();
+			$missed_items = [];
 			foreach ($item_keys as $item_key) {
 				if (!array_key_exists($item_key, $items)) {
 					$missed_items[] = $item_key;
@@ -191,7 +192,7 @@ if ($data['filter_search']) {
 		$macros = zbx_toHash($macros, 'macro');
 
 		if (count($macro_keys) != count($macros)) {
-			$missed_macro = array();
+			$missed_macro = [];
 			foreach ($macro_keys as $macro) {
 				if (!array_key_exists($macro, $macros)) {
 					$missed_macro[] = $macro;
@@ -288,7 +289,7 @@ if ($data['filter_search']) {
 					' AND h.clock<'.zbx_dbstr($end_time)
 			);
 
-			$item_values = array();
+			$item_values = [];
 			while ($item_hystory = DBfetch($item_hystories)) {
 				$item_values[] = array('clock' => $item_hystory['clock']);
 			}

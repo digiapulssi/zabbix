@@ -175,7 +175,7 @@ class CHostGroup extends CApiService {
 			$sqlParts['where']['hmh'] = 'g.groupid=mg.groupid';
 		}
 
-		$sub_sql_parts = array();
+		$sub_sql_parts = [];
 
 		// monitored_hosts, real_hosts, templated_hosts, with_hosts_and_templates
 		if ($options['monitored_hosts'] !== null) {

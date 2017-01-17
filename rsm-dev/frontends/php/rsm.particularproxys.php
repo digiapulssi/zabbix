@@ -38,7 +38,7 @@ $fields = array(
 );
 check_fields($fields);
 
-$data['proxys'] = array();
+$data['proxys'] = [];
 $data['host'] = null;
 $data['time'] = null;
 $data['slvItemId'] = null;
@@ -265,8 +265,8 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		'preservekeys' => true
 	));
 
-	$totalNs = array();
-	$negativeNs = array();
+	$totalNs = [];
+	$negativeNs = [];
 	foreach ($probeItems as $probeItem) {
 		preg_match('/^[^\[]+\[([^\]]+)]$/', $probeItem['key_'], $matches);
 		$nsValues = explode(',', $matches[1]);
