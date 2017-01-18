@@ -727,7 +727,7 @@ int	DBget_proxy_lastaccess(const char *hostname, int *lastaccess, char **error)
  ******************************************************************************/
 char	*DBdyn_escape_string(const char *src)
 {
-	return zbx_db_dyn_escape_string(src);
+	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, ZBX_MAX_UINT);
 }
 
 /******************************************************************************
@@ -737,7 +737,11 @@ char	*DBdyn_escape_string(const char *src)
  ******************************************************************************/
 char	*DBdyn_escape_string_len(const char *src, size_t max_src_len)
 {
-	return zbx_db_dyn_escape_string_len(src, max_src_len);
+#ifdef HAVE_IBM_DB2	/* IBM DB2 fields are limited by bytes rather than characters */
+	return zbx_db_dyn_escape_string(src, max_src_len, ZBX_MAX_UINT);
+#else
+	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, max_src_len);
+#endif
 }
 
 /******************************************************************************
@@ -2293,6 +2297,23 @@ void	zbx_db_insert_prepare(zbx_db_insert_t *self, const char *table, ...)
 	zbx_vector_ptr_destroy(&fields);
 }
 
+#ifdef HAVE_MYSQL
+static size_t	get_field_size(unsigned char type)
+{
+	switch(type)
+	{
+		case ZBX_TYPE_LONGTEXT:
+			return ZBX_MAX_UINT;
+		case ZBX_TYPE_CHAR:
+		case ZBX_TYPE_TEXT:
+		case ZBX_TYPE_SHORTTEXT:
+			return 65535u;
+		default:
+			return 0;
+	}
+}
+#endif
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_db_insert_add_values_dyn                                     *
@@ -2347,6 +2368,9 @@ void	zbx_db_insert_add_values_dyn(zbx_db_insert_t *self, const zbx_db_value_t **
 				row[i].str = NULL;
 				zbx_strncpy_alloc(&row[i].str, &str_alloc, &str_offset, value->str,
 						zbx_strlen_utf8_nchars(value->str, field->length));
+#elif HAVE_MYSQL
+				row[i].str = zbx_db_dyn_escape_string(value->str, get_field_size(field->type),
+						field->length);
 #else
 				row[i].str = DBdyn_escape_string_len(value->str, field->length);
 #endif
