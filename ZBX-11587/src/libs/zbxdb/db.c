@@ -760,7 +760,7 @@ rollback:
 	zbx_mutex_unlock(&sqlite_access);
 #endif
 
-	if (ZBX_DB_DOWN != rc)	/* ZBX_DB_FAIL or ZBX_DB_OK or number of changes */
+	if (ZBX_DB_DOWN != rc)	/* ZBX_DB_OK or number of changes */
 		txn_level--;
 
 	return rc;
