@@ -805,7 +805,14 @@ class CMacrosResolverGeneral {
 
 				$macro = $user_macro_parser->getMacro();
 				$context = $user_macro_parser->getContext();
-				$host_macros[$db_host_macro['hostid']][$macro] = ['value' => null, 'contexts' => []];
+
+				if (!array_key_exists($db_host_macro['hostid'], $host_macros)) {
+					$host_macros[$db_host_macro['hostid']] = [];
+				}
+
+				if (!array_key_exists($macro, $host_macros[$db_host_macro['hostid']])) {
+					$host_macros[$db_host_macro['hostid']][$macro] = ['value' => null, 'contexts' => []];
+				}
 
 				if ($context === null) {
 					$host_macros[$db_host_macro['hostid']][$macro]['value'] = $db_host_macro['value'];
