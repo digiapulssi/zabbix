@@ -47,7 +47,7 @@ sub check_api_error($) {
 sub get_proxies_list {
     my $proxies_list;
 
-    $proxies_list = $zabbix->get('proxy',{'output' => ['proxyid', 'host', 'status'], 'selectInterfaces' => ['ip'],
+    $proxies_list = $zabbix->get('proxy',{'output' => ['proxyid', 'host', 'status'], 'selectInterface' => ['ip'],
 					  'preservekeys' => 1 });
 
     return $proxies_list;
