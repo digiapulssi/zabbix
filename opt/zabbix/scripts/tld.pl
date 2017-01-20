@@ -368,8 +368,8 @@ foreach my $proxyid (sort keys %{$proxies}) {
                                           'host' => $probe_name.' - mon',
                                           'status' => $status,
                                           'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-                                                            'ip'=> $proxies->{$proxyid}->{'interfaces'}[0]->{'ip'},
-                                                            'dns' => '', 'port' => '10050'}]
+                                                            'ip'=> $proxies->{$proxyid}->{'interface'}->{'ip'},
+                                                            'dns' => 'tt', 'port' => '10050'}]
             		    });
 
     create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1);

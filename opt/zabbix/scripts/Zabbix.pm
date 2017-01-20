@@ -484,14 +484,19 @@ sub __send_request {
     my ($self, $class, $method, $params) = @_;
 
     my $req = $self->req;
+    
+    my $params = {
+                jsonrpc => "2.0",
+                method => "$class.$method",
+                params => $params,
+                id => $self->next_id,
+            };
+            
+    if ( $method ne 'version' ) {
+	$params->{'auth'} = $self->auth
+    }
 
-    $req->content(to_ascii(encode_json( {
-        jsonrpc => "2.0",
-        method => "$class.$method",
-        params => $params,
-        auth => $self->auth,
-        id => $self->next_id,
-    })));
+    $req->content(to_ascii(encode_json($params)));
 
     my $res;
     my $attempts = $REQUEST_ATTEMPTS;
