@@ -1467,6 +1467,9 @@ SERVER_LIBS="$SERVER_LIBS $LIBCURL_LIBS"
 PROXY_LDFLAGS="$PROXY_LDFLAGS $LIBCURL_LDFLAGS"
 PROXY_LIBS="$PROXY_LIBS $LIBCURL_LIBS"
 
+SERVER_LIBS="$SERVER_LIBS -lldns"
+PROXY_LIBS="$PROXY_LIBS -lldns"
+
 dnl Starting from 2.0 agent can do web monitoring
 AGENT_LDFLAGS="$AGENT_LDFLAGS $LIBCURL_LDFLAGS"
 AGENT_LIBS="$AGENT_LIBS $LIBCURL_LIBS"
@@ -1570,8 +1573,10 @@ AC_OUTPUT([
 	src/libs/zbxicmpping/Makefile
 	src/libs/zbxexec/Makefile
 	src/libs/zbxself/Makefile
+	src/libs/zbxrsm/Makefile
 	src/libs/zbxmodules/Makefile
 	src/libs/zbxregexp/Makefile
+	src/tests/Makefile
 	src/zabbix_agent/Makefile
 	src/zabbix_get/Makefile
 	src/zabbix_sender/Makefile
@@ -1598,6 +1603,7 @@ AC_OUTPUT([
 	src/zabbix_proxy/proxyconfig/Makefile
 	src/zabbix_proxy/datasender/Makefile
 	src/zabbix_java/Makefile
+	src/zabbix_rsm/Makefile
 	upgrades/Makefile
 	man/Makefile
 	])

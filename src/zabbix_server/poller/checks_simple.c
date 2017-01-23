@@ -19,6 +19,7 @@
 
 #include "checks_simple_vmware.h"
 #include "checks_simple.h"
+#include "checks_simple_rsm.h"
 #include "simple.h"
 #include "log.h"
 
@@ -143,6 +144,8 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 {
 	const char	*__function_name = "get_value_simple";
 
+	const char	*tmp;
+	size_t		tmp_len;
 	AGENT_REQUEST	request;
 	vmfunc_t	vmfunc;
 	int		ret = NOTSUPPORTED;
@@ -160,7 +163,58 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 
 	request.lastlogsize = item->lastlogsize;
 
-	if (0 == strcmp(request.key, "net.tcp.service") || 0 == strcmp(request.key, "net.udp.service"))
+	tmp = "rsm.";
+	tmp_len = strlen(tmp);
+
+	if (0 == strncmp(request.key, tmp, tmp_len))
+	{
+		const char	*kp = request.key + tmp_len;	/* move forward */
+
+		tmp = "dns.";
+		tmp_len = strlen(tmp);
+		if (0 == strncmp(kp, tmp, tmp_len))
+		{
+			kp += tmp_len;	/* move forward */
+
+			if (0 == strcmp(kp, "udp"))
+			{
+				if (SYSINFO_RET_OK == check_rsm_dns(item, &request, result, ZBX_RSM_UDP))
+				{
+					ret = SUCCEED;
+				}
+			}
+			else if (0 == strcmp(kp, "tcp"))
+			{
+				if (SYSINFO_RET_OK == check_rsm_dns(item, &request, result, ZBX_RSM_TCP))
+				{
+					ret = SUCCEED;
+				}
+			}
+		}
+		else if (0 == strcmp(kp, "rdds"))
+		{
+			if (SYSINFO_RET_OK == check_rsm_rdds(item, &request, result))
+				ret = SUCCEED;
+		}
+		else if (0 == strcmp(kp, "epp"))
+		{
+			if (SYSINFO_RET_OK == check_rsm_epp(item, &request, result))
+				ret = SUCCEED;
+		}
+		else if (0 == strcmp(kp, "probe.status"))
+		{
+			char	*mode;
+
+			mode = get_rparam(&request, 0);
+
+			if (0 == strcmp("automatic", mode) && SYSINFO_RET_OK == check_rsm_probe_status(item, &request,
+					result))
+			{
+				ret = SUCCEED;
+			}
+		}
+	}
+	else if (0 == strcmp(request.key, "net.tcp.service") || 0 == strcmp(request.key, "net.udp.service"))
 	{
 		if (SYSINFO_RET_OK == check_service(&request, item->interface.addr, result, 0))
 			ret = SUCCEED;
