@@ -1295,12 +1295,16 @@ static void	lld_items_make(const zbx_vector_ptr_t *item_prototypes, const zbx_ve
  *             item_prototypes - [IN] item prototypes                         *
  *             items           - [IN/OUT] items to save                       *
  *                                                                            *
+ * Return value: SUCCEED - if items was successfully saved or saving was not  *
+ *                         necessary                                          *
+ *               FAIL    - items cannot be saved                              *
+ *                                                                            *
  ******************************************************************************/
-static void	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prototypes, zbx_vector_ptr_t *items)
+static int	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prototypes, zbx_vector_ptr_t *items)
 {
 	const char			*__function_name = "lld_items_save";
 
-	int				index, i, new_items = 0, upd_items = 0;
+	int				ret = SUCCEED, index, i, new_items = 0, upd_items = 0;
 	zbx_lld_item_t			*item;
 	zbx_lld_item_prototype_t	*item_prototype;
 	zbx_uint64_t			itemid = 0, itemdiscoveryid = 0;
@@ -1332,7 +1336,7 @@ static void	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_pro
 	if (SUCCEED != DBlock_hostid(hostid))
 	{
 		/* the host was removed while processing lld rule */
-		DBrollback();
+		ret = FAIL;
 		goto out;
 	}
 
@@ -1699,6 +1703,8 @@ static void	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_pro
 	}
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+
+	return ret;
 }
 
 /******************************************************************************
@@ -2983,6 +2989,8 @@ static void	lld_applications_validate(zbx_uint64_t hostid, zbx_uint64_t lld_rule
 	zbx_vector_ptr_sort(applications, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+
+	return ret;
 }
 
 /******************************************************************************
@@ -3268,11 +3276,15 @@ void	lld_update_items(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, zbx_vector_p
 
 	DBbegin();
 
-	lld_items_save(hostid, &item_prototypes, &items);
-	lld_applications_save(hostid, &applications, &application_prototypes);
-	lld_items_applications_save(&items_applications, &items, &applications);
+	if (FAIL != lld_items_save(hostid, &item_prototypes, &items))
+	{
+		lld_applications_save(hostid, &applications, &application_prototypes);
+		lld_items_applications_save(&items_applications, &items, &applications);
 
-	DBcommit();
+		DBcommit();
+	}
+	else
+		DBrollback();
 
 	lld_item_links_populate(&item_prototypes, lld_rows, &items_index);
 	lld_remove_lost_items(&items, lifetime, lastcheck);
