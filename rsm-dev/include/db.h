@@ -642,4 +642,6 @@ zbx_host_availability_t;
 int	zbx_sql_add_host_availability(char **sql, size_t *sql_alloc, size_t *sql_offset,
 		const zbx_host_availability_t *ha);
 
+void	DBget_hostids_by_item(zbx_vector_uint64_t *hostids, const char *key);
+
 #endif

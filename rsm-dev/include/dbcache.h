@@ -491,4 +491,11 @@ typedef struct
 }
 zbx_hc_item_t;
 
+size_t	DCconfig_get_host_items_by_keypart(DC_ITEM **items, zbx_uint64_t hostid, zbx_item_type_t type,
+		const char *keypart, size_t keypart_size);
+void	DCset_probe_online_since(time_t t);
+void	DCset_probe_last_status(char status);
+time_t	DCget_probe_online_since(void);
+char	DCget_probe_last_status(void);
+
 #endif

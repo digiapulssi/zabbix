@@ -532,6 +532,9 @@ typedef struct
 	zbx_binary_heap_t	queues[ZBX_POLLER_TYPE_COUNT];
 	zbx_binary_heap_t	pqueue;
 	ZBX_DC_CONFIG_TABLE	*config;
+
+	time_t			probe_online_since;
+	char			probe_last_status;
 }
 ZBX_DC_CONFIG;
 
@@ -4520,6 +4523,9 @@ void	init_configuration_cache(void)
 	config->config = NULL;
 
 	config->availability_diff_ts = 0;
+
+	config->probe_last_status = 0;
+	config->probe_online_since = 0;
 
 #undef CREATE_HASHSET
 #undef CREATE_HASHSET_EXT
@@ -8702,4 +8708,121 @@ void	zbx_set_availability_diff_ts(int ts)
 {
 	/* this data can't be accessed simultaneously from multiple processes - locking is not necessary */
 	config->availability_diff_ts = ts;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DCconfig_get_host_items_by_keypart                               *
+ *                                                                            *
+ * Purpose: Get array of active items of specified host and type that match   *
+ *          the specified beginning key part (e. g. "rsm.dns.udp.ns.rtt"  *
+ *          will match keypart "rsm.dns.udp.").                           *
+ *                                                                            *
+ * Parameters: items        - [OUT] pointer to DC_ITEM structures             *
+ *             hostid       - [IN]  host ID of the items                      *
+ *             type         - [IN]  type of the items returned                *
+ *             keypart      - [IN]  first part of the key that matches every  *
+ *                                  item returned                             *
+ *             keypart_size - [IN]  size of keypart string                    *
+ *                                                                            *
+ * Return value: number of items returned                                     *
+ *                                                                            *
+ * Author: Vladimir Levijev                                                   *
+ *                                                                            *
+ * Comments: *items must be freed by caller if number of items returned is    *
+ *           non-zero.                                                        *
+ *                                                                            *
+ ******************************************************************************/
+size_t	DCconfig_get_host_items_by_keypart(DC_ITEM **items, zbx_uint64_t hostid, zbx_item_type_t type,
+		const char *keypart, size_t keypart_size)
+{
+	const char		*__function_name = "DCconfig_get_host_items_by_keypart";
+
+	size_t			items_num = 0, items_alloc = 16;
+	ZBX_DC_ITEM		*dc_item;
+	ZBX_DC_HOST		*dc_host;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() keypart:'%s'", __function_name, keypart);
+
+	LOCK_CACHE;
+
+	if (NULL == (dc_host = zbx_hashset_search(&config->hosts, &hostid)))
+		goto unlock;
+
+	zbx_hashset_iter_reset(&config->items, &iter);
+
+	while (NULL != (dc_item = zbx_hashset_iter_next(&iter)))
+	{
+		if (dc_item->hostid == hostid && 0 == strncmp(dc_item->key, keypart, keypart_size) &&
+				type == dc_item->type && ITEM_STATUS_ACTIVE == dc_item->status)
+		{
+			if (0 == items_num)
+			{
+				*items = zbx_malloc(*items, items_alloc * sizeof(DC_ITEM));
+			}
+			else if (items_num == items_alloc)
+			{
+				items_alloc += 16;
+				*items = zbx_realloc(*items, items_alloc * sizeof(DC_ITEM));
+			}
+
+			zabbix_log(LOG_LEVEL_DEBUG, "%s() '%s'", __function_name, dc_item->key);
+
+			DCget_host(&(*items)[items_num].host, dc_host);
+			DCget_item(&(*items)[items_num], dc_item);
+
+			items_num++;
+		}
+	}
+unlock:
+	UNLOCK_CACHE;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() items_num:" ZBX_FS_SIZE_T, __function_name, (zbx_fs_size_t)items_num);
+
+	return items_num;
+}
+
+void	DCset_probe_online_since(time_t t)
+{
+	LOCK_CACHE;
+
+	config->probe_online_since = t;
+
+	UNLOCK_CACHE;
+}
+
+void	DCset_probe_last_status(char status)
+{
+	LOCK_CACHE;
+
+	config->probe_last_status = status;
+
+	UNLOCK_CACHE;
+}
+
+time_t	DCget_probe_online_since(void)
+{
+	time_t	t;
+
+	LOCK_CACHE;
+
+	t = config->probe_online_since;
+
+	UNLOCK_CACHE;
+
+	return t;
+}
+
+char	DCget_probe_last_status(void)
+{
+	char	status;
+
+	LOCK_CACHE;
+
+	status = config->probe_last_status;
+
+	UNLOCK_CACHE;
+
+	return status;
 }

@@ -5130,3 +5130,24 @@ void	DBset_host_inventory(zbx_uint64_t hostid, int inventory_mode)
 
 	DBfree_result(result);
 }
+
+void	DBget_hostids_by_item(zbx_vector_uint64_t *hostids, const char *key)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	zbx_uint64_t	hostid;
+
+	result = DBselect(
+			"select distinct h.hostid"
+			" from items i,hosts h"
+			" where i.hostid=h.hostid"
+				" and key_='%s'",
+			key);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(hostid, row[0]);
+		zbx_vector_uint64_append(hostids, hostid);
+	}
+	DBfree_result(result);
+}

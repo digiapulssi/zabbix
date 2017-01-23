@@ -63,6 +63,7 @@ const char	syslog_app_name[] = "zabbix_proxy";
 const char	*usage_message[] = {
 	"[-c config-file]", NULL,
 	"[-c config-file]", "-R runtime-option", NULL,
+	"-r", NULL,
 	"-h", NULL,
 	"-V", NULL,
 	NULL	/* end of text */
@@ -91,6 +92,7 @@ const char	*help_message[] = {
 	"        process-type             All processes of specified type (e.g., poller)",
 	"        process-type,N           Process type and number (e.g., poller,3)",
 	"",
+	"  -r --rsm                       Enable Registry SLA Monitoring (RSM) support",
 	"  -h --help                      Display this help message",
 	"  -V --version                   Display version number",
 	NULL	/* end of text */
@@ -104,13 +106,14 @@ static struct zbx_option	longopts[] =
 	{"config",		1,	NULL,	'c'},
 	{"foreground",		0,	NULL,	'f'},
 	{"runtime-control",	1,	NULL,	'R'},
+	{"rsm",			0,	NULL,	'r'},
 	{"help",		0,	NULL,	'h'},
 	{"version",		0,	NULL,	'V'},
 	{NULL}
 };
 
 /* short options */
-static char	shortopts[] = "c:hVR:f";
+static char	shortopts[] = "c:rhVR:f";
 
 /* end of COMMAND LINE OPTIONS */
 
@@ -238,6 +241,9 @@ char	*CONFIG_TLS_CERT_FILE		= NULL;
 char	*CONFIG_TLS_KEY_FILE		= NULL;
 char	*CONFIG_TLS_PSK_IDENTITY	= NULL;
 char	*CONFIG_TLS_PSK_FILE		= NULL;
+
+/* a passphrase for EPP data encryption used in proxy poller */
+char	epp_passphrase[128]		= "";
 
 int	get_process_info_by_thread(int local_server_num, unsigned char *local_process_type, int *local_process_num);
 
@@ -746,6 +752,14 @@ int	main(int argc, char **argv)
 
 				t.task = ZBX_TASK_RUNTIME_CONTROL;
 				break;
+			case 'r':
+				if (SUCCEED != zbx_read_stdin("Enter a passphrase for EPP data encryption: ",
+						epp_passphrase, sizeof(epp_passphrase), NULL, 0))
+				{
+					printf("an error occured while requesting EPP passphrase\n");
+					exit(EXIT_FAILURE);
+				}
+				break;
 			case 'h':
 				help();
 				exit(EXIT_SUCCESS);
@@ -957,6 +971,12 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 		thread_args.server_num = i + 1;
 		thread_args.args = NULL;
 
+		if ('\0' != *epp_passphrase && ZBX_PROCESS_TYPE_POLLER != thread_args.process_type)
+		{
+			/* only poller needs EPP passphrase */
+			memset(epp_passphrase, 0, strlen(epp_passphrase));
+		}
+
 		switch (thread_args.process_type)
 		{
 			case ZBX_PROCESS_TYPE_CONFSYNCER:
@@ -1018,6 +1038,10 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 				break;
 		}
 	}
+
+	/* does not need EPP passphrase */
+	if ('\0' != *epp_passphrase)
+		memset(epp_passphrase, 0, strlen(epp_passphrase));
 
 	while (-1 == wait(&i))	/* wait for any child to exit */
 	{
