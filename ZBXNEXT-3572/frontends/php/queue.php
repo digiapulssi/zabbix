@@ -293,19 +293,21 @@ else {
 	$total = null;
 }
 
+if ($total !== null) {
+	$total = (new CDiv())
+		->addClass(ZBX_STYLE_TABLE_PAGING)
+		->addItem((new CDiv())
+			->addClass(ZBX_STYLE_PAGING_BTN_CONTAINER)
+			->addItem((new CDiv())
+				->addClass(ZBX_STYLE_TABLE_STATS)
+				->addItem($total)
+			)
+		);
+}
+
 $widget
 	->addItem($table)
-	->addItem((new CDiv())
-			->addClass(ZBX_STYLE_TABLE_PAGING)
-			->addItem((new CDiv())
-				->addClass(ZBX_STYLE_PAGING_BTN_CONTAINER)
-				->addItem(new CDiv())
-					->addItem((new CDiv())
-					->addClass(ZBX_STYLE_TABLE_STATS)
-					->addItem($total)
-				)
-			))
+	->addItem($total)
 	->show();
-
 
 require_once dirname(__FILE__).'/include/page_footer.php';
