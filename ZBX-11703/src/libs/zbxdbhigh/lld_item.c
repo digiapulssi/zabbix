@@ -2989,8 +2989,6 @@ static void	lld_applications_validate(zbx_uint64_t hostid, zbx_uint64_t lld_rule
 	zbx_vector_ptr_sort(applications, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
-
-	return ret;
 }
 
 /******************************************************************************
