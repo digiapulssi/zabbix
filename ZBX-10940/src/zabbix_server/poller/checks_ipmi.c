@@ -1275,8 +1275,8 @@ out:
 	zbx_free(addrs[0]);
 	zbx_free(ports[0]);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%p domain_nr:%u", __function_name, h, h->domain_nr);
-
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%p domain_nr:%u h->domain_up:%d h->ret:%d", __function_name, h,
+			h->domain_nr, h->domain_up, h->ret);
 	return h;
 }
 
@@ -1426,8 +1426,7 @@ int	get_value_ipmi(DC_ITEM *item, AGENT_RESULT *value)
 		return h->ret;
 	}
 
-	s = zbx_get_ipmi_sensor_by_id(h, item->ipmi_sensor);
-	if (NULL == s)
+	if (NULL == (s = zbx_get_ipmi_sensor_by_id(h, item->ipmi_sensor)))
 		c = zbx_get_ipmi_control_by_name(h, item->ipmi_sensor);
 
 	if (NULL == s && NULL == c)
@@ -1442,7 +1441,7 @@ int	get_value_ipmi(DC_ITEM *item, AGENT_RESULT *value)
 	else
 		zbx_read_ipmi_control(h, c);
 
-	if (h->ret != SUCCEED)
+	if (SUCCEED != h->ret)
 	{
 		if (NULL != h->err)
 		{
@@ -1458,6 +1457,7 @@ int	get_value_ipmi(DC_ITEM *item, AGENT_RESULT *value)
 		else
 			SET_UI64_RESULT(value, s->value.discrete);
 	}
+
 	if (NULL != c)
 		SET_DBL_RESULT(value, c->val[0]);
 
