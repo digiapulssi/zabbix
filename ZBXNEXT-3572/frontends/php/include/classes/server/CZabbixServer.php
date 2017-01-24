@@ -152,14 +152,14 @@ class CZabbixServer {
 	 *
 	 * @return bool|array
 	 */
-	public function getQueue($type, $sid, $limit = NULL) {
+	public function getQueue($type, $sid, $limit = 0) {
 		$request = [
 			'request' => 'queue.get',
 			'sid' => $sid,
 			'type' => $type
 		];
 
-		if ($type == self::QUEUE_DETAILS && isset($limit)) {
+		if ($type == self::QUEUE_DETAILS) {
 			$request['limit'] = $limit;
 		}
 
@@ -187,7 +187,7 @@ class CZabbixServer {
 	/**
 	 * Returns the total result count.
 	 *
-	 * @return int
+	 * @return int|null
 	 */
 	public function getTotalCount() {
 		return $this->total;
@@ -270,7 +270,7 @@ class CZabbixServer {
 		// request executed successfully
 		if ($response['response'] == self::RESPONSE_SUCCESS) {
 			// saves total count
-			$this->total = (isset($response['total'])) ? $response['total'] : null;
+			$this->total = array_key_exists('total', $response) ? $response['total'] : null;
 
 			return $response['data'];
 		}
