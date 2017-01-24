@@ -1207,6 +1207,7 @@ static zbx_ipmi_host_t	*zbx_init_ipmi_host(const char *ip, int port, int authtyp
 {
 	const char		*__function_name = "zbx_init_ipmi_host";
 	zbx_ipmi_host_t		*h;
+	ipmi_domain_id_t	domain;
 	ipmi_open_option_t	options[4];
 	char			*addrs[1] = {NULL}, *ports[1] = {NULL}, domain_name[11];	/* max int length */
 	int			ret;
@@ -1262,7 +1263,7 @@ static zbx_ipmi_host_t	*zbx_init_ipmi_host(const char *ip, int port, int authtyp
 	zbx_snprintf(domain_name, sizeof(domain_name), "%u", h->domain_nr);
 
 	if (0 != (ret = ipmi_open_domain(domain_name, &h->con, 1, zbx_connection_change_cb, h, zbx_domain_up_cb, h,
-			options, ARRSIZE(options), NULL)))
+			options, ARRSIZE(options), &domain)))
 	{
 		h->err = zbx_dsprintf(h->err, "Cannot connect to IPMI host [%s]:%d. ipmi_open_domain() failed: %s",
 				h->ip, h->port, zbx_strerror(ret));
@@ -1275,8 +1276,8 @@ out:
 	zbx_free(addrs[0]);
 	zbx_free(ports[0]);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%p domain_nr:%u h->domain_up:%d h->ret:%d", __function_name, h,
-			h->domain_nr, h->domain_up, h->ret);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%p domain:%p domain_nr:%u h->domain_up:%d h->ret:%d", __function_name, h,
+			domain.domain, h->domain_nr, h->domain_up, h->ret);
 	return h;
 }
 
