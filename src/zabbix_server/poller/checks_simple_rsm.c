@@ -1194,7 +1194,6 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 
 		item = &items[i];
 		ns_found = ip_found = 0;
-		*ns = *ip = '\0';
 
 		if (SUCCEED != parse_item_key(item->key, &request))
 		{
