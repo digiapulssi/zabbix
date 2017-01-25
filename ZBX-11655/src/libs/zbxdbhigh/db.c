@@ -943,7 +943,6 @@ const ZBX_FIELD *DBget_field(const ZBX_TABLE *table, const char *fieldname)
 {
 	int	f;
 
-
 	for (f = 0; NULL != table->fields[f].name; f++)
 	{
 		if (0 == strcmp(table->fields[f].name, fieldname))
