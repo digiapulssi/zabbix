@@ -864,6 +864,23 @@ int	DBget_proxy_lastaccess(const char *hostname, int *lastaccess, char **error)
 	return ret;
 }
 
+#ifdef HAVE_MYSQL
+static size_t	get_field_size(unsigned char type)
+{
+	switch(type)
+	{
+		case ZBX_TYPE_LONGTEXT:
+			return ZBX_MAX_UINT;
+		case ZBX_TYPE_CHAR:
+		case ZBX_TYPE_TEXT:
+		case ZBX_TYPE_SHORTTEXT:
+			return 65535u;
+		default:
+			return 0;
+	}
+}
+#endif
+
 /******************************************************************************
  *                                                                            *
  * Function: DBdyn_escape_string                                              *
@@ -886,6 +903,31 @@ char	*DBdyn_escape_string_len(const char *src, size_t max_src_len)
 #else
 	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, max_src_len);
 #endif
+}
+
+static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src)
+{
+#ifdef HAVE_MYSQL
+	return zbx_db_dyn_escape_string(src, get_field_size(field->type), field->length);
+#elif HAVE_IBM_DB2	/* IBM DB2 fields are limited by bytes rather than characters */
+	return zbx_db_dyn_escape_string(src, field->length, ZBX_MAX_UINT);
+#else
+	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, field->length);
+#endif
+}
+
+char	*DBdyn_escape_field(const char *tablename, const char *fieldname, const char *src)
+{
+	const ZBX_TABLE	*table;
+	const ZBX_FIELD	*field;
+
+	if (NULL == (table = DBget_table(tablename)) || NULL == (field = DBget_field(table, fieldname)))
+	{
+		THIS_SHOULD_NEVER_HAPPEN;
+		exit(EXIT_FAILURE);
+	}
+
+	return DBdyn_escape_field_len(field, src);
 }
 
 /******************************************************************************
@@ -1755,18 +1797,19 @@ void	DBregister_host_clean(zbx_vector_ptr_t *autoreg_hosts)
 void	DBproxy_register_host(const char *host, const char *ip, const char *dns, unsigned short port,
 		const char *host_metadata)
 {
-	char	*host_esc, *ip_esc, *dns_esc, *host_metadata_esc;
+	char		*host_esc, *ip_esc, *dns_esc, *host_metadata_esc;
+	const char	*tablename = "proxy_autoreg_host";
 
-	host_esc = DBdyn_escape_string_len(host, HOST_HOST_LEN);
-	ip_esc = DBdyn_escape_string_len(ip, INTERFACE_IP_LEN);
-	dns_esc = DBdyn_escape_string_len(dns, INTERFACE_DNS_LEN);
-	host_metadata_esc = DBdyn_escape_string(host_metadata);
+	host_esc = DBdyn_escape_field(tablename, "host", host);
+	ip_esc = DBdyn_escape_field(tablename, "listen_ip", ip);
+	dns_esc = DBdyn_escape_field(tablename, "listen_dns", dns);
+	host_metadata_esc = DBdyn_escape_field(tablename, "host_metadata", host_metadata);
 
-	DBexecute("insert into proxy_autoreg_host"
+	DBexecute("insert into %s"
 			" (clock,host,listen_ip,listen_dns,listen_port,host_metadata)"
 			" values"
 			" (%d,'%s','%s','%s',%d,'%s')",
-			(int)time(NULL), host_esc, ip_esc, dns_esc, (int)port, host_metadata_esc);
+			tablename, (int)time(NULL), host_esc, ip_esc, dns_esc, (int)port, host_metadata_esc);
 
 	zbx_free(host_metadata_esc);
 	zbx_free(dns_esc);
@@ -2465,22 +2508,7 @@ void	zbx_db_insert_prepare(zbx_db_insert_t *self, const char *table, ...)
 	zbx_vector_ptr_destroy(&fields);
 }
 
-#ifdef HAVE_MYSQL
-static size_t	get_field_size(unsigned char type)
-{
-	switch(type)
-	{
-		case ZBX_TYPE_LONGTEXT:
-			return ZBX_MAX_UINT;
-		case ZBX_TYPE_CHAR:
-		case ZBX_TYPE_TEXT:
-		case ZBX_TYPE_SHORTTEXT:
-			return 65535u;
-		default:
-			return 0;
-	}
-}
-#endif
+
 
 /******************************************************************************
  *                                                                            *
@@ -2536,11 +2564,8 @@ void	zbx_db_insert_add_values_dyn(zbx_db_insert_t *self, const zbx_db_value_t **
 				row[i].str = NULL;
 				zbx_strncpy_alloc(&row[i].str, &str_alloc, &str_offset, value->str,
 						zbx_strlen_utf8_nchars(value->str, field->length));
-#elif HAVE_MYSQL
-				row[i].str = zbx_db_dyn_escape_string(value->str, get_field_size(field->type),
-						field->length);
 #else
-				row[i].str = DBdyn_escape_string_len(value->str, field->length);
+				row[i].str = DBdyn_escape_field_len(field, value->str);
 #endif
 				break;
 			default:
