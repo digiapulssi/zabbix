@@ -876,7 +876,8 @@ static size_t	get_field_size(unsigned char type)
 		case ZBX_TYPE_SHORTTEXT:
 			return 65535u;
 		default:
-			return 0;
+			THIS_SHOULD_NEVER_HAPPEN;
+			exit(EXIT_FAILURE);
 	}
 }
 #endif
