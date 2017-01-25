@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2016 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,160 +15,57 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
-** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
 
-$rsmWidget = new CWidget(null, 'rolling-week-status');
+require_once dirname(__FILE__).'/js/rsm.rollingweekstatus.list.js.php';
 
-$rsmWidget->addPageHeader(_('TLD Rolling week status'));
+$widget = (new CWidget())->setTitle(_('TLD Rolling week status'));
 
-// header
-$rsmWidget->addHeader(_('TLD Rolling week status'));
-$rsmWidget->addHeaderRowNumber();
-
-$filterTable = new CTable('', 'filter');
-
-$filterTld = new CTextBox('filter_search',
-	isset($this->data['filter_search']) ? $this->data['filter_search'] : null
-);
-$filterTld->setAttribute('autocomplete', 'off');
-
-$filterStatus = new CComboBox('filter_status',
-	isset($this->data['filter_status']) ? $this->data['filter_status'] : null
-);
-$filterStatus->addItem(0, _('all'));
-$filterStatus->addItem(1, _('fail'));
-$filterStatus->addItem(2, _('disabled'));
-
-$filterValue = new CComboBox('filter_slv', isset($this->data['filter_slv']) ? $this->data['filter_slv'] : null);
+// filter
+$filter_value = new CComboBox('filter_slv', isset($this->data['filter_slv']) ? $this->data['filter_slv'] : null);
 $slvs = explode(',', $this->data['slv']);
-$filterValue->addItem('', _('any'));
-$filterValue->addItem(SLA_MONITORING_SLV_FILTER_NON_ZERO, _('non-zero'));
+$filter_value->addItem('', _('any'));
+$filter_value->addItem(SLA_MONITORING_SLV_FILTER_NON_ZERO, _('non-zero'));
 
 foreach ($slvs as $slv) {
-	$filterValue->addItem($slv, $slv.'%');
+	$filter_value->addItem($slv, $slv.'%');
 }
 
-$filterTable->addRow(array(
-	array(array(bold(_('TLD')), ':'.SPACE), $filterTld),
-	array(array(
-		array(
-			new CCheckBox('filter_dns', isset($this->data['filter_dns']) ? $this->data['filter_dns'] : null, null, 1),
-			SPACE,
-			bold(_('DNS')),
-		),
-		new CSpan(array(new CCheckBox('filter_dnssec',
-			isset($this->data['filter_dnssec']) ? $this->data['filter_dnssec'] : null, null, 1),
-			SPACE,
-			bold(_('DNSSEC'))
-		), 'checkbox-block'),
-		new CSpan(array(new CCheckBox('filter_rdds',
-			isset($this->data['filter_rdds']) ? $this->data['filter_rdds'] : null, null, 1),
-			SPACE,
-			bold(_('RDDS'))
-		), 'checkbox-block'),
-		new CSpan(array(new CCheckBox('filter_epp',
-			isset($this->data['filter_epp']) ? $this->data['filter_epp'] : null, null, 1),
-			SPACE,
-			bold(_('EPP'))
-		), 'checkbox-block'),
-		new CButton('checkAllServices', _('All/Any'), null, 'link_menu checkbox-block'),
-		new CSpan(array(SPACE, bold(_('Exceeding or equal to')), ':'.SPACE, $filterValue), 'select-block'),
-	)),
-	array(array(bold(_('Current status')), ':'.SPACE), $filterStatus)
-));
+$filter = (new CFilter('web.rsm.rollingweekstatus.filter.state'))
+	->addColumn((new CFormList())
+		->addVar('filter_set', 1)
+		->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
+	))
+	->addColumn((new CFormList())->addRow(_('Exceeding or equal to'), $filter_value))
+	->addColumn((new CFormList())->addRow(_('Current status'),
+		(new CComboBox('filter_status',
+			array_key_exists('filter_status', $this->data) ? $this->data['filter_status'] : null)
+		)
+			->addItem(0, _('all'))
+			->addItem(1, _('fail'))
+			->addItem(2, _('disabled'))
+	));
 
-// set disabled for no permission elements
-// ccTLD's group
-$filterCctldGroup = new CCheckBox('filter_cctld_group',
-	isset($this->data['filter_cctld_group']) ? $this->data['filter_cctld_group'] : null, null, 1
-);
-if (!$this->data['allowedGroups'][RSM_CC_TLD_GROUP]) {
-	$filterCctldGroup->setAttribute('disabled', true);
-}
+$widget->addItem($filter);
 
-// gTLD's group
-$filterGtldGroup = new CCheckBox('filter_gtld_group',
-	isset($this->data['filter_gtld_group']) ? $this->data['filter_gtld_group'] : null, null, 1
-);
-if (!$this->data['allowedGroups'][RSM_G_TLD_GROUP]) {
-	$filterGtldGroup->setAttribute('disabled', true);
-}
+// create form
+$form = (new CForm())
+	->setName('rollingweek');
 
-// other TLD's group
-$filterOtherGroup = new CCheckBox('filter_othertld_group',
-	isset($this->data['filter_othertld_group']) ? $this->data['filter_othertld_group'] : null, null, 1
-);
-if (!$this->data['allowedGroups'][RSM_OTHER_TLD_GROUP]) {
-	$filterOtherGroup->setAttribute('disabled', true);
-}
+$table = (new CTableInfo())
+	->setHeader([
+		_('TLD'),
+		_('Type'),
+		_('DNS (4Hrs)'),
+		_('DNSSEC (4Hrs)'),
+		_('RDDS (24Hrs)'),
+		_('EPP (24Hrs)')
+]);
 
-// test TLD's group
-$filterTestGroup = new CCheckBox('filter_test_group',
-	isset($this->data['filter_test_group']) ? $this->data['filter_test_group'] : null, null, 1
-);
-if (!$this->data['allowedGroups'][RSM_TEST_GROUP]) {
-	$filterTestGroup->setAttribute('disabled', true);
-}
-
-$filterTable->addRow(array(
-	'',
-	array(array(
-		array(
-			$filterCctldGroup,
-			SPACE,
-			bold(_(RSM_CC_TLD_GROUP)),
-		),
-		new CSpan(array(
-			$filterGtldGroup,
-			SPACE,
-			bold(_(RSM_G_TLD_GROUP))
-		), 'checkbox-block'),
-		new CSpan(array(
-			$filterOtherGroup,
-			SPACE,
-			bold(_(RSM_OTHER_TLD_GROUP))
-		), 'checkbox-block'),
-		new CSpan(array(
-			$filterTestGroup,
-			SPACE,
-			bold(_(RSM_TEST_GROUP))
-		), 'checkbox-block'),
-		new CButton('checkAllGroups', _('All/Any'), null, 'link_menu checkbox-block')
-	)),
-	''
-));
-
-$filter = new CButton('filter', _('Filter'), "submit();");
-$filter->useJQueryStyle('main');
-
-$reset = new CButton('reset', _('Reset'), "javascript: clearAllForm('zbx_filter');");
-$reset->useJQueryStyle();
-
-$divButtons = new CDiv(array($filter, SPACE, $reset));
-$divButtons->setAttribute('style', 'padding: 4px 0px;');
-
-$filterTable->addRow(new CCol($divButtons, 'center', 3));
-
-$filterForm = new CForm('get');
-$filterForm->setAttribute('name', 'zbx_filter');
-$filterForm->setAttribute('id', 'zbx_filter');
-$filterForm->addItem($filterTable);
-$filterForm->addVar('checkAllServicesValue', 0);
-$filterForm->addVar('checkAllGroupsValue', 0);
-$filterForm->addVar('filter_set', 1);
-$rsmWidget->addFlicker($filterForm, CProfile::get('web.rsm.rollingweekstatus.filter.state', 0));
-
-$table = new CTableInfo(_('No TLD\'s found.'));
-$table->setHeader(array(
-	make_sorting_header(_('TLD'), 'name'),
-	make_sorting_header(_('Type'), 'type'),
-	make_sorting_header(_('DNS (4Hrs)') , 'dns'),
-	make_sorting_header(_('DNSSEC (4Hrs)'), 'dnssec'),
-	make_sorting_header(_('RDDS (24Hrs)'), 'rdds'),
-	make_sorting_header(_('EPP (24Hrs)'), 'epp')
-));
 
 if (isset($this->data['tld'])) {
 	$serverTime = time() - RSM_ROLLWEEK_SHIFT_BACK;
@@ -370,9 +267,10 @@ if (isset($this->data['tld'])) {
 	}
 }
 
-$table = array($this->data['paging'], $table, $this->data['paging']);
-$rsmWidget->addItem($table);
+$form->addItem([
+	$table
+]);
+// append form to widget
+$widget->addItem($form);
 
-require_once dirname(__FILE__).'/js/rsm.rollingweekstatus.list.js.php';
-
-return $rsmWidget;
+return $widget;
