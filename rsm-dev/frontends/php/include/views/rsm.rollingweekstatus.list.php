@@ -24,6 +24,14 @@ require_once dirname(__FILE__).'/js/rsm.rollingweekstatus.list.js.php';
 $widget = (new CWidget())->setTitle(_('TLD Rolling week status'));
 
 // filter
+$filter = (new CFilter('web.rsm.rollingweekstatus.filter.state'))
+	->addVar('filter_set', 1)
+	->addVar('checkAllServicesValue', 0)
+	->addVar('checkAllGroupsValue', 0);
+$filterColumn1 = new CFormList();
+$filterColumn2 = new CFormList();
+$filterColumn3 = new CFormList();
+
 $filter_value = new CComboBox('filter_slv', isset($this->data['filter_slv']) ? $this->data['filter_slv'] : null);
 $slvs = explode(',', $this->data['slv']);
 $filter_value->addItem('', _('any'));
@@ -33,22 +41,107 @@ foreach ($slvs as $slv) {
 	$filter_value->addItem($slv, $slv.'%');
 }
 
-$filter = (new CFilter('web.rsm.rollingweekstatus.filter.state'))
-	->addColumn((new CFormList())
-		->addVar('filter_set', 1)
-		->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
-			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-			->setAttribute('autocomplete', 'off')
-	))
-	->addColumn((new CFormList())->addRow(_('Exceeding or equal to'), $filter_value))
-	->addColumn((new CFormList())->addRow(_('Current status'),
+// set disabled for no permission elements
+// ccTLD's group
+$filterCctldGroup = (new CCheckBox('filter_cctld_group'))->setChecked($this->data['filter_cctld_group']);
+if (!$this->data['allowedGroups'][RSM_CC_TLD_GROUP]) {
+	$filterCctldGroup->setAttribute('disabled', true);
+}
+
+// gTLD's group
+$filterGtldGroup = (new CCheckBox('filter_gtld_group'))->setChecked($this->data['filter_gtld_group']);
+if (!$this->data['allowedGroups'][RSM_G_TLD_GROUP]) {
+	$filterGtldGroup->setAttribute('disabled', true);
+}
+
+// other TLD's group
+$filterOtherGroup = (new CCheckBox('filter_othertld_group'))->setChecked($this->data['filter_othertld_group']);
+if (!$this->data['allowedGroups'][RSM_OTHER_TLD_GROUP]) {
+	$filterOtherGroup->setAttribute('disabled', true);
+}
+
+// test TLD's group
+$filterTestGroup = (new CCheckBox('filter_test_group'))->setChecked($this->data['filter_test_group']);
+if (!$this->data['allowedGroups'][RSM_TEST_GROUP]) {
+	$filterTestGroup->setAttribute('disabled', true);
+}
+
+$filterColumn1
+	->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+		->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+		->setAttribute('autocomplete', 'off')
+	)
+	->addRow(_('Services'), [
+		[
+			(new CCheckBox('filter_dns'))->setChecked($this->data['filter_dns']),
+			SPACE,
+			_('DNS'),
+		],
+		SPACE,
+		new CSpan([
+			(new CCheckBox('filter_dnssec'))->setChecked($this->data['filter_dnssec']),
+			SPACE,
+			_('DNSSEC')
+		], 'checkbox-block'),
+		SPACE,
+		new CSpan([
+			(new CCheckBox('filter_rdds'))->setChecked($this->data['filter_rdds']),
+			SPACE,
+			_('RDDS')
+		], 'checkbox-block'),
+		SPACE,
+		new CSpan([
+			(new CCheckBox('filter_epp'))->setChecked($this->data['filter_epp']),
+			SPACE,
+			_('EPP')
+		], 'checkbox-block'),
+		SPACE,
+		(new CButton('checkAllServices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
+	]);
+$filterColumn2
+	->addRow(_('TLD types'), [
+		[
+			$filterCctldGroup,
+			SPACE,
+			_(RSM_CC_TLD_GROUP),
+		],
+		SPACE,
+		new CSpan([
+			$filterGtldGroup,
+			SPACE,
+			_(RSM_G_TLD_GROUP)
+		], 'checkbox-block'),
+		SPACE,
+		new CSpan([
+			$filterOtherGroup,
+			SPACE,
+			_(RSM_OTHER_TLD_GROUP)
+		], 'checkbox-block'),
+		SPACE,
+		new CSpan([
+			$filterTestGroup,
+			SPACE,
+			_(RSM_TEST_GROUP)
+		], 'checkbox-block'),
+		SPACE,
+		(new CButton('checkAllGroups', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
+	])
+	->addRow(_('Exceeding or equal to'), $filter_value);
+$filterColumn3
+	->addRow(_('Current status'),
 		(new CComboBox('filter_status',
 			array_key_exists('filter_status', $this->data) ? $this->data['filter_status'] : null)
 		)
 			->addItem(0, _('all'))
 			->addItem(1, _('fail'))
 			->addItem(2, _('disabled'))
-	));
+	)
+	->addRow(SPACE);
+
+$filter
+	->addColumn($filterColumn1)
+	->addColumn($filterColumn2)
+	->addColumn($filterColumn3);
 
 $widget->addItem($filter);
 
