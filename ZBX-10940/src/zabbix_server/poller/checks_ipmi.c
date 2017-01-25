@@ -1242,15 +1242,6 @@ static zbx_ipmi_host_t	*zbx_init_ipmi_host(const char *ip, int port, int authtyp
 		goto out;
 	}
 
-	if (0 != (ret = h->con->start_con(h->con)))
-	{
-		h->err = zbx_dsprintf(h->err, "Cannot connect to IPMI host [%s]:%d."
-				" start_con() returned error 0x%x",
-				h->ip, h->port, ret);
-		h->ret = NETWORK_ERROR;
-		goto out;
-	}
-
 	options[0].option = IPMI_OPEN_OPTION_ALL;
 	options[0].ival = 0;
 	options[1].option = IPMI_OPEN_OPTION_SDRS;		/* scan SDRs */
@@ -1276,8 +1267,8 @@ out:
 	zbx_free(addrs[0]);
 	zbx_free(ports[0]);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%p domain:%p domain_nr:%u h->domain_up:%d h->ret:%d", __function_name, h,
-			domain.domain, h->domain_nr, h->domain_up, h->ret);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%p domain:%p domain_nr:%u h->domain_up:%d h->ret:%d", __function_name,
+			h, domain.domain, h->domain_nr, h->domain_up, h->ret);
 	return h;
 }
 
