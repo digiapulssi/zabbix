@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2016 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,88 +15,62 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
-** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
 
-$rsmWidget = new CWidget(null, 'monthly-reports');
+require_once dirname(__FILE__).'/js/rsm.monthlyreports.list.js.php';
 
-$rsmWidget->addPageHeader(_('Monthly report'));
+$widget = (new CWidget())->setTitle(_('Monthly report'));
 
-// header
-$rsmWidget->addHeader(_('Monthly report'));
-$rsmWidget->addHeaderRowNumber();
+$filterForm = new CFilter('web.rsm.slareports.filter.state');
 
-$filterTable = new CTable('', 'filter');
-
-$filterTld = new CTextBox('filter_search',
-	isset($this->data['filter_search']) ? $this->data['filter_search'] : null
-);
-$filterTld->setAttribute('autocomplete', 'off');
-
-$filterMonth = new CComboBox(
-	'filter_month',
-	isset($this->data['filter_month']) ? $this->data['filter_month'] : null
+$filterColumn = new CFormList();
+$filterColumn->addVar('filter_set', 1);
+$filterColumn->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+	->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
+	->setAttribute('autocomplete', 'off')
 );
 
+$months = [];
 for ($i = 1; $i <= 12; $i++) {
-	$filterMonth->addItem($i, getMonthCaption($i));
+	$months[$i] = getMonthCaption($i);
 }
 
-$filterYear = new CComboBox(
-	'filter_year',
-	isset($this->data['filter_year']) ? $this->data['filter_year'] : null
-);
-
+$years = [];
 for ($i = SLA_MONITORING_START_YEAR; $i <= date('Y', time()); $i++) {
-	$filterYear->addItem($i, $i);
+	$years[$i] = $i;
 }
 
-$filterTable->addRow(array(
-	array(array(bold(_('TLD')), ':'.SPACE), $filterTld),
-	array(array($filterMonth, SPACE, $filterYear)),
-	array(new CLink(
-		_('Download all TLD reports'),
-		'rsm.monthlyreports.php?filter_set=1&filter_search='.$this->data['filter_search'].'&filter_year='.
-			$this->data['filter_year'].'&filter_month='.$this->data['filter_month'].'&export=1'
-	))
-));
+$filterColumn->addRow(_('Period'), [
+	new CComboBox('filter_month', $this->data['filter_month'], null, $months),
+	SPACE,
+	new CComboBox('filter_year', $this->data['filter_year'], null, $years)
+]);
 
-$filter = new CButton('filter', _('Filter'), "submit();");
-$filter->useJQueryStyle('main');
+$filterForm->addColumn($filterColumn);
 
-$reset = new CButton('reset', _('Reset'), "javascript: clearAllForm('zbx_filter');");
-$reset->useJQueryStyle();
-
-$divButtons = new CDiv(array($filter, SPACE, $reset));
-$divButtons->setAttribute('style', 'padding: 4px 0px;');
-
-$filterTable->addRow(new CCol($divButtons, 'center', 3));
-
-$filterForm = new CForm('get');
-$filterForm->setAttribute('name', 'zbx_filter');
-$filterForm->setAttribute('id', 'zbx_filter');
-$filterForm->addItem($filterTable);
-$filterForm->addVar('checkallvalue', 0);
-$filterForm->addVar('filter_set', 1);
-$rsmWidget->addFlicker($filterForm, CProfile::get('web.rsm.monthlyreports.filter.state', 0));
+$widget->addItem($filterForm);
 
 if (isset($this->data['tld'])) {
-	$infoBlock = new CTable(null, 'filter info-block');
-	$infoBlock->addRow(array(
-		array(bold(_('TLD')), ':', SPACE, $this->data['tld']['name'])
-	));
-	$rsmWidget->additem($infoBlock);
+	$infoBlock = (new CTable(null, 'filter info-block'))
+		->addRow([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]);
+	$widget->additem($infoBlock);
 }
 
-$table = new CTableInfo(_('No TLD\'s found.'));
-$table->setHeader(array(
-	_('Service'),
-	_('Parameter'),
-	_('SLV'),
-	_('Acceptable SLA'),
-	SPACE
-));
+// create form
+$form = (new CForm())
+	->setName('scenarios');
+
+$table = (new CTableInfo())
+	->setHeader([
+		_('Service'),
+		_('Parameter'),
+		_('SLV'),
+		_('Acceptable SLA'),
+		SPACE
+]);
+
 
 foreach ($this->data['services'] as $name => $services) {
 	if (count($services['parameters']) > 1) {
@@ -148,8 +122,10 @@ foreach ($this->data['services'] as $name => $services) {
 	}
 }
 
-$rsmWidget->addItem($table);
+$form->addItem([
+	$table
+]);
+// append form to widget
+$widget->addItem($form);
 
-require_once dirname(__FILE__).'/js/rsm.monthlyreports.list.js.php';
-
-return $rsmWidget;
+return $widget;

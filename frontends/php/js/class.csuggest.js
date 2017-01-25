@@ -409,7 +409,6 @@ positionSuggests: function(){
 	var dims = getDimensions(this.dom.input);
 
 	this.dom.suggest.style.top = (pos.top+dims.height)+'px';
-	this.dom.suggest.style.left = '0px';
 },
 
 newSugTab: function(needle){

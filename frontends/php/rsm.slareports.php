@@ -305,8 +305,9 @@ if ($data['filter_search']) {
 				$to = '-';
 			}
 
-			$item_key = new CItemKey($ns_item['key_']);
-			$params = $item_key->getParameters();
+			$item_key = new CItemKey();
+			$item_key->parse($ns_item['key_']);
+			$params = $item_key->getParam(0);
 
 			$data['services'][] = array(
 				'name' => _('DNS name server availability'),

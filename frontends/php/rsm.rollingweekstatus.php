@@ -36,7 +36,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
 $fields = array(
 	// filter
-	'filter_set' =>				array(T_ZBX_STR, O_OPT,	P_ACT,	null,		null),
+	'filter_set' =>				array(T_ZBX_STR, O_OPT,	null,	null,		null),
 	'filter_search' =>			array(T_ZBX_STR, O_OPT,  null,	null,		null),
 	'filter_dns' =>				array(T_ZBX_INT, O_OPT,  null,	IN('0,1'),	null),
 	'filter_dnssec' =>			array(T_ZBX_INT, O_OPT,  null,	IN('0,1'),	null),
@@ -55,7 +55,7 @@ $fields = array(
 );
 
 check_fields($fields);
-validate_sort_and_sortorder('name', ZBX_SORT_UP);
+//validate_sort_and_sortorder('name', ZBX_SORT_UP);
 
 if (isset($_REQUEST['favobj'])) {
 	if('filter' == $_REQUEST['favobj']){
@@ -213,23 +213,19 @@ if ($data['filter_slv'] !== ''
 			$itemCount++;
 		}
 
-		if ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO) {
-			$filterSlvCondition = '>0';
-		}
-		else {
-			$filterSlvCondition = '>='.$data['filter_slv'];
-		}
-
-		$itemsHostids = DBselect(
-			'SELECT DISTINCT i.hostid'.
-			' FROM items i'.
-			' WHERE i.lastvalue'.$filterSlvCondition.
-				' AND '.dbConditionString('i.key_', $items['key'])
-		);
+		$items_hosts = API::Item()->get([
+			'filter' => ['key_' => $items['key']],
+			'output' => ['itemid', 'lastvalue'],
+			'selectHosts' => ['hostid'],
+			'preservekeys' => true
+		]);
 
 		$hostIds = [];
-		while ($hostId = DBfetch($itemsHostids)) {
-			$hostIds[] = $hostId['hostid'];
+		foreach ($items_hosts as $items_host) {
+			if (($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO && $items_host['lastvalue'] > 0)
+					|| $filterSlvCondition >= $items_host['lastvalue']) {
+				$hostIds[] = $items_host['hosts'][0]['hostid'];
+			}
 		}
 
 		if ($hostIds) {
@@ -318,7 +314,8 @@ if ($notEmptyResult) {
 		}
 
 		$hostGroups = API::HostGroup()->get(array(
-			'output' => array('groupid', 'name'),
+			'output' => ['groupid', 'name'],
+			'selectHosts' => ['hostid', 'name', 'host'],
 			'hostids' => $hostIds
 		));
 
@@ -335,8 +332,8 @@ if ($notEmptyResult) {
 $data['tld'] = [];
 
 if ($hostIds) {
-	$sortField = getPageSortField('name');
-	$sortOrder = getPageSortOrder();
+	$sortField = getRequest('sort', CProfile::get('web.'.$page['file'].'.sort', 'name'));
+	$sortOrder = getRequest('sortorder', CProfile::get('web.'.$page['file'].'.sort', 'name'));
 
 	// get items
 	$items = API::Item()->get(array(
@@ -433,8 +430,10 @@ if ($hostIds) {
 		// disabled services check
 		$templateName = [];
 		foreach ($tlds as $tld) {
-			$templateName[$tld['hostid']] = 'Template '.$tld['host'];
-			$hostIdByTemplateName['Template '.$tld['host']] = $tld['hostid'];
+			if (array_key_exists('hostid', $tld)) {
+				$templateName[$tld['hostid']] = 'Template '.$tld['host'];
+				$hostIdByTemplateName['Template '.$tld['host']] = $tld['hostid'];
+			}
 		}
 
 		$templates = API::Template()->get(array(
@@ -496,23 +495,25 @@ if ($hostIds) {
 		}
 
 		foreach ($tlds as $tld) {
-			$data['tld'][$tld['hostid']]['hostid'] = $tld['hostid'];
-			$data['tld'][$tld['hostid']]['host'] = $tld['host'];
-			$data['tld'][$tld['hostid']]['name'] = $tld['name'];
-			$data['tld'][$tld['hostid']]['type'] = '';
+			if (array_key_exists('hostid', $tld)) {
+				$data['tld'][$tld['hostid']]['hostid'] = $tld['hostid'];
+				$data['tld'][$tld['hostid']]['host'] = $tld['host'];
+				$data['tld'][$tld['hostid']]['name'] = $tld['name'];
+				$data['tld'][$tld['hostid']]['type'] = '';
 
-			foreach ($tld['groups'] as $tldGroup) {
-				if ($tldGroup['name'] === RSM_CC_TLD_GROUP) {
-					$data['tld'][$tld['hostid']]['type'] = RSM_CC_TLD_GROUP;
-				}
-				elseif ($tldGroup['name'] === RSM_G_TLD_GROUP) {
-					$data['tld'][$tld['hostid']]['type'] = RSM_G_TLD_GROUP;
-				}
-				elseif ($tldGroup['name'] === RSM_OTHER_TLD_GROUP) {
-					$data['tld'][$tld['hostid']]['type'] = RSM_OTHER_TLD_GROUP;
-				}
-				elseif ($tldGroup['name'] === RSM_TEST_GROUP) {
-					$data['tld'][$tld['hostid']]['type'] = RSM_TEST_GROUP;
+				foreach ($tld['groups'] as $tldGroup) {
+					if ($tldGroup['name'] === RSM_CC_TLD_GROUP) {
+						$data['tld'][$tld['hostid']]['type'] = RSM_CC_TLD_GROUP;
+					}
+					elseif ($tldGroup['name'] === RSM_G_TLD_GROUP) {
+						$data['tld'][$tld['hostid']]['type'] = RSM_G_TLD_GROUP;
+					}
+					elseif ($tldGroup['name'] === RSM_OTHER_TLD_GROUP) {
+						$data['tld'][$tld['hostid']]['type'] = RSM_OTHER_TLD_GROUP;
+					}
+					elseif ($tldGroup['name'] === RSM_TEST_GROUP) {
+						$data['tld'][$tld['hostid']]['type'] = RSM_TEST_GROUP;
+					}
 				}
 			}
 		}
@@ -605,7 +606,7 @@ if ($hostIds) {
 	}
 }
 
-$data['paging'] = getPagingLine($data['tld']);
+//$data['paging'] = getPagingLine($data['tld']);
 
 $rsmView = new CView('rsm.rollingweekstatus.list', $data);
 $rsmView->render();

@@ -32,7 +32,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = array(
 	'export' =>			array(T_ZBX_INT, O_OPT,		P_ACT,	null,			null),
 	// filter
-	'filter_set' =>		array(T_ZBX_STR, O_OPT,		P_ACT,	null,			null),
+	'filter_set' =>		array(T_ZBX_STR, O_OPT,		null,	null,			null),
 	'tld' =>			array(T_ZBX_STR, O_OPT,		null,	null,			null),
 	'filter_year' =>	array(T_ZBX_STR, O_OPT,		null,	null,			null),
 	'filter_month' =>	array(T_ZBX_STR, O_OPT,		null,	null,			null),
@@ -239,7 +239,7 @@ switch ($data['item']['key_']) {
 			));
 
 			if (count($item_keys) != count($items)) {
-				$missed_items = array();
+				$missed_items = [];
 				foreach ($item_keys as $item_key) {
 					if (!array_key_exists($item_key, $items)) {
 						$missed_items[] = $item_key;
@@ -272,7 +272,7 @@ switch ($data['item']['key_']) {
 				}
 			}
 
-			$test_results = array();
+			$test_results = [];
 			foreach ($pfail as $histoty) {
 				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
@@ -349,7 +349,7 @@ switch ($data['item']['key_']) {
 			));
 
 			if (count($item_keys) != count($items)) {
-				$missed_items = array();
+				$missed_items = [];
 				foreach ($item_keys as $item_key) {
 					if (!array_key_exists($item_key, $items)) {
 						$missed_items[] = $item_key;
@@ -382,7 +382,7 @@ switch ($data['item']['key_']) {
 				}
 			}
 
-			$test_results = array();
+			$test_results = [];
 			foreach ($pfail as $histoty) {
 				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
@@ -459,7 +459,7 @@ switch ($data['item']['key_']) {
 			));
 
 			if (count($item_keys) != count($items)) {
-				$missed_items = array();
+				$missed_items = [];
 				foreach ($item_keys as $item_key) {
 					if (!array_key_exists($item_key, $items)) {
 						$missed_items[] = $item_key;
@@ -492,7 +492,7 @@ switch ($data['item']['key_']) {
 				}
 			}
 
-			$test_results = array();
+			$test_results = [];
 			foreach ($pfail as $histoty) {
 				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
@@ -675,7 +675,7 @@ switch ($data['item']['key_']) {
 			));
 
 			if (count($item_keys) != count($items)) {
-				$missed_items = array();
+				$missed_items = [];
 				foreach ($item_keys as $item_key) {
 					if (!array_key_exists($item_key, $items)) {
 						$missed_items[] = $item_key;
@@ -708,7 +708,7 @@ switch ($data['item']['key_']) {
 				}
 			}
 
-			$test_results = array();
+			$test_results = [];
 			foreach ($pfail as $histoty) {
 				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
@@ -828,7 +828,7 @@ switch ($data['item']['key_']) {
 			));
 
 			if (count($item_keys) != count($items)) {
-				$missed_items = array();
+				$missed_items = [];
 				foreach ($item_keys as $item_key) {
 					if (!array_key_exists($item_key, $items)) {
 						$missed_items[] = $item_key;
@@ -861,7 +861,7 @@ switch ($data['item']['key_']) {
 				}
 			}
 
-			$test_results = array();
+			$test_results = [];
 			foreach ($pfail as $histoty) {
 				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
@@ -938,7 +938,7 @@ switch ($data['item']['key_']) {
 			));
 
 			if (count($item_keys) != count($items)) {
-				$missed_items = array();
+				$missed_items = [];
 				foreach ($item_keys as $item_key) {
 					if (!array_key_exists($item_key, $items)) {
 						$missed_items[] = $item_key;
@@ -971,7 +971,7 @@ switch ($data['item']['key_']) {
 				}
 			}
 
-			$test_results = array();
+			$test_results = [];
 			foreach ($pfail as $histoty) {
 				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
@@ -1048,7 +1048,7 @@ switch ($data['item']['key_']) {
 			));
 
 			if (count($item_keys) != count($items)) {
-				$missed_items = array();
+				$missed_items = [];
 				foreach ($item_keys as $item_key) {
 					if (!array_key_exists($item_key, $items)) {
 						$missed_items[] = $item_key;
@@ -1081,7 +1081,7 @@ switch ($data['item']['key_']) {
 				}
 			}
 
-			$test_results = array();
+			$test_results = [];
 			foreach ($pfail as $histoty) {
 				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
