@@ -98,28 +98,51 @@ while (my $row = $sth->fetchrow_hashref) {
 	$sth->finish;
     }
 
-    my $sql = "SELECT key_,IFNULL(min(lastvalue),1) as value FROM items where hostid = ? AND key_ LIKE 'rsm.probe.status[%]'";
+    my $sql = "SELECT itemid, key_ FROM items where hostid = ? AND key_ LIKE 'rsm.probe.status[%]'";
 
     my $sth = $dbh->prepare($sql) or die $dbh->errstr;
 
     $sth->execute($hostid) or die $dbh->errstr;
 
     while (my $item = $sth->fetchrow_hashref) {
-        dbg("  ", $item->{'key_'}, ": ", $item->{'value'});
-	$hosts->{$hostid}->{'status'} = $item->{'value'};
+#        dbg("  ", $item->{'key_'}, ": ", $item->{'value'});
+	$hosts->{$hostid}->{'status'} = 1;
+	$hosts->{$hostid}->{'itemid_status'} = $item->{'itemid'};
+    }
+    
+    $sth->finish;
+    
+    $sql = "SELECT IFNULL(value, 1) as value FROM history_uint WHERE itemid = ? ORDER BY clock DESC LIMIT 1";
+    
+    $sth = $dbh->prepare($sql) or die $dbh->errstr;
+    
+    foreach my $hostid ( keys (%{$hosts}) ) {
+	my $itemid = $hosts->{$hostid}->{'itemid_status'};
+	$sth->execute($itemid) or die $dbh->errstr;
+	
+	my $data = $sth->fetchrow_hashref;
+	$hosts->{$hostid}->{'status'} = $data->{'value'};
     }
 
     $sth->finish;
 
-    my $sql = "SELECT lastclock, lastvalue FROM items i JOIN hosts h USING (hostid) where h.host = ? AND key_ = 'zabbix[proxy,{\$RSM.PROXY_NAME},lastaccess]'";
+    my $sql = "SELECT itemid FROM items i JOIN hosts h USING (hostid) where h.host = ? AND key_ = 'zabbix[proxy,{\$RSM.PROXY_NAME},lastaccess]'";
 
     my $sth = $dbh->prepare($sql) or die $dbh->errstr;
 
     $sth->execute($row->{'host'}.' - mon') or die $dbh->errstr;
-
+    
+    my $item = $sth->fetchrow_hashref;
+    $sth->finish;
+    
+    $sql = "SELECT clock, IFNULL(value, 1) as value FROM history_uint WHERE itemid = ? ORDER BY clock DESC LIMIT 1";
+    $sth = $dbh->prepare($sql) or die $dbh->errstr;
+    
+    $sth->execute($item->{'itemid'}) or die $dbh->errstr;
+    
     while (my $item = $sth->fetchrow_hashref) {
-        dbg("  last seen: ", ($item->{'lastclock'} - $item->{'lastvalue'}), " seconds ago (lastvalue: ", $item->{'lastvalue'}, ")");
-	$hosts->{$hostid}->{'status'} = 0 if ($item->{'lastclock'} - $item->{'lastvalue'} > $max_diff);
+        dbg("  last seen: ", ($item->{'clock'} - $item->{'value'}), " seconds ago (lastvalue: ", $item->{'value'}, ")");
+	$hosts->{$hostid}->{'status'} = 0 if ($item->{'clock'} - $item->{'value'} > $max_diff);
     }
 
     $sth->finish;

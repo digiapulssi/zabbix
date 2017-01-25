@@ -27,8 +27,9 @@ openlog("mysql_zbx_part", "ndelay,pid", LOG_LOCAL0);
 my $config = get_rsm_config();
 
 my $db_schema = $config->{'db'}->{'name'};
+my $db_host = $config->{'db'}->{'host'};
 
-my $dsn = 'DBI:mysql:'.$db_schema.':mysql_socket=/var/lib/mysql/mysql.sock';
+my $dsn = 'DBI:mysql:'.$db_schema.':host='.$db_host;
 my $db_user_name = $config->{'db'}->{'user'};
 my $db_password = $config->{'db'}->{'password'};
 
@@ -40,12 +41,6 @@ my $tables = {	'history' => { 'period' => 'day', 'keep_history' => '60'},
 
 		'trends' => { 'period' => 'month', 'keep_history' => '9999'},
 		'trends_uint' => { 'period' => 'month', 'keep_history' => '9999'},
-
-		'acknowledges' => { 'period' => 'month', 'keep_history' => '24'},
-		'alerts' => { 'period' => 'month', 'keep_history' => '12'},
-		'auditlog' => { 'period' => 'month', 'keep_history' => '24'},
-		'events' => { 'period' => 'month', 'keep_history' => '12'},
-		'service_alarms' => { 'period' => 'month', 'keep_history' => '1'},
 	     };
 my $amount_partitions = 10;
 
