@@ -10,6 +10,7 @@ use Exporter qw(import);
 use Zabbix;
 use Sender;
 use Alerts;
+use TLD_constants qw(:api);
 use File::Pid;
 use POSIX qw(floor);
 use Sys::Syslog;
@@ -237,25 +238,30 @@ sub get_item_data
 	my $host = shift;
 	my $cfg_key_in = shift;
 	my $cfg_key_out = shift;
+	my $value_type = shift;
 
 	my $sql;
+
+	dbg("In");
 
 	if ("[" eq substr($cfg_key_out, -1))
 	{
 		$sql =
-			"select i.key_,i.itemid,i.lastclock".
+			"select i.key_,i.itemid".
 			" from items i,hosts h".
 			" where i.hostid=h.hostid".
 				" and h.host='$host'".
+				" and i.status=0".
 				" and (i.key_='$cfg_key_in' or i.key_ like '$cfg_key_out%')";
 	}
 	else
 	{
 		$sql =
-			"select i.key_,i.itemid,i.lastclock".
+			"select i.key_,i.itemid".
 			" from items i,hosts h".
 			" where i.hostid=h.hostid".
 				" and h.host='$host'".
+				" and i.status=0".
 				" and i.key_ in ('$cfg_key_in','$cfg_key_out')";
 	}
 
@@ -280,14 +286,19 @@ sub get_item_data
 		else
 		{
 			$itemid_out = $row_ref->[1];
-			$lastclock = $row_ref->[2] ? $row_ref->[2] : 0;
+			if (get_current_value($itemid_out, $value_type, undef, \$lastclock) != SUCCESS)
+			{
+				$lastclock = 0;
+			}
 		}
 
 		last if (defined($itemid_in) and defined($itemid_out));
 	}
 
-	fail("cannot find itemid ($cfg_key_in and $cfg_key_out) at host ($host)")
+	fail("cannot find items (need $cfg_key_in and $cfg_key_out) at host ($host)")
 		unless (defined($itemid_in) and defined($itemid_out));
+
+	dbg("End of");
 
 	return ($itemid_in, $itemid_out, $lastclock);
 }
@@ -382,15 +393,17 @@ sub get_lastclock
 {
 	my $host = shift;
 	my $key = shift;
+	my $value_type;
 
 	my $sql;
 
 	if ("[" eq substr($key, -1))
 	{
 		$sql =
-			"select i.lastclock".
+			"select i.itemid".
 			" from items i,hosts h".
 			" where i.hostid=h.hostid".
+			" and i.status=0".
 			" and h.host='$host'".
 			" and i.key_ like '$key%'".
 			" limit 1";
@@ -398,9 +411,10 @@ sub get_lastclock
 	else
 	{
 		$sql =
-			"select i.lastclock".
+			"select i.itemid".
 			" from items i,hosts h".
 			" where i.hostid=h.hostid".
+			" and i.status=0".
 			" and h.host='$host'".
 			" and i.key_='$key'";
 	}
@@ -409,7 +423,15 @@ sub get_lastclock
 
 	return E_FAIL if (scalar(@$rows_ref) == 0);
 
-	return (defined($rows_ref->[0]->[0]) && $rows_ref->[0]->[0] > 0) ? $rows_ref->[0]->[0] : 0;
+	my $itemid = $rows_ref->[0]->[0];
+	my $lastclock;
+
+	if (get_current_value($itemid, $value_type, undef, \$lastclock) != SUCCESS)
+	{
+		$lastclock = 0;
+	}
+
+	return $lastclock;
 }
 
 sub get_tlds
@@ -1083,13 +1105,11 @@ sub get_online_probes
 		{
 			# we did not get any values between $from and $till, consider lastvalue
 
-			my $lastvalue = get_current_value($itemid);
+			my $lastvalue;
 
-			fail("no item \"$key\" to check manual online status found at probe host \"$host\"") if (defined($lastvalue) and $lastvalue == E_FAIL);
-
-			if (defined($lastvalue) and $lastvalue == DOWN)
+			if (get_current_value($itemid, ITEM_VALUE_TYPE_UINT64, \$lastvalue) == SUCCESS && $lastvalue == DOWN)
 			{
-				dbg("$host ($hostid) down (manual: lastvalue)");
+				dbg("$host ($hostid) down (manual: $lastvalue)");
 				next;
 			}
 		}
@@ -1131,11 +1151,11 @@ sub get_online_probes
 		{
 			# we did not get any values between $from and $till, consider lastvalue
 
-			my $lastvalue = get_current_value($itemid);
+			my $lastvalue;
 
-			if (defined($lastvalue) and $lastvalue == DOWN)
+			if (get_current_value($itemid, ITEM_VALUE_TYPE_UINT64, \$lastvalue) == SUCCESS && $lastvalue == DOWN)
 			{
-				dbg("$host ($hostid) down (automatic: lastvalue)");
+				dbg("$host ($hostid) down (automatic: $lastvalue)");
 				next;
 			}
 		}
@@ -2286,20 +2306,48 @@ sub avail_result_msg
 	return sprintf("$result_str (%d/%d positive, %.3f%%, %s)", $success_values, $total_results, $perc, ts_str($value_ts));
 }
 
+sub __get_history_table_by_value_type
+{
+	my $value_type = shift;
+
+	return "history_uint" if (!defined($value_type) || $value_type == ITEM_VALUE_TYPE_UINT64);	# default
+	return "history" if ($value_type == ITEM_VALUE_TYPE_FLOAT);
+	return "history_str" if ($value_type == ITEM_VALUE_TYPE_STR);
+
+	fail("THIS_SHOULD_NEVER_HAPPEN");
+}
+
 #
 # returns:
-# E_FAIL      - no such item in database
-# otherwise - lastvalue (undef if lastvalue == NULL)
+# SUCCESS - last clock and value found
+# E_FAIL  - nothing found
 sub get_current_value
 {
 	my $itemid = shift;
+	my $value_type = shift;
+	my $value_ref = shift;
+	my $clock_ref = shift;
 
-	my $rows_ref = db_select("select lastvalue from items where itemid=$itemid");
+	fail("THIS_SHOULD_NEVER_HAPPEN") unless ($clock_ref || $value_ref);
 
-	return E_FAIL if (scalar(@$rows_ref) == 0);
+	my $t = __get_history_table_by_value_type($value_type);
 
-	# undef in case lastvalue=NULL
-	return $rows_ref->[0]->[0];
+	my @intervals = ("1 hour", "1 day", "1 month", "3 month");
+
+	foreach my $interval (@intervals)
+	{
+		my $rows_ref = db_select("select clock,value from $t where itemid=$itemid and clock > unix_timestamp(current_timestamp() - interval $interval) order by clock desc limit 1");
+
+		if (@{$rows_ref})
+		{
+			$$clock_ref = $rows_ref->[0]->[0] if ($clock_ref);
+			$$value_ref = $rows_ref->[0]->[1] if ($value_ref);
+
+			return SUCCESS;
+		}
+	}
+
+	return E_FAIL;
 }
 
 #

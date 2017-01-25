@@ -12,6 +12,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
+use TLD_constants qw(:api);	# ITEM_VALUE_TYPE_FLOAT
 
 my $cfg_key_in = 'rsm.slv.dnssec.avail';
 my $cfg_key_out = 'rsm.slv.dnssec.rollweek';
@@ -48,7 +49,7 @@ foreach (@$tlds_ref)
 	# NB! This is needed in order to set the value globally.
 	$tld = $_;
 
-	my ($itemid_in, $itemid_out, $lastclock) = get_item_data($tld, $cfg_key_in, $cfg_key_out);
+	my ($itemid_in, $itemid_out, $lastclock) = get_item_data($tld, $cfg_key_in, $cfg_key_out, ITEM_VALUE_TYPE_FLOAT);
 
 	if (rollweek_value_exists($value_ts, $itemid_out) == SUCCESS)
 	{
