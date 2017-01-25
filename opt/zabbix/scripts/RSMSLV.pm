@@ -15,7 +15,7 @@ use File::Pid;
 use POSIX qw(floor);
 use Sys::Syslog;
 use Data::Dumper;
-use Time::HiRes qw(time);
+use Time::HiRes;
 
 use constant SUCCESS => 0;
 use constant E_FAIL => -1;
@@ -784,7 +784,7 @@ sub db_select
 	my $sec;
 	if (opt('stats'))
 	{
-		$sec = time();
+		$sec = Time::HiRes::time();
 	}
 
 	my $sth = $dbh->prepare($global_sql)
@@ -795,7 +795,7 @@ sub db_select
 	my ($start, $exe, $fetch, $total);
 	if (opt('warnslow'))
 	{
-		$start = time();
+		$start = Time::HiRes::time();
 	}
 
 	$sth->execute()
@@ -803,14 +803,14 @@ sub db_select
 
 	if (opt('warnslow'))
 	{
-		$exe = time();
+		$exe = Time::HiRes::time();
 	}
 
 	my $rows_ref = $sth->fetchall_arrayref();
 
 	if (opt('warnslow'))
 	{
-		my $now = time();
+		my $now = Time::HiRes::time();
 		$total = $now - $start;
 
 		if ($total > getopt('warnslow'))
@@ -830,7 +830,7 @@ sub db_select
 
 	if (opt('stats'))
 	{
-		$sql_time += time() - $sec;
+		$sql_time += Time::HiRes::time() - $sec;
 		$sql_count++;
 	}
 

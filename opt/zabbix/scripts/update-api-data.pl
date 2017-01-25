@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:api);	# ITEM_VALUE_TYPE_UINT64
+use TLD_constants qw(:api);	# ITEM_VALUE_TYPE_FLOAT
 use ApiHelper;
 use JSON::XS;
 
@@ -293,7 +293,7 @@ foreach (@$tlds_ref)
 
 		my $lastclock_key = "rsm.slv.$service.rollweek";
 
-		my $lastclock = get_lastclock($tld, $lastclock_key, ITEM_VALUE_TYPE_UINT64);
+		my $lastclock = get_lastclock($tld, $lastclock_key, ITEM_VALUE_TYPE_FLOAT);
 
 		if ($lastclock == E_FAIL)
 		{
