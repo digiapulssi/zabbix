@@ -910,7 +910,7 @@ char	*DBdyn_escape_field(const char *table_name, const char *field_name, const c
 
 	if (NULL == (table = DBget_table(table_name)) || NULL == (field = DBget_field(table, field_name)))
 	{
-		THIS_SHOULD_NEVER_HAPPEN;
+		zabbix_log(LOG_LEVEL_CRIT, "invalid table: \"%s\" field: \"%s\"", table_name, field_name);
 		exit(EXIT_FAILURE);
 	}
 
