@@ -461,8 +461,8 @@ int	process_trigger(char **sql, size_t *sql_alloc, size_t *sql_offset, const str
 int	DBget_row_count(const char *table_name);
 int	DBget_proxy_lastaccess(const char *hostname, int *lastaccess, char **error);
 
+char	*DBdyn_escape_field(const char *table_name, const char *field_name, const char *src);
 char	*DBdyn_escape_string(const char *src);
-char	*DBdyn_escape_string_len(const char *src, size_t max_src_len);
 char	*DBdyn_escape_like_pattern(const char *src);
 
 zbx_uint64_t	DBadd_host(char *server, int port, int status, int useip, char *ip, int disable_until, int available);

@@ -606,7 +606,7 @@ int	process_trigger(char **sql, size_t *sql_alloc, size_t *sql_offset, const str
 
 			if (0 != error_changed)
 			{
-				new_error_esc = DBdyn_escape_string_len(new_error_local, TRIGGER_ERROR_LEN);
+				new_error_esc = DBdyn_escape_field("triggers", "error", new_error_local);
 				zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "error='%s',", new_error_esc);
 				zbx_free(new_error_esc);
 			}
@@ -891,20 +891,6 @@ char	*DBdyn_escape_string(const char *src)
 	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, ZBX_MAX_UINT);
 }
 
-/******************************************************************************
- *                                                                            *
- * Function: DBdyn_escape_string_len                                          *
- *                                                                            *
- ******************************************************************************/
-char	*DBdyn_escape_string_len(const char *src, size_t max_src_len)
-{
-#ifdef HAVE_IBM_DB2	/* IBM DB2 fields are limited by bytes rather than characters */
-	return zbx_db_dyn_escape_string(src, max_src_len, ZBX_MAX_UINT);
-#else
-	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, max_src_len);
-#endif
-}
-
 static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src)
 {
 #ifdef HAVE_MYSQL
@@ -916,12 +902,12 @@ static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src)
 #endif
 }
 
-char	*DBdyn_escape_field(const char *tablename, const char *fieldname, const char *src)
+char	*DBdyn_escape_field(const char *table_name, const char *field_name, const char *src)
 {
 	const ZBX_TABLE	*table;
 	const ZBX_FIELD	*field;
 
-	if (NULL == (table = DBget_table(tablename)) || NULL == (field = DBget_field(table, fieldname)))
+	if (NULL == (table = DBget_table(table_name)) || NULL == (field = DBget_field(table, field_name)))
 	{
 		THIS_SHOULD_NEVER_HAPPEN;
 		exit(EXIT_FAILURE);
@@ -956,6 +942,7 @@ const ZBX_TABLE *DBget_table(const char *tablename)
 const ZBX_FIELD *DBget_field(const ZBX_TABLE *table, const char *fieldname)
 {
 	int	f;
+
 
 	for (f = 0; NULL != table->fields[f].name; f++)
 	{
@@ -1797,19 +1784,18 @@ void	DBregister_host_clean(zbx_vector_ptr_t *autoreg_hosts)
 void	DBproxy_register_host(const char *host, const char *ip, const char *dns, unsigned short port,
 		const char *host_metadata)
 {
-	char		*host_esc, *ip_esc, *dns_esc, *host_metadata_esc;
-	const char	*tablename = "proxy_autoreg_host";
+	char	*host_esc, *ip_esc, *dns_esc, *host_metadata_esc;
 
-	host_esc = DBdyn_escape_field(tablename, "host", host);
-	ip_esc = DBdyn_escape_field(tablename, "listen_ip", ip);
-	dns_esc = DBdyn_escape_field(tablename, "listen_dns", dns);
-	host_metadata_esc = DBdyn_escape_field(tablename, "host_metadata", host_metadata);
+	host_esc = DBdyn_escape_field("proxy_autoreg_host", "host", host);
+	ip_esc = DBdyn_escape_field("proxy_autoreg_host", "listen_ip", ip);
+	dns_esc = DBdyn_escape_field("proxy_autoreg_host", "listen_dns", dns);
+	host_metadata_esc = DBdyn_escape_field("proxy_autoreg_host", "host_metadata", host_metadata);
 
-	DBexecute("insert into %s"
+	DBexecute("insert into proxy_autoreg_host"
 			" (clock,host,listen_ip,listen_dns,listen_port,host_metadata)"
 			" values"
 			" (%d,'%s','%s','%s',%d,'%s')",
-			tablename, (int)time(NULL), host_esc, ip_esc, dns_esc, (int)port, host_metadata_esc);
+			(int)time(NULL), host_esc, ip_esc, dns_esc, (int)port, host_metadata_esc);
 
 	zbx_free(host_metadata_esc);
 	zbx_free(dns_esc);
@@ -2019,51 +2005,6 @@ const char	*DBget_inventory_field(unsigned char inventory_link)
 		return NULL;
 
 	return inventory_fields[inventory_link - 1];
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: DBget_inventory_field_len                                        *
- *                                                                            *
- * Purpose: get host_inventory field length by inventory_link                 *
- *                                                                            *
- * Parameters: inventory_link - [IN] field number; 1..ZBX_MAX_INVENTORY_FIELDS*
- *                                                                            *
- * Return value: field length                                                 *
- *                                                                            *
- * Author: Alexander Vladishev                                                *
- *                                                                            *
- ******************************************************************************/
-unsigned short	DBget_inventory_field_len(unsigned char inventory_link)
-{
-	static unsigned short	*inventory_field_len = NULL;
-	const char		*inventory_field;
-	const ZBX_TABLE		*table;
-	const ZBX_FIELD		*field;
-
-	if (1 > inventory_link || inventory_link > ZBX_MAX_INVENTORY_FIELDS)
-		assert(0);
-
-	inventory_link--;
-
-	if (NULL == inventory_field_len)
-	{
-		inventory_field_len = zbx_malloc(inventory_field_len, ZBX_MAX_INVENTORY_FIELDS * sizeof(unsigned short));
-		memset(inventory_field_len, 0, ZBX_MAX_INVENTORY_FIELDS * sizeof(unsigned short));
-	}
-
-	if (0 != inventory_field_len[inventory_link])
-		return inventory_field_len[inventory_link];
-
-	inventory_field = DBget_inventory_field(inventory_link + 1);
-	table = DBget_table("host_inventory");
-	assert(NULL != table);
-	field = DBget_field(table, inventory_field);
-	assert(NULL != field);
-
-	inventory_field_len[inventory_link] = field->length;
-
-	return inventory_field_len[inventory_link];
 }
 
 #undef ZBX_MAX_INVENTORY_FIELDS
