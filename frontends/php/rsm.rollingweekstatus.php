@@ -34,25 +34,26 @@ if (PAGE_TYPE_HTML == $page['type']) {
 require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
-$fields = array(
+$fields = [
 	// filter
-	'filter_set' =>				array(T_ZBX_STR, O_OPT,	null,	null,		null),
-	'filter_search' =>			array(T_ZBX_STR, O_OPT,  null,	null,		null),
-	'filter_dns' =>				array(T_ZBX_INT, O_OPT,  null,	IN('0,1'),	null),
-	'filter_dnssec' =>			array(T_ZBX_INT, O_OPT,  null,	IN('0,1'),	null),
-	'filter_rdds' =>			array(T_ZBX_INT, O_OPT,  null,	IN('0,1'),	null),
-	'filter_epp' =>				array(T_ZBX_INT, O_OPT,  null,	IN('0,1'),	null),
-	'filter_slv' =>				array(T_ZBX_STR, O_OPT,  null,	null,		null),
-	'filter_status' =>			array(T_ZBX_INT, O_OPT,  null,	null,		null),
-	'filter_gtld_group' =>		array(T_ZBX_INT, O_OPT,  null,	null,		null),
-	'filter_cctld_group' =>		array(T_ZBX_INT, O_OPT,  null,	null,		null),
-	'filter_othertld_group' =>	array(T_ZBX_INT, O_OPT,  null,	null,		null),
-	'filter_test_group' =>		array(T_ZBX_INT, O_OPT,  null,	null,		null),
+	'filter_set' =>				[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
+	'filter_rst' =>				[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
+	'filter_search' =>			[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_dns' =>				[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_dnssec' =>			[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_rdds' =>			[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_epp' =>				[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_slv' =>				[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_status' =>			[T_ZBX_INT, O_OPT,  null,	null,		null],
+	'filter_gtld_group' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_cctld_group' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_othertld_group' =>	[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_test_group' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
 	// ajax
-	'favobj' =>					array(T_ZBX_STR, O_OPT, P_ACT,	null,		null),
-	'favref' =>					array(T_ZBX_STR, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})'),
-	'favstate' =>				array(T_ZBX_INT, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})&&("filter"=={favobj})')
-);
+	'favobj' =>					[T_ZBX_STR, O_OPT, P_ACT,	null,		null],
+	'favref' =>					[T_ZBX_STR, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})'],
+	'favstate' =>				[T_ZBX_INT, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})&&("filter"=={favobj})']
+];
 
 check_fields($fields);
 //validate_sort_and_sortorder('name', ZBX_SORT_UP);
@@ -74,18 +75,6 @@ $data = [];
  * Filter
  */
 if (isset($_REQUEST['filter_set'])) {
-	$data['filter_search'] = getRequest('filter_search');
-	$data['filter_dns'] = getRequest('filter_dns');
-	$data['filter_dnssec'] = getRequest('filter_dnssec');
-	$data['filter_rdds'] = getRequest('filter_rdds');
-	$data['filter_epp'] = getRequest('filter_epp');
-	$data['filter_slv'] = getRequest('filter_slv', 0);
-	$data['filter_status'] = getRequest('filter_status');
-	$data['filter_gtld_group'] = getRequest('filter_gtld_group');
-	$data['filter_cctld_group'] = getRequest('filter_cctld_group');
-	$data['filter_othertld_group'] = getRequest('filter_othertld_group');
-	$data['filter_test_group'] = getRequest('filter_test_group');
-
 	CProfile::update('web.rsm.rollingweekstatus.filter_search', getRequest('filter_search'), PROFILE_TYPE_STR);
 	CProfile::update('web.rsm.rollingweekstatus.filter_dns', getRequest('filter_dns', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_dnssec', getRequest('filter_dnssec', 0), PROFILE_TYPE_INT);
@@ -98,19 +87,33 @@ if (isset($_REQUEST['filter_set'])) {
 	CProfile::update('web.rsm.rollingweekstatus.filter_othertld_group', getRequest('filter_othertld_group', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_test_group', getRequest('filter_test_group', 0), PROFILE_TYPE_INT);
 }
-else {
-	$data['filter_search'] = CProfile::get('web.rsm.rollingweekstatus.filter_search');
-	$data['filter_dns'] = CProfile::get('web.rsm.rollingweekstatus.filter_dns');
-	$data['filter_dnssec'] = CProfile::get('web.rsm.rollingweekstatus.filter_dnssec');
-	$data['filter_rdds'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdds');
-	$data['filter_epp'] = CProfile::get('web.rsm.rollingweekstatus.filter_epp');
-	$data['filter_slv'] = CProfile::get('web.rsm.rollingweekstatus.filter_slv');
-	$data['filter_status'] = CProfile::get('web.rsm.rollingweekstatus.filter_status');
-	$data['filter_gtld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_gtld_group');
-	$data['filter_cctld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_cctld_group');
-	$data['filter_othertld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_othertld_group');
-	$data['filter_test_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_test_group');
+elseif (hasRequest('filter_rst')) {
+	DBStart();
+	CProfile::delete('web.rsm.rollingweekstatus.filter_search');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_dns');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_dnssec');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_rdds');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_epp');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_slv');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_status');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_gtld_group');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_cctld_group');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_othertld_group');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_test_group');
+	DBend();
 }
+
+$data['filter_search'] = CProfile::get('web.rsm.rollingweekstatus.filter_search');
+$data['filter_dns'] = CProfile::get('web.rsm.rollingweekstatus.filter_dns');
+$data['filter_dnssec'] = CProfile::get('web.rsm.rollingweekstatus.filter_dnssec');
+$data['filter_rdds'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdds');
+$data['filter_epp'] = CProfile::get('web.rsm.rollingweekstatus.filter_epp');
+$data['filter_slv'] = CProfile::get('web.rsm.rollingweekstatus.filter_slv', 0);
+$data['filter_status'] = CProfile::get('web.rsm.rollingweekstatus.filter_status');
+$data['filter_gtld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_gtld_group');
+$data['filter_cctld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_cctld_group');
+$data['filter_othertld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_othertld_group');
+$data['filter_test_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_test_group');
 
 $macro = API::UserMacro()->get(array(
 	'globalmacro' => true,
@@ -223,7 +226,7 @@ if ($data['filter_slv'] !== ''
 		$hostIds = [];
 		foreach ($items_hosts as $items_host) {
 			if (($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO && $items_host['lastvalue'] > 0)
-					|| $filterSlvCondition >= $items_host['lastvalue']) {
+					|| $data['filter_slv'] <= $items_host['lastvalue']) {
 				$hostIds[] = $items_host['hosts'][0]['hostid'];
 			}
 		}
