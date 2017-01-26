@@ -2495,15 +2495,14 @@ void	zbx_db_insert_add_values_dyn(zbx_db_insert_t *self, const zbx_db_value_t **
 		switch (field->type)
 		{
 			case ZBX_TYPE_LONGTEXT:
+#ifdef HAVE_ORACLE
 				if (0 == field->length)
 				{
-#ifdef HAVE_ORACLE
 					row[i].str = zbx_strdup(NULL, value->str);
-#else
-					row[i].str = DBdyn_escape_string(value->str);
-#endif
+
 					break;
 				}
+#endif
 				/* break; is not missing here */
 			case ZBX_TYPE_CHAR:
 			case ZBX_TYPE_TEXT:
