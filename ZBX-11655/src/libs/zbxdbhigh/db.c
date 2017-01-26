@@ -880,7 +880,24 @@ static size_t	get_field_size(unsigned char type)
 			exit(EXIT_FAILURE);
 	}
 }
+#elif HAVE_ORACLE
+static size_t	get_field_size(unsigned char type)
+{
+	switch(type)
+	{
+		case ZBX_TYPE_LONGTEXT:
+		case ZBX_TYPE_TEXT:
+			return ZBX_MAX_UINT;
+		case ZBX_TYPE_CHAR:
+		case ZBX_TYPE_SHORTTEXT:
+			return 4000u;
+		default:
+			THIS_SHOULD_NEVER_HAPPEN;
+			exit(EXIT_FAILURE);
+	}
+}
 #endif
+
 
 /******************************************************************************
  *                                                                            *
@@ -901,7 +918,7 @@ static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src)
 	else
 		length = field->length;
 
-#ifdef HAVE_MYSQL
+#if defined(HAVE_MYSQL) || defined(HAVE_ORACLE)
 	return zbx_db_dyn_escape_string(src, get_field_size(field->type), length);
 #elif HAVE_IBM_DB2	/* IBM DB2 fields are limited by bytes rather than characters */
 	return zbx_db_dyn_escape_string(src, length, ZBX_MAX_UINT);
