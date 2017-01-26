@@ -894,12 +894,19 @@ char	*DBdyn_escape_string(const char *src)
 
 static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src)
 {
+	size_t	length;
+
+	if (ZBX_TYPE_LONGTEXT == field->type && 0 == field->length)
+		length = ZBX_MAX_UINT;
+	else
+		length = field->length;
+
 #ifdef HAVE_MYSQL
-	return zbx_db_dyn_escape_string(src, get_field_size(field->type), field->length);
+	return zbx_db_dyn_escape_string(src, get_field_size(field->type), length);
 #elif HAVE_IBM_DB2	/* IBM DB2 fields are limited by bytes rather than characters */
-	return zbx_db_dyn_escape_string(src, field->length, ZBX_MAX_UINT);
+	return zbx_db_dyn_escape_string(src, length, ZBX_MAX_UINT);
 #else
-	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, field->length);
+	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, length);
 #endif
 }
 
