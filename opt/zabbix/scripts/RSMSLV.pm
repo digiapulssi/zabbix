@@ -242,8 +242,6 @@ sub get_item_data
 
 	my $sql;
 
-	dbg("In");
-
 	if ("[" eq substr($cfg_key_out, -1))
 	{
 		$sql =
@@ -297,8 +295,6 @@ sub get_item_data
 
 	fail("cannot find items (need $cfg_key_in and $cfg_key_out) at host ($host)")
 		unless (defined($itemid_in) and defined($itemid_out));
-
-	dbg("End of");
 
 	return ($itemid_in, $itemid_out, $lastclock);
 }
@@ -589,11 +585,11 @@ sub get_all_items
 	{
 		if (defined($tld))
 		{
-			fail("no items matching '$key' found at host '$tld %'");
+			wrn("no items matching '$key' found at host '$tld %'");
 		}
 		else
 		{
-			fail("no items matching '$key' found in the database");
+			wrn("no items matching '$key' found in the database");
 		}
 	}
 
@@ -745,7 +741,11 @@ sub tld_service_enabled
 			" and h.host='$host'".
 			" and hm.macro='$macro'");
 
-	fail("macro \"$macro\" does not exist at host \"$host\"") if (scalar(@$rows_ref) == 0);
+	if (scalar(@$rows_ref) == 0)
+	{
+		wrn("macro \"$macro\" does not exist at host \"$host\", assuming feature disabled");
+		return E_FAIL;
+	}
 
 	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS);
 }
@@ -1342,7 +1342,7 @@ sub send_values
 
 	if (scalar(@_sender_values) == 0)
 	{
-		wrn("no values to push to the server, is server up and running?");
+		wrn("no values to push to the server");
 		return;
 	}
 
@@ -2151,7 +2151,7 @@ sub get_downtime
 		$downtime += $period_till - $prevclock if ($prevvalue == DOWN);
 	}
 
-	$downtime /= 60;	# minutes;
+	$downtime = int($downtime / 60);	# minutes;
 
 	if (opt('stats'))
 	{
@@ -2280,7 +2280,7 @@ sub get_downtime_execute
 		$sql_count++;
 	}
 
-	$downtime /= 60;	# minutes;
+	$downtime = int($downtime / 60);	# minutes;
 
 	if (opt('stats'))
 	{
