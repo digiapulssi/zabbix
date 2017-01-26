@@ -786,47 +786,78 @@ sub create_cron_jobs($) {
     pfail("cannot open /etc/cron.d") unless ($rv);
 
     # first remove current entries
-    while (($slv_file = readdir DIR)) {
-	next unless ($slv_file =~ /^rsm\.slv\..*\.pl$/);
+    while (($slv_file = readdir DIR))
+    {
+	    next if ($slv_file !~ /^rsm.slv/ && $slv_file !~ /^rsm.probe/);
 
-	$slv_file = "/etc/cron.d/$slv_file";
+	    $slv_file = "/etc/cron.d/$slv_file";
 
-	system("/bin/rm -f $slv_file");
+	    system("/bin/rm -f $slv_file");
     }
 
-    my $avail_shift = 30;
-    my $avail_step = 5;
-    my $avail_limit = 60;
-    my $rollweek_shift = 0;
-    my $rollweek_step = 5;
-    my $rollweek_limit = 30;
-
+    my $avail_shift = 0;
+    my $avail_step = 1;
+    my $avail_limit = 5;
     my $avail_cur = $avail_shift;
+
+    my $rollweek_shift = 3;
+    my $rollweek_step = 1;
+    my $rollweek_limit = 8;
     my $rollweek_cur = $rollweek_shift;
-    
+
+    my $downtime_shift = 6;
+    my $downtime_step = 1;
+    my $downtime_limit = 11;
+    my $downtime_cur = $downtime_shift;
+
+    my $rtt_shift = 10;
+    my $rtt_step = 1;
+    my $rtt_limit = 20;
+    my $rtt_cur = $rtt_shift;
+
     $rv = opendir DIR, $slv_path;
 
     pfail("cannot open $slv_path") unless ($rv);
 
     # set up what's needed
     while (($slv_file = readdir DIR)) {
-	next unless ($slv_file =~ /^rsm\.slv\..*\.pl$/);
+	next unless ($slv_file =~ /^rsm\..*\.pl$/);
 
-	if ($slv_file =~ /\.slv\..*\.month\.pl$/) {
-	    # monthly data once a day
-	    system("echo '0 0 * * * root $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$slv_file");
-	} elsif ($slv_file =~ /\.slv\.dns\.downtime\.pl$/) {
-	    # DNS downtime every minute
-	    system("echo '* * * * * root $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$slv_file");
-	} elsif ($slv_file =~ /\.slv\..*\.avail\.pl$/) {
-	    # separate rollweek and avail by some delay
-	    system("echo '* * * * * root sleep $avail_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$slv_file");
+	my $cron_file = $slv_file;
+	$cron_file =~ s/\./-/g;
+
+	if ($slv_file =~ /\.slv\..*\.rtt\.pl$/)
+	{
+	    # monthly RTT data
+	    system("echo '* * * * * root sleep $rtt_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
+	    $rtt_cur += $rtt_step;
+	    $rtt_cur = $rtt_shift if ($rtt_cur >= $rtt_limit);
+	}
+	elsif ($slv_file =~ /\.slv\..*\.downtime\.pl$/)
+	{
+	    # downtime
+	    system("echo '* * * * * root sleep $downtime_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
+	    $downtime_cur += $downtime_step;
+	    $downtime_cur = $downtime_shift if ($downtime_cur >= $downtime_limit);
+	}
+	elsif ($slv_file =~ /\.slv\..*\.avail\.pl$/)
+	{
+	    # service availability
+	    system("echo '* * * * * root sleep $avail_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
 	    $avail_cur += $avail_step;
 	    $avail_cur = $avail_shift if ($avail_cur >= $avail_limit);
-	} else {
-	    system("echo '* * * * * root sleep $rollweek_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$slv_file");
+	}
+	elsif ($slv_file =~ /\.slv\..*\.rollweek\.pl$/)
+	{
+	    # rolling week
+	    system("echo '* * * * * root sleep $rollweek_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
 	    $rollweek_cur += $rollweek_step;
 	    $rollweek_cur = $rollweek_shift if ($rollweek_cur >= $rollweek_limit);
+	}
+	else
+	{
+	    # everything else
+	    system("echo '* * * * * root $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
 	}
     }
 }
