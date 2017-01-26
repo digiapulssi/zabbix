@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# DNS minutes of downtime at current month
+# EPP minutes of downtime at current month
 
 BEGIN
 {
@@ -13,8 +13,8 @@ use warnings;
 use RSM;
 use RSMSLV;
 
-my $cfg_key_in = 'rsm.slv.dns.avail';
-my $cfg_key_out = 'rsm.slv.dns.downtime';
+my $cfg_key_in = 'rsm.slv.epp.avail';
+my $cfg_key_out = 'rsm.slv.epp.downtime';
 
 parse_opts();
 exit_if_running();
@@ -23,7 +23,7 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $interval = get_macro_dns_udp_delay();
+my $interval = get_macro_epp_delay();
 
 my ($from, $till, $value_ts) = get_interval_bounds($interval);
 
@@ -32,7 +32,7 @@ my $curmon_till = $from;
 
 my %tld_items;
 
-my $tlds_ref = get_tlds();
+my $tlds_ref = get_tlds('EPP');
 
 # just collect itemids
 foreach (@$tlds_ref)
