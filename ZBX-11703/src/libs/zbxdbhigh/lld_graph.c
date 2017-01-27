@@ -909,14 +909,25 @@ static void	lld_graphs_validate(zbx_uint64_t hostid, zbx_vector_ptr_t *graphs, c
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-static void	lld_graphs_save(zbx_uint64_t hostid, zbx_uint64_t parent_graphid, zbx_vector_ptr_t *graphs, int width,
+/******************************************************************************
+ *                                                                            *
+ * Function: lld_graphs_save                                                  *
+ *                                                                            *
+ * Purpose: add or update graphs in database based on discovery rule          *
+ *                                                                            *
+ * Return value: SUCCEED - if graphs was successfully saved or saving         *
+ *                         was not necessary                                  *
+ *               FAIL    - graphs cannot be saved                             *
+ *                                                                            *
+ ******************************************************************************/
+static int	lld_graphs_save(zbx_uint64_t hostid, zbx_uint64_t parent_graphid, zbx_vector_ptr_t *graphs, int width,
 		int height, double yaxismin, double yaxismax, unsigned char show_work_period,
 		unsigned char show_triggers, unsigned char graphtype, unsigned char show_legend, unsigned char show_3d,
 		double percent_left, double percent_right, unsigned char ymin_type, unsigned char ymax_type)
 {
 	const char		*__function_name = "lld_graphs_save";
 
-	int			i, j, new_graphs = 0, upd_graphs = 0, new_gitems = 0;
+	int			ret = SUCCEED, i, j, new_graphs = 0, upd_graphs = 0, new_gitems = 0;
 	zbx_lld_graph_t		*graph;
 	zbx_lld_gitem_t		*gitem;
 	zbx_vector_ptr_t	upd_gitems; 	/* the ordered list of graphs_items which will be updated */
@@ -976,6 +987,7 @@ static void	lld_graphs_save(zbx_uint64_t hostid, zbx_uint64_t parent_graphid, zb
 	{
 		/* the host was removed while processing lld rule */
 		DBrollback();
+		ret = FAIL;
 		goto out;
 	}
 
@@ -1255,6 +1267,8 @@ out:
 	zbx_vector_ptr_destroy(&upd_gitems);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+
+	return ret;
 }
 
 /******************************************************************************
@@ -1267,13 +1281,18 @@ out:
  *             agent   - [IN] discovery item identificator from database      *
  *             jp_data - [IN] received data                                   *
  *                                                                            *
+ * Return value: SUCCEED - if graphs was successfully added/updated or        *
+ *                         adding/updating not necessary                      *
+ *               FAIL    - graphs cannot be added/updated                     *
+ *                                                                            *
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-void	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, zbx_vector_ptr_t *lld_rows, char **error)
+int	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, zbx_vector_ptr_t *lld_rows, char **error)
 {
 	const char		*__function_name = "lld_update_graphs";
 
+	int			ret = SUCCEED;
 	DB_RESULT		result;
 	DB_ROW			row;
 	zbx_vector_ptr_t	graphs;
@@ -1336,13 +1355,16 @@ void	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, zbx_vector_
 		lld_graphs_make(&gitems_proto, &graphs, &items, name_proto, ymin_itemid_proto, ymax_itemid_proto,
 				lld_rows);
 		lld_graphs_validate(hostid, &graphs, error);
-		lld_graphs_save(hostid, parent_graphid, &graphs, width, height, yaxismin, yaxismax, show_work_period,
-				show_triggers, graphtype, show_legend, show_3d, percent_left, percent_right,
-				ymin_type, ymax_type);
+		ret = lld_graphs_save(hostid, parent_graphid, &graphs, width, height, yaxismin, yaxismax,
+				show_work_period, show_triggers, graphtype, show_legend, show_3d, percent_left,
+				percent_right, ymin_type, ymax_type);
 
 		lld_items_free(&items);
 		lld_gitems_free(&gitems_proto);
 		lld_graphs_free(&graphs);
+
+		if (SUCCEED != ret)
+			break;
 	}
 	DBfree_result(result);
 
@@ -1351,4 +1373,6 @@ void	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, zbx_vector_
 	zbx_vector_ptr_destroy(&graphs);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+
+	return ret;
 }
