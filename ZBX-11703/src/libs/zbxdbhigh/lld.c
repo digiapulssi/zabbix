@@ -582,14 +582,12 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, char *value, const zbx_
 
 	now = time(NULL);
 
-	if (SUCCEED != lld_update_items(hostid, lld_ruleid, &lld_rows, &error, lifetime, now))
+	if (SUCCEED != lld_update_items(hostid, lld_ruleid, &lld_rows, &error, lifetime, now) ||
+			SUCCEED != lld_update_triggers(hostid, lld_ruleid, &lld_rows, &error) ||
+			SUCCEED != lld_update_graphs(hostid, lld_ruleid, &lld_rows, &error))
+	{
 		goto clean;
-
-	if (SUCCEED != lld_update_triggers(hostid, lld_ruleid, &lld_rows, &error))
-		goto clean;
-
-	if (SUCCEED != lld_update_graphs(hostid, lld_ruleid, &lld_rows, &error))
-		goto clean;
+	}
 
 	lld_update_hosts(lld_ruleid, &lld_rows, &error, lifetime, now);
 
