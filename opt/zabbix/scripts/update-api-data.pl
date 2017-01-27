@@ -37,7 +37,7 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-__validate_input();
+__validate_input();	# needs to be connected to db
 
 my $opt_from = getopt('from');
 
