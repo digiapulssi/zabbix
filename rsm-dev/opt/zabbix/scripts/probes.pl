@@ -20,12 +20,14 @@ use constant HOST_STATUS_NOT_MONITORED => 1;
 
 use constant HOST_STATUS_PROXY_ACTIVE => 5;
 
+use constant DEFAULT_PROBE_PORT => 10050;
+
 use constant true => 1;
 use constant false => 0;
 
 my %macros = ('{$RSM.EPP.ENABLED}' => 0, '{$RSM.IP4.ENABLED}' => 0, '{$RSM.IP6.ENABLED}' => 0, '{$RSM.RDDS.ENABLED}' => 0);
 
-sub add_probe($$);
+sub add_probe($$$);
 sub delete_probe($);
 sub disable_probe($);
 
@@ -33,7 +35,7 @@ sub validate_input;
 sub usage;
 
 my %OPTS;
-my $rv = GetOptions(\%OPTS, "probe=s", "ip=s",
+my $rv = GetOptions(\%OPTS, "probe=s", "ip=s", "port=s",
 			    "epp!", "ipv4!", "ipv6!", "rdds!", "resolver=s",
                 	    "delete!", "disable!", "add!",
                 	    "verbose!", "quiet!", "help|?");
@@ -54,16 +56,17 @@ elsif ($OPTS{'disable'}) {
 }
 elsif ($OPTS{'add'}) {
     create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
-    add_probe($OPTS{'probe'}, $OPTS{'ip'});
+    add_probe($OPTS{'probe'}, $OPTS{'ip'}, ($OPTS{'port'} ? $OPTS{'port'} : DEFAULT_PROBE_PORT));
 }
 
 exit;
 
 ################
 
-sub add_probe($$) {
+sub add_probe($$$) {
     my $probe_name = shift;
     my $probe_ip = shift;
+    my $probe_port = shift;
 
     my ($probe, $probe_hostgroup, $probe_host, $probe_host_mon, $probe_tmpl, $probe_tmpl_status);
 
@@ -91,9 +94,9 @@ sub add_probe($$) {
 
     ########## Creating new Probe
 
-    print "Creating '$probe_name' with '$probe_ip' IP: ";
+    print "Creating '$probe_name' with interface $probe_ip:$probe_port ";
 
-    $probe = create_passive_proxy($probe_name, $probe_ip);
+    $probe = create_passive_proxy($probe_name, $probe_ip, $probe_port);
 
     is_not_empty($probe, true);
 
@@ -146,7 +149,7 @@ sub add_probe($$) {
                                           'status' => HOST_STATUS_MONITORED,
                                           'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
                                                             'ip'=> $probe_ip,
-                                                            'dns' => '', 'port' => '10050'}]
+                                                            'dns' => '', 'port' => $probe_port}]
                             });
 
     is_not_empty($probe_host_mon, true);
@@ -452,6 +455,9 @@ Options for adding new probe. Argument --add.
     --ip
           IP of new probe node
           (default: empty)
+	--port
+		Port of new probe node
+		(default: 10050)
 	--epp
 		Enable EPP support for the Probe
 		(default: disabled)
@@ -492,10 +498,6 @@ sub validate_input {
 
     if (defined($OPTS{'add'}) and !defined($OPTS{'resolver'})) {
         $OPTS{'resolver'} = '127.0.0.1';
-    }
-
-    if (defined($OPTS{'add'}) and !defined($OPTS{'ip'})) {
-        $msg .= "You need to specify IP of the new node using --ip option\n";
     }
 
     $OPTS{'epp'} = 0 unless defined($OPTS{'epp'});

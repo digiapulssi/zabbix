@@ -25,6 +25,10 @@ sub get_rsm_config
 		exit(-1);
 	}
 
+	use Data::Dumper;
+	print(Dumper($config));
+#	exit;
+
 	return $config;
 }
 
