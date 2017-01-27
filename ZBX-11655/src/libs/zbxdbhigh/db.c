@@ -906,10 +906,15 @@ static size_t	get_field_size(unsigned char type)
  ******************************************************************************/
 char	*DBdyn_escape_string(const char *src)
 {
-	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, ZBX_MAX_UINT);
+	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, ZBX_MAX_UINT, ESCAPE_SEQUENCE_ON);
 }
 
-static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src)
+/******************************************************************************
+ *                                                                            *
+ * Function: DBdyn_escape_field_len                                           *
+ *                                                                            *
+ ******************************************************************************/
+static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src, zbx_escape_sequence_t flag)
 {
 	size_t	length;
 
@@ -919,14 +924,19 @@ static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src)
 		length = field->length;
 
 #if defined(HAVE_MYSQL) || defined(HAVE_ORACLE)
-	return zbx_db_dyn_escape_string(src, get_field_size(field->type), length);
+	return zbx_db_dyn_escape_string(src, get_field_size(field->type), length, flag);
 #elif HAVE_IBM_DB2	/* IBM DB2 fields are limited by bytes rather than characters */
-	return zbx_db_dyn_escape_string(src, length, ZBX_MAX_UINT);
+	return zbx_db_dyn_escape_string(src, length, ZBX_MAX_UINT, flag);
 #else
-	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, length);
+	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, length, flag);
 #endif
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: DBdyn_escape_field                                               *
+ *                                                                            *
+ ******************************************************************************/
 char	*DBdyn_escape_field(const char *table_name, const char *field_name, const char *src)
 {
 	const ZBX_TABLE	*table;
@@ -938,7 +948,7 @@ char	*DBdyn_escape_field(const char *table_name, const char *field_name, const c
 		exit(EXIT_FAILURE);
 	}
 
-	return DBdyn_escape_field_len(field, src);
+	return DBdyn_escape_field_len(field, src, ESCAPE_SEQUENCE_ON);
 }
 
 /******************************************************************************
@@ -2512,24 +2522,13 @@ void	zbx_db_insert_add_values_dyn(zbx_db_insert_t *self, const zbx_db_value_t **
 		switch (field->type)
 		{
 			case ZBX_TYPE_LONGTEXT:
-#ifdef HAVE_ORACLE
-				if (0 == field->length)
-				{
-					row[i].str = zbx_strdup(NULL, value->str);
-
-					break;
-				}
-#endif
-				/* break; is not missing here */
 			case ZBX_TYPE_CHAR:
 			case ZBX_TYPE_TEXT:
 			case ZBX_TYPE_SHORTTEXT:
 #ifdef HAVE_ORACLE
-				row[i].str = NULL;
-				zbx_strncpy_alloc(&row[i].str, &str_alloc, &str_offset, value->str,
-						zbx_strlen_utf8_nchars(value->str, field->length));
+				row[i].str = DBdyn_escape_field_len(field, value->str, ESCAPE_SEQUENCE_OFF);
 #else
-				row[i].str = DBdyn_escape_field_len(field, value->str);
+				row[i].str = DBdyn_escape_field_len(field, value->str, ESCAPE_SEQUENCE_ON);
 #endif
 				break;
 			default:

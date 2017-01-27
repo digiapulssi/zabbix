@@ -296,7 +296,7 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	{
 		char	*dbschema_esc;
 
-		dbschema_esc = zbx_db_dyn_escape_string(dbschema, ZBX_MAX_UINT, ZBX_MAX_UINT);
+		dbschema_esc = zbx_db_dyn_escape_string(dbschema, ZBX_MAX_UINT, ZBX_MAX_UINT, ESCAPE_SEQUENCE_ON);
 		if (0 < (ret = zbx_db_execute("set current schema='%s'", dbschema_esc)))
 			ret = ZBX_DB_OK;
 		zbx_free(dbschema_esc);
@@ -2033,7 +2033,7 @@ static int	zbx_db_is_escape_sequence(char c)
  *           and 'zbx_db_dyn_escape_string'                                   *
  *                                                                            *
  ******************************************************************************/
-static void	zbx_db_escape_string(const char *src, char *dst, size_t len)
+static void	zbx_db_escape_string(const char *src, char *dst, size_t len, zbx_escape_sequence_t flag)
 {
 	const char	*s;
 	char		*d;
@@ -2047,7 +2047,7 @@ static void	zbx_db_escape_string(const char *src, char *dst, size_t len)
 		if ('\r' == *s)
 			continue;
 
-		if (SUCCEED == zbx_db_is_escape_sequence(*s))
+		if (ESCAPE_SEQUENCE_ON == flag && SUCCEED == zbx_db_is_escape_sequence(*s))
 		{
 			if (2 > len)
 				break;
@@ -2077,12 +2077,14 @@ static void	zbx_db_escape_string(const char *src, char *dst, size_t len)
  * Parameters: s         - [IN] string to escape                              *
  *             max_bytes - [IN] limit in bytes                                *
  *             max_chars - [IN] limit in characters                           *
+ *             flag      - [IN] sequences need to be escaped on/off           *
  *                                                                            *
  * Return value: return length in bytes of escaped string                     *
  *               with terminating '\0'                                        *
  *                                                                            *
  ******************************************************************************/
-static size_t	zbx_db_get_escape_string_len(const char *s, size_t max_bytes, size_t max_chars)
+static size_t	zbx_db_get_escape_string_len(const char *s, size_t max_bytes, size_t max_chars,
+		zbx_escape_sequence_t flag)
 {
 	size_t	csize, len = 1;	/* '\0' */
 
@@ -2106,7 +2108,7 @@ static size_t	zbx_db_get_escape_string_len(const char *s, size_t max_bytes, size
 		if (max_bytes < csize)
 			break;
 
-		if (SUCCEED == zbx_db_is_escape_sequence(*s))
+		if (ESCAPE_SEQUENCE_ON == flag && SUCCEED == zbx_db_is_escape_sequence(*s))
 			len++;
 
 		s += csize;
@@ -2128,20 +2130,21 @@ static size_t	zbx_db_get_escape_string_len(const char *s, size_t max_bytes, size
  * Parameters: src       - [IN] string to escape                              *
  *             max_bytes - [IN] limit in bytes                                *
  *             max_chars - [IN] limit in characters                           *
+ *             flag      - [IN] sequences need to be escaped on/off           *
  *                                                                            *
  * Return value: escaped string                                               *
  *                                                                            *
  ******************************************************************************/
-char	*zbx_db_dyn_escape_string(const char *src, size_t max_bytes, size_t max_chars)
+char	*zbx_db_dyn_escape_string(const char *src, size_t max_bytes, size_t max_chars, zbx_escape_sequence_t flag)
 {
 	char	*dst = NULL;
 	size_t	len;
 
-	len = zbx_db_get_escape_string_len(src, max_bytes, max_chars);
+	len = zbx_db_get_escape_string_len(src, max_bytes, max_chars, flag);
 
 	dst = zbx_malloc(dst, len);
 
-	zbx_db_escape_string(src, dst, len);
+	zbx_db_escape_string(src, dst, len, flag);
 
 	return dst;
 }
@@ -2160,7 +2163,7 @@ static int	zbx_db_get_escape_like_pattern_len(const char *src)
 	int		len;
 	const char	*s;
 
-	len = zbx_db_get_escape_string_len(src, ZBX_MAX_UINT, ZBX_MAX_UINT) - 1; /* minus '\0' */
+	len = zbx_db_get_escape_string_len(src, ZBX_MAX_UINT, ZBX_MAX_UINT, ESCAPE_SEQUENCE_ON) - 1; /* minus '\0' */
 
 	for (s = src; s && *s; s++)
 	{
@@ -2208,7 +2211,7 @@ static void	zbx_db_escape_like_pattern(const char *src, char *dst, int len)
 
 	tmp = zbx_malloc(tmp, len);
 
-	zbx_db_escape_string(src, tmp, len);
+	zbx_db_escape_string(src, tmp, len, ESCAPE_SEQUENCE_ON);
 
 	len--; /* '\0' */
 
