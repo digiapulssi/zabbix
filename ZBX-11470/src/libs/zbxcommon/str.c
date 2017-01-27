@@ -4401,10 +4401,12 @@ static int	zbx_token_parse_nested_macro(const char *expression, const char *macr
 int	zbx_token_find(const char *expression, int pos, zbx_token_t *token, zbx_token_search_t token_search)
 {
 	int		ret = FAIL;
-	const char	*ptr = expression + pos, *dollar = ptr;
+	const char	*ptr = expression + pos, *dollar;
 
 	while (SUCCEED != ret)
 	{
+		dollar = ptr;
+
 		ptr = strchr(ptr, '{');
 
 		switch (token_search)
