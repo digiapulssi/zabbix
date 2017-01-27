@@ -439,15 +439,16 @@ sub get_host_macro {
     return $result;
 }
 
-sub create_passive_proxy($$) {
+sub create_passive_proxy($$$) {
     my $probe_name = shift;
     my $probe_ip = shift;
+    my $probe_port = shift;
 
     my $probe = get_probe($probe_name, false);
 
     if (defined($probe->{'proxyid'})) {
 	my $result = $zabbix->update('proxy', {'proxyid' => $probe->{'proxyid'}, 'status' => HOST_STATUS_PROXY_PASSIVE,
-                                        'interfaces' => [{'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => '10051'}]});
+                                        'interfaces' => [{'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port}]});
 
 	if (scalar($result->{'proxyids'})) {
             return $result->{'proxyids'}[0];
@@ -455,7 +456,7 @@ sub create_passive_proxy($$) {
     }
     else {
         my $result = $zabbix->create('proxy', {'host' => $probe_name, 'status' => HOST_STATUS_PROXY_PASSIVE,
-                                        'interfaces' => [{'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => '10051'}],
+                                        'interfaces' => [{'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port}],
                                         'hosts' => []});
 	if (scalar($result->{'proxyids'})) {
 	    return $result->{'proxyids'}[0];
