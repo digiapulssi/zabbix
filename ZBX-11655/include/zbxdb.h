@@ -195,7 +195,6 @@ typedef enum
 	ESCAPE_SEQUENCE_ON
 }
 zbx_escape_sequence_t;
-
 char		*zbx_db_dyn_escape_string(const char *src, size_t max_bytes, size_t max_chars,
 		zbx_escape_sequence_t flag);
 #define ZBX_SQL_LIKE_ESCAPE_CHAR '!'

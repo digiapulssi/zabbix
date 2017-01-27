@@ -2516,9 +2516,7 @@ void	zbx_db_insert_add_values_dyn(zbx_db_insert_t *self, const zbx_db_value_t **
 	{
 		ZBX_FIELD		*field = self->fields.values[i];
 		const zbx_db_value_t	*value = values[i];
-#ifdef HAVE_ORACLE
-		size_t			str_alloc = 0, str_offset = 0;
-#endif
+
 		switch (field->type)
 		{
 			case ZBX_TYPE_LONGTEXT:
