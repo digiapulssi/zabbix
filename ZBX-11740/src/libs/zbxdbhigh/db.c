@@ -906,9 +906,15 @@ void	DBadd_str_condition_alloc(char **sql, size_t *sql_alloc, size_t *sql_offset
 
 	if (1 == values_num)
 	{
-		value_esc = DBdyn_escape_string(values[0]);
-		zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s='%s'", fieldname, value_esc);
-		zbx_free(value_esc);
+		for (i = 0; i < num; i++)
+		{
+			if ('\0' == *values[i])
+				continue;
+
+			value_esc = DBdyn_escape_string(values[i]);
+			zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s='%s'", fieldname, value_esc);
+			zbx_free(value_esc);
+		}
 
 		if (0 != empty_num)
 			zbx_chrcpy_alloc(sql, sql_alloc, sql_offset, ')');
