@@ -2438,8 +2438,8 @@ static void	wrap_negative_double_suffix(char **replace_to, size_t *replace_to_al
 	(*replace_to)[replace_to_len + 2] = '\0';
 }
 
-static int	expand_trigger_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
-		zbx_uint64_t *userid, const char *m, char **replace_to, int N_functionid, int raw_value,
+static int	expand_trigger_msg_macro(const zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+		const zbx_uint64_t *userid, const char *m, char **replace_to, int N_functionid, int raw_value,
 		const DB_EVENT *c_event, char *error, int maxerrlen)
 {
 	int	ret = SUCCEED;
@@ -2680,9 +2680,9 @@ static int	expand_trigger_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *even
 	return ret;
 }
 
-static int	expand_intern_trigger_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
-		zbx_uint64_t *userid, const char *m, char **replace_to, int N_functionid, const DB_EVENT *c_event,
-		char *error, int maxerrlen)
+static int	expand_intern_trigger_msg_macro(const zbx_uint64_t *actionid, const DB_EVENT *event,
+		const DB_EVENT *r_event, const zbx_uint64_t *userid, const char *m, char **replace_to, int N_functionid,
+		const DB_EVENT *c_event, char *error, int maxerrlen)
 {
 	int	ret = SUCCEED;
 
@@ -2858,7 +2858,7 @@ static int	expand_intern_trigger_msg_macro(zbx_uint64_t *actionid, const DB_EVEN
 	return ret;
 }
 
-static int	expand_discovery_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const char *m,
+static int	expand_discovery_msg_macro(const zbx_uint64_t *actionid, const DB_EVENT *event, const char *m,
 		char **replace_to, const DB_EVENT *c_event)
 {
 	int	ret = SUCCEED;
@@ -2973,8 +2973,8 @@ static int	expand_discovery_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *ev
 	return ret;
 }
 
-static int	expand_areg_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const char *m, char **replace_to,
-		const DB_EVENT *c_event)
+static int	expand_areg_msg_macro(const zbx_uint64_t *actionid, const DB_EVENT *event, const char *m,
+		char **replace_to, const DB_EVENT *c_event)
 {
 	int	ret = SUCCEED;
 
@@ -3046,8 +3046,8 @@ static int	expand_areg_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, 
 	return ret;
 }
 
-static int	expand_item_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
-		const char *m, char **replace_to,const DB_EVENT *c_event)
+static int	expand_item_msg_macro(const zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+		const char *m, char **replace_to, const DB_EVENT *c_event)
 {
 	int	ret = SUCCEED;
 
@@ -3149,7 +3149,7 @@ static int	expand_item_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, 
 	return ret;
 }
 
-static int	expand_lldrule_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+static int	expand_lldrule_msg_macro(const zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
 		const char *m, char **replace_to, const DB_EVENT *c_event)
 {
 	int	ret = SUCCEED;
@@ -3534,9 +3534,9 @@ static int	expand_tag_macro(const DB_EVENT *event, const char *m, char **replace
  * Author: Eugene Grigorjev                                                   *
  *                                                                            *
  ******************************************************************************/
-int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
-		zbx_uint64_t *userid, zbx_uint64_t *hostid, DC_HOST *dc_host, DC_ITEM *dc_item, DB_ALERT *alert,
-		char **data, int macro_type, char *error, int maxerrlen)
+int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+		const zbx_uint64_t *userid, zbx_uint64_t *hostid, DC_HOST *dc_host, DC_ITEM *dc_item,
+		const DB_ALERT *alert, char **data, int macro_type, char *error, int maxerrlen)
 {
 	const char		*__function_name = "substitute_simple_macros";
 
