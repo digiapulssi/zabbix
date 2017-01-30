@@ -1014,18 +1014,16 @@ static int	DBget_item_value(zbx_uint64_t itemid, char **replace_to, int request)
 
 				if (SUCCEED == errcode)
 				{
-					int err = 0;
-
 					if (INTERFACE_TYPE_UNKNOWN == dc_item.interface.type)
-					{
-						err = (SUCCEED != DCconfig_get_interface(&dc_item.interface,
-								dc_item.host.hostid, 0));
-					}
+						ret = DCconfig_get_interface(&dc_item.interface, dc_item.host.hostid, 0);
+					else
+						ret = SUCCEED;
 
-					if (1 != err)
+					if (SUCCEED == ret)
 					{
 						key = zbx_strdup(NULL, dc_item.key_orig);
-						substitute_key_macros(&key, NULL, &dc_item, NULL, MACRO_TYPE_ITEM_KEY, NULL, 0);
+						substitute_key_macros(&key, NULL, &dc_item, NULL, MACRO_TYPE_ITEM_KEY,
+								NULL, 0);
 
 						if (ZBX_REQUEST_ITEM_NAME == request)
 						{
@@ -1041,9 +1039,6 @@ static int	DBget_item_value(zbx_uint64_t itemid, char **replace_to, int request)
 					}
 
 					DCconfig_clean_items(&dc_item, &errcode, 1);
-
-					if (1 != err)
-						ret = SUCCEED;
 				}
 				break;
 			case ZBX_REQUEST_ITEM_NAME_ORIG:
