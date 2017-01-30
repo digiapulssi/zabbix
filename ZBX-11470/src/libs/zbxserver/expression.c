@@ -2438,7 +2438,7 @@ static void	wrap_negative_double_suffix(char **replace_to, size_t *replace_to_al
 	(*replace_to)[replace_to_len + 2] = '\0';
 }
 
-static int	zbx_expand_trigger_msg(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+static int	expand_trigger_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
 		zbx_uint64_t *userid, const char *m, char **replace_to, int N_functionid, int raw_value,
 		const DB_EVENT *c_event, char *error, int maxerrlen)
 {
@@ -2680,7 +2680,7 @@ static int	zbx_expand_trigger_msg(zbx_uint64_t *actionid, const DB_EVENT *event,
 	return ret;
 }
 
-static int	zbx_expand_internal_trigger_msg(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+static int	expand_intern_trigger_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
 		zbx_uint64_t *userid, const char *m, char **replace_to, int N_functionid, const DB_EVENT *c_event,
 		char *error, int maxerrlen)
 {
@@ -2858,7 +2858,7 @@ static int	zbx_expand_internal_trigger_msg(zbx_uint64_t *actionid, const DB_EVEN
 	return ret;
 }
 
-static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *event, const char *m,
+static int	expand_discovery_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const char *m,
 		char **replace_to, const DB_EVENT *c_event)
 {
 	int	ret = SUCCEED;
@@ -2973,7 +2973,7 @@ static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *even
 	return ret;
 }
 
-static int	zbx_expand_areg_msg(zbx_uint64_t *actionid, const DB_EVENT *event, const char *m, char **replace_to,
+static int	expand_areg_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const char *m, char **replace_to,
 		const DB_EVENT *c_event)
 {
 	int	ret = SUCCEED;
@@ -3046,7 +3046,7 @@ static int	zbx_expand_areg_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	return ret;
 }
 
-static int	zbx_expand_item_msg(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+static int	expand_item_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
 		const char *m, char **replace_to,const DB_EVENT *c_event)
 {
 	int	ret = SUCCEED;
@@ -3149,7 +3149,7 @@ static int	zbx_expand_item_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	return ret;
 }
 
-static int	zbx_expand_lld_msg(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+static int	expand_lldrule_msg_macro(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
 		const char *m, char **replace_to, const DB_EVENT *c_event)
 {
 	int	ret = SUCCEED;
@@ -3252,7 +3252,7 @@ static int	zbx_expand_lld_msg(zbx_uint64_t *actionid, const DB_EVENT *event, con
 	return ret;
 }
 
-static int	zbx_expand_trigger_description(const DB_EVENT *event, const char *m, char **replace_to,
+static int	expand_trigger_description_macro(const DB_EVENT *event, const char *m, char **replace_to,
 		int N_functionid, int raw_value)
 {
 	int	ret = SUCCEED;
@@ -3294,13 +3294,13 @@ static int	zbx_expand_trigger_description(const DB_EVENT *event, const char *m, 
 	return ret;
 }
 
-static void	zbx_expand_trigger_expression(const DB_EVENT *event, const char *m, char **replace_to)
+static void	expand_trigger_expression_macro(const DB_EVENT *event, const char *m, char **replace_to)
 {
 	if (0 == strcmp(m, MVAR_TRIGGER_VALUE))
 		*replace_to = zbx_dsprintf(*replace_to, "%d", event->value);
 }
 
-static int	zbx_expand_trigger_url(const DB_EVENT *event, const char *m, char **replace_to, int N_functionid)
+static int	expand_trigger_url_macro(const DB_EVENT *event, const char *m, char **replace_to, int N_functionid)
 {
 	int	ret = SUCCEED;
 
@@ -3340,7 +3340,7 @@ static int	zbx_expand_trigger_url(const DB_EVENT *event, const char *m, char **r
 	return ret;
 }
 
-static int	zbx_expand_field(const char *m, char **replace_to, const DC_ITEM *dc_item)
+static int	expand_param_macro(const char *m, char **replace_to, const DC_ITEM *dc_item)
 {
 	int	ret = SUCCEED;
 
@@ -3392,7 +3392,7 @@ static int	zbx_expand_field(const char *m, char **replace_to, const DC_ITEM *dc_
 	return ret;
 }
 
-static int	zbx_expand_interface(const char *m, char **replace_to, const DC_HOST *dc_host)
+static int	expand_interface_macro(const char *m, char **replace_to, const DC_HOST *dc_host)
 {
 	int		ret = SUCCEED;
 	DC_INTERFACE	interface;
@@ -3433,7 +3433,7 @@ static int	zbx_expand_interface(const char *m, char **replace_to, const DC_HOST 
 	return ret;
 }
 
-static int	zbx_expand_script(const char *m, char **replace_to, const DC_HOST *dc_host)
+static int	expand_script_macro(const char *m, char **replace_to, const DC_HOST *dc_host)
 {
 	int		ret = SUCCEED;
 	DC_INTERFACE	interface;
@@ -3465,7 +3465,7 @@ static int	zbx_expand_script(const char *m, char **replace_to, const DC_HOST *dc
 	return ret;
 }
 
-static int	zbx_expand_httptest(const char *m, char **replace_to, const DC_HOST *dc_host)
+static int	expand_httptest_macro(const char *m, char **replace_to, const DC_HOST *dc_host)
 {
 	int		ret = SUCCEED;
 	DC_INTERFACE	interface;
@@ -3497,7 +3497,7 @@ static int	zbx_expand_httptest(const char *m, char **replace_to, const DC_HOST *
 	return ret;
 }
 
-static void	zbx_expand_alert(const char *m, char **replace_to, const DB_ALERT *alert)
+static void	expand_alert_macro(const char *m, char **replace_to, const DB_ALERT *alert)
 {
 	if (0 == strcmp(m, MVAR_ALERT_SENDTO))
 		*replace_to = zbx_strdup(*replace_to, alert->sendto);
@@ -3507,7 +3507,7 @@ static void	zbx_expand_alert(const char *m, char **replace_to, const DB_ALERT *a
 		*replace_to = zbx_strdup(*replace_to, alert->message);
 }
 
-static int	zbx_expand_trigger_tag(const DB_EVENT *event, const char *m, char **replace_to, int N_functionid,
+static int	expand_tag_macro(const DB_EVENT *event, const char *m, char **replace_to, int N_functionid,
 		int raw_value)
 {
 	int	ret = SUCCEED;
@@ -3657,7 +3657,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_trigger_msg(actionid, event,r_event, userid, m,
+					ret = expand_trigger_msg_macro(actionid, event,r_event, userid, m,
 							&replace_to, N_functionid, raw_value, c_event,
 							error, maxerrlen);
 				}
@@ -3673,7 +3673,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_internal_trigger_msg(actionid, event, r_event, userid, m,
+					ret = expand_intern_trigger_msg_macro(actionid, event, r_event, userid, m,
 							&replace_to, N_functionid, c_event, error, maxerrlen);
 				}
 			}
@@ -3686,7 +3686,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_discovery_msg(actionid, event, m, &replace_to, c_event);
+					ret = expand_discovery_msg_macro(actionid, event, m, &replace_to, c_event);
 				}
 			}
 			else if (0 == indexed_macro && EVENT_SOURCE_AUTO_REGISTRATION == c_event->source)
@@ -3698,7 +3698,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_areg_msg(actionid, event, m, &replace_to, c_event);
+					ret = expand_areg_msg_macro(actionid, event, m, &replace_to, c_event);
 				}
 			}
 			else if (0 == indexed_macro && EVENT_SOURCE_INTERNAL == c_event->source &&
@@ -3712,7 +3712,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_item_msg(actionid, event, r_event, m, &replace_to, c_event);
+					ret = expand_item_msg_macro(actionid, event, r_event, m, &replace_to, c_event);
 				}
 			}
 			else if (0 == indexed_macro && EVENT_SOURCE_INTERNAL == c_event->source &&
@@ -3726,7 +3726,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_lld_msg(actionid, event, r_event, m, &replace_to, c_event);
+					ret = expand_lldrule_msg_macro(actionid, event, r_event, m, &replace_to, c_event);
 				}
 			}
 		}
@@ -3757,7 +3757,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_trigger_description(event, m, &replace_to, N_functionid,
+					ret = expand_trigger_description_macro(event, m, &replace_to, N_functionid,
 							raw_value);
 				}
 			}
@@ -3767,7 +3767,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 			if (EVENT_OBJECT_TRIGGER == event->object)
 			{
 				if (ZBX_TOKEN_MACRO == token.type)
-					zbx_expand_trigger_expression(event, m, &replace_to);
+					expand_trigger_expression_macro(event, m, &replace_to);
 
 				/* when processing trigger expressions the user macros are already expanded */
 			}
@@ -3785,7 +3785,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_trigger_url(event, m, &replace_to, N_functionid);
+					ret = expand_trigger_url_macro(event, m, &replace_to, N_functionid);
 				}
 			}
 		}
@@ -3799,7 +3799,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 			}
 			else if (ZBX_TOKEN_MACRO == token.type)
 			{
-				ret = zbx_expand_field(m, &replace_to, dc_item);
+				ret = expand_param_macro(m, &replace_to, dc_item);
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_INTERFACE_ADDR))
@@ -3811,7 +3811,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 			}
 			else if (ZBX_TOKEN_MACRO == token.type)
 			{
-				ret = zbx_expand_interface(m, &replace_to, dc_host);
+				ret = expand_interface_macro(m, &replace_to, dc_host);
 			}
 		}
 		else if (0 != (macro_type & (MACRO_TYPE_COMMON | MACRO_TYPE_SNMP_OID)))
@@ -3844,7 +3844,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 			}
 			else if (ZBX_TOKEN_MACRO == token.type)
 			{
-				ret = zbx_expand_script(m, &replace_to, dc_host);
+				ret = expand_script_macro(m, &replace_to, dc_host);
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_HTTPTEST_FIELD))
@@ -3856,13 +3856,13 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 			}
 			else if (ZBX_TOKEN_MACRO == token.type)
 			{
-				zbx_expand_httptest(m, &replace_to, dc_host);
+				expand_httptest_macro(m, &replace_to, dc_host);
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_ALERT))
 		{
 			if (ZBX_TOKEN_MACRO == token.type)
-				zbx_expand_alert(m, &replace_to, alert);
+				expand_alert_macro(m, &replace_to, alert);
 		}
 		else if (macro_type & MACRO_TYPE_TRIGGER_TAG)
 		{
@@ -3877,7 +3877,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_trigger_tag(event, m, &replace_to, N_functionid, raw_value);
+					ret = expand_tag_macro(event, m, &replace_to, N_functionid, raw_value);
 				}
 			}
 		}
