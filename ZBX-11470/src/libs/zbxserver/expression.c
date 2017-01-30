@@ -3074,6 +3074,115 @@ static int	zbx_expand_areg_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	return ret;
 }
 
+static int	zbx_expand_item_msg(zbx_uint64_t *actionid, const DB_EVENT *event, const DB_EVENT *r_event,
+		const char *m, char **replace_to,const DB_EVENT *c_event)
+{
+	int	ret = SUCCEED;
+
+	if (0 == strncmp(m, MVAR_ACTION, ZBX_CONST_STRLEN(MVAR_ACTION)))
+	{
+		ret = get_action_value(m, *actionid, replace_to);
+	}
+	else if (0 == strcmp(m, MVAR_DATE))
+	{
+		*replace_to = zbx_strdup(*replace_to, zbx_date2str(time(NULL)));
+	}
+	else if (0 == strcmp(m, MVAR_ESC_HISTORY))
+	{
+		get_escalation_history(*actionid, event, r_event, replace_to);
+	}
+	else if (0 == strncmp(m, MVAR_EVENT_RECOVERY, ZBX_CONST_STRLEN(MVAR_EVENT_RECOVERY)))
+	{
+		if (NULL != r_event)
+			get_recovery_event_value(m, r_event, replace_to);
+	}
+	else if (0 == strncmp(m, MVAR_EVENT, ZBX_CONST_STRLEN(MVAR_EVENT)))
+	{
+		get_event_value(m, event, replace_to);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_HOST_HOST);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_NAME))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_HOST_NAME);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_DESCRIPTION))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to,
+				ZBX_REQUEST_HOST_DESCRIPTION);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_HOST_IP);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_DNS))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_HOST_DNS);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_CONN))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_HOST_CONN);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_PORT))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_HOST_PORT);
+	}
+	else if (0 == strncmp(m, MVAR_INVENTORY, ZBX_CONST_STRLEN(MVAR_INVENTORY)) ||
+			0 == strncmp(m, MVAR_PROFILE, ZBX_CONST_STRLEN(MVAR_PROFILE)))
+	{
+		ret = get_host_inventory_by_itemid(m, c_event->objectid, replace_to);
+	}
+	else if (0 == strcmp(m, MVAR_ITEM_DESCRIPTION))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to,
+				ZBX_REQUEST_ITEM_DESCRIPTION);
+	}
+	else if (0 == strcmp(m, MVAR_ITEM_ID))
+	{
+		*replace_to = zbx_dsprintf(*replace_to, ZBX_FS_UI64, c_event->objectid);
+	}
+	else if (0 == strcmp(m, MVAR_ITEM_KEY) || 0 == strcmp(m, MVAR_TRIGGER_KEY))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_ITEM_KEY);
+	}
+	else if (0 == strcmp(m, MVAR_ITEM_KEY_ORIG))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to,
+				ZBX_REQUEST_ITEM_KEY_ORIG);
+	}
+	else if (0 == strcmp(m, MVAR_ITEM_NAME))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_ITEM_NAME);
+	}
+	else if (0 == strcmp(m, MVAR_ITEM_NAME_ORIG))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to,
+				ZBX_REQUEST_ITEM_NAME_ORIG);
+	}
+	else if (0 == strcmp(m, MVAR_ITEM_STATE))
+	{
+		*replace_to = zbx_strdup(*replace_to, zbx_item_state_string(c_event->value));
+	}
+	else if (0 == strcmp(m, MVAR_PROXY_NAME))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_PROXY_NAME);
+	}
+	else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
+	{
+		ret = DBget_item_value(c_event->objectid, replace_to,
+				ZBX_REQUEST_PROXY_DESCRIPTION);
+	}
+	else if (0 == strcmp(m, MVAR_TIME))
+	{
+		*replace_to = zbx_strdup(*replace_to, zbx_time2str(time(NULL)));
+	}
+
+	return ret;
+}
+
+
 static int	zbx_expand_trigger_description(const DB_EVENT *event, const char *m, char **replace_to,
 		int N_functionid, int raw_value)
 {
@@ -3309,104 +3418,9 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 					DCget_user_macro(hostids.values, hostids.values_num, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (0 == strncmp(m, MVAR_ACTION, ZBX_CONST_STRLEN(MVAR_ACTION)))
+				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = get_action_value(m, *actionid, &replace_to);
-				}
-				else if (0 == strcmp(m, MVAR_DATE))
-				{
-					replace_to = zbx_strdup(replace_to, zbx_date2str(time(NULL)));
-				}
-				else if (0 == strcmp(m, MVAR_ESC_HISTORY))
-				{
-					get_escalation_history(*actionid, event, r_event, &replace_to);
-				}
-				else if (0 == strncmp(m, MVAR_EVENT_RECOVERY, ZBX_CONST_STRLEN(MVAR_EVENT_RECOVERY)))
-				{
-					if (NULL != r_event)
-						get_recovery_event_value(m, r_event, &replace_to);
-				}
-				else if (0 == strncmp(m, MVAR_EVENT, ZBX_CONST_STRLEN(MVAR_EVENT)))
-				{
-					get_event_value(m, event, &replace_to);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_HOST_HOST);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_NAME))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_HOST_NAME);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_DESCRIPTION))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to,
-							ZBX_REQUEST_HOST_DESCRIPTION);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_HOST_IP);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_DNS))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_HOST_DNS);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_CONN))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_HOST_CONN);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_PORT))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_HOST_PORT);
-				}
-				else if (0 == strncmp(m, MVAR_INVENTORY, ZBX_CONST_STRLEN(MVAR_INVENTORY)) ||
-						0 == strncmp(m, MVAR_PROFILE, ZBX_CONST_STRLEN(MVAR_PROFILE)))
-				{
-					ret = get_host_inventory_by_itemid(m, c_event->objectid, &replace_to);
-				}
-				else if (0 == strcmp(m, MVAR_ITEM_DESCRIPTION))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to,
-							ZBX_REQUEST_ITEM_DESCRIPTION);
-				}
-				else if (0 == strcmp(m, MVAR_ITEM_ID))
-				{
-					replace_to = zbx_dsprintf(replace_to, ZBX_FS_UI64, c_event->objectid);
-				}
-				else if (0 == strcmp(m, MVAR_ITEM_KEY) || 0 == strcmp(m, MVAR_TRIGGER_KEY))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_ITEM_KEY);
-				}
-				else if (0 == strcmp(m, MVAR_ITEM_KEY_ORIG))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to,
-							ZBX_REQUEST_ITEM_KEY_ORIG);
-				}
-				else if (0 == strcmp(m, MVAR_ITEM_NAME))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_ITEM_NAME);
-				}
-				else if (0 == strcmp(m, MVAR_ITEM_NAME_ORIG))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to,
-							ZBX_REQUEST_ITEM_NAME_ORIG);
-				}
-				else if (0 == strcmp(m, MVAR_ITEM_STATE))
-				{
-					replace_to = zbx_strdup(replace_to, zbx_item_state_string(c_event->value));
-				}
-				else if (0 == strcmp(m, MVAR_PROXY_NAME))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to, ZBX_REQUEST_PROXY_NAME);
-				}
-				else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
-				{
-					ret = DBget_item_value(c_event->objectid, &replace_to,
-							ZBX_REQUEST_PROXY_DESCRIPTION);
-				}
-				else if (0 == strcmp(m, MVAR_TIME))
-				{
-					replace_to = zbx_strdup(replace_to, zbx_time2str(time(NULL)));
+					ret = zbx_expand_item_msg(actionid, event, r_event, m, &replace_to, c_event);
 				}
 			}
 			else if (0 == indexed_macro && EVENT_SOURCE_INTERNAL == c_event->source &&
