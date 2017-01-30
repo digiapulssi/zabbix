@@ -3484,6 +3484,81 @@ static int	zbx_expand_interface(const char *m, char **replace_to, const DC_HOST 
 
 	return ret;
 }
+
+static int	zbx_expand_script(const char *m, char **replace_to, const DC_HOST *dc_host)
+{
+	int		ret = SUCCEED;
+	DC_INTERFACE	interface;
+
+	if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
+	{
+		*replace_to = zbx_strdup(*replace_to, dc_host->host);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_NAME))
+	{
+		*replace_to = zbx_strdup(*replace_to, dc_host->name);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+			*replace_to = zbx_strdup(*replace_to, interface.ip_orig);
+	}
+	else if	(0 == strcmp(m, MVAR_HOST_DNS))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+			*replace_to = zbx_strdup(*replace_to, interface.dns_orig);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_CONN))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+			*replace_to = zbx_strdup(*replace_to, interface.addr);
+	}
+
+	return ret;
+}
+
+static int	zbx_expand_httptest(const char *m, char **replace_to, const DC_HOST *dc_host)
+{
+	int		ret = SUCCEED;
+	DC_INTERFACE	interface;
+
+	if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
+	{
+		*replace_to = zbx_strdup(*replace_to, dc_host->host);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_NAME))
+	{
+		*replace_to = zbx_strdup(*replace_to, dc_host->name);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+			*replace_to = zbx_strdup(*replace_to, interface.ip_orig);
+	}
+	else if	(0 == strcmp(m, MVAR_HOST_DNS))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+			*replace_to = zbx_strdup(*replace_to, interface.dns_orig);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_CONN))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+			*replace_to = zbx_strdup(*replace_to, interface.addr);
+	}
+
+	return ret;
+}
+
+static void	zbx_expand_alert(const char *m, char **replace_to, const DB_ALERT *alert)
+{
+	if (0 == strcmp(m, MVAR_ALERT_SENDTO))
+		*replace_to = zbx_strdup(*replace_to, alert->sendto);
+	else if (0 == strcmp(m, MVAR_ALERT_SUBJECT))
+		*replace_to = zbx_strdup(*replace_to, alert->subject);
+	else if (0 == strcmp(m, MVAR_ALERT_MESSAGE))
+		*replace_to = zbx_strdup(*replace_to, alert->message);
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: substitute_simple_macros                                         *
@@ -3504,7 +3579,6 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 	int			N_functionid, indexed_macro, require_numeric, ret, res = SUCCEED, pos = 0, found,
 				raw_value;
 	size_t			data_alloc, data_len, replace_len;
-	DC_INTERFACE		interface;
 	zbx_vector_uint64_t	hostids;
 	zbx_token_t		token;
 	zbx_token_search_t	token_search;
@@ -3802,24 +3876,9 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				DCget_user_macro(&dc_host->hostid, 1, m, &replace_to);
 				pos = token.token.r;
 			}
-			else if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
-				replace_to = zbx_strdup(replace_to, dc_host->host);
-			else if (0 == strcmp(m, MVAR_HOST_NAME))
-				replace_to = zbx_strdup(replace_to, dc_host->name);
-			else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
+			else if (ZBX_TOKEN_MACRO == token.type)
 			{
-				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
-					replace_to = zbx_strdup(replace_to, interface.ip_orig);
-			}
-			else if	(0 == strcmp(m, MVAR_HOST_DNS))
-			{
-				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
-					replace_to = zbx_strdup(replace_to, interface.dns_orig);
-			}
-			else if (0 == strcmp(m, MVAR_HOST_CONN))
-			{
-				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
-					replace_to = zbx_strdup(replace_to, interface.addr);
+				ret = zbx_expand_script(m, &replace_to, dc_host);
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_HTTPTEST_FIELD))
@@ -3829,34 +3888,15 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				DCget_user_macro(&dc_host->hostid, 1, m, &replace_to);
 				pos = token.token.r;
 			}
-			else if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
-				replace_to = zbx_strdup(replace_to, dc_host->host);
-			else if (0 == strcmp(m, MVAR_HOST_NAME))
-				replace_to = zbx_strdup(replace_to, dc_host->name);
-			else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
+			else if (ZBX_TOKEN_MACRO == token.type)
 			{
-				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
-					replace_to = zbx_strdup(replace_to, interface.ip_orig);
-			}
-			else if	(0 == strcmp(m, MVAR_HOST_DNS))
-			{
-				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
-					replace_to = zbx_strdup(replace_to, interface.dns_orig);
-			}
-			else if (0 == strcmp(m, MVAR_HOST_CONN))
-			{
-				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
-					replace_to = zbx_strdup(replace_to, interface.addr);
+				zbx_expand_httptest(m, &replace_to, dc_host);
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_ALERT))
 		{
-			if (0 == strcmp(m, MVAR_ALERT_SENDTO))
-				replace_to = zbx_strdup(replace_to, alert->sendto);
-			else if (0 == strcmp(m, MVAR_ALERT_SUBJECT))
-				replace_to = zbx_strdup(replace_to, alert->subject);
-			else if (0 == strcmp(m, MVAR_ALERT_MESSAGE))
-				replace_to = zbx_strdup(replace_to, alert->message);
+			if (ZBX_TOKEN_MACRO == token.type)
+				zbx_expand_alert(m, &replace_to, alert);
 		}
 		else if (macro_type & MACRO_TYPE_TRIGGER_TAG)
 		{
