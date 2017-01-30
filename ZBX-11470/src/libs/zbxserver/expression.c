@@ -3443,6 +3443,47 @@ static int	zbx_expand_field(const char *m, char **replace_to, const DC_ITEM *dc_
 
 	return ret;
 }
+
+static int	zbx_expand_interface(const char *m, char **replace_to, const DC_HOST *dc_host)
+{
+	int		ret = SUCCEED;
+	DC_INTERFACE	interface;
+
+	if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
+	{
+		*replace_to = zbx_strdup(*replace_to, dc_host->host);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_NAME))
+	{
+		*replace_to = zbx_strdup(*replace_to, dc_host->name);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
+				dc_host->hostid, INTERFACE_TYPE_AGENT)))
+		{
+			*replace_to = zbx_strdup(*replace_to, interface.ip_orig);
+		}
+	}
+	else if	(0 == strcmp(m, MVAR_HOST_DNS))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
+				dc_host->hostid, INTERFACE_TYPE_AGENT)))
+		{
+			*replace_to = zbx_strdup(*replace_to, interface.dns_orig);
+		}
+	}
+	else if (0 == strcmp(m, MVAR_HOST_CONN))
+	{
+		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
+				dc_host->hostid, INTERFACE_TYPE_AGENT)))
+		{
+			*replace_to = zbx_strdup(*replace_to, interface.addr);
+		}
+	}
+
+	return ret;
+}
 /******************************************************************************
  *                                                                            *
  * Function: substitute_simple_macros                                         *
@@ -3728,33 +3769,9 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				DCget_user_macro(&dc_host->hostid, 1, m, &replace_to);
 				pos = token.token.r;
 			}
-			else if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
-				replace_to = zbx_strdup(replace_to, dc_host->host);
-			else if (0 == strcmp(m, MVAR_HOST_NAME))
-				replace_to = zbx_strdup(replace_to, dc_host->name);
-			else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
+			else if (ZBX_TOKEN_MACRO == token.type)
 			{
-				if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
-						dc_host->hostid, INTERFACE_TYPE_AGENT)))
-				{
-					replace_to = zbx_strdup(replace_to, interface.ip_orig);
-				}
-			}
-			else if	(0 == strcmp(m, MVAR_HOST_DNS))
-			{
-				if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
-						dc_host->hostid, INTERFACE_TYPE_AGENT)))
-				{
-					replace_to = zbx_strdup(replace_to, interface.dns_orig);
-				}
-			}
-			else if (0 == strcmp(m, MVAR_HOST_CONN))
-			{
-				if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
-						dc_host->hostid, INTERFACE_TYPE_AGENT)))
-				{
-					replace_to = zbx_strdup(replace_to, interface.addr);
-				}
+				ret = zbx_expand_interface(m, &replace_to, dc_host);
 			}
 		}
 		else if (0 != (macro_type & (MACRO_TYPE_COMMON | MACRO_TYPE_SNMP_OID)))
