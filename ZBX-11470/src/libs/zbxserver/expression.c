@@ -2872,6 +2872,132 @@ static int	zbx_expand_internal_trigger_msg(zbx_uint64_t *actionid, const DB_EVEN
 	return ret;
 }
 
+static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *event, const char *m,
+		char **replace_to, const DB_EVENT *c_event)
+{
+	int	ret = SUCCEED;
+	char	sql[64];
+
+	if (0 == strncmp(m, MVAR_ACTION, ZBX_CONST_STRLEN(MVAR_ACTION)))
+	{
+		ret = get_action_value(m, *actionid, replace_to);
+	}
+	else if (0 == strcmp(m, MVAR_DATE))
+	{
+		*replace_to = zbx_strdup(*replace_to, zbx_date2str(time(NULL)));
+	}
+	else if (0 == strncmp(m, MVAR_EVENT, ZBX_CONST_STRLEN(MVAR_EVENT)))
+	{
+		get_event_value(m, event, replace_to);
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_IPADDRESS))
+	{
+		ret = DBget_dhost_value_by_event(c_event, replace_to, "s.ip");
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_DNS))
+	{
+		ret = DBget_dhost_value_by_event(c_event, replace_to, "s.dns");
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_STATUS))
+	{
+		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to,
+				"h.status")))
+		{
+			*replace_to = zbx_strdup(*replace_to,
+					DOBJECT_STATUS_UP == atoi(*replace_to) ? "UP" : "DOWN");
+		}
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_UPTIME))
+	{
+		zbx_snprintf(sql, sizeof(sql),
+				"case when h.status=%d then h.lastup else h.lastdown end",
+				DOBJECT_STATUS_UP);
+		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to, sql)))
+		{
+			*replace_to = zbx_strdup(*replace_to,
+					zbx_age2str(time(NULL) - atoi(*replace_to)));
+		}
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_RULE_NAME))
+	{
+		ret = DBget_drule_value_by_event(c_event, replace_to, "name");
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_NAME))
+	{
+		if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, replace_to,
+				"s.type")))
+		{
+			*replace_to = zbx_strdup(*replace_to,
+					zbx_dservice_type_string(atoi(*replace_to)));
+		}
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_PORT))
+	{
+		ret = DBget_dservice_value_by_event(c_event, replace_to, "s.port");
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_STATUS))
+	{
+		if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, replace_to,
+				"s.status")))
+		{
+			*replace_to = zbx_strdup(*replace_to,
+					DOBJECT_STATUS_UP == atoi(*replace_to) ? "UP" : "DOWN");
+		}
+	}
+	else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_UPTIME))
+	{
+		zbx_snprintf(sql, sizeof(sql),
+				"case when s.status=%d then s.lastup else s.lastdown end",
+				DOBJECT_STATUS_UP);
+		if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, replace_to, sql)))
+		{
+			*replace_to = zbx_strdup(*replace_to,
+					zbx_age2str(time(NULL) - atoi(*replace_to)));
+		}
+	}
+	else if (0 == strcmp(m, MVAR_PROXY_NAME))
+	{
+		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to,
+				"r.proxy_hostid")))
+		{
+			zbx_uint64_t	proxy_hostid;
+
+			ZBX_DBROW2UINT64(proxy_hostid, *replace_to);
+
+			if (0 == proxy_hostid)
+				*replace_to = zbx_strdup(*replace_to, "");
+			else
+				ret = DBget_host_value(proxy_hostid, replace_to, "host");
+		}
+	}
+	else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
+	{
+		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to,
+				"r.proxy_hostid")))
+		{
+			zbx_uint64_t	proxy_hostid;
+
+			ZBX_DBROW2UINT64(proxy_hostid, *replace_to);
+
+			if (0 == proxy_hostid)
+			{
+				*replace_to = zbx_strdup(*replace_to, "");
+			}
+			else
+			{
+				ret = DBget_host_value(proxy_hostid, replace_to,
+						"description");
+			}
+		}
+	}
+	else if (0 == strcmp(m, MVAR_TIME))
+	{
+		*replace_to = zbx_strdup(*replace_to, zbx_time2str(time(NULL)));
+	}
+
+	return ret;
+}
+
 static int	zbx_expand_trigger_description(const DB_EVENT *event, const char *m, char **replace_to,
 		int N_functionid, int raw_value)
 {
@@ -2936,7 +3062,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 {
 	const char		*__function_name = "substitute_simple_macros";
 
-	char			c, *replace_to = NULL, sql[64];
+	char			c, *replace_to = NULL;
 	const char		*m, *replace = NULL;
 	int			N_functionid, indexed_macro, require_numeric, ret, res = SUCCEED, pos = 0, found,
 				raw_value;
@@ -3070,7 +3196,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = zbx_expand_internal_trigger_msg(actionid, event,r_event, userid, m,
+					ret = zbx_expand_internal_trigger_msg(actionid, event, r_event, userid, m,
 							&replace_to, N_functionid, c_event, error, maxerrlen);
 				}
 			}
@@ -3081,121 +3207,9 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 					DCget_user_macro(NULL, 0, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (0 == strncmp(m, MVAR_ACTION, ZBX_CONST_STRLEN(MVAR_ACTION)))
+				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = get_action_value(m, *actionid, &replace_to);
-				}
-				else if (0 == strcmp(m, MVAR_DATE))
-				{
-					replace_to = zbx_strdup(replace_to, zbx_date2str(time(NULL)));
-				}
-				else if (0 == strncmp(m, MVAR_EVENT, ZBX_CONST_STRLEN(MVAR_EVENT)))
-				{
-					get_event_value(m, event, &replace_to);
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_IPADDRESS))
-				{
-					ret = DBget_dhost_value_by_event(c_event, &replace_to, "s.ip");
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_DNS))
-				{
-					ret = DBget_dhost_value_by_event(c_event, &replace_to, "s.dns");
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_STATUS))
-				{
-					if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, &replace_to,
-							"h.status")))
-					{
-						replace_to = zbx_strdup(replace_to,
-								DOBJECT_STATUS_UP == atoi(replace_to) ? "UP" : "DOWN");
-					}
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_UPTIME))
-				{
-					zbx_snprintf(sql, sizeof(sql),
-							"case when h.status=%d then h.lastup else h.lastdown end",
-							DOBJECT_STATUS_UP);
-					if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, &replace_to, sql)))
-					{
-						replace_to = zbx_strdup(replace_to,
-								zbx_age2str(time(NULL) - atoi(replace_to)));
-					}
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_RULE_NAME))
-				{
-					ret = DBget_drule_value_by_event(c_event, &replace_to, "name");
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_NAME))
-				{
-					if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, &replace_to,
-							"s.type")))
-					{
-						replace_to = zbx_strdup(replace_to,
-								zbx_dservice_type_string(atoi(replace_to)));
-					}
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_PORT))
-				{
-					ret = DBget_dservice_value_by_event(c_event, &replace_to, "s.port");
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_STATUS))
-				{
-					if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, &replace_to,
-							"s.status")))
-					{
-						replace_to = zbx_strdup(replace_to,
-								DOBJECT_STATUS_UP == atoi(replace_to) ? "UP" : "DOWN");
-					}
-				}
-				else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_UPTIME))
-				{
-					zbx_snprintf(sql, sizeof(sql),
-							"case when s.status=%d then s.lastup else s.lastdown end",
-							DOBJECT_STATUS_UP);
-					if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, &replace_to, sql)))
-					{
-						replace_to = zbx_strdup(replace_to,
-								zbx_age2str(time(NULL) - atoi(replace_to)));
-					}
-				}
-				else if (0 == strcmp(m, MVAR_PROXY_NAME))
-				{
-					if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, &replace_to,
-							"r.proxy_hostid")))
-					{
-						zbx_uint64_t	proxy_hostid;
-
-						ZBX_DBROW2UINT64(proxy_hostid, replace_to);
-
-						if (0 == proxy_hostid)
-							replace_to = zbx_strdup(replace_to, "");
-						else
-							ret = DBget_host_value(proxy_hostid, &replace_to, "host");
-					}
-				}
-				else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
-				{
-					if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, &replace_to,
-							"r.proxy_hostid")))
-					{
-						zbx_uint64_t	proxy_hostid;
-
-						ZBX_DBROW2UINT64(proxy_hostid, replace_to);
-
-						if (0 == proxy_hostid)
-						{
-							replace_to = zbx_strdup(replace_to, "");
-						}
-						else
-						{
-							ret = DBget_host_value(proxy_hostid, &replace_to,
-									"description");
-						}
-					}
-				}
-				else if (0 == strcmp(m, MVAR_TIME))
-				{
-					replace_to = zbx_strdup(replace_to, zbx_time2str(time(NULL)));
+					ret = zbx_expand_discovery_msg(actionid, event, m, &replace_to, c_event);
 				}
 			}
 			else if (0 == indexed_macro && EVENT_SOURCE_AUTO_REGISTRATION == c_event->source)
