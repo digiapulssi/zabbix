@@ -3856,7 +3856,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 			}
 			else if (ZBX_TOKEN_MACRO == token.type)
 			{
-				expand_httptest_macro(m, &replace_to, dc_host);
+				ret = expand_httptest_macro(m, &replace_to, dc_host);
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_ALERT))
