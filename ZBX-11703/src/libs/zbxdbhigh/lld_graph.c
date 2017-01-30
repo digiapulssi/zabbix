@@ -345,14 +345,14 @@ static void	lld_gitems_get(zbx_uint64_t parent_graphid, zbx_vector_ptr_t *gitems
  *             items             - [OUT] sorted list of items                 *
  *                                                                            *
  ******************************************************************************/
-static void	lld_items_get(zbx_vector_ptr_t *gitems_proto, zbx_uint64_t ymin_itemid_proto,
+static void	lld_items_get(const zbx_vector_ptr_t *gitems_proto, zbx_uint64_t ymin_itemid_proto,
 		zbx_uint64_t ymax_itemid_proto, zbx_vector_ptr_t *items)
 {
 	const char		*__function_name = "lld_items_get";
 
 	DB_RESULT		result;
 	DB_ROW			row;
-	zbx_lld_gitem_t		*gitem;
+	const zbx_lld_gitem_t	*gitem;
 	zbx_lld_item_t		*item;
 	zbx_vector_uint64_t	itemids;
 	int			i;
@@ -456,14 +456,14 @@ static zbx_lld_graph_t	*lld_graph_by_item(zbx_vector_ptr_t *graphs, zbx_uint64_t
  * Return value: upon successful completion return pointer to the graph       *
  *                                                                            *
  ******************************************************************************/
-static zbx_lld_graph_t	*lld_graph_get(zbx_vector_ptr_t *graphs, zbx_vector_ptr_t *item_links)
+static zbx_lld_graph_t	*lld_graph_get(zbx_vector_ptr_t *graphs, const zbx_vector_ptr_t *item_links)
 {
 	int		i;
 	zbx_lld_graph_t	*graph;
 
 	for (i = 0; i < item_links->values_num; i++)
 	{
-		zbx_lld_item_link_t	*item_link = (zbx_lld_item_link_t *)item_links->values[i];
+		const zbx_lld_item_link_t	*item_link = (zbx_lld_item_link_t *)item_links->values[i];
 
 		if (NULL != (graph = lld_graph_by_item(graphs, item_link->itemid)))
 			return graph;
@@ -482,8 +482,8 @@ static zbx_lld_graph_t	*lld_graph_get(zbx_vector_ptr_t *graphs, zbx_vector_ptr_t
  * Return value: SUCCEED if item successfully processed, FAIL - otherwise     *
  *                                                                            *
  ******************************************************************************/
-static int	lld_item_get(zbx_uint64_t itemid_proto, zbx_vector_ptr_t *items, zbx_vector_ptr_t *item_links,
-		zbx_uint64_t *itemid)
+static int	lld_item_get(zbx_uint64_t itemid_proto, const zbx_vector_ptr_t *items,
+		const zbx_vector_ptr_t *item_links, zbx_uint64_t *itemid)
 {
 	int			index;
 	zbx_lld_item_t		*item_proto;
@@ -511,13 +511,14 @@ static int	lld_item_get(zbx_uint64_t itemid_proto, zbx_vector_ptr_t *items, zbx_
 	return SUCCEED;
 }
 
-static int	lld_gitems_make(zbx_vector_ptr_t *gitems_proto, zbx_vector_ptr_t *gitems, zbx_vector_ptr_t *items,
-		zbx_vector_ptr_t *item_links)
+static int	lld_gitems_make(const zbx_vector_ptr_t *gitems_proto, zbx_vector_ptr_t *gitems,
+		const zbx_vector_ptr_t *items, const zbx_vector_ptr_t *item_links)
 {
 	const char		*__function_name = "lld_gitems_make";
 
 	int			i, ret = FAIL;
-	zbx_lld_gitem_t		*gitem_proto, *gitem;
+	const zbx_lld_gitem_t	*gitem_proto;
+	zbx_lld_gitem_t		*gitem;
 	zbx_uint64_t		itemid;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -617,16 +618,16 @@ out:
  * Purpose: create a graph based on lld rule and add it to the list           *
  *                                                                            *
  ******************************************************************************/
-static void 	lld_graph_make(zbx_vector_ptr_t *gitems_proto, zbx_vector_ptr_t *graphs, zbx_vector_ptr_t *items,
+static void 	lld_graph_make(const zbx_vector_ptr_t *gitems_proto, zbx_vector_ptr_t *graphs, zbx_vector_ptr_t *items,
 		const char *name_proto, zbx_uint64_t ymin_itemid_proto, zbx_uint64_t ymax_itemid_proto,
-		zbx_lld_row_t *lld_row)
+		const zbx_lld_row_t *lld_row)
 {
-	const char		*__function_name = "lld_graph_make";
+	const char			*__function_name = "lld_graph_make";
 
-	zbx_lld_graph_t		*graph = NULL;
-	char			*buffer = NULL;
-	struct zbx_json_parse	*jp_row = &lld_row->jp_row;
-	zbx_uint64_t		ymin_itemid, ymax_itemid;
+	zbx_lld_graph_t			*graph = NULL;
+	char				*buffer = NULL;
+	const struct zbx_json_parse	*jp_row = &lld_row->jp_row;
+	zbx_uint64_t			ymin_itemid, ymax_itemid;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -696,9 +697,9 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-static void	lld_graphs_make(zbx_vector_ptr_t *gitems_proto, zbx_vector_ptr_t *graphs, zbx_vector_ptr_t *items,
+static void	lld_graphs_make(const zbx_vector_ptr_t *gitems_proto, zbx_vector_ptr_t *graphs, zbx_vector_ptr_t *items,
 		const char *name_proto, zbx_uint64_t ymin_itemid_proto, zbx_uint64_t ymax_itemid_proto,
-		zbx_vector_ptr_t *lld_rows)
+		const zbx_vector_ptr_t *lld_rows)
 {
 	int	i;
 
@@ -1288,7 +1289,7 @@ out:
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-int	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, zbx_vector_ptr_t *lld_rows, char **error)
+int	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, const zbx_vector_ptr_t *lld_rows, char **error)
 {
 	const char		*__function_name = "lld_update_graphs";
 
