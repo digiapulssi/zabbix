@@ -3339,6 +3339,12 @@ static int	zbx_expand_trigger_description(const DB_EVENT *event, const char *m, 
 	return ret;
 }
 
+static void	zbx_expand_trigger_expression(const DB_EVENT *event, const char *m, char **replace_to)
+{
+	if (0 == strcmp(m, MVAR_TRIGGER_VALUE))
+		*replace_to = zbx_dsprintf(*replace_to, "%d", event->value);
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: substitute_simple_macros                                         *
@@ -3581,8 +3587,8 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 		{
 			if (EVENT_OBJECT_TRIGGER == event->object)
 			{
-				if (0 == strcmp(m, MVAR_TRIGGER_VALUE))
-					replace_to = zbx_dsprintf(replace_to, "%d", event->value);
+				if (ZBX_TOKEN_MACRO == token.type)
+					zbx_expand_trigger_expression(event, m, &replace_to);
 
 				/* when processing trigger expressions the user macros are already expanded */
 			}
