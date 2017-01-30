@@ -3345,6 +3345,53 @@ static void	zbx_expand_trigger_expression(const DB_EVENT *event, const char *m, 
 		*replace_to = zbx_dsprintf(*replace_to, "%d", event->value);
 }
 
+static int	zbx_expand_trigger_url(const DB_EVENT *event, const char *m, char **replace_to, int N_functionid)
+{
+	int	ret = SUCCEED;
+
+	if (0 == strcmp(m, MVAR_HOST_ID))
+	{
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_ID);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_HOST))
+	{
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_HOST);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_NAME))
+	{
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_NAME);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_IP))
+	{
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_IP);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_DNS))
+	{
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_DNS);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_CONN))
+	{
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_CONN);
+	}
+	else if (0 == strcmp(m, MVAR_HOST_PORT))
+	{
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_PORT);
+	}
+	else if (0 == strcmp(m, MVAR_TRIGGER_ID))
+	{
+		*replace_to = zbx_dsprintf(*replace_to, ZBX_FS_UI64, event->objectid);
+	}
+
+	return ret;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: substitute_simple_macros                                         *
@@ -3604,44 +3651,9 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 					DCget_user_macro(hostids.values, hostids.values_num, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (0 == strcmp(m, MVAR_HOST_ID))
+				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = DBget_trigger_value(event->trigger.expression, &replace_to, N_functionid,
-							ZBX_REQUEST_HOST_ID);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_HOST))
-				{
-					ret = DBget_trigger_value(event->trigger.expression, &replace_to, N_functionid,
-							ZBX_REQUEST_HOST_HOST);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_NAME))
-				{
-					ret = DBget_trigger_value(event->trigger.expression, &replace_to, N_functionid,
-							ZBX_REQUEST_HOST_NAME);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_IP))
-				{
-					ret = DBget_trigger_value(event->trigger.expression, &replace_to, N_functionid,
-							ZBX_REQUEST_HOST_IP);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_DNS))
-				{
-					ret = DBget_trigger_value(event->trigger.expression, &replace_to, N_functionid,
-							ZBX_REQUEST_HOST_DNS);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_CONN))
-				{
-					ret = DBget_trigger_value(event->trigger.expression, &replace_to, N_functionid,
-							ZBX_REQUEST_HOST_CONN);
-				}
-				else if (0 == strcmp(m, MVAR_HOST_PORT))
-				{
-					ret = DBget_trigger_value(event->trigger.expression, &replace_to, N_functionid,
-							ZBX_REQUEST_HOST_PORT);
-				}
-				else if (0 == strcmp(m, MVAR_TRIGGER_ID))
-				{
-					replace_to = zbx_dsprintf(replace_to, ZBX_FS_UI64, event->objectid);
+					ret = zbx_expand_trigger_url(event, m, &replace_to, N_functionid);
 				}
 			}
 		}
