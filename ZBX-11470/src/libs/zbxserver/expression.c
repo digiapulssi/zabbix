@@ -3559,6 +3559,25 @@ static void	zbx_expand_alert(const char *m, char **replace_to, const DB_ALERT *a
 		*replace_to = zbx_strdup(*replace_to, alert->message);
 }
 
+static int	zbx_expand_trigger_tag(const DB_EVENT *event, const char *m, char **replace_to, int N_functionid,
+		int raw_value)
+{
+	int	ret = SUCCEED;
+
+	if (0 == strcmp(m, MVAR_ITEM_LASTVALUE))
+	{
+		ret = DBitem_lastvalue(event->trigger.expression, replace_to, N_functionid,
+				raw_value);
+	}
+	else if (0 == strcmp(m, MVAR_ITEM_VALUE))
+	{
+		ret = DBitem_value(event->trigger.expression, replace_to, N_functionid,
+				event->clock, event->ns, raw_value);
+	}
+
+	return ret;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: substitute_simple_macros                                         *
@@ -3909,15 +3928,9 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 					DCget_user_macro(hostids.values, hostids.values_num, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (0 == strcmp(m, MVAR_ITEM_LASTVALUE))
+				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = DBitem_lastvalue(event->trigger.expression, &replace_to, N_functionid,
-							raw_value);
-				}
-				else if (0 == strcmp(m, MVAR_ITEM_VALUE))
-				{
-					ret = DBitem_value(event->trigger.expression, &replace_to, N_functionid,
-							event->clock, event->ns, raw_value);
+					ret = zbx_expand_trigger_tag(event, m, &replace_to, N_functionid, raw_value);
 				}
 			}
 		}
