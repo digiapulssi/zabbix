@@ -2467,143 +2467,133 @@ static int	zbx_expand_trigger_msg(zbx_uint64_t *actionid, const DB_EVENT *event,
 	}
 	else if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_HOST);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_HOST);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_NAME))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_NAME);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_NAME);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_DESCRIPTION))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_DESCRIPTION);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_IP);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_IP);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_DNS))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_DNS);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_DNS);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_CONN))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_CONN);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_CONN);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_PORT))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_PORT);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_PORT);
 	}
 	else if (0 == strncmp(m, MVAR_INVENTORY, ZBX_CONST_STRLEN(MVAR_INVENTORY)) ||
 			0 == strncmp(m, MVAR_PROFILE, ZBX_CONST_STRLEN(MVAR_PROFILE)))
 	{
-		ret = get_host_inventory(m, c_event->trigger.expression, replace_to,
-				N_functionid);
+		ret = get_host_inventory(m, c_event->trigger.expression, replace_to, N_functionid);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_DESCRIPTION))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_DESCRIPTION);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_ID))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_ID);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_ID);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_KEY) || 0 == strcmp(m, MVAR_TRIGGER_KEY))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_KEY);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_KEY);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_KEY_ORIG))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_KEY_ORIG);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_KEY_ORIG);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LASTVALUE))
 	{
-		ret = DBitem_lastvalue(c_event->trigger.expression, replace_to, N_functionid,
-				raw_value);
+		ret = DBitem_lastvalue(c_event->trigger.expression, replace_to, N_functionid, raw_value);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LOG_AGE))
 	{
-		ret = get_history_log_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_LOG_AGE, c_event->clock,
-				c_event->ns);
+		ret = get_history_log_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_LOG_AGE, c_event->clock, c_event->ns);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LOG_DATE))
 	{
-		ret = get_history_log_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_LOG_DATE, c_event->clock,
-				c_event->ns);
+		ret = get_history_log_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_LOG_DATE, c_event->clock, c_event->ns);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LOG_EVENTID))
 	{
-		ret = get_history_log_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_LOG_EVENTID, c_event->clock,
-				c_event->ns);
+		ret = get_history_log_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_LOG_EVENTID, c_event->clock, c_event->ns);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LOG_NSEVERITY))
 	{
-		ret = get_history_log_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_LOG_NSEVERITY, c_event->clock,
-				c_event->ns);
+		ret = get_history_log_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_LOG_NSEVERITY, c_event->clock, c_event->ns);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LOG_SEVERITY))
 	{
-		ret = get_history_log_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_LOG_SEVERITY, c_event->clock,
-				c_event->ns);
+		ret = get_history_log_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_LOG_SEVERITY, c_event->clock, c_event->ns);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LOG_SOURCE))
 	{
-		ret = get_history_log_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_LOG_SOURCE, c_event->clock,
-				c_event->ns);
+		ret = get_history_log_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_LOG_SOURCE, c_event->clock, c_event->ns);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LOG_TIME))
 	{
-		ret = get_history_log_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_LOG_TIME, c_event->clock,
-				c_event->ns);
+		ret = get_history_log_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_LOG_TIME, c_event->clock, c_event->ns);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_NAME))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_NAME);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_NAME);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_NAME_ORIG))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_NAME_ORIG);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_NAME_ORIG);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_VALUE))
 	{
-		ret = DBitem_value(c_event->trigger.expression, replace_to, N_functionid,
-				c_event->clock, c_event->ns, raw_value);
+		ret = DBitem_value(c_event->trigger.expression, replace_to, N_functionid, c_event->clock, c_event->ns,
+				raw_value);
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_NAME))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_PROXY_NAME);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_PROXY_NAME);
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_PROXY_DESCRIPTION);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_PROXY_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_TIME))
 	{
 		*replace_to = zbx_strdup(*replace_to, zbx_time2str(time(NULL)));
 	}
-	else if (0 == strcmp(m, MVAR_TRIGGER_DESCRIPTION) ||
-			0 == strcmp(m, MVAR_TRIGGER_COMMENT))
+	else if (0 == strcmp(m, MVAR_TRIGGER_DESCRIPTION) || 0 == strcmp(m, MVAR_TRIGGER_COMMENT))
 	{
 		*replace_to = zbx_strdup(*replace_to, c_event->trigger.comments);
 		substitute_simple_macros(NULL, c_event, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -2635,8 +2625,7 @@ static int	zbx_expand_trigger_msg(zbx_uint64_t *actionid, const DB_EVENT *event,
 	{
 		if (TRIGGER_RECOVERY_MODE_RECOVERY_EXPRESSION == c_event->trigger.recovery_mode)
 		{
-			*replace_to = zbx_strdup(*replace_to,
-					c_event->trigger.recovery_expression);
+			*replace_to = zbx_strdup(*replace_to, c_event->trigger.recovery_expression);
 			DCexpand_trigger_expression(replace_to);
 		}
 		else
@@ -2720,91 +2709,89 @@ static int	zbx_expand_internal_trigger_msg(zbx_uint64_t *actionid, const DB_EVEN
 	}
 	else if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_HOST);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_HOST);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_NAME))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_NAME);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_NAME);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_DESCRIPTION))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_DESCRIPTION);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_IP);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_IP);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_DNS))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_DNS);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_DNS);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_CONN))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_CONN);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_CONN);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_PORT))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_HOST_PORT);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_HOST_PORT);
 	}
 	else if (0 == strncmp(m, MVAR_INVENTORY, ZBX_CONST_STRLEN(MVAR_INVENTORY)) ||
 			0 == strncmp(m, MVAR_PROFILE, ZBX_CONST_STRLEN(MVAR_PROFILE)))
 	{
-		ret = get_host_inventory(m, c_event->trigger.expression, replace_to,
-				N_functionid);
+		ret = get_host_inventory(m, c_event->trigger.expression, replace_to, N_functionid);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_DESCRIPTION))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_DESCRIPTION);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_ID))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_ID);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_ID);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_KEY) || 0 == strcmp(m, MVAR_TRIGGER_KEY))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_KEY);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_KEY);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_KEY_ORIG))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_KEY_ORIG);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_KEY_ORIG);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_NAME))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_NAME);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_NAME);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_NAME_ORIG))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_ITEM_NAME_ORIG);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_ITEM_NAME_ORIG);
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_NAME))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_PROXY_NAME);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_PROXY_NAME);
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
 	{
-		ret = DBget_trigger_value(c_event->trigger.expression, replace_to,
-				N_functionid, ZBX_REQUEST_PROXY_DESCRIPTION);
+		ret = DBget_trigger_value(c_event->trigger.expression, replace_to, N_functionid,
+				ZBX_REQUEST_PROXY_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_TIME))
 	{
 		*replace_to = zbx_strdup(*replace_to, zbx_time2str(time(NULL)));
 	}
-	else if (0 == strcmp(m, MVAR_TRIGGER_DESCRIPTION) ||
-			0 == strcmp(m, MVAR_TRIGGER_COMMENT))
+	else if (0 == strcmp(m, MVAR_TRIGGER_DESCRIPTION) || 0 == strcmp(m, MVAR_TRIGGER_COMMENT))
 	{
 		*replace_to = zbx_strdup(*replace_to, c_event->trigger.comments);
 		substitute_simple_macros(NULL, c_event, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -2820,8 +2807,7 @@ static int	zbx_expand_internal_trigger_msg(zbx_uint64_t *actionid, const DB_EVEN
 	{
 		if (TRIGGER_RECOVERY_MODE_RECOVERY_EXPRESSION == c_event->trigger.recovery_mode)
 		{
-			*replace_to = zbx_strdup(*replace_to,
-					c_event->trigger.recovery_expression);
+			*replace_to = zbx_strdup(*replace_to, c_event->trigger.recovery_expression);
 			DCexpand_trigger_expression(replace_to);
 		}
 		else
@@ -2900,11 +2886,9 @@ static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *even
 	}
 	else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_STATUS))
 	{
-		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to,
-				"h.status")))
+		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to, "h.status")))
 		{
-			*replace_to = zbx_strdup(*replace_to,
-					DOBJECT_STATUS_UP == atoi(*replace_to) ? "UP" : "DOWN");
+			*replace_to = zbx_strdup(*replace_to, DOBJECT_STATUS_UP == atoi(*replace_to) ? "UP" : "DOWN");
 		}
 	}
 	else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_UPTIME))
@@ -2914,8 +2898,7 @@ static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *even
 				DOBJECT_STATUS_UP);
 		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to, sql)))
 		{
-			*replace_to = zbx_strdup(*replace_to,
-					zbx_age2str(time(NULL) - atoi(*replace_to)));
+			*replace_to = zbx_strdup(*replace_to, zbx_age2str(time(NULL) - atoi(*replace_to)));
 		}
 	}
 	else if (0 == strcmp(m, MVAR_DISCOVERY_RULE_NAME))
@@ -2924,11 +2907,9 @@ static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *even
 	}
 	else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_NAME))
 	{
-		if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, replace_to,
-				"s.type")))
+		if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, replace_to, "s.type")))
 		{
-			*replace_to = zbx_strdup(*replace_to,
-					zbx_dservice_type_string(atoi(*replace_to)));
+			*replace_to = zbx_strdup(*replace_to, zbx_dservice_type_string(atoi(*replace_to)));
 		}
 	}
 	else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_PORT))
@@ -2937,11 +2918,9 @@ static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *even
 	}
 	else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_STATUS))
 	{
-		if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, replace_to,
-				"s.status")))
+		if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, replace_to, "s.status")))
 		{
-			*replace_to = zbx_strdup(*replace_to,
-					DOBJECT_STATUS_UP == atoi(*replace_to) ? "UP" : "DOWN");
+			*replace_to = zbx_strdup(*replace_to, DOBJECT_STATUS_UP == atoi(*replace_to) ? "UP" : "DOWN");
 		}
 	}
 	else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_UPTIME))
@@ -2951,14 +2930,12 @@ static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *even
 				DOBJECT_STATUS_UP);
 		if (SUCCEED == (ret = DBget_dservice_value_by_event(c_event, replace_to, sql)))
 		{
-			*replace_to = zbx_strdup(*replace_to,
-					zbx_age2str(time(NULL) - atoi(*replace_to)));
+			*replace_to = zbx_strdup(*replace_to, zbx_age2str(time(NULL) - atoi(*replace_to)));
 		}
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_NAME))
 	{
-		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to,
-				"r.proxy_hostid")))
+		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to, "r.proxy_hostid")))
 		{
 			zbx_uint64_t	proxy_hostid;
 
@@ -2972,8 +2949,7 @@ static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *even
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
 	{
-		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to,
-				"r.proxy_hostid")))
+		if (SUCCEED == (ret = DBget_dhost_value_by_event(c_event, replace_to, "r.proxy_hostid")))
 		{
 			zbx_uint64_t	proxy_hostid;
 
@@ -2985,8 +2961,7 @@ static int	zbx_expand_discovery_msg(zbx_uint64_t *actionid, const DB_EVENT *even
 			}
 			else
 			{
-				ret = DBget_host_value(proxy_hostid, replace_to,
-						"description");
+				ret = DBget_host_value(proxy_hostid, replace_to, "description");
 			}
 		}
 	}
@@ -3033,8 +3008,7 @@ static int	zbx_expand_areg_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_NAME))
 	{
-		if (SUCCEED == (ret = get_autoreg_value_by_event(c_event, replace_to,
-				"proxy_hostid")))
+		if (SUCCEED == (ret = get_autoreg_value_by_event(c_event, replace_to, "proxy_hostid")))
 		{
 			zbx_uint64_t	proxy_hostid;
 
@@ -3048,8 +3022,7 @@ static int	zbx_expand_areg_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
 	{
-		if (SUCCEED == (ret = get_autoreg_value_by_event(c_event, replace_to,
-				"proxy_hostid")))
+		if (SUCCEED == (ret = get_autoreg_value_by_event(c_event, replace_to, "proxy_hostid")))
 		{
 			zbx_uint64_t	proxy_hostid;
 
@@ -3061,8 +3034,7 @@ static int	zbx_expand_areg_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 			}
 			else
 			{
-				ret = DBget_host_value(proxy_hostid, replace_to,
-						"description");
+				ret = DBget_host_value(proxy_hostid, replace_to, "description");
 			}
 		}
 	}
@@ -3110,8 +3082,7 @@ static int	zbx_expand_item_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	}
 	else if (0 == strcmp(m, MVAR_HOST_DESCRIPTION))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_HOST_DESCRIPTION);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_HOST_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
 	{
@@ -3136,8 +3107,7 @@ static int	zbx_expand_item_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_DESCRIPTION))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_ITEM_DESCRIPTION);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_ITEM_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_ID))
 	{
@@ -3149,8 +3119,7 @@ static int	zbx_expand_item_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_KEY_ORIG))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_ITEM_KEY_ORIG);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_ITEM_KEY_ORIG);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_NAME))
 	{
@@ -3158,8 +3127,7 @@ static int	zbx_expand_item_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_NAME_ORIG))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_ITEM_NAME_ORIG);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_ITEM_NAME_ORIG);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_STATE))
 	{
@@ -3171,8 +3139,7 @@ static int	zbx_expand_item_msg(zbx_uint64_t *actionid, const DB_EVENT *event, co
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_PROXY_DESCRIPTION);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_PROXY_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_TIME))
 	{
@@ -3218,8 +3185,7 @@ static int	zbx_expand_lld_msg(zbx_uint64_t *actionid, const DB_EVENT *event, con
 	}
 	else if (0 == strcmp(m, MVAR_HOST_DESCRIPTION))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_HOST_DESCRIPTION);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_HOST_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
 	{
@@ -3244,8 +3210,7 @@ static int	zbx_expand_lld_msg(zbx_uint64_t *actionid, const DB_EVENT *event, con
 	}
 	else if (0 == strcmp(m, MVAR_LLDRULE_DESCRIPTION))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_ITEM_DESCRIPTION);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_ITEM_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_LLDRULE_ID))
 	{
@@ -3257,8 +3222,7 @@ static int	zbx_expand_lld_msg(zbx_uint64_t *actionid, const DB_EVENT *event, con
 	}
 	else if (0 == strcmp(m, MVAR_LLDRULE_KEY_ORIG))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_ITEM_KEY_ORIG);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_ITEM_KEY_ORIG);
 	}
 	else if (0 == strcmp(m, MVAR_LLDRULE_NAME))
 	{
@@ -3266,8 +3230,7 @@ static int	zbx_expand_lld_msg(zbx_uint64_t *actionid, const DB_EVENT *event, con
 	}
 	else if (0 == strcmp(m, MVAR_LLDRULE_NAME_ORIG))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_ITEM_NAME_ORIG);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_ITEM_NAME_ORIG);
 	}
 	else if (0 == strcmp(m, MVAR_LLDRULE_STATE))
 	{
@@ -3279,8 +3242,7 @@ static int	zbx_expand_lld_msg(zbx_uint64_t *actionid, const DB_EVENT *event, con
 	}
 	else if (0 == strcmp(m, MVAR_PROXY_DESCRIPTION))
 	{
-		ret = DBget_item_value(c_event->objectid, replace_to,
-				ZBX_REQUEST_PROXY_DESCRIPTION);
+		ret = DBget_item_value(c_event->objectid, replace_to, ZBX_REQUEST_PROXY_DESCRIPTION);
 	}
 	else if (0 == strcmp(m, MVAR_TIME))
 	{
@@ -3297,43 +3259,36 @@ static int	zbx_expand_trigger_description(const DB_EVENT *event, const char *m, 
 
 	if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_HOST);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_HOST);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_NAME))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_NAME);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_NAME);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_IP);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_IP);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_DNS))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_DNS);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_DNS);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_CONN))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_CONN);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_CONN);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_PORT))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_PORT);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_PORT);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_LASTVALUE))
 	{
-		ret = DBitem_lastvalue(event->trigger.expression, replace_to, N_functionid,
-				raw_value);
+		ret = DBitem_lastvalue(event->trigger.expression, replace_to, N_functionid, raw_value);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_VALUE))
 	{
-		ret = DBitem_value(event->trigger.expression, replace_to, N_functionid,
-				event->clock, event->ns, raw_value);
+		ret = DBitem_value(event->trigger.expression, replace_to, N_functionid, event->clock, event->ns,
+				raw_value);
 	}
 
 	return ret;
@@ -3351,38 +3306,31 @@ static int	zbx_expand_trigger_url(const DB_EVENT *event, const char *m, char **r
 
 	if (0 == strcmp(m, MVAR_HOST_ID))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_ID);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_ID);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_HOST))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_HOST);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_HOST);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_NAME))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_NAME);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_NAME);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_IP))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_IP);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_IP);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_DNS))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_DNS);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_DNS);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_CONN))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_CONN);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_CONN);
 	}
 	else if (0 == strcmp(m, MVAR_HOST_PORT))
 	{
-		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid,
-				ZBX_REQUEST_HOST_PORT);
+		ret = DBget_trigger_value(event->trigger.expression, replace_to, N_functionid, ZBX_REQUEST_HOST_PORT);
 	}
 	else if (0 == strcmp(m, MVAR_TRIGGER_ID))
 	{
@@ -3459,24 +3407,24 @@ static int	zbx_expand_interface(const char *m, char **replace_to, const DC_HOST 
 	}
 	else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
 	{
-		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
-				dc_host->hostid, INTERFACE_TYPE_AGENT)))
+		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface, dc_host->hostid,
+				INTERFACE_TYPE_AGENT)))
 		{
 			*replace_to = zbx_strdup(*replace_to, interface.ip_orig);
 		}
 	}
 	else if	(0 == strcmp(m, MVAR_HOST_DNS))
 	{
-		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
-				dc_host->hostid, INTERFACE_TYPE_AGENT)))
+		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface, dc_host->hostid,
+				INTERFACE_TYPE_AGENT)))
 		{
 			*replace_to = zbx_strdup(*replace_to, interface.dns_orig);
 		}
 	}
 	else if (0 == strcmp(m, MVAR_HOST_CONN))
 	{
-		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface,
-				dc_host->hostid, INTERFACE_TYPE_AGENT)))
+		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&interface, dc_host->hostid,
+				INTERFACE_TYPE_AGENT)))
 		{
 			*replace_to = zbx_strdup(*replace_to, interface.addr);
 		}
@@ -3566,13 +3514,12 @@ static int	zbx_expand_trigger_tag(const DB_EVENT *event, const char *m, char **r
 
 	if (0 == strcmp(m, MVAR_ITEM_LASTVALUE))
 	{
-		ret = DBitem_lastvalue(event->trigger.expression, replace_to, N_functionid,
-				raw_value);
+		ret = DBitem_lastvalue(event->trigger.expression, replace_to, N_functionid, raw_value);
 	}
 	else if (0 == strcmp(m, MVAR_ITEM_VALUE))
 	{
-		ret = DBitem_value(event->trigger.expression, replace_to, N_functionid,
-				event->clock, event->ns, raw_value);
+		ret = DBitem_value(event->trigger.expression, replace_to, N_functionid, event->clock, event->ns,
+				raw_value);
 	}
 
 	return ret;
