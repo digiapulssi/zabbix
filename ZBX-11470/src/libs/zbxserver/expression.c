@@ -3726,7 +3726,8 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				}
 				else if (ZBX_TOKEN_MACRO == token.type)
 				{
-					ret = expand_lldrule_msg_macro(actionid, event, r_event, m, &replace_to, c_event);
+					ret = expand_lldrule_msg_macro(actionid, event, r_event, m, &replace_to,
+							c_event);
 				}
 			}
 		}
