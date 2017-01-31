@@ -984,11 +984,10 @@ static int	lld_graphs_save(zbx_uint64_t hostid, zbx_uint64_t parent_graphid, zbx
 
 	DBbegin();
 
-	if (SUCCEED != DBlock_hostid(hostid))
+	if (SUCCEED != (ret = DBlock_hostid(hostid)))
 	{
 		/* the host was removed while processing lld rule */
 		DBrollback();
-		ret = FAIL;
 		goto out;
 	}
 
@@ -1318,7 +1317,7 @@ int	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, const zbx_ve
 				" and id.parent_itemid=" ZBX_FS_UI64,
 			lld_ruleid);
 
-	while (NULL != (row = DBfetch(result)))
+	while (SUCCEED == ret && NULL != (row = DBfetch(result)))
 	{
 		zbx_uint64_t	parent_graphid, ymin_itemid_proto, ymax_itemid_proto;
 		const char	*name_proto;
@@ -1363,9 +1362,6 @@ int	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, const zbx_ve
 		lld_items_free(&items);
 		lld_gitems_free(&gitems_proto);
 		lld_graphs_free(&graphs);
-
-		if (SUCCEED != ret)
-			break;
 	}
 	DBfree_result(result);
 
