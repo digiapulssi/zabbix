@@ -54,4 +54,6 @@ int	lld_update_graphs(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, const zbx_ve
 void	lld_update_hosts(zbx_uint64_t lld_ruleid, const zbx_vector_ptr_t *lld_rows, char **error,
 		unsigned short lifetime, int lastcheck);
 
+void	wait_before(const char *action, int delay);
+
 #endif
