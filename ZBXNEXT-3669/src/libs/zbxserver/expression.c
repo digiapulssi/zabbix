@@ -3755,7 +3755,7 @@ static void	zbx_populate_function_items(zbx_vector_uint64_t *functionids, zbx_ha
 
 static void	zbx_evaluate_item_functions(zbx_hashset_t *funcs)
 {
-	const char	*__function_name = "zbx_evaluate_item_functions";
+	const char		*__function_name = "zbx_evaluate_item_functions";
 
 	DC_ITEM			*items = NULL;
 	char			value[MAX_BUFFER_LEN], *error = NULL;
@@ -3857,14 +3857,9 @@ static void	zbx_substitute_functions_results(zbx_hashset_t *ifuncs, zbx_vector_p
 	zbx_uint64_t		functionid;
 	zbx_func_t		*func;
 	zbx_ifunc_t		*ifunc;
-	zbx_hashset_t		func_index;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ifuncs_num:%d tr_num:%d",
 			__function_name, ifuncs->num_data, triggers->values_num);
-
-	zbx_hashset_create(&func_index, ifuncs->num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
-			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
 
 	out = zbx_malloc(out, out_alloc);
 
@@ -3944,7 +3939,6 @@ static void	zbx_substitute_functions_results(zbx_hashset_t *ifuncs, zbx_vector_p
 	}
 
 	zbx_free(out);
-	zbx_hashset_destroy(&func_index);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -3977,7 +3971,7 @@ static void	substitute_functions(zbx_vector_ptr_t *triggers)
 	if (0 == functionids.values_num)
 		goto empty;
 
-	zbx_hashset_create(&ifuncs, triggers->values_num, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ifuncs, functionids.values_num, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 	zbx_hashset_create_ext(&funcs, triggers->values_num, func_hash_func, func_compare_func, func_clean,
 			ZBX_DEFAULT_MEM_MALLOC_FUNC, ZBX_DEFAULT_MEM_REALLOC_FUNC, ZBX_DEFAULT_MEM_FREE_FUNC);
