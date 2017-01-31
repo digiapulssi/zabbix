@@ -20,7 +20,7 @@ use constant HOST_STATUS_NOT_MONITORED => 1;
 
 use constant HOST_STATUS_PROXY_ACTIVE => 5;
 
-use constant DEFAULT_PROBE_PORT => 10050;
+use constant DEFAULT_PROBE_PORT => 10051;
 
 use constant true => 1;
 use constant false => 0;
@@ -149,7 +149,7 @@ sub add_probe($$$) {
                                           'status' => HOST_STATUS_MONITORED,
                                           'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
                                                             'ip'=> $probe_ip,
-                                                            'dns' => '', 'port' => $probe_port}]
+                                                            'dns' => '', 'port' => '10050'}]
                             });
 
     is_not_empty($probe_host_mon, true);
