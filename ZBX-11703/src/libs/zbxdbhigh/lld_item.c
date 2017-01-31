@@ -3312,12 +3312,13 @@ int	lld_update_items(zbx_uint64_t hostid, zbx_uint64_t lld_ruleid, const zbx_vec
 	{
 		ret = FAIL;
 		DBrollback();
+		goto clean;
 	}
 
 	lld_item_links_populate(&item_prototypes, lld_rows, &items_index);
 	lld_remove_lost_items(&items, lifetime, lastcheck);
 	lld_remove_lost_applications(lld_ruleid, &applications, lifetime, lastcheck);
-
+clean:
 	zbx_hashset_destroy(&items_applications);
 	zbx_hashset_destroy(&items_index);
 
