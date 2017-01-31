@@ -3249,8 +3249,8 @@ static void	lld_item_prototypes_get(zbx_uint64_t lld_ruleid, zbx_vector_ptr_t *i
  *                                                                            *
  * Purpose: add or update discovered items                                    *
  *                                                                            *
- * Return value: SUCCEED - if items was successfully added/updated or         *
- *                         adding/updating not necessary                      *
+ * Return value: SUCCEED - if items were successfully added/updated or        *
+ *                         adding/updating was not necessary                  *
  *               FAIL    - items cannot be added/updated                      *
  *                                                                            *
  ******************************************************************************/

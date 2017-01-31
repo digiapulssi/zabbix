@@ -916,7 +916,7 @@ static void	lld_graphs_validate(zbx_uint64_t hostid, zbx_vector_ptr_t *graphs, c
  *                                                                            *
  * Purpose: add or update graphs in database based on discovery rule          *
  *                                                                            *
- * Return value: SUCCEED - if graphs was successfully saved or saving         *
+ * Return value: SUCCEED - if graphs were successfully saved or saving        *
  *                         was not necessary                                  *
  *               FAIL    - graphs cannot be saved                             *
  *                                                                            *
@@ -1281,8 +1281,8 @@ out:
  *             agent   - [IN] discovery item identificator from database      *
  *             jp_data - [IN] received data                                   *
  *                                                                            *
- * Return value: SUCCEED - if graphs was successfully added/updated or        *
- *                         adding/updating not necessary                      *
+ * Return value: SUCCEED - if graphs were successfully added/updated or       *
+ *                         adding/updating was not necessary                  *
  *               FAIL    - graphs cannot be added/updated                     *
  *                                                                            *
  * Author: Alexander Vladishev                                                *

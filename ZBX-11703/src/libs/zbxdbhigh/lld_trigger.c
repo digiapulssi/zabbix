@@ -2707,8 +2707,8 @@ static void	lld_trigger_dependencies_validate(zbx_vector_ptr_t *triggers, char *
  *                                                                            *
  * Purpose: add or update triggers for discovered items                       *
  *                                                                            *
- * Return value: SUCCEED - if triggers was successfully added/updated or      *
- *                         adding/updating not necessary                      *
+ * Return value: SUCCEED - if triggers were successfully added/updated or     *
+ *                         adding/updating was not necessary                  *
  *               FAIL    - triggers cannot be added/updated                   *
  *                                                                            *
  ******************************************************************************/
