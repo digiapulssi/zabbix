@@ -3761,28 +3761,32 @@ static void	zbx_evaluate_item_functions(zbx_hashset_t *funcs)
 	char			value[MAX_BUFFER_LEN], *error = NULL;
 	int			i;
 	zbx_func_t		*func;
-	zbx_uint64_t		*itemids = NULL;
+	zbx_vector_uint64_t	itemids;
 	int			*errcodes = NULL;
 	zbx_hashset_iter_t	iter;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() funcs_num:%d", __function_name, funcs->num_data);
 
-	itemids = zbx_malloc(itemids, funcs->num_data * sizeof(zbx_uint64_t));
+	zbx_vector_uint64_create(&itemids);
+	zbx_vector_uint64_reserve(&itemids, funcs->num_data);
 
 	zbx_hashset_iter_reset(funcs, &iter);
-	for (i = 0; NULL != (func = (zbx_func_t *)zbx_hashset_iter_next(&iter)); i++)
-		itemids[i] = func->itemid;
+	while (NULL != (func = (zbx_func_t *)zbx_hashset_iter_next(&iter)))
+		zbx_vector_uint64_append(&itemids, func->itemid);
 
-	items = zbx_malloc(items, sizeof(DC_ITEM) * funcs->num_data);
-	errcodes = zbx_malloc(errcodes, sizeof(int) * funcs->num_data);
+	zbx_vector_uint64_sort(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
-	DCconfig_get_items_by_itemids(items, itemids, errcodes, funcs->num_data);
+	items = zbx_malloc(items, sizeof(DC_ITEM) * itemids.values_num);
+	errcodes = zbx_malloc(errcodes, sizeof(int) * itemids.values_num);
 
-	zbx_free(itemids);
+	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, itemids.values_num);
 
 	zbx_hashset_iter_reset(funcs, &iter);
-	for (i = 0; NULL != (func = (zbx_func_t *)zbx_hashset_iter_next(&iter)); i++)
+	while (NULL != (func = (zbx_func_t *)zbx_hashset_iter_next(&iter)))
 	{
+		i = zbx_vector_uint64_bsearch(&itemids, func->itemid, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
 		if (SUCCEED != errcodes[i])
 		{
 			func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s(%s)\":"
@@ -3838,7 +3842,8 @@ static void	zbx_evaluate_item_functions(zbx_hashset_t *funcs)
 			func->value = zbx_strdup(func->value, value);
 	}
 
-	DCconfig_clean_items(items, errcodes, funcs->num_data);
+	DCconfig_clean_items(items, errcodes, itemids.values_num);
+	zbx_vector_uint64_destroy(&itemids);
 
 	zbx_free(errcodes);
 	zbx_free(items);
