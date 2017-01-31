@@ -53,19 +53,3 @@ void	lld_field_uint64_rollback(zbx_uint64_t *field, zbx_uint64_t *field_orig, zb
 	*field_orig = 0;
 	*flags &= ~flag;
 }
-
-#include "log.h"
-
-void	wait_before(const char *action, int delay)
-{
-	zabbix_log(LOG_LEVEL_INFORMATION, "GLEB: %s in...", action);
-
-	do
-	{
-		zabbix_log(LOG_LEVEL_INFORMATION, "GLEB: %d...", delay);
-		sleep(1);
-	}
-	while (0 < --delay);
-
-	zabbix_log(LOG_LEVEL_INFORMATION, "GLEB: Go!");
-}

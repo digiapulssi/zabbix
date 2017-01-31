@@ -436,7 +436,7 @@ static int	filter_evaluate(const lld_filter_t *filter, const struct zbx_json_par
 	return FAIL;
 }
 
-static int	lld_rows_get(const char *value, const lld_filter_t *filter, zbx_vector_ptr_t *lld_rows, char **error)
+static int	lld_rows_get(const char *value, lld_filter_t *filter, zbx_vector_ptr_t *lld_rows, char **error)
 {
 	const char		*__function_name = "lld_rows_get";
 
@@ -528,15 +528,13 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 	lld_filter_t		filter;
 	time_t			now;
 
-	zabbix_log(LOG_LEVEL_INFORMATION, "In %s() itemid:" ZBX_FS_UI64, __function_name, lld_ruleid);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid:" ZBX_FS_UI64, __function_name, lld_ruleid);
 
 	zbx_vector_ptr_create(&lld_rows);
 
 	lld_filter_init(&filter);
 
 	sql = zbx_malloc(sql, sql_alloc);
-
-	wait_before("selecting discovery rule stuff", 3);
 
 	result = DBselect(
 			"select hostid,key_,state,evaltype,formula,error,lifetime"
@@ -574,8 +572,6 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 		zabbix_log(LOG_LEVEL_WARNING, "invalid discovery rule ID [" ZBX_FS_UI64 "]", lld_ruleid);
 		goto clean;
 	}
-
-	wait_before("loading filter", 3);
 
 	if (SUCCEED != lld_filter_load(&filter, lld_ruleid, &error))
 		goto error;
@@ -644,5 +640,5 @@ clean:
 	zbx_vector_ptr_clear_ext(&lld_rows, (zbx_clean_func_t)lld_row_free);
 	zbx_vector_ptr_destroy(&lld_rows);
 
-	zabbix_log(LOG_LEVEL_INFORMATION, "End of %s()", __function_name);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
