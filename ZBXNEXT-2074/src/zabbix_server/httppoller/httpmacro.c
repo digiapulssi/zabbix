@@ -187,8 +187,12 @@ out:
  * Purpose: substitute variables in input string with their values from http  *
  *          test config                                                       *
  *                                                                            *
- * Parameters: httptest - [IN]     the http test data                         *
- *             data     - [IN/OUT] string to substitute macros in             *
+ * Parameters: httptest   - [IN]     the http test data                       *
+ *             data       - [IN/OUT] string to substitute macros in           *
+ *             easyhandle - [IN]     handle to be used by escape function     *
+ *                                                                            *
+ * Usage example:                                                             *
+ *             name={{user}.urlencode()}&password={password}&enter=Sign in    *
  *                                                                            *
  * Author: Alexei Vladishev, Andris Zeila                                     *
  *                                                                            *

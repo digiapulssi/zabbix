@@ -28,6 +28,7 @@
  *                                                                            *
  * Parameters: func - [IN] the function data                                  *
  *             out  - [IN/OUT] the input/output value                         *
+ *             p    - [IN] used for compatibility with other functions        *
  *                                                                            *
  * Return value: SUCCEED - the function was calculated successfully.          *
  *               FAIL    - the function calculation failed.                   *
@@ -62,6 +63,7 @@ static int	macrofunc_regsub(char **params, size_t nparam, char **out, void *p)
  *                                                                            *
  * Parameters: func - [IN] the function data                                  *
  *             out  - [IN/OUT] the input/output value                         *
+ *             p    - [IN] used for compatibility with other functions        *
  *                                                                            *
  * Return value: SUCCEED - the function was calculated successfully.          *
  *               FAIL    - the function calculation failed.                   *
@@ -88,6 +90,20 @@ static int	macrofunc_iregsub(char **params, size_t nparam, char **out, void *p)
 	return SUCCEED;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: macrofunc_urlencode                                              *
+ *                                                                            *
+ * Purpose: to url encode                                                     *
+ *                                                                            *
+ * Parameters: func - [IN] the function data                                  *
+ *             out  - [IN/OUT] the input/output value                         *
+ *             p    - [IN] CURL handle to be used by escaping function        *
+ *                                                                            *
+ * Return value: SUCCEED - the function escaped successfully.                 *
+ *               FAIL    - the escape failed.                                 *
+ *                                                                            *
+ ******************************************************************************/
 static int	macrofunc_urlencode(char **params, size_t nparam, char **out, void *p)
 {
 	char	*value = NULL;

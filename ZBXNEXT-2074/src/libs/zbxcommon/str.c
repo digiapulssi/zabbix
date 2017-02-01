@@ -4040,6 +4040,9 @@ static int	zbx_token_parse_objectid(const char *expression, const char *macro, z
  * Parameters: expression - [IN] the expression                               *
  *             macro      - [IN] the beginning of the token                   *
  *             token      - [OUT] the token data                              *
+ *             type       - [IN] type of macro to be parsed, for example      *
+ *                               ZBX_TOKEN_MACRO has scrict syntax however    *
+ *                               ZBX_TOKEN_VAR_MACRO has no such restrictions *
  *                                                                            *
  * Return value: SUCCEED - the simple macro was parsed successfully           *
  *               FAIL    - macro does not point at valid macro                *
@@ -4127,6 +4130,9 @@ static int	zbx_token_parse_function(const char *expression, const char *func,
  *             func       - [IN] the beginning of the macro function in the   *
  *                               token                                        *
  *             token      - [OUT] the token data                              *
+ *             type       - [IN] type of macro to be parsed, can be           *
+ *                               ZBX_TOKEN_FUNC_MACRO or                      *
+ *                               ZBX_TOKEN__FUNC_VAR_MACRO                    *
  *                                                                            *
  * Return value: SUCCEED - the function macro was parsed successfully         *
  *               FAIL    - macro does not point at valid function macro       *
@@ -4324,15 +4330,20 @@ static int	zbx_token_parse_simple_macro(const char *expression, const char *macr
  * Parameters: expression - [IN] the expression                               *
  *             macro      - [IN] the beginning of the token                   *
  *             token      - [OUT] the token data                              *
+ *             type       - [IN] type of macro to be parsed, for example      *
+ *                               ZBX_TOKEN_FUNC_MACRO has scrict syntax       *
+ *                               ZBX_TOKEN_FUNC_VAR_MACRO however has no such *
+ *                               restrictions                                 *
  *                                                                            *
  * Return value: SUCCEED - the token was parsed successfully                  *
  *               FAIL    - macro does not point at valid function or simple   *
  *                         macro                                              *
  *                                                                            *
- * Comments: This function parses token with a macro inside it. There are two *
- *           types of nested macros - function macros and a specific case     *
- *           of simple macros where {HOST.HOSTn} macro is used as host name.  *
- *           In both cases another macro is found at the beginning of token.  *
+ * Comments: This function parses token with a macro inside it. There are 3   *
+ *           types of nested macros - function macros, a specific case        *
+ *           of simple macros where {HOST.HOSTn} macro is used as host name,  *
+ *           and scenario-level variables.
+ *           In all cases another macro is found at the beginning of token.   *
  *                                                                            *
  *           If the macro points at valid macro in the expression then        *
  *           the generic token fields are set and either the                  *
@@ -4369,6 +4380,20 @@ static int	zbx_token_parse_nested_macro(const char *expression, const char *macr
 	return FAIL;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_token_parse                                                  *
+ *                                                                            *
+ * Purpose: to parse user, lld, nested, host level, object or simple macro    *
+ *                                                                            *
+ * Parameters: expression - [IN] the expression                               *
+ *             macro      - [IN] the beginning of the token                   *
+ *             token      - [OUT] the token data                              *
+ *                                                                            *
+ * Return value: SUCCEED - the token was parsed successfully                  *
+ *               FAIL    - expression does not contain valid token.           *
+ *                                                                            *
+ ******************************************************************************/
 static int	zbx_token_parse(const char *expression, const char *ptr, zbx_token_t *token)
 {
 	int	ret;
@@ -4406,6 +4431,20 @@ static int	zbx_token_parse(const char *expression, const char *ptr, zbx_token_t 
 	return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_token_parse_var_macro                                        *
+ *                                                                            *
+ * Purpose: to parse scenario-level variable (macro)                          *
+ *                                                                            *
+ * Parameters: expression - [IN] the expression                               *
+ *             macro      - [IN] the beginning of the token                   *
+ *             token      - [OUT] the token data                              *
+ *                                                                            *
+ * Return value: SUCCEED - the token was parsed successfully                  *
+ *               FAIL    - expression does not contain valid token.           *
+ *                                                                            *
+ ******************************************************************************/
 static int	zbx_token_parse_var_macro(const char *expression, const char *ptr, zbx_token_t *token)
 {
 	int	ret;
@@ -4428,7 +4467,7 @@ static int	zbx_token_parse_var_macro(const char *expression, const char *ptr, zb
  * Parameters: expression   - [IN] the expression                             *
  *             pos          - [IN] the starting position                      *
  *             token        - [OUT] the token data                            *
- *             token_search - [IN] specify if references will be searched     *
+ *             token_search - [IN] specify type of token to be searched       *
  *                                                                            *
  * Return value: SUCCEED - the token was parsed successfully                  *
  *               FAIL    - expression does not contain valid token.           *
