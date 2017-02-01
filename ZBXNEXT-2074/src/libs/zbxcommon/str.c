@@ -4741,3 +4741,26 @@ int	zbx_replace_mem_dyn(char **data, size_t *data_alloc, size_t *data_len, size_
 
 	return sz_changed;
 }
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_replace_token_dyn                                            *
+ *                                                                            *
+ * Purpose: to replace memory block and allocate more memory if needed        *
+ *                                                                            *
+ * Parameters: data       - [IN/OUT] allocated memory                         *
+ *             data_alloc - [IN/OUT] allocated memory size                    *
+ *             data_len   - [IN/OUT] used memory size                         *
+ *             token      - [IN] offset of memory block to be replaced        *
+ *                               size of block that need to be replaced       *
+ *             from       - [IN] what to replace with                         *
+ *             sz_from    - [IN] size of new block                            *
+ *                                                                            *
+ * Return value: once data is replaced offset can become less, bigger or      *
+ *               remain unchanged                                             *
+ ******************************************************************************/
+int	zbx_replace_token_dyn(char **data, size_t *data_alloc, size_t *data_len, const zbx_strloc_t *token,
+		const char *from, size_t sz_from)
+{
+	return zbx_replace_mem_dyn(data, data_alloc, data_len, token->l, token->r - token->l + 1, from, sz_from);
+}

@@ -244,8 +244,7 @@ void	http_substitute_variables(CURL *easyhandle, zbx_httptest_t *httptest, char 
 				if (SUCCEED == zbx_calculate_macro_function(*data, &token.data.func_macro, &replace_to,
 						easyhandle))
 				{
-					pos += zbx_replace_mem_dyn(data, &data_alloc, &data_len, token.token.l,
-							token.token.r - token.token.l + 1,
+					pos += zbx_replace_token_dyn(data, &data_alloc, &data_len, &token.token,
 							replace_to, strlen(replace_to));
 				}
 
@@ -255,8 +254,8 @@ void	http_substitute_variables(CURL *easyhandle, zbx_httptest_t *httptest, char 
 			{
 				const char	*replace_to = (const char*)httptest->macros.values[index].second;
 
-				pos += zbx_replace_mem_dyn(data, &data_alloc, &data_len, token.token.l,
-						token.token.r - token.token.l + 1, replace_to, strlen(replace_to));
+				pos += zbx_replace_token_dyn(data, &data_alloc, &data_len, &token.token,
+						replace_to, strlen(replace_to));
 			}
 		}
 

@@ -1345,6 +1345,8 @@ typedef enum
 }
 zbx_token_search_t;
 
+int	zbx_replace_token_dyn(char **data, size_t *data_alloc, size_t *data_len, const zbx_strloc_t *token,
+		const char *from, size_t sz_from);
 int	zbx_token_find(const char *expression, int pos, zbx_token_t *token, zbx_token_search_t token_search);
 int	zbx_number_find(const char *str, size_t pos, zbx_strloc_t *number_loc);
 int	zbx_strmatch_condition(const char *value, const char *pattern, unsigned char op);
