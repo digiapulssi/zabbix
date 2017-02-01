@@ -101,7 +101,8 @@ foreach ($this->data['services'] as $name => $services) {
 	}
 	else {
 		$serviceValues = reset($services['parameters']);
-		$itemId = reset(array_keys($services['parameters']));
+		$itemIds = array_keys($services['parameters']);
+		$itemId = $itemIds[0];
 		$color = null;
 
 		if (isset($services['acceptable_sla']) && isset($serviceValues['slv'])
