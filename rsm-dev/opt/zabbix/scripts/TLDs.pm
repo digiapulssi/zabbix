@@ -65,7 +65,7 @@ sub get_probe($$) {
     my $probe_name = shift;
     my $selectHosts = shift;
 
-    my $options = {'output' => ['proxyid', 'host'], 'filter' => {'host' => $probe_name}};
+    my $options = {'output' => ['proxyid', 'host'], 'filter' => {'host' => $probe_name}, 'selectInterface' => ['interfaceid']};
 
     $options->{'selectHosts'} = ['hostid', 'name', 'host'] if (defined($selectHosts) and $selectHosts eq true);
 
@@ -448,7 +448,8 @@ sub create_passive_proxy($$$) {
 
     if (defined($probe->{'proxyid'})) {
 	my $result = $zabbix->update('proxy', {'proxyid' => $probe->{'proxyid'}, 'status' => HOST_STATUS_PROXY_PASSIVE,
-                                        'interfaces' => [{'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port}]});
+                                        'interface' => {'interfaceid' => $probe->{'interface'}->{'interfaceid'},
+					'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port}});
 
 	if (scalar($result->{'proxyids'})) {
             return $result->{'proxyids'}[0];
@@ -456,7 +457,7 @@ sub create_passive_proxy($$$) {
     }
     else {
         my $result = $zabbix->create('proxy', {'host' => $probe_name, 'status' => HOST_STATUS_PROXY_PASSIVE,
-                                        'interfaces' => [{'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port}],
+                                        'interface' => {'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port},
                                         'hosts' => []});
 	if (scalar($result->{'proxyids'})) {
 	    return $result->{'proxyids'}[0];
