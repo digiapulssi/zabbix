@@ -23,6 +23,7 @@
 #include "zbxregexp.h"
 
 #include "httpmacro.h"
+#include "macrofunc.h"
 
 #define REGEXP_PREFIX		"regex:"
 #define REGEXP_PREFIX_SIZE	ZBX_CONST_STRLEN(REGEXP_PREFIX)
