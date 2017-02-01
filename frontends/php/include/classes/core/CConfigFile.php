@@ -113,6 +113,10 @@ class CConfigFile {
 			$this->config['DB']['SCHEMA'] = $DB['SCHEMA'];
 		}
 
+		if (isset($DB['SERVERS'])) {
+			$this->config['DB']['SERVERS'] = $DB['SERVERS'];
+		}
+
 		if (isset($ZBX_SERVER)) {
 			$this->config['ZBX_SERVER'] = $ZBX_SERVER;
 		}

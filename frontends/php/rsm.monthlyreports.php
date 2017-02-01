@@ -150,8 +150,9 @@ if ($data['filter_search']) {
 			$usedMacro = [];
 
 			foreach ($items as $item) {
-				$itemKey = new CItemKey($item['key_']);
-				switch ($itemKey->getKeyId()) {
+				$itemKey = new CItemKey();
+				$itemKey->parse($item['key_']);
+				switch ($itemKey->getKey()) {
 					case MONTHLY_REPORTS_DNS_NS_RTT_UDP:
 						$newName = 'UDP DNS Resolution RTT';
 						$macro = CALCULATED_ITEM_SLV_DNS_NS_RTT_UDP;
@@ -198,7 +199,15 @@ if ($data['filter_search']) {
 				}
 
 				if ($newName) {
-					$data['services'][$newName]['parameters'][$item['itemid']]['ns'] = implode(': ', $itemKey->getParameters());
+					$key_data = $itemKey->getParamsRaw();
+					$key_parameters = [];
+
+					if ($key_data) {
+						foreach ($key_data[0]['parameters'] as $parameter) {
+							$key_parameters[] = $parameter['raw'];
+						}
+					};
+					$data['services'][$newName]['parameters'][$item['itemid']]['ns'] = implode(': ', $key_parameters);
 
 					$itemsAndServices[$item['itemid']] = $newName;
 					$macroValue[$macro] = $item['itemid'];

@@ -2515,6 +2515,19 @@ tr.cursor-move td * {
 .clock-lines {
   fill: #4f4f4f; }
 
+.service-icon {
+	display: inline-block;
+	vertical-align: middle;
+	height: 14px;
+	width: 14px;
+	background-repeat:no-repeat;
+	margin: 0 1px 0 1px;
+}
+
+.iconrollingweekok		{ background-image: url('../images/general/rolling_week_ok.png');}
+.iconrollingweekfail	{ background-image: url('../images/general/rolling_week_fail.png');}
+.iconrollingweekdisabled{ background-image: url('../images/general/rolling_week_disabled.png');}
+
 /*doc
 ---
 //title: About

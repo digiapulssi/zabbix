@@ -71,6 +71,8 @@ $filterColumn1
 		->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
 		->setAttribute('autocomplete', 'off')
 	)
+	->addRow(SPACE);
+$filterColumn2
 	->addRow(_('Services'), [
 		[
 			(new CCheckBox('filter_dns'))->setChecked($this->data['filter_dns']),
@@ -97,8 +99,7 @@ $filterColumn1
 		], 'checkbox-block'),
 		SPACE,
 		(new CButton('checkAllServices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
-	]);
-$filterColumn2
+	])
 	->addRow(_('TLD types'), [
 		[
 			$filterCctldGroup,
@@ -125,9 +126,9 @@ $filterColumn2
 		], 'checkbox-block'),
 		SPACE,
 		(new CButton('checkAllGroups', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
-	])
-	->addRow(_('Exceeding or equal to'), $filter_value);
+	]);
 $filterColumn3
+	->addRow(_('Exceeding or equal to'), $filter_value)
 	->addRow(_('Current status'),
 		(new CComboBox('filter_status',
 			array_key_exists('filter_status', $this->data) ? $this->data['filter_status'] : null)
@@ -135,8 +136,7 @@ $filterColumn3
 			->addItem(0, _('all'))
 			->addItem(1, _('fail'))
 			->addItem(2, _('disabled'))
-	)
-	->addRow(SPACE);
+	);
 
 $filter
 	->addColumn($filterColumn1)
@@ -171,26 +171,27 @@ if (isset($this->data['tld'])) {
 				if ($tld[RSM_DNS]['incident'] && isset($tld[RSM_DNS]['availItemId'])
 						&& isset($tld[RSM_DNS]['itemid'])) {
 					$dnsStatus =  new CLink(
-						new CDiv(null, 'service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
-						'rsm.incidentdetails.php?host='.$tld['host'].'&eventid='.$tld[RSM_DNS]['incident'].
+						(new CDiv(null))
+							->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
+						$tld['URL'].'rsm.incidentdetails.php?host='.$tld['host'].'&eventid='.$tld[RSM_DNS]['incident'].
 							'&slvItemId='.$tld[RSM_DNS]['itemid'].'&filter_from='.$from.'&filter_to='.$till.
 							'&availItemId='.$tld[RSM_DNS]['availItemId'].'&filter_set=1'
 					);
 				}
 				else {
-					$dnsStatus =  new CDiv(null,
-						'service-icon status_icon_extra iconrollingweekfail cell-value pointer'
-					);
+					$dnsStatus = (new CDiv(null))
+						->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer');
 				}
 			}
 			else {
-				$dnsStatus =  new CDiv(null, 'service-icon status_icon_extra iconrollingweekok cell-value');
+				$dnsStatus = (new CDiv(null))
+					->addClass('service-icon status_icon_extra iconrollingweekok cell-value');
 			}
 
 			$dnsValue = ($tld[RSM_DNS]['lastvalue'] > 0)
 				? new CLink(
 					$tld[RSM_DNS]['lastvalue'].'%',
-					'rsm.incidents.php?filter_set=1&filter_rolling_week=1&type='.RSM_DNS.'&host='.$tld['host'],
+					$tld['url'].'rsm.incidents.php?filter_set=1&filter_rolling_week=1&type='.RSM_DNS.'&host='.$tld['host'],
 					'first-cell-value'
 				)
 				: new CSpan('0.000%', 'first-cell-value');
@@ -202,8 +203,9 @@ if (isset($this->data['tld'])) {
 			$dns = array(new CSpan($dnsValue, 'right'), $dnsStatus, $dnsGraph);
 		}
 		else {
-			$dns = new CDiv(null, 'service-icon status_icon_extra iconrollingweekdisabled disabled-service');
-			$dns->setHint('Incorrect TLD configuration.', '', 'on');
+			$dns = (new CDiv(null))
+				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
+				->setHint('Incorrect TLD configuration.', '', 'on');
 		}
 
 		// DNSSEC
@@ -212,26 +214,27 @@ if (isset($this->data['tld'])) {
 				if ($tld[RSM_DNSSEC]['incident'] && isset($tld[RSM_DNSSEC]['availItemId'])
 						&& isset($tld[RSM_DNSSEC]['itemid'])) {
 					$dnssecStatus =  new CLink(
-						new CDiv(null, 'service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
-						'rsm.incidentdetails.php?host='.$tld['host'].'&eventid='.$tld[RSM_DNSSEC]['incident'].
+						(new CDiv(null))
+							->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
+						$tld['url'].'rsm.incidentdetails.php?host='.$tld['host'].'&eventid='.$tld[RSM_DNSSEC]['incident'].
 							'&slvItemId='.$tld[RSM_DNSSEC]['itemid'].'&filter_from='.$from.'&filter_to='.$till.
 							'&availItemId='.$tld[RSM_DNSSEC]['availItemId'].'&filter_set=1'
 					);
 				}
 				else {
-					$dnssecStatus =  new CDiv(null,
-						'service-icon status_icon_extra iconrollingweekfail cell-value pointer'
-					);
+					$dnssecStatus = (new CDiv(null))
+						->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer');
 				}
 			}
 			else {
-				$dnssecStatus =  new CDiv(null, 'service-icon status_icon_extra iconrollingweekok cell-value');
+				$dnssecStatus = (new CDiv(null))
+					->addClass('service-icon status_icon_extra iconrollingweekok cell-value');
 			}
 
 			$dnssecValue = ($tld[RSM_DNSSEC]['lastvalue'] > 0)
 				? new CLink(
 					$tld[RSM_DNSSEC]['lastvalue'].'%',
-					'rsm.incidents.php?filter_set=1&filter_rolling_week=1&type='.RSM_DNSSEC.'&host='.$tld['host'],
+					$tld['url'].'rsm.incidents.php?filter_set=1&filter_rolling_week=1&type='.RSM_DNSSEC.'&host='.$tld['host'],
 					'first-cell-value'
 				)
 				: new CSpan('0.000%', 'first-cell-value');
@@ -244,8 +247,9 @@ if (isset($this->data['tld'])) {
 			$dnssec =  array(new CSpan($dnssecValue, 'right'), $dnssecStatus, $dnssecGraph);
 		}
 		else {
-			$dnssec = new CDiv(null, 'service-icon status_icon_extra iconrollingweekdisabled disabled-service');
-			$dnssec->setHint('DNSSEC is disabled.', '', 'on');
+			$dnssec = (new CDiv(null))
+				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
+				->setHint('DNSSEC is disabled.', '', 'on');
 		}
 
 		// RDDS
@@ -254,26 +258,26 @@ if (isset($this->data['tld'])) {
 				if ($tld[RSM_RDDS]['incident'] && isset($tld[RSM_RDDS]['availItemId'])
 						&& isset($tld[RSM_RDDS]['itemid'])) {
 					$rddsStatus =  new CLink(
-						new CDiv(null, 'service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
-						'rsm.incidentdetails.php?host='.$tld['host'].'&eventid='.$tld[RSM_RDDS]['incident'].
+						(new CDiv(null))
+							->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
+						$tld['url'].'rsm.incidentdetails.php?host='.$tld['host'].'&eventid='.$tld[RSM_RDDS]['incident'].
 							'&slvItemId='.$tld[RSM_RDDS]['itemid'].'&filter_from='.$from.'&filter_to='.$till.
 							'&availItemId='.$tld[RSM_RDDS]['availItemId'].'&filter_set=1'
 					);
 				}
 				else {
-					$rddsStatus =  new CDiv(null,
-						'service-icon status_icon_extra iconrollingweekfail cell-value pointer'
-					);
+					$rddsStatus = (new CDiv(null))
+						->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer');
 				}
 			}
 			else {
-				$rddsStatus =  new CDiv(null, 'service-icon status_icon_extra iconrollingweekok cell-value');
+				$rddsStatus = (new CDiv(null))->addClass('service-icon status_icon_extra iconrollingweekok cell-value');
 			}
 
 			$rddsValue = ($tld[RSM_RDDS]['lastvalue'] > 0)
 				? new CLink(
 					$tld[RSM_RDDS]['lastvalue'].'%',
-					'rsm.incidents.php?filter_set=1&filter_rolling_week=1&type='.RSM_RDDS.'&host='.$tld['host'],
+					$tld['url'].'rsm.incidents.php?filter_set=1&filter_rolling_week=1&type='.RSM_RDDS.'&host='.$tld['host'],
 					'first-cell-value'
 				)
 				: new CSpan('0.000%', 'first-cell-value');
@@ -303,8 +307,9 @@ if (isset($this->data['tld'])) {
 			);
 		}
 		else {
-			$rdds = new CDiv(null, 'service-icon status_icon_extra iconrollingweekdisabled disabled-service');
-			$rdds->setHint('RDDS is disabled.', '', 'on');
+			$rdds = (new CDiv(null))
+				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
+				->setHint('RDDS is disabled.', '', 'on');
 		}
 
 		// EPP
@@ -312,27 +317,28 @@ if (isset($this->data['tld'])) {
 			if ($tld[RSM_EPP]['trigger']) {
 				if ($tld[RSM_EPP]['incident'] && isset($tld[RSM_EPP]['availItemId'])
 						&& isset($tld[RSM_EPP]['itemid'])) {
-					$eppStatus =  new CLink(
-						new CDiv(null, 'service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
-						'rsm.incidentdetails.php?host='.$tld['host'].'&eventid='.$tld[RSM_EPP]['incident'].
+					$eppStatus = new CLink(
+						(new CDiv(null))
+							->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
+						$tld['url'].'rsm.incidentdetails.php?host='.$tld['host'].'&eventid='.$tld[RSM_EPP]['incident'].
 							'&slvItemId='.$tld[RSM_EPP]['itemid'].'&filter_from='.$from.'&filter_to='.$till.
 							'&availItemId='.$tld[RSM_EPP]['availItemId'].'&filter_set=1'
 					);
 				}
 				else {
-					$eppStatus =  new CDiv(null,
-						'service-icon status_icon_extra iconrollingweekfail cell-value pointer'
-					);
+					$eppStatus = (new CDiv(null))
+						->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer');
 				}
 			}
 			else {
-				$eppStatus =  new CDiv(null, 'service-icon status_icon_extra iconrollingweekok cell-value');
+				$eppStatus = (new CDiv(null))
+					->addClass('service-icon status_icon_extra iconrollingweekok cell-value');
 			}
 
 			$eppValue = ($tld[RSM_EPP]['lastvalue'] > 0)
 				? new CLink(
 					$tld[RSM_EPP]['lastvalue'].'%',
-					'rsm.incidents.php?filter_set=1&filter_rolling_week=1&type='.RSM_EPP.'&host='.$tld['host'],
+					$tld['url'].'rsm.incidents.php?filter_set=1&filter_rolling_week=1&type='.RSM_EPP.'&host='.$tld['host'],
 					'first-cell-value'
 				)
 				: new CSpan('0.000%', 'first-cell-value');
@@ -344,8 +350,9 @@ if (isset($this->data['tld'])) {
 			$epp =  array(new CSpan($eppValue, 'right'), $eppStatus, $eppGraph);
 		}
 		else {
-			$epp = new CDiv(null, 'service-icon status_icon_extra iconrollingweekdisabled disabled-service');
-			$epp->setHint('EPP is disabled.', '', 'on');
+			$epp = (new CDiv(null))
+				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
+				->setHint('EPP is disabled.', '', 'on');
 		}
 		$row = array(
 			$tld['name'],
