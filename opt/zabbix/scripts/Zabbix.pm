@@ -27,15 +27,16 @@ use constant false => 0;
 sub to_ascii($);
 sub to_utf8($);
 
-sub get_authid($);
-sub set_authid($$);
+sub get_authid();
+sub set_authid($);
+sub delete_authid();
 
 use constant _LOGIN_TIMEOUT => 5;
 
 use constant _DEFAULT_REQUEST_TIMEOUT => 60;
 use constant _DEFAULT_REQUEST_ATTEMPTS => 10;
 
-my ($REQUEST_TIMEOUT, $REQUEST_ATTEMPTS, $DEBUG);
+my ($REQUEST_TIMEOUT, $REQUEST_ATTEMPTS, $AUTH_FILE, $DEBUG);
 
 sub new($$) {
     my ($class, $options) = @_;
@@ -60,10 +61,11 @@ sub new($$) {
 
     my $domain = $options->{'url'};
     $domain =~ s/^https*\:\/\/(.+)\/*$/$1/;
+    $AUTH_FILE = '/tmp/'.$domain.'.tmp';
 
-    if (my $authid = get_authid($domain)) {
+    if (my $authid = get_authid()) {
 
-    $ua->timeout($REQUEST_TIMEOUT);
+	$ua->timeout($REQUEST_TIMEOUT);
 
 	my $self = {
             UserAgent => $ua,
@@ -104,7 +106,7 @@ sub new($$) {
 
     my $auth = $result->{'result'};
 
-    set_authid($domain, $auth);
+    set_authid($auth);
 
     return bless {
         UserAgent => $ua,
@@ -115,14 +117,12 @@ sub new($$) {
     }, $class;
 }
 
-sub get_authid($) {
-    my $domain = shift;
-
+sub get_authid() {
     my $authid;
 
-    if (-e '/tmp/'.$domain.'.tmp') {
+    if (-e $AUTH_FILE) {
 
-        open(TMP, '< /tmp/'.$domain.'.tmp');
+        open(TMP, '<', $AUTH_FILE);
 
         my @lines = <TMP>;
 
@@ -134,15 +134,18 @@ sub get_authid($) {
     return $authid;
 }
 
-sub set_authid($$) {
-    my $domain = shift;
+sub set_authid($) {
     my $authid = shift;
 
-    open(TMP, '> /tmp/'.$domain.'.tmp');
+    open(TMP, '>', $AUTH_FILE);
 
     print TMP $authid;
 
     close(TMP);
+}
+
+sub delete_authid() {
+    unlink($AUTH_FILE);
 }
 
 sub ua {
@@ -520,6 +523,10 @@ sub __send_request {
     if (defined($result->{'error'})) {
 	print("REQUEST FAILED:\n", Dumper($req), "\n");
 	print("REPLY:\n", Dumper($result), "\n");
+
+	if ($result->{'error'}->{'code'} = -32602) {
+	    delete_authid();
+	}
     }
     elsif ($DEBUG) {
 	print("REQUEST:\n", Dumper($req), "\n");
