@@ -46,7 +46,7 @@ validate_input();
 
 my $config = get_rsm_config();
 
-zbx_connect($config->{'zapi'}->{'url'}, $config->{'zapi'}->{'user'}, $config->{'zapi'}->{'password'});
+zbx_connect($config->{'zapi'}->{'url'}, $config->{'zapi'}->{'user'}, $config->{'zapi'}->{'password'}, $OPTS{'verbose'});
 
 if ($OPTS{'delete'}) {
     delete_probe($OPTS{'probe'});
