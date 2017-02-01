@@ -198,10 +198,9 @@ out:
  * Author: Alexei Vladishev, Andris Zeila                                     *
  *                                                                            *
  ******************************************************************************/
-void	http_substitute_variables(CURL *easyhandle, zbx_httptest_t *httptest, char **data)
+void	http_substitute_variables(CURL *easyhandle, const zbx_httptest_t *httptest, char **data)
 {
 	const char	*__function_name = "http_substitute_variables";
-
 	int		pos = 0;
 	zbx_token_t	token;
 	size_t		data_alloc, data_len;
@@ -238,8 +237,7 @@ void	http_substitute_variables(CURL *easyhandle, zbx_httptest_t *httptest, char 
 
 			if (ZBX_TOKEN_FUNC_VAR_MACRO == token.type)
 			{
-				char	*replace_to = zbx_strdup(NULL,
-						(const char*)httptest->macros.values[index].second);
+				char	*replace_to = zbx_strdup(NULL, httptest->macros.values[index].second);
 
 				if (SUCCEED == zbx_calculate_macro_function(*data, &token.data.func_macro, &replace_to,
 						easyhandle))
@@ -252,7 +250,7 @@ void	http_substitute_variables(CURL *easyhandle, zbx_httptest_t *httptest, char 
 			}
 			else
 			{
-				const char	*replace_to = (const char*)httptest->macros.values[index].second;
+				const char	*replace_to = httptest->macros.values[index].second;
 
 				pos += zbx_replace_token_dyn(data, &data_alloc, &data_len, &token.token,
 						replace_to, strlen(replace_to));

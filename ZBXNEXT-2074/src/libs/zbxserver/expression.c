@@ -3768,16 +3768,15 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 		{
 			pos = token.token.r;
 
-			pos += zbx_replace_token_dyn(data, &data_alloc, &data_len, &token.token,
-					replace_to, strlen(replace_to));
+			pos += zbx_replace_token_dyn(data, &data_alloc, &data_len, &token.token, replace_to,
+					strlen(replace_to));
 			zbx_free(replace_to);
 		}
 		else if (NULL != replace)
 		{
 			pos = token.token.r;
 
-			pos += zbx_replace_token_dyn(data, &data_alloc, &data_len, &token.token,
-					replace, replace_len);
+			pos += zbx_replace_token_dyn(data, &data_alloc, &data_len, &token.token, replace, replace_len);
 
 			replace = NULL;
 		}

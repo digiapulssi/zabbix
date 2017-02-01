@@ -4342,7 +4342,7 @@ static int	zbx_token_parse_simple_macro(const char *expression, const char *macr
  * Comments: This function parses token with a macro inside it. There are 3   *
  *           types of nested macros - function macros, a specific case        *
  *           of simple macros where {HOST.HOSTn} macro is used as host name,  *
- *           and scenario-level variables.
+ *           and scenario-level variables.                                    *
  *           In all cases another macro is found at the beginning of token.   *
  *                                                                            *
  *           If the macro points at valid macro in the expression then        *
