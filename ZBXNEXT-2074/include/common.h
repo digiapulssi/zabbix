@@ -1238,14 +1238,16 @@ int	zbx_alarm_timed_out(void);
 int	zbx_strcmp_natural(const char *s1, const char *s2);
 
 /* tokens used in expressions */
-#define ZBX_TOKEN_OBJECTID	0x0001
-#define ZBX_TOKEN_MACRO		0x0002
-#define ZBX_TOKEN_LLD_MACRO	0x0004
-#define ZBX_TOKEN_USER_MACRO	0x0008
-#define ZBX_TOKEN_FUNC_MACRO	0x0010
-#define ZBX_TOKEN_SIMPLE_MACRO	0x0020
-#define ZBX_TOKEN_REFERENCE	0x0040
-#define ZBX_TOKEN_VAR_MACRO	0x0080
+#define ZBX_TOKEN_OBJECTID		0x0001
+#define ZBX_TOKEN_MACRO			0x0002
+#define ZBX_TOKEN_LLD_MACRO		0x0004
+#define ZBX_TOKEN_USER_MACRO		0x0008
+#define ZBX_TOKEN_FUNC_MACRO		0x0010
+#define ZBX_TOKEN_SIMPLE_MACRO		0x0020
+#define ZBX_TOKEN_REFERENCE		0x0040
+#define ZBX_TOKEN_VAR_MACRO		0x0080
+#define ZBX_TOKEN_FUNC_VAR_MACRO	0x0100
+
 /* additional token flags */
 #define ZBX_TOKEN_NUMERIC	0x8000
 

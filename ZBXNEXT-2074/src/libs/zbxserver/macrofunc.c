@@ -84,6 +84,14 @@ static int	macrofunc_iregsub(char **params, size_t nparam, char **out)
 	return SUCCEED;
 }
 
+static int	macrofunc_urlencode(char **params, size_t nparam, char **out)
+{
+	char	*value = NULL;
+
+	return SUCCEED;
+}
+
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_calculate_macro_function                                     *
@@ -112,6 +120,8 @@ int	zbx_calculate_macro_function(const char *expression, const zbx_token_func_ma
 		macrofunc = macrofunc_regsub;
 	else if (ZBX_CONST_STRLEN("iregsub") == len && 0 == strncmp(ptr, "iregsub", len))
 		macrofunc = macrofunc_iregsub;
+	else if (ZBX_CONST_STRLEN("urlencode") == len && 0 == strncmp(ptr, "urlencode", len))
+		macrofunc = macrofunc_urlencode;
 	else
 		return FAIL;
 

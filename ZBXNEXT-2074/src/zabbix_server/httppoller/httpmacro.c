@@ -24,6 +24,7 @@
 
 #include "httpmacro.h"
 
+
 #define REGEXP_PREFIX		"regex:"
 #define REGEXP_PREFIX_SIZE	ZBX_CONST_STRLEN(REGEXP_PREFIX)
 
@@ -204,29 +205,57 @@ void	http_substitute_variables(zbx_httptest_t *httptest, char **data)
 
 	data_alloc = data_len = strlen(*data) + 1;
 
-	while (SUCCEED == zbx_token_find(*data, pos, &token, ZBX_TOKEN_SEARCH_VAR_MACRO));
+	while (SUCCEED == zbx_token_find(*data, pos, &token, ZBX_TOKEN_SEARCH_VAR_MACRO))
 	{
 		int		index;
-		char		c = (*data)[token.token.r + 1];
+		char		c, *macro_end;
 		zbx_ptr_pair_t	pair;
 
-		pair.first = *data + token.token.l;
-		(*data)[token.token.r + 1] = '\0';
+		if (ZBX_TOKEN_FUNC_VAR_MACRO == token.type)
+		{
+			pair.first = *data + token.data.func_macro.macro.l;
+			macro_end = *data + token.data.func_macro.macro.r + 1;
+		}
+		else
+		{
+			pair.first = *data + token.token.l;
+			macro_end = *data + token.token.r + 1;
+		}
+
+		c = *macro_end;
+		*macro_end = '\0';
 		index = zbx_vector_ptr_pair_search(&httptest->macros, pair, httpmacro_cmp_func);
-		(*data)[token.token.r + 1] = c;
+		*macro_end = c;
 
 		if (FAIL != index)
 		{
-			const char	*replace_to = (const char*)httptest->macros.values[index].second;
-
 			pos = token.token.r;
-			pos += zbx_replace_mem_dyn(data, &data_alloc, &data_len, token.token.l,
-					token.token.r - token.token.l + 1, replace_to, strlen(replace_to));
+
+			if (ZBX_TOKEN_FUNC_VAR_MACRO == token.type)
+			{
+				char	*replace_to = zbx_strdup(NULL,
+						(const char*)httptest->macros.values[index].second);
+
+				if (SUCCEED == zbx_calculate_macro_function(*data, &token.data.func_macro, &replace_to))
+				{
+					pos += zbx_replace_mem_dyn(data, &data_alloc, &data_len, token.token.l,
+							token.token.r - token.token.l + 1,
+							replace_to, strlen(replace_to));
+				}
+
+				zbx_free(replace_to);
+			}
+			else
+			{
+				const char	*replace_to = (const char*)httptest->macros.values[index].second;
+
+				pos += zbx_replace_mem_dyn(data, &data_alloc, &data_len, token.token.l,
+						token.token.r - token.token.l + 1, replace_to, strlen(replace_to));
+			}
 		}
 
 		pos++;
 	}
-
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() data:'%s'", __function_name, *data);
 }

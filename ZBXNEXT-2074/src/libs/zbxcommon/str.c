@@ -4138,7 +4138,7 @@ static int	zbx_token_parse_function(const char *expression, const char *func,
  *                                                                            *
  ******************************************************************************/
 static int	zbx_token_parse_func_macro(const char *expression, const char *macro, const char *func,
-		zbx_token_t *token)
+		zbx_token_t *token, int type)
 {
 	zbx_strloc_t		func_loc, func_param;
 	zbx_token_func_macro_t	*data;
@@ -4164,7 +4164,7 @@ static int	zbx_token_parse_func_macro(const char *expression, const char *macro,
 	offset = macro - expression;
 
 	/* initialize token */
-	token->type = ZBX_TOKEN_FUNC_MACRO;
+	token->type = type;
 	token->token.l = offset;
 	token->token.r = ptr - expression;
 
@@ -4340,7 +4340,7 @@ static int	zbx_token_parse_simple_macro(const char *expression, const char *macr
  *           token type) structure is filled with macro specific data.        *
  *                                                                            *
  ******************************************************************************/
-static int	zbx_token_parse_nested_macro(const char *expression, const char *macro, zbx_token_t *token)
+static int	zbx_token_parse_nested_macro(const char *expression, const char *macro, zbx_token_t *token, int type)
 {
 	const char		*ptr;
 
@@ -4350,7 +4350,7 @@ static int	zbx_token_parse_nested_macro(const char *expression, const char *macr
 		if ('\0' == *ptr)
 			return FAIL;
 
-		if (SUCCEED != is_macro_char(*ptr))
+		if (ZBX_TOKEN_FUNC_MACRO == type && SUCCEED != is_macro_char(*ptr))
 			return FAIL;
 	}
 
@@ -4362,8 +4362,8 @@ static int	zbx_token_parse_nested_macro(const char *expression, const char *macr
 	/* Function macros have format {{MACRO}.function()} while simple macros        */
 	/* have format {{MACRO}:key.function()}.                                       */
 	if ('.' == ptr[1])
-		return zbx_token_parse_func_macro(expression, macro, ptr + 2, token);
-	else if (':' == ptr[1])
+		return zbx_token_parse_func_macro(expression, macro, ptr + 2, token, type);
+	else if (ZBX_TOKEN_FUNC_MACRO == type && ':' == ptr[1])
 		return zbx_token_parse_simple_macro_key(expression, macro, ptr + 2, token);
 
 	return FAIL;
@@ -4383,7 +4383,7 @@ static int	zbx_token_parse(const char *expression, const char *ptr, zbx_token_t 
 			break;
 
 		case '{':
-			ret = zbx_token_parse_nested_macro(expression, ptr, token);
+			ret = zbx_token_parse_nested_macro(expression, ptr, token, ZBX_TOKEN_FUNC_MACRO);
 			break;
 		case '0':
 		case '1':
@@ -4411,7 +4411,7 @@ static int	zbx_token_parse_var_macro(const char *expression, const char *ptr, zb
 	int	ret;
 
 	if ('{' == ptr[1])
-		ret = zbx_token_parse_nested_macro(expression, ptr, token);
+		ret = zbx_token_parse_nested_macro(expression, ptr, token, ZBX_TOKEN_FUNC_VAR_MACRO);
 	else
 		ret = zbx_token_parse_macro(expression, ptr, token, ZBX_TOKEN_VAR_MACRO);
 
@@ -4454,6 +4454,7 @@ int	zbx_token_find(const char *expression, int pos, zbx_token_t *token, zbx_toke
 
 	while (SUCCEED != ret)
 	{
+
 		ptr = strchr(ptr, '{');
 
 		switch (token_search)
