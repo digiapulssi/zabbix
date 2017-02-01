@@ -195,39 +195,38 @@ out:
 void	http_substitute_variables(zbx_httptest_t *httptest, char **data)
 {
 	const char	*__function_name = "http_substitute_variables";
-	char		replace_char;
-	size_t		left, right;
-	int		index;
-	zbx_ptr_pair_t	pair;
+
+	int		pos = 0;
+	zbx_token_t	token;
+	size_t		data_alloc, data_len;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() data:'%s'", __function_name, *data);
 
-	for (left = 0; '\0' != (*data)[left]; left++)
+	data_alloc = data_len = strlen(*data) + 1;
+
+	while (SUCCEED == zbx_token_find(*data, pos, &token, ZBX_TOKEN_SEARCH_VAR_MACRO));
 	{
-		if ('{' != (*data)[left])
-			continue;
+		int		index;
+		char		c = (*data)[token.token.r + 1];
+		zbx_ptr_pair_t	pair;
 
-		for (right = left + 1; '\0' != (*data)[right] && '}' != (*data)[right]; right++)
-			;
-
-		if ('}' != (*data)[right])
-			break;
-
-		replace_char = (*data)[right + 1];
-		(*data)[right + 1] = '\0';
-
-		pair.first = *data + left;
+		pair.first = *data + token.token.l;
+		(*data)[token.token.r + 1] = '\0';
 		index = zbx_vector_ptr_pair_search(&httptest->macros, pair, httpmacro_cmp_func);
+		(*data)[token.token.r + 1] = c;
 
-		(*data)[right + 1] = replace_char;
+		if (FAIL != index)
+		{
+			const char	*replace_to = (const char*)httptest->macros.values[index].second;
 
-		if (FAIL == index)
-			continue;
+			pos = token.token.r;
+			pos += zbx_replace_mem_dyn(data, &data_alloc, &data_len, token.token.l,
+					token.token.r - token.token.l + 1, replace_to, strlen(replace_to));
+		}
 
-		zbx_replace_string(data, left, &right, (char*)httptest->macros.values[index].second);
-
-		left = right;
+		pos++;
 	}
+
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() data:'%s'", __function_name, *data);
 }

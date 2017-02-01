@@ -1245,7 +1245,7 @@ int	zbx_strcmp_natural(const char *s1, const char *s2);
 #define ZBX_TOKEN_FUNC_MACRO	0x0010
 #define ZBX_TOKEN_SIMPLE_MACRO	0x0020
 #define ZBX_TOKEN_REFERENCE	0x0040
-
+#define ZBX_TOKEN_VAR_MACRO	0x0080
 /* additional token flags */
 #define ZBX_TOKEN_NUMERIC	0x8000
 
@@ -1338,7 +1338,8 @@ zbx_token_t;
 typedef enum
 {
 	ZBX_TOKEN_SEARCH_BASIC,
-	ZBX_TOKEN_SEARCH_REFERENCES
+	ZBX_TOKEN_SEARCH_REFERENCES,
+	ZBX_TOKEN_SEARCH_VAR_MACRO
 }
 zbx_token_search_t;
 

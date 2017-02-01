@@ -4049,7 +4049,7 @@ static int	zbx_token_parse_objectid(const char *expression, const char *macro, z
  *           structure is filled with simple macro specific data.             *
  *                                                                            *
  ******************************************************************************/
-static int	zbx_token_parse_macro(const char *expression, const char *macro, zbx_token_t *token)
+static int	zbx_token_parse_macro(const char *expression, const char *macro, zbx_token_t *token, int type)
 {
 	const char		*ptr;
 	int			offset;
@@ -4061,7 +4061,7 @@ static int	zbx_token_parse_macro(const char *expression, const char *macro, zbx_
 		if ('\0' == *ptr)
 			return FAIL;
 
-		if (SUCCEED != is_macro_char(*ptr))
+		if (ZBX_TOKEN_MACRO == type && SUCCEED != is_macro_char(*ptr))
 			return FAIL;
 	}
 
@@ -4072,7 +4072,7 @@ static int	zbx_token_parse_macro(const char *expression, const char *macro, zbx_
 	offset = macro - expression;
 
 	/* initialize token */
-	token->type = ZBX_TOKEN_MACRO;
+	token->type = type;
 	token->token.l = offset;
 	token->token.r = offset + (ptr - macro);
 
@@ -4217,7 +4217,7 @@ static int	zbx_token_parse_simple_macro_key(const char *expression, const char *
 	{
 		zbx_token_t	key_token;
 
-		if (SUCCEED != zbx_token_parse_macro(expression, key, &key_token))
+		if (SUCCEED != zbx_token_parse_macro(expression, key, &key_token, ZBX_TOKEN_MACRO))
 			return FAIL;
 
 		ptr = expression + key_token.token.r + 1;
@@ -4369,6 +4369,55 @@ static int	zbx_token_parse_nested_macro(const char *expression, const char *macr
 	return FAIL;
 }
 
+static int	zbx_token_parse(const char *expression, const char *ptr, zbx_token_t *token)
+{
+	int	ret;
+
+	switch (ptr[1])
+	{
+		case '$':
+			ret = zbx_token_parse_user_macro(expression, ptr, token);
+			break;
+		case '#':
+			ret = zbx_token_parse_lld_macro(expression, ptr, token);
+			break;
+
+		case '{':
+			ret = zbx_token_parse_nested_macro(expression, ptr, token);
+			break;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			if (SUCCEED == (ret = zbx_token_parse_objectid(expression, ptr, token)))
+				break;
+			/* break; is not missing here */
+		default:
+			if (SUCCEED != (ret = zbx_token_parse_macro(expression, ptr, token, ZBX_TOKEN_MACRO)))
+				ret = zbx_token_parse_simple_macro(expression, ptr, token);
+	}
+
+	return ret;
+}
+
+static int	zbx_token_parse_var_macro(const char *expression, const char *ptr, zbx_token_t *token)
+{
+	int	ret;
+
+	if ('{' == ptr[1])
+		ret = zbx_token_parse_nested_macro(expression, ptr, token);
+	else
+		ret = zbx_token_parse_macro(expression, ptr, token, ZBX_TOKEN_VAR_MACRO);
+
+	return ret;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_token_find                                                   *
@@ -4409,6 +4458,7 @@ int	zbx_token_find(const char *expression, int pos, zbx_token_t *token, zbx_toke
 
 		switch (token_search)
 		{
+			case ZBX_TOKEN_SEARCH_VAR_MACRO:
 			case ZBX_TOKEN_SEARCH_BASIC:
 				break;
 			case ZBX_TOKEN_SEARCH_REFERENCES:
@@ -4437,35 +4487,10 @@ int	zbx_token_find(const char *expression, int pos, zbx_token_t *token, zbx_toke
 		if ('\0' == ptr[1])
 			return FAIL;
 
-		switch (ptr[1])
-		{
-			case '$':
-				ret = zbx_token_parse_user_macro(expression, ptr, token);
-				break;
-			case '#':
-				ret = zbx_token_parse_lld_macro(expression, ptr, token);
-				break;
-
-			case '{':
-				ret = zbx_token_parse_nested_macro(expression, ptr, token);
-				break;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-				if (SUCCEED == (ret = zbx_token_parse_objectid(expression, ptr, token)))
-					break;
-				/* break; is not missing here */
-			default:
-				if (SUCCEED != (ret = zbx_token_parse_macro(expression, ptr, token)))
-					ret = zbx_token_parse_simple_macro(expression, ptr, token);
-		}
+		if (ZBX_TOKEN_SEARCH_VAR_MACRO == token_search)
+			ret = zbx_token_parse_var_macro(expression, ptr, token);
+		else
+			ret = zbx_token_parse(expression, ptr, token);
 
 		ptr++;
 	}
