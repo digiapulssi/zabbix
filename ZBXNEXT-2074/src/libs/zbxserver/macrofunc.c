@@ -28,17 +28,14 @@
  *                                                                            *
  * Parameters: func - [IN] the function data                                  *
  *             out  - [IN/OUT] the input/output value                         *
- *             p    - [IN] used for compatibility with other functions        *
  *                                                                            *
  * Return value: SUCCEED - the function was calculated successfully.          *
  *               FAIL    - the function calculation failed.                   *
  *                                                                            *
  ******************************************************************************/
-static int	macrofunc_regsub(char **params, size_t nparam, char **out, void *p)
+static int	macrofunc_regsub(char **params, size_t nparam, char **out)
 {
 	char	*value = NULL;
-
-	(void)p;
 
 	if (2 != nparam)
 		return FAIL;
@@ -63,17 +60,14 @@ static int	macrofunc_regsub(char **params, size_t nparam, char **out, void *p)
  *                                                                            *
  * Parameters: func - [IN] the function data                                  *
  *             out  - [IN/OUT] the input/output value                         *
- *             p    - [IN] used for compatibility with other functions        *
  *                                                                            *
  * Return value: SUCCEED - the function was calculated successfully.          *
  *               FAIL    - the function calculation failed.                   *
  *                                                                            *
  ******************************************************************************/
-static int	macrofunc_iregsub(char **params, size_t nparam, char **out, void *p)
+static int	macrofunc_iregsub(char **params, size_t nparam, char **out)
 {
 	char	*value = NULL;
-
-	(void)p;
 
 	if (2 != nparam)
 		return FAIL;
@@ -96,15 +90,14 @@ static int	macrofunc_iregsub(char **params, size_t nparam, char **out, void *p)
  *                                                                            *
  * Purpose: to url encode                                                     *
  *                                                                            *
- * Parameters: func - [IN] the function data                                  *
- *             out  - [IN/OUT] the input/output value                         *
- *             p    - [IN] CURL handle to be used by escaping function        *
+ * Parameters:  out  - [IN/OUT] the input/output value                        *
+ *              p    - [IN] CURL handle to be used by escaping function       *
  *                                                                            *
  * Return value: SUCCEED - the function escaped successfully.                 *
  *               FAIL    - the escape failed.                                 *
  *                                                                            *
  ******************************************************************************/
-static int	macrofunc_urlencode(char **params, size_t nparam, char **out, void *p)
+static int	macrofunc_urlencode(char **out, void *p)
 {
 	char	*value = NULL;
 
@@ -131,6 +124,8 @@ static int	macrofunc_urlencode(char **params, size_t nparam, char **out, void *p
  * Parameters: expression - [IN] expression containing macro function         *
  *             func_macro - [IN] information about macro function token       *
  *             out        - [IN/OUT] the input/output value                   *
+ *             p          - [IN] anything, for example CURL handle for        *
+ *                               urlencode function                           *
  *                                                                            *
  * Return value: SUCCEED - the function was calculated successfully.          *
  *               FAIL    - the function calculation failed.                   *
@@ -142,7 +137,7 @@ int	zbx_calculate_macro_function(const char *expression, const zbx_token_func_ma
 	char			**params, *buf = NULL;
 	const char		*ptr;
 	size_t			nparam = 0, param_alloc = 8, buf_alloc = 0, buf_offset = 0, len, sep_pos;
-	int			(*macrofunc)(char **params, size_t nparam, char **out, void *p), ret;
+	int			(*macrofunc)(char **params, size_t nparam, char **out), ret;
 
 	ptr = expression + func_macro->func.l;
 	len = func_macro->func_param.l - func_macro->func.l;
@@ -152,7 +147,7 @@ int	zbx_calculate_macro_function(const char *expression, const zbx_token_func_ma
 	else if (ZBX_CONST_STRLEN("iregsub") == len && 0 == strncmp(ptr, "iregsub", len))
 		macrofunc = macrofunc_iregsub;
 	else if (ZBX_CONST_STRLEN("urlencode") == len && 0 == strncmp(ptr, "urlencode", len))
-		macrofunc = macrofunc_urlencode;
+		return macrofunc_urlencode(out, p);
 	else
 		return FAIL;
 
@@ -175,7 +170,7 @@ int	zbx_calculate_macro_function(const char *expression, const zbx_token_func_ma
 		params[nparam++] = zbx_function_param_unquote_dyn(ptr + param_pos, param_len, &quoted);
 	}
 
-	ret = macrofunc(params, nparam, out, p);
+	ret = macrofunc(params, nparam, out);
 
 	while (0 < nparam--)
 		zbx_free(params[nparam]);
