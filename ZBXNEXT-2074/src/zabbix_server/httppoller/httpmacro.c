@@ -24,7 +24,6 @@
 
 #include "httpmacro.h"
 
-
 #define REGEXP_PREFIX		"regex:"
 #define REGEXP_PREFIX_SIZE	ZBX_CONST_STRLEN(REGEXP_PREFIX)
 
@@ -193,7 +192,7 @@ out:
  * Author: Alexei Vladishev, Andris Zeila                                     *
  *                                                                            *
  ******************************************************************************/
-void	http_substitute_variables(zbx_httptest_t *httptest, char **data)
+void	http_substitute_variables(CURL *easyhandle, zbx_httptest_t *httptest, char **data)
 {
 	const char	*__function_name = "http_substitute_variables";
 
@@ -236,7 +235,8 @@ void	http_substitute_variables(zbx_httptest_t *httptest, char **data)
 				char	*replace_to = zbx_strdup(NULL,
 						(const char*)httptest->macros.values[index].second);
 
-				if (SUCCEED == zbx_calculate_macro_function(*data, &token.data.func_macro, &replace_to))
+				if (SUCCEED == zbx_calculate_macro_function(*data, &token.data.func_macro, &replace_to,
+						easyhandle))
 				{
 					pos += zbx_replace_mem_dyn(data, &data_alloc, &data_len, token.token.l,
 							token.token.r - token.token.l + 1,

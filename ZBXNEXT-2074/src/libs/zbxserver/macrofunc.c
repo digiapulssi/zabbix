@@ -33,9 +33,11 @@
  *               FAIL    - the function calculation failed.                   *
  *                                                                            *
  ******************************************************************************/
-static int	macrofunc_regsub(char **params, size_t nparam, char **out)
+static int	macrofunc_regsub(char **params, size_t nparam, char **out, void *p)
 {
 	char	*value = NULL;
+
+	(void)p;
 
 	if (2 != nparam)
 		return FAIL;
@@ -65,9 +67,11 @@ static int	macrofunc_regsub(char **params, size_t nparam, char **out)
  *               FAIL    - the function calculation failed.                   *
  *                                                                            *
  ******************************************************************************/
-static int	macrofunc_iregsub(char **params, size_t nparam, char **out)
+static int	macrofunc_iregsub(char **params, size_t nparam, char **out, void *p)
 {
 	char	*value = NULL;
+
+	(void)p;
 
 	if (2 != nparam)
 		return FAIL;
@@ -84,13 +88,23 @@ static int	macrofunc_iregsub(char **params, size_t nparam, char **out)
 	return SUCCEED;
 }
 
-static int	macrofunc_urlencode(char **params, size_t nparam, char **out)
+static int	macrofunc_urlencode(char **params, size_t nparam, char **out, void *p)
 {
 	char	*value = NULL;
 
+	if (NULL == p)
+		return FAIL;
+#ifdef HAVE_LIBCURL
+	value = curl_easy_escape((CURL*)p, *out, strlen(*out));
+#endif
+	if (NULL == value)
+		return FAIL;
+
+	zbx_free(*out);
+	*out = value;
+
 	return SUCCEED;
 }
-
 
 /******************************************************************************
  *                                                                            *
@@ -106,12 +120,13 @@ static int	macrofunc_urlencode(char **params, size_t nparam, char **out)
  *               FAIL    - the function calculation failed.                   *
  *                                                                            *
  ******************************************************************************/
-int	zbx_calculate_macro_function(const char *expression, const zbx_token_func_macro_t *func_macro, char **out)
+int	zbx_calculate_macro_function(const char *expression, const zbx_token_func_macro_t *func_macro, char **out,
+		void *p)
 {
 	char			**params, *buf = NULL;
 	const char		*ptr;
 	size_t			nparam = 0, param_alloc = 8, buf_alloc = 0, buf_offset = 0, len, sep_pos;
-	int			(*macrofunc)(char **params, size_t nparam, char **out), ret;
+	int			(*macrofunc)(char **params, size_t nparam, char **out, void *p), ret;
 
 	ptr = expression + func_macro->func.l;
 	len = func_macro->func_param.l - func_macro->func.l;
@@ -144,7 +159,7 @@ int	zbx_calculate_macro_function(const char *expression, const zbx_token_func_ma
 		params[nparam++] = zbx_function_param_unquote_dyn(ptr + param_pos, param_len, &quoted);
 	}
 
-	ret = macrofunc(params, nparam, out);
+	ret = macrofunc(params, nparam, out, p);
 
 	while (0 < nparam--)
 		zbx_free(params[nparam]);

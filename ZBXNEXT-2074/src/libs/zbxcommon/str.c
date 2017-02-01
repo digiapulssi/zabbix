@@ -4454,7 +4454,6 @@ int	zbx_token_find(const char *expression, int pos, zbx_token_t *token, zbx_toke
 
 	while (SUCCEED != ret)
 	{
-
 		ptr = strchr(ptr, '{');
 
 		switch (token_search)

@@ -506,8 +506,8 @@ static void	process_httptest(DC_HOST *host, zbx_httptest_t *httptest)
 
 		memset(&stat, 0, sizeof(stat));
 
-		http_substitute_variables(httptest, &httpstep.url);
-		http_substitute_variables(httptest, &httpstep.posts);
+		http_substitute_variables(easyhandle, httptest, &httpstep.url);
+		http_substitute_variables(easyhandle, httptest, &httpstep.posts);
 
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() use step \"%s\"", __function_name, httpstep.name);
 
@@ -542,7 +542,7 @@ static void	process_httptest(DC_HOST *host, zbx_httptest_t *httptest)
 			}
 		}
 
-		http_substitute_variables(httptest, &httpstep.headers);
+		http_substitute_variables(easyhandle, httptest, &httpstep.headers);
 
 		/* headers defined in a step overwrite headers defined in scenario */
 		if ('\0' != *httpstep.headers)
