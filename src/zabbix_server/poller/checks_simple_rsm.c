@@ -894,13 +894,14 @@ static void	zbx_set_dns_values(const char *item_ns, const char *item_ip, int rtt
 	const char	*p;
 	const DC_ITEM	*item;
 	char		rtt_set = 0, upd_set = 0, *ns, *ip;
+	AGENT_REQUEST	request;
 
 	if (ZBX_NO_VALUE == upd)
 		upd_set = 1;
 
 	for (i = 0; i < items_num; i++)
 	{
-		AGENT_REQUEST	request;
+		init_request(&request);
 
 		item = &items[i];
 		p = item->key + keypart_size;	/* skip "rsm.dns.<tcp|udp>." part */
@@ -910,7 +911,7 @@ static void	zbx_set_dns_values(const char *item_ns, const char *item_ip, int rtt
 			if (SUCCEED != parse_item_key(item->key, &request))
 			{
 				THIS_SHOULD_NEVER_HAPPEN;
-				continue;
+				goto next;
 			}
 
 			ns = get_rparam(&request, 1);
@@ -928,7 +929,7 @@ static void	zbx_set_dns_values(const char *item_ns, const char *item_ip, int rtt
 			if (SUCCEED != parse_item_key(item->key, &request))
 			{
 				THIS_SHOULD_NEVER_HAPPEN;
-				continue;
+				goto next;
 			}
 
 			ns = get_rparam(&request, 1);
@@ -941,6 +942,8 @@ static void	zbx_set_dns_values(const char *item_ns, const char *item_ip, int rtt
 				upd_set = 1;
 			}
 		}
+next:
+		free_request(&request);
 
 		if (0 != rtt_set && 0 != upd_set)
 			return;
@@ -1020,17 +1023,20 @@ static int	zbx_parse_dns_item(DC_ITEM *item, char *host, size_t host_size)
 {
 	char		*tmp;
 	AGENT_REQUEST	request;
+	int		ret = FAIL;
+
+	init_request(&request);
 
 	if (SUCCEED != parse_item_key(item->key, &request))
 	{
 		/* unexpected key syntax */
-		return FAIL;
+		goto out;
 	}
 
 	if (3 != request.nparam)
 	{
 		/* unexpected key syntax */
-		return FAIL;
+		goto out;
 	}
 
 	zbx_strlcpy(host, get_rparam(&request, 0), host_size);
@@ -1038,7 +1044,7 @@ static int	zbx_parse_dns_item(DC_ITEM *item, char *host, size_t host_size)
 	if ('\0' == *host)
 	{
 		/* first parameter missing */
-		return FAIL;
+		goto out;
 	}
 
 	tmp = get_rparam(&request, 1);
@@ -1046,7 +1052,7 @@ static int	zbx_parse_dns_item(DC_ITEM *item, char *host, size_t host_size)
 	if ('\0' == *tmp)
 	{
 		/* second parameter missing */
-		return FAIL;
+		goto out;
 	}
 
 	tmp = get_rparam(&request, 2);
@@ -1054,28 +1060,35 @@ static int	zbx_parse_dns_item(DC_ITEM *item, char *host, size_t host_size)
 	if ('\0' == *tmp)
 	{
 		/* third parameter missing */
-		return FAIL;
+		goto out;
 	}
 
 	copy_params(&request, item);
 
-	return SUCCEED;
+	ret = SUCCEED;
+out:
+	free_request(&request);
+
+	return ret;
 }
 
 static int	zbx_parse_rdds_item(DC_ITEM *item, char *host, size_t host_size)
 {
 	AGENT_REQUEST	request;
+	int		ret = FAIL;
+
+	init_request(&request);
 
 	if (SUCCEED != parse_item_key(item->key, &request))
 	{
 		/* unexpected key syntax */
-		return FAIL;
+		goto out;
 	}
 
 	if (1 != request.nparam)
 	{
 		/* unexpected key syntax */
-		return FAIL;
+		goto out;
 	}
 
 	zbx_strlcpy(host, get_rparam(&request, 0), host_size);
@@ -1083,10 +1096,14 @@ static int	zbx_parse_rdds_item(DC_ITEM *item, char *host, size_t host_size)
 	if ('\0' == *host)
 	{
 		/* first parameter missing */
-		return FAIL;
+		goto out;
 	}
 
-	return SUCCEED;
+	ret = SUCCEED;
+out:
+	free_request(&request);
+
+	return ret;
 }
 
 static void	free_items(DC_ITEM *items, size_t items_num)
@@ -1187,10 +1204,11 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 	size_t		i, j, j2, nss_num = 0, nss_alloc = 8;
 	zbx_ns_t	*ns_entry;
 	const DC_ITEM	*item;
+	AGENT_REQUEST	request;
 
 	for (i = 0; i < items_num; i++)
 	{
-		AGENT_REQUEST	request;
+		init_request(&request);
 
 		item = &items[i];
 		ns_found = ip_found = 0;
@@ -1199,21 +1217,21 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 		{
 			zbx_rsm_errf(log_fd, "%s: item key %s is incorrectly formatted", item->host.host,
 					item->key_orig);
-			continue;
+			goto next;
 		}
 
 		if (NULL == (ns = get_rparam(&request, 1)) || '\0' == *ns)
 		{
 			zbx_rsm_errf(log_fd, "%s: cannot get Name Server from item %s (itemid:" ZBX_FS_UI64 ")",
 					item->host.host, item->key_orig, item->itemid);
-			continue;
+			goto next;
 		}
 
 		if (NULL == (ip = get_rparam(&request, 2)) || '\0' == *ip)
 		{
 			zbx_rsm_errf(log_fd, "%s: cannot get IP address from item %s (itemid:" ZBX_FS_UI64 ")",
 					item->host.host, item->key_orig, item->itemid);
-			continue;
+			goto next;
 		}
 
 		if (0 == nss_num)
@@ -1245,7 +1263,7 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 			}
 
 			if (0 != ip_found)
-				continue;
+				goto next;
 		}
 
 		if (nss_num == nss_alloc)
@@ -1269,7 +1287,7 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 			ns_entry = &(*nss)[j];
 
 		if (SUCCEED != zbx_validate_ip(ip, ipv4_enabled, ipv6_enabled, NULL, NULL))
-			continue;
+			goto next;
 
 		/* add IP here */
 		if (0 == ns_entry->ips_num)
@@ -1280,6 +1298,8 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 		ns_entry->ips[ns_entry->ips_num] = zbx_strdup(NULL, ip);
 
 		ns_entry->ips_num++;
+next:
+		free_request(&request);
 	}
 
 	return nss_num;
@@ -3003,17 +3023,20 @@ out:
 static int	zbx_parse_epp_item(DC_ITEM *item, char *host, size_t host_size)
 {
 	AGENT_REQUEST	request;
+	int		ret = FAIL;
+
+	init_request(&request);
 
 	if (SUCCEED != parse_item_key(item->key, &request))
 	{
 		/* unexpected key syntax */
-		return FAIL;
+		goto out;
 	}
 
 	if (1 != request.nparam)
 	{
 		/* unexpected key syntax */
-		return FAIL;
+		goto out;
 	}
 
 	zbx_strlcpy(host, get_rparam(&request, 0), host_size);
@@ -3021,12 +3044,16 @@ static int	zbx_parse_epp_item(DC_ITEM *item, char *host, size_t host_size)
 	if ('\0' == *host)
 	{
 		/* first parameter missing */
-		return FAIL;
+		goto out;
 	}
 
 	copy_params(&request, item);
 
-	return SUCCEED;
+	ret = SUCCEED;
+out:
+	free_request(&request);
+
+	return ret;
 }
 
 static size_t	zbx_get_epp_items(const char *keyname, DC_ITEM *item, const char *domain, DC_ITEM **out_items,
@@ -3108,6 +3135,7 @@ static void	zbx_set_epp_values(const char *ip, int rtt1, int rtt2, int rtt3, int
 	const DC_ITEM	*item;
 	const char	*p;
 	char		*cmd;
+	AGENT_REQUEST	request;
 
 	for (i = 0; i < items_num; i++)
 	{
@@ -3119,14 +3147,14 @@ static void	zbx_set_epp_values(const char *ip, int rtt1, int rtt2, int rtt3, int
 		else if ((ZBX_NO_VALUE != rtt1 || ZBX_NO_VALUE != rtt2 || ZBX_NO_VALUE != rtt3) &&
 				0 == strncmp(p, "rtt[", 4))
 		{
-			AGENT_REQUEST	request;
+			init_request(&request);
 
 			*cmd = '\0';
 
 			if (SUCCEED != parse_item_key(item->key, &request))
 			{
 				THIS_SHOULD_NEVER_HAPPEN;
-				continue;
+				goto next;
 			}
 
 			if (NULL != (cmd = get_rparam(&request, 1)) && '\0' != *cmd)
@@ -3138,6 +3166,8 @@ static void	zbx_set_epp_values(const char *ip, int rtt1, int rtt2, int rtt3, int
 				else if (ZBX_NO_VALUE != rtt3 && 0 == strcmp("info", cmd))
 					zbx_add_value_dbl(item, value_ts, rtt3);
 			}
+next:
+			free_request(&request);
 		}
 	}
 }
