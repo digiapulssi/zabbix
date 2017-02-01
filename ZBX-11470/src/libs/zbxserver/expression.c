@@ -3655,7 +3655,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					ret = get_trigger_function_value(c_event->trigger.expression, &replace_to,
 							*data, &token.data.simple_macro);
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_trigger_msg_macro(actionid, event,r_event, userid, m,
 							&replace_to, N_functionid, raw_value, c_event,
@@ -3671,7 +3671,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					DCget_user_macro(hostids.values, hostids.values_num, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_intern_trigger_msg_macro(actionid, event, r_event, userid, m,
 							&replace_to, N_functionid, c_event, error, maxerrlen);
@@ -3684,7 +3684,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					DCget_user_macro(NULL, 0, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_discovery_msg_macro(actionid, event, m, &replace_to, c_event);
 				}
@@ -3696,7 +3696,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					DCget_user_macro(NULL, 0, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_areg_msg_macro(actionid, event, m, &replace_to, c_event);
 				}
@@ -3710,7 +3710,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					DCget_user_macro(hostids.values, hostids.values_num, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_item_msg_macro(actionid, event, r_event, m, &replace_to, c_event);
 				}
@@ -3724,7 +3724,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					DCget_user_macro(hostids.values, hostids.values_num, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_lldrule_msg_macro(actionid, event, r_event, m, &replace_to,
 							c_event);
@@ -3756,7 +3756,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					get_trigger_expression_constant(expression, &token.data.reference, &replace,
 							&replace_len);
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_trigger_description_macro(event, m, &replace_to, N_functionid,
 							raw_value);
@@ -3767,7 +3767,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 		{
 			if (EVENT_OBJECT_TRIGGER == event->object)
 			{
-				if (ZBX_TOKEN_MACRO == token.type)
+				if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 					expand_trigger_expression_macro(event, m, &replace_to);
 
 				/* when processing trigger expressions the user macros are already expanded */
@@ -3784,7 +3784,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					DCget_user_macro(hostids.values, hostids.values_num, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_trigger_url_macro(event, m, &replace_to, N_functionid);
 				}
@@ -3798,7 +3798,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 				DCget_user_macro(&dc_item->host.hostid, 1, m, &replace_to);
 				pos = token.token.r;
 			}
-			else if (ZBX_TOKEN_MACRO == token.type)
+			else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 			{
 				ret = expand_param_macro(m, &replace_to, dc_item);
 			}
@@ -3810,7 +3810,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 				DCget_user_macro(&dc_host->hostid, 1, m, &replace_to);
 				pos = token.token.r;
 			}
-			else if (ZBX_TOKEN_MACRO == token.type)
+			else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 			{
 				ret = expand_interface_macro(m, &replace_to, dc_host);
 			}
@@ -3843,7 +3843,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 				DCget_user_macro(&dc_host->hostid, 1, m, &replace_to);
 				pos = token.token.r;
 			}
-			else if (ZBX_TOKEN_MACRO == token.type)
+			else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 			{
 				ret = expand_script_macro(m, &replace_to, dc_host);
 			}
@@ -3855,14 +3855,14 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 				DCget_user_macro(&dc_host->hostid, 1, m, &replace_to);
 				pos = token.token.r;
 			}
-			else if (ZBX_TOKEN_MACRO == token.type)
+			else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 			{
 				ret = expand_httptest_macro(m, &replace_to, dc_host);
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_ALERT))
 		{
-			if (ZBX_TOKEN_MACRO == token.type)
+			if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				expand_alert_macro(m, &replace_to, alert);
 		}
 		else if (macro_type & MACRO_TYPE_TRIGGER_TAG)
@@ -3876,7 +3876,7 @@ int	substitute_simple_macros(const zbx_uint64_t *actionid, const DB_EVENT *event
 					DCget_user_macro(hostids.values, hostids.values_num, m, &replace_to);
 					pos = token.token.r;
 				}
-				else if (ZBX_TOKEN_MACRO == token.type)
+				else if (ZBX_TOKEN_MACRO == token.type || ZBX_TOKEN_FUNC_MACRO == token.type)
 				{
 					ret = expand_tag_macro(event, m, &replace_to, N_functionid, raw_value);
 				}
