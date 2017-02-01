@@ -28,7 +28,9 @@ typedef struct
 }
 zbx_httptest_t;
 
+#ifdef HAVE_LIBCURL
 void	http_substitute_variables(CURL *easyhandle, zbx_httptest_t *httptest, char **data);
+#endif
 int	http_process_variables(zbx_httptest_t *httptest, const char *variables, const char *data, char **err_str);
 
 #endif

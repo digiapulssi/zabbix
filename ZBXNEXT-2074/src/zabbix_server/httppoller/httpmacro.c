@@ -180,6 +180,7 @@ out:
 	return ret;
 }
 
+#ifdef HAVE_LIBCURL
 /******************************************************************************
  *                                                                            *
  * Function: http_substitute_variables                                        *
@@ -187,9 +188,9 @@ out:
  * Purpose: substitute variables in input string with their values from http  *
  *          test config                                                       *
  *                                                                            *
- * Parameters: httptest   - [IN]     the http test data                       *
+ * Parameters: easyhandle - [IN]     handle to be used by escape function     *
+ *             httptest   - [IN]     the http test data                       *
  *             data       - [IN/OUT] string to substitute macros in           *
- *             easyhandle - [IN]     handle to be used by escape function     *
  *                                                                            *
  * Usage example:                                                             *
  *             name={{user}.urlencode()}&password={password}&enter=Sign in    *
@@ -264,6 +265,7 @@ void	http_substitute_variables(CURL *easyhandle, zbx_httptest_t *httptest, char 
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() data:'%s'", __function_name, *data);
 }
+#endif
 
 #define TRIM_LEADING_WHITESPACE(ptr)	while (' ' == *ptr || '\t' == *ptr) ptr++;
 #define TRIM_TRAILING_WHITESPACE(ptr)	do { ptr--; } while (' ' == *ptr || '\t' == *ptr);
