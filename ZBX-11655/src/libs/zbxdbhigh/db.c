@@ -865,7 +865,7 @@ int	DBget_proxy_lastaccess(const char *hostname, int *lastaccess, char **error)
 }
 
 #ifdef HAVE_MYSQL
-static size_t	get_field_size(unsigned char type)
+static size_t	get_string_field_size(unsigned char type)
 {
 	switch(type)
 	{
@@ -881,7 +881,7 @@ static size_t	get_field_size(unsigned char type)
 	}
 }
 #elif HAVE_ORACLE
-static size_t	get_field_size(unsigned char type)
+static size_t	get_string_field_size(unsigned char type)
 {
 	switch(type)
 	{
@@ -924,7 +924,7 @@ static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src, zbx
 		length = field->length;
 
 #if defined(HAVE_MYSQL) || defined(HAVE_ORACLE)
-	return zbx_db_dyn_escape_string(src, get_field_size(field->type), length, flag);
+	return zbx_db_dyn_escape_string(src, get_string_field_size(field->type), length, flag);
 #elif HAVE_IBM_DB2	/* IBM DB2 fields are limited by bytes rather than characters */
 	return zbx_db_dyn_escape_string(src, length, ZBX_MAX_UINT, flag);
 #else
