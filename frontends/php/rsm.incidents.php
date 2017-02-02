@@ -39,7 +39,7 @@ $fields = array(
 	'original_from' =>			array(T_ZBX_INT, O_OPT, null,	null,			null),
 	'original_to' =>			array(T_ZBX_INT, O_OPT, null,	null,			null),
 	// filter
-	'filter_set' =>				array(T_ZBX_STR, O_OPT,	P_ACT,	null,			null),
+	'filter_set' =>				array(T_ZBX_STR, O_OPT,	null,	null,			null),
 	'filter_search' =>			array(T_ZBX_STR, O_OPT, null,	null,			null),
 	'filter_from' =>			array(T_ZBX_INT, O_OPT, null,	null,			null),
 	'filter_to' =>				array(T_ZBX_INT, O_OPT, null,	null,			null),
@@ -310,8 +310,9 @@ if ($host || $data['filter_search']) {
 
 			// get triggers
 			$triggers = API::Trigger()->get(array(
+				'output' => ['triggerids'],
+				'selectItems' => ['itemid'],
 				'itemids' => $itemIds,
-				'output' => array('triggerids'),
 				'filter' => array(
 					'priority' => TRIGGER_SEVERITY_NOT_CLASSIFIED
 				),
@@ -366,7 +367,7 @@ if ($host || $data['filter_search']) {
 				'triggerids' => $triggerIds,
 				'source' => EVENT_SOURCE_TRIGGERS,
 				'object' => EVENT_OBJECT_TRIGGER,
-				'selectTriggers' => API_OUTPUT_REFER,
+				'selectTriggers' => API_OUTPUT_EXTEND,
 				'time_from' => $filterTimeFrom,
 				'time_till' => $filterTimeTill
 			));

@@ -2527,6 +2527,9 @@ tr.cursor-move td * {
 .iconrollingweekok		{ background-image: url('../images/general/rolling_week_ok.png');}
 .iconrollingweekfail	{ background-image: url('../images/general/rolling_week_fail.png');}
 .iconrollingweekdisabled{ background-image: url('../images/general/rolling_week_disabled.png');}
+.incidents-info { width: 100%; }
+.rolling-week-status { font-size: 16px; font-weight: bold; float: right; }
+.rsm-date-time { float: right; }
 
 /*doc
 ---
