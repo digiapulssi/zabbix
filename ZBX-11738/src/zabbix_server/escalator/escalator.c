@@ -880,7 +880,6 @@ static void	add_message_alert(const DB_EVENT *event, const DB_EVENT *r_event, zb
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	c_event = (NULL != r_event ? r_event : event);
-
 	now = time(NULL);
 
 	if (0 == mediatypeid)
