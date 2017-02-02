@@ -23,8 +23,6 @@
 
 #include "memalloc.h"
 
-extern char	*CONFIG_FILE;
-
 /******************************************************************************
  *                                                                            *
  *                     Some information on memory layout                      *
@@ -545,14 +543,7 @@ void	zbx_mem_create(zbx_mem_info_t **info, zbx_uint64_t size, const char *descr,
 {
 	const char		*__function_name = "zbx_mem_create";
 
-	const char		proj_ids[] = "abcdefghijknoqrstuvwxy"		/* 'l', 'm', 'S', 'p', 'z' are used */
-						"ABCDEFGHIJKLMNOPQRTUVWXYZ";	/* to allocate memory segments and  */
-										/* semaphores in other places, see  */
-										/* ipc.h and mutexs.c for details   */
-	static const char	*proj_id = NULL;
-	key_t			key;
 	int			shm_id, index;
-	struct shmid_ds		shmid_ds;
 	void			*base;
 
 	descr = ZBX_NULL2STR(descr);
@@ -577,73 +568,11 @@ void	zbx_mem_create(zbx_mem_info_t **info, zbx_uint64_t size, const char *descr,
 		exit(EXIT_FAILURE);
 	}
 
-	if (NULL == proj_id)
+	if (-1 == (shm_id = shmget(IPC_PRIVATE, size, 0600)))
 	{
-		/* do the cleanup */
-
-		for (proj_id = proj_ids; '\0' != *proj_id; proj_id++)
-		{
-			if (-1 == (key = ftok(CONFIG_FILE, *proj_id)))
-			{
-				zbx_error("cannot create IPC key for path [%s]: %s", CONFIG_FILE, zbx_strerror(errno));
-				exit(EXIT_FAILURE);
-			}
-
-			if (-1 == (shm_id = shmget(key, 0, 0600)))
-				continue;	/* either we don't have permissions or segment does not exist */
-
-			zabbix_log(LOG_LEVEL_DEBUG, "attempting to remove existing shm_id:%d", shm_id);
-
-			if (-1 != shmctl(shm_id, IPC_STAT, &shmid_ds))
-			{
-				zabbix_log(LOG_LEVEL_DEBUG, "segment size:" ZBX_FS_SIZE_T " last attach time:%d"
-						" last detach time:%d last change time: %d PID of creator:%d"
-						" PID of last shmat()/shmdt():%d number of current attaches:%d"
-						" UID of owner:%d GID of owner:%d UID of creator GID of creator:%d",
-						(zbx_fs_size_t)shmid_ds.shm_segsz, (int)shmid_ds.shm_atime,
-						(int)shmid_ds.shm_dtime, (int)shmid_ds.shm_ctime, (int)shmid_ds.shm_cpid,
-						(int)shmid_ds.shm_lpid, (int)shmid_ds.shm_nattch,
-						(int)shmid_ds.shm_perm.uid, (int)shmid_ds.shm_perm.gid,
-						(int)shmid_ds.shm_perm.cuid, (int)shmid_ds.shm_perm.cgid);
-			}
-			else
-				zabbix_log(LOG_LEVEL_DEBUG, "no stats available: %s", zbx_strerror(errno));
-
-			if (-1 != shmctl(shm_id, IPC_RMID, NULL))
-				zabbix_log(LOG_LEVEL_DEBUG, "shm_id:%d successfully marked for deletion", shm_id);
-			else
-				zabbix_log(LOG_LEVEL_DEBUG, "deletion attempt failed: %s", zbx_strerror(errno));
-		}
-
-		proj_id = proj_ids;
-	}
-
-	for (;;)
-	{
-		if ('\0' == *proj_id)
-		{
-			zbx_error("ran out of possible ids for IPC key creation, please remove unused shared memory"
-					" segments manually");
-			exit(EXIT_FAILURE);
-		}
-
-		if (-1 == (key = ftok(CONFIG_FILE, *proj_id++)))
-		{
-			zbx_error("cannot create IPC key for path [%s]: %s", CONFIG_FILE, zbx_strerror(errno));
-			exit(EXIT_FAILURE);
-		}
-
-		if (-1 == (shm_id = shmget(key, size, IPC_CREAT | IPC_EXCL | 0600)))
-		{
-			if (EEXIST == errno)
-				continue;
-
-			zbx_error("cannot allocate shared memory of size " ZBX_FS_SIZE_T " for %s: %s",
-					(zbx_fs_size_t)size, descr, zbx_strerror(errno));
-			exit(EXIT_FAILURE);
-		}
-
-		break;
+		zbx_error("cannot get private shared memory of size " ZBX_FS_SIZE_T " for %s: %s", (zbx_fs_size_t)size,
+				descr, zbx_strerror(errno));
+		exit(EXIT_FAILURE);
 	}
 
 	if ((void *)(-1) == (base = shmat(shm_id, NULL, 0)))
@@ -651,6 +580,9 @@ void	zbx_mem_create(zbx_mem_info_t **info, zbx_uint64_t size, const char *descr,
 		zabbix_log(LOG_LEVEL_CRIT, "cannot attach shared memory for %s: %s", descr, zbx_strerror(errno));
 		exit(EXIT_FAILURE);
 	}
+
+	if (-1 == shmctl(shm_id, IPC_RMID, NULL))
+		zabbix_log(LOG_LEVEL_CRIT, "cannot mark shared memory for destruction: %s", zbx_strerror(errno));
 
 	/* allocate zbx_mem_info_t structure, its buckets, and description inside shared memory */
 
