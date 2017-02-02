@@ -37,7 +37,6 @@
 
 #	define ZBX_MUTEX_NAME		int
 
-#	define ZBX_NO_MUTEX		-1
 #	define ZBX_MUTEX_LOG		0
 #	define ZBX_MUTEX_CACHE		1
 #	define ZBX_MUTEX_TRENDS		2
