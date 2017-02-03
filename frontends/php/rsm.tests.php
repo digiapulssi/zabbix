@@ -31,22 +31,23 @@ $page['type'] = detect_page_type(PAGE_TYPE_HTML);
 require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
-$fields = array(
-	'host' =>					array(T_ZBX_STR, O_OPT,		P_SYS,	null,			null),
-	'type' =>					array(T_ZBX_INT, O_OPT,		null,	IN('0,1,2,3'),	null),
-	'slvItemId' =>				array(T_ZBX_INT, O_OPT,		P_SYS,	DB_ID,			null),
-	'original_from' =>			array(T_ZBX_INT, O_OPT,		null,	null,			null),
-	'original_to' =>			array(T_ZBX_INT, O_OPT,		null,	null,			null),
+$fields = [
+	'host' =>					[T_ZBX_STR, O_OPT,		P_SYS,	null,			null],
+	'type' =>					[T_ZBX_INT, O_OPT,		null,	IN('0,1,2,3'),	null],
+	'slvItemId' =>				[T_ZBX_INT, O_OPT,		P_SYS,	DB_ID,			null],
+	'original_from' =>			[T_ZBX_INT, O_OPT,		null,	null,			null],
+	'original_to' =>			[T_ZBX_INT, O_OPT,		null,	null,			null],
 	// filter
-	'filter_set' =>				array(T_ZBX_STR, O_OPT,		P_ACT,	null,			null),
-	'filter_from' =>			array(T_ZBX_INT, O_OPT,		null,	null,			null),
-	'filter_to' =>				array(T_ZBX_INT, O_OPT,		null,	null,			null),
-	'filter_rolling_week' =>	array(T_ZBX_INT, O_OPT,		null,	null,			null),
+	'filter_set' =>				[T_ZBX_STR, O_OPT,		null,	null,			null],
+	'filter_rst' =>				[T_ZBX_STR, O_OPT,		null,	null,			null],
+	'filter_from' =>			[T_ZBX_INT, O_OPT,		null,	null,			null],
+	'filter_to' =>				[T_ZBX_INT, O_OPT,		null,	null,			null],
+	'filter_rolling_week' =>	[T_ZBX_INT, O_OPT,		null,	null,			null],
 	// ajax
-	'favobj'=>					array(T_ZBX_STR, O_OPT,		P_ACT,	null,			null),
-	'favref'=>					array(T_ZBX_STR, O_OPT,		P_ACT,  NOT_EMPTY,		'isset({favobj})'),
-	'favstate'=>				array(T_ZBX_INT, O_OPT,		P_ACT,  NOT_EMPTY,		'isset({favobj})&&("filter"=={favobj})')
-);
+	'favobj'=>					[T_ZBX_STR, O_OPT,		P_ACT,	null,			null],
+	'favref'=>					[T_ZBX_STR, O_OPT,		P_ACT,  NOT_EMPTY,		'isset({favobj})'],
+	'favstate'=>				[T_ZBX_INT, O_OPT,		P_ACT,  NOT_EMPTY,		'isset({favobj})&&("filter"=={favobj})']
+];
 check_fields($fields);
 
 if (isset($_REQUEST['favobj'])) {
@@ -101,7 +102,7 @@ if (getRequest('filter_set')) {
 	CProfile::update('web.rsm.tests.filter_from', $data['filter_from'], PROFILE_TYPE_ID);
 	CProfile::update('web.rsm.tests.filter_to', $data['filter_to'], PROFILE_TYPE_ID);
 }
-elseif (getRequest('filter_rolling_week')) {
+elseif (getRequest('filter_rolling_week') || hasRequest('filter_rst')) {
 	$data['host'] = CProfile::get('web.rsm.tests.host');
 	$data['type'] = CProfile::get('web.rsm.tests.type');
 	$data['slvItemId'] = CProfile::get('web.rsm.tests.slvItemId');
@@ -188,7 +189,7 @@ if ($items) {
 		'triggerids' => $triggerIds,
 		'source' => EVENT_SOURCE_TRIGGERS,
 		'object' => EVENT_OBJECT_TRIGGER,
-		'selectTriggers' => API_OUTPUT_REFER,
+		'selectTriggers' => API_OUTPUT_EXTEND,
 		'time_from' => zbxDateToTime($data['filter_from']),
 		'time_till' => zbxDateToTime($data['filter_to'])
 	));
