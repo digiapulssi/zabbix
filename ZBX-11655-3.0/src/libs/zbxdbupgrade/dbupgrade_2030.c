@@ -535,7 +535,7 @@ static int	dm_rename_slave_data(const char *table_name, const char *key_name, co
 		else
 			zbx_snprintf_alloc(&name, &name_alloc, &name_offset, "{$N%d_%s", nodeid, row[1] + 2);
 
-		name_esc = DBdyn_escape_string_len(name, field_length);
+		name_esc = DBdyn_escape_field(table_name, field_name, name);
 
 		if (ZBX_DB_OK > DBexecute("update %s set %s='%s' where %s=" ZBX_FS_UI64,
 				table_name, field_name, name_esc, key_name, id))
