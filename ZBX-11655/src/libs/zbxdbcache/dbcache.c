@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2776,13 +2776,24 @@ void	dc_add_history(zbx_uint64_t itemid, unsigned char value_type, unsigned char
 			{
 				size_t		i;
 				zbx_log_t	*log;
+				zbx_timespec_t	ts_tmp;
+
+				/* ensure that every log item value timestamp is unique */
+				ts_tmp.sec = ts->sec;
+				ts_tmp.ns = ts->ns;
 
 				for (i = 0; NULL != value->logs[i]; i++)
 				{
 					log = value->logs[i];
 
-					dc_local_add_history_log(itemid, ts, log->value, log->timestamp, log->source,
+					dc_local_add_history_log(itemid, &ts_tmp, log->value, log->timestamp, log->source,
 							log->severity, log->logeventid, log->lastlogsize, log->mtime);
+
+					if (++ts_tmp.ns == 1000000000)
+					{
+						ts_tmp.sec++;
+						ts_tmp.ns = 0;
+					}
 				}
 			}
 			break;

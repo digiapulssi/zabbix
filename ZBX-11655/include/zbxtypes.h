@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@
 #	define alloca		_alloca
 
 #	ifndef uint32_t
-#		define uint32_t	__int32
+#		define uint32_t	unsigned __int32
 #	endif
 
 #	ifndef PATH_SEPARATOR
