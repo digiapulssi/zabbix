@@ -2164,7 +2164,7 @@ static int	zbx_db_get_escape_like_pattern_len(const char *src)
 	int		len;
 	const char	*s;
 
-	len = zbx_db_get_escape_string_len(src, ZBX_MAX_UINT, ZBX_MAX_UINT, ESCAPE_SEQUENCE_ON) - 1; /* minus '\0' */
+	len = zbx_db_get_escape_string_len(src, ZBX_SIZE_T_MAX, ZBX_SIZE_T_MAX, ESCAPE_SEQUENCE_ON) - 1; /* minus '\0' */
 
 	for (s = src; s && *s; s++)
 	{

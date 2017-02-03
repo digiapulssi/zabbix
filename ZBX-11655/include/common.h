@@ -94,8 +94,6 @@ const char	*zbx_result_string(int result);
 #define ZBX_MAX_UINT64_LEN	21
 #define ZBX_DM_DELIMITER	'\255'
 
-#define ZBX_MAX_UINT		(~0U)
-
 typedef struct
 {
 	int	sec;	/* seconds */
@@ -779,7 +777,6 @@ int	is_double(const char *c);
 int	is_uint_suffix(const char *c, unsigned int *value);
 int	is_int_prefix(const char *c);
 int	is_uint_n_range(const char *str, size_t n, void *value, size_t size, zbx_uint64_t min, zbx_uint64_t max);
-
 
 #define ZBX_SIZE_T_MAX	(~(size_t)0)
 

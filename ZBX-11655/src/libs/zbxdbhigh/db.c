@@ -870,7 +870,7 @@ static size_t	get_string_field_size(unsigned char type)
 	switch(type)
 	{
 		case ZBX_TYPE_LONGTEXT:
-			return ZBX_MAX_UINT;
+			return ZBX_SIZE_T_MAX;
 		case ZBX_TYPE_CHAR:
 		case ZBX_TYPE_TEXT:
 		case ZBX_TYPE_SHORTTEXT:
@@ -887,7 +887,7 @@ static size_t	get_string_field_size(unsigned char type)
 	{
 		case ZBX_TYPE_LONGTEXT:
 		case ZBX_TYPE_TEXT:
-			return ZBX_MAX_UINT;
+			return ZBX_SIZE_T_MAX;
 		case ZBX_TYPE_CHAR:
 		case ZBX_TYPE_SHORTTEXT:
 			return 4000u;
@@ -906,7 +906,7 @@ static size_t	get_string_field_size(unsigned char type)
  ******************************************************************************/
 char	*DBdyn_escape_string(const char *src)
 {
-	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, ZBX_MAX_UINT, ESCAPE_SEQUENCE_ON);
+	return zbx_db_dyn_escape_string(src, ZBX_SIZE_T_MAX, ZBX_SIZE_T_MAX, ESCAPE_SEQUENCE_ON);
 }
 
 /******************************************************************************
@@ -919,16 +919,16 @@ static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src, zbx
 	size_t	length;
 
 	if (ZBX_TYPE_LONGTEXT == field->type && 0 == field->length)
-		length = ZBX_MAX_UINT;
+		length = ZBX_SIZE_T_MAX;
 	else
 		length = field->length;
 
 #if defined(HAVE_MYSQL) || defined(HAVE_ORACLE)
 	return zbx_db_dyn_escape_string(src, get_string_field_size(field->type), length, flag);
 #elif HAVE_IBM_DB2	/* IBM DB2 fields are limited by bytes rather than characters */
-	return zbx_db_dyn_escape_string(src, length, ZBX_MAX_UINT, flag);
+	return zbx_db_dyn_escape_string(src, length, ZBX_SIZE_T_MAX, flag);
 #else
-	return zbx_db_dyn_escape_string(src, ZBX_MAX_UINT, length, flag);
+	return zbx_db_dyn_escape_string(src, ZBX_SIZE_T_MAX, length, flag);
 #endif
 }
 
