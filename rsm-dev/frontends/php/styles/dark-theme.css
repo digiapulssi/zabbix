@@ -2530,6 +2530,7 @@ tr.cursor-move td * {
 .incidents-info { width: 100%; }
 .rolling-week-status { font-size: 16px; font-weight: bold; float: right; }
 .rsm-date-time { float: right; }
+.first-row-element { width: 300px; display: inline-block; }
 
 /*doc
 ---
