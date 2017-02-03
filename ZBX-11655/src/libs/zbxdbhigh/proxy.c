@@ -1209,7 +1209,7 @@ void	process_proxyconfig(struct zbx_json_parse *jp_data)
 	zbx_vector_ptr_t	tables;
 	const ZBX_TABLE		*table;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+	zabbix_log(LOG_LEVEL_INFORMATION, "In %s()", __function_name);
 
 	zbx_vector_ptr_create(&tables);
 
@@ -1295,7 +1295,7 @@ void	process_proxyconfig(struct zbx_json_parse *jp_data)
 
 	zbx_free(error);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+	zabbix_log(LOG_LEVEL_INFORMATION, "End of %s()", __function_name);
 }
 
 /******************************************************************************
