@@ -80,8 +80,8 @@ our @EXPORT = qw($result $dbh $tld
 		get_macro_dns_update_time get_macro_rdds_update_time get_items_by_hostids get_tld_items get_hostid
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_item_data get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
-		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_select
-		set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
+		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
+		db_select set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
 		minutes_last_month max_avail_time get_online_probes get_probe_times probe_offline_at probes2tldhostids
 		init_values push_value send_values get_nsip_from_key is_service_error process_slv_ns_monthly
 		process_slv_avail process_slv_ns_avail process_slv_monthly get_results get_item_values avail_value_exists
@@ -759,13 +759,21 @@ sub handle_db_error
 
 sub db_connect
 {
-	fail("no database configuration defined") if (not defined($config) or
-		not defined($config->{'db'}) or
-		not defined($config->{'db'}->{'name'}));
+	my $db_key = shift;
 
-	$global_sql = 'DBI:mysql:'.$config->{'db'}->{'name'}.':'.$config->{'db'}->{'host'};
+	$db_key = 'db_1' unless ($db_key);
 
-	$dbh = DBI->connect($global_sql, $config->{'db'}->{'user'}, $config->{'db'}->{'password'},
+	fail("configuration error: file not found") unless (defined($config));
+	fail("configuration error: section \"$db_key\" not found") unless (defined($config->{$db_key}));
+	foreach my $key ('name', 'user')
+	{
+		fail("configuration error: database $key not specified in section \"$db_key\"")
+			unless (defined($config->{$db_key}->{$key}));
+	}
+
+	$global_sql = 'DBI:mysql:'.$config->{$db_key}->{'name'}.':'.$config->{$db_key}->{'host'};
+
+	$dbh = DBI->connect($global_sql, $config->{$db_key}->{'user'}, $config->{$db_key}->{'password'},
 		{
 			PrintError  => 0,
 			HandleError => \&handle_db_error,
@@ -775,6 +783,12 @@ sub db_connect
 	# http://search.cpan.org/~capttofu/DBD-mysql-4.028/lib/DBD/mysql.pm
 	# for details
 	$dbh->{'mysql_use_result'} = 1;
+}
+
+sub db_disconnect
+{
+	$dbh->disconnect() || wrn($dbh->errstr);
+	undef($dbh);
 }
 
 sub db_select
