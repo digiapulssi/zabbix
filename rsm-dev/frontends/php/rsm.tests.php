@@ -24,8 +24,8 @@ require_once dirname(__FILE__).'/include/incidentdetails.inc.php';
 
 $page['title'] = _('Tests');
 $page['file'] = 'rsm.tests.php';
-$page['hist_arg'] = array('groupid', 'hostid');
-$page['scripts'] = array('class.calendar.js');
+$page['hist_arg'] = ['groupid', 'hostid'];
+$page['scripts'] = ['class.calendar.js'];
 $page['type'] = detect_page_type(PAGE_TYPE_HTML);
 
 require_once dirname(__FILE__).'/include/page_header.php';
@@ -63,13 +63,11 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 
 $data['tests'] = [];
 
-$macro = API::UserMacro()->get(array(
+$macro = API::UserMacro()->get([
 	'globalmacro' => true,
 	'output' => API_OUTPUT_EXTEND,
-	'filter' => array(
-		'macro' => RSM_ROLLWEEK_SECONDS
-	)
-));
+	'filter' => ['macro' => RSM_ROLLWEEK_SECONDS]
+]);
 
 if (!$macro) {
 	show_error_message(_s('Macro "%1$s" doesn\'t not exist.', RSM_ROLLWEEK_SECONDS));
@@ -130,13 +128,13 @@ if (!$data['host'] || !$data['slvItemId'] || $data['type'] === null) {
 }
 
 // get TLD
-$tld = API::Host()->get(array(
+$tld = API::Host()->get([
 	'tlds' => true,
-	'output' => array('hostid', 'host', 'name'),
-	'filter' => array(
+	'output' => ['hostid', 'host', 'name'],
+	'filter' => [
 		'host' => $data['host']
-	)
-));
+	]
+]);
 
 if ($tld) {
 	$data['tld'] = reset($tld);
@@ -162,29 +160,29 @@ else {
 }
 
 // get items
-$items = API::Item()->get(array(
+$items = API::Item()->get([
 	'hostids' => $data['tld']['hostid'],
-	'filter' => array(
+	'filter' => [
 		'key_' => $key
-	),
-	'output' => array('itemid', 'hostid', 'key_'),
+	],
+	'output' => ['itemid', 'hostid', 'key_'],
 	'preservekeys' => true
-));
+]);
 
 if ($items) {
 	$item = reset($items);
 	$availItem = $item['itemid'];
 
 	// get triggers
-	$triggers = API::Trigger()->get(array(
+	$triggers = API::Trigger()->get([
 		'itemids' => $availItem,
-		'output' => array('triggerids'),
+		'output' => ['triggerids'],
 		'preservekeys' => true
-	));
+	]);
 
 	$triggerIds = array_keys($triggers);
 
-	$events = API::Event()->get(array(
+	$events = API::Event()->get([
 		'output' => API_OUTPUT_EXTEND,
 		'triggerids' => $triggerIds,
 		'source' => EVENT_SOURCE_TRIGGERS,
@@ -192,9 +190,9 @@ if ($items) {
 		'selectTriggers' => API_OUTPUT_EXTEND,
 		'time_from' => zbxDateToTime($data['filter_from']),
 		'time_till' => zbxDateToTime($data['filter_to'])
-	));
+	]);
 
-	CArrayHelper::sort($events, array('objectid', 'clock'));
+	CArrayHelper::sort($events, ['objectid', 'clock']);
 
 	$i = 0;
 	$incidents = [];
@@ -213,7 +211,7 @@ if ($items) {
 						' AND e.clock>='.zbxDateToTime($data['filter_to']).
 						' AND e.object='.EVENT_OBJECT_TRIGGER.
 						' AND e.source='.EVENT_SOURCE_TRIGGERS.
-						' AND '.dbConditionInt('e.value', array(TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN)).
+						' AND '.dbConditionInt('e.value', [TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN]).
 					' ORDER BY e.clock,e.ns',
 					1
 				));
@@ -225,47 +223,45 @@ if ($items) {
 			}
 
 			$i++;
-			$incidents[$i] = array(
+			$incidents[$i] = [
 				'objectid' => $event['objectid'],
 				'status' => TRIGGER_VALUE_TRUE,
 				'startTime' => $event['clock'],
 				'false_positive' => $event['false_positive']
-			);
+			];
 		}
 		else {
 			if (isset($incidents[$i])) {
-				$incidents[$i] = array(
+				$incidents[$i] = [
 					'status' => TRIGGER_VALUE_FALSE,
 					'endTime' => $event['clock']
-				);
+				];
 			}
 			else {
 				$i++;
 				// get event start time
-				$addEvent = API::Event()->get(array(
+				$addEvent = API::Event()->get([
 					'output' => API_OUTPUT_EXTEND,
 					'triggerids' => $event['objectid'],
 					'source' => EVENT_SOURCE_TRIGGERS,
 					'object' => EVENT_OBJECT_TRIGGER,
 					'selectTriggers' => API_OUTPUT_REFER,
 					'time_till' => $event['clock'] - 1,
-					'filter' => array(
-						'value' => TRIGGER_VALUE_TRUE
-					),
+					'filter' => ['value' => TRIGGER_VALUE_TRUE],
 					'limit' => 1,
 					'sortorder' => ZBX_SORT_DOWN
-				));
+				]);
 
 				if ($addEvent) {
 					$addEvent = reset($addEvent);
 
-					$incidents[$i] = array(
+					$incidents[$i] = [
 						'objectid' => $event['objectid'],
 						'status' => TRIGGER_VALUE_FALSE,
 						'startTime' => $addEvent['clock'],
 						'endTime' => $event['clock'],
 						'false_positive' => $addEvent['false_positive']
-					);
+					];
 				}
 			}
 		}
@@ -289,16 +285,16 @@ if ($items) {
 				' AND e.clock>='.zbxDateToTime($data['filter_to']).
 				' AND e.object='.EVENT_OBJECT_TRIGGER.
 				' AND e.source='.EVENT_SOURCE_TRIGGERS.
-				' AND '.dbConditionString('e.value', array(TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN)).
+				' AND '.dbConditionString('e.value', [TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN]).
 			' ORDER BY e.clock,e.ns',
 			1
 		));
 
 		if ($addEvent) {
-			$newData[$i] = array(
+			$newData[$i] = [
 				'status' => TRIGGER_VALUE_FALSE,
 				'endTime' => $addEvent['clock']
-			);
+			];
 
 			unset($incidentsData[$i]['status']);
 			$incidentsData[$i] = array_merge($incidentsData[$i], $newData[$i]);
@@ -318,12 +314,12 @@ if ($items) {
 	$data['statusChanges'] = 0;
 	while ($test = DBfetch($tests)) {
 		if ($test['value'] == 0) {
-			$data['tests'][] = array(
+			$data['tests'][] = [
 				'value' => $test['value'],
 				'clock' => $test['clock'],
 				'incident' => 0,
 				'updated' => false
-			);
+			];
 
 			if (!$test['value']) {
 				$data['downTests']++;
@@ -355,12 +351,10 @@ if ($items) {
 	}
 
 	// get host with calculated items
-	$rsm = API::Host()->get(array(
-		'output' => array('hostid'),
-		'filter' => array(
-			'host' => RSM_HOST
-		)
-	));
+	$rsm = API::Host()->get([
+		'output' => ['hostid'],
+		'filter' => ['host' => RSM_HOST]
+	]);
 
 	if ($rsm) {
 		$rsm = reset($rsm);
@@ -371,13 +365,11 @@ if ($items) {
 		exit;
 	}
 
-	$item = API::Item()->get(array(
+	$item = API::Item()->get([
 		'hostids' => $rsm['hostid'],
-		'output' => array('itemid', 'value_type'),
-		'filter' => array(
-			'key_' => $itemKey
-		)
-	));
+		'output' => ['itemid', 'value_type'],
+		'filter' => ['key_' => $itemKey]
+	]);
 
 	if ($item) {
 		$item = reset($item);
@@ -388,13 +380,13 @@ if ($items) {
 		exit;
 	}
 
-	$itemValue = API::History()->get(array(
+	$itemValue = API::History()->get([
 		'itemids' => $item['itemid'],
 		'time_from' => zbxDateToTime($data['filter_from']),
 		'history' => $item['value_type'],
 		'output' => API_OUTPUT_EXTEND,
 		'limit' => 1
-	));
+	]);
 	$itemValue = reset($itemValue);
 
 	$timeStep = $itemValue['value'] ?  $itemValue['value'] / SEC_PER_MIN : 1;
