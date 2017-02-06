@@ -66,7 +66,7 @@ int	zbx_mutex_create(ZBX_MUTEX *mutex, ZBX_MUTEX_NAME name)
 		return FAIL;
 	}
 #else
-	if (-1 != ZBX_SEM_LIST_ID)
+	if (-1 == ZBX_SEM_LIST_ID)
 	{
 		union semun	semopts;
 		int		i;
