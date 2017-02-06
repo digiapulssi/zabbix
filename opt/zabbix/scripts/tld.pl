@@ -110,6 +110,7 @@ my $rv = GetOptions(\%OPTS,
 		    "ns-servers-v4=s",
 		    "ns-servers-v6=s",
 		    "rdds-ns-string=s",
+		    "root-servers=s",
 		    "get-nsservers-list!",
 		    "update-nsservers!",
 		    "list-services!",
@@ -289,7 +290,7 @@ $ns_servers = get_ns_servers($OPTS{'tld'});
 
 pfail("Could not retrive NS servers for '".$OPTS{'tld'}."' TLD") unless (scalar(keys %{$ns_servers}));
 
-$root_servers_macros = update_root_servers();
+$root_servers_macros = update_root_servers($OPTS{'root-servers'});
 
 unless (defined($root_servers_macros)) {
     print "Could not retrive list of root servers or create global macros\n";
@@ -1235,6 +1236,9 @@ Other options
         --rdds-ns-string=STRING
                 name server prefix in the WHOIS output
 		(default: $cfg_default_rdds_ns_string)
+        --root-servers=STRING
+                list of IPv4 and IPv6 root servers separated by comma and semicolon: "v4IP1[,v4IP2,...][;v6IP1[,v6IP2,...]]"
+                (default: taken from DNS)
         --rdds-test-prefix=STRING
 		domain test prefix for RDDS monitoring (needed only if rdds servers specified)
         --setup-cron

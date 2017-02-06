@@ -250,11 +250,22 @@ sub get_global_macro_value($) {
 }
 
 
-sub update_root_servers {
-    my $content = LWP::UserAgent->new->get('http://www.internic.net/zones/named.root')->{'_content'};
+sub update_root_servers(;$) {
+    my $root_servers = shift;
 
     my $macro_value_v4 = "";
     my $macro_value_v6 = "";
+
+    if ($root_servers)
+    {
+	($macro_value_v4, $macro_value_v6)  = split(';', $root_servers);
+
+	create_macro('{$RSM.IP4.ROOTSERVERS1}', $macro_value_v4, undef, 1);	# global, force
+	create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6, undef, 1);	# global, force
+    }
+    else
+    {
+    my $content = LWP::UserAgent->new->get('http://www.internic.net/zones/named.root')->{'_content'};
 
     return unless defined $content;
 
@@ -275,6 +286,7 @@ sub update_root_servers {
 #    return unless create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6) eq true;
     create_macro('{$RSM.IP4.ROOTSERVERS1}', $macro_value_v4);
     create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6);
+    }
 
     return '"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"';
 }
