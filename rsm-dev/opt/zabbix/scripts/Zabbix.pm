@@ -524,7 +524,7 @@ sub __send_request {
 	print("REQUEST FAILED:\n", Dumper($req), "\n");
 	print("REPLY:\n", Dumper($result), "\n");
 
-	if ($result->{'error'}->{'code'} = -32602) {
+	if (int($result->{'error'}->{'code'}) == -32602) {
 	    delete_authid();
 	}
     }
