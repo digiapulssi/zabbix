@@ -183,7 +183,8 @@ static int	httpmacro_append_pair(zbx_httptest_t *httptest, const char *pkey, siz
 	ret = SUCCEED;
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s macro:'%s'='%s'",
-			__function_name, zbx_result_string(ret), (char*)pair.first, (char*)pair.second);
+			__function_name, zbx_result_string(ret), ZBX_NULL2STR((char*)pair.first),
+			ZBX_NULL2STR((char*)pair.second));
 
 	return ret;
 }
