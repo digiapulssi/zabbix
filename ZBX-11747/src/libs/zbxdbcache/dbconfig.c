@@ -4425,7 +4425,7 @@ void	init_configuration_cache(void)
 	strpool_size = (size_t)(CONFIG_CONF_CACHE_SIZE * 0.15);
 	config_size = CONFIG_CONF_CACHE_SIZE - strpool_size;
 
-	if (SUCCEED == zbx_mutex_create(&config_lock, ZBX_MUTEX_CONFIG))
+	if (SUCCEED != zbx_mutex_create(&config_lock, ZBX_MUTEX_CONFIG))
 	{
 		zbx_error("unable to create mutex for configuration cache");
 		exit(EXIT_FAILURE);
