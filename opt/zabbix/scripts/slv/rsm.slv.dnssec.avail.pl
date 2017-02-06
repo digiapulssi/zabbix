@@ -12,6 +12,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
+use Alerts;
 use TLD_constants qw(:ec);
 
 my $cfg_key_in = 'rsm.dns.udp.rtt[';
