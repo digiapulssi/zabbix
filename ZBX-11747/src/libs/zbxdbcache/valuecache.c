@@ -2765,7 +2765,7 @@ void	zbx_vc_init(void)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (FAIL == zbx_mutex_create_force(&vc_lock, ZBX_MUTEX_VALUECACHE))
+	if (SUCCEED != zbx_mutex_create(&vc_lock, ZBX_MUTEX_VALUECACHE))
 	{
 		zbx_error("cannot create mutex for value cache");
 		exit(EXIT_FAILURE);
