@@ -238,7 +238,7 @@ void	DBstatement_prepare(const char *sql)
 
 /******************************************************************************
  *                                                                            *
- * Function: DBbind_parameter                                                 *
+ * Function: DBbind_parameter_dyn                                             *
  *                                                                            *
  * Purpose: creates an association between a program variable and             *
  *          a placeholder in a SQL statement                                  *
@@ -246,24 +246,27 @@ void	DBstatement_prepare(const char *sql)
  * Comments: retry until DB is up                                             *
  *                                                                            *
  ******************************************************************************/
-void	DBbind_parameter(int position, void *buffer, unsigned char type)
+int	DBbind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsigned char type,
+		zbx_db_value_t **rows, int rows_num)
 {
 	int	rc;
 
-	rc = zbx_db_bind_parameter(position, buffer, type);
+	rc = zbx_db_bind_parameter_dyn(context, position, type, rows, rows_num);
 
 	while (ZBX_DB_DOWN == rc)
 	{
 		DBclose();
 		DBconnect(ZBX_DB_CONNECT_NORMAL);
 
-		if (ZBX_DB_DOWN == (rc = zbx_db_bind_parameter(position, buffer, type)))
+		if (ZBX_DB_DOWN == (rc = zbx_db_bind_parameter_dyn(context, position, type, rows, rows_num)))
 		{
 			zabbix_log(LOG_LEVEL_ERR, "database is down: retrying in %d seconds", ZBX_DB_WAIT_DOWN);
 			connection_failure = 1;
 			sleep(ZBX_DB_WAIT_DOWN);
 		}
 	}
+
+	return rc;
 }
 
 /******************************************************************************
@@ -279,14 +282,45 @@ int	DBstatement_execute()
 {
 	int	rc;
 
-	rc = zbx_db_statement_execute();
+	rc = zbx_db_statement_execute(1);
 
 	while (ZBX_DB_DOWN == rc)
 	{
 		DBclose();
 		DBconnect(ZBX_DB_CONNECT_NORMAL);
 
-		if (ZBX_DB_DOWN == (rc = zbx_db_statement_execute()))
+		if (ZBX_DB_DOWN == (rc = zbx_db_statement_execute(1)))
+		{
+			zabbix_log(LOG_LEVEL_ERR, "database is down: retrying in %d seconds", ZBX_DB_WAIT_DOWN);
+			connection_failure = 1;
+			sleep(ZBX_DB_WAIT_DOWN);
+		}
+	}
+
+	return rc;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DBstatement_execute                                              *
+ *                                                                            *
+ * Purpose: executes a SQL statement                                          *
+ *                                                                            *
+ * Comments: retry until DB is up                                             *
+ *                                                                            *
+ ******************************************************************************/
+int	DBstatement_executeN(int iters)
+{
+	int	rc;
+
+	rc = zbx_db_statement_execute(iters);
+
+	while (ZBX_DB_DOWN == rc)
+	{
+		DBclose();
+		DBconnect(ZBX_DB_CONNECT_NORMAL);
+
+		if (ZBX_DB_DOWN == (rc = zbx_db_statement_execute(iters)))
 		{
 			zabbix_log(LOG_LEVEL_ERR, "database is down: retrying in %d seconds", ZBX_DB_WAIT_DOWN);
 			connection_failure = 1;
@@ -2448,6 +2482,8 @@ int	zbx_db_insert_execute(zbx_db_insert_t *self)
 	char		*sql_values = NULL;
 	size_t		sql_values_alloc = 0, sql_values_offset = 0;
 #	endif
+#else
+	zbx_db_bind_context_t	*contexts;
 #endif
 
 	if (0 == self->rows.values_num)
@@ -2523,48 +2559,35 @@ int	zbx_db_insert_execute(zbx_db_insert_t *self)
 
 	DBstatement_prepare(sql_command);
 
-	for (i = 0; i < self->rows.values_num; i++)
-	{
-		zbx_db_value_t	*values = (zbx_db_value_t *)self->rows.values[i];
+	contexts = (zbx_db_bind_context_t *)zbx_malloc(NULL, sizeof(zbx_db_bind_context_t) * self->fields.values_num);
 
-		if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
+	for (j = 0; j < self->fields.values_num; j++)
+	{
+		field = (ZBX_FIELD *)self->fields.values[j];
+
+		if (ZBX_DB_OK > DBbind_parameter_dyn(&contexts[j], j, field->type, (zbx_db_value_t **)self->rows.values,
+				self->rows.values_num))
 		{
+			goto out;
+		}
+	}
+
+	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
+	{
+		for (i = 0; i < self->rows.values_num; i++)
+		{
+			zbx_db_value_t	*values = (zbx_db_value_t *)self->rows.values[i];
 			char	*str;
 
 			str = zbx_db_format_values((ZBX_FIELD **)self->fields.values, values, self->fields.values_num);
 			zabbix_log(LOG_LEVEL_DEBUG, "insert [txnlev:%d] [%s]", zbx_db_txn_level(), str);
 			zbx_free(str);
 		}
-
-		for (j = 0; j < self->fields.values_num; j++)
-		{
-			const zbx_db_value_t	*value = &values[j];
-
-			field = self->fields.values[j];
-
-			switch (field->type)
-			{
-				case ZBX_TYPE_CHAR:
-				case ZBX_TYPE_TEXT:
-				case ZBX_TYPE_SHORTTEXT:
-				case ZBX_TYPE_LONGTEXT:
-					DBbind_parameter(j + 1, (void *)value->str, field->type);
-					break;
-				default:
-					DBbind_parameter(j + 1, (void *)value, field->type);
-					break;
-			}
-
-			if (0 != zbx_db_txn_error())
-			{
-				zabbix_log(LOG_LEVEL_ERR, "failed to bind field: %s", field->name);
-				goto out;
-			}
-		}
-		if (ZBX_DB_OK > DBstatement_execute())
-			goto out;
-
 	}
+
+	if (ZBX_DB_OK > DBstatement_executeN(self->rows.values_num))
+		goto out;
+
 	ret = SUCCEED;
 
 #else
@@ -2655,6 +2678,11 @@ out:
 #	ifdef HAVE_MYSQL
 	zbx_free(sql_values);
 #	endif
+#else
+	for (j = 0; j < self->fields.values_num; j++)
+		zbx_db_clean_bind_context(&contexts[j]);
+
+	zbx_free(contexts);
 #endif
 	return ret;
 }
