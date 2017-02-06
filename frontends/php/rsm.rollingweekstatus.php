@@ -143,7 +143,6 @@ if (!isset($data['rollWeekSeconds'])) {
 }
 
 foreach ($DB['SERVERS'] as $server) {
-	$tlds = [];
 	unset($DB['DB']);
 	$DB['TYPE'] = $server['TYPE'];
 	$DB['SERVER'] = $server['SERVER'];
@@ -159,6 +158,9 @@ foreach ($DB['SERVERS'] as $server) {
 		require_once dirname(__FILE__).'/include/page_footer.php';
 		exit;
 	}
+
+	$tlds = [];
+	$whereCondition = [];
 
 	// get "TLDs" groupId
 	$tldGroups = API::HostGroup()->get(array(

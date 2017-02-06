@@ -34,7 +34,7 @@ $filterColumn2
 	->addRow(_('To'), createDateSelector('filter_to', zbxDateToTime($this->data['filter_to'])));
 $filterColumn3
 	->addRow((new CLink(_('Rolling week'),
-		'rsm.tests.php?incident_type='.$this->data['type'].'&filter_set=1&filter_rolling_week=1')
+		'rsm.tests.php?incident_type='.$this->data['type'].'&filter_set=1&filter_rolling_week=1&host='.$this->data['tld']['name'])
 	)
 		->addClass(ZBX_STYLE_BTN_LINK));
 
@@ -63,7 +63,7 @@ foreach ($this->data['tests'] as $test) {
 		$rollingWeekEffects = _('Yes / False positive');
 	}
 
-	$row = array(
+	$row = [
 		date('d.m.Y H:i:s', $test['clock']),
 		$rollingWeekEffects,
 		new CLink(
@@ -71,7 +71,7 @@ foreach ($this->data['tests'] as $test) {
 			'rsm.particulartests.php?slvItemId='.$this->data['slvItemId'].'&host='.$this->data['tld']['host'].
 				'&time='.$test['clock'].'&type='.$this->data['type']
 		)
-	);
+	];
 
 	$table->addRow($row);
 }
