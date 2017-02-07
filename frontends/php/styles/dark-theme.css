@@ -2531,6 +2531,7 @@ tr.cursor-move td * {
 .rolling-week-status { font-size: 16px; font-weight: bold; float: right; }
 .rsm-date-time { float: right; }
 .first-row-element { width: 300px; display: inline-block; }
+.first-cell-value { width: 65px; display: inline-block; }
 
 /*doc
 ---

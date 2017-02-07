@@ -524,7 +524,7 @@ foreach ($DB['SERVERS'] as $server) {
 					$data['tld'][$server['NR'].$tld['hostid']]['host'] = $tld['host'];
 					$data['tld'][$server['NR'].$tld['hostid']]['name'] = $tld['name'];
 					$data['tld'][$server['NR'].$tld['hostid']]['type'] = '';
-					$data['tld'][$server['NR'].$tld['hostid']]['url'] = $server['URL'];
+					$data['tld'][$server['NR'].$tld['hostid']]['URL'] = $server['URL'];
 
 					foreach ($tld['groups'] as $tldGroup) {
 						if ($tldGroup['name'] === RSM_CC_TLD_GROUP) {
@@ -546,12 +546,13 @@ foreach ($DB['SERVERS'] as $server) {
 			// get triggers
 			$triggers = API::Trigger()->get(array(
 				'output' => array('triggerid', 'value'),
+				'selectItems' => ['itemid'],
 				'itemids' => array_keys($itemIds)
 			));
 
 			foreach ($triggers as $trigger) {
 				if ($trigger['value'] == TRIGGER_VALUE_TRUE) {
-					$trItem = $trigger['itemid'];
+					$trItem = $trigger['items'][0]['itemid'];
 					$problem = [];
 					switch ($items[$trItem]['key_']) {
 						case RSM_SLV_DNS_AVAIL:
@@ -613,7 +614,7 @@ foreach ($DB['SERVERS'] as $server) {
 					&& ($data['filter_dns'] || $data['filter_dnssec'] || $data['filter_rdds']
 						|| $data['filter_epp'])) {
 				foreach ($tlds as $tld) {
-					if ((!$data['filter_dns'] || (!isset($tld[RSM_DNS]) || $tld[RSM_DNS]['lastvalue'] < $data['filter_slv']))
+					if (array_key_exists('hostid', $tld) && (!$data['filter_dns'] || (!isset($tld[RSM_DNS]) || $tld[RSM_DNS]['lastvalue'] < $data['filter_slv']))
 							&& (!$data['filter_dnssec'] || (!isset($tld[RSM_DNSSEC]) || $tld[RSM_DNSSEC]['lastvalue'] < $data['filter_slv']))
 							&& (!$data['filter_rdds'] || (!isset($tld[RSM_RDDS]) || $tld[RSM_RDDS]['lastvalue'] < $data['filter_slv']))
 							&& (!$data['filter_epp'] || (!isset($tld[RSM_EPP]) || $tld[RSM_EPP]['lastvalue'] < $data['filter_slv']))) {
