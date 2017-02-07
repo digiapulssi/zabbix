@@ -197,7 +197,7 @@ if (isset($this->data['tld'])) {
 				: new CSpan('0.000%', 'first-cell-value');
 
 			$dnsGraph = ($tld[RSM_DNS]['lastvalue'] > 0)
-				? new CLink('graph', 'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemid='.
+				? new CLink('graph', 'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemids[]='.
 						$tld[RSM_DNS]['itemid'], 'cell-value')
 				: null;
 			$dns = array(new CSpan($dnsValue, 'right'), $dnsStatus, $dnsGraph);
@@ -240,7 +240,7 @@ if (isset($this->data['tld'])) {
 				: new CSpan('0.000%', 'first-cell-value');
 
 			$dnssecGraph = ($tld[RSM_DNSSEC]['lastvalue'] > 0)
-				? new CLink('graph', 'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemid='.
+				? new CLink('graph', 'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemids[]='.
 						$tld[RSM_DNSSEC]['itemid'], 'cell-value'
 				)
 				: null;
@@ -283,7 +283,7 @@ if (isset($this->data['tld'])) {
 				: new CSpan('0.000%', 'first-cell-value');
 
 			$rddsGraph = ($tld[RSM_RDDS]['lastvalue'] > 0)
-				? new CLink('graph', 'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemid='.
+				? new CLink('graph', 'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemids[]='.
 						$tld[RSM_RDDS]['itemid'], 'cell-value')
 				: null;
 
@@ -344,7 +344,7 @@ if (isset($this->data['tld'])) {
 				: new CSpan('0.000%', 'first-cell-value');
 
 			$eppGraph = ($tld[RSM_EPP]['lastvalue'] > 0)
-				? new CLink('graph', 'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemid='.
+				? new CLink('graph', 'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemids[]='.
 					$tld[RSM_EPP]['itemid'], 'cell-value')
 				: null;
 			$epp =  array(new CSpan($eppValue, 'right'), $eppStatus, $eppGraph);

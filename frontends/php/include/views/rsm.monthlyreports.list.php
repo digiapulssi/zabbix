@@ -95,7 +95,7 @@ foreach ($this->data['services'] as $name => $services) {
 				$service['ns'],
 				isset($service['slv']) ? new CSpan($service['slv'], $color) : '-',
 				isset($services['acceptable_sla']) ? $services['acceptable_sla'] : '-',
-				new CLink('graph', 'history.php?action=showgraph&period=2592000&stime='.$data['stime'].'&itemid='.$key)
+				new CLink('graph', 'history.php?action=showgraph&period=2592000&stime='.$data['stime'].'&itemids[]='.$key)
 			));
 		}
 	}
@@ -118,7 +118,7 @@ foreach ($this->data['services'] as $name => $services) {
 			SPACE,
 			isset($serviceValues['slv']) ? new CSpan($serviceValues['slv'], $color) : '-',
 			isset($services['acceptable_sla']) ? $services['acceptable_sla'] : '-',
-			new CLink('graph', 'history.php?action=showgraph&period=2592000&stime='.$data['stime'].'&itemid='.$itemId)
+			new CLink('graph', 'history.php?action=showgraph&period=2592000&stime='.$data['stime'].'&itemids[]='.$itemId)
 		));
 	}
 }
