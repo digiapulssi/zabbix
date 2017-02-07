@@ -991,13 +991,14 @@ static sb4 db_bind_dynamic_cb(dvoid *ctxp, OCIBind *bindp, ub4 iter, ub4 index, 
 
 	switch (context->type)
 	{
-		case ZBX_TYPE_ID: /* TODO: handle 0 -> NULL conversion */
+		case ZBX_TYPE_ID: /* handle 0 -> NULL conversion */
 			if (0 == context->rows[iter][context->position].ui64)
 			{
-				*bufpp = NULL;;
+				*bufpp = NULL;
 				*alenpp = 0;
 				break;
 			}
+			/* break; is not missing here */
 		case ZBX_TYPE_UINT:
 			*bufpp = &((OCINumber *)context->data)[iter];
 			*alenpp = sizeof(OCINumber);
