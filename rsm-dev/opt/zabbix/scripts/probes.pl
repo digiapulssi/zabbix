@@ -35,7 +35,7 @@ sub validate_input;
 sub usage;
 
 my %OPTS;
-my $rv = GetOptions(\%OPTS, "probe=s", "ip=s", "port=s",
+my $rv = GetOptions(\%OPTS, "probe=s", "ip=s", "port=s", "server-id=s",
 			    "epp!", "ipv4!", "ipv6!", "rdds!", "resolver=s",
                 	    "delete!", "disable!", "add!",
                 	    "verbose!", "quiet!", "help|?");
@@ -46,7 +46,10 @@ validate_input();
 
 my $config = get_rsm_config();
 
-zbx_connect($config->{'zapi'}->{'url'}, $config->{'zapi'}->{'user'}, $config->{'zapi'}->{'password'}, $OPTS{'verbose'});
+my $server_key = get_rsm_server_key($OPTS{'server-id'});
+
+my $section = $config->{$server_key};
+zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($OPTS{'delete'}) {
     delete_probe($OPTS{'probe'});
@@ -455,6 +458,9 @@ Options for adding new probe. Argument --add.
     --ip
           IP of new probe node
           (default: empty)
+	--server-id
+		ID of Zabbix server
+		(default: 1)
 	--port
 		Port of new probe node
 		(default: 10050)

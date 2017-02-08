@@ -65,7 +65,7 @@ sub _socket {
 sub _init_json {
     my $self = shift;
 
-    my $JSON = JSON::->new->utf8();
+    my $JSON = JSON->new->utf8();
 
     return $JSON;
 }

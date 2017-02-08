@@ -5,8 +5,9 @@ use warnings;
 use Config::Tiny;
 use base 'Exporter';
 
-our @EXPORT = qw(get_rsm_config get_rsm_config_db_keys);
+our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key);
 
+use constant RSM_SERVER_KEY_PREFIX => 'server_';
 use constant RSM_DEFAULT_CONFIG_FILE => '/opt/zabbix/scripts/rsm.conf';
 
 sub get_rsm_config
@@ -28,7 +29,7 @@ sub get_rsm_config
 	return $config;
 }
 
-sub get_rsm_config_db_keys
+sub get_rsm_server_keys
 {
 	my $config = shift;
 
@@ -36,10 +37,21 @@ sub get_rsm_config_db_keys
 
 	foreach my $key (sort(keys(%{$config})))
 	{
-		push(@keys, $key) if ($key =~ /^db_/);
+		push(@keys, $key) if ($key =~ /^${\(RSM_SERVER_KEY_PREFIX)}([0-9]+)$/)
 	}
 
 	return @keys;
+}
+
+sub get_rsm_server_key
+{
+	my $server_id = shift;
+
+	my (undef, $file, $line) = caller();
+
+	die("Internal error: function get_rsm_server_key() needs a parameter ($file:$line)") unless ($server_id);
+
+	return RSM_SERVER_KEY_PREFIX . $server_id;
 }
 
 1;
