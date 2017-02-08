@@ -2524,7 +2524,12 @@ retry_oracle:
 		}
 	}
 
-	if (ZBX_DB_DOWN == (rc = zbx_db_statement_execute(self->rows.values_num)))
+	rc = zbx_db_statement_execute(self->rows.values_num);
+
+	for (j = 0; j < self->fields.values_num; j++)
+		zbx_db_clean_bind_context(&contexts[j]);
+
+	if (ZBX_DB_DOWN == rc)
 	{
 		if (0 < tries++)
 		{
@@ -2630,9 +2635,6 @@ out:
 	zbx_free(sql_values);
 #	endif
 #else
-	for (j = 0; j < self->fields.values_num; j++)
-		zbx_db_clean_bind_context(&contexts[j]);
-
 	zbx_free(contexts);
 #endif
 	return ret;
