@@ -2507,6 +2507,9 @@ retry_oracle:
 		if (ZBX_DB_OK > zbx_db_bind_parameter_dyn(&contexts[j], j, field->type,
 				(zbx_db_value_t **)self->rows.values, self->rows.values_num))
 		{
+			for (i = 0; i < j; i++)
+				zbx_db_clean_bind_context(&contexts[i]);
+
 			goto out;
 		}
 	}
