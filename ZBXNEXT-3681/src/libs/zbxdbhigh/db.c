@@ -238,39 +238,6 @@ void	DBstatement_prepare(const char *sql)
 
 /******************************************************************************
  *                                                                            *
- * Function: DBbind_parameter_dyn                                             *
- *                                                                            *
- * Purpose: creates an association between a program variable and             *
- *          a placeholder in a SQL statement                                  *
- *                                                                            *
- * Comments: retry until DB is up                                             *
- *                                                                            *
- ******************************************************************************/
-int	DBbind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsigned char type,
-		zbx_db_value_t **rows, int rows_num)
-{
-	int	rc;
-
-	rc = zbx_db_bind_parameter_dyn(context, position, type, rows, rows_num);
-
-	while (ZBX_DB_DOWN == rc)
-	{
-		DBclose();
-		DBconnect(ZBX_DB_CONNECT_NORMAL);
-
-		if (ZBX_DB_DOWN == (rc = zbx_db_bind_parameter_dyn(context, position, type, rows, rows_num)))
-		{
-			zabbix_log(LOG_LEVEL_ERR, "database is down: retrying in %d seconds", ZBX_DB_WAIT_DOWN);
-			connection_failure = 1;
-			sleep(ZBX_DB_WAIT_DOWN);
-		}
-	}
-
-	return rc;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: DBstatement_execute                                              *
  *                                                                            *
  * Purpose: executes a SQL statement                                          *
@@ -300,36 +267,6 @@ int	DBstatement_execute()
 	return rc;
 }
 
-/******************************************************************************
- *                                                                            *
- * Function: DBstatement_execute                                              *
- *                                                                            *
- * Purpose: executes a SQL statement                                          *
- *                                                                            *
- * Comments: retry until DB is up                                             *
- *                                                                            *
- ******************************************************************************/
-int	DBstatement_executeN(int iters)
-{
-	int	rc;
-
-	rc = zbx_db_statement_execute(iters);
-
-	while (ZBX_DB_DOWN == rc)
-	{
-		DBclose();
-		DBconnect(ZBX_DB_CONNECT_NORMAL);
-
-		if (ZBX_DB_DOWN == (rc = zbx_db_statement_execute(iters)))
-		{
-			zabbix_log(LOG_LEVEL_ERR, "database is down: retrying in %d seconds", ZBX_DB_WAIT_DOWN);
-			connection_failure = 1;
-			sleep(ZBX_DB_WAIT_DOWN);
-		}
-	}
-
-	return rc;
-}
 #endif
 
 /******************************************************************************
@@ -2484,6 +2421,7 @@ int	zbx_db_insert_execute(zbx_db_insert_t *self)
 #	endif
 #else
 	zbx_db_bind_context_t	*contexts;
+	int			rc, tries = 0;
 #endif
 
 	if (0 == self->rows.values_num)
@@ -2557,16 +2495,17 @@ int	zbx_db_insert_execute(zbx_db_insert_t *self)
 	}
 	zbx_chrcpy_alloc(&sql_command, &sql_command_alloc, &sql_command_offset, ')');
 
-	DBstatement_prepare(sql_command);
-
 	contexts = (zbx_db_bind_context_t *)zbx_malloc(NULL, sizeof(zbx_db_bind_context_t) * self->fields.values_num);
+
+retry_oracle:
+	DBstatement_prepare(sql_command);
 
 	for (j = 0; j < self->fields.values_num; j++)
 	{
 		field = (ZBX_FIELD *)self->fields.values[j];
 
-		if (ZBX_DB_OK > DBbind_parameter_dyn(&contexts[j], j, field->type, (zbx_db_value_t **)self->rows.values,
-				self->rows.values_num))
+		if (ZBX_DB_OK > zbx_db_bind_parameter_dyn(&contexts[j], j, field->type,
+				(zbx_db_value_t **)self->rows.values, self->rows.values_num))
 		{
 			goto out;
 		}
@@ -2585,10 +2524,22 @@ int	zbx_db_insert_execute(zbx_db_insert_t *self)
 		}
 	}
 
-	if (ZBX_DB_OK > DBstatement_executeN(self->rows.values_num))
-		goto out;
+	if (ZBX_DB_DOWN == (rc = zbx_db_statement_execute(self->rows.values_num)))
+	{
+		if (0 < tries++)
+		{
+			zabbix_log(LOG_LEVEL_ERR, "database is down: retrying in %d seconds", ZBX_DB_WAIT_DOWN);
+			connection_failure = 1;
+			sleep(ZBX_DB_WAIT_DOWN);
+		}
 
-	ret = SUCCEED;
+		DBclose();
+		DBconnect(ZBX_DB_CONNECT_NORMAL);
+
+		goto retry_oracle;
+	}
+
+	ret = (ZBX_DB_OK == rc ? SUCCEED : FAIL);
 
 #else
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);

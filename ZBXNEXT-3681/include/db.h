@@ -392,8 +392,6 @@ void	DBclose(void);
 
 #ifdef HAVE_ORACLE
 void	DBstatement_prepare(const char *sql);
-int	DBbind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsigned char type,
-		zbx_db_value_t **rows, int rows_num);
 int	DBstatement_execute();
 #endif
 #ifdef HAVE___VA_ARGS__

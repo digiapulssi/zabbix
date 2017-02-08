@@ -1140,6 +1140,12 @@ int	zbx_db_bind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsi
 		goto out;
 	}
 out:
+	if (ret != ZBX_DB_OK)
+	{
+		zbx_free(context->data);
+		memset(context, 0, sizeof(zbx_db_bind_context_t));
+	}
+
 	return ret;
 }
 
