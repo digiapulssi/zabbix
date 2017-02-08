@@ -33,11 +33,16 @@ if (opt('debug'))
 	dbg("$_ => ", getopt($_)) foreach (optkeys());
 }
 
-set_slv_config(get_rsm_config());
+__validate_input();	# needs to be connected to db
+
+my $config = get_rsm_config();
+set_slv_config($config);
+
+my @server_keys = get_rsm_server_keys($config);
 
 db_connect();
 
-__validate_input();
+my $last_audit = ah_get_last_audit();
 
 my $opt_from = getopt('from');
 
@@ -125,26 +130,6 @@ foreach my $service (keys(%services))
 
 my $now = time();
 
-my $tlds_ref;
-if (opt('tld'))
-{
-	fail("TLD ", getopt('tld'), " does not exist.") if (tld_exists(getopt('tld')) == 0);
-
-	$tlds_ref = [ getopt('tld') ];
-}
-else
-{
-	$tlds_ref = get_tlds();
-}
-
-my $servicedata;	# hash with various data of TLD service
-
-my $probe_avail_limit = get_macro_probe_avail_limit();
-
-my $config_minclock = __get_config_minclock();
-
-dbg("config_minclock:$config_minclock");
-
 # in order to make sure all availability data points are saved we need to go back extra minute
 my $last_time_till = max_avail_time($now) - 60;
 
@@ -153,10 +138,17 @@ my ($check_from, $check_till, $continue_file);
 if (opt('continue'))
 {
 	$continue_file = ah_get_continue_file();
+
 	my $handle;
 
 	if (! -e $continue_file)
 	{
+		db_disconnect();
+		my $config_minclock = __get_config_minclock();
+		db_connect();
+
+		dbg("config_minclock:$config_minclock");
+
 		$check_from = truncate_from($config_minclock);
 	}
 	else
@@ -255,6 +247,29 @@ if (!$from)
 }
 
 my $tlds_processed = 0;
+
+# go through all the databases
+foreach my $server_key (@server_keys)
+{
+	db_disconnect();
+	db_connect($server_key);
+
+my $tlds_ref;
+if (opt('tld'))
+{
+	fail("TLD ", getopt('tld'), " does not exist.") if (tld_exists(getopt('tld')) == 0);
+
+	$tlds_ref = [ getopt('tld') ];
+}
+else
+{
+	$tlds_ref = get_tlds();
+}
+
+my $servicedata;	# hash with various data of TLD service
+
+my $probe_avail_limit = get_macro_probe_avail_limit();
+
 foreach (@$tlds_ref)
 {
 	$tlds_processed++;
@@ -325,6 +340,29 @@ my $all_probes_ref = get_probes();
 
 if (opt('probe'))
 {
+	my $probe = getopt('probe');
+	my $valid = 0;
+
+	foreach my $name (keys(%$all_probes_ref))
+	{
+		if ($name eq $probe)
+		{
+			$valid = 1;
+			last;
+		}
+	}
+
+	if ($valid == 0)
+	{
+		print("Error: unknown probe \"$probe\"\n");
+		print("\nAvailable probes:\n");
+		foreach my $name (keys(%$all_probes_ref))
+		{
+			print("  $name\n");
+		}
+		exit(E_FAIL);
+	}
+
 	my $temp = $all_probes_ref;
 
 	undef($all_probes_ref);
@@ -905,6 +943,14 @@ foreach (keys(%$servicedata))
 }
 # unset TLD (for the logs)
 $tld = undef;
+}	# for each db key
+
+db_disconnect();
+
+unless (opt('dry-run') or opt('tld'))
+{
+	__update_false_positives();
+}
 
 if (defined($continue_file) and not opt('dry-run'))
 {
@@ -915,11 +961,6 @@ if (defined($continue_file) and not opt('dry-run'))
 	}
 
 	dbg("last update: ", ts_str($till));
-}
-
-unless (opt('dry-run') or opt('tld'))
-{
-	__update_false_positives();
 }
 
 slv_exit(SUCCESS);
@@ -1641,8 +1682,11 @@ sub __tld_ignored
 sub __update_false_positives
 {
 	# now check for possible false_positive change in front-end
-	my $last_audit = ah_get_last_audit();
 	my $maxclock = 0;
+
+	foreach my $server_key (@server_keys)
+	{
+	db_connect($server_key);
 
 	my $rows_ref = db_select(
 		"select details,max(clock)".
@@ -1678,6 +1722,8 @@ sub __update_false_positives
 
 		fail("cannot update false_positive status of event with ID $eventid") unless (ah_save_false_positive($tld, $service, $eventid, $event_clock, $false_positive, $clock) == AH_SUCCESS);
 	}
+	db_disconnect();
+	}
 
 	ah_save_audit($maxclock) unless ($maxclock == 0);
 }
@@ -1712,31 +1758,6 @@ sub __validate_input
 			print("Error: option --probe can only be used together with --dry-run\n");
 			usage();
 		}
-
-		my $probe = getopt('probe');
-
-		my $probes_ref = get_probes();
-		my $valid = 0;
-
-		foreach my $name (keys(%$probes_ref))
-		{
-			if ($name eq $probe)
-			{
-				$valid = 1;
-				last;
-			}
-		}
-
-		if ($valid == 0)
-		{
-			print("Error: unknown probe \"$probe\"\n");
-			print("\nAvailable probes:\n");
-			foreach my $name (keys(%$probes_ref))
-			{
-				print("  $name\n");
-			}
-			exit(E_FAIL);
-		}
         }
 }
 
@@ -1751,39 +1772,6 @@ sub __sql_arr_to_str
 	}
 
 	return join(',', @arr);
-}
-
-sub __get_min_clock
-{
-	my $tld = shift;
-	my $service = shift;
-	my $config_minclock = shift;
-
-	my $key_condition;
-	if ($service eq 'dns' || $service eq 'dnssec' || $service eq 'epp')
-	{
-		$key_condition = "key_='" . $services{$service}{'key_status'} . "'";
-	}
-	elsif ($service eq 'rdds')
-	{
-		$key_condition = "key_ like '" . $services{$service}{'key_status'} . "%'";
-	}
-
-	my $rows_ref = db_select("select hostid from hosts where host like '$tld %'");
-
-	return 0 if (scalar(@$rows_ref) == 0);
-
-	my $hostids_str = __sql_arr_to_str($rows_ref);
-
-	$rows_ref = db_select("select itemid from items where $key_condition and templateid is not NULL and hostid in ($hostids_str)");
-
-	return 0 if (scalar(@$rows_ref) == 0);
-
-	my $itemids_str = __sql_arr_to_str($rows_ref);
-
-	$rows_ref = db_select("select min(clock) from history_uint where itemid in ($itemids_str) and clock<$config_minclock");
-
-	return $rows_ref->[0]->[0] ? $rows_ref->[0]->[0] : $config_minclock;
 }
 
 sub __no_status_result
@@ -1805,20 +1793,30 @@ sub __no_status_result
 sub __get_config_minclock
 {
 	my $config_key = 'rsm.configvalue[RSM.SLV.DNS.TCP.RTT]';
+	my $minclock;
+
+	foreach my $server_key (@server_keys)
+	{
+	db_connect($server_key);
 
 	# Get the minimum clock from the item that is collected once a day, this way
-	# "min(clock)" won't take too much time (see function __get_min_clock() for details).
+	# "min(clock)" won't take too much time.
 	my $rows_ref = db_select("select itemid from items where key_='$config_key'");
 
-	fail("item $config_key not found in Zabbix configuration") unless (scalar(@$rows_ref) == 1);
+	fail("item $config_key not found in Zabbix database ($server_key)") unless (scalar(@$rows_ref) == 1);
 
 	my $config_itemid = $rows_ref->[0]->[0];
 
 	$rows_ref = db_select("select min(clock) from history_uint where itemid=$config_itemid");
 
-	my $minclock = $rows_ref->[0]->[0];
+	fail("no data in the database ($server_key) yet") unless ($rows_ref->[0]->[0]);
 
-	fail("no data in the database yet") unless ($minclock);
+	$minclock = int($rows_ref->[0]->[0]) if ($minclock > int($rows_ref->[0]->[0]));
+	db_disconnect();
+	}
+
+	# move a day back since this is collected once a day
+	$minclock -= 86400;
 
 	return $minclock;
 }

@@ -16,6 +16,7 @@ use POSIX qw(floor);
 use Sys::Syslog;
 use Data::Dumper;
 use Time::HiRes;
+use RSM;
 
 use constant SUCCESS => 0;
 use constant E_FAIL => -1;
@@ -759,21 +760,24 @@ sub handle_db_error
 
 sub db_connect
 {
-	my $db_key = shift;
+	my $server_key = shift;
 
-	$db_key = 'db_1' unless ($db_key);
+	$server_key = get_rsm_server_key(1) unless ($server_key);
 
 	fail("configuration error: file not found") unless (defined($config));
-	fail("configuration error: section \"$db_key\" not found") unless (defined($config->{$db_key}));
-	foreach my $key ('name', 'user')
+	fail("configuration error: section \"$server_key\" not found") unless (defined($config->{$server_key}));
+
+	my $section = $config->{$server_key};
+
+	foreach my $key ('db_name', 'db_user')
 	{
-		fail("configuration error: database $key not specified in section \"$db_key\"")
-			unless (defined($config->{$db_key}->{$key}));
+		fail("configuration error: database $key not specified in section \"$server_key\"")
+			unless (defined($section->{$key}));
 	}
 
-	$global_sql = 'DBI:mysql:'.$config->{$db_key}->{'name'}.':'.$config->{$db_key}->{'host'};
+	$global_sql = 'DBI:mysql:'.$section->{'db_name'}.':'.$section->{'db_host'};
 
-	$dbh = DBI->connect($global_sql, $config->{$db_key}->{'user'}, $config->{$db_key}->{'password'},
+	$dbh = DBI->connect($global_sql, $section->{'db_user'}, $section->{'db_password'},
 		{
 			PrintError  => 0,
 			HandleError => \&handle_db_error,

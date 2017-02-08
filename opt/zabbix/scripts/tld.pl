@@ -111,6 +111,7 @@ my $rv = GetOptions(\%OPTS,
 		    "ns-servers-v6=s",
 		    "rdds-ns-string=s",
 		    "root-servers=s",
+		    "server-id=s",
 		    "get-nsservers-list!",
 		    "update-nsservers!",
 		    "list-services!",
@@ -140,11 +141,15 @@ if (defined($OPTS{'setup-cron'})) {
     exit;
 }
 
-pfail("Zabbix API URL is not specified. Please check configuration file") unless defined $config->{'zapi'}->{'url'};
-pfail("Username for Zabbix API is not specified. Please check configuration file") unless defined $config->{'zapi'}->{'user'};
-pfail("Password for Zabbix API is not specified. Please check configuration file") unless defined $config->{'zapi'}->{'password'};
+my $server_key = get_rsm_server_key($OPTS{'server-id'} ? $OPTS{'server-id'} : 1);
 
-my $result = zbx_connect($config->{'zapi'}->{'url'}, $config->{'zapi'}->{'user'}, $config->{'zapi'}->{'password'}, $OPTS{'verbose'});
+my $section = $config->{$server_key};
+
+pfail("Zabbix API URL is not specified. Please check configuration file") unless defined $section->{'za_url'};
+pfail("Username for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_user'};
+pfail("Password for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_password'};
+
+my $result = zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($result ne true) {
     pfail("Could not connect to Zabbix API. ".$result->{'data'});
@@ -1239,6 +1244,8 @@ Other options
         --root-servers=STRING
                 list of IPv4 and IPv6 root servers separated by comma and semicolon: "v4IP1[,v4IP2,...][;v6IP1[,v6IP2,...]]"
                 (default: taken from DNS)
+        --server-id=STRING
+                ID of Zabbix server (default: 1)
         --rdds-test-prefix=STRING
 		domain test prefix for RDDS monitoring (needed only if rdds servers specified)
         --setup-cron
