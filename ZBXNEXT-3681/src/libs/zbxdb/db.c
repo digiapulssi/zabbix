@@ -984,7 +984,7 @@ int	zbx_db_statement_prepare(const char *sql)
  * Purpose: callback function used by dynamic parameter binding               *
  *                                                                            *
  ******************************************************************************/
-static sb4 db_bind_dynamic_cb(dvoid *ctxp, OCIBind *bindp, ub4 iter, ub4 index, dvoid **bufpp, ub4 *alenpp, ub1 *piecep,
+static sb4 db_bind_dynamic_cb(dvoid *ctxp, OCIBind *bindp, ub4 iter, ub4 index, dvoid **bufpp, ub4 *alenp, ub1 *piecep,
 		dvoid **indpp)
 {
 	zbx_db_bind_context_t	*context = (zbx_db_bind_context_t *)ctxp;
@@ -995,28 +995,28 @@ static sb4 db_bind_dynamic_cb(dvoid *ctxp, OCIBind *bindp, ub4 iter, ub4 index, 
 			if (0 == context->rows[iter][context->position].ui64)
 			{
 				*bufpp = NULL;
-				*alenpp = 0;
+				*alenp = 0;
 				break;
 			}
 			/* break; is not missing here */
 		case ZBX_TYPE_UINT:
 			*bufpp = &((OCINumber *)context->data)[iter];
-			*alenpp = sizeof(OCINumber);
+			*alenp = sizeof(OCINumber);
 			break;
 		case ZBX_TYPE_INT:
 			*bufpp = &context->rows[iter][context->position].i32;
-			*alenpp = sizeof(int);
+			*alenp = sizeof(int);
 			break;
 		case ZBX_TYPE_FLOAT:
 			*bufpp = &context->rows[iter][context->position].dbl;
-			*alenpp = sizeof(double);
+			*alenp = sizeof(double);
 			break;
 		case ZBX_TYPE_CHAR:
 		case ZBX_TYPE_TEXT:
 		case ZBX_TYPE_SHORTTEXT:
 		case ZBX_TYPE_LONGTEXT:
 			*bufpp = context->rows[iter][context->position].str;
-			*alenpp = ((size_t *)context->data)[iter];
+			*alenp = ((size_t *)context->data)[iter];
 			break;
 		default:
 			return FAIL;
@@ -1073,8 +1073,8 @@ int	zbx_db_bind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsi
 					ret = OCI_handle_sql_error(ERR_Z3007, err, NULL);
 					goto out;
 				}
-
 			}
+
 			context->data = (OCINumber *)values;
 			context->size_max = sizeof(OCINumber);
 			data_type = SQLT_VNU;
@@ -1093,6 +1093,7 @@ int	zbx_db_bind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsi
 		case ZBX_TYPE_LONGTEXT:
 			sizes = (size_t *)zbx_malloc(NULL, sizeof(size_t) * rows_num);
 			context->size_max = 0;
+
 			for (i = 0; i < rows_num; i++)
 			{
 				sizes[i] = strlen(rows[i][position].str);
