@@ -15,6 +15,8 @@ BEGIN
 use lib $MYDIR;
 
 use strict;
+use warnings;
+use Getopt::Long;
 use Data::Dumper;
 use DBI;
 use Sys::Syslog qw(:standard :macros);
@@ -22,16 +24,25 @@ use DateTime;
 use POSIX qw(strftime);
 use RSM;
 
+my %OPTS;
+my $rv = GetOptions(\%OPTS, "server-id=s", "help|?");
+
+usage() if ($OPTS{'help'} || !$rv || !$OPTS{'server-id'});
+
 openlog("mysql_zbx_part", "ndelay,pid", LOG_LOCAL0);
+
+my $server_key = get_rsm_server_key($OPTS{'server-id'});
 
 my $config = get_rsm_config();
 
-my $db_schema = $config->{'db'}->{'name'};
-my $db_host = $config->{'db'}->{'host'};
+my $section = $config->{$server_key};
+
+my $db_schema = $section->{'db_name'};
+my $db_host = $section->{'db_host'};
 
 my $dsn = 'DBI:mysql:'.$db_schema.':host='.$db_host;
-my $db_user_name = $config->{'db'}->{'user'};
-my $db_password = $config->{'db'}->{'password'};
+my $db_user_name = $section->{'db_user'};
+my $db_password = $section->{'db_password'};
 
 my $tables = {	'history' => { 'period' => 'day', 'keep_history' => '60'},
 		'history_log' => { 'period' => 'day', 'keep_history' => '60'},
@@ -237,4 +248,17 @@ sub delete_old_data {
     $dbh->do("DELETE FROM sessions WHERE lastaccess < UNIX_TIMESTAMP(NOW() - INTERVAL 1 MONTH)");
     $dbh->do("TRUNCATE housekeeper");
     $dbh->do("DELETE FROM auditlog_details WHERE NOT EXISTS (SELECT NULL FROM auditlog WHERE auditlog.auditid = auditlog_details.auditid)");
+}
+
+sub usage {
+    print <<EOF;
+
+    Usage: $0 <options>
+
+Required options
+
+	--server-id
+		ID of Zabbix server
+EOF
+exit(1);
 }
