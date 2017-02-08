@@ -235,38 +235,6 @@ void	DBstatement_prepare(const char *sql)
 		}
 	}
 }
-
-/******************************************************************************
- *                                                                            *
- * Function: DBstatement_execute                                              *
- *                                                                            *
- * Purpose: executes a SQL statement                                          *
- *                                                                            *
- * Comments: retry until DB is up                                             *
- *                                                                            *
- ******************************************************************************/
-int	DBstatement_execute()
-{
-	int	rc;
-
-	rc = zbx_db_statement_execute(1);
-
-	while (ZBX_DB_DOWN == rc)
-	{
-		DBclose();
-		DBconnect(ZBX_DB_CONNECT_NORMAL);
-
-		if (ZBX_DB_DOWN == (rc = zbx_db_statement_execute(1)))
-		{
-			zabbix_log(LOG_LEVEL_ERR, "database is down: retrying in %d seconds", ZBX_DB_WAIT_DOWN);
-			connection_failure = 1;
-			sleep(ZBX_DB_WAIT_DOWN);
-		}
-	}
-
-	return rc;
-}
-
 #endif
 
 /******************************************************************************
