@@ -762,10 +762,11 @@ sub db_connect
 {
 	my $server_key = shift;
 
-	$server_key = get_rsm_server_key(1) unless ($server_key);
+	fail("Error: no database configuration") unless (defined($config));
 
-	fail("configuration error: file not found") unless (defined($config));
-	fail("configuration error: section \"$server_key\" not found") unless (defined($config->{$server_key}));
+	$server_key = get_rsm_local_key($config) unless ($server_key);
+
+	fail("Configuration error: section \"$server_key\" not found") unless (defined($config->{$server_key}));
 
 	my $section = $config->{$server_key};
 
