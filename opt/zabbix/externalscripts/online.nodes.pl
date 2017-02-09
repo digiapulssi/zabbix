@@ -5,18 +5,28 @@ use lib '/opt/zabbix/scripts';
 
 use strict;
 use Zabbix;
+use Getopt::Long;
 use DBI;
 use RSM;
 use Data::Dumper;
+
+my %OPTS;
+my $rv = GetOptions(\%OPTS, "debug!", "help|?");
+
+if ($OPTS{'help'} or not $rv)
+{
+	print("usage: $0 [--debug|--help]\n");
+	exit(-1);
+}
+
+use constant ENABLE_LOGFILE => 0;
+use constant LOGFILE => '/tmp/online.nodes.debug.log';
 
 my $command = shift || 'total';
 my $type = shift || 'dns';
 
 die("$command: invalid command") if ($command ne 'total' and $command ne 'online');
 die("$type: invalid type") if ($type ne 'dns' and $type ne 'epp' and $type ne 'rdds' and $type ne 'ipv4' and $type ne 'ipv6');
-
-use constant DEBUG => 0;
-use constant LOGFILE => '/tmp/online.nodes.debug.log';
 
 sub ts_str
 {
@@ -32,7 +42,12 @@ sub ts_str
 
 sub dbg
 {
-    return unless (DEBUG == 1);
+    if ($OPTS{'debug'})
+    {
+	    print(join('', @_), "\n");
+    }
+
+    return unless (ENABLE_LOGFILE == 1);
 
     my $msg = join('', @_);
 
@@ -49,9 +64,13 @@ my $hosts;
 
 my $config = get_rsm_config();
 
-my $dbh = DBI->connect('DBI:mysql:'.$config->{'db'}->{'name'}.':'.$config->{'db'}->{'host'},
-                                           $config->{'db'}->{'user'},
-                                           $config->{'db'}->{'password'});
+my $server_key = get_rsm_local_key($config);
+
+my $section = $config->{$server_key};
+
+my $dbh = DBI->connect('DBI:mysql:'.$section->{'db_name'}.':'.$section->{'db_host'},
+                                           $section->{'db_user'},
+                                           $section->{'db_password'});
 
 my $sql = "select IFNULL(value, 60) FROM globalmacro gm WHERE macro = ?";
 
