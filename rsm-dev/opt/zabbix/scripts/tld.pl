@@ -642,7 +642,7 @@ sub create_items_rdds {
 
     $item_key = 'rsm.rdds[{$RSM.TLD},"'.$OPTS{'rdds43-servers'}.'","'.$OPTS{'rdds80-servers'}.'"]';
 
-    $options = {'name' => 'RDDS availability of $1',
+    $options = {'name' => 'RDDS availability',
                                               'key_'=> $item_key,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('RDDS', $templateid)],
