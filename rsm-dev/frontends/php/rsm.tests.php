@@ -211,7 +211,7 @@ if ($items) {
 						' AND e.clock>='.zbxDateToTime($data['filter_to']).
 						' AND e.object='.EVENT_OBJECT_TRIGGER.
 						' AND e.source='.EVENT_SOURCE_TRIGGERS.
-						' AND '.dbConditionInt('e.value', [TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN]).
+						' AND e.value='.TRIGGER_VALUE_FALSE.
 					' ORDER BY e.clock,e.ns',
 					1
 				));
@@ -245,7 +245,7 @@ if ($items) {
 					'triggerids' => $event['objectid'],
 					'source' => EVENT_SOURCE_TRIGGERS,
 					'object' => EVENT_OBJECT_TRIGGER,
-					'selectTriggers' => API_OUTPUT_REFER,
+					'selectTriggers' => API_OUTPUT_EXTEND,
 					'time_till' => $event['clock'] - 1,
 					'filter' => ['value' => TRIGGER_VALUE_TRUE],
 					'limit' => 1,
@@ -285,7 +285,7 @@ if ($items) {
 				' AND e.clock>='.zbxDateToTime($data['filter_to']).
 				' AND e.object='.EVENT_OBJECT_TRIGGER.
 				' AND e.source='.EVENT_SOURCE_TRIGGERS.
-				' AND '.dbConditionString('e.value', [TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN]).
+				' AND e.value='.TRIGGER_VALUE_FALSE.
 			' ORDER BY e.clock,e.ns',
 			1
 		));

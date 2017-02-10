@@ -97,7 +97,7 @@ if (isset($_REQUEST['mark_incident']) && (CWebUser::getType() == USER_TYPE_ZABBI
 				' AND e.clock>='.$event['clock'].
 				' AND e.object='.EVENT_OBJECT_TRIGGER.
 				' AND e.source='.EVENT_SOURCE_TRIGGERS.
-				' AND '.dbConditionString('e.value', array(TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN)).
+				' AND e.value='.TRIGGER_VALUE_FALSE.
 			' ORDER BY e.clock,e.ns',
 			1
 		));
@@ -380,7 +380,7 @@ if ($host || $data['filter_search']) {
 			if ($newEventIds) {
 				$newEvents = API::Event()->get(array(
 					'eventids' => $newEventIds,
-					'selectTriggers' => API_OUTPUT_REFER,
+					'selectTriggers' => API_OUTPUT_EXTEND,
 					'output' => API_OUTPUT_EXTEND
 				));
 
@@ -397,9 +397,10 @@ if ($host || $data['filter_search']) {
 			foreach ($events as $event) {
 				$eventTriggerId = null;
 				$getHistory = false;
+				$itemInfo = [];
 
 				// ignore event duplicates
-				$currentValue = ($event['value'] == TRIGGER_VALUE_UNKNOWN) ? TRIGGER_VALUE_FALSE : $event['value'];
+				$currentValue = ($event['value'] == TRIGGER_VALUE_FALSE) ? TRIGGER_VALUE_FALSE : $event['value'];
 				if (isset($lastEventValue[$event['objectid']])
 						&& $lastEventValue[$event['objectid']] == $currentValue) {
 					continue;
@@ -418,7 +419,7 @@ if ($host || $data['filter_search']) {
 								' AND e.clock>='.$filterTimeTill.
 								' AND e.object='.EVENT_OBJECT_TRIGGER.
 								' AND e.source='.EVENT_SOURCE_TRIGGERS.
-								' AND '.dbConditionString('e.value', array(TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN)).
+								' AND e.value='.TRIGGER_VALUE_FALSE.
 							' ORDER BY e.clock,e.ns',
 							1
 						));
@@ -500,23 +501,24 @@ if ($host || $data['filter_search']) {
 								);
 							}
 
-							$data[$itemInfo['itemType']]['events'][$i]['incidentTotalTests'] = getTotalTestsCount(
-								$itemInfo['itemId'],
-								$filterTimeFrom,
-								$filterTimeTill,
-								$data[$itemInfo['itemType']]['events'][$i]['startTime']
-							);
+							if ($itemInfo) {
+								$data[$itemInfo['itemType']]['events'][$i]['incidentTotalTests'] = getTotalTestsCount(
+									$itemInfo['itemId'],
+									$filterTimeFrom,
+									$filterTimeTill,
+									$data[$itemInfo['itemType']]['events'][$i]['startTime']
+								);
 
-							$data[$itemInfo['itemType']]['events'][$i]['incidentFailedTests'] = getFailedTestsCount(
-								$itemInfo['itemId'],
-								$filterTimeTill,
-								$data[$itemInfo['itemType']]['events'][$i]['startTime']
-							);
+								$data[$itemInfo['itemType']]['events'][$i]['incidentFailedTests'] = getFailedTestsCount(
+									$itemInfo['itemId'],
+									$filterTimeTill,
+									$data[$itemInfo['itemType']]['events'][$i]['startTime']
+								);
+							}
 						}
 					}
 
-					$eventTrigger = reset($event['triggers']);
-					$eventTriggerId = $eventTrigger['triggerid'];
+					$eventTriggerId = $event['objectid'];
 
 					$i++;
 					$incidents[$i] = array(
@@ -543,7 +545,6 @@ if ($host || $data['filter_search']) {
 							'triggerids' => array($event['objectid']),
 							'source' => EVENT_SOURCE_TRIGGERS,
 							'object' => EVENT_OBJECT_TRIGGER,
-							'selectTriggers' => API_OUTPUT_REFER,
 							'time_till' => $event['clock'] - 1,
 							'filter' => array(
 								'value' => TRIGGER_VALUE_TRUE
@@ -554,9 +555,9 @@ if ($host || $data['filter_search']) {
 
 						if ($addEvent) {
 							$addEvent = reset($addEvent);
-							$eventTrigger = reset($addEvent['triggers']);
-							$eventTriggerId = $eventTrigger['triggerid'];
+							$eventTriggerId = $event['objectid'];
 
+							$infoItemId = '';
 							if (in_array($eventTriggerId, $dnsTriggers)) {
 								$infoItemId = $dnsAvailItem;
 							}
@@ -570,27 +571,29 @@ if ($host || $data['filter_search']) {
 								$infoItemId = $eppAvailItem;
 							}
 
-							$incidents[$i] = array(
-								'objectid' => $event['objectid'],
-								'eventid' => $addEvent['eventid'],
-								'status' => $event['value'],
-								'startTime' => $addEvent['clock'],
-								'endTime' => $event['clock'],
-								'false_positive' => $event['false_positive'],
-								'incidentTotalTests' => getTotalTestsCount(
-									$infoItemId,
-									$filterTimeFrom,
-									$filterTimeTill,
-									$addEvent['clock'],
-									$event['clock']
-								),
-								'incidentFailedTests' => getFailedTestsCount(
-									$infoItemId,
-									$filterTimeTill,
-									$addEvent['clock'],
-									$event['clock']
-								)
-							);
+							if ($infoItemId) {
+								$incidents[$i] = array(
+									'objectid' => $event['objectid'],
+									'eventid' => $addEvent['eventid'],
+									'status' => $event['value'],
+									'startTime' => $addEvent['clock'],
+									'endTime' => $event['clock'],
+									'false_positive' => $event['false_positive'],
+									'incidentTotalTests' => getTotalTestsCount(
+										$infoItemId,
+										$filterTimeFrom,
+										$filterTimeTill,
+										$addEvent['clock'],
+										$event['clock']
+									),
+									'incidentFailedTests' => getFailedTestsCount(
+										$infoItemId,
+										$filterTimeTill,
+										$addEvent['clock'],
+										$event['clock']
+									)
+								);
+							}
 						}
 					}
 				}
@@ -689,7 +692,7 @@ if ($host || $data['filter_search']) {
 						' AND e.clock>='.$filterTimeTill.
 						' AND e.object='.EVENT_OBJECT_TRIGGER.
 						' AND e.source='.EVENT_SOURCE_TRIGGERS.
-						' AND '.dbConditionString('e.value', array(TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN)).
+						' AND e.value='.TRIGGER_VALUE_FALSE.
 					' ORDER BY e.clock,e.ns',
 					1
 				));
@@ -746,6 +749,7 @@ if ($host || $data['filter_search']) {
 					);
 				}
 				else {
+					$itemInfo = [];
 					if (isset($data['dns']['events'][$i])) {
 						$itemInfo = array(
 							'itemType' => 'dns',
@@ -771,18 +775,20 @@ if ($host || $data['filter_search']) {
 						);
 					}
 
-					$data[$itemInfo['itemType']]['events'][$i]['incidentTotalTests'] = getTotalTestsCount(
-						$itemInfo['itemId'],
-						$filterTimeFrom,
-						$filterTimeTill,
-						$data[$itemInfo['itemType']]['events'][$i]['startTime']
-					);
+					if ($itemInfo) {
+						$data[$itemInfo['itemType']]['events'][$i]['incidentTotalTests'] = getTotalTestsCount(
+							$itemInfo['itemId'],
+							$filterTimeFrom,
+							$filterTimeTill,
+							$data[$itemInfo['itemType']]['events'][$i]['startTime']
+						);
 
-					$data[$itemInfo['itemType']]['events'][$i]['incidentFailedTests'] = getFailedTestsCount(
-						$itemInfo['itemId'],
-						$filterTimeTill,
-						$data[$itemInfo['itemType']]['events'][$i]['startTime']
-					);
+						$data[$itemInfo['itemType']]['events'][$i]['incidentFailedTests'] = getFailedTestsCount(
+							$itemInfo['itemId'],
+							$filterTimeTill,
+							$data[$itemInfo['itemType']]['events'][$i]['startTime']
+						);
+					}
 				}
 			}
 
