@@ -1,13 +1,18 @@
 #ifndef _T_RSM_H_
 #define _T_RSM_H_
 
+#include <common.h>
+#include <zbxtypes.h>
+
 const char	epp_passphrase[];
 const char      *progname = "";
 const char      title_message[] = "";
-const char      usage_message[] = "";
+const char      *usage_message[] = {NULL};
 const char      *help_message[] = {0};
+unsigned char	program_type = ZBX_PROGRAM_TYPE_TEST;
+const char	syslog_app_name[] = "rsm_test";
 
-unsigned char	daemon_type;
+//unsigned char	daemon_type;
 
 int		process_num;
 unsigned char	process_type;
@@ -41,15 +46,19 @@ int	CONFIG_HISTSYNCER_FORKS;
 int	CONFIG_HISTSYNCER_FREQUENCY;
 int	CONFIG_CONFSYNCER_FORKS;
 int	CONFIG_CONFSYNCER_FREQUENCY;
-int	CONFIG_CONF_CACHE_SIZE;
-int	CONFIG_HISTORY_CACHE_SIZE;
-int	CONFIG_TRENDS_CACHE_SIZE;
-int	CONFIG_TEXT_CACHE_SIZE;
+zbx_uint64_t	CONFIG_CONF_CACHE_SIZE;
+zbx_uint64_t	CONFIG_HISTORY_CACHE_SIZE;
+zbx_uint64_t	CONFIG_HISTORY_INDEX_CACHE_SIZE;
+zbx_uint64_t	CONFIG_TRENDS_CACHE_SIZE;
+zbx_uint64_t	CONFIG_TEXT_CACHE_SIZE;
+zbx_uint64_t	CONFIG_VALUE_CACHE_SIZE;
 int	CONFIG_DISABLE_HOUSEKEEPING;
 int	CONFIG_UNREACHABLE_PERIOD;
 int	CONFIG_UNREACHABLE_DELAY;
 int	CONFIG_UNAVAILABLE_DELAY;
 int	CONFIG_LOG_LEVEL;
+int	CONFIG_LOG_TYPE;
+char	*CONFIG_LOG_TYPE_STR;
 char	*CONFIG_ALERT_SCRIPTS_PATH;
 char	*CONFIG_EXTERNALSCRIPTS;
 char	*CONFIG_TMPDIR;

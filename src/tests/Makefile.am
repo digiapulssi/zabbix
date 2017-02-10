@@ -1,10 +1,11 @@
 ## Process this file with automake to produce Makefile.in
 
-sbin_PROGRAMS = t_rsm
+sbin_PROGRAMS = t_rsm_dns t_rsm_rdds
 
-t_rsm_SOURCES = t_rsm.c t_rsm.h
+t_rsm_dns_SOURCES = t_rsm_dns.c t_rsm.h
+t_rsm_rdds_SOURCES = t_rsm_rdds.c t_rsm.h
 
-t_rsm_LDADD = \
+COMMON_OBJS = \
 	$(top_srcdir)/src/zabbix_server/poller/libzbxpoller.a \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
@@ -27,9 +28,13 @@ t_rsm_LDADD = \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxdb/libzbxdb.a \
 	$(top_srcdir)/src/libs/zbxexec/libzbxexec.a \
+	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
 	$(top_srcdir)/src/zabbix_server/zabbix_server-events.o \
 	$(top_srcdir)/src/zabbix_server/zabbix_server-actions.o \
 	$(top_srcdir)/src/zabbix_server/zabbix_server-operations.o
 
-t_rsm_LDADD += @SERVER_LIBS@
-t_rsm_LDFLAGS = @SERVER_LDFLAGS@
+t_rsm_dns_LDADD = $(COMMON_OBJS) @SERVER_LIBS@
+t_rsm_dns_LDFLAGS = @SERVER_LDFLAGS@
+
+t_rsm_rdds_LDADD = $(COMMON_OBJS) @SERVER_LIBS@
+t_rsm_rdds_LDFLAGS = @SERVER_LDFLAGS@

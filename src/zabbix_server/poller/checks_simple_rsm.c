@@ -1821,11 +1821,9 @@ static int	zbx_rdds43_test(const char *request, const char *ip, short port, int 
 
 	if (SUCCEED != zbx_tcp_connect(&s, NULL, ip, port, timeout, ZBX_TCP_SEC_UNENCRYPTED, NULL, NULL))
 	{
-		zbx_strlcpy(err, "cannot connect to host", err_size);
+		zbx_strlcpy(err, zbx_socket_strerror(), err_size);
 		goto out;
 	}
-
-	zabbix_log(LOG_LEVEL_INFORMATION, "DIMIR: zbx_rdds43_test() connected, requesting [%s]", request);
 
 	zbx_snprintf(send_buf, sizeof(send_buf), "%s\r\n", request);
 
@@ -1834,8 +1832,6 @@ static int	zbx_rdds43_test(const char *request, const char *ip, short port, int 
 		zbx_snprintf(err, err_size, "cannot send data: %s", zbx_socket_strerror());
 		goto out;
 	}
-
-	zabbix_log(LOG_LEVEL_INFORMATION, "DIMIR: zbx_rdds43_test() receiving reply");
 
 	timeout -= time(NULL) - start.sec;
 
@@ -1854,7 +1850,6 @@ static int	zbx_rdds43_test(const char *request, const char *ip, short port, int 
 
 	if (NULL != answer)
 		*answer = zbx_strdup(*answer, s.buffer);
-	zabbix_log(LOG_LEVEL_INFORMATION, "DIMIR: zbx_rdds43_test() rtt=%dms received ===> [%s] <===", *rtt, *answer);
 out:
 	zbx_tcp_close(&s);	/* takes care of freeing received buffer */
 
