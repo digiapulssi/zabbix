@@ -6598,7 +6598,8 @@ int	DCconfig_get_time_based_triggers(DC_TRIGGER *trigger_info, zbx_vector_ptr_t 
 		dc_trigger = (ZBX_DC_TRIGGER *)config->time_triggers[process_num - 1].values[i];
 
 		if (TRIGGER_STATUS_ENABLED == dc_trigger->status && 0 == dc_trigger->locked &&
-				SUCCEED == DCconfig_find_active_time_function(dc_trigger->expression))
+				(SUCCEED == DCconfig_find_active_time_function(dc_trigger->expression) ||
+				SUCCEED == DCconfig_find_active_time_function(dc_trigger->recovery_expression)))
 		{
 			dc_trigger->locked = 1;
 
