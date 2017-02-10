@@ -1224,8 +1224,7 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
  *                                                                            *
  * Purpose: execute escalation recovery operations                            *
  *                                                                            *
- * Parameters: escalation - [IN] the escalation                               *
- *             event      - [IN] the event                                    *
+ * Parameters: event      - [IN] the event                                    *
  *             r_event    - [IN] the recovery event                           *
  *             action     - [IN] the action                                   *
  *                                                                            *
@@ -1234,8 +1233,8 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
  *           esc_step field set to 1.                                         *
  *                                                                            *
  ******************************************************************************/
-static void	escalation_execute_recovery_operations(DB_ESCALATION *escalation, const DB_EVENT *event,
-		const DB_EVENT *r_event, const DB_ACTION *action)
+static void	escalation_execute_recovery_operations(const DB_EVENT *event, const DB_EVENT *r_event,
+		const DB_ACTION *action)
 {
 	const char	*__function_name = "escalation_execute_recovery_operations";
 	DB_RESULT	result;
@@ -1799,7 +1798,7 @@ static void	escalation_recover(DB_ESCALATION *escalation, const DB_ACTION *actio
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() escalationid:" ZBX_FS_UI64 " status:%s",
 			__function_name, escalation->escalationid, zbx_escalation_status_string(escalation->status));
 
-	escalation_execute_recovery_operations(escalation, event, r_event, action);
+	escalation_execute_recovery_operations(event, r_event, action);
 
 	escalation->status = ESCALATION_STATUS_COMPLETED;
 
