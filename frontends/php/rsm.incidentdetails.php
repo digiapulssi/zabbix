@@ -175,7 +175,7 @@ else {
 // get start event
 $mainEvent = API::Event()->get(array(
 	'eventids' => $data['eventid'],
-	'selectTriggers' => API_OUTPUT_REFER,
+	'selectTriggers' => API_OUTPUT_EXTEND,
 	'output' => API_OUTPUT_EXTEND
 ));
 
@@ -293,7 +293,7 @@ if ($mainEvent) {
 			$endEventTimeTill.
 			' AND e.object='.EVENT_OBJECT_TRIGGER.
 			' AND e.source='.EVENT_SOURCE_TRIGGERS.
-			' AND '.dbConditionString('e.value', array(TRIGGER_VALUE_FALSE, TRIGGER_VALUE_UNKNOWN)).
+			' AND e.value='.TRIGGER_VALUE_FALSE.
 		' ORDER BY e.clock,e.ns',
 		1
 	));
@@ -321,9 +321,6 @@ if ($mainEvent) {
 	}
 	elseif ($endEvent && $endEvent['value'] == TRIGGER_VALUE_FALSE) {
 		$data['incidentType'] = INCIDENT_RESOLVED;
-	}
-	elseif ($endEvent && $endEvent['value'] == TRIGGER_VALUE_UNKNOWN) {
-		$data['incidentType'] = INCIDENT_RESOLVED_NO_DATA;
 	}
 	else {
 		$data['incidentType'] = INCIDENT_ACTIVE;

@@ -163,7 +163,7 @@ foreach ($tlds as $data['tld']) {
 			'triggerids' => $triggerIds,
 			'source' => EVENT_SOURCE_TRIGGERS,
 			'object' => EVENT_OBJECT_TRIGGER,
-			'selectTriggers' => API_OUTPUT_REFER
+			'selectTriggers' => API_OUTPUT_EXTEND
 		));
 
 		CArrayHelper::sort($events, array('objectid', 'clock'));
@@ -178,7 +178,7 @@ foreach ($tlds as $data['tld']) {
 			$getHistory = false;
 
 			// ignore event duplicates
-			$currentValue = ($event['value'] == TRIGGER_VALUE_UNKNOWN) ? TRIGGER_VALUE_FALSE : $event['value'];
+			$currentValue = ($event['value'] == TRIGGER_VALUE_FALSE) ? TRIGGER_VALUE_FALSE : $event['value'];
 			if (isset($lastEventValue[$event['objectid']])
 					&& $lastEventValue[$event['objectid']] == $currentValue) {
 				continue;
@@ -256,7 +256,7 @@ foreach ($tlds as $data['tld']) {
 						'triggerids' => array($event['objectid']),
 						'source' => EVENT_SOURCE_TRIGGERS,
 						'object' => EVENT_OBJECT_TRIGGER,
-						'selectTriggers' => API_OUTPUT_REFER,
+						'selectTriggers' => API_OUTPUT_EXTEND,
 						'time_till' => $event['clock'] - 1,
 						'filter' => array(
 							'value' => TRIGGER_VALUE_TRUE
