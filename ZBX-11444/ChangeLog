@@ -1,10 +1,12 @@
 Changes for 3.2.4rc1
 
 New features:
+.......PS. [ZBXNEXT-3681] improved bulk inserts for Oracle database backend (wiper)
 ........S. [ZBXNEXT-3669] optimized trigger expression batch processing to avoid recalculation of identical functions (wiper)
 ..F.....S. [ZBXNEXT-3572] added option to control amount of queued items (vjaceslavs)
 
 Bug fixes:
+........S. [ZBX-11740] fixed empty value handling in event correlation on oracle databases (wiper)
 .......PS. [ZBX-11655] fixed Oracle and MySQL column limit calculation when using UTF-8 (vso)
 ........S. [ZBX-11703] removed possibility to execute commit without transaction in processing LLD rules (Sergejs)
 ........S. [ZBX-11705] fixed event correlation when using databases other than mysql (wiper)
@@ -323,6 +325,7 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 Changes for 3.0.8rc1
 
 New features:
+.......PS. [ZBXNEXT-3681] improved bulk inserts for Oracle database backend (wiper)
 ........S. [ZBXNEXT-3669] optimized trigger expression batch processing to avoid recalculation of identical functions (wiper)
 ..F.....S. [ZBXNEXT-3572] added option to control amount of queued items (vjaceslavs)
 
