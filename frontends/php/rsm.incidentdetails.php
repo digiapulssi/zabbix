@@ -39,7 +39,7 @@ $fields = array(
 	'original_from' =>			array(T_ZBX_INT, O_OPT,	null,	null,		null),
 	'original_to' =>			array(T_ZBX_INT, O_OPT,	null,	null,		null),
 	// filter
-	'filter_set' =>				array(T_ZBX_STR, O_OPT,	P_ACT,	null,		null),
+	'filter_set' =>				array(T_ZBX_STR, O_OPT,	null,	null,		null),
 	'filter_from' =>			array(T_ZBX_INT, O_OPT,	null,	null,		null),
 	'filter_to' =>				array(T_ZBX_INT, O_OPT,	null,	null,		null),
 	'filter_rolling_week' =>	array(T_ZBX_INT, O_OPT,	null,	null,		null),
@@ -181,7 +181,6 @@ $mainEvent = API::Event()->get(array(
 
 if ($mainEvent) {
 	$mainEvent = reset($mainEvent);
-	$eventTrigger = reset($mainEvent['triggers']);
 
 	$mainEventFromTime = $mainEvent['clock'];
 
@@ -288,7 +287,7 @@ if ($mainEvent) {
 	$endEvent = DBfetch(DBselect(
 		'SELECT e.clock,e.value'.
 		' FROM events e'.
-		' WHERE e.objectid='.$eventTrigger['triggerid'].
+		' WHERE e.objectid='.$mainEvent['objectid'].
 			' AND e.clock>='.$mainEvent['clock'].
 			$endEventTimeTill.
 			' AND e.object='.EVENT_OBJECT_TRIGGER.
@@ -373,7 +372,7 @@ if ($mainEvent) {
 		$data['paging'] = null;
 	}
 	else {
-		$data['paging'] = getPagingLine($data['tests']);
+		$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl('rsm.incidentdetails.php'));
 		if (!$data['paging']->items) {
 			$data['paging'] = null;
 		}
