@@ -261,8 +261,7 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 				SET_UI64_RESULT(&value, stat->rspcode);
 				break;
 			case ZBX_HTTPITEM_TYPE_TIME:
-				if (0 < stat->total_time)
-					SET_DBL_RESULT(&value, stat->total_time);
+				SET_DBL_RESULT(&value, stat->total_time);
 				break;
 			case ZBX_HTTPITEM_TYPE_SPEED:
 				SET_DBL_RESULT(&value, stat->speed_download);
@@ -519,6 +518,9 @@ static void	process_httptest(DC_HOST *host, zbx_httptest_t *httptest)
 				zbx_free(variables);
 			}
 
+			zbx_timespec(&ts);
+			process_step_data(httpstep.httpstepid, &stat, &ts);
+
 			zbx_free(var_err_str);
 			zbx_free(page.data);
 		}
@@ -530,9 +532,6 @@ httpstep_error:
 		zbx_free(httpstep.required);
 		zbx_free(httpstep.posts);
 		zbx_free(httpstep.url);
-
-		zbx_timespec(&ts);
-		process_step_data(httpstep.httpstepid, &stat, &ts);
 
 		if (NULL != err_str)
 		{
