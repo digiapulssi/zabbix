@@ -58,7 +58,8 @@ sub get_rsm_local_key
 {
 	my $config = shift;
 
-	die("Internal error: configuration is missing \"local\" server") unless ($config->{'_'}->{'local'});
+	die("Internal error: no configuration passed to function get_rsm_local_key()") unless ($config);
+	die("Configuration error: no \"local\" server defined") unless ($config->{'_'}->{'local'});
 
 	return $config->{'_'}->{'local'};
 }
