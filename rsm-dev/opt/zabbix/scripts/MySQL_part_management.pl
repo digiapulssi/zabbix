@@ -27,13 +27,13 @@ use RSM;
 my %OPTS;
 my $rv = GetOptions(\%OPTS, "server-id=s", "help|?");
 
-usage() if ($OPTS{'help'} || !$rv || !$OPTS{'server-id'});
+usage() if ($OPTS{'help'} || !$rv);
 
 openlog("mysql_zbx_part", "ndelay,pid", LOG_LOCAL0);
 
-my $server_key = get_rsm_server_key($OPTS{'server-id'});
-
 my $config = get_rsm_config();
+
+my $server_key = ($OPTS{'server_id'} ? get_rsm_server_key($OPTS{'server-id'}) : get_rsm_local_key($config));
 
 my $section = $config->{$server_key};
 
