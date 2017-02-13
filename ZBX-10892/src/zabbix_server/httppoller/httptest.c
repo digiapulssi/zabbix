@@ -261,7 +261,8 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 				SET_UI64_RESULT(&value, stat->rspcode);
 				break;
 			case ZBX_HTTPITEM_TYPE_TIME:
-				SET_DBL_RESULT(&value, stat->total_time);
+				if (0 < stat->total_time)
+					SET_DBL_RESULT(&value, stat->total_time);
 				break;
 			case ZBX_HTTPITEM_TYPE_SPEED:
 				SET_DBL_RESULT(&value, stat->speed_download);
