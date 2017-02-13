@@ -954,7 +954,7 @@ int	zbx_db_rollback(void)
 
 #if defined(HAVE_IBM_DB2)
 
-	/* Rollback to begin that is masked with savepoint. This move undo all transactions. */
+	/* Rollback to begin that is marked with savepoint. This move undo all transactions. */
 	rc = zbx_ibm_db2_rollback_to_savepoint(ZBX_BEGIN_SAVEPOINT_NAME);
 	if (0 > ibm_db2_savepoints.values_num)
 	{
