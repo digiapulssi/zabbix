@@ -90,4 +90,9 @@ char		*zbx_db_dyn_escape_like_pattern(const char *src);
 
 int		zbx_db_strlen_n(const char *text, size_t maxlen);
 
+#ifdef HAVE_IBM_DB2
+int	zbx_ibm_db2_create_savepoint(const char *new_savepoint);
+int	zbx_ibm_db2_rollback_to_savepoint(const char *savepoint);
+#endif
+
 #endif
