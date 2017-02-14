@@ -33,7 +33,9 @@ $filter = (new CFilter('web.rsm.incidentdetails.filter.state'))
 	->addVar('availItemId', $data['availItemId']);
 $filterColumn1 = new CFormList();
 $filterColumn2 = new CFormList();
-$filterColumn3 = new CFormList();;
+$filterColumn3 = new CFormList();
+$filterColumn4 = new CFormList();
+$filterColumn5 = new CFormList();
 
 $filterColumn1
 	->addRow(_('From'), createDateSelector('filter_from', zbxDateToTime($this->data['filter_from'])));
@@ -44,11 +46,27 @@ $filterColumn3
 		'rsm.incidentdetails.php?incident_type='.$this->data['type'].'&filter_set=1&filter_rolling_week=1&host='.$this->data['tld']['name'])
 	)
 		->addClass(ZBX_STYLE_BTN_LINK));
+$filterColumn4
+	->addRow(new CSpan(array(
+		new CCheckBox('filter_failing_tests',
+			isset($data['filter_failing_tests']) ? $data['filter_failing_tests'] : null, null, 1),
+		SPACE,
+		_('Only failing tests')
+)));
+$filterColumn5
+	->addRow(new CSpan(array(
+		new CCheckBox('filter_show_all',
+			isset($data['filter_show_all']) ? $data['filter_show_all'] : null, null, 1),
+		SPACE,
+		_('Show all')
+)));
 
 $filter
 	->addColumn($filterColumn1)
 	->addColumn($filterColumn2)
-	->addColumn($filterColumn3);
+	->addColumn($filterColumn3)
+	->addColumn($filterColumn4)
+	->addColumn($filterColumn5);
 
 $widget->addItem($filter);
 
@@ -128,5 +146,12 @@ $testsInfoTable->addRow([[
 $widget->additem([$testsInfoTable]);
 
 $widget->addItem([$table]);
+
+$widget->addItem((new CButton('mark_incident', $changeIncidentTypeName,
+	'javascript: location.href = "rsm.incidents.php?mark_incident='.$changeIncidentType.
+	'&eventid='.$data['eventid'].'&host='.$data['tld']['host'].'&type='.$data['type'].'";'
+))
+	->addStyle('margin-top: 5px;')
+);
 
 return $widget;
