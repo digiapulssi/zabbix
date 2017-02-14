@@ -201,12 +201,10 @@ elseif (hasRequest('del_history') && hasRequest('httptestid')) {
 }
 elseif (hasRequest('add') || hasRequest('update')) {
 	if (hasRequest('update')) {
-		$action = AUDIT_ACTION_UPDATE;
 		$messageTrue = _('Web scenario updated');
 		$messageFalse = _('Cannot update web scenario');
 	}
 	else {
-		$action = AUDIT_ACTION_ADD;
 		$messageTrue = _('Web scenario added');
 		$messageFalse = _('Cannot add web scenario');
 	}
@@ -221,38 +219,38 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		}
 
 		$steps = getRequest('steps', []);
-		if (!empty($steps)) {
-			$i = 1;
-			foreach ($steps as $stepNumber => &$step) {
-				$step['no'] = $i++;
-				$step['follow_redirects'] = $step['follow_redirects']
-					? HTTPTEST_STEP_FOLLOW_REDIRECTS_ON
-					: HTTPTEST_STEP_FOLLOW_REDIRECTS_OFF;
-				$step['retrieve_mode'] = $step['retrieve_mode']
-					? HTTPTEST_STEP_RETRIEVE_MODE_HEADERS
-					: HTTPTEST_STEP_RETRIEVE_MODE_CONTENT;
-			}
-			unset($step);
+		$i = 1;
+		foreach ($steps as &$step) {
+			$step['no'] = $i++;
+			$step['follow_redirects'] = $step['follow_redirects']
+				? HTTPTEST_STEP_FOLLOW_REDIRECTS_ON
+				: HTTPTEST_STEP_FOLLOW_REDIRECTS_OFF;
+			$step['retrieve_mode'] = $step['retrieve_mode']
+				? HTTPTEST_STEP_RETRIEVE_MODE_HEADERS
+				: HTTPTEST_STEP_RETRIEVE_MODE_CONTENT;
 		}
+		unset($step);
 
 		$httpTest = [
 			'hostid' => $_REQUEST['hostid'],
 			'name' => $_REQUEST['name'],
-			'authentication' => $_REQUEST['authentication'],
 			'applicationid' => getRequest('applicationid'),
 			'delay' => $_REQUEST['delay'],
 			'retries' => $_REQUEST['retries'],
-			'status' => isset($_REQUEST['status']) ? 0 : 1,
 			'agent' => hasRequest('agent_other') ? getRequest('agent_other') : getRequest('agent'),
-			'variables' => $_REQUEST['variables'],
 			'http_proxy' => $_REQUEST['http_proxy'],
-			'steps' => $steps,
+			'variables' => $_REQUEST['variables'],
+			'headers' => getRequest('headers'),
+			'status' => hasRequest('status') ? HTTPTEST_STATUS_ACTIVE : HTTPTEST_STATUS_DISABLED,
+			'authentication' => $_REQUEST['authentication'],
+			'http_user' => ($_REQUEST['authentication'] == HTTPTEST_AUTH_NONE) ? '' : $_REQUEST['http_user'],
+			'http_password' => ($_REQUEST['authentication'] == HTTPTEST_AUTH_NONE) ? '' : $_REQUEST['http_password'],
 			'verify_peer' => getRequest('verify_peer', HTTPTEST_VERIFY_PEER_OFF),
 			'verify_host' => getRequest('verify_host', HTTPTEST_VERIFY_HOST_OFF),
 			'ssl_cert_file' => getRequest('ssl_cert_file'),
 			'ssl_key_file' => getRequest('ssl_key_file'),
 			'ssl_key_password' => getRequest('ssl_key_password'),
-			'headers' => getRequest('headers')
+			'steps' => $steps
 		];
 
 		if ($new_application) {
@@ -288,15 +286,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			}
 		}
 
-		if ($_REQUEST['authentication'] != HTTPTEST_AUTH_NONE) {
-			$httpTest['http_user'] = $_REQUEST['http_user'];
-			$httpTest['http_password'] = $_REQUEST['http_password'];
-		}
-		else {
-			$httpTest['http_user'] = '';
-			$httpTest['http_password'] = '';
-		}
-
 		if (isset($_REQUEST['httptestid'])) {
 			// unset fields that did not change
 			$dbHttpTest = API::HttpTest()->get([
@@ -308,6 +297,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$dbHttpSteps = zbx_toHash($dbHttpTest['steps'], 'httpstepid');
 
 			$httpTest = CArrayHelper::unsetEqualValues($httpTest, $dbHttpTest, ['applicationid']);
+
 			foreach ($httpTest['steps'] as $snum => $step) {
 				if (isset($step['httpstepid']) && isset($dbHttpSteps[$step['httpstepid']])) {
 					$newStep = CArrayHelper::unsetEqualValues($step, $dbHttpSteps[$step['httpstepid']], ['httpstepid']);
@@ -325,6 +315,11 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			}
 		}
 		else {
+			foreach ($httpTest['steps'] as &$step) {
+				unset($step['httptestid'], $step['httpstepid']);
+			}
+			unset($step);
+
 			$result = API::HttpTest()->create($httpTest);
 			if (!$result) {
 				throw new Exception();
@@ -334,11 +329,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			}
 			$httpTestId = reset($result['httptestids']);
 		}
-
-		$host = get_host_by_hostid($_REQUEST['hostid']);
-		add_audit($action, AUDIT_RESOURCE_SCENARIO,
-			_('Web scenario').' ['.getRequest('name').'] ['.$httpTestId.'] '._('Host').' ['.$host['name'].']'
-		);
 
 		unset($_REQUEST['form']);
 		show_messages(true, $messageTrue);
@@ -356,55 +346,25 @@ elseif (hasRequest('add') || hasRequest('update')) {
 }
 elseif (hasRequest('action') && str_in_array(getRequest('action'), ['httptest.massenable', 'httptest.massdisable'])
 		&& hasRequest('group_httptestid') && is_array(getRequest('group_httptestid'))) {
-	$result = true;
-	$httpTestIds = getRequest('group_httptestid');
 	$enable = (getRequest('action') === 'httptest.massenable');
 	$status = $enable ? HTTPTEST_STATUS_ACTIVE : HTTPTEST_STATUS_DISABLED;
-	$statusName = $enable ? 'enabled' : 'disabled';
-	$auditAction = $enable ? AUDIT_ACTION_ENABLE : AUDIT_ACTION_DISABLE;
 	$updated = 0;
+	$result = true;
 
-	$httpTests = API::HttpTest()->get([
-		'output' => ['httptestid', 'name', 'status'],
-		'selectHosts' => ['name'],
-		'httptestids' => $httpTestIds,
-		'editable' => true
-	]);
+	$upd_httptests = [];
 
-	if ($httpTests) {
-		$httpTestsToUpdate = [];
-
-		DBstart();
-
-		foreach ($httpTests as $httpTest) {
-			// change status if it's necessary
-			if ($httpTest['status'] != $status) {
-				$httpTestsToUpdate[] = [
-					'httptestid' => $httpTest['httptestid'],
-					'status' => $status
-				];
-			}
-		}
-
-		if ($httpTestsToUpdate) {
-			$result = API::HttpTest()->update($httpTestsToUpdate);
-
-			if ($result) {
-				foreach ($httpTests as $httpTest) {
-					$host = reset($httpTest['hosts']);
-
-					add_audit($auditAction, AUDIT_RESOURCE_SCENARIO,
-						_('Web scenario').' ['.$httpTest['name'].'] ['.$httpTest['httptestid'].'] '.
-							_('Host').' ['.$host['name'].'] '.$statusName
-					);
-				}
-			}
-		}
-
-		$result = DBend($result);
-
-		$updated = count($httpTests);
+	foreach (getRequest('group_httptestid') as $httptestid) {
+		$upd_httptests[] = [
+			'httptestid' => $httptestid,
+			'status' => $status
+		];
 	}
+
+	if ($upd_httptests) {
+		$result = (bool) API::HttpTest()->update($upd_httptests);
+	}
+
+	$updated = count($upd_httptests);
 
 	$messageSuccess = $enable
 		? _n('Web scenario enabled', 'Web scenarios enabled', $updated)

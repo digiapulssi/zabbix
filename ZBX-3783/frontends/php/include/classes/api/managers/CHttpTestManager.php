@@ -113,17 +113,6 @@ class CHttpTestManager {
 			$this->createStepsReal($httpTest, $httpTest['steps']);
 		}
 
-		// TODO: REMOVE info
-		$dbCursor = DBselect(
-			'SELECT ht.name,h.name AS hostname'.
-			' FROM httptest ht'.
-				' INNER JOIN hosts h ON ht.hostid=h.hostid'.
-			' WHERE '.dbConditionInt('ht.httptestid', zbx_objectValues($httpTests, 'httptestid'))
-		);
-		while ($httpTest = DBfetch($dbCursor)) {
-			info(_s('Created: Web scenario "%1$s" on "%2$s".', $httpTest['name'], $httpTest['hostname']));
-		}
-
 		return $httpTests;
 	}
 
@@ -274,17 +263,6 @@ class CHttpTestManager {
 					]);
 				}
 			}
-		}
-
-		// TODO: REMOVE info
-		$dbCursor = DBselect(
-			'SELECT ht.name,h.name AS hostname'.
-			' FROM httptest ht'.
-				' INNER JOIN hosts h ON ht.hostid=h.hostid'.
-			' WHERE '.dbConditionInt('ht.httptestid', zbx_objectValues($httpTests, 'httptestid'))
-		);
-		while ($httpTest = DBfetch($dbCursor)) {
-			info(_s('Updated: Web scenario "%1$s" on "%2$s".', $httpTest['name'], $httpTest['hostname']));
 		}
 
 		return $httpTests;
@@ -712,13 +690,16 @@ class CHttpTestManager {
 
 		$insertItems = [];
 
+		$delay = array_key_exists('delay', $httpTest) ? $httpTest['delay'] : DB::getDefault('httptest', 'delay');
+		$status = array_key_exists('status', $httpTest) ? $httpTest['status'] : DB::getDefault('httptest', 'status');
+
 		foreach ($checkitems as $item) {
 			$item['hostid'] = $httpTest['hostid'];
-			$item['delay'] = $httpTest['delay'];
+			$item['delay'] = $delay;
 			$item['type'] = ITEM_TYPE_HTTPTEST;
 			$item['history'] = self::ITEM_HISTORY;
 			$item['trends'] = self::ITEM_TRENDS;
-			$item['status'] = (HTTPTEST_STATUS_ACTIVE == $httpTest['status'])
+			$item['status'] = ($status == HTTPTEST_STATUS_ACTIVE)
 				? ITEM_STATUS_ACTIVE
 				: ITEM_STATUS_DISABLED;
 
@@ -967,7 +948,7 @@ class CHttpTestManager {
 				$insert[] = ['itemid' => $itemid, 'applicationid' => $applicationid];
 			}
 
-			DB::insert('items_applications', $insert);
+			DB::insertBatch('items_applications', $insert);
 		}
 	}
 
