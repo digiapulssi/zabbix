@@ -90,9 +90,13 @@ sub new($$) {
 
     croak "cannot connect to Zabbix: " . $res->status_line unless ($res->is_success);
 
-    my $auth;
-    eval { $auth = decode_json($res->content)->{'result'} };
+    my ($result, $auth);
+    eval { $result = decode_json($res->content) };
     croak "Zabbix API returned invalid JSON: " . $@ if $@;
+
+    croak "cannot connect to Zabbix: " . $result->{'error'}->{'data'} if (defined($result->{'error'}));
+
+    $auth = $result->{'result'};
 
     set_authid($domain, $auth);
 
