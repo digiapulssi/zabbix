@@ -108,10 +108,10 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	unsigned char	types[3], states[3];
+	unsigned char	types[3];
 	DC_ITEM		items[3];
 	zbx_uint64_t	itemids[3];
-	int		lastclocks[3], errcodes[3];
+	int		errcodes[3];
 	size_t		i, num = 0;
 	AGENT_RESULT    value;
 
@@ -183,9 +183,6 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 		items[i].state = ITEM_STATE_NORMAL;
 		dc_add_history(items[i].itemid, items[i].value_type, 0, &value, ts, items[i].state, NULL);
 
-		states[i] = items[i].state;
-		lastclocks[i] = ts->sec;
-
 		free_result(&value);
 	}
 
@@ -200,12 +197,12 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	unsigned char	types[3], states[3];
+	unsigned char	types[3];
 	DC_ITEM		items[3];
 	zbx_uint64_t	itemids[3];
-	int		lastclocks[3], errcodes[3];
+	int		errcodes[3];
 	size_t		i, num = 0;
-	AGENT_RESULT    value;
+	AGENT_RESULT	value;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() rspcode:%ld time:" ZBX_FS_DBL " speed:" ZBX_FS_DBL,
 			__function_name, stat->rspcode, stat->total_time, stat->speed_download);
@@ -268,9 +265,6 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 
 		items[i].state = ITEM_STATE_NORMAL;
 		dc_add_history(items[i].itemid, items[i].value_type, 0, &value, ts, items[i].state, NULL);
-
-		states[i] = items[i].state;
-		lastclocks[i] = ts->sec;
 
 		free_result(&value);
 	}
