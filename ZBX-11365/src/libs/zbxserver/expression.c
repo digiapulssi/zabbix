@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 /* The following definitions are used to identify the request field */
 /* for various value getters grouped by their scope:                */
 
-/* DBget_item_value(), DBget_interface_value() */
+/* DBget_item_value(), get_interface_value() */
 #define ZBX_REQUEST_HOST_IP		1
 #define ZBX_REQUEST_HOST_DNS		2
 #define ZBX_REQUEST_HOST_CONN		3
@@ -751,77 +751,42 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: DBget_interface_value                                            *
+ * Function: get_interface_value                                              *
  *                                                                            *
- * Purpose: request interface value by hostid                                 *
- *                                                                            *
- * Parameters:                                                                *
+ * Purpose: retrieve a particular value associated with the interface         *
  *                                                                            *
  * Return value: upon successful completion return SUCCEED                    *
  *               otherwise FAIL                                               *
  *                                                                            *
- * Author: Alexander Vladishev                                                *
- *                                                                            *
- * Comments:                                                                  *
- *                                                                            *
  ******************************************************************************/
-static int	DBget_interface_value(zbx_uint64_t hostid, char **replace_to, int request, unsigned char agent_only)
+static int	get_interface_value(zbx_uint64_t hostid, zbx_uint64_t itemid, char **replace_to, int request)
 {
-	DB_RESULT	result;
-	DB_ROW		row;
-	unsigned char	type, useip, pr, last_pr = INTERFACE_TYPE_COUNT;
-	char		sql[14];
-	int		ret = FAIL;
+	int		res;
+	DC_INTERFACE	interface;
 
-	if (0 == agent_only)
+	if (SUCCEED != (res = DCconfig_get_interface(&interface, hostid, itemid)))
+		return res;
+
+	switch (request)
 	{
-		zbx_snprintf(sql, sizeof(sql), " in (%d,%d,%d,%d)",
-				INTERFACE_TYPE_AGENT, INTERFACE_TYPE_SNMP, INTERFACE_TYPE_IPMI, INTERFACE_TYPE_JMX);
+		case ZBX_REQUEST_HOST_IP:
+			*replace_to = zbx_strdup(*replace_to, interface.ip_orig);
+			break;
+		case ZBX_REQUEST_HOST_DNS:
+			*replace_to = zbx_strdup(*replace_to, interface.dns_orig);
+			break;
+		case ZBX_REQUEST_HOST_CONN:
+			*replace_to = zbx_strdup(*replace_to, interface.addr);
+			break;
+		case ZBX_REQUEST_HOST_PORT:
+			*replace_to = zbx_strdup(*replace_to, interface.port_orig);
+			break;
+		default:
+			THIS_SHOULD_NEVER_HAPPEN;
+			res = FAIL;
 	}
-	else
-		zbx_snprintf(sql, sizeof(sql), "=%d", INTERFACE_TYPE_AGENT);
 
-	result = DBselect(
-			"select type,useip,ip,dns,port"
-			" from interface"
-			" where hostid=" ZBX_FS_UI64
-				" and type%s"
-				" and main=1",
-			hostid, sql);
-
-	while (NULL != (row = DBfetch(result)))
-	{
-		type = (unsigned char)atoi(row[0]);
-
-		for (pr = 0; INTERFACE_TYPE_COUNT > pr && INTERFACE_TYPE_PRIORITY[pr] != type; pr++)
-			;
-
-		if (pr >= last_pr)
-			continue;
-
-		last_pr = pr;
-
-		switch (request)
-		{
-			case ZBX_REQUEST_HOST_IP:
-				*replace_to = zbx_strdup(*replace_to, row[2]);
-				break;
-			case ZBX_REQUEST_HOST_DNS:
-				*replace_to = zbx_strdup(*replace_to, row[3]);
-				break;
-			case ZBX_REQUEST_HOST_CONN:
-				useip = (unsigned char)atoi(row[1]);
-				*replace_to = zbx_strdup(*replace_to, 1 == useip ? row[2] : row[3]);
-				break;
-			case ZBX_REQUEST_HOST_PORT:
-				*replace_to = zbx_strdup(*replace_to, row[4]);
-				break;
-		}
-		ret = SUCCEED;
-	}
-	DBfree_result(result);
-
-	return ret;
+	return res;
 }
 
 /******************************************************************************
@@ -840,18 +805,26 @@ static int	DBget_item_value(zbx_uint64_t itemid, char **replace_to, int request)
 	DB_RESULT	result;
 	DB_ROW		row;
 	DC_ITEM		dc_item;
-	char		*key = NULL, *addr = NULL;
-	zbx_uint64_t	proxy_hostid, hostid;
-	int		ret = FAIL;
+	char		*key;
+	zbx_uint64_t	proxy_hostid;
+	int		ret = FAIL, errcode;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
+	switch (request)
+	{
+		case ZBX_REQUEST_HOST_IP:
+		case ZBX_REQUEST_HOST_DNS:
+		case ZBX_REQUEST_HOST_CONN:
+		case ZBX_REQUEST_HOST_PORT:
+			return get_interface_value(0, itemid, replace_to, request);
+	}
+
 	result = DBselect(
-			"select h.hostid,h.proxy_hostid,h.host,h.name,h.description,i.itemid,i.name,i.key_,"
-				"i.description,ii.ip,ii.dns,ii.useip,ii.type,ii.main"
+			"select h.hostid,h.proxy_hostid,h.host,h.name,h.description,"
+				"i.itemid,i.name,i.key_,i.description"
 			" from items i"
 				" join hosts h on h.hostid=i.hostid"
-				" left join interface ii on ii.interfaceid=i.interfaceid"
 			" where i.itemid=" ZBX_FS_UI64, itemid);
 
 	if (NULL != (row = DBfetch(result)))
@@ -874,70 +847,42 @@ static int	DBget_item_value(zbx_uint64_t itemid, char **replace_to, int request)
 				*replace_to = zbx_strdup(*replace_to, row[4]);
 				ret = SUCCEED;
 				break;
-			case ZBX_REQUEST_HOST_IP:
-			case ZBX_REQUEST_HOST_DNS:
-			case ZBX_REQUEST_HOST_CONN:
-			case ZBX_REQUEST_HOST_PORT:
-				ZBX_STR2UINT64(hostid, row[0]);
-				ret = DBget_interface_value(hostid, replace_to, request, 0);
-				break;
 			case ZBX_REQUEST_ITEM_ID:
 				*replace_to = zbx_strdup(*replace_to, row[5]);
 				ret = SUCCEED;
 				break;
 			case ZBX_REQUEST_ITEM_NAME:
 			case ZBX_REQUEST_ITEM_KEY:
-				memset(&dc_item, 0, sizeof(dc_item));
-				ZBX_STR2UINT64(dc_item.host.hostid, row[0]);
-				strscpy(dc_item.host.host, row[2]);
-				strscpy(dc_item.host.name, row[3]);
+				DCconfig_get_items_by_itemids(&dc_item, &itemid, &errcode, 1);
 
-				if (SUCCEED != DBis_null(row[12]))	/* interface type */
+				if (SUCCEED == errcode)
 				{
-					dc_item.interface.type = (unsigned char)atoi(row[12]);
-					dc_item.interface.addr = ('1' == *row[11] ? dc_item.interface.ip_orig :
-							dc_item.interface.dns_orig);
-
-					if ('1' != *row[13] || INTERFACE_TYPE_AGENT == dc_item.interface.type)
-					{
-						addr = zbx_strdup(addr, row[9]);	/* ip */
-						substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, &dc_item.host,
-								NULL, NULL, &addr, MACRO_TYPE_INTERFACE_ADDR_DB,
-								NULL, 0);
-						strscpy(dc_item.interface.ip_orig, addr);
-						zbx_free(addr);
-
-						addr = zbx_strdup(addr, row[10]);	/* dns */
-						substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, &dc_item.host,
-								NULL, NULL, &addr, MACRO_TYPE_INTERFACE_ADDR_DB,
-								NULL, 0);
-						strscpy(dc_item.interface.dns_orig, addr);
-						zbx_free(addr);
-					}
+					if (INTERFACE_TYPE_UNKNOWN == dc_item.interface.type)
+						ret = DCconfig_get_interface(&dc_item.interface, dc_item.host.hostid, 0);
 					else
+						ret = SUCCEED;
+
+					if (SUCCEED == ret)
 					{
-						strscpy(dc_item.interface.ip_orig, row[9]);
-						strscpy(dc_item.interface.dns_orig, row[10]);
+						key = zbx_strdup(NULL, dc_item.key_orig);
+						substitute_key_macros(&key, NULL, &dc_item, NULL, MACRO_TYPE_ITEM_KEY,
+								NULL, 0);
+
+						if (ZBX_REQUEST_ITEM_NAME == request)
+						{
+							*replace_to = zbx_strdup(*replace_to, row[6]);
+							item_description(replace_to, key, dc_item.host.hostid);
+							zbx_free(key);
+						}
+						else	/* ZBX_REQUEST_ITEM_KEY */
+						{
+							zbx_free(*replace_to);
+							*replace_to = key;
+						}
 					}
-				}
-				else
-					dc_item.interface.type = INTERFACE_TYPE_UNKNOWN;
 
-				key = zbx_strdup(key, row[7]);
-				substitute_key_macros(&key, NULL, &dc_item, NULL, MACRO_TYPE_ITEM_KEY, NULL, 0);
-
-				if (ZBX_REQUEST_ITEM_NAME == request)
-				{
-					*replace_to = zbx_strdup(*replace_to, row[6]);
-					item_description(replace_to, key, dc_item.host.hostid);
-					zbx_free(key);
+					DCconfig_clean_items(&dc_item, &errcode, 1);
 				}
-				else	/* ZBX_REQUEST_ITEM_KEY */
-				{
-					zbx_free(*replace_to);
-					*replace_to = key;
-				}
-				ret = SUCCEED;
 				break;
 			case ZBX_REQUEST_ITEM_NAME_ORIG:
 				*replace_to = zbx_strdup(*replace_to, row[6]);
@@ -3440,8 +3385,8 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 				}
 				else
 				{
-					ret = DBget_interface_value(dc_item->host.hostid, &replace_to,
-							ZBX_REQUEST_HOST_IP, 0);
+					ret = get_interface_value(dc_item->host.hostid, dc_item->itemid, &replace_to,
+							ZBX_REQUEST_HOST_IP);
 				}
 			}
 			else if	(0 == strcmp(m, MVAR_HOST_DNS))
@@ -3452,8 +3397,8 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 				}
 				else
 				{
-					ret = DBget_interface_value(dc_item->host.hostid, &replace_to,
-							ZBX_REQUEST_HOST_DNS, 0);
+					ret = get_interface_value(dc_item->host.hostid, dc_item->itemid, &replace_to,
+							ZBX_REQUEST_HOST_DNS);
 				}
 			}
 			else if (0 == strcmp(m, MVAR_HOST_CONN))
@@ -3464,8 +3409,8 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 				}
 				else
 				{
-					ret = DBget_interface_value(dc_item->host.hostid, &replace_to,
-							ZBX_REQUEST_HOST_CONN, 0);
+					ret = get_interface_value(dc_item->host.hostid, dc_item->itemid, &replace_to,
+							ZBX_REQUEST_HOST_CONN);
 				}
 			}
 		}
@@ -3502,21 +3447,6 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 				}
 			}
 		}
-		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_INTERFACE_ADDR_DB))
-		{
-			if (0 == strncmp(m, "{$", 2))	/* user defined macros */
-				DCget_user_macro(&dc_host->hostid, 1, m, &replace_to);
-			else if (0 == strcmp(m, MVAR_HOST_HOST) || 0 == strcmp(m, MVAR_HOSTNAME))
-				replace_to = zbx_strdup(replace_to, dc_host->host);
-			else if (0 == strcmp(m, MVAR_HOST_NAME))
-				replace_to = zbx_strdup(replace_to, dc_host->name);
-			else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_IP, 1);
-			else if	(0 == strcmp(m, MVAR_HOST_DNS))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_DNS, 1);
-			else if (0 == strcmp(m, MVAR_HOST_CONN))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_CONN, 1);
-		}
 		else if (0 != (macro_type & (MACRO_TYPE_COMMON | MACRO_TYPE_SNMP_OID)))
 		{
 			if (0 == strncmp(m, "{$", 2))	/* user defined macros */
@@ -3544,11 +3474,20 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 			else if (0 == strcmp(m, MVAR_HOST_NAME))
 				replace_to = zbx_strdup(replace_to, dc_host->name);
 			else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_IP, 0);
+			{
+				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+					replace_to = zbx_strdup(replace_to, interface.ip_orig);
+			}
 			else if	(0 == strcmp(m, MVAR_HOST_DNS))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_DNS, 0);
+			{
+				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+					replace_to = zbx_strdup(replace_to, interface.dns_orig);
+			}
 			else if (0 == strcmp(m, MVAR_HOST_CONN))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_CONN, 0);
+			{
+				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+					replace_to = zbx_strdup(replace_to, interface.addr);
+			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_HTTPTEST_FIELD))
 		{
@@ -3559,11 +3498,20 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 			else if (0 == strcmp(m, MVAR_HOST_NAME))
 				replace_to = zbx_strdup(replace_to, dc_host->name);
 			else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_IP, 0);
+			{
+				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+					replace_to = zbx_strdup(replace_to, interface.ip_orig);
+			}
 			else if	(0 == strcmp(m, MVAR_HOST_DNS))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_DNS, 0);
+			{
+				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+					replace_to = zbx_strdup(replace_to, interface.dns_orig);
+			}
 			else if (0 == strcmp(m, MVAR_HOST_CONN))
-				ret = DBget_interface_value(dc_host->hostid, &replace_to, ZBX_REQUEST_HOST_CONN, 0);
+			{
+				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+					replace_to = zbx_strdup(replace_to, interface.addr);
+			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_ALERT))
 		{
@@ -3687,11 +3635,13 @@ static void	zbx_extract_functionids(zbx_vector_uint64_t *functionids, zbx_vector
 
 typedef struct
 {
-	zbx_uint64_t	functionid;
-	zbx_uint64_t	triggerid;
+	/* input data */
+	zbx_uint64_t	itemid;
 	char		*function;
 	char		*parameter;
 	zbx_timespec_t	timespec;
+
+	/* output data */
 	char		*value;
 	char		*error;
 }
@@ -3699,13 +3649,57 @@ zbx_func_t;
 
 typedef struct
 {
-	zbx_uint64_t		itemid;
-	zbx_vector_ptr_t	functions;
+	zbx_uint64_t	functionid;
+	zbx_func_t	*func;
 }
 zbx_ifunc_t;
 
-static void	zbx_populate_function_items(zbx_vector_uint64_t *functionids, zbx_hashset_t *ifuncs,
-		zbx_vector_ptr_t *triggers)
+static zbx_hash_t	func_hash_func(const void *data)
+{
+	const zbx_func_t	*func = (const zbx_func_t *)data;
+	zbx_hash_t		hash;
+
+	hash = ZBX_DEFAULT_UINT64_HASH_FUNC(&func->itemid);
+	hash = ZBX_DEFAULT_STRING_HASH_ALGO(func->function, strlen(func->function), hash);
+	hash = ZBX_DEFAULT_STRING_HASH_ALGO(func->parameter, strlen(func->parameter), hash);
+	hash = ZBX_DEFAULT_HASH_ALGO(&func->timespec.sec, sizeof(func->timespec.sec), hash);
+	hash = ZBX_DEFAULT_HASH_ALGO(&func->timespec.ns, sizeof(func->timespec.ns), hash);
+
+	return hash;
+}
+
+static int	func_compare_func(const void *d1, const void *d2)
+{
+	const zbx_func_t	*func1 = (const zbx_func_t *)d1;
+	const zbx_func_t	*func2 = (const zbx_func_t *)d2;
+	int			ret;
+
+	ZBX_RETURN_IF_NOT_EQUAL(func1->itemid, func2->itemid);
+
+	if (0 != (ret = strcmp(func1->function, func2->function)))
+		return ret;
+
+	if (0 != (ret = strcmp(func1->parameter, func2->parameter)))
+		return ret;
+
+	ZBX_RETURN_IF_NOT_EQUAL(func1->timespec.sec, func2->timespec.sec);
+	ZBX_RETURN_IF_NOT_EQUAL(func1->timespec.ns, func2->timespec.ns);
+
+	return 0;
+}
+
+static void	func_clean(void *ptr)
+{
+	zbx_func_t	*func = (zbx_func_t *)ptr;
+
+	zbx_free(func->function);
+	zbx_free(func->parameter);
+	zbx_free(func->value);
+	zbx_free(func->error);
+}
+
+static void	zbx_populate_function_items(zbx_vector_uint64_t *functionids, zbx_hashset_t *funcs,
+		zbx_hashset_t *ifuncs, zbx_vector_ptr_t *triggers)
 {
 	const char	*__function_name = "zbx_populate_function_items";
 
@@ -3713,10 +3707,13 @@ static void	zbx_populate_function_items(zbx_vector_uint64_t *functionids, zbx_ha
 	DC_TRIGGER	*tr;
 	DC_FUNCTION	*functions = NULL;
 	int		*errcodes = NULL;
-	zbx_ifunc_t	*ifunc;
-	zbx_func_t	*func;
+	zbx_ifunc_t	ifunc_local;
+	zbx_func_t	*func, func_local;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() functionids_num:%d", __function_name, functionids->values_num);
+
+	func_local.value = NULL;
+	func_local.error = NULL;
 
 	functions = zbx_malloc(functions, sizeof(DC_FUNCTION) * functionids->values_num);
 	errcodes = zbx_malloc(errcodes, sizeof(int) * functionids->values_num);
@@ -3728,34 +3725,33 @@ static void	zbx_populate_function_items(zbx_vector_uint64_t *functionids, zbx_ha
 		if (SUCCEED != errcodes[i])
 			continue;
 
-		if (NULL == (ifunc = zbx_hashset_search(ifuncs, &functions[i].itemid)))
-		{
-			zbx_ifunc_t	new_ifunc;
+		func_local.itemid = functions[i].itemid;
 
-			new_ifunc.itemid = functions[i].itemid;
-			zbx_vector_ptr_create(&new_ifunc.functions);
-			ifunc = zbx_hashset_insert(ifuncs, &new_ifunc, sizeof(zbx_ifunc_t));
-		}
-
-		func = zbx_malloc(NULL, sizeof(zbx_func_t));
-
-		func->functionid = functions[i].functionid;
-		func->triggerid = functions[i].triggerid;
-		func->function = zbx_strdup(NULL, functions[i].function);
-		func->parameter = zbx_strdup(NULL, functions[i].parameter);
-		func->timespec.sec = 0;
-		func->timespec.ns = 0;
-		func->value = NULL;
-		func->error = NULL;
-
-		if (FAIL != (j = zbx_vector_ptr_bsearch(triggers, &func->triggerid,
+		if (FAIL != (j = zbx_vector_ptr_bsearch(triggers, &functions[i].triggerid,
 				ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
 		{
 			tr = (DC_TRIGGER *)triggers->values[j];
-			func->timespec = tr->timespec;
+			func_local.timespec = tr->timespec;
+		}
+		else
+		{
+			func_local.timespec.sec = 0;
+			func_local.timespec.ns = 0;
 		}
 
-		zbx_vector_ptr_append(&ifunc->functions, func);
+		func_local.function = functions[i].function;
+		func_local.parameter = functions[i].parameter;
+
+		if (NULL == (func = zbx_hashset_search(funcs, &func_local)))
+		{
+			func = zbx_hashset_insert(funcs, &func_local, sizeof(func_local));
+			func->function = zbx_strdup(NULL, func_local.function);
+			func->parameter = zbx_strdup(NULL, func_local.parameter);
+		}
+
+		ifunc_local.functionid = functions[i].functionid;
+		ifunc_local.func = func;
+		zbx_hashset_insert(ifuncs, &ifunc_local, sizeof(ifunc_local));
 	}
 
 	DCconfig_clean_functions(functions, errcodes, functionids->values_num);
@@ -3763,101 +3759,100 @@ static void	zbx_populate_function_items(zbx_vector_uint64_t *functionids, zbx_ha
 	zbx_free(errcodes);
 	zbx_free(functions);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() ifuncs_num:%d", __function_name, ifuncs->num_data);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() funcs_num:%d", __function_name, funcs->num_data);
 }
 
-static void	zbx_evaluate_item_functions(zbx_hashset_t *ifuncs)
+static void	zbx_evaluate_item_functions(zbx_hashset_t *funcs)
 {
-	const char	*__function_name = "zbx_evaluate_item_functions";
+	const char		*__function_name = "zbx_evaluate_item_functions";
 
 	DC_ITEM			*items = NULL;
 	char			value[MAX_BUFFER_LEN], *error = NULL;
-	int			i, k;
-	zbx_ifunc_t		*ifunc;
+	int			i;
 	zbx_func_t		*func;
-	zbx_uint64_t		*itemids = NULL;
+	zbx_vector_uint64_t	itemids;
 	int			*errcodes = NULL;
 	zbx_hashset_iter_t	iter;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ifuncs_num:%d", __function_name, ifuncs->num_data);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() funcs_num:%d", __function_name, funcs->num_data);
 
-	itemids = zbx_malloc(itemids, ifuncs->num_data * sizeof(zbx_uint64_t));
+	zbx_vector_uint64_create(&itemids);
+	zbx_vector_uint64_reserve(&itemids, funcs->num_data);
 
-	zbx_hashset_iter_reset(ifuncs, &iter);
-	for (i = 0; NULL != (ifunc = zbx_hashset_iter_next(&iter)); i++)
-		itemids[i] = ifunc->itemid;
+	zbx_hashset_iter_reset(funcs, &iter);
+	while (NULL != (func = (zbx_func_t *)zbx_hashset_iter_next(&iter)))
+		zbx_vector_uint64_append(&itemids, func->itemid);
 
-	items = zbx_malloc(items, sizeof(DC_ITEM) * ifuncs->num_data);
-	errcodes = zbx_malloc(errcodes, sizeof(int) * ifuncs->num_data);
+	zbx_vector_uint64_sort(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
-	DCconfig_get_items_by_itemids(items, itemids, errcodes, ifuncs->num_data);
+	items = zbx_malloc(items, sizeof(DC_ITEM) * itemids.values_num);
+	errcodes = zbx_malloc(errcodes, sizeof(int) * itemids.values_num);
 
-	zbx_free(itemids);
+	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, itemids.values_num);
 
-	zbx_hashset_iter_reset(ifuncs, &iter);
-	for (i = 0; NULL != (ifunc = zbx_hashset_iter_next(&iter)); i++)
+	zbx_hashset_iter_reset(funcs, &iter);
+	while (NULL != (func = (zbx_func_t *)zbx_hashset_iter_next(&iter)))
 	{
-		for (k = 0; k < ifunc->functions.values_num; k++)
+		i = zbx_vector_uint64_bsearch(&itemids, func->itemid, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+		if (SUCCEED != errcodes[i])
 		{
-			func = (zbx_func_t *)ifunc->functions.values[k];
+			func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s(%s)\":"
+					" item does not exist.",
+					func->function, func->parameter);
+			continue;
+		}
 
-			if (SUCCEED != errcodes[i])
-			{
-				func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s(%s)\":"
-						" item does not exist.",
-						func->function, func->parameter);
-				continue;
-			}
+		if (ITEM_STATUS_ACTIVE != items[i].status)
+		{
+			func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s:%s.%s(%s)\":"
+					" item is disabled.",
+					items[i].host.host, items[i].key_orig, func->function, func->parameter);
+			continue;
+		}
 
-			if (ITEM_STATUS_ACTIVE != items[i].status)
-			{
-				func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s:%s.%s(%s)\":"
-						" item is disabled.",
-						items[i].host.host, items[i].key_orig, func->function, func->parameter);
-				continue;
-			}
+		if (HOST_STATUS_MONITORED != items[i].host.status)
+		{
+			func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s:%s.%s(%s)\":"
+					" item belongs to a disabled host.",
+					items[i].host.host, items[i].key_orig, func->function, func->parameter);
+			continue;
+		}
 
-			if (HOST_STATUS_MONITORED != items[i].host.status)
-			{
-				func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s:%s.%s(%s)\":"
-						" item belongs to a disabled host.",
-						items[i].host.host, items[i].key_orig, func->function, func->parameter);
-				continue;
-			}
+		if (ITEM_STATE_NOTSUPPORTED == items[i].state)
+		{
+			func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s:%s.%s(%s)\":"
+					" item is not supported.",
+					items[i].host.host, items[i].key_orig, func->function, func->parameter);
+			continue;
+		}
 
-			if (ITEM_STATE_NOTSUPPORTED == items[i].state)
+		if (SUCCEED != evaluate_function(value, &items[i], func->function, func->parameter,
+				func->timespec.sec, &error))
+		{
+			if (NULL != error)
 			{
-				func->error = zbx_dsprintf(func->error, "Cannot evaluate function \"%s:%s.%s(%s)\":"
-						" item is not supported.",
-						items[i].host.host, items[i].key_orig, func->function, func->parameter);
-				continue;
-			}
-
-			if (SUCCEED != evaluate_function(value, &items[i], func->function, func->parameter,
-					func->timespec.sec, &error))
-			{
-				if (NULL != error)
-				{
-					func->error = zbx_dsprintf(func->error,
-							"Cannot evaluate function \"%s:%s.%s(%s)\": %s.",
-							items[i].host.host, items[i].key_orig, func->function,
-							func->parameter, error);
-					zbx_free(error);
-				}
-				else
-				{
-					func->error = zbx_dsprintf(func->error,
-							"Cannot evaluate function \"%s:%s.%s(%s)\".",
-							items[i].host.host, items[i].key_orig,
-							func->function, func->parameter);
-				}
+				func->error = zbx_dsprintf(func->error,
+						"Cannot evaluate function \"%s:%s.%s(%s)\": %s.",
+						items[i].host.host, items[i].key_orig, func->function,
+						func->parameter, error);
+				zbx_free(error);
 			}
 			else
-				func->value = zbx_strdup(func->value, value);
+			{
+				func->error = zbx_dsprintf(func->error,
+						"Cannot evaluate function \"%s:%s.%s(%s)\".",
+						items[i].host.host, items[i].key_orig,
+						func->function, func->parameter);
+			}
 		}
+		else
+			func->value = zbx_strdup(func->value, value);
 	}
 
-	DCconfig_clean_items(items, errcodes, ifuncs->num_data);
+	DCconfig_clean_items(items, errcodes, itemids.values_num);
+	zbx_vector_uint64_destroy(&itemids);
 
 	zbx_free(errcodes);
 	zbx_free(items);
@@ -3869,13 +3864,6 @@ static void	zbx_substitute_functions_results(zbx_hashset_t *ifuncs, zbx_vector_p
 {
 	const char	*__function_name = "zbx_substitute_functions_results";
 
-	typedef struct
-	{
-		zbx_uint64_t	functionid;
-		zbx_func_t	*function;
-	}
-	zbx_func_index_t;
-
 	DC_TRIGGER		*tr;
 	char			*out = NULL, *br, *bl;
 	size_t			out_alloc = TRIGGER_EXPRESSION_LEN_MAX, out_offset = 0;
@@ -3883,28 +3871,9 @@ static void	zbx_substitute_functions_results(zbx_hashset_t *ifuncs, zbx_vector_p
 	zbx_uint64_t		functionid;
 	zbx_func_t		*func;
 	zbx_ifunc_t		*ifunc;
-	zbx_hashset_iter_t	iter;
-	zbx_hashset_t		func_index;
-	zbx_func_index_t	*func_index_item;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ifuncs_num:%d tr_num:%d",
 			__function_name, ifuncs->num_data, triggers->values_num);
-
-	zbx_hashset_create(&func_index, ifuncs->num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
-			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_hashset_iter_reset(ifuncs, &iter);
-	while (NULL != (ifunc = zbx_hashset_iter_next(&iter)))
-	{
-		zbx_func_index_t	item;
-
-		for (i = 0; i < ifunc->functions.values_num; i++)
-		{
-			item.function = (zbx_func_t *)ifunc->functions.values[i];
-			item.functionid = item.function->functionid;
-			zbx_hashset_insert(&func_index, &item, sizeof(zbx_func_index_t));
-		}
-	}
 
 	out = zbx_malloc(out, out_alloc);
 
@@ -3937,7 +3906,7 @@ static void	zbx_substitute_functions_results(zbx_hashset_t *ifuncs, zbx_vector_p
 			*br++ = '}';
 			bl = br;
 
-			if (NULL == (func_index_item = zbx_hashset_search(&func_index, &functionid)))
+			if (NULL == (ifunc = (zbx_ifunc_t *)zbx_hashset_search(ifuncs, &functionid)))
 			{
 				tr->new_error = zbx_dsprintf(tr->new_error, "Cannot obtain function"
 						" and item for functionid: " ZBX_FS_UI64, functionid);
@@ -3945,7 +3914,7 @@ static void	zbx_substitute_functions_results(zbx_hashset_t *ifuncs, zbx_vector_p
 				break;
 			}
 
-			func = func_index_item->function;
+			func = ifunc->func;
 
 			if (NULL != func->error)
 			{
@@ -3984,34 +3953,8 @@ static void	zbx_substitute_functions_results(zbx_hashset_t *ifuncs, zbx_vector_p
 	}
 
 	zbx_free(out);
-	zbx_hashset_destroy(&func_index);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
-}
-
-static void	zbx_free_item_functions(zbx_hashset_t *ifuncs)
-{
-	int			i;
-	zbx_ifunc_t		*ifunc;
-	zbx_func_t		*func;
-	zbx_hashset_iter_t	iter;
-
-	zbx_hashset_iter_reset(ifuncs, &iter);
-
-	while (NULL != (ifunc = zbx_hashset_iter_next(&iter)))
-	{
-		for (i = 0; i < ifunc->functions.values_num; i++)
-		{
-			func = (zbx_func_t *)ifunc->functions.values[i];
-
-			zbx_free(func->function);
-			zbx_free(func->parameter);
-			zbx_free(func->value);
-			zbx_free(func->error);
-			zbx_free(func);
-		}
-		zbx_vector_ptr_destroy(&ifunc->functions);
-	}
 }
 
 /******************************************************************************
@@ -4032,7 +3975,7 @@ static void	substitute_functions(zbx_vector_ptr_t *triggers)
 	const char		*__function_name = "substitute_functions";
 
 	zbx_vector_uint64_t	functionids;
-	zbx_hashset_t		ifuncs;
+	zbx_hashset_t		ifuncs, funcs;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -4042,18 +3985,21 @@ static void	substitute_functions(zbx_vector_ptr_t *triggers)
 	if (0 == functionids.values_num)
 		goto empty;
 
-	zbx_hashset_create(&ifuncs, triggers->values_num, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ifuncs, functionids.values_num, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-	zbx_populate_function_items(&functionids, &ifuncs, triggers);
+	zbx_hashset_create_ext(&funcs, triggers->values_num, func_hash_func, func_compare_func, func_clean,
+			ZBX_DEFAULT_MEM_MALLOC_FUNC, ZBX_DEFAULT_MEM_REALLOC_FUNC, ZBX_DEFAULT_MEM_FREE_FUNC);
 
-	if (0 != ifuncs.num_data)
+	zbx_populate_function_items(&functionids, &funcs, &ifuncs, triggers);
+
+	if (0 != funcs.num_data)
 	{
-		zbx_evaluate_item_functions(&ifuncs);
+		zbx_evaluate_item_functions(&funcs);
 		zbx_substitute_functions_results(&ifuncs, triggers);
 	}
 
-	zbx_free_item_functions(&ifuncs);
 	zbx_hashset_destroy(&ifuncs);
+	zbx_hashset_destroy(&funcs);
 empty:
 	zbx_vector_uint64_destroy(&functionids);
 
@@ -4158,7 +4104,7 @@ void	evaluate_expressions(zbx_vector_ptr_t *triggers)
  *                                                                            *
  ******************************************************************************/
 static int	substitute_discovery_macros_simple(char *data, char **replace_to, size_t *replace_to_alloc,
-		size_t *pos, struct zbx_json_parse *jp_row)
+		size_t *pos, const struct zbx_json_parse *jp_row)
 {
 	char	*pl, *pr;
 	char	*key = NULL;
@@ -4245,7 +4191,7 @@ static int	substitute_discovery_macros_simple(char *data, char **replace_to, siz
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-int	substitute_discovery_macros(char **data, struct zbx_json_parse *jp_row, int flags,
+int	substitute_discovery_macros(char **data, const struct zbx_json_parse *jp_row, int flags,
 		char *error, size_t max_error_len)
 {
 	const char	*__function_name = "substitute_discovery_macros";
@@ -4373,10 +4319,10 @@ int	substitute_discovery_macros(char **data, struct zbx_json_parse *jp_row, int 
 
 typedef struct
 {
-	zbx_uint64_t		*hostid;
-	DC_ITEM			*dc_item;
-	struct zbx_json_parse	*jp_row;
-	int			macro_type;
+	zbx_uint64_t			*hostid;
+	DC_ITEM				*dc_item;
+	const struct zbx_json_parse	*jp_row;
+	int				macro_type;
 }
 replace_key_param_data_t;
 
@@ -4393,7 +4339,7 @@ static int	replace_key_param_cb(const char *data, int key_type, int level, int n
 	replace_key_param_data_t	*replace_key_param_data = (replace_key_param_data_t *)cb_data;
 	zbx_uint64_t			*hostid = replace_key_param_data->hostid;
 	DC_ITEM				*dc_item = replace_key_param_data->dc_item;
-	struct zbx_json_parse		*jp_row = replace_key_param_data->jp_row;
+	const struct zbx_json_parse	*jp_row = replace_key_param_data->jp_row;
 	int				macro_type = replace_key_param_data->macro_type, ret = SUCCEED;
 
 	if (ZBX_KEY_TYPE_ITEM == key_type && 0 == level)
@@ -4457,7 +4403,7 @@ static int	replace_key_param_cb(const char *data, int key_type, int level, int n
  *           ifInOctets.{#SNMPINDEX} | 1      | ifInOctets.1      | SUCCEED   *
  *                                                                            *
  ******************************************************************************/
-int	substitute_key_macros(char **data, zbx_uint64_t *hostid, DC_ITEM *dc_item, struct zbx_json_parse *jp_row,
+int	substitute_key_macros(char **data, zbx_uint64_t *hostid, DC_ITEM *dc_item, const struct zbx_json_parse *jp_row,
 		int macro_type, char *error, size_t maxerrlen)
 {
 	const char			*__function_name = "substitute_key_macros";

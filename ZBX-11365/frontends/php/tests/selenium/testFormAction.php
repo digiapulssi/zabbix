@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1947,7 +1947,9 @@ class testFormAction extends CWebTest {
 		if (isset($data['esc_period'])){
 			$this->zbxTestTabSwitch('Operations');
 			$this->zbxTestInputTypeOverwrite('esc_period', $data['esc_period']);
-			$this->zbxTestAssertElementValue('esc_period', $data['esc_period']);
+			$this->zbxTestWaitForPageToLoad();
+			$this->webDriver->findElement(WebDriverBy::id('search'))->click();
+			$this->zbxTestWaitForPageToLoad();
 		}
 
 		$this->zbxTestDoubleClickBeforeMessage('add', 'all_items');
@@ -1987,7 +1989,7 @@ class testFormAction extends CWebTest {
 
 		$this->zbxTestDropdownSelectWait('new_condition_conditiontype', 'Trigger severity');
 		$this->zbxTestDropdownSelect('new_condition_value', 'Average');
-		$this->zbxTestClickXpathWait("//div[@id='conditionTab']//button[contains(@onclick, 'add_condition')]");
+		$this->zbxTestDoubleClickXpath("//div[@id='conditionTab']//button[contains(@onclick, 'add_condition')]", 'conditions_3');
 		$this->zbxTestAssertElementText("//tr[@id='conditions_3']/td[2]", 'Trigger severity = Average');
 
 		$this->zbxTestDropdownSelectWait('new_condition_conditiontype', 'Application');
@@ -2083,6 +2085,9 @@ class testFormAction extends CWebTest {
 		$this->zbxTestAssertElementText('//tr[@id="operations_2"]//td', '1 - 2');
 
 		$this->zbxTestInputTypeOverwrite('esc_period', '123');
+		$this->zbxTestWaitForPageToLoad();
+		$this->webDriver->findElement(WebDriverBy::id('search'))->click();
+		$this->zbxTestWaitForPageToLoad();
 		$this->zbxTestAssertElementValue('esc_period', '123');
 		$this->zbxTestDoubleClickXpath("//div[@id='operationTab']//button[contains(@onclick, 'new_operation')]", 'new_operation_esc_step_from');
 
