@@ -47,19 +47,19 @@ $filterColumn3
 	)
 		->addClass(ZBX_STYLE_BTN_LINK));
 $filterColumn4
-	->addRow(new CSpan(array(
+	->addRow(new CSpan([
 		new CCheckBox('filter_failing_tests',
 			isset($data['filter_failing_tests']) ? $data['filter_failing_tests'] : null, null, 1),
 		SPACE,
 		_('Only failing tests')
-)));
+]));
 $filterColumn5
-	->addRow(new CSpan(array(
+	->addRow(new CSpan([
 		new CCheckBox('filter_show_all',
 			isset($data['filter_show_all']) ? $data['filter_show_all'] : null, null, 1),
 		SPACE,
 		_('Show all')
-)));
+]));
 
 $filter
 	->addColumn($filterColumn1)
@@ -97,7 +97,7 @@ foreach ($data['tests'] as $test) {
 
 	$value = $test['value'] ? _('Up') : _('Down');
 
-	$row = array(
+	$row = [
 		$startEndIncident,
 		date('d.m.Y H:i:s', $test['clock']),
 		$value,
@@ -107,7 +107,7 @@ foreach ($data['tests'] as $test) {
 			'rsm.particulartests.php?slvItemId='.$data['slvItemId'].'&host='.$data['tld']['host'].
 				'&time='.$test['clock'].'&type='.$data['type']
 		)
-	);
+	];
 
 	$table->addRow($row);
 }
@@ -129,7 +129,7 @@ elseif ($data['incidentType'] == INCIDENT_RESOLVED_NO_DATA) {
 }
 else {
 	$incidentType = _('False positive');
-	$changeIncidentType = $data['active'] ? NCIDENT_ACTIVE : INCIDENT_RESOLVED;
+	$changeIncidentType = $data['active'] ? INCIDENT_ACTIVE : INCIDENT_RESOLVED;
 	$changeIncidentTypeName = _('Unmark incident as false positive');
 }
 
@@ -147,10 +147,10 @@ $widget->additem([$testsInfoTable]);
 
 $widget->addItem([$table]);
 
-$widget->addItem((new CButton('mark_incident', $changeIncidentTypeName,
-	'javascript: location.href = "rsm.incidents.php?mark_incident='.$changeIncidentType.
-	'&eventid='.$data['eventid'].'&host='.$data['tld']['host'].'&type='.$data['type'].'";'
-))
+$widget->addItem((new CButton('mark_incident', $changeIncidentTypeName))
+	->onClick('javascript: location.href = "rsm.incidents.php?mark_incident='.$changeIncidentType.
+		'&eventid='.$data['eventid'].'&host='.$data['tld']['host'].'&type='.$data['type'].'";'
+	)
 	->addStyle('margin-top: 5px;')
 );
 
