@@ -24,6 +24,7 @@ $widget = (new CWidget())->setTitle(_('Tests'));
 // filter
 $filter = (new CFilter('web.rsm.incidentdetails.filter.state'))
 	->addVar('filter_set', 1)
+	->addVar('host', $this->data['tld']['name'])
 	->addVar('filter_from', zbxDateToTime($data['filter_from']))
 	->addVar('filter_to', zbxDateToTime($data['filter_to']))
 	->addVar('original_from', zbxDateToTime($data['filter_from']))
