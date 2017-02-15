@@ -189,8 +189,6 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 		free_result(&value);
 	}
 
-	DCrequeue_items(itemids, states, lastclocks, NULL, NULL, errcodes, num);
-
 	DCconfig_clean_items(items, errcodes, num);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -276,8 +274,6 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 
 		free_result(&value);
 	}
-
-	DCrequeue_items(itemids, states, lastclocks, NULL, NULL, errcodes, num);
 
 	DCconfig_clean_items(items, errcodes, num);
 
@@ -555,18 +551,6 @@ clean:
 			/* or we have been compiled without cURL library */
 
 			lastfailedstep = 1;
-
-			if (NULL != (row = DBfetch(result)))
-			{
-				ZBX_STR2UINT64(httpstep.httpstepid, row[0]);
-				httpstep.name = row[2];
-
-				memset(&stat, 0, sizeof(stat));
-
-				process_step_data(httpstep.httpstepid, &stat, &ts);
-			}
-			else
-				THIS_SHOULD_NEVER_HAPPEN;
 		}
 
 		zabbix_log(LOG_LEVEL_WARNING, "cannot process step \"%s\" of web scenario \"%s\" on host \"%s\": %s",
