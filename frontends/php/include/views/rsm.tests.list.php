@@ -23,7 +23,10 @@ $widget = (new CWidget())->setTitle(_('Tests'));
 
 // filter
 $filter = (new CFilter('web.rsm.tests.filter.state'))
-	->addVar('filter_set', 1);
+	->addVar('filter_set', 1)
+	->addVar('host', $this->data['tld']['name'])
+	->addVar('filter_from', zbxDateToTime($data['filter_from']))
+	->addVar('filter_to', zbxDateToTime($data['filter_to']));
 $filterColumn1 = new CFormList();
 $filterColumn2 = new CFormList();
 $filterColumn3 = new CFormList();;
