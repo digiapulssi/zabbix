@@ -524,7 +524,8 @@ foreach ($DB['SERVERS'] as $server) {
 					$data['tld'][$server['NR'].$tld['hostid']]['host'] = $tld['host'];
 					$data['tld'][$server['NR'].$tld['hostid']]['name'] = $tld['name'];
 					$data['tld'][$server['NR'].$tld['hostid']]['type'] = '';
-					$data['tld'][$server['NR'].$tld['hostid']]['URL'] = $server['URL'];
+					$data['tld'][$server['NR'].$tld['hostid']]['url'] = $server['URL'];
+					$data['tld'][$server['NR'].$tld['hostid']]['server'] = $server['NAME'];
 
 					foreach ($tld['groups'] as $tldGroup) {
 						if ($tldGroup['name'] === RSM_CC_TLD_GROUP) {
