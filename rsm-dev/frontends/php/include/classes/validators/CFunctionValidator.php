@@ -439,6 +439,11 @@ class CFunctionValidator extends CValidator {
 			return (substr($param, 1) > 0);
 		}
 
+		// exception for RSM: allow hash cymbol (#) prior to macro
+		if (preg_match('/^#\{\$[A-Z0-9_\.]+\}$/', $param)) {
+			return true;
+		}
+
 		return ($this->validateSecValue($param) && $param > 0);
 	}
 
