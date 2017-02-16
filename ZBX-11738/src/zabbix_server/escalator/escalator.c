@@ -47,6 +47,10 @@ extern int	CONFIG_ESCALATOR_FORKS;
 #define ZBX_ESCALATION_SKIP		2
 #define ZBX_ESCALATION_PROCESS		3
 
+#define ZBX_ESC_OPERATON_CHECK		0
+#define ZBX_ESC_OPERATON_NORMAL		1
+#define ZBX_ESC_OPERATON_DO_NEXT_STEP	2
+
 typedef struct
 {
 	zbx_uint64_t	userid;
@@ -1076,140 +1080,154 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 	const char	*__function_name = "escalation_execute_operations";
 	DB_RESULT	result;
 	DB_ROW		row;
-	int		next_esc_period = 0, esc_period;
+	int		next_esc_period = 0, esc_period, next_esc_step;
 	ZBX_USER_MSG	*user_msg = NULL;
 	zbx_uint64_t	operationid;
-	unsigned char	operationtype, evaltype, operations = 0;
+	unsigned char	operationtype, evaltype, operations;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (0 == action->esc_period)
+	do
 	{
-		result = DBselect(
-				"select o.operationid,o.operationtype,o.esc_period,o.evaltype,"
-					"m.operationid,m.default_msg,m.subject,m.message,m.mediatypeid"
-				" from operations o"
-					" left join opmessage m"
-						" on m.operationid=o.operationid"
-				" where o.actionid=" ZBX_FS_UI64
-					" and o.operationtype in (%d,%d)"
-					" and o.recovery=%d",
-				action->actionid,
-				OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND, ZBX_OPERATION_MODE_NORMAL);
-	}
-	else
-	{
-		escalation->esc_step++;
+		operations = ZBX_ESC_OPERATON_CHECK;
 
-		result = DBselect(
-				"select o.operationid,o.operationtype,o.esc_period,o.evaltype,"
-					"m.operationid,m.default_msg,m.subject,m.message,m.mediatypeid"
-				" from operations o"
-					" left join opmessage m"
-						" on m.operationid=o.operationid"
-				" where o.actionid=" ZBX_FS_UI64
-					" and o.operationtype in (%d,%d)"
-					" and o.esc_step_from<=%d"
-					" and (o.esc_step_to=0 or o.esc_step_to>=%d)"
-					" and o.recovery=%d",
-				action->actionid,
-				OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND,
-				escalation->esc_step,
-				escalation->esc_step,
-				ZBX_OPERATION_MODE_NORMAL);
-	}
-
-	while (NULL != (row = DBfetch(result)))
-	{
-		ZBX_STR2UINT64(operationid, row[0]);
-		operationtype = (unsigned char)atoi(row[1]);
-		esc_period = atoi(row[2]);
-		evaltype = (unsigned char)atoi(row[3]);
-
-		if (0 == esc_period)
-			esc_period = action->esc_period;
-
-		if (0 == next_esc_period || next_esc_period > esc_period)
-			next_esc_period = esc_period;
-
-		if (SUCCEED == check_operation_conditions(event, operationid, evaltype))
-		{
-			unsigned char	default_msg;
-			char		*subject, *message;
-			zbx_uint64_t	mediatypeid;
-
-			zabbix_log(LOG_LEVEL_DEBUG, "Conditions match our event. Execute operation.");
-
-			switch (operationtype)
-			{
-				case OPERATION_TYPE_MESSAGE:
-					if (SUCCEED == DBis_null(row[4]))
-						break;
-
-					default_msg = (unsigned char)atoi(row[5]);
-					ZBX_DBROW2UINT64(mediatypeid, row[8]);
-
-					if (0 == default_msg)
-					{
-						subject = row[6];
-						message = row[7];
-					}
-					else
-					{
-						subject = action->shortdata;
-						message = action->longdata;
-					}
-
-					add_object_msg(action->actionid, operationid, mediatypeid, &user_msg,
-							subject, message, event, NULL);
-					break;
-				case OPERATION_TYPE_COMMAND:
-					execute_commands(event, action->actionid, operationid, escalation->esc_step);
-					break;
-			}
-		}
-		else
-			zabbix_log(LOG_LEVEL_DEBUG, "Conditions do not match our event. Do not execute operation.");
-
-		operations = 1;
-	}
-	DBfree_result(result);
-
-	flush_user_msg(&user_msg, escalation->esc_step, event, NULL, action->actionid);
-
-	if (0 == action->esc_period)
-	{
-		escalation->status = (ZBX_ACTION_RECOVERY_OPERATIONS == action->recovery ? ESCALATION_STATUS_SLEEP :
-				ESCALATION_STATUS_COMPLETED);
-	}
-	else
-	{
-		if (0 == operations)
+		if (0 == action->esc_period)
 		{
 			result = DBselect(
-					"select null"
-					" from operations"
-					" where actionid=" ZBX_FS_UI64
-						" and esc_step_from>%d"
-						" and recovery=%d",
-					action->actionid, escalation->esc_step, ZBX_OPERATION_MODE_NORMAL);
-
-			if (NULL != DBfetch(result))
-				operations = 1;
-			DBfree_result(result);
-		}
-
-		if (1 == operations)
-		{
-			next_esc_period = (0 != next_esc_period) ? next_esc_period : action->esc_period;
-			escalation->nextcheck = time(NULL) + next_esc_period;
+					"select o.operationid,o.operationtype,o.esc_period,o.evaltype,"
+						"m.operationid,m.default_msg,m.subject,m.message,m.mediatypeid"
+					" from operations o"
+						" left join opmessage m"
+							" on m.operationid=o.operationid"
+					" where o.actionid=" ZBX_FS_UI64
+						" and o.operationtype in (%d,%d)"
+						" and o.recovery=%d",
+					action->actionid,
+					OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND, ZBX_OPERATION_MODE_NORMAL);
 		}
 		else
+		{
+			escalation->esc_step++;
+
+			result = DBselect(
+					"select o.operationid,o.operationtype,o.esc_period,o.evaltype,"
+						"m.operationid,m.default_msg,m.subject,m.message,m.mediatypeid"
+					" from operations o"
+						" left join opmessage m"
+							" on m.operationid=o.operationid"
+					" where o.actionid=" ZBX_FS_UI64
+						" and o.operationtype in (%d,%d)"
+						" and o.esc_step_from<=%d"
+						" and (o.esc_step_to=0 or o.esc_step_to>=%d)"
+						" and o.recovery=%d",
+					action->actionid,
+					OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND,
+					escalation->esc_step,
+					escalation->esc_step,
+					ZBX_OPERATION_MODE_NORMAL);
+		}
+
+		while (NULL != (row = DBfetch(result)))
+		{
+			ZBX_STR2UINT64(operationid, row[0]);
+			operationtype = (unsigned char)atoi(row[1]);
+			esc_period = atoi(row[2]);
+			evaltype = (unsigned char)atoi(row[3]);
+
+			if (0 == esc_period)
+				esc_period = action->esc_period;
+
+			if (0 == next_esc_period || next_esc_period > esc_period)
+				next_esc_period = esc_period;
+
+			if (SUCCEED == check_operation_conditions(event, operationid, evaltype))
+			{
+				unsigned char	default_msg;
+				char		*subject, *message;
+				zbx_uint64_t	mediatypeid;
+
+				zabbix_log(LOG_LEVEL_DEBUG, "Conditions match our event. Execute operation.");
+
+				switch (operationtype)
+				{
+					case OPERATION_TYPE_MESSAGE:
+						if (SUCCEED == DBis_null(row[4]))
+							break;
+
+						default_msg = (unsigned char)atoi(row[5]);
+						ZBX_DBROW2UINT64(mediatypeid, row[8]);
+
+						if (0 == default_msg)
+						{
+							subject = row[6];
+							message = row[7];
+						}
+						else
+						{
+							subject = action->shortdata;
+							message = action->longdata;
+						}
+
+						add_object_msg(action->actionid, operationid, mediatypeid, &user_msg,
+								subject, message, event, NULL);
+						break;
+					case OPERATION_TYPE_COMMAND:
+						execute_commands(event, action->actionid, operationid,
+								escalation->esc_step);
+						break;
+				}
+			}
+			else
+				zabbix_log(LOG_LEVEL_DEBUG, "Conditions do not match our event. Do not execute"
+						"operation.");
+
+			if (0 != action->esc_period)
+			{
+				/* check if the time for executing escalation next step have not been exceeded */
+				next_esc_step = (0 != next_esc_period) ? next_esc_period : action->esc_period;
+				if (escalation->nextcheck + next_esc_step >= time(NULL))
+					operations = ZBX_ESC_OPERATON_NORMAL;
+			}
+		}
+		DBfree_result(result);
+
+		flush_user_msg(&user_msg, escalation->esc_step, event, NULL, action->actionid);
+
+		if (0 == action->esc_period)
 		{
 			escalation->status = (ZBX_ACTION_RECOVERY_OPERATIONS == action->recovery ?
 					ESCALATION_STATUS_SLEEP : ESCALATION_STATUS_COMPLETED);
 		}
+		else
+		{
+			if (0 == operations)
+			{
+				result = DBselect(
+						"select null"
+						" from operations"
+						" where actionid=" ZBX_FS_UI64
+							" and esc_step_from>%d"
+							" and recovery=%d",
+						action->actionid, escalation->esc_step, ZBX_OPERATION_MODE_NORMAL);
+
+				if (NULL != DBfetch(result))
+					operations = ZBX_ESC_OPERATON_DO_NEXT_STEP;
+				DBfree_result(result);
+			}
+
+			if (ZBX_ESC_OPERATON_NORMAL <= operations)
+			{
+				next_esc_period = (0 != next_esc_period) ? next_esc_period : action->esc_period;
+				escalation->nextcheck += next_esc_period;
+			}
+			else
+			{
+				escalation->status = (ZBX_ACTION_RECOVERY_OPERATIONS == action->recovery ?
+						ESCALATION_STATUS_SLEEP : ESCALATION_STATUS_COMPLETED);
+			}
+		}
 	}
+	while (ZBX_ESC_OPERATON_DO_NEXT_STEP == operations);
 
 	/* schedule nextcheck for sleeping escalations */
 	if (ESCALATION_STATUS_SLEEP == escalation->status)
