@@ -89,10 +89,6 @@ zbx_ibm_db2_handle_t;
 
 static zbx_ibm_db2_handle_t	ibm_db2;
 
-#define ZBX_BEGIN_SAVEPOINT_NAME	"zbx_begin_savepoint"
-
-static zbx_vector_str_t		ibm_db2_savepoints;
-
 static int	IBM_DB2server_status();
 static int	zbx_ibm_db2_success(SQLRETURN ret);
 static int	zbx_ibm_db2_success_ext(SQLRETURN ret);
@@ -757,48 +753,6 @@ void	zbx_db_close(void)
 #endif
 }
 
-#ifdef HAVE_IBM_DB2
-int	zbx_ibm_db2_create_savepoint(const char *new_savepoint)
-{
-	int	rc = ZBX_DB_FAIL;
-
-	if (FAIL == zbx_vector_str_search(&ibm_db2_savepoints, new_savepoint, ZBX_DEFAULT_STR_COMPARE_FUNC) &&
-			0 <= (rc = zbx_db_execute("savepoint %s on rollback retain cursors;", new_savepoint)))
-	{
-		zbx_vector_str_append(&ibm_db2_savepoints, zbx_strdup(NULL, new_savepoint));
-
-		rc = ZBX_DB_OK;
-	}
-
-	return rc;
-}
-
-int	zbx_ibm_db2_rollback_to_savepoint(const char *savepoint)
-{
-	int	rc = ZBX_DB_FAIL, idx;
-
-	if (FAIL != (idx = zbx_vector_str_search(&ibm_db2_savepoints, savepoint, ZBX_DEFAULT_STR_COMPARE_FUNC)) &&
-			0 <= (rc = zbx_db_execute("rollback to savepoint %s;", ibm_db2_savepoints.values[idx])))
-	{
-		rc = ZBX_DB_OK;
-	}
-
-	if (ZBX_DB_OK == rc)
-	{
-		/* remove current savepoint and savepoints that were created after */
-		while (idx < ibm_db2_savepoints.values_num)
-			zbx_vector_str_remove(&ibm_db2_savepoints, idx++);
-	}
-
-	return rc;
-}
-
-static void	zbx_ibm_db2_remove_savepoints()
-{
-	zbx_vector_str_clear_ext(&ibm_db2_savepoints, zbx_ptr_free);
-}
-#endif
-
 /******************************************************************************
  *                                                                            *
  * Function: zbx_db_begin                                                     *
@@ -829,10 +783,9 @@ int	zbx_db_begin(void)
 
 	if (ZBX_DB_OK == rc)
 	{
-		zbx_vector_str_create(&ibm_db2_savepoints);
-
 		/* create savepoint for correct rollback on DB2 */
-		rc = zbx_ibm_db2_create_savepoint(ZBX_BEGIN_SAVEPOINT_NAME);
+		if (0 <= (rc = zbx_db_execute("savepoint zbx_begin_savepoint unique on rollback retain cursors;")))
+			rc = ZBX_DB_OK;
 	}
 
 	if (ZBX_DB_OK != rc)
@@ -888,13 +841,6 @@ int	zbx_db_commit(void)
 	{
 		rc = ZBX_DB_DOWN;
 	}
-
-	if (ZBX_DB_OK == rc)
-	{
-		zbx_ibm_db2_remove_savepoints();
-		zbx_vector_str_destroy(&ibm_db2_savepoints);
-	}
-
 	if (ZBX_DB_OK != rc)
 	{
 		zbx_ibm_db2_log_errors(SQL_HANDLE_DBC, ibm_db2.hdbc, ERR_Z3005, "<commit>");
@@ -955,14 +901,8 @@ int	zbx_db_rollback(void)
 #if defined(HAVE_IBM_DB2)
 
 	/* Rollback to begin that is marked with savepoint. This move undo all transactions. */
-	rc = zbx_ibm_db2_rollback_to_savepoint(ZBX_BEGIN_SAVEPOINT_NAME);
-	if (0 > ibm_db2_savepoints.values_num)
-	{
-		THIS_SHOULD_NEVER_HAPPEN;
-		rc = ZBX_DB_FAIL;
-	}
-	else
-		zbx_vector_str_destroy(&ibm_db2_savepoints);
+	if (0 <= (rc = zbx_db_execute("rollback to savepoint zbx_begin_savepoint;")))
+		rc = ZBX_DB_OK;
 
 	if (SUCCEED != zbx_ibm_db2_success(SQLSetConnectAttr(ibm_db2.hdbc, SQL_ATTR_AUTOCOMMIT,
 			(SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS)))
