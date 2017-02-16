@@ -1386,14 +1386,14 @@ sub create_global_macros() {
     create_macro('{$RSM.TRIG.DOWNCOUNT}', '#1', undef);
     create_macro('{$RSM.TRIG.UPCOUNT}', '#3', undef);
 
-    create_macro('{$RSM.INCIDENT.DNS.FAIL}', '#3', undef);
-    create_macro('{$RSM.INCIDENT.DNS.RECOVER}', '#3', undef);
-    create_macro('{$RSM.INCIDENT.DNSSEC.FAIL}', '#3', undef);
-    create_macro('{$RSM.INCIDENT.DNSSEC.RECOVER}', '#3', undef);
-    create_macro('{$RSM.INCIDENT.RDDS.FAIL}', '#2', undef);
-    create_macro('{$RSM.INCIDENT.RDDS.RECOVER}', '#2', undef);
-    create_macro('{$RSM.INCIDENT.EPP.FAIL}', '#2', undef);
-    create_macro('{$RSM.INCIDENT.EPP.RECOVER}', '#2', undef);
+    create_macro('{$RSM.INCIDENT.DNS.FAIL}', '3', undef);
+    create_macro('{$RSM.INCIDENT.DNS.RECOVER}', '3', undef);
+    create_macro('{$RSM.INCIDENT.DNSSEC.FAIL}', '3', undef);
+    create_macro('{$RSM.INCIDENT.DNSSEC.RECOVER}', '3', undef);
+    create_macro('{$RSM.INCIDENT.RDDS.FAIL}', '2', undef);
+    create_macro('{$RSM.INCIDENT.RDDS.RECOVER}', '2', undef);
+    create_macro('{$RSM.INCIDENT.EPP.FAIL}', '2', undef);
+    create_macro('{$RSM.INCIDENT.EPP.RECOVER}', '2', undef);
 
     create_macro('{$RSM.SLV.DNS.UDP.RTT}', 99, undef);
     create_macro('{$RSM.SLV.DNS.TCP.RTT}', 99, undef);
@@ -1832,9 +1832,9 @@ sub create_avail_trigger($$) {
 	{
 		'description' => $service.' service is down',
 		'expression' => '({TRIGGER.VALUE}=0 and '.
-			'{'.$host_name.':rsm.slv.'.$service_lc.'.avail.max({$RSM.INCIDENT.'.$service.'.FAIL})}=0) or '.
+			'{'.$host_name.':rsm.slv.'.$service_lc.'.avail.max(#{$RSM.INCIDENT.'.$service.'.FAIL})}=0) or '.
 			'({TRIGGER.VALUE}=1 and '.
-			'{'.$host_name.':rsm.slv.'.$service_lc.'.avail.count({$RSM.INCIDENT.'.$service.'.RECOVER},0,"eq")}>0)',
+			'{'.$host_name.':rsm.slv.'.$service_lc.'.avail.count(#{$RSM.INCIDENT.'.$service.'.RECOVER},0,"eq")}>0)',
 		'priority' => '0'
 	};
 
