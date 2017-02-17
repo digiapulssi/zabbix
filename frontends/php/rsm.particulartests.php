@@ -425,25 +425,29 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 			elseif ($item['key_'] == PROBE_RDDS43_RTT) {
 				$hosts[$item['hostid']]['rdds43']['rtt'] = $itemValue['value']
-					? applyValueMap(convert_units($itemValue['value'], $item['units']), $item['valuemapid']) : null;
+					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+					: null;
 			}
 			elseif ($item['key_'] == PROBE_RDDS43_UPD) {
 				$hosts[$item['hostid']]['rdds43']['upd'] = $itemValue['value']
-					? applyValueMap(convert_units($itemValue['value'], $item['units']), $item['valuemapid']) : null;
+					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+					: null;
 			}
 			elseif ($item['key_'] == PROBE_RDDS80_IP) {
 				$hosts[$item['hostid']]['rdds80']['ip'] = $itemValue['value'];
 			}
 			elseif ($item['key_'] == PROBE_RDDS80_RTT) {
 				$hosts[$item['hostid']]['rdds80']['rtt'] = $itemValue['value']
-					? applyValueMap(convert_units($itemValue['value'], $item['units']), $item['valuemapid']) : null;
+					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+					: null;
 			}
 			elseif ($item['key_'] == PROBE_RDAP_IP) {
 				$hosts[$item['hostid']]['rdap']['ip'] = $itemValue['value'];
 			}
 			elseif ($item['key_'] == PROBE_RDAP_RTT) {
 				$hosts[$item['hostid']]['rdap']['rtt'] = $itemValue['value']
-					? applyValueMap(convert_units($itemValue['value'], $item['units']), $item['valuemapid']) : null;
+					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+					: null;
 			}
 			else {
 				$hosts[$item['hostid']]['value'] = $itemValue['value'];
@@ -455,15 +459,18 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 			elseif ($item['key_'] == PROBE_EPP_UPDATE) {
 				$hosts[$item['hostid']]['update'] = $itemValue['value']
-					? applyValueMap(convert_units($itemValue['value'], $item['units']), $item['valuemapid']) : null;
+					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+					: null;
 			}
 			elseif ($item['key_'] == PROBE_EPP_INFO) {
 				$hosts[$item['hostid']]['info'] = $itemValue['value']
-					? applyValueMap(convert_units($itemValue['value'], $item['units']), $item['valuemapid']) : null;
+					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+					: null;
 			}
 			elseif ($item['key_'] == PROBE_EPP_LOGIN) {
 				$hosts[$item['hostid']]['login'] = $itemValue['value']
-					? applyValueMap(convert_units($itemValue['value'], $item['units']), $item['valuemapid']) : null;
+					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+					: null;
 			}
 			else {
 				$hosts[$item['hostid']]['value'] = $itemValue['value'];
