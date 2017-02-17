@@ -19,11 +19,7 @@
 **/
 
 
-$rsmWidget = new CWidget(null, 'particular-proxy');
-
-// header
-$rsmWidget->addPageHeader(_('Test result from particular proxy'), SPACE);
-$rsmWidget->addHeader(_('Test result from particular proxy'));
+$widget = (new CWidget())->setTitle(_('Test result from particular proxy'));
 
 $headers = array(
 	_('NS name'),
@@ -32,7 +28,7 @@ $headers = array(
 );
 $noData = _('No particular proxy found.');
 
-$particularProxysInfoTable = new CTable(null, 'filter info-block');
+$particularProxysInfoTable = (new CTable(null))->addClass('incidents-info');
 
 $particularProxysTable = new CTableInfo($noData);
 $particularProxysTable->setHeader($headers);
@@ -53,42 +49,42 @@ foreach ($this->data['proxys'] as $proxy) {
 			$ms = $proxy['ms'];
 		}
 		elseif ($proxy['ms'] < $this->data['minMs']) {
-			$ms = new CSpan($proxy['ms'], 'green');
+			$ms = (new CSpan($proxy['ms']))->addClass('green');
 		}
 		else {
-			$ms = new CSpan($proxy['ms'], 'red');
+			$ms = (new CSpan($proxy['ms']))->addClass('red');
 		}
 	}
 	else {
 		$ms = '-';
 	}
-	$row = array(
+	$row = [
 		$proxy['ns'],
 		$proxy['ip'],
 		$ms
-	);
+	];
 	$particularProxysTable->addRow($row);
 }
 
-$particularProxys = array(
-	new CSpan(array(bold(_('TLD')), ':', SPACE, $this->data['tld']['name'])),
+$particularProxys = [
+	new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
 	BR(),
-	new CSpan(array(bold(_('Service')), ':', SPACE, $this->data['slvItem']['name'])),
+	new CSpan([bold(_('Service')), ':', SPACE, $this->data['slvItem']['name']]),
 	BR(),
-	new CSpan(array(bold(_('Test time')), ':', SPACE, date('d.m.Y H:i:s', $this->data['time']))),
+	new CSpan([bold(_('Test time')), ':', SPACE, date('d.m.Y H:i:s', $this->data['time'])]),
 	BR(),
-	new CSpan(array(bold(_('Probe')), ':', SPACE, $this->data['probe']['name'])),
-);
+	new CSpan([bold(_('Probe')), ':', SPACE, $this->data['probe']['name']]),
+];
 
 if ($this->data['type'] == RSM_DNS) {
 	if ($this->data['testResult'] == true) {
-		$testResult = new CSpan(_('Up'), 'green');
+		$testResult = (new CSpan(_('Up')))->addClass('green');
 	}
 	elseif ($this->data['testResult'] == false) {
-		$testResult = new CSpan(_('Down'), 'red');
+		$testResult = (new CSpan(_('Down')))->addClass('red');
 	}
 	else {
-		$testResult = new CSpan(_('No result'), 'grey');
+		$testResult = (new CSpan(_('No result')))->addClass('grey');
 	}
 	array_push($particularProxys, array(BR(),
 		new CSpan(array(
@@ -111,8 +107,8 @@ $particularProxysInfoTable->addRow(array(array(
 	))
 )));
 
-$rsmWidget->additem($particularProxysInfoTable);
+$widget->additem($particularProxysInfoTable);
 
-$rsmWidget->additem($particularProxysTable);
+$widget->additem($particularProxysTable);
 
-return $rsmWidget;
+return $widget;
