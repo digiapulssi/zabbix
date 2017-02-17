@@ -553,7 +553,7 @@ clean:
 
 		if (NULL != httpstep.name)
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "cannot process step \"%s\" of web scenario \"%s\" on host \"%s\": %s",
+			zabbix_log(LOG_LEVEL_DEBUG, "cannot process step \"%s\" of web scenario \"%s\" on host \"%s\": %s",
 					httpstep.name, httptest->httptest.name, host->name, err_str);
 		}
 	}
