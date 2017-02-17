@@ -6597,21 +6597,35 @@ int	DCconfig_get_time_based_triggers(DC_TRIGGER *trigger_info, zbx_vector_ptr_t 
 	{
 		dc_trigger = (ZBX_DC_TRIGGER *)config->time_triggers[process_num - 1].values[i];
 
-		if (TRIGGER_STATUS_ENABLED == dc_trigger->status && 0 == dc_trigger->locked &&
-				SUCCEED == DCconfig_find_active_time_function(dc_trigger->expression))
+		if (TRIGGER_STATUS_DISABLED == dc_trigger->status || 1 == dc_trigger->locked)
+			continue;
+
+		switch (DCconfig_find_active_time_function(dc_trigger->expression))
 		{
-			dc_trigger->locked = 1;
+			case FAIL:
+				if (TRIGGER_RECOVERY_MODE_RECOVERY_EXPRESSION == dc_trigger->recovery_mode)
+				{
+					if (FAIL == DCconfig_find_active_time_function(dc_trigger->recovery_expression))
+						break;
+				}
+				else
+				{
+					break;
+				}
+				/* FALLTHROUGH */
+			case SUCCEED:
+				dc_trigger->locked = 1;
 
-			trigger = &trigger_info[trigger_order->values_num];
+				trigger = &trigger_info[trigger_order->values_num];
 
-			DCget_trigger(trigger, dc_trigger, ZBX_EXPAND_MACROS);
-			zbx_timespec(&trigger->timespec);
+				DCget_trigger(trigger, dc_trigger, ZBX_EXPAND_MACROS);
+				zbx_timespec(&trigger->timespec);
 
-			zbx_vector_ptr_append(trigger_order, trigger);
-
-			if (trigger_order->values_num == max_triggers)
-				break;
+				zbx_vector_ptr_append(trigger_order, trigger);
 		}
+
+		if (trigger_order->values_num == max_triggers)
+			break;
 	}
 
 	UNLOCK_CACHE;
