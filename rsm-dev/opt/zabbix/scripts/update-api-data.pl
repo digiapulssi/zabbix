@@ -249,15 +249,21 @@ if (!$from)
 my $tlds_processed = 0;
 
 # go through all the databases
-foreach my $server_key (@server_keys)
+foreach (@server_keys)
 {
+	$server_key = $_;
+
 	db_disconnect();
 	db_connect($server_key);
 
 my $tlds_ref;
 if (opt('tld'))
 {
-	fail("TLD ", getopt('tld'), " does not exist.") if (tld_exists(getopt('tld')) == 0);
+	if (tld_exists(getopt('tld')) == 0)
+	{
+		fail("TLD ", getopt('tld'), " does not exist.") if ($server_keys[-1] eq $server_key);
+		next;
+	}
 
 	$tlds_ref = [ getopt('tld') ];
 }
@@ -308,6 +314,8 @@ foreach (@$tlds_ref)
 
 		my $lastclock_key = "rsm.slv.$service.rollweek";
 
+		dbg("tld:$tld lastclock_key:$lastclock_key value_type:", ITEM_VALUE_TYPE_FLOAT);
+
 		my $lastclock = get_lastclock($tld, $lastclock_key, ITEM_VALUE_TYPE_FLOAT);
 
 		if ($lastclock == E_FAIL)
@@ -333,6 +341,7 @@ foreach (@$tlds_ref)
 		$servicedata->{$tld}->{$service}->{'lastclock'} = $lastclock;
 	}
 }
+undef($tld);
 
 __prnt(sprintf("getting probe statuses for period: %s", selected_period($from, $till)));
 
@@ -943,7 +952,10 @@ foreach (keys(%$servicedata))
 }
 # unset TLD (for the logs)
 $tld = undef;
+
+last if (opt('tld'));
 }	# for each db key
+undef($server_key);
 
 db_disconnect();
 
@@ -1653,7 +1665,8 @@ sub __get_probe_statuses
 
 sub __prnt
 {
-	print((defined($tld) ? "$tld: " : ''), join('', @_), "\n");
+	my $server_str = ($server_key ? "\@$server_key " : "");
+	print($server_str, (defined($tld) ? "$tld: " : ''), join('', @_), "\n");
 }
 
 sub __prnt_json
@@ -1684,8 +1697,9 @@ sub __update_false_positives
 	# now check for possible false_positive change in front-end
 	my $maxclock = 0;
 
-	foreach my $server_key (@server_keys)
+	foreach (@server_keys)
 	{
+	$server_key = $_;
 	db_connect($server_key);
 
 	my $rows_ref = db_select(
@@ -1724,6 +1738,7 @@ sub __update_false_positives
 	}
 	db_disconnect();
 	}
+	undef($server_key);
 
 	ah_save_audit($maxclock) unless ($maxclock == 0);
 }
@@ -1795,8 +1810,9 @@ sub __get_config_minclock
 	my $config_key = 'rsm.configvalue[RSM.SLV.DNS.TCP.RTT]';
 	my $minclock;
 
-	foreach my $server_key (@server_keys)
+	foreach (@server_keys)
 	{
+	$server_key = $_;
 	db_connect($server_key);
 
 	# Get the minimum clock from the item that is collected once a day, this way
@@ -1814,6 +1830,7 @@ sub __get_config_minclock
 	$minclock = int($rows_ref->[0]->[0]) if ($minclock > int($rows_ref->[0]->[0]));
 	db_disconnect();
 	}
+	undef($server_key);
 
 	# move a day back since this is collected once a day
 	$minclock -= 86400;
