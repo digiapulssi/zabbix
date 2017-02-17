@@ -24,7 +24,7 @@ require_once dirname(__FILE__).'/include/incidentdetails.inc.php';
 
 $page['title'] = _('Test result from particular proxy');
 $page['file'] = 'rsm.particularproxys.php';
-$page['hist_arg'] = array('groupid', 'hostid');
+$page['hist_arg'] = ['groupid', 'hostid'];
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
@@ -282,14 +282,14 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 		$itemValue = reset($itemValue);
 
-		$ms = convert_units($itemValue['value'], $probeItem['units']);
+		$ms = convert_units(['value' => $itemValue['value'], 'units' => $probeItem['units']]);
 		$ms = $itemValue ? applyValueMap($ms, $probeItem['valuemapid']) : null;
 
-		$data['proxys'][$probeItem['itemid']] = array(
+		$data['proxys'][$probeItem['itemid']] = [
 			'ns' => $nsValues[1],
 			'ip' => $nsValues[2],
 			'ms' => $ms
-		);
+		];
 
 		$totalNs[$nsValues[1]] = true;
 
