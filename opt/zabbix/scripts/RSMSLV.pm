@@ -62,7 +62,7 @@ use constant PROBE_ONLINE_STR => 'Online';
 use constant PROBE_OFFLINE_STR => 'Offline';
 use constant PROBE_NORESULT_STR => 'No result';
 
-our ($result, $dbh, $tld);
+our ($result, $dbh, $tld, $server_key);
 
 my $total_sec;
 my $sql_time = 0.0;
@@ -70,7 +70,7 @@ my $sql_count = 0;
 
 our %OPTS; # specified command-line options
 
-our @EXPORT = qw($result $dbh $tld
+our @EXPORT = qw($result $dbh $tld $server_key
 		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR RESULT_TIMESTAMP_SHIFT PROBE_ONLINE_STR PROBE_OFFLINE_STR
 		PROBE_NORESULT_STR AVAIL_SHIFT_BACK
@@ -390,7 +390,7 @@ sub get_lastclock
 {
 	my $host = shift;
 	my $key = shift;
-	my $value_type;
+	my $value_type = shift;
 
 	my $sql;
 
@@ -2956,10 +2956,11 @@ sub __log
 	}
 
 	my $cur_tld = $tld || "";
+	my $server_str = ($server_key ? "\@$server_key " : "");
 
 	if (opt('dry-run') or opt('nolog'))
 	{
-		print {$stdout ? *STDOUT : *STDERR} (ts_str(), " [$priority] ", ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
+		print {$stdout ? *STDOUT : *STDERR} (ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
 		return;
 	}
 
@@ -2976,7 +2977,7 @@ sub __log
 		openlog($ident, $logopt, $facility);
 	}
 
-	syslog($syslog_priority, ts_str() . " [$priority] $msg"); # first parameter is not used in our rsyslog template
+	syslog($syslog_priority, ts_str() . " [$priority] ", $server_str, $msg); # first parameter is not used in our rsyslog template
 
 	$prev_tld = $cur_tld;
 }
