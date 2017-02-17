@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2016 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -15,24 +15,20 @@
 **
 ** You should have received a copy of the GNU General Public License
 ** along with this program; if not, write to the Free Software
-** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
 
-$rsmWidget = new CWidget(null, 'particular-test');
-
-// header
-$rsmWidget->addPageHeader(_('Details of particular test'), SPACE);
-$rsmWidget->addHeader(_('Details of particular test'));
+$widget = (new CWidget())->setTitle(_('Details of particular test'));
 
 if ($this->data['type'] == RSM_DNS || $this->data['type'] == RSM_DNSSEC) {
-	$headers = array(
+	$headers = [
 		_('Probe ID'),
 		_('Row result')
-	);
+	];
 }
 elseif ($this->data['type'] == RSM_RDDS) {
-	$headers = array(
+	$headers = [
 		_('Probe ID'),
 		_('RDDS43'),
 		_('IP'),
@@ -44,30 +40,25 @@ elseif ($this->data['type'] == RSM_RDDS) {
 		_('RDAP'),
 		_('IP'),
 		_('RTT'),
-	);
+	];
 }
 else {
-	$headers = array(
+	$headers = [
 		_('Probe ID'),
 		_('Row result'),
 		_('IP'),
 		_('Login'),
 		_('Update'),
 		_('Info')
-	);
+	];
 }
 
-$noData = _('No particular test found.');
+$table = (new CTableInfo())->setHeader($headers);
 
-$particularTestsInfoTable = new CTable(null, 'filter info-block');
-
-$particularTestsTable = new CTableInfo($noData);
-$particularTestsTable->setHeader($headers);
-
-$down = new CSpan(_('Down'), 'red');
-$offline = new CSpan(_('Offline'), 'grey');
-$noResult = new CSpan(_('No result'), 'grey');
-$up = new CSpan(_('Up'), 'green');
+$down = (new CSpan(_('Down')))->addClass('red');
+$offline = (new CSpan(_('Offline')))->addClass('grey');
+$noResult = (new CSpan(_('No result')))->addClass('grey');
+$up = (new CSpan(_('Up')))->addClass('green');
 
 $offlineProbes = 0;
 $noResultProbes = 0;
@@ -104,7 +95,7 @@ foreach ($this->data['probes'] as $probe) {
 
 				if ($probe['result'] === null) {
 					$noResultProbes++;
-					$link = new CSpan(_('No result'), 'grey');
+					$link = (new CSpan(_('No result')))->addClass('grey');
 				}
 				else {
 					if ($probe['result'] !== null && $probe['result'] != 0) {
@@ -114,16 +105,16 @@ foreach ($this->data['probes'] as $probe) {
 						$values[] = _s('%1$s FAILED', $probe['value']['fail']);
 					}
 
-					$link = new CLink(
+					$link = (new CLink(
 						implode(', ', $values),
 						'rsm.particularproxys.php?slvItemId='.$this->data['slvItemId'].'&host='.$this->data['tld']['host'].
-							'&time='.$this->data['time'].'&probe='.$probe['host'].'&type='.$this->data['type'],
-						$probe['class']
-					);
+							'&time='.$this->data['time'].'&probe='.$probe['host'].'&type='.$this->data['type']
+					))
+						->addClass($probe['class']);
 				}
 			}
 			else {
-				$link = new CSpan(_('Not monitored'), 'red');
+				$link = (new CSpan(_('Not monitored')))->addClass('red');
 			}
 		}
 		elseif ($this->data['type'] == RSM_DNSSEC) {
@@ -163,15 +154,15 @@ foreach ($this->data['probes'] as $probe) {
 					$class = null;
 				}
 
-				$link = new CLink(
+				$link = (new CLink(
 					implode(', ', $values),
 					'rsm.particularproxys.php?slvItemId='.$this->data['slvItemId'].'&host='.$this->data['tld']['host'].
-						'&time='.$this->data['time'].'&probe='.$probe['host'].'&type='.$this->data['type'],
-					$class
-				);
+						'&time='.$this->data['time'].'&probe='.$probe['host'].'&type='.$this->data['type']
+				))
+					->addClass($class);
 			}
 			else {
-				$link = new CSpan(_('Not monitored'), 'red');
+				$link = (new CSpan(_('Not monitored')))->addClass('red');
 			}
 		}
 		elseif ($this->data['type'] == RSM_RDDS) {
@@ -256,14 +247,14 @@ foreach ($this->data['probes'] as $probe) {
 	}
 
 	if ($this->data['type'] == RSM_DNS || $this->data['type'] == RSM_DNSSEC) {
-		$row = array(
+		$row = [
 			$probe['name'],
 			$link
-		);
+		];
 	}
 	elseif ($this->data['type'] == RSM_RDDS) {
-		$row = array(
-			new CSpan($probe['name'], $rdds),
+		$row = [
+			(new CSpan($probe['name']))->addClass($rdds),
 			$rdds43,
 			(isset($probe['rdds43']['ip']) && $probe['rdds43']['ip']) ? $probe['rdds43']['ip'] : '-',
 			(isset($probe['rdds43']['rtt']) && $probe['rdds43']['rtt']) ? $probe['rdds43']['rtt'] : '-',
@@ -274,60 +265,60 @@ foreach ($this->data['probes'] as $probe) {
 			$rdap,
 			(isset($probe['rdap']['ip']) && $probe['rdap']['ip']) ? $probe['rdap']['ip'] : '-',
 			(isset($probe['rdap']['rtt']) && $probe['rdap']['rtt']) ? $probe['rdap']['rtt'] : '-'
-		);
+		];
 	}
 	else {
-		$row = array(
+		$row = [
 			$probe['name'],
 			$epp,
 			(isset($probe['ip']) && $probe['ip']) ? $probe['ip'] : '-',
 			(isset($probe['login']) && $probe['login']) ? $probe['login'] : '-',
 			(isset($probe['update']) && $probe['update']) ? $probe['update'] : '-',
 			(isset($probe['info']) && $probe['info']) ? $probe['info'] : '-'
-		);
+		];
 	}
 
-	$particularTestsTable->addRow($row);
+	$table->addRow($row);
 }
 if ($this->data['type'] == RSM_DNS || $this->data['type'] == RSM_RDDS || $this->data['type'] == RSM_EPP) {
 	$downProbes = $this->data['type'] == RSM_DNS ? $this->data['downProbes'] : $downProbes;
 
-	$additionInfo = array(
-		new CSpan(array(bold(_('Probes total')), ':', SPACE, $this->data['totalProbes'])),
+	$additionInfo = [
+		new CSpan([bold(_('Probes total')), ':', SPACE, $this->data['totalProbes']]),
 		BR(),
-		new CSpan(array(bold(_('Probes offline')), ':', SPACE, $offlineProbes)),
+		new CSpan([bold(_('Probes offline')), ':', SPACE, $offlineProbes]),
 		BR(),
-		new CSpan(array(bold(_('Probes with No Result')), ':', SPACE, $noResultProbes)),
+		new CSpan([bold(_('Probes with No Result')), ':', SPACE, $noResultProbes]),
 		BR(),
-		new CSpan(array(bold(_('Probes with Result')), ':', SPACE,
+		new CSpan([bold(_('Probes with Result')), ':', SPACE,
 			$this->data['totalProbes'] - $offlineProbes - $noResultProbes
-		)),
+		]),
 		BR(),
-		new CSpan(array(bold(_('Probes Up')), ':', SPACE,
+		new CSpan([bold(_('Probes Up')), ':', SPACE,
 			$this->data['totalProbes'] - $offlineProbes - $noResultProbes - $downProbes
-		)),
+		]),
 		BR(),
-		new CSpan(array(bold(_('Probes Down')), ':', SPACE, $downProbes))
-	);
+		new CSpan([bold(_('Probes Down')), ':', SPACE, $downProbes])
+	];
 }
 elseif ($this->data['type'] == RSM_DNSSEC) {
-	$additionInfo = array(
-		new CSpan(array(bold(_('Probes total')), ':', SPACE, $this->data['totalProbes'])),
+	$additionInfo = [
+		new CSpan([bold(_('Probes total')), ':', SPACE, $this->data['totalProbes']]),
 		BR(),
-		new CSpan(array(bold(_('Probes offline')), ':', SPACE, $offlineProbes)),
+		new CSpan([bold(_('Probes offline')), ':', SPACE, $offlineProbes]),
 		BR(),
-		new CSpan(array(bold(_('Probes with No Result')), ':', SPACE, $noResultProbes)),
+		new CSpan([bold(_('Probes with No Result')), ':', SPACE, $noResultProbes]),
 		BR(),
-		new CSpan(array(bold(_('Probes with Result')), ':', SPACE,
+		new CSpan([bold(_('Probes with Result')), ':', SPACE,
 			$this->data['totalProbes'] - $offlineProbes - $noResultProbes
-		)),
+		]),
 		BR(),
-		new CSpan(array(bold(_('Tests total')), ':', SPACE, $this->data['totalTests'])),
+		new CSpan([bold(_('Tests total')), ':', SPACE, $this->data['totalTests']]),
 		BR(),
-		new CSpan(array(bold(_('Tests Up')), ':', SPACE, $testUp)),
+		new CSpan([bold(_('Tests Up')), ':', SPACE, $testUp]),
 		BR(),
-		new CSpan(array(bold(_('Tests Down')), ':', SPACE, $testDown))
-	);
+		new CSpan([bold(_('Tests Down')), ':', SPACE, $testDown])
+	];
 }
 
 $tldTriggersLink = new CLink($this->data['tld']['name'], 'tr_status.php?groupid=0&hostid='.$this->data['tld']['hostid']);
@@ -343,27 +334,27 @@ else {
 	$testResult = $down;
 }
 
-$particularTests = array(
-	new CSpan(array(bold(_('TLD')), ':', SPACE, $tldTriggersLink)),
+$particularTests = [
+	new CSpan([bold(_('TLD')), ':', SPACE, $tldTriggersLink]),
 	BR(),
-	new CSpan(array(bold(_('Service')), ':', SPACE, $this->data['slvItem']['name'])),
+	new CSpan([bold(_('Service')), ':', SPACE, $this->data['slvItem']['name']]),
 	BR(),
-	new CSpan(array(bold(_('Test time')), ':', SPACE, date('d.m.Y H:i:s', $this->data['time']))),
+	new CSpan([bold(_('Test time')), ':', SPACE, date('d.m.Y H:i:s', $this->data['time'])]),
 	BR(),
-	new CSpan(array(bold(_('Test result')), ':', SPACE, $testResult, SPACE,
+	new CSpan([bold(_('Test result')), ':', SPACE, $testResult, SPACE,
 		_s('(calculated at %1$s)', date('d.m.Y H:i:s', $this->data['time'] + RSM_ROLLWEEK_SHIFT_BACK))
-	)),
+	]),
 	BR(),
-	new CSpan(array(bold(_('Note')), ':', SPACE, _('The following table displays the data that has being received by '.
+	new CSpan([bold(_('Note')), ':', SPACE, _('The following table displays the data that has being received by '.
 		'the central node, some of the values might have not being available at the time of the calculation of the '.
 		'"Test result"')
-	))
-);
+	])
+];
+$particularTestsInfoTable = (new CTable(null))->addClass('incidents-info');
+$particularTestsInfoTable->addRow([$particularTests, $additionInfo]);
 
-$particularTestsInfoTable->addRow(array($particularTests, $additionInfo));
+$widget->addItem($particularTestsInfoTable);
 
-$rsmWidget->additem($particularTestsInfoTable);
+$widget->addItem($table);
 
-$rsmWidget->additem($particularTestsTable);
-
-return $rsmWidget;
+return $widget;
