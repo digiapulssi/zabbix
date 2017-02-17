@@ -30,7 +30,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
 $fields = array(
-	'export' =>			array(T_ZBX_INT, O_OPT,	P_ACT,	null,		null),
+	'export' =>			array(T_ZBX_INT, O_OPT,	null,	null,		null),
 	// filter
 	'filter_set' =>		array(T_ZBX_STR, O_OPT,  null,	null,		null),
 	'filter_search' =>	array(T_ZBX_STR, O_OPT,  null,	null,		null),

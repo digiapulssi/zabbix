@@ -23,14 +23,12 @@ require_once dirname(__FILE__).'/js/rsm.monthlyreports.list.js.php';
 
 $widget = (new CWidget())->setTitle(_('Monthly report'));
 
-$filterForm = new CFilter('web.rsm.slareports.filter.state');
+$filter = (new CFilter('web.rsm.slareports.filter.state'))
+	->addVar('filter_set', 1);
 
-$filterColumn = new CFormList();
-$filterColumn->addVar('filter_set', 1);
-$filterColumn->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
-	->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
-	->setAttribute('autocomplete', 'off')
-);
+$filterColumn1 = new CFormList();
+$filterColumn2 = new CFormList();
+$filterColumn3 = new CFormList();
 
 $months = [];
 for ($i = 1; $i <= 12; $i++) {
@@ -42,15 +40,29 @@ for ($i = SLA_MONITORING_START_YEAR; $i <= date('Y', time()); $i++) {
 	$years[$i] = $i;
 }
 
-$filterColumn->addRow(_('Period'), [
-	new CComboBox('filter_month', $this->data['filter_month'], null, $months),
-	SPACE,
-	new CComboBox('filter_year', $this->data['filter_year'], null, $years)
-]);
+$filterColumn1
+	->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+		->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
+		->setAttribute('autocomplete', 'off')
+	);
+$filterColumn2
+	->addRow(_('Period'), [
+		new CComboBox('filter_month', $this->data['filter_month'], null, $months),
+		SPACE,
+		new CComboBox('filter_year', $this->data['filter_year'], null, $years)
+	]);
+$filterColumn3
+	->addRow(new CLink(_('Download all TLD reports'),
+		'rsm.monthlyreports.php?filter_set=1&filter_search='.$this->data['filter_search'].'&filter_year='.
+			$this->data['filter_year'].'&filter_month='.$this->data['filter_month'].'&export=1'
+	));
 
-$filterForm->addColumn($filterColumn);
+$filter
+	->addColumn($filterColumn1)
+	->addColumn($filterColumn2)
+	->addColumn($filterColumn3);
 
-$widget->addItem($filterForm);
+$widget->addItem($filter);
 
 if (isset($this->data['tld'])) {
 	$infoBlock = (new CTable(null, 'filter info-block'))
