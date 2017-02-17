@@ -29,7 +29,7 @@ $filter = (new CFilter('web.rsm.tests.filter.state'))
 	->addVar('filter_to', zbxDateToTime($data['filter_to']));
 $filterColumn1 = new CFormList();
 $filterColumn2 = new CFormList();
-$filterColumn3 = new CFormList();;
+$filterColumn3 = new CFormList();
 
 $filterColumn1
 	->addRow(_('From'), createDateSelector('filter_from', zbxDateToTime($this->data['filter_from'])));
