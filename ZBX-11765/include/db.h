@@ -392,7 +392,6 @@ void	DBclose(void);
 
 #ifdef HAVE_ORACLE
 void	DBstatement_prepare(const char *sql);
-void	DBbind_parameter(int position, void *buffer, unsigned char type);
 int	DBstatement_execute();
 #endif
 #ifdef HAVE___VA_ARGS__
@@ -457,6 +456,7 @@ int	DBget_proxy_lastaccess(const char *hostname, int *lastaccess, char **error);
 
 char	*DBdyn_escape_field(const char *table_name, const char *field_name, const char *src);
 char	*DBdyn_escape_string(const char *src);
+char	*DBdyn_escape_string_len(const char *src, size_t length);
 char	*DBdyn_escape_like_pattern(const char *src);
 
 zbx_uint64_t	DBadd_host(char *server, int port, int status, int useip, char *ip, int disable_until, int available);
@@ -536,16 +536,6 @@ void	DBdelete_groups(zbx_vector_uint64_t *groupids);
 void	DBselect_uint64(const char *sql, zbx_vector_uint64_t *ids);
 
 /* bulk insert support */
-
-/* database field value */
-typedef union
-{
-	int		i32;
-	zbx_uint64_t	ui64;
-	double		dbl;
-	char		*str;
-}
-zbx_db_value_t;
 
 /* database bulk insert data */
 typedef struct
