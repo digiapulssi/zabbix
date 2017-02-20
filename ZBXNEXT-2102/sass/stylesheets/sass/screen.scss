@@ -2089,9 +2089,11 @@ $icon-btn: (
 }
 
 $icon-widget-btn: (
-	widget-action: url(../img/icon-sprite.svg) no-repeat -2px -616px,
+	widget-action: url(../img/icon-sprite.svg) no-repeat -4px -616px,
 	widget-collapse: url(../img/icon-sprite.svg) no-repeat -5px -652px,
 	widget-expand: url(../img/icon-sprite.svg) no-repeat -5px -688px,
+	widget-edit: url(../img/icon-sprite.svg) no-repeat -39px -617px,
+	widget-remove: url(../img/icon-sprite.svg) no-repeat -39px -580px,
 	alarm-on: url(../img/icon-sprite.svg) no-repeat -3px -545px,
 	alarm-off: url(../img/icon-sprite.svg) no-repeat -3px -581px,
 	sound-on: url(../img/icon-sprite.svg) no-repeat -3px -473px,
@@ -2606,7 +2608,7 @@ $form-icon-btn: (
 
 .dashbrd-grid-widget-head {
 	position: relative;
-	padding: 8px 40px 8px 10px;
+	padding: 8px 60px 8px 10px;
 	min-height: 17px;
 
 	h4 {
@@ -2618,7 +2620,7 @@ $form-icon-btn: (
 	ul {
 		position: absolute;
 		top: 0;
-		right: 3px;
+		right: 0;
 
 		li {
 			display: block;
