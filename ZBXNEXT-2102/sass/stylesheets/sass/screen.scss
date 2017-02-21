@@ -1944,16 +1944,49 @@ button {
 	color: $btn-alt-font-color;
 	background-color: $btn-alt-bg-color;
 
+	.plus-icon {
+		background-color: $btn-alt-font-color;
+		margin-right: 8px;
+
+		&::after {
+			background-color: $btn-alt-font-color;
+		}
+	}
+
 	&:hover {
 		@include btn-hover-active($btn-font-color, $btn-bg-color);
+
+		.plus-icon {
+			background-color: $btn-font-color;
+
+			&::after {
+				background-color: $btn-font-color;
+			}
+		}
 	}
 
 	&:focus {
 		@include btn-hover-active($btn-font-color, $btn-bg-color);
+
+		.plus-icon {
+			background-color: $btn-font-color;
+
+			&::after {
+				background-color: $btn-font-color;
+			}
+		}
 	}
 
 	&:active {
 		@include btn-hover-active($btn-font-color, $btn-bg-color);
+
+		.plus-icon {
+			background-color: $btn-font-color;
+
+			&::after {
+				background-color: $btn-font-color;
+			}
+		}
 	}
 }
 
@@ -2884,6 +2917,25 @@ $form-icon-btn: (
 	li {
 		display: inline-block;
 		padding: 8px 0 8px 13px
+	}
+}
+
+.dashbrd-edit {
+	display: inline-block;
+	position: relative;
+	background-color: $ui-bg-color;
+	@include box-shadow(0 0 0 4px $ui-bg-color);
+
+	&::after {
+		content: "";
+		position: absolute;
+		min-height: 24px;
+		z-index: -1;
+		top: -5px;
+		right: -5px;
+		bottom: -5px;
+		left: 5px;
+		border: 1px solid $ui-border-color;
 	}
 }
 
@@ -3907,6 +3959,28 @@ td.inactive-bg {
 	margin-right: auto;
 	margin-top: 5%;
 	max-width: 25%;
+}
+
+// Plus/Add icon
+
+.plus-icon {
+	display: inline-block;
+	@extend %plus-icon;
+}
+
+%plus-icon {
+	width: 2px;
+	height: 8px;
+	position: relative;
+
+	&::after {
+		content: "";
+		width: 8px;
+		height: 2px;
+		top: 3px;
+		left: -3px;
+		position: absolute;
+	}
 }
 
 // Close/Remove icon
