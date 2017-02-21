@@ -200,7 +200,7 @@ if (isset($this->data['tld'])) {
 				? new CLink('graph', $tld['url'].'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemids[]='.
 						$tld[RSM_DNS]['itemid'], 'cell-value')
 				: null;
-			$dns = array(new CSpan($dnsValue, 'right'), $dnsStatus, SPACE, $dnsGraph);
+			$dns = [new CSpan($dnsValue, 'right'), $dnsStatus, SPACE, $dnsGraph];
 		}
 		else {
 			$dns = (new CDiv(null))
@@ -243,7 +243,7 @@ if (isset($this->data['tld'])) {
 						$tld[RSM_DNSSEC]['itemid'], 'cell-value'
 				)
 				: null;
-			$dnssec =  array(new CSpan($dnssecValue, 'right'), $dnssecStatus, SPACE, $dnssecGraph);
+			$dnssec = [new CSpan($dnssecValue, 'right'), $dnssecStatus, SPACE, $dnssecGraph];
 		}
 		else {
 			$dnssec = (new CDiv(null))
@@ -300,9 +300,9 @@ if (isset($this->data['tld'])) {
 			}
 
 			$rdds_services = implode('/', $ok_rdds_services);
-			$rdds =  array(new CSpan($rddsValue, 'right'), $rddsStatus, SPACE, $rddsGraph, SPACE,
+			$rdds = [new CSpan($rddsValue, 'right'), $rddsStatus, SPACE, $rddsGraph, SPACE,
 				new CSpan($rdds_services, 'bold')
-			);
+			];
 		}
 		else {
 			$rdds = (new CDiv(null))
@@ -344,14 +344,14 @@ if (isset($this->data['tld'])) {
 				? new CLink('graph', $tld['url'].'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].'&itemids[]='.
 					$tld[RSM_EPP]['itemid'], 'cell-value')
 				: null;
-			$epp =  array(new CSpan($eppValue, 'right'), $eppStatus, SPACE, $eppGraph);
+			$epp = [new CSpan($eppValue, 'right'), $eppStatus, SPACE, $eppGraph];
 		}
 		else {
 			$epp = (new CDiv(null))
 				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
 				->setHint('EPP is disabled.', '', 'on');
 		}
-		$row = array(
+		$row = [
 			$tld['name'],
 			$tld['type'],
 			$dns,
@@ -359,7 +359,7 @@ if (isset($this->data['tld'])) {
 			$rdds,
 			$epp,
 			new CLink($tld['server'], $tld['url'])
-		);
+		];
 
 		$table->addRow($row);
 	}

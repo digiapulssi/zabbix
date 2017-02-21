@@ -479,7 +479,7 @@ foreach ($DB['SERVERS'] as $server) {
 				'hostids' => $templateIds,
 				'filter' => array(
 					'macro' => array(RSM_TLD_DNSSEC_ENABLED, RSM_TLD_EPP_ENABLED, RSM_TLD_RDDS43_ENABLED,
-						RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED
+						RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED, RSM_TLD_RDDS_ENABLED
 					)
 				)
 			));

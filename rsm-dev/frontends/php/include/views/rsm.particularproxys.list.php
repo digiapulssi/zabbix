@@ -21,11 +21,11 @@
 
 $widget = (new CWidget())->setTitle(_('Test result from particular proxy'));
 
-$headers = array(
+$headers = [
 	_('NS name'),
 	_('IP'),
 	_('Ms')
-);
+];
 $noData = _('No particular proxy found.');
 
 $particularProxysInfoTable = (new CTable(null))->addClass('incidents-info');
@@ -86,14 +86,14 @@ if ($this->data['type'] == RSM_DNS) {
 	else {
 		$testResult = (new CSpan(_('No result')))->addClass('grey');
 	}
-	array_push($particularProxys, array(BR(),
-		new CSpan(array(
+	array_push($particularProxys, [BR(),
+		new CSpan([
 			bold(_('Test result')),
 			':',
 			SPACE,
 			$testResult
-		))
-	));
+		])
+	]);
 }
 
 $particularProxysInfoTable->addRow(array($particularProxys));
