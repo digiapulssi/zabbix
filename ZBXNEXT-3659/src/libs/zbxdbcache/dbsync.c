@@ -105,7 +105,7 @@ static void	dbsync_add_row(zbx_dbsync_t *sync, zbx_uint64_t rowid, unsigned char
 	row->rowid = rowid;
 	row->tag = tag;
 
-	if (ZBX_DBSYNC_ROW_REMOVE != tag)
+	if (NULL != dbrow)
 	{
 		row->row = (char **)zbx_malloc(NULL, sizeof(char *) * sync->columns_num);
 
@@ -147,7 +147,7 @@ void	zbx_dbsync_clear(zbx_dbsync_t *sync)
 	{
 		row = (zbx_dbsync_row_t *)sync->rows.values[i];
 
-		if (ZBX_DBSYNC_ROW_ADD == row->tag || ZBX_DBSYNC_ROW_UPDATE == row->tag)
+		if (NULL != row->row)
 		{
 			for (j = 0; j < sync->columns_num; j++)
 				zbx_free(row->row[j]);
@@ -355,7 +355,7 @@ out:
  *                                                                            *
  * Parameter: cache - [IN] the configuration cache                            *
  *            host  - [IN] the cached host                                    *
- *            sync  - [OUT] the changeset                                     *
+ *            row   - [IN] the database row                                   *
  *                                                                            *
  * Return value: SUCCEED - the row matches configuration data                 *
  *               FAIL    - otherwise                                          *
@@ -538,8 +538,8 @@ int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *                                                                            *
  * Purpose: compares host inventory table row with cached configuration data  *
  *                                                                            *
- * Parameter: hi    - [IN] the cached host inventory data                     *
- *            sync  - [OUT] the changeset                                     *
+ * Parameter: hi  - [IN] the cached host inventory data                       *
+ *            row - [IN] the database row                                     *
  *                                                                            *
  * Return value: SUCCEED - the row matches configuration data                 *
  *               FAIL    - otherwise                                          *
@@ -614,6 +614,110 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	return SUCCEED;
 }
 
+/* hostid - templateid hashset support */
+typedef struct
+{
+	zbx_uint64_t	hostid;
+	zbx_uint64_t	templateid;
+}
+zbx_host_template_t;
+
+static zbx_hash_t	host_template_hash_func(const void *data)
+{
+	const zbx_host_template_t	*ht = (const zbx_host_template_t *)data;
+
+	zbx_hash_t		hash;
+
+	hash = ZBX_DEFAULT_UINT64_HASH_FUNC(&ht->hostid);
+	hash = ZBX_DEFAULT_UINT64_HASH_ALGO(&ht->templateid, sizeof(ht->templateid), hash);
+
+	return hash;
+}
+
+static int	host_template_compare_func(const void *d1, const void *d2)
+{
+	const zbx_host_template_t	*ht1 = (const zbx_host_template_t *)d1;
+	const zbx_host_template_t	*ht2 = (const zbx_host_template_t *)d2;
+
+	ZBX_RETURN_IF_NOT_EQUAL(ht1->hostid, ht2->hostid);
+	ZBX_RETURN_IF_NOT_EQUAL(ht1->templateid, ht2->templateid);
+
+	return 0;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_host_templates                                *
+ *                                                                            *
+ * Purpose: compares hosts_templates table with cached configuration data      *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_iter_t	iter;
+	ZBX_DC_HTMPL		*htmpl;
+	zbx_hashset_t		htmpls;
+	int			i;
+	zbx_host_template_t	ht_local, *ht;
+	char			hostid_s[MAX_ID_LEN + 1], templateid_s[MAX_ID_LEN + 1];
+	char			*del_row[2] = {hostid_s, templateid_s};
+
+	if (NULL == (result = DBselect(
+			"select hostid,templateid"
+			" from hosts_templates"
+			" order by hostid,templateid")))
+	{
+		return FAIL;
+	}
+
+	zbx_hashset_create(&htmpls, cache->htmpls.num_data * 5, host_template_hash_func, host_template_compare_func);
+	sync->columns_num = 2;
+
+	/* index all host->template links */
+	zbx_hashset_iter_reset(&cache->htmpls, &iter);
+	while (NULL != (htmpl = (ZBX_DC_HTMPL *)zbx_hashset_iter_next(&iter)))
+	{
+		ht_local.hostid = htmpl->hostid;
+
+		for (i = 0; i < htmpl->templateids.values_num; i++)
+		{
+			ht_local.templateid = htmpl->templateids.values[i];
+			zbx_hashset_insert(&htmpls, &ht_local, sizeof(ht_local));
+		}
+	}
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(ht_local.hostid, row[0]);
+		ZBX_STR2UINT64(ht_local.templateid, row[1]);
+
+		if (NULL == (ht = (zbx_host_template_t *)zbx_hashset_search(&htmpls, &ht_local)))
+			dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_ADD, row);
+		else
+			zbx_hashset_remove_direct(&htmpls, ht);
+	}
+
+	zbx_hashset_iter_reset(&htmpls, &iter);
+	while (NULL != (ht = (zbx_host_template_t *)zbx_hashset_iter_next(&iter)))
+	{
+		zbx_snprintf(hostid_s, sizeof(hostid_s), ZBX_FS_UI64, ht->hostid);
+		zbx_snprintf(templateid_s, sizeof(templateid_s), ZBX_FS_UI64, ht->templateid);
+		dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_REMOVE, del_row);
+	}
+
+	DBfree_result(result);
+	zbx_hashset_destroy(&htmpls);
+
+	return SUCCEED;
+}
 
 /******************************************************************************
  *                                                                            *
@@ -628,6 +732,7 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
+/*
 int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
@@ -640,3 +745,4 @@ int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	return SUCCEED;
 }
+*/

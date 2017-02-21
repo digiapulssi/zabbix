@@ -1343,35 +1343,34 @@ static void	DCsync_host_inventory(zbx_vector_ptr_t *rows)
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-static void	DCsync_htmpls(DB_RESULT result)
+static void	DCsync_htmpls(zbx_vector_ptr_t *rows)
 {
 	const char		*__function_name = "DCsync_htmpls";
 
-	DB_ROW			row;
+	zbx_dbsync_row_t	*diff;
+	char			**row;
 
 	ZBX_DC_HTMPL		*htmpl = NULL;
 
-	int			found;
+	int			found, i, index;
 	zbx_uint64_t		_hostid = 0, hostid, templateid;
-	zbx_vector_uint64_t	ids;
-	zbx_hashset_iter_t	iter;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_vector_uint64_create(&ids);
-	zbx_vector_uint64_reserve(&ids, config->htmpls.num_data + 32);
-
-	while (NULL != (row = DBfetch(result)))
+	for (i = 0; i < rows->values_num; i++)
 	{
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
+			continue;
+
+		row = diff->row;
+
 		ZBX_STR2UINT64(hostid, row[0]);
 		ZBX_STR2UINT64(templateid, row[1]);
 
 		if (_hostid != hostid || 0 == _hostid)
 		{
 			_hostid = hostid;
-
-			/* array of selected hosts */
-			zbx_vector_uint64_append(&ids, hostid);
 
 			htmpl = DCfind_id(&config->htmpls, hostid, sizeof(ZBX_DC_HTMPL), &found);
 
@@ -1383,8 +1382,6 @@ static void	DCsync_htmpls(DB_RESULT result)
 						__config_mem_free_func);
 				zbx_vector_uint64_reserve(&htmpl->templateids, 1);
 			}
-			else
-				zbx_vector_uint64_clear(&htmpl->templateids);
 		}
 
 		zbx_vector_uint64_append(&htmpl->templateids, templateid);
@@ -1392,19 +1389,35 @@ static void	DCsync_htmpls(DB_RESULT result)
 
 	/* remove deleted hosts from buffer */
 
-	zbx_hashset_iter_reset(&config->htmpls, &iter);
-
-	while (NULL != (htmpl = zbx_hashset_iter_next(&iter)))
+	for (i = 0; i < rows->values_num; i++)
 	{
-		if (FAIL != zbx_vector_uint64_bsearch(&ids, htmpl->hostid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+		if (ZBX_DBSYNC_ROW_REMOVE != diff->tag)
 			continue;
 
-		zbx_vector_uint64_destroy(&htmpl->templateids);
+		row = diff->row;
 
-		zbx_hashset_iter_remove(&iter);
+		ZBX_STR2UINT64(hostid, row[0]);
+
+		if (NULL == (htmpl = (ZBX_DC_HTMPL *)zbx_hashset_search(&config->htmpls, &hostid)))
+			continue;
+
+		ZBX_STR2UINT64(templateid, row[1]);
+
+		if (-1 == (index = zbx_vector_uint64_search(&htmpl->templateids, templateid,
+				ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+		{
+			continue;
+		}
+
+		if (1 == htmpl->templateids.values_num)
+		{
+			zbx_vector_uint64_destroy(&htmpl->templateids);
+			zbx_hashset_remove_direct(&config->htmpls, htmpl);
+		}
+		else
+			zbx_vector_uint64_remove_noorder(&htmpl->templateids, index);
 	}
-
-	zbx_vector_uint64_destroy(&ids);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -3193,7 +3206,6 @@ void	DCsync_configuration(void)
 {
 	const char		*__function_name = "DCsync_configuration";
 
-	DB_RESULT		htmpl_result = NULL;
 	DB_RESULT		gmacro_result = NULL;
 	DB_RESULT		hmacro_result = NULL;
 	DB_RESULT		if_result = NULL;
@@ -3212,13 +3224,15 @@ void	DCsync_configuration(void)
 				total, total2;
 	const zbx_strpool_t	*strpool;
 
-	zbx_dbsync_t		config_sync, hosts_sync, hi_sync;
-	zbx_dbsync_stats_t	config_stats, hosts_stats, hi_stats;
+	zbx_dbsync_t		config_sync, hosts_sync, hi_sync, htmpl_sync;
+	zbx_dbsync_stats_t	config_stats, hosts_stats, hi_stats, htmpl_stats;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	zbx_dbsync_init(&config_sync);
 	zbx_dbsync_init(&hosts_sync);
+	zbx_dbsync_init(&hi_sync);
+	zbx_dbsync_init(&htmpl_sync);
 
 	sec = zbx_time();
 	if (FAIL == zbx_dbsync_compare_config(config, &config_sync))
@@ -3239,13 +3253,9 @@ void	DCsync_configuration(void)
 	hisec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (NULL == (htmpl_result = DBselect(
-			"select hostid,templateid"
-			" from hosts_templates"
-			" order by hostid,templateid")))
-	{
+	if (FAIL == zbx_dbsync_compare_host_templates(config, &htmpl_sync))
 		goto out;
-	}
+	zbx_dbsync_get_stats(&htmpl_sync, &htmpl_stats);
 	htsec = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3386,7 +3396,7 @@ void	DCsync_configuration(void)
 	hisec2 = zbx_time() - sec;
 
 	sec = zbx_time();
-	DCsync_htmpls(htmpl_result);
+	DCsync_htmpls(&htmpl_sync.rows);
 	htsec2 = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3447,8 +3457,9 @@ void	DCsync_configuration(void)
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() host_invent: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
 			__function_name, hisec, hisec2, hi_stats.add_num, hi_stats.update_num,
 			hi_stats.remove_num);
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() templates  : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
-			htsec, htsec2);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() templates  : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
+			__function_name, htsec, htsec2, htmpl_stats.add_num, htmpl_stats.update_num,
+			htmpl_stats.remove_num);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() globmacros : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
 			gmsec, gmsec2);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() hostmacros : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
@@ -3582,8 +3593,8 @@ out:
 	zbx_dbsync_clear(&config_sync);
 	zbx_dbsync_clear(&hosts_sync);
 	zbx_dbsync_clear(&hi_sync);
+	zbx_dbsync_clear(&htmpl_sync);
 
-	DBfree_result(htmpl_result);
 	DBfree_result(gmacro_result);
 	DBfree_result(hmacro_result);
 	DBfree_result(if_result);
