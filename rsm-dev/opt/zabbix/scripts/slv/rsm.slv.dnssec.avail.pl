@@ -113,7 +113,7 @@ while ($period > 0)
 		my $success_values = scalar(@$values_ref);
 		foreach (@$values_ref)
 		{
-			$success_values-- if (ZBX_EC_DNS_NS_ERRSIG == $_->[1]);
+			$success_values-- if (ZBX_EC_DNS_NS_ERRSIG == $_->[1] || ZBX_EC_DNS_RES_NOADBIT == $_->[1]);
 		}
 
 		my $test_result = DOWN;
