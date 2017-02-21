@@ -760,7 +760,7 @@ sub handle_db_error
 
 sub db_connect
 {
-	my $server_key = shift;
+	$server_key = shift;
 
 	fail("Error: no database configuration") unless (defined($config));
 
