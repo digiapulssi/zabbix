@@ -257,14 +257,14 @@ foreach ($this->data['probes'] as $probe) {
 			(new CSpan($probe['name']))->addClass($rdds),
 			$rdds43,
 			(isset($probe['rdds43']['ip']) && $probe['rdds43']['ip']) ? $probe['rdds43']['ip'] : '-',
-			(isset($probe['rdds43']['rtt']) && $probe['rdds43']['rtt']) ? $probe['rdds43']['rtt'] : '-',
-			(isset($probe['rdds43']['upd']) && $probe['rdds43']['upd']) ? $probe['rdds43']['upd'] : '-',
+			(isset($probe['rdds43']['rtt'])) ? $probe['rdds43']['rtt'] : '-',
+			(isset($probe['rdds43']['upd'])) ? $probe['rdds43']['upd'] : '-',
 			$rdds80,
 			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip']) ? $probe['rdds80']['ip'] : '-',
-			(isset($probe['rdds80']['rtt']) && $probe['rdds80']['rtt']) ? $probe['rdds80']['rtt'] : '-',
+			(isset($probe['rdds80']['rtt'])) ? $probe['rdds80']['rtt'] : '-',
 			$rdap,
 			(isset($probe['rdap']['ip']) && $probe['rdap']['ip']) ? $probe['rdap']['ip'] : '-',
-			(isset($probe['rdap']['rtt']) && $probe['rdap']['rtt']) ? $probe['rdap']['rtt'] : '-'
+			(isset($probe['rdap']['rtt'])) ? $probe['rdap']['rtt'] : '-'
 		];
 	}
 	else {
