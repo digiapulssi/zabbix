@@ -1319,7 +1319,7 @@ sub __check_test
 			my $error_code_len = length(ZBX_EC_DNS_NS_ERRSIG);
 			my $error_code = substr($description, 0, $error_code_len);
 
-			if ($error_code eq ZBX_EC_DNS_NS_ERRSIG)
+			if ($error_code eq ZBX_EC_DNS_NS_ERRSIG || $error_code eq ZBX_EC_DNS_RES_NOADBIT)
 			{
 				return E_FAIL;
 			}
