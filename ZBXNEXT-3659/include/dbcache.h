@@ -492,4 +492,6 @@ typedef struct
 }
 zbx_hc_item_t;
 
+void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess);
+
 #endif

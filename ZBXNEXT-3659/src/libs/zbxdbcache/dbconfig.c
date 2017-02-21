@@ -32,6 +32,10 @@
 #include "cfg.h"
 #include "../zbxcrypto/tls_tcp_active.h"
 
+#define ZBX_DBCONFIG_IMPL
+#include "dbconfig.h"
+#include "dbsync.h"
+
 static int	sync_in_progress = 0;
 
 #define	LOCK_CACHE	if (0 == sync_in_progress) zbx_mutex_lock(&config_lock)
@@ -73,467 +77,6 @@ static int	sync_in_progress = 0;
  *                                                                            *
  ******************************************************************************/
 typedef int (*zbx_value_validator_func_t)(const char *macro, const char *value, char **error);
-
-typedef struct
-{
-	zbx_uint64_t	triggerid;
-	const char	*description;
-	const char	*expression;
-	/* cached expression with expanded user macros, can be NULL */
-	const char	*expression_ex;
-	const char	*error;
-	int		lastchange;
-	unsigned char	topoindex;
-	unsigned char	priority;
-	unsigned char	type;
-	unsigned char	value;
-	unsigned char	state;
-	unsigned char	locked;
-	unsigned char	status;
-	unsigned char	functional;	/* see TRIGGER_FUNCTIONAL_* defines */
-}
-ZBX_DC_TRIGGER;
-
-typedef struct zbx_dc_trigger_deplist
-{
-	zbx_uint64_t				triggerid;
-	ZBX_DC_TRIGGER				*trigger;
-	const struct zbx_dc_trigger_deplist	**dependencies;
-}
-ZBX_DC_TRIGGER_DEPLIST;
-
-typedef struct
-{
-	zbx_uint64_t	functionid;
-	zbx_uint64_t	triggerid;
-	zbx_uint64_t	itemid;
-	const char	*function;
-	const char	*parameter;
-}
-ZBX_DC_FUNCTION;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	zbx_uint64_t	hostid;
-	zbx_uint64_t	interfaceid;
-	zbx_uint64_t	lastlogsize;
-	zbx_uint64_t	valuemapid;
-	const char	*key;
-	const char	*port;
-	const char	*units;
-	const char	*db_error;
-	ZBX_DC_TRIGGER	**triggers;
-	int		delay;
-	int		nextcheck;
-	int		lastclock;
-	int		mtime;
-	int		data_expected_from;
-	int		history;
-	unsigned char	type;
-	unsigned char	data_type;
-	unsigned char	value_type;
-	unsigned char	poller_type;
-	unsigned char	state;
-	unsigned char	db_state;
-	unsigned char	inventory_link;
-	unsigned char	location;
-	unsigned char	flags;
-	unsigned char	status;
-	unsigned char	unreachable;
-}
-ZBX_DC_ITEM;
-
-typedef struct
-{
-	zbx_uint64_t	hostid;
-	const char	*key;
-	ZBX_DC_ITEM	*item_ptr;
-}
-ZBX_DC_ITEM_HK;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*formula;
-	const char	*units;
-	int		trends;
-	unsigned char	delta;
-	unsigned char	multiplier;
-}
-ZBX_DC_NUMITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*snmp_oid;
-	const char	*snmp_community;
-	const char	*snmpv3_securityname;
-	const char	*snmpv3_authpassphrase;
-	const char	*snmpv3_privpassphrase;
-	const char	*snmpv3_contextname;
-	unsigned char	snmpv3_securitylevel;
-	unsigned char	snmpv3_authprotocol;
-	unsigned char	snmpv3_privprotocol;
-	unsigned char	snmp_oid_type;
-}
-ZBX_DC_SNMPITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*ipmi_sensor;
-}
-ZBX_DC_IPMIITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*delay_flex;
-}
-ZBX_DC_FLEXITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*trapper_hosts;
-}
-ZBX_DC_TRAPITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*logtimefmt;
-}
-ZBX_DC_LOGITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*params;
-	const char	*username;
-	const char	*password;
-}
-ZBX_DC_DBITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*username;
-	const char	*publickey;
-	const char	*privatekey;
-	const char	*password;
-	const char	*params;
-	unsigned char	authtype;
-}
-ZBX_DC_SSHITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*username;
-	const char	*password;
-	const char	*params;
-}
-ZBX_DC_TELNETITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*username;
-	const char	*password;
-}
-ZBX_DC_SIMPLEITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*username;
-	const char	*password;
-}
-ZBX_DC_JMXITEM;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
-	const char	*params;
-}
-ZBX_DC_CALCITEM;
-
-typedef zbx_item_history_value_t	ZBX_DC_DELTAITEM;
-
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
-typedef struct
-{
-	const char	*tls_psk_identity;	/* pre-shared key identity           */
-	const char	*tls_psk;		/* pre-shared key value (hex-string) */
-	unsigned int	refcount;		/* reference count                   */
-}
-ZBX_DC_PSK;
-#endif
-
-typedef struct
-{
-	zbx_uint64_t	hostid;
-	zbx_uint64_t	proxy_hostid;
-	const char	*host;
-	const char	*name;
-	int		maintenance_from;
-	int		data_expected_from;
-	int		errors_from;
-	int		disable_until;
-	int		snmp_errors_from;
-	int		snmp_disable_until;
-	int		ipmi_errors_from;
-	int		ipmi_disable_until;
-	int		jmx_errors_from;
-	int		jmx_disable_until;
-
-	/* timestamp of last availability status (available/error) field change on any interface */
-	int		availability_ts;
-
-	unsigned char	maintenance_status;
-	unsigned char	maintenance_type;
-	unsigned char	available;
-	unsigned char	snmp_available;
-	unsigned char	ipmi_available;
-	unsigned char	jmx_available;
-	unsigned char	status;
-
-	/* specifies which interfaces are being used (have enabled items) */
-	/* (see ZBX_FLAG_INTERFACE_* defines)                             */
-	unsigned char	used_interfaces;
-
-	/* 'tls_connect' and 'tls_accept' must be respected even if encryption support is not compiled in */
-	unsigned char	tls_connect;
-	unsigned char	tls_accept;
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
-	const char	*tls_issuer;
-	const char	*tls_subject;
-	ZBX_DC_PSK	*tls_dc_psk;
-#endif
-	const char	*error;
-	const char	*snmp_error;
-	const char	*ipmi_error;
-	const char	*jmx_error;
-}
-ZBX_DC_HOST;
-
-typedef struct
-{
-	zbx_uint64_t	hostid;
-	unsigned char	inventory_mode;
-}
-ZBX_DC_HOST_INVENTORY;
-
-typedef struct
-{
-	const char	*host;
-	ZBX_DC_HOST	*host_ptr;
-}
-ZBX_DC_HOST_H;
-
-typedef struct
-{
-	zbx_uint64_t	hostid;
-	int		proxy_config_nextcheck;
-	int		proxy_data_nextcheck;
-	int		timediff;
-	int		lastaccess;
-	unsigned char	location;
-}
-ZBX_DC_PROXY;
-
-typedef struct
-{
-	zbx_uint64_t	hostid;
-	const char	*ipmi_username;
-	const char	*ipmi_password;
-	signed char	ipmi_authtype;
-	unsigned char	ipmi_privilege;
-}
-ZBX_DC_IPMIHOST;
-
-typedef struct
-{
-	zbx_uint64_t		hostid;
-	zbx_vector_uint64_t	templateids;
-}
-ZBX_DC_HTMPL;
-
-typedef struct
-{
-	zbx_uint64_t	globalmacroid;
-	const char	*macro;
-	const char	*context;
-	const char	*value;
-}
-ZBX_DC_GMACRO;
-
-typedef struct
-{
-	const char		*macro;
-	zbx_vector_ptr_t	gmacros;
-}
-ZBX_DC_GMACRO_M;
-
-typedef struct
-{
-	zbx_uint64_t	hostmacroid;
-	zbx_uint64_t	hostid;
-	const char	*macro;
-	const char	*context;
-	const char	*value;
-}
-ZBX_DC_HMACRO;
-
-typedef struct
-{
-	zbx_uint64_t		hostid;
-	const char		*macro;
-	zbx_vector_ptr_t	hmacros;
-}
-ZBX_DC_HMACRO_HM;
-
-typedef struct
-{
-	zbx_uint64_t	interfaceid;
-	zbx_uint64_t	hostid;
-	const char	*ip;
-	const char	*dns;
-	const char	*port;
-	unsigned char	type;
-	unsigned char	main;
-	unsigned char	useip;
-	unsigned char	bulk;
-	unsigned char	max_snmp_succeed;
-	unsigned char	min_snmp_fail;
-}
-ZBX_DC_INTERFACE;
-
-typedef struct
-{
-	zbx_uint64_t		hostid;
-	ZBX_DC_INTERFACE	*interface_ptr;
-	unsigned char		type;
-}
-ZBX_DC_INTERFACE_HT;
-
-typedef struct
-{
-	const char		*addr;
-	zbx_vector_uint64_t	interfaceids;
-}
-ZBX_DC_INTERFACE_ADDR;
-
-typedef struct
-{
-	zbx_uint64_t		interfaceid;
-	zbx_vector_uint64_t	itemids;
-}
-ZBX_DC_INTERFACE_ITEM;
-
-typedef struct
-{
-	const char		*name;
-	zbx_vector_uint64_t	expressionids;
-}
-ZBX_DC_REGEXP;
-
-typedef struct
-{
-	zbx_uint64_t	expressionid;
-	const char	*expression;
-	char		delimiter;
-	unsigned char	type;
-	unsigned char	case_sensitive;
-}
-ZBX_DC_EXPRESSION;
-
-typedef struct
-{
-	const char	*severity_name[TRIGGER_SEVERITY_COUNT];
-	zbx_uint64_t	discovery_groupid;
-	int		default_inventory_mode;
-	int		refresh_unsupported;
-	unsigned char	snmptrap_logging;
-	/* housekeeping related configuration data */
-	zbx_config_hk_t	hk;
-}
-ZBX_DC_CONFIG_TABLE;
-
-typedef struct
-{
-	zbx_uint64_t	conditionid;
-
-	unsigned char	conditiontype;
-	unsigned char	operator;
-	const char	*value;
-}
-zbx_dc_action_condition_t;
-
-typedef struct
-{
-	zbx_uint64_t		actionid;
-	const char		*formula;
-	unsigned char		eventsource;
-	unsigned char		evaltype;
-	zbx_vector_ptr_t	conditions;
-}
-zbx_dc_action_t;
-
-typedef struct
-{
-	/* timestamp of the last host availability diff sent to sever, used only by proxies */
-	int			availability_diff_ts;
-
-	zbx_hashset_t		items;
-	zbx_hashset_t		items_hk;		/* hostid, key */
-	zbx_hashset_t		numitems;
-	zbx_hashset_t		snmpitems;
-	zbx_hashset_t		ipmiitems;
-	zbx_hashset_t		flexitems;
-	zbx_hashset_t		trapitems;
-	zbx_hashset_t		logitems;
-	zbx_hashset_t		dbitems;
-	zbx_hashset_t		sshitems;
-	zbx_hashset_t		telnetitems;
-	zbx_hashset_t		simpleitems;
-	zbx_hashset_t		jmxitems;
-	zbx_hashset_t		calcitems;
-	zbx_hashset_t		deltaitems;		/* history data for delta value calculations */
-	zbx_hashset_t		functions;
-	zbx_hashset_t		triggers;
-	zbx_hashset_t		trigdeps;
-	zbx_vector_ptr_t	*time_triggers;
-	zbx_hashset_t		hosts;
-	zbx_hashset_t		hosts_h;		/* for searching hosts by 'host' name */
-	zbx_hashset_t		hosts_p;		/* for searching proxies by 'host' name */
-	zbx_hashset_t		proxies;
-	zbx_hashset_t		host_inventories;
-	zbx_hashset_t		ipmihosts;
-	zbx_hashset_t		htmpls;
-	zbx_hashset_t		gmacros;
-	zbx_hashset_t		gmacros_m;		/* macro */
-	zbx_hashset_t		hmacros;
-	zbx_hashset_t		hmacros_hm;		/* hostid, macro */
-	zbx_hashset_t		interfaces;
-	zbx_hashset_t		interfaces_ht;		/* hostid, type */
-	zbx_hashset_t		interface_snmpaddrs;	/* addr, interfaceids for SNMP interfaces */
-	zbx_hashset_t		interface_snmpitems;	/* interfaceid, itemids for SNMP trap items */
-	zbx_hashset_t		regexps;
-	zbx_hashset_t		expressions;
-	zbx_hashset_t		actions;
-	zbx_hashset_t		action_conditions;
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
-	zbx_hashset_t		psks;			/* for keeping PSK-identity and PSK pairs and for searching */
-							/* by PSK identity */
-#endif
-	zbx_binary_heap_t	queues[ZBX_POLLER_TYPE_COUNT];
-	zbx_binary_heap_t	pqueue;
-	ZBX_DC_CONFIG_TABLE	*config;
-}
-ZBX_DC_CONFIG;
 
 static ZBX_DC_CONFIG	*config = NULL;
 static ZBX_MUTEX	config_lock = ZBX_MUTEX_NULL;
@@ -1117,11 +660,10 @@ static void	config_hmacro_remove_index(zbx_hashset_t *hmacro_index, ZBX_DC_HMACR
 	}
 }
 
-static int	DCsync_config(DB_RESULT result, int *refresh_unsupported_changed)
+static int	DCsync_config(zbx_vector_ptr_t *rows, int *refresh_unsupported_changed)
 {
 	static char	*default_severity_names[] = {"Not classified", "Information", "Warning", "Average", "High", "Disaster"};
 	const char	*__function_name = "DCsync_config";
-	DB_ROW		row;
 	int		i, found = 1;
 
 #define DEFAULT_REFRESH_UNSUPPORTED	600
@@ -1136,11 +678,8 @@ static int	DCsync_config(DB_RESULT result, int *refresh_unsupported_changed)
 		config->config = __config_mem_malloc_func(NULL, sizeof(ZBX_DC_CONFIG_TABLE));
 	}
 
-	if (NULL == (row = DBfetch(result)))
+	if (0 == rows->values_num)
 	{
-		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-			zabbix_log(LOG_LEVEL_ERR, "no records in table 'config'");
-
 		if (0 == found)
 		{
 			/* load default config data */
@@ -1182,7 +721,12 @@ static int	DCsync_config(DB_RESULT result, int *refresh_unsupported_changed)
 	}
 	else
 	{
-		int	refresh_unsupported;
+		int			refresh_unsupported;
+		char			**row;
+		zbx_dbsync_row_t	*diff;
+
+		diff = (zbx_dbsync_row_t *)rows->values[0];
+		row = diff->row;
 
 		/* store the config data */
 
@@ -1230,9 +774,6 @@ static int	DCsync_config(DB_RESULT result, int *refresh_unsupported_changed)
 			config->config->hk.trends_global = atoi(row[24]);
 		else
 			config->config->hk.trends_global = ZBX_HK_OPTION_DISABLED;
-
-		if (NULL != (row = DBfetch(result)))	/* config table should have only one record */
-			zabbix_log(LOG_LEVEL_ERR, "table 'config' has multiple records");
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -1242,11 +783,12 @@ static int	DCsync_config(DB_RESULT result, int *refresh_unsupported_changed)
 	return SUCCEED;
 }
 
-static void	DCsync_hosts(DB_RESULT result)
+static void	DCsync_hosts(zbx_vector_ptr_t *rows)
 {
 	const char		*__function_name = "DCsync_hosts";
 
-	DB_ROW			row;
+	zbx_dbsync_row_t	*diff;
+	char			**row;
 
 	ZBX_DC_HOST		*host;
 	ZBX_DC_IPMIHOST		*ipmihost;
@@ -1254,10 +796,8 @@ static void	DCsync_hosts(DB_RESULT result)
 	ZBX_DC_HOST_H		*host_h, host_h_local, *host_p, host_p_local;
 
 	int			found;
-	int			update_index_h, update_index_p;
+	int			i, update_index_h, update_index_p;
 	zbx_uint64_t		hostid, proxy_hostid;
-	zbx_vector_uint64_t	ids;
-	zbx_hashset_iter_t	iter;
 	unsigned char		status;
 	time_t			now;
 	signed char		ipmi_authtype;
@@ -1269,22 +809,22 @@ static void	DCsync_hosts(DB_RESULT result)
 #endif
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_vector_uint64_create(&ids);
-	zbx_vector_uint64_reserve(&ids, config->hosts.num_data + 32);
-
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_hashset_create(&psk_owners, 0, ZBX_DEFAULT_PTR_HASH_FUNC, ZBX_DEFAULT_PTR_COMPARE_FUNC);
 #endif
 	now = time(NULL);
 
-	while (NULL != (row = DBfetch(result)))
+	for (i = 0; i < rows->values_num; i++)
 	{
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
+			continue;
+
+		row = diff->row;
+
 		ZBX_STR2UINT64(hostid, row[0]);
 		ZBX_DBROW2UINT64(proxy_hostid, row[1]);
 		ZBX_STR2UCHAR(status, row[22]);
-
-		/* array of selected hosts */
-		zbx_vector_uint64_append(&ids, hostid);
 
 		host = DCfind_id(&config->hosts, hostid, sizeof(ZBX_DC_HOST), &found);
 
@@ -1645,8 +1185,6 @@ done:
 				zbx_binary_heap_remove_direct(&config->pqueue, proxy->hostid);
 				proxy->location = ZBX_LOC_NOWHERE;
 			}
-
-			proxy->lastaccess = atoi(row[24]);
 		}
 		else if (NULL != (proxy = zbx_hashset_search(&config->proxies, &hostid)))
 		{
@@ -1664,16 +1202,16 @@ done:
 
 	/* remove deleted hosts from buffer */
 
-	zbx_vector_uint64_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_hashset_iter_reset(&config->hosts, &iter);
-
-	while (NULL != (host = zbx_hashset_iter_next(&iter)))
+	for (i = 0; i < rows->values_num; i++)
 	{
-		hostid = host->hostid;
-
-		if (FAIL != zbx_vector_uint64_bsearch(&ids, hostid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+		if (ZBX_DBSYNC_ROW_REMOVE != diff->tag)
 			continue;
+
+		if (NULL == (host = zbx_hashset_search(&config->hosts, &diff->rowid)))
+			continue;
+
+		hostid = host->hostid;
 
 		/* IPMI hosts */
 
@@ -1747,10 +1285,8 @@ done:
 			}
 		}
 #endif
-		zbx_hashset_iter_remove(&iter);
+		zbx_hashset_remove_direct(&config->hosts, host);
 	}
-
-	zbx_vector_uint64_destroy(&ids);
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_hashset_destroy(&psk_owners);
@@ -3652,28 +3188,6 @@ static void	DCsync_action_conditions(DB_RESULT result)
 
 /******************************************************************************
  *                                                                            *
- * Function: DCsync_config_select                                             *
- *                                                                            *
- * Purpose: Executes SQL select statement used to synchronize configuration   *
- *          data with DCsync_config()                                         *
- *                                                                            *
- ******************************************************************************/
-static DB_RESULT	DCsync_config_select(void)
-{
-	return DBselect(
-			"select refresh_unsupported,discovery_groupid,snmptrap_logging,"
-				"severity_name_0,severity_name_1,severity_name_2,"
-				"severity_name_3,severity_name_4,severity_name_5,"
-				"hk_events_mode,hk_events_trigger,hk_events_internal,"
-				"hk_events_discovery,hk_events_autoreg,hk_services_mode,"
-				"hk_services,hk_audit_mode,hk_audit,hk_sessions_mode,hk_sessions,"
-				"hk_history_mode,hk_history_global,hk_history,hk_trends_mode,"
-				"hk_trends_global,hk_trends,default_inventory_mode"
-			" from config");
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: DCsync_configuration                                             *
  *                                                                            *
  * Purpose: Synchronize configuration data from database                      *
@@ -3685,8 +3199,6 @@ void	DCsync_configuration(void)
 {
 	const char		*__function_name = "DCsync_configuration";
 
-	DB_RESULT		conf_result = NULL;
-	DB_RESULT		host_result = NULL;
 	DB_RESULT		hi_result = NULL;
 	DB_RESULT		htmpl_result = NULL;
 	DB_RESULT		gmacro_result = NULL;
@@ -3707,47 +3219,24 @@ void	DCsync_configuration(void)
 				total, total2;
 	const zbx_strpool_t	*strpool;
 
+	zbx_dbsync_t		config_sync, hosts_sync;
+	zbx_dbsync_stats_t	config_stats, hosts_stats;
+
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
+	zbx_dbsync_init(&config_sync);
+	zbx_dbsync_init(&hosts_sync);
+
 	sec = zbx_time();
-	if (NULL == (conf_result = DCsync_config_select()))
+	if (FAIL == zbx_dbsync_compare_config(config, &config_sync))
 		goto out;
+	zbx_dbsync_get_stats(&config_sync, &config_stats);
 	csec = zbx_time() - sec;
 
 	sec = zbx_time();
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
-	if (NULL == (host_result = DBselect(
-			"select hostid,proxy_hostid,host,ipmi_authtype,ipmi_privilege,ipmi_username,"
-				"ipmi_password,maintenance_status,maintenance_type,maintenance_from,"
-				"errors_from,available,disable_until,snmp_errors_from,"
-				"snmp_available,snmp_disable_until,ipmi_errors_from,ipmi_available,"
-				"ipmi_disable_until,jmx_errors_from,jmx_available,jmx_disable_until,"
-				"status,name,lastaccess,error,snmp_error,ipmi_error,jmx_error,tls_connect,tls_accept"
-				",tls_issuer,tls_subject,tls_psk_identity,tls_psk"
-			" from hosts"
-			" where status in (%d,%d,%d,%d)"
-				" and flags<>%d",
-			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED,
-			HOST_STATUS_PROXY_ACTIVE, HOST_STATUS_PROXY_PASSIVE,
-			ZBX_FLAG_DISCOVERY_PROTOTYPE)))
-#else
-	if (NULL == (host_result = DBselect(
-			"select hostid,proxy_hostid,host,ipmi_authtype,ipmi_privilege,ipmi_username,"
-				"ipmi_password,maintenance_status,maintenance_type,maintenance_from,"
-				"errors_from,available,disable_until,snmp_errors_from,"
-				"snmp_available,snmp_disable_until,ipmi_errors_from,ipmi_available,"
-				"ipmi_disable_until,jmx_errors_from,jmx_available,jmx_disable_until,"
-				"status,name,lastaccess,error,snmp_error,ipmi_error,jmx_error,tls_connect,tls_accept"
-			" from hosts"
-			" where status in (%d,%d,%d,%d)"
-				" and flags<>%d",
-			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED,
-			HOST_STATUS_PROXY_ACTIVE, HOST_STATUS_PROXY_PASSIVE,
-			ZBX_FLAG_DISCOVERY_PROTOTYPE)))
-#endif
-	{
+	if (FAIL == zbx_dbsync_compare_hosts(config, &hosts_sync))
 		goto out;
-	}
+	zbx_dbsync_get_stats(&hosts_sync, &hosts_stats);
 	hsec = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3895,11 +3384,11 @@ void	DCsync_configuration(void)
 	START_SYNC;
 
 	sec = zbx_time();
-	DCsync_config(conf_result, &refresh_unsupported_changed);
+	DCsync_config(&config_sync.rows, &refresh_unsupported_changed);
 	csec2 = zbx_time() - sec;
 
 	sec = zbx_time();
-	DCsync_hosts(host_result);
+	DCsync_hosts(&hosts_sync.rows);
 	hsec2 = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3959,10 +3448,12 @@ void	DCsync_configuration(void)
 	total2 = csec2 + hsec2 + hisec2 + htsec2 + gmsec2 + hmsec2 + ifsec2 + isec2 + tsec2 + dsec2 + fsec2 +
 			expr_sec2 + action_sec2 + action_condition_sec2;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() config     : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
-			csec, csec2);
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() hosts      : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
-			hsec, hsec2);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() config     : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
+			__function_name, csec, csec2, config_stats.add_num, config_stats.update_num,
+			config_stats.remove_num);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() hosts      : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec. (%d/%d/%d)",
+			__function_name, hsec, hsec2, hosts_stats.add_num, hosts_stats.update_num,
+			hosts_stats.remove_num);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() host_invent: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
 			hisec, hisec2);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() templates  : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
@@ -4097,8 +3588,9 @@ void	DCsync_configuration(void)
 
 	FINISH_SYNC;
 out:
-	DBfree_result(conf_result);
-	DBfree_result(host_result);
+	zbx_dbsync_clear(&config_sync);
+	zbx_dbsync_clear(&hosts_sync);
+
 	DBfree_result(hi_result);
 	DBfree_result(htmpl_result);
 	DBfree_result(gmacro_result);
@@ -4597,20 +4089,21 @@ void	DCload_config(void)
 {
 	const char	*__function_name = "DCload_config";
 
-	DB_RESULT	result;
-	int		refresh_unsupported_changed;
+	int			refresh_unsupported_changed;
+	zbx_dbsync_t		config_sync;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	result = DCsync_config_select();
+	zbx_dbsync_init(&config_sync);
+	zbx_dbsync_compare_config(config, &config_sync);
 
 	LOCK_CACHE;
 
-	DCsync_config(result, &refresh_unsupported_changed);
+	DCsync_config(&config_sync.rows, &refresh_unsupported_changed);
 
 	UNLOCK_CACHE;
 
-	DBfree_result(result);
+	zbx_dbsync_clear(&config_sync);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -8785,4 +8278,22 @@ void	zbx_set_availability_diff_ts(int ts)
 {
 	/* this data can't be accessed simultaneously from multiple processes - locking is not necessary */
 	config->availability_diff_ts = ts;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dc_update_proxy_lastaccess                                   *
+ *                                                                            *
+ * Purpose: updates proxy last access timestamp in configuration cache        *
+ *                                                                            *
+ * Parameter: hostid     - [IN] the proxy identifier (hostid)                 *
+ *            lastaccess - [IN] the last time proxy data was received/sent    *
+ *                                                                            *
+ ******************************************************************************/
+void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
+{
+	ZBX_DC_PROXY	*proxy;
+
+	if (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_search(&config->proxies, &hostid)))
+		proxy->lastaccess = lastaccess;
 }

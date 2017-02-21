@@ -199,7 +199,12 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
  ******************************************************************************/
 void	update_proxy_lastaccess(const zbx_uint64_t hostid)
 {
-	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, time(NULL), hostid);
+	int	now;
+
+	now = time(NULL);
+
+	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, now, hostid);
+	zbx_dc_update_proxy_lastaccess(hostid, now);
 }
 
 /******************************************************************************
