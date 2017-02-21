@@ -1294,30 +1294,30 @@ done:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-static void	DCsync_host_inventory(DB_RESULT result)
+static void	DCsync_host_inventory(zbx_vector_ptr_t *rows)
 {
 	const char		*__function_name = "DCsync_host_inventory";
 
-	DB_ROW			row;
+	zbx_dbsync_row_t	*diff;
+	char			**row;
 
 	ZBX_DC_HOST_INVENTORY	*host_inventory;
 
-	int			found;
+	int			found, i;
 	zbx_uint64_t		hostid;
-	zbx_vector_uint64_t	ids;
-	zbx_hashset_iter_t	iter;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_vector_uint64_create(&ids);
-	zbx_vector_uint64_reserve(&ids, config->host_inventories.num_data + 32);
 
-	while (NULL != (row = DBfetch(result)))
+	for (i = 0; i < rows->values_num; i++)
 	{
-		ZBX_STR2UINT64(hostid, row[0]);
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
+			continue;
 
-		/* array of selected hosts */
-		zbx_vector_uint64_append(&ids, hostid);
+		row = diff->row;
+
+		ZBX_STR2UINT64(hostid, row[0]);
 
 		host_inventory = DCfind_id(&config->host_inventories, hostid, sizeof(ZBX_DC_HOST_INVENTORY), &found);
 
@@ -1328,23 +1328,17 @@ static void	DCsync_host_inventory(DB_RESULT result)
 
 	/* remove deleted or disabled hosts from buffer */
 
-	zbx_vector_uint64_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_hashset_iter_reset(&config->host_inventories, &iter);
-
-	while (NULL != (host_inventory = zbx_hashset_iter_next(&iter)))
+	for (i = 0; i < rows->values_num; i++)
 	{
-		hostid = host_inventory->hostid;
-
-		if (FAIL != zbx_vector_uint64_bsearch(&ids, hostid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+		if (ZBX_DBSYNC_ROW_REMOVE != diff->tag)
 			continue;
 
-		/* host_inventories */
+		if (NULL == (host_inventory = zbx_hashset_search(&config->host_inventories, &diff->rowid)))
+			continue;
 
-		zbx_hashset_iter_remove(&iter);
+		zbx_hashset_remove_direct(&config->host_inventories, host_inventory);
 	}
-
-	zbx_vector_uint64_destroy(&ids);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -3199,7 +3193,6 @@ void	DCsync_configuration(void)
 {
 	const char		*__function_name = "DCsync_configuration";
 
-	DB_RESULT		hi_result = NULL;
 	DB_RESULT		htmpl_result = NULL;
 	DB_RESULT		gmacro_result = NULL;
 	DB_RESULT		hmacro_result = NULL;
@@ -3219,8 +3212,8 @@ void	DCsync_configuration(void)
 				total, total2;
 	const zbx_strpool_t	*strpool;
 
-	zbx_dbsync_t		config_sync, hosts_sync;
-	zbx_dbsync_stats_t	config_stats, hosts_stats;
+	zbx_dbsync_t		config_sync, hosts_sync, hi_sync;
+	zbx_dbsync_stats_t	config_stats, hosts_stats, hi_stats;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -3240,12 +3233,9 @@ void	DCsync_configuration(void)
 	hsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (NULL == (hi_result = DBselect(
-			"select hostid,inventory_mode"
-			" from host_inventory")))
-	{
+	if (FAIL == zbx_dbsync_compare_host_inventory(config, &hi_sync))
 		goto out;
-	}
+	zbx_dbsync_get_stats(&hi_sync, &hi_stats);
 	hisec = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3392,7 +3382,7 @@ void	DCsync_configuration(void)
 	hsec2 = zbx_time() - sec;
 
 	sec = zbx_time();
-	DCsync_host_inventory(hi_result);
+	DCsync_host_inventory(&hi_sync.rows);
 	hisec2 = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3454,8 +3444,9 @@ void	DCsync_configuration(void)
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() hosts      : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec. (%d/%d/%d)",
 			__function_name, hsec, hsec2, hosts_stats.add_num, hosts_stats.update_num,
 			hosts_stats.remove_num);
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() host_invent: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
-			hisec, hisec2);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() host_invent: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
+			__function_name, hisec, hisec2, hi_stats.add_num, hi_stats.update_num,
+			hi_stats.remove_num);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() templates  : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
 			htsec, htsec2);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() globmacros : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
@@ -3590,8 +3581,8 @@ void	DCsync_configuration(void)
 out:
 	zbx_dbsync_clear(&config_sync);
 	zbx_dbsync_clear(&hosts_sync);
+	zbx_dbsync_clear(&hi_sync);
 
-	DBfree_result(hi_result);
 	DBfree_result(htmpl_result);
 	DBfree_result(gmacro_result);
 	DBfree_result(hmacro_result);

@@ -120,6 +120,86 @@ static void	dbsync_add_row(zbx_dbsync_t *sync, zbx_uint64_t rowid, unsigned char
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_dbsync_init                                                  *
+ *                                                                            *
+ * Purpose: initializes changeset                                             *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_dbsync_init(zbx_dbsync_t *sync)
+{
+	sync->columns_num = 0;
+	zbx_vector_ptr_create(&sync->rows);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_clear                                                 *
+ *                                                                            *
+ * Purpose: frees resources allocated by changeset                            *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_dbsync_clear(zbx_dbsync_t *sync)
+{
+	int			i, j;
+	zbx_dbsync_row_t	*row;
+
+	for (i = 0; i < sync->rows.values_num; i++)
+	{
+		row = (zbx_dbsync_row_t *)sync->rows.values[i];
+
+		if (ZBX_DBSYNC_ROW_ADD == row->tag || ZBX_DBSYNC_ROW_UPDATE == row->tag)
+		{
+			for (j = 0; j < sync->columns_num; j++)
+				zbx_free(row->row[j]);
+
+			zbx_free(row->row);
+		}
+
+		zbx_free(row);
+	}
+
+	zbx_vector_ptr_destroy(&sync->rows);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_get_stats                                             *
+ *                                                                            *
+ * Purpose: calculates changeset statistics                                   *
+ *                                                                            *
+ * Parameters: sync  - [IN] the changeset                                     *
+ *             stats - [OUT] the statistics                                   *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_dbsync_get_stats(const zbx_dbsync_t *sync, zbx_dbsync_stats_t *stats)
+{
+	int			i;
+	zbx_dbsync_row_t	*row;
+
+	stats->add_num = 0;
+	stats->update_num = 0;
+	stats->remove_num = 0;
+
+	for (i = 0; i < sync->rows.values_num; i++)
+	{
+		row = (zbx_dbsync_row_t *)sync->rows.values[i];
+		switch (row->tag)
+		{
+			case ZBX_DBSYNC_ROW_ADD:
+				stats->add_num++;
+				break;
+			case ZBX_DBSYNC_ROW_UPDATE:
+				stats->update_num++;
+				break;
+			case ZBX_DBSYNC_ROW_REMOVE:
+				stats->remove_num++;
+				break;
+		}
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: dbsync_compare_config_row                                        *
  *                                                                            *
  * Purpose: compares config table row with cached configuration data          *
@@ -454,80 +534,109 @@ int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_dbsync_init                                                  *
+ * Function: dbsync_compare_host_inventory                                    *
  *                                                                            *
- * Purpose: initializes changeset                                             *
+ * Purpose: compares host inventory table row with cached configuration data  *
+ *                                                                            *
+ * Parameter: hi    - [IN] the cached host inventory data                     *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-void	zbx_dbsync_init(zbx_dbsync_t *sync)
+static int	dbsync_compare_host_inventory(const ZBX_DC_HOST_INVENTORY *hi, const DB_ROW row)
 {
-	sync->columns_num = 0;
-	zbx_vector_ptr_create(&sync->rows);
+	return dbsync_compare_uchar(row[1], hi->inventory_mode);
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_dbsync_clear                                                 *
+ * Function: zbx_dbsync_compare_host_inventory                                *
  *                                                                            *
- * Purpose: frees resources allocated by changeset                            *
+ * Purpose: compares host_inventory table with cached configuration data      *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-void	zbx_dbsync_clear(zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
-	int			i, j;
-	zbx_dbsync_row_t	*row;
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	ZBX_DC_HOST_INVENTORY	*hi;
 
-	for (i = 0; i < sync->rows.values_num; i++)
+	if (NULL == (result = DBselect(
+			"select hostid,inventory_mode"
+			" from host_inventory")))
 	{
-		row = (zbx_dbsync_row_t *)sync->rows.values[i];
-
-		if (ZBX_DBSYNC_ROW_ADD == row->tag || ZBX_DBSYNC_ROW_UPDATE == row->tag)
-		{
-			for (j = 0; j < sync->columns_num; j++)
-				zbx_free(row->row[j]);
-
-			zbx_free(row->row);
-		}
-
-		zbx_free(row);
+		return FAIL;
 	}
 
-	zbx_vector_ptr_destroy(&sync->rows);
+	sync->columns_num = 2;
+
+	zbx_hashset_create(&ids, cache->host_inventories.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[0]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (hi = (ZBX_DC_HOST_INVENTORY *)zbx_hashset_search(&cache->host_inventories, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_host_inventory(hi, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+
+	}
+
+	zbx_hashset_iter_reset(&cache->host_inventories, &iter);
+	while (NULL != (hi = (ZBX_DC_HOST_INVENTORY *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &hi->hostid))
+			dbsync_add_row(sync, hi->hostid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
 }
+
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_dbsync_get_stats                                             *
+ * Function: zbx_dbsync_compare_hosts                                         *
  *                                                                            *
- * Purpose: calculates changeset statistics                                   *
+ * Purpose: compares items table with cached configuration data               *
  *                                                                            *
- * Parameters: sync  - [IN] the changeset                                     *
- *             stats - [OUT] the statistics                                   *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-void	zbx_dbsync_get_stats(const zbx_dbsync_t *sync, zbx_dbsync_stats_t *stats)
+int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
-	int			i;
-	zbx_dbsync_row_t	*row;
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	ZBX_DC_ITEM		*item;
 
-	stats->add_num = 0;
-	stats->update_num = 0;
-	stats->remove_num = 0;
 
-	for (i = 0; i < sync->rows.values_num; i++)
-	{
-		row = (zbx_dbsync_row_t *)sync->rows.values[i];
-		switch (row->tag)
-		{
-			case ZBX_DBSYNC_ROW_ADD:
-				stats->add_num++;
-				break;
-			case ZBX_DBSYNC_ROW_UPDATE:
-				stats->update_num++;
-				break;
-			case ZBX_DBSYNC_ROW_REMOVE:
-				stats->remove_num++;
-				break;
-		}
-	}
+	return SUCCEED;
 }
