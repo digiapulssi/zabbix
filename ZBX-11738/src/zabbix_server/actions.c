@@ -1797,7 +1797,7 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 		int		i;
 
 		zbx_db_insert_prepare(&db_insert, "escalations", "escalationid", "actionid", "status", "triggerid",
-					"itemid", "eventid", "r_eventid", "nextcheck", NULL);
+					"itemid", "eventid", "r_eventid", NULL);
 
 		for (i = 0; i < new_escalations.values_num; i++)
 		{
@@ -1819,7 +1819,7 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 
 			zbx_db_insert_add_values(&db_insert, __UINT64_C(0), new_escalation->actionid,
 					(int)ESCALATION_STATUS_ACTIVE, triggerid, itemid,
-					new_escalation->event->eventid, __UINT64_C(0), new_escalation->event->clock);
+					new_escalation->event->eventid, __UINT64_C(0));
 
 			zbx_free(new_escalation);
 		}

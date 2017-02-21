@@ -47,10 +47,6 @@ extern int	CONFIG_ESCALATOR_FORKS;
 #define ZBX_ESCALATION_SKIP		2
 #define ZBX_ESCALATION_PROCESS		3
 
-#define ZBX_ESC_OPERATON_CHECK		0
-#define ZBX_ESC_OPERATON_NORMAL		1
-#define ZBX_ESC_OPERATON_DO_NEXT_STEP	2
-
 typedef struct
 {
 	zbx_uint64_t	userid;
@@ -1083,13 +1079,14 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 	int		next_esc_period = 0, esc_period, next_esc_step;
 	ZBX_USER_MSG	*user_msg = NULL;
 	zbx_uint64_t	operationid;
-	unsigned char	operationtype, evaltype, operations;
+	unsigned char	operationtype, evaltype, operations, operation_is_obsolete;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	do
 	{
-		operations = ZBX_ESC_OPERATON_CHECK;
+		operations = 0;
+		operation_is_obsolete = 0;
 
 		if (0 == action->esc_period)
 		{
@@ -1185,8 +1182,10 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 			{
 				/* check if the time for executing escalation next step have not been exceeded */
 				next_esc_step = (0 != next_esc_period) ? next_esc_period : action->esc_period;
+				if (0 == escalation->nextcheck)
+					escalation->nextcheck = event->clock;
 				if (escalation->nextcheck + next_esc_step >= time(NULL))
-					operations = ZBX_ESC_OPERATON_NORMAL;
+					operations = 1;
 			}
 		}
 		DBfree_result(result);
@@ -1211,13 +1210,16 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 						action->actionid, escalation->esc_step, ZBX_OPERATION_MODE_NORMAL);
 
 				if (NULL != DBfetch(result))
-					operations = ZBX_ESC_OPERATON_DO_NEXT_STEP;
+					operation_is_obsolete = 1;
+
 				DBfree_result(result);
 			}
 
-			if (ZBX_ESC_OPERATON_NORMAL <= operations)
+			if (1 == operations || 1 == operation_is_obsolete)
 			{
 				next_esc_period = (0 != next_esc_period) ? next_esc_period : action->esc_period;
+				if (0 == escalation->nextcheck)
+					escalation->nextcheck = event->clock;
 				escalation->nextcheck += next_esc_period;
 			}
 			else
@@ -1227,7 +1229,7 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 			}
 		}
 	}
-	while (ZBX_ESC_OPERATON_DO_NEXT_STEP == operations);
+	while (1 == operation_is_obsolete);
 
 	/* schedule nextcheck for sleeping escalations */
 	if (ESCALATION_STATUS_SLEEP == escalation->status)
