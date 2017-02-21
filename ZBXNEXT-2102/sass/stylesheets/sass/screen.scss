@@ -2921,8 +2921,9 @@ $form-icon-btn: (
 }
 
 .dashbrd-edit {
-	display: inline-block;
 	position: relative;
+	display: inline-block;
+	line-height: 24px;
 	background-color: $ui-bg-color;
 	@include box-shadow(0 0 0 4px $ui-bg-color);
 
@@ -2934,8 +2935,12 @@ $form-icon-btn: (
 		top: -5px;
 		right: -5px;
 		bottom: -5px;
-		left: 5px;
+		left: -5px;
 		border: 1px solid $ui-border-color;
+	}
+
+	li:first-child {
+		padding: 0;
 	}
 }
 
