@@ -86,10 +86,10 @@ $table = (new CTableInfo())
 
 foreach ($this->data['services'] as $name => $services) {
 	if (count($services['parameters']) > 1) {
-		$table->addRow(array(
+		$table->addRow([
 			$name,
 			new CCol(SPACE, null, 4)
-		));
+		]);
 
 		foreach ($services['parameters'] as $key => $service) {
 			$color = null;
@@ -102,13 +102,13 @@ foreach ($this->data['services'] as $name => $services) {
 				$color = 'green';
 			}
 
-			$table->addRow(array(
+			$table->addRow([
 				SPACE,
 				$service['ns'],
 				isset($service['slv']) ? new CSpan($service['slv'], $color) : '-',
 				isset($services['acceptable_sla']) ? $services['acceptable_sla'] : '-',
 				new CLink('graph', 'history.php?action=showgraph&period=2592000&stime='.$data['stime'].'&itemids[]='.$key)
-			));
+			]);
 		}
 	}
 	else {
@@ -125,13 +125,13 @@ foreach ($this->data['services'] as $name => $services) {
 			$color = 'green';
 		}
 
-		$table->addRow(array(
+		$table->addRow([
 			$name,
 			SPACE,
 			isset($serviceValues['slv']) ? new CSpan($serviceValues['slv'], $color) : '-',
 			isset($services['acceptable_sla']) ? $services['acceptable_sla'] : '-',
 			new CLink('graph', 'history.php?action=showgraph&period=2592000&stime='.$data['stime'].'&itemids[]='.$itemId)
-		));
+		]);
 	}
 }
 
