@@ -1060,6 +1060,310 @@ int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	return SUCCEED;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_item                                              *
+ *                                                                            *
+ * Purpose: compares hosts table row with cached configuration data           *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            host  - [IN] the cached item                                    *
+ *            row   - [IN] the database row                                   *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, const DB_ROW row)
+{
+	ZBX_DC_NUMITEM		*numitem;
+	ZBX_DC_SNMPITEM		*snmpitem;
+	ZBX_DC_IPMIITEM		*ipmiitem;
+	ZBX_DC_FLEXITEM		*flexitem;
+	ZBX_DC_TRAPITEM		*trapitem;
+	ZBX_DC_LOGITEM		*logitem;
+	ZBX_DC_DBITEM		*dbitem;
+	ZBX_DC_SSHITEM		*sshitem;
+	ZBX_DC_TELNETITEM	*telnetitem;
+	ZBX_DC_SIMPLEITEM	*simpleitem;
+	ZBX_DC_JMXITEM		*jmxitem;
+	ZBX_DC_CALCITEM		*calcitem;
+	unsigned char		value_type, type;
+
+	if (FAIL == dbsync_compare_uint64(row[1], item->hostid))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[2], item->status))
+		return FAIL;
+
+	ZBX_STR2UCHAR(type, row[3]);
+	if (item->type != type)
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[4], item->data_type))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[9], item->port))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[26], item->flags))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uint64(row[27], item->interfaceid))
+		return FAIL;
+
+	if (ZBX_HK_OPTION_ENABLED == cache->config->hk.history_global)
+	{
+		if (item->history != cache->config->hk.history)
+			return FAIL;
+	}
+	else
+	{
+		if (FAIL == dbsync_compare_int(row[36], item->history))
+			return FAIL;
+	}
+
+	if (FAIL == dbsync_compare_uchar(row[38], item->inventory_link))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uint64(row[39], item->valuemapid))
+		return FAIL;
+
+	ZBX_STR2UCHAR(value_type, row[5]);
+	if (item->value_type != value_type)
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[6], item->key))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_int(row[15], item->delay))
+		return FAIL;
+
+	flexitem = (ZBX_DC_FLEXITEM *)zbx_hashset_search(&cache->flexitems, &item->itemid);
+	if ('\0' != *row[16])
+	{
+		if (NULL == flexitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[16], flexitem->delay_flex))
+			return FAIL;
+	}
+	else if (NULL != flexitem)
+		return FAIL;
+
+	numitem = (ZBX_DC_NUMITEM *)zbx_hashset_search(&cache->numitems, &item->itemid);
+	if (ITEM_VALUE_TYPE_FLOAT == value_type || ITEM_VALUE_TYPE_UINT64 == value_type)
+	{
+		if (NULL == numitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_uchar(row[33], numitem->delta))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_uchar(row[34], numitem->multiplier))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[35], numitem->formula))
+			return FAIL;
+
+		if (ZBX_HK_OPTION_ENABLED == cache->config->hk.trends_global)
+		{
+			if (numitem->trends != cache->config->hk.trends)
+				return FAIL;
+		}
+		else
+		{
+			if (FAIL == dbsync_compare_int(row[37], numitem->trends))
+				return FAIL;
+		}
+
+		if (FAIL == dbsync_compare_str(row[40], numitem->units))
+			return FAIL;
+	}
+	else if (NULL != numitem)
+		return FAIL;
+
+	snmpitem = (ZBX_DC_SNMPITEM *)zbx_hashset_search(&cache->snmpitems, &item->itemid);
+	if (SUCCEED == is_snmp_type(type))
+	{
+		if (NULL == snmpitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[7], snmpitem->snmp_community))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[10], snmpitem->snmpv3_securityname))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_uchar(row[11], snmpitem->snmpv3_securitylevel))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[12], snmpitem->snmpv3_authpassphrase))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[13], snmpitem->snmpv3_privpassphrase))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_uchar(row[28], snmpitem->snmpv3_authprotocol))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_uchar(row[29], snmpitem->snmpv3_privprotocol))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[30], snmpitem->snmpv3_contextname))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[8], snmpitem->snmp_oid))
+			return FAIL;
+	}
+	else if (NULL != snmpitem)
+		return FAIL;
+
+	ipmiitem = (ZBX_DC_IPMIITEM *)zbx_hashset_search(&cache->ipmiitems, &item->itemid);
+	if (ITEM_TYPE_IPMI == item->type)
+	{
+		if (NULL == ipmiitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[14], ipmiitem->ipmi_sensor))
+			return FAIL;
+	}
+	else if (NULL != ipmiitem)
+		return FAIL;
+
+	trapitem = (ZBX_DC_TRAPITEM *)zbx_hashset_search(&cache->trapitems, &item->itemid);
+	if (ITEM_TYPE_TRAPPER == item->type && '\0' != *row[17])
+	{
+		if (NULL == trapitem)
+			return FAIL;
+
+		zbx_trim_str_list(row[17], ',');
+
+		if (FAIL == dbsync_compare_str(row[17], trapitem->trapper_hosts))
+			return FAIL;
+	}
+	else if (NULL != trapitem)
+		return FAIL;
+
+	logitem = (ZBX_DC_LOGITEM *)zbx_hashset_search(&cache->logitems, &item->itemid);
+	if (ITEM_VALUE_TYPE_LOG == item->value_type && '\0' != *row[18])
+	{
+		if (NULL == logitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[18], logitem->logtimefmt))
+			return FAIL;
+	}
+	else if (NULL != logitem)
+		return FAIL;
+
+	dbitem = (ZBX_DC_DBITEM *)zbx_hashset_search(&cache->dbitems, &item->itemid);
+	if (ITEM_TYPE_DB_MONITOR == item->type && '\0' != *row[19])
+	{
+		if (NULL == dbitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[19], dbitem->params))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[22], dbitem->username))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[23], dbitem->password))
+			return FAIL;
+	}
+	else if (NULL != dbitem)
+		return FAIL;
+
+	sshitem = (ZBX_DC_SSHITEM *)zbx_hashset_search(&cache->sshitems, &item->itemid);
+	if (ITEM_TYPE_SSH == item->type)
+	{
+		if (NULL == sshitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_uchar(row[21], sshitem->authtype))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[22], sshitem->username))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[23], sshitem->password))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[24], sshitem->publickey))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[25], sshitem->privatekey))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[19], sshitem->params))
+			return FAIL;
+	}
+	else if (NULL != sshitem)
+		return FAIL;
+
+	telnetitem = (ZBX_DC_TELNETITEM *)zbx_hashset_search(&cache->telnetitems, &item->itemid);
+	if (ITEM_TYPE_TELNET == item->type)
+	{
+		if (NULL == telnetitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[22], telnetitem->username))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[23], telnetitem->password))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[19], telnetitem->params))
+			return FAIL;
+	}
+	else if (NULL != telnetitem)
+		return FAIL;
+
+	simpleitem = (ZBX_DC_SIMPLEITEM *)zbx_hashset_search(&cache->simpleitems, &item->itemid);
+	if (ITEM_TYPE_SIMPLE == item->type)
+	{
+		if (NULL == simpleitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[22], simpleitem->username))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[23], simpleitem->password))
+			return FAIL;
+	}
+	else if (NULL != simpleitem)
+		return FAIL;
+
+	jmxitem = (ZBX_DC_JMXITEM *)zbx_hashset_search(&cache->jmxitems, &item->itemid);
+	if (ITEM_TYPE_JMX == item->type)
+	{
+		if (NULL == jmxitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[22], jmxitem->username))
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[23], jmxitem->password))
+			return FAIL;
+	}
+	else if (NULL != jmxitem)
+		return FAIL;
+
+	calcitem = (ZBX_DC_CALCITEM *)zbx_hashset_search(&cache->calcitems, &item->itemid);
+	if (ITEM_TYPE_CALCULATED == item->type)
+	{
+		if (NULL == calcitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_str(row[19], calcitem->params))
+			return FAIL;
+	}
+	else if (NULL != calcitem)
+		return FAIL;
+
+	return SUCCEED;
+}
 
 /******************************************************************************
  *                                                                            *
@@ -1074,7 +1378,6 @@ int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-/*
 int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
@@ -1084,7 +1387,55 @@ int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	zbx_uint64_t		rowid;
 	ZBX_DC_ITEM		*item;
 
+	if (NULL == (result = DBselect(
+			"select i.itemid,i.hostid,i.status,i.type,i.data_type,i.value_type,i.key_,"
+				"i.snmp_community,i.snmp_oid,i.port,i.snmpv3_securityname,i.snmpv3_securitylevel,"
+				"i.snmpv3_authpassphrase,i.snmpv3_privpassphrase,i.ipmi_sensor,i.delay,i.delay_flex,"
+				"i.trapper_hosts,i.logtimefmt,i.params,i.state,i.authtype,i.username,i.password,"
+				"i.publickey,i.privatekey,i.flags,i.interfaceid,i.snmpv3_authprotocol,"
+				"i.snmpv3_privprotocol,i.snmpv3_contextname,i.lastlogsize,i.mtime,i.delta,i.multiplier,"
+				"i.formula,i.history,i.trends,i.inventory_link,i.valuemapid,i.units,i.error"
+			" from items i,hosts h"
+			" where i.hostid=h.hostid"
+				" and h.status in (%d,%d)"
+				" and i.flags<>%d",
+			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED,
+			ZBX_FLAG_DISCOVERY_PROTOTYPE)))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 42;
+
+	zbx_hashset_create(&ids, cache->interfaces.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[0]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (item = (ZBX_DC_ITEM *)zbx_hashset_search(&cache->items, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_item(cache, item, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->items, &iter);
+	while (NULL != (item = (ZBX_DC_ITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &item->itemid))
+			dbsync_add_row(sync, item->itemid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
 
 	return SUCCEED;
 }
-*/
+
