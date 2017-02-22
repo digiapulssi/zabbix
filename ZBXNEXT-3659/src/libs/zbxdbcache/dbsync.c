@@ -649,7 +649,7 @@ static int	host_template_compare_func(const void *d1, const void *d2)
  *                                                                            *
  * Function: zbx_dbsync_compare_host_templates                                *
  *                                                                            *
- * Purpose: compares hosts_templates table with cached configuration data      *
+ * Purpose: compares hosts_templates table with cached configuration data     *
  *                                                                            *
  * Parameter: cache - [IN] the configuration cache                            *
  *            sync  - [OUT] the changeset                                     *
@@ -723,7 +723,231 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_dbsync_compare_hosts                                         *
+ * Function: dbsync_compare_global_macro                                      *
+ *                                                                            *
+ * Purpose: compares global macro table row with cached configuration data    *
+ *                                                                            *
+ * Parameter: gmacro - [IN] the cached global macro data                      *
+ *            row -    [IN] the database row                                  *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_global_macro(const ZBX_DC_GMACRO *gmacro, const DB_ROW row)
+{
+	char	*macro = NULL, *context = NULL;
+	int	ret = FAIL;
+
+	if (FAIL == dbsync_compare_str(row[2], gmacro->value))
+		return FAIL;
+
+	if (SUCCEED != zbx_user_macro_parse_dyn(row[1], &macro, &context, NULL))
+		return FAIL;
+
+	if (0 != strcmp(gmacro->macro, macro))
+		goto out;
+
+	if (NULL == context)
+	{
+		if (NULL != gmacro->context)
+			goto out;
+
+		ret = SUCCEED;
+		goto out;
+	}
+
+	if (NULL == gmacro->context)
+		goto out;
+
+	if (0 == strcmp(gmacro->context, context))
+		ret = SUCCEED;
+out:
+	zbx_free(macro);
+	zbx_free(context);
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_global_macros                                 *
+ *                                                                            *
+ * Purpose: compares global macros table with cached configuration data       *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	ZBX_DC_GMACRO		*gmacro;
+
+	if (NULL == (result = DBselect(
+			"select globalmacroid,macro,value"
+			" from globalmacro")))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 3;
+
+	zbx_hashset_create(&ids, cache->gmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[0]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (gmacro = (ZBX_DC_GMACRO *)zbx_hashset_search(&cache->gmacros, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_global_macro(gmacro, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->gmacros, &iter);
+	while (NULL != (gmacro = (ZBX_DC_GMACRO *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &gmacro->globalmacroid))
+			dbsync_add_row(sync, gmacro->globalmacroid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_host_macro                                        *
+ *                                                                            *
+ * Purpose: compares host macro table row with cached configuration data      *
+ *                                                                            *
+ * Parameter: gmacro - [IN] the cached global macro data                      *
+ *            row -    [IN] the database row                                  *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_host_macro(const ZBX_DC_HMACRO *hmacro, const DB_ROW row)
+{
+	char	*macro = NULL, *context = NULL;
+	int	ret = FAIL;
+
+	if (FAIL == dbsync_compare_str(row[3], hmacro->value))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uint64(row[1], hmacro->hostid))
+		return FAIL;
+
+	if (SUCCEED != zbx_user_macro_parse_dyn(row[2], &macro, &context, NULL))
+		return FAIL;
+
+	if (0 != strcmp(hmacro->macro, macro))
+		goto out;
+
+	if (NULL == context)
+	{
+		if (NULL != hmacro->context)
+			goto out;
+
+		ret = SUCCEED;
+		goto out;
+	}
+
+	if (NULL == hmacro->context)
+		goto out;
+
+	if (0 == strcmp(hmacro->context, context))
+		ret = SUCCEED;
+out:
+	zbx_free(macro);
+	zbx_free(context);
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_host_macros                                   *
+ *                                                                            *
+ * Purpose: compares global macros table with cached configuration data       *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	ZBX_DC_HMACRO		*hmacro;
+
+	if (NULL == (result = DBselect(
+			"select hostmacroid,hostid,macro,value"
+			" from hostmacro")))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 4;
+
+	zbx_hashset_create(&ids, cache->gmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[0]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_search(&cache->hmacros, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_host_macro(hmacro, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->hmacros, &iter);
+	while (NULL != (hmacro = (ZBX_DC_GMACRO *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &hmacro->hostmacroid))
+			dbsync_add_row(sync, hmacro->hostmacroid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_items                                         *
  *                                                                            *
  * Purpose: compares items table with cached configuration data               *
  *                                                                            *
