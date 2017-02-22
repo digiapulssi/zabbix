@@ -838,7 +838,7 @@ int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *                                                                            *
  * Purpose: compares host macro table row with cached configuration data      *
  *                                                                            *
- * Parameter: gmacro - [IN] the cached global macro data                      *
+ * Parameter: hmacro - [IN] the cached host macro data                        *
  *            row -    [IN] the database row                                  *
  *                                                                            *
  * Return value: SUCCEED - the row matches configuration data                 *
@@ -914,7 +914,7 @@ int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 4;
 
-	zbx_hashset_create(&ids, cache->gmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, cache->hmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -934,7 +934,7 @@ int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	}
 
 	zbx_hashset_iter_reset(&cache->hmacros, &iter);
-	while (NULL != (hmacro = (ZBX_DC_GMACRO *)zbx_hashset_iter_next(&iter)))
+	while (NULL != (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &hmacro->hostmacroid))
 			dbsync_add_row(sync, hmacro->hostmacroid, ZBX_DBSYNC_ROW_REMOVE, NULL);
@@ -945,6 +945,122 @@ int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	return SUCCEED;
 }
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_interface                                         *
+ *                                                                            *
+ * Purpose: compares interface table row with cached configuration data       *
+ *                                                                            *
+ * Parameter: interface - [IN] the cached interface data                      *
+ *            row       - [IN] the database row                               *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ * Comments: User macros used in ip, dns fields will always make compare to   *
+ *           fail.                                                            *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_interface(const ZBX_DC_INTERFACE *interface, const DB_ROW row)
+{
+	if (FAIL == dbsync_compare_uint64(row[1], interface->hostid))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[2], interface->type))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[3], interface->main))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[4], interface->useip))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[8], interface->bulk))
+		return FAIL;
+
+	if (NULL != strstr(row[5], "{$"))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[5], interface->ip))
+		return FAIL;
+
+	if (NULL != strstr(row[6], "{$"))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[6], interface->dns))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[7], interface->port))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_interfaces                                    *
+ *                                                                            *
+ * Purpose: compares interfaces table with cached configuration data          *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	ZBX_DC_INTERFACE	*interface;
+
+	if (NULL == (result = DBselect(
+			"select interfaceid,hostid,type,main,useip,ip,dns,port,bulk"
+			" from interface")))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 9;
+
+	zbx_hashset_create(&ids, cache->interfaces.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[0]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (interface = (ZBX_DC_INTERFACE *)zbx_hashset_search(&cache->interfaces, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_interface(interface, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->interfaces, &iter);
+	while (NULL != (interface = (ZBX_DC_INTERFACE *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &interface->interfaceid))
+			dbsync_add_row(sync, interface->interfaceid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_dbsync_compare_items                                         *
