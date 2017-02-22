@@ -1064,10 +1064,10 @@ int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *                                                                            *
  * Function: dbsync_compare_item                                              *
  *                                                                            *
- * Purpose: compares hosts table row with cached configuration data           *
+ * Purpose: compares items table row with cached configuration data           *
  *                                                                            *
  * Parameter: cache - [IN] the configuration cache                            *
- *            host  - [IN] the cached item                                    *
+ *            item  - [IN] the cached item                                    *
  *            row   - [IN] the database row                                   *
  *                                                                            *
  * Return value: SUCCEED - the row matches configuration data                 *
@@ -1407,7 +1407,7 @@ int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 42;
 
-	zbx_hashset_create(&ids, cache->interfaces.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, cache->items.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -1438,4 +1438,109 @@ int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	return SUCCEED;
 }
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_trigger                                           *
+ *                                                                            *
+ * Purpose: compares triggers table row with cached configuration data        *
+ *                                                                            *
+ * Parameter: trigger - [IN] the cached trigger                               *
+ *            row     - [IN] the database row                                 *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_trigger(const ZBX_DC_TRIGGER *trigger, const DB_ROW row)
+{
+	if (FAIL == dbsync_compare_str(row[1], trigger->description))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[2], trigger->expression))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[4], trigger->priority))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[5], trigger->type))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[9], trigger->status))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_triggers                                      *
+ *                                                                            *
+ * Purpose: compares triggers table with cached configuration data            *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	ZBX_DC_TRIGGER		*trigger;
+
+	if (NULL == (result = DBselect(
+			"select distinct t.triggerid,t.description,t.expression,t.error,"
+				"t.priority,t.type,t.value,t.state,t.lastchange,t.status"
+			" from hosts h,items i,functions f,triggers t"
+			" where h.hostid=i.hostid"
+				" and i.itemid=f.itemid"
+				" and f.triggerid=t.triggerid"
+				" and h.status in (%d,%d)"
+				" and t.flags<>%d",
+			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED,
+			ZBX_FLAG_DISCOVERY_PROTOTYPE)))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 10;
+
+	zbx_hashset_create(&ids, cache->triggers.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[0]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_search(&cache->triggers, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_trigger(trigger, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->triggers, &iter);
+	while (NULL != (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &trigger->triggerid))
+			dbsync_add_row(sync, trigger->triggerid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
 
