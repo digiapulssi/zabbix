@@ -2,7 +2,7 @@
 #include "../zabbix_server/poller/checks_simple_rsm.c"
 
 #define DEFAULT_RES_IP		"127.0.0.1"
-#define DEFAULT_TESTPREFIX	"nonexistent.23242432"
+#define DEFAULT_TESTPREFIX	"www.zz--icann-monitoring"
 
 void	exit_usage(const char *progname)
 {
@@ -12,6 +12,7 @@ void	exit_usage(const char *progname)
 	fprintf(stderr, "       -i <ip>           IP address of the Name Server to test\n");
 	fprintf(stderr, "       -r <res_ip>       IP address of resolver to use (default: %s)\n", DEFAULT_RES_IP);
 	fprintf(stderr, "       -p <testprefix>   domain testprefix to use (default: %s)\n", DEFAULT_TESTPREFIX);
+	fprintf(stderr, "       -d                enable DNSSEC\n");
 	fprintf(stderr, "       -g                ignore errors, try to finish the test\n");
 	fprintf(stderr, "       -h                show this message and quit\n");
 	exit(EXIT_FAILURE);
@@ -20,7 +21,7 @@ void	exit_usage(const char *progname)
 int	main(int argc, char *argv[])
 {
 	char		err[256], *res_ip = DEFAULT_RES_IP, *tld = NULL, *ns = NULL, *ns_ip = NULL, proto = ZBX_RSM_UDP,
-			ipv4_enabled = 1, ipv6_enabled = 1, *testprefix = DEFAULT_TESTPREFIX, ignore_err = 0;
+			ipv4_enabled = 1, ipv6_enabled = 1, *testprefix = DEFAULT_TESTPREFIX, dnssec_enabled = 0, ignore_err = 0;
 	int		c, index, res_ec, rtt;
 	ldns_resolver	*res = NULL;
 	ldns_rr_list	*keys = NULL;
@@ -28,7 +29,7 @@ int	main(int argc, char *argv[])
 
 	opterr = 0;
 
-	while ((c = getopt (argc, argv, "t:n:i:r:p:gh")) != -1)
+	while ((c = getopt (argc, argv, "t:n:i:r:p:dgh")) != -1)
 	{
 		switch (c)
 		{
@@ -46,6 +47,9 @@ int	main(int argc, char *argv[])
 				break;
 			case 'p':
 				testprefix = optarg;
+				break;
+			case 'd':
+				dnssec_enabled = 1;
 				break;
 			case 'g':
 				ignore_err = 1;
@@ -81,7 +85,8 @@ int	main(int argc, char *argv[])
 		goto out;
 	}
 
-	if (SUCCEED != zbx_get_dnskeys(res, tld, res_ip, &keys, log_fd, &res_ec, err, sizeof(err)))
+	if (0 != dnssec_enabled && SUCCEED != zbx_get_dnskeys(res, tld, res_ip, &keys, log_fd, &res_ec,
+			err, sizeof(err)))
 	{
 		zbx_rsm_err(log_fd, err);
 		if (0 == ignore_err)
