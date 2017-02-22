@@ -2453,7 +2453,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		}
 	}
 
-	zbx_rsm_infof(log_fd, "start RDDS80 test (url %s, host %s)", testname, random_host);
+	zbx_rsm_infof(log_fd, "start RDDS80 test (host %s)", random_host);
 
 	/* choose random host */
 	i = zbx_random(hosts80.values_num);
