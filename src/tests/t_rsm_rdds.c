@@ -1,14 +1,14 @@
 #include "t_rsm.h"
 #include "../zabbix_server/poller/checks_simple_rsm.c"
 
-#define DEFAULT_TESTPREFIX	"nonexistent.23242432"
+#define DEFAULT_TESTPREFIX	"whois.nic"
 #define DEFAULT_MAXREDIRS	10
 
 void	exit_usage(const char *progname)
 {
-	fprintf(stderr, "usage: %s -t <tld> <[-i <ip43>] [-w <ip80>]> [-p <testprefix>] [-g] [-h]\n", progname);
+	fprintf(stderr, "usage: %s -t <tld> <[-i <ip43>] [-w <ip80>]> [-p <testprefix43>] [-q <query80>] [-m <maxredirs80>] [-g] [-h]\n", progname);
 	fprintf(stderr, "       -t <tld>          TLD to test\n");
-	fprintf(stderr, "       -i <ip43>         IP address of the RDDS server to test\n");
+	fprintf(stderr, "       -i <ip43>         IP address of RDDS server to test\n");
 	fprintf(stderr, "       -w <ip80>         IP address of Whois server to test\n");
 	fprintf(stderr, "       -p <testprefix43> domain testprefix to use in RDDS43 test (default: %s)\n",
 			DEFAULT_TESTPREFIX);
@@ -77,6 +77,12 @@ int	main(int argc, char *argv[])
 
 	for (index = optind; index < argc; index++)
 		printf("Non-option argument %s\n", argv[index]);
+
+	if (NULL != ip80 && NULL == query)
+	{
+		fprintf(stderr, "query [-q] must be specified for RDDS80 test\n");
+		exit_usage(argv[0]);
+	}
 
 	if (NULL == tld || (NULL == ip43 && NULL == ip80))
 		exit_usage(argv[0]);
