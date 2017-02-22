@@ -673,7 +673,7 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	if (NULL == (result = DBselect(
 			"select hostid,templateid"
 			" from hosts_templates"
-			" order by hostid,templateid")))
+			" order by hostid")))
 	{
 		return FAIL;
 	}
@@ -694,6 +694,7 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		}
 	}
 
+	/* add new rows, remove existing rows from index */
 	while (NULL != (row = DBfetch(result)))
 	{
 		ZBX_STR2UINT64(ht_local.hostid, row[0]);
@@ -705,6 +706,7 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			zbx_hashset_remove_direct(&htmpls, ht);
 	}
 
+	/* add removed rows */
 	zbx_hashset_iter_reset(&htmpls, &iter);
 	while (NULL != (ht = (zbx_host_template_t *)zbx_hashset_iter_next(&iter)))
 	{

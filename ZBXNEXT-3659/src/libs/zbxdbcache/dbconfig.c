@@ -1354,14 +1354,19 @@ static void	DCsync_htmpls(zbx_vector_ptr_t *rows)
 
 	int			found, i, index;
 	zbx_uint64_t		_hostid = 0, hostid, templateid;
+	zbx_vector_ptr_t	sort;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	zbx_vector_ptr_create(&sort);
 
 	for (i = 0; i < rows->values_num; i++)
 	{
 		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		/* removed rows will be always added at the end */
 		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
-			continue;
+			break;
 
 		row = diff->row;
 
@@ -1382,19 +1387,18 @@ static void	DCsync_htmpls(zbx_vector_ptr_t *rows)
 						__config_mem_free_func);
 				zbx_vector_uint64_reserve(&htmpl->templateids, 1);
 			}
+
+			/* host template ids with added rows need to be sorted */
+			zbx_vector_ptr_append(&sort, htmpl);
 		}
 
 		zbx_vector_uint64_append(&htmpl->templateids, templateid);
 	}
 
 	/* remove deleted hosts from buffer */
-
-	for (i = 0; i < rows->values_num; i++)
+	for (; i < rows->values_num; i++)
 	{
 		diff = (zbx_dbsync_row_t *)rows->values[i];
-		if (ZBX_DBSYNC_ROW_REMOVE != diff->tag)
-			continue;
-
 		row = diff->row;
 
 		ZBX_STR2UINT64(hostid, row[0]);
@@ -1418,6 +1422,15 @@ static void	DCsync_htmpls(zbx_vector_ptr_t *rows)
 		else
 			zbx_vector_uint64_remove_noorder(&htmpl->templateids, index);
 	}
+
+	/* sort the template lists with new rows */
+	for (i = 0; i < sort.values_num; i++)
+	{
+		htmpl = (ZBX_DC_HTMPL *)sort.values[i];
+		zbx_vector_uint64_sort(&htmpl->templateids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	}
+
+	zbx_vector_ptr_destroy(&sort);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
