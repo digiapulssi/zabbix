@@ -1618,5 +1618,104 @@ int	zbx_dbsync_compare_trigger_dependency(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sy
 	return SUCCEED;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_function                                          *
+ *                                                                            *
+ * Purpose: compares functions table row with cached configuration data       *
+ *                                                                            *
+ * Parameter: function - [IN] the cached function                             *
+ *            row      - [IN] the database row                                *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_function(const ZBX_DC_FUNCTION *function, const DB_ROW row)
+{
+	if (FAIL == dbsync_compare_uint64(row[0], function->itemid))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uint64(row[4], function->triggerid))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[2], function->function))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[3], function->parameter))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_functions                                     *
+ *                                                                            *
+ * Purpose: compares functions table with cached configuration data           *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	ZBX_DC_FUNCTION		*function;
+
+	if (NULL == (result = DBselect(
+			"select i.itemid,f.functionid,f.function,f.parameter,t.triggerid"
+			" from hosts h,items i,functions f,triggers t"
+			" where h.hostid=i.hostid"
+				" and i.itemid=f.itemid"
+				" and f.triggerid=t.triggerid"
+				" and h.status in (%d,%d)"
+				" and t.flags<>%d",
+			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED,
+			ZBX_FLAG_DISCOVERY_PROTOTYPE)))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 5;
+
+	zbx_hashset_create(&ids, cache->functions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[1]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (function = (ZBX_DC_FUNCTION *)zbx_hashset_search(&cache->functions, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_function(function, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->functions, &iter);
+	while (NULL != (function = (ZBX_DC_FUNCTION *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &function->functionid))
+			dbsync_add_row(sync, function->functionid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
+}
 
 

@@ -2622,7 +2622,6 @@ static void	DCsync_triggers(zbx_vector_ptr_t *rows)
 
 	int			found, i;
 	zbx_uint64_t		triggerid;
-	zbx_hashset_iter_t	iter;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -2656,6 +2655,7 @@ static void	DCsync_triggers(zbx_vector_ptr_t *rows)
 			trigger->lastchange = atoi(row[8]);
 			trigger->locked = 0;
 			trigger->expression_ex = NULL;
+			trigger->topoindex = 1;
 		}
 	}
 
@@ -2675,24 +2675,6 @@ static void	DCsync_triggers(zbx_vector_ptr_t *rows)
 			zbx_strpool_release(trigger->expression_ex);
 
 		zbx_hashset_remove_direct(&config->triggers, trigger);
-	}
-
-	/* reset internal trigger states to default values so they are updated after sync */
-	zbx_hashset_iter_reset(&config->triggers, &iter);
-	while (NULL != (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_iter_next(&iter)))
-	{
-		/* reset the cached expression to ensure the expression are expanded */
-		/* with updated user macro values                                    */
-		if (NULL != trigger->expression_ex)
-		{
-			zbx_strpool_release(trigger->expression_ex);
-			trigger->expression_ex = NULL;
-		}
-
-		trigger->topoindex = 1;
-
-		/* reset trigger functionality, it will be updated in DCsync_functions() */
-		trigger->functional = TRIGGER_FUNCTIONAL_TRUE;
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -2834,41 +2816,35 @@ static void	DCsync_trigdeps(zbx_vector_ptr_t *rows)
 		}
 	}
 
-	DCconfig_sort_triggers_topologically();
-
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-static void	DCsync_functions(DB_RESULT result)
+static void	DCsync_functions(zbx_vector_ptr_t *rows)
 {
 	const char		*__function_name = "DCsync_functions";
 
-	DB_ROW			row;
+	zbx_dbsync_row_t	*diff;
+	char			**row;
 
 	ZBX_DC_ITEM		*item;
 	ZBX_DC_FUNCTION		*function;
 	ZBX_DC_TRIGGER		*trigger;
 
-	int			i, j, k, found;
+	int			i, found;
 	zbx_uint64_t		itemid, functionid, triggerid;
-	zbx_vector_uint64_t	ids;
-	zbx_hashset_iter_t	iter;
-
-	zbx_ptr_pair_t		itemtrig;
-	zbx_vector_ptr_pair_t	itemtrigs;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	for (i = 0; i < CONFIG_TIMER_FORKS; i++)
-		zbx_vector_ptr_clear(&config->time_triggers[i]);
-
-	zbx_vector_uint64_create(&ids);
-	zbx_vector_uint64_reserve(&ids, config->functions.num_data + 32);
-
-	zbx_vector_ptr_pair_create(&itemtrigs);
-
-	while (NULL != (row = DBfetch(result)))
+	for (i = 0; i < rows->values_num; i++)
 	{
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		/* removed rows will be always added at the end */
+		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
+			break;
+
+		row = diff->row;
+
 		ZBX_STR2UINT64(itemid, row[0]);
 		ZBX_STR2UINT64(functionid, row[1]);
 		ZBX_STR2UINT64(triggerid, row[4]);
@@ -2885,16 +2861,7 @@ static void	DCsync_functions(DB_RESULT result)
 			continue;
 		}
 
-		/* process item information */
-
-		itemtrig.first = item;
-		itemtrig.second = trigger;
-
-		zbx_vector_ptr_pair_append(&itemtrigs, itemtrig);
-
 		/* process function information */
-
-		zbx_vector_uint64_append(&ids, functionid);
 
 		function = DCfind_id(&config->functions, functionid, sizeof(ZBX_DC_FUNCTION), &found);
 
@@ -2902,90 +2869,21 @@ static void	DCsync_functions(DB_RESULT result)
 		function->itemid = itemid;
 		DCstrpool_replace(found, &function->function, row[2]);
 		DCstrpool_replace(found, &function->parameter, row[3]);
-
-		/* spread triggers with time-based functions between timer processes (load balancing) */
-
-		if (SUCCEED == is_time_function(function->function))
-		{
-			i = function->triggerid % CONFIG_TIMER_FORKS;
-			zbx_vector_ptr_append(&config->time_triggers[i], trigger);
-		}
 	}
 
-	for (i = 0; i < CONFIG_TIMER_FORKS; i++)
+	/* remove deleted functions from cache */
+	for (; i < rows->values_num; i++)
 	{
-		zbx_vector_ptr_sort(&config->time_triggers[i], ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
-		zbx_vector_ptr_uniq(&config->time_triggers[i], ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
-	}
+		diff = (zbx_dbsync_row_t *)rows->values[i];
 
-	/* disable functionality for triggers with expression containing */
-	/* disabled or not monitored items                               */
-	for (i = 0; i < itemtrigs.values_num; i++)
-	{
-		trigger = (ZBX_DC_TRIGGER *)itemtrigs.values[i].second;
-
-		if (TRIGGER_FUNCTIONAL_FALSE != trigger->functional)
-		{
-			item = (ZBX_DC_ITEM *)itemtrigs.values[i].first;
-
-			if (ITEM_STATUS_DISABLED != item->status)
-			{
-				ZBX_DC_HOST	*host;
-
-				host = zbx_hashset_search(&config->hosts, &item->hostid);
-
-				if (HOST_STATUS_NOT_MONITORED != host->status)
-					continue;
-			}
-
-			trigger->functional = TRIGGER_FUNCTIONAL_FALSE;
-		}
-	}
-
-	/* update links from items to triggers */
-
-	zbx_vector_ptr_pair_sort(&itemtrigs, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
-
-	for (i = 0; i < itemtrigs.values_num; i++)
-	{
-		for (j = i + 1; j < itemtrigs.values_num; j++)
-		{
-			if (itemtrigs.values[i].first != itemtrigs.values[j].first)
-				break;
-		}
-
-		item = (ZBX_DC_ITEM *)itemtrigs.values[i].first;
-
-		item->triggers = config->items.mem_realloc_func(item->triggers, (j - i + 1) * sizeof(ZBX_DC_TRIGGER *));
-
-		for (k = i; k < j; k++)
-			item->triggers[k - i] = (ZBX_DC_TRIGGER *)itemtrigs.values[k].second;
-
-		item->triggers[j - i] = NULL;
-
-		i = j - 1;
-	}
-
-	zbx_vector_ptr_pair_destroy(&itemtrigs);
-
-	/* remove deleted functions from buffer */
-
-	zbx_vector_uint64_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_hashset_iter_reset(&config->functions, &iter);
-
-	while (NULL != (function = zbx_hashset_iter_next(&iter)))
-	{
-		if (FAIL != zbx_vector_uint64_bsearch(&ids, function->functionid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		if (NULL == (function = zbx_hashset_search(&config->functions, &diff->rowid)))
 			continue;
 
 		zbx_strpool_release(function->function);
 		zbx_strpool_release(function->parameter);
 
-		zbx_hashset_iter_remove(&iter);
+		zbx_hashset_remove_direct(&config->functions, function);
 	}
-
-	zbx_vector_uint64_destroy(&ids);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -3268,6 +3166,189 @@ static void	DCsync_action_conditions(DB_RESULT result)
 
 /******************************************************************************
  *                                                                            *
+ * Function: dc_trigger_reset_cached_expressions                              *
+ *                                                                            *
+ * Purpose: resets cached trigger expressions to ensure the expression is     *
+ *          updated after expression/macro changes                            *
+ *                                                                            *
+ ******************************************************************************/
+static void	dc_trigger_reset_cached_expressions()
+{
+	zbx_hashset_iter_t	iter;
+	ZBX_DC_TRIGGER		*trigger;
+
+	zbx_hashset_iter_reset(&config->triggers, &iter);
+	while (NULL != (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL != trigger->expression_ex)
+		{
+			zbx_strpool_release(trigger->expression_ex);
+			trigger->expression_ex = NULL;
+		}
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dc_trigger_update_topology                                       *
+ *                                                                            *
+ * Purpose: updates trigger topology after trigger dependency changes         *
+ *                                                                            *
+ ******************************************************************************/
+static void	dc_trigger_update_topology()
+{
+	zbx_hashset_iter_t	iter;
+	ZBX_DC_TRIGGER		*trigger;
+
+	zbx_hashset_iter_reset(&config->triggers, &iter);
+	while (NULL != (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_iter_next(&iter)))
+		trigger->topoindex = 1;
+
+	DCconfig_sort_triggers_topologically();
+}
+
+static int	zbx_default_uint64_pair_ptr_compare_func(const void *d1, const void *d2)
+{
+	const zbx_uint64_pair_t	*p1 = *(const zbx_uint64_pair_t **)d1;
+	const zbx_uint64_pair_t	*p2 = *(const zbx_uint64_pair_t **)d2;
+
+	ZBX_RETURN_IF_NOT_EQUAL(p1->first, p2->first);
+	ZBX_RETURN_IF_NOT_EQUAL(p1->second, p2->second);
+
+	return 0;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dc_trigger_update_cache                                          *
+ *                                                                            *
+ * Purpose: updates trigger related cache data;                               *
+ *              1) time triggers assigned to timer processes                  *
+ *              2) trigger functionality (if it uses contain disabled         *
+ *                 items/hosts)                                               *
+ *              3) list of triggers each item is used by                      *
+ *                                                                            *
+ ******************************************************************************/
+static void	dc_trigger_update_cache()
+{
+	zbx_hashset_iter_t	iter;
+	ZBX_DC_TRIGGER		*trigger;
+	ZBX_DC_FUNCTION		*function;
+	ZBX_DC_ITEM		*item;
+	int			i, j, k;
+	zbx_ptr_pair_t		itemtrig;
+	zbx_vector_ptr_pair_t	itemtrigs;
+
+	zbx_vector_ptr_pair_create(&itemtrigs);
+
+	zbx_hashset_iter_reset(&config->triggers, &iter);
+	while (NULL != (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_iter_next(&iter)))
+		trigger->functional = TRIGGER_FUNCTIONAL_TRUE;
+
+	for (i = 0; i < CONFIG_TIMER_FORKS; i++)
+		zbx_vector_ptr_clear(&config->time_triggers[i]);
+
+	zbx_hashset_iter_reset(&config->functions, &iter);
+	while (NULL != (function = (ZBX_DC_FUNCTION *)zbx_hashset_iter_next(&iter)))
+	{
+
+		if (NULL == (item = zbx_hashset_search(&config->items, &function->itemid)) ||
+				NULL == (trigger = zbx_hashset_search(&config->triggers, &function->triggerid)))
+		{
+			continue;
+		}
+
+		/* cache item - trigger link */
+		itemtrig.first = item;
+		itemtrig.second = trigger;
+		zbx_vector_ptr_pair_append(&itemtrigs, itemtrig);
+
+		/* spread triggers with time-based functions between timer processes (load balancing) */
+		if (SUCCEED == is_time_function(function->function))
+		{
+			i = function->triggerid % CONFIG_TIMER_FORKS;
+			zbx_vector_ptr_append(&config->time_triggers[i], trigger);
+		}
+	}
+
+	for (i = 0; i < CONFIG_TIMER_FORKS; i++)
+	{
+		zbx_vector_ptr_sort(&config->time_triggers[i], ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
+		zbx_vector_ptr_uniq(&config->time_triggers[i], ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
+	}
+
+	zbx_vector_ptr_pair_sort(&itemtrigs, zbx_default_uint64_pair_ptr_compare_func);
+	zbx_vector_ptr_pair_uniq(&itemtrigs, zbx_default_uint64_pair_ptr_compare_func);
+
+	/* disable functionality for triggers with expression containing */
+	/* disabled or not monitored items                               */
+	for (i = 0; i < itemtrigs.values_num; i++)
+	{
+		trigger = (ZBX_DC_TRIGGER *)itemtrigs.values[i].second;
+
+		if (TRIGGER_FUNCTIONAL_FALSE != trigger->functional)
+		{
+			item = (ZBX_DC_ITEM *)itemtrigs.values[i].first;
+
+			if (ITEM_STATUS_DISABLED != item->status)
+			{
+				ZBX_DC_HOST	*host;
+
+				host = zbx_hashset_search(&config->hosts, &item->hostid);
+
+				if (HOST_STATUS_NOT_MONITORED != host->status)
+					continue;
+			}
+
+			trigger->functional = TRIGGER_FUNCTIONAL_FALSE;
+		}
+	}
+
+	/* reset item -> trigger links */
+	zbx_hashset_iter_reset(&config->items, &iter);
+	while (NULL != (item = (ZBX_DC_ITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL != item->triggers)
+			item->triggers[0] = NULL;
+	}
+
+	/* update links from items to triggers */
+	for (i = 0; i < itemtrigs.values_num; i++)
+	{
+		for (j = i + 1; j < itemtrigs.values_num; j++)
+		{
+			if (itemtrigs.values[i].first != itemtrigs.values[j].first)
+				break;
+		}
+
+		item = (ZBX_DC_ITEM *)itemtrigs.values[i].first;
+
+		item->triggers = config->items.mem_realloc_func(item->triggers, (j - i + 1) * sizeof(ZBX_DC_TRIGGER *));
+
+		for (k = i; k < j; k++)
+			item->triggers[k - i] = (ZBX_DC_TRIGGER *)itemtrigs.values[k].second;
+
+		item->triggers[j - i] = NULL;
+
+		i = j - 1;
+	}
+
+	/* cleanup unused memory */
+	zbx_hashset_iter_reset(&config->items, &iter);
+	while (NULL != (item = (ZBX_DC_ITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL != item->triggers && NULL == item->triggers[0])
+		{
+			config->items.mem_free_func(item->triggers);
+			item->triggers = NULL;
+		}
+	}
+
+	zbx_vector_ptr_pair_destroy(&itemtrigs);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: DCsync_configuration                                             *
  *                                                                            *
  * Purpose: Synchronize configuration data from database                      *
@@ -3279,7 +3360,6 @@ void	DCsync_configuration(void)
 {
 	const char		*__function_name = "DCsync_configuration";
 
-	DB_RESULT		func_result = NULL;
 	DB_RESULT		expr_result = NULL;
 	DB_RESULT		action_result = NULL;
 	DB_RESULT		action_condition_result = NULL;
@@ -3288,13 +3368,13 @@ void	DCsync_configuration(void)
 	double			sec, csec, hsec, hisec, htsec, gmsec, hmsec, ifsec, isec, tsec, dsec, fsec, expr_sec,
 				csec2, hsec2, hisec2, htsec2, gmsec2, hmsec2, ifsec2, isec2, tsec2, dsec2, fsec2,
 				expr_sec2, action_sec, action_sec2, action_condition_sec, action_condition_sec2,
-				total, total2;
+				total, total2, update_sec;
 	const zbx_strpool_t	*strpool;
 
 	zbx_dbsync_t		config_sync, hosts_sync, hi_sync, htmpl_sync, gmacro_sync, hmacro_sync, if_sync,
-				items_sync, triggers_sync, tdep_sync;
+				items_sync, triggers_sync, tdep_sync, func_sync;
 	zbx_dbsync_stats_t	config_stats, hosts_stats, hi_stats, htmpl_stats, gmacro_stats, hmacro_stats, if_stats,
-				items_stats, triggers_stats, tdep_stats;
+				items_stats, triggers_stats, tdep_stats, func_stats;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -3308,6 +3388,7 @@ void	DCsync_configuration(void)
 	zbx_dbsync_init(&items_sync);
 	zbx_dbsync_init(&triggers_sync);
 	zbx_dbsync_init(&tdep_sync);
+	zbx_dbsync_init(&func_sync);
 
 	sec = zbx_time();
 	if (FAIL == zbx_dbsync_compare_config(config, &config_sync))
@@ -3377,19 +3458,9 @@ void	DCsync_configuration(void)
 	dsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (NULL == (func_result = DBselect(
-			"select i.itemid,f.functionid,f.function,f.parameter,t.triggerid"
-			" from hosts h,items i,functions f,triggers t"
-			" where h.hostid=i.hostid"
-				" and i.itemid=f.itemid"
-				" and f.triggerid=t.triggerid"
-				" and h.status in (%d,%d)"
-				" and t.flags<>%d",
-			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED,
-			ZBX_FLAG_DISCOVERY_PROTOTYPE)))
-	{
+	if (FAIL == zbx_dbsync_compare_functions(config, &func_sync))
 		goto out;
-	}
+	zbx_dbsync_get_stats(&func_sync, &func_stats);
 	fsec = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3466,7 +3537,7 @@ void	DCsync_configuration(void)
 	dsec2 = zbx_time() - sec;
 
 	sec = zbx_time();
-	DCsync_functions(func_result);
+	DCsync_functions(&func_sync.rows);
 	fsec2 = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3481,12 +3552,34 @@ void	DCsync_configuration(void)
 	DCsync_action_conditions(action_condition_result);
 	action_condition_sec2 = zbx_time() - sec;
 
+	sec = zbx_time();
+
+	/* reset cached trigger expressions if there are changes in triggers or macros */
+	if (0 != triggers_sync.rows.values_num || 0 != hmacro_sync.rows.values_num ||
+			0 != gmacro_sync.rows.values_num || 0 != htmpl_sync.rows.values_num)
+	{
+		dc_trigger_reset_cached_expressions();
+	}
+
+	/* update trigger topology if trigger dependency was changed */
+	if (0 != tdep_sync.rows.values_num)
+		dc_trigger_update_topology();
+
+	/* update various trigger related links in cache */
+	if (0 != hosts_sync.rows.values_num || 0 != items_sync.rows.values_num || 0 != triggers_sync.rows.values_num ||
+			0 != func_sync.rows.values_num)
+	{
+		dc_trigger_update_cache();
+	}
+
+	update_sec = zbx_time() - sec;
+
 	strpool = zbx_strpool_info();
 
 	total = csec + hsec + hisec + htsec + gmsec + hmsec + ifsec + isec + tsec + dsec + fsec + expr_sec +
 			action_sec + action_condition_sec;
 	total2 = csec2 + hsec2 + hisec2 + htsec2 + gmsec2 + hmsec2 + ifsec2 + isec2 + tsec2 + dsec2 + fsec2 +
-			expr_sec2 + action_sec2 + action_condition_sec2;
+			expr_sec2 + action_sec2 + action_condition_sec2 + update_sec;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() config     : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
 			__function_name, csec, csec2, config_stats.add_num, config_stats.update_num,
@@ -3518,14 +3611,17 @@ void	DCsync_configuration(void)
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() trigdeps   : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
 			__function_name, dsec, dsec2, tdep_stats.add_num, tdep_stats.update_num,
 			tdep_stats.remove_num);
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() functions  : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
-			fsec, fsec2);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() functions  : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
+			__function_name, fsec, fsec2, func_stats.add_num, func_stats.update_num,
+			func_stats.remove_num);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() expressions: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
 			expr_sec, expr_sec2);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() actions    : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
 			action_sec, action_sec2);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() conditions : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.",
 			__function_name, action_condition_sec, action_condition_sec2);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() reindex    : " ZBX_FS_DBL " sec.", __function_name, update_sec);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() total sql  : " ZBX_FS_DBL " sec.", __function_name, total);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() total sync : " ZBX_FS_DBL " sec.", __function_name, total2);
@@ -3646,9 +3742,8 @@ out:
 	zbx_dbsync_clear(&items_sync);
 	zbx_dbsync_clear(&triggers_sync);
 	zbx_dbsync_clear(&tdep_sync);
+	zbx_dbsync_clear(&func_sync);
 
-
-	DBfree_result(func_result);
 	DBfree_result(expr_result);
 	DBfree_result(action_result);
 	DBfree_result(action_condition_result);
