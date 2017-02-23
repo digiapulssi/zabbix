@@ -20,10 +20,11 @@ use constant AH_ALARMED_DISABLED => 'DISABLED';
 use constant AH_SERVICE_AVAILABILITY_FILE => 'serviceAvailability';
 
 use constant AH_ROOT_ZONE_DIR => 'zz--root';			# map root zone name (.) to something human readable
-use constant AH_CONTINUE_FILE => 'last_update.txt';		# name of the file containing the timestamp of the last
-								# run with --continue
-use constant AH_AUDIT_FILE => AH_BASE_DIR . '/last_audit.txt';	# name of the file containing the timestamp of the last
-								# auditlog entry that was checked (false_positive change)
+
+use constant AH_CONTINUE_FILE		=> 'last_update.txt';	# file with timestamp of last run with --continue
+use constant AH_AUDIT_FILE_PREFIX	=> AH_BASE_DIR . '/last_audit_';	# file containing timestamp of last auditlog entry that
+								# was processed, is saved per db (false_positive change):
+								# AH_AUDIT_FILE_PREFIX _ <SERVER_KEY> .txt
 
 our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_ALARMED_YES AH_ALARMED_NO AH_ALARMED_DISABLED ah_get_error
 		ah_save_alarmed ah_save_service_availability ah_save_incident ah_save_false_positive
@@ -277,10 +278,22 @@ sub ah_get_api_tld
 	return $tld;
 }
 
+sub __get_audit_file_path
+{
+	my $server_key = shift;
+
+	return AH_AUDIT_FILE_PREFIX . $server_key . '.txt';
+}
+
 # get the time of last audit log entry that was checked
 sub ah_get_last_audit
 {
-	my $audit_file = AH_AUDIT_FILE;
+	my $server_key = shift;
+
+	die("Internal error: ah_get_last_audit() server_key not specified") unless ($server_key);
+
+	my $audit_file = __get_audit_file_path($server_key);
+
 	my $handle;
 
 	if (-e $audit_file)
@@ -299,9 +312,12 @@ sub ah_get_last_audit
 
 sub ah_save_audit
 {
+	my $server_key = shift;
 	my $clock = shift;
 
-	return __write_file(AH_AUDIT_FILE, $clock);
+	die("Internal error: ah_save_audit() server_key not specified") unless ($server_key && $clock);
+
+	return __write_file(__get_audit_file_path($server_key), $clock);
 }
 
 1;

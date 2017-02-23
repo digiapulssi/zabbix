@@ -43,8 +43,10 @@ use constant AH_SERVICE_AVAILABILITY_FILE	=> 'serviceAvailability' . AH_FILE_POS
 use constant AH_INCIDENT_STATE_FILE		=> 'state' . AH_FILE_POSTFIX;
 use constant AH_FALSE_POSITIVE_FILE		=> 'falsePositive' . AH_FILE_POSTFIX;
 
-use constant AH_CONTINUE_FILE	=> 'last_update.txt';	# file with timestamp of last run with --continue
-use constant AH_AUDIT_FILE	=> 'last_audit.txt';	# file containing timestamp of last auditlog entry that was checked (false_positive change)
+use constant AH_CONTINUE_FILE		=> 'last_update.txt';	# file with timestamp of last run with --continue
+use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_server';	# file containing timestamp of last auditlog entry that
+								# was processed, is saved per db (false_positive change):
+								# AH_AUDIT_FILE_PREFIX _ <SERVER_ID> .txt
 
 use constant AH_JSON_FILE_VERSION	=> 1;
 
@@ -456,10 +458,22 @@ sub ah_get_continue_file
 	return __source_dir() . '/' . AH_CONTINUE_FILE;
 }
 
+sub __get_audit_file_path
+{
+	my $server_id = shift;
+	my $base_dir = shift;
+
+	return  $base_dir . '/' . AH_AUDIT_FILE_PREFIX . '_' . $server_id . '.txt';
+}
+
 # get the time of last audit log entry that was checked
 sub ah_get_last_audit
 {
-	my $audit_file = __source_dir() . '/' . AH_AUDIT_FILE;
+	my $server_id = shift;
+
+	die("Internal error: ah_get_last_audit() server_id not specified") unless ($server_id);
+
+	my $audit_file = __get_audit_file_path($server_id, __source_dir());
 	my $handle;
 
 	if (-e $audit_file)
@@ -478,9 +492,12 @@ sub ah_get_last_audit
 
 sub ah_save_audit
 {
+	my $server_id = shift;
 	my $clock = shift;
 
-	return __write_file(__target_dir() . '/' . AH_AUDIT_FILE, $clock);
+	die("Internal error: ah_save_audit() server_id not specified") unless ($server_id && $clock);
+
+	return __write_file(__get_audit_file_path($server_id, __target_dir()), $clock);
 }
 
 sub __encode_json
