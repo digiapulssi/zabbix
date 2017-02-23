@@ -42,8 +42,6 @@ my @server_keys = get_rsm_server_keys($config);
 
 db_connect();
 
-my $last_audit = ah_get_last_audit();
-
 my $opt_from = getopt('from');
 
 if (defined($opt_from))
@@ -953,16 +951,16 @@ foreach (keys(%$servicedata))
 # unset TLD (for the logs)
 $tld = undef;
 
+unless (opt('dry-run') or opt('tld'))
+{
+	__update_false_positives($server_key);
+}
+
 last if (opt('tld'));
 }	# for each db key
 undef($server_key);
 
 db_disconnect();
-
-unless (opt('dry-run') or opt('tld'))
-{
-	__update_false_positives();
-}
 
 if (defined($continue_file) and not opt('dry-run'))
 {
@@ -1694,13 +1692,10 @@ sub __tld_ignored
 
 sub __update_false_positives
 {
+	my $last_audit = ah_get_last_audit($server_key);
+
 	# now check for possible false_positive change in front-end
 	my $maxclock = 0;
-
-	foreach (@server_keys)
-	{
-	$server_key = $_;
-	db_connect($server_key);
 
 	my $rows_ref = db_select(
 		"select details,max(clock)".
@@ -1736,11 +1731,8 @@ sub __update_false_positives
 
 		fail("cannot update false_positive status of event with ID $eventid") unless (ah_save_false_positive($tld, $service, $eventid, $event_clock, $false_positive, $clock) == AH_SUCCESS);
 	}
-	db_disconnect();
-	}
-	undef($server_key);
 
-	ah_save_audit($maxclock) unless ($maxclock == 0);
+	ah_save_audit($server_key, $maxclock) unless ($maxclock == 0);
 }
 
 sub __validate_input
