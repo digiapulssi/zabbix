@@ -2170,7 +2170,7 @@ static void	zbx_vector_str_clean_and_destroy(zbx_vector_str_t *v)
 int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	char			*domain, *value_str = NULL, *res_ip = NULL, *testprefix = NULL, *rdds_ns_string = NULL,
-				*answer = NULL, testname[ZBX_HOST_BUF_SIZE], is_ipv4, *random_ns, err[ZBX_ERR_BUF_SIZE];
+				*answer = NULL, testname[ZBX_HOST_BUF_SIZE], is_ipv4, err[ZBX_ERR_BUF_SIZE];
 	const char		*random_host, *ip43 = NULL, *ip80 = NULL;
 	zbx_vector_str_t	hosts43, hosts80, ips43, ips80, nss;
 	FILE			*log_fd = NULL;
@@ -2410,15 +2410,17 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 	if (SUCCEED == zbx_ec_noerror(rtt43))
 	{
-		/* choose random NS from the output */
-		i = zbx_random(nss.values_num);
-		random_ns = nss.values[i];
-
-		zbx_rsm_infof(log_fd, "randomly selected Name Server server \"%s\"", random_ns);
-
 		if (0 != epp_enabled)
 		{
 			/* start RDDS UPD test, get timestamp from the host name */
+			char	*random_ns;
+
+			/* choose random NS from the output */
+			i = zbx_random(nss.values_num);
+			random_ns = nss.values[i];
+
+			zbx_rsm_infof(log_fd, "randomly selected Name Server server \"%s\"", random_ns);
+
 			if (SUCCEED != zbx_get_ts_from_host(random_ns, &ts))
 			{
 				upd43 = ZBX_EC_RDDS43_NOTS;
