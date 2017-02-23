@@ -55,8 +55,6 @@ static int	sync_in_progress = 0;
 #define TRIGGER_FUNCTIONAL_TRUE		0
 #define TRIGGER_FUNCTIONAL_FALSE	1
 
-#define ZBX_CACHE_CLEANUP		1
-
 /* shorthand macro for calling in_maintenance_without_data_collection() */
 #define DCin_maintenance_without_data_collection(dc_host, dc_item)			\
 		in_maintenance_without_data_collection(dc_host->maintenance_status,	\
@@ -1682,11 +1680,9 @@ static void	substitute_host_interface_macros(ZBX_DC_INTERFACE *interface)
  * Purpose: remove interface from SNMP address -> interfaceid index           *
  *                                                                            *
  * Parameters: interface - [IN] the interface                                 *
- *             cleanup   - [IN] 1 (ZBX_CACHE_CLEANUP) - perform index cleanup *
- *                              if necessary                                  *
  *                                                                            *
  ******************************************************************************/
-static void	dc_interface_snmpaddrs_remove(ZBX_DC_INTERFACE *interface, int cleanup)
+static void	dc_interface_snmpaddrs_remove(ZBX_DC_INTERFACE *interface)
 {
 	ZBX_DC_INTERFACE_ADDR	*ifaddr, ifaddr_local;
 	int			index;
@@ -1707,7 +1703,7 @@ static void	dc_interface_snmpaddrs_remove(ZBX_DC_INTERFACE *interface, int clean
 
 	zbx_vector_uint64_remove_noorder(&ifaddr->interfaceids, index);
 
-	if (ZBX_CACHE_CLEANUP == cleanup && 0 == ifaddr->interfaceids.values_num)
+	if (0 == ifaddr->interfaceids.values_num)
 	{
 		zbx_strpool_release(ifaddr->addr);
 		zbx_vector_uint64_destroy(&ifaddr->interfaceids);
@@ -1754,7 +1750,7 @@ static void	DCsync_interfaces(zbx_vector_ptr_t *rows)
 
 		/* remove old address->interfaceid index */
 		if (0 != found && INTERFACE_TYPE_SNMP == interface->type)
-			dc_interface_snmpaddrs_remove(interface, 0);
+			dc_interface_snmpaddrs_remove(interface);
 
 		/* see whether we should and can update interfaces_ht index at this point */
 
@@ -1875,7 +1871,7 @@ static void	DCsync_interfaces(zbx_vector_ptr_t *rows)
 			continue;
 
 		if (INTERFACE_TYPE_SNMP == interface->type)
-			dc_interface_snmpaddrs_remove(interface, ZBX_CACHE_CLEANUP);
+			dc_interface_snmpaddrs_remove(interface);
 
 		if (1 == interface->main)
 		{
@@ -1907,11 +1903,9 @@ static void	DCsync_interfaces(zbx_vector_ptr_t *rows)
  * Purpose: remove item from interfaceid -> itemid index                      *
  *                                                                            *
  * Parameters: interface - [IN] the item                                      *
- *             cleanup   - [IN] 1 (ZBX_CACHE_CLEANUP) - perform index cleanup *
- *                              if necessary                                  *
  *                                                                            *
  ******************************************************************************/
-static void	dc_interface_snmpitems_remove(ZBX_DC_ITEM *item, int cleanup)
+static void	dc_interface_snmpitems_remove(ZBX_DC_ITEM *item)
 {
 	ZBX_DC_INTERFACE_ITEM	*ifitem;
 	int			index;
@@ -1928,7 +1922,7 @@ static void	dc_interface_snmpitems_remove(ZBX_DC_ITEM *item, int cleanup)
 
 	zbx_vector_uint64_remove_noorder(&ifitem->itemids, index);
 
-	if (ZBX_CACHE_CLEANUP == cleanup && 0 == ifitem->itemids.values_num)
+	if (0 == ifitem->itemids.values_num)
 	{
 		zbx_vector_uint64_destroy(&ifitem->itemids);
 		zbx_hashset_remove_direct(&config->interface_snmpitems, ifitem);
@@ -1991,7 +1985,7 @@ static void	DCsync_items(zbx_vector_ptr_t *rows, int refresh_unsupported_changed
 		item = DCfind_id(&config->items, itemid, sizeof(ZBX_DC_ITEM), &found);
 
 		if (0 != found && ITEM_TYPE_SNMPTRAP == item->type)
-			dc_interface_snmpitems_remove(item, 0);
+			dc_interface_snmpitems_remove(item);
 
 		/* see whether we should and can update items_hk index at this point */
 
@@ -2446,7 +2440,7 @@ static void	DCsync_items(zbx_vector_ptr_t *rows, int refresh_unsupported_changed
 		itemid = item->itemid;
 
 		if (ITEM_TYPE_SNMPTRAP == item->type)
-			dc_interface_snmpitems_remove(item, ZBX_CACHE_CLEANUP);
+			dc_interface_snmpitems_remove(item);
 
 		/* numeric items */
 
@@ -2706,20 +2700,55 @@ static void	DCsync_triggers(zbx_vector_ptr_t *rows)
 
 static void	DCconfig_sort_triggers_topologically(void);
 
-static void	DCsync_trigdeps(DB_RESULT tdep_result)
+/******************************************************************************
+ *                                                                            *
+ * Function: dc_trigger_deplist_release                                       *
+ *                                                                            *
+ * Purpose: releases trigger dependency list, removing it if necessary        *
+ *                                                                            *
+ ******************************************************************************/
+static int	dc_trigger_deplist_release(ZBX_DC_TRIGGER_DEPLIST *trigdep)
+{
+	if (0 == --trigdep->refcount)
+	{
+		zbx_vector_ptr_destroy(&trigdep->dependencies);
+		zbx_hashset_remove_direct(&config->trigdeps, trigdep);
+		return SUCCEED;
+	}
+
+	return FAIL;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dc_trigder_deplist_init                                          *
+ *                                                                            *
+ * Purpose: initializes trigger dependency list                               *
+ *                                                                            *
+ ******************************************************************************/
+static void	dc_trigder_deplist_init(ZBX_DC_TRIGGER_DEPLIST *trigdep, ZBX_DC_TRIGGER *trigger)
+{
+	trigdep->refcount = 1;
+	trigdep->trigger = trigger;
+	zbx_vector_ptr_create_ext(&trigdep->dependencies, __config_mem_malloc_func, __config_mem_realloc_func,
+			__config_mem_free_func);
+}
+
+static void	DCsync_trigdeps(zbx_vector_ptr_t *rows)
 {
 	const char		*__function_name = "DCsync_trigdeps";
 
-	DB_ROW			row;
+	zbx_dbsync_row_t	*diff;
+	char			**row;
 
-	ZBX_DC_TRIGGER_DEPLIST	*trigdep, *trigdep_down, *trigdep_up;
+	ZBX_DC_TRIGGER_DEPLIST	*trigdep_down, *trigdep_up;
 
-	int			found;
-	zbx_uint64_t		triggerid, triggerid_down, triggerid_up;
+	int			found, i, index;
+	zbx_uint64_t		triggerid_down, triggerid_up;
 	zbx_vector_ptr_t	dependencies;
 	zbx_vector_uint64_t	ids_down;
 	zbx_vector_uint64_t	ids_up;
-	zbx_hashset_iter_t	iter;
+	ZBX_DC_TRIGGER		*trigger_up, *trigger_down;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -2728,97 +2757,82 @@ static void	DCsync_trigdeps(DB_RESULT tdep_result)
 	zbx_vector_uint64_create(&ids_down);
 	zbx_vector_uint64_create(&ids_up);
 
-	triggerid = 0;
-	trigdep_down = NULL;
-
-	while (NULL != (row = DBfetch(tdep_result)))
+	for (i = 0; i < rows->values_num; i++)
 	{
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		/* removed rows will be always added at the end */
+		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
+			break;
+
+		row = diff->row;
+
 		/* find trigdep_down pointer */
 
 		ZBX_STR2UINT64(triggerid_down, row[0]);
-
-		if (triggerid != triggerid_down)
-		{
-			if (NULL != trigdep_down)
-			{
-				trigdep_down->dependencies = config->trigdeps.mem_realloc_func(trigdep_down->dependencies,
-						(dependencies.values_num + 1) * sizeof(const ZBX_DC_TRIGGER_DEPLIST *));
-				memcpy(trigdep_down->dependencies, dependencies.values,
-						dependencies.values_num * sizeof(const ZBX_DC_TRIGGER_DEPLIST *));
-				trigdep_down->dependencies[dependencies.values_num] = NULL;
-
-				zbx_vector_ptr_clear(&dependencies);
-			}
-
-			triggerid = triggerid_down;
-
-			trigdep_down = DCfind_id(&config->trigdeps, triggerid_down, sizeof(ZBX_DC_TRIGGER_DEPLIST), &found);
-
-			trigdep_down->trigger = zbx_hashset_search(&config->triggers, &triggerid_down);
-
-			if (0 == found)
-				trigdep_down->dependencies = NULL;
-
-			zbx_vector_uint64_append(&ids_down, triggerid_down);
-		}
-
-		/* find trigdep_up pointer */
+		if (NULL == (trigger_down = zbx_hashset_search(&config->triggers, &triggerid_down)))
+			continue;
 
 		ZBX_STR2UINT64(triggerid_up, row[1]);
-
-		trigdep_up = DCfind_id(&config->trigdeps, triggerid_up, sizeof(ZBX_DC_TRIGGER_DEPLIST), &found);
-
-		if (0 == found)
-			trigdep_up->dependencies = NULL;
-
-		zbx_vector_uint64_append(&ids_up, triggerid_up);
-
-		zbx_vector_ptr_append(&dependencies, trigdep_up);
-	}
-
-	if (NULL != trigdep_down)
-	{
-		trigdep_down->dependencies = config->trigdeps.mem_realloc_func(trigdep_down->dependencies,
-				(dependencies.values_num + 1) * sizeof(const ZBX_DC_TRIGGER_DEPLIST *));
-		memcpy(trigdep_down->dependencies, dependencies.values,
-				dependencies.values_num * sizeof(const ZBX_DC_TRIGGER_DEPLIST *));
-		trigdep_down->dependencies[dependencies.values_num] = NULL;
-	}
-
-	zbx_vector_ptr_destroy(&dependencies);
-
-	/* remove deleted trigger dependencies from buffer */
-
-	zbx_vector_uint64_sort(&ids_up, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_hashset_iter_reset(&config->trigdeps, &iter);
-
-	while (NULL != (trigdep = zbx_hashset_iter_next(&iter)))
-	{
-		if (FAIL != zbx_vector_uint64_bsearch(&ids_down, trigdep->triggerid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		if (NULL == (trigger_up = zbx_hashset_search(&config->triggers, &triggerid_up)))
 			continue;
 
-		if (FAIL != zbx_vector_uint64_bsearch(&ids_up, trigdep->triggerid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		trigdep_down = DCfind_id(&config->trigdeps, triggerid_down, sizeof(ZBX_DC_TRIGGER_DEPLIST), &found);
+		if (0 == found)
+			dc_trigder_deplist_init(trigdep_down, trigger_down);
+		else
+			trigdep_down->refcount++;
+
+		trigdep_up = DCfind_id(&config->trigdeps, triggerid_up, sizeof(ZBX_DC_TRIGGER_DEPLIST), &found);
+		if (0 == found)
+			dc_trigder_deplist_init(trigdep_up, trigger_up);
+		else
+			trigdep_up->refcount++;
+
+		zbx_vector_ptr_append(&trigdep_down->dependencies, trigdep_up);
+	}
+
+	/* remove deleted trigger dependencies from buffer */
+	for (; i < rows->values_num; i++)
+	{
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		ZBX_STR2UINT64(triggerid_down, diff->row[0]);
+		if (NULL == (trigdep_down = (ZBX_DC_TRIGGER_DEPLIST *)zbx_hashset_search(&config->trigdeps,
+				&triggerid_down)))
 		{
-			trigdep->trigger = zbx_hashset_search(&config->triggers, &trigdep->triggerid);
-
-			if (NULL != trigdep->dependencies)
-			{
-				config->trigdeps.mem_free_func(trigdep->dependencies);
-				trigdep->dependencies = NULL;
-			}
-
 			continue;
 		}
 
-		if (NULL != trigdep->dependencies)
-			config->trigdeps.mem_free_func(trigdep->dependencies);
+		ZBX_STR2UINT64(triggerid_up, diff->row[1]);
+		if (NULL != (trigdep_up = (ZBX_DC_TRIGGER_DEPLIST *)zbx_hashset_search(&config->trigdeps,
+				&triggerid_up)))
+		{
+			dc_trigger_deplist_release(trigdep_up);
+		}
 
-		zbx_hashset_iter_remove(&iter);
+		if (SUCCEED == dc_trigger_deplist_release(trigdep_down))
+		{
+			dc_trigger_deplist_release(trigdep_up);
+		}
+		else
+		{
+			if (FAIL == (index = zbx_vector_ptr_search(&trigdep_down->dependencies, &triggerid_up,
+					ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
+			{
+				continue;
+			}
+
+			if (1 == trigdep_down->dependencies.values_num)
+			{
+				/* recreate vector to release allocated memory */
+				zbx_vector_ptr_destroy(&trigdep_down->dependencies);
+				zbx_vector_ptr_create(&trigdep_down->dependencies);
+			}
+			else
+				zbx_vector_ptr_remove_noorder(&trigdep_down->dependencies, index);
+		}
 	}
-
-	zbx_vector_uint64_destroy(&ids_down);
-	zbx_vector_uint64_destroy(&ids_up);
 
 	DCconfig_sort_triggers_topologically();
 
@@ -3265,7 +3279,6 @@ void	DCsync_configuration(void)
 {
 	const char		*__function_name = "DCsync_configuration";
 
-	DB_RESULT		tdep_result = NULL;
 	DB_RESULT		func_result = NULL;
 	DB_RESULT		expr_result = NULL;
 	DB_RESULT		action_result = NULL;
@@ -3279,9 +3292,9 @@ void	DCsync_configuration(void)
 	const zbx_strpool_t	*strpool;
 
 	zbx_dbsync_t		config_sync, hosts_sync, hi_sync, htmpl_sync, gmacro_sync, hmacro_sync, if_sync,
-				items_sync, triggers_sync;
+				items_sync, triggers_sync, tdep_sync;
 	zbx_dbsync_stats_t	config_stats, hosts_stats, hi_stats, htmpl_stats, gmacro_stats, hmacro_stats, if_stats,
-				items_stats, triggers_stats;
+				items_stats, triggers_stats, tdep_stats;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -3294,6 +3307,7 @@ void	DCsync_configuration(void)
 	zbx_dbsync_init(&if_sync);
 	zbx_dbsync_init(&items_sync);
 	zbx_dbsync_init(&triggers_sync);
+	zbx_dbsync_init(&tdep_sync);
 
 	sec = zbx_time();
 	if (FAIL == zbx_dbsync_compare_config(config, &config_sync))
@@ -3357,13 +3371,9 @@ void	DCsync_configuration(void)
 	tsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (NULL == (tdep_result = DBselect(
-			"select d.triggerid_down,d.triggerid_up"
-			" from trigger_depends d"
-			" order by d.triggerid_down")))
-	{
+	if (FAIL == zbx_dbsync_compare_trigger_dependency(config, &tdep_sync))
 		goto out;
-	}
+	zbx_dbsync_get_stats(&tdep_sync, &tdep_stats);
 	dsec = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3452,7 +3462,7 @@ void	DCsync_configuration(void)
 	tsec2 = zbx_time() - sec;
 
 	sec = zbx_time();
-	DCsync_trigdeps(tdep_result);
+	DCsync_trigdeps(&tdep_sync.rows);
 	dsec2 = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3505,8 +3515,9 @@ void	DCsync_configuration(void)
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() triggers   : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
 			__function_name, tsec, tsec2, triggers_stats.add_num, triggers_stats.update_num,
 			triggers_stats.remove_num);
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() trigdeps   : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
-			dsec, dsec2);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() trigdeps   : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
+			__function_name, dsec, dsec2, tdep_stats.add_num, tdep_stats.update_num,
+			tdep_stats.remove_num);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() functions  : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
 			fsec, fsec2);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() expressions: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
@@ -3634,8 +3645,9 @@ out:
 	zbx_dbsync_clear(&if_sync);
 	zbx_dbsync_clear(&items_sync);
 	zbx_dbsync_clear(&triggers_sync);
+	zbx_dbsync_clear(&tdep_sync);
 
-	DBfree_result(tdep_result);
+
 	DBfree_result(func_result);
 	DBfree_result(expr_result);
 	DBfree_result(action_result);
@@ -6469,10 +6481,12 @@ static int	DCconfig_check_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST 
 		return SUCCEED;
 	}
 
-	if (NULL != trigdep->dependencies)
+	if (0 != trigdep->dependencies.values_num)
 	{
-		for (i = 0; NULL != (next_trigdep = trigdep->dependencies[i]); i++)
+		for (i = 0; trigdep->dependencies.values_num; i++)
 		{
+			next_trigdep = (const ZBX_DC_TRIGGER_DEPLIST *)trigdep->dependencies.values[i];
+
 			if (NULL != (next_trigger = next_trigdep->trigger) &&
 					TRIGGER_VALUE_PROBLEM == next_trigger->value &&
 					TRIGGER_STATUS_ENABLED == next_trigger->status &&
@@ -6525,8 +6539,6 @@ static unsigned char	DCconfig_sort_triggers_topologically_rec(const ZBX_DC_TRIGG
 {
 	int				i;
 	unsigned char			topoindex = 2, next_topoindex;
-	ZBX_DC_TRIGGER			*trigger;
-	const ZBX_DC_TRIGGER		*next_trigger;
 	const ZBX_DC_TRIGGER_DEPLIST	*next_trigdep;
 
 	if (32 < level)
@@ -6536,24 +6548,23 @@ static unsigned char	DCconfig_sort_triggers_topologically_rec(const ZBX_DC_TRIGG
 		goto exit;
 	}
 
-	trigger = trigdep->trigger;
-
-	if (NULL != trigger && 0 == trigger->topoindex)
+	if (0 == trigdep->trigger->topoindex)
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "trigger dependencies contain a cycle (triggerid:" ZBX_FS_UI64 ")",
 				trigdep->triggerid);
 		goto exit;
 	}
 
-	if (NULL != trigger)
-		trigger->topoindex = 0;
+	trigdep->trigger->topoindex = 0;
 
-	for (i = 0; NULL != (next_trigdep = trigdep->dependencies[i]); i++)
+	for (i = 0; i < trigdep->dependencies.values_num; i++)
 	{
-		if (NULL != (next_trigger = next_trigdep->trigger) && 1 < (next_topoindex = next_trigger->topoindex))
+		next_trigdep = (const ZBX_DC_TRIGGER_DEPLIST *)trigdep->dependencies.values[i];
+
+		if (1 < (next_topoindex =  next_trigdep->trigger->topoindex))
 			goto next;
 
-		if (NULL == next_trigdep->dependencies)
+		if (0 == next_trigdep->dependencies.values_num)
 			continue;
 
 		next_topoindex = DCconfig_sort_triggers_topologically_rec(next_trigdep, level + 1);
@@ -6562,8 +6573,7 @@ next:
 			topoindex = next_topoindex + 1;
 	}
 
-	if (NULL != trigger)
-		trigger->topoindex = topoindex;
+	trigdep->trigger->topoindex = topoindex;
 exit:
 	return topoindex;
 }
@@ -6589,7 +6599,7 @@ static void	DCconfig_sort_triggers_topologically(void)
 	{
 		trigger = trigdep->trigger;
 
-		if ((NULL != trigger && 1 < trigger->topoindex) || NULL == trigdep->dependencies)
+		if ((NULL != trigger && 1 < trigger->topoindex) || 0 == trigdep->dependencies.values_num)
 			continue;
 
 		DCconfig_sort_triggers_topologically_rec(trigdep, 0);

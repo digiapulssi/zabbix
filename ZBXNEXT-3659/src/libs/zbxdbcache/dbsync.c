@@ -27,6 +27,30 @@
 
 extern unsigned char	program_type;
 
+/* zbx_uint64_pair_t hashset support */
+static zbx_hash_t	uint64_pair_hash_func(const void *data)
+{
+	const zbx_uint64_pair_t	*pair = (const zbx_uint64_pair_t *)data;
+
+	zbx_hash_t		hash;
+
+	hash = ZBX_DEFAULT_UINT64_HASH_FUNC(&pair->first);
+	hash = ZBX_DEFAULT_UINT64_HASH_ALGO(&pair->second, sizeof(pair->second), hash);
+
+	return hash;
+}
+
+static int	uint64_pair_compare_func(const void *d1, const void *d2)
+{
+	const zbx_uint64_pair_t	*p1 = (const zbx_uint64_pair_t *)d1;
+	const zbx_uint64_pair_t	*p2 = (const zbx_uint64_pair_t *)d2;
+
+	ZBX_RETURN_IF_NOT_EQUAL(p1->first, p2->first);
+	ZBX_RETURN_IF_NOT_EQUAL(p1->second, p2->second);
+
+	return 0;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: dbsync_compare_uint64                                            *
@@ -614,37 +638,6 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	return SUCCEED;
 }
 
-/* hostid - templateid hashset support */
-typedef struct
-{
-	zbx_uint64_t	hostid;
-	zbx_uint64_t	templateid;
-}
-zbx_host_template_t;
-
-static zbx_hash_t	host_template_hash_func(const void *data)
-{
-	const zbx_host_template_t	*ht = (const zbx_host_template_t *)data;
-
-	zbx_hash_t		hash;
-
-	hash = ZBX_DEFAULT_UINT64_HASH_FUNC(&ht->hostid);
-	hash = ZBX_DEFAULT_UINT64_HASH_ALGO(&ht->templateid, sizeof(ht->templateid), hash);
-
-	return hash;
-}
-
-static int	host_template_compare_func(const void *d1, const void *d2)
-{
-	const zbx_host_template_t	*ht1 = (const zbx_host_template_t *)d1;
-	const zbx_host_template_t	*ht2 = (const zbx_host_template_t *)d2;
-
-	ZBX_RETURN_IF_NOT_EQUAL(ht1->hostid, ht2->hostid);
-	ZBX_RETURN_IF_NOT_EQUAL(ht1->templateid, ht2->templateid);
-
-	return 0;
-}
-
 /******************************************************************************
  *                                                                            *
  * Function: zbx_dbsync_compare_host_templates                                *
@@ -666,7 +659,7 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	ZBX_DC_HTMPL		*htmpl;
 	zbx_hashset_t		htmpls;
 	int			i;
-	zbx_host_template_t	ht_local, *ht;
+	zbx_uint64_pair_t	ht_local, *ht;
 	char			hostid_s[MAX_ID_LEN + 1], templateid_s[MAX_ID_LEN + 1];
 	char			*del_row[2] = {hostid_s, templateid_s};
 
@@ -678,18 +671,18 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return FAIL;
 	}
 
-	zbx_hashset_create(&htmpls, cache->htmpls.num_data * 5, host_template_hash_func, host_template_compare_func);
+	zbx_hashset_create(&htmpls, cache->htmpls.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
 	sync->columns_num = 2;
 
 	/* index all host->template links */
 	zbx_hashset_iter_reset(&cache->htmpls, &iter);
 	while (NULL != (htmpl = (ZBX_DC_HTMPL *)zbx_hashset_iter_next(&iter)))
 	{
-		ht_local.hostid = htmpl->hostid;
+		ht_local.first = htmpl->hostid;
 
 		for (i = 0; i < htmpl->templateids.values_num; i++)
 		{
-			ht_local.templateid = htmpl->templateids.values[i];
+			ht_local.second = htmpl->templateids.values[i];
 			zbx_hashset_insert(&htmpls, &ht_local, sizeof(ht_local));
 		}
 	}
@@ -697,10 +690,10 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	/* add new rows, remove existing rows from index */
 	while (NULL != (row = DBfetch(result)))
 	{
-		ZBX_STR2UINT64(ht_local.hostid, row[0]);
-		ZBX_STR2UINT64(ht_local.templateid, row[1]);
+		ZBX_STR2UINT64(ht_local.first, row[0]);
+		ZBX_STR2UINT64(ht_local.second, row[1]);
 
-		if (NULL == (ht = (zbx_host_template_t *)zbx_hashset_search(&htmpls, &ht_local)))
+		if (NULL == (ht = (zbx_uint64_pair_t *)zbx_hashset_search(&htmpls, &ht_local)))
 			dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_ADD, row);
 		else
 			zbx_hashset_remove_direct(&htmpls, ht);
@@ -708,10 +701,10 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	/* add removed rows */
 	zbx_hashset_iter_reset(&htmpls, &iter);
-	while (NULL != (ht = (zbx_host_template_t *)zbx_hashset_iter_next(&iter)))
+	while (NULL != (ht = (zbx_uint64_pair_t *)zbx_hashset_iter_next(&iter)))
 	{
-		zbx_snprintf(hostid_s, sizeof(hostid_s), ZBX_FS_UI64, ht->hostid);
-		zbx_snprintf(templateid_s, sizeof(templateid_s), ZBX_FS_UI64, ht->templateid);
+		zbx_snprintf(hostid_s, sizeof(hostid_s), ZBX_FS_UI64, ht->first);
+		zbx_snprintf(templateid_s, sizeof(templateid_s), ZBX_FS_UI64, ht->second);
 		dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_REMOVE, del_row);
 	}
 
@@ -1542,5 +1535,88 @@ int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	return SUCCEED;
 }
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_trigger_dependency                            *
+ *                                                                            *
+ * Purpose: compares trigger_depends table with cached configuration data     *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_trigger_dependency(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		deps;
+	zbx_hashset_iter_t	iter;
+	ZBX_DC_TRIGGER_DEPLIST	*dep_down, *dep_up;
+	zbx_uint64_pair_t	*dep, dep_local;
+	char			down_s[MAX_ID_LEN + 1], up_s[MAX_ID_LEN + 1];
+	char			*del_row[2] = {down_s, up_s};
+	int			i;
+
+	if (NULL == (result = DBselect(
+			"select d.triggerid_down,d.triggerid_up"
+			" from trigger_depends d,hosts h,items i,functions f"
+			" where h.hostid=i.hostid"
+				" and i.itemid=f.itemid"
+				" and f.triggerid=d.triggerid_down"
+				" and h.status in (%d,%d)",
+			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED)))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 2;
+
+	zbx_hashset_create(&deps, cache->trigdeps.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
+
+	/* index all host->template links */
+	zbx_hashset_iter_reset(&cache->trigdeps, &iter);
+	while (NULL != (dep_down = (ZBX_DC_TRIGGER_DEPLIST *)zbx_hashset_iter_next(&iter)))
+	{
+		dep_local.first = dep_down->triggerid;
+
+		for (i = 0; i < dep_down->dependencies.values_num; i++)
+		{
+			dep_up = (ZBX_DC_TRIGGER_DEPLIST *)dep_down->dependencies.values[i];
+			dep_local.second = dep_up->triggerid;
+			zbx_hashset_insert(&deps, &dep_local, sizeof(dep_local));
+		}
+	}
+
+	/* add new rows, remove existing rows from index */
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(dep_local.first, row[0]);
+		ZBX_STR2UINT64(dep_local.second, row[1]);
+
+		if (NULL == (dep = (zbx_uint64_pair_t *)zbx_hashset_search(&deps, &dep_local)))
+			dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_ADD, row);
+		else
+			zbx_hashset_remove_direct(&deps, dep);
+	}
+
+	/* add removed rows */
+	zbx_hashset_iter_reset(&deps, &iter);
+	while (NULL != (dep = (zbx_uint64_pair_t *)zbx_hashset_iter_next(&iter)))
+	{
+		zbx_snprintf(down_s, sizeof(down_s), ZBX_FS_UI64, dep->first);
+		zbx_snprintf(up_s, sizeof(up_s), ZBX_FS_UI64, dep->second);
+		dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_REMOVE, del_row);
+	}
+
+	DBfree_result(result);
+	zbx_hashset_destroy(&deps);
+
+	return SUCCEED;
+}
+
 
 

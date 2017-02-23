@@ -46,9 +46,10 @@ ZBX_DC_TRIGGER;
 
 typedef struct zbx_dc_trigger_deplist
 {
-	zbx_uint64_t				triggerid;
-	ZBX_DC_TRIGGER				*trigger;
-	const struct zbx_dc_trigger_deplist	**dependencies;
+	zbx_uint64_t		triggerid;
+	int			refcount;
+	ZBX_DC_TRIGGER		*trigger;
+	zbx_vector_ptr_t	dependencies;
 }
 ZBX_DC_TRIGGER_DEPLIST;
 
