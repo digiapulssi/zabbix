@@ -29,6 +29,9 @@ use constant PROBE_STATUS_UP => 'Up';
 use constant PROBE_STATUS_DOWN => 'Down';
 use constant PROBE_STATUS_UNKNOWN => 'Unknown';
 
+print("FATAL: this script is incomplete, it lacks support for RDDS (phase 1), multi-db etc.\n");
+exit(-1);
+
 parse_opts('date=s', 'tld=s', 'probe=s', 'service=s', 'day=n', 'shift=n');
 setopt('nolog');
 
