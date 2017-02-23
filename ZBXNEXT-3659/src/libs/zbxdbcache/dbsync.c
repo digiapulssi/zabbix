@@ -1718,4 +1718,100 @@ int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	return SUCCEED;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_expression                                        *
+ *                                                                            *
+ * Purpose: compares expressions table row with cached configuration data     *
+ *                                                                            *
+ * Parameter: expression - [IN] the cached expression                         *
+ *            row        - [IN] the database row                              *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_expression(const ZBX_DC_EXPRESSION *expression, const DB_ROW row)
+{
+	if (FAIL == dbsync_compare_str(row[0], expression->regexp))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[2], expression->expression))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[3], expression->type))
+		return FAIL;
+
+	if (*row[4] != expression->delimiter)
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[5], expression->case_sensitive))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_exprssions                                    *
+ *                                                                            *
+ * Purpose: compares expressions tables with cached configuration data        *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	ZBX_DC_EXPRESSION	*expression;
+
+	if (NULL == (result = DBselect(
+			"select r.name,e.expressionid,e.expression,e.expression_type,e.exp_delimiter,e.case_sensitive"
+			" from regexps r,expressions e"
+			" where r.regexpid=e.regexpid")))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 6;
+
+	zbx_hashset_create(&ids, cache->expressions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[1]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_search(&cache->expressions, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_expression(expression, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->expressions, &iter);
+	while (NULL != (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &expression->expressionid))
+			dbsync_add_row(sync, expression->expressionid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
+}
 

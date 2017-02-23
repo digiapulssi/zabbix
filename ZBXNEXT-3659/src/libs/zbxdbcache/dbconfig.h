@@ -395,6 +395,7 @@ typedef struct
 {
 	zbx_uint64_t	expressionid;
 	const char	*expression;
+	const char	*regexp;
 	char		delimiter;
 	unsigned char	type;
 	unsigned char	case_sensitive;

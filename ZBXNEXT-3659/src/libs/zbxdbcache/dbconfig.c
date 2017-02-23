@@ -2888,6 +2888,35 @@ static void	DCsync_functions(zbx_vector_ptr_t *rows)
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dc_regexp_remove_expression                                      *
+ *                                                                            *
+ * Purpose: removes expression from regexp                                    *
+ *                                                                            *
+ ******************************************************************************/
+static ZBX_DC_REGEXP	*dc_regexp_remove_expression(const char *regexp_name, zbx_uint64_t expressionid)
+{
+	ZBX_DC_REGEXP	*regexp, regexp_local;
+	int		index;
+
+	regexp_local.name = regexp_name;
+
+	if (NULL == (regexp = zbx_hashset_search(&config->regexps, &regexp_local)))
+		return NULL;
+
+	if (FAIL == (index = zbx_vector_uint64_search(&regexp->expressionids, expressionid,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+	{
+		return NULL;
+	}
+
+	zbx_vector_uint64_remove_noorder(&regexp->expressionids, index);
+
+	return regexp;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DCsync_expressions                                               *
@@ -2897,56 +2926,55 @@ static void	DCsync_functions(zbx_vector_ptr_t *rows)
  * Parameters: result - [IN] the result of expressions database select        *
  *                                                                            *
  ******************************************************************************/
-static void	DCsync_expressions(DB_RESULT result)
+static void	DCsync_expressions(zbx_vector_ptr_t *rows)
 {
 	const char		*__function_name = "DCsync_expressions";
-	DB_ROW			row;
+	zbx_dbsync_row_t	*diff;
+	char			**row;
 	zbx_hashset_iter_t	iter;
 	ZBX_DC_EXPRESSION	*expression;
-	ZBX_DC_REGEXP		*regexp;
-	zbx_vector_uint64_t	ids;
+	ZBX_DC_REGEXP		*regexp, regexp_local;
+	zbx_uint64_t		expressionid;
+	int 			found, i;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_vector_uint64_create(&ids);
-	zbx_vector_uint64_reserve(&ids, config->expressions.num_data + 32);
-
-	zbx_hashset_iter_reset(&config->regexps, &iter);
-
-	/* reset regexp -> expressions mapping */
-	while (NULL != (regexp = zbx_hashset_iter_next(&iter)))
-		zbx_vector_uint64_clear(&regexp->expressionids);
-
-	/* update expressions from db */
-	while (NULL != (row = DBfetch(result)))
+	for (i = 0; i < rows->values_num; i++)
 	{
-		ZBX_DC_REGEXP	new_regexp;
-		zbx_uint64_t	expressionid;
-		int 		found;
+		diff = (zbx_dbsync_row_t *)rows->values[i];
 
-		new_regexp.name = row[0];
+		/* removed rows will be always added at the end */
+		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
+			break;
 
-		if (NULL == (regexp = zbx_hashset_search(&config->regexps, &new_regexp)))
+		row = diff->row;
+
+		ZBX_STR2UINT64(expressionid, row[1]);
+		expression = DCfind_id(&config->expressions, expressionid, sizeof(ZBX_DC_EXPRESSION), &found);
+
+		if (0 != found)
+			dc_regexp_remove_expression(expression->regexp, expressionid);
+
+		DCstrpool_replace(found, &expression->regexp, row[0]);
+		DCstrpool_replace(found, &expression->expression, row[2]);
+		ZBX_STR2UCHAR(expression->type, row[3]);
+		ZBX_STR2UCHAR(expression->case_sensitive, row[5]);
+		expression->delimiter = *row[4];
+
+		regexp_local.name = row[0];
+
+		if (NULL == (regexp = zbx_hashset_search(&config->regexps, &regexp_local)))
 		{
-			DCstrpool_replace(0, &new_regexp.name, row[0]);
-			zbx_vector_uint64_create_ext(&new_regexp.expressionids,
+			DCstrpool_replace(0, &regexp_local.name, row[0]);
+			zbx_vector_uint64_create_ext(&regexp_local.expressionids,
 					__config_mem_malloc_func,
 					__config_mem_realloc_func,
 					__config_mem_free_func);
 
-			regexp = zbx_hashset_insert(&config->regexps, &new_regexp, sizeof(ZBX_DC_REGEXP));
+			regexp = zbx_hashset_insert(&config->regexps, &regexp_local, sizeof(ZBX_DC_REGEXP));
 		}
 
-		ZBX_STR2UINT64(expressionid, row[1]);
 		zbx_vector_uint64_append(&regexp->expressionids, expressionid);
-
-		expression = DCfind_id(&config->expressions, expressionid, sizeof(ZBX_DC_EXPRESSION), &found);
-		DCstrpool_replace(found, &expression->expression, row[2]);
-		expression->type = (unsigned char)atoi(row[3]);
-		expression->delimiter = *row[4];
-		expression->case_sensitive = (unsigned char)atoi(row[5]);
-
-		zbx_vector_uint64_append(&ids, expressionid);
 	}
 
 	/* remove regexps with no expressions related to it */
@@ -2963,19 +2991,27 @@ static void	DCsync_expressions(DB_RESULT result)
 	}
 
 	/* remove unused expressions */
-	zbx_vector_uint64_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-	zbx_hashset_iter_reset(&config->expressions, &iter);
-
-	while (NULL != (expression = zbx_hashset_iter_next(&iter)))
+	for (; i < rows->values_num; i++)
 	{
-		if (FAIL != zbx_vector_uint64_bsearch(&ids, expression->expressionid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		if (NULL == (expression = zbx_hashset_search(&config->expressions, &diff->rowid)))
 			continue;
 
-		zbx_strpool_release(expression->expression);
-		zbx_hashset_iter_remove(&iter);
-	}
+		if (NULL != (regexp = dc_regexp_remove_expression(expression->regexp, expression->expressionid)))
+		{
+			if (0 == regexp->expressionids.values_num)
+			{
+				zbx_strpool_release(regexp->name);
+				zbx_vector_uint64_destroy(&regexp->expressionids);
+				zbx_hashset_remove_direct(&config->regexps, regexp);
+			}
+		}
 
-	zbx_vector_uint64_destroy(&ids);
+		zbx_strpool_release(expression->expression);
+		zbx_strpool_release(expression->regexp);
+		zbx_hashset_remove_direct(&config->expressions, expression);
+	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -3372,9 +3408,9 @@ void	DCsync_configuration(void)
 	const zbx_strpool_t	*strpool;
 
 	zbx_dbsync_t		config_sync, hosts_sync, hi_sync, htmpl_sync, gmacro_sync, hmacro_sync, if_sync,
-				items_sync, triggers_sync, tdep_sync, func_sync;
+				items_sync, triggers_sync, tdep_sync, func_sync, expr_sync;
 	zbx_dbsync_stats_t	config_stats, hosts_stats, hi_stats, htmpl_stats, gmacro_stats, hmacro_stats, if_stats,
-				items_stats, triggers_stats, tdep_stats, func_stats;
+				items_stats, triggers_stats, tdep_stats, func_stats, expr_stats;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -3389,6 +3425,7 @@ void	DCsync_configuration(void)
 	zbx_dbsync_init(&triggers_sync);
 	zbx_dbsync_init(&tdep_sync);
 	zbx_dbsync_init(&func_sync);
+	zbx_dbsync_init(&expr_sync);
 
 	sec = zbx_time();
 	if (FAIL == zbx_dbsync_compare_config(config, &config_sync))
@@ -3464,13 +3501,9 @@ void	DCsync_configuration(void)
 	fsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (NULL == (expr_result = DBselect(
-			"select r.name,e.expressionid,e.expression,e.expression_type,e.exp_delimiter,e.case_sensitive"
-			" from regexps r,expressions e"
-			" where r.regexpid=e.regexpid")))
-	{
+	if (FAIL == zbx_dbsync_compare_expressions(config, &expr_sync))
 		goto out;
-	}
+	zbx_dbsync_get_stats(&expr_sync, &expr_stats);
 	expr_sec = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3541,7 +3574,7 @@ void	DCsync_configuration(void)
 	fsec2 = zbx_time() - sec;
 
 	sec = zbx_time();
-	DCsync_expressions(expr_result);
+	DCsync_expressions(&expr_sync.rows);
 	expr_sec2 = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3614,8 +3647,9 @@ void	DCsync_configuration(void)
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() functions  : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
 			__function_name, fsec, fsec2, func_stats.add_num, func_stats.update_num,
 			func_stats.remove_num);
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() expressions: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
-			expr_sec, expr_sec2);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() expressions: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
+			__function_name, expr_sec, expr_sec2, expr_stats.add_num, expr_stats.update_num,
+			expr_stats.remove_num);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() actions    : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
 			action_sec, action_sec2);
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() conditions : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.",
