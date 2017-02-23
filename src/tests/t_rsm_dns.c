@@ -83,7 +83,7 @@ int	main(int argc, char *argv[])
 	if (NULL == tld || NULL == ns || NULL == ns_ip)
 		exit_usage(argv[0]);
 
-	printf("tld:%s, ns:%s, ip:%s, res:%s, testprefix:%s\n", tld, ns, ns_ip, res_ip, testprefix);
+	zbx_rsm_infof(log_fd, "tld:%s, ns:%s, ip:%s, res:%s, testprefix:%s", tld, ns, ns_ip, res_ip, testprefix);
 
 	/* create resolver */
 	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, log_fd,
@@ -99,14 +99,14 @@ int	main(int argc, char *argv[])
 		{
 			if (NULL == (log_fd = fopen(LOG_FILE1, "w")))
 			{
-				fprintf(stderr, "cannot open file \"%s\" for writing: %s\n", LOG_FILE1, strerror(errno));
+				zbx_rsm_errf(stderr, "cannot open file \"%s\" for writing: %s", LOG_FILE1, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
 
 		if (SUCCEED != zbx_get_dnskeys(res, tld, res_ip, &keys, log_fd, &res_ec, err, sizeof(err)))
 		{
-			zbx_rsm_err(log_fd, err);
+			zbx_rsm_err(stderr, err);
 			if (0 == ignore_err)
 				goto out;
 		}
@@ -116,31 +116,31 @@ int	main(int argc, char *argv[])
 	{
 		if (0 != fclose(log_fd))
 		{
-			fprintf(stderr, "cannot close file %s: %s\n", LOG_FILE1, strerror(errno));
+			zbx_rsm_errf(stderr, "cannot close file %s: %s", LOG_FILE1, strerror(errno));
 			goto out;
 		}
 
 		if (NULL == (log_fd = fopen(LOG_FILE2, "w")))
 		{
-			fprintf(stderr, "cannot open file \"%s\" for writing: %s\n", LOG_FILE2, strerror(errno));
-			exit(EXIT_FAILURE);
+			zbx_rsm_errf(stderr, "cannot open file \"%s\" for writing: %s", LOG_FILE2, strerror(errno));
+			goto out;
 		}
 	}
 
 	if (SUCCEED != zbx_get_ns_ip_values(res, ns, ns_ip, keys, testprefix, tld, log_fd, &rtt, NULL, ipv4_enabled,
 					ipv6_enabled, 0, err, sizeof(err)))
 	{
-		zbx_rsm_err(log_fd, err);
+		zbx_rsm_err(stderr, err);
 		if (0 == ignore_err)
 			goto out;
 	}
 
-	printf("OK\n");
+	printf("OK (RTT:%d)\n", rtt);
 out:
 	if (log_to_file != 0)
 	{
 		if (0 != fclose(log_fd))
-			fprintf(stderr, "cannot close file: %s\n", strerror(errno));
+			zbx_rsm_errf(stderr, "cannot close log file: %s", strerror(errno));
 	}
 
 	if (NULL != keys)
