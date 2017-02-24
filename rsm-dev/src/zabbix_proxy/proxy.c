@@ -55,6 +55,8 @@
 #include "setproctitle.h"
 #include "../libs/zbxcrypto/tls.h"
 
+#include "rsm.h"	/* zbx_read_stdin() */
+
 #define DEFAULT_CONFIG_FILE	SYSCONFDIR "/zabbix_proxy.conf"
 
 const char	*progname = NULL;
