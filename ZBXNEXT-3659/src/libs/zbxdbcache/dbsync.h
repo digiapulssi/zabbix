@@ -62,8 +62,8 @@ typedef struct
 }
 zbx_dbsync_stats_t;
 
-void zbx_dbsync_init(zbx_dbsync_t *diff);
-void zbx_dbsync_clear(zbx_dbsync_t *diff);
+void	zbx_dbsync_init(zbx_dbsync_t *diff);
+void	zbx_dbsync_clear(zbx_dbsync_t *diff);
 void	zbx_dbsync_get_stats(const zbx_dbsync_t *sync, zbx_dbsync_stats_t *stats);
 
 int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);

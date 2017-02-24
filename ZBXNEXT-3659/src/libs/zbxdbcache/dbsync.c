@@ -27,6 +27,59 @@
 
 extern unsigned char	program_type;
 
+typedef struct
+{
+	zbx_hashset_t	strpool;
+	int		refcount;
+}
+zbx_dbsync_env_t;
+
+static zbx_dbsync_env_t	dbsync_env;
+
+/* string pool support */
+
+#define REFCOUNT_FIELD_SIZE	sizeof(zbx_uint32_t)
+
+static zbx_hash_t	dbsync_strpool_hash_func(const void *data)
+{
+	return ZBX_DEFAULT_STRING_HASH_FUNC((char *)data + REFCOUNT_FIELD_SIZE);
+}
+
+static int	dbsync_strpool_compare_func(const void *d1, const void *d2)
+{
+	return strcmp((char *)d1 + REFCOUNT_FIELD_SIZE, (char *)d2 + REFCOUNT_FIELD_SIZE);
+}
+
+static char	*dbsync_strdup(const char *str)
+{
+	void	*ptr;
+
+	ptr = zbx_hashset_search(&dbsync_env.strpool, str - REFCOUNT_FIELD_SIZE);
+
+	if (NULL == ptr)
+	{
+		ptr = zbx_hashset_insert_ext(&dbsync_env.strpool, str - REFCOUNT_FIELD_SIZE,
+				REFCOUNT_FIELD_SIZE + strlen(str) + 1, REFCOUNT_FIELD_SIZE);
+
+		*(zbx_uint32_t *)ptr = 0;
+	}
+
+	(*(zbx_uint32_t *)ptr)++;
+
+	return (char *)ptr + REFCOUNT_FIELD_SIZE;
+}
+
+static void	dbsync_strfree(char *str)
+{
+	if (NULL != str)
+	{
+		void	*ptr = str - REFCOUNT_FIELD_SIZE;
+
+		if (0 == --(*(zbx_uint32_t *)ptr))
+			zbx_hashset_remove_direct(&dbsync_env.strpool, ptr);
+	}
+}
+
 /* zbx_uint64_pair_t hashset support */
 static zbx_hash_t	uint64_pair_hash_func(const void *data)
 {
@@ -49,6 +102,32 @@ static int	uint64_pair_compare_func(const void *d1, const void *d2)
 	ZBX_RETURN_IF_NOT_EQUAL(p1->second, p2->second);
 
 	return 0;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_env_init                                                  *
+ *                                                                            *
+ ******************************************************************************/
+static void	dbsync_env_init()
+{
+	if (0 < dbsync_env.refcount++)
+		return;
+
+	zbx_hashset_create(&dbsync_env.strpool, 100, dbsync_strpool_hash_func, dbsync_strpool_compare_func);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_env_release                                               *
+ *                                                                            *
+ ******************************************************************************/
+static void	dbsync_env_release()
+{
+	if (0 < --dbsync_env.refcount)
+		return;
+
+	zbx_hashset_destroy(&dbsync_env.strpool);
 }
 
 /******************************************************************************
@@ -134,7 +213,7 @@ static void	dbsync_add_row(zbx_dbsync_t *sync, zbx_uint64_t rowid, unsigned char
 		row->row = (char **)zbx_malloc(NULL, sizeof(char *) * sync->columns_num);
 
 		for (i = 0; i < sync->columns_num; i++)
-			row->row[i] = (SUCCEED == DBis_null(dbrow[i]) ? NULL : zbx_strdup(NULL, dbrow[i]));
+			row->row[i] = (SUCCEED == DBis_null(dbrow[i]) ? NULL : dbsync_strdup(dbrow[i]));
 	}
 	else
 		row->row = NULL;
@@ -151,6 +230,8 @@ static void	dbsync_add_row(zbx_dbsync_t *sync, zbx_uint64_t rowid, unsigned char
  ******************************************************************************/
 void	zbx_dbsync_init(zbx_dbsync_t *sync)
 {
+	dbsync_env_init();
+
 	sync->columns_num = 0;
 	zbx_vector_ptr_create(&sync->rows);
 }
@@ -174,7 +255,7 @@ void	zbx_dbsync_clear(zbx_dbsync_t *sync)
 		if (NULL != row->row)
 		{
 			for (j = 0; j < sync->columns_num; j++)
-				zbx_free(row->row[j]);
+				dbsync_strfree(row->row[j]);
 
 			zbx_free(row->row);
 		}
@@ -183,6 +264,8 @@ void	zbx_dbsync_clear(zbx_dbsync_t *sync)
 	}
 
 	zbx_vector_ptr_destroy(&sync->rows);
+
+	dbsync_env_release();
 }
 
 /******************************************************************************
@@ -2004,3 +2087,4 @@ int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *syn
 
 	return SUCCEED;
 }
+
