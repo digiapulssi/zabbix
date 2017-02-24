@@ -417,6 +417,7 @@ ZBX_DC_CONFIG_TABLE;
 typedef struct
 {
 	zbx_uint64_t	conditionid;
+	zbx_uint64_t	actionid;
 
 	unsigned char	conditiontype;
 	unsigned char	operator;

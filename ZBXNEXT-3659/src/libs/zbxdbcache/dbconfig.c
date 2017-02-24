@@ -3031,28 +3031,29 @@ static void	DCsync_expressions(zbx_vector_ptr_t *rows)
  *           3 - formula                                                      *
  *                                                                            *
  ******************************************************************************/
-static void	DCsync_actions(DB_RESULT result)
+static void	DCsync_actions(zbx_vector_ptr_t *rows)
 {
 	const char		*__function_name = "DCsync_actions";
 
-	DB_ROW			row;
-	zbx_vector_uint64_t	ids;
+	zbx_dbsync_row_t	*diff;
+	char			**row;
 	zbx_uint64_t		actionid;
 	zbx_dc_action_t		*action;
-	int			found;
-	zbx_hashset_iter_t	iter;
+	int			found, i;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_vector_uint64_create(&ids);
-	zbx_vector_uint64_reserve(&ids, config->actions.num_data + 32);
-
-	while (NULL != (row = DBfetch(result)))
+	for (i = 0; i < rows->values_num; i++)
 	{
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		/* removed rows will be always added at the end */
+		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
+			break;
+
+		row = diff->row;
+
 		ZBX_STR2UINT64(actionid, row[0]);
-
-		zbx_vector_uint64_append(&ids, actionid);
-
 		action = DCfind_id(&config->actions, actionid, sizeof(zbx_dc_action_t), &found);
 
 		if (0 == found)
@@ -3067,30 +3068,21 @@ static void	DCsync_actions(DB_RESULT result)
 		ZBX_STR2UCHAR(action->evaltype, row[2]);
 
 		DCstrpool_replace(found, &action->formula, row[3]);
-
-		/* reset conditions vector */
-		zbx_vector_ptr_clear(&action->conditions);
 	}
 
 	/* remove deleted actions */
-
-	zbx_vector_uint64_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_hashset_iter_reset(&config->actions, &iter);
-
-	while (NULL != (action = zbx_hashset_iter_next(&iter)))
+	for (; i < rows->values_num; i++)
 	{
-		if (FAIL != zbx_vector_uint64_bsearch(&ids, action->actionid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		if (NULL == (action = zbx_hashset_search(&config->actions, &diff->rowid)))
 			continue;
 
 		zbx_strpool_release(action->formula);
-
 		zbx_vector_ptr_destroy(&action->conditions);
 
-		zbx_hashset_iter_remove(&iter);
+		zbx_hashset_remove_direct(&config->actions, action);
 	}
-
-	zbx_vector_uint64_destroy(&ids);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -3130,25 +3122,32 @@ static int	dc_compare_action_conditions_by_type(const void *d1, const void *d2)
  *           4 - value                                                        *
  *                                                                            *
  ******************************************************************************/
-static void	DCsync_action_conditions(DB_RESULT result)
+static void	DCsync_action_conditions(zbx_vector_ptr_t *rows)
 {
 	const char			*__function_name = "DCsync_action_conditions";
 
-	DB_ROW				row;
-	zbx_vector_uint64_t		ids;
+	zbx_dbsync_row_t		*diff;
+	char				**row;
 	zbx_uint64_t			actionid, conditionid;
 	zbx_dc_action_t			*action;
 	zbx_dc_action_condition_t	*condition;
-	int				found;
-	zbx_hashset_iter_t		iter;
+	int				found, i, index;
+	zbx_vector_ptr_t		actions;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_vector_uint64_create(&ids);
-	zbx_vector_uint64_reserve(&ids, config->action_conditions.num_data + 32);
+	zbx_vector_ptr_create(&actions);
 
-	while (NULL != (row = DBfetch(result)))
+	for (i = 0; i < rows->values_num; i++)
 	{
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		/* removed rows will be always added at the end */
+		if (ZBX_DBSYNC_ROW_REMOVE == diff->tag)
+			break;
+
+		row = diff->row;
+
 		ZBX_STR2UINT64(actionid, row[1]);
 
 		if (NULL == (action = zbx_hashset_search(&config->actions, &actionid)))
@@ -3156,46 +3155,58 @@ static void	DCsync_action_conditions(DB_RESULT result)
 
 		ZBX_STR2UINT64(conditionid, row[0]);
 
-		zbx_vector_uint64_append(&ids, conditionid);
-
 		condition = DCfind_id(&config->action_conditions, conditionid, sizeof(zbx_dc_action_condition_t),
 				&found);
 
+		condition->actionid = actionid;
 		ZBX_STR2UCHAR(condition->conditiontype, row[2]);
 		ZBX_STR2UCHAR(condition->operator, row[3]);
 
 		DCstrpool_replace(found, &condition->value, row[4]);
 
-		zbx_vector_ptr_append(&action->conditions, condition);
+		if (0 == found)
+			zbx_vector_ptr_append(&action->conditions, condition);
+
+		zbx_vector_ptr_append(&actions, action);
 	}
 
 	/* remove deleted conditions */
-
-	zbx_vector_uint64_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_hashset_iter_reset(&config->action_conditions, &iter);
-
-	while (NULL != (condition = zbx_hashset_iter_next(&iter)))
+	for (; i < rows->values_num; i++)
 	{
-		if (FAIL != zbx_vector_uint64_bsearch(&ids, condition->conditionid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		diff = (zbx_dbsync_row_t *)rows->values[i];
+
+		if (NULL == (condition = zbx_hashset_search(&config->action_conditions, &diff->rowid)))
 			continue;
+
+		if (NULL != (action = zbx_hashset_search(&config->actions, &condition->actionid)))
+		{
+			if (FAIL != (index = zbx_vector_ptr_search(&action->conditions, condition,
+					ZBX_DEFAULT_PTR_COMPARE_FUNC)))
+			{
+				zbx_vector_ptr_remove_noorder(&action->conditions, index);
+				zbx_vector_ptr_append(&actions, action);
+			}
+		}
 
 		zbx_strpool_release(condition->value);
 
-		zbx_hashset_iter_remove(&iter);
+		zbx_hashset_remove_direct(&config->action_conditions, condition);
 	}
 
 	/* sort conditions by type */
 
-	zbx_hashset_iter_reset(&config->actions, &iter);
+	zbx_vector_ptr_sort(&actions, ZBX_DEFAULT_PTR_COMPARE_FUNC);
+	zbx_vector_ptr_uniq(&actions, ZBX_DEFAULT_PTR_COMPARE_FUNC);
 
-	while (NULL != (action = zbx_hashset_iter_next(&iter)))
+	for (i = 0; i < actions.values_num; i++)
 	{
+		action = (zbx_dc_action_t *)actions.values[i];
+
 		if (CONDITION_EVAL_TYPE_AND_OR == action->evaltype)
 			zbx_vector_ptr_sort(&action->conditions, dc_compare_action_conditions_by_type);
 	}
 
-	zbx_vector_uint64_destroy(&ids);
+	zbx_vector_ptr_destroy(&actions);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -3396,9 +3407,6 @@ void	DCsync_configuration(void)
 {
 	const char		*__function_name = "DCsync_configuration";
 
-	DB_RESULT		action_result = NULL;
-	DB_RESULT		action_condition_result = NULL;
-
 	int			i, refresh_unsupported_changed;
 	double			sec, csec, hsec, hisec, htsec, gmsec, hmsec, ifsec, isec, tsec, dsec, fsec, expr_sec,
 				csec2, hsec2, hisec2, htsec2, gmsec2, hmsec2, ifsec2, isec2, tsec2, dsec2, fsec2,
@@ -3407,9 +3415,11 @@ void	DCsync_configuration(void)
 	const zbx_strpool_t	*strpool;
 
 	zbx_dbsync_t		config_sync, hosts_sync, hi_sync, htmpl_sync, gmacro_sync, hmacro_sync, if_sync,
-				items_sync, triggers_sync, tdep_sync, func_sync, expr_sync;
+				items_sync, triggers_sync, tdep_sync, func_sync, expr_sync, action_sync,
+				action_condition_sync;
 	zbx_dbsync_stats_t	config_stats, hosts_stats, hi_stats, htmpl_stats, gmacro_stats, hmacro_stats, if_stats,
-				items_stats, triggers_stats, tdep_stats, func_stats, expr_stats;
+				items_stats, triggers_stats, tdep_stats, func_stats, expr_stats, action_stats,
+				action_condition_stats;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -3425,6 +3435,8 @@ void	DCsync_configuration(void)
 	zbx_dbsync_init(&tdep_sync);
 	zbx_dbsync_init(&func_sync);
 	zbx_dbsync_init(&expr_sync);
+	zbx_dbsync_init(&action_sync);
+	zbx_dbsync_init(&action_condition_sync);
 
 	sec = zbx_time();
 	if (FAIL == zbx_dbsync_compare_config(config, &config_sync))
@@ -3506,26 +3518,15 @@ void	DCsync_configuration(void)
 	expr_sec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (NULL == (action_result = DBselect(
-			"select actionid,eventsource,evaltype,formula"
-			" from actions"
-			" where status=%d",
-			ACTION_STATUS_ACTIVE)))
-	{
+	if (FAIL == zbx_dbsync_compare_actions(config, &action_sync))
 		goto out;
-	}
+	zbx_dbsync_get_stats(&action_sync, &action_stats);
 	action_sec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (NULL == (action_condition_result = DBselect(
-			"select c.conditionid,c.actionid,c.conditiontype,c.operator,c.value"
-			" from conditions c,actions a"
-			" where c.actionid=a.actionid"
-				" and a.status=%d",
-			ACTION_STATUS_ACTIVE)))
-	{
+	if (FAIL == zbx_dbsync_compare_action_conditions(config, &action_condition_sync))
 		goto out;
-	}
+	zbx_dbsync_get_stats(&action_condition_sync, &action_condition_stats);
 	action_condition_sec = zbx_time() - sec;
 
 	START_SYNC;
@@ -3577,11 +3578,11 @@ void	DCsync_configuration(void)
 	expr_sec2 = zbx_time() - sec;
 
 	sec = zbx_time();
-	DCsync_actions(action_result);
+	DCsync_actions(&action_sync.rows);
 	action_sec2 = zbx_time() - sec;
 
 	sec = zbx_time();
-	DCsync_action_conditions(action_condition_result);
+	DCsync_action_conditions(&action_condition_sync.rows);
 	action_condition_sec2 = zbx_time() - sec;
 
 	sec = zbx_time();
@@ -3649,10 +3650,12 @@ void	DCsync_configuration(void)
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() expressions: sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
 			__function_name, expr_sec, expr_sec2, expr_stats.add_num, expr_stats.update_num,
 			expr_stats.remove_num);
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() actions    : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.", __function_name,
-			action_sec, action_sec2);
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() conditions : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec.",
-			__function_name, action_condition_sec, action_condition_sec2);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() actions    : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
+			__function_name, action_sec, action_sec2, action_stats.add_num, action_stats.update_num,
+			action_stats.remove_num);
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() conditions : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
+			__function_name, action_condition_sec, action_condition_sec2, action_condition_stats.add_num,
+			action_condition_stats.update_num, action_condition_stats.remove_num);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() reindex    : " ZBX_FS_DBL " sec.", __function_name, update_sec);
 
@@ -3777,9 +3780,8 @@ out:
 	zbx_dbsync_clear(&tdep_sync);
 	zbx_dbsync_clear(&func_sync);
 	zbx_dbsync_clear(&expr_sync);
-
-	DBfree_result(action_result);
-	DBfree_result(action_condition_result);
+	zbx_dbsync_clear(&action_sync);
+	zbx_dbsync_clear(&action_condition_sync);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }

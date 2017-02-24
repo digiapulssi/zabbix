@@ -78,5 +78,7 @@ int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_trigger_dependency(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_actions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
 
 #endif /* BUILD_SRC_LIBS_ZBXDBCACHE_DBSYNC_H_ */

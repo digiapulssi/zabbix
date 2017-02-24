@@ -1755,7 +1755,8 @@ static int	dbsync_compare_expression(const ZBX_DC_EXPRESSION *expression, const 
  *                                                                            *
  * Function: zbx_dbsync_compare_exprssions                                    *
  *                                                                            *
- * Purpose: compares expressions tables with cached configuration data        *
+ * Purpose: compares expressions, regexps tables with cached configuration    *
+ *          data                                                              *
  *                                                                            *
  * Parameter: cache - [IN] the configuration cache                            *
  *            sync  - [OUT] the changeset                                     *
@@ -1815,3 +1816,191 @@ int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	return SUCCEED;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_action                                            *
+ *                                                                            *
+ * Purpose: compares actions table row with cached configuration data         *
+ *                                                                            *
+ * Parameter: action - [IN] the cached action                                 *
+ *            row    - [IN] the database row                                  *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_action(const zbx_dc_action_t *action, const DB_ROW row)
+{
+
+	if (FAIL == dbsync_compare_uchar(row[1], action->eventsource))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[2], action->evaltype))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[3], action->formula))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_actions                                       *
+ *                                                                            *
+ * Purpose: compares actions table with cached configuration data             *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_actions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_hashset_t		ids;
+	zbx_hashset_iter_t	iter;
+	zbx_uint64_t		rowid;
+	zbx_dc_action_t		*action;
+
+	if (NULL == (result = DBselect(
+			"select actionid,eventsource,evaltype,formula"
+			" from actions"
+			" where status=%d",
+			ACTION_STATUS_ACTIVE)))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 4;
+
+	zbx_hashset_create(&ids, cache->actions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[0]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (action = (zbx_dc_action_t *)zbx_hashset_search(&cache->actions, &rowid)))
+			tag = ZBX_DBSYNC_ROW_ADD;
+		else if (FAIL == dbsync_compare_action(action, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->actions, &iter);
+	while (NULL != (action = (zbx_dc_action_t *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &action->actionid))
+			dbsync_add_row(sync, action->actionid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_action_condition                                  *
+ *                                                                            *
+ * Purpose: compares conditions table row with cached configuration data      *
+ *                                                                            *
+ * Parameter: action - [IN] the cached action                                 *
+ *            row    - [IN] the database row                                  *
+ *                                                                            *
+ * Return value: SUCCEED - the row matches configuration data                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	dbsync_compare_action_condition(const zbx_dc_action_condition_t *condition, const DB_ROW row)
+{
+	if (FAIL == dbsync_compare_uchar(row[2], condition->conditiontype))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_uchar(row[3], condition->operator))
+		return FAIL;
+
+	if (FAIL == dbsync_compare_str(row[4], condition->value))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_action_conditions                             *
+ *                                                                            *
+ * Purpose: compares conditions table with cached configuration data          *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+{
+	DB_ROW				row;
+	DB_RESULT			result;
+	zbx_hashset_t			ids;
+	zbx_hashset_iter_t		iter;
+	zbx_uint64_t			rowid;
+	zbx_dc_action_condition_t	*condition;
+
+	if (NULL == (result = DBselect(
+			"select c.conditionid,c.actionid,c.conditiontype,c.operator,c.value"
+			" from conditions c,actions a"
+			" where c.actionid=a.actionid"
+				" and a.status=%d",
+			ACTION_STATUS_ACTIVE)))
+	{
+		return FAIL;
+	}
+
+	sync->columns_num = 5;
+
+	zbx_hashset_create(&ids, cache->action_conditions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
+
+		ZBX_STR2UINT64(rowid, row[0]);
+		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
+
+		if (NULL == (condition = (zbx_dc_action_condition_t *)zbx_hashset_search(&cache->action_conditions,
+				&rowid)))
+		{
+			tag = ZBX_DBSYNC_ROW_ADD;
+		}
+		else if (FAIL == dbsync_compare_action_condition(condition, row))
+			tag = ZBX_DBSYNC_ROW_UPDATE;
+
+		if (ZBX_DBSYNC_ROW_NONE != tag)
+			dbsync_add_row(sync, rowid, tag, row);
+	}
+
+	zbx_hashset_iter_reset(&cache->action_conditions, &iter);
+	while (NULL != (condition = (zbx_dc_action_condition_t *)zbx_hashset_iter_next(&iter)))
+	{
+		if (NULL == zbx_hashset_search(&ids, &condition->conditionid))
+			dbsync_add_row(sync, condition->conditionid, ZBX_DBSYNC_ROW_REMOVE, NULL);
+	}
+
+	zbx_hashset_destroy(&ids);
+	DBfree_result(result);
+
+	return SUCCEED;
+}
