@@ -3396,7 +3396,6 @@ void	DCsync_configuration(void)
 {
 	const char		*__function_name = "DCsync_configuration";
 
-	DB_RESULT		expr_result = NULL;
 	DB_RESULT		action_result = NULL;
 	DB_RESULT		action_condition_result = NULL;
 
@@ -3777,8 +3776,8 @@ out:
 	zbx_dbsync_clear(&triggers_sync);
 	zbx_dbsync_clear(&tdep_sync);
 	zbx_dbsync_clear(&func_sync);
+	zbx_dbsync_clear(&expr_sync);
 
-	DBfree_result(expr_result);
 	DBfree_result(action_result);
 	DBfree_result(action_condition_result);
 
