@@ -114,7 +114,7 @@ static ub4	OCI_DBserver_status();
 
 #elif defined(HAVE_POSTGRESQL)
 static PGconn			*conn = NULL;
-static int			ZBX_PG_BYTEAOID = 0;
+static unsigned int		ZBX_PG_BYTEAOID = 0;
 static int			ZBX_PG_SVERSION = 0;
 char				ZBX_PG_ESCAPE_BACKSLASH = 1;
 #elif defined(HAVE_SQLITE3)
