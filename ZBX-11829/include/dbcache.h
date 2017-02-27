@@ -215,6 +215,9 @@ typedef struct _DC_TRIGGER
 	unsigned char		recovery_mode;
 	unsigned char		correlation_mode;
 
+	zbx_vector_uint64_t	itemids_expression;
+	zbx_vector_uint64_t	itemids_recovery_expression;
+
 	zbx_vector_ptr_t	tags;
 }
 DC_TRIGGER;

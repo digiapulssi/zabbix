@@ -4365,18 +4365,21 @@ void	evaluate_expressions(zbx_vector_ptr_t *triggers)
 		if (NULL != tr->new_error)
 			continue;
 
-		if (SUCCEED != evaluate(&expr_result, tr->expression, err, sizeof(err), &unknown_msgs))
+		if (0 < tr->itemids_expression.values_num)
 		{
-			tr->new_error = zbx_strdup(tr->new_error, err);
-			tr->new_value = TRIGGER_VALUE_UNKNOWN;
-			continue;
-		}
+			if (SUCCEED != evaluate(&expr_result, tr->expression, err, sizeof(err), &unknown_msgs))
+			{
+				tr->new_error = zbx_strdup(tr->new_error, err);
+				tr->new_value = TRIGGER_VALUE_UNKNOWN;
+				continue;
+			}
 
-		/* trigger expression evaluates to true, set PROBLEM value */
-		if (SUCCEED != zbx_double_compare(expr_result, 0.0))
-		{
-			tr->new_value = TRIGGER_VALUE_PROBLEM;
-			continue;
+			/* trigger expression evaluates to true, set PROBLEM value */
+			if (SUCCEED != zbx_double_compare(expr_result, 0.0))
+			{
+				tr->new_value = TRIGGER_VALUE_PROBLEM;
+				continue;
+			}
 		}
 
 		/* otherwise try to recover trigger by setting OK value */
@@ -4859,4 +4862,45 @@ int	substitute_key_macros(char **data, zbx_uint64_t *hostid, DC_ITEM *dc_item, c
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s data:'%s'", __function_name, zbx_result_string(ret), *data);
 
 	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DCget_itemids_by_expression                                      *
+ *                                                                            *
+ * Purpose: get identifiers of the items used in expression                   *
+ *                                                                            *
+ * Parameters: itemids     - [OUT] the resulting vector of item ids           *
+ *             expression  - [IN] trigger expression                          *
+ *                                                                            *
+ ******************************************************************************/
+void	DCget_itemids_by_expression(zbx_vector_uint64_t *itemids, const char *expression)
+{
+	const char	*start = expression;
+	zbx_uint64_t	functionid, itemid;
+	int		errcode;
+
+	const char	*__function_name = "DBget_itemids";
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() expression:'%s'", __function_name, expression);
+
+	while (SUCCEED == get_N_functionid(start, 1, &functionid, &start))
+	{
+		DC_FUNCTION	function;
+
+		DCconfig_get_functions_by_functionids(&function, &functionid, &errcode, 1);
+
+		if (SUCCEED == errcode)
+			zbx_vector_uint64_append(itemids, function.itemid);
+
+		DCconfig_clean_functions(&function, &errcode, 1);
+	}
+
+	if (0 != itemids->values_num)
+	{
+		zbx_vector_uint64_sort(itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+		zbx_vector_uint64_uniq(itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 }

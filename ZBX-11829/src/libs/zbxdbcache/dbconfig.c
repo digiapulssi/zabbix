@@ -6069,6 +6069,9 @@ static void	DCget_trigger(DC_TRIGGER *dst_trigger, ZBX_DC_TRIGGER *src_trigger, 
 			zbx_vector_ptr_append(&dst_trigger->tags, tag);
 		}
 	}
+
+	zbx_vector_uint64_create(&dst_trigger->itemids_expression);
+	zbx_vector_uint64_create(&dst_trigger->itemids_recovery_expression);
 }
 
 void	zbx_free_tag(zbx_tag_t *tag)
@@ -6091,6 +6094,11 @@ static void	DCclean_trigger(DC_TRIGGER *trigger)
 
 	zbx_vector_ptr_clear_ext(&trigger->tags, (zbx_clean_func_t)zbx_free_tag);
 	zbx_vector_ptr_destroy(&trigger->tags);
+
+	zbx_vector_uint64_clear(&trigger->itemids_expression);
+	zbx_vector_uint64_clear(&trigger->itemids_recovery_expression);
+	zbx_vector_uint64_destroy(&trigger->itemids_expression);
+	zbx_vector_uint64_destroy(&trigger->itemids_recovery_expression);
 }
 
 /******************************************************************************
@@ -6516,6 +6524,44 @@ void	DCconfig_get_triggers_by_itemids(zbx_hashset_t *trigger_info, zbx_vector_pt
 	UNLOCK_CACHE;
 
 	zbx_vector_ptr_sort(trigger_order, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
+
+	/* split items by the type of expression */
+	for (int i = 0; i < trigger_order->values_num; i++)
+	{
+		zbx_vector_uint64_t	exp_itemsIds;
+		DC_TRIGGER 		*tr = trigger_order->values[i];
+		int			i, n;
+
+		zbx_vector_uint64_create(&exp_itemsIds);
+
+		DCget_itemids_by_expression(&exp_itemsIds, tr->expression);
+		for (i = 0; i < exp_itemsIds.values_num; i++)
+		{
+			for (n = 0; n < itemids_num; n++)
+			{
+				if (exp_itemsIds.values[i] == itemids[i])
+					zbx_vector_uint64_append(&tr->itemids_expression, itemids[i]);
+			}
+		}
+
+		if (TRIGGER_RECOVERY_MODE_RECOVERY_EXPRESSION == tr->recovery_mode)
+		{
+			zbx_vector_uint64_clear(&exp_itemsIds);
+			DCget_itemids_by_expression(&exp_itemsIds, tr->recovery_expression);
+
+			for (i = 0; i < exp_itemsIds.values_num; i++)
+			{
+				for (n = 0; n < itemids_num; n++)
+				{
+					if (exp_itemsIds.values[i] == itemids[i])
+						zbx_vector_uint64_append(&tr->itemids_recovery_expression, itemids[i]);
+				}
+			}
+		}
+
+		zbx_vector_uint64_clear(&exp_itemsIds);
+		zbx_vector_uint64_destroy(&exp_itemsIds);
+	}
 }
 
 /******************************************************************************
