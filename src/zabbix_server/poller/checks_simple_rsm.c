@@ -25,6 +25,7 @@
 #include "comms.h"
 #include "base64.h"
 #include "md5.h"
+#include "threads.h"
 #include "rsm.h"
 
 #define ZBX_HOST_BUF_SIZE	128
@@ -55,12 +56,40 @@ extern const char	epp_passphrase[128];
 
 typedef struct
 {
-	char	*name;
-	char	result;
-	char	**ips;
-	size_t	ips_num;
+	char	*ip;
+	int	rtt;
+	int	upd;
+}
+zbx_ns_ip_t;
+
+typedef struct
+{
+	char		*name;
+	char		result;
+	zbx_ns_ip_t	*ips;
+	size_t		ips_num;
 }
 zbx_ns_t;
+
+typedef struct
+{
+	pid_t	pid;
+	int	fd;	/* read from this file descriptor */
+}
+writer_thread_t;
+
+#define PACK_NUM_VARS	4
+#define PACK_FORMAT	ZBX_FS_SIZE_T "|" ZBX_FS_SIZE_T "|%d|%d"
+
+static int	pack_values(size_t v1, size_t v2, int v3, int v4, char *buf, size_t buf_size)
+{
+	return zbx_snprintf(buf, buf_size, PACK_FORMAT, v1, v2, v3, v4);
+}
+
+static int	unpack_values(size_t *v1, size_t *v2, int *v3, int *v4, char *buf)
+{
+	return sscanf(buf, PACK_FORMAT, v1, v2, v3, v4);
+}
 
 #define zbx_rsm_errf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Error", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
 #define zbx_rsm_warnf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Warning", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
@@ -77,7 +106,8 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 	tm = localtime(&current_time.tv_sec);
 	ms = current_time.tv_usec / 1000;
 
-	zbx_snprintf(fmt_buf, sizeof(fmt_buf), "[%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+	zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%.5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+			getpid(),
 			tm->tm_year + 1900,
 			tm->tm_mon + 1,
 			tm->tm_mday,
@@ -106,7 +136,8 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 	tm = localtime(&current_time.tv_sec);
 	ms = current_time.tv_usec / 1000;
 
-	fprintf(log_fd, "[%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+	fprintf(log_fd, "%.5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+			getpid(),
 			tm->tm_year + 1900,
 			tm->tm_mon + 1,
 			tm->tm_mday,
@@ -1252,7 +1283,7 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 
 				for (j2 = 0; j2 < ns_entry->ips_num; j2++)
 				{
-					if (0 == strcmp(ns_entry->ips[j2], ip))
+					if (0 == strcmp(ns_entry->ips[j2].ip, ip))
 					{
 						ip_found = 1;
 						break;
@@ -1291,11 +1322,12 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 
 		/* add IP here */
 		if (0 == ns_entry->ips_num)
-			ns_entry->ips = zbx_malloc(NULL, sizeof(char *));
+			ns_entry->ips = zbx_malloc(NULL, sizeof(zbx_ns_ip_t));
 		else
-			ns_entry->ips = zbx_realloc(ns_entry->ips, (ns_entry->ips_num + 1) * sizeof(char *));
+			ns_entry->ips = zbx_realloc(ns_entry->ips, (ns_entry->ips_num + 1) * sizeof(zbx_ns_ip_t));
 
-		ns_entry->ips[ns_entry->ips_num] = zbx_strdup(NULL, ip);
+		ns_entry->ips[ns_entry->ips_num].ip = zbx_strdup(NULL, ip);
+		ns_entry->ips[ns_entry->ips_num].upd = ZBX_NO_VALUE;
 
 		ns_entry->ips_num++;
 next:
@@ -1314,7 +1346,7 @@ static void	zbx_clean_nss(zbx_ns_t *nss, size_t nss_num)
 		if (0 != nss[i].ips_num)
 		{
 			for (j = 0; j < nss[i].ips_num; j++)
-				zbx_free(nss[i].ips[j]);
+				zbx_free(nss[i].ips[j].ip);
 
 			zbx_free(nss[i].ips);
 		}
@@ -1517,7 +1549,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	zbx_ns_t	*nss = NULL;
 	size_t		i, j, items_num = 0, nss_num = 0;
 	int		ipv4_enabled, ipv6_enabled, dnssec_enabled, epp_enabled, rdds_enabled, res_ec = ZBX_EC_NOERROR,
-			rtt, upd = ZBX_NO_VALUE, rtt_limit, ret = SYSINFO_RET_FAIL;
+			rtt_limit, ret = SYSINFO_RET_FAIL;
 
 	if (1 != request->nparam)
 	{
@@ -1626,28 +1658,127 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	/* as working so if we have no IPs the result of Name Server will be SUCCEED  */
 	nss_num = zbx_get_nameservers(items, items_num, &nss, ipv4_enabled, ipv6_enabled, log_fd);
 
+	if (ZBX_EC_NOERROR != res_ec)
+	{
+		for (i = 0; i < nss_num; i++)
+		{
+			for (j = 0; j < nss[i].ips_num; j++)
+				nss[i].ips[j].rtt = res_ec;
+		}
+	}
+	else
+	{
+		int		th_num = 0, threads_num = 0, status;
+		char		buf[64];
+		pid_t		pid;
+		writer_thread_t	*threads = NULL;
+
+		for (i = 0; i < nss_num; i++)
+		{
+			for (j = 0; j < nss[i].ips_num; j++)
+				threads_num++;
+		}
+
+		threads = zbx_calloc(threads, threads_num, sizeof(*threads));
+		memset(threads, 0, threads_num * sizeof(*threads));
+
+		for (i = 0; i < nss_num; i++)
+		{
+			for (j = 0; j < nss[i].ips_num; j++)
+			{
+				int	fd[2];
+
+				if (-1 == pipe(fd))
+				{
+					zbx_rsm_errf(log_fd, "cannot create pipe: %s", zbx_strerror(errno));
+					goto endtest;
+				}
+
+				if (0 == (pid = zbx_child_fork()))
+				{
+					/* child */
+
+					close(fd[0]);
+
+					if (SUCCEED != zbx_get_ns_ip_values(res, nss[i].name, nss[i].ips[j].ip, keys,
+							testprefix, domain, log_fd, &nss[i].ips[j].rtt,
+							(ZBX_RSM_UDP == proto && 0 != rdds_enabled) ?
+							&nss[i].ips[j].upd : NULL, ipv4_enabled, ipv6_enabled,
+							epp_enabled, err, sizeof(err)))
+					{
+						zbx_rsm_err(log_fd, err);
+					}
+
+					pack_values(i, j, nss[i].ips[j].rtt, nss[i].ips[j].upd, buf, sizeof(buf));
+
+					if (-1 == write(fd[1], buf, strlen(buf) + 1))
+						zbx_rsm_errf(log_fd, "cannot write to pipe: %s", zbx_strerror(errno));
+
+					close(fd[1]);
+
+					exit(EXIT_SUCCESS);
+				}
+				else if (0 < pid)
+				{
+					/* parent */
+
+					close(fd[1]);
+
+					threads[th_num].pid = pid;
+					threads[th_num].fd = fd[0];
+
+					th_num++;
+				}
+				else
+				{
+					zbx_rsm_errf(log_fd, "cannot create process: %s", zbx_strerror(errno));
+
+					close(fd[0]);
+					close(fd[1]);
+
+					goto endtest;
+				}
+			}
+		}
+endtest:
+		for (th_num = 0; th_num < threads_num; th_num++)
+		{
+			if (0 == threads[th_num].pid)
+				continue;
+
+			if (-1 != read(threads[th_num].fd, buf, sizeof(buf)))
+			{
+				int	rv, rtt, upd;
+
+				if (PACK_NUM_VARS == (rv = unpack_values(&i, &j, &rtt, &upd, buf)))
+				{
+					nss[i].ips[j].rtt = rtt;
+					nss[i].ips[j].upd = upd;
+				}
+				else
+					zbx_rsm_errf(log_fd, "cannot unpack values (unpacked %d, need %d)", rv, PACK_NUM_VARS);
+			}
+			else
+				zbx_rsm_errf(log_fd, "cannot read from pipe: %s", zbx_strerror(errno));
+
+			if (0 >= waitpid(threads[th_num].pid, &status, 0))
+				zbx_rsm_err(log_fd, "error on thread waiting");
+
+			close(threads[th_num].fd);
+		}
+
+		zbx_free(threads);
+	}
+
 	for (i = 0; i < nss_num; i++)
 	{
 		for (j = 0; j < nss[i].ips_num; j++)
 		{
-			if (ZBX_EC_NOERROR == res_ec)
-			{
-				if (SUCCEED != zbx_get_ns_ip_values(res, nss[i].name, nss[i].ips[j], keys, testprefix,
-						domain, log_fd, &rtt,
-						(ZBX_RSM_UDP == proto && 0 != rdds_enabled) ? &upd : NULL,
-						ipv4_enabled, ipv6_enabled, epp_enabled, err, sizeof(err)))
-				{
-					zbx_rsm_err(log_fd, err);
-				}
-			}
-			else
-				rtt = res_ec;
-
-			zbx_set_dns_values(nss[i].name, nss[i].ips[j], rtt, upd, item->nextcheck, strlen(request->key) + 1,
-					items, items_num);
+			zbx_set_dns_values(nss[i].name, nss[i].ips[j].ip, nss[i].ips[j].rtt, nss[i].ips[j].upd,
+					item->nextcheck, strlen(request->key) + 1, items, items_num);
 
 			/* if a single IP of the Name Server fails, consider the whole Name Server down */
-			if (SUCCEED != rtt_result(rtt, rtt_limit))
+			if (SUCCEED != rtt_result(nss[i].ips[j].rtt, rtt_limit))
 				nss[i].result = FAIL;
 		}
 	}
@@ -3145,8 +3276,6 @@ static void	zbx_set_epp_values(const char *ip, int rtt1, int rtt2, int rtt3, int
 				0 == strncmp(p, "rtt[", 4))
 		{
 			init_request(&request);
-
-			*cmd = '\0';
 
 			if (SUCCEED != parse_item_key(item->key, &request))
 			{
