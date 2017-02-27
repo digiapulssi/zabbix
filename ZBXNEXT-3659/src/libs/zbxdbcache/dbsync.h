@@ -46,25 +46,32 @@ zbx_dbsync_row_t;
 
 typedef struct
 {
+	/* the synchronization mode (see ZBX_DBSYNC_* defines) */
+	unsigned char		mode;
+
 	/* the number of columns in diff */
 	int			columns_num;
 
+	/* the current row */
+	int			row_index;
+
 	/* the changed rows */
 	zbx_vector_ptr_t	rows;
-}
-zbx_dbsync_t;
 
-typedef struct
-{
+	/* the database result set for ZBX_DBSYNC_ALL mode */
+	DB_RESULT		dbresult;
+
+	/* statistics */
 	zbx_uint64_t	add_num;
 	zbx_uint64_t	update_num;
 	zbx_uint64_t	remove_num;
 }
-zbx_dbsync_stats_t;
+zbx_dbsync_t;
 
-void	zbx_dbsync_init(zbx_dbsync_t *diff);
-void	zbx_dbsync_clear(zbx_dbsync_t *diff);
-void	zbx_dbsync_get_stats(const zbx_dbsync_t *sync, zbx_dbsync_stats_t *stats);
+void	zbx_dbsync_init(zbx_dbsync_t *sync, unsigned char mode);
+void	zbx_dbsync_clear(zbx_dbsync_t *sync);
+void	zbx_dbsync_reset(zbx_dbsync_t *sync);
+int	zbx_dbsync_next(zbx_dbsync_t *sync, zbx_uint64_t *rowid, char ***rows, unsigned char *tag);
 
 int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);

@@ -219,6 +219,19 @@ static void	dbsync_add_row(zbx_dbsync_t *sync, zbx_uint64_t rowid, unsigned char
 		row->row = NULL;
 
 	zbx_vector_ptr_append(&sync->rows, row);
+
+	switch (tag)
+	{
+		case ZBX_DBSYNC_ROW_ADD:
+			sync->add_num++;
+			break;
+		case ZBX_DBSYNC_ROW_UPDATE:
+			sync->update_num++;
+			break;
+		case ZBX_DBSYNC_ROW_REMOVE:
+			sync->remove_num++;
+			break;
+	}
 }
 
 /******************************************************************************
@@ -228,12 +241,24 @@ static void	dbsync_add_row(zbx_dbsync_t *sync, zbx_uint64_t rowid, unsigned char
  * Purpose: initializes changeset                                             *
  *                                                                            *
  ******************************************************************************/
-void	zbx_dbsync_init(zbx_dbsync_t *sync)
+void	zbx_dbsync_init(zbx_dbsync_t *sync, unsigned char mode)
 {
 	dbsync_env_init();
 
 	sync->columns_num = 0;
-	zbx_vector_ptr_create(&sync->rows);
+	sync->mode = mode;
+
+	sync->add_num = 0;
+	sync->update_num = 0;
+	sync->remove_num = 0;
+
+	if (ZBX_DBSYNC_UPDATE == sync->mode)
+	{
+		zbx_vector_ptr_create(&sync->rows);
+		sync->row_index = 0;
+	}
+	else
+		sync->dbresult = NULL;
 }
 
 /******************************************************************************
@@ -245,64 +270,96 @@ void	zbx_dbsync_init(zbx_dbsync_t *sync)
  ******************************************************************************/
 void	zbx_dbsync_clear(zbx_dbsync_t *sync)
 {
-	int			i, j;
-	zbx_dbsync_row_t	*row;
-
-	for (i = 0; i < sync->rows.values_num; i++)
+	if (ZBX_DBSYNC_UPDATE == sync->mode)
 	{
-		row = (zbx_dbsync_row_t *)sync->rows.values[i];
+		int			i, j;
+		zbx_dbsync_row_t	*row;
 
-		if (NULL != row->row)
+		for (i = 0; i < sync->rows.values_num; i++)
 		{
-			for (j = 0; j < sync->columns_num; j++)
-				dbsync_strfree(row->row[j]);
+			row = (zbx_dbsync_row_t *)sync->rows.values[i];
 
-			zbx_free(row->row);
+			if (NULL != row->row)
+			{
+				for (j = 0; j < sync->columns_num; j++)
+					dbsync_strfree(row->row[j]);
+
+				zbx_free(row->row);
+			}
+
+			zbx_free(row);
 		}
 
-		zbx_free(row);
+		zbx_vector_ptr_destroy(&sync->rows);
 	}
-
-	zbx_vector_ptr_destroy(&sync->rows);
+	else
+	{
+		DBfree_result(sync->dbresult);
+		sync->dbresult = NULL;
+	}
 
 	dbsync_env_release();
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_dbsync_get_stats                                             *
+ * Function: zbx_dbsync_reset                                                 *
  *                                                                            *
- * Purpose: calculates changeset statistics                                   *
+ * Purpose: resets the iterator                                               *
  *                                                                            *
  * Parameters: sync  - [IN] the changeset                                     *
- *             stats - [OUT] the statistics                                   *
  *                                                                            *
  ******************************************************************************/
-void	zbx_dbsync_get_stats(const zbx_dbsync_t *sync, zbx_dbsync_stats_t *stats)
+void	zbx_dbsync_reset(zbx_dbsync_t *sync)
 {
-	int			i;
-	zbx_dbsync_row_t	*row;
+	if (ZBX_DBSYNC_UPDATE == sync->mode)
+		sync->row_index = 0;
+}
 
-	stats->add_num = 0;
-	stats->update_num = 0;
-	stats->remove_num = 0;
-
-	for (i = 0; i < sync->rows.values_num; i++)
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_next                                                  *
+ *                                                                            *
+ * Purpose: gets the next row from the changeset                              *
+ *                                                                            *
+ * Parameters: sync  - [IN] the changeset                                     *
+ *             rowid - [OUT] the row identifier (required for row removal,    *
+ *                          optional for new/updated rows)                    *
+ *             row   - [OUT] the row data                                     *
+ *             tag   - [OUT] the row tag, identifying changes                 *
+ *                           (see ZBX_DBSYNC_ROW_* defines)                   *
+ *                                                                            *
+ * Return value: SUCCEED - the next row was successfully retrieved            *
+ *               FAIL    - no more data to retrieve                           *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_next(zbx_dbsync_t *sync, zbx_uint64_t *rowid, char ***row, unsigned char *tag)
+{
+	if (ZBX_DBSYNC_UPDATE == sync->mode)
 	{
-		row = (zbx_dbsync_row_t *)sync->rows.values[i];
-		switch (row->tag)
-		{
-			case ZBX_DBSYNC_ROW_ADD:
-				stats->add_num++;
-				break;
-			case ZBX_DBSYNC_ROW_UPDATE:
-				stats->update_num++;
-				break;
-			case ZBX_DBSYNC_ROW_REMOVE:
-				stats->remove_num++;
-				break;
-		}
+		zbx_dbsync_row_t	*sync_row;
+
+		if (sync->row_index == sync->rows.values_num)
+			return FAIL;
+
+		sync_row = (zbx_dbsync_row_t *)sync->rows.values[sync->row_index++];
+		*rowid = sync_row->rowid;
+		*row = sync_row->row;
+		*tag = sync_row->tag;
 	}
+	else
+	{
+		if (NULL == (*row = DBfetch(sync->dbresult)))
+			return FAIL;
+
+		*rowid = 0;
+		*tag = ZBX_DBSYNC_ROW_ADD;
+
+		sync->add_num++;
+
+	}
+
+	return SUCCEED;
 }
 
 /******************************************************************************
@@ -427,6 +484,12 @@ int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			" from config")))
 	{
 		return FAIL;
+	}
+
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
 	}
 
 	if (NULL == (row = DBfetch(result)))
@@ -607,6 +670,12 @@ int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	sync->columns_num = 31;
 #endif
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->hosts.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -688,6 +757,12 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 2;
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->host_inventories.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -754,8 +829,15 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return FAIL;
 	}
 
-	zbx_hashset_create(&htmpls, cache->htmpls.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
 	sync->columns_num = 2;
+
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
+	zbx_hashset_create(&htmpls, cache->htmpls.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
 
 	/* index all host->template links */
 	zbx_hashset_iter_reset(&cache->htmpls, &iter);
@@ -876,6 +958,12 @@ int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 3;
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->gmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -990,6 +1078,12 @@ int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 4;
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->hmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -1103,6 +1197,12 @@ int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	}
 
 	sync->columns_num = 9;
+
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
 
 	zbx_hashset_create(&ids, cache->interfaces.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
@@ -1483,6 +1583,12 @@ int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 42;
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->items.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -1587,6 +1693,12 @@ int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 10;
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->triggers.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -1657,6 +1769,12 @@ int	zbx_dbsync_compare_trigger_dependency(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sy
 	}
 
 	sync->columns_num = 2;
+
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
 
 	zbx_hashset_create(&deps, cache->trigdeps.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
 
@@ -1769,6 +1887,12 @@ int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 5;
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->functions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -1867,6 +1991,12 @@ int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 6;
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->expressions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -1960,6 +2090,12 @@ int	zbx_dbsync_compare_actions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 4;
 
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
+
 	zbx_hashset_create(&ids, cache->actions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -2052,6 +2188,12 @@ int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *syn
 	}
 
 	sync->columns_num = 5;
+
+	if (ZBX_DBSYNC_INIT == sync->mode)
+	{
+		sync->dbresult = result;
+		return SUCCEED;
+	}
 
 	zbx_hashset_create(&ids, cache->action_conditions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
