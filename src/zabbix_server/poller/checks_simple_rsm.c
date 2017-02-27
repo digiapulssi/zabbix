@@ -1686,7 +1686,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		{
 			for (j = 0; j < nss[i].ips_num; j++)
 			{
-				int	fd[2];
+				int	fd[2];	/* reader and writer fd */
 
 				if (-1 == pipe(fd))
 				{
@@ -1698,7 +1698,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 				{
 					/* child */
 
-					close(fd[0]);
+					close(fd[0]);	/* child does not need reader fd */
 
 					if (SUCCEED != zbx_get_ns_ip_values(res, nss[i].name, nss[i].ips[j].ip, keys,
 							testprefix, domain, log_fd, &nss[i].ips[j].rtt,
@@ -1722,7 +1722,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 				{
 					/* parent */
 
-					close(fd[1]);
+					close(fd[1]);	/* parent does not need writer fd */
 
 					threads[th_num].pid = pid;
 					threads[th_num].fd = fd[0];
