@@ -2,7 +2,7 @@ package DaWa;
 
 use strict;
 use warnings;
-use RSMSLV1;	# todo phase 1
+use RSMSLV;
 use Text::CSV_XS;
 use File::Path qw(make_path);
 
@@ -378,26 +378,32 @@ sub __write_csv_file
 
 	foreach my $row (@{$_csv_files{$id_type}{'rows'}})
 	{
-		if (opt('debug'))
-		{
-			my $str = '';
-			my $has_undef = 0;
-			foreach (@$row)
-			{
-				if (defined($_))
-				{
-					$str .= " [$_]";
-				}
-				else
-				{
-					$has_undef = 1;
-					$str .= " [UNDEF]";
-				}
-			}
+		my $has_undef = 0;
+		my $str = '';
 
-			wrn("$id_type CSV record with UNDEF value: ", $str) if ($has_undef == 1);
+		foreach (@$row)
+		{
+			if (!defined($_))
+			{
+				$has_undef = 1;
+				$str .= " [UNDEF]";
+				$_ = '';
+			}
+			else
+			{
+				$str .= " [$_]";
+			}
 		}
-		dbg('dumping: ', join(',', @$row)) if (opt('debug'));
+
+		if ($has_undef == 1)
+		{
+			wrn("$id_type CSV record with UNDEF value: ", $str);
+		}
+		elsif (opt('debug'))
+		{
+			dbg($id_type, " ", join(',', @$row));
+		}
+
 		$_csv->print($fh, $row);
 	}
 

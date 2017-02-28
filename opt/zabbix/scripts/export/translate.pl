@@ -11,6 +11,7 @@ use lib $MYDIR2;
 use strict;
 use warnings;
 
+use File::Basename;
 use DaWa;
 use RSM;
 use RSMSLV;
@@ -19,17 +20,20 @@ use constant PRINT_RIGHT_SHIFT => 30;
 
 parse_opts();
 
-my $data_type = $ARGV[0];
-my $data_file = $ARGV[1];
-my $data_file_line = $ARGV[2];
+my $data_file = $ARGV[0];
+my $data_file_line = $ARGV[1];
+
+my $data_type;
 
 my $error = 0;
-if (scalar(@ARGV) ne 3)
+if (scalar(@ARGV) lt 1 || scalar(@ARGV) gt 2 || ! -f $data_file)
 {
 	$error = 1;
 }
 else
 {
+	$data_type = basename($data_file);
+
 	my $found = 0;
 
 	foreach my $id_type (keys(%DATAFILES))
@@ -46,37 +50,47 @@ else
 
 if ($error != 0)
 {
-	print("usage   : $0 <csv type> <csv file> <line>\n");
-	print("example : $0 cycles.csv /tmp/my-cycles-file.csv 1834\n");
+	print <<EOF;
+usage: $0 <csv file> <line>
+
+Supported files: cycles.csv, tests.csv
+
+example: $0 2017/02/22/tld1/cycles.csv
+EOF
+
 	exit(-1);
 }
-
-my $fh;
-open($fh, '<', $data_file) or die $!;
-
-my $line;
-do
-{
-	$line = <$fh>;
-}
-until ($. == $data_file_line && defined($line));
-
-print($line);
 
 set_slv_config(get_rsm_config());
 db_connect();
 dw_csv_init();
 dw_load_ids_from_db();
 
-##### TODO: USE MAPPINGS!!!! ######
-if ($data_type eq 'cycles.csv')
+my $fh;
+open($fh, '<', $data_file) or die $!;
+
+my $line;
+
+while ($line = <$fh>)
 {
-	__translate_cycles_line($line);
+	next if (defined($data_file_line) && $. != $data_file_line);
+
+	printf("%6d: %s", $., $line);
+
+	##### TODO: USE MAPPINGS!!!! ######
+	if ($data_type eq 'cycles.csv')
+	{
+	    __translate_cycles_line($line);
+	}
+	elsif ($data_type eq 'tests.csv')
+	{
+	    __translate_tests_line($line);
+	}
 }
-elsif ($data_type eq 'tests.csv')
-{
-	__translate_tests_line($line);
-}
+
+close($fh);
+
+db_disconnect();
 
 sub __translate_cycles_line
 {

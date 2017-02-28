@@ -62,6 +62,8 @@ use constant PROBE_ONLINE_STR => 'Online';
 use constant PROBE_OFFLINE_STR => 'Offline';
 use constant PROBE_NORESULT_STR => 'No result';
 
+use constant PROBE_KEY_ONLINE		=> 'rsm.probe.online';	# todo phae 1: taken from phase 2 for get_probe_times()
+
 our ($result, $dbh, $tld, $server_key);
 
 my $total_sec;
@@ -82,6 +84,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_item_data get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
+		get_templated_nsips db_exec
 		db_select set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
 		minutes_last_month max_avail_time get_online_probes get_probe_times probe_offline_at probes2tldhostids
 		init_values push_value send_values get_nsip_from_key is_service_error process_slv_ns_monthly
@@ -526,19 +529,14 @@ sub get_nsips
 {
 	my $host = shift;
 	my $key = shift;
-	my $templated = shift; # get the list from template
 
-	my $sql;
-	if (defined($templated))
-	{
-		$sql = "select key_ from items i,hosts h where i.hostid=h.hostid and h.host='Template $host' and i.key_ like '$key%'";
-	}
-	else
-	{
-		$sql = "select key_ from items i,hosts h where i.hostid=h.hostid and h.host='$host' and i.key_ like '$key%'";
-	}
-
-	my $rows_ref = db_select($sql);
+	my $rows_ref = db_select(
+		"select key_".
+		" from items i,hosts h".
+		" where i.hostid=h.hostid".
+			" and i.status<>".ITEM_STATUS_DISABLED.
+			" and h.host='$host'".
+			" and i.key_ like '$key%'");
 
 	my @nss;
 	foreach my $row_ref (@$rows_ref)
@@ -549,6 +547,14 @@ sub get_nsips
 	fail("cannot find items ($key*) at host ($host)") if (scalar(@nss) == 0);
 
 	return \@nss;
+}
+
+sub get_templated_nsips
+{
+	my $host = shift;
+	my $key = shift;
+
+	return get_nsips("Template $host", $key);
 }
 
 #
@@ -792,8 +798,11 @@ sub db_connect
 
 sub db_disconnect
 {
-	$dbh->disconnect() || wrn($dbh->errstr);
-	undef($dbh);
+	if (defined($dbh))
+	{
+		$dbh->disconnect() || wrn($dbh->errstr);
+		undef($dbh);
+	}
 }
 
 sub db_select
@@ -854,6 +863,50 @@ sub db_select
 	}
 
 	return $rows_ref;
+}
+
+# todo phase 1: taken from RSMSLV.pm phase 2 for DaWa.pm::dw_get_id()
+sub db_exec
+{
+	$global_sql = shift;
+
+	my $sec;
+	if (opt('stats'))
+	{
+		$sec = time();
+	}
+
+	my $sth = $dbh->prepare($global_sql)
+		or fail("cannot prepare [$global_sql]: ", $dbh->errstr);
+
+	dbg("[$global_sql]");
+
+	my ($start, $total);
+	if (opt('warnslow'))
+	{
+		$start = time();
+	}
+
+	$sth->execute()
+		or fail("cannot execute [$global_sql]: ", $sth->errstr);
+
+	if (opt('warnslow'))
+	{
+		$total = time() - $start;
+
+		if ($total > getopt('warnslow'))
+		{
+			wrn("slow query: [$global_sql] took ", sprintf("%.3f seconds", $total));
+		}
+	}
+
+	if (opt('stats'))
+	{
+		$sql_time += time() - $sec;
+		$sql_count++;
+	}
+
+	return $sth->{mysql_insertid};
 }
 
 sub set_slv_config
@@ -1190,7 +1243,7 @@ sub get_online_probes
 # Returns hash of probe names as keys and array with online times as values:
 #
 # {
-#   'probe name1' => [ from1, till1, from2, till2 ... ]
+#   'probe' => [ from1, till1, from2, till2 ... ]
 #   ...
 # }
 #
@@ -1199,45 +1252,91 @@ sub get_probe_times
 {
 	my $from = shift;
 	my $till = shift;
-	my $probe_avail_limit = shift;
+	my $probe_avail_limit = shift;	# todo phase 1: this param is ignored, remove in phase 2
 	my $probes_ref = shift; # { host => hostid, ... }
 
-	dbg("from:$from till:$till probe_avail_limit:$probe_avail_limit");
+	my $result;
 
-	$probes_ref = get_probes() unless (defined($probes_ref));
+	return $result if (scalar(keys(%{$probes_ref})) == 0);
 
-	my %result;
+	my @probes = map {"'$_ - mon'"} (keys(%{$probes_ref}));
 
-	# check probe lastaccess time
-	foreach my $probe (keys(%$probes_ref))
+	my $items_ref = db_select(
+		"select i.itemid,h.host".
+		" from items i,hosts h".
+		" where i.hostid=h.hostid".
+			" and h.host in (".join(',', @probes).")".
+			" and i.templateid is not null".
+			" and i.status<>".ITEM_STATUS_DISABLED.
+			" and i.key_='".PROBE_KEY_ONLINE."'");
+
+	if (scalar(@{$items_ref}) == 0)
 	{
-		my $times_ref = __get_reachable_times($probe, $probe_avail_limit, $from, $till);
+		fail("Probe main status items (".PROBE_KEY_ONLINE.") must exist on every probe (PROBE - mon) host.");
+	}
 
-		my $hostid = $probes_ref->{$probe};
+	foreach my $item_ref (@{$items_ref})
+	{
+		my $itemid = $item_ref->[0];
+		my $host = $item_ref->[1];
 
-		if (scalar(@$times_ref) != 0)
+		my $probe = substr($host, 0, -length(' - mon'));	# get rid of " - mon"
+
+		my $values_ref = db_select(
+			"select clock,value".
+			" from history_uint".
+			" where itemid=$itemid".
+				" and clock between $from and $till");
+
+		next unless (scalar(@{$values_ref}));
+
+		my ($values_hash_ref, $min_clock);
+		foreach my $row_ref (sort {$a->[0] <=> $b->[0]} (@{$values_ref}))	# sort by clock
 		{
-			dbg("$probe reachable times: ", join(',', @$times_ref)) if (opt('debug'));
-
-			$times_ref = __get_probestatus_times($probe, $hostid, $times_ref, PROBE_KEY_MANUAL);
+			$values_hash_ref->{truncate_from($row_ref->[0])} = $row_ref->[1];
+			$min_clock = $row_ref->[0] if (!defined($min_clock) || $row_ref->[0] < $min_clock);
 		}
 
-		if (scalar(@$times_ref) != 0)
-		{
-			dbg("$probe manual probestatus times: ", join(',', @$times_ref)) if (opt('debug'));
+		my $step_clock = $min_clock;
+		my $step = 60;	# seconds
+		my $prev_value = DOWN;
 
-			$times_ref = __get_probestatus_times($probe, $hostid, $times_ref, PROBE_KEY_AUTOMATIC);
+		# check probe status every minute, if the value is missing consider the probe down
+		while ($step_clock < $till)
+		{
+			my $value = (defined($values_hash_ref->{$step_clock}) ? $values_hash_ref->{$step_clock} : DOWN);
+
+			if ($prev_value == DOWN && $value == UP)
+			{
+				push(@{$result->{$probe}}, $step_clock);
+			}
+			elsif ($prev_value == UP && $value == DOWN)
+			{
+				# went down, add last second of previous minute
+				push(@{$result->{$probe}}, $step_clock - 1);
+			}
+
+			$step_clock += $step;
+			$prev_value = $value;
 		}
 
-		if (scalar(@$times_ref) != 0)
+		# push "till" to @times if it contains odd number of elements
+		if ($result->{$probe})
 		{
-			dbg("$probe automatic probestatus times: ", join(',', @$times_ref)) if (opt('debug'));
-
-			$result{$probe} = $times_ref;
+			push(@{$result->{$probe}}, $till) if ($prev_value == UP);
 		}
 	}
 
-	return \%result;
+	if (!defined($result))
+	{
+		fail("Probe main status items (".PROBE_KEY_ONLINE.") have no values yet.");
+	}
+	else
+	{
+		__print_probe_times($result) if (opt('dry-run'));
+	}
+
+	return $result;
 }
 
 sub probe_offline_at
@@ -2543,6 +2642,8 @@ sub get_detailed_result
 	my $maps = shift;
 	my $value = shift;
 
+	return undef unless($value);
+
 	my $value_int = int($value);
 
 	return $value_int unless (exists($maps->{$value_int}));
@@ -2938,12 +3039,12 @@ sub __log
 	}
 	elsif ($syslog_priority eq 'err')
 	{
-		$stdout = 0;
+		$stdout = 0 unless (opt('debug') || opt('dry-run'));	# todo phase 1: add this line to RSMSLV.pm of phase 2!
 		$priority = 'ERR';
 	}
 	elsif ($syslog_priority eq 'warning')
 	{
-		$stdout = 0;
+		$stdout = 0 unless (opt('debug') || opt('dry-run'));	# todo phase 1: add this line to RSMSLV.pm of phase 2!
 		$priority = 'WRN';
 	}
 	elsif ($syslog_priority eq 'debug')
