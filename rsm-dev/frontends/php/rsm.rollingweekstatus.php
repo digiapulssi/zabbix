@@ -594,19 +594,19 @@ foreach ($DB['SERVERS'] as $server) {
 
 			// services status filter
 			if ($data['filter_status'] == 1) {
-				foreach ($tlds as $tld) {
+				foreach ($data['tld'] as $key => $tld) {
 					if ((!isset($tld[RSM_DNS]) || !$tld[RSM_DNS]['trigger'])
 							&& (!isset($tld[RSM_DNSSEC]) || !$tld[RSM_DNSSEC]['trigger'])
 							&& (!isset($tld[RSM_RDDS]) || !$tld[RSM_RDDS]['trigger'])
 							&& (!isset($tld[RSM_EPP]) || !$tld[RSM_EPP]['trigger'])) {
-						unset($data['tld'][$tld['hostid']]);
+						unset($data['tld'][$key]);
 					}
 				}
 			}
 			elseif ($data['filter_status'] == 2) {
-				foreach ($tlds as $tld) {
+				foreach ($data['tld'] as $key => $tld) {
 					if (isset($tld[RSM_DNS]) && isset($tld[RSM_DNSSEC]) && isset($tld[RSM_RDDS]) && isset($tld[RSM_EPP])) {
-						unset($data['tld'][$tld['hostid']]);
+						unset($data['tld'][$key]);
 					}
 				}
 			}
@@ -614,12 +614,12 @@ foreach ($DB['SERVERS'] as $server) {
 			if ($data['filter_slv'] > 0
 					&& ($data['filter_dns'] || $data['filter_dnssec'] || $data['filter_rdds']
 						|| $data['filter_epp'])) {
-				foreach ($tlds as $tld) {
+				foreach ($data['tld'] as $key => $tld) {
 					if (array_key_exists('hostid', $tld) && (!$data['filter_dns'] || (!isset($tld[RSM_DNS]) || $tld[RSM_DNS]['lastvalue'] < $data['filter_slv']))
 							&& (!$data['filter_dnssec'] || (!isset($tld[RSM_DNSSEC]) || $tld[RSM_DNSSEC]['lastvalue'] < $data['filter_slv']))
 							&& (!$data['filter_rdds'] || (!isset($tld[RSM_RDDS]) || $tld[RSM_RDDS]['lastvalue'] < $data['filter_slv']))
 							&& (!$data['filter_epp'] || (!isset($tld[RSM_EPP]) || $tld[RSM_EPP]['lastvalue'] < $data['filter_slv']))) {
-						unset($data['tld'][$tld['hostid']]);
+						unset($data['tld'][$key]);
 					}
 				}
 			}
