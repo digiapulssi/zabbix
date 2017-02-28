@@ -692,7 +692,6 @@ int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 		if (ZBX_DBSYNC_ROW_NONE != tag)
 			dbsync_add_row(sync, rowid, tag, row);
-
 	}
 
 	zbx_hashset_iter_reset(&cache->hosts, &iter);

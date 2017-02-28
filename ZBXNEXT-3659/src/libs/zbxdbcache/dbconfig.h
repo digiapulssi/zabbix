@@ -60,6 +60,7 @@ typedef struct
 	zbx_uint64_t	itemid;
 	const char	*function;
 	const char	*parameter;
+	unsigned char	timer;
 }
 ZBX_DC_FUNCTION;
 
@@ -92,6 +93,7 @@ typedef struct
 	unsigned char	flags;
 	unsigned char	status;
 	unsigned char	unreachable;
+	unsigned char	update_triggers;
 }
 ZBX_DC_ITEM;
 
