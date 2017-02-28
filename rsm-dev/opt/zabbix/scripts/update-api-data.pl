@@ -38,8 +38,6 @@ __validate_input();	# needs to be connected to db
 my $config = get_rsm_config();
 set_slv_config($config);
 
-my @server_keys = get_rsm_server_keys($config);
-
 db_connect();
 
 my $opt_from = getopt('from');
@@ -247,6 +245,7 @@ if (!$from)
 my $tlds_processed = 0;
 
 # go through all the databases
+my @server_keys = get_rsm_server_keys($config);
 foreach (@server_keys)
 {
 	$server_key = $_;
@@ -471,7 +470,7 @@ foreach (keys(%$servicedata))
 
 		if ($service eq 'dns' || $service eq 'dnssec')
 		{
-			$nsips_ref = get_nsips($tld, $services{$service}{'key_rtt'}, 1);	# templated
+			$nsips_ref = get_templated_nsips($tld, $services{$service}{'key_rtt'});
 			$dns_items_ref = __get_dns_itemids($nsips_ref, $services{$service}{'key_rtt'}, $tld, getopt('probe'));
 		}
 		elsif ($service eq 'rdds')
@@ -957,7 +956,7 @@ unless (opt('dry-run') or opt('tld'))
 }
 
 last if (opt('tld'));
-}	# for each db key
+}	# foreach (@server_keys)
 undef($server_key);
 
 db_disconnect();
