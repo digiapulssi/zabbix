@@ -597,27 +597,27 @@ foreach ($DB['SERVERS'] as $server) {
 
 if (array_key_exists('tld', $data) && $data['tld']) {
 	// services status filter
-	if ($data['filter_status'] == 1) {
+	if ($data['filter_status']) {
 		foreach ($data['tld'] as $key => $tld) {
-			if ((!isset($tld[RSM_DNS]) || !$tld[RSM_DNS]['trigger'])
-					&& (!isset($tld[RSM_DNSSEC]) || !$tld[RSM_DNSSEC]['trigger'])
-					&& (!isset($tld[RSM_RDDS]) || !$tld[RSM_RDDS]['trigger'])
-					&& (!isset($tld[RSM_EPP]) || !$tld[RSM_EPP]['trigger'])) {
-				unset($data['tld'][$key]);
+			if ($data['filter_status'] == 1) {
+				if ((!isset($tld[RSM_DNS]) || !$tld[RSM_DNS]['trigger'])
+						&& (!isset($tld[RSM_DNSSEC]) || !$tld[RSM_DNSSEC]['trigger'])
+						&& (!isset($tld[RSM_RDDS]) || !$tld[RSM_RDDS]['trigger'])
+						&& (!isset($tld[RSM_EPP]) || !$tld[RSM_EPP]['trigger'])) {
+					unset($data['tld'][$key]);
+				}
 			}
-		}
-	}
-	elseif ($data['filter_status'] == 2) {
-		foreach ($data['tld'] as $key => $tld) {
-			if (isset($tld[RSM_DNS]) && isset($tld[RSM_DNSSEC]) && isset($tld[RSM_RDDS]) && isset($tld[RSM_EPP])) {
-				unset($data['tld'][$key]);
+			elseif ($data['filter_status'] == 2) {
+				if (isset($tld[RSM_DNS]) && isset($tld[RSM_DNSSEC]) && isset($tld[RSM_RDDS]) && isset($tld[RSM_EPP])) {
+					unset($data['tld'][$key]);
+				}
 			}
 		}
 	}
 
 	if ($data['filter_dns'] || $data['filter_dnssec'] || $data['filter_rdds'] || $data['filter_epp']) {
-		if ($data['filter_slv'] > 0) {
-			foreach ($data['tld'] as $key => $tld) {
+		foreach ($data['tld'] as $key => $tld) {
+			if ($data['filter_slv'] > 0) {
 				if (array_key_exists('hostid', $tld) && (!$data['filter_dns'] || (!isset($tld[RSM_DNS]) || $tld[RSM_DNS]['lastvalue'] < $data['filter_slv']))
 						&& (!$data['filter_dnssec'] || (!isset($tld[RSM_DNSSEC]) || $tld[RSM_DNSSEC]['lastvalue'] < $data['filter_slv']))
 						&& (!$data['filter_rdds'] || (!isset($tld[RSM_RDDS]) || $tld[RSM_RDDS]['lastvalue'] < $data['filter_slv']))
@@ -625,15 +625,25 @@ if (array_key_exists('tld', $data) && $data['tld']) {
 					unset($data['tld'][$key]);
 				}
 			}
-		}
-		elseif ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO) {
-			foreach ($data['tld'] as $key => $tld) {
+			elseif ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO) {
 				if (array_key_exists('hostid', $tld) && (!$data['filter_dns'] || (!isset($tld[RSM_DNS]) || $tld[RSM_DNS]['lastvalue'] == 0))
 						&& (!$data['filter_dnssec'] || (!isset($tld[RSM_DNSSEC]) || $tld[RSM_DNSSEC]['lastvalue'] == 0))
 						&& (!$data['filter_rdds'] || (!isset($tld[RSM_RDDS]) || $tld[RSM_RDDS]['lastvalue'] == 0))
 						&& (!$data['filter_epp'] || (!isset($tld[RSM_EPP]) || $tld[RSM_EPP]['lastvalue'] == 0))) {
 					unset($data['tld'][$key]);
 				}
+			}
+		}
+	}
+
+	if ($data['filter_cctld_group'] || $data['filter_gtld_group'] || $data['filter_othertld_group']
+		|| $data['filter_test_group']) {
+		foreach ($data['tld'] as $key => $tld) {
+			if (($tld['type'] == RSM_CC_TLD_GROUP && !$data['filter_cctld_group'])
+					|| ($tld['type'] == RSM_G_TLD_GROUP && !$data['filter_gtld_group'])
+					|| ($tld['type'] == RSM_OTHER_TLD_GROUP && !$data['filter_othertld_group'])
+					|| ($tld['type'] == RSM_TEST_GROUP && !$data['filter_test_group'])) {
+				unset($data['tld'][$key]);
 			}
 		}
 	}
