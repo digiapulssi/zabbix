@@ -359,7 +359,6 @@ zbx_uint64_t	DCget_nextid(const char *table_name, int num);
 void	DCsync_configuration(unsigned char mode);
 void	init_configuration_cache(void);
 void	free_configuration_cache(void);
-void	DCload_config(void);
 
 void	DCconfig_get_triggers_by_triggerids(DC_TRIGGER *triggers, const zbx_uint64_t *triggerids, int *errcode,
 		size_t num);

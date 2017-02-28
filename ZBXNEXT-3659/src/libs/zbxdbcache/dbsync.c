@@ -493,12 +493,7 @@ int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	}
 
 	if (NULL == (row = DBfetch(result)))
-	{
-		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-			zabbix_log(LOG_LEVEL_ERR, "no records in table 'config'");
-
 		goto out;
-	}
 
 	if (NULL == cache->config)
 		tag = ZBX_DBSYNC_ROW_ADD;
@@ -508,8 +503,8 @@ int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 	if (ZBX_DBSYNC_ROW_NONE != tag)
 		dbsync_add_row(sync, 0, tag, row);
 
-	if (NULL != (row = DBfetch(result)))	/* config table should have only one record */
-		zabbix_log(LOG_LEVEL_ERR, "table 'config' has multiple records");
+	while (NULL != (row = DBfetch(result)))
+		dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_ADD, row);
 
 out:
 	DBfree_result(result);

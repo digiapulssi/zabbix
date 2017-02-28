@@ -890,8 +890,6 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 
 	DBconnect(ZBX_DB_CONNECT_NORMAL);
 
-	DCload_config();
-
 	/* make initial configuration sync before worker processes are forked */
 	DCsync_configuration(ZBX_DBSYNC_INIT);
 

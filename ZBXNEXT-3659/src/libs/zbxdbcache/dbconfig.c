@@ -685,6 +685,9 @@ static int	DCsync_config(zbx_dbsync_t *sync, int *refresh_unsupported_changed)
 
 	if (FAIL == zbx_dbsync_next(sync, &rowid, &row, &tag))
 	{
+		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+			zabbix_log(LOG_LEVEL_ERR, "no records in table 'config'");
+
 		if (0 == found)
 		{
 			/* load default config data */
@@ -774,6 +777,9 @@ static int	DCsync_config(zbx_dbsync_t *sync, int *refresh_unsupported_changed)
 			config->config->hk.trends_global = atoi(row[24]);
 		else
 			config->config->hk.trends_global = ZBX_HK_OPTION_DISABLED;
+
+		if (FAIL != zbx_dbsync_next(sync, &rowid, &row, &tag))
+			zabbix_log(LOG_LEVEL_ERR, "table 'config' has multiple records");
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -4195,40 +4201,6 @@ void	free_configuration_cache(void)
 	UNLOCK_CACHE;
 
 	zbx_mutex_destroy(&config_lock);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: DCload_config                                                    *
- *                                                                            *
- * Purpose: load 'config' table in cache                                      *
- *                                                                            *
- * Author: Rudolfs Kreicbergs                                                 *
- *                                                                            *
- * Comments: !! SQL statement must be synced with DCsync_configuration() !!   *
- *                                                                            *
- ******************************************************************************/
-void	DCload_config(void)
-{
-	const char	*__function_name = "DCload_config";
-
-	int			refresh_unsupported_changed;
-	zbx_dbsync_t		config_sync;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
-	zbx_dbsync_init(&config_sync, ZBX_DBSYNC_INIT);
-	zbx_dbsync_compare_config(config, &config_sync);
-
-	LOCK_CACHE;
-
-	DCsync_config(&config_sync, &refresh_unsupported_changed);
-
-	UNLOCK_CACHE;
-
-	zbx_dbsync_clear(&config_sync);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
