@@ -637,7 +637,7 @@ if (array_key_exists('tld', $data) && $data['tld']) {
 	}
 
 	if ($data['filter_cctld_group'] || $data['filter_gtld_group'] || $data['filter_othertld_group']
-		|| $data['filter_test_group']) {
+			|| $data['filter_test_group']) {
 		foreach ($data['tld'] as $key => $tld) {
 			if (($tld['type'] == RSM_CC_TLD_GROUP && !$data['filter_cctld_group'])
 					|| ($tld['type'] == RSM_G_TLD_GROUP && !$data['filter_gtld_group'])

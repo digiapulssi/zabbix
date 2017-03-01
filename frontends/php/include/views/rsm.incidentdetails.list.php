@@ -49,15 +49,13 @@ $filterColumn3
 		->addClass(ZBX_STYLE_BTN_LINK));
 $filterColumn4
 	->addRow(new CSpan([
-		new CCheckBox('filter_failing_tests',
-			isset($data['filter_failing_tests']) ? $data['filter_failing_tests'] : null, null, 1),
+		(new CCheckBox('filter_failing_tests'))->setChecked($data['filter_failing_tests']),
 		SPACE,
 		_('Only failing tests')
 ]));
 $filterColumn5
 	->addRow(new CSpan([
-		new CCheckBox('filter_show_all',
-			isset($data['filter_show_all']) ? $data['filter_show_all'] : null, null, 1),
+		(new CCheckBox('filter_show_all'))->setChecked($data['filter_show_all']),
 		SPACE,
 		_('Show all')
 ]));
