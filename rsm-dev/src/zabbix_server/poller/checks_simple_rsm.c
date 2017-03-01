@@ -1571,7 +1571,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		return SYSINFO_RET_FAIL;
 	}
 
-	zbx_rsm_info(log_fd, "START DNS TEST");
+	zbx_rsm_info(log_fd, "START TEST");
 
 	if (SUCCEED != zbx_conf_int(&item->host.hostid, ZBX_MACRO_TLD_DNSSEC_ENABLED, &dnssec_enabled, 0,
 			err, sizeof(err)))
@@ -1798,7 +1798,7 @@ out:
 	if (0 != ISSET_MSG(result))
 		zbx_rsm_err(log_fd, result->msg);
 
-	zbx_rsm_info(log_fd, "END DNS TEST");
+	zbx_rsm_info(log_fd, "END TEST");
 
 	if (0 != nss_num)
 	{
@@ -2342,7 +2342,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	zbx_vector_str_create(&ips80);
 	zbx_vector_str_create(&nss);
 
-	zbx_rsm_info(log_fd, "START RDDS TEST");
+	zbx_rsm_info(log_fd, "START TEST");
 
 	if (SUCCEED != zbx_conf_int(&item->host.hostid, ZBX_MACRO_RDDS_ENABLED, &rdds_enabled, 0, err, sizeof(err)) ||
 			0 == rdds_enabled)
@@ -2642,7 +2642,7 @@ out:
 	if (0 != ISSET_MSG(result))
 		zbx_rsm_err(log_fd, result->msg);
 
-	zbx_rsm_info(log_fd, "END RDDS TEST");
+	zbx_rsm_info(log_fd, "END TEST");
 
 	if (SYSINFO_RET_OK == ret)
 	{
@@ -3632,7 +3632,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		return SYSINFO_RET_FAIL;
 	}
 
-	zbx_rsm_info(log_fd, "START EPP TEST");
+	zbx_rsm_info(log_fd, "START TEST");
 
 	if ('\0' == *epp_passphrase)
 	{
@@ -4041,7 +4041,7 @@ out:
 		}
 	}
 
-	zbx_rsm_info(log_fd, "END EPP TEST");
+	zbx_rsm_info(log_fd, "END TEST");
 
 	free_items(items, items_num);
 
@@ -4178,7 +4178,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		return SYSINFO_RET_FAIL;
 	}
 
-	zbx_rsm_info(log_fd, "START PROBE TEST");
+	zbx_rsm_info(log_fd, "START TEST");
 
 	if (SUCCEED != zbx_conf_ip_support(&item->host.hostid, &ipv4_enabled, &ipv6_enabled, err, sizeof(err)))
 	{
@@ -4392,7 +4392,7 @@ out:
 
 	DCset_probe_last_status(status);
 
-	zbx_rsm_info(log_fd, "END PROBE TEST");
+	zbx_rsm_info(log_fd, "END TEST");
 
 	if (NULL != res)
 	{
