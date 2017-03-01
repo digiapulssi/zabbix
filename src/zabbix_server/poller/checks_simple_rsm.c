@@ -123,6 +123,8 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 	va_start(args, fmt);
 	vfprintf(log_fd, fmt, args);
 	va_end(args);
+
+	fflush(log_fd);
 }
 
 #define zbx_rsm_err(log_fd, text)	zbx_rsm_log(log_fd, "Error", text)
@@ -148,6 +150,8 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 			ms,
 			prefix,
 			text);
+
+	fflush(log_fd);
 }
 
 static int	zbx_validate_ip(const char *ip, char ipv4_enabled, char ipv6_enabled, ldns_rdf **ip_rdf_out,
