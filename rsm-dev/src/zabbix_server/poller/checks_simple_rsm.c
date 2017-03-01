@@ -1447,7 +1447,22 @@ out:
 	return ret;
 }
 
-FILE	*open_item_log(const char *domain, const char *prefix, char *err, size_t err_size)
+/******************************************************************************
+ *                                                                            *
+ * Function: open_item_log                                                    *
+ *                                                                            *
+ * Purpose: Open log file for simple check                                    *
+ *                                                                            *
+ * Parameters: domain   - [IN]  TLD, NULL in case of probestatus check        *
+ *             prefix   - [IN]  name of the test: dns, rdds, epp, probestatus *
+ *             postfix  - [IN]  protocol of dns test, NULL for other tests    *
+ *             err      - [OUT] buffer for error message                      *
+ *             err_size - [IN]  size of err buffer                            *
+ *                                                                            *
+ * Return value: file descriptor in case of success, NULL otherwise           *
+ *                                                                            *
+ ******************************************************************************/
+FILE	*open_item_log(const char *domain, const char *prefix, const char *postfix, char *err, size_t err_size)
 {
 	FILE		*fd;
 	char		*file_name;
@@ -1471,8 +1486,10 @@ FILE	*open_item_log(const char *domain, const char *prefix, char *err, size_t er
 
 	if (NULL == domain)
 		file_name = zbx_strdcatf(file_name, "/%s.log", prefix);
-	else
+	else if (NULL == postfix)
 		file_name = zbx_strdcatf(file_name, "/%s-%s.log", domain, prefix);
+	else
+		file_name = zbx_strdcatf(file_name, "/%s-%s-%s.log", domain, prefix, postfix);
 
 	if (NULL == (fd = fopen(file_name, "a")))
 		zbx_snprintf(err, err_size, "cannot open log file \"%s\". %s.", file_name, strerror(errno));
@@ -1565,7 +1582,8 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	}
 
 	/* open log file */
-	if (NULL == (log_fd = open_item_log(domain, ZBX_DNS_LOG_PREFIX, err, sizeof(err))))
+	if (NULL == (log_fd = open_item_log(domain, ZBX_DNS_LOG_PREFIX, (ZBX_RSM_UDP == proto ? "udp" : "tcp"),
+			err, sizeof(err))))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
 		return SYSINFO_RET_FAIL;
@@ -2330,7 +2348,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	}
 
 	/* open log file */
-	if (NULL == (log_fd = open_item_log(domain, ZBX_RDDS_LOG_PREFIX, err, sizeof(err))))
+	if (NULL == (log_fd = open_item_log(domain, ZBX_RDDS_LOG_PREFIX, NULL, err, sizeof(err))))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
 		return SYSINFO_RET_FAIL;
@@ -3626,7 +3644,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	}
 
 	/* open log file */
-	if (NULL == (log_fd = open_item_log(domain, ZBX_EPP_LOG_PREFIX, err, sizeof(err))))
+	if (NULL == (log_fd = open_item_log(domain, ZBX_EPP_LOG_PREFIX, NULL, err, sizeof(err))))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
 		return SYSINFO_RET_FAIL;
@@ -4172,7 +4190,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 	}
 
 	/* open probestatus log file */
-	if (NULL == (log_fd = open_item_log(NULL, ZBX_PROBESTATUS_LOG_PREFIX, err, sizeof(err))))
+	if (NULL == (log_fd = open_item_log(NULL, ZBX_PROBESTATUS_LOG_PREFIX, NULL, err, sizeof(err))))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
 		return SYSINFO_RET_FAIL;
