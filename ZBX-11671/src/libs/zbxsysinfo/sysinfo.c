@@ -1411,7 +1411,8 @@ int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *re
 
 	zbx_free(data);
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%d '%s'", __function_name, ret, ISSET_MSG(result) ? result->msg : "");
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s '%s'", __function_name, zbx_result_string(ret),
+			ISSET_MSG(result) ? result->msg : "");
 
 	return ret;
 }
