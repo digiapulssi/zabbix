@@ -22,7 +22,12 @@
 
 #include <signal.h>
 
+#define PRINT_PC_REG_SF		0x0001
+#define PRINT_BACKTRACE		0x0002
+#define PRINT_MEM_MAP		0x0004
+#define PRINT_ALL		(PRINT_PC_REG_SF | PRINT_BACKTRACE | PRINT_MEM_MAP)
+
 const char	*get_signal_name(int sig);
-void		print_fatal_info(void *context);
+void	print_fatal_info(void *context, zbx_uint64_t print_flag);
 
 #endif

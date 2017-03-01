@@ -43,7 +43,7 @@ static void	fatal_signal_handler(int sig, siginfo_t *siginfo, void *context)
 			sig, get_signal_name(sig),
 			SIG_CHECKED_FIELD(siginfo, si_code),
 			SIG_CHECKED_FIELD_TYPE(siginfo, si_addr, void *));
-	print_fatal_info(context);
+	print_fatal_info(context, PRINT_ALL);
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_free_on_signal();
@@ -154,6 +154,29 @@ static void	child_signal_handler(int sig, siginfo_t *siginfo, void *context)
 
 /******************************************************************************
  *                                                                            *
+ * Function: metric_thread_signal_handler                                     *
+ *                                                                            *
+ * Purpose: handle fatal signals: SIGILL, SIGFPE, SIGSEGV, SIGBUS             *
+ *                                                                            *
+ ******************************************************************************/
+static void	metric_thread_signal_handler(int sig, siginfo_t *siginfo, void *context)
+{
+	SIG_CHECK_PARAMS(sig, siginfo, context);
+
+	zabbix_log(LOG_LEVEL_CRIT, "Got signal [signal:%d(%s),reason:%d,refaddr:%p]. Crashing ...",
+			sig, get_signal_name(sig),
+			SIG_CHECKED_FIELD(siginfo, si_code),
+			SIG_CHECKED_FIELD_TYPE(siginfo, si_addr, void *));
+	print_fatal_info(context, PRINT_BACKTRACE);
+
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+	zbx_tls_free_on_signal();
+#endif
+	exit(EXIT_FAILURE);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_set_common_signal_handlers                                   *
  *                                                                            *
  * Purpose: set the commonly used signal handlers                             *
@@ -201,4 +224,27 @@ void 	zbx_set_child_signal_handler()
 
 	phan.sa_sigaction = child_signal_handler;
 	sigaction(SIGCHLD, &phan, NULL);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_set_metric_thread_signal_handler                             *
+ *                                                                            *
+ * Purpose: set the handlers for child process signals                        *
+ *                                                                            *
+ ******************************************************************************/
+void 	zbx_set_metric_thread_signal_handler()
+{
+	struct sigaction	phan;
+
+	sig_parent_pid = (int)getpid();
+
+	sigemptyset(&phan.sa_mask);
+	phan.sa_flags = SA_SIGINFO;
+
+	phan.sa_sigaction = metric_thread_signal_handler;
+	sigaction(SIGILL, &phan, NULL);
+	sigaction(SIGFPE, &phan, NULL);
+	sigaction(SIGSEGV, &phan, NULL);
+	sigaction(SIGBUS, &phan, NULL);
 }

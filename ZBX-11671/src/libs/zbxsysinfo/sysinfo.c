@@ -24,6 +24,7 @@
 #include "cfg.h"
 #include "alias.h"
 #include "threads.h"
+#include "sighandler.h"
 
 #ifdef WITH_AGENT_METRICS
 #	include "agent/agent.h"
@@ -1334,10 +1335,7 @@ int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *re
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "executing in data process for key:'%s'", request->key);
 
-		signal(SIGILL, SIG_DFL);
-		signal(SIGFPE, SIG_DFL);
-		signal(SIGSEGV, SIG_DFL);
-		signal(SIGBUS, SIG_DFL);
+		zbx_set_metric_thread_signal_handler();
 
 		close(fds[0]);
 

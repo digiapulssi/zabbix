@@ -22,5 +22,6 @@
 
 void	zbx_set_common_signal_handlers();
 void	zbx_set_child_signal_handler();
+void 	zbx_set_metric_thread_signal_handler();
 
 #endif
