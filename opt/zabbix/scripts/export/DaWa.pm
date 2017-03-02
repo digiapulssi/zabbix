@@ -97,12 +97,14 @@ sub dw_append_csv
 
 	if (ref($rows_ref->[0]) eq '')
 	{
+		__fix_row($id_type, $rows_ref);
 		push(@{$_csv_files{$id_type}{'rows'}}, $rows_ref);
 	}
         elsif (ref($rows_ref->[0]) eq 'ARRAY')
         {
                 foreach my $row (@$rows_ref)
                 {
+			__fix_row($id_type, $row);
 			push(@{$_csv_files{$id_type}{'rows'}}, $row);
                 }
         }
@@ -330,6 +332,38 @@ sub __get_target_dir
 	return $_year . '/' . $_month . '/' . $_day . '/' . $tld  . '/';
 }
 
+sub __fix_row
+{
+	my $id_type = shift;
+	my $row_ref = shift;
+
+	my $has_undef = 0;
+	my $str = '';
+
+	foreach (@{$row_ref})
+	{
+		if (!defined($_))
+		{
+			$has_undef = 1;
+			$str .= " [UNDEF]";
+			$_ = '';
+		}
+		else
+		{
+			$str .= " [$_]";
+		}
+	}
+
+	if ($has_undef == 1)
+	{
+		wrn("$id_type entry with UNDEF value: ", $str);
+	}
+	elsif (opt('debug'))
+	{
+		dbg("$id_type ", join(',', @{$row_ref}));
+	}
+}
+
 # only works with data files
 sub __write_csv_file
 {
@@ -378,31 +412,7 @@ sub __write_csv_file
 
 	foreach my $row (@{$_csv_files{$id_type}{'rows'}})
 	{
-		my $has_undef = 0;
-		my $str = '';
-
-		foreach (@$row)
-		{
-			if (!defined($_))
-			{
-				$has_undef = 1;
-				$str .= " [UNDEF]";
-				$_ = '';
-			}
-			else
-			{
-				$str .= " [$_]";
-			}
-		}
-
-		if ($has_undef == 1)
-		{
-			wrn("$id_type CSV record with UNDEF value: ", $str);
-		}
-		elsif (opt('debug'))
-		{
-			dbg($id_type, " ", join(',', @$row));
-		}
+		__fix_row($id_type, $row);
 
 		$_csv->print($fh, $row);
 	}
@@ -450,7 +460,7 @@ sub __write_csv_catalog
 	{
 		my $id = $_csv_catalogs{$id_type}{$name};
 
-		dbg("dumping: $id,$name");
+		dbg($id_type, " ", join(',', $id, $name));
 		$_csv->print($fh, [$id, $name]);
 	}
 
