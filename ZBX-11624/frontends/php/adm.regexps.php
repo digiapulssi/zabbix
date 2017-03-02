@@ -235,6 +235,13 @@ if (isset($_REQUEST['form'])) {
 				'case_sensitive' => 0
 			]
 		]);
+
+		foreach ($data['expressions'] as $i => &$expression) {
+			if (!array_key_exists('case_sensitive', $expression)) {
+				$expression['case_sensitive'] = 0;
+			}
+		}
+		unset($expression);
 	}
 
 	$view = new CView('administration.general.regularexpressions.edit', $data);
