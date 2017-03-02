@@ -6033,6 +6033,7 @@ static void	DCget_trigger(DC_TRIGGER *dst_trigger, ZBX_DC_TRIGGER *src_trigger, 
 	dst_trigger->recovery_mode = src_trigger->recovery_mode;
 	dst_trigger->correlation_mode = src_trigger->correlation_mode;
 	dst_trigger->correlation_tag = zbx_strdup(NULL, src_trigger->correlation_tag);
+	dst_trigger->flags = 0;
 
 	dst_trigger->expression = NULL;
 	dst_trigger->recovery_expression = NULL;
@@ -6069,9 +6070,6 @@ static void	DCget_trigger(DC_TRIGGER *dst_trigger, ZBX_DC_TRIGGER *src_trigger, 
 			zbx_vector_ptr_append(&dst_trigger->tags, tag);
 		}
 	}
-
-	zbx_vector_uint64_create(&dst_trigger->itemids_expression);
-	zbx_vector_uint64_create(&dst_trigger->itemids_recovery_expression);
 }
 
 void	zbx_free_tag(zbx_tag_t *tag)
@@ -6094,11 +6092,6 @@ static void	DCclean_trigger(DC_TRIGGER *trigger)
 
 	zbx_vector_ptr_clear_ext(&trigger->tags, (zbx_clean_func_t)zbx_free_tag);
 	zbx_vector_ptr_destroy(&trigger->tags);
-
-	zbx_vector_uint64_clear(&trigger->itemids_expression);
-	zbx_vector_uint64_clear(&trigger->itemids_recovery_expression);
-	zbx_vector_uint64_destroy(&trigger->itemids_expression);
-	zbx_vector_uint64_destroy(&trigger->itemids_recovery_expression);
 }
 
 /******************************************************************************
@@ -6238,7 +6231,8 @@ void	DCconfig_set_item_db_state(zbx_uint64_t itemid, unsigned char state, const 
  * Author: Aleksandrs Saveljevs, Alexander Vladishev                          *
  *                                                                            *
  ******************************************************************************/
-void	DCconfig_get_functions_by_functionids(DC_FUNCTION *functions, zbx_uint64_t *functionids, int *errcodes, size_t num)
+void	DCconfig_get_functions_by_functionids(DC_FUNCTION *functions, zbx_uint64_t *functionids, int *errcodes,
+		size_t num)
 {
 	size_t			i;
 	const ZBX_DC_FUNCTION	*dc_function;
@@ -6464,6 +6458,55 @@ void	DCconfig_unlock_all_triggers(void)
 	UNLOCK_CACHE;
 }
 
+static void	DCconfig_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const zbx_uint64_t *itemids,
+		int itemids_num)
+{
+	zbx_vector_ptr_t	triggers_func_pos;
+	zbx_vector_uint64_t	functionids;
+	DC_FUNCTION		*functions = NULL;
+	int			*errcodes = NULL, index, t, f, i;
+
+	zbx_vector_ptr_create(&triggers_func_pos);
+	zbx_vector_uint64_create(&functionids);
+
+	zbx_link_triggers_with_functions(&triggers_func_pos, &functionids, trigger_order);
+
+	functions = zbx_malloc(functions, sizeof(DC_FUNCTION) * functionids.values_num);
+	errcodes = zbx_malloc(errcodes, sizeof(int) * functionids.values_num);
+
+	DCconfig_get_functions_by_functionids(functions, functionids.values, errcodes, functionids.values_num);
+
+	for (t = 0; t < triggers_func_pos.values_num; t++)
+	{
+		DC_TRIGGER_FUNC_POSITION	*tr_func_pos = (DC_TRIGGER_FUNC_POSITION *)triggers_func_pos.values[t];
+		int				next_trigger = 0;
+
+		for (f = tr_func_pos->start_index; f < tr_func_pos->start_index + tr_func_pos->count; f++)
+		{
+			for (i = 0; i < itemids_num; i++)
+			{
+				if (functions[f].itemid == itemids[i])
+				{
+					tr_func_pos[t].trigger->flags = ZBX_DC_TRIGGER_BASE_EXPRESSION;
+					next_trigger = 1;
+					break;
+				}
+			}
+
+			if (1 == next_trigger)
+				break;
+		}
+	}
+
+	DCconfig_clean_functions(functions, errcodes, functionids.values_num);
+
+	zbx_vector_ptr_clear(&triggers_func_pos);
+	zbx_vector_ptr_destroy(&triggers_func_pos);
+
+	zbx_vector_uint64_clear(&functionids);
+	zbx_vector_uint64_destroy(&functionids);
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DCconfig_get_triggers_by_itemids                                 *
@@ -6525,43 +6568,7 @@ void	DCconfig_get_triggers_by_itemids(zbx_hashset_t *trigger_info, zbx_vector_pt
 
 	zbx_vector_ptr_sort(trigger_order, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 
-	/* split items by the type of expression */
-	for (int i = 0; i < trigger_order->values_num; i++)
-	{
-		zbx_vector_uint64_t	exp_itemsIds;
-		DC_TRIGGER 		*tr = trigger_order->values[i];
-		int			i, n;
-
-		zbx_vector_uint64_create(&exp_itemsIds);
-
-		DCget_itemids_by_expression(&exp_itemsIds, tr->expression);
-		for (i = 0; i < exp_itemsIds.values_num; i++)
-		{
-			for (n = 0; n < itemids_num; n++)
-			{
-				if (exp_itemsIds.values[i] == itemids[i])
-					zbx_vector_uint64_append(&tr->itemids_expression, itemids[i]);
-			}
-		}
-
-		if (TRIGGER_RECOVERY_MODE_RECOVERY_EXPRESSION == tr->recovery_mode)
-		{
-			zbx_vector_uint64_clear(&exp_itemsIds);
-			DCget_itemids_by_expression(&exp_itemsIds, tr->recovery_expression);
-
-			for (i = 0; i < exp_itemsIds.values_num; i++)
-			{
-				for (n = 0; n < itemids_num; n++)
-				{
-					if (exp_itemsIds.values[i] == itemids[i])
-						zbx_vector_uint64_append(&tr->itemids_recovery_expression, itemids[i]);
-				}
-			}
-		}
-
-		zbx_vector_uint64_clear(&exp_itemsIds);
-		zbx_vector_uint64_destroy(&exp_itemsIds);
-	}
+	DCconfig_determine_items_in_expressions(trigger_order, itemids, itemids_num);
 }
 
 /******************************************************************************

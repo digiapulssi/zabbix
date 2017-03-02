@@ -48,8 +48,6 @@
 int	get_N_functionid(const char *expression, int N_functionid, zbx_uint64_t *functionid, const char **end);
 void	get_functionids(zbx_vector_uint64_t *functionids, const char *expression);
 
-void	DCget_itemids_by_expression(zbx_vector_uint64_t *itemids, const char *expression);
-
 int	evaluate_function(char *value, DC_ITEM *item, const char *function, const char *parameters, time_t now,
 		char **error);
 
@@ -61,6 +59,9 @@ void	evaluate_expressions(zbx_vector_ptr_t *triggers);
 
 void	zbx_format_value(char *value, size_t max_len, zbx_uint64_t valuemapid,
 		const char *units, unsigned char value_type);
+
+void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos,
+		zbx_vector_uint64_t *functionIds, zbx_vector_ptr_t *trigger_order);
 
 /* lld macro context */
 #define ZBX_MACRO_ANY		(ZBX_TOKEN_LLD_MACRO | ZBX_TOKEN_USER_MACRO)

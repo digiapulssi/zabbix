@@ -190,6 +190,9 @@ typedef struct
 }
 zbx_tag_t;
 
+/* item exist in base expression  */
+#define		ZBX_DC_TRIGGER_BASE_EXPRESSION	1
+
 typedef struct _DC_TRIGGER
 {
 	zbx_uint64_t		triggerid;
@@ -215,12 +218,19 @@ typedef struct _DC_TRIGGER
 	unsigned char		recovery_mode;
 	unsigned char		correlation_mode;
 
-	zbx_vector_uint64_t	itemids_expression;
-	zbx_vector_uint64_t	itemids_recovery_expression;
+	unsigned char		flags;
 
 	zbx_vector_ptr_t	tags;
 }
 DC_TRIGGER;
+
+typedef struct _DC_TRIGGER_FUNC_POSITION
+{
+	DC_TRIGGER	*trigger;
+	int		start_index;
+	int		count;
+}
+DC_TRIGGER_FUNC_POSITION;
 
 typedef struct
 {
