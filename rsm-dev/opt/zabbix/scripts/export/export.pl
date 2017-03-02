@@ -115,6 +115,10 @@ if (opt('debug'))
 	dbg("till: ", ts_full($till));
 }
 
+# todo phase 1: make sure this check exists in phase 2
+my $max = __cycle_end(time() - 240, 60);
+fail("cannot export data: selected time period is in the future") if ($till > $max);
+
 # consider only tests that started within given period
 my $cfg_dns_minns;
 my $cfg_dns_minonline;
@@ -581,7 +585,7 @@ sub __get_test_data
 		}
 
 		# add tests to appropriate cycles
-		foreach my $cycleclock (keys(%$tests_ref))
+		foreach my $cycleclock (sort(keys(%$tests_ref)))
 		{
 			if (!$cycles->{$cycleclock})
 			{
@@ -940,7 +944,7 @@ sub __save_csv_data
 								dw_append_csv(DATA_CYCLE, [
 										      dw_get_cycle_id($cycleclock, $ns_service_category_id, $tld_id, $ns_id, $ip_id),
 										      $cycleclock,
-										      0,	# TODO: emergency threshold not yet supported for NS Availability
+										      '',	# TODO: emergency threshold not yet supported for NS Availability (todo phase 1: make sure this fix (0 -> '') exists in phase 2)
 										      dw_get_id(ID_STATUS_MAP, $nscyclestatus),
 										      '',	# TODO: incident ID not yet supported for NS Availability
 										      $tld_id,
@@ -1391,15 +1395,13 @@ sub __db_select_binds
 	my $sth = $dbh->prepare($_global_sql)
 		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
-	dbg("[$_global_sql]");
+	dbg("[$_global_sql] ", join(',', @{$_global_sql_bind_values}));
 
 	my ($start, $exe, $fetch, $total);
 
 	my @rows;
 	foreach my $bind_value (@{$_global_sql_bind_values})
 	{
-		dbg("bind_value:$bind_value");
-
 		if (opt('warnslow'))
 		{
 			$start = time();
@@ -1444,6 +1446,48 @@ sub __db_select_binds
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
+# NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
+# (supports identifying service error)
+sub __best_rtt
+{
+	my $cur_rtt = shift;
+	my $cur_description = shift;
+	my $new_rtt = shift;
+	my $new_description = shift;
+
+	dbg("cur_rtt:$cur_rtt cur_description:", ($cur_description ? $cur_description : "UNDEF"), " new_rtt:$new_rtt new_description:", ($new_description ? $new_description : "UNDEF"));
+
+	if (!defined($cur_rtt) && !defined($cur_description))
+	{
+		return ($new_rtt, $new_description);
+	}
+
+	if (defined($new_rtt))
+	{
+		if (!defined($cur_rtt))
+		{
+			return ($new_rtt, $new_description);
+		}
+
+		if (is_service_error($cur_rtt) == SUCCESS)
+		{
+			if (is_service_error($new_rtt) != SUCCESS)
+			{
+				return ($new_rtt, $new_description);
+			}
+		}
+		elsif (is_service_error($new_rtt) != SUCCESS && $cur_rtt > $new_rtt)
+		{
+			return ($new_rtt, $new_description);
+		}
+	}
+
+	return ($cur_rtt, $cur_description);
+}
+
+# todo phase 1: taken from RSMSLV.pm phase 2
+# NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
+# (fixes incorrect handling of set_idx: $set_idx = 0)
 sub __get_dns_test_values
 {
 	my $dns_items_ref = shift;
@@ -1525,6 +1569,13 @@ sub __get_dns_test_values
 
 			my $cycleclock = __cycle_start($clock, $delay);
 
+			# TODO: rename (in all functions):
+			#
+			# tests_ref -> target_ips_ref
+			# test_ref -> target_ip_ref
+			# idx -> target_ip_idx
+			# set_idx -> replace_idx
+
 			my $tests_ref = $result->{$cycleclock}->{$interface}->{$probe}->{$target};
 
 			my $idx = 0;
@@ -1541,7 +1592,7 @@ sub __get_dns_test_values
 
 			if (!defined($set_idx))
 			{
-				$set_idx = 0;
+				$set_idx = $idx;
 			}
 			else
 			{
@@ -1564,6 +1615,7 @@ sub __get_dns_test_values
 					JSON_TAG_CLOCK() => $clock,
 					JSON_TAG_DESCRIPTION() => get_detailed_result($valuemaps, $new_description)
 				};
+
 			}
 		}
 	}
@@ -2285,6 +2337,8 @@ sub get_readable_tld
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
+# NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
+# (improved log message)
 sub __no_cycle_result
 {
 	my $service = shift;
@@ -2292,11 +2346,12 @@ sub __no_cycle_result
 	my $clock = shift;
 	my $details = shift;
 
-	wrn(uc($service), " service availability result is missing for timestamp ", ts_str($clock), " ($clock).".
-		" This means for that period the SLV availability script ($avail_key) was not run.".
-		" This may happen e. g. if cron was not running at some point. In order to fix this problem".
-		" please run the following script:".
-		"\n  $avail_key.pl --from $clock");
+	wrn(uc($service), " service availability result is missing for timestamp ", ts_str($clock), " ($clock).",
+		" This means that either script was not executed or Zabbix server was",
+		" not running at that time. In order to fix this problem please connect",
+		" to appropreate server (check @<server_key> in the beginning of this message)",
+		" and run the following script:");
+	wrn("  /opt/zabbix/scripts/slv/$avail_key.pl --from $clock");
 }
 
 __END__
