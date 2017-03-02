@@ -43,7 +43,7 @@ static void	fatal_signal_handler(int sig, siginfo_t *siginfo, void *context)
 			sig, get_signal_name(sig),
 			SIG_CHECKED_FIELD(siginfo, si_code),
 			SIG_CHECKED_FIELD_TYPE(siginfo, si_addr, void *));
-	print_fatal_info(context, PRINT_ALL);
+	print_fatal_info(context, ZBX_PRINT_FULL_INFO);
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_free_on_signal();
@@ -167,7 +167,7 @@ static void	metric_thread_signal_handler(int sig, siginfo_t *siginfo, void *cont
 			sig, get_signal_name(sig),
 			SIG_CHECKED_FIELD(siginfo, si_code),
 			SIG_CHECKED_FIELD_TYPE(siginfo, si_addr, void *));
-	print_fatal_info(context, PRINT_BACKTRACE);
+	print_fatal_info(context, (ZBX_PRINT_PC_REG_SF | ZBX_PRINT_BACKTRACE));
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_free_on_signal();

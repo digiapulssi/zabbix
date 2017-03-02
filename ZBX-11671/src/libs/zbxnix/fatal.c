@@ -247,7 +247,7 @@ void	print_fatal_info(void *context, zbx_uint64_t print_flag)
 
 	zabbix_log(LOG_LEVEL_CRIT, "====== Fatal information: ======");
 
-	if (0 != (print_flag & PRINT_PC_REG_SF))
+	if (0 != (print_flag & ZBX_PRINT_PC_REG_SF))
 	{
 #ifdef	HAVE_SYS_UCONTEXT_H
 
@@ -290,7 +290,7 @@ void	print_fatal_info(void *context, zbx_uint64_t print_flag)
 #endif	/* HAVE_SYS_UCONTEXT_H */
 	}
 
-	if (0 != (print_flag & PRINT_BACKTRACE))
+	if (0 != (print_flag & ZBX_PRINT_BACKTRACE))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "=== Backtrace: ===");
 
@@ -319,7 +319,7 @@ void	print_fatal_info(void *context, zbx_uint64_t print_flag)
 #endif	/* HAVE_EXECINFO_H */
 	}
 
-	if (0 != (print_flag & PRINT_MEM_MAP))
+	if (0 != (print_flag & ZBX_PRINT_MEM_MAP))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "=== Memory map: ===");
 
