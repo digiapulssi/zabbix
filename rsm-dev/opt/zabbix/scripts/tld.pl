@@ -967,13 +967,15 @@ sub create_slv_ns_items {
         foreach (my $i_ipv4 = 0; $i_ipv4 <= $#ipv4; $i_ipv4++) {
 	    next unless defined $ipv4[$i_ipv4];
 
-	    create_all_slv_ns_items($ns_name, $ipv4[$i_ipv4], $hostid);
+# todo phase 1: DNS NS are not currently used
+#	    create_all_slv_ns_items($ns_name, $ipv4[$i_ipv4], $hostid);
         }
 
 	foreach (my $i_ipv6 = 0; $i_ipv6 <= $#ipv6; $i_ipv6++) {
 	    next unless defined $ipv6[$i_ipv6];
 
-	    create_all_slv_ns_items($ns_name, $ipv6[$i_ipv6], $hostid);
+# todo phase 1: DNS NS are not currently used
+#	    create_all_slv_ns_items($ns_name, $ipv6[$i_ipv6], $hostid);
         }
     }
 }
@@ -1075,9 +1077,10 @@ sub create_slv_items {
 	undef($depend_down);
 
 
-	create_slv_item('% of successful monthly RDDS43 resolution RTT', 'rsm.slv.rdds.43.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
-	create_slv_item('% of successful monthly RDDS80 resolution RTT', 'rsm.slv.rdds.80.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
-	create_slv_item('% of successful monthly RDDS update time', 'rsm.slv.rdds.upd.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]) if (defined($OPTS{'epp-servers'}));
+# todo phase 1: DNS NS are not currently used
+#	create_slv_item('% of successful monthly RDDS43 resolution RTT', 'rsm.slv.rdds.43.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
+#	create_slv_item('% of successful monthly RDDS80 resolution RTT', 'rsm.slv.rdds.80.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
+#	create_slv_item('% of successful monthly RDDS update time', 'rsm.slv.rdds.upd.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]) if (defined($OPTS{'epp-servers'}));
     }
 
     if (defined($OPTS{'epp-servers'})) {
@@ -1085,9 +1088,10 @@ sub create_slv_items {
 	create_slv_item('EPP minutes of downtime', 'rsm.slv.epp.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 	create_slv_item('EPP weekly unavailability', 'rsm.slv.epp.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
-	create_slv_item('% of successful monthly EPP LOGIN resolution RTT', 'rsm.slv.epp.rtt.login.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
-	create_slv_item('% of successful monthly EPP UPDATE resolution RTT', 'rsm.slv.epp.rtt.update.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
-	create_slv_item('% of successful monthly EPP INFO resolution RTT', 'rsm.slv.epp.rtt.info.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
+# todo phase 1: DNS NS are not currently used
+#	create_slv_item('% of successful monthly EPP LOGIN resolution RTT', 'rsm.slv.epp.rtt.login.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
+#	create_slv_item('% of successful monthly EPP UPDATE resolution RTT', 'rsm.slv.epp.rtt.update.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
+#	create_slv_item('% of successful monthly EPP INFO resolution RTT', 'rsm.slv.epp.rtt.info.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
 
 	create_avail_trigger('EPP', $host_name);
 
@@ -1450,7 +1454,7 @@ sub create_probe_health_tmpl() {
 
     create_trigger($options, $host_name);
 
-    # todo phase 1
+    # todo phase 1: make sure this is in phase 2
     $options = {'name' => 'Probe main status',
 		'key_'=> 'rsm.probe.online',
 		'hostid' => $templateid,
