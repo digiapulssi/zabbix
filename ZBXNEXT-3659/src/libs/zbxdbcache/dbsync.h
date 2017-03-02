@@ -31,6 +31,14 @@
 /* a cached object must be removed from configuration cache */
 #define ZBX_DBSYNC_ROW_REMOVE	3
 
+#define ZBX_DBSYNC_UPDATE_HOSTS			__UINT64_C(0x0001)
+#define ZBX_DBSYNC_UPDATE_ITEMS			__UINT64_C(0x0002)
+#define ZBX_DBSYNC_UPDATE_FUNCTIONS		__UINT64_C(0x0004)
+#define ZBX_DBSYNC_UPDATE_MACROS		__UINT64_C(0x0008)
+#define ZBX_DBSYNC_UPDATE_HOST_TEMPLATES	__UINT64_C(0x0010)
+#define ZBX_DBSYNC_UPDATE_TRIGGERS		__UINT64_C(0x0020)
+#define ZBX_DBSYNC_UPDATE_TRIGGER_DEPENDENCY	__UINT64_C(0x0040)
+
 typedef struct
 {
 	/* a row tag, describing the changes (see ZBX_DBSYNC_ROW_* defines) */

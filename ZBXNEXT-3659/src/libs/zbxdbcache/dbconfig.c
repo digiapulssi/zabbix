@@ -1291,6 +1291,7 @@ done:
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_hashset_destroy(&psk_owners);
 #endif
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
@@ -3247,10 +3248,10 @@ static void	dc_trigger_update_topology()
 	DCconfig_sort_triggers_topologically();
 }
 
-static int	zbx_default_uint64_pair_ptr_compare_func(const void *d1, const void *d2)
+static int	zbx_default_ptr_pair_ptr_compare_func(const void *d1, const void *d2)
 {
-	const zbx_uint64_pair_t	*p1 = *(const zbx_uint64_pair_t **)d1;
-	const zbx_uint64_pair_t	*p2 = *(const zbx_uint64_pair_t **)d2;
+	const zbx_ptr_pair_t	*p1 = (const zbx_ptr_pair_t *)d1;
+	const zbx_ptr_pair_t	*p2 = (const zbx_ptr_pair_t *)d2;
 
 	ZBX_RETURN_IF_NOT_EQUAL(p1->first, p2->first);
 	ZBX_RETURN_IF_NOT_EQUAL(p1->second, p2->second);
@@ -3336,8 +3337,8 @@ static void	dc_trigger_update_cache()
 		zbx_vector_ptr_uniq(&config->time_triggers[i], ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 	}
 
-	zbx_vector_ptr_pair_sort(&itemtrigs, zbx_default_uint64_pair_ptr_compare_func);
-	zbx_vector_ptr_pair_uniq(&itemtrigs, zbx_default_uint64_pair_ptr_compare_func);
+	zbx_vector_ptr_pair_sort(&itemtrigs, zbx_default_ptr_pair_ptr_compare_func);
+	zbx_vector_ptr_pair_uniq(&itemtrigs, zbx_default_ptr_pair_ptr_compare_func);
 
 	/* update links from items to triggers */
 	for (i = 0; i < itemtrigs.values_num; i++)
@@ -3386,6 +3387,7 @@ void	DCsync_configuration(unsigned char mode)
 	zbx_dbsync_t		config_sync, hosts_sync, hi_sync, htmpl_sync, gmacro_sync, hmacro_sync, if_sync,
 				items_sync, triggers_sync, tdep_sync, func_sync, expr_sync, action_sync,
 				action_condition_sync;
+	zbx_uint64_t		update_flags = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -3539,20 +3541,44 @@ void	DCsync_configuration(unsigned char mode)
 
 	sec = zbx_time();
 
+	if (0 != hosts_sync.add_num + hosts_sync.update_num + hosts_sync.remove_num)
+		update_flags |= ZBX_DBSYNC_UPDATE_HOSTS;
+
+	if (0 != items_sync.add_num + items_sync.update_num + items_sync.remove_num)
+		update_flags |= ZBX_DBSYNC_UPDATE_ITEMS;
+
+	if (0 != htmpl_sync.add_num + htmpl_sync.update_num + htmpl_sync.remove_num)
+		update_flags |= ZBX_DBSYNC_UPDATE_HOST_TEMPLATES;
+
+	if (0 != func_sync.add_num + func_sync.update_num + func_sync.remove_num)
+		update_flags |= ZBX_DBSYNC_UPDATE_FUNCTIONS;
+
+	if (0 != gmacro_sync.add_num + gmacro_sync.update_num + gmacro_sync.remove_num)
+		update_flags |= ZBX_DBSYNC_UPDATE_MACROS;
+
+	if (0 != hmacro_sync.add_num + hmacro_sync.update_num + hmacro_sync.remove_num)
+		update_flags |= ZBX_DBSYNC_UPDATE_MACROS;
+
+	if (0 != triggers_sync.add_num + triggers_sync.update_num + triggers_sync.remove_num)
+		update_flags |= ZBX_DBSYNC_UPDATE_TRIGGERS;
+
+	if (0 != tdep_sync.add_num + tdep_sync.update_num + tdep_sync.remove_num)
+		update_flags |= ZBX_DBSYNC_UPDATE_TRIGGER_DEPENDENCY;
+
 	/* reset cached trigger expressions if there are changes in triggers or macros */
-	if (0 != triggers_sync.rows.values_num || 0 != hmacro_sync.rows.values_num ||
-			0 != gmacro_sync.rows.values_num || 0 != htmpl_sync.rows.values_num)
+	if (0 != (update_flags & (ZBX_DBSYNC_UPDATE_MACROS | ZBX_DBSYNC_UPDATE_HOST_TEMPLATES)) ||
+			0 != triggers_sync.update_num)
 	{
 		dc_trigger_reset_cached_expressions();
 	}
 
 	/* update trigger topology if trigger dependency was changed */
-	if (0 != tdep_sync.rows.values_num)
+	if (0 != (update_flags & ZBX_DBSYNC_UPDATE_TRIGGER_DEPENDENCY))
 		dc_trigger_update_topology();
 
 	/* update various trigger related links in cache */
-	if (0 != hosts_sync.rows.values_num || 0 != items_sync.rows.values_num || 0 != triggers_sync.rows.values_num ||
-			0 != func_sync.rows.values_num)
+	if (0 != (update_flags & (ZBX_DBSYNC_UPDATE_HOSTS | ZBX_DBSYNC_UPDATE_ITEMS | ZBX_DBSYNC_UPDATE_FUNCTIONS |
+			ZBX_DBSYNC_UPDATE_TRIGGERS)))
 	{
 		dc_trigger_update_cache();
 	}
