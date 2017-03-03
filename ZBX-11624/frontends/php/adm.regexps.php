@@ -125,7 +125,7 @@ if (hasRequest('add') || hasRequest('update')) {
 	];
 	$expressions = getRequest('expressions', []);
 
-	foreach ($expressions as $i => &$expression) {
+	foreach ($expressions as &$expression) {
 		if (!array_key_exists('case_sensitive', $expression)) {
 			$expression['case_sensitive'] = 0;
 		}
@@ -236,7 +236,7 @@ if (isset($_REQUEST['form'])) {
 			]
 		]);
 
-		foreach ($data['expressions'] as $i => &$expression) {
+		foreach ($data['expressions'] as &$expression) {
 			if (!array_key_exists('case_sensitive', $expression)) {
 				$expression['case_sensitive'] = 0;
 			}
