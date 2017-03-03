@@ -207,7 +207,7 @@ static const char	*get_register_name(int reg)
 
 #endif	/* defined(HAVE_SYS_UCONTEXT_H) && (defined(REG_EIP) || defined(REG_RIP)) */
 
-void	zbx_log_fatal_info(void *context, zbx_uint64_t print_flag)
+void	zbx_log_fatal_info(void *context, unsigned int flags)
 {
 #ifdef	HAVE_SYS_UCONTEXT_H
 
@@ -247,7 +247,7 @@ void	zbx_log_fatal_info(void *context, zbx_uint64_t print_flag)
 
 	zabbix_log(LOG_LEVEL_CRIT, "====== Fatal information: ======");
 
-	if (0 != (print_flag & ZBX_FATAL_LOG_PC_REG_SF))
+	if (0 != (flags & ZBX_FATAL_LOG_PC_REG_SF))
 	{
 #ifdef	HAVE_SYS_UCONTEXT_H
 
@@ -290,7 +290,7 @@ void	zbx_log_fatal_info(void *context, zbx_uint64_t print_flag)
 #endif	/* HAVE_SYS_UCONTEXT_H */
 	}
 
-	if (0 != (print_flag & ZBX_FATAL_LOG_BACKTRACE))
+	if (0 != (flags & ZBX_FATAL_LOG_BACKTRACE))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "=== Backtrace: ===");
 
@@ -319,7 +319,7 @@ void	zbx_log_fatal_info(void *context, zbx_uint64_t print_flag)
 #endif	/* HAVE_EXECINFO_H */
 	}
 
-	if (0 != (print_flag & ZBX_FATAL_LOG_MEM_MAP))
+	if (0 != (flags & ZBX_FATAL_LOG_MEM_MAP))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "=== Memory map: ===");
 

@@ -28,6 +28,6 @@
 #define ZBX_FATAL_LOG_FULL_INFO		(ZBX_FATAL_LOG_PC_REG_SF | ZBX_FATAL_LOG_BACKTRACE | ZBX_FATAL_LOG_MEM_MAP)
 
 const char	*get_signal_name(int sig);
-void	zbx_log_fatal_info(void *context, zbx_uint64_t print_flag);
+void	zbx_log_fatal_info(void *context, unsigned int flags);
 
 #endif
