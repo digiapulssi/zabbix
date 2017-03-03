@@ -1,9 +1,10 @@
 #ifndef INCLUDE_ZBXREG_H_
 #define INCLUDE_ZBXREG_H_
+
 #if defined(_WINDOWS)
 #	include "gnuregex.h"
 #else
-#	include <pcreposix.h>
+#	include "pcreposix.h"
 #endif
 
 int	zbx_regcomp(regex_t *restrict compiled, const char *restrict pattern, int cflags);
