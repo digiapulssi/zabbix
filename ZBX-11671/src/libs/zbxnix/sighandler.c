@@ -182,7 +182,7 @@ static void	metric_thread_signal_handler(int sig, siginfo_t *siginfo, void *cont
  * Purpose: set the commonly used signal handlers                             *
  *                                                                            *
  ******************************************************************************/
-void	zbx_set_common_signal_handlers()
+void	zbx_set_common_signal_handlers(void)
 {
 	struct sigaction	phan;
 
@@ -213,7 +213,7 @@ void	zbx_set_common_signal_handlers()
  * Purpose: set the handlers for child process signals                        *
  *                                                                            *
  ******************************************************************************/
-void 	zbx_set_child_signal_handler()
+void 	zbx_set_child_signal_handler(void)
 {
 	struct sigaction	phan;
 
@@ -233,7 +233,7 @@ void 	zbx_set_child_signal_handler()
  * Purpose: set the handlers for child process signals                        *
  *                                                                            *
  ******************************************************************************/
-void 	zbx_set_metric_thread_signal_handler()
+void 	zbx_set_metric_thread_signal_handler(void)
 {
 	struct sigaction	phan;
 

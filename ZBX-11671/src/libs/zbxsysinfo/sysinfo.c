@@ -1413,7 +1413,6 @@ int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *re
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s '%s'", __function_name, zbx_sysinfo_ret_string(ret),
 			ISSET_MSG(result) ? result->msg : "");
-
 	return ret;
 }
 #else
@@ -1495,10 +1494,9 @@ int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *re
 
 	CloseHandle(thread);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%d '%s'", __function_name, zbx_sysinfo_ret_string(metric_args.agent_ret),
-			ISSET_MSG(result) ? result->msg : "");
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s '%s'", __function_name,
+			zbx_sysinfo_ret_string(metric_args.agent_ret), ISSET_MSG(result) ? result->msg : "");
 
 	return metric_args.agent_ret;
 }
-
 #endif
