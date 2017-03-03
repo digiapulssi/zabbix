@@ -207,7 +207,7 @@ static const char	*get_register_name(int reg)
 
 #endif	/* defined(HAVE_SYS_UCONTEXT_H) && (defined(REG_EIP) || defined(REG_RIP)) */
 
-void	print_fatal_info(void *context, zbx_uint64_t print_flag)
+void	zbx_log_fatal_info(void *context, zbx_uint64_t print_flag)
 {
 #ifdef	HAVE_SYS_UCONTEXT_H
 
