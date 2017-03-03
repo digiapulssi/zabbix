@@ -6,6 +6,8 @@ use RSMSLV;
 use Text::CSV_XS;
 use File::Path qw(make_path);
 
+use constant CSV_FILES_DIR => '/opt/zabbix/export';
+
 # catalogs
 use constant ID_PROBE => 'probe';
 use constant ID_TLD => 'tld';
@@ -197,22 +199,37 @@ sub dw_get_name
 	return $found_name;
 }
 
-sub __csv_file_name
+sub __csv_file_full_path
 {
 	my $id_type = shift;
 
 	die("File '$id_type' is unknown") unless ($DATAFILES{$id_type});
+	die("Internal error: export date or TLD is unknown") unless ($_year && $_month && $_day && $tld);
 
-	return $DATAFILES{$id_type};
+	my $path = CSV_FILES_DIR . '/' . $_year . '/' . $_month . '/' . $_day . '/' . $tld  . '/';
+
+	if (!__make_path($path))
+	{
+		die(dw_error());
+	}
+
+	return $path . $DATAFILES{$id_type};
 }
 
-sub __csv_catalog_name
+sub __csv_catalog_full_path
 {
 	my $id_type = shift;
 
 	die("Catalog '$id_type' is unknown") unless ($CATALOGS{$id_type});
 
-	return $CATALOGS{$id_type};
+	my $path = CSV_FILES_DIR . '/';
+
+	if (!__make_path($path))
+	{
+		die(dw_error());
+	}
+
+	return $path . $CATALOGS{$id_type};
 }
 
 sub dw_write_csv_files
@@ -239,21 +256,21 @@ sub dw_delete_csvs
 {
 	foreach my $id_type (keys(%DATAFILES))
 	{
-		my $name = __get_target_dir() . __csv_file_name($id_type);
+		my $path = __csv_file_full_path($id_type);
 
-		if (-f $name)
+		if (-f $path)
 		{
-			unlink($name) or fail("cannot delete file \"$name\": $!");
+			unlink($path) or fail("cannot delete file \"$path\": $!");
 		}
 	}
 
 	foreach my $id_type (keys(%CATALOGS))
 	{
-		my $name = __get_target_dir() . __csv_catalog_name($id_type);
+		my $path = __csv_catalog_full_path($id_type);
 
-		if (-f $name)
+		if (-f $path)
 		{
-			unlink($name) or fail("cannot delete file \"$name\": $!");
+			unlink($path) or fail("cannot delete file \"$path\": $!");
 		}
 	}
 }
@@ -325,13 +342,6 @@ sub dw_set_date
 # Internal subs #
 #################
 
-sub __get_target_dir
-{
-	return '' unless ($tld);
-
-	return $_year . '/' . $_month . '/' . $_day . '/' . $tld  . '/';
-}
-
 sub __fix_row
 {
 	my $id_type = shift;
@@ -388,27 +398,17 @@ sub __write_csv_file
 
 	return 1 if (!$_csv_files{$id_type}{'rows'});
 
-	my $name = __get_target_dir();
-
-	if ($name ne '')
-	{
-		if (!__make_path($name))
-		{
-			die(dw_error());
-		}
-	}
-
-	$name .= __csv_file_name($id_type);
+	my $path = __csv_file_full_path($id_type);
 
 	my $fh;
 
-	unless (open($fh, ">:encoding(utf8)", $name))
+	unless (open($fh, ">:encoding(utf8)", $path))
 	{
-		die($name . ": $!");
+		die($path . ": $!");
 		return;
 	}
 
-	dbg("dumping to ", $name, "...");
+	dbg("dumping to ", $path, "...");
 
 	foreach my $row (@{$_csv_files{$id_type}{'rows'}})
 	{
@@ -419,8 +419,8 @@ sub __write_csv_file
 
 	unless (close($fh))
 	{
-		die($name . ": $!");
-                return;
+		die($path . ": $!");
+		return;
 	}
 
 	return 1;
@@ -435,27 +435,17 @@ sub __write_csv_catalog
 
 	return 1 if (scalar(keys(%{$_csv_catalogs{$id_type}})) == 0);
 
-	my $name = __get_target_dir();
-
-	if ($name ne '')
-	{
-		if (!__make_path($name))
-		{
-			die(dw_error());
-		}
-	}
-
-	$name .= __csv_catalog_name($id_type);
+	my $path = __csv_catalog_full_path($id_type);
 
 	my $fh;
 
-	unless (open($fh, ">:encoding(utf8)", $name))
+	unless (open($fh, ">:encoding(utf8)", $path))
 	{
-		die($name . ": $!");
+		die($path . ": $!");
 		return;
 	}
 
-	dbg("dumping to ", $name, "...");
+	dbg("dumping to ", $path, "...");
 	foreach my $name (sort {$_csv_catalogs{$id_type}{$a} <=> $_csv_catalogs{$id_type}{$b}} (keys(%{$_csv_catalogs{$id_type}})))
 	{
 		my $id = $_csv_catalogs{$id_type}{$name};
@@ -466,7 +456,7 @@ sub __write_csv_catalog
 
 	unless (close($fh))
 	{
-		die($name . ": $!");
+		die($path . ": $!");
                 return;
 	}
 
