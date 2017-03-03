@@ -19,10 +19,32 @@
 
 #include "common.h"
 #include "zbxregexp.h"
+#include "zbxreg.h"
 
 #if defined(_WINDOWS)
 #	include "gnuregex.h"
 #endif
+
+int	zbx_regcomp(regex_t *restrict compiled, const char *restrict pattern, int cflags)
+{
+	return regcomp(compiled, pattern, cflags);
+}
+
+int	zbx_regexec(const regex_t *restrict compiled, const char *restrict string, size_t nmatch,
+		regmatch_t matchptr[restrict], int eflags)
+{
+	return regexec(compiled, string, nmatch, matchptr, eflags);
+}
+
+size_t	zbx_regerror(int errcode, const regex_t *restrict compiled, char *restrict buffer, size_t length)
+{
+	return regerror(errcode, compiled, buffer, length);
+}
+
+void	zbx_regfree(regex_t *compiled)
+{
+	regfree(compiled);
+}
 
 static char	*zbx_regexp(const char *string, const char *pattern, int *len, int flags)
 {
@@ -45,11 +67,11 @@ static char	*zbx_regexp(const char *string, const char *pattern, int *len, int f
 		goto compile;
 
 	if (0 != strcmp(old_pattern, pattern) || old_flags != flags)
-		regfree(&re);
+		zbx_regfree(&re);
 	else
 		goto execute;
 compile:
-	if (0 == regcomp(&re, pattern, flags))
+	if (0 == zbx_regcomp(&re, pattern, flags))
 	{
 		old_pattern = zbx_strdup(old_pattern, pattern);
 		old_flags = flags;
@@ -59,13 +81,13 @@ compile:
 #ifdef _WINDOWS
 		/* the Windows gnuregex implementation does not correctly clean up */
 		/* allocated memory after regcomp() failure                        */
-		regfree(&re);
+		zbx_regfree(&re);
 #endif
 		zbx_free(old_pattern);
 		goto out;
 	}
 execute:
-	if (0 == regexec(&re, string, (size_t)1, &match, 0))	/* matched */
+	if (0 == zbx_regexec(&re, string, (size_t)1, &match, 0))	/* matched */
 	{
 		c = (char *)string + match.rm_so;
 
@@ -225,11 +247,11 @@ static int	regexp_sub(const char *string, const char *pattern, const char *outpu
 		goto compile;
 
 	if (0 != strcmp(old_pattern, pattern) || old_flags != flags)
-		regfree(&re);
+		zbx_regfree(&re);
 	else
 		goto execute;
 compile:
-	if (0 == regcomp(&re, pattern, flags))
+	if (0 == zbx_regcomp(&re, pattern, flags))
 	{
 		old_pattern = zbx_strdup(old_pattern, pattern);
 		old_flags = flags;
@@ -239,7 +261,7 @@ compile:
 #ifdef _WINDOWS
 		/* the Windows gnuregex implementation does not correctly clean up */
 		/* allocated memory after regcomp() failure                        */
-		regfree(&re);
+		zbx_regfree(&re);
 #endif
 		zbx_free(old_pattern);
 		return FAIL;
@@ -247,7 +269,7 @@ compile:
 execute:
 	zbx_free(*out);
 
-	if (0 == regexec(&re, string, ARRSIZE(match), match, 0))
+	if (0 == zbx_regexec(&re, string, ARRSIZE(match), match, 0))
 		*out = regexp_sub_replace(string, output_template, match, ARRSIZE(match));
 
 	return SUCCEED;

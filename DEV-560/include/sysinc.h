@@ -349,7 +349,9 @@
 #endif
 
 #ifdef HAVE_REGEX_H
+#ifdef _WINDOWS
 #	include <regex.h>
+#endif
 #endif
 
 #ifdef HAVE_VM_VM_PARAM_H
