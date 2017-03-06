@@ -25,37 +25,32 @@ my $data_file_line = $ARGV[1];
 
 my $data_type;
 
-my $error = 0;
-if (scalar(@ARGV) lt 1 || scalar(@ARGV) gt 2 || ! -f $data_file)
-{
-	$error = 1;
-}
-else
-{
-	$data_type = basename($data_file);
+__usage("number of arguments must be 1 or 2") if (scalar(@ARGV) lt 1 || scalar(@ARGV) gt 2);
+__usage("file \"$data_file\" not found") if (! -f $data_file);
 
-	my $found = 0;
+$data_type = basename($data_file);
 
-	foreach my $id_type (keys(%DATAFILES))
+my $found = 0;
+
+foreach my $id_type (keys(%DATAFILES))
+{
+	if ($DATAFILES{$id_type} eq $data_type)
 	{
-		if ($DATAFILES{$id_type} eq $data_type)
-		{
-			$found = 1;
-			last;
-		}
+		$found = 1;
+		last;
 	}
-
-	$error = 1 if ($found == 0);
 }
 
-if ($error != 0)
+__usage("unsupported file: \"$data_type\"") if ($found == 0);
+
+sub __usage
 {
+	print("Error: ", join('', @_), "\n\n") if (@_);
+
 	print <<EOF;
 usage: $0 <csv file> <line>
 
-Supported files: cycles.csv, tests.csv
-
-example: $0 2017/02/22/tld1/cycles.csv
+example: $0 /opt/zabbix/export/2017/02/22/tld1/cycles.csv
 EOF
 
 	exit(-1);
@@ -80,11 +75,27 @@ while ($line = <$fh>)
 	##### TODO: USE MAPPINGS!!!! ######
 	if ($data_type eq 'cycles.csv')
 	{
-	    __translate_cycles_line($line);
+		__translate_cycles_line($line);
 	}
 	elsif ($data_type eq 'tests.csv')
 	{
-	    __translate_tests_line($line);
+		__translate_tests_line($line);
+	}
+	elsif ($data_type eq 'nsTests.csv')
+	{
+		__translate_ns_tests_line($line);
+	}
+	elsif ($data_type eq 'incidents.csv')
+	{
+		__translate_incidents_line($line);
+	}
+	elsif ($data_type eq 'incidentsEndTime.csv')
+	{
+		__translate_incidents_end_time_line($line);
+	}
+	else
+	{
+		__usage("\"$data_type\" is not supported yet, currently supported are cycles.csv, tests.csv, incidents.csv, incidentsEndTime.csv");
 	}
 }
 
@@ -131,7 +142,7 @@ sub __translate_tests_line
 
 	my @columns = split(',', $line);
 
-	my $probe_id = dw_get_name(ID_PROBE, $columns[0]);
+	my $probe_name = dw_get_name(ID_PROBE, $columns[0]);
 	my $cycle_date_minute = $columns[1];
 	my $test_date_time = $columns[2];
 	my $test_rtt = $columns[3];
@@ -144,7 +155,7 @@ sub __translate_tests_line
 	my $test_nsfqdn = dw_get_name(ID_NS_NAME, $columns[10]) || '';
 	my $tld_type = dw_get_name(ID_TLD_TYPE, $columns[11]);
 
-	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeID', $probe_id);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeName', $probe_name);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testDateTime', ts_full($test_date_time));
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testRTT', $test_rtt);
@@ -156,4 +167,63 @@ sub __translate_tests_line
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testType', $test_type);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testNSFQDN', $test_nsfqdn);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'tldType', $tld_type);
+}
+
+sub __translate_ns_tests_line
+{
+	my $line = shift;
+
+	my @columns = split(',', $line);
+
+	my $probe_name = dw_get_name(ID_PROBE, $columns[0]);
+	my $ns_fqdn = dw_get_name(ID_NS_NAME, $columns[1]);
+	my $ns_test_tld = dw_get_name(ID_TLD, $columns[2]);
+	my $cycle_date_minute = $columns[3];
+	my $ns_test_status = dw_get_name(ID_STATUS_MAP, $columns[4]);
+	my $cycle_id = dw_translate_cycle_id($columns[5]);
+	my $tld_type = dw_get_name(ID_TLD_TYPE, $columns[6]);
+	my $ns_test_protocol = dw_get_name(ID_TRANSPORT_PROTOCOL, $columns[7]);
+
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeName', $probe_name);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsFQDN', $ns_fqdn);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsTestTLD', $ns_test_tld);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsTestStatus', $ns_test_status);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'tldType', $tld_type);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleID', $cycle_id);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testProtocol', $ns_test_protocol);
+}
+
+sub __translate_incidents_line
+{
+	my $line = shift;
+
+	my @columns = split(',', $line);
+
+	my $incident_id = $columns[0];
+	my $incident_start_time = $columns[1];
+	my $incident_tld = dw_get_name(ID_TLD, $columns[2]);
+	my $service_category = dw_get_name(ID_SERVICE_CATEGORY, $columns[3]);
+	my $tld_type = dw_get_name(ID_TLD_TYPE, $columns[4]);
+
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentID', $incident_id);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentStartTime', ts_full($incident_start_time));
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentTLD', $incident_tld);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'serviceCategory', $service_category);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'tldType', $tld_type);
+}
+
+sub __translate_incidents_end_time_line
+{
+	my $line = shift;
+
+	my @columns = split(',', $line);
+
+	my $incident_id = $columns[0];
+	my $incident_end_time = $columns[1];
+	my $incident_failed_tests = $columns[2];
+
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentID', $incident_id);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentEndTime', ts_full($incident_end_time));
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentFailedTests', $incident_failed_tests);
 }
