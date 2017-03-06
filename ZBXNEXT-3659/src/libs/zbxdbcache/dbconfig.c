@@ -1409,8 +1409,14 @@ static void	DCsync_htmpls(zbx_dbsync_t *sync)
 			zbx_hashset_remove_direct(&config->htmpls, htmpl);
 		}
 		else
+		{
 			zbx_vector_uint64_remove_noorder(&htmpl->templateids, index);
+			zbx_vector_ptr_append(&sort, htmpl);
+		}
 	}
+
+	zbx_vector_ptr_sort(&sort, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
+	zbx_vector_ptr_uniq(&sort, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 
 	/* sort the template lists with new rows */
 	for (i = 0; i < sort.values_num; i++)
