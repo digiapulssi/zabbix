@@ -26,8 +26,7 @@ int	zbx_regcomp(regex_t *compiled, const char *pattern, int cflags)
 	return regcomp(compiled, pattern, cflags);
 }
 
-int	zbx_regexec(const regex_t *compiled, const char *string, size_t nmatch,
-		regmatch_t matchptr[], int eflags)
+int	zbx_regexec(const regex_t *compiled, const char *string, size_t nmatch, regmatch_t matchptr[], int eflags)
 {
 	return regexec(compiled, string, nmatch, matchptr, eflags);
 }
