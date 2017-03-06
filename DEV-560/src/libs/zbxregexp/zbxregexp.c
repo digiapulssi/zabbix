@@ -21,22 +21,18 @@
 #include "zbxregexp.h"
 #include "zbxreg.h"
 
-#if defined(_WINDOWS)
-#	include "gnuregex.h"
-#endif
-
-int	zbx_regcomp(regex_t *restrict compiled, const char *restrict pattern, int cflags)
+int	zbx_regcomp(regex_t *compiled, const char *pattern, int cflags)
 {
 	return regcomp(compiled, pattern, cflags);
 }
 
-int	zbx_regexec(const regex_t *restrict compiled, const char *restrict string, size_t nmatch,
-		regmatch_t matchptr[restrict], int eflags)
+int	zbx_regexec(const regex_t *compiled, const char *string, size_t nmatch,
+		regmatch_t matchptr[], int eflags)
 {
 	return regexec(compiled, string, nmatch, matchptr, eflags);
 }
 
-size_t	zbx_regerror(int errcode, const regex_t *restrict compiled, char *restrict buffer, size_t length)
+size_t	zbx_regerror(int errcode, const regex_t *compiled, char *buffer, size_t length)
 {
 	return regerror(errcode, compiled, buffer, length);
 }
