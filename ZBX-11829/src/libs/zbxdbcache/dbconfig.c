@@ -6458,55 +6458,6 @@ void	DCconfig_unlock_all_triggers(void)
 	UNLOCK_CACHE;
 }
 
-static void	DCconfig_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const zbx_uint64_t *itemids,
-		int itemids_num)
-{
-	zbx_vector_ptr_t	triggers_func_pos;
-	zbx_vector_uint64_t	functionids;
-	DC_FUNCTION		*functions = NULL;
-	int			*errcodes = NULL, index, t, f, i;
-
-	zbx_vector_ptr_create(&triggers_func_pos);
-	zbx_vector_uint64_create(&functionids);
-
-	zbx_link_triggers_with_functions(&triggers_func_pos, &functionids, trigger_order);
-
-	functions = zbx_malloc(functions, sizeof(DC_FUNCTION) * functionids.values_num);
-	errcodes = zbx_malloc(errcodes, sizeof(int) * functionids.values_num);
-
-	DCconfig_get_functions_by_functionids(functions, functionids.values, errcodes, functionids.values_num);
-
-	for (t = 0; t < triggers_func_pos.values_num; t++)
-	{
-		DC_TRIGGER_FUNC_POSITION	*tr_func_pos = (DC_TRIGGER_FUNC_POSITION *)triggers_func_pos.values[t];
-		int				next_trigger = 0;
-
-		for (f = tr_func_pos->start_index; f < tr_func_pos->start_index + tr_func_pos->count; f++)
-		{
-			for (i = 0; i < itemids_num; i++)
-			{
-				if (functions[f].itemid == itemids[i])
-				{
-					tr_func_pos[t].trigger->flags = ZBX_DC_TRIGGER_BASE_EXPRESSION;
-					next_trigger = 1;
-					break;
-				}
-			}
-
-			if (1 == next_trigger)
-				break;
-		}
-	}
-
-	DCconfig_clean_functions(functions, errcodes, functionids.values_num);
-
-	zbx_vector_ptr_clear(&triggers_func_pos);
-	zbx_vector_ptr_destroy(&triggers_func_pos);
-
-	zbx_vector_uint64_clear(&functionids);
-	zbx_vector_uint64_destroy(&functionids);
-}
-
 /******************************************************************************
  *                                                                            *
  * Function: DCconfig_get_triggers_by_itemids                                 *
@@ -6567,8 +6518,6 @@ void	DCconfig_get_triggers_by_itemids(zbx_hashset_t *trigger_info, zbx_vector_pt
 	UNLOCK_CACHE;
 
 	zbx_vector_ptr_sort(trigger_order, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
-
-	DCconfig_determine_items_in_expressions(trigger_order, itemids, itemids_num);
 }
 
 /******************************************************************************
@@ -10061,7 +10010,8 @@ static void	dc_get_nested_hostgroupids(zbx_uint64_t groupid, zbx_vector_uint64_t
 			parent_group->flags |= ZBX_DC_HOSTGROUP_FLAGS_NESTED_GROUPIDS;
 		}
 
-		zbx_vector_uint64_append_vector(nested_groupids, &parent_group->nested_groupids);
+		zbx_vector_uint64_append_array(nested_groupids, parent_group->nested_groupids.values,
+				parent_group->nested_groupids.values_num);
 	}
 }
 

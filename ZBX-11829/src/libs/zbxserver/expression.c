@@ -3870,51 +3870,112 @@ static void	zbx_extract_functionids(zbx_vector_uint64_t *functionids, zbx_vector
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() functionids_num:%d", __function_name, functionids->values_num);
 }
 
-void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos,
-		zbx_vector_uint64_t *functionIds, zbx_vector_ptr_t *trigger_order)
+typedef struct
+{
+	DC_TRIGGER	*trigger;
+	int		start_index;
+	int		count;
+}
+zbx_trigger_func_position_t;
+
+static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos, zbx_vector_uint64_t *functionids,
+		zbx_vector_ptr_t *trigger_order)
 {
 	const char		*__function_name = "zbx_link_triggers_with_functions";
 
+	zbx_vector_uint64_t	funcids;
 	DC_TRIGGER		*tr;
 	int			i, n, index = 0;
+
+	zbx_vector_uint64_create(&funcids);
+	zbx_vector_uint64_reserve(&funcids, functionids->values_num);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() trigger_order_num:%d", __function_name, trigger_order->values_num);
 
 	for (i = 0; i < trigger_order->values_num; i++)
 	{
-		DC_TRIGGER_FUNC_POSITION	*tr_func_pos;
-		zbx_vector_uint64_t		funcIds;
-
-		tr_func_pos = zbx_malloc(NULL, sizeof(DC_TRIGGER_FUNC_POSITION));
-		zbx_vector_uint64_create(&funcIds);
+		zbx_trigger_func_position_t	*tr_func_pos;
 
 		tr = (DC_TRIGGER *)trigger_order->values[i];
 
 		if (NULL != tr->new_error)
 			continue;
 
+		tr_func_pos = zbx_malloc(NULL, sizeof(zbx_trigger_func_position_t));
 		tr_func_pos->trigger = tr;
 		tr_func_pos->start_index = index;
 		tr_func_pos->count = 0;
 
-		if (SUCCEED == extract_expression_functionids(&funcIds, tr->expression))
+		if (SUCCEED == extract_expression_functionids(&funcids, tr->expression))
 		{
-			for (n = 0; n < funcIds.values_num; n++)
-			{
-				zbx_vector_uint64_append(functionIds, funcIds.values[n]);
-				tr_func_pos->count++;
-			}
+			tr_func_pos->count = funcids.values_num;
+
+			zbx_vector_uint64_append_array(functionids, funcids.values, funcids.values_num);
 			zbx_vector_ptr_append(triggers_func_pos, tr_func_pos);
 
 			index += tr_func_pos->count;
 		}
 
-		zbx_vector_uint64_clear(&funcIds);
-		zbx_vector_uint64_destroy(&funcIds);
+		zbx_vector_uint64_clear(&funcids);
 	}
+
+	zbx_vector_uint64_destroy(&funcids);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() triggers_func_pos_num:%d", __function_name,
 			triggers_func_pos->values_num);
+}
+
+void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const zbx_uint64_t *itemids, int item_num)
+{
+	zbx_vector_ptr_t	triggers_func_pos;
+	zbx_vector_uint64_t	functionids;
+	DC_FUNCTION		*functions = NULL;
+	int			*errcodes = NULL, index, t, f, i;
+	zbx_vector_uint64_t	itemids_sorted;
+
+	zbx_vector_uint64_create(&itemids_sorted);
+	zbx_vector_uint64_reserve(&itemids_sorted, item_num);
+	zbx_vector_uint64_append_array(&itemids_sorted, itemids, item_num);
+	zbx_vector_uint64_sort(&itemids_sorted, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	zbx_vector_ptr_create(&triggers_func_pos);
+	zbx_vector_ptr_reserve(&triggers_func_pos, trigger_order->values_num);
+
+	zbx_vector_uint64_create(&functionids);
+	zbx_vector_uint64_reserve(&functionids, item_num);
+
+	zbx_link_triggers_with_functions(&triggers_func_pos, &functionids, trigger_order);
+
+	functions = zbx_malloc(functions, sizeof(DC_FUNCTION) * functionids.values_num);
+	errcodes = zbx_malloc(errcodes, sizeof(int) * functionids.values_num);
+
+	DCconfig_get_functions_by_functionids(functions, functionids.values, errcodes, functionids.values_num);
+
+	for (t = 0; t < triggers_func_pos.values_num; t++)
+	{
+		zbx_trigger_func_position_t	*func_pos = (zbx_trigger_func_position_t *)triggers_func_pos.values[t];
+
+		for (f = func_pos->start_index; f < func_pos->start_index + func_pos->count; f++)
+		{
+			if (SUCCEED == zbx_vector_uint64_bsearch(&itemids_sorted, functions[f].itemid,
+					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+			{
+				func_pos[t].trigger->flags = ZBX_DC_TRIGGER_BASE_EXPRESSION;
+				break;
+			}
+		}
+	}
+
+	DCconfig_clean_functions(functions, errcodes, functionids.values_num);
+
+	zbx_vector_ptr_clear_ext(&triggers_func_pos, zbx_ptr_free);
+	zbx_vector_ptr_destroy(&triggers_func_pos);
+
+	zbx_vector_uint64_clear(&functionids);
+	zbx_vector_uint64_destroy(&functionids);
+
+	zbx_vector_uint64_clear(&itemids_sorted);
+	zbx_vector_uint64_destroy(&itemids_sorted);
 }
 
 typedef struct

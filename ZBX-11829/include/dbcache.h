@@ -224,14 +224,6 @@ typedef struct _DC_TRIGGER
 }
 DC_TRIGGER;
 
-typedef struct _DC_TRIGGER_FUNC_POSITION
-{
-	DC_TRIGGER	*trigger;
-	int		start_index;
-	int		count;
-}
-DC_TRIGGER_FUNC_POSITION;
-
 typedef struct
 {
 	zbx_uint64_t	hostid;

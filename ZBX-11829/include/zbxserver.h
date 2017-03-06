@@ -60,8 +60,7 @@ void	evaluate_expressions(zbx_vector_ptr_t *triggers);
 void	zbx_format_value(char *value, size_t max_len, zbx_uint64_t valuemapid,
 		const char *units, unsigned char value_type);
 
-void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos,
-		zbx_vector_uint64_t *functionIds, zbx_vector_ptr_t *trigger_order);
+void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const zbx_uint64_t *itemids, int item_num);
 
 /* lld macro context */
 #define ZBX_MACRO_ANY		(ZBX_TOKEN_LLD_MACRO | ZBX_TOKEN_USER_MACRO)
