@@ -254,39 +254,45 @@ void	zbx_log_fatal_info(void *context, unsigned int flags)
 #ifdef	ZBX_GET_PC
 		zabbix_log(LOG_LEVEL_CRIT, "Program counter: %p", ZBX_GET_PC(uctx));
 		zabbix_log(LOG_LEVEL_CRIT, "=== Registers: ===");
+
 		for (i = 0; i < NGREG; i++)
+		{
 			zabbix_log(LOG_LEVEL_CRIT, "%-7s = %16lx = %20lu = %20ld", get_register_name(i),
 					ZBX_GET_REG(uctx, i), ZBX_GET_REG(uctx, i), ZBX_GET_REG(uctx, i));
-
+		}
 #ifdef	REG_EBP	/* dump a bit of stack frame for i386 */
 		zabbix_log(LOG_LEVEL_CRIT, "=== Stack frame: ===");
+
 		for (i = 16; i >= 2; i--)
+		{
 			zabbix_log(LOG_LEVEL_CRIT, "+0x%02x(%%ebp) = ebp + %2d = %08x = %10u = %11d%s",
 					i * ZBX_PTR_SIZE, i * ZBX_PTR_SIZE,
 					*(unsigned int *)((void *)ZBX_GET_REG(uctx, REG_EBP) + i * ZBX_PTR_SIZE),
 					*(unsigned int *)((void *)ZBX_GET_REG(uctx, REG_EBP) + i * ZBX_PTR_SIZE),
 					*(unsigned int *)((void *)ZBX_GET_REG(uctx, REG_EBP) + i * ZBX_PTR_SIZE),
 					i == 2 ? " <--- call arguments" : "");
+		}
 		zabbix_log(LOG_LEVEL_CRIT, "+0x%02x(%%ebp) = ebp + %2d = %08x%28s<--- return address",
 					ZBX_PTR_SIZE, ZBX_PTR_SIZE,
 					*(unsigned int *)((void *)ZBX_GET_REG(uctx, REG_EBP) + ZBX_PTR_SIZE), "");
 		zabbix_log(LOG_LEVEL_CRIT, "     (%%ebp) = ebp      = %08x%28s<--- saved ebp value",
 					*(unsigned int *)((void *)ZBX_GET_REG(uctx, REG_EBP)), "");
+
 		for (i = 1; i <= 16; i++)
+		{
 			zabbix_log(LOG_LEVEL_CRIT, "-0x%02x(%%ebp) = ebp - %2d = %08x = %10u = %11d%s",
 					i * ZBX_PTR_SIZE, i * ZBX_PTR_SIZE,
 					*(unsigned int *)((void *)ZBX_GET_REG(uctx, REG_EBP) - i * ZBX_PTR_SIZE),
 					*(unsigned int *)((void *)ZBX_GET_REG(uctx, REG_EBP) - i * ZBX_PTR_SIZE),
 					*(unsigned int *)((void *)ZBX_GET_REG(uctx, REG_EBP) - i * ZBX_PTR_SIZE),
 					i == 1 ? " <--- local variables" : "");
+		}
 #endif	/* REG_EBP */
-
 #else
 		zabbix_log(LOG_LEVEL_CRIT, "program counter not available for this architecture");
 		zabbix_log(LOG_LEVEL_CRIT, "=== Registers: ===");
 		zabbix_log(LOG_LEVEL_CRIT, "register dump not available for this architecture");
 #endif	/* ZBX_GET_PC */
-
 #endif	/* HAVE_SYS_UCONTEXT_H */
 	}
 
@@ -295,7 +301,6 @@ void	zbx_log_fatal_info(void *context, unsigned int flags)
 		zabbix_log(LOG_LEVEL_CRIT, "=== Backtrace: ===");
 
 #ifdef	HAVE_EXECINFO_H
-
 		bcktrc_sz = backtrace(bcktrc, ZBX_BACKTRACE_SIZE);
 		bcktrc_syms = backtrace_symbols(bcktrc, bcktrc_sz);
 
