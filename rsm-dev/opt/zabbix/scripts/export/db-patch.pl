@@ -31,18 +31,26 @@ my ($dbh, $global_sql);
 
 sub __db_connect
 {
-	fail("no database configuration defined") if (not defined($config) or
-		not defined($config->{'db'}) or
-		not defined($config->{'db'}->{'name'}));
+	$server_key = get_rsm_local_key($config) unless ($server_key);
 
-	$global_sql = 'DBI:mysql:'.$config->{'db'}->{'name'}.':'.$config->{'db'}->{'host'};
+	fail("Configuration error: section \"$server_key\" not found") unless (defined($config->{$server_key}));
 
-	$dbh = DBI->connect($global_sql, $config->{'db'}->{'user'}, $config->{'db'}->{'password'},
-		{
-			AutoCommit	=> 0,
-			PrintError	=> 0,
-			HandleError	=> \&__handle_db_error,
-		}) or __handle_db_error(DBI->errstr);
+	my $section = $config->{$server_key};
+
+	foreach my $key ('db_name', 'db_user')
+	{
+		fail("configuration error: database $key not specified in section \"$server_key\"")
+			unless (defined($section->{$key}));
+	}
+
+	$global_sql = 'DBI:mysql:'.$section->{'db_name'}.':'.$section->{'db_host'};
+
+	$dbh = DBI->connect($global_sql, $section->{'db_user'}, $section->{'db_password'},
+	{
+		AutoCommit => 0,
+		PrintError => 0,
+		HandleError => \&__handle_db_error,
+	}) or __handle_db_error(DBI->errstr);
 }
 
 sub __handle_db_error
