@@ -900,7 +900,6 @@ sub __save_csv_data
 										      $tld_id,
 										      $cycleclock,
 										      dw_get_id(ID_STATUS_MAP, $target_status),
-										      dw_get_cycle_id($cycleclock, $ns_service_category_id, $tld_id),
 										      $tld_type_id,
 										      $protocol_id
 									]);
