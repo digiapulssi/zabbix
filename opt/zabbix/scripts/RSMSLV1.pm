@@ -2342,7 +2342,7 @@ sub process_slv_avail
 	if ($probes_with_results < $cfg_minonline)
 	{
 		$result->{'value'} = UP_INCONCLUSIVE;
-		$result->{'message'} = "Up (inconclusive): not enough probes with reults, $probes_with_results while $cfg_minonline required";
+		$result->{'message'} = "Up (inconclusive): not enough probes with results, $probes_with_results while $cfg_minonline required";
 		$result->{'alert'} = 1 if (alerts_enabled() == SUCCESS);
 
 		return $result;
@@ -2462,7 +2462,7 @@ sub process_slv_ns_avail
 		elsif ($nsip_results->{$nsip}->{'probes_with_results'} < $cfg_minonline)
 		{
 			$status_value = UP_INCONCLUSIVE;
-			$status_message = "not enough probes with reults, " .
+			$status_message = "not enough probes with results, " .
 				$nsip_results->{$nsip}->{'probes_with_results'} . " while $cfg_minonline required";
 
 			$result->{$nsip}->{'alert'} = 1 if (alerts_enabled() == SUCCESS);
@@ -2470,7 +2470,7 @@ sub process_slv_ns_avail
 		elsif ($nsip_results->{$nsip}->{'probes_with_results'} == 0)
 		{
 			$status_value = UP_INCONCLUSIVE;
-			$status_message = "no probes with reults found";
+			$status_message = "no probes with results found";
 
 			$result->{$nsip}->{'alert'} = 1 if (alerts_enabled() == SUCCESS);
 		}

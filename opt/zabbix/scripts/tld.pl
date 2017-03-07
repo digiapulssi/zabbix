@@ -481,7 +481,7 @@ sub create_item_dns_rtt {
                                               'applications' => [get_application_id('DNS RTT ('.$proto_uc.')', $templateid)],
                                               'type' => 2, 'value_type' => 0,
 					      'status' => ITEM_STATUS_ACTIVE,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_dns'}};
+                                              'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'}};
 
     create_item($options);
 
@@ -545,7 +545,7 @@ sub create_item_dns_udp_upd {
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS RTT ('.$proto_uc.')', $templateid)],
                                               'type' => 2, 'value_type' => 0,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_dns'},
+                                              'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'},
 		                              'status' => (defined($OPTS{'epp-servers'}) ? 0 : 1)};
     return create_item($options);
 }
@@ -563,7 +563,7 @@ sub create_items_dns {
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS ('.$proto_uc.')', $templateid)],
                                               'type' => 3, 'value_type' => 3,
-                                              'delay' => $cfg_global_macros->{'{$RSM.DNS.TCP.DELAY}'}};
+                                              'delay' => $cfg_global_macros->{'{$RSM.DNS.TCP.DELAY}'}, 'valuemapid' => rsm_value_mappings->{'rsm_dns_result'}};
 
     create_item($options);
 
@@ -576,7 +576,7 @@ sub create_items_dns {
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS ('.$proto_uc.')', $templateid)],
                                               'type' => 3, 'value_type' => 3,
-                                              'delay' => $cfg_global_macros->{'{$RSM.DNS.UDP.DELAY}'}, 'valuemapid' => rsm_value_mappings->{'rsm_dns'}};
+                                              'delay' => $cfg_global_macros->{'{$RSM.DNS.UDP.DELAY}'}, 'valuemapid' => rsm_value_mappings->{'rsm_dns_result'}};
 
     create_item($options);
 }
@@ -594,8 +594,7 @@ sub create_items_rdds {
                                               'key_'=> $item_key,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_43],
-                                              'type' => 2, 'value_type' => 1,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_rdds_rttudp'}};
+                                              'type' => 2, 'value_type' => 1};
     create_item($options);
 
     $item_key = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
@@ -605,7 +604,7 @@ sub create_items_rdds {
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_43],
                                               'type' => 2, 'value_type' => 0,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_rdds_rttudp'}};
+                                              'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'}};
     create_item($options);
 
     if (defined($OPTS{'epp-servers'})) {
@@ -616,7 +615,7 @@ sub create_items_rdds {
 		    'hostid' => $templateid,
 		    'applications' => [$applicationid_43],
 		    'type' => 2, 'value_type' => 0,
-		    'valuemapid' => rsm_value_mappings->{'rsm_rdds_rttudp'},
+		    'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'},
 		    'status' => 0};
 	create_item($options);
     }
@@ -637,7 +636,7 @@ sub create_items_rdds {
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_80],
                                               'type' => 2, 'value_type' => 0,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_rdds_rttudp'}};
+                                              'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'}};
     create_item($options);
 
     $item_key = 'rsm.rdds[{$RSM.TLD},"'.$OPTS{'rdds43-servers'}.'","'.$OPTS{'rdds80-servers'}.'"]';
@@ -648,7 +647,7 @@ sub create_items_rdds {
                                               'applications' => [get_application_id('RDDS', $templateid)],
                                               'type' => 3, 'value_type' => 3,
 					      'delay' => $cfg_global_macros->{'{$RSM.RDDS.DELAY}'},
-                                              'valuemapid' => rsm_value_mappings->{'rsm_rdds_avail'}};
+                                              'valuemapid' => rsm_value_mappings->{'rsm_rdds_result'}};
     create_item($options);
 }
 
@@ -667,7 +666,7 @@ sub create_items_epp {
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 3, 'value_type' => 3,
-		'delay' => $cfg_global_macros->{'{$RSM.EPP.DELAY}'}, 'valuemapid' => rsm_value_mappings->{'rsm_avail'}};
+		'delay' => $cfg_global_macros->{'{$RSM.EPP.DELAY}'}, 'valuemapid' => rsm_value_mappings->{'rsm_epp_result'}};
 
     create_item($options);
 
@@ -688,7 +687,7 @@ sub create_items_epp {
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
-		'valuemapid' => rsm_value_mappings->{'rsm_epp'}};
+		'valuemapid' => rsm_value_mappings->{'rsm_epp_rtt'}};
 
     create_item($options);
 
@@ -699,7 +698,7 @@ sub create_items_epp {
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
-		'valuemapid' => rsm_value_mappings->{'rsm_epp'}};
+		'valuemapid' => rsm_value_mappings->{'rsm_epp_rtt'}};
 
     create_item($options);
 
@@ -710,7 +709,7 @@ sub create_items_epp {
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
-		'valuemapid' => rsm_value_mappings->{'rsm_epp'}};
+		'valuemapid' => rsm_value_mappings->{'rsm_epp_rtt'}};
 
     create_item($options);
 }

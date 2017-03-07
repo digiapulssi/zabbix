@@ -125,7 +125,7 @@ sub __translate_cycles_line
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleID', $cycle_id);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleEmergencyThreshold', $cycle_emergency_threshold);
-	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleStatus', $cycle_status);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s (%s)\n", 'cycleStatus', $cycle_status, $columns[3]);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentID', $incident_id);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleTLD', $cycle_tld);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'serviceCategory', $service_category);
@@ -188,7 +188,7 @@ sub __translate_ns_tests_line
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsFQDN', $ns_fqdn);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsTestTLD', $ns_test_tld);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
-	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsTestStatus', $ns_test_status);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s (%s)\n", 'nsTestStatus', $ns_test_status, $columns[2]);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'tldType', $tld_type);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleID', $cycle_id);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testProtocol', $ns_test_protocol);
