@@ -76,6 +76,7 @@ typedef struct
 {
 	pid_t	pid;
 	int	fd;	/* read from this file descriptor */
+	int	log_fd;	/* read logs from this file descriptor */
 }
 writer_thread_t;
 
@@ -92,6 +93,7 @@ static int	unpack_values(size_t *v1, size_t *v2, int *v3, int *v4, char *buf)
 	return sscanf(buf, PACK_FORMAT, v1, v2, v3, v4);
 }
 
+#define zbx_rsm_dump(log_fd, fmt, ...)	fprintf(log_fd, ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
 #define zbx_rsm_errf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Error", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
 #define zbx_rsm_warnf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Warning", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
 #define zbx_rsm_infof(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Info", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
@@ -1692,7 +1694,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	else
 	{
 		int		th_num = 0, threads_num = 0, status;
-		char		buf[64];
+		char		buf[2048];
 		pid_t		pid;
 		writer_thread_t	*threads = NULL;
 
@@ -1710,8 +1712,9 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 			for (j = 0; j < nss[i].ips_num; j++)
 			{
 				int	fd[2];	/* reader and writer fd */
+				int	log_pipe[2];
 
-				if (-1 == pipe(fd))
+				if (-1 == pipe(fd) || -1 == pipe(log_pipe))
 				{
 					zbx_rsm_errf(log_fd, "cannot create pipe: %s", zbx_strerror(errno));
 					goto endtest;
@@ -1721,23 +1724,36 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 				{
 					/* child */
 
+					FILE	*th_log_fd;
+
 					close(fd[0]);	/* child does not need reader fd */
+					close(log_pipe[0]);
+
+					if (NULL == (th_log_fd = fdopen(log_pipe[1], "w")))
+					{
+						zbx_rsm_errf(log_fd, "cannot open log pipe as stream: %s",
+								zbx_strerror(errno));
+					}
 
 					if (SUCCEED != zbx_get_ns_ip_values(res, nss[i].name, nss[i].ips[j].ip, keys,
-							testprefix, domain, log_fd, &nss[i].ips[j].rtt,
-							(ZBX_RSM_UDP == proto && 0 != rdds_enabled) ?
-							&nss[i].ips[j].upd : NULL, ipv4_enabled, ipv6_enabled,
+							testprefix, domain, (th_log_fd == NULL ? log_fd : th_log_fd),
+							&nss[i].ips[j].rtt, (ZBX_RSM_UDP == proto && 0 != rdds_enabled ?
+							&nss[i].ips[j].upd : NULL), ipv4_enabled, ipv6_enabled,
 							epp_enabled, err, sizeof(err)))
 					{
-						zbx_rsm_err(log_fd, err);
+						zbx_rsm_err((th_log_fd == NULL ? log_fd : th_log_fd), err);
 					}
 
 					pack_values(i, j, nss[i].ips[j].rtt, nss[i].ips[j].upd, buf, sizeof(buf));
 
 					if (-1 == write(fd[1], buf, strlen(buf) + 1))
-						zbx_rsm_errf(log_fd, "cannot write to pipe: %s", zbx_strerror(errno));
+					{
+						zbx_rsm_errf((th_log_fd == NULL ? log_fd : th_log_fd), "cannot write to"
+								" pipe: %s", zbx_strerror(errno));
+					}
 
 					close(fd[1]);
+					close(log_pipe[1]);
 
 					exit(EXIT_SUCCESS);
 				}
@@ -1746,9 +1762,11 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 					/* parent */
 
 					close(fd[1]);	/* parent does not need writer fd */
+					close(log_pipe[1]);
 
 					threads[th_num].pid = pid;
 					threads[th_num].fd = fd[0];
+					threads[th_num].log_fd = log_pipe[0];
 
 					th_num++;
 				}
@@ -1758,6 +1776,8 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 					close(fd[0]);
 					close(fd[1]);
+					close(log_pipe[0]);
+					close(log_pipe[1]);
 
 					goto endtest;
 				}
@@ -1766,6 +1786,8 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 endtest:
 		for (th_num = 0; th_num < threads_num; th_num++)
 		{
+			int	bytes;
+
 			if (0 == threads[th_num].pid)
 				continue;
 
@@ -1779,10 +1801,24 @@ endtest:
 					nss[i].ips[j].upd = upd;
 				}
 				else
-					zbx_rsm_errf(log_fd, "cannot unpack values (unpacked %d, need %d)", rv, PACK_NUM_VARS);
+				{
+					zbx_rsm_errf(log_fd, "cannot unpack values (unpacked %d, need %d)", rv,
+							PACK_NUM_VARS);
+				}
 			}
 			else
 				zbx_rsm_errf(log_fd, "cannot read from pipe: %s", zbx_strerror(errno));
+
+			while (0 != (bytes = read(threads[th_num].log_fd, buf, sizeof(buf))))
+			{
+				if (-1 == bytes)
+				{
+					zbx_rsm_errf(log_fd, "cannot read logs from pipe: %s", zbx_strerror(errno));
+					break;
+				}
+
+				zbx_rsm_dump(log_fd, "%.*s", bytes, buf);
+			}
 
 			if (0 >= waitpid(threads[th_num].pid, &status, 0))
 				zbx_rsm_err(log_fd, "error on thread waiting");
