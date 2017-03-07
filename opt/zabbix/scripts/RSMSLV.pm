@@ -3084,7 +3084,7 @@ sub __log
 		openlog($ident, $logopt, $facility);
 	}
 
-	syslog($syslog_priority, ts_str() . " [$priority] ", $server_str, $msg); # first parameter is not used in our rsyslog template
+	syslog($syslog_priority, ts_str() . " [$priority] " . $server_str . $msg);	# second parameter is the log message
 
 	$prev_tld = $cur_tld;
 }
