@@ -39,6 +39,7 @@ my $value_ts = $from;
 
 dbg("selected period: ", selected_period($from, $till), ", with value timestamp: ", ts_full($value_ts));
 
+# todo phase 1: add parameter: ENABLED_DNS
 my $probes_ref = get_probes(ENABLED_DNS);
 
 my $probe_times_ref = __get_probe_times($from, $till, $probes_ref);
