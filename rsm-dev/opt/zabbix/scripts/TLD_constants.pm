@@ -82,12 +82,17 @@ use constant cfg_default_rdds_ns_string => 'Name Server:';
 use constant rsm_host => 'rsm'; # global config history
 use constant rsm_group => 'rsm';
 
-use constant rsm_value_mappings => {'rsm_dns' => 13,
-                                'rsm_probe' => 14,
-                                'rsm_rdds_rttudp' => 15,
-                                'rsm_avail' => 16,
-                                'rsm_rdds_avail' => 18,
-                                'rsm_epp' => 19};
+use constant rsm_value_mappings =>
+{
+	'rsm_dns_rtt' => 13,
+	'rsm_dns_result' => 20,
+	'rsm_rdds_rtt' => 15,
+	'rsm_rdds_result' => 18,
+	'rsm_epp_rtt' => 19,
+	'rsm_epp_result' => 21,
+	'rsm_avail' => 16,
+	'rsm_probe' => 14
+};
 
 use constant rsm_trigger_rollweek_thresholds => { '1' => {'threshold' => '10', 'priority' => 2},
                                     '2' => {'threshold' => '25', 'priority' => 3},

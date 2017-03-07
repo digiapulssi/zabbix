@@ -105,8 +105,9 @@ while ($period > 0)
 		my $probes_with_results = get_probes_count($items_ref, $values_ref);
 		if ($probes_with_results < $cfg_minonline)
 		{
-			push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes with reults, $probes_with_results while $cfg_minonline required)");
-			add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes with reults, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
+			# todo phase 1: fix typo "reults -> results" here and in all other files
+			push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
+			add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes with results, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
 			next;
 		}
 

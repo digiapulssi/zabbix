@@ -1749,8 +1749,8 @@ sub process_slv_avail
 	my $probes_with_results = scalar(keys(%$values_ref));
 	if ($probes_with_results < $cfg_minonline)
 	{
-		push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes with reults, $probes_with_results while $cfg_minonline required)");
-		add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes with reults, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
+		push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
+		add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes with results, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
 		return;
 	}
 
@@ -1847,8 +1847,8 @@ sub process_slv_ns_avail
 		}
 		elsif ($probes_with_results < $cfg_minonline)
 		{
-			push_value($tld, $out_key, $value_ts, UP, "Up (not enough probes with reults, $probes_with_results while $cfg_minonline required)");
-			add_alert(ts_str($value_ts) . "#system#zabbix#$out_key#PROBLEM#$tld (not enough probes with reults, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
+			push_value($tld, $out_key, $value_ts, UP, "Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
+			add_alert(ts_str($value_ts) . "#system#zabbix#$out_key#PROBLEM#$tld (not enough probes with results, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
 		}
 		else
 		{
@@ -2591,7 +2591,34 @@ sub __get_valuemappings
 	return \%result;
 }
 
+# todo phase 1: the $vmname's must be fixed accordingly in phase 2
 sub get_valuemaps
+{
+	my $service = shift;
+
+	my $vmname;
+	if ($service eq 'dns' or $service eq 'dnssec')
+	{
+		$vmname = 'RSM DNS rtt';
+	}
+	elsif ($service eq 'rdds')
+	{
+		$vmname = 'RSM RDDS rtt';
+	}
+	elsif ($service eq 'epp')
+	{
+		$vmname = 'RSM EPP rtt';
+	}
+	else
+	{
+		fail("service '$service' is unknown");
+	}
+
+	return __get_valuemappings($vmname);
+}
+
+# todo phase 1: the $vmname's must be fixed accordingly in phase 2
+sub get_statusmaps
 {
 	my $service = shift;
 
@@ -2606,28 +2633,7 @@ sub get_valuemaps
 	}
 	elsif ($service eq 'epp')
 	{
-		$vmname = 'RSM EPP availability';
-	}
-	else
-	{
-		fail("service '$service' is unknown");
-	}
-
-	return __get_valuemappings($vmname);
-}
-
-sub get_statusmaps
-{
-	my $service = shift;
-
-	my $vmname;
-	if ($service eq 'dns' or $service eq 'dnssec' or $service eq 'epp')
-	{
-		$vmname = 'RSM DNS availability';
-	}
-	elsif ($service eq 'rdds')
-	{
-		$vmname = 'RSM RDDS availability';
+		$vmname = 'RSM EPP result';
 	}
 	else
 	{
