@@ -125,8 +125,6 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 	va_start(args, fmt);
 	vfprintf(log_fd, fmt, args);
 	va_end(args);
-
-	fflush(log_fd);
 }
 
 #define zbx_rsm_err(log_fd, text)	zbx_rsm_log(log_fd, "Error", text)
@@ -152,8 +150,6 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 			ms,
 			prefix,
 			text);
-
-	fflush(log_fd);
 }
 
 static int	zbx_validate_ip(const char *ip, char ipv4_enabled, char ipv6_enabled, ldns_rdf **ip_rdf_out,
@@ -1707,12 +1703,14 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		threads = zbx_calloc(threads, threads_num, sizeof(*threads));
 		memset(threads, 0, threads_num * sizeof(*threads));
 
+		fflush(log_fd);
+
 		for (i = 0; i < nss_num; i++)
 		{
 			for (j = 0; j < nss[i].ips_num; j++)
 			{
-				int	fd[2];	/* reader and writer fd */
-				int	log_pipe[2];
+				int	fd[2];		/* reader and writer fd for data */
+				int	log_pipe[2];	/* reader and writer fd for logs */
 
 				if (-1 == pipe(fd) || -1 == pipe(log_pipe))
 				{
@@ -1726,32 +1724,36 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 					FILE	*th_log_fd;
 
-					close(fd[0]);	/* child does not need reader fd */
-					close(log_pipe[0]);
+					close(fd[0]);		/* child does not need data reader fd */
+					close(log_pipe[0]);	/* child does not need log reader fd */
 
 					if (NULL == (th_log_fd = fdopen(log_pipe[1], "w")))
 					{
 						zbx_rsm_errf(log_fd, "cannot open log pipe as stream: %s",
 								zbx_strerror(errno));
+						th_log_fd = log_fd;
+					}
+					else
+					{
+						fclose(log_fd);
+						log_fd = NULL;
 					}
 
 					if (SUCCEED != zbx_get_ns_ip_values(res, nss[i].name, nss[i].ips[j].ip, keys,
-							testprefix, domain, (th_log_fd == NULL ? log_fd : th_log_fd),
+							testprefix, domain, th_log_fd,
 							&nss[i].ips[j].rtt, (ZBX_RSM_UDP == proto && 0 != rdds_enabled ?
 							&nss[i].ips[j].upd : NULL), ipv4_enabled, ipv6_enabled,
 							epp_enabled, err, sizeof(err)))
 					{
-						zbx_rsm_err((th_log_fd == NULL ? log_fd : th_log_fd), err);
+						zbx_rsm_err(th_log_fd, err);
 					}
 
 					pack_values(i, j, nss[i].ips[j].rtt, nss[i].ips[j].upd, buf, sizeof(buf));
 
 					if (-1 == write(fd[1], buf, strlen(buf) + 1))
-					{
-						zbx_rsm_errf((th_log_fd == NULL ? log_fd : th_log_fd), "cannot write to"
-								" pipe: %s", zbx_strerror(errno));
-					}
+						zbx_rsm_errf(th_log_fd, "cannot write to pipe: %s", zbx_strerror(errno));
 
+					fclose(th_log_fd);
 					close(fd[1]);
 					close(log_pipe[1]);
 
@@ -1761,8 +1763,8 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 				{
 					/* parent */
 
-					close(fd[1]);	/* parent does not need writer fd */
-					close(log_pipe[1]);
+					close(fd[1]);		/* parent does not need data writer fd */
+					close(log_pipe[1]);	/* parent does not need log writer fd */
 
 					threads[th_num].pid = pid;
 					threads[th_num].fd = fd[0];
