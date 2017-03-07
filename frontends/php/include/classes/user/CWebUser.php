@@ -34,6 +34,7 @@ class CWebUser {
 	 * @return bool
 	 */
 	public static function login($login, $password) {
+		global $DB;
 		try {
 			self::setDefault();
 
@@ -69,6 +70,53 @@ class CWebUser {
 				self::setSessionCookie(self::$data['sessionid']);
 
 				add_audit_ext(AUDIT_ACTION_LOGIN, AUDIT_RESOURCE_USER, self::$data['userid'], '', null, null, null);
+
+				$master = [
+					'TYPE' => $DB['TYPE'],
+					'SERVER' => $DB['SERVER'],
+					'PORT' => $DB['PORT'],
+					'DATABASE' => $DB['DATABASE'],
+					'USER' => $DB['USER'],
+					'PASSWORD' => $DB['PASSWORD'],
+					'SCHEMA' => $DB['SCHEMA']
+				];
+
+				foreach ($DB['SERVERS'] as $server) {
+					unset($DB['DB']);
+					$DB['TYPE'] = $server['TYPE'];
+					$DB['SERVER'] = $server['SERVER'];
+					$DB['PORT'] = $server['PORT'];
+					$DB['DATABASE'] = $server['DATABASE'];
+					$DB['USER'] = $server['USER'];
+					$DB['PASSWORD'] = $server['PASSWORD'];
+					$DB['SCHEMA'] = $server['SCHEMA'];
+
+					if ($master['TYPE'] != $server['TYPE'] || $master['SERVER'] != $server['SERVER']
+							|| $master['DATABASE'] != $server['DATABASE'] || $master['PORT'] != $server['PORT']
+							|| $master['USER'] != $server['USER'] || $master['PASSWORD'] != $server['PASSWORD']) {
+						DBconnect($error);
+
+						$user_info = DBfetch(DBselect(
+							'SELECT u.userid'.
+							' FROM users u'.
+							' WHERE u.alias='.zbx_dbstr($login)
+						));
+
+						DBexecute('INSERT INTO sessions (sessionid,userid,lastaccess,status)'.
+							' VALUES ('.zbx_dbstr(self::$data['sessionid']).','.zbx_dbstr($user_info['userid']).','.time().','.ZBX_SESSION_ACTIVE.')'
+						);
+
+						unset($DB['DB']);
+						$DB['TYPE'] = $master['TYPE'];
+						$DB['SERVER'] = $master['SERVER'];
+						$DB['PORT'] = $master['PORT'];
+						$DB['DATABASE'] = $master['DATABASE'];
+						$DB['USER'] = $master['USER'];
+						$DB['PASSWORD'] = $master['PASSWORD'];
+						$DB['SCHEMA'] = $master['SCHEMA'];
+						DBconnect($error);
+					}
+				}
 			}
 
 			return $result;

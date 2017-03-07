@@ -596,6 +596,7 @@ foreach ($DB['SERVERS'] as $server) {
 }
 
 if (array_key_exists('tld', $data) && $data['tld']) {
+	$data['sid'] = CWebUser::getSessionCookie();
 	// services status filter
 	if ($data['filter_status']) {
 		foreach ($data['tld'] as $key => $tld) {

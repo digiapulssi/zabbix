@@ -1180,7 +1180,13 @@ class CUser extends CApiService {
 	 * @return array				an array of user data
 	 */
 	public function checkAuthentication(array $sessionid) {
-		$sessionid = reset($sessionid);
+		if (hasRequest('sid') && hasRequest('set_sid')) {
+			zbx_setcookie('zbx_sessionid', getRequest('sid'),  1 ? strtotime('+1 month') : 0);
+			$sessionid = getRequest('sid');
+		}
+		else {
+			$sessionid = reset($sessionid);
+		}
 
 		// access DB only once per page load
 		if (!is_null(self::$userData)) {

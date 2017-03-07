@@ -1,9 +1,5 @@
 <script type="text/javascript">
 	jQuery(function() {
-		if (jQuery('#filter_search').length) {
-			createSuggest('filter_search', true);
-		}
-
 		jQuery('#checkAllServices').on('click', function() {
 			if (jQuery('#checkAllServicesValue').val() == 0) {
 				jQuery('#filter_dns').prop('checked', true);
