@@ -1455,7 +1455,7 @@ out:
  *                                                                            *
  * Purpose: Open log file for simple check                                    *
  *                                                                            *
- * Parameters: domain   - [IN]  TLD, NULL in case of probestatus check        *
+ * Parameters: domain   - [IN]  TLD or Probe in case of probestatus check     *
  *             prefix   - [IN]  name of the test: dns, rdds, epp, probestatus *
  *             postfix  - [IN]  protocol of dns test, NULL for other tests    *
  *             err      - [OUT] buffer for error message                      *
@@ -1486,9 +1486,7 @@ FILE	*open_item_log(const char *domain, const char *prefix, const char *postfix,
 	else
 		file_name = zbx_dsprintf(NULL, "%.*s", p - CONFIG_LOG_FILE, CONFIG_LOG_FILE);
 
-	if (NULL == domain)
-		file_name = zbx_strdcatf(file_name, "/%s.log", prefix);
-	else if (NULL == postfix)
+	if (NULL == postfix)
 		file_name = zbx_strdcatf(file_name, "/%s-%s.log", domain, prefix);
 	else
 		file_name = zbx_strdcatf(file_name, "/%s-%s-%s.log", domain, prefix, postfix);
@@ -4232,7 +4230,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 	}
 
 	/* open probestatus log file */
-	if (NULL == (log_fd = open_item_log(NULL, ZBX_PROBESTATUS_LOG_PREFIX, NULL, err, sizeof(err))))
+	if (NULL == (log_fd = open_item_log(item->host.host, ZBX_PROBESTATUS_LOG_PREFIX, NULL, err, sizeof(err))))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
 		return SYSINFO_RET_FAIL;
