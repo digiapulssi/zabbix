@@ -1705,12 +1705,15 @@ static void	DCsync_interfaces(zbx_dbsync_t *sync)
 	ZBX_DC_INTERFACE_HT	*interface_ht, interface_ht_local;
 	ZBX_DC_INTERFACE_ADDR	*interface_snmpaddr, interface_snmpaddr_local;
 
-	int			found, update_index, ret;
+	int			found, update_index, ret, i;
 	zbx_uint64_t		interfaceid, hostid;
 	unsigned char		type, main_, useip;
 	unsigned char		bulk, reset_snmp_stats;
+	zbx_vector_ptr_t	interfaces;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	zbx_vector_ptr_create(&interfaces);
 
 	while (SUCCEED == (ret = zbx_dbsync_next(sync, &rowid, &row, &tag)))
 	{
@@ -1726,6 +1729,7 @@ static void	DCsync_interfaces(zbx_dbsync_t *sync)
 		ZBX_STR2UCHAR(bulk, row[8]);
 
 		interface = DCfind_id(&config->interfaces, interfaceid, sizeof(ZBX_DC_INTERFACE), &found);
+		zbx_vector_ptr_append(&interfaces, interface);
 
 		/* remove old address->interfaceid index */
 		if (0 != found && INTERFACE_TYPE_SNMP == interface->type)
@@ -1827,18 +1831,9 @@ static void	DCsync_interfaces(zbx_dbsync_t *sync)
 
 	/* resolve macros in other interfaces */
 
-	zbx_dbsync_reset(sync);
-
-	while (SUCCEED == (ret = zbx_dbsync_next(sync, &rowid, &row, &tag)))
+	for (i = 0; i < interfaces.values_num; i++)
 	{
-		/* removed rows will be always added at the end */
-		if (ZBX_DBSYNC_ROW_REMOVE == tag)
-			break;
-
-		ZBX_STR2UINT64(interfaceid, row[0]);
-
-		if (NULL == (interface = zbx_hashset_search(&config->interfaces, &interfaceid)))
-			continue;
+		interface = (ZBX_DC_INTERFACE *)interfaces.values[i];
 
 		if (1 != interface->main || INTERFACE_TYPE_AGENT != interface->type)
 			substitute_host_interface_macros(interface);
@@ -1872,6 +1867,8 @@ static void	DCsync_interfaces(zbx_dbsync_t *sync)
 
 		zbx_hashset_remove_direct(&config->interfaces, interface);
 	}
+
+	zbx_vector_ptr_destroy(&interfaces);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
