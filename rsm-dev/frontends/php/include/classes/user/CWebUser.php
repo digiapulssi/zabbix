@@ -135,6 +135,10 @@ class CWebUser {
 
 	public static function checkAuthentication($sessionId) {
 		try {
+			if (hasRequest('sid') && hasRequest('set_sid') && $sessionId != getRequest('sid')) {
+				$sessionId = getRequest('sid');
+			}
+
 			if ($sessionId !== null) {
 				self::$data = API::User()->checkAuthentication([$sessionId]);
 			}
