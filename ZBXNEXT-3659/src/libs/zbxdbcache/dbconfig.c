@@ -3367,6 +3367,58 @@ static void	dc_trigger_update_cache()
 	zbx_vector_ptr_pair_destroy(&itemtrigs);
 }
 
+static void	DCdump_config()
+{
+	int	i;
+
+	if (NULL == config->config)
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "cannot parse config table");
+		return;
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  === config table ===");
+
+	zabbix_log(LOG_LEVEL_TRACE, "  refresh_unsupported %d", config->config->refresh_unsupported);
+	zabbix_log(LOG_LEVEL_TRACE, "  discovery_groupid " ZBX_FS_UI64, config->config->discovery_groupid);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmptrap_logging %u", config->config->snmptrap_logging);
+	zabbix_log(LOG_LEVEL_TRACE, "  default_inventory_mode %d", config->config->default_inventory_mode);
+
+	for (i = 0; TRIGGER_SEVERITY_COUNT > i; i++)
+		zabbix_log(LOG_LEVEL_TRACE, "  severity name %s", config->config->severity_name[i]);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.events_mode %u", config->config->hk.events_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.events_trigger %d", config->config->hk.events_trigger);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.events_internal %d", config->config->hk.events_internal);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.events_autoreg %d", config->config->hk.events_autoreg);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.events_discovery %d", config->config->hk.events_discovery);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.audit_mode %u", config->config->hk.audit_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.audit %d", config->config->hk.audit);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.services_mode %u", config->config->hk.services_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.services %d", config->config->hk.services);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.sessions_mode %u", config->config->hk.sessions_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.sessions %d", config->config->hk.sessions);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.history_mode %u", config->config->hk.history_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.history_global %u", config->config->hk.history_global);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.history %d", config->config->hk.history);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.trends_mode %u", config->config->hk.trends_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.trends_global %u", config->config->hk.trends_global);
+	zabbix_log(LOG_LEVEL_TRACE, "  hk.trends %d", config->config->hk.trends);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
+}
+
+static void	DCdump_configuration()
+{
+	DCdump_config();
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DCsync_configuration                                             *
@@ -3764,13 +3816,16 @@ out:
 	zbx_dbsync_clear(&action_sync);
 	zbx_dbsync_clear(&action_condition_sync);
 
+	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
+		DCdump_configuration();
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************
  *                                                                            *
  * Helper functions for configuration cache data structure element comparison *
- * and hash value calculatiif_statson.                                                *
+ * and hash value calculatiif_statson.                                        *
  *                                                                            *
  * The __config_mem_XXX_func(), __config_XXX_hash and __config_XXX_compare    *
  * functions are used only inside init_configuration_cache() function to      *
