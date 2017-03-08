@@ -3878,6 +3878,17 @@ typedef struct
 }
 zbx_trigger_func_position_t;
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_link_triggers_with_functions                                 *
+ *                                                                            *
+ * Parameters: triggers_func_pos - [IN/OUT] pointer to the list of triggers   *
+ *                                 with functions position in functionids     *
+ *                                 array                                      *
+ *             functionids       - [IN] array of function IDs                 *
+ *             trigger_order     - [IN] array of triggers                     *
+ *                                                                            *
+ ******************************************************************************/
 static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos, zbx_vector_uint64_t *functionids,
 		zbx_vector_ptr_t *trigger_order)
 {
@@ -3887,10 +3898,10 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
 	DC_TRIGGER		*tr;
 	int			i;
 
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() trigger_order_num:%d", __function_name, trigger_order->values_num);
+
 	zbx_vector_uint64_create(&funcids);
 	zbx_vector_uint64_reserve(&funcids, functionids->values_num);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() trigger_order_num:%d", __function_name, trigger_order->values_num);
 
 	for (i = 0; i < trigger_order->values_num; i++)
 	{
@@ -3921,13 +3932,24 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
 			triggers_func_pos->values_num);
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_determine_items_in_expressions                               *
+ *                                                                            *
+ * Purpose: determine which items is used in the base trigger expressions and *
+ *          flag it with ZBX_DC_TRIGGER_BASE_EXPRESSION                       *
+ *                                                                            *
+ * Parameters: trigger_order - [IN/OUT] pointer to the list of triggers       *
+ *             itemids       - [IN] array of item IDs                         *
+ *             item_num      - [IN] number of items                           *
+ *                                                                            *
+ ******************************************************************************/
 void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const zbx_uint64_t *itemids, int item_num)
 {
 	zbx_vector_ptr_t	triggers_func_pos;
-	zbx_vector_uint64_t	functionids;
+	zbx_vector_uint64_t	functionids, itemids_sorted;
 	DC_FUNCTION		*functions = NULL;
 	int			*errcodes = NULL, t, f;
-	zbx_vector_uint64_t	itemids_sorted;
 
 	zbx_vector_uint64_create(&itemids_sorted);
 	zbx_vector_uint64_append_array(&itemids_sorted, itemids, item_num);
