@@ -347,7 +347,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		],
 		'login' => [
 			'label' => _('Login'),
-			'user_type'	=> [USER_TYPE_EBERO, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
+			'user_type'	=> [USER_TYPE_ZABBIX_GUEST, USER_TYPE_EBERO, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
 				USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
 			'default_page_id' => 0,
