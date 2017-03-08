@@ -127,6 +127,7 @@ ZABBIX.apps.map = (function($) {
 			this.allLinkTriggerIds = {};
 			this.sysmapid = mapData.sysmap.sysmapid;
 			this.data = mapData.sysmap;
+			this.background = null;
 			this.iconList = mapData.iconList;
 			this.defaultAutoIconId = mapData.defaultAutoIconId;
 			this.defaultIconId = mapData.defaultIconId;
@@ -136,6 +137,21 @@ ZABBIX.apps.map = (function($) {
 			if (this.container.length === 0) {
 				this.container = $(document.body);
 			}
+
+			this.images = {};
+			Object.keys(this.iconList).forEach(function (id) {
+				var item = this.iconList[id];
+				this.images[item.imageid] = item;
+			}, this);
+
+			this.map = new SVGMap({
+				theme: mapData.theme,
+				canvas: {
+					width: this.data.width,
+					height: this.data.height
+				},
+				container: this.container[0]
+			});
 
 			this.container.css({
 				width: this.data.width + 'px',
@@ -150,37 +166,9 @@ ZABBIX.apps.map = (function($) {
 				});
 			}
 
-			if (IE || GK) {
-				this.base64image = false;
-				this.mapimg = $('#sysmap_img');
-				this.container.css('position', 'absolute');
-
-				// resize div on window resize
-				setContainer = function() {
-					var sysmapPosition = this.mapimg.position(),
-						sysmapHeight = this.mapimg.height(),
-						sysmapWidth = this.mapimg.width(),
-						containerPosition = this.container.position();
-
-					if (containerPosition.top !== sysmapPosition.top || containerPosition.left !== sysmapPosition.left || this.container.height() !== sysmapHeight || this.container.width() !== sysmapWidth) {
-						this.container.css({
-							top: sysmapPosition.top + 'px',
-							left: sysmapPosition.left + 'px',
-							height: sysmapHeight + 'px',
-							width: sysmapWidth + 'px'
-						});
-					}
-				};
-
-				$(window).resize($.proxy(setContainer, this));
-
-				this.mapimg.load($.proxy(setContainer, this));
-			}
-			else {
-				this.container.css('position', 'relative');
-				this.base64image = true;
-				$('#sysmap_img').remove();
-			}
+			this.container.css('position', 'relative');
+			this.base64image = true;
+			$('#sysmap_img').remove();
 
 			for (selementid in this.data.selements) {
 				if (this.data.selements.hasOwnProperty(selementid)) {
@@ -255,65 +243,45 @@ ZABBIX.apps.map = (function($) {
 			},
 
 			updateImage: function() {
-				var url = new Curl(),
-					urlText = 'map.php?sid=' + url.getArgument('sid'),
-					ajaxRequest;
-
-				// is image is updating, set reupdate flag and exit
-				if (this.imageUpdating === true) {
-					this.reupdateImage = true;
-
-					return;
-				}
-
-				// grid
 				if (this.data.grid_show === '1') {
-					urlText += '&grid=' + this.data.grid_size;
+					this.map.setGrid(parseInt(this.data.grid_size));
+				}
+				else {
+					this.map.setGrid(0);
 				}
 
-				this.imageUpdating = true;
+				var elements = [];
+				Object.keys(this.selements).forEach(function(key) {
+					var element = {};
+					['selementid', 'x', 'y', 'label', 'label_location'].forEach(function (name) {
+						element[name] = this.selements[key].data[name];
+					}, this);
 
-				ajaxRequest = $.ajax({
-					url: urlText,
-					type: 'post',
-					data: {
-						output: 'json',
-						sysmapid: this.sysmapid,
-						expand_macros: this.data.expand_macros,
-						noselements: 1,
-						nolinks: 1,
-						nocalculations: 1,
-						selements: Object.toJSON(this.data.selements),
-						links: Object.toJSON(this.data.links),
-						base64image: (this.base64image ? 1 : 0)
-					},
-					success: $.proxy(function(data) {
-						if (this.base64image) {
-							this.container.css({
-								'background-image': 'url("data:image/png;base64,' + data.result + '")',
-								width: this.data.width + 'px',
-								height: this.data.height + 'px'
-							});
-						}
-						else {
-							this.mapimg.attr('src', 'imgstore.php?imageid=' + data.result);
-						}
-
-						this.imageUpdating = false;
-					}, this),
-					error: $.proxy(function() {
-						alert('Map image update failed');
-
-						this.imageUpdating = false;
-					}, this)
-				});
-
-				$.when(ajaxRequest).always($.proxy(function() {
-					if (this.reupdateImage === true) {
-						this.reupdateImage = false;
-						this.updateImage();
+					// host group elements
+					if (this.selements[key].data.elementtype == '3' && this.selements[key].data.elementsubtype == '1') {
+						element.width = this.selements[key].data.width;
+						element.height = this.selements[key].data.height;
 					}
-				}, this));
+
+					element.icon = this.selements[key].data.iconid_off;
+					elements.push(element);
+				}, this);
+
+				var links = [];
+				Object.keys(this.links).forEach(function(key) {
+					var link = {};
+					['linkid', 'selementid1', 'selementid2', 'drawtype', 'color', 'label'].forEach(function (name) {
+						link[name] = this.links[key].data[name];
+					}, this);
+
+					links.push(link);
+				}, this);
+
+				this.map.update({
+					'background': this.data.backgroundid,
+					'elements': elements,
+					'links': links
+				});
 			},
 
 			// elements
@@ -375,13 +343,6 @@ ZABBIX.apps.map = (function($) {
 				/*
 				 * Map panel events
 				 */
-				// toggle expand macros
-				$('#expand_macros').click(function() {
-					that.data.expand_macros = (that.data.expand_macros === '1') ? '0' : '1';
-					$(this).html((that.data.expand_macros === '1') ? locale['S_ON'] : locale['S_OFF']);
-					that.updateImage();
-				});
-
 				// change grid size
 				$('#gridsize').change(function() {
 					var value = $(this).val();
@@ -525,7 +486,7 @@ ZABBIX.apps.map = (function($) {
 
 					if (values) {
 						for (var selementid in this.selection.selements) {
-							this.selements[selementid].update(values, true);
+							this.selements[selementid].update(values);
 						}
 					}
 				}, this));

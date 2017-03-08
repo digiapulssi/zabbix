@@ -37,10 +37,6 @@ $menu = (new CList())
 		(new CButton('linkRemove', _('Remove')))->addClass(ZBX_STYLE_BTN_LINK)
 	])
 	->addItem([
-		_('Expand macros').':'.SPACE,
-		(new CButton('expand_macros', ($this->data['sysmap']['expand_macros'] == SYSMAP_EXPAND_MACROS_ON) ? _('On') : _('Off')))->addClass(ZBX_STYLE_BTN_LINK)
-	])
-	->addItem([
 		_('Grid').':'.SPACE,
 		(new CButton('gridshow', ($this->data['sysmap']['grid_show'] == SYSMAP_GRID_SHOW_ON) ? _('Shown') : _('Hidden')))->addClass(ZBX_STYLE_BTN_LINK),
 		SPACE.'/'.SPACE,
@@ -56,17 +52,11 @@ $menu = (new CList())
 	->addItem((new CButton('gridalignall', _('Align icons')))->addClass(ZBX_STYLE_BTN_LINK))
 	->addItem((new CSubmit('update', _('Update')))->setAttribute('id', 'sysmap_update'));
 
-// create map
-$backgroundImage = (new CImg('images/general/tree/zero.gif', 'Sysmap'))
-	->setId('sysmap_img', $this->data['sysmap']['width'], $this->data['sysmap']['height']);
-
-$backgroundImageTable = new CTable();
-$backgroundImageTable->addRow($backgroundImage);
-
 $container = (new CDiv())->setId(ZBX_STYLE_MAP_AREA);
 
 // create elements
 zbx_add_post_js('ZABBIX.apps.map.run("'.ZBX_STYLE_MAP_AREA.'", '.CJs::encodeJson([
+	'theme' => $this->data['theme'],
 	'sysmap' => $this->data['sysmap'],
 	'iconList' => $this->data['iconList'],
 	'defaultAutoIconId' => $this->data['defaultAutoIconId'],
@@ -82,6 +72,5 @@ return (new CWidget())
 	->addItem(
 		(new CDiv())
 			->addClass(ZBX_STYLE_TABLE_FORMS_CONTAINER)
-			->addItem($backgroundImageTable)
 			->addItem($container)
 	);
