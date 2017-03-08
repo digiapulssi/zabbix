@@ -8418,6 +8418,10 @@ void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
 {
 	ZBX_DC_PROXY	*proxy;
 
+	LOCK_CACHE;
+
 	if (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_search(&config->proxies, &hostid)))
 		proxy->lastaccess = lastaccess;
+
+	UNLOCK_CACHE;
 }
