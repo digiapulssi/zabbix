@@ -1386,9 +1386,6 @@ sub create_global_macros() {
 
     create_macro('{$RSM.PROBE.ONLINE.DELAY}', 60, undef);
 
-    create_macro('{$RSM.TRIG.DOWNCOUNT}', '#1', undef);
-    create_macro('{$RSM.TRIG.UPCOUNT}', '#3', undef);
-
     create_macro('{$RSM.INCIDENT.DNS.FAIL}', '3', undef);
     create_macro('{$RSM.INCIDENT.DNS.RECOVER}', '3', undef);
     create_macro('{$RSM.INCIDENT.DNSSEC.FAIL}', '3', undef);
