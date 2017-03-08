@@ -3882,10 +3882,12 @@ zbx_trigger_func_position_t;
  *                                                                            *
  * Function: zbx_link_triggers_with_functions                                 *
  *                                                                            *
+ * Purpose: triggers links with functions                                     *
+ *                                                                            *
  * Parameters: triggers_func_pos - [IN/OUT] pointer to the list of triggers   *
  *                                 with functions position in functionids     *
  *                                 array                                      *
- *             functionids       - [IN] array of function IDs                 *
+ *             functionids       - [IN/OUT] array of function IDs             *
  *             trigger_order     - [IN] array of triggers                     *
  *                                                                            *
  ******************************************************************************/
