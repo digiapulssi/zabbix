@@ -62,7 +62,7 @@ use constant PROBE_ONLINE_STR => 'Online';
 use constant PROBE_OFFLINE_STR => 'Offline';
 use constant PROBE_NORESULT_STR => 'No result';
 
-use constant PROBE_KEY_ONLINE		=> 'rsm.probe.online';	# todo phae 1: taken from phase 2 for get_probe_times()
+use constant PROBE_KEY_ONLINE		=> 'rsm.probe.online';	# todo phase 1: taken from phase 2 for get_probe_times()
 
 our ($result, $dbh, $tld, $server_key);
 
@@ -1036,6 +1036,8 @@ sub get_online_probes
 	my $till = shift;
 	my $probe_avail_limit = shift; # max "last seen" of proxy
 	my $all_probes_ref = shift;
+
+	# todo phase 1: this function must be obsoleted in phase 2, use function get_probe_times() instead!
 
 	$all_probes_ref = get_probes() unless ($all_probes_ref);
 	my %reachable_probes = %$all_probes_ref; # we should work on a copy
