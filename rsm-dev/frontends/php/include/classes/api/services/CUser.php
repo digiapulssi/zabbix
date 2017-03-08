@@ -1181,7 +1181,7 @@ class CUser extends CApiService {
 	 */
 	public function checkAuthentication(array $sessionid) {
 		if (hasRequest('sid') && hasRequest('set_sid')) {
-			zbx_setcookie('zbx_sessionid', getRequest('sid'),  1 ? strtotime('+1 month') : 0);
+			zbx_setcookie('zbx_sessionid', getRequest('sid'),  strtotime('+1 month'));
 			$sessionid = getRequest('sid');
 		}
 		else {
