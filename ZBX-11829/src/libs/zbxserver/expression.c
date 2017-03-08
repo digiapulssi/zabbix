@@ -3885,7 +3885,7 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
 
 	zbx_vector_uint64_t	funcids;
 	DC_TRIGGER		*tr;
-	int			i, n, index = 0;
+	int			i;
 
 	zbx_vector_uint64_create(&funcids);
 	zbx_vector_uint64_reserve(&funcids, functionids->values_num);
@@ -3901,19 +3901,15 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
 		if (NULL != tr->new_error)
 			continue;
 
-		tr_func_pos = zbx_malloc(NULL, sizeof(zbx_trigger_func_position_t));
-		tr_func_pos->trigger = tr;
-		tr_func_pos->start_index = index;
-		tr_func_pos->count = 0;
-
 		if (SUCCEED == extract_expression_functionids(&funcids, tr->expression))
 		{
+			tr_func_pos = zbx_malloc(NULL, sizeof(zbx_trigger_func_position_t));
+			tr_func_pos->trigger = tr;
+			tr_func_pos->start_index = functionids->values_num;
 			tr_func_pos->count = funcids.values_num;
 
 			zbx_vector_uint64_append_array(functionids, funcids.values, funcids.values_num);
 			zbx_vector_ptr_append(triggers_func_pos, tr_func_pos);
-
-			index += tr_func_pos->count;
 		}
 
 		zbx_vector_uint64_clear(&funcids);
@@ -3930,11 +3926,10 @@ void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const z
 	zbx_vector_ptr_t	triggers_func_pos;
 	zbx_vector_uint64_t	functionids;
 	DC_FUNCTION		*functions = NULL;
-	int			*errcodes = NULL, index, t, f, i;
+	int			*errcodes = NULL, t, f;
 	zbx_vector_uint64_t	itemids_sorted;
 
 	zbx_vector_uint64_create(&itemids_sorted);
-	zbx_vector_uint64_reserve(&itemids_sorted, item_num);
 	zbx_vector_uint64_append_array(&itemids_sorted, itemids, item_num);
 	zbx_vector_uint64_sort(&itemids_sorted, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
@@ -3957,7 +3952,7 @@ void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const z
 
 		for (f = func_pos->start_index; f < func_pos->start_index + func_pos->count; f++)
 		{
-			if (SUCCEED == zbx_vector_uint64_bsearch(&itemids_sorted, functions[f].itemid,
+			if (FAIL != zbx_vector_uint64_bsearch(&itemids_sorted, functions[f].itemid,
 					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
 			{
 				func_pos[t].trigger->flags = ZBX_DC_TRIGGER_BASE_EXPRESSION;
@@ -3967,6 +3962,8 @@ void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const z
 	}
 
 	DCconfig_clean_functions(functions, errcodes, functionids.values_num);
+	zbx_free(errcodes);
+	zbx_free(functions);
 
 	zbx_vector_ptr_clear_ext(&triggers_func_pos, zbx_ptr_free);
 	zbx_vector_ptr_destroy(&triggers_func_pos);
@@ -4484,12 +4481,11 @@ void	evaluate_expressions(zbx_vector_ptr_t *triggers)
 		if (SUCCEED != zbx_double_compare(expr_result, 0.0))
 		{
 			if (ZBX_DC_TRIGGER_BASE_EXPRESSION == tr->flags)
-			{
 				tr->new_value = TRIGGER_VALUE_PROBLEM;
-				continue;
-			}
 			else
 				tr->new_value = TRIGGER_VALUE_NONE;
+
+			continue;
 		}
 
 		/* otherwise try to recover trigger by setting OK value */
