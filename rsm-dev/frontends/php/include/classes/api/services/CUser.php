@@ -1180,7 +1180,8 @@ class CUser extends CApiService {
 	 * @return array				an array of user data
 	 */
 	public function checkAuthentication(array $sessionid) {
-		if (hasRequest('sid') && hasRequest('set_sid')) {
+		if (hasRequest('sid') && hasRequest('set_sid') && reset($sessionid) != getRequest('sid')) {
+			DBexecute('DELETE FROM sessions WHERE sessionid='.zbx_dbstr(reset($sessionid)));
 			zbx_setcookie('zbx_sessionid', getRequest('sid'),  strtotime('+1 month'));
 			$sessionid = getRequest('sid');
 		}
