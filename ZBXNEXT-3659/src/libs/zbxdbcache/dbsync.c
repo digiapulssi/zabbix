@@ -341,7 +341,6 @@ int	zbx_dbsync_next(zbx_dbsync_t *sync, zbx_uint64_t *rowid, char ***row, unsign
 		*tag = ZBX_DBSYNC_ROW_ADD;
 
 		sync->add_num++;
-
 	}
 
 	return SUCCEED;
@@ -360,9 +359,9 @@ int	zbx_dbsync_next(zbx_dbsync_t *sync, zbx_uint64_t *rowid, char ***row, unsign
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	dbsync_compare_config_row(ZBX_DC_CONFIG_TABLE *config, const DB_ROW row)
+static int	dbsync_compare_config_row(const ZBX_DC_CONFIG_TABLE *config, const DB_ROW row)
 {
-	int		i;
+	int	i;
 
 	if (FAIL == dbsync_compare_int(row[0], config->refresh_unsupported))
 		return FAIL;
@@ -450,7 +449,7 @@ static int	dbsync_compare_config_row(ZBX_DC_CONFIG_TABLE *config, const DB_ROW r
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_config(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
 	DB_ROW		row;
 	DB_RESULT	result;
@@ -458,7 +457,8 @@ int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	sync->columns_num = 27;
 
-	if (NULL == (result = DBselect("select refresh_unsupported,discovery_groupid,snmptrap_logging,"
+	if (NULL == (result = DBselect(
+			"select refresh_unsupported,discovery_groupid,snmptrap_logging,"
 				"severity_name_0,severity_name_1,severity_name_2,"
 				"severity_name_3,severity_name_4,severity_name_5,"
 				"hk_events_mode,hk_events_trigger,hk_events_internal,"
@@ -490,7 +490,6 @@ int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 	while (NULL != (row = DBfetch(result)))
 		dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_ADD, row);
-
 out:
 	DBfree_result(result);
 

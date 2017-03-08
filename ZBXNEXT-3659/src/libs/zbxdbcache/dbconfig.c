@@ -729,7 +729,7 @@ static int	DCsync_config(zbx_dbsync_t *sync, int *refresh_unsupported_changed)
 	}
 	else
 	{
-		int			refresh_unsupported;
+		int	refresh_unsupported;
 
 		/* store the config data */
 
