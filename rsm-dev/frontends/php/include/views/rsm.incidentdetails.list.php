@@ -19,7 +19,7 @@
 **/
 
 
-$widget = (new CWidget())->setTitle(_('Tests'));
+$widget = (new CWidget())->setTitle(_('Incident details'));
 
 // filter
 $filter = (new CFilter('web.rsm.incidentdetails.filter.state'))
@@ -44,8 +44,10 @@ $filterColumn2
 	->addRow(_('To'), createDateSelector('filter_to', zbxDateToTime($this->data['filter_to'])));
 $filterColumn3
 	->addRow((new CLink(_('Rolling week'),
-		'rsm.incidentdetails.php?incident_type='.$this->data['type'].'&filter_set=1&filter_rolling_week=1&host='.$this->data['tld']['name'])
-	)
+		'rsm.incidentdetails.php?eventid='.$this->data['eventid'].'&slvItemId='.$this->data['slvItemId'].
+			'&availItemId='.$this->data['availItemId'].'&filter_set=1&filter_rolling_week=1'.
+			'&host='.$this->data['tld']['name']
+	))
 		->addClass(ZBX_STYLE_BTN_LINK));
 $filterColumn4
 	->addRow(new CSpan([
