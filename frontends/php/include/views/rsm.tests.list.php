@@ -37,7 +37,8 @@ $filterColumn2
 	->addRow(_('To'), createDateSelector('filter_to', zbxDateToTime($this->data['filter_to'])));
 $filterColumn3
 	->addRow((new CLink(_('Rolling week'),
-		'rsm.tests.php?incident_type='.$this->data['type'].'&filter_set=1&filter_rolling_week=1&host='.$this->data['tld']['name'])
+		'rsm.tests.php?type='.$this->data['type'].'&filter_set=1&filter_rolling_week=1'
+			.'&host='.$this->data['tld']['name'].'&slvItemId='.$this->data['slvItemId'])
 	)
 		->addClass(ZBX_STYLE_BTN_LINK));
 
