@@ -510,7 +510,7 @@ out:
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, const ZBX_DC_HOST *host, const DB_ROW row)
+static int	dbsync_compare_host(const ZBX_DC_CONFIG *cache, const ZBX_DC_HOST *host, const DB_ROW row)
 {
 	signed char	ipmi_authtype;
 	unsigned char	ipmi_privilege;
@@ -599,7 +599,7 @@ static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, const ZBX_DC_HOST *host, co
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_hosts(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;

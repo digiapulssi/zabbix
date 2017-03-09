@@ -1310,7 +1310,6 @@ static void	DCsync_host_inventory(zbx_dbsync_t *sync)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-
 	while (SUCCEED == (ret = zbx_dbsync_next(sync, &rowid, &row, &tag)))
 	{
 		/* removed rows will be always added at the end */
@@ -3366,10 +3365,12 @@ static void	dc_trigger_update_cache()
 
 	zbx_vector_ptr_pair_destroy(&itemtrigs);
 }
-
+#define LOG_LEVEL_TRACE LOG_LEVEL_INFORMATION
 static void	DCdump_config()
 {
-	int	i;
+	const char	*__function_name = "DCdump_config";
+
+	int		i;
 
 	if (NULL == config->config)
 	{
@@ -3377,7 +3378,7 @@ static void	DCdump_config()
 		return;
 	}
 
-	zabbix_log(LOG_LEVEL_TRACE, "  === config table ===");
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  refresh_unsupported %d", config->config->refresh_unsupported);
 	zabbix_log(LOG_LEVEL_TRACE, "  discovery_groupid " ZBX_FS_UI64, config->config->discovery_groupid);
@@ -3385,7 +3386,7 @@ static void	DCdump_config()
 	zabbix_log(LOG_LEVEL_TRACE, "  default_inventory_mode %d", config->config->default_inventory_mode);
 
 	for (i = 0; TRIGGER_SEVERITY_COUNT > i; i++)
-		zabbix_log(LOG_LEVEL_TRACE, "  severity name %s", config->config->severity_name[i]);
+		zabbix_log(LOG_LEVEL_TRACE, "  severity name '%s'", config->config->severity_name[i]);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  hk.events_mode %u", config->config->hk.events_mode);
 	zabbix_log(LOG_LEVEL_TRACE, "  hk.events_trigger %d", config->config->hk.events_trigger);
@@ -3411,12 +3412,134 @@ static void	DCdump_config()
 	zabbix_log(LOG_LEVEL_TRACE, "  hk.trends %d", config->config->hk.trends);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
 
+static void	DCdump_hosts()
+{
+	const char		*__function_name = "DCdump_hosts";
+
+	const ZBX_DC_HOST	*host;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->hosts, &iter);
+
+	while (NULL != (host = (ZBX_DC_HOST*)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, host->hostid);
+		zabbix_log(LOG_LEVEL_TRACE, "  proxy_hostid " ZBX_FS_UI64, host->proxy_hostid);
+		zabbix_log(LOG_LEVEL_TRACE, "  host '%s'", host->host);
+		zabbix_log(LOG_LEVEL_TRACE, "  name '%s'", host->name);
+		zabbix_log(LOG_LEVEL_TRACE, "  maintenance_from %d", host->maintenance_from);
+		zabbix_log(LOG_LEVEL_TRACE, "  data_expected_from %d", host->data_expected_from);
+		zabbix_log(LOG_LEVEL_TRACE, "  errors_from %d", host->errors_from);
+		zabbix_log(LOG_LEVEL_TRACE, "  disable_until %d", host->disable_until);
+		zabbix_log(LOG_LEVEL_TRACE, "  snmp_errors_from %d", host->snmp_errors_from);
+		zabbix_log(LOG_LEVEL_TRACE, "  snmp_disable_until %d", host->snmp_disable_until);
+		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_errors_from %d", host->ipmi_errors_from);
+		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_disable_until %d", host->ipmi_disable_until);
+		zabbix_log(LOG_LEVEL_TRACE, "  jmx_errors_from %d", host->jmx_errors_from);
+		zabbix_log(LOG_LEVEL_TRACE, "  jmx_disable_until %d", host->jmx_disable_until);
+
+		/* timestamp of last availability status (available/error) field change on any interface */
+		zabbix_log(LOG_LEVEL_TRACE, "  availability_ts %d", host->availability_ts);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  maintenance_status %u", host->maintenance_status);
+		zabbix_log(LOG_LEVEL_TRACE, "  maintenance_type %u", host->maintenance_type);
+		zabbix_log(LOG_LEVEL_TRACE, "  available %u", host->available);
+		zabbix_log(LOG_LEVEL_TRACE, "  snmp_available %u", host->snmp_available);
+		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_available %u", host->ipmi_available);
+		zabbix_log(LOG_LEVEL_TRACE, "  jmx_available %u", host->jmx_available);
+		zabbix_log(LOG_LEVEL_TRACE, "  status %u", host->status);
+
+		/* specifies which interfaces are being used (have enabled items) */
+		/* (see ZBX_FLAG_INTERFACE_* defines)                             */
+		zabbix_log(LOG_LEVEL_TRACE, "  used_interfaces %u", host->used_interfaces);
+
+		/* 'tls_connect' and 'tls_accept' must be respected even if encryption support is not compiled in */
+		zabbix_log(LOG_LEVEL_TRACE, "  tls_connect %u", host->tls_connect);
+		zabbix_log(LOG_LEVEL_TRACE, "  tls_accept %u", host->tls_accept);
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+		zabbix_log(LOG_LEVEL_TRACE, "  tls_issuer '%s'", host->tls_issuer);
+		zabbix_log(LOG_LEVEL_TRACE, "  tls_subject '%s'", host->tls_subject);
+
+		if (NULL != host->tls_dc_psk)
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "  tls_psk_identity '%s'", host->tls_dc_psk->tls_psk_identity);
+			zabbix_log(LOG_LEVEL_TRACE, "  tls_psk '%s'", host->tls_dc_psk->tls_psk);
+			zabbix_log(LOG_LEVEL_TRACE, "  tls_dc_psk %u", host->tls_dc_psk->refcount);
+		}
+#endif
+		zabbix_log(LOG_LEVEL_TRACE, "  error '%s'", host->error);
+		zabbix_log(LOG_LEVEL_TRACE, "  snmp_error '%s'", host->snmp_error);
+		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_error '%s'", host->ipmi_error);
+		zabbix_log(LOG_LEVEL_TRACE, "  jmx_error '%s'", host->jmx_error);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_proxies()
+{
+	const char		*__function_name = "DCdump_proxies";
+
+	const ZBX_DC_PROXY	*proxy;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->proxies, &iter);
+
+	while (NULL != (proxy = (ZBX_DC_PROXY*)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, proxy->hostid);
+		zabbix_log(LOG_LEVEL_TRACE, "  proxy_config_nextcheck %d", proxy->proxy_config_nextcheck);
+		zabbix_log(LOG_LEVEL_TRACE, "  proxy_data_nextcheck %d", proxy->proxy_data_nextcheck);
+		zabbix_log(LOG_LEVEL_TRACE, "  timediff %d", proxy->timediff);
+		zabbix_log(LOG_LEVEL_TRACE, "  lastaccess %d", proxy->lastaccess);
+		zabbix_log(LOG_LEVEL_TRACE, "  location %u", proxy->location);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_ipmihosts()
+{
+	const char		*__function_name = "DCdump_ipmihosts";
+
+	const ZBX_DC_IPMIHOST	*ipmihost;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->ipmihosts, &iter);
+
+	while (NULL != (ipmihost = (ZBX_DC_IPMIHOST*)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, ipmihost->hostid);
+		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_username '%s' ipmi_password '%s'", ipmihost->ipmi_username,
+				ipmihost->ipmi_password);
+		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_authtype %d", ipmihost->ipmi_authtype);
+		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_privilege %u", ipmihost->ipmi_privilege);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
 static void	DCdump_configuration()
 {
 	DCdump_config();
+	DCdump_hosts();
+	DCdump_proxies();
+	DCdump_ipmihosts();
 }
 
 /******************************************************************************
