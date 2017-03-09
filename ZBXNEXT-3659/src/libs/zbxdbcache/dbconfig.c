@@ -3556,6 +3556,32 @@ static void	DCdump_host_inventories()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_htmpls()
+{
+	const char		*__function_name = "DCdump_htmpls";
+
+	ZBX_DC_HTMPL		*htmpl = NULL;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->htmpls, &iter);
+
+	while (NULL != (htmpl = (ZBX_DC_HTMPL*)zbx_hashset_iter_next(&iter)))
+	{
+		int	i;
+
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, htmpl->hostid);
+
+		for (i = 0; i < htmpl->templateids.values_num; i++)
+			zabbix_log(LOG_LEVEL_TRACE, "  templateid " ZBX_FS_UI64, htmpl->templateids.values[i]);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
@@ -3563,6 +3589,7 @@ static void	DCdump_configuration()
 	DCdump_proxies();
 	DCdump_ipmihosts();
 	DCdump_host_inventories();
+	DCdump_htmpls();
 }
 
 /******************************************************************************

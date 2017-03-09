@@ -449,7 +449,7 @@ static int	dbsync_compare_config_row(const ZBX_DC_CONFIG_TABLE *config, const DB
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_config(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
 	DB_ROW		row;
 	DB_RESULT	result;
@@ -510,7 +510,7 @@ out:
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	dbsync_compare_host(const ZBX_DC_CONFIG *cache, const ZBX_DC_HOST *host, const DB_ROW row)
+static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, const ZBX_DC_HOST *host, const DB_ROW row)
 {
 	signed char	ipmi_authtype;
 	unsigned char	ipmi_privilege;
@@ -599,7 +599,7 @@ static int	dbsync_compare_host(const ZBX_DC_CONFIG *cache, const ZBX_DC_HOST *ho
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_hosts(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -717,7 +717,7 @@ static int	dbsync_compare_host_inventory(const ZBX_DC_HOST_INVENTORY *hi, const 
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_host_inventory(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;

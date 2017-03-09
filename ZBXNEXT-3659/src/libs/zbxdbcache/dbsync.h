@@ -80,9 +80,9 @@ void	zbx_dbsync_init(zbx_dbsync_t *sync, unsigned char mode);
 void	zbx_dbsync_clear(zbx_dbsync_t *sync);
 int	zbx_dbsync_next(zbx_dbsync_t *sync, zbx_uint64_t *rowid, char ***rows, unsigned char *tag);
 
-int	zbx_dbsync_compare_config(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_hosts(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_host_inventory(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
