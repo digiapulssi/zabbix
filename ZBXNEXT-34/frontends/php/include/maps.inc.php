@@ -1405,7 +1405,7 @@ function populateFromMapAreas(array &$map, $theme) {
 				while (isset($map['selements'][$newSelementid])) {
 					$newSelementid += 1;
 				}
-				$selement['selementid'] = $newSelementid;
+				$selement['selementid'] = -$newSelementid;
 
 				$area['selementids'][$newSelementid] = $newSelementid;
 				$map['selements'][$newSelementid] = $selement;
@@ -1436,7 +1436,7 @@ function populateFromMapAreas(array &$map, $theme) {
 							$newLinkid += 1;
 						}
 
-						$link['linkid'] = $newLinkid;
+						$link['linkid'] = -$newLinkid;
 						$link[$idNumber] = $newSelementid;
 						$map['links'][$newLinkid] = $link;
 					}
