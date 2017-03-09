@@ -59,6 +59,7 @@
 #include "setproctitle.h"
 #include "../libs/zbxcrypto/tls.h"
 #include "zbxipcservice.h"
+#include "ldapsyncer/ldapsyncer.h"
 
 #ifdef HAVE_OPENIPMI
 #include "ipmi/ipmi_manager.h"
@@ -153,6 +154,7 @@ int	CONFIG_PASSIVE_FORKS		= 0;
 int	CONFIG_ACTIVE_FORKS		= 0;
 int	CONFIG_TASKMANAGER_FORKS	= 1;
 int	CONFIG_IPMIMANAGER_FORKS	= 0;
+int	CONFIG_LDAPSYNCER_FORKS		= 0;
 
 int	CONFIG_LISTEN_PORT		= ZBX_DEFAULT_SERVER_PORT;
 char	*CONFIG_LISTEN_IP		= NULL;
@@ -362,6 +364,11 @@ int	get_process_info_by_thread(int local_server_num, unsigned char *local_proces
 	{
 		*local_process_type = ZBX_PROCESS_TYPE_PINGER;
 		*local_process_num = local_server_num - server_count + CONFIG_PINGER_FORKS;
+	}
+	else if (local_server_num <= (server_count += CONFIG_LDAPSYNCER_FORKS))
+	{
+		*local_process_type = ZBX_PROCESS_TYPE_LDAPSYNCER;
+		*local_process_num = local_server_num - server_count + CONFIG_LDAPSYNCER_FORKS;
 	}
 	else
 		return FAIL;
@@ -940,13 +947,17 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	if (0 != CONFIG_IPMIPOLLER_FORKS)
 		CONFIG_IPMIMANAGER_FORKS = 1;
 
+#ifdef HAVE_LDAP
+	CONFIG_LDAPSYNCER_FORKS = 1;
+#endif
 	threads_num = CONFIG_CONFSYNCER_FORKS + CONFIG_WATCHDOG_FORKS + CONFIG_POLLER_FORKS
 			+ CONFIG_UNREACHABLE_POLLER_FORKS + CONFIG_TRAPPER_FORKS + CONFIG_PINGER_FORKS
 			+ CONFIG_ALERTER_FORKS + CONFIG_HOUSEKEEPER_FORKS + CONFIG_TIMER_FORKS
 			+ CONFIG_HTTPPOLLER_FORKS + CONFIG_DISCOVERER_FORKS + CONFIG_HISTSYNCER_FORKS
 			+ CONFIG_ESCALATOR_FORKS + CONFIG_IPMIPOLLER_FORKS + CONFIG_JAVAPOLLER_FORKS
 			+ CONFIG_SNMPTRAPPER_FORKS + CONFIG_PROXYPOLLER_FORKS + CONFIG_SELFMON_FORKS
-			+ CONFIG_VMWARE_FORKS + CONFIG_TASKMANAGER_FORKS + CONFIG_IPMIMANAGER_FORKS;
+			+ CONFIG_VMWARE_FORKS + CONFIG_TASKMANAGER_FORKS + CONFIG_IPMIMANAGER_FORKS
+			+ CONFIG_LDAPSYNCER_FORKS;
 	threads = zbx_calloc(threads, threads_num, sizeof(pid_t));
 
 	if (0 != CONFIG_TRAPPER_FORKS)
@@ -1049,6 +1060,11 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 				break;
 			case ZBX_PROCESS_TYPE_IPMIPOLLER:
 				threads[i] = zbx_thread_start(ipmi_poller_thread, &thread_args);
+				break;
+#endif
+#ifdef HAVE_LDAP
+			case ZBX_PROCESS_TYPE_LDAPSYNCER:
+				threads[i] = zbx_thread_start(ldap_syncer_thread, &thread_args);
 				break;
 #endif
 		}

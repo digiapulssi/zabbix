@@ -19,7 +19,8 @@ SUBDIRS = \
 	selfmon \
 	vmware \
 	taskmanager \
-	ipmi
+	ipmi \
+	ldapsyncer
 
 sbin_PROGRAMS = zabbix_server
 
@@ -49,6 +50,7 @@ zabbix_server_LDADD = \
 	vmware/libzbxvmware.a \
 	taskmanager/libzbxtaskmanager.a \
 	ipmi/libipmi.a \
+	ldapsyncer/libzbxldapsyncer.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxserversysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
