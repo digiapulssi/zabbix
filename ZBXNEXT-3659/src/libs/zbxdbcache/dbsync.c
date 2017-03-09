@@ -717,7 +717,7 @@ static int	dbsync_compare_host_inventory(const ZBX_DC_HOST_INVENTORY *hi, const 
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_host_inventory(const ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -758,7 +758,6 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 
 		if (ZBX_DBSYNC_ROW_NONE != tag)
 			dbsync_add_row(sync, rowid, tag, row);
-
 	}
 
 	zbx_hashset_iter_reset(&cache->host_inventories, &iter);

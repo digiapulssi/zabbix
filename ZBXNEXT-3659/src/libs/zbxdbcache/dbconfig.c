@@ -3365,7 +3365,7 @@ static void	dc_trigger_update_cache()
 
 	zbx_vector_ptr_pair_destroy(&itemtrigs);
 }
-#define LOG_LEVEL_TRACE LOG_LEVEL_INFORMATION
+
 static void	DCdump_config()
 {
 	const char	*__function_name = "DCdump_config";
@@ -3534,12 +3534,35 @@ static void	DCdump_ipmihosts()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_host_inventories()
+{
+	const char		*__function_name = "DCdump_host_inventories";
+
+	zbx_hashset_iter_t	iter;
+	ZBX_DC_HOST_INVENTORY	*host_inventory;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->host_inventories, &iter);
+
+	while (NULL != (host_inventory = (ZBX_DC_HOST_INVENTORY*)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, host_inventory->hostid);
+		zabbix_log(LOG_LEVEL_TRACE, "  inventory_mode %u", host_inventory->inventory_mode);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
 	DCdump_hosts();
 	DCdump_proxies();
 	DCdump_ipmihosts();
+	DCdump_host_inventories();
 }
 
 /******************************************************************************
