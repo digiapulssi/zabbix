@@ -30,14 +30,16 @@ my %macros = ('{$RSM.EPP.ENABLED}' => 0, '{$RSM.IP4.ENABLED}' => 0, '{$RSM.IP6.E
 sub add_probe($$$);
 sub delete_probe($);
 sub disable_probe($);
+sub rename_probe($$);
+
 
 sub validate_input;
 sub usage;
 
 my %OPTS;
-my $rv = GetOptions(\%OPTS, "probe=s", "ip=s", "port=s", "server-id=s",
+my $rv = GetOptions(\%OPTS, "probe=s", "ip=s", "port=s", "new-name=s", "server-id=s",
 			    "epp!", "ipv4!", "ipv6!", "rdds!", "resolver=s",
-                	    "delete!", "disable!", "add!",
+                	    "delete!", "disable!", "add!", "rename!",
                 	    "verbose!", "quiet!", "help|?");
 
 usage() if ($OPTS{'help'} or not $rv);
@@ -49,6 +51,13 @@ my $config = get_rsm_config();
 my $server_key = get_rsm_server_key($OPTS{'server-id'});
 
 my $section = $config->{$server_key};
+
+if (!defined($section))
+{
+	print("Error: server-id \"", $OPTS{'server-id'}, "\" not found in configuration file\n");
+	exit(1);
+}
+
 zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($OPTS{'delete'}) {
@@ -60,6 +69,9 @@ elsif ($OPTS{'disable'}) {
 elsif ($OPTS{'add'}) {
     create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
     add_probe($OPTS{'probe'}, $OPTS{'ip'}, ($OPTS{'port'} ? $OPTS{'port'} : DEFAULT_PROBE_PORT));
+}
+elsif($OPTS{'rename'}) {
+    rename_probe($OPTS{'probe'}, $OPTS{'new-name'});
 }
 
 exit;
@@ -401,6 +413,100 @@ sub disable_probe($) {
     print "Do not forget to tune macros!\n";
 }
 
+sub rename_probe($$) {
+    my $old_name = shift;
+    my $new_name = shift;
+
+    my ($result, $probe, $probe_host, $probe_host_mon, $probe_tmpl, $probe_tmpl_status, $probe_hostgroup, $probe_macro);
+
+    print "Trying to rename '".$old_name."' probe...\n";
+
+    $probe = get_probe($old_name, true);
+
+    check_probe_data($probe, "The probe is not found. Terminating...");
+
+    $probe_host = get_host($old_name, false);
+
+    check_probe_data($probe_host, "The probe host is not found", false);
+
+    $probe_host_mon = get_host($old_name.' - mon', false);
+
+    check_probe_data($probe_host_mon, "Probe monitoring host with name '$old_name - mon' is not found", false);
+
+# check arguments
+    $probe_tmpl = get_template('Template '.$old_name, false, false);
+
+    check_probe_data($probe_tmpl, "Probe monitoring template with name 'Template $old_name' is not found", false);
+
+    $probe_tmpl_status = get_template('Template '.$old_name.' Status', false, false);
+
+    check_probe_data($probe_tmpl_status, "Probe Status monitoring template with name 'Template $old_name Status' is not found", false);
+
+    $probe_hostgroup = get_host_group($old_name, false);
+
+    check_probe_data($probe_hostgroup, "Host group with name '$old_name' is not found", false);
+    
+    $probe_macro = get_host_macro($probe_host_mon->{'hostid'}, '{$RSM.PROXY_NAME}');
+    
+    check_probe_data($probe_macro, "Host group with name '{\$RSM.PROXY_NAME}' is not found", false);
+
+    print "Trying to rename '$old_name' probe: ";
+    $result = rename_proxy($probe->{'proxyid'}, $new_name);
+    is_not_empty($result->{'proxyids'}, false);
+
+    ########## Renaming TLDs linked to the probe and Probe monitoring host
+    foreach my $host (@{$probe->{'hosts'}}) {
+	my $host_name = $host->{'host'};
+	my $hostid = $host->{'hostid'};
+	
+	print "Trying to rename '$host_name' host: ";
+	
+	if ($host_name=~/(.+)\s$old_name$/) {
+	    $host_name = $1." ".$new_name;
+	}
+	else {
+	    $host_name = $new_name
+	}
+
+	$result = rename_host($hostid, $host_name);
+	
+	is_not_empty($result->{'hostids'}, false);
+    }
+
+    ########## Renaming probe monitoring host
+    if (defined($probe_host_mon->{'host'})) {
+	my $host_name = $probe_host_mon->{'host'};
+	my $hostid = $probe_host_mon->{'hostid'};
+
+	print "Trying to rename '$host_name' host: ";
+
+	$result = rename_host($hostid, $new_name." - mon");
+
+	is_not_empty($result->{'hostids'}, false);
+    }
+
+    my $template_name = $probe_tmpl->{'host'};
+    print "Trying to rename '$template_name' template: ";
+    $result = rename_template($probe_tmpl->{'templateid'}, 'Template '.$new_name);
+    is_not_empty($result->{'templateids'}, false);
+
+    $template_name = $probe_tmpl_status->{'host'};
+    print "Trying to rename '$template_name' template: ";
+    $result = rename_template($probe_tmpl_status->{'templateid'}, 'Template '.$new_name.' Status');
+    is_not_empty($result->{'templateids'}, false);
+
+    print "Trying to rename '$old_name' host group: ";
+    $result = rename_hostgroup($probe_hostgroup->{'groupid'}, $new_name);
+    is_not_empty($result->{'groupids'}, false);
+    
+    print "Trying to update '{\$RSM.PROXY_NAME}' macro on '$new_name - mon' host: ";
+    $result = macro_value($probe_macro->{'hostmacroid'}, $new_name);
+    is_not_empty($result->{'hostmacroids'}, false);
+    
+    # rsm_probes table?
+    print "The probe has been renamed successful\n";
+}
+
 sub check_probe_data($) {
     my $data = shift;
     my $message = shift;
@@ -442,6 +548,8 @@ Required options
 
         --probe=STRING
                 PROBE name
+	--server-id=NUM
+		ID of Zabbix server specified in /opt/zabbix/rsm.conf
 Other options
 
         --delete
@@ -453,14 +561,14 @@ Other options
 	--add
 		add new probe with specified name and options
 		(default: off)
+	--rename
+		rename existing probe to specified name in --new-name argument
+		(default: off)
 
 Options for adding new probe. Argument --add.
-    --ip
-          IP of new probe node
-          (default: empty)
-	--server-id
-		ID of Zabbix server
-		(default: 1)
+	--ip
+		IP of new probe node
+		(default: empty)
 	--port
 		Port of new probe node
 		(default: 10050)
@@ -479,23 +587,37 @@ Options for adding new probe. Argument --add.
 	--resolver
 		The name of resolver
 		(default: 127.0.0.1)
+
+Options for renaming probe. Argument --rename.
+	--new-name
+		New probe name
+		(default: empty)
 EOF
 exit(1);
 }
 
 sub validate_input {
-    my $msg;
+    my $msg = "";
 
-    $msg  = "Probe name must be specified (--probe)\n" unless (defined($OPTS{'probe'}));
+    $msg = "Probe name must be specified (--probe)\n" unless (defined($OPTS{'probe'}));
+
+    $msg .= "Server id must be specified (--server-id)\n" unless (defined($OPTS{'server-id'}));
 
     if ((defined($OPTS{'delete'}) and defined($OPTS{'disable'})) or
 	(defined($OPTS{'delete'}) and defined($OPTS{'add'})) or
-	(defined($OPTS{'disable'}) and defined($OPTS{'add'}))) {
-	$msg .= "You need to choose only one option from --disable, --add, --delete\n";
+	(defined($OPTS{'delete'}) and defined($OPTS{'rename'})) or
+	(defined($OPTS{'disable'}) and defined($OPTS{'add'})) or
+	(defined($OPTS{'disable'}) and defined($OPTS{'rename'})) or
+	(defined($OPTS{'add'}) and defined($OPTS{'rename'}))) {
+	$msg .= "You need to choose only one option from --disable, --add, --delete, --rename\n";
     }
 
-    if (!defined($OPTS{'delete'}) and !defined($OPTS{'add'}) and !defined($OPTS{'disable'})) {
-	$msg .= "At least one option --disable, --add, --delete must be specified\n";
+    if (!defined($OPTS{'delete'}) and !defined($OPTS{'add'}) and !defined($OPTS{'disable'}) and !defined($OPTS{'rename'})) {
+	$msg .= "At least one option --disable, --add, --delete, --rename must be specified\n";
+    }
+    
+    if (defined($OPTS{'rename'}) and !defined($OPTS{'new-name'})) {
+	$msg .= "You need to specify new Probe node name using --new-name argument\n";
     }
 
     if (defined($OPTS{'add'}) and !defined($OPTS{'ip'})) {
@@ -511,7 +633,7 @@ sub validate_input {
     $OPTS{'ipv6'} = 0 unless defined($OPTS{'ipv6'});
     $OPTS{'rdds'} = 0 unless defined($OPTS{'rdds'});
 
-    if (defined($msg)) {
+    if ($msg ne '') {
         print($msg);
         usage();
     }

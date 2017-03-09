@@ -14,6 +14,7 @@ our @EXPORT = qw(zbx_connect check_api_error get_proxies_list
 		remove_templates remove_hosts remove_hostgroups remove_probes remove_items
 		disable_host disable_hosts
 		disable_items disable_triggers
+		rename_host rename_proxy rename_template rename_hostgroup
 		macro_value get_global_macro_value get_host_macro
 		set_proxy_status
 		get_application_id get_items_like set_tld_type get_triggers_by_items
@@ -202,6 +203,42 @@ sub disable_host($) {
     return $result;
 }
 
+sub rename_template($$) {
+    my $templateid = shift;
+    my $template_name = shift;
+
+    return unless defined($templateid);
+    return unless defined($template_name);
+
+    my $result = $zabbix->update('template', {'templateid' => $templateid, 'host' => $template_name});
+
+    return $result;
+}
+
+sub rename_host($$) {
+    my $hostid = shift;
+    my $host_name = shift;
+
+    return unless defined($hostid);
+    return unless defined($host_name);
+
+    my $result = $zabbix->update('host', {'hostid' => $hostid, 'host' => $host_name});
+
+    return $result;
+}
+
+sub rename_hostgroup($$) {
+    my $groupid = shift;
+    my $group_name = shift;
+
+    return unless defined($groupid);
+    return unless defined($group_name);
+
+    my $result = $zabbix->update('hostgroup', {'groupid' => $groupid, 'name' => $group_name});
+
+    return $result;
+}
+
 sub macro_value($$) {
     my $hostmacroid = shift;
     my $value = shift;
@@ -222,6 +259,17 @@ sub set_proxy_status($$) {
     return if $status != HOST_STATUS_PROXY_ACTIVE and $status != HOST_STATUS_PROXY_PASSIVE;
 
     my $result = $zabbix->update('proxy', { 'proxyid' => $proxyid, 'status' => $status});
+
+    return $result;
+}
+
+sub rename_proxy($$) {
+    my $proxyid = shift;
+    my $proxy_name = shift;
+
+    return if !defined($proxyid) or !defined($proxy_name);
+
+    my $result = $zabbix->update('proxy', { 'proxyid' => $proxyid, 'host' => $proxy_name});
 
     return $result;
 }
