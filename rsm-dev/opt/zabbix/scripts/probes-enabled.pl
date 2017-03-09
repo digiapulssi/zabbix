@@ -13,54 +13,74 @@ use RSM;
 use Data::Dumper;
 
 my $config = get_rsm_config();
-my $zabbix = Zabbix->new({'url' => $config->{'zapi'}->{'url'}, user => $config->{'zapi'}->{'user'}, password => $config->{'zapi'}->{'password'}});
 
-my $result = $zabbix->get('proxy',{'output' => ['proxyid', 'host'], 'selectInterfaces' => ['ip'], 'preservekeys' => 1 });
-my @proxy_hosts;
-foreach my $k (keys %$result)
+my @server_keys = get_rsm_server_keys($config);
+
+foreach my $server_key (@server_keys)
 {
-	push(@proxy_hosts, $result->{$k}->{'host'});
-}
+	my $section = $config->{$server_key};
 
-my $total = scalar(@proxy_hosts);
-my $rdds_num = 0;
-my $epp_num = 0;
-foreach my $ph (@proxy_hosts)
-{
-	my ($tname, $result, $hostid, $macro);
+	print($server_key, "\n");
 
-	my $rdds = "no";
-	my $epp = "no";
+	my $zabbix = Zabbix->new({'url' => $section->{'za_url'}, user => $section->{'za_user'}, password => $section->{'za_password'}});
 
-	$tname = 'Template '.$ph;
-	$result = $zabbix->get('template', {'output' => ['host'], 'filter' => {'host' => $tname}});
+	my $result = $zabbix->get('proxy',{'output' => ['proxyid', 'host'], 'selectInterface' => ['ip', 'port'], 'preservekeys' => 1 });
 
-	$hostid = $result->{'hostid'};
+	my $total = 0;
+	my $rdds_num = 0;
+	my $epp_num = 0;
 
-	$macro = '{$RSM.RDDS.ENABLED}';
-	$result = $zabbix->get('usermacro', {'output' => 'extend', 'hostids' => $hostid, 'filter' => {'macro' => $macro}});
-	if (defined($result->{'value'}) and $result->{'value'} != 0)
+	foreach my $proxyid (keys(%{$result}))
 	{
-		$rdds_num++;
-		$rdds = "yes";
+		my $proxy = $result->{$proxyid};
+
+		$total++;
+
+		my $ph = $proxy->{'host'};
+		my $ip = $proxy->{'interface'}->{'ip'};
+		my $port = $proxy->{'interface'}->{'port'};
+
+		my ($tname, $result2, $hostid, $macro);
+
+		my $rdds = "no";
+		my $epp = "no";
+
+		$tname = 'Template '.$ph;
+		$result2 = $zabbix->get('template', {'output' => ['templateid'], 'filter' => {'host' => $tname}});
+
+		$hostid = $result2->{'templateid'};
+
+		$macro = '{$RSM.RDDS.ENABLED}';
+		$result2 = $zabbix->get('usermacro', {'output' => 'extend', 'hostids' => $hostid, 'filter' => {'macro' => $macro}});
+		if (defined($result2->{'value'}) and $result2->{'value'} != 0)
+		{
+			$rdds_num++;
+			$rdds = "yes";
+		}
+
+		$macro = '{$RSM.EPP.ENABLED}';
+		$result2 = $zabbix->get('usermacro', {'output' => 'extend', 'hostids' => $hostid, 'filter' => {'macro' => $macro}});
+		if (defined($result2->{'value'}) and $result2->{'value'} != 0)
+		{
+			$epp_num++;
+			$epp = "yes";
+		}
+
+		print("  $ph ($ip:$port): RDDS:$rdds EPP:$epp\n");
 	}
 
-	$macro = '{$RSM.EPP.ENABLED}';
-	$result = $zabbix->get('usermacro', {'output' => 'extend', 'hostids' => $hostid, 'filter' => {'macro' => $macro}});
-	if (defined($result->{'value'}) and $result->{'value'} != 0)
+	if ($total == $rdds_num and $total == $epp_num)
 	{
-		$epp_num++;
-		$epp = "yes";
+		print("Total $total proxies, all with RDDS and EPP enabled\n");
+	}
+	if ($rdds_num == 0 and $epp_num == 0)
+	{
+		print("Total $total proxies, all with RDDS and EPP disabled\n");
+	}
+	else
+	{
+		print("Total $total proxies, $rdds_num with RDDS enabled, $epp_num with EPP enabled\n");
 	}
 
-	print("  $ph ($hostid): RDDS:$rdds EPP:$epp\n");
-}
-
-if ($total == $rdds_num and $total == $epp_num)
-{
-	print("Total $total proxies, all with RDDS and EPP enabled\n");
-}
-else
-{
-	print("Total $total proxies, $rdds_num with RDDS enabled, $epp_num with EPP enabled\n");
+	print("\n") unless ($server_key eq $server_keys[-1]);
 }
