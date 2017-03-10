@@ -1324,6 +1324,7 @@ static void	escalation_execute_recovery_operations(const DB_EVENT *event, const 
 			zabbix_log(LOG_LEVEL_DEBUG, "Conditions do not match our event. Do not execute operation.");
 	}
 	DBfree_result(result);
+
 	flush_user_msg(&user_msg, 1, event, r_event, action->actionid);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
