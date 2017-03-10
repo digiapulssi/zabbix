@@ -1350,7 +1350,9 @@ function populateFromMapAreas(array &$map, $theme) {
 	$areas = [];
 
 	foreach ($map['selements'] as $selement) {
-		if ($selement['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS) {
+		if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST_GROUP &&
+			$selement['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS) {
+
 			$area = ['selementids' => []];
 
 			$origSelement = $selement;
@@ -1446,7 +1448,8 @@ function populateFromMapAreas(array &$map, $theme) {
 	}
 
 	$map['selements'] = array_filter($map['selements'], function ($element) {
-		return ($element['elementsubtype'] != SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS);
+		return ($element['elementtype'] != SYSMAP_ELEMENT_TYPE_HOST_GROUP ||
+			$element['elementsubtype'] != SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS);
 	});
 
 	return $areas;
