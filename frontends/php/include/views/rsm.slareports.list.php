@@ -19,8 +19,6 @@
 **/
 
 
-require_once dirname(__FILE__).'/js/rsm.slareports.list.js.php';
-
 $widget = (new CWidget())->setTitle(_('SLA report'));
 
 $filterForm = new CFilter('web.rsm.slareports.filter.state');
@@ -57,7 +55,10 @@ if ($data['tld']) {
 		->addRow([[
 		bold(_('Month')), ':', SPACE, date('F', mktime(0, 0, 0, $data['filter_month'], 1, $data['filter_year'])), BR(),
 		bold(_('Generation time')), ':', SPACE, date('dS F Y, H:i:s e', time()), BR(),
-		bold(_('TLD')), ':', SPACE, $data['tld']['name']
+		bold(_('TLD')), ':', SPACE, $data['tld']['name'], BR(),
+		bold(_('Server')), ':', SPACE, new CLink($this->data['server'],
+			$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
+		)
 	]]);
 	$widget->additem($infoBlock);
 }

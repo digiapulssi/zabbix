@@ -19,8 +19,6 @@
 **/
 
 
-require_once dirname(__FILE__).'/js/rsm.monthlyreports.list.js.php';
-
 $widget = (new CWidget())->setTitle(_('Monthly report'));
 
 $filter = (new CFilter('web.rsm.slareports.filter.state'))
@@ -53,8 +51,9 @@ $filterColumn2
 	]);
 $filterColumn3
 	->addRow(new CLink(_('Download all TLD reports'),
-		'rsm.monthlyreports.php?filter_set=1&filter_search='.$this->data['filter_search'].'&filter_year='.
-			$this->data['filter_year'].'&filter_month='.$this->data['filter_month'].'&export=1'
+		$this->data['url'].'rsm.monthlyreports.php?filter_set=1&filter_search='.$this->data['filter_search'].
+			'&filter_year='.$this->data['filter_year'].'&filter_month='.$this->data['filter_month'].
+			'&export=1&sid='.$this->data['sid'].'&set_sid=1'
 	));
 
 $filter
@@ -66,7 +65,10 @@ $widget->addItem($filter);
 
 if (isset($this->data['tld'])) {
 	$infoBlock = (new CTable(null, 'filter info-block'))
-		->addRow([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]);
+		->addRow([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']])
+		->addRow([bold(_('Server')), ':', SPACE, new CLink($this->data['server'],
+			$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
+		)]);
 	$widget->additem($infoBlock);
 }
 
@@ -107,7 +109,9 @@ foreach ($this->data['services'] as $name => $services) {
 				$service['ns'],
 				isset($service['slv']) ? new CSpan($service['slv'], $color) : '-',
 				isset($services['acceptable_sla']) ? $services['acceptable_sla'] : '-',
-				new CLink('graph', 'history.php?action=showgraph&period=2592000&stime='.$data['stime'].'&itemids[]='.$key)
+				new CLink('graph', $this->data['url'].'history.php?action=showgraph&period=2592000'.
+					'&stime='.$data['stime'].'&itemids[]='.$key.'&sid='.$this->data['sid'].'&set_sid=1'
+				)
 			]);
 		}
 	}
@@ -130,7 +134,9 @@ foreach ($this->data['services'] as $name => $services) {
 			SPACE,
 			isset($serviceValues['slv']) ? new CSpan($serviceValues['slv'], $color) : '-',
 			isset($services['acceptable_sla']) ? $services['acceptable_sla'] : '-',
-			new CLink('graph', 'history.php?action=showgraph&period=2592000&stime='.$data['stime'].'&itemids[]='.$itemId)
+			new CLink('graph', $this->data['url'].'history.php?action=showgraph&period=2592000&stime='.$data['stime'].
+				'&itemids[]='.$itemId.'&sid='.$this->data['sid'].'&set_sid=1'
+			)
 		]);
 	}
 }

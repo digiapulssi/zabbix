@@ -202,7 +202,7 @@ if (isset($this->data['tld'])) {
 				? new CLink('graph', $tld['url'].'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].
 					'&itemids[]='.$tld[RSM_DNS]['itemid'].'&sid='.$this->data['sid'].'&set_sid=1', 'cell-value')
 				: null;
-			$dns = [new CSpan($dnsValue, 'right'), $dnsStatus, SPACE, $dnsGraph];
+			$dns = [(new CSpan($dnsValue))->addClass('right'), $dnsStatus, SPACE, $dnsGraph];
 		}
 		else {
 			$dns = (new CDiv(null))
@@ -247,7 +247,7 @@ if (isset($this->data['tld'])) {
 						$tld[RSM_DNSSEC]['itemid'], 'cell-value'
 				)
 				: null;
-			$dnssec = [new CSpan($dnssecValue, 'right'), $dnssecStatus, SPACE, $dnssecGraph];
+			$dnssec = [(new CSpan($dnssecValue))->addClass('right'), $dnssecStatus, SPACE, $dnssecGraph];
 		}
 		else {
 			$dnssec = (new CDiv(null))
@@ -306,7 +306,7 @@ if (isset($this->data['tld'])) {
 			}
 
 			$rdds_services = implode('/', $ok_rdds_services);
-			$rdds = [new CSpan($rddsValue, 'right'), $rddsStatus, SPACE, $rddsGraph, SPACE,
+			$rdds = [(new CSpan($rddsValue))->addClass('right'), $rddsStatus, SPACE, $rddsGraph, SPACE,
 				new CSpan($rdds_services, 'bold')
 			];
 		}
@@ -352,7 +352,7 @@ if (isset($this->data['tld'])) {
 				? new CLink('graph', $tld['url'].'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].
 					'&itemids[]='.$tld[RSM_EPP]['itemid'].'&sid='.$this->data['sid'].'&set_sid=1', 'cell-value')
 				: null;
-			$epp = [new CSpan($eppValue, 'right'), $eppStatus, SPACE, $eppGraph];
+			$epp = [(new CSpan($eppValue))->addClass('right'), $eppStatus, SPACE, $eppGraph];
 		}
 		else {
 			$epp = (new CDiv(null))
