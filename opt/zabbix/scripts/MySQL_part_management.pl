@@ -91,8 +91,6 @@ foreach my $key (sort keys %{$tables}) {
     remove_old_partitions($key, $part_tables->{$key}, $tables->{$key}->{'period'}, $tables->{$key}->{'keep_history'})
 }
 
-delete_old_data();
-
 
 $dbh->disconnect();
 
@@ -242,12 +240,6 @@ sub date_next_part {
 
 
     return $period_date;
-}
-
-sub delete_old_data {
-    $dbh->do("DELETE FROM sessions WHERE lastaccess < UNIX_TIMESTAMP(NOW() - INTERVAL 1 MONTH)");
-    $dbh->do("TRUNCATE housekeeper");
-    $dbh->do("DELETE FROM auditlog_details WHERE NOT EXISTS (SELECT NULL FROM auditlog WHERE auditlog.auditid = auditlog_details.auditid)");
 }
 
 sub usage {
