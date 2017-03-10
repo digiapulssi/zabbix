@@ -42,8 +42,9 @@ $filterColumn3
 	->addRow(_('To'), createDateSelector('filter_to', zbxDateToTime($this->data['filter_to'])));
 $filterColumn4
 	->addRow((new CLink(_('Rolling week'),
-		'rsm.incidents.php?incident_type='.$this->data['type'].'&filter_set=1&filter_search='.$this->data['filter_search'].'&filter_rolling_week=1')
-	)
+		$this->data['url'].'rsm.incidents.php?incident_type='.$this->data['type'].'&filter_set=1&filter_search='.
+			$this->data['filter_search'].'&filter_rolling_week=1&sid='.$this->data['sid'].'&set_sid=1'
+	))
 		->addClass(ZBX_STYLE_BTN_LINK));
 
 $filter
@@ -64,7 +65,14 @@ if (isset($this->data['tld'])) {
 		SPACE,
 		$this->data['tld']['name'],
 		BR(),
-		_s('From %1$s till %2$s', $dateFrom, $dateTill)
+		_s('From %1$s till %2$s', $dateFrom, $dateTill),
+		BR(),
+		bold(_('Server')),
+		':',
+		SPACE,
+		new CLink($this->data['server'],
+			$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
+		),
 	]]);
 	$widget->additem($infoBlock);
 }
@@ -101,10 +109,10 @@ if (isset($this->data['tld'])) {
 			$row = [
 				new CLink(
 					$event['eventid'],
-					'rsm.incidentdetails.php?host='.$this->data['tld']['host'].
+					$this->data['url'].'rsm.incidentdetails.php?host='.$this->data['tld']['host'].
 						'&eventid='.$event['eventid'].'&slvItemId='.$this->data['dns']['itemid'].
 						'&filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
-						'&availItemId='.$this->data['dns']['availItemId'].'&filter_set=1'
+						'&availItemId='.$this->data['dns']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
 				date('d.m.Y H:i:s', $event['startTime']),
@@ -118,9 +126,9 @@ if (isset($this->data['tld'])) {
 
 		$testsDown = new CLink(
 			$this->data['dns']['totalTests'],
-			'rsm.tests.php?filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
+			$this->data['url'].'rsm.tests.php?filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
 				'&filter_set=1&host='.$this->data['tld']['host'].'&type='.RSM_DNS.
-				'&slvItemId='.$this->data['dns']['itemid']
+				'&slvItemId='.$this->data['dns']['itemid'].'&sid='.$this->data['sid'].'&set_sid=1'
 		);
 
 		$testsInfo = [
@@ -177,10 +185,10 @@ if (isset($this->data['tld'])) {
 			$row = [
 				new CLink(
 					$event['eventid'],
-					'rsm.incidentdetails.php?host='.$this->data['tld']['host'].
+					$this->data['url'].'rsm.incidentdetails.php?host='.$this->data['tld']['host'].
 						'&eventid='.$event['eventid'].'&slvItemId='.$this->data['dnssec']['itemid'].
 						'&filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
-						'&availItemId='.$this->data['dnssec']['availItemId'].'&filter_set=1'
+						'&availItemId='.$this->data['dnssec']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
 				date('d.m.Y H:i:s', $event['startTime']),
@@ -194,9 +202,9 @@ if (isset($this->data['tld'])) {
 
 		$testsDown = new CLink(
 			$this->data['dnssec']['totalTests'],
-			'rsm.tests.php?filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
+			$this->data['url'].'rsm.tests.php?filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
 				'&filter_set=1&host='.$this->data['tld']['host'].'&type='.RSM_DNSSEC.'&slvItemId='.
-				$this->data['dnssec']['itemid']
+				$this->data['dnssec']['itemid'].'&sid='.$this->data['sid'].'&set_sid=1'
 		);
 
 		$testsInfo = [
@@ -253,10 +261,10 @@ if (isset($this->data['tld'])) {
 			$row = [
 				new CLink(
 					$event['eventid'],
-					'rsm.incidentdetails.php?host='.$this->data['tld']['host'].
+					$this->data['url'].'rsm.incidentdetails.php?host='.$this->data['tld']['host'].
 						'&eventid='.$event['eventid'].'&slvItemId='.$this->data['rdds']['itemid'].
 						'&filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
-						'&availItemId='.$this->data['rdds']['availItemId'].'&filter_set=1'
+						'&availItemId='.$this->data['rdds']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
 				date('d.m.Y H:i:s', $event['startTime']),
@@ -270,9 +278,9 @@ if (isset($this->data['tld'])) {
 
 		$testsDown = new CLink(
 			$this->data['rdds']['totalTests'],
-			'rsm.tests.php?filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
+			$this->data['url'].'rsm.tests.php?filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
 				'&filter_set=1&host='.$this->data['tld']['host'].'&type='.RSM_RDDS.'&slvItemId='.
-				$this->data['rdds']['itemid']
+				$this->data['rdds']['itemid'].'&sid='.$this->data['sid'].'&set_sid=1'
 		);
 
 		$testsInfo = [
@@ -329,10 +337,10 @@ if (isset($this->data['tld'])) {
 			$row = [
 				new CLink(
 					$event['eventid'],
-					'rsm.incidentdetails.php?host='.$this->data['tld']['host'].
+					$this->data['url'].'rsm.incidentdetails.php?host='.$this->data['tld']['host'].
 						'&eventid='.$event['eventid'].'&slvItemId='.$this->data['epp']['itemid'].
 						'&filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
-						'&availItemId='.$this->data['epp']['availItemId'].'&filter_set=1'
+						'&availItemId='.$this->data['epp']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
 				date('d.m.Y H:i:s', $event['startTime']),
@@ -346,9 +354,9 @@ if (isset($this->data['tld'])) {
 
 		$testsDown = new CLink(
 			$this->data['epp']['totalTests'],
-			'rsm.tests.php?filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
+			$this->data['url'].'rsm.tests.php?filter_from='.$this->data['filter_from'].'&filter_to='.$this->data['filter_to'].
 				'&filter_set=1&host='.$this->data['tld']['host'].'&type='.RSM_EPP.'&slvItemId='.
-				$this->data['epp']['itemid']
+				$this->data['epp']['itemid'].'&sid='.$this->data['sid'].'&set_sid=1'
 		);
 
 		$testsInfo = [
