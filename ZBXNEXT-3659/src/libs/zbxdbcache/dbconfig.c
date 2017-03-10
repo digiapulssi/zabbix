@@ -3634,6 +3634,39 @@ static void	DCdump_hmacros()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_interfaces()
+{
+	const char		*__function_name = "DCdump_interfaces";
+
+	const ZBX_DC_INTERFACE	*interface;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->interfaces, &iter);
+
+	while (NULL != (interface = (ZBX_DC_INTERFACE *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  interfaceid " ZBX_FS_UI64, interface->interfaceid);
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, interface->hostid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ip '%s'", interface->ip);
+		zabbix_log(LOG_LEVEL_TRACE, "  dns '%s'", interface->dns);
+		zabbix_log(LOG_LEVEL_TRACE, "  port '%s'", interface->port);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  type %u", interface->type);
+		zabbix_log(LOG_LEVEL_TRACE, "  main %u", interface->main);
+		zabbix_log(LOG_LEVEL_TRACE, "  useip %u", interface->useip);
+		zabbix_log(LOG_LEVEL_TRACE, "  bulk %u", interface->bulk);
+		zabbix_log(LOG_LEVEL_TRACE, "  max_snmp_succeed %u", interface->max_snmp_succeed);
+		zabbix_log(LOG_LEVEL_TRACE, "  min_snmp_fail %u", interface->min_snmp_fail);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
@@ -3644,6 +3677,7 @@ static void	DCdump_configuration()
 	DCdump_htmpls();
 	DCdump_gmacros();
 	DCdump_hmacros();
+	DCdump_interfaces();
 }
 
 /******************************************************************************
