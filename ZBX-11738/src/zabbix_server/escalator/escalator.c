@@ -2120,21 +2120,32 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 		/* Execute operations and recovery operations, mark changes in 'diffs' for batch saving in DB below. */
 		diff = escalation_create_diff(&escalation);
 
-		if (escalation.nextcheck <= now)
+		if (0 != escalation.r_eventid)
+		{
+			if (0 == escalation.esc_step)
+				escalation_execute(&escalation, &action, &event);
+
+			escalation_recover(&escalation, &action, &event, &r_event);
+		}
+		else if (escalation.nextcheck <= now)
 		{
 			if (ESCALATION_STATUS_ACTIVE == escalation.status)
 			{
-				if (0 == escalation.r_eventid || 0 == escalation.esc_step)
-					escalation_execute(&escalation, &action, &event);
+				escalation_execute(&escalation, &action, &event);
 			}
 			else if (ESCALATION_STATUS_SLEEP == escalation.status)
+			{
 				escalation.nextcheck = time(NULL) + SEC_PER_MIN;
+			}
 			else
+			{
 				THIS_SHOULD_NEVER_HAPPEN;
+			}
 		}
-
-		if (0 != escalation.r_eventid)
-			escalation_recover(&escalation, &action, &event, &r_event);
+		else
+		{
+			THIS_SHOULD_NEVER_HAPPEN;
+		}
 
 		escalation_update_diff(&escalation, diff);
 		zbx_vector_ptr_append(&diffs, diff);
