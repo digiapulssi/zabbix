@@ -3426,7 +3426,7 @@ static void	DCdump_hosts()
 
 	zbx_hashset_iter_reset(&config->hosts, &iter);
 
-	while (NULL != (host = (ZBX_DC_HOST*)zbx_hashset_iter_next(&iter)))
+	while (NULL != (host = (ZBX_DC_HOST *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, host->hostid);
 		zabbix_log(LOG_LEVEL_TRACE, "  proxy_hostid " ZBX_FS_UI64, host->proxy_hostid);
@@ -3494,7 +3494,7 @@ static void	DCdump_proxies()
 
 	zbx_hashset_iter_reset(&config->proxies, &iter);
 
-	while (NULL != (proxy = (ZBX_DC_PROXY*)zbx_hashset_iter_next(&iter)))
+	while (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, proxy->hostid);
 		zabbix_log(LOG_LEVEL_TRACE, "  proxy_config_nextcheck %d", proxy->proxy_config_nextcheck);
@@ -3520,7 +3520,7 @@ static void	DCdump_ipmihosts()
 
 	zbx_hashset_iter_reset(&config->ipmihosts, &iter);
 
-	while (NULL != (ipmihost = (ZBX_DC_IPMIHOST*)zbx_hashset_iter_next(&iter)))
+	while (NULL != (ipmihost = (ZBX_DC_IPMIHOST *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, ipmihost->hostid);
 		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_username '%s' ipmi_password '%s'", ipmihost->ipmi_username,
@@ -3536,16 +3536,16 @@ static void	DCdump_ipmihosts()
 
 static void	DCdump_host_inventories()
 {
-	const char		*__function_name = "DCdump_host_inventories";
+	const char			*__function_name = "DCdump_host_inventories";
 
-	zbx_hashset_iter_t	iter;
-	ZBX_DC_HOST_INVENTORY	*host_inventory;
+	const ZBX_DC_HOST_INVENTORY	*host_inventory;
+	zbx_hashset_iter_t		iter;
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->host_inventories, &iter);
 
-	while (NULL != (host_inventory = (ZBX_DC_HOST_INVENTORY*)zbx_hashset_iter_next(&iter)))
+	while (NULL != (host_inventory = (ZBX_DC_HOST_INVENTORY *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, host_inventory->hostid);
 		zabbix_log(LOG_LEVEL_TRACE, "  inventory_mode %u", host_inventory->inventory_mode);
@@ -3560,14 +3560,14 @@ static void	DCdump_htmpls()
 {
 	const char		*__function_name = "DCdump_htmpls";
 
-	ZBX_DC_HTMPL		*htmpl = NULL;
+	const ZBX_DC_HTMPL	*htmpl = NULL;
 	zbx_hashset_iter_t	iter;
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->htmpls, &iter);
 
-	while (NULL != (htmpl = (ZBX_DC_HTMPL*)zbx_hashset_iter_next(&iter)))
+	while (NULL != (htmpl = (ZBX_DC_HTMPL *)zbx_hashset_iter_next(&iter)))
 	{
 		int	i;
 
@@ -3575,6 +3575,31 @@ static void	DCdump_htmpls()
 
 		for (i = 0; i < htmpl->templateids.values_num; i++)
 			zabbix_log(LOG_LEVEL_TRACE, "  templateid " ZBX_FS_UI64, htmpl->templateids.values[i]);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_gmacros()
+{
+	const char		*__function_name = "DCdump_gmacro";
+
+	const ZBX_DC_GMACRO	*gmacro;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->gmacros, &iter);
+
+	while (NULL != (gmacro = (ZBX_DC_GMACRO *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  globalmacroid " ZBX_FS_UI64, gmacro->globalmacroid);
+		zabbix_log(LOG_LEVEL_TRACE, "  macro '%s'", gmacro->macro);
+		if (NULL != gmacro->context)
+			zabbix_log(LOG_LEVEL_TRACE, "  context '%s'", gmacro->context);
+		zabbix_log(LOG_LEVEL_TRACE, "  value '%s'", gmacro->value);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3590,6 +3615,7 @@ static void	DCdump_configuration()
 	DCdump_ipmihosts();
 	DCdump_host_inventories();
 	DCdump_htmpls();
+	DCdump_gmacros();
 }
 
 /******************************************************************************
