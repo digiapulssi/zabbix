@@ -2532,6 +2532,7 @@ tr.cursor-move td * {
 .rsm-date-time { float: right; }
 .first-row-element { width: 300px; display: inline-block; }
 .first-cell-value { width: 65px; display: inline-block; }
+.disabled-service { margin-left: 75px; }
 
 /*doc
 ---
