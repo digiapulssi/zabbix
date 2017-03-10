@@ -1437,7 +1437,7 @@ function populateFromMapAreas(array &$map, $theme) {
 						}
 
 						$link['linkid'] = -$newLinkid;
-						$link[$idNumber] = $newSelementid;
+						$link[$idNumber] = -$newSelementid;
 						$map['links'][$newLinkid] = $link;
 					}
 				}
