@@ -25,13 +25,56 @@
 #include "db.h"
 #include "zbxself.h"
 #include "./ldapsyncer.h"
-
 #include <ldap.h>
 
-#define ZBX_LDAPSYNCER_PERIOD		600	/* TODO: make period configurable */
+#define ZBX_LDAPSYNCER_PERIOD		60	/* TODO: make period configurable */
 
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_ldap_connect                                                 *
+ *                                                                            *
+ * Purpose: connect to LDAP server                                            *
+ *                                                                            *
+ * Return value: SUCCEED or FAIL                                              *
+ *                                                                            *
+ ******************************************************************************/
+static int	zbx_ldap_connect(LDAP **ld, const char *uri, char **error)
+{
+	int	res;
+
+	/* initialize LDAP data struture (without opening a connection) */
+
+	if (LDAP_SUCCESS != (res = ldap_initialize(ld, uri)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_initialize() failed for \"%s\": %d %s",
+				uri, res, ldap_err2string(res));
+		return FAIL;
+	}
+
+	/* TODO: set options ? */
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_ldap_free                                                    *
+ *                                                                            *
+ * Purpose: release LDAP resources                                            *
+ *                                                                            *
+ ******************************************************************************/
+static void	zbx_ldap_free(LDAP **ld)
+{
+	int	res;
+
+	if (LDAP_SUCCESS == (res = ldap_unbind_ext_s(*ld, NULL, NULL)))
+		*ld = NULL;
+	else
+		zabbix_log(LOG_LEVEL_WARNING, "ldap_unbind_ext_s() failed: %d %s", res, ldap_err2string(res));
+}
 
 /******************************************************************************
  *                                                                            *
@@ -39,18 +82,47 @@ extern int		server_num, process_num;
  *                                                                            *
  * Purpose: synchronize users and groups from LDAP database                   *
  *                                                                            *
- * Return value: The number of synchronized users                             *
+ * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
-static int      synchronize_from_ldap(void)
+static int      zbx_synchronize_from_ldap(int *user_num)
 {
-	return 0;			/* TODO: return real value */
+	const char	*__function_name = "zbx_synchronize_from_ldap";
+	LDAP		*ld = NULL;
+	char		*error = NULL;
+	int		res, ret = FAIL;
+
+	/* TODO: replace with uri from database. Here is a hardcoded value for proof of concept. */
+	/* TODO: consider supporting a list of URIs - ldap_initialize() in zbx_ldap_connect() can take a list of them */
+	/* TODO: consider supporting 'ldaps' (LDAP over TLS) protocol. */
+	const char	*uri = "ldap://127.0.0.1:389";
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	if (SUCCEED != (res = zbx_ldap_connect(&ld, uri, &error)))
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "%s() cannot connect to LDAP server: %s", __function_name, error);
+		goto out;
+	}
+
+	/* TODO: synchronization */
+
+	ret = SUCCEED;
+out:
+	zbx_free(error);
+
+	if (NULL != ld)
+		zbx_ldap_free(&ld);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s error:'%s'", __function_name, zbx_result_string(ret),
+			ZBX_NULL2EMPTY_STR(error));
+	return ret;
 }
 
 ZBX_THREAD_ENTRY(ldap_syncer_thread, args)
 {
 	double	sec1, sec2;
-	int	user_num = 0, sleeptime, nextsync;
+	int	sleeptime;
 
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
@@ -71,6 +143,8 @@ ZBX_THREAD_ENTRY(ldap_syncer_thread, args)
 
 	for (;;)
 	{
+		int	user_num = 0, nextsync;
+
 		zbx_sleep_loop(sleeptime);
 
 		zbx_handle_log();
@@ -78,7 +152,12 @@ ZBX_THREAD_ENTRY(ldap_syncer_thread, args)
 		zbx_setproctitle("%s [synchronizing LDAP users]", get_process_type_string(process_type));
 
 		sec1 = zbx_time();
-		user_num = synchronize_from_ldap();
+
+		if (SUCCEED != zbx_synchronize_from_ldap(&user_num))
+		{
+			/* TODO: communicate error to frontend */
+		}
+
 		sec2 = zbx_time();
 
 		nextsync = (int)sec1 - (int)sec1 % ZBX_LDAPSYNCER_PERIOD + ZBX_LDAPSYNCER_PERIOD;
@@ -87,7 +166,7 @@ ZBX_THREAD_ENTRY(ldap_syncer_thread, args)
 			sleeptime = 0;
 
 		zbx_setproctitle("%s [synchronized %d LDAP users(s) in " ZBX_FS_DBL " sec, idle %d sec]",
-		get_process_type_string(process_type), user_num, sec2 - sec1, sleeptime);
+				get_process_type_string(process_type), user_num, sec2 - sec1, sleeptime);
 	}
 }
 #endif
