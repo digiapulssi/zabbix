@@ -1802,7 +1802,7 @@ function getMapHighligts($map, $mapInfo) {
 	foreach ($map['selements'] as $id => $selement) {
 		if ((($map['highlight'] % 2) != SYSMAP_HIGHLIGHT_ON) ||
 			(isset($selement['elementsubtype']) && $selement['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS)) {
-			$highlights[] = null;
+			$highlights[$id] = null;
 			continue;
 		}
 
