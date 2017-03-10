@@ -3607,6 +3607,33 @@ static void	DCdump_gmacros()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_hmacros()
+{
+	const char		*__function_name = "DCdump_hmacros";
+
+	const ZBX_DC_HMACRO	*hmacro;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->hmacros, &iter);
+
+	while (NULL != (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  hostmacroid " ZBX_FS_UI64, hmacro->hostmacroid);
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, hmacro->hostid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  macro '%s'", hmacro->macro);
+		if (NULL != hmacro->context)
+			zabbix_log(LOG_LEVEL_TRACE, "  context '%s'", hmacro->context);
+		zabbix_log(LOG_LEVEL_TRACE, "  value '%s'", hmacro->value);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
@@ -3616,6 +3643,7 @@ static void	DCdump_configuration()
 	DCdump_host_inventories();
 	DCdump_htmpls();
 	DCdump_gmacros();
+	DCdump_hmacros();
 }
 
 /******************************************************************************
