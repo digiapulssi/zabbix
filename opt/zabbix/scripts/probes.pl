@@ -197,7 +197,7 @@ sub add_probe($$$) {
 
     ##########
 
-    print "The probe has been added successful\n";
+    print "The probe has been added successfully\n";
     print "Do not forget to tune macros!\n";
 }
 
@@ -212,7 +212,7 @@ sub delete_probe($) {
 
     $probe = get_probe($probe_name, true);
 
-    check_probe_data($probe, "The probe is not found. Terminating...");
+    check_probe_data($probe, "Probe \"$probe_name\" was not found on server ID ".$OPTS{'server-id'}.". Use script \"probes-enabled.pl\" to list probes available in the system. Terminating...");
 
     $probe_host = get_host($probe_name, false);
 
@@ -314,7 +314,7 @@ sub delete_probe($) {
 
     ##########
 
-    print "The probe has been removed successful\n";
+    print "The probe has been removed successfully\n";
     print "Do not forget to tune macros!\n";
 }
 
@@ -329,7 +329,7 @@ sub disable_probe($) {
 
     $probe = get_probe($probe_name, true);
 
-    check_probe_data($probe, "The probe is not found. Terminating...");
+    check_probe_data($probe, "Probe \"$probe_name\" was not found on server ID ".$OPTS{'server-id'}.". Use script \"probes-enabled.pl\" to list probes available in the system. Terminating...");
 
     $probe_host = get_host($probe_name, false);
 
@@ -409,7 +409,7 @@ sub disable_probe($) {
 
     ##########
 
-    print "The probe has been disabled successful\n";
+    print "The probe has been disabled successfully\n";
     print "Do not forget to tune macros!\n";
 }
 
@@ -423,7 +423,7 @@ sub rename_probe($$) {
 
     $probe = get_probe($old_name, true);
 
-    check_probe_data($probe, "The probe is not found. Terminating...");
+    check_probe_data($probe, "Probe \"$old_name\" was not found on server ID ".$OPTS{'server-id'}.". Use script \"probes-enabled.pl\" to list probes available in the system. Terminating...");
 
     $probe_host = get_host($old_name, false);
 
@@ -504,7 +504,7 @@ sub rename_probe($$) {
     is_not_empty($result->{'hostmacroids'}, false);
     
     # rsm_probes table?
-    print "The probe has been renamed successful\n";
+    print "The probe has been renamed successfully\n";
 }
 
 sub check_probe_data($) {

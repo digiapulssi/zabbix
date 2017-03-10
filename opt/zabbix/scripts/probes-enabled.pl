@@ -71,15 +71,15 @@ foreach my $server_key (@server_keys)
 
 	if ($total == $rdds_num and $total == $epp_num)
 	{
-		print("Total $total proxies, all with RDDS and EPP enabled\n");
+		print("Total $total probes, all with RDDS and EPP enabled\n");
 	}
 	if ($rdds_num == 0 and $epp_num == 0)
 	{
-		print("Total $total proxies, all with RDDS and EPP disabled\n");
+		print("Total $total probes, all with RDDS and EPP disabled\n");
 	}
 	else
 	{
-		print("Total $total proxies, $rdds_num with RDDS enabled, $epp_num with EPP enabled\n");
+		print("Total $total probes, $rdds_num with RDDS enabled, $epp_num with EPP enabled\n");
 	}
 
 	print("\n") unless ($server_key eq $server_keys[-1]);
