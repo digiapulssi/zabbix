@@ -57,6 +57,8 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 
 $data = [];
 $data['services'] = [];
+$data['url'] = '';
+$data['sid'] = CWebUser::getSessionCookie();
 
 $year = date('Y', time());
 $month = date('m', time());
@@ -88,184 +90,203 @@ else {
 }
 
 if ($data['filter_search']) {
-	$tld = API::Host()->get(array(
-		'tlds' => true,
-		'output' => array('hostid', 'host', 'name'),
-		'filter' => array(
-			'name' => $data['filter_search']
-		)
-	));
+	foreach ($DB['SERVERS'] as $server) {
+		unset($DB['DB']);
+		$DB['TYPE'] = $server['TYPE'];
+		$DB['SERVER'] = $server['SERVER'];
+		$DB['PORT'] = $server['PORT'];
+		$DB['DATABASE'] = $server['DATABASE'];
+		$DB['USER'] = $server['USER'];
+		$DB['PASSWORD'] = $server['PASSWORD'];
+		$DB['SCHEMA'] = $server['SCHEMA'];
+		DBconnect($error);
 
-	$data['tld'] = reset($tld);
-
-	if ($data['tld']) {
-		// get application
-		$applications = API::Application()->get(array(
-			'hostids' => $data['tld']['hostid'],
-			'output' => array('applicationid'),
+		$tld = API::Host()->get(array(
+			'tlds' => true,
+			'output' => array('hostid', 'host', 'name'),
 			'filter' => array(
-				'name' => MONTHLY_REPORTS_APPLICATION
+				'name' => $data['filter_search']
 			)
 		));
 
-		if ($applications) {
-			$application = reset($applications);
+		if ($tld) {
+			$data['tld'] = reset($tld);
 
-			// time limits
-			$startTime = mktime(
-				0,
-				0,
-				0,
-				$data['filter_month'],
-				1,
-				$data['filter_year']
-			);
-
-			if ($data['filter_month'] == 12) {
-				$endMonth = 1;
-				$endYear = $data['filter_year'] + 1;
-			}
-			else {
-				$endMonth = $data['filter_month'] + 1;
-				$endYear = $data['filter_year'];
-			}
-
-			$endTime = mktime(
-				0,
-				0,
-				0,
-				$endMonth,
-				1,
-				$endYear
-			);
-
-			$data['stime'] = date('YmdHis', $startTime);
-
-			// get items
-			$items = API::Item()->get(array(
-				'applicationids' => $application['applicationid'],
-				'output' => array('itemid', 'name', 'key_', 'value_type')
+			// get application
+			$applications = API::Application()->get(array(
+				'hostids' => $data['tld']['hostid'],
+				'output' => array('applicationid'),
+				'filter' => array(
+					'name' => MONTHLY_REPORTS_APPLICATION
+				)
 			));
 
-			$usedMacro = [];
+			if ($applications) {
+				$application = reset($applications);
 
-			foreach ($items as $item) {
-				$itemKey = new CItemKey();
-				$itemKey->parse($item['key_']);
-				switch ($itemKey->getKey()) {
-					case MONTHLY_REPORTS_DNS_NS_RTT_UDP:
-						$newName = 'UDP DNS Resolution RTT';
-						$macro = CALCULATED_ITEM_SLV_DNS_NS_RTT_UDP;
-						break;
-					case MONTHLY_REPORTS_DNS_NS_RTT_TCP:
-						$newName = 'TCP DNS Resolution RTT';
-						$macro = CALCULATED_ITEM_SLV_DNS_NS_RTT_TCP;
-						break;
-					case MONTHLY_REPORTS_DNS_NS_UPD:
-						$newName = 'DNS update time';
-						$macro = CALCULATED_ITEM_SLV_DNS_NS_UPD;
-						break;
-					case MONTHLY_REPORTS_DNS_NS:
-						$newName = 'DNS Name Server availability';
-						$macro = CALCULATED_ITEM_SLV_DNS_NS;
-						break;
-					case MONTHLY_REPORTS_RDDS43_RTT:
-						$newName = 'RDDS43 resolution RTT';
-						$macro = CALCULATED_ITEM_SLV_RDDS43_RTT;
-						break;
-					case MONTHLY_REPORTS_RDDS80_RTT:
-						$newName = 'RDDS80 resolution RTT';
-						$macro = CALCULATED_ITEM_SLV_RDDS80_RTT;
-						break;
-					case MONTHLY_REPORTS_RDDS_UPD:
-						$newName = 'RDDS update time';
-						$macro = CALCULATED_ITEM_SLV_RDDS_UPD;
-						break;
-					case MONTHLY_REPORTS_EPP_INFO:
-						$newName = 'EPP INFO resolution RTT';
-						$macro = CALCULATED_ITEM_SLV_EPP_INFO;
-						break;
-					case MONTHLY_REPORTS_EPP_LOGIN:
-						$newName = 'EPP LOGIN resolution RTT';
-						$macro = CALCULATED_ITEM_SLV_EPP_LOGIN;
-						break;
-					case MONTHLY_REPORTS_EPP_UPDATE:
-						$newName = 'EPP UPDATE resolution RTT';
-						$macro = CALCULATED_ITEM_EPP_UPDATE;
-						break;
-					default:
-						$newName = null;
-						break;
+				// time limits
+				$startTime = mktime(
+					0,
+					0,
+					0,
+					$data['filter_month'],
+					1,
+					$data['filter_year']
+				);
+
+				if ($data['filter_month'] == 12) {
+					$endMonth = 1;
+					$endYear = $data['filter_year'] + 1;
+				}
+				else {
+					$endMonth = $data['filter_month'] + 1;
+					$endYear = $data['filter_year'];
 				}
 
-				if ($newName) {
-					$key_data = $itemKey->getParamsRaw();
-					$key_parameters = [];
+				$endTime = mktime(
+					0,
+					0,
+					0,
+					$endMonth,
+					1,
+					$endYear
+				);
 
-					if ($key_data) {
-						foreach ($key_data[0]['parameters'] as $parameter) {
-							$key_parameters[] = $parameter['raw'];
+				$data['stime'] = date('YmdHis', $startTime);
+
+				// get items
+				$items = API::Item()->get(array(
+					'applicationids' => $application['applicationid'],
+					'output' => array('itemid', 'name', 'key_', 'value_type')
+				));
+
+				$usedMacro = [];
+
+				foreach ($items as $item) {
+					$itemKey = new CItemKey();
+					$itemKey->parse($item['key_']);
+					switch ($itemKey->getKey()) {
+						case MONTHLY_REPORTS_DNS_NS_RTT_UDP:
+							$newName = 'UDP DNS Resolution RTT';
+							$macro = CALCULATED_ITEM_SLV_DNS_NS_RTT_UDP;
+							break;
+						case MONTHLY_REPORTS_DNS_NS_RTT_TCP:
+							$newName = 'TCP DNS Resolution RTT';
+							$macro = CALCULATED_ITEM_SLV_DNS_NS_RTT_TCP;
+							break;
+						case MONTHLY_REPORTS_DNS_NS_UPD:
+							$newName = 'DNS update time';
+							$macro = CALCULATED_ITEM_SLV_DNS_NS_UPD;
+							break;
+						case MONTHLY_REPORTS_DNS_NS:
+							$newName = 'DNS Name Server availability';
+							$macro = CALCULATED_ITEM_SLV_DNS_NS;
+							break;
+						case MONTHLY_REPORTS_RDDS43_RTT:
+							$newName = 'RDDS43 resolution RTT';
+							$macro = CALCULATED_ITEM_SLV_RDDS43_RTT;
+							break;
+						case MONTHLY_REPORTS_RDDS80_RTT:
+							$newName = 'RDDS80 resolution RTT';
+							$macro = CALCULATED_ITEM_SLV_RDDS80_RTT;
+							break;
+						case MONTHLY_REPORTS_RDDS_UPD:
+							$newName = 'RDDS update time';
+							$macro = CALCULATED_ITEM_SLV_RDDS_UPD;
+							break;
+						case MONTHLY_REPORTS_EPP_INFO:
+							$newName = 'EPP INFO resolution RTT';
+							$macro = CALCULATED_ITEM_SLV_EPP_INFO;
+							break;
+						case MONTHLY_REPORTS_EPP_LOGIN:
+							$newName = 'EPP LOGIN resolution RTT';
+							$macro = CALCULATED_ITEM_SLV_EPP_LOGIN;
+							break;
+						case MONTHLY_REPORTS_EPP_UPDATE:
+							$newName = 'EPP UPDATE resolution RTT';
+							$macro = CALCULATED_ITEM_EPP_UPDATE;
+							break;
+						default:
+							$newName = null;
+							break;
+					}
+
+					if ($newName) {
+						$key_data = $itemKey->getParamsRaw();
+						$key_parameters = [];
+
+						if ($key_data) {
+							foreach ($key_data[0]['parameters'] as $parameter) {
+								$key_parameters[] = $parameter['raw'];
+							}
+						};
+						$data['services'][$newName]['parameters'][$item['itemid']]['ns'] = implode(': ', $key_parameters);
+
+						$itemsAndServices[$item['itemid']] = $newName;
+						$macroValue[$macro] = $item['itemid'];
+						$usedMacro[] = $macro;
+
+						$itemHistory = API::History()->get(array(
+							'itemids' => $item['itemid'],
+							'time_from' => $startTime,
+							'time_till' => $endTime,
+							'history' => $item['value_type'],
+							'output' => API_OUTPUT_EXTEND
+						));
+
+						$itemHistory = reset($itemHistory);
+
+						$serviceName = $itemsAndServices[$item['itemid']];
+						if (isset($itemHistory['value'])) {
+							$data['services'][$serviceName]['parameters'][$item['itemid']]['slv'] = sprintf(
+								'%.3f',
+								$itemHistory['value']
+							);
 						}
-					};
-					$data['services'][$newName]['parameters'][$item['itemid']]['ns'] = implode(': ', $key_parameters);
+					}
+				}
 
-					$itemsAndServices[$item['itemid']] = $newName;
-					$macroValue[$macro] = $item['itemid'];
-					$usedMacro[] = $macro;
+				// get calculated items
+				$calculatedItems = API::Item()->get(array(
+					'output' => array('itemid', 'key_'),
+					'filter' => array(
+						'key_' => $usedMacro
+					),
+					'preservekeys' => true
+				));
 
-					$itemHistory = API::History()->get(array(
-						'itemids' => $item['itemid'],
-						'time_from' => $startTime,
-						'time_till' => $endTime,
-						'history' => $item['value_type'],
-						'output' => API_OUTPUT_EXTEND
+				$calculatedItemIds = array_keys($calculatedItems);
+
+				// get old value
+				foreach ($calculatedItemIds as $calculatedItemId) {
+					$historyData = DBfetch(DBselect(
+						'SELECT h.value, h.itemid'.
+						' FROM history_uint h'.
+						' WHERE h.itemid='.$calculatedItemId.
+							' AND h.clock>='.$startTime.
+							' AND h.clock<'.$endTime.
+						' ORDER BY h.clock DESC',
+						1
 					));
 
-					$itemHistory = reset($itemHistory);
-
-					$serviceName = $itemsAndServices[$item['itemid']];
-					if (isset($itemHistory['value'])) {
-						$data['services'][$serviceName]['parameters'][$item['itemid']]['slv'] = sprintf(
-							'%.3f',
-							$itemHistory['value']
-						);
+					if ($historyData) {
+						$itemKey = $calculatedItems[$calculatedItemId]['key_'];
+						$mainItemId = $macroValue[$itemKey];
+						$serviceName = $itemsAndServices[$mainItemId];
+						$data['services'][$serviceName]['acceptable_sla'] = $historyData['value'];
 					}
 				}
 			}
-
-			// get calculated items
-			$calculatedItems = API::Item()->get(array(
-				'output' => array('itemid', 'key_'),
-				'filter' => array(
-					'key_' => $usedMacro
-				),
-				'preservekeys' => true
-			));
-
-			$calculatedItemIds = array_keys($calculatedItems);
-
-			// get old value
-			foreach ($calculatedItemIds as $calculatedItemId) {
-				$historyData = DBfetch(DBselect(
-					'SELECT h.value, h.itemid'.
-					' FROM history_uint h'.
-					' WHERE h.itemid='.$calculatedItemId.
-						' AND h.clock>='.$startTime.
-						' AND h.clock<'.$endTime.
-					' ORDER BY h.clock DESC',
-					1
-				));
-
-				if ($historyData) {
-					$itemKey = $calculatedItems[$calculatedItemId]['key_'];
-					$mainItemId = $macroValue[$itemKey];
-					$serviceName = $itemsAndServices[$mainItemId];
-					$data['services'][$serviceName]['acceptable_sla'] = $historyData['value'];
-				}
+			else {
+				show_error_message(_s('Application "%1$s" not exist on TLD', MONTHLY_REPORTS_APPLICATION));
 			}
+
+			$data['url'] = $server['URL'];
+			$data['server'] = $server['NAME'];
+			break;
 		}
 		else {
-			show_error_message(_s('Application "%1$s" not exist on TLD', MONTHLY_REPORTS_APPLICATION));
+			continue;
 		}
 	}
 }

@@ -19,8 +19,6 @@
 **/
 
 
-require_once dirname(__FILE__).'/js/rsm.incidents.list.js.php';
-
 $widget = (new CWidget())->setTitle(_('Incidents'));
 
 // filter
