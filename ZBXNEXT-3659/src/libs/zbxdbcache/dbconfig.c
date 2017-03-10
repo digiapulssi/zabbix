@@ -3741,6 +3741,33 @@ static void	DCdump_items()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_numitems()
+{
+	const char		*__function_name = "DCdump_numitems";
+
+	const ZBX_DC_NUMITEM	*numitem;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->numitems, &iter);
+
+	while (NULL != (numitem = (ZBX_DC_NUMITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, numitem->itemid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  formula '%s'", numitem->formula);
+		zabbix_log(LOG_LEVEL_TRACE, "  units '%s'", numitem->units);
+		zabbix_log(LOG_LEVEL_TRACE, "  trends %d", numitem->trends);
+		zabbix_log(LOG_LEVEL_TRACE, "  delta %u", numitem->delta);
+		zabbix_log(LOG_LEVEL_TRACE, "  multiplier %u", numitem->multiplier);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
@@ -3753,6 +3780,7 @@ static void	DCdump_configuration()
 	DCdump_hmacros();
 	DCdump_interfaces();
 	DCdump_items();
+	DCdump_numitems();
 }
 
 /******************************************************************************
