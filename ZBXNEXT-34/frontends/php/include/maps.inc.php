@@ -1418,8 +1418,10 @@ function populateFromMapAreas(array &$map, $theme) {
 			$selements = zbx_toHash($map['selements'], 'selementid');
 			foreach ($map['links'] as $link) {
 				// do not multiply links between two areas
-				if ($selements[$link['selementid1']]['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS
-						&& $selements[$link['selementid2']]['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS) {
+				if ($selements[$link['selementid1']]['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST_GROUP &&
+					$selements[$link['selementid1']]['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS &&
+					$selements[$link['selementid2']]['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST_GROUP &&
+					$selements[$link['selementid2']]['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS) {
 					continue;
 				}
 
@@ -1804,7 +1806,8 @@ function getMapHighligts($map, $mapInfo) {
 	$highlights = [];
 	foreach ($map['selements'] as $id => $selement) {
 		if ((($map['highlight'] % 2) != SYSMAP_HIGHLIGHT_ON) ||
-			(isset($selement['elementsubtype']) && $selement['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS)) {
+			(isset($selement['elementtype']) && $selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST_GROUP &&
+			isset($selement['elementsubtype']) && $selement['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS)) {
 			$highlights[$id] = null;
 			continue;
 		}
