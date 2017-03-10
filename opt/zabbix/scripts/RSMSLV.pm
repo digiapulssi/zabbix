@@ -706,7 +706,7 @@ sub get_hostid
 
 	my $rows_ref = db_select("select hostid from hosts where host='$host'");
 
-	fail("cannot get host ID of host '$host'") unless (scalar(@$rows_ref) == 1);
+	fail("Host \"$host\" not found") unless (scalar(@$rows_ref) == 1);
 
 	return $rows_ref->[0]->[0];
 }
