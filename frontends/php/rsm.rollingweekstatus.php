@@ -650,10 +650,10 @@ if (array_key_exists('tld', $data) && $data['tld']) {
 	}
 
 	if ($sortField === 'name') {
-		order_result($data['tld'], 'name', $sortOrder);
+		order_result($data['tld'], 'name');
 	}
 	elseif ($sortField === 'type') {
-		order_result($data['tld'], 'type', $sortOrder);
+		order_result($data['tld'], 'type');
 	}
 }
 
