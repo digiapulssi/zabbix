@@ -44,6 +44,7 @@ global $ZBX_SERVER_NAME;
 	(new CDiv([
 		(new CDiv())->addClass(ZBX_STYLE_SIGNIN_LOGO),
 		(new CForm())
+			->addItem(new CVar('request', $request))
 			->addItem(
 				(new CList())
 					->addItem([
