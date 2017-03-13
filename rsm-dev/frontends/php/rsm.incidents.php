@@ -238,16 +238,16 @@ if ($host || $data['filter_search']) {
 		$tld = API::Host()->get($options);
 		$data['tld'] = reset($tld);
 
-		if ($data['tld'] && $host && $data['filter_search'] != $data['tld']['name']) {
-			$data['filter_search'] = $data['tld']['name'];
-			CProfile::update('web.rsm.incidents.filter_search', $data['tld']['name'], PROFILE_TYPE_STR);
-		}
-
 		if (!$data['tld']) {
 			unset($data['tld']);
 			continue;
 		}
 		else {
+			if ($host && $data['filter_search'] != $data['tld']['name']) {
+				$data['filter_search'] = $data['tld']['name'];
+				CProfile::update('web.rsm.incidents.filter_search', $data['tld']['name'], PROFILE_TYPE_STR);
+			}
+
 			// get items
 			$items = API::Item()->get(array(
 				'hostids' => $data['tld']['hostid'],
