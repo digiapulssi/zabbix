@@ -19,6 +19,23 @@
 		<!-- Build agent binaries -->
 		<exec executable="./configure" failonerror="on">
 			<arg value="--enable-agent"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<antcall target="runagent"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killagent"/>
+
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-agent"/>
 			<arg value="--with-libcurl"/>
 			<arg value="--prefix=${basedir}"/>
 		</exec>
@@ -30,9 +47,142 @@
 			<arg value="-s"/>
 			<arg value="install"/>
 		</exec>
+
+		<antcall target="runagent"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killagent"/>
 	</target>
 
 	<target name="buildserver">
+		<antcall target="killserver"/>
+
+		<!-- Build server binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-server"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killserver"/>
+
+		<!-- Build server binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-server"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killserver"/>
+
+		<!-- Build server binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-server"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killserver"/>
+
+		<!-- Build server binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-server"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--with-ldap"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killserver"/>
+
+		<!-- Build server binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-server"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--with-ldap"/>
+			<arg value="--with-ssh2"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killserver"/>
+
+		<!-- Build server binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-server"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--with-ldap"/>
+			<arg value="--with-ssh2"/>
+			<arg value="--with-libcurl"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
 		<antcall target="killserver"/>
 
 		<!-- Build server binaries -->
@@ -55,9 +205,171 @@
 			<arg value="-s"/>
 			<arg value="install"/>
 		</exec>
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killserver"/>
+
+		<!-- Build server binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-server"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--with-ldap"/>
+			<arg value="--with-ssh2"/>
+			<arg value="--with-libcurl"/>
+			<arg value="--with-jabber"/>
+			<arg value="--with-openssl"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killserver"/>
+
+		<!-- Build server binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-server"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--with-ldap"/>
+			<arg value="--with-ssh2"/>
+			<arg value="--with-libcurl"/>
+			<arg value="--with-jabber"/>
+			<arg value="--with-mbedtls"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<antcall target="runserver"/>
+		<antcall target="sleep10s"/>
+		<antcall target="killserver"/>
 	</target>
 
 	<target name="buildproxy">
+		<!-- Build proxy binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-proxy"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<!-- Build proxy binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-proxy"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<!-- Build proxy binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-proxy"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<!-- Build proxy binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-proxy"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--with-ldap"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<!-- Build proxy binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-proxy"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--with-ldap"/>
+			<arg value="--with-ssh2"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
+		<!-- Build proxy binaries -->
+		<exec executable="./configure" failonerror="on">
+			<arg value="--enable-proxy"/>
+			<arg value="--with-${dbenable}"/>
+			<arg value="--with-net-snmp"/>
+			<arg value="--with-openipmi"/>
+			<arg value="--with-ldap"/>
+			<arg value="--with-ssh2"/>
+			<arg value="--with-libcurl"/>
+			<arg value="--prefix=${basedir}"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="clean"/>
+		</exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg value="install"/>
+		</exec>
+
 		<!-- Build proxy binaries -->
 		<exec executable="./configure" failonerror="on">
 			<arg value="--enable-proxy"/>
@@ -125,6 +437,46 @@
 		<replace file="etc/zabbix_server.conf" token="{DBPASSWORD}" value="${dbpassword}"/>
 	</target>
 
+	<target name="init-mysql" depends="create-configs">
+		<!-- Create MySQL database -->
+		<exec executable="mysql" failonerror="on">
+			<arg line="-h '${dbhost}'"/>
+			<arg line="-u '${dbuser}'"/>
+			<arg line="-p${dbpassword}"/>
+			<arg line="-e 'drop database if exists ${dbname}'"/>
+		</exec>
+		<exec executable="mysql" failonerror="on">
+			<arg line="-h '${dbhost}'"/>
+			<arg line="-u '${dbuser}'"/>
+			<arg line="-p${dbpassword}"/>
+			<arg line="-e 'create database ${dbname} character set utf8 collate utf8_bin'"/>
+		</exec>
+		<exec executable="mysql" input="database/mysql/schema.sql" failonerror="on">
+			<arg line="-h '${dbhost}'"/>
+			<arg line="-u '${dbuser}'"/>
+			<arg line="-p${dbpassword}"/>
+			<arg line="${dbname}"/>
+		</exec>
+		<exec executable="mysql" input="database/mysql/images.sql" failonerror="on">
+			<arg line="-h '${dbhost}'"/>
+			<arg line="-u '${dbuser}'"/>
+			<arg line="-p${dbpassword}"/>
+			<arg line="${dbname}"/>
+		</exec>
+		<exec executable="mysql" input="database/mysql/data.sql" failonerror="on">
+			<arg line="-h '${dbhost}'"/>
+			<arg line="-u '${dbuser}'"/>
+			<arg line="-p${dbpassword}"/>
+			<arg line="${dbname}"/>
+		</exec>
+		<exec executable="mysql" input="tests/data/data_test.sql" failonerror="on">
+			<arg line="-h '${dbhost}'"/>
+			<arg line="-u '${dbuser}'"/>
+			<arg line="-p${dbpassword}"/>
+			<arg line="${dbname}"/>
+		</exec>
+	</target>
+
 	<target name="init-postgresql" depends="create-configs">
 		<!-- Create PostgreSQL database -->
 		<exec executable="psql" failonerror="on">
@@ -173,9 +525,9 @@
 
 	<target name="killagent">
 		<!-- Kill previously running agent -->
-		<exec executable="bash">
+		<exec executable="sh">
 			<arg value="-c"/>
-			<arg value="kill `ps -fu $USER|grep -v grep|grep ${basedir}/etc/zabbix_agentd.conf|head -1|awk '{print $2}'`"/>
+			<arg value="pkill -TERM zabbix_agentd"/>
 		</exec>
 		<!-- Sleep for 2 seconds -->
 		<exec executable="sleep" failonerror="off">
@@ -185,9 +537,9 @@
 
 	<target name="killserver">
 		<!-- Kill previously running server -->
-		<exec executable="bash">
+		<exec executable="sh">
 			<arg value="-c"/>
-			<arg value="kill `ps -fu $USER|grep -v grep|grep ${basedir}/etc/zabbix_server.conf|head -1|awk '{print $2}'`"/>
+			<arg value="pkill -TERM zabbix_server"/>
 		</exec>
 		<!-- Sleep for 2 seconds -->
 		<exec executable="sleep" failonerror="off">
@@ -197,6 +549,13 @@
 
 	<target name="killdaemons" depends="killserver,killagent"/>
 
+	<target name="sleep10s">
+		<!-- Sleep for 10 seconds -->
+		<exec executable="sleep" failonerror="off">
+			<arg line="10"/>
+		</exec>
+	</target>
+
 	<target name="sleep5m">
 		<!-- Sleep for 5 minutes -->
 		<exec executable="sleep" failonerror="off">
@@ -204,63 +563,28 @@
 		</exec>
 	</target>
 
-	<target name="runserver" depends="buildserver">
+	<target name="runserver">
 		<!-- Execute Server -->
 		<exec executable="./zabbix_server" dir="sbin/" failonerror="on">
 			<arg line="--config=${basedir}/etc/zabbix_server.conf"/>
 		</exec>
 	</target>
 
-	<target name="runagent" depends="buildagent">
+	<target name="runagent">
 		<!-- Execute Agent -->
 		<exec executable="./zabbix_agentd" dir="sbin/" failonerror="on">
 			<arg line="--config=${basedir}/etc/zabbix_agentd.conf"/>
 		</exec>
 	</target>
 
-	<target name="init-mysql" depends="create-configs">
-		<!-- Create MySQL database -->
-		<exec executable="mysql" failonerror="on">
-			<arg line="-h '${dbhost}'"/>
-			<arg line="-u '${dbuser}'"/>
-			<arg line="-e 'drop database if exists ${dbname}'"/>
-		</exec>
-		<exec executable="mysql" failonerror="on">
-			<arg line="-h '${dbhost}'"/>
-			<arg line="-u '${dbuser}'"/>
-			<arg line="-e 'create database ${dbname} character set utf8 collate utf8_bin'"/>
-		</exec>
-		<exec executable="mysql" input="database/mysql/schema.sql" failonerror="on">
-			<arg line="-h '${dbhost}'"/>
-			<arg line="-u '${dbuser}'"/>
-			<arg line="${dbname}"/>
-		</exec>
-		<exec executable="mysql" input="database/mysql/images.sql" failonerror="on">
-			<arg line="-h '${dbhost}'"/>
-			<arg line="-u '${dbuser}'"/>
-			<arg line="${dbname}"/>
-		</exec>
-		<exec executable="mysql" input="database/mysql/data.sql" failonerror="on">
-			<arg line="-h '${dbhost}'"/>
-			<arg line="-u '${dbuser}'"/>
-			<arg line="${dbname}"/>
-		</exec>
-		<exec executable="mysql" input="tests/data/data_test.sql" failonerror="on">
-			<arg line="-h '${dbhost}'"/>
-			<arg line="-u '${dbuser}'"/>
-			<arg line="${dbname}"/>
-		</exec>
-	</target>
-
-	<target name="test-frontend">
+	<target name="test-frontend", depends=">
 		<exec executable="phpunit" dir="frontends/php/tests" failonerror="off">
 			<arg line="--log-junit=${basedir}/build/logs/phpunit.xml --bootstrap=bootstrap.php frontend.php"/>
 		</exec>
 	</target>
 
-	<target name="build-mysql" depends="init-mysql,runagent,runserver,buildproxy,sleep5m,killdaemons,test-frontend" />
-	<target name="build-postgresql" depends="init-postgresql,runagent,runserver,buildproxy,sleep5m,killdaemons,test-frontend" />
+	<target name="test-server" depends="buildagent,runagent,buildserver,runserver,buildproxy,sleep5m,killdaemons"/>
 
 	<!-- Default target -->
-	<target name="build" depends="build-mysql,build-postgresql" />
+	<target name="build" depends="init-${database},test-server,test-frontend" />
 </project>
