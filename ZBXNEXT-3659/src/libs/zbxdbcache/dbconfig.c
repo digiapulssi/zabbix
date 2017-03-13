@@ -3939,6 +3939,127 @@ static void	DCdump_sshitems()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_telnetitems()
+{
+	const char		*__function_name = "DCdump_telnetitems";
+
+	const ZBX_DC_TELNETITEM	*telnetitem;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->telnetitems, &iter);
+
+	while (NULL != (telnetitem = (ZBX_DC_TELNETITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, telnetitem->itemid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", telnetitem->username);
+		zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", telnetitem->password);
+		zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", telnetitem->params);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_simpleitems()
+{
+	const char		*__function_name = "DCdump_simpleitems";
+
+	const ZBX_DC_SIMPLEITEM	*simpleitem;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->simpleitems, &iter);
+
+	while (NULL != (simpleitem = (ZBX_DC_SIMPLEITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, simpleitem->itemid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", simpleitem->username);
+		zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", simpleitem->password);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_jmxitems()
+{
+	const char		*__function_name = "DCdump_jmxitems";
+
+	const ZBX_DC_JMXITEM	*jmxitem;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->jmxitems, &iter);
+
+	while (NULL != (jmxitem = (ZBX_DC_JMXITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, jmxitem->itemid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", jmxitem->username);
+		zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", jmxitem->password);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_calcitems()
+{
+	const char		*__function_name = "DCdump_calcitems";
+
+	const ZBX_DC_CALCITEM	*calcitem;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->calcitems, &iter);
+
+	while (NULL != (calcitem = (ZBX_DC_CALCITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, calcitem->itemid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", calcitem->params);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_interface_snmpitems()
+{
+	const char			*__function_name = "DCdump_interface_snmpitems";
+
+	const ZBX_DC_INTERFACE_ITEM	*interface_snmpitem;
+	zbx_hashset_iter_t		iter;
+	int				i;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->interface_snmpitems, &iter);
+
+	while (NULL != (interface_snmpitem = (ZBX_DC_INTERFACE_ITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  interfaceid " ZBX_FS_UI64, interface_snmpitem->interfaceid);
+
+		for (i = 0; i < interface_snmpitem->itemids.values_num; i++)
+			zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, interface_snmpitem->itemids.values[i]);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
@@ -3959,6 +4080,11 @@ static void	DCdump_configuration()
 	DCdump_logitems();
 	DCdump_dbitems();
 	DCdump_sshitems();
+	DCdump_telnetitems();
+	DCdump_simpleitems();
+	DCdump_jmxitems();
+	DCdump_calcitems();
+	DCdump_interface_snmpitems();
 }
 
 /******************************************************************************
