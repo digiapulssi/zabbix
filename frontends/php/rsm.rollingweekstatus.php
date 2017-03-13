@@ -310,7 +310,7 @@ foreach ($DB['SERVERS'] as $server) {
 							' AND '.dbConditionInt('r.groupid', $userGroups).
 				' WHERE h.hostid=hgg.hostid'.
 				' GROUP BY hgg.hostid'.
-				' HAVING MIN(r.permission)>='.PERM_READ_ONLY.
+				' HAVING MIN(r.permission)>='.PERM_READ.
 			')';
 		}
 
