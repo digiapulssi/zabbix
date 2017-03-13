@@ -61,7 +61,6 @@ use RSM;
 use TLD_constants qw(:general :templates :value_types :ec :rsm :slv :config :api);
 use TLDs;
 
-sub create_global_macros;
 sub create_tld_host($$$$);
 sub create_probe_health_tmpl;
 sub manage_tld_objects($$$$$);
@@ -256,10 +255,6 @@ if (defined($OPTS{'disable'})) {
 my $proxies = get_proxies_list();
 
 pfail("Cannot find existing proxies") if (scalar(keys %{$proxies}) == 0);
-
-## Creating all global macros##
-## Please check the function to change default values of macros ##
-create_global_macros();
 
 ## Geting some global macros related to item refresh interval ##
 ## Values are used as item update interval ##
@@ -1342,73 +1337,6 @@ sub lc_options {
 
 sub add_default_actions() {
 
-}
-
-sub create_global_macros() {
-    create_macro('{$RSM.IP4.MIN.PROBE.ONLINE}', 2, undef);
-    create_macro('{$RSM.IP6.MIN.PROBE.ONLINE}', 2, undef);
-
-    create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
-
-    create_macro('{$RSM.IP4.MIN.SERVERS}', 4, undef);
-    create_macro('{$RSM.IP6.MIN.SERVERS}', 4, undef);
-    create_macro('{$RSM.IP4.REPLY.MS}', 500, undef);
-    create_macro('{$RSM.IP6.REPLY.MS}', 500, undef);
-
-    create_macro('{$RSM.DNS.TCP.RTT.LOW}', 1500, undef);
-    create_macro('{$RSM.DNS.TCP.RTT.HIGH}', 7500, undef);
-    create_macro('{$RSM.DNS.UDP.RTT.LOW}', 500, undef);
-    create_macro('{$RSM.DNS.UDP.RTT.HIGH}', 2500, undef);
-    create_macro('{$RSM.DNS.UDP.DELAY}', 60, undef);
-    create_macro('{$RSM.DNS.TCP.DELAY}', 60, undef);
-    create_macro('{$RSM.DNS.UPDATE.TIME}', 3600, undef);
-    create_macro('{$RSM.DNS.PROBE.ONLINE}', 2, undef);
-    create_macro('{$RSM.DNS.AVAIL.MINNS}', 2, undef);
-    create_macro('{$RSM.DNS.ROLLWEEK.SLA}', 60, undef);
-
-    create_macro('{$RSM.RDDS.RTT.LOW}', 2000, undef);
-    create_macro('{$RSM.RDDS.RTT.HIGH}', 10000, undef);
-    create_macro('{$RSM.RDDS.DELAY}', 60, undef);
-    create_macro('{$RSM.RDDS.UPDATE.TIME}', 3600, undef);
-    create_macro('{$RSM.RDDS.PROBE.ONLINE}', 2, undef);
-    create_macro('{$RSM.RDDS.ROLLWEEK.SLA}', 60, undef);
-    create_macro('{$RSM.RDDS.MAXREDIRS}', 10, undef);
-
-    create_macro('{$RSM.EPP.DELAY}', 60, undef);
-    create_macro('{$RSM.EPP.LOGIN.RTT.LOW}', 4000, undef);
-    create_macro('{$RSM.EPP.LOGIN.RTT.HIGH}', 20000, undef);
-    create_macro('{$RSM.EPP.UPDATE.RTT.LOW}', 4000, undef);
-    create_macro('{$RSM.EPP.UPDATE.RTT.HIGH}', 20000, undef);
-    create_macro('{$RSM.EPP.INFO.RTT.LOW}', 2000, undef);
-    create_macro('{$RSM.EPP.INFO.RTT.HIGH}', 10000, undef);
-    create_macro('{$RSM.EPP.PROBE.ONLINE}', 2, undef);
-    create_macro('{$RSM.EPP.ROLLWEEK.SLA}', 60, undef);
-
-    create_macro('{$RSM.PROBE.ONLINE.DELAY}', 60, undef);
-
-    create_macro('{$RSM.INCIDENT.DNS.FAIL}', '3', undef);
-    create_macro('{$RSM.INCIDENT.DNS.RECOVER}', '3', undef);
-    create_macro('{$RSM.INCIDENT.DNSSEC.FAIL}', '3', undef);
-    create_macro('{$RSM.INCIDENT.DNSSEC.RECOVER}', '3', undef);
-    create_macro('{$RSM.INCIDENT.RDDS.FAIL}', '2', undef);
-    create_macro('{$RSM.INCIDENT.RDDS.RECOVER}', '2', undef);
-    create_macro('{$RSM.INCIDENT.EPP.FAIL}', '2', undef);
-    create_macro('{$RSM.INCIDENT.EPP.RECOVER}', '2', undef);
-
-    create_macro('{$RSM.SLV.DNS.UDP.RTT}', 99, undef);
-    create_macro('{$RSM.SLV.DNS.TCP.RTT}', 99, undef);
-    create_macro('{$RSM.SLV.NS.AVAIL}', 99, undef);
-    create_macro('{$RSM.SLV.RDDS43.RTT}', 99, undef);
-    create_macro('{$RSM.SLV.RDDS80.RTT}', 99, undef);
-    create_macro('{$RSM.SLV.RDDS.UPD}', 99, undef);
-    create_macro('{$RSM.SLV.DNS.NS.UPD}', 99, undef);
-    create_macro('{$RSM.SLV.EPP.LOGIN}', 99, undef);
-    create_macro('{$RSM.SLV.EPP.UPDATE}', 99, undef);
-    create_macro('{$RSM.SLV.EPP.INFO}', 99, undef);
-
-    create_macro('{$RSM.ROLLWEEK.THRESHOLDS}', RSM_ROLLWEEK_THRESHOLDS, undef);
-    create_macro('{$RSM.ROLLWEEK.SECONDS}', 7200, undef);
-    create_macro('{$RSM.PROBE.AVAIL.LIMIT}', '60', undef); # For finding unreachable probes. Probes are considered unreachable if last access time is over this limit of seconds.
 }
 
 sub create_tld_host($$$$) {
