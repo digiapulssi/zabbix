@@ -148,11 +148,13 @@ $widget->additem([$testsInfoTable]);
 
 $widget->addItem([$table]);
 
-$widget->addItem((new CButton('mark_incident', $changeIncidentTypeName))
-	->onClick('javascript: location.href = "rsm.incidents.php?mark_incident='.$changeIncidentType.
-		'&eventid='.$data['eventid'].'&host='.$data['tld']['host'].'&type='.$data['type'].'";'
-	)
-	->addStyle('margin-top: 5px;')
-);
-
+if (CWebUser::getType() == USER_TYPE_ZABBIX_ADMIN || CWebUser::getType() == USER_TYPE_SUPER_ADMIN
+		|| CWebUser::getType() == USER_TYPE_TEHNICAL_SERVICE) {
+	$widget->addItem((new CButton('mark_incident', $changeIncidentTypeName))
+		->onClick('javascript: location.href = "rsm.incidents.php?mark_incident='.$changeIncidentType.
+			'&eventid='.$data['eventid'].'&host='.$data['tld']['host'].'&type='.$data['type'].'";'
+		)
+		->addStyle('margin-top: 5px;')
+	);
+}
 return $widget;
