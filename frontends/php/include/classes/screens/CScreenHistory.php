@@ -227,9 +227,9 @@ class CScreenHistory extends CScreenBase {
 							if ($useEventLogItem) {
 								$row[] = zbx_empty($data['source']) ? '-' : $data['source'];
 								$row[] = ($data['severity'] == 0)
-								? '-'
-								: new CCol(get_item_logtype_description($data['severity']), get_item_logtype_style($data['severity']));
-								$row[] = ($data['logeventid'] == 0) ? '-' : $data['logeventid'];
+									? '-'
+									: new CCol(get_item_logtype_description($data['severity']), get_item_logtype_style($data['severity']));
+								$row[] = $data['logeventid'];
 							}
 						}
 

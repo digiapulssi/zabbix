@@ -4,6 +4,7 @@ New features:
 
 Bug fixes:
 .......PS. [ZBX-11758] fixed crash in web monitoring when variable is empty or the first step was called regexp function on Solaris (Sergejs)
+..F....... [ZBX-6851] fixed zero number display in Event ID column in windows eventlog history (vmurzins)
 
 --------------------------------------------------------------------------------
 Changes for 2.2.17
