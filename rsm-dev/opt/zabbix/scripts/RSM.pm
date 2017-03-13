@@ -5,7 +5,7 @@ use warnings;
 use Config::Tiny;
 use base 'Exporter';
 
-our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_local_key);
+our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_local_key get_rsm_local_id);
 
 use constant RSM_SERVER_KEY_PREFIX => 'server_';
 use constant RSM_DEFAULT_CONFIG_FILE => '/opt/zabbix/scripts/rsm.conf';
@@ -62,6 +62,20 @@ sub get_rsm_local_key
 	die("Configuration error: no \"local\" server defined") unless ($config->{'_'}->{'local'});
 
 	return $config->{'_'}->{'local'};
+}
+
+sub get_rsm_local_id
+{
+	my $config = shift;
+
+	die("Internal error: no configuration passed to function get_rsm_local_key()") unless ($config);
+	die("Configuration error: no \"local\" server defined") unless ($config->{'_'}->{'local'});
+
+	my $id = $config->{'_'}->{'local'};
+
+	$id =~ s/^${\(RSM_SERVER_KEY_PREFIX)}//;
+
+	return $id;
 }
 
 1;

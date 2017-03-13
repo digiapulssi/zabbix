@@ -81,6 +81,8 @@ my ($ns_servers, $root_servers_macros);
 
 my ($main_templateid, $tld_groupid, $tld_type_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid, $proxy_mon_templateid);
 
+my $config = get_rsm_config();
+
 my %OPTS;
 my $rv = GetOptions(\%OPTS,
 		    "tld=s",
@@ -129,8 +131,6 @@ my $exp_timeout = 3;
 my $exp_command = '/opt/zabbix/bin/rsm_epp_enc';
 my $exp_output;
 
-my $config = get_rsm_config();
-
 pfail("SLV scripts path is not specified. Please check configuration file") unless defined $config->{'slv'}->{'path'};
 
 #### Creating cron objects ####
@@ -140,7 +140,15 @@ if (defined($OPTS{'setup-cron'})) {
     exit;
 }
 
-my $server_key = get_rsm_server_key($OPTS{'server-id'} ? $OPTS{'server-id'} : 1);
+my $server_key;
+if (defined($OPTS{'server-id'}))
+{
+	$server_key = get_rsm_server_key($OPTS{'server-id'});
+}
+else
+{
+	$server_key = get_rsm_local_key($config);
+}
 
 my $section = $config->{$server_key};
 
@@ -1173,6 +1181,8 @@ sub usage {
 
     my $cfg_default_rdds_ns_string = cfg_default_rdds_ns_string;
 
+    my $local_server_id = get_rsm_local_id($config);
+
     print <<EOF;
 
     Usage: $0 [options]
@@ -1243,7 +1253,7 @@ Other options
                 list of IPv4 and IPv6 root servers separated by comma and semicolon: "v4IP1[,v4IP2,...][;v6IP1[,v6IP2,...]]"
                 (default: taken from DNS)
         --server-id=STRING
-                ID of Zabbix server (default: 1)
+                ID of Zabbix server (default: $local_server_id)
         --rdds-test-prefix=STRING
 		domain test prefix for RDDS monitoring (needed only if rdds servers specified)
         --setup-cron
