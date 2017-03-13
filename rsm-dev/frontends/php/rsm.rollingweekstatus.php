@@ -161,6 +161,7 @@ foreach ($DB['SERVERS'] as $server) {
 
 	$tlds = [];
 	$whereCondition = [];
+	$itemIds = [];
 
 	// get "TLDs" groupId
 	$tldGroups = API::HostGroup()->get(array(
