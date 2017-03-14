@@ -25,6 +25,8 @@ $widget = (new CWidget())->setTitle(_('Tests'));
 $filter = (new CFilter('web.rsm.tests.filter.state'))
 	->addVar('filter_set', 1)
 	->addVar('host', $this->data['tld']['name'])
+	->addVar('type', $this->data['type'])
+	->addVar('slvItemId', $this->data['slvItemId'])
 	->addVar('filter_from', zbxDateToTime($data['filter_from']))
 	->addVar('filter_to', zbxDateToTime($data['filter_to']));
 $filterColumn1 = new CFormList();
