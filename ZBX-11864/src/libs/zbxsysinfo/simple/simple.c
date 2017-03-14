@@ -179,9 +179,11 @@ static int	check_https(const char *host, unsigned short port, int timeout, int *
 		goto clean;
 	}
 
+#ifdef HAVE_IPV6
 	if (SUCCEED == is_ip6(host))
 		zbx_snprintf(https_host, sizeof(https_host), "%s[%s]", (0 == strncmp(host, "https://", 8) ? "" : "https://"), host);
 	else
+#endif
 		zbx_snprintf(https_host, sizeof(https_host), "%s%s", (0 == strncmp(host, "https://", 8) ? "" : "https://"), host);
 
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_USERAGENT, "Zabbix " ZABBIX_VERSION)) ||
@@ -200,8 +202,8 @@ static int	check_https(const char *host, unsigned short port, int timeout, int *
 	if (CURLE_OK == (err = curl_easy_perform(easyhandle)))
 		*value_int = 1;
 	else
-		zabbix_log(LOG_LEVEL_DEBUG, "%s: curl_easy_perform failed for %s:%hu: %s",
-				__function_name, https_host, port, curl_easy_strerror(err));
+		zabbix_log(LOG_LEVEL_DEBUG, "%s: curl_easy_perform failed for [%s:%hu]: %s",
+				__function_name, host, port, curl_easy_strerror(err));
 clean:
 	curl_easy_cleanup(easyhandle);
 
