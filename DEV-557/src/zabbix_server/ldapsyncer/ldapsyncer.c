@@ -42,7 +42,8 @@ extern int		CONFIG_TIMEOUT;
  * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
-static int	zbx_ldap_connect(LDAP **ld, const char *uri, char **error)
+static int	zbx_ldap_connect(LDAP **ld, const char *uri, const char *bind_user, const char *bind_passwd,
+		char **error)
 {
 	int		res, opt_protocol_version = LDAP_VERSION3, opt_deref = LDAP_DEREF_NEVER;
 	struct timeval	tv;
@@ -117,6 +118,14 @@ static int	zbx_ldap_connect(LDAP **ld, const char *uri, char **error)
 		return FAIL;
 	}
 
+	/* simple bind with user/password */
+
+	if (LDAP_SUCCESS != (res= ldap_simple_bind_s(*ld, bind_user, bind_passwd)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_simple_bind_s() failed: %d %s", res, ldap_err2string(res));
+		return FAIL;
+	}
+
 	return SUCCEED;
 }
 
@@ -153,14 +162,16 @@ static int      zbx_synchronize_from_ldap(int *user_num)
 	char		*error = NULL;
 	int		res, ret = FAIL;
 
-	/* TODO: replace with uri from database. Here is a hardcoded value for proof of concept. */
+	/* TODO: replace hardcoded uri, bind_user, bind_passwd with values from database. */
 	/* TODO: consider supporting a list of URIs - ldap_initialize() in zbx_ldap_connect() can take a list of them */
 	/* TODO: consider supporting 'ldaps' (LDAP over TLS) protocol. */
 	const char	*uri = "ldap://127.0.0.1:389";
+	const char	*bind_user = "bind user name here";
+	const char	*bind_passwd = "bind password here";
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (SUCCEED != (res = zbx_ldap_connect(&ld, uri, &error)))
+	if (SUCCEED != (res = zbx_ldap_connect(&ld, uri, bind_user, bind_passwd, &error)))
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "%s() cannot connect to LDAP server: %s", __function_name, error);
 		goto out;
