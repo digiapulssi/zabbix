@@ -1331,7 +1331,7 @@ sub get_probe_times
 
 	if (!defined($result))
 	{
-		fail("Probe main status items (".PROBE_KEY_ONLINE.") have no values yet.");
+		wrn("Probe main status items (".PROBE_KEY_ONLINE.") have no values yet.");
 	}
 	else
 	{
