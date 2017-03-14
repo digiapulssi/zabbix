@@ -31,6 +31,7 @@
 
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
+extern int		CONFIG_TIMEOUT;
 
 /******************************************************************************
  *                                                                            *
@@ -43,7 +44,8 @@ extern int		server_num, process_num;
  ******************************************************************************/
 static int	zbx_ldap_connect(LDAP **ld, const char *uri, char **error)
 {
-	int	res;
+	int		res, opt_protocol_version = LDAP_VERSION3, opt_deref = LDAP_DEREF_NEVER;
+	struct timeval	tv;
 
 	/* initialize LDAP data struture (without opening a connection) */
 
@@ -54,7 +56,66 @@ static int	zbx_ldap_connect(LDAP **ld, const char *uri, char **error)
 		return FAIL;
 	}
 
-	/* TODO: set options ? */
+	/* TODO: (optionally) check LDAP_OPT_API_FEATURE_INFO, LDAP_OPT_API_INFO to detect library version mismatch */
+
+	/* set LDAP protocol v3 */
+
+	if (LDAP_OPT_SUCCESS != (res = ldap_set_option(*ld, LDAP_OPT_PROTOCOL_VERSION, &opt_protocol_version)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_set_option(,LDAP_OPT_PROTOCOL_VERSION,) failed: %d %s",
+				res, ldap_err2string(res));
+		return FAIL;
+	}
+
+	/* do not use asynchronous connect */
+
+	if (LDAP_OPT_SUCCESS != (res = ldap_set_option(*ld, LDAP_OPT_CONNECT_ASYNC, LDAP_OPT_OFF)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_set_option(,LDAP_OPT_CONNECT_ASYNC,) failed: %d %s",
+				res, ldap_err2string(res));
+		return FAIL;
+	}
+
+	/* TODO: (optionally) set LDAP_OPT_DEBUG_LEVEL for using with DebugLevel=5 */
+
+	/* do not dereference aliases (default) */
+
+	if (LDAP_OPT_SUCCESS != (res = ldap_set_option(*ld, LDAP_OPT_DEREF, &opt_deref)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_set_option(,LDAP_OPT_DEREF,) failed: %d %s",
+				res, ldap_err2string(res));
+		return FAIL;
+	}
+
+	/* set connection timeout */
+
+	tv.tv_sec = CONFIG_TIMEOUT;
+	tv.tv_usec = 0;
+
+	if (LDAP_OPT_SUCCESS != (res = ldap_set_option(*ld, LDAP_OPT_NETWORK_TIMEOUT, &tv)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_set_option(,LDAP_OPT_NETWORK_TIMEOUT,) failed: %d %s",
+				res, ldap_err2string(res));
+		return FAIL;
+	}
+
+	/* do not chase referrals */
+
+	if (LDAP_OPT_SUCCESS != (res = ldap_set_option(*ld, LDAP_OPT_REFERRALS, LDAP_OPT_OFF)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_set_option(,LDAP_OPT_REFERRALS,) failed: %d %s",
+				res, ldap_err2string(res));
+		return FAIL;
+	}
+
+	/* set timeout for synchronous API call. TODO: currently set CONFIG_TIMEOUT, maybe need to be changed */
+
+	if (LDAP_OPT_SUCCESS != (res = ldap_set_option(*ld, LDAP_OPT_TIMEOUT, &tv)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_set_option(,LDAP_OPT_TIMEOUT,) failed: %d %s",
+				res, ldap_err2string(res));
+		return FAIL;
+	}
 
 	return SUCCEED;
 }
