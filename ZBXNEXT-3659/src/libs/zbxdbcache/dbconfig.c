@@ -4090,6 +4090,38 @@ static void	DCdump_functions()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_trigdeps()
+{
+	const char			*__function_name = "DCdump_trigdeps";
+
+	const ZBX_DC_TRIGGER_DEPLIST	*trigdep;
+	zbx_hashset_iter_t		iter;
+	int				i;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->trigdeps, &iter);
+
+	while (NULL != (trigdep = (ZBX_DC_TRIGGER_DEPLIST *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  triggerid " ZBX_FS_UI64, trigdep->triggerid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  refcount %d",  trigdep->refcount);
+
+		for (i = 0; i < trigdep->dependencies.values_num; i++)
+		{
+			const ZBX_DC_TRIGGER_DEPLIST	*trigdep_up = trigdep->dependencies.values[i];
+
+			zabbix_log(LOG_LEVEL_TRACE, "    triggerid " ZBX_FS_UI64, trigdep_up->triggerid);
+			zabbix_log(LOG_LEVEL_TRACE, "    refcount %d",  trigdep_up->refcount);
+		}
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
@@ -4116,6 +4148,7 @@ static void	DCdump_configuration()
 	DCdump_calcitems();
 	DCdump_interface_snmpitems();
 	DCdump_functions();
+	DCdump_trigdeps();
 }
 
 /******************************************************************************
