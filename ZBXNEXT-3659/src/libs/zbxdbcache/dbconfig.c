@@ -2596,6 +2596,8 @@ static void	DCsync_triggers(zbx_dbsync_t *sync)
 	int			found, ret;
 	zbx_uint64_t		triggerid;
 
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
 	while (SUCCEED == (ret = zbx_dbsync_next(sync, &rowid, &row, &tag)))
 	{
 		/* removed rows will be always added at the end */
@@ -2672,6 +2674,7 @@ static void	DCsync_triggers(zbx_dbsync_t *sync)
 
 		zbx_vector_uint64_destroy(&functionids);
 	}
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
@@ -3664,6 +3667,31 @@ static void	DCdump_interfaces()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_trigger(const ZBX_DC_TRIGGER	*trigger)
+{
+	zabbix_log(LOG_LEVEL_TRACE, "    ====================");
+
+	zabbix_log(LOG_LEVEL_TRACE, "    triggerid " ZBX_FS_UI64, trigger->triggerid);
+
+	zabbix_log(LOG_LEVEL_TRACE, "    description '%s'", trigger->description);
+	zabbix_log(LOG_LEVEL_TRACE, "    expression '%s'", trigger->expression);
+
+	if (NULL != trigger->expression_ex)
+		zabbix_log(LOG_LEVEL_TRACE, "    expression_ex '%s'", trigger->expression_ex);
+	zabbix_log(LOG_LEVEL_TRACE, "    error '%s'", trigger->error);
+
+	zabbix_log(LOG_LEVEL_TRACE, "    lastchange %d", trigger->lastchange);
+
+	zabbix_log(LOG_LEVEL_TRACE, "    topoindex %u", trigger->topoindex);
+	zabbix_log(LOG_LEVEL_TRACE, "    priority %u", trigger->priority);
+	zabbix_log(LOG_LEVEL_TRACE, "    type %u", trigger->type);
+	zabbix_log(LOG_LEVEL_TRACE, "    value %u", trigger->value);
+	zabbix_log(LOG_LEVEL_TRACE, "    state %u", trigger->state);
+	zabbix_log(LOG_LEVEL_TRACE, "    locked %u", trigger->locked);
+	zabbix_log(LOG_LEVEL_TRACE, "    status %u", trigger->status);
+	zabbix_log(LOG_LEVEL_TRACE, "    functional %u", trigger->functional);
+}
+
 static void	DCdump_items()
 {
 	const char		*__function_name = "DCdump_items";
@@ -3711,30 +3739,9 @@ static void	DCdump_items()
 			ZBX_DC_TRIGGER	*trigger;
 
 			for (i = 0; NULL != (trigger = item->triggers[i]); i++)
-			{
-				zabbix_log(LOG_LEVEL_TRACE, "    ====================");
-
-				zabbix_log(LOG_LEVEL_TRACE, "    triggerid " ZBX_FS_UI64, trigger->triggerid);
-
-				zabbix_log(LOG_LEVEL_TRACE, "    description '%s'", trigger->description);
-				zabbix_log(LOG_LEVEL_TRACE, "    expression '%s'", trigger->expression);
-
-				if (NULL != trigger->expression_ex)
-					zabbix_log(LOG_LEVEL_TRACE, "    expression_ex '%s'", trigger->expression_ex);
-				zabbix_log(LOG_LEVEL_TRACE, "    error '%s'", trigger->error);
-
-				zabbix_log(LOG_LEVEL_TRACE, "    lastchange %d", trigger->lastchange);
-
-				zabbix_log(LOG_LEVEL_TRACE, "    topoindex %u", trigger->topoindex);
-				zabbix_log(LOG_LEVEL_TRACE, "    priority %u", trigger->priority);
-				zabbix_log(LOG_LEVEL_TRACE, "    type %u", trigger->type);
-				zabbix_log(LOG_LEVEL_TRACE, "    value %u", trigger->value);
-				zabbix_log(LOG_LEVEL_TRACE, "    state %u", trigger->state);
-				zabbix_log(LOG_LEVEL_TRACE, "    locked %u", trigger->locked);
-				zabbix_log(LOG_LEVEL_TRACE, "    status %u", trigger->status);
-				zabbix_log(LOG_LEVEL_TRACE, "    functional %u", trigger->functional);
-			}
+				DCdump_trigger(trigger);
 		}
+
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
 
@@ -4060,6 +4067,33 @@ static void	DCdump_interface_snmpitems()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_functions()
+{
+	const char		*__function_name = "DCdump_functions";
+
+	const ZBX_DC_FUNCTION	*function;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->functions, &iter);
+
+	while (NULL != (function = (ZBX_DC_FUNCTION *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  functionid " ZBX_FS_UI64, function->functionid);
+		zabbix_log(LOG_LEVEL_TRACE, "  triggerid " ZBX_FS_UI64, function->triggerid);
+		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, function->itemid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  function '%s'", function->function);
+		zabbix_log(LOG_LEVEL_TRACE, "  parameter '%s'", function->parameter);
+		zabbix_log(LOG_LEVEL_TRACE, "  authtype %u",  function->timer);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
@@ -4085,6 +4119,7 @@ static void	DCdump_configuration()
 	DCdump_jmxitems();
 	DCdump_calcitems();
 	DCdump_interface_snmpitems();
+	DCdump_functions();
 }
 
 /******************************************************************************
