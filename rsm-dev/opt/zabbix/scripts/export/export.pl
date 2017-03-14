@@ -293,7 +293,7 @@ sub __validate_input
 
 	if (opt('day'))
 	{
-		if (0 && !opt('dry-run'))
+		if (!opt('dry-run'))
 		{
 			print("Error: option --day can only be used together with --dry-run\n");
 			$error_found = 1;
@@ -307,7 +307,7 @@ sub __validate_input
 
 	if (opt('shift'))
 	{
-		if (0 && !opt('dry-run'))
+		if (!opt('dry-run'))
 		{
 			print("Error: option --shift can only be used together with --dry-run\n");
 			$error_found = 1;
