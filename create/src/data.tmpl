@@ -1503,3 +1503,45 @@ ROW   |22450           |22450 |8       |{#FSNAME}|@File systems for discovery   
 ROW   |23346           |23346 |8       |{#IFNAME}|@Network interfaces for discovery|
 ROW   |23347           |23347 |8       |{#FSNAME}|@File systems for discovery      |
 
+TABLE |rsm_ip_version
+FIELDS|id|name|
+ROW   |1 |IPv4|
+ROW   |2 |IPv6|
+
+TABLE |rsm_service_category
+FIELDS|id|name  |
+ROW   |1 |dns   |
+ROW   |2 |dnssec|
+ROW   |3 |rdds  |
+ROW   |4 |epp   |
+ROW   |5 |ns    |
+
+TABLE |rsm_status_map
+FIELDS|id|name     |
+ROW   |1 |Unknown  |
+ROW   |2 |Up       |
+ROW   |3 |Down     |
+ROW   |4 |No result|
+ROW   |5 |Online   |
+ROW   |6 |Offline  |
+
+TABLE |rsm_test_type
+FIELDS|id|name        |
+ROW   |1 |dns         |
+ROW   |2 |rdds43      |
+ROW   |3 |rdds80      |
+ROW   |4 |eppsession  |
+ROW   |5 |eppinfo     |
+ROW   |6 |epptransform|
+
+TABLE |rsm_tld_type
+FIELDS|id|name    |
+ROW   |1 |ccTLD   |
+ROW   |2 |gTLD    |
+ROW   |3 |testTLD |
+ROW   |4 |otherTLD|
+
+TABLE |rsm_transport_protocol
+FIELDS|id|name|
+ROW   |1 |udp |
+ROW   |2 |tcp |
