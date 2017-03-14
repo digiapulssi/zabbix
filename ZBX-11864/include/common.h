@@ -955,9 +955,7 @@ int	comms_parse_response(char *xml, char *host, size_t host_len, char *key, size
 int 	parse_command(const char *command, char *cmd, size_t cmd_max_len, char *param, size_t param_max_len);
 
 /* misc functions */
-#ifdef HAVE_IPV6
 int	is_ip6(const char *ip);
-#endif
 int	is_ip4(const char *ip);
 int	is_ip(const char *ip);
 
