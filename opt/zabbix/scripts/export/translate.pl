@@ -180,9 +180,8 @@ sub __translate_ns_tests_line
 	my $ns_test_tld = dw_get_name(ID_TLD, $columns[2]);
 	my $cycle_date_minute = $columns[3];
 	my $ns_test_status = dw_get_name(ID_STATUS_MAP, $columns[4]);
-	my $cycle_id = dw_translate_cycle_id($columns[5]);
-	my $tld_type = dw_get_name(ID_TLD_TYPE, $columns[6]);
-	my $ns_test_protocol = dw_get_name(ID_TRANSPORT_PROTOCOL, $columns[7]);
+	my $tld_type = dw_get_name(ID_TLD_TYPE, $columns[5]);
+	my $ns_test_protocol = dw_get_name(ID_TRANSPORT_PROTOCOL, $columns[6]);
 
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeName', $probe_name);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsFQDN', $ns_fqdn);
@@ -190,7 +189,6 @@ sub __translate_ns_tests_line
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s (%s)\n", 'nsTestStatus', $ns_test_status, $columns[2]);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'tldType', $tld_type);
-	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleID', $cycle_id);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testProtocol', $ns_test_protocol);
 }
 
