@@ -2726,17 +2726,9 @@ static void	DCsync_trigdeps(zbx_dbsync_t *sync)
 
 	int			found, index, ret;
 	zbx_uint64_t		triggerid_down, triggerid_up;
-	zbx_vector_ptr_t	dependencies;
-	zbx_vector_uint64_t	ids_down;
-	zbx_vector_uint64_t	ids_up;
 	ZBX_DC_TRIGGER		*trigger_up, *trigger_down;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
-	zbx_vector_ptr_create(&dependencies);
-
-	zbx_vector_uint64_create(&ids_down);
-	zbx_vector_uint64_create(&ids_up);
 
 	while (SUCCEED == (ret = zbx_dbsync_next(sync, &rowid, &row, &tag)))
 	{
