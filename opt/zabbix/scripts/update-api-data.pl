@@ -81,7 +81,8 @@ my $cfg_dns_delay = undef;
 my $cfg_dns_minns;
 my $cfg_dns_valuemaps;
 
-my $cfg_dns_statusmaps = get_statusmaps('dns');
+# todo phase 1: changed from get_statusmaps('dns')
+my $cfg_avail_valuemaps = get_avail_valuemaps();
 
 foreach my $service (keys(%services))
 {
@@ -530,8 +531,11 @@ foreach (keys(%$servicedata))
 				my $result;
 
 				$result->{'tld'} = $tld;
-				$result->{'status'} = get_result_string($cfg_dns_statusmaps, $value);
 				$result->{'clock'} = $clock;
+
+				# todo phase 1: make sure this uses avail valuemaps in phase1
+				# todo: later rewrite to use valuemap ID from item
+				$result->{'status'} = get_result_string($cfg_avail_valuemaps, $value);
 
 				# We have the test resulting value (Up or Down) at "clock". Now we need to select the
 				# time bounds (start/end) of all data points from all proxies.

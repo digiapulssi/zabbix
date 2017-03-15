@@ -53,8 +53,6 @@ else
 my $cfg_dns_delay = undef;
 my $cfg_dns_valuemaps;
 
-my $cfg_dns_statusmaps = get_statusmaps('dns');
-
 foreach my $service (keys(%services))
 {
 	if ($service eq 'dns' || $service eq 'dnssec')
