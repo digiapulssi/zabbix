@@ -21,6 +21,7 @@
 #include "db.h"
 #include "zbxdbupgrade.h"
 #include "dbupgrade.h"
+#include "log.h"
 
 /*
  * 3.0 maintenance database patches
@@ -33,6 +34,13 @@ static int	DBpatch_3000000(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000100(void)
+{
+	zabbix_log(LOG_LEVEL_CRIT, "There is no automatic database upgrade for Phase 1");
+
+	return FAIL;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -40,5 +48,6 @@ DBPATCH_START(3000)
 /* version, duplicates flag, mandatory flag */
 
 DBPATCH_ADD(3000000, 0, 1)
+DBPATCH_ADD(3000100, 0, 1)	/* Phase 1 */
 
 DBPATCH_END()
