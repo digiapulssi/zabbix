@@ -1464,7 +1464,7 @@ define('MONTHLY_REPORTS_EPP_LOGIN',			'rsm.slv.epp.rtt.login.month');
 define('MONTHLY_REPORTS_EPP_UPDATE',		'rsm.slv.epp.rtt.update.month');
 
 // SLA monitoring "rsm" host name
-define('RSM_HOST',	'rsm');
+define('RSM_HOST',	'Global macro history');
 
 // SLA monitoring TLDs group
 define('RSM_TLDS_GROUP',	'TLDs');

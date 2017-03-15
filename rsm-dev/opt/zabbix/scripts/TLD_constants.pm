@@ -79,9 +79,11 @@ use constant RSM_ROLLWEEK_THRESHOLDS => '0,5,10,25,50,75,100';
 
 use constant cfg_default_rdds_ns_string => 'Name Server:';
 
-use constant rsm_host => 'rsm'; # global config history
-use constant rsm_group => 'rsm';
+# todo phase 1: renamed host
+use constant rsm_host => 'Global macro history';
+use constant rsm_group => 'Global macro history';
 
+# todo phase 1:
 use constant rsm_value_mappings =>
 {
 	'rsm_dns_rtt' => 13,
