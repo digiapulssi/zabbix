@@ -30,11 +30,28 @@ foreach my $opt ($tld, $from, $till)
 	}
 }
 
+my $config = get_rsm_config();
+
+set_slv_config($config);
+
+my @server_keys = get_rsm_server_keys($config);
+foreach (@server_keys)
+{
+	$server_key = $_;
+
+	db_connect($server_key);
+
+	if (tld_exists(getopt('tld')) == 0)
+	{
+		db_disconnect();
+		fail("TLD ", getopt('tld'), " does not exist.") if ($server_keys[-1] eq $server_key);
+		next;
+	}
+
+	last;
+}
+
 my @probes;
-
-set_slv_config(get_rsm_config());
-
-db_connect();
 
 if ($probe)
 {
@@ -81,7 +98,7 @@ foreach my $probe (@probes)
 			my $value = $row_ref->[2];
 			my $key = $row_ref->[3];
 
-			printf("%s  %s  %-80s %s\n", ts_full($clock), $ns, $key, $value);
+			printf("%s  %-9s  %-80s %s\n", ts_full($clock), $ns, $key, $value);
 		}
 	}
 
@@ -122,7 +139,9 @@ foreach my $probe (@probes)
 
 		foreach my $r (sort {$a->[0] <=> $b->[0] || $a->[2] cmp $b->[2]} (@results))
 		{
-			printf("%s  %s  %-80s %s\n", ts_full($r->[0]), $r->[1], $r->[2], $r->[3]);
+			printf("%s  %-9s  %-80s %s\n", ts_full($r->[0]), $r->[1], $r->[2], $r->[3]);
 		}
 	}
 }
+
+db_disconnect();
