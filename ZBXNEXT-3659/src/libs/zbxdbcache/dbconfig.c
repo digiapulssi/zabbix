@@ -2287,7 +2287,7 @@ static void	DCsync_items(zbx_dbsync_t *sync, int refresh_unsupported_changed)
 		{
 			sshitem = DCfind_id(&config->sshitems, itemid, sizeof(ZBX_DC_SSHITEM), &found);
 
-			sshitem->authtype = (unsigned short)atoi(row[21]);
+			sshitem->authtype = (unsigned char)atoi(row[21]);
 			DCstrpool_replace(found, &sshitem->username, row[22]);
 			DCstrpool_replace(found, &sshitem->password, row[23]);
 			DCstrpool_replace(found, &sshitem->publickey, row[24]);
@@ -3292,7 +3292,6 @@ static void	dc_trigger_update_cache()
 	zbx_hashset_iter_reset(&config->functions, &iter);
 	while (NULL != (function = (ZBX_DC_FUNCTION *)zbx_hashset_iter_next(&iter)))
 	{
-
 		if (NULL == (item = zbx_hashset_search(&config->items, &function->itemid)) ||
 				NULL == (trigger = zbx_hashset_search(&config->triggers, &function->triggerid)))
 		{

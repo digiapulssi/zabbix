@@ -25,8 +25,6 @@
 #include "dbconfig.h"
 #include "dbsync.h"
 
-extern unsigned char	program_type;
-
 typedef struct
 {
 	zbx_hashset_t	strpool;
