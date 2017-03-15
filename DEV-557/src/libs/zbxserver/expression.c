@@ -2545,6 +2545,16 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 				(*data)[token.token.r + 1] = '\0';
 				break;
 			case ZBX_TOKEN_SIMPLE_MACRO:
+				if (0 == (macro_type & (MACRO_TYPE_MESSAGE_NORMAL | MACRO_TYPE_MESSAGE_RECOVERY)) ||
+						EVENT_SOURCE_TRIGGERS != ((NULL != r_event) ? r_event : event)->source)
+				{
+					pos++;
+					continue;
+				}
+				/* These macros (and probably all other in the future) must be resolved using only */
+				/* information stored in token.data union. For now, force crash if they rely on m. */
+				m = NULL;
+				break;
 			case ZBX_TOKEN_REFERENCE:
 				/* These macros (and probably all other in the future) must be resolved using only */
 				/* information stored in token.data union. For now, force crash if they rely on m. */
@@ -3975,7 +3985,7 @@ void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const z
 			if (FAIL != zbx_vector_uint64_bsearch(&itemids_sorted, functions[f].itemid,
 					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
 			{
-				func_pos[t].trigger->flags = ZBX_DC_TRIGGER_BASE_EXPRESSION;
+				func_pos->trigger->flags = ZBX_DC_TRIGGER_BASE_EXPRESSION;
 				break;
 			}
 		}
