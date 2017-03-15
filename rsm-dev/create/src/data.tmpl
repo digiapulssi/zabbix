@@ -97,16 +97,15 @@ ROW   |1          |10057 |1   |1   |1    |127.0.0.1|   |10050|1   |
 TABLE |valuemaps
 FIELDS|valuemapid|name                      |
 ROW   |1         |Service state             |
-ROW   |2         |Host status               |
 ROW   |10        |Zabbix agent ping status  |
-ROW   |13        |RSM DNS rtt               |
-ROW   |14        |RSM Probe status          |
-ROW   |15        |RSM RDDS rtt              |
-ROW   |16        |RSM Service Availability  |
-ROW   |18        |RSM RDDS result           |
-ROW   |19        |RSM EPP rtt               |
-ROW   |21        |RSM EPP result            |
-ROW   |22        |Value cache operating mode|
+ROW   |15        |Value cache operating mode|
+ROW   |100       |RSM Probe status          |
+ROW   |110       |RSM Service Availability  |
+ROW   |120       |RSM DNS rtt               |
+ROW   |130       |RSM RDDS rtt              |
+ROW   |140       |RSM RDDS result           |
+ROW   |150       |RSM EPP rtt               |
+ROW   |160       |RSM EPP result            |
 
 TABLE |items
 FIELDS|itemid|type|snmp_community|snmp_oid|hostid|name                                        |key_                                         |delay|history|trends|status|value_type|trapper_hosts|units   |multiplier|delta|snmpv3_securityname|snmpv3_securitylevel|snmpv3_authpassphrase|snmpv3_privpassphrase|formula|logtimefmt|templateid|valuemapid|delay_flex|params|ipmi_sensor|data_type|authtype|username|password|publickey|privatekey|flags|interfaceid|port|description                                                                                                                      |inventory_link|lifetime|snmpv3_authprotocol|snmpv3_privprotocol|snmpv3_contextname|evaltype|
@@ -191,7 +190,7 @@ ROW   |23387 |5   |              |        |10047 |Zabbix $4 $2 processes, in %  
 ROW   |23388 |5   |              |        |10047 |Zabbix value cache, % free                  |zabbix[vcache,buffer,pfree]                  |60   |7      |365   |0     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23389 |5   |              |        |10047 |Zabbix value cache hits                     |zabbix[vcache,cache,hits]                    |60   |7      |365   |0     |0         |             |vps     |0         |1    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23390 |5   |              |        |10047 |Zabbix value cache misses                   |zabbix[vcache,cache,misses]                  |60   |7      |365   |0     |0         |             |vps     |0         |1    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
-ROW   |23391 |5   |              |        |10047 |Zabbix value cache operating mode           |zabbix[vcache,cache,mode]                    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |22        |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
+ROW   |23391 |5   |              |        |10047 |Zabbix value cache operating mode           |zabbix[vcache,cache,mode]                    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |15        |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23392 |5   |              |        |10047 |Zabbix vmware cache, % free                 |zabbix[vmware,buffer,pfree]                  |60   |7      |365   |1     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23393 |5   |              |        |10047 |Zabbix history index cache, % free          |zabbix[wcache,index,pfree]                   |60   |7      |365   |0     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23401 |5   |              |        |10058 |Zabbix $4 $2 processes, in %                |zabbix[process,configuration syncer,avg,busy]|60   |7      |365   |0     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
@@ -287,7 +286,7 @@ ROW   |23394 |5   |              |        |10057 |Zabbix $4 $2 processes, in %  
 ROW   |23395 |5   |              |        |10057 |Zabbix value cache, % free                  |zabbix[vcache,buffer,pfree]                  |60   |7      |365   |0     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23388     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23396 |5   |              |        |10057 |Zabbix value cache hits                     |zabbix[vcache,cache,hits]                    |60   |7      |365   |0     |0         |             |vps     |0         |1    |                   |0                   |                     |                     |1      |          |23389     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23397 |5   |              |        |10057 |Zabbix value cache misses                   |zabbix[vcache,cache,misses]                  |60   |7      |365   |0     |0         |             |vps     |0         |1    |                   |0                   |                     |                     |1      |          |23390     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
-ROW   |23398 |5   |              |        |10057 |Zabbix value cache operating mode           |zabbix[vcache,cache,mode]                    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |23391     |22        |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
+ROW   |23398 |5   |              |        |10057 |Zabbix value cache operating mode           |zabbix[vcache,cache,mode]                    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |23391     |15        |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23399 |5   |              |        |10057 |Zabbix vmware cache, % free                 |zabbix[vmware,buffer,pfree]                  |60   |7      |365   |1     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23392     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23400 |5   |              |        |10057 |Zabbix history index cache, % free          |zabbix[wcache,index,pfree]                   |60   |7      |365   |0     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23393     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 
@@ -1020,55 +1019,49 @@ TABLE |mappings
 FIELDS|mappingid|valuemapid|value|newvalue                                                                                                        |
 ROW   |1        |1         |0    |Down                                                                                                            |
 ROW   |2        |1         |1    |Up                                                                                                              |
-ROW   |3        |2         |0    |Up                                                                                                              |
-ROW   |4        |2         |2    |Unreachable                                                                                                     |
 ROW   |68       |10        |1    |Up                                                                                                              |
-ROW   |74       |13        |-1   |Internal error                                                                                                  |
-ROW   |75       |13        |-205 |No reply from resolver                                                                                          |
-ROW   |76       |13        |-206 |No AD bit in the answer from resolver                                                                           |
-ROW   |78       |13        |-200 |No reply from Name Server                                                                                       |
-ROW   |79       |13        |-201 |Invalid reply from Name Server                                                                                  |
-ROW   |80       |13        |-202 |No UNIX timestamp                                                                                               |
-ROW   |81       |13        |-203 |Invalid UNIX timestamp                                                                                          |
-ROW   |82       |13        |-204 |DNSSEC error                                                                                                    |
-ROW   |83       |14        |1    |Online                                                                                                          |
-ROW   |84       |14        |0    |Offline                                                                                                         |
-ROW   |85       |15        |-1   |Internal error                                                                                                  |
-ROW   |86       |15        |-200 |No reply from RDDS43 server                                                                                     |
-ROW   |87       |15        |-201 |Whois server returned no NS                                                                                     |
-ROW   |88       |15        |-202 |No Unix timestamp                                                                                               |
-ROW   |89       |15        |-203 |Invalid Unix timestamp                                                                                          |
-ROW   |90       |15        |-204 |No reply from RDDS80 server                                                                                     |
-ROW   |91       |15        |-205 |Cannot resolve a Whois host name                                                                                |
-ROW   |92       |15        |-206 |no HTTP status code                                                                                             |
-ROW   |93       |15        |-207 |invalid HTTP status code                                                                                        |
-ROW   |94       |16        |0    |Down                                                                                                            |
-ROW   |95       |16        |1    |Up                                                                                                              |
-ROW   |96       |18        |0    |Down                                                                                                            |
-ROW   |97       |18        |1    |Up                                                                                                              |
-ROW   |98       |18        |2    |RDDS43 only                                                                                                     |
-ROW   |99       |18        |3    |RDDS80 only                                                                                                     |
-ROW   |100      |19        |-200 |IP is missing for EPP server                                                                                    |
-ROW   |101      |19        |-201 |Cannot connect to EPP server                                                                                    |
-ROW   |102      |19        |-202 |Invalid certificate or private key                                                                              |
-ROW   |103      |19        |-203 |First message timeout                                                                                           |
-ROW   |104      |19        |-204 |First message is invalid                                                                                        |
-ROW   |105      |19        |-205 |LOGIN command timeout                                                                                           |
-ROW   |106      |19        |-206 |Invalid reply to LOGIN command                                                                                  |
-ROW   |107      |19        |-207 |UPDATE command timeout                                                                                          |
-ROW   |108      |19        |-208 |Invalid reply to UPDATE command                                                                                 |
-ROW   |109      |19        |-209 |INFO command timeout                                                                                            |
-ROW   |110      |19        |-210 |Invalid reply to INFO command                                                                                   |
-ROW   |111      |19        |-1   |Internal error                                                                                                  |
-ROW   |112      |19        |-211 |Server certificate validation failed                                                                            |
-ROW   |270      |18        |4    |RDAP only                                                                                                       |
-ROW   |271      |18        |5    |RDDS43 is missing                                                                                               |
-ROW   |272      |18        |6    |RDDS80 is missing                                                                                               |
-ROW   |273      |18        |7    |RDAP is missing                                                                                                 |
-ROW   |282      |21        |0    |Down                                                                                                            |
-ROW   |283      |21        |1    |Up                                                                                                              |
-ROW   |502      |22        |0    |Normal                                                                                                          |
-ROW   |503      |22        |1    |Low memory                                                                                                      |
+ROW   |82       |15        |0    |Normal                                                                                                          |
+ROW   |83       |15        |1    |Low memory                                                                                                      |
+ROW   |10000    |100       |1    |Online                                                                                                          |
+ROW   |10001    |100       |0    |Offline                                                                                                         |
+ROW   |11000    |110       |0    |Down                                                                                                            |
+ROW   |11001    |110       |1    |Up                                                                                                              |
+ROW   |12000    |120       |-1   |Internal error                                                                                                  |
+ROW   |12001    |120       |-205 |No reply from resolver                                                                                          |
+ROW   |12002    |120       |-206 |No AD bit in the answer from resolver                                                                           |
+ROW   |12003    |120       |-200 |No reply from Name Server                                                                                       |
+ROW   |12004    |120       |-201 |Invalid reply from Name Server                                                                                  |
+ROW   |12005    |120       |-202 |No UNIX timestamp                                                                                               |
+ROW   |12006    |120       |-203 |Invalid UNIX timestamp                                                                                          |
+ROW   |12007    |120       |-204 |DNSSEC error                                                                                                    |
+ROW   |13000    |130       |-1   |Internal error                                                                                                  |
+ROW   |13001    |130       |-200 |No reply from RDDS43 server                                                                                     |
+ROW   |13002    |130       |-201 |Whois server returned no NS                                                                                     |
+ROW   |13003    |130       |-202 |No Unix timestamp                                                                                               |
+ROW   |13004    |130       |-203 |Invalid Unix timestamp                                                                                          |
+ROW   |13005    |130       |-204 |No reply from RDDS80 server                                                                                     |
+ROW   |13006    |130       |-205 |Cannot resolve a Whois host name                                                                                |
+ROW   |13007    |130       |-206 |no HTTP status code                                                                                             |
+ROW   |13008    |130       |-207 |invalid HTTP status code                                                                                        |
+ROW   |14000    |140       |0    |Down                                                                                                            |
+ROW   |14001    |140       |1    |Up                                                                                                              |
+ROW   |14002    |140       |2    |RDDS43 only                                                                                                     |
+ROW   |14003    |140       |3    |RDDS80 only                                                                                                     |
+ROW   |15000    |150       |-200 |IP is missing for EPP server                                                                                    |
+ROW   |15001    |150       |-201 |Cannot connect to EPP server                                                                                    |
+ROW   |15002    |150       |-202 |Invalid certificate or private key                                                                              |
+ROW   |15003    |150       |-203 |First message timeout                                                                                           |
+ROW   |15004    |150       |-204 |First message is invalid                                                                                        |
+ROW   |15005    |150       |-205 |LOGIN command timeout                                                                                           |
+ROW   |15006    |150       |-206 |Invalid reply to LOGIN command                                                                                  |
+ROW   |15007    |150       |-207 |UPDATE command timeout                                                                                          |
+ROW   |15008    |150       |-208 |Invalid reply to UPDATE command                                                                                 |
+ROW   |15009    |150       |-209 |INFO command timeout                                                                                            |
+ROW   |15010    |150       |-210 |Invalid reply to INFO command                                                                                   |
+ROW   |15011    |150       |-1   |Internal error                                                                                                  |
+ROW   |15012    |150       |-211 |Server certificate validation failed                                                                            |
+ROW   |16000    |160       |0    |Down                                                                                                            |
+ROW   |16001    |160       |1    |Up                                                                                                              |
 
 TABLE |regexps
 FIELDS|regexpid|name                              |test_string|
