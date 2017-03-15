@@ -204,10 +204,12 @@ sub __csv_file_full_path
 	my $id_type = shift;
 
 	die("File '$id_type' is unknown") unless ($DATAFILES{$id_type});
-	die("Internal error: export date or TLD is unknown") unless ($_year && $_month && $_day && $tld);
+	die("Internal error: export date is unknown") unless ($_year && $_month && $_day);
 
-	my $path = CSV_FILES_DIR . '/' . $_year . '/' . $_month . '/' . $_day . '/' . $tld  . '/';
+	my $path = CSV_FILES_DIR . '/' . $_year . '/' . $_month . '/' . $_day . '/';
 
+	$path .= $tld  . '/' if ($tld);
+	
 	if (!__make_path($path))
 	{
 		die(dw_error());
