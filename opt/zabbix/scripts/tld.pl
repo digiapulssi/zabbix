@@ -271,29 +271,6 @@ foreach my $macro (keys %{$cfg_global_macros}) {
     pfail('cannot get global macro ', $macro) unless defined($cfg_global_macros->{$macro});
 }
 
-
-# RSM host is required to have history of global configuration changes #
-# There are monitored changes of global macros #
-
-$rsm_groupid = create_group(rsm_group);
-
-if (defined($rsm_groupid)) {
-    $rsm_hostid = create_host({'groups' => [{'groupid' => $rsm_groupid}],
-			      'host' => rsm_host,
-			      'interfaces' => [{'type' => INTERFACE_TYPE_AGENT, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
-
-    if (defined($rsm_hostid)) {
-        # calculated items, configuration history (TODO: rename host to something like config_history)
-	create_rsm_items($rsm_hostid);
-    }
-    else {
-	print "Could not create/update '".rsm_host."' host. Items are not created/updated.\n";
-    }
-}
-else {
-    print "Could not create/update '".rsm_group."' host group. RSM host is not created/updated.\n";
-}
-
 $ns_servers = get_ns_servers($OPTS{'tld'});
 
 pfail("Could not retrive NS servers for '".$OPTS{'tld'}."' TLD") unless (scalar(keys %{$ns_servers}));
@@ -1122,58 +1099,6 @@ sub create_slv_items {
 
 # calculated items, configuration history (TODO: rename host to something like config_history)
 sub create_rsm_items {
-    my $hostid = shift;
-
-    my $options;
-    my $appid = get_application_id('Configuration', $hostid);
-
-    my $macros = {
-		&TIME_MINUTE => [
-			'RSM.INCIDENT.DNS.FAIL',
-    			'RSM.INCIDENT.DNS.RECOVER',
-		        'RSM.INCIDENT.DNSSEC.FAIL',
-		        'RSM.INCIDENT.DNSSEC.RECOVER',
-		        'RSM.INCIDENT.RDDS.FAIL',
-		        'RSM.INCIDENT.RDDS.RECOVER',
-		        'RSM.INCIDENT.EPP.FAIL',
-		        'RSM.INCIDENT.EPP.RECOVER',
-		        'RSM.DNS.UDP.DELAY',
-		        'RSM.RDDS.DELAY',
-		        'RSM.EPP.DELAY',
-		        'RSM.DNS.UDP.RTT.HIGH',
-		        'RSM.DNS.AVAIL.MINNS',
-		        'RSM.DNS.ROLLWEEK.SLA',
-		        'RSM.RDDS.ROLLWEEK.SLA',
-		        'RSM.EPP.ROLLWEEK.SLA'
-		],
-		&TIME_DAY => [
-			'RSM.SLV.DNS.UDP.RTT',
-		        'RSM.SLV.DNS.TCP.RTT',
-		        'RSM.SLV.NS.AVAIL',
-		        'RSM.SLV.RDDS43.RTT',
-		        'RSM.SLV.RDDS80.RTT',
-		        'RSM.SLV.RDDS.UPD',
-		        'RSM.SLV.DNS.NS.UPD',
-		        'RSM.SLV.EPP.LOGIN',
-		        'RSM.SLV.EPP.UPDATE',
-		        'RSM.SLV.EPP.INFO'
-		]};
-
-    foreach my $delay (keys %{$macros}) {
-	foreach my $macro (@{$macros->{$delay}}) {
-	    $options = {'name' => '$1 value',
-                   'key_'=> 'rsm.configvalue['.$macro.']',
-                   'hostid' => $hostid,
-                   'applications' => [$appid],
-                   'params' => '{$'.$macro.'}',
-                   'delay' => $delay,
-                   'type' => ITEM_TYPE_CALCULATED, 'value_type' => ITEM_VALUE_TYPE_UINT64};
-
-    	    my $itemid = create_item($options);
-
-	    pfail($itemid->{'data'}) if check_api_error($itemid) eq true;
-	}
-    }
 }
 
 sub usage {
