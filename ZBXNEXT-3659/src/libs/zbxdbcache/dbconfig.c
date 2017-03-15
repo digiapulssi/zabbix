@@ -4085,7 +4085,7 @@ static void	DCdump_functions()
 
 		zabbix_log(LOG_LEVEL_TRACE, "  function '%s'", function->function);
 		zabbix_log(LOG_LEVEL_TRACE, "  parameter '%s'", function->parameter);
-		zabbix_log(LOG_LEVEL_TRACE, "  authtype %u",  function->timer);
+		zabbix_log(LOG_LEVEL_TRACE, "  timer %u",  function->timer);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -4125,6 +4125,71 @@ static void	DCdump_trigdeps()
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
 
+static void	DCdump_expressions()
+{
+	const char		*__function_name = "DCdump_expressions";
+
+	const ZBX_DC_EXPRESSION	*expression;
+	zbx_hashset_iter_t	iter;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->expressions, &iter);
+
+	while (NULL != (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  expressionid " ZBX_FS_UI64, expression->expressionid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  expression '%s'", expression->expression);
+		zabbix_log(LOG_LEVEL_TRACE, "  regexp '%s'", expression->regexp);
+		zabbix_log(LOG_LEVEL_TRACE, "  delimiter %d",  expression->delimiter);
+		zabbix_log(LOG_LEVEL_TRACE, "  type %u", expression->type);
+		zabbix_log(LOG_LEVEL_TRACE, "  case_sensitive %u",  expression->case_sensitive);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_actions()
+{
+	const char		*__function_name = "DCdump_actions";
+
+	const zbx_dc_action_t	*action;
+	zbx_hashset_iter_t	iter;
+	int			i;
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zbx_hashset_iter_reset(&config->actions, &iter);
+
+	while (NULL != (action = (zbx_dc_action_t *)zbx_hashset_iter_next(&iter)))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "  actionid " ZBX_FS_UI64, action->actionid);
+
+		zabbix_log(LOG_LEVEL_TRACE, "  formula '%s'", action->formula);
+		zabbix_log(LOG_LEVEL_TRACE, "  eventsource %u",  action->eventsource);
+		zabbix_log(LOG_LEVEL_TRACE, "  evaltype %u",  action->evaltype);
+
+		for (i = 0; i < action->conditions.values_num; i++)
+		{
+			zbx_dc_action_condition_t	*condition = action->conditions.values[i];
+
+			zabbix_log(LOG_LEVEL_TRACE, "    conditionid " ZBX_FS_UI64, condition->conditionid);
+
+			zabbix_log(LOG_LEVEL_TRACE, "    conditiontype %u",  condition->conditiontype);
+			zabbix_log(LOG_LEVEL_TRACE, "    operator %u",  condition->operator);
+			zabbix_log(LOG_LEVEL_TRACE, "    value '%s'", condition->value);
+			zabbix_log(LOG_LEVEL_TRACE, "    ====================");
+		}
+
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_configuration()
 {
 	DCdump_config();
@@ -4150,8 +4215,10 @@ static void	DCdump_configuration()
 	DCdump_jmxitems();
 	DCdump_calcitems();
 	DCdump_interface_snmpitems();
-	DCdump_functions();
 	DCdump_trigdeps();
+	DCdump_functions();
+	DCdump_expressions();
+	DCdump_actions();
 }
 
 /******************************************************************************
