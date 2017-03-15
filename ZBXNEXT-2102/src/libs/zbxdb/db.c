@@ -35,7 +35,6 @@
 #	include <sqlite3.h>
 #endif
 
-#include "db.h"
 #include "dbschema.h"
 #include "log.h"
 #if defined(HAVE_SQLITE3)
@@ -111,18 +110,11 @@ zbx_oracle_db_handle_t;
 
 static zbx_oracle_db_handle_t	oracle;
 
-/* 64-bit integer binding is supported only starting with Oracle 11.2 */
-/* so for compatibility reasons we must convert 64-bit values to      */
-/* Oracle numbers before binding.                                     */
-static OCINumber	**oci_ids = NULL;
-static int		oci_ids_alloc = 0;
-static int		oci_ids_num = 0;
-
 static ub4	OCI_DBserver_status();
 
 #elif defined(HAVE_POSTGRESQL)
 static PGconn			*conn = NULL;
-static int			ZBX_PG_BYTEAOID = 0;
+static unsigned int		ZBX_PG_BYTEAOID = 0;
 static int			ZBX_PG_SVERSION = 0;
 char				ZBX_PG_ESCAPE_BACKSLASH = 1;
 #elif defined(HAVE_SQLITE3)
@@ -381,7 +373,7 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	{
 		char	*dbschema_esc;
 
-		dbschema_esc = DBdyn_escape_string(dbschema);
+		dbschema_esc = zbx_db_dyn_escape_string(dbschema, ZBX_SIZE_T_MAX, ZBX_SIZE_T_MAX, ESCAPE_SEQUENCE_ON);
 		if (0 < (ret = zbx_db_execute("set current schema='%s'", dbschema_esc)))
 			ret = ZBX_DB_OK;
 		zbx_free(dbschema_esc);
@@ -553,7 +545,7 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	{
 		char	*dbschema_esc;
 
-		dbschema_esc = zbx_db_dyn_escape_string(dbschema);
+		dbschema_esc = zbx_db_dyn_escape_string(dbschema, ZBX_SIZE_T_MAX, ZBX_SIZE_T_MAX, ESCAPE_SEQUENCE_ON);
 		if (ZBX_DB_DOWN == (rc = zbx_db_execute("set schema '%s'", dbschema_esc)) || ZBX_DB_FAIL == rc)
 			ret = rc;
 		zbx_free(dbschema_esc);
@@ -808,11 +800,19 @@ int	zbx_db_begin(void)
 		rc = ZBX_DB_DOWN;
 	}
 
+	if (ZBX_DB_OK == rc)
+	{
+		/* create savepoint for correct rollback on DB2 */
+		if (0 <= (rc = zbx_db_execute("savepoint zbx_begin_savepoint unique on rollback retain cursors;")))
+			rc = ZBX_DB_OK;
+	}
+
 	if (ZBX_DB_OK != rc)
 	{
 		zbx_ibm_db2_log_errors(SQL_HANDLE_DBC, ibm_db2.hdbc, ERR_Z3005, "<begin>");
 		rc = (SQL_CD_TRUE == IBM_DB2server_status() ? ZBX_DB_FAIL : ZBX_DB_DOWN);
 	}
+
 #elif defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
 	rc = zbx_db_execute("%s", "begin;");
 #elif defined(HAVE_SQLITE3)
@@ -860,7 +860,6 @@ int	zbx_db_commit(void)
 	{
 		rc = ZBX_DB_DOWN;
 	}
-
 	if (ZBX_DB_OK != rc)
 	{
 		zbx_ibm_db2_log_errors(SQL_HANDLE_DBC, ibm_db2.hdbc, ERR_Z3005, "<commit>");
@@ -919,8 +918,11 @@ int	zbx_db_rollback(void)
 	txn_error = 0;
 
 #if defined(HAVE_IBM_DB2)
-	if (SUCCEED != zbx_ibm_db2_success(SQLEndTran(SQL_HANDLE_DBC, ibm_db2.hdbc, SQL_ROLLBACK)))
-		rc = ZBX_DB_DOWN;
+
+	/* Rollback to begin that is marked with savepoint. This move undo all transactions. */
+	if (0 <= (rc = zbx_db_execute("rollback to savepoint zbx_begin_savepoint;")))
+		rc = ZBX_DB_OK;
+
 	if (SUCCEED != zbx_ibm_db2_success(SQLSetConnectAttr(ibm_db2.hdbc, SQL_ATTR_AUTOCOMMIT,
 			(SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_NTS)))
 	{
@@ -967,28 +969,17 @@ static sword	zbx_oracle_statement_prepare(const char *sql)
 			(ub4)OCI_DEFAULT);
 }
 
-static sword	zbx_oracle_bind_parameter(ub4 position, void *buffer, sb4 buffer_sz, ub2 dty)
-{
-	OCIBind	*bindhp = NULL;
-	sb2	is_null = -1;
-
-	return OCIBindByPos(oracle.stmthp, &bindhp, oracle.errhp, position, buffer, buffer_sz, dty,
-			(dvoid *)(NULL == buffer ? &is_null : 0), 0, 0, 0, 0, (ub4)OCI_DEFAULT);
-}
-
-static sword	zbx_oracle_statement_execute(ub4 *nrows)
+static sword	zbx_oracle_statement_execute(ub4 iters, ub4 *nrows)
 {
 	sword	err;
 
-	if (OCI_SUCCESS == (err = OCIStmtExecute(oracle.svchp, oracle.stmthp, oracle.errhp, (ub4)1, (ub4)0,
+	if (OCI_SUCCESS == (err = OCIStmtExecute(oracle.svchp, oracle.stmthp, oracle.errhp, iters, (ub4)0,
 			(CONST OCISnapshot *)NULL, (OCISnapshot *)NULL,
 			0 == txn_level ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT)))
 	{
 		err = OCIAttrGet((void *)oracle.stmthp, OCI_HTYPE_STMT, nrows, (ub4 *)0, OCI_ATTR_ROW_COUNT,
 				oracle.errhp);
 	}
-
-	oci_ids_num = 0;
 
 	return err;
 }
@@ -1009,8 +1000,6 @@ int	zbx_db_statement_prepare(const char *sql)
 		return ZBX_DB_FAIL;
 	}
 
-	oci_ids_num = 0;
-
 	zabbix_log(LOG_LEVEL_DEBUG, "query [txnlev:%d] [%s]", txn_level, sql);
 
 	if (OCI_SUCCESS != (err = zbx_oracle_statement_prepare(sql)))
@@ -1025,73 +1014,182 @@ int	zbx_db_statement_prepare(const char *sql)
 	return ret;
 }
 
-int	zbx_db_bind_parameter(int position, void *buffer, unsigned char type)
+/******************************************************************************
+ *                                                                            *
+ * Function: db_bind_dynamic_cb                                               *
+ *                                                                            *
+ * Purpose: callback function used by dynamic parameter binding               *
+ *                                                                            *
+ ******************************************************************************/
+static sb4 db_bind_dynamic_cb(dvoid *ctxp, OCIBind *bindp, ub4 iter, ub4 index, dvoid **bufpp, ub4 *alenp, ub1 *piecep,
+		dvoid **indpp)
 {
-	sword	err;
-	int	ret = ZBX_DB_OK, old_alloc, i;
+	zbx_db_bind_context_t	*context = (zbx_db_bind_context_t *)ctxp;
 
-	if (1 == txn_error)
+	switch (context->type)
 	{
-		zabbix_log(LOG_LEVEL_DEBUG, "ignoring query [txnlev:%d] within failed transaction", txn_level);
-		return ZBX_DB_FAIL;
-	}
-
-	switch (type)
-	{
-		case ZBX_TYPE_ID:
-			if (0 == *(zbx_uint64_t *)buffer)
+		case ZBX_TYPE_ID: /* handle 0 -> NULL conversion */
+			if (0 == context->rows[iter][context->position].ui64)
 			{
-				err = zbx_oracle_bind_parameter((ub4)position, NULL, 0, SQLT_VNU);
+				*bufpp = NULL;
+				*alenp = 0;
 				break;
 			}
 			/* break; is not missing here */
 		case ZBX_TYPE_UINT:
-			if (oci_ids_num >= oci_ids_alloc)
-			{
-				old_alloc = oci_ids_alloc;
-				oci_ids_alloc = (0 == oci_ids_alloc ? 8 : oci_ids_alloc * 3 / 2);
-				oci_ids = zbx_realloc(oci_ids, oci_ids_alloc * sizeof(OCINumber *));
-
-				for (i = old_alloc; i < oci_ids_alloc; i++)
-					oci_ids[i] = zbx_malloc(NULL, sizeof(OCINumber));
-			}
-
-			if (OCI_SUCCESS == (err = OCINumberFromInt(oracle.errhp, buffer, sizeof(zbx_uint64_t),
-					OCI_NUMBER_UNSIGNED, oci_ids[oci_ids_num])))
-			{
-				err = zbx_oracle_bind_parameter((ub4)position, oci_ids[oci_ids_num++],
-						(sb4)sizeof(OCINumber), SQLT_VNU);
-			}
+			*bufpp = &((OCINumber *)context->data)[iter];
+			*alenp = sizeof(OCINumber);
 			break;
 		case ZBX_TYPE_INT:
-			err = zbx_oracle_bind_parameter((ub4)position, buffer, (sb4)sizeof(int), SQLT_INT);
+			*bufpp = &context->rows[iter][context->position].i32;
+			*alenp = sizeof(int);
 			break;
 		case ZBX_TYPE_FLOAT:
-			err = zbx_oracle_bind_parameter((ub4)position, buffer, (sb4)sizeof(double), SQLT_FLT);
+			*bufpp = &context->rows[iter][context->position].dbl;
+			*alenp = sizeof(double);
 			break;
 		case ZBX_TYPE_CHAR:
 		case ZBX_TYPE_TEXT:
 		case ZBX_TYPE_SHORTTEXT:
 		case ZBX_TYPE_LONGTEXT:
-			err = zbx_oracle_bind_parameter((ub4)position, buffer, (sb4)strlen((char *)buffer), SQLT_LNG);
+			*bufpp = context->rows[iter][context->position].str;
+			*alenp = ((size_t *)context->data)[iter];
 			break;
 		default:
-			err = OCI_SUCCESS;
+			return FAIL;
 	}
+
+	*indpp = NULL;
+	*piecep = OCI_ONE_PIECE;
+
+	return OCI_CONTINUE;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_db_bind_parameter_dyn                                        *
+ *                                                                            *
+ * Purpose: performs dynamic parameter binding, converting value if necessary *
+ *                                                                            *
+ * Parameters: context  - [OUT] the bind context                              *
+ *             position - [IN] the parameter position                         *
+ *             type     - [IN] the parameter type (ZBX_TYPE_* )               *
+ *             rows     - [IN] the data to bind - array of rows,              *
+ *                             each row being an array of columns             *
+ *             rows_num - [IN] the number of rows in the data                 *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_db_bind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsigned char type,
+		zbx_db_value_t **rows, int rows_num)
+{
+	int		i, ret = ZBX_DB_OK;
+	size_t		*sizes;
+	sword		err;
+	OCINumber	*values;
+	ub2		data_type;
+	OCIBind		*bindhp = NULL;
+
+	context->position = position;
+	context->rows = rows;
+	context->data = NULL;
+	context->type = type;
+
+	switch (type)
+	{
+		case ZBX_TYPE_ID:
+		case ZBX_TYPE_UINT:
+			values = (OCINumber *)zbx_malloc(NULL, sizeof(OCINumber) * rows_num);
+
+			for (i = 0; i < rows_num; i++)
+			{
+				err = OCINumberFromInt(oracle.errhp, &rows[i][position].ui64, sizeof(zbx_uint64_t),
+						OCI_NUMBER_UNSIGNED, &values[i]);
+
+				if (OCI_SUCCESS != err)
+				{
+					ret = OCI_handle_sql_error(ERR_Z3007, err, NULL);
+					goto out;
+				}
+			}
+
+			context->data = (OCINumber *)values;
+			context->size_max = sizeof(OCINumber);
+			data_type = SQLT_VNU;
+			break;
+		case ZBX_TYPE_INT:
+			context->size_max = sizeof(int);
+			data_type = SQLT_INT;
+			break;
+		case ZBX_TYPE_FLOAT:
+			context->size_max = sizeof(double);
+			data_type = SQLT_FLT;
+			break;
+		case ZBX_TYPE_CHAR:
+		case ZBX_TYPE_TEXT:
+		case ZBX_TYPE_SHORTTEXT:
+		case ZBX_TYPE_LONGTEXT:
+			sizes = (size_t *)zbx_malloc(NULL, sizeof(size_t) * rows_num);
+			context->size_max = 0;
+
+			for (i = 0; i < rows_num; i++)
+			{
+				sizes[i] = strlen(rows[i][position].str);
+
+				if (sizes[i] > context->size_max)
+					context->size_max = sizes[i];
+			}
+
+			context->data = sizes;
+			data_type = SQLT_LNG;
+			break;
+		default:
+			THIS_SHOULD_NEVER_HAPPEN;
+			exit(EXIT_FAILURE);
+	}
+
+	err = OCIBindByPos(oracle.stmthp, &bindhp, oracle.errhp, context->position + 1, NULL, context->size_max,
+			data_type, NULL, NULL, NULL, 0, NULL, (ub4)OCI_DATA_AT_EXEC);
 
 	if (OCI_SUCCESS != err)
+	{
 		ret = OCI_handle_sql_error(ERR_Z3007, err, NULL);
 
-	if (ZBX_DB_FAIL == ret && 0 < txn_level)
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "query failed, setting transaction as failed");
-		txn_error = 1;
+		if (ZBX_DB_FAIL == ret && 0 < txn_level)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "query failed, setting transaction as failed");
+			txn_error = 1;
+		}
+
+		goto out;
 	}
+
+	err = OCIBindDynamic(bindhp, oracle.errhp, (dvoid *)context, db_bind_dynamic_cb, NULL, NULL);
+
+	if (OCI_SUCCESS != err)
+	{
+		ret = OCI_handle_sql_error(ERR_Z3007, err, NULL);
+
+		if (ZBX_DB_FAIL == ret && 0 < txn_level)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "query failed, setting transaction as failed");
+			txn_error = 1;
+		}
+
+		goto out;
+	}
+out:
+	if (ret != ZBX_DB_OK)
+		zbx_db_clean_bind_context(context);
 
 	return ret;
 }
 
-int	zbx_db_statement_execute()
+void	zbx_db_clean_bind_context(zbx_db_bind_context_t *context)
+{
+	zbx_free(context->data);
+}
+
+int	zbx_db_statement_execute(int iters)
 {
 	const char	*__function_name = "zbx_db_statement_execute";
 
@@ -1106,7 +1204,7 @@ int	zbx_db_statement_execute()
 		goto out;
 	}
 
-	if (OCI_SUCCESS != (err = zbx_oracle_statement_execute(&nrows)))
+	if (OCI_SUCCESS != (err = zbx_oracle_statement_execute(iters, &nrows)))
 		ret = OCI_handle_sql_error(ERR_Z3007, err, NULL);
 	else
 		ret = (int)nrows;
@@ -1252,7 +1350,7 @@ int	zbx_db_vexecute(const char *fmt, va_list args)
 	{
 		ub4	nrows = 0;
 
-		if (OCI_SUCCESS == (err = zbx_oracle_statement_execute(&nrows)))
+		if (OCI_SUCCESS == (err = zbx_oracle_statement_execute(1, &nrows)))
 			ret = (int)nrows;
 	}
 
@@ -1510,7 +1608,7 @@ error:
 	memset(result->clobs, 0, result->ncolumn * sizeof(OCILobLocator *));
 	memset(result->values_alloc, 0, result->ncolumn * sizeof(ub4));
 
-	for (counter = 1; OCI_SUCCESS == err && counter <= result->ncolumn; counter++)
+	for (counter = 1; OCI_SUCCESS == err && counter <= (ub4)result->ncolumn; counter++)
 	{
 		OCIParam	*parmdp = NULL;
 		OCIDefine	*defnp = NULL;
@@ -2169,12 +2267,6 @@ static size_t	zbx_db_get_escape_string_len(const char *s, size_t max_bytes, size
 
 	while ('\0' != *s && 0 < max_chars)
 	{
-		if ('\r' == *s)
-		{
-			s++;
-			continue;
-		}
-
 		csize = zbx_utf8_char_len(s);
 
 		/* process non-UTF-8 characters as single byte characters */
