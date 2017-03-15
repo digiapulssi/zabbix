@@ -3378,6 +3378,7 @@ static void	DCdump_config()
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
+	zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	zabbix_log(LOG_LEVEL_TRACE, "  refresh_unsupported %d", config->config->refresh_unsupported);
 	zabbix_log(LOG_LEVEL_TRACE, "  discovery_groupid " ZBX_FS_UI64, config->config->discovery_groupid);
 	zabbix_log(LOG_LEVEL_TRACE, "  snmptrap_logging %u", config->config->snmptrap_logging);
@@ -3423,6 +3424,9 @@ static void	DCdump_hosts()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->hosts, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (host = (ZBX_DC_HOST *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3492,13 +3496,13 @@ static void	DCdump_proxies()
 
 	zbx_hashset_iter_reset(&config->proxies, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, proxy->hostid);
-		zabbix_log(LOG_LEVEL_TRACE, "  proxy_config_nextcheck %d", proxy->proxy_config_nextcheck);
-		zabbix_log(LOG_LEVEL_TRACE, "  proxy_data_nextcheck %d", proxy->proxy_data_nextcheck);
 		zabbix_log(LOG_LEVEL_TRACE, "  timediff %d", proxy->timediff);
-		zabbix_log(LOG_LEVEL_TRACE, "  lastaccess %d", proxy->lastaccess);
 		zabbix_log(LOG_LEVEL_TRACE, "  location %u", proxy->location);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
@@ -3517,6 +3521,9 @@ static void	DCdump_ipmihosts()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->ipmihosts, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (ipmihost = (ZBX_DC_IPMIHOST *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3543,6 +3550,9 @@ static void	DCdump_host_inventories()
 
 	zbx_hashset_iter_reset(&config->host_inventories, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (host_inventory = (ZBX_DC_HOST_INVENTORY *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, host_inventory->hostid);
@@ -3564,6 +3574,9 @@ static void	DCdump_htmpls()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->htmpls, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (htmpl = (ZBX_DC_HTMPL *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3591,6 +3604,9 @@ static void	DCdump_gmacros()
 
 	zbx_hashset_iter_reset(&config->gmacros, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (gmacro = (ZBX_DC_GMACRO *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  globalmacroid " ZBX_FS_UI64, gmacro->globalmacroid);
@@ -3615,6 +3631,9 @@ static void	DCdump_hmacros()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->hmacros, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3643,6 +3662,9 @@ static void	DCdump_interfaces()
 
 	zbx_hashset_iter_reset(&config->interfaces, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (interface = (ZBX_DC_INTERFACE *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  interfaceid " ZBX_FS_UI64, interface->interfaceid);
@@ -3656,8 +3678,6 @@ static void	DCdump_interfaces()
 		zabbix_log(LOG_LEVEL_TRACE, "  main %u", interface->main);
 		zabbix_log(LOG_LEVEL_TRACE, "  useip %u", interface->useip);
 		zabbix_log(LOG_LEVEL_TRACE, "  bulk %u", interface->bulk);
-		zabbix_log(LOG_LEVEL_TRACE, "  max_snmp_succeed %u", interface->max_snmp_succeed);
-		zabbix_log(LOG_LEVEL_TRACE, "  min_snmp_fail %u", interface->min_snmp_fail);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3667,8 +3687,6 @@ static void	DCdump_interfaces()
 
 static void	DCdump_trigger(const ZBX_DC_TRIGGER	*trigger)
 {
-	zabbix_log(LOG_LEVEL_TRACE, "    ====================");
-
 	zabbix_log(LOG_LEVEL_TRACE, "    triggerid " ZBX_FS_UI64, trigger->triggerid);
 
 	zabbix_log(LOG_LEVEL_TRACE, "    description '%s'", trigger->description);
@@ -3688,6 +3706,8 @@ static void	DCdump_trigger(const ZBX_DC_TRIGGER	*trigger)
 	zabbix_log(LOG_LEVEL_TRACE, "    locked %u", trigger->locked);
 	zabbix_log(LOG_LEVEL_TRACE, "    status %u", trigger->status);
 	zabbix_log(LOG_LEVEL_TRACE, "    functional %u", trigger->functional);
+
+	zabbix_log(LOG_LEVEL_TRACE, "    ====================");
 }
 
 static void	DCdump_items()
@@ -3700,6 +3720,9 @@ static void	DCdump_items()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->items, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (item = (ZBX_DC_ITEM *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3736,6 +3759,8 @@ static void	DCdump_items()
 			int		i;
 			ZBX_DC_TRIGGER	*trigger;
 
+			zabbix_log(LOG_LEVEL_TRACE, "    ====================");
+
 			for (i = 0; NULL != (trigger = item->triggers[i]); i++)
 				DCdump_trigger(trigger);
 		}
@@ -3756,6 +3781,9 @@ static void	DCdump_numitems()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->numitems, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (numitem = (ZBX_DC_NUMITEM *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3783,6 +3811,9 @@ static void	DCdump_snmpitems()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->snmpitems, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (snmpitem = (ZBX_DC_SNMPITEM *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3815,6 +3846,9 @@ static void	DCdump_ipmiitems()
 
 	zbx_hashset_iter_reset(&config->ipmiitems, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (ipmiitem = (ZBX_DC_IPMIITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, ipmiitem->itemid);
@@ -3836,6 +3870,9 @@ static void	DCdump_flexitems()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->flexitems, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (flexitem = (ZBX_DC_FLEXITEM *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3859,6 +3896,9 @@ static void	DCdump_trapitems()
 
 	zbx_hashset_iter_reset(&config->trapitems, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (trapitem = (ZBX_DC_TRAPITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, trapitem->itemid);
@@ -3881,6 +3921,9 @@ static void	DCdump_logitems()
 
 	zbx_hashset_iter_reset(&config->logitems, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (logitem = (ZBX_DC_LOGITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, logitem->itemid);
@@ -3902,6 +3945,9 @@ static void	DCdump_dbitems()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->dbitems, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (dbitem = (ZBX_DC_DBITEM *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3926,6 +3972,9 @@ static void	DCdump_sshitems()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->sshitems, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (sshitem = (ZBX_DC_SSHITEM *)zbx_hashset_iter_next(&iter)))
 	{
@@ -3955,6 +4004,9 @@ static void	DCdump_telnetitems()
 
 	zbx_hashset_iter_reset(&config->telnetitems, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (telnetitem = (ZBX_DC_TELNETITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, telnetitem->itemid);
@@ -3980,6 +4032,9 @@ static void	DCdump_simpleitems()
 
 	zbx_hashset_iter_reset(&config->simpleitems, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (simpleitem = (ZBX_DC_SIMPLEITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, simpleitem->itemid);
@@ -4003,6 +4058,9 @@ static void	DCdump_jmxitems()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->jmxitems, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (jmxitem = (ZBX_DC_JMXITEM *)zbx_hashset_iter_next(&iter)))
 	{
@@ -4028,6 +4086,9 @@ static void	DCdump_calcitems()
 
 	zbx_hashset_iter_reset(&config->calcitems, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (calcitem = (ZBX_DC_CALCITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, calcitem->itemid);
@@ -4052,6 +4113,9 @@ static void	DCdump_interface_snmpitems()
 
 	zbx_hashset_iter_reset(&config->interface_snmpitems, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (interface_snmpitem = (ZBX_DC_INTERFACE_ITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  interfaceid " ZBX_FS_UI64, interface_snmpitem->interfaceid);
@@ -4075,6 +4139,9 @@ static void	DCdump_functions()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->functions, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (function = (ZBX_DC_FUNCTION *)zbx_hashset_iter_next(&iter)))
 	{
@@ -4103,6 +4170,9 @@ static void	DCdump_trigdeps()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->trigdeps, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (trigdep = (ZBX_DC_TRIGGER_DEPLIST *)zbx_hashset_iter_next(&iter)))
 	{
@@ -4135,6 +4205,9 @@ static void	DCdump_expressions()
 
 	zbx_hashset_iter_reset(&config->expressions, &iter);
 
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
+
 	while (NULL != (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  expressionid " ZBX_FS_UI64, expression->expressionid);
@@ -4162,6 +4235,9 @@ static void	DCdump_actions()
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zbx_hashset_iter_reset(&config->actions, &iter);
+
+	if (0 != iter.hashset->num_data)
+		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 
 	while (NULL != (action = (zbx_dc_action_t *)zbx_hashset_iter_next(&iter)))
 	{
