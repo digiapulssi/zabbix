@@ -1097,10 +1097,6 @@ sub create_slv_items {
     }
 }
 
-# calculated items, configuration history (TODO: rename host to something like config_history)
-sub create_rsm_items {
-}
-
 sub usage {
     my ($opt_name, $opt_value) = @_;
 
