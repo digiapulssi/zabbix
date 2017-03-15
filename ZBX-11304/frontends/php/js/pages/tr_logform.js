@@ -72,6 +72,8 @@ function add_logexpr() {
 		}
 	}
 
+	key_count = 0;
+
 	if (typeof(expr.value) != 'undefined' && expr.value != '') {
 		if (expression != '') {
 			expression += ex;
