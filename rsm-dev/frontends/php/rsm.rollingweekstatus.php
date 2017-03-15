@@ -142,6 +142,13 @@ if (!isset($data['rollWeekSeconds'])) {
 	exit;
 }
 
+$data['allowedGroups'] = array(
+	RSM_CC_TLD_GROUP => false,
+	RSM_G_TLD_GROUP => false,
+	RSM_OTHER_TLD_GROUP => false,
+	RSM_TEST_GROUP => false
+);
+
 foreach ($DB['SERVERS'] as $server) {
 	unset($DB['DB']);
 	$DB['TYPE'] = $server['TYPE'];
@@ -172,12 +179,6 @@ foreach ($DB['SERVERS'] as $server) {
 	));
 
 	$selectedGroups = [];
-	$data['allowedGroups'] = array(
-		RSM_CC_TLD_GROUP => false,
-		RSM_G_TLD_GROUP => false,
-		RSM_OTHER_TLD_GROUP => false,
-		RSM_TEST_GROUP => false
-	);
 
 	foreach ($tldGroups as $tldGroup) {
 		switch ($tldGroup['name']) {
