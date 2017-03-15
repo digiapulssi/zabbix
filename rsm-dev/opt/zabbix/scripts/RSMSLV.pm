@@ -92,6 +92,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute avail_result_msg
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
+		get_avail_valuemaps
 		get_result_string get_tld_by_trigger truncate_from alerts_enabled get_test_start_time
 		get_real_services_period dbg info wrn fail format_stats_time slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt optkeys ts_str ts_full selected_period write_file
@@ -2594,6 +2595,7 @@ sub __get_valuemappings
 }
 
 # todo phase 1: the $vmname's must be fixed accordingly in phase 2
+# todo phase 1: also, consider renaming to something like get_rtt_valuemaps()
 sub get_valuemaps
 {
 	my $service = shift;
@@ -2620,6 +2622,7 @@ sub get_valuemaps
 }
 
 # todo phase 1: the $vmname's must be fixed accordingly in phase 2
+# todo phase 1: also, consider renaming to something like get_result_valuemaps()
 sub get_statusmaps
 {
 	my $service = shift;
@@ -2627,7 +2630,9 @@ sub get_statusmaps
 	my $vmname;
 	if ($service eq 'dns' or $service eq 'dnssec')
 	{
-		$vmname = 'RSM DNS result';
+		# todo phase 1: this will be used in phase 2 (many statuses)
+		#$vmname = 'RSM DNS result';
+		return undef;
 	}
 	elsif ($service eq 'rdds')
 	{
@@ -2643,6 +2648,12 @@ sub get_statusmaps
 	}
 
 	return __get_valuemappings($vmname);
+}
+
+# todo phase 1: add to phase 2
+sub get_avail_valuemaps
+{
+	return __get_valuemappings('RSM Service Availability');
 }
 
 sub get_detailed_result
@@ -2666,6 +2677,7 @@ sub get_result_string
 
 	my $value_int = int($value);
 
+	return $value_int unless ($maps);
 	return $value_int unless (exists($maps->{$value_int}));
 
 	return $maps->{$value_int};

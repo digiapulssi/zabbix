@@ -90,10 +90,12 @@ else
 	}
 }
 
-my $cfg_dns_statusmaps = get_statusmaps('dns');
+# todo phase 1: changed from get_statusmaps('dns')
+my $cfg_avail_valuemaps = get_avail_valuemaps();
 
-my $general_status_up = get_result_string($cfg_dns_statusmaps, UP);
-my $general_status_down = get_result_string($cfg_dns_statusmaps, DOWN);
+# todo phase 1: changed from get_result_string($cfg_dns_statusmaps, UP/Down)
+my $general_status_up = 'Up';
+my $general_status_down = 'Down';
 
 __get_delays($services);
 __get_keys($services);
@@ -520,6 +522,7 @@ sub __get_test_data
 				}
 			}
 
+			# todo phase 1: make sure UP_INCONCLUSIVE is added in phase 2
 			wrn("unknown availability result: $value (expected ", DOWN, " (Down), ", UP, " (Up))")
 				if ($value != UP && $value != DOWN);
 
@@ -535,7 +538,9 @@ sub __get_test_data
 
 			my $cycleclock = __cycle_start($clock, $delay);
 
-			$cycles->{$cycleclock}->{'status'} = get_result_string($cfg_dns_statusmaps, $value);
+			# todo phase 1: make sure this uses avail valuemaps in phase1
+			# todo: later rewrite to use valuemap ID from item
+			$cycles->{$cycleclock}->{'status'} = get_result_string($cfg_avail_valuemaps, $value);
 		}
 
 		# Rolling week data (is synced with availability data from above)
