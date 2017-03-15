@@ -566,7 +566,7 @@ sub create_items_dns {
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS ('.$proto_uc.')', $templateid)],
                                               'type' => 3, 'value_type' => 3,
-                                              'delay' => $cfg_global_macros->{'{$RSM.DNS.TCP.DELAY}'}, 'valuemapid' => rsm_value_mappings->{'rsm_dns_result'}};
+                                              'delay' => $cfg_global_macros->{'{$RSM.DNS.TCP.DELAY}'}};
 
     create_item($options);
 
@@ -579,7 +579,7 @@ sub create_items_dns {
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS ('.$proto_uc.')', $templateid)],
                                               'type' => 3, 'value_type' => 3,
-                                              'delay' => $cfg_global_macros->{'{$RSM.DNS.UDP.DELAY}'}, 'valuemapid' => rsm_value_mappings->{'rsm_dns_result'}};
+                                              'delay' => $cfg_global_macros->{'{$RSM.DNS.UDP.DELAY}'}};
 
     create_item($options);
 }
