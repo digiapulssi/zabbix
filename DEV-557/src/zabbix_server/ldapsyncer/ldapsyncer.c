@@ -43,7 +43,7 @@ extern int		CONFIG_TIMEOUT;
  *                                                                            *
  ******************************************************************************/
 static int	zbx_ldap_connect(LDAP **ld, const char *uri, const char *bind_user, const char *bind_passwd,
-		char **error)
+		int timeout, char **error)
 {
 	int		res, opt_protocol_version = LDAP_VERSION3, opt_deref = LDAP_DEREF_NEVER;
 	struct timeval	tv;
@@ -90,7 +90,7 @@ static int	zbx_ldap_connect(LDAP **ld, const char *uri, const char *bind_user, c
 
 	/* set connection timeout */
 
-	tv.tv_sec = CONFIG_TIMEOUT;
+	tv.tv_sec = timeout;
 	tv.tv_usec = 0;
 
 	if (LDAP_OPT_SUCCESS != (res = ldap_set_option(*ld, LDAP_OPT_NETWORK_TIMEOUT, &tv)))
@@ -131,6 +131,36 @@ static int	zbx_ldap_connect(LDAP **ld, const char *uri, const char *bind_user, c
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_ldap_search                                                  *
+ *                                                                            *
+ * Purpose: search in LDAP database                                           *
+ *                                                                            *
+ * Return value: SUCCEED or FAIL                                              *
+ *                                                                            *
+ ******************************************************************************/
+static int	zbx_ldap_search(LDAP *ld, char *base_dn, int scope, char *filter, char **attributes_list, int timeout,
+		LDAPMessage **result, char **error)
+{
+	int		res;
+	struct timeval	tv;
+
+	tv.tv_sec = timeout;
+	tv.tv_usec = 0;
+
+	/* TODO: add handling of LDAP_SIZELIMIT_EXCEEDED (too many entries found to return them in one response) */
+
+	if (LDAP_SUCCESS != (res = ldap_search_ext_s(ld, base_dn, scope, filter, attributes_list, 0, NULL, NULL, &tv,
+			-1, result)))
+	{
+		*error = zbx_dsprintf(*error, "ldap_search_ext_s() failed: %d %s", res, ldap_err2string(res));
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_ldap_free                                                    *
  *                                                                            *
  * Purpose: release LDAP resources                                            *
@@ -159,25 +189,43 @@ static int      zbx_synchronize_from_ldap(int *user_num)
 {
 	const char	*__function_name = "zbx_synchronize_from_ldap";
 	LDAP		*ld = NULL;
+	LDAPMessage	*result;
 	char		*error = NULL;
 	int		res, ret = FAIL;
+	int		timeout = CONFIG_TIMEOUT;
 
 	/* TODO: replace hardcoded uri, bind_user, bind_passwd with values from database. */
 	/* TODO: consider supporting a list of URIs - ldap_initialize() in zbx_ldap_connect() can take a list of them */
 	/* TODO: consider supporting 'ldaps' (LDAP over TLS) protocol. */
+
 	const char	*uri = "ldap://127.0.0.1:389";
 	const char	*bind_user = "bind user name here";
 	const char	*bind_passwd = "bind password here";
 
+	char		*base_dn = "OU=people,DC=example,DC=com";
+	int		scope = LDAP_SCOPE_SUBTREE;
+	char		*filter = "(ou=IT operations)";
+	char		**attributes_list = NULL;
+
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (SUCCEED != (res = zbx_ldap_connect(&ld, uri, bind_user, bind_passwd, &error)))
+	if (SUCCEED != (res = zbx_ldap_connect(&ld, uri, bind_user, bind_passwd, timeout, &error)))
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "%s() cannot connect to LDAP server: %s", __function_name, error);
 		goto out;
 	}
 
 	/* TODO: synchronization */
+
+	/* TODO: this is just learning to search */
+
+	if (SUCCEED != (res = zbx_ldap_search(ld, base_dn, scope, filter, attributes_list, timeout, &result, &error)))
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "%s() cannot search in LDAP server: %s", __function_name, error);
+		goto out;
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "%s(): %d entries found", __function_name, ldap_count_messages(ld, result));
 
 	ret = SUCCEED;
 out:
