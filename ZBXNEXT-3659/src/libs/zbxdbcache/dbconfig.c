@@ -3732,15 +3732,17 @@ static void	DCdump_snmpitem(const ZBX_DC_SNMPITEM	*snmpitem)
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
-	zabbix_log(LOG_LEVEL_TRACE, "  snmp_oid '%s'", snmpitem->snmp_oid);
-	zabbix_log(LOG_LEVEL_TRACE, "  snmp_community '%s'", snmpitem->snmp_community);
-	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_securityname '%s'", snmpitem->snmpv3_securityname);
-	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_authpassphrase '%s'", snmpitem->snmpv3_authpassphrase);
-	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_privpassphrase '%s'", snmpitem->snmpv3_privpassphrase);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmp_oid '%s' snmp_community '%s'", snmpitem->snmp_oid,
+			snmpitem->snmp_community);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_securityname '%s' snmpv3_authpassphrase '%s' snmpv3_privpassphrase '%s'",
+			snmpitem->snmpv3_securityname, snmpitem->snmpv3_authpassphrase,
+			snmpitem->snmpv3_privpassphrase);
+
 	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_contextname '%s'", snmpitem->snmpv3_contextname);
-	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_securitylevel %u", snmpitem->snmpv3_securitylevel);
-	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_authprotocol %u", snmpitem->snmpv3_authprotocol);
-	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_privprotocol %u", snmpitem->snmpv3_privprotocol);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_securitylevel %u snmpv3_authprotocol %u snmpv3_privprotocol %u",
+			snmpitem->snmpv3_securitylevel, snmpitem->snmpv3_authprotocol, snmpitem->snmpv3_privprotocol);
+
 	zabbix_log(LOG_LEVEL_TRACE, "  snmp_oid_type %u", snmpitem->snmp_oid_type);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
