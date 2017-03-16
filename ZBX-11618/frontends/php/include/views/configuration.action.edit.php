@@ -1181,8 +1181,11 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVE
 				$operation['mediatypeid'] = 0;
 			}
 
-			$details = (new CSpan($actionOperationDescriptions[0][$operationid]))
-				->setHint($action_operation_hints[$operationid]);
+			$details = (new CSpan($actionOperationDescriptions[0][$operationid]));
+
+			if (!empty($action_operation_hints[$operationid])) {
+				$details->setHint($action_operation_hints[$operationid]);
+			}
 
 			$operationRow = [
 				$details,
