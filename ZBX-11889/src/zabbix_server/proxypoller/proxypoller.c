@@ -31,6 +31,9 @@
 #include "proxy.h"
 #include "../../libs/zbxcrypto/tls.h"
 
+#define ZBX_PROXY_CONN_SUCCESS	0
+#define ZBX_PROXY_CONN_FAIL	-1
+
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 
@@ -173,7 +176,7 @@ static int	process_proxy(void)
 {
 	const char		*__function_name = "process_proxy";
 	DC_PROXY		proxy;
-	int			num, i, ret;
+	int			num, i, ret, update_lastaccess = ZBX_PROXY_CONN_FAIL;
 	struct zbx_json		j;
 	struct zbx_json_parse	jp, jp_data;
 	zbx_socket_t		s;
@@ -290,6 +293,8 @@ retry_history:
 
 				if (SUCCEED == zbx_json_open(answer, &jp))
 				{
+					update_lastaccess = ZBX_PROXY_CONN_SUCCESS;
+
 					process_hist_data(NULL, &jp, proxy.hostid, &ts, NULL);
 
 					if (SUCCEED == zbx_json_brackets_by_name(&jp, ZBX_PROTO_TAG_DATA, &jp_data))
@@ -321,6 +326,8 @@ retry_dhistory:
 
 				if (SUCCEED == zbx_json_open(answer, &jp))
 				{
+					update_lastaccess = ZBX_PROXY_CONN_SUCCESS;
+
 					process_dhis_data(&jp);
 
 					if (SUCCEED == zbx_json_brackets_by_name(&jp, ZBX_PROTO_TAG_DATA, &jp_data))
@@ -352,6 +359,8 @@ retry_autoreg_host:
 
 				if (SUCCEED == zbx_json_open(answer, &jp))
 				{
+					update_lastaccess = ZBX_PROXY_CONN_SUCCESS;
+
 					process_areg_data(&jp, proxy.hostid);
 
 					if (SUCCEED == zbx_json_brackets_by_name(&jp, ZBX_PROTO_TAG_DATA, &jp_data))
@@ -369,11 +378,14 @@ retry_autoreg_host:
 			else
 				goto network_error;
 		}
-
-		DBbegin();
-		update_proxy_lastaccess(proxy.hostid);
-		DBcommit();
 network_error:
+		if (ZBX_PROXY_CONN_SUCCESS == update_lastaccess)
+		{
+			DBbegin();
+			update_proxy_lastaccess(proxy.hostid);
+			DBcommit();
+		}
+
 		DCrequeue_proxy(proxy.hostid, update_nextcheck);
 	}
 
