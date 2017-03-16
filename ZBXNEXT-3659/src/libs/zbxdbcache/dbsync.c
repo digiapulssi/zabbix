@@ -508,17 +508,25 @@ out:
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, const ZBX_DC_HOST *host, const DB_ROW row)
+static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, ZBX_DC_HOST *host, const DB_ROW row)
 {
 	signed char	ipmi_authtype;
 	unsigned char	ipmi_privilege;
 	ZBX_DC_IPMIHOST	*ipmihost;
 
 	if (FAIL == dbsync_compare_uint64(row[1], host->proxy_hostid))
+	{
+		host->update_items = 1;
 		return FAIL;
+	}
 
 	if (FAIL == dbsync_compare_uchar(row[22], host->status))
+	{
+		host->update_items = 1;
 		return FAIL;
+	}
+
+	host->update_items = 0;
 
 	if (FAIL == dbsync_compare_str(row[2], host->host))
 		return FAIL;
@@ -1239,9 +1247,16 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	ZBX_DC_SIMPLEITEM	*simpleitem;
 	ZBX_DC_JMXITEM		*jmxitem;
 	ZBX_DC_CALCITEM		*calcitem;
+	ZBX_DC_HOST		*host;
 	unsigned char		value_type, type;
 
 	if (FAIL == dbsync_compare_uint64(row[1], item->hostid))
+		return FAIL;
+
+	if (NULL == (host = (ZBX_DC_HOST *)zbx_hashset_search(&cache->hosts, &item->hostid)))
+		return FAIL;
+
+	if (0 != host->update_items)
 		return FAIL;
 
 	if (FAIL == dbsync_compare_uchar(row[2], item->status))
