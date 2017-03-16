@@ -3431,10 +3431,9 @@ static void	DCdump_hosts()
 
 	while (NULL != (host = (ZBX_DC_HOST *)zbx_hashset_iter_next(&iter)))
 	{
-		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, host->hostid);
-		zabbix_log(LOG_LEVEL_TRACE, "  proxy_hostid " ZBX_FS_UI64, host->proxy_hostid);
-		zabbix_log(LOG_LEVEL_TRACE, "  host '%s'", host->host);
-		zabbix_log(LOG_LEVEL_TRACE, "  name '%s'", host->name);
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64 " proxy_hostid " ZBX_FS_UI64 " host '%s' name '%s'",
+				host->hostid, host->proxy_hostid, host->host, host->name);
+
 		zabbix_log(LOG_LEVEL_TRACE, "  maintenance_from %d", host->maintenance_from);
 		zabbix_log(LOG_LEVEL_TRACE, "  data_expected_from %d", host->data_expected_from);
 		zabbix_log(LOG_LEVEL_TRACE, "  errors_from %d", host->errors_from);
@@ -3449,8 +3448,9 @@ static void	DCdump_hosts()
 		/* timestamp of last availability status (available/error) field change on any interface */
 		zabbix_log(LOG_LEVEL_TRACE, "  availability_ts %d", host->availability_ts);
 
-		zabbix_log(LOG_LEVEL_TRACE, "  maintenance_status %u", host->maintenance_status);
-		zabbix_log(LOG_LEVEL_TRACE, "  maintenance_type %u", host->maintenance_type);
+		zabbix_log(LOG_LEVEL_TRACE, "  maintenance_status %u maintenance_type %u", host->maintenance_status,
+				host->maintenance_type);
+
 		zabbix_log(LOG_LEVEL_TRACE, "  available %u", host->available);
 		zabbix_log(LOG_LEVEL_TRACE, "  snmp_available %u", host->snmp_available);
 		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_available %u", host->ipmi_available);
@@ -3502,9 +3502,8 @@ static void	DCdump_proxies()
 
 	while (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_iter_next(&iter)))
 	{
-		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, proxy->hostid);
-		zabbix_log(LOG_LEVEL_TRACE, "  timediff %d", proxy->timediff);
-		zabbix_log(LOG_LEVEL_TRACE, "  location %u", proxy->location);
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64 " timediff %d location %u", proxy->hostid,
+				proxy->timediff, proxy->location);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3528,11 +3527,10 @@ static void	DCdump_ipmihosts()
 
 	while (NULL != (ipmihost = (ZBX_DC_IPMIHOST *)zbx_hashset_iter_next(&iter)))
 	{
-		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, ipmihost->hostid);
-		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_username '%s' ipmi_password '%s'", ipmihost->ipmi_username,
-				ipmihost->ipmi_password);
-		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_authtype %d", ipmihost->ipmi_authtype);
-		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_privilege %u", ipmihost->ipmi_privilege);
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64 "  ipmi_username '%s' ipmi_password '%s'"
+				"ipmi_authtype %d ipmi_privilege %u",
+				ipmihost->hostid, ipmihost->ipmi_username, ipmihost->ipmi_password,
+				ipmihost->ipmi_authtype, ipmihost->ipmi_privilege);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3556,8 +3554,8 @@ static void	DCdump_host_inventories()
 
 	while (NULL != (host_inventory = (ZBX_DC_HOST_INVENTORY *)zbx_hashset_iter_next(&iter)))
 	{
-		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, host_inventory->hostid);
-		zabbix_log(LOG_LEVEL_TRACE, "  inventory_mode %u", host_inventory->inventory_mode);
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64 " inventory_mode %u", host_inventory->hostid,
+				host_inventory->inventory_mode);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3639,12 +3637,9 @@ static void	DCdump_hmacros()
 	while (NULL != (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  hostmacroid " ZBX_FS_UI64, hmacro->hostmacroid);
-		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, hmacro->hostid);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  macro '%s'", hmacro->macro);
-		if (NULL != hmacro->context)
-			zabbix_log(LOG_LEVEL_TRACE, "  context '%s'", hmacro->context);
-		zabbix_log(LOG_LEVEL_TRACE, "  value '%s'", hmacro->value);
+		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64 " macro '%s' value '%s' context '%s'",
+				hmacro->hostid, hmacro->macro,
+				hmacro->value, NULL != hmacro->context ? hmacro->context : "");
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3668,17 +3663,10 @@ static void	DCdump_interfaces()
 
 	while (NULL != (interface = (ZBX_DC_INTERFACE *)zbx_hashset_iter_next(&iter)))
 	{
-		zabbix_log(LOG_LEVEL_TRACE, "  interfaceid " ZBX_FS_UI64, interface->interfaceid);
-		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, interface->hostid);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ip '%s'", interface->ip);
-		zabbix_log(LOG_LEVEL_TRACE, "  dns '%s'", interface->dns);
-		zabbix_log(LOG_LEVEL_TRACE, "  port '%s'", interface->port);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  type %u", interface->type);
-		zabbix_log(LOG_LEVEL_TRACE, "  main %u", interface->main);
-		zabbix_log(LOG_LEVEL_TRACE, "  useip %u", interface->useip);
-		zabbix_log(LOG_LEVEL_TRACE, "  bulk %u", interface->bulk);
+		zabbix_log(LOG_LEVEL_TRACE, "  interfaceid " ZBX_FS_UI64 " hostid " ZBX_FS_UI64 " ip '%s' dns '%s'"
+				" port '%s' type %u main %u useip %u bulk %u",
+				interface->interfaceid, interface->hostid, interface->ip, interface->dns,
+				interface->port, interface->type, interface->main, interface->useip, interface->bulk);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3799,8 +3787,7 @@ static void	DCdump_dbitem(const ZBX_DC_DBITEM	*dbitem)
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", dbitem->params);
-	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", dbitem->username);
-	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", dbitem->password);
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s' password '%s'", dbitem->username, dbitem->password);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
@@ -3811,10 +3798,9 @@ static void	DCdump_sshitem(const ZBX_DC_SSHITEM	*sshitem)
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
-	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", sshitem->username);
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s' password '%s'", sshitem->username, sshitem->password);
 	zabbix_log(LOG_LEVEL_TRACE, "  publickey '%s'", sshitem->publickey);
 	zabbix_log(LOG_LEVEL_TRACE, "  privatekey '%s'", sshitem->privatekey);
-	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", sshitem->password);
 	zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", sshitem->params);
 	zabbix_log(LOG_LEVEL_TRACE, "  authtype %u",  sshitem->authtype);
 
@@ -3827,8 +3813,7 @@ static void	DCdump_telnetitem(const ZBX_DC_TELNETITEM	*telnetitem)
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
-	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", telnetitem->username);
-	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", telnetitem->password);
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s' password '%s'", telnetitem->username, telnetitem->password);
 	zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", telnetitem->params);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
@@ -3840,8 +3825,7 @@ static void	DCdump_simpleitem(const ZBX_DC_SIMPLEITEM	*simpleitem)
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
-	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", simpleitem->username);
-	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", simpleitem->password);
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s' password '%s'", simpleitem->username, simpleitem->password);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
@@ -3852,8 +3836,7 @@ static void	DCdump_jmxitem(const ZBX_DC_JMXITEM	*jmxitem)
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
-	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", jmxitem->username);
-	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", jmxitem->password);
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s' password '%s'", jmxitem->username, jmxitem->password);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
@@ -3902,12 +3885,12 @@ static void	DCdump_items()
 
 	while (NULL != (item = (ZBX_DC_ITEM *)zbx_hashset_iter_next(&iter)))
 	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, item->itemid);
-		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64, item->hostid);
-		zabbix_log(LOG_LEVEL_TRACE, "  interfaceid " ZBX_FS_UI64, item->interfaceid);
+		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64 " hostid " ZBX_FS_UI64 " interfaceid " ZBX_FS_UI64
+				" key '%s'",
+				item->itemid, item->hostid, item->interfaceid, item->key);
+
 		zabbix_log(LOG_LEVEL_TRACE, "  lastlogsize " ZBX_FS_UI64, item->lastlogsize);
 		zabbix_log(LOG_LEVEL_TRACE, "  valuemapid " ZBX_FS_UI64, item->valuemapid);
-		zabbix_log(LOG_LEVEL_TRACE, "  key '%s'", item->key);
 		zabbix_log(LOG_LEVEL_TRACE, "  port '%s'", item->port);
 		zabbix_log(LOG_LEVEL_TRACE, "  db_error '%s'", item->db_error);
 
