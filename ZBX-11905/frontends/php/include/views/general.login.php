@@ -22,7 +22,7 @@
 define('ZBX_PAGE_NO_HEADER', 1);
 define('ZBX_PAGE_NO_FOOTER', 1);
 
-$request = CHtml::encode(getRequest('request', ''));
+$request = getRequest('request', '');
 $message = CHtml::encode(getRequest('message', '')) ;
 // remove debug code for login form message, trimming not in regex to relay only on [ ] in debug message.
 $message = trim(preg_replace('/\[.*\]/', '', $message));
