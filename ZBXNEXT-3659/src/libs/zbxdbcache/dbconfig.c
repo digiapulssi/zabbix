@@ -3688,10 +3688,6 @@ static void	DCdump_interfaces()
 
 static void	DCdump_trigger(const ZBX_DC_TRIGGER	*trigger)
 {
-	const char	*__function_name = "DCdump_trigger";
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
 	zabbix_log(LOG_LEVEL_TRACE, "    triggerid " ZBX_FS_UI64, trigger->triggerid);
 
 	zabbix_log(LOG_LEVEL_TRACE, "    description '%s'", trigger->description);
