@@ -3623,7 +3623,7 @@ static void	DCdump_gmacros()
 
 static void	DCdump_hmacros()
 {
-	const char		*__function_name = "DCdump_hmacros";
+	const char	*__function_name = "DCdump_hmacros";
 
 	const ZBX_DC_HMACRO	*hmacro;
 	zbx_hashset_iter_t	iter;
@@ -3653,7 +3653,7 @@ static void	DCdump_hmacros()
 
 static void	DCdump_interfaces()
 {
-	const char		*__function_name = "DCdump_interfaces";
+	const char	*__function_name = "DCdump_interfaces";
 
 	const ZBX_DC_INTERFACE	*interface;
 	zbx_hashset_iter_t	iter;
@@ -3687,6 +3687,10 @@ static void	DCdump_interfaces()
 
 static void	DCdump_trigger(const ZBX_DC_TRIGGER	*trigger)
 {
+	const char	*__function_name = "DCdump_trigger";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
 	zabbix_log(LOG_LEVEL_TRACE, "    triggerid " ZBX_FS_UI64, trigger->triggerid);
 
 	zabbix_log(LOG_LEVEL_TRACE, "    description '%s'", trigger->description);
@@ -3710,12 +3714,185 @@ static void	DCdump_trigger(const ZBX_DC_TRIGGER	*trigger)
 	zabbix_log(LOG_LEVEL_TRACE, "    ====================");
 }
 
+static void	DCdump_numitem(const ZBX_DC_NUMITEM	*numitem)
+{
+	const char	*__function_name = "DCdump_numitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  formula '%s'", numitem->formula);
+	zabbix_log(LOG_LEVEL_TRACE, "  units '%s'", numitem->units);
+	zabbix_log(LOG_LEVEL_TRACE, "  trends %d", numitem->trends);
+	zabbix_log(LOG_LEVEL_TRACE, "  delta %u", numitem->delta);
+	zabbix_log(LOG_LEVEL_TRACE, "  multiplier %u", numitem->multiplier);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_snmpitem(const ZBX_DC_SNMPITEM	*snmpitem)
+{
+	const char	*__function_name = "DCdump_snmpitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  snmp_oid '%s'", snmpitem->snmp_oid);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmp_community '%s'", snmpitem->snmp_community);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_securityname '%s'", snmpitem->snmpv3_securityname);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_authpassphrase '%s'", snmpitem->snmpv3_authpassphrase);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_privpassphrase '%s'", snmpitem->snmpv3_privpassphrase);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_contextname '%s'", snmpitem->snmpv3_contextname);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_securitylevel %u", snmpitem->snmpv3_securitylevel);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_authprotocol %u", snmpitem->snmpv3_authprotocol);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_privprotocol %u", snmpitem->snmpv3_privprotocol);
+	zabbix_log(LOG_LEVEL_TRACE, "  snmp_oid_type %u", snmpitem->snmp_oid_type);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_ipmiitem(const ZBX_DC_IPMIITEM	*ipmiitem)
+{
+	const char	*__function_name = "DCdump_ipmiitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  ipmi_sensor '%s'", ipmiitem->ipmi_sensor);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_flexitem(const ZBX_DC_FLEXITEM	*flexitem)
+{
+	const char	*__function_name = "DCdump_flexitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  delay_flex '%s'", flexitem->delay_flex);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_trapitem(const ZBX_DC_TRAPITEM	*trapitem)
+{
+	const char	*__function_name = "DCdump_trapitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  trapper_hosts '%s'", trapitem->trapper_hosts);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_logitem(ZBX_DC_LOGITEM	*logitem)
+{
+	const char	*__function_name = "DCdump_logitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  logtimefmt '%s'", logitem->logtimefmt);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_dbitem(const ZBX_DC_DBITEM	*dbitem)
+{
+	const char	*__function_name = "DCdump_dbitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", dbitem->params);
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", dbitem->username);
+	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", dbitem->password);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_sshitem(const ZBX_DC_SSHITEM	*sshitem)
+{
+	const char	*__function_name = "DCdump_sshitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", sshitem->username);
+	zabbix_log(LOG_LEVEL_TRACE, "  publickey '%s'", sshitem->publickey);
+	zabbix_log(LOG_LEVEL_TRACE, "  privatekey '%s'", sshitem->privatekey);
+	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", sshitem->password);
+	zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", sshitem->params);
+	zabbix_log(LOG_LEVEL_TRACE, "  authtype %u",  sshitem->authtype);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_telnetitem(const ZBX_DC_TELNETITEM	*telnetitem)
+{
+	const char	*__function_name = "DCdump_telnetitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", telnetitem->username);
+	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", telnetitem->password);
+	zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", telnetitem->params);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_simpleitem(const ZBX_DC_SIMPLEITEM	*simpleitem)
+{
+	const char	*__function_name = "DCdump_simpleitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", simpleitem->username);
+	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", simpleitem->password);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_jmxitem(const ZBX_DC_JMXITEM	*jmxitem)
+{
+	const char	*__function_name = "DCdump_jmxitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", jmxitem->username);
+	zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", jmxitem->password);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
+static void	DCdump_calcitem(const ZBX_DC_CALCITEM	*calcitem)
+{
+	const char	*__function_name = "DCdump_calcitem";
+
+	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", calcitem->params);
+
+	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
+}
+
 static void	DCdump_items()
 {
 	const char		*__function_name = "DCdump_items";
 
 	const ZBX_DC_ITEM	*item;
 	zbx_hashset_iter_t	iter;
+	int			i;
+	void			*ptr;
+	void			*trace_items[][2] =
+	{
+		{&config->numitems, DCdump_numitem},
+		{&config->snmpitems, DCdump_snmpitem},
+		{&config->ipmiitems, DCdump_ipmiitem},
+		{&config->flexitems, DCdump_flexitem},
+		{&config->trapitems, DCdump_trapitem},
+		{&config->logitems, DCdump_logitem},
+		{&config->dbitems, DCdump_dbitem},
+		{&config->sshitems, DCdump_sshitem},
+		{&config->telnetitems, DCdump_telnetitem},
+		{&config->simpleitems, DCdump_simpleitem},
+		{&config->jmxitems, DCdump_jmxitem},
+		{&config->calcitems, DCdump_calcitem}
+	};
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
@@ -3754,6 +3931,16 @@ static void	DCdump_items()
 		zabbix_log(LOG_LEVEL_TRACE, "  unreachable %u", item->unreachable);
 		zabbix_log(LOG_LEVEL_TRACE, "  update_triggers %u", item->update_triggers);
 
+		for (i = 0; i < (int)ARRSIZE(trace_items); i++)
+		{
+			if (NULL != (ptr = zbx_hashset_search(trace_items[i][0], &item->itemid)))
+			{
+				void (*ptrf)(void*) = trace_items[i][1];
+
+				ptrf(ptr);
+			}
+		}
+
 		if (NULL != item->triggers)
 		{
 			int		i;
@@ -3764,336 +3951,6 @@ static void	DCdump_items()
 			for (i = 0; NULL != (trigger = item->triggers[i]); i++)
 				DCdump_trigger(trigger);
 		}
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_numitems()
-{
-	const char		*__function_name = "DCdump_numitems";
-
-	const ZBX_DC_NUMITEM	*numitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->numitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (numitem = (ZBX_DC_NUMITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, numitem->itemid);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  formula '%s'", numitem->formula);
-		zabbix_log(LOG_LEVEL_TRACE, "  units '%s'", numitem->units);
-		zabbix_log(LOG_LEVEL_TRACE, "  trends %d", numitem->trends);
-		zabbix_log(LOG_LEVEL_TRACE, "  delta %u", numitem->delta);
-		zabbix_log(LOG_LEVEL_TRACE, "  multiplier %u", numitem->multiplier);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_snmpitems()
-{
-	const char		*__function_name = "DCdump_snmpitems";
-
-	const ZBX_DC_SNMPITEM	*snmpitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->snmpitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (snmpitem = (ZBX_DC_SNMPITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, snmpitem->itemid);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmp_oid '%s'", snmpitem->snmp_oid);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmp_community '%s'", snmpitem->snmp_community);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_securityname '%s'", snmpitem->snmpv3_securityname);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_authpassphrase '%s'", snmpitem->snmpv3_authpassphrase);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_privpassphrase '%s'", snmpitem->snmpv3_privpassphrase);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_contextname '%s'", snmpitem->snmpv3_contextname);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_securitylevel %u", snmpitem->snmpv3_securitylevel);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_authprotocol %u", snmpitem->snmpv3_authprotocol);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmpv3_privprotocol %u", snmpitem->snmpv3_privprotocol);
-		zabbix_log(LOG_LEVEL_TRACE, "  snmp_oid_type %u", snmpitem->snmp_oid_type);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_ipmiitems()
-{
-	const char		*__function_name = "DCdump_ipmiitems";
-
-	const ZBX_DC_IPMIITEM	*ipmiitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->ipmiitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (ipmiitem = (ZBX_DC_IPMIITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, ipmiitem->itemid);
-		zabbix_log(LOG_LEVEL_TRACE, "  ipmi_sensor '%s'", ipmiitem->ipmi_sensor);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_flexitems()
-{
-	const char		*__function_name = "DCdump_flexitems";
-
-	const ZBX_DC_FLEXITEM	*flexitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->flexitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (flexitem = (ZBX_DC_FLEXITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, flexitem->itemid);
-		zabbix_log(LOG_LEVEL_TRACE, "  delay_flex '%s'", flexitem->delay_flex);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_trapitems()
-{
-	const char		*__function_name = "DCdump_trapitems";
-
-	const ZBX_DC_TRAPITEM	*trapitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->trapitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (trapitem = (ZBX_DC_TRAPITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, trapitem->itemid);
-		zabbix_log(LOG_LEVEL_TRACE, "  trapper_hosts '%s'", trapitem->trapper_hosts);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_logitems()
-{
-	const char		*__function_name = "DCdump_logitems";
-
-	const 	ZBX_DC_LOGITEM	*logitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->logitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (logitem = (ZBX_DC_LOGITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, logitem->itemid);
-		zabbix_log(LOG_LEVEL_TRACE, "  logtimefmt '%s'", logitem->logtimefmt);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_dbitems()
-{
-	const char		*__function_name = "DCdump_dbitems";
-
-	const ZBX_DC_DBITEM	*dbitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->dbitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (dbitem = (ZBX_DC_DBITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, dbitem->itemid);
-		zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", dbitem->params);
-		zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", dbitem->username);
-		zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", dbitem->password);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_sshitems()
-{
-	const char		*__function_name = "DCdump_sshitems";
-
-	const ZBX_DC_SSHITEM	*sshitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->sshitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (sshitem = (ZBX_DC_SSHITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, sshitem->itemid);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", sshitem->username);
-		zabbix_log(LOG_LEVEL_TRACE, "  publickey '%s'", sshitem->publickey);
-		zabbix_log(LOG_LEVEL_TRACE, "  privatekey '%s'", sshitem->privatekey);
-		zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", sshitem->password);
-		zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", sshitem->params);
-		zabbix_log(LOG_LEVEL_TRACE, "  authtype %u",  sshitem->authtype);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_telnetitems()
-{
-	const char		*__function_name = "DCdump_telnetitems";
-
-	const ZBX_DC_TELNETITEM	*telnetitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->telnetitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (telnetitem = (ZBX_DC_TELNETITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, telnetitem->itemid);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", telnetitem->username);
-		zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", telnetitem->password);
-		zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", telnetitem->params);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_simpleitems()
-{
-	const char		*__function_name = "DCdump_simpleitems";
-
-	const ZBX_DC_SIMPLEITEM	*simpleitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->simpleitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (simpleitem = (ZBX_DC_SIMPLEITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, simpleitem->itemid);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", simpleitem->username);
-		zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", simpleitem->password);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_jmxitems()
-{
-	const char		*__function_name = "DCdump_jmxitems";
-
-	const ZBX_DC_JMXITEM	*jmxitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->jmxitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (jmxitem = (ZBX_DC_JMXITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, jmxitem->itemid);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  username '%s'", jmxitem->username);
-		zabbix_log(LOG_LEVEL_TRACE, "  password '%s'", jmxitem->password);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
-}
-
-static void	DCdump_calcitems()
-{
-	const char		*__function_name = "DCdump_calcitems";
-
-	const ZBX_DC_CALCITEM	*calcitem;
-	zbx_hashset_iter_t	iter;
-
-	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
-
-	zbx_hashset_iter_reset(&config->calcitems, &iter);
-
-	if (0 != iter.hashset->num_data)
-		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
-
-	while (NULL != (calcitem = (ZBX_DC_CALCITEM *)zbx_hashset_iter_next(&iter)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64, calcitem->itemid);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  params '%s'", calcitem->params);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -4277,18 +4134,6 @@ static void	DCdump_configuration()
 	DCdump_hmacros();
 	DCdump_interfaces();
 	DCdump_items();
-	DCdump_numitems();
-	DCdump_snmpitems();
-	DCdump_ipmiitems();
-	DCdump_flexitems();
-	DCdump_trapitems();
-	DCdump_logitems();
-	DCdump_dbitems();
-	DCdump_sshitems();
-	DCdump_telnetitems();
-	DCdump_simpleitems();
-	DCdump_jmxitems();
-	DCdump_calcitems();
 	DCdump_interface_snmpitems();
 	DCdump_trigdeps();
 	DCdump_functions();
