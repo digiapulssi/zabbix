@@ -3,7 +3,7 @@ package TLDs;
 use strict;
 use warnings;
 use Zabbix;
-use TLD_constants qw(:general :templates :api :config);
+use TLD_constants qw(:general :templates :api :config :tls);
 use Data::Dumper;
 use base 'Exporter';
 
@@ -499,26 +499,44 @@ sub get_host_macro {
     return $result;
 }
 
-sub create_passive_proxy($$$) {
+sub create_passive_proxy($$$$$) {
     my $probe_name = shift;
     my $probe_ip = shift;
     my $probe_port = shift;
+    my $probe_psk_identity = shift;
+    my $probe_psk = shift;
 
     my $probe = get_probe($probe_name, false);
 
     if (defined($probe->{'proxyid'})) {
-	my $result = $zabbix->update('proxy', {'proxyid' => $probe->{'proxyid'}, 'status' => HOST_STATUS_PROXY_PASSIVE,
+	my $vars = {'proxyid' => $probe->{'proxyid'}, 'status' => HOST_STATUS_PROXY_PASSIVE,
                                         'interface' => {'interfaceid' => $probe->{'interface'}->{'interfaceid'},
-					'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port}});
+				'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port}};
+
+	if (defined($probe_psk_identity)) {
+		$vars->{'tls_psk_identity'} = $probe_psk_identity;
+		$vars->{'tls_psk'} = $probe_psk;
+		$vars->{'tls_connect'} = HOST_ENCRYPTION_PSK;
+	}
+
+	my $result = $zabbix->update('proxy', $vars);
 
 	if (scalar($result->{'proxyids'})) {
             return $result->{'proxyids'}[0];
         }
     }
     else {
-        my $result = $zabbix->create('proxy', {'host' => $probe_name, 'status' => HOST_STATUS_PROXY_PASSIVE,
+	my $vars = {'host' => $probe_name, 'status' => HOST_STATUS_PROXY_PASSIVE,
                                         'interface' => {'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port},
-                                        'hosts' => []});
+                                        'hosts' => []};
+
+	if (defined($probe_psk_identity)) {
+		$vars->{'tls_psk_identity'} = $probe_psk_identity;
+		$vars->{'tls_psk'} = $probe_psk;
+		$vars->{'tls_connect'} = HOST_ENCRYPTION_PSK;
+	}
+
+        my $result = $zabbix->create('proxy', $vars);
 	if (scalar($result->{'proxyids'})) {
 	    return $result->{'proxyids'}[0];
 	}
