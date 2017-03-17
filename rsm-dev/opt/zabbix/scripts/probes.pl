@@ -27,7 +27,7 @@ use constant false => 0;
 
 my %macros = ('{$RSM.EPP.ENABLED}' => 0, '{$RSM.IP4.ENABLED}' => 0, '{$RSM.IP6.ENABLED}' => 0, '{$RSM.RDDS.ENABLED}' => 0);
 
-sub add_probe($$$);
+sub add_probe($$$$$);
 sub delete_probe($);
 sub disable_probe($);
 sub rename_probe($$);
@@ -40,6 +40,7 @@ my %OPTS;
 my $rv = GetOptions(\%OPTS, "probe=s", "ip=s", "port=s", "new-name=s", "server-id=s",
 			    "epp!", "ipv4!", "ipv6!", "rdds!", "resolver=s",
                 	    "delete!", "disable!", "add!", "rename!",
+			    "psk-identity=s", "psk=s",
                 	    "verbose!", "quiet!", "help|?");
 
 usage() if ($OPTS{'help'} or not $rv);
@@ -68,7 +69,7 @@ elsif ($OPTS{'disable'}) {
 }
 elsif ($OPTS{'add'}) {
     create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
-    add_probe($OPTS{'probe'}, $OPTS{'ip'}, ($OPTS{'port'} ? $OPTS{'port'} : DEFAULT_PROBE_PORT));
+    add_probe($OPTS{'probe'}, $OPTS{'ip'}, ($OPTS{'port'} ? $OPTS{'port'} : DEFAULT_PROBE_PORT), $OPTS{'psk-identity'}, $OPTS{'psk'});
 }
 elsif($OPTS{'rename'}) {
     rename_probe($OPTS{'probe'}, $OPTS{'new-name'});
@@ -78,10 +79,12 @@ exit;
 
 ################
 
-sub add_probe($$$) {
+sub add_probe($$$$$) {
     my $probe_name = shift;
     my $probe_ip = shift;
     my $probe_port = shift;
+    my $psk_identity = shift;
+    my $psk = shift;
 
     my ($probe, $probe_hostgroup, $probe_host, $probe_host_mon, $probe_tmpl, $probe_tmpl_status);
 
@@ -111,7 +114,7 @@ sub add_probe($$$) {
 
     print "Creating '$probe_name' with interface $probe_ip:$probe_port ";
 
-    $probe = create_passive_proxy($probe_name, $probe_ip, $probe_port);
+    $probe = create_passive_proxy($probe_name, $probe_ip, $probe_port, $psk_identity, $psk);
 
     is_not_empty($probe, true);
 
@@ -259,16 +262,16 @@ sub delete_probe($) {
     }
 
     ########## Deleting probe host
-    if (keys %{$probe_host}) {
-        my $hostid = $probe_host->{'hostid'};
-        my $host_name = $probe_host->{'host'};
-
-        print "Trying to remove '$host_name' probe host: ";
-
-        $result = remove_hosts( [ {'hostid' => $hostid} ] );
-
-	is_not_empty($result->{'hostids'}, false);
-    }
+#    if (keys %{$probe_host}) {
+#        my $hostid = $probe_host->{'hostid'};
+#        my $host_name = $probe_host->{'host'};
+#
+#        print "Trying to remove '$host_name' probe host: ";
+#
+#        $result = remove_hosts( [ $hostid ] );
+#
+#	is_not_empty($result->{'hostids'}, false);
+#    }
 
     ########## Deleting TLDs and probe host linked to the Probe
     foreach my $host (@{$probe->{'hosts'}}) {
@@ -277,7 +280,7 @@ sub delete_probe($) {
 
         print "Trying to remove '$host_name' host: ";
 
-        $result = remove_hosts( [ {'hostid' => $hostid} ] );
+        $result = remove_hosts( [ $hostid ] );
 
 	is_not_empty($result->{'hostids'}, false);
     }
@@ -289,7 +292,7 @@ sub delete_probe($) {
 
 	print "Trying to delete '$host_name' host: ";
 
-	$result = remove_hosts( [ {'hostid' => $hostid} ] );
+	$result = remove_hosts( [ $hostid ] );
 
 	is_not_empty($result->{'hostids'}, false);
     }
@@ -308,7 +311,7 @@ sub delete_probe($) {
     ########## Deleting Probe
     print "Trying to remove '$probe_name' Probe: ";
 
-    $result = remove_probes( [ {'proxyid' => $probe->{'proxyid'}} ] );
+    $result = remove_probes( [ $probe->{'proxyid'} ] );
 
     is_not_empty($result->{'proxyids'}, false);
 
@@ -572,6 +575,12 @@ Options for adding new probe. Argument --add.
 	--port
 		Port of new probe node
 		(default: 10050)
+	--psk-identity
+		PSK identity
+		(default: name of the Probe)
+	--psk
+		The preshared key, at least 32 hex digits
+		(default: empty)
 	--epp
 		Enable EPP support for the Probe
 		(default: disabled)
@@ -622,6 +631,10 @@ sub validate_input {
 
     if (defined($OPTS{'add'}) and !defined($OPTS{'ip'})) {
         $msg .= "You need to specify Probe IP using --ip argument\n";
+    }
+
+    if (!defined($OPTS{'psk-identity'}) and defined($OPTS{'psk'})) {
+	$OPTS{'psk-identity'} = $OPTS{'probe'};
     }
 
     if (defined($OPTS{'add'}) and !defined($OPTS{'resolver'})) {
