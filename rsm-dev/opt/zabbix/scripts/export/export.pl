@@ -161,6 +161,8 @@ foreach my $service (sort(keys(%{$services})))
 	}
 }
 
+my $probes_data;
+
 # go through all the databases
 my @server_keys = get_rsm_server_keys($config);
 foreach (@server_keys)
@@ -171,18 +173,19 @@ db_disconnect();
 db_connect($server_key);
 
 my $probes_ref = get_probes();
-my $probe_times_ref = get_probe_times($from, $till, $probes_ref);
+my $check_probes_from = $from - 60;	# NB! We need previous value for probeChanges file (see __get_probe_changes())
+$probes_data->{$server_key} = get_probe_times($check_probes_from, $till, undef, $probes_ref);	# todo phase 1: this param is ignored, remove in phase 2
 
 if (opt('debug'))
 {
-	foreach my $probe (keys(%{$probe_times_ref}))
+	foreach my $probe (keys(%{$probes_data->{$server_key}}))
 	{
 		my $idx = 0;
 
-		while (defined($probe_times_ref->{$probe}->[$idx]))
+		while (defined($probes_data->{$server_key}->{$probe}->[$idx]))
 		{
 			my $status = ($idx % 2 == 0 ? "ONLINE" : "OFFLINE");
-			dbg("$probe: $status ", ts_full($probe_times_ref->{$probe}->[$idx]));
+			dbg("$probe: $status ", ts_full($probes_data->{$server_key}->{$probe}->[$idx]));
 			$idx++;
 		}
 	}
@@ -233,7 +236,7 @@ while ($tld_index < $tld_count)
 		#slv_stats_reset();	# todo phase 1: this is part of phase 2
 
 		db_connect($server_key);
-		my $result = __get_test_data($from, $till, $probe_times_ref);
+		my $result = __get_test_data($from, $till, $probes_data->{$server_key});
 		db_disconnect();
 
 		db_connect();	# connect to the local node
@@ -254,7 +257,7 @@ while (children_running() > 0)
 
 last if (opt('tld'));
 }	# foreach (@server_keys)
-#undef($server_key);	NB! do not undefine, used in __get_false_positives() below.
+#undef($server_key);	NB! do not uncomment, DB is used in __get_false_positives() below.
 
 # at this point there should be no child processes so we do not care about locking
 
@@ -275,6 +278,22 @@ foreach my $fp_ref (@$false_positives)
 			      $fp_ref->{'clock'},
 			      $fp_ref->{'status'},
 			      ''	# reason is not implemented in front-end
+		]);
+}
+
+my $probe_changes = __get_probe_changes($from);
+foreach my $pc_ref (@{$probe_changes})
+{
+	dbg("writing probe changes entry:");
+	dbg("  name:", $pc_ref->{'probe'});
+	dbg("  changed at:", ts_full($pc_ref->{'clock'}));
+	dbg("  new status:", $pc_ref->{'status'});
+
+	dw_append_csv(DATA_PROBE_CHANGES, [
+			      dw_get_id(ID_PROBE, $pc_ref->{'probe'}),
+			      $pc_ref->{'clock'},
+			      dw_get_id(ID_STATUS_MAP, $pc_ref->{'status'}),
+			      ''	# reason is not implemented yet
 		]);
 }
 
@@ -1303,6 +1322,41 @@ sub __get_false_positives
 	db_disconnect();
 	}
 	undef($server_key);
+
+	return \@result;
+}
+
+sub __get_probe_changes
+{
+	my $from = shift;
+
+	my @result;
+
+	foreach my $server_key (sort(keys(%{$probes_data})))
+	{
+		foreach my $probe (sort(keys(%{$probes_data->{$server_key}})))
+		{
+			my $idx = 0;
+
+			while (defined($probes_data->{$server_key}->{$probe}->[$idx]))
+			{
+				my $clock = $probes_data->{$server_key}->{$probe}->[$idx];
+				my $status = ($idx % 2 == 0 ? PROBE_ONLINE_STR : PROBE_OFFLINE_STR);
+
+				dbg("  $probe\@$server_key changed to $status on ", ts_full($clock));
+
+				if ($idx == 0 && $clock < $from)
+				{
+					# ignore previous status
+					next;
+				}
+
+				push(@result, {'probe' => $probe, 'status' => $status, 'clock' => $clock});
+
+				$idx++;
+			}
+		}
+	}
 
 	return \@result;
 }

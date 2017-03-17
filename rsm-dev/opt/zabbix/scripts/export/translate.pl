@@ -93,6 +93,10 @@ while ($line = <$fh>)
 	{
 		__translate_incidents_end_time_line($line);
 	}
+	elsif ($data_type eq 'probeChanges.csv')
+	{
+		__translate_probe_changes_line($line);
+	}
 	else
 	{
 		__usage("\"$data_type\" is not supported yet, currently supported are cycles.csv, tests.csv, incidents.csv, incidentsEndTime.csv");
@@ -224,4 +228,19 @@ sub __translate_incidents_end_time_line
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentID', $incident_id);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentEndTime', ts_full($incident_end_time));
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'incidentFailedTests', $incident_failed_tests);
+}
+
+sub __translate_probe_changes_line
+{
+	my $line = shift;
+
+	my @columns = split(',', $line);
+
+	my $probe_name = dw_get_name(ID_PROBE, $columns[0]);
+	my $probe_change_date_time = $columns[1];
+	my $probe_status = dw_get_name(ID_STATUS_MAP, $columns[2]);
+
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeName', $probe_name);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeChangeDateTime', ts_full($probe_change_date_time));
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeStatus', $probe_status);
 }
