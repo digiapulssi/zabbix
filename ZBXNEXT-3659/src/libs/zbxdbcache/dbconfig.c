@@ -3528,9 +3528,8 @@ static void	DCdump_ipmihosts()
 	while (NULL != (ipmihost = (ZBX_DC_IPMIHOST *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  hostid " ZBX_FS_UI64 " ipmi_username '%s' ipmi_password '%s'"
-				" ipmi_authtype %d ipmi_privilege %u",
-				ipmihost->hostid, ipmihost->ipmi_username, ipmihost->ipmi_password,
-				ipmihost->ipmi_authtype, ipmihost->ipmi_privilege);
+				" ipmi_authtype %d ipmi_privilege %u", ipmihost->hostid, ipmihost->ipmi_username,
+				ipmihost->ipmi_password, ipmihost->ipmi_authtype, ipmihost->ipmi_privilege);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3633,9 +3632,9 @@ static void	DCdump_hmacros()
 
 	while (NULL != (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_iter_next(&iter)))
 	{
-		zabbix_log(LOG_LEVEL_TRACE, "  hostmacroid " ZBX_FS_UI64 " hostid " ZBX_FS_UI64 " macro '%s' value '%s' context '%s'",
-				hmacro->hostmacroid, hmacro->hostid, hmacro->macro,
-				hmacro->value, NULL != hmacro->context ? hmacro->context : "");
+		zabbix_log(LOG_LEVEL_TRACE, "  hostmacroid " ZBX_FS_UI64 " hostid " ZBX_FS_UI64 " macro '%s' value '%s'"
+				" context '%s'", hmacro->hostmacroid, hmacro->hostid, hmacro->macro, hmacro->value,
+				NULL != hmacro->context ? hmacro->context : "");
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -3699,8 +3698,8 @@ static void	DCdump_numitem(const ZBX_DC_NUMITEM	*numitem)
 
 	zabbix_log(LOG_LEVEL_TRACE, "  In %s()", __function_name);
 
-	zabbix_log(LOG_LEVEL_TRACE, "  formula '%s' units '%s' trends %d delta %u multiplier %u",
-			numitem->formula, numitem->units, numitem->trends, numitem->delta, numitem->multiplier);
+	zabbix_log(LOG_LEVEL_TRACE, "  formula '%s' units '%s' trends %d delta %u multiplier %u", numitem->formula,
+			numitem->units, numitem->trends, numitem->delta, numitem->multiplier);
 
 	zabbix_log(LOG_LEVEL_TRACE, "  End of %s()", __function_name);
 }
@@ -3877,8 +3876,7 @@ static void	DCdump_items()
 	while (NULL != (item = (ZBX_DC_ITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  itemid " ZBX_FS_UI64 " hostid " ZBX_FS_UI64 " interfaceid " ZBX_FS_UI64
-				" key '%s'",
-				item->itemid, item->hostid, item->interfaceid, item->key);
+				" key '%s'", item->itemid, item->hostid, item->interfaceid, item->key);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  lastlogsize " ZBX_FS_UI64, item->lastlogsize);
 		zabbix_log(LOG_LEVEL_TRACE, "  valuemapid " ZBX_FS_UI64, item->valuemapid);
@@ -3976,9 +3974,9 @@ static void	DCdump_functions()
 	while (NULL != (function = (ZBX_DC_FUNCTION *)zbx_hashset_iter_next(&iter)))
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "  functionid " ZBX_FS_UI64 " triggerid " ZBX_FS_UI64 " itemid "
-				ZBX_FS_UI64 " function '%s' parameter '%s' timer %u",
-				function->functionid, function->triggerid, function->itemid, function->function,
-				function->parameter, function->timer);
+				ZBX_FS_UI64 " function '%s' parameter '%s' timer %u", function->functionid,
+				function->triggerid, function->itemid, function->function, function->parameter,
+				function->timer);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -4011,8 +4009,7 @@ static void	DCdump_trigdeps()
 		{
 			const ZBX_DC_TRIGGER_DEPLIST	*trigdep_up = trigdep->dependencies.values[i];
 
-			zabbix_log(LOG_LEVEL_TRACE, "    triggerid " ZBX_FS_UI64 " refcount %d", trigdep_up->triggerid,
-					trigdep_up->refcount);
+			zabbix_log(LOG_LEVEL_TRACE, "    triggerid " ZBX_FS_UI64, trigdep_up->triggerid);
 		}
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
@@ -4037,13 +4034,10 @@ static void	DCdump_expressions()
 
 	while (NULL != (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_iter_next(&iter)))
 	{
-		zabbix_log(LOG_LEVEL_TRACE, "  expressionid " ZBX_FS_UI64 " regexp '%s'", expression->expressionid,
-				expression->regexp);
-
-		zabbix_log(LOG_LEVEL_TRACE, "  expression '%s'", expression->expression);
-		zabbix_log(LOG_LEVEL_TRACE, "  delimiter %d",  expression->delimiter);
-		zabbix_log(LOG_LEVEL_TRACE, "  type %u", expression->type);
-		zabbix_log(LOG_LEVEL_TRACE, "  case_sensitive %u",  expression->case_sensitive);
+		zabbix_log(LOG_LEVEL_TRACE, "  expressionid " ZBX_FS_UI64 " regexp '%s' expression '%s delimiter %d"
+				" type %u case_sensitive %u", expression->expressionid, expression->regexp,
+				expression->expression, expression->delimiter, expression->type,
+				expression->case_sensitive);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
 	}
@@ -4075,10 +4069,9 @@ static void	DCdump_actions()
 		{
 			zbx_dc_action_condition_t	*condition = action->conditions.values[i];
 
-			zabbix_log(LOG_LEVEL_TRACE, "    conditionid " ZBX_FS_UI64 " conditiontype %u operator %u value '%s'",
-					condition->conditionid, condition->conditiontype, condition->operator, condition->value);
-
-			zabbix_log(LOG_LEVEL_TRACE, "    ====================");
+			zabbix_log(LOG_LEVEL_TRACE, "    conditionid " ZBX_FS_UI64 " conditiontype %u operator "
+					"%u value '%s'", condition->conditionid, condition->conditiontype,
+					condition->operator, condition->value);
 		}
 
 		zabbix_log(LOG_LEVEL_TRACE, "  ====================");
