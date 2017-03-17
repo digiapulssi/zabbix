@@ -1,26 +1,24 @@
 #!/usr/bin/perl
 #
 
-use lib '/opt/zabbix/scripts';
+BEGIN
+{
+	our $MYDIR = $0; $MYDIR =~ s,(.*)/externalscripts/.*,$1/scripts,; $MYDIR = '../scripts' if ($MYDIR eq $0);
+}
+use lib $MYDIR;
 
 use strict;
-use Zabbix;
-use Getopt::Long;
-use DBI;
 use RSM;
+use RSMSLV;
+use TLD_constants qw(:api);
 use Data::Dumper;
 
-my %OPTS;
-my $rv = GetOptions(\%OPTS, "debug!", "help|?");
-
-if ($OPTS{'help'} or not $rv)
-{
-	print("usage: $0 [--debug|--help]\n");
-	exit(-1);
-}
+parse_opts();
 
 use constant ENABLE_LOGFILE => 0;
 use constant LOGFILE => '/tmp/online.nodes.debug.log';
+
+use constant PROBE_KEY_ONLINE	=> 'rsm.probe.online';	# todo phase 1: taken from RSMSLV.pm, define in single place in phase 2
 
 my $command = shift || 'total';
 my $type = shift || 'dns';
@@ -28,171 +26,42 @@ my $type = shift || 'dns';
 die("$command: invalid command") if ($command ne 'total' and $command ne 'online');
 die("$type: invalid type") if ($type ne 'dns' and $type ne 'epp' and $type ne 'rdds' and $type ne 'ipv4' and $type ne 'ipv6');
 
-sub ts_str
-{
-    my $ts = shift;
-    $ts = time() unless ($ts);
-
-    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
-
-    $year += 1900;
-    $mon++;
-    return sprintf("%4.2d/%2.2d/%2.2d-%2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
-}
-
 sub dbg
 {
-    if ($OPTS{'debug'})
-    {
-	    print(join('', @_), "\n");
-    }
-
-    return unless (ENABLE_LOGFILE == 1);
-
-    my $msg = join('', @_);
-
-    my $OUTFILE;
-
-    open $OUTFILE, '>>', LOGFILE or die("cannot open file ", LOGFILE, ": $!");
-
-    print {$OUTFILE} ts_str(), " ", $msg, "\n" or die("cannot write to file ", LOGFILE, ": $!");
-
-    close $OUTFILE or die("cannot close file ", LOGFILE, ": $!");
-}
-
-my $hosts;
-
-my $config = get_rsm_config();
-
-my $server_key = get_rsm_local_key($config);
-
-my $section = $config->{$server_key};
-
-my $dbh = DBI->connect('DBI:mysql:'.$section->{'db_name'}.':'.$section->{'db_host'},
-                                           $section->{'db_user'},
-                                           $section->{'db_password'});
-
-my $sql = "select IFNULL(value, 60) FROM globalmacro gm WHERE macro = ?";
-
-my $sth = $dbh->prepare($sql) or die $dbh->errstr;
-
-$sth->execute('{$RSM.PROBE.AVAIL.LIMIT}') or die $dbh->errstr;
-
-my @macro = $sth->fetchrow_array;
-
-$sth->finish;
-
-my $max_diff = $macro[0];
-
-dbg("probe availability limit: $max_diff seconds");
-
-my $sql = "select hostid, host FROM hosts h JOIN hosts_groups hg USING(hostid) JOIN groups g USING(groupid) WHERE g.name = ?";
-
-my $sth = $dbh->prepare($sql) or die $dbh->errstr;
-
-$sth->execute('Probes') or die $dbh->errstr;
-
-while (my $row = $sth->fetchrow_hashref) {
-    my $hostid = $row->{'hostid'};
-    my @templates;
-    push(@templates, $hostid);
-
-    dbg("checking probe ", $row->{'host'}, "...");
-
-    $hosts->{$hostid}->{'name'} = $row->{'host'};
-
-    @templates = (@templates, get_parent_templateids($hostid));
-
-    foreach my $templateid (@templates) {
-	my $sql = "SELECT hostid, macro, value FROM hostmacro WHERE hostid = ?";
-
-	my $sth = $dbh->prepare($sql) or die $dbh->errstr;
-
-	$sth->execute($templateid) or die $dbh->errstr;
-
-	while (my $macro = $sth->fetchrow_hashref) {
-	    $hosts->{$hostid}->{$macro->{'macro'}} = $macro->{'value'};
+	if (opt('debug'))
+	{
+		print(join('', @_), "\n");
 	}
 
-	$sth->finish;
-    }
+	return unless (ENABLE_LOGFILE == 1);
 
-    my $sql = "SELECT itemid, key_ FROM items where hostid = ? AND key_ LIKE 'rsm.probe.status[%]'";
+	my $msg = join('', @_);
 
-    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
+	my $OUTFILE;
 
-    $sth->execute($hostid) or die $dbh->errstr;
-
-    while (my $item = $sth->fetchrow_hashref) {
-#        dbg("  ", $item->{'key_'}, ": ", $item->{'value'});
-	$hosts->{$hostid}->{'status'} = 1;
-	$hosts->{$hostid}->{'itemid_status'} = $item->{'itemid'};
-    }
-    
-    $sth->finish;
-    
-    $sql = "SELECT IFNULL(value, 1) as value FROM history_uint WHERE itemid = ? ORDER BY clock DESC LIMIT 1";
-    
-    $sth = $dbh->prepare($sql) or die $dbh->errstr;
-    
-    foreach my $hostid ( keys (%{$hosts}) ) {
-	my $itemid = $hosts->{$hostid}->{'itemid_status'};
-	$sth->execute($itemid) or die $dbh->errstr;
-	
-	my $data = $sth->fetchrow_hashref;
-	$hosts->{$hostid}->{'status'} = $data->{'value'};
-    }
-
-    $sth->finish;
-
-    my $sql = "SELECT itemid FROM items i JOIN hosts h USING (hostid) where h.host = ? AND key_ = 'zabbix[proxy,{\$RSM.PROXY_NAME},lastaccess]'";
-
-    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
-
-    $sth->execute($row->{'host'}.' - mon') or die $dbh->errstr;
-    
-    my $item = $sth->fetchrow_hashref;
-    $sth->finish;
-    
-    $sql = "SELECT clock, IFNULL(value, 1) as value FROM history_uint WHERE itemid = ? ORDER BY clock DESC LIMIT 1";
-    $sth = $dbh->prepare($sql) or die $dbh->errstr;
-    
-    $sth->execute($item->{'itemid'}) or die $dbh->errstr;
-    
-    while (my $item = $sth->fetchrow_hashref) {
-        dbg("  last seen: ", ($item->{'clock'} - $item->{'value'}), " seconds ago (lastvalue: ", $item->{'value'}, ")");
-	$hosts->{$hostid}->{'status'} = 0 if ($item->{'clock'} - $item->{'value'} > $max_diff);
-    }
-
-    $sth->finish;
+	open $OUTFILE, '>>', LOGFILE or die("cannot open file ", LOGFILE, ": $!");
+	print {$OUTFILE} ts_str(), " ", $msg, "\n" or die("cannot write to file ", LOGFILE, ": $!");
+	close $OUTFILE or die("cannot close file ", LOGFILE, ": $!");
 }
+
+set_slv_config(get_rsm_config());
+
+db_connect();
+
+my $probes_ref = get_probes($type);
 
 my $total = 0;
 my $online = 0;
 
-foreach my $hostid (keys %{$hosts}) {
-    my $status = $hosts->{$hostid}->{'status'};
+foreach my $probe (keys(%{$probes_ref}))
+{
+	my $itemid = get_itemid_by_host("$probe - mon", PROBE_KEY_ONLINE);
+	my $value;
 
-    if ($type eq 'dns') {
-	$online++ if $status == 1;
+	next if (get_current_value($itemid, ITEM_VALUE_TYPE_UINT64, \$value) != SUCCESS);
+
+	$online++ if $value == ONLINE;
 	$total++;
-    }
-    elsif ($type eq 'epp') {
-	$online++ if $status == 1 and $hosts->{$hostid}->{'{$RSM.EPP.ENABLED}'} == 1;
-	$total++ if $hosts->{$hostid}->{'{$RSM.EPP.ENABLED}'} == 1;
-    }
-    elsif ($type eq 'rdds') {
-	$online++ if $status == 1 and $hosts->{$hostid}->{'{$RSM.RDDS.ENABLED}'} == 1;
-	$total++ if $hosts->{$hostid}->{'{$RSM.RDDS.ENABLED}'} == 1;
-    }
-    elsif ($type eq 'ipv4') {
-        $online++ if $status == 1 and $hosts->{$hostid}->{'{$RSM.IP4.ENABLED}'} == 1;
-        $total++ if $hosts->{$hostid}->{'{$RSM.IP4.ENABLED}'} == 1;
-    }
-    elsif ($type eq 'ipv6') {
-        $online++ if $status == 1 and $hosts->{$hostid}->{'{$RSM.IP6.ENABLED}'} == 1;
-        $total++ if $hosts->{$hostid}->{'{$RSM.IP6.ENABLED}'} == 1;
-    }
 }
 
 dbg($total, " total probes available for $type tests") if ($command eq 'total');
@@ -202,26 +71,8 @@ print $total if $command eq 'total';
 print $online if $command eq 'online';
 print 0 if $command ne 'total' and $command ne 'online';
 
-exit;
-
-sub get_parent_templateids($) {
-    my $templateid = shift;
-    my @result;
-
-    my $sql = "SELECT templateid FROM hosts_templates WHERE hostid = ?";
-
-    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
-
-    $sth->execute($templateid) or die $dbh->errstr;
-
-    while (my $row = $sth->fetchrow_hashref) {
-	my $templateid = $row->{'templateid'};
-	push (@result, $templateid);
-        my @parent_templates = get_parent_templateids($templateid);
-        @result = (@result, @parent_templates) if scalar @parent_templates;
-    }
-
-    $sth->finish;
-
-    return @result;
+sub usage
+{
+	print("usage: $0 [--debug|--help]\n");
+	exit(-1);
 }

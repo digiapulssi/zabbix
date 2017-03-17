@@ -25,8 +25,8 @@ use constant E_ID_MULTIPLE => -3;
 
 use constant UP => 1;
 use constant DOWN => 0;
-use constant ONLINE => 1;
-use constant OFFLINE => 0;
+use constant ONLINE => 1;	# todo phase 1: check where these are used
+use constant OFFLINE => 0;	# todo phase 1: check where these are used
 use constant SLV_UNAVAILABILITY_LIMIT => 49; # NB! must be in sync with frontend
 
 use constant MAX_SERVICE_ERROR => -200; # -200, -201 ...
@@ -76,6 +76,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR RESULT_TIMESTAMP_SHIFT PROBE_ONLINE_STR PROBE_OFFLINE_STR
 		PROBE_NORESULT_STR AVAIL_SHIFT_BACK
+		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
 		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_macro_dns_udp_delay get_macro_dns_tcp_delay
@@ -482,6 +483,7 @@ sub get_tlds
 }
 
 # Returns a reference to hash of all probes (host => hostid).
+# todo phase 1: this function changed in phase 2, please check callers
 sub get_probes
 {
 	my $service = shift;
@@ -707,7 +709,8 @@ sub get_hostid
 
 	my $rows_ref = db_select("select hostid from hosts where host='$host'");
 
-	fail("Host \"$host\" not found") unless (scalar(@$rows_ref) == 1);
+	fail("host \"$host\" not found") if (scalar(@$rows_ref) == 0);
+	fail("multiple hosts \"$host\" found") if (scalar(@$rows_ref) > 1);
 
 	return $rows_ref->[0]->[0];
 }
@@ -2442,6 +2445,7 @@ sub __get_history_table_by_value_type
 # returns:
 # SUCCESS - last clock and value found
 # E_FAIL  - nothing found
+# todo phase 1: rename to get_last_value
 sub get_current_value
 {
 	my $itemid = shift;
