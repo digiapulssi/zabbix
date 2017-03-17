@@ -68,6 +68,7 @@ function sysmapElementLabel($label = null) {
  * @param array $sysmap
  * @param array $options
  * @param int   $options['severity_min']
+ * @param int   $options['fullscreen']
  *
  * @return CAreaMap
  */
@@ -154,7 +155,8 @@ function getActionMapBySysmap($sysmap, array $options = array()) {
 			case SYSMAP_ELEMENT_TYPE_MAP:
 				$gotos['submap'] = array(
 					'sysmapid' => $elem['elementid'],
-					'severity_min' => isset($options['severity_min']) ? $options['severity_min'] : null
+					'severity_min' => isset($options['severity_min']) ? $options['severity_min'] : null,
+					'fullscreen' => isset($options['fullscreen']) ? $options['fullscreen'] : 0,
 				);
 				break;
 
