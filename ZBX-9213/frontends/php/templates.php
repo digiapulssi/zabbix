@@ -473,6 +473,14 @@ if (hasRequest('form')) {
 		'templateids' => $templateIds,
 		'preservekeys' => true
 	]);
+
+	$data['writable_templates'] = API::Template()->get([
+		'output' => ['templateid'],
+		'templateids' => $templateIds,
+		'editable' => true,
+		'preservekeys' => true
+	]);
+
 	CArrayHelper::sort($data['linkedTemplates'], ['name']);
 
 	// Get user allowed host groups and sort them by name.
