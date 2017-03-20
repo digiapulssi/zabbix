@@ -55,7 +55,7 @@ my $tables = {	'history' => { 'period' => 'day', 'keep_history' => '60'},
 	     };
 my $amount_partitions = 10;
 
-my $curr_tz = 'Europe/London';
+my $curr_tz = 'UTC';
 
 my $part_tables;
 
