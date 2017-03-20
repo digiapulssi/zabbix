@@ -137,7 +137,7 @@ if (hasRequest('unlink') || hasRequest('unlink_and_clear')) {
 	}
 	elseif (hasRequest('unlink_and_clear') && is_array(getRequest('unlink_and_clear'))) {
 		$unlinkTemplates = array_keys(getRequest('unlink_and_clear'));
-		$_REQUEST['clear_templates'] = array_merge(getRequest('unlink_and_clear'), $unlinkTemplates);
+		$_REQUEST['clear_templates'] = array_merge($unlinkTemplates, getRequest('clear_templates', []));
 	}
 
 	foreach ($unlinkTemplates as $id) {
