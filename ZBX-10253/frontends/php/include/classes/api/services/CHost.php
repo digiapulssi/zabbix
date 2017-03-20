@@ -633,7 +633,12 @@ class CHost extends CHostGeneral {
 			'preservekeys' => true
 		]);
 
-		$this->validateUpdate($hosts, $db_hosts);
+		$available_accept_types = [
+			HOST_ENCRYPTION_NONE, HOST_ENCRYPTION_PSK, (HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_PSK),
+			HOST_ENCRYPTION_CERTIFICATE, (HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_CERTIFICATE),
+			(HOST_ENCRYPTION_PSK | HOST_ENCRYPTION_CERTIFICATE),
+			(HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_PSK | HOST_ENCRYPTION_CERTIFICATE)
+		];
 
 		$inventories = [];
 		foreach ($hosts as &$host) {
@@ -646,7 +651,8 @@ class CHost extends CHostGeneral {
 				? $host['tls_connect']
 				: $db_hosts[$host['hostid']]['tls_connect'];
 
-			$host['tls_accept'] = array_key_exists('tls_accept', $host)
+			$host['tls_accept'] =
+				(array_key_exists('tls_accept', $host) && in_array($host['tls_accept'], $available_accept_types))
 				? $host['tls_accept']
 				: $db_hosts[$host['hostid']]['tls_accept'];
 
@@ -655,6 +661,14 @@ class CHost extends CHostGeneral {
 					&& ($host['tls_accept'] & HOST_ENCRYPTION_PSK) != HOST_ENCRYPTION_PSK) {
 				$host['tls_psk_identity'] = '';
 				$host['tls_psk'] = '';
+			} else {
+				$host['tls_psk_identity'] = array_key_exists('tls_psk_identity', $host)
+				? $host['tls_psk_identity']
+				: $db_hosts[$host['hostid']]['tls_psk_identity'];
+
+				$host['tls_psk'] = array_key_exists('tls_psk', $host)
+				? $host['tls_psk']
+				: $db_hosts[$host['hostid']]['tls_psk'];
 			}
 
 			// Clean certificate fields.
@@ -662,6 +676,14 @@ class CHost extends CHostGeneral {
 					&& ($host['tls_accept'] & HOST_ENCRYPTION_CERTIFICATE) != HOST_ENCRYPTION_CERTIFICATE) {
 				$host['tls_issuer'] = '';
 				$host['tls_subject'] = '';
+			} else {
+				$host['tls_issuer'] = array_key_exists('tls_issuer', $host)
+				? $host['tls_issuer']
+				: $db_hosts[$host['hostid']]['tls_issuer'];
+
+				$host['tls_subject'] = array_key_exists('tls_subject', $host)
+				? $host['tls_subject']
+				: $db_hosts[$host['hostid']]['tls_subject'];
 			}
 
 			// Fetch fields required to update host inventory.
@@ -673,6 +695,8 @@ class CHost extends CHostGeneral {
 			}
 		}
 		unset($host);
+
+		$this->validateUpdate($hosts, $db_hosts);
 
 		$inventories = $this->extendObjects('host_inventory', $inventories, ['inventory_mode']);
 		$inventories = zbx_toHash($inventories, 'hostid');
@@ -1534,15 +1558,15 @@ class CHost extends CHostGeneral {
 	 * @throws APIException if incorrect encryption options.
 	 */
 	protected function validateEncryption(array $hosts) {
-		foreach ($hosts as $host) {
-			$available_connect_types = [HOST_ENCRYPTION_NONE, HOST_ENCRYPTION_PSK, HOST_ENCRYPTION_CERTIFICATE];
-			$available_accept_types = [
-				HOST_ENCRYPTION_NONE, HOST_ENCRYPTION_PSK, (HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_PSK),
-				HOST_ENCRYPTION_CERTIFICATE, (HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_CERTIFICATE),
-				(HOST_ENCRYPTION_PSK | HOST_ENCRYPTION_CERTIFICATE),
-				(HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_PSK | HOST_ENCRYPTION_CERTIFICATE)
-			];
+		$available_connect_types = [HOST_ENCRYPTION_NONE, HOST_ENCRYPTION_PSK, HOST_ENCRYPTION_CERTIFICATE];
+		$available_accept_types = [
+			HOST_ENCRYPTION_NONE, HOST_ENCRYPTION_PSK, (HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_PSK),
+			HOST_ENCRYPTION_CERTIFICATE, (HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_CERTIFICATE),
+			(HOST_ENCRYPTION_PSK | HOST_ENCRYPTION_CERTIFICATE),
+			(HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_PSK | HOST_ENCRYPTION_CERTIFICATE)
+		];
 
+		foreach ($hosts as $host) {
 			if (array_key_exists('tls_connect', $host) && !in_array($host['tls_connect'], $available_connect_types)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.', 'tls_connect',
 					_s('unexpected value "%1$s"', $host['tls_connect'])
