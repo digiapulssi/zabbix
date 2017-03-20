@@ -1140,7 +1140,7 @@ class CUser extends CZBXAPI {
 		}
 
 		// start session
-		$sessionid = md5(time().$password.$name.mt_rand(0, 10000000));
+		$sessionid = md5(microtime().$password.$name.mt_rand());
 		DBexecute('INSERT INTO sessions (sessionid,userid,lastaccess,status) VALUES ('.zbx_dbstr($sessionid).','.$userInfo['userid'].','.time().','.ZBX_SESSION_ACTIVE.')');
 
 		add_audit(AUDIT_ACTION_LOGIN, AUDIT_RESOURCE_USER, _s('Correct login "%s".', $name));
