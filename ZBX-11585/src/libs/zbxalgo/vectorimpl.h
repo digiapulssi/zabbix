@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -88,11 +88,12 @@ void	zbx_vector_ ## __id ## _append_ptr(zbx_vector_ ## __id ## _t *vector, __typ
 	vector->values[vector->values_num++] = *value;								\
 }														\
 														\
-void	zbx_vector_ ## __id ## _append_vector(zbx_vector_ ## __id ## _t *vector, zbx_vector_ ## __id ## _t *src)\
+void	zbx_vector_ ## __id ## _append_array(zbx_vector_ ## __id ## _t *vector, const __type *values,		\
+									int values_num)				\
 {														\
-	zbx_vector_ ## __id ## _reserve(vector, vector->values_num + src->values_num);				\
-	memcpy(vector->values + vector->values_num, src->values, src->values_num * sizeof(__type));		\
-	vector->values_num = vector->values_num + src->values_num;						\
+	zbx_vector_ ## __id ## _reserve(vector, vector->values_num + values_num);				\
+	memcpy(vector->values + vector->values_num, values, values_num * sizeof(__type));			\
+	vector->values_num = vector->values_num + values_num;							\
 }														\
 														\
 void	zbx_vector_ ## __id ## _remove_noorder(zbx_vector_ ## __id ## _t *vector, int index)			\

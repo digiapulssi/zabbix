@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -190,6 +190,9 @@ typedef struct
 }
 zbx_tag_t;
 
+/* item exist in base expression  */
+#define		ZBX_DC_TRIGGER_BASE_EXPRESSION	1
+
 typedef struct _DC_TRIGGER
 {
 	zbx_uint64_t		triggerid;
@@ -214,6 +217,8 @@ typedef struct _DC_TRIGGER
 	unsigned char		status;
 	unsigned char		recovery_mode;
 	unsigned char		correlation_mode;
+
+	unsigned char		flags;
 
 	zbx_vector_ptr_t	tags;
 }
@@ -466,6 +471,7 @@ void	DCfree_triggers(zbx_vector_ptr_t *triggers);
 void	DCconfig_update_interface_snmp_stats(zbx_uint64_t interfaceid, int max_snmp_succeed, int min_snmp_fail);
 int	DCconfig_get_suggested_snmp_vars(zbx_uint64_t interfaceid, int *bulk);
 int	DCconfig_get_interface_by_type(DC_INTERFACE *interface, zbx_uint64_t hostid, unsigned char type);
+int	DCconfig_get_interface(DC_INTERFACE *interface, zbx_uint64_t hostid, zbx_uint64_t itemid);
 int	DCconfig_get_poller_nextcheck(unsigned char poller_type);
 int	DCconfig_get_poller_items(unsigned char poller_type, DC_ITEM *items);
 int	DCconfig_get_snmp_interfaceids_by_addr(const char *addr, zbx_uint64_t **interfaceids);

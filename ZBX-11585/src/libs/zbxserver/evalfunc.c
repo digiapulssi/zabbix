@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -125,7 +125,7 @@ static int	get_function_parameter_int(zbx_uint64_t hostid, const char *parameter
 	}
 
 	if (SUCCEED == ret)
-		zabbix_log(LOG_LEVEL_DEBUG, "%s() type:%d value:%d", __function_name, zbx_type_string(*type), *value);
+		zabbix_log(LOG_LEVEL_DEBUG, "%s() type:%s value:%d", __function_name, zbx_type_string(*type), *value);
 
 	zbx_free(parameter);
 out:
@@ -2725,7 +2725,7 @@ static void	add_value_suffix_normal(char *value, size_t max_len, const char *uni
 		value_double /= base * base * base * base;
 	}
 
-	if (SUCCEED != zbx_double_compare((int)(value_double + 0.5), value_double))
+	if (SUCCEED != zbx_double_compare(round(value_double), value_double))
 	{
 		zbx_snprintf(tmp, sizeof(tmp), ZBX_FS_DBL_EXT(2), value_double);
 		del_zeroes(tmp);

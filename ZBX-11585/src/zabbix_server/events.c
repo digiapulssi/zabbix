@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1032,8 +1032,8 @@ static void	correlation_condition_add_tag_match(char **sql, size_t *sql_alloc, s
 	{
 		case CONDITION_OPERATOR_EQUAL:
 		case CONDITION_OPERATOR_NOT_EQUAL:
-			zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "pt.tag='%s' and pt.value='%s'", tag_esc,
-					value_esc);
+			zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "pt.tag='%s' and pt.value" ZBX_SQL_STRCMP,
+					tag_esc, ZBX_SQL_STRVAL_EQ(value_esc));
 			break;
 		case CONDITION_OPERATOR_LIKE:
 		case CONDITION_OPERATOR_NOT_LIKE:
@@ -1077,9 +1077,9 @@ static char	*correlation_condition_get_event_filter(zbx_corr_condition_t *condit
 		case ZBX_CORR_CONDITION_NEW_EVENT_TAG_VALUE:
 		case ZBX_CORR_CONDITION_NEW_EVENT_HOSTGROUP:
 			if (SUCCEED == correlation_condition_match_new_event(condition, event, SUCCEED))
-				filter = "1";
+				filter = "1=1";
 			else
-				filter = "0";
+				filter = "0=1";
 
 			return zbx_strdup(NULL, filter);
 	}
@@ -1451,7 +1451,6 @@ static void	correlate_events_by_global_rules(zbx_vector_ptr_t *trigger_diff, zbx
 	{
 		if (FAIL != zbx_vector_uint64_bsearch(triggerids_lock, queue->objectid,
 				ZBX_DEFAULT_UINT64_COMPARE_FUNC))
-
 		{
 			/* trigger already locked by this process, add to locked triggerids */
 			zbx_vector_uint64_append(&triggerids, queue->objectid);
@@ -1706,11 +1705,7 @@ static void	update_trigger_changes(zbx_vector_ptr_t *trigger_diff)
 		}
 
 		if (EVENT_SOURCE_INTERNAL == event->source)
-		{
-			diff->lastchange = event->clock;
-			diff->flags |= ZBX_FLAGS_TRIGGER_DIFF_UPDATE_LASTCHANGE;
 			continue;
-		}
 
 		if (TRIGGER_VALUE_OK == event->value && 0 == (event->flags & ZBX_FLAGS_DB_EVENT_LINKED))
 		{
@@ -1728,8 +1723,9 @@ static void	update_trigger_changes(zbx_vector_ptr_t *trigger_diff)
 			diff->flags |= ZBX_FLAGS_TRIGGER_DIFF_UPDATE_PROBLEM_COUNT;
 		}
 
-		/* remember the clock of the last event in the case we must update trigger lastchange */
+		/* always update trigger last change whenever a trigger event has been created */
 		diff->lastchange = event->clock;
+		diff->flags |= ZBX_FLAGS_TRIGGER_DIFF_UPDATE_LASTCHANGE;
 	}
 
 	/* recalculate trigger value from problem_count and mark for updating if necessary */
@@ -1745,7 +1741,7 @@ static void	update_trigger_changes(zbx_vector_ptr_t *trigger_diff)
 		if (new_value != diff->value)
 		{
 			diff->value = new_value;
-			diff->flags |= (ZBX_FLAGS_TRIGGER_DIFF_UPDATE_VALUE | ZBX_FLAGS_TRIGGER_DIFF_UPDATE_LASTCHANGE);
+			diff->flags |= ZBX_FLAGS_TRIGGER_DIFF_UPDATE_VALUE;
 		}
 	}
 }
