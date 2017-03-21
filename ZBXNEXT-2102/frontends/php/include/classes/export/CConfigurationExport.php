@@ -1066,12 +1066,6 @@ class CConfigurationExport {
 						case SCREEN_RESOURCE_SCREEN:
 							$screenIds[$screenItem['resourceid']] = $screenItem['resourceid'];
 							break;
-
-						case SCREEN_RESOURCE_CLOCK:
-							if ($screenItem['style'] == TIME_TYPE_HOST) {
-								$itemIds[$screenItem['resourceid']] = $screenItem['resourceid'];
-							}
-							break;
 					}
 				}
 			}
@@ -1119,12 +1113,6 @@ class CConfigurationExport {
 
 						case SCREEN_RESOURCE_SCREEN:
 							$screenItem['resourceid'] = $screens[$screenItem['resourceid']];
-							break;
-
-						case SCREEN_RESOURCE_CLOCK:
-							if ($screenItem['style'] == TIME_TYPE_HOST) {
-								$screenItem['resourceid'] = $items[$screenItem['resourceid']];
-							}
 							break;
 					}
 				}
