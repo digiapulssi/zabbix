@@ -391,10 +391,10 @@ class CPageFilter {
 		$this->data['groups'] = API::HostGroup()->get($options);
 
 		$parents = [];
-		$parent_name = '';
 		foreach ($this->data['groups'] as $group) {
 			$parent = explode('/', $group['name']);
 			if (count($parent) > 1) {
+				$parent_name = '';
 				array_pop($parent);
 				foreach ($parent as $sub_parent) {
 					if ($parent_name === '') {
@@ -403,9 +403,12 @@ class CPageFilter {
 					else {
 						$parent_name .= '/'.$sub_parent;
 					}
-					$parents[] = $parent_name;
+					if (!in_array(trim($parent_name), $parents)) {
+						$parents[] = trim($parent_name);
+					}
 				}
 			}
+			$parents[] = $group['name'];
 		}
 
 		if ($parents) {
