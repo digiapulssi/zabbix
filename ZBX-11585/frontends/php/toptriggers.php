@@ -98,11 +98,27 @@ if ($groupids) {
 		'preservekeys' => true
 	]);
 
+	$filterGroupsNames = [];
 	foreach ($filterGroups as $filterGroup) {
 		$data['multiSelectHostGroupData'][] = [
 			'id' => $filterGroup['groupid'],
 			'name' => $filterGroup['name']
 		];
+
+		$filterGroupsNames[] = $filterGroup['name'].'/';
+	}
+
+	if ($filterGroupsNames) {
+		$child_groups = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'search' => ['name' => $filterGroupsNames],
+			'searchByAny' => true,
+			'startSearch' => true
+		]);
+
+		foreach ($child_groups as $child_group) {
+			$groupids[] = $child_group['groupid'];
+		}
 	}
 }
 
