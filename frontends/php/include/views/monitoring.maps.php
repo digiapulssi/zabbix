@@ -55,7 +55,10 @@ if (!empty($this->data['maps'])) {
 		$mapWidget->addHeader($parentMaps);
 	}
 
-	$actionMap = getActionMapBySysmap($this->data['map'], array('severity_min' => $this->data['severity_min']));
+	$actionMap = getActionMapBySysmap($this->data['map'], array(
+		'severity_min' => $this->data['severity_min'],
+		'fullscreen' => $this->data['fullscreen']
+	));
 
 	$mapTable->addRow($actionMap);
 
