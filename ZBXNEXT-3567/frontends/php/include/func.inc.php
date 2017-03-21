@@ -1815,7 +1815,17 @@ function show_messages($good = false, $okmsg = null, $errmsg = null) {
 	$imageMessages = [];
 
 	$title = $good ? $okmsg : $errmsg;
-	$messages = isset($ZBX_MESSAGES) ? $ZBX_MESSAGES : [];
+	$temp = isset($ZBX_MESSAGES) ? $ZBX_MESSAGES : [];
+	$messages = [];
+
+	$debug_enabled = CWebUser::isLoggedIn() && CWebUser::getDebugMode();
+	foreach($temp as $message) {
+		$sql_error = array_key_exists('sql_error', $message) && ($message['sql_error'] === true);
+		if ($sql_error && ZBX_SHOW_SQL_ERRORS === false && !$debug_enabled) {
+			$message['message'] = _('SQL error, please contact with Zabbix administrator.');
+		}
+		$messages[] = $message;
+	}
 
 	$ZBX_MESSAGES = [];
 
@@ -1926,6 +1936,20 @@ function error($msgs) {
 
 	foreach ($msgs as $msg) {
 		$ZBX_MESSAGES[] = ['type' => 'error', 'message' => $msg];
+	}
+}
+
+function sqlError($msgs) {
+	global $ZBX_MESSAGES;
+
+	if (!isset($ZBX_MESSAGES)) {
+		$ZBX_MESSAGES = [];
+	}
+
+	$msgs = zbx_toArray($msgs);
+
+	foreach ($msgs as $msg) {
+		$ZBX_MESSAGES[] = ['type' => 'error', 'message' => $msg, 'sql_error' => true];
 	}
 }
 

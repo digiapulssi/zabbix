@@ -238,9 +238,11 @@ class CScreenHistory extends CScreenBase {
 										->addClass(ZBX_STYLE_NOWRAP)
 										->addClass(get_item_logtype_style($data['severity']))
 									: '';
-								$row[] = (new CCol($data['logeventid']))
-									->addClass(ZBX_STYLE_NOWRAP)
-									->addClass($color);
+								$row[] = ($data['logeventid'] != 0)
+									? (new CCol($data['logeventid']))
+										->addClass(ZBX_STYLE_NOWRAP)
+										->addClass($color)
+									: '';
 							}
 						}
 
