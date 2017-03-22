@@ -2963,7 +2963,7 @@ static void	conditions_vectors_destroy(zbx_hashset_t *uniq_conditions)
  ******************************************************************************/
 int	check_action_condition(const DB_EVENT *event, DB_CONDITION *condition)
 {
-	int			ret = FAIL;
+	int			ret;
 	zbx_vector_ptr_t	esc_events;
 
 	zbx_vector_uint64_create(&condition->objectids);
@@ -2973,8 +2973,7 @@ int	check_action_condition(const DB_EVENT *event, DB_CONDITION *condition)
 
 	check_events_condition(&esc_events, event->source, condition);
 
-	if (1 == condition->objectids.values_num && condition->objectids.values[0] == event->objectid)
-		ret = SUCCEED;
+	ret = (1 == condition->objectids.values_num && condition->objectids.values[0] == event->objectid ? SUCCEED : FAIL);
 
 	zbx_vector_uint64_destroy(&condition->objectids);
 	zbx_vector_ptr_destroy(&esc_events);
