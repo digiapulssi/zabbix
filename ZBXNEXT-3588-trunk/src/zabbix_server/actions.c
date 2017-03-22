@@ -1063,61 +1063,50 @@ static int	check_trigger_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION *c
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (CONDITION_TYPE_HOST_GROUP == condition->conditiontype)
+	switch (condition->conditiontype)
 	{
-		ret = check_host_group_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_HOST_TEMPLATE == condition->conditiontype)
-	{
-		ret = check_host_template_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_HOST == condition->conditiontype)
-	{
-		ret = check_host_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_TRIGGER == condition->conditiontype)
-	{
-		ret = check_trigger_id_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_TRIGGER_NAME == condition->conditiontype)
-	{
-		ret = check_trigger_name_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_TRIGGER_SEVERITY == condition->conditiontype)
-	{
-		ret = check_trigger_severity_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_TIME_PERIOD == condition->conditiontype)
-	{
-		ret = check_time_period_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_MAINTENANCE == condition->conditiontype)
-	{
-		ret = check_maintenance_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_EVENT_ACKNOWLEDGED == condition->conditiontype)
-	{
-		ret = check_acknowledged_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_APPLICATION == condition->conditiontype)
-	{
-		ret = check_application_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_EVENT_TAG == condition->conditiontype)
-	{
-		check_condition_event_tag(esc_events, condition);
-		ret = SUCCEED;
-	}
-	else if (CONDITION_TYPE_EVENT_TAG_VALUE == condition->conditiontype)
-	{
-		check_condition_event_tag_value(esc_events, condition);
-		ret = SUCCEED;
-	}
-	else
-	{
-		zabbix_log(LOG_LEVEL_ERR, "unsupported condition type [%d] for condition id [" ZBX_FS_UI64 "]",
-				(int)condition->conditiontype, condition->conditionid);
-		ret = FAIL;
+		case CONDITION_TYPE_HOST_GROUP:
+			ret = check_host_group_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_HOST_TEMPLATE:
+			ret = check_host_template_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_HOST:
+			ret = check_host_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_TRIGGER:
+			ret = check_trigger_id_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_TRIGGER_NAME:
+			ret = check_trigger_name_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_TRIGGER_SEVERITY:
+			ret = check_trigger_severity_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_TIME_PERIOD:
+			ret = check_time_period_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_MAINTENANCE:
+			ret = check_maintenance_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_EVENT_ACKNOWLEDGED:
+			ret = check_acknowledged_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_APPLICATION:
+			ret = check_application_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_EVENT_TAG:
+			check_condition_event_tag(esc_events, condition);
+			ret = SUCCEED;
+			break;
+		case CONDITION_TYPE_EVENT_TAG_VALUE:
+			check_condition_event_tag_value(esc_events, condition);
+			ret = SUCCEED;
+			break;
+		default:
+			zabbix_log(LOG_LEVEL_ERR, "unsupported condition type [%d] for condition id [" ZBX_FS_UI64 "]",
+					(int)condition->conditiontype, condition->conditionid);
+			ret = FAIL;
 	}
 
 	if (NOTSUPPORTED == ret)
@@ -1126,6 +1115,7 @@ static int	check_trigger_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION *c
 				(int)condition->operator, condition->conditionid);
 		ret = FAIL;
 	}
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
