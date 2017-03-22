@@ -173,9 +173,10 @@ class CScreenHistory extends CScreenBase {
 						$options['excludeSearch'] = 1;
 					}
 				}
-				$options['sortfield'] = ['itemid', 'clock'];
 
 				$historyData = API::History()->get($options);
+				CArrayHelper::sort($historyData, ['clock', 'ns']);
+				$historyData = array_reverse($historyData);
 
 				foreach ($historyData as $data) {
 					$data['value'] = rtrim($data['value'], " \t\r\n");
@@ -268,8 +269,9 @@ class CScreenHistory extends CScreenBase {
 					]);
 				}
 
-				$options['sortfield'] = ['itemid', 'clock'];
 				$historyData = API::History()->get($options);
+				CArrayHelper::sort($historyData, ['clock', 'ns']);
+				$historyData = array_reverse($historyData);
 
 				foreach ($historyData as $data) {
 					$item = $items[$data['itemid']];
