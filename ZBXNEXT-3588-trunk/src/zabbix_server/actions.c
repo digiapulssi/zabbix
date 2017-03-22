@@ -3278,31 +3278,28 @@ zbx_escalation_rec_t;
  ******************************************************************************/
 static int	is_recovery_event(const DB_EVENT *event)
 {
-	if (EVENT_SOURCE_TRIGGERS == event->source)
+	switch (event->source)
 	{
-		if (EVENT_OBJECT_TRIGGER == event->object && TRIGGER_VALUE_OK == event->value)
-			return SUCCEED;
+		case EVENT_SOURCE_TRIGGERS:
+			switch (event->object)
+			{
+				case EVENT_OBJECT_TRIGGER:
+					return (TRIGGER_VALUE_OK == event->value ? SUCCEED : FAIL);
+				default:
+					return FAIL;
+			}
+		case EVENT_SOURCE_INTERNAL:
+			switch (event->object)
+			{
+				case EVENT_OBJECT_TRIGGER:
+					return (TRIGGER_STATE_NORMAL == event->value ? SUCCEED : FAIL);
+				case EVENT_OBJECT_ITEM:
+				case EVENT_OBJECT_LLDRULE:
+					return (ITEM_STATE_NORMAL == event->value ? SUCCEED : FAIL);
+				default:
+					return FAIL;
+			}
 	}
-	else if (EVENT_SOURCE_INTERNAL == event->source)
-	{
-		switch (event->object)
-		{
-			case EVENT_OBJECT_TRIGGER:
-				if (TRIGGER_STATE_NORMAL == event->value)
-					return SUCCEED;
-				break;
-			case EVENT_OBJECT_ITEM:
-				if (ITEM_STATE_NORMAL == event->value)
-					return SUCCEED;
-				break;
-			case EVENT_OBJECT_LLDRULE:
-				if (ITEM_STATE_NORMAL == event->value)
-					return SUCCEED;
-				break;
-		}
-	}
-
-	return FAIL;
 }
 
 /******************************************************************************
