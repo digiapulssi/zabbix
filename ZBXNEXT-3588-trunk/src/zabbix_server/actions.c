@@ -2786,31 +2786,27 @@ static int	check_internal_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION *
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (CONDITION_TYPE_EVENT_TYPE == condition->conditiontype)
+	switch (condition->conditiontype)
 	{
-		ret = check_intern_event_type_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_HOST_GROUP == condition->conditiontype)
-	{
-		ret = check_intern_host_group_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_HOST_TEMPLATE == condition->conditiontype)
-	{
-		ret = check_intern_host_template_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_HOST == condition->conditiontype)
-	{
-		ret = check_intern_host_condition(esc_events, condition);
-	}
-	else if (CONDITION_TYPE_APPLICATION == condition->conditiontype)
-	{
-		ret = check_intern_application_condition(esc_events, condition);
-	}
-	else
-	{
-		zabbix_log(LOG_LEVEL_ERR, "unsupported condition type [%d] for condition id [" ZBX_FS_UI64 "]",
-				(int)condition->conditiontype, condition->conditionid);
-		ret = FAIL;
+		case CONDITION_TYPE_EVENT_TYPE:
+			ret = check_intern_event_type_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_HOST_GROUP:
+			ret = check_intern_host_group_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_HOST_TEMPLATE:
+			ret = check_intern_host_template_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_HOST:
+			ret = check_intern_host_condition(esc_events, condition);
+			break;
+		case CONDITION_TYPE_APPLICATION:
+			ret = check_intern_application_condition(esc_events, condition);
+			break;
+		default:
+			zabbix_log(LOG_LEVEL_ERR, "unsupported condition type [%d] for condition id [" ZBX_FS_UI64 "]",
+					(int)condition->conditiontype, condition->conditionid);
+			ret = FAIL;
 	}
 
 	if (NOTSUPPORTED == ret)
@@ -2924,6 +2920,7 @@ static void	conditions_vectors_create(zbx_hashset_t *uniq_conditions)
 			zbx_vector_uint64_create(&condition->objectids);
 	}
 }
+
 /******************************************************************************
  *                                                                            *
  * Function: conditions_vectors_destroy                                       *
