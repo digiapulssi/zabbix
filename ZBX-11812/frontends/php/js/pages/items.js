@@ -46,7 +46,11 @@ function organizeInterfaces(interfaceType) {
 				if (selectedInterfaceId && !selectedInterfaceOption.prop('disabled')) {
 					jQuery('#interfaceid').val(selectedInterfaceId);
 				}
-				// if no interfaceid is given, select the first suitable interface
+				// if no interfaceid is given, check if one is set as default
+				else if (matchingInterfaces.filter('[data-default="1"]').length == 1) {
+					matchingInterfaces.filter('[data-default="1"]').prop('selected', true);
+				}
+				// if no interfaceid is given and default is not specified, select the first suitable interface
 				else {
 					matchingInterfaces.first().prop('selected', true);
 				}

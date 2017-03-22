@@ -77,7 +77,18 @@ $table = (new CTableInfo())
 $current_time = time();
 
 foreach ($data['hosts'] as $host) {
-	$interface = reset($host['interfaces']);
+	// select first interface from the list, based on order sorted by 'type', then, select default one
+	if (count($host['interfaces']) > 1) {
+		CArrayHelper::sort($host['interfaces'], ['type']);
+
+		foreach ($host['interfaces'] as $interfaceIndex => $interface) {
+			if ($interface['main'] == 1) break;
+			if (!array_key_exists($interfaceIndex + 1, $host['interfaces'])) break;
+			if ($interface['type'] != $host['interfaces'][$interfaceIndex + 1]['type']) break;
+		}
+	} else {
+		$interface = reset($host['interfaces']);
+	}
 
 	$description = [];
 
