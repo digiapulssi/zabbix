@@ -1972,7 +1972,9 @@ function evalExpressionData($expression, $replaceFunctionMacros) {
 
 	// execute expression
 	ob_start();
-	eval('$result = ('.trim($evStr).');');
+	try {
+		eval('$result = ('.trim($evStr).');');
+	} catch (Throwable $t) { }
 	ob_get_clean();
 
 	return $result;
