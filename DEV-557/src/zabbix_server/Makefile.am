@@ -20,6 +20,7 @@ SUBDIRS = \
 	vmware \
 	taskmanager \
 	ipmi \
+	scripts \
 	ldapsyncer
 
 sbin_PROGRAMS = zabbix_server
@@ -28,7 +29,6 @@ zabbix_server_SOURCES = \
 	actions.c actions.h \
 	operations.c operations.h \
 	events.c events.h \
-	scripts.c scripts.h \
 	server.c
 
 zabbix_server_LDADD = \
@@ -50,6 +50,7 @@ zabbix_server_LDADD = \
 	vmware/libzbxvmware.a \
 	taskmanager/libzbxtaskmanager.a \
 	ipmi/libipmi.a \
+	scripts/libzbxscripts.a \
 	ldapsyncer/libzbxldapsyncer.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxserversysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
@@ -75,7 +76,8 @@ zabbix_server_LDADD = \
 	$(top_srcdir)/src/libs/zbxdbupgrade/libzbxdbupgrade.a \
 	$(top_srcdir)/src/libs/zbxdbhigh/libzbxdbhigh.a \
 	$(top_srcdir)/src/libs/zbxdb/libzbxdb.a \
-	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a
+	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a \
+	$(top_srcdir)/src/libs/zbxtasks/libzbxtasks.a
 
 zabbix_server_LDADD += @SERVER_LIBS@
 
