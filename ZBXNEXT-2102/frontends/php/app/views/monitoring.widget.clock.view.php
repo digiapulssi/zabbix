@@ -44,12 +44,9 @@ if ($data['clock']['time_zone_string'] !== null) {
 	$item->setTimeZoneString($data['clock']['time_zone_string']);
 }
 
-$clock_div = (new CDiv($item))
-	->addClass(ZBX_STYLE_CLOCK_WIDGET_CONTAINER);
-
 $output = [
 	'header' => $data['clock']['title'],
-	'body' => $clock_div->toString(),
+	'body' => $item->toString(),
 	'footer' => (new CList([$item->getTimeDiv(),_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString(),
 	'script_file' => $item->getScriptFile(),
 	'script_inline' => $item->getScriptRun()
