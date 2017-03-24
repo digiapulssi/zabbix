@@ -55,6 +55,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 		zbx_uint64_t *userid, zbx_uint64_t *hostid, DC_HOST *dc_host, DC_ITEM *dc_item, DB_ALERT *alert,
 		char **data, int macro_type, char *error, int maxerrlen);
 
+void	expand_trigger_macros(DB_EVENT *event, DC_TRIGGER *trigger);
 void	evaluate_expressions(zbx_vector_ptr_t *triggers);
 
 void	zbx_format_value(char *value, size_t max_len, zbx_uint64_t valuemapid,
