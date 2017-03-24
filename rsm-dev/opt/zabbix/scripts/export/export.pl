@@ -1273,7 +1273,7 @@ sub __get_false_positives
 {
 	my $from = shift;
 	my $till = shift;
-	$server_key = shift;
+	my $server_key = shift;
 
 	my @local_server_keys;
 
