@@ -132,15 +132,23 @@
 			domElement.draggable({
 				handle: 'div.<?= ZBX_STYLE_DRAG_ICON ?>',
 				revert: 'invalid',
+				helper: function(event) {
+					var hostInterfaceId = jQuery(this).data('interfaceid');
+					var clone = jQuery(this).clone();
+					// clone has to have unique name for useip radio group for original to keep selected value.
+					clone.find("[name$='[useip]']").each(function(){
+						jQuery(this).attr('name','interfaces[' + hostInterfaceId + '][useip_handle]');
+					});
+					return clone;
+				},
 				start: function(event, ui) {
-					jQuery(this).css({'z-index': '1000'})
+					jQuery(ui.helper).css({'z-index': '1000'});
+					// visibility is added to original element to hide it, while helper is beeing moved, but to keep it's place visually
+					jQuery(this).css({'visibility': 'hidden'});
 				},
 				stop: function(event, ui) {
-					var hostInterfaceId = jQuery(this).data('interfaceid');
 					resetMainInterfaces();
-					resetUseipInterface(hostInterfaceId)
-
-					jQuery(this).css({'z-index': ''})
+					jQuery(this).css({'visibility': ''});
 				}
 			});
 		}
@@ -239,16 +247,6 @@
 			jQuery('#hostInterfaceRow_' + hostInterfaceId).insertBefore(newDomId);
 		}
 
-		function resetUseipInterface(hostInterfaceId) {
-			var useip = allHostInterfaces[hostInterfaceId].useip;
-			if (useip == 0) {
-				jQuery('#radio_dns_' + hostInterfaceId).prop('checked', true);
-			}
-			else {
-				jQuery('#radio_ip_' + hostInterfaceId).prop('checked', true);
-			}
-		}
-
 		return {
 			add: function(hostInterfaces) {
 				for (var i = 0; i < hostInterfaces.length; i++) {
@@ -325,9 +323,7 @@
 			hostInterfacesManager.setMainInterface(interfaceId);
 		});
 
-		// when we start dragging row, all radio buttons are unchecked for some reason, we store radio buttons values
-		// to restore them when drag is ended
-		jQuery('#hostlist').on('click', 'input[type=radio].interface-useip', function() {
+		jQuery('#hostlist').on('click', 'input[type=radio][id*="_useip_"]', function() {
 			var interfaceId = jQuery(this).attr('id').match(/\d+/);
 			hostInterfacesManager.setUseipForInterface(interfaceId[0], jQuery(this).val());
 		});
