@@ -193,6 +193,8 @@ $data['userid'] = CWebUser::$data['userid'];
 $data['form'] = getRequest('form');
 $data['form_refresh'] = getRequest('form_refresh', 0);
 $data['autologout'] = getRequest('autologout');
+$data['name'] = CwebUser::$data['name'];
+$data['surname'] = CwebUser::$data['surname'];
 
 // render view
 $usersView = new CView('administration.users.edit', $data);
