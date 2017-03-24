@@ -509,15 +509,9 @@ sub create_passive_proxy($$$$$) {
     my $probe = get_probe($probe_name, false);
 
     if (defined($probe->{'proxyid'})) {
-	my $vars = {'proxyid' => $probe->{'proxyid'}, 'status' => HOST_STATUS_PROXY_PASSIVE};
-	
-	if (defined($probe->{'interface'}) and 'HASH' eq ref($probe->{'interface'})) {
-		$vars->{'interface'} = {'interfaceid' => $probe->{'interface'}->{'interfaceid'},
-					'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port};
-	}
-	else {
-		$vars->{'interface'} = {'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port};
-	}
+	my $vars = {'proxyid' => $probe->{'proxyid'}, 'status' => HOST_STATUS_PROXY_PASSIVE,
+                                        'interface' => {'interfaceid' => $probe->{'interface'}->{'interfaceid'},
+				'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port}};
 
 	if (defined($probe_psk_identity)) {
 		$vars->{'tls_psk_identity'} = $probe_psk_identity;
