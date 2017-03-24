@@ -1244,6 +1244,36 @@ sub get_online_probes
 	return \@result;
 }
 
+# todo phase 1: taken from RSMSLV.pm of phase 2
+sub __print_probe_times
+{
+	my $probe_times_ref = shift;
+
+	if (scalar(keys(%{$probe_times_ref})) == 0)
+	{
+		info("no probes were online at given period");
+		return;
+	}
+
+	info("probe online times:");
+
+	foreach my $probe (keys(%{$probe_times_ref}))
+	{
+		info("  $probe");
+
+		my $idx = 0;
+		my $count = scalar(@{$probe_times_ref->{$probe}});
+
+		while ($idx < $count)
+		{
+			my $from = $probe_times_ref->{$probe}->[$idx++];
+			my $till = $probe_times_ref->{$probe}->[$idx++];
+
+			info("    ", selected_period($from, $till));
+		}
+	}
+}
+
 # Get online times of probe nodes.
 #
 # Returns hash of probe names as keys and array with online times as values:
