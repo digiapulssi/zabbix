@@ -1393,7 +1393,7 @@ sub manage_tld_objects($$$$$) {
 	}
 
 	if ($action eq 'delete') {
-	    remove_hosts( \@tmp_hostids );
+	    remove_hosts( \@hostids_arr );
 	    remove_templates([ $main_templateid ]);
 
 	    my $hostgroupid = get_host_group('TLD '.$tld, false);
