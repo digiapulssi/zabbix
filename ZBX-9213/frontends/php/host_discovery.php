@@ -451,6 +451,26 @@ else {
 
 	$data['paging'] = getPagingLine($data['discoveries'], $sortOrder, $url);
 
+	// get real hosts & select write permissions
+	$data['writable_templates'] = null;
+	$discoveryHostIds = [];
+	foreach ($data['discoveries'] as &$discovery) {
+		if ($discovery['templateid']) {
+			$discovery['dbTemplate'] = get_realhost_by_itemid($discovery['templateid']);
+			$discoveryHostIds[] = $discovery['dbTemplate']['hostid'];
+		}
+	}
+	unset($discovery);
+
+	if ($discoveryHostIds) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => array_unique($discoveryHostIds),
+			'preservekeys' => true,
+			'editable' => true
+		]);
+	}
+
 	// render view
 	$discoveryView = new CView('configuration.host.discovery.list', $data);
 	$discoveryView->render();

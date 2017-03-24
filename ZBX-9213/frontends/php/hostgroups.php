@@ -460,11 +460,24 @@ else {
 	]);
 	order_result($data['groups'], $sortField, $sortOrder);
 
+	$linkedTemplateIds = [];
 	foreach ($data['groups'] as &$group) {
+		$linkedTemplateIds = array_merge($linkedTemplateIds, zbx_objectValues($group['templates'], 'templateid'));
 		order_result($group['hosts'], 'name');
 		order_result($group['templates'], 'name');
 	}
 	unset($group);
+
+	// Select writable templates:
+	$data['writable_templates'] = null;
+	if ($linkedTemplateIds) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => array_unique($linkedTemplateIds),
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
 
 	// render view
 	$hostgroupView = new CView('configuration.hostgroups.list', $data);

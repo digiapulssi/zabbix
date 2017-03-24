@@ -1542,6 +1542,25 @@ else {
 	]);
 	$data['triggerRealHosts'] = getParentHostsByTriggers($data['itemTriggers']);
 
+	// Select hosts used and test permissions
+	$hostIds = [];
+	foreach ($data['triggerRealHosts'] as $realHost) {
+		$hostIds = array_merge($hostIds, zbx_objectValues($realHost, 'hostid'));
+	}
+	foreach ($data['items'] as $item) {
+		$hostIds = array_merge($hostIds, zbx_objectValues($item['template_host'], 'itemid'));
+	}
+
+	$data['writable_templates'] = null;
+	if ($hostIds) {
+			$data['writable_templates'] = API::Template()->get([
+				'output' => ['templateid'],
+				'templateids' => array_unique($hostIds),
+				'preservekeys' => true,
+				'editable' => true
+			]);
+	}
+
 	// determine, show or not column of errors
 	if (isset($hosts)) {
 		$host = reset($hosts);

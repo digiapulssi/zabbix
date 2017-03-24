@@ -81,11 +81,17 @@ foreach ($this->data['items'] as $item) {
 	// description
 	$description = [];
 	if (!empty($item['template_host'])) {
-		$description[] = (new CLink(CHtml::encode($item['template_host']['name']),
-			'?hostid='.$item['template_host']['hostid'].'&filter_set=1'
-		))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass(ZBX_STYLE_GREY);
+		if (array_key_exists($item['template_host']['hostid'], $this->data['writable_templates'])) {
+			$description[] = (new CLink(CHtml::encode($item['template_host']['name']),
+				'?hostid='.$item['template_host']['hostid'].'&filter_set=1'
+			))
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->addClass(ZBX_STYLE_GREY);
+		} else {
+			$description[] = (new CSpan(CHtml::encode($item['template_host']['name'])))
+				->addClass(ZBX_STYLE_GREY);
+		}
+
 		$description[] = NAME_DELIMITER;
 	}
 
@@ -146,10 +152,16 @@ foreach ($this->data['items'] as $item) {
 			}
 			else {
 				$realHost = reset($this->data['triggerRealHosts'][$trigger['triggerid']]);
-				$triggerDescription[] = (new CLink(
-					CHtml::encode($realHost['name']),
-					'triggers.php?hostid='.$realHost['hostid']))
-					->addClass(ZBX_STYLE_GREY);
+				if (array_key_exists($realHost['hostid'], $this->data['writable_templates'])) {
+					$triggerDescription[] = (new CLink(
+						CHtml::encode($realHost['name']),
+						'triggers.php?hostid='.$realHost['hostid']))
+						->addClass(ZBX_STYLE_GREY);
+				} else {
+					$triggerDescription[] = (new CSpan(CHtml::encode($realHost['name'])))
+						->addClass(ZBX_STYLE_GREY);
+				}
+
 				$triggerDescription[] = ':';
 			}
 		}

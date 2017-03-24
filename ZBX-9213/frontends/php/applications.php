@@ -401,6 +401,25 @@ else {
 
 	$data['paging'] = getPagingLine($data['applications'], $sortOrder, $url);
 
+	// Select hosts used and test permissions
+	$hostIds = [];
+	foreach ($data['applications'] as $application) {
+		if (array_key_exists('sourceTemplates', $application)) {
+			$hostIds = array_merge($hostIds, zbx_objectValues($application['sourceTemplates'], 'hostid'));
+		}
+		$hostIds[] = $application['host']['hostid'];
+	}
+
+	$data['writable_templates'] = null;
+	if ($hostIds) {
+			$data['writable_templates'] = API::Template()->get([
+				'output' => ['templateid'],
+				'templateids' => array_unique($hostIds),
+				'preservekeys' => true,
+				'editable' => true
+			]);
+	}
+
 	// render view
 	$applicationView = new CView('configuration.application.list', $data);
 	$applicationView->render();

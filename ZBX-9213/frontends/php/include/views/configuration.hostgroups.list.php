@@ -77,11 +77,15 @@ foreach ($this->data['groups'] as $group) {
 			$hostsOutput[] = ', ';
 		}
 
-		$url = 'templates.php?form=update&templateid='.$template['templateid'].'&groupid='.$group['groupid'];
+		if (array_key_exists($template['templateid'], $data['writable_templates'])) {
+			$url = 'templates.php?form=update&templateid='.$template['templateid'].'&groupid='.$group['groupid'];
 
-		$hostsOutput[] = (new CLink($template['name'], $url))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass(ZBX_STYLE_GREY);
+			$hostsOutput[] = (new CLink($template['name'], $url))
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->addClass(ZBX_STYLE_GREY);
+		} else {
+			$hostsOutput[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
+		}
 	}
 
 	if ($group['templates'] && $group['hosts']) {

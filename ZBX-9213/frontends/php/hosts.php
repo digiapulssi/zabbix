@@ -1029,6 +1029,13 @@ elseif (hasRequest('form')) {
 			'templateids' => $data['templates']
 		]);
 		CArrayHelper::sort($data['linked_templates'], ['name']);
+
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $data['templates'],
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	$hostView = new CView('configuration.host.edit', $data);
@@ -1096,6 +1103,21 @@ else {
 		'preservekeys' => true
 	]);
 
+	// selecting writable templates
+	$writable_templates = null;
+	if ($templateIds) {
+		foreach ($templates as $template) {
+			$templateIds = array_merge($templateIds, zbx_objectValues($template['parentTemplates'], 'templateid'));
+		}
+
+		$writable_templates = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => array_unique($templateIds),
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
+
 	// get proxy host IDs that that are not 0
 	$proxyHostIds = [];
 	foreach ($hosts as $host) {
@@ -1122,6 +1144,7 @@ else {
 		'groupId' => $pageFilter->groupid,
 		'config' => $config,
 		'templates' => $templates,
+		'writable_templates' => $writable_templates,
 		'proxies' => $proxies
 	];
 

@@ -627,6 +627,26 @@ else {
 
 	order_result($templates, $sortField, $sortOrder);
 
+	// Select writable templates:
+	$linkedTemplateIds = [];
+	$writable_templates = null;
+	foreach ($templates as $template) {
+		$linkedTemplateIds = array_merge(
+			$linkedTemplateIds,
+			zbx_objectValues($template['parentTemplates'], 'templateid'),
+			zbx_objectValues($template['templates'], 'templateid')
+		);
+	}
+	if ($linkedTemplateIds) {
+		$linkedTemplateIds = array_unique($linkedTemplateIds);
+		$writable_templates = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $linkedTemplateIds,
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
+
 	$data = [
 		'pageFilter' => $pageFilter,
 		'templates' => $templates,
@@ -636,7 +656,8 @@ else {
 		'sortOrder' => $sortOrder,
 		'config' => [
 			'max_in_table' => $config['max_in_table']
-		]
+		],
+		'writable_templates' => $writable_templates
 	];
 
 	$view = new CView('configuration.template.list', $data);
