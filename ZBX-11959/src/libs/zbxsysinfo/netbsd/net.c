@@ -235,7 +235,7 @@ int	NET_IF_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int			ret = SYSINFO_RET_FAIL, i;
 	struct zbx_json		j;
-	struct if_nameindex	*interfaces;
+	struct if_nameindex		*interfaces;
 
 	zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
 
@@ -261,6 +261,8 @@ int	NET_IF_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	SET_STR_RESULT(result, strdup(j.buffer));
 
 	zbx_json_free(&j);
+
+	if_freenameindex(interfaces);
 
 	return ret;
 }
