@@ -126,13 +126,18 @@ elseif ($config['authentication_type'] == ZBX_AUTH_LDAP) {
 			]
 		]);
 
-		$login = $ldapValidator->validate([
-			'user' => getRequest('user', CWebUser::$data['alias']),
-			'password' => getRequest('user_password', '')
-		]);
+		if (function_exists('ldap_connect')) {
+			$login = $ldapValidator->validate([
+				'user' => getRequest('user', CWebUser::$data['alias']),
+				'password' => getRequest('user_password', '')
+			]);
 
-		if (!$login) {
-			error(_('Login name or password is incorrect!'));
+			if (!$login) {
+				error(_('Login name or password is incorrect!'));
+			}
+		} else {
+			$login = false;
+			error(_('Probably php-ldap module is missing.'));
 		}
 
 		if (hasRequest('update')) {
