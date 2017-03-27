@@ -28,16 +28,20 @@
 #define ZBX_REMOTE_COMMAND_TTL		(SEC_PER_MIN * 10)
 
 /* task manager task types */
-#define ZBX_TM_TASK_UNDEFINED				0
-#define ZBX_TM_TASK_CLOSE_PROBLEM			1
-#define ZBX_TM_TASK_REMOTE_COMMAND			2
-#define ZBX_TM_TASK_REMOTE_COMMAND_RESULT		3
+#define ZBX_TM_TASK_UNDEFINED			0
+#define ZBX_TM_TASK_CLOSE_PROBLEM		1
+#define ZBX_TM_TASK_REMOTE_COMMAND		2
+#define ZBX_TM_TASK_REMOTE_COMMAND_RESULT	3
 
 /* task manager task states */
 #define ZBX_TM_STATUS_NEW			1
 #define ZBX_TM_STATUS_INPROGRESS		2
 #define ZBX_TM_STATUS_DONE			3
 #define ZBX_TM_STATUS_EXPIRED			4
+
+/* rem states */
+#define ZBX_TM_REMOTE_COMMAND_COMPLETED		0
+#define ZBX_TM_REMOTE_COMMAND_FAILED		1
 
 /* the time period after which finished (done/expired) tasks are removed */
 #define ZBX_TM_CLEANUP_TASK_AGE			SEC_PER_DAY

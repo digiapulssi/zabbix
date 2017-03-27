@@ -74,7 +74,7 @@ static int	tm_execute_remote_command(zbx_uint64_t taskid, int clock, int ttl, in
 
 	if (0 != ttl && clock + ttl < now)
 	{
-		task->data = zbx_tm_remote_command_result_create(parent_taskid, FAIL,
+		task->data = zbx_tm_remote_command_result_create(parent_taskid, ZBX_TM_REMOTE_COMMAND_FAILED,
 				"The remote command has been expired.");
 		goto finish;
 	}
@@ -82,7 +82,8 @@ static int	tm_execute_remote_command(zbx_uint64_t taskid, int clock, int ttl, in
 	ZBX_STR2UINT64(hostid, row[10]);
 	if (FAIL == DCget_host_by_hostid(&host, hostid))
 	{
-		task->data = zbx_tm_remote_command_result_create(parent_taskid, FAIL, "Unknown host.");
+		task->data = zbx_tm_remote_command_result_create(parent_taskid, ZBX_TM_REMOTE_COMMAND_FAILED,
+				"Unknown host.");
 		goto finish;
 	}
 
@@ -99,9 +100,9 @@ static int	tm_execute_remote_command(zbx_uint64_t taskid, int clock, int ttl, in
 	script.command = row[8];
 
 	if (SUCCEED != (ret = zbx_script_execute(&script, &host, &info, error, sizeof(error))))
-		task->data = zbx_tm_remote_command_result_create(parent_taskid, ret, error);
+		task->data = zbx_tm_remote_command_result_create(parent_taskid, ZBX_TM_REMOTE_COMMAND_FAILED, error);
 	else
-		task->data = zbx_tm_remote_command_result_create(parent_taskid, ret, info);
+		task->data = zbx_tm_remote_command_result_create(parent_taskid, ZBX_TM_REMOTE_COMMAND_COMPLETED, info);
 
 	zbx_free(info);
 finish:

@@ -223,7 +223,7 @@ static int	tm_process_remote_command_result(zbx_uint64_t taskid)
 		ZBX_STR2UINT64(parent_taskid, row[3]);
 		status = atoi(row[0]);
 
-		if (SUCCEED == status)
+		if (ZBX_TM_REMOTE_COMMAND_COMPLETED == status)
 		{
 			DBexecute("update alerts set status=%d where alertid=" ZBX_FS_UI64, ALERT_STATUS_SENT, alertid);
 		}
