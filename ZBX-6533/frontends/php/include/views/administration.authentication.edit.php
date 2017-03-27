@@ -84,7 +84,7 @@ if ($this->data['config']['authentication_type'] == ZBX_AUTH_LDAP) {
 		$authenticationForm->addVar('change_bind_password', 1);
 		$authenticationFormList->addRow(
 			_('Bind password'),
-			(new CPassBox('ldap_bind_password', $this->data['config']['ldap_bind_password']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
+			(new CPassBox('ldap_bind_password', getRequest('ldap_bind_password')))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 		);
 	}
 	else {
