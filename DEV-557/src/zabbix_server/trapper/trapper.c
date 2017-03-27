@@ -342,6 +342,33 @@ static int	zbx_session_validate(const char *sessionid, int access_level)
 
 /******************************************************************************
  *                                                                            *
+ * Function: authenticate_super_admin_session                                 *
+ *                                                                            *
+ * Purpose: helper function - checks is there a super admin session with      *
+ *          the specified 'sessionid'                                         *
+ *                                                                            *
+ * Parameters: sock - [IN] the request socket                                 *
+ *             jp   - [IN] the request data                                   *
+ *                                                                            *
+ * Return value:  SUCCEED or FAIL                                             *
+ *                                                                            *
+ ******************************************************************************/
+static int	authenticate_super_admin_session(zbx_socket_t *sock, struct zbx_json_parse *jp)
+{
+	char	sessionid[MAX_STRING_LEN];
+
+	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_SID, sessionid, sizeof(sessionid)) ||
+			FAIL == zbx_session_validate(sessionid, USER_TYPE_SUPER_ADMIN))
+	{
+		zbx_send_response_raw(sock, FAIL, "Permission denied.", CONFIG_TIMEOUT);
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: recv_getqueue                                                    *
  *                                                                            *
  * Purpose: process queue request                                             *
@@ -357,7 +384,7 @@ static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 {
 	const char		*__function_name = "recv_getqueue";
 	int			ret = FAIL, request_type = ZBX_GET_QUEUE_UNKNOWN, now, i, limit;
-	char			type[MAX_STRING_LEN], sessionid[MAX_STRING_LEN], limit_str[MAX_STRING_LEN];
+	char			type[MAX_STRING_LEN], limit_str[MAX_STRING_LEN];
 	zbx_vector_ptr_t	queue;
 	struct zbx_json		json;
 	zbx_hashset_t		queue_stats;
@@ -365,12 +392,8 @@ static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_SID, sessionid, sizeof(sessionid)) ||
-		FAIL == zbx_session_validate(sessionid, USER_TYPE_SUPER_ADMIN))
-	{
-		zbx_send_response_raw(sock, ret, "Permission denied.", CONFIG_TIMEOUT);
+	if (FAIL == authenticate_super_admin_session(sock, jp))
 		goto out;
-	}
 
 	if (FAIL != zbx_json_value_by_name(jp, ZBX_PROTO_TAG_TYPE, type, sizeof(type)))
 	{
@@ -485,6 +508,70 @@ static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 	zbx_vector_ptr_destroy(&queue);
 
 	zbx_json_free(&json);
+
+	ret = SUCCEED;
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: ldap_sync_test                                                   *
+ *                                                                            *
+ * Purpose: test LDAP operation                                               *
+ *                                                                            *
+ * Parameters:  sock  - [IN] the request socket                               *
+ *              jp    - [IN] the request data                                 *
+ *                                                                            *
+ * Return value:  SUCCEED or FAIL                                             *
+ *                                                                            *
+ ******************************************************************************/
+static int	ldap_sync_test(zbx_socket_t *sock, struct zbx_json_parse *jp)
+{
+	const char	*__function_name = "ldap_sync_test";
+	int		ret = FAIL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	if (FAIL == authenticate_super_admin_session(sock, jp))
+		goto out;
+
+	/* TODO: run LDAP synchronization in test mode without changing Zabbix DB */
+	zbx_send_response_raw(sock, ret, "ldap_sync_test", CONFIG_TIMEOUT);
+
+	ret = SUCCEED;
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: ldap_sync_now                                                    *
+ *                                                                            *
+ * Purpose: run synchronization from LDAP on demand                           *
+ *                                                                            *
+ * Parameters:  sock  - [IN] the request socket                               *
+ *              jp    - [IN] the request data                                 *
+ *                                                                            *
+ * Return value:  SUCCEED or FAIL                                             *
+ *                                                                            *
+ ******************************************************************************/
+static int	ldap_sync_now(zbx_socket_t *sock, struct zbx_json_parse *jp)
+{
+	const char	*__function_name = "ldap_sync_now";
+	int		ret = FAIL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	if (FAIL == authenticate_super_admin_session(sock, jp))
+		goto out;
+
+	/* TODO: run LDAP synchronization on demand */
+	zbx_send_response_raw(sock, ret, "ldap_sync_now", CONFIG_TIMEOUT);
 
 	ret = SUCCEED;
 out:
@@ -616,6 +703,16 @@ static int	process_trap(zbx_socket_t *sock, char *s, zbx_timespec_t *ts)
 			{
 				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 					ret = recv_getqueue(sock, &jp);
+			}
+			else if (0 == strcmp(value, ZBX_PROTO_VALUE_LDAP_TEST))
+			{
+				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+					ret = ldap_sync_test(sock, &jp);
+			}
+			else if (0 == strcmp(value, ZBX_PROTO_VALUE_LDAP_NOW))
+			{
+				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+					ret = ldap_sync_now(sock, &jp);
 			}
 			else
 				zabbix_log(LOG_LEVEL_WARNING, "unknown request received [%s]", value);

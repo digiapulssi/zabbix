@@ -107,6 +107,9 @@
 #define ZBX_PROTO_VALUE_GET_QUEUE_PROXY		"overview by proxy"
 #define ZBX_PROTO_VALUE_GET_QUEUE_DETAILS	"details"
 
+#define ZBX_PROTO_VALUE_LDAP_TEST		"ldap.test"
+#define ZBX_PROTO_VALUE_LDAP_NOW		"ldap.now"
+
 typedef enum
 {
 	ZBX_JSON_TYPE_UNKNOWN = 0,
