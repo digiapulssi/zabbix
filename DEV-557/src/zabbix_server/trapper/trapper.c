@@ -518,41 +518,10 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: ldap_sync_test                                                   *
+ * Function: ldap_sync                                                        *
  *                                                                            *
- * Purpose: test LDAP operation                                               *
- *                                                                            *
- * Parameters:  sock  - [IN] the request socket                               *
- *              jp    - [IN] the request data                                 *
- *                                                                            *
- * Return value:  SUCCEED or FAIL                                             *
- *                                                                            *
- ******************************************************************************/
-static int	ldap_sync_test(zbx_socket_t *sock, struct zbx_json_parse *jp)
-{
-	const char	*__function_name = "ldap_sync_test";
-	int		ret = FAIL;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
-	if (FAIL == authenticate_super_admin_session(sock, jp))
-		goto out;
-
-	/* TODO: run LDAP synchronization in test mode without changing Zabbix DB */
-	zbx_send_response_raw(sock, ret, "ldap_sync_test", CONFIG_TIMEOUT);
-
-	ret = SUCCEED;
-out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return ret;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: ldap_sync_now                                                    *
- *                                                                            *
- * Purpose: run synchronization from LDAP on demand                           *
+ * Purpose: entry point for processing LDAP synchronization requests from     *
+ *          frontend                                                          *
  *                                                                            *
  * Parameters:  sock  - [IN] the request socket                               *
  *              jp    - [IN] the request data                                 *
@@ -560,9 +529,9 @@ out:
  * Return value:  SUCCEED or FAIL                                             *
  *                                                                            *
  ******************************************************************************/
-static int	ldap_sync_now(zbx_socket_t *sock, struct zbx_json_parse *jp)
+static int	ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 {
-	const char	*__function_name = "ldap_sync_now";
+	const char	*__function_name = "ldap_sync";
 	int		ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -570,8 +539,8 @@ static int	ldap_sync_now(zbx_socket_t *sock, struct zbx_json_parse *jp)
 	if (FAIL == authenticate_super_admin_session(sock, jp))
 		goto out;
 
-	/* TODO: run LDAP synchronization on demand */
-	zbx_send_response_raw(sock, ret, "ldap_sync_now", CONFIG_TIMEOUT);
+	/* TODO: run LDAP synchronization test or do on-demand synchronization */
+	zbx_send_response_raw(sock, ret, "ldap_sync", CONFIG_TIMEOUT);
 
 	ret = SUCCEED;
 out:
@@ -704,15 +673,10 @@ static int	process_trap(zbx_socket_t *sock, char *s, zbx_timespec_t *ts)
 				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 					ret = recv_getqueue(sock, &jp);
 			}
-			else if (0 == strcmp(value, ZBX_PROTO_VALUE_LDAP_TEST))
+			else if (0 == strcmp(value, ZBX_PROTO_VALUE_LDAP_SYNC))
 			{
 				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-					ret = ldap_sync_test(sock, &jp);
-			}
-			else if (0 == strcmp(value, ZBX_PROTO_VALUE_LDAP_NOW))
-			{
-				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-					ret = ldap_sync_now(sock, &jp);
+					ret = ldap_sync(sock, &jp);
 			}
 			else
 				zabbix_log(LOG_LEVEL_WARNING, "unknown request received [%s]", value);
