@@ -759,7 +759,7 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 			goto out;
 		}
 
-		if (0 == (fields[fields_count]->flags & ZBX_PROXY))
+		if (0 == (fields[fields_count]->flags & ZBX_PROXY) && 0 != strcmp(table->recid, buf))
 		{
 			*error = zbx_dsprintf(*error, "unexpected field \"%s.%s\"", table->table, buf);
 			goto out;
