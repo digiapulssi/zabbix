@@ -176,12 +176,12 @@ static int	process_proxy(void)
 {
 	const char		*__function_name = "process_proxy";
 	DC_PROXY		proxy;
-	int			num, i, ret, update_lastaccess = ZBX_PROXY_CONN_FAIL;
+	int			num, i, ret;
 	struct zbx_json		j;
 	struct zbx_json_parse	jp, jp_data;
 	zbx_socket_t		s;
 	char			*answer = NULL, *port = NULL;
-	time_t			now;
+	time_t			now, last_access = 0;
 	unsigned char		update_nextcheck;
 	zbx_timespec_t		ts;
 
@@ -293,7 +293,7 @@ retry_history:
 
 				if (SUCCEED == zbx_json_open(answer, &jp))
 				{
-					update_lastaccess = ZBX_PROXY_CONN_SUCCESS;
+					last_access = time(NULL);
 
 					process_hist_data(NULL, &jp, proxy.hostid, &ts, NULL);
 
@@ -326,7 +326,7 @@ retry_dhistory:
 
 				if (SUCCEED == zbx_json_open(answer, &jp))
 				{
-					update_lastaccess = ZBX_PROXY_CONN_SUCCESS;
+					last_access = time(NULL);
 
 					process_dhis_data(&jp);
 
@@ -359,7 +359,7 @@ retry_autoreg_host:
 
 				if (SUCCEED == zbx_json_open(answer, &jp))
 				{
-					update_lastaccess = ZBX_PROXY_CONN_SUCCESS;
+					last_access = time(NULL);
 
 					process_areg_data(&jp, proxy.hostid);
 
@@ -379,10 +379,10 @@ retry_autoreg_host:
 				goto network_error;
 		}
 network_error:
-		if (ZBX_PROXY_CONN_SUCCESS == update_lastaccess)
+		if (0 != last_access)
 		{
 			DBbegin();
-			update_proxy_lastaccess(proxy.hostid);
+			update_proxy_lastaccess(proxy.hostid, last_access);
 			DBcommit();
 		}
 

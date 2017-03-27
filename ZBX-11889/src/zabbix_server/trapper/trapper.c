@@ -91,7 +91,7 @@ static void	recv_proxyhistory(zbx_socket_t *sock, struct zbx_json_parse *jp, zbx
 		goto out;
 	}
 
-	update_proxy_lastaccess(proxy_hostid);
+	update_proxy_lastaccess(proxy_hostid, 0);
 
 	ret = process_hist_data(sock, jp, proxy_hostid, ts, &error);
 out:
@@ -189,7 +189,7 @@ static void	recv_proxy_heartbeat(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		goto out;
 	}
 
-	update_proxy_lastaccess(proxy_hostid);
+	update_proxy_lastaccess(proxy_hostid, 0);
 out:
 	zbx_send_response(sock, ret, error, CONFIG_TIMEOUT);
 
