@@ -197,12 +197,9 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
  * Function: update_proxy_lastaccess                                          *
  *                                                                            *
  ******************************************************************************/
-void	update_proxy_lastaccess(const zbx_uint64_t hostid, time_t access_time)
+void	update_proxy_lastaccess(const zbx_uint64_t hostid, time_t last_access)
 {
-	if (0 == access_time)
-		DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, time(NULL), hostid);
-	else
-		DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, access_time, hostid);
+	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, last_access, hostid);
 }
 
 /******************************************************************************
