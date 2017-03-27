@@ -1788,7 +1788,8 @@ class CMap extends CMapElement {
 			]);
 			$relation_map = $this->createRelationMap($shapes, 'sysmapid', 'shapeid');
 
-			$shapes = $this->unsetExtraFields($shapes, ['sysmapid', 'shapeid'], $options['selectShapes']);
+			$shapes = $this->unsetExtraFields($shapes, ['shapeid'], $options['selectShapes']);
+			$shapes = $this->unsetExtraFields($shapes, ['sysmapid'], null);
 			$result = $relation_map->mapMany($result, $shapes, 'shapes');
 		}
 
