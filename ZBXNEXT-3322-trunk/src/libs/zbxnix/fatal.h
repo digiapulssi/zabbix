@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,12 @@
 
 #include <signal.h>
 
+#define ZBX_FATAL_LOG_PC_REG_SF		0x0001
+#define ZBX_FATAL_LOG_BACKTRACE		0x0002
+#define ZBX_FATAL_LOG_MEM_MAP		0x0004
+#define ZBX_FATAL_LOG_FULL_INFO		(ZBX_FATAL_LOG_PC_REG_SF | ZBX_FATAL_LOG_BACKTRACE | ZBX_FATAL_LOG_MEM_MAP)
+
 const char	*get_signal_name(int sig);
-void		print_fatal_info(int sig, siginfo_t *siginfo, void *context);
+void	zbx_log_fatal_info(void *context, unsigned int flags);
 
 #endif

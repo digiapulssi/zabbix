@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,15 +20,6 @@
 
 
 require_once dirname(__FILE__).'/perm.inc.php';
-
-/**
- * Returns true if the user has the permissions to network discovery.
- *
- * @return bool
- */
-function check_right_on_discovery() {
-	return (CWebUser::getType() >= USER_TYPE_ZABBIX_ADMIN);
-}
 
 function svc_default_port($type) {
 	$types = [

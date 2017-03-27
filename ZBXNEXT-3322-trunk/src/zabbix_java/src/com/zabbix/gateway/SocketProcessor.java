@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,11 +32,12 @@ class SocketProcessor implements Runnable
 
 	private Socket socket;
 
-	public SocketProcessor(Socket socket)
+	SocketProcessor(Socket socket)
 	{
 		this.socket = socket;
 	}
 
+	@Override
 	public void run()
 	{
 		logger.debug("starting to process incoming connection");

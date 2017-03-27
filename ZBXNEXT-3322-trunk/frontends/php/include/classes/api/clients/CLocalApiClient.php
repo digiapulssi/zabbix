@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ class CLocalApiClient extends CApiClient {
 			throw new APIException(ZBX_API_ERROR_NO_AUTH, _('Not authorised.'));
 		}
 
-		$user = $this->serviceFactory->getObject('user')->checkAuthentication([$auth]);
+		$user = $this->serviceFactory->getObject('user')->checkAuthentication(['sessionid' => $auth]);
 		$this->debug = $user['debug_mode'];
 	}
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,12 +37,9 @@ $itemFormList = new CFormList('itemFormList');
 
 // append type to form list
 $itemFormList->addRow(
-	[
-		_('Type'),
-		SPACE,
-		(new CVisibilityBox('visible[type]', 'type', _('Original')))
-			->setChecked(isset($this->data['visible']['type']))
-	],
+	(new CVisibilityBox('visible[type]', 'type', _('Original')))
+		->setLabel(_('Type'))
+		->setChecked(isset($this->data['visible']['type'])),
 	new CComboBox('type', $this->data['type'], null, $this->data['itemTypes'])
 );
 
@@ -76,11 +73,11 @@ if ($this->data['displayInterfaces']) {
 		->setId('interface_not_defined')
 		->setAttribute('style', 'display: none;');
 
-	$interfaceVisBox = (new CVisibilityBox('visible[interface]', 'interfaceDiv', _('Original')))
-		->setChecked(isset($this->data['visible']['interface']))
-		->setAttribute('data-multiple-interface-types', $this->data['multiple_interface_types']);
 	$itemFormList->addRow(
-		[_('Host interface'), SPACE, $interfaceVisBox],
+		(new CVisibilityBox('visible[interface]', 'interfaceDiv', _('Original')))
+			->setLabel(_('Host interface'))
+			->setChecked(isset($this->data['visible']['interface']))
+			->setAttribute('data-multiple-interface-types', $this->data['multiple_interface_types']),
 		(new CDiv([$interfacesComboBox, $span]))->setId('interfaceDiv'),
 		'interface_row'
 	);
@@ -89,45 +86,33 @@ if ($this->data['displayInterfaces']) {
 
 // append snmp community to form list
 $itemFormList->addRow(
-	[
-		_('SNMP community'),
-		SPACE,
-		(new CVisibilityBox('visible[community]', 'snmp_community', _('Original')))
-			->setChecked(isset($this->data['visible']['community']))
-	],
+	(new CVisibilityBox('visible[community]', 'snmp_community', _('Original')))
+		->setLabel(_('SNMP community'))
+		->setChecked(isset($this->data['visible']['community'])),
 	(new CTextBox('snmp_community', $this->data['snmp_community']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
 // append snmpv3 contextname to form list
 $itemFormList->addRow(
-	[
-		_('Context name'),
-		SPACE,
-		(new CVisibilityBox('visible[contextname]', 'snmpv3_contextname', _('Original')))
-			->setChecked(isset($this->data['visible']['contextname']))
-	],
+	(new CVisibilityBox('visible[contextname]', 'snmpv3_contextname', _('Original')))
+		->setLabel(_('Context name'))
+		->setChecked(isset($this->data['visible']['contextname'])),
 	(new CTextBox('snmpv3_contextname', $this->data['snmpv3_contextname']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
 // append snmpv3 securityname to form list
 $itemFormList->addRow(
-	[
-		_('Security name'),
-		SPACE,
-		(new CVisibilityBox('visible[securityname]', 'snmpv3_securityname', _('Original')))
-			->setChecked(isset($this->data['visible']['securityname']))
-	],
+	(new CVisibilityBox('visible[securityname]', 'snmpv3_securityname', _('Original')))
+		->setLabel(_('Security name'))
+		->setChecked(isset($this->data['visible']['securityname'])),
 	(new CTextBox('snmpv3_securityname', $this->data['snmpv3_securityname']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
 // append snmpv3 securitylevel to form list
 $itemFormList->addRow(
-	[
-		_('Security level'),
-		SPACE,
-		(new CVisibilityBox('visible[securitylevel]', 'snmpv3_securitylevel', _('Original')))
-			->setChecked(isset($this->data['visible']['securitylevel']))
-	],
+	(new CVisibilityBox('visible[securitylevel]', 'snmpv3_securitylevel', _('Original')))
+		->setLabel(_('Security level'))
+		->setChecked(isset($this->data['visible']['securitylevel'])),
 	new CComboBox('snmpv3_securitylevel', $this->data['snmpv3_securitylevel'], null, [
 		ITEM_SNMPV3_SECURITYLEVEL_NOAUTHNOPRIV => 'noAuthNoPriv',
 		ITEM_SNMPV3_SECURITYLEVEL_AUTHNOPRIV => 'authNoPriv',
@@ -137,12 +122,9 @@ $itemFormList->addRow(
 
 // append snmpv3 authprotocol to form list
 $itemFormList->addRow(
-	[
-		_('Authentication protocol'),
-		SPACE,
-		(new CVisibilityBox('visible[authprotocol]', 'authprotocol_div', _('Original')))
-			->setChecked(isset($this->data['visible']['authprotocol']))
-	],
+	(new CVisibilityBox('visible[authprotocol]', 'authprotocol_div', _('Original')))
+		->setLabel(_('Authentication protocol'))
+		->setChecked(isset($this->data['visible']['authprotocol'])),
 	(new CDiv(
 		(new CRadioButtonList('snmpv3_authprotocol', (int) $this->data['snmpv3_authprotocol']))
 			->addValue(_('MD5'), ITEM_AUTHPROTOCOL_MD5)
@@ -153,24 +135,18 @@ $itemFormList->addRow(
 
 // append snmpv3 authpassphrase to form list
 $itemFormList->addRow(
-	[
-		_('Authentication passphrase'),
-		SPACE,
-		(new CVisibilityBox('visible[authpassphrase]', 'snmpv3_authpassphrase', _('Original')))
-			->setChecked(isset($this->data['visible']['authpassphrase']))
-	],
+	(new CVisibilityBox('visible[authpassphrase]', 'snmpv3_authpassphrase', _('Original')))
+		->setLabel(_('Authentication passphrase'))
+		->setChecked(isset($this->data['visible']['authpassphrase'])),
 	(new CTextBox('snmpv3_authpassphrase', $this->data['snmpv3_authpassphrase']))
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
 // append snmpv3 privprotocol to form list
 $itemFormList->addRow(
-	[
-		_('Privacy protocol'),
-		SPACE,
-		(new CVisibilityBox('visible[privprotocol]', 'privprotocol_div', _('Original')))
-			->setChecked(isset($this->data['visible']['privprotocol']))
-	],
+	(new CVisibilityBox('visible[privprotocol]', 'privprotocol_div', _('Original')))
+		->setLabel(_('Privacy protocol'))
+		->setChecked(isset($this->data['visible']['privprotocol'])),
 	(new CDiv(
 		(new CRadioButtonList('snmpv3_privprotocol', (int) $this->data['snmpv3_privprotocol']))
 			->addValue(_('DES'), ITEM_PRIVPROTOCOL_DES)
@@ -182,35 +158,26 @@ $itemFormList->addRow(
 
 // append snmpv3 privpassphrase to form list
 $itemFormList->addRow(
-	[
-		_('Privacy passphrase'),
-		SPACE,
-		(new CVisibilityBox('visible[privpassphras]', 'snmpv3_privpassphrase', _('Original')))
-			->setChecked(isset($this->data['visible']['privpassphras']))
-	],
+	(new CVisibilityBox('visible[privpassphrase]', 'snmpv3_privpassphrase', _('Original')))
+		->setLabel(_('Privacy passphrase'))
+		->setChecked(isset($this->data['visible']['privpassphrase'])),
 	(new CTextBox('snmpv3_privpassphrase', $this->data['snmpv3_privpassphrase']))
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
 // append port to form list
 $itemFormList->addRow(
-	[
-		_('Port'),
-		SPACE,
-		(new CVisibilityBox('visible[port]', 'port', _('Original')))
-			->setChecked(isset($this->data['visible']['port']))
-	],
+	(new CVisibilityBox('visible[port]', 'port', _('Original')))
+		->setLabel(_('Port'))
+		->setChecked(isset($this->data['visible']['port'])),
 	(new CTextBox('port', $this->data['port']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 );
 
 // append value type to form list
 $itemFormList->addRow(
-	[
-		_('Type of information'),
-		SPACE,
-		(new CVisibilityBox('visible[value_type]', 'value_type', _('Original')))
-			->setChecked(isset($this->data['visible']['value_type']))
-	],
+	(new CVisibilityBox('visible[value_type]', 'value_type', _('Original')))
+		->setLabel(_('Type of information'))
+		->setChecked(isset($this->data['visible']['value_type'])),
 	new CComboBox('value_type', $this->data['value_type'], null, [
 		ITEM_VALUE_TYPE_UINT64 => _('Numeric (unsigned)'),
 		ITEM_VALUE_TYPE_FLOAT => _('Numeric (float)'),
@@ -220,36 +187,19 @@ $itemFormList->addRow(
 	])
 );
 
-// append data type to form list
-$itemFormList->addRow(
-	[
-		_('Data type'),
-		SPACE,
-		(new CVisibilityBox('visible[data_type]', 'data_type', _('Original')))
-			->setChecked(isset($this->data['visible']['data_type']))
-	],
-	new CComboBox('data_type', $this->data['data_type'], null, item_data_type2str())
-);
-
 // append units to form list
 $itemFormList->addRow(
-	[
-		_('Units'),
-		SPACE,
-		(new CVisibilityBox('visible[units]', 'units', _('Original')))
-			->setChecked(isset($this->data['visible']['units']))
-	],
+	(new CVisibilityBox('visible[units]', 'units', _('Original')))
+		->setLabel(_('Units'))
+		->setChecked(isset($this->data['visible']['units'])),
 	(new CTextBox('units', $this->data['units']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
 // append authtype to form list
 $itemFormList->addRow(
-	[
-		_('Authentication method'),
-		SPACE,
-		(new CVisibilityBox('visible[authtype]', 'authtype', _('Original')))
-			->setChecked(isset($this->data['visible']['authtype']))
-	],
+	(new CVisibilityBox('visible[authtype]', 'authtype', _('Original')))
+		->setLabel(_('Authentication method'))
+		->setChecked(isset($this->data['visible']['authtype'])),
 	new CComboBox('authtype', $this->data['authtype'], null, [
 		ITEM_AUTHTYPE_PASSWORD => _('Password'),
 		ITEM_AUTHTYPE_PUBLICKEY => _('Public key')
@@ -258,69 +208,133 @@ $itemFormList->addRow(
 
 // append username to form list
 $itemFormList->addRow(
-	[
-		_('User name'),
-		SPACE,
-		(new CVisibilityBox('visible[username]', 'username', _('Original')))
-			->setChecked(isset($this->data['visible']['username']))
-	],
+	(new CVisibilityBox('visible[username]', 'username', _('Original')))
+		->setLabel(_('User name'))
+		->setChecked(isset($this->data['visible']['username'])),
 	(new CTextBox('username', $this->data['username']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 );
 
 // append publickey to form list
 $itemFormList->addRow(
-	[
-		_('Public key file'),
-		SPACE,
-		(new CVisibilityBox('visible[publickey]', 'publickey', _('Original')))
-			->setChecked(isset($this->data['visible']['publickey']))
-	],
+	(new CVisibilityBox('visible[publickey]', 'publickey', _('Original')))
+		->setLabel(_('Public key file'))
+		->setChecked(isset($this->data['visible']['publickey'])),
 	(new CTextBox('publickey', $this->data['publickey']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 );
 
 // append privatekey to form list
 $itemFormList->addRow(
-	[
-		_('Private key file'),
-		SPACE,
-		(new CVisibilityBox('visible[privatekey]', 'privatekey', _('Original')))
-			->setChecked(isset($this->data['visible']['privatekey']))
-	],
+	(new CVisibilityBox('visible[privatekey]', 'privatekey', _('Original')))
+		->setLabel(_('Private key file'))
+		->setChecked(isset($this->data['visible']['privatekey'])),
 	(new CTextBox('privatekey', $this->data['privatekey']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 );
 
 // append password
 $itemFormList->addRow(
-	[
-		_('Password'),
-		SPACE,
-		(new CVisibilityBox('visible[password]', 'password', _('Original')))
-			->setChecked(isset($this->data['visible']['password']))
-	],
+	(new CVisibilityBox('visible[password]', 'password', _('Original')))
+		->setLabel(_('Password'))
+		->setChecked(isset($this->data['visible']['password'])),
 	(new CTextBox('password', $this->data['password']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 );
 
-// append formula to form list
+// append item pre-processing
+$preprocessing = (new CTable())
+	->setId('preprocessing')
+	->setHeader([
+		'',
+		new CColHeader(_('Name')),
+		new CColHeader(_('Parameters')),
+		new CColHeader(null),
+		(new CColHeader(_('Action')))->setWidth(50)
+	]);
+
+foreach ($data['preprocessing'] as $i => $step) {
+	// Depeding on preprocessing type, display corresponding params field and placeholders.
+	$params = [];
+
+	// Use numeric box for multiplier, otherwise use text box.
+	if ($step['type'] == ZBX_PREPROC_MULTIPLIER) {
+		$params[] = (new CTextBox('preprocessing['.$i.'][params][0]',
+			array_key_exists('params', $step) ? $step['params'][0] : ''
+		))->setAttribute('placeholder', _('number'));
+	}
+	else {
+		$params[] = new CTextBox('preprocessing['.$i.'][params][0]',
+			array_key_exists('params', $step) ? $step['params'][0] : ''
+		);
+	}
+
+	// Create a secondary param text box, so it can be hidden if necessary.
+	$params[] = (new CTextBox('preprocessing['.$i.'][params][1]',
+		(array_key_exists('params', $step) && array_key_exists(1, $step['params']))
+			? $step['params'][1]
+			: ''
+	))->setAttribute('placeholder', _('output'));
+
+	// Add corresponding placeholders and show or hide text boxes.
+	switch ($step['type']) {
+		case ZBX_PREPROC_MULTIPLIER:
+			$params[1]->addStyle('display: none;');
+			break;
+
+		case ZBX_PREPROC_RTRIM:
+		case ZBX_PREPROC_LTRIM:
+		case ZBX_PREPROC_TRIM:
+			$params[0]->setAttribute('placeholder', _('list of characters'));
+			$params[1]->addStyle('display: none;');
+			break;
+
+		case ZBX_PREPROC_REGSUB:
+			$params[0]->setAttribute('placeholder', _('pattern'));
+				break;
+
+		case ZBX_PREPROC_BOOL2DEC:
+		case ZBX_PREPROC_OCT2DEC:
+		case ZBX_PREPROC_HEX2DEC:
+		case ZBX_PREPROC_DELTA_VALUE:
+		case ZBX_PREPROC_DELTA_SPEED:
+			$params[0]->addStyle('display: none;');
+			$params[1]->addStyle('display: none;');
+			break;
+	}
+
+	$preprocessing->addRow(
+		(new CRow([
+			(new CCol((new CDiv())->addClass(ZBX_STYLE_DRAG_ICON)))->addClass(ZBX_STYLE_TD_DRAG_ICON),
+			(new CComboBox('preprocessing['.$i.'][type]', $step['type'], null, get_preprocessing_types())),
+			$params[0],
+			$params[1],
+			(new CButton('preprocessing['.$i.'][remove]', _('Remove')))
+				->addClass(ZBX_STYLE_BTN_LINK)
+				->addClass('element-table-remove')
+		]))->addClass('sortable')
+	);
+}
+
+$preprocessing->addRow(
+	(new CCol(
+		(new CButton('param_add', _('Add')))
+			->addClass(ZBX_STYLE_BTN_LINK)
+			->addClass('element-table-add')
+	))->setColSpan(5)
+);
+
 $itemFormList->addRow(
-	[
-		_('Custom multiplier').' (0 - '._('Disabled').')',
-		SPACE,
-		(new CVisibilityBox('visible[formula]', 'formula', _('Original')))
-			->setChecked(isset($this->data['visible']['formula']))
-	],
-	(new CTextBox('formula', $this->data['formula']))
-		->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
-		->setAttribute('style', 'text-align: right;')
+	(new CVisibilityBox('visible[preprocessing]', 'preprocessing_div', _('Original')))
+		->setLabel(_('Preprocessing'))
+		->setChecked(isset($this->data['visible']['preprocessing'])),
+	(new CDiv($preprocessing))
+		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+		->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_STANDARD_WIDTH.'px;')
+		->setId('preprocessing_div')
 );
 
 // append delay to form list
 $itemFormList->addRow(
-	[
-		_('Update interval (in sec)'),
-		SPACE,
-		(new CVisibilityBox('visible[delay]', 'delay', _('Original')))
-			->setChecked(isset($this->data['visible']['delay']))
-	],
+	(new CVisibilityBox('visible[delay]', 'delay', _('Original')))
+		->setLabel(_('Update interval (in sec)'))
+		->setChecked(isset($this->data['visible']['delay'])),
 	(new CNumericBox('delay', $this->data['delay'], 5))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
 );
 
@@ -368,32 +382,24 @@ $delayFlexTable->addRow([(new CButton('interval_add', _('Add')))
 	->addClass('element-table-add')]);
 
 $itemFormList->addRow(
-	[
-		_('Custom intervals'),
-		SPACE,
-		(new CVisibilityBox('visible[delay_flex]', 'delayFlexDiv', _('Original')))
-			->setChecked(isset($this->data['visible']['delay_flex']))
-	],
+	(new CVisibilityBox('visible[delay_flex]', 'delayFlexDiv', _('Original')))
+		->setLabel(_('Custom intervals'))
+		->setChecked(isset($this->data['visible']['delay_flex'])),
 	(new CDiv($delayFlexTable))
 		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
 		->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_STANDARD_WIDTH.'px;')
 		->setId('delayFlexDiv')
 )
 	->addRow(
-		[
-			_('History storage period (in days)'), SPACE,
-			(new CVisibilityBox('visible[history]', 'history', _('Original')))
-				->setChecked(isset($this->data['visible']['history']))
-		],
+		(new CVisibilityBox('visible[history]', 'history', _('Original')))
+			->setLabel(_('History storage period (in days)'))
+			->setChecked(isset($this->data['visible']['history'])),
 		(new CNumericBox('history', $this->data['history'], 8))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
 )
 	->addRow(
-		[
-			_('Trend storage period (in days)'),
-			SPACE,
-			(new CVisibilityBox('visible[trends]', 'trends', _('Original')))
-			->setChecked(isset($this->data['visible']['trends']))
-		],
+		(new CVisibilityBox('visible[trends]', 'trends', _('Original')))
+			->setLabel(_('Trend storage period (in days)'))
+			->setChecked(isset($this->data['visible']['trends'])),
 		(new CNumericBox('trends', $this->data['trends'], 8))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
 );
 
@@ -403,39 +409,18 @@ foreach ([ITEM_STATUS_ACTIVE, ITEM_STATUS_DISABLED] as $status) {
 	$statusComboBox->addItem($status, item_status2str($status));
 }
 $itemFormList->addRow(
-	[
-		_('Status'),
-		SPACE,
-		(new CVisibilityBox('visible[status]', 'status', _('Original')))
-			->setChecked(isset($this->data['visible']['status']))
-	],
+	(new CVisibilityBox('visible[status]', 'status', _('Original')))
+		->setLabel(_('Status'))
+		->setChecked(isset($this->data['visible']['status'])),
 	$statusComboBox
 );
 
 // append logtime to form list
 $itemFormList->addRow(
-	[
-		_('Log time format'),
-		SPACE,
-		(new CVisibilityBox('visible[logtimefmt]', 'logtimefmt', _('Original')))
-			->setChecked(isset($this->data['visible']['logtimefmt']))
-	],
+	(new CVisibilityBox('visible[logtimefmt]', 'logtimefmt', _('Original')))
+		->setLabel(_('Log time format'))
+		->setChecked(isset($this->data['visible']['logtimefmt'])),
 	(new CTextBox('logtimefmt', $this->data['logtimefmt']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
-);
-
-// append delta to form list
-$itemFormList->addRow(
-	[
-		_('Store value'),
-		SPACE,
-		(new CVisibilityBox('visible[delta]', 'delta', _('Original')))
-			->setChecked(isset($this->data['visible']['delta']))
-	],
-	new CComboBox('delta', $this->data['delta'], null, [
-		0 => _('As is'),
-		1 => _('Delta (speed per second)'),
-		2 => _('Delta (simple change)')
-	])
 );
 
 // append valuemap to form list
@@ -448,24 +433,18 @@ $valueMapLink = (new CLink(_('show value mappings'), 'adm.valuemapping.php'))
 	->setAttribute('target', '_blank');
 
 $itemFormList->addRow(
-	[
-		_('Show value'),
-		SPACE,
-		(new CVisibilityBox('visible[valuemapid]', 'valuemap', _('Original')))
-			->setChecked(isset($this->data['visible']['valuemapid']))
-	],
+	(new CVisibilityBox('visible[valuemapid]', 'valuemap', _('Original')))
+		->setLabel(_('Show value'))
+		->setChecked(isset($this->data['visible']['valuemapid'])),
 	(new CDiv([$valueMapsComboBox, SPACE, $valueMapLink]))
 		->setId('valuemap')
 );
 
 // append trapper hosts to form list
 $itemFormList->addRow(
-	[
-		_('Allowed hosts'),
-		SPACE,
-		(new CVisibilityBox('visible[trapper_hosts]', 'trapper_hosts', _('Original')))
-			->setChecked(isset($this->data['visible']['trapper_hosts']))
-	],
+	(new CVisibilityBox('visible[trapper_hosts]', 'trapper_hosts', _('Original')))
+		->setLabel(_('Allowed hosts'))
+		->setChecked(isset($this->data['visible']['trapper_hosts'])),
 	(new CTextBox('trapper_hosts', $this->data['trapper_hosts']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
@@ -500,10 +479,9 @@ if ($this->data['displayApplications']) {
 	))->setId('replaceApp');
 
 	$itemFormList->addRow(
-		[_('Replace applications'), SPACE,
-			(new CVisibilityBox('visible[applications]', 'replaceApp', _('Original')))
-				->setChecked(isset($this->data['visible']['applications']))
-		],
+		(new CVisibilityBox('visible[applications]', 'replaceApp', _('Original')))
+			->setLabel(_('Replace applications'))
+			->setChecked(isset($this->data['visible']['applications'])),
 		$replaceApp
 	);
 
@@ -552,22 +530,18 @@ if ($this->data['displayApplications']) {
 	))->setId('newApp');
 
 	$itemFormList->addRow(
-		[_('Add new or existing applications'), SPACE,
-			(new CVisibilityBox('visible[new_applications]', 'newApp', _('Original')))
-				->setChecked(isset($this->data['visible']['new_applications']))
-		],
+		(new CVisibilityBox('visible[new_applications]', 'newApp', _('Original')))
+			->setLabel(_('Add new or existing applications'))
+			->setChecked(isset($this->data['visible']['new_applications'])),
 		$newApp
 	);
 }
 
 // append description to form list
 $itemFormList->addRow(
-	[
-		_('Description'),
-		SPACE,
-		(new CVisibilityBox('visible[description]', 'description', _('Original')))
-			->setChecked(isset($this->data['visible']['description']))
-	],
+	(new CVisibilityBox('visible[description]', 'description', _('Original')))
+		->setLabel(_('Description'))
+		->setChecked(isset($this->data['visible']['description'])),
 	(new CTextArea('description', $this->data['description']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 // append tabs to form
@@ -577,7 +551,7 @@ $itemTab->addTab('itemTab', _('Mass update'), $itemFormList);
 // append buttons to form
 $itemTab->setFooter(makeFormFooter(
 	new CSubmit('massupdate', _('Update')),
-	[new CButtonCancel(url_param('groupid').url_param('hostid'))]
+	[new CButtonCancel(url_param('hostid'))]
 ));
 
 $itemForm->addItem($itemTab);

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,18 +36,17 @@ $guiTab = (new CFormList())
 			ZBX_DROPDOWN_FIRST_ALL => _('All')
 		]),
 		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-		new CLabel([
-			(new CCheckBox('dropdown_first_remember'))->setChecked($data['dropdown_first_remember'] == 1),
-			_('remember selected')
-		], 'dropdown_first_remember')
+		(new CCheckBox('dropdown_first_remember'))
+			->setLabel(_('remember selected'))
+			->setChecked($data['dropdown_first_remember'] == 1)
 	])
-	->addRow(_('Search/Filter elements limit'),
+	->addRow(_('Limit for search and filter results'),
 		(new CNumericBox('search_limit', $data['search_limit'], 6))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
 	)
 	->addRow(_('Max count of elements to show inside table cell'),
 		(new CNumericBox('max_in_table', $data['max_in_table'], 5))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
 	)
-	->addRow(_('Enable event acknowledges'),
+	->addRow(_('Enable event acknowledgement'),
 		(new CCheckBox('event_ack_enable'))->setChecked($data['event_ack_enable'] == 1)
 	)
 	->addRow(_('Show events not older than (in days)'),

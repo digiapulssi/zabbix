@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -288,6 +288,8 @@ void	zbx_vector_ ## __id ## _destroy(zbx_vector_ ## __id ## _t *vector);					\
 														\
 void	zbx_vector_ ## __id ## _append(zbx_vector_ ## __id ## _t *vector, __type value);			\
 void	zbx_vector_ ## __id ## _append_ptr(zbx_vector_ ## __id ## _t *vector, __type *value);			\
+void	zbx_vector_ ## __id ## _append_array(zbx_vector_ ## __id ## _t *vector, const __type *values,		\
+									int values_num);			\
 void	zbx_vector_ ## __id ## _remove_noorder(zbx_vector_ ## __id ## _t *vector, int index);			\
 void	zbx_vector_ ## __id ## _remove(zbx_vector_ ## __id ## _t *vector, int index);				\
 														\
@@ -336,7 +338,11 @@ unsigned int	zbx_isqrt32(unsigned int value);
 
 /* expression evaluation */
 
-int	evaluate(double *value, const char *expression, char *error, int max_error_len);
+#define ZBX_UNKNOWN_STR		"ZBX_UNKNOWN"	/* textual representation of ZBX_UNKNOWN */
+#define ZBX_UNKNOWN_STR_LEN	ZBX_CONST_STRLEN(ZBX_UNKNOWN_STR)
+
+int	evaluate(double *value, const char *expression, char *error, size_t max_error_len,
+		zbx_vector_ptr_t *unknown_msgs);
 
 /* forecasting */
 
@@ -368,5 +374,30 @@ int	zbx_fit_code(char *fit_str, zbx_fit_t *fit, unsigned *k, char **error);
 int	zbx_mode_code(char *mode_str, zbx_mode_t *mode, char **error);
 double	zbx_forecast(double *t, double *x, int n, double now, double time, zbx_fit_t fit, unsigned k, zbx_mode_t mode);
 double	zbx_timeleft(double *t, double *x, int n, double now, double threshold, zbx_fit_t fit, unsigned k);
+
+
+/* fifo queue of pointers */
+
+typedef struct
+{
+	void	**values;
+	int	alloc_num;
+	int	head_pos;
+	int	tail_pos;
+}
+zbx_queue_ptr_t;
+
+#define zbx_queue_ptr_empty(queue)	((queue)->head_pos == (queue)->tail_pos ? SUCCEED : FAIL)
+
+int	zbx_queue_ptr_values_num(zbx_queue_ptr_t *queue);
+void	zbx_queue_ptr_reserve(zbx_queue_ptr_t *queue, int num);
+void	zbx_queue_ptr_compact(zbx_queue_ptr_t *queue);
+void	zbx_queue_ptr_create(zbx_queue_ptr_t *queue);
+void	zbx_queue_ptr_destroy(zbx_queue_ptr_t *queue);
+void	zbx_queue_ptr_push(zbx_queue_ptr_t *queue, void *value);
+void	*zbx_queue_ptr_pop(zbx_queue_ptr_t *queue);
+void	zbx_queue_ptr_remove_value(zbx_queue_ptr_t *queue, const void *value);
+
+
 
 #endif

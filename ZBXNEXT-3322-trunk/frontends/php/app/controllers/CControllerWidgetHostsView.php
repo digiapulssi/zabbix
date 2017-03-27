@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,9 +54,9 @@ class CControllerWidgetHostsView extends CController {
 			}
 			else {
 				$filter['groupids'] = zbx_objectValues(CFavorite::get('web.dashconf.groups.groupids'), 'value');
-				$hideHostGroupIds = zbx_objectValues(CFavorite::get('web.dashconf.groups.hide.groupids'), 'value');
+				$hide_groupids = zbx_objectValues(CFavorite::get('web.dashconf.groups.hide.groupids'), 'value');
 
-				if ($hideHostGroupIds) {
+				if ($hide_groupids) {
 					// get all groups if no selected groups defined
 					if (!$filter['groupids']) {
 						$dbHostGroups = API::HostGroup()->get([
@@ -65,7 +65,7 @@ class CControllerWidgetHostsView extends CController {
 						$filter['groupids'] = zbx_objectValues($dbHostGroups, 'groupid');
 					}
 
-					$filter['groupids'] = array_diff($filter['groupids'], $hideHostGroupIds);
+					$filter['groupids'] = array_diff($filter['groupids'], $hide_groupids);
 
 					// get available hosts
 					$dbAvailableHosts = API::Host()->get([
@@ -76,17 +76,15 @@ class CControllerWidgetHostsView extends CController {
 
 					$dbDisabledHosts = API::Host()->get([
 						'output' => ['hostid'],
-						'groupids' => $hideHostGroupIds
+						'groupids' => $hide_groupids
 					]);
 					$disabledHostIds = zbx_objectValues($dbDisabledHosts, 'hostid');
 
 					$filter['hostids'] = array_diff($availableHostIds, $disabledHostIds);
 				}
-				else {
-					if (!$filter['groupids']) {
-						// null mean all groups
-						$filter['groupids'] = null;
-					}
+				elseif (!$filter['groupids']) {
+					// null mean all groups
+					$filter['groupids'] = null;
 				}
 			}
 

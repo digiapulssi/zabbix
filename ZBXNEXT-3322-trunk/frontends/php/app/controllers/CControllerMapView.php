@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -101,7 +101,13 @@ class CControllerMapView extends CController {
 		]);
 		$data['map'] = reset($maps);
 
-		$data['map']['editable'] = API::Map()->isWritable([$this->sysmapid]);
+		$maps_rw = API::Map()->get([
+			'output' => [],
+			'sysmapids' => [$this->sysmapid],
+			'editable' => true
+		]);
+
+		$data['map']['editable'] = (bool) $maps_rw;
 
 		$data['pageFilter'] = new CPageFilter([
 			'severitiesMin' => [

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,12 +40,12 @@ class BinaryProtocolSpeaker
 	private DataInputStream dis = null;
 	private BufferedOutputStream bos = null;
 
-	public BinaryProtocolSpeaker(Socket socket)
+	BinaryProtocolSpeaker(Socket socket)
 	{
 		this.socket = socket;
 	}
 
-	public String getRequest() throws IOException, ZabbixException
+	String getRequest() throws IOException, ZabbixException
 	{
 		dis = new DataInputStream(socket.getInputStream());
 
@@ -78,7 +78,7 @@ class BinaryProtocolSpeaker
 		return request;
 	}
 
-	public void sendResponse(String response) throws IOException, ZabbixException
+	void sendResponse(String response) throws IOException, ZabbixException
 	{
 		bos = new BufferedOutputStream(socket.getOutputStream());
 
@@ -102,7 +102,7 @@ class BinaryProtocolSpeaker
 		bos.flush();
 	}
 
-	public void close()
+	void close()
 	{
 		try { if (null != dis) dis.close(); } catch (Exception e) { }
 		try { if (null != bos) bos.close(); } catch (Exception e) { }

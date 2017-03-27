@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -118,7 +118,11 @@ switch ($data['method']) {
 					}
 
 					$url_tr_status = 'tr_status.php?hostid='.$host['hostid'];
-					$url_events = 'events.php?filter_set=1&triggerid='.$event['objectid'].'&source='.EVENT_SOURCE_TRIGGERS;
+					$url_events = (new CUrl('zabbix.php'))
+						->setArgument('action', 'problem.view')
+						->setArgument('filter_triggerids[]', $event['objectid'])
+						->setArgument('filter_set', '1')
+						->getUrl();
 					$url_tr_events = 'tr_events.php?eventid='.$event['eventid'].'&triggerid='.$event['objectid'];
 
 					$result[$number] = [
@@ -186,10 +190,8 @@ switch ($data['method']) {
 			if ($data['mode'] == SCREEN_MODE_JS) {
 				$result = $screen;
 			}
-			else {
-				if (is_object($screen)) {
-					$result = $screen->toString();
-				}
+			elseif (is_object($screen)) {
+				$result = $screen->toString();
 			}
 		}
 		break;
@@ -316,9 +318,10 @@ switch ($data['method']) {
 
 			case 'triggers':
 				$triggers = API::Trigger()->get([
-					'editable' => isset($data['editable']) ? $data['editable'] : null,
 					'output' => ['triggerid', 'description'],
 					'selectHosts' => ['name'],
+					'editable' => isset($data['editable']) ? $data['editable'] : null,
+					'monitored' => isset($data['monitored']) ? $data['monitored'] : null,
 					'search' => isset($data['search']) ? ['description' => $data['search']] : null,
 					'limit' => $config['search_limit']
 				]);

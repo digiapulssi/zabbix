@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -237,6 +237,7 @@ void	free_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 		pcpus->cpu_counter[idx] = NULL;
 	}
 #else
+	ZBX_UNUSED(pcpus);
 	zbx_mutex_destroy(&cpustats_lock);
 #endif
 

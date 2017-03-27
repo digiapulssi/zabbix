@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -526,6 +526,8 @@ int	NET_IF_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char		line[MAX_STRING_LEN], *p;
 	FILE		*f;
 	struct zbx_json	j;
+
+	ZBX_UNUSED(request);
 
 	if (NULL == (f = fopen("/proc/net/dev", "r")))
 	{

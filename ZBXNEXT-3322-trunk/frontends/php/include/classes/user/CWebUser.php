@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,8 +67,6 @@ class CWebUser {
 
 			if ($result) {
 				self::setSessionCookie(self::$data['sessionid']);
-
-				add_audit_ext(AUDIT_ACTION_LOGIN, AUDIT_RESOURCE_USER, self::$data['userid'], '', null, null, null);
 			}
 
 			return $result;
@@ -92,7 +90,7 @@ class CWebUser {
 	public static function checkAuthentication($sessionId) {
 		try {
 			if ($sessionId !== null) {
-				self::$data = API::User()->checkAuthentication([$sessionId]);
+				self::$data = API::User()->checkAuthentication(['sessionid' => $sessionId]);
 			}
 
 			if ($sessionId === null || empty(self::$data)) {

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,17 +35,17 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 //	VAR						 TYPE		 OPTIONAL FLAGS	VALIDATION		EXCEPTION
 $fields = [
-	'filterEnable' =>	[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
-	'grpswitch' =>		[T_ZBX_INT, O_OPT, P_SYS,			BETWEEN(0, 1),	null],
-	'groupids' =>		[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
-	'hidegroupids' =>	[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
-	'trgSeverity' =>	[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
-	'trigger_name' =>	[T_ZBX_STR, O_OPT, P_SYS,			null,			null],
-	'maintenance' =>	[T_ZBX_INT, O_OPT, P_SYS,			BETWEEN(0, 1),	null],
-	'extAck' =>			[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
-	'form_refresh' =>	[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
-	'update' =>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,			null],
-	'cancel' =>			[T_ZBX_STR, O_OPT, P_SYS,			null,			null]
+	'filterEnable' =>				[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
+	'grpswitch' =>					[T_ZBX_INT, O_OPT, P_SYS,			BETWEEN(0, 1),	null],
+	'groupids' =>					[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
+	'hidegroupids' =>				[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
+	'trgSeverity' =>				[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
+	'trigger_name' =>				[T_ZBX_STR, O_OPT, P_SYS,			null,			null],
+	'maintenance' =>				[T_ZBX_INT, O_OPT, P_SYS,			BETWEEN(0, 1),	null],
+	'extAck' =>						[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
+	'form_refresh' =>				[T_ZBX_INT, O_OPT, P_SYS,			null,			null],
+	'update' =>						[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,			null],
+	'cancel' =>						[T_ZBX_STR, O_OPT, P_SYS,			null,			null]
 ];
 check_fields($fields);
 
@@ -63,23 +63,25 @@ if (hasRequest('update')) {
 
 		if ($_REQUEST['grpswitch'] == 1) {
 			// show groups
-			$groupIds = getRequest('groupids', []);
+			$groupids = getRequest('groupids', []);
 
 			$result = true;
 
 			DBstart();
 
 			$result &= CFavorite::remove('web.dashconf.groups.groupids');
-			foreach ($groupIds as $groupId) {
-				$result &= CFavorite::add('web.dashconf.groups.groupids', $groupId);
+
+			foreach ($groupids as $groupid) {
+				$result &= CFavorite::add('web.dashconf.groups.groupids', $groupid);
 			}
 
 			// hide groups
-			$hideGroupIds = getRequest('hidegroupids', []);
+			$hide_groupids = getRequest('hidegroupids', []);
 
 			$result &= CFavorite::remove('web.dashconf.groups.hide.groupids');
-			foreach ($hideGroupIds as $hideGroupId) {
-				$result &= CFavorite::add('web.dashconf.groups.hide.groupids', $hideGroupId);
+
+			foreach ($hide_groupids as $groupid) {
+				$result &= CFavorite::add('web.dashconf.groups.hide.groupids', $groupid);
 			}
 
 			DBend($result);
@@ -128,10 +130,8 @@ if (hasRequest('form_refresh')) {
 
 	// groups
 	$data['grpswitch'] = getRequest('grpswitch', 0);
-	$data['groupIds'] = getRequest('groupids', []);
-	$data['groupIds'] = zbx_toHash($data['groupIds']);
-	$data['hideGroupIds'] = getRequest('hidegroupids', []);
-	$data['hideGroupIds'] = zbx_toHash($data['hideGroupIds']);
+	$groupids = getRequest('groupids', []);
+	$hide_groupids = getRequest('hidegroupids', []);
 }
 else {
 	$data['isFilterEnable'] = CProfile::get('web.dashconf.filter.enable', 0);
@@ -144,12 +144,8 @@ else {
 
 	// groups
 	$data['grpswitch'] = CProfile::get('web.dashconf.groups.grpswitch', 0);
-	$data['groupIds'] = CFavorite::get('web.dashconf.groups.groupids');
-	$data['groupIds'] = zbx_objectValues($data['groupIds'], 'value');
-	$data['groupIds'] = zbx_toHash($data['groupIds']);
-	$data['hideGroupIds'] = CFavorite::get('web.dashconf.groups.hide.groupids');
-	$data['hideGroupIds'] = zbx_objectValues($data['hideGroupIds'], 'value');
-	$data['hideGroupIds'] = zbx_toHash($data['hideGroupIds']);
+	$groupids = zbx_objectValues(CFavorite::get('web.dashconf.groups.groupids'), 'value');
+	$hide_groupids = zbx_objectValues(CFavorite::get('web.dashconf.groups.hide.groupids'), 'value');
 }
 
 $data['severity'] = zbx_toHash($data['severity']);
@@ -165,8 +161,9 @@ $data['severities'] = [
 if ($data['grpswitch']) {
 	// show groups
 	$data['groups'] = API::HostGroup()->get([
-		'groupids' => $data['groupIds'],
-		'output' => ['groupid', 'name']
+		'output' => ['groupid', 'name'],
+		'groupids' => $groupids,
+		'preservekeys' => true
 	]);
 
 	CArrayHelper::sort($data['groups'], [
@@ -182,8 +179,9 @@ if ($data['grpswitch']) {
 
 	// hide groups
 	$data['hideGroups'] = API::HostGroup()->get([
-		'groupids' => $data['hideGroupIds'],
-		'output' => ['groupid', 'name']
+		'output' => ['groupid', 'name'],
+		'groupids' => $hide_groupids,
+		'preservekeys' => true
 	]);
 
 	CArrayHelper::sort($data['hideGroups'], [

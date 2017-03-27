@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,7 +74,9 @@ if (!$this->data['is_profile']) {
 				->onClick('return PopUp("popup_usrgrp.php?dstfrm='.$userForm->getName().'&list_name=user_groups_to_del[]&var_name=user_groups");'),
 			BR(),
 			(count($this->data['user_groups']) > 0)
-				? (new CSubmit('del_user_group', _('Delete selected')))->addClass(ZBX_STYLE_BTN_GREY)
+				? (new CSimpleButton(_('Delete selected')))
+					->onClick('javascript: submitFormWithParam("'.$userForm->getName().'", "del_user_group", "1");')
+					->addClass(ZBX_STYLE_BTN_GREY)
 				: null
 		]
 	);
@@ -97,7 +99,9 @@ if ($data['auth_type'] == ZBX_AUTH_INTERNAL) {
 		}
 	}
 	else {
-		$passwdButton = (new CSubmit('change_password', _('Change password')))->addClass(ZBX_STYLE_BTN_GREY);
+		$passwdButton = (new CSimpleButton(_('Change password')))
+			->onClick('javascript: submitFormWithParam("'.$userForm->getName().'", "change_password", "1");')
+			->addClass(ZBX_STYLE_BTN_GREY);
 		if ($this->data['alias'] == ZBX_GUEST_USER) {
 			$passwdButton->setAttribute('disabled', 'disabled');
 		}
@@ -238,7 +242,9 @@ if (uint_in_array(CWebUser::$data['type'], [USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SU
 			(new CRow([
 				$media['description'],
 				$media['sendto'],
-				$media['period'],
+				(new CDiv($media['period']))
+					->setAttribute('style', 'max-width: '.ZBX_TEXTAREA_STANDARD_WIDTH.'px;')
+					->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS),
 				$mediaSeverity,
 				$status,
 				(new CCol(
@@ -300,11 +306,9 @@ if ($this->data['is_profile']) {
 
 	$triggersTable = (new CTable())
 		->addRow([
-			new CLabel([
-				(new CCheckBox('messages[triggers.recovery]'))
-					->setChecked($this->data['messages']['triggers.recovery'] == 1),
-				_('Recovery')], 'messages[triggers.recovery]'
-			),
+			(new CCheckBox('messages[triggers.recovery]'))
+				->setLabel(_('Recovery'))
+				->setChecked($this->data['messages']['triggers.recovery'] == 1),
 			[
 				$soundList,
 				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
@@ -336,11 +340,9 @@ if ($this->data['is_profile']) {
 		}
 
 		$triggersTable->addRow([
-			new CLabel([
-				(new CCheckBox('messages[triggers.severities]['.$severity.']'))
-					->setChecked(isset($this->data['messages']['triggers.severities'][$severity])),
-				getSeverityName($severity, $this->data['config'])], 'messages[triggers.severities]['.$severity.']'
-			),
+			(new CCheckBox('messages[triggers.severities]['.$severity.']'))
+				->setLabel(getSeverityName($severity, $this->data['config']))
+				->setChecked(isset($this->data['messages']['triggers.severities'][$severity])),
 			[
 				$soundList,
 				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
@@ -371,13 +373,11 @@ if (isset($userMediaFormList)) {
 	$userTab->addTab('mediaTab', _('Media'), $userMediaFormList);
 }
 
-if (!$this->data['is_profile']) {
-	/*
-	 * Permissions tab
-	 */
+// Permissions tab.
+if (!$data['is_profile']) {
 	$permissionsFormList = new CFormList('permissionsFormList');
 
-	$userTypeComboBox = new CComboBox('user_type', $this->data['user_type'], 'submit();', [
+	$userTypeComboBox = new CComboBox('user_type', $data['user_type'], 'submit();', [
 		USER_TYPE_ZABBIX_USER => user_type2str(USER_TYPE_ZABBIX_USER),
 		USER_TYPE_ZABBIX_ADMIN => user_type2str(USER_TYPE_ZABBIX_ADMIN),
 		USER_TYPE_SUPER_ADMIN => user_type2str(USER_TYPE_SUPER_ADMIN)
@@ -386,17 +386,44 @@ if (!$this->data['is_profile']) {
 	if ($data['userid'] != 0 && bccomp(CWebUser::$data['userid'], $data['userid']) == 0) {
 		$userTypeComboBox->setEnabled(false);
 		$permissionsFormList->addRow(_('User type'), [$userTypeComboBox, SPACE, new CSpan(_('User can\'t change type for himself'))]);
-		$userForm->addVar('user_type', $this->data['user_type']);
+		$userForm->addVar('user_type', $data['user_type']);
 	}
 	else {
 		$permissionsFormList->addRow(_('User type'), $userTypeComboBox);
 	}
 
-	$permissionsFormList = getPermissionsFormList($this->data['user_rights'], $this->data['user_type'], $permissionsFormList);
-	$permissionsFormList->addInfo(_('Permissions can be assigned for user groups only.'));
+	$permissions_table = (new CTable())
+		->setAttribute('style', 'width: 100%;')
+		->setHeader([_('Host group'), _('Permissions')]);
+
+	if ($data['user_type'] == USER_TYPE_SUPER_ADMIN) {
+		$permissions_table->addRow([italic(_('All groups')), permissionText(PERM_READ_WRITE)]);
+	}
+	else {
+		foreach ($data['groups_rights'] as $groupid => $group_rights) {
+			if (array_key_exists('grouped', $group_rights) && $group_rights['grouped']) {
+				$group_name = ($groupid == 0)
+					? italic(_('All groups'))
+					: [$group_rights['name'], SPACE, italic('('._('including subgroups').')')];
+			}
+			else {
+				$group_name = $group_rights['name'];
+			}
+			$permissions_table->addRow([$group_name, permissionText($group_rights['permission'])]);
+		}
+	}
+
+	$permissionsFormList
+		->addRow(_('Permissions'),
+			(new CDiv($permissions_table))
+				->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+				->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_BIG_WIDTH.'px;')
+		)
+		->addInfo(_('Permissions can be assigned for user groups only.'));
 
 	$userTab->addTab('permissionsTab', _('Permissions'), $permissionsFormList);
 }
+
 if (isset($userMessagingFormList)) {
 	$userTab->addTab('messagingTab', _('Messaging'), $userMessagingFormList);
 }

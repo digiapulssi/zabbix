@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,7 +50,8 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 					'url' => 'zabbix.php',
 					'action' => 'problem.view',
 					'active_if' => ['problem.view'],
-					'label' => _('Problems')
+					'label' => _('Problems'),
+					'sub_pages' => ['tr_events.php']
 				],
 				[
 					'url' => 'overview.php',
@@ -73,11 +74,6 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 					'active_if' => ['acknowledge.edit'],
 					'label' => _('Triggers'),
 					'sub_pages' => ['tr_comments.php', 'chart4.php', 'scripts_exec.php']
-				],
-				[
-					'url' => 'events.php',
-					'label' => _('Events'),
-					'sub_pages' => ['tr_events.php']
 				],
 				[
 					'url' => 'charts.php',
@@ -112,7 +108,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 				[
 					'url' => 'srv_status.php',
 					'active_if' => ['report.services'],
-					'label' => _('IT services'),
+					'label' => _('Services'),
 					'sub_pages' => ['chart5.php']
 				],
 				[
@@ -181,9 +177,6 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 				],
 				[
 					'url' => 'popup.php'
-				],
-				[
-					'url' => 'popup_right.php'
 				]
 			]
 		],
@@ -245,7 +238,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 				],
 				[
 					'url' => 'services.php',
-					'label' => _('IT services')
+					'label' => _('Services')
 				]
 			]
 		],

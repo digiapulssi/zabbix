@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1004,15 +1004,13 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 	char			*sql = NULL;
 	size_t			sql_alloc = 256, sql_offset;
 	int			i;
-	zbx_vector_uint64_t	profileids, selementids;
-	const char		*profile_idx = "web.events.filter.triggerid";
+	zbx_vector_uint64_t	selementids;
 
 	if (0 == triggerids->values_num)
 		return;
 
 	sql = zbx_malloc(sql, sql_alloc);
 
-	zbx_vector_uint64_create(&profileids);
 	zbx_vector_uint64_create(&selementids);
 
 	DBremove_triggers_from_itservices(triggerids->values, triggerids->values_num);
@@ -1032,15 +1030,6 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 	for (i = 0; i < triggerids->values_num; i++)
 		DBdelete_action_conditions(CONDITION_TYPE_TRIGGER, triggerids->values[i]);
 
-	DBget_profiles_by_source_idxs_values(&profileids, NULL, &profile_idx, 1, triggerids);
-	if (0 != profileids.values_num)
-	{
-		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "delete from profiles where");
-		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "profileid", profileids.values,
-				profileids.values_num);
-		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, ";\n");
-	}
-
 	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
 			"delete from triggers"
 			" where");
@@ -1052,7 +1041,6 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 	DBexecute("%s", sql);
 
 	zbx_vector_uint64_destroy(&selementids);
-	zbx_vector_uint64_destroy(&profileids);
 
 	zbx_free(sql);
 }
@@ -2273,9 +2261,9 @@ static int	DBcopy_trigger_to_host(zbx_uint64_t *new_triggerid, zbx_uint64_t *cur
 
 		if (SUCCEED == res)
 		{
-			expression_esc = DBdyn_escape_string_len(new_expression, TRIGGER_EXPRESSION_LEN);
-			recovery_expression_esc = DBdyn_escape_string_len(new_recovery_expression,
-					TRIGGER_EXPRESSION_LEN);
+			expression_esc = DBdyn_escape_field("triggers", "expression", new_expression);
+			recovery_expression_esc = DBdyn_escape_field("triggers", "recovery_expression",
+					new_recovery_expression);
 
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 					"update triggers"
@@ -4944,8 +4932,8 @@ zbx_uint64_t	DBadd_interface(zbx_uint64_t hostid, unsigned char type,
 	if (0 != interfaceid)
 		goto out;
 
-	ip_esc = DBdyn_escape_string_len(ip, INTERFACE_IP_LEN);
-	dns_esc = DBdyn_escape_string_len(dns, INTERFACE_DNS_LEN);
+	ip_esc = DBdyn_escape_field("interface", "ip", ip);
+	dns_esc = DBdyn_escape_field("interface", "dns", dns);
 
 	interfaceid = DBget_maxid("interface");
 
@@ -5113,7 +5101,12 @@ void	DBdelete_groups(zbx_vector_uint64_t *groupids)
 						SCREEN_RESOURCE_TRIGGER_OVERVIEW};
 	zbx_uint64_t		resource_types_update[] = {SCREEN_RESOURCE_HOST_INFO, SCREEN_RESOURCE_TRIGGER_INFO,
 						SCREEN_RESOURCE_HOSTGROUP_TRIGGERS, SCREEN_RESOURCE_HOST_TRIGGERS};
-	const char		*profile_idxs[] = {"web.dashconf.groups.groupids", "web.dashconf.groups.hide.groupids"};
+	const char		*profile_idxs[] = {
+						"web.dashconf.groups.groupids",
+						"web.dashconf.groups.subgroupids",
+						"web.dashconf.groups.hide.groupids",
+						"web.dashconf.groups.hide.subgroupids"
+					};
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() values_num:%d", __function_name, groupids->values_num);
 

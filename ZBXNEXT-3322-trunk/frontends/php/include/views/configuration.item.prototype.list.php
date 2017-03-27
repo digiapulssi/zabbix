@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ $widget = (new CWidget())
 // create form
 $itemForm = (new CForm())
 	->setName('items')
-	->addVar('hostid', $this->data['hostid'])
 	->addVar('parent_discoveryid', $this->data['parent_discoveryid']);
 
 // create table
@@ -47,7 +46,7 @@ $itemTable = (new CTableInfo())
 		make_sorting_header(_('Trends'), 'trends', $this->data['sort'], $this->data['sortorder']),
 		make_sorting_header(_('Type'), 'type', $this->data['sort'], $this->data['sortorder']),
 		_('Applications'),
-		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'])
+		make_sorting_header(_('Create enabled'), 'status', $this->data['sort'], $this->data['sortorder'])
 	]);
 
 foreach ($this->data['items'] as $item) {
@@ -67,10 +66,10 @@ foreach ($this->data['items'] as $item) {
 	);
 
 	$status = (new CLink(
-		itemIndicator($item['status']),
+		($item['status'] == ITEM_STATUS_DISABLED) ? _('No') : _('Yes'),
 		'?group_itemid[]='.$item['itemid'].
 			'&parent_discoveryid='.$this->data['parent_discoveryid'].
-			'&action='.($item['status'] == ITEM_STATUS_DISABLED
+			'&action='.(($item['status'] == ITEM_STATUS_DISABLED)
 				? 'itemprototype.massenable'
 				: 'itemprototype.massdisable'
 			)
@@ -113,10 +112,10 @@ $itemForm->addItem([
 	$this->data['paging'],
 	new CActionButtonList('action', 'group_itemid',
 		[
-			'itemprototype.massenable' => ['name' => _('Enable'),
+			'itemprototype.massenable' => ['name' => _('Create enabled'),
 				'confirm' => _('Enable selected item prototypes?')
 			],
-			'itemprototype.massdisable' => ['name' => _('Disable'),
+			'itemprototype.massdisable' => ['name' => _('Create disabled'),
 				'confirm' => _('Disable selected item prototypes?')
 			],
 			'itemprototype.massdelete' => ['name' => _('Delete'),

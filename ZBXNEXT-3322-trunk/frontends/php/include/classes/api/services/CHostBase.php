@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,14 @@ abstract class CHostBase extends CApiService {
 		}
 
 		// permission check
-		if (!API::Template()->isReadable($templateIds)) {
+		$templateIds = array_unique($templateIds);
+
+		$count = API::Template()->get([
+			'countOutput' => true,
+			'templateids' => $templateIds
+		]);
+
+		if ($count != count($templateIds)) {
 			self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
 		}
 

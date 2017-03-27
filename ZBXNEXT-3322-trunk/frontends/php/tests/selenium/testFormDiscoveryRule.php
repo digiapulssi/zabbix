@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -468,7 +468,7 @@ class testFormDiscoveryRule extends CWebTest {
 		if	($type == 'SNMPv1 agent' || $type == 'SNMPv2 agent' || $type == 'SNMPv3 agent') {
 			$this->zbxTestTextPresent('SNMP OID');
 			$this->zbxTestAssertVisibleId('snmp_oid');
-			$this->zbxTestAssertAttribute("//input[@id='snmp_oid']", 'maxlength', 255);
+			$this->zbxTestAssertAttribute("//input[@id='snmp_oid']", 'maxlength', 512);
 			$this->zbxTestAssertAttribute("//input[@id='snmp_oid']", 'size', 20);
 			$this->zbxTestAssertElementValue('snmp_oid', 'interfaces.ifTable.ifEntry.ifInOctets.1');
 
@@ -642,11 +642,11 @@ class testFormDiscoveryRule extends CWebTest {
 		$this->zbxTestAssertAttribute("//textarea[@id='description']", 'rows', 7);
 
 		$this->zbxTestTextPresent('Enabled');
-		$this->zbxTestAssertVisibleId('status');
+		$this->zbxTestAssertElementPresentId('status');
 		$this->assertTrue($this->zbxTestCheckboxSelected('status'));
 
 		$this->zbxTestClickWait('tab_macroTab');
-		if ( 'Filters' != $this->zbxTestGetText("//li[contains(@class, 'ui-tabs-active')]/a")) {
+		if ($this->zbxTestGetText("//li[contains(@class, 'ui-tabs-active')]/a") != 'Filters') {
 			$this->zbxTestTabSwitch('Filters');
 		}
 
@@ -1412,8 +1412,6 @@ class testFormDiscoveryRule extends CWebTest {
 	 * @dataProvider create
 	 */
 	public function testFormDiscoveryRule_SimpleCreate($data) {
-		DBexecute("UPDATE config SET server_check_interval = 0 WHERE configid = 1");
-
 		$this->zbxTestLogin('hosts.php');
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->zbxTestCheckHeader('Hosts');
@@ -1474,11 +1472,6 @@ class testFormDiscoveryRule extends CWebTest {
 			$this->zbxTestInputType('params_es', $data['params_es']);
 		}
 
-		if (isset($data['formula'])) {
-			$this->zbxTestCheckboxSelect('multiplier');
-			$this->zbxTestInputType('formula', $data['formula']);
-		}
-
 		if (isset($data['delay']))	{
 			$this->zbxTestInputTypeOverwrite('delay', $data['delay']);
 		}
@@ -1504,14 +1497,6 @@ class testFormDiscoveryRule extends CWebTest {
 					$this->zbxTestClickWait('delay_flex_'.($itemCount-1).'_remove');
 				}
 			}
-		}
-
-		if (isset($data['history'])) {
-			$this->zbxTestInputType('history', $data['history']);
-		}
-
-		if (isset($data['trends'])) {
-			$this->zbxTestInputType('trends', $data['trends']);
 		}
 
 		if ($itemFlexFlag == true) {
@@ -1601,8 +1586,6 @@ class testFormDiscoveryRule extends CWebTest {
 
 			$sql = "SELECT itemid FROM items WHERE name = '".$name."' and hostid = ".$this->hostid;
 			$this->assertEquals(0, DBcount($sql), 'Discovery rule has not been deleted from DB.');
-
-			DBexecute("UPDATE config SET server_check_interval = 10 WHERE configid = 1");
 		}
 	}
 

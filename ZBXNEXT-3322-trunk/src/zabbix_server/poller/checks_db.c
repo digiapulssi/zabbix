@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ static int	get_result_columns(ZBX_ODBC_DBH *dbh, char **buffer)
 	{
 		rc = SQLColAttribute(dbh->hstmt, i + 1, SQL_DESC_LABEL, str, sizeof(str), &len, NULL);
 
-		if (SQL_SUCCESS != rc || sizeof(str) <= len || '\0' == *str)
+		if (SQL_SUCCESS != rc || sizeof(str) <= (size_t)len || '\0' == *str)
 		{
 			for (j = 0; j < i; j++)
 				zbx_free(buffer[j]);
@@ -183,8 +183,9 @@ static int	db_odbc_select(DC_ITEM *item, AGENT_REQUEST *request, AGENT_RESULT *r
 			{
 				SET_MSG_RESULT(result, zbx_strdup(NULL, "SQL query returned NULL value."));
 			}
-			else if (SUCCEED == set_result_type(result, item->value_type, item->data_type, row[0]))
+			else
 			{
+				set_result_type(result, ITEM_VALUE_TYPE_TEXT, row[0]);
 				ret = SUCCEED;
 			}
 		}

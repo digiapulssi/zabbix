@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -343,6 +343,9 @@ static size_t	smtp_provide_payload(void *buffer, size_t size, size_t nmemb, void
 static int	smtp_debug_function(CURL *easyhandle, curl_infotype type, char *data, size_t size, void *userptr)
 {
 	const char	labels[3] = {'*', '<', '>'};
+
+	ZBX_UNUSED(easyhandle);
+	ZBX_UNUSED(userptr);
 
 	if (CURLINFO_TEXT != type && CURLINFO_HEADER_IN != type && CURLINFO_HEADER_OUT != type)
 		goto out;

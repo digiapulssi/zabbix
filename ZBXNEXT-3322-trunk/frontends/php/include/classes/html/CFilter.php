@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -158,13 +158,13 @@ class CFilter extends CTag {
 		return $buttons;
 	}
 
-	public function startToString() {
+	protected function startToString() {
 		$ret = $this->getHeader()->toString();
 		$ret .= parent::startToString();
 		return $ret;
 	}
 
-	public function endToString() {
+	protected function endToString() {
 		$this->form->addItem($this->getTable());
 
 		if ($this->show_buttons) {

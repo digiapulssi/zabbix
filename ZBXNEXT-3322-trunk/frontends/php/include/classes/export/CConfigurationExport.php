@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,26 +78,26 @@ class CConfigurationExport {
 		];
 
 		$this->dataFields = [
-			'item' => ['hostid', 'multiplier', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history',
-				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'delta', 'snmpv3_contextname',
-				'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase',
-				'snmpv3_privprotocol', 'snmpv3_privpassphrase', 'formula', 'valuemapid', 'delay_flex', 'params',
-				'ipmi_sensor', 'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey',
-				'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'logtimefmt'
+			'item' => ['hostid', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history', 'trends',
+				'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname',
+				'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol',
+				'snmpv3_privpassphrase', 'valuemapid', 'delay_flex', 'params', 'ipmi_sensor', 'authtype', 'username',
+				'password', 'publickey', 'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags',
+				'logtimefmt'
 			],
 			'drule' => ['itemid', 'hostid', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history',
-				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'delta', 'snmpv3_contextname',
-				'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase',
-				'snmpv3_privprotocol', 'snmpv3_privpassphrase', 'formula', 'valuemapid', 'delay_flex', 'params',
-				'ipmi_sensor', 'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey',
-				'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'filter', 'lifetime'
+				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname',
+				'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol',
+				'snmpv3_privpassphrase', 'formula', 'valuemapid', 'delay_flex', 'params', 'ipmi_sensor', 'authtype',
+				'username', 'password', 'publickey', 'privatekey', 'interfaceid', 'port', 'description',
+				'inventory_link', 'flags', 'filter', 'lifetime'
 			],
-			'item_prototype' => ['hostid', 'multiplier', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_',
-				'delay', 'history', 'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'delta',
-				'snmpv3_contextname', 'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authprotocol',
-				'snmpv3_authpassphrase', 'snmpv3_privprotocol', 'snmpv3_privpassphrase', 'formula', 'valuemapid',
-				'delay_flex', 'params', 'ipmi_sensor', 'data_type', 'authtype', 'username', 'password', 'publickey',
-				'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'logtimefmt'
+			'item_prototype' => ['hostid', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history',
+				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname',
+				'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol',
+				'snmpv3_privpassphrase', 'valuemapid', 'delay_flex', 'params', 'ipmi_sensor', 'authtype', 'username',
+				'password', 'publickey', 'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags',
+				'logtimefmt'
 			]
 		];
 	}
@@ -417,6 +417,7 @@ class CConfigurationExport {
 		$items = API::Item()->get([
 			'output' => $this->dataFields['item'],
 			'selectApplications' => ['name', 'flags'],
+			'selectPreprocessing' => ['type', 'params'],
 			'hostids' => array_keys($hosts),
 			'inherited' => false,
 			'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
@@ -544,6 +545,7 @@ class CConfigurationExport {
 			'selectApplications' => ['name'],
 			'selectApplicationPrototypes' => ['name'],
 			'selectDiscoveryRule' => ['itemid'],
+			'selectPreprocessing' => ['type', 'params'],
 			'discoveryids' => zbx_objectValues($items, 'itemid'),
 			'inherited' => false,
 			'preservekeys' => true
@@ -754,14 +756,14 @@ class CConfigurationExport {
 	}
 
 	/**
-	 * Unset graphs that have LLD created items or web items, or items containing LLD applications.
+	 * Unset graphs that have LLD created items or items containing LLD applications
+	 * and replace graph itemids with array of host and key.
 	 *
 	 * @param array $graphs
 	 *
 	 * @return array
 	 */
 	protected function prepareGraphs(array $graphs) {
-		// get item axis items info
 		$graphItemIds = [];
 
 		foreach ($graphs as $graph) {
@@ -791,8 +793,7 @@ class CConfigurationExport {
 			if ($graph['ymin_itemid'] && isset($graphItems[$graph['ymin_itemid']])) {
 				$axisItem = $graphItems[$graph['ymin_itemid']];
 
-				// unset lld and web graphs
-				if ($axisItem['flags'] == ZBX_FLAG_DISCOVERY_CREATED || $axisItem['type'] == ITEM_TYPE_HTTPTEST) {
+				if ($axisItem['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
 					unset($graphs[$gnum]);
 					continue;
 				}
@@ -816,8 +817,7 @@ class CConfigurationExport {
 			if ($graph['ymax_itemid'] && isset($graphItems[$graph['ymax_itemid']])) {
 				$axisItem = $graphItems[$graph['ymax_itemid']];
 
-				// unset lld and web graphs
-				if ($axisItem['flags'] == ZBX_FLAG_DISCOVERY_CREATED || $axisItem['type'] == ITEM_TYPE_HTTPTEST) {
+				if ($axisItem['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
 					unset($graphs[$gnum]);
 					continue;
 				}
@@ -841,8 +841,7 @@ class CConfigurationExport {
 			foreach ($graph['gitems'] as $ginum => $gItem) {
 				$item = $graphItems[$gItem['itemid']];
 
-				// unset lld and web graphs
-				if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED || $item['type'] == ITEM_TYPE_HTTPTEST) {
+				if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
 					unset($graphs[$gnum]);
 					continue 2;
 				}
@@ -915,7 +914,7 @@ class CConfigurationExport {
 
 		foreach ($triggers as $idx => &$trigger) {
 			foreach ($trigger['items'] as $item) {
-				if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED || $item['type'] == ITEM_TYPE_HTTPTEST) {
+				if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
 					unset($triggers[$idx]);
 					continue 2;
 				}
@@ -956,6 +955,7 @@ class CConfigurationExport {
 	protected function gatherMaps(array $mapIds) {
 		$sysmaps = API::Map()->get([
 			'sysmapids' => $mapIds,
+			'selectShapes' => API_OUTPUT_EXTEND,
 			'selectSelements' => API_OUTPUT_EXTEND,
 			'selectLinks' => API_OUTPUT_EXTEND,
 			'selectIconMap' => API_OUTPUT_EXTEND,

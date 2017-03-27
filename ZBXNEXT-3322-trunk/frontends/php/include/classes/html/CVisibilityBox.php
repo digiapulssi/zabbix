@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,6 +38,20 @@ class CVisibilityBox extends CCheckBox {
 		parent::__construct($name);
 		$this->onClick($action);
 		insert_javascript_for_visibilitybox();
+	}
+
+	/**
+	 * Set the label for the checkbox and put it on the left.
+	 *
+	 * @param string $label
+	 *
+	 * @return CVisibilityBox
+	 */
+	public function setLabel($label) {
+		parent::setLabel($label.SPACE);
+		$this->setLabelPosition(self::LABEL_POSITION_LEFT);
+
+		return $this;
 	}
 
 	public function toString($destroy = true) {

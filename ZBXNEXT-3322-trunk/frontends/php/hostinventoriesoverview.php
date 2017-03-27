@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 
 require_once dirname(__FILE__).'/include/config.inc.php';
+require_once dirname(__FILE__).'/include/hostgroups.inc.php';
 require_once dirname(__FILE__).'/include/hosts.inc.php';
 require_once dirname(__FILE__).'/include/forms.inc.php';
 
@@ -47,7 +48,7 @@ CProfile::update('web.'.$page['file'].'.sortorder', $sortOrder, PROFILE_TYPE_STR
 /*
  * Permissions
  */
-if (getRequest('groupid') && !API::HostGroup()->isReadable([$_REQUEST['groupid']])) {
+if (getRequest('groupid') && !isReadableHostGroups([getRequest('groupid')])) {
 	access_deny();
 }
 
@@ -85,8 +86,16 @@ foreach($inventoryFields as $inventoryField){
 }
 
 $controls = (new CList())
-	->addItem([_('Group').SPACE, $pageFilter->getGroupsCB()])
-	->addItem([_('Grouping by').SPACE, $inventoryFieldsComboBox]);
+	->addItem([
+		new CLabel(_('Group'), 'groupid'),
+		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+		$pageFilter->getGroupsCB()
+	])
+	->addItem([
+		new CLabel(_('Grouping by'), 'groupby'),
+		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+		$inventoryFieldsComboBox
+	]);
 
 $hostinvent_wdgt->setControls(
 	(new CForm('get'))->addItem($controls)
@@ -108,10 +117,9 @@ if($pageFilter->groupsSelected && $groupFieldTitle !== ''){
 	$options = [
 		'output' => ['hostid', 'name'],
 		'selectInventory' => [$_REQUEST['groupby']], // only one field is required
-		'withInventory' => true
+		'withInventory' => true,
+		'groupids' => $pageFilter->groupids
 	];
-	if($pageFilter->groupid > 0)
-		$options['groupids'] = $pageFilter->groupid;
 
 	$hosts = API::Host()->get($options);
 

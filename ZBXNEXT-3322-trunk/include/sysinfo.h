@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ int	parse_item_key(const char *itemkey, AGENT_REQUEST *request);
 void	unquote_key_param(char *param);
 int	quote_key_param(char **param, int forced);
 
-int	set_result_type(AGENT_RESULT *result, int value_type, int data_type, char *c);
+int	set_result_type(AGENT_RESULT *result, int value_type, char *c);
 void	set_result_meta(AGENT_RESULT *result, zbx_uint64_t lastlogsize, int mtime);
 
 #ifdef HAVE_KSTAT_H
@@ -275,11 +275,14 @@ int	SERVICES(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	PROC_INFO(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	NET_IF_LIST(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	WMI_GET(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	VM_VMEMORY_SIZE(AGENT_REQUEST *request, AGENT_RESULT *result);
 #endif
 
 #ifdef _AIX
 int	SYSTEM_STAT(AGENT_REQUEST *request, AGENT_RESULT *result);
 #endif
+
+typedef int (*zbx_metric_func_t)(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 typedef struct
 {
@@ -287,6 +290,8 @@ typedef struct
 	int		(*function)();
 }
 MODE_FUNCTION;
+
+int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *request, AGENT_RESULT *result);
 
 /* the fields used by proc queries */
 #define ZBX_SYSINFO_PROC_NONE		0x0000

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ typedef struct zbx_scheduler_interval
 }
 zbx_scheduler_interval_t;
 
-ZBX_THREAD_LOCAL volatile sig_atomic_t	zbx_timed_out;	/* 0 - no timeout occurred, 1 - SIGALRM took place */
+static ZBX_THREAD_LOCAL volatile sig_atomic_t	zbx_timed_out;	/* 0 - no timeout occurred, 1 - SIGALRM took place */
 
 #ifdef _WINDOWS
 
@@ -1765,7 +1765,7 @@ int	is_ip4(const char *ip)
 {
 	const char	*__function_name = "is_ip4";
 	const char	*p = ip;
-	int		nums = 0, dots = 0, res = FAIL;
+	int		digits = 0, dots = 0, res = FAIL, octet = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ip:'%s'", __function_name, ip);
 
@@ -1773,24 +1773,27 @@ int	is_ip4(const char *ip)
 	{
 		if (0 != isdigit(*p))
 		{
-			nums++;
+			octet = octet * 10 + (*p - '0');
+			digits++;
 		}
 		else if ('.' == *p)
 		{
-			if (0 == nums || 3 < nums)
+			if (0 == digits || 3 < digits || 255 < octet)
 				break;
-			nums = 0;
+
+			digits = 0;
+			octet = 0;
 			dots++;
 		}
 		else
 		{
-			nums = 0;
+			digits = 0;
 			break;
 		}
 
 		p++;
 	}
-	if (dots == 3 && 1 <= nums && nums <= 3)
+	if (3 == dots && 1 <= digits && 3 >= digits && 255 >= octet)
 		res = SUCCEED;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(res));
@@ -1798,7 +1801,6 @@ int	is_ip4(const char *ip)
 	return res;
 }
 
-#if defined(HAVE_IPV6)
 /******************************************************************************
  *                                                                            *
  * Function: is_ip6                                                           *
@@ -1812,14 +1814,12 @@ int	is_ip4(const char *ip)
  *                                                                            *
  * Author: Alexander Vladishev                                                *
  *                                                                            *
- * Comments: could be improved (not supported x:x:x:x:x:x:d.d.d.d addresses)  *
- *                                                                            *
  ******************************************************************************/
 int	is_ip6(const char *ip)
 {
 	const char	*__function_name = "is_ip6";
-	const char	*p = ip;
-	int		nums = 0, is_nums = 0, colons = 0, dcolons = 0, res = FAIL;
+	const char	*p = ip, *last_colon;
+	int		xdigits = 0, only_xdigits = 0, colons = 0, dbl_colons = 0, res;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ip:'%s'", __function_name, ip);
 
@@ -1827,35 +1827,46 @@ int	is_ip6(const char *ip)
 	{
 		if (0 != isxdigit(*p))
 		{
-			nums++;
-			is_nums = 1;
+			xdigits++;
+			only_xdigits = 1;
 		}
 		else if (':' == *p)
 		{
-			if (0 == nums && 0 < colons)
-				dcolons++;
-			if (4 < nums || 1 < dcolons)
+			if (0 == xdigits && 0 < colons)
+			{
+				/* consecutive sections of zeroes are replaced with a double colon */
+				only_xdigits = 1;
+				dbl_colons++;
+			}
+
+			if (4 < xdigits || 1 < dbl_colons)
 				break;
-			nums = 0;
+
+			xdigits = 0;
 			colons++;
 		}
 		else
 		{
-			is_nums = 0;
+			only_xdigits = 0;
 			break;
 		}
 
 		p++;
 	}
 
-	if (2 <= colons && colons <= 7 && 4 >= nums && 1 == is_nums)
+	if (2 > colons || 7 < colons || 1 < dbl_colons || 4 < xdigits)
+		res = FAIL;
+	else if (1 == only_xdigits)
 		res = SUCCEED;
+	else if (7 > colons && (last_colon = strrchr(ip, ':')) < p)
+		res = is_ip4(last_colon + 1);	/* past last column is ipv4 mapped address */
+	else
+		res = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(res));
 
 	return res;
 }
-#endif	/*HAVE_IPV6*/
 
 /******************************************************************************
  *                                                                            *
@@ -1877,7 +1888,7 @@ int	is_ip(const char *ip)
 
 	if (SUCCEED == is_ip4(ip))
 		return SUCCEED;
-#if defined(HAVE_IPV6)
+#ifdef HAVE_IPV6
 	if (SUCCEED == is_ip6(ip))
 		return SUCCEED;
 #endif
@@ -1891,7 +1902,7 @@ int	is_ip(const char *ip)
  * Purpose: check if ip matches range of ip addresses                         *
  *                                                                            *
  * Parameters: list - [IN] comma-separated list of ip ranges                  *
- *                    192.168.0.1-64,192.168.0.128,10.10.0.0/24,12fc::21      *
+ *                         192.168.0.1-64,192.168.0.128,10.10.0.0/24,12fc::21 *
  *             ip   - [IN] ip address                                         *
  *                                                                            *
  * Return value: FAIL - out of range, SUCCEED - within the range              *
@@ -2021,7 +2032,9 @@ int	zbx_double_compare(double a, double b)
  *                                                                            *
  * Purpose: check if the string is double                                     *
  *                                                                            *
- * Parameters: str - string to check                                          *
+ * Parameters: str   - string to check                                        *
+ *             flags - extra options including:                               *
+ *                       ZBX_FLAG_DOUBLE_SUFFIX - allow suffixes              *
  *                                                                            *
  * Return value:  SUCCEED - the string is double                              *
  *                FAIL - otherwise                                            *
@@ -2032,7 +2045,7 @@ int	zbx_double_compare(double a, double b)
  *           s, m, h, d, w                                                    *
  *                                                                            *
  ******************************************************************************/
-int	is_double_suffix(const char *str)
+int	is_double_suffix(const char *str, unsigned char flags)
 {
 	size_t	i;
 	char	dot = 0;
@@ -2053,7 +2066,7 @@ int	is_double_suffix(const char *str)
 		}
 
 		/* last character is suffix */
-		if (NULL != strchr("KMGTsmhdw", str[i]) && '\0' == str[i + 1])
+		if (0 != (flags & ZBX_FLAG_DOUBLE_SUFFIX) && NULL != strchr(ZBX_UNIT_SYMBOLS, str[i]) && '\0' == str[i + 1])
 			continue;
 
 		return FAIL;
@@ -2126,14 +2139,15 @@ int	is_double(const char *str)
 
 /******************************************************************************
  *                                                                            *
- * Function: is_uint_suffix                                                   *
+ * Function: is_time_suffix                                                   *
  *                                                                            *
- * Purpose: check if the string is unsigned integer                           *
+ * Purpose: check if the string is a non-negative integer with or without     *
+ *          supported time suffix                                             *
  *                                                                            *
- * Parameters: str   - string to check                                        *
- *             value - a pointer to converted value (optional)                *
+ * Parameters: str   - [IN] string to check                                   *
+ *             value - [OUT] a pointer to converted value (optional)          *
  *                                                                            *
- * Return value: SUCCEED - the string is unsigned integer                     *
+ * Return value: SUCCEED - the string is valid and within reasonable limits   *
  *               FAIL    - otherwise                                          *
  *                                                                            *
  * Author: Aleksandrs Saveljevs, Vladimir Levijev                             *
@@ -2141,22 +2155,22 @@ int	is_double(const char *str)
  * Comments: the function automatically processes suffixes s, m, h, d, w      *
  *                                                                            *
  ******************************************************************************/
-int	is_uint_suffix(const char *str, unsigned int *value)
+int	is_time_suffix(const char *str, int *value)
 {
-	const unsigned int	max_uint = ~0U;
-	unsigned int		value_uint = 0, c, factor = 1;
+	const int	max = 0x7fffffff;	/* minimum acceptable value for INT_MAX is 2 147 483 647 */
+	int		value_tmp = 0, c, factor = 1;
 
-	if ('\0' == *str || '0' > *str || *str > '9')
+	if ('\0' == *str || 0 == isdigit(*str))
 		return FAIL;
 
 	while ('\0' != *str && 0 != isdigit(*str))
 	{
-		c = (unsigned int)(unsigned char)(*str - '0');
+		c = (int)(unsigned char)(*str - '0');
 
-		if ((max_uint - c) / 10 < value_uint)
+		if ((max - c) / 10 < value_tmp)
 			return FAIL;	/* overflow */
 
-		value_uint = value_uint * 10 + c;
+		value_tmp = value_tmp * 10 + c;
 
 		str++;
 	}
@@ -2189,16 +2203,16 @@ int	is_uint_suffix(const char *str, unsigned int *value)
 	if ('\0' != *str)
 		return FAIL;
 
-	if (max_uint / factor < value_uint)
+	if (max / factor < value_tmp)
 		return FAIL;	/* overflow */
 
 	if (NULL != value)
-		*value = value_uint * factor;
+		*value = value_tmp * factor;
 
 	return SUCCEED;
 }
 
-#if defined(_WINDOWS)
+#ifdef _WINDOWS
 int	_wis_uint(const wchar_t *wide_string)
 {
 	const wchar_t	*wide_char = wide_string;
@@ -3070,10 +3084,20 @@ fail:
 	return res;
 }
 
+void	zbx_alarm_flag_set(void)
+{
+	zbx_timed_out = 1;
+}
+
+void	zbx_alarm_flag_clear(void)
+{
+	zbx_timed_out = 0;
+}
+
 #if !defined(_WINDOWS)
 unsigned int	zbx_alarm_on(unsigned int seconds)
 {
-	zbx_timed_out = 0;
+	zbx_alarm_flag_clear();
 
 	return alarm(seconds);
 }
@@ -3083,7 +3107,12 @@ unsigned int	zbx_alarm_off(void)
 	unsigned int	ret;
 
 	ret = alarm(0);
-	zbx_timed_out = 0;
+	zbx_alarm_flag_clear();
 	return ret;
 }
 #endif
+
+int	zbx_alarm_timed_out(void)
+{
+	return (0 == zbx_timed_out ? FAIL : SUCCEED);
+}

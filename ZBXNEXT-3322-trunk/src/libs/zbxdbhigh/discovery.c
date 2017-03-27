@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ static DB_RESULT	discovery_get_dhost_by_value(zbx_uint64_t dcheckid, const char 
 	DB_RESULT	result;
 	char		*value_esc;
 
-	value_esc = DBdyn_escape_string_len(value, DSERVICE_VALUE_LEN);
+	value_esc = DBdyn_escape_field("dservices", "value", value);
 
 	result = DBselect(
 			"select dh.dhostid,dh.status,dh.lastup,dh.lastdown"
@@ -48,7 +48,7 @@ static DB_RESULT	discovery_get_dhost_by_ip(zbx_uint64_t druleid, const char *ip)
 	DB_RESULT	result;
 	char		*ip_esc;
 
-	ip_esc = DBdyn_escape_string_len(ip, INTERFACE_IP_LEN);
+	ip_esc = DBdyn_escape_field("dservices", "ip", ip);
 
 	result = DBselect(
 			"select dh.dhostid,dh.status,dh.lastup,dh.lastdown"
@@ -84,7 +84,8 @@ static void	discovery_separate_host(DB_DRULE *drule, DB_DHOST *dhost, const char
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ip:'%s'", __function_name, ip);
 
-	ip_esc = DBdyn_escape_string_len(ip, INTERFACE_IP_LEN);
+	ip_esc = DBdyn_escape_field("dservices", "ip", ip);
+
 	sql = zbx_dsprintf(sql,
 			"select dserviceid"
 			" from dservices"
@@ -130,7 +131,7 @@ static void	discovery_separate_host(DB_DRULE *drule, DB_DHOST *dhost, const char
  * Parameters: host ip address                                                *
  *                                                                            *
  ******************************************************************************/
-static void	discovery_register_host(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhost,
+static void	discovery_register_host(DB_DRULE *drule, zbx_uint64_t dcheckid, DB_DHOST *dhost,
 		const char *ip, int status, const char *value)
 {
 	const char	*__function_name = "discovery_register_host";
@@ -141,9 +142,9 @@ static void	discovery_register_host(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ip:'%s' status:%d value:'%s'",
 			__function_name, ip, status, value);
 
-	if (drule->unique_dcheckid == dcheck->dcheckid)
+	if (drule->unique_dcheckid == dcheckid)
 	{
-		result = discovery_get_dhost_by_value(dcheck->dcheckid, value);
+		result = discovery_get_dhost_by_value(dcheckid, value);
 
 		if (NULL == (row = DBfetch(result)))
 		{
@@ -201,37 +202,28 @@ static void	discovery_register_host(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST
  * Parameters: host ip address                                                *
  *                                                                            *
  ******************************************************************************/
-static void	discovery_register_service(DB_DRULE *drule, DB_DCHECK *dcheck,
-		DB_DHOST *dhost, DB_DSERVICE *dservice, const char *ip, const char *dns,
-		int port, int status)
+static void	discovery_register_service(zbx_uint64_t dcheckid, DB_DHOST *dhost, DB_DSERVICE *dservice,
+		const char *ip, const char *dns, int port, int status)
 {
 	const char	*__function_name = "discovery_register_service";
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	char		*key_esc, *ip_esc, *dns_esc;
+	char		*ip_esc, *dns_esc;
 
 	zbx_uint64_t	dhostid;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ip:'%s' port:%d key:'%s'",
-			__function_name, ip, port, dcheck->key_);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ip:'%s' port:%d", __function_name, ip, port);
 
-	key_esc = DBdyn_escape_string_len(dcheck->key_, DSERVICE_KEY_LEN);
-	ip_esc = DBdyn_escape_string_len(ip, INTERFACE_IP_LEN);
+	ip_esc = DBdyn_escape_field("dservices", "ip", ip);
 
 	result = DBselect(
 			"select dserviceid,dhostid,status,lastup,lastdown,value,dns"
 			" from dservices"
 			" where dcheckid=" ZBX_FS_UI64
-				" and type=%d"
-				" and key_" ZBX_SQL_STRCMP
 				" and ip" ZBX_SQL_STRCMP
 				" and port=%d",
-			dcheck->dcheckid,
-			dcheck->type,
-			ZBX_SQL_STRVAL_EQ(key_esc),
-			ZBX_SQL_STRVAL_EQ(ip_esc),
-			port);
+			dcheckid, ZBX_SQL_STRVAL_EQ(ip_esc), port);
 
 	if (NULL == (row = DBfetch(result)))
 	{
@@ -243,12 +235,12 @@ static void	discovery_register_service(DB_DRULE *drule, DB_DCHECK *dcheck,
 			dservice->status = DOBJECT_STATUS_DOWN;
 			dservice->value = zbx_strdup(dservice->value, "");
 
-			dns_esc = DBdyn_escape_string_len(dns, INTERFACE_DNS_LEN);
+			dns_esc = DBdyn_escape_field("dservices", "dns", dns);
 
-			DBexecute("insert into dservices (dserviceid,dhostid,dcheckid,type,key_,ip,dns,port,status)"
-					" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ",%d,'%s','%s','%s',%d,%d)",
-					dservice->dserviceid, dhost->dhostid, dcheck->dcheckid, dcheck->type,
-					key_esc, ip_esc, dns_esc, port, dservice->status);
+			DBexecute("insert into dservices (dserviceid,dhostid,dcheckid,ip,dns,port,status)"
+					" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ",'%s','%s',%d,%d)",
+					dservice->dserviceid, dhost->dhostid, dcheckid, ip_esc, dns_esc, port,
+					dservice->status);
 
 			zbx_free(dns_esc);
 		}
@@ -278,7 +270,7 @@ static void	discovery_register_service(DB_DRULE *drule, DB_DCHECK *dcheck,
 
 		if (0 != strcmp(row[6], dns))
 		{
-			dns_esc = DBdyn_escape_string_len(dns, INTERFACE_DNS_LEN);
+			dns_esc = DBdyn_escape_field("dservices", "dns", dns);
 
 			DBexecute("update dservices"
 					" set dns='%s'"
@@ -291,7 +283,6 @@ static void	discovery_register_service(DB_DRULE *drule, DB_DCHECK *dcheck,
 	DBfree_result(result);
 
 	zbx_free(ip_esc);
-	zbx_free(key_esc);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -308,7 +299,7 @@ static void	discovery_update_dservice(zbx_uint64_t dserviceid, int status, int l
 {
 	char	*value_esc;
 
-	value_esc = DBdyn_escape_string_len(value, DSERVICE_VALUE_LEN);
+	value_esc = DBdyn_escape_field("dservices", "value", value);
 
 	DBexecute("update dservices set status=%d,lastup=%d,lastdown=%d,value='%s' where dserviceid=" ZBX_FS_UI64,
 			status, lastup, lastdown, value_esc, dserviceid);
@@ -327,7 +318,7 @@ static void	discovery_update_dservice_value(zbx_uint64_t dserviceid, const char 
 {
 	char	*value_esc;
 
-	value_esc = DBdyn_escape_string_len(value, DSERVICE_VALUE_LEN);
+	value_esc = DBdyn_escape_field("dservices", "value", value);
 
 	DBexecute("update dservices set value='%s' where dserviceid=" ZBX_FS_UI64, value_esc, dserviceid);
 
@@ -451,7 +442,7 @@ static void	discovery_update_host_status(DB_DHOST *dhost, int status, int now)
  * Parameters: host - host info                                               *
  *                                                                            *
  ******************************************************************************/
-void	discovery_update_host(DB_DHOST *dhost, const char *ip, int status, int now)
+void	discovery_update_host(DB_DHOST *dhost, int status, int now)
 {
 	const char	*__function_name = "discovery_update_host";
 
@@ -472,8 +463,8 @@ void	discovery_update_host(DB_DHOST *dhost, const char *ip, int status, int now)
  * Parameters: service - service info                                         *
  *                                                                            *
  ******************************************************************************/
-void	discovery_update_service(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhost, const char *ip, const char *dns,
-		int port, int status, const char *value, int now)
+void	discovery_update_service(DB_DRULE *drule, zbx_uint64_t dcheckid, DB_DHOST *dhost, const char *ip,
+		const char *dns, int port, int status, const char *value, int now)
 {
 	const char	*__function_name = "discovery_update_service";
 
@@ -486,11 +477,11 @@ void	discovery_update_service(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhos
 
 	/* register host if is not registered yet */
 	if (0 == dhost->dhostid)
-		discovery_register_host(drule, dcheck, dhost, ip, status, value);
+		discovery_register_host(drule, dcheckid, dhost, ip, status, value);
 
 	/* register service if is not registered yet */
 	if (0 != dhost->dhostid)
-		discovery_register_service(drule, dcheck, dhost, &dservice, ip, dns, port, status);
+		discovery_register_service(dcheckid, dhost, &dservice, ip, dns, port, status);
 
 	/* service was not registered because we do not add down service */
 	if (0 != dservice.dserviceid)

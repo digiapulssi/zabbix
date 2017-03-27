@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,183 +20,6 @@
 
 
 class CMenuPopupHelper {
-
-	/**
-	 * Prepare data for favourite graphs menu popup.
-	 *
-	 * @return array
-	 */
-	public static function getFavouriteGraphs() {
-		$graphs = [];
-		$simple_graphs = [];
-
-		$favourites = CFavorite::get('web.favorite.graphids');
-
-		if ($favourites) {
-			$graphids = [];
-			$itemids = [];
-			$db_graphs = [];
-			$db_items = [];
-
-			foreach ($favourites as $favourite) {
-				if ($favourite['source'] === 'itemid') {
-					$itemids[$favourite['value']] = true;
-				}
-				else {
-					$graphids[$favourite['value']] = true;
-				}
-			}
-
-			if ($graphids) {
-				$db_graphs = API::Graph()->get([
-					'output' => ['graphid', 'name'],
-					'selectHosts' => ['hostid', 'name'],
-					'expandName' => true,
-					'graphids' => array_keys($graphids),
-					'preservekeys' => true
-				]);
-			}
-
-			if ($itemids) {
-				$db_items = API::Item()->get([
-					'output' => ['itemid', 'hostid', 'name', 'key_'],
-					'selectHosts' => ['hostid', 'name'],
-					'itemids' => array_keys($itemids),
-					'webitems' => true,
-					'preservekeys' => true
-				]);
-
-				$db_items = CMacrosResolverHelper::resolveItemNames($db_items);
-			}
-
-			foreach ($favourites as $favourite) {
-				$sourceid = $favourite['value'];
-
-				if ($favourite['source'] === 'itemid') {
-					if (array_key_exists($sourceid, $db_items)) {
-						$db_item = $db_items[$sourceid];
-
-						$simple_graphs[] = [
-							'id' => $sourceid,
-							'label' => $db_item['hosts'][0]['name'].NAME_DELIMITER.$db_item['name_expanded']
-						];
-					}
-				}
-				else {
-					if (array_key_exists($sourceid, $db_graphs)) {
-						$db_graph = $db_graphs[$sourceid];
-
-						$graphs[] = [
-							'id' => $sourceid,
-							'label' => $db_graph['hosts'][0]['name'].NAME_DELIMITER.$db_graph['name']
-						];
-					}
-				}
-			}
-		}
-
-		return [
-			'type' => 'favouriteGraphs',
-			'graphs' => $graphs,
-			'simpleGraphs' => $simple_graphs
-		];
-	}
-
-	/**
-	 * Prepare data for favourite maps menu popup.
-	 *
-	 * @return array
-	 */
-	public static function getFavouriteMaps() {
-		$maps = [];
-
-		$favourites = CFavorite::get('web.favorite.sysmapids');
-
-		if ($favourites) {
-			$mapids = [];
-
-			foreach ($favourites as $favourite) {
-				$mapids[$favourite['value']] = true;
-			}
-
-			$db_maps = API::Map()->get([
-				'output' => ['sysmapid', 'name'],
-				'sysmapids' => array_keys($mapids)
-			]);
-
-			foreach ($db_maps as $db_map) {
-				$maps[] = [
-					'id' => $db_map['sysmapid'],
-					'label' => $db_map['name']
-				];
-			}
-		}
-
-		return [
-			'type' => 'favouriteMaps',
-			'maps' => $maps
-		];
-	}
-
-	/**
-	 * Prepare data for favourite screens menu popup.
-	 *
-	 * @return array
-	 */
-	public static function getFavouriteScreens() {
-		$screens = $slideshows = [];
-
-		$favourites = CFavorite::get('web.favorite.screenids');
-
-		if ($favourites) {
-			$screenIds = $slideshowIds = [];
-
-			foreach ($favourites as $favourite) {
-				if ($favourite['source'] === 'screenid') {
-					$screenIds[$favourite['value']] = $favourite['value'];
-				}
-			}
-
-			$dbScreens = API::Screen()->get([
-				'output' => ['screenid', 'name'],
-				'screenids' => $screenIds,
-				'preservekeys' => true
-			]);
-
-			foreach ($favourites as $favourite) {
-				$sourceId = $favourite['value'];
-
-				if ($favourite['source'] === 'slideshowid') {
-					if (slideshow_accessible($sourceId, PERM_READ)) {
-						$dbSlideshow = get_slideshow_by_slideshowid($sourceId, PERM_READ);
-
-						if ($dbSlideshow) {
-							$slideshows[] = [
-								'id' => $dbSlideshow['slideshowid'],
-								'label' => $dbSlideshow['name']
-							];
-						}
-					}
-				}
-				else {
-					if (isset($dbScreens[$sourceId])) {
-						$dbScreen = $dbScreens[$sourceId];
-
-						$screens[] = [
-							'id' => $dbScreen['screenid'],
-							'label' => $dbScreen['name']
-						];
-					}
-				}
-			}
-		}
-
-		return [
-			'type' => 'favouriteScreens',
-			'screens' => $screens,
-			'slideshows' => $slideshows
-		];
-	}
 
 	/**
 	 * Prepare data for item history menu popup.
@@ -243,7 +66,7 @@ class CMenuPopupHelper {
 
 		if ($scripts) {
 			foreach ($scripts as &$script) {
-				$script['name'] = implode('/', splitPath($script['name'], false, true));
+				$script['name'] = trimPath($script['name']);
 			}
 			unset($script);
 
@@ -288,7 +111,7 @@ class CMenuPopupHelper {
 
 		if ($scripts) {
 			foreach ($scripts as &$script) {
-				$script['name'] = implode('/', splitPath($script['name'], false, true));
+				$script['name'] = trimPath($script['name']);
 			}
 			unset($script);
 			CArrayHelper::sort($scripts, ['name']);
@@ -361,11 +184,10 @@ class CMenuPopupHelper {
 	 * @param string $acknowledge['eventid']			event ID
 	 * @param string $acknowledge['screenid']			screen ID (optional)
 	 * @param string $acknowledge['backurl']			return URL (optional)
-	 * @param string $eventTime							event navigation time parameter (optional)
 	 *
 	 * @return array
 	 */
-	public static function getTrigger(array $trigger, array $acknowledge = null, $eventTime = null) {
+	public static function getTrigger(array $trigger, array $acknowledge = null) {
 		$hosts = [];
 		$showEvents = true;
 
@@ -406,27 +228,17 @@ class CMenuPopupHelper {
 		$data = [
 			'type' => 'trigger',
 			'triggerid' => $trigger['triggerid'],
-			'items' => $items
+			'items' => $items,
+			'showEvents' => $showEvents,
+			'configuration' => in_array(CWebUser::$data['type'], [USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN])
 		];
 
 		if ($acknowledge !== null) {
 			$data['acknowledge'] = $acknowledge;
 		}
 
-		if ($eventTime !== null) {
-			$data['eventTime'] = $eventTime;
-		}
-
 		if ($trigger['url'] !== '') {
 			$data['url'] = $trigger['url'];
-		}
-
-		if ($showEvents) {
-			$data['showEvents'] = true;
-		}
-		if (in_array(CWebUser::$data['type'], [USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN])
-				&& $trigger['flags'] == ZBX_FLAG_DISCOVERY_NORMAL) {
-			$data['configuration'] = true;
 		}
 
 		return $data;

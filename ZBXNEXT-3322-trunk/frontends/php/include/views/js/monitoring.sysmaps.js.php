@@ -194,6 +194,293 @@
 	?>
 </script>
 
+<script type="text/x-jquery-tmpl" id="mapShapeFormTpl">
+	<?= (new CDiv(new CTag('h4', true, _('Map shape'))))
+			->addClass(ZBX_STYLE_DASHBRD_WIDGET_HEAD)
+			->addClass(ZBX_STYLE_CURSOR_MOVE)
+			->setId('shapeDragHandler')
+			->toString()
+	?>
+	<?= (new CForm())
+			->cleanItems()
+			->setName('shapeForm')
+			->setId('shapeForm')
+			->addVar('shapeid', '')
+			->addItem(
+				(new CFormList())
+					->addRow(_('Shape'),
+						(new CRadioButtonList('type', 0))
+							->addValue(_('Rectangle'), 0)
+							->addValue(_('Ellipse'), 1)
+							->setModern(true)
+					)
+					->addRow(_('Text'),
+						(new CDiv([
+							(new CTextArea('text'))
+								->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+								->setRows(3),
+							BR(),
+							_('Font'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CComboBox('font'))
+								->addItem(
+									(new COptGroup(_('Serif')))
+										->addItem(new CComboItem(0, 'Georgia'))
+										->addItem(new CComboItem(1, 'Palatino'))
+										->addItem(new CComboItem(2, 'Times New Roman'))
+								)
+								->addItem(
+									(new COptGroup(_('Sans-Serif')))
+										->addItem(new CComboItem(3, 'Arial'))
+										->addItem(new CComboItem(4, 'Arial Black'))
+										->addItem(new CComboItem(5, 'Comic Sans'))
+										->addItem(new CComboItem(6, 'Impact'))
+										->addItem(new CComboItem(7, 'Lucida Sans'))
+										->addItem(new CComboItem(8, 'Tahoma'))
+										->addItem(new CComboItem(9, 'Helvetica'))
+										->addItem(new CComboItem(10, 'Verdana'))
+								)
+								->addItem(
+									(new COptGroup(_('Monospace')))
+										->addItem(new CComboItem(11, 'Courier New'))
+										->addItem(new CComboItem(12, 'Lucida Console'))
+								),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							_('Font size'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CTextBox('font_size'))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							_('Colour'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							new CColor('font_color', '#{color}', false),
+							BR(),
+							_('Horizontal align'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CComboBox('text_halign', -1, null, [
+								'0'	=> _('Left'),
+								'-1'	=> _('Center'),
+								'1'	=> _('Right')
+							]))->setAttribute('style', 'margin-top:4px'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							_('Vertical align'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CComboBox('text_valign', -1, null, [
+								'0'	=> _('Top'),
+								'-1'	=> _('Middle'),
+								'1'	=> _('Bottom')
+							])),
+						]))
+							->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+					)
+					->addRow(_('Background'),
+						(new CDiv([
+							_('Colour'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							new CColor('background_color', '#{color}', false)
+						]))
+							->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+					)
+					->addRow(_('Border'),
+						(new CDiv([
+							_('Type'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CComboBox('border_type', null, null, [
+								'-1'	=> _('None'),
+								'0'	=> '———',
+								'1'	=> '· · · ·',
+								'2'	=> '- - - -',
+							])),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							_('Width'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CTextBox('border_width'))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							_('Colour'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							new CColor('border_color', '#{color}', false)
+						]))
+							->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+					)
+					->addRow(new CLabel(_('Coordinates'), 'x'),
+						(new CDiv([
+							_('X'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CTextBox('x'))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							_('Y'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CTextBox('y'))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+						]))
+							->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+					)
+					->addRow(new CLabel(_('Size'), 'areaSizeWidth'),
+						(new CDiv([
+							_('Width'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CTextBox('width'))
+								->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
+								->setId('areaSizeWidth'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							_('Height'),
+							(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+							(new CTextBox('height'))
+								->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
+								->setId('areaSizeHeight')
+						]))
+							->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+					)
+					->addItem([
+						(new CDiv())->addClass(ZBX_STYLE_TABLE_FORMS_TD_LEFT),
+						(new CDiv([
+							(new CButton(null, _('Apply')))
+								->addClass('shape-edit-control')
+								->setId('shapeApply'),
+							(new CButton(null, _('Remove')))
+								->addClass('shape-edit-control')
+								->addClass(ZBX_STYLE_BTN_ALT)
+								->setId('shapeRemove'),
+							(new CButton(null, _('Close')))
+								->addClass(ZBX_STYLE_BTN_ALT)
+								->setId('shapeClose')
+						]))
+							->addClass(ZBX_STYLE_TABLE_FORMS_TD_RIGHT)
+							->addClass(ZBX_STYLE_TFOOT_BUTTONS)
+					])
+			)
+			->toString()
+	?>
+</script>
+
+<script type="text/x-jquery-tmpl" id="mapMassShapeFormTpl">
+	<?= (new CDiv(new CTag('h4', true, _('Mass update shapes'))))
+			->addClass(ZBX_STYLE_DASHBRD_WIDGET_HEAD)
+			->addClass(ZBX_STYLE_CURSOR_MOVE)
+			->setId('massShapeDragHandler')
+			->toString()
+	?>
+	<?= (new CForm())
+			->cleanItems()
+			->setName('shapeForm')
+			->setId('massShapeForm')
+			->addItem(
+				(new CFormList())
+					->addRow((new CCheckBox('chkbox_type'))
+							->setId('chkboxType')
+							->setLabel(_('Shape')),
+						(new CRadioButtonList('mass_type', 0))
+							->addValue(_('Rectangle'), 0)
+							->addValue(_('Ellipse'), 1)
+							->setModern(true)
+					)
+					->addRow((new CCheckBox('chkbox_text'))
+							->setId('chkboxText')
+							->setLabel(_('Text')),
+						(new CTextArea('mass_text'))
+								->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+								->setRows(2)
+					)
+					->addRow((new CCheckBox('chkbox_font'))
+							->setId('chkboxFont')
+							->setLabel(_('Font')),
+						(new CComboBox('mass_font'))
+								->addItem(
+									(new COptGroup(_('Serif')))
+										->addItem(new CComboItem(0, 'Georgia'))
+										->addItem(new CComboItem(1, 'Palatino'))
+										->addItem(new CComboItem(2, 'Times New Roman'))
+								)
+								->addItem(
+									(new COptGroup(_('Sans-Serif')))
+										->addItem(new CComboItem(3, 'Arial'))
+										->addItem(new CComboItem(4, 'Arial Black'))
+										->addItem(new CComboItem(5, 'Comic Sans'))
+										->addItem(new CComboItem(6, 'Impact'))
+										->addItem(new CComboItem(7, 'Lucida Sans'))
+										->addItem(new CComboItem(8, 'Tahoma'))
+										->addItem(new CComboItem(9, 'Helvetica'))
+										->addItem(new CComboItem(10, 'Verdana'))
+								)
+								->addItem(
+									(new COptGroup(_('Monospace')))
+										->addItem(new CComboItem(11, 'Courier New'))
+										->addItem(new CComboItem(12, 'Lucida Console'))
+								)
+					)
+					->addRow((new CCheckBox('chkbox_font_size'))
+							->setId('chkboxFontSize')
+							->setLabel(_('Font size')),
+						(new CTextBox('mass_font_size'))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+					)
+					->addRow((new CCheckBox('chkbox_font_color'))
+							->setId('chkboxFontColor')
+							->setLabel(_('Font colour')),
+						new CColor('mass_font_color', '#{color}', false)
+					)
+					->addRow((new CCheckBox('chkbox_text_halign'))
+							->setId('chkboxTextHalign')
+							->setLabel(_('Horizontal align')),
+						new CComboBox('mass_text_halign', -1, null, [
+								'0'	=> _('Left'),
+								'-1'	=> _('Center'),
+								'1'	=> _('Right')
+							])
+					)
+					->addRow((new CCheckBox('chkbox_text_valign'))
+							->setId('chkboxTextValign')
+							->setLabel(_('Vertical align')),
+						new CComboBox('mass_text_valign', -1, null, [
+								'0'	=> _('Top'),
+								'-1'	=> _('Middle'),
+								'1'	=> _('Bottom')
+							])
+					)
+					->addRow((new CCheckBox('chkbox_background'))
+							->setId('chkboxBackground')
+							->setLabel(_('Background colour')),
+						new CColor('mass_background_color', '#{color}', false)
+					)
+					->addRow((new CCheckBox('chkbox_border_type'))
+							->setId('chkboxBorderType')
+							->setLabel(_('Border type')),
+						new CComboBox('mass_border_type', null, null, [
+								'-1'	=> _('None'),
+								'0'	=> '———',
+								'1'	=> '· · · ·',
+								'2'	=> '- - - -',
+							])
+					)
+					->addRow((new CCheckBox('chkbox_border_width'))
+							->setId('chkboxBorderWidth')
+							->setLabel(_('Border width')),
+						(new CTextBox('mass_border_width'))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+					)
+					->addRow((new CCheckBox('chkbox_border_color'))
+							->setId('chkboxBorderColor')
+							->setLabel(_('Border colour')),
+						new CColor('mass_border_color', '#{color}', false)
+					)
+					->addItem([
+						(new CDiv())->addClass(ZBX_STYLE_TABLE_FORMS_TD_LEFT),
+						(new CDiv([
+							(new CButton(null, _('Apply')))
+								->addClass('shape-edit-control')
+								->setId('shapeMassApply'),
+							(new CButton(null, _('Remove')))
+								->addClass('shape-edit-control')
+								->addClass(ZBX_STYLE_BTN_ALT)
+								->setId('shapeMassRemove'),
+							(new CButton(null, _('Close')))
+								->addClass(ZBX_STYLE_BTN_ALT)
+								->setId('shapeMassClose')
+						]))
+							->addClass(ZBX_STYLE_TABLE_FORMS_TD_RIGHT)
+							->addClass(ZBX_STYLE_TFOOT_BUTTONS)
+					])
+			)
+			->toString()
+	?>
+</script>
+
 <script type="text/x-jquery-tmpl" id="mapMassFormTpl">
 	<?= (new CDiv(new CTag('h4', true, _('Mass update elements'))))
 			->addClass(ZBX_STYLE_DASHBRD_WIDGET_HEAD)
@@ -217,17 +504,18 @@
 							->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_BIG_WIDTH.'px;')
 					)
 					->addRow(
-						new CLabel([(new CCheckBox('chkbox_label'))->setId('chkboxLabel'), _('Label')], 'chkboxLabel'),
+						(new CCheckBox('chkbox_label'))
+							->setId('chkboxLabel')
+							->setLabel(_('Label')),
 						(new CTextArea('label'))
 							->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 							->setRows(2)
 							->setId('massLabel')
 					)
 					->addRow(
-						new CLabel([
-							(new CCheckBox('chkbox_label_location'))->setId('chkboxLabelLocation'),
-							_('Label location')
-						], 'chkboxLabelLocation'),
+						(new CCheckBox('chkbox_label_location'))
+							->setId('chkboxLabelLocation')
+							->setLabel(_('Label location')),
 						(new CComboBox('label_location', null, null, [
 							MAP_LABEL_LOC_DEFAULT => _('Default'),
 							MAP_LABEL_LOC_BOTTOM => _('Bottom'),
@@ -237,40 +525,34 @@
 						]))->setId('massLabelLocation')
 					)
 					->addRow(
-						new CLabel([
-							(new CCheckBox('chkbox_use_iconmap'))
-								->setEnabled($data['sysmap']['iconmapid'] !== '0')
-								->setId('chkboxMassUseIconmap'),
-							_('Automatic icon selection')
-						], 'chkboxMassUseIconmap'),
+						(new CCheckBox('chkbox_use_iconmap'))
+							->setId('chkboxMassUseIconmap')
+							->setLabel(_('Automatic icon selection'))
+							->setEnabled($data['sysmap']['iconmapid'] !== '0'),
 						(new CCheckBox('use_iconmap'))->setId('massUseIconmap')
 					)
 					->addRow(
-						new CLabel([
-							(new CCheckBox('chkbox_iconid_off'))->setId('chkboxMassIconidOff'),
-							_('Icon (default)')
-						], 'chkboxMassIconidOff'),
+						(new CCheckBox('chkbox_iconid_off'))
+							->setId('chkboxMassIconidOff')
+							->setLabel(_('Icon (default)')),
 						(new CComboBox('iconid_off'))->setId('massIconidOff')
 					)
 					->addRow(
-						new CLabel([
-							(new CCheckBox('chkbox_iconid_on'))->setId('chkboxMassIconidOn'),
-							_('Icon (problem)')
-						], 'chkboxMassIconidOn'),
+						(new CCheckBox('chkbox_iconid_on'))
+							->setId('chkboxMassIconidOn')
+							->setLabel(_('Icon (problem)')),
 						(new CComboBox('iconid_on'))->setId('massIconidOn')
 					)
 					->addRow(
-						new CLabel([
-							(new CCheckBox('chkbox_iconid_maintenance'))->setId('chkboxMassIconidMaintenance'),
-							_('Icon (maintenance)')
-						], 'chkboxMassIconidMaintenance'),
+						(new CCheckBox('chkbox_iconid_maintenance'))
+							->setId('chkboxMassIconidMaintenance')
+							->setLabel(_('Icon (maintenance)')),
 						(new CComboBox('iconid_maintenance'))->setId('massIconidMaintenance')
 					)
 					->addRow(
-						new CLabel([
-							(new CCheckBox('chkbox_iconid_disabled'))->setId('chkboxMassIconidDisabled'),
-							_('Icon (disabled)')
-						], 'chkboxMassIconidDisabled'),
+						(new CCheckBox('chkbox_iconid_disabled'))
+							->setId('chkboxMassIconidDisabled')
+							->setLabel(_('Icon (disabled)')),
 						(new CComboBox('iconid_disabled'))->setId('massIconidDisabled')
 					)
 					->addItem([

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -167,7 +167,7 @@ if ($parentHost['status'] != HOST_STATUS_TEMPLATE) {
 	$hostList->addRow(_('Monitored by proxy'), $proxyTb);
 }
 
-$hostList->addRow(_('Enabled'),
+$hostList->addRow(_('Create enabled'),
 	(new CCheckBox('status', HOST_STATUS_MONITORED))
 		->setChecked(HOST_STATUS_MONITORED == $hostPrototype['status'])
 );
@@ -256,7 +256,11 @@ else {
 		$linkedTemplateTable->addRow([
 			$templateLink,
 			(new CCol(
-				(new CSubmit('unlink['.$template['templateid'].']', _('Unlink')))->addClass(ZBX_STYLE_BTN_LINK)
+				(new CSimpleButton(_('Unlink')))
+					->onClick('javascript: submitFormWithParam('.
+						'"'.$frmHost->getName().'", "unlink['.$template['templateid'].']", "1"'.
+					');')
+					->addClass(ZBX_STYLE_BTN_LINK)
 			))->addClass(ZBX_STYLE_NOWRAP)
 		]);
 
@@ -282,7 +286,11 @@ else {
 				]
 			]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 		])
-		->addRow([(new CSubmit('add_template', _('Add')))->addClass(ZBX_STYLE_BTN_LINK)]);
+		->addRow([
+			(new CSimpleButton(_('Add')))
+				->onClick('javascript: submitFormWithParam("'.$frmHost->getName().'", "add_template", "1");')
+				->addClass(ZBX_STYLE_BTN_LINK)
+		]);
 
 	$tmplList->addRow(_('Link new templates'),
 		(new CDiv($newTemplateTable))
@@ -355,13 +363,22 @@ $encryption_form_list = (new CFormList('encryption'))
 			->setModern(true)
 			->setEnabled(false)
 	)
-	->addRow(_('Connections from host'), [
-		new CLabel([(new CCheckBox('tls_in_none'))->setAttribute('disabled', 'disabled'), _('No encryption')]),
-		BR(),
-		new CLabel([(new CCheckBox('tls_in_psk'))->setAttribute('disabled', 'disabled'), _('PSK')]),
-		BR(),
-		new CLabel([(new CCheckBox('tls_in_cert'))->setAttribute('disabled', 'disabled'), _('Certificate')])
-	])
+	->addRow(_('Connections from host'),
+		(new CList())
+			->addClass(ZBX_STYLE_LIST_CHECK_RADIO)
+			->addItem((new CCheckBox('tls_in_none'))
+				->setLabel(_('No encryption'))
+				->setAttribute('disabled', 'disabled')
+			)
+			->addItem((new CCheckBox('tls_in_psk'))
+				->setLabel(_('PSK'))
+				->setAttribute('disabled', 'disabled')
+			)
+			->addItem((new CCheckBox('tls_in_cert'))
+				->setLabel(_('Certificate'))
+				->setAttribute('disabled', 'disabled')
+			)
+	)
 	->addRow(_('PSK identity'),
 		(new CTextBox('tls_psk_identity', $parentHost['tls_psk_identity'], false, 128))
 			->setWidth(ZBX_TEXTAREA_BIG_WIDTH)

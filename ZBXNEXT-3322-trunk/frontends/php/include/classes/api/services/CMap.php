@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ class CMap extends CMapElement {
 			// output
 			'output'					=> API_OUTPUT_EXTEND,
 			'selectSelements'			=> null,
+			'selectShapes'				=> null,
 			'selectLinks'				=> null,
 			'selectIconMap'				=> null,
 			'selectUrls'				=> null,
@@ -467,7 +468,8 @@ class CMap extends CMapElement {
 
 				foreach ($map['users'] as $share) {
 					// Check required parameters.
-					$missing_keys = checkRequiredKeys($share, $required_fields);
+					$missing_keys = array_diff($required_fields, array_keys($share));
+
 					if ($missing_keys) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s(
 							'User sharing is missing parameters: %1$s for map "%2$s".',
@@ -541,7 +543,8 @@ class CMap extends CMapElement {
 
 				foreach ($map['userGroups'] as $share) {
 					// Check required parameters.
-					$missing_keys = checkRequiredKeys($share, $required_fields);
+					$missing_keys = array_diff($required_fields, array_keys($share));
+
 					if ($missing_keys) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s(
 							'User group sharing is missing parameters: %1$s for map "%2$s".',
@@ -888,7 +891,8 @@ class CMap extends CMapElement {
 
 				foreach ($map['users'] as $share) {
 					// Check required parameters.
-					$missing_keys = checkRequiredKeys($share, $required_fields);
+					$missing_keys = array_diff($required_fields, array_keys($share));
+
 					if ($missing_keys) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s(
 							'User sharing is missing parameters: %1$s for map "%2$s".',
@@ -961,7 +965,8 @@ class CMap extends CMapElement {
 
 				foreach ($map['userGroups'] as $share) {
 					// Check required parameters.
-					$missing_keys = checkRequiredKeys($share, $required_fields);
+					$missing_keys = array_diff($required_fields, array_keys($share));
+
 					if ($missing_keys) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s(
 							'User group sharing is missing parameters: %1$s for map "%2$s".',
@@ -1217,6 +1222,7 @@ class CMap extends CMapElement {
 		$shared_users = [];
 		$shared_user_groups = [];
 		$urls = [];
+		$shapes = [];
 		$selements = [];
 		$links = [];
 
@@ -1256,6 +1262,14 @@ class CMap extends CMapElement {
 				}
 
 				$selements += $maps[$key]['selements'];
+			}
+
+			if (array_key_exists('shapes', $maps[$key])) {
+				foreach ($maps[$key]['shapes'] as $snum => $shape) {
+					$maps[$key]['shapes'][$snum]['sysmapid'] = $sysmapid;
+				}
+
+				$shapes += $maps[$key]['shapes'];
 			}
 
 			if (array_key_exists('links', $maps[$key])) {
@@ -1306,6 +1320,10 @@ class CMap extends CMapElement {
 			}
 		}
 
+		if ($shapes) {
+			$this->createShapes($shapes);
+		}
+
 		return ['sysmapids' => $sysmapids];
 	}
 
@@ -1335,6 +1353,7 @@ class CMap extends CMapElement {
 			'sysmapids' => zbx_objectValues($maps, 'sysmapid'),
 			'selectLinks' => API_OUTPUT_EXTEND,
 			'selectSelements' => API_OUTPUT_EXTEND,
+			'selectShapes' => API_OUTPUT_EXTEND,
 			'selectUrls' => ['sysmapid', 'sysmapurlid', 'name', 'url'],
 			'selectUsers' => ['sysmapuserid', 'sysmapid', 'userid', 'permission'],
 			'selectUserGroups' => ['sysmapusrgrpid', 'sysmapid', 'usrgrpid', 'permission'],
@@ -1351,6 +1370,9 @@ class CMap extends CMapElement {
 		$selements_to_delete = [];
 		$selements_to_update = [];
 		$selements_to_add = [];
+		$shapes_to_delete = [];
+		$shapes_to_update = [];
+		$shapes_to_add = [];
 		$links_to_delete = [];
 		$links_to_update = [];
 		$links_to_add = [];
@@ -1448,6 +1470,20 @@ class CMap extends CMapElement {
 				$selements_to_delete = array_merge($selements_to_delete, $selement_diff['second']);
 			}
 
+			// Map shapes.
+			if (array_key_exists('shapes', $map)) {
+				$shape_diff = zbx_array_diff($map['shapes'], $db_map['shapes'], 'shapeid');
+
+				// We need sysmapid for add operations.
+				foreach ($shape_diff['first'] as $new_shape) {
+					$new_shape['sysmapid'] = $map['sysmapid'];
+					$shapes_to_add[] = $new_shape;
+				}
+
+				$shapes_to_update = array_merge($shapes_to_update, $shape_diff['both']);
+				$shapes_to_delete = array_merge($shapes_to_delete, $shape_diff['second']);
+			}
+
 			// Links.
 			if (array_key_exists('links', $map)) {
 				$link_diff = zbx_array_diff($map['links'], $db_map['links'], 'linkid');
@@ -1502,6 +1538,20 @@ class CMap extends CMapElement {
 
 		if ($selements_to_delete) {
 			$this->deleteSelements($selements_to_delete);
+		}
+
+		// Shapes.
+		$new_shapeids = ['shapeids' => []];
+		if ($shapes_to_add) {
+			$new_shapeids = $this->createShapes($shapes_to_add);
+		}
+
+		if ($shapes_to_update) {
+			$this->updateShapes($shapes_to_update);
+		}
+
+		if ($shapes_to_delete) {
+			$this->deleteShapes($shapes_to_delete);
 		}
 
 		// Links.
@@ -1671,37 +1721,6 @@ class CMap extends CMapElement {
 		return $url;
 	}
 
-	public function isReadable(array $ids) {
-		if (empty($ids)) {
-			return true;
-		}
-
-		$ids = array_unique($ids);
-
-		$count = $this->get([
-			'sysmapids' => $ids,
-			'countOutput' => true
-		]);
-
-		return (count($ids) == $count);
-	}
-
-	public function isWritable(array $ids) {
-		if (empty($ids)) {
-			return true;
-		}
-
-		$ids = array_unique($ids);
-
-		$count = $this->get([
-			'sysmapids' => $ids,
-			'editable' => true,
-			'countOutput' => true
-		]);
-
-		return (count($ids) == $count);
-	}
-
 	protected function addRelatedObjects(array $options, array $result) {
 		$result = parent::addRelatedObjects($options, $result);
 
@@ -1758,6 +1777,19 @@ class CMap extends CMapElement {
 
 			$selements = $this->unsetExtraFields($selements, ['sysmapid', 'selementid'], $options['selectSelements']);
 			$result = $relation_map->mapMany($result, $selements, 'selements');
+		}
+
+		// adding shapes
+		if ($options['selectShapes'] !== null && $options['selectShapes'] != API_OUTPUT_COUNT) {
+			$shapes = API::getApiService()->select('sysmap_shape', [
+				'output' => $this->outputExtend($options['selectShapes'], ['shapeid', 'sysmapid']),
+				'filter' => ['sysmapid' => $sysmapIds],
+				'preservekeys' => true
+			]);
+			$relation_map = $this->createRelationMap($shapes, 'sysmapid', 'shapeid');
+
+			$shapes = $this->unsetExtraFields($shapes, ['sysmapid', 'shapeid'], $options['selectShapes']);
+			$result = $relation_map->mapMany($result, $shapes, 'shapes');
 		}
 
 		// adding icon maps

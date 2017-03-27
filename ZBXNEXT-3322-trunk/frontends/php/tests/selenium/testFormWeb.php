@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -482,7 +482,7 @@ class testFormWeb extends CWebTest {
 		$this->zbxTestAssertAttribute("//textarea[@id='variables']", 'rows', 7);
 
 		$this->zbxTestTextPresent('Enabled');
-		$this->zbxTestAssertVisibleId('status');
+		$this->zbxTestAssertElementPresentId('status');
 		$this->assertTrue($this->zbxTestCheckboxSelected('status'));
 
 		$this->zbxTestAssertVisibleId('cancel');
@@ -503,7 +503,7 @@ class testFormWeb extends CWebTest {
 			$this->zbxTestAssertVisibleId('clone');
 			$this->zbxTestAssertElementValue('clone', 'Clone');
 
-			$this->zbxTestAssertElementNotPresentId('delete');
+			$this->zbxTestAssertElementPresentXpath("//button[@id='delete'][@disabled]");
 		}
 		else {
 			$this->zbxTestAssertElementPresentId('add');
@@ -512,10 +512,7 @@ class testFormWeb extends CWebTest {
 			$this->zbxTestAssertElementNotPresentId('update');
 		}
 
-		$this->zbxTestClickWait('tab_authenticationTab');
-		if ( 'Authentication' != $this->zbxTestGetText("//li[contains(@class, 'ui-tabs-active')]/a")) {
-			$this->zbxTestTabSwitch('Authentication');
-		}
+		$this->zbxTestTabSwitchById('tab_authenticationTab', 'Authentication');
 		$this->zbxTestWaitUntilElementVisible(WebDriverBy::id('authentication'));
 
 		$this->zbxTestTextPresent('Authentication');
@@ -546,7 +543,7 @@ class testFormWeb extends CWebTest {
 			$this->zbxTestAssertNotVisibleId('http_password');
 		}
 
-		$this->zbxTestTabSwitch('Steps');
+		$this->zbxTestTabSwitchById('tab_stepTab' ,'Steps');
 		$this->zbxTestTextPresent(['Steps', 'Name', 'Timeout', 'URL', 'Required' ,'Status codes', 'Action']);
 
 		if (isset($data['form']) && !isset($data['templatedHost'])) {
@@ -1462,7 +1459,7 @@ class testFormWeb extends CWebTest {
 			$this->zbxTestInputType('variables', $data['variables']);
 		}
 
-		$this->zbxTestTabSwitch('Authentication');
+		$this->zbxTestTabSwitchById('tab_authenticationTab', 'Authentication');
 		if (isset($data['authentication'])) {
 			$this->zbxTestDropdownSelectWait('authentication', $data['authentication']);
 		}
@@ -1478,7 +1475,7 @@ class testFormWeb extends CWebTest {
 
 		$check = false;
 		if (isset($data['add_step'])) {
-			$this->zbxTestTabSwitch('Steps');
+			$this->zbxTestTabSwitchById('tab_stepTab' ,'Steps');
 			foreach($data['add_step'] as $item) {
 				$this->zbxTestClickWait('add_step');
 				$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
@@ -1540,7 +1537,7 @@ class testFormWeb extends CWebTest {
 			$this->zbxTestAssertElementValue('name', $name);
 			$this->zbxTestDropdownAssertSelected('agent', $data['agent']);
 			if (isset($data['add_step'])) {
-				$this->zbxTestTabSwitch('Steps');
+				$this->zbxTestTabSwitchById('tab_stepTab' ,'Steps');
 				foreach($data['add_step'] as $item) {
 					$step = $item['step']." step";
 					$this->zbxTestTextPresent($step);

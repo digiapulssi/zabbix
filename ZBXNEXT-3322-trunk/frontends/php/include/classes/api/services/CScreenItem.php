@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -392,57 +392,6 @@ class CScreenItem extends CApiService {
 		]);
 
 		return ['screenitemids' => $screenItemIds];
-	}
-
-	/**
-	 * Returns true if the given screen items exist and are available for reading.
-	 *
-	 * @param array $screenItemIds
-	 *
-	 * @return bool
-	 */
-	public function isReadable(array $screenItemIds) {
-		if (!is_array($screenItemIds)) {
-			return false;
-		}
-		elseif (empty($screenItemIds)) {
-			return true;
-		}
-
-		$screenItemIds = array_unique($screenItemIds);
-
-		$count = $this->get([
-			'screenitemids' => $screenItemIds,
-			'countOutput' => true
-		]);
-
-		return (count($screenItemIds) == $count);
-	}
-
-	/**
-	 * Returns true if the given screen items exist and are available for writing.
-	 *
-	 * @param array $screenItemIds	An array if screen item IDs
-	 *
-	 * @return bool
-	 */
-	public function isWritable(array $screenItemIds) {
-		if (!is_array($screenItemIds)) {
-			return false;
-		}
-		elseif (empty($screenItemIds)) {
-			return true;
-		}
-
-		$screenItemIds = array_unique($screenItemIds);
-
-		$count = $this->get([
-			'screenitemids' => $screenItemIds,
-			'editable' => true,
-			'countOutput' => true
-		]);
-
-		return (count($screenItemIds) == $count);
 	}
 
 	/**

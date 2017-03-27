@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 
 require_once dirname(__FILE__).'/include/config.inc.php';
+require_once dirname(__FILE__).'/include/hostgroups.inc.php';
 require_once dirname(__FILE__).'/include/hosts.inc.php';
 require_once dirname(__FILE__).'/include/items.inc.php';
 
@@ -54,10 +55,10 @@ check_fields($fields);
 /*
  * Permissions
  */
-if (getRequest('groupids') && !API::HostGroup()->isReadable(getRequest('groupids'))) {
+if (getRequest('groupids') && !isReadableHostGroups(getRequest('groupids'))) {
 	access_deny();
 }
-if (getRequest('hostids') && !API::Host()->isReadable(getRequest('hostids'))) {
+if (getRequest('hostids') && !isReadableHosts(getRequest('hostids'))) {
 	access_deny();
 }
 
@@ -108,15 +109,52 @@ $sortOrder = getRequest('sortorder', CProfile::get('web.'.$page['file'].'.sortor
 CProfile::update('web.'.$page['file'].'.sort', $sortField, PROFILE_TYPE_STR);
 CProfile::update('web.'.$page['file'].'.sortorder', $sortOrder, PROFILE_TYPE_STR);
 
-$applications = $items = $hostScripts = [];
+$applications = [];
+$items = [];
+$hostScripts = [];
+$child_groups = [];
+
+// multiselect host groups
+$multiSelectHostGroupData = [];
+if ($filter['groupids'] !== null) {
+	$filterGroups = API::HostGroup()->get([
+		'output' => ['groupid', 'name'],
+		'groupids' => $filter['groupids'],
+		'preservekeys' => true
+	]);
+
+	foreach ($filterGroups as $group) {
+		$multiSelectHostGroupData[] = [
+			'id' => $group['groupid'],
+			'name' => $group['name']
+		];
+
+		$child_groups[] = $group['name'].'/';
+	}
+}
 
 // we'll only display the values if the filter is set
 $filterSet = ($filter['select'] !== '' || $filter['application'] !== '' || $filter['groupids'] || $filter['hostids']);
 if ($filterSet) {
+	$groupids = null;
+	if ($child_groups) {
+		$groups = $filterGroups;
+		foreach ($child_groups as $child_group) {
+			$child_groups = API::HostGroup()->get([
+				'output' => ['groupid'],
+				'search' => ['name' => $child_group],
+				'startSearch' => true,
+				'preservekeys' => true
+			]);
+			$groups = array_replace($groups, $child_groups);
+		}
+		$groupids = array_keys($groups);
+	}
+
 	$hosts = API::Host()->get([
 		'output' => ['name', 'hostid', 'status'],
 		'hostids' => $filter['hostids'],
-		'groupids' => $filter['groupids'],
+		'groupids' => $groupids,
 		'selectGraphs' => API_OUTPUT_COUNT,
 		'with_monitored_items' => true,
 		'preservekeys' => true
@@ -278,22 +316,6 @@ if ($filter['hostids']) {
 	}
 }
 
-// multiselect host groups
-$multiSelectHostGroupData = [];
-if ($filter['groupids'] !== null) {
-	$filterGroups = API::HostGroup()->get([
-		'output' => ['groupid', 'name'],
-		'groupids' => $filter['groupids']
-	]);
-
-	foreach ($filterGroups as $group) {
-		$multiSelectHostGroupData[] = [
-			'id' => $group['groupid'],
-			'name' => $group['name']
-		];
-	}
-}
-
 /*
  * Display
  */
@@ -307,11 +329,9 @@ $widget = (new CWidget())
 $filterForm = (new CFilter('web.latest.filter.state'))
 	->addVar('fullscreen', getRequest('fullscreen'));
 
-$filterColumn1 = new CFormList();
-$filterColumn1->addRow(
-	_('Host groups'),
-	(new CMultiSelect(
-		[
+$filterColumn1 = (new CFormList())
+	->addRow(_('Host groups'),
+		(new CMultiSelect([
 			'name' => 'groupids[]',
 			'objectName' => 'hostGroup',
 			'data' => $multiSelectHostGroupData,
@@ -319,25 +339,20 @@ $filterColumn1->addRow(
 				'parameters' => 'srctbl=host_groups&dstfrm=zbx_filter&dstfld1=groupids_'.
 					'&srcfld1=groupid&multiselect=1'
 			]
-	]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
-);
-$filterColumn1->addRow(
-		_('Hosts'),
-		(new CMultiSelect(
-			[
-				'name' => 'hostids[]',
-				'objectName' => 'hosts',
-				'data' => $multiSelectHostData,
-				'popup' => [
-					'parameters' => 'srctbl=hosts&dstfrm=zbx_filter&dstfld1=hostids_&srcfld1=hostid'.
-						'&real_hosts=1&multiselect=1'
-				]
+		]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
+	)
+	->addRow(_('Hosts'),
+		(new CMultiSelect([
+			'name' => 'hostids[]',
+			'objectName' => 'hosts',
+			'data' => $multiSelectHostData,
+			'popup' => [
+				'parameters' => 'srctbl=hosts&dstfrm=zbx_filter&dstfld1=hostids_&srcfld1=hostid'.
+					'&real_hosts=1&multiselect=1'
 			]
-		))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
-);
-$filterColumn1->addRow(
-	_('Application'),
-	[
+		]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
+	)
+	->addRow(_('Application'), [
 		(new CTextBox('application', $filter['application']))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH),
 		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
 		(new CButton('application_name', _('Select')))
@@ -345,25 +360,18 @@ $filterColumn1->addRow(
 			->onClick('return PopUp("popup.php?srctbl=applications&srcfld1=name&real_hosts=1&dstfld1=application'.
 				'&with_applications=1&dstfrm=zbx_filter");'
 			)
-	]
-);
+	]);
 
-$filterColumn2 = new CFormList();
-$filterColumn2->addRow(
-	_('Name'),
-	(new CTextBox('select', $filter['select']))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
-);
-$filterColumn2->addRow(
-	_('Show items without data'),
-	(new CCheckBox('show_without_data'))->setChecked($filter['showWithoutData'] == 1)
-);
-$filterColumn2->addRow(
-	_('Show details'),
-	(new CCheckBox('show_details'))->setChecked($filter['showDetails'] == 1)
-);
+$filterColumn2 = (new CFormList())
+	->addRow(_('Name'), (new CTextBox('select', $filter['select']))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH))
+	->addRow(_('Show items without data'),
+		(new CCheckBox('show_without_data'))->setChecked($filter['showWithoutData'] == 1)
+	)
+	->addRow(_('Show details'), (new CCheckBox('show_details'))->setChecked($filter['showDetails'] == 1));
 
-$filterForm->addColumn($filterColumn1);
-$filterForm->addColumn($filterColumn2);
+$filterForm
+	->addColumn($filterColumn1)
+	->addColumn($filterColumn2);
 
 $widget->addItem($filterForm);
 // End of Filter
@@ -480,8 +488,7 @@ foreach ($items as $key => $item){
 			&& (($config['hk_trends_global'] && $config['hk_trends'] == 0) || $item['trends'] == 0)
 	);
 
-	$checkbox = (new CCheckBox('itemids['.$item['itemid'].']', $item['itemid']))
-		->removeAttribute('id');
+	$checkbox = (new CCheckBox('itemids['.$item['itemid'].']', $item['itemid']));
 
 	if ($item['value_type'] == ITEM_VALUE_TYPE_FLOAT || $item['value_type'] == ITEM_VALUE_TYPE_UINT64) {
 		$actions = $showLink
@@ -499,18 +506,15 @@ foreach ($items as $key => $item){
 
 	if ($filter['showDetails']) {
 		// item key
-		$itemKey = ($item['type'] == ITEM_TYPE_HTTPTEST || $item['flags'] == ZBX_FLAG_DISCOVERY_CREATED)
+		$itemKey = ($item['type'] == ITEM_TYPE_HTTPTEST)
 			? (new CSpan($item['key_expanded']))->addClass(ZBX_STYLE_GREEN)
 			: (new CLink($item['key_expanded'], 'items.php?form=update&itemid='.$item['itemid']))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREEN);
 
-		// info
+		$info_icons = [];
 		if ($item['status'] == ITEM_STATUS_ACTIVE && $item['error'] !== '') {
-			$info = makeErrorIcon($item['error']);
-		}
-		else {
-			$info = '';
+			$info_icons[] = makeErrorIcon($item['error']);
 		}
 
 		// trend value
@@ -538,7 +542,7 @@ foreach ($items as $key => $item){
 			(new CCol($lastValue))->addClass($state_css),
 			(new CCol($change))->addClass($state_css),
 			$actions,
-			$info
+			makeInformationList($info_icons)
 		]);
 	}
 	else {
@@ -660,8 +664,7 @@ foreach ($items as $item) {
 			&& (($config['hk_trends_global'] && $config['hk_trends'] == 0) || $item['trends'] == 0)
 	);
 
-	$checkbox = (new CCheckBox('itemids['.$item['itemid'].']', $item['itemid']))
-		->removeAttribute('id');
+	$checkbox = (new CCheckBox('itemids['.$item['itemid'].']', $item['itemid']));
 
 	if ($item['value_type'] == ITEM_VALUE_TYPE_FLOAT || $item['value_type'] == ITEM_VALUE_TYPE_UINT64) {
 		$actions = $showLink
@@ -680,18 +683,15 @@ foreach ($items as $item) {
 	$host = $hosts[$item['hostid']];
 	if ($filter['showDetails']) {
 		// item key
-		$itemKey = ($item['type'] == ITEM_TYPE_HTTPTEST || $item['flags'] == ZBX_FLAG_DISCOVERY_CREATED)
+		$itemKey = ($item['type'] == ITEM_TYPE_HTTPTEST)
 			? (new CSpan($item['key_expanded']))->addClass(ZBX_STYLE_GREEN)
 			: (new CLink($item['key_expanded'], 'items.php?form=update&itemid='.$item['itemid']))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREEN);
 
-		// info
+		$info_icons = [];
 		if ($item['status'] == ITEM_STATUS_ACTIVE && $item['error'] !== '') {
-			$info = makeErrorIcon($item['error']);
-		}
-		else {
-			$info = '';
+			$info_icons[] = makeErrorIcon($item['error']);
 		}
 
 		// trend value
@@ -719,7 +719,7 @@ foreach ($items as $item) {
 			(new CCol($lastValue))->addClass($state_css),
 			(new CCol($change))->addClass($state_css),
 			$actions,
-			$info
+			makeInformationList($info_icons)
 		]);
 	}
 	else {

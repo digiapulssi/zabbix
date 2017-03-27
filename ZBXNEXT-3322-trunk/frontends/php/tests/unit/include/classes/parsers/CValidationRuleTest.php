@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -126,6 +126,17 @@ class CValidationRuleTest extends PHPUnit_Framework_TestCase {
 			['ge -5', '',
 				[
 					'ge' => '-5'
+				]
+			],
+			['ge -5|le 10', '',
+				[
+					'ge' => '-5',
+					'le' => '10'
+				]
+			],
+			['time', '',
+				[
+					'time' => true
 				]
 			],
 			['array_id', '',

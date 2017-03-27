@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ class CSetupWizard extends CForm {
 		return false;
 	}
 
-	function bodyToString($destroy = true) {
+	protected function bodyToString($destroy = true) {
 		$setup_left = (new CDiv([
 			(new CDiv())->addClass(ZBX_STYLE_SIGNIN_LOGO), $this->getList()
 		]))->addClass(ZBX_STYLE_SETUP_LEFT);
@@ -131,7 +131,7 @@ class CSetupWizard extends CForm {
 
 		$setup_container = (new CDiv([$setup_left, $setup_right, $setup_footer]))->addClass(ZBX_STYLE_SETUP_CONTAINER);
 
-		return parent::bodyToString($destroy).$setup_container->ToString();
+		return parent::bodyToString($destroy).$setup_container->toString();
 	}
 
 	function getList() {
@@ -150,7 +150,8 @@ class CSetupWizard extends CForm {
 	}
 
 	function stage0() {
-		$setup_title = (new CDiv([new CSpan(_('Welcome to')), 'Zabbix 3.0']))->addClass(ZBX_STYLE_SETUP_TITLE);
+		preg_match('/^\d+\.\d+/', ZABBIX_VERSION, $version);
+		$setup_title = (new CDiv([new CSpan(_('Welcome to')), 'Zabbix '.$version[0]]))->addClass(ZBX_STYLE_SETUP_TITLE);
 
 		return (new CDiv($setup_title))->addClass(ZBX_STYLE_SETUP_RIGHT_BODY);
 	}

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,7 +78,10 @@ class CLocalApiClientTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testCallIncorrect($api, $method, $params, $auth, $expectedErrorCode, $expectedErrorMessage) {
 		// setup a mock user API to authenticate the user
-		$userMock = $this->getMock('CUser', ['checkAuthentication']);
+		$userMock = $this->getMockBuilder('CUser')
+			->setMethods(['checkAuthentication'])
+			->getMock();
+
 		$userMock->expects($this->any())->method('checkAuthentication')->will($this->returnValue([
 			'debug_mode' => false
 		]));

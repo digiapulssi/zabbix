@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -695,49 +695,70 @@ class testUrlParameters extends CWebTest {
 				]
 			],
 			[
-				'title' => 'Latest events [refreshed every 30 sec.]',
+				'title' => '404 Not Found',
+				'check_server_name' => false,
+				'server_name_on_page' => false,
+				'test_cases' => [
+					[
+						'url' => 'events.php',
+						'text_not_present' => 'Events',
+						'text_present' => [
+							'Not Found',
+						]
+					],
+					[
+						'url' => 'events.php?triggerid=13491',
+						'text_not_present' => 'Events',
+						'text_present' => [
+							'Not Found'
+						]
+					]
+				]
+			],
+			[
+				'title' => 'Problems',
 				'check_server_name' => true,
 				'server_name_on_page' => true,
 				'test_cases' => [
 					[
-						'url' => 'events.php?triggerid=13491',
-						'text_present' => 'Events'
+						'url' => 'zabbix.php?action=problem.view',
+						'text_present' => 'Problems'
 					],
 					[
-						'url' => 'events.php?triggerid=9999999',
-						'text_not_present' => 'Events',
-						'text_present' => [
-							'No permissions to referred object or it does not exist!'
-						]
-					],
-					[
-						'url' => 'events.php?triggerid=abc',
-						'text_not_present' => 'Events',
-						'text_present' => [
-							'Zabbix has received an incorrect request.',
-							'Field "triggerid" is not integer.'
-						]
-					],
-					[
-						'url' => 'events.php?triggerid=',
-						'text_not_present' => 'Events',
-						'text_present' => [
-							'Zabbix has received an incorrect request.',
-							'Field "triggerid" is not integer.'
-						]
-					],
-					[
-						'url' => 'events.php?triggerid=-1',
-						'text_not_present' => 'Events',
-						'text_present' => [
-							'Zabbix has received an incorrect request.',
-							'Incorrect value "-1" for "triggerid" field.'
-						]
-					],
-					[
-						'url' => 'events.php',
-						'text_present' => 'Events'
+						'url' => 'zabbix.php?action=problem.view&filter_triggerids[]=13491',
+						'text_present' => 'Problems'
 					]
+				]
+			],
+			[
+				'title' => 'Fatal error, please report to the Zabbix team',
+				'check_server_name' => false,
+				'server_name_on_page' => false,
+				'test_cases' => [
+					[
+						'url' => 'zabbix.php?action=problem.view&filter_triggerids[]=abc',
+						'text_not_present' => 'Problems',
+						'text_present' => [
+							'Fatal error, please report to the Zabbix team',
+							'Controller: problem.view'
+							]
+					],
+					[
+						'url' => 'zabbix.php?action=problem.view&filter_triggerids[]=',
+						'text_not_present' => 'Problems',
+						'text_present' => [
+							'Fatal error, please report to the Zabbix team',
+							'Controller: problem.view'
+						]
+					],
+					[
+						'url' => 'zabbix.php?action=problem.view&filter_triggerids[]=-1',
+						'text_not_present' => 'Problems',
+						'text_present' => [
+							'Fatal error, please report to the Zabbix team',
+							'Controller: problem.view'
+						]
+					],
 				]
 			],
 			[
@@ -893,8 +914,7 @@ class testUrlParameters extends CWebTest {
 						'url' => 'sysmaps.php?sysmapid=-1&severity_min=0',
 						'text_not_present' => 'Maps',
 						'text_present' => [
-							'Zabbix has received an incorrect request.',
-							'Incorrect value "-1" for "sysmapid" field.'
+							'No permissions to referred object or it does not exist!'
 						]
 					],
 					[
@@ -984,45 +1004,45 @@ class testUrlParameters extends CWebTest {
 				]
 			],
 			[
-				'title' => 'IT services [refreshed every 30 sec.]',
+				'title' => 'Services [refreshed every 30 sec.]',
 				'check_server_name' => true,
 				'server_name_on_page' => true,
 				'test_cases' => [
 					[
 						'url' => 'srv_status.php?period=today',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					],
 					[
 						'url' => 'srv_status.php?period=week',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					],
 					[
 						'url' => 'srv_status.php?period=month',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					],
 					[
 						'url' => 'srv_status.php?period=year',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					],
 					[
 						'url' => 'srv_status.php?period=24',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					],
 					[
 						'url' => 'srv_status.php?period=168',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					],
 					[
 						'url' => 'srv_status.php?period=720',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					],
 					[
 						'url' => 'srv_status.php?period=8760',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					],
 					[
 						'url' => 'srv_status.php?period=1',
-						'text_not_present' => 'IT services',
+						'text_not_present' => 'Services',
 						'text_present' => [
 							'Zabbix has received an incorrect request.',
 							'Incorrect value "1" for "period" field.'
@@ -1030,7 +1050,7 @@ class testUrlParameters extends CWebTest {
 					],
 					[
 						'url' => 'srv_status.php?period=abc',
-						'text_not_present' => 'IT services',
+						'text_not_present' => 'Services',
 						'text_present' => [
 							'Zabbix has received an incorrect request.',
 							'Incorrect value "abc" for "period" field.'
@@ -1038,7 +1058,7 @@ class testUrlParameters extends CWebTest {
 					],
 					[
 						'url' => 'srv_status.php?period=',
-						'text_not_present' => 'IT services',
+						'text_not_present' => 'Services',
 						'text_present' => [
 							'Zabbix has received an incorrect request.',
 							'Incorrect value "" for "period" field.'
@@ -1046,7 +1066,7 @@ class testUrlParameters extends CWebTest {
 					],
 					[
 						'url' => 'srv_status.php?period=-1',
-						'text_not_present' => 'IT services',
+						'text_not_present' => 'Services',
 						'text_present' => [
 							'Zabbix has received an incorrect request.',
 							'Incorrect value "-1" for "period" field.'
@@ -1054,7 +1074,7 @@ class testUrlParameters extends CWebTest {
 					],
 					[
 						'url' => 'srv_status.php',
-						'text_present' => 'IT services'
+						'text_present' => 'Services'
 					]
 				]
 			],

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,6 +78,6 @@ class CScreenServerInfo extends CScreenBase {
 			->addItem(_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS)))
 			->addClass(ZBX_STYLE_DASHBRD_WIDGET_FOOT);
 
-		return $this->getOutput((new CUiWidget(uniqid(), [$table, $footer]))->setHeader(_('Zabbix server info')));
+		return $this->getOutput((new CUiWidget(uniqid(), [$table, $footer]))->setHeader(_('Status of Zabbix')));
 	}
 }

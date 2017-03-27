@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 
 require_once dirname(__FILE__).'/include/config.inc.php';
+require_once dirname(__FILE__).'/include/hostgroups.inc.php';
 require_once dirname(__FILE__).'/include/hosts.inc.php';
 require_once dirname(__FILE__).'/include/triggers.inc.php';
 require_once dirname(__FILE__).'/include/items.inc.php';
@@ -58,12 +59,15 @@ check_fields($fields);
 /*
  * Permissions
  */
-if (getRequest('groupid') && !API::HostGroup()->isReadable([$_REQUEST['groupid']])) {
+if (getRequest('groupid') && !isReadableHostGroups([getRequest('groupid')])) {
 	access_deny();
 }
 
 $config = select_config();
 if (hasRequest('filter_set')) {
+	CProfile::update('web.overview.filter.show_triggers', getRequest('show_triggers', TRIGGERS_OPTION_RECENT_PROBLEM),
+		PROFILE_TYPE_INT
+	);
 	CProfile::update('web.overview.filter.show_maintenance', getRequest('show_maintenance', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.overview.filter.show_severity', getRequest('show_severity', TRIGGER_SEVERITY_NOT_CLASSIFIED),
 		PROFILE_TYPE_INT
@@ -74,13 +78,6 @@ if (hasRequest('filter_set')) {
 		PROFILE_TYPE_INT
 	);
 	CProfile::update('web.overview.filter.application', getRequest('application'), PROFILE_TYPE_STR);
-
-	// show triggers
-	// when this filter is set to "All" it must not be remembered in the profiles because it may render the
-	// whole page inaccessible on large installations.
-	if (getRequest('show_triggers') != TRIGGERS_OPTION_ALL) {
-		CProfile::update('web.overview.filter.show_triggers', getRequest('show_triggers'), PROFILE_TYPE_INT);
-	}
 
 	// ack status
 	if ($config['event_ack_enable'] == EVENT_ACK_ENABLED) {
@@ -128,12 +125,7 @@ if (hasRequest('view_style')) {
 }
 $viewStyle = CProfile::get('web.overview.view_style', STYLE_TOP);
 
-if (hasRequest('filter_set') && getRequest('show_triggers') == TRIGGERS_OPTION_ALL) {
-	$showTriggers = TRIGGERS_OPTION_ALL;
-}
-else {
-	$showTriggers = CProfile::get('web.overview.filter.show_triggers', TRIGGERS_OPTION_RECENT_PROBLEM);
-}
+$showTriggers = CProfile::get('web.overview.filter.show_triggers', TRIGGERS_OPTION_RECENT_PROBLEM);
 
 /*
  * Display
@@ -190,7 +182,7 @@ if ($type == SHOW_TRIGGERS) {
 		'output' => ['hostid', 'status'],
 		'selectGraphs' => ($viewStyle == STYLE_LEFT) ? API_OUTPUT_COUNT : null,
 		'selectScreens' => ($viewStyle == STYLE_LEFT) ? API_OUTPUT_COUNT : null,
-		'groupids' => ($data['pageFilter']->groupid != 0) ? $data['pageFilter']->groupid : null,
+		'groupids' => $data['pageFilter']->groupids,
 		'searchInventory' => ($inventoryFilter) ? $inventoryFilter : null,
 		'preservekeys' => true
 	]);
@@ -256,7 +248,7 @@ else {
 	if ($filter['application'] !== '') {
 		$applications = API::Application()->get([
 			'output' => ['applicationid'],
-			'groupids' => ($data['pageFilter']->groupid != 0) ? $data['pageFilter']->groupid : null,
+			'groupids' => $data['pageFilter']->groupids,
 			'search' => ['name' => $filter['application']]
 		]);
 		$applicationIds = zbx_objectValues($applications, 'applicationid');

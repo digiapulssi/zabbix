@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,14 +33,14 @@
  *               FAIL    - the function calculation failed.                   *
  *                                                                            *
  ******************************************************************************/
-static int	macrofunc_regsub(zbx_function_t *func, char **out)
+static int	macrofunc_regsub(char **params, size_t nparam, char **out)
 {
 	char	*value = NULL;
 
-	if (2 != func->nparam)
+	if (2 != nparam)
 		return FAIL;
 
-	if (FAIL == zbx_regexp_sub(*out, func->params[0], func->params[1], &value))
+	if (FAIL == zbx_regexp_sub(*out, params[0], params[1], &value))
 		return FAIL;
 
 	if (NULL == value)
@@ -54,7 +54,7 @@ static int	macrofunc_regsub(zbx_function_t *func, char **out)
 
 /******************************************************************************
  *                                                                            *
- * Function: macrofunc_regsub                                                 *
+ * Function: macrofunc_iregsub                                                *
  *                                                                            *
  * Purpose: calculates case insensitive regular expression substitution       *
  *                                                                            *
@@ -65,14 +65,14 @@ static int	macrofunc_regsub(zbx_function_t *func, char **out)
  *               FAIL    - the function calculation failed.                   *
  *                                                                            *
  ******************************************************************************/
-static int	macrofunc_iregsub(zbx_function_t *func, char **out)
+static int	macrofunc_iregsub(char **params, size_t nparam, char **out)
 {
 	char	*value = NULL;
 
-	if (2 != func->nparam)
+	if (2 != nparam)
 		return FAIL;
 
-	if (FAIL == zbx_iregexp_sub(*out, func->params[0], func->params[1], &value))
+	if (FAIL == zbx_iregexp_sub(*out, params[0], params[1], &value))
 		return FAIL;
 
 	if (NULL == value)
@@ -90,30 +90,58 @@ static int	macrofunc_iregsub(zbx_function_t *func, char **out)
  *                                                                            *
  * Purpose: calculates macro function value                                   *
  *                                                                            *
- * Parameters: expression - [IN] the macro function                           *
- *             len        - [IN] the macro function length                    *
+ * Parameters: expression - [IN] expression containing macro function         *
+ *             func_macro - [IN] information about macro function token       *
  *             out        - [IN/OUT] the input/output value                   *
  *                                                                            *
  * Return value: SUCCEED - the function was calculated successfully.          *
  *               FAIL    - the function calculation failed.                   *
  *                                                                            *
  ******************************************************************************/
-int	zbx_calculate_macro_function(const char *expression, size_t len, char **out)
+int	zbx_calculate_macro_function(const char *expression, const zbx_token_func_macro_t *func_macro, char **out)
 {
-	zbx_function_t	func;
-	int		ret;
+	char			**params, *buf = NULL;
+	const char		*ptr;
+	size_t			nparam = 0, param_alloc = 8, buf_alloc = 0, buf_offset = 0, len, sep_pos;
+	int			(*macrofunc)(char **params, size_t nparam, char **out), ret;
 
-	if (SUCCEED != zbx_function_parse(&func, expression, &len))
+	ptr = expression + func_macro->func.l;
+	len = func_macro->func_param.l - func_macro->func.l;
+
+	if (ZBX_CONST_STRLEN("regsub") == len && 0 == strncmp(ptr, "regsub", len))
+		macrofunc = macrofunc_regsub;
+	else if (ZBX_CONST_STRLEN("iregsub") == len && 0 == strncmp(ptr, "iregsub", len))
+		macrofunc = macrofunc_iregsub;
+	else
 		return FAIL;
 
-	if (0 == strcmp(func.name, "regsub"))
-		ret = macrofunc_regsub(&func, out);
-	else if (0 == strcmp(func.name, "iregsub"))
-		ret = macrofunc_iregsub(&func, out);
-	else
-		ret = FAIL;
+	zbx_strncpy_alloc(&buf, &buf_alloc, &buf_offset, expression + func_macro->func_param.l + 1,
+			func_macro->func_param.r - func_macro->func_param.l - 1);
+	params = (char **)zbx_malloc(NULL, sizeof(char *) * param_alloc);
 
-	zbx_function_clean(&func);
+	for (ptr = buf; ptr < buf + buf_offset; ptr += sep_pos + 1)
+	{
+		size_t	param_pos, param_len;
+		int	quoted;
+
+		if (nparam == param_alloc)
+		{
+			param_alloc *= 2;
+			params = (char **)zbx_realloc(params, sizeof(char *) * param_alloc);
+		}
+
+		zbx_function_param_parse(ptr, &param_pos, &param_len, &sep_pos);
+		params[nparam++] = zbx_function_param_unquote_dyn(ptr + param_pos, param_len, &quoted);
+	}
+
+	ret = macrofunc(params, nparam, out);
+
+	while (0 < nparam--)
+		zbx_free(params[nparam]);
+
+	zbx_free(params);
+	zbx_free(buf);
 
 	return ret;
 }
+

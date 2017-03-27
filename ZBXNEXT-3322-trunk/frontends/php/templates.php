@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 
 require_once dirname(__FILE__).'/include/config.inc.php';
+require_once dirname(__FILE__).'/include/hostgroups.inc.php';
 require_once dirname(__FILE__).'/include/hosts.inc.php';
 require_once dirname(__FILE__).'/include/screens.inc.php';
 require_once dirname(__FILE__).'/include/forms.inc.php';
@@ -88,11 +89,19 @@ check_fields($fields);
 /*
  * Permissions
  */
-if (getRequest('groupid') && !API::HostGroup()->isWritable([$_REQUEST['groupid']])) {
+if (getRequest('groupid') && !isWritableHostGroups([getRequest('groupid')])) {
 	access_deny();
 }
-if (getRequest('templateid') && !API::Template()->isWritable([$_REQUEST['templateid']])) {
-	access_deny();
+if (getRequest('templateid')) {
+	$templates = API::Template()->get([
+		'output' => [],
+		'templateids' => getRequest('templateid'),
+		'editable' => true
+	]);
+
+	if (!$templates) {
+		access_deny();
+	}
 }
 
 $templateIds = getRequest('templates', []);
@@ -157,25 +166,27 @@ elseif (isset($_REQUEST['full_clone']) && isset($_REQUEST['templateid'])) {
 	$_REQUEST['hosts'] = [];
 }
 elseif (hasRequest('add') || hasRequest('update')) {
-	$templateId = getRequest('templateid');
-
 	try {
 		DBstart();
 
-		$templates = getRequest('templates', []);
-		$templateName = getRequest('template_name', '');
-
-		// clone template id
-		$cloneTemplateId = null;
-		$templatesClear = getRequest('clear_templates', []);
+		$templateId = getRequest('templateid', 0);
+		$cloneTemplateId = 0;
 
 		if (getRequest('form') === 'full_clone') {
 			$cloneTemplateId = $templateId;
-			$templateId = null;
+			$templateId = 0;
 		}
 
-		// macros
-		$macros = getRequest('macros', []);
+		if ($templateId == 0) {
+			$messageSuccess = _('Template added');
+			$messageFailed = _('Cannot add template');
+			$auditAction = AUDIT_ACTION_ADD;
+		}
+		else {
+			$messageSuccess = _('Template updated');
+			$messageFailed = _('Cannot update template');
+			$auditAction = AUDIT_ACTION_UPDATE;
+		}
 
 		// groups
 		$groups = getRequest('groups', []);
@@ -188,6 +199,10 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$result = API::HostGroup()->create([
 				'name' => $newGroup
 			]);
+
+			if (!$result) {
+				throw new Exception();
+			}
 
 			$newGroup = API::HostGroup()->get([
 				'groupids' => $result['groupids'],
@@ -203,12 +218,13 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		}
 
 		// linked templates
-		$linkedTemplates = $templates;
+		$linkedTemplates = getRequest('templates', []);
 		$templates = [];
 		foreach ($linkedTemplates as $linkedTemplateId) {
 			$templates[] = ['templateid' => $linkedTemplateId];
 		}
 
+		$templatesClear = getRequest('clear_templates', []);
 		$templatesClear = zbx_toObject($templatesClear, 'templateid');
 
 		// discovered hosts
@@ -219,6 +235,8 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
 		]);
 
+		$templateName = getRequest('template_name', '');
+
 		// create / update template
 		$template = [
 			'host' => $templateName,
@@ -226,28 +244,11 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			'groups' => $groups,
 			'templates' => $templates,
 			'hosts' => $dbHosts,
-			'macros' => $macros,
+			'macros' => getRequest('macros', []),
 			'description' => getRequest('description', '')
 		];
 
-		if ($templateId) {
-			$template['templateid'] = $templateId;
-			$template['templates_clear'] = $templatesClear;
-
-			$messageSuccess = _('Template updated');
-			$messageFailed = _('Cannot update template');
-			$auditAction = AUDIT_ACTION_UPDATE;
-
-			$result = API::Template()->update($template);
-			if (!$result) {
-				throw new Exception();
-			}
-		}
-		else {
-			$messageSuccess = _('Template added');
-			$messageFailed = _('Cannot add template');
-			$auditAction = AUDIT_ACTION_ADD;
-
+		if ($templateId == 0) {
 			$result = API::Template()->create($template);
 
 			if ($result) {
@@ -257,9 +258,19 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				throw new Exception();
 			}
 		}
+		else {
+			$template['templateid'] = $templateId;
+			$template['templates_clear'] = $templatesClear;
+
+			$result = API::Template()->update($template);
+
+			if (!$result) {
+				throw new Exception();
+			}
+		}
 
 		// full clone
-		if ($templateId && $cloneTemplateId && getRequest('form') === 'full_clone') {
+		if ($cloneTemplateId != 0 && getRequest('form') === 'full_clone') {
 			if (!copyApplications($cloneTemplateId, $templateId)) {
 				throw new Exception();
 			}
@@ -586,7 +597,7 @@ else {
 			'search' => [
 				'name' => ($filter['name'] === '') ? null : $filter['name']
 			],
-			'groupids' => ($pageFilter->groupid > 0) ? $pageFilter->groupid : null,
+			'groupids' => $pageFilter->groupids,
 			'editable' => true,
 			'sortfield' => $sortField,
 			'limit' => $config['search_limit'] + 1

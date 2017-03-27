@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -122,7 +122,6 @@ class testFormGraphPrototype extends CWebTest {
 	 */
 	public function testFormGraphPrototype_Setup() {
 		DBsave_tables('graphs');
-		DBexecute("UPDATE config SET server_check_interval = 0 WHERE configid = 1");
 	}
 
 	// Returns layout data
@@ -441,14 +440,14 @@ class testFormGraphPrototype extends CWebTest {
 		}
 
 		$this->zbxTestTextPresent('Show legend');
-		$this->zbxTestAssertVisibleId('show_legend');
+		$this->zbxTestAssertElementPresentId('show_legend');
 		if (!isset($data['form'])) {
 			$this->assertTrue($this->zbxTestCheckboxSelected('show_legend'));
 		}
 
 		if ($graphtype == 'Normal' || $graphtype == 'Stacked') {
 			$this->zbxTestTextPresent('Show working time');
-			$this->zbxTestAssertVisibleId('show_work_period');
+			$this->zbxTestAssertElementPresentId('show_work_period');
 
 			if (!isset($data['form'])) {
 				$this->assertTrue($this->zbxTestCheckboxSelected('show_work_period'));
@@ -468,7 +467,7 @@ class testFormGraphPrototype extends CWebTest {
 
 		if ($graphtype == 'Normal' || $graphtype == 'Stacked') {
 			$this->zbxTestTextPresent('Show triggers');
-			$this->zbxTestAssertVisibleId('show_triggers');
+			$this->zbxTestAssertElementPresentId('show_triggers');
 			if (!isset($data['form'])) {
 				$this->assertTrue($this->zbxTestCheckboxSelected('show_triggers'));
 			}
@@ -486,13 +485,13 @@ class testFormGraphPrototype extends CWebTest {
 
 		if ($graphtype == 'Normal') {
 			$this->zbxTestTextPresent('Percentile line (left)');
-			$this->zbxTestAssertVisibleId('visible_percent_left');
+			$this->zbxTestAssertElementPresentId('visible_percent_left');
 			if (isset($data['templatedHost'])) {
 				$this->zbxTestAssertAttribute("//input[@id='visible_percent_left']", 'disabled');
 				$this->zbxTestAssertAttribute("//input[@id='visible_percent_right']", 'disabled');
 			}
 			$this->zbxTestTextPresent('Percentile line (right)');
-			$this->zbxTestAssertVisibleId('visible_percent_right');
+			$this->zbxTestAssertElementPresentId('visible_percent_right');
 		}
 		else {
 			$this->zbxTestTextNotPresent('Percentile line (left)');
@@ -504,7 +503,7 @@ class testFormGraphPrototype extends CWebTest {
 
 		if ($graphtype == 'Pie' || $graphtype == 'Exploded') {
 			$this->zbxTestTextPresent('3D view');
-			$this->zbxTestAssertVisibleId('show_3d');
+			$this->zbxTestAssertElementPresentId('show_3d');
 			if (isset($data['templatedHost'])) {
 				$this->zbxTestAssertAttribute("//input[@id='show_3d']/@disabled", 'disabled');
 			}
@@ -519,7 +518,7 @@ class testFormGraphPrototype extends CWebTest {
 
 		if ($graphtype == 'Normal' || $graphtype == 'Stacked') {
 			$this->zbxTestTextPresent('Y axis MIN value');
-			$this->zbxTestAssertVisibleId('ymin_type');
+			$this->zbxTestAssertElementPresentId('ymin_type');
 			$this->zbxTestDropdownHasOptions('ymin_type', [
 				'Calculated',
 				'Fixed',
@@ -544,7 +543,7 @@ class testFormGraphPrototype extends CWebTest {
 			}
 
 			$this->zbxTestTextPresent('Y axis MAX value');
-			$this->zbxTestAssertVisibleId('ymax_type');
+			$this->zbxTestAssertElementPresentId('ymax_type');
 			$this->zbxTestDropdownHasOptions('ymax_type', [
 				'Calculated',
 				'Fixed',
@@ -597,6 +596,7 @@ class testFormGraphPrototype extends CWebTest {
 		if (!isset($data['form'])) {
 			$this->zbxTestLaunchPopup('add_item');
 			if (isset($data['host'])) {
+				$this->zbxTestWaitUntilElementVisible(WebDriverBy::id('groupid'));
 				$this->zbxTestDropdownSelect('groupid', 'Zabbix servers');
 				$this->zbxTestDropdownSelectWait('hostid', $this->host);
 
@@ -1104,18 +1104,18 @@ class testFormGraphPrototype extends CWebTest {
 				$this->zbxTestClickWait('items_0_remove');
 				$this->zbxTestTextNotPresent($this->itemSimple);
 
-				$this->zbxTestLaunchPopup('add_item');
+				$this->zbxTestClickWait('add_item');
+				$this->zbxTestSwitchToNewWindow();
 
 				$this->zbxTestWaitUntilElementPresent(webDriverBy::id('groupid'));
 				$this->zbxTestDropdownSelect('groupid', 'Zabbix servers');
 				$this->zbxTestDropdownSelectWait('hostid', $this->host);
-				$this->zbxTestClickLinkTextWait($this->itemSimple);
-				$this->zbxTestWaitWindowClose();
+				$this->zbxTestClickLinkAndWaitWindowClose($this->itemSimple);
 
 				$this->zbxTestClickWait('add_protoitem');
-				$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
+				$this->zbxTestSwitchToNewWindow();
 				$this->zbxTestClickLinkTextWait($this->item);
-				$this->webDriver->switchTo()->window('');
+				$this->zbxTestWaitWindowClose();
 			}
 		}
 		if (isset($data['width'])) {
@@ -1222,7 +1222,7 @@ class testFormGraphPrototype extends CWebTest {
 			$this->zbxTestClickLinkTextWait($this->discoveryRule);
 			$this->zbxTestClickLinkTextWait('Graph prototypes');
 
-			$this->zbxTestCheckboxSelect("group_graphid_$graphid");
+			$this->zbxTestCheckboxSelect('group_graphid_'.$graphid);
 			$this->zbxTestClickButton('graph.massdelete');
 
 			$this->webDriver->switchTo()->alert()->accept();
@@ -1235,7 +1235,6 @@ class testFormGraphPrototype extends CWebTest {
 	 * Restore the original tables.
 	 */
 	public function testFormGraphPrototype_Teardown() {
-		DBexecute("UPDATE config SET server_check_interval = 10 WHERE configid = 1");
 		DBrestore_tables('graphs');
 	}
 }

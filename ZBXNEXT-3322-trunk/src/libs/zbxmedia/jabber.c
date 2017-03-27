@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@ static int	zbx_io_connect(iksparser *prs, void **socketptr, const char *server, 
 	struct addrinfo	hints, *addr_res, *addr_ptr;
 	char		port_str[6];
 
+	ZBX_UNUSED(prs);
+
 	*socketptr = NULL;
 
 	hints.ai_flags = AI_CANONNAME;
@@ -86,6 +88,8 @@ static int	zbx_io_connect(iksparser *prs, void **socketptr, const char *server, 
 	struct hostent		*host;
 	struct sockaddr_in	sin;
 
+	ZBX_UNUSED(prs);
+
 	if (NULL == (host = gethostbyname(server)))
 		return IKS_NET_NODNS;
 
@@ -116,7 +120,7 @@ static int	zbx_io_send(void *socket, const char *data, size_t len)
 	if (NULL == sock)
 		return IKS_NET_RWERR;
 
-	if (write(*sock, data, len) < len)
+	if (write(*sock, data, len) < (ssize_t)len)
 		return IKS_NET_RWERR;
 
 	return IKS_OK;
@@ -189,6 +193,8 @@ static int		jabber_error_len = 0;
 static int	on_result(jabber_session_p sess, ikspak *pak)
 {
 	const char	*__function_name = "on_result";
+
+	ZBX_UNUSED(pak);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "%s: In %s()", __module_name, __function_name);
 
@@ -400,6 +406,9 @@ static int	on_stream(jabber_session_p sess, int type, iks *node)
 
 static int	on_error(void *user_data, ikspak *pak)
 {
+	ZBX_UNUSED(user_data);
+	ZBX_UNUSED(pak);
+
 	zbx_snprintf(jabber_error, jabber_error_len, "authorization failed");
 
 	jsess->status = JABBER_ERROR;

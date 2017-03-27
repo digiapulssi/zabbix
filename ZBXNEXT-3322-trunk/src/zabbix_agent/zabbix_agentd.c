@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -219,6 +219,7 @@ int	CONFIG_COLLECTOR_FORKS		= 1;
 int	CONFIG_PASSIVE_FORKS		= 3;	/* number of listeners for processing passive checks */
 int	CONFIG_ACTIVE_FORKS		= 0;
 int	CONFIG_TASKMANAGER_FORKS	= 0;
+int	CONFIG_IPMIMANAGER_FORKS	= 0;
 
 char	*opt = NULL;
 
@@ -542,12 +543,20 @@ static void	zbx_validate_config(ZBX_TASK_EX *task)
 	char	*ch_error;
 	int	err = 0;
 
-	if (NULL == CONFIG_HOSTS_ALLOWED && 0 != CONFIG_PASSIVE_FORKS)
+	if (0 != CONFIG_PASSIVE_FORKS)
 	{
-		zabbix_log(LOG_LEVEL_CRIT, "StartAgents is not 0, parameter Server must be defined");
-		err = 1;
+		if (NULL == CONFIG_HOSTS_ALLOWED)
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "StartAgents is not 0, parameter \"Server\" must be defined");
+			err = 1;
+		}
+		else if (SUCCEED != zbx_validate_peer_list(CONFIG_HOSTS_ALLOWED, &ch_error))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "invalid entry in \"Server\" configuration parameter: %s", ch_error);
+			zbx_free(ch_error);
+			err = 1;
+		}
 	}
-
 	if (NULL == CONFIG_HOSTNAME)
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "\"Hostname\" configuration parameter is not defined");
@@ -890,15 +899,15 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 
 	zabbix_log(LOG_LEVEL_INFORMATION, "using configuration file: %s", CONFIG_FILE);
 
-#ifndef _WINDOWS
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+#if !defined(_WINDOWS) && (defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL))
 	if (SUCCEED != zbx_coredump_disable())
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "cannot disable core dump, exiting...");
 		exit(EXIT_FAILURE);
 	}
 #endif
-	if (FAIL == load_modules(CONFIG_LOAD_MODULE_PATH, CONFIG_LOAD_MODULE, CONFIG_TIMEOUT, 1))
+#ifndef _WINDOWS
+	if (FAIL == zbx_load_modules(CONFIG_LOAD_MODULE_PATH, CONFIG_LOAD_MODULE, CONFIG_TIMEOUT, 1))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "loading modules failed, exiting...");
 		exit(EXIT_FAILURE);
@@ -1061,8 +1070,9 @@ void	zbx_free_service_resources(void)
 #ifdef _WINDOWS
 	free_perf_collector();
 	zbx_co_uninitialize();
-#else
-	unload_modules();
+#endif
+#ifndef _WINDOWS
+	zbx_unload_modules();
 #endif
 	zabbix_log(LOG_LEVEL_INFORMATION, "Zabbix Agent stopped. Zabbix %s (revision %s).",
 			ZABBIX_VERSION, ZABBIX_REVISION);
@@ -1157,7 +1167,7 @@ int	main(int argc, char **argv)
 			zbx_set_common_signal_handlers();
 #endif
 #ifndef _WINDOWS
-			if (FAIL == load_modules(CONFIG_LOAD_MODULE_PATH, CONFIG_LOAD_MODULE, CONFIG_TIMEOUT, 0))
+			if (FAIL == zbx_load_modules(CONFIG_LOAD_MODULE_PATH, CONFIG_LOAD_MODULE, CONFIG_TIMEOUT, 0))
 			{
 				zabbix_log(LOG_LEVEL_CRIT, "loading modules failed, exiting...");
 				exit(EXIT_FAILURE);
@@ -1174,7 +1184,7 @@ int	main(int argc, char **argv)
 			free_perf_collector();	/* cpu_collector must be freed before perf_collector is freed */
 #endif
 #ifndef _WINDOWS
-			unload_modules();
+			zbx_unload_modules();
 #endif
 			free_metrics();
 			alias_list_free();

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -431,6 +431,15 @@ static struct snmp_session	*zbx_snmp_open_session(const DC_ITEM *item, char *err
 
 	snmp_sess_init(&session);
 
+	/* Allow using sub-OIDs higher than MAX_INT, like in 'snmpwalk -Ir'. */
+	/* Disables the validation of varbind values against the MIB definition for the relevant OID. */
+	if (SNMPERR_SUCCESS != netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_DONT_CHECK_RANGE, 1))
+	{
+		/* This error is not fatal and should never happen (see netsnmp_ds_set_boolean() implementation). */
+		/* Only items with sub-OIDs higher than MAX_INT will be unsupported. */
+		zabbix_log(LOG_LEVEL_WARNING, "cannot set \"DontCheckRange\" option for Net-SNMP");
+	}
+
 	switch (item->type)
 	{
 		case ITEM_TYPE_SNMPv1:
@@ -691,15 +700,13 @@ end:
 	return strval_dyn;
 }
 
-static int	zbx_snmp_set_result(const struct variable_list *var, unsigned char value_type, unsigned char data_type,
-		AGENT_RESULT *result)
+static int	zbx_snmp_set_result(const struct variable_list *var, AGENT_RESULT *result)
 {
 	const char	*__function_name = "zbx_snmp_set_result";
 	char		*strval_dyn;
 	int		ret = SUCCEED;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() type:%d value_type:%d data_type:%d", __function_name,
-			(int)var->type, (int)value_type, (int)data_type);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() type:%d", __function_name, (int)var->type);
 
 	if (ASN_OCTET_STR == var->type || ASN_OBJECT_ID == var->type)
 	{
@@ -710,9 +717,7 @@ static int	zbx_snmp_set_result(const struct variable_list *var, unsigned char va
 		}
 		else
 		{
-			if (SUCCEED != set_result_type(result, value_type, data_type, strval_dyn))
-				ret = NOTSUPPORTED;
-
+			set_result_type(result, ITEM_VALUE_TYPE_TEXT, strval_dyn);
 			zbx_free(strval_dyn);
 		}
 	}
@@ -745,8 +750,7 @@ static int	zbx_snmp_set_result(const struct variable_list *var, unsigned char va
 
 		zbx_snprintf(buffer, sizeof(buffer), "%d", *var->val.integer);
 
-		if (SUCCEED != set_result_type(result, value_type, data_type, buffer))
-			ret = NOTSUPPORTED;
+		set_result_type(result, ITEM_VALUE_TYPE_TEXT, buffer);
 	}
 #ifdef OPAQUE_SPECIAL_TYPES
 	else if (ASN_OPAQUE_FLOAT == var->type)
@@ -1190,7 +1194,7 @@ static int	zbx_snmp_walk(struct snmp_session *ss, const DC_ITEM *item, const cha
 
 				init_result(&snmp_result);
 
-				if (SUCCEED == zbx_snmp_set_result(var, ITEM_VALUE_TYPE_STR, 0, &snmp_result) &&
+				if (SUCCEED == zbx_snmp_set_result(var, &snmp_result) &&
 						NULL != GET_STR_RESULT(&snmp_result))
 				{
 					walk_cb_func(walk_cb_arg, OID, snmp_oid, snmp_result.str);
@@ -1375,12 +1379,11 @@ retry:
 
 			if (NULL != query_and_ignore_type && 1 == query_and_ignore_type[j])
 			{
-				(void)zbx_snmp_set_result(var, ITEM_VALUE_TYPE_STR, 0, &results[j]);
+				(void)zbx_snmp_set_result(var, &results[j]);
 			}
 			else
 			{
-				errcodes[j] = zbx_snmp_set_result(var, items[j].value_type, items[j].data_type,
-						&results[j]);
+				errcodes[j] = zbx_snmp_set_result(var, &results[j]);
 			}
 		}
 
@@ -1733,10 +1736,12 @@ static void	zbx_snmp_ddata_clean(zbx_snmp_ddata_t *data)
 	free_request(&data->request);
 }
 
-static void	zbx_snmp_walk_discovery_cb(void *arg, const char *OID, const char *index, const char *value)
+static void	zbx_snmp_walk_discovery_cb(void *arg, const char *oid, const char *index, const char *value)
 {
 	zbx_snmp_ddata_t	*data = (zbx_snmp_ddata_t *)arg;
 	zbx_snmp_dobject_t	*obj;
+
+	ZBX_UNUSED(oid);
 
 	if (NULL == (obj = zbx_hashset_search(&data->objects, &index)))
 	{

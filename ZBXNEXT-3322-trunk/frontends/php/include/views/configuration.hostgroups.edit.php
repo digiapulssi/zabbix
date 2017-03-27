@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,8 +32,7 @@ if (isset($this->data['groupid'])) {
 // create hostgroup form list
 $hostGroupFormList = new CFormList('hostgroupFormList');
 $nameTextBox = (new CTextBox('name', $this->data['name'],
-	($this->data['groupid'] && $this->data['group']['flags'] == ZBX_FLAG_DISCOVERY_CREATED),
-	64
+	($this->data['groupid'] && $this->data['group']['flags'] == ZBX_FLAG_DISCOVERY_CREATED)
 ))
 	->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH);
 $nameTextBox->setAttribute('autofocus', 'autofocus');
@@ -61,6 +60,14 @@ foreach ($this->data['r_hosts'] as $host) {
 	}
 }
 $hostGroupFormList->addRow(_('Hosts'), $hostsComboBox->get(_('Hosts in'), [_('Other hosts | Group').SPACE, $groupsComboBox]));
+
+if ($data['groupid'] != 0 && CWebUser::getType() == USER_TYPE_SUPER_ADMIN) {
+	$hostGroupFormList->addRow(null,
+		(new CCheckBox('subgroups'))
+			->setLabel(_('Apply permissions to all subgroups'))
+			->setChecked($data['subgroups'])
+	);
+}
 
 // append tabs to form
 $hostGroupTab = new CTabView();

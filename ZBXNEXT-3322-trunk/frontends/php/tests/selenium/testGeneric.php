@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,16 +40,14 @@ class testGeneric extends CWebTest {
 			['latest.php',						'Latest data [refreshed every 30 sec.]'],
 			['tr_status.php',					'Triggers [refreshed every 30 sec.]'],
 
-			['events.php',						'Latest events [refreshed every 30 sec.]'],
-			['events.php?source=0',			'Latest events [refreshed every 30 sec.]'],
-			['events.php?source=1',			'Latest events [refreshed every 30 sec.]'],
+			['zabbix.php?action=problem.view',	'Problems'],
 
 			['charts.php',						'Custom graphs [refreshed every 30 sec.]'],
 			['screens.php',					'Configuration of screens'],
 			['slides.php',						'Configuration of slide shows'],
 			['zabbix.php?action=map.view',							'Configuration of network maps'],
 			['zabbix.php?action=discovery.view',					'Status of discovery'],
-			['srv_status.php',					'IT services [refreshed every 30 sec.]'],
+			['srv_status.php',					'Services [refreshed every 30 sec.]'],
 
 			// inventory
 			['hostinventoriesoverview.php',	'Host inventory overview'],
@@ -83,7 +81,7 @@ class testGeneric extends CWebTest {
 			['slideconf.php',					'Configuration of slide shows'],
 			['sysmaps.php',					'Configuration of network maps'],
 			['discoveryconf.php',				'Configuration of discovery rules'],
-			['services.php',					'Configuration of IT services'],
+			['services.php',					'Configuration of services'],
 
 			// Administration
 			['adm.gui.php',					'Configuration of GUI'],

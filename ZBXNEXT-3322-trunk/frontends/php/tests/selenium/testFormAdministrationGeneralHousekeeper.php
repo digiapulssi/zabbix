@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,31 +33,31 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 
 		$this->zbxTestTextPresent('Events and alerts');
 		$this->zbxTestTextPresent('Enable internal housekeeping');
-		$this->zbxTestAssertVisibleId('hk_events_mode');
+		$this->zbxTestAssertElementPresentId('hk_events_mode');
 		$this->assertTrue($this->zbxTestCheckboxSelected('hk_events_mode'));
 
 		$this->zbxTestTextPresent('Trigger data storage period (in days)');
-		$this->zbxTestAssertVisibleId('hk_events_trigger');
+		$this->zbxTestAssertElementPresentId('hk_events_trigger');
 		$this->zbxTestAssertAttribute("//input[@id='hk_events_trigger']", "maxlength", 5);
 		$this->zbxTestAssertAttribute("//input[@id='hk_events_trigger']", "value", 365);
 		$this->zbxTestAssertElementNotPresentXpath("//input[@id='hk_events_trigger'][@disabled]");
 
 		$this->zbxTestTextPresent('Internal data storage period (in days)');
-		$this->zbxTestAssertVisibleId('hk_events_internal');
+		$this->zbxTestAssertElementPresentId('hk_events_internal');
 		$this->zbxTestAssertAttribute("//input[@id='hk_events_internal']", "maxlength", 5);
-		$this->zbxTestAssertAttribute("//input[@id='hk_events_internal']", "value", 365);
+		$this->zbxTestAssertAttribute("//input[@id='hk_events_internal']", "value", 1);
 		$this->zbxTestAssertElementNotPresentXpath("//input[@id='hk_events_internal'][@disabled]");
 
 		$this->zbxTestTextPresent('Network discovery data storage period (in days)');
-		$this->zbxTestAssertVisibleId('hk_events_discovery');
+		$this->zbxTestAssertElementPresentId('hk_events_discovery');
 		$this->zbxTestAssertAttribute("//input[@id='hk_events_discovery']", "maxlength", 5);
-		$this->zbxTestAssertAttribute("//input[@id='hk_events_discovery']", "value", 365);
+		$this->zbxTestAssertAttribute("//input[@id='hk_events_discovery']", "value", 1);
 		$this->zbxTestAssertElementNotPresentXpath("//input[@id='hk_events_discovery'][@disabled]");
 
 		$this->zbxTestTextPresent('Auto-registration data storage period (in days)');
-		$this->zbxTestAssertVisibleId('hk_events_autoreg');
+		$this->zbxTestAssertElementPresentId('hk_events_autoreg');
 		$this->zbxTestAssertAttribute("//input[@id='hk_events_autoreg']", "maxlength", 5);
-		$this->zbxTestAssertAttribute("//input[@id='hk_events_autoreg']", "value", 365);
+		$this->zbxTestAssertAttribute("//input[@id='hk_events_autoreg']", "value", 1);
 		$this->zbxTestAssertElementNotPresentXpath("//input[@id='hk_events_autoreg'][@disabled]");
 
 		$this->zbxTestCheckboxSelect('hk_events_mode', false);
@@ -66,15 +66,15 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 		$this->zbxTestAssertElementPresentXpath("//input[@id='hk_events_discovery'][@disabled]");
 		$this->zbxTestAssertElementPresentXpath("//input[@id='hk_events_autoreg'][@disabled]");
 
-		// IT services
+		// Services
 
-		$this->zbxTestTextPresent('IT services');
+		$this->zbxTestTextPresent('Services');
 		$this->zbxTestTextPresent('Enable internal housekeeping');
-		$this->zbxTestAssertVisibleId('hk_services_mode');
+		$this->zbxTestAssertElementPresentId('hk_services_mode');
 		$this->assertTrue($this->zbxTestCheckboxSelected('hk_services_mode'));
 
 		$this->zbxTestTextPresent('Data storage period (in days)');
-		$this->zbxTestAssertVisibleId('hk_services');
+		$this->zbxTestAssertElementPresentId('hk_services');
 		$this->zbxTestAssertAttribute("//input[@id='hk_services']", "maxlength", 5);
 		$this->zbxTestAssertAttribute("//input[@id='hk_services']", "value", 365);
 		$this->zbxTestAssertElementNotPresentXpath("//input[@id='hk_services'][@disabled]");
@@ -86,11 +86,11 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 
 		$this->zbxTestTextPresent('Audit');
 		$this->zbxTestTextPresent('Enable internal housekeeping');
-		$this->zbxTestAssertVisibleId('hk_audit_mode');
+		$this->zbxTestAssertElementPresentId('hk_audit_mode');
 		$this->assertTrue($this->zbxTestCheckboxSelected('hk_audit_mode'));
 
 		$this->zbxTestTextPresent('Data storage period (in days)');
-		$this->zbxTestAssertVisibleId('hk_audit');
+		$this->zbxTestAssertElementPresentId('hk_audit');
 		$this->zbxTestAssertAttribute("//input[@id='hk_audit']", "maxlength", 5);
 		$this->zbxTestAssertAttribute("//input[@id='hk_audit']", "value", 365);
 		$this->zbxTestAssertElementNotPresentXpath("//input[@id='hk_audit'][@disabled]");
@@ -102,7 +102,7 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 
 		$this->zbxTestTextPresent('User sessions');
 		$this->zbxTestTextPresent('Enable internal housekeeping');
-		$this->zbxTestAssertVisibleId('hk_sessions_mode');
+		$this->zbxTestAssertElementPresentId('hk_sessions_mode');
 		$this->assertTrue($this->zbxTestCheckboxSelected('hk_sessions_mode'));
 
 		$this->zbxTestTextPresent('Data storage period (in days)');
@@ -118,11 +118,11 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 
 		$this->zbxTestTextPresent('History');
 		$this->zbxTestTextPresent('Enable internal housekeeping');
-		$this->zbxTestAssertVisibleId('hk_history_mode');
+		$this->zbxTestAssertElementPresentId('hk_history_mode');
 		$this->assertTrue($this->zbxTestCheckboxSelected('hk_history_mode'));
 
 		$this->zbxTestTextPresent('Override item history period');
-		$this->zbxTestAssertVisibleId('hk_history_global');
+		$this->zbxTestAssertElementPresentId('hk_history_global');
 		$this->assertFalse($this->zbxTestCheckboxSelected('hk_history_global'));
 
 		$this->zbxTestTextPresent('Data storage period (in days)');
@@ -142,11 +142,11 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 
 		$this->zbxTestTextPresent('Trends');
 		$this->zbxTestTextPresent('Enable internal housekeeping');
-		$this->zbxTestAssertVisibleId('hk_trends_mode');
+		$this->zbxTestAssertElementPresentId('hk_trends_mode');
 		$this->assertTrue($this->zbxTestCheckboxSelected('hk_trends_mode'));
 
 		$this->zbxTestTextPresent('Override item trend period');
-		$this->zbxTestAssertVisibleId('hk_trends_global');
+		$this->zbxTestAssertElementPresentId('hk_trends_global');
 		$this->assertFalse($this->zbxTestCheckboxSelected('hk_trends_global'));
 
 		$this->zbxTestTextPresent('Data storage period (in days)');
@@ -246,7 +246,7 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 						'Incorrect value "0" for "Internal event and alert data storage period" field: must be between 1 and 99999.',
 						'Incorrect value "0" for "Network discovery event and alert data storage period" field: must be between 1 and 99999.',
 						'Incorrect value "0" for "Auto-registration event and alert data storage period" field: must be between 1 and 99999.',
-						'Incorrect value "0" for "IT service data storage period" field: must be between 1 and 99999.',
+						'Incorrect value "0" for "Service data storage period" field: must be between 1 and 99999.',
 						'Incorrect value "0" for "Audit data storage period" field: must be between 1 and 99999.',
 						'Incorrect value "0" for "User session data storage period" field: must be between 1 and 99999.',
 						'Incorrect value "-1" for "History data storage period" field: must be between 0 and 99999.',
@@ -260,9 +260,9 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 					'resetDefaults' => true,
 					'hk_events_mode' => true,
 					'hk_events_trigger' => 365,
-					'hk_events_internal' => 365,
-					'hk_events_discovery' => 365,
-					'hk_events_autoreg' => 365,
+					'hk_events_internal' => 1,
+					'hk_events_discovery' => 1,
+					'hk_events_autoreg' => 1,
 					'hk_services_mode' => true,
 					'hk_services' => 365,
 					'hk_audit_mode' => true,
@@ -311,7 +311,7 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 				$this->zbxTestInputTypeOverwrite('hk_events_autoreg', $data['hk_events_autoreg']);
 			}
 
-			// IT services
+			// Services
 
 			if (isset($data['hk_services_mode'])) {
 				$this->zbxTestCheckboxSelect('hk_services_mode', $data['hk_services_mode']);
@@ -408,7 +408,7 @@ class testFormAdministrationGeneralHousekeeper extends CWebTest {
 				$this->zbxTestAssertElementValue('hk_events_autoreg', $data['hk_events_autoreg']);
 			}
 
-			// IT services
+			// Services
 
 			if (isset($data['hk_services_mode'])) {
 				$this->assertEquals($this->zbxTestCheckboxSelected('hk_services_mode'), $data['hk_services_mode']);

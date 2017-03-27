@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -207,6 +207,22 @@ class CNewValidator {
 					break;
 
 				/*
+				 * 'le' => <value>
+				 */
+				case 'le':
+					if (array_key_exists($field, $this->input)) {
+						if (!is_string($this->input[$field]) || !$this->is_int32($this->input[$field])
+								|| $this->input[$field] > $params) {
+							$this->addError($fatal,
+								_s('Incorrect value "%1$s" for "%2$s" field.', $this->input[$field], $field)
+							);
+
+							return false;
+						}
+					}
+					break;
+
+				/*
 				 * 'db' => array(
 				 *     'table' => <table_name>,
 				 *     'field' => <field_name>
@@ -247,6 +263,18 @@ class CNewValidator {
 					}
 					break;
 
+				/*
+				 * 'time' => true
+				 */
+				case 'time':
+					if (array_key_exists($field, $this->input) && !$this->is_time($this->input[$field])) {
+						$this->addError($fatal,
+							_s('Incorrect value for field "%1$s": %2$s.', $field, _('a time is expected'))
+						);
+						return false;
+					}
+					break;
+
 				default:
 					// the message can be not translated because it is an internal error
 					$this->addError($fatal, 'Invalid validation rule "'.$rule.'".');
@@ -273,6 +301,15 @@ class CNewValidator {
 
 		// between INT_MIN and INT_MAX
 		return (bccomp($value, '-2147483648') >= 0 && bccomp($value, '2147483647') <= 0);
+	}
+
+	public static function is_uint64($value) {
+		if (1 != preg_match('/^[0-9]+$/', $value)) {
+			return false;
+		}
+
+		// between 0 and _UI64_MAX
+		return (bccomp($value, '0') >= 0 && bccomp($value, '18446744073709551615') <= 0);
 	}
 
 	private function check_db_value($field_schema, $value) {
@@ -321,6 +358,40 @@ class CNewValidator {
 		$table_schema = DB::getSchema($table);
 
 		return (is_string($value) && $this->check_db_value($table_schema['fields'][$field], $value));
+	}
+
+	private function isLeapYear($year) {
+		return (0 == $year % 4 && (0 != $year % 100 || 0 == $year % 400));
+	}
+
+	private function getDaysInMonth($year, $month) {
+		if (in_array($month, [4, 6, 9, 11], true)) {
+			return 30;
+		}
+
+		if ($month == 2) {
+			return $this->isLeapYear($year) ? 29 : 28;
+		}
+
+		return 31;
+	}
+
+	private function is_time($value) {
+		// YYYYMMDDhhmmss
+
+		if (!is_string($value) || strlen($value) != 14 || !ctype_digit($value)) {
+			return false;
+		}
+
+		$Y = (int) substr($value, 0, 4);
+		$M = (int) substr($value, 4, 2);
+		$D = (int) substr($value, 6, 2);
+		$h = (int) substr($value, 8, 2);
+		$m = (int) substr($value, 10, 2);
+		$s = (int) substr($value, 12, 2);
+
+		return ($Y >= 1990 && $M >= 1 && $M <= 12 && $D >= 1 && $D <= $this->getDaysInMonth($Y, $M)
+			&& $h >= 0 && $h <= 23 && $m >= 0 && $m <= 59 && $s >= 0 && $s <= 59);
 	}
 
 	/**

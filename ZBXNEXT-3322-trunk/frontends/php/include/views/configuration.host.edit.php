@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -88,9 +88,7 @@ if ($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED) {
 
 	$hostList->addRow(_('Groups'), $groupsTB->get(_('In groups'), _('Other groups')));
 
-	$new_group = (new CTextBox('newgroup', $data['newgroup']))
-		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
-		->setAttribute('maxlength', 64);
+	$new_group = (new CTextBox('newgroup', $data['newgroup']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH);
 	$new_group_label = _('New group');
 	if (CWebUser::$data['type'] != USER_TYPE_SUPER_ADMIN) {
 		$new_group_label .= ' '._('(Only super admins can create groups)');
@@ -575,9 +573,16 @@ if ($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED) {
 			$templateLink,
 			(new CCol(
 				new CHorList([
-					(new CSubmit('unlink['.$template['templateid'].']', _('Unlink')))->addClass(ZBX_STYLE_BTN_LINK),
+					(new CSimpleButton(_('Unlink')))
+						->onClick('javascript: submitFormWithParam('.
+							'"'.$frmHost->getName().'", "unlink['.$template['templateid'].']", "1"'.
+						');')
+						->addClass(ZBX_STYLE_BTN_LINK),
 					array_key_exists($template['templateid'], $data['original_templates'])
-						? (new CSubmit('unlink_and_clear['.$template['templateid'].']', _('Unlink and clear')))
+						? (new CSimpleButton(_('Unlink and clear')))
+							->onClick('javascript: submitFormWithParam('.
+								'"'.$frmHost->getName().'", "unlink_and_clear['.$template['templateid'].']", "1"'.
+							');')
 							->addClass(ZBX_STYLE_BTN_LINK)
 						: null
 				])
@@ -606,7 +611,11 @@ if ($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED) {
 				]
 			]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 		])
-		->addRow([(new CSubmit('add_template', _('Add')))->addClass(ZBX_STYLE_BTN_LINK)]);
+		->addRow([
+			(new CSimpleButton(_('Add')))
+				->onClick('javascript: submitFormWithParam("'.$frmHost->getName().'", "add_template", "1");')
+				->addClass(ZBX_STYLE_BTN_LINK)
+		]);
 
 	$tmplList->addRow(_('Link new templates'),
 		(new CDiv($newTemplateTable))
@@ -713,18 +722,8 @@ foreach ($hostInventoryFields as $inventoryNo => $inventoryInfo) {
 	else {
 		$field_length = $hostInventoryTable['fields'][$field_name]['length'];
 
-		if ($field_length < 39) {
-			$width = ZBX_TEXTAREA_SMALL_WIDTH;
-		}
-		elseif ($field_length < 64) {
-			$width = ZBX_TEXTAREA_STANDARD_WIDTH;
-		}
-		else {
-			$width = ZBX_TEXTAREA_BIG_WIDTH;
-		}
-
 		$input = (new CTextBox('host_inventory['.$field_name.']', $data['host_inventory'][$field_name]))
-			->setWidth($width)
+			->setWidth(($field_length < 39) ? ZBX_TEXTAREA_SMALL_WIDTH : ZBX_TEXTAREA_BIG_WIDTH)
 			->setAttribute('maxlength', $field_length);
 	}
 
@@ -770,32 +769,37 @@ $encryption_form_list = (new CFormList('encryption'))
 			->setModern(true)
 			->setEnabled($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED)
 	)
-	->addRow(_('Connections from host'), [
-		new CLabel([(new CCheckBox('tls_in_none'))->setEnabled($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED),
-			_('No encryption')
-		]),
-		BR(),
-		new CLabel([(new CCheckBox('tls_in_psk'))->setEnabled($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED), _('PSK')]),
-		BR(),
-		new CLabel([(new CCheckBox('tls_in_cert'))->setEnabled($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED),
-			_('Certificate')
-		])
-	])
+	->addRow(_('Connections from host'),
+		(new CList())
+			->addClass(ZBX_STYLE_LIST_CHECK_RADIO)
+			->addItem((new CCheckBox('tls_in_none'))
+				->setLabel(_('No encryption'))
+				->setEnabled($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED)
+			)
+			->addItem((new CCheckBox('tls_in_psk'))
+				->setLabel(_('PSK'))
+				->setEnabled($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED)
+			)
+			->addItem((new CCheckBox('tls_in_cert'))
+				->setLabel(_('Certificate'))
+				->setEnabled($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED)
+			)
+	)
 	->addRow(_('PSK identity'),
 		(new CTextBox('tls_psk_identity', $data['tls_psk_identity'], $data['flags'] == ZBX_FLAG_DISCOVERY_CREATED, 128))
-			->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
+			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_('PSK'),
 		(new CTextBox('tls_psk', $data['tls_psk'], $data['flags'] == ZBX_FLAG_DISCOVERY_CREATED, 512))
-			->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
+			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_('Issuer'),
 		(new CTextBox('tls_issuer', $data['tls_issuer'], $data['flags'] == ZBX_FLAG_DISCOVERY_CREATED, 1024))
-			->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
+			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_x('Subject', 'encryption certificate'),
 		(new CTextBox('tls_subject', $data['tls_subject'], $data['flags'] == ZBX_FLAG_DISCOVERY_CREATED, 1024))
-			->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
+			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	);
 
 $divTabs->addTab('encryptionTab', _('Encryption'), $encryption_form_list);

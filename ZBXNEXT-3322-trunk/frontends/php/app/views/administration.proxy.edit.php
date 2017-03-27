@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,10 +79,12 @@ $proxy_form_list = (new CFormList('proxyFormList'))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 			->setAttribute('autofocus', 'autofocus')
 	)
-	->addRow(_('Proxy mode'), new CComboBox('status', $data['status'], null, [
-		HOST_STATUS_PROXY_ACTIVE => _('Active'),
-		HOST_STATUS_PROXY_PASSIVE => _('Passive')
-	]))
+	->addRow(_('Proxy mode'),
+		(new CRadioButtonList('status', (int) $data['status']))
+			->addValue(_('Active'), HOST_STATUS_PROXY_ACTIVE)
+			->addValue(_('Passive'), HOST_STATUS_PROXY_PASSIVE)
+			->setModern(true)
+	)
 	->addRow(_('Interface'), (new CDiv($interfaceTable))->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR))
 	->addRow(_('Hosts'), $hosts_tween_box->get(_('Proxy hosts'), _('Other hosts')))
 	->addRow(_('Description'),
@@ -101,24 +103,24 @@ $encryption_form_list = (new CFormList('encryption'))
 			->addValue(_('Certificate'), HOST_ENCRYPTION_CERTIFICATE)
 			->setModern(true)
 	)
-	->addRow(_('Connections from proxy'), [
-		new CLabel([new CCheckBox('tls_in_none'), _('No encryption')]),
-		BR(),
-		new CLabel([new CCheckBox('tls_in_psk'), _('PSK')]),
-		BR(),
-		new CLabel([new CCheckBox('tls_in_cert'), _('Certificate')])
-	])
+	->addRow(_('Connections from proxy'),
+		(new CList())
+			->addClass(ZBX_STYLE_LIST_CHECK_RADIO)
+			->addItem((new CCheckBox('tls_in_none'))->setLabel(_('No encryption')))
+			->addItem((new CCheckBox('tls_in_psk'))->setLabel(_('PSK')))
+			->addItem((new CCheckBox('tls_in_cert'))->setLabel(_('Certificate')))
+	)
 	->addRow(_('PSK identity'),
-		(new CTextBox('tls_psk_identity', $data['tls_psk_identity'], false, 128))->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
+		(new CTextBox('tls_psk_identity', $data['tls_psk_identity'], false, 128))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_('PSK'),
-		(new CTextBox('tls_psk', $data['tls_psk'], false, 512))->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
+		(new CTextBox('tls_psk', $data['tls_psk'], false, 512))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_('Issuer'),
-		(new CTextBox('tls_issuer', $data['tls_issuer'], false, 1024))->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
+		(new CTextBox('tls_issuer', $data['tls_issuer'], false, 1024))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_x('Subject', 'encryption certificate'),
-		(new CTextBox('tls_subject', $data['tls_subject'], false, 1024))->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
+		(new CTextBox('tls_subject', $data['tls_subject'], false, 1024))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	);
 
 $tabs->addTab('proxyTab', _('Proxy'), $proxy_form_list);

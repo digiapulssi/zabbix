@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ if ($this->data['grpswitch']) {
 			'parameters' => 'srctbl=host_groups&dstfrm='.$form->getName().'&dstfld1=groupids_'.
 				'&srcfld1=groupid&multiselect=1'
 		]
-	]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH));
+	]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH));
 	$form_list->addRow(_('Hide selected groups'), (new CMultiSelect([
 		'name' => 'hidegroupids[]',
 		'objectName' => 'hostGroup',
@@ -77,30 +77,29 @@ if ($this->data['grpswitch']) {
 			'parameters' => 'srctbl=host_groups&dstfrm='.$form->getName().'&dstfld1=hidegroupids_'.
 				'&srcfld1=groupid&multiselect=1'
 		]
-	]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH));
+	]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH));
 }
 
 // append host in maintenance checkbox to form list
-$maintenanceCheckBox = (new CCheckBox('maintenance'))->setChecked($this->data['maintenance'] == 1);
+$maintenanceCheckBox = (new CCheckBox('maintenance'))
+	->setLabel(_('Show hosts in maintenance'))
+	->setChecked($this->data['maintenance'] == 1);
 if (!$this->data['isFilterEnable']) {
 	$maintenanceCheckBox->setAttribute('disabled', 'disabled');
 }
-$form_list->addRow(_('Hosts'),
-	new CLabel([$maintenanceCheckBox, _('Show hosts in maintenance')], 'maintenance')
-);
+$form_list->addRow(_('Hosts'), $maintenanceCheckBox);
 
 // append trigger severities to form list
-$severities = [];
+$severities = (new CList())->addClass(ZBX_STYLE_LIST_CHECK_RADIO);
+
 foreach ($this->data['severities'] as $severity) {
-	$serverityCheckBox = (new CCheckBox('trgSeverity['.$severity.']'))
-		->setChecked(isset($this->data['severity'][$severity]))
-		->setEnabled($this->data['isFilterEnable']);
-	$severities[] = new CLabel([$serverityCheckBox, getSeverityName($severity, $this->data['config'])],
-		'trgSeverity['.$severity.']'
+	$severities->addItem(
+		(new CCheckBox('trgSeverity['.$severity.']'))
+			->setLabel(getSeverityName($severity, $this->data['config']))
+			->setChecked(isset($this->data['severity'][$severity]))
+			->setEnabled($this->data['isFilterEnable'])
 	);
-	$severities[] = BR();
 }
-array_pop($severities);
 
 $form_list->addRow(_('Triggers with severity'), $severities);
 
@@ -111,14 +110,14 @@ $form_list->addRow(_('Trigger name'),
 );
 
 if ($data['config']['event_ack_enable']) {
-	// append problem display to form list
-	$ext_ack_combobox = new CComboBox('extAck', $data['extAck'], null, [
-		EXTACK_OPTION_ALL => _('All'),
-		EXTACK_OPTION_BOTH => _('Separated'),
-		EXTACK_OPTION_UNACK => _('Unacknowledged only')
-	]);
-	$ext_ack_combobox->setEnabled($data['isFilterEnable']);
-	$form_list->addRow(_('Problem display'), $ext_ack_combobox);
+	$form_list->addRow(_('Problem display'),
+		(new CRadioButtonList('extAck', (int) $data['extAck']))
+			->addValue(_('All'), EXTACK_OPTION_ALL)
+			->addValue(_('Separated'), EXTACK_OPTION_BOTH)
+			->addValue(_('Unacknowledged only'), EXTACK_OPTION_UNACK)
+			->setEnabled($data['isFilterEnable'])
+			->setModern(true)
+	);
 }
 
 // create tab

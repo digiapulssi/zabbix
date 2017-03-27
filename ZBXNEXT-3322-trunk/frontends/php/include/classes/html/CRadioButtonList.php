@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ class CRadioButtonList extends CList {
 	private $enabled;
 	private $values;
 	private $modern;
-	private $focused;
 
 	public function __construct($name, $value) {
 		parent::__construct();
@@ -41,7 +40,6 @@ class CRadioButtonList extends CList {
 		$this->enabled = true;
 		$this->values = [];
 		$this->modern = false;
-		$this->focused = false;
 		$this->setId(zbx_formatDomId($name));
 	}
 
@@ -85,8 +83,6 @@ class CRadioButtonList extends CList {
 			);
 		}
 
-		$focused = $this->focused;
-
 		foreach ($this->values as $key => $value) {
 			if ($value['id'] === null) {
 				$value['id'] = zbx_formatDomId($this->name).'_'.$key;
@@ -96,29 +92,20 @@ class CRadioButtonList extends CList {
 				->setEnabled($this->enabled)
 				->onChange($value['on_change'])
 				->setId($value['id']);
+
 			if ($value['value'] === $this->value) {
 				$radio->setAttribute('checked', 'checked');
-			}
-			if ($focused) {
-				$radio->setAttribute('autofocus', 'autofocus');
-				$focused = false;
 			}
 
 			if ($this->modern) {
 				parent::addItem([$radio, new CLabel($value['name'], $value['id'])]);
 			}
 			else {
-				parent::addItem(new CLabel([$radio, $value['name']], $value['id']));
+				$radio->addClass(ZBX_STYLE_CHECKBOX_RADIO);
+				parent::addItem([$radio, new CLabel([new CSpan(), $value['name']], $value['id'])]);
 			}
 		}
 
 		return parent::toString($destroy);
 	}
-
-	public function setFocused($focused) {
-		$this->focused = $focused;
-
-		return $this;
-	}
-
 }

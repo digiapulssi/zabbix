@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,13 +30,13 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 //	VAR					TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
 $fields = [
-	'groupids' =>		[T_ZBX_INT,	O_OPT,	P_SYS,			DB_ID,	null],
-	'hostids' =>		[T_ZBX_INT,	O_OPT,	P_SYS,			DB_ID,	null],
-	'severities'=>		[T_ZBX_INT,	O_OPT,	P_SYS,			null,	null],
-	'filter_from' =>	[T_ZBX_STR,	O_OPT,	P_UNSET_EMPTY,	null,	null],
-	'filter_till' =>	[T_ZBX_STR,	O_OPT,	P_UNSET_EMPTY,	null,	null],
-	'filter_rst' =>		[T_ZBX_STR,	O_OPT,	P_SYS,			null,	null],
-	'filter_set' =>		[T_ZBX_STR,	O_OPT,	P_SYS,			null,	null]
+	'groupids' =>				[T_ZBX_INT,	O_OPT,	P_SYS,			DB_ID,	null],
+	'hostids' =>				[T_ZBX_INT,	O_OPT,	P_SYS,			DB_ID,	null],
+	'severities'=>				[T_ZBX_INT,	O_OPT,	P_SYS,			null,	null],
+	'filter_from' =>			[T_ZBX_STR,	O_OPT,	P_UNSET_EMPTY,	null,	null],
+	'filter_till' =>			[T_ZBX_STR,	O_OPT,	P_UNSET_EMPTY,	null,	null],
+	'filter_rst' =>				[T_ZBX_STR,	O_OPT,	P_SYS,			null,	null],
+	'filter_set' =>				[T_ZBX_STR,	O_OPT,	P_SYS,			null,	null]
 ];
 check_fields($fields);
 
@@ -82,8 +82,6 @@ else {
 
 $data['filter'] = [
 	'severities' => CProfile::getArray('web.toptriggers.filter.severities', $defaultSeverities),
-	'groupids' => CProfile::getArray('web.toptriggers.filter.groupids'),
-	'hostids' => CProfile::getArray('web.toptriggers.filter.hostids'),
 	'filter_from' => CProfile::get('web.toptriggers.filter.from', $today),
 	'filter_till' => CProfile::get('web.toptriggers.filter.till', $tomorrow)
 ];
@@ -91,10 +89,13 @@ $data['filter'] = [
 
 // multiselect host groups
 $data['multiSelectHostGroupData'] = [];
-if ($data['filter']['groupids'] !== null) {
+$groupids = CProfile::getArray('web.toptriggers.filter.groupids', []);
+
+if ($groupids) {
 	$filterGroups = API::HostGroup()->get([
 		'output' => ['groupid', 'name'],
-		'groupids' => $data['filter']['groupids']
+		'groupids' => $groupids,
+		'preservekeys' => true
 	]);
 
 	foreach ($filterGroups as $filterGroup) {
@@ -107,10 +108,12 @@ if ($data['filter']['groupids'] !== null) {
 
 // multiselect hosts
 $data['multiSelectHostData'] = [];
-if ($data['filter']['hostids']) {
+$hostids = CProfile::getArray('web.toptriggers.filter.hostids', []);
+
+if ($hostids) {
 	$filterHosts = API::Host()->get([
 		'output' => ['hostid', 'name'],
-		'hostids' => $data['filter']['hostids']
+		'hostids' => $hostids
 	]);
 
 	foreach ($filterHosts as $filterHost) {
@@ -134,22 +137,23 @@ $sql = 'SELECT e.objectid,count(distinct e.eventid) AS cnt_event'.
 			' AND e.clock<='.zbx_dbstr($data['filter']['filter_till']).
 			' AND '.dbConditionInt('t.priority', $data['filter']['severities']);
 
-if ($data['filter']['hostids']) {
-	$inHosts = ' AND '.dbConditionInt('i.hostid', $data['filter']['hostids']);
-}
-if ($data['filter']['groupids']) {
-	$inGroups = ' AND '.dbConditionInt('hgg.groupid', $data['filter']['groupids']);
+if ($hostids) {
+	$inHosts = ' AND '.dbConditionInt('i.hostid', $hostids);
 }
 
-if (CWebUser::getType() == USER_TYPE_SUPER_ADMIN && ($data['filter']['groupids'] || $data['filter']['hostids'])) {
+if ($groupids) {
+	$inGroups = ' AND '.dbConditionInt('hgg.groupid', $groupids);
+}
+
+if (CWebUser::getType() == USER_TYPE_SUPER_ADMIN && ($groupids || $hostids)) {
 	$sql .= ' AND EXISTS ('.
 				'SELECT NULL'.
 				' FROM functions f,items i,hosts_groups hgg'.
 				' WHERE t.triggerid=f.triggerid'.
 					' AND f.itemid=i.itemid'.
 					' AND i.hostid=hgg.hostid'.
-					($data['filter']['hostids'] ? $inHosts : '').
-					($data['filter']['groupids'] ? $inGroups : '').
+					($hostids ? $inHosts : '').
+					($groupids ? $inGroups : '').
 			')';
 }
 elseif (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
@@ -165,8 +169,8 @@ elseif (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
 				' WHERE t.triggerid=f.triggerid'.
 					' AND f.itemid=i.itemid'.
 					' AND i.hostid=hgg.hostid'.
-					($data['filter']['hostids'] ? $inHosts : '').
-					($data['filter']['groupids'] ? $inGroups : '').
+					($hostids ? $inHosts : '').
+					($groupids ? $inGroups : '').
 				' GROUP BY f.triggerid'.
 				' HAVING MIN(r.permission)>'.PERM_DENY.
 			')';
@@ -190,11 +194,11 @@ $data['triggers'] = API::Trigger()->get([
 
 $data['triggers'] = CMacrosResolverHelper::resolveTriggerUrls($data['triggers']);
 
-$hostIds = [];
+$trigger_hostids = [];
 
 foreach ($data['triggers'] as $triggerId => $trigger) {
 	$hostId = $trigger['hosts'][0]['hostid'];
-	$hostIds[$hostId] = $hostId;
+	$trigger_hostids[$hostId] = $hostId;
 
 	$data['triggers'][$triggerId]['cnt_event'] = $triggersEventCount[$triggerId];
 }
@@ -208,11 +212,11 @@ $data['hosts'] = API::Host()->get([
 	'output' => ['hostid', 'status'],
 	'selectGraphs' => API_OUTPUT_COUNT,
 	'selectScreens' => API_OUTPUT_COUNT,
-	'hostids' => $hostIds,
+	'hostids' => $trigger_hostids,
 	'preservekeys' => true
 ]);
 
-$data['scripts'] = API::Script()->getScriptsByHosts($hostIds);
+$data['scripts'] = API::Script()->getScriptsByHosts($trigger_hostids);
 
 // render view
 $historyView = new CView('reports.toptriggers', $data);

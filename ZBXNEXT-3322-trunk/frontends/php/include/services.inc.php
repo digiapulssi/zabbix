@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -215,7 +215,10 @@ function createServiceMonitoringTree(array $services, array $slaData, $period, &
 				$caption,
 				' - ',
 				new CLink($trigger['description'],
-					'events.php?filter_set=1&source='.EVENT_SOURCE_TRIGGERS.'&triggerid='.$trigger['triggerid']
+					(new CUrl('zabbix.php'))
+						->setArgument('action', 'problem.view')
+						->setArgument('filter_triggerids[]', $trigger['triggerid'])
+						->setArgument('filter_set', '1')
 				)
 			];
 		}
@@ -227,7 +230,10 @@ function createServiceMonitoringTree(array $services, array $slaData, $period, &
 				$reason[] = ', ';
 			}
 			$reason[] = new CLink($problemTrigger['description'],
-				'events.php?filter_set=1&source='.EVENT_SOURCE_TRIGGERS.'&triggerid='.$problemTrigger['triggerid']
+				(new CUrl('zabbix.php'))
+					->setArgument('action', 'problem.view')
+					->setArgument('filter_triggerids[]', $problemTrigger['triggerid'])
+					->setArgument('filter_set', '1')
 			);
 		}
 
@@ -304,7 +310,7 @@ function createServiceMonitoringTree(array $services, array $slaData, $period, &
 }
 
 /**
- * Calculates the current IT service status based on it's child services.
+ * Calculates the current service status based on it's child services.
  *
  * The new statuses are written to the $services array in the "newStatus" property.
  *
@@ -374,7 +380,7 @@ function calculateItServiceStatusByTrigger($triggerStatus, $triggerValue, $trigg
 }
 
 /**
- * Updates the status of all IT services
+ * Updates the status of all services
  */
 function updateItServices() {
 	$servicesLinks = [];

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -504,7 +504,7 @@ var CScrollBar = Class.create({
 			this.appendCalendars();
 
 			// after px2sec is set. important!
-			this.position.bar = getDimensions(this.bar);
+			this.position.bar = getDimensions(this.dom.bar);
 			this.setBarPosition();
 			this.setGhostByBar();
 			this.setTabInfo();

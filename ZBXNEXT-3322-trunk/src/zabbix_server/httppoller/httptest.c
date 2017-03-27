@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,6 +64,8 @@ static size_t	WRITEFUNCTION2(void *ptr, size_t size, size_t nmemb, void *userdat
 {
 	size_t	r_size = size * nmemb;
 
+	ZBX_UNUSED(userdata);
+
 	/* first piece of data */
 	if (NULL == page.data)
 	{
@@ -79,6 +81,9 @@ static size_t	WRITEFUNCTION2(void *ptr, size_t size, size_t nmemb, void *userdat
 
 static size_t	HEADERFUNCTION2(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
+	ZBX_UNUSED(ptr);
+	ZBX_UNUSED(userdata);
+
 	return size * nmemb;
 }
 
@@ -117,10 +122,10 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	unsigned char	types[3], states[3];
+	unsigned char	types[3];
 	DC_ITEM		items[3];
 	zbx_uint64_t	itemids[3];
-	int		lastclocks[3], errcodes[3];
+	int		errcodes[3];
 	size_t		i, num = 0;
 	AGENT_RESULT    value;
 
@@ -155,7 +160,7 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 	}
 	DBfree_result(result);
 
-	DCconfig_get_items_by_itemids(items, itemids, errcodes, num);
+	DCconfig_get_items_by_itemids(items, itemids, errcodes, num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
 
 	for (i = 0; i < num; i++)
 	{
@@ -190,33 +195,29 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 		}
 
 		items[i].state = ITEM_STATE_NORMAL;
-		dc_add_history(items[i].itemid, items[i].value_type, 0, &value, ts, items[i].state, NULL);
-
-		states[i] = items[i].state;
-		lastclocks[i] = ts->sec;
+		dc_add_history(items[i].itemid, 0, &value, ts, items[i].state, NULL);
 
 		free_result(&value);
 	}
-
-	DCrequeue_items(itemids, states, lastclocks, NULL, NULL, errcodes, num);
 
 	DCconfig_clean_items(items, errcodes, num);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
+#ifdef HAVE_LIBCURL
 static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx_timespec_t *ts)
 {
 	const char	*__function_name = "process_step_data";
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	unsigned char	types[3], states[3];
+	unsigned char	types[3];
 	DC_ITEM		items[3];
 	zbx_uint64_t	itemids[3];
-	int		lastclocks[3], errcodes[3];
+	int		errcodes[3];
 	size_t		i, num = 0;
-	AGENT_RESULT    value;
+	AGENT_RESULT	value;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() rspcode:%ld time:" ZBX_FS_DBL " speed:" ZBX_FS_DBL,
 			__function_name, stat->rspcode, stat->total_time, stat->speed_download);
@@ -243,7 +244,7 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 	}
 	DBfree_result(result);
 
-	DCconfig_get_items_by_itemids(items, itemids, errcodes, num);
+	DCconfig_get_items_by_itemids(items, itemids, errcodes, num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
 
 	for (i = 0; i < num; i++)
 	{
@@ -278,22 +279,16 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 		}
 
 		items[i].state = ITEM_STATE_NORMAL;
-		dc_add_history(items[i].itemid, items[i].value_type, 0, &value, ts, items[i].state, NULL);
-
-		states[i] = items[i].state;
-		lastclocks[i] = ts->sec;
+		dc_add_history(items[i].itemid, 0, &value, ts, items[i].state, NULL);
 
 		free_result(&value);
 	}
-
-	DCrequeue_items(itemids, states, lastclocks, NULL, NULL, errcodes, num);
 
 	DCconfig_clean_items(items, errcodes, num);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-#ifdef HAVE_LIBCURL
 static void	add_headers(char *headers, struct curl_slist **headers_slist)
 {
 	char      *p_begin;
@@ -351,15 +346,15 @@ static void	process_httptest(DC_HOST *host, zbx_httptest_t *httptest)
 	const char	*__function_name = "process_httptest";
 
 	DB_RESULT	result;
-	DB_ROW		row;
 	DB_HTTPSTEP	httpstep;
 	char		*err_str = NULL;
-	int		lastfailedstep;
+	int		lastfailedstep = 0;
 	zbx_timespec_t	ts;
-	zbx_httpstat_t	stat;
 	double		speed_download = 0;
 	int		speed_download_num = 0;
 #ifdef HAVE_LIBCURL
+	DB_ROW		row;
+	zbx_httpstat_t	stat;
 	int		err;
 	char		*auth = NULL, errbuf[CURL_ERROR_SIZE];
 	size_t		auth_alloc = 0, auth_offset;
@@ -369,8 +364,6 @@ static void	process_httptest(DC_HOST *host, zbx_httptest_t *httptest)
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() httptestid:" ZBX_FS_UI64 " name:'%s'",
 			__function_name, httptest->httptest.httptestid, httptest->httptest.name);
 
-	lastfailedstep = 0;
-
 	result = DBselect(
 			"select httpstepid,no,name,url,timeout,posts,required,status_codes,variables,follow_redirects,"
 				"retrieve_mode,headers"
@@ -378,6 +371,10 @@ static void	process_httptest(DC_HOST *host, zbx_httptest_t *httptest)
 			" where httptestid=" ZBX_FS_UI64
 			" order by no",
 			httptest->httptest.httptestid);
+
+	/* Explicitly initialize the name. If we compile without libCURL support, */
+	/* we avoid the potential usage of unititialized values. */
+	httpstep.name = NULL;
 
 #ifdef HAVE_LIBCURL
 	if (NULL == (easyhandle = curl_easy_init()))
@@ -690,6 +687,10 @@ static void	process_httptest(DC_HOST *host, zbx_httptest_t *httptest)
 
 				zbx_free(var_err_str);
 			}
+
+			zbx_timespec(&ts);
+			process_step_data(httpstep.httpstepid, &stat, &ts);
+
 			zbx_free(page.data);
 		}
 		else
@@ -701,9 +702,6 @@ httpstep_error:
 		zbx_free(httpstep.required);
 		zbx_free(httpstep.posts);
 		zbx_free(httpstep.url);
-
-		zbx_timespec(&ts);
-		process_step_data(httpstep.httpstepid, &stat, &ts);
 
 		if (NULL != err_str)
 		{
@@ -729,22 +727,13 @@ clean:
 			/* or we have been compiled without cURL library */
 
 			lastfailedstep = 1;
-
-			if (NULL != (row = DBfetch(result)))
-			{
-				ZBX_STR2UINT64(httpstep.httpstepid, row[0]);
-				httpstep.name = row[2];
-
-				memset(&stat, 0, sizeof(stat));
-
-				process_step_data(httpstep.httpstepid, &stat, &ts);
-			}
-			else
-				THIS_SHOULD_NEVER_HAPPEN;
 		}
 
-		zabbix_log(LOG_LEVEL_WARNING, "cannot process step \"%s\" of web scenario \"%s\" on host \"%s\": %s",
-				httpstep.name, httptest->httptest.name, host->name, err_str);
+		if (NULL != httpstep.name)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "cannot process step \"%s\" of web scenario \"%s\" on host \"%s\": %s",
+					httpstep.name, httptest->httptest.name, host->name, err_str);
+		}
 	}
 	DBfree_result(result);
 

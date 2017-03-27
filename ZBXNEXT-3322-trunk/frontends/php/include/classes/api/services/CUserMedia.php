@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,6 +31,8 @@ class CUserMedia extends CApiService {
 	/**
 	 * Get users data.
 	 *
+	 * @deprecated	As of version 3.4, use user.get() method instead.
+	 *
 	 * @param array  $options
 	 * @param array  $options['usrgrpids']	filter by UserGroup IDs
 	 * @param array  $options['userids']	filter by User IDs
@@ -45,6 +47,8 @@ class CUserMedia extends CApiService {
 	 * @return array
 	 */
 	public function get($options = []) {
+		$this->deprecated('usermedia.get method is deprecated.');
+
 		$result = [];
 
 		$sqlParts = [

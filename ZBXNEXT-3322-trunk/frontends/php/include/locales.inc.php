@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,6 +61,7 @@ function getLocales() {
 		'ka_GE' => ['name' => _('Georgian (ka_GE)'),	'display' => false],
 		'de_DE' => ['name' => _('German (de_DE)'),	'display' => false],
 		'el_GR' => ['name' => _('Greek (el_GR)'),	'display' => false],
+		'he_IL' => ['name' => _('Hebrew (he_IL)'),	'display' => false],
 		'hu_HU' => ['name' => _('Hungarian (hu_HU)'),	'display' => false],
 		'id_ID' => ['name' => _('Indonesian (id_ID)'),	'display' => false],
 		'it_IT' => ['name' => _('Italian (it_IT)'),	'display' => true],
@@ -160,6 +161,7 @@ function zbx_locale_variants_win($language) {
 		'ka_ge' => ['Georgian_Georgia.65001', 'georgian'],
 		'de_de' => ['German_Germany.1252', 'german'],
 		'el_gr' => ['Greek_Greece.1253', 'greek'],
+		'he_IL' => ['Hebrew_Israel.1255', 'hebrew'],
 		'hu_hu' => ['Hungarian_Hungary.1250', 'hungarian'],
 		'id_id' => ['Indonesian_indonesia.1252', 'indonesian'],
 		'it_it' => ['Italian_Italy.1252', 'italian'],

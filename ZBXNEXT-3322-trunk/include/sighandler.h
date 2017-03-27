@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@
 #ifndef ZABBIX_SIGHANDLER_H
 #define ZABBIX_SIGHANDLER_H
 
-void	zbx_set_common_signal_handlers();
-void	zbx_set_child_signal_handler();
+void	zbx_set_common_signal_handlers(void);
+void	zbx_set_child_signal_handler(void);
+void 	zbx_set_metric_thread_signal_handler(void);
 
 #endif

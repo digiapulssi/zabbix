@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,18 +92,22 @@ class CTable extends CTag {
 		return $this;
 	}
 
+	public function getNumCols() {
+		return $this->colnum;
+	}
+
 	public function getNumRows() {
 		return $this->rownum;
 	}
 
-	public function startToString() {
+	protected function startToString() {
 		$ret = parent::startToString();
 		$ret .= $this->header;
 		$ret .= '<tbody>';
 		return $ret;
 	}
 
-	public function endToString() {
+	protected function endToString() {
 		$ret = $this->footer;
 		$ret .= '</tbody>';
 		$ret .= parent::endToString();

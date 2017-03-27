@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,20 @@ int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
 		unsigned char trigger_type, const zbx_vector_ptr_t *trigger_tags,
 		unsigned char trigger_correlation_mode, const char *trigger_correlation_tag)
 {
+	ZBX_UNUSED(source);
+	ZBX_UNUSED(object);
+	ZBX_UNUSED(objectid);
+	ZBX_UNUSED(timespec);
+	ZBX_UNUSED(value);
+	ZBX_UNUSED(trigger_description);
+	ZBX_UNUSED(trigger_expression);
+	ZBX_UNUSED(trigger_recovery_expression);
+	ZBX_UNUSED(trigger_priority);
+	ZBX_UNUSED(trigger_type);
+	ZBX_UNUSED(trigger_tags);
+	ZBX_UNUSED(trigger_correlation_mode);
+	ZBX_UNUSED(trigger_correlation_tag);
+
 	return FAIL;
 }
 
@@ -37,6 +51,23 @@ int	close_event(zbx_uint64_t eventid, unsigned char source, unsigned char object
 		const zbx_vector_ptr_t *trigger_tags, unsigned char trigger_correlation_mode,
 		const char *trigger_correlation_tag)
 {
+	ZBX_UNUSED(eventid);
+	ZBX_UNUSED(source);
+	ZBX_UNUSED(object);
+	ZBX_UNUSED(objectid);
+	ZBX_UNUSED(ts);
+	ZBX_UNUSED(userid);
+	ZBX_UNUSED(correlationid);
+	ZBX_UNUSED(c_eventid);
+	ZBX_UNUSED(trigger_description);
+	ZBX_UNUSED(trigger_expression);
+	ZBX_UNUSED(trigger_recovery_expression);
+	ZBX_UNUSED(trigger_priority);
+	ZBX_UNUSED(trigger_type);
+	ZBX_UNUSED(trigger_tags);
+	ZBX_UNUSED(trigger_correlation_mode);
+	ZBX_UNUSED(trigger_correlation_tag);
+
 	return FAIL;
 }
 
@@ -47,10 +78,14 @@ int	process_events()
 
 int	process_trigger_events(zbx_vector_ptr_t *trigger_diff, zbx_vector_uint64_t *triggerids_lock, int mode)
 {
+	ZBX_UNUSED(trigger_diff);
+	ZBX_UNUSED(triggerids_lock);
+	ZBX_UNUSED(mode);
+
 	return 0;
 }
 
-int	flush_correlated_events()
+int	flush_correlated_events(void)
 {
 	return 0;
 }

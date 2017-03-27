@@ -1,6 +1,6 @@
 dnl
 dnl Zabbix
-dnl Copyright (C) 2001-2016 Zabbix SIA
+dnl Copyright (C) 2001-2017 Zabbix SIA
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([Zabbix],[3.2.0alpha2])
+AC_INIT([Zabbix],[3.4.0alpha1])
 AC_CONFIG_SRCDIR(src/zabbix_server/server.c)
 AM_INIT_AUTOMAKE
 
@@ -1099,6 +1099,7 @@ have_ipv6="no"
 have_ssh2="no"
 have_tls="no"
 
+
 if test "x$ipv6" = "xyes"; then
 	AC_DEFINE(HAVE_IPV6,1,[Define to 1 if IPv6 should be enabled.])
 	have_ipv6="yes"
@@ -1325,7 +1326,7 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	PROXY_LIBS="$PROXY_LIBS $SSH2_LIBS"
 
 	AC_SUBST(SSH2_CFLAGS)
-
+	
 	found_openipmi="no"
 	dnl Check for libOpenIPMI [by default - skip]
 	LIBOPENIPMI_CHECK_CONFIG([no])
@@ -1336,6 +1337,7 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 			have_ipmi="yes"
 		fi
 	fi
+	
 	SERVER_LDFLAGS="$SERVER_LDFLAGS $OPENIPMI_LDFLAGS"
 	SERVER_LIBS="$SERVER_LIBS $OPENIPMI_LIBS"
 
@@ -1343,6 +1345,30 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	PROXY_LIBS="$PROXY_LIBS $OPENIPMI_LIBS"
 
 	AC_SUBST(OPENIPMI_CFLAGS)
+fi
+
+dnl Check if Zabbix internal IPC services are used
+have_ipcservice="no"
+if test "x$have_ipmi" = "xyes"; then
+	have_ipcservice="yes"
+fi
+
+dnl Check for libevent, used by Zabbix IPC services
+if test "x$have_ipcservice" = "xyes"; then
+	AC_DEFINE([HAVE_IPCSERVICE], 1, [Define to 1 if Zabbix IPC services are used])
+
+	LIBEVENT_CHECK_CONFIG([no])
+	if test "x$found_libevent" != "xyes"; then
+		AC_MSG_ERROR([Unable to use libevent (libevent check failed)])
+	fi
+	SERVER_LDFLAGS="$SERVER_LDFLAGS $LIBEVENT_LDFLAGS"
+	SERVER_LIBS="$SERVER_LIBS $LIBEVENT_LIBS"
+	
+	PROXY_LDFLAGS="$PROXY_LDFLAGS $LIBEVENT_LDFLAGS"
+	PROXY_LIBS="$PROXY_LIBS $LIBEVENT_LIBS"
+	
+	AC_SUBST(LIBEVENET_CFLAGS)
+
 fi
 
 dnl Check for mbed TLS (PolarSSL) libpolarssl [by default - skip]
@@ -1459,7 +1485,7 @@ fi
 if test "x$found_curl" = "xyes"; then
 	have_web_monitoring="cURL"
 fi
-CFLAGS="$LIBCURL_CPPFLAGS $CFLAGS"
+CFLAGS="$LIBCURL_CFLAGS $CFLAGS"
 
 SERVER_LDFLAGS="$SERVER_LDFLAGS $LIBCURL_LDFLAGS"
 SERVER_LIBS="$SERVER_LIBS $LIBCURL_LIBS"
@@ -1572,6 +1598,7 @@ AC_OUTPUT([
 	src/libs/zbxself/Makefile
 	src/libs/zbxmodules/Makefile
 	src/libs/zbxregexp/Makefile
+	src/libs/zbxtasks/Makefile
 	src/zabbix_agent/Makefile
 	src/zabbix_get/Makefile
 	src/zabbix_sender/Makefile
@@ -1593,11 +1620,14 @@ AC_OUTPUT([
 	src/zabbix_server/selfmon/Makefile
 	src/zabbix_server/vmware/Makefile
 	src/zabbix_server/taskmanager/Makefile
+	src/zabbix_server/ipmi/Makefile
+	src/zabbix_server/scripts/Makefile
 	src/zabbix_proxy/Makefile
 	src/zabbix_proxy/heart/Makefile
 	src/zabbix_proxy/housekeeper/Makefile
 	src/zabbix_proxy/proxyconfig/Makefile
 	src/zabbix_proxy/datasender/Makefile
+	src/zabbix_proxy/taskmanager/Makefile
 	src/zabbix_java/Makefile
 	upgrades/Makefile
 	man/Makefile

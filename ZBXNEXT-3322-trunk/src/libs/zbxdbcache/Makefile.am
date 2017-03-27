@@ -4,9 +4,10 @@ noinst_LIBRARIES = libzbxdbcache.a
 
 libzbxdbcache_a_SOURCES = \
 	dbcache.c \
-	nextchecks.c \
 	dbconfig.c \
 	valuecache.c \
-	valuecache.h
+	valuecache.h \
+	item_preproc.c \
+	item_preproc.h
 
 libzbxdbcache_a_CFLAGS = -I@top_srcdir@/src/zabbix_server/ -I@top_srcdir@/src/libs/zbxalgo

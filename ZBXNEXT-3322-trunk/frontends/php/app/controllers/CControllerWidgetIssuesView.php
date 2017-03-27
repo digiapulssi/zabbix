@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,14 +48,14 @@ class CControllerWidgetIssuesView extends CController {
 			// groups
 			if (CProfile::get('web.dashconf.groups.grpswitch', 0) == 1) {
 				$filter['groupids'] = zbx_objectValues(CFavorite::get('web.dashconf.groups.groupids'), 'value');
-				$groupids_hidden = zbx_objectValues(CFavorite::get('web.dashconf.groups.hide.groupids'), 'value');
+				$hide_groupids = zbx_objectValues(CFavorite::get('web.dashconf.groups.hide.groupids'), 'value');
 
 				if (!$filter['groupids']) {
 					// null mean all groups
 					$filter['groupids'] = null;
 				}
 
-				if ($groupids_hidden) {
+				if ($hide_groupids) {
 					// get all groups if no selected groups defined
 					if ($filter['groupids'] === null) {
 						$filter['groupids'] = array_keys(
@@ -66,7 +66,7 @@ class CControllerWidgetIssuesView extends CController {
 						);
 					}
 
-					$filter['groupids'] = array_diff($filter['groupids'], $groupids_hidden);
+					$filter['groupids'] = array_diff($filter['groupids'], $hide_groupids);
 
 					// get available hosts
 					$hostids_available = array_keys(
@@ -80,7 +80,7 @@ class CControllerWidgetIssuesView extends CController {
 					$hostids_hidden = array_keys(
 						API::Host()->get([
 							'output' => [],
-							'groupids' => $groupids_hidden,
+							'groupids' => $hide_groupids,
 							'preservekeys' => true
 						])
 					);

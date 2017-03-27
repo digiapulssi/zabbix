@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -547,7 +547,7 @@ static int	DBpatch_3010024_validate_action(zbx_uint64_t actionid, int eventsourc
 					" left join opconditions oc"
 						" on oc.operationid=o.operationid"
 					" where o.actionid=" ZBX_FS_UI64
-					" group by o.operationid",
+					" group by o.operationid,o.operationtype,o.esc_step_from,o.esc_step_to",
 					actionid);
 
 		while (NULL != (row = DBfetch(result)))
@@ -1119,7 +1119,7 @@ static int	DBpatch_3010026(void)
 			" from actions a"
 			" left join conditions c"
 				" on a.actionid=c.actionid"
-			" group by a.actionid");
+			" group by a.actionid,a.name,a.evaltype");
 
 	while (NULL != (row = DBfetch(result)))
 	{
@@ -1570,6 +1570,78 @@ static int	DBpatch_3010075(void)
 	return DBadd_field("problem", &field);
 }
 
+static int	DBpatch_3010076(void)
+{
+	const char	*sql = "delete from profiles where idx in ("
+			"'web.events.discovery.period',"
+			"'web.events.filter.state',"
+			"'web.events.filter.triggerid',"
+			"'web.events.source',"
+			"'web.events.timelinefixed',"
+			"'web.events.trigger.period'"
+		")";
+
+	if (ZBX_DB_OK <= DBexecute("%s", sql))
+		return SUCCEED;
+
+	return FAIL;
+}
+
+static int	DBpatch_3010077(void)
+{
+	const ZBX_FIELD	field = {"name", "", NULL, NULL, 255, ZBX_TYPE_CHAR, ZBX_NOTNULL, 0};
+
+	return DBmodify_field_type("groups", &field);
+}
+
+static int	DBpatch_3010078(void)
+{
+	const ZBX_FIELD	field = {"name", "", NULL, NULL, 255, ZBX_TYPE_CHAR, ZBX_NOTNULL, 0};
+
+	return DBmodify_field_type("group_prototype", &field);
+}
+
+static int	DBpatch_3010079(void)
+{
+	DB_ROW			row;
+	DB_RESULT		result;
+	int			ret = FAIL;
+	char			*sql = NULL;
+	size_t			sql_alloc = 0, sql_offset = 0;
+
+	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	result = DBselect("select p.eventid,e.clock,e.ns"
+			" from problem p,events e"
+			" where p.eventid=e.eventid"
+				" and p.clock=0");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+				"update problem set clock=%s,ns=%s where eventid=%s;\n",
+				row[1], row[2], row[0]);
+
+		if (SUCCEED != DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset))
+			goto out;
+	}
+
+	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	if (16 < sql_offset)
+	{
+		if (ZBX_DB_OK > DBexecute("%s", sql))
+			goto out;
+	}
+
+	ret = SUCCEED;
+out:
+	DBfree_result(result);
+	zbx_free(sql);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3010)
@@ -1650,5 +1722,9 @@ DBPATCH_ADD(3010072, 0, 1)
 DBPATCH_ADD(3010073, 0, 1)
 DBPATCH_ADD(3010074, 0, 1)
 DBPATCH_ADD(3010075, 0, 1)
+DBPATCH_ADD(3010076, 0, 0)
+DBPATCH_ADD(3010077, 0, 1)
+DBPATCH_ADD(3010078, 0, 1)
+DBPATCH_ADD(3010079, 0, 1)
 
 DBPATCH_END()

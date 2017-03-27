@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -194,6 +194,8 @@ int     SYSTEM_CPU_SWITCHES(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_uint64_t	value = 0;
 	FILE		*f;
 
+	ZBX_UNUSED(request);
+
 	if (NULL == (f = fopen("/proc/stat", "r")))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /proc/stat: %s", zbx_strerror(errno)));
@@ -226,6 +228,8 @@ int     SYSTEM_CPU_INTR(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char		line[MAX_STRING_LEN];
 	zbx_uint64_t	value = 0;
 	FILE		*f;
+
+	ZBX_UNUSED(request);
 
 	if (NULL == (f = fopen("/proc/stat", "r")))
 	{

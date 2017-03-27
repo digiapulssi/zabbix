@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,6 +42,8 @@ int	SYSTEM_CPU_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_vector_uint64_pair_t	cpus;
 	struct zbx_json			json;
 	int				i, ret = SYSINFO_RET_FAIL;
+
+	ZBX_UNUSED(request);
 
 	zbx_vector_uint64_pair_create(&cpus);
 

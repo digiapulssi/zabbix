@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1139,7 +1139,7 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 	{
 		max_delay = 0.0f;
 	}
-	else if (SUCCEED != is_double(max_delay_str) || 0.0f > (max_delay = atof(max_delay_str)))
+	else if (SUCCEED != is_double(max_delay_str) || 0.0f > (max_delay = (float)atof(max_delay_str)))
 	{
 		*error = zbx_dsprintf(*error, "Invalid %s parameter.", (5 == max_delay_par_nr) ? "sixth" : "seventh");
 		goto out;
@@ -1277,7 +1277,7 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 	AGENT_REQUEST	request;
 	const char	*filename, *pattern, *key_severity, *key_source, *key_logeventid, *maxlines_persec, *skip,
 			*str_severity;
-	int		rate, s_count, p_count, send_err = SUCCEED;
+	int		rate, s_count, p_count, match = SUCCEED, send_err = SUCCEED;
 	char		*value = NULL, *provider = NULL, *source = NULL, str_logeventid[8];
 	zbx_uint64_t	lastlogsize;
 	unsigned long	timestamp, logeventid;
@@ -1447,13 +1447,65 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 
 				zbx_snprintf(str_logeventid, sizeof(str_logeventid), "%lu", logeventid);
 
-				if (ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, value, pattern, ZBX_CASE_SENSITIVE) &&
-						ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, str_severity,
+				if (0 == p_count)
+				{
+					int	ret1, ret2, ret3, ret4;
+
+					if (FAIL == (ret1 = regexp_match_ex(&regexps, value, pattern,
+							ZBX_CASE_SENSITIVE)))
+					{
+						*error = zbx_strdup(*error,
+								"Invalid regular expression in the second parameter.");
+						match = FAIL;
+					}
+					else if (FAIL == (ret2 = regexp_match_ex(&regexps, str_severity, key_severity,
+							ZBX_IGNORE_CASE)))
+					{
+						*error = zbx_strdup(*error,
+								"Invalid regular expression in the third parameter.");
+						match = FAIL;
+					}
+					else if (FAIL == (ret3 = regexp_match_ex(&regexps, provider, key_source,
+							ZBX_IGNORE_CASE)))
+					{
+						*error = zbx_strdup(*error,
+								"Invalid regular expression in the fourth parameter.");
+						match = FAIL;
+					}
+					else if (FAIL == (ret4 = regexp_match_ex(&regexps, str_logeventid,
+							key_logeventid, ZBX_CASE_SENSITIVE)))
+					{
+						*error = zbx_strdup(*error,
+								"Invalid regular expression in the fifth parameter.");
+						match = FAIL;
+					}
+
+					if (FAIL == match)
+					{
+						zbx_free(source);
+						zbx_free(provider);
+						zbx_free(value);
+
+						ret = FAIL;
+						break;
+					}
+
+					match = (ZBX_REGEXP_MATCH == ret1 && ZBX_REGEXP_MATCH == ret2 &&
+							ZBX_REGEXP_MATCH == ret3 && ZBX_REGEXP_MATCH == ret4);
+				}
+				else
+				{
+					match = (ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, value, pattern,
+								ZBX_CASE_SENSITIVE) &&
+							ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, str_severity,
 								key_severity, ZBX_IGNORE_CASE) &&
-						ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, provider,
+							ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, provider,
 								key_source, ZBX_IGNORE_CASE) &&
-						ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, str_logeventid,
-								key_logeventid, ZBX_CASE_SENSITIVE))
+							ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, str_logeventid,
+								key_logeventid, ZBX_CASE_SENSITIVE));
+				}
+
+				if (1 == match)
 				{
 					send_err = process_value(server, port, CONFIG_HOSTNAME, metric->key_orig, value,
 							ITEM_STATE_NORMAL, &lastlogsize, NULL, &timestamp, provider,
@@ -1543,13 +1595,63 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 
 			zbx_snprintf(str_logeventid, sizeof(str_logeventid), "%lu", logeventid);
 
-			if (ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, value, pattern, ZBX_CASE_SENSITIVE) &&
-					ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, str_severity, key_severity,
-							ZBX_IGNORE_CASE) &&
-					ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, source, key_source,
-							ZBX_IGNORE_CASE) &&
-					ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, str_logeventid, key_logeventid,
-							ZBX_CASE_SENSITIVE))
+			if (0 == p_count)
+			{
+				int	ret1, ret2, ret3, ret4;
+
+				if (FAIL == (ret1 = regexp_match_ex(&regexps, value, pattern, ZBX_CASE_SENSITIVE)))
+				{
+					*error = zbx_strdup(*error,
+							"Invalid regular expression in the second parameter.");
+					match = FAIL;
+				}
+				else if (FAIL == (ret2 = regexp_match_ex(&regexps, str_severity, key_severity,
+						ZBX_IGNORE_CASE)))
+				{
+					*error = zbx_strdup(*error,
+							"Invalid regular expression in the third parameter.");
+					match = FAIL;
+				}
+				else if (FAIL == (ret3 = regexp_match_ex(&regexps, source, key_source,
+						ZBX_IGNORE_CASE)))
+				{
+					*error = zbx_strdup(*error,
+							"Invalid regular expression in the fourth parameter.");
+					match = FAIL;
+				}
+				else if (FAIL == (ret4 = regexp_match_ex(&regexps, str_logeventid, key_logeventid,
+						ZBX_CASE_SENSITIVE)))
+				{
+					*error = zbx_strdup(*error,
+							"Invalid regular expression in the fifth parameter.");
+					match = FAIL;
+				}
+
+				if (FAIL == match)
+				{
+					zbx_free(source);
+					zbx_free(value);
+
+					ret = FAIL;
+					break;
+				}
+
+				match = (ZBX_REGEXP_MATCH == ret1 && ZBX_REGEXP_MATCH == ret2 &&
+						ZBX_REGEXP_MATCH == ret3 && ZBX_REGEXP_MATCH == ret4);
+			}
+			else
+			{
+				match = (ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, value, pattern,
+							ZBX_CASE_SENSITIVE) &&
+						ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, str_severity,
+							key_severity, ZBX_IGNORE_CASE) &&
+						ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, source,
+							key_source, ZBX_IGNORE_CASE) &&
+						ZBX_REGEXP_MATCH == regexp_match_ex(&regexps, str_logeventid,
+							key_logeventid, ZBX_CASE_SENSITIVE));
+			}
+
+			if (1 == match)
 			{
 				send_err = process_value(server, port, CONFIG_HOSTNAME, metric->key_orig, value,
 						ITEM_STATE_NORMAL, &lastlogsize, NULL, &timestamp, source, &severity,
@@ -1589,7 +1691,12 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 	}
 out:
 	free_request(&request);
-
+#else	/* not _WINDOWS */
+	ZBX_UNUSED(server);
+	ZBX_UNUSED(port);
+	ZBX_UNUSED(metric);
+	ZBX_UNUSED(lastlogsize_sent);
+	ZBX_UNUSED(error);
 #endif	/* _WINDOWS */
 
 	return ret;
@@ -1654,7 +1761,13 @@ static void	process_active_checks(char *server, unsigned short port)
 		lastlogsize_sent = metric->lastlogsize;
 		mtime_sent = metric->mtime;
 
-		if (0 != ((ZBX_METRIC_FLAG_LOG_LOG | ZBX_METRIC_FLAG_LOG_LOGRT) & metric->flags))
+		/* before processing make sure refresh is not 0 to avoid overload */
+		if (0 == metric->refresh)
+		{
+			ret = FAIL;
+			error = zbx_strdup(error, "Incorrect update interval.");
+		}
+		else if (0 != ((ZBX_METRIC_FLAG_LOG_LOG | ZBX_METRIC_FLAG_LOG_LOGRT) & metric->flags))
 			ret = process_log_check(server, port, metric, &lastlogsize_sent, &mtime_sent, &error);
 		else if (0 != (ZBX_METRIC_FLAG_LOG_EVENTLOG & metric->flags))
 			ret = process_eventlog_check(server, port, metric, &lastlogsize_sent, &error);
@@ -1715,11 +1828,37 @@ static void	process_active_checks(char *server, unsigned short port)
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: update_schedule                                                  *
+ *                                                                            *
+ * Purpose: update active check and send buffer schedule by the specified     *
+ *          time delta                                                        *
+ *                                                                            *
+ * Parameters: delta - [IN] the time delta in seconds                         *
+ *                                                                            *
+ * Comments: This function is used to update checking and sending schedules   *
+ *           if the system time was rolled back.                              *
+ *                                                                            *
+ ******************************************************************************/
+static void	update_schedule(int delta)
+{
+	int	i;
+
+	for (i = 0; i < active_metrics.values_num; i++)
+	{
+		ZBX_ACTIVE_METRIC	*metric = (ZBX_ACTIVE_METRIC *)active_metrics.values[i];
+		metric->nextcheck += delta;
+	}
+
+	buffer.lastsent += delta;
+}
+
 ZBX_THREAD_ENTRY(active_checks_thread, args)
 {
 	ZBX_THREAD_ACTIVECHK_ARGS activechk_args;
 
-	int	nextcheck = 0, nextrefresh = 0, nextsend = 0;
+	int	nextcheck = 0, nextrefresh = 0, nextsend = 0, now, delta, lastcheck = 0;
 
 	assert(args);
 	assert(((zbx_thread_args_t *)args)->args);
@@ -1743,15 +1882,18 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 
 	while (ZBX_IS_RUNNING())
 	{
+
 		zbx_handle_log();
 
-		if (time(NULL) >= nextsend)
+		now = time(NULL);
+
+		if (now >= nextsend)
 		{
 			send_buffer(activechk_args.host, activechk_args.port);
 			nextsend = (int)time(NULL) + 1;
 		}
 
-		if (time(NULL) >= nextrefresh)
+		if (now >= nextrefresh)
 		{
 			zbx_setproctitle("active checks #%d [getting list of active checks]", process_num);
 
@@ -1765,7 +1907,7 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 			}
 		}
 
-		if (time(NULL) >= nextcheck && CONFIG_BUFFER_SIZE / 2 > buffer.pcount)
+		if (now >= nextcheck && CONFIG_BUFFER_SIZE / 2 > buffer.pcount)
 		{
 			zbx_setproctitle("active checks #%d [processing active checks]", process_num);
 
@@ -1779,9 +1921,21 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 		}
 		else
 		{
+			if (0 > (delta = now - lastcheck))
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "the system time has been pushed back,"
+						" adjusting active check schedule");
+				update_schedule(delta);
+				nextcheck += delta;
+				nextsend += delta;
+				nextrefresh += delta;
+			}
+
 			zbx_setproctitle("active checks #%d [idle 1 sec]", process_num);
 			zbx_sleep(1);
 		}
+
+		lastcheck = now;
 	}
 
 #ifdef _WINDOWS

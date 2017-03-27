@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ function screen_resources($resource = null) {
 		SCREEN_RESOURCE_MAP => _('Map'),
 		SCREEN_RESOURCE_PLAIN_TEXT => _('Plain text'),
 		SCREEN_RESOURCE_SCREEN => _('Screen'),
-		SCREEN_RESOURCE_SERVER_INFO => _('Server info'),
+		SCREEN_RESOURCE_SERVER_INFO => _('Status of Zabbix'),
 		SCREEN_RESOURCE_SIMPLE_GRAPH => _('Simple graph'),
 		SCREEN_RESOURCE_HOSTGROUP_TRIGGERS => _('Host group issues'),
 		SCREEN_RESOURCE_HOST_TRIGGERS => _('Host issues'),

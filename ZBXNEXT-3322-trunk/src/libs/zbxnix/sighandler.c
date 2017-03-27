@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,10 +25,26 @@
 #include "sigcommon.h"
 #include "../../libs/zbxcrypto/tls.h"
 
-extern volatile sig_atomic_t	zbx_timed_out;
-
 int	sig_parent_pid = -1;
 int	sig_exiting = 0;
+
+static void	log_fatal_signal(int sig, siginfo_t *siginfo, void *context)
+{
+	SIG_CHECK_PARAMS(sig, siginfo, context);
+
+	zabbix_log(LOG_LEVEL_CRIT, "Got signal [signal:%d(%s),reason:%d,refaddr:%p]. Crashing ...",
+			sig, get_signal_name(sig),
+			SIG_CHECKED_FIELD(siginfo, si_code),
+			SIG_CHECKED_FIELD_TYPE(siginfo, si_addr, void *));
+}
+
+static void	exit_with_failure(void)
+{
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+	zbx_tls_free_on_signal();
+#endif
+	exit(EXIT_FAILURE);
+}
 
 /******************************************************************************
  *                                                                            *
@@ -39,18 +55,26 @@ int	sig_exiting = 0;
  ******************************************************************************/
 static void	fatal_signal_handler(int sig, siginfo_t *siginfo, void *context)
 {
-	SIG_CHECK_PARAMS(sig, siginfo, context);
+	log_fatal_signal(sig, siginfo, context);
+	zbx_log_fatal_info(context, ZBX_FATAL_LOG_FULL_INFO);
 
-	zabbix_log(LOG_LEVEL_CRIT, "Got signal [signal:%d(%s),reason:%d,refaddr:%p]. Crashing ...",
-			sig, get_signal_name(sig),
-			SIG_CHECKED_FIELD(siginfo, si_code),
-			SIG_CHECKED_FIELD_TYPE(siginfo, si_addr, void *));
-	print_fatal_info(sig, siginfo, context);
+	exit_with_failure();
+}
 
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
-	zbx_tls_free_on_signal();
-#endif
-	exit(EXIT_FAILURE);
+/******************************************************************************
+ *                                                                            *
+ * Function: metric_thread_signal_handler                                     *
+ *                                                                            *
+ * Purpose: same as fatal_signal_handler() but customized for metric thread - *
+ *          does not log memory map                                           *
+ *                                                                            *
+ ******************************************************************************/
+static void	metric_thread_signal_handler(int sig, siginfo_t *siginfo, void *context)
+{
+	log_fatal_signal(sig, siginfo, context);
+	zbx_log_fatal_info(context, (ZBX_FATAL_LOG_PC_REG_SF | ZBX_FATAL_LOG_BACKTRACE));
+
+	exit_with_failure();
 }
 
 /******************************************************************************
@@ -64,7 +88,7 @@ static void	alarm_signal_handler(int sig, siginfo_t *siginfo, void *context)
 {
 	SIG_CHECK_PARAMS(sig, siginfo, context);
 
-	zbx_timed_out = 1;	/* set a global flag */
+	zbx_alarm_flag_set();	/* set alarm flag */
 }
 
 /******************************************************************************
@@ -95,10 +119,7 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 		if (SIGINT == sig)
 			return;
 
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
-		zbx_tls_free_on_signal();
-#endif
-		exit(EXIT_FAILURE);
+		exit_with_failure();
 	}
 	else
 	{
@@ -134,12 +155,7 @@ static void	child_signal_handler(int sig, siginfo_t *siginfo, void *context)
 	SIG_CHECK_PARAMS(sig, siginfo, context);
 
 	if (!SIG_PARENT_PROCESS)
-	{
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
-		zbx_tls_free_on_signal();
-#endif
-		exit(EXIT_FAILURE);
-	}
+		exit_with_failure();
 
 	if (0 == sig_exiting)
 	{
@@ -161,7 +177,7 @@ static void	child_signal_handler(int sig, siginfo_t *siginfo, void *context)
  * Purpose: set the commonly used signal handlers                             *
  *                                                                            *
  ******************************************************************************/
-void	zbx_set_common_signal_handlers()
+void	zbx_set_common_signal_handlers(void)
 {
 	struct sigaction	phan;
 
@@ -192,7 +208,7 @@ void	zbx_set_common_signal_handlers()
  * Purpose: set the handlers for child process signals                        *
  *                                                                            *
  ******************************************************************************/
-void 	zbx_set_child_signal_handler()
+void 	zbx_set_child_signal_handler(void)
 {
 	struct sigaction	phan;
 
@@ -203,4 +219,27 @@ void 	zbx_set_child_signal_handler()
 
 	phan.sa_sigaction = child_signal_handler;
 	sigaction(SIGCHLD, &phan, NULL);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_set_metric_thread_signal_handler                             *
+ *                                                                            *
+ * Purpose: set the handlers for child process signals                        *
+ *                                                                            *
+ ******************************************************************************/
+void 	zbx_set_metric_thread_signal_handler(void)
+{
+	struct sigaction	phan;
+
+	sig_parent_pid = (int)getpid();
+
+	sigemptyset(&phan.sa_mask);
+	phan.sa_flags = SA_SIGINFO;
+
+	phan.sa_sigaction = metric_thread_signal_handler;
+	sigaction(SIGILL, &phan, NULL);
+	sigaction(SIGFPE, &phan, NULL);
+	sigaction(SIGSEGV, &phan, NULL);
+	sigaction(SIGBUS, &phan, NULL);
 }

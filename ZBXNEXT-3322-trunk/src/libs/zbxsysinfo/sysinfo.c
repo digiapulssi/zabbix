@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
 #include "log.h"
 #include "cfg.h"
 #include "alias.h"
+#include "threads.h"
+#include "sighandler.h"
 
 #ifdef WITH_AGENT_METRICS
 #	include "agent/agent.h"
@@ -665,10 +667,9 @@ static void	add_log_result(AGENT_RESULT *result, const char *value)
 	result->type |= AR_LOG;
 }
 
-int	set_result_type(AGENT_RESULT *result, int value_type, int data_type, char *c)
+int	set_result_type(AGENT_RESULT *result, int value_type, char *c)
 {
 	zbx_uint64_t	value_uint64;
-	double		value_double;
 	int		ret = FAIL;
 
 	assert(result);
@@ -680,61 +681,21 @@ int	set_result_type(AGENT_RESULT *result, int value_type, int data_type, char *c
 			zbx_ltrim(c, " \"+");
 			del_zeroes(c);
 
-			switch (data_type)
+			if (SUCCEED == is_uint64(c, &value_uint64))
 			{
-				case ITEM_DATA_TYPE_BOOLEAN:
-					if (SUCCEED == is_boolean(c, &value_uint64))
-					{
-						SET_UI64_RESULT(result, value_uint64);
-						ret = SUCCEED;
-					}
-					break;
-				case ITEM_DATA_TYPE_OCTAL:
-					if (SUCCEED == is_uoct(c))
-					{
-						ZBX_OCT2UINT64(value_uint64, c);
-						SET_UI64_RESULT(result, value_uint64);
-						ret = SUCCEED;
-					}
-					break;
-				case ITEM_DATA_TYPE_DECIMAL:
-					if (SUCCEED == is_uint64(c, &value_uint64))
-					{
-						SET_UI64_RESULT(result, value_uint64);
-						ret = SUCCEED;
-					}
-					break;
-				case ITEM_DATA_TYPE_HEXADECIMAL:
-					if (SUCCEED == is_uhex(c))
-					{
-						ZBX_HEX2UINT64(value_uint64, c);
-						SET_UI64_RESULT(result, value_uint64);
-						ret = SUCCEED;
-					}
-					else if (SUCCEED == is_hex_string(c))
-					{
-						zbx_remove_whitespace(c);
-						ZBX_HEX2UINT64(value_uint64, c);
-						SET_UI64_RESULT(result, value_uint64);
-						ret = SUCCEED;
-					}
-					break;
-				default:
-					THIS_SHOULD_NEVER_HAPPEN;
-					break;
+				SET_UI64_RESULT(result, value_uint64);
+				ret = SUCCEED;
 			}
 			break;
 		case ITEM_VALUE_TYPE_FLOAT:
 			zbx_rtrim(c, " \"");
 			zbx_ltrim(c, " \"+");
 
-			if (SUCCEED != is_double(c))
-				break;
-
-			value_double = atof(c);
-
-			SET_DBL_RESULT(result, value_double);
-			ret = SUCCEED;
+			if (SUCCEED == is_double(c))
+			{
+				SET_DBL_RESULT(result, atof(c));
+				ret = SUCCEED;
+			}
 			break;
 		case ITEM_VALUE_TYPE_STR:
 			zbx_replace_invalid_utf8(c);
@@ -751,26 +712,6 @@ int	set_result_type(AGENT_RESULT *result, int value_type, int data_type, char *c
 			add_log_result(result, c);
 			ret = SUCCEED;
 			break;
-	}
-
-	if (SUCCEED != ret)
-	{
-		char	*error = NULL;
-
-		zbx_remove_chars(c, "\r\n");
-		zbx_replace_invalid_utf8(c);
-
-		if (ITEM_VALUE_TYPE_UINT64 == value_type)
-			error = zbx_dsprintf(error,
-					"Received value [%s] is not suitable for value type [%s] and data type [%s]",
-					c, zbx_item_value_type_string(value_type),
-					zbx_item_data_type_string(data_type));
-		else
-			error = zbx_dsprintf(error,
-					"Received value [%s] is not suitable for value type [%s]",
-					c, zbx_item_value_type_string(value_type));
-
-		SET_MSG_RESULT(result, error);
 	}
 
 	return ret;
@@ -1051,13 +992,13 @@ void	unquote_key_param(char *param)
  * Parameters: param   - [IN/OUT] item key parameter                          *
  *             forced  - [IN] 1 - enclose parameter in " even if it does not  *
  *                                contain any special characters              *
- *                            0 - do nothing if the paramter does not contain *
- *                                any special characters                      *
+ *                            0 - do nothing if the parameter does not        *
+ *                                contain any special characters              *
  *                                                                            *
- * Return value: SUCEED - if parameter doesn't contain special characters and *
- *                        is not forced to be quoted or when parameter is     *
- *                        enclosed in quotes                                  *
- *               FAIL   - if parameter ends with backslash                    *
+ * Return value: SUCCEED - if parameter was successfully quoted or quoting    *
+ *                         was not necessary                                  *
+ *               FAIL    - if parameter needs to but cannot be quoted due to  *
+ *                         backslash in the end                               *
  *                                                                            *
  ******************************************************************************/
 int	quote_key_param(char **param, int forced)
@@ -1066,13 +1007,14 @@ int	quote_key_param(char **param, int forced)
 
 	if (0 == forced)
 	{
-		if ('"' != **param && ' ' != **param && NULL == strchr(*param, ',') && NULL == strchr(*param, ']'))
+		if ('"' != **param && ' ' != **param && '[' != **param && NULL == strchr(*param, ',') &&
+				NULL == strchr(*param, ']'))
+		{
 			return SUCCEED;
+		}
 	}
 
-	sz_src = strlen(*param);
-
-	if ('\\' == (*param)[sz_src - 1])
+	if (0 != (sz_src = strlen(*param)) && '\\' == (*param)[sz_src - 1])
 		return FAIL;
 
 	sz_dst = zbx_get_escape_string_len(*param, "\"") + 3;
@@ -1110,5 +1052,390 @@ zbx_uint64_t	get_kstat_numeric_value(const kstat_named_t *kn)
 			THIS_SHOULD_NEVER_HAPPEN;
 			return 0;
 	}
+}
+#endif
+
+#ifndef _WINDOWS
+/******************************************************************************
+ *                                                                            *
+ * Function: serialize_agent_result                                           *
+ *                                                                            *
+ * Purpose: serialize agent result to transfer over pipe/socket               *
+ *                                                                            *
+ * Parameters: data        - [IN/OUT] the data buffer                         *
+ *             data_alloc  - [IN/OUT] the data buffer allocated size          *
+ *             data_offset - [IN/OUT] the data buffer data size               *
+ *             agent_ret   - [IN] the agent result return code                *
+ *             result      - [IN] the agent result                            *
+ *                                                                            *
+ * Comments: The agent result is serialized as [rc][type][data] where:        *
+ *             [rc] the agent result return code, 4 bytes                     *
+ *             [type] the agent result data type, 1 byte                      *
+ *             [data] the agent result data, null terminated string (optional)*
+ *                                                                            *
+ ******************************************************************************/
+static void	serialize_agent_result(char **data, size_t *data_alloc, size_t *data_offset, int agent_ret,
+		AGENT_RESULT *result)
+{
+	char	**pvalue, result_type;
+	size_t	value_len;
+
+	if (SYSINFO_RET_OK == agent_ret)
+	{
+		if (ISSET_TEXT(result))
+			result_type = 't';
+		else if (ISSET_STR(result))
+			result_type = 's';
+		else if (ISSET_UI64(result))
+			result_type = 'u';
+		else if (ISSET_DBL(result))
+			result_type = 'd';
+		else if (ISSET_MSG(result))
+			result_type = 'm';
+		else
+			result_type = '-';
+	}
+	else
+		result_type = 'm';
+
+	switch (result_type)
+	{
+		case 't':
+		case 's':
+		case 'u':
+		case 'd':
+			pvalue = GET_TEXT_RESULT(result);
+			break;
+		case 'm':
+			pvalue = GET_MSG_RESULT(result);
+			break;
+		default:
+			pvalue = NULL;
+	}
+
+	if (NULL != pvalue)
+	{
+		value_len = strlen(*pvalue) + 1;
+	}
+	else
+	{
+		value_len = 0;
+		result_type = '-';
+	}
+
+	if (*data_alloc - *data_offset < value_len + 1 + sizeof(int))
+	{
+		while (*data_alloc - *data_offset < value_len + 1 + sizeof(int))
+			*data_alloc *= 1.5;
+
+		*data = zbx_realloc(*data, *data_alloc);
+	}
+
+	memcpy(*data + *data_offset, &agent_ret, sizeof(int));
+	*data_offset += sizeof(int);
+
+	(*data)[(*data_offset)++] = result_type;
+
+	if ('-' != result_type)
+	{
+		memcpy(*data + *data_offset, *pvalue, value_len);
+		*data_offset += value_len;
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: deserialize_agent_result                                         *
+ *                                                                            *
+ * Purpose: deserialize agent result                                          *
+ *                                                                            *
+ * Parameters: data        - [IN] the data to deserialize                     *
+ *             result      - [OUT] the agent result                           *
+ *                                                                            *
+ * Return value: the agent result return code (SYSINFO_RET_*)                 *
+ *                                                                            *
+ ******************************************************************************/
+static int	deserialize_agent_result(char *data, AGENT_RESULT *result)
+{
+	int	ret, agent_ret;
+	char	type;
+
+	memcpy(&agent_ret, data, sizeof(int));
+	data += sizeof(int);
+
+	type = *data++;
+
+	if ('m' == type || 0 == strcmp(data, ZBX_NOTSUPPORTED))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, data));
+		return agent_ret;
+	}
+
+	switch (type)
+	{
+		case 't':
+			ret = set_result_type(result, ITEM_VALUE_TYPE_TEXT, data);
+			break;
+		case 's':
+			ret = set_result_type(result, ITEM_VALUE_TYPE_STR, data);
+			break;
+		case 'u':
+			ret = set_result_type(result, ITEM_VALUE_TYPE_UINT64, data);
+			break;
+		case 'd':
+			ret = set_result_type(result, ITEM_VALUE_TYPE_FLOAT, data);
+			break;
+		default:
+			ret = SUCCEED;
+	}
+
+	/* return deserialized return code or SYSINFO_RET_FAIL if setting result data failed */
+	return (FAIL == ret ? SYSINFO_RET_FAIL : agent_ret);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: write_all                                                        *
+ *                                                                            *
+ * Purpose: call write in a loop, iterating until all the data is written.    *
+ *                                                                            *
+ * Parameters: fd      - [IN] descriptor                                      *
+ *             buf     - [IN] buffer to write                                 *
+ *             n       - [IN] bytes count to write                            *
+ *                                                                            *
+ * Return value: SUCCEED - n bytes successfully written                       *
+ *               FAIL    - less than n bytes are written                      *
+ *                                                                            *
+ ******************************************************************************/
+static int	write_all(int fd, const char *buf, size_t n)
+{
+	ssize_t	ret;
+
+	while (0 < n)
+	{
+		if (-1 != (ret = write(fd, buf, n)))
+		{
+			buf += ret;
+			n -= ret;
+		}
+		else if (EINTR != errno)
+			return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_execute_threaded_metric                                      *
+ *                                                                            *
+ * Purpose: execute metric in a separate process/thread so it can be          *
+ *          killed/terminated when timeout is detected                        *
+ *                                                                            *
+ * Parameters: metric_func - [IN] the metric function to execute              *
+ *             ...                the metric function parameters              *
+ *                                                                            *
+ * Return value:                                                              *
+ *         SYSINFO_RET_OK - the metric was executed successfully              *
+ *         SYSINFO_RET_FAIL - otherwise                                       *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	const char	*__function_name = "zbx_execute_threaded_metric";
+
+	int		ret = SYSINFO_RET_OK;
+	pid_t		pid;
+	int		fds[2], n, status;
+	char		buffer[MAX_STRING_LEN], *data;
+	size_t		data_alloc = MAX_STRING_LEN, data_offset = 0;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s'", __function_name, request->key);
+
+	if (-1 == pipe(fds))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot create data pipe: %s", strerror_from_system(errno)));
+		ret = SYSINFO_RET_FAIL;
+		goto out;
+	}
+
+	if (-1 == (pid = zbx_fork()))
+	{
+		close(fds[0]);
+		close(fds[1]);
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot fork data process: %s", strerror_from_system(errno)));
+		ret = SYSINFO_RET_FAIL;
+		goto out;
+	}
+
+	data = zbx_malloc(NULL, data_alloc);
+
+	if (0 == pid)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "executing in data process for key:'%s'", request->key);
+
+		zbx_set_metric_thread_signal_handler();
+
+		close(fds[0]);
+
+		ret = metric_func(request, result);
+		serialize_agent_result(&data, &data_alloc, &data_offset, ret, result);
+
+		ret = write_all(fds[1], data, data_offset);
+
+		zbx_free(data);
+		free_result(result);
+
+		close(fds[1]);
+
+		exit(SUCCEED == ret ? EXIT_SUCCESS : EXIT_FAILURE);
+	}
+
+	close(fds[1]);
+
+	zbx_alarm_on(CONFIG_TIMEOUT);
+
+	while (0 != (n = read(fds[0], buffer, sizeof(buffer))))
+	{
+		if (SUCCEED == zbx_alarm_timed_out())
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Timeout while waiting for data."));
+			kill(pid, SIGKILL);
+			ret = SYSINFO_RET_FAIL;
+			break;
+		}
+
+		if (-1 == n)
+		{
+			SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Error while reading data: %s", zbx_strerror(errno)));
+			kill(pid, SIGKILL);
+			ret = SYSINFO_RET_FAIL;
+			break;
+		}
+
+		if ((int)(data_alloc - data_offset) < n + 1)
+		{
+			while ((int)(data_alloc - data_offset) < n + 1)
+				data_alloc *= 1.5;
+
+			data = zbx_realloc(data, data_alloc);
+		}
+
+		memcpy(data + data_offset, buffer, n);
+		data_offset += n;
+		data[data_offset] = '\0';
+	}
+
+	zbx_alarm_off();
+
+	close(fds[0]);
+	waitpid(pid, &status, 0);
+
+	if (SYSINFO_RET_OK == ret)
+	{
+		if (0 == WIFEXITED(status))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Data gathering process terminated unexpectedly."));
+			kill(pid, SIGKILL);
+			ret = SYSINFO_RET_FAIL;
+		}
+		else if (EXIT_SUCCESS != WEXITSTATUS(status))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Data gathering process terminated with error."));
+			ret = SYSINFO_RET_FAIL;
+		}
+		else
+			ret = deserialize_agent_result(data, result);
+	}
+
+	zbx_free(data);
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s '%s'", __function_name, zbx_sysinfo_ret_string(ret),
+			ISSET_MSG(result) ? result->msg : "");
+	return ret;
+}
+#else
+
+typedef struct
+{
+	zbx_metric_func_t	func;
+	AGENT_REQUEST		*request;
+	AGENT_RESULT		*result;
+	int			agent_ret;
+}
+zbx_metric_thread_args_t;
+
+ZBX_THREAD_ENTRY(agent_metric_thread, data)
+{
+	zbx_metric_thread_args_t	*args = (zbx_metric_thread_args_t *)((zbx_thread_args_t *)data)->args;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "executing in data thread for key:'%s'", args->request->key);
+
+	if (SYSINFO_RET_FAIL == (args->agent_ret = args->func(args->request, args->result)))
+	{
+		if (NULL == GET_MSG_RESULT(args->result))
+			SET_MSG_RESULT(args->result, zbx_strdup(NULL, ZBX_NOTSUPPORTED));
+	}
+
+	zbx_thread_exit(0);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_execute_threaded_metric                                      *
+ *                                                                            *
+ * Purpose: execute metric in a separate process/thread so it can be          *
+ *          killed/terminated when timeout is detected                        *
+ *                                                                            *
+ * Parameters: metric_func - [IN] the metric function to execute              *
+ *             ...                the metric function parameters              *
+ *                                                                            *
+ * Return value:                                                              *
+ *         SYSINFO_RET_OK - the metric was executed successfully              *
+ *         SYSINFO_RET_FAIL - otherwise                                       *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	const char			*__function_name = "zbx_execute_threaded_metric";
+
+	ZBX_THREAD_HANDLE		thread;
+	zbx_thread_args_t		args;
+	zbx_metric_thread_args_t	metric_args = {metric_func, request, result};
+	DWORD				rc;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s'", __function_name, request->key);
+
+	args.args = (void *)&metric_args;
+
+	if (ZBX_THREAD_ERROR == (thread = zbx_thread_start(agent_metric_thread, &args)))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot start data thread: %s",
+				strerror_from_system(GetLastError())));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (WAIT_FAILED == (rc = WaitForSingleObject(thread, CONFIG_TIMEOUT * 1000)))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot wait for data: %s",
+				strerror_from_system(GetLastError())));
+		TerminateThread(thread, 0);
+		CloseHandle(thread);
+		return SYSINFO_RET_FAIL;
+	}
+	else if (WAIT_TIMEOUT == rc)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Timeout while waiting for data."));
+		TerminateThread(thread, 0);
+		CloseHandle(thread);
+		return SYSINFO_RET_FAIL;
+	}
+
+	CloseHandle(thread);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s '%s'", __function_name,
+			zbx_sysinfo_ret_string(metric_args.agent_ret), ISSET_MSG(result) ? result->msg : "");
+
+	return metric_args.agent_ret;
 }
 #endif

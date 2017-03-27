@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,8 +43,16 @@ $widget = (new CWidget())
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addItem((new CList())
-			->addItem([_('Group'), SPACE, $this->data['pageFilter']->getGroupsCB()])
-			->addItem([_('Host'), SPACE, $this->data['pageFilter']->getHostsCB()])
+			->addItem([
+				new CLabel(_('Group'), 'groupid'),
+				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+				$this->data['pageFilter']->getGroupsCB()
+			])
+			->addItem([
+				new CLabel(_('Host'), 'hostid'),
+				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
+				$this->data['pageFilter']->getHostsCB()
+			])
 			->addItem($create_button)
 		)
 	);
@@ -94,6 +102,7 @@ foreach ($httpTests as $httpTestId => $httpTest) {
 	$name[] = new CLink($httpTest['name'], '?form=update'.'&httptestid='.$httpTestId.'&hostid='.$httpTest['hostid']);
 
 	if ($this->data['showInfoColumn']) {
+		$info_icons = [];
 		if($httpTest['status'] == HTTPTEST_STATUS_ACTIVE && isset($httpTestsLastData[$httpTestId]) && $httpTestsLastData[$httpTestId]['lastfailedstep']) {
 			$lastData = $httpTestsLastData[$httpTestId];
 
@@ -109,14 +118,8 @@ foreach ($httpTests as $httpTestId => $httpTest) {
 				)
 				: _s('Unknown step failed: %1$s', $lastData['error']);
 
-			$infoIcon = makeErrorIcon($errorMessage);
+			$info_icons[] = makeErrorIcon($errorMessage);
 		}
-		else {
-			$infoIcon = '';
-		}
-	}
-	else {
-		$infoIcon = null;
 	}
 
 	$httpTable->addRow([
@@ -141,7 +144,7 @@ foreach ($httpTests as $httpTestId => $httpTest) {
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(httptest_status2style($httpTest['status']))
 			->addSID(),
-		$infoIcon
+		$this->data['showInfoColumn'] ? makeInformationList($info_icons) : null
 	]);
 }
 

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -666,7 +666,9 @@ char	*strerror_from_system(unsigned long error)
 	zbx_rtrim(utf8_string, "\r\n ");
 
 	return utf8_string;
-#else
+#else	/* not _WINDOWS */
+	ZBX_UNUSED(error);
+
 	return zbx_strerror(errno);
 #endif	/* _WINDOWS */
 }

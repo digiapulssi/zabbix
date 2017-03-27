@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 
 include(dirname(__FILE__).'/js/configuration.services.child.list.js.php');
 
-$servicesChildWidget = (new CWidget())->setTitle(_('IT service dependencies'));
+$servicesChildWidget = (new CWidget())->setTitle(_('Service dependencies'));
 
 // create form
 $servicesChildForm = (new CForm())->setName('servicesForm');

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,13 +20,14 @@
 
 
 require_once dirname(__FILE__).'/include/config.inc.php';
+require_once dirname(__FILE__).'/include/hostgroups.inc.php';
 require_once dirname(__FILE__).'/include/graphs.inc.php';
 require_once dirname(__FILE__).'/include/screens.inc.php';
 require_once dirname(__FILE__).'/include/blocks.inc.php';
 
 $page['title'] = _('Custom slides');
 $page['file'] = 'slides.php';
-$page['scripts'] = ['class.pmaster.js', 'class.calendar.js', 'gtlc.js', 'flickerfreescreen.js'];
+$page['scripts'] = ['class.svg.canvas.js', 'class.svg.map.js', 'class.pmaster.js', 'class.calendar.js', 'gtlc.js', 'flickerfreescreen.js'];
 $page['type'] = detect_page_type(PAGE_TYPE_HTML);
 
 define('ZBX_PAGE_DO_JS_REFRESH', 1);
@@ -58,8 +59,10 @@ check_fields($fields);
  */
 $data = [];
 
-if (getRequest('groupid') && !API::HostGroup()->isReadable([getRequest('groupid')])
-		|| getRequest('hostid') && !API::Host()->isReadable([getRequest('hostid')])) {
+if (getRequest('groupid') && !isReadableHostGroups([getRequest('groupid')])) {
+	access_deny();
+}
+if (getRequest('hostid') && !isReadableHosts([getRequest('hostid')])) {
 	access_deny();
 }
 if (hasRequest('elementid')) {
@@ -82,14 +85,16 @@ if ((hasRequest('widgetRefresh') || hasRequest('widgetRefreshRate')) && $data['s
 	$screen = getSlideshowScreens($elementId, getRequest('upd_counter'));
 
 	// display screens
-	$dbScreens = API::Screen()->get([
-		'screenids' => $screen['screenid'],
-		'output' => API_OUTPUT_EXTEND,
-		'selectScreenItems' => API_OUTPUT_EXTEND
-	]);
+	$dbScreens = $screen
+		? API::Screen()->get([
+			'screenids' => $screen['screenid'],
+			'output' => API_OUTPUT_EXTEND,
+			'selectScreenItems' => API_OUTPUT_EXTEND
+		])
+		: [];
 
 	if (!$dbScreens) {
-		insert_js('alert("'._('No permissions').'");');
+		echo (new CTableInfo());
 	}
 	else {
 		$dbScreen = reset($dbScreens);

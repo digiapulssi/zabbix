@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -215,7 +215,12 @@ static int	hk_item_update_cache_compare(const void *d1, const void *d2)
 static void	hk_history_delete_queue_append(zbx_hk_history_rule_t *rule, int now,
 		zbx_hk_item_cache_t *item_record, int history)
 {
-	int	keep_from = now - history * SEC_PER_DAY;
+	int	keep_from;
+
+	if ((zbx_uint64_t)history * SEC_PER_DAY > (zbx_uint64_t)now)
+		keep_from = 0;
+	else
+		keep_from = now - history * SEC_PER_DAY;
 
 	if (keep_from > item_record->min_clock)
 	{
@@ -238,7 +243,6 @@ static void	hk_history_delete_queue_append(zbx_hk_history_rule_t *rule, int now,
  * Purpose: prepares history housekeeping rule                                *
  *                                                                            *
  * Parameters: rule        - [IN/OUT] the history housekeeping rule           *
- *             now         - [IN] the current timestamp                       *
  *                                                                            *
  * Author: Andris Zeila                                                       *
  *                                                                            *
@@ -248,7 +252,7 @@ static void	hk_history_delete_queue_append(zbx_hk_history_rule_t *rule, int now,
  *           processed during the first run.                                  *
  *                                                                            *
  ******************************************************************************/
-static void	hk_history_prepare(zbx_hk_history_rule_t *rule, int now)
+static void	hk_history_prepare(zbx_hk_history_rule_t *rule)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -434,7 +438,7 @@ static void	hk_history_delete_queue_prepare_all(zbx_hk_history_rule_t *rules, in
 		if (ZBX_HK_OPTION_ENABLED == *rule->poption_mode)
 		{
 			if (0 == rule->item_cache.num_slots)
-				hk_history_prepare(rule, now);
+				hk_history_prepare(rule);
 		}
 		else if (0 != rule->item_cache.num_slots)
 			hk_history_release(rule);

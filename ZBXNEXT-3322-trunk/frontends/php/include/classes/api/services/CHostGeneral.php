@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,41 @@
  * Class containing methods for operations with hosts.
  */
 abstract class CHostGeneral extends CHostBase {
+
+	/**
+	 * Checks if the current user has access to the given hosts and templates. Assumes the "hostid" field is valid.
+	 *
+	 * @param array $hostids    an array of host or template IDs
+	 *
+	 * @throws APIException if the user doesn't have write permissions for the given hosts.
+	 */
+	private function checkHostPermissions(array $hostids) {
+		if ($hostids) {
+			$hostids = array_unique($hostids);
+
+			$count = API::Host()->get([
+				'countOutput' => true,
+				'hostids' => $hostids,
+				'editable' => true
+			]);
+
+			if ($count == count($hostids)) {
+				return;
+			}
+
+			$count += API::Template()->get([
+				'countOutput' => true,
+				'templateids' => $hostids,
+				'editable' => true
+			]);
+
+			if ($count != count($hostids)) {
+				self::exception(ZBX_API_ERROR_PERMISSIONS,
+					_('No permissions to referred object or it does not exist!')
+				);
+			}
+		}
+	}
 
 	/**
 	 * Allows to:
@@ -49,7 +84,7 @@ abstract class CHostGeneral extends CHostBase {
 
 		// add groups
 		if (!empty($data['groups'])) {
-			API::HostGroup()->massAdd($options = [
+			API::HostGroup()->massAdd([
 				'hosts' => $data['hosts'],
 				'templates' => $data['templates'],
 				'groups' => $data['groups']
@@ -58,11 +93,7 @@ abstract class CHostGeneral extends CHostBase {
 
 		// link templates
 		if (!empty($data['templates_link'])) {
-			if (!API::Host()->isWritable($allHostIds)) {
-				self::exception(ZBX_API_ERROR_PERMISSIONS,
-					_('No permissions to referred object or it does not exist!')
-				);
-			}
+			$this->checkHostPermissions($allHostIds);
 
 			$this->link(zbx_objectValues(zbx_toArray($data['templates_link']), 'templateid'), $allHostIds);
 		}
@@ -108,11 +139,7 @@ abstract class CHostGeneral extends CHostBase {
 	public function massRemove(array $data) {
 		$allHostIds = array_merge($data['hostids'], $data['templateids']);
 
-		if (!API::Host()->isWritable($allHostIds)) {
-			self::exception(ZBX_API_ERROR_PERMISSIONS,
-				_('No permissions to referred object or it does not exist!')
-			);
-		}
+		$this->checkHostPermissions($allHostIds);
 
 		if (!empty($data['templateids_link'])) {
 			$this->unlink(zbx_toArray($data['templateids_link']), $allHostIds);
@@ -152,7 +179,7 @@ abstract class CHostGeneral extends CHostBase {
 				'templateids' => $hostTplIds['templateid']
 			]);
 
-			API::Itemprototype()->syncTemplates([
+			API::ItemPrototype()->syncTemplates([
 				'hostids' => $hostTplIds['hostid'],
 				'templateids' => $hostTplIds['templateid']
 			]);
@@ -209,7 +236,7 @@ abstract class CHostGeneral extends CHostBase {
 	}
 
 	/**
-	 * Unlinks the templates from the given hosts. If $tragetids is set to null, the templates will be unlinked from
+	 * Unlinks the templates from the given hosts. If $targetids is set to null, the templates will be unlinked from
 	 * all hosts.
 	 *
 	 * @param array      $templateids
@@ -385,7 +412,7 @@ abstract class CHostGeneral extends CHostBase {
 
 			if ($clear) {
 				// This will include deletion of linked application prototypes.
-				$result = API::Itemprototype()->delete($item_prototypeids, true);
+				$result = API::ItemPrototype()->delete($item_prototypeids, true);
 
 				if (!$result) {
 					self::exception(ZBX_API_ERROR_INTERNAL, _('Cannot unlink and clear item prototypes'));
@@ -610,9 +637,11 @@ abstract class CHostGeneral extends CHostBase {
 							' WHERE '.dbConditionInt('ia.applicationid', $applicationids).
 						')'
 				));
-				$result = API::Application()->delete(zbx_objectValues($applications, 'applicationid'), true);
-				if (!$result) {
-					self::exception(ZBX_API_ERROR_INTERNAL, _('Cannot unlink and clear applications.'));
+				if ($applications) {
+					$result = API::Application()->delete(zbx_objectValues($applications, 'applicationid'), true);
+					if (!$result) {
+						self::exception(ZBX_API_ERROR_INTERNAL, _('Cannot unlink and clear applications.'));
+					}
 				}
 			}
 			else {

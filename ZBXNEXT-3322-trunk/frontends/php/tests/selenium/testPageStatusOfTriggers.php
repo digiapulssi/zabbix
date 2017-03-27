@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ class testPageStatusOfTriggers extends CWebTest {
 		$this->zbxTestTextPresent('0 selected');
 		$this->zbxTestTextPresent('Displaying');
 		$this->zbxTestTextPresent(['Group', 'Host']);
-		$this->zbxTestTextPresent(['Severity', 'Status', 'Info', 'Last change', 'Age', 'Ack', 'Host', 'Name', 'Description']);
+		$this->zbxTestTextPresent(['Severity', 'Status', 'Info', 'Time', 'Age', 'Ack', 'Host', 'Name', 'Description']);
 		$this->zbxTestTextPresent('Filter');
 	}
 

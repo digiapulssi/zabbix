@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -405,10 +405,10 @@ function str2mem($val) {
 	switch ($last) {
 		case 'g':
 			$val *= 1024;
-			/* falls through */
+			// break; is not missing here
 		case 'm':
 			$val *= 1024;
-			/* falls through */
+			// break; is not missing here
 		case 'k':
 			$val *= 1024;
 	}
@@ -1261,7 +1261,6 @@ function zbx_toArray($value) {
 		return $value;
 	}
 
-	$result = [];
 	if (is_array($value)) {
 		// reset() is needed to move internal array pointer to the beginning of the array
 		reset($value);
@@ -1271,6 +1270,9 @@ function zbx_toArray($value) {
 		}
 		elseif (!empty($value)) {
 			$result = [$value];
+		}
+		else {
+			$result = [];
 		}
 	}
 	else {
@@ -1285,7 +1287,6 @@ function zbx_objectValues($value, $field) {
 	if (is_null($value)) {
 		return $value;
 	}
-	$result = [];
 
 	if (!is_array($value)) {
 		$result = [$value];
@@ -1294,6 +1295,8 @@ function zbx_objectValues($value, $field) {
 		$result = [$value[$field]];
 	}
 	else {
+		$result = [];
+
 		foreach ($value as $val) {
 			if (!is_array($val)) {
 				$result[] = $val;
@@ -1523,7 +1526,7 @@ function getPagingLine(&$items, $sortorder, CUrl $url) {
 
 		if ($startPage > 1) {
 			$url->setArgument('page', 1);
-			$tags[] = new CLink(_('First'), $url->getUrl());
+			$tags[] = new CLink(_x('First', 'page navigation'), $url->getUrl());
 		}
 
 		if ($currentPage > 1) {
@@ -1550,7 +1553,7 @@ function getPagingLine(&$items, $sortorder, CUrl $url) {
 
 		if ($p < $pagesCount) {
 			$url->setArgument('page', $pagesCount);
-			$tags[] = new CLink(_('Last'), $url->getUrl());
+			$tags[] = new CLink(_x('Last', 'page navigation'), $url->getUrl());
 		}
 	}
 
@@ -1668,7 +1671,7 @@ function access_deny($mode = ACCESS_DENY_OBJECT) {
 	}
 	// deny access to a page
 	else {
-		// url to redirect the user to after he loggs in
+		// url to redirect the user to after he logs in
 		$url = (new CUrl(!empty($_REQUEST['request']) ? $_REQUEST['request'] : ''))->removeArgument('sid');
 		$url = urlencode($url->toString());
 
@@ -1771,7 +1774,7 @@ function makeMessageBox($good, array $messages, $title = null, $show_close_box =
 	if ($show_close_box) {
 		$msg_box->addItem((new CSimpleButton())
 			->addClass(ZBX_STYLE_OVERLAY_CLOSE_BTN)
-			->onClick('javascript: $(this).closest(\'.'.$class.'\').remove();')
+			->onClick('jQuery(this).closest(\'.'.$class.'\').remove();')
 			->setAttribute('title', _('Close')));
 	}
 
@@ -2195,19 +2198,6 @@ function hasErrorMesssages() {
 }
 
 /**
- * Check if all keys from $keys exist in $array.
- * If some keys are missing return array of missing keys, true otherwise.
- *
- * @param array $array
- * @param array $keys
- *
- * @return array|bool
- */
-function checkRequiredKeys(array $array, array $keys) {
-	return array_diff($keys, array_keys($array));
-}
-
-/**
  * Clears table rows selection's cookies.
  *
  * @param string $cookieId		parent ID, is used as cookie suffix
@@ -2219,69 +2209,51 @@ function uncheckTableRows($cookieId = null) {
 }
 
 /**
+ * Trim each element of the script path. For example, " a / b / c d " => "a/b/c d"
+ *
+ * @param string $name
+ *
+ * @return string
+ */
+function trimPath($name) {
+	$path = splitPath($name);
+	$path = array_map('trim', $path);
+	$path = str_replace(['\\', '/'], ['\\\\', '\\/'], $path);
+	return implode('/', $path);
+}
+
+/**
  * Splitting string using slashes with escape backslash support and non-pair backslash cleanup.
  *
- * @param string $path					String path to parse.
- * @param bool   $stripSlashes			Remove escaped slashes from the path pieces.
- * @param bool   $cleanupBackslashes	Cleanup invalid backslash combinations.
+ * @param string $path
  *
  * @return array
  */
-function splitPath($path, $stripSlashes = true, $cleanupBackslashes = false) {
-	$position = 0;
-	$escapeCharacters = '';
-	$pathItemsArray = [];
-	$pathItemString = '';
+function splitPath($path) {
+	$path_items = [];
+	$path_item = '';
 
-	for ($stringLength = strlen($path); $position < $stringLength; ++$position) {
-		// Determine how many escape characters we already have in the backlog.
-		$escapeCharacterCount = strlen($escapeCharacters);
+	for ($i = 0; isset($path[$i]); $i++) {
+		switch ($path[$i]) {
+			case '/':
+				$path_items[] = $path_item;
+				$path_item = '';
+				break;
 
-		if ($path[$position] === '/') {
-			// If we have no escape chars previously - save item into the array and move on.
-			if ($escapeCharacterCount == 0) {
-				$pathItemsArray[] = $pathItemString;
-				$escapeCharacters = '';
-				$pathItemString = '';
-				continue;
-			}
+			case '\\':
+				if (isset($path[++$i])) {
+					$path_item .= $path[$i];
+				}
+				break;
 
-			// We have a backslash before the / - keep it as part of the item and clean escape char buffer.
-			$pathItemString .= $escapeCharacters.$path[$position];
-			$escapeCharacters = '';
-		}
-		elseif ($cleanupBackslashes && $path[$position] === '\\') {
-
-			/*
-			 * If we had a backslash before - this is an escaped backslash, keep it and empty char backlog. This way
-			 * we save only paired backslashes.
-			 */
-			if ($escapeCharacterCount == 1) {
-				$pathItemString .= $escapeCharacters.$path[$position];
-				$escapeCharacters = '';
-			}
-			else {
-				// It is a first backslash - add it to the backlog.
-				$escapeCharacters .= $path[$position];
-			}
-		}
-		else {
-			// A regular character - save it and move on. If previous char was a backslash - it is dropped.
-			$pathItemString .= $path[$position];
-			$escapeCharacters = '';
+			default:
+				$path_item .= $path[$i];
 		}
 	}
 
-	// Save the path tail.
-	if (strlen($pathItemString) != 0) {
-		$pathItemsArray[] = $pathItemString;
-	}
+	$path_items[] = $path_item;
 
-	if ($stripSlashes) {
-		$pathItemsArray = array_map('stripslashes', $pathItemsArray);
-	}
-
-	return $pathItemsArray;
+	return $path_items;
 }
 
 /**

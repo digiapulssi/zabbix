@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,13 +20,14 @@
 
 
 require_once dirname(__FILE__).'/include/config.inc.php';
+require_once dirname(__FILE__).'/include/hostgroups.inc.php';
 require_once dirname(__FILE__).'/include/graphs.inc.php';
 require_once dirname(__FILE__).'/include/screens.inc.php';
 require_once dirname(__FILE__).'/include/blocks.inc.php';
 
 $page['title'] = _('Custom screens');
 $page['file'] = 'screens.php';
-$page['scripts'] = ['class.calendar.js', 'gtlc.js', 'flickerfreescreen.js'];
+$page['scripts'] = ['class.calendar.js', 'gtlc.js', 'flickerfreescreen.js', 'class.svg.canvas.js', 'class.svg.map.js'];
 $page['type'] = detect_page_type(PAGE_TYPE_HTML);
 
 define('ZBX_PAGE_DO_JS_REFRESH', 1);
@@ -57,20 +58,18 @@ check_fields($fields);
  * Permissions
  */
 // Validate group IDs.
-$validate_groupids = array_filter([
-	getRequest('groupid'),
-	getRequest('tr_groupid')
-]);
-if ($validate_groupids && !API::HostGroup()->isReadable($validate_groupids)) {
+if (getRequest('groupid') && !isReadableHostGroups([getRequest('groupid')])) {
+	access_deny();
+}
+if (getRequest('tr_groupid') && !isReadableHostGroups([getRequest('tr_groupid')])) {
 	access_deny();
 }
 
 // Validate host IDs.
-$validate_hostids = array_filter([
-	getRequest('hostid'),
-	getRequest('tr_hostid')
-]);
-if ($validate_hostids && !API::Host()->isReadable($validate_hostids)) {
+if (getRequest('hostid') && !isReadableHosts([getRequest('hostid')])) {
+	access_deny();
+}
+if (getRequest('tr_hostid') && !isReadableHosts([getRequest('tr_hostid')])) {
 	access_deny();
 }
 

@@ -4,15 +4,6 @@
 			jQuery('#goodsla').prop('disabled', !this.checked);
 		});
 
-		jQuery('#add_service_time').click(function() {
-			var input = document.createElement('input');
-			input.setAttribute('type', 'hidden');
-			input.setAttribute('name', 'add_service_time');
-			input.setAttribute('value', 1);
-			jQuery('form[name=servicesForm]').append(input);
-			jQuery('form[name=servicesForm]').submit();
-		});
-
 		jQuery('#algorithm').change(function() {
 			var statusDisabled = (jQuery(this).val() == <?= SERVICE_ALGORITHM_NONE ?>);
 			jQuery('#showsla, #trigger, #btn1, #goodsla').prop('disabled', statusDisabled);
@@ -65,9 +56,15 @@
 			softCheckbox.setAttribute('type', 'checkbox');
 			softCheckbox.setAttribute('value', '1');
 			softCheckbox.setAttribute('name', 'children[' + serviceid + '][soft]');
-			softCheckbox.setAttribute('class', 'input checkbox pointer')
+			softCheckbox.setAttribute('id', 'children_' + serviceid + '_soft');
+			softCheckbox.setAttribute('class', '<?= ZBX_STYLE_CHECKBOX_RADIO ?>');
+
+			var softCheckboxLabel = document.createElement('label');
+			softCheckboxLabel.setAttribute('for', 'children_' + serviceid + '_soft');
+			softCheckboxLabel.appendChild(document.createElement('span'));
 
 			td.appendChild(softCheckbox);
+			td.appendChild(softCheckboxLabel);
 			tr.appendChild(td);
 
 			// column "trigger"

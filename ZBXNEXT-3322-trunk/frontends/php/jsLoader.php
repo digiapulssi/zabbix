@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ require_once dirname(__FILE__).'/include/translateDefines.inc.php';
 // available scripts 'scriptFileName' => 'path relative to js/'
 $availableJScripts = [
 	'common.js' => '',
+	'dashboard.grid.js' => '',
 	'menupopup.js' => '',
 	'gtlc.js' => '',
 	'functions.js' => '',
@@ -77,6 +78,8 @@ $availableJScripts = [
 	'class.ctree.js' => '',
 	'class.curl.js' => '',
 	'class.rpc.js' => '',
+	'class.svg.canvas.js' => 'vector/',
+	'class.svg.map.js' => 'vector/',
 	'class.pmaster.js' => '',
 	'class.cviewswitcher.js' => '',
 	'init.js' => '',
@@ -148,6 +151,12 @@ $tranStrings = [
 		'S_DOT' => _('Dot'),
 		'S_TWO_ELEMENTS_SHOULD_BE_SELECTED' => _('Two elements should be selected'),
 		'S_DELETE_SELECTED_ELEMENTS_Q' => _('Delete selected elements?'),
+		'S_DELETE_SELECTED_SHAPES_Q' => _('Delete selected shapes?'),
+		'S_BRING_TO_FRONT' => _('Bring to front'),
+		'S_BRING_FORWARD' => _('Bring forward'),
+		'S_SEND_BACKWARD' => _('Send backward'),
+		'S_SEND_TO_BACK' => _('Send to back'),
+		'S_REMOVE' => _('Remove'),
 		'S_NEW_ELEMENT' => _('New element'),
 		'S_INCORRECT_ELEMENT_MAP_LINK' => _('All links should have "Name" and "URL" specified'),
 		'S_EACH_URL_SHOULD_HAVE_UNIQUE' => _('Each URL should have a unique name. Please make sure there is only one URL named'),
@@ -178,18 +187,11 @@ $tranStrings = [
 	],
 	'menupopup.js' => [
 		'Acknowledge' => _('Acknowledge'),
-		'Add' => _('Add'),
 		'Configuration' => _('Configuration'),
 		'Create trigger' => _('Create trigger'),
 		'Delete service "%1$s"?' => _('Delete service "%1$s"?'),
 		'Do you wish to replace the conditional expression?' => _('Do you wish to replace the conditional expression?'),
 		'Edit trigger' => _('Edit trigger'),
-		'Events' => _('Events'),
-		'Favourite graphs' => _('Favourite graphs'),
-		'Favourite maps' => _('Favourite maps'),
-		'Favourite screens' => _('Favourite screens'),
-		'Favourite simple graphs' => _('Favourite simple graphs'),
-		'Favourite slide shows' => _('Favourite slide shows'),
 		'Insert expression' => _('Insert expression'),
 		'Trigger status "OK"' => _('Trigger status "OK"'),
 		'Trigger status "Problem"' => _('Trigger status "Problem"'),
@@ -204,10 +206,9 @@ $tranStrings = [
 		'Last hour graph' => _('Last hour graph'),
 		'Last month graph' => _('Last month graph'),
 		'Last week graph' => _('Last week graph'),
+		'Problems' => _('Problems'),
 		'Refresh time' => _('Refresh time'),
 		'Refresh time multiplier' => _('Refresh time multiplier'),
-		'Remove' => _('Remove'),
-		'Remove all' => _('Remove all'),
 		'Scripts' => _('Scripts'),
 		'Submap' => _('Submap'),
 		'Trigger' => _('Trigger'),

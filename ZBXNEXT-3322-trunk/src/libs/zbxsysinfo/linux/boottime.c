@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ int	SYSTEM_BOOTTIME(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char		buf[MAX_STRING_LEN];
 	int		ret = SYSINFO_RET_FAIL;
 	unsigned long	value;
+
+	ZBX_UNUSED(request);
 
 	if (NULL == (f = fopen("/proc/stat", "r")))
 	{

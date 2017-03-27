@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,14 +82,16 @@ class CEvent extends CApiService {
 		];
 
 		$defOptions = [
+			'eventids'					=> null,
 			'groupids'					=> null,
 			'hostids'					=> null,
+			'applicationids'			=> null,
 			'objectids'					=> null,
-			'eventids'					=> null,
+
 			'editable'					=> null,
 			'object'					=> EVENT_OBJECT_TRIGGER,
 			'source'					=> EVENT_SOURCE_TRIGGERS,
-			'acknowledged'				=> null,
+			'severities'				=> null,
 			'nopermissions'				=> null,
 			// filter
 			'value'						=> null,
@@ -97,6 +99,8 @@ class CEvent extends CApiService {
 			'time_till'					=> null,
 			'eventid_from'				=> null,
 			'eventid_till'				=> null,
+			'acknowledged'				=> null,
+			'tags'						=> null,
 			// filter
 			'filter'					=> null,
 			'search'					=> null,
@@ -121,6 +125,10 @@ class CEvent extends CApiService {
 		$options = zbx_array_merge($defOptions, $options);
 
 		$this->validateGet($options);
+
+		// source and object
+		$sqlParts['where'][] = 'e.source='.zbx_dbstr($options['source']);
+		$sqlParts['where'][] = 'e.object='.zbx_dbstr($options['object']);
 
 		// editable + PERMISSION CHECK
 		if ($userType != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
@@ -211,58 +219,92 @@ class CEvent extends CApiService {
 			}
 		}
 
+		$sub_sql_parts = [];
+
 		// groupids
-		if (!is_null($options['groupids'])) {
+		if ($options['groupids'] !== null) {
 			zbx_value2array($options['groupids']);
 
 			// triggers
 			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
-				$sqlParts['from']['functions'] = 'functions f';
-				$sqlParts['from']['items'] = 'items i';
-				$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
-				$sqlParts['where']['hg'] = dbConditionInt('hg.groupid', $options['groupids']);
-				$sqlParts['where']['hgi'] = 'hg.hostid=i.hostid';
-				$sqlParts['where']['fe'] = 'f.triggerid=e.objectid';
-				$sqlParts['where']['fi'] = 'f.itemid=i.itemid';
+				$sub_sql_parts['from']['f'] = 'functions f';
+				$sub_sql_parts['from']['i'] = 'items i';
+				$sub_sql_parts['from']['hg'] = 'hosts_groups hg';
+				$sub_sql_parts['where']['e-f'] = 'e.objectid=f.triggerid';
+				$sub_sql_parts['where']['f-i'] = 'f.itemid=i.itemid';
+				$sub_sql_parts['where']['i-hg'] = 'i.hostid=hg.hostid';
+				$sub_sql_parts['where']['hg'] = dbConditionInt('hg.groupid', $options['groupids']);
 			}
 			// lld rules and items
 			elseif ($options['object'] == EVENT_OBJECT_LLDRULE || $options['object'] == EVENT_OBJECT_ITEM) {
-				$sqlParts['from']['items'] = 'items i';
-				$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
-				$sqlParts['where']['hg'] = dbConditionInt('hg.groupid', $options['groupids']);
-				$sqlParts['where']['hgi'] = 'hg.hostid=i.hostid';
-				$sqlParts['where']['fi'] = 'e.objectid=i.itemid';
+				$sub_sql_parts['from']['i'] = 'items i';
+				$sub_sql_parts['from']['hg'] = 'hosts_groups hg';
+				$sub_sql_parts['where']['e-i'] = 'e.objectid=i.itemid';
+				$sub_sql_parts['where']['i-hg'] = 'i.hostid=hg.hostid';
+				$sub_sql_parts['where']['hg'] = dbConditionInt('hg.groupid', $options['groupids']);
 			}
 		}
 
 		// hostids
-		if (!is_null($options['hostids'])) {
+		if ($options['hostids'] !== null) {
 			zbx_value2array($options['hostids']);
 
 			// triggers
 			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
-				$sqlParts['from']['functions'] = 'functions f';
-				$sqlParts['from']['items'] = 'items i';
-				$sqlParts['where']['i'] = dbConditionInt('i.hostid', $options['hostids']);
-				$sqlParts['where']['ft'] = 'f.triggerid=e.objectid';
-				$sqlParts['where']['fi'] = 'f.itemid=i.itemid';
+				$sub_sql_parts['from']['f'] = 'functions f';
+				$sub_sql_parts['from']['i'] = 'items i';
+				$sub_sql_parts['where']['e-f'] = 'e.objectid=f.triggerid';
+				$sub_sql_parts['where']['f-i'] = 'f.itemid=i.itemid';
+				$sub_sql_parts['where']['i'] = dbConditionInt('i.hostid', $options['hostids']);
 			}
 			// lld rules and items
 			elseif ($options['object'] == EVENT_OBJECT_LLDRULE || $options['object'] == EVENT_OBJECT_ITEM) {
-				$sqlParts['from']['items'] = 'items i';
-				$sqlParts['where']['i'] = dbConditionInt('i.hostid', $options['hostids']);
-				$sqlParts['where']['fi'] = 'e.objectid=i.itemid';
+				$sub_sql_parts['from']['i'] = 'items i';
+				$sub_sql_parts['where']['e-i'] = 'e.objectid=i.itemid';
+				$sub_sql_parts['where']['i'] = dbConditionInt('i.hostid', $options['hostids']);
 			}
 		}
 
-		// object
-		if (!is_null($options['object'])) {
-			$sqlParts['where']['o'] = 'e.object='.zbx_dbstr($options['object']);
+		// applicationids
+		if ($options['applicationids'] !== null) {
+			zbx_value2array($options['applicationids']);
+
+			// triggers
+			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
+				$sub_sql_parts['from']['f'] = 'functions f';
+				$sub_sql_parts['from']['ia'] = 'items_applications ia';
+				$sub_sql_parts['where']['e-f'] = 'e.objectid=f.triggerid';
+				$sub_sql_parts['where']['f-ia'] = 'f.itemid=ia.itemid';
+				$sub_sql_parts['where']['ia'] = dbConditionInt('ia.applicationid', $options['applicationids']);
+			}
+			// items
+			elseif ($options['object'] == EVENT_OBJECT_ITEM) {
+				$sub_sql_parts['from']['ia'] = 'items_applications ia';
+				$sub_sql_parts['where']['e-ia'] = 'e.objectid=ia.itemid';
+				$sub_sql_parts['where']['ia'] = dbConditionInt('ia.applicationid', $options['applicationids']);
+			}
+			// ignore this filter for lld rules
 		}
 
-		// source
-		if (!is_null($options['source'])) {
-			$sqlParts['where'][] = 'e.source='.zbx_dbstr($options['source']);
+		// severities
+		if ($options['severities'] !== null) {
+			zbx_value2array($options['severities']);
+
+			// triggers
+			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
+				$sub_sql_parts['from']['t'] = 'triggers t';
+				$sub_sql_parts['where']['e-t'] = 'e.objectid=t.triggerid';
+				$sub_sql_parts['where']['t'] = dbConditionInt('t.priority', $options['severities']);
+			}
+			// ignore this filter for items and lld rules
+		}
+
+		if ($sub_sql_parts) {
+			$sqlParts['where'][] = 'EXISTS ('.
+				'SELECT NULL'.
+				' FROM '.implode(',', $sub_sql_parts['from']).
+				' WHERE '.implode(' AND ', array_unique($sub_sql_parts['where'])).
+			')';
 		}
 
 		// acknowledged
@@ -270,23 +312,44 @@ class CEvent extends CApiService {
 			$sqlParts['where'][] = 'e.acknowledged='.($options['acknowledged'] ? 1 : 0);
 		}
 
+		// tags
+		if ($options['tags'] !== null && $options['tags']) {
+			foreach ($options['tags'] as $tag) {
+				if ($tag['value'] !== '') {
+					$tag['value'] = str_replace('!', '!!', $tag['value']);
+					$tag['value'] = str_replace('%', '!%', $tag['value']);
+					$tag['value'] = str_replace('_', '!_', $tag['value']);
+					$tag['value'] = '%'.mb_strtoupper($tag['value']).'%';
+					$tag['value'] = ' AND UPPER(et.value) LIKE'.zbx_dbstr($tag['value'])." ESCAPE '!'";
+				}
+
+				$sqlParts['where'][] = 'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag et'.
+					' WHERE e.eventid=et.eventid'.
+						' AND et.tag='.zbx_dbstr($tag['tag']).
+						$tag['value'].
+				')';
+			}
+		}
+
 		// time_from
-		if (!is_null($options['time_from'])) {
+		if ($options['time_from'] !== null) {
 			$sqlParts['where'][] = 'e.clock>='.zbx_dbstr($options['time_from']);
 		}
 
 		// time_till
-		if (!is_null($options['time_till'])) {
+		if ($options['time_till'] !== null) {
 			$sqlParts['where'][] = 'e.clock<='.zbx_dbstr($options['time_till']);
 		}
 
 		// eventid_from
-		if (!is_null($options['eventid_from'])) {
+		if ($options['eventid_from'] !== null) {
 			$sqlParts['where'][] = 'e.eventid>='.zbx_dbstr($options['eventid_from']);
 		}
 
 		// eventid_till
-		if (!is_null($options['eventid_till'])) {
+		if ($options['eventid_till'] !== null) {
 			$sqlParts['where'][] = 'e.eventid<='.zbx_dbstr($options['eventid_till']);
 		}
 
@@ -420,7 +483,11 @@ class CEvent extends CApiService {
 			$ack_count = count($acknowledgeids);
 
 			for ($i = 0; $i < $ack_count; $i++) {
-				$tasks[] = ['type' => ZBX_TM_TASK_CLOSE_PROBLEM];
+				$tasks[] = [
+					'type' => ZBX_TM_TASK_CLOSE_PROBLEM,
+					'status' => ZBX_TM_STATUS_NEW,
+					'clock' => $time
+				];
 			}
 
 			$taskids = DB::insert('task', $tasks);
@@ -614,11 +681,13 @@ class CEvent extends CApiService {
 				// create the base query
 				$sqlParts = API::getApiService()->createSelectQueryParts('acknowledges', 'a', [
 					'output' => $this->outputExtend($options['select_acknowledges'],
-						['acknowledgeid', 'eventid', 'clock']
+						['acknowledgeid', 'eventid', 'clock', 'userid']
 					),
 					'filter' => ['eventid' => $eventIds]
 				]);
 				$sqlParts['order'][] = 'a.clock DESC';
+
+				$acknowledges = DBFetchArrayAssoc(DBselect($this->createSelectQueryFromParts($sqlParts)), 'acknowledgeid');
 
 				// if the user data is requested via extended output or specified fields, join the users table
 				$userFields = ['alias', 'name', 'surname'];
@@ -628,17 +697,24 @@ class CEvent extends CApiService {
 						$requestUserData[] = $userField;
 					}
 				}
+
 				if ($requestUserData) {
-					foreach ($requestUserData as $userField) {
-						$sqlParts = $this->addQuerySelect('u.'.$userField, $sqlParts);
+					$users = API::User()->get([
+						'output' => $requestUserData,
+						'userids' => zbx_objectValues($acknowledges, 'userid'),
+						'preservekeys' => true
+					]);
+
+					foreach ($acknowledges as &$acknowledge) {
+						if (array_key_exists($acknowledge['userid'], $users)) {
+							$acknowledge = array_merge($acknowledge, $users[$acknowledge['userid']]);
+						}
 					}
-					$sqlParts['from'][] = 'users u';
-					$sqlParts['where'][] = 'a.userid=u.userid';
+					unset($acknowledge);
 				}
 
-				$acknowledges = DBFetchArrayAssoc(DBselect($this->createSelectQueryFromParts($sqlParts)), 'acknowledgeid');
 				$relationMap = $this->createRelationMap($acknowledges, 'eventid', 'acknowledgeid');
-				$acknowledges = $this->unsetExtraFields($acknowledges, ['eventid', 'acknowledgeid', 'clock'],
+				$acknowledges = $this->unsetExtraFields($acknowledges, ['eventid', 'acknowledgeid', 'clock', 'userid'],
 					$options['select_acknowledges']
 				);
 				$result = $relationMap->mapMany($result, $acknowledges, 'acknowledges');
@@ -681,27 +757,38 @@ class CEvent extends CApiService {
 	/**
 	 * Checks if the given events exist, are accessible and can be acknowledged.
 	 *
-	 * @throws APIException     if an event does not exist, is not accessible or is not a trigger event
+	 * @param array $eventids
 	 *
-	 * @param array $eventIds
+	 * @throws APIException			If an event does not exist, is not accessible, is not a trigger event or event is
+	 *								not in PROBLEM state.
 	 */
-	protected function checkCanBeAcknowledged(array $eventIds) {
-		$allowedEvents = $this->get([
-			'eventids' => $eventIds,
-			'output' => ['eventid'],
+	protected function checkCanBeAcknowledged(array $eventids) {
+		$allowed_events = $this->get([
+			'output' => ['eventid', 'value'],
+			'eventids' => $eventids,
 			'preservekeys' => true
 		]);
-		foreach ($eventIds as $eventId) {
-			if (!isset($allowedEvents[$eventId])) {
-				// check if an event actually exists but maybe belongs to a different source or object
+
+		foreach ($eventids as $eventid) {
+			if (array_key_exists($eventid, $allowed_events)) {
+				// Prohibit acknowledging OK events.
+				if ($allowed_events[$eventid]['value'] == TRIGGER_VALUE_FALSE) {
+					self::exception(ZBX_API_ERROR_PERMISSIONS,
+						_s('Cannot acknowledge problem: %1$s.', _('event is not in PROBLEM state'))
+					);
+				}
+			}
+			else {
+				// Check if an event actually exists but maybe belongs to a different source or object.
+
 				$event = API::getApiService()->select($this->tableName(), [
 					'output' => ['eventid', 'source', 'object'],
-					'eventids' => $eventId,
+					'eventids' => $eventid,
 					'limit' => 1
 				]);
 				$event = reset($event);
 
-				// if the event exists, check if we have permissions to access it
+				// If the event exists, check if we have permissions to access it.
 				if ($event) {
 					$event = $this->get([
 						'output' => ['eventid'],
@@ -712,13 +799,15 @@ class CEvent extends CApiService {
 					]);
 				}
 
-				// the event exists, is accessible but belongs to a different object or source
 				if ($event) {
+					// The event exists, is accessible but belongs to a different object or source.
 					self::exception(ZBX_API_ERROR_PERMISSIONS, _('Only trigger events can be acknowledged.'));
 				}
-				// the event either doesn't exist or is not accessible
 				else {
-					self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
+					// The event either doesn't exist or is not accessible.
+					self::exception(ZBX_API_ERROR_PERMISSIONS,
+						_('No permissions to referred object or it does not exist!')
+					);
 				}
 			}
 		}
@@ -728,6 +817,8 @@ class CEvent extends CApiService {
 	 * Checks if the given events can be closed manually.
 	 *
 	 * @param array $eventids
+	 *
+	 * @throws APIException			If an event does not exist, is not accessible or trigger does not allow manual closing.
 	 */
 	protected function checkCanBeManuallyClosed(array $eventids) {
 		$events_count = count($eventids);
@@ -760,7 +851,7 @@ class CEvent extends CApiService {
 		}
 
 		foreach ($events as $event) {
-			if ($event['relatedObject']['manual_close'] != ZBX_TRIGGER_MANUAL_CLOSE_ALLOWED) {
+			if ($event['relatedObject']['manual_close'] == ZBX_TRIGGER_MANUAL_CLOSE_NOT_ALLOWED) {
 				self::exception(ZBX_API_ERROR_PERMISSIONS,
 					_s('Cannot close problem: %1$s.', _('trigger does not allow manual closing'))
 				);

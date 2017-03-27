@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,6 +37,8 @@ ZBX_METRIC	parameters_agent[] =
 
 static int	AGENT_HOSTNAME(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
+	ZBX_UNUSED(request);
+
 	SET_STR_RESULT(result, zbx_strdup(NULL, CONFIG_HOSTNAME));
 
 	return SYSINFO_RET_OK;
@@ -44,6 +46,8 @@ static int	AGENT_HOSTNAME(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 static int	AGENT_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
+	ZBX_UNUSED(request);
+
 	SET_UI64_RESULT(result, 1);
 
 	return SYSINFO_RET_OK;
@@ -51,6 +55,8 @@ static int	AGENT_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 static int	AGENT_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
+	ZBX_UNUSED(request);
+
 	SET_STR_RESULT(result, zbx_strdup(NULL, ZABBIX_VERSION));
 
 	return SYSINFO_RET_OK;

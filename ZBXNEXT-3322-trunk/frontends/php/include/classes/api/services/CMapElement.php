@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,6 +80,89 @@ abstract class CMapElement extends CApiService {
 		return ($update || $delete) ? $dbSelements : true;
 	}
 
+	protected function checkShapeInput(&$shapes, $method) {
+		$update = ($method == 'updateShapes');
+		$delete = ($method == 'deleteShapes');
+
+		// permissions
+		if ($update || $delete) {
+			$dbShapes = API::getApiService()->select('sysmap_shape', [
+				'output' => API_OUTPUT_EXTEND,
+				'filter' => ['selementid' => zbx_objectValues($shapes, 'shapeid')],
+				'preservekeys' => true
+			]);
+
+			if ($update) {
+				$shapes = $this->extendFromObjects($shapes, $dbShapes, ['type', 'shapeid']);
+			}
+		}
+
+		foreach ($shapes as &$shape) {
+			if ($update || $delete) {
+				if (!isset($dbShapes[$shape['shapeid']])) {
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_('No permissions to referred object or it does not exist!'));
+				}
+
+				if ($delete) {
+					continue;
+				}
+			}
+
+			if (!array_key_exists('type', $shape) || !in_array($shape['type'], range(0,1))) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Shape type is not correct.'));
+			}
+
+			foreach (['x', 'y'] as $field) {
+				if (array_key_exists($field, $shape) && $shape[$field] < 0) {
+					self::exception(ZBX_API_ERROR_PARAMETERS, _('Shape position is not correct.'));
+				}
+			}
+
+			foreach (['width', 'height'] as $field) {
+				if (array_key_exists($field, $shape) && $shape[$field] < 1) {
+					self::exception(ZBX_API_ERROR_PARAMETERS, _('Shape dimensions are not correct.'));
+				}
+			}
+
+			if (array_key_exists('font', $shape) && !in_array($shape['font'], range(0,12))) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Shape font is not correct.'));
+			}
+
+			if (array_key_exists('font_size', $shape) && ($shape['font_size'] < 1 || $shape['font_size'] > 250)) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Shape font size is not correct.'));
+			}
+
+			foreach (['border_color', 'background_color', 'font_color'] as $field) {
+				if (array_key_exists($field, $shape) && !empty($shape[$field])) {
+					$colorValidator = new CColorValidator();
+
+					if (!$colorValidator->validate($shape[$field])) {
+						self::exception(ZBX_API_ERROR_PARAMETERS,
+							_s('Colour "%1$s" is not correct: expecting hexadecimal colour code (6 symbols).', $field));
+					}
+				}
+			}
+
+			foreach (['text_halign', 'text_valign'] as $field) {
+				if (array_key_exists($field, $shape) && !in_array($shape[$field], range(-1,1))) {
+					self::exception(ZBX_API_ERROR_PARAMETERS, _('Shape text alignment is not correct.'));
+				}
+			}
+
+			if (array_key_exists('border_type', $shape) && !in_array($shape['border_type'], range(-1,2))) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Shape border type is not correct.'));
+			}
+
+			if (array_key_exists('border_width', $shape) && $shape['border_width'] < 0) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Shape border width is not correct.'));
+			}
+		}
+		unset($shape);
+
+		return ($update || $delete) ? $dbShapes : true;
+	}
+
 	/**
 	 * Checks that the user has write permissions to objects used in the map elements.
 	 *
@@ -88,33 +171,126 @@ abstract class CMapElement extends CApiService {
 	 * @param array $selements
 	 */
 	protected function checkSelementPermissions(array $selements) {
-		if (CWebUser::getType() == USER_TYPE_SUPER_ADMIN) {
+		if (self::$userData['type'] == USER_TYPE_SUPER_ADMIN) {
 			return;
 		}
 
-		$hostIds = $groupIds = $triggerIds = $mapIds = [];
+		$groupids = [];
+		$hostids = [];
+		$triggerids = [];
+		$sysmapids = [];
+
 		foreach ($selements as $selement) {
 			switch ($selement['elementtype']) {
-				case SYSMAP_ELEMENT_TYPE_HOST:
-					$hostIds[$selement['elementid']] = $selement['elementid'];
-					break;
 				case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
-					$groupIds[$selement['elementid']] = $selement['elementid'];
+					$groupids[$selement['elementid']] = true;
 					break;
+
+				case SYSMAP_ELEMENT_TYPE_HOST:
+					$hostids[$selement['elementid']] = true;
+					break;
+
 				case SYSMAP_ELEMENT_TYPE_TRIGGER:
-					$triggerIds[$selement['elementid']] = $selement['elementid'];
+					$triggerids[$selement['elementid']] = true;
 					break;
+
 				case SYSMAP_ELEMENT_TYPE_MAP:
-					$mapIds[$selement['elementid']] = $selement['elementid'];
+					$sysmapids[$selement['elementid']] = true;
 					break;
 			}
 		}
 
-		if (($hostIds && !API::Host()->isReadable($hostIds))
-				|| ($groupIds && !API::HostGroup()->isReadable($groupIds))
-				|| ($triggerIds && !API::Trigger()->isReadable($triggerIds))
-				|| ($mapIds && !API::Map()->isReadable($mapIds))) {
-			self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
+		$this->checkHostGroupsPermissions(array_keys($groupids));
+		$this->checkHostsPermissions(array_keys($hostids));
+		$this->checkTriggersPermissions(array_keys($triggerids));
+		$this->checkMapsPermissions(array_keys($sysmapids));
+	}
+
+	/**
+	 * Checks if the current user has access to the given host groups.
+	 *
+	 * @throws APIException if the user doesn't have write permissions for the given host groups
+	 *
+	 * @param array $groupids
+	 */
+	private function checkHostGroupsPermissions(array $groupids) {
+		if ($groupids) {
+			$count = API::HostGroup()->get([
+				'countOutput' => true,
+				'groupids' => $groupids
+			]);
+
+			if ($count != count($groupids)) {
+				self::exception(ZBX_API_ERROR_PERMISSIONS,
+					_('No permissions to referred object or it does not exist!')
+				);
+			}
+		}
+	}
+
+	/**
+	 * Checks if the current user has access to the given hosts.
+	 *
+	 * @throws APIException if the user doesn't have write permissions for the given hosts
+	 *
+	 * @param array $hostids
+	 */
+	private function checkHostsPermissions(array $hostids) {
+		if ($hostids) {
+			$count = API::Host()->get([
+				'countOutput' => true,
+				'hostids' => $hostids
+			]);
+
+			if ($count != count($hostids)) {
+				self::exception(ZBX_API_ERROR_PERMISSIONS,
+					_('No permissions to referred object or it does not exist!')
+				);
+			}
+		}
+	}
+
+	/**
+	 * Checks if the current user has access to the given triggers.
+	 *
+	 * @throws APIException if the user doesn't have write permissions for the given triggers
+	 *
+	 * @param array $triggerids
+	 */
+	private function checkTriggersPermissions(array $triggerids) {
+		if ($triggerids) {
+			$count = API::Trigger()->get([
+				'countOutput' => true,
+				'triggerids' => $triggerids
+			]);
+
+			if ($count != count($triggerids)) {
+				self::exception(ZBX_API_ERROR_PERMISSIONS,
+					_('No permissions to referred object or it does not exist!')
+				);
+			}
+		}
+	}
+
+	/**
+	 * Checks if the current user has access to the given maps.
+	 *
+	 * @throws APIException if the user doesn't have write permissions for the given maps
+	 *
+	 * @param array $sysmapids
+	 */
+	private function checkMapsPermissions(array $sysmapids) {
+		if ($sysmapids) {
+			$count = API::Map()->get([
+				'countOutput' => true,
+				'sysmapids' => $sysmapids
+			]);
+
+			if ($count != count($sysmapids)) {
+				self::exception(ZBX_API_ERROR_PERMISSIONS,
+					_('No permissions to referred object or it does not exist!')
+				);
+			}
 		}
 	}
 
@@ -346,6 +522,58 @@ abstract class CMapElement extends CApiService {
 		DB::delete('sysmaps_elements', ['selementid' => $selementIds]);
 
 		return $selementIds;
+	}
+
+	/**
+	 * Add shape to sysmap.
+	 *
+	 * @return array
+	 */
+	protected function createShapes(array $shapes) {
+		$shapes = zbx_toArray($shapes);
+
+		$this->checkShapeInput($shapes, __FUNCTION__);
+
+		$shapeIds = DB::insert('sysmap_shape', $shapes);
+
+		return ['shapeids' => $shapeIds];
+	}
+
+	/**
+	 * Update shapes to sysmap.
+	 */
+	protected function updateShapes(array $shapes) {
+		$shapes = zbx_toArray($shapes);
+		$shapeIds = [];
+
+		$this->checkShapeInput($shapes, __FUNCTION__);
+
+		$update = [];
+		foreach ($shapes as $shape) {
+			$update[] = [
+				'values' => $shape,
+				'where' => ['shapeid' => $shape['shapeid']],
+			];
+			$shapeIds[] = $shape['shapeid'];
+		}
+
+		DB::update('sysmap_shape', $update);
+
+		return ['shapeids' => $shapeIds];
+	}
+
+	/**
+	 * Delete shapes from map.
+	 */
+	protected function deleteShapes(array $shapes) {
+		$shapes = zbx_toArray($shapes);
+		$shapeIds = zbx_objectValues($shapes, 'shapeid');
+
+		$this->checkShapeInput($shapes, __FUNCTION__);
+
+		DB::delete('sysmap_shape', ['shapeid' => $shapeIds]);
+
+		return $shapeIds;
 	}
 
 	/**

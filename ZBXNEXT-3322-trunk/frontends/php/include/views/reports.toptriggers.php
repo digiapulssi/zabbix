@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,96 +21,85 @@
 
 require_once dirname(__FILE__).'/js/reports.toptriggers.js.php';
 
-$topTriggers = (new CWidget())->setTitle(_('100 busiest triggers'));
-
 $filterForm = (new CFilter('web.toptriggers.filter.state'))
 	->addVar('filter_from', date(TIMESTAMP_FORMAT, $this->data['filter']['filter_from']))
 	->addVar('filter_till', date(TIMESTAMP_FORMAT, $this->data['filter']['filter_till']));
 
-$filterColumn1 = new CFormList();
-$filterColumn2 = new CFormList();
-
-$filterColumn2->addRow(_('From'), createDateSelector('filter_from', $this->data['filter']['filter_from']));
-$filterColumn2->addRow(_('Till'), createDateSelector('filter_till', $this->data['filter']['filter_till']));
-$filterColumn2->addRow(null, [
-	new CHorList([
-		(new CButton(null, _('Today')))
-			->onClick('javascript: setPeriod('.REPORT_PERIOD_TODAY.');')
-			->addClass(ZBX_STYLE_BTN_LINK),
-		(new CButton(null, _('Yesterday')))
-			->onClick('javascript: setPeriod('.REPORT_PERIOD_YESTERDAY.');')
-			->addClass(ZBX_STYLE_BTN_LINK),
-		(new CButton(null, _('Current week')))
-			->onClick('javascript: setPeriod('.REPORT_PERIOD_CURRENT_WEEK.');')
-			->addClass(ZBX_STYLE_BTN_LINK),
-		(new CButton(null, _('Current month')))
-			->onClick('javascript: setPeriod('.REPORT_PERIOD_CURRENT_MONTH.');')
-			->addClass(ZBX_STYLE_BTN_LINK),
-		(new CButton(null, _('Current year')))
-			->onClick('javascript: setPeriod('.REPORT_PERIOD_CURRENT_YEAR.');')
-			->addClass(ZBX_STYLE_BTN_LINK)
-	]),
-	new CHorList([
-		(new CButton(null, _('Last week')))
-			->onClick('javascript: setPeriod('.REPORT_PERIOD_LAST_WEEK.');')
-			->addClass(ZBX_STYLE_BTN_LINK),
-		(new CButton(null, _('Last month')))
-			->onClick('javascript: setPeriod('.REPORT_PERIOD_LAST_MONTH.');')
-			->addClass(ZBX_STYLE_BTN_LINK),
-		(new CButton(null, _('Last year')))
-			->onClick('javascript: setPeriod('.REPORT_PERIOD_LAST_YEAR.');')
-			->addClass(ZBX_STYLE_BTN_LINK)
-	])
-]);
-
-$filterColumn1->addRow(
-	_('Host groups'),
-	(new CMultiSelect([
-		'name' => 'groupids[]',
-		'objectName' => 'hostGroup',
-		'data' => $this->data['multiSelectHostGroupData'],
-		'popup' => [
-			'parameters' => 'srctbl=host_groups&dstfrm='.$filterForm->getName().'&dstfld1=groupids_'.
-				'&srcfld1=groupid&multiselect=1'
-		]
-	]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
-);
-
-$filterColumn1->addRow(
-	_('Hosts'),
-	(new CMultiSelect([
-		'name' => 'hostids[]',
-		'objectName' => 'hosts',
-		'data' => $this->data['multiSelectHostData'],
-		'popup' => [
-			'parameters' => 'srctbl=hosts&dstfrm='.$filterForm->getName().'&dstfld1=hostids_&srcfld1=hostid'.
-				'&real_hosts=1&multiselect=1'
-		]
-	]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
-);
-
 // severities
 $severity_columns = [0 => [], 1 => []];
 
-for ($severity = TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity < TRIGGER_SEVERITY_COUNT; $severity++) {
-	$severity_columns[$severity % 2][] = new CLabel([
-		(new CCheckBox('severities['.$severity.']'))
-			->setChecked(in_array($severity, $this->data['filter']['severities'])),
-		getSeverityName($severity, $this->data['config'])
-	], 'severities['.$severity.']');
+foreach (range(TRIGGER_SEVERITY_NOT_CLASSIFIED, TRIGGER_SEVERITY_COUNT - 1) as $severity) {
+	$severity_columns[$severity % 2][] = (new CCheckBox('severities['.$severity.']'))
+		->setLabel(getSeverityName($severity, $this->data['config']))
+		->setChecked(in_array($severity, $this->data['filter']['severities']));
 }
 
-$filterColumn1->addRow(_('Severity'),
-	(new CTable())
-		->addRow($severity_columns[0])
-		->addRow($severity_columns[1])
-);
+$filterColumn1 = (new CFormList())
+	->addRow(_('Host groups'),
+		(new CMultiSelect([
+			'name' => 'groupids[]',
+			'objectName' => 'hostGroup',
+			'data' => $this->data['multiSelectHostGroupData'],
+			'popup' => [
+				'parameters' => 'srctbl=host_groups&dstfrm='.$filterForm->getName().'&dstfld1=groupids_'.
+					'&srcfld1=groupid&multiselect=1'
+			]
+		]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
+	)
+	->addRow(_('Hosts'),
+		(new CMultiSelect([
+			'name' => 'hostids[]',
+			'objectName' => 'hosts',
+			'data' => $this->data['multiSelectHostData'],
+			'popup' => [
+				'parameters' => 'srctbl=hosts&dstfrm='.$filterForm->getName().'&dstfld1=hostids_&srcfld1=hostid'.
+					'&real_hosts=1&multiselect=1'
+			]
+		]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
+	)
+	->addRow(_('Severity'),
+		(new CTable())
+			->addRow($severity_columns[0])
+			->addRow($severity_columns[1])
+	);
+
+$filterColumn2 = (new CFormList())
+	->addRow(_('From'), createDateSelector('filter_from', $this->data['filter']['filter_from']))
+	->addRow(_('Till'), createDateSelector('filter_till', $this->data['filter']['filter_till']))
+	->addRow(null, [
+		new CHorList([
+			(new CButton(null, _('Today')))
+				->onClick('javascript: setPeriod('.REPORT_PERIOD_TODAY.');')
+				->addClass(ZBX_STYLE_BTN_LINK),
+			(new CButton(null, _('Yesterday')))
+				->onClick('javascript: setPeriod('.REPORT_PERIOD_YESTERDAY.');')
+				->addClass(ZBX_STYLE_BTN_LINK),
+			(new CButton(null, _('Current week')))
+				->onClick('javascript: setPeriod('.REPORT_PERIOD_CURRENT_WEEK.');')
+				->addClass(ZBX_STYLE_BTN_LINK),
+			(new CButton(null, _('Current month')))
+				->onClick('javascript: setPeriod('.REPORT_PERIOD_CURRENT_MONTH.');')
+				->addClass(ZBX_STYLE_BTN_LINK),
+			(new CButton(null, _('Current year')))
+				->onClick('javascript: setPeriod('.REPORT_PERIOD_CURRENT_YEAR.');')
+				->addClass(ZBX_STYLE_BTN_LINK)
+		]),
+		new CHorList([
+			(new CButton(null, _('Last week')))
+				->onClick('javascript: setPeriod('.REPORT_PERIOD_LAST_WEEK.');')
+				->addClass(ZBX_STYLE_BTN_LINK),
+			(new CButton(null, _('Last month')))
+				->onClick('javascript: setPeriod('.REPORT_PERIOD_LAST_MONTH.');')
+				->addClass(ZBX_STYLE_BTN_LINK),
+			(new CButton(null, _('Last year')))
+				->onClick('javascript: setPeriod('.REPORT_PERIOD_LAST_YEAR.');')
+				->addClass(ZBX_STYLE_BTN_LINK)
+		])
+	]);
 
 $filterForm
 	->addColumn($filterColumn1)
 	->addColumn($filterColumn2);
-
-$topTriggers->addItem($filterForm);
 
 // table
 $table = (new CTableInfo())->setHeader([_('Host'), _('Trigger'), _('Severity'), _('Number of status changes')]);
@@ -137,6 +126,7 @@ foreach ($this->data['triggers'] as $trigger) {
 	]);
 }
 
-$topTriggers->addItem($table);
-
-return $topTriggers;
+return (new CWidget())
+	->setTitle(_('100 busiest triggers'))
+	->addItem($filterForm)
+	->addItem($table);

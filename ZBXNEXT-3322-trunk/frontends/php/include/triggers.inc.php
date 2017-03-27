@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -179,46 +179,6 @@ function trigger_value2str($value = null) {
 	else {
 		return _('Unknown');
 	}
-}
-
-function discovery_value($val = null) {
-	$array = [
-		DOBJECT_STATUS_UP => _('UP'),
-		DOBJECT_STATUS_DOWN => _('DOWN'),
-		DOBJECT_STATUS_DISCOVER => _('DISCOVERED'),
-		DOBJECT_STATUS_LOST => _('LOST')
-	];
-
-	if (is_null($val)) {
-		return $array;
-	}
-	elseif (isset($array[$val])) {
-		return $array[$val];
-	}
-	else {
-		return _('Unknown');
-	}
-}
-
-function discovery_value_style($val) {
-	switch ($val) {
-		case DOBJECT_STATUS_UP:
-			$style = ZBX_STYLE_GREEN;
-			break;
-		case DOBJECT_STATUS_DOWN:
-			$style = ZBX_STYLE_RED;
-			break;
-		case DOBJECT_STATUS_DISCOVER:
-			$style = ZBX_STYLE_GREEN;
-			break;
-		case DOBJECT_STATUS_LOST:
-			$style = ZBX_STYLE_GREY;
-			break;
-		default:
-			$style = '';
-	}
-
-	return $style;
 }
 
 function getParentHostsByTriggers($triggers) {
@@ -837,7 +797,11 @@ function getTriggerOverviewCells($trigger, $pageFile, $screenid = null) {
 			$ack = null;
 
 			if ($config['event_ack_enable']) {
-				if ($event = get_last_event_by_triggerid($trigger['triggerid'])) {
+				$event = getTriggerLastProblems([$trigger['triggerid']], ['eventid', 'acknowledged']);
+
+				if ($event) {
+					$event = reset($event);
+
 					if ($screenid !== null) {
 						$acknowledge = [
 							'eventid' => $event['eventid'],
@@ -1817,7 +1781,7 @@ function get_item_function_info($expr) {
 			$result = [
 				'value_type' => $value_type[ITEM_VALUE_TYPE_FLOAT],
 				'type' => T_ZBX_STR,
-				'validation' => 'preg_match("/^'.ZBX_PREG_NUMBER.'$/u", {})'
+				'validation' => 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'
 			];
 		}
 		elseif ($parseResult->hasTokenOfType(CTriggerExpressionParserResult::TOKEN_TYPE_FUNCTION_MACRO)) {
@@ -1869,7 +1833,7 @@ function get_item_function_info($expr) {
 
 				if ($result['type'] == T_ZBX_INT) {
 					$result['type'] = T_ZBX_STR;
-					$result['validation'] = 'preg_match("/^'.ZBX_PREG_NUMBER.'$/u",{})';
+					$result['validation'] = 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})';
 				}
 			}
 		}
@@ -2004,11 +1968,8 @@ function triggerIndicator($status, $state = null) {
 	if ($status == TRIGGER_STATUS_ENABLED) {
 		return ($state == TRIGGER_STATE_UNKNOWN) ? _('Unknown') : _('Enabled');
 	}
-	elseif ($status == TRIGGER_STATUS_DISABLED) {
-		return _('Disabled');
-	}
 
-	return _('Unknown');
+	return _('Disabled');
 }
 
 /**
@@ -2026,11 +1987,8 @@ function triggerIndicatorStyle($status, $state = null) {
 			ZBX_STYLE_GREY :
 			ZBX_STYLE_GREEN;
 	}
-	elseif ($status == TRIGGER_STATUS_DISABLED) {
-		return ZBX_STYLE_RED;
-	}
 
-	return ZBX_STYLE_GREY;
+	return ZBX_STYLE_RED;
 }
 
 /**
@@ -2046,13 +2004,11 @@ function orderTriggersByStatus(array &$triggers, $sortorder = ZBX_SORT_UP) {
 
 	foreach ($triggers as $key => $trigger) {
 		if ($trigger['status'] == TRIGGER_STATUS_ENABLED) {
-			$statusOrder = ($trigger['state'] == TRIGGER_STATE_UNKNOWN) ? 2 : 0;
+			$sort[$key] = ($trigger['state'] == TRIGGER_STATE_UNKNOWN) ? 2 : 0;
 		}
-		elseif ($trigger['status'] == TRIGGER_STATUS_DISABLED) {
-			$statusOrder = 1;
+		else {
+			$sort[$key] = 1;
 		}
-
-		$sort[$key] = $statusOrder;
 	}
 
 	if ($sortorder == ZBX_SORT_UP) {
@@ -2155,7 +2111,7 @@ function makeTriggersHostsList(array $triggers_hosts) {
 			]);
 		}
 
-		$scripts_by_hosts = API::Script()->getScriptsByHosts($hostids);
+		$scripts_by_hosts = API::Script()->getScriptsByHosts(array_keys($hostids));
 	}
 
 	foreach ($triggers_hosts as &$hosts) {
@@ -2205,3 +2161,47 @@ function makeTriggersHostsList(array $triggers_hosts) {
 
 	return $triggers_hosts;
 }
+
+/**
+ * Check if user has read permissions for triggers.
+ *
+ * @param $triggerids
+ *
+ * @return bool
+ */
+function isReadableTriggers(array $triggerids) {
+	return count($triggerids) == API::Trigger()->get([
+		'triggerids' => $triggerids,
+		'countOutput' => true
+	]);
+}
+
+/**
+ * Get last problems by given trigger IDs.
+ *
+ * @param array $triggerids
+ * @param array $output         List of output fields.
+ *
+ * @return array
+ */
+function getTriggerLastProblems(array $triggerids, array $output) {
+	$problems = DBfetchArray(DBselect(
+		'SELECT '.implode(',e.', $output).
+		' FROM events e'.
+		' JOIN ('.
+			'SELECT e2.source,e2.object,e2.objectid,MAX(clock) AS clock'.
+			' FROM events e2'.
+			' WHERE e2.source='.EVENT_SOURCE_TRIGGERS.
+				' AND e2.object='.EVENT_OBJECT_TRIGGER.
+				' AND e2.value='.TRIGGER_VALUE_TRUE.
+				' AND '.dbConditionInt('e2.objectid', $triggerids).
+			' GROUP BY e2.source,e2.object,e2.objectid'.
+		') e3 ON e3.source=e.source'.
+			' AND e3.object=e.object'.
+			' AND e3.objectid=e.objectid'.
+			' AND e3.clock=e.clock'
+	));
+
+	return $problems;
+}
+

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ class InternalItemChecker extends ItemChecker
 {
 	private static final Logger logger = LoggerFactory.getLogger(InternalItemChecker.class);
 
-	public InternalItemChecker(JSONObject request) throws ZabbixException
+	InternalItemChecker(JSONObject request) throws ZabbixException
 	{
 		super(request);
 	}

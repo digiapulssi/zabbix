@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,9 +61,6 @@ foreach ($this->data['iconmap']['mappings'] as $mapping) {
 			->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			->setAttribute('maxlength', 64)
 	];
-	if (isset($mapping['iconmappingid'])) {
-		$expressionTextBox[] = new CVar('iconmap[mappings]['.$i.'][iconmappingid]', $mapping['iconmappingid']);
-	}
 
 	$iconsComboBox = new CComboBox('iconmap[mappings]['.$i.'][iconid]', $mapping['iconid'], null,
 		$this->data['iconList']
@@ -85,7 +82,7 @@ foreach ($this->data['iconmap']['mappings'] as $mapping) {
 			$profileLinksComboBox,
 			$expressionTextBox,
 			$iconsComboBox,
-			$iconPreviewImage,
+			(new CCol($iconPreviewImage))->setAttribute('style', 'vertical-align: middle;'),
 			(new CCol(
 				(new CButton('remove', _('Remove')))
 					->addClass(ZBX_STYLE_BTN_LINK)
@@ -118,7 +115,11 @@ $iconPreviewImage = (new CImg('imgstore.php?iconid='.$this->data['iconmap']['def
 	->addClass('preview')
 	->setAttribute('data-image-full', 'imgstore.php?iconid='.$this->data['iconmap']['default_iconid']);
 
-$iconMapTable->addRow([(new CCol(_('Default')))->setColSpan(4), $iconsComboBox, $iconPreviewImage]);
+$iconMapTable->addRow([
+	(new CCol(_('Default')))->setColSpan(4),
+	$iconsComboBox,
+	(new CCol($iconPreviewImage))->setAttribute('style', 'vertical-align: middle;')
+]);
 // </default icon row>
 
 $iconMapTab->addRow(_('Mappings'),

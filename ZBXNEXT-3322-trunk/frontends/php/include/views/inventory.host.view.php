@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,27 +87,30 @@ foreach ([INTERFACE_TYPE_AGENT, INTERFACE_TYPE_SNMP, INTERFACE_TYPE_JMX, INTERFA
 		$ifTab = (new CTable());
 
 		if (!$header_is_set) {
-			$ifTab->setHeader([_('IP address'), _('DNS name'), _('Connect to'), _('Port')]);
+			$ifTab->setHeader([_('IP address'), _('DNS name'), _('Connect to'), _('Port'), _('Default')]);
 			$header_is_set = true;
 		}
 
 		foreach ($interfaces[$type] as $interface) {
-			$connect_to = ($interface['useip'] == INTERFACE_USE_IP) ? _('IP') : _('DNS');
-
 			$ifTab->addRow([
-				(new CDiv($interface['main'] ? bold($interface['ip']) : $interface['ip']))
-					->setWidth(ZBX_TEXTAREA_INTERFACE_IP_WIDTH),
-				(new CDiv($interface['main'] ? bold($interface['dns']) : $interface['dns']))
-					->setWidth(ZBX_TEXTAREA_INTERFACE_DNS_WIDTH),
-				(new CDiv($interface['main'] ? bold($connect_to) : $connect_to))
-					->setWidth(ZBX_TEXTAREA_INTERFACE_USEIP_WIDTH),
-				(new CDiv($interface['main'] ? bold($interface['port']) : $interface['port']))
-					->setWidth(ZBX_TEXTAREA_INTERFACE_PORT_WIDTH)
+				(new CTextBox('ip', $interface['ip'], true, 64))->setWidth(ZBX_TEXTAREA_INTERFACE_IP_WIDTH),
+				(new CTextBox('dns', $interface['dns'], true, 64))->setWidth(ZBX_TEXTAREA_INTERFACE_DNS_WIDTH),
+				(new CRadioButtonList('useip['.$interface['interfaceid'].']', (int) $interface['useip']))
+					->addValue(_('IP'), INTERFACE_USE_IP)
+					->addValue(_('DNS'), INTERFACE_USE_DNS)
+					->setModern(true)
+					->setEnabled(false),
+				(new CTextBox('port', $interface['port'], true, 64))->setWidth(ZBX_TEXTAREA_INTERFACE_PORT_WIDTH),
+				(new CRadioButtonList('main['.$interface['type'].']', (int) $interface['main']))
+					->addValue(null, INTERFACE_PRIMARY)
+					->setEnabled(false)
 			]);
 		}
 
 		$overviewFormList->addRow($interface_names[$type],
-			(new CDiv($ifTab))->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+			(new CDiv($ifTab))
+				->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+				->setWidth(ZBX_HOST_INTERFACE_WIDTH)
 		);
 	}
 }
@@ -141,8 +144,11 @@ $overviewFormList->addRow(_('Monitoring'),
 			'tr_status.php?filter_set=1&show_triggers=2&ack_status=1&show_events=1&show_events=0&show_details=1'.
 			'&txt_select=&show_maintenance=1&hostid='.$data['host']['hostid'].url_param('groupid')
 		),
-		new CLink(_('Events'),
-			'events.php?hostid='.$data['host']['hostid'].url_param('groupid').'&source='.EVENT_SOURCE_TRIGGERS
+		new CLink(_('Problems'),
+			(new CUrl('zabbix.php'))
+				->setArgument('action', 'problem.view')
+				->setArgument('filter_hostids[]', $data['host']['hostid'])
+				->setArgument('filter_set', '1')
 		),
 		new CLink(_('Graphs'), 'charts.php?hostid='.$data['host']['hostid'].url_param('groupid')),
 		new CLink(_('Screens'), 'host_screen.php?hostid='.$data['host']['hostid'].url_param('groupid'))

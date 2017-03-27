@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -243,7 +243,7 @@ class testFormTrigger extends CWebTest {
 				$this->zbxTestAssertAttribute("//button[@id='insert']", 'disabled');
 			}
 
-			$this->zbxTestAssertElementNotPresentId('add_expression');
+			$this->zbxTestAssertElementNotPresentXpath("//li[@id='expression_row']//button[contains(@onclick, 'add_expression')]");
 			$this->zbxTestAssertElementNotPresentId('insert_macro');
 			$this->zbxTestAssertElementNotPresentId('exp_list');
 		}
@@ -256,11 +256,10 @@ class testFormTrigger extends CWebTest {
 			$this->zbxTestAssertNotVisibleId('expression');
 
 			if (!isset($data['form'])) {
-				$this->zbxTestAssertVisibleId('add_expression');
-				$this->zbxTestAssertElementValue('add_expression', 'Add');
+				$this->zbxTestAssertVisibleXpath("//li[@id='expression_row']//button[contains(@onclick, 'add_expression') and text()='Add']");
 			}
 			else {
-				$this->zbxTestAssertElementNotPresentId('add_expression');
+				$this->zbxTestAssertElementNotPresentXpath("//li[@id='expression_row']//button[contains(@onclick, 'add_expression')]");
 			}
 
 			$this->zbxTestAssertVisibleId('insert');
@@ -301,18 +300,18 @@ class testFormTrigger extends CWebTest {
 		$this->zbxTestAssertAttribute("//input[@id='url']", 'maxlength', 255);
 		$this->zbxTestAssertAttribute("//input[@id='url']", 'size', 20);
 
-		$this->zbxTestAssertVisibleId('priority_0');
+		$this->zbxTestAssertElementPresentId('priority_0');
 		$this->assertTrue($this->zbxTestCheckboxSelected('priority_0'));
 		$this->zbxTestAssertElementText("//*[@id='priority_0']/../label", 'Not classified');
-		$this->zbxTestAssertVisibleId('priority_1');
+		$this->zbxTestAssertElementPresentId('priority_1');
 		$this->zbxTestAssertElementText("//*[@id='priority_1']/../label", 'Information');
-		$this->zbxTestAssertVisibleId('priority_2');
+		$this->zbxTestAssertElementPresentId('priority_2');
 		$this->zbxTestAssertElementText("//*[@id='priority_2']/../label", 'Warning');
-		$this->zbxTestAssertVisibleId('priority_3');
+		$this->zbxTestAssertElementPresentId('priority_3');
 		$this->zbxTestAssertElementText("//*[@id='priority_3']/../label", 'Average');
-		$this->zbxTestAssertVisibleId('priority_4');
+		$this->zbxTestAssertElementPresentId('priority_4');
 		$this->zbxTestAssertElementText("//*[@id='priority_4']/../label", 'High');
-		$this->zbxTestAssertVisibleId('priority_5');
+		$this->zbxTestAssertElementPresentId('priority_5');
 		$this->zbxTestAssertElementText("//*[@id='priority_5']/../label", 'Disaster');
 
 		if (isset($data['severity'])) {
@@ -339,7 +338,7 @@ class testFormTrigger extends CWebTest {
 		}
 
 		$this->zbxTestTextPresent('Enabled');
-		$this->zbxTestAssertVisibleId('status');
+		$this->zbxTestAssertElementPresentId('status');
 		$this->zbxTestAssertAttribute("//input[@id='status']", 'type', 'checkbox');
 
 		$this->zbxTestAssertVisibleId('cancel');
@@ -826,11 +825,10 @@ class testFormTrigger extends CWebTest {
 					}
 				}
 				else {
-					$this->zbxTestAssertElementValue('and_expression', 'And');
+					$this->zbxTestAssertVisibleXpath("//li[@id='expression_row']//button[contains(@onclick, 'and_expression') and text()='And']");
+					$this->zbxTestAssertVisibleXpath("//li[@id='expression_row']//button[contains(@onclick, 'or_expression') and text()='Or']");
+					$this->zbxTestAssertVisibleXpath("//li[@id='expression_row']//button[contains(@onclick, 'replace_expression') and text()='Replace']");
 
-					$this->zbxTestAssertElementValue('or_expression', 'Or');
-
-					$this->zbxTestAssertElementValue('replace_expression', 'Replace');
 					if (isset($constructor['text'])) {
 						foreach($constructor['text'] as $txt) {
 							$this->zbxTestTextPresent($txt);
@@ -842,10 +840,10 @@ class testFormTrigger extends CWebTest {
 						}
 					}
 					if (isset($constructor['elementError'])) {
-						$this->zbxTestAssertElementPresentXpath('//table[@id="exp_list"]//span[@class="status-red cursor-pointer"]');
+						$this->zbxTestAssertElementPresentXpath('//table[@id="exp_list"]//span[@class="icon-info status-red"]');
 					}
 					else {
-						$this->zbxTestAssertElementNotPresentXpath('//table[@id="exp_list"]//span[@class="status-red cursor-pointer"]');
+						$this->zbxTestAssertElementNotPresentXpath('//table[@id="exp_list"]//span[@class="icon-info status-red"]');
 					}
 				}
 			}
