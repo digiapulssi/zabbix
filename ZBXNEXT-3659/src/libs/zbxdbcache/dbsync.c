@@ -346,96 +346,6 @@ int	zbx_dbsync_next(zbx_dbsync_t *sync, zbx_uint64_t *rowid, char ***row, unsign
 
 /******************************************************************************
  *                                                                            *
- * Function: dbsync_compare_config_row                                        *
- *                                                                            *
- * Purpose: compares config table row with cached configuration data          *
- *                                                                            *
- * Parameter: config - [IN] the cached configuration                          *
- *            row    - [IN] the table row                                     *
- *                                                                            *
- * Return value: SUCCEED - the row matches configuration data                 *
- *               FAIL    - otherwise                                          *
- *                                                                            *
- ******************************************************************************/
-static int	dbsync_compare_config_row(const ZBX_DC_CONFIG_TABLE *config, const DB_ROW row)
-{
-	int	i;
-
-	if (FAIL == dbsync_compare_int(row[0], config->refresh_unsupported))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_uint64(row[1], config->discovery_groupid))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[2], config->snmptrap_logging))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[26], config->default_inventory_mode))
-		return FAIL;
-
-	for (i = 0; TRIGGER_SEVERITY_COUNT > i; i++)
-	{
-		if (FAIL == dbsync_compare_str(row[3 + i], config->severity_name[i]))
-			return FAIL;
-	}
-
-	/* read housekeeper configuration */
-	if (FAIL == dbsync_compare_int(row[9], config->hk.events_mode))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[10], config->hk.events_trigger))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[11], config->hk.events_internal))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[12], config->hk.events_discovery))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[13], config->hk.events_autoreg))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[14], config->hk.services_mode))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[15], config->hk.services))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[16], config->hk.audit_mode))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[17], config->hk.audit))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[18], config->hk.sessions_mode))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[19], config->hk.sessions))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[20], config->hk.history_mode))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[22], config->hk.history))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[21], config->hk.history_global))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[23], config->hk.trends_mode))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[25], config->hk.trends))
-		return FAIL;
-
-	if (FAIL == dbsync_compare_int(row[24], config->hk.trends_global))
-		return FAIL;
-
-	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: zbx_dbsync_compare_config                                        *
  *                                                                            *
  * Purpose: compares config table with cached configuration data              *
@@ -449,9 +359,7 @@ static int	dbsync_compare_config_row(const ZBX_DC_CONFIG_TABLE *config, const DB
  ******************************************************************************/
 int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 {
-	DB_ROW		row;
 	DB_RESULT	result;
-	unsigned char	tag = ZBX_DBSYNC_ROW_NONE;
 
 	sync->columns_num = 27;
 
@@ -464,7 +372,8 @@ int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 				"hk_services,hk_audit_mode,hk_audit,hk_sessions_mode,hk_sessions,"
 				"hk_history_mode,hk_history_global,hk_history,hk_trends_mode,"
 				"hk_trends_global,hk_trends,default_inventory_mode"
-			" from config")))
+			" from config"
+			" order by configid")))
 	{
 		return FAIL;
 	}
@@ -475,23 +384,12 @@ int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	if (NULL == (row = DBfetch(result)))
-		goto out;
-
-	if (NULL == cache->config)
-		tag = ZBX_DBSYNC_ROW_ADD;
-	else if (FAIL == dbsync_compare_config_row(cache->config, row))
-		tag = ZBX_DBSYNC_ROW_UPDATE;
-
-	if (ZBX_DBSYNC_ROW_NONE != tag)
-		dbsync_add_row(sync, 0, tag, row);
-
-	while (NULL != (row = DBfetch(result)))
-		dbsync_add_row(sync, 0, ZBX_DBSYNC_ROW_ADD, row);
-out:
 	DBfree_result(result);
 
-	return SUCCEED;
+	/* global configuration will be always synchronized directly with database */
+	THIS_SHOULD_NEVER_HAPPEN;
+
+	return FAIL;
 }
 
 /******************************************************************************
