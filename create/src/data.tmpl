@@ -336,6 +336,8 @@ ROW   |8       |Guests                   |0         |1           |0         |
 ROW   |9       |Disabled                 |0         |1           |0         |
 ROW   |11      |Enabled debug mode       |0         |0           |1         |
 ROW   |12      |No access to the frontend|2         |0           |0         |
+ROW   |100     |EBERO users              |0         |0           |0         |
+ROW   |110     |Technical services users |0         |0           |0         |
 
 TABLE |users_groups
 FIELDS|id|usrgrpid|userid|
@@ -1117,6 +1119,11 @@ ROW   |15011    |150       |-1   |Internal error                                
 ROW   |15012    |150       |-211 |Server certificate validation failed                                                                            |
 ROW   |16000    |160       |0    |Down                                                                                                            |
 ROW   |16001    |160       |1    |Up                                                                                                              |
+
+TABLE |rights
+FIELDS|rightid|groupid|permission|id |
+ROW   |100    |100    |2         |140|
+ROW   |110    |110    |2         |140|
 
 TABLE |regexps
 FIELDS|regexpid|name                              |test_string|
