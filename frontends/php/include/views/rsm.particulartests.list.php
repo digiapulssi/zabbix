@@ -321,9 +321,6 @@ elseif ($this->data['type'] == RSM_DNSSEC) {
 	];
 }
 
-$tldTriggersLink = new CLink($this->data['tld']['name'], 'tr_status.php?groupid=0&hostid='.$this->data['tld']['hostid']);
-$tldTriggersLink->setTarget('_blank');
-
 if ($this->data['testResult'] === null) {
 	$testResult = $noResult;
 }
@@ -335,8 +332,6 @@ else {
 }
 
 $particularTests = [
-	new CSpan([bold(_('TLD')), ':', SPACE, $tldTriggersLink]),
-	BR(),
 	new CSpan([bold(_('Service')), ':', SPACE, $this->data['slvItem']['name']]),
 	BR(),
 	new CSpan([bold(_('Test time')), ':', SPACE, date('d.m.Y H:i:s', $this->data['time'])]),
