@@ -143,9 +143,13 @@ static int	get_data_from_proxy(DC_PROXY *proxy, const char *request, char **data
 			zbx_timespec(ts);
 
 		if (SUCCEED == (ret = send_data_to_proxy(proxy, &s, j.buffer)))
+		{
 			if (SUCCEED == (ret = recv_data_from_proxy(proxy, &s)))
+			{
 				if (SUCCEED == (ret = zbx_send_response(&s, SUCCEED, NULL, 0)))
 					*data = zbx_strdup(*data, s.buffer);
+			}
+		}
 
 		disconnect_proxy(&s);
 	}
