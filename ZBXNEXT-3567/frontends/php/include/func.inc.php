@@ -1822,7 +1822,7 @@ function show_messages($good = false, $okmsg = null, $errmsg = null) {
 	foreach($temp as $message) {
 		$sql_error = array_key_exists('sql_error', $message) && ($message['sql_error'] === true);
 		if ($sql_error && ZBX_SHOW_SQL_ERRORS === false && !$debug_enabled) {
-			$message['message'] = _('SQL error, please contact with Zabbix administrator.');
+			$message['message'] = _('SQL error, please contact Zabbix administrator.');
 		}
 		$messages[] = $message;
 	}
