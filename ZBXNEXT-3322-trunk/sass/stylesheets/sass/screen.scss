@@ -501,6 +501,14 @@ ul.top-nav-icons {
 	}
 }
 
+.adm-header-list {
+	li {
+		display: inline-block;
+		vertical-align: top;
+		padding: 0 0 0 10px;
+	}
+}
+
 .header-btns {
 
 	li {
@@ -3059,12 +3067,28 @@ $form-icon-btn: (
 	}
 }
 
+.header-dropdown-menu {
+	text-align: left;
+
+	h1:hover {
+		text-decoration: underline;
+	}
+}
+
 a.header-dropdown {
 	border: none;
 	color: $font-color;
 }
 
 .header-dropdown-list {
+	display: none;
+
+	&.example {
+		display: block;
+	}
+	top: 32px;
+	left: -8px;
+
 	padding: 5px 8px;
 	font-size: $font-h4-size;
 	@extend .action-menu;

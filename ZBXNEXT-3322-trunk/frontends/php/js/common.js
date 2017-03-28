@@ -435,10 +435,28 @@ function redirect(uri, method, needle, invert_needle) {
 
 function showHide(obj) {
 	if (jQuery(obj).is(':hidden')) {
-		jQuery(obj).css('display', 'block');
+		showElement(obj);
+	} else {
+		hideElement(obj);
 	}
-	else {
-		jQuery(obj).css('display', 'none');
+}
+
+/**
+ * Hide html element
+ * @param {object} obj
+ */
+function hideElement(obj) {
+	jQuery(obj).css('display', 'none');
+}
+
+/**
+ * Show html element
+ *
+ * @param {object} obj
+ */
+function showElement(obj) {
+	if (jQuery(obj).is(':hidden')) {
+		jQuery(obj).css('display', 'block');
 	}
 }
 

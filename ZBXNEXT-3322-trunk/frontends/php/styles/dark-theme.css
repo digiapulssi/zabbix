@@ -346,7 +346,7 @@ ul.top-nav-icons {
   border-top: 4px solid transparent;
   border-left: 6px solid #f2f2f2; }
 
-.arrow-up, .arrow-down, .arrow-left, .arrow-right {
+.arrow-up, .arrow-down, .arrow-left, .arrow-right, .header-dropdown-list::before, .header-dropdown-list::after {
   width: 0;
   height: 0;
   font-size: 0;
@@ -360,19 +360,21 @@ ul.top-nav-icons {
 .header-title {
   position: relative;
   width: 100%;
-  padding: 0 0 6px 0;
-  margin: 0 0 10px 0;
-  text-align: right;
-  border-bottom: 1px solid #303030; }
+  margin: 0 0 7px 0; }
   .header-title h1 {
-    text-align: left; }
-  .header-title form {
     display: inline-block; }
-  .header-title ul li {
-    display: inline-block;
-    vertical-align: top;
-    position: relative;
-    padding: 0 0 0 10px; }
+  .header-title .cell:last-child {
+    text-align: right; }
+
+.adm-header-list li {
+  display: inline-block;
+  vertical-align: top;
+  padding: 0 0 0 10px; }
+
+.header-btns li {
+  display: inline-block;
+  vertical-align: top;
+  padding: 0 0 0 10px; }
 
 article, .article {
   padding: 10px 10px 0 10px; }
@@ -2039,7 +2041,7 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
     display: inline-block;
     padding: 8px 0 8px 13px; }
 
-.action-menu {
+.action-menu, .header-dropdown-list {
   position: absolute;
   z-index: 1000;
   padding: 5px 15px 5px 25px;
@@ -2051,12 +2053,12 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
   -webkit-box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.5);
   box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.5); }
-  .action-menu li {
+  .action-menu li, .header-dropdown-list li {
     display: block; }
-    .action-menu li div {
+    .action-menu li div, .header-dropdown-list li div {
       border-top: 1px solid #383838;
       margin: 5px -15px 5px -25px; }
-  .action-menu .action-menu-item {
+  .action-menu .action-menu-item, .header-dropdown-list .action-menu-item {
     display: block;
     height: 24px;
     line-height: 24px;
@@ -2071,13 +2073,13 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
     -webkit-transition: background-color 0.2s ease-out;
     -moz-transition: background-color 0.2s ease-out;
     transition: background-color 0.2s ease-out; }
-    .action-menu .action-menu-item:hover {
+    .action-menu .action-menu-item:hover, .header-dropdown-list .action-menu-item:hover {
       background-color: #454545; }
-    .action-menu .action-menu-item:focus {
+    .action-menu .action-menu-item:focus, .header-dropdown-list .action-menu-item:focus {
       background-color: #454545; }
-    .action-menu .action-menu-item:active {
+    .action-menu .action-menu-item:active, .header-dropdown-list .action-menu-item:active {
       background-color: #454545; }
-    .action-menu .action-menu-item.selected::before {
+    .action-menu .action-menu-item.selected::before, .header-dropdown-list .action-menu-item.selected::before {
       display: block;
       width: 24px;
       height: 24px;
@@ -2085,7 +2087,7 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
       left: 0;
       content: '';
       background: url(../img/icon-sprite.svg) no-repeat -5px -835px; }
-    .action-menu .action-menu-item .arrow-right {
+    .action-menu .action-menu-item .arrow-right, .header-dropdown-list .action-menu-item .arrow-right {
       position: absolute;
       right: 10px;
       top: 8px;
@@ -2094,14 +2096,14 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
       padding: 0;
       margin: 0;
       border-left-color: #737373; }
-  .action-menu .action-menu-item-disabled {
+  .action-menu .action-menu-item-disabled, .header-dropdown-list .action-menu-item-disabled {
     display: block;
     height: 24px;
     line-height: 24px;
     color: #737373;
     border: none;
     cursor: default; }
-  .action-menu h3 {
+  .action-menu h3, .header-dropdown-list h3 {
     height: 24px;
     line-height: 24px; }
 
@@ -2130,6 +2132,59 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
     transition: background-color 0.2s ease-out; }
     .search-suggest li.suggest-hover {
       background-color: #454545; }
+
+.header-dropdown {
+  position: relative;
+  margin-right: 20px;
+  color: #f2f2f2;
+  cursor: pointer; }
+  .header-dropdown::after {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 7px;
+    height: 7px;
+    top: 20%;
+    right: -18px;
+    border-left: 2px solid #f2f2f2;
+    border-bottom: 2px solid #f2f2f2;
+    -webkit-transform: translate3d(-50%, -50%, 0) rotate(-45deg);
+    -moz-transform: translate3d(-50%, -50%, 0) rotate(-45deg);
+    -ms-transform: translate3d(-50%, -50%, 0) rotate(-45deg);
+    transform: translate3d(-50%, -50%, 0) rotate(-45deg); }
+
+.header-dropdown-menu {
+  text-align: left; }
+  .header-dropdown-menu h1:hover {
+    text-decoration: underline; }
+
+a.header-dropdown {
+  border: none;
+  color: #f2f2f2; }
+
+.header-dropdown-list {
+  display: none;
+  top: 32px;
+  left: -8px;
+  padding: 5px 8px;
+  font-size: 1.167em; }
+  .header-dropdown-list.example {
+    display: block; }
+  .header-dropdown-list .action-menu-item {
+    padding: 0 8px;
+    margin: 0 -8px;
+    height: 26px;
+    line-height: 26px; }
+  .header-dropdown-list::before, .header-dropdown-list::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid #353535; }
+  .header-dropdown-list::after {
+    top: -9px;
+    border-bottom-color: #2b2b2b; }
 
 .overlay-dialogue {
   position: absolute;
@@ -2890,7 +2945,7 @@ tr.cursor-move td * {
 .cursor-pointer {
   cursor: pointer; }
 
-.dashbrd-grid-widget-head h4, .dashbrd-grid-widget-foot ul li, .action-menu .action-menu-item, .action-menu h3, .notif-body h4, .tag, .overflow-ellipsis, .overflow-ellipsis td, .overflow-ellipsis th, .overflow-ellipsis th a, .server-name {
+.dashbrd-grid-widget-head h4, .dashbrd-grid-widget-foot ul li, .action-menu .action-menu-item, .header-dropdown-list .action-menu-item, .action-menu h3, .header-dropdown-list h3, .notif-body h4, .tag, .overflow-ellipsis, .overflow-ellipsis td, .overflow-ellipsis th, .overflow-ellipsis th a, .server-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap; }

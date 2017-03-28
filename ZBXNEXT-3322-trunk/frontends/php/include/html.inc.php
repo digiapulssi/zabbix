@@ -824,25 +824,45 @@ function makePageFooter($with_version = true)
 /**
  * Renders a drop-down menu for the Administration->General section.
  *
- * @param string $selected
+ * @param string $selected current url
  *
- * @return CComboBox
+ * @return CDiv
  */
 function makeAdministrationGeneralMenu($selected)
 {
-	return new CComboBox('configDropDown', $selected, 'redirect(this.options[this.selectedIndex].value);', [
-		'adm.gui.php' => _('GUI'),
-		'adm.housekeeper.php' => _('Housekeeping'),
-		'adm.images.php' => _('Images'),
-		'adm.iconmapping.php' => _('Icon mapping'),
-		'adm.regexps.php' => _('Regular expressions'),
-		'adm.macros.php' => _('Macros'),
-		'adm.valuemapping.php' => _('Value mapping'),
-		'adm.workingtime.php' => _('Working time'),
-		'adm.triggerseverities.php' => _('Trigger severities'),
-		'adm.triggerdisplayoptions.php' => _('Trigger displaying options'),
-		'adm.other.php' => _('Other')
-	]);
+	$list = new CList();
+	$list->addClass('header-dropdown-list')
+		->setId('adm-menu-dropdown-list');
+
+	$menu_map = [
+		['title' => _('GUI'), 'url' => 'adm.gui.php'],
+		['title' => _('Housekeeping'), 'url' => 'adm.housekeeper.php'],
+		['title' => _('Images'), 'url' => 'adm.images.php'],
+		['title' => _('Icon mapping'), 'url' => 'adm.iconmapping.php'],
+		['title' => _('Regular expressions'), 'url' => 'adm.regexps.php'],
+		['title' => _('Macros'), 'url' => 'adm.macros.php'],
+		['title' => _('Value mapping'), 'url' => 'adm.valuemapping.php'],
+		['title' => _('Working time'), 'url' => 'adm.workingtime.php'],
+		['title' => _('Trigger severities'), 'url' => 'adm.triggerseverities.php'],
+		['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
+		['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
+	];
+	$header = null;
+	foreach ($menu_map as $item) {
+		if ($item['url'] !== $selected) {
+			$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
+			$link = new CLink($title, $item['url']);
+			$link->addClass('action-menu-item');
+			$list->addItem($link);
+		} else {
+			$header = new CLink(new CTag('h1', true, $item['title']), '#');
+			$header->addClass('header-dropdown');
+			$header->onClick('javascript: showHide($(this).next(\'.header-dropdown-list\'));');
+		}
+	}
+
+	$div = (new CDiv([$header, $list]))->addClass('header-dropdown-menu');
+	return $div;
 }
 
 /**

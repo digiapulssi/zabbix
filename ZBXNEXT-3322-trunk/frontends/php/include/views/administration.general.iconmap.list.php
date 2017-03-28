@@ -20,10 +20,10 @@
 
 $widget = (new CWidget())
 	->setTitle(_('Icon mapping'))
+	->setTopHeader(makeAdministrationGeneralMenu('adm.iconmapping.php'))
 	->setControls((new CForm())
 		->cleanItems()
 		->addItem((new CList())
-			->addItem(makeAdministrationGeneralMenu('adm.iconmapping.php'))
 			->addItem(new CSubmit('form', _('Create icon map')))
 		)
 	);

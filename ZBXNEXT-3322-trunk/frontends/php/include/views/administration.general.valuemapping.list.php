@@ -21,12 +21,13 @@
 
 $widget = (new CWidget())
 	->setTitle(_('Value mapping'))
+	->setTopHeader(makeAdministrationGeneralMenu('adm.valuemapping.php'))
 	->setControls((new CForm())
 		->cleanItems()
 		->addItem((new CList())
-			->addItem(makeAdministrationGeneralMenu('adm.valuemapping.php'))
 			->addItem(new CSubmit('form', _('Create value map')))
 			->addItem((new CButton('form', _('Import')))->onClick('redirect("conf.import.php?rules_preset=valuemap")'))
+			->addClass('adm-header-list')
 		)
 	);
 

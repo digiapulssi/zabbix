@@ -23,10 +23,7 @@ require_once dirname(__FILE__).'/js/adm.regexprs.edit.js.php';
 
 $widget = (new CWidget())
 	->setTitle(_('Regular expressions'))
-	->setControls((new CForm())
-		->cleanItems()
-		->addItem((new CList())->addItem(makeAdministrationGeneralMenu('adm.regexps.php')))
-	);
+	->setTopHeader(makeAdministrationGeneralMenu('adm.regexps.php'));
 
 $form = (new CForm())
 	->setId('zabbixRegExpForm')

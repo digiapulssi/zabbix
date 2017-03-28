@@ -49,6 +49,16 @@ jQuery(function($) {
 		changeClass(comboBox);
 	});
 
+	$(document).click(function(e) {
+		var openDropdown = $('#adm-menu-dropdown-list');
+		if (openDropdown && !openDropdown.is(':hidden')) {
+			var menu = $('.header-dropdown-menu');
+			if (menu && menu.has(e.target).length === 0) {
+				openDropdown.hide();
+			}
+		}
+	});
+
 	/**
 	 * Build menu popup for given elements.
 	 */

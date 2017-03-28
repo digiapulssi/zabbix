@@ -18,14 +18,13 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-
 $widget = (new CWidget())
 	->setTitle(_('Images'))
+	->setTopHeader(makeAdministrationGeneralMenu('adm.images.php'))
 	->setControls((new CForm())
 		->cleanItems()
 		->addItem(
 			(new CList())
-				->addItem(makeAdministrationGeneralMenu('adm.images.php'))
 				->addItem([
 					new CLabel(_('Type'), 'imagetype'),
 					(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
@@ -34,6 +33,7 @@ $widget = (new CWidget())
 						IMAGE_TYPE_BACKGROUND => _('Background')
 					])
 				])
+				->addClass('adm-header-list')
 				->addItem(
 					new CSubmit('form', ($data['imagetype'] == IMAGE_TYPE_ICON)
 						? _('Create icon')

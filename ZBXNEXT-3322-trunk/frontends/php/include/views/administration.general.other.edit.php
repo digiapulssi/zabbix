@@ -21,10 +21,7 @@
 
 $widget = (new CWidget())
 	->setTitle(_('Other configuration parameters'))
-	->setControls((new CForm())
-		->cleanItems()
-		->addItem((new CList())->addItem(makeAdministrationGeneralMenu('adm.other.php')))
-	);
+	->setTopHeader(makeAdministrationGeneralMenu('adm.other.php'));
 
 $otherTab = new CFormList();
 

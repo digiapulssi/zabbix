@@ -21,6 +21,13 @@
 
 class CWidget {
 
+	/**
+	 * Top header
+	 *
+	 * @var CTag|null|array
+	 */
+	private $top_header = null;
+
 	private $title = null;
 	private $controls = null;
 
@@ -44,6 +51,28 @@ class CWidget {
 		return $this;
 	}
 
+	/**
+	 * Get top header
+	 *
+	 * @return array|CTag|null
+	 */
+	public function getTopHeader()
+	{
+		return $this->top_header;
+	}
+
+	/**
+	 * Set top header
+	 *
+	 * @param array|CTag|null $top_header
+	 * @return $this
+	 */
+	public function setTopHeader($top_header)
+	{
+		$this->top_header = $top_header;
+		return $this;
+	}
+
 	public function addItem($items = null) {
 		if (!is_null($items)) {
 			$this->body[] = $items;
@@ -55,7 +84,7 @@ class CWidget {
 	public function get() {
 		$widget = [];
 
-		if ($this->title !== null || $this->controls !== null) {
+		if ($this->top_header !== null || $this->title !== null || $this->controls !== null) {
 			$widget[] = $this->createTopHeader();
 		}
 
@@ -77,8 +106,13 @@ class CWidget {
 	private function createTopHeader() {
 		$divs = [];
 
-		if ($this->title !== null) {
-			$divs[] = (new CDiv(new CTag('h1', true, $this->title)))->addClass(ZBX_STYLE_CELL);
+		if ($this->top_header === null) {
+			// adding default h1 element based on given title
+			$this->addHOneToTopHeader($this->title);
+		}
+
+		if ($this->top_header !== null) {
+			$divs[] = (new CDiv($this->top_header))->addClass(ZBX_STYLE_CELL);
 		}
 
 		if ($this->controls !== null) {
@@ -88,5 +122,19 @@ class CWidget {
 		return (new CDiv($divs))
 			->addClass(ZBX_STYLE_HEADER_TITLE)
 			->addClass(ZBX_STYLE_TABLE);
+	}
+
+	/**
+	 * Add h1 element to top header elements
+	 *
+	 * @param string $title
+	 * @return $this
+	 */
+	public function addHOneToTopHeader($title)
+	{
+		if ($title !== null) {
+			$this->top_header[] =  new CTag('h1', true, $this->title);
+		}
+		return $this;
 	}
 }

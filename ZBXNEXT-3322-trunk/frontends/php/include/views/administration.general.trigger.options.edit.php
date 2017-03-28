@@ -23,10 +23,7 @@ include('include/views/js/administration.general.trigger.options.js.php');
 
 $widget = (new CWidget())
 	->setTitle(_('Trigger displaying options'))
-	->setControls((new CForm())
-		->cleanItems()
-		->addItem((new CList())->addItem(makeAdministrationGeneralMenu('adm.triggerdisplayoptions.php')))
-	);
+	->setTopHeader(makeAdministrationGeneralMenu('adm.triggerdisplayoptions.php'));
 
 $triggerDOFormList = (new CFormList())
 	->addRow(_('Unacknowledged PROBLEM events'), [

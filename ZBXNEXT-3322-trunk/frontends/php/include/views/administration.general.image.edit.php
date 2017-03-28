@@ -20,10 +20,7 @@
 
 $widget = (new CWidget())
 	->setTitle(_('Images'))
-	->setControls((new CForm())
-		->cleanItems()
-		->addItem((new CList())->addItem(makeAdministrationGeneralMenu('adm.images.php')))
-	);
+	->setTopHeader(makeAdministrationGeneralMenu('adm.images.php'));
 
 $imageForm = (new CForm('post', null, 'multipart/form-data'))
 	->addVar('form', $this->data['form']);
