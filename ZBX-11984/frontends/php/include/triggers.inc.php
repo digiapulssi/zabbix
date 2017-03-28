@@ -1182,7 +1182,8 @@ function make_trigger_details($trigger) {
 	$scripts = API::Script()->getScriptsByHosts($hostIds);
 
 	foreach ($hosts as $host) {
-		$hostName = new CSpan($host['name'], ZBX_STYLE_LINK_ACTION);
+		$hostName = new CSpan($host['name']);
+		$hostName->addClass(ZBX_STYLE_LINK_ACTION);
 		$hostName->setMenuPopup(CMenuPopupHelper::getHost($host, $scripts[$host['hostid']]));
 		$hostNames[] = $hostName;
 		$hostNames[] = ', ';
