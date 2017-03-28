@@ -181,7 +181,7 @@ static int	process_proxy(void)
 	struct zbx_json_parse	jp, jp_data;
 	zbx_socket_t		s;
 	char			*answer = NULL, *port = NULL;
-	time_t			now, last_access = 0;
+	time_t			now, last_access;
 	unsigned char		update_nextcheck;
 	zbx_timespec_t		ts;
 
@@ -197,6 +197,7 @@ static int	process_proxy(void)
 	for (i = 0; i < num; i++)
 	{
 		update_nextcheck = 0;
+		last_access = 0;
 
 		if (proxy.proxy_config_nextcheck <= now)
 			update_nextcheck |= 0x01;
@@ -255,6 +256,8 @@ static int	process_proxy(void)
 
 			if (SUCCEED != ret)
 				goto network_error;
+
+			last_access = time(NULL);
 		}
 
 		if (proxy.proxy_data_nextcheck <= now)
@@ -272,7 +275,10 @@ static int	process_proxy(void)
 				}
 
 				if (SUCCEED == zbx_json_open(answer, &jp))
+				{
+					last_access = time(NULL);
 					process_host_availability(&jp);
+				}
 
 				zbx_free(answer);
 			}
