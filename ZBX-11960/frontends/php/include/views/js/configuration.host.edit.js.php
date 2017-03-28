@@ -77,8 +77,7 @@
 		}
 
 		function resetMainInterfaces() {
-			var hostInterface,
-				typeInterfaces,
+			var typeInterfaces,
 				hostInterfaces = getMainInterfacesByType();
 
 			for (var hostInterfaceType in hostInterfaces) {
@@ -135,10 +134,15 @@
 				helper: function(event) {
 					var hostInterfaceId = jQuery(this).data('interfaceid');
 					var clone = jQuery(this).clone();
-					// clone has to have unique name for useip radio group for original to keep selected value.
+					// NOTE: Make sure to update names for all radio and checkboxes for them not to affect selection of originals
+					// NOTE: If original is addressed by any means (ex. by ID), make sure, to update these means in clone,
+					// for clone not to be addressed in place of original.
 					clone.find("[name$='[useip]']").each(function(){
 						jQuery(this).attr('name','interfaces[' + hostInterfaceId + '][useip_handle]');
 					});
+					clone.find("#interface_main_" + hostInterfaceId)
+						.attr('name','mainInterfaces[handle]')
+						.attr('id','interface_main_' + hostInterfaceId + '_handle');
 					return clone;
 				},
 				start: function(event, ui) {
@@ -354,8 +358,6 @@
 				var hostInterfaceTypeName = jQuery(this).data('type'),
 					hostInterfaceId = ui.draggable.data('interfaceid');
 
-				ui.helper.css({'left': '', 'top': ''});
-
 				if (getHostInterfaceNumericType(hostInterfaceTypeName) == <?= INTERFACE_TYPE_SNMP ?>) {
 					if (jQuery('.interface-bulk', jQuery('#hostInterfaceRow_' + hostInterfaceId)).length == 0) {
 						var bulkDiv = jQuery('<div>', {
@@ -386,7 +388,6 @@
 				}
 
 				hostInterfacesManager.setType(hostInterfaceId, hostInterfaceTypeName);
-				hostInterfacesManager.resetMainInterfaces();
 			},
 			activate: function(event, ui) {
 				if (!jQuery(this).find(ui.draggable).length) {
