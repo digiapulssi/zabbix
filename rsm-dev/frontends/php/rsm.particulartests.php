@@ -347,10 +347,9 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 	elseif ($data['type'] == RSM_RDDS) {
 		$probeItemKey = ' AND (i.key_ LIKE ('.zbx_dbstr(PROBE_RDDS_ITEM.'%').')'.
-		' OR '.dbConditionString('i.key_',
-			array(PROBE_RDDS43_IP, PROBE_RDDS43_RTT, PROBE_RDDS43_UPD, PROBE_RDDS80_IP, PROBE_RDDS80_RTT, PROBE_RDAP_IP,
-				PROBE_RDAP_RTT
-			)).
+			' OR '.dbConditionString('i.key_',
+				[PROBE_RDDS43_IP, PROBE_RDDS43_RTT, PROBE_RDDS43_UPD, PROBE_RDDS80_IP, PROBE_RDDS80_RTT]
+			).
 		')';
 	}
 	else {
@@ -438,14 +437,6 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 			elseif ($item['key_'] == PROBE_RDDS80_RTT) {
 				$hosts[$item['hostid']]['rdds80']['rtt'] = $itemValue['value']
-					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
-					: null;
-			}
-			elseif ($item['key_'] == PROBE_RDAP_IP) {
-				$hosts[$item['hostid']]['rdap']['ip'] = $itemValue['value'];
-			}
-			elseif ($item['key_'] == PROBE_RDAP_RTT) {
-				$hosts[$item['hostid']]['rdap']['rtt'] = $itemValue['value']
 					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
 					: null;
 			}

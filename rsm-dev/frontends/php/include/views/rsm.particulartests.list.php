@@ -36,10 +36,7 @@ elseif ($this->data['type'] == RSM_RDDS) {
 		_('UPD'),
 		_('RDDS80'),
 		_('IP'),
-		_('RTT'),
-		_('RDAP'),
-		_('IP'),
-		_('RTT'),
+		_('RTT')
 	];
 }
 else {
@@ -170,62 +167,53 @@ foreach ($this->data['probes'] as $probe) {
 			if (!isset($probe['value']) || $probe['value'] === null) {
 				$rdds43 = $noResult;
 				$rdds80 = $noResult;
-				$rdap = $noResult;
 				$rdds = 'grey';
 				$noResultProbes++;
 			}
 			elseif ($probe['value'] == 0) {
 				$rdds43 = $down;
 				$rdds80 = $down;
-				$rdap = $down;
 				$rdds = 'red';
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 1) {
 				$rdds43 = $up;
 				$rdds80 = $up;
-				$rdap = $up;
 				$rdds = 'green';
 			}
 			elseif ($probe['value'] == 2) {
 				$rdds43 = $up;
 				$rdds80 = $down;
-				$rdap = $down;
 				$rdds = 'red';
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 3) {
 				$rdds43 = $down;
 				$rdds80 = $up;
-				$rdap = $down;
 				$rdds = 'red';
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 4) {
 				$rdds43 = $down;
 				$rdds80 = $down;
-				$rdap = $up;
 				$rdds = 'red';
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 5) {
 				$rdds43 = $noResult;
 				$rdds80 = $up;
-				$rdap = $up;
 				$rdds = 'red';
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 6) {
 				$rdds43 = $up;
 				$rdds80 = $noResult;
-				$rdap = $up;
 				$rdds = 'red';
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 7) {
 				$rdds43 = $up;
 				$rdds80 = $up;
-				$rdap = $noResult;
 				$rdds = 'red';
 				$downProbes++;
 			}
@@ -261,10 +249,7 @@ foreach ($this->data['probes'] as $probe) {
 			(isset($probe['rdds43']['upd'])) ? $probe['rdds43']['upd'] : '-',
 			$rdds80,
 			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip']) ? $probe['rdds80']['ip'] : '-',
-			(isset($probe['rdds80']['rtt'])) ? $probe['rdds80']['rtt'] : '-',
-			$rdap,
-			(isset($probe['rdap']['ip']) && $probe['rdap']['ip']) ? $probe['rdap']['ip'] : '-',
-			(isset($probe['rdap']['rtt'])) ? $probe['rdap']['rtt'] : '-'
+			(isset($probe['rdds80']['rtt'])) ? $probe['rdds80']['rtt'] : '-'
 		];
 	}
 	else {
