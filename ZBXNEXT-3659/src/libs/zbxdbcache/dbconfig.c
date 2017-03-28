@@ -887,9 +887,6 @@ static void	DCsync_hosts(zbx_dbsync_t *sync)
 
 		/* store new information in host structure */
 
-		/* reset the used interfaces flag */
-		host->used_interfaces = ZBX_FLAG_INTERFACE_NONE;
-
 		DCstrpool_replace(found, &host->host, row[2]);
 		DCstrpool_replace(found, &host->name, row[23]);
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
@@ -1112,6 +1109,13 @@ done:
 			DCstrpool_replace(0, &host->snmp_error, row[26]);
 			DCstrpool_replace(0, &host->ipmi_error, row[27]);
 			DCstrpool_replace(0, &host->jmx_error, row[28]);
+
+			host->items_num = 0;
+			host->snmp_items_num = 0;
+			host->ipmi_items_num = 0;
+			host->jmx_items_num = 0;
+
+			host->reset_availability = 0;
 		}
 		else
 		{
@@ -1120,7 +1124,7 @@ done:
 
 			/* reset host status if host proxy assignment has been changed */
 			if (proxy_hostid != host->proxy_hostid)
-				host->used_interfaces = ZBX_FLAG_INTERFACE_UNKNOWN;
+				host->reset_availability = 1;
 		}
 
 		host->proxy_hostid = proxy_hostid;
@@ -1907,6 +1911,37 @@ static void	dc_interface_snmpitems_remove(ZBX_DC_ITEM *item)
 	}
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: dc_host_update_agent_stats                                       *
+ *                                                                            *
+ * Purpose: update number of items per agent statistics                       *
+ *                                                                            *
+ * Parameters: host - [IN] the host                                           *
+ *             type - [IN] the item type (ITEM_TYPE_*)                        *
+ *             num  - [IN] the number of items (+) added, (-) removed         *
+ *                                                                            *
+ ******************************************************************************/
+static void	dc_host_update_agent_stats(ZBX_DC_HOST *host, unsigned char type, int num)
+{
+	switch (type)
+	{
+		case ITEM_TYPE_ZABBIX:
+			host->items_num += num;
+			break;
+		case ITEM_TYPE_SNMPv1:
+		case ITEM_TYPE_SNMPv2c:
+		case ITEM_TYPE_SNMPv3:
+			host->snmp_items_num += num;
+			break;
+		case ITEM_TYPE_IPMI:
+			host->ipmi_items_num += num;
+			break;
+		case ITEM_TYPE_JMX:
+			host->jmx_items_num += num;
+	}
+}
+
 static void	DCsync_items(zbx_dbsync_t *sync, int refresh_unsupported_changed)
 {
 	const char		*__function_name = "DCsync_items";
@@ -2034,7 +2069,13 @@ static void	DCsync_items(zbx_dbsync_t *sync, int refresh_unsupported_changed)
 				item->data_expected_from = now;
 
 			old_poller_type = item->poller_type;
+
+			if (ITEM_STATUS_ACTIVE == item->status)
+				dc_host_update_agent_stats(host, item->type, -1);
 		}
+
+		if (ITEM_STATUS_ACTIVE == status)
+			dc_host_update_agent_stats(host, type, 1);
 
 		item->status = status;
 		old_nextcheck = item->nextcheck;
@@ -2119,28 +2160,6 @@ static void	DCsync_items(zbx_dbsync_t *sync, int refresh_unsupported_changed)
 					item->nextcheck = calculate_item_nextcheck(seed, type, delay,
 							(NULL == flexitem ? NULL : row[16]), now - proxy_timediff);
 					item->nextcheck += proxy_timediff + (NULL != proxy);
-				}
-			}
-
-			/* update host's used_interfaces flag */
-			if (ZBX_FLAG_INTERFACE_UNKNOWN != host->used_interfaces)
-			{
-				switch (type)
-				{
-					case ITEM_TYPE_ZABBIX:
-						host->used_interfaces |= ZBX_FLAG_INTERFACE_ZABBIX;
-						break;
-					case ITEM_TYPE_SNMPv1:
-					case ITEM_TYPE_SNMPv2c:
-					case ITEM_TYPE_SNMPv3:
-						host->used_interfaces |= ZBX_FLAG_INTERFACE_SNMP;
-						break;
-					case ITEM_TYPE_IPMI:
-						host->used_interfaces |= ZBX_FLAG_INTERFACE_IPMI;
-						break;
-					case ITEM_TYPE_JMX:
-						host->used_interfaces |= ZBX_FLAG_INTERFACE_JMX;
-						break;
 				}
 			}
 		}
@@ -2410,6 +2429,9 @@ static void	DCsync_items(zbx_dbsync_t *sync, int refresh_unsupported_changed)
 	{
 		if (NULL == (item = zbx_hashset_search(&config->items, &rowid)))
 			continue;
+
+		if (NULL != (host = zbx_hashset_search(&config->hosts, &item->hostid)))
+			dc_host_update_agent_stats(host, item->type, -1);
 
 		itemid = item->itemid;
 
@@ -3458,9 +3480,8 @@ static void	DCdump_hosts()
 		zabbix_log(LOG_LEVEL_TRACE, "  jmx_available %u", host->jmx_available);
 		zabbix_log(LOG_LEVEL_TRACE, "  status %u", host->status);
 
-		/* specifies which interfaces are being used (have enabled items) */
-		/* (see ZBX_FLAG_INTERFACE_* defines)                             */
-		zabbix_log(LOG_LEVEL_TRACE, "  used_interfaces %u", host->used_interfaces);
+		zabbix_log(LOG_LEVEL_TRACE, "   number of items: zabbix:%d snmp:%d ipmi:%d jmx:%d", host->items_num,
+				host->snmp_items_num, host->ipmi_items_num, host->jmx_items_num);
 
 		/* 'tls_connect' and 'tls_accept' must be respected even if encryption support is not compiled in */
 		zabbix_log(LOG_LEVEL_TRACE, "  tls_connect %u", host->tls_connect);
@@ -8859,25 +8880,26 @@ int	DCreset_hosts_availability(zbx_vector_ptr_t *hosts)
 
 	while (NULL != (host = (ZBX_DC_HOST *)zbx_hashset_iter_next(&iter)))
 	{
+		int	items_num = 0, snmp_items_num = 0, ipmi_items_num = 0, jmx_items_num = 0;
+
 		/* On server skip hosts handled by proxies. They are handled directly */
 		/* when receiving hosts' availability data from proxies.              */
 		/* Unless a host was just (re)assigned to a proxy or the proxy has    */
 		/* not updated its status during the maximum proxy heartbeat period.  */
 		/* In this case reset all interfaces to unknown status.               */
-		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER) && 0 != host->proxy_hostid)
+		if (0 == host->reset_availability &&
+				0 != (program_type & ZBX_PROGRAM_TYPE_SERVER) && 0 != host->proxy_hostid)
 		{
-			if (ZBX_FLAG_INTERFACE_UNKNOWN != host->used_interfaces)
-			{
-				ZBX_DC_PROXY	*proxy;
+			ZBX_DC_PROXY	*proxy;
 
-				if (NULL != (proxy = zbx_hashset_search(&config->proxies, &host->proxy_hostid)))
-				{
-					/* SEC_PER_MIN is a tolerance interval, it was chosen arbitrarily */
-					if (ZBX_PROXY_HEARTBEAT_FREQUENCY_MAX + SEC_PER_MIN >= now - proxy->lastaccess)
-						continue;
-				}
-				host->used_interfaces = ZBX_FLAG_INTERFACE_UNKNOWN;
+			if (NULL != (proxy = zbx_hashset_search(&config->proxies, &host->proxy_hostid)))
+			{
+				/* SEC_PER_MIN is a tolerance interval, it was chosen arbitrarily */
+				if (ZBX_PROXY_HEARTBEAT_FREQUENCY_MAX + SEC_PER_MIN >= now - proxy->lastaccess)
+					continue;
 			}
+
+			host->reset_availability = 1;
 		}
 
 		if (NULL == ha)
@@ -8885,29 +8907,25 @@ int	DCreset_hosts_availability(zbx_vector_ptr_t *hosts)
 
 		zbx_host_availability_init(ha, host->hostid);
 
-		if (0 == (host->used_interfaces & ZBX_FLAG_INTERFACE_ZABBIX) &&
-				HOST_AVAILABLE_UNKNOWN != host->available)
+		if (0 == host->reset_availability)
 		{
+			items_num = host->items_num;
+			snmp_items_num = host->snmp_items_num;
+			ipmi_items_num = host->ipmi_items_num;
+			jmx_items_num = host->jmx_items_num;
+		}
+
+		if (0 == items_num &&  HOST_AVAILABLE_UNKNOWN != host->available)
 			zbx_agent_availability_init(&ha->agents[ZBX_AGENT_ZABBIX], HOST_AVAILABLE_UNKNOWN, "", 0, 0);
-		}
 
-		if (0 == (host->used_interfaces & ZBX_FLAG_INTERFACE_SNMP) &&
-				HOST_AVAILABLE_UNKNOWN != host->snmp_available)
-		{
+		if (0 == snmp_items_num && HOST_AVAILABLE_UNKNOWN != host->snmp_available)
 			zbx_agent_availability_init(&ha->agents[ZBX_AGENT_SNMP], HOST_AVAILABLE_UNKNOWN, "", 0, 0);
-		}
 
-		if (0 == (host->used_interfaces & ZBX_FLAG_INTERFACE_IPMI) &&
-				HOST_AVAILABLE_UNKNOWN != host->ipmi_available)
-		{
+		if (0 == ipmi_items_num && HOST_AVAILABLE_UNKNOWN != host->ipmi_available)
 			zbx_agent_availability_init(&ha->agents[ZBX_AGENT_IPMI], HOST_AVAILABLE_UNKNOWN, "", 0, 0);
-		}
 
-		if (0 == (host->used_interfaces & ZBX_FLAG_INTERFACE_JMX) &&
-				HOST_AVAILABLE_UNKNOWN != host->jmx_available)
-		{
+		if (0 == jmx_items_num && HOST_AVAILABLE_UNKNOWN != host->jmx_available)
 			zbx_agent_availability_init(&ha->agents[ZBX_AGENT_JMX], HOST_AVAILABLE_UNKNOWN, "", 0, 0);
-		}
 
 		if (SUCCEED == zbx_host_availability_is_set(ha))
 		{
@@ -8919,6 +8937,8 @@ int	DCreset_hosts_availability(zbx_vector_ptr_t *hosts)
 			else
 				zbx_host_availability_clean(ha);
 		}
+
+		host->reset_availability = 0;
 	}
 	UNLOCK_CACHE;
 
