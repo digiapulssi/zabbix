@@ -67,8 +67,6 @@ foreach ($this->data['proxys'] as $proxy) {
 }
 
 $particularProxys = [
-	new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
-	BR(),
 	new CSpan([bold(_('Service')), ':', SPACE, $this->data['slvItem']['name']]),
 	BR(),
 	new CSpan([bold(_('Test time')), ':', SPACE, date('d.m.Y H:i:s', $this->data['time'])]),
