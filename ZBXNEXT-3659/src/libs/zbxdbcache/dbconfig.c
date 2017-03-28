@@ -2050,7 +2050,7 @@ static void	DCsync_items(zbx_dbsync_t *sync, int refresh_unsupported_changed)
 		if (0 == found)
 		{
 			item->triggers = NULL;
-			item->update_triggers = 1;
+			item->update_triggers = 0;
 			item->nextcheck = 0;
 			item->lastclock = 0;
 			item->state = (unsigned char)atoi(row[20]);
