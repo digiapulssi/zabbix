@@ -3906,6 +3906,8 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
 	zbx_vector_uint64_create(&funcids);
 	zbx_vector_uint64_reserve(&funcids, functionids->values_num);
 
+	ev.object = EVENT_OBJECT_TRIGGER;
+
 	for (i = 0; i < trigger_order->values_num; i++)
 	{
 		zbx_trigger_func_position_t	*tr_func_pos;
@@ -3915,7 +3917,6 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
 		if (NULL != tr->new_error)
 			continue;
 
-		ev.object = EVENT_OBJECT_TRIGGER;
 		ev.value = tr->value;
 
 		expand_trigger_macros(&ev, tr);
@@ -4439,7 +4440,7 @@ empty:
  *                                                                            *
  * Function: expand_trigger_macros                                            *
  *                                                                            *
- * Purpose: Expand macros in a trigger expression                             *
+ * Purpose: expand macros in a trigger expression                             *
  *                                                                            *
  * Parameters: event - The trigger event structure                            *
  *             trigger - The trigger where to expand macros in                *
@@ -4478,7 +4479,7 @@ void	evaluate_expressions(zbx_vector_ptr_t *triggers)
 	DC_TRIGGER		*tr;
 	int			i;
 	double			expr_result;
-	zbx_vector_ptr_t		unknown_msgs;	/* pointers to messages about origins of 'unknown' values */
+	zbx_vector_ptr_t	unknown_msgs;	/* pointers to messages about origins of 'unknown' values */
 	char			err[MAX_STRING_LEN];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() tr_num:%d", __function_name, triggers->values_num);
