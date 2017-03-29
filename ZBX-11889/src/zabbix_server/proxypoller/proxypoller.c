@@ -31,9 +31,6 @@
 #include "proxy.h"
 #include "../../libs/zbxcrypto/tls.h"
 
-#define ZBX_PROXY_CONN_SUCCESS	0
-#define ZBX_PROXY_CONN_FAIL	-1
-
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 
