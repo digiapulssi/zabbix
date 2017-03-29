@@ -1706,7 +1706,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	}
 	else
 	{
-		int		th_num = 0, threads_num = 0, status;
+		int		th_num = 0, threads_num = 0, status, last_test_failed = 0;
 		char		buf[2048];
 		pid_t		pid;
 		writer_thread_t	*threads = NULL;
@@ -1728,11 +1728,29 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 			{
 				int	fd[2];		/* reader and writer fd for data */
 				int	log_pipe[2];	/* reader and writer fd for logs */
+				int	rv_fd, rv_log_pipe = 0;
 
-				if (-1 == pipe(fd) || -1 == pipe(log_pipe))
+				if (0 != last_test_failed)
+				{
+					nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
+
+					continue;
+				}
+
+				if (-1 == (rv_fd = pipe(fd)) || -1 == (rv_log_pipe = pipe(log_pipe)))
 				{
 					zbx_rsm_errf(log_fd, "cannot create pipe: %s", zbx_strerror(errno));
-					goto endtest;
+
+					if (-1 == rv_log_pipe)
+					{
+						close(fd[0]);
+						close(fd[1]);
+					}
+
+					nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
+					last_test_failed = 1;
+
+					continue;
 				}
 
 				if (0 == (pid = zbx_child_fork()))
@@ -1743,17 +1761,13 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 					close(fd[0]);		/* child does not need data reader fd */
 					close(log_pipe[0]);	/* child does not need log reader fd */
+					fclose(log_fd);		/* child does not need log writer */
 
 					if (NULL == (th_log_fd = fdopen(log_pipe[1], "w")))
 					{
-						zbx_rsm_errf(log_fd, "cannot open log pipe as stream: %s",
-								zbx_strerror(errno));
-						th_log_fd = log_fd;
-					}
-					else
-					{
-						fclose(log_fd);
-						log_fd = NULL;
+						zbx_rsm_errf(log_fd, "cannot open log pipe: %s", zbx_strerror(errno));
+
+						nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
 					}
 
 					if (SUCCEED != zbx_get_ns_ip_values(res, nss[i].name, nss[i].ips[j].ip, keys,
@@ -1798,11 +1812,11 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 					close(log_pipe[0]);
 					close(log_pipe[1]);
 
-					goto endtest;
+					last_test_failed = 1;
 				}
 			}
 		}
-endtest:
+
 		for (th_num = 0; th_num < threads_num; th_num++)
 		{
 			int	bytes;
