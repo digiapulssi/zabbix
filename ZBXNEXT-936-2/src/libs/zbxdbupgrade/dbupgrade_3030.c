@@ -499,15 +499,6 @@ static int	DBpatch_3030042(void)
 	return DBset_default("scripts", &field);
 }
 
-static int	DBpatch_3030043(void)
-{
-	/* 1 - ZBX_TM_REMOTE_COMMAND_FAILED */
-	if (ZBX_DB_OK > DBexecute("update task_remote_command_result set status=1 where status=-1"))
-		return FAIL;
-
-	return SUCCEED;
-}
-
 #endif
 
 DBPATCH_START(3030)
@@ -557,6 +548,5 @@ DBPATCH_ADD(3030039, 0, 1)
 DBPATCH_ADD(3030040, 0, 1)
 DBPATCH_ADD(3030041, 0, 1)
 DBPATCH_ADD(3030042, 0, 1)
-DBPATCH_ADD(3030043, 0, 1)
 
 DBPATCH_END()
