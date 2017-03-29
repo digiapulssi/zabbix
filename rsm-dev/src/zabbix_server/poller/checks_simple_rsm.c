@@ -1753,7 +1753,21 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 					continue;
 				}
 
-				if (0 == (pid = zbx_child_fork()))
+				if (0 > (pid = zbx_child_fork()))
+				{
+					zbx_rsm_errf(log_fd, "cannot create process: %s", zbx_strerror(errno));
+
+					close(fd[0]);
+					close(fd[1]);
+					close(log_pipe[0]);
+					close(log_pipe[1]);
+
+					nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
+					last_test_failed = 1;
+
+					continue;
+				}
+				else if (0 == pid)
 				{
 					/* child */
 
@@ -1770,8 +1784,8 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 						nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
 					}
 
-					if (SUCCEED != zbx_get_ns_ip_values(res, nss[i].name, nss[i].ips[j].ip, keys,
-							testprefix, domain, th_log_fd,
+					if (NULL != th_log_fd && SUCCEED != zbx_get_ns_ip_values(res, nss[i].name,
+							nss[i].ips[j].ip, keys, testprefix, domain, th_log_fd,
 							&nss[i].ips[j].rtt, (ZBX_RSM_UDP == proto && 0 != rdds_enabled ?
 							&nss[i].ips[j].upd : NULL), ipv4_enabled, ipv6_enabled,
 							epp_enabled, err, sizeof(err)))
@@ -1790,7 +1804,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 					exit(EXIT_SUCCESS);
 				}
-				else if (0 < pid)
+				else
 				{
 					/* parent */
 
@@ -1802,17 +1816,6 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 					threads[th_num].log_fd = log_pipe[0];
 
 					th_num++;
-				}
-				else
-				{
-					zbx_rsm_errf(log_fd, "cannot create process: %s", zbx_strerror(errno));
-
-					close(fd[0]);
-					close(fd[1]);
-					close(log_pipe[0]);
-					close(log_pipe[1]);
-
-					last_test_failed = 1;
 				}
 			}
 		}
