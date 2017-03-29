@@ -3569,8 +3569,6 @@ static void	DCdump_host_inventories()
 
 	zabbix_log(LOG_LEVEL_TRACE, "In %s()", __function_name);
 
-	zbx_hashset_iter_reset(&config->host_inventories, &iter);
-
 	zbx_vector_ptr_create(&index);
 	zbx_hashset_iter_reset(&config->host_inventories, &iter);
 
@@ -3722,13 +3720,13 @@ static void	DCdump_interfaces()
 	zabbix_log(LOG_LEVEL_TRACE, "End of %s()", __function_name);
 }
 
-static void	DCdump_numitem(const ZBX_DC_NUMITEM	*numitem)
+static void	DCdump_numitem(const ZBX_DC_NUMITEM *numitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  formula:'%s' units:'%s' trends:%d delta:%u multiplier:%u", numitem->formula,
 			numitem->units, numitem->trends, numitem->delta, numitem->multiplier);
 }
 
-static void	DCdump_snmpitem(const ZBX_DC_SNMPITEM	*snmpitem)
+static void	DCdump_snmpitem(const ZBX_DC_SNMPITEM *snmpitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  snmp:[oid:'%s' community:'%s' oid_type:%u]", snmpitem->snmp_oid,
 			snmpitem->snmp_community, snmpitem->snmp_oid_type);
@@ -3742,33 +3740,33 @@ static void	DCdump_snmpitem(const ZBX_DC_SNMPITEM	*snmpitem)
 			snmpitem->snmpv3_privprotocol);
 }
 
-static void	DCdump_ipmiitem(const ZBX_DC_IPMIITEM	*ipmiitem)
+static void	DCdump_ipmiitem(const ZBX_DC_IPMIITEM *ipmiitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  ipmi_sensor:'%s'", ipmiitem->ipmi_sensor);
 }
 
-static void	DCdump_flexitem(const ZBX_DC_FLEXITEM	*flexitem)
+static void	DCdump_flexitem(const ZBX_DC_FLEXITEM *flexitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  delay_flex:'%s'", flexitem->delay_flex);
 }
 
-static void	DCdump_trapitem(const ZBX_DC_TRAPITEM	*trapitem)
+static void	DCdump_trapitem(const ZBX_DC_TRAPITEM *trapitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  trapper_hosts:'%s'", trapitem->trapper_hosts);
 }
 
-static void	DCdump_logitem(ZBX_DC_LOGITEM	*logitem)
+static void	DCdump_logitem(ZBX_DC_LOGITEM *logitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  logtimefmt:'%s'", logitem->logtimefmt);
 }
 
-static void	DCdump_dbitem(const ZBX_DC_DBITEM	*dbitem)
+static void	DCdump_dbitem(const ZBX_DC_DBITEM *dbitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  db:[params:'%s' username:'%s' password:'%s']", dbitem->params,
 			dbitem->username, dbitem->password);
 }
 
-static void	DCdump_sshitem(const ZBX_DC_SSHITEM	*sshitem)
+static void	DCdump_sshitem(const ZBX_DC_SSHITEM *sshitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  ssh:[username:'%s' password:'%s' authtype:%u params:'%s']",
 			sshitem->username, sshitem->password, sshitem->authtype, sshitem->params);
@@ -3776,24 +3774,24 @@ static void	DCdump_sshitem(const ZBX_DC_SSHITEM	*sshitem)
 			sshitem->privatekey);
 }
 
-static void	DCdump_telnetitem(const ZBX_DC_TELNETITEM	*telnetitem)
+static void	DCdump_telnetitem(const ZBX_DC_TELNETITEM *telnetitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  telnet:[username:'%s' password:'%s' params:'%s']", telnetitem->username,
 			telnetitem->password, telnetitem->params);
 }
 
-static void	DCdump_simpleitem(const ZBX_DC_SIMPLEITEM	*simpleitem)
+static void	DCdump_simpleitem(const ZBX_DC_SIMPLEITEM *simpleitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  simple:[username:'%s' password:'%s']", simpleitem->username,
 			simpleitem->password);
 }
 
-static void	DCdump_jmxitem(const ZBX_DC_JMXITEM	*jmxitem)
+static void	DCdump_jmxitem(const ZBX_DC_JMXITEM *jmxitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  jmx:[username:'%s' password:'%s']", jmxitem->username, jmxitem->password);
 }
 
-static void	DCdump_calcitem(const ZBX_DC_CALCITEM	*calcitem)
+static void	DCdump_calcitem(const ZBX_DC_CALCITEM *calcitem)
 {
 	zabbix_log(LOG_LEVEL_TRACE, "  calc:[params:'%s']", calcitem->params);
 }
@@ -3995,12 +3993,12 @@ static void	DCdump_triggers()
 
 static void	DCdump_trigdeps()
 {
-	const char			*__function_name = "DCdump_trigdeps";
+	const char		*__function_name = "DCdump_trigdeps";
 
-	ZBX_DC_TRIGGER_DEPLIST		*trigdep;
-	zbx_hashset_iter_t		iter;
-	int				i, j;
-	zbx_vector_ptr_t		index;
+	ZBX_DC_TRIGGER_DEPLIST	*trigdep;
+	zbx_hashset_iter_t	iter;
+	int			i, j;
+	zbx_vector_ptr_t	index;
 
 	zabbix_log(LOG_LEVEL_TRACE, "In %s()", __function_name);
 
