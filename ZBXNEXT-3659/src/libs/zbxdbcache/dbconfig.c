@@ -3387,7 +3387,7 @@ static void	DCdump_config()
 {
 	const char	*__function_name = "DCdump_config";
 
-	int	i;
+	int		i;
 
 	zabbix_log(LOG_LEVEL_TRACE, "In %s()", __function_name);
 
