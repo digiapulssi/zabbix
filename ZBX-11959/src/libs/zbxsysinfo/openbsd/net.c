@@ -310,6 +310,8 @@ int	NET_IF_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 			i++;
 		}
 
+		if_freenameindex(interfaces);
+
 		ret = SYSINFO_RET_OK;
 	}
 
@@ -318,8 +320,6 @@ int	NET_IF_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	SET_STR_RESULT(result, strdup(j.buffer));
 
 	zbx_json_free(&j);
-
-	if_freenameindex(interfaces);
 
 	return ret;
 }
