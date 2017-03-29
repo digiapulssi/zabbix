@@ -3880,6 +3880,30 @@ zbx_trigger_func_position_t;
 
 /******************************************************************************
  *                                                                            *
+ * Function: expand_trigger_macros                                            *
+ *                                                                            *
+ * Purpose: expand macros in a trigger expression                             *
+ *                                                                            *
+ * Parameters: event - The trigger event structure                            *
+ *             trigger - The trigger where to expand macros in                *
+ *                                                                            *
+ * Author: Andrea Biscuola                                                    *
+ *                                                                            *
+ ******************************************************************************/
+static void	expand_trigger_macros(DB_EVENT *event, DC_TRIGGER *trigger)
+{
+	substitute_simple_macros(NULL, event, NULL, NULL, NULL, NULL, NULL, NULL, &trigger->expression,
+			MACRO_TYPE_TRIGGER_EXPRESSION, NULL, 0);
+
+	if (TRIGGER_RECOVERY_MODE_RECOVERY_EXPRESSION == trigger->recovery_mode)
+	{
+		substitute_simple_macros(NULL, event, NULL, NULL, NULL, NULL, NULL, NULL,
+				&trigger->recovery_expression, MACRO_TYPE_TRIGGER_EXPRESSION, NULL, 0);
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_link_triggers_with_functions                                 *
  *                                                                            *
  * Purpose: triggers links with functions                                     *
@@ -4434,30 +4458,6 @@ empty:
 	zbx_vector_uint64_destroy(&functionids);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: expand_trigger_macros                                            *
- *                                                                            *
- * Purpose: expand macros in a trigger expression                             *
- *                                                                            *
- * Parameters: event - The trigger event structure                            *
- *             trigger - The trigger where to expand macros in                *
- *                                                                            *
- * Author: Andrea Biscuola                                                    *
- *                                                                            *
- ******************************************************************************/
-void	expand_trigger_macros(DB_EVENT *event, DC_TRIGGER *trigger)
-{
-	substitute_simple_macros(NULL, event, NULL, NULL, NULL, NULL, NULL, NULL, &trigger->expression,
-			MACRO_TYPE_TRIGGER_EXPRESSION, NULL, 0);
-
-	if (TRIGGER_RECOVERY_MODE_RECOVERY_EXPRESSION == trigger->recovery_mode)
-	{
-		substitute_simple_macros(NULL, event, NULL, NULL, NULL, NULL, NULL, NULL,
-				&trigger->recovery_expression, MACRO_TYPE_TRIGGER_EXPRESSION, NULL, 0);
-	}
 }
 
 /******************************************************************************
