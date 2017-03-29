@@ -8918,7 +8918,7 @@ int	DCreset_hosts_availability(zbx_vector_ptr_t *hosts)
 			jmx_items_num = host->jmx_items_num;
 		}
 
-		if (0 == items_num &&  HOST_AVAILABLE_UNKNOWN != host->available)
+		if (0 == items_num && HOST_AVAILABLE_UNKNOWN != host->available)
 			zbx_agent_availability_init(&ha->agents[ZBX_AGENT_ZABBIX], HOST_AVAILABLE_UNKNOWN, "", 0, 0);
 
 		if (0 == snmp_items_num && HOST_AVAILABLE_UNKNOWN != host->snmp_available)
