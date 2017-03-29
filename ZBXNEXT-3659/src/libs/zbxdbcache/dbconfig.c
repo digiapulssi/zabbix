@@ -1437,17 +1437,17 @@ static void	DCsync_htmpls(zbx_dbsync_t *sync)
 
 static void	DCsync_gmacros(zbx_dbsync_t *sync)
 {
-	const char		*__function_name = "DCsync_gmacros";
+	const char	*__function_name = "DCsync_gmacros";
 
-	char			**row;
-	zbx_uint64_t		rowid;
-	unsigned char		tag;
+	char		**row;
+	zbx_uint64_t	rowid;
+	unsigned char	tag;
 
-	ZBX_DC_GMACRO		*gmacro;
+	ZBX_DC_GMACRO	*gmacro;
 
-	int			found, context_existed, update_index, ret;
-	zbx_uint64_t		globalmacroid;
-	char			*macro = NULL, *context = NULL;
+	int		found, context_existed, update_index, ret;
+	zbx_uint64_t	globalmacroid;
+	char		*macro = NULL, *context = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1528,17 +1528,17 @@ static void	DCsync_gmacros(zbx_dbsync_t *sync)
 
 static void	DCsync_hmacros(zbx_dbsync_t *sync)
 {
-	const char		*__function_name = "DCsync_hmacros";
+	const char	*__function_name = "DCsync_hmacros";
 
-	char			**row;
-	zbx_uint64_t		rowid;
-	unsigned char		tag;
+	char		**row;
+	zbx_uint64_t	rowid;
+	unsigned char	tag;
 
-	ZBX_DC_HMACRO		*hmacro;
+	ZBX_DC_HMACRO	*hmacro;
 
-	int			found, context_existed, update_index, ret;
-	zbx_uint64_t		hostmacroid, hostid;
-	char			*macro = NULL, *context = NULL;
+	int		found, context_existed, update_index, ret;
+	zbx_uint64_t	hostmacroid, hostid;
+	char		*macro = NULL, *context = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
