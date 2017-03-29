@@ -15,6 +15,8 @@ common_libs = \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a
 
+common_libs += -lssl -lcrypto
+
 rsm_epp_gen_LDADD = $(common_libs)
 rsm_epp_enc_LDADD = $(common_libs)
 rsm_epp_dec_LDADD = $(common_libs)
