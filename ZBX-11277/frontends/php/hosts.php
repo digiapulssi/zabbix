@@ -274,11 +274,15 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			$newValues['status'] = getRequest('status', HOST_STATUS_NOT_MONITORED);
 		}
 
-		if (isset($visible['inventory_mode'])) {
-			$newValues['inventory_mode'] = getRequest('inventory_mode', HOST_INVENTORY_DISABLED);
-			$newValues['inventory'] = ($newValues['inventory_mode'] == HOST_INVENTORY_DISABLED)
-				? []
-				: getRequest('host_inventory', []);
+		if (hasRequest('host_inventory')) {
+			$newValues['inventory'] = getRequest('host_inventory');
+		}
+
+		if (hasRequest('inventory_mode')) {
+			$newValues['inventory_mode'] = getRequest('inventory_mode');
+			if ($newValues['inventory_mode'] == HOST_INVENTORY_DISABLED) {
+				$newValues['inventory'] = [];
+			}
 		}
 
 		if (array_key_exists('encryption', $visible)) {
