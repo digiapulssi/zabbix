@@ -92,4 +92,21 @@ const char	*CONFIG_LOG_FILE;
 char	*CONFIG_FILE;
 int	CONFIG_LOG_FILE_SIZE;
 
+char	*CONFIG_TLS_PSK_FILE;
+char	*CONFIG_TLS_CA_FILE;
+char	*CONFIG_TLS_CRL_FILE;
+char	*CONFIG_TLS_CERT_FILE;
+char	*CONFIG_TLS_KEY_FILE;
+char	*CONFIG_TLS_CONNECT;
+char	*CONFIG_TLS_ACCEPT;
+char	*CONFIG_TLS_SERVER_CERT_SUBJECT;
+char	*CONFIG_TLS_PSK_IDENTITY;
+char	*CONFIG_TLS_SERVER_CERT_ISSUER;
+int	CONFIG_PASSIVE_FORKS;
+int	CONFIG_ACTIVE_FORKS;
+unsigned int	configured_tls_connect_mode;
+unsigned int	configured_tls_accept_mode;
+unsigned int	configured_tls_connect_modes;
+unsigned int	configured_tls_accept_modes;
+
 #endif	/* _T_RSM_H_ */
