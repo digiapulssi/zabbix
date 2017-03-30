@@ -577,11 +577,11 @@ sub create_probe_template {
 
     my $templateid = create_template('Template '.$root_name);
 
-    create_macro('{$RSM.IP4.ENABLED}', defined($ipv4) ? $ipv4 : '1', $templateid);
-    create_macro('{$RSM.IP6.ENABLED}', defined($ipv6) ? $ipv6 : '1', $templateid);
-    create_macro('{$RSM.RESOLVER}', defined($resolver) ? $resolver : '127.0.0.1', $templateid);
-    create_macro('{$RSM.RDDS.ENABLED}', defined($rdds) ? $rdds : '1', $templateid);
-    create_macro('{$RSM.EPP.ENABLED}', defined($epp) ? $epp : '1', $templateid);
+    create_macro('{$RSM.IP4.ENABLED}', defined($ipv4) ? $ipv4 : '1', $templateid, defined($ipv4) ? 1 : undef);
+    create_macro('{$RSM.IP6.ENABLED}', defined($ipv6) ? $ipv6 : '1', $templateid, defined($ipv6) ? 1 : undef);
+    create_macro('{$RSM.RESOLVER}', defined($resolver) ? $resolver : '127.0.0.1', $templateid, defined($resolver) ? 1 : undef);
+    create_macro('{$RSM.RDDS.ENABLED}', defined($rdds) ? $rdds : '1', $templateid, defined($rdds) ? 1 : undef);
+    create_macro('{$RSM.EPP.ENABLED}', defined($epp) ? $epp : '1', $templateid, defined($epp) ? 1 : undef);
 
     return $templateid;
 }
