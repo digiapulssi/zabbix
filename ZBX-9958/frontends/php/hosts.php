@@ -249,6 +249,7 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 	$_REQUEST['templates'] = getRequest('templates', []);
 
 	try {
+		$result = null;
 		DBstart();
 
 		// filter only normal and discovery created hosts
@@ -395,10 +396,12 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 
 		DBend(true);
 
-		uncheckTableRows();
-		show_message(_('Hosts updated'));
+		if ($result) {
+			uncheckTableRows();
+			show_message(_('Hosts updated'));
 
-		unset($_REQUEST['massupdate'], $_REQUEST['form'], $_REQUEST['hosts']);
+			unset($_REQUEST['massupdate'], $_REQUEST['form'], $_REQUEST['hosts']);
+		}
 	}
 	catch (Exception $e) {
 		DBend(false);
@@ -724,7 +727,7 @@ $_REQUEST['hostid'] = getRequest('hostid', 0);
 
 $config = select_config();
 
-if (hasRequest('action') && getRequest('action') === 'host.massupdateform' && hasRequest('hosts')) {
+if (hasRequest('action') && (getRequest('action') === 'host.massupdateform' || getRequest('action') === 'host.massupdate') && hasRequest('hosts')) {
 	$data = [
 		'hosts' => getRequest('hosts'),
 		'visible' => getRequest('visible', []),

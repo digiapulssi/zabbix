@@ -377,7 +377,7 @@ elseif (hasRequest('action') && getRequest('action') == 'trigger.massdelete' && 
 /*
  * Display
  */
-if (hasRequest('action') && getRequest('action') == 'trigger.massupdateform' && hasRequest('g_triggerid')) {
+if (((hasRequest('action') && getRequest('action') == 'trigger.massupdateform') || hasRequest('massupdate')) && hasRequest('g_triggerid')) {
 	$data = getTriggerMassupdateFormData();
 	$data['action'] = 'trigger.massupdate';
 	$triggersView = new CView('configuration.triggers.massupdate', $data);
