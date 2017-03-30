@@ -24,7 +24,7 @@ my $command = shift || 'total';
 my $type = shift || 'dns';
 
 die("$command: invalid command") if ($command ne 'total' and $command ne 'online');
-die("$type: invalid type") if ($type ne 'dns' and $type ne 'epp' and $type ne 'rdds' and $type ne 'ipv4' and $type ne 'ipv6');
+die("$type: invalid type") if ($type ne 'dns' and $type ne 'epp' and $type ne 'rdds' and $type ne 'ip4' and $type ne 'ip6');
 
 sub dbg
 {
