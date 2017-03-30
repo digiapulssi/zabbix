@@ -76,7 +76,7 @@ ZBX_THREAD_ENTRY(dbconfig_thread, args)
 				CONFIG_CONFSYNCER_FREQUENCY);
 	}
 	else
-		zbx_setproctitle("%s [waiting for processes]", get_process_type_string(process_type));
+		zbx_setproctitle("%s [waiting for user command]", get_process_type_string(process_type));
 
 	zbx_set_sigusr_handler(zbx_dbconfig_sigusr_handler);
 
@@ -84,7 +84,7 @@ ZBX_THREAD_ENTRY(dbconfig_thread, args)
 	if (0 != CONFIG_CONFSYNCER_FREQUENCY)
 		zbx_sleep_loop(CONFIG_CONFSYNCER_FREQUENCY);
 	else
-		pause();
+		zbx_sleep_forever();
 
 	zbx_setproctitle("%s [connecting to the database]", get_process_type_string(process_type));
 
@@ -111,10 +111,10 @@ ZBX_THREAD_ENTRY(dbconfig_thread, args)
 		}
 		else
 		{
-			zbx_setproctitle("%s [synced configuration in " ZBX_FS_DBL " sec, idling]",
+			zbx_setproctitle("%s [synced configuration in " ZBX_FS_DBL " sec, waiting for user command]",
 					get_process_type_string(process_type), sec);
 
-			pause();
+			zbx_sleep_forever();
 		}
 	}
 }
