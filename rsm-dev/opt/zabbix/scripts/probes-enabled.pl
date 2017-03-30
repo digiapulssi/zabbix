@@ -73,7 +73,7 @@ foreach my $server_key (@server_keys)
 	{
 		print("Total $total probes, all with RDDS and EPP enabled\n");
 	}
-	if ($rdds_num == 0 and $epp_num == 0)
+	elsif ($rdds_num == 0 and $epp_num == 0)
 	{
 		print("Total $total probes, all with RDDS and EPP disabled\n");
 	}
