@@ -500,6 +500,7 @@ sub get_probes
 		" from hosts h, hosts_groups hg, groups g".
 		" where h.hostid=hg.hostid".
 			" and hg.groupid=g.groupid".
+			" and h.status=0".
 			$name_cond.
 			" and g.name='".PROBE_GROUP_NAME."'");
 
