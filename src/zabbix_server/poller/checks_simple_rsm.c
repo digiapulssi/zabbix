@@ -1860,6 +1860,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 				zbx_rsm_err(log_fd, "error on thread waiting");
 
 			close(threads[th_num].fd);
+			close(threads[th_num].log_fd);
 		}
 
 		zbx_free(threads);
