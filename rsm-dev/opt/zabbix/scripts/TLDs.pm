@@ -717,7 +717,7 @@ sub create_probe_status_host {
     create_item($options);
 
     $options = {'name' => 'Total number of probes with enabled IPv4',
-                                              'key_'=> 'online.nodes.pl[total,ipv4]',
+                                              'key_'=> 'online.nodes.pl[total,ip4]',
                                               'hostid' => $hostid,
                                               'interfaceid' => $interfaceid->{'interfaceid'},
                                               'applications' => [get_application_id('Probes availability', $hostid)],
@@ -727,7 +727,7 @@ sub create_probe_status_host {
     create_item($options);
 
     $options = {'name' => 'Number of online probes with enabled IPv4',
-                                              'key_'=> 'online.nodes.pl[online,ipv4]',
+                                              'key_'=> 'online.nodes.pl[online,ip4]',
                                               'hostid' => $hostid,
                                               'interfaceid' => $interfaceid->{'interfaceid'},
                                               'applications' => [get_application_id('Probes availability', $hostid)],
@@ -737,7 +737,7 @@ sub create_probe_status_host {
     create_item($options);
 
     $options = {'name' => 'Total number of probes with enabled IPv6',
-                                              'key_'=> 'online.nodes.pl[total,ipv6]',
+                                              'key_'=> 'online.nodes.pl[total,ip6]',
                                               'hostid' => $hostid,
                                               'interfaceid' => $interfaceid->{'interfaceid'},
                                               'applications' => [get_application_id('Probes availability', $hostid)],
@@ -747,7 +747,7 @@ sub create_probe_status_host {
     create_item($options);
 
     $options = {'name' => 'Number of online probes with enabled IPv6',
-                                              'key_'=> 'online.nodes.pl[online,ipv6]',
+                                              'key_'=> 'online.nodes.pl[online,ip6]',
                                               'hostid' => $hostid,
                                               'interfaceid' => $interfaceid->{'interfaceid'},
                                               'applications' => [get_application_id('Probes availability', $hostid)],
