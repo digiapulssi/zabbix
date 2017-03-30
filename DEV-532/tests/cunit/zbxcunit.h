@@ -22,6 +22,7 @@
 
 #include <malloc.h>
 #include <CUnit/Basic.h>
+#include <CUnit/Automated.h> 
 
 #define ZBX_CU_MODULE(module)	zbx_cu_init_##module()
 
