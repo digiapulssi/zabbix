@@ -536,7 +536,7 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 		{"ValueCacheSize",		&CONFIG_VALUE_CACHE_SIZE,		TYPE_UINT64,
 			PARM_OPT,	0,			__UINT64_C(64) * ZBX_GIBIBYTE},
 		{"CacheUpdateFrequency",	&CONFIG_CONFSYNCER_FREQUENCY,		TYPE_INT,
-			PARM_OPT,	1,			SEC_PER_HOUR},
+			PARM_OPT,	0,			SEC_PER_HOUR},
 		{"HousekeepingFrequency",	&CONFIG_HOUSEKEEPING_FREQUENCY,		TYPE_INT,
 			PARM_OPT,	0,			24},
 		{"MaxHousekeeperDelete",	&CONFIG_MAX_HOUSEKEEPER_DELETE,		TYPE_INT,
