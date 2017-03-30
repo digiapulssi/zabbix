@@ -740,8 +740,12 @@ class CHostPrototype extends CHostBase {
 			$templateIds = zbx_toHash($host['parentTemplates'], 'templateid');
 			$parentHostPrototypes = [];
 			foreach ($hostPrototypes as $inum => $parentHostPrototype) {
-				$parentTemplateId = $discoveryRules[$parentHostPrototype['ruleid']]['hostid'];
+				$ruleid = $parentHostPrototype['ruleid'];
+				if (!array_key_exists($ruleid, $discoveryRules)) {
+					continue;
+				}
 
+				$parentTemplateId = $discoveryRules[$ruleid]['hostid'];
 				if (isset($templateIds[$parentTemplateId])) {
 					$parentHostPrototypes[$inum] = $parentHostPrototype;
 				}
