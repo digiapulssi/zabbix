@@ -278,7 +278,7 @@ sub get_host($$) {
     my $host_name = shift;
     my $selectGroups = shift;
 
-    my $options = {'output' => ['hostid', 'host'], 'filter' => {'host' => $host_name} };
+    my $options = {'output' => ['hostid', 'host', 'status'], 'filter' => {'host' => $host_name} };
 
     $options->{'selectGroups'} = 'extend' if (defined($selectGroups) and $selectGroups eq true);
 
