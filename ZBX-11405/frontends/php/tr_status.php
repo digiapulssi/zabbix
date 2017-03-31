@@ -364,6 +364,7 @@ if ($config['event_ack_enable']) {
 	}
 }
 
+$events = null;
 if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
 	foreach ($triggers as &$trigger) {
 		$trigger['events'] = [];
@@ -439,7 +440,7 @@ $triggers_hosts = makeTriggersHostsList($triggers_hosts);
  */
 $switcherName = 'trigger_switchers';
 
-if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
+if ($events && ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK)) {
 	$showHideAllButton = (new CColHeader(
 		(new CSimpleButton())
 			->addClass(ZBX_STYLE_TREEVIEW)
