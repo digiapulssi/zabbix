@@ -244,16 +244,24 @@ jQuery(function($) {
 					data: {},
 					dataType: 'html',
 					success: function(html) {
-						// get timestamp from html
-						var htmlTimestamp = null;
+						// get timestamp and error message from html
+						var htmlTimestamp = null,
+								msgBad = null;
 
 						$(html).each(function() {
 							var obj = $(this);
-
-							if (obj.prop('nodeName') == 'DIV') {
+							if(obj.hasClass('msg-bad')){
+								msgBad = obj;
+							} else if (obj.prop('nodeName') == 'DIV') {
 								htmlTimestamp = obj.data('timestamp');
 							}
 						});
+
+						// set message
+						if (msgBad) {
+							$(msgBad).insertBefore('.article > :first-child');
+							html = $(html).not('.msg-bad');
+						}
 
 						// set html
 						if ($('#flickerfreescreen_' + id).data('timestamp') < htmlTimestamp) {
@@ -267,6 +275,9 @@ jQuery(function($) {
 							window.flickerfreeScreenShadow.validate(id);
 						}
 						chkbxRange.init();
+					},
+					beforeSend: function(){
+						$('.msg-bad').remove();
 					},
 					error: function() {
 						window.flickerfreeScreen.calculateReRefresh(id);
