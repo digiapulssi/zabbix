@@ -364,8 +364,10 @@ if ($config['event_ack_enable']) {
 	}
 }
 
+$events = null;
 if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
 	foreach ($triggers as &$trigger) {
+		$trigger['display_events'] = false;
 		$trigger['events'] = [];
 	}
 	unset($trigger);
@@ -416,8 +418,21 @@ if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
 			}
 
 			$triggers[$event['objectid']]['events'][] = $event;
+
+			if ($showEvents == EVENTS_OPTION_ALL) {
+				$triggers[$event['objectid']]['display_events'] = true;
+			}
+			elseif (!$event['acknowledged']) {
+				$triggers[$event['objectid']]['display_events'] = true;
+			}
 		}
 	}
+}
+else {
+	foreach ($triggers as &$trigger) {
+		$trigger['display_events'] = false;
+	}
+	unset($trigger);
 }
 
 // get trigger dependencies
@@ -440,12 +455,12 @@ $triggers_hosts = makeTriggersHostsList($triggers_hosts);
 $switcherName = 'trigger_switchers';
 
 if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
-	$showHideAllButton = (new CColHeader(
+	$showHideAllButton = $events ? (new CColHeader(
 		(new CSimpleButton())
 			->addClass(ZBX_STYLE_TREEVIEW)
 			->setId($switcherName)
 			->addItem((new CSpan())->addClass(ZBX_STYLE_ARROW_RIGHT))
-	))->addClass(ZBX_STYLE_CELL_WIDTH);
+	))->addClass(ZBX_STYLE_CELL_WIDTH) : '';
 }
 else {
 	$showHideAllButton = null;
@@ -596,7 +611,7 @@ foreach ($triggers as $trigger) {
 	}
 
 	if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
-		$openOrCloseButton = $trigger['events']
+		$openOrCloseButton = $trigger['display_events']
 			? (new CSimpleButton())
 				->addClass(ZBX_STYLE_TREEVIEW)
 				->setAttribute('data-switcherid', $trigger['triggerid'])
