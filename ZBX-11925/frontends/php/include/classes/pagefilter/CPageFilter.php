@@ -400,9 +400,8 @@ class CPageFilter {
 				for ($i = 0; $i < $count; $i++) {
 					$parent_name .= ($parent_name === '') ? '' : '/';
 					$parent_name .= $parent[$i];
+					$parents[$parent_name] = true;
 				}
-
-				$parents[$parent_name] = true;
 			}
 		}
 
