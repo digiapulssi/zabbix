@@ -210,12 +210,11 @@ if (defined($OPTS{'list-services'})) {
 
     my $report;
 
-    my @columns = ('tld_type', '{$RSM.DNS.TESTPREFIX}', '{$RSM.RDDS.NS.STRING}', '{$RSM.RDDS.TESTPREFIX}',
+    my @columns = ('tld_type', 'tld_status', '{$RSM.DNS.TESTPREFIX}', '{$RSM.RDDS.NS.STRING}', '{$RSM.RDDS.TESTPREFIX}',
 		    '{$RSM.TLD.DNSSEC.ENABLED}', '{$RSM.TLD.EPP.ENABLED}', '{$RSM.TLD.RDDS.ENABLED}');
 
     foreach my $tld (@tlds) {
 	my $services = get_services($tld);
-
         $report->{$tld} = $services;
     }
 
@@ -1386,7 +1385,7 @@ sub manage_tld_objects($$$$$) {
 		compare_arrays(\@hostids_arr, \@{$result->{'hostids'}});
 	    }
 	    else {
-		print "An error happened while removing hosts!\n";
+		print "An error happened while disabling hosts!\n";
 	    }
 
 	    exit;
@@ -1674,9 +1673,11 @@ sub get_services($) {
 
     my $tld_host = get_host($tld, true);
 
+    $result->{'tld_status'} = $tld_host->{'status'};
+
     foreach my $group (@{$tld_host->{'groups'}}) {
 	my $name = $group->{'name'};
-	$result->{'tld_type'} = $name if (grep(/\b$name\b/, @tld_types));
+	$result->{'tld_type'} = $name if ( $name ~~ @tld_types );
     }
 
     foreach my $macro (@{$macros}) {
