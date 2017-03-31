@@ -180,13 +180,10 @@ if (opt('debug'))
 {
 	foreach my $probe (keys(%{$probes_data->{$server_key}}))
 	{
-		my $idx = 0;
-
-		while (defined($probes_data->{$server_key}->{$probe}->[$idx]))
+		for (my $idx = 0; defined($probes_data->{$server_key}->{$probe}->[$idx]); $idx++)
 		{
 			my $status = ($idx % 2 == 0 ? "ONLINE" : "OFFLINE");
 			dbg("$probe: $status ", ts_full($probes_data->{$server_key}->{$probe}->[$idx]));
-			$idx++;
 		}
 	}
 }
@@ -1336,24 +1333,28 @@ sub __get_probe_changes
 	{
 		foreach my $probe (sort(keys(%{$probes_data->{$server_key}})))
 		{
-			my $idx = 0;
+			dbg("  $probe\@$server_key");
 
-			while (defined($probes_data->{$server_key}->{$probe}->[$idx]))
+			for (my $idx = 0; defined($probes_data->{$server_key}->{$probe}->[$idx]); $idx++)
 			{
 				my $clock = $probes_data->{$server_key}->{$probe}->[$idx];
 				my $status = ($idx % 2 == 0 ? PROBE_ONLINE_STR : PROBE_OFFLINE_STR);
 
-				dbg("  $probe\@$server_key changed to $status on ", ts_full($clock));
-
 				if ($idx == 0 && $clock < $from)
 				{
-					# ignore previous status
+					# ignore previous minute status
 					next;
 				}
 
-				push(@result, {'probe' => $probe, 'status' => $status, 'clock' => $clock});
+				if ($idx + 1 == scalar(@{$probes_data->{$server_key}->{$probe}}) && ($clock % 60 != 0))
+				{
+					# ignore last second status
+					next;
+				}
 
-				$idx++;
+				dbg("    changed status to \"$status\" on ", ts_full($clock));
+
+				push(@result, {'probe' => $probe, 'status' => $status, 'clock' => $clock});
 			}
 		}
 	}
