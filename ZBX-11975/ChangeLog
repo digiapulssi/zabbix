@@ -3,6 +3,10 @@ Changes for 3.0.9rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-11980] fixed incorrect type handling in SSH checks (abs)
+...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
+..F....... [ZBX-11984] fixed host hyperlink style on event details page (gcalenko)
+.......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
 A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
 ..F....... [ZBX-11933] added fullscreen parameter in link to submap in maps (vmurzins)
 A......... [ZBX-11893] fixed permission issue, when importing hosts that are monitored by proxy by Zabbix Admin type user (vmurzins)
@@ -1645,6 +1649,8 @@ Changes for 2.2.18rc1
 New features:
 
 Bug fixes:
+...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
+.......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
 A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
 A......... [ZBX-11893] fixed permission issue, when importing hosts that are monitored by proxy by Zabbix Admin type user (vmurzins)
 ..F....... [ZBX-11933] added fullscreen parameter in link to submap in maps (vmurzins)
