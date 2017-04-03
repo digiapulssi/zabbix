@@ -3,6 +3,7 @@ Changes for 3.2.5rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-11925] fixed parsing of nested host groups (gcalenko, Sasha)
 ..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
 ..F....... [ZBX-11975] fixed undefined index error in web scenario step creation (vmurzins)
 ........S. [ZBX-11980] fixed incorrect type handling in SSH checks (abs)
