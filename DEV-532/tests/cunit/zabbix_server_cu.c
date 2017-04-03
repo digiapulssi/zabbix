@@ -21,7 +21,7 @@
 
 #define daemon_start(arg, user, flags)	zabbix_server_entry()
 
-void	initialize_cu_tests();
+int	initialize_cu_tests();
 void	run_cu_tests();
 
 int	zabbix_server_entry()
