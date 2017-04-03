@@ -3,6 +3,7 @@ Changes for 2.2.18rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
 ...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
 .......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
 A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
