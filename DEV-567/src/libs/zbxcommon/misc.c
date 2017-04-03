@@ -879,22 +879,7 @@ int	is_ip6(const char *ip)
  ******************************************************************************/
 int	is_ip(const char *ip)
 {
-	const char	*__function_name = "is_ip";
-	int		ret = FAIL;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() ip:'%s'", __function_name, ip);
-
-	if (SUCCEED != is_ip4(ip))
-		goto out;
-
-	if (SUCCEED != is_ip6(ip))
-		goto out;
-
-	ret = SUCCEED;
-out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return FAIL;
+	return SUCCEED == is_ip4(ip) ? SUCCEED : is_ip6(ip);
 }
 
 /******************************************************************************
