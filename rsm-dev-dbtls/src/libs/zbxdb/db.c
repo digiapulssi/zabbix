@@ -21,6 +21,10 @@
 
 #include "zbxdb.h"
 
+#if defined(DBTLS) && !defined(HAVE_MYSQL)
+#	error "Secure connection with database server is only available for MySQL."
+#endif
+
 #if defined(HAVE_IBM_DB2)
 #	include <sqlcli1.h>
 #elif defined(HAVE_MYSQL)
@@ -283,7 +287,11 @@ static int	is_recoverable_mysql_error(void)
  *               ZBX_DB_FAIL - failed to connect                              *
  *                                                                            *
  ******************************************************************************/
-int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *dbschema, char *dbsocket, int port)
+int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *dbschema, char *dbsocket, int port
+#ifdef DBTLS
+		, const char *key, const char *cert, const char *ca, const char *capath, const char *cipher
+#endif
+)
 {
 	int		ret = ZBX_DB_OK, last_txn_error, last_txn_level;
 #if defined(HAVE_IBM_DB2)
@@ -392,7 +400,16 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 		zabbix_log(LOG_LEVEL_CRIT, "cannot allocate or initialize MYSQL database connection object");
 		exit(EXIT_FAILURE);
 	}
+#ifdef DBTLS
+	/* if at least one of DB TLS parameters was provided, pass them to MySQL and require secure connection */
+	if (NULL != key || NULL != cert || NULL != ca || NULL != capath || NULL != cipher)
+	{
+		enum mysql_ssl_mode	ssl_mode = SSL_MODE_REQUIRED;
 
+		mysql_ssl_set(conn, key, cert, ca, capath, cipher);
+		mysql_options(conn, MYSQL_OPT_SSL_MODE, &ssl_mode);
+	}
+#endif
 	if (NULL == mysql_real_connect(conn, host, user, password, dbname, port, dbsocket, CLIENT_MULTI_STATEMENTS))
 	{
 		zabbix_errlog(ERR_Z3001, dbname, mysql_errno(conn), mysql_error(conn));
