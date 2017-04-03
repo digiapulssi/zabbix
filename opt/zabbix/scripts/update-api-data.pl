@@ -20,6 +20,8 @@ use constant JSON_RDDS_80 => 'RDDS80';
 
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
+use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
+
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
 
 # do not write any logs
@@ -37,6 +39,8 @@ __validate_input();	# needs to be connected to db
 
 my $config = get_rsm_config();
 set_slv_config($config);
+
+my @server_keys = get_rsm_server_keys($config);
 
 db_connect();
 
@@ -127,8 +131,8 @@ foreach my $service (keys(%services))
 
 my $now = time();
 
-# in order to make sure all availability data points are saved we need to go back extra minute
-my $last_time_till = max_avail_time($now) - 60;
+# in order to make sure all data is saved in Zabbix we move 1 minute back
+my $max_till = max_avail_time($now) - 60;
 
 my ($check_from, $check_till, $continue_file);
 
@@ -168,7 +172,7 @@ if (opt('continue'))
 
 		$check_from = $truncated_ts;
 
-		info(sprintf("getting date from %s: %s (%d)", $continue_file, ts_str($check_from), $check_from));
+		dbg("last update time: ", ts_full($check_from));
 	}
 
 	if ($check_from == 0)
@@ -176,13 +180,21 @@ if (opt('continue'))
 		fail("no data from probes in the database yet");
 	}
 
+	my $period;
 	if (opt('period'))
 	{
-		$check_till = $check_from + getopt('period') * 60 - 1;
+		$period = getopt('period');
 	}
 	else
 	{
-		$check_till = $last_time_till;
+		$period = MAX_CONTINUE_PERIOD;
+	}
+
+	$check_till = $check_from + $period * 60 - 1;
+
+	if ($check_till > $max_till)
+	{
+		$check_till = $max_till;
 	}
 }
 elsif (opt('from'))
@@ -195,20 +207,20 @@ elsif (opt('from'))
 	}
 	else
 	{
-		$check_till = $last_time_till;
+		$check_till = $max_till;
 	}
 }
 elsif (opt('period'))
 {
 	# only period specified
-	$check_till = $last_time_till;
+	$check_till = $max_till;
 	$check_from = $check_till - getopt('period') * 60 + 1;
 }
 
 fail("cannot get the beginning of calculation period") unless(defined($check_from));
 fail("cannot get the end of calculation period") unless(defined($check_till));
 
-dbg("check_from:", ts_full($check_from), " check_till:", ts_full($check_till), " last_time_till:", ts_full($last_time_till));
+dbg("check_from:", ts_full($check_from), " check_till:", ts_full($check_till), " max_till:", ts_full($max_till));
 
 if ($check_till < $check_from)
 {
@@ -216,9 +228,9 @@ if ($check_till < $check_from)
 	exit(0);
 }
 
-if ($check_till > $last_time_till)
+if ($check_till > $max_till)
 {
-	my $left = ($check_till - $last_time_till) / 60;
+	my $left = ($check_till - $max_till) / 60;
 	my $left_str;
 
 	if ($left == 1)
@@ -237,16 +249,17 @@ if ($check_till > $last_time_till)
 
 my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till);
 
+dbg("real services period: ", selected_period($from, $till));
+
 if (!$from)
 {
-    info("no full test periods within specified time range: ", selected_period($check_from, $check_till));
-    exit(0);
+	info("no full test periods within specified time range: ", selected_period($check_from, $check_till));
+	exit(0);
 }
 
 my $tlds_processed = 0;
 
 # go through all the databases
-my @server_keys = get_rsm_server_keys($config);
 foreach (@server_keys)
 {
 	$server_key = $_;
@@ -1803,7 +1816,7 @@ sub __no_status_result
 sub __get_config_minclock
 {
 	my $config_key = 'rsm.configvalue[RSM.SLV.DNS.TCP.RTT]';
-	my $minclock;
+	my $minclock = 0;
 
 	foreach (@server_keys)
 	{
@@ -1822,13 +1835,16 @@ sub __get_config_minclock
 
 	fail("no data in the database ($server_key) yet") unless ($rows_ref->[0]->[0]);
 
-	$minclock = int($rows_ref->[0]->[0]) if ($minclock > int($rows_ref->[0]->[0]));
+	dbg("minclock: ", ts_full($rows_ref->[0]->[0]));
+
+	$minclock = int($rows_ref->[0]->[0]) if ($minclock eq 0 || $minclock gt int($rows_ref->[0]->[0]));
 	db_disconnect();
 	}
 	undef($server_key);
 
+	# todo phase 1: remove moving 1 day back, this was needed for Data Export, not SLA API!
 	# move a day back since this is collected once a day
-	$minclock -= 86400;
+	#$minclock -= 86400;
 
 	return $minclock;
 }
@@ -1881,8 +1897,8 @@ This option cannot be used together with option --continue.
 
 Continue calculation from the timestamp of the last run with --continue. In case of first run with
 --continue the oldest available data will be used as starting point. You may specify the end point
-of the period with --period option (see above). If you don't specify the end point the timestamp
-of the newest available data in the database will be used.
+of the period with --period option (see above). Default end point is as much data as available in the database
+but not more than 30 minutes.
 
 Note, that continue token is not updated if this option was specified together with --dry-run or when you use
 --from option.
