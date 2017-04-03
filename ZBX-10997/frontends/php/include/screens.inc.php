@@ -93,11 +93,18 @@ function addScreenRow(array $screen, $row_num) {
 	unset($screen_item);
 
 	DBstart();
-	$result = API::Screen()->update([
+	$options = [
 		'screenid' => $screen['screenid'],
 		'vsize' => $screen['vsize'] + 1,
 		'screenitems' => $screen['screenitems']
-	]);
+	];
+
+	if (!empty($screen['templateid'])) {
+		$result = API::TemplateScreen()->update($options);
+	} else {
+		$result = API::Screen()->update($options);
+	}
+
 	if ($result) {
 		add_audit_details(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_SCREEN, $screen['screenid'], $screen['name'],
 			_('Row added')
@@ -121,11 +128,18 @@ function addScreenColumn(array $screen, $col_num) {
 	unset($screen_item);
 
 	DBstart();
-	$result = API::Screen()->update([
+	$options = [
 		'screenid' => $screen['screenid'],
 		'hsize' => $screen['hsize'] + 1,
 		'screenitems' => $screen['screenitems']
-	]);
+	];
+
+	if (!empty($screen['templateid'])) {
+		$result = API::TemplateScreen()->update($options);
+	} else {
+		$result = API::Screen()->update($options);
+	}
+
 	if ($result) {
 		add_audit_details(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_SCREEN, $screen['screenid'], $screen['name'],
 			_('Column added')
@@ -152,11 +166,18 @@ function delScreenRow(array $screen, $row_num) {
 	unset($screen_item);
 
 	DBstart();
-	$result = API::Screen()->update([
+	$options = [
 		'screenid' => $screen['screenid'],
 		'vsize' => $screen['vsize'] - 1,
 		'screenitems' => $screen['screenitems']
-	]);
+	];
+
+	if (!empty($screen['templateid'])) {
+		$result = API::TemplateScreen()->update($options);
+	} else {
+		$result = API::Screen()->update($options);
+	}
+
 	if ($result) {
 		add_audit_details(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_SCREEN, $screen['screenid'], $screen['name'],
 			_('Row deleted')
@@ -183,11 +204,18 @@ function delScreenColumn(array $screen, $col_num) {
 	unset($screen_item);
 
 	DBstart();
-	$result = API::Screen()->update([
+	$options = [
 		'screenid' => $screen['screenid'],
 		'hsize' => $screen['hsize'] - 1,
 		'screenitems' => $screen['screenitems']
-	]);
+	];
+
+	if (!empty($screen['templateid'])) {
+		$result = API::TemplateScreen()->update($options);
+	} else {
+		$result = API::Screen()->update($options);
+	}
+
 	if ($result) {
 		add_audit_details(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_SCREEN, $screen['screenid'], $screen['name'],
 			_('Column deleted')
