@@ -144,12 +144,20 @@ class CScreenItem extends CApiService {
 			'resourcetype' => null
 		];
 
+		$defaults = [
+			'x' => 0,
+			'y' => 0,
+			'colspan' => 1,
+			'rowspan' => 1
+		];
+
 		foreach ($screenItems as &$screenItem) {
 			if (!check_db_fields($screenItemDBfields, $screenItem)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Invalid method parameters.'));
 			}
 
 			unset($screenItem['screenitemid']);
+			$screenItem = array_merge($defaults, $screenItem);
 		}
 		unset($screenItem);
 
@@ -175,10 +183,9 @@ class CScreenItem extends CApiService {
 			}
 		}
 
-		$dbScreenItems = $this->get([
+		$dbScreenItems = API::getApiService()->select($this->tableName(), [
 			'output' => ['screenitemid', 'screenid', 'x', 'y', 'rowspan', 'colspan'],
-			'screenids' => $screenIds,
-			'editable' => true,
+			'filter' => ['screenid' => array_keys($dbScreens)],
 			'preservekeys' => true
 		]);
 
@@ -286,11 +293,9 @@ class CScreenItem extends CApiService {
 			$dbScreens = zbx_array_merge($dbScreens, $dbTemplateScreens);
 		}
 
-		$dbScreenItems = $this->get([
-			'output' => ['screenitemid', 'screenid', 'x', 'y', 'rowspan', 'colspan', 'resourcetype', 'resourceid',
-				'style'],
-			'screenids' => array_keys($dbScreens),
-			'editable' => true,
+		$dbScreenItems = API::getApiService()->select($this->tableName(), [
+			'output' => ['screenitemid', 'screenid', 'x', 'y', 'rowspan', 'colspan', 'resourcetype', 'resourceid', 'style'],
+			'filter' => ['screenid' => array_keys($dbScreens)],
 			'preservekeys' => true
 		]);
 
@@ -912,8 +917,11 @@ class CScreenItem extends CApiService {
 				'xspan' => $item['x'] + $item['colspan'] - 1,
 				'yspan' => $item['y'] + $item['rowspan'] - 1
 			];
+			if (!array_key_exists($item['screenid'], $calculated)) {
+				$calculated[$item['screenid']] = [];
+			}
 
-			foreach($calculated as $entry) {
+			foreach($calculated[$item['screenid']] as $entry) {
 				$overlaps_x = $checked['x'] <= $entry['xspan'] && $checked['xspan'] >= $entry['x'];
 				$overlaps_y = $checked['y'] <= $entry['yspan'] && $checked['yspan'] >= $entry['y'];
 				if ($overlaps_x && $overlaps_y) {
@@ -923,7 +931,7 @@ class CScreenItem extends CApiService {
 				}
 			}
 
-			$calculated[] = $checked;
+			$calculated[$item['screenid']][] = $checked;
 		}
 	}
 
