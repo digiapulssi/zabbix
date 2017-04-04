@@ -73,11 +73,11 @@ $filterColumn1
 	)
 	->addRow(SPACE);
 $filterColumn2
-	->addRow(_('Services'), [
+	->addRow((new CSpan(_('Services')))->addStyle('padding: 0 25px;'), [
 		[
 			(new CCheckBox('filter_dns'))->setChecked($this->data['filter_dns']),
 			SPACE,
-			_('DNS'),
+			_('DNS')
 		],
 		SPACE,
 		new CSpan([
@@ -100,11 +100,11 @@ $filterColumn2
 		SPACE,
 		(new CButton('checkAllServices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
 	])
-	->addRow(_('TLD types'), [
+	->addRow((new CSpan(_('TLD types')))->addStyle('padding: 0 25px;'), [
 		[
 			$filterCctldGroup,
 			SPACE,
-			_(RSM_CC_TLD_GROUP),
+			_(RSM_CC_TLD_GROUP)
 		],
 		SPACE,
 		new CSpan([
