@@ -338,6 +338,10 @@ class DB {
 			else {
 				switch ($tableSchema['fields'][$field]['type']) {
 					case self::FIELD_TYPE_CHAR:
+						if (is_object($values[$field]) || is_array($values[$field])) {
+							$values[$field] = '';
+						}
+
 						$length = zbx_strlen($values[$field]);
 						$values[$field] = zbx_dbstr($values[$field]);
 
