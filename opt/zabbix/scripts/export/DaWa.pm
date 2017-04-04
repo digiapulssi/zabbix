@@ -6,7 +6,7 @@ use RSMSLV;
 use Text::CSV_XS;
 use File::Path qw(make_path);
 
-use constant CSV_FILES_DIR => '/opt/zabbix/export';
+use constant CSV_FILES_DIR => '/opt/zabbix/export-tmp';
 
 # catalogs
 use constant ID_PROBE => 'probe';
@@ -211,7 +211,7 @@ sub __csv_file_full_path
 	my $path = CSV_FILES_DIR . '/' . $_year . '/' . $_month . '/' . $_day . '/';
 
 	$path .= $tld  . '/' if ($tld);
-	
+
 	if (!__make_path($path))
 	{
 		die(dw_error());
@@ -467,6 +467,28 @@ sub __write_csv_catalog
 	return 1;
 }
 
+# todo phase 1: this was taken from ApiHerlper.pm:__set_file_error of phase 2 (improved version)
+sub __get_file_error
+{
+	my $err = shift;
+
+	if (ref($err) eq "ARRAY")
+	{
+		for my $diag (@$err)
+		{
+			my ($file, $message) = %$diag;
+			if ($file eq '')
+			{
+				return "$message.";
+			}
+
+			return "$file: $message.";
+		}
+	}
+
+	return join('', $err, @_);
+}
+
 sub __make_path
 {
 	my $path = shift;
@@ -475,7 +497,7 @@ sub __make_path
 
 	if (@$err)
 	{
-		__set_dw_error($err);
+		__set_dw_error(__get_file_error($err));
 		return;
 	}
 

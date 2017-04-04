@@ -22,7 +22,6 @@ use TLD_constants qw(:ec :api);
 use Parallel;
 
 use constant RDDS_SUBSERVICE => 'sub';
-use constant AUDIT_FILE => '/opt/zabbix/export/last_audit.txt';
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant PROBE_STATUS_UP => 'Up';
@@ -61,6 +60,10 @@ use constant rsm_rdds_probe_result => [
 	{JSON_INTERFACE_RDDS80 => true}					# 3 - only 80
 ];
 
+# todo phase 1: this must be available in phase 2
+use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
+use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
+
 parse_opts('tld=s', 'date=s', 'day=n', 'shift=n');
 setopt('nolog');
 
@@ -76,6 +79,11 @@ my ($d, $m, $y) = split('/', getopt('date'));
 usage() unless ($d && $m && $y);
 
 dw_set_date($y, $m, $d);
+
+if (!opt('dry-run') && (my $error = rsm_targets_prepare(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
+{
+	fail($error);
+}
 
 my $services;
 if (opt('service'))
@@ -296,6 +304,11 @@ foreach my $pc_ref (@{$probe_changes})
 
 dw_write_csv_files();
 dw_write_csv_catalogs();
+
+if (!opt('dry-run') && (my $error = rsm_targets_copy(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
+{
+	fail($error);
+}
 
 slv_exit(SUCCESS);
 

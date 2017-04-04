@@ -18,7 +18,7 @@ use constant AH_ALARMED_NO => 'NO';
 use constant AH_ALARMED_DISABLED => 'DISABLED';
 use constant AH_SERVICE_AVAILABILITY_FILE => 'serviceAvailability';
 use constant AH_BASE_DIR => '/opt/zabbix/sla';
-use constant AH_TMP_DIR => '/opt/zabbix/tmp';
+use constant AH_TMP_DIR => '/opt/zabbix/sla-tmp';
 
 use constant AH_ROOT_ZONE_DIR => 'zz--root';			# map root zone name (.) to something human readable
 
@@ -81,13 +81,14 @@ sub __set_error
 	$error_string = shift;
 }
 
+# todo phase 1: this improved version was taken from the same file of phase 2
 sub __set_file_error
 {
 	my $err = shift;
 
 	$error_string = "";
 
-	if (@$err)
+	if (ref($err) eq "ARRAY")
 	{
 		for my $diag (@$err)
 		{
@@ -104,6 +105,8 @@ sub __set_file_error
 			return;
 		}
 	}
+
+	$error_string = join('', $err, @_);
 }
 
 sub __write_file
