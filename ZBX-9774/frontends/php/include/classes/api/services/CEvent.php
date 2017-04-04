@@ -139,19 +139,8 @@ class CEvent extends CApiService {
 				// all triggers
 				else {
 					$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
-					$sqlParts['where'][] = 'EXISTS ('.
-							'SELECT NULL'.
-							' FROM functions f,items i,hosts_groups hgg'.
-								' JOIN rights r'.
-									' ON r.id=hgg.groupid'.
-										' AND '.dbConditionInt('r.groupid', getUserGroupsByUserId($userid)).
-							' WHERE e.objectid=f.triggerid'.
-								' AND f.itemid=i.itemid'.
-								' AND i.hostid=hgg.hostid'.
-							' GROUP BY f.triggerid'.
-							' HAVING MIN(r.permission)>'.PERM_DENY.
-								' AND MAX(r.permission)>='.zbx_dbstr($permission).
-							')';
+					$sub_query = $this->getAllowedTriggersByUserAndPermissionQuery($userid, $permission);
+					$sqlParts['where'][] = 'e.objectid IN (' . $sub_query . ')';
 				}
 			}
 			// items and LLD rules
@@ -662,5 +651,28 @@ class CEvent extends CApiService {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get allowed triggers by user and permission query
+	 *
+	 * @param integer $user_id
+	 * @param integer $permission
+	 * @return string
+	 */
+	private function getAllowedTriggersByUserAndPermissionQuery($user_id, $permission)
+	{
+		$sql = 'SELECT f.triggerid
+		FROM users u
+		INNER JOIN users_groups ug ON ug.userid = u.userid
+		INNER JOIN hosts_groups hg ON hg.groupid = r.id
+		INNER JOIN items i ON i.hostid = hg.hostid
+		INNER JOIN functions f ON f.itemid = i.itemid
+		INNER JOIN rights r ON r.groupid = ug.usrgrpid
+		WHERE u.userid = %d
+		GROUP BY f.triggerid
+		HAVING MAX(r.permission) >= %d AND MIN(r.permission) > %d';
+
+		return sprintf($sql, $user_id, $permission, PERM_DENY);
 	}
 }

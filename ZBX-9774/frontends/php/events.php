@@ -542,8 +542,6 @@ if ($source == EVENT_SOURCE_DISCOVERY) {
 // source not discovery i.e. trigger
 else {
 	if ($csvExport || $pageFilter->hostsSelected || $triggerId != 0) {
-		$knownTriggerIds = [];
-		$validTriggerIds = [];
 
 		$triggerOptions = [
 			'output' => ['triggerid'],
@@ -565,9 +563,7 @@ else {
 		];
 
 		if ($triggerId) {
-			$knownTriggerIds = [$triggerId => $triggerId];
-			$validTriggerIds = $knownTriggerIds;
-
+			$triggerOptions['triggerids'] = [$triggerId];
 			$eventOptions['objectids'] = [$triggerId];
 		}
 		elseif ($pageFilter->hostid > 0) {
@@ -577,12 +573,8 @@ else {
 				'monitored' => true,
 				'preservekeys' => true
 			]);
-			$filterTriggerIds = array_map('strval', array_keys($hostTriggers));
-			$knownTriggerIds = array_combine($filterTriggerIds, $filterTriggerIds);
-			$validTriggerIds = $knownTriggerIds;
-
+			$triggerOptions['triggerids'] = array_map('strval', array_keys($hostTriggers));
 			$eventOptions['hostids'] = $pageFilter->hostid;
-			$eventOptions['objectids'] = $validTriggerIds;
 		}
 		elseif ($pageFilter->groupid > 0) {
 			$eventOptions['groupids'] = $pageFilter->groupid;
@@ -592,45 +584,12 @@ else {
 
 		$events = [];
 
-		while (true) {
-			$allEventsSlice = API::Event()->get($eventOptions);
-
-			$triggerIdsFromSlice = array_keys(array_flip(zbx_objectValues($allEventsSlice, 'objectid')));
-
-			$unknownTriggerIds = array_diff($triggerIdsFromSlice, $knownTriggerIds);
-
-			if ($unknownTriggerIds) {
-				$triggerOptions['triggerids'] = $unknownTriggerIds;
-				$validTriggersFromSlice = API::Trigger()->get($triggerOptions);
-
-				foreach ($validTriggersFromSlice as $trigger) {
-					$validTriggerIds[$trigger['triggerid']] = $trigger['triggerid'];
-				}
-
-				foreach ($unknownTriggerIds as $id) {
-					$id = strval($id);
-					$knownTriggerIds[$id] = $id;
-				}
-			}
-
-			foreach ($allEventsSlice as $event) {
-				if (isset($validTriggerIds[$event['objectid']])) {
-					$events[] = ['eventid' => $event['eventid']];
-				}
-			}
-
-			// break loop when either enough events have been retrieved, or last slice was not full
-			if (count($events) >= $config['search_limit'] || count($allEventsSlice) <= $allEventsSliceLimit) {
-				break;
-			}
-
-			/*
-			 * Because events in slices are sorted descending by eventid (i.e. bigger eventid),
-			 * first event in next slice must have eventid that is previous to last eventid in current slice.
-			 */
-			$lastEvent = end($allEventsSlice);
-			$eventOptions['eventid_till'] = $lastEvent['eventid'] - 1;
-		}
+		// get all valid triggers
+		$triggers = API::Trigger()->get($triggerOptions);
+		// query event with short data
+		$events = API::Event()->get(
+			$eventOptions + ['objectids' => zbx_objectValues($triggers, 'triggerid')]
+		);
 
 		/*
 		 * At this point it is possible that more than $config['search_limit'] events are selected,
@@ -646,27 +605,29 @@ else {
 
 		$paging = getPagingLine($events, ZBX_SORT_UP, $url);
 
-		// query event with extend data
-		$events = API::Event()->get([
-			'source' => EVENT_SOURCE_TRIGGERS,
-			'object' => EVENT_OBJECT_TRIGGER,
-			'eventids' => zbx_objectValues($events, 'eventid'),
-			'output' => API_OUTPUT_EXTEND,
-			'select_acknowledges' => API_OUTPUT_COUNT,
-			'sortfield' => ['clock', 'eventid'],
-			'sortorder' => ZBX_SORT_DOWN,
-			'nopermissions' => true
-		]);
+		$triggers = [];
+		if (count($events)) {
+			// query event with extend data
+			$events = API::Event()->get([
+				'source' => EVENT_SOURCE_TRIGGERS,
+				'object' => EVENT_OBJECT_TRIGGER,
+				'eventids' => zbx_objectValues($events, 'eventid'),
+				'output' => API_OUTPUT_EXTEND,
+				'select_acknowledges' => API_OUTPUT_COUNT,
+				'sortfield' => ['clock', 'eventid'],
+				'sortorder' => ZBX_SORT_DOWN,
+				'nopermissions' => true
+			]);
 
-		$triggers = API::Trigger()->get([
-			'output' => ['triggerid', 'description', 'expression', 'priority', 'flags', 'url'],
-			'selectHosts' => ['hostid', 'name', 'status'],
-			'selectItems' => ['itemid', 'hostid', 'name', 'key_', 'value_type'],
-			'triggerids' => zbx_objectValues($events, 'objectid'),
-			'preservekeys' => true
-		]);
-
-		$triggers = CMacrosResolverHelper::resolveTriggerUrls($triggers);
+			$triggers = API::Trigger()->get([
+				'output' => ['triggerid', 'description', 'expression', 'priority', 'flags', 'url'],
+				'selectHosts' => ['hostid', 'name', 'status'],
+				'selectItems' => ['itemid', 'hostid', 'name', 'key_', 'value_type'],
+				'triggerids' => zbx_objectValues($events, 'objectid'),
+				'preservekeys' => true
+			]);
+			$triggers = CMacrosResolverHelper::resolveTriggerUrls($triggers);
+		}
 
 		// fetch hosts
 		$hosts = [];

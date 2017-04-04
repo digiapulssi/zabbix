@@ -421,12 +421,14 @@ class CApiService {
 		// build query
 		$sqlSelect = implode(',', array_unique($sqlParts['select']));
 		$sqlFrom = implode(',', array_unique($sqlParts['from']));
+		$sql_joins = empty($sqlParts['join']) ? '' : (' ' . implode(' ', $sqlParts['join']));
 		$sqlWhere = empty($sqlParts['where']) ? '' : ' WHERE '.implode(' AND ', array_unique($sqlParts['where']));
 		$sqlGroup = empty($sqlParts['group']) ? '' : ' GROUP BY '.implode(',', array_unique($sqlParts['group']));
 		$sqlOrder = empty($sqlParts['order']) ? '' : ' ORDER BY '.implode(',', array_unique($sqlParts['order']));
 
 		return 'SELECT '.zbx_db_distinct($sqlParts).' '.$sqlSelect.
 				' FROM '.$sqlFrom.
+				$sql_joins.
 				$sqlWhere.
 				$sqlGroup.
 				$sqlOrder;
