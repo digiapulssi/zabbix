@@ -82,21 +82,21 @@ sub get_rsm_local_id
 	return $id;
 }
 
-# todo phase 1: taken from ApiHelper:__system
+# todo phase 1: taken from ApiHelper:__system, should be removed from there in phase 2
 sub __system
 {
 	my $cmd = join('', @_);
 
-	system($cmd);
+	my $rv = system($cmd);
 
-	if ($? == -1)
+	if ($rv == -1)
 	{
-		return "failed to execute: $!";
+		return "cannot execute command [$cmd]: $!";
 	}
 
-	if ($? & 127)
+	if ($rv & 127)
 	{
-		return sprintf("child died with signal %d, %s coredump", ($? & 127),  ($? & 128) ? 'with' : 'without');
+		return sprintf("cannot execute command [$cmd], child died with signal %d, %s coredump", ($rv & 127),  ($rv & 128) ? 'with' : 'without');
 	}
 
 	return undef;

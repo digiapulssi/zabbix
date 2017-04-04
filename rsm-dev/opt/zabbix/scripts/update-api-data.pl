@@ -22,7 +22,7 @@ use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
 
-use constant TARGETS_TMP_DIR => '/opt/zabbix/tmp';
+use constant TARGETS_TMP_DIR => '/opt/zabbix/sla-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/sla';
 
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
@@ -40,7 +40,7 @@ if (opt('debug'))
 
 __validate_input();	# needs to be connected to db
 
-if (my $error = rsm_targets_prepare(TARGETS_TMP_DIR, TARGETS_TARGET_DIR))
+if (!opt('dry-run') && (my $error = rsm_targets_prepare(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
 {
 	fail($error);
 }
@@ -998,7 +998,7 @@ if (defined($continue_file) and not opt('dry-run'))
 	dbg("last update: ", ts_str($till));
 }
 
-if (my $error = rsm_targets_copy(TARGETS_TMP_DIR, TARGETS_TARGET_DIR))
+if (!opt('dry-run') && (my $error = rsm_targets_copy(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
 {
 	fail($error);
 }
