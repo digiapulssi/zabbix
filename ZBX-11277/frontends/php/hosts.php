@@ -252,12 +252,15 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 		DBstart();
 
 		// filter only normal and discovery created hosts
-		$hosts = API::Host()->get([
+		$options = [
 			'output' => ['hostid'],
 			'hostids' => $hostIds,
 			'filter' => ['flags' => [ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED]]
-		]);
-		$hosts = ['hosts' => $hosts];
+		];
+		if (hasRequest('host_inventory')) {
+			$options['selectInventory'] = ['inventory_mode'];
+		}
+		$hosts = API::Host()->get($options);
 
 		$properties = [
 			'proxy_hostid', 'ipmi_authtype', 'ipmi_privilege', 'ipmi_username', 'ipmi_password', 'description'
@@ -274,16 +277,26 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			$newValues['status'] = getRequest('status', HOST_STATUS_NOT_MONITORED);
 		}
 
-		if (hasRequest('host_inventory')) {
-			$newValues['inventory'] = getRequest('host_inventory');
-		}
-
 		if (hasRequest('inventory_mode')) {
 			$newValues['inventory_mode'] = getRequest('inventory_mode');
 			if ($newValues['inventory_mode'] == HOST_INVENTORY_DISABLED) {
 				$newValues['inventory'] = [];
 			}
 		}
+
+		$disabled_inventory = [];
+		if (hasRequest('host_inventory') && !array_key_exists('inventory', $newValues)) {
+			$newValues['inventory'] = getRequest('host_inventory');
+			foreach($hosts as $index => & $host) {
+				$disabled = !array_key_exists('inventory_mode', $host['inventory']) || $host['inventory']['inventory_mode'] === HOST_INVENTORY_DISABLED;
+				unset($host['inventory']);
+				if ($disabled) {
+					$disabled_inventory[$index] = $host;
+				}
+			}
+		}
+
+		$hosts = ['hosts' => $hosts];
 
 		if (array_key_exists('encryption', $visible)) {
 			$newValues['tls_connect'] = getRequest('tls_connect', HOST_ENCRYPTION_NONE);
@@ -372,7 +385,19 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			$hosts['templates'] = $templateIds;
 		}
 
-		$result = API::Host()->massUpdate(array_merge($hosts, $newValues));
+		$result = [];
+
+		$with_inventory = array_diff_key($hosts['hosts'], $disabled_inventory);
+		if (!empty($with_inventory)) {
+			$result = API::Host()->massUpdate(array_merge(['hosts' => $with_inventory], $newValues));
+		}
+
+		$without_inventory = array_diff_key($hosts['hosts'], $with_inventory);
+		if (!empty($without_inventory) && $result !== false) {
+			unset($newValues['inventory']);
+			$result = API::Host()->massUpdate(array_merge(['hosts' => $without_inventory], $newValues));
+		}
+
 		if ($result === false) {
 			throw new Exception();
 		}
