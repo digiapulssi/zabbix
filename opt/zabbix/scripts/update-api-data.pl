@@ -22,6 +22,9 @@ use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
 
+use constant TARGETS_TMP_DIR => '/opt/zabbix/tmp';
+use constant TARGETS_TARGET_DIR => '/opt/zabbix/sla';
+
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
 
 # do not write any logs
@@ -36,6 +39,11 @@ if (opt('debug'))
 }
 
 __validate_input();	# needs to be connected to db
+
+if (my $error = rsm_targets_prepare(TARGETS_TMP_DIR, TARGETS_TARGET_DIR))
+{
+	fail($error);
+}
 
 my $config = get_rsm_config();
 set_slv_config($config);
@@ -354,7 +362,7 @@ foreach (@$tlds_ref)
 }
 undef($tld);
 
-__prnt(sprintf("getting probe statuses for period: %s", selected_period($from, $till)));
+dbg("getting probe statuses for period:", selected_period($from, $till));
 
 my $all_probes_ref = get_probes();
 
@@ -980,13 +988,19 @@ db_disconnect();
 
 if (defined($continue_file) and not opt('dry-run'))
 {
-	unless (write_file($continue_file, $till) == SUCCESS)
+	# todo phase 1: introduced new function ah_save_continue_file to get around tmp/target dir
+	unless (ah_save_continue_file($till) == SUCCESS)
 	{
-		wrn("cannot update continue file \"$continue_file\": $!");
+		wrn("cannot save continue file \"$continue_file\": $!");
 		next;
 	}
 
 	dbg("last update: ", ts_str($till));
+}
+
+if (my $error = rsm_targets_copy(TARGETS_TMP_DIR, TARGETS_TARGET_DIR))
+{
+	fail($error);
 }
 
 slv_exit(SUCCESS);
