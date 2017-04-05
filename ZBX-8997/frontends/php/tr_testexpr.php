@@ -96,14 +96,18 @@ if ($result) {
 				foreach ($vals as $v) {
 					$control->addItem($v, $v);
 				}
+
+				$fields[$fname] = [$info['type'], O_OPT, null, $validation, 'isset({test_expression})',
+					$token['value']
+				];
 			}
 			else {
 				$control = (new CTextBox($fname, $macrosData[$token['value']]))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
-			}
 
-			$fields[$fname] = [$info['type'], O_OPT, null, $validation, 'isset({test_expression})',
-				$token['value']
-			];
+				$fields[$fname] = [$info['type'], O_OPT, null, 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})', 'isset({test_expression})',
+					$token['value']
+				];
+			}
 
 			$row->addItem($info['value_type']);
 			$row->addItem($control);
