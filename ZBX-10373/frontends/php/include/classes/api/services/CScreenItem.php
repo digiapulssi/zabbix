@@ -910,33 +910,39 @@ class CScreenItem extends CApiService {
 	protected function checkDuplicateResourceInCell(array $screen_items, array $db_screen_items, array $screens) {
 		$calculated = [];
 
-		foreach ([$screen_items, $db_screen_items] as $items) {
-
-			foreach ($items as $item) {
-
-				$checked = [
-					'left' => $item['x'],
-					'top' => $item['y'],
-					'right' => $item['x'] + $item['colspan'] - 1,
-					'bottom' => $item['y'] + $item['rowspan'] - 1
-				];
-				if (!array_key_exists($item['screenid'], $calculated)) {
-					$calculated[$item['screenid']] = [];
-				}
-
-				foreach ($calculated[$item['screenid']] as $entry) {
-					$overlaps_x = ($checked['left'] <= $entry['right'] && $checked['right'] >= $entry['left']);
-					$overlaps_y = ($checked['top'] <= $entry['bottom'] && $checked['bottom'] >= $entry['top']);
-					if ($overlaps_x && $overlaps_y) {
-						self::exception(
-							ZBX_API_ERROR_PARAMETERS, _s('Screen "%1$s" cell X - %2$s Y - %3$s is already taken.',
-							$screens[$item['screenid']]['name'], $checked['x'], $checked['y']
-						));
-					}
-				}
-
-				$calculated[$item['screenid']][] = $checked;
+		foreach ($screen_items as $index => $item) {
+			if (array_key_exists('screenitemid', $item) && array_key_exists($item['screenitemid'], $db_screen_items)) {
+				$db_screen_items[$item['screenitemid']] = array_merge($db_screen_items[$item['screenitemid']], $item);
+			} else {
+				$tmp_index = 'new'. $index;
+				$db_screen_items[$tmp_index] = $item;
 			}
+		}
+
+		foreach ($db_screen_items as $item) {
+
+			$checked = [
+				'left' => $item['x'],
+				'top' => $item['y'],
+				'right' => $item['x'] + $item['colspan'] - 1,
+				'bottom' => $item['y'] + $item['rowspan'] - 1
+			];
+			if (!array_key_exists($item['screenid'], $calculated)) {
+				$calculated[$item['screenid']] = [];
+			}
+
+			foreach ($calculated[$item['screenid']] as $entry) {
+				$overlaps_x = ($checked['left'] <= $entry['right'] && $checked['right'] >= $entry['left']);
+				$overlaps_y = ($checked['top'] <= $entry['bottom'] && $checked['bottom'] >= $entry['top']);
+				if ($overlaps_x && $overlaps_y) {
+					self::exception(
+						ZBX_API_ERROR_PARAMETERS, _s('Screen "%1$s" cell X - %2$s Y - %3$s is already taken.',
+						$screens[$item['screenid']]['name'], $checked['left'], $checked['top']
+					));
+				}
+			}
+
+			$calculated[$item['screenid']][] = $checked;
 		}
 	}
 
