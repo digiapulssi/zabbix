@@ -157,7 +157,7 @@ class CScreenItem extends CApiService {
 			}
 
 			unset($screenItem['screenitemid']);
-			$screenItem = array_merge($defaults, $screenItem);
+			$screenItem += $defaults;
 		}
 		unset($screenItem);
 
