@@ -324,7 +324,8 @@ static int	process_trap(zbx_sock_t	*sock, char *s, int max_len)
 				}
 				else if (0 == strcmp(value, ZBX_PROTO_VALUE_COMMAND))
 				{
-					ret = node_process_command(sock, s, &jp);
+					if (0 != (daemon_type & ZBX_DAEMON_TYPE_SERVER))
+						ret = node_process_command(sock, s, &jp);
 				}
 				else
 					zabbix_log(LOG_LEVEL_WARNING, "unknown request received [%s]", value);
