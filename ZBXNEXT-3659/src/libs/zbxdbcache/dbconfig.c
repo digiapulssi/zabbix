@@ -4041,7 +4041,7 @@ static void	DCdump_expressions()
 	zabbix_log(LOG_LEVEL_TRACE, "In %s()", __function_name);
 
 	zbx_vector_ptr_create(&index);
-	zbx_hashset_iter_reset(&config->trigdeps, &iter);
+	zbx_hashset_iter_reset(&config->expressions, &iter);
 
 	while (NULL != (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_iter_next(&iter)))
 		zbx_vector_ptr_append(&index, expression);
