@@ -1089,6 +1089,14 @@ AC_ARG_ENABLE(ipv6,[  --enable-ipv6           Turn on support of IPv6],
 esac],
 [ipv6=no])
 
+AC_ARG_ENABLE(dbtls,[  --enable-dbtls          Turn on support of secure DB connections],
+[case "${enableval}" in
+  yes) dbtls=yes ;;
+  no)  dbtls=no ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbtls]) ;;
+esac],
+[dbtls=no])
+
 have_db="no"
 have_unixodbc="no"
 have_web_monitoring="no"
@@ -1102,6 +1110,11 @@ have_tls="no"
 if test "x$ipv6" = "xyes"; then
 	AC_DEFINE(HAVE_IPV6,1,[Define to 1 if IPv6 should be enabled.])
 	have_ipv6="yes"
+fi
+
+if test "x$dbtls" = "xyes"; then
+	AC_DEFINE(DBTLS,1,[Define to 1 if support for secure DB connections should be enabled.])
+	have_dbtls="yes"
 fi
 
 if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
@@ -1668,6 +1681,7 @@ if test "x$server" != "xno"; then
 
 echo "  Server details:
     With database:         ${have_db}
+    Secure connections:    ${have_dbtls}
     WEB Monitoring:        ${have_web_monitoring}
     Native Jabber:         ${have_jabber}
     SNMP:                  ${have_snmp}
@@ -1687,6 +1701,7 @@ if test "x$proxy" != "xno"; then
 
 echo "  Proxy details:
     With database:         ${have_db}
+    Secure connections:    ${have_dbtls}
     WEB Monitoring:        ${have_web_monitoring}
     SNMP:                  ${have_snmp}
     IPMI:                  ${have_ipmi}
