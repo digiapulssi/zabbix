@@ -665,10 +665,10 @@ class CEvent extends CApiService {
 		$sql = 'SELECT f.triggerid
 		FROM users u
 		INNER JOIN users_groups ug ON ug.userid = u.userid
+		INNER JOIN rights r ON r.groupid = ug.usrgrpid
 		INNER JOIN hosts_groups hg ON hg.groupid = r.id
 		INNER JOIN items i ON i.hostid = hg.hostid
 		INNER JOIN functions f ON f.itemid = i.itemid
-		INNER JOIN rights r ON r.groupid = ug.usrgrpid
 		WHERE u.userid = %d
 		GROUP BY f.triggerid
 		HAVING MAX(r.permission) >= %d AND MIN(r.permission) > %d';
