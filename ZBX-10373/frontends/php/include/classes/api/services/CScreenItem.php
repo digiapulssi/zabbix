@@ -910,9 +910,9 @@ class CScreenItem extends CApiService {
 	protected function checkDuplicateResourceInCell(array $screen_items, array $db_screen_items, array $screens) {
 		$calculated = [];
 
-		foreach([$screen_items, $db_screen_items] as $items) {
+		foreach ([$screen_items, $db_screen_items] as $items) {
 
-			foreach($items as $item) {
+			foreach ($items as $item) {
 
 				$checked = [
 					'left' => $item['x'],
@@ -924,7 +924,7 @@ class CScreenItem extends CApiService {
 					$calculated[$item['screenid']] = [];
 				}
 
-				foreach($calculated[$item['screenid']] as $entry) {
+				foreach ($calculated[$item['screenid']] as $entry) {
 					$overlaps_x = ($checked['left'] <= $entry['right'] && $checked['right'] >= $entry['left']);
 					$overlaps_y = ($checked['top'] <= $entry['bottom'] && $checked['bottom'] >= $entry['top']);
 					if ($overlaps_x && $overlaps_y) {
