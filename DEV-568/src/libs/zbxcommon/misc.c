@@ -806,7 +806,6 @@ int	is_ip4(const char *ip)
 	return res;
 }
 
-#if defined(HAVE_IPV6)
 /******************************************************************************
  *                                                                            *
  * Function: is_ip6                                                           *
@@ -863,7 +862,6 @@ int	is_ip6(const char *ip)
 
 	return res;
 }
-#endif	/*HAVE_IPV6*/
 
 /******************************************************************************
  *                                                                            *
@@ -881,15 +879,7 @@ int	is_ip6(const char *ip)
  ******************************************************************************/
 int	is_ip(const char *ip)
 {
-	zabbix_log(LOG_LEVEL_DEBUG, "In is_ip() ip:'%s'", ip);
-
-	if (SUCCEED == is_ip4(ip))
-		return SUCCEED;
-#if defined(HAVE_IPV6)
-	if (SUCCEED == is_ip6(ip))
-		return SUCCEED;
-#endif
-	return FAIL;
+	return SUCCEED == is_ip4(ip) ? SUCCEED : is_ip6(ip);
 }
 
 /******************************************************************************
