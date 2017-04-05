@@ -36,7 +36,6 @@ $filterColumn1 = new CFormList();
 $filterColumn2 = new CFormList();
 $filterColumn3 = new CFormList();
 $filterColumn4 = new CFormList();
-$filterColumn5 = new CFormList();
 
 $filterColumn1
 	->addRow(_('From'), createDateSelector('filter_from', zbxDateToTime($this->data['filter_from'])));
@@ -50,24 +49,18 @@ $filterColumn3
 	))
 		->addClass(ZBX_STYLE_BTN_LINK));
 $filterColumn4
-	->addRow(new CSpan([
-		(new CCheckBox('filter_failing_tests'))->setChecked($data['filter_failing_tests']),
-		SPACE,
-		_('Only failing tests')
-]));
-$filterColumn5
-	->addRow(new CSpan([
-		(new CCheckBox('filter_show_all'))->setChecked($data['filter_show_all']),
-		SPACE,
-		_('Show all')
-]));
+	->addRow(new CSpan(
+		(new CRadioButtonList('filter_failing_tests', (int) $data['filter_failing_tests']))
+			->addValue(_('Only failing tests'), 1)
+			->addValue(_('Show all'), 0)
+			->setModern(true)
+));
 
 $filter
 	->addColumn($filterColumn1)
 	->addColumn($filterColumn2)
 	->addColumn($filterColumn3)
-	->addColumn($filterColumn4)
-	->addColumn($filterColumn5);
+	->addColumn($filterColumn4);
 
 $widget->addItem($filter);
 
