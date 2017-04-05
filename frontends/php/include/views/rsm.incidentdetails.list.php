@@ -129,13 +129,20 @@ else {
 
 $testsInfoTable = (new CTable(null))->addClass('incidents-info');
 
-$testsInfoTable->addRow([[
-	new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
-	BR(),
-	new CSpan([bold(_('Service')), ':', SPACE, $data['slvItem']['name']]),
-	BR(),
-	new CSpan([bold(_('Incident type')), ':', SPACE, $incidentType])
-]]);
+$testsInfoTable->addRow([
+	[
+		new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
+		BR(),
+		new CSpan([bold(_('Service')), ':', SPACE, $data['slvItem']['name']]),
+		BR(),
+		new CSpan([bold(_('Incident type')), ':', SPACE, $incidentType])
+	],
+	[
+		(new CSpan(_s('%1$s Rolling week status', $this->data['slv'].'%')))->addClass('rolling-week-status'),
+		BR(),
+		(new CSpan(date('d.m.Y H:i', $this->data['slvTestTime'])))->addClass('rsm-date-time'),
+	]
+]);
 
 $widget->additem([$testsInfoTable]);
 
