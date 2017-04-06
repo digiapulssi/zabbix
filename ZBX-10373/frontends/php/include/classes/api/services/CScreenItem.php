@@ -190,7 +190,7 @@ class CScreenItem extends CApiService {
 		]);
 
 		$this->checkInput($screenItems, $dbScreenItems);
-		$this->checkDuplicateResourceInCell($screenItems, $dbScreenItems, $dbScreens);
+		$this->checkDuplicateResourceInCell(array_merge($screenItems, $dbScreenItems), $dbScreens);
 
 		foreach ($screenItems as $screenItem) {
 			$this->checkSpans($screenItem, $dbScreens[$screenItem['screenid']]);
@@ -294,8 +294,8 @@ class CScreenItem extends CApiService {
 		}
 
 		$dbScreenItems = API::getApiService()->select($this->tableName(), [
-			'output' => ['screenitemid', 'screenid', 'x', 'y', 'rowspan',
-				'colspan', 'resourcetype', 'resourceid', 'style'
+			'output' => ['screenitemid', 'screenid', 'x', 'y', 'rowspan', 'colspan', 'resourcetype', 'resourceid',
+				'style'
 			],
 			'filter' => ['screenid' => array_keys($dbScreens)],
 			'preservekeys' => true
@@ -306,7 +306,7 @@ class CScreenItem extends CApiService {
 		);
 
 		$this->checkInput($screenItems, $dbScreenItems);
-		$this->checkDuplicateResourceInCell($screenItems, $dbScreenItems, $dbScreens);
+		$this->checkDuplicateResourceInCell($screenItems + $dbScreenItems, $dbScreens);
 
 		foreach ($screenItems as $screenItem) {
 			$this->checkSpans($screenItem, $dbScreens[$screenItem['screenid']]);
@@ -901,48 +901,39 @@ class CScreenItem extends CApiService {
 	/**
 	 * Check duplicates screen items in one cell.
 	 *
-	 * @param array $screenItems
-	 * @param array $dbScreenItems
-	 * @param array $dbScreens
+	 * @param array $screen_items
+	 * @param array $screens
 	 *
 	 * @throws APIException if input is invalid.
 	 */
-	protected function checkDuplicateResourceInCell(array $screen_items, array $db_screen_items, array $screens) {
+	protected function checkDuplicateResourceInCell(array $screen_items, array $screens) {
 		$calculated = [];
 
-		foreach ($screen_items as $index => $item) {
-			if (array_key_exists('screenitemid', $item) && array_key_exists($item['screenitemid'], $db_screen_items)) {
-				$db_screen_items[$item['screenitemid']] = array_merge($db_screen_items[$item['screenitemid']], $item);
-			} else {
-				$tmp_index = 'new'. $index;
-				$db_screen_items[$tmp_index] = $item;
-			}
-		}
-
-		foreach ($db_screen_items as $item) {
-
+		foreach ($screen_items as $screen_item) {
+			$screenid = $screen_item['screenid'];
 			$checked = [
-				'left' => $item['x'],
-				'top' => $item['y'],
-				'right' => $item['x'] + $item['colspan'] - 1,
-				'bottom' => $item['y'] + $item['rowspan'] - 1
+				'left' => $screen_item['x'],
+				'top' => $screen_item['y'],
+				'right' => $screen_item['x'] + $screen_item['colspan'] - 1,
+				'bottom' => $screen_item['y'] + $screen_item['rowspan'] - 1
 			];
-			if (!array_key_exists($item['screenid'], $calculated)) {
-				$calculated[$item['screenid']] = [];
+			if (!array_key_exists($screenid, $calculated)) {
+				$calculated[$screenid] = [];
 			}
 
-			foreach ($calculated[$item['screenid']] as $entry) {
+			foreach ($calculated[$screenid] as $entry) {
 				$overlaps_x = ($checked['left'] <= $entry['right'] && $checked['right'] >= $entry['left']);
 				$overlaps_y = ($checked['top'] <= $entry['bottom'] && $checked['bottom'] >= $entry['top']);
 				if ($overlaps_x && $overlaps_y) {
-					self::exception(
-						ZBX_API_ERROR_PARAMETERS, _s('Screen "%1$s" cell X - %2$s Y - %3$s is already taken.',
-						$screens[$item['screenid']]['name'], $checked['left'], $checked['top']
-					));
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('Screen "%1$s" cell X - %2$s Y - %3$s is already taken.', $screens[$screenid]['name'],
+							$checked['left'], $checked['top']
+						)
+					);
 				}
 			}
 
-			$calculated[$item['screenid']][] = $checked;
+			$calculated[$screenid][] = $checked;
 		}
 	}
 
