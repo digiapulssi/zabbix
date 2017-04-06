@@ -1645,13 +1645,15 @@ int	zbx_dbsync_compare_trigger_dependency(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sy
 	int			i;
 
 	if (NULL == (result = DBselect(
-			"select d.triggerid_down,d.triggerid_up"
-			" from trigger_depends d,hosts h,items i,functions f"
-			" where h.hostid=i.hostid"
+			"select distinct d.triggerid_down,d.triggerid_up"
+			" from trigger_depends d,triggers t,hosts h,items i,functions f"
+			" where t.triggerid=d.triggerid_down"
+				" and t.flags<>%d"
+				" and h.hostid=i.hostid"
 				" and i.itemid=f.itemid"
 				" and f.triggerid=d.triggerid_down"
 				" and h.status in (%d,%d)",
-			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED)))
+				ZBX_FLAG_DISCOVERY_PROTOTYPE, HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED)))
 	{
 		return FAIL;
 	}
