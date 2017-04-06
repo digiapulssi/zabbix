@@ -901,8 +901,15 @@ class CScreenItem extends CApiService {
 	/**
 	 * Check duplicates screen items in one cell.
 	 *
-	 * @param array $screen_items
-	 * @param array $screens
+	 * @param array  $screen_items
+	 * @param string $screen_items['screenid']
+	 * @param int    $screen_items['x']
+	 * @param int    $screen_items['y']
+	 * @param int    $screen_items['colspan']
+	 * @param int    $screen_items['rowspan']
+	 * @param array  $screens
+	 * @param string $screens['screenid']
+	 * @param string $screens['name']
 	 *
 	 * @throws APIException if input is invalid.
 	 */
