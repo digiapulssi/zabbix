@@ -497,6 +497,6 @@ typedef struct
 }
 ZBX_DC_CONFIG;
 
-
+void	DCdump_configuration(ZBX_DC_CONFIG *config);
 
 #endif
