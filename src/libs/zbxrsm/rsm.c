@@ -37,15 +37,20 @@ int	rsm_ssl_init()
 
 int     get_random(void *data, int bytes)
 {
-	int	fd;
+	int	fd, ret = FAIL;
 
 	if (-1 == (fd = open("/dev/random", O_RDONLY)))
-		return FAIL;
+		goto out;
 
-	read(fd, data, bytes);
-	close(fd);
+	if (-1 == read(fd, data, bytes))
+		goto out;
 
-	return SUCCEED;
+	ret = SUCCEED;
+out:
+	if (-1 != fd)
+		close(fd);
+
+	return ret;
 }
 
 void	zbx_ssl_get_error(char *err, size_t err_size)
@@ -350,7 +355,8 @@ int	zbx_read_stdin(const char *prompt, char *output, size_t output_size, char *e
 
 		do
 		{
-			fgets(buf, sizeof(buf), stdin);
+			if (NULL == fgets(buf, sizeof(buf), stdin))
+				break;
 		}
 		while ('\n' != buf[strlen(buf) - 1]);
 
