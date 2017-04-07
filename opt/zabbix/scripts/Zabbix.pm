@@ -417,7 +417,7 @@ sub __execute($$$) {
 
     if (defined($result->{'error'})) {
 	$self->set_last_error($result->{'error'});
-	return;
+	return $result;
     }
 
     $self->set_last_error();
@@ -432,7 +432,8 @@ sub __fetch($$$) {
     my $result = to_utf8($self->__send_request($class, $method, $params));
 
     if (defined($result->{'error'})) {
-	die($self->set_last_error($result->{'error'}));
+	$self->set_last_error($result->{'error'});
+	return;
     }
 
     $self->set_last_error();
@@ -449,11 +450,13 @@ sub __fetch_bool($$$) {
     my $result = $self->__send_request($class, $method, $params);
 
     if (defined($result->{'error'})) {
-	die($self->set_last_error($result->{'error'}));
+	$self->set_last_error($result->{'error'});
+	return;
     }
 
     if (@{$result->{'result'}} > 1) {
-	die('more than one entry found when checking '.$class.':'."\nREQUEST:\n".Dumper($params)."\nREPLY:\n".Dumper($result->{'result'})."\n");
+	$self->set_last_error('more than one entry found when checking '.$class.':'."\nREQUEST:\n".Dumper($params)."\nREPLY:\n".Dumper($result->{'result'})."\n");
+	return false;
     }
 
     $self->set_last_error();
@@ -469,11 +472,13 @@ sub __fetch_id($$$) {
     my $result = $self->__send_request($class, $method, $params);
 
     if (defined($result->{'error'})) {
-	die($self->set_last_error($result->{'error'}));
+	$self->set_last_error($result->{'error'});
+	return;
     }
 
     if (@{$result->{'result'}} > 1) {
-	die('more than one entry found when checking '.$class.':'."\nREQUEST:\n".Dumper($params)."\nREPLY:\n".Dumper($result->{'result'})."\n");
+	$self->set_last_error('more than one entry found when checking '.$class.':'."\nREQUEST:\n".Dumper($params)."\nREPLY:\n".Dumper($result->{'result'})."\n");
+	return false;
     }
 
     $self->set_last_error();

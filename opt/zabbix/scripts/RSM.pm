@@ -6,8 +6,8 @@ use Config::Tiny;
 use File::Path qw(make_path remove_tree);
 use base 'Exporter';
 
-our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_local_key get_rsm_local_id
-		rsm_targets_prepare rsm_targets_copy);
+our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_server_id get_rsm_local_key
+		get_rsm_local_id rsm_targets_prepare rsm_targets_copy);
 
 use constant RSM_SERVER_KEY_PREFIX => 'server_';
 use constant RSM_DEFAULT_CONFIG_FILE => '/opt/zabbix/scripts/rsm.conf';
@@ -56,6 +56,15 @@ sub get_rsm_server_key
 	die("Internal error: function get_rsm_server_key() needs a parameter ($file:$line)") unless ($server_id);
 
 	return RSM_SERVER_KEY_PREFIX . $server_id;
+}
+
+sub get_rsm_server_id
+{
+	my $server_id = shift;
+
+	$server_id =~ s/${\RSM_SERVER_KEY_PREFIX}//;
+
+	return $server_id;
 }
 
 sub get_rsm_local_key
