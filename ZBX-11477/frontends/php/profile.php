@@ -190,12 +190,12 @@ $config = select_config();
 
 $data = getUserFormData(CWebUser::$data['userid'], $config, true);
 $data['userid'] = CWebUser::$data['userid'];
+$data['name'] = CWebUser::$data['name'];
+$data['surname'] = CWebUser::$data['surname'];
+$data['alias'] = CWebUser::$data['alias'];
 $data['form'] = getRequest('form');
 $data['form_refresh'] = getRequest('form_refresh', 0);
 $data['autologout'] = getRequest('autologout');
-$data['name'] = CwebUser::$data['name'];
-$data['surname'] = CwebUser::$data['surname'];
-$data['alias'] = CwebUser::$data['alias'];
 
 // render view
 $usersView = new CView('administration.users.edit', $data);
