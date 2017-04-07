@@ -134,8 +134,9 @@
 				helper: function(event) {
 					var hostInterfaceId = jQuery(this).data('interfaceid');
 					var clone = jQuery(this).clone();
-					// NOTE: Make sure to update names for all radio and checkboxes for them not to affect selection of originals
-					// NOTE: If original is addressed by any means (ex. by ID), make sure, to update these means in clone,
+					// Make sure to update names for all radio and checkboxes for them not to affect selection of
+					// originals.
+					// If original is addressed by any means (ex. by ID), make sure, to update these means in clone,
 					// for clone not to be addressed in place of original.
 					clone.find("[name$='[useip]']").each(function(){
 						jQuery(this).attr('name','interfaces[' + hostInterfaceId + '][useip_handle]');
@@ -147,7 +148,8 @@
 				},
 				start: function(event, ui) {
 					jQuery(ui.helper).css({'z-index': '1000'});
-					// visibility is added to original element to hide it, while helper is beeing moved, but to keep it's place visually
+					// Visibility is added to original element to hide it, while helper is beeing moved, but to keep
+					// it's place visually.
 					jQuery(this).css({'visibility': 'hidden'});
 				},
 				stop: function(event, ui) {
@@ -367,7 +369,6 @@
 						// append checkbox
 						bulkDiv.append(jQuery('<input>', {
 							id: 'interfaces_' + hostInterfaceId + '_bulk',
-							'class': 'input checkbox pointer',
 							type: 'checkbox',
 							name: 'interfaces[' + hostInterfaceId + '][bulk]',
 							value: 1,
