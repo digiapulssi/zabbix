@@ -465,7 +465,7 @@ else {
 	$triggers = zbx_objectValues(
 		array_filter($services, function($service) { return (bool) $service['trigger']; }), 'trigger'
 	);
-	$triggers = CMacrosResolverHelper::resolveTriggerNames(zbx_toHash($triggers, 'triggerid'));
+	$triggers = zbx_toHash($triggers, 'triggerid');
 
 	foreach ($services as &$service) {
 		if ($service['trigger']) {
