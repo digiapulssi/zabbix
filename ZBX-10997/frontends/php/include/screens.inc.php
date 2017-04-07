@@ -99,11 +99,9 @@ function addScreenRow(array $screen, $row_num) {
 		'screenitems' => $screen['screenitems']
 	];
 
-	if (!empty($screen['templateid'])) {
-		$result = API::TemplateScreen()->update($options);
-	} else {
-		$result = API::Screen()->update($options);
-	}
+	$result = ($screen['templateid'] != 0)
+		? API::TemplateScreen()->update($options)
+		: API::Screen()->update($options);
 
 	if ($result) {
 		add_audit_details(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_SCREEN, $screen['screenid'], $screen['name'],
@@ -134,11 +132,9 @@ function addScreenColumn(array $screen, $col_num) {
 		'screenitems' => $screen['screenitems']
 	];
 
-	if (!empty($screen['templateid'])) {
-		$result = API::TemplateScreen()->update($options);
-	} else {
-		$result = API::Screen()->update($options);
-	}
+	$result = ($screen['templateid'] != 0)
+		? API::TemplateScreen()->update($options)
+		: API::Screen()->update($options);
 
 	if ($result) {
 		add_audit_details(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_SCREEN, $screen['screenid'], $screen['name'],
@@ -172,11 +168,9 @@ function delScreenRow(array $screen, $row_num) {
 		'screenitems' => $screen['screenitems']
 	];
 
-	if (!empty($screen['templateid'])) {
-		$result = API::TemplateScreen()->update($options);
-	} else {
-		$result = API::Screen()->update($options);
-	}
+	$result = ($screen['templateid'] != 0)
+		? API::TemplateScreen()->update($options)
+		: API::Screen()->update($options);
 
 	if ($result) {
 		add_audit_details(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_SCREEN, $screen['screenid'], $screen['name'],
@@ -210,11 +204,9 @@ function delScreenColumn(array $screen, $col_num) {
 		'screenitems' => $screen['screenitems']
 	];
 
-	if (!empty($screen['templateid'])) {
-		$result = API::TemplateScreen()->update($options);
-	} else {
-		$result = API::Screen()->update($options);
-	}
+	$result = ($screen['templateid'] != 0)
+		? API::TemplateScreen()->update($options)
+		: API::Screen()->update($options);
 
 	if ($result) {
 		add_audit_details(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_SCREEN, $screen['screenid'], $screen['name'],
