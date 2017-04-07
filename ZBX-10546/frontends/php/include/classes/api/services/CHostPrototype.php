@@ -656,8 +656,15 @@ class CHostPrototype extends CHostBase {
 			$updateHostPrototypes = $this->updateReal($updateHostPrototypes);
 		}
 
+		$host_prototypes = $insertHostPrototypes;
+		foreach($updateHostPrototypes as $host_prototype) {
+			if ($host_prototype['status'] == HOST_STATUS_TEMPLATE) {
+				$host_prototypes[] = $host_prototype;
+			}
+		}
+
 		// propagate the inheritance to the children
-		return $this->inherit(array_merge($updateHostPrototypes, $insertHostPrototypes));
+		return $this->inherit($host_prototypes);
 	}
 
 
@@ -793,6 +800,7 @@ class CHostPrototype extends CHostBase {
 				$newHostPrototype = $parentHostPrototype;
 				$newHostPrototype['ruleid'] = $discoveryRuleChildren[$parentHostPrototype['ruleid']][$hostId];
 				$newHostPrototype['templateid'] = $parentHostPrototype['hostid'];
+				$newHostPrototype['status'] = $host['status'];
 
 				// update an existing inherited host prototype
 				if ($exHostPrototype) {
