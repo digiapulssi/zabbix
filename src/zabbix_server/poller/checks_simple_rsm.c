@@ -303,8 +303,8 @@ static int	zbx_change_resolver(ldns_resolver *res, const char *name, const char 
  *                                                                            *
  * Purpose: Extract the Unix timestamp from the host name. Expected format of *
  *          the host: ns<optional digits><DOT or DASH><Unix timestamp>.       *
- *          Examples: ns2-1376488934.icann.org.                               *
- *                    ns1.1376488934.icann.org.                               *
+ *          Examples: ns2-1376488934.example.com.                             *
+ *                    ns1.1376488934.example.com.                             *
  * Return value: SUCCEED - if host name correctly formatted and timestamp     *
  *               extracted, FAIL - otherwise                                  *
  *                                                                            *
@@ -760,7 +760,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		}
 
 		/* the AUTHORITY section should contain at least one NS RR for the last label in  */
-		/* PREFIX, e.g. "icann-test" when querying for "blahblah.icann-test.example." */
+		/* PREFIX, e.g. "somedomain" when querying for "blahblah.somedomain.example." */
 		if (SUCCEED != zbx_get_last_label(testname, &last_label, err, err_size))
 		{
 			*rtt = ZBX_EC_DNS_NS_EREPLY;
