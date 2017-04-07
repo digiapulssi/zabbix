@@ -110,14 +110,16 @@ static void	disconnect_proxy(zbx_socket_t *sock)
  *                                                                            *
  * Purpose: get historical data from proxy                                    *
  *                                                                            *
- * Parameters:                                                                *
+ * Parameters: proxy   - [IN] proxy data                                      *
+ *             request - [IN] requested data type                             *
+ *             data    - [OUT] data received from proxy                       *
+ *             ts      - [OUT] timestamp when the proxy connection was        *
+ *                             established                                    *
  *                                                                            *
  * Return value: SUCCESS - processed successfully                             *
  *               FAIL - an error occurred                                     *
  *                                                                            *
  * Author: Alexander Vladishev                                                *
- *                                                                            *
- * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
 static int	get_data_from_proxy(DC_PROXY *proxy, const char *request, char **data, zbx_timespec_t *ts)
