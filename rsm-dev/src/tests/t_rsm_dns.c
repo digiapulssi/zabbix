@@ -2,7 +2,7 @@
 #include "../zabbix_server/poller/checks_simple_rsm.c"
 
 #define DEFAULT_RES_IP		"127.0.0.1"
-#define DEFAULT_TESTPREFIX	"www.zz--icann-monitoring"
+#define DEFAULT_TESTPREFIX	"www.zz--rsm-monitoring"
 
 #define LOG_FILE1	"test1.log"
 #define LOG_FILE2	"test2.log"

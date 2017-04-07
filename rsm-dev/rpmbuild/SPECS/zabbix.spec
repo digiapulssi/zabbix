@@ -1,6 +1,6 @@
 Name:		zabbix
 Version:	3.0.7
-Release: 	1%{?alphatag:.%{alphatag}}%{?dist}.icann
+Release: 	1%{?alphatag:.%{alphatag}}%{?dist}
 Summary:	The Enterprise-class open source monitoring solution
 Group:		Applications/Internet
 License:	GPLv2+
@@ -202,7 +202,7 @@ SELinux policy modules for use with Zabbix web frontend
 %endif
 
 %package scripts
-Summary:			Zabbix scripts for ICANN
+Summary:			Zabbix scripts for RSM
 Group:				Applications/Internet
 BuildArch:			noarch
 %if 0%{?rhel} >= 7
@@ -216,7 +216,7 @@ Requires:			zabbix-server = %{version}-%{release}
 AutoReq:			no
 
 %description scripts
-Zabbix scripts for ICANN
+Zabbix scripts for RSM
 
 %prep
 %setup0 -q -n zabbix-%{version}%{?alphatag:%{alphatag}}
@@ -768,8 +768,8 @@ fi
 
 
 %changelog
-* Wed Dec 21 2016 Alexey Pustovalov <alexey.pustovalov@zabbix.com> - 3.0.7-1-icann
-- update to ICANN version
+* Wed Dec 21 2016 Alexey Pustovalov <alexey.pustovalov@zabbix.com> - 3.0.7-1-rsm
+- update to RSM version
 
 * Wed Dec 21 2016 Kodai Terashima <kodai.terashima@zabbix.com> - 3.0.7-1
 - update to 3.0.7
