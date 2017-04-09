@@ -756,11 +756,12 @@ sub create_probe_status_host {
                                               };
     create_item($options);
 
+    # todo phase 1: changed IPv4 and IPv6 => IP4 and IP6
     create_online_probes_trigger('DNS', '{$RSM.DNS.PROBE.ONLINE}', $name);
     create_online_probes_trigger('RDDS', '{$RSM.RDDS.PROBE.ONLINE}', $name);
     create_online_probes_trigger('EPP', '{$RSM.RDDS.PROBE.ONLINE}', $name);
-    create_online_probes_trigger('IPv4', '{$RSM.IP4.MIN.PROBE.ONLINE}', $name);
-    create_online_probes_trigger('IPv6', '{$RSM.IP6.MIN.PROBE.ONLINE}', $name);
+    create_online_probes_trigger('IP4', '{$RSM.IP4.MIN.PROBE.ONLINE}', $name);
+    create_online_probes_trigger('IP6', '{$RSM.IP6.MIN.PROBE.ONLINE}', $name);
 }
 
 sub get_items_like($$$) {
