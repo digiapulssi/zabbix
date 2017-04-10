@@ -91,6 +91,16 @@ else {
 }
 
 if ($data['filter_search']) {
+	$master = [
+		'TYPE' => $DB['TYPE'],
+		'SERVER' => $DB['SERVER'],
+		'PORT' => $DB['PORT'],
+		'DATABASE' => $DB['DATABASE'],
+		'USER' => $DB['USER'],
+		'PASSWORD' => $DB['PASSWORD'],
+		'SCHEMA' => $DB['SCHEMA']
+	];
+
 	foreach ($DB['SERVERS'] as $server) {
 		unset($DB['DB']);
 		$DB['TYPE'] = $server['TYPE'];
@@ -101,6 +111,11 @@ if ($data['filter_search']) {
 		$DB['PASSWORD'] = $server['PASSWORD'];
 		$DB['SCHEMA'] = $server['SCHEMA'];
 		DBconnect($error);
+
+		if ($error) {
+			show_error_message(_($server['NAME'].': '.$error));
+			continue;
+		}
 
 		$tld = API::Host()->get(array(
 			'output' => array('hostid', 'host', 'name'),
@@ -614,6 +629,18 @@ if ($data['filter_search']) {
 		} else {
 			continue;
 		}
+	}
+
+	if ($error) {
+		unset($DB['DB']);
+		$DB['TYPE'] = $master['TYPE'];
+		$DB['SERVER'] = $master['SERVER'];
+		$DB['PORT'] = $master['PORT'];
+		$DB['DATABASE'] = $master['DATABASE'];
+		$DB['USER'] = $master['USER'];
+		$DB['PASSWORD'] = $master['PASSWORD'];
+		$DB['SCHEMA'] = $master['SCHEMA'];
+		DBconnect($error);
 	}
 }
 

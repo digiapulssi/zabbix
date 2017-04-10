@@ -1024,21 +1024,61 @@ class CUser extends CApiService {
 	}
 
 	public function logout() {
+		global $DB;
 		$sessionId = CWebUser::$data['sessionid'];
 
-		$session = DBfetch(DBselect(
-			'SELECT s.userid'.
-			' FROM sessions s'.
-			' WHERE s.sessionid='.zbx_dbstr($sessionId).
-				' AND s.status='.ZBX_SESSION_ACTIVE
-		));
+		$master = [
+			'TYPE' => $DB['TYPE'],
+			'SERVER' => $DB['SERVER'],
+			'PORT' => $DB['PORT'],
+			'DATABASE' => $DB['DATABASE'],
+			'USER' => $DB['USER'],
+			'PASSWORD' => $DB['PASSWORD'],
+			'SCHEMA' => $DB['SCHEMA']
+		];
 
-		if (!$session) {
-			self::exception(ZBX_API_ERROR_PARAMETERS, _('Cannot logout.'));
+		foreach ($DB['SERVERS'] as $server) {
+			unset($DB['DB']);
+			$DB['TYPE'] = $server['TYPE'];
+			$DB['SERVER'] = $server['SERVER'];
+			$DB['PORT'] = $server['PORT'];
+			$DB['DATABASE'] = $server['DATABASE'];
+			$DB['USER'] = $server['USER'];
+			$DB['PASSWORD'] = $server['PASSWORD'];
+			$DB['SCHEMA'] = $server['SCHEMA'];
+
+			DBconnect($error);
+
+			if ($error) {
+				continue;
+			}
+
+			$session = DBfetch(DBselect(
+				'SELECT s.userid'.
+				' FROM sessions s'.
+				' WHERE s.sessionid='.zbx_dbstr($sessionId).
+					' AND s.status='.ZBX_SESSION_ACTIVE
+			));
+
+			if (!$session) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Cannot logout.'));
+			}
+
+			DBexecute('DELETE FROM sessions WHERE status='.ZBX_SESSION_PASSIVE.' AND userid='.zbx_dbstr($session['userid']));
+			DBexecute('UPDATE sessions SET status='.ZBX_SESSION_PASSIVE.' WHERE sessionid='.zbx_dbstr($sessionId));
 		}
 
-		DBexecute('DELETE FROM sessions WHERE status='.ZBX_SESSION_PASSIVE.' AND userid='.zbx_dbstr($session['userid']));
-		DBexecute('UPDATE sessions SET status='.ZBX_SESSION_PASSIVE.' WHERE sessionid='.zbx_dbstr($sessionId));
+		if ($error) {
+			unset($DB['DB']);
+			$DB['TYPE'] = $master['TYPE'];
+			$DB['SERVER'] = $master['SERVER'];
+			$DB['PORT'] = $master['PORT'];
+			$DB['DATABASE'] = $master['DATABASE'];
+			$DB['USER'] = $master['USER'];
+			$DB['PASSWORD'] = $master['PASSWORD'];
+			$DB['SCHEMA'] = $master['SCHEMA'];
+			DBconnect($error);
+		}
 
 		return true;
 	}
