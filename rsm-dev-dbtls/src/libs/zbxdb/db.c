@@ -459,7 +459,10 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 		zabbix_errlog(ERR_Z3001, dbname, mysql_errno(conn), mysql_error(conn));
 		ret = ZBX_DB_FAIL;
 	}
-
+#ifdef DBTLS
+	if (ZBX_DB_OK == ret)
+		zabbix_log(LOG_LEVEL_DEBUG, "Cipher in use: \"%s\".", ZBX_NULL2EMPTY_STR(mysql_get_ssl_cipher(conn)));
+#endif
 	/* The RECONNECT option setting is placed here, AFTER the connection	*/
 	/* is made, due to a bug in MySQL versions prior to 5.1.6 where it	*/
 	/* reset the options value to the default, regardless of what it was	*/
