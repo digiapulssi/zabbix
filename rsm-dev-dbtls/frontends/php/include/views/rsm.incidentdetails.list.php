@@ -36,7 +36,6 @@ $filterColumn1 = new CFormList();
 $filterColumn2 = new CFormList();
 $filterColumn3 = new CFormList();
 $filterColumn4 = new CFormList();
-$filterColumn5 = new CFormList();
 
 $filterColumn1
 	->addRow(_('From'), createDateSelector('filter_from', zbxDateToTime($this->data['filter_from'])));
@@ -50,24 +49,18 @@ $filterColumn3
 	))
 		->addClass(ZBX_STYLE_BTN_LINK));
 $filterColumn4
-	->addRow(new CSpan([
-		(new CCheckBox('filter_failing_tests'))->setChecked($data['filter_failing_tests']),
-		SPACE,
-		_('Only failing tests')
-]));
-$filterColumn5
-	->addRow(new CSpan([
-		(new CCheckBox('filter_show_all'))->setChecked($data['filter_show_all']),
-		SPACE,
-		_('Show all')
-]));
+	->addRow(new CSpan(
+		(new CRadioButtonList('filter_failing_tests', (int) $data['filter_failing_tests']))
+			->addValue(_('Only failing tests'), 1)
+			->addValue(_('Show all'), 0)
+			->setModern(true)
+));
 
 $filter
 	->addColumn($filterColumn1)
 	->addColumn($filterColumn2)
 	->addColumn($filterColumn3)
-	->addColumn($filterColumn4)
-	->addColumn($filterColumn5);
+	->addColumn($filterColumn4);
 
 $widget->addItem($filter);
 
@@ -136,13 +129,20 @@ else {
 
 $testsInfoTable = (new CTable(null))->addClass('incidents-info');
 
-$testsInfoTable->addRow([[
-	new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
-	BR(),
-	new CSpan([bold(_('Service')), ':', SPACE, $data['slvItem']['name']]),
-	BR(),
-	new CSpan([bold(_('Incident type')), ':', SPACE, $incidentType])
-]]);
+$testsInfoTable->addRow([
+	[
+		new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
+		BR(),
+		new CSpan([bold(_('Service')), ':', SPACE, $data['slvItem']['name']]),
+		BR(),
+		new CSpan([bold(_('Incident type')), ':', SPACE, $incidentType])
+	],
+	[
+		(new CSpan(_s('%1$s Rolling week status', $this->data['slv'].'%')))->addClass('rolling-week-status'),
+		BR(),
+		(new CSpan(date('d.m.Y H:i', $this->data['slvTestTime'])))->addClass('rsm-date-time'),
+	]
+]);
 
 $widget->additem([$testsInfoTable]);
 

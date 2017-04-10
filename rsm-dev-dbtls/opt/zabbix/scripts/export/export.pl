@@ -22,7 +22,6 @@ use TLD_constants qw(:ec :api);
 use Parallel;
 
 use constant RDDS_SUBSERVICE => 'sub';
-use constant AUDIT_FILE => '/opt/zabbix/export/last_audit.txt';
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant PROBE_STATUS_UP => 'Up';
@@ -61,6 +60,10 @@ use constant rsm_rdds_probe_result => [
 	{JSON_INTERFACE_RDDS80 => true}					# 3 - only 80
 ];
 
+# todo phase 1: this must be available in phase 2
+use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
+use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
+
 parse_opts('tld=s', 'date=s', 'day=n', 'shift=n');
 setopt('nolog');
 
@@ -76,6 +79,11 @@ my ($d, $m, $y) = split('/', getopt('date'));
 usage() unless ($d && $m && $y);
 
 dw_set_date($y, $m, $d);
+
+if (!opt('dry-run') && (my $error = rsm_targets_prepare(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
+{
+	fail($error);
+}
 
 my $services;
 if (opt('service'))
@@ -180,13 +188,10 @@ if (opt('debug'))
 {
 	foreach my $probe (keys(%{$probes_data->{$server_key}}))
 	{
-		my $idx = 0;
-
-		while (defined($probes_data->{$server_key}->{$probe}->[$idx]))
+		for (my $idx = 0; defined($probes_data->{$server_key}->{$probe}->[$idx]); $idx++)
 		{
 			my $status = ($idx % 2 == 0 ? "ONLINE" : "OFFLINE");
 			dbg("$probe: $status ", ts_full($probes_data->{$server_key}->{$probe}->[$idx]));
-			$idx++;
 		}
 	}
 }
@@ -299,6 +304,11 @@ foreach my $pc_ref (@{$probe_changes})
 
 dw_write_csv_files();
 dw_write_csv_catalogs();
+
+if (!opt('dry-run') && (my $error = rsm_targets_copy(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
+{
+	fail($error);
+}
 
 slv_exit(SUCCESS);
 
@@ -510,8 +520,6 @@ sub __get_test_data
 			" order by itemid,clock");	# NB! order is important, see how the result is used below
 
 		my $cycles;
-
-		my $inc_idx = 0;
 		my $last_avail_clock;
 
 		foreach my $row_ref (@$rows_ref)
@@ -523,23 +531,11 @@ sub __get_test_data
 
 			$last_avail_clock = $clock;
 
-			dbg("$service availability at ", ts_full($clock), ": $value (inc_idx:$inc_idx)");
+			dbg("$service availability at ", ts_full($clock), ": $value");
 
-			# we need to count failed tests within resolved incidents
-			if ($inc_idx < $incidents_count && $incidents->[$inc_idx]->{'end'})
-			{
-				$incidents->[$inc_idx]->{'failed_tests'} = 0 unless (defined($incidents->[$inc_idx]->{'failed_tests'}));
-
-				while ($inc_idx < $incidents_count && $incidents->[$inc_idx]->{'end'} && $incidents->[$inc_idx]->{'end'} < $clock)
-				{
-					$inc_idx++;
-				}
-
-				if ($value == DOWN && $inc_idx < $incidents_count && $incidents->[$inc_idx]->{'end'} && $clock >= $incidents->[$inc_idx]->{'start'} && $incidents->[$inc_idx]->{'end'} >= $clock)
-				{
-					$incidents->[$inc_idx]->{'failed_tests'}++;
-				}
-			}
+			# todo phase 1: remove the cycle here that counts failed_incidents, it's already calculated in __get_incidents()
+			# NB! REMOVED CODE HERE
+			# todo phase 1: calculating number of failed incidents can be added as an option to get_incidents() of phase 2
 
 			# todo phase 1: make sure UP_INCONCLUSIVE is added in phase 2
 			wrn("unknown availability result: $value (expected ", DOWN, " (Down), ", UP, " (Up))")
@@ -1336,24 +1332,28 @@ sub __get_probe_changes
 	{
 		foreach my $probe (sort(keys(%{$probes_data->{$server_key}})))
 		{
-			my $idx = 0;
+			dbg("  $probe\@$server_key");
 
-			while (defined($probes_data->{$server_key}->{$probe}->[$idx]))
+			for (my $idx = 0; defined($probes_data->{$server_key}->{$probe}->[$idx]); $idx++)
 			{
 				my $clock = $probes_data->{$server_key}->{$probe}->[$idx];
 				my $status = ($idx % 2 == 0 ? PROBE_ONLINE_STR : PROBE_OFFLINE_STR);
 
-				dbg("  $probe\@$server_key changed to $status on ", ts_full($clock));
-
 				if ($idx == 0 && $clock < $from)
 				{
-					# ignore previous status
+					# ignore previous minute status
 					next;
 				}
 
-				push(@result, {'probe' => $probe, 'status' => $status, 'clock' => $clock});
+				if ($idx + 1 == scalar(@{$probes_data->{$server_key}->{$probe}}) && ($clock % 60 != 0))
+				{
+					# ignore last second status
+					next;
+				}
 
-				$idx++;
+				dbg("    changed status to \"$status\" on ", ts_full($clock));
+
+				push(@result, {'probe' => $probe, 'status' => $status, 'clock' => $clock});
 			}
 		}
 	}
@@ -1695,6 +1695,7 @@ sub __make_incident
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
+# todo phase 1: NB! Contains the fix to recalculate number of failed tests, see below label "FIX-PH1"
 sub __get_incidents2
 {
 	my $itemid = shift;
@@ -1724,6 +1725,9 @@ sub __get_incidents2
 
 	my $last_trigger_value = TRIGGER_VALUE_FALSE;
 
+	# FIX-PH1
+	use constant SEC_PER_MONTH => 2592000;
+
 	if (defined($from))
 	{
 		# First check for ongoing incident.
@@ -1735,7 +1739,10 @@ sub __get_incidents2
 		my $attempt = 0;
 
 		my $clock_till = $from;
-		my $clock_from = $clock_till - SEC_PER_WEEK;
+		# start FIX-PH1
+		#my $clock_from = $clock_till - SEC_PER_WEEK;
+		my $clock_from = $clock_till - SEC_PER_MONTH;
+		# end FIX-PH1
 		$clock_till--;
 
 		while ($attempt++ < $attempts && !defined($row_ref))
@@ -1841,6 +1848,17 @@ sub __get_incidents2
 			my $idx = scalar(@incidents) - 1;
 
 			$incidents[$idx]->{'end'} = __cycle_end($clock, $delay);
+
+			# start FIX-PH1
+			# count failed tests within resolved incident
+			my $rows_ref2 = db_select(
+				"select count(*)".
+				" from history_uint".
+				" where itemid=$itemid".
+					" and value=".DOWN.
+					" and ".sql_time_condition($incidents[$idx]->{'start'}, $incidents[$idx]->{'end'}));
+			$incidents[$idx]->{'failed_tests'} = $rows_ref2->[0]->[0];
+			# end FIX-PH1
 		}
 		else
 		{

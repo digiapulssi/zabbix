@@ -96,8 +96,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_avail_valuemaps
 		get_result_string get_tld_by_trigger truncate_from alerts_enabled get_test_start_time
 		get_real_services_period dbg info wrn fail format_stats_time slv_exit exit_if_running trim parse_opts
-		parse_avail_opts parse_rollweek_opts opt getopt setopt optkeys ts_str ts_full selected_period write_file
-		usage);
+		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
+		write_file usage);
 
 # configuration, set in set_slv_config()
 my $config = undef;
@@ -1366,7 +1366,7 @@ sub get_probe_times
 
 	if (!defined($result))
 	{
-		wrn("Probe main status items (".PROBE_KEY_ONLINE.") have no values yet.");
+		dbg("Probe main status items (".PROBE_KEY_ONLINE.") have no values yet.");
 	}
 	else
 	{
@@ -2990,6 +2990,13 @@ sub setopt
 	$value = 1 unless (defined($value));
 
 	$OPTS{$key} = $value;
+}
+
+sub unsetopt
+{
+	my $key = shift;
+
+	$OPTS{$key} = undef;
 }
 
 sub optkeys

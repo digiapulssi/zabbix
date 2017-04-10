@@ -8,7 +8,6 @@ use base 'Exporter';
 
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
-use constant AH_BASE_DIR => '/opt/zabbix/sla';
 
 use constant AH_INCIDENT_ACTIVE => 'ACTIVE';
 use constant AH_END_FILE => 'end';
@@ -18,17 +17,20 @@ use constant AH_ALARMED_YES => 'YES';
 use constant AH_ALARMED_NO => 'NO';
 use constant AH_ALARMED_DISABLED => 'DISABLED';
 use constant AH_SERVICE_AVAILABILITY_FILE => 'serviceAvailability';
+use constant AH_BASE_DIR => '/opt/zabbix/sla';
+use constant AH_TMP_DIR => '/opt/zabbix/sla-tmp';
 
 use constant AH_ROOT_ZONE_DIR => 'zz--root';			# map root zone name (.) to something human readable
 
 use constant AH_CONTINUE_FILE		=> 'last_update.txt';	# file with timestamp of last run with --continue
-use constant AH_AUDIT_FILE_PREFIX	=> AH_BASE_DIR . '/last_audit_';	# file containing timestamp of last auditlog entry that
+use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp of last auditlog entry that
 								# was processed, is saved per db (false_positive change):
 								# AH_AUDIT_FILE_PREFIX _ <SERVER_KEY> .txt
 
 our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_ALARMED_YES AH_ALARMED_NO AH_ALARMED_DISABLED ah_get_error
 		ah_save_alarmed ah_save_service_availability ah_save_incident ah_save_false_positive
-		ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit ah_save_audit);
+		ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit ah_save_audit
+		ah_save_continue_file);
 
 my $error_string = "";
 
@@ -47,7 +49,7 @@ sub __make_base_path
 	$tld = lc($tld);
 	$service = lc($service);
 
-	my $path = AH_BASE_DIR . "/$tld/$service";
+	my $path = AH_TMP_DIR . "/$tld/$service";
 	$path .= "/$add_path" if ($add_path);
 
 	make_path($path, {error => \my $err});
@@ -79,13 +81,14 @@ sub __set_error
 	$error_string = shift;
 }
 
+# todo phase 1: this improved version was taken from the same file of phase 2
 sub __set_file_error
 {
 	my $err = shift;
 
 	$error_string = "";
 
-	if (@$err)
+	if (ref($err) eq "ARRAY")
 	{
 		for my $diag (@$err)
 		{
@@ -102,6 +105,8 @@ sub __set_file_error
 			return;
 		}
 	}
+
+	$error_string = join('', $err, @_);
 }
 
 sub __write_file
@@ -269,6 +274,13 @@ sub ah_get_continue_file
 	return AH_BASE_DIR . '/' . AH_CONTINUE_FILE;
 }
 
+sub ah_save_continue_file
+{
+	my $ts = shift;
+
+	return __write_file(AH_TMP_DIR . '/' . AH_CONTINUE_FILE, $ts);
+}
+
 sub ah_get_api_tld
 {
 	my $tld = shift;
@@ -282,7 +294,7 @@ sub __get_audit_file_path
 {
 	my $server_key = shift;
 
-	return AH_AUDIT_FILE_PREFIX . $server_key . '.txt';
+	return AH_BASE_DIR . '/' . AH_AUDIT_FILE_PREFIX . $server_key . '.txt';
 }
 
 # get the time of last audit log entry that was checked
@@ -317,7 +329,7 @@ sub ah_save_audit
 
 	die("Internal error: ah_save_audit() server_key not specified") unless ($server_key && $clock);
 
-	return __write_file(__get_audit_file_path($server_key), $clock);
+	return __write_file(AH_TMP_DIR . '/' . AH_AUDIT_FILE_PREFIX . $server_key . '.txt', $clock);
 }
 
 1;

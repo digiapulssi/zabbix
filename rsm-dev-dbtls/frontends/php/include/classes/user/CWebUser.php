@@ -90,8 +90,11 @@ class CWebUser {
 					$DB['USER'] = $server['USER'];
 					$DB['PASSWORD'] = $server['PASSWORD'];
 					$DB['SCHEMA'] = $server['SCHEMA'];
-
 					DBconnect($error);
+
+					if ($error) {
+						continue;
+					}
 
 					$user_info = DBfetch(DBselect(
 						'SELECT u.userid'.
@@ -104,15 +107,17 @@ class CWebUser {
 					);
 				}
 
-				unset($DB['DB']);
-				$DB['TYPE'] = $master['TYPE'];
-				$DB['SERVER'] = $master['SERVER'];
-				$DB['PORT'] = $master['PORT'];
-				$DB['DATABASE'] = $master['DATABASE'];
-				$DB['USER'] = $master['USER'];
-				$DB['PASSWORD'] = $master['PASSWORD'];
-				$DB['SCHEMA'] = $master['SCHEMA'];
-				DBconnect($error);
+				if ($error) {
+					unset($DB['DB']);
+					$DB['TYPE'] = $master['TYPE'];
+					$DB['SERVER'] = $master['SERVER'];
+					$DB['PORT'] = $master['PORT'];
+					$DB['DATABASE'] = $master['DATABASE'];
+					$DB['USER'] = $master['USER'];
+					$DB['PASSWORD'] = $master['PASSWORD'];
+					$DB['SCHEMA'] = $master['SCHEMA'];
+					DBconnect($error);
+				}
 			}
 
 			return $result;

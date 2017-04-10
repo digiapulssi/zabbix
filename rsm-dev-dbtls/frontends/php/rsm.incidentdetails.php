@@ -44,7 +44,6 @@ $fields = array(
 	'filter_to' =>				array(T_ZBX_INT, O_OPT,	null,	null,		null),
 	'filter_rolling_week' =>	array(T_ZBX_INT, O_OPT,	null,	null,		null),
 	'filter_failing_tests' =>	array(T_ZBX_INT, O_OPT,	null,	IN('0,1'),	null),
-	'filter_show_all' =>		array(T_ZBX_INT, O_OPT,	null,	IN('0,1'),	null),
 	// ajax
 	'favobj' =>					array(T_ZBX_STR, O_OPT,	P_ACT,	null,		null),
 	'favref' =>					array(T_ZBX_STR, O_OPT,	P_ACT,  NOT_EMPTY,	'isset({favobj})'),
@@ -90,7 +89,6 @@ if (getRequest('filter_set')) {
 	$data['eventid'] = getRequest('eventid');
 	$data['slvItemId'] = getRequest('slvItemId');
 	$data['availItemId'] = getRequest('availItemId');
-	$data['filter_show_all'] = getRequest('filter_show_all', 0);
 	$data['filter_failing_tests'] = getRequest('filter_failing_tests', 0);
 
 	$data['filter_from'] = (getRequest('filter_from') == getRequest('original_from'))
@@ -107,7 +105,6 @@ if (getRequest('filter_set')) {
 	CProfile::update('web.rsm.incidentdetails.availItemId', $data['availItemId'], PROFILE_TYPE_ID);
 	CProfile::update('web.rsm.incidentdetails.filter_from', $data['filter_from'], PROFILE_TYPE_ID);
 	CProfile::update('web.rsm.incidentdetails.filter_to', $data['filter_to'], PROFILE_TYPE_ID);
-	CProfile::update('web.rsm.incidentdetails.filter_show_all', $data['filter_show_all'], PROFILE_TYPE_ID);
 	CProfile::update('web.rsm.incidentdetails.filter_failing_tests', $data['filter_failing_tests'], PROFILE_TYPE_ID);
 }
 elseif (getRequest('filter_rolling_week')) {
@@ -115,7 +112,6 @@ elseif (getRequest('filter_rolling_week')) {
 	$data['eventid'] = CProfile::get('web.rsm.incidentdetails.eventid');
 	$data['slvItemId'] = CProfile::get('web.rsm.incidentdetails.slvItemId');
 	$data['availItemId'] = CProfile::get('web.rsm.incidentdetails.availItemId');
-	$data['filter_show_all'] = CProfile::get('web.rsm.incidentdetails.filter_show_all');
 	$data['filter_failing_tests'] = CProfile::get('web.rsm.incidentdetails.filter_failing_tests');
 
 	// set new filter from and filter to
@@ -134,7 +130,6 @@ else {
 		date('YmdHis', $serverTime - $rollWeekSeconds['value'])
 	);
 	$data['filter_to'] = CProfile::get('web.rsm.incidentdetails.filter_to', date('YmdHis', $serverTime));
-	$data['filter_show_all'] = CProfile::get('web.rsm.incidentdetails.filter_show_all');
 	$data['filter_failing_tests'] = CProfile::get('web.rsm.incidentdetails.filter_failing_tests');
 }
 
@@ -367,24 +362,17 @@ if ($mainEvent) {
 	}
 
 	// pagination
-	if ($data['filter_show_all']) {
-		$toTime += $recoveryCount * $delayTime;
+	$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl('rsm.incidentdetails.php'));
+	if (!$data['paging']->items) {
 		$data['paging'] = null;
 	}
-	else {
-		$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl('rsm.incidentdetails.php'));
-		if (!$data['paging']->items) {
-			$data['paging'] = null;
-		}
 
-		// time correction after pagination
-		$firstElement = reset($data['tests']);
-		$lastElement = end($data['tests']);
+	// time correction after pagination
+	$firstElement = reset($data['tests']);
+	$lastElement = end($data['tests']);
 
-		$fromTime = $firstElement['clock'] - $failCount * $delayTime;
-		$toTime = $lastElement['clock'] + $recoveryCount * $delayTime + SEC_PER_MIN;
-	}
-
+	$fromTime = $firstElement['clock'] - $failCount * $delayTime;
+	$toTime = $lastElement['clock'] + $recoveryCount * $delayTime + SEC_PER_MIN;
 	$tempTests = $data['tests'];
 	$startEventExist = false;
 	$endEventExist = false;
