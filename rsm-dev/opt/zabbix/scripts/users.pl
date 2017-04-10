@@ -59,7 +59,7 @@ foreach my $server_key (@server_keys)
 
 	my $section = $config->{$server_key};
 
-	print($server_key, "\n");
+	print("Processing $server_key\n");
 
 	my $zabbix = Zabbix->new({'url' => $section->{'za_url'}, user => $section->{'za_user'}, password => $section->{'za_password'}});
 
@@ -169,7 +169,7 @@ users.pl - manage users in Zabbix
 
 =head1 SYNOPSIS
 
-users.pl --add|--delete --user <user> [--type <ebero|tech|admin>] [--password <password>] [--firstname <firstname>] [--lastname <lastname>] [--server-id id] [--dry-run] [--debug] [--help]
+users.pl --add|--delete --user <user> [--type <ebero|tech|admin>] [--password <password>] [--firstname <firstname>] [--lastname <lastname>] [--server-id id] [--debug] [--help]
 
 =head1 OPTIONS
 
@@ -210,10 +210,6 @@ Specify last name of a user.
 Specify id of the server to continue the optration from. This option is useful when action was successful on part of the servers.
 
 =head2 OTHER OPTIONS
-
-=item B<--dry-run>
-
-Print data to the screen, do not change anything in the system.
 
 =item B<--debug>
 
