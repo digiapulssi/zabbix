@@ -149,6 +149,16 @@ $data['allowedGroups'] = array(
 	RSM_TEST_GROUP => false
 );
 
+$master = [
+	'TYPE' => $DB['TYPE'],
+	'SERVER' => $DB['SERVER'],
+	'PORT' => $DB['PORT'],
+	'DATABASE' => $DB['DATABASE'],
+	'USER' => $DB['USER'],
+	'PASSWORD' => $DB['PASSWORD'],
+	'SCHEMA' => $DB['SCHEMA']
+];
+
 foreach ($DB['SERVERS'] as $server) {
 	unset($DB['DB']);
 	$DB['TYPE'] = $server['TYPE'];
@@ -161,9 +171,8 @@ foreach ($DB['SERVERS'] as $server) {
 	DBconnect($error);
 
 	if ($error) {
-		show_error_message(_($error));
-		require_once dirname(__FILE__).'/include/page_footer.php';
-		exit;
+		show_error_message(_($server['NAME'].': '.$error));
+		continue;
 	}
 
 	$tlds = [];
@@ -595,6 +604,18 @@ foreach ($DB['SERVERS'] as $server) {
 			}
 		}
 	}
+}
+
+if ($error) {
+	unset($DB['DB']);
+	$DB['TYPE'] = $master['TYPE'];
+	$DB['SERVER'] = $master['SERVER'];
+	$DB['PORT'] = $master['PORT'];
+	$DB['DATABASE'] = $master['DATABASE'];
+	$DB['USER'] = $master['USER'];
+	$DB['PASSWORD'] = $master['PASSWORD'];
+	$DB['SCHEMA'] = $master['SCHEMA'];
+	DBconnect($error);
 }
 
 if (array_key_exists('tld', $data) && $data['tld']) {
