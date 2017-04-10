@@ -289,7 +289,8 @@ static int	is_recoverable_mysql_error(void)
  ******************************************************************************/
 int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *dbschema, char *dbsocket, int port
 #ifdef DBTLS
-		, const char *key, const char *cert, const char *ca, const char *capath, const char *cipher
+		, const char *mode, const char *key, const char *cert, const char *ca, const char *capath
+		, const char *cipher, const char *tlsv
 #endif
 )
 {
@@ -404,10 +405,53 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	/* if at least one of DB TLS parameters was provided, pass them to MySQL and require secure connection */
 	if (NULL != key || NULL != cert || NULL != ca || NULL != capath || NULL != cipher)
 	{
-		enum mysql_ssl_mode	ssl_mode = SSL_MODE_REQUIRED;
+		enum mysql_ssl_mode	ssl_mode;
+
+		if (NULL != mode && 0 == strcmp(mode, "REQUIRED"))
+		{
+			ssl_mode = SSL_MODE_REQUIRED;
+		}
+		else if (NULL != mode && 0 == strcmp(mode, "VERIFY_CA"))
+		{
+			ssl_mode = SSL_MODE_VERIFY_CA;
+		}
+		else if (NULL != mode && 0 == strcmp(mode, "VERIFY_IDENTITY"))
+		{
+			ssl_mode = SSL_MODE_VERIFY_IDENTITY;
+		}
+		else
+		{
+			if (NULL != mode)
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "Invalid secure connection mode, acceptable values are:"
+						" \"REQUIRED\" (default), \"VERIFY_CA\" and \"VERIFY_IDENTITY\"."
+						" Trying to deduce appropriate setting from other parameters.");
+			}
+
+			if (NULL != ca || NULL != capath)
+				ssl_mode = SSL_MODE_VERIFY_CA;
+			else
+				ssl_mode = SSL_MODE_REQUIRED;
+		}
 
 		mysql_ssl_set(conn, key, cert, ca, capath, cipher);
 		mysql_options(conn, MYSQL_OPT_SSL_MODE, &ssl_mode);
+
+		if (NULL != tlsv)
+			mysql_options(conn, MYSQL_OPT_TLS_VERSION, tlsv);
+
+		/* might be useful to set MYSQL_OPT_SSL_CRL and MYSQL_OPT_SSL_CRLPATH too */
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "None of encryption parameters was provided. Database connection is going"
+				" to be unencrypted.");
+
+		if (NULL != mode)
+			zabbix_log(LOG_LEVEL_WARNING, "Ignoring secure connection mode.");
+
+		if (NULL != tlsv)
+			zabbix_log(LOG_LEVEL_WARNING, "Ignoring TLS version.");
 	}
 #endif
 	if (NULL == mysql_real_connect(conn, host, user, password, dbname, port, dbsocket, CLIENT_MULTI_STATEMENTS))

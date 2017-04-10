@@ -199,11 +199,13 @@ char	*CONFIG_DBPASSWORD		= NULL;
 char	*CONFIG_DBSOCKET		= NULL;
 int	CONFIG_DBPORT			= 0;
 #ifdef DBTLS
+char	*CONFIG_DB_MODE			= NULL;
 char	*CONFIG_DB_KEY_FILE		= NULL;
 char	*CONFIG_DB_CERT_FILE		= NULL;
 char	*CONFIG_DB_CA_FILE		= NULL;
 char	*CONFIG_DB_CA_PATH		= NULL;
 char	*CONFIG_DB_CIPHER		= NULL;
+char	*CONFIG_DB_TLS_VERSION		= NULL;
 #endif
 int	CONFIG_ENABLE_REMOTE_COMMANDS	= 0;
 int	CONFIG_LOG_REMOTE_COMMANDS	= 0;
@@ -646,6 +648,22 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 		{"DBPort",			&CONFIG_DBPORT,				TYPE_INT,
 			PARM_OPT,	1024,			65535},
+#ifdef DBTLS
+		{"DBTLSMode",			&CONFIG_DB_MODE,			TYPE_STRING,
+			PARM_OPT,	0,			0},
+		{"DBKeyFile",			&CONFIG_DB_KEY_FILE,			TYPE_STRING,
+			PARM_OPT,	0,			0},
+		{"DBCertFile",			&CONFIG_DB_CERT_FILE,			TYPE_STRING,
+			PARM_OPT,	0,			0},
+		{"DBCAFile",			&CONFIG_DB_CA_FILE,			TYPE_STRING,
+			PARM_OPT,	0,			0},
+		{"DBCAPath",			&CONFIG_DB_CA_PATH,			TYPE_STRING,
+			PARM_OPT,	0,			0},
+		{"DBCipher",			&CONFIG_DB_CIPHER,			TYPE_STRING,
+			PARM_OPT,	0,			0},
+		{"DBTLSVersion",		&CONFIG_DB_TLS_VERSION,			TYPE_STRING,
+			PARM_OPT,	0,			0},
+#endif
 		{"SSHKeyLocation",		&CONFIG_SSH_KEY_LOCATION,		TYPE_STRING,
 			PARM_OPT,	0,			0},
 		{"LogSlowQueries",		&CONFIG_LOG_SLOW_QUERIES,		TYPE_INT,
