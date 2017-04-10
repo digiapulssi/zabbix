@@ -1124,6 +1124,10 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	dnl Checking for IBM DB2 support
 	AX_LIB_IBM_DB2()
 	if test "x$want_ibm_db2" = "xyes"; then
+		if test "x$have_dbtls" = "xyes"; then
+			AC_MSG_ERROR([Secure connections are not supported for IBM DB2])
+		fi
+
 		if test "x$have_db" != "xno"; then
 			AC_MSG_ERROR([You can configure for only one database.])
 		fi
@@ -1154,6 +1158,10 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	dnl Checking for Oracle support
 	AX_LIB_ORACLE_OCI([10.0])
 	if test "x$want_oracle_oci" = "xyes"; then
+		if test "x$have_dbtls" = "xyes"; then
+			AC_MSG_ERROR([Secure connections are not supported for Oracle])
+		fi
+
 		if test "x$have_db" != "xno"; then
 			AC_MSG_ERROR([You can configure for only one database.])
 		fi
@@ -1174,6 +1182,10 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	dnl Checking for PostgreSQL support
 	AX_LIB_POSTGRESQL("8.1")
 	if test "x$want_postgresql" = "xyes"; then
+		if test "x$have_dbtls" = "xyes"; then
+			AC_MSG_ERROR([Secure connections are not supported for PostgreSQL])
+		fi
+
 		if test "x$have_db" != "xno"; then
 			AC_MSG_ERROR([You can configure for only one database.])
 		fi
@@ -1197,6 +1209,10 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	dnl Checking for SQLite3 support
 	AX_LIB_SQLITE3()
 	if test "x$want_sqlite3" = "xyes"; then
+		if test "x$have_dbtls" = "xyes"; then
+			AC_MSG_ERROR([Secure connections are not supported for SQLite3])
+		fi
+
 		if test "x$have_db" != "xno"; then
 			AC_MSG_ERROR([You can configure for only one database.])
 		fi
