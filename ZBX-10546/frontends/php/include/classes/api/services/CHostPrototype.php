@@ -619,49 +619,49 @@ class CHostPrototype extends CHostBase {
 	/**
 	 * Updates the children of the host prototypes on the given hosts and propagates the inheritance to the child hosts.
 	 *
-	 * @param array $hostPrototypes		array of host prototypes to inherit
+	 * @param array $host_prototypes	array of host prototypes to inherit
 	 * @param array $hostids   			array of hosts to inherit to; if set to null, the children will be updated on all
 	 *                              	child hosts
 	 *
 	 * @return bool
 	 */
-	protected function inherit(array $hostPrototypes, array $hostids = null) {
-		if (empty($hostPrototypes)) {
+	protected function inherit(array $host_prototypes, array $hostids = null) {
+		if (empty($host_prototypes)) {
 			return true;
 		}
 
-		// prepare the child host prototypes
-		$newHostPrototypes = $this->prepareInheritedObjects($hostPrototypes, $hostids);
-		if (!$newHostPrototypes) {
+		$prototypes = $this->prepareInheritedObjects($host_prototypes, $hostids);
+		if (!$prototypes) {
 			return true;
 		}
 
-		$insertHostPrototypes = [];
-		$updateHostPrototypes = [];
-		foreach ($newHostPrototypes as $newHostPrototype) {
-			if (isset($newHostPrototype['hostid'])) {
-				$updateHostPrototypes[] = $newHostPrototype;
-			}
-			else {
-				$insertHostPrototypes[] = $newHostPrototype;
+		$existing_prototypes = [];
+		$new_prototypes = [];
+		foreach($prototypes as $prototype) {
+			if (array_key_exists('hostid', $prototype)) {
+				$existing_prototypes[] = $prototype;
+			} else {
+				$new_prototypes[] = $prototype;
 			}
 		}
 
-		// save the new host prototypes
-		if (!zbx_empty($insertHostPrototypes)) {
-			$insertHostPrototypes = $this->createReal($insertHostPrototypes);
+		if ($existing_prototypes) {
+			$existing_prototypes = $this->updateReal($existing_prototypes);
 		}
 
-		if (!zbx_empty($updateHostPrototypes)) {
-			$updateHostPrototypes = $this->updateReal($updateHostPrototypes);
+		if ($new_prototypes) {
+			$new_prototypes = $this->createReal($new_prototypes);
 		}
 
-		$host_prototypes = $insertHostPrototypes;
-		foreach($updateHostPrototypes as $host_prototype) {
-			if ($host_prototype['status'] == HOST_STATUS_TEMPLATE) {
-				$host_prototypes[] = $host_prototype;
+		$host_prototypes = [];
+		foreach([$new_prototypes, $existing_prototypes] as $prototypes) {
+			foreach($prototypes as $prototype) {
+				if ($prototype['status'] == HOST_STATUS_TEMPLATE) {
+					$host_prototypes[] = $prototype;
+				}
 			}
 		}
+		unset($new_prototypes, $existing_prototypes);
 
 		// propagate the inheritance to the children
 		return $this->inherit($host_prototypes);
