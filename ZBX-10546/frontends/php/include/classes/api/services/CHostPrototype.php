@@ -637,7 +637,7 @@ class CHostPrototype extends CHostBase {
 
 		$existing_prototypes = [];
 		$new_prototypes = [];
-		foreach($prototypes as $prototype) {
+		foreach ($prototypes as $prototype) {
 			if (array_key_exists('hostid', $prototype)) {
 				$existing_prototypes[] = $prototype;
 			} else {
@@ -654,8 +654,8 @@ class CHostPrototype extends CHostBase {
 		}
 
 		$host_prototypes = [];
-		foreach([$new_prototypes, $existing_prototypes] as $prototypes) {
-			foreach($prototypes as $prototype) {
+		foreach ([$new_prototypes, $existing_prototypes] as $prototypes) {
+			foreach ($prototypes as $prototype) {
 				if ($prototype['status'] == HOST_STATUS_TEMPLATE) {
 					$host_prototypes[] = $prototype;
 				}
