@@ -266,6 +266,7 @@ build_flags="
 	--with-libcurl
 	--enable-proxy
 	--enable-ipv6
+	--enable-dbtls
 "
 
 %if 0%{?rhel} >=6
