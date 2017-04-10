@@ -1,5 +1,5 @@
 [Unit]
-Description=Zabbix Proxy
+Description=Zabbix Proxy <N>
 After=syslog.target
 After=network.target
 
