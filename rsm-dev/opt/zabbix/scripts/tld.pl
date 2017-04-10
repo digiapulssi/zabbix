@@ -115,6 +115,7 @@ my $rv = GetOptions(\%OPTS,
 		    "server-id=s",
 		    "get-nsservers-list!",
 		    "update-nsservers!",
+		    "resolver=s",
 		    "list-services!",
 		    "setup-cron!",
 		    "verbose!",
@@ -415,19 +416,27 @@ sub get_ns_servers {
 	    }
 	}
     } else {
-	my $nsservers = `dig $tld NS +short`;
+	# todo phase 1: implemented --resolver for automatically fetching NSs (NB, search for --resolver in this file)
+	my $add_opts = "";
+	$add_opts = "\@" . $OPTS{'resolver'} if ($OPTS{'resolver'});
+	# todo phase 1: NB! Fix duplicate items! Remove DOT from the end of NS.
+	my $nsservers = `dig $add_opts $tld NS +short | sed 's/\.\$//'`;
+
 	my @nsservers = split(/\n/,$nsservers);
+
+	# todo phase 1: added
+	print("Warning: resolver returned no Name Servers, did you forget to specify \"--resolver\"?\n") if (scalar(@nsservers) == 0);
 
 	foreach (my $i = 0;$i<=$#nsservers; $i++) {
 	    if ($OPTS{'ipv4'} == 1) {
-		my $ipv4 = `dig $nsservers[$i] A +short`;
+		my $ipv4 = `dig $add_opts $nsservers[$i] A +short`;
 		my @ipv4 = split(/\n/, $ipv4);
 
 		@{$ns_servers->{$nsservers[$i]}{'v4'}} = @ipv4 if scalar @ipv4;
 	    }
 
 	    if ($OPTS{'ipv6'} == 1) {
-		my $ipv6 = `dig $nsservers[$i] AAAA +short` if $OPTS{'ipv6'};
+		my $ipv6 = `dig $add_opts $nsservers[$i] AAAA +short` if $OPTS{'ipv6'};
 		my @ipv6 = split(/\n/, $ipv6);
 
 		@{$ns_servers->{$nsservers[$i]}{'v6'}} = @ipv6 if scalar @ipv6;
@@ -1125,7 +1134,9 @@ Other options
 	--get-nsservers-list
 		CSV formatted list of NS + IP server pairs for specified TLD
 	--update-nsservers
-		update all NS + IP pairs for specified TLD. --ns-servers-v4 or/and --ns-servers-v6 is mandatory in this case
+		update all NS + IP pairs for specified TLD.
+	--resolver=IP
+		specify resolver to use when querying Name Servers of a TLD
         --type=STRING
                 Type of TLD. Possible values: @{[TLD_TYPE_G]}, @{[TLD_TYPE_CC]}, @{[TLD_TYPE_OTHER]}, @{[TLD_TYPE_TEST]}.
         --set-type
@@ -1141,10 +1152,10 @@ Other options
 		(default: disabled)
         --ns-servers-v4=STRING
                 list of IPv4 name servers separated by space (name and IP separated by comma): "NAME,IP[ NAME,IP2 ...]"
-		(default: get the list from local resolver)
+		(default: get the list from local resolver or specified with --resolver)
         --ns-servers-v6=STRING
                 list of IPv6 name servers separated by space (name and IP separated by comma): "NAME,IP[ NAME,IP2 ...]"
-		(default: get the list from local resolver)
+		(default: get the list from local resolver or specified with --resolver)
         --rdds43-servers=STRING
                 list of RDDS43 servers separated by comma: "NAME1,NAME2,..."
         --rdds80-servers=STRING
@@ -1242,8 +1253,9 @@ sub validate_input {
 	$msg .= "EPP Server certificate file must be specified (--epp-servercert)\n" unless ($OPTS{'epp-servercert'});
     }
 
-    $OPTS{'ipv4'} = 0 if (defined($OPTS{'update-nsservers'}));
-    $OPTS{'ipv6'} = 0 if (defined($OPTS{'update-nsservers'}));
+    # todo phase 1: why on Earth? Do not do this.
+    #$OPTS{'ipv4'} = 0 if (defined($OPTS{'update-nsservers'}));
+    #$OPTS{'ipv6'} = 0 if (defined($OPTS{'update-nsservers'}));
 
     $OPTS{'dns'} = 0 unless defined $OPTS{'dns'};
     $OPTS{'rdds'} = 0 unless defined $OPTS{'rdds'};
@@ -1505,11 +1517,13 @@ sub update_nsservers($$) {
     my $TLD = shift;
     my $new_ns_servers = shift;
 
-    return unless defined $new_ns_servers;
+    # todo phase 1: allow disabling all the NSs
+    #return unless defined $new_ns_servers;
 
     my $old_ns_servers = get_nsservers_list($TLD);
 
-    return unless defined $old_ns_servers;
+    # todo phase 1: allow adding NSs on an empty set
+    #return unless defined $old_ns_servers;
 
     my @to_be_added = ();
     my @to_be_removed = ();
@@ -1533,6 +1547,9 @@ sub update_nsservers($$) {
 			$ns_ip->{$new_ip}->{'ns'} = $new_nsname;
 			$ns_ip->{$new_ip}->{'proto'} = $proto;
 			push @to_be_added, $ns_ip;
+
+			# todo phase 1: added
+			print("add\t: $new_nsname ($new_ip)\n");
 		    }
 	    }
 
@@ -1562,6 +1579,9 @@ sub update_nsservers($$) {
 		    $ns_ip->{$old_ip} = $old_nsname;
 
 		    push @to_be_removed, $ns_ip;
+
+		    # todo phase 1: added
+		    print("delete\t: $old_nsname ($old_ip)\n");
 		}
 	    }
 	}
