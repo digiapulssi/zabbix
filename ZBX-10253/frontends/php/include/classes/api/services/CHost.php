@@ -1563,7 +1563,7 @@ class CHost extends CHostGeneral {
 
 				if (strlen($tls_psk) < PSK_MIN_LEN) {
 					self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.', 'tls_psk',
-						_s('minumum length is %1$s hex-digits', PSK_MIN_LEN)
+						_s('minimum length is %1$s characters', PSK_MIN_LEN)
 					));
 				}
 			}
