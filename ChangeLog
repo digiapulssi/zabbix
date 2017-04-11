@@ -3,7 +3,6 @@ Changes for 3.2.5rc1
 New features:
 
 Bug fixes:
-..F....... [ZBX-7492] fixed undefined index, invalid argument supplied to foreach and invalid value insertion into database (miks)
 ..F....... [ZBX-11477] fixed lost user name in profile title (miks)
 ........S. [ZBX-11889] fixed lastaccess update for passive proxy (viktors)
 A......... [ZBX-10373] fixed check for screen items overlap (gcalenko, Sasha)
@@ -2024,6 +2023,7 @@ Changes for 2.2.18rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-7492] fixed undefined index, invalid argument supplied to foreach and invalid value insertion into database (miks)
 ..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
 ...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
 .......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
