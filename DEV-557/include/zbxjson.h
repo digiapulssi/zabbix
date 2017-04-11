@@ -84,6 +84,12 @@
 #define ZBX_PROTO_TAG_TASKS		"tasks"
 #define ZBX_PROTO_TAG_ALERTID		"alertid"
 
+#define ZBX_PROTO_TAG_LDAP_USE_TLS	"use_tls"
+#define ZBX_PROTO_TAG_LDAP_BIND_DN	"bind_dn"
+#define ZBX_PROTO_TAG_LDAP_BIND_PW	"bind_pw"
+#define ZBX_PROTO_TAG_LDAP_NET_TIMEOUT	"net_timeout"
+#define ZBX_PROTO_TAG_LDAP_PROC_TIMEOUT	"proc_timeout"
+
 #define ZBX_PROTO_VALUE_FAILED		"failed"
 #define ZBX_PROTO_VALUE_SUCCESS		"success"
 
@@ -107,7 +113,11 @@
 #define ZBX_PROTO_VALUE_GET_QUEUE_PROXY		"overview by proxy"
 #define ZBX_PROTO_VALUE_GET_QUEUE_DETAILS	"details"
 
-#define ZBX_PROTO_VALUE_LDAP_SYNC		"ldap sync"
+#define ZBX_PROTO_VALUE_LDAP_SYNC		"ldap.sync"
+#define ZBX_PROTO_VALUE_LDAP_TEST_SERVER	"test_server"
+#define ZBX_PROTO_VALUE_LDAP_TEST_SEARCH	"test_search"
+#define ZBX_PROTO_VALUE_LDAP_TEST_SYNC		"test_sync"
+#define ZBX_PROTO_VALUE_LDAP_SYNC_NOW		"sync_now"
 
 typedef enum
 {
