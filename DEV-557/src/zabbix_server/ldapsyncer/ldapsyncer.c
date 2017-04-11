@@ -423,7 +423,7 @@ static int	ldap_json_deserialize_server(struct zbx_json_parse *jp, zbx_ldap_serv
 		return FAIL;
 	}
 
-	if (0 > (ldap_server->net_timeout = atoi(value)))
+	if (0 >= (ldap_server->net_timeout = atoi(value)))
 	{
 		*error = zbx_strdup(*error, "invalid \"" ZBX_PROTO_TAG_LDAP_NET_TIMEOUT "\" tag value ");
 		return FAIL;
@@ -443,7 +443,7 @@ static int	ldap_json_deserialize_server(struct zbx_json_parse *jp, zbx_ldap_serv
 		return FAIL;
 	}
 
-	if (0 > (ldap_server->proc_timeout = atoi(value)))
+	if (0 >= (ldap_server->proc_timeout = atoi(value)))
 	{
 		*error = zbx_strdup(*error, "invalid \"" ZBX_PROTO_TAG_LDAP_PROC_TIMEOUT "\" tag value ");
 		return FAIL;
@@ -513,7 +513,7 @@ int	zbx_ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 	if (ZBX_LDAP_UNKNOWN == request_type)
 	{
-		zbx_send_response_raw(sock, ret, "Unsupported request type.", CONFIG_TIMEOUT);
+		zbx_send_response_raw(sock, FAIL, "Unsupported request type.", CONFIG_TIMEOUT);
 		goto out;
 	}
 
@@ -521,7 +521,7 @@ int	zbx_ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 	if (SUCCEED != zbx_json_brackets_by_name(jp, ZBX_PROTO_TAG_DATA, &jp_data))
 	{
-		zbx_send_response_raw(sock, ret, "no \"" ZBX_PROTO_TAG_DATA "\" tag", CONFIG_TIMEOUT);
+		zbx_send_response_raw(sock, FAIL, "no \"" ZBX_PROTO_TAG_DATA "\" tag", CONFIG_TIMEOUT);
 		goto out;
 	}
 
@@ -531,13 +531,13 @@ int	zbx_ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 		if (SUCCEED != (ret = zbx_json_brackets_open(p, &jp_server)))
 		{
-			zbx_send_response_raw(sock, ret, zbx_json_strerror(), CONFIG_TIMEOUT);
+			zbx_send_response_raw(sock, FAIL, zbx_json_strerror(), CONFIG_TIMEOUT);
 			goto out;
 		}
 
 		if (SUCCEED != ldap_json_deserialize_server(&jp_server, &ldap_server, &error))
 		{
-			zbx_send_response_raw(sock, ret, error, CONFIG_TIMEOUT);
+			zbx_send_response_raw(sock, FAIL, error, CONFIG_TIMEOUT);
 			goto out;
 		}
 
@@ -545,7 +545,7 @@ int	zbx_ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		{
 			if (SUCCEED != zbx_ldap_server_test(&ldap_server, &error))
 			{
-				zbx_send_response_raw(sock, ret, error, CONFIG_TIMEOUT);
+				zbx_send_response_raw(sock, FAIL, error, CONFIG_TIMEOUT);
 				goto out;
 			}
 			break;
