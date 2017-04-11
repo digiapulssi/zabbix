@@ -862,7 +862,7 @@ int	is_supported_ip(const char *ip)
 {
 	if (SUCCEED == is_ip4(ip))
 		return SUCCEED;
-#if defined(HAVE_IPV6)
+#ifdef HAVE_IPV6
 	if (SUCCEED == is_ip6(ip))
 		return SUCCEED;
 #endif
