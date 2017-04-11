@@ -22,6 +22,7 @@
 
 #include "threads.h"
 
+int	zbx_ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp);
 ZBX_THREAD_ENTRY(ldap_syncer_thread, args);
 
 #endif

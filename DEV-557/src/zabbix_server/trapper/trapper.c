@@ -38,6 +38,7 @@
 
 #include "daemon.h"
 #include "../../libs/zbxcrypto/tls.h"
+#include "../ldapsyncer/ldapsyncer.h"
 
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
@@ -523,10 +524,10 @@ out:
  * Purpose: entry point for processing LDAP synchronization requests from     *
  *          frontend                                                          *
  *                                                                            *
- * Parameters:  sock  - [IN] the request socket                               *
- *              jp    - [IN] the request data                                 *
+ * Parameters: sock - [IN] the request socket                                 *
+ *             jp   - [IN] the request data                                   *
  *                                                                            *
- * Return value:  SUCCEED or FAIL                                             *
+ * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
 static int	ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
@@ -539,10 +540,8 @@ static int	ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 	if (FAIL == authenticate_super_admin_session(sock, jp))
 		goto out;
 
-	/* TODO: run LDAP synchronization test or do on-demand synchronization */
-	zbx_send_response_raw(sock, ret, "ldap_sync", CONFIG_TIMEOUT);
-
-	ret = SUCCEED;
+	if (SUCCEED == zbx_ldap_sync(sock, jp))
+		ret = SUCCEED;
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
