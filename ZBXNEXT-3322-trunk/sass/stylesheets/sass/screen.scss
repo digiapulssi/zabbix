@@ -497,6 +497,17 @@ ul.top-nav-icons {
 
 		&:last-child {
 			text-align: right;
+			ul {
+				li {
+					display: inline-block;
+					vertical-align: top;
+					position: relative;
+					padding: 0 0 0 10px;
+				}
+			}
+		}
+		form {
+			display: inline-block;
 		}
 	}
 }
@@ -3114,6 +3125,10 @@ a.header-dropdown {
 		top: -9px;
 		border-bottom-color: $ui-bg-color;
 	}
+}
+
+.header-dropdown-list-item {
+	display: block !important;
 }
 
 .overlay-dialogue {

@@ -73,6 +73,7 @@ $help->setHint($help_hint);
 
 $widget = (new CWidget())
 	->setTitle(_('Overview'))
+	->setTopHeader(prepareOverviewTypeMenu())
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addItem((new CList())
@@ -80,14 +81,6 @@ $widget = (new CWidget())
 				new CLabel(_('Group'), 'groupid'),
 				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
 				$this->data['pageFilter']->getGroupsCB()
-			])
-			->addItem([
-				new CLabel(_('Type'), 'type'),
-				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-				new CComboBox('type', $this->data['type'], 'submit()', [
-					SHOW_TRIGGERS => _('Triggers'),
-					SHOW_DATA => _('Data')
-				])
 			])
 			->addItem([
 				new CLabel(_('Hosts location'), 'view_style'),

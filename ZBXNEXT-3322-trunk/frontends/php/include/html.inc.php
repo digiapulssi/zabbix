@@ -847,22 +847,9 @@ function makeAdministrationGeneralMenu($selected)
 		['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
 		['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
 	];
-	$header = null;
-	foreach ($menu_map as $item) {
-		if ($item['url'] !== $selected) {
-			$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
-			$link = new CLink($title, $item['url']);
-			$link->addClass('action-menu-item');
-			$list->addItem($link);
-		} else {
-			$header = new CLink(new CTag('h1', true, $item['title']), '#');
-			$header->addClass('header-dropdown');
-			$header->onClick('javascript: showHide($(this).next(\'.header-dropdown-list\'));');
-		}
-	}
+	$menu = new CHeaderDropDownMenu($menu_map, $selected);
 
-	$div = (new CDiv([$header, $list]))->addClass('header-dropdown-menu');
-	return $div;
+	return $menu->makeDropDownDiv();
 }
 
 /**
@@ -987,4 +974,22 @@ function getTriggerSeverityCss($config)
 	}
 
 	return $css;
+}
+
+/**
+ * Prepare drop-down menu for Monitoring->Overview type action
+ *
+ * @param int $current_type
+ * @return CDiv
+ */
+function prepareOverviewTypeMenu($current_type = 0) {
+	$url_builder = CUrlFactory::getContextUrl();
+
+	$menu_map = [
+		['title' => _('Overview Triggers'), 'url' => $url_builder->setArgument('type', 0)->getUrl()],
+		['title' => _('Overview Data'), 'url' => $url_builder->setArgument('type', 1)->getUrl()]
+	];
+	$current_url = $url_builder->setArgument('type', $current_type)->getUrl();
+	$typeMenu = new CHeaderDropDownMenu($menu_map, $current_url);
+	return $typeMenu->makeDropDownDiv();
 }

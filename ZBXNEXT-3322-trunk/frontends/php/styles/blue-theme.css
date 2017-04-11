@@ -342,6 +342,13 @@ ul.top-nav-icons {
     display: inline-block; }
   .header-title .cell:last-child {
     text-align: right; }
+    .header-title .cell:last-child ul li {
+      display: inline-block;
+      vertical-align: top;
+      position: relative;
+      padding: 0 0 0 10px; }
+  .header-title .cell form {
+    display: inline-block; }
 
 .adm-header-list li {
   display: inline-block;
@@ -2162,6 +2169,9 @@ a.header-dropdown {
   .header-dropdown-list::after {
     top: -9px;
     border-bottom-color: #fff; }
+
+.header-dropdown-list-item {
+  display: block !important; }
 
 .overlay-dialogue {
   position: absolute;
