@@ -1,7 +1,5 @@
 Changes for 2.2.18rc1
 
-New features:
-
 Bug fixes:
 A......... [ZBX-7492] fixed undefined index and invalid argument supplied to foreach errors in case if macros tag is empty or is not included in the XML import file (miks)
 ..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
