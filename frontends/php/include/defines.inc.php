@@ -1387,8 +1387,9 @@ define('INCIDENT_FLAG_NORMAL',			0);
 define('INCIDENT_FLAG_FALSE_POSITIVE',	1);
 
 // SLA monitoring incident status
-define('DNS_NO_REPLY_ERROR_CODE',	-200);
-define('DNSSEC_FAIL_ERROR_CODE',	-204);
+define('ZBX_EC_DNS_NS_NOREPLY',		-200);
+define('ZBX_EC_DNS_NS_ERRSIG',		-204);
+define('ZBX_EC_DNS_RES_NOADBIT',	-206);
 
 define('MIN_PROBE_OK_RESULT_PERCENTAGE',	49);
 
