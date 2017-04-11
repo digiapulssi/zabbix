@@ -56,7 +56,8 @@ zabbix_proxy_LDADD = \
 	$(top_srcdir)/src/libs/zbxdbhigh/libzbxdbhigh.a \
 	$(top_srcdir)/src/libs/zbxdb/libzbxdb.a \
 	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a \
-	$(top_srcdir)/src/libs/zbxtasks/libzbxtasks.a
+	$(top_srcdir)/src/libs/zbxtasks/libzbxtasks.a \
+	$(top_srcdir)/src/zabbix_server/ldapsyncer/libzbxldapsyncer.a
 	
 
 zabbix_proxy_LDADD += @PROXY_LIBS@
