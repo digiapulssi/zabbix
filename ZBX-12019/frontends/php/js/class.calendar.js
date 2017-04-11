@@ -21,13 +21,13 @@
 var CLNDR = new Array();
 var calendar = Class.create();
 
-function create_calendar(time, timeobjects, id, utime_field_id, parentNodeid) {
+function create_calendar(time, timeobjects, id, utime_field_id, parentNodeid, doTZDiff) {
 	id = id || CLNDR.length;
 	if ('undefined' == typeof(utime_field_id)) {
 		utime_field_id = null;
 	}
 	CLNDR[id] = new Object;
-	CLNDR[id].clndr = new calendar(id, time, timeobjects, utime_field_id, parentNodeid);
+	CLNDR[id].clndr = new calendar(id, time, timeobjects, utime_field_id, parentNodeid, doTZDiff);
 	return CLNDR[id];
 }
 
@@ -57,10 +57,14 @@ calendar.prototype = {
 	timeobjects: new Array(),	// object list where will be saved date
 	status: false,				// status of timeobjects
 	visible: 0,					// GMenu style state
+	doTZDiff: true,			// if true, timezone difference is calculated
 	monthname: new Array(locale['S_JANUARY'], locale['S_FEBRUARY'], locale['S_MARCH'], locale['S_APRIL'], locale['S_MAY'], locale['S_JUNE'], locale['S_JULY'], locale['S_AUGUST'], locale['S_SEPTEMBER'], locale['S_OCTOBER'], locale['S_NOVEMBER'], locale['S_DECEMBER']),
 
-	initialize: function(id, stime, timeobjects, utime_field_id, parentNodeid) {
+	initialize: function(id, stime, timeobjects, utime_field_id, parentNodeid, doTZDiff) {
 		this.id = id;
+		if (doTZDiff === false) {
+			this.doTZDiff = false;
+		}
 		this.timeobjects = new Array();
 		if (!(this.status = this.checkOuterObj(timeobjects))) {
 			throw 'Calendar: constructor expects second parameter to be list of DOM nodes [d,M,Y,H,i].';
@@ -260,7 +264,12 @@ calendar.prototype = {
 		var dateHolder = new Date(y, m - 1, d, 0, 0, 0);
 
 		if (y >= 1970 && dateHolder.getFullYear() == y && dateHolder.getMonth() == m - 1 && dateHolder.getDate() == d) {
-			this.sdt.setTime(dateHolder.getTime());
+			if (this.doTZDiff) {
+				this.sdt.setTime(dateHolder.getTime());
+			} else {
+				this.sdt.setTimeObject(y, m - 1, d, 0, 0, 0);
+			}
+
 			return true;
 		}
 
@@ -499,7 +508,7 @@ calendar.prototype = {
 		this.clndr_calendar.className = 'overlay-dialogue calendar';
 		this.clndr_calendar.hide();
 
-		if (typeof(parentNodeid) == 'undefined') {
+		if (typeof(parentNodeid) == 'undefined' || !parentNodeid) {
 			document.body.appendChild(this.clndr_calendar);
 		}
 		else {

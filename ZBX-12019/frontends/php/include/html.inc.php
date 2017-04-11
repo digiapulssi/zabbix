@@ -795,7 +795,7 @@ function createDateSelector($name, $date, $relatedCalendar = null) {
 	zbx_add_post_js('create_calendar(null,'.
 		'["'.$name.'_day","'.$name.'_month","'.$name.'_year","'.$name.'_hour","'.$name.'_minute"],'.
 		'"'.$name.'_calendar",'.
-		'"'.$name.'");'
+		'"'.$name.'", null, false);'
 	);
 
 	return $fields;
