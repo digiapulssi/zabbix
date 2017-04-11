@@ -21,12 +21,12 @@
 
 class CControllerDashbrdWidgetConfig extends CController {
 
-	private $widgetConfig;
+	private $widget_config;
 
 	public function __construct() {
 		parent::__construct();
 
-		$this->widgetConfig = new CWidgetConfig(); // TODO VM: maybe better to convert to static functions
+		$this->widget_config = new CWidgetConfig(); // TODO VM: maybe better to convert to static functions
 	}
 
 	protected function checkInput() {
@@ -52,7 +52,7 @@ class CControllerDashbrdWidgetConfig extends CController {
 					$ret = false;
 				}
 				// We will work only with known widget types
-				elseif (!in_array($widget_fields['type'], $this->widgetConfig->getKnownWidgetTypes())) {
+				elseif (!in_array($widget_fields['type'], $this->widget_config->getKnownWidgetTypes($this->getUserType()))) {
 					$ret = false;
 				}
 				// TODO VM: validation
@@ -83,7 +83,7 @@ class CControllerDashbrdWidgetConfig extends CController {
 		// get data for current widget
 		if ($this->hasInput('widgetid')) {
 			$dialogue['widgetid'] = $this->getInput('widgetid');
-			$widget = $this->widgetConfig->getConfig($dialogue['widgetid']);
+			$widget = $this->widget_config->getConfig($dialogue['widgetid']);
 		}
 
 		// Get fields from dialogue form
@@ -96,7 +96,8 @@ class CControllerDashbrdWidgetConfig extends CController {
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
 			],
-			'dialogue' => $dialogue
+			'dialogue' => $dialogue,
+			'known_widget_types_w_names' => $this->widget_config->getKnownWidgetTypesWNames($this->getUserType())
 		]));
 	}
 }
