@@ -52,7 +52,7 @@ void	send_proxyconfig(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		goto out;
 	}
 
-	update_proxy_lastaccess(proxy_hostid);
+	update_proxy_lastaccess(proxy_hostid, time(NULL));
 
 	zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
 
