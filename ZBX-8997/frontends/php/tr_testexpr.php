@@ -99,8 +99,6 @@ if ($result) {
 			}
 			else {
 				$control = (new CTextBox($fname, $macrosData[$token['value']]))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
-
-				$validation = 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})';
 			}
 
 			$fields[$fname] = [$info['type'], O_OPT, null, $validation, 'isset({test_expression})',

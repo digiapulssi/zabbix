@@ -1799,43 +1799,48 @@ function get_item_function_info($expr) {
 	];
 
 	$type_of_value_type = [
-		ITEM_VALUE_TYPE_UINT64	=> T_ZBX_INT,
+		ITEM_VALUE_TYPE_UINT64	=> T_ZBX_STR,
 		ITEM_VALUE_TYPE_FLOAT	=> T_ZBX_DBL_BIG,
 		ITEM_VALUE_TYPE_STR		=> T_ZBX_STR,
 		ITEM_VALUE_TYPE_LOG		=> T_ZBX_STR,
 		ITEM_VALUE_TYPE_TEXT	=> T_ZBX_STR
 	];
 
+	$validation_of_type = [
+		T_ZBX_DBL_BIG			=> NOT_EMPTY,
+		T_ZBX_STR				=> 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'
+	];
+
 	$function_info = [
 		'band' =>		['value_type' => _('Numeric (integer 64bit)'),	'type' => T_ZBX_INT, 'validation' => NOT_EMPTY],
-		'abschange' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
-		'avg' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
-		'change' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
+		'abschange' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
+		'avg' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
+		'change' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'count' =>		['value_type' => _('Numeric (integer 64bit)'), 'type' => T_ZBX_INT, 'validation' => NOT_EMPTY],
 		'date' =>		['value_type' => 'YYYYMMDD',	'type' => T_ZBX_INT,			'validation' => '{}>=19700101&&{}<=99991231'],
 		'dayofmonth' =>	['value_type' => '1-31',		'type' => T_ZBX_INT,			'validation' => '{}>=1&&{}<=31'],
 		'dayofweek' =>	['value_type' => '1-7',		'type' => T_ZBX_INT,			'validation' => IN('1,2,3,4,5,6,7')],
-		'delta' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
+		'delta' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'diff' =>		['value_type' => _('0 or 1'),	'type' => T_ZBX_INT,			'validation' => IN('0,1')],
-		'forecast' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
+		'forecast' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'fuzzytime' =>	['value_type' => _('0 or 1'),	'type' => T_ZBX_INT,			'validation' => IN('0,1')],
 		'iregexp' =>	['value_type' => _('0 or 1'),	'type' => T_ZBX_INT,			'validation' => IN('0,1')],
-		'last' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
+		'last' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'logeventid' =>	['value_type' => _('0 or 1'),	'type' => T_ZBX_INT,			'validation' => IN('0,1')],
 		'logseverity' =>['value_type' => _('Numeric (integer 64bit)'), 'type' => T_ZBX_INT, 'validation' => NOT_EMPTY],
 		'logsource' =>	['value_type' => _('0 or 1'),	'type' => T_ZBX_INT,			'validation' => IN('0,1')],
-		'max' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
-		'min' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
+		'max' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
+		'min' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'nodata' =>		['value_type' => _('0 or 1'),	'type' => T_ZBX_INT,			'validation' => IN('0,1')],
 		'now' =>		['value_type' => _('Numeric (integer 64bit)'), 'type' => T_ZBX_INT, 'validation' => NOT_EMPTY],
-		'percentile' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
-		'prev' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
+		'percentile' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
+		'prev' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'regexp' =>		['value_type' => _('0 or 1'),	'type' => T_ZBX_INT,			'validation' => IN('0,1')],
 		'str' =>		['value_type' => _('0 or 1'),	'type' => T_ZBX_INT,			'validation' => IN('0,1')],
 		'strlen' =>		['value_type' => _('Numeric (integer 64bit)'), 'type' => T_ZBX_INT, 'validation' => NOT_EMPTY],
-		'sum' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY],
+		'sum' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'time' =>		['value_type' => 'HHMMSS',		'type' => T_ZBX_INT,			'validation' => 'strlen({})==6'],
-		'timeleft' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => NOT_EMPTY]
+		'timeleft' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type]
 	];
 
 	$expressionData = new CTriggerExpression();
@@ -1904,11 +1909,7 @@ function get_item_function_info($expr) {
 			if (is_array($result['value_type'])) {
 				$result['value_type'] = $result['value_type'][$itemFound['value_type']];
 				$result['type'] = $result['type'][$itemFound['value_type']];
-
-				if ($result['type'] == T_ZBX_INT) {
-					$result['type'] = T_ZBX_STR;
-					$result['validation'] = 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})';
-				}
+				$result['validation'] = $result['validation'][$result['type']];
 			}
 		}
 		else {
