@@ -28,6 +28,22 @@
 #include "system.h"
 #include "zbxexec.h"
 
+typedef struct allowed_path {
+	struct allowed_path *next;
+	char *path;
+}
+allowed_path_t;
+
+allowed_path_t *allowed_path_list = NULL;
+
+void add_allowed_path(char *config_value) {
+	allowed_path_t *allowed_path;
+	allowed_path = (allowed_path_t *)zbx_malloc(allowed_path, sizeof(allowed_path_t));
+	allowed_path->next = allowed_path_list;
+	allowed_path->path = strdup(config_value);
+	allowed_path_list = allowed_path;
+}
+
 #if !defined(_WINDOWS)
 #	define VFS_TEST_FILE "/etc/passwd"
 #	define VFS_TEST_REGEXP "root"
@@ -209,4 +225,45 @@ static int	SYSTEM_RUN(AGENT_REQUEST *request, AGENT_RESULT *result)
 	SET_UI64_RESULT(result, 1);
 
 	return SYSINFO_RET_OK;
+}
+
+int CHECK_PATH_ALLOWED(const char *filename)
+{
+	allowed_path_t *allowed_path;
+	regex_t path_re;
+	int result;
+
+	allowed_path = allowed_path_list;
+
+	if (NULL == allowed_path)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "no path restriction configured");
+		return 0;
+	}
+
+	while (NULL != allowed_path)
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "checking path against '%s'", allowed_path->path);
+		if (0 == regcomp(&path_re, allowed_path->path, 0))
+		{
+			result = regexec(&path_re, filename, 0, NULL, 0);
+			regfree(&path_re);
+			if (0 == result)
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "access to path '%s' is allowed", filename);
+				return 0;
+			}
+		} else {
+#ifdef _WINDOWS
+			/* the Windows gnuregex implementation does not correctly clean up */
+			/* allocated memory after regcomp() failure                        */
+			regfree(&path_re);
+#endif
+		}
+
+		allowed_path = allowed_path->next;
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "access to path '%s' is denied", filename);
+	return 1;
 }

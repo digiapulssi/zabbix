@@ -48,6 +48,12 @@ int	VFS_FILE_SIZE(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
+		goto err;
+	}
+
 	if (0 != zbx_stat(filename, &buf))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot obtain file information: %s", zbx_strerror(errno)));
@@ -79,6 +85,12 @@ int	VFS_FILE_TIME(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (NULL == filename || '\0' == *filename)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter."));
+		goto err;
+	}
+
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
 	}
 
@@ -122,6 +134,12 @@ int	VFS_FILE_EXISTS(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (NULL == filename || '\0' == *filename)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter."));
+		goto err;
+	}
+
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
 	}
 
@@ -173,6 +191,12 @@ int	VFS_FILE_CONTENTS(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (NULL == filename || '\0' == *filename)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter."));
+		goto err;
+	}
+
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
 	}
 
@@ -285,6 +309,12 @@ int	VFS_FILE_REGEXP(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (NULL == regexp || '\0' == *regexp)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter."));
+		goto err;
+	}
+
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
 	}
 
@@ -408,6 +438,12 @@ int	VFS_FILE_REGMATCH(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
+		goto err;
+	}
+
 	if (NULL == tmp)
 		*encoding = '\0';
 	else
@@ -510,6 +546,12 @@ int	VFS_FILE_MD5SUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (NULL == filename || '\0' == *filename)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter."));
+		goto err;
+	}
+
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
 	}
 
@@ -649,6 +691,12 @@ int	VFS_FILE_CKSUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (NULL == filename || '\0' == *filename)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter."));
+		goto err;
+	}
+
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
 	}
 

@@ -780,12 +780,15 @@ static void	zbx_load_config(int requirement, ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 		{"TLSPSKFile",			&CONFIG_TLS_PSK_FILE,			TYPE_STRING,
 			PARM_OPT,	0,			0},
+		{"AllowedPath",			&CONFIG_ALLOWED_PATHS,		TYPE_MULTISTRING,
+			PARM_OPT, 0,			0},
 		{NULL}
 	};
 
 	/* initialize multistrings */
 	zbx_strarr_init(&CONFIG_ALIASES);
 	zbx_strarr_init(&CONFIG_USER_PARAMETERS);
+	zbx_strarr_init(&CONFIG_ALLOWED_PATHS);
 #ifndef _WINDOWS
 	zbx_strarr_init(&CONFIG_LOAD_MODULE);
 #endif
@@ -825,6 +828,7 @@ static void	zbx_free_config(void)
 {
 	zbx_strarr_free(CONFIG_ALIASES);
 	zbx_strarr_free(CONFIG_USER_PARAMETERS);
+	zbx_strarr_free(CONFIG_ALLOWED_PATHS);
 #ifndef _WINDOWS
 	zbx_strarr_free(CONFIG_LOAD_MODULE);
 #endif
@@ -1174,6 +1178,7 @@ int	main(int argc, char **argv)
 #endif
 			load_user_parameters(CONFIG_USER_PARAMETERS);
 			load_aliases(CONFIG_ALIASES);
+			load_allowed_paths(CONFIG_ALLOWED_PATHS);
 			zbx_free_config();
 			if (ZBX_TASK_TEST_METRIC == t.task)
 				test_parameter(TEST_METRIC);
@@ -1205,6 +1210,7 @@ int	main(int argc, char **argv)
 			zbx_load_config(ZBX_CFG_FILE_REQUIRED, &t);
 			load_user_parameters(CONFIG_USER_PARAMETERS);
 			load_aliases(CONFIG_ALIASES);
+			load_allowed_paths(CONFIG_ALLOWED_PATHS);
 			break;
 	}
 
