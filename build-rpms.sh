@@ -13,8 +13,9 @@ usage()
 {
 	[ -n "$1" ] && echo "$*"
 
-	echo "usage: $0 [-f] [-h] [-r]"
+	echo "usage: $0 [-f] [-c] [-r] [-h]"
 	echo "       -f|--force      force all compilation steps"
+	echo "       -c|--clean      clean all previously generated files"
 	echo "       -r|--restore    restore the versions and exit"
 	echo "       -h|--help       print this help message"
 
@@ -26,7 +27,7 @@ msg()
 	echo "BUILD-RPMS $*"
 }
 
-restore()
+restore_versions()
 {
 	for i in $SRV_VERSION_FILE $FE_VERSION_FILE $AC_VERSION_FILE $SPEC; do
 		[ -f $i.rpmbak ] && mv $i.rpmbak $i
@@ -41,14 +42,17 @@ fail()
 }
 
 OPT_FORCE=0
+OPT_CLEAN=0
 while [ -n "$1" ]; do
 	case "$1" in
 		-f|--force)
 			OPT_FORCE=1
-			shift
+			;;
+		-c|--clean)
+			OPT_CLEAN=1
 			;;
 		-r|--restore)
-			restore
+			restore_versions
 			exit $SUCCESS
 			;;
 		-h|--help)
@@ -69,12 +73,15 @@ done
 [ ! -f $FE_VERSION_FILE ] && echo "Error: frontend file \"$FE_VERSION_FILE\" not found" && fail
 [ ! -f $AC_VERSION_FILE ] && echo "Error: autoconf file \"$AC_VERSION_FILE\" not found" && fail
 
-restore
+restore_versions
 
-if [[ $OPT_FORCE -eq 1 ]]; then
+if [[ $OPT_CLEAN -eq 1 ]]; then
 	msg "cleaning up"
 	make -s clean > /dev/null 2>&1
 	make -s distclean > /dev/null 2>&1
+	for i in RPMS SRPMS BUILD BUILDROOT; do
+		rm -rf $RPMDIR/$i || fail
+	done
 fi
 
 if ! grep -q "ZBX_STR(ZABBIX_VERSION_PATCH).*ZABBIX_VERSION_RC.*$RSM_VERSION" $SRV_VERSION_FILE; then
@@ -117,11 +124,10 @@ fi
 mv zabbix-*.tar.gz $RPMDIR/SOURCES/ || fail
 
 msg "building RPMs, this can take a while"
-rm -f "$RPMDIR/RPMS/x86_64/*" "$RPMDIR/RPMS/noarch/*"
 rpmbuild --quiet --define "_topdir ${PWD}/$RPMDIR" -ba $SPEC >/dev/null || fail
 
 msg "RPM files are available in $RPMDIR/RPMS/x86_64 and $RPMDIR/RPMS/noarch"
 
-restore
+restore_versions
 
 exit $SUCCESS
