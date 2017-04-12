@@ -82,6 +82,7 @@ class CWebUser {
 				];
 
 				foreach ($DB['SERVERS'] as $server) {
+					$error = false;
 					unset($DB['DB']);
 					$DB['TYPE'] = $server['TYPE'];
 					$DB['SERVER'] = $server['SERVER'];
