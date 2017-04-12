@@ -232,6 +232,7 @@ int CHECK_PATH_ALLOWED(const char *filename)
 	allowed_path_t *allowed_path;
 	regex_t path_re;
 	int result;
+	int reg_error;
 
 	allowed_path = allowed_path_list;
 
@@ -244,7 +245,7 @@ int CHECK_PATH_ALLOWED(const char *filename)
 	while (NULL != allowed_path)
 	{
 		zabbix_log(LOG_LEVEL_TRACE, "checking path against '%s'", allowed_path->path);
-		if (0 == regcomp(&path_re, allowed_path->path, 0))
+		if (0 == (reg_error = regcomp(&path_re, allowed_path->path, 0)))
 		{
 			result = regexec(&path_re, filename, 0, NULL, 0);
 			regfree(&path_re);
@@ -254,6 +255,11 @@ int CHECK_PATH_ALLOWED(const char *filename)
 				return 0;
 			}
 		} else {
+			char err_buf[MAX_STRING_LEN];
+
+			regerror(reg_error, &path_re, err_buf, sizeof(err_buf));
+			zabbix_log(LOG_LEVEL_WARNING, "cannot compile regex for allowed path: \"%s\"", err_buf);
+
 #ifdef _WINDOWS
 			/* the Windows gnuregex implementation does not correctly clean up */
 			/* allocated memory after regcomp() failure                        */
