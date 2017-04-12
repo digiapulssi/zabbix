@@ -55,6 +55,8 @@ extern char	*CONFIG_TLS_KEY_FILE;
 extern char	*CONFIG_TLS_PSK_IDENTITY;
 extern char	*CONFIG_TLS_PSK_FILE;
 
+extern char **CONFIG_ALLOWED_PATHS;
+
 void	load_aliases(char **lines);
 void	load_user_parameters(char **lines);
 #ifdef _WINDOWS
