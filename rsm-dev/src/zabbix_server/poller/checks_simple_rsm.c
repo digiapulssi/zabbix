@@ -1358,20 +1358,76 @@ static void	zbx_clean_nss(zbx_ns_t *nss, size_t nss_num)
 	}
 }
 
-static int	is_service_err(int ec)
-{
-	if (0 > ec && -200 >= ec && ec > ZBX_NO_VALUE)
-		return SUCCEED;
+/* todo phase 1: added these defines */
+#define RSM_SERVICE_DNS		1
+#define RSM_SERVICE_RDDS	2
+#define RSM_SERVICE_EPP		3
 
-	/* not a service error */
-	return FAIL;
+/* todo phase 1: added this one for dns internal error exceptions */
+static int	is_dns_service_err(int ec)
+{
+	if (ZBX_EC_DNS_RES_NOREPLY == ec)
+		return FAIL;
+
+	/* is dns service error */
+	return SUCCEED;
+}
+
+/* todo phase 1: added this one for rdds internal error exceptions */
+static int	is_rdds_service_err(int ec)
+{
+	if (ZBX_EC_RDDS_ERES == ec)
+		return FAIL;
+
+	/* is rdds service error */
+	return SUCCEED;
+}
+
+/* todo phase 1: added this one for epp internal error exceptions */
+static int	is_epp_service_err(int ec)
+{
+	if (ZBX_EC_EPP_NO_IP == ec || ZBX_EC_INTERNAL_IP_UNSUP == ec)
+		return FAIL;
+
+	/* is epp service error */
+	return SUCCEED;
+}
+
+/* todo phase 1: this function was completely rewritten */
+static int	is_service_err(int service, int ec)
+{
+	int	ret = FAIL;	/* not a service error */
+
+	if (-200 >= ec && ec > ZBX_NO_VALUE)
+	{
+		switch (service)
+		{
+			case RSM_SERVICE_DNS:
+				ret = is_dns_service_err(ec);
+				break;
+			case RSM_SERVICE_RDDS:
+				ret = is_rdds_service_err(ec);
+				break;
+			case RSM_SERVICE_EPP:
+				ret = is_epp_service_err(ec);
+				break;
+			default:
+				THIS_SHOULD_NEVER_HAPPEN;
+				exit(EXIT_FAILURE);
+				break;
+		}
+	}
+
+	return ret;
 }
 
 /* The ns is considered non-working only in case it was the one to blame. Resolver */
 /* and internal errors do not count. Another case of ns fail is slow response.     */
-static int	rtt_result(int rtt, int rtt_limit)
+/* todo phase 1: added first argument because of exceptional RTT errors treated as internal */
+static int	rtt_result(int service, int rtt, int rtt_limit)
 {
-	if (SUCCEED == is_service_err(rtt) || rtt > rtt_limit)
+
+	if (SUCCEED == is_service_err(service, rtt) || rtt > rtt_limit)
 		return FAIL;
 
 	return SUCCEED;
@@ -1874,7 +1930,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 					item->nextcheck, strlen(request->key) + 1, items, items_num);
 
 			/* if a single IP of the Name Server fails, consider the whole Name Server down */
-			if (SUCCEED != rtt_result(nss[i].ips[j].rtt, rtt_limit))
+			if (SUCCEED != rtt_result(RSM_SERVICE_DNS, nss[i].ips[j].rtt, rtt_limit))
 				nss[i].result = FAIL;
 		}
 	}
@@ -2746,8 +2802,8 @@ out:
 		zbx_set_rdds_values(ip43, rtt43, upd43, ip80, rtt80, item->nextcheck, strlen(request->key), items,
 				items_num);
 
-		rdds43 = rtt_result(rtt43, rtt_limit);
-		rdds80 = rtt_result(rtt80, rtt_limit);
+		rdds43 = rtt_result(RSM_SERVICE_RDDS, rtt43, rtt_limit);
+		rdds80 = rtt_result(RSM_SERVICE_RDDS, rtt80, rtt_limit);
 
 		if (SUCCEED == rdds43)
 		{
@@ -4123,8 +4179,9 @@ out:
 		}
 
 		/* set availability of EPP (up/down) */
-		if (SUCCEED != rtt_result(rtt1, rtt1_limit) || SUCCEED != rtt_result(rtt2, rtt2_limit) ||
-				SUCCEED != rtt_result(rtt3, rtt3_limit))
+		if (SUCCEED != rtt_result(RSM_SERVICE_EPP, rtt1, rtt1_limit) ||
+				SUCCEED != rtt_result(RSM_SERVICE_EPP, rtt2, rtt2_limit) ||
+				SUCCEED != rtt_result(RSM_SERVICE_EPP, rtt3, rtt3_limit))
 		{
 			/* down */
 			zbx_add_value_uint(item, item->nextcheck, 0);
