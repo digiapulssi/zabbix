@@ -77,11 +77,6 @@ if [[ $OPT_FORCE -eq 1 ]]; then
 	make -s distclean > /dev/null 2>&1
 fi
 
-if [[ $OPT_FORCE -eq 1 ]]; then
-	msg "updating SVN"
-	svn up || fail
-fi
-
 if ! grep -q "ZBX_STR(ZABBIX_VERSION_PATCH).*ZABBIX_VERSION_RC.*$RSM_VERSION" $SRV_VERSION_FILE; then
 	msg "setting server version ($RSM_VERSION)"
 	sed -i.rpmbak -r "s/(ZBX_STR\(ZABBIX_VERSION_PATCH\).*ZABBIX_VERSION_RC)/\1 \"$RSM_VERSION\"/" $SRV_VERSION_FILE || fail
