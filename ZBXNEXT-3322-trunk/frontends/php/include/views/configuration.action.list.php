@@ -20,20 +20,16 @@
 
 $widget = (new CWidget())
 	->setTitle(_('Actions'))
-	->setControls((new CForm('get'))
-		->cleanItems()
-		->addItem((new CList())
-			->addItem([
-				new CLabel(_('Event source'), 'eventsource'),
-				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-				new CComboBox('eventsource', $data['eventsource'], 'submit()', [
-					EVENT_SOURCE_TRIGGERS => _('Triggers'),
-					EVENT_SOURCE_DISCOVERY => _('Discovery'),
-					EVENT_SOURCE_AUTO_REGISTRATION => _('Auto registration'),
-					EVENT_SOURCE_INTERNAL => _x('Internal', 'event source')
-				])
-			])
-			->addItem(new CSubmit('form', _('Create action')))
+	->setTopHeader(
+		prepareHeaderDropDownMenu(
+			[
+				EVENT_SOURCE_TRIGGERS          => ['title' => _('Trigger actions')],
+				EVENT_SOURCE_DISCOVERY         => ['title' => _('Discovery actions')],
+				EVENT_SOURCE_AUTO_REGISTRATION => ['title' => _('Auto registration actions')],
+				EVENT_SOURCE_INTERNAL          => ['title' => _('Internal actions')]
+			],
+			'eventsource',
+			(int) $data['eventsource']
 		)
 	)
 	->addItem((new CFilter('web.actionconf.filter.state'))

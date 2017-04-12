@@ -64,14 +64,15 @@ if ($zabbixServer->getError()) {
 
 $widget = (new CWidget())
 	->setTitle(_('Queue of items to be updated'))
-	->setControls((new CForm('get'))
-		->cleanItems()
-		->addItem((new CList())
-			->addItem((new CComboBox('config', $config, 'submit();', [
-				QUEUE_OVERVIEW => _('Overview'),
-				QUEUE_OVERVIEW_BY_PROXY => _('Overview by proxy'),
-				QUEUE_DETAILS => _('Details')
-			])))
+	->setTopHeader(
+		prepareHeaderDropDownMenu(
+			$menu = [
+				QUEUE_OVERVIEW          => ['title' => _('Queue Overview')],
+				QUEUE_OVERVIEW_BY_PROXY => ['title' => _('Queue Overview by proxy')],
+				QUEUE_DETAILS           => ['title' => _('Queue Details')]
+			],
+			'config',
+			(int) $config
 		)
 	);
 

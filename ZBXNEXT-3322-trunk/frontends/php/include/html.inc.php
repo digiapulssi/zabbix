@@ -977,19 +977,21 @@ function getTriggerSeverityCss($config)
 }
 
 /**
- * Prepare drop-down menu for Monitoring->Overview type action
+ * Prepare dropdown menu by given menu items
  *
- * @param int $current_type
+ * @param array  $menu_items (['desc' => ['title' => 'Sorting Descending', 'menu_name' => 'desc'], 'asc' => ..])
+ * @param string $url_param  name of url parameter
+ * @param mixed  $selected   url param value from current url (selected menu item)
  * @return CDiv
  */
-function prepareOverviewTypeMenu($current_type = 0) {
-	$url_builder = CUrlFactory::getContextUrl();
+function prepareHeaderDropDownMenu($menu_items, $url_param, $selected) {
 
-	$menu_map = [
-		['title' => _('Overview Triggers'), 'url' => $url_builder->setArgument('type', 0)->getUrl()],
-		['title' => _('Overview Data'), 'url' => $url_builder->setArgument('type', 1)->getUrl()]
-	];
-	$current_url = $url_builder->setArgument('type', $current_type)->getUrl();
-	$typeMenu = new CHeaderDropDownMenu($menu_map, $current_url);
-	return $typeMenu->makeDropDownDiv();
+	$url_builder = CUrlFactory::getContextUrl();
+	foreach ($menu_items as $url_param_value => &$data) {
+		if ($url_param_value === $selected) {
+			continue;
+		}
+		$data['url'] = $url_builder->setArgument($url_param, $url_param_value)->getUrl();
+	}
+	return (new CHeaderDropDownMenu($menu_items))->makeDropDownDiv();
 }

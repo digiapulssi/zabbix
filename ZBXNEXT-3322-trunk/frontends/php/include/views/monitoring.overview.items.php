@@ -39,7 +39,13 @@ $help->setHint($help_hint);
 
 $widget = (new CWidget())
 	->setTitle(_('Overview'))
-	->setTopHeader(prepareOverviewTypeMenu(1))
+	->setTopHeader(
+		prepareHeaderDropDownMenu(
+			[SHOW_TRIGGERS => ['title' => _('Overview Triggers')], SHOW_DATA => ['title' => _('Overview Data')]],
+			'type',
+			(int) $this->data['type']
+		)
+	)
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addItem((new CList())

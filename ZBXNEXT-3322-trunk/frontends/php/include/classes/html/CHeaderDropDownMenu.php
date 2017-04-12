@@ -56,7 +56,7 @@ class CHeaderDropDownMenu
 	}
 
 	/**
-	 * Make drop-down menu inside div element
+	 * Make and return drop-down menu inside div element
 	 *
 	 * @return CDiv
 	 */
