@@ -60,10 +60,15 @@ sub new($$) {
     $req->content_type('application/json-rpc');
 
     my $domain = $options->{'url'};
-    $domain =~ s/^https*\:\/\/(.+)\/*$/$1/;
+    $domain =~ s,^https*\://(.+)/*$,$1,;
+    $domain =~ s,/,-,g;
     $AUTH_FILE = '/tmp/'.$domain.'.tmp';
 
+    print("AUTH_FILE: $AUTH_FILE\n") if ($DEBUG);
+
     if (my $authid = get_authid()) {
+
+	print("Using previous authid: $authid\n") if ($DEBUG);
 
 	$ua->timeout($REQUEST_TIMEOUT);
 
@@ -80,7 +85,9 @@ sub new($$) {
 	return bless ($self, $class) if defined $self->api_version();
     }
 
-    $req->content(encode_json( {
+    print("no authid in the file, logging in...\n") if ($DEBUG);
+
+    my $request = encode_json( {
 	    jsonrpc => "2.0",
        method => "user.login",
         params => {
@@ -88,19 +95,36 @@ sub new($$) {
             password => $options->{password},
         },
         id => 1,
-    }));
-
-    $ua->timeout(_LOGIN_TIMEOUT);
-
-    my $res = $ua->request($req);
-
-    $ua->timeout($REQUEST_TIMEOUT);
-
-    croak "cannot connect to Zabbix: " . $res->status_line unless ($res->is_success);
+    });
 
     my $result;
-    eval { $result = decode_json($res->content) };
-    croak "Zabbix API returned invalid JSON: " . $@ if $@;
+
+    my $login_attempts = 2;
+
+    while ($login_attempts--)
+    {
+	print("REQUEST:\n", Dumper($request), "\n") if ($DEBUG);
+
+	$req->content($request);
+
+	$ua->timeout(_LOGIN_TIMEOUT);
+
+	my $res = $ua->request($req);
+
+	$ua->timeout($REQUEST_TIMEOUT);
+
+	croak "cannot connect to Zabbix: " . $res->status_line unless ($res->is_success);
+
+	eval { $result = decode_json($res->content) };
+	croak "Zabbix API returned invalid JSON: " . $@ if $@;
+
+	print("REPLY:\n", Dumper($result), "\n") if ($DEBUG);
+
+	if (defined($result->{'error'}))
+	{
+		last unless (int($result->{'error'}->{'code'}) == -32602);
+	}
+    }
 
     croak "cannot connect to Zabbix: " . $result->{'error'}->{'message'} . ' ' . $result->{'error'}->{'data'} if (defined($result->{'error'}));
 
@@ -137,7 +161,7 @@ sub get_authid() {
 sub set_authid($) {
     my $authid = shift;
 
-    open(TMP, '>', $AUTH_FILE);
+    open(TMP, '>', $AUTH_FILE) || print("cannot open file \"$AUTH_FILE\": $!\n");
 
     print TMP $authid;
 
@@ -433,7 +457,7 @@ sub __fetch($$$) {
 
     if (defined($result->{'error'})) {
 	$self->set_last_error($result->{'error'});
-	return;
+	return $result;
     }
 
     $self->set_last_error();
