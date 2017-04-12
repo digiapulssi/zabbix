@@ -12,12 +12,13 @@ use Zabbix;
 use RSM;
 use RSMSLV;
 
-# NB! Keep in sync with front-end!
 use constant USER_TYPE_EBERO => 4;
 use constant USER_TYPE_TEHNICAL_SERVICE => 5;
 use constant USER_TYPE_SUPER_ADMIN => 3;
-use constant EBERO_GROUPID => 13;
-use constant TEHNICAL_SERVICE_GROUPID => 14;
+
+# NB! Keep these values in sync with DB schema!
+use constant EBERO_GROUPID => 100;
+use constant TEHNICAL_SERVICE_GROUPID => 110;
 use constant SUPER_ADMIN_GROUPID => 7;
 
 use constant USER_TYPES =>
