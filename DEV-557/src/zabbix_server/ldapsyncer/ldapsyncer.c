@@ -543,12 +543,12 @@ int	zbx_ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 		if (ZBX_LDAP_TEST_SERVER == request_type)
 		{
-			if (SUCCEED != zbx_ldap_server_test(&ldap_server, &error))
-			{
+			if (SUCCEED == zbx_ldap_server_test(&ldap_server, &error))
+				zbx_send_response_raw(sock, SUCCEED, "LDAP server test successful", CONFIG_TIMEOUT);
+			else
 				zbx_send_response_raw(sock, FAIL, error, CONFIG_TIMEOUT);
-				goto out;
-			}
-			break;
+
+			goto out;
 		}
 
 		/* TODO: process "test_search", "test_sync" and "sync_now" requests */
