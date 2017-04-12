@@ -62,7 +62,8 @@ foreach my $server_key (@server_keys)
 
 	print("Processing $server_key\n");
 
-	my $zabbix = Zabbix->new({'url' => $section->{'za_url'}, user => $section->{'za_user'}, password => $section->{'za_password'}});
+	my $zabbix = Zabbix->new({'url' => $section->{'za_url'}, 'user' => $section->{'za_user'},
+			'password' => $section->{'za_password'}, 'debug' => getopt('debug')});
 
 	if (opt('add'))
 	{
@@ -79,11 +80,20 @@ foreach my $server_key (@server_keys)
 
 		if ($result->{'error'})
 		{
-			print("Error: cannot add user \"", getopt('user'), "\". ", $result->{'error'}->{'data'}, "\n");
-
-			if ($modified == 1)
+			if (int($result->{'error'}->{'code'}) == -32602)
 			{
-				print("Please fix the issue and re-run the same command with \"--server-id ", get_rsm_server_id($server_key), "\"\n");
+				print("Session terminated. Please re-run the same command again");
+				print(" with option \"--server-id ", get_rsm_server_id($server_key), "\"")  if ($modified == 1);
+				print(".\n");
+			}
+			else
+			{
+				print("Error: cannot add user \"", getopt('user'), "\". ", $result->{'error'}->{'data'}, "\n");
+
+				if ($modified == 1)
+				{
+					print("Please fix the issue and re-run the same command with \"--server-id ", get_rsm_server_id($server_key), "\"\n");
+				}
 			}
 
 			exit(-1);
@@ -94,6 +104,27 @@ foreach my $server_key (@server_keys)
 		my $options = {'output' => ['userid'], 'filter' => {'alias' => getopt('user')}};
 
 		my $result = $zabbix->get('user', $options);
+
+		if ($result->{'error'})
+		{
+			if (int($result->{'error'}->{'code'}) == -32602)
+			{
+				print("Session terminated. Please re-run the same command again");
+				print(" with option \"--server-id ", get_rsm_server_id($server_key), "\"") if ($modified == 1);
+				print(".\n");
+			}
+			else
+			{
+				print("Error: cannot get user \"", getopt('user'), "\". ", $result->{'error'}->{'data'}, "\n");
+
+				if ($modified == 1)
+				{
+					print("Please fix the issue and re-run the same command with \"--server-id ", get_rsm_server_id($server_key), "\"\n");
+				}
+			}
+
+			exit(-1);
+		}
 
 		my $userid = $result->{'userid'};
 
