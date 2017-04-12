@@ -117,6 +117,6 @@ $testsInfoTable->addRow([[
 
 $widget->additem([$testsInfoTable]);
 
-$widget->addItem([$table]);
+$widget->addItem([$table, $data['paging']]);
 
 return $widget;
