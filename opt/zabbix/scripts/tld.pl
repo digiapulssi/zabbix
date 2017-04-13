@@ -465,10 +465,10 @@ sub create_item_dns_rtt {
 
     my $options = {'name' => 'DNS RTT of $2 ($3) ('.$proto_uc.')',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS RTT ('.$proto_uc.')', $templateid)],
                                               'type' => 2, 'value_type' => 0,
-					      'status' => ITEM_STATUS_ACTIVE,
                                               'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'}};
 
     create_item($options);
@@ -488,28 +488,28 @@ sub create_slv_item {
     {
 	$options = {'name' => $name,
                                               'key_'=> $key,
+					      'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $hostid,
                                               'type' => 2, 'value_type' => 3,
 					      'applications' => $applicationids,
-					    'status' => ITEM_STATUS_ACTIVE,
 					      'valuemapid' => rsm_value_mappings->{'rsm_avail'}};
     }
     elsif ($value_type == VALUE_TYPE_NUM)
     {
 	$options = {'name' => $name,
                                               'key_'=> $key,
+					      'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $hostid,
                                               'type' => 2, 'value_type' => 3,
-					    'status' => ITEM_STATUS_ACTIVE,
 					      'applications' => $applicationids};
     }
     elsif ($value_type == VALUE_TYPE_PERC) {
 	$options = {'name' => $name,
                                               'key_'=> $key,
+					      'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $hostid,
                                               'type' => 2, 'value_type' => 0,
                                               'applications' => $applicationids,
-					    'status' => ITEM_STATUS_ACTIVE,
 					      'units' => '%'};
     }
     else {
@@ -530,11 +530,12 @@ sub create_item_dns_udp_upd {
 
     my $options = {'name' => 'DNS update time of $2 ($3)',
                                               'key_'=> 'rsm.dns.udp.upd[{$RSM.TLD},'.$ns_name.','.$ip.']',
+					      'status' => (defined($OPTS{'epp-servers'}) ? ITEM_STATUS_ACTIVE : ITEM_STATUS_DISABLED),
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS RTT ('.$proto_uc.')', $templateid)],
                                               'type' => 2, 'value_type' => 0,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'},
-		                              'status' => (defined($OPTS{'epp-servers'}) ? 0 : 1)};
+                                              'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'}};
+
     return create_item($options);
 }
 
@@ -548,6 +549,7 @@ sub create_items_dns {
 
     my $options = {'name' => 'Number of working DNS Name Servers of $1 ('.$proto_uc.')',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS ('.$proto_uc.')', $templateid)],
                                               'type' => 3, 'value_type' => 3,
@@ -561,6 +563,7 @@ sub create_items_dns {
 
     $options = {'name' => 'Number of working DNS Name Servers of $1 ('.$proto_uc.')',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS ('.$proto_uc.')', $templateid)],
                                               'type' => 3, 'value_type' => 3,
@@ -580,6 +583,7 @@ sub create_items_rdds {
 
     my $options = {'name' => 'RDDS43 IP of $1',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_43],
                                               'type' => 2, 'value_type' => 1};
@@ -589,6 +593,7 @@ sub create_items_rdds {
 
     $options = {'name' => 'RDDS43 RTT of $1',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_43],
                                               'type' => 2, 'value_type' => 0,
@@ -600,11 +605,11 @@ sub create_items_rdds {
 
 	$options = {'name' => 'RDDS43 update time of $1',
 		    'key_'=> $item_key,
+		    'status' => ITEM_STATUS_ACTIVE,
 		    'hostid' => $templateid,
 		    'applications' => [$applicationid_43],
 		    'type' => 2, 'value_type' => 0,
-		    'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'},
-		    'status' => 0};
+		    'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'}};
 	create_item($options);
     }
 
@@ -612,6 +617,7 @@ sub create_items_rdds {
 
     $options = {'name' => 'RDDS80 IP of $1',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_80],
                                               'type' => 2, 'value_type' => 1};
@@ -621,6 +627,7 @@ sub create_items_rdds {
 
     $options = {'name' => 'RDDS80 RTT of $1',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_80],
                                               'type' => 2, 'value_type' => 0,
@@ -631,6 +638,7 @@ sub create_items_rdds {
 
     $options = {'name' => 'RDDS availability',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('RDDS', $templateid)],
                                               'type' => 3, 'value_type' => 3,
@@ -651,6 +659,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP service availability at $1 ($2)',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 3, 'value_type' => 3,
@@ -662,6 +671,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP IP of $1',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 1};
@@ -672,6 +682,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP $2 command RTT of $1',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
@@ -683,6 +694,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP $2 command RTT of $1',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
@@ -694,6 +706,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP $2 command RTT of $1',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
@@ -843,6 +856,7 @@ sub create_main_template {
 
         $options = {'name' => 'Value of $1 variable',
                     'key_'=> $key,
+		    'status' => ITEM_STATUS_ACTIVE,
                     'hostid' => $templateid,
                     'applications' => [$appid],
                     'params' => '{$'.$m.'}',
@@ -1311,6 +1325,7 @@ sub create_probe_health_tmpl() {
 
     my $options = {'name' => 'Availability of $2 Probe',
                                           'key_'=> $item_key,
+                                          'status' => ITEM_STATUS_ACTIVE,
                                           'hostid' => $templateid,
                                           'applications' => [get_application_id('Probe Availability', $templateid)],
                                           'type' => 5, 'value_type' => 3,
@@ -1328,6 +1343,7 @@ sub create_probe_health_tmpl() {
     # todo phase 1: make sure this is in phase 2
     $options = {'name' => 'Probe main status',
 		'key_'=> 'rsm.probe.online',
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [get_application_id('Probe Availability', $templateid)],
 		'type' => 2, 'value_type' => 3,
@@ -1447,8 +1463,10 @@ sub manage_tld_objects($$$$$) {
 	my $template_items = get_items_like($main_templateid, $type, true);
 	my $host_items = get_items_like($main_hostid, $type, false);
 
-	if (scalar(%{$template_items})) {
-	    foreach my $itemid (%{$template_items}) {
+	# todo phase 1: bug fix, was "scalar(%)"
+	if (scalar(keys(%{$template_items}))) {
+	    # todo phase 1: bug fix, was "foreach (%)"
+	    foreach my $itemid (keys(%{$template_items})) {
 		push @itemids, $itemid;
 	    }
 	}
@@ -1456,8 +1474,10 @@ sub manage_tld_objects($$$$$) {
 	    print "Could not find $type related items on the template level\n";
 	}
 
-	if (scalar(%{$host_items})) {
-	    foreach my $itemid (%{$host_items}) {
+	# todo phase 1: bug fix, was "scalar(%)"
+	if (scalar(keys(%{$host_items}))) {
+	    # todo phase 1: bug fix, was "foreach (%)"
+	    foreach my $itemid (keys(%{$host_items})) {
 		push @itemids, $itemid;
 	    }
 	}
