@@ -1276,6 +1276,7 @@ sub validate_input {
     #$OPTS{'ipv6'} = 0 if (defined($OPTS{'update-nsservers'}));
 
     $OPTS{'dns'} = 0 unless defined $OPTS{'dns'};
+    $OPTS{'dnssec'} = 0 unless defined $OPTS{'dnssec'};
     $OPTS{'rdds'} = 0 unless defined $OPTS{'rdds'};
     $OPTS{'epp'} = 0 unless defined $OPTS{'epp'};
 
