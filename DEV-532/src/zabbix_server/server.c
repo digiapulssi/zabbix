@@ -204,6 +204,8 @@ char	*CONFIG_SSL_KEY_LOCATION	= NULL;
  *                                                                            *
  * Purpose: set configuration defaults                                        *
  *                                                                            *
+ * Comments:                                                                  *
+ *                                                                            *
  ******************************************************************************/
 static void	zbx_set_defaults()
 {
