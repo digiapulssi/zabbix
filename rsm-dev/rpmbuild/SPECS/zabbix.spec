@@ -360,8 +360,8 @@ cat conf/zabbix_server.conf | sed \
 	-e '/^# PidFile=/a \\nPidFile=%{_localstatedir}/run/zabbix/zabbix_server.pid' \
 	-e 's|^LogFile=.*|LogFile=%{_localstatedir}/log/zabbix/zabbix_server.log|g' \
 	-e '/^# LogFileSize=/a \\nLogFileSize=0' \
-	-e '/^# AlertScriptsPath=/a \\nAlertScriptsPath=/opt/zabbix/scripts/alertscripts' \
-	-e '/^# ExternalScripts=/a \\nExternalScripts=/opt/zabbix/scripts/externalscripts' \
+	-e '/^# AlertScriptsPath=/a \\nAlertScriptsPath=/opt/zabbix/alertscripts' \
+	-e '/^# ExternalScripts=/a \\nExternalScripts=/opt/zabbix/externalscripts' \
 	-e 's|^DBUser=root|DBUser=zabbix|g' \
 	> $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_server.conf
 
@@ -374,7 +374,7 @@ cat conf/zabbix_proxy_common.conf | sed \
 	-e '/^# PidFile=/a \\nPidFile=%{_localstatedir}/run/zabbix/zabbix_proxy.pid' \
 	-e 's|^LogFile=.*|LogFile=%{_localstatedir}/log/zabbix/zabbix_proxy.log|g' \
 	-e '/^# LogFileSize=/a \\nLogFileSize=0' \
-	-e '/^# ExternalScripts=/a \\nExternalScripts=/opt/zabbix/scripts/externalscripts' \
+	-e '/^# ExternalScripts=/a \\nExternalScripts=/opt/zabbix/externalscripts' \
 	-e 's|^DBUser=root|DBUser=zabbix|g' \
 	> $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_proxy_common.conf
 cp %{SOURCE23} $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_proxy_N.conf
