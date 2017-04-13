@@ -1376,9 +1376,6 @@ static int	is_dns_service_err(int ec)
 /* todo phase 1: added this one for rdds internal error exceptions */
 static int	is_rdds_service_err(int ec)
 {
-	if (ZBX_EC_RDDS_ERES == ec)
-		return FAIL;
-
 	/* is rdds service error */
 	return SUCCEED;
 }
