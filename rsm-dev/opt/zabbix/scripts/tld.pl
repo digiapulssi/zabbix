@@ -1487,6 +1487,7 @@ sub manage_tld_objects($$$$$) {
 
 	if ($action eq 'disable' and scalar(@itemids)) {
 	    disable_items(\@itemids);
+	    create_macro('{$RSM.TLD.'.uc($type).'.ENABLED}', 0, $main_templateid, true);
 	}
 
 	if ($action eq 'delete' and scalar(@itemids)) {
