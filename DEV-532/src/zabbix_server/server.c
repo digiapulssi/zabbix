@@ -255,7 +255,7 @@ static void	zbx_set_defaults()
  * Purpose: validate configuration parameters                                 *
  *                                                                            *
  * Author: Vladimir Levijev                                                   *
- * test comment 1                                                             *
+ * test comment 2                                                             *
  ******************************************************************************/
 static void	zbx_validate_config(void)
 {
