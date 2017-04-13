@@ -1293,6 +1293,7 @@ sub create_tld_host($$$$) {
 
     my $tld_hostid = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $tlds_groupid}, {'groupid' => $tld_type_groupid}],
                               'host' => $tld_name,
+                              'status' => HOST_STATUS_MONITORED,
                               'interfaces' => [{'type' => INTERFACE_TYPE_AGENT, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
 
     pfail $tld_hostid->{'data'} if check_api_error($tld_hostid) eq true;
