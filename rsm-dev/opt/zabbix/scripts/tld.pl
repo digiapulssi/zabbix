@@ -63,7 +63,7 @@ use TLDs;
 
 sub create_tld_host($$$$);
 sub create_probe_health_tmpl;
-sub manage_tld_objects($$$$$);
+sub manage_tld_objects($$$$$$);
 sub manage_tld_hosts($$);
 
 sub get_nsservers_list($);
@@ -249,13 +249,13 @@ if (defined($OPTS{'update-nsservers'})) {
 
 #### Deleting TLD or TLD objects ####
 if (defined($OPTS{'delete'})) {
-    manage_tld_objects('delete', $OPTS{'tld'}, $OPTS{'dns'}, $OPTS{'epp'}, $OPTS{'rdds'});
+    manage_tld_objects('delete', $OPTS{'tld'}, $OPTS{'dns'}, $OPTS{'dnssec'}, $OPTS{'epp'}, $OPTS{'rdds'});
     exit;
 }
 
 #### Disabling TLD or TLD objects ####
 if (defined($OPTS{'disable'})) {
-    manage_tld_objects('disable',$OPTS{'tld'}, $OPTS{'dns'}, $OPTS{'epp'}, $OPTS{'rdds'});
+    manage_tld_objects('disable',$OPTS{'tld'}, $OPTS{'dns'}, $OPTS{'dnssec'}, $OPTS{'epp'}, $OPTS{'rdds'});
     exit;
 }
 
@@ -1356,40 +1356,17 @@ sub create_probe_health_tmpl() {
 
 # todo phase 1: fixed delete/disable TLD/service by handling services input (specifying none means action on the whole tld)
 # todo phase 1: fixed deletion of main host ($main_hostid)
-sub manage_tld_objects($$$$$) {
+sub manage_tld_objects($$$$$$) {
     my $action = shift;
     my $tld = shift;
     my $dns = shift;
+    my $dnssec = shift;
     my $epp = shift;
     my $rdds = shift;
 
-    my $types = {'dns' => $dns, 'epp' => $epp, 'rdds' => $rdds};
+    my $types = {'dns' => $dns, 'dnssec' => $dnssec, 'epp' => $epp, 'rdds' => $rdds};
 
     my $main_temlateid;
-
-    my @tld_hostids;
-
-    my @affected_services;
-    my $total_services = scalar(keys(%{$types}));
-    foreach my $s (keys(%{$types}))
-    {
-	    push(@affected_services, $s) if ($types->{$s} eq true);
-    }
-
-    if (scalar(@affected_services) == 0)
-    {
-	    foreach my $s (keys(%{$types}))
-	    {
-		    $types->{$s} = true;
-	    }
-    }
-
-    print "Requested to $action '$tld'";
-    if (scalar(@affected_services) != 0 && scalar(@affected_services) != $total_services)
-    {
-	    print(" (", join(',', @affected_services), ")");
-    }
-    print "\n";
 
     print "Getting main host of the TLD: ";
     my $main_hostid = get_host($tld, false);
@@ -1414,6 +1391,30 @@ sub manage_tld_objects($$$$$) {
         print "Could not find 'Template .$tld' template\n";
         exit;
     }
+
+    my @tld_hostids;
+
+    my @affected_services;
+    my $total_services = scalar(keys(%{$types}));
+    foreach my $s (keys(%{$types}))
+    {
+	push(@affected_services, $s) if ($types->{$s} eq true);
+    }
+
+    if (scalar(@affected_services) == 0)
+    {
+	    foreach my $s (keys(%{$types}))
+	    {
+		    $types->{$s} = true;
+	    }
+    }
+
+    print "Requested to $action '$tld'";
+    if (scalar(@affected_services) != 0 && scalar(@affected_services) != $total_services)
+    {
+	    print(" (", join(',', @affected_services), ")");
+    }
+    print "\n";
 
     foreach my $host (@{$tld_template->{'hosts'}}) {
 	push @tld_hostids, $host->{'hostid'};
@@ -1457,6 +1458,12 @@ sub manage_tld_objects($$$$$) {
 
     foreach my $type (keys %{$types}) {
 	next if $types->{$type} eq false;
+
+	if ($type eq 'dnssec')
+	{
+		create_macro('{$RSM.TLD.DNSSEC.ENABLED}', 0, $main_templateid, true) if ($types->{$type} eq true);
+		next;
+	}
 
 	my @itemids;
 
