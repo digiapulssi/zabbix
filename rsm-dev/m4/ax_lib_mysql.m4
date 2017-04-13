@@ -98,10 +98,6 @@ AC_DEFUN([AX_LIB_MYSQL],
                     -lmariadbclient)
                         _client_lib_name="mariadbclient"
                 ;;
-                    # todo phase 1: handle mysql libs properly
-                    -l*)
-                        MYSQL_LIBS="${MYSQL_LIBS} $i"
-                ;;
                     -L*)
                         MYSQL_LDFLAGS="${MYSQL_LDFLAGS} $i"
                 ;;
