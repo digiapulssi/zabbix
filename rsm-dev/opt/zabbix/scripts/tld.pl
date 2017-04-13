@@ -1112,6 +1112,8 @@ sub usage {
 
     my $local_server_id = get_rsm_local_id($config);
 
+    # todo phase 1: updated --delete and --disable sections, explaining better how these options work
+
     print <<EOF;
 
     Usage: $0 [options]
@@ -1125,9 +1127,11 @@ Required options
 
 Other options
         --delete
-                delete specified TLD
+                delete specified TLD or TLD services specifyed by: --dns, --rdds, --epp
+                if none or all services specified - will delete the whole TLD
         --disable
-                disable specified TLD
+                disable specified TLD or TLD services specified by: --dns, --rdds, --epp
+                if none or all services specified - will disable the whole TLD
 	--list-services
 		list services of each TLD, the output is comma-separated list:
                 <TLD>,<TLD-TYPE>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>
