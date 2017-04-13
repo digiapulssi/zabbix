@@ -2139,7 +2139,7 @@ out:
 }
 
 static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vector_str_t *ips,
-		int ipv4_enabled, int ipv6_enabled, FILE *log_fd, char *err, size_t err_size)
+		int ipv4_enabled, int ipv6_enabled, FILE *log_fd, char *internal, char *err, size_t err_size)
 {
 	ldns_pkt	*pkt = NULL;
 	ldns_rdf	*host_rdf = NULL;
@@ -2152,12 +2152,14 @@ static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vect
 	{
 		if (NULL == (host_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, host)))
 		{
+			*internal = 1;
 			zbx_snprintf(err, err_size, "invalid host name \"%s\"", host);
 			goto out;
 		}
 
 		if (NULL == (pkt = ldns_resolver_query(res, host_rdf, LDNS_RR_TYPE_A, LDNS_RR_CLASS_IN, LDNS_RD)))
 		{
+			*internal = 1;
 			zbx_snprintf(err, err_size, "cannot resolve host \"%s\" to IPv4 address", host);
 			goto out;
 		}
@@ -2179,6 +2181,7 @@ static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vect
 	{
 		if (NULL == host_rdf && NULL == (host_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, host)))
 		{
+			*internal = 1;
 			zbx_snprintf(err, err_size, "invalid host name \"%s\"", host);
 			goto out;
 		}
@@ -2188,6 +2191,7 @@ static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vect
 
 		if (NULL == (pkt = ldns_resolver_query(res, host_rdf, LDNS_RR_TYPE_AAAA, LDNS_RR_CLASS_IN, LDNS_RD)))
 		{
+			*internal = 1;
 			zbx_snprintf(err, err_size, "cannot resolve host \"%s\" to IPv6 address", host);
 			goto out;
 		}
@@ -2210,6 +2214,7 @@ static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vect
 
 	if (0 == ips->values_num)
 	{
+		*internal = 0;
 		zbx_snprintf(err, err_size, "no IPs of host \"%s\" returned from resolver", host);
 		goto out;
 	}
@@ -2452,7 +2457,7 @@ static void	zbx_vector_str_clean_and_destroy(zbx_vector_str_t *v)
 int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	char			*domain, *value_str = NULL, *res_ip = NULL, *testprefix = NULL, *rdds_ns_string = NULL,
-				*answer = NULL, testname[ZBX_HOST_BUF_SIZE], is_ipv4, err[ZBX_ERR_BUF_SIZE];
+				*answer = NULL, testname[ZBX_HOST_BUF_SIZE], is_ipv4, err[ZBX_ERR_BUF_SIZE], internal;
 	const char		*random_host, *ip43 = NULL, *ip80 = NULL;
 	zbx_vector_str_t	hosts43, hosts80, ips43, ips80, nss;
 	FILE			*log_fd = NULL;
@@ -2637,9 +2642,12 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	random_host = hosts43.values[i];
 
 	/* start RDDS43 test, resolve host to ips */
-	if (SUCCEED != zbx_resolve_host(res, random_host, &ips43, 1, 1, log_fd, err, sizeof(err)))
+	if (SUCCEED != zbx_resolve_host(res, random_host, &ips43, 1, 1, log_fd, &internal, err, sizeof(err)))
 	{
-		rtt43 = ZBX_EC_RDDS_ERES;
+		if (0 == internal)
+			rtt43 = ZBX_EC_RDDS_ERES;
+		else
+			rtt43 = ZBX_EC_INTERNAL;
 		zbx_rsm_errf(log_fd, "RDDS43 \"%s\": %s", random_host, err);
 	}
 
@@ -2746,9 +2754,13 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	random_host = hosts80.values[i];
 
 	/* start RDDS80 test, resolve host to ips */
-	if (SUCCEED != zbx_resolve_host(res, random_host, &ips80, ipv4_enabled, ipv6_enabled, log_fd, err, sizeof(err)))
+	if (SUCCEED != zbx_resolve_host(res, random_host, &ips80, ipv4_enabled, ipv6_enabled, log_fd, &internal,
+			err, sizeof(err)))
 	{
-		rtt80 = ZBX_EC_RDDS_ERES;
+		if (0 == internal)
+			rtt80 = ZBX_EC_RDDS_ERES;
+		else
+			rtt80 = ZBX_EC_INTERNAL;
 		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": %s", random_host, err);
 		goto out;
 	}
@@ -3740,7 +3752,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 				*epp_passwd_salt_b64 = NULL, *epp_privkey_enc_b64 = NULL, *epp_privkey_salt_b64 = NULL,
 				*epp_user = NULL, *epp_passwd = NULL, *epp_privkey = NULL, *epp_cert_b64 = NULL,
 				*epp_cert = NULL, *epp_commands = NULL, *epp_serverid = NULL, *epp_testprefix = NULL,
-				*epp_servercertmd5 = NULL, *tmp;
+				*epp_servercertmd5 = NULL, *tmp, internal;
 	short			epp_port = 700;
 	X509			*epp_server_x509 = NULL;
 	const SSL_METHOD	*method;
@@ -4015,10 +4027,17 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	random_host = epp_hosts.values[i];
 
 	/* resolve host to ips */
-	if (SUCCEED != zbx_resolve_host(res, random_host, &epp_ips, ipv4_enabled, ipv6_enabled, log_fd,
+	if (SUCCEED != zbx_resolve_host(res, random_host, &epp_ips, ipv4_enabled, ipv6_enabled, log_fd, &internal,
 			err, sizeof(err)))
 	{
-		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_NO_IP;
+		if (0 == internal)
+		{
+			rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_NO_IP;
+		}
+		else
+		{
+			rtt1 = rtt2 = rtt3 = ZBX_EC_INTERNAL;
+		}
 		zbx_rsm_errf(log_fd, "\"%s\": %s", random_host, err);
 		goto out;
 	}
