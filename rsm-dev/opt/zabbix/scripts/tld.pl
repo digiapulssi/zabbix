@@ -1333,6 +1333,8 @@ sub create_probe_health_tmpl() {
     return $templateid;
 }
 
+# todo phase 1: fixed delete/disable TLD/service by handling services input (specifying none means action on the whole tld)
+# todo phase 1: fixed deletion of main host ($main_hostid)
 sub manage_tld_objects($$$$$) {
     my $action = shift;
     my $tld = shift;
@@ -1346,14 +1348,34 @@ sub manage_tld_objects($$$$$) {
 
     my @tld_hostids;
 
-    print "Trying to $action '$tld' TLD\n";
+    my @affected_services;
+    my $total_services = scalar(keys(%{$types}));
+    foreach my $s (keys(%{$types}))
+    {
+	    push(@affected_services, $s) if ($types->{$s} eq true);
+    }
+
+    if (scalar(@affected_services) == 0)
+    {
+	    foreach my $s (keys(%{$types}))
+	    {
+		    $types->{$s} = true;
+	    }
+    }
+
+    print "Requested to $action '$tld'";
+    if (scalar(@affected_services) != 0 && scalar(@affected_services) != $total_services)
+    {
+	    print(" (", join(',', @affected_services), ")");
+    }
+    print "\n";
 
     print "Getting main host of the TLD: ";
     my $main_hostid = get_host($tld, false);
 
     if (scalar(%{$main_hostid})) {
         $main_hostid = $main_hostid->{'hostid'};
-	print "success\n";
+	print "$main_hostid\n";
     }
     else {
         print "Could not find '$tld' host\n";
@@ -1365,7 +1387,7 @@ sub manage_tld_objects($$$$$) {
 
     if (scalar(%{$tld_template})) {
         $main_templateid = $tld_template->{'templateid'};
-	print "success\n";
+	print "$main_templateid\n";
     }
     else {
         print "Could not find 'Template .$tld' template\n";
@@ -1376,10 +1398,7 @@ sub manage_tld_objects($$$$$) {
 	push @tld_hostids, $host->{'hostid'};
     }
 
-
-    if ($dns eq true and $epp eq true and $rdds eq true) {
-	print "You have choosed all possible options. Trying to $action TLD.\n";
-
+    if ($types->{'dns'} eq true and $types->{'epp'} eq true and $types->{'rdds'} eq true) {
 	my @tmp_hostids;
 	my @hostids_arr;
 
@@ -1405,6 +1424,7 @@ sub manage_tld_objects($$$$$) {
 
 	if ($action eq 'delete') {
 	    remove_hosts( \@hostids_arr );
+	    remove_hosts( [$main_hostid] );
 	    remove_templates([ $main_templateid ]);
 
 	    my $hostgroupid = get_host_group('TLD '.$tld, false);
@@ -1581,7 +1601,7 @@ sub update_nsservers($$) {
 		    push @to_be_removed, $ns_ip;
 
 		    # todo phase 1: added
-		    print("delete\t: $old_nsname ($old_ip)\n");
+		    print("disable\t: $old_nsname ($old_ip)\n");
 		}
 	    }
 	}
