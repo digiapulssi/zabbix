@@ -1881,6 +1881,12 @@ static int	process_log(unsigned char flags, const char *filename, zbx_uint64_t *
 	zbx_stat_t	buf;
 	zbx_uint64_t	l_size;
 
+	if (0 != CHECK_PATH_ALLOWED(filename))
+	{
+		*err_msg = zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename);
+		goto out;
+	}
+
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
 			__function_name, filename, *lastlogsize, NULL != mtime ? *mtime : 0);
 
