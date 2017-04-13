@@ -48,7 +48,7 @@ function local_generateHeader($data) {
 	echo $pageHeader->getOutput();
 
 	if ($data['fullscreen'] == 0) {
-		global $ZBX_SERVER_NAME;
+		global $ZBX_SERVER_NAME, $DB;
 
 		$servers = new CComboBox('servers', null, 'window.location.href=this.value');
 		foreach ($DB['SERVERS'] as $server) {
