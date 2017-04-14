@@ -54,7 +54,7 @@ $widget->addItem($filter);
 $table = (new CTableInfo())
 	->setHeader([
 		_('Time'),
-		_('Effects rolling week'),
+		_('Affects rolling week'),
 		SPACE
 ]);
 
