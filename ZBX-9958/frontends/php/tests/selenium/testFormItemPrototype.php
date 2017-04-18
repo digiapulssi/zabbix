@@ -2360,6 +2360,9 @@ class testFormItemPrototype extends CWebTest {
 
 		if (isset($data['key'])) {
 			$this->zbxTestInputTypeOverwrite('key', $data['key']);
+			if ($data['key'] != $this->zbxTestGetValue("//input[@id='key']")) {
+				$this->zbxTestInputTypeOverwrite('key', $data['key']);
+			}
 			$this->zbxTestAssertElementValue('key', $data['key']);
 		}
 		$key = $this->zbxTestGetValue("//input[@id='key']");
