@@ -99,7 +99,8 @@ class CControllerAcknowledgeEdit extends CController {
 			if ($events) {
 				$data['event'] = [
 					'acknowledges' => $events[0]['acknowledges'],
-					'value' => $events[0]['value']
+					'value' => $events[0]['value'],
+					'triggerSeverity' => $events[0]['relatedObject']['priority']
 				];
 				order_result($data['acknowledges'], 'clock', ZBX_SORT_DOWN);
 

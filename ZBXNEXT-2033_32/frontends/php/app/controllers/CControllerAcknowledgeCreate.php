@@ -67,6 +67,7 @@ class CControllerAcknowledgeCreate extends CController {
 		$acknowledge_type = $this->getInput('acknowledge_type');
 		$close_problem = $this->getInput('close_problem', ZBX_ACKNOWLEDGE_ACTION_NONE);
 		$eventids_to_ack = $eventids;
+		$eventids_acknowledged = []; // acknowledged events to prevent some be acknowledged multiple times
 		$result = true;
 
 		// Select events with trigger IDs only if there is a need to close problems or to find related all other events.
@@ -141,6 +142,7 @@ class CControllerAcknowledgeCreate extends CController {
 					'message' => $this->getInput('message', ''),
 					'action' => $close_problem
 				]);
+				$eventids_acknowledged = array_merge($eventids_acknowledged, $eventids_to_close);
 			}
 		}
 
@@ -153,6 +155,7 @@ class CControllerAcknowledgeCreate extends CController {
 				'eventids' => $eventids_to_ack,
 				'message' => $this->getInput('message', '')
 			]);
+			$eventids_acknowledged = array_merge($eventids_acknowledged, $eventids_to_ack);
 		}
 
 		// If previous action was success and there is a need to acknowledge all other problem events.
@@ -183,6 +186,7 @@ class CControllerAcknowledgeCreate extends CController {
 						'eventids' => array_keys($events),
 						'message' => $this->getInput('message', '')
 					]);
+					$eventids_acknowledged = array_merge($eventids_acknowledged, array_keys($events));
 				}
 				else {
 					break;
@@ -214,7 +218,7 @@ class CControllerAcknowledgeCreate extends CController {
 			}
 
 			$result = $result && API::Event()->acknowledge([
-				'eventids' => $eventids,
+				'eventids' => array_diff($eventids, $eventids_acknowledged),
 				'message' => $this->getInput('message', '')
 			]);
 		}
