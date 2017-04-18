@@ -103,7 +103,7 @@ static void	recv_proxyhistory(zbx_socket_t *sock, struct zbx_json_parse *jp, zbx
 		goto out;
 	}
 
-	update_proxy_lastaccess(proxy_hostid);
+	update_proxy_lastaccess(proxy_hostid, time(NULL));
 out:
 	zbx_send_response(sock, ret, error, CONFIG_TIMEOUT);
 
@@ -199,7 +199,7 @@ static void	recv_proxy_heartbeat(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		goto out;
 	}
 
-	update_proxy_lastaccess(proxy_hostid);
+	update_proxy_lastaccess(proxy_hostid, time(NULL));
 out:
 	zbx_send_response(sock, ret, error, CONFIG_TIMEOUT);
 
@@ -827,7 +827,8 @@ static int	process_trap(zbx_socket_t *sock, char *s, zbx_timespec_t *ts)
 			}
 			else if (0 == strcmp(value, ZBX_PROTO_VALUE_COMMAND))
 			{
-				ret = node_process_command(sock, s, &jp);
+				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+					ret = node_process_command(sock, s, &jp);
 			}
 			else if (0 == strcmp(value, ZBX_PROTO_VALUE_GET_QUEUE))
 			{
