@@ -136,7 +136,7 @@ class CScreenGraph extends CScreenBase {
 				$isDefault = true;
 			}
 
-			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_graphid($resourceId));
+			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, time() - ZBX_MAX_PERIOD);
 
 			$timeControlData['src'] = $this->screenitem['url'].'&width='.$this->screenitem['width']
 				.'&height='.$this->screenitem['height'].'&legend='.$legend
