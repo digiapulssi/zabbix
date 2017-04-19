@@ -341,7 +341,7 @@ int	zbx_read_stdin(const char *prompt, char *output, size_t output_size, char *e
 		goto out;
 	}
 
-	printf(prompt);
+	printf("%s", prompt);
 	if (output != fgets(output, output_size, stdin))
 	{
 		if (NULL != err)
