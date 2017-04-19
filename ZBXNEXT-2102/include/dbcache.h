@@ -47,7 +47,6 @@
 
 #define ZBX_EXPAND_MACROS		1
 
-extern char	*CONFIG_FILE;
 extern int	CONFIG_TIMEOUT;
 
 extern zbx_uint64_t	CONFIG_CONF_CACHE_SIZE;
@@ -421,7 +420,7 @@ void	dc_add_history(zbx_uint64_t itemid, unsigned char item_flags, AGENT_RESULT 
 		unsigned char state, const char *error);
 void	dc_flush_history(void);
 int	DCsync_history(int sync_type, int *sync_num);
-void	init_database_cache(void);
+int	init_database_cache(char **error);
 void	free_database_cache(void);
 
 #define ZBX_STATS_HISTORY_COUNTER	0
@@ -452,7 +451,7 @@ void	*DCget_stats(int request);
 zbx_uint64_t	DCget_nextid(const char *table_name, int num);
 
 void	DCsync_configuration(void);
-void	init_configuration_cache(void);
+int	init_configuration_cache(char **error);
 void	free_configuration_cache(void);
 void	DCload_config(void);
 
@@ -460,6 +459,7 @@ void	DCconfig_get_triggers_by_triggerids(DC_TRIGGER *triggers, const zbx_uint64_
 		size_t num);
 void	DCconfig_clean_items(DC_ITEM *items, int *errcodes, size_t num);
 int	DCget_host_by_hostid(DC_HOST *host, zbx_uint64_t hostid);
+void	DCconfig_get_hosts_by_itemids(DC_HOST *hosts, const zbx_uint64_t *itemids, int *errcodes, size_t num);
 void	DCconfig_get_items_by_keys(DC_ITEM *items, zbx_host_key_t *keys, int *errcodes, size_t num);
 void	DCconfig_get_items_by_itemids(DC_ITEM *items, const zbx_uint64_t *itemids, int *errcodes, size_t num,
 		zbx_uint64_t flags);
