@@ -89,8 +89,8 @@ class CControllerAcknowledgeEdit extends CController {
 		if (count($this->getInput('eventids')) == 1) {
 			$events = API::Event()->get([
 				'output' => ['eventid', 'value'],
-				'selectRelatedObject' => ['priority'],
 				'select_acknowledges' => ['clock', 'message', 'action', 'alias', 'name', 'surname'],
+				'selectRelatedObject' => ['priority'],
 				'eventids' => $this->getInput('eventids'),
 				'source' => EVENT_SOURCE_TRIGGERS,
 				'object' => EVENT_OBJECT_TRIGGER
@@ -104,7 +104,7 @@ class CControllerAcknowledgeEdit extends CController {
 				];
 				order_result($data['acknowledges'], 'clock', ZBX_SORT_DOWN);
 
-				CRemedyService::init(['triggerSeverity' => $events[0]['relatedObject']['priority']]);
+				CRemedyService::init(['triggerSeverity' => $data['event']['triggerSeverity']]);
 
 				if (CRemedyService::$enabled) {
 					$data['ticket'] = CRemedyService::mediaQuery($events[0]['eventid']);

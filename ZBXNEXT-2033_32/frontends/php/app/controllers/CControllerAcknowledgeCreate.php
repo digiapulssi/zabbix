@@ -67,7 +67,9 @@ class CControllerAcknowledgeCreate extends CController {
 		$acknowledge_type = $this->getInput('acknowledge_type');
 		$close_problem = $this->getInput('close_problem', ZBX_ACKNOWLEDGE_ACTION_NONE);
 		$eventids_to_ack = $eventids;
-		$eventids_acknowledged = []; // acknowledged events to prevent some be acknowledged multiple times
+
+		// Store already acknowledged events to prevent multiple acknowledgements.
+		$eventids_acknowledged = [];
 		$result = true;
 
 		// Select events with trigger IDs only if there is a need to close problems or to find related all other events.
