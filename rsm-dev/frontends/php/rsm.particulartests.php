@@ -286,6 +286,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	// get manual data
 	$ignoredHostIds = [];
+	$hostNames = [];
 
 	foreach ($manualItemIds as $itemId) {
 		$itemValue = DBfetch(DBselect(DBaddLimit(
