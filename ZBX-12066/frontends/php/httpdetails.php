@@ -280,7 +280,7 @@ $graphInScreen = new CScreenBase(array(
 	'period' => get_request('period'),
 	'stime' => get_request('stime')
 ));
-$graphInScreen->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($itemIds));
+$graphInScreen->timeline['starttime'] = date(TIMESTAMP_FORMAT, time() - ZBX_MAX_PERIOD);
 
 $src = 'chart3.php?height=150'.
 	'&name='.$httpTest['name'].
