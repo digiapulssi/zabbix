@@ -1503,6 +1503,13 @@ sub __db_select_binds
 	return \@rows;
 }
 
+sub __print_undef
+{
+	my $string = shift;
+
+	return (defined($string) ? $string : "UNDEF");
+}
+
 # todo phase 1: taken from RSMSLV.pm phase 2
 # NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
 # (supports identifying service error)
@@ -1513,7 +1520,11 @@ sub __best_rtt
 	my $new_rtt = shift;
 	my $new_description = shift;
 
-	dbg("cur_rtt:$cur_rtt cur_description:", ($cur_description ? $cur_description : "UNDEF"), " new_rtt:$new_rtt new_description:", ($new_description ? $new_description : "UNDEF"));
+	if (opt('debug'))
+	{
+		dbg("cur_rtt:%s cur_description:%s new_rtt:%s new_description:%s", __print_undef($cur_rtt),
+			__print_undef($cur_description), __print_undef($new_rtt), __print_undef($new_description));
+	}
 
 	if (!defined($cur_rtt) && !defined($cur_description))
 	{
