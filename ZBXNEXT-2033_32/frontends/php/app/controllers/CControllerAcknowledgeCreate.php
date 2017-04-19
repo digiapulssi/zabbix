@@ -134,9 +134,6 @@ class CControllerAcknowledgeCreate extends CController {
 				}
 			}
 
-			// The remaining events can be acknowledged.
-			$eventids_to_ack = array_diff($eventids, $eventids_to_close);
-
 			// Acknowledge and close problems.
 			if ($eventids_to_close) {
 				$result = API::Event()->acknowledge([
@@ -144,20 +141,10 @@ class CControllerAcknowledgeCreate extends CController {
 					'message' => $this->getInput('message', ''),
 					'action' => $close_problem
 				]);
-				$eventids_acknowledged = array_merge($eventids_acknowledged, $eventids_to_close);
-			}
-		}
 
-		/*
-		 * There might be nothing more to acknowledge since previous action closed all the events. This will also
-		 * acknowlege only selected events in case there is no need to close the events.
-		 */
-		if ($result && $eventids_to_ack) {
-			$result = API::Event()->acknowledge([
-				'eventids' => $eventids_to_ack,
-				'message' => $this->getInput('message', '')
-			]);
-			$eventids_acknowledged = array_merge($eventids_acknowledged, $eventids_to_ack);
+				// The remaining events can be acknowledged.
+				$eventids_to_ack = array_diff($eventids_to_ack, $eventids_to_close);
+			}
 		}
 
 		// If previous action was success and there is a need to acknowledge all other problem events.
@@ -184,11 +171,13 @@ class CControllerAcknowledgeCreate extends CController {
 						}
 					}
 
+					// The remaining events can be acknowledged.
+					$eventids_to_ack = array_diff($eventids_to_ack, array_keys($events));
+
 					$result = API::Event()->acknowledge([
 						'eventids' => array_keys($events),
 						'message' => $this->getInput('message', '')
 					]);
-					$eventids_acknowledged = array_merge($eventids_acknowledged, array_keys($events));
 				}
 				else {
 					break;
@@ -218,9 +207,15 @@ class CControllerAcknowledgeCreate extends CController {
 					]);
 				}
 			}
+		}
 
-			$result = $result && API::Event()->acknowledge([
-				'eventids' => array_diff($eventids, $eventids_acknowledged),
+		/*
+		 * There might be nothing more to acknowledge since events can be already acknowledged by previous actions.
+		 */
+		if ($result && $eventids_to_ack) {
+
+			$result = API::Event()->acknowledge([
+				'eventids' => $eventids_to_ack,
 				'message' => $this->getInput('message', '')
 			]);
 		}
