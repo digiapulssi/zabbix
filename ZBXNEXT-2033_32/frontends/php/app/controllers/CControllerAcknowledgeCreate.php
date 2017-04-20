@@ -67,25 +67,52 @@ class CControllerAcknowledgeCreate extends CController {
 		$acknowledge_type = $this->getInput('acknowledge_type');
 		$close_problem = $this->getInput('close_problem', ZBX_ACKNOWLEDGE_ACTION_NONE);
 		$eventids_to_ack = $eventids;
-
-		// Store already acknowledged events to prevent multiple acknowledgements.
-		$eventids_acknowledged = [];
 		$result = true;
 
-		// Select events with trigger IDs only if there is a need to close problems or to find related all other events.
-		if ($acknowledge_type == ZBX_ACKNOWLEDGE_PROBLEM || $close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM) {
+		/*
+		 * Select events with trigger IDs if there is a need to close problems, to find related all other events
+		 * or create a Remedy ticket. The only time that it's not required, when we acknowlege single problem
+		 * and do nothing else.
+		 */
+		if ($acknowledge_type == ZBX_ACKNOWLEDGE_PROBLEM || $close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM
+				|| (count($eventids) == 1 && $this->hasInput('ticket_status'))) {
 			// Get trigger IDs for selected events.
-			$events = API::Event()->get([
+
+			$options = [
 				'output' => ['eventid', 'objectid'],
 				'eventids' => $eventids,
 				'source' => EVENT_SOURCE_TRIGGERS,
 				'object' => EVENT_OBJECT_TRIGGER,
 				'preservekeys' => true
-			]);
+			];
+
+			// Additionally select trigger data for Remedy.
+			if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
+				$options['selectRelatedObject'] = ['priority', 'description', 'expression'];
+			}
+
+			$events = API::Event()->get($options);
+
 			$triggerids = zbx_objectValues($events, 'objectid');
 		}
 
-		if ($close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM) {
+		// Create or update and incident on Remedy for current event.
+		if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
+			$event = reset($events);
+			CRemedyService::init(['triggerSeverity' => $event['relatedObject']['priority']]);
+
+			if (CRemedyService::$enabled) {
+				$event_trigger_name = CMacrosResolverHelper::resolveTriggerName($event['relatedObject']);
+
+				$result = (bool) CRemedyService::mediaAcknowledge([
+					'eventid' => $events[0]['eventid'],
+					'message' => $this->getInput('message', ''),
+					'subject' => $event_trigger_name
+				]);
+			}
+		}
+
+		if ($result && $close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM) {
 			// User should have read-write permissions to trigger and trigger must have "manual_close" set to "1".
 			$triggers = API::Trigger()->get([
 				'output' => [],
@@ -134,6 +161,9 @@ class CControllerAcknowledgeCreate extends CController {
 				}
 			}
 
+			// The remaining events can be acknowledged.
+			$eventids_to_ack = array_diff($eventids, $eventids_to_close);
+
 			// Acknowledge and close problems.
 			if ($eventids_to_close) {
 				$result = API::Event()->acknowledge([
@@ -141,10 +171,18 @@ class CControllerAcknowledgeCreate extends CController {
 					'message' => $this->getInput('message', ''),
 					'action' => $close_problem
 				]);
-
-				// The remaining events can be acknowledged.
-				$eventids_to_ack = array_diff($eventids_to_ack, $eventids_to_close);
 			}
+		}
+
+		/*
+		 * There might be nothing more to acknowledge since previous action closed all the events. This will also
+		 * acknowlege only selected events in case there is no need to close the events.
+		 */
+		if ($result && $eventids_to_ack) {
+			$result = API::Event()->acknowledge([
+				'eventids' => $eventids_to_ack,
+				'message' => $this->getInput('message', '')
+			]);
 		}
 
 		// If previous action was success and there is a need to acknowledge all other problem events.
@@ -171,9 +209,6 @@ class CControllerAcknowledgeCreate extends CController {
 						}
 					}
 
-					// The remaining events can be acknowledged.
-					$eventids_to_ack = array_diff($eventids_to_ack, array_keys($events));
-
 					$result = API::Event()->acknowledge([
 						'eventids' => array_keys($events),
 						'message' => $this->getInput('message', '')
@@ -183,41 +218,6 @@ class CControllerAcknowledgeCreate extends CController {
 					break;
 				}
 			}
-		}
-
-		if ($result && $eventids) {
-			if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
-				$events = API::Event()->get([
-					'output' => ['eventid'],
-					'selectRelatedObject' => ['priority', 'description', 'expression'],
-					'source' => EVENT_SOURCE_TRIGGERS,
-					'object' => EVENT_OBJECT_TRIGGER,
-					'eventids' => $eventids
-				]);
-
-				CRemedyService::init(['triggerSeverity' => $events[0]['relatedObject']['priority']]);
-
-				if (CRemedyService::$enabled) {
-					$event_trigger_name = CMacrosResolverHelper::resolveTriggerName($events[0]['relatedObject']);
-
-					$result = (bool) CRemedyService::mediaAcknowledge([
-						'eventid' => $events[0]['eventid'],
-						'message' => $this->getInput('message', ''),
-						'subject' => $event_trigger_name
-					]);
-				}
-			}
-		}
-
-		/*
-		 * There might be nothing more to acknowledge since events can be already acknowledged by previous actions.
-		 */
-		if ($result && $eventids_to_ack) {
-
-			$result = API::Event()->acknowledge([
-				'eventids' => $eventids_to_ack,
-				'message' => $this->getInput('message', '')
-			]);
 		}
 
 		if ($result) {
