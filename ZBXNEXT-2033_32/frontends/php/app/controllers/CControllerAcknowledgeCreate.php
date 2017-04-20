@@ -105,7 +105,7 @@ class CControllerAcknowledgeCreate extends CController {
 				$event_trigger_name = CMacrosResolverHelper::resolveTriggerName($event['relatedObject']);
 
 				$result = (bool) CRemedyService::mediaAcknowledge([
-					'eventid' => $events[0]['eventid'],
+					'eventid' => $event['eventid'],
 					'message' => $this->getInput('message', ''),
 					'subject' => $event_trigger_name
 				]);
