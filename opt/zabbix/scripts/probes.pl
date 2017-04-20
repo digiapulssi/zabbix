@@ -205,7 +205,6 @@ sub add_probe($$$$$) {
     ##########
 
     print "The probe has been added successfully\n";
-    print "Do not forget to tune macros!\n";
 }
 
 sub delete_probe($) {
