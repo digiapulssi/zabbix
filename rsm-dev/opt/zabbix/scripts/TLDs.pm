@@ -75,15 +75,33 @@ sub get_probe($$) {
     return $result;
 }
 
-sub get_host_group($$) {
+sub get_host_group($$$) {
     my $group_name = shift;
     my $selectHosts = shift;
+    my $selectType = shift;
 
     my $options = {'output' => 'extend', 'filter' => {'name' => $group_name}};
 
     $options->{'selectHosts'} = ['hostid', 'host', 'name'] if (defined($selectHosts) and $selectHosts eq true);
 
     my $result = $zabbix->get('hostgroup', $options);
+
+    if ($selectType eq true && scalar(@{$result->{'hosts'}}) != 0)
+    {
+	    foreach my $tld (@{$result->{'hosts'}}) {
+		    my $hostid = $tld->{'hostid'};
+		    $options = {'output' => 'extend', 'filter' => {'hostid' => $hostid}};
+		    $options->{'selectGroups'} = ['name'];
+		    my $result2 = $zabbix->get('host', $options);
+		    foreach my $group (@{$result2->{'groups'}}) {
+			    my $name = $group->{'name'};
+			    next unless ($name =~ /^[a-z]+TLD$/);
+			    $tld->{'type'} = $group->{'name'};
+			    last;
+		    }
+		    die("cannot get TLD type of \"", $tld->{'host'}, "\"") unless (defined($tld->{'type'}));
+	    }
+    }
 
     return $result;
 }
@@ -794,6 +812,7 @@ sub get_triggers_by_items($) {
 sub set_tld_type($$) {
 	my $tld = shift;
 	my $tld_type = shift;
+	my $tld_type_probe_results_groupid = shift;
 
 	my %tld_type_groups = (@{[TLD_TYPE_G]} => undef, @{[TLD_TYPE_CC]} => undef, @{[TLD_TYPE_OTHER]} => undef, @{[TLD_TYPE_TEST]} => undef);
 
@@ -853,6 +872,7 @@ sub set_tld_type($$) {
 
 	# add new group to the options
 	push(@{$options->{'groups'}}, {'groupid' => $tld_type_groups{$tld_type}});
+	push(@{$options->{'groups'}}, {'groupid' => $tld_type_probe_results_groupid});
 
 	$result = create_host($options);
 

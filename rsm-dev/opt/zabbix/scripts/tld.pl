@@ -79,7 +79,7 @@ my ($rsm_groupid, $rsm_hostid);
 
 my ($ns_servers, $root_servers_macros);
 
-my ($main_templateid, $tld_groupid, $tld_type_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid, $proxy_mon_templateid);
+my ($main_templateid, $tld_groupid, $tld_type_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid, $proxy_mon_templateid);
 
 my $config = get_rsm_config();
 
@@ -163,8 +163,12 @@ if ($result ne true) {
     pfail("Could not connect to Zabbix API. ".$result->{'data'});
 }
 
+$tld_type_probe_results_groupid = create_group($OPTS{'type'}.' Probe results');
+
+pfail $tld_type_probe_results_groupid->{'data'} if check_api_error($tld_type_probe_results_groupid) eq true;
+
 if (defined($OPTS{'set-type'})) {
-    if (set_tld_type($OPTS{'tld'}, $OPTS{'type'}) == true)
+    if (set_tld_type($OPTS{'tld'}, $OPTS{'type'}, $tld_type_probe_results_groupid) == true)
     {
 	print("${OPTS{'tld'}} set to \"${OPTS{'type'}}\"\n");
     }
@@ -289,6 +293,10 @@ $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
 
+$tld_probe_results_groupid = create_group('TLD Probe results');
+
+pfail $tld_probe_results_groupid->{'data'} if check_api_error($tld_probe_results_groupid) eq true;
+
 $tlds_groupid = create_group('TLDs');
 
 pfail $tlds_groupid->{'data'} if check_api_error($tlds_groupid) eq true;
@@ -363,7 +371,7 @@ foreach my $proxyid (sort keys %{$proxies}) {
 #  TODO: add the host above
 #	  to more host groups: "TLD Probe Results" and\/or "gTLD Probe Results" and perhaps others
 
-    create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $proxy_groupid}],
+    create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $proxy_groupid}, {'groupid' => $tld_probe_results_groupid}, {'groupid' => $tld_type_probe_results_groupid}],
                                           'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_templateid}],
                                           'host' => $OPTS{'tld'}.' '.$probe_name,
                                           'status' => $status,
@@ -1453,7 +1461,7 @@ sub manage_tld_objects($$$$$$) {
 	    remove_hosts( [$main_hostid] );
 	    remove_templates([ $main_templateid ]);
 
-	    my $hostgroupid = get_host_group('TLD '.$tld, false);
+	    my $hostgroupid = get_host_group('TLD '.$tld, false, false);
 	    $hostgroupid = $hostgroupid->{'groupid'};
 	    remove_hostgroups( [ $hostgroupid ] );
 	    return;
@@ -1527,7 +1535,7 @@ sub compare_arrays($$) {
 }
 
 sub get_tld_list() {
-    my $tlds = get_host_group('TLDs', true);
+    my $tlds = get_host_group('TLDs', true, false);
 
     my @result;
 
