@@ -28,18 +28,23 @@ ROW   |10058 |NULL        |Template App Zabbix Proxy |3     |0            |2    
 ROW   |100000|NULL        |Global macro history      |0     |-1           |2             |             |             |Global macro history      |0    |NULL      |           |1          |1         |          |           |                |       |
 
 TABLE |groups
-FIELDS|groupid|name                |internal|flags|
-ROW   |1      |Templates           |0       |0    |
-ROW   |5      |Discovered hosts    |1       |0    |
-ROW   |100    |Global macro history|0       |0    |
-ROW   |110    |Mon                 |0       |0    |
-ROW   |120    |Probes              |0       |0    |
-ROW   |130    |Probes - Mon        |0       |0    |
-ROW   |140    |TLDs                |0       |0    |
-ROW   |150    |gTLD                |0       |0    |
-ROW   |160    |ccTLD               |0       |0    |
-ROW   |170    |testTLD             |0       |0    |
-ROW   |180    |otherTLD            |0       |0    |
+FIELDS|groupid|name                  |internal|flags|
+ROW   |1      |Templates             |0       |0    |
+ROW   |5      |Discovered hosts      |1       |0    |
+ROW   |100    |Global macro history  |0       |0    |
+ROW   |110    |Mon                   |0       |0    |
+ROW   |120    |Probes                |0       |0    |
+ROW   |130    |Probes - Mon          |0       |0    |
+ROW   |140    |TLDs                  |0       |0    |
+ROW   |150    |gTLD                  |0       |0    |
+ROW   |160    |ccTLD                 |0       |0    |
+ROW   |170    |testTLD               |0       |0    |
+ROW   |180    |otherTLD              |0       |0    |
+ROW   |190    |TLD Probe results     |0       |0    |
+ROW   |200    |gTLD Probe results    |0       |0    |
+ROW   |210    |ccTLD Probe results   |0       |0    |
+ROW   |220    |testTLD Probe results |0       |0    |
+ROW   |230    |otherTLD Probe results|0       |0    |
 
 TABLE |screens
 FIELDS|screenid|name                |hsize|vsize|templateid|userid|private|
@@ -1128,12 +1133,16 @@ ROW   |102    |100    |0         |160|
 ROW   |103    |100    |0         |170|
 ROW   |104    |100    |0         |180|
 ROW   |105    |100    |2         |100|
+ROW   |106    |100    |2         |120|
+ROW   |107    |100    |2         |200|
 ROW   |110    |110    |2         |140|
 ROW   |111    |110    |2         |150|
 ROW   |112    |110    |2         |160|
 ROW   |113    |110    |2         |170|
 ROW   |114    |110    |2         |180|
 ROW   |115    |110    |2         |100|
+ROW   |116    |110    |2         |120|
+ROW   |117    |110    |2         |190|
 
 TABLE |regexps
 FIELDS|regexpid|name                              |test_string|
