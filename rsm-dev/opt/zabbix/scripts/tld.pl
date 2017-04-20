@@ -360,8 +360,8 @@ foreach my $proxyid (sort keys %{$proxies}) {
 
     create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1);
 
-  TODO: add the host above
-	  to more host groups: "TLD Probe Results" and\/or "gTLD Probe Results" and perhaps others
+#  TODO: add the host above
+#	  to more host groups: "TLD Probe Results" and\/or "gTLD Probe Results" and perhaps others
 
     create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $proxy_groupid}],
                                           'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_templateid}],
