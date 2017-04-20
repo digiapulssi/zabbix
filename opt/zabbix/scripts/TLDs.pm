@@ -809,7 +809,7 @@ sub get_triggers_by_items($) {
     return $result;
 }
 
-sub set_tld_type($$) {
+sub set_tld_type($$$) {
 	my $tld = shift;
 	my $tld_type = shift;
 	my $tld_type_probe_results_groupid = shift;
