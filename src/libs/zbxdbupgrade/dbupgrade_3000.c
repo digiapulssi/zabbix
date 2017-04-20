@@ -43,118 +43,98 @@ static int	DBpatch_3000100(void)
 	return FAIL;
 }
 
-static int	DBpatch_3000101(void)
+static int	add_hostgroup(const char *name, zbx_uint64_t groupid)
 {
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	if (ZBX_DB_OK <= DBexecute("insert into groups (groupid,name,internal,flags) values"
-			" ('190','TLD Probe results','0','0')"))
+	if (ZBX_DB_OK > DBexecute(
+			"insert into groups (groupid,name,internal,flags)"
+			" values ('" ZBX_FS_UI64 "','%s','0','0')", groupid, name))
 	{
-		return SUCCEED;
+		return FAIL;
 	}
 
-	return FAIL;
+	if (ZBX_DB_OK > DBexecute(
+			"update ids"
+			" set nextid=(select max(groupid) from groups)"
+			" where table_name='groups'"
+				" and field_name='groupid'"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000101(void)
+{
+	return add_hostgroup("TLD Probe results", 190);
 }
 
 static int	DBpatch_3000102(void)
 {
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK <= DBexecute("insert into groups (groupid,name,internal,flags) values"
-			" ('200','gTLD Probe results','0','0')"))
-	{
-		return SUCCEED;
-	}
-
-	return FAIL;
+	return add_hostgroup("gTLD Probe results", 200);
 }
 
 static int	DBpatch_3000103(void)
 {
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK <= DBexecute("insert into groups (groupid,name,internal,flags) values"
-			" ('210','ccTLD Probe results','0','0')"))
-	{
-		return SUCCEED;
-	}
-
-	return FAIL;
+	return add_hostgroup("ccTLD Probe results", 210);
 }
 
 static int	DBpatch_3000104(void)
 {
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK <= DBexecute("insert into groups (groupid,name,internal,flags) values"
-			" ('220','testTLD Probe results','0','0')"))
-	{
-		return SUCCEED;
-	}
-
-	return FAIL;
+	return add_hostgroup("testTLD Probe results", 220);
 }
 
 static int	DBpatch_3000105(void)
 {
+	return add_hostgroup("otherTLD Probe results", 230);
+}
+
+static int	add_right(zbx_uint64_t rightid, zbx_uint64_t usergroupid, zbx_uint64_t groupid)
+{
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	if (ZBX_DB_OK <= DBexecute("insert into groups (groupid,name,internal,flags) values"
-			" ('230','otherTLD Probe results','0','0')"))
+	if (ZBX_DB_OK > DBexecute(
+			"insert into rights (rightid,groupid,permission,id)"
+			" values ('" ZBX_FS_UI64 "','" ZBX_FS_UI64 "','2','" ZBX_FS_UI64 "')",
+			rightid, usergroupid, groupid))
 	{
-		return SUCCEED;
+		return FAIL;
 	}
 
-	return FAIL;
+	if (ZBX_DB_OK > DBexecute(
+			"update ids"
+			" set nextid=(select max(rightid) from rights)"
+			" where table_name='rights'"
+				" and field_name='rightid'"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
 }
 
 static int	DBpatch_3000106(void)
 {
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK <= DBexecute("insert into rights (rightid,groupid,permission,id) values ('116','110','2','190')"))
-		return SUCCEED;
-
-	return FAIL;
+	return add_right(116, 110, 190);
 }
 
 static int	DBpatch_3000107(void)
 {
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK <= DBexecute("insert into rights (rightid,groupid,permission,id) values ('106','100','2','200')"))
-		return SUCCEED;
-
-	return FAIL;
+	return add_right(106, 100, 200);
 }
 
 static int	DBpatch_3000108(void)
 {
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK <= DBexecute("insert into rights (rightid,groupid,permission,id) values ('117','110','2','120')"))
-		return SUCCEED;
-
-	return FAIL;
+	return add_right(117, 110, 120);
 }
 
 static int	DBpatch_3000109(void)
 {
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK <= DBexecute("insert into rights (rightid,groupid,permission,id) values ('107','100','2','120')"))
-		return SUCCEED;
-
-	return FAIL;
+	return add_right(107, 100, 120);
 }
 
 static int	add_hosts_to_group(const char *tld_type, zbx_uint64_t groupid)
@@ -221,10 +201,9 @@ static int	add_hosts_to_group(const char *tld_type, zbx_uint64_t groupid)
 
 	if (ZBX_DB_OK > DBexecute(
 			"update ids"
-			" set nextid=" ZBX_FS_UI64
+			" set nextid=(select max(hostgroupid) from hosts_groups)"
 			" where table_name='hosts_groups'"
-				" and field_name='hostgroupid'",
-			hostgroupid))
+				" and field_name='hostgroupid'"))
 	{
 		return FAIL;
 	}
