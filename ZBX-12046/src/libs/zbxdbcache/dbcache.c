@@ -3133,14 +3133,14 @@ zbx_uint64_t	DCget_nextid(const char *table_name, int num)
 			table->recid,
 			min, max);
 
-	if (SUCCEED == DBtxn_status())
+	if (NULL != result)
 	{
+		zbx_strlcpy(id->table_name, table_name, sizeof(id->table_name));
+
 		if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]))
 			id->lastid = min;
 		else
 			ZBX_STR2UINT64(id->lastid, row[0]);
-
-		zbx_strlcpy(id->table_name, table_name, sizeof(id->table_name));
 
 		nextid = id->lastid + 1;
 		id->lastid += num;
