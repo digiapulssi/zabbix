@@ -390,8 +390,6 @@ foreach my $proxyid (sort keys %{$proxies}) {
                                           'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
 }
 
-create_probe_status_host($probes_mon_groupid);
-
 exit;
 
 ########### FUNCTIONS ###############
