@@ -290,6 +290,13 @@ sub dw_get_cycle_id
 	$ns_id = 0 unless (defined($ns_id));
 	$ip_id = 0 unless (defined($ip_id));
 
+	# todo phase 1: for RDDS the target and the IP can be an empty string:
+	if ($service_category_id == 3)
+	{
+		$ns_id = 0 if ($ns_id eq "");
+		$ip_id = 0 if ($ip_id eq "");
+	}
+
 	if (opt('dry-run'))
 	{
 		return sprintf(
