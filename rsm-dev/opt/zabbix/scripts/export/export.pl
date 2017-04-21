@@ -64,7 +64,7 @@ use constant rsm_rdds_probe_result => [
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
 
-parse_opts('tld=s', 'date=s', 'day=n', 'shift=n');
+parse_opts('tld=s', 'date=s', 'day=n', 'shift=n', 'forse!');
 setopt('nolog');
 
 my $config = get_rsm_config();
@@ -72,7 +72,7 @@ set_slv_config($config);
 
 db_connect();
 
-__validate_input();
+__validate_input() unless (opt('force'));
 
 my ($d, $m, $y) = split('/', getopt('date'));
 
