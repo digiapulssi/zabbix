@@ -497,7 +497,7 @@ sub __fetch_id($$$) {
 
     if (defined($result->{'error'})) {
 	$self->set_last_error($result->{'error'});
-	return;
+	return $result;
     }
 
     if (@{$result->{'result'}} > 1) {
