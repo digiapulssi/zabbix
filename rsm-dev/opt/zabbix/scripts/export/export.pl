@@ -857,7 +857,7 @@ sub __save_csv_data
 									$ip_version_id = '';
 								}
 
-								if ($metric_ref->{JSON_TAG_RTT()})
+								if (defined($metric_ref->{JSON_TAG_RTT()}))
 								{
 									$rtt = $metric_ref->{JSON_TAG_RTT()};
 								}
