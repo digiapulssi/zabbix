@@ -165,13 +165,17 @@ if ($result ne true) {
     pfail("Could not connect to Zabbix API. ".$result->{'data'});
 }
 
-$tld_type_probe_results_groupid = create_group($OPTS{'type'}.' Probe results');
-my $error = get_api_error($tld_type_probe_results_groupid);
-if (defined($error)) {
-    if (zbx_need_relogin($tld_type_probe_results_groupid) eq true) {
-	goto RELOGIN if (--$attempts);
+# todo phase 1: getting $tld_type_probe_results_groupid must happen in one place only, use other first method to identify need for relogin
+if (!$OPTS{'list-services'} && !$OPTS{'get-nsservers-list'})
+{
+    $tld_type_probe_results_groupid = create_group($OPTS{'type'}.' Probe results');
+    my $error = get_api_error($tld_type_probe_results_groupid);
+    if (defined($error)) {
+	if (zbx_need_relogin($tld_type_probe_results_groupid) eq true) {
+	    goto RELOGIN if (--$attempts);
+	}
+	pfail($error);
     }
-    pfail($error);
 }
 
 if (defined($OPTS{'set-type'})) {
@@ -1166,9 +1170,10 @@ Other options
                 if none or all services specified - will disable the whole TLD
 	--list-services
 		list services of each TLD, the output is comma-separated list:
-                <TLD>,<TLD-TYPE>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>
+                <TLD>,<TLD-TYPE>,<TLD-STATUS>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>
 	--get-nsservers-list
-		CSV formatted list of NS + IP server pairs for specified TLD
+		CSV formatted list of NS + IP server pairs for specified TLD:
+		<TLD>,<IP-VERSION>,<NAME-SERVER>,<IP>
 	--update-nsservers
 		update all NS + IP pairs for specified TLD.
 	--resolver=IP
