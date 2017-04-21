@@ -157,15 +157,22 @@ pfail("Zabbix API URL is not specified. Please check configuration file") unless
 pfail("Username for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_user'};
 pfail("Password for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_password'};
 
-my $result = zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
+my $attempts = 3;
+my $result;
+RELOGIN: $result = zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($result ne true) {
     pfail("Could not connect to Zabbix API. ".$result->{'data'});
 }
 
 $tld_type_probe_results_groupid = create_group($OPTS{'type'}.' Probe results');
-
-pfail $tld_type_probe_results_groupid->{'data'} if check_api_error($tld_type_probe_results_groupid) eq true;
+my $error = get_api_error($tld_type_probe_results_groupid);
+if (defined($error)) {
+    if (zbx_need_relogin($tld_type_probe_results_groupid) eq true) {
+	goto RELOGIN if (--$attempts);
+    }
+    pfail($error);
+}
 
 if (defined($OPTS{'set-type'})) {
     if (set_tld_type($OPTS{'tld'}, $OPTS{'type'}, $tld_type_probe_results_groupid) == true)

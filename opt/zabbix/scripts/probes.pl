@@ -59,7 +59,8 @@ if (!defined($section))
 	exit(1);
 }
 
-zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
+my $attempts = 3;
+RELOGIN: zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($OPTS{'delete'}) {
     delete_probe($OPTS{'probe'});
@@ -68,7 +69,14 @@ elsif ($OPTS{'disable'}) {
     disable_probe($OPTS{'probe'});
 }
 elsif ($OPTS{'add'}) {
-    create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
+    my $result = create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
+    my $error = get_api_error($result);
+    if (defined($error)) {
+	if (zbx_need_relogin($result) eq true) {
+	    goto RELOGIN if (--$attempts);
+	}
+	pfail($error);
+    }
     add_probe($OPTS{'probe'}, $OPTS{'ip'}, ($OPTS{'port'} ? $OPTS{'port'} : DEFAULT_PROBE_PORT), $OPTS{'psk-identity'}, $OPTS{'psk'});
 }
 elsif($OPTS{'rename'}) {

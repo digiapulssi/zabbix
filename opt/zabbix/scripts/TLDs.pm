@@ -8,6 +8,7 @@ use Data::Dumper;
 use base 'Exporter';
 
 our @EXPORT = qw(zbx_connect check_api_error get_proxies_list
+		get_api_error zbx_need_relogin
 		create_probe_status_host
 		create_probe_template create_probe_status_template create_host create_group create_template create_item create_trigger create_macro update_root_servers
 		create_passive_proxy is_probe_exist get_host_group get_template get_probe get_host
@@ -40,7 +41,25 @@ sub zbx_connect($$$;$) {
 sub check_api_error($) {
     my $result = shift;
 
-    return true if 'HASH' eq ref($result) and (defined $result->{'error'} or defined $result->{'code'});
+    return true if ('HASH' eq ref($result) && (defined($result->{'error'}) || defined($result->{'code'})));
+
+    return false;
+}
+
+sub get_api_error($) {
+    my $result = shift;
+
+    return $result->{'error'}->{'data'} if (check_api_error($result) eq true);
+
+    return;
+}
+
+sub zbx_need_relogin($) {
+    my $result = shift;
+
+    if (check_api_error($result) eq true) {
+	return true if ($result->{'error'}->{'code'} eq "-32602")
+    }
 
     return false;
 }
@@ -380,9 +399,11 @@ sub create_host {
 sub create_group {
     my $name = shift;
 
-    my $groupid;
+    my $groupid = $zabbix->exist('hostgroup',{'filter' => {'name' => $name}});
 
-    unless ($groupid = $zabbix->exist('hostgroup',{'filter' => {'name' => $name}})) {
+    return $groupid if (check_api_error($groupid) eq true);
+
+    unless ($groupid) {
         my $result = $zabbix->create('hostgroup', {'name' => $name});
 	$groupid = $result->{'groupids'}[0];
     }
@@ -477,7 +498,7 @@ sub create_macro {
     my $templateid = shift;
     my $force_update = shift;
 
-    my $result;
+    my ($result, $error);
 
     if (defined($templateid)) {
 	if ($zabbix->get('usermacro',{'countOutput' => 1, 'hostids' => $templateid, 'filter' => {'macro' => $name}})) {
@@ -492,7 +513,10 @@ sub create_macro {
 	return $result->{'hostmacroids'}[0];
     }
     else {
-	if ($zabbix->get('usermacro',{'countOutput' => 1, 'globalmacro' => 1, 'filter' => {'macro' => $name}})) {
+	$result = $zabbix->get('usermacro',{'countOutput' => 1, 'globalmacro' => 1, 'filter' => {'macro' => $name}});
+	return $result if (check_api_error($result) eq true);
+
+	if ($result) {
             $result = $zabbix->get('usermacro',{'output' => 'globalmacroid', 'globalmacro' => 1, 'filter' => {'macro' => $name}} );
             $zabbix->macro_global_update({'globalmacroid' => $result->{'globalmacroid'}, 'value' => $value}) if defined $result->{'globalmacroid'}
 															and defined($force_update);
