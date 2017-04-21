@@ -2101,11 +2101,10 @@ sub __get_rdds_test_values
 
 		my $cycleclock = __cycle_start($clock, $delay);
 
-		my $test_ref = $result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0];
-
-		$test_ref->{$type} = $value;
-		$test_ref->{JSON_TAG_CLOCK()} = $clock;
-		$test_ref->{JSON_TAG_DESCRIPTION()} = $description;
+		# todo phase 1: NB! Do not use references, that won't add data!
+		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
+		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{JSON_TAG_CLOCK()} = $clock;
+		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{JSON_TAG_DESCRIPTION()} = $description;
 	}
 
 	my $str_rows_ref = __db_select_binds("select itemid,value,clock from history_str where itemid=? and " . sql_time_condition($start, $end), \@str_itemids);
@@ -2132,9 +2131,8 @@ sub __get_rdds_test_values
 
 		my $cycleclock = __cycle_start($clock, $delay);
 
-		my $test_ref = $result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0];
-
-		$test_ref->{$type} = $value;
+		# todo phase 1: NB! Do not use references, that won't add data!
+		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
 	}
 
 	return $result;
@@ -2191,8 +2189,6 @@ sub __get_epp_test_values
 		my $command = __get_epp_dbl_type($key);
 		my $cycleclock = __cycle_start($clock, $delay);
 
-		my $test_ref = $result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0];
-
 		# TODO: EPP: it's not yet decided if 3 EPP RTTs
 		# (login, info, update) are coming in one metric or 3
 		# separate ones. Based on that decision in the future
@@ -2201,9 +2197,10 @@ sub __get_epp_test_values
 		# __add_csv_test() 3 times, for each RTT.
 		# NB! Sync with export.pl part that calls this function!
 
-		$test_ref->{$command} = $value;
-		$test_ref->{JSON_TAG_CLOCK()} = $clock;
-		$test_ref->{JSON_TAG_DESCRIPTION()} = get_detailed_result($valuemaps, $value);
+		# todo phase 1: NB! Do not use references, that won't add data!
+		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{$command} = $value;
+		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_CLOCK()} = $clock;
+		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_DESCRIPTION()} = get_detailed_result($valuemaps, $value);
 	}
 
 	my $str_rows_ref = __db_select_binds("select itemid,value,clock from history_str where itemid=? and " . sql_time_condition($start, $end), \@str_itemids);
@@ -2227,9 +2224,8 @@ sub __get_epp_test_values
 
 		my $cycleclock = __cycle_start($clock, $delay);
 
-		my $test_ref = $result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0];
-
-		$test_ref->{JSON_TAG_TARGET_IP()} = $ip;
+		# todo phase 1: NB! Do not use references, that won't add data!
+		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_TARGET_IP()} = $ip;
 	}
 
 	return $result;
