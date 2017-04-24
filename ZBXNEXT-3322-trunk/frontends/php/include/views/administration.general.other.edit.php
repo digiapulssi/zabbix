@@ -18,10 +18,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-
-$widget = (new CWidget())
-	->setTitle(_('Other configuration parameters'))
-	->setTopHeader(makeAdministrationGeneralMenu('adm.other.php'));
+$menu_items = getAdministrationGeneralMenuItems();
+$widget = (new CHeaderMenuWidget($menu_items, 'adm.other.php'));
 
 $otherTab = new CFormList();
 

@@ -71,15 +71,12 @@ if ($data['config']['blink_period'] > 0) {
 $help = get_icon('overviewhelp');
 $help->setHint($help_hint);
 
-$widget = (new CWidget())
-	->setTitle(_('Overview'))
-	->setTopHeader(
-		prepareHeaderDropDownMenu(
-			[SHOW_TRIGGERS => ['title' => _('Overview Triggers')], SHOW_DATA => ['title' => _('Overview Data')]],
-			'type',
-			(int) $this->data['type']
-		)
-	)
+$menu_items = prepareHeaderMenuItems(
+	[SHOW_TRIGGERS => ['title' => _('Overview Triggers')], SHOW_DATA => ['title' => _('Overview Data')]],
+	'type',
+	(int) $this->data['type']
+);
+$widget = (new CHeaderMenuWidget($menu_items))
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addItem((new CList())

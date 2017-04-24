@@ -17,10 +17,8 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
-
-$widget = (new CWidget())
-	->setTitle(_('Images'))
-	->setTopHeader(makeAdministrationGeneralMenu('adm.images.php'));
+$menu_items = getAdministrationGeneralMenuItems();
+$widget = new CHeaderMenuWidget('adm.images.php');
 
 $imageForm = (new CForm('post', null, 'multipart/form-data'))
 	->addVar('form', $this->data['form']);

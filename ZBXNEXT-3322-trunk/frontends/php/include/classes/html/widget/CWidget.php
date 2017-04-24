@@ -21,13 +21,6 @@
 
 class CWidget {
 
-	/**
-	 * Top header
-	 *
-	 * @var CTag|null|array
-	 */
-	private $top_header = null;
-
 	private $title = null;
 	private $controls = null;
 
@@ -51,28 +44,6 @@ class CWidget {
 		return $this;
 	}
 
-	/**
-	 * Get top header
-	 *
-	 * @return array|CTag|null
-	 */
-	public function getTopHeader()
-	{
-		return $this->top_header;
-	}
-
-	/**
-	 * Set top header
-	 *
-	 * @param array|CTag|null $top_header
-	 * @return $this
-	 */
-	public function setTopHeader($top_header)
-	{
-		$this->top_header = $top_header;
-		return $this;
-	}
-
 	public function addItem($items = null) {
 		if (!is_null($items)) {
 			$this->body[] = $items;
@@ -84,8 +55,9 @@ class CWidget {
 	public function get() {
 		$widget = [];
 
-		if ($this->top_header !== null || $this->title !== null || $this->controls !== null) {
-			$widget[] = $this->createTopHeader();
+		$topHeader = $this->createTopHeader();
+		if ($topHeader !== null) {
+			$widget[] = $topHeader;
 		}
 
 		return [$widget, $this->body];
@@ -103,26 +75,38 @@ class CWidget {
 		return unpack_object($tab);
 	}
 
+	/**
+	 * Create top header
+	 *
+	 * @return CDiv|null
+	 */
 	private function createTopHeader() {
 		$divs = [];
 
-		if ($this->top_header === null) {
-			if ($this->title !== null) {
-				// adding default h1 element based on given title
-				$this->top_header[] =  new CTag('h1', true, $this->title);
-			}
-		}
-
-		if ($this->top_header !== null) {
-			$divs[] = (new CDiv($this->top_header))->addClass(ZBX_STYLE_CELL);
+		$title = $this->createTitle();
+		if ($title !== null) {
+			$divs[] = $title;
 		}
 
 		if ($this->controls !== null) {
 			$divs[] = (new CDiv($this->controls))->addClass(ZBX_STYLE_CELL);
 		}
 
-		return (new CDiv($divs))
-			->addClass(ZBX_STYLE_HEADER_TITLE)
-			->addClass(ZBX_STYLE_TABLE);
+		if (count($divs) > 0) {
+			return (new CDiv($divs))
+				->addClass(ZBX_STYLE_HEADER_TITLE)
+				->addClass(ZBX_STYLE_TABLE);
+		}
+	}
+
+	/**
+	 * Create title
+	 *
+	 * @return CDiv
+	 */
+	protected function createTitle() {
+		if ($this->title !== null) {
+			return (new CDiv(new CTag('h1', true, $this->title)))->addClass(ZBX_STYLE_CELL);
+		}
 	}
 }

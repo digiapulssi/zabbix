@@ -19,17 +19,13 @@
 **/
 
 /**
- * C header drop down menu
+ * C header menu widget
  *
- * @author Maksims Tarleckis <maksims.tarleckis@zabbix.com>
  */
-class CHeaderDropDownMenu
+class CHeaderMenuWidget extends CWidget
 {
-
 	/**
 	 * Menu_map
-	 *
-	 * example: [['url' => 'overview.php?groupid=23', 'title' => 'Overview triggers', 'menu_name' => 'triggers'],..]
 	 *
 	 * @var array
 	 */
@@ -45,8 +41,12 @@ class CHeaderDropDownMenu
 	/**
 	 * Constructor
 	 *
-	 * @param array       $menu_map
-	 * @param null|string $selected_url
+	 * @param array $menu_map
+	 * @param string $menu_map[]['url']       menu action url
+	 * @param string $menu_map[]['title']     menu item title (can be shown only when selected if menu_name specified)
+	 * @param string $menu_map[]['menu_name'] (optional) menu item title (shown only in dropdown menu)
+	 *
+	 * @param null|string $selected_url       url related to selected menu item
 	 */
 	public function __construct(array $menu_map, $selected_url = null)
 	{
@@ -55,12 +55,7 @@ class CHeaderDropDownMenu
 		return $this;
 	}
 
-	/**
-	 * Make and return drop-down menu inside div element
-	 *
-	 * @return CDiv
-	 */
-	public function makeDropDownDiv()
+	protected function createTitle()
 	{
 		$list = new CList();
 		$list->addClass('header-dropdown-list')

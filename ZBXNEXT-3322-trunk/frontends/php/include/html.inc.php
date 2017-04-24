@@ -822,13 +822,11 @@ function makePageFooter($with_version = true)
 }
 
 /**
- * Renders a drop-down menu for the Administration->General section.
+ * Get header menu items for administration page
  *
- * @param string $selected current url
- *
- * @return CDiv
+ * @return array
  */
-function makeAdministrationGeneralMenu($selected)
+function getAdministrationGeneralMenuItems()
 {
 	$menu_map = [
 		['title' => _('GUI'), 'url' => 'adm.gui.php'],
@@ -843,9 +841,8 @@ function makeAdministrationGeneralMenu($selected)
 		['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
 		['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
 	];
-	$menu = new CHeaderDropDownMenu($menu_map, $selected);
 
-	return $menu->makeDropDownDiv();
+	return $menu_map;
 }
 
 /**
@@ -973,21 +970,21 @@ function getTriggerSeverityCss($config)
 }
 
 /**
- * Prepare dropdown menu by given menu items
+ * Prepare dropdown menu item by given items and current url
  *
- * @param array  $menu_items (['desc' => ['title' => 'Sorting Descending', 'menu_name' => 'desc'], 'asc' => ..])
- * @param string $url_param  name of url parameter
- * @param mixed  $selected   url param value from current url (selected menu item)
- * @return CDiv
+ * @param array  $menu_items   menu items
+ * @param string $url_param    name of url parameter
+ * @param mixed  $selected_url url param value from current url (selected menu item)
+ * @return array
  */
-function prepareHeaderDropDownMenu($menu_items, $url_param, $selected) {
+function prepareHeaderMenuItems($menu_items, $url_param, $selected_url) {
 
 	$url_builder = CUrlFactory::getContextUrl();
 	foreach ($menu_items as $url_param_value => &$data) {
-		if ($url_param_value === $selected) {
+		if ($url_param_value === $selected_url) {
 			continue;
 		}
 		$data['url'] = $url_builder->setArgument($url_param, $url_param_value)->getUrl();
 	}
-	return (new CHeaderDropDownMenu($menu_items))->makeDropDownDiv();
+	return $menu_items;
 }

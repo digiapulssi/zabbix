@@ -61,20 +61,16 @@ if ($zabbixServer->getError()) {
 
 	require_once dirname(__FILE__).'/include/page_footer.php';
 }
-
-$widget = (new CWidget())
-	->setTitle(_('Queue of items to be updated'))
-	->setTopHeader(
-		prepareHeaderDropDownMenu(
-			$menu = [
-				QUEUE_OVERVIEW          => ['title' => _('Queue Overview')],
-				QUEUE_OVERVIEW_BY_PROXY => ['title' => _('Queue Overview by proxy')],
-				QUEUE_DETAILS           => ['title' => _('Queue Details')]
-			],
-			'config',
-			(int) $config
-		)
-	);
+$menu_items = prepareHeaderMenuItems(
+	$menu = [
+		QUEUE_OVERVIEW          => ['title' => _('Queue Overview')],
+		QUEUE_OVERVIEW_BY_PROXY => ['title' => _('Queue Overview by proxy')],
+		QUEUE_DETAILS           => ['title' => _('Queue Details')]
+	],
+	'config',
+	(int) $config
+);
+$widget = new CHeaderMenuWidget($menu_items);
 
 $table = new CTableInfo();
 

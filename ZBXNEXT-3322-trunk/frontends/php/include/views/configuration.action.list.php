@@ -18,20 +18,18 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-$widget = (new CWidget())
-	->setTitle(_('Actions'))
-	->setTopHeader(
-		prepareHeaderDropDownMenu(
-			[
-				EVENT_SOURCE_TRIGGERS          => ['title' => _('Trigger actions')],
-				EVENT_SOURCE_DISCOVERY         => ['title' => _('Discovery actions')],
-				EVENT_SOURCE_AUTO_REGISTRATION => ['title' => _('Auto registration actions')],
-				EVENT_SOURCE_INTERNAL          => ['title' => _('Internal actions')]
-			],
-			'eventsource',
-			(int) $data['eventsource']
-		)
-	)
+$menu_items = prepareHeaderMenuItems(
+	[
+		EVENT_SOURCE_TRIGGERS          => ['title' => _('Trigger actions')],
+		EVENT_SOURCE_DISCOVERY         => ['title' => _('Discovery actions')],
+		EVENT_SOURCE_AUTO_REGISTRATION => ['title' => _('Auto registration actions')],
+		EVENT_SOURCE_INTERNAL          => ['title' => _('Internal actions')]
+	],
+	'eventsource',
+	(int) $data['eventsource']
+);
+
+$widget = (new CHeaderMenuWidget($menu_items))
 	->addItem((new CFilter('web.actionconf.filter.state'))
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))

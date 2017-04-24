@@ -17,10 +17,8 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
-
-$widget = (new CWidget())
-	->setTitle(_('Icon mapping'))
-	->setTopHeader(makeAdministrationGeneralMenu('adm.iconmapping.php'))
+$menu_items = getAdministrationGeneralMenuItems();
+$widget = (new CHeaderMenuWidget($menu_items, 'adm.iconmapping.php'))
 	->setControls((new CForm())
 		->cleanItems()
 		->addItem((new CList())

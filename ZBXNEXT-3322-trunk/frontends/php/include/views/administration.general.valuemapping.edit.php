@@ -21,9 +21,8 @@
 
 include('include/views/js/administration.general.valuemapping.edit.js.php');
 
-$widget = (new CWidget())
-	->setTitle(_('Value mapping'))
-	->setTopHeader(makeAdministrationGeneralMenu('adm.valuemapping.php'));
+$menu_items = getAdministrationGeneralMenuItems();
+$widget = new CHeaderMenuWidget($menu_items, 'adm.valuemapping.php');
 
 $form = (new CForm())->addVar('form', $data['form']);
 
