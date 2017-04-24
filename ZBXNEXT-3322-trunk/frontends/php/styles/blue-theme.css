@@ -2171,7 +2171,8 @@ a.header-dropdown {
     border-bottom-color: #fff; }
 
 .header-dropdown-list-item {
-  display: block !important; }
+  display: block !important;
+  padding-left: 0px !important; }
 
 .overlay-dialogue {
   position: absolute;

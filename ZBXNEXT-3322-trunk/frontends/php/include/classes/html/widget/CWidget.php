@@ -107,8 +107,10 @@ class CWidget {
 		$divs = [];
 
 		if ($this->top_header === null) {
-			// adding default h1 element based on given title
-			$this->addHOneToTopHeader($this->title);
+			if ($this->title !== null) {
+				// adding default h1 element based on given title
+				$this->top_header[] =  new CTag('h1', true, $this->title);
+			}
 		}
 
 		if ($this->top_header !== null) {
@@ -122,19 +124,5 @@ class CWidget {
 		return (new CDiv($divs))
 			->addClass(ZBX_STYLE_HEADER_TITLE)
 			->addClass(ZBX_STYLE_TABLE);
-	}
-
-	/**
-	 * Add h1 element to top header elements
-	 *
-	 * @param string $title
-	 * @return $this
-	 */
-	public function addHOneToTopHeader($title)
-	{
-		if ($title !== null) {
-			$this->top_header[] =  new CTag('h1', true, $this->title);
-		}
-		return $this;
 	}
 }

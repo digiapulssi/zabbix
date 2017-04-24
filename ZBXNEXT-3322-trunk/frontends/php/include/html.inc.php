@@ -830,10 +830,6 @@ function makePageFooter($with_version = true)
  */
 function makeAdministrationGeneralMenu($selected)
 {
-	$list = new CList();
-	$list->addClass('header-dropdown-list')
-		->setId('adm-menu-dropdown-list');
-
 	$menu_map = [
 		['title' => _('GUI'), 'url' => 'adm.gui.php'],
 		['title' => _('Housekeeping'), 'url' => 'adm.housekeeper.php'],
