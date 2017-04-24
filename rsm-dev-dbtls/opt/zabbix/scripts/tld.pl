@@ -63,7 +63,7 @@ use TLDs;
 
 sub create_tld_host($$$$);
 sub create_probe_health_tmpl;
-sub manage_tld_objects($$$$$);
+sub manage_tld_objects($$$$$$);
 sub manage_tld_hosts($$);
 
 sub get_nsservers_list($);
@@ -79,7 +79,7 @@ my ($rsm_groupid, $rsm_hostid);
 
 my ($ns_servers, $root_servers_macros);
 
-my ($main_templateid, $tld_groupid, $tld_type_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid, $proxy_mon_templateid);
+my ($main_templateid, $tld_groupid, $tld_type_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid, $proxy_mon_templateid);
 
 my $config = get_rsm_config();
 
@@ -157,14 +157,29 @@ pfail("Zabbix API URL is not specified. Please check configuration file") unless
 pfail("Username for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_user'};
 pfail("Password for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_password'};
 
-my $result = zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
+my $attempts = 3;
+my $result;
+RELOGIN: $result = zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($result ne true) {
     pfail("Could not connect to Zabbix API. ".$result->{'data'});
 }
 
+# todo phase 1: getting $tld_type_probe_results_groupid must happen in one place only, use other first method to identify need for relogin
+if (!$OPTS{'list-services'} && !$OPTS{'get-nsservers-list'})
+{
+    $tld_type_probe_results_groupid = create_group($OPTS{'type'}.' Probe results');
+    my $error = get_api_error($tld_type_probe_results_groupid);
+    if (defined($error)) {
+	if (zbx_need_relogin($tld_type_probe_results_groupid) eq true) {
+	    goto RELOGIN if (--$attempts);
+	}
+	pfail($error);
+    }
+}
+
 if (defined($OPTS{'set-type'})) {
-    if (set_tld_type($OPTS{'tld'}, $OPTS{'type'}) == true)
+    if (set_tld_type($OPTS{'tld'}, $OPTS{'type'}, $tld_type_probe_results_groupid) == true)
     {
 	print("${OPTS{'tld'}} set to \"${OPTS{'type'}}\"\n");
     }
@@ -249,13 +264,13 @@ if (defined($OPTS{'update-nsservers'})) {
 
 #### Deleting TLD or TLD objects ####
 if (defined($OPTS{'delete'})) {
-    manage_tld_objects('delete', $OPTS{'tld'}, $OPTS{'dns'}, $OPTS{'epp'}, $OPTS{'rdds'});
+    manage_tld_objects('delete', $OPTS{'tld'}, $OPTS{'dns'}, $OPTS{'dnssec'}, $OPTS{'epp'}, $OPTS{'rdds'});
     exit;
 }
 
 #### Disabling TLD or TLD objects ####
 if (defined($OPTS{'disable'})) {
-    manage_tld_objects('disable',$OPTS{'tld'}, $OPTS{'dns'}, $OPTS{'epp'}, $OPTS{'rdds'});
+    manage_tld_objects('disable',$OPTS{'tld'}, $OPTS{'dns'}, $OPTS{'dnssec'}, $OPTS{'epp'}, $OPTS{'rdds'});
     exit;
 }
 
@@ -288,6 +303,10 @@ pfail("Main templateid is not defined") unless defined $main_templateid;
 $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
+
+$tld_probe_results_groupid = create_group('TLD Probe results');
+
+pfail $tld_probe_results_groupid->{'data'} if check_api_error($tld_probe_results_groupid) eq true;
 
 $tlds_groupid = create_group('TLDs');
 
@@ -360,15 +379,16 @@ foreach my $proxyid (sort keys %{$proxies}) {
 
     create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1);
 
-    create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $proxy_groupid}],
+#  TODO: add the host above
+#	  to more host groups: "TLD Probe Results" and\/or "gTLD Probe Results" and perhaps others
+
+    create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $proxy_groupid}, {'groupid' => $tld_probe_results_groupid}, {'groupid' => $tld_type_probe_results_groupid}],
                                           'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_templateid}],
                                           'host' => $OPTS{'tld'}.' '.$probe_name,
                                           'status' => $status,
                                           'proxy_hostid' => $proxyid,
                                           'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
 }
-
-create_probe_status_host($probes_mon_groupid);
 
 exit;
 
@@ -465,10 +485,10 @@ sub create_item_dns_rtt {
 
     my $options = {'name' => 'DNS RTT of $2 ($3) ('.$proto_uc.')',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS RTT ('.$proto_uc.')', $templateid)],
                                               'type' => 2, 'value_type' => 0,
-					      'status' => ITEM_STATUS_ACTIVE,
                                               'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'}};
 
     create_item($options);
@@ -488,28 +508,28 @@ sub create_slv_item {
     {
 	$options = {'name' => $name,
                                               'key_'=> $key,
+					      'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $hostid,
                                               'type' => 2, 'value_type' => 3,
 					      'applications' => $applicationids,
-					    'status' => ITEM_STATUS_ACTIVE,
 					      'valuemapid' => rsm_value_mappings->{'rsm_avail'}};
     }
     elsif ($value_type == VALUE_TYPE_NUM)
     {
 	$options = {'name' => $name,
                                               'key_'=> $key,
+					      'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $hostid,
                                               'type' => 2, 'value_type' => 3,
-					    'status' => ITEM_STATUS_ACTIVE,
 					      'applications' => $applicationids};
     }
     elsif ($value_type == VALUE_TYPE_PERC) {
 	$options = {'name' => $name,
                                               'key_'=> $key,
+					      'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $hostid,
                                               'type' => 2, 'value_type' => 0,
                                               'applications' => $applicationids,
-					    'status' => ITEM_STATUS_ACTIVE,
 					      'units' => '%'};
     }
     else {
@@ -530,11 +550,12 @@ sub create_item_dns_udp_upd {
 
     my $options = {'name' => 'DNS update time of $2 ($3)',
                                               'key_'=> 'rsm.dns.udp.upd[{$RSM.TLD},'.$ns_name.','.$ip.']',
+					      'status' => (defined($OPTS{'epp-servers'}) ? ITEM_STATUS_ACTIVE : ITEM_STATUS_DISABLED),
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS RTT ('.$proto_uc.')', $templateid)],
                                               'type' => 2, 'value_type' => 0,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'},
-		                              'status' => (defined($OPTS{'epp-servers'}) ? 0 : 1)};
+                                              'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'}};
+
     return create_item($options);
 }
 
@@ -548,6 +569,7 @@ sub create_items_dns {
 
     my $options = {'name' => 'Number of working DNS Name Servers of $1 ('.$proto_uc.')',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS ('.$proto_uc.')', $templateid)],
                                               'type' => 3, 'value_type' => 3,
@@ -561,6 +583,7 @@ sub create_items_dns {
 
     $options = {'name' => 'Number of working DNS Name Servers of $1 ('.$proto_uc.')',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('DNS ('.$proto_uc.')', $templateid)],
                                               'type' => 3, 'value_type' => 3,
@@ -580,6 +603,7 @@ sub create_items_rdds {
 
     my $options = {'name' => 'RDDS43 IP of $1',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_43],
                                               'type' => 2, 'value_type' => 1};
@@ -589,6 +613,7 @@ sub create_items_rdds {
 
     $options = {'name' => 'RDDS43 RTT of $1',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_43],
                                               'type' => 2, 'value_type' => 0,
@@ -600,11 +625,11 @@ sub create_items_rdds {
 
 	$options = {'name' => 'RDDS43 update time of $1',
 		    'key_'=> $item_key,
+		    'status' => ITEM_STATUS_ACTIVE,
 		    'hostid' => $templateid,
 		    'applications' => [$applicationid_43],
 		    'type' => 2, 'value_type' => 0,
-		    'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'},
-		    'status' => 0};
+		    'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'}};
 	create_item($options);
     }
 
@@ -612,6 +637,7 @@ sub create_items_rdds {
 
     $options = {'name' => 'RDDS80 IP of $1',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_80],
                                               'type' => 2, 'value_type' => 1};
@@ -621,6 +647,7 @@ sub create_items_rdds {
 
     $options = {'name' => 'RDDS80 RTT of $1',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_80],
                                               'type' => 2, 'value_type' => 0,
@@ -631,6 +658,7 @@ sub create_items_rdds {
 
     $options = {'name' => 'RDDS availability',
                                               'key_'=> $item_key,
+                                              'status' => ITEM_STATUS_ACTIVE,
                                               'hostid' => $templateid,
                                               'applications' => [get_application_id('RDDS', $templateid)],
                                               'type' => 3, 'value_type' => 3,
@@ -651,6 +679,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP service availability at $1 ($2)',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 3, 'value_type' => 3,
@@ -662,6 +691,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP IP of $1',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 1};
@@ -672,6 +702,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP $2 command RTT of $1',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
@@ -683,6 +714,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP $2 command RTT of $1',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
@@ -694,6 +726,7 @@ sub create_items_epp {
 
     $options = {'name' => 'EPP $2 command RTT of $1',
 		'key_'=> $item_key,
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 0,
@@ -843,6 +876,7 @@ sub create_main_template {
 
         $options = {'name' => 'Value of $1 variable',
                     'key_'=> $key,
+		    'status' => ITEM_STATUS_ACTIVE,
                     'hostid' => $templateid,
                     'applications' => [$appid],
                     'params' => '{$'.$m.'}',
@@ -891,7 +925,7 @@ sub create_main_template {
     create_macro('{$RSM.DNS.TESTPREFIX}', $OPTS{'dns-test-prefix'}, $templateid);
     create_macro('{$RSM.RDDS.TESTPREFIX}', $OPTS{'rdds-test-prefix'}, $templateid) if (defined($OPTS{'rdds-test-prefix'}));
     create_macro('{$RSM.RDDS.NS.STRING}', defined($OPTS{'rdds-ns-string'}) ? $OPTS{'rdds-ns-string'} : cfg_default_rdds_ns_string, $templateid);
-    create_macro('{$RSM.TLD.DNSSEC.ENABLED}', defined($OPTS{'dnssec'}) ? 1 : 0, $templateid, true);
+    create_macro('{$RSM.TLD.DNSSEC.ENABLED}', $OPTS{'dnssec'}, $templateid, true);
     create_macro('{$RSM.TLD.RDDS.ENABLED}', defined($OPTS{'rdds43-servers'}) ? 1 : 0, $templateid, true);
     create_macro('{$RSM.TLD.EPP.ENABLED}', defined($OPTS{'epp-servers'}) ? 1 : 0, $templateid, true);
 
@@ -1112,6 +1146,8 @@ sub usage {
 
     my $local_server_id = get_rsm_local_id($config);
 
+    # todo phase 1: updated --delete and --disable sections, explaining better how these options work
+
     print <<EOF;
 
     Usage: $0 [options]
@@ -1125,14 +1161,17 @@ Required options
 
 Other options
         --delete
-                delete specified TLD
+                delete specified TLD or TLD services specifyed by: --dns, --rdds, --epp
+                if none or all services specified - will delete the whole TLD
         --disable
-                disable specified TLD
+                disable specified TLD or TLD services specified by: --dns, --rdds, --epp
+                if none or all services specified - will disable the whole TLD
 	--list-services
 		list services of each TLD, the output is comma-separated list:
-                <TLD>,<TLD-TYPE>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>
+                <TLD>,<TLD-TYPE>,<TLD-STATUS>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>
 	--get-nsservers-list
-		CSV formatted list of NS + IP server pairs for specified TLD
+		CSV formatted list of NS + IP server pairs for specified TLD:
+		<TLD>,<IP-VERSION>,<NAME-SERVER>,<IP>
 	--update-nsservers
 		update all NS + IP pairs for specified TLD.
 	--resolver=IP
@@ -1258,6 +1297,7 @@ sub validate_input {
     #$OPTS{'ipv6'} = 0 if (defined($OPTS{'update-nsservers'}));
 
     $OPTS{'dns'} = 0 unless defined $OPTS{'dns'};
+    $OPTS{'dnssec'} = 0 unless defined $OPTS{'dnssec'};
     $OPTS{'rdds'} = 0 unless defined $OPTS{'rdds'};
     $OPTS{'epp'} = 0 unless defined $OPTS{'epp'};
 
@@ -1289,6 +1329,7 @@ sub create_tld_host($$$$) {
 
     my $tld_hostid = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $tlds_groupid}, {'groupid' => $tld_type_groupid}],
                               'host' => $tld_name,
+                              'status' => HOST_STATUS_MONITORED,
                               'interfaces' => [{'type' => INTERFACE_TYPE_AGENT, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
 
     pfail $tld_hostid->{'data'} if check_api_error($tld_hostid) eq true;
@@ -1306,6 +1347,7 @@ sub create_probe_health_tmpl() {
 
     my $options = {'name' => 'Availability of $2 Probe',
                                           'key_'=> $item_key,
+                                          'status' => ITEM_STATUS_ACTIVE,
                                           'hostid' => $templateid,
                                           'applications' => [get_application_id('Probe Availability', $templateid)],
                                           'type' => 5, 'value_type' => 3,
@@ -1323,6 +1365,7 @@ sub create_probe_health_tmpl() {
     # todo phase 1: make sure this is in phase 2
     $options = {'name' => 'Probe main status',
 		'key_'=> 'rsm.probe.online',
+		'status' => ITEM_STATUS_ACTIVE,
 		'hostid' => $templateid,
 		'applications' => [get_application_id('Probe Availability', $templateid)],
 		'type' => 2, 'value_type' => 3,
@@ -1333,27 +1376,26 @@ sub create_probe_health_tmpl() {
     return $templateid;
 }
 
-sub manage_tld_objects($$$$$) {
+# todo phase 1: fixed delete/disable TLD/service by handling services input (specifying none means action on the whole tld)
+# todo phase 1: fixed deletion of main host ($main_hostid)
+sub manage_tld_objects($$$$$$) {
     my $action = shift;
     my $tld = shift;
     my $dns = shift;
+    my $dnssec = shift;
     my $epp = shift;
     my $rdds = shift;
 
-    my $types = {'dns' => $dns, 'epp' => $epp, 'rdds' => $rdds};
+    my $types = {'dns' => $dns, 'dnssec' => $dnssec, 'epp' => $epp, 'rdds' => $rdds};
 
     my $main_temlateid;
-
-    my @tld_hostids;
-
-    print "Trying to $action '$tld' TLD\n";
 
     print "Getting main host of the TLD: ";
     my $main_hostid = get_host($tld, false);
 
     if (scalar(%{$main_hostid})) {
         $main_hostid = $main_hostid->{'hostid'};
-	print "success\n";
+	print "$main_hostid\n";
     }
     else {
         print "Could not find '$tld' host\n";
@@ -1365,21 +1407,42 @@ sub manage_tld_objects($$$$$) {
 
     if (scalar(%{$tld_template})) {
         $main_templateid = $tld_template->{'templateid'};
-	print "success\n";
+	print "$main_templateid\n";
     }
     else {
         print "Could not find 'Template .$tld' template\n";
         exit;
     }
 
+    my @tld_hostids;
+
+    my @affected_services;
+    my $total_services = scalar(keys(%{$types}));
+    foreach my $s (keys(%{$types}))
+    {
+	push(@affected_services, $s) if ($types->{$s} eq true);
+    }
+
+    if (scalar(@affected_services) == 0)
+    {
+	    foreach my $s (keys(%{$types}))
+	    {
+		    $types->{$s} = true;
+	    }
+    }
+
+    print "Requested to $action '$tld'";
+    if (scalar(@affected_services) != 0 && scalar(@affected_services) != $total_services)
+    {
+	    print(" (", join(',', @affected_services), ")");
+    }
+    print "\n";
+
     foreach my $host (@{$tld_template->{'hosts'}}) {
 	push @tld_hostids, $host->{'hostid'};
     }
 
-
-    if ($dns eq true and $epp eq true and $rdds eq true) {
-	print "You have choosed all possible options. Trying to $action TLD.\n";
-
+    if ($types->{'dns'} eq true and $types->{'epp'} eq true and $types->{'rdds'} eq true) {
 	my @tmp_hostids;
 	my @hostids_arr;
 
@@ -1405,9 +1468,10 @@ sub manage_tld_objects($$$$$) {
 
 	if ($action eq 'delete') {
 	    remove_hosts( \@hostids_arr );
+	    remove_hosts( [$main_hostid] );
 	    remove_templates([ $main_templateid ]);
 
-	    my $hostgroupid = get_host_group('TLD '.$tld, false);
+	    my $hostgroupid = get_host_group('TLD '.$tld, false, false);
 	    $hostgroupid = $hostgroupid->{'groupid'};
 	    remove_hostgroups( [ $hostgroupid ] );
 	    return;
@@ -1417,13 +1481,21 @@ sub manage_tld_objects($$$$$) {
     foreach my $type (keys %{$types}) {
 	next if $types->{$type} eq false;
 
+	if ($type eq 'dnssec')
+	{
+		create_macro('{$RSM.TLD.DNSSEC.ENABLED}', 0, $main_templateid, true) if ($types->{$type} eq true);
+		next;
+	}
+
 	my @itemids;
 
 	my $template_items = get_items_like($main_templateid, $type, true);
 	my $host_items = get_items_like($main_hostid, $type, false);
 
-	if (scalar(%{$template_items})) {
-	    foreach my $itemid (%{$template_items}) {
+	# todo phase 1: bug fix, was "scalar(%)"
+	if (scalar(keys(%{$template_items}))) {
+	    # todo phase 1: bug fix, was "foreach (%)"
+	    foreach my $itemid (keys(%{$template_items})) {
 		push @itemids, $itemid;
 	    }
 	}
@@ -1431,8 +1503,10 @@ sub manage_tld_objects($$$$$) {
 	    print "Could not find $type related items on the template level\n";
 	}
 
-	if (scalar(%{$host_items})) {
-	    foreach my $itemid (%{$host_items}) {
+	# todo phase 1: bug fix, was "scalar(%)"
+	if (scalar(keys(%{$host_items}))) {
+	    # todo phase 1: bug fix, was "foreach (%)"
+	    foreach my $itemid (keys(%{$host_items})) {
 		push @itemids, $itemid;
 	    }
 	}
@@ -1442,6 +1516,7 @@ sub manage_tld_objects($$$$$) {
 
 	if ($action eq 'disable' and scalar(@itemids)) {
 	    disable_items(\@itemids);
+	    create_macro('{$RSM.TLD.'.uc($type).'.ENABLED}', 0, $main_templateid, true);
 	}
 
 	if ($action eq 'delete' and scalar(@itemids)) {
@@ -1470,7 +1545,7 @@ sub compare_arrays($$) {
 }
 
 sub get_tld_list() {
-    my $tlds = get_host_group('TLDs', true);
+    my $tlds = get_host_group('TLDs', true, false);
 
     my @result;
 
@@ -1581,7 +1656,7 @@ sub update_nsservers($$) {
 		    push @to_be_removed, $ns_ip;
 
 		    # todo phase 1: added
-		    print("delete\t: $old_nsname ($old_ip)\n");
+		    print("disable\t: $old_nsname ($old_ip)\n");
 		}
 	    }
 	}

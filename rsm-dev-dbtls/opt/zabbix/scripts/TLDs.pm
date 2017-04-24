@@ -8,7 +8,7 @@ use Data::Dumper;
 use base 'Exporter';
 
 our @EXPORT = qw(zbx_connect check_api_error get_proxies_list
-		create_probe_status_host
+		get_api_error zbx_need_relogin
 		create_probe_template create_probe_status_template create_host create_group create_template create_item create_trigger create_macro update_root_servers
 		create_passive_proxy is_probe_exist get_host_group get_template get_probe get_host
 		remove_templates remove_hosts remove_hostgroups remove_probes remove_items
@@ -40,7 +40,25 @@ sub zbx_connect($$$;$) {
 sub check_api_error($) {
     my $result = shift;
 
-    return true if 'HASH' eq ref($result) and (defined $result->{'error'} or defined $result->{'code'});
+    return true if ('HASH' eq ref($result) && (defined($result->{'error'}) || defined($result->{'code'})));
+
+    return false;
+}
+
+sub get_api_error($) {
+    my $result = shift;
+
+    return $result->{'error'}->{'data'} if (check_api_error($result) eq true);
+
+    return;
+}
+
+sub zbx_need_relogin($) {
+    my $result = shift;
+
+    if (check_api_error($result) eq true) {
+	return true if ($result->{'error'}->{'code'} eq "-32602")
+    }
 
     return false;
 }
@@ -75,15 +93,33 @@ sub get_probe($$) {
     return $result;
 }
 
-sub get_host_group($$) {
+sub get_host_group($$$) {
     my $group_name = shift;
     my $selectHosts = shift;
+    my $selectType = shift;
 
     my $options = {'output' => 'extend', 'filter' => {'name' => $group_name}};
 
     $options->{'selectHosts'} = ['hostid', 'host', 'name'] if (defined($selectHosts) and $selectHosts eq true);
 
     my $result = $zabbix->get('hostgroup', $options);
+
+    if ($selectType eq true && scalar(@{$result->{'hosts'}}) != 0)
+    {
+	    foreach my $tld (@{$result->{'hosts'}}) {
+		    my $hostid = $tld->{'hostid'};
+		    $options = {'output' => 'extend', 'filter' => {'hostid' => $hostid}};
+		    $options->{'selectGroups'} = ['name'];
+		    my $result2 = $zabbix->get('host', $options);
+		    foreach my $group (@{$result2->{'groups'}}) {
+			    my $name = $group->{'name'};
+			    next unless ($name =~ /^[a-z]+TLD$/);
+			    $tld->{'type'} = $group->{'name'};
+			    last;
+		    }
+		    die("cannot get TLD type of \"", $tld->{'host'}, "\"") unless (defined($tld->{'type'}));
+	    }
+    }
 
     return $result;
 }
@@ -362,9 +398,11 @@ sub create_host {
 sub create_group {
     my $name = shift;
 
-    my $groupid;
+    my $groupid = $zabbix->exist('hostgroup',{'filter' => {'name' => $name}});
 
-    unless ($groupid = $zabbix->exist('hostgroup',{'filter' => {'name' => $name}})) {
+    return $groupid if (check_api_error($groupid) eq true);
+
+    unless ($groupid) {
         my $result = $zabbix->create('hostgroup', {'name' => $name});
 	$groupid = $result->{'groupids'}[0];
     }
@@ -459,7 +497,7 @@ sub create_macro {
     my $templateid = shift;
     my $force_update = shift;
 
-    my $result;
+    my ($result, $error);
 
     if (defined($templateid)) {
 	if ($zabbix->get('usermacro',{'countOutput' => 1, 'hostids' => $templateid, 'filter' => {'macro' => $name}})) {
@@ -474,7 +512,10 @@ sub create_macro {
 	return $result->{'hostmacroids'}[0];
     }
     else {
-	if ($zabbix->get('usermacro',{'countOutput' => 1, 'globalmacro' => 1, 'filter' => {'macro' => $name}})) {
+	$result = $zabbix->get('usermacro',{'countOutput' => 1, 'globalmacro' => 1, 'filter' => {'macro' => $name}});
+	return $result if (check_api_error($result) eq true);
+
+	if ($result) {
             $result = $zabbix->get('usermacro',{'output' => 'globalmacroid', 'globalmacro' => 1, 'filter' => {'macro' => $name}} );
             $zabbix->macro_global_update({'globalmacroid' => $result->{'globalmacroid'}, 'value' => $value}) if defined $result->{'globalmacroid'}
 															and defined($force_update);
@@ -642,128 +683,6 @@ sub add_dependency($$) {
     return $result;
 }
 
-sub create_probe_status_host {
-    my $groupid = shift;
-
-    my $name = 'Probes Status';
-
-    my $hostid = create_host({'groups' => [{'groupid' => $groupid}],
-                                          'host' => $name,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-                                                            'ip'=> '127.0.0.1',
-                                                            'dns' => '', 'port' => '10050'}]
-                });
-
-    my $interfaceid = $zabbix->get('hostinterface', {'hostids' => $hostid, 'output' => ['interfaceid']});
-
-    my $options = {'name' => 'Total number of probes for DNS tests',
-                                              'key_'=> 'online.nodes.pl[total,dns]',
-                                              'hostid' => $hostid,
-					      'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-					      'delay' => 300,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Number of online probes for DNS tests',
-                                              'key_'=> 'online.nodes.pl[online,dns]',
-                                              'hostid' => $hostid,
-					      'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-					      'delay' => 60,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Total number of probes for EPP tests',
-                                              'key_'=> 'online.nodes.pl[total,epp]',
-                                              'hostid' => $hostid,
-                                              'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-                                              'delay' => 300,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Number of online probes for EPP tests',
-                                              'key_'=> 'online.nodes.pl[online,epp]',
-                                              'hostid' => $hostid,
-                                              'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-                                              'delay' => 60,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Total number of probes for RDDS tests',
-                                              'key_'=> 'online.nodes.pl[total,rdds]',
-                                              'hostid' => $hostid,
-                                              'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-                                              'delay' => 300,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Number of online probes for RDDS tests',
-                                              'key_'=> 'online.nodes.pl[online,rdds]',
-                                              'hostid' => $hostid,
-                                              'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-                                              'delay' => 60,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Total number of probes with enabled IPv4',
-                                              'key_'=> 'online.nodes.pl[total,ip4]',
-                                              'hostid' => $hostid,
-                                              'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-                                              'delay' => 300,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Number of online probes with enabled IPv4',
-                                              'key_'=> 'online.nodes.pl[online,ip4]',
-                                              'hostid' => $hostid,
-                                              'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-                                              'delay' => 60,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Total number of probes with enabled IPv6',
-                                              'key_'=> 'online.nodes.pl[total,ip6]',
-                                              'hostid' => $hostid,
-                                              'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-                                              'delay' => 300,
-                                              };
-    create_item($options);
-
-    $options = {'name' => 'Number of online probes with enabled IPv6',
-                                              'key_'=> 'online.nodes.pl[online,ip6]',
-                                              'hostid' => $hostid,
-                                              'interfaceid' => $interfaceid->{'interfaceid'},
-                                              'applications' => [get_application_id('Probes availability', $hostid)],
-                                              'type' => 10, 'value_type' => 3,
-                                              'delay' => 60,
-                                              };
-    create_item($options);
-
-    # todo phase 1: changed IPv4 and IPv6 => IP4 and IP6
-    create_online_probes_trigger('DNS', '{$RSM.DNS.PROBE.ONLINE}', $name);
-    create_online_probes_trigger('RDDS', '{$RSM.RDDS.PROBE.ONLINE}', $name);
-    create_online_probes_trigger('EPP', '{$RSM.RDDS.PROBE.ONLINE}', $name);
-    create_online_probes_trigger('IP4', '{$RSM.IP4.MIN.PROBE.ONLINE}', $name);
-    create_online_probes_trigger('IP6', '{$RSM.IP6.MIN.PROBE.ONLINE}', $name);
-}
-
 sub get_items_like($$$) {
     my $hostid = shift;
     my $like = shift;
@@ -791,9 +710,10 @@ sub get_triggers_by_items($) {
     return $result;
 }
 
-sub set_tld_type($$) {
+sub set_tld_type($$$) {
 	my $tld = shift;
 	my $tld_type = shift;
+	my $tld_type_probe_results_groupid = shift;
 
 	my %tld_type_groups = (@{[TLD_TYPE_G]} => undef, @{[TLD_TYPE_CC]} => undef, @{[TLD_TYPE_OTHER]} => undef, @{[TLD_TYPE_TEST]} => undef);
 
@@ -853,6 +773,7 @@ sub set_tld_type($$) {
 
 	# add new group to the options
 	push(@{$options->{'groups'}}, {'groupid' => $tld_type_groups{$tld_type}});
+	push(@{$options->{'groups'}}, {'groupid' => $tld_type_probe_results_groupid});
 
 	$result = create_host($options);
 
@@ -952,23 +873,6 @@ sub create_cron_jobs($) {
 sub pfail {
     print("Error: ", @_, "\n");
     exit -1;
-}
-
-sub create_online_probes_trigger {
-	my $feature = shift;
-	my $macro = shift;
-	my $host_name = shift;
-
-	my $feature_lc = lc($feature);
-
-	my $options =
-	{
-		'description' => 'Number of '.$feature.'-enabled online probes is less than '.$macro,
-		'expression' => '{'.$host_name.':online.nodes.pl[online,'.$feature_lc.'].last(0)}<'.$macro,
-		'priority' => '5'
-	};
-
-	return create_trigger($options, $host_name);
 }
 
 1;

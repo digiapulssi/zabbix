@@ -64,7 +64,7 @@ use constant rsm_rdds_probe_result => [
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
 
-parse_opts('tld=s', 'date=s', 'day=n', 'shift=n');
+parse_opts('tld=s', 'date=s', 'day=n', 'shift=n', 'force!');
 setopt('nolog');
 
 my $config = get_rsm_config();
@@ -72,7 +72,7 @@ set_slv_config($config);
 
 db_connect();
 
-__validate_input();
+__validate_input() unless (opt('force'));
 
 my ($d, $m, $y) = split('/', getopt('date'));
 
@@ -857,7 +857,7 @@ sub __save_csv_data
 									$ip_version_id = '';
 								}
 
-								if ($metric_ref->{JSON_TAG_RTT()})
+								if (defined($metric_ref->{JSON_TAG_RTT()}))
 								{
 									$rtt = $metric_ref->{JSON_TAG_RTT()};
 								}
@@ -1503,6 +1503,13 @@ sub __db_select_binds
 	return \@rows;
 }
 
+sub __print_undef
+{
+	my $string = shift;
+
+	return (defined($string) ? $string : "UNDEF");
+}
+
 # todo phase 1: taken from RSMSLV.pm phase 2
 # NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
 # (supports identifying service error)
@@ -1513,7 +1520,11 @@ sub __best_rtt
 	my $new_rtt = shift;
 	my $new_description = shift;
 
-	dbg("cur_rtt:$cur_rtt cur_description:", ($cur_description ? $cur_description : "UNDEF"), " new_rtt:$new_rtt new_description:", ($new_description ? $new_description : "UNDEF"));
+	if (opt('debug'))
+	{
+		dbg("cur_rtt:%s cur_description:%s new_rtt:%s new_description:%s", __print_undef($cur_rtt),
+			__print_undef($cur_description), __print_undef($new_rtt), __print_undef($new_description));
+	}
 
 	if (!defined($cur_rtt) && !defined($cur_description))
 	{
@@ -2090,11 +2101,10 @@ sub __get_rdds_test_values
 
 		my $cycleclock = __cycle_start($clock, $delay);
 
-		my $test_ref = $result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0];
-
-		$test_ref->{$type} = $value;
-		$test_ref->{JSON_TAG_CLOCK()} = $clock;
-		$test_ref->{JSON_TAG_DESCRIPTION()} = $description;
+		# todo phase 1: NB! Do not use references, that won't add data!
+		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
+		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{JSON_TAG_CLOCK()} = $clock;
+		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{JSON_TAG_DESCRIPTION()} = $description;
 	}
 
 	my $str_rows_ref = __db_select_binds("select itemid,value,clock from history_str where itemid=? and " . sql_time_condition($start, $end), \@str_itemids);
@@ -2121,9 +2131,8 @@ sub __get_rdds_test_values
 
 		my $cycleclock = __cycle_start($clock, $delay);
 
-		my $test_ref = $result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0];
-
-		$test_ref->{$type} = $value;
+		# todo phase 1: NB! Do not use references, that won't add data!
+		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
 	}
 
 	return $result;
@@ -2180,8 +2189,6 @@ sub __get_epp_test_values
 		my $command = __get_epp_dbl_type($key);
 		my $cycleclock = __cycle_start($clock, $delay);
 
-		my $test_ref = $result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0];
-
 		# TODO: EPP: it's not yet decided if 3 EPP RTTs
 		# (login, info, update) are coming in one metric or 3
 		# separate ones. Based on that decision in the future
@@ -2190,9 +2197,10 @@ sub __get_epp_test_values
 		# __add_csv_test() 3 times, for each RTT.
 		# NB! Sync with export.pl part that calls this function!
 
-		$test_ref->{$command} = $value;
-		$test_ref->{JSON_TAG_CLOCK()} = $clock;
-		$test_ref->{JSON_TAG_DESCRIPTION()} = get_detailed_result($valuemaps, $value);
+		# todo phase 1: NB! Do not use references, that won't add data!
+		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{$command} = $value;
+		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_CLOCK()} = $clock;
+		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_DESCRIPTION()} = get_detailed_result($valuemaps, $value);
 	}
 
 	my $str_rows_ref = __db_select_binds("select itemid,value,clock from history_str where itemid=? and " . sql_time_condition($start, $end), \@str_itemids);
@@ -2216,9 +2224,8 @@ sub __get_epp_test_values
 
 		my $cycleclock = __cycle_start($clock, $delay);
 
-		my $test_ref = $result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0];
-
-		$test_ref->{JSON_TAG_TARGET_IP()} = $ip;
+		# todo phase 1: NB! Do not use references, that won't add data!
+		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_TARGET_IP()} = $ip;
 	}
 
 	return $result;

@@ -54,7 +54,7 @@ $widget->addItem($filter);
 $table = (new CTableInfo())
 	->setHeader([
 		_('Time'),
-		_('Effects rolling week'),
+		_('Affects rolling week'),
 		SPACE
 ]);
 
@@ -117,6 +117,6 @@ $testsInfoTable->addRow([[
 
 $widget->additem([$testsInfoTable]);
 
-$widget->addItem([$table]);
+$widget->addItem([$table, $data['paging']]);
 
 return $widget;

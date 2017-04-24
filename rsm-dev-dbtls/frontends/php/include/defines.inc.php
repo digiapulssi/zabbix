@@ -22,7 +22,7 @@
 define('ZABBIX_VERSION',		'3.0.7');
 define('ZABBIX_API_VERSION',	'3.0.7');
 define('ZABBIX_EXPORT_VERSION',	'3.0');
-define('ZABBIX_DB_VERSION',		3000100);
+define('ZABBIX_DB_VERSION',		3000114);
 
 define('ZABBIX_COPYRIGHT_FROM',	'2001');
 define('ZABBIX_COPYRIGHT_TO',	'2016');
@@ -1387,8 +1387,9 @@ define('INCIDENT_FLAG_NORMAL',			0);
 define('INCIDENT_FLAG_FALSE_POSITIVE',	1);
 
 // SLA monitoring incident status
-define('DNS_NO_REPLY_ERROR_CODE',	-200);
-define('DNSSEC_FAIL_ERROR_CODE',	-204);
+define('ZBX_EC_DNS_NS_NOREPLY',		-200);
+define('ZBX_EC_DNS_NS_ERRSIG',		-204);
+define('ZBX_EC_DNS_RES_NOADBIT',	-206);
 
 define('MIN_PROBE_OK_RESULT_PERCENTAGE',	49);
 

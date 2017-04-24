@@ -48,10 +48,16 @@ function local_generateHeader($data) {
 	echo $pageHeader->getOutput();
 
 	if ($data['fullscreen'] == 0) {
-		global $ZBX_SERVER_NAME;
+		global $ZBX_SERVER_NAME, $DB;
+
+		$servers = new CComboBox('servers', null, 'window.location.href=this.value');
+		foreach ($DB['SERVERS'] as $server) {
+			$servers->addItem($server['URL'].'rsm.rollingweekstatus.php?sid='.CWebUser::getSessionCookie().'&set_sid=1',
+				$server['NAME'], ($ZBX_SERVER_NAME === $server['NAME']) ? 'no' : null);
+		}
 
 		$pageMenu = new CView('layout.htmlpage.menu', [
-			'server_name' => isset($ZBX_SERVER_NAME) ? $ZBX_SERVER_NAME : '',
+			'server_name' => $servers,
 			'menu' => [
 				'main_menu' => $main_menu,
 				'sub_menus' => $sub_menus,

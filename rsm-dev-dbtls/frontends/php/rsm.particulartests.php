@@ -286,6 +286,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	// get manual data
 	$ignoredHostIds = [];
+	$hostNames = [];
 
 	foreach ($manualItemIds as $itemId) {
 		$itemValue = DBfetch(DBselect(DBaddLimit(
@@ -389,7 +390,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			if (!$itemValue) {
 				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_NO_RESULT;
 			}
-			elseif ($itemValue['value'] < $udpRtt && $itemValue['value'] > DNS_NO_REPLY_ERROR_CODE) {
+			elseif ($itemValue['value'] < $udpRtt && $itemValue['value'] > ZBX_EC_DNS_NS_NOREPLY) {
 				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_UP;
 			}
 			else {
@@ -405,7 +406,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 
 			if ($itemValue) {
-				if ($itemValue['value'] != DNSSEC_FAIL_ERROR_CODE) {
+				if ($itemValue['value'] != ZBX_EC_DNS_NS_ERRSIG && $itemValue['value'] != ZBX_EC_DNS_RES_NOADBIT) {
 					$hosts[$item['hostid']]['value']['ok']++;
 				}
 				else {

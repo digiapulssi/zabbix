@@ -59,7 +59,8 @@ if (!defined($section))
 	exit(1);
 }
 
-zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
+my $attempts = 3;
+RELOGIN: zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($OPTS{'delete'}) {
     delete_probe($OPTS{'probe'});
@@ -68,7 +69,14 @@ elsif ($OPTS{'disable'}) {
     disable_probe($OPTS{'probe'});
 }
 elsif ($OPTS{'add'}) {
-    create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
+    my $result = create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
+    my $error = get_api_error($result);
+    if (defined($error)) {
+	if (zbx_need_relogin($result) eq true) {
+	    goto RELOGIN if (--$attempts);
+	}
+	pfail($error);
+    }
     add_probe($OPTS{'probe'}, $OPTS{'ip'}, ($OPTS{'port'} ? $OPTS{'port'} : DEFAULT_PROBE_PORT), $OPTS{'psk-identity'}, $OPTS{'psk'});
 }
 elsif($OPTS{'rename'}) {
@@ -176,19 +184,23 @@ sub add_probe($$$$$) {
 
     ########## Creating TLD hosts for the Probe
 
-    my $tld_list = get_host_group('TLDs', true);
+    my $tld_list = get_host_group('TLDs', true, true);
+
+    my $tld_probe_results_groupid = create_group('TLD Probe results');
 
     print "Creating TLD hosts for the Probe...\n";
 
     foreach my $tld (@{$tld_list->{'hosts'}}) {
 	my $tld_name = $tld->{'name'};
 	my $tld_groupid = create_group('TLD '.$tld_name);
+	my $tld_type = $tld->{'type'};
+	my $tld_type_probe_results_groupid = create_group($tld_type.' Probe results');
 
 	my $main_templateid = create_template('Template '.$tld_name);
 
 	print "Creating '$tld_name $probe_name' host for '$tld_name' TLD: ";
 
-	my $tld_host = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $probe_hostgroup}],
+	my $tld_host = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $probe_hostgroup}, {'groupid' => $tld_probe_results_groupid}, {'groupid' => $tld_type_probe_results_groupid}],
                                           'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_tmpl}],
                                           'host' => $tld_name.' '.$probe_name,
                                           'proxy_hostid' => $probe,
@@ -201,7 +213,6 @@ sub add_probe($$$$$) {
     ##########
 
     print "The probe has been added successfully\n";
-    print "Do not forget to tune macros!\n";
 }
 
 sub delete_probe($) {
@@ -233,7 +244,7 @@ sub delete_probe($) {
 
     check_probe_data($probe_tmpl_status, "Probe Status monitoring template with name 'Template $probe_name Status' is not found", false);
 
-    $probe_hostgroup = get_host_group($probe_name, false);
+    $probe_hostgroup = get_host_group($probe_name, false, false);
 
     check_probe_data($probe_hostgroup, "Host group with name '$probe_name' is not found", false);
 
@@ -445,7 +456,7 @@ sub rename_probe($$) {
 
     check_probe_data($probe_tmpl_status, "Probe Status monitoring template with name 'Template $old_name Status' is not found", false);
 
-    $probe_hostgroup = get_host_group($old_name, false);
+    $probe_hostgroup = get_host_group($old_name, false, false);
 
     check_probe_data($probe_hostgroup, "Host group with name '$old_name' is not found", false);
     

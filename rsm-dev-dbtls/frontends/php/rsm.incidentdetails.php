@@ -361,12 +361,6 @@ if ($mainEvent) {
 		);
 	}
 
-	// pagination
-	$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl('rsm.incidentdetails.php'));
-	if (!$data['paging']->items) {
-		$data['paging'] = null;
-	}
-
 	// time correction after pagination
 	$firstElement = reset($data['tests']);
 	$lastElement = end($data['tests']);
@@ -442,6 +436,8 @@ if ($mainEvent) {
 		}
 	}
 }
+
+$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl());
 
 $rsmView = new CView('rsm.incidentdetails.list', $data);
 

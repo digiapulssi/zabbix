@@ -402,6 +402,8 @@ if ($items) {
 			}
 		}
 	}
+
+	$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl());
 }
 else {
 	access_deny();
