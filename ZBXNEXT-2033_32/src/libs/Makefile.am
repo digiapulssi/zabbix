@@ -24,7 +24,6 @@ DIST_SUBDIRS = \
 	zbxself \
 	zbxmodules \
 	zbxregexp
-
 if SERVER
 SERVER_SUBDIRS = \
 	zbxcommshigh \
@@ -35,7 +34,6 @@ SERVER_SUBDIRS = \
 	zbxmemory \
 	zbxserver \
 	zbxicmpping \
-	zbxmedia \
 	zbxself
 else
 if PROXY
@@ -71,6 +69,7 @@ SUBDIRS = \
 	zbxexec \
 	zbxmodules \
 	zbxregexp \
+	zbxmedia \
 	$(PROXY_SUBDIRS) \
 	$(SERVER_SUBDIRS) \
 	$(AGENT_SUBDIRS)
