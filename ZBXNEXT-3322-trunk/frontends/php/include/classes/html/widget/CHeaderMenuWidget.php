@@ -55,6 +55,11 @@ class CHeaderMenuWidget extends CWidget
 		return $this;
 	}
 
+	/**
+	 * Create dropdown menu in title
+	 *
+	 * @return CDiv
+	 */
 	protected function createTitle()
 	{
 		$list = new CList();
