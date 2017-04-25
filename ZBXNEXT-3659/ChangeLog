@@ -1,3 +1,44 @@
+Changes for 3.0.10rc1
+
+New features:
+
+Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 3.0.9
+
+3.0.9rc1 was released as 3.0.9 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.9rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
+..F....... [ZBX-11024] fixed popup window size in actions configuration form (miks)
+..F....... [ZBX-10997] fixed usage of wrong API in screen constructor (miks)
+..F....... [ZBX-11477] fixed lost user name in profile title (miks)
+A......... [ZBX-10373] fixed check for screen items overlap (gcalenko, Sasha)
+........S. [ZBX-11889] fixed lastaccess update for passive proxy (viktors)
+..F....... [ZBX-11960] fixed interface dragging in host edit page in Chome browser (vmurzins)
+..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
+..F....... [ZBX-11975] fixed undefined index error in web scenario step creation (vmurzins)
+.......PS. [ZBX-11980] fixed incorrect type handling in SSH checks (abs)
+...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
+..F....... [ZBX-11984] fixed host hyperlink style on event details page (gcalenko)
+.......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
+A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
+..F....... [ZBX-11933] added fullscreen parameter in link to submap in maps (vmurzins)
+A......... [ZBX-11893] fixed permission issue, when importing hosts that are monitored by proxy by Zabbix Admin type user (vmurzins)
+..F....... [ZBX-11905] fixed redirect to original requested page after login (vmurzins)
+.......PS. [ZBX-11864] fixed formatting of URLs if an IPv6 is used in simple HTTPS checks (abs)
+..F....... [ZBX-6851] fixed zero number display in Event ID column in windows eventlog history (vmurzins)
+..F....... [ZBX-11624] fixed undefined index error for regular expressions form (vmurzins)
+.......PS. [ZBX-11855] fixed data truncation when escaping strings that contain carriage return (vso)
+.......PS. [ZBX-11758] fixed crash in web monitoring when variable is empty or the first step was called regexp function on Solaris (Sergejs)
+.......PS. [ZBX-11765] fixed incorrect rollback in process of escalation for DB2 database (Sergejs)
+
+--------------------------------------------------------------------------------
 Changes for 3.0.8
 
 New features:
@@ -12,8 +53,8 @@ New features:
 ..F.....S. [ZBXNEXT-3572] added option to control amount of queued items (vjaceslavs)
 
 Bug fixes:
-...G...... [ZBX-11568] fixed wrong number round for cpu statistics (abs)
-........S. [ZBX-11781] fixed potential buffer overflow in the housekeeper process (abs)
+...G...... [ZBX-11568] fixed incorrect number rounding for CPU statistics (abs)
+........S. [ZBX-11781] fixed potential integer underflow/overflow in the housekeeper process (abs)
 .......PS. [ZBX-10902] fixed wrong averages in web monitoring if a web server doesn't respond to a request (abs)
 ..F....... [ZBX-11365] fixed button and multiselect positioning in action operations edit form (Ivo, Pavel)
 .......PS. [ZBX-11655] fixed Oracle and MySQL column limit calculation when using UTF-8 (vso)
@@ -32,7 +73,7 @@ A.F....... [ZBX-11482] improved performance for getting last value of web items 
 .......PS. [ZBX-11630] added escaping '"', ''', '&', '<' and '>' characters in SOAP XML for VMware requests (Sergejs)
 .......PS. [ZBX-11525] ensured unique value timestamps (clock, ns) from active agents and senders (dimir)
 ........S. [ZBX-11558] fixed removing trigger dependencies for triggers that are created from LLD prototypes (viktors)
-..F....... [ZBX-11385] fixed interfaces displaying in host inventory page (Oleg, Pavel)
+..F....... [ZBX-11385] fixed interface displaying in host inventory page (Oleg, Pavel)
 ...G...PS. [ZBX-11101] fixed potential crash in case of failure in zbx_tls_connect() with mbed TLS (gleb)
 ...G...PS. [ZBX-11101] fixed compilation warnings regarding gnutls_transport_set_ptr() with GnuTLS (asaveljevs, gleb)
 ...G...PS. [ZBX-11101] fixed certificates with empty issuer and subject fields being rejected with OpenSSL (asaveljevs, gleb)
@@ -1623,6 +1664,35 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
 
 --------------------------------------------------------------------------------
+Changes for 2.2.19rc1
+
+New features:
+
+Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.2.18
+
+2.2.18rc1 was released as 2.2.18 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.18rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
+A......... [ZBX-7492] fixed undefined index and invalid argument supplied to foreach errors in case if macros tag is empty or is not included in the XML import file (miks)
+..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
+...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
+.......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
+A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
+A......... [ZBX-11893] fixed permission issue, when importing hosts that are monitored by proxy by Zabbix Admin type user (vmurzins)
+..F....... [ZBX-11933] added fullscreen parameter in link to submap in maps (vmurzins)
+.......PS. [ZBX-11864] fixed formatting of URLs if an IPv6 is used in simple HTTPS checks (abs)
+..F....... [ZBX-6851] fixed zero number display in Event ID column in windows eventlog history (vmurzins)
+.......PS. [ZBX-11758] fixed crash in web monitoring when variable is empty or the first step was called regexp function on Solaris (Sergejs)
+
+--------------------------------------------------------------------------------
 Changes for 2.2.17
 
 New features:
@@ -1632,7 +1702,7 @@ A.F....... [ZBX-1357] updated Czech, French, Italian, Japanese, Korean, Polish, 
 Changes for 2.2.17rc1
 
 Bug fixes:
-........S. [ZBX-11781] fixed potential buffer overflow in the housekeeper process (abs)
+........S. [ZBX-11781] fixed potential integer underflow/overflow in the housekeeper process (abs)
 .......PS. [ZBX-10902] fixed wrong averages in web monitoring if a web server doesn't respond to a request (abs)
 .......PS. [ZBX-11655] fixed Oracle and MySQL column limit calculation when using UTF-8 (vso)
 ...G...... [ZBX-11719] fixed reading files with vfs.file.regmatch[] and vfs.file.cksum[] keys on windows (Sergejs)
@@ -3150,11 +3220,23 @@ A......... [ZBX-5498] applications API refactoring (Vedmak)
 ..F....... [ZBX-1845] added tabs to host massupdate form (Vedmak)
 
 --------------------------------------------------------------------------------
-Changes for 2.0.21rc1
+Changes for 2.0.22rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.0.21
+
+2.0.21rc1 was released as 2.0.21 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.0.21rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
 ...G...... [ZBX-11479] fixed threaded metric to handle interruption by a signal (vso)
 
 --------------------------------------------------------------------------------
