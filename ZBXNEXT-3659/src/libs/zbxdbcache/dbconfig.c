@@ -3342,7 +3342,7 @@ static void	dc_trigger_update_cache()
 
 				host = zbx_hashset_search(&config->hosts, &item->hostid);
 
-				if (HOST_STATUS_NOT_MONITORED != host->status)
+				if (NULL != host && HOST_STATUS_NOT_MONITORED != host->status)
 					continue;
 			}
 
