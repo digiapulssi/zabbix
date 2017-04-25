@@ -1815,19 +1815,16 @@ function show_messages($good = false, $okmsg = null, $errmsg = null) {
 	$imageMessages = [];
 
 	$title = $good ? $okmsg : $errmsg;
-	$temp = isset($ZBX_MESSAGES) ? $ZBX_MESSAGES : [];
-	$messages = [];
-
-	$debug_enabled = CWebUser::isLoggedIn() && CWebUser::getDebugMode();
-	foreach($temp as $message) {
-		$sql_error = array_key_exists('sql_error', $message) && ($message['sql_error'] === true);
-		if ($sql_error && ZBX_SHOW_SQL_ERRORS === false && !$debug_enabled) {
-			$message['message'] = _('SQL error, please contact Zabbix administrator.');
-		}
-		$messages[] = $message;
-	}
-
+	$messages = $ZBX_MESSAGES;
 	$ZBX_MESSAGES = [];
+
+	if (is_array($messages) && ZBX_SHOW_SQL_ERRORS === false && !CWebUser::getDebugMode()) {
+		foreach ($messages as & $message) {
+			if (array_key_exists('sql_error', $message) && ($message['sql_error'] === true)) {
+				$message['message'] = _('SQL error, please contact Zabbix administrator.');
+			}
+		}
+	}
 
 	switch ($page['type']) {
 		case PAGE_TYPE_IMAGE:
