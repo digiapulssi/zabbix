@@ -28,7 +28,7 @@
 typedef struct
 {
 	zbx_hashset_t	strpool;
-	int		refcount;
+	ZBX_DC_CONFIG	*cache;
 }
 zbx_dbsync_env_t;
 
@@ -104,27 +104,23 @@ static int	uint64_pair_compare_func(const void *d1, const void *d2)
 
 /******************************************************************************
  *                                                                            *
- * Function: dbsync_env_init                                                  *
+ * Function: zbx_dbsync_init_env                                              *
  *                                                                            *
  ******************************************************************************/
-static void	dbsync_env_init()
+void	zbx_dbsync_init_env(ZBX_DC_CONFIG *cache)
 {
-	if (0 < dbsync_env.refcount++)
-		return;
-
+	dbsync_env.cache = cache;
 	zbx_hashset_create(&dbsync_env.strpool, 100, dbsync_strpool_hash_func, dbsync_strpool_compare_func);
 }
+
 
 /******************************************************************************
  *                                                                            *
  * Function: dbsync_env_release                                               *
  *                                                                            *
  ******************************************************************************/
-static void	dbsync_env_release()
+void	zbx_dbsync_free_env()
 {
-	if (0 < --dbsync_env.refcount)
-		return;
-
 	zbx_hashset_destroy(&dbsync_env.strpool);
 }
 
@@ -241,8 +237,6 @@ static void	dbsync_add_row(zbx_dbsync_t *sync, zbx_uint64_t rowid, unsigned char
  ******************************************************************************/
 void	zbx_dbsync_init(zbx_dbsync_t *sync, unsigned char mode)
 {
-	dbsync_env_init();
-
 	sync->columns_num = 0;
 	sync->mode = mode;
 
@@ -295,8 +289,6 @@ void	zbx_dbsync_clear(zbx_dbsync_t *sync)
 		DBfree_result(sync->dbresult);
 		sync->dbresult = NULL;
 	}
-
-	dbsync_env_release();
 }
 
 /******************************************************************************
@@ -357,7 +349,7 @@ int	zbx_dbsync_next(zbx_dbsync_t *sync, zbx_uint64_t *rowid, char ***row, unsign
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_config(zbx_dbsync_t *sync)
 {
 	DB_RESULT	result;
 
@@ -406,7 +398,7 @@ int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, ZBX_DC_HOST *host, const DB_ROW row)
+static int	dbsync_compare_host(ZBX_DC_HOST *host, const DB_ROW row)
 {
 	signed char	ipmi_authtype;
 	unsigned char	ipmi_privilege;
@@ -469,7 +461,7 @@ static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, ZBX_DC_HOST *host, const DB
 
 	if (0 != ipmi_authtype || 2 != ipmi_privilege || '\0' != *row[5] || '\0' != *row[6])	/* useipmi */
 	{
-		if (NULL == (ipmihost = (ZBX_DC_IPMIHOST *)zbx_hashset_search(&cache->ipmihosts, &host->hostid)))
+		if (NULL == (ipmihost = (ZBX_DC_IPMIHOST *)zbx_hashset_search(&dbsync_env.cache->ipmihosts, &host->hostid)))
 			return FAIL;
 
 		if (ipmihost->ipmi_authtype != ipmi_authtype)
@@ -484,7 +476,7 @@ static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, ZBX_DC_HOST *host, const DB
 		if (FAIL == dbsync_compare_str(row[6], ipmihost->ipmi_password))
 			return FAIL;
 	}
-	else if (NULL != zbx_hashset_search(&cache->ipmihosts, &host->hostid))
+	else if (NULL != zbx_hashset_search(&dbsync_env.cache->ipmihosts, &host->hostid))
 		return FAIL;
 
 	return SUCCEED;
@@ -503,7 +495,7 @@ static int	dbsync_compare_host(ZBX_DC_CONFIG *cache, ZBX_DC_HOST *host, const DB
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_hosts(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -559,7 +551,7 @@ int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->hosts.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_hashset_create(&ids, dbsync_env.cache->hosts.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
 	{
@@ -568,16 +560,16 @@ int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (host = (ZBX_DC_HOST *)zbx_hashset_search(&cache->hosts, &rowid)))
+		if (NULL == (host = (ZBX_DC_HOST *)zbx_hashset_search(&dbsync_env.cache->hosts, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
-		else if (FAIL == dbsync_compare_host(cache, host, row))
+		else if (FAIL == dbsync_compare_host(host, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
 
 		if (ZBX_DBSYNC_ROW_NONE != tag)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->hosts, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->hosts, &iter);
 	while (NULL != (host = (ZBX_DC_HOST *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &host->hostid))
@@ -621,7 +613,7 @@ static int	dbsync_compare_host_inventory(const ZBX_DC_HOST_INVENTORY *hi, const 
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_host_inventory(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -645,7 +637,7 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->host_inventories.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->host_inventories.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -655,7 +647,7 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (hi = (ZBX_DC_HOST_INVENTORY *)zbx_hashset_search(&cache->host_inventories, &rowid)))
+		if (NULL == (hi = (ZBX_DC_HOST_INVENTORY *)zbx_hashset_search(&dbsync_env.cache->host_inventories, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
 		else if (FAIL == dbsync_compare_host_inventory(hi, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
@@ -664,7 +656,7 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->host_inventories, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->host_inventories, &iter);
 	while (NULL != (hi = (ZBX_DC_HOST_INVENTORY *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &hi->hostid))
@@ -690,7 +682,7 @@ int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_host_templates(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -718,10 +710,10 @@ int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&htmpls, cache->htmpls.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
+	zbx_hashset_create(&htmpls, dbsync_env.cache->htmpls.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
 
 	/* index all host->template links */
-	zbx_hashset_iter_reset(&cache->htmpls, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->htmpls, &iter);
 	while (NULL != (htmpl = (ZBX_DC_HTMPL *)zbx_hashset_iter_next(&iter)))
 	{
 		ht_local.first = htmpl->hostid;
@@ -821,7 +813,7 @@ out:
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_global_macros(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -845,7 +837,7 @@ int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->gmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->gmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -855,7 +847,7 @@ int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (gmacro = (ZBX_DC_GMACRO *)zbx_hashset_search(&cache->gmacros, &rowid)))
+		if (NULL == (gmacro = (ZBX_DC_GMACRO *)zbx_hashset_search(&dbsync_env.cache->gmacros, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
 		else if (FAIL == dbsync_compare_global_macro(gmacro, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
@@ -864,7 +856,7 @@ int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->gmacros, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->gmacros, &iter);
 	while (NULL != (gmacro = (ZBX_DC_GMACRO *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &gmacro->globalmacroid))
@@ -941,7 +933,7 @@ out:
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_host_macros(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -965,7 +957,7 @@ int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->hmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->hmacros.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -975,7 +967,7 @@ int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_search(&cache->hmacros, &rowid)))
+		if (NULL == (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_search(&dbsync_env.cache->hmacros, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
 		else if (FAIL == dbsync_compare_host_macro(hmacro, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
@@ -984,7 +976,7 @@ int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->hmacros, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->hmacros, &iter);
 	while (NULL != (hmacro = (ZBX_DC_HMACRO *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &hmacro->hostmacroid))
@@ -1061,7 +1053,7 @@ static int	dbsync_compare_interface(const ZBX_DC_INTERFACE *interface, const DB_
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_interfaces(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -1085,7 +1077,7 @@ int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->interfaces.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->interfaces.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -1095,7 +1087,7 @@ int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (interface = (ZBX_DC_INTERFACE *)zbx_hashset_search(&cache->interfaces, &rowid)))
+		if (NULL == (interface = (ZBX_DC_INTERFACE *)zbx_hashset_search(&dbsync_env.cache->interfaces, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
 		else if (FAIL == dbsync_compare_interface(interface, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
@@ -1104,7 +1096,7 @@ int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->interfaces, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->interfaces, &iter);
 	while (NULL != (interface = (ZBX_DC_INTERFACE *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &interface->interfaceid))
@@ -1131,7 +1123,7 @@ int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, const DB_ROW row)
+static int	dbsync_compare_item(const ZBX_DC_ITEM *item, const DB_ROW row)
 {
 	ZBX_DC_NUMITEM		*numitem;
 	ZBX_DC_SNMPITEM		*snmpitem;
@@ -1151,7 +1143,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	if (FAIL == dbsync_compare_uint64(row[1], item->hostid))
 		return FAIL;
 
-	if (NULL == (host = (ZBX_DC_HOST *)zbx_hashset_search(&cache->hosts, &item->hostid)))
+	if (NULL == (host = (ZBX_DC_HOST *)zbx_hashset_search(&dbsync_env.cache->hosts, &item->hostid)))
 		return FAIL;
 
 	if (0 != host->update_items)
@@ -1176,9 +1168,9 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	if (FAIL == dbsync_compare_uint64(row[27], item->interfaceid))
 		return FAIL;
 
-	if (ZBX_HK_OPTION_ENABLED == cache->config->hk.history_global)
+	if (ZBX_HK_OPTION_ENABLED == dbsync_env.cache->config->hk.history_global)
 	{
-		if (item->history != cache->config->hk.history)
+		if (item->history != dbsync_env.cache->config->hk.history)
 			return FAIL;
 	}
 	else
@@ -1203,7 +1195,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	if (FAIL == dbsync_compare_int(row[15], item->delay))
 		return FAIL;
 
-	flexitem = (ZBX_DC_FLEXITEM *)zbx_hashset_search(&cache->flexitems, &item->itemid);
+	flexitem = (ZBX_DC_FLEXITEM *)zbx_hashset_search(&dbsync_env.cache->flexitems, &item->itemid);
 	if ('\0' != *row[16])
 	{
 		if (NULL == flexitem)
@@ -1215,7 +1207,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != flexitem)
 		return FAIL;
 
-	numitem = (ZBX_DC_NUMITEM *)zbx_hashset_search(&cache->numitems, &item->itemid);
+	numitem = (ZBX_DC_NUMITEM *)zbx_hashset_search(&dbsync_env.cache->numitems, &item->itemid);
 	if (ITEM_VALUE_TYPE_FLOAT == value_type || ITEM_VALUE_TYPE_UINT64 == value_type)
 	{
 		if (NULL == numitem)
@@ -1230,9 +1222,9 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 		if (FAIL == dbsync_compare_str(row[35], numitem->formula))
 			return FAIL;
 
-		if (ZBX_HK_OPTION_ENABLED == cache->config->hk.trends_global)
+		if (ZBX_HK_OPTION_ENABLED == dbsync_env.cache->config->hk.trends_global)
 		{
-			if (numitem->trends != cache->config->hk.trends)
+			if (numitem->trends != dbsync_env.cache->config->hk.trends)
 				return FAIL;
 		}
 		else
@@ -1247,7 +1239,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != numitem)
 		return FAIL;
 
-	snmpitem = (ZBX_DC_SNMPITEM *)zbx_hashset_search(&cache->snmpitems, &item->itemid);
+	snmpitem = (ZBX_DC_SNMPITEM *)zbx_hashset_search(&dbsync_env.cache->snmpitems, &item->itemid);
 	if (SUCCEED == is_snmp_type(type))
 	{
 		if (NULL == snmpitem)
@@ -1283,7 +1275,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != snmpitem)
 		return FAIL;
 
-	ipmiitem = (ZBX_DC_IPMIITEM *)zbx_hashset_search(&cache->ipmiitems, &item->itemid);
+	ipmiitem = (ZBX_DC_IPMIITEM *)zbx_hashset_search(&dbsync_env.cache->ipmiitems, &item->itemid);
 	if (ITEM_TYPE_IPMI == item->type)
 	{
 		if (NULL == ipmiitem)
@@ -1295,7 +1287,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != ipmiitem)
 		return FAIL;
 
-	trapitem = (ZBX_DC_TRAPITEM *)zbx_hashset_search(&cache->trapitems, &item->itemid);
+	trapitem = (ZBX_DC_TRAPITEM *)zbx_hashset_search(&dbsync_env.cache->trapitems, &item->itemid);
 	if (ITEM_TYPE_TRAPPER == item->type && '\0' != *row[17])
 	{
 		if (NULL == trapitem)
@@ -1309,7 +1301,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != trapitem)
 		return FAIL;
 
-	logitem = (ZBX_DC_LOGITEM *)zbx_hashset_search(&cache->logitems, &item->itemid);
+	logitem = (ZBX_DC_LOGITEM *)zbx_hashset_search(&dbsync_env.cache->logitems, &item->itemid);
 	if (ITEM_VALUE_TYPE_LOG == item->value_type && '\0' != *row[18])
 	{
 		if (NULL == logitem)
@@ -1321,7 +1313,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != logitem)
 		return FAIL;
 
-	dbitem = (ZBX_DC_DBITEM *)zbx_hashset_search(&cache->dbitems, &item->itemid);
+	dbitem = (ZBX_DC_DBITEM *)zbx_hashset_search(&dbsync_env.cache->dbitems, &item->itemid);
 	if (ITEM_TYPE_DB_MONITOR == item->type && '\0' != *row[19])
 	{
 		if (NULL == dbitem)
@@ -1339,7 +1331,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != dbitem)
 		return FAIL;
 
-	sshitem = (ZBX_DC_SSHITEM *)zbx_hashset_search(&cache->sshitems, &item->itemid);
+	sshitem = (ZBX_DC_SSHITEM *)zbx_hashset_search(&dbsync_env.cache->sshitems, &item->itemid);
 	if (ITEM_TYPE_SSH == item->type)
 	{
 		if (NULL == sshitem)
@@ -1366,7 +1358,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != sshitem)
 		return FAIL;
 
-	telnetitem = (ZBX_DC_TELNETITEM *)zbx_hashset_search(&cache->telnetitems, &item->itemid);
+	telnetitem = (ZBX_DC_TELNETITEM *)zbx_hashset_search(&dbsync_env.cache->telnetitems, &item->itemid);
 	if (ITEM_TYPE_TELNET == item->type)
 	{
 		if (NULL == telnetitem)
@@ -1384,7 +1376,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != telnetitem)
 		return FAIL;
 
-	simpleitem = (ZBX_DC_SIMPLEITEM *)zbx_hashset_search(&cache->simpleitems, &item->itemid);
+	simpleitem = (ZBX_DC_SIMPLEITEM *)zbx_hashset_search(&dbsync_env.cache->simpleitems, &item->itemid);
 	if (ITEM_TYPE_SIMPLE == item->type)
 	{
 		if (NULL == simpleitem)
@@ -1399,7 +1391,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != simpleitem)
 		return FAIL;
 
-	jmxitem = (ZBX_DC_JMXITEM *)zbx_hashset_search(&cache->jmxitems, &item->itemid);
+	jmxitem = (ZBX_DC_JMXITEM *)zbx_hashset_search(&dbsync_env.cache->jmxitems, &item->itemid);
 	if (ITEM_TYPE_JMX == item->type)
 	{
 		if (NULL == jmxitem)
@@ -1414,7 +1406,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
 	else if (NULL != jmxitem)
 		return FAIL;
 
-	calcitem = (ZBX_DC_CALCITEM *)zbx_hashset_search(&cache->calcitems, &item->itemid);
+	calcitem = (ZBX_DC_CALCITEM *)zbx_hashset_search(&dbsync_env.cache->calcitems, &item->itemid);
 	if (ITEM_TYPE_CALCULATED == item->type)
 	{
 		if (NULL == calcitem)
@@ -1442,7 +1434,7 @@ static int	dbsync_compare_item(ZBX_DC_CONFIG *cache, const ZBX_DC_ITEM *item, co
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_items(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -1477,7 +1469,7 @@ int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->items.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->items.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -1487,16 +1479,16 @@ int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (item = (ZBX_DC_ITEM *)zbx_hashset_search(&cache->items, &rowid)))
+		if (NULL == (item = (ZBX_DC_ITEM *)zbx_hashset_search(&dbsync_env.cache->items, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
-		else if (FAIL == dbsync_compare_item(cache, item, row))
+		else if (FAIL == dbsync_compare_item(item, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
 
 		if (ZBX_DBSYNC_ROW_NONE != tag)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->items, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->items, &iter);
 	while (NULL != (item = (ZBX_DC_ITEM *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &item->itemid))
@@ -1555,7 +1547,7 @@ static int	dbsync_compare_trigger(const ZBX_DC_TRIGGER *trigger, const DB_ROW ro
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_triggers(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -1587,7 +1579,7 @@ int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->triggers.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->triggers.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -1597,7 +1589,7 @@ int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_search(&cache->triggers, &rowid)))
+		if (NULL == (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_search(&dbsync_env.cache->triggers, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
 		else if (FAIL == dbsync_compare_trigger(trigger, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
@@ -1606,7 +1598,7 @@ int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->triggers, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->triggers, &iter);
 	while (NULL != (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &trigger->triggerid))
@@ -1632,7 +1624,7 @@ int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_trigger_dependency(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_trigger_dependency(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -1666,10 +1658,10 @@ int	zbx_dbsync_compare_trigger_dependency(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sy
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&deps, cache->trigdeps.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
+	zbx_hashset_create(&deps, dbsync_env.cache->trigdeps.num_data * 5, uint64_pair_hash_func, uint64_pair_compare_func);
 
 	/* index all host->template links */
-	zbx_hashset_iter_reset(&cache->trigdeps, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->trigdeps, &iter);
 	while (NULL != (dep_down = (ZBX_DC_TRIGGER_DEPLIST *)zbx_hashset_iter_next(&iter)))
 	{
 		dep_local.first = dep_down->triggerid;
@@ -1752,7 +1744,7 @@ static int	dbsync_compare_function(const ZBX_DC_FUNCTION *function, const DB_ROW
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_functions(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -1783,7 +1775,7 @@ int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->functions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->functions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -1793,7 +1785,7 @@ int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[1]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (function = (ZBX_DC_FUNCTION *)zbx_hashset_search(&cache->functions, &rowid)))
+		if (NULL == (function = (ZBX_DC_FUNCTION *)zbx_hashset_search(&dbsync_env.cache->functions, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
 		else if (FAIL == dbsync_compare_function(function, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
@@ -1802,7 +1794,7 @@ int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->functions, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->functions, &iter);
 	while (NULL != (function = (ZBX_DC_FUNCTION *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &function->functionid))
@@ -1862,7 +1854,7 @@ static int	dbsync_compare_expression(const ZBX_DC_EXPRESSION *expression, const 
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_expressions(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -1887,7 +1879,7 @@ int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->expressions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->expressions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -1897,7 +1889,7 @@ int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[1]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_search(&cache->expressions, &rowid)))
+		if (NULL == (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_search(&dbsync_env.cache->expressions, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
 		else if (FAIL == dbsync_compare_expression(expression, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
@@ -1906,7 +1898,7 @@ int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->expressions, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->expressions, &iter);
 	while (NULL != (expression = (ZBX_DC_EXPRESSION *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &expression->expressionid))
@@ -1960,7 +1952,7 @@ static int	dbsync_compare_action(const zbx_dc_action_t *action, const DB_ROW row
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_actions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_actions(zbx_dbsync_t *sync)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -1986,7 +1978,7 @@ int	zbx_dbsync_compare_actions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->actions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->actions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -1996,7 +1988,7 @@ int	zbx_dbsync_compare_actions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (action = (zbx_dc_action_t *)zbx_hashset_search(&cache->actions, &rowid)))
+		if (NULL == (action = (zbx_dc_action_t *)zbx_hashset_search(&dbsync_env.cache->actions, &rowid)))
 			tag = ZBX_DBSYNC_ROW_ADD;
 		else if (FAIL == dbsync_compare_action(action, row))
 			tag = ZBX_DBSYNC_ROW_UPDATE;
@@ -2005,7 +1997,7 @@ int	zbx_dbsync_compare_actions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->actions, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->actions, &iter);
 	while (NULL != (action = (zbx_dc_action_t *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &action->actionid))
@@ -2058,7 +2050,7 @@ static int	dbsync_compare_action_condition(const zbx_dc_action_condition_t *cond
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync)
+int	zbx_dbsync_compare_action_conditions(zbx_dbsync_t *sync)
 {
 	DB_ROW				row;
 	DB_RESULT			result;
@@ -2085,7 +2077,7 @@ int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *syn
 		return SUCCEED;
 	}
 
-	zbx_hashset_create(&ids, cache->action_conditions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
+	zbx_hashset_create(&ids, dbsync_env.cache->action_conditions.num_data, ZBX_DEFAULT_UINT64_HASH_FUNC,
 			ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	while (NULL != (row = DBfetch(result)))
@@ -2095,7 +2087,7 @@ int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *syn
 		ZBX_STR2UINT64(rowid, row[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (condition = (zbx_dc_action_condition_t *)zbx_hashset_search(&cache->action_conditions,
+		if (NULL == (condition = (zbx_dc_action_condition_t *)zbx_hashset_search(&dbsync_env.cache->action_conditions,
 				&rowid)))
 		{
 			tag = ZBX_DBSYNC_ROW_ADD;
@@ -2107,7 +2099,7 @@ int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *syn
 			dbsync_add_row(sync, rowid, tag, row);
 	}
 
-	zbx_hashset_iter_reset(&cache->action_conditions, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->action_conditions, &iter);
 	while (NULL != (condition = (zbx_dc_action_condition_t *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &condition->conditionid))

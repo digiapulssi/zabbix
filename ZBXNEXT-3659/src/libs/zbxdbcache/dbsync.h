@@ -76,23 +76,26 @@ typedef struct
 }
 zbx_dbsync_t;
 
+void	zbx_dbsync_init_env(ZBX_DC_CONFIG *cache);
+void	zbx_dbsync_free_env();
+
 void	zbx_dbsync_init(zbx_dbsync_t *sync, unsigned char mode);
 void	zbx_dbsync_clear(zbx_dbsync_t *sync);
 int	zbx_dbsync_next(zbx_dbsync_t *sync, zbx_uint64_t *rowid, char ***rows, unsigned char *tag);
 
-int	zbx_dbsync_compare_config(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_hosts(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_host_inventory(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_host_templates(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_global_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_host_macros(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_interfaces(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_items(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_triggers(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_trigger_dependency(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_functions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_expressions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_actions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
-int	zbx_dbsync_compare_action_conditions(ZBX_DC_CONFIG *cache, zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_config(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_hosts(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_host_inventory(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_host_templates(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_global_macros(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_host_macros(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_interfaces(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_items(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_triggers(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_trigger_dependency(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_functions(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_expressions(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_actions(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_action_conditions(zbx_dbsync_t *sync);
 
 #endif /* BUILD_SRC_LIBS_ZBXDBCACHE_DBSYNC_H_ */

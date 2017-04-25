@@ -3410,6 +3410,8 @@ void	DCsync_configuration(unsigned char mode)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
+	zbx_dbsync_init_env(config);
+
 	/* global configuration must be synchronized directly with database */
 	zbx_dbsync_init(&config_sync, ZBX_DBSYNC_INIT);
 
@@ -3428,7 +3430,7 @@ void	DCsync_configuration(unsigned char mode)
 	zbx_dbsync_init(&action_condition_sync, mode);
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_config(config, &config_sync))
+	if (FAIL == zbx_dbsync_compare_config(&config_sync))
 		goto out;
 	csec = zbx_time() - sec;
 
@@ -3440,67 +3442,67 @@ void	DCsync_configuration(unsigned char mode)
 	FINISH_SYNC;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_hosts(config, &hosts_sync))
+	if (FAIL == zbx_dbsync_compare_hosts(&hosts_sync))
 		goto out;
 	hsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_host_inventory(config, &hi_sync))
+	if (FAIL == zbx_dbsync_compare_host_inventory(&hi_sync))
 		goto out;
 	hisec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_host_templates(config, &htmpl_sync))
+	if (FAIL == zbx_dbsync_compare_host_templates(&htmpl_sync))
 		goto out;
 	htsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_global_macros(config, &gmacro_sync))
+	if (FAIL == zbx_dbsync_compare_global_macros(&gmacro_sync))
 		goto out;
 	gmsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_host_macros(config, &hmacro_sync))
+	if (FAIL == zbx_dbsync_compare_host_macros(&hmacro_sync))
 		goto out;
 	hmsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_interfaces(config, &if_sync))
+	if (FAIL == zbx_dbsync_compare_interfaces(&if_sync))
 		goto out;
 	ifsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_items(config, &items_sync))
+	if (FAIL == zbx_dbsync_compare_items(&items_sync))
 		goto out;
 	isec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_triggers(config, &triggers_sync))
+	if (FAIL == zbx_dbsync_compare_triggers(&triggers_sync))
 		goto out;
 	tsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_trigger_dependency(config, &tdep_sync))
+	if (FAIL == zbx_dbsync_compare_trigger_dependency(&tdep_sync))
 		goto out;
 	dsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_functions(config, &func_sync))
+	if (FAIL == zbx_dbsync_compare_functions(&func_sync))
 		goto out;
 	fsec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_expressions(config, &expr_sync))
+	if (FAIL == zbx_dbsync_compare_expressions(&expr_sync))
 		goto out;
 	expr_sec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_actions(config, &action_sync))
+	if (FAIL == zbx_dbsync_compare_actions(&action_sync))
 		goto out;
 	action_sec = zbx_time() - sec;
 
 	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_action_conditions(config, &action_condition_sync))
+	if (FAIL == zbx_dbsync_compare_action_conditions(&action_condition_sync))
 		goto out;
 	action_condition_sec = zbx_time() - sec;
 
@@ -3781,6 +3783,8 @@ out:
 	zbx_dbsync_clear(&expr_sync);
 	zbx_dbsync_clear(&action_sync);
 	zbx_dbsync_clear(&action_condition_sync);
+
+	zbx_dbsync_free_env(config);
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
 		DCdump_configuration(config);
