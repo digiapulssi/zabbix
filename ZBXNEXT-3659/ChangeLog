@@ -1,6 +1,7 @@
 Changes for 3.0.10rc1
 
 New features:
+.......PS. [ZBXNEXT-3659] reduced cache locking time during configuration synchronization (wiper)
 
 Bug fixes:
 
