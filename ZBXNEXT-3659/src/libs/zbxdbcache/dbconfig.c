@@ -3657,8 +3657,9 @@ void	DCsync_configuration(unsigned char mode)
 				__function_name, action_sec, action_sec2, action_sync.add_num, action_sync.update_num,
 				action_sync.remove_num);
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() conditions : sql:" ZBX_FS_DBL " sync:" ZBX_FS_DBL " sec (%d/%d/%d).",
-				__function_name, action_condition_sec, action_condition_sec2, action_condition_sync.add_num,
-				action_condition_sync.update_num, action_condition_sync.remove_num);
+				__function_name, action_condition_sec, action_condition_sec2,
+				action_condition_sync.add_num, action_condition_sync.update_num,
+				action_condition_sync.remove_num);
 
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() reindex    : " ZBX_FS_DBL " sec.", __function_name, update_sec);
 
