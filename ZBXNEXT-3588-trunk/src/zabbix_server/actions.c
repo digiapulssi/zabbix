@@ -3296,7 +3296,6 @@ static int	is_recovery_event(const DB_EVENT *event)
 					return FAIL;
 			}
 		default:
-			THIS_SHOULD_NEVER_HAPPEN;
 			return FAIL;
 	}
 }
