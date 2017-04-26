@@ -3316,11 +3316,11 @@ static int	is_escalation_event(const DB_EVENT *event)
 	if (SUCCEED == is_recovery_event(event))
 		return FAIL;
 
-	if (0 != (event->flags & ZBX_FLAGS_DB_EVENT_NO_ACTION) ||
-			0 == (event->flags & ZBX_FLAGS_DB_EVENT_CREATE))
-	{
+	if (0 != (event->flags & ZBX_FLAGS_DB_EVENT_NO_ACTION))
 		return FAIL;
-	}
+
+	if (0 == (event->flags & ZBX_FLAGS_DB_EVENT_CREATE))
+		return FAIL;
 
 	return SUCCEED;
 }
