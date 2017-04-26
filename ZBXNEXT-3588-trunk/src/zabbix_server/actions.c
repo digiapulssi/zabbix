@@ -3394,14 +3394,10 @@ static zbx_hash_t	uniq_conditions_hash_func(const void *data)
  ******************************************************************************/
 static void	get_escalation_events(const DB_EVENT *events, size_t events_num, zbx_vector_ptr_t *esc_events)
 {
-	int	i;
+	const DB_EVENT	*event;
 
-	for (i = 0; i < events_num; i++)
+	for (event = events; 0 < events_num; event++, events_num--)
 	{
-		const DB_EVENT	*event;
-
-		event = &events[i];
-
 		if (SUCCEED == is_escalation_event(event) && EVENT_SOURCE_COUNT > (size_t)event->source)
 			zbx_vector_ptr_append(&esc_events[event->source], (void*)event);
 	}
