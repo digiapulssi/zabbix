@@ -18,8 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-$menu_items = getAdministrationGeneralMenuItems();
-$widget = (new CHeaderMenuWidget($menu_items, 'adm.regexps.php'))
+$widget = (new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.regexps.php')))
 	->setControls((new CForm())
 		->cleanItems()
 		->addItem((new CList())->addItem(new CSubmit('form', _('New regular expression'))))

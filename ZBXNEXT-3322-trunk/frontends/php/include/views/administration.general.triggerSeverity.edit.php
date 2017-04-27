@@ -20,8 +20,8 @@
 
 
 include('include/views/js/administration.general.triggerSeverity.js.php');
-$menu_items = getAdministrationGeneralMenuItems();
-$widget = new CHeaderMenuWidget($menu_items, 'adm.triggerseverities.php');
+
+$widget = new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.triggerseverities.php'));
 
 $severityTab = (new CFormList())
 	->addRow(_('Not classified'), [

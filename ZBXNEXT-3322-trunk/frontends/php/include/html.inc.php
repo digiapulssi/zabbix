@@ -824,9 +824,10 @@ function makePageFooter($with_version = true)
 /**
  * Get header menu items for administration page
  *
+ * @param string $selected_url selected menu item url
  * @return array
  */
-function getAdministrationGeneralMenuItems()
+function getAdministrationGeneralMenuItems($selected_url)
 {
 	$menu_map = [
 		['title' => _('GUI'), 'url' => 'adm.gui.php'],
@@ -841,6 +842,14 @@ function getAdministrationGeneralMenuItems()
 		['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
 		['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
 	];
+
+	foreach ($menu_map as &$data) {
+		if ($data['url'] === $selected_url) {
+			$data['selected'] = true;
+		} else {
+			$data['selected'] = false;
+		}
+	}
 
 	return $menu_map;
 }
@@ -972,19 +981,21 @@ function getTriggerSeverityCss($config)
 /**
  * Prepare dropdown menu item by given items and current url
  *
- * @param array  $menu_items   menu items
- * @param string $url_param    name of url parameter
- * @param mixed  $selected_url url param value from current url (selected menu item)
+ * @param array  $menu_items          menu items
+ * @param string $param_name          name of url parameter
+ * @param mixed  $current_param_value url param value from current url (selected menu item)
  * @return array
  */
-function prepareHeaderMenuItems($menu_items, $url_param, $selected_url) {
+function prepareHeaderMenuItems($menu_items, $param_name, $current_param_value) {
 
 	$url_builder = CUrlFactory::getContextUrl();
-	foreach ($menu_items as $url_param_value => &$data) {
-		if ($url_param_value === $selected_url) {
-			continue;
+	$url_builder->clearArguments();
+	foreach ($menu_items as $param_value => &$data) {
+		$data['selected'] = false;
+		if ($param_value === $current_param_value) {
+			$data['selected'] = true;
 		}
-		$data['url'] = $url_builder->setArgument($url_param, $url_param_value)->getUrl();
+		$data['url'] = $url_builder->setArgument($param_name, $param_value)->getUrl();
 	}
 	return $menu_items;
 }

@@ -21,9 +21,7 @@
 
 require_once dirname(__FILE__).'/js/administration.general.gui.php';
 
-$menu_items = getAdministrationGeneralMenuItems();
-
-$widget = new CHeaderMenuWidget($menu_items, 'adm.gui.php');
+$widget = new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.gui.php'));
 
 $guiTab = (new CFormList())
 	->addRow(_('Default theme'), new CComboBox('default_theme', $data['default_theme'], null, Z::getThemes()))

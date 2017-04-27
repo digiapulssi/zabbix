@@ -114,6 +114,16 @@ class CUrl {
 		return $this;
 	}
 
+	/**
+	 * Clear all arguments
+	 *
+	 * @return $this
+	 */
+	public function clearArguments() {
+		$this->arguments = [];
+		return $this;
+	}
+
 	public function setArgument($key, $value = '') {
 		$this->arguments[$key] = $value;
 

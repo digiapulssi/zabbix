@@ -32,27 +32,18 @@ class CHeaderMenuWidget extends CWidget
 	private $menu_map = [];
 
 	/**
-	 * url related to selected menu item
-	 *
-	 * @var string|null
-	 */
-	private $selected_url;
-
-	/**
 	 * Constructor
 	 *
-	 * @param array $menu_map
-	 * @param string $menu_map[]['url']       menu action url
-	 * @param string $menu_map[]['title']     menu item title (can be shown only when selected if menu_name specified)
-	 * @param string $menu_map[]['menu_name'] (optional) menu item title (shown only in dropdown menu)
+	 * @param array   $menu_map
+	 * @param string  $menu_map[]['url']       menu action url
+	 * @param boolean $menu_map[]['selected']  identify when menu item is selected
+	 * @param string  $menu_map[]['title']     menu item title (can be shown only when selected if menu_name specified)
+	 * @param string  $menu_map[]['menu_name'] (optional) menu item title (shown only in dropdown menu)
 	 *
-	 * @param null|string $selected_url       url related to selected menu item
 	 */
-	public function __construct(array $menu_map, $selected_url = null)
+	public function __construct(array $menu_map)
 	{
 		$this->menu_map = $menu_map;
-		$this->selected_url = $selected_url;
-		return $this;
 	}
 
 	/**
@@ -62,24 +53,24 @@ class CHeaderMenuWidget extends CWidget
 	 */
 	protected function createTitle()
 	{
-		$list = new CList();
-		$list->addClass('header-dropdown-list')
-			->setId('adm-menu-dropdown-list');
+		$list = (new CList())
+			->addClass(ZBX_STYLE_HEADER_DROPDOWN_LIST)
+			->setId(ZBX_STYLE_HEADER_DROPDOWN_LIST_ID);
 
 		$header = null;
 		foreach ($this->menu_map as $item) {
-			if (array_key_exists('url', $item) && $item['url'] !== $this->selected_url) {
-				$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
-				$link = new CLink($title, $item['url']);
-				$link->addClass('action-menu-item');
-				$list->addItem($link, 'header-dropdown-list-item');
-			} else {
-				$header = new CLink(new CTag('h1', true, $item['title']), '#');
-				$header->addClass('header-dropdown');
-				$header->onClick('javascript: showHide($(this).next(\'.header-dropdown-list\'));');
+			if ($item['selected']) {
+				$header = (new CLink(new CTag('h1', true, $item['title'])))
+					->addClass(ZBX_STYLE_HEADER_DROPDOWN)
+					->onClick('javascript: showHide($(this).next(\'.header-dropdown-list\'));');
 			}
+			$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
+			$list->addItem(
+				(new CLink($title, $item['url']))->addClass(ZBX_STYLE_ACTION_MENU_ITEM),
+				ZBX_STYLE_HEADER_DROPDOWN_LIST_ITEM
+			);
 		}
-		$div = (new CDiv([$header, $list]))->addClass('header-dropdown-menu');
+		$div = (new CDiv([$header, $list]))->addClass(ZBX_STYLE_HEADER_DROPDOWN_MENU);
 
 		return $div;
 	}

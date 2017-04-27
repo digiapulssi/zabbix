@@ -20,8 +20,8 @@
 
 
 require_once dirname(__FILE__).'/js/administration.general.macros.edit.js.php';
-$menu_items = getAdministrationGeneralMenuItems();
-$widget = (new CHeaderMenuWidget($menu_items, 'adm.macros.php'));
+
+$widget = (new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.macros.php')));
 
 $table = (new CTable())
 	->setId('tbl_macros')

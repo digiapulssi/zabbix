@@ -1342,6 +1342,12 @@ define('ZBX_STYLE_TREEVIEW_PLUS', 'treeview-plus');
 define('ZBX_STYLE_UPPERCASE', 'uppercase');
 define('ZBX_STYLE_WARNING_BG', 'warning-bg');
 define('ZBX_STYLE_YELLOW', 'yellow');
+define('ZBX_STYLE_HEADER_DROPDOWN', 'header-dropdown');
+define('ZBX_STYLE_ACTION_MENU_ITEM', 'action-menu-item');
+define('ZBX_STYLE_HEADER_DROPDOWN_LIST', 'header-dropdown-list');
+define('ZBX_STYLE_HEADER_DROPDOWN_LIST_ID', 'adm-menu-dropdown-list');
+define('ZBX_STYLE_HEADER_DROPDOWN_LIST_ITEM', 'header-dropdown-list-item');
+define('ZBX_STYLE_HEADER_DROPDOWN_MENU', 'header-dropdown-menu');
 
 // server variables
 define('HTTPS', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] != 'off');

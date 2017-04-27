@@ -21,8 +21,7 @@
 
 require_once dirname(__FILE__).'/js/administration.general.housekeeper.edit.js.php';
 
-$menu_items = getAdministrationGeneralMenuItems();
-$widget = new CHeaderMenuWidget($menu_items, 'adm.housekeeper.php');
+$widget = new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.housekeeper.php'));
 
 $houseKeeperTab = (new CFormList())
 	->addRow(new CTag('h4', true, _('Events and alerts')))

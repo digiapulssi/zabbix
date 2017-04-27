@@ -21,8 +21,7 @@
 
 include('include/views/js/administration.general.valuemapping.edit.js.php');
 
-$menu_items = getAdministrationGeneralMenuItems();
-$widget = new CHeaderMenuWidget($menu_items, 'adm.valuemapping.php');
+$widget = new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.valuemapping.php'));
 
 $form = (new CForm())->addVar('form', $data['form']);
 
