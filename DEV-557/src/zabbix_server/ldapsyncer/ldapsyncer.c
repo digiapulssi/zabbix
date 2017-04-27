@@ -392,6 +392,113 @@ static void	zbx_ldap_user_destroy(zbx_ldap_user_t *p)
 */
 }
 
+static int	zbx_ldap_search(LDAP *ld, const char *base, int scope, const char *filter, char **attrs,
+		int attrsonly, time_t tv_sec)
+{
+	struct berval	*cookie = NULL;
+	unsigned char	more_pages;
+	int		total = 0;
+	struct timeval	timeout = {tv_sec, 0};
+
+	do
+	{
+		LDAPMessage	*lm = NULL, *entry;
+		LDAPControl	**ctrls_response = NULL, *ctrl = NULL, *serverctrls[2] = {NULL};
+		ber_int_t	count = 0;
+		int		ldap_err, sizelimit = LDAP_MAXINT, errcode;
+
+		more_pages = 0;
+
+		if (LDAP_SUCCESS != (ldap_err = ldap_create_page_control(ld, sizelimit, cookie, 1, &ctrl)))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "cannot create page control '%s'", ldap_err2string(ldap_err));
+			goto clean;
+		}
+
+		serverctrls[0] = ctrl;
+
+		if (LDAP_SUCCESS != (ldap_err = ldap_search_ext_s(ld, base, scope,
+				filter, attrs, attrsonly, serverctrls, NULL, &timeout, sizelimit, &lm)))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "cannot perform search '%s'",ldap_err2string(ldap_err));
+			goto clean;
+		}
+
+		if (LDAP_SUCCESS != (ldap_err = ldap_parse_result(ld, lm, &errcode, NULL, NULL, NULL, &ctrls_response,
+				0)))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "cannot parse result '%s'", ldap_err2string(ldap_err));
+			goto clean;
+		}
+
+		ber_bvfree(cookie);
+		cookie = NULL;
+
+		if (LDAP_SUCCESS != (ldap_err = ldap_parse_page_control(ld, ctrls_response, &count, &cookie)))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "cannot parse page control '%s'", ldap_err2string(ldap_err));
+			goto clean;
+		}
+
+		if (NULL == (entry = ldap_first_entry(ld, lm)))
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "cannot read first entry");
+			goto clean;
+		}
+
+		do
+		{
+			char		*attr;
+			BerElement	*ber = NULL;
+
+			if (NULL == (attr = ldap_first_attribute(ld, entry, &ber)))
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "cannot read first attribute");
+				continue;
+			}
+
+			do
+			{
+				struct berval	**berVal, **berValIter;
+
+				if (NULL == (berVal = ldap_get_values_len(ld, entry, attr)))
+				{
+					zabbix_log(LOG_LEVEL_DEBUG, "cannot obtain values");
+				}
+				else
+				{
+					for (berValIter = berVal; NULL != *berValIter; berValIter++)
+					{
+						zabbix_log(LOG_LEVEL_TRACE, "attribute '%s' length %d value '%s'",
+								attr, (*berValIter)->bv_len, (*berValIter)->bv_val);
+						total++;
+					}
+
+					ldap_value_free_len(berVal);
+				}
+
+				ldap_memfree(attr);
+			}
+			while (NULL != (attr = ldap_next_attribute(ld, entry, ber)));
+
+			ber_free(ber, 0);
+		}
+		while (NULL != (entry = ldap_next_entry(ld, entry)));
+
+		if (NULL != cookie && NULL != cookie->bv_val && 0 < cookie->bv_len)
+			more_pages = 1;
+clean:
+		ldap_controls_free(ctrls_response);
+		ldap_control_free(ctrl);
+		ldap_msgfree(lm);
+	}
+	while (1 == more_pages);
+
+	ber_bvfree(cookie);
+
+	return total;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_get_data_from_ldap                                           *
