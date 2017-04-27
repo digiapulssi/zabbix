@@ -363,9 +363,9 @@ ul.top-nav-icons {
   margin: 0 0 7px 0; }
   .header-title h1 {
     display: inline-block; }
-  .header-title .cell:last-child {
+  .header-title .cell:last-child:not(:only-child) {
     text-align: right; }
-    .header-title .cell:last-child ul li {
+    .header-title .cell:last-child:not(:only-child) ul li {
       display: inline-block;
       vertical-align: top;
       position: relative;
@@ -2192,10 +2192,6 @@ a.header-dropdown {
   .header-dropdown-list::after {
     top: -9px;
     border-bottom-color: #2b2b2b; }
-
-.header-dropdown-list-item {
-  display: block !important;
-  padding-left: 0px !important; }
 
 .overlay-dialogue {
   position: absolute;

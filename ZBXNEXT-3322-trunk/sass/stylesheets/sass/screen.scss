@@ -495,7 +495,7 @@ ul.top-nav-icons {
 
 	.cell {
 
-		&:last-child {
+		&:last-child:not(:only-child) {
 			text-align: right;
 			ul {
 				li {
@@ -3125,11 +3125,6 @@ a.header-dropdown {
 		top: -9px;
 		border-bottom-color: $ui-bg-color;
 	}
-}
-
-.header-dropdown-list-item {
-	display: block !important;
-	padding-left: 0px !important;
 }
 
 .overlay-dialogue {
