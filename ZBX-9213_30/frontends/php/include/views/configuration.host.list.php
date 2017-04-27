@@ -141,13 +141,18 @@ foreach ($data['hosts'] as $host) {
 			break;
 		}
 
-		$caption = [
-			(new CLink(
-				CHtml::encode($template['name']), 'templates.php?form=update&templateid='.$template['templateid']
-			))
-				->addClass(ZBX_STYLE_LINK_ALT)
-				->addClass(ZBX_STYLE_GREY)
-		];
+		if (array_key_exists($template['templateid'], $data['writable_templates'])) {
+			$caption = [
+				(new CLink(
+					CHtml::encode($template['name']), 'templates.php?form=update&templateid='.$template['templateid']
+				))
+					->addClass(ZBX_STYLE_LINK_ALT)
+					->addClass(ZBX_STYLE_GREY)
+			];
+		}
+		else {
+			$caption = (new CSpan(CHtml::encode($template['name'])))->addClass(ZBX_STYLE_GREY);
+		}
 
 		$parentTemplates = $data['templates'][$template['templateid']]['parentTemplates'];
 		if ($parentTemplates) {
@@ -155,12 +160,17 @@ foreach ($data['hosts'] as $host) {
 
 			$caption[] = ' (';
 			foreach ($parentTemplates as $parentTemplate) {
-				$caption[] = (new CLink(
-					CHtml::encode($parentTemplate['name']),
-					'templates.php?form=update&templateid='.$parentTemplate['templateid']
-				))
-					->addClass(ZBX_STYLE_LINK_ALT)
-					->addClass(ZBX_STYLE_GREY);
+				if (array_key_exists($parentTemplate['templateid'], $data['writable_templates'])) {
+					$caption[] = (new CLink(
+						CHtml::encode($parentTemplate['name']),
+						'templates.php?form=update&templateid='.$parentTemplate['templateid']
+					))
+						->addClass(ZBX_STYLE_LINK_ALT)
+						->addClass(ZBX_STYLE_GREY);
+				}
+				else {
+					$caption[] = (new CSpan(CHtml::encode($parentTemplate['name'])))->addClass(ZBX_STYLE_GREY);
+				}
 				$caption[] = ', ';
 			}
 			array_pop($caption);
