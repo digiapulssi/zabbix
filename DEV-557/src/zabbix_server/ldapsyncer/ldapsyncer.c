@@ -392,7 +392,7 @@ static void	zbx_ldap_user_destroy(zbx_ldap_user_t *p)
 */
 }
 
-static int	zbx_ldap_search(LDAP *ld, const char *base, int scope, const char *filter, char **attrs,
+static int	zbx_ldap_get_data(LDAP *ld, const char *base, int scope, const char *filter, char **attrs,
 		int attrsonly, time_t tv_sec)
 {
 	struct berval	*cookie = NULL;
