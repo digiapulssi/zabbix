@@ -41,6 +41,7 @@ extern int		CONFIG_TIMEOUT;
 
 typedef struct
 {
+	char	*server_id;	/* keep 'server_id' as text string */
 	char	*host;		/* LDAP server hostname or IP address */
 	char	*bind_dn;	/* bind user */
 	char	*bind_pw;	/* bind passowrd */
@@ -50,6 +51,77 @@ typedef struct
 	int	proc_timeout;	/* processing (API) timeout, seconds */
 }
 zbx_ldap_server_t;
+
+typedef struct
+{
+	char	*group_base_dn;
+	char	*group_filter;
+	int	group_scope;		/* 0 - Base, 1 - One level, 2 - Subtree */
+	char	*user_base_dn;
+	char	*user_filter;
+	int	user_scope;		/* 0 - Base, 1 - One level, 2 - Subtree */
+	char	**groups;		/* array of strings with Zabbix user group names, the last element is NULL */
+	char	*user_type_attr;
+	int	user_type_default;	/* 1 - (default) Zabbix user; 2 - Zabbix admin; 3 - Zabbix super admin */
+	char	*alias_attr;
+	char	*name_attr;
+	char	*surname_attr;
+	char	*language_attr;
+	char	*language_default;	/* example: "en_GB" */
+	char	*theme_attr;
+	char	*theme_default;		/* example: "default", "blue-theme" or "dark-theme" */
+	char	*autologin_attr;
+	int	autologin_default;	/* 0 - (default) auto-login disabled, 1 - auto-login enabled */
+	char	*autologout_attr;
+	int	autologout_default;
+	char	*refresh_attr;
+	int	refresh_default;
+	char	*rows_per_page_attr;
+	int	rows_per_page_default;
+	char	*url_after_login_attr;
+	char	*url_after_login_default;
+	char	*media_type_attr;
+	int	media_type_default;
+	char	*send_to_attr;
+	char	*send_to_default;
+	char	*when_active_attr;
+	char	*when_active_default;	/* example: "1-7,00:00-23:59" */
+	char	*media_enabled_attr;
+	int	media_enabled_default;	/* 0 - enabled, 1 - disabled */
+	char	*use_if_severity_attr;
+	int	use_if_severity_default;	/* 1 - Not classified, 2 - Information,  4 - Warning, 8 - Average, */
+						/* 16 - High, 32 - Disaster (32) */
+}
+zbx_ldap_search_t;
+
+typedef struct
+{
+	zbx_ldap_server_t	server;
+	zbx_vector_ptr_t	searches;	/* container for storing pointers to 'zbx_ldap_search_t' structures */
+}
+zbx_ldap_source_t;
+
+typedef struct
+{
+	char	*alias;
+	char	*name;
+	char	*surname;
+	char	*language;
+	char	*theme;
+	int	user_type;
+	int	autologin;
+	int	autologout;
+	int	refresh;
+	int	rows_per_page;
+	char	*url_after_login;
+	int	media_type;
+	char	*send_to;
+	char	*when_active;
+	int	media_enabled;
+	int	use_if_severity;
+	char	**groups;		/* array of strings with Zabbix user group names, the last element is NULL */
+}
+zbx_ldap_user_t;
 
 /******************************************************************************
  *                                                                            *
@@ -216,6 +288,289 @@ static void	zbx_ldap_free(LDAP **ld)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_ldap_server_destroy                                          *
+ *                                                                            *
+ * Purpose: release memory allocated for components of 'zbx_ldap_server_t'    *
+ *                                                                            *
+ ******************************************************************************/
+static void	zbx_ldap_server_destroy(zbx_ldap_server_t *p)
+{
+	zbx_free(p->server_id);
+	zbx_free(p->host);
+	zbx_free(p->bind_dn);
+
+	if (NULL != p->bind_pw)
+	{
+		zbx_guaranteed_memset(p->bind_pw, 0, strlen(p->bind_pw));
+		zbx_free(p->bind_pw);
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_ldap_search_destroy                                          *
+ *                                                                            *
+ * Purpose: release memory allocated for components of 'zbx_ldap_search_t'    *
+ *                                                                            *
+ ******************************************************************************/
+static void	zbx_ldap_search_destroy(zbx_ldap_search_t *p)
+{
+	zbx_free(p->group_base_dn);
+	zbx_free(p->group_filter);
+	zbx_free(p->user_base_dn);
+	zbx_free(p->user_filter);
+
+/*	s = *p->groups;		TODO: unfinished.
+
+	while (NULL != s++)
+		zbx_free(s);
+
+	zbx_free(p->groups);
+*/
+	zbx_free(p->user_type_attr);
+	zbx_free(p->alias_attr);
+	zbx_free(p->name_attr);
+	zbx_free(p->surname_attr);
+	zbx_free(p->language_attr);
+	zbx_free(p->language_default);
+	zbx_free(p->theme_attr);
+	zbx_free(p->theme_default);
+	zbx_free(p->autologin_attr);
+	zbx_free(p->autologout_attr);
+	zbx_free(p->refresh_attr);
+	zbx_free(p->rows_per_page_attr);
+	zbx_free(p->url_after_login_attr);
+	zbx_free(p->url_after_login_default);
+	zbx_free(p->media_type_attr);
+	zbx_free(p->send_to_attr);
+	zbx_free(p->send_to_default);
+	zbx_free(p->when_active_attr);
+	zbx_free(p->when_active_default);
+	zbx_free(p->media_enabled_attr);
+	zbx_free(p->use_if_severity_attr);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_ldap_source_destroy                                          *
+ *                                                                            *
+ * Purpose: release memory allocated for components of 'zbx_ldap_source_t'    *
+ *                                                                            *
+ ******************************************************************************/
+static void	zbx_ldap_source_destroy(zbx_ldap_source_t *p)
+{
+	int	i;
+
+	zbx_ldap_server_destroy(&p->server);
+
+	for (i = 0; i < p->searches.values_num; i++)
+	{
+		zbx_ldap_search_destroy(p->searches.values[i]);
+		zbx_free(p->searches.values[i]);
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_ldap_user_destroy                                            *
+ *                                                                            *
+ * Purpose: release memory allocated for components of 'zbx_ldap_user_t'      *
+ *                                                                            *
+ ******************************************************************************/
+static void	zbx_ldap_user_destroy(zbx_ldap_user_t *p)
+{
+	zbx_free(p->alias);
+	zbx_free(p->name);
+	zbx_free(p->surname);
+	zbx_free(p->language);
+	zbx_free(p->theme);
+	zbx_free(p->url_after_login);
+	zbx_free(p->send_to);
+	zbx_free(p->when_active);
+/*
+	zbx_free(p->groups);               TODO : unfinished
+*/
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_get_data_from_ldap                                           *
+ *                                                                            *
+ * Purpose: read user data from LDAP servers and fill into structures         *
+ *                                                                            *
+ ******************************************************************************/
+static int	zbx_get_data_from_ldap(zbx_vector_ptr_t *sources, zbx_vector_ptr_t *users, char **error)
+{
+	const char	*__function_name = "zbx_get_data_from_ldap";
+	int		i, ret = FAIL;
+	char		*err = NULL;
+
+	for (i = 0; i < sources->values_num; i++)	/* for each LDAP server */
+	{
+		LDAP	*ld = NULL;
+
+		if (SUCCEED != zbx_ldap_connect(&ld, &((zbx_ldap_source_t *)(sources->values[i]))->server, &err))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s() cannot connect to LDAP server: %s",
+					__function_name, *err);
+			continue;
+		}
+
+		/* TODO get data */
+
+		if (NULL != ld)
+			zbx_ldap_free(&ld);
+
+		ret = SUCCEED;		/* at least one LDAP server was contacted */
+	}
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_get_sources_from_db                                          *
+ *                                                                            *
+ * Purpose: read all LDAP search info from DB and fill it into structures     *
+ *                                                                            *
+ ******************************************************************************/
+static int	zbx_get_sources_from_db(zbx_vector_ptr_t *sources, char **error)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	char		*ids = NULL;
+	size_t		alloc = 0, offset = 0;
+	int		ret = FAIL;
+
+	/* read all enabled records from 'ldap_servers' table */
+
+	result = DBselect(
+			"select server_id,host,port,bind_dn,bind_pw,use_tls,net_timeout,proc_timeout"
+			" from ldap_servers"
+			" where status=0"
+			" order by server_id");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_ldap_source_t	*p;
+
+		/* collect 'server_id' values for later reading from 'ldap_searches' table */
+		zbx_snprintf_alloc(&ids, &alloc, &offset, "%s%s", NULL != ids ? "," : "", row[0]);
+
+		/* build 'zbx_ldap_source_t' structure and insert it into 'sources' vector */
+
+		p = zbx_malloc(NULL, sizeof(zbx_ldap_source_t));
+
+		p->server.server_id = zbx_strdup(NULL, row[0]);
+		p->server.host = zbx_strdup(NULL, row[1]);
+		p->server.port = atoi(row[2]);
+		p->server.bind_dn = zbx_strdup(NULL, row[3]);
+		p->server.bind_pw = zbx_strdup(NULL, row[4]);
+		p->server.use_tls = atoi(row[5]);
+		p->server.net_timeout = atoi(row[6]);
+		p->server.proc_timeout = atoi(row[7]);
+
+		zbx_vector_ptr_create(&p->searches);
+		zbx_vector_ptr_append(sources, p);
+	}
+
+	DBfree_result(result);
+
+	if (0 == sources->values_num)	/* no LDAP servers configured or all disabled */
+	{
+		ret = SUCCEED;
+		goto out;
+	}
+
+	/* read corresponding records from 'ldap_searches' table */
+
+	result = DBselect(
+			"select search_id,server_id,group_base_dn,group_filter,group_scope,user_base_dn,user_filter,"
+			"user_scope,user_type_attr,user_type_default,alias_attr,name_attr,surname_attr,language_attr,"
+			"language_default,theme_attr,theme_default,autologin_attr,autologin_default,autologout_attr,"
+			"autologout_default,refresh_attr,refresh_default,rows_per_page_attr,rows_per_page_default,"
+			"url_after_login_attr,url_after_login_default,media_type_attr,media_type_default,send_to_attr,"
+			"send_to_default,when_active_attr,when_active_default,media_enabled_attr,media_enabled_default,"
+			"use_if_severity_attr,use_if_severity_default"
+			" from ldap_searches"
+			" where status=0 and server_id in (%s)"
+			" order by server_id, search_id", ids);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_ldap_search_t	*p;
+		int			i;
+
+		/* find which element in 'sources' this 'ldap_searches' record belongs to */
+
+		for (i = 0; i < sources->values_num; i++)
+		{
+			if (0 == strcmp(((zbx_ldap_source_t *)(sources->values[i]))->server.server_id, row[1]))
+				break;
+		}
+
+		if (sources->values_num == i)
+		{
+			*error = zbx_strdup(*error, "database changed while reading LDAP data");
+			DBfree_result(result);
+			goto out;
+		}
+
+		/* build 'zbx_ldap_search_t' structure and insert it into searches vector for the given server */
+
+		p = zbx_malloc(NULL, sizeof(zbx_ldap_search_t));
+
+		p->group_base_dn = zbx_strdup(NULL, row[2]);
+		p->group_filter = zbx_strdup(NULL, row[3]);
+		p->group_scope = atoi(row[4]);
+		p->user_base_dn = zbx_strdup(NULL, row[5]);
+		p->user_filter = zbx_strdup(NULL, row[6]);
+		p->user_scope = atoi(row[7]);
+		p->groups = NULL;
+		p->user_type_attr = zbx_strdup(NULL, row[8]);
+		p->user_type_default = atoi(row[9]);
+		p->alias_attr = zbx_strdup(NULL, row[10]);
+		p->name_attr = zbx_strdup(NULL, row[11]);
+		p->surname_attr = zbx_strdup(NULL, row[12]);
+		p->language_attr = zbx_strdup(NULL, row[13]);
+		p->language_default = zbx_strdup(NULL, row[14]);
+		p->theme_attr = zbx_strdup(NULL, row[15]);
+		p->theme_default = zbx_strdup(NULL, row[16]);
+		p->autologin_attr = zbx_strdup(NULL, row[17]);
+		p->autologin_default = atoi(row[18]);
+		p->autologout_attr = zbx_strdup(NULL, row[19]);
+		p->autologout_default = atoi(row[20]);
+		p->refresh_attr = zbx_strdup(NULL, row[21]);
+		p->refresh_default = atoi(row[22]);
+		p->rows_per_page_attr = zbx_strdup(NULL, row[23]);
+		p->rows_per_page_default = atoi(row[24]);
+		p->url_after_login_attr = zbx_strdup(NULL, row[25]);
+		p->url_after_login_default = zbx_strdup(NULL, row[26]);
+		p->media_type_attr = zbx_strdup(NULL, row[27]);
+		p->media_type_default = atoi(row[28]);
+		p->send_to_attr = zbx_strdup(NULL, row[29]);
+		p->send_to_default = zbx_strdup(NULL, row[30]);
+		p->when_active_attr = zbx_strdup(NULL, row[31]);
+		p->when_active_default = zbx_strdup(NULL, row[32]);
+		p->media_enabled_attr = zbx_strdup(NULL, row[33]);
+		p->media_enabled_default = atoi(row[34]);
+		p->use_if_severity_attr = zbx_strdup(NULL, row[35]);
+		p->use_if_severity_default = atoi(row[36]);
+
+		zbx_vector_ptr_append(&((zbx_ldap_source_t *)(sources->values[i]))->searches, p);
+	}
+
+	DBfree_result(result);
+
+	ret = SUCCEED;
+out:
+	zbx_free(ids);
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: synchronize_from_ldap                                            *
  *                                                                            *
  * Purpose: synchronize users and groups from LDAP database                   *
@@ -226,14 +581,14 @@ static void	zbx_ldap_free(LDAP **ld)
 static int      zbx_synchronize_from_ldap(int *user_num)
 {
 	const char		*__function_name = "zbx_synchronize_from_ldap";
-	LDAP			*ld = NULL;
 	LDAPMessage		*result;
 	char			*error = NULL;
-	int			res, ret = FAIL;
-	int			timeout = CONFIG_TIMEOUT;
-	zbx_ldap_server_t	ldap_server = { "127.0.0.1", "bind user name", "bind password", 389, 0, 10, 10 };
+	int			i, res, ret = FAIL;
+	zbx_vector_ptr_t	ldap_sources;		/* top-level container for storing pointers to */
+							/* 'zbx_ldap_source_t' structures */
+	zbx_vector_ptr_t	ldap_users;		/* top-level container for storing pointers to */
+							/* 'zbx_ldap_user_t' structures */
 
-	/* TODO: replace hardcoded host, port, bind user, bind password with values from database. */
 	/* TODO: consider supporting a list of URIs - ldap_initialize() in zbx_ldap_connect() can take a list of them */
 	/* TODO: consider supporting 'ldaps' (LDAP over TLS) protocol. */
 
@@ -244,30 +599,53 @@ static int      zbx_synchronize_from_ldap(int *user_num)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (SUCCEED != (res = zbx_ldap_connect(&ld, &ldap_server, &error)))
+	zbx_vector_ptr_create(&ldap_sources);
+	zbx_vector_ptr_create(&ldap_users);
+
+	if (SUCCEED != zbx_get_sources_from_db(&ldap_sources, &error))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "%s() cannot connect to LDAP server: %s", __function_name, error);
+		zabbix_log(LOG_LEVEL_WARNING, "%s(): cannot get LDAP details from database: %s",
+				__function_name, error);
+		goto out;
+	}
+
+	if (0 == ldap_sources.values_num)
+	{
+		ret = SUCCEED;
+		goto out;
+	}
+
+	if (SUCCEED != zbx_get_data_from_ldap(&ldap_sources, &ldap_users, &error))
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "%s(): cannot get user data from LDAP: %s",
+				__function_name, error);
 		goto out;
 	}
 
 	/* TODO: synchronization */
 
 	/* TODO: this is just learning to search */
-
+/*
 	if (SUCCEED != (res = zbx_ldap_search(ld, base_dn, scope, filter, attributes_list, timeout, &result, &error)))
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "%s() cannot search in LDAP server: %s", __function_name, error);
 		goto out;
 	}
-
-	zabbix_log(LOG_LEVEL_DEBUG, "%s(): %d entries found", __function_name, ldap_count_messages(ld, result));
-
+*/
 	ret = SUCCEED;
 out:
 	zbx_free(error);
 
-	if (NULL != ld)
-		zbx_ldap_free(&ld);
+
+	for (i = 0; i < ldap_sources.values_num; i++)
+		zbx_ldap_source_destroy(ldap_sources.values[i]);
+
+	zbx_vector_ptr_destroy(&ldap_sources);
+
+	for (i = 0; i < ldap_users.values_num; i++)
+		zbx_ldap_user_destroy(ldap_users.values[i]);
+
+	zbx_vector_ptr_destroy(&ldap_users);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s error:'%s'", __function_name, zbx_result_string(ret),
 			ZBX_NULL2EMPTY_STR(error));
@@ -336,6 +714,8 @@ static int	ldap_json_deserialize_server(struct zbx_json_parse *jp, zbx_ldap_serv
 
 	size_t	host_alloc = 0, bind_dn_alloc = 0, bind_pw_alloc = 0;
 	char	value[MAX_STRING_LEN];
+
+	ldap_server->server_id = NULL;
 
 	/* "host" */
 
@@ -493,7 +873,7 @@ int	zbx_ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 	char			*error = NULL, type[MAX_STRING_LEN];
 	struct zbx_json_parse	jp_data;
 	const char		*p = NULL;
-	zbx_ldap_server_t	ldap_server = { NULL, NULL, NULL, 0, 0, 0, 0 };
+	zbx_ldap_server_t	ldap_server = { NULL, NULL, NULL, NULL, 0, 0, 0, 0 };
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -555,14 +935,7 @@ int	zbx_ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 	}
 out:
 	zbx_free(error);
-	zbx_free(ldap_server.host);
-	zbx_free(ldap_server.bind_dn);
-
-	if (NULL != ldap_server.bind_pw)
-	{
-		zbx_guaranteed_memset(ldap_server.bind_pw, 0, strlen(ldap_server.bind_pw));
-		zbx_free(ldap_server.bind_pw);
-	}
+	zbx_ldap_server_destroy(&ldap_server);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
