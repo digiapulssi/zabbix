@@ -95,7 +95,8 @@ foreach ($data['templates'] as $template) {
 			$linkedTemplatesOutput[] = (new CLink($parentTemplate['name'], $url))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREY);
-		} else {
+		}
+		else {
 			$linkedTemplatesOutput[] = (new CSpan($parentTemplate['name']))
 				->addClass(ZBX_STYLE_GREY);
 		}
@@ -125,16 +126,22 @@ foreach ($data['templates'] as $template) {
 				$link = (new CLink($linkedToObject['name'], $url))
 					->addClass(ZBX_STYLE_LINK_ALT)
 					->addClass(ZBX_STYLE_GREY);
-			} else {
-				$link = (new CSpan($parentTemplate['name']))
+			}
+			else {
+				$link = (new CSpan($linkedToObject['name']))
 					->addClass(ZBX_STYLE_GREY);
 			}
 		}
 		else {
-			$url = 'hosts.php?form=update&hostid='.$linkedToObject['hostid'].url_param('groupid');
-			$link = (new CLink($linkedToObject['name'], $url))
-				->addClass($linkedToObject['status'] == HOST_STATUS_MONITORED ? ZBX_STYLE_GREEN : ZBX_STYLE_RED)
-				->addClass(ZBX_STYLE_LINK_ALT);
+			if (array_key_exists($linkedToObject['hostid'], $data['writable_hosts'])) {
+				$url = 'hosts.php?form=update&hostid='.$linkedToObject['hostid'].url_param('groupid');
+				$link = (new CLink($linkedToObject['name'], $url))->addClass(ZBX_STYLE_LINK_ALT);
+			}
+			else {
+				$link = (new CSpan($linkedToObject['name']));
+			}
+
+			$link->addClass($linkedToObject['status'] == HOST_STATUS_MONITORED ? ZBX_STYLE_GREEN : ZBX_STYLE_RED);
 		}
 
 		$linkedToOutput[] = $link;

@@ -349,7 +349,7 @@ if (isset($_REQUEST['form'])) {
 
 	// Select writable templates
 	$templateIds = zbx_objectValues($data['host_prototype']['templates'], 'templateid');
-	$data['host_prototype']['writable_templates'] = null;
+	$data['host_prototype']['writable_templates'] = [];
 	if ($templateIds) {
 		$data['host_prototype']['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],
@@ -413,7 +413,7 @@ else {
 	$data['linkedTemplates'] = zbx_toHash($linkedTemplates, 'templateid');
 
 	// Select writable templates
-	$data['writable_templates'] = null;
+	$data['writable_templates'] = [];
 	if ($templateIds) {
 		$data['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],

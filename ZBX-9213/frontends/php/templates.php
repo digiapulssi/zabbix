@@ -628,20 +628,37 @@ else {
 	order_result($templates, $sortField, $sortOrder);
 
 	// Select writable templates:
-	$linkedTemplateIds = [];
-	$writable_templates = null;
+	$linked_template_ids = [];
+	$writable_templates = [];
+	$linked_hosts_ids = [];
+	$writable_hosts = [];
 	foreach ($templates as $template) {
-		$linkedTemplateIds = array_merge(
-			$linkedTemplateIds,
+		$linked_template_ids = array_merge(
+			$linked_template_ids,
 			zbx_objectValues($template['parentTemplates'], 'templateid'),
-			zbx_objectValues($template['templates'], 'templateid')
+			zbx_objectValues($template['templates'], 'templateid'),
+			zbx_objectValues($template['hosts'], 'hostid')
+		);
+
+		$linked_hosts_ids = array_merge(
+			$linked_hosts_ids,
+			zbx_objectValues($template['hosts'], 'hostid')
 		);
 	}
-	if ($linkedTemplateIds) {
-		$linkedTemplateIds = array_unique($linkedTemplateIds);
+	if ($linked_template_ids) {
+		$linked_template_ids = array_unique($linked_template_ids);
 		$writable_templates = API::Template()->get([
 			'output' => ['templateid'],
-			'templateids' => $linkedTemplateIds,
+			'templateids' => $linked_template_ids,
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
+	if ($linked_hosts_ids) {
+		$linked_hosts_ids = array_unique($linked_hosts_ids);
+		$writable_hosts = API::Host()->get([
+			'output' => ['hostid'],
+			'hostsids' => $linked_hosts_ids,
 			'editable' => true,
 			'preservekeys' => true
 		]);
@@ -657,7 +674,8 @@ else {
 		'config' => [
 			'max_in_table' => $config['max_in_table']
 		],
-		'writable_templates' => $writable_templates
+		'writable_templates' => $writable_templates,
+		'writable_hosts' => $writable_hosts
 	];
 
 	$view = new CView('configuration.template.list', $data);

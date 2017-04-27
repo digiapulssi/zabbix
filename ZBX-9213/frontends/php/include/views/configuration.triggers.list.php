@@ -124,7 +124,8 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 					'triggers.php?hostid='.$real_host['hostid']))
 					->addClass(ZBX_STYLE_LINK_ALT)
 					->addClass(ZBX_STYLE_GREY);
-			} else {
+			}
+			else {
 				$description[] = (new CSpan(CHtml::encode($real_host['name'])))->addClass(ZBX_STYLE_GREY);
 			}
 

@@ -954,7 +954,8 @@ function getItemFormData(array $item = [], array $options = []) {
 							$data['templates'][] = new CLink($host['name'],
 								'host_discovery.php?form=update&itemid='.$item['itemid']
 							);
-						} else {
+						}
+						else {
 							$data['templates'][] = new CSpan($host['name']);
 						}
 
@@ -966,7 +967,8 @@ function getItemFormData(array $item = [], array $options = []) {
 							$data['templates'][] = new CLink($host['name'], 'disc_prototypes.php?form=update'.
 								'&itemid='.$item['itemid'].'&parent_discoveryid='.$item['discoveryRule']['itemid']
 							);
-						} else {
+						}
+						else {
 							$data['templates'][] = new CSpan($host['name']);
 						}
 
@@ -978,7 +980,8 @@ function getItemFormData(array $item = [], array $options = []) {
 							$data['templates'][] = new CLink($host['name'],
 								'items.php?form=update&itemid='.$item['itemid']
 							);
-						} else {
+						}
+						else {
 							$data['templates'][] = new CSpan($host['name']);
 						}
 
@@ -1422,7 +1425,8 @@ function getTriggerFormData(array $data) {
 					}
 
 					$data['templates'][] = new CLink(CHtml::encode($db_triggers['name']), $link);
-				} else {
+				}
+				else {
 					$data['templates'][] = new CSpan(CHtml::encode($db_triggers['name']));
 				}
 

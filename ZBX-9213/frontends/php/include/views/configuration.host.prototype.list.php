@@ -73,7 +73,8 @@ foreach ($this->data['hostPrototypes'] as $hostPrototype) {
 				$caption[] = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
 					->addClass(ZBX_STYLE_LINK_ALT)
 					->addClass(ZBX_STYLE_GREY);
-			} else {
+			}
+			else {
 				$caption[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
 			}
 
@@ -87,7 +88,8 @@ foreach ($this->data['hostPrototypes'] as $hostPrototype) {
 						$caption[] = (new CLink($tpl['name'],'templates.php?form=update&templateid='.$tpl['templateid']))
 							->addClass(ZBX_STYLE_LINK_ALT)
 							->addClass(ZBX_STYLE_GREY);
-					} else {
+					}
+					else {
 						$caption[] = (new CSpan($tpl['name']))->addClass(ZBX_STYLE_GREY);
 					}
 

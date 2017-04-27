@@ -1548,10 +1548,12 @@ else {
 		$hostIds = array_merge($hostIds, zbx_objectValues($realHost, 'hostid'));
 	}
 	foreach ($data['items'] as $item) {
-		$hostIds = array_merge($hostIds, zbx_objectValues($item['template_host'], 'itemid'));
+		if (array_key_exists('template_host', $item)) {
+			$hostIds = array_merge($hostIds, zbx_objectValues($item['template_host'], 'itemid'));
+		}
 	}
 
-	$data['writable_templates'] = null;
+	$data['writable_templates'] = [];
 	if ($hostIds) {
 			$data['writable_templates'] = API::Template()->get([
 				'output' => ['templateid'],

@@ -410,7 +410,7 @@ else {
 		$hostIds[] = $application['host']['hostid'];
 	}
 
-	$data['writable_templates'] = null;
+	$data['writable_templates'] = [];
 	if ($hostIds) {
 			$data['writable_templates'] = API::Template()->get([
 				'output' => ['templateid'],

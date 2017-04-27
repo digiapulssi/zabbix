@@ -78,7 +78,8 @@ foreach ($this->data['applications'] as $application) {
 				$name[] = (new CLink($template['name'], 'applications.php?hostid='.$template['hostid']))
 					->addClass(ZBX_STYLE_LINK_ALT)
 					->addClass(ZBX_STYLE_GREY);
-			} else {
+			}
+			else {
 				$name[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
 			}
 			$name[] = ', ';

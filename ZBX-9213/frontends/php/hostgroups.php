@@ -469,7 +469,7 @@ else {
 	unset($group);
 
 	// Select writable templates:
-	$data['writable_templates'] = null;
+	$data['writable_templates'] = [];
 	if ($linkedTemplateIds) {
 		$data['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],

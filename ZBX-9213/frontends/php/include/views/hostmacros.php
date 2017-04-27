@@ -127,7 +127,8 @@ else {
 						)
 						->addClass('unknown')
 						->setAttribute('target', '_blank');
-				} else {
+				}
+				else {
 					$link = new CSpan(CHtml::encode($macro['template']['name']));
 				}
 

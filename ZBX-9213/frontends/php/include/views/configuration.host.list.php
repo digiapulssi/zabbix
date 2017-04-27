@@ -151,7 +151,8 @@ foreach ($data['hosts'] as $host) {
 					->addClass(ZBX_STYLE_LINK_ALT)
 					->addClass(ZBX_STYLE_GREY)
 			];
-		} else {
+		}
+		else {
 			$caption = (new CSpan(CHtml::encode($template['name'])))->addClass(ZBX_STYLE_GREY);
 		}
 
@@ -168,7 +169,8 @@ foreach ($data['hosts'] as $host) {
 					))
 						->addClass(ZBX_STYLE_LINK_ALT)
 						->addClass(ZBX_STYLE_GREY);
-				} else {
+				}
+				else {
 					$caption[] = (new CSpan(CHtml::encode($parentTemplate['name'])))->addClass(ZBX_STYLE_GREY);
 				}
 				$caption[] = ', ';

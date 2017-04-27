@@ -59,7 +59,8 @@ foreach ($data['discoveries'] as $discovery) {
 			$description[] = (new CLink($discovery['dbTemplate']['name'], '?hostid='.$discovery['dbTemplate']['hostid']))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREY);
-		} else {
+		}
+		else {
 			$description[] = (new CSpan($discovery['dbTemplate']['name']))
 				->addClass(ZBX_STYLE_GREY);
 		}

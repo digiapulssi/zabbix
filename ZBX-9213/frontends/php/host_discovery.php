@@ -452,7 +452,7 @@ else {
 	$data['paging'] = getPagingLine($data['discoveries'], $sortOrder, $url);
 
 	// get real hosts & select write permissions
-	$data['writable_templates'] = null;
+	$data['writable_templates'] = [];
 	$discoveryHostIds = [];
 	foreach ($data['discoveries'] as &$discovery) {
 		if ($discovery['templateid']) {

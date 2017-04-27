@@ -83,7 +83,8 @@ foreach ($this->data['groups'] as $group) {
 			$hostsOutput[] = (new CLink($template['name'], $url))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREY);
-		} else {
+		}
+		else {
 			$hostsOutput[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
 		}
 	}

@@ -232,7 +232,8 @@ if ($hostPrototype['templateid']) {
 		if (array_key_exists($template['templateid'], $hostPrototype['writable_templates'])) {
 			$templateLink = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
 				->setTarget('_blank');
-		} else {
+		}
+		else {
 			$templateLink = new CSpan($template['name']);
 		}
 
@@ -257,7 +258,8 @@ else {
 		if (array_key_exists($template['templateid'], $hostPrototype['writable_templates'])) {
 			$templateLink = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
 				->setTarget('_blank');
-		} else {
+		}
+		else {
 			$templateLink = new CSpan($template['name']);
 		}
 

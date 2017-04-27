@@ -743,7 +743,7 @@ else {
 		$hostIds = array_merge($hostIds, zbx_objectValues($realHost, 'hostid'));
 	}
 
-	$data['writable_templates'] = null;
+	$data['writable_templates'] = [];
 	if ($hostIds) {
 			$data['writable_templates'] = API::Template()->get([
 				'output' => ['templateid'],

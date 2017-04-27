@@ -87,7 +87,8 @@ foreach ($this->data['items'] as $item) {
 			))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREY);
-		} else {
+		}
+		else {
 			$description[] = (new CSpan(CHtml::encode($item['template_host']['name'])))
 				->addClass(ZBX_STYLE_GREY);
 		}
@@ -157,7 +158,8 @@ foreach ($this->data['items'] as $item) {
 						CHtml::encode($realHost['name']),
 						'triggers.php?hostid='.$realHost['hostid']))
 						->addClass(ZBX_STYLE_GREY);
-				} else {
+				}
+				else {
 					$triggerDescription[] = (new CSpan(CHtml::encode($realHost['name'])))
 						->addClass(ZBX_STYLE_GREY);
 				}

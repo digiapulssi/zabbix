@@ -1104,7 +1104,7 @@ else {
 	]);
 
 	// selecting writable templates
-	$writable_templates = null;
+	$writable_templates = [];
 	if ($templateIds) {
 		foreach ($templates as $template) {
 			$templateIds = array_merge($templateIds, zbx_objectValues($template['parentTemplates'], 'templateid'));
