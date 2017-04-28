@@ -510,21 +510,34 @@ clean:
 static int	zbx_get_data_from_ldap(zbx_vector_ptr_t *sources, zbx_vector_ptr_t *users, char **error)
 {
 	const char	*__function_name = "zbx_get_data_from_ldap";
-	int		i, ret = FAIL;
+	int		i, j, ret = FAIL;
 	char		*err = NULL;
 
 	for (i = 0; i < sources->values_num; i++)	/* for each LDAP server */
 	{
-		LDAP	*ld = NULL;
+		LDAP			*ld = NULL;
+		zbx_ldap_source_t	*ldap_source = sources->values[i];
 
-		if (SUCCEED != zbx_ldap_connect(&ld, &((zbx_ldap_source_t *)(sources->values[i]))->server, &err))
+		if (SUCCEED != zbx_ldap_connect(&ld, &ldap_source->server, &err))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "%s() cannot connect to LDAP server: %s",
 					__function_name, *err);
 			continue;
 		}
 
-		/* TODO get data */
+		for (j = 0;j < ldap_source->searches.values_num; j++)
+		{
+			zbx_ldap_search_t	*ldap_search = ldap_source->searches.values[j];
+			char			*attrs[] =
+			{
+					ldap_search->send_to_attr,
+					ldap_search->name_attr,
+					NULL
+			};
+
+			zbx_ldap_get_data(ld, ldap_search->user_base_dn, ldap_search->user_scope,
+					ldap_search->user_filter, attrs, 0, ldap_source->server.proc_timeout);
+		}
 
 		if (NULL != ld)
 			zbx_ldap_free(&ld);
