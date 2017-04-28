@@ -392,13 +392,39 @@ static void	zbx_ldap_user_destroy(zbx_ldap_user_t *p)
 */
 }
 
-static int	zbx_ldap_get_data(LDAP *ld, const char *base, int scope, const char *filter, char **attrs,
-		int attrs_only, time_t tv_sec)
+static void	zbx_ldap_read_entry(LDAP *ld, LDAPMessage *entry)
+{
+	char		*attr;
+	BerElement	*ber = NULL;
+
+	for (attr = ldap_first_attribute(ld, entry, &ber); NULL != attr; attr = ldap_next_attribute(ld, entry, ber))
+	{
+		struct berval	**ber_val = ldap_get_values_len(ld, entry, attr);
+
+		if (NULL != ber_val && NULL != *ber_val)
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "attribute '%s' length %d value '%s'",
+					attr, (*ber_val)->bv_len, (*ber_val)->bv_val);
+		}
+
+		ldap_value_free_len(ber_val);
+		ldap_memfree(attr);
+	}
+
+	ber_free(ber, 0);
+}
+
+static void	zbx_ldap_get_data(LDAP *ld, zbx_ldap_search_t *ldap_search, int attrs_only, time_t tv_sec)
 {
 	struct berval	*cookie = NULL;
 	unsigned char	more_pages;
 	struct timeval	timeout = {tv_sec, 0};
-	int		total = 0;
+	char		*attrs[] =
+	{
+			ldap_search->send_to_attr,
+			ldap_search->name_attr,
+			NULL
+	};
 
 	do
 	{
@@ -418,8 +444,9 @@ static int	zbx_ldap_get_data(LDAP *ld, const char *base, int scope, const char *
 		ctrls[0] = ctrl;
 		ctrls[1] = NULL;
 
-		if (LDAP_SUCCESS != (ldap_err = ldap_search_ext_s(ld, base, scope,
-				filter, attrs, attrs_only, ctrls, NULL, &timeout, LDAP_MAXINT, &lm)))
+		if (LDAP_SUCCESS != (ldap_err = ldap_search_ext_s(ld, ldap_search->user_base_dn,
+				ldap_search->user_scope, ldap_search->user_filter, attrs, attrs_only, ctrls, NULL,
+				&timeout, LDAP_MAXINT, &lm)))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "cannot perform search '%s'",ldap_err2string(ldap_err));
 			goto clean;
@@ -441,50 +468,8 @@ static int	zbx_ldap_get_data(LDAP *ld, const char *base, int scope, const char *
 			goto clean;
 		}
 
-		if (NULL == (entry = ldap_first_entry(ld, lm)))
-		{
-			zabbix_log(LOG_LEVEL_DEBUG, "cannot read first entry");
-			goto clean;
-		}
-
-		do
-		{
-			char		*attr;
-			BerElement	*ber = NULL;
-
-			if (NULL == (attr = ldap_first_attribute(ld, entry, &ber)))
-			{
-				zabbix_log(LOG_LEVEL_DEBUG, "cannot read first attribute");
-				continue;
-			}
-
-			do
-			{
-				struct berval	**ber_val, **iter;
-
-				if (NULL == (ber_val = ldap_get_values_len(ld, entry, attr)))
-				{
-					zabbix_log(LOG_LEVEL_DEBUG, "cannot obtain values");
-				}
-				else
-				{
-					for (iter = ber_val; NULL != *iter; iter++)
-					{
-						zabbix_log(LOG_LEVEL_TRACE, "attribute '%s' length %d value '%s'",
-								attr, (*iter)->bv_len, (*iter)->bv_val);
-						total++;
-					}
-
-					ldap_value_free_len(ber_val);
-				}
-
-				ldap_memfree(attr);
-			}
-			while (NULL != (attr = ldap_next_attribute(ld, entry, ber)));
-
-			ber_free(ber, 0);
-		}
-		while (NULL != (entry = ldap_next_entry(ld, entry)));
+		for (entry = ldap_first_entry(ld, lm); NULL != entry; entry = ldap_next_entry(ld, entry))
+			zbx_ldap_read_entry(ld, entry);
 
 		if (NULL != cookie && NULL != cookie->bv_val && 0 < cookie->bv_len)
 			more_pages = 1;
@@ -496,8 +481,6 @@ clean:
 	while (1 == more_pages);
 
 	ber_bvfree(cookie);
-
-	return total;
 }
 
 /******************************************************************************
@@ -528,15 +511,8 @@ static int	zbx_get_data_from_ldap(zbx_vector_ptr_t *sources, zbx_vector_ptr_t *u
 		for (j = 0;j < ldap_source->searches.values_num; j++)
 		{
 			zbx_ldap_search_t	*ldap_search = ldap_source->searches.values[j];
-			char			*attrs[] =
-			{
-					ldap_search->send_to_attr,
-					ldap_search->name_attr,
-					NULL
-			};
 
-			zbx_ldap_get_data(ld, ldap_search->user_base_dn, ldap_search->user_scope,
-					ldap_search->user_filter, attrs, 0, ldap_source->server.proc_timeout);
+			zbx_ldap_get_data(ld, ldap_search, 0, ldap_source->server.proc_timeout);
 		}
 
 		if (NULL != ld)
