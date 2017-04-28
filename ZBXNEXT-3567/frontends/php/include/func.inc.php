@@ -1815,7 +1815,7 @@ function show_messages($good = false, $okmsg = null, $errmsg = null) {
 	$imageMessages = [];
 
 	$title = $good ? $okmsg : $errmsg;
-	$messages = $ZBX_MESSAGES;
+	$messages = is_array($ZBX_MESSAGES) ? $ZBX_MESSAGES : [];
 	$ZBX_MESSAGES = [];
 
 	if (is_array($messages) && ZBX_SHOW_SQL_ERRORS == false && CWebUser::getType() != USER_TYPE_SUPER_ADMIN
