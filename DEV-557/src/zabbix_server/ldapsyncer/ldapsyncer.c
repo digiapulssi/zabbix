@@ -393,32 +393,33 @@ static void	zbx_ldap_user_destroy(zbx_ldap_user_t *p)
 }
 
 static int	zbx_ldap_get_data(LDAP *ld, const char *base, int scope, const char *filter, char **attrs,
-		int attrsonly, time_t tv_sec)
+		int attrs_only, time_t tv_sec)
 {
 	struct berval	*cookie = NULL;
 	unsigned char	more_pages;
-	int		total = 0;
 	struct timeval	timeout = {tv_sec, 0};
+	int		total = 0;
 
 	do
 	{
+		LDAPControl	*ctrl = NULL, *ctrls[2], **ctrls_response = NULL;
 		LDAPMessage	*lm = NULL, *entry;
-		LDAPControl	**ctrls_response = NULL, *ctrl = NULL, *serverctrls[2] = {NULL};
 		ber_int_t	count = 0;
-		int		ldap_err, sizelimit = LDAP_MAXINT, errcode;
+		int		ldap_err, errcode;
 
 		more_pages = 0;
 
-		if (LDAP_SUCCESS != (ldap_err = ldap_create_page_control(ld, sizelimit, cookie, 1, &ctrl)))
+		if (LDAP_SUCCESS != (ldap_err = ldap_create_page_control(ld, LDAP_MAXINT, cookie, 1, &ctrl)))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "cannot create page control '%s'", ldap_err2string(ldap_err));
 			goto clean;
 		}
 
-		serverctrls[0] = ctrl;
+		ctrls[0] = ctrl;
+		ctrls[1] = NULL;
 
 		if (LDAP_SUCCESS != (ldap_err = ldap_search_ext_s(ld, base, scope,
-				filter, attrs, attrsonly, serverctrls, NULL, &timeout, sizelimit, &lm)))
+				filter, attrs, attrs_only, ctrls, NULL, &timeout, LDAP_MAXINT, &lm)))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "cannot perform search '%s'",ldap_err2string(ldap_err));
 			goto clean;
@@ -459,22 +460,22 @@ static int	zbx_ldap_get_data(LDAP *ld, const char *base, int scope, const char *
 
 			do
 			{
-				struct berval	**berVal, **berValIter;
+				struct berval	**ber_val, **iter;
 
-				if (NULL == (berVal = ldap_get_values_len(ld, entry, attr)))
+				if (NULL == (ber_val = ldap_get_values_len(ld, entry, attr)))
 				{
 					zabbix_log(LOG_LEVEL_DEBUG, "cannot obtain values");
 				}
 				else
 				{
-					for (berValIter = berVal; NULL != *berValIter; berValIter++)
+					for (iter = ber_val; NULL != *iter; iter++)
 					{
 						zabbix_log(LOG_LEVEL_TRACE, "attribute '%s' length %d value '%s'",
-								attr, (*berValIter)->bv_len, (*berValIter)->bv_val);
+								attr, (*iter)->bv_len, (*iter)->bv_val);
 						total++;
 					}
 
-					ldap_value_free_len(berVal);
+					ldap_value_free_len(ber_val);
 				}
 
 				ldap_memfree(attr);
