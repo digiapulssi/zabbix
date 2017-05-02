@@ -338,6 +338,8 @@ static void	zbx_ldap_source_destroy(zbx_ldap_source_t *p)
 		zbx_ldap_search_destroy(p->searches.values[i]);
 		zbx_free(p->searches.values[i]);
 	}
+
+	zbx_vector_ptr_destroy(&p->searches);
 }
 
 /******************************************************************************
@@ -775,6 +777,7 @@ out:
 	for (i = 0; i < ldap_sources.values_num; i++)
 		zbx_ldap_source_destroy(ldap_sources.values[i]);
 
+	zbx_vector_ptr_clear_ext(&ldap_sources, zbx_ptr_free);
 	zbx_vector_ptr_destroy(&ldap_sources);
 
 	for (i = 0; i < ldap_users.values_num; i++)
