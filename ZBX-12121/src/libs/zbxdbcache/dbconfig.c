@@ -6620,7 +6620,7 @@ int	DCconfig_get_time_based_triggers(DC_TRIGGER *trigger_info, zbx_vector_ptr_t 
 		{
 			/* Remember that trigger is chosen for evaluation because of time-based function in problem */
 			/* expression. This information is later used in evaluate_expressions() to avoid generation */
-			/* of duplicate PROBLEM events if recovery expression is remains to false. */
+			/* of duplicate PROBLEM events if recovery expression remains to be false. */
 			flags = ZBX_DC_TRIGGER_PROBLEM_EXPRESSION;
 		}
 
