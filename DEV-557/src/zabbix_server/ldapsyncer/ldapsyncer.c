@@ -452,31 +452,30 @@ static void	zbx_ldap_get_user(LDAP *ld, LDAPMessage *entry, zbx_ldap_search_t *l
 	ber_free(ber, 0);
 }
 
-static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, int attrs_only, time_t tv_sec,
-		zbx_vector_ptr_t *users)
+static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, time_t tv_sec, zbx_vector_ptr_t *users)
 {
 	struct berval	*cookie = NULL;
 	unsigned char	more_pages;
 	struct timeval	timeout = {tv_sec, 0};
 	char		*attrs[] =
 	{
-			ldap_search->user_type_attr,
-			ldap_search->alias_attr,
-			ldap_search->name_attr,
-			ldap_search->surname_attr,
-			ldap_search->language_attr,
-			ldap_search->theme_attr,
-			ldap_search->autologin_attr,
-			ldap_search->autologout_attr,
-			ldap_search->refresh_attr,
-			ldap_search->rows_per_page_attr,
-			ldap_search->url_after_login_attr,
-			ldap_search->media_type_attr,
-			ldap_search->send_to_attr,
-			ldap_search->when_active_attr,
-			ldap_search->media_enabled_attr,
-			ldap_search->use_if_severity_attr,
-			NULL
+		ldap_search->user_type_attr,
+		ldap_search->alias_attr,
+		ldap_search->name_attr,
+		ldap_search->surname_attr,
+		ldap_search->language_attr,
+		ldap_search->theme_attr,
+		ldap_search->autologin_attr,
+		ldap_search->autologout_attr,
+		ldap_search->refresh_attr,
+		ldap_search->rows_per_page_attr,
+		ldap_search->url_after_login_attr,
+		ldap_search->media_type_attr,
+		ldap_search->send_to_attr,
+		ldap_search->when_active_attr,
+		ldap_search->media_enabled_attr,
+		ldap_search->use_if_severity_attr,
+		NULL
 	};
 
 	do
@@ -498,7 +497,7 @@ static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, int at
 		ctrls[1] = NULL;
 
 		if (LDAP_SUCCESS != (ldap_err = ldap_search_ext_s(ld, ldap_search->user_base_dn,
-				ldap_search->user_scope, ldap_search->user_filter, attrs, attrs_only, ctrls, NULL,
+				ldap_search->user_scope, ldap_search->user_filter, attrs, 0, ctrls, NULL,
 				&timeout, LDAP_MAXINT, &lm)))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "cannot perform search '%s'",ldap_err2string(ldap_err));
@@ -565,7 +564,7 @@ static int	zbx_get_data_from_ldap(zbx_vector_ptr_t *sources, zbx_vector_ptr_t *u
 		{
 			zbx_ldap_search_t	*ldap_search = ldap_source->searches.values[j];
 
-			zbx_ldap_find_users(ld, ldap_search, 0, ldap_source->server.proc_timeout, users);
+			zbx_ldap_find_users(ld, ldap_search, ldap_source->server.proc_timeout, users);
 		}
 
 		if (NULL != ld)
