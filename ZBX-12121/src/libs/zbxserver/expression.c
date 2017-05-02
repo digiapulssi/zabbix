@@ -3970,7 +3970,7 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
  * Function: zbx_determine_items_in_expressions                               *
  *                                                                            *
  * Purpose: determine which items is used in the base trigger expressions and *
- *          flag it with ZBX_DC_TRIGGER_BASE_EXPRESSION                       *
+ *          flag it with ZBX_DC_TRIGGER_PROBLEM_EXPRESSION                    *
  *                                                                            *
  * Parameters: trigger_order - [IN/OUT] pointer to the list of triggers       *
  *             itemids       - [IN] array of item IDs                         *
@@ -4010,7 +4010,7 @@ void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const z
 			if (FAIL != zbx_vector_uint64_bsearch(&itemids_sorted, functions[f].itemid,
 					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
 			{
-				func_pos->trigger->flags = ZBX_DC_TRIGGER_BASE_EXPRESSION;
+				func_pos->trigger->flags = ZBX_DC_TRIGGER_PROBLEM_EXPRESSION;
 				break;
 			}
 		}
@@ -4528,7 +4528,9 @@ void	evaluate_expressions(zbx_vector_ptr_t *triggers)
 		/* trigger expression evaluates to true, set PROBLEM value */
 		if (SUCCEED != zbx_double_compare(expr_result, 0.0))
 		{
-			if (ZBX_DC_TRIGGER_BASE_EXPRESSION == tr->flags)
+			/* Trigger value cannot be PROBLEM state if the initiator (new item values or time */
+			/* functions) of trigger recalculation is not included in problem expression. */
+			if (ZBX_DC_TRIGGER_PROBLEM_EXPRESSION == tr->flags)
 				tr->new_value = TRIGGER_VALUE_PROBLEM;
 			else
 				tr->new_value = TRIGGER_VALUE_NONE;

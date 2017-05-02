@@ -190,8 +190,8 @@ typedef struct
 }
 zbx_tag_t;
 
-/* item exist in base expression  */
-#define		ZBX_DC_TRIGGER_BASE_EXPRESSION	1
+/* item exist in problem expression  */
+#define ZBX_DC_TRIGGER_PROBLEM_EXPRESSION	1
 
 typedef struct _DC_TRIGGER
 {
