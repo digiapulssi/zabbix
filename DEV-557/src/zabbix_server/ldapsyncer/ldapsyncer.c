@@ -241,36 +241,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_ldap_search                                                  *
- *                                                                            *
- * Purpose: search in LDAP database                                           *
- *                                                                            *
- * Return value: SUCCEED or FAIL                                              *
- *                                                                            *
- ******************************************************************************/
-static int	zbx_ldap_search(LDAP *ld, char *base_dn, int scope, char *filter, char **attributes_list, int timeout,
-		LDAPMessage **result, char **error)
-{
-	int		res;
-	struct timeval	tv;
-
-	tv.tv_sec = timeout;
-	tv.tv_usec = 0;
-
-	/* TODO: add handling of LDAP_SIZELIMIT_EXCEEDED (too many entries found to return them in one response) */
-
-	if (LDAP_SUCCESS != (res = ldap_search_ext_s(ld, base_dn, scope, filter, attributes_list, 0, NULL, NULL, &tv,
-			-1, result)))
-	{
-		*error = zbx_dsprintf(*error, "ldap_search_ext_s() failed: %d %s", res, ldap_err2string(res));
-		return FAIL;
-	}
-
-	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: zbx_ldap_free                                                    *
  *                                                                            *
  * Purpose: close connection, release LDAP resources                          *
@@ -392,37 +362,118 @@ static void	zbx_ldap_user_destroy(zbx_ldap_user_t *p)
 */
 }
 
-static void	zbx_ldap_read_entry(LDAP *ld, LDAPMessage *entry)
+static void	zbx_ldap_get_user(LDAP *ld, LDAPMessage *entry, zbx_ldap_search_t *ldap_search, zbx_vector_ptr_t *users)
 {
 	char		*attr;
 	BerElement	*ber = NULL;
+	zbx_ldap_user_t	*user;
+
+	user = zbx_calloc(NULL, 1, sizeof(zbx_ldap_user_t));
+	zbx_vector_ptr_append(users, user);
 
 	for (attr = ldap_first_attribute(ld, entry, &ber); NULL != attr; attr = ldap_next_attribute(ld, entry, ber))
 	{
-		struct berval	**ber_val = ldap_get_values_len(ld, entry, attr);
+		char	**values = ldap_get_values(ld, entry, attr);
 
-		if (NULL != ber_val && NULL != *ber_val)
+		if (NULL != values && NULL != *values)
 		{
-			zabbix_log(LOG_LEVEL_TRACE, "attribute '%s' length %d value '%s'",
-					attr, (*ber_val)->bv_len, (*ber_val)->bv_val);
+			if (0 == strcmp(ldap_search->user_type_attr, attr))
+			{
+				user->user_type = atoi(*values);
+			}
+			else if (0 == strcmp(ldap_search->alias_attr, attr))
+			{
+				user->alias = zbx_strdup(user->alias, *values);
+			}
+			else if (0 == strcmp(ldap_search->name_attr, attr))
+			{
+				user->name = zbx_strdup(user->name, *values);
+			}
+			else if (0 == strcmp(ldap_search->surname_attr, attr))
+			{
+				user->surname = zbx_strdup(user->surname, *values);
+			}
+			else if (0 == strcmp(ldap_search->language_attr, attr))
+			{
+				user->language = zbx_strdup(user->language, *values);
+			}
+			else if (0 == strcmp(ldap_search->theme_attr, attr))
+			{
+				user->theme = zbx_strdup(user->theme, *values);
+			}
+			else if (0 == strcmp(ldap_search->autologin_attr, attr))
+			{
+				user->autologin = atoi(*values);
+			}
+			else if (0 == strcmp(ldap_search->autologout_attr, attr))
+			{
+				user->autologout = atoi(*values);
+			}
+			else if (0 == strcmp(ldap_search->refresh_attr, attr))
+			{
+				user->refresh = atoi(*values);
+			}
+			else if (0 == strcmp(ldap_search->rows_per_page_attr, attr))
+			{
+				user->rows_per_page = atoi(*values);
+			}
+			else if (0 == strcmp(ldap_search->url_after_login_attr, attr))
+			{
+				user->url_after_login = zbx_strdup(user->url_after_login, *values);
+			}
+			else if (0 == strcmp(ldap_search->media_type_attr, attr))
+			{
+				user->media_type = atoi(*values);
+			}
+			else if (0 == strcmp(ldap_search->send_to_attr, attr))
+			{
+				user->send_to = zbx_strdup(user->send_to, *values);
+			}
+			else if (0 == strcmp(ldap_search->when_active_attr, attr))
+			{
+				user->when_active = zbx_strdup(user->when_active, *values);
+			}
+			else if (0 == strcmp(ldap_search->media_enabled_attr, attr))
+			{
+				user->media_enabled = atoi(*values);
+			}
+			else if (0 == strcmp(ldap_search->use_if_severity_attr, attr))
+			{
+				user->use_if_severity = atoi(*values);
+			}
 		}
 
-		ldap_value_free_len(ber_val);
+		ldap_value_free(values);
 		ldap_memfree(attr);
 	}
 
 	ber_free(ber, 0);
 }
 
-static void	zbx_ldap_get_data(LDAP *ld, zbx_ldap_search_t *ldap_search, int attrs_only, time_t tv_sec)
+static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, int attrs_only, time_t tv_sec,
+		zbx_vector_ptr_t *users)
 {
 	struct berval	*cookie = NULL;
 	unsigned char	more_pages;
 	struct timeval	timeout = {tv_sec, 0};
 	char		*attrs[] =
 	{
-			ldap_search->send_to_attr,
+			ldap_search->user_type_attr,
+			ldap_search->alias_attr,
 			ldap_search->name_attr,
+			ldap_search->surname_attr,
+			ldap_search->language_attr,
+			ldap_search->theme_attr,
+			ldap_search->autologin_attr,
+			ldap_search->autologout_attr,
+			ldap_search->refresh_attr,
+			ldap_search->rows_per_page_attr,
+			ldap_search->url_after_login_attr,
+			ldap_search->media_type_attr,
+			ldap_search->send_to_attr,
+			ldap_search->when_active_attr,
+			ldap_search->media_enabled_attr,
+			ldap_search->use_if_severity_attr,
 			NULL
 	};
 
@@ -469,7 +520,7 @@ static void	zbx_ldap_get_data(LDAP *ld, zbx_ldap_search_t *ldap_search, int attr
 		}
 
 		for (entry = ldap_first_entry(ld, lm); NULL != entry; entry = ldap_next_entry(ld, entry))
-			zbx_ldap_read_entry(ld, entry);
+			zbx_ldap_get_user(ld, entry, ldap_search, users);
 
 		if (NULL != cookie && NULL != cookie->bv_val && 0 < cookie->bv_len)
 			more_pages = 1;
@@ -508,11 +559,11 @@ static int	zbx_get_data_from_ldap(zbx_vector_ptr_t *sources, zbx_vector_ptr_t *u
 			continue;
 		}
 
-		for (j = 0;j < ldap_source->searches.values_num; j++)
+		for (j = 0; j < ldap_source->searches.values_num; j++)
 		{
 			zbx_ldap_search_t	*ldap_search = ldap_source->searches.values[j];
 
-			zbx_ldap_get_data(ld, ldap_search, 0, ldap_source->server.proc_timeout);
+			zbx_ldap_find_users(ld, ldap_search, 0, ldap_source->server.proc_timeout, users);
 		}
 
 		if (NULL != ld)
@@ -675,7 +726,7 @@ out:
  * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
-static int      zbx_synchronize_from_ldap(int *user_num)
+static int	zbx_synchronize_from_ldap(int *user_num)
 {
 	const char		*__function_name = "zbx_synchronize_from_ldap";
 	LDAPMessage		*result;
@@ -688,11 +739,6 @@ static int      zbx_synchronize_from_ldap(int *user_num)
 
 	/* TODO: consider supporting a list of URIs - ldap_initialize() in zbx_ldap_connect() can take a list of them */
 	/* TODO: consider supporting 'ldaps' (LDAP over TLS) protocol. */
-
-	char		*base_dn = "OU=people,DC=example,DC=com";
-	int		scope = LDAP_SCOPE_SUBTREE;
-	char		*filter = "(ou=IT operations)";
-	char		**attributes_list = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -721,14 +767,6 @@ static int      zbx_synchronize_from_ldap(int *user_num)
 
 	/* TODO: synchronization */
 
-	/* TODO: this is just learning to search */
-/*
-	if (SUCCEED != (res = zbx_ldap_search(ld, base_dn, scope, filter, attributes_list, timeout, &result, &error)))
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "%s() cannot search in LDAP server: %s", __function_name, error);
-		goto out;
-	}
-*/
 	ret = SUCCEED;
 out:
 	zbx_free(error);
@@ -742,6 +780,7 @@ out:
 	for (i = 0; i < ldap_users.values_num; i++)
 		zbx_ldap_user_destroy(ldap_users.values[i]);
 
+	zbx_vector_ptr_clear_ext(&ldap_users, zbx_ptr_free);
 	zbx_vector_ptr_destroy(&ldap_users);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s error:'%s'", __function_name, zbx_result_string(ret),
