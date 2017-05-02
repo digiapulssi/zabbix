@@ -2062,6 +2062,7 @@ Changes for 2.2.19rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-11888] fixed chart name urlencoding for web scenario reports; thanks to Kotaro Miyashita for patch (miks)
 
 --------------------------------------------------------------------------------
 Changes for 2.2.18
