@@ -3,7 +3,7 @@ package TLDs;
 use strict;
 use warnings;
 use Zabbix;
-use TLD_constants qw(:general :templates :api :config :tls);
+use TLD_constants qw(:general :templates :groups :api :config :tls);
 use Data::Dumper;
 use base 'Exporter';
 
@@ -414,17 +414,10 @@ sub create_template {
     my $name = shift;
     my $child_templateid = shift;
 
-    my ($result, $templateid, $options, $groupid);
-
-    unless ($groupid = $zabbix->exist('hostgroup', {'filter' => {'name' => 'Templates - TLD'}})) {
-        $result = $zabbix->create('hostgroup', {'name' => 'Templates - TLD'});
-        $groupid = $result->{'groupids'}[0];
-    }
-
-    return $zabbix->last_error if defined $zabbix->last_error;
+    my ($result, $templateid, $options);
 
     unless ($templateid = $zabbix->exist('template',{'filter' => {'host' => $name}})) {
-        $options = {'groups'=> {'groupid' => $groupid}, 'host' => $name};
+        $options = {'groups'=> {'groupid' => TEMPLATES_TLD_GROUPID}, 'host' => $name};
 
         $options->{'templates'} = [{'templateid' => $child_templateid}] if defined $child_templateid;
 
@@ -433,7 +426,7 @@ sub create_template {
         $templateid = $result->{'templateids'}[0];
     }
     else {
-        $options = {'templateid' => $templateid, 'groups'=> {'groupid' => $groupid}, 'host' => $name};
+        $options = {'templateid' => $templateid, 'groups'=> {'groupid' => TEMPLATES_TLD_GROUPID}, 'host' => $name};
         $options->{'templates'} = [{'templateid' => $child_templateid}] if defined $child_templateid;
 
         $result = $zabbix->update('template', $options);
