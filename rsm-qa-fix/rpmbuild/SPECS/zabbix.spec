@@ -212,7 +212,6 @@ Requires:			perl-LWP-Protocol-https, perl-JSON-XS, perl-Expect, perl-JSON
 Requires:			perl-Redis, perl-File-Pid, perl-DateTime-Format-RFC3339
 Requires:			perl-Text-CSV_XS
 %endif
-Requires:			zabbix-server = %{version}-%{release}
 AutoReq:			no
 
 %description scripts
