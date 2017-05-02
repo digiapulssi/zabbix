@@ -175,8 +175,10 @@ class CScreenHistory extends CScreenBase {
 				}
 
 				$historyData = API::History()->get($options);
-				CArrayHelper::sort($historyData, ['clock', 'ns']);
-				$historyData = array_reverse($historyData);
+				CArrayHelper::sort($historyData, [
+					['field' => 'clock', 'order' => SORT_DESC],
+					['field' => 'ns', 'order' => SORT_DESC]
+				]);
 
 				foreach ($historyData as $data) {
 					$data['value'] = rtrim($data['value'], " \t\r\n");
@@ -270,8 +272,10 @@ class CScreenHistory extends CScreenBase {
 				}
 
 				$historyData = API::History()->get($options);
-				CArrayHelper::sort($historyData, ['clock', 'ns']);
-				$historyData = array_reverse($historyData);
+				CArrayHelper::sort($historyData, [
+					['field' => 'clock', 'order' => SORT_DESC],
+					['field' => 'ns', 'order' => SORT_DESC]
+				]);
 
 				foreach ($historyData as $data) {
 					$item = $items[$data['itemid']];
