@@ -6,6 +6,7 @@ New features:
 
 Bug fixes:
 ..F....... [203] allowed specific frontend users to access RDDS and EPP data (dimir, gleb)
+....I..... [209] fixed full path to Zabbix server log file in configuration file of RPM package (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc1
