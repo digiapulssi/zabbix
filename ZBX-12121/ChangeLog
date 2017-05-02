@@ -3,6 +3,12 @@ Changes for 3.2.6rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-11530] fixed status of application inheritance from template in API::Application()->get() call (miks)
+..F....... [ZBX-11536] fixed missing operator in event correlation form (miks)
+..F....... [ZBX-11309] fixed collision of cookies name responsible for storing selected checkboxes (miks)
+..F....... [ZBX-11981] fixed undefined index 'ns' in options output array (miks)
+..F....... [ZBX-12116] fixed pagination in Maintenance page (Sasha)
+A......... [ZBX-12108] fixed limit option in event.get method (Sasha)
 ........S. [ZBX-12100] fixed new line handling in SSH agent with numeric type of information (vso)
 ..F....... [ZBX-9958] fixed wrongly displayed list view after mass update failure (miks)
 
@@ -2056,6 +2062,7 @@ Changes for 2.2.19rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-11888] fixed chart name urlencoding for web scenario reports; thanks to Kotaro Miyashita for patch (miks)
 
 --------------------------------------------------------------------------------
 Changes for 2.2.18
