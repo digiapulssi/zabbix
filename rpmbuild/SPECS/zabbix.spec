@@ -240,16 +240,8 @@ cat database/mysql/data.sql >> database/mysql/create.sql
 cat %{SOURCE16} >> database/mysql/create.sql
 gzip database/mysql/create.sql
 
-mkdir syslog/
-cp %{SOURCE20} syslog/rsm.slv.conf
-
 cp %{SOURCE19} frontends/nginx.conf
-
-cp %{SOURCE21} conf/zabbix_server.conf
 %endif
-
-cp %{SOURCE22} conf/zabbix_proxy_common.conf
-cp %{SOURCE23} conf/zabbix_proxy_N.conf
 
 # sql files for proxyes
 gzip database/mysql/schema.sql
@@ -355,27 +347,12 @@ mv $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_server.conf.d $RPM_BUILD_ROOT%{_s
 %endif
 
 %if 0%{?build_server}
-cat conf/zabbix_server.conf | sed \
-	-e '/^# PidFile=/a \\nPidFile=%{_localstatedir}/run/zabbix/zabbix_server.pid' \
-	-e 's|^LogFile=.*|LogFile=%{_localstatedir}/log/zabbix/zabbix_server.log|g' \
-	-e '/^# LogFileSize=/a \\nLogFileSize=0' \
-	-e '/^# AlertScriptsPath=/a \\nAlertScriptsPath=/opt/zabbix/alertscripts' \
-	-e '/^# ExternalScripts=/a \\nExternalScripts=/opt/zabbix/externalscripts' \
-	-e 's|^DBUser=root|DBUser=zabbix|g' \
-	> $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_server.conf
-
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/rsyslog.d
-cp syslog/rsm.slv.conf $RPM_BUILD_ROOT%{_sysconfdir}/rsyslog.d/rsm.slv.conf
+cp %{SOURCE20} $RPM_BUILD_ROOT%{_sysconfdir}/rsyslog.d/rsm.slv.conf
+cp %{SOURCE21} $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_server.conf
 %endif
 
-cat conf/zabbix_proxy_common.conf | sed \
-	-e '/^# ProxyMode=/a \\nProxyMode=1' \
-	-e '/^# PidFile=/a \\nPidFile=%{_localstatedir}/run/zabbix/zabbix_proxy.pid' \
-	-e 's|^LogFile=.*|LogFile=%{_localstatedir}/log/zabbix/zabbix_proxy.log|g' \
-	-e '/^# LogFileSize=/a \\nLogFileSize=0' \
-	-e '/^# ExternalScripts=/a \\nExternalScripts=/opt/zabbix/externalscripts' \
-	-e 's|^DBUser=root|DBUser=zabbix|g' \
-	> $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_proxy_common.conf
+cp %{SOURCE22} $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_proxy_common.conf
 cp %{SOURCE23} $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_proxy_N.conf
 
 # install logrotate configuration files
