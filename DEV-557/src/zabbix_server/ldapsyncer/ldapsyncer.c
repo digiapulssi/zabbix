@@ -487,7 +487,7 @@ static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, time_t
 
 		more_pages = 0;
 
-		if (LDAP_SUCCESS != (ldap_err = ldap_create_page_control(ld, LDAP_MAXINT, cookie, 1, &ctrl)))
+		if (LDAP_SUCCESS != (ldap_err = ldap_create_page_control(ld, LDAP_MAXINT, cookie, 0, &ctrl)))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "cannot create page control '%s'", ldap_err2string(ldap_err));
 			goto clean;
