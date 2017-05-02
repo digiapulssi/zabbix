@@ -1151,7 +1151,7 @@ class CUser extends CApiService {
 		}
 
 		// start session
-		$sessionid = md5(time().$password.$name.rand(0, 10000000));
+		$sessionid = md5(microtime().$password.$name.mt_rand());
 		DBexecute('INSERT INTO sessions (sessionid,userid,lastaccess,status)'.
 			' VALUES ('.zbx_dbstr($sessionid).','.zbx_dbstr($userInfo['userid']).','.time().','.ZBX_SESSION_ACTIVE.')'
 		);
