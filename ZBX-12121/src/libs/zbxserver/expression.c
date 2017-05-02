@@ -3969,8 +3969,8 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
  *                                                                            *
  * Function: zbx_determine_items_in_expressions                               *
  *                                                                            *
- * Purpose: determine which items is used in the base trigger expressions and *
- *          flag it with ZBX_DC_TRIGGER_PROBLEM_EXPRESSION                    *
+ * Purpose: mark triggers that use one of the items in problem expression     *
+ *          with ZBX_DC_TRIGGER_PROBLEM_EXPRESSION flag                       *
  *                                                                            *
  * Parameters: trigger_order - [IN/OUT] pointer to the list of triggers       *
  *             itemids       - [IN] array of item IDs                         *
