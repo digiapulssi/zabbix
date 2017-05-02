@@ -1,8 +1,27 @@
-Changes for 2.2.18rc1
+Changes for 2.2.19rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.2.18
+
+2.2.18rc1 was released as 2.2.18 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.18rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
+A......... [ZBX-7492] fixed undefined index and invalid argument supplied to foreach errors in case if macros tag is empty or is not included in the XML import file (miks)
+..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
+...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
+.......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
+A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
+A......... [ZBX-11893] fixed permission issue, when importing hosts that are monitored by proxy by Zabbix Admin type user (vmurzins)
+..F....... [ZBX-11933] added fullscreen parameter in link to submap in maps (vmurzins)
 .......PS. [ZBX-11864] fixed formatting of URLs if an IPv6 is used in simple HTTPS checks (abs)
 ..F....... [ZBX-6851] fixed zero number display in Event ID column in windows eventlog history (vmurzins)
 .......PS. [ZBX-11758] fixed crash in web monitoring when variable is empty or the first step was called regexp function on Solaris (Sergejs)
@@ -1535,11 +1554,23 @@ A......... [ZBX-5498] applications API refactoring (Vedmak)
 ..F....... [ZBX-1845] added tabs to host massupdate form (Vedmak)
 
 --------------------------------------------------------------------------------
-Changes for 2.0.21rc1
+Changes for 2.0.22rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.0.21
+
+2.0.21rc1 was released as 2.0.21 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.0.21rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
 ...G...... [ZBX-11479] fixed threaded metric to handle interruption by a signal (vso)
 
 --------------------------------------------------------------------------------

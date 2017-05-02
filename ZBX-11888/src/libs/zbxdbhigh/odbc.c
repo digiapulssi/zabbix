@@ -309,8 +309,10 @@ ZBX_ODBC_ROW	odbc_DBfetch(ZBX_ODBC_RESULT pdbh)
 		}
 
 		/* force len to integer value for DB2 compatibility */
-		while (SQL_NO_DATA != (retcode = SQLGetData(pdbh->hstmt, i + 1, c_type, buffer, MAX_STRING_LEN, &len)))
+		do
 		{
+			retcode = SQLGetData(pdbh->hstmt, i + 1, c_type, buffer, MAX_STRING_LEN, &len);
+
 			if (0 == SQL_SUCCEEDED(retcode))
 			{
 				odbc_Diag(SQL_HANDLE_STMT, pdbh->hstmt, retcode, "Cannot get column data");
@@ -324,6 +326,7 @@ ZBX_ODBC_ROW	odbc_DBfetch(ZBX_ODBC_RESULT pdbh)
 
 			zbx_strcpy_alloc(&pdbh->row_data[i], &alloc, &offset, buffer);
 		}
+		while (SQL_SUCCESS != retcode);
 
 		if (NULL != pdbh->row_data[i])
 			zbx_rtrim(pdbh->row_data[i], " ");

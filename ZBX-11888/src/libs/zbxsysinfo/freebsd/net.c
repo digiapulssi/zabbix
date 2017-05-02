@@ -231,6 +231,8 @@ int	NET_IF_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 			i++;
 		}
 
+		if_freenameindex(interfaces);
+
 		ret = SYSINFO_RET_OK;
 	}
 
