@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc2
 
 New features:
+..F....... [211] fixed SQL errors in frontend when trying to view incident (Oleg)
 ....I..... [210] removed dependency of Zabbix scripts on Zabbix server (dimir)
 
 Bug fixes:
