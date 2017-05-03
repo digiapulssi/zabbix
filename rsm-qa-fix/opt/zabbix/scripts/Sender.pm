@@ -8,6 +8,7 @@ use JSON;
 use IO::Socket;
 use IO::Select;
 use Net::Domain;
+use Data::Dumper;
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -25,7 +26,8 @@ sub new
 	      'interval' => 1,
 	      'retries' => 1,
 	      'keepalive' => 0,
-	      '_last_sent' => 0);
+	      '_last_sent' => 0,
+	      'debug' => 0);
 
     my %h = %{$_[0]};
 
@@ -182,18 +184,22 @@ sub _send {
 	    return;
 	}
     }
+    print("request to sender: ", Dumper($data_ref)) if ($ZOPTS{'debug'});
     $self->_socket()->send( $self->_encode_request( $data_ref ) );
     my $Select  = IO::Select::->new($self->_socket());
     my @Handles = $Select->can_read( $self->timeout() );
 
     my $status = 0;
+    my $decoded_result;
+    my $result;
     if ( scalar(@Handles) > 0 ) {
-        my $result;
         $self->_socket()->recv( $result, 1024 );
-        if ( $self->_decode_answer($result) ) {
+        $decoded_result = $self->_decode_answer($result);
+        if ( $decoded_result ) {
             $status = 1;
         }
     }
+    print("reply from sender: $result\n") if ($ZOPTS{'debug'});
     $self->_disconnect() unless $self->keepalive();
 
     return $status if ($status == 1);
@@ -211,8 +217,11 @@ sub _connect {
         Timeout  => $self->timeout(),
     );
 
+    print("connecting to sender: ", $self->server(), ":", $self->port(), "\n") if ($ZOPTS{'debug'});
+
     if (!$Socket) {
 	$self->_sender_err("cannot create socket (".$self->server().":".$self->port()."): $!");
+	print("cannot create socket: $!\n") if ($ZOPTS{'debug'});
 	return 0;
     }
 
