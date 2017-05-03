@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-02-20 11:27+0200\n"
+"POT-Creation-Date: 2017-05-03 21:42+0300\n"
 "PO-Revision-Date: 2016-03-25 20:04+0300\n"
 "Last-Translator: Anonymous Pootle User\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -291,7 +291,7 @@ msgstr "Những ghi nhận"
 #: include/views/administration.general.iconmap.edit.php:48
 #: include/views/administration.general.regularexpressions.edit.php:47
 #: include/views/administration.general.valuemapping.edit.php:46
-#: include/views/administration.users.edit.php:204
+#: include/views/administration.users.edit.php:206
 #: include/views/configuration.action.edit.php:48
 #: include/views/configuration.action.edit.php:401
 #: include/views/configuration.action.edit.php:405
@@ -457,9 +457,9 @@ msgstr "Kích hoạt"
 #: include/views/administration.general.valuemapping.edit.php:107
 #: include/views/administration.usergroups.edit.php:155
 #: include/views/administration.usergroups.edit.php:186
-#: include/views/administration.users.edit.php:72
-#: include/views/administration.users.edit.php:265
-#: include/views/administration.users.edit.php:452
+#: include/views/administration.users.edit.php:74
+#: include/views/administration.users.edit.php:267
+#: include/views/administration.users.edit.php:454
 #: include/views/common.filter.trigger.php:140
 #: include/views/configuration.action.edit.php:359
 #: include/views/configuration.action.edit.php:614
@@ -527,7 +527,7 @@ msgstr "Kích hoạt"
 #: include/views/js/administration.general.valuemapping.edit.js.php:24
 #: include/views/js/adm.regexprs.edit.js.php:188
 #: include/views/js/configuration.action.edit.js.php:242
-#: include/views/js/configuration.action.edit.js.php:578
+#: include/views/js/configuration.action.edit.js.php:576
 #: include/views/js/configuration.correlation.edit.js.php:47
 #: include/views/js/configuration.discovery.edit.js.php:111
 #: include/views/js/configuration.discovery.edit.js.php:674
@@ -655,7 +655,7 @@ msgstr "Agent hoặc SNMP hoặc JMX hoặc IPMI interface"
 msgid "Aggregate checks do not require any agent running on a host being monitored. Zabbix server collects aggregate information by doing direct database queries. See Zabbix Manual."
 msgstr "Tập hợp các kiểm tra yêu cầu không được bất kỳ agent nào đang chạy trên host thì được theo dõi. Zabbix server thu thập các tập hợp thông tin bằng cách trực tiếp. Xem hướng dẫn Zabbix."
 
-#: include/hosts.inc.php:114 include/views/administration.users.edit.php:46
+#: include/hosts.inc.php:114 include/views/administration.users.edit.php:48
 #: include/views/administration.users.list.php:42
 #: include/views/administration.users.list.php:72 popup.php:635 users.php:43
 msgid "Alias"
@@ -684,8 +684,8 @@ msgid "All"
 msgstr "Tất cả"
 
 #: include/views/administration.usergroups.edit.php:99
-#: include/views/administration.users.edit.php:402
-#: include/views/administration.users.edit.php:408
+#: include/views/administration.users.edit.php:404
+#: include/views/administration.users.edit.php:410
 msgid "All groups"
 msgstr ""
 
@@ -1033,11 +1033,11 @@ msgstr "Giao thức xác thực"
 msgid "Auto registration"
 msgstr "Đăng ký tự động"
 
-#: include/views/administration.users.edit.php:175
+#: include/views/administration.users.edit.php:177
 msgid "Auto-login"
 msgstr "Tự động đăng nhập"
 
-#: include/views/administration.users.edit.php:176 profile.php:49 users.php:60
+#: include/views/administration.users.edit.php:178 profile.php:49 users.php:60
 msgid "Auto-logout (min 90 seconds)"
 msgstr "Tự động đăng xuất (ít nhất 90 giây)"
 
@@ -1275,7 +1275,7 @@ msgid "Cannot acknowledge event"
 msgid_plural "Cannot acknowledge events"
 msgstr[0] "Không thể tiếp nhận sự kiện"
 
-#: include/classes/api/services/CEvent.php:773
+#: include/classes/api/services/CEvent.php:775
 #, c-format
 msgid "Cannot acknowledge problem: %1$s."
 msgstr ""
@@ -1350,7 +1350,7 @@ msgstr "Không thể thêm nhóm"
 msgid "Cannot add group."
 msgstr ""
 
-#: hosts.php:431
+#: hosts.php:438
 msgid "Cannot add host"
 msgstr "Không thể thêm host"
 
@@ -1506,8 +1506,8 @@ msgstr "Không thể sao chép kiểu item."
 msgid "Cannot clone trigger prototypes."
 msgstr "Không thể sao chép kiểu trigger."
 
-#: include/classes/api/services/CEvent.php:845
-#: include/classes/api/services/CEvent.php:852
+#: include/classes/api/services/CEvent.php:847
+#: include/classes/api/services/CEvent.php:854
 #, c-format
 msgid "Cannot close problem: %1$s."
 msgstr ""
@@ -1652,7 +1652,7 @@ msgid "Cannot delete group"
 msgid_plural "Cannot delete groups"
 msgstr[0] "Không thể xóa nhóm"
 
-#: hosts.php:662 hosts.php:675
+#: hosts.php:676 hosts.php:689
 msgid "Cannot delete host"
 msgstr "Không thể xóa host"
 
@@ -1672,7 +1672,7 @@ msgstr "Không thể xóa biểu tượng sơ đồ"
 msgid "Cannot delete image"
 msgstr "Không thể xóa hình ảnh"
 
-#: include/classes/api/services/CHost.php:1021
+#: include/classes/api/services/CHost.php:985
 msgid "Cannot delete inventory."
 msgstr "Không thể xóa danh sách lưu trữ."
 
@@ -1847,7 +1847,7 @@ msgid_plural "Cannot disable discovery rules"
 msgstr[0] "Không thể vô hiệu hoa quy tắc phát hiệnKhông thể vô hiệu hóa các quy tắc phát hiện"
 
 #: app/controllers/CControllerProxyHostDisable.php:76 hostgroups.php:303
-#: hosts.php:706
+#: hosts.php:720
 msgid "Cannot disable host"
 msgid_plural "Cannot disable hosts"
 msgstr[0] "Không thể vô hiệu hóa hostKhông thể vô hiệu hóa các host"
@@ -1901,7 +1901,7 @@ msgid_plural "Cannot enable discovery rules"
 msgstr[0] "Không thể kích hoạt quy tắc phát hiệnKhông thể kích hoạt các quy tắc phát hiện"
 
 #: app/controllers/CControllerProxyHostEnable.php:76 hostgroups.php:302
-#: hosts.php:705
+#: hosts.php:719
 msgid "Cannot enable host"
 msgid_plural "Cannot enable hosts"
 msgstr[0] "Không thể kích hoạt hostKhông thể kích hoạt các host"
@@ -2105,7 +2105,7 @@ msgstr "Không thể chèn biểu thức trigger"
 msgid "Cannot insert user media."
 msgstr "Không thể chèn media người dùng."
 
-#: include/classes/api/services/CHost.php:999
+#: include/classes/api/services/CHost.php:963
 msgid "Cannot link template"
 msgstr "Không thể liên kết template"
 
@@ -2122,7 +2122,7 @@ msgstr "Không thể đăng nhập."
 msgid "Cannot logout."
 msgstr "Không thể đăng xuất."
 
-#: include/classes/api/services/CHost.php:857
+#: include/classes/api/services/CHost.php:821
 msgid "Cannot mass update host name."
 msgstr "Không thể cập nhật cùng một lúc tên host."
 
@@ -2130,7 +2130,7 @@ msgstr "Không thể cập nhật cùng một lúc tên host."
 msgid "Cannot mass update template name."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:847
+#: include/classes/api/services/CHost.php:811
 msgid "Cannot mass update visible host name."
 msgstr "Không thể cập nhật cùng một lúc visible host name."
 
@@ -2252,14 +2252,14 @@ msgstr ""
 msgid "Cannot set \"templateid\" for screen \"%1$s\"."
 msgstr "Không thể đặt lại \"templateid\" cho screen \"%1$s\"."
 
-#: include/classes/api/services/CHost.php:908
-#: include/classes/api/services/CHost.php:1688
-#: include/classes/api/services/CHost.php:1816
+#: include/classes/api/services/CHost.php:872
+#: include/classes/api/services/CHost.php:1700
+#: include/classes/api/services/CHost.php:1827
 msgid "Cannot set inventory fields for disabled inventory."
 msgstr "Không thể đặt lại các trường inventory khi vô hiệu hóa inventory."
 
-#: include/classes/api/services/CScreenItem.php:568
-#: include/classes/api/services/CScreenItem.php:594
+#: include/classes/api/services/CScreenItem.php:575
+#: include/classes/api/services/CScreenItem.php:601
 msgid "Cannot set resource ID for screen element."
 msgstr ""
 
@@ -2304,7 +2304,7 @@ msgstr "Không thể ngắt kết nối hoặc xóa các item"
 msgid "Cannot unlink and clear triggers"
 msgstr "Không thể ngắt kết nối hoặc xóa các trigger"
 
-#: include/classes/api/services/CHost.php:974
+#: include/classes/api/services/CHost.php:938
 msgid "Cannot unlink template"
 msgstr "Không thể ngắt kết nối tempate"
 
@@ -2369,7 +2369,7 @@ msgstr "Không thể cập nhật \"%1$s\" cho trigger \"%2$s\"."
 msgid "Cannot update \"%1$s\" for trigger prototype \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1800
+#: include/classes/api/services/CHost.php:1811
 #, c-format
 msgid "Cannot update \"%2$s\" for a discovered host \"%1$s\"."
 msgstr ""
@@ -2471,11 +2471,11 @@ msgstr "Không thể cập nhật nhóm."
 msgid "Cannot update groups for discovered host \"%1$s\"."
 msgstr "Không thể cập nhật các nhóm cho host được phát hiện \"%1$s\"."
 
-#: hosts.php:418
+#: hosts.php:425
 msgid "Cannot update host"
 msgstr "Không thể cập nhật host"
 
-#: include/classes/api/services/CHost.php:812
+#: include/classes/api/services/CHost.php:778
 msgid "Cannot update host encryption settings. Connection settings for both directions should be specified."
 msgstr ""
 
@@ -2485,7 +2485,7 @@ msgid "Cannot update host prototype"
 msgid_plural "Cannot update host prototypes"
 msgstr[0] "Không thể cập nhật kiểu host"
 
-#: hosts.php:405
+#: hosts.php:412
 msgid "Cannot update hosts"
 msgstr "Không thể cập nhật các host"
 
@@ -2636,6 +2636,10 @@ msgstr "Không thể xác nhận kiểm tra phát hiện: yêu cầu khô
 msgid "Case sensitive"
 msgstr "Phân biệt chữ hoa/thường"
 
+#: include/locales.inc.php:55
+msgid "Catalan (ca_ES)"
+msgstr ""
+
 #: include/classes/items/CHelpItems.php:877
 msgid "Catches all SNMP traps that match regex. If regexp is unspecified, catches any trap."
 msgstr ""
@@ -2661,7 +2665,7 @@ msgstr ""
 
 #: include/classes/screens/CScreenBase.php:405
 #: include/classes/screens/CScreenBuilder.php:515
-#: include/classes/screens/CScreenMap.php:58
+#: include/classes/screens/CScreenMap.php:61
 #: include/views/configuration.services.edit.php:51
 #: include/views/hostmacros.php:100 include/views/js/hostmacros.js.php:37
 msgid "Change"
@@ -2674,7 +2678,7 @@ msgstr "Thay đổi"
 
 #: app/views/administration.mediatype.edit.php:116
 #: include/views/administration.authentication.edit.php:93
-#: include/views/administration.users.edit.php:102
+#: include/views/administration.users.edit.php:104
 msgid "Change password"
 msgstr "Thay đổi mật khẩu"
 
@@ -2788,11 +2792,11 @@ msgstr ""
 msgid "Checks should be unique."
 msgstr "Kiểm tra phải là duy nhất."
 
-#: include/locales.inc.php:55
+#: include/locales.inc.php:56
 msgid "Chinese (zh_CN)"
 msgstr "Chinese (zh_CN)"
 
-#: include/locales.inc.php:56
+#: include/locales.inc.php:57
 msgid "Chinese (zh_TW)"
 msgstr "Chinese (zh_TW)"
 
@@ -2917,11 +2921,11 @@ msgstr "Màu \"%1$s\" là không đúng: phải là mã màu thập lục
 msgid "Colour (OK)"
 msgstr "Màu sắc (OK)"
 
-#: include/screens.inc.php:131
+#: include/screens.inc.php:141
 msgid "Column added"
 msgstr ""
 
-#: include/screens.inc.php:193
+#: include/screens.inc.php:213
 msgid "Column deleted"
 msgstr ""
 
@@ -3682,7 +3686,7 @@ msgstr "Tùy chỉnh kích cỡ"
 msgid "Custom slides"
 msgstr "Tùy chỉnh các slide"
 
-#: include/locales.inc.php:57
+#: include/locales.inc.php:58
 msgid "Czech (cs_CZ)"
 msgstr "Czech (cs_CZ)"
 
@@ -3700,8 +3704,8 @@ msgstr ""
 msgid "DES"
 msgstr "DES"
 
-#: include/maps.inc.php:489 include/maps.inc.php:569 include/maps.inc.php:655
-#: include/maps.inc.php:743
+#: include/maps.inc.php:490 include/maps.inc.php:570 include/maps.inc.php:656
+#: include/maps.inc.php:744
 msgid "DISABLED"
 msgstr "VÔ HIỆU HÓA"
 
@@ -4124,7 +4128,7 @@ msgstr "Xóa screen?"
 msgid "Delete script?"
 msgstr "Xoas script?"
 
-#: include/views/administration.users.edit.php:77
+#: include/views/administration.users.edit.php:79
 msgid "Delete selected"
 msgstr "Xóa sự lựa chọn"
 
@@ -4246,7 +4250,7 @@ msgstr "Xóa các kiểu trigger được chọn?"
 msgid "Delete selected triggers?"
 msgstr "Xóa các trigger được chọn?"
 
-#: include/views/administration.users.edit.php:440
+#: include/views/administration.users.edit.php:442
 msgid "Delete selected user?"
 msgstr "Xóa người dùng được chọn?"
 
@@ -4316,7 +4320,7 @@ msgstr "Đã xóa: Quy tắc phát hiện \"%1$s\" trên \"%2$s\"."
 msgid "Deleted: Graph \"%1$s\" on \"%2$s\"."
 msgstr "Đã xoá: đồ thị \"%1$s\" trên \"%2$s\"."
 
-#: include/classes/api/services/CHost.php:1332
+#: include/classes/api/services/CHost.php:1296
 #, c-format
 msgid "Deleted: Host \"%1$s\"."
 msgstr "Đã xóa: Host \"%1$s\"."
@@ -4632,7 +4636,7 @@ msgstr ""
 #: include/views/administration.usergroups.list.php:67
 #: include/views/administration.usergroups.list.php:99
 #: include/views/administration.usergroups.list.php:108
-#: include/views/administration.users.edit.php:214
+#: include/views/administration.users.edit.php:216
 #: include/views/administration.users.list.php:165
 #: include/views/administration.users.list.php:167
 #: include/views/configuration.action.list.php:49
@@ -4945,14 +4949,14 @@ msgstr "Tạo bản sao tên kiểu nhóm \"%2$s\" cho kiểu host \"%1$s\"."
 msgid "Duplicate host group ID \"%2$s\" for host prototype \"%1$s\"."
 msgstr "Tạo bản sao nhóm ID host \"%2$s\" cho kiểu host \"%1$s\"."
 
-#: include/classes/api/services/CHost.php:1636
-#: include/classes/api/services/CHost.php:1846
+#: include/classes/api/services/CHost.php:1648
+#: include/classes/api/services/CHost.php:1857
 #, c-format
 msgid "Duplicate host. Host with the same host name \"%s\" already exists in data."
 msgstr "Bản sao host. Host với tên host cùng là \"%s\" đã tồn tại trong dữ liệu."
 
-#: include/classes/api/services/CHost.php:1643
-#: include/classes/api/services/CHost.php:1866
+#: include/classes/api/services/CHost.php:1655
+#: include/classes/api/services/CHost.php:1877
 #, c-format
 msgid "Duplicate host. Host with the same visible name \"%s\" already exists in data."
 msgstr "Bản sao host. Host với tên hiển thị cùng là \"%s\" đã tồn tại trong dữ liệu."
@@ -5006,7 +5010,7 @@ msgstr "Khoảng thời gian"
 msgid "Duration (sec)"
 msgstr "Khoảng thời gian (giây)"
 
-#: include/locales.inc.php:58
+#: include/locales.inc.php:59
 msgid "Dutch (nl_NL)"
 msgstr "Dutch (nl_NL)"
 
@@ -5018,7 +5022,7 @@ msgstr "Item động"
 msgid "Each URL should have a unique name. Please make sure there is only one URL named"
 msgstr "Mỗi URL cần có một tên duy nhất. Xin chắc chắn chỉ có một URl có tên"
 
-#: include/views/administration.users.edit.php:250
+#: include/views/administration.users.edit.php:252
 #: include/views/configuration.action.edit.php:460
 #: include/views/configuration.action.edit.php:480
 #: include/views/configuration.action.edit.php:1191
@@ -5154,7 +5158,7 @@ msgstr "Không có host."
 #: include/classes/api/services/CHostGroup.php:675
 #: include/classes/api/services/CHostGroup.php:741
 #: include/classes/api/services/CHostInterface.php:389
-#: include/classes/api/services/CHost.php:1180
+#: include/classes/api/services/CHost.php:1144
 #: include/classes/api/services/CHostPrototype.php:914
 #: include/classes/api/services/CIconMap.php:318
 #: include/classes/api/services/CItem.php:550
@@ -5384,7 +5388,7 @@ msgstr ""
 #: include/views/administration.usergroups.list.php:63
 #: include/views/administration.usergroups.list.php:95
 #: include/views/administration.usergroups.list.php:107
-#: include/views/administration.users.edit.php:208
+#: include/views/administration.users.edit.php:210
 #: include/views/administration.users.list.php:164
 #: include/views/administration.users.list.php:168
 #: include/views/configuration.action.edit.php:368
@@ -5756,7 +5760,7 @@ msgstr "Trường \"%1$s\" không thể bị thiết lập là NULL."
 #: include/classes/api/services/CDRule.php:305
 #: include/classes/api/services/CDRule.php:461
 #: include/classes/api/services/CHostGroup.php:912
-#: include/classes/api/services/CHost.php:784
+#: include/classes/api/services/CHost.php:750
 #: include/classes/api/services/CTemplate.php:743
 #: include/classes/api/services/CTriggerGeneral.php:236
 #: include/classes/validators/CNewValidator.php:249
@@ -5882,7 +5886,7 @@ msgstr ""
 msgid "Finish"
 msgstr "Hoàn thành"
 
-#: include/locales.inc.php:59
+#: include/locales.inc.php:60
 msgid "Finnish (fi_FI)"
 msgstr "Hoàn thành(fi_FI)"
 
@@ -5951,7 +5955,7 @@ msgstr "Công thức"
 msgid "Fourth"
 msgstr "Thứ tư"
 
-#: include/locales.inc.php:60
+#: include/locales.inc.php:61
 msgid "French (fr_FR)"
 msgstr "Pháp(fr_FR)"
 
@@ -5984,7 +5988,7 @@ msgstr "Truy cập Frontend"
 msgid "Frontend access updated"
 msgstr "Truy cập frontend đã được cập nhật"
 
-#: include/views/administration.users.edit.php:281
+#: include/views/administration.users.edit.php:283
 msgid "Frontend messaging"
 msgstr "Thông điệp frontend"
 
@@ -6031,11 +6035,11 @@ msgstr "Chung"
 msgid "Generated in %s sec"
 msgstr "Được tạo ra trong %s giây"
 
-#: include/locales.inc.php:61
+#: include/locales.inc.php:62
 msgid "Georgian (ka_GE)"
 msgstr ""
 
-#: include/locales.inc.php:62
+#: include/locales.inc.php:63
 msgid "German (de_DE)"
 msgstr "German (de_DE)"
 
@@ -6258,7 +6262,7 @@ msgstr "Đồ thị"
 msgid "Graphs deleted"
 msgstr "Các đồ thị đã xóa"
 
-#: include/locales.inc.php:63
+#: include/locales.inc.php:64
 msgid "Greek (el_GR)"
 msgstr "Greek(el_GR)"
 
@@ -6274,7 +6278,7 @@ msgstr "Grid"
 #: include/classes/screens/CScreenHostsInfo.php:102
 #: include/classes/screens/CScreenHostTriggers.php:133
 #: include/classes/screens/CScreenTriggersOverview.php:76
-#: include/screens.inc.php:680
+#: include/screens.inc.php:700
 #: include/views/configuration.application.list.php:35
 #: include/views/configuration.copy.elements.php:61
 #: include/views/configuration.graph.list.php:46
@@ -6363,7 +6367,7 @@ msgstr "Nhóm được cập nhật"
 msgid "Grouping by"
 msgstr "Gộp nhóm theo"
 
-#: include/views/administration.users.edit.php:68
+#: include/views/administration.users.edit.php:70
 #: include/views/administration.users.list.php:76
 #: include/views/configuration.host.edit.php:89
 #: include/views/configuration.host.edit.php:112
@@ -6429,7 +6433,7 @@ msgstr ""
 msgid "Headers"
 msgstr ""
 
-#: include/locales.inc.php:64
+#: include/locales.inc.php:65
 msgid "Hebrew (he_IL)"
 msgstr ""
 
@@ -6443,7 +6447,7 @@ msgstr ""
 msgid "Height"
 msgstr "Độ cao"
 
-#: app/views/layout.htmlpage.menu.php:42 include/views/general.login.php:66
+#: app/views/layout.htmlpage.menu.php:42 include/views/general.login.php:67
 msgid "Help"
 msgstr "Trợ giúp"
 
@@ -6581,16 +6585,16 @@ msgid "Host"
 msgid_plural "Hosts"
 msgstr[0] "Host"
 
-#: include/classes/api/services/CHost.php:870
+#: include/classes/api/services/CHost.php:834
 #: include/classes/api/services/CTemplate.php:430
 #, c-format
 msgid "Host \"%1$s\" already exists."
 msgstr "Host \"%1$s\" đã tồn tại."
 
 #: include/classes/api/services/CHostGroup.php:1490
-#: include/classes/api/services/CHost.php:838
-#: include/classes/api/services/CHost.php:1624
-#: include/classes/api/services/CHost.php:1784
+#: include/classes/api/services/CHost.php:802
+#: include/classes/api/services/CHost.php:1636
+#: include/classes/api/services/CHost.php:1795
 #, c-format
 msgid "Host \"%1$s\" cannot be without host group."
 msgstr ""
@@ -6612,7 +6616,7 @@ msgstr "Host IP"
 msgid "Host access"
 msgstr "Kết nối host"
 
-#: hosts.php:430
+#: hosts.php:437
 msgid "Host added"
 msgstr "Host được thêm vào"
 
@@ -6624,18 +6628,18 @@ msgstr "Host không thể có nhiều hơn một interface mặc định cu
 msgid "Host count"
 msgstr "Đếm host"
 
-#: hosts.php:662 hosts.php:675
+#: hosts.php:676 hosts.php:689
 msgid "Host deleted"
 msgstr "Host đã xóa"
 
 #: app/controllers/CControllerProxyHostDisable.php:73 hostgroups.php:300
-#: hosts.php:703
+#: hosts.php:717
 msgid "Host disabled"
 msgid_plural "Hosts disabled"
 msgstr[0] "Host đã vô hiệu hóaCác host đã vô hiệu hóa"
 
 #: app/controllers/CControllerProxyHostEnable.php:73 hostgroups.php:299
-#: hosts.php:702
+#: hosts.php:716
 msgid "Host enabled"
 msgid_plural "Hosts enabled"
 msgstr[0] "Host được kích hoạtCác host được kích hoạt"
@@ -6647,7 +6651,7 @@ msgstr[0] "Host được kích hoạtCác host được kích hoạt"
 #: include/audit.inc.php:35 include/blocks.inc.php:282
 #: include/forms.inc.php:342 include/maps.inc.php:25
 #: include/views/administration.usergroups.edit.php:93
-#: include/views/administration.users.edit.php:399
+#: include/views/administration.users.edit.php:401
 #: include/views/configuration.hostgroups.edit.php:66
 #: include/views/js/configuration.action.edit.js.php:67
 #: include/views/js/configuration.action.edit.js.php:168
@@ -6845,11 +6849,11 @@ msgstr "Host subnet mask"
 msgid "Host time"
 msgstr "Thời gian của host"
 
-#: include/classes/api/services/CHost.php:712
+#: include/classes/api/services/CHost.php:678
 msgid "Host update failed."
 msgstr "Host cập nhật thất bại."
 
-#: hosts.php:417
+#: hosts.php:424
 msgid "Host updated"
 msgstr "Host đã cập nhật"
 
@@ -6858,8 +6862,8 @@ msgstr "Host đã cập nhật"
 msgid "Host with the same name \"%1$s\" already exists."
 msgstr "Host với cùng một tên \"%1$s\" đã tồn tại."
 
-#: include/classes/api/services/CHost.php:1719
-#: include/classes/api/services/CHost.php:1899
+#: include/classes/api/services/CHost.php:1731
+#: include/classes/api/services/CHost.php:1933
 #, c-format
 msgid "Host with the same name \"%s\" already exists."
 msgstr "Host với cùng một tên \"%s\" đã tồn tại."
@@ -6870,8 +6874,8 @@ msgstr "Host với cùng một tên \"%s\" đã tồn tại."
 msgid "Host with the same visible name \"%1$s\" already exists."
 msgstr "Host với cùng một tên hiển thị \"%1$s\" đã tồn tại."
 
-#: include/classes/api/services/CHost.php:1725
-#: include/classes/api/services/CHost.php:1906
+#: include/classes/api/services/CHost.php:1737
+#: include/classes/api/services/CHost.php:1940
 #, c-format
 msgid "Host with the same visible name \"%s\" already exists."
 msgstr "Host với cùng một tên hiển thị \"%s\" đã tồn tại."
@@ -6922,7 +6926,7 @@ msgstr "Host trong bảo trì"
 msgid "Hosts location"
 msgstr "Vị trí các host"
 
-#: hosts.php:399
+#: hosts.php:406
 msgid "Hosts updated"
 msgstr "Các host đã cập nhật"
 
@@ -6936,7 +6940,7 @@ msgstr "Giờ"
 msgid "Housekeeping"
 msgstr "Dọn dẹp"
 
-#: include/locales.inc.php:65
+#: include/locales.inc.php:66
 msgid "Hungarian (hu_HU)"
 msgstr "Hungarian (hu_HU)"
 
@@ -7200,7 +7204,7 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "Nếu bạn nghĩ rằng tin nhắn này là sai, xin vui lòng tham khảo ý kiên các quản trị viên của bạn về việc nhận các điều khoản cần thiết."
 
 #: image.php:26 include/audit.inc.php:37 include/maps.inc.php:28
-#: include/maps.inc.php:765
+#: include/maps.inc.php:766
 #: include/views/administration.general.image.edit.php:46
 #: include/views/administration.general.image.edit.php:49
 #: include/views/js/monitoring.sysmaps.js.php:21 jsLoader.php:145 map.php:152
@@ -7624,9 +7628,9 @@ msgstr "Tính toán giá trị SLA cho dịch vụ \"%1$s\" không chính xa
 msgid "Incorrect characters used for host \"%1$s\"."
 msgstr "Các ký tự được sử dụng cho host \"%1$s\" không chính xác."
 
-#: include/classes/api/services/CHost.php:853
-#: include/classes/api/services/CHost.php:1612
-#: include/classes/api/services/CHost.php:1840
+#: include/classes/api/services/CHost.php:817
+#: include/classes/api/services/CHost.php:1624
+#: include/classes/api/services/CHost.php:1851
 #, c-format
 msgid "Incorrect characters used for host name \"%s\"."
 msgstr "Các ký tự được sử dụng cho tên host \"%s\" không chính xác."
@@ -7748,12 +7752,12 @@ msgstr ""
 msgid "Incorrect function is used"
 msgstr "Hàm được sử dụng không chính xác."
 
-#: include/classes/api/services/CScreenItem.php:690
+#: include/classes/api/services/CScreenItem.php:697
 #, c-format
 msgid "Incorrect graph ID \"%1$s\" provided for screen element."
 msgstr "ID đồ thị \"%1$s\" không chính xác đã cung cấp cho phần tử screen."
 
-#: include/classes/api/services/CScreenItem.php:707
+#: include/classes/api/services/CScreenItem.php:714
 #, c-format
 msgid "Incorrect graph prototype ID \"%1$s\" provided for screen element."
 msgstr ""
@@ -7772,12 +7776,12 @@ msgstr "Kiểu nhóm ID không chính xác."
 msgid "Incorrect group prototypes for host prototype \"%1$s\"."
 msgstr "Các kiểu nhóm không chính xác đối với kiểu host \"%1$s\"."
 
-#: include/classes/api/services/CScreenItem.php:673
+#: include/classes/api/services/CScreenItem.php:680
 #, c-format
 msgid "Incorrect host ID \"%1$s\" provided for screen element."
 msgstr "Host ID \"%1$s\" không chính xác đã cung cấp cho Phần tử screen."
 
-#: include/classes/api/services/CScreenItem.php:656
+#: include/classes/api/services/CScreenItem.php:663
 #, c-format
 msgid "Incorrect host group ID \"%1$s\" provided for screen element."
 msgstr "ID nhóm host \"%1$s\" không chính xác đã cung cấp cho phần tử screen."
@@ -7819,8 +7823,8 @@ msgstr "Tham số DNS interface \"%s\" được cung cấp không chính xa�
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "Cổng interface \"%s\" được cung cấp không chính xác."
 
-#: include/classes/api/services/CHost.php:1694
-#: include/classes/api/services/CHost.php:1822
+#: include/classes/api/services/CHost.php:1706
+#: include/classes/api/services/CHost.php:1833
 #, c-format
 msgid "Incorrect inventory field \"%s\"."
 msgstr "Trường lưu trữ \"%s\" không chính xác."
@@ -7829,7 +7833,7 @@ msgstr "Trường lưu trữ \"%s\" không chính xác."
 msgid "Incorrect inventory mode in action operation."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:725
+#: include/classes/api/services/CScreenItem.php:732
 #, c-format
 msgid "Incorrect item ID \"%1$s\" provided for screen element."
 msgstr "ID item \"%1$s\" được cung cấp không chính xác đối với phần tử screen."
@@ -7843,7 +7847,7 @@ msgstr "Item không chính xác đối với trục giá trị."
 msgid "Incorrect item key \"%1$s\" provided for trigger expression on \"%2$s\"."
 msgstr "Key item \"%1$s\" không chính xác được cung cấp cho biểu thức trigger trên \"%2$s\"."
 
-#: include/classes/api/services/CScreenItem.php:742
+#: include/classes/api/services/CScreenItem.php:749
 #, c-format
 msgid "Incorrect item prototype ID \"%1$s\" provided for screen element."
 msgstr ""
@@ -7893,7 +7897,7 @@ msgstr "Chu kỳ bảo trì không chính xác (nhỏ nhất là 5 phút)"
 msgid "Incorrect maintenance week period"
 msgstr "Chu kỳ bảo trì theo tuần không chính xác"
 
-#: include/classes/api/services/CScreenItem.php:759
+#: include/classes/api/services/CScreenItem.php:766
 #, c-format
 msgid "Incorrect map ID \"%1$s\" provided for screen element."
 msgstr "ID bản đồ \"%1$s\" được cung cấp không chính xác đối với phần tử screen."
@@ -7902,7 +7906,7 @@ msgstr "ID bản đồ \"%1$s\" được cung cấp không chính xác đô
 msgid "Incorrect map ID."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:635
+#: include/classes/api/services/CScreenItem.php:642
 msgid "Incorrect max columns provided for screen element."
 msgstr ""
 
@@ -7986,7 +7990,7 @@ msgstr "Giao thức riêng cho item \"%1$s\" không chính xác."
 msgid "Incorrect regular expression \"%1$s\": \"%2$s\""
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:487
+#: include/classes/api/services/CScreenItem.php:494
 msgid "Incorrect resource type provided for screen item."
 msgstr "Kiểu tài nguyên không chính xác được cung cấp cho screen item."
 
@@ -8000,7 +8004,7 @@ msgstr "Đáp ứng không chính xác nhận được từ máy chủ Z
 msgid "Incorrect retrieve mode value for step \"%1$s\" of web scenario \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:788
+#: include/classes/api/services/CScreenItem.php:795
 #, c-format
 msgid "Incorrect screen ID \"%1$s\" provided for screen element."
 msgstr "ID screen \"%1$s\" không chính xác được cung cấp cho phần tử screen."
@@ -8010,7 +8014,7 @@ msgstr "ID screen \"%1$s\" không chính xác được cung cấp cho phầ
 msgid "Incorrect screen ID."
 msgstr "ID screen không chính xác."
 
-#: include/screens.inc.php:318 include/screens.inc.php:438
+#: include/screens.inc.php:338 include/screens.inc.php:458
 msgid "Incorrect screen provided for slide show."
 msgstr "Screen không chính xác được cung cấp cho slide hiển thị."
 
@@ -8036,8 +8040,8 @@ msgstr ""
 msgid "Incorrect source value."
 msgstr "Giá trị nguồn không chính xác."
 
-#: include/classes/api/services/CHost.php:1671
-#: include/classes/api/services/CHost.php:1795
+#: include/classes/api/services/CHost.php:1683
+#: include/classes/api/services/CHost.php:1806
 #, c-format
 msgid "Incorrect status for host \"%1$s\"."
 msgstr ""
@@ -8052,7 +8056,7 @@ msgstr "Trạng thái cho kiểu host \"%1$s\" không chính xác."
 msgid "Incorrect status for service \"%1$s\"."
 msgstr "Trạng thái cho dịch vụ \"%1$s\" không chính xác."
 
-#: include/classes/api/services/CScreenItem.php:641
+#: include/classes/api/services/CScreenItem.php:648
 msgid "Incorrect style provided for screen element."
 msgstr ""
 
@@ -8201,7 +8205,7 @@ msgstr "Nhóm người dùng không chính xác."
 msgid "Incorrect value \"%1$s\" for \"%2$s\" field."
 msgstr "Giá trị \"%1$s\" không chính xác đối với trường \"%2$s\"."
 
-#: include/classes/api/services/CScreenItem.php:616
+#: include/classes/api/services/CScreenItem.php:623
 #: include/validate.inc.php:320
 #, c-format
 msgid "Incorrect value \"%1$s\" for \"%2$s\" field: must be between %3$s and %4$s."
@@ -8271,10 +8275,16 @@ msgstr ""
 #: include/classes/api/services/CEvent.php:531
 #: include/classes/api/services/CHostGroup.php:700
 #: include/classes/api/services/CHostGroup.php:773
-#: include/classes/api/services/CHost.php:1547
-#: include/classes/api/services/CHost.php:1553
-#: include/classes/api/services/CHost.php:1564
-#: include/classes/api/services/CHost.php:1570
+#: include/classes/api/services/CHost.php:1527
+#: include/classes/api/services/CHost.php:1533
+#: include/classes/api/services/CHost.php:1548
+#: include/classes/api/services/CHost.php:1554
+#: include/classes/api/services/CHost.php:1559
+#: include/classes/api/services/CHost.php:1565
+#: include/classes/api/services/CHost.php:1573
+#: include/classes/api/services/CHost.php:1579
+#: include/classes/api/services/CHost.php:1588
+#: include/classes/api/services/CHost.php:1594
 #: include/classes/api/services/CHostPrototype.php:139
 #: include/classes/api/services/CHostPrototype.php:432
 #: include/classes/api/services/CMediatype.php:417
@@ -8317,7 +8327,6 @@ msgstr "Giá trị trường \"%1$s\" không chính xác: Không thể đê
 msgid "Incorrect value map ID."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1576
 #: include/classes/api/services/CProxy.php:676
 msgid "Incorrect value used for PSK field. It should consist of an even number of hexadecimal characters."
 msgstr ""
@@ -8332,7 +8341,7 @@ msgstr "Giá trị được sử dụng cho trạng thái proxy \"%1$s\" kh�
 msgid "Incorrect web scenario ID."
 msgstr ""
 
-#: include/locales.inc.php:66
+#: include/locales.inc.php:67
 msgid "Indonesian (id_ID)"
 msgstr "Indonesian (id_ID)"
 
@@ -8409,7 +8418,7 @@ msgstr "Interface"
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "Interface được liên kết đến item \"%1$s\" trên \"%2$s\". "
 
-#: include/views/js/configuration.host.edit.js.php:154
+#: include/views/js/configuration.host.edit.js.php:168
 msgid "Interface is used by items that require this type of the interface."
 msgstr "Interface được sử dụng cho các item yêu cầu loại này của interface."
 
@@ -8674,9 +8683,9 @@ msgstr ""
 msgid "Invalid maintenance period"
 msgstr "Chu kỳ bảo trì không hợp lệ"
 
-#: include/classes/api/services/CScreenItem.php:147
-#: include/classes/api/services/CScreenItem.php:262
-#: include/classes/api/services/CScreenItem.php:326
+#: include/classes/api/services/CScreenItem.php:154
+#: include/classes/api/services/CScreenItem.php:269
+#: include/classes/api/services/CScreenItem.php:333
 #: include/classes/api/services/CScript.php:427
 #: include/classes/api/services/CService.php:200
 #: include/classes/api/services/CService.php:371
@@ -8745,7 +8754,7 @@ msgstr "Tên để xem không hợp lệ cho \"%s\". Cho phép các ký t�
 msgid "Inventory"
 msgstr "Kiểm kê"
 
-#: include/classes/api/services/CHost.php:1040
+#: include/classes/api/services/CHost.php:1004
 #, c-format
 msgid "Inventory disabled for host \"%1$s\"."
 msgstr "Kiểm kê bị vô hiệu hóa cho host \"%1$s\"."
@@ -8782,7 +8791,7 @@ msgstr "Nó không thể lọc theo mật khẩu người dùng."
 msgid "It is not possible to search by user password."
 msgstr "Nó không thể tìm kiếm theo mật khẩu người dùng."
 
-#: include/locales.inc.php:67
+#: include/locales.inc.php:68
 msgid "Italian (it_IT)"
 msgstr "Italian (it_IT)"
 
@@ -9049,7 +9058,7 @@ msgstr "Tháng 1"
 msgid "January"
 msgstr "Tháng 1"
 
-#: include/locales.inc.php:69
+#: include/locales.inc.php:70
 msgid "Japanese (ja_JP)"
 msgstr "Japanese (ja_JP)"
 
@@ -9102,7 +9111,7 @@ msgstr "Key passphrase"
 msgid "Keyword"
 msgstr "Từ khóa"
 
-#: include/locales.inc.php:68
+#: include/locales.inc.php:69
 msgid "Korean (ko_KR)"
 msgstr "Korean (ko_KR)"
 
@@ -9148,7 +9157,7 @@ msgstr "Nhãn"
 msgid "Label location"
 msgstr "Vị trí nhãn"
 
-#: include/views/administration.users.edit.php:152
+#: include/views/administration.users.edit.php:154
 msgid "Language"
 msgstr "Ngôn ngữ"
 
@@ -9261,7 +9270,7 @@ msgstr "Dữ liệu gần đây nhất"
 msgid "Latest values"
 msgstr "Các giá trị gần đây nhất"
 
-#: include/locales.inc.php:70
+#: include/locales.inc.php:71
 msgid "Latvian (lv_LV)"
 msgstr "Latvian (lv_LV)"
 
@@ -9396,7 +9405,7 @@ msgstr ""
 msgid "Listing of services. Returns 0 - if empty; text - list of services separated by a newline"
 msgstr ""
 
-#: include/locales.inc.php:71
+#: include/locales.inc.php:72
 msgid "Lithuanian (lt_LT)"
 msgstr "Lithuanian (lt_LT)"
 
@@ -9535,7 +9544,7 @@ msgstr "Địa chỉ MAC A"
 msgid "MAC address B"
 msgstr "Địa chỉ MAC B"
 
-#: include/maps.inc.php:481 include/maps.inc.php:561
+#: include/maps.inc.php:482 include/maps.inc.php:562
 msgid "MAINTENANCE"
 msgstr "Bảo trì"
 
@@ -9603,7 +9612,7 @@ msgstr "Macros"
 msgid "Macros updated"
 msgstr "Các macro được cập nhật"
 
-#: include/audit.inc.php:47 include/maps.inc.php:644 include/maps.inc.php:732
+#: include/audit.inc.php:47 include/maps.inc.php:645 include/maps.inc.php:733
 #: include/menu.inc.php:224
 #: include/views/configuration.maintenance.edit.php:205
 #: include/views/js/monitoring.sysmaps.js.php:138
@@ -9854,8 +9863,8 @@ msgctxt "May short"
 msgid "May"
 msgstr "Tháng 5"
 
-#: include/views/administration.users.edit.php:262
-#: include/views/administration.users.edit.php:375 popup_media.php:27
+#: include/views/administration.users.edit.php:264
+#: include/views/administration.users.edit.php:377 popup_media.php:27
 #: popup_media.php:132 popup_media.php:140 popup_media.php:154
 msgid "Media"
 msgstr "Media"
@@ -9950,11 +9959,11 @@ msgstr "Hành động nhắn tin"
 msgid "Message text limit"
 msgstr "Giới hạn văn bản tin nhắn"
 
-#: include/views/administration.users.edit.php:295
+#: include/views/administration.users.edit.php:297
 msgid "Message timeout"
 msgstr "Thời hạn tin nhắn"
 
-#: include/views/administration.users.edit.php:284
+#: include/views/administration.users.edit.php:286
 msgid "Message timeout (seconds)"
 msgstr "Thời hạn tin nhắn (giây)"
 
@@ -9962,7 +9971,7 @@ msgstr "Thời hạn tin nhắn (giây)"
 msgid "Messages"
 msgstr "Các tin nhắn"
 
-#: include/views/administration.users.edit.php:430
+#: include/views/administration.users.edit.php:432
 msgid "Messaging"
 msgstr "Viết tin nhắn"
 
@@ -10261,7 +10270,7 @@ msgstr ""
 msgid "Name"
 msgstr "Tên"
 
-#: include/views/administration.users.edit.php:50
+#: include/views/administration.users.edit.php:52
 #: include/views/administration.users.list.php:73 popup.php:636 users.php:44
 msgctxt "user first name"
 msgid "Name"
@@ -10342,12 +10351,12 @@ msgstr "Điều kiện mới"
 msgid "New element"
 msgstr "Phần tử mới"
 
-#: include/correlation.inc.php:51 include/correlation.inc.php:204
+#: include/correlation.inc.php:51 include/correlation.inc.php:207
 msgid "New event host group"
 msgstr ""
 
-#: include/correlation.inc.php:50 include/correlation.inc.php:199
-#: include/correlation.inc.php:223
+#: include/correlation.inc.php:50 include/correlation.inc.php:202
+#: include/correlation.inc.php:226
 msgid "New event tag"
 msgstr ""
 
@@ -10521,7 +10530,7 @@ msgstr "SNMP community không được ghi rõ."
 msgid "No SNMP interfaces found."
 msgstr "Không tìm thấy SNMP interfaces."
 
-#: include/classes/api/services/CScreenItem.php:602
+#: include/classes/api/services/CScreenItem.php:609
 msgid "No URL provided for screen element."
 msgstr "Không cung cấp URL cho phần tử screen."
 
@@ -10638,7 +10647,7 @@ msgstr "Không có mục tiêu thực hiện theo quy định đối với 
 msgid "No file was uploaded."
 msgstr "Không có tập tin nào được tải lên."
 
-#: include/classes/api/services/CScreenItem.php:523
+#: include/classes/api/services/CScreenItem.php:530
 msgid "No graph ID provided for screen element."
 msgstr "Không cung cấp ID đồ thị cho phần tử screen."
 
@@ -10647,7 +10656,7 @@ msgstr "Không cung cấp ID đồ thị cho phần tử screen."
 msgid "No graph item with graphid \"%s\"."
 msgstr "Không có item của đồ thị với id đồ thị \"%s\"."
 
-#: include/classes/api/services/CScreenItem.php:532
+#: include/classes/api/services/CScreenItem.php:539
 msgid "No graph prototype ID provided for screen element."
 msgstr ""
 
@@ -10668,7 +10677,7 @@ msgstr "Không có host nhất định nào cho macro \"%1$s\"."
 msgid "No host group ID for group prototype."
 msgstr "Không có ID nhóm host nào cho kiểu host."
 
-#: include/classes/api/services/CScreenItem.php:505
+#: include/classes/api/services/CScreenItem.php:512
 msgid "No host group ID provided for screen element."
 msgstr "ID nhóm host không được cung cấp cho phần tử screen."
 
@@ -10712,8 +10721,8 @@ msgstr "Không tìm thấy interface."
 msgid "No interface provided for proxy \"%s\"."
 msgstr "Interface không được cung cấp cho proxy \"%s\"."
 
-#: include/classes/api/services/CHost.php:1678
-#: include/classes/api/services/CHost.php:1833
+#: include/classes/api/services/CHost.php:1690
+#: include/classes/api/services/CHost.php:1844
 #, c-format
 msgid "No interfaces for host \"%s\"."
 msgstr "Không có interface nào cho host \"%s\"."
@@ -10722,12 +10731,12 @@ msgstr "Không có interface nào cho host \"%s\"."
 msgid "No inventory mode specified for action operation."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:552
-#: include/classes/api/services/CScreenItem.php:562
+#: include/classes/api/services/CScreenItem.php:559
+#: include/classes/api/services/CScreenItem.php:569
 msgid "No item ID provided for screen element."
 msgstr "item ID không được cung cấp cho phần tử screen."
 
-#: include/classes/api/services/CScreenItem.php:542
+#: include/classes/api/services/CScreenItem.php:549
 msgid "No item prototype ID provided for screen element."
 msgstr ""
 
@@ -10749,7 +10758,7 @@ msgstr "Không các định được các item."
 msgid "No macros found."
 msgstr "Không tìm thấy macro nào."
 
-#: include/classes/api/services/CScreenItem.php:575
+#: include/classes/api/services/CScreenItem.php:582
 msgid "No map ID provided for screen element."
 msgstr "Map ID không được cung cấp cho phần tử screen."
 
@@ -10789,8 +10798,8 @@ msgstr "Không có quyền truy cập hệ thống."
 #: include/classes/api/services/CDRule.php:296
 #: include/classes/api/services/CDRule.php:323
 #: include/classes/api/services/CDRule.php:939
-#: include/classes/api/services/CEvent.php:805
-#: include/classes/api/services/CEvent.php:831
+#: include/classes/api/services/CEvent.php:807
+#: include/classes/api/services/CEvent.php:833
 #: include/classes/api/services/CGraphGeneral.php:64
 #: include/classes/api/services/CGraphGeneral.php:86
 #: include/classes/api/services/CGraph.php:702
@@ -10810,9 +10819,9 @@ msgstr "Không có quyền truy cập hệ thống."
 #: include/classes/api/services/CHostInterface.php:257
 #: include/classes/api/services/CHostInterface.php:400
 #: include/classes/api/services/CHostInterface.php:637
-#: include/classes/api/services/CHost.php:1525
-#: include/classes/api/services/CHost.php:1661
-#: include/classes/api/services/CHost.php:1777
+#: include/classes/api/services/CHost.php:1489
+#: include/classes/api/services/CHost.php:1673
+#: include/classes/api/services/CHost.php:1788
 #: include/classes/api/services/CHostPrototype.php:1027
 #: include/classes/api/services/CHostPrototype.php:1074
 #: include/classes/api/services/CHostPrototype.php:1087
@@ -10849,8 +10858,8 @@ msgstr "Không có quyền truy cập hệ thống."
 #: include/classes/api/services/CProxy.php:758
 #: include/classes/api/services/CProxy.php:789
 #: include/classes/api/services/CProxy.php:849
-#: include/classes/api/services/CScreenItem.php:385
-#: include/classes/api/services/CScreenItem.php:483
+#: include/classes/api/services/CScreenItem.php:392
+#: include/classes/api/services/CScreenItem.php:490
 #: include/classes/api/services/CScreen.php:771
 #: include/classes/api/services/CScreen.php:1238
 #: include/classes/api/services/CScript.php:287
@@ -10910,7 +10919,7 @@ msgstr "Không quy định được khóa tập tin công khai."
 msgid "No recipients for action operation message."
 msgstr "Không có người nhận khi gửi nhắn tin."
 
-#: include/classes/api/services/CScreenItem.php:583
+#: include/classes/api/services/CScreenItem.php:590
 msgid "No screen ID provided for screen element."
 msgstr "Screen ID không được cung cấp cho phần tử screen."
 
@@ -11245,8 +11254,8 @@ msgstr "OEM"
 #: include/classes/screens/CScreenHttpTestDetails.php:101
 #: include/classes/screens/CScreenHttpTestDetails.php:187
 #: include/classes/screens/CScreenHttpTest.php:156
-#: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:497
-#: include/maps.inc.php:577 include/maps.inc.php:665 include/maps.inc.php:753
+#: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:498
+#: include/maps.inc.php:578 include/maps.inc.php:666 include/maps.inc.php:754
 #: include/triggers.inc.php:169
 #: include/views/monitoring.overview.triggers.php:31
 msgid "OK"
@@ -11317,8 +11326,8 @@ msgstr "Off"
 msgid "Ok"
 msgstr "Ok"
 
-#: include/correlation.inc.php:49 include/correlation.inc.php:194
-#: include/correlation.inc.php:209 include/correlation.inc.php:216
+#: include/correlation.inc.php:49 include/correlation.inc.php:197
+#: include/correlation.inc.php:212 include/correlation.inc.php:219
 msgid "Old event tag"
 msgstr ""
 
@@ -11336,7 +11345,7 @@ msgstr "On"
 msgid "On status change triggers blink for"
 msgstr "Thay đổi trạng thái trigger trong nháy mắt"
 
-#: include/views/administration.users.edit.php:293
+#: include/views/administration.users.edit.php:295
 msgid "Once"
 msgstr "Một lần"
 
@@ -11423,7 +11432,7 @@ msgstr ""
 msgid "Only administrators can set screen owner."
 msgstr ""
 
-#: include/screens.inc.php:343 include/screens.inc.php:467
+#: include/screens.inc.php:363 include/screens.inc.php:487
 msgid "Only administrators can set slide show owner."
 msgstr ""
 
@@ -11473,7 +11482,7 @@ msgstr ""
 msgid "Only the last 20%% of the indicator is displayed."
 msgstr "Chỉ có 20%% cuối cùng của bộ chỉ thị được hiển thị."
 
-#: include/classes/api/services/CEvent.php:800
+#: include/classes/api/services/CEvent.php:802
 msgid "Only trigger events can be acknowledged."
 msgstr "Chỉ các sự kiện trigger mới có thể được tiếp nhận."
 
@@ -11836,7 +11845,7 @@ msgstr "POP"
 #: chart5.php:215 include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:741
 #: include/classes/screens/CScreenProblem.php:882 include/events.inc.php:351
-#: include/maps.inc.php:465 include/triggers.inc.php:170
+#: include/maps.inc.php:466 include/triggers.inc.php:170
 #: include/views/monitoring.overview.items.php:32
 #: include/views/monitoring.overview.triggers.php:40 tr_status.php:669
 msgid "PROBLEM"
@@ -11874,7 +11883,6 @@ msgstr ""
 msgid "PSK identity"
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1582
 #: include/classes/api/services/CProxy.php:682
 #, c-format
 msgid "PSK is too short. Minimum is %1$s hex-digits."
@@ -11936,9 +11944,9 @@ msgstr "Thụ động"
 
 #: app/views/administration.mediatype.edit.php:135 httpconf.php:59
 #: include/classes/setup/CSetupWizard.php:255
-#: include/views/administration.users.edit.php:89
-#: include/views/administration.users.edit.php:109
-#: include/views/administration.users.edit.php:113
+#: include/views/administration.users.edit.php:91
+#: include/views/administration.users.edit.php:111
+#: include/views/administration.users.edit.php:115
 #: include/views/configuration.action.edit.php:866
 #: include/views/configuration.action.edit.php:884
 #: include/views/configuration.action.edit.php:1578
@@ -11954,12 +11962,12 @@ msgstr "Thụ động"
 #: include/views/configuration.item.massupdate.php:295
 #: include/views/configuration.item.prototype.edit.php:168
 #: include/views/configuration.item.prototype.edit.php:185
-#: include/views/general.login.php:54
+#: include/views/general.login.php:55
 #: include/views/js/common.item.edit.js.php:240
 msgid "Password"
 msgstr "mật khẩu"
 
-#: include/views/administration.users.edit.php:93
+#: include/views/administration.users.edit.php:95
 msgid "Password (once again)"
 msgstr "Mật khẩu (nhập lại một lần nữa)"
 
@@ -12046,9 +12054,9 @@ msgstr "Các chu kỳ"
 #: include/views/administration.usergroups.edit.php:93
 #: include/views/administration.usergroups.edit.php:123
 #: include/views/administration.usergroups.edit.php:169
-#: include/views/administration.users.edit.php:399
-#: include/views/administration.users.edit.php:419
-#: include/views/administration.users.edit.php:426
+#: include/views/administration.users.edit.php:401
+#: include/views/administration.users.edit.php:421
+#: include/views/administration.users.edit.php:428
 #: include/views/monitoring.screen.edit.php:129
 #: include/views/monitoring.screen.edit.php:159
 #: include/views/monitoring.slideconf.edit.php:173
@@ -12058,11 +12066,11 @@ msgstr "Các chu kỳ"
 msgid "Permissions"
 msgstr "Quyền truy cập"
 
-#: include/views/administration.users.edit.php:424
+#: include/views/administration.users.edit.php:426
 msgid "Permissions can be assigned for user groups only."
 msgstr "Quyền truy cập có thể chỉ được gán cho nhóm người dùng."
 
-#: include/locales.inc.php:72
+#: include/locales.inc.php:73
 msgid "Persian (fa_IR)"
 msgstr "Persian (fa_IR)"
 
@@ -12078,12 +12086,12 @@ msgstr "Đặt thuật toán"
 msgid "Plain text"
 msgstr "Văn bản gốc"
 
-#: include/views/administration.users.edit.php:315
-#: include/views/administration.users.edit.php:351
+#: include/views/administration.users.edit.php:317
+#: include/views/administration.users.edit.php:353
 msgid "Play"
 msgstr "Phát"
 
-#: include/views/administration.users.edit.php:298
+#: include/views/administration.users.edit.php:300
 msgid "Play sound"
 msgstr "Phát âm thanh"
 
@@ -12105,7 +12113,7 @@ msgstr ""
 msgid "Please select two elements"
 msgstr "Xin vui lòng lựa chọn 2 phần tử"
 
-#: include/locales.inc.php:73
+#: include/locales.inc.php:74
 msgid "Polish (pl_PL)"
 msgstr "Polish (pl_PL)"
 
@@ -12140,11 +12148,11 @@ msgstr "Cổng không thể được để trống đối với host inte
 msgid "Port range"
 msgstr "Phạm vi cổng"
 
-#: include/locales.inc.php:74
+#: include/locales.inc.php:75
 msgid "Portuguese (pt_BR)"
 msgstr "Portuguese (pt_BR)"
 
-#: include/locales.inc.php:75
+#: include/locales.inc.php:76
 msgid "Portuguese (pt_PT)"
 msgstr "Portuguese (pt_PT)"
 
@@ -12255,8 +12263,8 @@ msgstr "Khả năng mô đun php-ldap bị lỗi."
 #: include/actions.inc.php:1417 include/actions.inc.php:1492
 #: include/classes/screens/CScreenProblem.php:677
 #: include/classes/screens/CScreenProblem.php:785
-#: include/classes/screens/CScreenProblem.php:855 include/maps.inc.php:533
-#: include/maps.inc.php:614 include/maps.inc.php:703
+#: include/classes/screens/CScreenProblem.php:855 include/maps.inc.php:534
+#: include/maps.inc.php:615 include/maps.inc.php:704
 #: include/views/configuration.item.list.php:171
 #: include/views/configuration.trigger.prototype.list.php:139
 #: include/views/configuration.triggers.list.php:204
@@ -12294,8 +12302,8 @@ msgstr "Vấn đề, nếu ít nhất một phần tử con có vấn 
 #: app/views/monitoring.problem.view.php:82
 #: app/views/monitoring.problem.view.php:253 app/views/report.services.php:60
 #: app/views/report.services.php:61 app/views/report.services.php:62
-#: app/views/report.services.php:63 chart4.php:165 include/maps.inc.php:527
-#: include/maps.inc.php:608 include/maps.inc.php:697 include/menu.inc.php:53
+#: app/views/report.services.php:63 chart4.php:165 include/maps.inc.php:528
+#: include/maps.inc.php:609 include/maps.inc.php:698 include/menu.inc.php:53
 #: include/views/common.filter.trigger.php:37
 #: include/views/inventory.host.view.php:147 jsLoader.php:206 report2.php:499
 #: search.php:130 search.php:234 search.php:291 search.php:341
@@ -12479,7 +12487,7 @@ msgstr "Người nhận (giảm dần)"
 
 #: include/actions.inc.php:1338 include/actions.inc.php:1417
 #: include/actions.inc.php:1492 include/classes/screens/CScreenProblem.php:786
-#: include/views/administration.users.edit.php:310
+#: include/views/administration.users.edit.php:312
 #: include/views/configuration.item.list.php:172
 #: include/views/configuration.trigger.prototype.list.php:140
 #: include/views/configuration.triggers.list.php:205 tr_status.php:549
@@ -12511,7 +12519,7 @@ msgstr ""
 msgid "Recovery time"
 msgstr ""
 
-#: include/views/administration.users.edit.php:184 profile.php:52 users.php:63
+#: include/views/administration.users.edit.php:186 profile.php:52 users.php:63
 msgid "Refresh (in seconds)"
 msgstr "Làm mới (trong vài giây)"
 
@@ -12585,7 +12593,7 @@ msgstr "Biểu thức chính quy đã được cập nhật"
 msgid "Regular expressions"
 msgstr "Các biểu thức chính quy"
 
-#: include/views/general.login.php:58
+#: include/views/general.login.php:59
 msgid "Remember me for 30 days"
 msgstr "Ghi nhớ khoảng 30 ngày"
 
@@ -12603,7 +12611,7 @@ msgstr "Lệnh từ xa"
 #: include/views/administration.general.macros.edit.php:47
 #: include/views/administration.general.regularexpressions.edit.php:70
 #: include/views/administration.general.valuemapping.edit.php:55
-#: include/views/administration.users.edit.php:253
+#: include/views/administration.users.edit.php:255
 #: include/views/common.filter.trigger.php:130
 #: include/views/configuration.action.edit.php:86
 #: include/views/configuration.action.edit.php:466
@@ -12904,15 +12912,15 @@ msgstr "Trả về tỉ lệ mất gói tin ping ICMP."
 msgid "Right"
 msgstr "Bên phải"
 
-#: include/locales.inc.php:76
+#: include/locales.inc.php:77
 msgid "Romanian (ro_RO)"
 msgstr "Romanian (ro_RO)"
 
-#: include/screens.inc.php:103
+#: include/screens.inc.php:108
 msgid "Row added"
 msgstr ""
 
-#: include/screens.inc.php:162
+#: include/screens.inc.php:177
 msgid "Row deleted"
 msgstr ""
 
@@ -12924,7 +12932,7 @@ msgstr "Chiếm giữ trong hàng"
 msgid "Rows"
 msgstr "Số hàng"
 
-#: include/views/administration.users.edit.php:187 profile.php:53 users.php:64
+#: include/views/administration.users.edit.php:189 profile.php:53 users.php:64
 msgid "Rows per page"
 msgstr "Số hàng trên mỗi trang"
 
@@ -12977,7 +12985,7 @@ msgstr "Thực hiện lệnh từ xa trên các host"
 msgid "Run specified command on the host. Returns text result of the command; 1 - with mode as nowait (regardless of command result)"
 msgstr ""
 
-#: include/locales.inc.php:77
+#: include/locales.inc.php:78
 msgid "Russian (ru_RU)"
 msgstr "Russian (ru_RU)"
 
@@ -13211,18 +13219,17 @@ msgstr "Screen \"%1$s\" đã tồn tại trên template \"%2$s\"."
 msgid "Screen \"%1$s\" already exists."
 msgstr "Screen \"%1$s\" đã tồn tại."
 
-#: include/classes/api/services/CScreenItem.php:916
-#: include/classes/api/services/CScreenItem.php:932
+#: include/classes/api/services/CScreenItem.php:934
 #, c-format
 msgid "Screen \"%1$s\" cell X - %2$s Y - %3$s is already taken."
 msgstr "Screen \"%1$s\" ô X - %2$s Y - %3$s đã được thực hiện."
 
-#: include/classes/api/services/CScreenItem.php:834
+#: include/classes/api/services/CScreenItem.php:841
 #, c-format
 msgid "Screen \"%1$s\" column span in cell X - %2$s Y - %3$s is incorrect."
 msgstr "creen \"%1$s\" khoảng cách cột trong ô X - %2$s Y - %3$s là không chính xác."
 
-#: include/classes/api/services/CScreenItem.php:883
+#: include/classes/api/services/CScreenItem.php:890
 #, c-format
 msgid "Screen \"%1$s\" column span in cell X - %2$s Y - %3$s is too big."
 msgstr "Screen \"%1$s\" khoảng cách cột trong ô X - %2$s Y - %3$s là quá lớn."
@@ -13235,12 +13242,12 @@ msgstr "Screen \"%1$s\" khoảng cách cột trong ô X - %2$s Y - %3$s là q
 msgid "Screen \"%1$s\" is public and read-only sharing is disallowed."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:820
+#: include/classes/api/services/CScreenItem.php:827
 #, c-format
 msgid "Screen \"%1$s\" row span in cell X - %2$s Y - %3$s is incorrect."
 msgstr "Screen \"%1$s\" khoảng cách hàng trong ô X - %2$s Y - %3$s là không chính xác."
 
-#: include/classes/api/services/CScreenItem.php:870
+#: include/classes/api/services/CScreenItem.php:877
 #, c-format
 msgid "Screen \"%1$s\" row span in cell X - %2$s Y - %3$s is too big."
 msgstr "Screen \"%1$s\" khoảng cách hàng trong ô X - %2$s Y - %3$s là quá lớn."
@@ -13409,7 +13416,7 @@ msgstr "Điện thoại B POC thứ hai"
 msgid "Secondary POC screen name"
 msgstr "Tên screen POC thứ hai"
 
-#: include/views/administration.users.edit.php:294
+#: include/views/administration.users.edit.php:296
 msgid "Seconds"
 msgstr "Giây"
 
@@ -13521,7 +13528,7 @@ msgstr "Chỉ gửi đến"
 msgid "Send recovery message"
 msgstr ""
 
-#: include/views/administration.users.edit.php:204 popup_media.php:134
+#: include/views/administration.users.edit.php:206 popup_media.php:134
 msgid "Send to"
 msgstr "Gửi tới"
 
@@ -13786,7 +13793,7 @@ msgstr "Hiển thị thời gian làm việc"
 msgid "Shown"
 msgstr "Đã hiển thị"
 
-#: include/views/general.login.php:61 index.php:55 index.php:64
+#: include/views/general.login.php:62 index.php:55 index.php:64
 msgid "Sign in"
 msgstr "Đăng nhập"
 
@@ -13869,18 +13876,18 @@ msgstr "Slide"
 msgid "Slide show"
 msgstr "Slide show"
 
-#: include/screens.inc.php:453
+#: include/screens.inc.php:473
 #, c-format
 msgid "Slide show \"%1$s\" already exists."
 msgstr "Slide show \"%1$s\" đã tồn tại."
 
-#: include/screens.inc.php:361 include/screens.inc.php:380
-#: include/screens.inc.php:484 include/screens.inc.php:492
+#: include/screens.inc.php:381 include/screens.inc.php:400
+#: include/screens.inc.php:504 include/screens.inc.php:512
 #, c-format
 msgid "Slide show \"%1$s\" is public and read-only sharing is disallowed."
 msgstr ""
 
-#: include/screens.inc.php:330
+#: include/screens.inc.php:350
 #, c-format
 msgid "Slide show \"%s\" already exists."
 msgstr "Slide show \"%s\" đã tồn tại."
@@ -13893,11 +13900,11 @@ msgstr "Slide show đã được thêm vào"
 msgid "Slide show deleted"
 msgstr "Slide show đã bị xóa"
 
-#: include/screens.inc.php:302 include/screens.inc.php:422
+#: include/screens.inc.php:322 include/screens.inc.php:442
 msgid "Slide show must contain slides."
 msgstr "Slide show phải chứa các slide."
 
-#: include/screens.inc.php:337 include/screens.inc.php:461
+#: include/screens.inc.php:357 include/screens.inc.php:481
 msgid "Slide show owner cannot be empty."
 msgstr ""
 
@@ -13920,7 +13927,7 @@ msgstr "Các slide show"
 msgid "Slides"
 msgstr "Các slide"
 
-#: include/locales.inc.php:78
+#: include/locales.inc.php:79
 msgid "Slovak (sk_SK)"
 msgstr "Slovak (sk_SK)"
 
@@ -13986,7 +13993,7 @@ msgstr "Sắp xếp theo trường \"%1$s\" không được cho phép."
 msgid "Source"
 msgstr "Mã nguồn"
 
-#: include/locales.inc.php:79
+#: include/locales.inc.php:80
 msgid "Spanish (es_ES)"
 msgstr "Spanish (es_ES)"
 
@@ -14135,8 +14142,8 @@ msgstr "Bước có tên \"%1$s\" đã tồn tại."
 msgid "Steps"
 msgstr "Các bước"
 
-#: include/views/administration.users.edit.php:319
-#: include/views/administration.users.edit.php:355
+#: include/views/administration.users.edit.php:321
+#: include/views/administration.users.edit.php:357
 msgid "Stop"
 msgstr "Dừng lại"
 
@@ -14211,11 +14218,11 @@ msgstr "Chủ nhật"
 msgid "Sunday"
 msgstr "Chủ nhật"
 
-#: include/views/general.login.php:71
+#: include/views/general.login.php:72
 msgid "Support"
 msgstr "Hỗ trợ"
 
-#: include/views/administration.users.edit.php:53
+#: include/views/administration.users.edit.php:55
 #: include/views/administration.users.list.php:50
 #: include/views/administration.users.list.php:74 popup.php:637 users.php:45
 msgid "Surname"
@@ -14236,7 +14243,7 @@ msgstr ""
 msgid "Swap space size in bytes or in percentage from total. Returns integer for bytes; float for percentage"
 msgstr ""
 
-#: include/locales.inc.php:80
+#: include/locales.inc.php:81
 msgid "Swedish (sv_SE)"
 msgstr "Swedish (sv_SE)"
 
@@ -14249,7 +14256,7 @@ msgstr "Chuyển đổi phương pháp xác nhận sẽ thiết laoapj la�
 msgid "System boot time. Returns integer (Unix timestamp)"
 msgstr ""
 
-#: include/users.inc.php:83 include/views/administration.users.edit.php:159
+#: include/users.inc.php:83 include/views/administration.users.edit.php:161
 msgid "System default"
 msgstr "Mặc định hệ thống"
 
@@ -14387,7 +14394,7 @@ msgstr "Telnet"
 msgid "Template"
 msgstr "Template"
 
-#: include/classes/api/services/CHost.php:881
+#: include/classes/api/services/CHost.php:845
 #: include/classes/api/services/CTemplate.php:420
 #, c-format
 msgid "Template \"%1$s\" already exists."
@@ -14460,8 +14467,8 @@ msgstr ""
 msgid "Template with the same name \"%1$s\" already exists."
 msgstr "Template với cùng một tên \"%1$s\" đã tồn tại."
 
-#: include/classes/api/services/CHost.php:1740
-#: include/classes/api/services/CHost.php:1924
+#: include/classes/api/services/CHost.php:1752
+#: include/classes/api/services/CHost.php:1958
 #, c-format
 msgid "Template with the same name \"%s\" already exists."
 msgstr "Template với cùng một tên \"%s\" đã tồn tại."
@@ -14472,8 +14479,8 @@ msgstr "Template với cùng một tên \"%s\" đã tồn tại."
 msgid "Template with the same visible name \"%1$s\" already exists."
 msgstr "Template với cùng tên hiển thị \"%1$s\" đã tồn tại. "
 
-#: include/classes/api/services/CHost.php:1746
-#: include/classes/api/services/CHost.php:1932
+#: include/classes/api/services/CHost.php:1758
+#: include/classes/api/services/CHost.php:1966
 #, c-format
 msgid "Template with the same visible name \"%s\" already exists."
 msgstr "Template với cùng một tên hiển thị \"%s\" đã tồn tại."
@@ -14546,12 +14553,12 @@ msgstr "Văn bản"
 msgid "The \"%1$s.%2$s\" method must be called without the \"auth\" parameter."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:952
+#: include/classes/api/services/CScreenItem.php:958
 #, c-format
 msgid "The X coordinate of screen element located at X - %1$s and Y - %2$s of screen \"%3$s\" is too big."
 msgstr "Tọa độ X của phần tử screen đặt tại X - %1$s và Y - %2$s của screen \"%3$s\"là quá lớn."
 
-#: include/classes/api/services/CScreenItem.php:964
+#: include/classes/api/services/CScreenItem.php:970
 #, c-format
 msgid "The Y coordinate of screen element located at X - %1$s and Y - %2$s of screen \"%3$s\" is too big."
 msgstr "Tọa độ Y của phần tử screen đặt tại X - %1$s và Y - %2$s của screen \"%3$s\" là quá lớn."
@@ -14634,7 +14641,7 @@ msgstr "Các yêu cầu thủ tục từ xa không tồn tại / không să�
 msgid "The web scenario application belongs to a different host than the web scenario host."
 msgstr "Ứng dụng web scenario thuộc về một host khác hơn so với host web scenario."
 
-#: include/views/administration.users.edit.php:160
+#: include/views/administration.users.edit.php:162
 msgid "Theme"
 msgstr "Giao diện"
 
@@ -14768,7 +14775,7 @@ msgid "Timeout"
 msgstr "Hết giờ"
 
 #: include/classes/screens/CScreenHistory.php:154
-#: include/classes/screens/CScreenHistory.php:268
+#: include/classes/screens/CScreenHistory.php:266
 #: include/classes/screens/CScreenPlainText.php:42
 #: include/classes/screens/CScreenPlainText.php:53
 msgid "Timestamp"
@@ -15053,7 +15060,7 @@ msgstr ""
 msgid "Trigger severities"
 msgstr "Mức độ quan trọng của trigger"
 
-#: include/actions.inc.php:41 include/views/administration.users.edit.php:365
+#: include/actions.inc.php:41 include/views/administration.users.edit.php:367
 msgid "Trigger severity"
 msgstr "Mức độ quan trọng của trigger"
 
@@ -15133,7 +15140,7 @@ msgstr "Thứ ba"
 msgid "Tuesday"
 msgstr "Thứ ba"
 
-#: include/locales.inc.php:81
+#: include/locales.inc.php:82
 msgid "Turkish (tr_TR)"
 msgstr "Turkish (tr_TR)"
 
@@ -15153,7 +15160,7 @@ msgstr "Hai item (\"%1$s\" và \"%2$s\") không thể gắn vào một trư
 #: include/classes/screens/CScreenActions.php:128 include/forms.inc.php:358
 #: include/hosts.inc.php:99 include/views/administration.auditacts.list.php:49
 #: include/views/administration.general.image.list.php:30
-#: include/views/administration.users.edit.php:204
+#: include/views/administration.users.edit.php:206
 #: include/views/configuration.action.edit.php:849
 #: include/views/configuration.action.edit.php:1561
 #: include/views/configuration.graph.edit.php:292
@@ -15244,7 +15251,7 @@ msgstr "UNKNOWN"
 msgid "URL"
 msgstr "URL"
 
-#: include/views/administration.users.edit.php:191
+#: include/views/administration.users.edit.php:193
 msgid "URL (after login)"
 msgstr "URL (sau khi đăng nhập)"
 
@@ -15289,7 +15296,7 @@ msgstr "URLs"
 msgid "USA (160 characters)"
 msgstr "USA (160 ký tự)"
 
-#: include/locales.inc.php:82
+#: include/locales.inc.php:83
 msgid "Ukrainian (uk_UA)"
 msgstr "Ukrainian (uk_UA)"
 
@@ -15309,7 +15316,7 @@ msgstr "Không thể lựa chọn cấu hình."
 msgid "Unable to upload file because \"file_uploads\" is disabled."
 msgstr "Không thể tải lên tập tin bởi vì \"file_uploads\" đã bị vô hiệu hóa."
 
-#: include/maps.inc.php:544 include/maps.inc.php:625 include/maps.inc.php:714
+#: include/maps.inc.php:545 include/maps.inc.php:626 include/maps.inc.php:715
 msgid "Unacknowledged"
 msgstr "Không được tiếp nhận"
 
@@ -15328,7 +15335,7 @@ msgstr "Các sự kiện PROBLEM không được báo nhận"
 msgid "Unacknowledged only"
 msgstr "Chỉ không được báo nhận"
 
-#: include/views/administration.users.edit.php:114
+#: include/views/administration.users.edit.php:116
 #, c-format
 msgid "Unavailable for users with %1$s."
 msgstr "Không có sẵn cho người dùng với %1$s."
@@ -15351,7 +15358,7 @@ msgstr "Đơn vị"
 #: include/actions.inc.php:1077
 #: include/classes/screens/CScreenHostsInfo.php:89
 #: include/classes/screens/CScreenHttpTestDetails.php:116
-#: include/correlation.inc.php:124 include/discovery.inc.php:115
+#: include/correlation.inc.php:127 include/discovery.inc.php:115
 #: include/discovery.inc.php:151 include/events.inc.php:47
 #: include/events.inc.php:78 include/graphs.inc.php:37
 #: include/graphs.inc.php:67 include/hosts.inc.php:47 include/hosts.inc.php:74
@@ -15555,7 +15562,7 @@ msgstr "Up"
 #: include/views/administration.general.valuemapping.edit.php:94
 #: include/views/administration.general.workingtime.edit.php:38
 #: include/views/administration.usergroups.edit.php:177
-#: include/views/administration.users.edit.php:448
+#: include/views/administration.users.edit.php:450
 #: include/views/configuration.action.edit.php:1129
 #: include/views/configuration.action.edit.php:1677
 #: include/views/configuration.action.edit.php:1705
@@ -15666,7 +15673,7 @@ msgstr "Đã cập nhật: Item \"%1$s\" trên \"%2$s\"."
 msgid "Updated: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Đã cập nhật: Kiểu item \"%1$s\" trên \"%2$s\"."
 
-#: include/classes/api/managers/CHttpTestManager.php:287
+#: include/classes/api/managers/CHttpTestManager.php:283
 #, c-format
 msgid "Updated: Web scenario \"%1$s\" on \"%2$s\"."
 msgstr "Đã cập nhật: Web scenario \"%1$s\" trên \"%2$s\"."
@@ -15695,7 +15702,7 @@ msgid "Uptime/Downtime"
 msgstr "Thời gian hoạt động/Thời gian ngừng hoạt động"
 
 #: include/views/js/configuration.host.edit.js.php:15
-#: include/views/js/configuration.host.edit.js.php:382
+#: include/views/js/configuration.host.edit.js.php:381
 msgid "Use bulk requests"
 msgstr ""
 
@@ -15704,7 +15711,7 @@ msgstr ""
 msgid "Use custom multiplier"
 msgstr "Sử dụng tùy chỉnh multiplier"
 
-#: include/views/administration.users.edit.php:204 popup_media.php:136
+#: include/views/administration.users.edit.php:206 popup_media.php:136
 msgid "Use if severity"
 msgstr "Sử dụng nếu mức độ quan trọng"
 
@@ -15722,7 +15729,7 @@ msgstr ""
 #: include/events.inc.php:241 include/events.inc.php:590
 #: include/hosts.inc.php:61 include/views/administration.auditlogs.list.php:28
 #: include/views/administration.auditlogs.list.php:62
-#: include/views/administration.users.edit.php:373
+#: include/views/administration.users.edit.php:375
 #: include/views/configuration.action.edit.php:629
 #: include/views/configuration.action.edit.php:1317
 #: include/views/configuration.httpconf.edit.php:126
@@ -15764,7 +15771,7 @@ msgstr "Người dùng được thêm vào"
 msgid "User agent string"
 msgstr ""
 
-#: include/views/administration.users.edit.php:390
+#: include/views/administration.users.edit.php:392
 msgid "User can't change type for himself"
 msgstr "Người dùng không thể thay đổi kiểu cho chính mình"
 
@@ -15898,7 +15905,8 @@ msgstr "Tên người dùng không khớp với cơ sở dữ liệu"
 msgid "User password"
 msgstr "Mật khẩu người dùng"
 
-#: include/views/administration.users.edit.php:25 profile.php:27
+#: include/views/administration.users.edit.php:26
+#: include/views/administration.users.edit.php:27 profile.php:27
 msgid "User profile"
 msgstr "Hồ sơ người dùng"
 
@@ -15927,8 +15935,8 @@ msgstr ""
 msgid "User sharing is missing parameters: %1$s for screen \"%2$s\"."
 msgstr ""
 
-#: include/views/administration.users.edit.php:390
-#: include/views/administration.users.edit.php:394
+#: include/views/administration.users.edit.php:392
+#: include/views/administration.users.edit.php:396
 #: include/views/administration.users.list.php:53
 #: include/views/administration.users.list.php:75
 msgid "User type"
@@ -15948,14 +15956,14 @@ msgstr "Người dùng với bí danh \"%s\" đã tồn tại."
 #: app/views/administration.mediatype.list.php:87
 #: include/views/configuration.host.edit.php:673
 #: include/views/configuration.host.prototype.edit.php:317
-#: include/views/general.login.php:50 index.php:30
+#: include/views/general.login.php:51 index.php:30
 msgid "Username"
 msgstr "Tên người dùng"
 
 #: include/menu.inc.php:282
 #: include/views/administration.usergroups.edit.php:54
 #: include/views/administration.usergroups.list.php:144
-#: include/views/administration.users.edit.php:28
+#: include/views/administration.users.edit.php:30
 #: include/views/administration.users.list.php:29
 #: include/views/monitoring.screen.edit.php:159
 #: include/views/monitoring.slideconf.edit.php:205
@@ -16166,7 +16174,7 @@ msgstr "Thời gian hoạt động của máy ảo VMware, <url> - dịch vu�
 #: include/blocks.inc.php:463 include/classes/graphdraw/CPieGraphDraw.php:303
 #: include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenHistory.php:166
-#: include/classes/screens/CScreenHistory.php:269
+#: include/classes/screens/CScreenHistory.php:267
 #: include/classes/screens/CScreenPlainText.php:53
 #: include/views/administration.general.macros.edit.php:33
 #: include/views/administration.general.valuemapping.edit.php:46
@@ -16322,7 +16330,7 @@ msgstr "Thẳng đứng"
 msgid "Vertical align"
 msgstr "Căn hàng thẳng đứng"
 
-#: include/locales.inc.php:83
+#: include/locales.inc.php:84
 msgid "Vietnamese (vi_VN)"
 msgstr "Vietnamese (vi_VN)"
 
@@ -16342,7 +16350,7 @@ msgstr ""
 msgid "Visible name"
 msgstr "Tên hiển thị"
 
-#: include/classes/api/services/CHost.php:1858
+#: include/classes/api/services/CHost.php:1869
 msgid "Visible name cannot be empty if host name is missing."
 msgstr "Tên hiển thị không thể bị trống nếu tên host bị lỗi."
 
@@ -16393,8 +16401,8 @@ msgstr "Web monitoring"
 msgid "Web scenario"
 msgstr ""
 
-#: include/classes/api/managers/CHttpTestManager.php:408
-#: include/classes/api/managers/CHttpTestManager.php:416
+#: include/classes/api/managers/CHttpTestManager.php:404
+#: include/classes/api/managers/CHttpTestManager.php:412
 #, c-format
 msgid "Web scenario \"%1$s\" already exists on host \"%2$s\"."
 msgstr "Web scenario \"%1$s\" đã tồn tại trên host \"%2$s\"."
@@ -16498,7 +16506,7 @@ msgstr ""
 msgid "Welcome to"
 msgstr ""
 
-#: include/views/administration.users.edit.php:204 popup_media.php:135
+#: include/views/administration.users.edit.php:206 popup_media.php:135
 msgid "When active"
 msgstr "Khi hoạt động"
 
@@ -16572,8 +16580,8 @@ msgstr "Những trường không đúng đối với quan hệ phụ thuô
 msgid "Wrong fields for element."
 msgstr "Những trường không đúng đối với phần tử."
 
-#: include/classes/api/services/CHost.php:1605
-#: include/classes/api/services/CHost.php:1770
+#: include/classes/api/services/CHost.php:1617
+#: include/classes/api/services/CHost.php:1781
 #, c-format
 msgid "Wrong fields for host \"%1$s\"."
 msgstr ""
@@ -16725,7 +16733,7 @@ msgstr ""
 msgid "You are logged in as \"%1$s\"."
 msgstr ""
 
-#: include/views/administration.users.edit.php:148
+#: include/views/administration.users.edit.php:150
 msgid "You are not able to choose some of the languages, because locales for them are not installed on the web server."
 msgstr "Bạn không thể chọn một số trong các ngôn ngữ, bởi vì địa chỉ của chúng không được cài đặt trên web máy chủ."
 
@@ -16762,8 +16770,8 @@ msgstr "Bạn không ghi rõ mục tiêu cho thao tác tập lệnh action \
 
 #: include/classes/api/services/CGraph.php:540
 #: include/classes/api/services/CGraphPrototype.php:555
-#: include/classes/api/services/CHost.php:739
-#: include/classes/api/services/CHost.php:802
+#: include/classes/api/services/CHost.php:705
+#: include/classes/api/services/CHost.php:768
 #: include/classes/api/services/CMaintenance.php:540
 #: include/classes/api/services/CMaintenance.php:658
 #: include/classes/api/services/CMaintenance.php:670
@@ -16942,7 +16950,7 @@ msgstr "agent"
 
 #: include/classes/graphdraw/CLineGraphDraw.php:2026
 #: include/classes/html/CSeverity.php:49
-#: include/classes/pagefilter/CPageFilter.php:840
+#: include/classes/pagefilter/CPageFilter.php:842
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
 #: include/classes/screens/CScreenHostgroupTriggers.php:110
 #: include/classes/screens/CScreenHostTriggers.php:109
@@ -16973,6 +16981,10 @@ msgstr ""
 #: include/classes/import/validators/C10XmlValidator.php:397
 #: include/classes/import/validators/C10XmlValidator.php:419
 msgid "an empty string is expected"
+msgstr ""
+
+#: include/classes/api/services/CHost.php:1560
+msgid "an even number of hexadecimal characters is expected"
 msgstr ""
 
 #: include/views/monitoring.history.php:165
@@ -17022,8 +17034,8 @@ msgstr ""
 #: include/classes/api/services/CDRule.php:306
 #: include/classes/api/services/CDRule.php:332
 #: include/classes/api/services/CEvent.php:522
-#: include/classes/api/services/CHost.php:1564
-#: include/classes/api/services/CHost.php:1570
+#: include/classes/api/services/CHost.php:1548
+#: include/classes/api/services/CHost.php:1554
 #: include/classes/api/services/CMediatype.php:417
 #: include/classes/api/services/CProxy.php:664
 #: include/classes/api/services/CProxy.php:670
@@ -17067,7 +17079,7 @@ msgstr "Ngày"
 msgid "dd"
 msgstr "dd"
 
-#: include/classes/pagefilter/CPageFilter.php:732
+#: include/classes/pagefilter/CPageFilter.php:734
 #: include/classes/setup/CSetupWizard.php:320
 #: include/views/js/monitoring.slideconf.edit.js.php:13
 #: include/views/monitoring.slideconf.edit.php:130
@@ -17094,8 +17106,8 @@ msgstr "dynamic"
 msgid "esc_step_from and esc_step_to must be set together."
 msgstr "esc_step_from và esc_step_to phải được thiết lập cùng nhau."
 
-#: include/classes/api/services/CEvent.php:773
-#: include/classes/api/services/CEvent.php:845
+#: include/classes/api/services/CEvent.php:775
+#: include/classes/api/services/CEvent.php:847
 msgid "event is not in PROBLEM state"
 msgstr ""
 
@@ -17159,7 +17171,7 @@ msgid "in"
 msgstr "in"
 
 #: include/views/administration.usergroups.edit.php:106
-#: include/views/administration.users.edit.php:409
+#: include/views/administration.users.edit.php:411
 msgid "including subgroups"
 msgstr ""
 
@@ -17267,6 +17279,11 @@ msgstr "min"
 msgid "minimum 60 seconds"
 msgstr "Tối thiểu khoảng 60 giây"
 
+#: include/classes/api/services/CHost.php:1566
+#, c-format
+msgid "minimum length is %1$s characters"
+msgstr ""
+
 #: include/html.inc.php:765 include/html.inc.php:788
 #: include/views/configuration.services.edit.php:273
 #: include/views/configuration.services.edit.php:281
@@ -17301,7 +17318,7 @@ msgctxt "new element in multiselect"
 msgid "new"
 msgstr "new"
 
-#: include/correlation.inc.php:211
+#: include/correlation.inc.php:214
 #: include/views/configuration.correlation.edit.php:135
 msgid "new event tag"
 msgstr ""
@@ -17324,8 +17341,8 @@ msgid "not running"
 msgstr "Không hoạt động"
 
 #: hostinventoriesoverview.php:75
-#: include/classes/pagefilter/CPageFilter.php:778
-#: include/classes/pagefilter/CPageFilter.php:840 include/forms.inc.php:995
+#: include/classes/pagefilter/CPageFilter.php:780
+#: include/classes/pagefilter/CPageFilter.php:842 include/forms.inc.php:995
 #: include/views/monitoring.screen.php:60 slides.php:198
 msgid "not selected"
 msgstr "Không được chọn"
@@ -17356,7 +17373,7 @@ msgstr "of"
 #: include/classes/setup/CFrontendSetup.php:602
 #: include/classes/setup/CFrontendSetup.php:603
 #: include/classes/setup/CFrontendSetup.php:619
-#: include/views/administration.users.edit.php:237
+#: include/views/administration.users.edit.php:239
 msgid "off"
 msgstr "off"
 
@@ -17378,7 +17395,7 @@ msgstr ""
 #: include/classes/setup/CFrontendSetup.php:585
 #: include/classes/setup/CFrontendSetup.php:602
 #: include/classes/setup/CFrontendSetup.php:619
-#: include/views/administration.users.edit.php:237
+#: include/views/administration.users.edit.php:239
 #: include/views/monitoring.hostscreen.php:42
 msgid "on"
 msgstr "on"
@@ -17435,6 +17452,10 @@ msgstr ""
 msgid "short description"
 msgstr "Mô tả ngắn"
 
+#: include/classes/api/services/CHost.php:1573
+#: include/classes/api/services/CHost.php:1579
+#: include/classes/api/services/CHost.php:1588
+#: include/classes/api/services/CHost.php:1594
 #: include/classes/api/services/CTriggerGeneral.php:529
 #: include/classes/api/services/CTriggerGeneral.php:555
 #: include/classes/api/services/CTriggerGeneral.php:770
@@ -17483,7 +17504,7 @@ msgstr ""
 msgid "trigger"
 msgstr "trigger"
 
-#: include/classes/api/services/CEvent.php:852
+#: include/classes/api/services/CEvent.php:854
 msgid "trigger does not allow manual closing"
 msgstr ""
 
@@ -17525,8 +17546,8 @@ msgid "unexpected text \"%1$s\""
 msgstr ""
 
 #: include/classes/api/services/CEvent.php:532
-#: include/classes/api/services/CHost.php:1548
-#: include/classes/api/services/CHost.php:1554
+#: include/classes/api/services/CHost.php:1528
+#: include/classes/api/services/CHost.php:1534
 #: include/classes/api/services/CProxy.php:645
 #: include/classes/api/services/CProxy.php:652
 #: include/classes/api/services/CTriggerGeneral.php:563
