@@ -94,7 +94,9 @@ $eppTab = new CDiv();
 
 if (isset($this->data['tld'])) {
 	$incidentPage = new CTabView(['remember' => true]);
-	$incidentPage->setSelected($this->data['type']);
+	if (hasRequest('type')) {
+		$incidentPage->setSelected($this->data['type']);
+	}
 
 	// DNS
 	if (isset($this->data['dns']['events'])) {
