@@ -306,8 +306,8 @@ class CNavigationTree extends CDiv {
 		}
 
 		return [
-				'problems' => $this->getNumberOfProblemsBySysmap(zbx_objectValues($rows, 'mapid')),
-				'rows' => $rows
+			'problems' => $this->getNumberOfProblemsBySysmap(zbx_objectValues($rows, 'mapid')),
+			'rows' => $rows
 		];
 	}
 

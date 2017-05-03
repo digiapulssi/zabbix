@@ -42,10 +42,12 @@ jQuery(function($) {
 				root = createTreeBranch(),
 				data = $this.data('treeData');
 
-				for (var id in data.treeData){
-					root.append(createTreeLeap(id, data.treeData[id]));
-					if(id > lastId){
-						lastId = id;
+				if (data.treeData.length) {
+					for (var id in data.treeData){
+						root.append(createTreeLeap(id, data.treeData[id]));
+						if(id > lastId){
+							lastId = id;
+						}
 					}
 				}
 				$this.append(root);
@@ -55,11 +57,13 @@ jQuery(function($) {
 				var colors = {0:'#97AAB3', 1:'#7499FF', 2:'#FFC859', 3:'#FFA059', 4:'#E97659', 5: '#E45959'};
 				data = $this.data('treeData');
 
-				for(var map in data.problems){
-					data.problems[map].each(function(numb,sev){
-						if (!numb) return;
-						$('.tree-item[data-mapid='+map+']').attr('data-problems'+sev, numb);
-					});
+				if(data.problems.length){
+					for(var map in data.problems){
+						data.problems[map].each(function(numb,sev){
+							if (!numb) return;
+							$('.tree-item[data-mapid='+map+']').attr('data-problems'+sev, numb);
+						});
+					}
 				}
 
 				$('.tree-item', $this).each(function(){
