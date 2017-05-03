@@ -619,52 +619,45 @@ class CHostPrototype extends CHostBase {
 	/**
 	 * Updates the children of the host prototypes on the given hosts and propagates the inheritance to the child hosts.
 	 *
-	 * @param array $host_prototypes	array of host prototypes to inherit
+	 * @param array $hostPrototypes		array of host prototypes to inherit
 	 * @param array $hostids   			array of hosts to inherit to; if set to null, the children will be updated on all
 	 *                              	child hosts
 	 *
 	 * @return bool
 	 */
-	protected function inherit(array $host_prototypes, array $hostids = null) {
-		if (empty($host_prototypes)) {
+	protected function inherit(array $hostPrototypes, array $hostids = null) {
+		if (empty($hostPrototypes)) {
 			return true;
 		}
 
-		$prototypes = $this->prepareInheritedObjects($host_prototypes, $hostids);
-		if (!$prototypes) {
+		// prepare the child host prototypes
+		$newHostPrototypes = $this->prepareInheritedObjects($hostPrototypes, $hostids);
+		if (!$newHostPrototypes) {
 			return true;
 		}
 
-		$existing_prototypes = [];
-		$new_prototypes = [];
-		foreach ($prototypes as $prototype) {
-			if (array_key_exists('hostid', $prototype)) {
-				$existing_prototypes[] = $prototype;
-			} else {
-				$new_prototypes[] = $prototype;
+		$insertHostPrototypes = [];
+		$updateHostPrototypes = [];
+		foreach ($newHostPrototypes as $newHostPrototype) {
+			if (isset($newHostPrototype['hostid'])) {
+				$updateHostPrototypes[] = $newHostPrototype;
+			}
+			else {
+				$insertHostPrototypes[] = $newHostPrototype;
 			}
 		}
 
-		if ($existing_prototypes) {
-			$existing_prototypes = $this->updateReal($existing_prototypes);
+		// save the new host prototypes
+		if (!zbx_empty($insertHostPrototypes)) {
+			$insertHostPrototypes = $this->createReal($insertHostPrototypes);
 		}
 
-		if ($new_prototypes) {
-			$new_prototypes = $this->createReal($new_prototypes);
+		if (!zbx_empty($updateHostPrototypes)) {
+			$updateHostPrototypes = $this->updateReal($updateHostPrototypes);
 		}
-
-		$host_prototypes = [];
-		foreach ([$new_prototypes, $existing_prototypes] as $prototypes) {
-			foreach ($prototypes as $prototype) {
-				if ($prototype['status'] == HOST_STATUS_TEMPLATE) {
-					$host_prototypes[] = $prototype;
-				}
-			}
-		}
-		unset($new_prototypes, $existing_prototypes);
 
 		// propagate the inheritance to the children
-		return $this->inherit($host_prototypes);
+		return $this->inherit(array_merge($updateHostPrototypes, $insertHostPrototypes));
 	}
 
 
@@ -747,12 +740,8 @@ class CHostPrototype extends CHostBase {
 			$templateIds = zbx_toHash($host['parentTemplates'], 'templateid');
 			$parentHostPrototypes = [];
 			foreach ($hostPrototypes as $inum => $parentHostPrototype) {
-				$ruleid = $parentHostPrototype['ruleid'];
-				if (!array_key_exists($ruleid, $discoveryRules)) {
-					continue;
-				}
+				$parentTemplateId = $discoveryRules[$parentHostPrototype['ruleid']]['hostid'];
 
-				$parentTemplateId = $discoveryRules[$ruleid]['hostid'];
 				if (isset($templateIds[$parentTemplateId])) {
 					$parentHostPrototypes[$inum] = $parentHostPrototype;
 				}
@@ -800,7 +789,6 @@ class CHostPrototype extends CHostBase {
 				$newHostPrototype = $parentHostPrototype;
 				$newHostPrototype['ruleid'] = $discoveryRuleChildren[$parentHostPrototype['ruleid']][$hostId];
 				$newHostPrototype['templateid'] = $parentHostPrototype['hostid'];
-				$newHostPrototype['status'] = $host['status'];
 
 				// update an existing inherited host prototype
 				if ($exHostPrototype) {
