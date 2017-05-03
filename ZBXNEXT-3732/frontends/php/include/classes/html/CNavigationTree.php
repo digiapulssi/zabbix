@@ -261,18 +261,11 @@ class CNavigationTree extends CDiv {
 		$rows = [];
 
 		$query = ''
-		 . 'SELECT '
-		 . '	widget_fieldid AS id, '
-		 . '	CASE type '
-		 . '	WHEN 1 THEN value_str '
-		 . '	WHEN 2 THEN sysmapid '
-		 . '	WHEN 3 THEN value_int '
-		 . '	END AS value, '
-		 . '	name '
-		 . 'FROM widget_field '
-		 . 'WHERE '
-		 . '	widgetid = '.$this->widgetId
-		 . '';
+			. 'SELECT widget_fieldid AS id, type, value_str, sysmapid, value_int, name '
+			. 'FROM widget_field '
+			. 'WHERE '
+			. '	widgetid = '.$this->widgetId
+			. '';
 
 		$data = DBselect($query);
 		while ($row = DBfetch($data)) {
@@ -284,6 +277,21 @@ class CNavigationTree extends CDiv {
 					'name' => '',
 					'parent' => 0
 				];
+			}
+
+			switch ($row['type']) {
+				case 1:
+					$row['value'] = $row['value_str'];
+					break;
+				case 2:
+					$row['value'] = $row['sysmapid'];
+					break;
+				case 3:
+					$row['value'] = $row['value_int'];
+					break;
+				default:
+					$row['value'] = null;
+					break;
 			}
 
 			if ($row['name'][0] === 'map' && $row['name'][1] === 'name') {
