@@ -35,6 +35,8 @@ class CWidgetConfig
 			WIDGET_FAVOURITE_MAPS		=> _('Favourite maps'),
 			WIDGET_FAVOURITE_SCREENS	=> _('Favourite screens'),
 			WIDGET_CLOCK				=> _('Clock'),
+			WIDGET_SYSMAP				=> _('Map'),
+			WIDGET_NAVIGATION_TREE	=> _('Map Navigation Tree'),
 			WIDGET_URL					=> _('URL'),
 		];
 
@@ -49,6 +51,8 @@ class CWidgetConfig
 			WIDGET_FAVOURITE_MAPS		=> 15 * SEC_PER_MIN,
 			WIDGET_FAVOURITE_SCREENS	=> 15 * SEC_PER_MIN,
 			WIDGET_CLOCK				=> 15 * SEC_PER_MIN,
+			WIDGET_SYSMAP				=> 15 * SEC_PER_MIN,
+			WIDGET_NAVIGATION_TREE => 15 * SEC_PER_MIN,
 			WIDGET_URL					=> 0,
 		];
 	}

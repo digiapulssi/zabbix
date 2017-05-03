@@ -411,11 +411,11 @@ class CScreenBase {
 	}
 
 	/**
-	 * Insert javascript flicker-free screen data.
+	 * Build javascript flicker-free screen data.
 	 *
 	 * @param array $data
 	 */
-	public function insertFlickerfreeJs(array $data = []) {
+	public function buildFlickerfreeJs(array $data = []) {
 		$jsData = [
 			'id' => $this->getDataId(),
 			'interval' => CWebUser::$data['refresh']
@@ -448,7 +448,17 @@ class CScreenBase {
 			$jsData['data'] = $data;
 		}
 
-		zbx_add_post_js('window.flickerfreeScreen.add('.zbx_jsvalue($jsData).');');
+		return 'window.flickerfreeScreen.add('.zbx_jsvalue($jsData).');';
+	}
+
+	/**
+	 * Insert javascript flicker-free screen data.
+	 *
+	 * @param array $data
+	 * @param boolean $returnAsString	true - return as JS string; false - include JS in HTML response
+	 */
+	public function insertFlickerfreeJs(array $data = []) {
+		zbx_add_post_js($this->buildFlickerfreeJs($data));
 	}
 
 	/**

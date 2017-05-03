@@ -4373,6 +4373,67 @@ tr.cursor-move {
 	fill: $clock-lines-color;
 }
 
+.navtree {
+	position: relative;
+	height: 100%;
+
+	.buttons {
+		border-top: 1px solid #dfe4e7;
+		position: absolute;
+		padding: 5px 20px 0;
+		height: 25px;
+		bottom: 0;
+		right: 0;
+		left: 0;
+	}
+	.tree {
+		height: calc(100% - 30px);
+		overflow-y: auto;
+		overflow-x: hidden;
+
+		span.row {
+			border-bottom: 1px solid $ui-border-color;
+			padding: 8px 0px 8px 20px;
+			display: block;
+		}
+		ul span.row {
+			padding-left: 25px;
+		}
+		ul ul span.row {
+			padding-left: 40px;
+		}
+		ul ul ul span.row {
+			padding-left: 55px;
+		}
+
+		.arrow-down, .arrow-right {
+			cursor: pointer;
+			position: absolute;
+			margin: 5px 0 0 -15px;
+		}
+
+		.opened > ul{
+			display:block;
+		}
+		.closed > ul{
+			display:none;
+		}
+
+		.tools {
+			margin-left: 20px;
+			padding-right: 10px;
+			float: right;
+
+			.edit-item-btn,
+			.remove-item-btn,
+			.add-child-btn{
+				margin-left: 5px;
+				float: left;
+			}
+		}
+	}
+}
+
 /*doc
 ---
 //title: About

@@ -116,6 +116,11 @@ switch ($srctbl) {
 		$page['title'] = _('Global scripts');
 		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
 		break;
+	case 'filter_widgets':
+		$page['title'] = _('Filter widgets');
+		$min_user_type = USER_TYPE_ZABBIX_USER;
+		break;
+		break;
 	default:
 		$page['title'] = _('Error');
 		$error = true;
@@ -159,7 +164,8 @@ $allowedSrcFields = [
 	'hosts'					=> '"hostid", "host"',
 	'templates'				=> '"hostid", "host"',
 	'host_templates'		=> '"hostid", "host"',
-	'host_groups'			=> '"groupid", "name"'
+	'host_groups'			=> '"groupid", "name"',
+	'filter_widgets' => '"id", "name"',
 ];
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
@@ -198,7 +204,8 @@ $fields = [
 	'noempty' =>					[T_ZBX_STR, O_OPT, null,	null,		null],
 	'select' =>						[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'submitParent' =>				[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
-	'templateid' =>					[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null]
+	'templateid' =>					[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null],
+	'dashboardid' =>					[T_ZBX_STR, O_OPT, null,	null,		null],
 ];
 
 // unset disabled item types
@@ -1831,6 +1838,85 @@ elseif ($srctbl == 'scripts') {
 		);
 		insert_js('var popupReference = '.zbx_jsvalue($scripts, true).';');
 	}
+
+	$form->addItem($table);
+	$widget->addItem($form)->show();
+}
+/*
+ * Filter widgets
+ */
+elseif ($srctbl == 'filter_widgets') {
+	$dashboardId = getRequest('dashboardid', null);
+
+	if (!$dashboardId) {
+		invalid_url();
+	}
+
+	$form = (new CForm())
+		->setName('widgetform')
+		->setId('filter_widgets');
+
+	$table = (new CTableInfo())
+		->setHeader([
+			$multiselect
+				? (new CColHeader(
+					(new CCheckBox('all_widgets'))
+						->onClick("javascript: checkAll('".$form->getName()."', 'all_widgets', 'widget');")
+				))->addClass(ZBX_STYLE_CELL_WIDTH)
+				: null,
+			_('Name')
+		]);
+
+	// TODO miks: replace with API call.
+	// use $dashboardId to filter out only widgets that belongs to current dashboard.
+	$widgets = [
+		'1' => ['id' => 1, 'name' => 'Map Navigation Tree widget']
+	];
+
+	foreach ($widgets as $row) {
+		if ($multiselect) {
+			$checkBox = new CCheckBox('widget['.$row['id'].']', $row['id']);
+		}
+
+		// check for existing
+		if (isset($excludeids[$row['id']])) {
+			if ($multiselect) {
+				$checkBox->setChecked(1);
+				$checkBox->setEnabled(false);
+			}
+			$name = $row['name'];
+		}
+		else {
+			$name = (new CLink($row['name'], 'javascript:void(0);'));
+
+			if ($multiselect) {
+				$js_action = "javascript: addValue(".zbx_jsvalue($reference).', '.zbx_jsvalue($row[$srcfld1]).');';
+			}
+			else {
+				$values = [
+					$dstfld1 => $row[$srcfld1],
+					$dstfld2 => $row[$srcfld2]
+				];
+
+				$js_action = 'javascript: addValues('.zbx_jsvalue($dstfrm).', '.zbx_jsvalue($values).'); close_window(); return false;';
+			}
+			$name->onClick($js_action.' jQuery(this).removeAttr("onclick");');
+		}
+
+		$table->addRow([$multiselect ? $checkBox : null, $name]);
+	}
+
+	order_result($widgets, 'name');
+
+	if ($multiselect) {
+		$table->setFooter(
+			new CCol(
+				(new CButton('select', _('Select')))
+					->onClick("javascript: addSelectedValues('filter_widgets', ".zbx_jsvalue($reference).");")
+			)
+		);
+	}
+	insert_js('var popupReference = '.zbx_jsvalue($widgets, true).';');
 
 	$form->addItem($table);
 	$widget->addItem($form)->show();

@@ -426,12 +426,18 @@
 
 				// Creates new script elements and removes previous ones to force their reexecution
 				widget['content_script'].empty();
-				if (typeof(resp.script_file) !== 'undefined') {
+				if (typeof(resp.script_file) !== 'undefined' && resp.script_file.length) {
 					// NOTE: it is done this way to make sure, this script is executed before script_run function below.
-					var new_script = $('<script>')
-						.attr('type', 'text/javascript')
-						.attr('src',resp.script_file);
-					widget['content_script'].append(new_script);
+					if (typeof(resp.script_file) === 'string') {
+						resp.script_file = [resp.script_file];
+					}
+
+					for (var i = 0, l = resp.script_file.length; l > i; i++){
+						var new_script = $('<script>')
+							.attr('type', 'text/javascript')
+							.attr('src', resp.script_file[i]);
+						widget['content_script'].append(new_script);
+					}
 				}
 				if (typeof(resp.script_inline) !== 'undefined') {
 					// NOTE: to execute scrpt with current widget context, add unique ID for required div, and use it in script
@@ -593,6 +599,13 @@
 		url.setArgument('action', 'dashbrd.widget.update');
 
 		$.each(data['widgets'], function(index, widget) {
+			if (typeof widget.event_triggers !== 'undefined') {
+				if (typeof(widget.event_triggers['beforeSave']) !== 'undefined') {
+					// TODO miks: should be called with apply(), instead of eval().
+					eval(widget.event_triggers.beforeSave);
+				}
+			}
+
 			widget['fields'] = $.extend({}, {widgetid: widget['widgetid']}, widget['fields'], widget['pos']);
 
 			ajax_data.push({
@@ -739,6 +752,19 @@
 			});
 		},
 
+		setWidgetFieldValue: function(widgetid, field, value) {
+			return this.each(function() {
+				var	$this = $(this),
+					data = $this.data('dashboardGrid');
+
+				$.each(data['widgets'], function(index, widget) {
+					if (widget['widgetid'] == widgetid) {
+						widget['fields'][field] = value;
+					}
+				});
+			});
+		},
+
 		addWidgets: function(widgets) {
 			return this.each(function() {
 				var	$this = $(this);
@@ -754,6 +780,15 @@
 			return this.each(function() {
 				var	$this = $(this),
 					data = $this.data('dashboardGrid');
+
+					$(data.widgets).each(function(){
+						if (typeof(this.event_triggers) !== 'undefined') {
+							if(typeof(this.event_triggers.onEditStart) !== 'undefined') {
+								// TODO miks: rewrite with apply:
+								eval(this.event_triggers.onEditStart);
+							}
+						}
+					});
 
 				setModeEditDashboard($this, data);
 			});
@@ -774,6 +809,15 @@
 			return this.each(function() {
 				var	$this = $(this),
 					data = $this.data('dashboardGrid');
+
+				$(data.widgets).each(function(){
+					if (typeof(this.event_triggers) !== 'undefined') {
+						if(typeof(this.event_triggers.onEditStop) !== 'undefined') {
+							// TODO miks: rewrite with apply:
+							eval(this.event_triggers.onEditStop);
+						}
+					}
+				});
 
 				setModeViewDashboard($this, data);
 			});
@@ -854,6 +898,48 @@
 						// TODO VM: do we need to have error message on failed dialogue form update?
 					}
 				});
+			});
+		},
+		registerWidget: function(obj) {
+			return this.each(function() {
+				var $this = $(this),
+						data = $this.data('dashboardGrid');
+
+				for (var i = 0, l = data['widgets'].length; l > i; i++) {
+					if (data['widgets'][i]['widgetid'] === obj.widgetid) {
+						if (typeof data['widgets'][i]['triggers'] == 'undefined') {
+							data['widgets'][i]['triggers'] = [];
+						}
+						data['widgets'][i]['triggers'].push(obj);
+					}
+				}
+			});
+		},
+		widgetDataShare: function(widget) {
+			var args = Array.prototype.slice.call(arguments, 1);
+
+			return this.each(function() {
+				var $this = $(this),
+						data = $this.data('dashboardGrid');
+				for (var i = 0, l = data['widgets'].length; l > i; i++) {
+					if (typeof(data['widgets'][i].triggers) != 'undefined') {
+						for (var t = 0, j = data['widgets'][i].triggers.length; j > t; t++) {
+							if (data['widgets'][i].triggers[t].sourceWidget == widget.widgetid) {
+								var trigger = data['widgets'][i].triggers[t];
+
+								if (typeof(trigger.filterFunction) == 'function') {
+									var argsToApply = args.filter(trigger.filterFunction);
+								} else {
+									var argsToApply = args;
+								}
+
+								if (argsToApply.length) {
+									trigger.callback.apply(this, [data['widgets'][i], argsToApply]);
+								}
+							}
+						}
+					}
+				}
 			});
 		}
 	}

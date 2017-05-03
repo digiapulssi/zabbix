@@ -27,18 +27,41 @@ $this->includeJSfile('app/views/monitoring.dashboard.view.js.php');
  */
 $widgets = [
 	1 => [
-		'header' => _('Favourite graphs'),
-		'type' => WIDGET_FAVOURITE_GRAPHS,
-		'pos' => ['row' => 0, 'col' => 0, 'height' => 3, 'width' => 2],
-		'rf_rate' => 15 * SEC_PER_MIN
+		'header' => _('Map Navigation Tree Widget'),
+		'type' => WIDGET_NAVIGATION_TREE,
+		'pos' => ['row' => 0, 'col' => 0, 'height' => 12, 'width' => 3],
+		'rf_rate' => 15 * SEC_PER_MIN,
+		'fields' => [
+			'type' => WIDGET_NAVIGATION_TREE,
+			'widget_name' => 'Map Navigation Tree Widget'
+		]
 	],
 	2 => [
-		'header' => _('Favourite screens'),
-		'type' => WIDGET_FAVOURITE_SCREENS,
-		'pos' => ['row' => 0, 'col' => 2, 'height' => 3, 'width' => 2],
+		'header' => _('Map widget'),
+		'type' => WIDGET_SYSMAP,
+		'pos' => ['row' => 0, 'col' => 3, 'height' => 12, 'width' => 9],
+		'rf_rate' => 15 * SEC_PER_MIN,
+		'fields' => [
+			'type' => WIDGET_SYSMAP,
+			'widget_name' => 'Map widget',
+			'source_type' => WIDGET_NAVIGATION_TREE,
+			'sysmap_id' => null,
+			'filter_id' => null
+		]
+	],/*
+	2 => [
+		'header' => _('Favourite graphs'),
+		'type' => WIDGET_FAVOURITE_GRAPHS,
+		'pos' => ['row' => 1, 'col' => 2, 'height' => 3, 'width' => 2],
 		'rf_rate' => 15 * SEC_PER_MIN
 	],
 	3 => [
+		'header' => _('Favourite screens'),
+		'type' => WIDGET_FAVOURITE_SCREENS,
+		'pos' => ['row' => 1, 'col' => 4, 'height' => 3, 'width' => 2],
+		'rf_rate' => 15 * SEC_PER_MIN
+	],
+	4 => [
 		'header' => _('Favourite maps'),
 		'type' => WIDGET_FAVOURITE_MAPS,
 		'pos' => ['row' => 0, 'col' => 4, 'height' => 3, 'width' => 2],
@@ -47,7 +70,7 @@ $widgets = [
 	4 => [
 		'header' => _n('Last %1$d issue', 'Last %1$d issues', DEFAULT_LATEST_ISSUES_CNT),
 		'type' => WIDGET_LAST_ISSUES,
-		'pos' => ['row' => 3, 'col' => 0, 'height' => 6, 'width' => 6],
+		'pos' => ['row' => 4, 'col' => 0, 'height' => 6, 'width' => 6],
 		'rf_rate' => SEC_PER_MIN
 	],
 	5 => [
@@ -80,6 +103,7 @@ $widgets = [
 		'pos' => ['row' => 13, 'col' => 0, 'height' => 4, 'width' => 3],
 		'rf_rate' => 0
 	]
+	*/
 ];
 
 if (!empty($data['grid_widgets'])) {
@@ -99,9 +123,30 @@ if (!empty($data['grid_widgets'])) {
 				'width' => (int) CProfile::get('web.dashbrd.widget.'.$widgetid.'.width', $widget['pos']['width'])
 			],
 			'rf_rate' => (int) CProfile::get('web.dashbrd.widget.'.$widgetid.'.rf_rate', $widget['rf_rate']),
-			'fields' => ['type' => $widget['type']]
+			'event_triggers' => array_key_exists('event_triggers', $widget) ? $widget['event_triggers'] : [],
+			'fields' => $widget['fields']
 		];
 	}
+}
+
+// TODO miks: don't leave it here. Widgettype can be changed after initial json is loaded.
+$_widget_default_features = [
+	WIDGET_NAVIGATION_TREE => [
+		'event_triggers' => [
+			'beforeSave' => '$("#tree").zbx_navtree("beforeSave")',
+			'onEditStart' => '$("#tree").zbx_navtree("onEditStart")',
+			'onEditStop' => '$("#tree").zbx_navtree("onEditStop")',
+		]
+	]
+];
+
+if ($grid_widgets) {
+	$grid_widgets = array_map(function(&$widget) use($_widget_default_features) {
+		if (array_key_exists($widget['type'], $_widget_default_features)) {
+			$widget += $_widget_default_features[$widget['type']];
+		}
+		return $widget;
+	}, $grid_widgets);
 }
 
 (new CWidget())
