@@ -141,12 +141,12 @@ $_widget_default_features = [
 ];
 
 if ($grid_widgets) {
-	$grid_widgets = array_map(function(&$widget) use($_widget_default_features) {
-		if (array_key_exists($widget['type'], $_widget_default_features)) {
-			$widget += $_widget_default_features[$widget['type']];
+	foreach ($grid_widgets as &$grid_widget) {
+		if (array_key_exists($grid_widget['type'], $_widget_default_features)) {
+			$grid_widget['event_triggers'] += $_widget_default_features[$grid_widget['type']]['event_triggers'];
 		}
-		return $widget;
-	}, $grid_widgets);
+	}
+	unset($grid_widget);
 }
 
 (new CWidget())
