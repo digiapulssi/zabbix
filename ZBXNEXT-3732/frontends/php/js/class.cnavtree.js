@@ -59,13 +59,11 @@ jQuery(function($) {
 				var colors = {0:'#97AAB3', 1:'#7499FF', 2:'#FFC859', 3:'#FFA059', 4:'#E97659', 5: '#E45959'};
 				data = $this.data('treeData');
 
-				if(data.problems.length){
-					for(var map in data.problems){
-						data.problems[map].each(function(numb,sev){
-							if (!numb) return;
-							$('.tree-item[data-mapid='+map+']').attr('data-problems'+sev, numb);
-						});
-					}
+				for(var map in data.problems){
+					data.problems[map].each(function(numb,sev){
+						if (!numb) return;
+						$('.tree-item[data-mapid='+map+']').attr('data-problems'+sev, numb);
+					});
 				}
 
 				$('.tree-item', $this).each(function(){

@@ -66,7 +66,7 @@ class CNavigationTree extends CDiv {
 		// TODO miks: add severity checks // done
 		// TODO miks: map may have several triggers per selement:o
 		// TODO miks: create submap counter
-		
+
 		$response = [];
 		$sysmaps = API::Map()->get([
 				'output' => ['sysmapid', 'severity_min'],
