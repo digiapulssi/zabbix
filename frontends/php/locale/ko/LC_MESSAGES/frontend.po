@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-05-03 21:42+0300\n"
-"PO-Revision-Date: 2016-12-14 02:49+0300\n"
+"PO-Revision-Date: 2017-03-24 02:27+0300\n"
 "Last-Translator: JONGKWON <jkkim.photo@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: ko\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1481676598.000000\n"
+"X-POOTLE-MTIME: 1490315259.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -3373,11 +3373,11 @@ msgstr "컨텍스트 스위치의 횟수. integer를 리턴."
 
 #: include/classes/items/CHelpItems.php:375
 msgid "Count of matched lines in log file monitoring with log rotation support. Returns integer"
-msgstr ""
+msgstr "로그의 일치하는 행의 개수. (로그 로테이션 대응) integer를 리턴."
 
 #: include/classes/items/CHelpItems.php:367
 msgid "Count of matched lines in log file monitoring. Returns integer"
-msgstr ""
+msgstr "로그의 일치하는 행의 개수. integer를 리턴"
 
 #: include/views/configuration.action.list.php:36
 msgid "Create action"
@@ -7183,7 +7183,7 @@ msgstr "아이콘"
 #: include/classes/items/CHelpItems.php:253
 #: include/classes/items/CHelpItems.php:547
 msgid "Identification of the system. Returns string"
-msgstr ""
+msgstr "시스템의 식별문자. string을 리턴."
 
 #: include/func.inc.php:1684 include/func.inc.php:1703
 msgid "If you think this message is wrong, please consult your administrators about getting the necessary permissions."
@@ -16123,6 +16123,7 @@ msgstr "VMware가상 머신 private 메모리 사이즈, <url> - VMware 서비�
 #: include/classes/items/CHelpItems.php:783
 msgid "VMware virtual machine processor ready time ms, <url> - VMware service URL, <uuid> - VMware virtual machine host name"
 msgstr ""
+"VMware가상머신의 프로세서 유효시간(ms)、<url> - VMware 서비스 URL、<uuid> - VMware 가상 머신 호스트 이름"
 
 #: include/classes/items/CHelpItems.php:787
 msgid "VMware virtual machine processor usage in Hz, <url> - VMware service URL, <uuid> - VMware virtual machine host name"
@@ -16321,7 +16322,7 @@ msgstr "뷰를 랜더링 할 수 없었습니다."
 #: include/classes/items/CHelpItems.php:317
 #: include/classes/items/CHelpItems.php:611
 msgid "Virtual space size in bytes or in percentage from total. Returns integer for bytes; float for percentage"
-msgstr ""
+msgstr "가상 메모리 사이즈의 바이트 단위 혹은 전체에서 퍼센트값. 바이트 단위라면 integer를 리턴, 퍼센트라면 float를 리턴"
 
 #: include/views/configuration.host.edit.php:69
 #: include/views/configuration.host.prototype.edit.php:72
