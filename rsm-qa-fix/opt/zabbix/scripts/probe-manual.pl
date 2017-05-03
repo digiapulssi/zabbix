@@ -152,8 +152,7 @@ sub __send_to_probe
 		'server' => $ip,
 		'port' => $port,
 		'timeout' => 10,
-		'retries' => 5,
-		'debug' => getopt('debug') });
+		'retries' => 5 });
 
 	if (!defined($sender))
 	{
