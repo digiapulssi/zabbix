@@ -452,6 +452,19 @@ static void	zbx_ldap_get_user(LDAP *ld, LDAPMessage *entry, zbx_ldap_search_t *l
 	ber_free(ber, 0);
 }
 
+static void	zbx_remove_empty(register char **str)
+{
+	register char **p;
+
+	for (p = str; NULL != *p; p++)
+	{
+		if (0 != strlen(*p))
+			*str++ = *p;
+	}
+
+	*str = NULL;
+}
+
 static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, time_t tv_sec, zbx_vector_ptr_t *users)
 {
 	struct berval	*cookie = NULL;
@@ -477,6 +490,8 @@ static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, time_t
 		ldap_search->use_if_severity_attr,
 		NULL
 	};
+
+	zbx_remove_empty(attrs);
 
 	do
 	{
