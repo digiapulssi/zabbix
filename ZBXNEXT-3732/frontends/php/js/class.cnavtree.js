@@ -42,11 +42,13 @@ jQuery(function($) {
 				root = createTreeBranch(),
 				data = $this.data('treeData');
 
-				if (data.treeData.length) {
+				if (data.treeData) {
 					for (var id in data.treeData){
-						root.append(createTreeLeap(id, data.treeData[id]));
-						if(id > lastId){
-							lastId = id;
+						if(typeof data.treeData[id] != 'function'){
+							root.append(createTreeLeap(id, data.treeData[id]));
+							if(id > lastId){
+								lastId = id;
+							}
 						}
 					}
 				}
