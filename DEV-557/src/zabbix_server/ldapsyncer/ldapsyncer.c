@@ -452,17 +452,18 @@ static void	zbx_ldap_get_user(LDAP *ld, LDAPMessage *entry, zbx_ldap_search_t *l
 	ber_free(ber, 0);
 }
 
-static void	zbx_remove_empty(register char **str)
+static void	zbx_remove_string(register char **strings, const char *string)
 {
-	register char **p;
+	register char	**p;
+	size_t		size = strlen(string) + 1;
 
-	for (p = str; NULL != *p; p++)
+	for (p = strings; NULL != *p; p++)
 	{
-		if (0 != strlen(*p))
-			*str++ = *p;
+		if (0 != memcmp(*p, string, size))
+			*strings++ = *p;
 	}
 
-	*str = NULL;
+	*strings = NULL;
 }
 
 static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, time_t tv_sec, zbx_vector_ptr_t *users)
@@ -491,7 +492,7 @@ static void	zbx_ldap_find_users(LDAP *ld, zbx_ldap_search_t *ldap_search, time_t
 		NULL
 	};
 
-	zbx_remove_empty(attrs);
+	zbx_remove_string(attrs, "");
 
 	do
 	{
