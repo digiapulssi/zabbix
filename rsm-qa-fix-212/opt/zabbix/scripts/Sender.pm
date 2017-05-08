@@ -152,8 +152,8 @@ sub send_arrref {
 
     my $status = 0;
     my $attempts = 0;
-    foreach ( 1 .. $self->retries() ) {
-	$attempts++;
+    for ($attempts = 1; $attempts <= $self->retries(); $attempts++) {
+	_dbg("attempt $attempts of ", $self->retries());
         if ( $self->_send( $data_ref ) ) {
             $status = 1;
             last;
@@ -184,7 +184,7 @@ sub _send {
 	    return;
 	}
     }
-    print("request to sender: ", Dumper($data_ref)) if ($ZOPTS{'debug'});
+    _dbg("request: ", Dumper($data_ref));
     $self->_socket()->send( $self->_encode_request( $data_ref ) );
     my $Select  = IO::Select::->new($self->_socket());
     my @Handles = $Select->can_read( $self->timeout() );
@@ -199,8 +199,24 @@ sub _send {
             $status = 1;
         }
     }
-    print("reply from sender: $result\n") if ($ZOPTS{'debug'});
+
+    _dbg("reply: $result");
     $self->_disconnect() unless $self->keepalive();
+
+    if ($status == 1) {
+	my $failed = $result;
+
+	$failed =~ s/.*; failed: ([0-9]+); total: .*/$1/;
+
+	$failed = int($failed);
+
+	_dbg("failed=$failed");
+
+    	if ($failed != 0) {
+	    $self->_sender_err(sprintf("%d result%s failed: %s", $failed, ($failed == 1 ? '' : 's'), $result));
+	    $status = 0;
+	}
+    }
 
     return $status if ($status == 1);
 
@@ -217,11 +233,11 @@ sub _connect {
         Timeout  => $self->timeout(),
     );
 
-    print("connecting to sender: ", $self->server(), ":", $self->port(), "\n") if ($ZOPTS{'debug'});
+    _dbg("connecting to sender: ", $self->server(), ":", $self->port());
 
     if (!$Socket) {
 	$self->_sender_err("cannot create socket (".$self->server().":".$self->port()."): $!");
-	print("cannot create socket: $!\n") if ($ZOPTS{'debug'});
+	dbg("cannot create socket: $!");
 	return 0;
     }
 
@@ -241,6 +257,16 @@ sub _disconnect {
     $self->_socket(undef);
 
     return 1;
+}
+
+sub _dbg {
+    return unless ($ZOPTS{'debug'});
+
+    my $msg = join('', '[Sender] ', @_);
+
+    $msg .= "\n" if (substr($msg, -1) ne "\n");
+
+    print($msg);
 }
 
 sub DEMOLISH {

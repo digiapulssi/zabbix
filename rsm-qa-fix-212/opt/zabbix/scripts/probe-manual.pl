@@ -167,8 +167,7 @@ sub __send_to_probe
 
 	unless (defined($sender->send_arrref(\@hashes)))
 	{
-		print("Cannot send data to Zabbix server: " . $sender->sender_err());
-		exit(1);
+		fail("Cannot send data to Zabbix server: " . $sender->sender_err());
 	}
 }
 
