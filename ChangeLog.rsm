@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc2
 
 New features:
+....I..... [202] added option to change user password to users.pl (dimir)
 ..F....... [211] fixed SQL errors in frontend when trying to view incident (Oleg)
 ....I..... [210] removed dependency of Zabbix scripts on Zabbix server (dimir)
 
