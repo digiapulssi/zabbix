@@ -146,7 +146,7 @@ $testsInfoTable->addRow([
 
 $widget->additem([$testsInfoTable]);
 
-$widget->addItem([$table, $data['paging']]);
+$widget->addItem([$data['paging'], $table, $data['paging']]);
 
 if (CWebUser::getType() == USER_TYPE_ZABBIX_ADMIN || CWebUser::getType() == USER_TYPE_SUPER_ADMIN
 		|| CWebUser::getType() == USER_TYPE_TEHNICAL_SERVICE) {
