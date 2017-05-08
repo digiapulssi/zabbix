@@ -998,7 +998,7 @@ if (defined($continue_file) and not opt('dry-run'))
 	dbg("last update: ", ts_str($till));
 }
 
-if (!opt('dry-run') && (my $error = rsm_targets_copy(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
+if (!opt('dry-run') && (my $error = rsm_targets_apply()))
 {
 	fail($error);
 }
@@ -1757,9 +1757,20 @@ sub __update_false_positives
 
 		my ($tld, $service) = get_tld_by_trigger($triggerid);
 
-		dbg("auditlog message: $eventid\t$service\t".ts_str($event_clock)."\t".ts_str($clock)."\tfp:$false_positive\t$tld\n");
+		dbg("auditlog: service:$service evnetid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
 
-		fail("cannot update false_positive status of event with ID $eventid") unless (ah_save_false_positive($tld, $service, $eventid, $event_clock, $false_positive, $clock) == AH_SUCCESS);
+		fail("cannot update false_positive status of event with ID $eventid")
+			unless (ah_save_false_positive($tld, $service, $eventid, $event_clock, $false_positive, $clock) == AH_SUCCESS);
+
+		if ($false_positive == 0)
+		{
+			my $inc_fp_relative_path;
+
+			fail("internal error: cannot form incident path!")
+				unless (ah_inc_fp_relative_path($tld, $service, $eventid, $event_clock, \$inc_fp_relative_path) == AH_SUCCESS);
+
+			rsm_targets_delete($inc_fp_relative_path);
+		}
 	}
 
 	ah_save_audit($server_key, $maxclock) unless ($maxclock == 0);
