@@ -57,7 +57,7 @@ sub zbx_need_relogin($) {
     my $result = shift;
 
     if (check_api_error($result) eq true) {
-	return true if ($result->{'error'}->{'code'} eq "-32602")
+	return true if ($result->{'error'}->{'data'} =~ /Session terminated/);
     }
 
     return false;
