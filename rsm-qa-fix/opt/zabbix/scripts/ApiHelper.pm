@@ -28,9 +28,9 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 								# AH_AUDIT_FILE_PREFIX _ <SERVER_KEY> .txt
 
 our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_ALARMED_YES AH_ALARMED_NO AH_ALARMED_DISABLED ah_get_error
-		ah_save_alarmed ah_save_service_availability ah_save_incident ah_save_false_positive
-		ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit ah_save_audit
-		ah_save_continue_file);
+		ah_save_alarmed ah_save_service_availability ah_save_incident ah_inc_fp_relative_path
+		ah_save_false_positive ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit
+		ah_save_audit ah_save_continue_file);
 
 my $error_string = "";
 
@@ -45,11 +45,14 @@ sub __make_base_path
 	my $service = shift;
 	my $result_path_ptr = shift;	# pointer
 	my $add_path = shift;
+	my $relative_path = shift;
 
 	$tld = lc($tld);
 	$service = lc($service);
 
-	my $path = AH_TMP_DIR . "/$tld/$service";
+	my $path = "";
+	$path .= AH_TMP_DIR . "/" unless ($relative_path);
+	$path .= "$tld/$service";
 	$path .= "/$add_path" if ($add_path);
 
 	make_path($path, {error => \my $err});
@@ -72,8 +75,9 @@ sub __make_inc_path
 	my $start = shift;
 	my $eventid = shift;
 	my $inc_path_ptr = shift;	# pointer
+	my $relative_path = shift;
 
-	return __make_base_path($tld, $service, $inc_path_ptr, "incidents/$start.$eventid");
+	return __make_base_path($tld, $service, $inc_path_ptr, "incidents/$start.$eventid", $relative_path);
 }
 
 sub __set_error
@@ -233,6 +237,24 @@ sub ah_save_incident
 	return AH_FAIL unless (__apply_inc_end($inc_path, $end, $lastclock) == AH_SUCCESS);
 
 	return __apply_inc_false_positive($inc_path, $false_positive, $start);
+}
+
+# todo phase 1: new function needed for deleting falsePositive file
+sub ah_inc_fp_relative_path
+{
+	my $tld = shift;
+	my $service = shift;
+	my $eventid = shift;	# incident is identified by event ID
+	my $start = shift;
+	my $inc_fp_relative_path_ref = shift;
+
+	my $inc_path;
+
+	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, 1) == AH_SUCCESS);	# relative path
+
+	$$inc_fp_relative_path_ref = "$inc_path/" . AH_FALSE_POSITIVE_FILE;
+
+	return AH_SUCCESS;
 }
 
 sub ah_save_false_positive
