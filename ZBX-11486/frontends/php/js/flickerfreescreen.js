@@ -252,7 +252,8 @@ jQuery(function($) {
 							var obj = $(this);
 							if(obj.hasClass('msg-bad')){
 								msgBad = obj;
-							} else if (obj.prop('nodeName') == 'DIV') {
+							}
+							else if (obj.prop('nodeName') == 'DIV') {
 								htmlTimestamp = obj.data('timestamp');
 							}
 						});
