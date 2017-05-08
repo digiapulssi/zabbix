@@ -257,6 +257,8 @@ jQuery(function($) {
 							}
 						});
 
+						$('.msg-bad').remove();
+
 						// set message
 						if (msgBad) {
 							$(msgBad).insertBefore('.article > :first-child');
@@ -275,9 +277,6 @@ jQuery(function($) {
 							window.flickerfreeScreenShadow.validate(id);
 						}
 						chkbxRange.init();
-					},
-					beforeSend: function(){
-						$('.msg-bad').remove();
 					},
 					error: function() {
 						window.flickerfreeScreen.calculateReRefresh(id);
