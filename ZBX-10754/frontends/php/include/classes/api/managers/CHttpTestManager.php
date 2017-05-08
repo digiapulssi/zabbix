@@ -401,11 +401,13 @@ class CHttpTestManager {
 				if (isset($hostHttpTest['byTemplateId'][$httpTestId])) {
 					$exHttpTest = $hostHttpTest['byTemplateId'][$httpTestId];
 
-					// need to check templateid here too in case we update linked http test to name that already exists on linked host
+					// need to check templateid here too in case we update linked http test to name
+					// that already exists on linked host
 					if (isset($httpTest['name']) && isset($hostHttpTest['byName'][$httpTest['name']])
 							&& !idcmp($exHttpTest['templateid'], $hostHttpTest['byName'][$httpTest['name']]['templateid'])) {
 						$host = DBfetch(DBselect('SELECT h.name FROM hosts h WHERE h.hostid='.zbx_dbstr($hostId)));
-						throw new Exception(_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name']));
+						throw new Exception(
+							_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name']));
 					}
 				}
 				// update by name
@@ -414,8 +416,11 @@ class CHttpTestManager {
 
 					if ($exHttpTest['templateid'] === $httpTestId) {
 						$host = DBfetch(DBselect('SELECT h.name FROM hosts h WHERE h.hostid='.zbx_dbstr($hostId)));
-						throw new Exception(_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name']));
-					} elseif ($this->compareHttpSteps($httpTest, $exHttpTest) && $this->compareHttpProperties($httpTest, $exHttpTest)) {
+						throw new Exception(
+							_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name']));
+					}
+					elseif ($this->compareHttpSteps($httpTest, $exHttpTest)
+							&& $this->compareHttpProperties($httpTest, $exHttpTest)) {
 						$this->createLinkageBetweenHttpTests($httpTestId, $exHttpTest['httptestid']);
 						continue;
 					}
@@ -452,23 +457,18 @@ class CHttpTestManager {
 	 * Compare properties for http tests.
 	 *
 	 * @param array $httpTest properties
-	 * @param array $exHttpTest
+	 * @param array $exHttpTest properties to compare with
 	 *
 	 * @return bool
 	 */
-	protected function compareHttpProperties($httpTest, $exHttpTest) {
-		if ($httpTest['headers'] === $exHttpTest['headers']
-			&& $httpTest['variables'] === $exHttpTest['variables']
-			&& $httpTest['http_proxy'] === $exHttpTest['http_proxy']
-			&& $httpTest['agent'] === $exHttpTest['agent']
-			&& $httpTest['retries'] === $exHttpTest['retries']
-			&& $httpTest['delay'] === $exHttpTest['delay']
-			&& $httpTest['applicationid'] === $exHttpTest['applicationid']
-		) {
-			return true;
-		}
-
-		return false;
+	protected function compareHttpProperties(array $httpTest, array $exHttpTest) {
+		return ($httpTest['headers'] === $exHttpTest['headers']
+				&& $httpTest['variables'] === $exHttpTest['variables']
+				&& $httpTest['http_proxy'] === $exHttpTest['http_proxy']
+				&& $httpTest['agent'] === $exHttpTest['agent']
+				&& $httpTest['retries'] == $exHttpTest['retries']
+				&& $httpTest['delay'] == $exHttpTest['delay']
+				&& $httpTest['applicationid'] == $exHttpTest['applicationid']);
 	}
 
 	/**
@@ -575,8 +575,8 @@ class CHttpTestManager {
 		}
 
 		$dbCursor = DBselect(
-			'SELECT ht.httptestid,ht.name,ht.hostid,ht.templateid,'.
-			'ht.applicationid,ht.delay,ht.retries,ht.agent,ht.http_proxy,ht.variables,ht.headers'.
+			'SELECT ht.httptestid,ht.name,ht.hostid,ht.templateid,ht.applicationid,ht.delay,ht.retries,ht.agent'.
+				',ht.http_proxy,ht.variables,ht.headers'.
 			' FROM httptest ht'.
 			' WHERE '.dbConditionInt('ht.hostid', $hostIds)
 		);
