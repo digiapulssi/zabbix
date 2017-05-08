@@ -6,6 +6,7 @@ New features:
 ....I..... [210] removed dependency of Zabbix scripts on Zabbix server (dimir)
 
 Bug fixes:
+....I..... [212] fixed getting correct probe host, IP in probe-manual.pl (dimir)
 ....I..... [201] fixed removal of falsePositive file when incident is unmarked so (dimir)
 ..F....... [198] added pagination (top) on the "Incident details" page (Oleg)
 ..F....... [215] fixed service tab selection when using incidents page filter (Oleg)
