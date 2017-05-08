@@ -223,8 +223,37 @@ else {
 	}
 }
 
-$filterGroupId = getRequest('filter_groupid');
-if ($filterGroupId && !API::HostGroup()->isWritable([$filterGroupId])) {
+// get sub-groups of selected group
+$filter_group_id = [];
+if (hasRequest('filter_groupid')) {
+	$filter_group_id = [getRequest('filter_groupid')];
+
+	$filter_groups = API::HostGroup()->get([
+		'output' => ['groupid', 'name'],
+		'groupids' => $filter_group_id,
+		'preservekeys' => true
+	]);
+
+	$filter_groups_names = [];
+	foreach ($filter_groups as $group) {
+		$filter_groups_names[] = $group['name'].'/';
+	}
+
+	if ($filter_groups_names) {
+		$child_groups = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'search' => ['name' => $filter_groups_names],
+			'searchByAny' => true,
+			'startSearch' => true
+		]);
+
+		foreach ($child_groups as $child_group) {
+			$filter_group_id[] = $child_group['groupid'];
+		}
+	}
+}
+
+if ($filter_group_id && !API::HostGroup()->isWritable($filter_group_id)) {
 	access_deny();
 }
 
@@ -1278,8 +1307,35 @@ else {
 	];
 	$preFilter = count($options, COUNT_RECURSIVE);
 
-	if (isset($_REQUEST['filter_groupid']) && !empty($_REQUEST['filter_groupid'])) {
-		$options['groupids'] = $_REQUEST['filter_groupid'];
+	if (hasRequest('filter_groupid')) {
+		$filter_group_id = [getRequest('filter_groupid', [])];
+		$filter_groups = API::HostGroup()->get([
+			'output' => ['groupid', 'name'],
+			'groupids' => $filter_group_id,
+			'preservekeys' => true
+		]);
+
+		$filter_groups_names = [];
+		foreach ($filter_groups as $group) {
+			$filter_groups_names[] = $group['name'].'/';
+		}
+
+		if ($filter_groups_names) {
+			$child_groups = API::HostGroup()->get([
+				'output' => ['groupid'],
+				'search' => ['name' => $filter_groups_names],
+				'searchByAny' => true,
+				'startSearch' => true
+			]);
+
+			foreach ($child_groups as $child_group) {
+				$filter_group_id[] = $child_group['groupid'];
+			}
+		}
+
+		if ($filter_group_id) {
+			$options['groupids'] = $filter_group_id;
+		}
 	}
 	if (isset($_REQUEST['filter_hostid']) && !empty($_REQUEST['filter_hostid'])) {
 		$data['filter_hostid'] = $_REQUEST['filter_hostid'];

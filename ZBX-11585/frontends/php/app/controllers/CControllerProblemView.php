@@ -186,15 +186,15 @@ class CControllerProblemView extends CController {
 				'preservekeys' => true
 			]);
 
-			$filterGroupsNames = [];
+			$filter_groups_names = [];
 			foreach ($filter_groups as $group) {
-				$filterGroupsNames[] = $group['name'].'/';
+				$filter_groups_names[] = $group['name'].'/';
 			}
 
-			if ($filterGroupsNames) {
+			if ($filter_groups_names) {
 				$child_groups = API::HostGroup()->get([
 					'output' => ['groupid'],
-					'search' => ['name' => $filterGroupsNames],
+					'search' => ['name' => $filter_groups_names],
 					'searchByAny' => true,
 					'startSearch' => true
 				]);

@@ -290,7 +290,7 @@ function make_system_status($filter, $backurl) {
 		'preservekeys' => true
 	];
 
-	if (isset($filter['hostids'])) {
+	if (array_key_exists('hostids', $filter)) {
 		$options['hostids'] = $filter['hostids'];
 	}
 
@@ -301,23 +301,26 @@ function make_system_status($filter, $backurl) {
 		'groupids' => $filter['groupids']
 	]);
 
+	$filter_groups_names = [];
 	foreach ($filter_groups as $group) {
-		$options = [
-			'output' => ['groupid', 'name'],
-			'monitored_hosts' => true,
-			'search' => ['name' => $group['name'].'/'],
-			'startSearch' => true
-		];
+		$filter_groups_names[] = $group['name'].'/';
+	}
 
-		if (isset($filter['hostids'])) {
-			$options['hostids'] = $filter['hostids'];
-		}
+	$options = [
+		'output' => ['groupid', 'name'],
+		'monitored_hosts' => true,
+		'search' => ['name' => $filter_groups_names],
+		'startSearch' => true
+	];
 
-		$child_groups = API::HostGroup()->get($options);
+	if (array_key_exists('hostids', $filter)) {
+		$options['hostids'] = $filter['hostids'];
+	}
 
-		foreach ($child_groups as $child_group) {
-			$groups[$child_group['groupid']] = $child_group;
-		}
+	$child_groups = API::HostGroup()->get($options);
+
+	foreach ($child_groups as $child_group) {
+		$groups[$child_group['groupid']] = $child_group;
 	}
 
 	CArrayHelper::sort($groups, [
