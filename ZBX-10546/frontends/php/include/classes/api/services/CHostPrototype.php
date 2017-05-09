@@ -658,15 +658,21 @@ class CHostPrototype extends CHostBase {
 
 		if ($updateHostPrototypes) {
 			$sql_parts = [
-				'select'	=> ['hostid'],
-				'from'		=> [$this->tableName()],
+				'select'	=> ['hd.hostid'],
+				'from'		=> [
+					'host_discovery' => 'host_discovery hd',
+					'items' => 'items i',
+					'hosts' => 'hosts h'
+				],
 				'where'		=> [
-					dbConditionInt('hostid', zbx_objectValues($updateHostPrototypes, 'hostid')),
-					'status = '. HOST_STATUS_TEMPLATE
+					dbConditionInt('hd.hostid', zbx_objectValues($updateHostPrototypes, 'hostid')),
+					'i.itemid = hd.parent_itemid',
+					'h.hostid = i.hostid',
+					'h.status = '. HOST_STATUS_TEMPLATE
 				]
 			];
 			$sql = $this->createSelectQueryFromParts($sql_parts);
-			$valid_hostprototypes = DBfetchColumn(DBselect($sql), 'hostid', true);
+			$valid_hostprototypes = DBfetchArrayAssoc(DBselect($sql), 'hostid');
 
 			$to_inherit = [];
 			foreach ($updateHostPrototypes as $hostprototype) {
