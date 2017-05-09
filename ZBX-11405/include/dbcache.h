@@ -351,10 +351,14 @@ void	*DCget_stats(int request);
 
 zbx_uint64_t	DCget_nextid(const char *table_name, int num);
 
-void	DCsync_configuration(void);
+/* initial sync, get all data */
+#define ZBX_DBSYNC_INIT		0
+/* update sync, get changed data */
+#define ZBX_DBSYNC_UPDATE	1
+
+void	DCsync_configuration(unsigned char mode);
 void	init_configuration_cache(void);
 void	free_configuration_cache(void);
-void	DCload_config(void);
 
 void	DCconfig_get_triggers_by_triggerids(DC_TRIGGER *triggers, const zbx_uint64_t *triggerids, int *errcode,
 		size_t num);
@@ -452,14 +456,6 @@ void	DCget_hostids_by_functionids(zbx_vector_uint64_t *functionids, zbx_vector_u
 void	zbx_config_get(zbx_config_t *cfg, zbx_uint64_t flags);
 void	zbx_config_clean(zbx_config_t *cfg);
 
-/* flags to specify which host interfaces have enabled items */
-#define ZBX_FLAG_INTERFACE_NONE		0x00
-#define ZBX_FLAG_INTERFACE_ZABBIX	(0x01 << (INTERFACE_TYPE_AGENT - 1))
-#define ZBX_FLAG_INTERFACE_SNMP		(0x01 << (INTERFACE_TYPE_SNMP - 1))
-#define ZBX_FLAG_INTERFACE_IPMI		(0x01 << (INTERFACE_TYPE_IPMI - 1))
-#define ZBX_FLAG_INTERFACE_JMX		(0x01 << (INTERFACE_TYPE_JMX - 1))
-#define ZBX_FLAG_INTERFACE_UNKNOWN	0x80
-
 int	DCset_hosts_availability(zbx_vector_ptr_t *availabilities);
 
 int	DCreset_hosts_availability(zbx_vector_ptr_t *hosts);
@@ -491,5 +487,7 @@ typedef struct
 	zbx_hc_data_t	*head;
 }
 zbx_hc_item_t;
+
+void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess);
 
 #endif
