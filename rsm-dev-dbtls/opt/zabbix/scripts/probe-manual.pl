@@ -41,11 +41,7 @@ $server_key = get_rsm_server_key($server_id);
 
 my $section = $config->{$server_key};
 
-if (!defined($section))
-{
-	print("Error: server-id \"$server_id\" not found in configuration file\n");
-	exit(1);
-}
+fail("Error: server-id \"$server_id\" not found in configuration file") if (!defined($section));
 
 db_connect($server_key);
 
@@ -53,11 +49,7 @@ my $probe = getopt('probe');
 
 my $rows_ref = db_select("select hostid from hosts where host='$probe' and status=".HOST_STATUS_MONITORED);
 
-if (scalar(@{$rows_ref}) != 1)
-{
-	print("Error: Probe \"$probe\" not found on Server with ID $server_id.\n");
-	exit(1);
-}
+fail("Error: Probe \"$probe\" not found on Server with ID $server_id.") if (scalar(@{$rows_ref}) != 1);
 
 my $hostid = $rows_ref->[0]->[0];
 
@@ -65,7 +57,9 @@ if (opt('set'))
 {
 	my $zabbix = Zabbix->new({'url' => $section->{'za_url'}, user => $section->{'za_user'}, password => $section->{'za_password'}});
 
-	my $result = $zabbix->get('proxy',{'output' => ['proxyid', 'host'], 'selectInterface' => ['ip', 'port'], 'preservekeys' => 1 });
+	my $result = $zabbix->get('proxy',{'output' => ['proxyid', 'host'], 'filter' => {'host' => $probe}, 'selectInterface' => ['ip', 'port'], 'preservekeys' => 1 });
+
+	fail("Probe \"$probe\" not found on Server ID $server_id (did you forget to reload configuration cache?)") if (scalar(keys(%{$result})) == 0);
 
 	my ($ip, $port);
 
@@ -75,12 +69,6 @@ if (opt('set'))
 
 		$ip = $proxy->{'interface'}->{'ip'};
 		$port = $proxy->{'interface'}->{'port'};
-	}
-
-	if (!$ip || !$port)
-	{
-		print("Probe \"$probe\" not found on Server ID $server_id\n");
-		exit(1);
 	}
 
 	__send_to_probe($ip, $port, $probe, PROBE_KEY_MANUAL, time(), getopt('set'));
@@ -152,23 +140,17 @@ sub __send_to_probe
 		'server' => $ip,
 		'port' => $port,
 		'timeout' => 10,
-		'retries' => 5 });
+		'retries' => 5,
+		'debug' => getopt('debug') });
 
-	if (!defined($sender))
-	{
-		print("Cannot connect to Probe ($ip:$port)\n");
-		exit(1);
-	}
+	
+	fail("Cannot connect to Probe ($ip:$port)") if (!defined($sender));
 
 	my @hashes;
 
 	push(@hashes, {'host' => $hostname, 'key' => $key, 'clock' => $timestamp, 'value' => $value});
 
-	unless (defined($sender->send_arrref(\@hashes)))
-	{
-		print("Cannot send data to Zabbix server: " . $sender->sender_err());
-		exit(1);
-	}
+	fail("Cannot send data to Zabbix server: " . $sender->sender_err()) unless (defined($sender->send_arrref(\@hashes)));
 }
 
 __END__

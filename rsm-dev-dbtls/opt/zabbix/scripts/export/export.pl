@@ -305,7 +305,7 @@ foreach my $pc_ref (@{$probe_changes})
 dw_write_csv_files();
 dw_write_csv_catalogs();
 
-if (!opt('dry-run') && (my $error = rsm_targets_copy(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
+if (!opt('dry-run') && (my $error = rsm_targets_apply()))
 {
 	fail($error);
 }
