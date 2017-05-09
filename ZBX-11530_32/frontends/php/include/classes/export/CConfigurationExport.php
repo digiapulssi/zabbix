@@ -395,7 +395,6 @@ class CConfigurationExport {
 			'output' => ['hostid', 'name'],
 			'hostids' => array_keys($hosts),
 			'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
-			'inherited' => false,
 			'preservekeys' => true
 		]);
 
@@ -715,7 +714,6 @@ class CConfigurationExport {
 			$db_applications = API::Application()->get([
 				'output' => ['name'],
 				'applicationids' => array_keys($applicationids),
-				'inherited' => false,
 				'preservekeys' => true
 			]);
 		}
