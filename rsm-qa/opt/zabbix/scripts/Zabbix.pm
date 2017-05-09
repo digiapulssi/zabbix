@@ -122,7 +122,7 @@ sub new($$) {
 
 	if (defined($result->{'error'}))
 	{
-		last unless (int($result->{'error'}->{'code'}) == -32602);
+	    last unless ($result->{'error'}->{'data'} =~ /Session terminated/);
 	}
     }
 
@@ -553,7 +553,7 @@ sub __send_request {
 	print("REQUEST FAILED:\n", Dumper($req), "\n");
 	print("REPLY:\n", Dumper($result), "\n");
 
-	if (int($result->{'error'}->{'code'}) == -32602) {
+	if ($result->{'error'}->{'data'} =~ /Session terminated/) {
 	    delete_authid();
 	}
     }

@@ -12,14 +12,14 @@ use Zabbix;
 use RSM;
 use RSMSLV;
 
-use constant USER_TYPE_EBERO => 4;
-use constant USER_TYPE_TEHNICAL_SERVICE => 5;
-use constant USER_TYPE_SUPER_ADMIN => 3;
+use constant USER_TYPE_EBERO => 4;		# User type "EBERO"
+use constant USER_TYPE_TEHNICAL_SERVICE => 5;	# User type "Technical Services"
+use constant USER_TYPE_SUPER_ADMIN => 3;	# User type "Zabbix Super Admin"
 
 # NB! Keep these values in sync with DB schema!
-use constant EBERO_GROUPID => 100;
-use constant TEHNICAL_SERVICE_GROUPID => 110;
-use constant SUPER_ADMIN_GROUPID => 7;
+use constant EBERO_GROUPID => 100;		# User group "EBERO users"
+use constant TEHNICAL_SERVICE_GROUPID => 110;	# User group "Technical services users"
+use constant SUPER_ADMIN_GROUPID => 7;		# User group "Zabbix administrators"
 
 use constant USER_TYPES =>
 {
@@ -40,7 +40,7 @@ use constant USER_TYPES =>
 	}
 };
 
-parse_opts('add!', 'delete!', 'user=s', 'type=s', 'password=s', 'firstname=s', 'lastname=s', 'server-id=n');
+parse_opts('add!', 'delete!', 'modify!', 'user=s', 'type=s', 'password=s', 'firstname=s', 'lastname=s', 'server-id=n');
 
 __validate_opts();
 
@@ -51,9 +51,11 @@ my @server_keys = get_rsm_server_keys($config);
 my $modified = 0;
 foreach my $server_key (@server_keys)
 {
+	my $server_id = get_rsm_server_id($server_key);
+
 	if (opt('server-id'))
 	{
-		next if (getopt('server-id') != get_rsm_server_id($server_key));
+		next if (getopt('server-id') != $server_id);
 
 		unsetopt('server-id');
 	}
@@ -80,10 +82,10 @@ foreach my $server_key (@server_keys)
 
 		if ($result->{'error'})
 		{
-			if (int($result->{'error'}->{'code'}) == -32602)
+			if ($result->{'error'}->{'data'} =~ /Session terminated/)
 			{
 				print("Session terminated. Please re-run the same command again");
-				print(" with option \"--server-id ", get_rsm_server_id($server_key), "\"")  if ($modified == 1);
+				print(" with option \"--server-id $server_id\"")  if ($modified == 1);
 				print(".\n");
 			}
 			else
@@ -92,8 +94,26 @@ foreach my $server_key (@server_keys)
 
 				if ($modified == 1)
 				{
-					print("Please fix the issue and re-run the same command with \"--server-id ", get_rsm_server_id($server_key), "\"\n");
+					print("Please fix the issue and re-run the same command with \"--server-id $server_id\"\n");
 				}
+			}
+
+			exit(-1);
+		}
+	}
+	elsif (opt('modify'))
+	{
+		my $userid = __get_userid($zabbix, $server_id, getopt('user'), $modified);
+
+		my $result = $zabbix->update('user', {'userid' => $userid, 'passwd' => getopt('password')});
+
+		if ($result->{'error'})
+		{
+			print("Error: cannot change password of user \"", getopt('user'), "\". ", $result->{'error'}->{'data'}, "\n");
+
+			if ($modified == 1)
+			{
+				print("Please fix the issue and re-run the same command with \"--server-id $server_id\"\n");
 			}
 
 			exit(-1);
@@ -101,46 +121,9 @@ foreach my $server_key (@server_keys)
 	}
 	else
 	{
-		my $options = {'output' => ['userid'], 'filter' => {'alias' => getopt('user')}};
+		my $userid = __get_userid($zabbix, $server_id, getopt('user'), $modified);
 
-		my $result = $zabbix->get('user', $options);
-
-		if ($result->{'error'})
-		{
-			if (int($result->{'error'}->{'code'}) == -32602)
-			{
-				print("Session terminated. Please re-run the same command again");
-				print(" with option \"--server-id ", get_rsm_server_id($server_key), "\"") if ($modified == 1);
-				print(".\n");
-			}
-			else
-			{
-				print("Error: cannot get user \"", getopt('user'), "\". ", $result->{'error'}->{'data'}, "\n");
-
-				if ($modified == 1)
-				{
-					print("Please fix the issue and re-run the same command with \"--server-id ", get_rsm_server_id($server_key), "\"\n");
-				}
-			}
-
-			exit(-1);
-		}
-
-		my $userid = $result->{'userid'};
-
-		if (!$userid)
-		{
-			print("Error: user \"", getopt('user'), "\" not found on $server_key\n");
-
-			if ($modified == 1)
-			{
-				print("Please fix the issue and re-run the same command with \"--server-id ", get_rsm_server_id($server_key), "\"\n");
-			}
-
-			exit(-1);
-		}
-
-		$result = $zabbix->remove('user', [$userid]);
+		my $result = $zabbix->remove('user', [$userid]);
 
 		if ($result->{'error'})
 		{
@@ -148,7 +131,7 @@ foreach my $server_key (@server_keys)
 
 			if ($modified == 1)
 			{
-				print("Please fix the issue and re-run the same command with \"--server-id ", get_rsm_server_id($server_key), "\"\n");
+				print("Please fix the issue and re-run the same command with \"--server-id $server_id\"\n");
 			}
 
 			exit(-1);
@@ -156,6 +139,55 @@ foreach my $server_key (@server_keys)
 	}
 
 	$modified = 1;
+}
+
+sub __get_userid
+{
+	my $zabbix = shift;
+	my $server_id = shift;
+	my $alias = shift;
+	my $modified = shift;
+
+	my $options = {'output' => ['userid'], 'filter' => {'alias' => $alias}};
+
+	my $result = $zabbix->get('user', $options);
+
+	if ($result->{'error'})
+	{
+		if ($result->{'error'}->{'data'} =~ /Session terminated/)
+		{
+			print("Session terminated. Please re-run the same command again");
+			print(" with option \"--server-id $server_id\"") if ($modified == 1);
+			print(".\n");
+		}
+		else
+		{
+			print("Error: cannot get user \"$alias\". ", $result->{'error'}->{'data'}, "\n");
+
+			if ($modified == 1)
+			{
+				print("Please fix the issue and re-run the same command with \"--server-id $server_id\"\n");
+			}
+		}
+
+		exit(-1);
+	}
+
+	my $userid = $result->{'userid'};
+
+	if (!$userid)
+	{
+		print("Error: user \"$alias\" not found on $server_key\n");
+
+		if ($modified == 1)
+		{
+			print("Please fix the issue and re-run the same command with \"--server-id $server_id\"\n");
+		}
+
+		exit(-1);
+	}
+
+	return $userid;
 }
 
 sub __opts_fail
@@ -169,9 +201,25 @@ sub __validate_opts
 {
 	my @errors;
 
-	push(@errors, "\tboth \"--add\" and \"--delete\" cannot be specified") if (opt('add') && opt('delete'));
-	push(@errors, "\tone of \"--add\" or \"--delete\" must be specified") if (!opt('add') && !opt('delete'));
-	push(@errors, "\toption \"--user\" must be specified") if (!opt('user'));
+	my $actions_specified = 0;
+
+	foreach my $opt ('add', 'delete', 'modify')
+	{
+		$actions_specified++ if (opt($opt));
+	}
+
+	if ($actions_specified == 0)
+	{
+		push(@errors, "\tone of \"--add\", \"--delete\" or \"--modify\" must be specified");
+	}
+	elsif ($actions_specified != 1)
+	{
+		push(@errors, "\tonly one of \"--add\", \"--delete\" or \"--modify\" must be specified");
+	}
+
+	__opts_fail(@errors) if (0 != scalar(@errors));
+
+	push(@errors, "\tuser name must be specified with \"--user\"") if (!opt('user'));
 
 	if (opt('add'))
 	{
@@ -179,7 +227,6 @@ sub __validate_opts
 		{
 			push(@errors, "\toption \"--$opt\" must be specified") if (!opt($opt));
 		}
-
 
 		if (opt('type'))
 		{
@@ -189,8 +236,17 @@ sub __validate_opts
 				if ($type ne 'ebero' && $type ne 'tech' && $type ne 'admin');
 		}
 	}
+	elsif (opt('modify'))
+	{
+		foreach my $opt ('type', 'firstname', 'lastname')
+		{
+			push(@errors, "\toption \"--$opt\" is currently not supported with \"--modify\"") if (opt($opt));
+		}
 
-	__opts_fail(@errors) if (0 != scalar(@errors))
+		push(@errors, "\tnew password must be specified with \"--password\"") if (!opt('password'));
+	}
+
+	__opts_fail(@errors) if (0 != scalar(@errors));
 }
 
 __END__
