@@ -8,6 +8,7 @@ use JSON;
 use IO::Socket;
 use IO::Select;
 use Net::Domain;
+use Data::Dumper;
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -25,7 +26,8 @@ sub new
 	      'interval' => 1,
 	      'retries' => 1,
 	      'keepalive' => 0,
-	      '_last_sent' => 0);
+	      '_last_sent' => 0,
+	      'debug' => 0);
 
     my %h = %{$_[0]};
 
@@ -150,8 +152,8 @@ sub send_arrref {
 
     my $status = 0;
     my $attempts = 0;
-    foreach ( 1 .. $self->retries() ) {
-	$attempts++;
+    for ($attempts = 1; $attempts <= $self->retries(); $attempts++) {
+	_dbg("attempt $attempts of ", $self->retries());
         if ( $self->_send( $data_ref ) ) {
             $status = 1;
             last;
@@ -182,19 +184,39 @@ sub _send {
 	    return;
 	}
     }
+    _dbg("request: ", Dumper($data_ref));
     $self->_socket()->send( $self->_encode_request( $data_ref ) );
     my $Select  = IO::Select::->new($self->_socket());
     my @Handles = $Select->can_read( $self->timeout() );
 
     my $status = 0;
+    my $decoded_result;
+    my $result;
     if ( scalar(@Handles) > 0 ) {
-        my $result;
         $self->_socket()->recv( $result, 1024 );
-        if ( $self->_decode_answer($result) ) {
+        $decoded_result = $self->_decode_answer($result);
+        if ( $decoded_result ) {
             $status = 1;
         }
     }
+
+    _dbg("reply: $result");
     $self->_disconnect() unless $self->keepalive();
+
+    if ($status == 1) {
+	my $failed = $result;
+
+	$failed =~ s/.*; failed: ([0-9]+); total: .*/$1/;
+
+	$failed = int($failed);
+
+	_dbg("failed=$failed");
+
+    	if ($failed != 0) {
+	    $self->_sender_err(sprintf("%d result%s failed: %s", $failed, ($failed == 1 ? '' : 's'), $result));
+	    $status = 0;
+	}
+    }
 
     return $status if ($status == 1);
 
@@ -211,8 +233,11 @@ sub _connect {
         Timeout  => $self->timeout(),
     );
 
+    _dbg("connecting to sender: ", $self->server(), ":", $self->port());
+
     if (!$Socket) {
 	$self->_sender_err("cannot create socket (".$self->server().":".$self->port()."): $!");
+	dbg("cannot create socket: $!");
 	return 0;
     }
 
@@ -232,6 +257,16 @@ sub _disconnect {
     $self->_socket(undef);
 
     return 1;
+}
+
+sub _dbg {
+    return unless ($ZOPTS{'debug'});
+
+    my $msg = join('', '[Sender] ', @_);
+
+    $msg .= "\n" if (substr($msg, -1) ne "\n");
+
+    print($msg);
 }
 
 sub DEMOLISH {
