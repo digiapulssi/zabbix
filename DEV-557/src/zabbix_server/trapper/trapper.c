@@ -532,6 +532,7 @@ out:
  ******************************************************************************/
 static int	ldap_sync(zbx_socket_t *sock, struct zbx_json_parse *jp)
 {
+#ifdef HAVE_LDAP
 	const char	*__function_name = "ldap_sync";
 	int		ret = FAIL;
 
@@ -546,6 +547,12 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
+#else
+	ZBX_UNUSED(jp);
+	zbx_send_response_raw(sock, FAIL, "Cannot synchronize users from LDAP: support for LDAP was not compiled in.",
+			CONFIG_TIMEOUT);
+	return FAIL;
+#endif
 }
 
 static void	active_passive_misconfig(zbx_socket_t *sock)
