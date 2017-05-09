@@ -320,7 +320,6 @@ class CConfigurationExport {
 		$applications = API::Application()->get(array(
 			'hostids' => $hostIds,
 			'output' => API_OUTPUT_EXTEND,
-			'inherited' => false,
 			'preservekeys' => true
 		));
 		foreach ($applications as $application) {
