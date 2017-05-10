@@ -975,9 +975,9 @@ foreach (keys(%$servicedata))
 # unset TLD (for the logs)
 $tld = undef;
 
-unless (opt('dry-run') or opt('tld'))
+if (!opt('dry-run') && !opt('tld'))
 {
-	__update_false_positives($server_key);
+	__update_false_positives();
 }
 
 last if (opt('tld'));
@@ -1749,13 +1749,23 @@ sub __update_false_positives
 
 		my $rows_ref2 = db_select("select objectid,clock,false_positive from events where eventid=$eventid");
 
-		fail("cannot get event with ID $eventid") unless (scalar(@$rows_ref2) == 1);
+		if (scalar(@$rows_ref2) != 1)
+		{
+			wrn("looks like event ID $eventid found in auditlog does not exist any more");
+			next;
+		}
 
 		my $triggerid = $rows_ref2->[0]->[0];
 		my $event_clock = $rows_ref2->[0]->[1];
 		my $false_positive = $rows_ref2->[0]->[2];
 
 		my ($tld, $service) = get_tld_by_trigger($triggerid);
+
+		if (!$tld)
+		{
+			dbg("looks like trigger ID $triggerid found in auditlog does not exist any more");
+			next;
+		}
 
 		dbg("auditlog: service:$service evnetid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
 
