@@ -2727,7 +2727,7 @@ sub get_tld_by_trigger
 
 	my $itemid = $rows_ref->[0]->[0];
 
-	fail("cannot get item by triggerid $triggerid") unless ($itemid);
+	return (undef, undef) unless ($itemid);
 
 	dbg("itemid:$itemid");
 
