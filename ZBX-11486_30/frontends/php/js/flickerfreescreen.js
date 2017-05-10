@@ -238,16 +238,17 @@ jQuery(function($) {
 					data: {},
 					dataType: 'html',
 					success: function(html) {
-						// get timestamp and error message from html
+						// Get timestamp and error message from HTML.
 						var htmlTimestamp = null,
-								msgBad = null;
+							msgBad = null;
 
 						$(html).each(function() {
 							var obj = $(this);
-							if(obj.hasClass('msg-bad')){
+
+							if (obj.hasClass('msg-bad')) {
 								msgBad = obj;
 							}
-							else if (obj.prop('nodeName') == 'DIV') {
+							else if (obj.prop('nodeName') === 'DIV') {
 								htmlTimestamp = obj.data('timestamp');
 							}
 						});
