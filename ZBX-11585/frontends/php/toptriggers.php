@@ -99,6 +99,7 @@ if ($groupids) {
 	]);
 
 	$filter_groups_names = [];
+
 	foreach ($filter_groups as $filter_group) {
 		$data['multiSelectHostGroupData'][] = [
 			'id' => $filter_group['groupid'],

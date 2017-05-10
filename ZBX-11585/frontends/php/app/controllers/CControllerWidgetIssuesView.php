@@ -55,7 +55,7 @@ class CControllerWidgetIssuesView extends CController {
 					$filter['groupids'] = null;
 				}
 
-				// get sub-groups of selected groups
+				// Get sub-groups of selected groups.
 				if ($filter['groupids']) {
 					$filter_groups = API::HostGroup()->get([
 						'output' => ['name'],
@@ -64,6 +64,7 @@ class CControllerWidgetIssuesView extends CController {
 					]);
 
 					$filter_groups_names = [];
+
 					foreach ($filter_groups as $group) {
 						$filter_groups_names[] = $group['name'].'/';
 					}

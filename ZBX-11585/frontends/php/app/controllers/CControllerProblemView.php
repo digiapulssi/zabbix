@@ -187,6 +187,7 @@ class CControllerProblemView extends CController {
 			]);
 
 			$filter_groups_names = [];
+
 			foreach ($filter_groups as $group) {
 				$filter_groups_names[] = $group['name'].'/';
 			}

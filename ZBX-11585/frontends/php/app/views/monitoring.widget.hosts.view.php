@@ -44,11 +44,12 @@ foreach ($data['groups'] as $group) {
 		if ($data['hosts_data'][$group['groupid']]['lastUnack']) {
 			$table_inf = new CTableInfo();
 
-			// set trigger severities as table header starting from highest severity
+			// Set trigger severities as table header starting from highest severity.
 			$header = [];
 
 			for ($severity = TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity < TRIGGER_SEVERITY_COUNT; $severity++) {
-				$header[] = ($data['filter']['severity'] === null || array_key_exists($severity, $data['filter']['severity']))
+				$header[] = ($data['filter']['severity'] === null
+						|| array_key_exists($severity, $data['filter']['severity']))
 					? getSeverityName($severity, $data['config'])
 					: null;
 			}
@@ -62,6 +63,7 @@ foreach ($data['groups'] as $group) {
 
 			foreach ($group['hosts'] as $host) {
 				$hostid = $host['hostid'];
+
 				if (!array_key_exists($hostid, $data['lastUnack_host_list'])) {
 					continue;
 				}
@@ -77,11 +79,14 @@ foreach ($data['groups'] as $group) {
 				);
 
 				foreach ($data['lastUnack_host_list'][$host['hostid']]['severities'] as $severity => $trigger_count) {
-					if (!is_null($data['filter']['severity']) && !array_key_exists($severity, $data['filter']['severity'])) {
+					if (!is_null($data['filter']['severity'])
+							&& !array_key_exists($severity, $data['filter']['severity'])) {
 						continue;
 					}
+
 					$r->addItem((new CCol($trigger_count))->addClass(getSeverityStyle($severity, $trigger_count)));
 				}
+
 				$table_inf->addRow($r);
 
 				if (++$popup_rows == ZBX_WIDGET_ROWS) {
@@ -105,7 +110,8 @@ foreach ($data['groups'] as $group) {
 		$header = [];
 
 		for ($severity = TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity < TRIGGER_SEVERITY_COUNT; $severity++) {
-			$header[] = ($data['filter']['severity'] === null || array_key_exists($severity, $data['filter']['severity']))
+			$header[] = ($data['filter']['severity'] === null
+					|| array_key_exists($severity, $data['filter']['severity']))
 				? getSeverityName($severity, $data['config'])
 				: null;
 		}
@@ -119,6 +125,7 @@ foreach ($data['groups'] as $group) {
 
 		foreach ($group['hosts'] as $host) {
 			$hostid = $host['hostid'];
+
 			if (!array_key_exists($hostid, $data['problematic_host_list'])) {
 				continue;
 			}
@@ -131,11 +138,14 @@ foreach ($data['groups'] as $group) {
 			));
 
 			foreach ($data['problematic_host_list'][$host['hostid']]['severities'] as $severity => $trigger_count) {
-				if (!is_null($data['filter']['severity']) && !array_key_exists($severity, $data['filter']['severity'])) {
+				if (!is_null($data['filter']['severity'])
+						&& !array_key_exists($severity, $data['filter']['severity'])) {
 					continue;
 				}
+
 				$r->addItem((new CCol($trigger_count))->addClass(getSeverityStyle($severity, $trigger_count)));
 			}
+
 			$table_inf->addRow($r);
 
 			if (++$popup_rows == ZBX_WIDGET_ROWS) {
@@ -153,19 +163,29 @@ foreach ($data['groups'] as $group) {
 	switch ($data['filter']['extAck']) {
 		case EXTACK_OPTION_ALL:
 			$group_row->addItem((new CCol($problematic_count))
-				->addClass(getSeverityStyle($data['highest_severity'][$group['groupid']], $data['hosts_data'][$group['groupid']]['problematic']))
+				->addClass(getSeverityStyle($data['highest_severity'][$group['groupid']],
+					$data['hosts_data'][$group['groupid']]['problematic']
+				))
 			);
-			$group_row->addItem($data['hosts_data'][$group['groupid']]['problematic'] + $data['hosts_data'][$group['groupid']]['ok']);
+			$group_row->addItem(
+				$data['hosts_data'][$group['groupid']]['problematic'] + $data['hosts_data'][$group['groupid']]['ok']
+			);
 			break;
+
 		case EXTACK_OPTION_UNACK:
 			$group_row->addItem((new CCol($lastUnack_count))
 				->addClass(getSeverityStyle(
-					array_key_exists($group['groupid'], $data['highest_severity2']) ? $data['highest_severity2'][$group['groupid']] : 0,
+					array_key_exists($group['groupid'], $data['highest_severity2'])
+						? $data['highest_severity2'][$group['groupid']]
+						: 0,
 					$data['hosts_data'][$group['groupid']]['lastUnack']
 				))
 			);
-			$group_row->addItem($data['hosts_data'][$group['groupid']]['lastUnack'] + $data['hosts_data'][$group['groupid']]['ok']);
+			$group_row->addItem(
+				$data['hosts_data'][$group['groupid']]['lastUnack'] + $data['hosts_data'][$group['groupid']]['ok']
+			);
 			break;
+
 		case EXTACK_OPTION_BOTH:
 			$unackspan = $lastUnack_count ? [$lastUnack_count, ' '._('of').' '] : null;
 			$group_row->addItem((new CCol([$unackspan, $problematic_count]))
@@ -173,7 +193,9 @@ foreach ($data['groups'] as $group) {
 					$data['highest_severity'][$group['groupid']], $data['hosts_data'][$group['groupid']]['problematic']
 				))
 			);
-			$group_row->addItem($data['hosts_data'][$group['groupid']]['problematic'] + $data['hosts_data'][$group['groupid']]['ok']);
+			$group_row->addItem(
+				$data['hosts_data'][$group['groupid']]['problematic'] + $data['hosts_data'][$group['groupid']]['ok']
+			);
 			break;
 	}
 

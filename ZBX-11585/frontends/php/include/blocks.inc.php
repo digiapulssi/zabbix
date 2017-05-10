@@ -302,6 +302,7 @@ function make_system_status($filter, $backurl) {
 	]);
 
 	$filter_groups_names = [];
+
 	foreach ($filter_groups as $group) {
 		$filter_groups_names[] = $group['name'].'/';
 	}

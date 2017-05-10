@@ -223,18 +223,20 @@ else {
 	}
 }
 
-// get sub-groups of selected group
-$filter_group_id = [];
+// Set sub-groups of selected group.
+$filter_groupids = [];
+
 if (hasRequest('filter_groupid')) {
-	$filter_group_id = [getRequest('filter_groupid')];
+	$filter_groupids = [getRequest('filter_groupid')];
 
 	$filter_groups = API::HostGroup()->get([
 		'output' => ['groupid', 'name'],
-		'groupids' => $filter_group_id,
+		'groupids' => $filter_groupids,
 		'preservekeys' => true
 	]);
 
 	$filter_groups_names = [];
+
 	foreach ($filter_groups as $group) {
 		$filter_groups_names[] = $group['name'].'/';
 	}
@@ -248,12 +250,12 @@ if (hasRequest('filter_groupid')) {
 		]);
 
 		foreach ($child_groups as $child_group) {
-			$filter_group_id[] = $child_group['groupid'];
+			$filter_groupids[] = $child_group['groupid'];
 		}
 	}
 }
 
-if ($filter_group_id && !API::HostGroup()->isWritable($filter_group_id)) {
+if ($filter_groupids && !API::HostGroup()->isWritable($filter_groupids)) {
 	access_deny();
 }
 
@@ -1308,10 +1310,10 @@ else {
 	$preFilter = count($options, COUNT_RECURSIVE);
 
 	if (hasRequest('filter_groupid')) {
-		$filter_group_id = [getRequest('filter_groupid', [])];
+		$filter_groupids = [getRequest('filter_groupid', [])];
 		$filter_groups = API::HostGroup()->get([
 			'output' => ['groupid', 'name'],
-			'groupids' => $filter_group_id,
+			'groupids' => $filter_groupids,
 			'preservekeys' => true
 		]);
 
@@ -1329,12 +1331,12 @@ else {
 			]);
 
 			foreach ($child_groups as $child_group) {
-				$filter_group_id[] = $child_group['groupid'];
+				$filter_groupids[] = $child_group['groupid'];
 			}
 		}
 
-		if ($filter_group_id) {
-			$options['groupids'] = $filter_group_id;
+		if ($filter_groupids) {
+			$options['groupids'] = $filter_groupids;
 		}
 	}
 	if (isset($_REQUEST['filter_hostid']) && !empty($_REQUEST['filter_hostid'])) {
