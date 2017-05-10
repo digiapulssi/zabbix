@@ -237,7 +237,7 @@ sub _connect {
 
     if (!$Socket) {
 	$self->_sender_err("cannot create socket (".$self->server().":".$self->port()."): $!");
-	dbg("cannot create socket: $!");
+	_dbg("cannot create socket: $!");
 	return 0;
     }
 
