@@ -132,6 +132,17 @@ class DB {
 				$nextid = bcadd($res['nextid'], 1, 0);
 			}
 		}
+		// Detect either the query is executable at all?
+		// If query is valid and schema is correct but query still can not be executed,
+		// then there is a good chance that previous transaction has left row level lock
+		// unreleased or it is still running.
+		else if (DBexecute($sql) === false) {
+			self::exception(
+				self::DBEXECUTE_ERROR,
+				_('Your database is not working properly. Please wait few minutes and try to repeat this action. '.
+				'If problem still remains, please contact system administrator.'));
+		}
+		// If query is executable, but still returns false, only then call refreshIds.
 		else {
 			$nextid = self::refreshIds($table, $count);
 		}
