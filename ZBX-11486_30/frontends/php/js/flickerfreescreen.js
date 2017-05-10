@@ -240,13 +240,13 @@ jQuery(function($) {
 					success: function(html) {
 						// Get timestamp and error message from HTML.
 						var htmlTimestamp = null,
-							msgBad = null;
+							msg_bad = null;
 
 						$(html).each(function() {
 							var obj = $(this);
 
 							if (obj.hasClass('msg-bad')) {
-								msgBad = obj;
+								msg_bad = obj;
 							}
 							else if (obj.prop('nodeName') === 'DIV') {
 								htmlTimestamp = obj.data('timestamp');
@@ -256,8 +256,8 @@ jQuery(function($) {
 						$('.msg-bad').remove();
 
 						// set message
-						if (msgBad) {
-							$(msgBad).insertBefore('.article > :first-child');
+						if (msg_bad) {
+							$(msg_bad).insertBefore('.article > :first-child');
 							html = $(html).not('.msg-bad');
 						}
 
