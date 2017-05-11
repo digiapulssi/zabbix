@@ -943,8 +943,8 @@ if (isset($_REQUEST['form']) && str_in_array($_REQUEST['form'], [_('Create item'
 
 	// Sort interfaces to be displayed listed by priority and starting with one selected as 'main'.
 	CArrayHelper::sort($data['interfaces'], [
-		['field' => 'type', 'order' => SORT_ASC],
-		['field' => 'main', 'order' => SORT_DESC]
+		['field' => 'type', 'order' => ZBX_SORT_UP],
+		['field' => 'main', 'order' => ZBX_SORT_DOWN]
 	]);
 
 	if (hasRequest('itemid') && !getRequest('form_refresh')) {

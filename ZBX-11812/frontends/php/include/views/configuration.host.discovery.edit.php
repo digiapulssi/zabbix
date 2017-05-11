@@ -82,6 +82,7 @@ if (!empty($this->data['interfaces'])) {
 			$interface['interfaceid'] == $this->data['interfaceid'] ? 'yes' : 'no'
 		);
 		$option->setAttribute('data-interfacetype', $interface['type']);
+		$option->setAttribute('data-default', $interface['main']);
 		$interfaceGroups[$interface['type']]->addItem($option);
 	}
 	foreach ($interfaceGroups as $interfaceGroup) {

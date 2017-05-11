@@ -79,8 +79,8 @@ $current_time = time();
 foreach ($data['hosts'] as $host) {
 	// Sort interfaces by 'main' in descending order and by interface priority.
 	CArrayHelper::sort($host['interfaces'], [
-		['field' => 'main', 'order' => SORT_DESC],
-		['field' => 'type', 'order' => SORT_ASC]
+		['field' => 'main', 'order' => ZBX_SORT_DOWN],
+		['field' => 'type', 'order' => ZBX_SORT_UP]
 	]);
 
 	$interface = reset($host['interfaces']);
