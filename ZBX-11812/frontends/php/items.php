@@ -941,6 +941,12 @@ if (isset($_REQUEST['form']) && str_in_array($_REQUEST['form'], [_('Create item'
 	$data['config'] = select_config();
 	$data['host'] = $host;
 
+	// Sort interfaces to be displayed listed by priority and starting with one selected as 'main'.
+	CArrayHelper::sort($data['interfaces'], [
+		['field' => 'type', 'order' => SORT_ASC],
+		['field' => 'main', 'order' => SORT_DESC]
+	]);
+
 	if (hasRequest('itemid') && !getRequest('form_refresh')) {
 		$data['inventory_link'] = $item['inventory_link'];
 	}
