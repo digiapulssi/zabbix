@@ -1357,6 +1357,7 @@ int	zbx_strmatch_condition(const char *value, const char *pattern, unsigned char
 #define ZBX_PREPROC_HEX2DEC		8
 #define ZBX_PREPROC_DELTA_VALUE		9
 #define ZBX_PREPROC_DELTA_SPEED 	10
+#define ZBX_PREPROC_XPATH		11
 
 #define ZBX_HTTPFIELD_HEADER		0
 #define ZBX_HTTPFIELD_VARIABLE		1

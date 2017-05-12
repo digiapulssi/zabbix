@@ -1310,7 +1310,7 @@ static int	preprocess_item_value(const DC_ITEM *item, ZBX_DC_HISTORY *hdata, zbx
 		{
 			char	*errmsg_full;
 
-			errmsg_full = zbx_dsprintf(NULL, "Item preprocessing step #%d failed: %s", i, errmsg);
+			errmsg_full = zbx_dsprintf(NULL, "Item preprocessing step #%d failed: %s", i + 1, errmsg);
 			dc_history_set_error(hdata, errmsg_full);
 			zbx_free(errmsg);
 			goto out;
