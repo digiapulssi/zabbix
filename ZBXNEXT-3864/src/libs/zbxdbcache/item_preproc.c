@@ -800,8 +800,10 @@ static int	item_preproc_xpath(zbx_variant_t *value, const char *params, char **e
 
 	if (NULL == (doc = xmlReadMemory(value->data.str, strlen(value->data.str), "noname.xml", NULL, 0)))
 	{
-		pErr = xmlGetLastError();
-		*errmsg = zbx_strdup(NULL, pErr->message);
+		if (NULL != (pErr = xmlGetLastError()))
+			*errmsg = zbx_strdup(*errmsg, pErr->message);
+		else
+			*errmsg = zbx_strdup(*errmsg, "Failed to parse xml value");
 		return FAIL;
 	}
 
