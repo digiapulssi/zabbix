@@ -1342,7 +1342,7 @@ DB_RESULT	zbx_db_vselect(const char *fmt, va_list args)
 		sec = zbx_time();
 
 	sql = zbx_dvsprintf(sql, fmt, args);
-
+#ifdef HAVE_ORACLE
 	if (0 == zbx_strncasecmp(sql, "select ", 7))
 	{
 		const char	*sql_p = sql + 7;
@@ -1357,7 +1357,7 @@ DB_RESULT	zbx_db_vselect(const char *fmt, va_list args)
 			sql = sql_dyn;
 		}
 	}
-
+#endif
 	if (1 == txn_error)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "ignoring query [txnlev:%d] [%s] within failed transaction", txn_level, sql);
