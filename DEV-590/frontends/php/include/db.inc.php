@@ -411,6 +411,10 @@ function DBselect($query, $limit = null, $offset = 0) {
 			}
 			break;
 		case ZBX_DB_ORACLE:
+			if (preg_match('/^SELECT\s/i', $query)) {
+				$query = str_ireplace('SELECT ', 'SELECT /*+ NO_EXPAND */ ', $query);
+			}
+
 			if (!$result = oci_parse($DB['DB'], $query)) {
 				$e = @oci_error();
 				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']');
@@ -536,6 +540,10 @@ function DBexecute($query, $skip_error_messages = 0) {
 			}
 			break;
 		case ZBX_DB_ORACLE:
+			if (preg_match('/^SELECT\s/i', $query)) {
+				$query = str_ireplace('SELECT ', 'SELECT /*+ NO_EXPAND */ ', $query);
+			}
+
 			if (!$result = oci_parse($DB['DB'], $query)) {
 				$e = @oci_error();
 				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']');
