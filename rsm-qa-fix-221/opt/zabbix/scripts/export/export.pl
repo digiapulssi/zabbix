@@ -262,15 +262,19 @@ while (children_running() > 0)
 
 last if (opt('tld'));
 }	# foreach (@server_keys)
-#undef($server_key);	NB! do not uncomment, DB is used in __get_false_positives() below.
+undef($server_key) unless (opt('tld'));	# keep $server_key if --tld was specified (for __get_false_positives())
 
 # at this point there should be no child processes so we do not care about locking
+
+my $false_positives = __get_false_positives($from, $till, $server_key);
+
+undef($server_key) if (defined($server_key));
+
+my $probe_changes = __get_probe_changes($from);	# does not need db connection
 
 db_connect();
 dw_csv_init();
 dw_load_ids_from_db();
-
-my $false_positives = __get_false_positives($from, $till, (opt('tld') ? $server_key : undef));
 foreach my $fp_ref (@$false_positives)
 {
 	dbg("writing false positive entry:");
@@ -286,7 +290,6 @@ foreach my $fp_ref (@$false_positives)
 		]);
 }
 
-my $probe_changes = __get_probe_changes($from);
 foreach my $pc_ref (@{$probe_changes})
 {
 	dbg("writing probe changes entry:");
@@ -1269,13 +1272,13 @@ sub __get_false_positives
 {
 	my $from = shift;
 	my $till = shift;
-	my $server_key = shift;
+	my $_server_key = shift;	# if --tld was specified
 
 	my @local_server_keys;
 
-	if ($server_key)
+	if ($_server_key)
 	{
-		push(@local_server_keys, $server_key)
+		push(@local_server_keys, $_server_key)
 	}
 	else
 	{
@@ -1288,7 +1291,6 @@ sub __get_false_positives
 	foreach (@local_server_keys)
 	{
 	$server_key = $_;
-
 	db_connect($server_key);
 
 	# check for possible false_positive changes made in front-end
@@ -1328,15 +1330,13 @@ sub __get_probe_changes
 
 	my @result;
 
-	foreach my $server_key (sort(keys(%{$probes_data})))
+	foreach my $_server_key (sort(keys(%{$probes_data})))
 	{
-		foreach my $probe (sort(keys(%{$probes_data->{$server_key}})))
+		foreach my $probe (sort(keys(%{$probes_data->{$_server_key}})))
 		{
-			dbg("  $probe\@$server_key");
-
-			for (my $idx = 0; defined($probes_data->{$server_key}->{$probe}->[$idx]); $idx++)
+			for (my $idx = 0; defined($probes_data->{$_server_key}->{$probe}->[$idx]); $idx++)
 			{
-				my $clock = $probes_data->{$server_key}->{$probe}->[$idx];
+				my $clock = $probes_data->{$_server_key}->{$probe}->[$idx];
 				my $status = ($idx % 2 == 0 ? PROBE_ONLINE_STR : PROBE_OFFLINE_STR);
 
 				if ($idx == 0 && $clock < $from)
@@ -1345,7 +1345,7 @@ sub __get_probe_changes
 					next;
 				}
 
-				if ($idx + 1 == scalar(@{$probes_data->{$server_key}->{$probe}}) && ($clock % 60 != 0))
+				if ($idx + 1 == scalar(@{$probes_data->{$_server_key}->{$probe}}) && ($clock % 60 != 0))
 				{
 					# ignore last second status
 					next;
