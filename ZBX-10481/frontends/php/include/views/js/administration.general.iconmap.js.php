@@ -23,7 +23,7 @@
 			<?php endforeach ?>
 		</select>
 	</td>
-	<td>
+	<td style="vertical-align: middle;">
 		<?php reset($this->data['iconList']) ?>
 		<?php $iconid = key($this->data['iconList']) ?>
 		<img class="pointer preview" name="Preview" alt="Preview" src="imgstore.php?iconid=<?= $iconid ?>&width=24&height=24" data-image-full="imgstore.php?iconid=<?= $iconid ?>" border="0">
@@ -36,7 +36,7 @@
 <script type="text/javascript">
 	jQuery(function($) {
 		var iconMapTable = $('#iconMapTable'),
-			addMappindButton = $('#addMapping');
+			addMappingButton = $('#addMapping');
 
 		function recalculateSortOrder() {
 			var i = 1;
@@ -95,7 +95,7 @@
 				hintBox.showStaticHint(e, this, img, '', true);
 			});
 
-		addMappindButton.click(function() {
+		addMappingButton.click(function() {
 			var tpl = new Template($('#iconMapRowTPL').html()),
 				iconmappingid = getUniqueId(),
 				mapping = {};
@@ -118,7 +118,7 @@
 		});
 
 		if (iconMapTable.find('tr.sortable').length === 0) {
-			addMappindButton.click();
+			addMappingButton.click();
 		}
 	});
 </script>

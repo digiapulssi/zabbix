@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -396,7 +396,7 @@ class CDiscoveryRule extends CItemGeneral {
 			$iprototypeids[$item['itemid']] = $item['itemid'];
 		}
 		if (!empty($iprototypeids)) {
-			if (!API::Itemprototype()->delete($iprototypeids, true)) {
+			if (!API::ItemPrototype()->delete($iprototypeids, true)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Cannot delete discovery rule'));
 			}
 		}

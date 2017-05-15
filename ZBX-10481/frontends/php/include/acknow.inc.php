@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,7 +51,9 @@ function makeAckTab($acknowledges) {
 	foreach ($acknowledges as $acknowledge) {
 		$table->addRow([
 			zbx_date2str(DATE_TIME_FORMAT_SECONDS, $acknowledge['clock']),
-			getUserFullname($acknowledge),
+			array_key_exists('alias', $acknowledge)
+				? getUserFullname($acknowledge)
+				: _('Inaccessible user'),
 			zbx_nl2br($acknowledge['message'])
 		]);
 	}

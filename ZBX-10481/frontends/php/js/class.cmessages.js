@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -383,9 +383,9 @@ var CMessageList = Class.create({
 		$(this.dom.container).hide();
 
 		// close all
-		this.dom.container.close = document.createElement('span');
-		this.dom.container.close.className = 'overlay-close-btn';
+		this.dom.container.close = document.createElement('button');
 		this.dom.container.close.setAttribute('title', locale['S_CLEAR']);
+		this.dom.container.close.className = 'overlay-close-btn';
 		this.dom.container.appendChild(this.dom.container.close);
 
 		// header

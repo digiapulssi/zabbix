@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -200,7 +200,7 @@ function close_window() {
 }
 
 function Confirm(msg) {
-	return confirm(msg, 'title');
+	return confirm(msg);
 }
 
 function create_var(form_name, var_name, var_value, doSubmit) {
@@ -524,26 +524,6 @@ function basename(path, suffix) {
 }
 
 /**
- * Return the number of days in a month.
- *
- * @param int year
- * @param int month
- *
- * @return int
- */
-function daysInMonth(year, month) {
-	month++;
-	var days = 31;
-	if (month == 4 || month == 6 || month == 9 || month == 11) {
-		days = 30;
-	}
-	else if (month == 2) {
-		days = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) ? 29 : 28;
-	}
-	return days;
-}
-
-/**
  * Transform datetime parts to two digits e.g., 2 becomes 02.
  *
  * @param int val
@@ -568,3 +548,19 @@ jQuery.fn.trimValues = function(selectors) {
 		obj.val(jQuery.trim(obj.val()));
 	});
 };
+
+/**
+ * Inserts hidden input into a form
+ *
+ * @param string form_name
+ * @param string input_name
+ * @param string input_value
+ */
+function submitFormWithParam(form_name, input_name, input_value) {
+	var input = document.createElement('input');
+	input.setAttribute('type', 'hidden');
+	input.setAttribute('name', input_name);
+	input.setAttribute('value', input_value);
+	document.forms[form_name].appendChild(input);
+	jQuery(document.forms[form_name]).trigger('submit');
+}

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,10 +66,8 @@ class CMultiSelect extends CTag {
 		}
 
 		if (array_key_exists('popup', $options)) {
-			foreach (['parameters', 'width', 'height'] as $option) {
-				if (array_key_exists($option, $options['popup'])) {
-					$params['popup'][$option] = $options['popup'][$option];
-				}
+			if (array_key_exists('parameters', $options['popup'])) {
+				$params['popup']['parameters'] = $options['popup']['parameters'];
 			}
 		}
 

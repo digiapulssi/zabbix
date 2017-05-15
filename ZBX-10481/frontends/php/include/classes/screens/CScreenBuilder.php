@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -272,6 +272,9 @@ class CScreenBuilder {
 
 			case SCREEN_RESOURCE_DISCOVERY:
 				return new CScreenDiscovery($options);
+
+			case SCREEN_RESOURCE_HTTPTEST:
+				return new CScreenHttpTest($options);
 
 			default:
 				return null;
@@ -562,7 +565,7 @@ class CScreenBuilder {
 						->addClass(ZBX_STYLE_TREEVIEW_PLUS)
 						->addSID();
 					if (!$emptyScreenRow) {
-						$link->addConfirmation(CJs::encodeJson(_('This screen-row is not empty. Delete it?')));
+						$link->addConfirmation(_('This screen row is not empty. Delete it?'));
 					}
 				}
 
@@ -608,7 +611,7 @@ class CScreenBuilder {
 						->addSID();
 
 					if (array_key_exists($i, $emptyScreenColumns)) {
-						$link->addConfirmation(CJs::encodeJson(_('This screen-column is not empty. Delete it?')));
+						$link->addConfirmation(_('This screen column is not empty. Delete it?'));
 					}
 				}
 

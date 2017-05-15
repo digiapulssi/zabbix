@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,12 +29,11 @@ class testPageEvents extends CWebTest {
 		$this->zbxTestDropdownSelectWait('groupid', 'all');
 		$this->zbxTestDropdownSelectWait('hostid', 'all');
 
-		$this->zbxTestCheckTitle('Latest events \[refreshed every 30 sec.\]');
-		$this->zbxTestTextPresent('HISTORY OF EVENTS');
-		$this->zbxTestTextPresent('Group');
-		$this->zbxTestTextPresent('Host');
-		$this->zbxTestTextPresent('Source');
+		$this->zbxTestCheckTitle('Latest events [refreshed every 30 sec.]');
+		$this->zbxTestCheckHeader('Events');
+		$this->zbxTestTextPresent(['Group', 'Host', 'Source']);
 		$this->zbxTestTextPresent('Displaying');
+		$this->zbxTestTextPresent('Filter');
 		$this->zbxTestTextPresent(['Time', 'Host', 'Description', 'Status', 'Severity', 'Duration', 'Ack', 'Actions']);
 	}
 
@@ -43,26 +42,27 @@ class testPageEvents extends CWebTest {
 
 		$this->zbxTestDropdownSelectWait('source', 'Discovery');
 
-		$this->zbxTestCheckTitle('Latest events \[refreshed every 30 sec.\]');
-		$this->zbxTestTextPresent('HISTORY OF EVENTS');
+		$this->zbxTestCheckTitle('Latest events [refreshed every 30 sec.]');
+		$this->zbxTestCheckHeader('Events');
 		$this->zbxTestTextPresent('Source');
-		$this->zbxTestTextPresent('Displaying');
+		$this->zbxTestTextNotPresent('Group');
+		$this->zbxTestTextNotPresent(['Severity', 'Duration', 'Ack']);
 		$this->zbxTestTextPresent(['Time', 'IP', 'DNS', 'Description', 'Status']);
 	}
 
 	public function testPageEvents_Triggers_NoHostNames() {
 		$this->zbxTestLogin('events.php');
 		$this->zbxTestDropdownSelectWait('source', 'Trigger');
-		$this->zbxTestCheckTitle('Latest events \[refreshed every 30 sec.\]');
+		$this->zbxTestCheckTitle('Latest events [refreshed every 30 sec.]');
 
-		$this->checkNoRealHostnames();
+		$this->zbxTestCheckNoRealHostnames();
 	}
 
 	public function testPageEvents_Discovery_NoHostNames() {
 		$this->zbxTestLogin('events.php');
 		$this->zbxTestDropdownSelectWait('source', 'Discovery');
-		$this->zbxTestCheckTitle('Latest events \[refreshed every 30 sec.\]');
+		$this->zbxTestCheckTitle('Latest events [refreshed every 30 sec.]');
 
-		$this->checkNoRealHostnames();
+		$this->zbxTestCheckNoRealHostnames();
 	}
 }

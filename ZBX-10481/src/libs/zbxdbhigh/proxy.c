@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
 	if (0 == (configured_tls_accept_modes & sock->connection_type))
 	{
 		msg = zbx_dsprintf(NULL, "%s from server over connection of type \"%s\" is not allowed", req,
-				zbx_tls_connection_type_name(sock->connection_type));
+				zbx_tcp_connection_type_name(sock->connection_type));
 
 		zabbix_log(LOG_LEVEL_WARNING, "%s by proxy configuration parameter \"TLSAccept\"", msg);
 
@@ -197,9 +197,10 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
  * Function: update_proxy_lastaccess                                          *
  *                                                                            *
  ******************************************************************************/
-void	update_proxy_lastaccess(const zbx_uint64_t hostid)
+void	update_proxy_lastaccess(const zbx_uint64_t hostid, time_t last_access)
 {
-	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, time(NULL), hostid);
+	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, last_access, hostid);
+	zbx_dc_update_proxy_lastaccess(hostid, last_access);
 }
 
 /******************************************************************************
@@ -719,7 +720,7 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 {
 	const char		*__function_name = "process_proxyconfig_table";
 
-	int			f, fields_count = 0, insert, is_null, i, ret = FAIL, id_field_nr = 0, move_out = 0,
+	int			f, fields_count, insert, is_null, i, ret = FAIL, id_field_nr = 0, move_out = 0,
 				move_field_nr = 0;
 	const ZBX_FIELD		*fields[ZBX_MAX_FIELDS];
 	struct zbx_json_parse	jp_data, jp_row;
@@ -795,11 +796,18 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 
 	p = NULL;
 	/* iterate column names (lines 4-6 in T1) */
-	while (NULL != (p = zbx_json_next_value_dyn(&jp_data, p, &buf, &buf_alloc, NULL)))
+	for (fields_count = 0; NULL != (p = zbx_json_next_value_dyn(&jp_data, p, &buf, &buf_alloc, NULL)); fields_count++)
 	{
-		if (NULL == (fields[fields_count++] = DBget_field(table, buf)))
+		if (NULL == (fields[fields_count] = DBget_field(table, buf)))
 		{
 			*error = zbx_dsprintf(*error, "invalid field name \"%s.%s\"", table->table, buf);
+			goto out;
+		}
+
+		if (0 == (fields[fields_count]->flags & ZBX_PROXY) &&
+				(0 != strcmp(table->recid, buf) || ZBX_TYPE_ID != fields[fields_count]->type))
+		{
+			*error = zbx_dsprintf(*error, "unexpected field \"%s.%s\"", table->table, buf);
 			goto out;
 		}
 	}
@@ -1380,7 +1388,7 @@ void	process_proxyconfig(struct zbx_json_parse *jp_data)
 	}
 	else
 	{
-		DCsync_configuration();
+		DCsync_configuration(ZBX_DBSYNC_UPDATE);
 		DCupdate_hosts_availability();
 	}
 
@@ -1721,7 +1729,7 @@ try_again:
  *          cache to speed things up.                                         *
  *                                                                            *
  ******************************************************************************/
-static int	proxy_get_history_data(struct zbx_json *j, zbx_uint64_t *lastid)
+static int	proxy_get_history_data(struct zbx_json *j, zbx_uint64_t *lastid, zbx_uint64_t * id, int *records_processed)
 {
 	const char			*__function_name = "proxy_get_history_data";
 
@@ -1748,7 +1756,7 @@ static int	proxy_get_history_data(struct zbx_json *j, zbx_uint64_t *lastid)
 	static char			*string_buffer = NULL;
 	static size_t			string_buffer_alloc = ZBX_KIBIBYTE;
 	size_t				string_buffer_offset = 0, len1, len2;
-	static zbx_uint64_t		*itemids = NULL, id;
+	static zbx_uint64_t		*itemids = NULL;
 	static zbx_history_data_t	*data = NULL;
 	static size_t			data_alloc = 0;
 	size_t				data_num = 0, i;
@@ -1764,7 +1772,6 @@ static int	proxy_get_history_data(struct zbx_json *j, zbx_uint64_t *lastid)
 
 	*lastid = 0;
 
-	proxy_get_lastid("proxy_history", "history_lastid", &id);
 try_again:
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 			"select id,itemid,clock,ns,timestamp,source,severity,"
@@ -1772,7 +1779,7 @@ try_again:
 			" from proxy_history"
 			" where id>" ZBX_FS_UI64
 			" order by id",
-			id);
+			*id);
 
 	result = DBselectN(sql, records_lim);
 
@@ -1782,7 +1789,7 @@ try_again:
 	{
 		ZBX_STR2UINT64(*lastid, row[0]);
 
-		if (1 < *lastid - id)
+		if (1 < *lastid - *id)
 		{
 			/* At least one record is missing. It can happen if some DB syncer process has */
 			/* started but not yet committed a transaction or a rollback occurred in a DB syncer. */
@@ -1791,7 +1798,7 @@ try_again:
 				DBfree_result(result);
 				zabbix_log(LOG_LEVEL_DEBUG, "%s() " ZBX_FS_UI64 " record(s) missing."
 						" Waiting " ZBX_FS_DBL " sec, retrying.",
-						__function_name, *lastid - id - 1,
+						__function_name, *lastid - *id - 1,
 						t_sleep.tv_sec + t_sleep.tv_nsec / 1e9);
 				nanosleep(&t_sleep, &t_rem);
 				goto try_again;
@@ -1799,7 +1806,7 @@ try_again:
 			else
 			{
 				zabbix_log(LOG_LEVEL_DEBUG, "%s() " ZBX_FS_UI64 " record(s) missing. No more retries.",
-						__function_name, *lastid - id - 1);
+						__function_name, *lastid - *id - 1);
 			}
 		}
 
@@ -1842,7 +1849,7 @@ try_again:
 		memcpy(&string_buffer[string_buffer_offset], row[7], len2);
 		string_buffer_offset += len2;
 
-		id = *lastid;
+		*id = *lastid;
 		records_lim--;
 	}
 	DBfree_result(result);
@@ -1903,18 +1910,31 @@ try_again:
 
 		records++;
 	}
-
 	DCconfig_clean_items(dc_items, errcodes, data_num);
 	zbx_free(dc_items);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%d lastid:" ZBX_FS_UI64, __function_name, records, *lastid);
+	*records_processed = data_num;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%d records_processed:%d lastid:" ZBX_FS_UI64,
+			__function_name, records, *records_processed, *lastid);
 
 	return records;
 }
 
 int	proxy_get_hist_data(struct zbx_json *j, zbx_uint64_t *lastid)
 {
-	return proxy_get_history_data(j, lastid);
+	int		records = 0, records_processed;
+	zbx_uint64_t	id;
+
+	proxy_get_lastid("proxy_history", "history_lastid", &id);
+
+	do
+	{
+		records += proxy_get_history_data(j, lastid, &id, &records_processed);
+	}
+	while (ZBX_MAX_HRECORDS > records && ZBX_MAX_HRECORDS == records_processed);
+
+	return records;
 }
 
 int	proxy_get_dhis_data(struct zbx_json *j, zbx_uint64_t *lastid)
@@ -2131,7 +2151,7 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 					zabbix_log(LOG_LEVEL_WARNING, "connection of type \"%s\" is not allowed for"
 							" host \"%s\" item \"%s\" (not every rejected item might be"
 							" reported)",
-							zbx_tls_connection_type_name(sock->connection_type),
+							zbx_tcp_connection_type_name(sock->connection_type),
 							items[i].host.host, items[i].key_orig);
 					flag_host_allow = 0;
 					continue;
@@ -2314,31 +2334,31 @@ int	process_hist_data(zbx_socket_t *sock, struct zbx_json_parse *jp, const zbx_u
 	size_t			tmp_alloc = 0, values_num = 0;
 	int			ret = FAIL, processed = 0, total_num = 0;
 	double			sec;
-	zbx_timespec_t		proxy_timediff;
+	zbx_timespec_t		client_timediff;
 	static AGENT_VALUE	*values = NULL, *av;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	sec = zbx_time();
 
-	proxy_timediff.sec = 0;
-	proxy_timediff.ns = 0;
+	client_timediff.sec = 0;
+	client_timediff.ns = 0;
 
 	if (NULL == values)
 		values = zbx_malloc(values, VALUES_MAX * sizeof(AGENT_VALUE));
 
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp, ZBX_PROTO_TAG_CLOCK, &tmp, &tmp_alloc))
 	{
-		proxy_timediff.sec = ts->sec - atoi(tmp);
+		client_timediff.sec = ts->sec - atoi(tmp);
 
 		if (SUCCEED == zbx_json_value_by_name_dyn(jp, ZBX_PROTO_TAG_NS, &tmp, &tmp_alloc))
 		{
-			proxy_timediff.ns = ts->ns - atoi(tmp);
+			client_timediff.ns = ts->ns - atoi(tmp);
 
-			if (proxy_timediff.ns < 0)
+			if (client_timediff.ns < 0)
 			{
-				proxy_timediff.sec--;
-				proxy_timediff.ns += 1000000000;
+				client_timediff.sec--;
+				client_timediff.ns += 1000000000;
 			}
 		}
 	}
@@ -2352,7 +2372,7 @@ int	process_hist_data(zbx_socket_t *sock, struct zbx_json_parse *jp, const zbx_u
 		ret = SUCCEED;
 
 	if (SUCCEED == ret && 0 != proxy_hostid)
-		DCconfig_set_proxy_timediff(proxy_hostid, &proxy_timediff);
+		DCconfig_set_proxy_timediff(proxy_hostid, &client_timediff);
 
 	p = NULL;
 	while (SUCCEED == ret && NULL != (p = zbx_json_next(&jp_data, p)))	/* iterate the item key entries */
@@ -2371,7 +2391,7 @@ int	process_hist_data(zbx_socket_t *sock, struct zbx_json_parse *jp, const zbx_u
 			if (FAIL == is_uint31(tmp, &av->ts.sec))
 				continue;
 
-			av->ts.sec += proxy_timediff.sec;
+			av->ts.sec += client_timediff.sec;
 
 			if (SUCCEED == zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_NS, &tmp, &tmp_alloc))
 			{
@@ -2381,7 +2401,7 @@ int	process_hist_data(zbx_socket_t *sock, struct zbx_json_parse *jp, const zbx_u
 					continue;
 				}
 
-				av->ts.ns += proxy_timediff.ns;
+				av->ts.ns += client_timediff.ns;
 
 				if (av->ts.ns > 999999999)
 				{
@@ -2390,7 +2410,17 @@ int	process_hist_data(zbx_socket_t *sock, struct zbx_json_parse *jp, const zbx_u
 				}
 			}
 			else
-				av->ts.ns = proxy_timediff.ns;
+			{
+				/* ensure unique value timestamp (clock, ns) if only clock is available */
+
+				av->ts.ns = client_timediff.ns++;
+
+				if (client_timediff.ns > 999999999)
+				{
+					client_timediff.sec++;
+					client_timediff.ns = 0;
+				}
+			}
 		}
 		else
 			zbx_timespec(&av->ts);
@@ -2425,7 +2455,7 @@ int	process_hist_data(zbx_socket_t *sock, struct zbx_json_parse *jp, const zbx_u
 
 			if (0 == av->meta)
 			{
-				/* only meta information update packets can have empty value*/
+				/* only meta information update packets can have empty value */
 				continue;
 			}
 		}
@@ -2550,6 +2580,12 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
 			goto json_parse_error;
 
+		if (SUCCEED != is_ip(ip))
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "\"%s\" is not a valid IP address", ip);
+			goto next;
+		}
+
 		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
 			port = atoi(tmp);
 
@@ -2652,8 +2688,11 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 				tmp[MAX_STRING_LEN], *host_metadata = NULL;
 	unsigned short		port;
 	size_t			host_metadata_alloc = 1;	/* for at least NUL-termination char */
+	zbx_vector_ptr_t	autoreg_hosts;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	zbx_vector_ptr_create(&autoreg_hosts);
 
 	now = time(NULL);
 
@@ -2697,19 +2736,26 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		if (FAIL == is_ushort(tmp, &port))
 			port = ZBX_DEFAULT_AGENT_PORT;
 
-		DBbegin();
-		DBregister_host(proxy_hostid, host, ip, dns, port, host_metadata, itemtime);
-		DBcommit();
+		DBregister_host_prepare(&autoreg_hosts, host, ip, dns, port, host_metadata, itemtime);
 
 		continue;
 json_parse_error:
 		zabbix_log(LOG_LEVEL_WARNING, "invalid auto registration data: %s", zbx_json_strerror());
+	}
+
+	if (0 != autoreg_hosts.values_num)
+	{
+		DBbegin();
+		DBregister_host_flush(&autoreg_hosts, proxy_hostid);
+		DBcommit();
 	}
 exit:
 	if (SUCCEED != ret)
 		zabbix_log(LOG_LEVEL_WARNING, "invalid auto registration data: %s", zbx_json_strerror());
 
 	zbx_free(host_metadata);
+	DBregister_host_clean(&autoreg_hosts);
+	zbx_vector_ptr_destroy(&autoreg_hosts);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 }

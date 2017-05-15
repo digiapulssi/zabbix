@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,12 +75,12 @@ class testZBX6648 extends CWebTest {
 			case 'disabled' :
 				$hostgroup = $zbx_data['hostgroup'];
 				$host = $zbx_data['host'];
-				$this->assertElementNotPresent("//select[@id='groupid']/option[text()='$hostgroup']");
-				$this->assertElementNotPresent("//select[@id='hostid']/option[text()='$host']");
+				$this->zbxTestAssertElementNotPresentXpath("//select[@id='groupid']/option[text()='$hostgroup']");
+				$this->zbxTestAssertElementNotPresentXpath("//select[@id='hostid']/option[text()='$host']");
 				break;
 			case 'no triggers' :
 				$hostgroup = $zbx_data['hostgroup'];
-				$this->assertElementNotPresent("//select[@id='groupid']/option[text()='$hostgroup']");
+				$this->zbxTestAssertElementNotPresentXpath("//select[@id='groupid']/option[text()='$hostgroup']");
 				break;
 		}
 	}

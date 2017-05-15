@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1787,7 +1787,7 @@ class CTrigger extends CTriggerGeneral {
 			'SELECT t.triggerid,t.description,t.expression'.
 				' FROM triggers t'.
 				' WHERE '.dbConditionInt('t.triggerid', $triggerIds).
-				'AND t.templateid IS NOT NULL',
+				' AND t.templateid IS NOT NULL',
 			1
 		));
 		if ($trigger) {

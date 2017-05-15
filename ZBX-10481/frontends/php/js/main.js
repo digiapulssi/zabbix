@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -394,7 +394,7 @@ var hintBox = {
 		}
 
 		if (isStatic) {
-			var close_link = jQuery('<span>', {
+			var close_link = jQuery('<button>', {
 					'class': 'overlay-close-btn'}
 				)
 				.click(function() {
@@ -572,7 +572,7 @@ function show_color_picker(id) {
 	color_picker.y = pos.top;
 	color_picker.style.left = (color_picker.x + 20) + 'px';
 	color_picker.style.top = color_picker.y + 'px';
-	color_picker.style.display = null;
+	color_picker.style.display = 'block';
 }
 
 function create_color_picker() {
@@ -628,18 +628,19 @@ function rm4favorites(object, objectid) {
 	});
 }
 
-
 /**
  * Toggles filter state and updates title and icons accordingly.
  *
- * @param {idx} 	idx					User profile index
- * @param {int} 	value_int			Integer value
+ * @param {string} 	idx					User profile index
+ * @param {string} 	value_int			Integer value
+ * @param {object} 	idx2				An array of IDs
  */
-function updateUserProfile(idx, value_int) {
+function updateUserProfile(idx, value_int, idx2) {
 	sendAjaxData('zabbix.php?action=profile.update', {
 		data: {
 			idx: idx,
-			value_int: value_int
+			value_int: value_int,
+			idx2: idx2
 		}
 	});
 }

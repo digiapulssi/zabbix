@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -606,7 +606,7 @@ function make_latest_issues(array $filter = [], $backurl) {
 		$event_acknowledges = API::Event()->get([
 			'output' => ['eventid'],
 			'eventids' => $eventids,
-			'select_acknowledges' => API_OUTPUT_EXTEND,
+			'select_acknowledges' => ['clock', 'message', 'alias', 'name', 'surname'],
 			'preservekeys' => true
 		]);
 	}

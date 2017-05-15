@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -268,7 +268,7 @@ elseif (hasRequest('action') && getRequest('action') === 'triggerprototype.massu
 	}
 
 	if ($result) {
-		unset($_REQUEST['form'], $_REQUEST['g_triggerid']);
+		unset($_REQUEST['massupdate'], $_REQUEST['form'], $_REQUEST['g_triggerid']);
 		uncheckTableRows(getRequest('parent_discoveryid'));
 	}
 	show_messages($result, _('Trigger prototypes updated'), _('Cannot update trigger prototypes'));
@@ -326,7 +326,8 @@ elseif (hasRequest('action') && getRequest('action') == 'triggerprototype.massde
 /*
  * Display
  */
-if (hasRequest('action') && getRequest('action') === 'triggerprototype.massupdateform' && hasRequest('g_triggerid')) {
+if ((getRequest('action') === 'triggerprototype.massupdateform' || hasRequest('massupdate'))
+		&& hasRequest('g_triggerid')) {
 	$data = getTriggerMassupdateFormData();
 	$data['action'] = 'triggerprototype.massupdate';
 	$data['hostid'] = $discoveryRule['hostid'];

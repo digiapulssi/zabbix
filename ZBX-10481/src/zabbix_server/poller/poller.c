@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,6 +111,7 @@ static void	update_triggers_status_to_unknown(zbx_uint64_t hostid, zbx_item_type
 				" and i.type in (%s)"
 				" and f.function not in (" ZBX_SQL_TIME_FUNCTIONS ")"
 				" and t.status=%d"
+				" and t.flags in (%d,%d)"
 				" and h.hostid=" ZBX_FS_UI64
 				" and h.status=%d"
 			" and not exists ("
@@ -141,6 +142,7 @@ static void	update_triggers_status_to_unknown(zbx_uint64_t hostid, zbx_item_type
 			ITEM_STATE_NORMAL,
 			failed_type_buf,
 			TRIGGER_STATUS_ENABLED,
+			ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED,
 			hostid,
 			HOST_STATUS_MONITORED,
 			failed_type_buf,
@@ -826,7 +828,7 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 			server_num, get_process_type_string(process_type), process_num);
 #ifdef HAVE_NETSNMP
 	if (ZBX_POLLER_TYPE_NORMAL == poller_type || ZBX_POLLER_TYPE_UNREACHABLE == poller_type)
-		init_snmp(progname);
+		zbx_init_snmp();
 #endif
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
@@ -852,10 +854,11 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 		processed += get_values(poller_type, &nextcheck);
 		total_sec += zbx_time() - sec;
 #ifdef HAVE_OPENIPMI
-		if (ZBX_POLLER_TYPE_IPMI == poller_type && SEC_PER_HOUR < time(NULL) - last_ipmi_host_check)
+		if ((ZBX_POLLER_TYPE_IPMI == poller_type || ZBX_POLLER_TYPE_UNREACHABLE == poller_type) &&
+				SEC_PER_HOUR < time(NULL) - last_ipmi_host_check)
 		{
 			last_ipmi_host_check = time(NULL);
-			delete_inactive_ipmi_hosts(last_ipmi_host_check);
+			zbx_delete_inactive_ipmi_hosts(last_ipmi_host_check);
 		}
 #endif
 		sleeptime = calculate_sleeptime(nextcheck, POLLER_DELAY);

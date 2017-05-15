@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ if ($itemPrototypeId && !API::ItemPrototype()->isWritable([$itemPrototypeId])) {
  */
 if (hasRequest('delete') && hasRequest('itemid')) {
 	DBstart();
-	$result = API::Itemprototype()->delete([getRequest('itemid')]);
+	$result = API::ItemPrototype()->delete([getRequest('itemid')]);
 	$result = DBend($result);
 
 	if ($result) {
@@ -355,16 +355,24 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			'ipmi_sensor'	=> getRequest('ipmi_sensor'),
 			'data_type'		=> getRequest('data_type'),
 			'ruleid'		=> getRequest('parent_discoveryid'),
-			'delay_flex'	=> $delay_flex,
-			'applications'	=> $applications,
-			'applicationPrototypes' => $application_prototypes
+			'delay_flex'	=> $delay_flex
 		];
 
 		if (hasRequest('update')) {
 			$itemId = getRequest('itemid');
 
-			$dbItem = get_item_by_itemid_limited($itemId);
-			$dbItem['applications'] = get_applications_by_itemid($itemId);
+			$dbItem = API::ItemPrototype()->get([
+				'output' => ['type', 'snmp_community', 'snmp_oid', 'hostid', 'name', 'key_', 'delay',
+					'history', 'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'multiplier', 'delta',
+					'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authpassphrase', 'snmpv3_privpassphrase',
+					'formula', 'logtimefmt', 'templateid', 'valuemapid', 'delay_flex', 'params', 'ipmi_sensor',
+					'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey',	'interfaceid', 'port',
+					'description', 'snmpv3_authprotocol', 'snmpv3_privprotocol', 'snmpv3_contextname'
+				],
+				'selectApplications' => ['applicationid'],
+				'selectApplicationPrototypes' => ['name'],
+				'itemids' => [$itemId]
+			]);
 
 			// unset snmpv3 fields
 			if ($item['snmpv3_securitylevel'] == ITEM_SNMPV3_SECURITYLEVEL_NOAUTHNOPRIV) {
@@ -375,13 +383,39 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				$item['snmpv3_privprotocol'] = ITEM_PRIVPROTOCOL_DES;
 			}
 
+			$dbItem = $dbItem[0];
+
 			$item = CArrayHelper::unsetEqualValues($item, $dbItem);
 			$item['itemid'] = $itemId;
 
-			$result = API::Itemprototype()->update($item);
+			$dbItem['applications'] = zbx_objectValues($dbItem['applications'], 'applicationid');
+
+			// compare applications
+			natsort($dbItem['applications']);
+			natsort($applications);
+
+			if (array_values($dbItem['applications']) !== array_values($applications)) {
+				$item['applications'] = $applications;
+			}
+
+			// compare application prototypes
+			$db_application_prototype_names = zbx_objectValues($dbItem['applicationPrototypes'], 'name');
+			natsort($db_application_prototype_names);
+
+			$application_prototype_names = zbx_objectValues($application_prototypes, 'name');
+			natsort($application_prototype_names);
+
+			if (array_values($db_application_prototype_names) !== array_values($application_prototype_names)) {
+				$item['applicationPrototypes'] = $application_prototypes;
+			}
+
+			$result = API::ItemPrototype()->update($item);
 		}
 		else {
-			$result = API::Itemprototype()->create($item);
+			$item['applications'] = $applications;
+			$item['applicationPrototypes'] = $application_prototypes;
+
+			$result = API::ItemPrototype()->create($item);
 		}
 	}
 
@@ -424,7 +458,7 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['itemprototy
 elseif (hasRequest('action') && getRequest('action') == 'itemprototype.massdelete' && hasRequest('group_itemid')) {
 	DBstart();
 
-	$result = API::Itemprototype()->delete(getRequest('group_itemid'));
+	$result = API::ItemPrototype()->delete(getRequest('group_itemid'));
 	$result = DBend($result);
 
 	if ($result) {

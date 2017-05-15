@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,6 +77,19 @@ class testInheritanceWeb extends CWebTest {
 						['name' => 'testInheritanceStep1', 'url' => 'http://testInheritanceStep1/']
 					]
 				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'testInheritanceWeb1',
+					'addStep' => [
+						['name' => 'testInheritanceStep1', 'url' => 'http://testInheritanceStep1/']
+					],
+					'errors' => [
+						'Cannot add web scenario',
+						'Web scenario "testInheritanceWeb1" already exists.'
+					]
+				]
 			]
 		];
 	}
@@ -87,16 +100,19 @@ class testInheritanceWeb extends CWebTest {
 	public function testInheritanceWeb_SimpleCreate($data) {
 		$this->zbxTestLogin('httpconf.php?form=Create+web+scenario&hostid='.$this->templateid);
 
-		$this->input_type('name', $data['name']);
+		$this->zbxTestInputTypeWait('name', $data['name']);
+		$this->zbxTestAssertElementValue('name', $data['name']);
 
 		$this->zbxTestClick('tab_stepTab');
 		foreach ($data['addStep'] as $step) {
 			$this->zbxTestLaunchPopup('add_step');
-			$this->input_type('name', $step['name']);
-			$this->input_type('url', $step['url']);
+			$this->zbxTestInputTypeWait('name', $step['name']);
+			$this->zbxTestInputType('url', $step['url']);
 			$this->zbxTestClick('add');
-			$this->selectWindow();
-			sleep(1);
+			$this->zbxTestTextNotPresent('Page received incorrect data');
+			$this->zbxTestWaitWindowClose();
+			$this->zbxTestWaitUntilElementVisible(WebDriverBy::id('name_0'));
+			$this->zbxTestTextPresent($step['name']);
 		}
 
 		$this->zbxTestClickWait('add');
@@ -104,13 +120,13 @@ class testInheritanceWeb extends CWebTest {
 		switch ($data['expected']) {
 			case TEST_GOOD:
 				$this->zbxTestCheckTitle('Configuration of web monitoring');
-				$this->zbxTestTextPresent('CONFIGURATION OF WEB MONITORING');
-				$this->zbxTestTextPresent('Web scenario added');
+				$this->zbxTestTextNotPresent('Cannot add web scenario');
+				$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Web scenario added');
 				break;
 
 			case TEST_BAD:
 				$this->zbxTestCheckTitle('Configuration of web monitoring');
-				$this->zbxTestTextPresent('CONFIGURATION OF WEB MONITORING');
+				$this->zbxTestCheckHeader('Web monitoring');
 				$this->zbxTestTextPresent($data['errors']);
 				break;
 		}

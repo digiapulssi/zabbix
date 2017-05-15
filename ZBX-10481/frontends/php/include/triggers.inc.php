@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1182,9 +1182,9 @@ function make_trigger_details($trigger) {
 	$scripts = API::Script()->getScriptsByHosts($hostIds);
 
 	foreach ($hosts as $host) {
-		$hostName = new CSpan($host['name'], ZBX_STYLE_LINK_ACTION);
-		$hostName->setMenuPopup(CMenuPopupHelper::getHost($host, $scripts[$host['hostid']]));
-		$hostNames[] = $hostName;
+		$hostNames[] = (new CSpan($host['name']))
+			->setMenuPopup(CMenuPopupHelper::getHost($host, $scripts[$host['hostid']]))
+			->addClass(ZBX_STYLE_LINK_ACTION);
 		$hostNames[] = ', ';
 	}
 	array_pop($hostNames);
@@ -1855,7 +1855,7 @@ function get_item_function_info($expr) {
 			$result = [
 				'value_type' => $value_type[ITEM_VALUE_TYPE_FLOAT],
 				'type' => T_ZBX_STR,
-				'validation' => 'preg_match("/^'.ZBX_PREG_NUMBER.'$/u", {})'
+				'validation' => 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'
 			];
 		}
 		elseif ($parseResult->hasTokenOfType(CTriggerExpressionParserResult::TOKEN_TYPE_FUNCTION_MACRO)) {
@@ -1907,7 +1907,7 @@ function get_item_function_info($expr) {
 
 				if ($result['type'] == T_ZBX_INT) {
 					$result['type'] = T_ZBX_STR;
-					$result['validation'] = 'preg_match("/^'.ZBX_PREG_NUMBER.'$/u",{})';
+					$result['validation'] = 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})';
 				}
 			}
 		}

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ class CFilter extends CTag {
 			jQuery("#filter-space").toggle();
 			jQuery("#filter-mode").toggleClass("filter-active");
 			jQuery("#filter-arrow").toggleClass("arrow-up arrow-down");
-			updateUserProfile("'.$this->filterid.'", jQuery("#filter-arrow").hasClass("arrow-up") ? 1 : 0);
+			updateUserProfile("'.$this->filterid.'", jQuery("#filter-arrow").hasClass("arrow-up") ? 1 : 0, []);
 			if (jQuery(".multiselect").length > 0 && jQuery("#filter-arrow").hasClass("arrow-up")) {
 				jQuery(".multiselect").multiSelect("resize");
 			}'

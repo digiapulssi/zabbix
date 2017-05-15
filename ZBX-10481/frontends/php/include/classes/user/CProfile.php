@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -283,7 +283,7 @@ class CProfile {
 			'idx' => zbx_dbstr($idx),
 			$value_type => zbx_dbstr($value),
 			'type' => $type,
-			'idx2' => $idx2
+			'idx2' => zbx_dbstr($idx2)
 		];
 
 		return DBexecute('INSERT INTO profiles ('.implode(', ', array_keys($values)).') VALUES ('.implode(', ', $values).')');

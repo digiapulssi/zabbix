@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,12 +22,6 @@
 require_once dirname(__FILE__).'/../include/class.czabbixtest.php';
 
 class API_JSON_Host extends CZabbixTest {
-	public static function host_names() {
-		return [
-			['Test host', true],
-			['Fake host', false],
-		];
-	}
 
 	public static function dup_template_ids() {
 		return [
@@ -128,27 +122,6 @@ class API_JSON_Host extends CZabbixTest {
 			],
 		];
 	}
-
-	/**
-	* @dataProvider host_names
-	*/
-	public function testCHost_exists($name, $exists) {
-		$debug = null;
-
-		$result = $this->api_acall(
-			'host.exists',
-			['host' => $name],
-			$debug
-		);
-
-		$this->assertTrue(!array_key_exists('error', $result), "Chuck Norris: Exists method returned an error. Result is: ".print_r($result, true)."\nDebug: ".print_r($debug, true));
-
-		$this->assertFalse(
-			($result['result'] != $exists),
-			"Chuck Norris: Exists method returned wrong result. Result is: ".print_r($result, true)."\nDebug: ".print_r($debug, true)
-		);
-	}
-
 
 	/**
 	* @dataProvider dup_template_ids

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ static int	zbx_execute_script_on_agent(DC_HOST *host, const char *command, char 
 	const char	*__function_name = "zbx_execute_script_on_agent";
 	int		ret;
 	AGENT_RESULT	agent_result;
-	char		*param, *port = NULL;
+	char		*param = NULL, *port = NULL;
 	DC_ITEM		item;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -62,10 +62,15 @@ static int	zbx_execute_script_on_agent(DC_HOST *host, const char *command, char 
 		goto fail;
 	}
 
-	param = zbx_dyn_escape_string(command, "\"");
-	item.key = zbx_dsprintf(item.key, "system.run[\"%s\",\"%s\"]", param, NULL == result ? "nowait" : "wait");
+	param = zbx_strdup(param, command);
+	if (SUCCEED != (ret = quote_key_param(&param, 0)))
+	{
+		zbx_snprintf(error, max_error_len, "Invalid param [%s]", param);
+		goto fail;
+	}
+
+	item.key = zbx_dsprintf(item.key, "system.run[%s,%s]", param, NULL == result ? "nowait" : "wait");
 	item.value_type = ITEM_VALUE_TYPE_TEXT;
-	zbx_free(param);
 
 	init_result(&agent_result);
 
@@ -87,6 +92,7 @@ static int	zbx_execute_script_on_agent(DC_HOST *host, const char *command, char 
 	zbx_free(item.key);
 fail:
 	zbx_free(port);
+	zbx_free(param);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
@@ -123,9 +129,9 @@ static int	zbx_execute_ipmi_command(DC_HOST *host, const char *command, char *er
 		goto fail;
 	}
 
-	if (SUCCEED == (ret = parse_ipmi_command(command, item.ipmi_sensor, &val, error, max_error_len)))
+	if (SUCCEED == (ret = zbx_parse_ipmi_command(command, item.ipmi_sensor, &val, error, max_error_len)))
 	{
-		if (SUCCEED != (ret = set_ipmi_control_value(&item, val, error, max_error_len)))
+		if (SUCCEED != (ret = zbx_set_ipmi_control_value(&item, val, error, max_error_len)))
 			ret = FAIL;
 	}
 fail:
@@ -141,10 +147,10 @@ static int	zbx_execute_script_on_terminal(DC_HOST *host, zbx_script_t *script, c
 		char *error, size_t max_error_len)
 {
 	const char	*__function_name = "zbx_execute_script_on_terminal";
-	int		ret;
+	int		ret = FAIL, i;
 	AGENT_RESULT	agent_result;
 	DC_ITEM		item;
-	int             (*function)();
+	int             (*function)(DC_ITEM *, AGENT_RESULT *);
 
 #ifdef HAVE_SSH2
 	assert(ZBX_SCRIPT_TYPE_SSH == script->type || ZBX_SCRIPT_TYPE_TELNET == script->type);
@@ -158,9 +164,18 @@ static int	zbx_execute_script_on_terminal(DC_HOST *host, zbx_script_t *script, c
 	memset(&item, 0, sizeof(item));
 	memcpy(&item.host, host, sizeof(item.host));
 
-	if (SUCCEED != (ret = DCconfig_get_interface_by_type(&item.interface, host->hostid, INTERFACE_TYPE_AGENT)))
+	for (i = 0; INTERFACE_TYPE_COUNT > i; i++)
 	{
-		zbx_snprintf(error, max_error_len, "Zabbix agent interface is not defined for host [%s]", host->host);
+		if (SUCCEED == (ret = DCconfig_get_interface_by_type(&item.interface, host->hostid,
+				INTERFACE_TYPE_PRIORITY[i])))
+		{
+			break;
+		}
+	}
+
+	if (FAIL == ret)
+	{
+		zbx_snprintf(error, max_error_len, "No interface defined for host [%s]", host->host);
 		goto fail;
 	}
 

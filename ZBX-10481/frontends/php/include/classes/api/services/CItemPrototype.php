@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -854,9 +854,15 @@ class CItemPrototype extends CItemGeneral {
 				' WHERE '.dbConditionInt('ad.application_prototypeid', $application_prototypeids)
 			));
 
-			DB::delete('application_prototype', [
-				'application_prototypeid' => zbx_objectValues($db_application_prototypes, 'application_prototypeid')
+			$db_application_prototypeids = zbx_objectValues($db_application_prototypes, 'application_prototypeid');
+
+			// unlink templated application prototype
+			DB::update('application_prototype', [
+				'values' => ['templateid' => null],
+				'where' => ['templateid' => $db_application_prototypeids]
 			]);
+
+			DB::delete('application_prototype', ['application_prototypeid' => $db_application_prototypeids]);
 
 			/*
 			 * Deleting an application prototype will automatically delete the link in 'item_application_prototype',

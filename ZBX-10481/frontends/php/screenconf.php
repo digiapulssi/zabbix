@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -388,7 +388,7 @@ else {
 			'output' => ['screenid', 'name', 'hsize', 'vsize'],
 			'templateids' => $data['templateid'],
 			'sortfield' => $sortField,
-			'limit' => $config['search_limit'],
+			'limit' => $config['search_limit'] + 1,
 			'editable' => true,
 			'preservekeys' => true
 		]);
@@ -413,7 +413,7 @@ else {
 		$data['screens'] = API::Screen()->get([
 			'output' => ['screenid', 'name', 'hsize', 'vsize'],
 			'sortfield' => $sortField,
-			'limit' => $config['search_limit'],
+			'limit' => $config['search_limit'] + 1,
 			'search' => [
 				'name' => ($data['filter']['name'] === '') ? null : $data['filter']['name']
 			],

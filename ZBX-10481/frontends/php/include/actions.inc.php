@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1113,7 +1113,9 @@ function getActionMessages(array $alerts) {
 		}
 
 		$recipient = $alert['userid']
-			? [bold(getUserFullname($dbUsers[$alert['userid']])), BR(), $alert['sendto']]
+			? array_key_exists($alert['userid'], $dbUsers)
+				? [bold(getUserFullname($dbUsers[$alert['userid']])), BR(), $alert['sendto']]
+				: _('Inaccessible user')
 			: $alert['sendto'];
 
 		$table->addRow([
@@ -1201,7 +1203,10 @@ function makeActionHints($alerts, $mediatypes, $users, $status) {
 
 		switch ($alert['alerttype']) {
 			case ALERT_TYPE_MESSAGE:
-				$user = array_key_exists($alert['userid'], $users) ? getUserFullname($users[$alert['userid']]) : '';
+				$user = array_key_exists($alert['userid'], $users)
+					? getUserFullname($users[$alert['userid']])
+					: _('Inaccessible user');
+
 				$message = array_key_exists($alert['mediatypeid'], $mediatypes)
 					? $mediatypes[$alert['mediatypeid']]['description']
 					: '';

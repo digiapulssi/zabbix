@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -181,29 +181,32 @@ class testZBX6663 extends CWebTest {
 		if (isset($zbx_data['host'])) {
 			$this->zbxTestLogin('hosts.php');
 			$this->zbxTestDropdownSelectWait('groupid', 'all');
-			$this->zbxTestClickWait('link='.$zbx_data['host']);
+			$this->zbxTestClickLinkText($zbx_data['host']);
 		}
 
 		if (isset($zbx_data['template'])) {
 			$this->zbxTestLogin('templates.php');
 			$this->zbxTestDropdownSelectWait('groupid', 'all');
-			$this->zbxTestClickWait('link='.$zbx_data['template']);
+			$this->zbxTestClickLinkText($zbx_data['template']);
 		}
 
 		if (isset($zbx_data['discoveryRule'])) {
-			$this->zbxTestClickWait('link=Discovery rules');
-			$this->zbxTestClickWait('link='.$this->discoveryRule);
-			$this->zbxTestClickWait('link='.$zbx_data['discoveryRule']);
+			$this->zbxTestClickLinkTextWait('Discovery rules');
+			$this->zbxTestCheckHeader('Discovery rules');
+			$this->zbxTestClickLinkTextWait($this->discoveryRule);
+			$this->zbxTestClickLinkTextWait($zbx_data['discoveryRule']);
 		}
 		else {
 			$link = $zbx_data['link'];
-			$this->zbxTestClickWait("//div[@class='w']//a[text()='$link']");
+			$this->zbxTestClickXpathWait("//ul[@class='object-group']//a[text()='$link']");
 		}
 
-		$this->assertVisible('//input[@value="Go (0)"]');
+		$this->zbxTestWaitUntilElementVisible(WebDriverBy::id('selected_count'));
+		$this->zbxTestTextPresent('0 selected');
 		$this->zbxTestCheckboxSelect("all_$checkbox");
 
-		$this->zbxTestClickWait('link='.$this->templated);
-		$this->assertVisible('//input[@value="Go (0)"]');
+		$this->zbxTestClickLinkText($this->templated);
+		$this->zbxTestWaitUntilElementPresent(WebDriverBy::id('selected_count'));
+		$this->zbxTestTextPresent('0 selected');
 	}
 }

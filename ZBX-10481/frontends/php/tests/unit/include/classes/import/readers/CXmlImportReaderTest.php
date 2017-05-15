@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,6 +32,30 @@ class CXmlImportReaderTest extends PHPUnit_Framework_TestCase {
 						'version' => '1.0',
 						'date' => '09.01.10',
 						'time' => '14.23'
+					]
+				]
+			],
+			[
+				'<'.'?xml version="1.0"?'.'>'."\n".
+				'<zabbix_export version="1.0" date="09.01.10" time="14.23">'."\n".
+				'<hosts>'."\n".
+				'    <host host="Zabbix server"/>'."\n".
+				'    <host host="Zabbix server2"/>'."\n".
+				'</hosts>'."\n".
+				'</zabbix_export>',
+				[
+					'zabbix_export' => [
+						'version' => '1.0',
+						'date' => '09.01.10',
+						'time' => '14.23',
+						'hosts' => [
+							'host' => [
+								'host' => 'Zabbix server'
+							],
+							'host1' => [
+								'host' => 'Zabbix server2'
+							]
+						]
 					]
 				]
 			],

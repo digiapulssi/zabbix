@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ static int	get_hostid_by_host(const zbx_socket_t *sock, const char *host, const 
 			if (0 == (tls_accept & sock->connection_type))
 			{
 				zbx_snprintf(error, MAX_STRING_LEN, "connection of type \"%s\" is not allowed for host"
-						" \"%s\"", zbx_tls_connection_type_name(sock->connection_type), host);
+						" \"%s\"", zbx_tcp_connection_type_name(sock->connection_type), host);
 				goto done;
 			}
 

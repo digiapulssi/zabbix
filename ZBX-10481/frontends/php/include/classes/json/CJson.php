@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,6 +87,13 @@ class CJson {
 	protected $_level;
 
 	/**
+	 * Last error of $this->decode() method.
+	 *
+	 * @var int
+	 */
+	protected $last_error;
+
+	/**
 	 *
 	 * Constructor.
 	 *
@@ -103,6 +110,8 @@ class CJson {
 	public function __construct($config = null) {
 		$this->_mapAscii();
 		$this->_setStateTransitionTable();
+
+		$this->last_error = JSON_ERROR_NONE;
 	}
 
 	/**
@@ -225,26 +234,38 @@ class CJson {
 	 *
 	 */
 	public function decode($encodedValue, $asArray = false) {
-		if (!$this->_config['bypass_ext'] && function_exists('json_decode')) {
-			return json_decode($encodedValue, (bool) $asArray);
+		if (!$this->_config['bypass_ext'] && function_exists('json_decode') && function_exists('json_last_error')) {
+			$result = json_decode($encodedValue, $asArray);
+			$this->last_error = json_last_error();
+
+			return $result;
 		}
 
 		$first_char = substr(ltrim($encodedValue), 0, 1);
+
 		if ($first_char != '{' && $first_char != '[') {
-			return null;
+			$result = null;
+		}
+		else {
+			ini_set('pcre.backtrack_limit', '10000000');
+
+			$this->_level = 0;
+
+			$result = $this->isValid($encodedValue) ? $this->_json_decode($encodedValue, $asArray) : null;
 		}
 
-		// fall back to php-only method
-		ini_set('pcre.backtrack_limit', '10000000');
-
-		$this->_level = 0;
-		$result = null;
-
-		if ($this->isValid($encodedValue)) {
-			$result = $this->_json_decode($encodedValue, (bool) $asArray);
-		}
+		$this->last_error = ($result === null) ? JSON_ERROR_SYNTAX : JSON_ERROR_NONE;
 
 		return $result;
+	}
+
+	/**
+	 * Returns true if last $this->decode call was with error.
+	 *
+	 * @return bool
+	 */
+	public function hasError() {
+		return ($this->last_error != JSON_ERROR_NONE);
 	}
 
 	/**

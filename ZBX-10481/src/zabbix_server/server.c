@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -438,7 +438,7 @@ static void	zbx_validate_config(ZBX_TASK_EX *task)
 		err = 1;
 	}
 
-	if (NULL != CONFIG_SOURCE_IP && ('\0' == *CONFIG_SOURCE_IP || SUCCEED != is_ip(CONFIG_SOURCE_IP)))
+	if (NULL != CONFIG_SOURCE_IP && SUCCEED != is_supported_ip(CONFIG_SOURCE_IP))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "invalid \"SourceIP\" configuration parameter: '%s'", CONFIG_SOURCE_IP);
 		err = 1;
@@ -752,7 +752,7 @@ int	main(int argc, char **argv)
 		exit(SUCCEED == zbx_sigusr_send(t.data) ? EXIT_SUCCESS : EXIT_FAILURE);
 
 #ifdef HAVE_OPENIPMI
-	init_ipmi_handler();
+	zbx_init_ipmi_handler();
 #endif
 	return daemon_start(CONFIG_ALLOW_ROOT, CONFIG_USER, t.flags);
 }
@@ -890,10 +890,8 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 
 	DBconnect(ZBX_DB_CONNECT_NORMAL);
 
-	DCload_config();
-
 	/* make initial configuration sync before worker processes are forked */
-	DCsync_configuration();
+	DCsync_configuration(ZBX_DBSYNC_INIT);
 
 	DBclose();
 
@@ -1069,7 +1067,7 @@ void	zbx_on_exit(void)
 	zbx_destroy_itservices_lock();
 
 #ifdef HAVE_OPENIPMI
-	free_ipmi_handler();
+	zbx_free_ipmi_handler();
 #endif
 
 #ifdef HAVE_SQLITE3

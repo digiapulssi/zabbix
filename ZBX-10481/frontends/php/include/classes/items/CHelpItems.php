@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,11 +81,11 @@ class CHelpItems {
 					'description' => _('Maximum number of processes supported by OS. Returns integer')
 				],
 				[
-					'key' => 'net.dns[<ip>,zone,<type>,<timeout>,<count>,<protocol>]',
+					'key' => 'net.dns[<ip>,name,<type>,<timeout>,<count>,<protocol>]',
 					'description' => _('Checks if DNS service is up. Returns 0 - DNS is down (server did not respond or DNS resolution failed); 1 - DNS is up')
 				],
 				[
-					'key' => 'net.dns.record[<ip>,zone,<type>,<timeout>,<count>,<protocol>]',
+					'key' => 'net.dns.record[<ip>,name,<type>,<timeout>,<count>,<protocol>]',
 					'description' => _('Performs a DNS query. Returns character string with the required type of information')
 				],
 				[
@@ -250,7 +250,7 @@ class CHelpItems {
 				],
 				[
 					'key' => 'system.uname',
-					'description' => _('Detailed host information. Returns string')
+					'description' => _('Identification of the system. Returns string')
 				],
 				[
 					'key' => 'system.uptime',
@@ -311,6 +311,10 @@ class CHelpItems {
 				[
 					'key' => 'vm.memory.size[<mode>]',
 					'description' => _('Memory size in bytes or in percentage from total. Returns integer for bytes; float for percentage')
+				],
+				[
+					'key' => 'vm.vmemory.size[<type>]',
+					'description' => _('Virtual space size in bytes or in percentage from total. Returns integer for bytes; float for percentage')
 				],
 				[
 					'key' => 'web.page.get[host,<path>,<port>]',
@@ -363,11 +367,11 @@ class CHelpItems {
 					'description' => _('Log file monitoring with log rotation support. Returns log')
 				],
 				[
-					'key' => 'net.dns[<ip>,zone,<type>,<timeout>,<count>,<protocol>]',
+					'key' => 'net.dns[<ip>,name,<type>,<timeout>,<count>,<protocol>]',
 					'description' => _('Checks if DNS service is up. Returns 0 - DNS is down (server did not respond or DNS resolution failed); 1 - DNS is up')
 				],
 				[
-					'key' => 'net.dns.record[<ip>,zone,<type>,<timeout>,<count>,<protocol>]',
+					'key' => 'net.dns.record[<ip>,name,<type>,<timeout>,<count>,<protocol>]',
 					'description' => _('Performs a DNS query. Returns character string with the required type of information')
 				],
 				[
@@ -532,7 +536,7 @@ class CHelpItems {
 				],
 				[
 					'key' => 'system.uname',
-					'description' => _('Detailed host information. Returns string')
+					'description' => _('Identification of the system. Returns string')
 				],
 				[
 					'key' => 'system.uptime',
@@ -593,6 +597,10 @@ class CHelpItems {
 				[
 					'key' => 'vm.memory.size[<mode>]',
 					'description' => _('Memory size in bytes or in percentage from total. Returns integer for bytes; float for percentage')
+				],
+				[
+					'key' => 'vm.vmemory.size[<type>]',
+					'description' => _('Virtual space size in bytes or in percentage from total. Returns integer for bytes; float for percentage')
 				],
 				[
 					'key' => 'web.page.get[host,<path>,<port>]',
@@ -669,6 +677,10 @@ class CHelpItems {
 				[
 					'key' => 'vmware.hv.datastore.read[<url>,<uuid>,<datastore>,<mode>]',
 					'description' => _('VMware hypervisor datastore read statistics, <url> - VMware service URL, <uuid> - VMware hypervisor host name, <datastore> - datastore name, <mode> - latency')
+				],
+				[
+					'key' => 'vmware.hv.datastore.size[<url>,<uuid>,<datastore>,<mode>]',
+					'description' => _('VMware datastore capacity statistics in bytes or in percentage from total. Returns integer for bytes; float for percentage')
 				],
 				[
 					'key' => 'vmware.hv.datastore.write[<url>,<uuid>,<datastore>,<mode>]',
@@ -760,7 +772,7 @@ class CHelpItems {
 				],
 				[
 					'key' => 'vmware.vm.cpu.ready[<url>,<uuid>]',
-					'description' => _('VMware virtual machine processor ready time %, <url> - VMware service URL, <uuid> - VMware virtual machine host name')
+					'description' => _('VMware virtual machine processor ready time ms, <url> - VMware service URL, <uuid> - VMware virtual machine host name')
 				],
 				[
 					'key' => 'vmware.vm.cpu.usage[<url>,<uuid>]',

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ $paramsFieldName = getParamFieldNameByType(getRequest('type', 0));
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
 $fields = [
-	'groupid' =>				[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null],
 	'hostid' =>					[T_ZBX_INT, O_OPT, P_SYS,	DB_ID.NOT_ZERO, 'isset({form}) && !isset({itemid})'],
 	'interfaceid' =>			[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null, _('Interface')],
 	'copy_type' =>				[T_ZBX_INT, O_OPT, P_SYS,	IN('0,1,2'), 'isset({copy})'],
@@ -492,7 +491,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			'params' => getRequest('params'),
 			'ipmi_sensor' => getRequest('ipmi_sensor'),
 			'data_type' => getRequest('data_type'),
-			'applications' => $applications,
 			'inventory_link' => getRequest('inventory_link')
 		];
 
@@ -514,9 +512,18 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$item = CArrayHelper::unsetEqualValues($item, $dbItem);
 			$item['itemid'] = $itemId;
 
+			// compare applications
+			natsort($dbItem['applications']);
+			natsort($applications);
+			if (array_values($dbItem['applications']) !== array_values($applications)) {
+				$item['applications'] = $applications;
+			}
+
 			$result = API::Item()->update($item);
 		}
 		else {
+			$item['applications'] = $applications;
+
 			$result = API::Item()->create($item);
 		}
 	}
@@ -949,7 +956,7 @@ if (isset($_REQUEST['form']) && str_in_array($_REQUEST['form'], [_('Create item'
 	$itemView->render();
 	$itemView->show();
 }
-elseif (((hasRequest('action') && getRequest('action') == 'item.massupdateform') || hasRequest('massupdate')) && hasRequest('group_itemid')) {
+elseif ((getRequest('action') === 'item.massupdateform' || hasRequest('massupdate')) && hasRequest('group_itemid')) {
 	$data = [
 		'form' => getRequest('form'),
 		'action' => 'item.massupdateform',
@@ -998,7 +1005,6 @@ elseif (((hasRequest('action') && getRequest('action') == 'item.massupdateform')
 	$data['hosts'] = API::Host()->get([
 		'output' => ['hostid'],
 		'itemids' => $data['itemids'],
-		'selectItems' => ['itemid'],
 		'selectInterfaces' => API_OUTPUT_EXTEND
 	]);
 	$hostCount = count($data['hosts']);
@@ -1041,7 +1047,7 @@ elseif (((hasRequest('action') && getRequest('action') == 'item.massupdateform')
 
 			// set the initial chosen interface to one of the interfaces the items use
 			$items = API::Item()->get([
-				'itemids' => zbx_objectValues($data['hosts']['items'], 'itemid'),
+				'itemids' => $data['itemids'],
 				'output' => ['itemid', 'type']
 			]);
 			$usedInterfacesTypes = [];

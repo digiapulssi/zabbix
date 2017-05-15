@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -153,7 +153,6 @@ $tranStrings = [
 		'S_EACH_URL_SHOULD_HAVE_UNIQUE' => _('Each URL should have a unique name. Please make sure there is only one URL named'),
 		'S_DELETE_LINKS_BETWEEN_SELECTED_ELEMENTS_Q' => _('Delete links between selected elements?'),
 		'S_NO_IMAGES' => 'You need to have at least one image uploaded to create map element. Images can be uploaded in Administration->General->Images section.',
-		'S_ICONMAP_IS_NOT_ENABLED' => _('Iconmap is not enabled'),
 		'Colour "%1$s" is not correct: expecting hexadecimal colour code (6 symbols).' => _('Colour "%1$s" is not correct: expecting hexadecimal colour code (6 symbols).')
 	],
 	'class.cmessages.js' => [

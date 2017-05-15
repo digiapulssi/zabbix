@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ var CSwitcher = Class.create({
 		this.switcherName = name;
 
 		var element = $(this.switcherName),
-			toggles = $$('div[data-switcherid]'),
+			toggles = $$('button[data-switcherid]'),
 			switcherids = cookie.readArray(this.switcherName),
 			state_all = 0;
 
@@ -78,7 +78,7 @@ var CSwitcher = Class.create({
 
 		obj.firstChild.className = (state == 1 ? 'arrow-down' : 'arrow-right');
 
-		var toggles = $$(switcherid == null ? 'div[data-switcherid]' : 'div[data-switcherid=' + switcherid + ']');
+		var toggles = $$(switcherid == null ? 'button[data-switcherid]' : 'button[data-switcherid=' + switcherid + ']');
 
 		for (var i = 0; i < toggles.length; i++) {
 			var toggle_switcherid = toggles[i].getAttribute('data-switcherid');

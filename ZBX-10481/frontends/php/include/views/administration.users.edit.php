@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@
 include('include/views/js/administration.users.edit.js.php');
 
 if ($this->data['is_profile']) {
-	$userWidget = (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['name'].' '.$this->data['surname']);
+	$userWidget = ($this->data['name'] !== '' || $this->data['surname'] !== '')
+		? (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['name'].' '.$this->data['surname'])
+		: (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['alias']);
 }
 else {
 	$userWidget = (new CWidget())->setTitle(_('Users'));
@@ -74,7 +76,9 @@ if (!$this->data['is_profile']) {
 				->onClick('return PopUp("popup_usrgrp.php?dstfrm='.$userForm->getName().'&list_name=user_groups_to_del[]&var_name=user_groups");'),
 			BR(),
 			(count($this->data['user_groups']) > 0)
-				? (new CSubmit('del_user_group', _('Delete selected')))->addClass(ZBX_STYLE_BTN_GREY)
+				? (new CSimpleButton(_('Delete selected')))
+					->onClick('javascript: submitFormWithParam("'.$userForm->getName().'", "del_user_group", "1");')
+					->addClass(ZBX_STYLE_BTN_GREY)
 				: null
 		]
 	);
@@ -97,7 +101,9 @@ if ($data['auth_type'] == ZBX_AUTH_INTERNAL) {
 		}
 	}
 	else {
-		$passwdButton = (new CSubmit('change_password', _('Change password')))->addClass(ZBX_STYLE_BTN_GREY);
+		$passwdButton = (new CSimpleButton(_('Change password')))
+			->onClick('javascript: submitFormWithParam("'.$userForm->getName().'", "change_password", "1");')
+			->addClass(ZBX_STYLE_BTN_GREY);
 		if ($this->data['alias'] == ZBX_GUEST_USER) {
 			$passwdButton->setAttribute('disabled', 'disabled');
 		}

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ class testPageInventory extends CWebTest {
 		$this->zbxTestDropdownSelectWait('groupid', 'all');
 
 		$this->zbxTestCheckTitle('Host inventory');
-		$this->zbxTestTextPresent('HOST INVENTORY');
+		$this->zbxTestCheckHeader('Host inventory');
 		$this->zbxTestTextPresent('Displaying');
 		$this->zbxTestTextPresent(
 			['Host', 'Group', 'Name', 'Type', 'OS', 'Serial number A', 'Tag', 'MAC address A']
@@ -71,7 +71,7 @@ class testPageInventory extends CWebTest {
 		$this->zbxTestClickWait('cancel');
 
 		$this->zbxTestCheckTitle('Host inventory');
-		$this->zbxTestTextPresent('HOST INVENTORY');
+		$this->zbxTestCheckHeader('Host inventory');
 	}
 
 }

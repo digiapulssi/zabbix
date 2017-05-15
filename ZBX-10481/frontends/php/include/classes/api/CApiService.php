@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -257,14 +257,14 @@ class CApiService {
 			case null:
 				return false;
 
-				// if an array of fields is passed, check if the field is present in the array
+			// if an array of fields is passed, check if the field is present in the array
 			default:
 				return in_array($field, $output);
 		}
 	}
 
 	/**
-	 * Unsets fields $field from the given objects if they are not requested in $output.
+	 * Unsets fields $fields from the given objects if they are not requested in $output.
 	 *
 	 * @param array        $objects
 	 * @param array        $fields
@@ -725,6 +725,30 @@ class CApiService {
 	}
 
 	/**
+	 * For each object in $objects the method copies fields listed in $fields that are not present in the target
+	 * object from the source object.
+	 *
+	 * @param array  $objects
+	 * @param array  $source
+	 * @param string $field_name
+	 * @param array  $fields
+	 *
+	 * @return array
+	 */
+	protected function extendObjectsByKey(array $objects, array $source, $field_name, array $fields) {
+		$fields = array_flip($fields);
+
+		foreach ($objects as &$object) {
+			if (array_key_exists($object[$field_name], $source)) {
+				$object += array_intersect_key($source[$object[$field_name]], $fields);
+			}
+		}
+		unset($object);
+
+		return $objects;
+	}
+
+	/**
 	 * Checks that each object has a valid ID.
 	 *
 	 * @param array $objects
@@ -748,7 +772,7 @@ class CApiService {
 	}
 
 	/**
-	 * Checks if the object has any fields, that are not defined in the schema or in $additionalFields.
+	 * Checks if the object has any fields, that are not defined in the schema or in $extraFields.
 	 *
 	 * @param string $tableName
 	 * @param array  $object
@@ -769,7 +793,7 @@ class CApiService {
 	}
 
 	/**
-	 * Checks if an objects contains any of the given parameters.
+	 * Checks if an object contains any of the given parameters.
 	 *
 	 * Example:
 	 * checkNoParameters($item, array('templateid', 'state'), _('Cannot set "%1$s" for item "%2$s".'), $item['name']);
