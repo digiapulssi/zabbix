@@ -769,7 +769,7 @@ static int	item_preproc_regsub(zbx_variant_t *value, const char *params, char **
 
 /******************************************************************************
  *                                                                            *
- * Function: item_preproc_xpath                                               *
+ * Function: item_preproc_xpath_op                                             *
  *                                                                            *
  * Purpose: execute xpath query                                               *
  *                                                                            *
@@ -781,7 +781,7 @@ static int	item_preproc_regsub(zbx_variant_t *value, const char *params, char **
  *               FAIL - otherwise                                             *
  *                                                                            *
  ******************************************************************************/
-static int	item_preproc_xpath(zbx_variant_t *value, const char *params, char **errmsg)
+static int	item_preproc_xpath_op(zbx_variant_t *value, const char *params, char **errmsg)
 {
 #ifndef HAVE_LIBXML2
 	*errmsg = zbx_dsprintf(*errmsg, "Zabbix was compiled without libxml2 support");
@@ -803,7 +803,7 @@ static int	item_preproc_xpath(zbx_variant_t *value, const char *params, char **e
 		if (NULL != (pErr = xmlGetLastError()))
 			*errmsg = zbx_strdup(*errmsg, pErr->message);
 		else
-			*errmsg = zbx_strdup(*errmsg, "Failed to parse xml value");
+			*errmsg = zbx_strdup(*errmsg, "failed to parse xml value");
 		return FAIL;
 	}
 
@@ -812,7 +812,7 @@ static int	item_preproc_xpath(zbx_variant_t *value, const char *params, char **e
 	if (NULL == (xpathObj = xmlXPathEvalExpression((xmlChar *)params, xpathCtx)))
 	{
 		pErr = xmlGetLastError();
-		*errmsg = zbx_dsprintf(*errmsg, "XPath error: %s", pErr->message);
+		*errmsg = zbx_dsprintf(*errmsg, "xpath error: %s", pErr->message);
 		goto out;
 	}
 
@@ -864,6 +864,32 @@ out:
 #endif
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: item_preproc_xpath_op                                             *
+ *                                                                            *
+ * Purpose: execute xpath query                                               *
+ *                                                                            *
+ * Parameters: value  - [IN/OUT] the value to process                         *
+ *             params - [IN] the operation parameters                         *
+ *             errmsg - [OUT] error message                                   *
+ *                                                                            *
+ * Return value: SUCCEED - the value was processed successfully               *
+ *               FAIL - otherwise                                             *
+ *                                                                            *
+ ******************************************************************************/
+static int	item_preproc_xpath(zbx_variant_t *value, const char *params, char **errmsg)
+{
+	char		*err = NULL;
+
+	if (SUCCEED == item_preproc_xpath_op(value, params, &err))
+		return SUCCEED;
+
+	*errmsg = zbx_dsprintf(*errmsg, "Cannot extract XML value with xpath \"%s\": %s", params, err);
+	zbx_free(err);
+
+	return FAIL;
+}
 /******************************************************************************
  *                                                                            *
  * Function: zbx_item_preproc                                                 *
