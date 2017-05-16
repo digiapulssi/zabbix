@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc3
 New features:
 
 Bug fixes:
+....I..... [227] fixed macros in trigger expressions for minimum online IPv4 and IPv6 enabled probe number (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc2
