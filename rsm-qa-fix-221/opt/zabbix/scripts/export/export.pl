@@ -268,7 +268,7 @@ undef($server_key) unless (opt('tld'));	# keep $server_key if --tld was specifie
 
 my $false_positives = __get_false_positives($from, $till, $server_key);
 
-undef($server_key) if (defined($server_key));
+undef($server_key);
 
 my $probe_changes = __get_probe_changes($from);	# does not need db connection
 
