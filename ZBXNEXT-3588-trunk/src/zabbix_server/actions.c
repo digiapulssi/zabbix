@@ -3365,7 +3365,6 @@ static int	uniq_conditions_compare_func(const void *d1, const void *d2)
  *                                                                            *
  * Parameters: data - [IN] condition structure                                *
  *                                                                            *
- *                                                                            *
  * Return value: hash is generated                                            *
  *                                                                            *
  ******************************************************************************/
