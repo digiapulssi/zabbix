@@ -48,6 +48,8 @@ use constant JSON_INTERFACE_RDDS43	=> 'RDDS43';	# todo phase 1: taken from phase
 use constant JSON_INTERFACE_RDDS80	=> 'RDDS80';	# todo phase 1: taken from phase 2
 use constant ROOT_ZONE_READABLE		=> 'zz--root';	# todo phase 1: taken from phase 2
 
+use constant SERVICE_DNS_TCP	=> 'dns-tcp';	# todo phase 1: Export DNS-TCP tests, not a real service
+
 use constant AH_STATUS_UP	=> 'Up';	# todo phase 1: taken from ApiHelper.pm phase 2
 use constant AH_STATUS_DOWN	=> 'Down';	# todo phase 1: taken from ApiHelper.pm phase 2
 
@@ -92,7 +94,7 @@ if (opt('service'))
 }
 else
 {
-	foreach my $service ('dns', 'dnssec', 'rdds', 'epp')
+	foreach my $service ('dns', 'dnssec', SERVICE_DNS_TCP, 'rdds', 'epp')	# todo phase 1: Export DNS-TCP tests
 	{
 		$services->{$service} = undef;
 	}
@@ -364,6 +366,10 @@ sub __get_delays
 
 			$services->{$service}->{'delay'} = $cfg_dns_delay;
 		}
+		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		{
+			$services->{$service}->{'delay'} = get_macro_dns_tcp_delay();
+		}
 		elsif ($service eq 'rdds')
 		{
 			$services->{$service}->{'delay'} = get_macro_rdds_delay();
@@ -388,6 +394,10 @@ sub __get_keys
 			$services->{$service}->{'key_status'} = 'rsm.dns.udp[{$RSM.TLD}]';	# 0 - down, 1 - up
 			$services->{$service}->{'key_rtt'} = 'rsm.dns.udp.rtt[{$RSM.TLD},';
 		}
+		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		{
+			$services->{$service}->{'key_rtt'} = 'rsm.dns.tcp.rtt[{$RSM.TLD},';
+		}
 		elsif ($service eq 'rdds')
 		{
 			$services->{$service}->{'key_status'} = 'rsm.rdds[{$RSM.TLD}';	# 0 - down, 1 - up, 2 - only 43, 3 - only 80
@@ -404,8 +414,11 @@ sub __get_keys
 			$services->{$service}->{'key_rtt'} = 'rsm.epp.rtt[{$RSM.TLD},';
 		}
 
-		$services->{$service}->{'key_avail'} = "rsm.slv.$service.avail";
-		$services->{$service}->{'key_rollweek'} = "rsm.slv.$service.rollweek";
+		if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
+		{
+			$services->{$service}->{'key_avail'} = "rsm.slv.$service.avail";
+			$services->{$service}->{'key_rollweek'} = "rsm.slv.$service.rollweek";
+		}
 	}
 }
 
@@ -417,7 +430,7 @@ sub __get_valuemaps
 
 	foreach my $service (sort(keys(%{$services})))
 	{
-		if ($service eq 'dns' || $service eq 'dnssec')
+		if ($service eq 'dns' || $service eq SERVICE_DNS_TCP || $service eq 'dnssec')	# todo phase 1: Export DNS-TCP tests
 		{
 			$cfg_dns_valuemaps = get_valuemaps('dns') unless ($cfg_dns_valuemaps);
 
@@ -460,7 +473,10 @@ sub __get_test_data
 
 	foreach my $service (sort(keys(%{$services})))
 	{
-		next if (tld_service_enabled($tld, $service) != SUCCESS);
+		if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		{
+			next if (tld_service_enabled($tld, $service) != SUCCESS);
+		}
 
 		my $delay = $services->{$service}->{'delay'};
 		my $service_from = $services->{$service}->{'from'};
@@ -470,20 +486,25 @@ sub __get_test_data
 
 		next if (!$service_from || !$service_till);
 
+		my ($itemid_avail, $itemid_rollweek);
+
 		my $hostid = get_hostid($tld);
 
-		my $itemid_avail = get_itemid_by_hostid($hostid, $key_avail);
-		if (!$itemid_avail)
+		if ($key_avail)
 		{
-			wrn("configuration error: service $service enabled but ", rsm_slv_error());
-			next;
-		}
+			$itemid_avail = get_itemid_by_hostid($hostid, $key_avail);
+			if (!$itemid_avail)
+			{
+				wrn("configuration error: service $service enabled but ", rsm_slv_error());
+				next;
+			}
 
-		my $itemid_rollweek = get_itemid_by_hostid($hostid, $key_rollweek);
-		if (!$itemid_rollweek)
-		{
-			wrn("configuration error: service $service enabled but ", rsm_slv_error());
-			next;
+			$itemid_rollweek = get_itemid_by_hostid($hostid, $key_rollweek);
+			if (!$itemid_rollweek)
+			{
+				wrn("configuration error: service $service enabled but ", rsm_slv_error());
+				next;
+			}
 		}
 
 		if ($service eq 'dns' || $service eq 'dnssec')
@@ -493,6 +514,14 @@ sub __get_test_data
 				$nsips_ref = get_templated_nsips($tld, $services->{$service}->{'key_rtt'}, 1);	# templated
 				$dns_items_ref = __get_dns_itemids($nsips_ref, $services->{$service}->{'key_rtt'}, $tld, getopt('probe'));
 			}
+		}
+		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		{
+			if (!$nsips_ref)
+			{
+				$nsips_ref = get_templated_nsips($tld, $services->{$service}->{'key_rtt'}, 1);  # templated
+			}
+			$dns_items_ref = __get_dns_itemids($nsips_ref, $services->{$service}->{'key_rtt'}, $tld, getopt('probe'));
 		}
 		elsif ($service eq 'rdds')
 		{
@@ -508,16 +537,27 @@ sub __get_test_data
 			$epp_str_items_ref = get_epp_str_itemids($tld, getopt('probe'), $services->{$service}->{'key_ip'});
 		}
 
-		my $incidents = __get_incidents2($itemid_avail, $delay, $service_from, $service_till);
-		my $incidents_count = scalar(@$incidents);
+		my (@empty_arr, $rows_ref, $incidents, $incidents_count);
 
-		# SERVICE availability data
-		my $rows_ref = db_select(
-			"select value,clock".
-			" from history_uint".
-			" where itemid=$itemid_avail".
-				" and " . sql_time_condition($service_from, $service_till).
-			" order by itemid,clock");	# NB! order is important, see how the result is used below
+		if ($itemid_avail)
+		{
+			$incidents = __get_incidents2($itemid_avail, $delay, $service_from, $service_till);
+
+			# SERVICE availability data
+			$rows_ref = db_select(
+				"select value,clock".
+				" from history_uint".
+				" where itemid=$itemid_avail".
+					" and " . sql_time_condition($service_from, $service_till).
+				" order by itemid,clock");	# NB! order is important, see how the result is used below
+		}
+		else
+		{
+			$incidents = \@empty_arr;
+			$rows_ref = \@empty_arr;
+		}
+
+		$incidents_count = scalar(@$incidents);
 
 		my $cycles;
 		my $last_avail_clock;
@@ -558,13 +598,20 @@ sub __get_test_data
 			$cycles->{$cycleclock}->{'status'} = get_result_string($cfg_avail_valuemaps, $value);
 		}
 
-		# Rolling week data (is synced with availability data from above)
-		$rows_ref = db_select(
-			"select value,clock".
-			" from history".
-			" where itemid=$itemid_rollweek".
-				" and " . sql_time_condition($service_from, $service_till).
-			" order by itemid,clock");	# NB! order is important, see how the result is used below
+		if ($itemid_rollweek)
+		{
+			# Rolling week data (is synced with availability data from above)
+			$rows_ref = db_select(
+				"select value,clock".
+				" from history".
+				" where itemid=$itemid_rollweek".
+					" and " . sql_time_condition($service_from, $service_till).
+				" order by itemid,clock");	# NB! order is important, see how the result is used below
+		}
+		else
+		{
+			$rows_ref = \@empty_arr;
+		}
 
 		foreach my $row_ref (@$rows_ref)
 		{
@@ -580,7 +627,7 @@ sub __get_test_data
 
 		my $cycles_count = scalar(keys(%{$cycles}));
 
-		if ($cycles_count == 0)
+		if ($service ne SERVICE_DNS_TCP && $cycles_count == 0)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
 		{
 			wrn("$service: no results");
 			last;
@@ -588,7 +635,7 @@ sub __get_test_data
 
 		my $tests_ref;
 
-		if ($service eq 'dns')
+		if ($service eq 'dns' || $service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
 		{
 			$tests_ref = __get_dns_test_values($dns_items_ref, $service_from, $service_till,
 				$services->{$service}->{'valuemaps'}, $delay, $service);
@@ -607,10 +654,13 @@ sub __get_test_data
 		# add tests to appropriate cycles
 		foreach my $cycleclock (sort(keys(%$tests_ref)))
 		{
-			if (!$cycles->{$cycleclock})
+			if ($key_avail)
 			{
-				__no_cycle_result($service, $key_avail, $cycleclock);
-				next;
+				if (!$cycles->{$cycleclock})
+				{
+					__no_cycle_result($service, $key_avail, $cycleclock);
+					next;
+				}
 			}
 
 			foreach my $interface (keys(%{$tests_ref->{$cycleclock}}))
@@ -643,6 +693,10 @@ sub __get_test_data
 
 			$probe_results_ref = $probe_dns_results_ref;
 		}
+		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
+		{
+			$probe_results_ref = undef;
+		}
 		else
 		{
 			my $itemids_ref = __get_service_status_itemids($tld, $services->{$service}->{'key_status'});
@@ -656,12 +710,15 @@ sub __get_test_data
 			{
 				foreach my $probe (keys(%{$cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}}))
 				{
-					foreach my $probe_result_ref (@{$probe_results_ref->{$probe}})
+					if ($probe_results_ref)
 					{
-						if (!defined($cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}->{$probe}->{'status'}))
+						foreach my $probe_result_ref (@{$probe_results_ref->{$probe}})
 						{
-							$cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}->{$probe}->{'status'} =
-								__interface_status($interface, $probe_result_ref->{'value'}, $services->{$service});
+							if (!defined($cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}->{$probe}->{'status'}))
+							{
+								$cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}->{$probe}->{'status'} =
+									__interface_status($interface, $probe_result_ref->{'value'}, $services->{$service});
+							}
 						}
 					}
 				}
@@ -717,6 +774,12 @@ sub __save_csv_data
 				$protocol_id = $udp_protocol_id;
 				$proto = PROTO_UDP;
 			}
+			elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+			{
+				$service_category_id = $dns_service_category_id;
+				$protocol_id = $tcp_protocol_id;
+				$proto = PROTO_TCP;
+			}
 			elsif ($service eq 'dnssec')
 			{
 				$service_category_id = $dnssec_service_category_id;
@@ -749,10 +812,13 @@ sub __save_csv_data
 			{
 				my $cycle_ref = $result->{$tld}->{'services'}->{$service}->{'cycles'}->{$cycleclock};
 
-				if (!defined($cycle_ref->{'status'}))
+				if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
 				{
-					wrn("no status of $service cycle rolling week (", ts_full($cycleclock), ")!");
-					next;
+					if (!defined($cycle_ref->{'status'}))
+					{
+						wrn("no status of $service cycle rolling week (", ts_full($cycleclock), ")!");
+						next;
+					}
 				}
 
 				my %nscycle;	# for Name Server cycle
@@ -786,7 +852,7 @@ sub __save_csv_data
 						      '',
 						      $tld_type_id,
 						      $protocol_id
-					]);
+					]) if ($service ne SERVICE_DNS_TCP);	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
 
 				foreach my $interface (keys(%{$cycle_ref->{'interfaces'}}))
 				{
@@ -819,7 +885,9 @@ sub __save_csv_data
 								if (!defined($rtt_low) || !defined($rtt_low->{$tld}) || !defined($rtt_low->{$tld}->{$service})
 									|| !defined($rtt_low->{$tld}->{$service}->{$proto}))
 								{
-									$rtt_low->{$tld}->{$service}->{$proto} = __get_rtt_low($service, $proto);	# TODO: add third parameter (command) for EPP!
+									my $_service = ($service eq SERVICE_DNS_TCP ? 'dns' : $service);	# todo phase 1: Export DNS-TCP tests, __get_rtt_low() expects real service
+
+									$rtt_low->{$tld}->{$service}->{$proto} = __get_rtt_low($_service, $proto);	# TODO: add third parameter (command) for EPP!
 								}
 
 								if (__check_test($interface, $metric_ref->{JSON_TAG_RTT()}, $metric_ref->{JSON_TAG_DESCRIPTION()},
@@ -928,7 +996,7 @@ sub __save_csv_data
 					}
 
 
-					if ($interface eq 'DNS')
+					if ($interface eq 'DNS' && $service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
 					{
 						foreach my $ns (keys(%nscycle))
 						{
@@ -1110,6 +1178,7 @@ sub __get_itemids_by_complete_key
 		"select h.host,i.itemid,i.key_".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
+			" and h.status=0".
 			" and h.host like '$host_value'".
 			" and i.key_ in ($keys_str)".
 			" and i.templateid is not null");
@@ -1152,6 +1221,7 @@ sub __get_status_itemids
 		"select h.host,i.itemid".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
+			" and h.status=0".
 			" and i.templateid is not null".
 			" and $key_condition".
 			" and h.host like '$tld %'".
@@ -1419,6 +1489,7 @@ sub __get_dns_itemids
 		"select h.host,i.itemid,i.key_".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
+			" and h.status=0".
 			" and i.status<>".ITEM_STATUS_DISABLED.
 			" and h.host like '$host_value'".
 			" and i.templateid is not null".
@@ -1568,7 +1639,7 @@ sub __get_dns_test_values
 
 	my $interface;
 
-	if (uc($service) eq 'DNS')
+	if ($service eq 'dns' || $service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
 	{
 		$interface = JSON_INTERFACE_DNS;
 	}
@@ -1935,6 +2006,7 @@ sub __get_service_status_itemids
 		"select h.host,i.itemid".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
+			" and h.status=0".
 			" and i.status<>".ITEM_STATUS_DISABLED.
 			" and i.templateid is not null".
 			" and $key_condition".
