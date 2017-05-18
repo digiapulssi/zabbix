@@ -40,9 +40,13 @@ typedef struct
 }
 zbx_autoreg_host_t;
 
-#if HAVE_POSTGRESQL
-extern char	ZBX_PG_ESCAPE_BACKSLASH;
-#endif
+extern char	*CONFIG_DBHOST;
+extern char	*CONFIG_DBNAME;
+extern char	*CONFIG_DBSCHEMA;
+extern char	*CONFIG_DBUSER;
+extern char	*CONFIG_DBPASSWORD;
+extern char	*CONFIG_DBSOCKET;
+extern int	CONFIG_DBPORT;
 
 static int	connection_failure;
 

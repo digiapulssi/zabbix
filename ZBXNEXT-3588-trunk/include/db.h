@@ -25,18 +25,6 @@
 #include "zbxdb.h"
 #include "dbschema.h"
 
-extern char	*CONFIG_DBHOST;
-extern char	*CONFIG_DBNAME;
-extern char	*CONFIG_DBSCHEMA;
-extern char	*CONFIG_DBUSER;
-extern char	*CONFIG_DBPASSWORD;
-extern char	*CONFIG_DBSOCKET;
-extern int	CONFIG_DBPORT;
-extern int	CONFIG_HISTSYNCER_FORKS;
-extern int	CONFIG_UNAVAILABLE_DELAY;
-
-struct	_DC_TRIGGER;
-
 #define ZBX_DB_CONNECT_NORMAL	0
 #define ZBX_DB_CONNECT_EXIT	1
 #define ZBX_DB_CONNECT_ONCE	2

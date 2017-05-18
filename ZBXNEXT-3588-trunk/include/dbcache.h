@@ -190,7 +190,7 @@ typedef struct
 }
 zbx_tag_t;
 
-typedef struct _DC_TRIGGER
+typedef struct
 {
 	zbx_uint64_t		triggerid;
 	char			*description;

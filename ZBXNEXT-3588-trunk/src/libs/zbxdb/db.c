@@ -123,7 +123,7 @@ static ub4	OCI_DBserver_status();
 static PGconn			*conn = NULL;
 static int			ZBX_PG_BYTEAOID = 0;
 static int			ZBX_PG_SVERSION = 0;
-char				ZBX_PG_ESCAPE_BACKSLASH = 1;
+static char			ZBX_PG_ESCAPE_BACKSLASH = 1;
 #elif defined(HAVE_SQLITE3)
 static sqlite3			*conn = NULL;
 static ZBX_MUTEX		sqlite_access = ZBX_MUTEX_NULL;
