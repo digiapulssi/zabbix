@@ -125,7 +125,7 @@ void	DBinit(void)
  * Author: Eugene Grigorjev, Vladimir Levijev                                 *
  *                                                                            *
  ******************************************************************************/
-static void	DBtxn_operation(int (*txn_operation)())
+static void	DBtxn_operation(int (*txn_operation)(void))
 {
 	int	rc;
 
