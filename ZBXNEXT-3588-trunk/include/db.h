@@ -35,29 +35,6 @@ extern int	CONFIG_DBPORT;
 extern int	CONFIG_HISTSYNCER_FORKS;
 extern int	CONFIG_UNAVAILABLE_DELAY;
 
-typedef enum
-{
-	GRAPH_TYPE_NORMAL = 0,
-	GRAPH_TYPE_STACKED = 1
-}
-zbx_graph_types;
-
-typedef enum
-{
-	CALC_FNC_MIN = 1,
-	CALC_FNC_AVG = 2,
-	CALC_FNC_MAX = 4,
-	CALC_FNC_ALL = 7
-}
-zbx_graph_item_calc_function;
-
-typedef enum
-{
-	GRAPH_ITEM_SIMPLE = 0,
-	GRAPH_ITEM_AGGREGATED = 1
-}
-zbx_graph_item_type;
-
 struct	_DC_TRIGGER;
 
 #define ZBX_DB_CONNECT_NORMAL	0
@@ -171,13 +148,6 @@ struct	_DC_TRIGGER;
 
 #define PROXY_DHISTORY_VALUE_LEN	255
 
-#define ZBX_SQL_ITEM_FIELDS	"i.itemid,i.key_,h.host,i.type,i.history,i.hostid,i.value_type,i.delta,"	\
-				"i.units,i.multiplier,i.formula,i.state,i.valuemapid,i.trends,i.data_type"
-#define ZBX_SQL_ITEM_TABLES	"hosts h,items i"
-#define ZBX_SQL_TIME_FUNCTIONS	"'nodata','date','dayofmonth','dayofweek','time','now'"
-#define ZBX_SQL_ITEM_FIELDS_NUM	15
-#define ZBX_SQL_ITEM_SELECT	ZBX_SQL_ITEM_FIELDS " from " ZBX_SQL_ITEM_TABLES
-
 #ifdef HAVE_ORACLE
 #define	DBbegin_multiple_update(sql, sql_alloc, sql_offset)	zbx_strcpy_alloc(sql, sql_alloc, sql_offset, "begin\n")
 #define	DBend_multiple_update(sql, sql_alloc, sql_offset)	zbx_strcpy_alloc(sql, sql_alloc, sql_offset, "end;")
@@ -284,36 +254,13 @@ typedef struct
 
 	zbx_vector_ptr_t	tags;
 
-#define ZBX_FLAGS_DB_EVENT_UNSET		0x0000
-#define ZBX_FLAGS_DB_EVENT_CREATE		0x0001
-#define ZBX_FLAGS_DB_EVENT_NO_ACTION		0x0002
+#define ZBX_FLAGS_DB_EVENT_UNSET	0x0000
+#define ZBX_FLAGS_DB_EVENT_CREATE	0x0001
+#define ZBX_FLAGS_DB_EVENT_NO_ACTION	0x0002
 #define ZBX_FLAGS_DB_EVENT_LINKED	0x0004
 	zbx_uint64_t		flags;
 }
 DB_EVENT;
-
-typedef struct
-{
-	zbx_uint64_t		itemid;
-	zbx_uint64_t		hostid;
-	zbx_item_type_t		type;
-	zbx_item_data_type_t	data_type;
-	char			*key;
-	char			*host_name;
-	int			history;
-	int			trends;
-	zbx_item_value_type_t	value_type;
-	int			delta;
-	int			multiplier;
-	char			*units;
-	char			*formula;
-	zbx_uint64_t		valuemapid;
-	char			*error;
-
-	unsigned char		state;
-	unsigned char		flags;
-}
-DB_ITEM;
 
 typedef struct
 {
@@ -350,15 +297,15 @@ DB_CONDITION;
 
 typedef struct
 {
-	zbx_uint64_t	alertid;
-	zbx_uint64_t 	actionid;
-	int		clock;
-	zbx_uint64_t	mediatypeid;
-	char		*sendto;
-	char		*subject;
-	char		*message;
+	zbx_uint64_t		alertid;
+	zbx_uint64_t 		actionid;
+	int			clock;
+	zbx_uint64_t		mediatypeid;
+	char			*sendto;
+	char			*subject;
+	char			*message;
 	zbx_alert_status_t	status;
-	int		retries;
+	int			retries;
 }
 DB_ALERT;
 
@@ -516,26 +463,12 @@ void	zbx_trigger_diff_free(zbx_trigger_diff_t *diff);
 void	zbx_append_trigger_diff(zbx_vector_ptr_t *trigger_diff, zbx_uint64_t triggerid, unsigned char priority,
 		zbx_uint64_t flags, unsigned char value, unsigned char state, int lastchange, const char *error);
 
-int	DBupdate_item_status_to_notsupported(DB_ITEM *item, int clock, const char *error);
 int	DBget_row_count(const char *table_name);
 int	DBget_proxy_lastaccess(const char *hostname, int *lastaccess, char **error);
 
 char	*DBdyn_escape_string(const char *src);
 char	*DBdyn_escape_string_len(const char *src, size_t max_src_len);
 char	*DBdyn_escape_like_pattern(const char *src);
-
-zbx_uint64_t	DBadd_host(char *server, int port, int status, int useip, char *ip, int disable_until, int available);
-int	DBhost_exists(char *server);
-int	DBadd_templates_to_host(int hostid,int host_templateid);
-
-int	DBadd_template_linkage(int hostid,int templateid,int items,int triggers,int graphs);
-
-int	DBget_item_by_itemid(int itemid,DB_ITEM *item);
-
-int	DBadd_trigger_to_linked_hosts(int triggerid,int hostid);
-void	DBdelete_sysmaps_hosts_by_hostid(zbx_uint64_t hostid);
-
-int	DBadd_graph_item_to_linked_hosts(int gitemid,int hostid);
 
 int	DBcopy_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *lnk_templateids);
 int	DBdelete_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *del_templateids);
