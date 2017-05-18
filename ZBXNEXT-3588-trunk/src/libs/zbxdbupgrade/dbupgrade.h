@@ -42,8 +42,10 @@ zbx_dbpatch_t;
 
 #define DBPATCH_ADD(version, duplicates, mandatory)	{DBpatch_##version, version, duplicates, mandatory},
 
+int	DBtable_exists(const char *table_name);
 int	DBcreate_table(const ZBX_TABLE *table);
 int	DBdrop_table(const char *table_name);
+int	DBfield_exists(const char *table_name, const char *field_name);
 int	DBadd_field(const char *table_name, const ZBX_FIELD *field);
 int	DBrename_field(const char *table_name, const char *field_name, const ZBX_FIELD *field);
 int	DBmodify_field_type(const char *table_name, const ZBX_FIELD *field);
