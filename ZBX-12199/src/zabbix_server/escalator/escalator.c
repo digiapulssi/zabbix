@@ -1248,7 +1248,7 @@ static void	escalation_execute_recovery_operations(const DB_EVENT *event, const 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	result = DBselect(
-			"select o.operationid,o.operationtype"
+			"select o.operationid,o.operationtype,"
 				"m.operationid,m.default_msg,m.subject,m.message,m.mediatypeid"
 			" from operations o"
 				" left join opmessage m"
