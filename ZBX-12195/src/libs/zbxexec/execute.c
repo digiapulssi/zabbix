@@ -162,10 +162,8 @@ static int	zbx_popen(pid_t *pid, const char *command)
 	}
 
 	/* child process */
+
 	close(fd[0]);
-	dup2(fd[1], STDOUT_FILENO);
-	dup2(fd[1], STDERR_FILENO);
-	close(fd[1]);
 
 	/* set the child as the process group leader, otherwise orphans may be left after timeout */
 	if (-1 == setpgid(0, 0))
@@ -176,6 +174,12 @@ static int	zbx_popen(pid_t *pid, const char *command)
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "%s(): executing script", __function_name);
+
+	/* redirect output right before script execution after all logging is done */
+
+	dup2(fd[1], STDOUT_FILENO);
+	dup2(fd[1], STDERR_FILENO);
+	close(fd[1]);
 
 	execl("/bin/sh", "sh", "-c", command, NULL);
 
