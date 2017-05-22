@@ -1178,7 +1178,7 @@ sub __get_itemids_by_complete_key
 		"select h.host,i.itemid,i.key_".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
-			" and h.status=0".
+			" and h.status=".HOST_STATUS_MONITORED.
 			" and h.host like '$host_value'".
 			" and i.key_ in ($keys_str)".
 			" and i.templateid is not null");
@@ -1221,7 +1221,7 @@ sub __get_status_itemids
 		"select h.host,i.itemid".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
-			" and h.status=0".
+			" and h.status=".HOST_STATUS_MONITORED.
 			" and i.templateid is not null".
 			" and $key_condition".
 			" and h.host like '$tld %'".
@@ -1489,7 +1489,7 @@ sub __get_dns_itemids
 		"select h.host,i.itemid,i.key_".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
-			" and h.status=0".
+			" and h.status=".HOST_STATUS_MONITORED.
 			" and i.status<>".ITEM_STATUS_DISABLED.
 			" and h.host like '$host_value'".
 			" and i.templateid is not null".
@@ -2006,7 +2006,7 @@ sub __get_service_status_itemids
 		"select h.host,i.itemid".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
-			" and h.status=0".
+			" and h.status=".HOST_STATUS_MONITORED.
 			" and i.status<>".ITEM_STATUS_DISABLED.
 			" and i.templateid is not null".
 			" and $key_condition".
