@@ -2788,7 +2788,7 @@ sub truncate_till
 {
 	my $ts = shift;
 
-	return $ts + (60 - ($ts % 60) - 1);
+	return $ts - $ts % 60 + 59;
 }
 
 # whether additional alerts through Redis are enabled, disable in config passed with set_slv_config()
