@@ -1,8 +1,12 @@
 Changes for rsm1.0.0rc3
 
 New features:
+....I..... [207] moved miscellaneous helper scripts to misc/ directory (dimir)
 
 Bug fixes:
+....I..... [220] fixed rolling week calculation on the first minute of downtime (dimir)
+....I..... [204] added support for DNS TCP data to Data Export (dimir)
+....I..... [227] fixed macros in trigger expressions for minimum online IPv4 and IPv6 enabled probe number (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc2
