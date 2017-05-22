@@ -468,8 +468,8 @@ sub __get_test_data
 	my $till = shift;
 	my $probe_times_ref = shift;
 
-	my ($nsips_ref, $dns_items_ref, $rdds_dbl_items_ref, $rdds_str_items_ref, $epp_dbl_items_ref, $epp_str_items_ref,
-		$probe_dns_results_ref, $result);
+	my ($nsips_ref, $dns_items_ref, $dns_tcp_items_ref, $rdds_dbl_items_ref, $rdds_str_items_ref, $epp_dbl_items_ref,
+		$epp_str_items_ref, $probe_dns_results_ref, $result);
 
 	foreach my $service (sort(keys(%{$services})))
 	{
@@ -507,11 +507,18 @@ sub __get_test_data
 			}
 		}
 
+		# $nsips_ref is used by services: dns, dnssec, dns-tcp
+		# $dns_items_ref is used by services: dns, dnssec
+
 		if ($service eq 'dns' || $service eq 'dnssec')
 		{
 			if (!$nsips_ref)
 			{
 				$nsips_ref = get_templated_nsips($tld, $services->{$service}->{'key_rtt'}, 1);	# templated
+			}
+
+			if (!$dns_items_ref)
+			{
 				$dns_items_ref = __get_dns_itemids($nsips_ref, $services->{$service}->{'key_rtt'}, $tld, getopt('probe'));
 			}
 		}
@@ -521,7 +528,7 @@ sub __get_test_data
 			{
 				$nsips_ref = get_templated_nsips($tld, $services->{$service}->{'key_rtt'}, 1);  # templated
 			}
-			$dns_items_ref = __get_dns_itemids($nsips_ref, $services->{$service}->{'key_rtt'}, $tld, getopt('probe'));
+			$dns_tcp_items_ref = __get_dns_itemids($nsips_ref, $services->{$service}->{'key_rtt'}, $tld, getopt('probe'));
 		}
 		elsif ($service eq 'rdds')
 		{
@@ -635,9 +642,14 @@ sub __get_test_data
 
 		my $tests_ref;
 
-		if ($service eq 'dns' || $service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		if ($service eq 'dns')
 		{
 			$tests_ref = __get_dns_test_values($dns_items_ref, $service_from, $service_till,
+				$services->{$service}->{'valuemaps'}, $delay, $service);
+		}
+		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		{
+			$tests_ref = __get_dns_test_values($dns_tcp_items_ref, $service_from, $service_till,
 				$services->{$service}->{'valuemaps'}, $delay, $service);
 		}
 		elsif ($service eq 'rdds')
