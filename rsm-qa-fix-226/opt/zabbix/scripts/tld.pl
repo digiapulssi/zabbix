@@ -972,9 +972,6 @@ sub create_all_slv_ns_items {
     my $ip = shift;
     my $hostid = shift;
 
-    # todo phase 1: DNS NS are not currently used
-    return;
-
     create_slv_item('% of successful monthly DNS resolution RTT (UDP): $1 ($2)', 'rsm.slv.dns.ns.rtt.udp.month['.$ns_name.','.$ip.']', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
     create_slv_item('% of successful monthly DNS resolution RTT (TCP): $1 ($2)', 'rsm.slv.dns.ns.rtt.tcp.month['.$ns_name.','.$ip.']', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
     create_slv_item('% of successful monthly DNS update time: $1 ($2)', 'rsm.slv.dns.ns.upd.month['.$ns_name.','.$ip.']', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]) if (defined($OPTS{'epp-servers'}));
@@ -1709,7 +1706,8 @@ sub add_new_ns($) {
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'tcp', $proto);
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'udp', $proto);
 
-    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
+# todo phase 1: DNS NS are not currently used
+#    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
 	}
     }
 }
