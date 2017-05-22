@@ -2145,7 +2145,11 @@ sub get_incidents
 			my $value = $row_ref->[2];
 			my $false_positive = $row_ref->[3];
 
-			dbg("reading pre-event $eventid: clock:" . ts_str($clock) . " ($clock), value:", ($value == 0 ? 'OK' : 'PROBLEM'), ", false_positive:$false_positive") if (opt('debug'));
+			if (opt('debug'))
+			{
+				my $type = ($value == TRIGGER_VALUE_FALSE ? 'closing' : 'opening');
+				dbg("$type pre-event $eventid: clock:" . ts_str($clock) . " ($clock), false_positive:$false_positive");
+			}
 
 			# do not add 'value=TRIGGER_VALUE_TRUE' to SQL above just for corner case of 2 events at the same second
 			if ($value == TRIGGER_VALUE_TRUE)
@@ -2174,7 +2178,20 @@ sub get_incidents
 		my $value = $row_ref->[2];
 		my $false_positive = $row_ref->[3];
 
-		dbg("reading event $eventid: clock:" . ts_str($clock) . " ($clock), value:", ($value == 0 ? 'OK' : 'PROBLEM'), ", false_positive:$false_positive") if (opt('debug'));
+		if ($value == TRIGGER_VALUE_FALSE)
+		{
+			$clock = truncate_till($clock);
+		}
+		else
+		{
+			$clock = truncate_from($clock);
+		}
+
+		if (opt('debug'))
+		{
+			my $type = ($value == TRIGGER_VALUE_FALSE ? 'closing' : 'opening');
+			dbg("$type event $eventid: clock:" . ts_str($clock) . " ($clock), false_positive:$false_positive");
+		}
 
 		# ignore non-resolved false_positive incidents (corner case)
 		if ($value == TRIGGER_VALUE_TRUE && $last_trigger_value == TRIGGER_VALUE_TRUE)
@@ -2298,7 +2315,16 @@ sub get_downtime
 				next;
 			}
 
-			$downtime += $clock - $prevclock if ($prevvalue == DOWN);
+			# todo phase 1: do not ignore the first downtime minute
+			if ($value == DOWN && $prevclock == 0)
+			{
+				# first run
+				$downtime += 60;
+			}
+			elsif ($prevvalue == DOWN)
+			{
+				$downtime += $clock - $prevclock;
+			}
 
 			$prevvalue = $value;
 			$prevclock = $clock;
@@ -2756,6 +2782,15 @@ sub truncate_from
 
 	# truncate to the beginning of the minute
 	return $ts - ($ts % $delay);
+}
+
+# todo phase 1: this is taken from RSMSLV1.pm and is used in get_incidents()
+# last second of given minute
+sub truncate_till
+{
+	my $ts = shift;
+
+	return $ts - $ts % 60 + 59;
 }
 
 # whether additional alerts through Redis are enabled, disable in config passed with set_slv_config()
