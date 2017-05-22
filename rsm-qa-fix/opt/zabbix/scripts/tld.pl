@@ -1706,7 +1706,8 @@ sub add_new_ns($) {
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'tcp', $proto);
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'udp', $proto);
 
-    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
+# todo phase 1: DNS NS are not currently used
+#    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
 	}
     }
 }

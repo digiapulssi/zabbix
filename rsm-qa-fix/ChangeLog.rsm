@@ -4,6 +4,7 @@ New features:
 ....I..... [207] moved miscellaneous helper scripts to misc/ directory (dimir)
 
 Bug fixes:
+....I..... [226] disabled creation of unused items (DNS NS) when tld.pl is run with --update-nsservers (dimir)
 ....I..... [221] fixed possible SQL connection error on probe changes calculation in Data Export (dimir)
 ....I..... [220] fixed rolling week calculation on the first minute of downtime (dimir)
 ....I..... [204] added support for DNS TCP data to Data Export (dimir)
