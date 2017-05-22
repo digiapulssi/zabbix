@@ -176,9 +176,11 @@ sub get_macro_dns_tcp_delay
 
 	my $item_param = 'RSM.DNS.TCP.DELAY';
 
-	my $value = __get_rsm_configvalue($item_param, $value_time);
-
-	return $value if ($value);
+	# todo phase 1: Export DNS-TCP tests
+	# todo phase 1: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
+#	my $value = __get_rsm_configvalue($item_param, $value_time);
+#
+#	return $value if ($value);
 
 	return __get_macro('{$' . $item_param . '}');
 }
