@@ -157,25 +157,35 @@ pfail("Zabbix API URL is not specified. Please check configuration file") unless
 pfail("Username for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_user'};
 pfail("Password for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_password'};
 
+# todo phase 1: add support for re-login in case session is expired
 my $attempts = 3;
 my $result;
+my $error;
 RELOGIN: $result = zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($result ne true) {
     pfail("Could not connect to Zabbix API. ".$result->{'data'});
 }
 
-# todo phase 1: getting $tld_type_probe_results_groupid must happen in one place only, use other first method to identify need for relogin
-if (!$OPTS{'list-services'} && !$OPTS{'get-nsservers-list'})
+# make sure we re-login in case of session invalidation
+$tld_probe_results_groupid = create_group('TLD Probe results');
+
+$error = get_api_error($tld_probe_results_groupid);
+
+if (defined($error)) {
+    if (zbx_need_relogin($tld_probe_results_groupid) eq true) {
+	goto RELOGIN if (--$attempts);
+    }
+
+    pfail($error);
+}
+
+# todo phase 1: get $tld_type_probe_results_groupid early for set-type
+if (defined($OPTS{'type'}))
 {
     $tld_type_probe_results_groupid = create_group($OPTS{'type'}.' Probe results');
-    my $error = get_api_error($tld_type_probe_results_groupid);
-    if (defined($error)) {
-	if (zbx_need_relogin($tld_type_probe_results_groupid) eq true) {
-	    goto RELOGIN if (--$attempts);
-	}
-	pfail($error);
-    }
+
+    pfail $tld_type_probe_results_groupid->{'data'} if check_api_error($tld_type_probe_results_groupid) eq true;
 }
 
 if (defined($OPTS{'set-type'})) {
@@ -303,10 +313,6 @@ pfail("Main templateid is not defined") unless defined $main_templateid;
 $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
-
-$tld_probe_results_groupid = create_group('TLD Probe results');
-
-pfail $tld_probe_results_groupid->{'data'} if check_api_error($tld_probe_results_groupid) eq true;
 
 $tlds_groupid = create_group('TLDs');
 
@@ -1700,7 +1706,8 @@ sub add_new_ns($) {
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'tcp', $proto);
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'udp', $proto);
 
-    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
+# todo phase 1: DNS NS are not currently used
+#    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
 	}
     }
 }
