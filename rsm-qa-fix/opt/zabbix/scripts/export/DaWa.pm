@@ -161,7 +161,7 @@ sub dw_get_id
 
 	if (!defined($name))
 	{
-		wrn("cannot get $id_type ID by undefined name!");
+		wrn("internal error: attempt to get $id_type ID by undefined name!");
 		return undef;
 	}
 
