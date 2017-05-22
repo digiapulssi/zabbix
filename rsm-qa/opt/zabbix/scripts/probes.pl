@@ -329,7 +329,6 @@ sub delete_probe($) {
     ##########
 
     print "The probe has been removed successfully\n";
-    print "Do not forget to tune macros!\n";
 }
 
 sub disable_probe($) {
@@ -424,7 +423,6 @@ sub disable_probe($) {
     ##########
 
     print "The probe has been disabled successfully\n";
-    print "Do not forget to tune macros!\n";
 }
 
 sub rename_probe($$) {
