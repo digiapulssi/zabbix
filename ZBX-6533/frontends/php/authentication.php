@@ -114,20 +114,21 @@ if ($config['authentication_type'] == ZBX_AUTH_INTERNAL) {
 }
 elseif ($config['authentication_type'] == ZBX_AUTH_LDAP) {
 	if (hasRequest('update') || hasRequest('test')) {
-		// check LDAP login/password
-		$ldapValidator = new CLdapAuthValidator([
-			'conf' => [
-				'host' => $config['ldap_host'],
-				'port' => $config['ldap_port'],
-				'base_dn' => $config['ldap_base_dn'],
-				'bind_dn' => $config['ldap_bind_dn'],
-				'bind_password' => $config['ldap_bind_password'],
-				'search_attribute' => $config['ldap_search_attribute']
-			]
-		]);
+		$ldap_status = CFrontendSetup::checkPhpLdapModule();
 
-		if (function_exists('ldap_connect')) {
-			$login = $ldapValidator->validate([
+		if ($ldap_status['result'] === CFrontendSetup::CHECK_OK) {
+			$ldap_validator = new CLdapAuthValidator([
+				'conf' => [
+					'host' => $config['ldap_host'],
+					'port' => $config['ldap_port'],
+					'base_dn' => $config['ldap_base_dn'],
+					'bind_dn' => $config['ldap_bind_dn'],
+					'bind_password' => $config['ldap_bind_password'],
+					'search_attribute' => $config['ldap_search_attribute']
+				]
+			]);
+
+			$login = $ldap_validator->validate([
 				'user' => getRequest('user', CWebUser::$data['alias']),
 				'password' => getRequest('user_password', '')
 			]);
@@ -137,7 +138,8 @@ elseif ($config['authentication_type'] == ZBX_AUTH_LDAP) {
 			}
 		} else {
 			$login = false;
-			error(_('Probably php-ldap module is missing.'));
+
+			error($ldap_status['error']);
 		}
 
 		if (hasRequest('update')) {
