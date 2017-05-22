@@ -84,7 +84,7 @@ class CFrontendSetup {
 		$result[] = $this->checkPhpLibxml();
 		$result[] = $this->checkPhpXmlWriter();
 		$result[] = $this->checkPhpXmlReader();
-		$result[] = $this->checkLdapModule();
+		$result[] = $this->checkPhpLdapModule();
 		$result[] = $this->checkPhpCtype();
 		$result[] = $this->checkPhpSession();
 		$result[] = $this->checkPhpSessionAutoStart();
@@ -547,11 +547,11 @@ class CFrontendSetup {
 	}
 
 	/**
-	 * Checks for PHP ldap extension.
+	 * Checks for PHP LDAP extension.
 	 *
 	 * @return array
 	 */
-	public function checkLdapModule() {
+	public function checkPhpLdapModule() {
 		$current = function_exists('ldap_connect');
 
 		return [
@@ -559,7 +559,7 @@ class CFrontendSetup {
 			'current' => $current ? _('on') : _('off'),
 			'required' => null,
 			'result' => $current ? self::CHECK_OK : self::CHECK_WARNING,
-			'error' => _('PHP ldap extension missing.')
+			'error' => _('PHP LDAP extension missing.')
 		];
 	}
 
