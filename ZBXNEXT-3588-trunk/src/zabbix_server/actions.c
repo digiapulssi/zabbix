@@ -2980,41 +2980,6 @@ int	check_action_condition(const DB_EVENT *event, DB_CONDITION *condition)
 
 /******************************************************************************
  *                                                                            *
- * Function: event_match_condition                                            *
- *                                                                            *
- * Purpose: check if event matches single previously checked condition        *
- *                                                                            *
- * Parameters: event     - event to check                                     *
- *             condition - condition with event ids that match condition      *
- *                                                                            *
- * Return value: SUCCEED - matches, FAIL - otherwise                          *
- *                                                                            *
- ******************************************************************************/
-static int	event_match_condition(const DB_EVENT *event, const DB_CONDITION *condition)
-{
-	int		i, ret = FAIL;
-	const char	*__function_name = "event_match_condition";
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() actionid:" ZBX_FS_UI64 " conditionid:" ZBX_FS_UI64 " cond.value:'%s'"
-			" cond.value2:'%s'", __function_name, condition->actionid, condition->conditionid,
-			condition->value, condition->value2);
-
-	for (i = 0; i < condition->objectids.values_num; i++)
-	{
-		if (condition->objectids.values[i] == event->objectid)
-		{
-			ret = SUCCEED;
-			break;
-		}
-	}
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return ret;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: check_action_conditions                                          *
  *                                                                            *
  * Purpose: check if action have to be processed for the event                *
@@ -3051,7 +3016,12 @@ static int	check_action_conditions(const DB_EVENT *event, const zbx_action_eval_
 			continue;	/* short-circuit true OR condition block to the next AND condition */
 		}
 
-		condition_result = event_match_condition(event, condition);
+		condition_result = zbx_vector_uint64_search(&condition->objectids, event->objectid,
+				ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+		zabbix_log(LOG_LEVEL_DEBUG, " conditionid:" ZBX_FS_UI64 " cond.value:'%s' cond.value2:'%s' result:%s",
+				condition->conditionid, condition->value, condition->value2,
+				zbx_result_string(condition_result));
 
 		switch (action->evaltype)
 		{
