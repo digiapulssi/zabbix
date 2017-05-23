@@ -3476,8 +3476,6 @@ static void	prepare_actions_conditions_eval(zbx_vector_ptr_t *actions, zbx_hashs
 			action->conditions.values[j] = uniq_condition;
 		}
 	}
-
-	conditions_vectors_create(uniq_conditions);
 }
 
 /******************************************************************************
@@ -3518,6 +3516,7 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 	zbx_vector_ptr_create(&actions);
 	zbx_dc_get_actions_eval(&actions);
 	prepare_actions_conditions_eval(&actions, uniq_conditions);
+	conditions_vectors_create(uniq_conditions);
 
 	get_escalation_events(events, events_num, esc_events);
 
