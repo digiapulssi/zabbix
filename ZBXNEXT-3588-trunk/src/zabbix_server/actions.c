@@ -3376,6 +3376,112 @@ static void	get_escalation_events(const DB_EVENT *events, size_t events_num, zbx
 
 /******************************************************************************
  *                                                                            *
+ * Function: db_condition_clean                                               *
+ *                                                                            *
+ * Purpose: cleans condition data structure                                   *
+ *                                                                            *
+ * Parameters: condition - [IN] the condition data to free                    *
+ *                                                                            *
+ ******************************************************************************/
+static void	db_condition_clean(DB_CONDITION *condition)
+{
+	zbx_free(condition->value2);
+	zbx_free(condition->value);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_conditions_eval_clean                                        *
+ *                                                                            *
+ * Purpose: cleans condition data structures from hashset                     *
+ *                                                                            *
+ * Parameters: uniq_conditions - [IN] hashset with data structures to clean   *
+ *                                                                            *
+ ******************************************************************************/
+static void	conditions_eval_clean(zbx_hashset_t *uniq_conditions)
+{
+	zbx_hashset_iter_t	iter;
+	DB_CONDITION		*condition;
+
+	zbx_hashset_iter_reset(uniq_conditions, &iter);
+
+	while (NULL != (condition = (DB_CONDITION *)zbx_hashset_iter_next(&iter)))
+		db_condition_clean(condition);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: prepare_actions_conditions_eval                                  *
+ *                                                                            *
+ * Purpose: make actions to point, to conditions from hashset, where all      *
+ *          conditions are unique, this ensures that we don't double check    *
+ *          same conditions.                                                  *
+ *                                                                            *
+ * Parameters: actions         - [IN/OUT] all conditions are added to hashset *
+ *                                        then cleaned, actions will now      *
+ *                                        point to conditions from hashset.   *
+ *                                        for custom expression also          *
+ *                                        replaces formula                    *
+ *             uniq_conditions - [OUT]    unique conditions that actions      *
+ *                                        point to (several sources)          *
+ *                                                                            *
+ * Comments: The returned conditions must be freed with                       *
+ *           conditions_eval_clean() function later.                          *
+ *                                                                            *
+ ******************************************************************************/
+static void	prepare_actions_conditions_eval(zbx_vector_ptr_t *actions, zbx_hashset_t *uniq_conditions)
+{
+	int	i, j;
+
+	for (i = 0; i < actions->values_num; i++)
+	{
+		zbx_action_eval_t	*action = actions->values[i];
+
+		for (j = 0; j < action->conditions.values_num; j++)
+		{
+			DB_CONDITION	*uniq_condition = NULL, *condition = action->conditions.values[j];
+
+			if (EVENT_SOURCE_COUNT <= action->eventsource)
+			{
+				db_condition_clean(condition);
+			}
+			else if (NULL == (uniq_condition = zbx_hashset_search(&uniq_conditions[action->eventsource],
+					condition)))
+			{
+				uniq_condition = zbx_hashset_insert(&uniq_conditions[action->eventsource],
+						condition, sizeof(DB_CONDITION));
+			}
+			else
+			{
+				if (CONDITION_EVAL_TYPE_EXPRESSION == action->evaltype)
+				{
+					char	search[ZBX_MAX_UINT64_LEN + 2];
+					char	replace[ZBX_MAX_UINT64_LEN + 2];
+					char	*old_formula;
+
+					zbx_snprintf(search, sizeof(search), "{" ZBX_FS_UI64 "}",
+							condition->conditionid);
+					zbx_snprintf(replace, sizeof(replace), "{" ZBX_FS_UI64 "}",
+							uniq_condition->conditionid);
+
+					old_formula = action->formula;
+					action->formula = string_replace(action->formula, search, replace);
+					zbx_free(old_formula);
+				}
+
+				db_condition_clean(condition);
+			}
+
+			zbx_free(action->conditions.values[j]);
+			action->conditions.values[j] = uniq_condition;
+		}
+	}
+
+	conditions_vectors_create(uniq_conditions);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: process_actions                                                  *
  *                                                                            *
  * Purpose: process all actions of each event in a list                       *
@@ -3410,8 +3516,8 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 	}
 
 	zbx_vector_ptr_create(&actions);
-	zbx_dc_get_actions_eval(&actions, uniq_conditions);
-	conditions_vectors_create(uniq_conditions);
+	zbx_dc_get_actions_eval(&actions);
+	prepare_actions_conditions_eval(&actions, uniq_conditions);
 
 	get_escalation_events(events, events_num, esc_events);
 
@@ -3462,7 +3568,7 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 	for (i = 0; i < EVENT_SOURCE_COUNT; i++)
 	{
 		zbx_vector_ptr_destroy(&esc_events[i]);
-		zbx_conditions_eval_clean(&uniq_conditions[i]);
+		conditions_eval_clean(&uniq_conditions[i]);
 		zbx_hashset_destroy(&uniq_conditions[i]);
 	}
 
