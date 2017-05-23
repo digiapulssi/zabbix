@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,14 +51,14 @@ if ($config['event_ack_enable']) {
 
 // events
 if (!$overview) {
+	$config['event_expire'] = convertUnitsS(timeUnitToSeconds($config['event_expire']));
+
 	$eventsComboBox = new CComboBox('show_events', $filter['showEvents'], null, [
 		EVENTS_OPTION_NOEVENT => _('Hide all'),
-		EVENTS_OPTION_ALL => _n('Show all (%1$s day)', 'Show all (%1$s days)', $config['event_expire'])
+		EVENTS_OPTION_ALL => _s('Show all (%1$s)', $config['event_expire'])
 	]);
 	if ($config['event_ack_enable']) {
-		$eventsComboBox->addItem(EVENTS_OPTION_NOT_ACK,
-			_n('Show unacknowledged (%1$s day)', 'Show unacknowledged (%1$s days)', $config['event_expire'])
-		);
+		$eventsComboBox->addItem(EVENTS_OPTION_NOT_ACK, _s('Show unacknowledged (%1$s)', $config['event_expire']));
 	}
 	$column1->addRow(_('Events'), $eventsComboBox);
 }

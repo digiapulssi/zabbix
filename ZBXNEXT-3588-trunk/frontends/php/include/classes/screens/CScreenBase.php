@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -402,7 +402,7 @@ class CScreenBase {
 		if ($this->mode == SCREEN_MODE_EDIT) {
 			$div->addItem(
 				(new CDiv([
-					new CLink(_('Change'), $this->action)
+					new CLink(_x('Change', 'verb'), $this->action)
 				]))->addClass(ZBX_STYLE_CENTER)
 			);
 		}
@@ -418,7 +418,7 @@ class CScreenBase {
 	public function insertFlickerfreeJs(array $data = []) {
 		$jsData = [
 			'id' => $this->getDataId(),
-			'interval' => CWebUser::$data['refresh']
+			'interval' => CWebUser::getRefresh()
 		];
 
 		$parameters = $this->parameters;

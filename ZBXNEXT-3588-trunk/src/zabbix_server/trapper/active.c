@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ static int	get_hostid_by_host(const zbx_socket_t *sock, const char *host, const 
 			if (0 == (tls_accept & sock->connection_type))
 			{
 				zbx_snprintf(error, MAX_STRING_LEN, "connection of type \"%s\" is not allowed for host"
-						" \"%s\"", zbx_tls_connection_type_name(sock->connection_type), host);
+						" \"%s\"", zbx_tcp_connection_type_name(sock->connection_type), host);
 				goto done;
 			}
 
@@ -271,7 +271,8 @@ int	send_list_of_active_checks(zbx_socket_t *sock, char *request)
 		dc_items = zbx_malloc(NULL, sizeof(DC_ITEM) * itemids.values_num);
 		errcodes = zbx_malloc(NULL, sizeof(int) * itemids.values_num);
 
-		DCconfig_get_items_by_itemids(dc_items, itemids.values, errcodes, itemids.values_num);
+		DCconfig_get_items_by_itemids(dc_items, itemids.values, errcodes, itemids.values_num,
+				ZBX_FLAG_ITEM_FIELDS_DEFAULT);
 		zbx_config_get(&cfg, ZBX_CONFIG_FLAGS_REFRESH_UNSUPPORTED);
 
 		now = time(NULL);
@@ -370,7 +371,8 @@ static void	zbx_itemkey_extract_global_regexps(const char *key, zbx_vector_str_t
 	int		item_key;
 	const char	*param;
 
-	if (0 == strncmp(key, "log[", 4) || 0 == strncmp(key, "logrt[", 6))
+	if (0 == strncmp(key, "log[", 4) || 0 == strncmp(key, "logrt[", 6) || 0 == strncmp(key, "log.count[", 10) ||
+			0 == strncmp(key, "logrt.count[", 12))
 		item_key = ZBX_KEY_LOG;
 	else if (0 == strncmp(key, "eventlog[", 9))
 		item_key = ZBX_KEY_EVENTLOG;
@@ -479,13 +481,14 @@ int	send_list_of_active_checks_json(zbx_socket_t *sock, struct zbx_json_parse *j
 	if (0 != itemids.values_num)
 	{
 		DC_ITEM		*dc_items;
-		int		*errcodes, now;
+		int		*errcodes, now, delay;
 		zbx_config_t	cfg;
 
 		dc_items = zbx_malloc(NULL, sizeof(DC_ITEM) * itemids.values_num);
 		errcodes = zbx_malloc(NULL, sizeof(int) * itemids.values_num);
 
-		DCconfig_get_items_by_itemids(dc_items, itemids.values, errcodes, itemids.values_num);
+		DCconfig_get_items_by_itemids(dc_items, itemids.values, errcodes, itemids.values_num,
+				ZBX_FLAG_ITEM_FIELDS_DEFAULT);
 		zbx_config_get(&cfg, ZBX_CONFIG_FLAGS_REFRESH_UNSUPPORTED);
 
 		now = time(NULL);
@@ -514,6 +517,9 @@ int	send_list_of_active_checks_json(zbx_socket_t *sock, struct zbx_json_parse *j
 					continue;
 			}
 
+			if (SUCCEED != zbx_interval_preproc(dc_items[i].delay, &delay, NULL, NULL))
+				continue;
+
 			dc_items[i].key = zbx_strdup(dc_items[i].key, dc_items[i].key_orig);
 			substitute_key_macros(&dc_items[i].key, NULL, &dc_items[i], NULL, MACRO_TYPE_ITEM_KEY, NULL, 0);
 
@@ -524,7 +530,7 @@ int	send_list_of_active_checks_json(zbx_socket_t *sock, struct zbx_json_parse *j
 				zbx_json_addstring(&json, ZBX_PROTO_TAG_KEY_ORIG,
 						dc_items[i].key_orig, ZBX_JSON_TYPE_STRING);
 			}
-			zbx_json_adduint64(&json, ZBX_PROTO_TAG_DELAY, dc_items[i].delay);
+			zbx_json_adduint64(&json, ZBX_PROTO_TAG_DELAY, delay);
 			/* The agent expects ALWAYS to have lastlogsize and mtime tags. */
 			/* Removing those would cause older agents to fail. */
 			zbx_json_adduint64(&json, ZBX_PROTO_TAG_LASTLOGSIZE, dc_items[i].lastlogsize);

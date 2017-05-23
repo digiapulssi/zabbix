@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,24 +135,6 @@ function itemValueTypeString($valueType) {
 	return _('Unknown');
 }
 
-function item_data_type2str($type = null) {
-	$types = [
-		ITEM_DATA_TYPE_BOOLEAN => _('Boolean'),
-		ITEM_DATA_TYPE_OCTAL => _('Octal'),
-		ITEM_DATA_TYPE_DECIMAL => _('Decimal'),
-		ITEM_DATA_TYPE_HEXADECIMAL => _('Hexadecimal')
-	];
-	if (is_null($type)) {
-		return $types;
-	}
-	elseif (isset($types[$type])) {
-		return $types[$type];
-	}
-	else {
-		return _('Unknown');
-	}
-}
-
 function item_status2str($type = null) {
 	if (is_null($type)) {
 		return [ITEM_STATUS_ACTIVE => _('Enabled'), ITEM_STATUS_DISABLED => _('Disabled')];
@@ -222,6 +204,101 @@ function itemIndicatorStyle($status, $state = null) {
 	}
 
 	return ZBX_STYLE_RED;
+}
+
+/**
+ * Order items by keep history.
+ *
+ * @param array  $items
+ * @param string $items['history']
+ * @param string $sortorder
+ */
+function orderItemsByHistory(array &$items, $sortorder){
+	$simple_interval_parser = new CSimpleIntervalParser();
+
+	foreach ($items as &$item) {
+		$item['history_sort'] = ($simple_interval_parser->parse($item['history']) == CParser::PARSE_SUCCESS)
+			? timeUnitToSeconds($item['history'])
+			: $item['history'];
+	}
+	unset($item);
+
+	order_result($items, 'history_sort', $sortorder);
+
+	foreach ($items as &$item) {
+		unset($item['history_sort']);
+	}
+	unset($item);
+}
+
+/**
+ * Order items by keep trends.
+ *
+ * @param array  $items
+ * @param int    $items['value_type']
+ * @param string $items['trends']
+ * @param string $sortorder
+ */
+function orderItemsByTrends(array &$items, $sortorder){
+	$simple_interval_parser = new CSimpleIntervalParser();
+
+	foreach ($items as &$item) {
+		if (in_array($item['value_type'], [ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG, ITEM_VALUE_TYPE_TEXT])) {
+			$item['trends_sort'] = '';
+		}
+		else {
+			$item['trends_sort'] = ($simple_interval_parser->parse($item['trends']) == CParser::PARSE_SUCCESS)
+				? timeUnitToSeconds($item['trends'])
+				: $item['trends'];
+		}
+	}
+	unset($item);
+
+	order_result($items, 'trends_sort', $sortorder);
+
+	foreach ($items as &$item) {
+		unset($item['trends_sort']);
+	}
+	unset($item);
+}
+
+/**
+ * Order items by update interval.
+ *
+ * @param array  $items
+ * @param int    $items['type']
+ * @param string $items['delay']
+ * @param string $sortorder
+ * @param array  $options
+ * @param bool   $options['usermacros']
+ * @param bool   $options['lldmacros']
+ */
+function orderItemsByDelay(array &$items, $sortorder, array $options){
+	$update_interval_parser = new CUpdateIntervalParser($options);
+
+	foreach ($items as &$item) {
+		if ($item['type'] == ITEM_TYPE_TRAPPER || $item['type'] == ITEM_TYPE_SNMPTRAP) {
+			$item['delay_sort'] = '';
+		}
+		elseif ($update_interval_parser->parse($item['delay']) == CParser::PARSE_SUCCESS) {
+			$item['delay_sort'] = $update_interval_parser->getDelay();
+
+			if ($item['delay_sort'][0] !== '{') {
+				$item['delay_sort'] = timeUnitToSeconds($item['delay_sort']);
+			}
+		}
+		else {
+			$item['delay_sort'] = $item['delay'];
+		}
+	}
+	unset($item);
+
+	order_result($items, 'delay_sort', $sortorder);
+
+	foreach ($items as &$item) {
+		unset($item['delay_sort']);
+	}
+	unset($item);
 }
 
 /**
@@ -311,15 +388,14 @@ function itemTypeInterface($type = null) {
  */
 function copyItemsToHosts($src_itemids, $dst_hostids) {
 	$items = API::Item()->get([
-		'output' => [
-			'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history', 'trends', 'status', 'value_type',
-			'trapper_hosts', 'units', 'multiplier', 'delta', 'snmpv3_contextname', 'snmpv3_securityname',
-			'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol',
-			'snmpv3_privpassphrase', 'formula', 'logtimefmt', 'valuemapid', 'delay_flex', 'params', 'ipmi_sensor',
-			'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey', 'flags', 'port',
-			'description', 'inventory_link'
+		'output' => ['type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history', 'trends', 'status',
+			'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname', 'snmpv3_securitylevel',
+			'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol', 'snmpv3_privpassphrase',
+			'logtimefmt', 'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username', 'password', 'publickey',
+			'privatekey', 'flags', 'port', 'description', 'inventory_link'
 		],
 		'selectApplications' => ['applicationid'],
+		'selectPreprocessing' => ['type', 'params'],
 		'itemids' => $src_itemids
 	]);
 
@@ -380,18 +456,17 @@ function copyItemsToHosts($src_itemids, $dst_hostids) {
 
 function copyItems($srcHostId, $dstHostId) {
 	$srcItems = API::Item()->get([
-		'hostids' => $srcHostId,
-		'output' => [
-			'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history', 'trends', 'status', 'value_type',
-			'trapper_hosts', 'units', 'multiplier', 'delta', 'snmpv3_contextname', 'snmpv3_securityname',
-			'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol',
-			'snmpv3_privpassphrase', 'formula', 'logtimefmt', 'valuemapid', 'delay_flex', 'params', 'ipmi_sensor',
-			'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey', 'flags', 'port',
-			'description', 'inventory_link'
+		'output' => ['type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history', 'trends', 'status',
+			'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname', 'snmpv3_securitylevel',
+			'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol', 'snmpv3_privpassphrase',
+			'logtimefmt', 'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username', 'password', 'publickey',
+			'privatekey', 'flags', 'port',	'description', 'inventory_link'
 		],
+		'selectApplications' => ['applicationid'],
+		'selectPreprocessing' => ['type', 'params'],
+		'hostids' => $srcHostId,
 		'inherited' => false,
-		'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
-		'selectApplications' => ['applicationid']
+		'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
 	]);
 	$dstHosts = API::Host()->get([
 		'output' => ['hostid', 'host', 'status'],
@@ -419,6 +494,10 @@ function copyItems($srcHostId, $dstHostId) {
 		unset($srcItem['templateid']);
 		$srcItem['hostid'] = $dstHostId;
 		$srcItem['applications'] = get_same_applications_for_host(zbx_objectValues($srcItem['applications'], 'applicationid'), $dstHostId);
+
+		if (!$srcItem['preprocessing']) {
+			unset($srcItem['preprocessing']);
+		}
 	}
 	unset($srcItem);
 
@@ -466,11 +545,11 @@ function get_item_by_itemid($itemid) {
 function get_item_by_itemid_limited($itemid) {
 	$row = DBfetch(DBselect(
 		'SELECT i.itemid,i.interfaceid,i.name,i.key_,i.hostid,i.delay,i.history,i.status,i.type,i.lifetime,'.
-			'i.snmp_community,i.snmp_oid,i.value_type,i.data_type,i.trapper_hosts,i.port,i.units,i.multiplier,'.
-			'i.delta,i.snmpv3_contextname,i.snmpv3_securityname,i.snmpv3_securitylevel,i.snmpv3_authprotocol,'.
-			'i.snmpv3_authpassphrase,i.snmpv3_privprotocol,i.snmpv3_privpassphrase,i.formula,i.trends,i.logtimefmt,'.
-			'i.valuemapid,i.delay_flex,i.params,i.ipmi_sensor,i.templateid,i.authtype,i.username,i.password,'.
-			'i.publickey,i.privatekey,i.flags,i.description,i.inventory_link'.
+			'i.snmp_community,i.snmp_oid,i.value_type,i.trapper_hosts,i.port,i.units,i.snmpv3_contextname,'.
+			'i.snmpv3_securityname,i.snmpv3_securitylevel,i.snmpv3_authprotocol,i.snmpv3_authpassphrase,'.
+			'i.snmpv3_privprotocol,i.snmpv3_privpassphrase,i.trends,i.logtimefmt,i.valuemapid,i.params,i.ipmi_sensor,'.
+			'i.templateid,i.authtype,i.username,i.password,i.publickey,i.privatekey,i.flags,i.description,'.
+			'i.inventory_link'.
 		' FROM items i'.
 		' WHERE i.itemid='.zbx_dbstr($itemid)));
 	if ($row) {
@@ -738,10 +817,14 @@ function getItemDataOverviewCells($tableRow, $ithosts, $hostName) {
 			// Display event acknowledgement.
 			$config = select_config();
 			if ($config['event_ack_enable']) {
-				$ack = get_last_event_by_triggerid($item['triggerid']);
-				$ack = ($ack['acknowledged'] == 1)
-					? [SPACE, (new CSpan())->addClass(ZBX_STYLE_ICON_ACKN)]
-					: null;
+				$ack = getTriggerLastProblems([$item['triggerid']], ['acknowledged']);
+
+				if ($ack) {
+					$ack = reset($ack);
+					$ack = ($ack['acknowledged'] == 1)
+						? [SPACE, (new CSpan())->addClass(ZBX_STYLE_ICON_ACKN)]
+						: null;
+				}
 			}
 		}
 
@@ -1051,6 +1134,8 @@ function checkTimePeriod($period, $now) {
  * @return string
  */
 function getItemDelay($delay, array $flexible_intervals) {
+	$delay = timeUnitToSeconds($delay);
+
 	if ($delay != 0 || !$flexible_intervals) {
 		return $delay;
 	}
@@ -1059,7 +1144,7 @@ function getItemDelay($delay, array $flexible_intervals) {
 
 	foreach ($flexible_intervals as $flexible_interval) {
 		$flexible_interval_parts = explode('/', $flexible_interval);
-		$flexible_delay = (int) $flexible_interval_parts[0];
+		$flexible_delay = timeUnitToSeconds($flexible_interval_parts[0]);
 
 		$min_delay = min($min_delay, $flexible_delay);
 	}
@@ -1292,6 +1377,88 @@ function getParamFieldLabelByType($itemType) {
 			return _('Formula');
 		default:
 			return 'params';
+	}
+}
+
+/**
+ * Get either one or all item preprocessing types. If grouped set to true, returns group labels. Returns empty string if
+ * no specific type is found.
+ *
+ * Usage examples:
+ *    - get_preprocessing_types()              Returns array as defined.
+ *    - get_preprocessing_types(4)             Returns string: 'Trim'.
+ *    - get_preprocessing_types(<wrong type>)  Returns an empty string: ''.
+ *    - get_preprocessing_types(null, false)   Returns subarrays in one array maintaining index:
+ *                                               [5] => Regular expression
+ *                                               [4] => Trim
+ *                                               [2] => Right trim
+ *                                               [3] => Left trim
+ *                                               [1] => Custom multiplier
+ *                                               [9] => Simple change
+ *                                               [10] => Speed per second
+ *                                               [6] => Boolean to decimal
+ *                                               [7] => Octal to decimal
+ *                                               [8] => Hexadecimal to decimal
+ *
+ * @param int  $type     Item preprocessing type.
+ * @param bool $grouped  Group label flag.
+ *
+ * @return mixed
+ */
+function get_preprocessing_types($type = null, $grouped = true) {
+	$groups = [
+		[
+			'label' => _('Text'),
+			'types' => [
+				ZBX_PREPROC_REGSUB => _('Regular expression'),
+				ZBX_PREPROC_TRIM => _('Trim'),
+				ZBX_PREPROC_RTRIM => _('Right trim'),
+				ZBX_PREPROC_LTRIM => _('Left trim')
+			]
+		],
+		[
+			'label' => _('Arithmetic'),
+			'types' => [
+				ZBX_PREPROC_MULTIPLIER => _('Custom multiplier')
+			]
+		],
+		[
+			'label' => _x('Change', 'noun'),
+			'types' => [
+				ZBX_PREPROC_DELTA_VALUE => _('Simple change'),
+				ZBX_PREPROC_DELTA_SPEED => _('Change per second')
+			]
+		],
+		[
+			'label' => _('Numeral systems'),
+			'types' => [
+				ZBX_PREPROC_BOOL2DEC => _('Boolean to decimal'),
+				ZBX_PREPROC_OCT2DEC => _('Octal to decimal'),
+				ZBX_PREPROC_HEX2DEC => _('Hexadecimal to decimal')
+			]
+		]
+	];
+
+	if ($type !== null) {
+		foreach ($groups as $group) {
+			if (array_key_exists($type, $group['types'])) {
+				return $group['types'][$type];
+			}
+		}
+
+		return '';
+	}
+	elseif ($grouped) {
+		return $groups;
+	}
+	else {
+		$types = [];
+
+		foreach ($groups as $group) {
+			$types += $group['types'];
+		}
+
+		return $types;
 	}
 }
 

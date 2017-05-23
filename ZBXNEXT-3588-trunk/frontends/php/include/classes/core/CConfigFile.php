@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,8 +30,7 @@ class CConfigFile {
 		ZBX_DB_DB2 => true,
 		ZBX_DB_MYSQL => true,
 		ZBX_DB_ORACLE => true,
-		ZBX_DB_POSTGRESQL => true,
-		ZBX_DB_SQLITE3 => true
+		ZBX_DB_POSTGRESQL => true
 	];
 
 	public $configFile = null;

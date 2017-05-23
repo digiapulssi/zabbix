@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -87,9 +87,11 @@ foreach ($this->data['users'] as $user) {
 
 	// online time
 	if ($session['lastaccess']) {
-		$online_time = ($user['autologout'] == 0 || ZBX_USER_ONLINE_TIME < $user['autologout'])
+		$autologout = timeUnitToSeconds($user['autologout']);
+
+		$online_time = ($autologout == 0 || ZBX_USER_ONLINE_TIME < $autologout)
 			? ZBX_USER_ONLINE_TIME
-			: $user['autologout'];
+			: $autologout;
 
 		$online = ($session['status'] == ZBX_SESSION_ACTIVE && $user['users_status'] == GROUP_STATUS_ENABLED
 				&& ($session['lastaccess'] + $online_time) >= time())

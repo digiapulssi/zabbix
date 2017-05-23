@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -310,7 +310,7 @@ function createServiceMonitoringTree(array $services, array $slaData, $period, &
 }
 
 /**
- * Calculates the current IT service status based on it's child services.
+ * Calculates the current service status based on it's child services.
  *
  * The new statuses are written to the $services array in the "newStatus" property.
  *
@@ -380,7 +380,7 @@ function calculateItServiceStatusByTrigger($triggerStatus, $triggerValue, $trigg
 }
 
 /**
- * Updates the status of all IT services
+ * Updates the status of all services
  */
 function updateItServices() {
 	$servicesLinks = [];

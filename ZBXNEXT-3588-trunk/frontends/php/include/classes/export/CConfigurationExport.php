@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,26 +78,24 @@ class CConfigurationExport {
 		];
 
 		$this->dataFields = [
-			'item' => ['hostid', 'multiplier', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history',
-				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'delta', 'snmpv3_contextname',
-				'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase',
-				'snmpv3_privprotocol', 'snmpv3_privpassphrase', 'formula', 'valuemapid', 'delay_flex', 'params',
-				'ipmi_sensor', 'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey',
-				'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'logtimefmt'
+			'item' => ['hostid', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history', 'trends',
+				'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname',
+				'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol',
+				'snmpv3_privpassphrase', 'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username', 'password',
+				'publickey', 'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'logtimefmt'
 			],
 			'drule' => ['itemid', 'hostid', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history',
-				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'delta', 'snmpv3_contextname',
-				'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase',
-				'snmpv3_privprotocol', 'snmpv3_privpassphrase', 'formula', 'valuemapid', 'delay_flex', 'params',
-				'ipmi_sensor', 'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey',
-				'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'filter', 'lifetime'
+				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname',
+				'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol',
+				'snmpv3_privpassphrase', 'formula', 'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username',
+				'password', 'publickey', 'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags',
+				'filter', 'lifetime'
 			],
-			'item_prototype' => ['hostid', 'multiplier', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_',
-				'delay', 'history', 'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'delta',
-				'snmpv3_contextname', 'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authprotocol',
-				'snmpv3_authpassphrase', 'snmpv3_privprotocol', 'snmpv3_privpassphrase', 'formula', 'valuemapid',
-				'delay_flex', 'params', 'ipmi_sensor', 'data_type', 'authtype', 'username', 'password', 'publickey',
-				'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'logtimefmt'
+			'item_prototype' => ['hostid', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history',
+				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname',
+				'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol',
+				'snmpv3_privpassphrase', 'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username', 'password',
+				'publickey', 'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'logtimefmt'
 			]
 		];
 	}
@@ -417,6 +415,7 @@ class CConfigurationExport {
 		$items = API::Item()->get([
 			'output' => $this->dataFields['item'],
 			'selectApplications' => ['name', 'flags'],
+			'selectPreprocessing' => ['type', 'params'],
 			'hostids' => array_keys($hosts),
 			'inherited' => false,
 			'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
@@ -544,6 +543,7 @@ class CConfigurationExport {
 			'selectApplications' => ['name'],
 			'selectApplicationPrototypes' => ['name'],
 			'selectDiscoveryRule' => ['itemid'],
+			'selectPreprocessing' => ['type', 'params'],
 			'discoveryids' => zbx_objectValues($items, 'itemid'),
 			'inherited' => false,
 			'preservekeys' => true
@@ -677,8 +677,8 @@ class CConfigurationExport {
 				'headers', 'status', 'authentication', 'http_user', 'http_password', 'verify_peer', 'verify_host',
 				'ssl_cert_file', 'ssl_key_file', 'ssl_key_password'
 			],
-			'selectSteps' => ['no', 'name', 'url', 'posts', 'variables', 'headers', 'follow_redirects', 'retrieve_mode',
-				'timeout', 'required', 'status_codes'
+			'selectSteps' => ['no', 'name', 'url', 'query_fields', 'posts', 'variables', 'headers', 'follow_redirects',
+				'retrieve_mode', 'timeout', 'required', 'status_codes'
 			],
 			'hostids' => array_keys($hosts),
 			'inherited' => false,
@@ -953,6 +953,11 @@ class CConfigurationExport {
 	protected function gatherMaps(array $mapIds) {
 		$sysmaps = API::Map()->get([
 			'sysmapids' => $mapIds,
+			'selectShapes' => ['type', 'x', 'y', 'width', 'height', 'text', 'font', 'font_size', 'font_color',
+				'text_halign', 'text_valign', 'border_type', 'border_width', 'border_color', 'background_color',
+				'zindex'
+			],
+			'selectLines' => ['x1', 'x2', 'y1', 'y2', 'line_type', 'line_width', 'line_color', 'zindex'],
 			'selectSelements' => API_OUTPUT_EXTEND,
 			'selectLinks' => API_OUTPUT_EXTEND,
 			'selectIconMap' => API_OUTPUT_EXTEND,
@@ -1145,19 +1150,21 @@ class CConfigurationExport {
 			foreach ($sysmap['selements'] as $selement) {
 				switch ($selement['elementtype']) {
 					case SYSMAP_ELEMENT_TYPE_MAP:
-						$sysmapIds[$selement['elementid']] = $selement['elementid'];
+						$sysmapIds[$selement['elements'][0]['sysmapid']] = $selement['elements'][0]['sysmapid'];
 						break;
 
 					case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
-						$groupIds[$selement['elementid']] = $selement['elementid'];
+						$groupIds[$selement['elements'][0]['groupid']] = $selement['elements'][0]['groupid'];
 						break;
 
 					case SYSMAP_ELEMENT_TYPE_HOST:
-						$hostIds[$selement['elementid']] = $selement['elementid'];
+						$hostIds[$selement['elements'][0]['hostid']] = $selement['elements'][0]['hostid'];
 						break;
 
 					case SYSMAP_ELEMENT_TYPE_TRIGGER:
-						$triggerIds[$selement['elementid']] = $selement['elementid'];
+						foreach ($selement['elements'] as $element) {
+							$triggerIds[$element['triggerid']] = $element['triggerid'];
+						}
 						break;
 				}
 
@@ -1206,16 +1213,19 @@ class CConfigurationExport {
 			foreach ($sysmap['selements'] as &$selement) {
 				switch ($selement['elementtype']) {
 					case SYSMAP_ELEMENT_TYPE_MAP:
-						$selement['elementid'] = $sysmaps[$selement['elementid']];
+						$selement['elements'] = [$sysmaps[$selement['elements'][0]['sysmapid']]];
 						break;
 					case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
-						$selement['elementid'] = $groups[$selement['elementid']];
+						$selement['elements'] = [$groups[$selement['elements'][0]['groupid']]];
 						break;
 					case SYSMAP_ELEMENT_TYPE_HOST:
-						$selement['elementid'] = $hosts[$selement['elementid']];
+						$selement['elements'] = [$hosts[$selement['elements'][0]['hostid']]];
 						break;
 					case SYSMAP_ELEMENT_TYPE_TRIGGER:
-						$selement['elementid'] = $triggers[$selement['elementid']];
+						foreach ($selement['elements'] as &$element) {
+							$element = $triggers[$element['triggerid']];
+						}
+						unset($element);
 						break;
 				}
 

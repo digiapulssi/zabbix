@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -637,9 +637,11 @@ abstract class CHostGeneral extends CHostBase {
 							' WHERE '.dbConditionInt('ia.applicationid', $applicationids).
 						')'
 				));
-				$result = API::Application()->delete(zbx_objectValues($applications, 'applicationid'), true);
-				if (!$result) {
-					self::exception(ZBX_API_ERROR_INTERNAL, _('Cannot unlink and clear applications.'));
+				if ($applications) {
+					$result = API::Application()->delete(zbx_objectValues($applications, 'applicationid'), true);
+					if (!$result) {
+						self::exception(ZBX_API_ERROR_INTERNAL, _('Cannot unlink and clear applications.'));
+					}
 				}
 			}
 			else {

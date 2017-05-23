@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,16 +61,12 @@ $triggerDOFormList = (new CFormList())
 	->addRow(_('Display OK triggers for'), [
 		(new CTextBox('ok_period', $data['ok_period']))
 			->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
-			->setAttribute('maxlength', '6'),
-		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-		_('seconds')
+			->setAttribute('maxlength', '6')
 	])
 	->addRow(_('On status change triggers blink for'), [
 		(new CTextBox('blink_period', $data['blink_period']))
 			->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
-			->setAttribute('maxlength', '6'),
-		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-		_('seconds')
+			->setAttribute('maxlength', '6')
 	]);
 
 $severityForm = (new CForm())

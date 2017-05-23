@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -402,8 +402,10 @@ class CTrigger extends CTriggerGeneral {
 		if (!is_null($options['only_true'])) {
 			$config = select_config();
 			$sqlParts['where']['ot'] = '((t.value='.TRIGGER_VALUE_TRUE.')'.
-					' OR '.
-					'((t.value='.TRIGGER_VALUE_FALSE.') AND (t.lastchange>'.(time() - $config['ok_period']).')))';
+				' OR ((t.value='.TRIGGER_VALUE_FALSE.')'.
+					' AND (t.lastchange>'.(time() - timeUnitToSeconds($config['ok_period'])).
+				'))'.
+			')';
 		}
 
 		// min_severity
@@ -534,6 +536,27 @@ class CTrigger extends CTriggerGeneral {
 		$db_triggers = [];
 
 		$this->validateUpdate($triggers, $db_triggers);
+
+		$validate_dependencies = [];
+		foreach ($triggers as $tnum => $trigger) {
+			$db_trigger = $db_triggers[$tnum];
+
+			$expressions_changed = ($trigger['expression'] !== $db_trigger['expression']
+				|| $trigger['recovery_expression'] !== $db_trigger['recovery_expression']);
+
+			if ($expressions_changed && $db_trigger['dependencies'] && !array_key_exists('dependencies', $trigger)) {
+				$validate_dependencies[] = [
+					'triggerid' => $trigger['triggerid'],
+					'dependencies' => zbx_objectValues($db_trigger['dependencies'], 'triggerid')
+				];
+			}
+		}
+
+		if ($validate_dependencies) {
+			$this->checkDependencies($validate_dependencies);
+			$this->checkDependencyParents($validate_dependencies);
+		}
+
 		$this->updateReal($triggers, $db_triggers);
 
 		foreach ($triggers as $trigger) {
@@ -633,9 +656,8 @@ class CTrigger extends CTriggerGeneral {
 	 * @param array $triggerIds
 	 */
 	protected function deleteByIds(array $triggerIds) {
-		DB::delete('sysmaps_elements', [
-			'elementid' => $triggerIds,
-			'elementtype' => SYSMAP_ELEMENT_TYPE_TRIGGER
+		DB::delete('sysmap_element_trigger', [
+			'triggerid' => $triggerIds
 		]);
 
 		// disable actions
@@ -1279,12 +1301,6 @@ class CTrigger extends CTriggerGeneral {
 				$maxNs = max(array_keys($events));
 				$result[$triggerId]['lastEvent'] = $events[$maxNs];
 			}
-
-			foreach ($lastEvents as $triggerId => $events) {
-				// find max 'ns' for each trigger and that will be the 'lastEvent'
-				$maxNs = max(array_keys($events));
-				$result[$triggerId]['lastEvent'] = $events[$maxNs];
-			}
 		}
 
 		return $result;
@@ -1525,7 +1541,7 @@ class CTrigger extends CTriggerGeneral {
 	}
 
 	/**
-	 * Returns true if at least one of the given triggers is used in IT services.
+	 * Returns true if at least one of the given triggers is used in services.
 	 *
 	 * @param array $triggerIds
 	 *

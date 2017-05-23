@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -438,7 +438,7 @@ function make_popup_eventlist($trigger, $backurl) {
 		$table->setHeader([_('Time'), _('Status'), _('Duration'), _('Age')]);
 	}
 
-	if ($trigger['lastEvent']) {
+	if (array_key_exists('lastEvent', $trigger)) {
 		$events = API::Event()->get([
 			'source' => EVENT_SOURCE_TRIGGERS,
 			'object' => EVENT_OBJECT_TRIGGER,

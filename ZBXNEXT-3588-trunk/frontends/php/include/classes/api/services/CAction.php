@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -234,6 +234,10 @@ class CAction extends CApiService {
 
 		// filter
 		if (is_array($options['filter'])) {
+			if (array_key_exists('esc_period', $options['filter']) && $options['filter']['esc_period'] !== null) {
+				$options['filter']['esc_period'] = getTimeUnitFilters($options['filter']['esc_period']);
+			}
+
 			$this->dbFilter('actions a', $options, $sqlParts);
 		}
 
@@ -1392,6 +1396,7 @@ class CAction extends CApiService {
 
 		$all_groupids = [];
 		$all_hostids = [];
+		$all_templateids = [];
 		$all_userids = [];
 		$all_usrgrpids = [];
 
@@ -1441,9 +1446,12 @@ class CAction extends CApiService {
 					}
 				}
 
-				if (array_key_exists('esc_period', $operation) && $operation['esc_period'] != 0
-						&& $operation['esc_period'] < SEC_PER_MIN) {
-					self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect action operation step duration.'));
+				if (array_key_exists('esc_period', $operation)
+						&& !validateTimeUnit($operation['esc_period'], SEC_PER_MIN, SEC_PER_WEEK, true, $error,
+							['usermacros' => true])) {
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('Incorrect value for field "%1$s": %2$s.', 'esc_period', $error)
+					);
 				}
 			}
 
@@ -1645,7 +1653,7 @@ class CAction extends CApiService {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _('Operation has no template to operate.'));
 					}
 
-					$all_hostids = array_merge($all_hostids, $templateids);
+					$all_templateids = array_merge($all_templateids, $templateids);
 					break;
 				case OPERATION_TYPE_HOST_ADD:
 				case OPERATION_TYPE_HOST_REMOVE:
@@ -1673,6 +1681,9 @@ class CAction extends CApiService {
 		));
 		$this->checkHostsPermissions($all_hostids,
 			_('Incorrect action operation host. Host does not exist or you have no access to this host.')
+		);
+		$this->checkTemplatesPermissions($all_templateids,
+			_('Incorrect action operation template. Template does not exist or you have no access to this template.')
 		);
 		$this->checkUsersPermissions($all_userids,
 			_('Incorrect action operation user. User does not exist or you have no access to this user.')
@@ -2323,6 +2334,7 @@ class CAction extends CApiService {
 		];
 
 		$duplicates = [];
+
 		foreach ($actions as $action) {
 			if (!check_db_fields($actionDbFields, $action)) {
 				self::exception(
@@ -2330,19 +2342,16 @@ class CAction extends CApiService {
 					_s('Incorrect parameter for action "%1$s".', $action['name'])
 				);
 			}
-			if (isset($action['esc_period']) && $action['esc_period'] < SEC_PER_MIN
-					&& $action['eventsource'] == EVENT_SOURCE_TRIGGERS) {
 
-				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
-					'Action "%1$s" has incorrect value for "esc_period" (minimum %2$s seconds).',
-					$action['name'], SEC_PER_MIN
-				));
-			}
 			if (isset($duplicates[$action['name']])) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Action "%1$s" already exists.', $action['name']));
 			}
 			else {
 				$duplicates[$action['name']] = $action['name'];
+			}
+
+			if (array_key_exists('esc_period', $action) && $action['eventsource'] == EVENT_SOURCE_TRIGGERS) {
+				self::validateStepDuration($action['esc_period']);
 			}
 		}
 
@@ -2434,6 +2443,21 @@ class CAction extends CApiService {
 	}
 
 	/**
+	 * Validate default step duration and operation step duration values.
+	 *
+	 * @param string $esc_period  Step duration.
+	 *
+	 * @throws APIException if the input is invalid.
+	 */
+	private static function validateStepDuration($esc_period) {
+		if (!validateTimeUnit($esc_period, SEC_PER_MIN, SEC_PER_WEEK, false, $error, ['usermacros' => true])) {
+			self::exception(ZBX_API_ERROR_PARAMETERS,
+				_s('Incorrect value for field "%1$s": %2$s.', 'esc_period', $error)
+			);
+		}
+	}
+
+	/**
 	 * Validate input given to action.update API call.
 	 *
 	 * @param array $actions
@@ -2456,6 +2480,7 @@ class CAction extends CApiService {
 
 		// check fields
 		$duplicates = [];
+
 		foreach ($actions as $action) {
 			$actionName = isset($action['name']) ? $action['name'] : $db_actions[$action['actionid']]['name'];
 
@@ -2466,14 +2491,9 @@ class CAction extends CApiService {
 			}
 
 			// check if user changed esc_period for trigger eventsource
-			if (isset($action['esc_period'])
-					&& $action['esc_period'] < SEC_PER_MIN
+			if (array_key_exists('esc_period', $action)
 					&& $db_actions[$action['actionid']]['eventsource'] == EVENT_SOURCE_TRIGGERS) {
-
-				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
-					'Action "%1$s" has incorrect value for "esc_period" (minimum %2$s seconds).',
-					$actionName, SEC_PER_MIN
-				));
+				self::validateStepDuration($action['esc_period']);
 			}
 
 			$this->checkNoParameters(

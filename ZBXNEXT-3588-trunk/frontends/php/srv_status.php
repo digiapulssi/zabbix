@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ require_once dirname(__FILE__).'/include/config.inc.php';
 require_once dirname(__FILE__).'/include/triggers.inc.php';
 require_once dirname(__FILE__).'/include/services.inc.php';
 
-$page['title'] = _('IT services');
+$page['title'] = _('Services');
 $page['file'] = 'srv_status.php';
 
 define('ZBX_PAGE_DO_REFRESH', 1);
@@ -156,7 +156,7 @@ else {
 		}
 
 		$srv_wdgt = (new CWidget())
-			->setTitle(_('IT services'))
+			->setTitle(_('Services'))
 			->setControls((new CForm('get'))
 				->cleanItems()
 				->addVar('fullscreen', $_REQUEST['fullscreen'])

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1033,16 +1033,16 @@ class testFormAction extends CWebTest {
 			case 'Triggers':
 			case 'Internal':
 				$this->zbxTestTextPresent([
-						'Default operation step duration',	'(minimum 60 seconds)'
+						'Default operation step duration'
 				]);
 				$this->zbxTestAssertVisibleId('esc_period');
-				$this->zbxTestAssertAttribute('//input[@id=\'esc_period\']', 'maxlength', 6);
+				$this->zbxTestAssertAttribute('//input[@id=\'esc_period\']', 'maxlength', 255);
 				$this->zbxTestAssertAttribute('//input[@id=\'esc_period\']', 'size', 20);
-				$this->zbxTestAssertAttribute('//input[@id=\'esc_period\']', 'value', 3600);
+				$this->zbxTestAssertAttribute('//input[@id=\'esc_period\']', 'value', '1h');
 				break;
 			default:
 				$this->zbxTestTextNotPresent([
-						'Default operation step duration',	'(minimum 60 seconds)'
+						'Default operation step duration'
 				]);
 				$this->zbxTestAssertElementNotPresentId('esc_period');
 				break;
@@ -1054,12 +1054,12 @@ class testFormAction extends CWebTest {
 			case 'Triggers':
 			case 'Internal':
 				$this->zbxTestTextPresent([
-						'Steps', 'Start in', 'Duration (sec)'
+						'Steps', 'Start in', 'Duration'
 				]);
 				break;
 			default:
 				$this->zbxTestTextNotPresent([
-						'Steps', 'Start in', 'Duration (sec)'
+						'Steps', 'Start in', 'Duration'
 				]);
 				break;
 		}
@@ -1089,11 +1089,11 @@ class testFormAction extends CWebTest {
 					$this->zbxTestAssertAttribute('//input[@id=\'new_operation_esc_step_to\']', 'size', 20);
 					$this->zbxTestAssertAttribute('//input[@id=\'new_operation_esc_step_to\']', 'value', 1);
 
-					$this->zbxTestTextPresent (['Step duration', '(minimum 60 seconds, 0 - use action default)']);
+					$this->zbxTestTextPresent (['Step duration', '(0 - use action default)']);
 					$this->zbxTestAssertVisibleId('new_operation_esc_period');
-					$this->zbxTestAssertAttribute('//input[@id=\'new_operation_esc_period\']', 'maxlength', 6);
+					$this->zbxTestAssertAttribute('//input[@id=\'new_operation_esc_period\']', 'maxlength', 255);
 					$this->zbxTestAssertAttribute('//input[@id=\'new_operation_esc_period\']', 'size', 20);
-					$this->zbxTestAssertAttribute('//input[@id=\'new_operation_esc_period\']', 'value', 0);
+					$this->zbxTestAssertAttribute('//input[@id=\'new_operation_esc_period\']', 'value', '0');
 					break;
 				}
 			}
@@ -1620,7 +1620,12 @@ class testFormAction extends CWebTest {
 		$name = $data['name'];
 		$eventsource = $data['eventsource'];
 
-		$sqlActions = "SELECT * FROM actions ORDER BY actionid";
+		if ($name == 'Auto discovery. Linux servers.') {
+			$sqlActions = "SELECT actionid,name,eventsource,evaltype,status,def_shortdata,def_longdata,r_shortdata,r_longdata FROM actions ORDER BY actionid";
+		}
+		else {
+			$sqlActions = "SELECT * FROM actions ORDER BY actionid";
+		}
 		$oldHashActions = DBhash($sqlActions);
 
 		$this->zbxTestLogin('actionconf.php');
@@ -1927,7 +1932,9 @@ class testFormAction extends CWebTest {
 		if (isset($data['esc_period'])){
 			$this->zbxTestTabSwitch('Operations');
 			$this->zbxTestInputTypeOverwrite('esc_period', $data['esc_period']);
-			$this->zbxTestAssertElementValue('esc_period', $data['esc_period']);
+			$this->zbxTestWaitForPageToLoad();
+			$this->webDriver->findElement(WebDriverBy::id('search'))->click();
+			$this->zbxTestWaitForPageToLoad();
 		}
 
 		$this->zbxTestDoubleClickBeforeMessage('add', 'filter_name');
@@ -2024,8 +2031,7 @@ class testFormAction extends CWebTest {
 		$this->zbxTestTextPresent(['Target list', 'Target', 'Action']);
 		$this->zbxTestAssertElementPresentXpath("//div[@id='opCmdTargetObject']/input");
 
-		$this->zbxTestClickButtonText('Select');
-		$this->zbxTestSwitchToNewWindow();
+		$this->zbxTestClickAndSwitchToNewWindow("//button[text()='Select']");
 		$this->zbxTestClickLinkTextWait('Zabbix servers');
 		$this->zbxTestWaitWindowClose();
 		$this->zbxTestClickXpath('//*[@id="opcmdEditForm"]//button[@id="save"]');
@@ -2064,10 +2070,13 @@ class testFormAction extends CWebTest {
 		$this->zbxTestAssertElementText('//tr[@id="operations_2"]//td', '1 - 2');
 
 		$this->zbxTestInputTypeOverwrite('esc_period', '123');
+		$this->zbxTestWaitForPageToLoad();
+		$this->webDriver->findElement(WebDriverBy::id('search'))->click();
+		$this->zbxTestWaitForPageToLoad();
 		$this->zbxTestAssertElementValue('esc_period', '123');
 		$this->zbxTestDoubleClickXpath("//div[@id='operationTab']//button[contains(@onclick, 'new_operation')]", 'new_operation_esc_step_from');
 
-		$this->zbxTestClickWait('add');
+		$this->zbxTestDoubleClickBeforeMessage('add', 'filter_name');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Action added');
 
 		$sql = "SELECT actionid FROM actions WHERE name='action test'";

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -297,6 +297,12 @@ clean:
 	return ret;
 
 #else
+	ZBX_UNUSED(username);
+	ZBX_UNUSED(password);
+	ZBX_UNUSED(sendto);
+	ZBX_UNUSED(message);
+	ZBX_UNUSED(limit);
+
 	zbx_snprintf(error, max_error_len, "cURL library is required for Ez Texting support");
 	return FAIL;
 

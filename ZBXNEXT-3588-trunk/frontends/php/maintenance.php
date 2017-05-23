@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -528,6 +528,9 @@ else {
 
 	$options = [
 		'output' => ['maintenanceid', $sortField],
+		'search' => [
+			'name' => ($filter['name'] === '') ? null : $filter['name']
+		],
 		'editable' => true,
 		'sortfield' => $sortField,
 		'limit' => $config['search_limit'] + 1
@@ -551,10 +554,7 @@ else {
 
 	// get list of maintenances
 	$data['maintenances'] = API::Maintenance()->get([
-		'output' => API_OUTPUT_EXTEND,
-		'search' => [
-			'name' => ($filter['name'] === '') ? null : $filter['name']
-		],
+		'output' => ['maintenanceid', 'name', 'maintenance_type', 'active_since', 'active_till', 'description'],
 		'maintenanceids' => zbx_objectValues($data['maintenances'], 'maintenanceid')
 	]);
 

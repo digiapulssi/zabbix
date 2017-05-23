@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,6 +83,7 @@ class CItemPrototype extends CItemGeneral {
 			'selectTriggers'				=> null,
 			'selectGraphs'					=> null,
 			'selectDiscoveryRule'			=> null,
+			'selectPreprocessing'			=> null,
 			'countOutput'					=> null,
 			'groupCount'					=> null,
 			'preservekeys'					=> null,
@@ -214,6 +215,19 @@ class CItemPrototype extends CItemGeneral {
 
 // --- FILTER ---
 		if (is_array($options['filter'])) {
+			if (array_key_exists('delay', $options['filter']) && $options['filter']['delay'] !== null) {
+				$sqlParts['where'][] = makeUpdateIntervalFilter('i.delay', $options['filter']['delay']);
+				unset($options['filter']['delay']);
+			}
+
+			if (array_key_exists('history', $options['filter']) && $options['filter']['history'] !== null) {
+				$options['filter']['history'] = getTimeUnitFilters($options['filter']['history']);
+			}
+
+			if (array_key_exists('trends', $options['filter']) && $options['filter']['trends'] !== null) {
+				$options['filter']['trends'] = getTimeUnitFilters($options['filter']['trends']);
+			}
+
 			$this->dbFilter('items i', $options, $sqlParts);
 
 			if (isset($options['filter']['host'])) {
@@ -277,11 +291,6 @@ class CItemPrototype extends CItemGeneral {
 		// set proper flags to divide normal and discovered items in future processing
 		foreach ($items as &$item) {
 			$item['flags'] = ZBX_FLAG_DISCOVERY_PROTOTYPE;
-
-			// set default formula value
-			if (!$update && !isset($item['formula'])) {
-				$item['formula'] = '1';
-			}
 
 			if (array_key_exists('applicationPrototypes', $item) && is_array($item['applicationPrototypes'])
 					&& $item['applicationPrototypes']) {
@@ -419,6 +428,8 @@ class CItemPrototype extends CItemGeneral {
 		if ($item_application_prototypes) {
 			DB::insert('item_application_prototype', $item_application_prototypes);
 		}
+
+		$this->createItemPreprocessing($items);
 
 // TODO: REMOVE info
 		$itemHosts = $this->get([
@@ -660,6 +671,8 @@ class CItemPrototype extends CItemGeneral {
 			$this->deleteApplicationPrototypes(array_keys($application_prototypes_to_remove));
 		}
 
+		$this->updateItemPreprocessing($items);
+
 // TODO: REMOVE info
 		$itemHosts = $this->get([
 			'itemids' => $itemids,
@@ -852,9 +865,15 @@ class CItemPrototype extends CItemGeneral {
 				' WHERE '.dbConditionInt('ad.application_prototypeid', $application_prototypeids)
 			));
 
-			DB::delete('application_prototype', [
-				'application_prototypeid' => zbx_objectValues($db_application_prototypes, 'application_prototypeid')
+			$db_application_prototypeids = zbx_objectValues($db_application_prototypes, 'application_prototypeid');
+
+			// unlink templated application prototype
+			DB::update('application_prototype', [
+				'values' => ['templateid' => null],
+				'where' => ['templateid' => $db_application_prototypeids]
 			]);
+
+			DB::delete('application_prototype', ['application_prototypeid' => $db_application_prototypeids]);
 
 			/*
 			 * Deleting an application prototype will automatically delete the link in 'item_application_prototype',
@@ -896,6 +915,7 @@ class CItemPrototype extends CItemGeneral {
 			'output' => $selectFields,
 			'selectApplications' => ['applicationid'],
 			'selectApplicationPrototypes' => ['name'],
+			'selectPreprocessing' => ['type', 'params'],
 			'hostids' => $data['templateids'],
 			'preservekeys' => true
 		]);
@@ -907,6 +927,36 @@ class CItemPrototype extends CItemGeneral {
 		$this->inherit($items, $data['hostids']);
 
 		return true;
+	}
+
+	/**
+	 * Check item prototype specific fields:
+	 *		- validate history and trends using simple interval parser, user macro parser and lld macro parser;
+	 *		- validate item preprocessing.
+	 *
+	 * @param array  $item    An array of single item data.
+	 * @param string $method  A string of "create" or "update" method.
+	 *
+	 * @throws APIException if the input is invalid.
+	 */
+	protected function checkSpecificFields(array $item, $method) {
+		if (array_key_exists('history', $item)
+				&& !validateTimeUnit($item['history'], SEC_PER_HOUR, 25 * SEC_PER_YEAR, true, $error,
+					['usermacros' => true, 'lldmacros' => true])) {
+			self::exception(ZBX_API_ERROR_PARAMETERS,
+				_s('Incorrect value for field "%1$s": %2$s.', 'history', $error)
+			);
+		}
+
+		if (array_key_exists('trends', $item)
+				&& !validateTimeUnit($item['trends'], SEC_PER_DAY, 25 * SEC_PER_YEAR, true, $error,
+					['usermacros' => true, 'lldmacros' => true])) {
+			self::exception(ZBX_API_ERROR_PARAMETERS,
+				_s('Incorrect value for field "%1$s": %2$s.', 'trends', $error)
+			);
+		}
+
+		$this->validateItemPreprocessing($item, $method);
 	}
 
 	protected function inherit(array $items, array $hostids = null) {
@@ -1105,6 +1155,29 @@ class CItemPrototype extends CItemGeneral {
 				'preservekeys' => true
 			]);
 			$result = $relationMap->mapOne($result, $discoveryRules, 'discoveryRule');
+		}
+
+		if ($options['selectPreprocessing'] !== null && $options['selectPreprocessing'] != API_OUTPUT_COUNT) {
+			$db_item_preproc = API::getApiService()->select('item_preproc', [
+				'output' => $this->outputExtend($options['selectPreprocessing'], ['itemid', 'step']),
+				'filter' => ['itemid' => array_keys($result)],
+			]);
+
+			CArrayHelper::sort($db_item_preproc, ['step']);
+
+			foreach ($result as &$item) {
+				$item['preprocessing'] = [];
+			}
+			unset($item);
+
+			foreach ($db_item_preproc as $step) {
+				$itemid = $step['itemid'];
+				unset($step['item_preprocid'], $step['itemid'], $step['step']);
+
+				if (array_key_exists($itemid, $result)) {
+					$result[$itemid]['preprocessing'][] = $step;
+				}
+			}
 		}
 
 		return $result;

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -565,8 +565,11 @@ function show_color_picker(id) {
 		return;
 	}
 
-	curr_lbl = document.getElementById('lbl_' + id);
 	curr_txt = document.getElementById(id);
+	if (curr_txt.hasAttribute('disabled')) {
+		return;
+	}
+	curr_lbl = document.getElementById('lbl_' + id);
 	var pos = getPosition(curr_lbl);
 	color_picker.x = pos.left;
 	color_picker.y = pos.top;
@@ -588,9 +591,16 @@ function create_color_picker() {
 }
 
 function set_color(color) {
+	var background = color;
+
 	if (curr_lbl) {
-		curr_lbl.style.background = curr_lbl.style.color = '#' + color;
-		curr_lbl.title = '#' + color;
+		if (color.trim() !== '') {
+			background = '#' + color;
+		}
+
+		curr_lbl.style.color = background;
+		curr_lbl.style.background = background;
+		curr_lbl.title = background;
 	}
 	if (curr_txt) {
 		curr_txt.value = color.toString().toUpperCase();

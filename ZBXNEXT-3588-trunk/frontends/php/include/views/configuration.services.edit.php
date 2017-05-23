@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ include('include/views/js/configuration.services.edit.js.php');
 
 $service = $this->data['service'];
 
-$widget = (new CWidget())->setTitle(_('IT services'));
+$widget = (new CWidget())->setTitle(_('Services'));
 
 // create form
 $servicesForm = (new CForm())
@@ -48,7 +48,7 @@ $servicesFormList = (new CFormList('servicesFormList'))
 $servicesFormList->addRow(_('Parent service'), [
 	(new CTextBox('parent_name', $this->data['parentname'], true, 128))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH),
 	(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-	(new CButton('select_parent', _('Change')))
+	(new CButton('select_parent', _x('Change', 'verb')))
 		->addClass(ZBX_STYLE_BTN_GREY)
 		->onClick(
 			"javascript: openWinCentered('services.php?pservices=1".url_param('serviceid')."', ".

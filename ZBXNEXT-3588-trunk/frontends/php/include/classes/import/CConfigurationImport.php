@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ class CConfigurationImport {
 			'hosts' => ['updateExisting' => false, 'createMissing' => false],
 			'templates' => ['updateExisting' => false, 'createMissing' => false],
 			'templateScreens' => ['updateExisting' => false, 'createMissing' => false, 'deleteMissing' => false],
-			'applications' => ['updateExisting' => false, 'createMissing' => false],
+			'applications' => ['createMissing' => false, 'deleteMissing' => false],
 			'templateLinkage' => ['createMissing' => false],
 			'items' => ['updateExisting' => false, 'createMissing' => false, 'deleteMissing' => false],
 			'discoveryRules' => ['updateExisting' => false, 'createMissing' => false, 'deleteMissing' => false],
@@ -342,20 +342,21 @@ class CConfigurationImport {
 				foreach ($map['selements'] as $selement) {
 					switch ($selement['elementtype']) {
 						case SYSMAP_ELEMENT_TYPE_MAP:
-							$mapsRefs[$selement['element']['name']] = $selement['element']['name'];
+							$mapsRefs[$selement['elements'][0]['name']] = $selement['elements'][0]['name'];
 							break;
 
 						case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
-							$groupsRefs[$selement['element']['name']] = $selement['element']['name'];
+							$groupsRefs[$selement['elements'][0]['name']] = $selement['elements'][0]['name'];
 							break;
 
 						case SYSMAP_ELEMENT_TYPE_HOST:
-							$hostsRefs[$selement['element']['host']] = $selement['element']['host'];
+							$hostsRefs[$selement['elements'][0]['host']] = $selement['elements'][0]['host'];
 							break;
 
 						case SYSMAP_ELEMENT_TYPE_TRIGGER:
-							$el = $selement['element'];
-							$triggersRefs[$el['description']][$el['expression']][$el['recovery_expression']] = true;
+							foreach ($selement['elements'] as $element) {
+								$triggersRefs[$element['description']][$element['expression']][$element['recovery_expression']] = true;
+							}
 							break;
 					}
 				}

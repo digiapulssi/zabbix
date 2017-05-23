@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,17 +52,7 @@ class CControllerScriptDelete extends CController {
 	protected function doAction() {
 		$scriptids = $this->getInput('scriptids');
 
-		DBstart();
-
-		$result = API::Script()->delete($scriptids);
-
-		if ($result) {
-			foreach ($scriptids as $scriptid) {
-				add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_SCRIPT, _('Script').' ['.$scriptid.']');
-			}
-		}
-
-		$result = DBend($result);
+		$result = (bool) API::Script()->delete($scriptids);
 
 		$deleted = count($scriptids);
 

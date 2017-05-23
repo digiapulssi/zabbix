@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -300,7 +300,7 @@ class CNewValidator {
 		}
 
 		// between INT_MIN and INT_MAX
-		return (bccomp($value, '-2147483648') >= 0 && bccomp($value, '2147483647') <= 0);
+		return (bccomp($value, ZBX_MIN_INT32) >= 0 && bccomp($value, ZBX_MAX_INT32) <= 0);
 	}
 
 	public static function is_uint64($value) {

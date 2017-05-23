@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ $graph_in = new CScreenBase([
 ]);
 
 $items = DBfetchArray(DBselect(
-	'SELECT i.itemid,i.value_type,i.history,i.trends'.
+	'SELECT i.itemid,i.value_type,i.history,i.trends,i.hostid'.
 	' FROM items i,httpstepitem hi,httpstep hs'.
 	' WHERE i.itemid=hi.itemid'.
 		' AND hi.httpstepid=hs.httpstepid'.
@@ -176,7 +176,7 @@ $graph_time = new CScreenBase([
 $url = (new CUrl('chart3.php'))
 	->setArgument('height', 150)
 	->setArgument('name', $http_test_name.': '._('Response time'))
-	->setArgument('http_item_type', HTTPSTEP_ITEM_TYPE_IN)
+	->setArgument('http_item_type', HTTPSTEP_ITEM_TYPE_TIME)
 	->setArgument('httptestid', $httptest['httptestid'])
 	->setArgument('graphtype', GRAPH_TYPE_STACKED)
 	->setArgument('period', $graph_time->timeline['period'])

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ $itemFormList->addRow(
 // append hosts to form list
 if ($this->data['displayInterfaces']) {
 	$interfacesComboBox = new CComboBox('interfaceid', $this->data['interfaceid']);
-	$interfacesComboBox->addItem(new CComboItem(0, '', null, false));
+	$interfacesComboBox->addItem(new CComboItem(0, '', false, false));
 
 	// set up interface groups
 	$interfaceGroups = [];
@@ -58,8 +58,10 @@ if ($this->data['displayInterfaces']) {
 	foreach ($this->data['hosts']['interfaces'] as $interface) {
 		$option = new CComboItem(
 			$interface['interfaceid'],
-			$interface['useip'] ? $interface['ip'].' : '.$interface['port'] : $interface['dns'].' : '.$interface['port'],
-			$interface['interfaceid'] == $this->data['interfaceid'] ? 'yes' : 'no'
+			$interface['useip']
+				? $interface['ip'].' : '.$interface['port']
+				: $interface['dns'].' : '.$interface['port'],
+			($interface['interfaceid'] == $this->data['interfaceid'])
 		);
 		$option->setAttribute('data-interfacetype', $interface['type']);
 		$interfaceGroups[$interface['type']]->addItem($option);
@@ -187,14 +189,6 @@ $itemFormList->addRow(
 	])
 );
 
-// append data type to form list
-$itemFormList->addRow(
-	(new CVisibilityBox('visible[data_type]', 'data_type', _('Original')))
-		->setLabel(_('Data type'))
-		->setChecked(isset($this->data['visible']['data_type'])),
-	new CComboBox('data_type', $this->data['data_type'], null, item_data_type2str())
-);
-
 // append units to form list
 $itemFormList->addRow(
 	(new CVisibilityBox('visible[units]', 'units', _('Original')))
@@ -246,88 +240,192 @@ $itemFormList->addRow(
 	(new CTextBox('password', $this->data['password']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 );
 
-// append formula to form list
-$itemFormList->addRow(
-	(new CVisibilityBox('visible[formula]', 'formula', _('Original')))
-		->setLabel(_('Custom multiplier').' (0 - '._('Disabled').')')
-		->setChecked(isset($this->data['visible']['formula'])),
-	(new CTextBox('formula', $this->data['formula']))
-		->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
-		->setAttribute('style', 'text-align: right;')
+// append item pre-processing
+$preprocessing = (new CTable())
+	->setId('preprocessing')
+	->setHeader([
+		'',
+		new CColHeader(_('Name')),
+		new CColHeader(_('Parameters')),
+		new CColHeader(null),
+		(new CColHeader(_('Action')))->setWidth(50)
+	]);
+
+foreach ($data['preprocessing'] as $i => $step) {
+	// Depeding on preprocessing type, display corresponding params field and placeholders.
+	$params = [];
+
+	// Use numeric box for multiplier, otherwise use text box.
+	if ($step['type'] == ZBX_PREPROC_MULTIPLIER) {
+		$params[] = (new CTextBox('preprocessing['.$i.'][params][0]',
+			array_key_exists('params', $step) ? $step['params'][0] : ''
+		))->setAttribute('placeholder', _('number'));
+	}
+	else {
+		$params[] = new CTextBox('preprocessing['.$i.'][params][0]',
+			array_key_exists('params', $step) ? $step['params'][0] : ''
+		);
+	}
+
+	// Create a secondary param text box, so it can be hidden if necessary.
+	$params[] = (new CTextBox('preprocessing['.$i.'][params][1]',
+		(array_key_exists('params', $step) && array_key_exists(1, $step['params']))
+			? $step['params'][1]
+			: ''
+	))->setAttribute('placeholder', _('output'));
+
+	// Add corresponding placeholders and show or hide text boxes.
+	switch ($step['type']) {
+		case ZBX_PREPROC_MULTIPLIER:
+			$params[1]->addStyle('display: none;');
+			break;
+
+		case ZBX_PREPROC_RTRIM:
+		case ZBX_PREPROC_LTRIM:
+		case ZBX_PREPROC_TRIM:
+			$params[0]->setAttribute('placeholder', _('list of characters'));
+			$params[1]->addStyle('display: none;');
+			break;
+
+		case ZBX_PREPROC_REGSUB:
+			$params[0]->setAttribute('placeholder', _('pattern'));
+				break;
+
+		case ZBX_PREPROC_BOOL2DEC:
+		case ZBX_PREPROC_OCT2DEC:
+		case ZBX_PREPROC_HEX2DEC:
+		case ZBX_PREPROC_DELTA_VALUE:
+		case ZBX_PREPROC_DELTA_SPEED:
+			$params[0]->addStyle('display: none;');
+			$params[1]->addStyle('display: none;');
+			break;
+	}
+
+	$preproc_types_cbbox = new CComboBox('preprocessing['.$i.'][type]', $step['type']);
+
+	foreach (get_preprocessing_types() as $group) {
+		$cb_group = new COptGroup($group['label']);
+
+		foreach ($group['types'] as $type => $label) {
+			$cb_group->addItem(new CComboItem($type, $label, ($type == $step['type'])));
+		}
+
+		$preproc_types_cbbox->addItem($cb_group);
+	}
+
+	$preprocessing->addRow(
+		(new CRow([
+			(new CCol((new CDiv())->addClass(ZBX_STYLE_DRAG_ICON)))->addClass(ZBX_STYLE_TD_DRAG_ICON),
+			$preproc_types_cbbox,
+			$params[0],
+			$params[1],
+			(new CButton('preprocessing['.$i.'][remove]', _('Remove')))
+				->addClass(ZBX_STYLE_BTN_LINK)
+				->addClass('element-table-remove')
+		]))->addClass('sortable')
+	);
+}
+
+$preprocessing->addRow(
+	(new CCol(
+		(new CButton('param_add', _('Add')))
+			->addClass(ZBX_STYLE_BTN_LINK)
+			->addClass('element-table-add')
+	))->setColSpan(5)
 );
 
-// append delay to form list
 $itemFormList->addRow(
-	(new CVisibilityBox('visible[delay]', 'delay', _('Original')))
-		->setLabel(_('Update interval (in sec)'))
-		->setChecked(isset($this->data['visible']['delay'])),
-	(new CNumericBox('delay', $this->data['delay'], 5))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+	(new CVisibilityBox('visible[preprocessing]', 'preprocessing_div', _('Original')))
+		->setLabel(_('Preprocessing steps'))
+		->setChecked(isset($this->data['visible']['preprocessing'])),
+	(new CDiv($preprocessing))
+		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+		->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_STANDARD_WIDTH.'px;')
+		->setId('preprocessing_div')
 );
 
-// Append delay_flex to form list.
-$delayFlexTable = (new CTable())
-	->setId('delayFlexTable')
-	->setHeader([_('Type'), _('Interval'), _('Period'), _('Action')])
-	->setAttribute('style', 'width: 100%;');
+$update_interval = (new CTable())
+	->setId('update_interval')
+	->addRow([_('Delay'),
+		(new CDiv((new CTextBox('delay', $data['delay']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)))
+	]);
+
+$custom_intervals = (new CTable())
+	->setId('custom_intervals')
+	->setHeader([
+		new CColHeader(_('Type')),
+		new CColHeader(_('Interval')),
+		new CColHeader(_('Period')),
+		(new CColHeader(_('Action')))->setWidth(50)
+	])
+	->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
+	->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_STANDARD_WIDTH.'px;');
 
 foreach ($data['delay_flex'] as $i => $delay_flex) {
 	$type_input = (new CRadioButtonList('delay_flex['.$i.'][type]', (int) $delay_flex['type']))
-		->addValue(_('Flexible'), ITEM_DELAY_FLEX_TYPE_FLEXIBLE)
-		->addValue(_('Scheduling'), ITEM_DELAY_FLEX_TYPE_SCHEDULING)
+		->addValue(_('Flexible'), ITEM_DELAY_FLEXIBLE)
+		->addValue(_('Scheduling'), ITEM_DELAY_SCHEDULING)
 		->setModern(true);
 
-	if ($delay_flex['type'] == ITEM_DELAY_FLEX_TYPE_FLEXIBLE) {
-		$delay_input = (new CNumericBox('delay_flex['.$i.'][delay]', $delay_flex['delay'], 5, false, true, false))
-			->setAttribute('placeholder', 50);
-		$period_input = (new CTextBox('delay_flex['.$i.'][period]', $delay_flex['period'], false, 255))
+	if ($delay_flex['type'] == ITEM_DELAY_FLEXIBLE) {
+		$delay_input = (new CTextBox('delay_flex['.$i.'][delay]', $delay_flex['delay']))
+			->setAttribute('placeholder', ZBX_ITEM_FLEXIBLE_DELAY_DEFAULT);
+		$period_input = (new CTextBox('delay_flex['.$i.'][period]', $delay_flex['period']))
 			->setAttribute('placeholder', ZBX_DEFAULT_INTERVAL);
-		$schedule_input = (new CTextBox('delay_flex['.$i.'][schedule]', '', false, 255))
-			->setAttribute('placeholder', 'wd1-5h9-18')
+		$schedule_input = (new CTextBox('delay_flex['.$i.'][schedule]'))
+			->setAttribute('placeholder', ZBX_ITEM_SCHEDULING_DEFAULT)
 			->setAttribute('style', 'display: none;');
 	}
 	else {
-		$delay_input = (new CNumericBox('delay_flex['.$i.'][delay]', '', 5, false, true, false))
-			->setAttribute('placeholder', 50)
+		$delay_input = (new CTextBox('delay_flex['.$i.'][delay]'))
+			->setAttribute('placeholder', ZBX_ITEM_FLEXIBLE_DELAY_DEFAULT)
 			->setAttribute('style', 'display: none;');
-		$period_input = (new CTextBox('delay_flex['.$i.'][period]', '', false, 255))
+		$period_input = (new CTextBox('delay_flex['.$i.'][period]'))
 			->setAttribute('placeholder', ZBX_DEFAULT_INTERVAL)
 			->setAttribute('style', 'display: none;');
-		$schedule_input = (new CTextBox('delay_flex['.$i.'][schedule]', $delay_flex['schedule'], false, 255))
-			->setAttribute('placeholder', 'wd1-5h9-18');
+		$schedule_input = (new CTextBox('delay_flex['.$i.'][schedule]', $delay_flex['schedule']))
+			->setAttribute('placeholder', ZBX_ITEM_SCHEDULING_DEFAULT);
 	}
 
 	$button = (new CButton('delay_flex['.$i.'][remove]', _('Remove')))
 		->addClass(ZBX_STYLE_BTN_LINK)
 		->addClass('element-table-remove');
 
-	$delayFlexTable->addRow([$type_input, [$delay_input, $schedule_input], $period_input, $button], 'form_row');
+	$custom_intervals->addRow([$type_input, [$delay_input, $schedule_input], $period_input, $button], 'form_row');
 }
 
-$delayFlexTable->addRow([(new CButton('interval_add', _('Add')))
+$custom_intervals->addRow([(new CButton('interval_add', _('Add')))
 	->addClass(ZBX_STYLE_BTN_LINK)
 	->addClass('element-table-add')]);
 
+$update_interval->addRow(
+	(new CRow([
+		(new CCol(_('Custom intervals')))->setAttribute('style', 'vertical-align: top;'),
+		new CCol($custom_intervals)
+	]))
+);
+
+// append delay to form list
 $itemFormList->addRow(
-	(new CVisibilityBox('visible[delay_flex]', 'delayFlexDiv', _('Original')))
-		->setLabel(_('Custom intervals'))
-		->setChecked(isset($this->data['visible']['delay_flex'])),
-	(new CDiv($delayFlexTable))
-		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
-		->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_STANDARD_WIDTH.'px;')
-		->setId('delayFlexDiv')
-)
+	(new CVisibilityBox('visible[update_interval]', 'update_interval_div', _('Original')))
+		->setLabel(_('Update interval'))
+		->setChecked(isset($data['visible']['update_interval'])),
+	(new CDiv($update_interval))->setId('update_interval_div')
+);
+
+$itemFormList
 	->addRow(
 		(new CVisibilityBox('visible[history]', 'history', _('Original')))
-			->setLabel(_('History storage period (in days)'))
-			->setChecked(isset($this->data['visible']['history'])),
-		(new CNumericBox('history', $this->data['history'], 8))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
-)
+			->setLabel(_('History storage period'))
+			->setChecked(isset($data['visible']['history'])),
+		(new CTextBox('history', $data['history']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
+	)
 	->addRow(
 		(new CVisibilityBox('visible[trends]', 'trends', _('Original')))
-			->setLabel(_('Trend storage period (in days)'))
-			->setChecked(isset($this->data['visible']['trends'])),
-		(new CNumericBox('trends', $this->data['trends'], 8))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
-);
+			->setLabel(_('Trend storage period'))
+			->setChecked(isset($data['visible']['trends'])),
+		(new CTextBox('trends', $data['trends']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
+	);
 
 // append status to form list
 $statusComboBox = new CComboBox('status', $this->data['status']);
@@ -347,18 +445,6 @@ $itemFormList->addRow(
 		->setLabel(_('Log time format'))
 		->setChecked(isset($this->data['visible']['logtimefmt'])),
 	(new CTextBox('logtimefmt', $this->data['logtimefmt']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
-);
-
-// append delta to form list
-$itemFormList->addRow(
-	(new CVisibilityBox('visible[delta]', 'delta', _('Original')))
-		->setLabel(_('Store value'))
-		->setChecked(isset($this->data['visible']['delta'])),
-	new CComboBox('delta', $this->data['delta'], null, [
-		0 => _('As is'),
-		1 => _('Delta (speed per second)'),
-		2 => _('Delta (simple change)')
-	])
 );
 
 // append valuemap to form list

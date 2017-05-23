@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -363,18 +363,6 @@ class CHostInterface extends CApiService {
 		return ['interfaceids' => zbx_objectValues($interfaces, 'interfaceid')];
 	}
 
-	protected function clearValues(array $interface) {
-		if (isset($interface['port']) && $interface['port'] != '') {
-			$interface['port'] = ltrim($interface['port'], '0');
-
-			if ($interface['port'] == '') {
-				$interface['port'] = 0;
-			}
-		}
-
-		return $interface;
-	}
-
 	/**
 	 * Delete interfaces.
 	 * Interface cannot be deleted if it's main interface and exists other interface of same type on same host.
@@ -603,9 +591,10 @@ class CHostInterface extends CApiService {
 			return;
 		}
 
-		$ipValidator = new CIPValidator();
-		if (!$ipValidator->validate($interface['ip'])) {
-			self::exception(ZBX_API_ERROR_PARAMETERS, $ipValidator->getError());
+		$ip_parser = new CIPParser(['v6' => ZBX_HAVE_IPV6]);
+
+		if ($ip_parser->parse($interface['ip']) != CParser::PARSE_SUCCESS) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, _s('Invalid IP address "%1$s".', $interface['ip']));
 		}
 	}
 

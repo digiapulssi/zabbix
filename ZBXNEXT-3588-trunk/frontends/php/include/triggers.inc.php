@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -154,6 +154,8 @@ function addTriggerValueStyle($object, $triggerValue, $triggerLastChange, $isAck
 
 		// blinking
 		$timeSinceLastChange = time() - $triggerLastChange;
+		$config['blink_period'] = timeUnitToSeconds($config['blink_period']);
+
 		if ($blinks && $timeSinceLastChange < $config['blink_period']) {
 			$object->addClass('blink'); // elements with this class will blink
 			$object->setAttribute('data-time-to-blink', $config['blink_period'] - $timeSinceLastChange);
@@ -797,7 +799,11 @@ function getTriggerOverviewCells($trigger, $pageFile, $screenid = null) {
 			$ack = null;
 
 			if ($config['event_ack_enable']) {
-				if ($event = get_last_event_by_triggerid($trigger['triggerid'])) {
+				$event = getTriggerLastProblems([$trigger['triggerid']], ['eventid', 'acknowledged']);
+
+				if ($event) {
+					$event = reset($event);
+
 					if ($screenid !== null) {
 						$acknowledge = [
 							'eventid' => $event['eventid'],
@@ -866,6 +872,7 @@ function getTriggerOverviewCells($trigger, $pageFile, $screenid = null) {
 			->addClass(ZBX_STYLE_CURSOR_POINTER);
 	}
 
+	$config['blink_period'] = timeUnitToSeconds($config['blink_period']);
 	if ($trigger && $config['blink_period'] > 0 && time() - $trigger['lastchange'] < $config['blink_period']) {
 		$column->addClass('blink');
 		$column->setAttribute('data-toggle-class', $css);
@@ -1070,9 +1077,9 @@ function make_trigger_details($trigger) {
 	$scripts = API::Script()->getScriptsByHosts($hostIds);
 
 	foreach ($hosts as $host) {
-		$hostName = new CSpan($host['name'], ZBX_STYLE_LINK_ACTION);
-		$hostName->setMenuPopup(CMenuPopupHelper::getHost($host, $scripts[$host['hostid']]));
-		$hostNames[] = $hostName;
+		$hostNames[] = (new CSpan($host['name']))
+			->setMenuPopup(CMenuPopupHelper::getHost($host, $scripts[$host['hostid']]))
+			->addClass(ZBX_STYLE_LINK_ACTION);
 		$hostNames[] = ', ';
 	}
 	array_pop($hostNames);
@@ -2171,3 +2178,33 @@ function isReadableTriggers(array $triggerids) {
 		'countOutput' => true
 	]);
 }
+
+/**
+ * Get last problems by given trigger IDs.
+ *
+ * @param array $triggerids
+ * @param array $output         List of output fields.
+ *
+ * @return array
+ */
+function getTriggerLastProblems(array $triggerids, array $output) {
+	$problems = DBfetchArray(DBselect(
+		'SELECT '.implode(',e.', $output).
+		' FROM events e'.
+		' JOIN ('.
+			'SELECT e2.source,e2.object,e2.objectid,MAX(clock) AS clock'.
+			' FROM events e2'.
+			' WHERE e2.source='.EVENT_SOURCE_TRIGGERS.
+				' AND e2.object='.EVENT_OBJECT_TRIGGER.
+				' AND e2.value='.TRIGGER_VALUE_TRUE.
+				' AND '.dbConditionInt('e2.objectid', $triggerids).
+			' GROUP BY e2.source,e2.object,e2.objectid'.
+		') e3 ON e3.source=e.source'.
+			' AND e3.object=e.object'.
+			' AND e3.objectid=e.objectid'.
+			' AND e3.clock=e.clock'
+	));
+
+	return $problems;
+}
+

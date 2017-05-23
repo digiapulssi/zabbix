@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,9 +40,9 @@ foreach ($data['alert_usrgrps'] as $usrgrp) {
 }
 
 $otherTab
-	->addRow(_('Refresh unsupported items (in sec)'),
-		(new CNumericBox('refresh_unsupported', $data['refresh_unsupported'], 5))
-			->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+	->addRow(_('Refresh unsupported items'),
+		(new CTextBox('refresh_unsupported', $data['refresh_unsupported']))
+			->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
 	)
 	->addRow(_('Group for discovered hosts'), $discoveryGroup)
 	->addRow(_('Default host inventory mode'),

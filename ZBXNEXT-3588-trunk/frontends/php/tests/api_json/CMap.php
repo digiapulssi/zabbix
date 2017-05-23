@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ class API_JSON_Map extends CZabbixTest {
 					'grid_show' => 1,
 					'grid_align' => 0,
 					'highlight' => 0,
-					'expandproblem' => 0,
+					'expandproblem' => 1,
 					'markelements' => 0,
 					'show_unack' => 0,
 					'severity_min' => 0,

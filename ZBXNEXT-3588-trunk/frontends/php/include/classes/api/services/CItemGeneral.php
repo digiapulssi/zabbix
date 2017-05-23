@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,8 +61,6 @@ abstract class CItemGeneral extends CApiService {
 			'value_type'			=> ['template' => 1],
 			'trapper_hosts'			=> [],
 			'units'					=> ['template' => 1],
-			'multiplier'			=> ['template' => 1],
-			'delta'					=> ['template' => 1],
 			'snmpv3_contextname'	=> [],
 			'snmpv3_securityname'	=> [],
 			'snmpv3_securitylevel'	=> [],
@@ -76,10 +74,8 @@ abstract class CItemGeneral extends CApiService {
 			'logtimefmt'			=> [],
 			'templateid'			=> ['system' => 1],
 			'valuemapid'			=> ['template' => 1],
-			'delay_flex'			=> [],
 			'params'				=> [],
 			'ipmi_sensor'			=> ['template' => 1],
-			'data_type'				=> ['template' => 1],
 			'authtype'				=> [],
 			'username'				=> [],
 			'password'				=> [],
@@ -91,7 +87,8 @@ abstract class CItemGeneral extends CApiService {
 			'interfaceid'			=> ['host' => 1],
 			'port'					=> [],
 			'inventory_link'		=> [],
-			'lifetime'				=> []
+			'lifetime'				=> [],
+			'preprocessing'			=> ['template' => 1]
 		];
 
 		$this->errorMessages = array_merge($this->errorMessages, [
@@ -143,8 +140,7 @@ abstract class CItemGeneral extends CApiService {
 				'hostid' => null,
 				'type' => null,
 				'value_type' => null,
-				'delay' => '0',
-				'delay_flex' => ''
+				'delay' => null
 			];
 
 			$dbHosts = API::Host()->get([
@@ -190,6 +186,11 @@ abstract class CItemGeneral extends CApiService {
 		}
 
 		$item_key_parser = new CItemKey();
+		$ip_range_parser = new CIPRangeParser(['v6' => ZBX_HAVE_IPV6, 'ranges' => false]);
+		$update_interval_parser = new CUpdateIntervalParser([
+			'usermacros' => true,
+			'lldmacros' => (get_class($this) === 'CItemPrototype')
+		]);
 
 		foreach ($items as $inum => &$item) {
 			$item = $this->clearValues($item);
@@ -255,21 +256,60 @@ abstract class CItemGeneral extends CApiService {
 
 			$host = $dbHosts[$fullItem['hostid']];
 
-			if ($fullItem['type'] == ITEM_TYPE_ZABBIX_ACTIVE) {
-				$item['delay_flex'] = '';
-				$fullItem['delay_flex'] = '';
-			}
-			if ($fullItem['value_type'] == ITEM_VALUE_TYPE_STR) {
-				$item['delta'] = 0;
-			}
-			if ($fullItem['value_type'] != ITEM_VALUE_TYPE_UINT64) {
-				$item['data_type'] = 0;
+			// Validate update interval.
+			if ($fullItem['type'] != ITEM_TYPE_TRAPPER && $fullItem['type'] != ITEM_TYPE_SNMPTRAP) {
+				if ($update_interval_parser->parse($fullItem['delay']) != CParser::PARSE_SUCCESS) {
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('Incorrect value for field "%1$s": %2$s.', 'delay', _('invalid delay'))
+					);
+				}
+
+				$delay = $update_interval_parser->getDelay();
+
+				// Check if not macros. If delay is a macro, skip this step, otherwise check if delay is valid.
+				if ($delay[0] !== '{') {
+					$delay_sec = timeUnitToSeconds($delay);
+					$intervals = $update_interval_parser->getIntervals();
+					$flexible_intervals = $update_interval_parser->getIntervals(ITEM_DELAY_FLEXIBLE);
+					$has_scheduling_intervals = (bool) $update_interval_parser->getIntervals(ITEM_DELAY_SCHEDULING);
+					$has_macros = false;
+
+					foreach ($intervals as $interval) {
+						if (strpos($interval['interval'], '{') !== false) {
+							$has_macros = true;
+							break;
+						}
+					}
+
+					// If delay is 0, there must be at least one either flexible or scheduling interval.
+					if ($delay_sec < 0 || $delay_sec > SEC_PER_DAY || ($delay_sec == 0 && !$intervals)) {
+						self::exception(ZBX_API_ERROR_PARAMETERS,
+							_('Item will not be refreshed. Please enter a correct update interval.')
+						);
+					}
+
+					if ($fullItem['type'] == ITEM_TYPE_ZABBIX_ACTIVE) {
+						// Remove flexible and scheduling intervals and leave only the delay part.
+						$item['delay'] = $delay;
+					}
+					// If there are scheduling intervals or intervals with macros, skip the next check calculation.
+					elseif (!$has_macros && !$has_scheduling_intervals && $flexible_intervals
+							&& calculateItemNextCheck(0, $delay_sec, $flexible_intervals, time()) == ZBX_JAN_2038) {
+						self::exception(ZBX_API_ERROR_PARAMETERS,
+							_('Item will not be refreshed. Please enter a correct update interval.')
+						);
+					}
+				}
+				elseif ($fullItem['type'] == ITEM_TYPE_ZABBIX_ACTIVE) {
+					// Remove flexible and scheduling intervals and leave only the delay part.
+					$item['delay'] = $delay;
+				}
 			}
 
 			// For non-numeric types, whichever value was entered in trends field, is overwritten to zero.
 			if ($fullItem['value_type'] == ITEM_VALUE_TYPE_STR || $fullItem['value_type'] == ITEM_VALUE_TYPE_LOG
 					|| $fullItem['value_type'] == ITEM_VALUE_TYPE_TEXT) {
-				$item['trends'] = 0;
+				$item['trends'] = '0';
 			}
 
 			// check if the item requires an interface
@@ -343,54 +383,11 @@ abstract class CItemGeneral extends CApiService {
 						_('Type of information must be "Numeric (unsigned)" or "Numeric (float)" for aggregate items.'));
 			}
 
-			// update interval
-			if ($fullItem['type'] != ITEM_TYPE_TRAPPER && $fullItem['type'] != ITEM_TYPE_SNMPTRAP) {
-				// delay must be between 0 and 86400, if delay is 0, delay_flex interval must be set.
-				if ($fullItem['delay'] < 0 || $fullItem['delay'] > SEC_PER_DAY
-					|| ($fullItem['delay'] == 0 && $fullItem['delay_flex'] === '')) {
+			if ($fullItem['type'] == ITEM_TYPE_TRAPPER) {
+				if ($fullItem['trapper_hosts'] !== '' && !$ip_range_parser->parse($fullItem['trapper_hosts'])) {
 					self::exception(ZBX_API_ERROR_PARAMETERS,
-						_('Item will not be refreshed. Please enter a correct update interval.')
+						_s('Incorrect value for field "%1$s": %2$s.', 'trapper_hosts', $ip_range_parser->getError())
 					);
-				}
-
-				// Don't parse empty strings, they will not be valid.
-				if ($fullItem['delay_flex'] !== '') {
-					// Validate item delay_flex string. First check syntax with parser, then validate time ranges.
-					$item_delay_flex_parser = new CItemDelayFlexParser($fullItem['delay_flex']);
-
-					if ($item_delay_flex_parser->isValid()) {
-						$delay_flex_validator = new CItemDelayFlexValidator();
-
-						if ($delay_flex_validator->validate($item_delay_flex_parser->getIntervals())) {
-							// Some valid intervals exist at this point.
-							$flexible_intervals = $item_delay_flex_parser->getFlexibleIntervals();
-
-							// If there are no flexible intervals, skip the next check calculation.
-							if (!$flexible_intervals) {
-								continue;
-							}
-
-							$nextCheck = calculateItemNextCheck(0, $fullItem['delay'],
-								$item_delay_flex_parser->getFlexibleIntervals($flexible_intervals),
-								time()
-							);
-
-							if ($nextCheck == ZBX_JAN_2038) {
-								self::exception(ZBX_API_ERROR_PARAMETERS,
-									_('Item will not be refreshed. Please enter a correct update interval.')
-								);
-							}
-						}
-						else {
-							self::exception(ZBX_API_ERROR_PARAMETERS, $delay_flex_validator->getError());
-						}
-					}
-					else {
-						self::exception(ZBX_API_ERROR_PARAMETERS, _s('Invalid interval "%1$s": %2$s.',
-							$fullItem['delay_flex'],
-							$item_delay_flex_parser->getError())
-						);
-					}
 				}
 			}
 
@@ -477,14 +474,23 @@ abstract class CItemGeneral extends CApiService {
 				}
 			}
 
-			$this->checkSpecificFields($fullItem);
+			$this->checkSpecificFields($fullItem, $update ? 'update' : 'create');
 		}
 		unset($item);
 
 		$this->checkExistingItems($items);
 	}
 
-	protected function checkSpecificFields(array $item) {
+	/**
+	 * Check item specific fields. Each API like Item, Itemprototype and Discovery rule may inherit different fields
+	 * to validate.
+	 *
+	 * @param array  $item    An array of single item data.
+	 * @param string $method  A string of "create" or "update" method.
+	 *
+	 * @return bool
+	 */
+	protected function checkSpecificFields(array $item, $method) {
 		return true;
 	}
 
@@ -493,13 +499,6 @@ abstract class CItemGeneral extends CApiService {
 			$item['port'] = ltrim($item['port'], '0');
 			if ($item['port'] == '') {
 				$item['port'] = 0;
-			}
-		}
-
-		if (isset($item['lifetime']) && $item['lifetime'] != '') {
-			$item['lifetime'] = ltrim($item['lifetime'], '0');
-			if ($item['lifetime'] == '') {
-				$item['lifetime'] = 0;
 			}
 		}
 
@@ -792,6 +791,17 @@ abstract class CItemGeneral extends CApiService {
 					$newItem['applications'] = get_same_applications_for_host($parentItem['applications'], $host['hostid']);
 				}
 
+				if (array_key_exists('preprocessing', $newItem)) {
+					foreach ($newItem['preprocessing'] as $preprocessing) {
+						if ($exItem) {
+							$preprocessing['itemid'] = $exItem['itemid'];
+						}
+						else {
+							unset($preprocessing['itemid']);
+						}
+					}
+				}
+
 				if ($parentItem['flags'] == ZBX_FLAG_DISCOVERY_PROTOTYPE
 						&& array_key_exists('applicationPrototypes', $parentItem)) {
 
@@ -837,6 +847,230 @@ abstract class CItemGeneral extends CApiService {
 		}
 
 		return $newItems;
+	}
+
+	/**
+	 * Validate item pre-processing.
+	 *
+	 * @param array  $item									An array of single item data.
+	 * @param array  $item['preprocessing']					An array of item pre-processing data.
+	 * @param string $item['preprocessing'][]['type']		The preprocessing option type. Possible values:
+	 *															1 - ZBX_PREPROC_MULTIPLIER;
+	 *															2 - ZBX_PREPROC_RTRIM;
+	 *															3 - ZBX_PREPROC_LTRIM;
+	 *															4 - ZBX_PREPROC_TRIM;
+	 *															5 - ZBX_PREPROC_REGSUB;
+	 *															6 - ZBX_PREPROC_BOOL2DEC;
+	 *															7 - ZBX_PREPROC_OCT2DEC;
+	 *															8 - ZBX_PREPROC_HEX2DEC;
+	 *															9 - ZBX_PREPROC_DELTA_VALUE;
+	 *															10 - ZBX_PREPROC_DELTA_SPEED.
+	 * @param string $item['preprocessing'][]['params']		Additional parameters used by preprocessing option. In case
+	 *														of regular expression (ZBX_PREPROC_REGSUB), multiple
+	 *														parameters are separated by LF (\n)character.
+	 * @param string $method								A string of "create" or "update" method.
+	 */
+	protected function validateItemPreprocessing(array $item, $method) {
+		if (array_key_exists('preprocessing', $item)) {
+			if (!is_array($item['preprocessing'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+			}
+
+			$type_validator = new CLimitedSetValidator(['values' => array_keys(get_preprocessing_types(null, false))]);
+
+			$required_fields = ['type', 'params'];
+			$delta = false;
+
+			foreach ($item['preprocessing'] as $preprocessing) {
+				$missing_keys = array_diff($required_fields, array_keys($preprocessing));
+
+				if ($missing_keys) {
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('Item pre-processing is missing parameters: %1$s', implode(', ', $missing_keys))
+					);
+				}
+
+				if (is_array($preprocessing['type'])) {
+					self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+				}
+				elseif ($preprocessing['type'] === '' || $preprocessing['type'] === null
+						|| $preprocessing['type'] === false) {
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('Incorrect value for field "%1$s": %2$s.', 'type', _('cannot be empty'))
+					);
+				}
+
+				if (!$type_validator->validate($preprocessing['type'])) {
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('Incorrect value for field "%1$s": %2$s.', 'type',
+							_s('unexpected value "%1$s"', $preprocessing['type'])
+						)
+					);
+				}
+				switch ($preprocessing['type']) {
+					case ZBX_PREPROC_MULTIPLIER:
+						// Check if custom multiplier is a valid number.
+						if (is_array($preprocessing['params'])) {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+						}
+						elseif ($preprocessing['params'] === '' || $preprocessing['params'] === null
+								|| $preprocessing['params'] === false) {
+							self::exception(ZBX_API_ERROR_PARAMETERS,
+								_s('Incorrect value for field "%1$s": %2$s.', 'params', _('cannot be empty'))
+							);
+						}
+
+						if (!is_numeric($preprocessing['params'])) {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.',
+								'params', _('a numeric value is expected')
+							));
+						}
+						break;
+
+					case ZBX_PREPROC_RTRIM:
+					case ZBX_PREPROC_LTRIM:
+					case ZBX_PREPROC_TRIM:
+						// Check 'params' if not empty.
+						if (is_array($preprocessing['params'])) {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+						}
+						elseif ($preprocessing['params'] === '' || $preprocessing['params'] === null
+								|| $preprocessing['params'] === false) {
+							self::exception(ZBX_API_ERROR_PARAMETERS,
+								_s('Incorrect value for field "%1$s": %2$s.', 'params', _('cannot be empty'))
+							);
+						}
+						break;
+
+					case ZBX_PREPROC_REGSUB:
+						// Check if 'params' are not empty and if second parameter contains (after \n) is not empty.
+						if (is_array($preprocessing['params'])) {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+						}
+						elseif ($preprocessing['params'] === '' || $preprocessing['params'] === null
+								|| $preprocessing['params'] === false) {
+							self::exception(ZBX_API_ERROR_PARAMETERS,
+								_s('Incorrect value for field "%1$s": %2$s.', 'params', _('cannot be empty'))
+							);
+						}
+
+						$params = explode("\n", $preprocessing['params']);
+
+						if ($params[0] === '') {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.',
+								'params', _('first parameter is expected')
+							));
+						}
+
+						if (!array_key_exists(1, $params) || $params[1] === '') {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.',
+								'params', _('second parameter is expected')
+							));
+						}
+						break;
+
+					case ZBX_PREPROC_BOOL2DEC:
+					case ZBX_PREPROC_OCT2DEC:
+					case ZBX_PREPROC_HEX2DEC:
+						// Check if 'params' is empty, because it must be empty.
+						if (is_array($preprocessing['params'])) {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+						}
+						elseif ($preprocessing['params'] !== '' && $preprocessing['params'] !== null
+								&& $preprocessing['params'] !== false) {
+							self::exception(ZBX_API_ERROR_PARAMETERS,
+								_s('Incorrect value for field "%1$s": %2$s.', 'params', _('should be empty'))
+							);
+						}
+						break;
+
+					case ZBX_PREPROC_DELTA_VALUE:
+					case ZBX_PREPROC_DELTA_SPEED:
+						// Check if 'params' is empty, because it must be empty.
+						if (is_array($preprocessing['params'])) {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+						}
+						elseif ($preprocessing['params'] !== '' && $preprocessing['params'] !== null
+								&& $preprocessing['params'] !== false) {
+							self::exception(ZBX_API_ERROR_PARAMETERS,
+								_s('Incorrect value for field "%1$s": %2$s.', 'params', _('should be empty'))
+							);
+						}
+
+						// Check if one of the deltas (Delta per second or Delta value) already exists.
+						if ($delta) {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _('Only one change step is allowed.'));
+						}
+						else {
+							$delta = true;
+						}
+						break;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Insert item pre-processing data into DB.
+	 *
+	 * @param array $items							An array of items.
+	 * @param array $items[]['preprocessing']		An array of item pre-processing data.
+	 */
+	protected function createItemPreprocessing(array $items) {
+		$item_preproc = [];
+		$step = 1;
+
+		foreach ($items as $item) {
+			if (array_key_exists('preprocessing', $item)) {
+				foreach ($item['preprocessing'] as $preprocessing) {
+					$item_preproc[] = [
+						'itemid' => $item['itemid'],
+						'step' => $step++,
+						'type' => $preprocessing['type'],
+						'params' => $preprocessing['params']
+					];
+				}
+			}
+		}
+
+		if ($item_preproc) {
+			DB::insert('item_preproc', $item_preproc);
+		}
+	}
+
+	/**
+	 * Update item pre-processing data in DB. Delete old records and create new ones.
+	 *
+	 * @param array $items							An array of items.
+	 * @param array $items[]['preprocessing']		An array of item pre-processing data.
+	 */
+	protected function updateItemPreprocessing(array $items) {
+		$item_preproc = [];
+		$item_preprocids = [];
+		$step = 1;
+
+		foreach ($items as $item) {
+			if (array_key_exists('preprocessing', $item)) {
+				$item_preprocids[] = $item['itemid'];
+
+				foreach ($item['preprocessing'] as $preprocessing) {
+					$item_preproc[] = [
+						'itemid' => $item['itemid'],
+						'step' => $step++,
+						'type' => $preprocessing['type'],
+						'params' => $preprocessing['params']
+					];
+				}
+			}
+		}
+
+		if ($item_preprocids) {
+			DB::delete('item_preproc', ['itemid' => $item_preprocids]);
+		}
+
+		if ($item_preproc) {
+			DB::insert('item_preproc', $item_preproc);
+		}
 	}
 
 	/**

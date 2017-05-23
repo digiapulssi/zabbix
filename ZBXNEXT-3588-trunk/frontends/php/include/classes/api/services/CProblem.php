@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -303,7 +303,7 @@ class CProblem extends CApiService {
 		// recent
 		if ($options['recent'] !== null && $options['recent']) {
 			$config = select_config();
-			$ok_events_from = time() - $config['ok_period'];
+			$ok_events_from = time() - timeUnitToSeconds($config['ok_period']);
 
 			$sqlParts['where'][] = '(p.r_eventid IS NULL OR p.r_clock>'.$ok_events_from.')';
 		}

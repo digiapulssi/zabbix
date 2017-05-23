@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -250,7 +250,7 @@ static int	DBpatch_2050013(void)
 	return DBdrop_table("user_history");
 }
 
-static int      DBpatch_2050014(void)
+static int	DBpatch_2050014(void)
 {
 	if (ZBX_DB_OK <= DBexecute(
 		"update config"
@@ -265,7 +265,7 @@ static int      DBpatch_2050014(void)
 	return FAIL;
 }
 
-static int      DBpatch_2050015(void)
+static int	DBpatch_2050015(void)
 {
 	if (ZBX_DB_OK <= DBexecute(
 		"update users"

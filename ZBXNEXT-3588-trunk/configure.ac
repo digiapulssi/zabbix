@@ -1,6 +1,6 @@
 dnl
 dnl Zabbix
-dnl Copyright (C) 2001-2016 Zabbix SIA
+dnl Copyright (C) 2001-2017 Zabbix SIA
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([Zabbix],[3.3.0])
+AC_INIT([Zabbix],[3.4.0alpha1])
 AC_CONFIG_SRCDIR(src/zabbix_server/server.c)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_MSG_NOTICE([Configuring $PACKAGE_NAME $PACKAGE_VERSION])
 
@@ -58,11 +58,11 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h unistd.h netdb.h signal.h \
   stdint.h mach/host_info.h mach/mach_host.h knlist.h pwd.h \
   sys/var.h arpa/nameser.h assert.h sys/dkstat.h sys/disk.h sys/sched.h \
   zone.h nlist.h kvm.h linux/kernel.h procinfo.h sys/dk.h \
-  sys/resource.h pthread.h windows.h process.h conio.h sys/wait.h regex.h \
+  sys/resource.h pthread.h windows.h process.h conio.h sys/wait.h pcreposix.h \
   stdarg.h winsock2.h pdh.h psapi.h sys/sem.h sys/ipc.h sys/shm.h Winldap.h \
   Winber.h lber.h ws2tcpip.h inttypes.h sys/file.h grp.h \
   execinfo.h libperfstat.h sys/systemcfg.h sys/mnttab.h mntent.h sys/times.h \
-  dlfcn.h sys/utsname.h)
+  dlfcn.h sys/utsname.h sys/un.h event.h)
 AC_CHECK_HEADERS(resolv.h, [], [], [
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
@@ -1089,6 +1089,8 @@ AC_ARG_ENABLE(ipv6,[  --enable-ipv6           Turn on support of IPv6],
 esac],
 [ipv6=no])
 
+AM_CONDITIONAL([ZBXCUNIT], [test -f src/libs/zbxcunit/zbxcunit.c])
+
 have_db="no"
 have_unixodbc="no"
 have_web_monitoring="no"
@@ -1098,6 +1100,7 @@ have_ipmi="no"
 have_ipv6="no"
 have_ssh2="no"
 have_tls="no"
+
 
 if test "x$ipv6" = "xyes"; then
 	AC_DEFINE(HAVE_IPV6,1,[Define to 1 if IPv6 should be enabled.])
@@ -1184,6 +1187,10 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	dnl Checking for SQLite3 support
 	AX_LIB_SQLITE3()
 	if test "x$want_sqlite3" = "xyes"; then
+		if test "x$server" = "xyes"; then
+			AC_MSG_ERROR([SQLite is not supported as a main Zabbix database backend.])
+		fi
+
 		if test "x$have_db" != "xno"; then
 			AC_MSG_ERROR([You can configure for only one database.])
 		fi
@@ -1232,7 +1239,7 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	DB_CFLAGS="$IBM_DB2_CPPFLAGS $MYSQL_CFLAGS $ORACLE_CPPFLAGS $POSTGRESQL_CFLAGS $SQLITE3_CPPFLAGS"
 	DB_LDFLAGS="$IBM_DB2_LDFLAGS $MYSQL_LDFLAGS $ORACLE_LDFLAGS $POSTGRESQL_LDFLAGS $SQLITE3_LDFLAGS"
 	DB_LIBS="$IBM_DB2_LIBS $MYSQL_LIBS $ORACLE_LIBS $POSTGRESQL_LIBS $SQLITE3_LIBS"
-	
+
 	AC_SUBST(DB_CFLAGS)
 	AC_SUBST(DB_LDFLAGS)
 	AC_SUBST(DB_LIBS)
@@ -1336,6 +1343,7 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 			have_ipmi="yes"
 		fi
 	fi
+
 	SERVER_LDFLAGS="$SERVER_LDFLAGS $OPENIPMI_LDFLAGS"
 	SERVER_LIBS="$SERVER_LIBS $OPENIPMI_LIBS"
 
@@ -1344,6 +1352,41 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 
 	AC_SUBST(OPENIPMI_CFLAGS)
 fi
+
+dnl Check if Zabbix internal IPC services are used
+have_ipcservice="no"
+if test "x$have_ipmi" = "xyes"; then
+	have_ipcservice="yes"
+fi
+
+dnl Check for libevent, used by Zabbix IPC services
+if test "x$have_ipcservice" = "xyes"; then
+	AC_DEFINE([HAVE_IPCSERVICE], 1, [Define to 1 if Zabbix IPC services are used])
+
+	LIBEVENT_CHECK_CONFIG([no])
+	if test "x$found_libevent" != "xyes"; then
+		AC_MSG_ERROR([Unable to use libevent (libevent check failed)])
+	fi
+	SERVER_LDFLAGS="$SERVER_LDFLAGS $LIBEVENT_LDFLAGS"
+	SERVER_LIBS="$SERVER_LIBS $LIBEVENT_LIBS"
+
+	PROXY_LDFLAGS="$PROXY_LDFLAGS $LIBEVENT_LDFLAGS"
+	PROXY_LIBS="$PROXY_LIBS $LIBEVENT_LIBS"
+
+	AC_SUBST(LIBEVENET_CFLAGS)
+
+fi
+
+dnl Check for libpcre, used by Zabbix for regular expressions
+LIBPCRE_CHECK_CONFIG([no])
+if test "x$found_libpcre" != "xyes"; then
+	AC_MSG_ERROR([Unable to use libpcre (libpcre check failed)])
+fi
+CFLAGS="$CFLAGS $LIBPCRE_CFLAGS"
+LDFLAGS="$LDFLAGS $LIBPCRE_LDFLAGS"
+LIBS="$LIBS $LIBPCRE_LIBS"
+
+AC_SUBST(LIBPCRE_CFLAGS)
 
 dnl Check for mbed TLS (PolarSSL) libpolarssl [by default - skip]
 LIBMBEDTLS_CHECK_CONFIG([no])
@@ -1521,7 +1564,7 @@ case "x$ARCH" in
 	xlinux|xsolaris)
 		AC_DEFINE(ZBX_PROCSTAT_COLLECTOR, 1 , [Define to 1 on linux and solaris platforms])
 		;;
-esac		
+esac
 
 
 dnl *****************************************************************
@@ -1566,12 +1609,14 @@ AC_OUTPUT([
 	src/libs/zbxdb/Makefile
 	src/libs/zbxdbupgrade/Makefile
 	src/libs/zbxjson/Makefile
+	src/libs/zbxhttp/Makefile
 	src/libs/zbxserver/Makefile
 	src/libs/zbxicmpping/Makefile
 	src/libs/zbxexec/Makefile
 	src/libs/zbxself/Makefile
 	src/libs/zbxmodules/Makefile
 	src/libs/zbxregexp/Makefile
+	src/libs/zbxtasks/Makefile
 	src/zabbix_agent/Makefile
 	src/zabbix_get/Makefile
 	src/zabbix_sender/Makefile
@@ -1593,11 +1638,14 @@ AC_OUTPUT([
 	src/zabbix_server/selfmon/Makefile
 	src/zabbix_server/vmware/Makefile
 	src/zabbix_server/taskmanager/Makefile
+	src/zabbix_server/ipmi/Makefile
+	src/zabbix_server/scripts/Makefile
 	src/zabbix_proxy/Makefile
 	src/zabbix_proxy/heart/Makefile
 	src/zabbix_proxy/housekeeper/Makefile
 	src/zabbix_proxy/proxyconfig/Makefile
 	src/zabbix_proxy/datasender/Makefile
+	src/zabbix_proxy/taskmanager/Makefile
 	src/zabbix_java/Makefile
 	upgrades/Makefile
 	man/Makefile

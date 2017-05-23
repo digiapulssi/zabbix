@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ else {
 				}
 				elseif ($macro['type'] & MACRO_TYPE_INHERITED) {
 					$row[] = (new CCol(
-						(new CButton('macros['.$i.'][change]', _('Change')))
+						(new CButton('macros['.$i.'][change]', _x('Change', 'verb')))
 							->addClass(ZBX_STYLE_BTN_LINK)
 							->addClass('element-table-change')
 					))->addClass(ZBX_STYLE_NOWRAP);

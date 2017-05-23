@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ class testPageDiscovery extends CWebTest {
 
 		$this->zbxTestCheckHeader('Discovery rules');
 		$this->zbxTestTextPresent('Displaying');
-		$this->zbxTestTextPresent(['Name', 'IP range', 'Delay', 'Checks', 'Status']);
+		$this->zbxTestTextPresent(['Name', 'IP range', 'Interval', 'Checks', 'Status']);
 		$this->zbxTestTextPresent(['Enable', 'Disable', 'Delete']);
 	}
 

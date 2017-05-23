@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = [
 	'shows' =>			[T_ZBX_INT, O_OPT,	P_SYS,		DB_ID,	null],
 	'slideshowid' =>	[T_ZBX_INT, O_NO,	P_SYS,		DB_ID,	'isset({form}) && {form} == "update"'],
-	'name' => [T_ZBX_STR, O_OPT, null, NOT_EMPTY, 'isset({add}) || isset({update})', _('Name')],
-	'delay' => [T_ZBX_INT, O_OPT, null, BETWEEN(1, SEC_PER_DAY), 'isset({add}) || isset({update})',_('Default delay (in seconds)')],
+	'name' =>			[T_ZBX_STR, O_OPT, null, NOT_EMPTY, 'isset({add}) || isset({update})', _('Name')],
+	'delay' =>			[T_ZBX_TU,  O_OPT, null, null, 'isset({add}) || isset({update})', _('Default delay')],
 	'slides' =>			[null,		 O_OPT, null,		null,	null],
 	'userid' =>			[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,			null],
 	'private' =>		[T_ZBX_INT, O_OPT, null,	BETWEEN(0, 1),	null],
@@ -42,7 +42,6 @@ $fields = [
 	'userGroups' =>		[T_ZBX_INT, O_OPT, null,	null,			null],
 	// actions
 	'action' =>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT, IN('"slideshow.massdelete"'),	null],
-	'clone' =>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'add' =>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'update' =>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'delete' =>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
@@ -98,21 +97,22 @@ if (hasRequest('action')) {
 /*
  * Actions
  */
-if (hasRequest('clone') && hasRequest('slideshowid')) {
-	unset($_REQUEST['slideshowid'], $_REQUEST['users'], $_REQUEST['userGroups']);
-	$_REQUEST['form'] = 'clone';
-	$_REQUEST['private'] = PRIVATE_SHARING;
-	$_REQUEST['userid'] = CWebUser::$data['userid'];
-}
-elseif (hasRequest('add') || hasRequest('update')) {
+if (hasRequest('add') || hasRequest('update')) {
 	DBstart();
+
+	$slides = getRequest('slides', []);
+
+	foreach ($slides as &$slide) {
+		$slide['delay'] = ($slide['delay'] === '') ? '0' : $slide['delay'];
+	}
+	unset($slide);
 
 	if (hasRequest('update')) {
 		$data = [
 			'slideshowid' => getRequest('slideshowid'),
 			'name' => getRequest('name'),
 			'delay' => getRequest('delay'),
-			'slides' => getRequest('slides', []),
+			'slides' => $slides,
 			'userid' => getRequest('userid', ''),
 			'private' => getRequest('private'),
 			'users' => getRequest('users', []),
@@ -145,7 +145,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		$result = add_slideshow([
 			'name' => getRequest('name'),
 			'delay' => getRequest('delay'),
-			'slides' => getRequest('slides', []),
+			'slides' => $slides,
 			'userid' => getRequest('userid'),
 			'private' => getRequest('private'),
 			'users' => getRequest('users', []),
@@ -294,7 +294,7 @@ if (hasRequest('form')) {
 		$data['slideshow'] = [
 			'slideshowid' => getRequest('slideshowid'),
 			'name' => getRequest('name', ''),
-			'delay' => getRequest('delay', ZBX_ITEM_DELAY_DEFAULT),
+			'delay' => getRequest('delay', DB::getDefault('slideshows', 'delay')),
 			'slides' => getRequest('slides', []),
 			'private' => getRequest('private', PRIVATE_SHARING),
 			'users' => getRequest('users', []),
@@ -317,6 +317,11 @@ if (hasRequest('form')) {
 			}
 		}
 	}
+
+	foreach ($data['slideshow']['slides'] as &$slide) {
+		$slide['delay'] = $slide['delay'] === '0' ? '' : $slide['delay'];
+	}
+	unset($slide);
 
 	$screenids = [];
 	foreach ($data['slideshow']['slides'] as $slides) {

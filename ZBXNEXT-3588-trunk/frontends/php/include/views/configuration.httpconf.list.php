@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ $httpTable = (new CTableInfo())
 			: null,
 		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder']),
 		_('Number of steps'),
-		_('Update interval'),
+		_('Interval'),
 		_('Attempts'),
 		_('Authentication'),
 		_('HTTP proxy'),
@@ -127,7 +127,7 @@ foreach ($httpTests as $httpTestId => $httpTest) {
 		($this->data['hostid'] > 0) ? null : $httpTest['hostname'],
 		$name,
 		$httpTest['stepscnt'],
-		convertUnitsS($httpTest['delay']),
+		$httpTest['delay'],
 		$httpTest['retries'],
 		httptest_authentications($httpTest['authentication']),
 		($httpTest['http_proxy'] !== '') ? _('Yes') : _('No'),

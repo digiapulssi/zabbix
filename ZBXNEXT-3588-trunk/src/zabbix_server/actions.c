@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -968,26 +968,42 @@ static int	check_trigger_severity_condition(zbx_vector_ptr_t *esc_events, DB_CON
  ******************************************************************************/
 static int	check_time_period_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION *condition)
 {
+	char	*period;
 	int	i;
+
+	period = zbx_strdup(NULL, condition->value);
+	substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &period, MACRO_TYPE_COMMON,
+			NULL, 0);
 
 	for (i = 0; i < esc_events->values_num; i++)
 	{
 		const DB_EVENT	*event = esc_events->values[i];
+		int		res;
 
-		switch (condition->operator)
+		if (SUCCEED == zbx_check_time_period(period, (time_t)event->clock, &res))
 		{
-			case CONDITION_OPERATOR_IN:
-				if (SUCCEED == check_time_period(condition->value, (time_t)event->clock))
-					zbx_vector_uint64_append(&condition->objectids, event->objectid);
-				break;
-			case CONDITION_OPERATOR_NOT_IN:
-				if (FAIL == check_time_period(condition->value, (time_t)event->clock))
-					zbx_vector_uint64_append(&condition->objectids, event->objectid);
-				break;
-			default:
-				return NOTSUPPORTED;
+			switch (condition->operator)
+			{
+				case CONDITION_OPERATOR_IN:
+					if (SUCCEED == res)
+						zbx_vector_uint64_append(&condition->objectids, event->objectid);
+					break;
+				case CONDITION_OPERATOR_NOT_IN:
+					if (FAIL == res)
+						zbx_vector_uint64_append(&condition->objectids, event->objectid);
+					break;
+				default:
+					return NOTSUPPORTED;
+			}
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "Invalid time period \"%s\" for condition id [" ZBX_FS_UI64 "]",
+					period, condition->conditionid);
 		}
 	}
+
+	zbx_free(period);
 
 	return SUCCEED;
 }
@@ -3016,8 +3032,8 @@ static int	check_action_conditions(const DB_EVENT *event, const zbx_action_eval_
 			continue;	/* short-circuit true OR condition block to the next AND condition */
 		}
 
-		condition_result = zbx_vector_uint64_search(&condition->objectids, event->objectid,
-				ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+		condition_result = FAIL == zbx_vector_uint64_search(&condition->objectids, event->objectid,
+				ZBX_DEFAULT_UINT64_COMPARE_FUNC) ? FAIL : SUCCEED;
 
 		zabbix_log(LOG_LEVEL_DEBUG, " conditionid:" ZBX_FS_UI64 " cond.value:'%s' cond.value2:'%s' result:%s",
 				condition->conditionid, condition->value, condition->value2,

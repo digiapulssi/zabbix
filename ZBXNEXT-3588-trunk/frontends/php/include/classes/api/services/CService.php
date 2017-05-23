@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 
 /**
- * Class containing methods for operations with IT services.
+ * Class containing methods for operations with services.
  */
 class CService extends CApiService {
 
@@ -791,7 +791,7 @@ class CService extends CApiService {
 		$sqlParts = $this->addQueryOrder($this->fieldId('serviceid'), $sqlParts);
 
 		// add permission filter
-		if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			$sqlParts = $this->addPermissionFilter($sqlParts);
 		}
 
@@ -825,7 +825,7 @@ class CService extends CApiService {
 		$sqlParts = $this->addQueryOrder($this->fieldId('serviceid'), $sqlParts);
 
 		// add permission filter
-		if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			$sqlParts = $this->addPermissionFilter($sqlParts);
 		}
 
@@ -1211,7 +1211,7 @@ class CService extends CApiService {
 	}
 
 	protected function applyQueryFilterOptions($tableName, $tableAlias, array $options, array $sqlParts) {
-		if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			// if services with specific trigger IDs were requested, return only the ones accessible to the current user.
 			if ($options['filter']['triggerid']) {
 				$accessibleTriggers = API::Trigger()->get([

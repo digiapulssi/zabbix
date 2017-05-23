@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -212,6 +212,20 @@ static void	DBdrop_table_sql(char **sql, size_t *sql_alloc, size_t *sql_offset, 
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "drop table %s", table_name);
 }
 
+static void	DBset_default_sql(char **sql, size_t *sql_alloc, size_t *sql_offset,
+		const char *table_name, const ZBX_FIELD *field)
+{
+	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "alter table %s" ZBX_DB_ALTER_COLUMN " ", table_name);
+
+#if defined(HAVE_MYSQL)
+	DBfield_definition_string(sql, sql_alloc, sql_offset, field);
+#elif defined(HAVE_ORACLE)
+	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s default '%s'", field->name, field->default_value);
+#else
+	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s set default '%s'", field->name, field->default_value);
+#endif
+}
+
 static void	DBmodify_field_type_sql(char **sql, size_t *sql_alloc, size_t *sql_offset,
 		const char *table_name, const ZBX_FIELD *field)
 {
@@ -222,6 +236,12 @@ static void	DBmodify_field_type_sql(char **sql, size_t *sql_alloc, size_t *sql_o
 #else
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s" ZBX_DB_SET_TYPE " ", field->name);
 	DBfield_type_string(sql, sql_alloc, sql_offset, field);
+#ifdef HAVE_POSTGRESQL
+	if (NULL != field->default_value) {
+		zbx_strcpy_alloc(sql, sql_alloc, sql_offset, ";\n");
+		DBset_default_sql(sql, sql_alloc, sql_offset, table_name, field);
+	}
+#endif
 #endif
 }
 
@@ -250,20 +270,6 @@ static void	DBset_not_null_sql(char **sql, size_t *sql_alloc, size_t *sql_offset
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s not null", field->name);
 #else
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s set not null", field->name);
-#endif
-}
-
-static void	DBset_default_sql(char **sql, size_t *sql_alloc, size_t *sql_offset,
-		const char *table_name, const ZBX_FIELD *field)
-{
-	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "alter table %s" ZBX_DB_ALTER_COLUMN " ", table_name);
-
-#if defined(HAVE_MYSQL)
-	DBfield_definition_string(sql, sql_alloc, sql_offset, field);
-#elif defined(HAVE_ORACLE)
-	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s default '%s'", field->name, field->default_value);
-#else
-	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "%s set default '%s'", field->name, field->default_value);
 #endif
 }
 
@@ -308,6 +314,8 @@ static void	DBdrop_index_sql(char **sql, size_t *sql_alloc, size_t *sql_offset,
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "drop index %s", index_name);
 #ifdef HAVE_MYSQL
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, " on %s", table_name);
+#else
+	ZBX_UNUSED(table_name);
 #endif
 }
 
@@ -315,6 +323,9 @@ static void	DBrename_index_sql(char **sql, size_t *sql_alloc, size_t *sql_offset
 		const char *old_name, const char *new_name, const char *fields, int unique)
 {
 #if defined(HAVE_IBM_DB2)
+	ZBX_UNUSED(table_name);
+	ZBX_UNUSED(fields);
+	ZBX_UNUSED(unique);
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "rename index %s to %s", old_name, new_name);
 #elif defined(HAVE_MYSQL)
 	DBcreate_index_sql(sql, sql_alloc, sql_offset, table_name, new_name, fields, unique);
@@ -322,6 +333,9 @@ static void	DBrename_index_sql(char **sql, size_t *sql_alloc, size_t *sql_offset
 	DBdrop_index_sql(sql, sql_alloc, sql_offset, table_name, old_name);
 	zbx_strcpy_alloc(sql, sql_alloc, sql_offset, ";\n");
 #elif defined(HAVE_ORACLE) || defined(HAVE_POSTGRESQL)
+	ZBX_UNUSED(table_name);
+	ZBX_UNUSED(fields);
+	ZBX_UNUSED(unique);
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "alter index %s rename to %s", old_name, new_name);
 #endif
 }

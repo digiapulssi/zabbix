@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,6 @@
 #define TRIGGER_DESCRIPTION_LEN		255
 #define TRIGGER_EXPRESSION_LEN		2048
 #define TRIGGER_EXPRESSION_LEN_MAX	(TRIGGER_EXPRESSION_LEN + 1)
-#define TRIGGER_ERROR_LEN		128
 #if defined(HAVE_IBM_DB2) || defined(HAVE_ORACLE)
 #	define TRIGGER_COMMENTS_LEN	2048
 #else
@@ -70,6 +69,9 @@
 
 #define ITEM_NAME_LEN			255
 #define ITEM_KEY_LEN			255
+#define ITEM_DELAY_LEN			1024
+#define ITEM_HISTORY_LEN		255
+#define ITEM_TRENDS_LEN			255
 #define ITEM_UNITS_LEN			255
 #define ITEM_SNMP_COMMUNITY_LEN		64
 #define ITEM_SNMP_COMMUNITY_LEN_MAX	(ITEM_SNMP_COMMUNITY_LEN + 1)
@@ -89,8 +91,6 @@
 #define ITEM_SNMPV3_CONTEXTNAME_LEN_MAX		(ITEM_SNMPV3_CONTEXTNAME_LEN + 1)
 #define ITEM_LOGTIMEFMT_LEN		64
 #define ITEM_LOGTIMEFMT_LEN_MAX		(ITEM_LOGTIMEFMT_LEN + 1)
-#define ITEM_DELAY_FLEX_LEN		255
-#define ITEM_DELAY_FLEX_LEN_MAX		(ITEM_DELAY_FLEX_LEN + 1)
 #define ITEM_IPMI_SENSOR_LEN		128
 #define ITEM_IPMI_SENSOR_LEN_MAX	(ITEM_IPMI_SENSOR_LEN + 1)
 #define ITEM_USERNAME_LEN		64
@@ -121,7 +121,7 @@
 #define HISTORY_LOG_SOURCE_LEN		64
 #define HISTORY_LOG_SOURCE_LEN_MAX	(HISTORY_LOG_SOURCE_LEN + 1)
 
-#define ALERT_ERROR_LEN			128
+#define ALERT_ERROR_LEN			2048
 #define ALERT_ERROR_LEN_MAX		(ALERT_ERROR_LEN + 1)
 
 #define GRAPH_NAME_LEN			128
@@ -135,6 +135,8 @@
 #define HTTPTEST_HTTP_PASSWORD_LEN	64
 
 #define PROXY_DHISTORY_VALUE_LEN	255
+
+#define ITEM_PREPROC_PARAMS_LEN		255
 
 #ifdef HAVE_ORACLE
 #define	DBbegin_multiple_update(sql, sql_alloc, sql_offset)	zbx_strcpy_alloc(sql, sql_alloc, sql_offset, "begin\n")
@@ -310,8 +312,6 @@ typedef struct
 {
 	zbx_uint64_t	httptestid;
 	char		*name;
-	char		*variables;
-	char		*headers;
 	char		*agent;
 	char		*http_user;
 	char		*http_password;
@@ -319,6 +319,7 @@ typedef struct
 	char		*ssl_cert_file;
 	char		*ssl_key_file;
 	char		*ssl_key_password;
+	char		*delay;
 	int		authentication;
 	int		retries;
 	int		verify_peer;
@@ -337,10 +338,9 @@ typedef struct
 	char		*status_codes;
 	int		no;
 	int		timeout;
-	char		*variables;
 	int		follow_redirects;
 	int		retrieve_mode;
-	char		*headers;
+	int		post_type;
 }
 DB_HTTPSTEP;
 
@@ -358,13 +358,14 @@ typedef struct
 }
 DB_ESCALATION;
 
+int	DBinit(char **error);
+void	DBdeinit(void);
+
 int	DBconnect(int flag);
-void	DBinit(void);
 void	DBclose(void);
 
 #ifdef HAVE_ORACLE
 void	DBstatement_prepare(const char *sql);
-void	DBbind_parameter(int position, void *buffer, unsigned char type);
 int	DBstatement_execute();
 #endif
 #ifdef HAVE___VA_ARGS__
@@ -454,8 +455,9 @@ void	zbx_append_trigger_diff(zbx_vector_ptr_t *trigger_diff, zbx_uint64_t trigge
 int	DBget_row_count(const char *table_name);
 int	DBget_proxy_lastaccess(const char *hostname, int *lastaccess, char **error);
 
+char	*DBdyn_escape_field(const char *table_name, const char *field_name, const char *src);
 char	*DBdyn_escape_string(const char *src);
-char	*DBdyn_escape_string_len(const char *src, size_t max_src_len);
+char	*DBdyn_escape_string_len(const char *src, size_t length);
 char	*DBdyn_escape_like_pattern(const char *src);
 
 int	DBcopy_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *lnk_templateids);
@@ -469,8 +471,8 @@ void	DBdelete_hosts_with_prototypes(zbx_vector_uint64_t *hostids);
 int	DBupdate_itservices(zbx_vector_ptr_t *trigger_diff);
 int	DBremove_triggers_from_itservices(zbx_uint64_t *triggerids, int triggerids_num);
 
-void	zbx_create_itservices_lock();
-void	zbx_destroy_itservices_lock();
+int	zbx_create_itservices_lock(char **error);
+void	zbx_destroy_itservices_lock(void);
 
 void	DBadd_condition_alloc(char **sql, size_t *sql_alloc, size_t *sql_offset, const char *fieldname,
 		const zbx_uint64_t *values, const int num);
@@ -500,7 +502,6 @@ zbx_uint64_t	DBadd_interface(zbx_uint64_t hostid, unsigned char type,
 		unsigned char useip, const char *ip, const char *dns, unsigned short port);
 
 const char	*DBget_inventory_field(unsigned char inventory_link);
-unsigned short	DBget_inventory_field_len(unsigned char inventory_link);
 
 void	DBset_host_inventory(zbx_uint64_t hostid, int inventory_mode);
 void	DBadd_host_inventory(zbx_uint64_t hostid, int inventory_mode);
@@ -522,16 +523,6 @@ void	DBdelete_groups(zbx_vector_uint64_t *groupids);
 void	DBselect_uint64(const char *sql, zbx_vector_uint64_t *ids);
 
 /* bulk insert support */
-
-/* database field value */
-typedef union
-{
-	int		i32;
-	zbx_uint64_t	ui64;
-	double		dbl;
-	char		*str;
-}
-zbx_db_value_t;
 
 /* database bulk insert data */
 typedef struct
@@ -600,6 +591,6 @@ zbx_host_availability_t;
 
 int	zbx_sql_add_host_availability(char **sql, size_t *sql_alloc, size_t *sql_offset,
 		const zbx_host_availability_t *ha);
-int	DBget_user_by_active_session(zbx_user_t *user, const char *sessionid);
+int	DBget_user_by_active_session(const char *sessionid, zbx_user_t *user);
 
 #endif

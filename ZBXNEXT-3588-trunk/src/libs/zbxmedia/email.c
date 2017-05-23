@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -684,6 +684,23 @@ clean:
 out:
 	return ret;
 #else
+	ZBX_UNUSED(smtp_server);
+	ZBX_UNUSED(smtp_port);
+	ZBX_UNUSED(smtp_helo);
+	ZBX_UNUSED(from_display_name);
+	ZBX_UNUSED(from_angle_addr);
+	ZBX_UNUSED(to_display_name);
+	ZBX_UNUSED(to_angle_addr);
+	ZBX_UNUSED(mailsubject);
+	ZBX_UNUSED(mailbody);
+	ZBX_UNUSED(smtp_security);
+	ZBX_UNUSED(smtp_verify_peer);
+	ZBX_UNUSED(smtp_verify_host);
+	ZBX_UNUSED(smtp_authentication);
+	ZBX_UNUSED(username);
+	ZBX_UNUSED(password);
+	ZBX_UNUSED(timeout);
+
 	zbx_strlcpy(error, "Support for SMTP authentication was not compiled in", max_error_len);
 	return FAIL;
 #endif

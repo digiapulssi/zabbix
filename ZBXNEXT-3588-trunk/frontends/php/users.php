@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,10 +57,10 @@ $fields = [
 	'lang' =>				[T_ZBX_STR, O_OPT, null,	null,		null],
 	'theme' =>				[T_ZBX_STR, O_OPT, null,	IN('"'.implode('","', $themes).'"'), 'isset({add}) || isset({update})'],
 	'autologin' =>			[T_ZBX_INT, O_OPT, null,	IN('1'),	null],
-	'autologout' => 		[T_ZBX_INT, O_OPT, null,	BETWEEN(90, 10000), null, _('Auto-logout (min 90 seconds)')],
+	'autologout' => 		[T_ZBX_STR, O_OPT, null,	null,		null, _('Auto-logout')],
 	'autologout_visible' =>	[T_ZBX_STR, O_OPT, null,	IN('1'),	null],
 	'url' =>				[T_ZBX_STR, O_OPT, null,	null,		'isset({add}) || isset({update})'],
-	'refresh' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(0, SEC_PER_HOUR), 'isset({add}) || isset({update})', _('Refresh (in seconds)')],
+	'refresh' =>			[T_ZBX_STR, O_OPT, null,	null, 'isset({add}) || isset({update})', _('Refresh')],
 	'rows_per_page' =>		[T_ZBX_INT, O_OPT, null,	BETWEEN(1, 999999),'isset({add}) || isset({update})', _('Rows per page')],
 	// actions
 	'action' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	IN('"user.massdelete","user.massunblock"'),	null],
@@ -207,75 +207,66 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 		$isValid = false;
 	}
-	elseif (isset($_REQUEST['password1']) && $_REQUEST['alias'] == ZBX_GUEST_USER && !zbx_empty($_REQUEST['password1'])) {
-		show_error_message(_('For guest, password must be empty'));
-
-		$isValid = false;
-	}
-	elseif (isset($_REQUEST['password1']) && $_REQUEST['alias'] != ZBX_GUEST_USER && zbx_empty($_REQUEST['password1'])) {
+	elseif (hasRequest('password1') && getRequest('password1') === '') {
 		show_error_message(_('Password should not be empty'));
 
 		$isValid = false;
 	}
 
 	if ($isValid) {
-		$user = [];
-		$user['alias'] = getRequest('alias');
-		$user['name'] = getRequest('name');
-		$user['surname'] = getRequest('surname');
-		$user['passwd'] = getRequest('password1');
-		$user['url'] = getRequest('url');
-		$user['autologin'] = getRequest('autologin', 0);
-		$user['autologout'] = hasRequest('autologout_visible') ? getRequest('autologout') : 0;
-		$user['theme'] = getRequest('theme');
-		$user['refresh'] = getRequest('refresh');
-		$user['rows_per_page'] = getRequest('rows_per_page');
-		$user['type'] = getRequest('user_type');
-		$user['user_medias'] = getRequest('user_medias', []);
-		$user['usrgrps'] = zbx_toObject($usrgrps, 'usrgrpid');
+		$user = [
+			'alias' => getRequest('alias'),
+			'name' => getRequest('name'),
+			'surname' => getRequest('surname'),
+			'url' => getRequest('url'),
+			'autologin' => getRequest('autologin', 0),
+			'autologout' => hasRequest('autologout_visible') ? getRequest('autologout') : '0',
+			'theme' => getRequest('theme'),
+			'refresh' => getRequest('refresh'),
+			'rows_per_page' => getRequest('rows_per_page'),
+			'user_medias' => [],
+			'usrgrps' => zbx_toObject($usrgrps, 'usrgrpid')
+		];
+
+		if (hasRequest('password1')) {
+			$user['passwd'] = getRequest('password1');
+		}
+
+		foreach (getRequest('user_medias', []) as $media) {
+			$user['user_medias'][] = [
+				'mediatypeid' => $media['mediatypeid'],
+				'sendto' => $media['sendto'],
+				'active' => $media['active'],
+				'severity' => $media['severity'],
+				'period' => $media['period']
+			];
+		}
 
 		if (hasRequest('lang')) {
 			$user['lang'] = getRequest('lang');
 		}
 
-		DBstart();
-
 		if (hasRequest('userid')) {
-			$user['userid'] = getRequest('userid');
-			$result = API::User()->update([$user]);
-
-			if ($result) {
-				$result = API::User()->updateMedia([
-					'users' => $user,
-					'medias' => $user['user_medias']
-				]);
+			if (bccomp(CWebUser::$data['userid'], getRequest('userid')) != 0) {
+				$user['type'] = getRequest('user_type');
 			}
 
-			$messageSuccess = _('User updated');
-			$messageFailed = _('Cannot update user');
-			$auditAction = AUDIT_ACTION_UPDATE;
+			$user['userid'] = getRequest('userid');
+			$result = (bool) API::User()->update([$user]);
+
+			show_messages($result, _('User updated'), _('Cannot update user'));
 		}
 		else {
-			$result = API::User()->create($user);
+			$user['type'] = getRequest('user_type');
+			$result = (bool) API::User()->create($user);
 
-			$messageSuccess = _('User added');
-			$messageFailed = _('Cannot add user');
-			$auditAction = AUDIT_ACTION_ADD;
+			show_messages($result, _('User added'), _('Cannot add user'));
 		}
 
 		if ($result) {
-			add_audit($auditAction, AUDIT_RESOURCE_USER,
-				'User alias ['.$_REQUEST['alias'].'] name ['.$_REQUEST['name'].'] surname ['.$_REQUEST['surname'].']'
-			);
 			unset($_REQUEST['form']);
-		}
-
-		$result = DBend($result);
-
-		if ($result) {
 			uncheckTableRows();
 		}
-		show_messages($result, $messageSuccess, $messageFailed);
 	}
 }
 elseif (isset($_REQUEST['del_user_media'])) {
@@ -352,7 +343,6 @@ if (!empty($_REQUEST['form'])) {
 	$data['userid'] = $userId;
 	$data['form'] = getRequest('form');
 	$data['form_refresh'] = getRequest('form_refresh', 0);
-	$data['autologout'] = getRequest('autologout');
 
 	// render view
 	$usersView = new CView('administration.users.edit', $data);

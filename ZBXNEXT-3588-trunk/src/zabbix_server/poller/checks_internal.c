@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -158,13 +158,15 @@ int	get_value_internal(DC_ITEM *item, AGENT_RESULT *result)
 			goto out;
 		}
 
-		if (NULL != (tmp = get_rparam(&request, 1)) && '\0' != *tmp && FAIL == is_time_suffix(tmp, &from))
+		if (NULL != (tmp = get_rparam(&request, 1)) && '\0' != *tmp &&
+				FAIL == is_time_suffix(tmp, &from, ZBX_LENGTH_UNLIMITED))
 		{
 			error = zbx_strdup(error, "Invalid second parameter.");
 			goto out;
 		}
 
-		if (NULL != (tmp = get_rparam(&request, 2)) && '\0' != *tmp && FAIL == is_time_suffix(tmp, &to))
+		if (NULL != (tmp = get_rparam(&request, 2)) && '\0' != *tmp &&
+				FAIL == is_time_suffix(tmp, &to, ZBX_LENGTH_UNLIMITED))
 		{
 			error = zbx_strdup(error, "Invalid third parameter.");
 			goto out;
@@ -337,7 +339,6 @@ int	get_value_internal(DC_ITEM *item, AGENT_RESULT *result)
 			case ZBX_PROCESS_TYPE_ESCALATOR:
 			case ZBX_PROCESS_TYPE_PROXYPOLLER:
 			case ZBX_PROCESS_TYPE_TIMER:
-			case ZBX_PROCESS_TYPE_TASKMANAGER:
 				if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
 					process_type = ZBX_PROCESS_TYPE_UNKNOWN;
 				break;
