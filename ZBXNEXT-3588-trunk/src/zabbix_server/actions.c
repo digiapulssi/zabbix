@@ -2948,7 +2948,7 @@ static void	conditions_vectors_destroy(zbx_hashset_t *uniq_conditions)
 
 /******************************************************************************
  *                                                                            *
- * Function: check_action_condition                                           *
+ * Function: zbx_check_action_condition                                       *
  *                                                                            *
  * Purpose: check if event matches single condition                           *
  *                                                                            *
@@ -2958,7 +2958,7 @@ static void	conditions_vectors_destroy(zbx_hashset_t *uniq_conditions)
  * Return value: SUCCEED - matches, FAIL - otherwise                          *
  *                                                                            *
  ******************************************************************************/
-int	check_action_condition(const DB_EVENT *event, DB_CONDITION *condition)
+int	zbx_check_action_condition(const DB_EVENT *event, DB_CONDITION *condition)
 {
 	int			ret;
 	zbx_vector_ptr_t	esc_events;
