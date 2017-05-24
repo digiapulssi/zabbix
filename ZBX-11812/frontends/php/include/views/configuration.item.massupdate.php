@@ -46,7 +46,7 @@ $itemFormList->addRow(
 	new CComboBox('type', $this->data['type'], null, $this->data['itemTypes'])
 );
 
-// append hosts to form list...
+// append hosts to form list
 if ($this->data['displayInterfaces']) {
 	$interfacesComboBox = new CComboBox('interfaceid', $this->data['interfaceid']);
 	$interfacesComboBox->addItem(new CComboItem(0, '', null, false));
