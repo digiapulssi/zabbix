@@ -555,7 +555,7 @@ class CFrontendSetup {
 		$current = function_exists('ldap_connect');
 
 		return [
-			'name' => _('PHP ldap'),
+			'name' => _('PHP LDAP'),
 			'current' => $current ? _('on') : _('off'),
 			'required' => null,
 			'result' => $current ? self::CHECK_OK : self::CHECK_WARNING,
