@@ -77,13 +77,18 @@ $table = (new CTableInfo())
 $current_time = time();
 
 foreach ($data['hosts'] as $host) {
-	// Sort interfaces by 'main' in descending order and by interface priority.
-	CArrayHelper::sort($host['interfaces'], [
-		['field' => 'main', 'order' => ZBX_SORT_DOWN],
-		['field' => 'type', 'order' => ZBX_SORT_UP]
-	]);
+	// Select an interface from the list with highest priority.
+	$interface = null;
+	foreach ([INTERFACE_TYPE_AGENT, INTERFACE_TYPE_SNMP, INTERFACE_TYPE_JMX, INTERFACE_TYPE_IPMI] as $interface_type) {
+		$host_interfaces = array_filter($host['interfaces'], function($host_interface) use($interface_type) {
+			return $host_interface['type'] == $interface_type;
+		});
+		if ($host_interfaces) {
+			$interface = reset($host_interfaces);
+			break;
+		}
+	}
 
-	$interface = reset($host['interfaces']);
 	$description = [];
 
 	if ($host['proxy_hostid'] != 0) {

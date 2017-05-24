@@ -390,9 +390,8 @@ if (isset($_REQUEST['form'])) {
 		$data['form'] = 'clone';
 	}
 
-	// Sort interfaces to be displayed listed by priority and starting with one selected as 'main'.
+	// Sort interfaces to be listed starting with one selected as 'main'.
 	CArrayHelper::sort($data['interfaces'], [
-		['field' => 'type', 'order' => ZBX_SORT_UP],
 		['field' => 'main', 'order' => ZBX_SORT_DOWN]
 	]);
 

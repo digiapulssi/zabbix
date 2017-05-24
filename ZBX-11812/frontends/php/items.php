@@ -941,9 +941,8 @@ if (isset($_REQUEST['form']) && str_in_array($_REQUEST['form'], [_('Create item'
 	$data['config'] = select_config();
 	$data['host'] = $host;
 
-	// Sort interfaces to be displayed listed by priority and starting with one selected as 'main'.
+	// Sort interfaces to be listed starting with one selected as 'main'.
 	CArrayHelper::sort($data['interfaces'], [
-		['field' => 'type', 'order' => ZBX_SORT_UP],
 		['field' => 'main', 'order' => ZBX_SORT_DOWN]
 	]);
 
@@ -1039,6 +1038,11 @@ elseif (((hasRequest('action') && getRequest('action') == 'item.massupdateform')
 
 		if ($hostCount == 1 && $data['displayInterfaces']) {
 			$data['hosts'] = reset($data['hosts']);
+
+			// Sort interfaces to be listed starting with one selected as 'main'.
+			CArrayHelper::sort($data['hosts']['interfaces'], [
+				['field' => 'main', 'order' => ZBX_SORT_DOWN]
+			]);
 
 			// if selected from filter without 'hostid'
 			if (!$data['hostid']) {
