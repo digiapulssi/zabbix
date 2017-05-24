@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc4
 
 New features:
+..F....... [214] fixed timeout on the Incident Details page when number of tests within incidents is over 5000 (Sasha)
 ....I..... [sub-201] allowed earlier SLA-API update on a freshly installed database (dimir)
 
 Bug fixes:
