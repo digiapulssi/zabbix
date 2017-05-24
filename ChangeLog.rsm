@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc4
 
 New features:
+....I..... [sub-201] allowed earlier SLA-API update on a freshly installed database (dimir)
 
 Bug fixes:
 
