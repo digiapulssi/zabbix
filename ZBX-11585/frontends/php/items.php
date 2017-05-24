@@ -1309,8 +1309,9 @@ else {
 	];
 	$preFilter = count($options, COUNT_RECURSIVE);
 
-	if (hasRequest('filter_groupid')) {
-		$filter_groupids = [getRequest('filter_groupid', [])];
+	$filter_groupid = getRequest('filter_groupid', []);
+	if ($filter_groupid) {
+		$filter_groupids = [$filter_groupid];
 		$filter_groups = API::HostGroup()->get([
 			'output' => ['groupid', 'name'],
 			'groupids' => $filter_groupids,
