@@ -37,7 +37,7 @@ $authenticationFormList->addRow(_('Default authentication'),
 );
 
 // append LDAP fields to form list
-if ($this->data['config']['authentication_type'] == ZBX_AUTH_LDAP) {
+if ($this->data['ldap_extension_enabled'] && $this->data['config']['authentication_type'] == ZBX_AUTH_LDAP) {
 	if ($this->data['user_list']) {
 		$userComboBox = new CComboBox('user', $this->data['user']);
 		foreach ($this->data['user_list'] as $user) {
@@ -119,9 +119,15 @@ elseif ($this->data['config']['authentication_type'] != ZBX_AUTH_LDAP) {
 	$saveButton->setAttribute('disabled', 'true');
 }
 
-// append buttons to form
+// LDAP Test button
+$test_button = new CSubmit('test', _('Test'));
+
 if ($this->data['config']['authentication_type'] == ZBX_AUTH_LDAP) {
-	$authenticationTab->setFooter(makeFormFooter($saveButton, [new CSubmit('test', _('Test'))]));
+	if (!$this->data['ldap_extension_enabled']) {
+		$test_button->setAttribute('disabled', 'true');
+		$saveButton->setAttribute('disabled', 'true');
+	}
+	$authenticationTab->setFooter(makeFormFooter($saveButton, [$test_button]));
 }
 else {
 	$authenticationTab->setFooter(makeFormFooter($saveButton));
