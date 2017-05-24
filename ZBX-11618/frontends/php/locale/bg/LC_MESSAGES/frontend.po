@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-02-20 11:27+0200\n"
+"POT-Creation-Date: 2017-05-03 21:42+0300\n"
 "PO-Revision-Date: 2013-01-12 23:52+0300\n"
 "Last-Translator: Fahri <fahri_hasan@hotmail.com>\n"
 "Language-Team: \n"
@@ -302,7 +302,7 @@ msgstr "Потвърждаване"
 #: include/views/administration.general.iconmap.edit.php:48
 #: include/views/administration.general.regularexpressions.edit.php:47
 #: include/views/administration.general.valuemapping.edit.php:46
-#: include/views/administration.users.edit.php:204
+#: include/views/administration.users.edit.php:206
 #: include/views/configuration.action.edit.php:48
 #: include/views/configuration.action.edit.php:401
 #: include/views/configuration.action.edit.php:405
@@ -470,9 +470,9 @@ msgstr "Активно до"
 #: include/views/administration.general.valuemapping.edit.php:107
 #: include/views/administration.usergroups.edit.php:155
 #: include/views/administration.usergroups.edit.php:186
-#: include/views/administration.users.edit.php:72
-#: include/views/administration.users.edit.php:265
-#: include/views/administration.users.edit.php:452
+#: include/views/administration.users.edit.php:74
+#: include/views/administration.users.edit.php:267
+#: include/views/administration.users.edit.php:454
 #: include/views/common.filter.trigger.php:140
 #: include/views/configuration.action.edit.php:359
 #: include/views/configuration.action.edit.php:614
@@ -540,7 +540,7 @@ msgstr "Активно до"
 #: include/views/js/administration.general.valuemapping.edit.js.php:24
 #: include/views/js/adm.regexprs.edit.js.php:188
 #: include/views/js/configuration.action.edit.js.php:242
-#: include/views/js/configuration.action.edit.js.php:578
+#: include/views/js/configuration.action.edit.js.php:576
 #: include/views/js/configuration.correlation.edit.js.php:47
 #: include/views/js/configuration.discovery.edit.js.php:111
 #: include/views/js/configuration.discovery.edit.js.php:674
@@ -668,7 +668,7 @@ msgstr "Интерфейс на Агента или SNMP или JMX или IPMI"
 msgid "Aggregate checks do not require any agent running on a host being monitored. Zabbix server collects aggregate information by doing direct database queries. See Zabbix Manual."
 msgstr ""
 
-#: include/hosts.inc.php:114 include/views/administration.users.edit.php:46
+#: include/hosts.inc.php:114 include/views/administration.users.edit.php:48
 #: include/views/administration.users.list.php:42
 #: include/views/administration.users.list.php:72 popup.php:635 users.php:43
 msgid "Alias"
@@ -697,8 +697,8 @@ msgid "All"
 msgstr "Всички"
 
 #: include/views/administration.usergroups.edit.php:99
-#: include/views/administration.users.edit.php:402
-#: include/views/administration.users.edit.php:408
+#: include/views/administration.users.edit.php:404
+#: include/views/administration.users.edit.php:410
 msgid "All groups"
 msgstr ""
 
@@ -1049,11 +1049,11 @@ msgstr "Протокол за автентификация"
 msgid "Auto registration"
 msgstr "Автоматично регистриране"
 
-#: include/views/administration.users.edit.php:175
+#: include/views/administration.users.edit.php:177
 msgid "Auto-login"
 msgstr "Автоматичен вход"
 
-#: include/views/administration.users.edit.php:176 profile.php:49 users.php:60
+#: include/views/administration.users.edit.php:178 profile.php:49 users.php:60
 msgid "Auto-logout (min 90 seconds)"
 msgstr "Автоматичен изход (мин 90 секунди)"
 
@@ -1293,7 +1293,7 @@ msgid_plural "Cannot acknowledge events"
 msgstr[0] "Събитието не може да се потвърди"
 msgstr[1] "Събитието не може да се потвърди"
 
-#: include/classes/api/services/CEvent.php:773
+#: include/classes/api/services/CEvent.php:775
 #, c-format
 msgid "Cannot acknowledge problem: %1$s."
 msgstr ""
@@ -1368,7 +1368,7 @@ msgstr "Не може да се добави група"
 msgid "Cannot add group."
 msgstr ""
 
-#: hosts.php:431
+#: hosts.php:438
 msgid "Cannot add host"
 msgstr "Не може да се добави потребител"
 
@@ -1524,8 +1524,8 @@ msgstr "Не може да се клонират елемент на данни�
 msgid "Cannot clone trigger prototypes."
 msgstr "Не може да се клонират тригер прототипите"
 
-#: include/classes/api/services/CEvent.php:845
-#: include/classes/api/services/CEvent.php:852
+#: include/classes/api/services/CEvent.php:847
+#: include/classes/api/services/CEvent.php:854
 #, c-format
 msgid "Cannot close problem: %1$s."
 msgstr ""
@@ -1676,7 +1676,7 @@ msgid_plural "Cannot delete groups"
 msgstr[0] "Не може да се изтрие групата"
 msgstr[1] "Не може да се изтрие групата"
 
-#: hosts.php:662 hosts.php:675
+#: hosts.php:676 hosts.php:689
 msgid "Cannot delete host"
 msgstr "Не може да се изтрие хоста"
 
@@ -1697,7 +1697,7 @@ msgstr "Не може да се изтрие съответствие на ик�
 msgid "Cannot delete image"
 msgstr "Не може да се изтрие изображението"
 
-#: include/classes/api/services/CHost.php:1021
+#: include/classes/api/services/CHost.php:985
 msgid "Cannot delete inventory."
 msgstr "Не може да се изтрият инвентарните данни."
 
@@ -1876,7 +1876,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: app/controllers/CControllerProxyHostDisable.php:76 hostgroups.php:303
-#: hosts.php:706
+#: hosts.php:720
 msgid "Cannot disable host"
 msgid_plural "Cannot disable hosts"
 msgstr[0] ""
@@ -1941,7 +1941,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: app/controllers/CControllerProxyHostEnable.php:76 hostgroups.php:302
-#: hosts.php:705
+#: hosts.php:719
 msgid "Cannot enable host"
 msgid_plural "Cannot enable hosts"
 msgstr[0] ""
@@ -2154,7 +2154,7 @@ msgstr ""
 msgid "Cannot insert user media."
 msgstr "Не може да вмъкне потребителско уведомление."
 
-#: include/classes/api/services/CHost.php:999
+#: include/classes/api/services/CHost.php:963
 msgid "Cannot link template"
 msgstr "Не може да се върже шаблона"
 
@@ -2171,7 +2171,7 @@ msgstr ""
 msgid "Cannot logout."
 msgstr "Неуспешно излизане от системата."
 
-#: include/classes/api/services/CHost.php:857
+#: include/classes/api/services/CHost.php:821
 msgid "Cannot mass update host name."
 msgstr "Неуспешно общо актуализиране името на хоста."
 
@@ -2179,7 +2179,7 @@ msgstr "Неуспешно общо актуализиране името на �
 msgid "Cannot mass update template name."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:847
+#: include/classes/api/services/CHost.php:811
 msgid "Cannot mass update visible host name."
 msgstr "Неуспешно общо актуализиране видимото име на хоста."
 
@@ -2301,14 +2301,14 @@ msgstr ""
 msgid "Cannot set \"templateid\" for screen \"%1$s\"."
 msgstr "Не може да се зададе \"templateid\" за екран \"%1$s\"."
 
-#: include/classes/api/services/CHost.php:908
-#: include/classes/api/services/CHost.php:1688
-#: include/classes/api/services/CHost.php:1816
+#: include/classes/api/services/CHost.php:872
+#: include/classes/api/services/CHost.php:1700
+#: include/classes/api/services/CHost.php:1827
 msgid "Cannot set inventory fields for disabled inventory."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:568
-#: include/classes/api/services/CScreenItem.php:594
+#: include/classes/api/services/CScreenItem.php:575
+#: include/classes/api/services/CScreenItem.php:601
 msgid "Cannot set resource ID for screen element."
 msgstr ""
 
@@ -2353,7 +2353,7 @@ msgstr "Не може да се премахнат и изчистят елем�
 msgid "Cannot unlink and clear triggers"
 msgstr "Не може да се премахнат и изчистят тригерите"
 
-#: include/classes/api/services/CHost.php:974
+#: include/classes/api/services/CHost.php:938
 msgid "Cannot unlink template"
 msgstr "Не може да се премахне шаблона"
 
@@ -2418,7 +2418,7 @@ msgstr ""
 msgid "Cannot update \"%1$s\" for trigger prototype \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1800
+#: include/classes/api/services/CHost.php:1811
 #, c-format
 msgid "Cannot update \"%2$s\" for a discovered host \"%1$s\"."
 msgstr ""
@@ -2520,11 +2520,11 @@ msgstr "Не може да се актуализира групата."
 msgid "Cannot update groups for discovered host \"%1$s\"."
 msgstr ""
 
-#: hosts.php:418
+#: hosts.php:425
 msgid "Cannot update host"
 msgstr "Не може да се актуализира хоста"
 
-#: include/classes/api/services/CHost.php:812
+#: include/classes/api/services/CHost.php:778
 msgid "Cannot update host encryption settings. Connection settings for both directions should be specified."
 msgstr ""
 
@@ -2534,7 +2534,7 @@ msgid_plural "Cannot update host prototypes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: hosts.php:405
+#: hosts.php:412
 msgid "Cannot update hosts"
 msgstr "Не може да се актуализират хостовете"
 
@@ -2686,6 +2686,10 @@ msgstr ""
 msgid "Case sensitive"
 msgstr "Чувствително към регистъра (отчитане на главни и малки букви)"
 
+#: include/locales.inc.php:55
+msgid "Catalan (ca_ES)"
+msgstr ""
+
 #: include/classes/items/CHelpItems.php:877
 msgid "Catches all SNMP traps that match regex. If regexp is unspecified, catches any trap."
 msgstr ""
@@ -2711,7 +2715,7 @@ msgstr ""
 
 #: include/classes/screens/CScreenBase.php:405
 #: include/classes/screens/CScreenBuilder.php:515
-#: include/classes/screens/CScreenMap.php:58
+#: include/classes/screens/CScreenMap.php:61
 #: include/views/configuration.services.edit.php:51
 #: include/views/hostmacros.php:100 include/views/js/hostmacros.js.php:37
 msgid "Change"
@@ -2724,7 +2728,7 @@ msgstr "Промяна"
 
 #: app/views/administration.mediatype.edit.php:116
 #: include/views/administration.authentication.edit.php:93
-#: include/views/administration.users.edit.php:102
+#: include/views/administration.users.edit.php:104
 msgid "Change password"
 msgstr "Промени парола"
 
@@ -2838,11 +2842,11 @@ msgstr ""
 msgid "Checks should be unique."
 msgstr "Проверките трябва да са уникални."
 
-#: include/locales.inc.php:55
+#: include/locales.inc.php:56
 msgid "Chinese (zh_CN)"
 msgstr "Китайски (zh_CN)"
 
-#: include/locales.inc.php:56
+#: include/locales.inc.php:57
 msgid "Chinese (zh_TW)"
 msgstr "Китайски (zh_TW)"
 
@@ -2967,11 +2971,11 @@ msgstr "Цвят \"%1$s\" не е коректен: очаква шестнад�
 msgid "Colour (OK)"
 msgstr "Цвят (OK)"
 
-#: include/screens.inc.php:131
+#: include/screens.inc.php:141
 msgid "Column added"
 msgstr ""
 
-#: include/screens.inc.php:193
+#: include/screens.inc.php:213
 msgid "Column deleted"
 msgstr ""
 
@@ -3738,7 +3742,7 @@ msgstr "Персонализиран размер"
 msgid "Custom slides"
 msgstr "Персонализирани слайдове"
 
-#: include/locales.inc.php:57
+#: include/locales.inc.php:58
 msgid "Czech (cs_CZ)"
 msgstr "Чешки (cs_CZ)"
 
@@ -3756,8 +3760,8 @@ msgstr ""
 msgid "DES"
 msgstr ""
 
-#: include/maps.inc.php:489 include/maps.inc.php:569 include/maps.inc.php:655
-#: include/maps.inc.php:743
+#: include/maps.inc.php:490 include/maps.inc.php:570 include/maps.inc.php:656
+#: include/maps.inc.php:744
 msgid "DISABLED"
 msgstr "ИЗКЛЮЧЕНО"
 
@@ -4181,7 +4185,7 @@ msgstr "Изтриване на екран?"
 msgid "Delete script?"
 msgstr "Изтриване на скрипт?"
 
-#: include/views/administration.users.edit.php:77
+#: include/views/administration.users.edit.php:79
 msgid "Delete selected"
 msgstr "Изтриване на избраните"
 
@@ -4303,7 +4307,7 @@ msgstr ""
 msgid "Delete selected triggers?"
 msgstr "Изтриване на избраните тригери?"
 
-#: include/views/administration.users.edit.php:440
+#: include/views/administration.users.edit.php:442
 msgid "Delete selected user?"
 msgstr "Изтриване на избрания потребител?"
 
@@ -4374,7 +4378,7 @@ msgstr "Изтрито: Правило за откриване \"%1$s\" в \"%2$
 msgid "Deleted: Graph \"%1$s\" on \"%2$s\"."
 msgstr "Изтрито: Графика \"%1$s\" в \"%2$s\"."
 
-#: include/classes/api/services/CHost.php:1332
+#: include/classes/api/services/CHost.php:1296
 #, c-format
 msgid "Deleted: Host \"%1$s\"."
 msgstr "Изтрито: Хост \"%1$s\"."
@@ -4690,7 +4694,7 @@ msgstr ""
 #: include/views/administration.usergroups.list.php:67
 #: include/views/administration.usergroups.list.php:99
 #: include/views/administration.usergroups.list.php:108
-#: include/views/administration.users.edit.php:214
+#: include/views/administration.users.edit.php:216
 #: include/views/administration.users.list.php:165
 #: include/views/administration.users.list.php:167
 #: include/views/configuration.action.list.php:49
@@ -5005,14 +5009,14 @@ msgstr ""
 msgid "Duplicate host group ID \"%2$s\" for host prototype \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1636
-#: include/classes/api/services/CHost.php:1846
+#: include/classes/api/services/CHost.php:1648
+#: include/classes/api/services/CHost.php:1857
 #, c-format
 msgid "Duplicate host. Host with the same host name \"%s\" already exists in data."
 msgstr "Дублиране на хост. Хост със същото име \"%s\" вече съществува в данните."
 
-#: include/classes/api/services/CHost.php:1643
-#: include/classes/api/services/CHost.php:1866
+#: include/classes/api/services/CHost.php:1655
+#: include/classes/api/services/CHost.php:1877
 #, c-format
 msgid "Duplicate host. Host with the same visible name \"%s\" already exists in data."
 msgstr "Дублиране на хост. Хост със същото видимо име \"%s\" вече съществува в данните."
@@ -5066,7 +5070,7 @@ msgstr "Продължителност"
 msgid "Duration (sec)"
 msgstr "Продължителност (сек)"
 
-#: include/locales.inc.php:58
+#: include/locales.inc.php:59
 msgid "Dutch (nl_NL)"
 msgstr "Холандски (nl_NL)"
 
@@ -5078,7 +5082,7 @@ msgstr "Динамичен елемент на данните"
 msgid "Each URL should have a unique name. Please make sure there is only one URL named"
 msgstr "Всеки URL адрес трябва да има уникално име. Моля, уверете се, че има само едно URL с това име "
 
-#: include/views/administration.users.edit.php:250
+#: include/views/administration.users.edit.php:252
 #: include/views/configuration.action.edit.php:460
 #: include/views/configuration.action.edit.php:480
 #: include/views/configuration.action.edit.php:1191
@@ -5214,7 +5218,7 @@ msgstr ""
 #: include/classes/api/services/CHostGroup.php:675
 #: include/classes/api/services/CHostGroup.php:741
 #: include/classes/api/services/CHostInterface.php:389
-#: include/classes/api/services/CHost.php:1180
+#: include/classes/api/services/CHost.php:1144
 #: include/classes/api/services/CHostPrototype.php:914
 #: include/classes/api/services/CIconMap.php:318
 #: include/classes/api/services/CItem.php:550
@@ -5444,7 +5448,7 @@ msgstr ""
 #: include/views/administration.usergroups.list.php:63
 #: include/views/administration.usergroups.list.php:95
 #: include/views/administration.usergroups.list.php:107
-#: include/views/administration.users.edit.php:208
+#: include/views/administration.users.edit.php:210
 #: include/views/administration.users.list.php:164
 #: include/views/administration.users.list.php:168
 #: include/views/configuration.action.edit.php:368
@@ -5817,7 +5821,7 @@ msgstr ""
 #: include/classes/api/services/CDRule.php:305
 #: include/classes/api/services/CDRule.php:461
 #: include/classes/api/services/CHostGroup.php:912
-#: include/classes/api/services/CHost.php:784
+#: include/classes/api/services/CHost.php:750
 #: include/classes/api/services/CTemplate.php:743
 #: include/classes/api/services/CTriggerGeneral.php:236
 #: include/classes/validators/CNewValidator.php:249
@@ -5943,7 +5947,7 @@ msgstr ""
 msgid "Finish"
 msgstr "Завърши"
 
-#: include/locales.inc.php:59
+#: include/locales.inc.php:60
 msgid "Finnish (fi_FI)"
 msgstr "Финландски (fi_FI)"
 
@@ -6012,7 +6016,7 @@ msgstr "Формула"
 msgid "Fourth"
 msgstr "Четвърти"
 
-#: include/locales.inc.php:60
+#: include/locales.inc.php:61
 msgid "French (fr_FR)"
 msgstr "Френски (fr_FR)"
 
@@ -6045,7 +6049,7 @@ msgstr "Достъп до уеб интерфейс"
 msgid "Frontend access updated"
 msgstr "Достъп до уеб интерфейс актуализиран"
 
-#: include/views/administration.users.edit.php:281
+#: include/views/administration.users.edit.php:283
 msgid "Frontend messaging"
 msgstr "Съобщения в уеб интерфейс"
 
@@ -6092,11 +6096,11 @@ msgstr "Общ"
 msgid "Generated in %s sec"
 msgstr "Генерирано за %s сек"
 
-#: include/locales.inc.php:61
+#: include/locales.inc.php:62
 msgid "Georgian (ka_GE)"
 msgstr ""
 
-#: include/locales.inc.php:62
+#: include/locales.inc.php:63
 msgid "German (de_DE)"
 msgstr "Немски (de_DE)"
 
@@ -6320,7 +6324,7 @@ msgstr "Графики"
 msgid "Graphs deleted"
 msgstr "Графики изтрити"
 
-#: include/locales.inc.php:63
+#: include/locales.inc.php:64
 msgid "Greek (el_GR)"
 msgstr "Гръцки (el_GR)"
 
@@ -6336,7 +6340,7 @@ msgstr "Решетка"
 #: include/classes/screens/CScreenHostsInfo.php:102
 #: include/classes/screens/CScreenHostTriggers.php:133
 #: include/classes/screens/CScreenTriggersOverview.php:76
-#: include/screens.inc.php:680
+#: include/screens.inc.php:700
 #: include/views/configuration.application.list.php:35
 #: include/views/configuration.copy.elements.php:61
 #: include/views/configuration.graph.list.php:46
@@ -6426,7 +6430,7 @@ msgstr "Група актуализирана"
 msgid "Grouping by"
 msgstr "Групиране по"
 
-#: include/views/administration.users.edit.php:68
+#: include/views/administration.users.edit.php:70
 #: include/views/administration.users.list.php:76
 #: include/views/configuration.host.edit.php:89
 #: include/views/configuration.host.edit.php:112
@@ -6492,7 +6496,7 @@ msgstr ""
 msgid "Headers"
 msgstr ""
 
-#: include/locales.inc.php:64
+#: include/locales.inc.php:65
 msgid "Hebrew (he_IL)"
 msgstr ""
 
@@ -6506,7 +6510,7 @@ msgstr ""
 msgid "Height"
 msgstr "Височина"
 
-#: app/views/layout.htmlpage.menu.php:42 include/views/general.login.php:66
+#: app/views/layout.htmlpage.menu.php:42 include/views/general.login.php:67
 msgid "Help"
 msgstr "Помощ"
 
@@ -6644,16 +6648,16 @@ msgid_plural "Hosts"
 msgstr[0] "Хост"
 msgstr[1] "Хост"
 
-#: include/classes/api/services/CHost.php:870
+#: include/classes/api/services/CHost.php:834
 #: include/classes/api/services/CTemplate.php:430
 #, c-format
 msgid "Host \"%1$s\" already exists."
 msgstr "Хост \"%1$s\" вече съществува."
 
 #: include/classes/api/services/CHostGroup.php:1490
-#: include/classes/api/services/CHost.php:838
-#: include/classes/api/services/CHost.php:1624
-#: include/classes/api/services/CHost.php:1784
+#: include/classes/api/services/CHost.php:802
+#: include/classes/api/services/CHost.php:1636
+#: include/classes/api/services/CHost.php:1795
 #, c-format
 msgid "Host \"%1$s\" cannot be without host group."
 msgstr ""
@@ -6675,7 +6679,7 @@ msgstr "IP адрес на хост"
 msgid "Host access"
 msgstr "Хост достъп"
 
-#: hosts.php:430
+#: hosts.php:437
 msgid "Host added"
 msgstr "Хост добавен"
 
@@ -6687,19 +6691,19 @@ msgstr "Хоста не може да има повече от един стан
 msgid "Host count"
 msgstr "Хост брояч"
 
-#: hosts.php:662 hosts.php:675
+#: hosts.php:676 hosts.php:689
 msgid "Host deleted"
 msgstr "Хост изтрит"
 
 #: app/controllers/CControllerProxyHostDisable.php:73 hostgroups.php:300
-#: hosts.php:703
+#: hosts.php:717
 msgid "Host disabled"
 msgid_plural "Hosts disabled"
 msgstr[0] ""
 msgstr[1] ""
 
 #: app/controllers/CControllerProxyHostEnable.php:73 hostgroups.php:299
-#: hosts.php:702
+#: hosts.php:716
 msgid "Host enabled"
 msgid_plural "Hosts enabled"
 msgstr[0] ""
@@ -6712,7 +6716,7 @@ msgstr[1] ""
 #: include/audit.inc.php:35 include/blocks.inc.php:282
 #: include/forms.inc.php:342 include/maps.inc.php:25
 #: include/views/administration.usergroups.edit.php:93
-#: include/views/administration.users.edit.php:399
+#: include/views/administration.users.edit.php:401
 #: include/views/configuration.hostgroups.edit.php:66
 #: include/views/js/configuration.action.edit.js.php:67
 #: include/views/js/configuration.action.edit.js.php:168
@@ -6910,11 +6914,11 @@ msgstr "Маска на подмрежата на хоста"
 msgid "Host time"
 msgstr "Хост време"
 
-#: include/classes/api/services/CHost.php:712
+#: include/classes/api/services/CHost.php:678
 msgid "Host update failed."
 msgstr "Актуализацията на хоста се провали."
 
-#: hosts.php:417
+#: hosts.php:424
 msgid "Host updated"
 msgstr "Хост актуализиран"
 
@@ -6923,8 +6927,8 @@ msgstr "Хост актуализиран"
 msgid "Host with the same name \"%1$s\" already exists."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1719
-#: include/classes/api/services/CHost.php:1899
+#: include/classes/api/services/CHost.php:1731
+#: include/classes/api/services/CHost.php:1933
 #, c-format
 msgid "Host with the same name \"%s\" already exists."
 msgstr "Хост със същото име \"%s\" вече съществува."
@@ -6935,8 +6939,8 @@ msgstr "Хост със същото име \"%s\" вече съществува
 msgid "Host with the same visible name \"%1$s\" already exists."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1725
-#: include/classes/api/services/CHost.php:1906
+#: include/classes/api/services/CHost.php:1737
+#: include/classes/api/services/CHost.php:1940
 #, c-format
 msgid "Host with the same visible name \"%s\" already exists."
 msgstr "Хост със същото видимо име \"%s\" вече съществува."
@@ -6987,7 +6991,7 @@ msgstr "Хостове в поддръжка"
 msgid "Hosts location"
 msgstr "Местоположение на хостове"
 
-#: hosts.php:399
+#: hosts.php:406
 msgid "Hosts updated"
 msgstr "Хостове актуализирани"
 
@@ -7001,7 +7005,7 @@ msgstr "Часа"
 msgid "Housekeeping"
 msgstr ""
 
-#: include/locales.inc.php:65
+#: include/locales.inc.php:66
 msgid "Hungarian (hu_HU)"
 msgstr "Унгарски (hu_HU)"
 
@@ -7271,7 +7275,7 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "Ако смятате, че това съобщение е грешно, моля консултирайте се с администраторите за получаване на необходимите права."
 
 #: image.php:26 include/audit.inc.php:37 include/maps.inc.php:28
-#: include/maps.inc.php:765
+#: include/maps.inc.php:766
 #: include/views/administration.general.image.edit.php:46
 #: include/views/administration.general.image.edit.php:49
 #: include/views/js/monitoring.sysmaps.js.php:21 jsLoader.php:145 map.php:152
@@ -7695,9 +7699,9 @@ msgstr "Неправилно изчислена стойност SLA за усл
 msgid "Incorrect characters used for host \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:853
-#: include/classes/api/services/CHost.php:1612
-#: include/classes/api/services/CHost.php:1840
+#: include/classes/api/services/CHost.php:817
+#: include/classes/api/services/CHost.php:1624
+#: include/classes/api/services/CHost.php:1851
 #, c-format
 msgid "Incorrect characters used for host name \"%s\"."
 msgstr "Използвани са неправилни символи за името на хост \"%s\"."
@@ -7819,12 +7823,12 @@ msgstr ""
 msgid "Incorrect function is used"
 msgstr "Използва се неправилна функция"
 
-#: include/classes/api/services/CScreenItem.php:690
+#: include/classes/api/services/CScreenItem.php:697
 #, c-format
 msgid "Incorrect graph ID \"%1$s\" provided for screen element."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:707
+#: include/classes/api/services/CScreenItem.php:714
 #, c-format
 msgid "Incorrect graph prototype ID \"%1$s\" provided for screen element."
 msgstr ""
@@ -7843,12 +7847,12 @@ msgstr ""
 msgid "Incorrect group prototypes for host prototype \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:673
+#: include/classes/api/services/CScreenItem.php:680
 #, c-format
 msgid "Incorrect host ID \"%1$s\" provided for screen element."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:656
+#: include/classes/api/services/CScreenItem.php:663
 #, c-format
 msgid "Incorrect host group ID \"%1$s\" provided for screen element."
 msgstr ""
@@ -7890,8 +7894,8 @@ msgstr "За интерфейса е зададен неправилен DNS п�
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "За интерфейса е зададен неправилен порт \"%s\"."
 
-#: include/classes/api/services/CHost.php:1694
-#: include/classes/api/services/CHost.php:1822
+#: include/classes/api/services/CHost.php:1706
+#: include/classes/api/services/CHost.php:1833
 #, c-format
 msgid "Incorrect inventory field \"%s\"."
 msgstr "Неправилно поле \"%s\" за инвентарни данни."
@@ -7900,7 +7904,7 @@ msgstr "Неправилно поле \"%s\" за инвентарни данн�
 msgid "Incorrect inventory mode in action operation."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:725
+#: include/classes/api/services/CScreenItem.php:732
 #, c-format
 msgid "Incorrect item ID \"%1$s\" provided for screen element."
 msgstr ""
@@ -7914,7 +7918,7 @@ msgstr "Неправилен елемент на данните за стойн�
 msgid "Incorrect item key \"%1$s\" provided for trigger expression on \"%2$s\"."
 msgstr "В тригер израза \"%2$s\" е зададен неправилен ключ за елемента на данните \"%1$s\"."
 
-#: include/classes/api/services/CScreenItem.php:742
+#: include/classes/api/services/CScreenItem.php:749
 #, c-format
 msgid "Incorrect item prototype ID \"%1$s\" provided for screen element."
 msgstr ""
@@ -7964,7 +7968,7 @@ msgstr "Неправилен период за поддръжката (мини�
 msgid "Incorrect maintenance week period"
 msgstr "Неправилен период от седмицата за поддръжката"
 
-#: include/classes/api/services/CScreenItem.php:759
+#: include/classes/api/services/CScreenItem.php:766
 #, c-format
 msgid "Incorrect map ID \"%1$s\" provided for screen element."
 msgstr ""
@@ -7973,7 +7977,7 @@ msgstr ""
 msgid "Incorrect map ID."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:635
+#: include/classes/api/services/CScreenItem.php:642
 msgid "Incorrect max columns provided for screen element."
 msgstr ""
 
@@ -8057,7 +8061,7 @@ msgstr "Неправилен протокол за поверителност з
 msgid "Incorrect regular expression \"%1$s\": \"%2$s\""
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:487
+#: include/classes/api/services/CScreenItem.php:494
 msgid "Incorrect resource type provided for screen item."
 msgstr "Зададен е неправилен тип ресурс за елемент на данните на екрана."
 
@@ -8071,7 +8075,7 @@ msgstr ""
 msgid "Incorrect retrieve mode value for step \"%1$s\" of web scenario \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:788
+#: include/classes/api/services/CScreenItem.php:795
 #, c-format
 msgid "Incorrect screen ID \"%1$s\" provided for screen element."
 msgstr ""
@@ -8081,7 +8085,7 @@ msgstr ""
 msgid "Incorrect screen ID."
 msgstr ""
 
-#: include/screens.inc.php:318 include/screens.inc.php:438
+#: include/screens.inc.php:338 include/screens.inc.php:458
 msgid "Incorrect screen provided for slide show."
 msgstr "Зададен е неправилен екран за слайдшоу."
 
@@ -8107,8 +8111,8 @@ msgstr ""
 msgid "Incorrect source value."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1671
-#: include/classes/api/services/CHost.php:1795
+#: include/classes/api/services/CHost.php:1683
+#: include/classes/api/services/CHost.php:1806
 #, c-format
 msgid "Incorrect status for host \"%1$s\"."
 msgstr ""
@@ -8123,7 +8127,7 @@ msgstr ""
 msgid "Incorrect status for service \"%1$s\"."
 msgstr "Неправилно състояние за услуга  \"%1$s\"."
 
-#: include/classes/api/services/CScreenItem.php:641
+#: include/classes/api/services/CScreenItem.php:648
 msgid "Incorrect style provided for screen element."
 msgstr ""
 
@@ -8272,7 +8276,7 @@ msgstr "Неправилна потребителска група."
 msgid "Incorrect value \"%1$s\" for \"%2$s\" field."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:616
+#: include/classes/api/services/CScreenItem.php:623
 #: include/validate.inc.php:320
 #, c-format
 msgid "Incorrect value \"%1$s\" for \"%2$s\" field: must be between %3$s and %4$s."
@@ -8342,10 +8346,16 @@ msgstr ""
 #: include/classes/api/services/CEvent.php:531
 #: include/classes/api/services/CHostGroup.php:700
 #: include/classes/api/services/CHostGroup.php:773
-#: include/classes/api/services/CHost.php:1547
-#: include/classes/api/services/CHost.php:1553
-#: include/classes/api/services/CHost.php:1564
-#: include/classes/api/services/CHost.php:1570
+#: include/classes/api/services/CHost.php:1527
+#: include/classes/api/services/CHost.php:1533
+#: include/classes/api/services/CHost.php:1548
+#: include/classes/api/services/CHost.php:1554
+#: include/classes/api/services/CHost.php:1559
+#: include/classes/api/services/CHost.php:1565
+#: include/classes/api/services/CHost.php:1573
+#: include/classes/api/services/CHost.php:1579
+#: include/classes/api/services/CHost.php:1588
+#: include/classes/api/services/CHost.php:1594
 #: include/classes/api/services/CHostPrototype.php:139
 #: include/classes/api/services/CHostPrototype.php:432
 #: include/classes/api/services/CMediatype.php:417
@@ -8388,7 +8398,6 @@ msgstr ""
 msgid "Incorrect value map ID."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1576
 #: include/classes/api/services/CProxy.php:676
 msgid "Incorrect value used for PSK field. It should consist of an even number of hexadecimal characters."
 msgstr ""
@@ -8403,7 +8412,7 @@ msgstr ""
 msgid "Incorrect web scenario ID."
 msgstr ""
 
-#: include/locales.inc.php:66
+#: include/locales.inc.php:67
 msgid "Indonesian (id_ID)"
 msgstr "Индонезийски (id_ID)"
 
@@ -8480,7 +8489,7 @@ msgstr "Интерфейс"
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "Интерфейса е свързан с елемента на данните \"%1$s\" в \"%2$s\"."
 
-#: include/views/js/configuration.host.edit.js.php:154
+#: include/views/js/configuration.host.edit.js.php:168
 msgid "Interface is used by items that require this type of the interface."
 msgstr "Интерфейсът се използва от елементи на данните, които изискват този тип интерфейс."
 
@@ -8745,9 +8754,9 @@ msgstr ""
 msgid "Invalid maintenance period"
 msgstr "Невалиден период на поддръжка"
 
-#: include/classes/api/services/CScreenItem.php:147
-#: include/classes/api/services/CScreenItem.php:262
-#: include/classes/api/services/CScreenItem.php:326
+#: include/classes/api/services/CScreenItem.php:154
+#: include/classes/api/services/CScreenItem.php:269
+#: include/classes/api/services/CScreenItem.php:333
 #: include/classes/api/services/CScript.php:427
 #: include/classes/api/services/CService.php:200
 #: include/classes/api/services/CService.php:371
@@ -8816,7 +8825,7 @@ msgstr "Невалидно име за преглед дава \"%s\". Позв�
 msgid "Inventory"
 msgstr "Инвентаризация"
 
-#: include/classes/api/services/CHost.php:1040
+#: include/classes/api/services/CHost.php:1004
 #, c-format
 msgid "Inventory disabled for host \"%1$s\"."
 msgstr ""
@@ -8853,7 +8862,7 @@ msgstr "Не е възможно да се филтрира по парола н
 msgid "It is not possible to search by user password."
 msgstr "Не е възможно да се търси по парола на потребителя."
 
-#: include/locales.inc.php:67
+#: include/locales.inc.php:68
 msgid "Italian (it_IT)"
 msgstr "Италиански (it_IT)"
 
@@ -9123,7 +9132,7 @@ msgstr "Яну"
 msgid "January"
 msgstr "Януари"
 
-#: include/locales.inc.php:69
+#: include/locales.inc.php:70
 msgid "Japanese (ja_JP)"
 msgstr "Японски (ja_JP)"
 
@@ -9176,7 +9185,7 @@ msgstr "Ключ фраза за достъп"
 msgid "Keyword"
 msgstr "Ключова дума"
 
-#: include/locales.inc.php:68
+#: include/locales.inc.php:69
 msgid "Korean (ko_KR)"
 msgstr "Корейски (ko_KR)"
 
@@ -9222,7 +9231,7 @@ msgstr "Етикет"
 msgid "Label location"
 msgstr "Разположение на етикет"
 
-#: include/views/administration.users.edit.php:152
+#: include/views/administration.users.edit.php:154
 msgid "Language"
 msgstr "Език"
 
@@ -9336,7 +9345,7 @@ msgstr "Последни данни"
 msgid "Latest values"
 msgstr ""
 
-#: include/locales.inc.php:70
+#: include/locales.inc.php:71
 msgid "Latvian (lv_LV)"
 msgstr "Латвийски (lv_LV)"
 
@@ -9471,7 +9480,7 @@ msgstr ""
 msgid "Listing of services. Returns 0 - if empty; text - list of services separated by a newline"
 msgstr ""
 
-#: include/locales.inc.php:71
+#: include/locales.inc.php:72
 msgid "Lithuanian (lt_LT)"
 msgstr ""
 
@@ -9610,7 +9619,7 @@ msgstr "MAC адрес A"
 msgid "MAC address B"
 msgstr "MAC адрес B"
 
-#: include/maps.inc.php:481 include/maps.inc.php:561
+#: include/maps.inc.php:482 include/maps.inc.php:562
 msgid "MAINTENANCE"
 msgstr "ПОДДРЪЖКА"
 
@@ -9678,7 +9687,7 @@ msgstr "Макроси"
 msgid "Macros updated"
 msgstr "Макроси актуализирани"
 
-#: include/audit.inc.php:47 include/maps.inc.php:644 include/maps.inc.php:732
+#: include/audit.inc.php:47 include/maps.inc.php:645 include/maps.inc.php:733
 #: include/menu.inc.php:224
 #: include/views/configuration.maintenance.edit.php:205
 #: include/views/js/monitoring.sysmaps.js.php:138
@@ -9930,8 +9939,8 @@ msgctxt "May short"
 msgid "May"
 msgstr "Май"
 
-#: include/views/administration.users.edit.php:262
-#: include/views/administration.users.edit.php:375 popup_media.php:27
+#: include/views/administration.users.edit.php:264
+#: include/views/administration.users.edit.php:377 popup_media.php:27
 #: popup_media.php:132 popup_media.php:140 popup_media.php:154
 msgid "Media"
 msgstr "Уведомления"
@@ -10030,12 +10039,12 @@ msgstr "Съобщение действия"
 msgid "Message text limit"
 msgstr "Ограничение на текстово съобщение"
 
-#: include/views/administration.users.edit.php:295
+#: include/views/administration.users.edit.php:297
 #, fuzzy
 msgid "Message timeout"
 msgstr "Време преди изключване на съобщенията"
 
-#: include/views/administration.users.edit.php:284
+#: include/views/administration.users.edit.php:286
 #, fuzzy
 msgid "Message timeout (seconds)"
 msgstr "Време преди изключване на съобщенията (секунди)"
@@ -10044,7 +10053,7 @@ msgstr "Време преди изключване на съобщенията (
 msgid "Messages"
 msgstr "Съобщения"
 
-#: include/views/administration.users.edit.php:430
+#: include/views/administration.users.edit.php:432
 msgid "Messaging"
 msgstr "Съобщения"
 
@@ -10344,7 +10353,7 @@ msgstr ""
 msgid "Name"
 msgstr "Име"
 
-#: include/views/administration.users.edit.php:50
+#: include/views/administration.users.edit.php:52
 #: include/views/administration.users.list.php:73 popup.php:636 users.php:44
 msgctxt "user first name"
 msgid "Name"
@@ -10425,12 +10434,12 @@ msgstr "Ново състояние"
 msgid "New element"
 msgstr "Нов елемент"
 
-#: include/correlation.inc.php:51 include/correlation.inc.php:204
+#: include/correlation.inc.php:51 include/correlation.inc.php:207
 msgid "New event host group"
 msgstr ""
 
-#: include/correlation.inc.php:50 include/correlation.inc.php:199
-#: include/correlation.inc.php:223
+#: include/correlation.inc.php:50 include/correlation.inc.php:202
+#: include/correlation.inc.php:226
 msgid "New event tag"
 msgstr ""
 
@@ -10604,7 +10613,7 @@ msgstr ""
 msgid "No SNMP interfaces found."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:602
+#: include/classes/api/services/CScreenItem.php:609
 msgid "No URL provided for screen element."
 msgstr "Не е предвидено URL за елемент от екрана."
 
@@ -10721,7 +10730,7 @@ msgstr "Не е уточнена цел за изпълнение за кома�
 msgid "No file was uploaded."
 msgstr "Не е качен файл."
 
-#: include/classes/api/services/CScreenItem.php:523
+#: include/classes/api/services/CScreenItem.php:530
 msgid "No graph ID provided for screen element."
 msgstr "За елемент от екрана не е уточнено ID на графика."
 
@@ -10730,7 +10739,7 @@ msgstr "За елемент от екрана не е уточнено ID на �
 msgid "No graph item with graphid \"%s\"."
 msgstr "Няма елемент на графика с graphid \"%s\"."
 
-#: include/classes/api/services/CScreenItem.php:532
+#: include/classes/api/services/CScreenItem.php:539
 msgid "No graph prototype ID provided for screen element."
 msgstr ""
 
@@ -10751,7 +10760,7 @@ msgstr "Не е зададен хост за макро \"%1$s\"."
 msgid "No host group ID for group prototype."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:505
+#: include/classes/api/services/CScreenItem.php:512
 msgid "No host group ID provided for screen element."
 msgstr "Не е определено ID на хост група за елемент от екрана."
 
@@ -10795,8 +10804,8 @@ msgstr "Не е открит интерфейс."
 msgid "No interface provided for proxy \"%s\"."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1678
-#: include/classes/api/services/CHost.php:1833
+#: include/classes/api/services/CHost.php:1690
+#: include/classes/api/services/CHost.php:1844
 #, c-format
 msgid "No interfaces for host \"%s\"."
 msgstr "Няма интерфейс за хост \"%s\"."
@@ -10805,12 +10814,12 @@ msgstr "Няма интерфейс за хост \"%s\"."
 msgid "No inventory mode specified for action operation."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:552
-#: include/classes/api/services/CScreenItem.php:562
+#: include/classes/api/services/CScreenItem.php:559
+#: include/classes/api/services/CScreenItem.php:569
 msgid "No item ID provided for screen element."
 msgstr "Не е определено ID на елемент на данните за елемент от екрана."
 
-#: include/classes/api/services/CScreenItem.php:542
+#: include/classes/api/services/CScreenItem.php:549
 msgid "No item prototype ID provided for screen element."
 msgstr ""
 
@@ -10832,7 +10841,7 @@ msgstr "Не са дефинирани елементи на данните."
 msgid "No macros found."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:575
+#: include/classes/api/services/CScreenItem.php:582
 msgid "No map ID provided for screen element."
 msgstr "Не е определено ID на карта на мрежата за елемент от екрана."
 
@@ -10872,8 +10881,8 @@ msgstr "Нямате право на достъп до системата."
 #: include/classes/api/services/CDRule.php:296
 #: include/classes/api/services/CDRule.php:323
 #: include/classes/api/services/CDRule.php:939
-#: include/classes/api/services/CEvent.php:805
-#: include/classes/api/services/CEvent.php:831
+#: include/classes/api/services/CEvent.php:807
+#: include/classes/api/services/CEvent.php:833
 #: include/classes/api/services/CGraphGeneral.php:64
 #: include/classes/api/services/CGraphGeneral.php:86
 #: include/classes/api/services/CGraph.php:702
@@ -10893,9 +10902,9 @@ msgstr "Нямате право на достъп до системата."
 #: include/classes/api/services/CHostInterface.php:257
 #: include/classes/api/services/CHostInterface.php:400
 #: include/classes/api/services/CHostInterface.php:637
-#: include/classes/api/services/CHost.php:1525
-#: include/classes/api/services/CHost.php:1661
-#: include/classes/api/services/CHost.php:1777
+#: include/classes/api/services/CHost.php:1489
+#: include/classes/api/services/CHost.php:1673
+#: include/classes/api/services/CHost.php:1788
 #: include/classes/api/services/CHostPrototype.php:1027
 #: include/classes/api/services/CHostPrototype.php:1074
 #: include/classes/api/services/CHostPrototype.php:1087
@@ -10932,8 +10941,8 @@ msgstr "Нямате право на достъп до системата."
 #: include/classes/api/services/CProxy.php:758
 #: include/classes/api/services/CProxy.php:789
 #: include/classes/api/services/CProxy.php:849
-#: include/classes/api/services/CScreenItem.php:385
-#: include/classes/api/services/CScreenItem.php:483
+#: include/classes/api/services/CScreenItem.php:392
+#: include/classes/api/services/CScreenItem.php:490
 #: include/classes/api/services/CScreen.php:771
 #: include/classes/api/services/CScreen.php:1238
 #: include/classes/api/services/CScript.php:287
@@ -10993,7 +11002,7 @@ msgstr "Не е уточнен файла с обществен ключ."
 msgid "No recipients for action operation message."
 msgstr "Няма получатели на съобщение в операция на действие."
 
-#: include/classes/api/services/CScreenItem.php:583
+#: include/classes/api/services/CScreenItem.php:590
 msgid "No screen ID provided for screen element."
 msgstr "Не е определено ID на екран за елемент от екрана."
 
@@ -11328,8 +11337,8 @@ msgstr "OEM"
 #: include/classes/screens/CScreenHttpTestDetails.php:101
 #: include/classes/screens/CScreenHttpTestDetails.php:187
 #: include/classes/screens/CScreenHttpTest.php:156
-#: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:497
-#: include/maps.inc.php:577 include/maps.inc.php:665 include/maps.inc.php:753
+#: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:498
+#: include/maps.inc.php:578 include/maps.inc.php:666 include/maps.inc.php:754
 #: include/triggers.inc.php:169
 #: include/views/monitoring.overview.triggers.php:31
 msgid "OK"
@@ -11400,8 +11409,8 @@ msgstr "Изкл"
 msgid "Ok"
 msgstr "Ок"
 
-#: include/correlation.inc.php:49 include/correlation.inc.php:194
-#: include/correlation.inc.php:209 include/correlation.inc.php:216
+#: include/correlation.inc.php:49 include/correlation.inc.php:197
+#: include/correlation.inc.php:212 include/correlation.inc.php:219
 msgid "Old event tag"
 msgstr ""
 
@@ -11419,7 +11428,7 @@ msgstr "Вкл"
 msgid "On status change triggers blink for"
 msgstr "Мигане на тригери при промяна на състоянието "
 
-#: include/views/administration.users.edit.php:293
+#: include/views/administration.users.edit.php:295
 msgid "Once"
 msgstr "Веднъж"
 
@@ -11508,7 +11517,7 @@ msgstr ""
 msgid "Only administrators can set screen owner."
 msgstr ""
 
-#: include/screens.inc.php:343 include/screens.inc.php:467
+#: include/screens.inc.php:363 include/screens.inc.php:487
 msgid "Only administrators can set slide show owner."
 msgstr ""
 
@@ -11559,7 +11568,7 @@ msgstr ""
 msgid "Only the last 20%% of the indicator is displayed."
 msgstr "Индикаторът показва само последните 20%%."
 
-#: include/classes/api/services/CEvent.php:800
+#: include/classes/api/services/CEvent.php:802
 msgid "Only trigger events can be acknowledged."
 msgstr ""
 
@@ -11922,7 +11931,7 @@ msgstr "POP"
 #: chart5.php:215 include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:741
 #: include/classes/screens/CScreenProblem.php:882 include/events.inc.php:351
-#: include/maps.inc.php:465 include/triggers.inc.php:170
+#: include/maps.inc.php:466 include/triggers.inc.php:170
 #: include/views/monitoring.overview.items.php:32
 #: include/views/monitoring.overview.triggers.php:40 tr_status.php:669
 msgid "PROBLEM"
@@ -11960,7 +11969,6 @@ msgstr ""
 msgid "PSK identity"
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1582
 #: include/classes/api/services/CProxy.php:682
 #, c-format
 msgid "PSK is too short. Minimum is %1$s hex-digits."
@@ -12022,9 +12030,9 @@ msgstr "Пасивен"
 
 #: app/views/administration.mediatype.edit.php:135 httpconf.php:59
 #: include/classes/setup/CSetupWizard.php:255
-#: include/views/administration.users.edit.php:89
-#: include/views/administration.users.edit.php:109
-#: include/views/administration.users.edit.php:113
+#: include/views/administration.users.edit.php:91
+#: include/views/administration.users.edit.php:111
+#: include/views/administration.users.edit.php:115
 #: include/views/configuration.action.edit.php:866
 #: include/views/configuration.action.edit.php:884
 #: include/views/configuration.action.edit.php:1578
@@ -12040,12 +12048,12 @@ msgstr "Пасивен"
 #: include/views/configuration.item.massupdate.php:295
 #: include/views/configuration.item.prototype.edit.php:168
 #: include/views/configuration.item.prototype.edit.php:185
-#: include/views/general.login.php:54
+#: include/views/general.login.php:55
 #: include/views/js/common.item.edit.js.php:240
 msgid "Password"
 msgstr "Парола"
 
-#: include/views/administration.users.edit.php:93
+#: include/views/administration.users.edit.php:95
 msgid "Password (once again)"
 msgstr "Парола (потвърждаване)"
 
@@ -12132,9 +12140,9 @@ msgstr "Периоди"
 #: include/views/administration.usergroups.edit.php:93
 #: include/views/administration.usergroups.edit.php:123
 #: include/views/administration.usergroups.edit.php:169
-#: include/views/administration.users.edit.php:399
-#: include/views/administration.users.edit.php:419
-#: include/views/administration.users.edit.php:426
+#: include/views/administration.users.edit.php:401
+#: include/views/administration.users.edit.php:421
+#: include/views/administration.users.edit.php:428
 #: include/views/monitoring.screen.edit.php:129
 #: include/views/monitoring.screen.edit.php:159
 #: include/views/monitoring.slideconf.edit.php:173
@@ -12144,11 +12152,11 @@ msgstr "Периоди"
 msgid "Permissions"
 msgstr "Права за достъп"
 
-#: include/views/administration.users.edit.php:424
+#: include/views/administration.users.edit.php:426
 msgid "Permissions can be assigned for user groups only."
 msgstr "Права за достъп може да бъдат назначен само за потребителски групи."
 
-#: include/locales.inc.php:72
+#: include/locales.inc.php:73
 msgid "Persian (fa_IR)"
 msgstr "Персийски (fa_IR)"
 
@@ -12164,12 +12172,12 @@ msgstr "Поставяне на алгоритъм"
 msgid "Plain text"
 msgstr "Обикновен текст"
 
-#: include/views/administration.users.edit.php:315
-#: include/views/administration.users.edit.php:351
+#: include/views/administration.users.edit.php:317
+#: include/views/administration.users.edit.php:353
 msgid "Play"
 msgstr "Възпроизвеждане"
 
-#: include/views/administration.users.edit.php:298
+#: include/views/administration.users.edit.php:300
 msgid "Play sound"
 msgstr "Възпроизвеждане на звук"
 
@@ -12191,7 +12199,7 @@ msgstr ""
 msgid "Please select two elements"
 msgstr "Моля, изберете два елемента"
 
-#: include/locales.inc.php:73
+#: include/locales.inc.php:74
 msgid "Polish (pl_PL)"
 msgstr "Полски (pl_PL)"
 
@@ -12226,11 +12234,11 @@ msgstr "Порта не може да бъде празен за хост инт
 msgid "Port range"
 msgstr "Диапазон на порт"
 
-#: include/locales.inc.php:74
+#: include/locales.inc.php:75
 msgid "Portuguese (pt_BR)"
 msgstr "Португалски (pt_BR)"
 
-#: include/locales.inc.php:75
+#: include/locales.inc.php:76
 msgid "Portuguese (pt_PT)"
 msgstr "Португалски (pt_PT)"
 
@@ -12342,8 +12350,8 @@ msgstr "Може би липсва php-ldap модула."
 #: include/actions.inc.php:1417 include/actions.inc.php:1492
 #: include/classes/screens/CScreenProblem.php:677
 #: include/classes/screens/CScreenProblem.php:785
-#: include/classes/screens/CScreenProblem.php:855 include/maps.inc.php:533
-#: include/maps.inc.php:614 include/maps.inc.php:703
+#: include/classes/screens/CScreenProblem.php:855 include/maps.inc.php:534
+#: include/maps.inc.php:615 include/maps.inc.php:704
 #: include/views/configuration.item.list.php:171
 #: include/views/configuration.trigger.prototype.list.php:139
 #: include/views/configuration.triggers.list.php:204
@@ -12381,8 +12389,8 @@ msgstr "Проблем, ако най-малко едно дете има про
 #: app/views/monitoring.problem.view.php:82
 #: app/views/monitoring.problem.view.php:253 app/views/report.services.php:60
 #: app/views/report.services.php:61 app/views/report.services.php:62
-#: app/views/report.services.php:63 chart4.php:165 include/maps.inc.php:527
-#: include/maps.inc.php:608 include/maps.inc.php:697 include/menu.inc.php:53
+#: app/views/report.services.php:63 chart4.php:165 include/maps.inc.php:528
+#: include/maps.inc.php:609 include/maps.inc.php:698 include/menu.inc.php:53
 #: include/views/common.filter.trigger.php:37
 #: include/views/inventory.host.view.php:147 jsLoader.php:206 report2.php:499
 #: search.php:130 search.php:234 search.php:291 search.php:341
@@ -12566,7 +12574,7 @@ msgstr "Получател (низходящ)"
 
 #: include/actions.inc.php:1338 include/actions.inc.php:1417
 #: include/actions.inc.php:1492 include/classes/screens/CScreenProblem.php:786
-#: include/views/administration.users.edit.php:310
+#: include/views/administration.users.edit.php:312
 #: include/views/configuration.item.list.php:172
 #: include/views/configuration.trigger.prototype.list.php:140
 #: include/views/configuration.triggers.list.php:205 tr_status.php:549
@@ -12598,7 +12606,7 @@ msgstr ""
 msgid "Recovery time"
 msgstr ""
 
-#: include/views/administration.users.edit.php:184 profile.php:52 users.php:63
+#: include/views/administration.users.edit.php:186 profile.php:52 users.php:63
 msgid "Refresh (in seconds)"
 msgstr "Обнови (в секунди)"
 
@@ -12673,7 +12681,7 @@ msgstr "Регулярен израз актуализиран"
 msgid "Regular expressions"
 msgstr "Регулярни изрази"
 
-#: include/views/general.login.php:58
+#: include/views/general.login.php:59
 msgid "Remember me for 30 days"
 msgstr "Запомни ме за 30 дни"
 
@@ -12691,7 +12699,7 @@ msgstr "Отдалечена команда"
 #: include/views/administration.general.macros.edit.php:47
 #: include/views/administration.general.regularexpressions.edit.php:70
 #: include/views/administration.general.valuemapping.edit.php:55
-#: include/views/administration.users.edit.php:253
+#: include/views/administration.users.edit.php:255
 #: include/views/common.filter.trigger.php:130
 #: include/views/configuration.action.edit.php:86
 #: include/views/configuration.action.edit.php:466
@@ -12995,15 +13003,15 @@ msgstr ""
 msgid "Right"
 msgstr "Отдясно"
 
-#: include/locales.inc.php:76
+#: include/locales.inc.php:77
 msgid "Romanian (ro_RO)"
 msgstr ""
 
-#: include/screens.inc.php:103
+#: include/screens.inc.php:108
 msgid "Row added"
 msgstr ""
 
-#: include/screens.inc.php:162
+#: include/screens.inc.php:177
 msgid "Row deleted"
 msgstr ""
 
@@ -13015,7 +13023,7 @@ msgstr "Обединение на редове"
 msgid "Rows"
 msgstr "Редове"
 
-#: include/views/administration.users.edit.php:187 profile.php:53 users.php:64
+#: include/views/administration.users.edit.php:189 profile.php:53 users.php:64
 msgid "Rows per page"
 msgstr "Редове на страница"
 
@@ -13068,7 +13076,7 @@ msgstr "Изпълни отдалечени команди на хост"
 msgid "Run specified command on the host. Returns text result of the command; 1 - with mode as nowait (regardless of command result)"
 msgstr ""
 
-#: include/locales.inc.php:77
+#: include/locales.inc.php:78
 msgid "Russian (ru_RU)"
 msgstr "Руски (ru_RU)"
 
@@ -13302,18 +13310,17 @@ msgstr ""
 msgid "Screen \"%1$s\" already exists."
 msgstr "Екран \"%1$s\" вече съществува."
 
-#: include/classes/api/services/CScreenItem.php:916
-#: include/classes/api/services/CScreenItem.php:932
+#: include/classes/api/services/CScreenItem.php:934
 #, c-format
 msgid "Screen \"%1$s\" cell X - %2$s Y - %3$s is already taken."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:834
+#: include/classes/api/services/CScreenItem.php:841
 #, c-format
 msgid "Screen \"%1$s\" column span in cell X - %2$s Y - %3$s is incorrect."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:883
+#: include/classes/api/services/CScreenItem.php:890
 #, c-format
 msgid "Screen \"%1$s\" column span in cell X - %2$s Y - %3$s is too big."
 msgstr ""
@@ -13326,12 +13333,12 @@ msgstr ""
 msgid "Screen \"%1$s\" is public and read-only sharing is disallowed."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:820
+#: include/classes/api/services/CScreenItem.php:827
 #, c-format
 msgid "Screen \"%1$s\" row span in cell X - %2$s Y - %3$s is incorrect."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:870
+#: include/classes/api/services/CScreenItem.php:877
 #, c-format
 msgid "Screen \"%1$s\" row span in cell X - %2$s Y - %3$s is too big."
 msgstr ""
@@ -13500,7 +13507,7 @@ msgstr "Вторичен телефон Б за контакт"
 msgid "Secondary POC screen name"
 msgstr "Вторичен прякор за контакт"
 
-#: include/views/administration.users.edit.php:294
+#: include/views/administration.users.edit.php:296
 msgid "Seconds"
 msgstr "Секунди"
 
@@ -13612,7 +13619,7 @@ msgstr "Изпратете само до"
 msgid "Send recovery message"
 msgstr ""
 
-#: include/views/administration.users.edit.php:204 popup_media.php:134
+#: include/views/administration.users.edit.php:206 popup_media.php:134
 msgid "Send to"
 msgstr "Изпрати до"
 
@@ -13879,7 +13886,7 @@ msgstr "Покажи работното време"
 msgid "Shown"
 msgstr "Показан"
 
-#: include/views/general.login.php:61 index.php:55 index.php:64
+#: include/views/general.login.php:62 index.php:55 index.php:64
 msgid "Sign in"
 msgstr "Влезте в профила си"
 
@@ -13962,18 +13969,18 @@ msgstr "Слайд"
 msgid "Slide show"
 msgstr "Слайдшоу"
 
-#: include/screens.inc.php:453
+#: include/screens.inc.php:473
 #, c-format
 msgid "Slide show \"%1$s\" already exists."
 msgstr ""
 
-#: include/screens.inc.php:361 include/screens.inc.php:380
-#: include/screens.inc.php:484 include/screens.inc.php:492
+#: include/screens.inc.php:381 include/screens.inc.php:400
+#: include/screens.inc.php:504 include/screens.inc.php:512
 #, c-format
 msgid "Slide show \"%1$s\" is public and read-only sharing is disallowed."
 msgstr ""
 
-#: include/screens.inc.php:330
+#: include/screens.inc.php:350
 #, c-format
 msgid "Slide show \"%s\" already exists."
 msgstr "Слайдшоу \"%s\" вече съществува."
@@ -13986,11 +13993,11 @@ msgstr "Слайдшоу добавено"
 msgid "Slide show deleted"
 msgstr "Слайдшоу изтрито"
 
-#: include/screens.inc.php:302 include/screens.inc.php:422
+#: include/screens.inc.php:322 include/screens.inc.php:442
 msgid "Slide show must contain slides."
 msgstr "Слайдшоу трябва да съдържа слайдове."
 
-#: include/screens.inc.php:337 include/screens.inc.php:461
+#: include/screens.inc.php:357 include/screens.inc.php:481
 msgid "Slide show owner cannot be empty."
 msgstr ""
 
@@ -14013,7 +14020,7 @@ msgstr "Слайдшоу"
 msgid "Slides"
 msgstr "Слайдове"
 
-#: include/locales.inc.php:78
+#: include/locales.inc.php:79
 msgid "Slovak (sk_SK)"
 msgstr "Словашки (sk_SK)"
 
@@ -14079,7 +14086,7 @@ msgstr "Сортиране по поле \"%1$s\" не е разрешено."
 msgid "Source"
 msgstr "Източник"
 
-#: include/locales.inc.php:79
+#: include/locales.inc.php:80
 msgid "Spanish (es_ES)"
 msgstr "Испански (es_ES)"
 
@@ -14228,8 +14235,8 @@ msgstr "Стъпка с име \\\"%1$s\\\" вече съществува."
 msgid "Steps"
 msgstr "Стъпки"
 
-#: include/views/administration.users.edit.php:319
-#: include/views/administration.users.edit.php:355
+#: include/views/administration.users.edit.php:321
+#: include/views/administration.users.edit.php:357
 msgid "Stop"
 msgstr "Спри"
 
@@ -14304,11 +14311,11 @@ msgstr "Нед"
 msgid "Sunday"
 msgstr "Неделя"
 
-#: include/views/general.login.php:71
+#: include/views/general.login.php:72
 msgid "Support"
 msgstr "Поддръжка"
 
-#: include/views/administration.users.edit.php:53
+#: include/views/administration.users.edit.php:55
 #: include/views/administration.users.list.php:50
 #: include/views/administration.users.list.php:74 popup.php:637 users.php:45
 msgid "Surname"
@@ -14329,7 +14336,7 @@ msgstr ""
 msgid "Swap space size in bytes or in percentage from total. Returns integer for bytes; float for percentage"
 msgstr ""
 
-#: include/locales.inc.php:80
+#: include/locales.inc.php:81
 msgid "Swedish (sv_SE)"
 msgstr "Шведски (sv_SE)"
 
@@ -14342,7 +14349,7 @@ msgstr "Превключването на метода за автентифик
 msgid "System boot time. Returns integer (Unix timestamp)"
 msgstr ""
 
-#: include/users.inc.php:83 include/views/administration.users.edit.php:159
+#: include/users.inc.php:83 include/views/administration.users.edit.php:161
 msgid "System default"
 msgstr "Система по подразбиране"
 
@@ -14480,7 +14487,7 @@ msgstr "Telnet"
 msgid "Template"
 msgstr "Шаблон"
 
-#: include/classes/api/services/CHost.php:881
+#: include/classes/api/services/CHost.php:845
 #: include/classes/api/services/CTemplate.php:420
 #, c-format
 msgid "Template \"%1$s\" already exists."
@@ -14553,8 +14560,8 @@ msgstr ""
 msgid "Template with the same name \"%1$s\" already exists."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1740
-#: include/classes/api/services/CHost.php:1924
+#: include/classes/api/services/CHost.php:1752
+#: include/classes/api/services/CHost.php:1958
 #, c-format
 msgid "Template with the same name \"%s\" already exists."
 msgstr "Шаблон със същото име \"%s\" вече съществува."
@@ -14565,8 +14572,8 @@ msgstr "Шаблон със същото име \"%s\" вече съществу
 msgid "Template with the same visible name \"%1$s\" already exists."
 msgstr ""
 
-#: include/classes/api/services/CHost.php:1746
-#: include/classes/api/services/CHost.php:1932
+#: include/classes/api/services/CHost.php:1758
+#: include/classes/api/services/CHost.php:1966
 #, c-format
 msgid "Template with the same visible name \"%s\" already exists."
 msgstr "Шаблон със същото видимо име \"%s\" вече съществува."
@@ -14639,12 +14646,12 @@ msgstr "Текст"
 msgid "The \"%1$s.%2$s\" method must be called without the \"auth\" parameter."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:952
+#: include/classes/api/services/CScreenItem.php:958
 #, c-format
 msgid "The X coordinate of screen element located at X - %1$s and Y - %2$s of screen \"%3$s\" is too big."
 msgstr ""
 
-#: include/classes/api/services/CScreenItem.php:964
+#: include/classes/api/services/CScreenItem.php:970
 #, c-format
 msgid "The Y coordinate of screen element located at X - %1$s and Y - %2$s of screen \"%3$s\" is too big."
 msgstr ""
@@ -14730,7 +14737,7 @@ msgstr "Исканата дистанционна процедурата не с
 msgid "The web scenario application belongs to a different host than the web scenario host."
 msgstr "Приложението на уеб сценарий принадлежи към друг хост от хост на уеб сценарий."
 
-#: include/views/administration.users.edit.php:160
+#: include/views/administration.users.edit.php:162
 msgid "Theme"
 msgstr "Тема"
 
@@ -14865,7 +14872,7 @@ msgid "Timeout"
 msgstr "Просрочване на времето"
 
 #: include/classes/screens/CScreenHistory.php:154
-#: include/classes/screens/CScreenHistory.php:268
+#: include/classes/screens/CScreenHistory.php:266
 #: include/classes/screens/CScreenPlainText.php:42
 #: include/classes/screens/CScreenPlainText.php:53
 msgid "Timestamp"
@@ -15153,7 +15160,7 @@ msgstr ""
 msgid "Trigger severities"
 msgstr "Важност на тригер "
 
-#: include/actions.inc.php:41 include/views/administration.users.edit.php:365
+#: include/actions.inc.php:41 include/views/administration.users.edit.php:367
 msgid "Trigger severity"
 msgstr "Важност на тригер "
 
@@ -15233,7 +15240,7 @@ msgstr "Вто"
 msgid "Tuesday"
 msgstr "Вторник"
 
-#: include/locales.inc.php:81
+#: include/locales.inc.php:82
 msgid "Turkish (tr_TR)"
 msgstr "Турски (tr_TR)"
 
@@ -15253,7 +15260,7 @@ msgstr "Двата елемента на данните (\"%1$s\" и \"%2$s\") �
 #: include/classes/screens/CScreenActions.php:128 include/forms.inc.php:358
 #: include/hosts.inc.php:99 include/views/administration.auditacts.list.php:49
 #: include/views/administration.general.image.list.php:30
-#: include/views/administration.users.edit.php:204
+#: include/views/administration.users.edit.php:206
 #: include/views/configuration.action.edit.php:849
 #: include/views/configuration.action.edit.php:1561
 #: include/views/configuration.graph.edit.php:292
@@ -15344,7 +15351,7 @@ msgstr "НЕИЗВЕСТЕН"
 msgid "URL"
 msgstr "URL"
 
-#: include/views/administration.users.edit.php:191
+#: include/views/administration.users.edit.php:193
 msgid "URL (after login)"
 msgstr "URL (след влизане в системата)"
 
@@ -15389,7 +15396,7 @@ msgstr "URLs"
 msgid "USA (160 characters)"
 msgstr "USA (160 символа)"
 
-#: include/locales.inc.php:82
+#: include/locales.inc.php:83
 msgid "Ukrainian (uk_UA)"
 msgstr "Украински (uk_UA)"
 
@@ -15409,7 +15416,7 @@ msgstr "Не може да изберете конфигурация."
 msgid "Unable to upload file because \"file_uploads\" is disabled."
 msgstr ""
 
-#: include/maps.inc.php:544 include/maps.inc.php:625 include/maps.inc.php:714
+#: include/maps.inc.php:545 include/maps.inc.php:626 include/maps.inc.php:715
 msgid "Unacknowledged"
 msgstr "Непотвърдено"
 
@@ -15428,7 +15435,7 @@ msgstr "Непотвърдени събития ПРОБЛЕМ"
 msgid "Unacknowledged only"
 msgstr "Само непотвърдени"
 
-#: include/views/administration.users.edit.php:114
+#: include/views/administration.users.edit.php:116
 #, c-format
 msgid "Unavailable for users with %1$s."
 msgstr ""
@@ -15451,7 +15458,7 @@ msgstr "Единици за измерване"
 #: include/actions.inc.php:1077
 #: include/classes/screens/CScreenHostsInfo.php:89
 #: include/classes/screens/CScreenHttpTestDetails.php:116
-#: include/correlation.inc.php:124 include/discovery.inc.php:115
+#: include/correlation.inc.php:127 include/discovery.inc.php:115
 #: include/discovery.inc.php:151 include/events.inc.php:47
 #: include/events.inc.php:78 include/graphs.inc.php:37
 #: include/graphs.inc.php:67 include/hosts.inc.php:47 include/hosts.inc.php:74
@@ -15655,7 +15662,7 @@ msgstr "Достъпен"
 #: include/views/administration.general.valuemapping.edit.php:94
 #: include/views/administration.general.workingtime.edit.php:38
 #: include/views/administration.usergroups.edit.php:177
-#: include/views/administration.users.edit.php:448
+#: include/views/administration.users.edit.php:450
 #: include/views/configuration.action.edit.php:1129
 #: include/views/configuration.action.edit.php:1677
 #: include/views/configuration.action.edit.php:1705
@@ -15766,7 +15773,7 @@ msgstr "Актуализирано: Елемент на данните \"%1$s\" 
 msgid "Updated: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Актуализирано: Прототип на елемент на данните \"%1$s\" в \"%2$s\"."
 
-#: include/classes/api/managers/CHttpTestManager.php:287
+#: include/classes/api/managers/CHttpTestManager.php:283
 #, c-format
 msgid "Updated: Web scenario \"%1$s\" on \"%2$s\"."
 msgstr "Актуализиран: Уеб сценарий \"%1$s\" в \"%2$s\"."
@@ -15796,7 +15803,7 @@ msgid "Uptime/Downtime"
 msgstr "Време без прекъсване - достъпно/Време на прекъсване"
 
 #: include/views/js/configuration.host.edit.js.php:15
-#: include/views/js/configuration.host.edit.js.php:382
+#: include/views/js/configuration.host.edit.js.php:381
 msgid "Use bulk requests"
 msgstr ""
 
@@ -15805,7 +15812,7 @@ msgstr ""
 msgid "Use custom multiplier"
 msgstr "Потребителски множител"
 
-#: include/views/administration.users.edit.php:204 popup_media.php:136
+#: include/views/administration.users.edit.php:206 popup_media.php:136
 msgid "Use if severity"
 msgstr "Използвай, ако важността"
 
@@ -15823,7 +15830,7 @@ msgstr ""
 #: include/events.inc.php:241 include/events.inc.php:590
 #: include/hosts.inc.php:61 include/views/administration.auditlogs.list.php:28
 #: include/views/administration.auditlogs.list.php:62
-#: include/views/administration.users.edit.php:373
+#: include/views/administration.users.edit.php:375
 #: include/views/configuration.action.edit.php:629
 #: include/views/configuration.action.edit.php:1317
 #: include/views/configuration.httpconf.edit.php:126
@@ -15865,7 +15872,7 @@ msgstr "Потребител добавен"
 msgid "User agent string"
 msgstr ""
 
-#: include/views/administration.users.edit.php:390
+#: include/views/administration.users.edit.php:392
 msgid "User can't change type for himself"
 msgstr "Потребителят не може да промени типа за себе си"
 
@@ -16001,7 +16008,8 @@ msgstr "Потребителско име не съответства на БД"
 msgid "User password"
 msgstr "Потребителска парола"
 
-#: include/views/administration.users.edit.php:25 profile.php:27
+#: include/views/administration.users.edit.php:26
+#: include/views/administration.users.edit.php:27 profile.php:27
 msgid "User profile"
 msgstr "Потребителски профил"
 
@@ -16030,8 +16038,8 @@ msgstr ""
 msgid "User sharing is missing parameters: %1$s for screen \"%2$s\"."
 msgstr ""
 
-#: include/views/administration.users.edit.php:390
-#: include/views/administration.users.edit.php:394
+#: include/views/administration.users.edit.php:392
+#: include/views/administration.users.edit.php:396
 #: include/views/administration.users.list.php:53
 #: include/views/administration.users.list.php:75
 msgid "User type"
@@ -16051,14 +16059,14 @@ msgstr "Потребител с псевдоним \"%s\" вече същест�
 #: app/views/administration.mediatype.list.php:87
 #: include/views/configuration.host.edit.php:673
 #: include/views/configuration.host.prototype.edit.php:317
-#: include/views/general.login.php:50 index.php:30
+#: include/views/general.login.php:51 index.php:30
 msgid "Username"
 msgstr "Потребителско име"
 
 #: include/menu.inc.php:282
 #: include/views/administration.usergroups.edit.php:54
 #: include/views/administration.usergroups.list.php:144
-#: include/views/administration.users.edit.php:28
+#: include/views/administration.users.edit.php:30
 #: include/views/administration.users.list.php:29
 #: include/views/monitoring.screen.edit.php:159
 #: include/views/monitoring.slideconf.edit.php:205
@@ -16269,7 +16277,7 @@ msgstr ""
 #: include/blocks.inc.php:463 include/classes/graphdraw/CPieGraphDraw.php:303
 #: include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenHistory.php:166
-#: include/classes/screens/CScreenHistory.php:269
+#: include/classes/screens/CScreenHistory.php:267
 #: include/classes/screens/CScreenPlainText.php:53
 #: include/views/administration.general.macros.edit.php:33
 #: include/views/administration.general.valuemapping.edit.php:46
@@ -16425,7 +16433,7 @@ msgstr "Вертикален"
 msgid "Vertical align"
 msgstr "Вертикално подравняване"
 
-#: include/locales.inc.php:83
+#: include/locales.inc.php:84
 msgid "Vietnamese (vi_VN)"
 msgstr ""
 
@@ -16445,7 +16453,7 @@ msgstr ""
 msgid "Visible name"
 msgstr "Видимо име"
 
-#: include/classes/api/services/CHost.php:1858
+#: include/classes/api/services/CHost.php:1869
 msgid "Visible name cannot be empty if host name is missing."
 msgstr "Видимото име не може да бъде празно, ако липсва име на хост."
 
@@ -16496,8 +16504,8 @@ msgstr "Уеб мониторинг"
 msgid "Web scenario"
 msgstr ""
 
-#: include/classes/api/managers/CHttpTestManager.php:408
-#: include/classes/api/managers/CHttpTestManager.php:416
+#: include/classes/api/managers/CHttpTestManager.php:404
+#: include/classes/api/managers/CHttpTestManager.php:412
 #, c-format
 msgid "Web scenario \"%1$s\" already exists on host \"%2$s\"."
 msgstr "Уеб сценарий \"%1$s\" вече съществува в хост \"%2$s\"."
@@ -16605,7 +16613,7 @@ msgstr ""
 msgid "Welcome to"
 msgstr ""
 
-#: include/views/administration.users.edit.php:204 popup_media.php:135
+#: include/views/administration.users.edit.php:206 popup_media.php:135
 msgid "When active"
 msgstr "Когато е активен"
 
@@ -16679,8 +16687,8 @@ msgstr "Грешни полета за зависимост на услуга \"
 msgid "Wrong fields for element."
 msgstr "Грешни полета за елемент."
 
-#: include/classes/api/services/CHost.php:1605
-#: include/classes/api/services/CHost.php:1770
+#: include/classes/api/services/CHost.php:1617
+#: include/classes/api/services/CHost.php:1781
 #, c-format
 msgid "Wrong fields for host \"%1$s\"."
 msgstr "Грешни полета за хот \"%1$s\"."
@@ -16832,7 +16840,7 @@ msgstr ""
 msgid "You are logged in as \"%1$s\"."
 msgstr ""
 
-#: include/views/administration.users.edit.php:148
+#: include/views/administration.users.edit.php:150
 #, fuzzy
 msgid "You are not able to choose some of the languages, because locales for them are not installed on the web server."
 msgstr "Вие не може да изберете някои от езиците, защото не е инсталирана локализация за тях на уеб сървъра."
@@ -16870,8 +16878,8 @@ msgstr "Вие не сте уточнили цели за глобален ск�
 
 #: include/classes/api/services/CGraph.php:540
 #: include/classes/api/services/CGraphPrototype.php:555
-#: include/classes/api/services/CHost.php:739
-#: include/classes/api/services/CHost.php:802
+#: include/classes/api/services/CHost.php:705
+#: include/classes/api/services/CHost.php:768
 #: include/classes/api/services/CMaintenance.php:540
 #: include/classes/api/services/CMaintenance.php:658
 #: include/classes/api/services/CMaintenance.php:670
@@ -17050,7 +17058,7 @@ msgstr "агент"
 
 #: include/classes/graphdraw/CLineGraphDraw.php:2026
 #: include/classes/html/CSeverity.php:49
-#: include/classes/pagefilter/CPageFilter.php:840
+#: include/classes/pagefilter/CPageFilter.php:842
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
 #: include/classes/screens/CScreenHostgroupTriggers.php:110
 #: include/classes/screens/CScreenHostTriggers.php:109
@@ -17081,6 +17089,10 @@ msgstr ""
 #: include/classes/import/validators/C10XmlValidator.php:397
 #: include/classes/import/validators/C10XmlValidator.php:419
 msgid "an empty string is expected"
+msgstr ""
+
+#: include/classes/api/services/CHost.php:1560
+msgid "an even number of hexadecimal characters is expected"
 msgstr ""
 
 #: include/views/monitoring.history.php:165
@@ -17130,8 +17142,8 @@ msgstr ""
 #: include/classes/api/services/CDRule.php:306
 #: include/classes/api/services/CDRule.php:332
 #: include/classes/api/services/CEvent.php:522
-#: include/classes/api/services/CHost.php:1564
-#: include/classes/api/services/CHost.php:1570
+#: include/classes/api/services/CHost.php:1548
+#: include/classes/api/services/CHost.php:1554
 #: include/classes/api/services/CMediatype.php:417
 #: include/classes/api/services/CProxy.php:664
 #: include/classes/api/services/CProxy.php:670
@@ -17175,7 +17187,7 @@ msgstr "дни"
 msgid "dd"
 msgstr "дд"
 
-#: include/classes/pagefilter/CPageFilter.php:732
+#: include/classes/pagefilter/CPageFilter.php:734
 #: include/classes/setup/CSetupWizard.php:320
 #: include/views/js/monitoring.slideconf.edit.js.php:13
 #: include/views/monitoring.slideconf.edit.php:130
@@ -17202,8 +17214,8 @@ msgstr "динамичен"
 msgid "esc_step_from and esc_step_to must be set together."
 msgstr "esc_step_from и esc_step_to трябва да бъдат заедно."
 
-#: include/classes/api/services/CEvent.php:773
-#: include/classes/api/services/CEvent.php:845
+#: include/classes/api/services/CEvent.php:775
+#: include/classes/api/services/CEvent.php:847
 msgid "event is not in PROBLEM state"
 msgstr ""
 
@@ -17267,7 +17279,7 @@ msgid "in"
 msgstr "в"
 
 #: include/views/administration.usergroups.edit.php:106
-#: include/views/administration.users.edit.php:409
+#: include/views/administration.users.edit.php:411
 msgid "including subgroups"
 msgstr ""
 
@@ -17375,6 +17387,11 @@ msgstr "мин"
 msgid "minimum 60 seconds"
 msgstr "минимум 60 секунди"
 
+#: include/classes/api/services/CHost.php:1566
+#, c-format
+msgid "minimum length is %1$s characters"
+msgstr ""
+
 #: include/html.inc.php:765 include/html.inc.php:788
 #: include/views/configuration.services.edit.php:273
 #: include/views/configuration.services.edit.php:281
@@ -17409,7 +17426,7 @@ msgctxt "new element in multiselect"
 msgid "new"
 msgstr ""
 
-#: include/correlation.inc.php:211
+#: include/correlation.inc.php:214
 #: include/views/configuration.correlation.edit.php:135
 msgid "new event tag"
 msgstr ""
@@ -17432,8 +17449,8 @@ msgid "not running"
 msgstr "не работи"
 
 #: hostinventoriesoverview.php:75
-#: include/classes/pagefilter/CPageFilter.php:778
-#: include/classes/pagefilter/CPageFilter.php:840 include/forms.inc.php:995
+#: include/classes/pagefilter/CPageFilter.php:780
+#: include/classes/pagefilter/CPageFilter.php:842 include/forms.inc.php:995
 #: include/views/monitoring.screen.php:60 slides.php:198
 msgid "not selected"
 msgstr "не е избрано"
@@ -17464,7 +17481,7 @@ msgstr "на"
 #: include/classes/setup/CFrontendSetup.php:602
 #: include/classes/setup/CFrontendSetup.php:603
 #: include/classes/setup/CFrontendSetup.php:619
-#: include/views/administration.users.edit.php:237
+#: include/views/administration.users.edit.php:239
 msgid "off"
 msgstr ""
 
@@ -17486,7 +17503,7 @@ msgstr ""
 #: include/classes/setup/CFrontendSetup.php:585
 #: include/classes/setup/CFrontendSetup.php:602
 #: include/classes/setup/CFrontendSetup.php:619
-#: include/views/administration.users.edit.php:237
+#: include/views/administration.users.edit.php:239
 #: include/views/monitoring.hostscreen.php:42
 msgid "on"
 msgstr "в"
@@ -17543,6 +17560,10 @@ msgstr ""
 msgid "short description"
 msgstr "кратко описание"
 
+#: include/classes/api/services/CHost.php:1573
+#: include/classes/api/services/CHost.php:1579
+#: include/classes/api/services/CHost.php:1588
+#: include/classes/api/services/CHost.php:1594
 #: include/classes/api/services/CTriggerGeneral.php:529
 #: include/classes/api/services/CTriggerGeneral.php:555
 #: include/classes/api/services/CTriggerGeneral.php:770
@@ -17592,7 +17613,7 @@ msgstr ""
 msgid "trigger"
 msgstr "тригер"
 
-#: include/classes/api/services/CEvent.php:852
+#: include/classes/api/services/CEvent.php:854
 msgid "trigger does not allow manual closing"
 msgstr ""
 
@@ -17634,8 +17655,8 @@ msgid "unexpected text \"%1$s\""
 msgstr ""
 
 #: include/classes/api/services/CEvent.php:532
-#: include/classes/api/services/CHost.php:1548
-#: include/classes/api/services/CHost.php:1554
+#: include/classes/api/services/CHost.php:1528
+#: include/classes/api/services/CHost.php:1534
 #: include/classes/api/services/CProxy.php:645
 #: include/classes/api/services/CProxy.php:652
 #: include/classes/api/services/CTriggerGeneral.php:563
