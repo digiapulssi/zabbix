@@ -673,7 +673,7 @@ else {
 	}
 
 	if ($linked_templateids) {
-		$linked_templateids = array_unique($linked_templateids);
+		$linked_templateids = array_keys(array_flip($linked_templateids));
 		$writable_templates = API::Template()->get([
 			'output' => ['templateid'],
 			'templateids' => $linked_templateids,
@@ -683,7 +683,7 @@ else {
 	}
 
 	if ($linked_hostsids) {
-		$linked_hostsids = array_unique($linked_hostsids);
+		$linked_hostsids = array_keys(array_flip($linked_hostsids));
 		$writable_hosts = API::Host()->get([
 			'output' => ['hostid'],
 			'hostsids' => $linked_hostsids,

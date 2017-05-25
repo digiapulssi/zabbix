@@ -462,7 +462,7 @@ else {
 	if ($discovery_hostids) {
 		$data['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],
-			'templateids' => array_unique($discovery_hostids),
+			'templateids' => array_keys(array_flip($discovery_hostids)),
 			'preservekeys' => true,
 			'editable' => true
 		]);

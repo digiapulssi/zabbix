@@ -453,7 +453,7 @@ else {
 	if ($linked_templateids) {
 		$data['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],
-			'templateids' => array_unique($linked_templateids),
+			'templateids' => array_keys(array_flip($linked_templateids)),
 			'editable' => true,
 			'preservekeys' => true
 		]);

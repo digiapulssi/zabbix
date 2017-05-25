@@ -1111,7 +1111,7 @@ else {
 
 		$writable_templates = API::Template()->get([
 			'output' => ['templateid'],
-			'templateids' => array_unique($templateids),
+			'templateids' => array_keys(array_flip($templateids)),
 			'editable' => true,
 			'preservekeys' => true
 		]);
