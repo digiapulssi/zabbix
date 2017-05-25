@@ -411,20 +411,20 @@ else {
 
 	$data['paging'] = getPagingLine($data['applications'], $sortOrder, $url);
 
-	// Select hosts used and test permissions
-	$hostIds = [];
+	// Select writable templates IDs.
+	$hostids = [];
 	foreach ($data['applications'] as $application) {
 		if (array_key_exists('sourceTemplates', $application)) {
-			$hostIds = array_merge($hostIds, zbx_objectValues($application['sourceTemplates'], 'hostid'));
+			$hostids = array_merge($hostids, zbx_objectValues($application['sourceTemplates'], 'hostid'));
 		}
-		$hostIds[] = $application['host']['hostid'];
+		$hostids[] = $application['host']['hostid'];
 	}
 
 	$data['writable_templates'] = [];
-	if ($hostIds) {
+	if ($hostids) {
 			$data['writable_templates'] = API::Template()->get([
 				'output' => ['templateid'],
-				'templateids' => array_unique($hostIds),
+				'templateids' => array_unique($hostids),
 				'preservekeys' => true,
 				'editable' => true
 			]);

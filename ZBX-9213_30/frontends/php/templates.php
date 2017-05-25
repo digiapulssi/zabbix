@@ -467,18 +467,18 @@ if (hasRequest('form')) {
 		? $data['dbTemplate']['description']
 		: getRequest('description');
 
-	$templateIds = getRequest('templates', hasRequest('form_refresh') ? [] : $data['original_templates']);
+	$templateids = getRequest('templates', hasRequest('form_refresh') ? [] : $data['original_templates']);
 
 	// Get linked templates.
 	$data['linkedTemplates'] = API::Template()->get([
 		'output' => ['templateid', 'name'],
-		'templateids' => $templateIds,
+		'templateids' => $templateids,
 		'preservekeys' => true
 	]);
 
 	$data['writable_templates'] = API::Template()->get([
 		'output' => ['templateid'],
-		'templateids' => $templateIds,
+		'templateids' => $templateids,
 		'editable' => true,
 		'preservekeys' => true
 	]);
@@ -655,38 +655,38 @@ else {
 	order_result($templates, $sortField, $sortOrder);
 
 	// Select writable templates:
-	$linkedTemplateIds = [];
+	$linked_templateids = [];
 	$writable_templates = [];
-	$linkedHostsIds = [];
+	$linked_hostsids = [];
 	$writable_hosts = [];
 	foreach ($templates as $template) {
-		$linkedTemplateIds = array_merge(
-			$linkedTemplateIds,
+		$linked_templateids = array_merge(
+			$linked_templateids,
 			zbx_objectValues($template['parentTemplates'], 'templateid'),
 			zbx_objectValues($template['templates'], 'templateid')
 		);
 
-		$linkedHostsIds = array_merge(
-			$linkedHostsIds,
+		$linked_hostsids = array_merge(
+			$linked_hostsids,
 			zbx_objectValues($template['hosts'], 'hostid')
 		);
 	}
 
-	if ($linkedTemplateIds) {
-		$linkedTemplateIds = array_unique($linkedTemplateIds);
+	if ($linked_templateids) {
+		$linked_templateids = array_unique($linked_templateids);
 		$writable_templates = API::Template()->get([
 			'output' => ['templateid'],
-			'templateids' => $linkedTemplateIds,
+			'templateids' => $linked_templateids,
 			'editable' => true,
 			'preservekeys' => true
 		]);
 	}
 
-	if ($linkedHostsIds) {
-		$linkedHostsIds = array_unique($linkedHostsIds);
+	if ($linked_hostsids) {
+		$linked_hostsids = array_unique($linked_hostsids);
 		$writable_hosts = API::Host()->get([
 			'output' => ['hostid'],
-			'hostsids' => $linkedHostsIds,
+			'hostsids' => $linked_hostsids,
 			'editable' => true,
 			'preservekeys' => true
 		]);

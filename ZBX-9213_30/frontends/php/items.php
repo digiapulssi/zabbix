@@ -1385,22 +1385,22 @@ else {
 	]);
 	$data['triggerRealHosts'] = getParentHostsByTriggers($data['itemTriggers']);
 
-	// Select hosts used and test permissions
-	$hostIds = [];
+	// Select writable templates IDs.
+	$hostids = [];
 	foreach ($data['triggerRealHosts'] as $realHost) {
-		$hostIds = array_merge($hostIds, zbx_objectValues($realHost, 'hostid'));
+		$hostids = array_merge($hostids, zbx_objectValues($realHost, 'hostid'));
 	}
 	foreach ($data['items'] as $item) {
 		if (array_key_exists('template_host', $item)) {
-			$hostIds = array_merge($hostIds, zbx_objectValues($item['template_host'], 'itemid'));
+			$hostids = array_merge($hostids, zbx_objectValues($item['template_host'], 'itemid'));
 		}
 	}
 
 	$data['writable_templates'] = [];
-	if ($hostIds) {
+	if ($hostids) {
 			$data['writable_templates'] = API::Template()->get([
 				'output' => ['templateid'],
-				'templateids' => array_unique($hostIds),
+				'templateids' => array_unique($hostids),
 				'preservekeys' => true,
 				'editable' => true
 			]);

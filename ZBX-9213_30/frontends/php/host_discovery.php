@@ -450,19 +450,19 @@ else {
 
 	// get real hosts & select write permissions
 	$data['writable_templates'] = [];
-	$discoveryHostIds = [];
+	$discovery_hostids = [];
 	foreach ($data['discoveries'] as &$discovery) {
 		if ($discovery['templateid']) {
 			$discovery['dbTemplate'] = get_realhost_by_itemid($discovery['templateid']);
-			$discoveryHostIds[] = $discovery['dbTemplate']['hostid'];
+			$discovery_hostids[] = $discovery['dbTemplate']['hostid'];
 		}
 	}
 	unset($discovery);
 
-	if ($discoveryHostIds) {
+	if ($discovery_hostids) {
 		$data['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],
-			'templateids' => array_unique($discoveryHostIds),
+			'templateids' => array_unique($discovery_hostids),
 			'preservekeys' => true,
 			'editable' => true
 		]);

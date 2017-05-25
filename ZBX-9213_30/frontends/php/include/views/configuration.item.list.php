@@ -151,36 +151,36 @@ foreach ($this->data['items'] as $item) {
 
 	foreach ($item['triggers'] as $num => &$trigger) {
 		$trigger = $this->data['itemTriggers'][$trigger['triggerid']];
-		$triggerDescription = [];
+		$trigger_description = [];
 		if ($trigger['templateid'] > 0) {
 			if (!isset($this->data['triggerRealHosts'][$trigger['triggerid']])) {
-				$triggerDescription[] = (new CSpan('HOST'))->addClass(ZBX_STYLE_GREY);
-				$triggerDescription[] = ':';
+				$trigger_description[] = (new CSpan('HOST'))->addClass(ZBX_STYLE_GREY);
+				$trigger_description[] = ':';
 			}
 			else {
 				$realHost = reset($this->data['triggerRealHosts'][$trigger['triggerid']]);
 				if (array_key_exists($realHost['hostid'], $this->data['writable_templates'])) {
-					$triggerDescription[] = (new CLink(
+					$trigger_description[] = (new CLink(
 						CHtml::encode($realHost['name']),
 						'triggers.php?hostid='.$realHost['hostid']))
 						->addClass(ZBX_STYLE_GREY);
 				}
 				else {
-					$triggerDescription[] = (new CSpan(CHtml::encode($realHost['name'])))
+					$trigger_description[] = (new CSpan(CHtml::encode($realHost['name'])))
 						->addClass(ZBX_STYLE_GREY);
 				}
 
-				$triggerDescription[] = ':';
+				$trigger_description[] = ':';
 			}
 		}
 
 		$trigger['hosts'] = zbx_toHash($trigger['hosts'], 'hostid');
 
 		if ($trigger['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
-			$triggerDescription[] = new CSpan(CHtml::encode($trigger['description']));
+			$trigger_description[] = new CSpan(CHtml::encode($trigger['description']));
 		}
 		else {
-			$triggerDescription[] = new CLink(
+			$trigger_description[] = new CLink(
 				CHtml::encode($trigger['description']),
 				'triggers.php?form=update&hostid='.key($trigger['hosts']).'&triggerid='.$trigger['triggerid']
 			);
@@ -194,7 +194,7 @@ foreach ($this->data['items'] as $item) {
 
 		$triggerHintTable->addRow([
 			getSeverityCell($trigger['priority'], $this->data['config']),
-			$triggerDescription,
+			$trigger_description,
 			$trigger['expression'],
 			(new CSpan(triggerIndicator($trigger['status'], $trigger['state'])))
 				->addClass(triggerIndicatorStyle($trigger['status'], $trigger['state']))

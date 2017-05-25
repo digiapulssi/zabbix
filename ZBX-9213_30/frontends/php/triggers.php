@@ -546,17 +546,17 @@ else {
 	// get real hosts
 	$data['realHosts'] = getParentHostsByTriggers($data['triggers']);
 
-	// Select hosts and test permissions
-	$hostIds = [];
+	// Select writable hosts.
+	$hostids = [];
 	foreach ($data['realHosts'] as $realHost) {
-		$hostIds = array_merge($hostIds, zbx_objectValues($realHost, 'hostid'));
+		$hostids = array_merge($hostids, zbx_objectValues($realHost, 'hostid'));
 	}
 
 	$data['writable_templates'] = [];
-	if ($hostIds) {
+	if ($hostids) {
 			$data['writable_templates'] = API::Template()->get([
 				'output' => ['templateid'],
-				'templateids' => $hostIds,
+				'templateids' => $hostids,
 				'preservekeys' => true,
 				'editable' => true
 			]);

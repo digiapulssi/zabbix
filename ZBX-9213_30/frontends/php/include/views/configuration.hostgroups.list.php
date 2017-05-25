@@ -54,37 +54,37 @@ $hostGroupTable = (new CTableInfo())
 $current_time = time();
 
 foreach ($this->data['groups'] as $group) {
-	$hostsOutput = [];
+	$hosts_output = [];
 	$n = 0;
 
 	foreach ($group['templates'] as $template) {
 		$n++;
 
 		if ($n > $this->data['config']['max_in_table']) {
-			$hostsOutput[] = ' &hellip;';
+			$hosts_output[] = ' &hellip;';
 
 			break;
 		}
 
 		if ($n > 1) {
-			$hostsOutput[] = ', ';
+			$hosts_output[] = ', ';
 		}
 
 		if (array_key_exists($template['templateid'], $data['writable_templates'])) {
 			$url = 'templates.php?form=update&templateid='.$template['templateid'].'&groupid='.$group['groupid'];
 
-			$hostsOutput[] = (new CLink($template['name'], $url))
+			$hosts_output[] = (new CLink($template['name'], $url))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREY);
 		}
 		else {
-			$hostsOutput[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
+			$hosts_output[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
 		}
 	}
 
 	if ($group['templates'] && $group['hosts']) {
-		$hostsOutput[] = BR();
-		$hostsOutput[] = BR();
+		$hosts_output[] = BR();
+		$hosts_output[] = BR();
 	}
 
 	$n = 0;
@@ -93,17 +93,17 @@ foreach ($this->data['groups'] as $group) {
 		$n++;
 
 		if ($n > $this->data['config']['max_in_table']) {
-			$hostsOutput[] = ' &hellip;';
+			$hosts_output[] = ' &hellip;';
 
 			break;
 		}
 
 		if ($n > 1) {
-			$hostsOutput[] = ', ';
+			$hosts_output[] = ', ';
 		}
 
 		$url = 'hosts.php?form=update&hostid='.$host['hostid'].'&groupid='.$group['groupid'];
-		$hostsOutput[] = (new CLink($host['name'], $url))
+		$hosts_output[] = (new CLink($host['name'], $url))
 			->addClass(ZBX_STYLE_LINK_ALT)
 			->addClass($host['status'] == HOST_STATUS_MONITORED ? ZBX_STYLE_GREEN : ZBX_STYLE_RED);
 	}
@@ -136,7 +136,7 @@ foreach ($this->data['groups'] as $group) {
 			(new CLink(_('Templates'), 'templates.php?groupid='.$group['groupid'])),
 			CViewHelper::showNum($templateCount)
 		],
-		empty($hostsOutput) ? '' : $hostsOutput,
+		empty($hosts_output) ? '' : $hosts_output,
 		$info
 	]);
 }

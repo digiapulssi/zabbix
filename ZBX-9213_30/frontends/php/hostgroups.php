@@ -440,9 +440,9 @@ else {
 	]);
 	order_result($data['groups'], $sortField, $sortOrder);
 
-	$linkedTemplateIds = [];
+	$linked_templateids = [];
 	foreach ($data['groups'] as &$group) {
-		$linkedTemplateIds = array_merge($linkedTemplateIds, zbx_objectValues($group['templates'], 'templateid'));
+		$linked_templateids = array_merge($linked_templateids, zbx_objectValues($group['templates'], 'templateid'));
 		order_result($group['hosts'], 'name');
 		order_result($group['templates'], 'name');
 	}
@@ -450,10 +450,10 @@ else {
 
 	// Select writable templates:
 	$data['writable_templates'] = [];
-	if ($linkedTemplateIds) {
+	if ($linked_templateids) {
 		$data['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],
-			'templateids' => array_unique($linkedTemplateIds),
+			'templateids' => array_unique($linked_templateids),
 			'editable' => true,
 			'preservekeys' => true
 		]);
