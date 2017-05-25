@@ -74,7 +74,7 @@ foreach ($this->data['applications'] as $application) {
 		CArrayHelper::sort($application['sourceTemplates'], ['name']);
 
 		foreach ($application['sourceTemplates'] as $template) {
-			if (array_key_exists($template['hostid'], $this->data['writable_templates'])) {
+			if (array_key_exists($template['hostid'], $data['writable_templates'])) {
 				$name[] = (new CLink($template['name'], 'applications.php?hostid='.$template['hostid']))
 					->addClass(ZBX_STYLE_LINK_ALT)
 					->addClass(ZBX_STYLE_GREY);

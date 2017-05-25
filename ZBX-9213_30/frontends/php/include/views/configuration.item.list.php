@@ -79,7 +79,7 @@ foreach ($this->data['items'] as $item) {
 	// description
 	$description = [];
 	if (!empty($item['template_host'])) {
-		if (array_key_exists($item['template_host']['hostid'], $this->data['writable_templates'])) {
+		if (array_key_exists($item['template_host']['hostid'], $data['writable_templates'])) {
 			$description[] = (new CLink(
 				CHtml::encode($item['template_host']['name']),
 				'?hostid='.$item['template_host']['hostid'].'&filter_set=1'))
@@ -159,7 +159,7 @@ foreach ($this->data['items'] as $item) {
 			}
 			else {
 				$realHost = reset($this->data['triggerRealHosts'][$trigger['triggerid']]);
-				if (array_key_exists($realHost['hostid'], $this->data['writable_templates'])) {
+				if (array_key_exists($realHost['hostid'], $data['writable_templates'])) {
 					$trigger_description[] = (new CLink(
 						CHtml::encode($realHost['name']),
 						'triggers.php?hostid='.$realHost['hostid']))

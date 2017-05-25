@@ -115,7 +115,7 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 			$real_hosts = $this->data['realHosts'][$triggerid];
 			$real_host = reset($real_hosts);
 
-			if (array_key_exists($real_host['hostid'], $this->data['writable_templates'])) {
+			if (array_key_exists($real_host['hostid'], $data['writable_templates'])) {
 				$description[] = (new CLink(
 					CHtml::encode($real_host['name']),
 					'triggers.php?hostid='.$real_host['hostid']))
