@@ -46,9 +46,15 @@ $hostList = new CFormList('hostlist');
 if ($hostPrototype['templateid'] && $data['parents']) {
 	$parents = [];
 	foreach (array_reverse($data['parents']) as $parent) {
-		$parents[] = new CLink($parent['parentHost']['name'],
-			'?form=update&hostid='.$parent['hostid'].'&parent_discoveryid='.$parent['discoveryRule']['itemid']
-		);
+		if (array_key_exists($parent['parentHost']['hostid'], $hostPrototype['writable_templates'])) {
+			$parents[] = new CLink($parent['parentHost']['name'],
+				'?form=update&hostid='.$parent['hostid'].'&parent_discoveryid='.$parent['discoveryRule']['itemid']
+			);
+		}
+		else {
+			$parents[] = new CSpan($parent['parentHost']['name']);
+		}
+
 		$parents[] = SPACE.'&rArr;'.SPACE;
 	}
 	array_pop($parents);

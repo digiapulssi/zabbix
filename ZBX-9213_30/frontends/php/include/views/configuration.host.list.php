@@ -151,7 +151,9 @@ foreach ($data['hosts'] as $host) {
 			];
 		}
 		else {
-			$caption = (new CSpan(CHtml::encode($template['name'])))->addClass(ZBX_STYLE_GREY);
+			$caption = [
+				(new CSpan(CHtml::encode($template['name'])))->addClass(ZBX_STYLE_GREY)
+			];
 		}
 
 		$parentTemplates = $data['templates'][$template['templateid']]['parentTemplates'];

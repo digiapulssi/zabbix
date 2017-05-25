@@ -316,6 +316,7 @@ if (isset($_REQUEST['form'])) {
 	}
 
 	// host prototype edit form
+	$templateIds = [];
 	if (getRequest('hostid') && !getRequest('form_refresh')) {
 		$data['host_prototype'] = array_merge($data['host_prototype'], $hostPrototype);
 
@@ -347,13 +348,14 @@ if (isset($_REQUEST['form'])) {
 				if ($parentHostPrototype) {
 					$data['parents'][] = $parentHostPrototype;
 					$hostPrototypeId = $parentHostPrototype['templateid'];
+					$templateIds[] = $parentHostPrototype['parentHost']['hostid'];
 				}
 			}
 		}
 	}
 
 	// Select writable templates
-	$templateIds = zbx_objectValues($data['host_prototype']['templates'], 'templateid');
+	$templateIds = array_merge(zbx_objectValues($data['host_prototype']['templates'], 'templateid'), $templateIds);
 	$data['host_prototype']['writable_templates'] = [];
 	if ($templateIds) {
 		$data['host_prototype']['writable_templates'] = API::Template()->get([
@@ -417,17 +419,6 @@ else {
 	]);
 	$data['linkedTemplates'] = zbx_toHash($linkedTemplates, 'templateid');
 
-	// Select writable templates
-	$data['writable_templates'] = [];
-	if ($templateIds) {
-		$data['writable_templates'] = API::Template()->get([
-			'output' => ['templateid'],
-			'templateids' => $templateIds,
-			'editable' => true,
-			'preservekeys' => true
-		]);
-	}
-
 	// fetch source templates and LLD rules
 	$hostPrototypeSourceIds = getHostPrototypeSourceParentIds(zbx_objectValues($data['hostPrototypes'], 'hostid'));
 	if ($hostPrototypeSourceIds) {
@@ -448,9 +439,27 @@ else {
 				];
 				$sourceDiscoveryRuleId = get_realrule_by_itemid_and_hostid($discoveryRule['itemid'], $sourceTemplate['hostid']);
 				$hostPrototype['sourceDiscoveryRuleId'] = $sourceDiscoveryRuleId;
+				$templateIds[] = $sourceTemplate['parent_hostid'];
 			}
 		}
 		unset($hostPrototype);
+	}
+
+	foreach ($data['linkedTemplates'] as $linked_template) {
+		foreach ($linked_template['parentTemplates'] as $parent_template) {
+			$templateIds[] = $parent_template['templateid'];
+		}
+	}
+
+	// Select writable templates
+	$data['writable_templates'] = [];
+	if ($templateIds) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $templateIds,
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	// render view
