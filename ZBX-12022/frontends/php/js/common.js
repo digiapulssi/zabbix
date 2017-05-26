@@ -356,6 +356,13 @@ function get_scroll_pos() {
 }
 
 function openWinCentered(url, name, width, height, params) {
+	if (!width) {
+		width = 1024;
+	}
+	if (!height) {
+		height = 768;
+	}
+
 	var top = Math.ceil((screen.height - height) / 2),
 		left = Math.ceil((screen.width - width) / 2);
 

@@ -45,14 +45,15 @@ $servicesFormList = (new CFormList('servicesFormList'))
 	);
 
 // append parent link to form list
+$parent_url_param = '&parentid=\'+this.form.parentid.value+\'';
 $servicesFormList->addRow(_('Parent service'), [
 	(new CTextBox('parent_name', $this->data['parentname'], true, 128))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH),
 	(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
 	(new CButton('select_parent', _('Change')))
 		->addClass(ZBX_STYLE_BTN_GREY)
 		->onClick(
-			"javascript: openWinCentered('services.php?pservices=1".url_param('serviceid')."', ".
-				"'ZBX_Services_List', 740, 420, 'scrollbars=1, toolbar=0, menubar=0, resizable=1, dialog=0');")
+			"javascript: openWinCentered('services.php?pservices=1".url_param('serviceid').$parent_url_param."', ".
+				"'ZBX_Services_List', null, null, 'scrollbars=1, toolbar=0, menubar=0, resizable=1, dialog=0');")
 ]);
 
 // append algorithm to form list
@@ -126,7 +127,7 @@ $servicesDependenciesFormList->addRow(
 	(new CDiv([
 		$servicesChildTable,
 		(new CButton('add_child_service', _('Add')))
-			->onClick("javascript: openWinCentered('services.php?cservices=1".url_param('serviceid')."', 'ZBX_Services_List', 640, 520, 'scrollbars=1, toolbar=0, menubar=0, resizable=0');")
+			->onClick("javascript: openWinCentered('services.php?cservices=1".url_param('serviceid')."', 'ZBX_Services_List', null, null, 'scrollbars=1, toolbar=0, menubar=0, resizable=0');")
 			->addClass(ZBX_STYLE_BTN_LINK)
 	]))
 		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
