@@ -290,18 +290,18 @@ sub dw_get_cycle_id
 	$ns_id = 0 unless (defined($ns_id));
 	$ip_id = 0 unless (defined($ip_id));
 
-	# todo phase 1: for RDDS the target and the IP can be an empty string:
-	if ($service_category_id == 3)
-	{
-		$ns_id = 0 if ($ns_id eq "");
-		$ip_id = 0 if ($ip_id eq "");
-	}
-
 	if (opt('dry-run'))
 	{
 		return sprintf(
 			"%0"._DIGITS_CLOCK."d%0"._DIGITS_SERVICE_CATEGORY_ID."s%0"._DIGITS_TLD_ID."s%0"._DIGITS_NS_ID."s%0".
 			_DIGITS_IP_ID."s", $clock, $service_category_id, $tld_id, $ns_id, $ip_id);
+	}
+
+	# todo phase 1: for RDDS the target and the IP can be an empty string:
+	if ($service_category_id == 3)
+	{
+		$ns_id = 0 if ($ns_id eq "");
+		$ip_id = 0 if ($ip_id eq "");
 	}
 
 	return sprintf(

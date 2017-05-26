@@ -5,6 +5,7 @@ New features:
 ....I..... [230] allowed earlier SLA-API update on a freshly installed database (dimir)
 
 Bug fixes:
+....I..... [231] fixed Data Export script runtime errors when run with --dry-run (dimir)
 ....I..... [229] fixed SLA-API script error when probes have no TLDs yet (dimir)
 
 --------------------------------------------------------------------------------
