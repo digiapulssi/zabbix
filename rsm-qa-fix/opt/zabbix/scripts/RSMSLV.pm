@@ -1309,11 +1309,6 @@ sub get_probe_times
 			" and i.status<>".ITEM_STATUS_DISABLED.
 			" and i.key_='".PROBE_KEY_ONLINE."'");
 
-	if (scalar(@{$items_ref}) == 0)
-	{
-		fail("Probe main status items (".PROBE_KEY_ONLINE.") must exist on every probe (PROBE - mon) host.");
-	}
-
 	foreach my $item_ref (@{$items_ref})
 	{
 		my $itemid = $item_ref->[0];
@@ -1368,11 +1363,11 @@ sub get_probe_times
 
 	if (!defined($result))
 	{
-		dbg("Probe main status items (".PROBE_KEY_ONLINE.") have no values yet.");
+		wrn("Probes have no values yet.");
 	}
-	else
+	elsif (opt('dry-run'))
 	{
-		__print_probe_times($result) if (opt('dry-run'));
+		__print_probe_times($result);
 	}
 
 	return $result;

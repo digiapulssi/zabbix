@@ -5,6 +5,7 @@ New features:
 ....I..... [sub-201] allowed earlier SLA-API update on a freshly installed database (dimir)
 
 Bug fixes:
+....I..... [229] fixed SLA-API script error when probes have no TLDs yet (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc3
