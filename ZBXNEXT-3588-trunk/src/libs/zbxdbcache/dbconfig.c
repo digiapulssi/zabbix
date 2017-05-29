@@ -9594,7 +9594,7 @@ static void	dc_action_copy_conditions(const zbx_dc_action_t *dc_action, zbx_vect
  ******************************************************************************/
 static zbx_action_eval_t	*dc_action_eval_create(const zbx_dc_action_t *dc_action)
 {
-	zbx_action_eval_t		*action;
+	zbx_action_eval_t	*action;
 
 	action = (zbx_action_eval_t *)zbx_malloc(NULL, sizeof(zbx_action_eval_t));
 
@@ -9615,7 +9615,7 @@ static zbx_action_eval_t	*dc_action_eval_create(const zbx_dc_action_t *dc_action
  *                                                                            *
  * Purpose: gets action evaluation data                                       *
  *                                                                            *
- * Parameters: actions         - [OUT] the action evaluation data             *
+ * Parameters: actions - [OUT] the action evaluation data                     *
  *                                                                            *
  * Comments: The returned actions must be freed with zbx_action_eval_free()   *
  *           conditions must also be cleared                                  *
@@ -9623,9 +9623,9 @@ static zbx_action_eval_t	*dc_action_eval_create(const zbx_dc_action_t *dc_action
  ******************************************************************************/
 void	zbx_dc_get_actions_eval(zbx_vector_ptr_t *actions)
 {
-	const char			*__function_name = "zbx_dc_get_actions_eval";
-	zbx_dc_action_t			*dc_action;
-	zbx_hashset_iter_t		iter;
+	const char		*__function_name = "zbx_dc_get_actions_eval";
+	zbx_dc_action_t		*dc_action;
+	zbx_hashset_iter_t	iter;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
