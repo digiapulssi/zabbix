@@ -2882,88 +2882,6 @@ static void	check_events_condition(zbx_vector_ptr_t *esc_events, unsigned char s
 
 /******************************************************************************
  *                                                                            *
- * Function: check_events_conditions                                          *
- *                                                                            *
- * Purpose: check if multiple events matches multiple conditions              *
- *                                                                            *
- *                                                                            *
- * Parameters: esc_events - [IN] events to check                              *
- *             source     - [IN] specific event source that need checking     *
- *             condition  - [IN/OUT] condition for matching, outputs          *
- *                                   event ids that match condition           *
- *                                                                            *
- ******************************************************************************/
-static void	check_events_conditions(zbx_vector_ptr_t *esc_events, zbx_hashset_t *uniq_conditions)
-{
-	int	i;
-
-	for (i = 0; i < EVENT_SOURCE_COUNT; i++)
-	{
-		if (0 != esc_events[i].values_num)
-		{
-			zbx_hashset_iter_t	iter;
-			DB_CONDITION		*condition;
-
-			zbx_hashset_iter_reset(&uniq_conditions[i], &iter);
-
-			while (NULL != (condition = (DB_CONDITION *)zbx_hashset_iter_next(&iter)))
-				check_events_condition(&esc_events[i], i, condition);
-		}
-	}
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: conditions_vectors_create                                        *
- *                                                                            *
- * Purpose: each condition must store event ids that match condition          *
- *                                                                            *
- * Parameters: uniq_conditions - [IN/OUT] conditions that need vectors to be  *
- *                                        created                             *
- ******************************************************************************/
-static void	conditions_vectors_create(zbx_hashset_t *uniq_conditions)
-{
-	int	i;
-
-	for (i = 0; i < EVENT_SOURCE_COUNT; i++)
-	{
-		zbx_hashset_iter_t	iter;
-		DB_CONDITION		*condition;
-
-		zbx_hashset_iter_reset(&uniq_conditions[i], &iter);
-
-		while (NULL != (condition = (DB_CONDITION *)zbx_hashset_iter_next(&iter)))
-			zbx_vector_uint64_create(&condition->objectids);
-	}
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: conditions_vectors_destroy                                       *
- *                                                                            *
- * Purpose: destroy previously allocated vectors                              *
- *                                                                            *
- * Parameters: uniq_conditions [IN/OUT] - conditions that need vectors to be  *
- *                                        destroyed                           *
- ******************************************************************************/
-static void	conditions_vectors_destroy(zbx_hashset_t *uniq_conditions)
-{
-	int	i;
-
-	for (i = 0; i < EVENT_SOURCE_COUNT; i++)
-	{
-		zbx_hashset_iter_t	iter;
-		DB_CONDITION		*condition;
-
-		zbx_hashset_iter_reset(&uniq_conditions[i], &iter);
-
-		while (NULL != (condition = (DB_CONDITION *)zbx_hashset_iter_next(&iter)))
-			zbx_vector_uint64_destroy(&condition->objectids);
-	}
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: zbx_check_action_condition                                       *
  *                                                                            *
  * Purpose: check if event matches single condition                           *
@@ -3516,6 +3434,8 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 	zbx_vector_ptr_t	esc_events[EVENT_SOURCE_COUNT];
 	zbx_hashset_t		rec_escalations;
 	zbx_hashset_t		uniq_conditions[EVENT_SOURCE_COUNT];
+	zbx_hashset_iter_t	iter;
+	DB_CONDITION		*condition;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() events_num:" ZBX_FS_SIZE_T, __function_name, (zbx_fs_size_t)events_num);
 
@@ -3532,11 +3452,27 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 	zbx_vector_ptr_create(&actions);
 	zbx_dc_get_actions_eval(&actions);
 	prepare_actions_conditions_eval(&actions, uniq_conditions);
-	conditions_vectors_create(uniq_conditions);
+
+	for (i = 0; i < EVENT_SOURCE_COUNT; i++)
+	{
+		zbx_hashset_iter_reset(&uniq_conditions[i], &iter);
+
+		while (NULL != (condition = (DB_CONDITION *)zbx_hashset_iter_next(&iter)))
+			zbx_vector_uint64_create(&condition->objectids);
+	}
 
 	get_escalation_events(events, events_num, esc_events);
 
-	check_events_conditions(esc_events, uniq_conditions);
+	for (i = 0; i < EVENT_SOURCE_COUNT; i++)
+	{
+		if (0 == esc_events[i].values_num)
+			continue;
+
+		zbx_hashset_iter_reset(&uniq_conditions[i], &iter);
+
+		while (NULL != (condition = (DB_CONDITION *)zbx_hashset_iter_next(&iter)))
+			check_events_condition(&esc_events[i], i, condition);
+	}
 
 	/* 1. All event sources: match PROBLEM events to action conditions, add them to 'new_escalations' list.      */
 	/* 2. EVENT_SOURCE_DISCOVERY, EVENT_SOURCE_AUTO_REGISTRATION: execute operations (except command and message */
@@ -3578,10 +3514,13 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 		}
 	}
 
-	conditions_vectors_destroy(uniq_conditions);
-
 	for (i = 0; i < EVENT_SOURCE_COUNT; i++)
 	{
+		zbx_hashset_iter_reset(&uniq_conditions[i], &iter);
+
+		while (NULL != (condition = (DB_CONDITION *)zbx_hashset_iter_next(&iter)))
+			zbx_vector_uint64_destroy(&condition->objectids);
+
 		zbx_vector_ptr_destroy(&esc_events[i]);
 		conditions_eval_clean(&uniq_conditions[i]);
 		zbx_hashset_destroy(&uniq_conditions[i]);
