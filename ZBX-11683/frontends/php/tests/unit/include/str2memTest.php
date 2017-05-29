@@ -1,3 +1,4 @@
+﻿<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -17,17 +18,36 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package com.zabbix.gateway;
 
-class GeneralInformation
-{
-	public static final String APPLICATION_NAME = "Zabbix Java Gateway";
-	public static final String REVISION_DATE = "19 April 2017";
-	public static final String REVISION = "{ZABBIX_REVISION}";
-	public static final String VERSION = "3.0.10rc1";
+class Cstr2memTest extends PHPUnit_Framework_TestCase {
 
-	public static void printVersion()
-	{
-		System.out.printf("%s v%s (revision %s) (%s)\n", APPLICATION_NAME, VERSION, REVISION, REVISION_DATE);
+	public static function testProvider() {
+		return [
+			['1', 1],
+			['1024', 1024],
+			['0', 0],
+			['1K', 1024],
+			['1k', 1024],
+			['1M', 1024 * 1024],
+			['1m', 1024 * 1024],
+			['1G', 1024 * 1024 * 1024],
+			['1g', 1024 * 1024 * 1024],
+			['8K', 8 * 1024],
+			['8k', 8 * 1024],
+			['8M', 8 * 1024 * 1024],
+			['8m', 8 * 1024 * 1024],
+			['8G', 8 * 1024 * 1024 * 1024],
+			['8g', 8 * 1024 * 1024 * 1024]
+		];
+	}
+
+	/**
+	 * @dataProvider testProvider
+	 *
+	 * @param string $source
+	 * @param string $expected
+	*/
+	public function testTriggerExpressionReplaceHost($source, $expected) {
+		$this->assertSame($expected, str2mem($source));
 	}
 }
