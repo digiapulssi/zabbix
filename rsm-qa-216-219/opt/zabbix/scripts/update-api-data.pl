@@ -232,7 +232,7 @@ dbg("check_from:", ts_full($check_from), " check_till:", ts_full($check_till), "
 
 if ($check_till < $check_from)
 {
-	info("cannot yet calculate, the latest data not fully available");
+	info("no new data yet, we are up-to-date");
 	exit(0);
 }
 
@@ -250,7 +250,7 @@ if ($check_till > $max_till)
 		$left_str = "$left minutes";
 	}
 
-	wrn(sprintf("cannot yet calculate for selected period (%s), please wait for %s for the data to be processed", selected_period($check_from, $check_till), $left_str));
+	wrn(sprintf("the specified period (%s) is in the future, please wait for %s", selected_period($check_from, $check_till), $left_str));
 
 	exit(0);
 }
