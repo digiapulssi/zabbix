@@ -17,28 +17,13 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_DAEMON_H
-#define ZABBIX_DAEMON_H
+#ifndef ZABBIX_ZBXLDAP_H
+#define ZABBIX_ZBXLDAP_H
 
-#if defined(_WINDOWS)
-#	error "This module allowed only for Unix OS"
+#ifdef HAVE_LDAP
+int	zbx_load_ldap(char **error);
+void	zbx_unload_ldap(void);
+int	zbx_check_ldap(const char *host, unsigned short port, int timeout, int *value_int);
 #endif
 
-extern char	*CONFIG_PID_FILE;
-
-#include "threads.h"
-
-int	daemon_start(int allow_root, const char *user, unsigned int flags);
-void	daemon_stop(void);
-
-int	zbx_sigusr_send(int flags);
-
-#define ZBX_IS_RUNNING()	1
-#define ZBX_DO_EXIT()
-
-#define START_MAIN_ZABBIX_ENTRY(allow_root, user, flags)	daemon_start(allow_root, user, flags)
-
-int	zbx_load_dependencies(char **error);
-void	zbx_unload_dependencies(void);
-
-#endif	/* ZABBIX_DAEMON_H */
+#endif

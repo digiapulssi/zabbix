@@ -913,6 +913,13 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	}
 #endif
 #ifndef _WINDOWS
+	if (SUCCEED != zbx_load_dependencies(&error))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "cannot load dependencies: %s", error);
+		zbx_free(error);
+		exit(EXIT_FAILURE);
+	}
+
 	if (FAIL == zbx_load_modules(CONFIG_LOAD_MODULE_PATH, CONFIG_LOAD_MODULE, CONFIG_TIMEOUT, 1))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "loading modules failed, exiting...");
@@ -1090,6 +1097,7 @@ void	zbx_free_service_resources(void)
 #endif
 #ifndef _WINDOWS
 	zbx_unload_modules();
+	zbx_unload_dependencies();
 #endif
 	zabbix_log(LOG_LEVEL_INFORMATION, "Zabbix Agent stopped. Zabbix %s (revision %s).",
 			ZABBIX_VERSION, ZABBIX_REVISION);
@@ -1117,9 +1125,9 @@ void	zbx_on_exit(void)
 int	main(int argc, char **argv)
 {
 	ZBX_TASK_EX	t = {ZBX_TASK_START};
+	char		*error;
 #ifdef _WINDOWS
 	int		ret;
-	char		*error;
 
 	/* Provide, so our process handles errors instead of the system itself. */
 	/* Attention!!! */
@@ -1191,6 +1199,13 @@ int	main(int argc, char **argv)
 			zbx_set_common_signal_handlers();
 #endif
 #ifndef _WINDOWS
+			if (SUCCEED != zbx_load_dependencies(&error))
+			{
+				zabbix_log(LOG_LEVEL_CRIT, "cannot load dependencies: %s", error);
+				zbx_free(error);
+				exit(EXIT_FAILURE);
+			}
+
 			if (FAIL == zbx_load_modules(CONFIG_LOAD_MODULE_PATH, CONFIG_LOAD_MODULE, CONFIG_TIMEOUT, 0))
 			{
 				zabbix_log(LOG_LEVEL_CRIT, "loading modules failed, exiting...");
@@ -1209,6 +1224,7 @@ int	main(int argc, char **argv)
 #endif
 #ifndef _WINDOWS
 			zbx_unload_modules();
+			zbx_unload_dependencies();
 #endif
 			free_metrics();
 			alias_list_free();

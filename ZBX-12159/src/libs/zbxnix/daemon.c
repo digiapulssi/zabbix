@@ -29,6 +29,8 @@
 #include "sighandler.h"
 #include "sigcommon.h"
 
+#include "zbxldap.h"
+
 char		*CONFIG_PID_FILE = NULL;
 static int	parent_pid = -1;
 
@@ -434,4 +436,23 @@ int	zbx_sigusr_send(int flags)
 		zbx_error("%s", error);
 
 	return ret;
+}
+
+int	zbx_load_dependencies(char **error)
+{
+#ifndef HAVE_LDAP
+	ZBX_UNUSED(error);
+#endif
+#ifdef HAVE_LDAP
+	if (SUCCEED != zbx_load_ldap(error))
+		return FAIL;
+#endif
+	return SUCCEED;
+}
+
+void	zbx_unload_dependencies(void)
+{
+#ifdef HAVE_LDAP
+	zbx_unload_ldap();
+#endif
 }

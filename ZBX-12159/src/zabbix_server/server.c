@@ -908,6 +908,13 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 		exit(EXIT_FAILURE);
 	}
 #endif
+	if (SUCCEED != zbx_load_dependencies(&error))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "cannot load dependencies: %s", error);
+		zbx_free(error);
+		exit(EXIT_FAILURE);
+	}
+
 	if (FAIL == zbx_load_modules(CONFIG_LOAD_MODULE_PATH, CONFIG_LOAD_MODULE, CONFIG_TIMEOUT, 1))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "loading modules failed, exiting...");
@@ -1174,6 +1181,7 @@ void	zbx_on_exit(void)
 	zbx_uninitialize_events();
 
 	zbx_unload_modules();
+	zbx_unload_dependencies();
 
 	zabbix_log(LOG_LEVEL_INFORMATION, "Zabbix Server stopped. Zabbix %s (revision %s).",
 			ZABBIX_VERSION, ZABBIX_REVISION);

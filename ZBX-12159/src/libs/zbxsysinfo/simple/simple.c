@@ -26,14 +26,7 @@
 #include "../common/net.h"
 #include "ntp.h"
 #include "simple.h"
-
-#ifdef HAVE_LDAP
-#	include <ldap.h>
-#endif
-
-#ifdef HAVE_LBER_H
-#	include <lber.h>
-#endif
+#include "zbxldap.h"
 
 ZBX_METRIC	parameters_simple[] =
 /*      KEY                     FLAG		FUNCTION        	TEST PARAMETERS */
@@ -44,68 +37,6 @@ ZBX_METRIC	parameters_simple[] =
 	{"net.udp.service.perf",CF_HAVEPARAMS,	CHECK_SERVICE_PERF, 	"ntp,127.0.0.1,123"},
 	{NULL}
 };
-
-#ifdef HAVE_LDAP
-static int    check_ldap(const char *host, unsigned short port, int timeout, int *value_int)
-{
-	LDAP		*ldap	= NULL;
-	LDAPMessage	*res	= NULL;
-	LDAPMessage	*msg	= NULL;
-	BerElement	*ber	= NULL;
-
-	char	*attrs[2] = { "namingContexts", NULL };
-	char	*attr	 = NULL;
-	char	**valRes = NULL;
-	int	ldapErr = 0;
-
-	zbx_alarm_on(timeout);
-
-	*value_int = 0;
-
-	if (NULL == (ldap = ldap_init(host, port)))
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "LDAP - initialization failed [%s:%hu]", host, port);
-		goto lbl_ret;
-	}
-
-	if (LDAP_SUCCESS != (ldapErr = ldap_search_s(ldap, "", LDAP_SCOPE_BASE, "(objectClass=*)", attrs, 0, &res)))
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "LDAP - searching failed [%s] [%s]", host, ldap_err2string(ldapErr));
-		goto lbl_ret;
-	}
-
-	if (NULL == (msg = ldap_first_entry(ldap, res)))
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "LDAP - empty sort result. [%s] [%s]", host, ldap_err2string(ldapErr));
-		goto lbl_ret;
-	}
-
-	if (NULL == (attr = ldap_first_attribute(ldap, msg, &ber)))
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "LDAP - empty first entry result. [%s] [%s]", host, ldap_err2string(ldapErr));
-		goto lbl_ret;
-	}
-
-	valRes = ldap_get_values(ldap, msg, attr);
-
-	*value_int = 1;
-lbl_ret:
-	zbx_alarm_off();
-
-	if (NULL != valRes)
-		ldap_value_free(valRes);
-	if (NULL != attr)
-		ldap_memfree(attr);
-	if (NULL != ber)
-		ber_free(ber, 0);
-	if (NULL != res)
-		ldap_msgfree(res);
-	if (NULL != ldap)
-		ldap_unbind(ldap);
-
-	return SYSINFO_RET_OK;
-}
-#endif	/* HAVE_LDAP */
 
 /******************************************************************************
  *                                                                            *
@@ -354,7 +285,7 @@ int	check_service(AGENT_REQUEST *request, const char *default_addr, AGENT_RESULT
 #ifdef HAVE_LDAP
 			if (NULL == port_str || '\0' == *port_str)
 				port = ZBX_DEFAULT_LDAP_PORT;
-			ret = check_ldap(ip, port, CONFIG_TIMEOUT, &value_int);
+			ret = zbx_check_ldap(ip, port, CONFIG_TIMEOUT, &value_int);
 #else
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Support for LDAP check was not compiled in."));
 #endif
