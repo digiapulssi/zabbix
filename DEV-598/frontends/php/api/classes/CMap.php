@@ -380,12 +380,13 @@ class CMap extends CMapElement {
 				' WHERE '.dbConditionInt('seu.selementid', array_keys($selements))
 			);
 			while ($selementUrl = DBfetch($dbSelementUrls)) {
-				if (is_null($options['expandUrls'])) {
-					$selements[$selementUrl['selementid']]['urls'][] = $selementUrl;
+				if (!is_null($options['expandUrls'])) {
+					$selementUrl = $this->expandUrlMacro($selementUrl, $selements[$selementUrl['selementid']]);
 				}
-				else {
-					$selements[$selementUrl['selementid']]['urls'][] = $this->expandUrlMacro($selementUrl, $selements[$selementUrl['selementid']]);
+				if (strtolower(substr($selementUrl['url'], 0, 11)) == 'javascript:') {
+					$selementUrl['url'] = substr($selementUrl['url'], 11);
 				}
+				$selements[$selementUrl['selementid']]['urls'][] = $selementUrl;
 			}
 
 			foreach ($selements as $selement) {
