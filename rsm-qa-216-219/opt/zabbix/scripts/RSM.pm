@@ -214,9 +214,9 @@ sub __get_file_error
 			{
 				$error_string .= "$file: $message. ";
 			}
-
-			return $error_string;
 		}
+
+		return $error_string;
 	}
 
 	return join('', $err, @_);
