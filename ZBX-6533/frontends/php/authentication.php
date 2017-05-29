@@ -114,9 +114,8 @@ if ($config['authentication_type'] == ZBX_AUTH_INTERNAL) {
 	}
 }
 elseif ($config['authentication_type'] == ZBX_AUTH_LDAP) {
-	$frontend = new CFrontendSetup();
-	$ldap_status = $frontend->checkPhpLdapModule();
-	$ldap_extension_enabled = ($ldap_status['result'] === CFrontendSetup::CHECK_OK);
+	$ldap_status = (new CFrontendSetup())->checkPhpLdapModule();
+	$ldap_extension_enabled = ($ldap_status['result'] == CFrontendSetup::CHECK_OK);
 	$login = false;
 
 	if ($ldap_extension_enabled && (hasRequest('update') || hasRequest('test'))) {
