@@ -448,7 +448,7 @@ class CHttpTestManager {
 		return ($httpTest['http_proxy'] === $exHttpTest['http_proxy']
 				&& $httpTest['agent'] === $exHttpTest['agent']
 				&& $httpTest['retries'] == $exHttpTest['retries']
-				&& $httpTest['delay'] == $exHttpTest['delay']
+				&& $httpTest['delay'] === $exHttpTest['delay']
 				&& $httpTest['applicationid'] == $exHttpTest['applicationid']);
 	}
 
@@ -555,11 +555,12 @@ class CHttpTestManager {
 			$hostHttpTests[$hostid] = ['byName' => [], 'byTemplateId' => []];
 		}
 		$dbCursor = DBselect(
-			'SELECT ht.httptestid,ht.name,ht.hostid,ht.templateid,ht.applicationid,ht.delay,ht.retries,ht.agent,'.
-				'ht.http_proxy'.
+			'SELECT ht.httptestid,ht.name,ht.applicationid,ht.delay,ht.agent,ht.hostid,ht.templateid,ht.http_proxy,'.
+				'ht.retries'.
 			' FROM httptest ht'.
 			' WHERE '.dbConditionInt('ht.hostid', $hostIds)
 		);
+
 		while ($dbHttpTest = DBfetch($dbCursor)) {
 			$hostHttpTests[$dbHttpTest['hostid']]['byName'][$dbHttpTest['name']] = $dbHttpTest;
 			if ($dbHttpTest['templateid']) {
