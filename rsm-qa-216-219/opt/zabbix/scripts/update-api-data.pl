@@ -12,7 +12,6 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);	# ITEM_VALUE_TYPE_FLOAT
 use ApiHelper;
-use JSON::XS;
 
 use constant JSON_RDDS_SUBSERVICE => 'subService';
 use constant JSON_RDDS_43 => 'RDDS43';
@@ -725,7 +724,7 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, encode_json($tr_ref), $tr_ref->{'clock'}) != AH_SUCCESS)
+						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
@@ -850,7 +849,7 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, encode_json($tr_ref), $tr_ref->{'clock'}) != AH_SUCCESS)
+						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
@@ -958,7 +957,7 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, encode_json($tr_ref), $tr_ref->{'clock'}) != AH_SUCCESS)
+						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
@@ -1703,7 +1702,7 @@ sub __prnt_json
 
 	if (opt('debug'))
 	{
-		dbg(JSON->new->utf8(1)->pretty(1)->encode($tr_ref), "-----------------------------------------------------------");
+		dbg(ah_encode_pretty_json($tr_ref), "-----------------------------------------------------------");
 	}
 	else
 	{

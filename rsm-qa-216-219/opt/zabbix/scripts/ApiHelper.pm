@@ -5,6 +5,7 @@ use warnings;
 use File::Path qw(make_path);
 use DateTime::Format::RFC3339;
 use base 'Exporter';
+use JSON::XS;
 
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
@@ -30,7 +31,9 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_ALARMED_YES AH_ALARMED_NO AH_ALARMED_DISABLED ah_get_error
 		ah_save_alarmed ah_save_service_availability ah_save_incident ah_inc_fp_relative_path
 		ah_save_false_positive ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit
-		ah_save_audit ah_save_continue_file);
+		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
+
+use constant AH_JSON_FILE_VERSION => 1;
 
 my $error_string = "";
 
@@ -288,7 +291,7 @@ sub ah_save_incident_json
 
 	my $json_path = "$inc_path/$clock.$eventid.json";
 
-	return __write_file($json_path, "$json\n", $clock);
+	return __write_file($json_path, __encode_json($json), $clock);
 }
 
 sub ah_get_continue_file
@@ -301,6 +304,11 @@ sub ah_save_continue_file
 	my $ts = shift;
 
 	return __write_file(AH_TMP_DIR . '/' . AH_CONTINUE_FILE, $ts);
+}
+
+sub ah_encode_pretty_json
+{
+	return JSON->new->utf8(1)->pretty(1)->encode(shift);
 }
 
 sub ah_get_api_tld
@@ -317,6 +325,16 @@ sub __get_audit_file_path
 	my $server_key = shift;
 
 	return AH_BASE_DIR . '/' . AH_AUDIT_FILE_PREFIX . $server_key . '.txt';
+}
+
+sub __encode_json
+{
+	my $json_ref = shift;
+
+	$json_ref->{'version'} = AH_JSON_FILE_VERSION;
+	$json_ref->{'lastUpdateApiDatabase'} = time();
+
+	return encode_json($json_ref);
 }
 
 # get the time of last audit log entry that was checked
