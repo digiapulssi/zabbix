@@ -130,6 +130,9 @@ static void	zbx_openssl_thread_cleanup(void)
 
 static int	OPENSSL_init_ssl(int opts, void *settings)
 {
+	ZBX_UNUSED(opts);
+	ZBX_UNUSED(settings);
+
 	SSL_load_error_strings();
 	ERR_load_BIO_strings();
 	SSL_library_init();
@@ -315,6 +318,8 @@ static void	zbx_gnutls_debug_cb(int level, const char *str)
 static void	zbx_gnutls_audit_cb(gnutls_session_t session, const char *str)
 {
 	char	msg[1024];
+
+	ZBX_UNUSED(session);
 
 	/* remove '\n' from the end of debug message */
 	zbx_strlcpy(msg, str, sizeof(msg));
@@ -1260,6 +1265,8 @@ static int	zbx_psk_cb(gnutls_session_t session, const char *psk_identity, gnutls
 	size_t		psk_len = 0;
 	int		psk_bin_len;
 	unsigned char	tls_psk_hex[HOST_TLS_PSK_LEN_MAX], psk_buf[HOST_TLS_PSK_LEN / 2];
+
+	ZBX_UNUSED(session);
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() requested PSK identity \"%s\"", __function_name, psk_identity);
