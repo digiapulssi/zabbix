@@ -72,7 +72,7 @@ $fields = [
 	'ldap_bind_dn' => true,
 	'ldap_bind_password' => true
 ];
-$ldap_extension_enabled = null;
+$ldap_extension_enabled = false;
 
 foreach ($config as $field => $value) {
 	if (array_key_exists($field, $fields)) {

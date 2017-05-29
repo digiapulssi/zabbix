@@ -119,14 +119,12 @@ elseif ($this->data['config']['authentication_type'] != ZBX_AUTH_LDAP) {
 	$saveButton->setAttribute('disabled', 'true');
 }
 
-// LDAP Test button
+// LDAP test button.
 $test_button = new CSubmit('test', _('Test'));
 
-if ($this->data['config']['authentication_type'] == ZBX_AUTH_LDAP) {
-	if (!$this->data['ldap_extension_enabled']) {
-		$test_button->setAttribute('disabled', 'true');
-		$saveButton->setAttribute('disabled', 'true');
-	}
+if ($data['config']['authentication_type'] == ZBX_AUTH_LDAP) {
+	$test_button->setEnabled($data['ldap_extension_enabled']);
+	$saveButton->setEnabled($data['ldap_extension_enabled']);
 	$authenticationTab->setFooter(makeFormFooter($saveButton, [$test_button]));
 }
 else {
