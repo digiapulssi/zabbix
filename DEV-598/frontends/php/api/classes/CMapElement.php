@@ -720,7 +720,7 @@ abstract class CMapElement extends CZBXAPI {
 	}
 
 	/**
-	 * Returns array of Selements with sanitized URLs. Allowed URL prefixes: '/', 'http://', 'https://'
+	 * Returns array of Selements with sanitized URLs.
 	 *
 	 * @param array $selements	Array of Selements where URL should be sanitized
 	 *
@@ -732,7 +732,7 @@ abstract class CMapElement extends CZBXAPI {
 				continue;
 			}
 			foreach ($selement['urls'] as &$url_data) {
-				if (!preg_match('@^\s*(/|http://|https://|\w+\.php)@i', $url_data['url'])) {
+				if (!preg_match('@^(\s|\.)*(/|http://|https://|[\w\.]+\.php)+@i', $url_data['url'])) {
 					$url_data['url'] = 'http://'.trim($url_data['url']);
 				}
 			}
