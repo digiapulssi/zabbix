@@ -170,7 +170,6 @@ else {
 // get start event
 $mainEvent = API::Event()->get(array(
 	'eventids' => $data['eventid'],
-	'selectTriggers' => API_OUTPUT_EXTEND,
 	'output' => API_OUTPUT_EXTEND
 ));
 
@@ -333,24 +332,10 @@ if ($mainEvent) {
 			$failingTests
 	);
 
-	$mainEventClock = mktime(
-		date('H', $mainEvent['clock']),
-		date('i', $mainEvent['clock']),
-		0,
-		date('n', $mainEvent['clock']),
-		date('j', $mainEvent['clock']),
-		date('Y', $mainEvent['clock'])
-	);
+	$mainEventClock = $mainEvent['clock'] - $mainEvent['clock'] % 60;
 
 	if ($endEvent) {
-		$endEventClock = mktime(
-			date('H', $endEvent['clock']),
-			date('i', $endEvent['clock']),
-			0,
-			date('n', $endEvent['clock']),
-			date('j', $endEvent['clock']),
-			date('Y', $endEvent['clock'])
-		);
+		$endEventClock = $endEvent['clock'] - $endEvent['clock'] % 60;
 	}
 
 	$data['tests'] = [];
@@ -360,42 +345,38 @@ if ($mainEvent) {
 			'value' => $test['value']
 		);
 	}
+	CArrayHelper::sort($data['tests'], ['clock']);
 
 	// time correction after pagination
 	$firstElement = reset($data['tests']);
 	$lastElement = end($data['tests']);
-
 	$fromTime = $firstElement['clock'] - $failCount * $delayTime;
 	$toTime = $lastElement['clock'] + $recoveryCount * $delayTime + SEC_PER_MIN;
+
 	$tempTests = $data['tests'];
 	$startEventExist = false;
 	$endEventExist = false;
-	foreach ($tempTests as $key => $test) {
-		$newClock = mktime(
-			date('H', $test['clock']),
-			date('i', $test['clock']),
-			0,
-			date('n', $test['clock']),
-			date('j', $test['clock']),
-			date('Y', $test['clock'])
-		);
+
+	foreach ($data['tests'] as &$test) {
+		$newClock = $test['clock'] - $test['clock'] % 60;
 
 		if (!$startEventExist && $mainEventClock == $newClock) {
-			$data['tests'][$key]['startEvent'] = true;
+			$test['startEvent'] = true;
 			$startEventExist = true;
 		}
 		else {
-			$data['tests'][$key]['startEvent'] = false;
+			$test['startEvent'] = false;
 		}
 
 		if ($endEvent && !$endEventExist && $endEventClock == $newClock) {
-			$data['tests'][$key]['endEvent'] = $endEvent['value'];
+			$test['endEvent'] = $endEvent['value'];
 			$endEventExist = true;
 		}
 		else {
-			$data['tests'][$key]['endEvent'] = TRIGGER_VALUE_TRUE;
+			$test['endEvent'] = TRIGGER_VALUE_TRUE;
 		}
 	}
+	unset($test);
 
 	$slvs = DBselect(
 		'SELECT h.value,h.clock'.
@@ -405,39 +386,34 @@ if ($mainEvent) {
 			' AND h.clock<='.$toTime
 	);
 
+	$old = false;
+
 	while ($slv = DBfetch($slvs)) {
+		$slvValue = sprintf('%.3f', $slv['value']);
+
 		foreach ($tempTests as $key => $test) {
-			$newClock = mktime(
-				date('H', $test['clock']),
-				date('i', $test['clock']),
-				0,
-				date('n', $test['clock']),
-				date('j', $test['clock']),
-				date('Y', $test['clock'])
-			);
-
-			$slvValue = sprintf('%.3f', $slv['value']);
-
 			if ($slv['clock'] == $test['clock']) {
 				$data['tests'][$key]['slv'] = $slvValue;
 				unset($tempTests[$key]);
 				continue;
 			}
-			elseif (isset($old['clock']) && $test['clock'] < $slv['clock']) {
+
+			if ($old && $slv['clock'] > $test['clock']) {
 				$data['tests'][$key]['slv'] = $slvValue;
 				unset($tempTests[$key]);
 				continue;
 			}
 
-			$old = array(
-				'clock' => $slv['clock'],
-				'value' => $slvValue
-			);
+			$old = true;
+
+			if ($slv['clock'] < $test['clock']) {
+				break;
+			}
 		}
 	}
-}
 
-$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl());
+	$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl());
+}
 
 $rsmView = new CView('rsm.incidentdetails.list', $data);
 
