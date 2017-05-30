@@ -1,3 +1,14 @@
+Changes for rsm1.0.0rc4
+
+New features:
+..F....... [214] fixed timeout on the Incident Details page when number of tests within incidents is over 5000 (Sasha)
+....I..... [230] allowed earlier SLA-API update on a freshly installed database (dimir)
+
+Bug fixes:
+....I..... [231] fixed Data Export script runtime errors when run with --dry-run (dimir)
+....I..... [229] fixed SLA-API script error when probes have no TLDs yet (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc3
 
 New features:
