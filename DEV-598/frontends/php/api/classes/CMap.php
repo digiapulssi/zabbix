@@ -387,6 +387,7 @@ class CMap extends CMapElement {
 					$selements[$selementUrl['selementid']]['urls'][] = $this->expandUrlMacro($selementUrl, $selements[$selementUrl['selementid']]);
 				}
 			}
+			$selements = $this->sanitizeSelementsURLs($selements);
 
 			foreach ($selements as $selement) {
 				if (!isset($result[$selement['sysmapid']]['selements'])) {

@@ -254,6 +254,7 @@ abstract class CMapElement extends CZBXAPI {
 			while ($selementUrl = DBfetch($dbSelementUrls)) {
 				$result[$selementUrl['selementid']]['urls'][] = $selementUrl;
 			}
+			$result = $this->sanitizeSelementsURLs($result);
 		}
 // Adding Links
 		if (!is_null($options['selectLinks']) && str_in_array($options['selectLinks'], $subselectsAllowedOutputs)) {
@@ -613,6 +614,7 @@ abstract class CMapElement extends CZBXAPI {
  * @param array $elements[0,...]['label_location']
  */
 	protected function createSelements($selements) {
+		$selements = $this->sanitizeSelementsURLs($selements);
 		$selements = zbx_toArray($selements);
 
 		$this->checkSelementInput($selements, __FUNCTION__);
@@ -650,6 +652,7 @@ abstract class CMapElement extends CZBXAPI {
  * @param array $elements[0,...]['label_location']
  */
 	protected function updateSelements($selements) {
+		$selements = $this->sanitizeSelementsURLs($selements);
 		$selements = zbx_toArray($selements);
 		$selementids = array();
 
@@ -714,6 +717,28 @@ abstract class CMapElement extends CZBXAPI {
 		DB::delete('sysmaps_elements', array('selementid' => $selementids));
 
 	return $selementids;
+	}
+
+	/**
+	 * Returns array of Selements with sanitized URLs. Allowed URL prefixes: '/', 'http://', 'https://'
+	 *
+	 * @param array $selements	Array of Selements where URL should be sanitized
+	 *
+	 * @return array
+	 */
+	protected function sanitizeSelementsURLs($selements) {
+		foreach ($selements as &$selement) {
+			if (!array_key_exists('urls', $selement) || !$selement['urls']) {
+				continue;
+			}
+			foreach ($selement['urls'] as &$url_data) {
+				if (!preg_match('@^\s*(/|http://|https://)@i', $url_data['url'])) {
+					$url_data['url'] = 'http://'.trim($url_data['url']);
+				}
+			}
+			unset($url_data);
+		}
+		return $selements;
 	}
 
 /**
