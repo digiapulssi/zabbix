@@ -3,6 +3,7 @@ Changes for 2.2.19rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-12046] fixed handling of database failure during ID selection (vso)
 ..F....... [ZBX-11683] fixed problem with lost IDs of unlinkable templates (miks)
 .......PS. [ZBX-11584] fixed selection of ntext data from Microsoft SQL Server using 'db.odbc.select' item key (Sergejs)
 ........S. [ZBX-12012] fixed resolving of Critical and Verbose event log levels by {ITEM.LOG.SEVERITY} macro (Sasha)
