@@ -622,7 +622,6 @@ abstract class CMapElement extends CZBXAPI {
 		$insertUrls = array();
 		foreach ($selementids as $snum => $selementid) {
 			foreach ($selements[$snum]['urls'] as $url) {
-				$url = (strtolower(substr($url, 0, 11)) == 'javascript:') ? substr($url, 11) : $url;
 				$url['selementid'] = $selementid;
 				$insertUrls[] = $url;
 			}
