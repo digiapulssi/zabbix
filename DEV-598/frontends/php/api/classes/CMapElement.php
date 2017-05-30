@@ -732,7 +732,7 @@ abstract class CMapElement extends CZBXAPI {
 				continue;
 			}
 			foreach ($selement['urls'] as &$url_data) {
-				if (!preg_match('@^\s*(/|http://|https://)@i', $url_data['url'])) {
+				if (!preg_match('@^\s*(/|http://|https://|\w+\.php)@i', $url_data['url'])) {
 					$url_data['url'] = 'http://'.trim($url_data['url']);
 				}
 			}
