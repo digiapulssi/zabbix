@@ -18,9 +18,6 @@ use constant AH_STATE_FILE => 'state';
 use constant AH_END_FILE => 'end';
 use constant AH_FALSE_POSITIVE_FILE => 'falsePositive';
 use constant AH_ALARMED_FILE => 'alarmed';
-use constant AH_ALARMED_YES => 'YES';
-use constant AH_ALARMED_NO => 'NO';
-use constant AH_ALARMED_DISABLED => 'DISABLED';
 use constant AH_BASE_DIR => '/opt/zabbix/sla';
 use constant AH_TMP_DIR => '/opt/zabbix/sla-tmp';
 
@@ -31,7 +28,7 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 								# was processed, is saved per db (false_positive change):
 								# AH_AUDIT_FILE_PREFIX _ <SERVER_KEY> .txt
 
-our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_ALARMED_YES AH_ALARMED_NO AH_ALARMED_DISABLED ah_get_error ah_save_state
+our @EXPORT = qw(AH_SUCCESS AH_FAIL ah_get_error ah_save_state
 		ah_save_alarmed ah_save_incident ah_inc_fp_relative_path
 		ah_save_false_positive ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit
 		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
@@ -214,7 +211,9 @@ sub ah_save_alarmed
 
 	my $alarmed_path = "$base_path/" . AH_ALARMED_FILE;
 
-	return __write_file($alarmed_path, $status, $clock);
+	my $json = {'alarmed' => $status};
+
+	return __write_file($alarmed_path, __encode_json($json), $clock);
 }
 
 sub ah_save_incident

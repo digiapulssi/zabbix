@@ -21,6 +21,9 @@ use constant JSON_VALUE_UP => 'Up';
 use constant JSON_VALUE_DOWN => 'Down';
 use constant JSON_VALUE_INCIDENT_ACTIVE => 'Active';
 use constant JSON_VALUE_INCIDENT_RESOLVED => 'Resolved';
+use constant JSON_VALUE_ALARMED_YES => 'Yes';
+use constant JSON_VALUE_ALARMED_NO => 'No';
+use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
 
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
@@ -329,7 +332,7 @@ foreach (@$tlds_ref)
 			}
 			else
 			{
-				if (ah_save_alarmed($ah_tld, $service, AH_ALARMED_DISABLED) != AH_SUCCESS)
+				if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_DISABLED) != AH_SUCCESS)
 				{
 					fail("cannot save alarmed: ", ah_get_error());
 				}
@@ -354,7 +357,7 @@ foreach (@$tlds_ref)
 		{
 			wrn(uc($service), ": no rolling week data in the database yet");
 
-			if (ah_save_alarmed($ah_tld, $service, AH_ALARMED_DISABLED) != AH_SUCCESS)
+			if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_DISABLED) != AH_SUCCESS)
 			{
 				fail("cannot save alarmed: ", ah_get_error());
 			}
@@ -497,12 +500,12 @@ foreach (keys(%$servicedata))
 		# get alarmed
 		my $incidents = get_incidents($avail_itemid, $now);
 
-		my $alarmed_status = AH_ALARMED_NO;
+		my $alarmed_status = JSON_VALUE_ALARMED_NO;
 		if (scalar(@$incidents) != 0)
 		{
 			if ($incidents->[0]->{'false_positive'} == 0 and not defined($incidents->[0]->{'end'}))
 			{
-				$alarmed_status = AH_ALARMED_YES;
+				$alarmed_status = JSON_VALUE_ALARMED_YES;
 				$json_state_ref->{'status'} = JSON_VALUE_DOWN;
 			}
 		}
@@ -546,7 +549,7 @@ foreach (keys(%$servicedata))
 		push(@{$json_state_ref->{'testedService'}},
 		{
 			'service' => uc($service),
-			'status' => ($alarmed_status eq AH_ALARMED_YES ? JSON_VALUE_DOWN : JSON_VALUE_UP),
+			'status' => ($alarmed_status eq JSON_VALUE_ALARMED_YES ? JSON_VALUE_DOWN : JSON_VALUE_UP),
 			'emergencyThreshold' => $rollweek,
 			'incidents' => []
 		});
