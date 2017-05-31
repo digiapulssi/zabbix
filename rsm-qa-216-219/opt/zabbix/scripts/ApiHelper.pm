@@ -14,6 +14,7 @@ use constant AH_PATH_RELATIVE	=> 0;
 use constant AH_PATH_FULL	=> 1;
 
 use constant AH_INCIDENT_ACTIVE => 'ACTIVE';
+use constant AH_STATE_FILE => 'state';
 use constant AH_END_FILE => 'end';
 use constant AH_FALSE_POSITIVE_FILE => 'falsePositive';
 use constant AH_ALARMED_FILE => 'alarmed';
@@ -31,7 +32,7 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 								# was processed, is saved per db (false_positive change):
 								# AH_AUDIT_FILE_PREFIX _ <SERVER_KEY> .txt
 
-our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_ALARMED_YES AH_ALARMED_NO AH_ALARMED_DISABLED ah_get_error
+our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_ALARMED_YES AH_ALARMED_NO AH_ALARMED_DISABLED ah_get_error ah_save_state
 		ah_save_alarmed ah_save_service_availability ah_save_incident ah_inc_fp_relative_path
 		ah_save_false_positive ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit
 		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
@@ -54,10 +55,11 @@ sub __make_base_path
 	my $path_type = shift;	# relative/full
 
 	$tld = lc($tld);
-	$service = lc($service);
+	$service = lc($service) if ($service);
 
 	my $path = "";
 	$path .= AH_TMP_DIR . "/" if ($path_type == AH_PATH_FULL);
+	$path .= "$tld/";
 	$path .= "$tld/$service/" if ($service);
 	$path .= $add_path if ($add_path);
 
@@ -182,6 +184,22 @@ sub __apply_inc_false_positive
 	}
 
 	return AH_SUCCESS;
+}
+
+sub ah_save_state
+{
+	my $ah_tld = shift;
+	my $state_ref = shift;
+
+	my $base_path;
+
+	return AH_FAIL unless (__make_base_path($ah_tld, undef, \$base_path, undef, AH_PATH_FULL) == AH_SUCCESS);
+
+	my $state_path = "$base_path/" . AH_STATE_FILE;
+
+	my $json = $state_ref;
+
+	return __write_file($state_path, __encode_json($json));
 }
 
 sub ah_save_alarmed

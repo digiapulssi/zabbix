@@ -17,6 +17,11 @@ use constant JSON_RDDS_SUBSERVICE => 'subService';
 use constant JSON_RDDS_43 => 'RDDS43';
 use constant JSON_RDDS_80 => 'RDDS80';
 
+use constant JSON_VALUE_UP => 'Up';
+use constant JSON_VALUE_DOWN => 'Down';
+use constant JSON_VALUE_INCIDENT_ACTIVE => 'Active';
+use constant JSON_VALUE_INCIDENT_RESOLVED => 'Resolved';
+
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
@@ -134,6 +139,7 @@ foreach my $service (keys(%services))
 	}
 
 	$services{$service}{'avail_key'} = "rsm.slv.$service.avail";
+	$services{$service}{'rollweek_key'} = "rsm.slv.$service.rollweek";
 }
 
 my $now = time();
@@ -330,7 +336,7 @@ foreach (@$tlds_ref)
 			next;
 		}
 
-		my $lastclock_key = "rsm.slv.$service.rollweek";
+		my $lastclock_key = $services{$service}{'rollweek_key'};
 
 		dbg("tld:$tld lastclock_key:$lastclock_key value_type:", ITEM_VALUE_TYPE_FLOAT);
 
@@ -405,6 +411,11 @@ foreach (keys(%$servicedata))
 	$tld = $_;
 
 	my $ah_tld = ah_get_api_tld($tld);
+	my $json_state_ref;
+
+	$json_state_ref->{'tld'} = $tld;
+	$json_state_ref->{'status'} = JSON_VALUE_UP;
+	$json_state_ref->{'testedService'} = [];
 
 	foreach my $service (keys(%{$servicedata->{$tld}}))
 	{
@@ -414,6 +425,7 @@ foreach (keys(%$servicedata))
 		my $service_from = $services{$service}{'from'};
 		my $service_till = $services{$service}{'till'};
 		my $avail_key = $services{$service}{'avail_key'};
+		my $rollweek_key = $services{$service}{'rollweek_key'};
 
 		if (!$service_from || !$service_till)
 		{
@@ -438,6 +450,26 @@ foreach (keys(%$servicedata))
 			else
 			{
 				wrn("cannot get ID of $service item ($avail_key): unknown error");
+			}
+
+			next;
+		}
+
+		my $rollweek_itemid = get_itemid_by_hostid($hostid, $rollweek_key);
+
+		if ($rollweek_itemid < 0)
+		{
+			if ($rollweek_itemid == E_ID_NONEXIST)
+			{
+				wrn("configuration error: service $service enabled but item \"$rollweek_key\" not found");
+			}
+			elsif ($rollweek_itemid == E_ID_MULTIPLE)
+			{
+				wrn("configuration error: multiple items with key \"$rollweek_key\" found");
+			}
+			else
+			{
+				wrn("cannot get ID of $service item ($rollweek_key): unknown error");
 			}
 
 			next;
@@ -472,6 +504,7 @@ foreach (keys(%$servicedata))
 			if ($incidents->[0]->{'false_positive'} == 0 and not defined($incidents->[0]->{'end'}))
 			{
 				$alarmed_status = AH_ALARMED_YES;
+				$json_state_ref->{'status'} = JSON_VALUE_DOWN;
 			}
 		}
 
@@ -504,6 +537,20 @@ foreach (keys(%$servicedata))
 			$epp_dbl_items_ref = __get_epp_dbl_itemids($tld, getopt('probe'));
 			$epp_str_items_ref = __get_epp_str_itemids($tld, getopt('probe'));
 		}
+
+		my $rollweek;
+		if (get_current_value($rollweek_itemid, ITEM_VALUE_TYPE_FLOAT, \$rollweek) != SUCCESS)
+		{
+			fail(uc($service), ": no rolling week data in the database yet");
+		}
+
+		push(@{$json_state_ref->{'testedService'}},
+		{
+			'service' => $service,
+			'status' => ($alarmed_status eq AH_ALARMED_YES ? JSON_VALUE_DOWN : JSON_VALUE_UP),
+			'emergencyThreshold' => $rollweek,
+			'incidents' => []
+		});
 
 		$incidents = get_incidents($avail_itemid, $service_from, $service_till);
 
@@ -968,7 +1015,36 @@ foreach (keys(%$servicedata))
 			{
 				fail("THIS SHOULD NEVER HAPPEN (unknown service \"$service\")");
 			}
+		} # foreach (@$incidents)
+
+		my $rollweek_incidents = get_incidents($avail_itemid, $rollweek_from, $rollweek_till);
+
+		my $service_idx = scalar(@{$json_state_ref->{'testedService'}}) - 1;
+
+		foreach (@{$rollweek_incidents})
+		{
+			my $eventid = $_->{'eventid'};
+			my $event_start = $_->{'start'};
+			my $event_end = $_->{'end'};
+			my $false_positive = $_->{'false_positive'};
+
+			my $json_state = (defined($event_end) ? JSON_VALUE_INCIDENT_RESOLVED : JSON_VALUE_INCIDENT_ACTIVE);
+			my $json_false_positive = ($false_positive ? JSON::true : JSON::false);
+
+			push(@{$json_state_ref->{'testedService'}->[$service_idx]->{'incidents'}},
+			{
+				'incidentID' => "$event_start.$eventid",
+				'startTime' => $event_start,
+				'endTime' => $event_end,
+				'falsePositive' => $json_false_positive,
+				'state' => $json_state
+			});
 		}
+	} # foreach my $service
+
+	if (ah_save_state($ah_tld, $json_state_ref) != AH_SUCCESS)
+	{
+		fail("cannot save TLD state: ", ah_get_error());
 	}
 }
 # unset TLD (for the logs)
