@@ -279,6 +279,8 @@ static void	polarssl_debug_cb(void *tls_ctx, int level, const char *str)
 {
 	char	msg[1024];	/* Apparently 1024 bytes is the longest message which can come from PolarSSL 1.3.9 */
 
+	ZBX_UNUSED(tls_ctx);
+
 	/* remove '\n' from the end of debug message */
 	zbx_strlcpy(msg, str, sizeof(msg));
 	zbx_rtrim(msg, "\n");
@@ -1168,6 +1170,8 @@ static int	zbx_psk_cb(void *par, ssl_context *tls_ctx, const unsigned char *psk_
 	int		psk_bin_len;
 	unsigned char	tls_psk_identity[HOST_TLS_PSK_IDENTITY_LEN_MAX], tls_psk_hex[HOST_TLS_PSK_LEN_MAX],
 			psk_buf[HOST_TLS_PSK_LEN / 2];
+
+	ZBX_UNUSED(par);
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 	{
