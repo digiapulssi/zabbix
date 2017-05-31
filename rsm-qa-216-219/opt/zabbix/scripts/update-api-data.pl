@@ -548,7 +548,7 @@ foreach (keys(%$servicedata))
 
 		push(@{$json_state_ref->{'testedService'}},
 		{
-			'service' => $service,
+			'service' => uc($service),
 			'status' => ($alarmed_status eq AH_ALARMED_YES ? JSON_VALUE_DOWN : JSON_VALUE_UP),
 			'emergencyThreshold' => $rollweek,
 			'incidents' => []
