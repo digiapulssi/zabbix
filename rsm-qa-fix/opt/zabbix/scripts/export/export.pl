@@ -326,28 +326,25 @@ sub __validate_input
 		print("Error: you must specify the date using option --date\n");
 		$error_found = 1;
 	}
-
-	if (opt('day'))
+	elsif (getopt('date') !~ /^\d\d\/\d\d\/\d\d\d\d$/)
 	{
-		if (!opt('dry-run'))
-		{
-			print("Error: option --day can only be used together with --dry-run\n");
-			$error_found = 1;
-		}
+		print("Error: ", getopt('date'), " -- invalid date, expected format: dd/mm/yyyy\n");
+		$error_found = 1;
+	}
 
-		if ((getopt('day') % 60) != 0)
+	foreach my $opt ('probe', 'tld', 'service', 'day', 'shift')
+	{
+		if (opt($opt) && !opt('dry-run'))
 		{
-			print("Error: parameter of option --day must be multiple of 60\n");
+			print("Error: option --$opt can only be used together with --dry-run\n");
+			$error_found = 1;
 		}
 	}
 
-	if (opt('shift'))
+	if (opt('day') && (getopt('day') % 60) != 0)
 	{
-		if (!opt('dry-run'))
-		{
-			print("Error: option --shift can only be used together with --dry-run\n");
-			$error_found = 1;
-		}
+		print("Error: parameter of option --day must be multiple of 60\n");
+		$error_found = 1;
 	}
 
 	usage() unless ($error_found == 0);
