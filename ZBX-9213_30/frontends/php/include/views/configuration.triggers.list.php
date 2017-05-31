@@ -116,9 +116,9 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 			$real_host = reset($real_hosts);
 
 			if (array_key_exists($real_host['hostid'], $data['writable_templates'])) {
-				$description[] = (new CLink(
-					CHtml::encode($real_host['name']),
-					'triggers.php?hostid='.$real_host['hostid']))
+				$description[] = (new CLink(CHtml::encode($real_host['name']),
+					'triggers.php?hostid='.$real_host['hostid']
+				))
 					->addClass(ZBX_STYLE_LINK_ALT)
 					->addClass(ZBX_STYLE_GREY);
 			}

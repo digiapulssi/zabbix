@@ -56,7 +56,9 @@ foreach ($data['discoveries'] as $discovery) {
 
 	if ($discovery['templateid']) {
 		if (array_key_exists($discovery['dbTemplate']['hostid'], $data['writable_templates'])) {
-			$description[] = (new CLink($discovery['dbTemplate']['name'], '?hostid='.$discovery['dbTemplate']['hostid']))
+			$description[] = (new CLink($discovery['dbTemplate']['name'],
+				'?hostid='.$discovery['dbTemplate']['hostid']
+			))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREY);
 		}
@@ -64,6 +66,7 @@ foreach ($data['discoveries'] as $discovery) {
 			$description[] = (new CSpan($discovery['dbTemplate']['name']))
 				->addClass(ZBX_STYLE_GREY);
 		}
+
 		$description[] = NAME_DELIMITER;
 	}
 

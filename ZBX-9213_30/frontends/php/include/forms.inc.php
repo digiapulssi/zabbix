@@ -1029,8 +1029,8 @@ function getItemFormData(array $item = [], array $options = []) {
 						$writable = API::Template()->get([
 							'output' => ['templateid'],
 							'templateids' => [$host['hostid']],
-							'preservekeys' => true,
-							'editable' => true
+							'editable' => true,
+							'preservekeys' => true
 						]);
 					}
 

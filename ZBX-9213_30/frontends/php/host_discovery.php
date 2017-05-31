@@ -448,9 +448,10 @@ else {
 
 	$data['paging'] = getPagingLine($data['discoveries'], $sortOrder, $url);
 
-	// get real hosts & select write permissions
+	// Get real hosts and select writable templates IDs.
 	$data['writable_templates'] = [];
 	$discovery_hostids = [];
+
 	foreach ($data['discoveries'] as &$discovery) {
 		if ($discovery['templateid']) {
 			$discovery['dbTemplate'] = get_realhost_by_itemid($discovery['templateid']);
@@ -463,8 +464,8 @@ else {
 		$data['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],
 			'templateids' => array_keys(array_flip($discovery_hostids)),
-			'preservekeys' => true,
-			'editable' => true
+			'editable' => true,
+			'preservekeys' => true
 		]);
 	}
 

@@ -317,6 +317,7 @@ if (isset($_REQUEST['form'])) {
 
 	// host prototype edit form
 	$templateids = [];
+
 	if (getRequest('hostid') && !getRequest('form_refresh')) {
 		$data['host_prototype'] = array_merge($data['host_prototype'], $hostPrototype);
 
@@ -357,6 +358,7 @@ if (isset($_REQUEST['form'])) {
 	// Select writable templates
 	$templateids = array_merge(zbx_objectValues($data['host_prototype']['templates'], 'templateid'), $templateids);
 	$data['host_prototype']['writable_templates'] = [];
+
 	if ($templateids) {
 		$data['host_prototype']['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],
@@ -410,7 +412,7 @@ else {
 	foreach ($data['hostPrototypes'] as $hostPrototype) {
 		$templateids = array_merge($templateids, zbx_objectValues($hostPrototype['templates'], 'templateid'));
 	}
-	$templateids = array_unique($templateids);
+	$templateids = array_keys(array_flip($templateids));
 
 	$linkedTemplates = API::Template()->get([
 		'output' => ['templateid', 'name'],
@@ -451,8 +453,9 @@ else {
 		}
 	}
 
-	// Select writable templates
+	// Select writable template IDs.
 	$data['writable_templates'] = [];
+
 	if ($templateids) {
 		$data['writable_templates'] = API::Template()->get([
 			'output' => ['templateid'],

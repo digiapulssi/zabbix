@@ -80,15 +80,14 @@ foreach ($this->data['items'] as $item) {
 	$description = [];
 	if (!empty($item['template_host'])) {
 		if (array_key_exists($item['template_host']['hostid'], $data['writable_templates'])) {
-			$description[] = (new CLink(
-				CHtml::encode($item['template_host']['name']),
-				'?hostid='.$item['template_host']['hostid'].'&filter_set=1'))
+			$description[] = (new CLink(CHtml::encode($item['template_host']['name']),
+				'?hostid='.$item['template_host']['hostid'].'&filter_set=1'
+			))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(ZBX_STYLE_GREY);
 		}
 		else {
-			$description[] = (new CSpan(CHtml::encode($item['template_host']['name'])))
-				->addClass(ZBX_STYLE_GREY);
+			$description[] = (new CSpan(CHtml::encode($item['template_host']['name'])))->addClass(ZBX_STYLE_GREY);
 		}
 
 		$description[] = NAME_DELIMITER;
@@ -152,6 +151,7 @@ foreach ($this->data['items'] as $item) {
 	foreach ($item['triggers'] as $num => &$trigger) {
 		$trigger = $this->data['itemTriggers'][$trigger['triggerid']];
 		$trigger_description = [];
+
 		if ($trigger['templateid'] > 0) {
 			if (!isset($this->data['triggerRealHosts'][$trigger['triggerid']])) {
 				$trigger_description[] = (new CSpan('HOST'))->addClass(ZBX_STYLE_GREY);
@@ -159,15 +159,14 @@ foreach ($this->data['items'] as $item) {
 			}
 			else {
 				$realHost = reset($this->data['triggerRealHosts'][$trigger['triggerid']]);
+
 				if (array_key_exists($realHost['hostid'], $data['writable_templates'])) {
-					$trigger_description[] = (new CLink(
-						CHtml::encode($realHost['name']),
-						'triggers.php?hostid='.$realHost['hostid']))
-						->addClass(ZBX_STYLE_GREY);
+					$trigger_description[] = (new CLink(CHtml::encode($realHost['name']),
+						'triggers.php?hostid='.$realHost['hostid']
+					))->addClass(ZBX_STYLE_GREY);
 				}
 				else {
-					$trigger_description[] = (new CSpan(CHtml::encode($realHost['name'])))
-						->addClass(ZBX_STYLE_GREY);
+					$trigger_description[] = (new CSpan(CHtml::encode($realHost['name'])))->addClass(ZBX_STYLE_GREY);
 				}
 
 				$trigger_description[] = ':';

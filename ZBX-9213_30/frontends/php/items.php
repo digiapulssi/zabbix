@@ -1387,9 +1387,11 @@ else {
 
 	// Select writable templates IDs.
 	$hostids = [];
-	foreach ($data['triggerRealHosts'] as $realHost) {
-		$hostids = array_merge($hostids, zbx_objectValues($realHost, 'hostid'));
+
+	foreach ($data['triggerRealHosts'] as $real_host) {
+		$hostids = array_merge($hostids, zbx_objectValues($real_host, 'hostid'));
 	}
+
 	foreach ($data['items'] as $item) {
 		if (array_key_exists('template_host', $item)) {
 			$hostids = array_merge($hostids, zbx_objectValues($item['template_host'], 'itemid'));
@@ -1397,13 +1399,14 @@ else {
 	}
 
 	$data['writable_templates'] = [];
+
 	if ($hostids) {
-			$data['writable_templates'] = API::Template()->get([
-				'output' => ['templateid'],
-				'templateids' => array_keys(array_flip($hostids)),
-				'preservekeys' => true,
-				'editable' => true
-			]);
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => array_keys(array_flip($hostids)),
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	// determine, show or not column of errors

@@ -235,13 +235,16 @@ if ($hostPrototype['templateid']) {
 
 	foreach ($hostPrototype['templates'] as $template) {
 		$tmplList->addVar('templates['.$template['templateid'].']', $template['templateid']);
+
 		if (array_key_exists($template['templateid'], $hostPrototype['writable_templates'])) {
-			$template_link = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
-				->setTarget('_blank');
+			$template_link = (new CLink($template['name'],
+				'templates.php?form=update&templateid='.$template['templateid']
+			))->setTarget('_blank');
 		}
 		else {
 			$template_link = new CSpan($template['name']);
 		}
+
 		$linkedTemplateTable->addRow([$template_link]);
 	}
 
@@ -260,9 +263,11 @@ else {
 
 	foreach ($hostPrototype['templates'] as $template) {
 		$tmplList->addVar('templates['.$template['templateid'].']', $template['templateid']);
+
 		if (array_key_exists($template['templateid'], $hostPrototype['writable_templates'])) {
-			$template_link = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
-				->setTarget('_blank');
+			$template_link = (new CLink($template['name'],
+				'templates.php?form=update&templateid='.$template['templateid']
+			))->setTarget('_blank');
 		}
 		else {
 			$template_link = new CSpan($template['name']);

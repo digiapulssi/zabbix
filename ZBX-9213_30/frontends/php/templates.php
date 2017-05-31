@@ -654,39 +654,34 @@ else {
 
 	order_result($templates, $sortField, $sortOrder);
 
-	// Select writable templates:
+	// Select writable template IDs.
 	$linked_templateids = [];
 	$writable_templates = [];
-	$linked_hostsids = [];
+	$linked_hostids = [];
 	$writable_hosts = [];
+
 	foreach ($templates as $template) {
-		$linked_templateids = array_merge(
-			$linked_templateids,
+		$linked_templateids = array_merge($linked_templateids,
 			zbx_objectValues($template['parentTemplates'], 'templateid'),
 			zbx_objectValues($template['templates'], 'templateid')
 		);
 
-		$linked_hostsids = array_merge(
-			$linked_hostsids,
-			zbx_objectValues($template['hosts'], 'hostid')
-		);
+		$linked_hostids = array_merge($linked_hostids, zbx_objectValues($template['hosts'], 'hostid'));
 	}
 
 	if ($linked_templateids) {
-		$linked_templateids = array_keys(array_flip($linked_templateids));
 		$writable_templates = API::Template()->get([
 			'output' => ['templateid'],
-			'templateids' => $linked_templateids,
+			'templateids' => array_keys(array_flip($linked_templateids)),
 			'editable' => true,
 			'preservekeys' => true
 		]);
 	}
 
-	if ($linked_hostsids) {
-		$linked_hostsids = array_keys(array_flip($linked_hostsids));
+	if ($linked_hostids) {
 		$writable_hosts = API::Host()->get([
 			'output' => ['hostid'],
-			'hostsids' => $linked_hostsids,
+			'hostsids' => array_keys(array_flip($linked_hostids)),
 			'editable' => true,
 			'preservekeys' => true
 		]);
@@ -731,8 +726,7 @@ else {
 					->addClass(ZBX_STYLE_GREY);
 			}
 			else {
-				$linkedTemplatesOutput[] = (new CSpan($parentTemplate['name']))
-					->addClass(ZBX_STYLE_GREY);
+				$linkedTemplatesOutput[] = (new CSpan($parentTemplate['name']))->addClass(ZBX_STYLE_GREY);
 			}
 		}
 
@@ -762,15 +756,13 @@ else {
 						->addClass(ZBX_STYLE_GREY);
 				}
 				else {
-					$link = (new CSpan($linkedToObject['name']))
-						->addClass(ZBX_STYLE_GREY);
+					$link = (new CSpan($linkedToObject['name']))->addClass(ZBX_STYLE_GREY);
 				}
 			}
 			else {
 				if (array_key_exists($linkedToObject['hostid'], $writable_hosts)) {
 					$url = 'hosts.php?form=update&hostid='.$linkedToObject['hostid'].url_param('groupid');
-					$link = (new CLink($linkedToObject['name'], $url))
-						->addClass(ZBX_STYLE_LINK_ALT);
+					$link = (new CLink($linkedToObject['name'], $url))->addClass(ZBX_STYLE_LINK_ALT);
 				}
 				else {
 					$link = new CSpan($linkedToObject['name']);

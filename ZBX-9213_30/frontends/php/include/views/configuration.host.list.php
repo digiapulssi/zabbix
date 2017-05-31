@@ -157,14 +157,14 @@ foreach ($data['hosts'] as $host) {
 		}
 
 		$parent_templates = $data['templates'][$template['templateid']]['parentTemplates'];
+
 		if ($parent_templates) {
 			order_result($parent_templates, 'name');
-
 			$caption[] = ' (';
+
 			foreach ($parent_templates as $parent_template) {
 				if (array_key_exists($parent_template['templateid'], $data['writable_templates'])) {
-					$caption[] = (new CLink(
-						CHtml::encode($parent_template['name']),
+					$caption[] = (new CLink(CHtml::encode($parent_template['name']),
 						'templates.php?form=update&templateid='.$parent_template['templateid']
 					))
 						->addClass(ZBX_STYLE_LINK_ALT)

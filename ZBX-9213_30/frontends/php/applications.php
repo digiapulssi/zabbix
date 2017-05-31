@@ -413,21 +413,24 @@ else {
 
 	// Select writable templates IDs.
 	$hostids = [];
+
 	foreach ($data['applications'] as $application) {
 		if (array_key_exists('sourceTemplates', $application)) {
 			$hostids = array_merge($hostids, zbx_objectValues($application['sourceTemplates'], 'hostid'));
 		}
+
 		$hostids[] = $application['host']['hostid'];
 	}
 
 	$data['writable_templates'] = [];
+
 	if ($hostids) {
-			$data['writable_templates'] = API::Template()->get([
-				'output' => ['templateid'],
-				'templateids' => array_keys(array_flip($hostids)),
-				'preservekeys' => true,
-				'editable' => true
-			]);
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => array_keys(array_flip($hostids)),
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	// render view

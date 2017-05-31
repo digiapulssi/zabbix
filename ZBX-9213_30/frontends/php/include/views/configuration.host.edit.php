@@ -570,8 +570,9 @@ if ($data['flags'] != ZBX_FLAG_DISCOVERY_CREATED) {
 		$tmplList->addVar('templates[]', $template['templateid']);
 
 		if (array_key_exists($template['templateid'], $data['writable_templates'])) {
-			$template_link = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
-				->setTarget('_blank');
+			$template_link = (new CLink($template['name'],
+				'templates.php?form=update&templateid='.$template['templateid']
+			))->setTarget('_blank');
 		}
 		else {
 			$template_link = new CSpan($template['name']);

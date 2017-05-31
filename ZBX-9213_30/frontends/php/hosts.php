@@ -1090,10 +1090,12 @@ else {
 
 	// selecting linked templates to templates linked to hosts
 	$templateids = [];
+
 	foreach ($hosts as $host) {
 		$templateids = array_merge($templateids, zbx_objectValues($host['parentTemplates'], 'templateid'));
 	}
-	$templateids = array_unique($templateids);
+
+	$templateids = array_keys(array_flip($templateids));
 
 	$templates = API::Template()->get([
 		'output' => ['templateid', 'name'],
