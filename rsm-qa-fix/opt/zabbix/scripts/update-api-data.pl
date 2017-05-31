@@ -638,7 +638,7 @@ foreach (keys(%$servicedata))
 
 						my ($ns, $ip) = split(',', $nsip);
 
-						dbg("  ", scalar(keys(%$endvalues_ref)), " values for $nsip:") if (opt('debug'));
+						dbg("  values for $nsip:");
 
 						my $test_result_index = 0;
 
@@ -665,10 +665,12 @@ foreach (keys(%$servicedata))
 							if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
 							{
 								$tr_ref->{'probes'}->{$probe}->{'status'} = PROBE_OFFLINE_STR;
+								dbg("    ", ts_str($clock), ": OFFLINE");
 							}
 							else
 							{
 								push(@{$tr_ref->{'probes'}->{$probe}->{'details'}->{$ns}}, {'clock' => $clock, 'rtt' => $endvalues_ref->{$clock}, 'ip' => $ip});
+								dbg("    ", ts_str($clock), ": ", $endvalues_ref->{$clock});
 							}
 						}
 					}
@@ -686,8 +688,6 @@ foreach (keys(%$servicedata))
 						{
 							if ($tr_ref_probe eq $probe)
 							{
-								dbg("\"$tr_ref_probe\" found!");
-
 								$found = 1;
 								last;
 							}
@@ -918,8 +918,6 @@ foreach (keys(%$servicedata))
 						{
 							if ($tr_ref_probe eq $probe)
 							{
-								dbg("\"$tr_ref_probe\" found!");
-
 								$found = 1;
 								last;
 							}
