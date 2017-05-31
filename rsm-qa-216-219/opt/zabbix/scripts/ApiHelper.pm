@@ -21,7 +21,6 @@ use constant AH_ALARMED_FILE => 'alarmed';
 use constant AH_ALARMED_YES => 'YES';
 use constant AH_ALARMED_NO => 'NO';
 use constant AH_ALARMED_DISABLED => 'DISABLED';
-use constant AH_SERVICE_AVAILABILITY_FILE => 'serviceAvailability';
 use constant AH_BASE_DIR => '/opt/zabbix/sla';
 use constant AH_TMP_DIR => '/opt/zabbix/sla-tmp';
 
@@ -33,7 +32,7 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 								# AH_AUDIT_FILE_PREFIX _ <SERVER_KEY> .txt
 
 our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_ALARMED_YES AH_ALARMED_NO AH_ALARMED_DISABLED ah_get_error ah_save_state
-		ah_save_alarmed ah_save_service_availability ah_save_incident ah_inc_fp_relative_path
+		ah_save_alarmed ah_save_incident ah_inc_fp_relative_path
 		ah_save_false_positive ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit
 		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
 
@@ -215,33 +214,7 @@ sub ah_save_alarmed
 
 	my $alarmed_path = "$base_path/" . AH_ALARMED_FILE;
 
-	# if service is disabled there should be no availability file
-	if ($status eq AH_ALARMED_DISABLED)
-	{
-		my $avail_path = "$base_path/" . AH_SERVICE_AVAILABILITY_FILE;;
-
-		if ((-e $avail_path) and not unlink($avail_path))
-		{
-			__set_file_error($!);
-			return AH_FAIL;
-		}
-	}
-
 	return __write_file($alarmed_path, $status, $clock);
-}
-
-sub ah_save_service_availability
-{
-	my $tld = shift;
-	my $service = shift;
-	my $downtime = shift;
-	my $clock = shift;
-
-	my $service_availability_path;
-
-	return AH_FAIL unless (__make_base_path($tld, $service, \$service_availability_path, undef, AH_PATH_FULL) == AH_SUCCESS);
-
-	return __write_file("$service_availability_path/" . AH_SERVICE_AVAILABILITY_FILE, $downtime, $clock);
 }
 
 sub ah_save_incident

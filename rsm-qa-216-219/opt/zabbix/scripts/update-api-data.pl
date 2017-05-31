@@ -485,19 +485,16 @@ foreach (keys(%$servicedata))
 
 		if (opt('dry-run'))
 		{
-			__prnt(uc($service), " service availability $downtime (", ts_str($lastclock), ")");
+			__prnt(uc($service), " downtime: $downtime (", ts_str($lastclock), ")");
 		}
 		else
 		{
-			if (ah_save_service_availability($ah_tld, $service, $downtime, $lastclock) != AH_SUCCESS)
-			{
-				fail("cannot save service availability: ", ah_get_error());
-			}
+			print("TODO: save $ah_tld $service downtime\n");
 		}
 
-		dbg("getting current $service availability (delay:$delay)");
+		dbg("getting current $service service availability (delay:$delay)");
 
-		# get availability
+		# get alarmed
 		my $incidents = get_incidents($avail_itemid, $now);
 
 		my $alarmed_status = AH_ALARMED_NO;
