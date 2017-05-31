@@ -381,6 +381,7 @@ class CScreen extends CZBXAPI {
 					$result[$sitem['screenid']]['screenitems'] = array();
 				}
 
+				$sitem['url'] = CStringsHelper::sanitizeURL($sitem['url']);
 				$result[$sitem['screenid']]['screenitems'][] = $sitem;
 			}
 		}

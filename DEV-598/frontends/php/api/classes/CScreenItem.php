@@ -112,6 +112,12 @@ class CScreenItem extends CZBXAPI {
 			}
 		}
 
+		foreach($result as &$screenItem) {
+			if ($screenItem['url']) {
+				$screenItem['url'] = CStringsHelper::sanitizeURL($screenItem['url']);
+			}
+		}
+
 		return $result;
 	}
 
@@ -126,6 +132,13 @@ class CScreenItem extends CZBXAPI {
 		$screenItems = zbx_toArray($screenItems);
 
 		$this->validateCreate($screenItems);
+
+		foreach($screenItems as &$screenItem) {
+			if ($screenItem['url']) {
+				$screenItem['url'] = CStringsHelper::sanitizeURL($screenItem['url']);
+			}
+		}
+		unset($screenItem);
 
 		// insert items
 		$screenItemids = DB::insert($this->tableName(), $screenItems);
@@ -197,6 +210,13 @@ class CScreenItem extends CZBXAPI {
 		$screenItems = zbx_toArray($screenItems);
 
 		$this->validateUpdate($screenItems);
+
+		foreach($screenItems as &$screenItem) {
+			if ($screenItem['url']) {
+				$screenItem['url'] = CStringsHelper::sanitizeURL($screenItem['url']);
+			}
+		}
+		unset($screenItem);
 
 		// update items
 		$update = array();
