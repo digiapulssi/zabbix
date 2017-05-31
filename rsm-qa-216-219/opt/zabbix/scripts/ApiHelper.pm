@@ -60,7 +60,7 @@ sub __make_base_path
 	my $path = "";
 	$path .= AH_TMP_DIR . "/" if ($path_type == AH_PATH_FULL);
 	$path .= "$tld/";
-	$path .= "$tld/$service/" if ($service);
+	$path .= "$service/" if ($service);
 	$path .= $add_path if ($add_path);
 
 	make_path($path, {error => \my $err});

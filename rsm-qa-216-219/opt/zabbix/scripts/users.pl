@@ -100,6 +100,8 @@ foreach my $server_key (@server_keys)
 
 			exit(-1);
 		}
+
+		print("  user with userid ", $result->{'userids'}->[0], " added\n");
 	}
 	elsif (opt('modify'))
 	{
@@ -118,6 +120,8 @@ foreach my $server_key (@server_keys)
 
 			exit(-1);
 		}
+
+		print("  user modified\n");
 	}
 	else
 	{
@@ -136,6 +140,8 @@ foreach my $server_key (@server_keys)
 
 			exit(-1);
 		}
+
+		print("  user deleted\n");
 	}
 
 	$modified = 1;

@@ -161,7 +161,9 @@ if (opt('continue'))
 		my $config_minclock = __get_config_minclock();
 		db_connect();
 
-		dbg("config_minclock:$config_minclock");
+		fail("no data from Probe nodes yet, please wait") if ($config_minclock eq 0);
+
+		dbg("oldest data found: ", ts_full($config_minclock));
 
 		$check_from = truncate_from($config_minclock);
 	}
@@ -1923,9 +1925,10 @@ sub __no_status_result
 		"\nmanually to add missing service availability result.");
 }
 
+# todo phase 1: this function was modified to allow earlier run on freshly installed database
 sub __get_config_minclock
 {
-	my $config_key = 'rsm.configvalue[RSM.SLV.DNS.TCP.RTT]';
+	my $probe_item_key = 'rsm.probe.online';
 	my $minclock = 0;
 
 	foreach (@server_keys)
@@ -1933,21 +1936,18 @@ sub __get_config_minclock
 	$server_key = $_;
 	db_connect($server_key);
 
-	# Get the minimum clock from the item that is collected once a day, this way
-	# "min(clock)" won't take too much time.
-	my $rows_ref = db_select("select itemid from items where key_='$config_key'");
+	my $rows_ref = db_select(
+			"select min(clock)".
+			" from history_uint".
+			" where itemid in".
+				" (select itemid from items where key_='$probe_item_key' and templateid is not null)");
 
-	fail("item $config_key not found in Zabbix database ($server_key)") unless (scalar(@$rows_ref) == 1);
+	next unless (scalar(@$rows_ref) == 1);
 
-	my $config_itemid = $rows_ref->[0]->[0];
+	my $newclock = int($rows_ref->[0]->[0]);
+	dbg("min(clock): $newclock");
 
-	$rows_ref = db_select("select min(clock) from history_uint where itemid=$config_itemid");
-
-	fail("no data in the database ($server_key) yet") unless ($rows_ref->[0]->[0]);
-
-	dbg("minclock: ", ts_full($rows_ref->[0]->[0]));
-
-	$minclock = int($rows_ref->[0]->[0]) if ($minclock eq 0 || $minclock gt int($rows_ref->[0]->[0]));
+	$minclock = $newclock if ($minclock eq 0 || $newclock lt $minclock);
 	db_disconnect();
 	}
 	undef($server_key);
