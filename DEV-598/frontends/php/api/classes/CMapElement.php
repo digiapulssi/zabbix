@@ -728,15 +728,14 @@ abstract class CMapElement extends CZBXAPI {
 	 */
 	protected function sanitizeSelementsURLs($selements) {
 		foreach ($selements as &$selement) {
-			if (!array_key_exists('urls', $selement) || !$selement['urls']) {
-				continue;
-			}
-			foreach ($selement['urls'] as &$url_data) {
-				if (!preg_match('@^(\s|\.)*(/|http://|https://|[\w\.]+\.php)+@i', $url_data['url'])) {
-					$url_data['url'] = 'http://'.trim($url_data['url']);
+			if (array_key_exists('urls', $selement)) {
+				foreach ($selement['urls'] as &$url_data) {
+					if (!preg_match('/^(http:\/\/|https:\/\/|[a-z_\.]+\.php)+/i', $url_data['url'])) {
+						$url_data['url'] = 'http://'.$url_data['url'];
+					}
 				}
+				unset($url_data);
 			}
-			unset($url_data);
 		}
 		return $selements;
 	}
