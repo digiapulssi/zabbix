@@ -18,6 +18,7 @@ use constant AH_STATE_FILE => 'state';
 use constant AH_END_FILE => 'end';
 use constant AH_FALSE_POSITIVE_FILE => 'falsePositive';
 use constant AH_ALARMED_FILE => 'alarmed';
+use constant AH_DOWNTIME_FILE => 'downtime';
 use constant AH_BASE_DIR => '/opt/zabbix/sla';
 use constant AH_TMP_DIR => '/opt/zabbix/sla-tmp';
 
@@ -29,7 +30,7 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 								# AH_AUDIT_FILE_PREFIX _ <SERVER_KEY> .txt
 
 our @EXPORT = qw(AH_SUCCESS AH_FAIL ah_get_error ah_save_state
-		ah_save_alarmed ah_save_incident ah_inc_fp_relative_path
+		ah_save_alarmed ah_save_downtime ah_save_incident ah_inc_fp_relative_path
 		ah_save_false_positive ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit
 		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
 
@@ -212,6 +213,24 @@ sub ah_save_alarmed
 	my $alarmed_path = "$base_path/" . AH_ALARMED_FILE;
 
 	my $json = {'alarmed' => $status};
+
+	return __write_file($alarmed_path, __encode_json($json), $clock);
+}
+
+sub ah_save_downtime
+{
+	my $tld = shift;
+	my $service = shift;
+	my $downtime = shift;
+	my $clock = shift;
+
+	my $base_path;
+
+	return AH_FAIL unless (__make_base_path($tld, $service, \$base_path, undef, AH_PATH_FULL) == AH_SUCCESS);
+
+	my $alarmed_path = "$base_path/" . AH_DOWNTIME_FILE;
+
+	my $json = {'downtime' => $downtime};
 
 	return __write_file($alarmed_path, __encode_json($json), $clock);
 }

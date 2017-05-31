@@ -482,7 +482,10 @@ foreach (keys(%$servicedata))
 
 		# we need down time in minutes, not percent, that's why we can't use "rsm.slv.$service.rollweek" value
 		my ($rollweek_from, $rollweek_till) = get_rollweek_bounds();
-		my $downtime = get_downtime($avail_itemid, $rollweek_from, $rollweek_till);
+
+		my $rollweek_incidents = get_incidents($avail_itemid, $rollweek_from, $rollweek_till);
+
+		my $downtime = get_downtime($avail_itemid, $rollweek_from, $rollweek_till, 0, $rollweek_incidents);
 
 		__prnt(uc($service), " period: ", selected_period($service_from, $service_till)) if (opt('dry-run') or opt('debug'));
 
@@ -492,7 +495,7 @@ foreach (keys(%$servicedata))
 		}
 		else
 		{
-			print("TODO: save $ah_tld $service downtime\n");
+			ah_save_downtime($ah_tld, $service, $downtime, $lastclock);
 		}
 
 		dbg("getting current $service service availability (delay:$delay)");
@@ -1018,8 +1021,6 @@ foreach (keys(%$servicedata))
 				fail("THIS SHOULD NEVER HAPPEN (unknown service \"$service\")");
 			}
 		} # foreach (@$incidents)
-
-		my $rollweek_incidents = get_incidents($avail_itemid, $rollweek_from, $rollweek_till);
 
 		my $service_idx = scalar(@{$json_state_ref->{'testedService'}}) - 1;
 
