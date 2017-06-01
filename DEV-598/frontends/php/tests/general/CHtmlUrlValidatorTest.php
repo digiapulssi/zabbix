@@ -21,7 +21,7 @@
 require_once dirname(__FILE__).'/../../include/classes/validators/CHtmlUrlValidator.php';
 
 class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
-	public static function providerSanitizeURL() {
+	public static function providerValidateURL() {
 		return array(
 			array('',						false),
 			array('javascript:alert()',		false),
@@ -37,9 +37,9 @@ class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
 	}
 
 	/**
-	* @dataProvider providerSanitizeURL
+	* @dataProvider providerValidateURL
 	*/
-	public function test_sanitizeURL($url, $expected) {
+	public function test_validateURL($url, $expected) {
 		$this->assertEquals(CHtmlUrlValidator::validate($url), $expected);
 	}
 }
