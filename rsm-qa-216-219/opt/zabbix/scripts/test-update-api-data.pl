@@ -285,7 +285,7 @@ my $expected_things = [
 					{
 						# incidents
 						'name'		=> 'incidents',
-						'mandatory'	=> 1,
+						'mandatory'	=> 0,
 						'contents'	=> [
 							{
 								# <incidentID>
