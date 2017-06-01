@@ -152,7 +152,7 @@ class CScreenItem extends CZBXAPI {
 		}
 		unset($screenItem);
 
-		$this->checkItemsURLField($screenItems);
+		$this->validateItemsURL($screenItems);
 
 		$screenIds = array_keys(array_flip(zbx_objectValues($screenItems, 'screenid')));
 
@@ -243,7 +243,7 @@ class CScreenItem extends CZBXAPI {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Invalid method parameters.'));
 			}
 		}
-		$this->checkItemsURLField($screenItems);
+		$this->validateItemsURL($screenItems);
 
 		$screenItems = zbx_toHash($screenItems, 'screenitemid');
 		$screenItemIds = array_keys($screenItems);
@@ -922,7 +922,7 @@ class CScreenItem extends CZBXAPI {
 	 *
 	 * @param array $screen_items	Array of screen items.
 	 */
-	protected function checkItemsURLField($screen_items) {
+	protected function validateItemsURL($screen_items) {
 		foreach ($screen_items as $screen_item) {
 			if ($screen_item['resourcetype'] == SCREEN_RESOURCE_URL && array_key_exists('url', $screen_item)
 					&& !CHtmlUrlValidator::validate($screen_item['url'])) {
