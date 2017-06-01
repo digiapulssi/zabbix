@@ -1,8 +1,11 @@
 Changes for rsm1.0.0rc5
 
 New features:
+....I..... [sub-231] improved command-line parameters validation in Data Export script (dimir)
 
 Bug fixes:
+....I..... [233] fixed SLA-API script to not produce double incident directories (dimir)
+....I..... [sub-230] fixed SLA-API script to not produce an error on a freshly deployed server (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc4
