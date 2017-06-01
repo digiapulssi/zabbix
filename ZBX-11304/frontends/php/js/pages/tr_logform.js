@@ -96,7 +96,7 @@ function add_logexpr() {
 
 	var form = jQuery('form[name=sform]');
 
-	form.prepend(jQuery('<input>', {
+	form.append(jQuery('<input>', {
 		name: 'expressions[' + logexpr_count + '][value]',
 		type: 'hidden',
 		value: expression
@@ -107,7 +107,7 @@ function add_logexpr() {
 
 	td.appendChild(document.createTextNode(expr_t.options[expr_t.selectedIndex].text));
 
-	form.prepend(jQuery('<input>', {
+	form.append(jQuery('<input>', {
 		name: 'expressions[' + logexpr_count + '][type]',
 		type: 'hidden',
 		value: expr_t.value
