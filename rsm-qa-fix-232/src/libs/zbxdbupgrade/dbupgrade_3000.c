@@ -267,6 +267,11 @@ static int	DBpatch_3000116(void)
 			"{100103}<{$RSM.IP6.MIN.PROBE.ONLINE}");
 }
 
+static int	DBpatch_3000117(void)
+{
+	return add_right(109, 110, 130);
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -291,5 +296,6 @@ DBPATCH_ADD(3000113, 0, 1)	/* add "otherTLD" hosts to "otherTLD Probe results" h
 DBPATCH_ADD(3000114, 0, 1)	/* add all TLD hosts to "TLD Probe results" host group */
 DBPATCH_ADD(3000115, 0, 0)	/* fixed trigger expression for minimum online IPv4 enabled probe number */
 DBPATCH_ADD(3000116, 0, 0)	/* fixed trigger expression for minimum online IPv6 enabled probe number */
+DBPATCH_ADD(3000117, 0, 0)	/* read permissions on "Probes - Mon" host group for "Technical services users" */
 
 DBPATCH_END()
