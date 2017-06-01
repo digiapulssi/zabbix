@@ -156,7 +156,11 @@ if (opt('continue'))
 		my $config_minclock = __get_config_minclock();
 		db_connect();
 
-		fail("no data from Probe nodes yet, please wait") if ($config_minclock eq 0);
+		if (!defined($config_minclock))
+		{
+			info("no data from Probe nodes yet");
+			exit(0);
+		}
 
 		dbg("oldest data found: ", ts_full($config_minclock));
 
@@ -634,7 +638,7 @@ foreach (keys(%$servicedata))
 
 						my ($ns, $ip) = split(',', $nsip);
 
-						dbg("  ", scalar(keys(%$endvalues_ref)), " values for $nsip:") if (opt('debug'));
+						dbg("  values for $nsip:");
 
 						my $test_result_index = 0;
 
@@ -661,10 +665,12 @@ foreach (keys(%$servicedata))
 							if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
 							{
 								$tr_ref->{'probes'}->{$probe}->{'status'} = PROBE_OFFLINE_STR;
+								dbg("    ", ts_str($clock), ": OFFLINE");
 							}
 							else
 							{
 								push(@{$tr_ref->{'probes'}->{$probe}->{'details'}->{$ns}}, {'clock' => $clock, 'rtt' => $endvalues_ref->{$clock}, 'ip' => $ip});
+								dbg("    ", ts_str($clock), ": ", $endvalues_ref->{$clock});
 							}
 						}
 					}
@@ -682,8 +688,6 @@ foreach (keys(%$servicedata))
 						{
 							if ($tr_ref_probe eq $probe)
 							{
-								dbg("\"$tr_ref_probe\" found!");
-
 								$found = 1;
 								last;
 							}
@@ -914,8 +918,6 @@ foreach (keys(%$servicedata))
 						{
 							if ($tr_ref_probe eq $probe)
 							{
-								dbg("\"$tr_ref_probe\" found!");
-
 								$found = 1;
 								last;
 							}
@@ -1854,7 +1856,7 @@ sub __no_status_result
 sub __get_config_minclock
 {
 	my $probe_item_key = 'rsm.probe.online';
-	my $minclock = 0;
+	my $minclock;
 
 	foreach (@server_keys)
 	{
@@ -1867,12 +1869,12 @@ sub __get_config_minclock
 			" where itemid in".
 				" (select itemid from items where key_='$probe_item_key' and templateid is not null)");
 
-	next unless (scalar(@$rows_ref) == 1);
+	next unless (defined($rows_ref->[0]->[0]));
 
 	my $newclock = int($rows_ref->[0]->[0]);
 	dbg("min(clock): $newclock");
 
-	$minclock = $newclock if ($minclock eq 0 || $newclock lt $minclock);
+	$minclock = $newclock if (!defined($minclock) || $newclock < $minclock);
 	db_disconnect();
 	}
 	undef($server_key);
