@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -867,7 +867,14 @@ function getActionOperationHints(array $operations, array $defaultMessage) {
 					? $defaultMessage['message']
 					: $operation['opmessage']['message'];
 
-				$result[$key][] = [bold($subject), BR(), BR(), zbx_nl2br($message)];
+				$result_hint = [];
+				if ($subject) {
+					$result_hint = [bold($subject), BR(), BR()];
+				}
+				if ($message) {
+					$result_hint[] = zbx_nl2br($message);
+				}
+				$result[$key][] = $result_hint;
 				break;
 
 			case OPERATION_TYPE_COMMAND:

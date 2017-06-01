@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -536,7 +536,7 @@ $config = select_config();
 /*
  * Display
  */
-if (hasRequest('action') && getRequest('action') === 'trigger.massupdateform' && hasRequest('g_triggerid')) {
+if ((getRequest('action') === 'trigger.massupdateform' || hasRequest('massupdate')) && hasRequest('g_triggerid')) {
 	$data = getTriggerMassupdateFormData();
 	$data['action'] = 'trigger.massupdate';
 	$triggersView = new CView('configuration.triggers.massupdate', $data);

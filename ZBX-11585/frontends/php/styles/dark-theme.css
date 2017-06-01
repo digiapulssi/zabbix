@@ -780,7 +780,8 @@ footer, .footer {
 .multiselect-wrapper {
   position: relative;
   vertical-align: top;
-  display: inline-block; }
+  display: inline-block;
+  white-space: nowrap; }
 
 .multiselect {
   position: relative;

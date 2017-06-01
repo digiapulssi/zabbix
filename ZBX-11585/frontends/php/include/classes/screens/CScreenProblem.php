@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -837,7 +837,7 @@ class CScreenProblem extends CScreenBase {
 			if ($this->config['event_ack_enable']) {
 				$footer = new CActionButtonList('action', 'eventids', [
 					'acknowledge.edit' => ['name' => _('Bulk acknowledge')]
-				]);
+				], 'problem');
 			}
 
 			return $this->getOutput($form->addItem([$table, $paging, $footer]), true, $this->data);

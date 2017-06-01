@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -361,7 +361,7 @@ else {
 }
 $link = (new CLink(_('show value mappings'), 'adm.valuemapping.php'))
 	->setAttribute('target', '_blank');
-$itemFormList->addRow(_('Show value'), [$valuemapComboBox, SPACE, $link], null, 'row_valuemap');
+$itemFormList->addRow(_('Show value'), [$valuemapComboBox, SPACE, $link], 'row_valuemap');
 $itemFormList->addRow(_('Allowed hosts'),
 	(new CTextBox('trapper_hosts', $this->data['trapper_hosts']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH),
 	'row_trapper_hosts');

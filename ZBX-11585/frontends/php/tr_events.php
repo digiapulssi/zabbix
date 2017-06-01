@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ $alert_options = ['alertid', 'alerttype', 'mediatypes', 'status', 'retries', 'us
 	'clock', 'subject', 'message'
 ];
 $options = [
-	'output' => ['eventid', 'r_eventid', 'clock', 'objectid', 'value'],
+	'output' => ['eventid', 'r_eventid', 'clock', 'ns', 'objectid', 'value'],
 	'select_alerts' => $alert_options,
 	'selectTags' => ['tag', 'value'],
 	'source' => EVENT_SOURCE_TRIGGERS,

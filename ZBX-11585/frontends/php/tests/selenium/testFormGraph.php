@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -933,9 +933,8 @@ class testFormGraph extends CWebTest {
 			$this->zbxTestDropdownSelectWait('hostid', $this->host);
 
 			$this->zbxTestAssertElementPresentXpath("//a[text()='".$this->itemSimple."']");
-			$this->zbxTestClickLinkTextWait($this->itemSimple);
+			$this->zbxTestClickLinkAndWaitWindowClose($this->itemSimple);
 
-			$this->zbxTestWaitWindowClose();
 			$ymin_name = $data['ymin_name'];
 			$ymin_nameValue = $this->zbxTestGetValue("//input[@id='ymin_name']");
 			$this->assertEquals($ymin_nameValue, $this->host.": $ymin_name");

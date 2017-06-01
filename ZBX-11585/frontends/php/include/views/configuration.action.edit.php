@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -426,8 +426,15 @@ if ($data['action']['operations']) {
 			$operation['mediatypeid'] = 0;
 		}
 
-		$details = (new CSpan($actionOperationDescriptions[0][$operationid]))
-			->setHint($action_operation_hints[$operationid]);
+		$details = new CSpan($actionOperationDescriptions[0][$operationid]);
+
+		if (array_key_exists($operationid, $action_operation_hints)) {
+			$action_operation_hints[$operationid] = array_filter($action_operation_hints[$operationid]);
+
+			if ($action_operation_hints[$operationid]) {
+				$details->setHint($action_operation_hints[$operationid]);
+			}
+		}
 
 		if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVENT_SOURCE_INTERNAL) {
 			$esc_steps_txt = null;
@@ -847,7 +854,7 @@ if (!empty($data['new_operation'])) {
 			];
 
 			$new_operation_formlist->addRow(_('Type'), $typeComboBox);
-			$new_operation_formlist->addRow(_('Script name'), $userScript);
+			$new_operation_formlist->addRow(_('Script name'), (new CDiv($userScript))->addClass(ZBX_STYLE_NOWRAP));
 
 			// script
 			$new_operation_formlist->addRow(_('Execute on'),
@@ -1181,8 +1188,15 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVE
 				$operation['mediatypeid'] = 0;
 			}
 
-			$details = (new CSpan($actionOperationDescriptions[0][$operationid]))
-				->setHint($action_operation_hints[$operationid]);
+			$details = new CSpan($actionOperationDescriptions[0][$operationid]);
+
+			if (array_key_exists($operationid, $action_operation_hints)) {
+				$action_operation_hints[$operationid] = array_filter($action_operation_hints[$operationid]);
+
+				if ($action_operation_hints[$operationid]) {
+					$details->setHint($action_operation_hints[$operationid]);
+				}
+			}
 
 			$operationRow = [
 				$details,
