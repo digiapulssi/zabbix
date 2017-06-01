@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use Getopt::Long;
 use JSON::XS;
 use Path::Tiny qw(path);
 use Types::Serialiser;
@@ -42,11 +43,28 @@ use constant JSON_KEY_UPDATE_TIME		=> 'updateTime';
 use constant JSON_KEY_VERSION			=> 'version';
 
 # global variables
-# TODO make them command line options
 
 my $fail_immediately = 0;
 my $issues_found = 0;
-my $debug_logging = 1;
+my $debug_logging = 0;
+my $help = 0;
+
+my %options = (
+	'fail-immediately'	=> \$fail_immediately,
+	'debug'			=> \$debug_logging,
+	'help'			=> \$help
+);
+
+if (!GetOptions(%options))
+{
+	die();
+}
+
+if ($help)
+{
+	print("Usage: $0 [--fail-immediately|-f] [--debug|-d] [--help|-h]\n");
+	exit();
+}
 
 # helper function to report issues
 
