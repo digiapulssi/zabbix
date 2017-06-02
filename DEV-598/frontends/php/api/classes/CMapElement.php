@@ -237,10 +237,9 @@ abstract class CMapElement extends CZBXAPI {
 	 * @return array
 	 */
 	protected function createSelements(array $selements) {
-		$this->validateSelementsUrl($selements);
-
 		$selements = zbx_toArray($selements);
 
+		$this->validateSelementsUrl($selements);
 		$this->checkSelementInput($selements, __FUNCTION__);
 
 		$selementIds = DB::insert('sysmaps_elements', $selements);
@@ -277,12 +276,11 @@ abstract class CMapElement extends CZBXAPI {
 	 * @param array $elements[0,...]['label_location']
 	 */
 	protected function updateSelements(array $selements) {
-		$this->validateSelementsUrl($selements);
-
 		$selements = zbx_toArray($selements);
 		$selementIds = array();
-
 		$dbSelements = $this->checkSelementInput($selements, __FUNCTION__);
+
+		$this->validateSelementsUrl($selements);
 
 		$update = array();
 		$urlsToDelete = $urlsToUpdate = $urlsToAdd = array();
