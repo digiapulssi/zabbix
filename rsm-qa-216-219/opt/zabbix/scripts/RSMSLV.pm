@@ -2173,14 +2173,9 @@ sub get_incidents
 		my $value = $row_ref->[2];
 		my $false_positive = $row_ref->[3];
 
-		if ($value == TRIGGER_VALUE_FALSE)
-		{
-			$clock = truncate_till($clock);
-		}
-		else
-		{
-			$clock = truncate_from($clock);
-		}
+		# NB! Incident start/end times must not be truncated to first/last second
+		# of a minute (do not use truncate_from and truncate_till) because they
+		# can be used by a caller to identify an incident.
 
 		if (opt('debug'))
 		{
@@ -2781,15 +2776,6 @@ sub truncate_from
 
 	# truncate to the beginning of the minute
 	return $ts - ($ts % $delay);
-}
-
-# todo phase 1: this is taken from RSMSLV1.pm and is used in get_incidents()
-# last second of given minute
-sub truncate_till
-{
-	my $ts = shift;
-
-	return $ts - $ts % 60 + 59;
 }
 
 # whether additional alerts through Redis are enabled, disable in config passed with set_slv_config()
