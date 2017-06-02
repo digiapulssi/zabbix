@@ -310,7 +310,57 @@ sub validate_tld_state_file($)
 	if (defined($json))
 	{
 		my $schema = {
-			# TODO
+			'value'		=> JSON_VALUE_OBJECT,
+			'not null'	=> 1,
+			'members'	=> {
+				JSON_KEY_VERSION,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'exact'		=> '1'
+					}
+				},
+				JSON_KEY_TLD,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_STRING,
+						'not null'	=> 1,
+						'pattern'	=> qr/.*/
+					}
+				},
+				JSON_KEY_STATUS,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_STRING,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(Up|Down|Up-inconclusive)$/
+					}
+				},
+				JSON_KEY_LAST_UPDATE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				},
+				JSON_KEY_TESTED_SERVICE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_ARRAY,
+						'not null'	=> 0,
+						'element'	=> {
+							# TODO
+						}
+					}
+				}
+			}
 		};
 
 		validate_json_value($json, $schema, "");
@@ -331,12 +381,14 @@ sub validate_alarmed_file($)
 	{
 		my $schema = {
 			'value'		=> JSON_VALUE_OBJECT,
+			'not null'	=> 1,
 			'members'	=> {
 				JSON_KEY_VERSION,
 				{
 					'mandatory'	=> 1,
 					'member'	=> {
 						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
 						'exact'		=> '1'
 					}
 				},
@@ -345,6 +397,7 @@ sub validate_alarmed_file($)
 					'mandatory'	=> 1,
 					'member'	=> {
 						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
 						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
 					}
 				},
@@ -353,7 +406,58 @@ sub validate_alarmed_file($)
 					'mandatory'	=> 1,
 					'member'	=> {
 						'value'		=> JSON_VALUE_STRING,
+						'not null'	=> 1,
 						'pattern'	=> qr/^(Yes|No|Disabled)$/
+					}
+				}
+			}
+		};
+
+		validate_json_value($json, $schema, "");
+	}
+
+	info("\"$file\" validated");
+}
+
+sub validate_downtime_file($)
+{
+	my $file = shift;
+
+	info("validating \"$file\"");
+
+	my $json = read_json_file($file);
+
+	if (defined($json))
+	{
+		my $schema = {
+			'value'		=> JSON_VALUE_OBJECT,
+			'not null'	=> 1,
+			'members'	=> {
+				JSON_KEY_VERSION,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'exact'		=> '1'
+					}
+				},
+				JSON_KEY_LAST_UPDATE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				},
+				JSON_KEY_DOWNTIME,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
 					}
 				}
 			}
@@ -610,7 +714,7 @@ my $expected_in_base_path = [
 						# downtime
 						'name'		=> 'downtime',
 						'mandatory'	=> 1,
-						'validator'	=> undef
+						'validator'	=> \&validate_downtime_file
 					},
 					{
 						# incidents
