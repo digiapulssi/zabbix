@@ -201,6 +201,16 @@ Requires:		zabbix-web-mysql = %{version}-%{release}
 SELinux policy modules for use with Zabbix web frontend
 %endif
 
+%package agent-selinux
+Summary:		SELinux Policies for Zabbix agent
+Group:			System Environment/Base
+BuildArch:		noarch
+Requires(post):		selinux-policy-base >= %{selinux_policyver}, selinux-policy-targeted >= %{selinux_policyver}, policycoreutils, policycoreutils-python libselinux-utils
+Requires:		zabbix-agent
+
+%description agent-selinux
+SELinux policy modules for use with Zabbix agent
+
 %package scripts
 Summary:			Zabbix scripts for RSM
 Group:				Applications/Internet
@@ -510,6 +520,13 @@ fi
 
 %endif
 
+%post agent-selinux
+%{_sbindir}/semodule -n -s %{selinuxtype} -i %{_datadir}/selinux/packages/zabbix_agent.pp.bz2
+if %{_sbindir}/selinuxenabled ; then
+    %{_sbindir}/load_policy
+    %relabel_files
+fi
+
 %preun proxy-mysql
 if [ "$1" = 0 ]; then
 %if 0%{?rhel} >= 7
@@ -630,6 +647,15 @@ if [ $1 -eq 0 ]; then
 fi
 %endif
 
+%postun agent-selinux
+if [ $1 -eq 0 ]; then
+    %{_sbindir}/semodule -n -r zabbix-agent &> /dev/null || :
+    if %{_sbindir}/selinuxenabled ; then
+	%{_sbindir}/load_policy
+	%relabel_files
+    fi
+fi
+
 %files proxy-mysql
 %defattr(-,root,root,-)
 %doc AUTHORS ChangeLog COPYING NEWS README
@@ -731,6 +757,11 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/zabbix_agent.pp.bz2
 %attr(0644,root,root) %{_datadir}/selinux/packages/zbx_nginx.pp.bz2
 %attr(0644,root,root) %{_datadir}/selinux/packages/zbx_php-fpm.pp.bz2
+
+%files agent-selinux
+%defattr(-,root,root,0755)
+%attr(0644,root,root) %{_datadir}/selinux/packages/zabbix_agent.pp.bz2
+
 
 %files scripts
 %defattr(-,zabbix,zabbix,0755)
