@@ -36,7 +36,7 @@ use constant JSON_VALUE_INCIDENT_RESOLVED => 'Resolved';
 
 our @EXPORT = qw(AH_SUCCESS AH_FAIL ah_get_error ah_save_state
 		ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
-		ah_save_false_positive ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit
+		ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
 		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
 
 use constant AH_JSON_FILE_VERSION => 1;
@@ -389,7 +389,7 @@ sub ah_save_false_positive
 	return __save_inc_false_positive($inc_path, $false_positive, $clock);
 }
 
-sub ah_save_incident_json
+sub ah_save_measurement
 {
 	my $tld = shift;
 	my $service = shift;

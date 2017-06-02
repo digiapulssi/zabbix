@@ -778,7 +778,7 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
@@ -903,7 +903,7 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
@@ -1009,7 +1009,7 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
