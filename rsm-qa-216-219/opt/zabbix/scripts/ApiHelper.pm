@@ -375,7 +375,7 @@ sub ah_save_false_positive
 
 	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, AH_PATH_FULL) == AH_SUCCESS);
 
-	my $curr_false_positive = (($json->{'incidents'}->[0]->{'falsePositive'} == JSON::true) ? 1 : 0);
+	my $curr_false_positive = (($json->{'incidents'}->[0]->{'falsePositive'} eq JSON::true) ? 1 : 0);
 
 	if ($curr_false_positive != $false_positive)
 	{
