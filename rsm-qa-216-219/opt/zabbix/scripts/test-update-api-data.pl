@@ -242,7 +242,7 @@ sub validate_one($$)
 			}
 			else
 			{
-				fail("validator subroutine for \"$real_thing\" is not yet available");
+				info("validator subroutine for \"$real_thing\" is not yet available");
 			}
 		}
 		else
@@ -272,6 +272,18 @@ sub validate_one($$)
 # validating generated files
 
 my $expected_things = [
+	{
+		# last_update.txt
+		'name'		=> 'last_update.txt',
+		'mandatory'	=> 0,
+		'validator'	=> undef
+	},
+	{
+		# last_audit_<serverID>.txt
+		'pattern'	=> qr/^last_audit_.+\.txt$/,
+		'mandatory'	=> 0,
+		'validator'	=> undef
+	},
 	{
 		# <TLD>
 		'pattern'	=> qr/.*/,
