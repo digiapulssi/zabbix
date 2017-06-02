@@ -617,7 +617,54 @@ sub validate_incident_state_file($)
 						'value'		=> JSON_VALUE_ARRAY,
 						'not null'	=> 1,
 						'element'	=> {
-							# TODO
+							'value'		=> JSON_VALUE_OBJECT,
+							'not null'	=> 1,
+							'members'	=> {
+								JSON_KEY_INCIDENT_ID,
+								{
+									'mandatory'	=> 1,
+									'member'	=> {
+										'value'		=> JSON_VALUE_STRING,
+										'not null'	=> 1,
+										'pattern'	=> qr/^(0|[1-9][0-9]*)\.[1-9]+$/
+									}
+								},
+								JSON_KEY_START_TIME,
+								{
+									'mandatory'	=> 1,
+									'member'	=> {
+										'value'		=> JSON_VALUE_NUMBER,
+										'not null'	=> 1,
+										'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+									}
+								},
+								JSON_KEY_FALSE_POSITIVE,
+								{
+									'mandatory'	=> 1,
+									'member'	=> {
+										'value'		=> JSON_VALUE_BOOLEAN,
+										'not null'	=> 1
+									}
+								},
+								JSON_KEY_STATE,
+								{
+									'mandatory'	=> 1,
+									'member'	=> {
+										'value'		=> JSON_VALUE_STRING,
+										'not null'	=> 1,
+										'pattern'	=> qr/^(Active|Resolved)$/
+									}
+								},
+								JSON_KEY_END_TIME,
+								{
+									'mandatory'	=> 1,
+									'member'	=> {
+										'value'		=> JSON_VALUE_NUMBER,
+										'not null'	=> 0,
+										'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+									}
+								}
+							}
 						}
 					}
 				}
