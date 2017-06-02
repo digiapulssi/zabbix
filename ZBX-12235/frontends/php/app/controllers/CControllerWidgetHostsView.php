@@ -56,6 +56,37 @@ class CControllerWidgetHostsView extends CController {
 				$filter['groupids'] = zbx_objectValues(CFavorite::get('web.dashconf.groups.groupids'), 'value');
 				$hide_groupids = zbx_objectValues(CFavorite::get('web.dashconf.groups.hide.groupids'), 'value');
 
+				// Select sub-groups for groups which are specified to be displayed in widgets.
+				if ($filter['groupids']) {
+					$filter_groups = API::HostGroup()->get([
+						'output' => ['groupid', 'name'],
+						'groupids' => $filter['groupids'],
+						'preservekeys' => true
+					]);
+
+					foreach ($filter_groups as &$group) {
+						$group = $group['name'].'/';
+					}
+					unset($group);
+
+					if ($filter_groups) {
+						$child_groups = API::HostGroup()->get([
+							'output' => ['groupid'],
+							'search' => ['name' => $filter_groups],
+							'searchByAny' => true,
+							'startSearch' => true
+						]);
+
+						foreach ($child_groups as $child_group) {
+							$filter['groupids'][] = $child_group['groupid'];
+						}
+					}
+				}
+				else {
+					// null mean all groups
+					$filter['groupids'] = null;
+				}
+
 				if ($hide_groupids) {
 					// get all groups if no selected groups defined
 					if (!$filter['groupids']) {
@@ -65,6 +96,32 @@ class CControllerWidgetHostsView extends CController {
 						$filter['groupids'] = zbx_objectValues($dbHostGroups, 'groupid');
 					}
 
+					// Select sub-groups for groups which are specified to be hidden in widgets.
+					$filter_groups = API::HostGroup()->get([
+						'output' => ['groupid', 'name'],
+						'groupids' => $hide_groupids,
+						'preservekeys' => true
+					]);
+
+					foreach ($filter_groups as &$group) {
+						$group = $group['name'].'/';
+					}
+					unset($group);
+
+					if ($filter_groups) {
+						$child_groups = API::HostGroup()->get([
+							'output' => ['groupid'],
+							'search' => ['name' => $filter_groups],
+							'searchByAny' => true,
+							'startSearch' => true
+						]);
+
+						foreach ($child_groups as $child_group) {
+							$hide_groupids[] = $child_group['groupid'];
+						}
+					}
+
+					// Calculate the difference between groups selected to be displayed and these which are selected to be hidden.
 					$filter['groupids'] = array_diff($filter['groupids'], $hide_groupids);
 
 					// get available hosts
@@ -81,10 +138,6 @@ class CControllerWidgetHostsView extends CController {
 					$disabledHostIds = zbx_objectValues($dbDisabledHosts, 'hostid');
 
 					$filter['hostids'] = array_diff($availableHostIds, $disabledHostIds);
-				}
-				elseif (!$filter['groupids']) {
-					// null mean all groups
-					$filter['groupids'] = null;
 				}
 			}
 
