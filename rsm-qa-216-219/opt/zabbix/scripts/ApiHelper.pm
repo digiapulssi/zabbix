@@ -48,6 +48,31 @@ sub ah_get_error
 	return $error_string;
 }
 
+sub __ts_str
+{
+	my $ts = shift;
+
+	$ts = time() unless ($ts);
+
+	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
+
+	$year += 1900;
+	$mon++;
+
+	return sprintf("%4.2d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
+}
+
+sub __ts_full
+{
+	my $ts = shift;
+
+	$ts = time() unless ($ts);
+
+	my $str = __ts_str($ts);
+
+	return "$str ($ts)";
+}
+
 sub __make_base_path
 {
 	my $tld = shift;
@@ -92,7 +117,7 @@ sub __make_inc_path
 
 sub __set_error
 {
-	$error_string = shift;
+	$error_string = join('', @_);
 }
 
 # todo phase 1: this improved version was taken from the same file of phase 2
@@ -364,7 +389,7 @@ sub ah_save_false_positive
 		$$later_ref = 1;
 
 		my $curr_err = ah_get_error();
-		__set_error("incident state file not found, try to update false positiveness later (error was: $curr_err)");
+		__set_error("incident state file not found, try to update false positiveness (changed at ", __ts_full($clock), ") later (error was: $curr_err)");
 
 		return AH_FAIL;
 	}

@@ -772,13 +772,16 @@ foreach (keys(%$servicedata))
 						}
 					}
 
+					$tr_ref->{'cycleCalculationDateTime'} = $tr_ref->{'clock'};
+					delete($tr_ref->{'clock'});
+
 					if (opt('dry-run'))
 					{
 						__prnt_json($tr_ref);
 					}
 					else
 					{
-						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'clock'}) != AH_SUCCESS)
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
