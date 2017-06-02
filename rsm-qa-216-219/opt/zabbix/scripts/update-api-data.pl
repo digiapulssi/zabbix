@@ -19,8 +19,6 @@ use constant JSON_RDDS_80 => 'RDDS80';
 
 use constant JSON_VALUE_UP => 'Up';
 use constant JSON_VALUE_DOWN => 'Down';
-use constant JSON_VALUE_INCIDENT_ACTIVE => 'Active';
-use constant JSON_VALUE_INCIDENT_RESOLVED => 'Resolved';
 use constant JSON_VALUE_ALARMED_YES => 'Yes';
 use constant JSON_VALUE_ALARMED_NO => 'No';
 use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
@@ -1033,17 +1031,8 @@ foreach (keys(%$servicedata))
 			my $event_end = $_->{'end'};
 			my $false_positive = $_->{'false_positive'};
 
-			my $json_state = (defined($event_end) ? JSON_VALUE_INCIDENT_RESOLVED : JSON_VALUE_INCIDENT_ACTIVE);
-			my $json_false_positive = ($false_positive ? JSON::true : JSON::false);
-
 			push(@{$json_state_ref->{'testedService'}->[$service_idx]->{'incidents'}},
-			{
-				'incidentID' => "$event_start.$eventid",
-				'startTime' => $event_start,
-				'endTime' => $event_end,
-				'falsePositive' => $json_false_positive,
-				'state' => $json_state
-			});
+				ah_create_incident_json($eventid, $event_start, $event_end, $false_positive));
 		}
 	} # foreach my $service
 
@@ -1807,6 +1796,9 @@ sub __update_false_positives
 	# now check for possible false_positive change in front-end
 	my $maxclock = 0;
 
+	# should we update fasle positiveness later? (incident state file does not exist yet)
+	my $later;
+
 	my $rows_ref = db_select(
 		"select details,max(clock)".
 		" from auditlog".
@@ -1849,21 +1841,27 @@ sub __update_false_positives
 
 		dbg("auditlog: service:$service evnetid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
 
-		fail("cannot update false_positive status of event with ID $eventid")
-			unless (ah_save_false_positive($tld, $service, $eventid, $event_clock, $false_positive, $clock) == AH_SUCCESS);
-
-		if ($false_positive == 0)
+		unless (ah_save_false_positive($tld, $service, $eventid, $event_clock,
+				$false_positive, $clock, \$later) == AH_SUCCESS)
 		{
-			my $inc_fp_relative_path;
-
-			fail("internal error: cannot form incident path!")
-				unless (ah_inc_fp_relative_path($tld, $service, $eventid, $event_clock, \$inc_fp_relative_path) == AH_SUCCESS);
-
-			rsm_targets_delete($inc_fp_relative_path);
+			if ($later == 1)
+			{
+				wrn(ah_get_error());
+			}
+			else
+			{
+				fail("cannot update false_positive state: ", ah_get_error());
+			}
 		}
 	}
 
-	ah_save_audit($server_key, $maxclock) unless ($maxclock == 0);
+	# If the "later" flag is non-zero it means the incident for which we would like to change
+	# false positiveness was not processed yet and there is no incident state file. We cannot
+	# modify falsePositive file without making sure incident state file is also updated.
+	if ($maxclock != 0 && $later == 0)
+	{
+		ah_save_audit($server_key, $maxclock);
+	}
 }
 
 sub __validate_input

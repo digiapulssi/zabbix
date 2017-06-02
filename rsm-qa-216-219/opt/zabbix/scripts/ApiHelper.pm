@@ -7,6 +7,8 @@ use DateTime::Format::RFC3339;
 use base 'Exporter';
 use JSON::XS;
 
+use constant AH_DEBUG => 0;
+
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
 
@@ -15,7 +17,7 @@ use constant AH_PATH_FULL	=> 1;
 
 use constant AH_INCIDENT_ACTIVE => 'ACTIVE';
 use constant AH_STATE_FILE => 'state';
-use constant AH_END_FILE => 'end';
+use constant AH_INCIDENT_STATE_FILE => 'state';
 use constant AH_FALSE_POSITIVE_FILE => 'falsePositive';
 use constant AH_ALARMED_FILE => 'alarmed';
 use constant AH_DOWNTIME_FILE => 'downtime';
@@ -29,8 +31,11 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 								# was processed, is saved per db (false_positive change):
 								# AH_AUDIT_FILE_PREFIX _ <SERVER_KEY> .txt
 
+use constant JSON_VALUE_INCIDENT_ACTIVE => 'Active';
+use constant JSON_VALUE_INCIDENT_RESOLVED => 'Resolved';
+
 our @EXPORT = qw(AH_SUCCESS AH_FAIL ah_get_error ah_save_state
-		ah_save_alarmed ah_save_downtime ah_save_incident ah_inc_fp_relative_path
+		ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
 		ah_save_false_positive ah_save_incident_json ah_get_continue_file ah_get_api_tld ah_get_last_audit
 		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
 
@@ -145,23 +150,7 @@ sub __write_file
 	return AH_SUCCESS;
 }
 
-sub __apply_inc_end
-{
-	my $inc_path = shift;
-	my $end = shift;
-	my $lastclock = shift;
-
-	my $end_path = "$inc_path/" . AH_END_FILE;
-
-	return __write_file($end_path, AH_INCIDENT_ACTIVE, $lastclock) unless (defined($end));
-
-	my $dt = DateTime->from_epoch('epoch' => $end);
-	my $f = DateTime::Format::RFC3339->new();
-
-	return __write_file($end_path, $f->format_datetime($dt), $end);
-}
-
-sub __apply_inc_false_positive
+sub __save_inc_false_positive
 {
 	my $inc_path = shift;
 	my $false_positive = shift;
@@ -169,18 +158,13 @@ sub __apply_inc_false_positive
 
 	my $false_positive_path = "$inc_path/" . AH_FALSE_POSITIVE_FILE;
 
-	if ($false_positive != 0)
+	my $json =
 	{
-		return __write_file($false_positive_path, '', $clock);
-	}
+		'falsePositive' => ($false_positive ? JSON::true : JSON::false),
+		'updateTime' => $clock
+	};
 
-	if ((-e $false_positive_path) and not unlink($false_positive_path))
-	{
-		__set_file_error($!);
-		return AH_FAIL;
-	}
-
-	return AH_SUCCESS;
+	return __write_file($false_positive_path, __encode_json($json));
 }
 
 sub ah_save_state
@@ -235,6 +219,34 @@ sub ah_save_downtime
 	return __write_file($alarmed_path, __encode_json($json), $clock);
 }
 
+sub ah_create_incident_json
+{
+	my $eventid = shift;	# incident is identified by event ID
+	my $start = shift;
+	my $end = shift;
+	my $false_positive = shift;
+
+	return
+	{
+		'incidentID' => "$start.$eventid",
+		'startTime' => $start,
+		'endTime' => $end,
+		'falsePositive' => ($false_positive ? JSON::true : JSON::false),
+		'state' => (defined($end) ? JSON_VALUE_INCIDENT_RESOLVED : JSON_VALUE_INCIDENT_ACTIVE)
+	};
+}
+
+sub __save_inc_state
+{
+	my $inc_path = shift;
+	my $json = shift;
+	my $lastclock = shift;
+
+	my $inc_state_path = "$inc_path/" . AH_INCIDENT_STATE_FILE;
+
+	return __write_file($inc_state_path, __encode_json($json), $lastclock);
+}
+
 sub ah_save_incident
 {
 	my $tld = shift;
@@ -249,29 +261,82 @@ sub ah_save_incident
 
 	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, AH_PATH_FULL) == AH_SUCCESS);
 
-	return AH_FAIL unless (__apply_inc_end($inc_path, $end, $lastclock) == AH_SUCCESS);
+	my $json = {'incidents' => [ah_create_incident_json($eventid, $start, $end, $false_positive)]};
 
-	return __apply_inc_false_positive($inc_path, $false_positive, $start);
+	return AH_FAIL unless ( __save_inc_state($inc_path, $json, $lastclock) == AH_SUCCESS);
+
+	# If the there's no falsePositive file yet, just write create it with updateTime null.
+	# Otherwise do nothing, it should always contain correct false positiveness.
+
+	my $rel_inc_path;
+
+	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$rel_inc_path, AH_PATH_RELATIVE) == AH_SUCCESS);
+
+	my $buf;
+
+	if (__read_false_positive_file($rel_inc_path, \$buf) == AH_FAIL)
+	{
+		return __save_inc_false_positive($inc_path, $false_positive);
+	}
 }
 
-# todo phase 1: new function needed for deleting falsePositive file
-sub ah_inc_fp_relative_path
+sub __read_file
 {
-	my $tld = shift;
-	my $service = shift;
-	my $eventid = shift;	# incident is identified by event ID
-	my $start = shift;
-	my $inc_fp_relative_path_ref = shift;
+	my $file = shift;
+	my $buf_ref = shift;
 
-	my $inc_path;
+	dbg("file: $file");
 
-	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, AH_PATH_RELATIVE) == AH_SUCCESS);
+	$$buf_ref = do
+	{
+		local $/ = undef;
+		my $fh;
+		if (!open($fh, "<", $file))
+		{
+			__set_error("cannot open file \"$file\": $!");
+			return AH_FAIL;
+		}
 
-	$$inc_fp_relative_path_ref = "$inc_path/" . AH_FALSE_POSITIVE_FILE;
+		<$fh>;
+	};
+
+	dbg("buf: ", $$buf_ref);
 
 	return AH_SUCCESS;
 }
 
+# read previously saved data from AH_BASE_DIR
+sub __read_incident_state_file
+{
+	my $rel_inc_path = shift;	# relative incident path
+	my $buf_ref = shift;
+
+	my $inc_state_path = AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_INCIDENT_STATE_FILE;
+
+	return __read_file($inc_state_path, $buf_ref);
+}
+
+# read previously saved data from AH_BASE_DIR
+sub __read_false_positive_file
+{
+	my $rel_inc_path = shift;	# relative incident path
+	my $buf_ref = shift;
+
+	my $inc_fp_path = AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_FALSE_POSITIVE_FILE;
+
+	return __read_file($inc_fp_path, $buf_ref);
+}
+
+# When saving false positiveness, read from AH_BASE_DIR, write to AH_TMP_DIR.
+#
+# We need to get the incident state file from AH_BASE_DIR in order to get current
+# "falsePositive" value and if it has changed, update it in the state file.
+# We don't want to change any other parameter of the incident in the state file.
+#
+# If we received a false positiveness update request but the incident is not yet
+# processed (no incident state file) we ignore this change and notify the caller
+# about the need to try updating false positiveness later by setting $later_ref
+# flag to 1.
 sub ah_save_false_positive
 {
 	my $tld = shift;
@@ -280,12 +345,50 @@ sub ah_save_false_positive
 	my $start = shift;
 	my $false_positive = shift;
 	my $clock = shift;
+	my $later_ref = shift;	# should we update fasle positiveness later? (incident state file does not exist yet)
+
+	$$later_ref = 0;
+
+	if (!defined($later_ref))
+	{
+		die("internal error: ah_save_false_positive() called without last parameter");
+	}
+
+	my $rel_inc_path;
+
+	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$rel_inc_path, AH_PATH_RELATIVE) == AH_SUCCESS);
+
+	my $buf;
+
+	if (__read_incident_state_file($rel_inc_path, \$buf) == AH_FAIL)
+	{
+		# no incident state file yet, do not update false positiveness at this point
+		$$later_ref = 1;
+
+		my $curr_err = ah_get_error();
+		__set_error("incident state file not found, try to update false positiveness later (error was: $curr_err)");
+
+		return AH_FAIL;
+	}
+
+	my $json = decode_json($buf);
 
 	my $inc_path;
 
 	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, AH_PATH_FULL) == AH_SUCCESS);
 
-	return __apply_inc_false_positive($inc_path, $false_positive, $clock);
+	my $curr_false_positive = (($json->{'incidents'}->[0]->{'falsePositive'} == JSON::true) ? 1 : 0);
+
+	if ($curr_false_positive != $false_positive)
+	{
+		dbg("false positiveness of $eventid changed: $false_positive");
+
+		$json->{'incidents'}->[0]->{'falsePositive'} = ($false_positive ? JSON::true : JSON::false);
+
+		return AH_FAIL unless (__save_inc_state($inc_path, $json, $clock) == AH_SUCCESS);
+	}
+
+	return __save_inc_false_positive($inc_path, $false_positive, $clock);
 }
 
 sub ah_save_incident_json
@@ -304,6 +407,19 @@ sub ah_save_incident_json
 	my $json_path = "$inc_path/$clock.$eventid.json";
 
 	return __write_file($json_path, __encode_json($json), $clock);
+}
+
+sub dbg
+{
+	return if (AH_DEBUG == 0);
+
+	my @args = @_;
+
+	my $depth = 1;
+
+	my $func = (caller($depth))[3];
+
+	print("${func}() ", join('', @args), "\n");
 }
 
 sub ah_get_continue_file
