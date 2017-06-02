@@ -11,6 +11,14 @@ use Types::Serialiser;
 
 use constant BASE_PATH	=> '/opt/zabbix/sla';
 
+# JSON value types
+
+use constant JSON_VALUE_ARRAY	=> 1;
+use constant JSON_VALUE_BOOLEAN	=> 2;
+use constant JSON_VALUE_NUMBER	=> 3;
+use constant JSON_VALUE_OBJECT	=> 4;
+use constant JSON_VALUE_STRING	=> 5;
+
 # JSON keys sorted alphabetically
 
 use constant JSON_KEY_ALARMED			=> 'alarmed';
@@ -95,31 +103,323 @@ sub info($)
 	}
 }
 
+# JSON content validation functions
+
+sub validate_json_value_string_number($$$)
+{
+	my $json = shift;
+	my $schema = shift;
+	my $jsonpath = shift;
+
+	if (exists($schema->{'exact'}))
+	{
+		if ($json eq $schema->{'exact'})
+		{
+			info("\"$jsonpath\" has expected value");
+		}
+		else
+		{
+			fail("\"$jsonpath\" has unexpected value");
+		}
+	}
+	elsif (exists($schema->{'pattern'}))
+	{
+		if ($json =~ $schema->{'pattern'})
+		{
+			info("\"$jsonpath\" matches expected pattern");
+		}
+		else
+		{
+			fail("\"$jsonpath\" has unexpected value");
+		}
+	}
+	elsif (exists($schema->{'rule'}))
+	{
+		&{$schema->{'rule'}}($json, $jsonpath);
+	}
+	else
+	{
+		die("missing 'exact' value, 'pattern' or validation 'rule' for JSON string or number in schema");
+	}
+}
+
+sub validate_json_value($$$);
+
+sub validate_json_value_object($$$)
+{
+	my $json = shift;
+	my $schema = shift;
+	my $jsonpath = shift;
+
+	if (ref($json) eq 'HASH')
+	{
+		info("\"$jsonpath\" is a JSON object, as expected");
+
+		if (exists($schema->{'members'}))
+		{
+			my $members = $schema->{'members'};
+
+			# check that members expected by schema can be found in JSON object and validate them
+			foreach my $key (keys(%{$members}))
+			{
+				if (exists($json->{$key}))
+				{
+					if (exists($members->{$key}->{'member'}))
+					{
+						validate_json_value($json->{$key}, $members->{$key}->{'member'},
+								"$jsonpath.$key");
+					}
+					else
+					{
+						die("missing 'member' in JSON object member in schema");
+					}
+				}
+				else
+				{
+					if (exists($members->{$key}->{'mandatory'}))
+					{
+						if ($members->{$key}->{'mandatory'})
+						{
+							fail("mandatory \"$key\" was not found in \"$jsonpath\"");
+						}
+						else
+						{
+							info("missing \"$key\" is not mandatory in \"$jsonpath\"")
+						}
+					}
+					else
+					{
+						die("missing 'mandatory' in JSON object member in schema");
+					}
+				}
+			}
+
+			# check that JSON object does not contain members not expected by schema
+			foreach my $key (keys(%{$json}))
+			{
+				if (!exists($members->{$key}))
+				{
+					fail("\"$key\" was not expected in \"$jsonpath\"");
+				}
+			}
+		}
+		else
+		{
+			die("missing 'members' of JSON object in schema");
+		}
+	}
+	else
+	{
+		fail("\"$jsonpath\" is expected to be a JSON object");
+	}
+}
+
+sub validate_json_value_array($$$)
+{
+	# TODO
+
+	die("JSON array validator is not available");
+}
+
+sub validate_json_value($$$)
+{
+	my $json = shift;
+	my $schema = shift;
+	my $jsonpath = shift;
+
+	info("validating \"$jsonpath\"");
+
+	if (defined($json))
+	{
+		if (exists($schema->{'value'}))
+		{
+			if ($schema->{'value'} eq JSON_VALUE_STRING || $schema->{'value'} eq JSON_VALUE_NUMBER)
+			{
+				validate_json_value_string_number($json, $schema, $jsonpath);
+			}
+			elsif ($schema->{'value'} eq JSON_VALUE_OBJECT)
+			{
+				validate_json_value_object($json, $schema, $jsonpath);
+			}
+			elsif ($schema->{'value'} eq JSON_VALUE_ARRAY)
+			{
+				validate_json_value_array($json, $schema, $jsonpath);
+			}
+			elsif ($schema->{'value'} eq JSON_VALUE_BOOLEAN)
+			{
+				if (Types::Serialiser::is_bool($json))
+				{
+					info("\"$jsonpath\" is a boolean, as expected");
+				}
+				else
+				{
+					fail("\"$jsonpath\" is expected to be a boolean");
+				}
+			}
+		}
+		else
+		{
+			die("missing 'value' in JSON schema");
+		}
+	}
+	elsif (exists($schema->{'not null'}))
+	{
+		if ($schema->{'not null'})
+		{
+			fail("\"$jsonpath\" cannot be \"null\"");
+		}
+		else
+		{
+			info("\"$jsonpath\" is \"null\"");
+		}
+	}
+	else
+	{
+		die("missing 'not null' in JSON schema");
+	}
+
+	info("\"$jsonpath\" validated");
+}
+
 # file validation functions
 
 sub read_json_file($)
 {
 	my $file = shift;
 	my $contents = $file->slurp_utf8;
-	my ($json, $error);
+	my $json;
 
 	eval {$json = decode_json($contents)};
-	$error = $@;
 
-	return ($json, $error);
+	if ($@)
+	{
+		fail("error reading JSON from \"$file\": $@");
+	}
+
+	return $json;
 }
 
-sub validate_state_file($)
+sub validate_tld_state_file($)
 {
 	my $file = shift;
 
 	info("validating \"$file\"");
 
-	my ($json, $error) = read_json_file($file);
+	my $json = read_json_file($file);
 
-	if ($error)
+	if (defined($json))
 	{
-		fail("error reading JSON from \"$file\": $error");
+		my $schema = {
+			# TODO
+		};
+
+		validate_json_value($json, $schema, "");
+	}
+
+	info("\"$file\" validated");
+}
+
+sub validate_alarmed_file($)
+{
+	my $file = shift;
+
+	info("validating \"$file\"");
+
+	my $json = read_json_file($file);
+
+	if (defined($json))
+	{
+		my $schema = {
+			'value'		=> JSON_VALUE_OBJECT,
+			'members'	=> {
+				JSON_KEY_VERSION,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'exact'		=> '1'
+					}
+				},
+				JSON_KEY_LAST_UPDATE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				},
+				JSON_KEY_ALARMED,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_STRING,
+						'pattern'	=> qr/^(Yes|No|Disabled)$/
+					}
+				}
+			}
+		};
+
+		validate_json_value($json, $schema, "");
+	}
+
+	info("\"$file\" validated");
+}
+
+sub validate_incident_state_file($)
+{
+	my $file = shift;
+
+	info("validating \"$file\"");
+
+	my $json = read_json_file($file);
+
+	if (defined($json))
+	{
+		my $schema = {
+			# TODO
+		};
+
+		validate_json_value($json, $schema, "");
+	}
+
+	info("\"$file\" validated");
+}
+
+sub validate_false_positive_file($)
+{
+	my $file = shift;
+
+	info("validating \"$file\"");
+
+	my $json = read_json_file($file);
+
+	if (defined($json))
+	{
+		my $schema = {
+			# TODO
+		};
+
+		validate_json_value($json, $schema, "");
+	}
+
+	info("\"$file\" validated");
+}
+
+sub validate_measurement_file($)
+{
+	my $file = shift;
+
+	info("validating \"$file\"");
+
+	my $json = read_json_file($file);
+
+	if (defined($json))
+	{
+		my $schema = {
+			# TODO
+		};
+
+		validate_json_value($json, $schema, "");
 	}
 
 	info("\"$file\" validated");
@@ -195,7 +495,7 @@ sub validate_all($$)
 		info("\"$real_thing\" checked");
 	}
 
-	#check that all expected mandatory things are present
+	# check that all expected mandatory things are present
 	foreach my $expected_thing (@{$expected_things})
 	{
 		if (exists($expected_thing->{'mandatory'}))
@@ -271,7 +571,7 @@ sub validate_one($$)
 
 # validating generated files
 
-my $expected_things = [
+my $expected_in_base_path = [
 	{
 		# last_update.txt
 		'name'		=> 'last_update.txt',
@@ -293,7 +593,7 @@ my $expected_things = [
 				# state
 				'name'		=> 'state',
 				'mandatory'	=> 1,
-				'validator'	=> \&validate_state_file
+				'validator'	=> \&validate_tld_state_file
 			},
 			{
 				# <service>
@@ -304,7 +604,7 @@ my $expected_things = [
 						# alarmed
 						'name'		=> 'alarmed',
 						'mandatory'	=> 1,
-						'validator'	=> undef
+						'validator'	=> \&validate_alarmed_file
 					},
 					{
 						# downtime
@@ -326,19 +626,19 @@ my $expected_things = [
 										# state
 										'name'		=> 'state',
 										'mandatory'	=> 1,
-										'validator'	=> undef
+										'validator'	=> \&validate_incident_state_file
 									},
 									{
 										# falsePositive
 										'name'		=> 'falsePositive',
 										'mandatory'	=> 1,
-										'validator'	=> undef
+										'validator'	=> \&validate_false_positive_file
 									},
 									{
 										# <measurementID>
 										'pattern'	=> qr/\d+\.\d+\.json/,
 										'mandatory'	=> 1,
-										'validator'	=> undef
+										'validator'	=> \&validate_measurement_file
 									}
 								]
 							}
@@ -350,7 +650,7 @@ my $expected_things = [
 	}
 ];
 
-validate_all($expected_things, path(BASE_PATH));
+validate_all($expected_in_base_path, path(BASE_PATH));
 
 if ($issues_found)
 {
