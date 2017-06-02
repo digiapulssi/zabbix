@@ -480,7 +480,39 @@ sub validate_incident_state_file($)
 	if (defined($json))
 	{
 		my $schema = {
-			# TODO
+			'value'		=> JSON_VALUE_OBJECT,
+			'not null'	=> 1,
+			'members'	=> {
+				JSON_KEY_VERSION,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'exact'		=> '1'
+					}
+				},
+				JSON_KEY_LAST_UPDATE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				},
+				JSON_KEY_INCIDENTS,
+				{
+					'mandatory'	=> 0,
+					'member'	=> {
+						'value'		=> JSON_VALUE_ARRAY,
+						'not null'	=> 1,
+						'element'	=> {
+							# TODO
+						}
+					}
+				}
+			}
 		};
 
 		validate_json_value($json, $schema, "");
@@ -500,7 +532,45 @@ sub validate_false_positive_file($)
 	if (defined($json))
 	{
 		my $schema = {
-			# TODO
+			'value'		=> JSON_VALUE_OBJECT,
+			'not null'	=> 1,
+			'members'	=> {
+				JSON_KEY_VERSION,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'exact'		=> '1'
+					}
+				},
+				JSON_KEY_LAST_UPDATE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				},
+				JSON_KEY_FALSE_POSITIVE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_BOOLEAN,
+						'not null'	=> 1
+					}
+				},
+				JSON_KEY_UPDATE_TIME,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 0,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				}
+			}
 		};
 
 		validate_json_value($json, $schema, "");
