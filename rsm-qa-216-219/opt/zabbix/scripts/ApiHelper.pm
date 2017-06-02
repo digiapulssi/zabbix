@@ -347,8 +347,6 @@ sub ah_save_false_positive
 	my $clock = shift;
 	my $later_ref = shift;	# should we update fasle positiveness later? (incident state file does not exist yet)
 
-	$$later_ref = 0;
-
 	if (!defined($later_ref))
 	{
 		die("internal error: ah_save_false_positive() called without last parameter");

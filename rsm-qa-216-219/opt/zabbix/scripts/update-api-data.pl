@@ -1797,7 +1797,7 @@ sub __update_false_positives
 	my $maxclock = 0;
 
 	# should we update fasle positiveness later? (incident state file does not exist yet)
-	my $later;
+	my $later = 0;
 
 	my $rows_ref = db_select(
 		"select details,max(clock)".
