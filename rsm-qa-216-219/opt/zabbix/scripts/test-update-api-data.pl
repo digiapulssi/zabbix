@@ -502,7 +502,7 @@ sub validate_all($$)
 		{
 			if ($expected_thing->{'mandatory'})
 			{
-				if (exists($real_matches{$expected_things}))
+				if (exists($real_matches{$expected_thing}))
 				{
 					info("mandatory " . (exists($expected_thing->{'name'}) ?
 							"\"$expected_thing->{'name'}\"" : "entry") .
