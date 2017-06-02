@@ -34,11 +34,11 @@ if (!empty($this->data['service'])) {
 $servicesParentTable = (new CTableInfo())
 	->setHeader([_('Service'), _('Status calculation'), _('Trigger')]);
 
-$selected_parent_service = getRequest('parentid', null);
+$parentid = getRequest('parentid', 0);
 $prefix = null;
 
 // root
-if (!$selected_parent_service) {
+if ($parentid == 0) {
 	$description = new CSpan(_('root'));
 }
 else {
@@ -60,7 +60,7 @@ $servicesParentTable->addRow([
 
 // others
 foreach ($this->data['db_pservices'] as $db_service) {
-	if ($selected_parent_service == $db_service['serviceid']) {
+	if (bccomp($parentid, $db_service['serviceid']) == 0) {
 		$description = new CSpan($db_service['name']);
 	}
 	else {
