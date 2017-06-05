@@ -105,7 +105,7 @@ sub info($)
 
 # JSON content validation functions
 
-sub validate_json_value_string_number($$$)
+sub validate_json_value_string_or_number($$$)
 {
 	my $json = shift;
 	my $schema = shift;
@@ -256,7 +256,7 @@ sub validate_json_value($$$)
 		{
 			if ($schema->{'value'} eq JSON_VALUE_STRING || $schema->{'value'} eq JSON_VALUE_NUMBER)
 			{
-				validate_json_value_string_number($json, $schema, $jsonpath);
+				validate_json_value_string_or_number($json, $schema, $jsonpath);
 			}
 			elsif ($schema->{'value'} eq JSON_VALUE_OBJECT)
 			{
@@ -746,7 +746,192 @@ sub validate_measurement_file($)
 	if (defined($json))
 	{
 		my $schema = {
-			# TODO
+			'value'		=> JSON_VALUE_OBJECT,
+			'not null'	=> 1,
+			'members'	=> {
+				JSON_KEY_VERSION,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'exact'		=> '1'
+					}
+				},
+				JSON_KEY_LAST_UPDATE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				},
+				JSON_KEY_TLD,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_STRING,
+						'not null'	=> 1,
+						'pattern'	=> qr/.*/
+					}
+				},
+				JSON_KEY_CYCLE_CALCULATION_TIME,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_NUMBER,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				},
+				JSON_KEY_TESTED_INTERFACE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_ARRAY,
+						'not null'	=> 1,
+						'element'	=> {
+							'value'		=> JSON_VALUE_OBJECT,
+							'not null'	=> 1,
+							'members'	=> {
+								JSON_KEY_INTERFACE,
+								{
+									'mandatory'	=> 1,
+									'member'	=> {
+										'value'		=> JSON_VALUE_STRING,
+										'not null'	=> 1,
+										'pattern'	=> qr/^(DNS|DNSSEC|EPP|RDDS43|RDDS80)$/
+									}
+								},
+								JSON_KEY_STATUS,
+								{
+									'mandatory'	=> 1,
+									'member'	=> {
+										'value'		=> JSON_VALUE_STRING,
+										'not null'	=> 1,
+										'pattern'	=> qr/^(Up|Down)$/
+									}
+								},
+								JSON_KEY_PROBES,
+								{
+									'mandatory'	=> 1,
+									'member'	=> {
+										'value'		=> JSON_VALUE_ARRAY,
+										'not null'	=> 1,
+										'element'	=> {
+											'value'		=> JSON_VALUE_OBJECT,
+											'not null'	=> 1,
+											'members'	=> {
+												JSON_KEY_CITY,
+												{
+													'mandatory'	=> 1,
+													'member'	=> {
+														'value'		=> JSON_VALUE_STRING,
+														'not null'	=> 1,
+														'pattern'	=> qr/.*/
+													}
+												},
+												JSON_KEY_STATUS,
+												{
+													'mandatory'	=> 1,
+													'member'	=> {
+														'value'		=> JSON_VALUE_STRING,
+														'not null'	=> 1,
+														'pattern'	=> qr/^(Up|Down|Nodata)$/
+													}
+												},
+												JSON_KEY_TEST_DATA,
+												{
+													'mandatory'	=> 1,
+													'member'	=> {
+														'value'		=> JSON_VALUE_ARRAY,
+														'not null'	=> 1,
+														'element'	=> {
+															'value'		=> JSON_VALUE_OBJECT,
+															'not null'	=> 1,
+															'members'	=> {
+																JSON_KEY_TARGET,
+																{
+																	'mandatory'	=> 1,
+																	'member'	=> {
+																		'value'		=> JSON_VALUE_STRING,
+																		'not null'	=> 0,
+																		'pattern'	=> qr/.*/
+																	}
+																},
+																JSON_KEY_STATUS,
+																{
+																	'mandatory'	=> 1,
+																	'member'	=> {
+																		'value'		=> JSON_VALUE_STRING,
+																		'not null'	=> 1,
+																		'pattern'	=> qr/^(Up|Down|No result|Offline)$/
+																	}
+																},
+																JSON_KEY_METRICS,
+																{
+																	'mandatory'	=> 1,
+																	'member'	=> {
+																		'value'		=> JSON_VALUE_ARRAY,
+																		'not null'	=> 1,
+																		'element'	=> {
+																			'value'		=> JSON_VALUE_OBJECT,
+																			'not null'	=> 1,
+																			'members'	=> {
+																				JSON_KEY_TEST_TIME,
+																				{
+																					'mandatory'	=> 1,
+																					'member'	=> {
+																						'value'		=> JSON_VALUE_NUMBER,
+																						'not null'	=> 1,
+																						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+																					}
+																				},
+																				JSON_KEY_TARGET_IP,
+																				{
+																					'mandatory'	=> 1,
+																					'member'	=> {
+																						'value'		=> JSON_VALUE_STRING,
+																						'not null'	=> 1,
+																						'pattern'	=> qr/.*/	# TODO add IP validation
+																					}
+																				},
+																				JSON_KEY_RTT,
+																				{
+																					'mandatory'	=> 1,
+																					'member'	=> {
+																						'value'		=> JSON_VALUE_NUMBER,
+																						'not null'	=> 0,
+																						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+																					}
+																				},
+																				JSON_KEY_RESULT,
+																				{
+																					'mandatory'	=> 1,
+																					'member'	=> {
+																						'value'		=> JSON_VALUE_STRING,
+																						'not null'	=> 1,
+																						'pattern'	=> qr/^(ok|(-[1-9][0-9]+,.*))$/	# TODO add error code and error message validation
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		};
 
 		validate_json_value($json, $schema, "");
