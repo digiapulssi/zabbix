@@ -105,32 +105,33 @@ sub info($)
 
 # JSON content validation functions
 
-sub validate_json_value_string_or_number($$$)
+sub validate_json_value_string_or_number($$$$)
 {
 	my $json = shift;
 	my $schema = shift;
 	my $jsonpath = shift;
+	my $file = shift;
 
 	if (exists($schema->{'exact'}))
 	{
 		if ($json eq $schema->{'exact'})
 		{
-			info("\"$jsonpath\" has expected value");
+			info("\"$jsonpath\" has expected value in \"$file\"");
 		}
 		else
 		{
-			fail("\"$jsonpath\" has unexpected value");
+			fail("\"$jsonpath\" has unexpected value in \"$file\"");
 		}
 	}
 	elsif (exists($schema->{'pattern'}))
 	{
 		if ($json =~ $schema->{'pattern'})
 		{
-			info("\"$jsonpath\" matches expected pattern");
+			info("\"$jsonpath\" matches expected pattern in \"$file\"");
 		}
 		else
 		{
-			fail("\"$jsonpath\" has unexpected value");
+			fail("\"$jsonpath\" has unexpected value in \"$file\"");
 		}
 	}
 	elsif (exists($schema->{'rule'}))
@@ -143,17 +144,18 @@ sub validate_json_value_string_or_number($$$)
 	}
 }
 
-sub validate_json_value($$$);
+sub validate_json_value($$$$);
 
-sub validate_json_value_object($$$)
+sub validate_json_value_object($$$$)
 {
 	my $json = shift;
 	my $schema = shift;
 	my $jsonpath = shift;
+	my $file = shift;
 
 	if (ref($json) eq 'HASH')
 	{
-		info("\"$jsonpath\" is a JSON object, as expected");
+		info("\"$jsonpath\" in \"$file\" is a JSON object, as expected");
 
 		if (exists($schema->{'members'}))
 		{
@@ -167,7 +169,7 @@ sub validate_json_value_object($$$)
 					if (exists($members->{$key}->{'member'}))
 					{
 						validate_json_value($json->{$key}, $members->{$key}->{'member'},
-								"$jsonpath.$key");
+								"$jsonpath.$key", $file);
 					}
 					else
 					{
@@ -180,11 +182,11 @@ sub validate_json_value_object($$$)
 					{
 						if ($members->{$key}->{'mandatory'})
 						{
-							fail("mandatory \"$key\" was not found in \"$jsonpath\"");
+							fail("mandatory \"$key\" was not found in \"$jsonpath\" in \"$file\"");
 						}
 						else
 						{
-							info("missing \"$key\" is not mandatory in \"$jsonpath\"")
+							info("missing \"$key\" is not mandatory in \"$jsonpath\" in \"$file\"")
 						}
 					}
 					else
@@ -199,7 +201,7 @@ sub validate_json_value_object($$$)
 			{
 				if (!exists($members->{$key}))
 				{
-					fail("\"$key\" was not expected in \"$jsonpath\"");
+					fail("\"$key\" was not expected in \"$jsonpath\" in \"$file\"");
 				}
 			}
 		}
@@ -210,25 +212,26 @@ sub validate_json_value_object($$$)
 	}
 	else
 	{
-		fail("\"$jsonpath\" is expected to be a JSON object");
+		fail("\"$jsonpath\" is expected to be a JSON object in \"$file\"");
 	}
 }
 
-sub validate_json_value_array($$$)
+sub validate_json_value_array($$$$)
 {
 	my $json = shift;
 	my $schema = shift;
 	my $jsonpath = shift;
+	my $file = shift;
 
 	if (ref($json) eq 'ARRAY')
 	{
-		info("\"$jsonpath\" is a JSON array, as expected");
+		info("\"$jsonpath\" in \"$file\" is a JSON array, as expected");
 
 		if (exists($schema->{'element'}))
 		{
 			for (my $i = 0; $i < scalar(@{$json}); $i++)
 			{
-				validate_json_value($json->[$i], $schema->{'element'}, "$jsonpath\[$i]");
+				validate_json_value($json->[$i], $schema->{'element'}, "$jsonpath\[$i]", $file);
 			}
 		}
 		else
@@ -238,17 +241,18 @@ sub validate_json_value_array($$$)
 	}
 	else
 	{
-		fail("\"$jsonpath\" is expected to be a JSON array");
+		fail("\"$jsonpath\" is expected to be a JSON array in \"$file\"");
 	}
 }
 
-sub validate_json_value($$$)
+sub validate_json_value($$$$)
 {
 	my $json = shift;
 	my $schema = shift;
 	my $jsonpath = shift;
+	my $file = shift;
 
-	info("validating \"$jsonpath\"");
+	info("validating \"$jsonpath\" in \"$file\"");
 
 	if (defined($json))
 	{
@@ -256,25 +260,25 @@ sub validate_json_value($$$)
 		{
 			if ($schema->{'value'} eq JSON_VALUE_STRING || $schema->{'value'} eq JSON_VALUE_NUMBER)
 			{
-				validate_json_value_string_or_number($json, $schema, $jsonpath);
+				validate_json_value_string_or_number($json, $schema, $jsonpath, $file);
 			}
 			elsif ($schema->{'value'} eq JSON_VALUE_OBJECT)
 			{
-				validate_json_value_object($json, $schema, $jsonpath);
+				validate_json_value_object($json, $schema, $jsonpath, $file);
 			}
 			elsif ($schema->{'value'} eq JSON_VALUE_ARRAY)
 			{
-				validate_json_value_array($json, $schema, $jsonpath);
+				validate_json_value_array($json, $schema, $jsonpath, $file);
 			}
 			elsif ($schema->{'value'} eq JSON_VALUE_BOOLEAN)
 			{
 				if (Types::Serialiser::is_bool($json))
 				{
-					info("\"$jsonpath\" is a boolean, as expected");
+					info("\"$jsonpath\" in \"$file\" is a boolean, as expected");
 				}
 				else
 				{
-					fail("\"$jsonpath\" is expected to be a boolean");
+					fail("\"$jsonpath\" is expected to be a boolean in \"$file\"");
 				}
 			}
 		}
@@ -287,11 +291,11 @@ sub validate_json_value($$$)
 	{
 		if ($schema->{'not null'})
 		{
-			fail("\"$jsonpath\" cannot be \"null\"");
+			fail("\"$jsonpath\" cannot be \"null\" in \"$file\"");
 		}
 		else
 		{
-			info("\"$jsonpath\" is \"null\"");
+			info("\"$jsonpath\" is \"null\" in \"$file\"");
 		}
 	}
 	else
@@ -299,7 +303,7 @@ sub validate_json_value($$$)
 		die("missing 'not null' in JSON schema");
 	}
 
-	info("\"$jsonpath\" validated");
+	info("\"$jsonpath\" validated in \"$file\"");
 }
 
 # file validation functions
@@ -472,7 +476,7 @@ sub validate_tld_state_file($)
 			}
 		};
 
-		validate_json_value($json, $schema, "");
+		validate_json_value($json, $schema, "", $file);
 	}
 
 	info("\"$file\" validated");
@@ -522,7 +526,7 @@ sub validate_alarmed_file($)
 			}
 		};
 
-		validate_json_value($json, $schema, "");
+		validate_json_value($json, $schema, "", $file);
 	}
 
 	info("\"$file\" validated");
@@ -572,7 +576,7 @@ sub validate_downtime_file($)
 			}
 		};
 
-		validate_json_value($json, $schema, "");
+		validate_json_value($json, $schema, "", $file);
 	}
 
 	info("\"$file\" validated");
@@ -671,7 +675,7 @@ sub validate_incident_state_file($)
 			}
 		};
 
-		validate_json_value($json, $schema, "");
+		validate_json_value($json, $schema, "", $file);
 	}
 
 	info("\"$file\" validated");
@@ -729,7 +733,7 @@ sub validate_false_positive_file($)
 			}
 		};
 
-		validate_json_value($json, $schema, "");
+		validate_json_value($json, $schema, "", $file);
 	}
 
 	info("\"$file\" validated");
@@ -934,7 +938,7 @@ sub validate_measurement_file($)
 			}
 		};
 
-		validate_json_value($json, $schema, "");
+		validate_json_value($json, $schema, "", $file);
 	}
 
 	info("\"$file\" validated");
