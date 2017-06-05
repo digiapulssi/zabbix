@@ -765,6 +765,35 @@ sub validate_false_positive_file($)
 	info($file, undef, "validation ends");
 }
 
+sub validate_test_result($$$)
+{
+	my $json = shift;
+	my $jsonpath = shift;
+	my $file = shift;
+
+	my %results = (							# meaningless hint
+		'-200, No reply from name server'			=> 'DNS',
+		'-201, Invalid reply from name server'			=> 'DNS',
+		'-204, DNSSEC error'					=> 'DNS',
+		'-206, Keyset is not valid'				=> 'DNS',
+		'-200, No reply from RDDS43 server'			=> 'RDDS',
+		'-201, Syntax error on RDDS43 output'			=> 'RDDS',
+		'-204, No reply from RDDS80 server'			=> 'RDDS',
+		'-205, Cannot resolve the Whois server hostname'	=> 'RDDS',
+		'-207, Invalid HTTP status code'			=> 'RDDS',
+		'ok'							=> 'both'
+	);
+
+	if (exists($results{$json}))
+	{
+		info($file, $jsonpath, "has expected value");
+	}
+	else
+	{
+		fail($file, $jsonpath, "has unexpected value");
+	}
+}
+
 sub validate_measurement_file($)
 {
 	my $file = shift;
@@ -942,7 +971,7 @@ sub validate_measurement_file($)
 																					'member'	=> {
 																						'value'		=> JSON_VALUE_STRING,
 																						'not null'	=> 1,
-																						'pattern'	=> qr/^(ok|(-[1-9][0-9]+,.*))$/	# TODO add error code and error message validation
+																						'rule'		=> \&validate_test_result
 																					}
 																				}
 																			}
