@@ -6,6 +6,7 @@ use Getopt::Long;
 use JSON::XS;
 use Path::Tiny qw(path);
 use Types::Serialiser;
+use Data::Validate::IP qw(is_ipv4 is_ipv6);
 
 # directory where files are generated
 
@@ -765,6 +766,26 @@ sub validate_false_positive_file($)
 	info($file, undef, "validation ends");
 }
 
+sub validate_ip($$$)
+{
+	my $json = shift;
+	my $jsonpath = shift;
+	my $file = shift;
+
+	if (is_ipv4($json))
+	{
+		info($file, $jsonpath, "is a valid IPv4 address");
+	}
+	elsif (is_ipv6($json))
+	{
+		info($file, $jsonpath, "is a valid IPv6 address");
+	}
+	else
+	{
+		fail($file, $jsonpath, "invalid IP address");
+	}
+}
+
 sub validate_test_result($$$)
 {
 	my $json = shift;
@@ -953,7 +974,7 @@ sub validate_measurement_file($)
 																					'member'	=> {
 																						'value'		=> JSON_VALUE_STRING,
 																						'not null'	=> 1,
-																						'pattern'	=> qr/.*/	# TODO add IP validation
+																						'rule'		=> \&validate_ip
 																					}
 																				},
 																				JSON_KEY_RTT,
