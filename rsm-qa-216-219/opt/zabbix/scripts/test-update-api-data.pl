@@ -76,30 +76,56 @@ if ($help)
 
 # helper function to report issues
 
-sub fail($)
+sub fail($$$)
 {
+	my $treepath = shift;
+	my $jsonpath = shift;
 	my $message = shift;
 
 	if ($fail_immediately)
 	{
-		die("FAIL: $message");
+		if (defined($jsonpath))
+		{
+			die("FAIL: \"$treepath\": \"$jsonpath\": $message");
+		}
+		else
+		{
+			die("FAIL: \"$treepath\": $message");
+		}
 	}
 	else
 	{
-		print("FAIL: $message\n");
+		if (defined($jsonpath))
+		{
+			print("FAIL: \"$treepath\": \"$jsonpath\": $message\n");
+		}
+		else
+		{
+			print("FAIL: \"$treepath\": $message\n");
+		}
+
 		$issues_found++;
 	}
 }
 
 # helper function to report progress
 
-sub info($)
+sub info($$$)
 {
+	my $treepath = shift;
+	my $jsonpath = shift;
 	my $message = shift;
 
 	if ($debug_logging)
 	{
-		print("INFO: $message\n");
+		if (defined($jsonpath))
+		{
+			print("INFO: \"$treepath\": \"$jsonpath\": $message\n");
+		}
+		else
+		{
+			print("INFO: \"$treepath\": $message\n");
+		}
 	}
 }
 
@@ -116,27 +142,27 @@ sub validate_json_value_string_or_number($$$$)
 	{
 		if ($json eq $schema->{'exact'})
 		{
-			info("\"$jsonpath\" has expected value in \"$file\"");
+			info($file, $jsonpath, "has expected value");
 		}
 		else
 		{
-			fail("\"$jsonpath\" has unexpected value in \"$file\"");
+			fail($file, $jsonpath, "has unexpected value");
 		}
 	}
 	elsif (exists($schema->{'pattern'}))
 	{
 		if ($json =~ $schema->{'pattern'})
 		{
-			info("\"$jsonpath\" matches expected pattern in \"$file\"");
+			info($file, $jsonpath, "matches expected pattern");
 		}
 		else
 		{
-			fail("\"$jsonpath\" has unexpected value in \"$file\"");
+			fail($file, $jsonpath, "has unexpected value");
 		}
 	}
 	elsif (exists($schema->{'rule'}))
 	{
-		&{$schema->{'rule'}}($json, $jsonpath);
+		&{$schema->{'rule'}}($json, $jsonpath, $file);
 	}
 	else
 	{
@@ -155,7 +181,7 @@ sub validate_json_value_object($$$$)
 
 	if (ref($json) eq 'HASH')
 	{
-		info("\"$jsonpath\" in \"$file\" is a JSON object, as expected");
+		info($file, $jsonpath, "is a JSON object, as expected");
 
 		if (exists($schema->{'members'}))
 		{
@@ -182,11 +208,11 @@ sub validate_json_value_object($$$$)
 					{
 						if ($members->{$key}->{'mandatory'})
 						{
-							fail("mandatory \"$key\" was not found in \"$jsonpath\" in \"$file\"");
+							fail($file, "$jsonpath.$key", "mandatory field not found");
 						}
 						else
 						{
-							info("missing \"$key\" is not mandatory in \"$jsonpath\" in \"$file\"")
+							info($file, "$jsonpath.$key", "is missing but not mandatory")
 						}
 					}
 					else
@@ -201,7 +227,7 @@ sub validate_json_value_object($$$$)
 			{
 				if (!exists($members->{$key}))
 				{
-					fail("\"$key\" was not expected in \"$jsonpath\" in \"$file\"");
+					fail($file, "$jsonpath.$key", "unexpected field");
 				}
 			}
 		}
@@ -212,7 +238,7 @@ sub validate_json_value_object($$$$)
 	}
 	else
 	{
-		fail("\"$jsonpath\" is expected to be a JSON object in \"$file\"");
+		fail($file, $jsonpath, "is expected to be a JSON object");
 	}
 }
 
@@ -225,7 +251,7 @@ sub validate_json_value_array($$$$)
 
 	if (ref($json) eq 'ARRAY')
 	{
-		info("\"$jsonpath\" in \"$file\" is a JSON array, as expected");
+		info($file, $jsonpath, "is a JSON array, as expected");
 
 		if (exists($schema->{'element'}))
 		{
@@ -241,7 +267,7 @@ sub validate_json_value_array($$$$)
 	}
 	else
 	{
-		fail("\"$jsonpath\" is expected to be a JSON array in \"$file\"");
+		fail($file, $jsonpath, "is expected to be a JSON array");
 	}
 }
 
@@ -252,7 +278,7 @@ sub validate_json_value($$$$)
 	my $jsonpath = shift;
 	my $file = shift;
 
-	info("validating \"$jsonpath\" in \"$file\"");
+	info($file, $jsonpath, "validation begins");
 
 	if (defined($json))
 	{
@@ -274,11 +300,11 @@ sub validate_json_value($$$$)
 			{
 				if (Types::Serialiser::is_bool($json))
 				{
-					info("\"$jsonpath\" in \"$file\" is a boolean, as expected");
+					info($file, $jsonpath, "is a boolean, as expected");
 				}
 				else
 				{
-					fail("\"$jsonpath\" is expected to be a boolean in \"$file\"");
+					fail($file, $jsonpath, "is expected to be a boolean");
 				}
 			}
 		}
@@ -291,11 +317,11 @@ sub validate_json_value($$$$)
 	{
 		if ($schema->{'not null'})
 		{
-			fail("\"$jsonpath\" cannot be \"null\" in \"$file\"");
+			fail($file, $jsonpath, "cannot be \"null\"");
 		}
 		else
 		{
-			info("\"$jsonpath\" is \"null\" in \"$file\"");
+			info($file, $jsonpath, "is \"null\"");
 		}
 	}
 	else
@@ -303,7 +329,7 @@ sub validate_json_value($$$$)
 		die("missing 'not null' in JSON schema");
 	}
 
-	info("\"$jsonpath\" validated in \"$file\"");
+	info($file, $jsonpath, "validation ends");
 }
 
 # file validation functions
@@ -318,7 +344,7 @@ sub read_json_file($)
 
 	if ($@)
 	{
-		fail("error reading JSON from \"$file\": $@");
+		fail($file, undef, "error reading JSON: $@");
 	}
 
 	return $json;
@@ -328,7 +354,7 @@ sub validate_tld_state_file($)
 {
 	my $file = shift;
 
-	info("validating \"$file\"");
+	info($file, undef, "validation begins");
 
 	my $json = read_json_file($file);
 
@@ -479,14 +505,14 @@ sub validate_tld_state_file($)
 		validate_json_value($json, $schema, "", $file);
 	}
 
-	info("\"$file\" validated");
+	info($file, undef, "validation ends");
 }
 
 sub validate_alarmed_file($)
 {
 	my $file = shift;
 
-	info("validating \"$file\"");
+	info($file, undef, "validation begins");
 
 	my $json = read_json_file($file);
 
@@ -529,14 +555,14 @@ sub validate_alarmed_file($)
 		validate_json_value($json, $schema, "", $file);
 	}
 
-	info("\"$file\" validated");
+	info($file, undef, "validation ends");
 }
 
 sub validate_downtime_file($)
 {
 	my $file = shift;
 
-	info("validating \"$file\"");
+	info($file, undef, "validation begins");
 
 	my $json = read_json_file($file);
 
@@ -579,14 +605,14 @@ sub validate_downtime_file($)
 		validate_json_value($json, $schema, "", $file);
 	}
 
-	info("\"$file\" validated");
+	info($file, undef, "validation ends");
 }
 
 sub validate_incident_state_file($)
 {
 	my $file = shift;
 
-	info("validating \"$file\"");
+	info($file, undef, "validation begins");
 
 	my $json = read_json_file($file);
 
@@ -678,14 +704,14 @@ sub validate_incident_state_file($)
 		validate_json_value($json, $schema, "", $file);
 	}
 
-	info("\"$file\" validated");
+	info($file, undef, "validation ends");
 }
 
 sub validate_false_positive_file($)
 {
 	my $file = shift;
 
-	info("validating \"$file\"");
+	info($file, undef, "validation begins");
 
 	my $json = read_json_file($file);
 
@@ -736,14 +762,14 @@ sub validate_false_positive_file($)
 		validate_json_value($json, $schema, "", $file);
 	}
 
-	info("\"$file\" validated");
+	info($file, undef, "validation ends");
 }
 
 sub validate_measurement_file($)
 {
 	my $file = shift;
 
-	info("validating \"$file\"");
+	info($file, undef, "validation begins");
 
 	my $json = read_json_file($file);
 
@@ -941,7 +967,7 @@ sub validate_measurement_file($)
 		validate_json_value($json, $schema, "", $file);
 	}
 
-	info("\"$file\" validated");
+	info($file, undef, "validation ends");
 }
 
 # tree validation functions
@@ -954,14 +980,14 @@ sub validate_all($$)
 	my $path = shift;
 	my %real_matches = ();
 
-	info("checking \"$path\"");
+	info($path, undef, "check begins");
 
 	# check that all real things are expected
 	foreach my $real_thing ($path->children)
 	{
 		my $expected_match;
 
-		info("checking \"$real_thing\"");
+		info($real_thing, undef, "check begins");
 
 		# find out which one of expected things corresponds to the given real thing
 		foreach my $expected_thing (@{$expected_things})
@@ -990,7 +1016,7 @@ sub validate_all($$)
 
 		if (defined($expected_match))
 		{
-			info("\"$real_thing\" was expected, match found");
+			info($real_thing, undef, "was expected, match found");
 
 			if (exists($expected_match->{'mandatory'}))
 			{
@@ -1008,10 +1034,10 @@ sub validate_all($$)
 		}
 		else
 		{
-			fail("\"$real_thing\" was not expected");
+			fail($real_thing, undef, "was not expected");
 		}
 
-		info("\"$real_thing\" checked");
+		info($real_thing, undef, "check ends");
 	}
 
 	# check that all expected mandatory things are present
@@ -1023,15 +1049,13 @@ sub validate_all($$)
 			{
 				if (exists($real_matches{$expected_thing}))
 				{
-					info("mandatory " . (exists($expected_thing->{'name'}) ?
-							"\"$expected_thing->{'name'}\"" : "entry") .
-							" was found in \"$path\"");
+					info($path, undef, "mandatory " . (exists($expected_thing->{'name'}) ?
+							"\"$expected_thing->{'name'}\"" : "entry") . " was found");
 				}
 				else
 				{
-					fail("mandatory " . (exists($expected_thing->{'name'}) ?
-							"\"$expected_thing->{'name'}\"" : "entry") .
-							" was not found in \"$path\"");
+					fail($path, undef, "mandatory " . (exists($expected_thing->{'name'}) ?
+							"\"$expected_thing->{'name'}\"" : "entry") . " was not found");
 				}
 			}
 		}
@@ -1041,7 +1065,7 @@ sub validate_all($$)
 		}
 	}
 
-	info("\"$path\" checked");
+	info($path, undef, "check ends");
 }
 
 sub validate_one($$)
@@ -1053,7 +1077,7 @@ sub validate_one($$)
 	{
 		if ($real_thing->is_file)
 		{
-			info("\"$real_thing\" is a file, as expected");
+			info($real_thing, undef, "is a file, as expected");
 
 			if (defined($expected_thing->{'validator'}))
 			{
@@ -1061,25 +1085,25 @@ sub validate_one($$)
 			}
 			else
 			{
-				info("validator subroutine for \"$real_thing\" is not available");
+				info($real_thing, undef, "validator subroutine is not available");
 			}
 		}
 		else
 		{
-			fail("expected \"$real_thing\" to be a file");
+			fail($real_thing, undef, "expected to be a file");
 		}
 	}
 	elsif (exists($expected_thing->{'contents'}))
 	{
 		if ($real_thing->is_dir)
 		{
-			info("\"$real_thing\" is a directory, as expected");
+			info($real_thing, undef, "is a directory, as expected");
 
 			validate_all($expected_thing->{'contents'}, $real_thing);
 		}
 		else
 		{
-			fail("expected \"$real_thing\" to be a directory");
+			fail($real_thing, undef, "expected to be a directory");
 		}
 	}
 	else
@@ -1176,4 +1200,4 @@ if ($issues_found)
 	die("issues found: $issues_found");
 }
 
-info("no issues found");
+info(BASE_PATH, undef, "no issues found");
