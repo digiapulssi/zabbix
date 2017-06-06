@@ -22,10 +22,10 @@
 #include "memalloc.h"
 #include "ipc.h"
 #include "dbcache.h"
-
 #include "vectorimpl.h"
 
 #include "valuecache.h"
+#include "history.h"
 
 /*
  * The cache (zbx_vc_cache_t) is organized as a hashset of item records (zbx_vc_item_t).
@@ -236,6 +236,9 @@ ZBX_VECTOR_IMPL(vc_itemweight, zbx_vc_item_weight_t);
 /* the value cache */
 static zbx_vc_cache_t	*vc_cache = NULL;
 
+/* History service URL reference, from history.c */
+extern const char		*HISTORY_SERVICE_URL;
+
 /* function prototypes */
 static void	vc_history_record_copy(zbx_history_record_t *dst, const zbx_history_record_t *src, int value_type);
 static int	vc_history_record_compare_asc_func(const zbx_history_record_t *d1, const zbx_history_record_t *d2);
@@ -358,52 +361,63 @@ static void	vc_try_unlock(void)
 static int	vc_db_read_values_by_time(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
 		int seconds, int end_timestamp, zbx_uint64_t *queries)
 {
-	char			*sql = NULL;
-	size_t	 		sql_alloc = 0, sql_offset = 0;
-	DB_RESULT		result;
-	DB_ROW			row;
-	zbx_vc_history_table_t	*table = &vc_history_tables[value_type];
-	int			ret = FAIL;
-
-	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-			"select clock,ns,%s"
-			" from %s"
-			" where itemid=" ZBX_FS_UI64,
-			table->fields, table->name, itemid);
-
-	if (1 == seconds)
+#ifdef HAVE_LIBCURL
+	if (NULL == HISTORY_SERVICE_URL)
 	{
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock=%d", end_timestamp);
+#endif
+		char			*sql = NULL;
+		size_t	 		sql_alloc = 0, sql_offset = 0;
+		DB_RESULT		result;
+		DB_ROW			row;
+		zbx_vc_history_table_t	*table = &vc_history_tables[value_type];
+		int			ret = FAIL;
+
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+				"select clock,ns,%s"
+				" from %s"
+				" where itemid=" ZBX_FS_UI64,
+				table->fields, table->name, itemid);
+
+		if (1 == seconds)
+		{
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock=%d", end_timestamp);
+		}
+		else
+		{
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock>%d and clock<=%d",
+					end_timestamp - seconds, end_timestamp);
+		}
+
+		(*queries)++;
+		result = DBselect("%s", sql);
+
+		zbx_free(sql);
+
+		if (NULL == result)
+			goto out;
+
+		while (NULL != (row = DBfetch(result)))
+		{
+			zbx_history_record_t	value;
+
+			value.timestamp.sec = atoi(row[0]);
+			value.timestamp.ns = atoi(row[1]);
+			table->rtov(&value.value, row + 2);
+
+			zbx_vector_history_record_append_ptr(values, &value);
+		}
+		DBfree_result(result);
+
+		ret = SUCCEED;
+out:
+		return ret;
+#ifdef HAVE_LIBCURL
 	}
 	else
-	{
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock>%d and clock<=%d",
-				end_timestamp - seconds, end_timestamp);
-	}
+		zbx_history_get_values(itemid, value_type, seconds, -1, end_timestamp, values);
+#endif
 
-	(*queries)++;
-	result = DBselect("%s", sql);
-
-	zbx_free(sql);
-
-	if (NULL == result)
-		goto out;
-
-	while (NULL != (row = DBfetch(result)))
-	{
-		zbx_history_record_t	value;
-
-		value.timestamp.sec = atoi(row[0]);
-		value.timestamp.ns = atoi(row[1]);
-		table->rtov(&value.value, row + 2);
-
-		zbx_vector_history_record_append_ptr(values, &value);
-	}
-	DBfree_result(result);
-
-	ret = SUCCEED;
-out:
-	return ret;
+	return SUCCEED;
 }
 
 /************************************************************************************
@@ -435,84 +449,95 @@ out:
 static int	vc_db_read_values_by_count(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
 		int count, int end_timestamp, zbx_uint64_t *queries)
 {
-	char			*sql = NULL;
-	size_t	 		sql_alloc = 0, sql_offset;
-	int			clock_to, clock_from, step = 0, ret = FAIL;
-	DB_RESULT		result;
-	DB_ROW			row;
-	zbx_vc_history_table_t	*table = &vc_history_tables[value_type];
-	const int		periods[] = {SEC_PER_HOUR, SEC_PER_DAY, SEC_PER_WEEK, SEC_PER_MONTH, 0, -1};
-
-	clock_to = end_timestamp;
-
-	while (-1 != periods[step] && 0 < count)
+#ifdef HAVE_LIBCURL
+	if (NULL == HISTORY_SERVICE_URL)
 	{
-		if (0 > (clock_from = clock_to - periods[step]))
+#endif
+		char			*sql = NULL;
+		size_t	 		sql_alloc = 0, sql_offset;
+		int			clock_to, clock_from, step = 0, ret = FAIL;
+		DB_RESULT		result;
+		DB_ROW			row;
+		zbx_vc_history_table_t	*table = &vc_history_tables[value_type];
+		const int		periods[] = {SEC_PER_HOUR, SEC_PER_DAY, SEC_PER_WEEK, SEC_PER_MONTH, 0, -1};
+
+		clock_to = end_timestamp;
+
+		while (-1 != periods[step] && 0 < count)
 		{
-			clock_from = clock_to;
-			step = 4;
+			if (0 > (clock_from = clock_to - periods[step]))
+			{
+				clock_from = clock_to;
+				step = 4;
+			}
+
+			sql_offset = 0;
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+					"select clock,ns,%s"
+					" from %s"
+					" where itemid=" ZBX_FS_UI64
+						" and clock<=%d",
+					table->fields, table->name, itemid, clock_to);
+
+			if (clock_from != clock_to)
+				zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock>%d", clock_from);
+
+			zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by clock desc");
+
+			(*queries)++;
+			result = DBselectN(sql, count);
+
+			if (NULL == result)
+				goto out;
+
+			while (NULL != (row = DBfetch(result)))
+			{
+				zbx_history_record_t	value;
+
+				value.timestamp.sec = atoi(row[0]);
+				value.timestamp.ns = atoi(row[1]);
+				table->rtov(&value.value, row + 2);
+
+				zbx_vector_history_record_append_ptr(values, &value);
+
+				count--;
+			}
+			DBfree_result(result);
+
+			clock_to -= periods[step];
+			step++;
 		}
 
-		sql_offset = 0;
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-				"select clock,ns,%s"
-				" from %s"
-				" where itemid=" ZBX_FS_UI64
-					" and clock<=%d",
-				table->fields, table->name, itemid, clock_to);
 
-		if (clock_from != clock_to)
-			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock>%d", clock_from);
-
-		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by clock desc");
-
-		(*queries)++;
-		result = DBselectN(sql, count);
-
-		if (NULL == result)
+		if (0 < count)
+		{
+			/* no more data in database, return success */
+			ret = SUCCEED;
 			goto out;
-
-		while (NULL != (row = DBfetch(result)))
-		{
-			zbx_history_record_t	value;
-
-			value.timestamp.sec = atoi(row[0]);
-			value.timestamp.ns = atoi(row[1]);
-			table->rtov(&value.value, row + 2);
-
-			zbx_vector_history_record_append_ptr(values, &value);
-
-			count--;
 		}
-		DBfree_result(result);
 
-		clock_to -= periods[step];
-		step++;
-	}
+		/* drop data from the last second and read the whole second again  */
+		/* to ensure that data is cached by seconds                        */
+		end_timestamp = values->values[values->values_num - 1].timestamp.sec;
 
+		while (0 < values->values_num && values->values[values->values_num - 1].timestamp.sec == end_timestamp)
+		{
+			values->values_num--;
+			zbx_history_record_clear(&values->values[values->values_num], value_type);
+		}
 
-	if (0 < count)
-	{
-		/* no more data in database, return success */
-		ret = SUCCEED;
-		goto out;
-	}
-
-	/* drop data from the last second and read the whole second again  */
-	/* to ensure that data is cached by seconds                        */
-	end_timestamp = values->values[values->values_num - 1].timestamp.sec;
-
-	while (0 < values->values_num && values->values[values->values_num - 1].timestamp.sec == end_timestamp)
-	{
-		values->values_num--;
-		zbx_history_record_clear(&values->values[values->values_num], value_type);
-	}
-
-	ret = vc_db_read_values_by_time(itemid, value_type, values, 1, end_timestamp, queries);
+		ret = vc_db_read_values_by_time(itemid, value_type, values, 1, end_timestamp, queries);
 out:
-	zbx_free(sql);
+		zbx_free(sql);
 
-	return ret;
+		return ret;
+#ifdef HAVE_LIBCURL
+	}
+	else
+		zbx_history_get_values(itemid, value_type, 0, count, end_timestamp, values);
+
+	return SUCCEED;
+#endif
 }
 
 /************************************************************************************
@@ -540,71 +565,85 @@ out:
 static int	vc_db_read_values_by_time_and_count(zbx_uint64_t itemid, int value_type,
 		zbx_vector_history_record_t *values, int seconds, int count, int end_timestamp, zbx_uint64_t *queries)
 {
-	char			*sql = NULL;
-	size_t	 		sql_alloc = 0, sql_offset;
 	int			ret = FAIL;
-	DB_RESULT		result;
-	DB_ROW			row;
-	zbx_vc_history_table_t	*table = &vc_history_tables[value_type];
 
-	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-			"select clock,ns,%s"
-			" from %s"
-			" where itemid=" ZBX_FS_UI64,
-			table->fields, table->name, itemid);
-
-	if (1 == seconds)
+#ifdef HAVE_LIBCURL
+	if (NULL == HISTORY_SERVICE_URL)
 	{
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock=%d", end_timestamp);
+#endif
+		char			*sql = NULL;
+		size_t	 		sql_alloc = 0, sql_offset;
+		DB_RESULT		result;
+		DB_ROW			row;
+		zbx_vc_history_table_t	*table = &vc_history_tables[value_type];
+
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+				"select clock,ns,%s"
+				" from %s"
+				" where itemid=" ZBX_FS_UI64,
+				table->fields, table->name, itemid);
+
+		if (1 == seconds)
+		{
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock=%d", end_timestamp);
+		}
+		else
+		{
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock>%d and clock<=%d order by clock desc",
+					end_timestamp - seconds, end_timestamp);
+		}
+
+		(*queries)++;
+		result = DBselectN(sql, count);
+
+		zbx_free(sql);
+
+		if (NULL == result)
+			goto out;
+
+		while (NULL != (row = DBfetch(result)) && 0 < count--)
+		{
+			zbx_history_record_t	value;
+
+			value.timestamp.sec = atoi(row[0]);
+			value.timestamp.ns = atoi(row[1]);
+			table->rtov(&value.value, row + 2);
+
+			zbx_vector_history_record_append_ptr(values, &value);
+		}
+		DBfree_result(result);
+
+		if (0 < count)
+		{
+			/* no more data in the specified time period, return success */
+			ret = SUCCEED;
+			goto out;
+		}
+
+		/* Drop data from the last second and read the whole second again     */
+		/* to ensure that data is cached by seconds.                          */
+		/* Because the initial select has limit option (DBselectN()) we have  */
+		/* to perform another select to read the last second data.            */
+		end_timestamp = values->values[values->values_num - 1].timestamp.sec;
+
+		while (0 < values->values_num && values->values[values->values_num - 1].timestamp.sec == end_timestamp)
+		{
+			values->values_num--;
+			zbx_history_record_clear(&values->values[values->values_num], value_type);
+		}
+
+		ret = vc_db_read_values_by_time(itemid, value_type, values, 1, end_timestamp, queries);
+out:
+		zbx_free(sql);
+#ifdef HAVE_LIBCURL
 	}
 	else
 	{
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and clock>%d and clock<=%d order by clock desc",
-				end_timestamp - seconds, end_timestamp);
+		zbx_history_get_values(itemid, value_type, seconds, count, end_timestamp, values);
+
+		return SUCCEED;
 	}
-
-	(*queries)++;
-	result = DBselectN(sql, count);
-
-	zbx_free(sql);
-
-	if (NULL == result)
-		goto out;
-
-	while (NULL != (row = DBfetch(result)) && 0 < count--)
-	{
-		zbx_history_record_t	value;
-
-		value.timestamp.sec = atoi(row[0]);
-		value.timestamp.ns = atoi(row[1]);
-		table->rtov(&value.value, row + 2);
-
-		zbx_vector_history_record_append_ptr(values, &value);
-	}
-	DBfree_result(result);
-
-	if (0 < count)
-	{
-		/* no more data in the specified time period, return success */
-		ret = SUCCEED;
-		goto out;
-	}
-
-	/* Drop data from the last second and read the whole second again     */
-	/* to ensure that data is cached by seconds.                          */
-	/* Because the initial select has limit option (DBselectN()) we have  */
-	/* to perform another select to read the last second data.            */
-	end_timestamp = values->values[values->values_num - 1].timestamp.sec;
-
-	while (0 < values->values_num && values->values[values->values_num - 1].timestamp.sec == end_timestamp)
-	{
-		values->values_num--;
-		zbx_history_record_clear(&values->values[values->values_num], value_type);
-	}
-
-	ret = vc_db_read_values_by_time(itemid, value_type, values, 1, end_timestamp, queries);
-out:
-	zbx_free(sql);
+#endif
 
 	return ret;
 }
@@ -629,37 +668,48 @@ out:
 static int	vc_db_read_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *ts,
 		zbx_history_record_t *value, zbx_uint64_t *queries)
 {
-	int				ret = FAIL, i;
-	zbx_vector_history_record_t	values;
+	int		ret = FAIL;
 
-	zbx_history_record_vector_create(&values);
-
-	/* first try to find value in the requested second */
-	vc_db_read_values_by_time(itemid, value_type, &values, 1, ts->sec, queries);
-	zbx_vector_history_record_sort(&values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
-
-	if (0 == values.values_num || 0 > zbx_timespec_compare(ts, &values.values[values.values_num - 1].timestamp))
+#ifdef HAVE_LIBCURL
+	if (NULL == HISTORY_SERVICE_URL)
 	{
-		/* if the requested second does not contain matching values, */
-		/* get the first older value outside the requested second    */
-		vc_history_record_vector_clean(&values, value_type);
+#endif
+		int			i;
+		zbx_vector_history_record_t	values;
 
-		vc_db_read_values_by_count(itemid, value_type, &values, 1, ts->sec - 1, queries);
+		zbx_history_record_vector_create(&values);
+
+		/* first try to find value in the requested second */
+		vc_db_read_values_by_time(itemid, value_type, &values, 1, ts->sec, queries);
 		zbx_vector_history_record_sort(&values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
-	}
 
-	for (i = 0; i < values.values_num; i++)
-	{
-		if (0 <= zbx_timespec_compare(ts, &values.values[i].timestamp))
+		if (0 == values.values_num || 0 > zbx_timespec_compare(ts, &values.values[values.values_num - 1].timestamp))
 		{
-			vc_history_record_copy(value, &values.values[i], value_type);
-			ret = SUCCEED;
+			/* if the requested second does not contain matching values, */
+			/* get the first older value outside the requested second    */
+			vc_history_record_vector_clean(&values, value_type);
 
-			break;
+			vc_db_read_values_by_count(itemid, value_type, &values, 1, ts->sec - 1, queries);
+			zbx_vector_history_record_sort(&values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
 		}
-	}
 
-	zbx_history_record_vector_destroy(&values, value_type);
+		for (i = 0; i < values.values_num; i++)
+		{
+			if (0 <= zbx_timespec_compare(ts, &values.values[i].timestamp))
+			{
+				vc_history_record_copy(value, &values.values[i], value_type);
+				ret = SUCCEED;
+
+				break;
+			}
+		}
+
+		zbx_history_record_vector_destroy(&values, value_type);
+#ifdef HAVE_LIBCURL
+	}
+	else
+		return zbx_history_get_value(itemid, value_type, ts, value);
+#endif
 
 	return ret;
 }
@@ -2901,6 +2951,72 @@ int	zbx_vc_add_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_vc_add_values                                                *
+ *                                                                            *
+ * Purpose: adds item values to the value cache                               *
+ *                                                                            *
+ * Parameters: history - [IN] item history values                             *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_vc_add_values(zbx_vector_ptr_t *history)
+{
+	zbx_vc_item_t		*item;
+	int 			i;
+	ZBX_DC_HISTORY		*h;
+	const char		*__function_name = "zbx_vc_add_values";
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+#ifdef HAVE_LIBCURL
+	if (NULL != HISTORY_SERVICE_URL)
+	{
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_FLOAT);
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_STR);
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_LOG);
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_UINT64);
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_TEXT);
+	}
+#endif
+
+	if (NULL == vc_cache)
+		return;
+
+	vc_try_lock();
+
+	for (i = 0; i < history->values_num; i++)
+	{
+		h = (ZBX_DC_HISTORY *)history->values[i];
+
+		if (NULL != (item = zbx_hashset_search(&vc_cache->items, &h->itemid)))
+		{
+			zbx_history_record_t	record = {h->ts, h->value};
+
+			if (0 == (item->state & ZBX_ITEM_STATE_REMOVE_PENDING))
+			{
+				vc_item_addref(item);
+
+				/* If the new value type does not match the item's type in cache we can't  */
+				/* change the cache because other processes might still be accessing it    */
+				/* at the same time. The only thing that can be done - mark it for removal */
+				/* so it could be added later with new type.                               */
+				/* Also mark it for removal if the value adding failed. In this case we    */
+				/* won't have the latest data in cache - so the requests must go directly  */
+				/* to the database.                                                        */
+				if (item->value_type != h->value_type || FAIL == vch_item_add_value_at_head(item, &record))
+					item->state |= ZBX_ITEM_STATE_REMOVE_PENDING;
+
+				vc_item_release(item);
+			}
+		}
+	}
+
+	vc_try_unlock();
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_vc_get_value_range                                           *
  *                                                                            *
  * Purpose: get item history data for the specified time period               *
@@ -2961,6 +3077,7 @@ int	zbx_vc_get_value_range(zbx_uint64_t itemid, int value_type, zbx_vector_histo
 		goto out;
 
 	ret = vch_item_get_value_range(item, values, seconds, count, timestamp);
+
 out:
 	if (FAIL == ret)
 	{

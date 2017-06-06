@@ -63,6 +63,7 @@
 #include "setproctitle.h"
 #include "../libs/zbxcrypto/tls.h"
 #include "zbxipcservice.h"
+#include "history.h"
 
 #ifdef ZBX_CUNIT
 #include "../libs/zbxcunit/zbxcunit.h"
@@ -256,6 +257,7 @@ char	*CONFIG_TLS_PSK_FILE		= NULL;
 #endif
 
 char	*CONFIG_SOCKET_PATH		= NULL;
+char	*CONFIG_HISTORY_SERVICE_URL	= NULL;
 
 int	get_process_info_by_thread(int local_server_num, unsigned char *local_process_type, int *local_process_num);
 
@@ -670,6 +672,8 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 		{"SocketDir",			&CONFIG_SOCKET_PATH,			TYPE_STRING,
 			PARM_OPT,	0,			0},
+		{"HistoryServiceURL",		&CONFIG_HISTORY_SERVICE_URL,		TYPE_STRING,
+			PARM_OPT,	0,			0},
 		{NULL}
 	};
 
@@ -686,6 +690,8 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_validate_config();
 #endif
+
+	zbx_set_history_service_url(CONFIG_HISTORY_SERVICE_URL);
 }
 
 /******************************************************************************
@@ -881,6 +887,12 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 #else
 #	define TLS_FEATURE_STATUS	" NO"
 #endif
+
+	if (0 == strcmp(LIBCURL_FEATURE_STATUS, " NO") && NULL != CONFIG_HISTORY_SERVICE_URL)
+	{
+		zbx_error("LibCURL support is needed for using the history service");
+		exit(EXIT_FAILURE);
+	}
 
 	zabbix_log(LOG_LEVEL_INFORMATION, "Starting Zabbix Server. Zabbix %s (revision %s).",
 			ZABBIX_VERSION, ZABBIX_REVISION);

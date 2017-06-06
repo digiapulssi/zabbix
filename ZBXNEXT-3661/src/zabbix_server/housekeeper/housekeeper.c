@@ -31,6 +31,8 @@
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 
+extern char	*CONFIG_HISTORY_SERVICE_URL;
+
 static int	hk_period;
 
 #define HK_INITIAL_DELETE_QUEUE_SIZE	4096
@@ -909,9 +911,13 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 
 		zbx_config_get(&cfg, ZBX_CONFIG_FLAGS_HOUSEKEEPER);
 
-		zbx_setproctitle("%s [removing old history and trends]", get_process_type_string(process_type));
-		sec = zbx_time();
-		d_history_and_trends = housekeeping_history_and_trends(now);
+		if (NULL == CONFIG_HISTORY_SERVICE_URL)
+		{
+			zbx_setproctitle("%s [removing old history and trends]",
+					get_process_type_string(process_type));
+			sec = zbx_time();
+			d_history_and_trends = housekeeping_history_and_trends(now);
+		}
 
 		zbx_setproctitle("%s [removing deleted items data]", get_process_type_string(process_type));
 		d_cleanup = housekeeping_cleanup();
@@ -933,10 +939,21 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 
 		sec = zbx_time() - sec;
 
-		zabbix_log(LOG_LEVEL_WARNING, "%s [deleted %d hist/trends, %d items, %d events, %d problems,"
-				" %d sessions, %d alarms, %d audit items in " ZBX_FS_DBL " sec, %s]",
-				get_process_type_string(process_type), d_history_and_trends, d_cleanup, d_events,
-				d_problems, d_sessions, d_services, d_audit, sec, sleeptext);
+		if (NULL == CONFIG_HISTORY_SERVICE_URL)
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s [deleted %d hist/trends, %d items, %d events, %d problems,"
+					" %d sessions, %d alarms, %d audit items in " ZBX_FS_DBL " sec, %s]",
+					get_process_type_string(process_type), d_history_and_trends,
+					d_cleanup, d_events, d_problems, d_sessions, d_services, d_audit, sec,
+					sleeptext);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s [deleted %d items, %d events, %d problems,"
+					" %d sessions, %d alarms, %d audit items in " ZBX_FS_DBL " sec, %s]",
+					get_process_type_string(process_type), d_cleanup, d_events,
+					d_problems, d_sessions, d_services, d_audit, sec, sleeptext);
+		}
 
 		zbx_config_clean(&cfg);
 
