@@ -9526,24 +9526,6 @@ int	DCget_hosts_availability(zbx_vector_ptr_t *hosts, int *ts)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_action_eval_free                                             *
- *                                                                            *
- * Purpose: frees action evaluation data structure                            *
- *                                                                            *
- * Parameters: action - [IN] the action evaluation to free                    *
- *                                                                            *
- ******************************************************************************/
-void	zbx_action_eval_free(zbx_action_eval_t *action)
-{
-	zbx_free(action->formula);
-
-	zbx_vector_ptr_destroy(&action->conditions);
-
-	zbx_free(action);
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: dc_action_copy_conditions                                        *
  *                                                                            *
  * Purpose: copies configuration cache action conditions to the specified     *

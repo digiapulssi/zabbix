@@ -3345,6 +3345,24 @@ static void	conditions_eval_clean(zbx_hashset_t *uniq_conditions)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_action_eval_free                                             *
+ *                                                                            *
+ * Purpose: frees action evaluation data structure                            *
+ *                                                                            *
+ * Parameters: action - [IN] the action evaluation to free                    *
+ *                                                                            *
+ ******************************************************************************/
+static void	zbx_action_eval_free(zbx_action_eval_t *action)
+{
+	zbx_free(action->formula);
+
+	zbx_vector_ptr_destroy(&action->conditions);
+
+	zbx_free(action);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: prepare_actions_conditions_eval                                  *
  *                                                                            *
  * Purpose: make actions to point, to conditions from hashset, where all      *
