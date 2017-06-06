@@ -2426,7 +2426,7 @@ static int	check_intern_host_group_condition(zbx_vector_ptr_t *esc_events, DB_CO
 
 /******************************************************************************
  *                                                                            *
- * Function: check_template_id_sql_alloc                                      *
+ * Function: check_template_id_item_sql_alloc                                 *
  *                                                                            *
  * Purpose: allocate sql query for template id condition                      *
  *                                                                            *
@@ -2443,7 +2443,7 @@ static void	check_template_id_item_sql_alloc(char **sql, size_t *sql_alloc, zbx_
 
 	zbx_vector_uint64_sort(objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
-	/* multiple hosts can share trigger from same template, don't allocate duplicate ids */
+	/* multiple hosts can share item from same template, don't allocate duplicate ids */
 	zbx_vector_uint64_uniq(objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	zbx_snprintf_alloc(sql, sql_alloc, &sql_offset,
