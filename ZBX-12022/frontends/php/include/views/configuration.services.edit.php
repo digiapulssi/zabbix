@@ -124,7 +124,8 @@ $servicesDependenciesFormList->addRow(
 	(new CDiv([
 		$servicesChildTable,
 		(new CButton('add_child_service', _('Add')))
-			->onClick("javascript: openWinCentered('services.php?cservices=1".url_param('serviceid')."', 'ZBX_Services_List', null, null, 'scrollbars=1, toolbar=0, menubar=0, resizable=0');")
+			->onClick("javascript: openWinCentered('services.php?cservices=1".url_param('serviceid')."', ".
+					"'ZBX_Services_List', null, null, 'scrollbars=1, toolbar=0, menubar=0, resizable=0');")
 			->addClass(ZBX_STYLE_BTN_LINK)
 	]))
 		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
@@ -262,20 +263,21 @@ else {
 		$weekToComboBox->addItem($dow, getDayOfWeekCaption($dow));
 	}
 	$timeFromHourTextBox = (new CTextBox('new_service_time[from_hour]', isset($_REQUEST['new_service_time']['from_hour'])
-			? $_REQUEST['new_service_time']['from_hour'] : '', false, 2))
-		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
+			? $_REQUEST['new_service_time']['from_hour'] : '', false, 2
+		))->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('hh'));
-	$timeFromMinuteTextBox = (new CTextBox('new_service_time[from_minute]', isset($_REQUEST['new_service_time']['from_minute'])
-			? $_REQUEST['new_service_time']['from_minute'] : '', false, 2))
-		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
+	$timeFromMinuteTextBox = (new CTextBox('new_service_time[from_minute]',
+			isset($_REQUEST['new_service_time']['from_minute']) ? $_REQUEST['new_service_time']['from_minute'] : '',
+			false, 2
+		))->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('mm'));
 	$timeToHourTextBox = (new CTextBox('new_service_time[to_hour]', isset($_REQUEST['new_service_time']['to_hour'])
-			? $_REQUEST['new_service_time']['to_hour'] : '', false, 2))
-		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
+			? $_REQUEST['new_service_time']['to_hour'] : '', false, 2
+		))->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('hh'));
 	$timeToMinuteTextBox = (new CTextBox('new_service_time[to_minute]', isset($_REQUEST['new_service_time']['to_minute'])
-			? $_REQUEST['new_service_time']['to_minute'] : '', false, 2))
-		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
+			? $_REQUEST['new_service_time']['to_minute'] : '', false, 2
+		))->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('mm'));
 
 	$serviceTimeTable->addRow([

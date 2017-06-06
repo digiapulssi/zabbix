@@ -383,7 +383,8 @@ function PopUp(url, width, height, form_name) {
 	var left = (screen.width - (width + 150)) / 2;
 	var top = (screen.height - (height + 150)) / 2;
 
-	var popup = window.open(url, form_name, 'width=' + width + ', height=' + height + ', top=' + top + ', left=' + left + ', resizable=yes, scrollbars=yes, location=no, menubar=no');
+	var popup = window.open(url, form_name, 'width=' + width + ', height=' + height + ', top=' + top + ', left=' + left +
+			', resizable=yes, scrollbars=yes, location=no, menubar=no');
 	popup.focus();
 
 	return false;
