@@ -950,7 +950,7 @@ if (isset($_REQUEST['form']) && str_in_array($_REQUEST['form'], [_('Create item'
 	$itemView->render();
 	$itemView->show();
 }
-elseif (((hasRequest('action') && getRequest('action') == 'item.massupdateform') || hasRequest('massupdate')) && hasRequest('group_itemid')) {
+elseif ((getRequest('action') === 'item.massupdateform' || hasRequest('massupdate')) && hasRequest('group_itemid')) {
 	$data = [
 		'form' => getRequest('form'),
 		'action' => 'item.massupdateform',

@@ -3788,7 +3788,7 @@ out:
 	zbx_dbsync_clear(&action_sync);
 	zbx_dbsync_clear(&action_condition_sync);
 
-	zbx_dbsync_free_env(config);
+	zbx_dbsync_free_env();
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
 		DCdump_configuration(config);
