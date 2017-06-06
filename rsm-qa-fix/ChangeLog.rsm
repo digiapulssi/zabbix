@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc7
 New features:
 
 Bug fixes:
+..F....... [236] added "No reply from resolver" to non-service error exceptions on frontend side (gleb, Oleg)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc6
