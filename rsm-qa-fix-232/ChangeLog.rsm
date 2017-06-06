@@ -1,8 +1,14 @@
-Changes for rsm1.0.0rc6
+Changes for rsm1.0.0rc7
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc6
+
+Bug fixes:
+....I..... [208] fixed SELinux issues on probe nodes (dotneft)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc5
