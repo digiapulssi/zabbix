@@ -269,10 +269,49 @@ static int	DBpatch_3000116(void)
 
 static int	DBpatch_3000117(void)
 {
-	return add_right(109, 110, 130);
+	DB_RESULT	result;
+	DB_ROW		row;
+	int		ret = SUCCEED;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	result = DBselect(
+			"select h.hostid"
+			" from hosts h,applications a"
+			" where h.status in (0,1)"	/* HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED */
+				" and a.hostid=h.hostid"
+				" and a.name='Probe status'");
+
+	if (NULL == result)
+		return FAIL;
+
+	while (NULL != (row = DBfetch(result)) && SUCCEED == ret)
+	{
+		zbx_uint64_t		hostid;
+		zbx_vector_uint64_t	templateids;
+
+		ZBX_STR2UINT64(hostid, row[0]);			/* hostid of probe host */
+		zbx_vector_uint64_create(&templateids);
+		zbx_vector_uint64_reserve(&templateids, 1);
+		zbx_vector_uint64_append(&templateids, 10058);	/* hostid of "Template App Zabbix Proxy" */
+
+		ret = DBcopy_template_elements(hostid, &templateids);
+
+		zbx_vector_uint64_destroy(&templateids);
+	}
+
+	DBfree_result(result);
+
+	return ret;
 }
 
 static int	DBpatch_3000118(void)
+{
+	return add_right(109, 110, 130);
+}
+
+static int	DBpatch_3000119(void)
 {
 	return add_right(119, 110, 110);
 }
@@ -301,7 +340,8 @@ DBPATCH_ADD(3000113, 0, 1)	/* add "otherTLD" hosts to "otherTLD Probe results" h
 DBPATCH_ADD(3000114, 0, 1)	/* add all TLD hosts to "TLD Probe results" host group */
 DBPATCH_ADD(3000115, 0, 0)	/* fixed trigger expression for minimum online IPv4 enabled probe number */
 DBPATCH_ADD(3000116, 0, 0)	/* fixed trigger expression for minimum online IPv6 enabled probe number */
-DBPATCH_ADD(3000117, 0, 0)	/* read permissions on "Probes - Mon" host group for "Technical services users" */
-DBPATCH_ADD(3000118, 0, 0)	/* read permissions on "Mon" host group for "Technical services users" */
+DBPATCH_ADD(3000117, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts */
+DBPATCH_ADD(3000118, 0, 0)	/* read permissions on "Probes - Mon" host group for "Technical services users" */
+DBPATCH_ADD(3000119, 0, 0)	/* read permissions on "Mon" host group for "Technical services users" */
 
 DBPATCH_END()
