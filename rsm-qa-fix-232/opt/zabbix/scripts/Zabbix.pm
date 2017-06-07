@@ -510,9 +510,15 @@ sub __fetch($$$)
 		return $result;
 	}
 
-	$self->set_last_error();
+	unless (is_array($result->{'result'}))
+	{
+		$self->set_last_error("non-array result received when checking " . $class . ":\nREQUEST:\n" .
+				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
 
-	die("Attempt to fetch from non-array result\n") unless (is_array($result->{'result'}));
+		return undef;
+	}
+
+	$self->set_last_error();
 
 	# return direct reference to the only element or reference to the whole array
 	return scalar(@{$result->{'result'}}) == 1 ? $result->{'result'}->[0] : $result->{'result'};
@@ -531,6 +537,14 @@ sub __fetch_bool($$$)
 		return undef;
 	}
 
+	unless (is_array($result->{'result'}))
+	{
+		$self->set_last_error("non-array result received when checking " . $class . ":\nREQUEST:\n" .
+				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
+
+		return undef;
+	}
+
 	if (scalar(@{$result->{'result'}}) > 1)
 	{
 		$self->set_last_error("more than one entry found when checking " . $class . ":\nREQUEST:\n" .
@@ -540,8 +554,6 @@ sub __fetch_bool($$$)
 	}
 
 	$self->set_last_error();
-
-	die("Attempt to fetch from non-array result\n") unless (is_array($result->{'result'}));
 
 	return scalar(@{$result->{'result'}}) == 0 ? false : true;
 }
@@ -559,6 +571,14 @@ sub __fetch_id($$$)
 		return $result;
 	}
 
+	unless (is_array($result->{'result'}))
+	{
+		$self->set_last_error("non-array result received when checking " . $class . ":\nREQUEST:\n" .
+				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
+
+		return undef;
+	}
+
 	if (scalar(@{$result->{'result'}}) > 1)
 	{
 		$self->set_last_error("more than one entry found when checking " . $class . ":\nREQUEST:\n" .
@@ -568,8 +588,6 @@ sub __fetch_id($$$)
 	}
 
 	$self->set_last_error();
-
-	die("Attempt to fetch from non-array result\n") unless (is_array($result->{'result'}));
 
 	return scalar(@{$result->{'result'}}) == 0 ? false : $result->{'result'}->[0]->{$objectids->{$class}};
 }
