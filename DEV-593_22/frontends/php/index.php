@@ -71,7 +71,19 @@ if (isset($_REQUEST['enter']) && $_REQUEST['enter'] == _('Sign in')) {
 		}
 		add_audit_ext(AUDIT_ACTION_LOGIN, AUDIT_RESOURCE_USER, CWebUser::$data['userid'], '', null, null, null);
 
-		$request = get_request('request');
+		$request = get_request('request', '');
+
+		if ($request) {
+			preg_match('/^\/?(?<filename>(?:[a-z0-9\_\.]+)\.php).*$/i', $request, $test_request);
+
+			if (!array_key_exists('filename', $test_request) || !file_exists('./'.$test_request['filename'])) {
+				$request = '';
+			}
+			elseif (array_key_exists('filename', $test_request)) {
+				$request = $test_request['filename'];
+			}
+		}
+
 		$url = zbx_empty($request) ? CWebUser::$data['url'] : $request;
 		if (zbx_empty($url) || $url == $page['file']) {
 			$url = 'dashboard.php';
