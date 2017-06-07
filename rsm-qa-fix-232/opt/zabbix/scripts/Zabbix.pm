@@ -413,6 +413,20 @@ sub macro_global_update
 
 #####################################
 
+sub is_array($)
+{
+	my $ref = shift;
+
+	return ref($ref) eq 'ARRAY';
+}
+
+sub is_hash($)
+{
+	my $ref = shift;
+
+	return ref($ref) eq 'HASH';
+}
+
 sub to_ascii($)
 {
 	my $json = shift;
@@ -463,38 +477,6 @@ sub to_utf8($)
 	}
 
 	return $json;
-}
-
-sub is_array($)
-{
-	my ($ref) = @_;
-
-	return 0 unless ref $ref;
-
-	if ($ref =~ /^ARRAY/)
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-sub is_hash($)
-{
-	my $ref = shift;
-
-	return 0 unless ref $ref;
-
-	if ($ref =~ /^HASH/)
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
 }
 
 sub __execute($$$)
