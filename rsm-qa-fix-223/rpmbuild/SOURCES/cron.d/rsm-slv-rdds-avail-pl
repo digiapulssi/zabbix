@@ -1,0 +1,1 @@
+* * * * * root sleep 0; /opt/zabbix/scripts/slv/rsm.slv.rdds.avail.pl >> /var/log/zabbix/rsm.slv.err 2>&1
