@@ -488,6 +488,7 @@ sub __execute($$$)
 	if (defined($result->{'error'}))
 	{
 		$self->set_last_error($result->{'error'});
+
 		return $result;
 	}
 
@@ -505,6 +506,7 @@ sub __fetch($$$)
 	if (defined($result->{'error'}))
 	{
 		$self->set_last_error($result->{'error'});
+
 		return $result;
 	}
 
@@ -525,13 +527,15 @@ sub __fetch_bool($$$)
 	if (defined($result->{'error'}))
 	{
 		$self->set_last_error($result->{'error'});
-		return;
+
+		return;	# FIXME Always end subroutines with return if they are expected to return a value
 	}
 
 	if (@{$result->{'result'}} > 1)
 	{
 		$self->set_last_error('more than one entry found when checking ' . $class . ':' . "\nREQUEST:\n" .
 				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
+
 		return false;
 	}
 
@@ -551,6 +555,7 @@ sub __fetch_id($$$)
 	if (defined($result->{'error'}))
 	{
 		$self->set_last_error($result->{'error'});
+
 		return $result;
 	}
 
@@ -558,6 +563,7 @@ sub __fetch_id($$$)
 	{
 		$self->set_last_error('more than one entry found when checking ' . $class . ':' . "\nREQUEST:\n" .
 				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
+
 		return false;
 	}
 
