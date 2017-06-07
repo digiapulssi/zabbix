@@ -116,10 +116,10 @@ sub new($$)
 
 		$ua->timeout($REQUEST_TIMEOUT);
 
-		croak "cannot connect to Zabbix: " . $res->status_line unless ($res->is_success);
+		croak("cannot connect to Zabbix: " . $res->status_line) unless ($res->is_success);
 
 		eval {$result = decode_json($res->content)};
-		croak "Zabbix API returned invalid JSON: " . $@ if $@;
+		croak("Zabbix API returned invalid JSON: " . $@) if ($@);
 
 		print("REPLY:\n", Dumper($result), "\n") if ($DEBUG);
 
@@ -129,20 +129,23 @@ sub new($$)
 		}
 	}
 
-	croak "cannot connect to Zabbix: " . $result->{'error'}->{'message'} . ' ' . $result->{'error'}->{'data'}
-			if (defined($result->{'error'}));
+	if (defined($result->{'error'}))
+	{
+		croak("cannot connect to Zabbix: " . $result->{'error'}->{'message'} . ' ' .
+				$result->{'error'}->{'data'});
+	}
 
 	my $auth = $result->{'result'};
 
 	set_authid($auth);
 
-	return bless {
+	return bless({
 		UserAgent	=> $ua,
 		request		=> $req,
 		count		=> 1,
 		auth		=> $auth,
 		error		=> undef,
-	}, $class;
+	}, $class);
 }
 
 sub get_authid()
