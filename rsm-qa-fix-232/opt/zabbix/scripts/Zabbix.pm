@@ -211,10 +211,7 @@ sub set_last_error
 {
 	my ($self, $error) = @_;
 
-	shift->{'error'} = $error if defined $error;
-	return if defined $error;
-
-	shift->{'error'} = undef;
+	shift->{'error'} = $error;
 }
 
 sub api_version
