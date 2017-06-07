@@ -589,10 +589,9 @@ sub __send_request
 	$req->content(to_ascii(encode_json($request)));
 
 	my $res;
-	my $attempts = $REQUEST_ATTEMPTS;
 	my $sleep = 1;
 
-	while ($attempts-- > 0)
+	for (my $attempts_left = $REQUEST_ATTEMPTS; $attempts_left > 0; $attempts_left--)
 	{
 		$res = $self->ua->request($req);
 
