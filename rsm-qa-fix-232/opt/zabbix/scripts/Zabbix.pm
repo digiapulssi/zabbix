@@ -85,7 +85,7 @@ sub new($$)
 
 		bless($self, $class);
 
-		return bless($self, $class) if defined $self->api_version();
+		return bless($self, $class) if (defined $self->api_version());
 	}
 
 	print("no authid in the file, logging in...\n") if ($DEBUG);
@@ -433,7 +433,7 @@ sub to_ascii($)
 	}
 	else
 	{
-		$json = decode_utf8($json) if utf8::valid($json);
+		$json = decode_utf8($json) if (utf8::valid($json));
 	}
 
 	return $json;
