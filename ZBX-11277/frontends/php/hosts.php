@@ -284,20 +284,6 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			}
 		}
 
-		$disabled_inventory = [];
-		if (hasRequest('host_inventory') && !array_key_exists('inventory', $newValues)) {
-			$newValues['inventory'] = getRequest('host_inventory');
-			foreach ($hosts as $index => &$host) {
-				$disabled = (!array_key_exists('inventory_mode', $host['inventory']) || $host['inventory']['inventory_mode'] === HOST_INVENTORY_DISABLED);
-				unset($host['inventory']);
-				if ($disabled) {
-					$disabled_inventory[$index] = $host;
-				}
-			}
-		}
-
-		$hosts = ['hosts' => $hosts];
-
 		if (array_key_exists('encryption', $visible)) {
 			$newValues['tls_connect'] = getRequest('tls_connect', HOST_ENCRYPTION_NONE);
 			$newValues['tls_accept'] = getRequest('tls_accept', HOST_ENCRYPTION_NONE);
@@ -351,14 +337,14 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			}
 
 			if (isset($replaceHostGroupsIds)) {
-				$hosts['groups'] = API::HostGroup()->get([
+				$newValues['groups'] = API::HostGroup()->get([
 					'groupids' => $replaceHostGroupsIds,
 					'editable' => true,
 					'output' => ['groupid']
 				]);
 			}
 			else {
-				$hosts['groups'] = [];
+				$newValues['groups'] = [];
 			}
 		}
 		elseif ($newHostGroupIds) {
@@ -379,24 +365,23 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 				$hostTemplateIds = zbx_objectValues($hostTemplates, 'templateid');
 				$templatesToDelete = array_diff($hostTemplateIds, $templateIds);
 
-				$hosts['templates_clear'] = zbx_toObject($templatesToDelete, 'templateid');
+				$newValues['templates_clear'] = zbx_toObject($templatesToDelete, 'templateid');
 			}
 
-			$hosts['templates'] = $templateIds;
+			$newValues['templates'] = $templateIds;
 		}
 
-		$result = true;
+		foreach ($hosts as &$host) {
+			$inventory_disabled = (!array_key_exists('inventory_mode', $host['inventory'])
+				|| $host['inventory']['inventory_mode'] == HOST_INVENTORY_DISABLED);
+			$host = array_merge($host, $newValues);
 
-		$update_with_inventory = array_diff_key($hosts['hosts'], $disabled_inventory);
-		if ($update_with_inventory) {
-			$result = (bool) API::Host()->massUpdate(array_merge(['hosts' => $with_inventory], $newValues));
+			if ($inventory_disabled) {
+				unset($host['inventory']);
+			}
 		}
-
-		$update_without_inventory = $result ? array_diff_key($hosts['hosts'], $update_with_inventory) : [];
-		if ($update_without_inventory) {
-			unset($newValues['inventory']);
-			$result = (bool) API::Host()->massUpdate(array_merge(['hosts' => $without_inventory], $newValues));
-		}
+		unset($host);
+		$result = (bool) API::Host()->update($hosts);
 
 		if ($result === false) {
 			throw new Exception();
