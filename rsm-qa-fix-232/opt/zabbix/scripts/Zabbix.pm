@@ -601,7 +601,7 @@ sub __send_request
 
 	if ($method ne 'version')
 	{
-		$request->{'auth'} = $self->auth
+		$request->{'auth'} = $self->auth;
 	}
 
 	$req->content(to_ascii(encode_json($request)));
