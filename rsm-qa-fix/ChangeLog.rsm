@@ -4,6 +4,7 @@ New features:
 ....I..... [206] added monitoring of vital parameters of Zabbix proxies (dotneft, gleb)
 
 Bug fixes:
+..F....... [218] fixed "Affects rolling week" column in SLA monitoring tests (Oleg)
 ..F....... [236] added "No reply from resolver" to non-service error exceptions on frontend side (gleb, Oleg)
 
 --------------------------------------------------------------------------------
