@@ -56,7 +56,7 @@ sub new($$)
 
 	$ua->agent("Net::Zabbix");
 
-	my $req = HTTP::Request->new(POST => $options->{'url'}."/api_jsonrpc.php");
+	my $req = HTTP::Request->new(POST => $options->{'url'} . "/api_jsonrpc.php");
 
 	$req->authorization_basic($options->{user}, $options->{password}) if ($options->{auth_basic});
 
@@ -65,7 +65,7 @@ sub new($$)
 	my $domain = $options->{'url'};
 	$domain =~ s,^https*\://(.+)/*$,$1,;
 	$domain =~ s,/,-,g;
-	$AUTH_FILE = '/tmp/'.$domain.'.tmp';
+	$AUTH_FILE = '/tmp/' . $domain . '.tmp';
 
 	print("AUTH_FILE: $AUTH_FILE\n") if ($DEBUG);
 
@@ -176,31 +176,32 @@ sub set_authid($)
 
 sub delete_authid()
 {
-    unlink($AUTH_FILE);
+	unlink($AUTH_FILE);
 }
 
 sub ua
 {
-    return shift->{'UserAgent'};
+	return shift->{'UserAgent'};
 }
 
 sub req
 {
-    return shift->{'request'};
+	return shift->{'request'};
 }
 
 sub auth
 {
-    return shift->{'auth'};
+	return shift->{'auth'};
 }
 
 sub next_id
 {
-    return ++shift->{'count'};
+	return ++shift->{'count'};
 }
 
-sub last_error {
-    return shift->{'error'};
+sub last_error
+{
+	return shift->{'error'};
 }
 
 sub set_last_error
@@ -212,7 +213,6 @@ sub set_last_error
 
 	shift->{'error'} = undef;
 }
-
 
 sub api_version
 {
@@ -287,7 +287,6 @@ sub is_writeable
 
 	return $self->__fetch_bool($class, 'iswriteable', $params);
 }
-
 
 sub massadd
 {
@@ -440,7 +439,6 @@ sub to_ascii($)
 	return $json;
 }
 
-
 sub to_utf8($)
 {
 	my $json = shift;
@@ -516,7 +514,6 @@ sub __execute($$$)
 	return $result->{'result'};
 }
 
-
 sub __fetch($$$)
 {
 	my ($self, $class, $method, $params) = @_;
@@ -551,7 +548,8 @@ sub __fetch_bool($$$)
 
 	if (@{$result->{'result'}} > 1)
 	{
-		$self->set_last_error('more than one entry found when checking '.$class.':'."\nREQUEST:\n".Dumper($params)."\nREPLY:\n".Dumper($result->{'result'})."\n");
+		$self->set_last_error('more than one entry found when checking ' . $class . ':' . "\nREQUEST:\n" .
+				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
 		return false;
 	}
 
@@ -576,7 +574,8 @@ sub __fetch_id($$$)
 
 	if (@{$result->{'result'}} > 1)
 	{
-		$self->set_last_error('more than one entry found when checking '.$class.':'."\nREQUEST:\n".Dumper($params)."\nREPLY:\n".Dumper($result->{'result'})."\n");
+		$self->set_last_error('more than one entry found when checking ' . $class . ':' . "\nREQUEST:\n" .
+				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
 		return false;
 	}
 
@@ -594,13 +593,13 @@ sub __send_request
 	my $req = $self->req;
 
 	my $request = {
-		jsonrpc => "2.0",
-		method => "$class.$method",
-		params => $params,
-		id => $self->next_id
+		jsonrpc	=> "2.0",
+		method	=> "$class.$method",
+		params	=> $params,
+		id	=> $self->next_id
 	};
 
-	if ( $method ne 'version' )
+	if ($method ne 'version')
 	{
 		$request->{'auth'} = $self->auth
 	}
