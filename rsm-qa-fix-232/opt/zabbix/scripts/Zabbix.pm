@@ -65,7 +65,7 @@ sub new($$)
 	my $domain = $options->{'url'};
 	$domain =~ s,^https*\://(.+)/*$,$1,;
 	$domain =~ s,/,-,g;
-	$AUTH_FILE = '/tmp/' . $domain . '.tmp';
+	$AUTH_FILE = "/tmp/" . $domain . ".tmp";
 
 	print("AUTH_FILE: $AUTH_FILE\n") if ($DEBUG);
 
@@ -131,7 +131,7 @@ sub new($$)
 
 	if (defined($result->{'error'}))
 	{
-		croak("cannot connect to Zabbix: " . $result->{'error'}->{'message'} . ' ' .
+		croak("cannot connect to Zabbix: " . $result->{'error'}->{'message'} . " " .
 				$result->{'error'}->{'data'});
 	}
 
@@ -533,7 +533,7 @@ sub __fetch_bool($$$)
 
 	if (@{$result->{'result'}} > 1)
 	{
-		$self->set_last_error('more than one entry found when checking ' . $class . ':' . "\nREQUEST:\n" .
+		$self->set_last_error("more than one entry found when checking " . $class . ":\nREQUEST:\n" .
 				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
 
 		return false;
@@ -561,7 +561,7 @@ sub __fetch_id($$$)
 
 	if (@{$result->{'result'}} > 1)
 	{
-		$self->set_last_error('more than one entry found when checking ' . $class . ':' . "\nREQUEST:\n" .
+		$self->set_last_error("more than one entry found when checking " . $class . ":\nREQUEST:\n" .
 				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
 
 		return false;
