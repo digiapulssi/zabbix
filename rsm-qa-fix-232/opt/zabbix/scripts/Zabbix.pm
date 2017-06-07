@@ -433,16 +433,16 @@ sub to_ascii($)
 
 	if (is_hash($json))
 	{
-		foreach my $key (keys %{$json})
+		foreach my $value (values(%{$json}))
 		{
-			${$json}{$key} = to_ascii(${$json}{$key});
+			$value = to_ascii($value);
 		}
 	}
 	elsif (is_array($json))
 	{
-		for(my $i=0; $i<@{$json}; $i++)
+		foreach my $value (@{$json})
 		{
-			${$json}[$i] = to_ascii(${$json}[$i]);
+			$value = to_ascii($value);
 		}
 	}
 	else
@@ -459,16 +459,16 @@ sub to_utf8($)
 
 	if (is_hash($json))
 	{
-		foreach my $key (keys %{$json})
+		foreach my $value (values(%{$json}))
 		{
-			${$json}{$key} = to_utf8(${$json}{$key});
+			$value = to_utf8($value);
 		}
 	}
 	elsif (is_array($json))
 	{
-		for (my $i=0; $i<@{$json}; $i++)
+		foreach my $value (@{$json})
 		{
-			${$json}[$i] = to_utf8(${$json}[$i]);
+			$value = to_utf8($value);
 		}
 	}
 	else
