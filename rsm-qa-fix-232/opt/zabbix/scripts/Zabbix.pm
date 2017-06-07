@@ -49,16 +49,16 @@ sub new($$)
 
 #	$ua->ssl_opts(verify_hostname => 0);
 
-	$REQUEST_TIMEOUT = (defined($options->{request_timeout}) ? $options->{request_timeout} :
+	$REQUEST_TIMEOUT = (defined($options->{'request_timeout'}) ? $options->{'request_timeout'} :
 			_DEFAULT_REQUEST_TIMEOUT);
-	$REQUEST_ATTEMPTS = (defined($options->{request_attempts}) ? $options->{request_attempts} :
+	$REQUEST_ATTEMPTS = (defined($options->{'request_attempts'}) ? $options->{'request_attempts'} :
 			_DEFAULT_REQUEST_ATTEMPTS);
 
 	$ua->agent("Net::Zabbix");
 
 	my $req = HTTP::Request->new(POST => $options->{'url'} . "/api_jsonrpc.php");
 
-	$req->authorization_basic($options->{user}, $options->{password}) if ($options->{auth_basic});
+	$req->authorization_basic($options->{'user'}, $options->{'password'}) if ($options->{'auth_basic'});
 
 	$req->content_type('application/json-rpc');
 
@@ -76,11 +76,11 @@ sub new($$)
 		$ua->timeout($REQUEST_TIMEOUT);
 
 		my $self = {
-			UserAgent	=> $ua,
-			request		=> $req,
-			count		=> 0,
-			auth		=> $authid,
-			error		=> undef,
+			'UserAgent'	=> $ua,
+			'request'	=> $req,
+			'count'		=> 0,
+			'auth'		=> $authid,
+			'error'		=> undef,
 		};
 
 		bless($self, $class);
@@ -91,13 +91,13 @@ sub new($$)
 	print("no authid in the file, logging in...\n") if ($DEBUG);
 
 	my $request = encode_json({
-		jsonrpc	=> "2.0",
-		method	=> "user.login",
-		params	=> {
-			user		=> $options->{user},
-			password	=> $options->{password},
+		'jsonrpc'	=> "2.0",
+		'method'	=> "user.login",
+		'params'	=> {
+			'user'		=> $options->{'user'},
+			'password'	=> $options->{'password'},
 		},
-		id	=> 1,
+		'id'	=> 1,
 	});
 
 	my $result;
@@ -140,11 +140,11 @@ sub new($$)
 	set_authid($auth);
 
 	return bless({
-		UserAgent	=> $ua,
-		request		=> $req,
-		count		=> 1,
-		auth		=> $auth,
-		error		=> undef,
+		'UserAgent'	=> $ua,
+		'request'	=> $req,
+		'count'		=> 1,
+		'auth'		=> $auth,
+		'error'		=> undef,
 	}, $class);
 }
 
@@ -575,10 +575,10 @@ sub __send_request
 	my $req = $self->req;
 
 	my $request = {
-		jsonrpc	=> "2.0",
-		method	=> "$class.$method",
-		params	=> $params,
-		id	=> $self->next_id
+		'jsonrpc'	=> "2.0",
+		'method'	=> "$class.$method",
+		'params'	=> $params,
+		'id'		=> $self->next_id
 	};
 
 	if ($method ne 'version')
