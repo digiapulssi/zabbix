@@ -49,7 +49,7 @@ class CControllerWidgetHostsView extends CController {
 		if (CProfile::get('web.dashconf.filter.enable', 0) == 1) {
 			// groups
 			if (CProfile::get('web.dashconf.groups.grpswitch', 0) == 0) {
-				// null mean all groups
+				// Select all groups.
 				$filter['groupids'] = null;
 			}
 			else {
@@ -83,12 +83,12 @@ class CControllerWidgetHostsView extends CController {
 					}
 				}
 				else {
-					// null mean all groups
+					// Select all groups.
 					$filter['groupids'] = null;
 				}
 
 				if ($hide_groupids) {
-					// get all groups if no selected groups defined
+					// Get all groups if no selected groups defined.
 					if (!$filter['groupids']) {
 						$dbHostGroups = API::HostGroup()->get([
 							'output' => ['groupid']
@@ -121,7 +121,10 @@ class CControllerWidgetHostsView extends CController {
 						}
 					}
 
-					// Calculate the difference between groups selected to be displayed and these which are selected to be hidden.
+					/*
+					 * Calculate the difference between groups selected to be displayed and these which are selected
+					 * to be hidden.
+					 */
 					$filter['groupids'] = array_diff($filter['groupids'], $hide_groupids);
 
 					// get available hosts

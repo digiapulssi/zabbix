@@ -81,7 +81,7 @@ class CControllerWidgetSystemView extends CController {
 					}
 				}
 				else {
-					// null mean all groups
+					// Select all groups.
 					$filter['groupids'] = null;
 				}
 
@@ -119,7 +119,10 @@ class CControllerWidgetSystemView extends CController {
 						}
 					}
 
-					// Calculate the difference between groups selected to be displayed and these which are selected to be hidden.
+					/*
+					 * Calculate the difference between groups selected to be displayed and these which are selected
+					 * to be hidden.
+					 */
 					$filter['groupids'] = array_diff($filter['groupids'], $hide_groupids);
 
 					// get available hosts
