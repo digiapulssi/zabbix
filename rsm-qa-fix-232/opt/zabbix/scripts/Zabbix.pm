@@ -512,10 +512,10 @@ sub __fetch($$$)
 
 	$self->set_last_error();
 
-	return ${$result->{'result'}}[0] if (is_array($result->{'result'}) and (scalar @{$result->{'result'}} == 1));
-	return {} if (is_array($result->{'result'}) and (scalar @{$result->{'result'}} == 0));
+	die("Attempt to fetch from non-array result\n") unless (is_array($result->{'result'}));
 
-	return $result->{'result'};
+	# return direct reference to the only element or reference to the whole array
+	return scalar(@{$result->{'result'}}) == 1 ? $result->{'result'}->[0] : $result->{'result'};
 }
 
 sub __fetch_bool($$$)
@@ -528,10 +528,10 @@ sub __fetch_bool($$$)
 	{
 		$self->set_last_error($result->{'error'});
 
-		return;	# FIXME Always end subroutines with return if they are expected to return a value
+		return undef;
 	}
 
-	if (@{$result->{'result'}} > 1)
+	if (scalar(@{$result->{'result'}}) > 1)
 	{
 		$self->set_last_error("more than one entry found when checking " . $class . ":\nREQUEST:\n" .
 				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
@@ -541,9 +541,9 @@ sub __fetch_bool($$$)
 
 	$self->set_last_error();
 
-	return false if (@{$result->{'result'}} == 0);
+	die("Attempt to fetch from non-array result\n") unless (is_array($result->{'result'}));
 
-	return true;
+	return scalar(@{$result->{'result'}}) == 0 ? false : true;
 }
 
 sub __fetch_id($$$)
@@ -559,7 +559,7 @@ sub __fetch_id($$$)
 		return $result;
 	}
 
-	if (@{$result->{'result'}} > 1)
+	if (scalar(@{$result->{'result'}}) > 1)
 	{
 		$self->set_last_error("more than one entry found when checking " . $class . ":\nREQUEST:\n" .
 				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
@@ -569,9 +569,9 @@ sub __fetch_id($$$)
 
 	$self->set_last_error();
 
-	return 0 if (@{$result->{'result'}} == 0);
+	die("Attempt to fetch from non-array result\n") unless (is_array($result->{'result'}));
 
-	return $result->{'result'}->[0]->{$objectids->{$class}};
+	return scalar(@{$result->{'result'}}) == 0 ? false : $result->{'result'}->[0]->{$objectids->{$class}};
 }
 
 sub __send_request
