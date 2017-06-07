@@ -62,8 +62,9 @@ sub new($$)
 
 	$req->content_type('application/json-rpc');
 
-	my $domain = $options->{'url'};
-	$domain =~ s,^https*\://(.+)/*$,$1,;
+	croak("invalid URL: \"" . $options->{'url'} . "\"") unless ($options->{'url'} =~ qr|^https?\://(.+)/?$|);
+
+	my $domain = $1;
 	$domain =~ s,/,-,g;
 	$AUTH_FILE = "/tmp/" . $domain . ".tmp";
 
