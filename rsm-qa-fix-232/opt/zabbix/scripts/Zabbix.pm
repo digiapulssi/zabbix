@@ -249,6 +249,7 @@ sub update
 	return $self->__execute($class, 'update', $params);
 }
 
+# TODO consider deleting this unused method
 sub objects
 {
 	my ($self, $class, $params) = @_;
@@ -274,6 +275,7 @@ sub exist
 	return $self->__fetch_id($class, 'get', $params);
 }
 
+# TODO consider deleting this unused method
 sub is_readable
 {
 	my ($self, $class, $params) = @_;
@@ -281,6 +283,7 @@ sub is_readable
 	return $self->__fetch_bool($class, 'isreadable', $params);
 }
 
+# TODO consider deleting this unused method
 sub is_writeable
 {
 	my ($self, $class, $params) = @_;
@@ -288,6 +291,7 @@ sub is_writeable
 	return $self->__fetch_bool($class, 'iswriteable', $params);
 }
 
+# TODO consider deleting this unused method
 sub massadd
 {
 	my ($self, $class, $params) = @_;
@@ -295,6 +299,7 @@ sub massadd
 	return $self->__execute($class, 'massAdd', $params);
 }
 
+# TODO consider deleting this unused method
 sub massremove
 {
 	my ($self, $class, $params) = @_;
@@ -309,6 +314,7 @@ sub massupdate
 	return $self->__execute($class, 'massupdate', $params);
 }
 
+# TODO consider deleting this unused method
 sub event_ack
 {
 	my ($self, $params) = @_;
@@ -318,6 +324,7 @@ sub event_ack
 
 #####################################
 
+# TODO consider deleting this unused method
 sub conf_export
 {
 	my ($self, $params) = @_;
@@ -325,6 +332,7 @@ sub conf_export
 	return $self->__fetch('configuration', 'export', $params);
 }
 
+# TODO consider deleting this unused method
 sub conf_import
 {
 	my ($self, $params) = @_;
@@ -334,6 +342,7 @@ sub conf_import
 
 #####################################
 
+# TODO consider deleting this unused method
 sub replace_interfaces
 {
 	my ($self, $params) = @_;
@@ -341,6 +350,7 @@ sub replace_interfaces
 	return $self->__execute('hostinterface', 'replacehostinterfaces', $params);
 }
 
+# TODO consider deleting this unused method
 sub execute_script
 {
 	my ($self, $params) = @_;
@@ -355,6 +365,7 @@ sub trigger_dep_add
 	return $self->__execute('trigger', 'adddependencies', $params);
 }
 
+# TODO consider deleting this unused method
 sub trigger_dep_delete
 {
 	my ($self, $params) = @_;
@@ -362,6 +373,7 @@ sub trigger_dep_delete
 	return $self->__execute('trigger', 'deleteDependencies', $params);
 }
 
+# TODO consider deleting this unused method
 sub user_media_add
 {
 	my ($self, $params) = @_;
@@ -369,6 +381,7 @@ sub user_media_add
 	return $self->__execute('user', 'addMedia', $params);
 }
 
+# TODO consider deleting this unused method
 sub user_media_delete
 {
 	my ($self, $params) = @_;
@@ -376,6 +389,7 @@ sub user_media_delete
 	return $self->__execute('user', 'deleteMedia', $params);
 }
 
+# TODO consider deleting this unused method
 sub user_media_update
 {
 	my ($self, $params) = @_;
@@ -383,6 +397,7 @@ sub user_media_update
 	return $self->__execute('user', 'updateMedia', $params);
 }
 
+# TODO consider deleting this unused method
 sub user_profile_update
 {
 	my ($self, $params) = @_;
@@ -397,6 +412,7 @@ sub macro_global_create
 	return $self->__execute('usermacro', 'createGlobal', $params);
 }
 
+# TODO consider deleting this unused method
 sub macro_global_delete
 {
 	my ($self, $params) = @_;
@@ -524,6 +540,7 @@ sub __fetch($$$)
 	return scalar(@{$result->{'result'}}) == 1 ? $result->{'result'}->[0] : $result->{'result'};
 }
 
+# TODO consider deleting this unused method
 sub __fetch_bool($$$)
 {
 	my ($self, $class, $method, $params) = @_;
