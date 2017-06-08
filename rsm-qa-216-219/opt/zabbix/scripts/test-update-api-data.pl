@@ -1202,7 +1202,7 @@ my $expected_in_base_path = [
 					{
 						# downtime
 						'name'		=> 'downtime',
-						'mandatory'	=> 1,
+						'mandatory'	=> 0,
 						'validator'	=> \&validate_downtime_file
 					},
 					{
