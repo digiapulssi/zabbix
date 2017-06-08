@@ -454,7 +454,7 @@ sub validate_tld_state_file($)
 													'member'	=> {
 														'value'		=> JSON_VALUE_STRING,
 														'not null'	=> 1,
-														'pattern'	=> qr/^(0|[1-9][0-9]*)\.[1-9]+$/
+														'pattern'	=> qr/^(0|[1-9][0-9]*)\.[0-9]+$/
 													}
 												},
 												JSON_KEY_START_TIME,
