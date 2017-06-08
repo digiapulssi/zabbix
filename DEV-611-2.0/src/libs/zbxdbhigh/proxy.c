@@ -2271,6 +2271,9 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_VALUE, value, sizeof(value));
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns));
 
+		if (FAIL == validate_hostname(dns, strlen(dns)))
+			*dns = '\0';
+
 		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_STATUS, tmp, sizeof(tmp)))
 			status = atoi(tmp);
 
@@ -2390,10 +2393,25 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_HOST, host, sizeof(host)))
 			goto json_parse_error;
 
+		if (FAIL == zbx_check_hostname(host))
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "\"%s\" is not a valid host name", host);
+			goto next;
+		}
+
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
-			*ip = '\0';
+			goto json_parse_error;
+
+		if (SUCCEED != is_ip(ip))
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "\"%s\" is not a valid IP address", ip);
+			goto next;
+		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)))
+			*dns = '\0';
+
+		if (FAIL == validate_hostname(dns, strlen(dns)))
 			*dns = '\0';
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
@@ -2405,7 +2423,7 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		DBbegin();
 		DBregister_host(proxy_hostid, host, ip, dns, port, itemtime);
 		DBcommit();
-
+next:
 		continue;
 json_parse_error:
 		zabbix_log(LOG_LEVEL_WARNING, "invalid auto registration data: %s", zbx_json_strerror());
