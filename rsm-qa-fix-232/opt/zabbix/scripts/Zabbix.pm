@@ -18,7 +18,7 @@ our @ISA = qw(Exporter);
 
 BEGIN {
 	$Zabbix::VERSION = '1.0';
-	$Zabbix::DEBUG   = 0 unless (defined $Zabbix::DEBUG);
+	$Zabbix::DEBUG   = 0 unless (defined($Zabbix::DEBUG));
 }
 
 use constant true => 1;
