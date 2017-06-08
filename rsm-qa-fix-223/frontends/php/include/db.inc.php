@@ -192,6 +192,18 @@ function DBconnect(&$error) {
 
 	if (false == $result) {
 		$DB['DB'] = null;
+
+		$server_name = _('Unknown');
+		foreach ($DB['SERVERS'] as $server) {
+			if ($DB['TYPE'] === $server['TYPE'] && $DB['SERVER'] === $server['SERVER']
+					&& $DB['PORT'] === $server['PORT'] && $DB['DATABASE'] === $server['DATABASE']
+					&& $DB['USER'] === $server['USER'] && $DB['PASSWORD'] === $server['PASSWORD']) {
+				$server_name = $server['NAME'];
+				break;
+			}
+		}
+
+		$error = $server_name.': '.$error;
 	}
 
 	return $result;
