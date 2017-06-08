@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc7
 
 New features:
+..F....... [223] added error messages if no connection to other databases (Oleg)
 ....I..... [206] added monitoring of vital parameters of Zabbix proxies (dotneft, gleb)
 
 Bug fixes:
