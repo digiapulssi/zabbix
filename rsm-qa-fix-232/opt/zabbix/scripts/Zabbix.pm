@@ -84,9 +84,9 @@ sub new($$)
 			'error'		=> undef,
 		};
 
-		bless($self, $class);
+		croak("cannot get Zabbix API version information") unless (defined($self->api_version()));
 
-		return bless($self, $class) if (defined $self->api_version());
+		return bless($self, $class);
 	}
 
 	print("no authid in the file, logging in...\n") if ($DEBUG);
