@@ -960,6 +960,8 @@ int	is_ip4(const char *ip);
 int	is_supported_ip(const char *ip);
 int	is_ip(const char *ip);
 
+int	validate_hostname(const char *hostname, int len);
+
 void	zbx_on_exit(); /* calls exit() at the end! */
 
 int	int_in_list(char *list, int value);
