@@ -435,7 +435,7 @@ sub validate_tld_state_file($)
 									'member'	=> {
 										'value'		=> JSON_VALUE_NUMBER,
 										'not null'	=> 1,
-										'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+										'pattern'	=> qr/^(0|[1-9][0-9]*)(\.[0-9]*)?$/
 									}
 								},
 								JSON_KEY_INCIDENTS,
