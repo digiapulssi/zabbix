@@ -14,8 +14,6 @@ use RSM;
 use TLD_constants qw(:general :templates :api :config);
 use TLDs;
 
-use constant LINUX_TEMPLATEID => 10001;
-
 use constant HOST_STATUS_NOT_MONITORED => 1;
 
 use constant HOST_STATUS_PROXY_ACTIVE => 5;
@@ -155,7 +153,7 @@ sub add_probe($$$$$) {
 
     print "Creating '$probe_name' host: ";
     $probe_host = create_host({'groups' => [{'groupid' => $probe_hostgroup}, {'groupid' => $probes_groupid}],
-                                          'templates' => [{'templateid' => $probe_tmpl_status}],
+                                          'templates' => [{'templateid' => $probe_tmpl_status}, {'templateid' => APP_ZABBIX_PROXY_TEMPLATEID}],
                                           'host' => $probe_name,
                                           'status' => HOST_STATUS_MONITORED,
                                           'proxy_hostid' => $probe,

@@ -390,7 +390,8 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			if (!$itemValue) {
 				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_NO_RESULT;
 			}
-			elseif ($itemValue['value'] < $udpRtt && $itemValue['value'] > ZBX_EC_DNS_NS_NOREPLY) {
+			elseif ($itemValue['value'] < $udpRtt
+					&& ($itemValue['value'] > ZBX_EC_DNS_NS_NOREPLY	|| $itemValue['value'] == ZBX_EC_DNS_RES_NOREPLY)) {
 				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_UP;
 			}
 			else {
