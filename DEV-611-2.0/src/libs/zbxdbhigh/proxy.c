@@ -2271,7 +2271,7 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_VALUE, value, sizeof(value));
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns));
 
-		if (FAIL == validate_hostname(dns, strlen(dns)))
+		if (FAIL == zbx_validate_hostname(dns, strlen(dns)))
 			*dns = '\0';
 
 		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_STATUS, tmp, sizeof(tmp)))
@@ -2411,7 +2411,7 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)))
 			*dns = '\0';
 
-		if (FAIL == validate_hostname(dns, strlen(dns)))
+		if (FAIL == zbx_validate_hostname(dns, strlen(dns)))
 			*dns = '\0';
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
