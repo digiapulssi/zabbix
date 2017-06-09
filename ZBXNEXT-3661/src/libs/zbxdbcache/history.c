@@ -203,19 +203,17 @@ static history_value_t	history_str2value(char *str, unsigned char value_type)
 		case ITEM_VALUE_TYPE_LOG:
 			value.log = zbx_malloc(NULL, sizeof(zbx_log_value_t));
 			memset(value.log, 0, sizeof(zbx_log_value_t));
-			value.log->value = str;
+			zbx_strdup(value.log->value, str);
 			break;
 		case ITEM_VALUE_TYPE_STR:
 		case ITEM_VALUE_TYPE_TEXT:
-			value.str = str;
+			zbx_strdup(value.str, str);
 			break;
 		case ITEM_VALUE_TYPE_FLOAT:
 			value.dbl = atof(str);
-			zbx_free(str);
 			break;
 		case ITEM_VALUE_TYPE_UINT64:
 			ZBX_STR2UINT64(value.ui64, str);
-			zbx_free(str);
 			break;
 	}
 
@@ -224,72 +222,66 @@ static history_value_t	history_str2value(char *str, unsigned char value_type)
 
 static int	history_parse_value(struct zbx_json_parse *jp, unsigned char value_type, zbx_history_record_t *hr)
 {
-	char			buffer[MAX_ID_LEN + 1], *value = NULL;
-	size_t			value_alloc = 0;
+	char	*value = NULL;
+	size_t	value_alloc = 0;
+	int	ret = FAIL;
 
-	if (SUCCEED != zbx_json_value_by_name(jp, "sec", buffer, sizeof(buffer)))
-		return FAIL;
+	if (SUCCEED != zbx_json_value_by_name_dyn(jp, "sec", &value, &value_alloc))
+		goto out;
 
-	hr->timestamp.sec = atoi(buffer);
+	hr->timestamp.sec = atoi(value);
 
-	if (SUCCEED != zbx_json_value_by_name(jp, "ns", buffer, sizeof(buffer)))
-		return FAIL;
+	if (SUCCEED != zbx_json_value_by_name_dyn(jp, "ns", &value, &value_alloc))
+		goto out;
 
-	hr->timestamp.ns = atoi(buffer);
+	hr->timestamp.ns = atoi(value);
 
 	if (ITEM_VALUE_TYPE_LOG == value_type)
 	{
 		struct zbx_json_parse	jp_value;
 
 		if (SUCCEED != zbx_json_brackets_by_name(jp, "value", &jp_value))
-		{
-			return FAIL;
-		}
+			goto out;
 
 		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "value", &value, &value_alloc))
-		{
-			return FAIL;
-		}
+			goto out;
 
 		hr->value = history_str2value(value, value_type);
 
-		if (SUCCEED != zbx_json_value_by_name(&jp_value, "timestamp", buffer, sizeof(buffer)))
-		{
-			return FAIL;
-		}
+		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "timestamp", &value, &value_alloc))
+			goto out;
 
-		hr->value.log->timestamp = atoi(buffer);
+		hr->value.log->timestamp = atoi(value);
 
-		if (SUCCEED != zbx_json_value_by_name(&jp_value, "logeventid", buffer, sizeof(buffer)))
-		{
-			return FAIL;
-		}
+		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "logeventid", &value, &value_alloc))
+			goto out;
 
-		hr->value.log->logeventid = atoi(buffer);
+		hr->value.log->logeventid = atoi(value);
 
-		if (SUCCEED != zbx_json_value_by_name(&jp_value, "severity", buffer, sizeof(buffer)))
-		{
-			return FAIL;
-		}
+		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "severity", &value, &value_alloc))
+			goto out;
 
-		hr->value.log->severity = atoi(buffer);
+		hr->value.log->severity = atoi(value);
 
-		if (SUCCEED != zbx_json_value_by_name(&jp_value, "source", buffer, sizeof(buffer)))
-		{
-			return FAIL;
-		}
+		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "source", &value, &value_alloc))
+			goto out;
 
-		hr->value.log->source = zbx_strdup(hr->value.log->source, buffer);
+		zbx_strdup(hr->value.log->source, value);
 	}
 	else
 	{
 		if (SUCCEED != zbx_json_value_by_name_dyn(jp, "value", &value, &value_alloc))
-			return FAIL;
+			goto out;
 
 		hr->value = history_str2value(value, value_type);
 	}
 
-	return SUCCEED;
+	ret = SUCCEED;
+
+out:
+	zbx_free(value);
+
+	return ret;
 }
 
 void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
