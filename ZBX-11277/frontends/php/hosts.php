@@ -401,7 +401,8 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 		}
 
 		if ($add) {
-			$add['hosts'] = $hosts;
+			$hostsids = zbx_objectValues($hosts, 'hostid');
+			$add['hosts'] = zbx_toObject($hostsids, 'hostid');
 
 			$result = API::Host()->massAdd($add);
 
