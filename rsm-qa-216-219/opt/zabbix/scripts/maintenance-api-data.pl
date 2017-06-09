@@ -5,6 +5,10 @@ use warnings;
 use JSON::XS qw(decode_json encode_json);
 use Path::Tiny qw(path);
 
+use constant JSON_OBJECT_DISABLED_SERVICE => {
+	'status'	=> 'Disabled'
+};
+
 my $now = time();
 
 foreach my $tld_dir (path('/opt/zabbix/sla')->children)
@@ -18,7 +22,12 @@ foreach my $tld_dir (path('/opt/zabbix/sla')->children)
 	my $json = decode_json($state_file->slurp_utf8);
 
 	$json->{'status'} = 'Up-inconclusive';
-	$json->{'testedService'} = [];
+	$json->{'testedService'} = {
+		'DNS'		=> JSON_OBJECT_DISABLED_SERVICE,
+		'DNSSEC'	=> JSON_OBJECT_DISABLED_SERVICE,
+		'EPP'		=> JSON_OBJECT_DISABLED_SERVICE,
+		'RDDS'		=> JSON_OBJECT_DISABLED_SERVICE
+	};
 	$json->{'lastUpdateApiDatabase'} = $now;
 
 	$state_file->spew(encode_json($json));
