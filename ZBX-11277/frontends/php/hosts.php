@@ -252,15 +252,12 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 		DBstart();
 
 		// filter only normal and discovery created hosts
-		$options = [
+		$hosts = API::Host()->get([
 			'output' => ['hostid'],
 			'hostids' => $hostIds,
+			'selectInventory' => ['inventory_mode'],
 			'filter' => ['flags' => [ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED]]
-		];
-		if (hasRequest('host_inventory')) {
-			$options['selectInventory'] = ['inventory_mode'];
-		}
-		$hosts = API::Host()->get($options);
+		]);
 
 		$properties = [
 			'proxy_hostid', 'ipmi_authtype', 'ipmi_privilege', 'ipmi_username', 'ipmi_password', 'description'
@@ -275,13 +272,6 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 
 		if (isset($visible['status'])) {
 			$newValues['status'] = getRequest('status', HOST_STATUS_NOT_MONITORED);
-		}
-
-		if (hasRequest('inventory_mode')) {
-			$newValues['inventory_mode'] = getRequest('inventory_mode');
-			if ($newValues['inventory_mode'] == HOST_INVENTORY_DISABLED) {
-				$newValues['inventory'] = [];
-			}
 		}
 
 		if (array_key_exists('encryption', $visible)) {
@@ -371,14 +361,22 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			$newValues['templates'] = $templateIds;
 		}
 
-		foreach ($hosts as &$host) {
-			$inventory_disabled = (!array_key_exists('inventory_mode', $host['inventory'])
-				|| $host['inventory']['inventory_mode'] == HOST_INVENTORY_DISABLED);
-			$host = array_merge($host, $newValues);
+		$inventory = array_intersect_key(getRequest('host_inventory', []), $visible);
 
-			if ($inventory_disabled) {
+		if (hasRequest('inventory_mode')
+				&& getRequest('inventory_mode') == HOST_INVENTORY_DISABLED) {
+			$inventory = ['inventory_mode' => HOST_INVENTORY_DISABLED];
+		}
+
+		foreach ($hosts as &$host) {
+			if (array_key_exists('inventory_mode', $host['inventory'])
+					&& $host['inventory']['inventory_mode'] != HOST_INVENTORY_DISABLED) {
+				$host['inventory'] = $inventory;
+			}
+			else {
 				unset($host['inventory']);
 			}
+			$host = array_merge($host, $newValues);
 		}
 		unset($host);
 		$result = (bool) API::Host()->update($hosts);
@@ -398,7 +396,7 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 		}
 
 		if ($add) {
-			$add['hosts'] = $hosts['hosts'];
+			$add['hosts'] = $hosts;
 
 			$result = API::Host()->massAdd($add);
 
