@@ -2872,69 +2872,6 @@ void	zbx_vc_destroy(void)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_vc_add_value                                                 *
- *                                                                            *
- * Purpose: adds an item value to the value cache                             *
- *                                                                            *
- * Parameters: itemid     - [IN] the item id                                  *
- *             value_type - [IN] the value type (see ITEM_VALUE_TYPE_* defs)  *
- *             timestamp  - [IN] the value timestamp                          *
- *             value      - [IN] the value to add                             *
- *                                                                            *
- * Return value:  SUCCEED - the item value was added successfully             *
- *                FAIL    - failed to add item value to cache (not fatal      *
- *                          failure - cache might be in low memory mode)      *
- *                                                                            *
- * Comments: This function must be called whenever item receives a new        *
- *           value(s) to keep the value cache updated.                        *
- *                                                                            *
- ******************************************************************************/
-int	zbx_vc_add_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *timestamp, history_value_t *value)
-{
-	const char	*__function_name = "zbx_vc_add_value";
-
-	zbx_vc_item_t	*item;
-	int 		ret = FAIL;
-
-	if (NULL == vc_cache)
-		return FAIL;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid:" ZBX_FS_UI64 " value_type:%d timestamp:%d.%d",
-			__function_name, itemid, value_type, timestamp->sec, timestamp->ns);
-
-	vc_try_lock();
-
-	if (NULL != (item = zbx_hashset_search(&vc_cache->items, &itemid)))
-	{
-		zbx_history_record_t	record = {*timestamp, *value};
-
-		if (0 == (item->state & ZBX_ITEM_STATE_REMOVE_PENDING))
-		{
-			vc_item_addref(item);
-
-			/* If the new value type does not match the item's type in cache we can't  */
-			/* change the cache because other processes might still be accessing it    */
-			/* at the same time. The only thing that can be done - mark it for removal */
-			/* so it could be added later with new type.                               */
-			/* Also mark it for removal if the value adding failed. In this case we    */
-			/* won't have the latest data in cache - so the requests must go directly  */
-			/* to the database.                                                        */
-			if (item->value_type != value_type || FAIL == (ret = vch_item_add_value_at_head(item, &record)))
-				item->state |= ZBX_ITEM_STATE_REMOVE_PENDING;
-
-			vc_item_release(item);
-		}
-	}
-
-	vc_try_unlock();
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return ret;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: zbx_vc_add_values                                                *
  *                                                                            *
  * Purpose: adds item values to the value cache                               *
