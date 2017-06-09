@@ -291,9 +291,21 @@ function check_field(&$fields, &$field, $checks) {
 			return ZBX_VALID_OK;
 		}
 		elseif ($flags & P_ACT) {
-			if (!isset($_REQUEST['sid'])
-					|| (isset($_COOKIE['zbx_sessionid'])
-							&& $_REQUEST['sid'] != substr($_COOKIE['zbx_sessionid'], 16, 16))) {
+			$authorized = true;
+			if (hasRequest('sid')) {
+				if (strlen(getRequest('sid')) == 16) {
+					$authorized = (array_key_exists('zbx_sessionid', $_COOKIE)
+							&& getRequest('sid') == substr($_COOKIE['zbx_sessionid'], 16, 16));
+				}
+				else {
+					$authorized = (getRequest('sid') == CWebUser::getSessionCookie());
+				}
+			}
+			else {
+				$authorized = false;
+			}
+
+			if (!$authorized) {
 				info(_('Operation cannot be performed due to unauthorized request.'));
 				return ZBX_VALID_ERROR;
 			}
