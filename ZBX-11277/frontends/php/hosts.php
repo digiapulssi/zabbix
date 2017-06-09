@@ -361,20 +361,25 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			$newValues['templates'] = $templateIds;
 		}
 
-		$inventory = array_intersect_key(getRequest('host_inventory', []), $visible);
+		$host_inventory = array_intersect_key(getRequest('host_inventory', []), $visible);
 
-		if (hasRequest('inventory_mode')
-				&& getRequest('inventory_mode') == HOST_INVENTORY_DISABLED) {
-			$inventory = ['inventory_mode' => HOST_INVENTORY_DISABLED];
+		if (hasRequest('inventory_mode') && array_key_exists('inventory_mode', $visible)) {
+			$newValues['inventory_mode'] = getRequest('inventory_mode', HOST_INVENTORY_DISABLED);
+			if ($newValues['inventory_mode'] == HOST_INVENTORY_DISABLED) {
+				$host_inventory = [];
+			}
 		}
 
 		foreach ($hosts as &$host) {
-			if (array_key_exists('inventory_mode', $host['inventory'])
-					&& $host['inventory']['inventory_mode'] != HOST_INVENTORY_DISABLED) {
-				$host['inventory'] = $inventory;
+			if (array_key_exists('inventory_mode', $newValues)) {
+				$host['inventory'] = $host_inventory;
+			}
+			elseif (array_key_exists('inventory_mode', $host['inventory'])
+						&& $host['inventory']['inventory_mode'] != HOST_INVENTORY_DISABLED) {
+				$host['inventory'] =  $host_inventory;
 			}
 			else {
-				unset($host['inventory']);
+				$host['inventory'] = [];
 			}
 			$host = array_merge($host, $newValues);
 		}
