@@ -350,56 +350,6 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	zbx_free(url);
 }
 
-int	zbx_history_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *ts,
-		zbx_history_record_t *value)
-{
-	CURL		*curl = NULL;
-	char		*url = NULL;
-	size_t		url_alloc = 0, url_offset = 0;
-	char		*types[] = {"float", "char", "log", "unum", "text"};
-	int		err, ret = FAIL;
-	long		http_code;
-
-	history_init();
-
-	if (NULL == (curl = curl_easy_init()))
-	{
-		zbx_error("Cannot initialize cURL session");
-
-		return ret;
-	}
-
-	zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s/" ZBX_FS_UI64
-			"/values?end=%d", HISTORY_SERVICE_URL, types[value_type], itemid, ts->sec);
-
-	curl_easy_setopt(curl, CURLOPT_URL, url);
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, NULL);
-	curl_easy_setopt(curl, CURLOPT_POST, 0);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_cb);
-
-	page.offset = 0;
-	if (CURLE_OK != (err = curl_easy_perform(curl)))
-		zabbix_log(LOG_LEVEL_ERR, "Failed to get value from history service: %s", curl_easy_strerror(err));
-
-	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-
-	if (200 == http_code)
-	{
-		if (NULL != page.data) {
-			struct zbx_json_parse	jp;
-
-			zbx_json_open(page.data, &jp);
-			ret = history_parse_value(&jp, value_type, value);
-		}
-	}
-
-	curl_easy_cleanup(curl);
-
-	zbx_free(url);
-
-	return ret;
-}
-
 void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 {
 	int			i, num = 0;
@@ -492,15 +442,6 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	ZBX_UNUSED(count);
 	ZBX_UNUSED(end);
 	ZBX_UNUSED(values);
-}
-
-int	zbx_history_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *ts,
-		zbx_history_record_t *value)
-{
-	ZBX_UNUSED(itemid);
-	ZBX_UNUSED(value_type);
-	ZBX_UNUSED(ts);
-	ZBX_UNUSED(value);
 }
 
 void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)

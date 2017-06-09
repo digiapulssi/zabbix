@@ -656,44 +656,38 @@ out:
 static int	vc_db_read_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *ts,
 		zbx_history_record_t *value, zbx_uint64_t *queries)
 {
-	int		ret = FAIL;
+	int			ret = FAIL;
+	int			i;
+	zbx_vector_history_record_t	values;
 
-	if (NULL == HISTORY_SERVICE_URL)
+	zbx_history_record_vector_create(&values);
+
+	/* first try to find value in the requested second */
+	vc_db_read_values_by_time(itemid, value_type, &values, 1, ts->sec, queries);
+	zbx_vector_history_record_sort(&values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
+
+	if (0 == values.values_num || 0 > zbx_timespec_compare(ts, &values.values[values.values_num - 1].timestamp))
 	{
-		int			i;
-		zbx_vector_history_record_t	values;
+		/* if the requested second does not contain matching values, */
+		/* get the first older value outside the requested second    */
+		vc_history_record_vector_clean(&values, value_type);
 
-		zbx_history_record_vector_create(&values);
-
-		/* first try to find value in the requested second */
-		vc_db_read_values_by_time(itemid, value_type, &values, 1, ts->sec, queries);
+		vc_db_read_values_by_count(itemid, value_type, &values, 1, ts->sec - 1, queries);
 		zbx_vector_history_record_sort(&values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
-
-		if (0 == values.values_num || 0 > zbx_timespec_compare(ts, &values.values[values.values_num - 1].timestamp))
-		{
-			/* if the requested second does not contain matching values, */
-			/* get the first older value outside the requested second    */
-			vc_history_record_vector_clean(&values, value_type);
-
-			vc_db_read_values_by_count(itemid, value_type, &values, 1, ts->sec - 1, queries);
-			zbx_vector_history_record_sort(&values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
-		}
-
-		for (i = 0; i < values.values_num; i++)
-		{
-			if (0 <= zbx_timespec_compare(ts, &values.values[i].timestamp))
-			{
-				vc_history_record_copy(value, &values.values[i], value_type);
-				ret = SUCCEED;
-
-				break;
-			}
-		}
-
-		zbx_history_record_vector_destroy(&values, value_type);
 	}
-	else
-		return zbx_history_get_value(itemid, value_type, ts, value);
+
+	for (i = 0; i < values.values_num; i++)
+	{
+		if (0 <= zbx_timespec_compare(ts, &values.values[i].timestamp))
+		{
+			vc_history_record_copy(value, &values.values[i], value_type);
+			ret = SUCCEED;
+
+			break;
+		}
+	}
+
+	zbx_history_record_vector_destroy(&values, value_type);
 
 	return ret;
 }

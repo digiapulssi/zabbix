@@ -29,9 +29,6 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
 		zbx_vector_history_record_t *values);
 
-int	zbx_history_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *ts,
-		zbx_history_record_t *value);
-
 void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type);
 
 #endif
