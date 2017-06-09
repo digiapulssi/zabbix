@@ -1,3 +1,13 @@
+Changes for rsm1.0.0rc8
+
+New features:
+....I..... [219] added script for putting SLA API into maintenance mode (gleb)
+
+Bug fixes:
+....I..... [237] fixed creation of "zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]" and "rsm.probe.online" items in "Template Proxy Health" by probes.pl (gleb)
+..F....... [205] fixed frontend logout (Oleg)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc7
 
 New features:
