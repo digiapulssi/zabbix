@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc8
 New features:
 
 Bug fixes:
+....I..... [237] fixed creation of "zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]" and "rsm.probe.online" items in "Template Proxy Health" by probes.pl (gleb)
 ..F....... [205] fixed frontend logout (Oleg)
 
 --------------------------------------------------------------------------------

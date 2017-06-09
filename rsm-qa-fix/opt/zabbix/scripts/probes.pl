@@ -113,7 +113,7 @@ sub add_probe($$$$$) {
     is_not_empty($probes_mon_groupid, true);
 
     print "Getting 'Template Proxy Health' template: ";
-    $probe_tmpl_health = create_template('Template Proxy Health', LINUX_TEMPLATEID);
+    $probe_tmpl_health = create_probe_health_tmpl();
     is_not_empty($probe_tmpl_health, true);
 
     ########## Creating new Probe
