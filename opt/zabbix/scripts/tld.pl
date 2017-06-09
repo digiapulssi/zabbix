@@ -62,7 +62,6 @@ use TLD_constants qw(:general :templates :value_types :ec :rsm :slv :config :api
 use TLDs;
 
 sub create_tld_host($$$$);
-sub create_probe_health_tmpl;
 sub manage_tld_objects($$$$$$);
 sub manage_tld_hosts($$);
 
@@ -1345,42 +1344,7 @@ sub create_tld_host($$$$) {
     return $tld_hostid;
 }
 
-sub create_probe_health_tmpl() {
-    my $host_name = 'Template Proxy Health';
-    my $templateid = create_template($host_name, LINUX_TEMPLATEID);
-
-    my $item_key = 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
-
-    my $options = {'name' => 'Availability of $2 Probe',
-                                          'key_'=> $item_key,
-                                          'status' => ITEM_STATUS_ACTIVE,
-                                          'hostid' => $templateid,
-                                          'applications' => [get_application_id('Probe Availability', $templateid)],
-                                          'type' => 5, 'value_type' => 3,
-                                          'units' => 'unixtime', delay => '60'};
-
-    create_item($options);
-
-    $options = { 'description' => 'Probe {$RSM.PROXY_NAME} is unavailable',
-                     'expression' => '{'.$host_name.':'.$item_key.'.fuzzytime(2m)}=0',
-                    'priority' => '4',
-            };
-
-    create_trigger($options, $host_name);
-
-    # todo phase 1: make sure this is in phase 2
-    $options = {'name' => 'Probe main status',
-		'key_'=> 'rsm.probe.online',
-		'status' => ITEM_STATUS_ACTIVE,
-		'hostid' => $templateid,
-		'applications' => [get_application_id('Probe Availability', $templateid)],
-		'type' => 2, 'value_type' => 3,
-		'valuemapid' => rsm_value_mappings->{'rsm_probe'}};
-
-    create_item($options);
-
-    return $templateid;
-}
+# todo phase 1: moved create_probe_health_tmpl() to TLDs.pm to be used by both tld.pl and probes.pl
 
 # todo phase 1: fixed delete/disable TLD/service by handling services input (specifying none means action on the whole tld)
 # todo phase 1: fixed deletion of main host ($main_hostid)

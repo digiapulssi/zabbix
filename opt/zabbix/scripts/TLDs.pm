@@ -20,6 +20,7 @@ our @EXPORT = qw(zbx_connect check_api_error get_proxies_list
 		get_application_id get_items_like set_tld_type get_triggers_by_items
 		add_dependency
 		create_cron_jobs
+		create_probe_health_tmpl
 		pfail);
 
 our ($zabbix, $result);
@@ -861,6 +862,52 @@ sub create_cron_jobs($) {
 	    system("echo '* * * * * root $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
 	}
     }
+}
+
+# todo phase 1: moved here from tld.pl to be used by both tld.pl and probes.pl
+sub create_probe_health_tmpl()
+{
+	my $host_name = 'Template Proxy Health';
+	my $templateid = create_template($host_name, LINUX_TEMPLATEID);
+
+	my $item_key = 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
+
+	create_item({
+		'name'		=> 'Availability of $2 Probe',
+		'key_'		=> $item_key,
+		'status'	=> ITEM_STATUS_ACTIVE,
+		'hostid'	=> $templateid,
+		'applications'	=> [
+			get_application_id('Probe Availability', $templateid)
+		],
+		'type'		=> 5,
+		'value_type'	=> 3,
+		'units'		=> 'unixtime',
+		'delay'		=> '60'
+	});
+
+	create_trigger(
+		{
+			'description'	=> 'Probe {$RSM.PROXY_NAME} is unavailable',
+			'expression'	=> '{' . $host_name . ':' . $item_key . '.fuzzytime(2m)}=0',
+			'priority'	=> 4
+		},
+		$host_name
+	);
+
+	# todo phase 1: make sure this is in phase 2
+	create_item({
+		'name'		=> 'Probe main status',
+		'key_'		=> 'rsm.probe.online',
+		'status'	=> ITEM_STATUS_ACTIVE,
+		'hostid'	=> $templateid,
+		'applications'	=> [get_application_id('Probe Availability', $templateid)],
+		'type'		=> 2,
+		'value_type'	=> 3,
+		'valuemapid'	=> rsm_value_mappings->{'rsm_probe'}
+	});
+
+	return $templateid;
 }
 
 sub pfail {
