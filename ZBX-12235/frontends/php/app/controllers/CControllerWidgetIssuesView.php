@@ -59,8 +59,7 @@ class CControllerWidgetIssuesView extends CController {
 				if ($filter['groupids']) {
 					$filter_groups = API::HostGroup()->get([
 						'output' => ['name'],
-						'groupids' => $filter['groupids'],
-						'preservekeys' => true
+						'groupids' => $filter['groupids']
 					]);
 
 					$filter_groups_names = [];
@@ -92,6 +91,31 @@ class CControllerWidgetIssuesView extends CController {
 								'preservekeys' => true
 							])
 						);
+					}
+
+					// Get names of hidden host groups.
+					$hidden_filter_groups = API::HostGroup()->get([
+						'output' => ['name'],
+						'groupids' => $hide_groupids
+					]);
+
+					$hidden_filter_groups_names = [];
+
+					foreach ($hidden_filter_groups as $group) {
+						$hidden_filter_groups_names[] = $group['name'].'/';
+					}
+
+					if ($hidden_filter_groups_names) {
+						$hidden_child_groups = API::HostGroup()->get([
+							'output' => ['groupid'],
+							'search' => ['name' => $hidden_filter_groups_names],
+							'searchByAny' => true,
+							'startSearch' => true
+						]);
+
+						foreach ($hidden_child_groups as $child_group) {
+							$hide_groupids[] = $child_group['groupid'];
+						}
 					}
 
 					$filter['groupids'] = array_diff($filter['groupids'], $hide_groupids);
