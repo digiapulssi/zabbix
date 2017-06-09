@@ -32,6 +32,8 @@
 
 const char	*HISTORY_SERVICE_URL = NULL;
 
+#if defined (HAVE_LIBCURL)
+
 typedef struct
 {
 	char	*data;
@@ -57,8 +59,6 @@ void	zbx_set_history_service_url(const char *url)
 {
 	HISTORY_SERVICE_URL = url;
 }
-
-#ifdef HAVE_LIBCURL
 
 static void	history_init(void)
 {
@@ -476,6 +476,45 @@ void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 	}
 
 	zbx_json_free(&json);
+}
+
+#else
+
+void	zbx_set_history_service_url(const char *url)
+{
+	ZBX_UNUSED(url);
+}
+
+void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
+{
+	ZBX_UNUSED(history);
+	ZBX_UNUSED(value_type);
+}
+
+void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
+		zbx_vector_history_record_t *values)
+{
+	ZBX_UNUSED(itemid);
+	ZBX_UNUSED(value_type);
+	ZBX_UNUSED(start);
+	ZBX_UNUSED(count);
+	ZBX_UNUSED(end);
+	ZBX_UNUSED(values);
+}
+
+int	zbx_history_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *ts,
+		zbx_history_record_t *value)
+{
+	ZBX_UNUSED(itemid);
+	ZBX_UNUSED(value_type);
+	ZBX_UNUSED(ts);
+	ZBX_UNUSED(value);
+}
+
+void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
+{
+	ZBX_UNUSED(trends);
+	ZBX_UNUSED(value_type);
 }
 
 #endif /* HAVE_LIBCURL */

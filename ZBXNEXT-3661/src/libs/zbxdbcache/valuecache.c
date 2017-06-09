@@ -361,10 +361,8 @@ static void	vc_try_unlock(void)
 static int	vc_db_read_values_by_time(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
 		int seconds, int end_timestamp, zbx_uint64_t *queries)
 {
-#ifdef HAVE_LIBCURL
 	if (NULL == HISTORY_SERVICE_URL)
 	{
-#endif
 		char			*sql = NULL;
 		size_t	 		sql_alloc = 0, sql_offset = 0;
 		DB_RESULT		result;
@@ -411,11 +409,9 @@ static int	vc_db_read_values_by_time(zbx_uint64_t itemid, int value_type, zbx_ve
 		ret = SUCCEED;
 out:
 		return ret;
-#ifdef HAVE_LIBCURL
 	}
 	else
 		zbx_history_get_values(itemid, value_type, seconds, -1, end_timestamp, values);
-#endif
 
 	return SUCCEED;
 }
@@ -449,10 +445,8 @@ out:
 static int	vc_db_read_values_by_count(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
 		int count, int end_timestamp, zbx_uint64_t *queries)
 {
-#ifdef HAVE_LIBCURL
 	if (NULL == HISTORY_SERVICE_URL)
 	{
-#endif
 		char			*sql = NULL;
 		size_t	 		sql_alloc = 0, sql_offset;
 		int			clock_to, clock_from, step = 0, ret = FAIL;
@@ -531,13 +525,11 @@ out:
 		zbx_free(sql);
 
 		return ret;
-#ifdef HAVE_LIBCURL
 	}
 	else
 		zbx_history_get_values(itemid, value_type, 0, count, end_timestamp, values);
 
 	return SUCCEED;
-#endif
 }
 
 /************************************************************************************
@@ -567,10 +559,8 @@ static int	vc_db_read_values_by_time_and_count(zbx_uint64_t itemid, int value_ty
 {
 	int			ret = FAIL;
 
-#ifdef HAVE_LIBCURL
 	if (NULL == HISTORY_SERVICE_URL)
 	{
-#endif
 		char			*sql = NULL;
 		size_t	 		sql_alloc = 0, sql_offset;
 		DB_RESULT		result;
@@ -635,7 +625,6 @@ static int	vc_db_read_values_by_time_and_count(zbx_uint64_t itemid, int value_ty
 		ret = vc_db_read_values_by_time(itemid, value_type, values, 1, end_timestamp, queries);
 out:
 		zbx_free(sql);
-#ifdef HAVE_LIBCURL
 	}
 	else
 	{
@@ -643,7 +632,6 @@ out:
 
 		return SUCCEED;
 	}
-#endif
 
 	return ret;
 }
@@ -670,10 +658,8 @@ static int	vc_db_read_value(zbx_uint64_t itemid, int value_type, const zbx_times
 {
 	int		ret = FAIL;
 
-#ifdef HAVE_LIBCURL
 	if (NULL == HISTORY_SERVICE_URL)
 	{
-#endif
 		int			i;
 		zbx_vector_history_record_t	values;
 
@@ -705,11 +691,9 @@ static int	vc_db_read_value(zbx_uint64_t itemid, int value_type, const zbx_times
 		}
 
 		zbx_history_record_vector_destroy(&values, value_type);
-#ifdef HAVE_LIBCURL
 	}
 	else
 		return zbx_history_get_value(itemid, value_type, ts, value);
-#endif
 
 	return ret;
 }
@@ -2967,7 +2951,6 @@ void	zbx_vc_add_values(zbx_vector_ptr_t *history)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-#ifdef HAVE_LIBCURL
 	if (NULL != HISTORY_SERVICE_URL)
 	{
 		zbx_history_add_values(history, ITEM_VALUE_TYPE_FLOAT);
@@ -2976,7 +2959,6 @@ void	zbx_vc_add_values(zbx_vector_ptr_t *history)
 		zbx_history_add_values(history, ITEM_VALUE_TYPE_UINT64);
 		zbx_history_add_values(history, ITEM_VALUE_TYPE_TEXT);
 	}
-#endif
 
 	if (NULL == vc_cache)
 		return;

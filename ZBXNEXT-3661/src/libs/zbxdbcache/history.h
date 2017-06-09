@@ -24,8 +24,6 @@
 
 void	zbx_set_history_service_url(const char *url);
 
-#ifdef HAVE_LIBCURL
-
 void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type);
 
 void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
@@ -35,7 +33,5 @@ int	zbx_history_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespe
 		zbx_history_record_t *value);
 
 void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type);
-
-#endif
 
 #endif

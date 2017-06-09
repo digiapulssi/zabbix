@@ -423,9 +423,7 @@ static void	dc_insert_trends_in_db(ZBX_DC_TREND *trends, int trends_num, int ins
 			zbx_vector_ptr_append(&tr, trend);
 		}
 
-#ifdef HAVE_LIBCURL
 		zbx_trends_send_values(&tr, value_type);
-#endif
 
 		for (i = 0; i < tr.values_num; i++)
 		{
@@ -675,9 +673,7 @@ static void	dc_trends_fetch_and_update(ZBX_DC_TREND *trends, int trends_num, zbx
 			}
 		}
 
-#ifdef HAVE_LIBCURL
 		zbx_trends_send_values(&tr, value_type);
-#endif
 
 		for (i = 0; i < tr.values_num; i++)
 		{
