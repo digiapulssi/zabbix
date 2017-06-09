@@ -22,6 +22,10 @@ use constant JSON_VALUE_STRING	=> 5;
 
 # JSON keys sorted alphabetically
 
+use constant JSON_KEY_DNS			=> 'DNS';
+use constant JSON_KEY_DNSSEC			=> 'DNSSEC';
+use constant JSON_KEY_EPP			=> 'EPP';
+use constant JSON_KEY_RDDS			=> 'RDDS';
 use constant JSON_KEY_ALARMED			=> 'alarmed';
 use constant JSON_KEY_CITY			=> 'city';
 use constant JSON_KEY_CYCLE_CALCULATION_TIME	=> 'cycleCalculationDateTime';
@@ -46,7 +50,7 @@ use constant JSON_KEY_TARGET_IP			=> 'targetIP';
 use constant JSON_KEY_TEST_DATA			=> 'testData';
 use constant JSON_KEY_TEST_TIME			=> 'testDateTime';
 use constant JSON_KEY_TESTED_INTERFACE		=> 'testedInterface';
-use constant JSON_KEY_TESTED_SERVICE		=> 'testedService';
+use constant JSON_KEY_TESTED_SERVICES		=> 'testedServices';
 use constant JSON_KEY_TLD			=> 'tld';
 use constant JSON_KEY_UPDATE_TIME		=> 'updateTime';
 use constant JSON_KEY_VERSION			=> 'version';
@@ -333,7 +337,7 @@ sub validate_json_value($$$$)
 	info($file, $jsonpath, "validation ends");
 }
 
-# file validation functions
+# helper function to read file containing JSON
 
 sub read_json_file($)
 {
@@ -350,6 +354,93 @@ sub read_json_file($)
 
 	return $json;
 }
+
+# common JSON pieces
+
+my $tested_service_object_schema = {
+	'value'		=> JSON_VALUE_OBJECT,
+	'not null'	=> 1,
+	'members'	=> {
+		JSON_KEY_STATUS,
+		{
+			'mandatory'	=> 1,
+			'member'	=> {
+				'value'		=> JSON_VALUE_STRING,
+				'not null'	=> 1,
+				'pattern'	=> qr/^(Up|Down|Disabled)$/
+			}
+		},
+		JSON_KEY_EMERGENCY_THRESHOLD,
+		{
+			'mandatory'	=> 0,
+			'member'	=> {
+				'value'		=> JSON_VALUE_NUMBER,
+				'not null'	=> 1,
+				'pattern'	=> qr/^(0|[1-9][0-9]*)(\.[0-9]*)?$/
+			}
+		},
+		JSON_KEY_INCIDENTS,
+		{
+			'mandatory'	=> 0,
+			'member'	=> {
+				'value'		=> JSON_VALUE_ARRAY,
+				'not null'	=> 1,
+				'element'	=> {
+					'value'		=> JSON_VALUE_OBJECT,
+					'not null'	=> 1,
+					'members'	=> {
+						JSON_KEY_INCIDENT_ID,
+						{
+							'mandatory'	=> 1,
+							'member'	=> {
+								'value'		=> JSON_VALUE_STRING,
+								'not null'	=> 1,
+								'pattern'	=> qr/^(0|[1-9][0-9]*)\.[0-9]+$/
+							}
+						},
+						JSON_KEY_START_TIME,
+						{
+							'mandatory'	=> 1,
+							'member'	=> {
+								'value'		=> JSON_VALUE_NUMBER,
+								'not null'	=> 1,
+								'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+							}
+						},
+						JSON_KEY_FALSE_POSITIVE,
+						{
+							'mandatory'	=> 1,
+							'member'	=> {
+								'value'		=> JSON_VALUE_BOOLEAN,
+								'not null'	=> 1
+							}
+						},
+						JSON_KEY_STATE,
+						{
+							'mandatory'	=> 1,
+							'member'	=> {
+								'value'		=> JSON_VALUE_STRING,
+								'not null'	=> 1,
+								'pattern'	=> qr/^(Active|Resolved)$/
+							}
+						},
+						JSON_KEY_END_TIME,
+						{
+							'mandatory'	=> 1,
+							'member'	=> {
+								'value'		=> JSON_VALUE_NUMBER,
+								'not null'	=> 0,
+								'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+};
+
+# file validation functions
 
 sub validate_tld_state_file($)
 {
@@ -401,102 +492,33 @@ sub validate_tld_state_file($)
 						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
 					}
 				},
-				JSON_KEY_TESTED_SERVICE,
+				JSON_KEY_TESTED_SERVICES,
 				{
 					'mandatory'	=> 1,
 					'member'	=> {
-						'value'		=> JSON_VALUE_ARRAY,
-						'not null'	=> 0,
-						'element'	=> {
-							'value'		=> JSON_VALUE_OBJECT,
-							'not null'	=> 1,
-							'members'	=> {
-								JSON_KEY_SERVICE,
-								{
-									'mandatory'	=> 1,
-									'member'	=> {
-										'value'		=> JSON_VALUE_STRING,
-										'not null'	=> 1,
-										'pattern'	=> qr/^(DNS|DNSSEC|EPP|RDDS)$/
-									}
-								},
-								JSON_KEY_STATUS,
-								{
-									'mandatory'	=> 1,
-									'member'	=> {
-										'value'		=> JSON_VALUE_STRING,
-										'not null'	=> 1,
-										'pattern'	=> qr/^(Up|Down|Disabled)$/
-									}
-								},
-								JSON_KEY_EMERGENCY_THRESHOLD,
-								{
-									'mandatory'	=> 1,
-									'member'	=> {
-										'value'		=> JSON_VALUE_NUMBER,
-										'not null'	=> 1,
-										'pattern'	=> qr/^(0|[1-9][0-9]*)(\.[0-9]*)?$/
-									}
-								},
-								JSON_KEY_INCIDENTS,
-								{
-									'mandatory'	=> 0,
-									'member'	=> {
-										'value'		=> JSON_VALUE_ARRAY,
-										'not null'	=> 1,
-										'element'	=> {
-											'value'		=> JSON_VALUE_OBJECT,
-											'not null'	=> 1,
-											'members'	=> {
-												JSON_KEY_INCIDENT_ID,
-												{
-													'mandatory'	=> 1,
-													'member'	=> {
-														'value'		=> JSON_VALUE_STRING,
-														'not null'	=> 1,
-														'pattern'	=> qr/^(0|[1-9][0-9]*)\.[0-9]+$/
-													}
-												},
-												JSON_KEY_START_TIME,
-												{
-													'mandatory'	=> 1,
-													'member'	=> {
-														'value'		=> JSON_VALUE_NUMBER,
-														'not null'	=> 1,
-														'pattern'	=> qr/^(0|[1-9][0-9]*)$/
-													}
-												},
-												JSON_KEY_FALSE_POSITIVE,
-												{
-													'mandatory'	=> 1,
-													'member'	=> {
-														'value'		=> JSON_VALUE_BOOLEAN,
-														'not null'	=> 1
-													}
-												},
-												JSON_KEY_STATE,
-												{
-													'mandatory'	=> 1,
-													'member'	=> {
-														'value'		=> JSON_VALUE_STRING,
-														'not null'	=> 1,
-														'pattern'	=> qr/^(Active|Resolved)$/
-													}
-												},
-												JSON_KEY_END_TIME,
-												{
-													'mandatory'	=> 1,
-													'member'	=> {
-														'value'		=> JSON_VALUE_NUMBER,
-														'not null'	=> 0,
-														'pattern'	=> qr/^(0|[1-9][0-9]*)$/
-													}
-												}
-											}
-										}
-									}
-								}
-							}
+						'value'		=> JSON_VALUE_OBJECT,
+						'not null'	=> 1,
+						'members'	=> {
+							JSON_KEY_DNS,
+							{
+								'mandatory'	=> 1,
+								'member'	=> $tested_service_object_schema
+							},
+							JSON_KEY_DNSSEC,
+							{
+								'mandatory'	=> 1,
+								'member'	=> $tested_service_object_schema
+							},
+							JSON_KEY_EPP,
+							{
+								'mandatory'	=> 1,
+								'member'	=> $tested_service_object_schema
+							},
+							JSON_KEY_RDDS,
+							{
+								'mandatory'	=> 1,
+								'member'	=> $tested_service_object_schema
+							},
 						}
 					}
 				}
@@ -863,6 +885,15 @@ sub validate_measurement_file($)
 						'value'		=> JSON_VALUE_NUMBER,
 						'not null'	=> 1,
 						'pattern'	=> qr/^(0|[1-9][0-9]*)$/
+					}
+				},
+				JSON_KEY_STATUS,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_STRING,
+						'not null'	=> 1,
+						'pattern'	=> qr/^(Up|Down)$/
 					}
 				},
 				JSON_KEY_TESTED_INTERFACE,
