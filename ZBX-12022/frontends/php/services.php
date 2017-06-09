@@ -108,8 +108,7 @@ if (isset($_REQUEST['delete']) && isset($_REQUEST['serviceid'])) {
 	$result = API::Service()->delete([$service['serviceid']]);
 
 	if ($result) {
-		add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_IT_SERVICE,
-				'Name ['.$service['name'].'] id ['.$service['serviceid'].']');
+		add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_IT_SERVICE, 'Name ['.$service['name'].'] id ['.$service['serviceid'].']');
 		unset($_REQUEST['form']);
 	}
 	unset($service);
@@ -226,10 +225,8 @@ if (isset($_REQUEST['form'])) {
 			}
 		}
 		else {
-			$new_service_time['ts_from'] = dowHrMinToSec($_REQUEST['new_service_time']['from_week'],
-					$_REQUEST['new_service_time']['from_hour'], $_REQUEST['new_service_time']['from_minute']);
-			$new_service_time['ts_to'] = dowHrMinToSec($_REQUEST['new_service_time']['to_week'],
-					$_REQUEST['new_service_time']['to_hour'], $_REQUEST['new_service_time']['to_minute']);
+			$new_service_time['ts_from'] = dowHrMinToSec($_REQUEST['new_service_time']['from_week'], $_REQUEST['new_service_time']['from_hour'], $_REQUEST['new_service_time']['from_minute']);
+			$new_service_time['ts_to'] = dowHrMinToSec($_REQUEST['new_service_time']['to_week'], $_REQUEST['new_service_time']['to_hour'], $_REQUEST['new_service_time']['to_minute']);
 			$new_service_time['note'] = $_REQUEST['new_service_time']['note'];
 		}
 
