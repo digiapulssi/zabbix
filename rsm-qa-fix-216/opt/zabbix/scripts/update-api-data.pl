@@ -752,6 +752,16 @@ foreach (keys(%$servicedata))
 					delete($tr_ref->{'start'});
 					delete($tr_ref->{'end'});
 
+					$tr_ref->{'testedInterface'} = [
+						{
+							'interface'	=> uc($service),
+							'status'	=> $tr_ref->{'status'},
+							'probes'	=> []
+						}
+					];
+
+					delete($tr_ref->{'status'});
+
 					my $probes_ref = $tr_ref->{'probes'};
 					foreach my $probe (keys(%$probes_ref))
 					{
@@ -765,7 +775,49 @@ foreach (keys(%$servicedata))
 								$probes_ref->{$probe}->{'status'} = ($status_ref->{'value'} >= $minns ? "Up" : "Down");
 							}
 						}
+
+						my $probe_ref = {
+							'city'		=> $probe,
+							'status'	=> $probes_ref->{$probe}->{'status'},
+							'testData'	=> []
+						};
+
+						foreach my $ns (keys(%{$probes_ref->{$probe}->{'details'}}))
+						{
+							my $test_data_ref = {
+								'target'	=> $ns,
+								'status'	=> undef,	# TODO figure out what's that
+								'metrics'	=> []
+							};
+
+							foreach my $test (@{$probes_ref->{$probe}->{'details'}->{$ns}})
+							{
+								my $metric = {
+									'testDateTime'	=> $test->{'clock'},
+									'targetIP'	=> $test->{'ip'},
+								};
+
+								if ($test->{'rtt'} =~ qr/^\-/)
+								{
+									$metric->{'rtt'} = undef;
+									$metric->{'result'} = $test->{'rtt'};
+								}
+								else
+								{
+									$metric->{'rtt'} = $test->{'rtt'};
+									$metric->{'result'} = 'ok';
+								}
+
+								push(@{$test_data_ref->{'metrics'}}, $metric);
+							}
+
+							push(@{$probe_ref->{'testData'}}, $test_data_ref);
+						}
+
+						push(@{$tr_ref->{'testedInterface'}->[0]->{'probes'}}, $probe_ref);
 					}
+
+					delete($tr_ref->{'probes'});
 
 					if (opt('dry-run'))
 					{
