@@ -1,3 +1,24 @@
+Changes for rsm1.0.0rc8
+
+New features:
+....I..... [219] added script for putting SLA API into maintenance mode (gleb)
+
+Bug fixes:
+....I..... [237] fixed creation of "zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]" and "rsm.probe.online" items in "Template Proxy Health" by probes.pl (gleb)
+..F....... [205] fixed frontend logout (Oleg)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc7
+
+New features:
+..F....... [223] added error messages if no connection to other databases (Oleg)
+....I..... [206] added monitoring of vital parameters of Zabbix proxies (dotneft, gleb)
+
+Bug fixes:
+..F....... [218] fixed "Affects rolling week" column in SLA monitoring tests (Oleg)
+..F....... [236] added "No reply from resolver" to non-service error exceptions on frontend side (gleb, Oleg)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc6
 
 Bug fixes:

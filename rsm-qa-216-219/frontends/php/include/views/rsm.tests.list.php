@@ -66,7 +66,7 @@ foreach ($this->data['tests'] as $test) {
 		$rollingWeekEffects = _('Yes');
 	}
 	else {
-		$rollingWeekEffects = _('Yes / False positive');
+		$rollingWeekEffects = _('No / False positive');
 	}
 
 	$row = [
