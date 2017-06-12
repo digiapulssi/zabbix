@@ -23,6 +23,10 @@ use constant JSON_VALUE_ALARMED_YES => 'Yes';
 use constant JSON_VALUE_ALARMED_NO => 'No';
 use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
 
+use constant JSON_OBJECT_DISABLED_SERVICE => {
+	'status'	=> 'Disabled'
+};
+
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
@@ -422,7 +426,7 @@ foreach (keys(%$servicedata))
 
 	$json_state_ref->{'tld'} = $tld;
 	$json_state_ref->{'status'} = JSON_VALUE_UP;
-	$json_state_ref->{'testedService'} = [];
+	$json_state_ref->{'testedServices'} = {};
 
 	foreach my $service (keys(%{$servicedata->{$tld}}))
 	{
@@ -551,13 +555,11 @@ foreach (keys(%$servicedata))
 			fail(uc($service), ": no rolling week data in the database yet");
 		}
 
-		push(@{$json_state_ref->{'testedService'}},
-		{
-			'service' => uc($service),
+		$json_state_ref->{'testedServices'}->{uc($service)} = {
 			'status' => ($alarmed_status eq JSON_VALUE_ALARMED_YES ? JSON_VALUE_DOWN : JSON_VALUE_UP),
 			'emergencyThreshold' => $rollweek,
 			'incidents' => []
-		});
+		};
 
 		$incidents = get_incidents($avail_itemid, $service_from, $service_till);
 
@@ -1025,8 +1027,6 @@ foreach (keys(%$servicedata))
 			}
 		} # foreach (@$incidents)
 
-		my $service_idx = scalar(@{$json_state_ref->{'testedService'}}) - 1;
-
 		foreach (@{$rollweek_incidents})
 		{
 			my $eventid = $_->{'eventid'};
@@ -1034,10 +1034,17 @@ foreach (keys(%$servicedata))
 			my $event_end = $_->{'end'};
 			my $false_positive = $_->{'false_positive'};
 
-			push(@{$json_state_ref->{'testedService'}->[$service_idx]->{'incidents'}},
+			push(@{$json_state_ref->{'testedServices'}->{uc($service)}->{'incidents'}},
 				ah_create_incident_json($eventid, $event_start, $event_end, $false_positive));
 		}
 	} # foreach my $service
+
+	foreach my $service (('DNS', 'DNSSEC', 'EPP', 'RDDS'))
+	{
+		next if (exists($json_state_ref->{'testedServices'}->{$service}));
+
+		$json_state_ref->{'testedServices'}->{$service} = JSON_OBJECT_DISABLED_SERVICE;
+	}
 
 	if (ah_save_state($ah_tld, $json_state_ref) != AH_SUCCESS)
 	{
