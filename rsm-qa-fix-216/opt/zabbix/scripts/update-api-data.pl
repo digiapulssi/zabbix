@@ -27,6 +27,10 @@ use constant JSON_OBJECT_DISABLED_SERVICE => {
 	'status'	=> 'Disabled'
 };
 
+use constant JSON_OBJECT_NORESULT_PROBE => {
+	'status'	=> PROBE_NORESULT_STR
+};
+
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
@@ -730,19 +734,8 @@ foreach (keys(%$servicedata))
 				{
 					foreach my $tr_ref (@test_results)
 					{
-						my $found = 0;
-
-						my $probes_ref = $tr_ref->{'probes'};
-						foreach my $tr_ref_probe (keys(%$probes_ref))
-						{
-							if ($tr_ref_probe eq $probe)
-							{
-								$found = 1;
-								last;
-							}
-						}
-
-						$probes_ref->{$probe}->{'status'} = PROBE_NORESULT_STR if ($found == 0);
+						next if (exists($tr_ref->{'probes'}->{$probe}));
+						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 					}
 				}
 
@@ -848,20 +841,8 @@ foreach (keys(%$servicedata))
 
 						foreach my $subservice (keys(%$subservices_ref))
 						{
-							my $probes_ref = $subservices_ref->{$subservice};
-
-							my $found = 0;
-
-							foreach my $tr_ref_probe (keys(%$probes_ref))
-							{
-								if ($tr_ref_probe eq $probe)
-								{
-									$found = 1;
-									last;
-								}
-							}
-
-							$probes_ref->{$probe}->{'status'} = PROBE_NORESULT_STR if ($found == 0);
+							next if (exists($subservices_ref->{$subservice}->{$probe}));
+							$subservices_ref->{$subservice}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 						}
 					}
 				}
@@ -966,19 +947,8 @@ foreach (keys(%$servicedata))
 				{
 					foreach my $tr_ref (@test_results)
 					{
-						my $found = 0;
-
-						my $probes_ref = $tr_ref->{'probes'};
-						foreach my $tr_ref_probe (keys(%$probes_ref))
-						{
-							if ($tr_ref_probe eq $probe)
-							{
-								$found = 1;
-								last;
-							}
-						}
-
-						$probes_ref->{$probe}->{'status'} = PROBE_NORESULT_STR if ($found == 0);
+						next if (exists($tr_ref->{'probes'}->{$probe}));
+						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 					}
 				}
 
