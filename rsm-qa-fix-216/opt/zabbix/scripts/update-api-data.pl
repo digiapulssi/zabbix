@@ -611,7 +611,7 @@ foreach (keys(%$servicedata))
 				my $result;
 
 				$result->{'tld'} = $tld;
-				$result->{'clock'} = $clock;
+				$result->{'cycleCalculationDateTime'} = $clock;
 
 				# todo phase 1: make sure this uses avail valuemaps in phase1
 				# todo: later rewrite to use valuemap ID from item
@@ -767,9 +767,6 @@ foreach (keys(%$servicedata))
 						}
 					}
 
-					$tr_ref->{'cycleCalculationDateTime'} = $tr_ref->{'clock'};
-					delete($tr_ref->{'clock'});
-
 					if (opt('dry-run'))
 					{
 						__prnt_json($tr_ref);
@@ -883,9 +880,6 @@ foreach (keys(%$servicedata))
 						}
 					}
 
-					$tr_ref->{'cycleCalculationDateTime'} = $tr_ref->{'clock'};
-					delete($tr_ref->{'clock'});
-
 					if (opt('dry-run'))
 					{
 						__prnt_json($tr_ref);
@@ -980,9 +974,6 @@ foreach (keys(%$servicedata))
 							}
 						}
 					}
-
-					$tr_ref->{'cycleCalculationDateTime'} = $tr_ref->{'clock'};
-					delete($tr_ref->{'clock'});
 
 					if (opt('dry-run'))
 					{
