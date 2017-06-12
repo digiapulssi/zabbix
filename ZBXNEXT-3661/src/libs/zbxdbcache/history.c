@@ -100,7 +100,7 @@ static const char *history_value2str(ZBX_DC_HISTORY *h)
 
 static void	zbx_send_data(const char *data, const char *url)
 {
-	CUR			*curl = NULL;
+	CURL			*curl = NULL;
 	struct curl_slist	*curl_headers = NULL;
 	int			err;
 
