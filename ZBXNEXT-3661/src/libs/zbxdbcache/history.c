@@ -100,9 +100,9 @@ static const char *history_value2str(ZBX_DC_HISTORY *h)
 
 static void	zbx_send_data(const char *data, const char *url)
 {
-	CURL		*curl = NULL;
+	CUR			*curl = NULL;
 	struct curl_slist	*curl_headers = NULL;
-	int		err;
+	int			err;
 
 	history_init();
 
@@ -287,12 +287,12 @@ out:
 void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
 		zbx_vector_history_record_t *values)
 {
-	CURL		*curl = NULL;
-	char		*url = NULL;
-	size_t		url_alloc = 0, url_offset = 0;
-	char		*types[] = {"float", "char", "log", "unum", "text"};
-	int		err;
-	long		http_code;
+	CURL	*curl = NULL;
+	char	*url = NULL;
+	size_t	url_alloc = 0, url_offset = 0;
+	char	*types[] = {"float", "char", "log", "unum", "text"};
+	int	err;
+	long	http_code;
 
 	history_init();
 
@@ -352,14 +352,14 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 
 void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 {
-	int			i, num = 0;
-	ZBX_DC_TREND		*t;
-	struct zbx_json		json;
-	const char		*types[] = {"float", "char", "log", "unum", "text"};
-	char			*url = NULL;
-	size_t			url_alloc = 0, url_offset = 0;
-	char			*buffer = NULL;
-	size_t			buffer_alloc = 0, buffer_offset;
+	int		i, num = 0;
+	ZBX_DC_TREND	*t;
+	struct zbx_json	json;
+	const char	*types[] = {"float", "char", "log", "unum", "text"};
+	char		*url = NULL;
+	size_t		url_alloc = 0, url_offset = 0;
+	char		*buffer = NULL;
+	size_t		buffer_alloc = 0, buffer_offset;
 
 	zbx_json_initarray(&json, trends->values_num * 100);
 
@@ -421,6 +421,8 @@ void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 }
 
 #else
+
+/* Stub functions if LibCURL support is not compiled in zabbix */
 
 void	zbx_set_history_service_url(const char *url)
 {
