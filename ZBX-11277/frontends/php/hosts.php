@@ -365,6 +365,7 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 
 		if (hasRequest('inventory_mode') && array_key_exists('inventory_mode', $visible)) {
 			$newValues['inventory_mode'] = getRequest('inventory_mode', HOST_INVENTORY_DISABLED);
+
 			if ($newValues['inventory_mode'] == HOST_INVENTORY_DISABLED) {
 				$host_inventory = [];
 			}
@@ -375,8 +376,8 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 				$host['inventory'] = $host_inventory;
 			}
 			elseif (array_key_exists('inventory_mode', $host['inventory'])
-						&& $host['inventory']['inventory_mode'] != HOST_INVENTORY_DISABLED) {
-				$host['inventory'] =  $host_inventory;
+					&& $host['inventory']['inventory_mode'] != HOST_INVENTORY_DISABLED) {
+				$host['inventory'] = $host_inventory;
 			}
 			else {
 				$host['inventory'] = [];
@@ -384,6 +385,7 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			$host = array_merge($host, $newValues);
 		}
 		unset($host);
+
 		$result = (bool) API::Host()->update($hosts);
 
 		if ($result === false) {
