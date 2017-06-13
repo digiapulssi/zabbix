@@ -108,17 +108,15 @@ class CWebUser {
 					);
 				}
 
-				if ($error) {
-					unset($DB['DB']);
-					$DB['TYPE'] = $master['TYPE'];
-					$DB['SERVER'] = $master['SERVER'];
-					$DB['PORT'] = $master['PORT'];
-					$DB['DATABASE'] = $master['DATABASE'];
-					$DB['USER'] = $master['USER'];
-					$DB['PASSWORD'] = $master['PASSWORD'];
-					$DB['SCHEMA'] = $master['SCHEMA'];
-					DBconnect($error);
-				}
+				unset($DB['DB']);
+				$DB['TYPE'] = $master['TYPE'];
+				$DB['SERVER'] = $master['SERVER'];
+				$DB['PORT'] = $master['PORT'];
+				$DB['DATABASE'] = $master['DATABASE'];
+				$DB['USER'] = $master['USER'];
+				$DB['PASSWORD'] = $master['PASSWORD'];
+				$DB['SCHEMA'] = $master['SCHEMA'];
+				DBconnect($error);
 			}
 
 			return $result;
