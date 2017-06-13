@@ -31,6 +31,8 @@ use constant JSON_OBJECT_NODATA_PROBE => {
 	'status'	=> 'Nodata'
 };
 
+use constant DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
+
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
@@ -294,6 +296,8 @@ foreach (@server_keys)
 
 	db_disconnect();
 	db_connect($server_key);
+
+	my $dns_udp_rtt_high_history = get_history_by_itemid(DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
 
 my $tlds_ref;
 if (opt('tld'))
@@ -786,7 +790,7 @@ foreach (keys(%$servicedata))
 						{
 							my $test_data_ref = {
 								'target'	=> $ns,
-								'status'	=> undef,	# TODO figure out what's that
+								'status'	=> undef,
 								'metrics'	=> []
 							};
 
@@ -797,19 +801,29 @@ foreach (keys(%$servicedata))
 									'targetIP'	=> $test->{'ip'},
 								};
 
-								if ($test->{'rtt'} =~ qr/^\-/)
+								if (substr($test->{'rtt'}, 0, 1) eq "-")
 								{
 									$metric->{'rtt'} = undef;
 									$metric->{'result'} = $test->{'rtt'};
+
+									$test_data_ref->{'status'} = "Down";
 								}
 								else
 								{
 									$metric->{'rtt'} = $test->{'rtt'};
-									$metric->{'result'} = 'ok';
+									$metric->{'result'} = "ok";
+
+									# skip threshold check if NS is already known to be down
+									unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+									{
+										$test_data_ref->{'status'} = ($test->{'rtt'} > get_historical_value_by_time($dns_udp_rtt_high_history, $metric->{'testDateTime'}) ? "Down" : "Up");
+									}
 								}
 
 								push(@{$test_data_ref->{'metrics'}}, $metric);
 							}
+
+							$test_data_ref->{'status'} = "No result" unless (defined($test_data_ref->{'status'}));
 
 							push(@{$probe_ref->{'testData'}}, $test_data_ref);
 						}
@@ -1102,6 +1116,45 @@ if (!opt('dry-run') && (my $error = rsm_targets_apply()))
 }
 
 slv_exit(SUCCESS);
+
+# gets the history of item for a given period
+sub get_history_by_itemid($$$)
+{
+	my $itemid = shift;
+	my $timestamp_from = shift;
+	my $timestamp_till = shift;
+
+	return db_select(
+			"select clock,value" .
+			" from history_uint" .
+			" where itemid=$itemid" .
+			" and " . sql_time_condition($start, $end) .
+			" order by clock");
+}
+
+# gets the value of item at a given timestamp
+sub get_historical_value_by_time($$)
+{
+	my $history = shift;
+	my $timestamp = shift;
+
+	# TODO implement binary search
+
+	my $value;
+
+	foreach my $row (@{$history})
+	{
+		last if ($timestamp < $row->[0]);	# stop iterating if history clock overshot the timestamp
+	}
+	continue
+	{
+		$value = $row->[1];	# keep the value preceeding overshooting
+	}
+
+	fail("timestamp $timestamp is out of bounds of selected historical data range") unless (defined($value));
+
+	return $value;
+}
 
 # values are organized like this:
 # {
