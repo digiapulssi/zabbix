@@ -2242,12 +2242,17 @@ sub get_downtime
 	my $itemid = shift;
 	my $from = shift;
 	my $till = shift;
-	my $ignore_incidents = shift; # if set check the whole period
+	my $ignore_incidents = shift;	# if set check the whole period
+	my $incidents_ref = shift;	# optional reference to array of incidents, ignored if $ignore_incidents is true
 
 	my $incidents;
 	if ($ignore_incidents)
 	{
 		push(@$incidents, __make_incident(0, 0, $from, $till));
+	}
+	elsif ($incidents_ref)
+	{
+		$incidents = $incidents_ref;
 	}
 	else
 	{
@@ -2255,8 +2260,6 @@ sub get_downtime
 	}
 
 	my $count = 0;
-
-	my $total = scalar(@$incidents);
 	my $downtime = 0;
 
 	my $sec;
@@ -2273,7 +2276,10 @@ sub get_downtime
 		my $period_from = $_->{'start'};
 		my $period_till = $_->{'end'};
 
-		fail("internal error: incident outside time bounds, check function get_incidents()") if (($period_from < $from) and defined($period_till) and ($period_till < $from));
+		if (($period_from < $from) && defined($period_till) && ($period_till < $from))
+		{
+			fail("internal error: incident outside time bounds, check function get_incidents()");
+		}
 
 		$period_from = $from if ($period_from < $from);
 		$period_till = $till unless (defined($period_till)); # last incident may be ongoing
@@ -2390,8 +2396,6 @@ sub get_downtime_execute
 	}
 
 	my $count = 0;
-
-	my $total = scalar(@$incidents);
 	my $downtime = 0;
 
 	my $sec;

@@ -12,11 +12,26 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);	# ITEM_VALUE_TYPE_FLOAT
 use ApiHelper;
-use JSON::XS;
 
 use constant JSON_RDDS_SUBSERVICE => 'subService';
 use constant JSON_RDDS_43 => 'RDDS43';
 use constant JSON_RDDS_80 => 'RDDS80';
+
+use constant JSON_VALUE_UP => 'Up';
+use constant JSON_VALUE_DOWN => 'Down';
+use constant JSON_VALUE_ALARMED_YES => 'Yes';
+use constant JSON_VALUE_ALARMED_NO => 'No';
+use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
+
+use constant JSON_OBJECT_DISABLED_SERVICE => {
+	'status'	=> 'Disabled'
+};
+
+use constant JSON_OBJECT_NODATA_PROBE => {
+	'status'	=> 'Nodata'
+};
+
+use constant DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
 
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
@@ -24,6 +39,9 @@ use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this 
 
 use constant TARGETS_TMP_DIR => '/opt/zabbix/sla-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/sla';
+
+sub get_history_by_itemid($$$);
+sub get_historical_value_by_time($$);
 
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
 
@@ -135,6 +153,7 @@ foreach my $service (keys(%services))
 	}
 
 	$services{$service}{'avail_key'} = "rsm.slv.$service.avail";
+	$services{$service}{'rollweek_key'} = "rsm.slv.$service.rollweek";
 }
 
 my $now = time();
@@ -238,7 +257,7 @@ dbg("check_from:", ts_full($check_from), " check_till:", ts_full($check_till), "
 
 if ($check_till < $check_from)
 {
-	info("cannot yet calculate, the latest data not fully available");
+	info("no new data yet, we are up-to-date");
 	exit(0);
 }
 
@@ -256,7 +275,7 @@ if ($check_till > $max_till)
 		$left_str = "$left minutes";
 	}
 
-	wrn(sprintf("cannot yet calculate for selected period (%s), please wait for %s for the data to be processed", selected_period($check_from, $check_till), $left_str));
+	wrn(sprintf("the specified period (%s) is in the future, please wait for %s", selected_period($check_from, $check_till), $left_str));
 
 	exit(0);
 }
@@ -280,6 +299,8 @@ foreach (@server_keys)
 
 	db_disconnect();
 	db_connect($server_key);
+
+	my $dns_udp_rtt_high_history = get_history_by_itemid(DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
 
 my $tlds_ref;
 if (opt('tld'))
@@ -328,7 +349,7 @@ foreach (@$tlds_ref)
 			}
 			else
 			{
-				if (ah_save_alarmed($ah_tld, $service, AH_ALARMED_DISABLED) != AH_SUCCESS)
+				if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_DISABLED) != AH_SUCCESS)
 				{
 					fail("cannot save alarmed: ", ah_get_error());
 				}
@@ -337,7 +358,7 @@ foreach (@$tlds_ref)
 			next;
 		}
 
-		my $lastclock_key = "rsm.slv.$service.rollweek";
+		my $lastclock_key = $services{$service}{'rollweek_key'};
 
 		dbg("tld:$tld lastclock_key:$lastclock_key value_type:", ITEM_VALUE_TYPE_FLOAT);
 
@@ -353,7 +374,7 @@ foreach (@$tlds_ref)
 		{
 			wrn(uc($service), ": no rolling week data in the database yet");
 
-			if (ah_save_alarmed($ah_tld, $service, AH_ALARMED_DISABLED) != AH_SUCCESS)
+			if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_DISABLED) != AH_SUCCESS)
 			{
 				fail("cannot save alarmed: ", ah_get_error());
 			}
@@ -411,7 +432,14 @@ foreach (keys(%$servicedata))
 	# NB! This is needed in order to set the value globally.
 	$tld = $_;
 
+	my @tld_measurements = ();
+
 	my $ah_tld = ah_get_api_tld($tld);
+	my $json_state_ref;
+
+	$json_state_ref->{'tld'} = $tld;
+	$json_state_ref->{'status'} = JSON_VALUE_UP;
+	$json_state_ref->{'testedServices'} = {};
 
 	foreach my $service (keys(%{$servicedata->{$tld}}))
 	{
@@ -421,6 +449,7 @@ foreach (keys(%$servicedata))
 		my $service_from = $services{$service}{'from'};
 		my $service_till = $services{$service}{'till'};
 		my $avail_key = $services{$service}{'avail_key'};
+		my $rollweek_key = $services{$service}{'rollweek_key'};
 
 		if (!$service_from || !$service_till)
 		{
@@ -450,35 +479,56 @@ foreach (keys(%$servicedata))
 			next;
 		}
 
+		my $rollweek_itemid = get_itemid_by_hostid($hostid, $rollweek_key);
+
+		if ($rollweek_itemid < 0)
+		{
+			if ($rollweek_itemid == E_ID_NONEXIST)
+			{
+				wrn("configuration error: service $service enabled but item \"$rollweek_key\" not found");
+			}
+			elsif ($rollweek_itemid == E_ID_MULTIPLE)
+			{
+				wrn("configuration error: multiple items with key \"$rollweek_key\" found");
+			}
+			else
+			{
+				wrn("cannot get ID of $service item ($rollweek_key): unknown error");
+			}
+
+			next;
+		}
+
 		# we need down time in minutes, not percent, that's why we can't use "rsm.slv.$service.rollweek" value
 		my ($rollweek_from, $rollweek_till) = get_rollweek_bounds();
-		my $downtime = get_downtime($avail_itemid, $rollweek_from, $rollweek_till);
+
+		my $rollweek_incidents = get_incidents($avail_itemid, $rollweek_from, $rollweek_till);
+
+		my $downtime = get_downtime($avail_itemid, $rollweek_from, $rollweek_till, 0, $rollweek_incidents);
 
 		__prnt(uc($service), " period: ", selected_period($service_from, $service_till)) if (opt('dry-run') or opt('debug'));
 
 		if (opt('dry-run'))
 		{
-			__prnt(uc($service), " service availability $downtime (", ts_str($lastclock), ")");
+			__prnt(uc($service), " downtime: $downtime (", ts_str($lastclock), ")");
 		}
 		else
 		{
-			if (ah_save_service_availability($ah_tld, $service, $downtime, $lastclock) != AH_SUCCESS)
-			{
-				fail("cannot save service availability: ", ah_get_error());
-			}
+			ah_save_downtime($ah_tld, $service, $downtime, $lastclock);
 		}
 
-		dbg("getting current $service availability (delay:$delay)");
+		dbg("getting current $service service availability (delay:$delay)");
 
-		# get availability
+		# get alarmed
 		my $incidents = get_incidents($avail_itemid, $now);
 
-		my $alarmed_status = AH_ALARMED_NO;
+		my $alarmed_status = JSON_VALUE_ALARMED_NO;
 		if (scalar(@$incidents) != 0)
 		{
 			if ($incidents->[0]->{'false_positive'} == 0 and not defined($incidents->[0]->{'end'}))
 			{
-				$alarmed_status = AH_ALARMED_YES;
+				$alarmed_status = JSON_VALUE_ALARMED_YES;
+				$json_state_ref->{'status'} = JSON_VALUE_DOWN;
 			}
 		}
 
@@ -511,6 +561,18 @@ foreach (keys(%$servicedata))
 			$epp_dbl_items_ref = __get_epp_dbl_itemids($tld, getopt('probe'));
 			$epp_str_items_ref = __get_epp_str_itemids($tld, getopt('probe'));
 		}
+
+		my $rollweek;
+		if (get_current_value($rollweek_itemid, ITEM_VALUE_TYPE_FLOAT, \$rollweek) != SUCCESS)
+		{
+			fail(uc($service), ": no rolling week data in the database yet");
+		}
+
+		$json_state_ref->{'testedServices'}->{uc($service)} = {
+			'status' => ($alarmed_status eq JSON_VALUE_ALARMED_YES ? JSON_VALUE_DOWN : JSON_VALUE_UP),
+			'emergencyThreshold' => $rollweek,
+			'incidents' => []
+		};
 
 		$incidents = get_incidents($avail_itemid, $service_from, $service_till);
 
@@ -558,7 +620,7 @@ foreach (keys(%$servicedata))
 				my $result;
 
 				$result->{'tld'} = $tld;
-				$result->{'clock'} = $clock;
+				$result->{'cycleCalculationDateTime'} = $clock;
 
 				# todo phase 1: make sure this uses avail valuemaps in phase1
 				# todo: later rewrite to use valuemap ID from item
@@ -681,19 +743,8 @@ foreach (keys(%$servicedata))
 				{
 					foreach my $tr_ref (@test_results)
 					{
-						my $found = 0;
-
-						my $probes_ref = $tr_ref->{'probes'};
-						foreach my $tr_ref_probe (keys(%$probes_ref))
-						{
-							if ($tr_ref_probe eq $probe)
-							{
-								$found = 1;
-								last;
-							}
-						}
-
-						$probes_ref->{$probe}->{'status'} = PROBE_NORESULT_STR if ($found == 0);
+						next if (exists($tr_ref->{'probes'}->{$probe}));
+						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NODATA_PROBE;
 					}
 				}
 
@@ -710,6 +761,16 @@ foreach (keys(%$servicedata))
 					delete($tr_ref->{'start'});
 					delete($tr_ref->{'end'});
 
+					$tr_ref->{'testedInterface'} = [
+						{
+							'interface'	=> uc($service),
+							'status'	=> $tr_ref->{'status'},
+							'probes'	=> []
+						}
+					];
+
+					delete($tr_ref->{'status'});
+
 					my $probes_ref = $tr_ref->{'probes'};
 					foreach my $probe (keys(%$probes_ref))
 					{
@@ -723,7 +784,59 @@ foreach (keys(%$servicedata))
 								$probes_ref->{$probe}->{'status'} = ($status_ref->{'value'} >= $minns ? "Up" : "Down");
 							}
 						}
+
+						my $probe_ref = {
+							'city'		=> $probe,
+							'status'	=> $probes_ref->{$probe}->{'status'},
+							'testData'	=> []
+						};
+
+						foreach my $ns (keys(%{$probes_ref->{$probe}->{'details'}}))
+						{
+							my $test_data_ref = {
+								'target'	=> $ns,
+								'status'	=> undef,
+								'metrics'	=> []
+							};
+
+							foreach my $test (@{$probes_ref->{$probe}->{'details'}->{$ns}})
+							{
+								my $metric = {
+									'testDateTime'	=> $test->{'clock'},
+									'targetIP'	=> $test->{'ip'}
+								};
+
+								if (substr($test->{'rtt'}, 0, 1) eq "-")
+								{
+									$metric->{'rtt'} = undef;
+									$metric->{'result'} = $test->{'rtt'};
+
+									$test_data_ref->{'status'} = "Down";
+								}
+								else
+								{
+									$metric->{'rtt'} = $test->{'rtt'};
+									$metric->{'result'} = "ok";
+
+									# skip threshold check if NS is already known to be down
+									unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+									{
+										$test_data_ref->{'status'} = ($test->{'rtt'} > get_historical_value_by_time($dns_udp_rtt_high_history, $metric->{'testDateTime'}) ? "Down" : "Up");
+									}
+								}
+
+								push(@{$test_data_ref->{'metrics'}}, $metric);
+							}
+
+							$test_data_ref->{'status'} = "No result" unless (defined($test_data_ref->{'status'}));
+
+							push(@{$probe_ref->{'testData'}}, $test_data_ref);
+						}
+
+						push(@{$tr_ref->{'testedInterface'}->[0]->{'probes'}}, $probe_ref);
 					}
+
+					delete($tr_ref->{'probes'});
 
 					if (opt('dry-run'))
 					{
@@ -731,10 +844,13 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, encode_json($tr_ref), $tr_ref->{'clock'}) != AH_SUCCESS)
-						{
-							fail("cannot save incident: ", ah_get_error());
-						}
+						push(@tld_measurements, {
+							'ah_tld'	=> $ah_tld,
+							'service'	=> $service,
+							'eventid'	=> $eventid,
+							'event_start'	=> $event_start,
+							'tr_ref'	=> $tr_ref
+						});
 					}
 				}
 			}
@@ -796,20 +912,8 @@ foreach (keys(%$servicedata))
 
 						foreach my $subservice (keys(%$subservices_ref))
 						{
-							my $probes_ref = $subservices_ref->{$subservice};
-
-							my $found = 0;
-
-							foreach my $tr_ref_probe (keys(%$probes_ref))
-							{
-								if ($tr_ref_probe eq $probe)
-								{
-									$found = 1;
-									last;
-								}
-							}
-
-							$probes_ref->{$probe}->{'status'} = PROBE_NORESULT_STR if ($found == 0);
+							next if (exists($subservices_ref->{$subservice}->{$probe}));
+							$subservices_ref->{$subservice}->{$probe} = JSON_OBJECT_NODATA_PROBE;
 						}
 					}
 				}
@@ -826,6 +930,16 @@ foreach (keys(%$servicedata))
 
 					delete($tr_ref->{'start'});
 					delete($tr_ref->{'end'});
+
+					my $rdds43_ref = {
+						'interface'	=> JSON_RDDS_43,
+						'probes'	=> []
+					};
+
+					my $rdds80_ref = {
+						'interface'	=> JSON_RDDS_80,
+						'probes'	=> []
+					};
 
 					my $subservices_ref = $tr_ref->{+JSON_RDDS_SUBSERVICE};
 
@@ -847,8 +961,50 @@ foreach (keys(%$servicedata))
 									$probes_ref->{$probe}->{'status'} = (($status_ref->{'value'} == 1 or $status_ref->{'value'} == $service_only) ? "Up" : "Down");
 								}
 							}
+
+							fail("Gleb was wrong, RDDS test can have more (or less) than one metric") if (scalar(@{$probes_ref->{$probe}->{'details'}}) != 1);
+
+							my $test = $probes_ref->{$probe}->{'details'}->[0];
+
+							my $metric = {
+								'testDateTime'	=> $test->{'clock'},
+								'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+							};
+
+							if (substr($test->{'rtt'}, 0, 1) eq "-")
+							{
+								$metric->{'rtt'} = undef;
+								$metric->{'result'} = $test->{'rtt'};
+							}
+							else
+							{
+								$metric->{'rtt'} = $test->{'rtt'};
+								$metric->{'result'} = "ok";
+							}
+
+							my $probe_ref = {
+								'city'		=> $probe,
+								'status'	=> $probes_ref->{$probe}->{'status'},
+								'testData'	=> [
+									{
+										'target'	=> undef,
+										'status'	=> defined($metric->{'rtt'}) ? "Up" : "Down",
+										'metrics'	=> [$metric]
+									}
+								]
+							};
+
+							push(@{($subservice eq JSON_RDDS_43 ? $rdds43_ref : $rdds80_ref)->{'probes'}}, $probe_ref);
 						}
 					}
+
+					$tr_ref->{'testedInterface'} = [
+						$rdds43_ref,
+						$rdds80_ref
+					];
+
+					delete($tr_ref->{'status'});
+					delete($tr_ref->{+JSON_RDDS_SUBSERVICE});
 
 					if (opt('dry-run'))
 					{
@@ -856,10 +1012,13 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, encode_json($tr_ref), $tr_ref->{'clock'}) != AH_SUCCESS)
-						{
-							fail("cannot save incident: ", ah_get_error());
-						}
+						push(@tld_measurements, {
+							'ah_tld'	=> $ah_tld,
+							'service'	=> $service,
+							'eventid'	=> $eventid,
+							'event_start'	=> $event_start,
+							'tr_ref'	=> $tr_ref
+						});
 					}
 				}
 			}
@@ -911,19 +1070,8 @@ foreach (keys(%$servicedata))
 				{
 					foreach my $tr_ref (@test_results)
 					{
-						my $found = 0;
-
-						my $probes_ref = $tr_ref->{'probes'};
-						foreach my $tr_ref_probe (keys(%$probes_ref))
-						{
-							if ($tr_ref_probe eq $probe)
-							{
-								$found = 1;
-								last;
-							}
-						}
-
-						$probes_ref->{$probe}->{'status'} = PROBE_NORESULT_STR if ($found == 0);
+						next if (exists($tr_ref->{'probes'}->{$probe}));
+						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NODATA_PROBE;
 					}
 				}
 
@@ -962,10 +1110,13 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						if (ah_save_incident_json($ah_tld, $service, $eventid, $event_start, encode_json($tr_ref), $tr_ref->{'clock'}) != AH_SUCCESS)
-						{
-							fail("cannot save incident: ", ah_get_error());
-						}
+						push(@tld_measurements, {
+							'ah_tld'	=> $ah_tld,
+							'service'	=> $service,
+							'eventid'	=> $eventid,
+							'event_start'	=> $event_start,
+							'tr_ref'	=> $tr_ref
+						});
 					}
 				}
 			}
@@ -973,6 +1124,42 @@ foreach (keys(%$servicedata))
 			{
 				fail("THIS SHOULD NEVER HAPPEN (unknown service \"$service\")");
 			}
+		} # foreach (@$incidents)
+
+		foreach (@{$rollweek_incidents})
+		{
+			my $eventid = $_->{'eventid'};
+			my $event_start = $_->{'start'};
+			my $event_end = $_->{'end'};
+			my $false_positive = $_->{'false_positive'};
+
+			push(@{$json_state_ref->{'testedServices'}->{uc($service)}->{'incidents'}},
+				ah_create_incident_json($eventid, $event_start, $event_end, $false_positive));
+		}
+	} # foreach my $service
+
+	foreach my $service (('DNS', 'DNSSEC', 'EPP', 'RDDS'))
+	{
+		next if (exists($json_state_ref->{'testedServices'}->{$service}));
+
+		$json_state_ref->{'testedServices'}->{$service} = JSON_OBJECT_DISABLED_SERVICE;
+	}
+
+	if (ah_save_state($ah_tld, $json_state_ref) != AH_SUCCESS)
+	{
+		fail("cannot save TLD state: ", ah_get_error());
+	}
+
+	# enrich measurements with TLD status and save them
+	foreach my $measurement (@tld_measurements)
+	{
+		$measurement->{'tr_ref'}->{'status'} = $json_state_ref->{'status'};
+
+		if (ah_save_measurement($measurement->{'ah_tld'}, $measurement->{'service'}, $measurement->{'eventid'},
+				$measurement->{'event_start'}, $measurement->{'tr_ref'},
+				$measurement->{'tr_ref'}->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+		{
+			fail("cannot save measurement: ", ah_get_error());
 		}
 	}
 }
@@ -1008,6 +1195,45 @@ if (!opt('dry-run') && (my $error = rsm_targets_apply()))
 }
 
 slv_exit(SUCCESS);
+
+# gets the history of item for a given period
+sub get_history_by_itemid($$$)
+{
+	my $itemid = shift;
+	my $timestamp_from = shift;
+	my $timestamp_till = shift;
+
+	return db_select(
+			"select clock,value" .
+			" from history_uint" .
+			" where itemid=$itemid" .
+			" and " . sql_time_condition($timestamp_from, $timestamp_till) .
+			" order by clock");
+}
+
+# gets the value of item at a given timestamp
+sub get_historical_value_by_time($$)
+{
+	my $history = shift;
+	my $timestamp = shift;
+
+	# TODO implement binary search
+
+	my $value;
+
+	foreach my $row (@{$history})
+	{
+		last if ($timestamp < $row->[0]);	# stop iterating if history clock overshot the timestamp
+	}
+	continue
+	{
+		$value = $row->[1];	# keep the value preceeding overshooting
+	}
+
+	fail("timestamp $timestamp is out of bounds of selected historical data range") unless (defined($value));
+
+	return $value;
+}
 
 # values are organized like this:
 # {
@@ -1707,7 +1933,7 @@ sub __prnt_json
 
 	if (opt('debug'))
 	{
-		dbg(JSON->new->utf8(1)->pretty(1)->encode($tr_ref), "-----------------------------------------------------------");
+		dbg(ah_encode_pretty_json($tr_ref), "-----------------------------------------------------------");
 	}
 	else
 	{
@@ -1730,6 +1956,9 @@ sub __update_false_positives
 
 	# now check for possible false_positive change in front-end
 	my $maxclock = 0;
+
+	# should we update false positiveness later? (incident state file does not exist yet)
+	my $later = 0;
 
 	my $rows_ref = db_select(
 		"select details,max(clock)".
@@ -1773,21 +2002,27 @@ sub __update_false_positives
 
 		dbg("auditlog: service:$service evnetid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
 
-		fail("cannot update false_positive status of event with ID $eventid")
-			unless (ah_save_false_positive($tld, $service, $eventid, $event_clock, $false_positive, $clock) == AH_SUCCESS);
-
-		if ($false_positive == 0)
+		unless (ah_save_false_positive($tld, $service, $eventid, $event_clock,
+				$false_positive, $clock, \$later) == AH_SUCCESS)
 		{
-			my $inc_fp_relative_path;
-
-			fail("internal error: cannot form incident path!")
-				unless (ah_inc_fp_relative_path($tld, $service, $eventid, $event_clock, \$inc_fp_relative_path) == AH_SUCCESS);
-
-			rsm_targets_delete($inc_fp_relative_path);
+			if ($later == 1)
+			{
+				wrn(ah_get_error());
+			}
+			else
+			{
+				fail("cannot update false_positive state: ", ah_get_error());
+			}
 		}
 	}
 
-	ah_save_audit($server_key, $maxclock) unless ($maxclock == 0);
+	# If the "later" flag is non-zero it means the incident for which we would like to change
+	# false positiveness was not processed yet and there is no incident state file. We cannot
+	# modify falsePositive file without making sure incident state file is also updated.
+	if ($maxclock != 0 && $later == 0)
+	{
+		ah_save_audit($server_key, $maxclock);
+	}
 }
 
 sub __validate_input
