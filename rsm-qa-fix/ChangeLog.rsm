@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc9
 
 New features:
+....I..... [216] implemented new format of SLA API (dimir, gleb)
 
 Bug fixes:
 ....I..... [sub-219] fixed SLA API maintenance mode JSON key ("testedServices" vs. "testedService") (gleb)
