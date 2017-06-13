@@ -163,7 +163,12 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 			zbx_json_addobject(&json, "value");
 			zbx_json_addstring(&json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
 			zbx_json_adduint64(&json, "timestamp", log->timestamp);
-			zbx_json_addstring(&json, "source", log->source, ZBX_JSON_TYPE_STRING);
+
+			if (NULL != log->source)
+				zbx_json_addstring(&json, "source", log->source, ZBX_JSON_TYPE_STRING);
+			else
+				zbx_json_addstring(&json, "source", "", ZBX_JSON_TYPE_STRING);
+
 			zbx_json_adduint64(&json, "severity", log->severity);
 			zbx_json_adduint64(&json, "logeventid", log->logeventid);
 
