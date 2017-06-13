@@ -40,6 +40,9 @@ use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this 
 use constant TARGETS_TMP_DIR => '/opt/zabbix/sla-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/sla';
 
+sub get_history_by_itemid($$$);
+sub get_historical_value_by_time($$);
+
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
 
 # do not write any logs
@@ -798,7 +801,7 @@ foreach (keys(%$servicedata))
 							{
 								my $metric = {
 									'testDateTime'	=> $test->{'clock'},
-									'targetIP'	=> $test->{'ip'},
+									'targetIP'	=> $test->{'ip'}
 								};
 
 								if (substr($test->{'rtt'}, 0, 1) eq "-")
@@ -923,6 +926,16 @@ foreach (keys(%$servicedata))
 					delete($tr_ref->{'start'});
 					delete($tr_ref->{'end'});
 
+					my $rdds43_ref = {
+						'interface'	=> JSON_RDDS_43,
+						'probes'	=> []
+					};
+
+					my $rdds80_ref = {
+						'interface'	=> JSON_RDDS_80,
+						'probes'	=> []
+					};
+
 					my $subservices_ref = $tr_ref->{+JSON_RDDS_SUBSERVICE};
 
 					foreach my $subservice (keys(%$subservices_ref))
@@ -943,8 +956,50 @@ foreach (keys(%$servicedata))
 									$probes_ref->{$probe}->{'status'} = (($status_ref->{'value'} == 1 or $status_ref->{'value'} == $service_only) ? "Up" : "Down");
 								}
 							}
+
+							fail("Gleb was wrong, RDDS test can have more (or less) than one metric") if (scalar(@{$probes_ref->{$probe}->{'details'}}) != 1);
+
+							my $test = $probes_ref->{$probe}->{'details'}->[0];
+
+							my $metric = {
+								'testDateTime'	=> $test->{'clock'},
+								'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+							};
+
+							if (substr($test->{'rtt'}, 0, 1) eq "-")
+							{
+								$metric->{'rtt'} = undef;
+								$metric->{'result'} = $test->{'rtt'};
+							}
+							else
+							{
+								$metric->{'rtt'} = $test->{'rtt'};
+								$metric->{'result'} = "ok";
+							}
+
+							my $probe_ref = {
+								'city'		=> $probe,
+								'status'	=> $probes_ref->{$probe}->{'status'},
+								'testData'	=> [
+									{
+										'target'	=> undef,
+										'status'	=> defined($metric->{'rtt'}) ? "Up" : "Down",
+										'metrics'	=> [$metric]
+									}
+								]
+							};
+
+							push(@{($subservice eq JSON_RDDS_43 ? $rdds43_ref : $rdds80_ref)->{'probes'}}, $probe_ref);
 						}
 					}
+
+					$tr_ref->{'testedInterface'} = [
+						$rdds43_ref,
+						$rdds80_ref
+					];
+
+					delete($tr_ref->{'status'});
+					delete($tr_ref->{+JSON_RDDS_SUBSERVICE});
 
 					if (opt('dry-run'))
 					{
@@ -1128,7 +1183,7 @@ sub get_history_by_itemid($$$)
 			"select clock,value" .
 			" from history_uint" .
 			" where itemid=$itemid" .
-			" and " . sql_time_condition($start, $end) .
+			" and " . sql_time_condition($timestamp_from, $timestamp_till) .
 			" order by clock");
 }
 
