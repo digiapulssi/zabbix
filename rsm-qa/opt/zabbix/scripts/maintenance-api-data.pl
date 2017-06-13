@@ -22,7 +22,7 @@ foreach my $tld_dir (path('/opt/zabbix/sla')->children)
 	my $json = decode_json($state_file->slurp_utf8);
 
 	$json->{'status'} = 'Up-inconclusive';
-	$json->{'testedService'} = {
+	$json->{'testedServices'} = {
 		'DNS'		=> JSON_OBJECT_DISABLED_SERVICE,
 		'DNSSEC'	=> JSON_OBJECT_DISABLED_SERVICE,
 		'EPP'		=> JSON_OBJECT_DISABLED_SERVICE,
