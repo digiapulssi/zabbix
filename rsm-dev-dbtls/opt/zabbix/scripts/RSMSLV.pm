@@ -176,9 +176,11 @@ sub get_macro_dns_tcp_delay
 
 	my $item_param = 'RSM.DNS.TCP.DELAY';
 
-	my $value = __get_rsm_configvalue($item_param, $value_time);
-
-	return $value if ($value);
+	# todo phase 1: Export DNS-TCP tests
+	# todo phase 1: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
+#	my $value = __get_rsm_configvalue($item_param, $value_time);
+#
+#	return $value if ($value);
 
 	return __get_macro('{$' . $item_param . '}');
 }
@@ -1307,11 +1309,6 @@ sub get_probe_times
 			" and i.status<>".ITEM_STATUS_DISABLED.
 			" and i.key_='".PROBE_KEY_ONLINE."'");
 
-	if (scalar(@{$items_ref}) == 0)
-	{
-		fail("Probe main status items (".PROBE_KEY_ONLINE.") must exist on every probe (PROBE - mon) host.");
-	}
-
 	foreach my $item_ref (@{$items_ref})
 	{
 		my $itemid = $item_ref->[0];
@@ -1366,11 +1363,11 @@ sub get_probe_times
 
 	if (!defined($result))
 	{
-		dbg("Probe main status items (".PROBE_KEY_ONLINE.") have no values yet.");
+		wrn("Probes have no values yet.");
 	}
-	else
+	elsif (opt('dry-run'))
 	{
-		__print_probe_times($result) if (opt('dry-run'));
+		__print_probe_times($result);
 	}
 
 	return $result;
@@ -2143,7 +2140,11 @@ sub get_incidents
 			my $value = $row_ref->[2];
 			my $false_positive = $row_ref->[3];
 
-			dbg("reading pre-event $eventid: clock:" . ts_str($clock) . " ($clock), value:", ($value == 0 ? 'OK' : 'PROBLEM'), ", false_positive:$false_positive") if (opt('debug'));
+			if (opt('debug'))
+			{
+				my $type = ($value == TRIGGER_VALUE_FALSE ? 'closing' : 'opening');
+				dbg("$type pre-event $eventid: clock:" . ts_str($clock) . " ($clock), false_positive:$false_positive");
+			}
 
 			# do not add 'value=TRIGGER_VALUE_TRUE' to SQL above just for corner case of 2 events at the same second
 			if ($value == TRIGGER_VALUE_TRUE)
@@ -2172,7 +2173,15 @@ sub get_incidents
 		my $value = $row_ref->[2];
 		my $false_positive = $row_ref->[3];
 
-		dbg("reading event $eventid: clock:" . ts_str($clock) . " ($clock), value:", ($value == 0 ? 'OK' : 'PROBLEM'), ", false_positive:$false_positive") if (opt('debug'));
+		# NB! Incident start/end times must not be truncated to first/last second
+		# of a minute (do not use truncate_from and truncate_till) because they
+		# can be used by a caller to identify an incident.
+
+		if (opt('debug'))
+		{
+			my $type = ($value == TRIGGER_VALUE_FALSE ? 'closing' : 'opening');
+			dbg("$type event $eventid: clock:" . ts_str($clock) . " ($clock), false_positive:$false_positive");
+		}
 
 		# ignore non-resolved false_positive incidents (corner case)
 		if ($value == TRIGGER_VALUE_TRUE && $last_trigger_value == TRIGGER_VALUE_TRUE)
@@ -2296,7 +2305,16 @@ sub get_downtime
 				next;
 			}
 
-			$downtime += $clock - $prevclock if ($prevvalue == DOWN);
+			# todo phase 1: do not ignore the first downtime minute
+			if ($value == DOWN && $prevclock == 0)
+			{
+				# first run
+				$downtime += 60;
+			}
+			elsif ($prevvalue == DOWN)
+			{
+				$downtime += $clock - $prevclock;
+			}
 
 			$prevvalue = $value;
 			$prevclock = $clock;
@@ -2727,7 +2745,7 @@ sub get_tld_by_trigger
 
 	my $itemid = $rows_ref->[0]->[0];
 
-	fail("cannot get item by triggerid $triggerid") unless ($itemid);
+	return (undef, undef) unless ($itemid);
 
 	dbg("itemid:$itemid");
 

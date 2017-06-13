@@ -49,13 +49,21 @@ if (!$data['user']['is_guest']) {
 			->setAttribute('title', getUserFullname($data['user']))
 	);
 }
-
-$icons->addItem(
-	(new CLink(SPACE, 'index.php?reconnect=1'))
-		->addClass(ZBX_STYLE_TOP_NAV_SIGNOUT)
-		->setAttribute('title', _('Sign out'))
-		->addSID()
-);
+if (hasRequest('set_sid')) {
+	$icons->addItem(
+		(new CLink(SPACE, 'index.php?reconnect=1&sid='.CWebUser::getSessionCookie()))
+			->addClass(ZBX_STYLE_TOP_NAV_SIGNOUT)
+			->setAttribute('title', _('Sign out'))
+	);
+}
+else {
+	$icons->addItem(
+		(new CLink(SPACE, 'index.php?reconnect=1'))
+			->addClass(ZBX_STYLE_TOP_NAV_SIGNOUT)
+			->setAttribute('title', _('Sign out'))
+			->addSID()
+	);
+}
 
 // 1st level menu
 $top_menu = (new CDiv())

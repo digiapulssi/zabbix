@@ -100,6 +100,8 @@ foreach my $server_key (@server_keys)
 
 			exit(-1);
 		}
+
+		print("  user with userid ", $result->{'userids'}->[0], " added\n");
 	}
 	elsif (opt('modify'))
 	{
@@ -118,6 +120,8 @@ foreach my $server_key (@server_keys)
 
 			exit(-1);
 		}
+
+		print("  user modified\n");
 	}
 	else
 	{
@@ -136,6 +140,8 @@ foreach my $server_key (@server_keys)
 
 			exit(-1);
 		}
+
+		print("  user deleted\n");
 	}
 
 	$modified = 1;
@@ -257,9 +263,11 @@ users.pl - manage users in Zabbix
 
 =head1 SYNOPSIS
 
-users.pl --add|--delete --user <user> [--type <ebero|tech|admin>] [--password <password>] [--firstname <firstname>] [--lastname <lastname>] [--server-id id] [--debug] [--help]
+users.pl --add|--delete|--modify --user <user> [--type <ebero|tech|admin>] [--password <password>] [--firstname <firstname>] [--lastname <lastname>] [--server-id id] [--debug] [--help]
 
 =head1 OPTIONS
+
+=head2 REQUIRED OPTIONS
 
 =over 8
 
@@ -271,19 +279,25 @@ Add a new user.
 
 Delete existing user.
 
+=item B<--modify>
+
+Change password of existing user. This option requires --password.
+
 =item B<--user> user
 
 Specify username of the user account.
 
-=head2 OPTIONS FOR ADDING A USER
-
-=item B<--type> type
-
-Specify user type, accepted values: ebero, tech or admin.
+=head2 REQUIRED OPTIONS FOR ADDING A USER OR CHANGING PASSWORD
 
 =item B<--password> password
 
 Specify user password.
+
+=head2 REQUIRED OPTIONS FOR ADDING A USER
+
+=item B<--type> type
+
+Specify user type, accepted values: ebero, tech or admin.
 
 =item B<--firstname> firstname
 
@@ -293,11 +307,11 @@ Specify first name of a user.
 
 Specify last name of a user.
 
+=head2 OTHER OPTIONS
+
 =item B<--server-id> id
 
-Specify id of the server to continue the optration from. This option is useful when action was successful on part of the servers.
-
-=head2 OTHER OPTIONS
+Specify id of the server to continue the operation from. This option is useful when action was successful on part of the servers.
 
 =item B<--debug>
 

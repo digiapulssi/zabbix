@@ -156,7 +156,13 @@ if (opt('continue'))
 		my $config_minclock = __get_config_minclock();
 		db_connect();
 
-		dbg("config_minclock:$config_minclock");
+		if (!defined($config_minclock))
+		{
+			info("no data from Probe nodes yet");
+			exit(0);
+		}
+
+		dbg("oldest data found: ", ts_full($config_minclock));
 
 		$check_from = truncate_from($config_minclock);
 	}
@@ -632,7 +638,7 @@ foreach (keys(%$servicedata))
 
 						my ($ns, $ip) = split(',', $nsip);
 
-						dbg("  ", scalar(keys(%$endvalues_ref)), " values for $nsip:") if (opt('debug'));
+						dbg("  values for $nsip:");
 
 						my $test_result_index = 0;
 
@@ -659,10 +665,12 @@ foreach (keys(%$servicedata))
 							if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
 							{
 								$tr_ref->{'probes'}->{$probe}->{'status'} = PROBE_OFFLINE_STR;
+								dbg("    ", ts_str($clock), ": OFFLINE");
 							}
 							else
 							{
 								push(@{$tr_ref->{'probes'}->{$probe}->{'details'}->{$ns}}, {'clock' => $clock, 'rtt' => $endvalues_ref->{$clock}, 'ip' => $ip});
+								dbg("    ", ts_str($clock), ": ", $endvalues_ref->{$clock});
 							}
 						}
 					}
@@ -680,8 +688,6 @@ foreach (keys(%$servicedata))
 						{
 							if ($tr_ref_probe eq $probe)
 							{
-								dbg("\"$tr_ref_probe\" found!");
-
 								$found = 1;
 								last;
 							}
@@ -912,8 +918,6 @@ foreach (keys(%$servicedata))
 						{
 							if ($tr_ref_probe eq $probe)
 							{
-								dbg("\"$tr_ref_probe\" found!");
-
 								$found = 1;
 								last;
 							}
@@ -975,9 +979,9 @@ foreach (keys(%$servicedata))
 # unset TLD (for the logs)
 $tld = undef;
 
-unless (opt('dry-run') or opt('tld'))
+if (!opt('dry-run') && !opt('tld'))
 {
-	__update_false_positives($server_key);
+	__update_false_positives();
 }
 
 last if (opt('tld'));
@@ -1749,13 +1753,23 @@ sub __update_false_positives
 
 		my $rows_ref2 = db_select("select objectid,clock,false_positive from events where eventid=$eventid");
 
-		fail("cannot get event with ID $eventid") unless (scalar(@$rows_ref2) == 1);
+		if (scalar(@$rows_ref2) != 1)
+		{
+			wrn("looks like event ID $eventid found in auditlog does not exist any more");
+			next;
+		}
 
 		my $triggerid = $rows_ref2->[0]->[0];
 		my $event_clock = $rows_ref2->[0]->[1];
 		my $false_positive = $rows_ref2->[0]->[2];
 
 		my ($tld, $service) = get_tld_by_trigger($triggerid);
+
+		if (!$tld)
+		{
+			dbg("looks like trigger ID $triggerid found in auditlog does not exist any more");
+			next;
+		}
 
 		dbg("auditlog: service:$service evnetid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
 
@@ -1838,31 +1852,29 @@ sub __no_status_result
 		"\nmanually to add missing service availability result.");
 }
 
+# todo phase 1: this function was modified to allow earlier run on freshly installed database
 sub __get_config_minclock
 {
-	my $config_key = 'rsm.configvalue[RSM.SLV.DNS.TCP.RTT]';
-	my $minclock = 0;
+	my $probe_item_key = 'rsm.probe.online';
+	my $minclock;
 
 	foreach (@server_keys)
 	{
 	$server_key = $_;
 	db_connect($server_key);
 
-	# Get the minimum clock from the item that is collected once a day, this way
-	# "min(clock)" won't take too much time.
-	my $rows_ref = db_select("select itemid from items where key_='$config_key'");
+	my $rows_ref = db_select(
+			"select min(clock)".
+			" from history_uint".
+			" where itemid in".
+				" (select itemid from items where key_='$probe_item_key' and templateid is not null)");
 
-	fail("item $config_key not found in Zabbix database ($server_key)") unless (scalar(@$rows_ref) == 1);
+	next unless (defined($rows_ref->[0]->[0]));
 
-	my $config_itemid = $rows_ref->[0]->[0];
+	my $newclock = int($rows_ref->[0]->[0]);
+	dbg("min(clock): $newclock");
 
-	$rows_ref = db_select("select min(clock) from history_uint where itemid=$config_itemid");
-
-	fail("no data in the database ($server_key) yet") unless ($rows_ref->[0]->[0]);
-
-	dbg("minclock: ", ts_full($rows_ref->[0]->[0]));
-
-	$minclock = int($rows_ref->[0]->[0]) if ($minclock eq 0 || $minclock gt int($rows_ref->[0]->[0]));
+	$minclock = $newclock if (!defined($minclock) || $newclock < $minclock);
 	db_disconnect();
 	}
 	undef($server_key);

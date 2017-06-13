@@ -62,7 +62,6 @@ use TLD_constants qw(:general :templates :value_types :ec :rsm :slv :config :api
 use TLDs;
 
 sub create_tld_host($$$$);
-sub create_probe_health_tmpl;
 sub manage_tld_objects($$$$$$);
 sub manage_tld_hosts($$);
 
@@ -157,25 +156,35 @@ pfail("Zabbix API URL is not specified. Please check configuration file") unless
 pfail("Username for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_user'};
 pfail("Password for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_password'};
 
+# todo phase 1: add support for re-login in case session is expired
 my $attempts = 3;
 my $result;
+my $error;
 RELOGIN: $result = zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
 if ($result ne true) {
     pfail("Could not connect to Zabbix API. ".$result->{'data'});
 }
 
-# todo phase 1: getting $tld_type_probe_results_groupid must happen in one place only, use other first method to identify need for relogin
-if (!$OPTS{'list-services'} && !$OPTS{'get-nsservers-list'})
+# make sure we re-login in case of session invalidation
+$tld_probe_results_groupid = create_group('TLD Probe results');
+
+$error = get_api_error($tld_probe_results_groupid);
+
+if (defined($error)) {
+    if (zbx_need_relogin($tld_probe_results_groupid) eq true) {
+	goto RELOGIN if (--$attempts);
+    }
+
+    pfail($error);
+}
+
+# todo phase 1: get $tld_type_probe_results_groupid early for set-type
+if (defined($OPTS{'type'}))
 {
     $tld_type_probe_results_groupid = create_group($OPTS{'type'}.' Probe results');
-    my $error = get_api_error($tld_type_probe_results_groupid);
-    if (defined($error)) {
-	if (zbx_need_relogin($tld_type_probe_results_groupid) eq true) {
-	    goto RELOGIN if (--$attempts);
-	}
-	pfail($error);
-    }
+
+    pfail $tld_type_probe_results_groupid->{'data'} if check_api_error($tld_type_probe_results_groupid) eq true;
 }
 
 if (defined($OPTS{'set-type'})) {
@@ -303,10 +312,6 @@ pfail("Main templateid is not defined") unless defined $main_templateid;
 $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
-
-$tld_probe_results_groupid = create_group('TLD Probe results');
-
-pfail $tld_probe_results_groupid->{'data'} if check_api_error($tld_probe_results_groupid) eq true;
 
 $tlds_groupid = create_group('TLDs');
 
@@ -1339,42 +1344,7 @@ sub create_tld_host($$$$) {
     return $tld_hostid;
 }
 
-sub create_probe_health_tmpl() {
-    my $host_name = 'Template Proxy Health';
-    my $templateid = create_template($host_name, LINUX_TEMPLATEID);
-
-    my $item_key = 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
-
-    my $options = {'name' => 'Availability of $2 Probe',
-                                          'key_'=> $item_key,
-                                          'status' => ITEM_STATUS_ACTIVE,
-                                          'hostid' => $templateid,
-                                          'applications' => [get_application_id('Probe Availability', $templateid)],
-                                          'type' => 5, 'value_type' => 3,
-                                          'units' => 'unixtime', delay => '60'};
-
-    create_item($options);
-
-    $options = { 'description' => 'Probe {$RSM.PROXY_NAME} is unavailable',
-                     'expression' => '{'.$host_name.':'.$item_key.'.fuzzytime(2m)}=0',
-                    'priority' => '4',
-            };
-
-    create_trigger($options, $host_name);
-
-    # todo phase 1: make sure this is in phase 2
-    $options = {'name' => 'Probe main status',
-		'key_'=> 'rsm.probe.online',
-		'status' => ITEM_STATUS_ACTIVE,
-		'hostid' => $templateid,
-		'applications' => [get_application_id('Probe Availability', $templateid)],
-		'type' => 2, 'value_type' => 3,
-		'valuemapid' => rsm_value_mappings->{'rsm_probe'}};
-
-    create_item($options);
-
-    return $templateid;
-}
+# todo phase 1: moved create_probe_health_tmpl() to TLDs.pm to be used by both tld.pl and probes.pl
 
 # todo phase 1: fixed delete/disable TLD/service by handling services input (specifying none means action on the whole tld)
 # todo phase 1: fixed deletion of main host ($main_hostid)
@@ -1700,7 +1670,8 @@ sub add_new_ns($) {
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'tcp', $proto);
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'udp', $proto);
 
-    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
+# todo phase 1: DNS NS are not currently used
+#    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
 	}
     }
 }

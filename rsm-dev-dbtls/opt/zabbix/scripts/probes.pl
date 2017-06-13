@@ -14,8 +14,6 @@ use RSM;
 use TLD_constants qw(:general :templates :api :config);
 use TLDs;
 
-use constant LINUX_TEMPLATEID => 10001;
-
 use constant HOST_STATUS_NOT_MONITORED => 1;
 
 use constant HOST_STATUS_PROXY_ACTIVE => 5;
@@ -115,7 +113,7 @@ sub add_probe($$$$$) {
     is_not_empty($probes_mon_groupid, true);
 
     print "Getting 'Template Proxy Health' template: ";
-    $probe_tmpl_health = create_template('Template Proxy Health', LINUX_TEMPLATEID);
+    $probe_tmpl_health = create_probe_health_tmpl();
     is_not_empty($probe_tmpl_health, true);
 
     ########## Creating new Probe
@@ -155,7 +153,7 @@ sub add_probe($$$$$) {
 
     print "Creating '$probe_name' host: ";
     $probe_host = create_host({'groups' => [{'groupid' => $probe_hostgroup}, {'groupid' => $probes_groupid}],
-                                          'templates' => [{'templateid' => $probe_tmpl_status}],
+                                          'templates' => [{'templateid' => $probe_tmpl_status}, {'templateid' => APP_ZABBIX_PROXY_TEMPLATEID}],
                                           'host' => $probe_name,
                                           'status' => HOST_STATUS_MONITORED,
                                           'proxy_hostid' => $probe,
@@ -329,7 +327,6 @@ sub delete_probe($) {
     ##########
 
     print "The probe has been removed successfully\n";
-    print "Do not forget to tune macros!\n";
 }
 
 sub disable_probe($) {
@@ -424,7 +421,6 @@ sub disable_probe($) {
     ##########
 
     print "The probe has been disabled successfully\n";
-    print "Do not forget to tune macros!\n";
 }
 
 sub rename_probe($$) {
