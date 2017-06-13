@@ -210,6 +210,9 @@ if (CSession::keyExists('messageOk') || CSession::keyExists('messageError')) {
 }
 
 if (!defined('ZBX_PAGE_NO_MENU')) {
+	if (!array_key_exists('name', CWebUser::$data)) {
+		redirect('index.php');
+	}
 	$servers = new CComboBox('servers', null, 'window.location.href=this.value');
 	foreach ($DB['SERVERS'] as $server) {
 		$servers->addItem($server['URL'].'rsm.rollingweekstatus.php?sid='.CWebUser::getSessionCookie().'&set_sid=1',

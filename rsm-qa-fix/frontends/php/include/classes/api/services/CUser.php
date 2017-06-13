@@ -1069,17 +1069,15 @@ class CUser extends CApiService {
 			DBexecute('UPDATE sessions SET status='.ZBX_SESSION_PASSIVE.' WHERE sessionid='.zbx_dbstr($sessionId));
 		}
 
-		if ($error) {
-			unset($DB['DB']);
-			$DB['TYPE'] = $master['TYPE'];
-			$DB['SERVER'] = $master['SERVER'];
-			$DB['PORT'] = $master['PORT'];
-			$DB['DATABASE'] = $master['DATABASE'];
-			$DB['USER'] = $master['USER'];
-			$DB['PASSWORD'] = $master['PASSWORD'];
-			$DB['SCHEMA'] = $master['SCHEMA'];
-			DBconnect($error);
-		}
+		unset($DB['DB']);
+		$DB['TYPE'] = $master['TYPE'];
+		$DB['SERVER'] = $master['SERVER'];
+		$DB['PORT'] = $master['PORT'];
+		$DB['DATABASE'] = $master['DATABASE'];
+		$DB['USER'] = $master['USER'];
+		$DB['PASSWORD'] = $master['PASSWORD'];
+		$DB['SCHEMA'] = $master['SCHEMA'];
+		DBconnect($error);
 
 		return true;
 	}
