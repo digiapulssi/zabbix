@@ -193,6 +193,7 @@ char	*CONFIG_DB_CERT_FILE		= NULL;
 char	*CONFIG_DB_CA_FILE		= NULL;
 char	*CONFIG_DB_CA_PATH		= NULL;
 char	*CONFIG_DB_CIPHER		= NULL;
+int	CONFIG_DB_VERIFY_IDENTITY	= 0;
 #endif
 int	CONFIG_ENABLE_REMOTE_COMMANDS	= 0;
 int	CONFIG_LOG_REMOTE_COMMANDS	= 0;
@@ -611,6 +612,8 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 		{"DBCipher",			&CONFIG_DB_CIPHER,			TYPE_STRING,
 			PARM_OPT,	0,			0},
+		{"DBVerifyIdentity",		&CONFIG_DB_VERIFY_IDENTITY,		TYPE_INT,
+			PARM_OPT,	0,			1},
 #endif
 		{"SSHKeyLocation",		&CONFIG_SSH_KEY_LOCATION,		TYPE_STRING,
 			PARM_OPT,	0,			0},

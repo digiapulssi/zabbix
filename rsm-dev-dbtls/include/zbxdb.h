@@ -53,7 +53,7 @@ typedef struct zbx_db_result	*DB_RESULT;
 int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *dbschema, char *dbsocket, int port
 #ifdef DBTLS
 		, const char *key, const char *cert, const char *ca, const char *capath
-		, const char *cipher
+		, const char *cipher, int verify_identity
 #endif
 );
 #ifdef HAVE_SQLITE3
