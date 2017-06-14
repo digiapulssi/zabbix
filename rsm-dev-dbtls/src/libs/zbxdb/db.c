@@ -405,40 +405,11 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	/* if at least one of DB TLS parameters was provided, pass them to MySQL and require secure connection */
 	if (NULL != key || NULL != cert || NULL != ca || NULL != capath || NULL != cipher)
 	{
-		enum mysql_ssl_mode	ssl_mode;
-
-		if (NULL != mode && 0 == strcmp(mode, "REQUIRED"))
-		{
-			ssl_mode = SSL_MODE_REQUIRED;
-		}
-		else if (NULL != mode && 0 == strcmp(mode, "VERIFY_CA"))
-		{
-			ssl_mode = SSL_MODE_VERIFY_CA;
-		}
-		else if (NULL != mode && 0 == strcmp(mode, "VERIFY_IDENTITY"))
-		{
-			ssl_mode = SSL_MODE_VERIFY_IDENTITY;
-		}
-		else
-		{
-			if (NULL != mode)
-			{
-				zabbix_log(LOG_LEVEL_WARNING, "Invalid secure connection mode, acceptable values are:"
-						" \"REQUIRED\" (default), \"VERIFY_CA\" and \"VERIFY_IDENTITY\"."
-						" Trying to deduce appropriate setting from other parameters.");
-			}
-
-			if (NULL != ca || NULL != capath)
-				ssl_mode = SSL_MODE_VERIFY_CA;
-			else
-				ssl_mode = SSL_MODE_REQUIRED;
-		}
+		my_bool	verify = 1;
 
 		mysql_ssl_set(conn, key, cert, ca, capath, cipher);
-		mysql_options(conn, MYSQL_OPT_SSL_MODE, &ssl_mode);
 
-		if (NULL != tlsv)
-			mysql_options(conn, MYSQL_OPT_TLS_VERSION, tlsv);
+		mysql_options(conn, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&verify);
 
 		/* might be useful to set MYSQL_OPT_SSL_CRL and MYSQL_OPT_SSL_CRLPATH too */
 	}
