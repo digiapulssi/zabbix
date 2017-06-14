@@ -20,9 +20,21 @@
 #ifndef ZABBIX_HISTORY_H
 #define ZABBIX_HISTORY_H
 
-#define		HISTORY_API_VERSION	"v1"
+#define	HISTORY_API_VERSION	"v1"
 
-void	zbx_set_history_service_url(const char *url);
+#define	ZBX_HISTORY_TYPE_UNUM_STR	"unum"
+#define	ZBX_HISTORY_TYPE_FLOAT_STR	"float"
+#define	ZBX_HISTORY_TYPE_CHAR_STR	"char"
+#define	ZBX_HISTORY_TYPE_TEXT_STR	"text"
+#define	ZBX_HISTORY_TYPE_LOG_STR		"log"
+
+#define	ZBX_HISTORY_TYPE_UNUM		1
+#define	ZBX_HISTORY_TYPE_FLOAT		2
+#define	ZBX_HISTORY_TYPE_CHAR		4
+#define	ZBX_HISTORY_TYPE_TEXT		8
+#define	ZBX_HISTORY_TYPE_LOG		16
+
+int	zbx_init_history_service(const char *url, const char *types);
 
 void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type);
 
@@ -30,5 +42,7 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 		zbx_vector_history_record_t *values);
 
 void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type);
+
+int	zbx_history_check_type(int value_type);
 
 #endif

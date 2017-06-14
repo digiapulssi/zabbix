@@ -183,7 +183,7 @@ static dc_item_value_t	*item_values = NULL;
 static size_t		item_values_alloc = 0, item_values_num = 0;
 
 /* History service URL reference, from history.c */
-extern const char		*HISTORY_SERVICE_URL;
+extern const char	*HISTORY_SERVICE_URL;
 
 static void	hc_add_item_values(dc_item_value_t *values, int values_num);
 static void	hc_pop_items(zbx_vector_ptr_t *history_items);
@@ -835,9 +835,10 @@ static void	dc_send_trends(ZBX_DC_TREND *trends, int trends_num)
 static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 {
 	const char	*__function_name = "DCmass_update_trends";
-	ZBX_DC_TREND	*trends = NULL;
+	ZBX_DC_TREND	*trends = NULL, *trends_serv = NULL;
 	zbx_timespec_t	ts;
 	int		trends_alloc = 0, trends_num = 0, i, hour, seconds;
+	int		trends_alloc_serv = 0, trends_num_serv = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -854,7 +855,10 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 		if (0 != (ZBX_DC_FLAGS_NOT_FOR_TRENDS & h->flags))
 			continue;
 
-		DCadd_trend(h, &trends, &trends_alloc, &trends_num);
+		if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(h->value_type)))
+			DCadd_trend(h, &trends, &trends_alloc, &trends_num);
+		else
+			DCadd_trend(h, &trends_serv, &trends_alloc_serv, &trends_num_serv);
 	}
 
 	if (cache->trends_last_cleanup_hour < hour && ZBX_TRENDS_CLEANUP_TIME < seconds)
@@ -866,11 +870,19 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 
 		while (NULL != (trend = (ZBX_DC_TREND *)zbx_hashset_iter_next(&iter)))
 		{
-			if (trend->clock != hour)
+			if (trend->clock == hour)
+				continue;
+
+			if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(trend->value_type)))
 			{
 				DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
-				zbx_hashset_iter_remove(&iter);
 			}
+			else
+			{
+				DCflush_trend(trend, &trends_serv, &trends_alloc_serv, &trends_num_serv);
+			}
+
+			zbx_hashset_iter_remove(&iter);
 		}
 
 		cache->trends_last_cleanup_hour = hour;
@@ -878,15 +890,14 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 
 	UNLOCK_TRENDS;
 
-	if (NULL == HISTORY_SERVICE_URL)
-	{
-		while (0 < trends_num)
-			DCflush_trends(trends, &trends_num, 1);
-	}
-	else
-		dc_send_trends(trends, trends_num);
+	while (0 < trends_num)
+		DCflush_trends(trends, &trends_num, 1);
+
+	if (0 < trends_num_serv)
+		dc_send_trends(trends_serv, trends_num_serv);
 
 	zbx_free(trends);
+	zbx_free(trends_serv);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -904,8 +915,9 @@ static void	DCsync_trends(void)
 {
 	const char		*__function_name = "DCsync_trends";
 	zbx_hashset_iter_t	iter;
-	ZBX_DC_TREND		*trends = NULL, *trend;
+	ZBX_DC_TREND		*trends = NULL, *trends_serv = NULL, *trend;
 	int			trends_alloc = 0, trends_num = 0;
+	int			trends_alloc_serv = 0, trends_num_serv = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() trends_num:%d", __function_name, cache->trends_num);
 
@@ -916,23 +928,30 @@ static void	DCsync_trends(void)
 	zbx_hashset_iter_reset(&cache->trends, &iter);
 
 	while (NULL != (trend = (ZBX_DC_TREND *)zbx_hashset_iter_next(&iter)))
-		DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
+	{
+		if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(trend->value_type)))
+			DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
+		else
+			DCflush_trend(trend, &trends_serv, &trends_alloc_serv, &trends_num_serv);
+	}
 
 	UNLOCK_TRENDS;
 
-	if (NULL == HISTORY_SERVICE_URL)
+	if (0 < trends_num)
 	{
 		DBbegin();
 
-		while (trends_num > 0)
+		while (0 < trends_num)
 			DCflush_trends(trends, &trends_num, 0);
 
 		DBcommit();
 	}
-	else
-		dc_send_trends(trends, trends_num);
+
+	if (0 < trends_num_serv)
+		dc_send_trends(trends_serv, trends_num_serv);
 
 	zbx_free(trends);
+	zbx_free(trends_serv);
 
 	zabbix_log(LOG_LEVEL_WARNING, "syncing trend data done");
 
@@ -1825,6 +1844,23 @@ static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num)
 
 		/* history_log */
 		if (0 != hlog_num)
+			dc_add_history_log(history, history_num);
+	}
+	else
+	{
+		if (0 != huint_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_UINT64)))
+			dc_add_history_uint(history, history_num);
+
+		if (0 != h_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_FLOAT)))
+			dc_add_history_dbl(history, history_num);
+
+		if (0 != hstr_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_STR)))
+			dc_add_history_str(history, history_num);
+
+		if (0 != htext_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_TEXT)))
+			dc_add_history_text(history, history_num);
+
+		if (0 != hlog_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_LOG)))
 			dc_add_history_log(history, history_num);
 	}
 

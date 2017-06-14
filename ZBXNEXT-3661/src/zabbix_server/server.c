@@ -258,6 +258,7 @@ char	*CONFIG_TLS_PSK_FILE		= NULL;
 
 char	*CONFIG_SOCKET_PATH		= NULL;
 char	*CONFIG_HISTORY_SERVICE_URL	= NULL;
+char	*CONFIG_HISTORY_SERVICE_TYPES	= NULL;
 
 int	get_process_info_by_thread(int local_server_num, unsigned char *local_process_type, int *local_process_num);
 
@@ -426,6 +427,9 @@ static void	zbx_set_defaults(void)
 
 	if (NULL == CONFIG_SSL_KEY_LOCATION)
 		CONFIG_SSL_KEY_LOCATION = zbx_strdup(CONFIG_SSL_KEY_LOCATION, DATADIR "/zabbix/ssl/keys");
+
+	if (NULL == CONFIG_HISTORY_SERVICE_TYPES)
+		CONFIG_HISTORY_SERVICE_TYPES = zbx_strdup(CONFIG_HISTORY_SERVICE_TYPES, "unum,float,char,log,text");
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -485,7 +489,9 @@ static void	zbx_validate_config(ZBX_TASK_EX *task)
 	err |= (FAIL == check_cfg_feature_str("SSLCertLocation", CONFIG_SSL_CERT_LOCATION, "cURL library"));
 	err |= (FAIL == check_cfg_feature_str("SSLKeyLocation", CONFIG_SSL_KEY_LOCATION, "cURL library"));
 	err |= (FAIL == check_cfg_feature_str("HistoryServiceURL", CONFIG_HISTORY_SERVICE_URL, "cURL library"));
+	err |= (FAIL == check_cfg_feature_str("HistoryServiceTypes", CONFIG_HISTORY_SERVICE_TYPES, "cURL library"));
 #endif
+
 #if !defined(HAVE_LIBXML2) || !defined(HAVE_LIBCURL)
 	err |= (FAIL == check_cfg_feature_int("StartVMwareCollectors", CONFIG_VMWARE_FORKS, "VMware support"));
 
@@ -675,6 +681,8 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 		{"HistoryServiceURL",		&CONFIG_HISTORY_SERVICE_URL,		TYPE_STRING,
 			PARM_OPT,	0,			0},
+		{"HistoryServiceTypes",		&CONFIG_HISTORY_SERVICE_TYPES,		TYPE_STRING_LIST,
+			PARM_OPT,	0,			0},
 		{NULL}
 	};
 
@@ -692,7 +700,8 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 	zbx_tls_validate_config();
 #endif
 
-	zbx_set_history_service_url(CONFIG_HISTORY_SERVICE_URL);
+	if (SUCCEED != zbx_init_history_service(CONFIG_HISTORY_SERVICE_URL, CONFIG_HISTORY_SERVICE_TYPES))
+		exit(EXIT_FAILURE);
 }
 
 /******************************************************************************

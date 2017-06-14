@@ -30,7 +30,8 @@
 
 #define		ZBX_HISTORY_SERVICE_DOWN	10
 
-const char	*HISTORY_SERVICE_URL = NULL;
+const char	*HISTORY_SERVICE_URL	= NULL;
+static int		HISTORY_SERVICE_TYPES	= 0;
 
 #if defined (HAVE_LIBCURL)
 
@@ -55,9 +56,52 @@ static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata
 	return r_size;
 }
 
-void	zbx_set_history_service_url(const char *url)
+int	zbx_init_history_service(const char *url, const char *types)
 {
+	char	*str = NULL, *tok = NULL;
+	int	ret = SUCCEED;
+
+	if (NULL == url)
+		return SUCCEED;
+
 	HISTORY_SERVICE_URL = url;
+
+	str = zbx_strdup(str, types);
+
+	for (tok = strtok(str, ","); NULL != tok; tok = strtok(NULL, ","))
+	{
+		if (0 == strcmp(ZBX_HISTORY_TYPE_UNUM_STR, tok))
+		{
+			HISTORY_SERVICE_TYPES |= ZBX_HISTORY_TYPE_UNUM;
+		}
+		else if (0 == strcmp(ZBX_HISTORY_TYPE_FLOAT_STR, tok))
+		{
+			HISTORY_SERVICE_TYPES |= ZBX_HISTORY_TYPE_FLOAT;
+		}
+		else if (0 == strcmp(ZBX_HISTORY_TYPE_CHAR_STR, tok))
+		{
+			HISTORY_SERVICE_TYPES |= ZBX_HISTORY_TYPE_CHAR;
+		}
+		else if (0 == strcmp(ZBX_HISTORY_TYPE_TEXT_STR, tok))
+		{
+			HISTORY_SERVICE_TYPES |= ZBX_HISTORY_TYPE_TEXT;
+		}
+		else if (0 == strcmp(ZBX_HISTORY_TYPE_LOG_STR, tok))
+		{
+			HISTORY_SERVICE_TYPES |= ZBX_HISTORY_TYPE_LOG;
+		}
+		else
+		{
+			zbx_error("Invalid history service type; %s", tok);
+			ret = FAIL;
+
+			break;
+		}
+	}
+
+	zbx_free(str);
+
+	return ret;
 }
 
 static void	history_init(void)
@@ -425,13 +469,35 @@ void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 	zbx_json_free(&json);
 }
 
+int	zbx_history_check_type(int value_type)
+{
+	switch (value_type)
+	{
+		case ITEM_VALUE_TYPE_FLOAT:
+			return HISTORY_SERVICE_TYPES & ZBX_HISTORY_TYPE_FLOAT;
+		case ITEM_VALUE_TYPE_UINT64:
+			return HISTORY_SERVICE_TYPES & ZBX_HISTORY_TYPE_UNUM;
+		case ITEM_VALUE_TYPE_STR:
+			return HISTORY_SERVICE_TYPES & ZBX_HISTORY_TYPE_CHAR;
+		case ITEM_VALUE_TYPE_TEXT:
+			return HISTORY_SERVICE_TYPES & ITEM_VALUE_TYPE_TEXT;
+		case ITEM_VALUE_TYPE_LOG:
+			return HISTORY_SERVICE_TYPES & ZBX_HISTORY_TYPE_LOG;
+	}
+
+	return 0;
+}
+
 #else
 
 /* Stub functions if LibCURL support is not compiled in zabbix */
 
-void	zbx_set_history_service_url(const char *url)
+int	zbx_init_history_service(const char *url, const char *types)
 {
 	ZBX_UNUSED(url);
+	ZBX_UNUSED(types);
+
+	return SUCCEED;
 }
 
 void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
@@ -455,6 +521,13 @@ void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 {
 	ZBX_UNUSED(trends);
 	ZBX_UNUSED(value_type);
+}
+
+int	zbx_history_check_type(int value_type)
+{
+	ZBX_UNUSED(value_type);
+
+	return 0;
 }
 
 #endif /* HAVE_LIBCURL */
