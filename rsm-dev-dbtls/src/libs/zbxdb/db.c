@@ -289,8 +289,8 @@ static int	is_recoverable_mysql_error(void)
  ******************************************************************************/
 int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *dbschema, char *dbsocket, int port
 #ifdef DBTLS
-		, const char *mode, const char *key, const char *cert, const char *ca, const char *capath
-		, const char *cipher, const char *tlsv
+		, const char *key, const char *cert, const char *ca, const char *capath
+		, const char *cipher
 #endif
 )
 {
@@ -417,12 +417,6 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "None of encryption parameters was provided. Database connection is going"
 				" to be unencrypted.");
-
-		if (NULL != mode)
-			zabbix_log(LOG_LEVEL_WARNING, "Ignoring secure connection mode.");
-
-		if (NULL != tlsv)
-			zabbix_log(LOG_LEVEL_WARNING, "Ignoring TLS version.");
 	}
 #endif
 	if (NULL == mysql_real_connect(conn, host, user, password, dbname, port, dbsocket, CLIENT_MULTI_STATEMENTS))
