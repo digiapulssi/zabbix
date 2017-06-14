@@ -117,6 +117,30 @@ class CConfigFile {
 			$this->config['DB']['SERVERS'] = $DB['SERVERS'];
 		}
 
+		if (isset($DB['DB_SSL'])) {
+			$this->config['DB']['DB_SSL'] = $DB['DB_SSL'];
+		}
+
+		if (isset($DB['DB_KEY_FILE'])) {
+			$this->config['DB']['DB_KEY_FILE'] = $DB['DB_KEY_FILE'];
+		}
+
+		if (isset($DB['DB_CERT_FILE'])) {
+			$this->config['DB']['DB_CERT_FILE'] = $DB['DB_CERT_FILE'];
+		}
+
+		if (isset($DB['DB_CA_FILE'])) {
+			$this->config['DB']['DB_CA_FILE'] = $DB['DB_CA_FILE'];
+		}
+
+		if (isset($DB['DB_CA_PACTH'])) {
+			$this->config['DB']['DB_CA_PACTH'] = $DB['DB_CA_PACTH'];
+		}
+
+		if (isset($DB['DB_CA_CIPHER'])) {
+			$this->config['DB']['DB_CA_CIPHER'] = $DB['DB_CA_CIPHER'];
+		}
+
 		if (isset($ZBX_SERVER)) {
 			$this->config['ZBX_SERVER'] = $ZBX_SERVER;
 		}

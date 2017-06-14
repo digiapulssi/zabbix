@@ -50,7 +50,18 @@ function DBconnect(&$error) {
 	else {
 		switch ($DB['TYPE']) {
 			case ZBX_DB_MYSQL:
-				$DB['DB'] = @mysqli_connect($DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'], $DB['PORT']);
+				if ($DB['DB_SSL'] === true) {
+					$DB['DB'] = mysqli_init();
+					mysqli_ssl_set($DB['DB'], $DB['DB_KEY_FILE'], $DB['DB_CERT_FILE'], $DB['DB_CA_FILE'],
+						$DB['DB_CA_PACTH'], $DB['DB_CA_CIPHER']);
+					mysqli_real_connect($DB['DB'], $DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'],
+						$DB['PORT']);
+				}
+				else {
+					$DB['DB'] = @mysqli_connect($DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'],
+						$DB['PORT']);
+				}
+
 				if (!$DB['DB']) {
 					$error = 'Error connecting to database: '.trim(mysqli_connect_error());
 					$result = false;

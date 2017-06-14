@@ -309,6 +309,12 @@ class ZBase {
 					$DB['USER'] = $server['USER'];
 					$DB['PASSWORD'] = $server['PASSWORD'];
 					$DB['SCHEMA'] = $server['SCHEMA'];
+					$DB['DB_SSL'] = $server['DB_SSL'];
+					$DB['DB_KEY_FILE'] = $server['DB_KEY_FILE'];
+					$DB['DB_CERT_FILE'] = $server['DB_CERT_FILE'];
+					$DB['DB_CA_PACTH'] = $server['DB_CA_PACTH'];
+					$DB['DB_CA_FILE'] = $server['DB_CA_FILE'];
+					$DB['DB_CA_CIPHER'] = $server['DB_CA_CIPHER'];
 					DBconnect($error);
 
 					if (!$error) {
