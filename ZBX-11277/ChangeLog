@@ -1,8 +1,54 @@
-Changes for 3.0.9rc1
+Changes for 3.0.10rc1
 
 New features:
+A.F....... [ZBX-1357] updated Chinese (China), Czech, English (United States), Korean, Romanian, Ukrainian, Vietnamese translations; thanks to Zabbix translators (zalex_ua)
+.......PS. [ZBXNEXT-3659] reduced cache locking time during configuration synchronization (wiper)
 
 Bug fixes:
+..F....... [ZBX-10999] fixed user's access level to display popup content (miks)
+..F....... [ZBX-9213] removed link from uneditable template and host names in all configuration sections (miks)
+..F....... [ZBX-6533] improved LDAP authentication module status check for authentication form (gcalenko)
+..F....... [ZBX-12019] fixed incorrectly displayed calendar date in maintenance edit form (miks)
+..F....... [ZBX-11304] fixed trigger wizard expressions sorting as well as wizard crash due incorrect expression removal (miks)
+A......... [ZBX-12023] fixed permission issue with event.get method (Sasha)
+.......PS. [ZBX-12226] fixed configuration synchronization with Oracle databases (wiper)
+.......PS. [ZBX-12046] fixed handling of database failure during ID selection (vso)
+..F....... [ZBX-11683] fixed problem with lost IDs of unlinkable templates (miks)
+.......PS. [ZBX-12142] fixed Oracle batch insert return value (wiper)
+..F....... [ZBX-10546] fixed undefined index error in host import form while importing templates (gcalenko, Ivo)
+..F....... [ZBX-11285] fixed cookie vulnerability for tabbed forms (gcalenko)
+..F....... [ZBX-11486] fixed duplicated error messages in screens section (miks)
+..F....... [ZBX-10807] fixed wrongly displayed field in item prototype form (miks)
+..F....... [ZBX-11549] fixed 'numeric value' error in dashboard for php 7 (gcalenko, Sasha)
+..F....... [ZBX-11559] fixed jquery binded function call on form submit (miks)
+..F....... [ZBX-11405] fixed conditions to display treeview button in triggers section (miks)
+........S. [ZBX-12012] fixed resolving of Critical and Verbose event log levels by {ITEM.LOG.SEVERITY} macro (Sasha)
+A......... [ZBX-12093] fixed removing of applications that are created from application prototypes (Sasha)
+A.F....... [ZBX-10253] fixed translation string and validation of TLS settings in host.create(), host.update() and host.massUpdate() methods; added variables to hosts array required by CHost::validateUpdate() method (miks)
+........S. [ZBX-12100] fixed new line handling in SSH agent with numeric type of information (vso)
+..F....... [ZBX-9958] fixed wrongly displayed list view after mass update failure (miks)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.9
+
+3.0.9rc1 was released as 3.0.9 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.9rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
+..F....... [ZBX-11024] fixed popup window size in actions configuration form (miks)
+..F....... [ZBX-10997] fixed usage of wrong API in screen constructor (miks)
+..F....... [ZBX-11477] fixed lost user name in profile title (miks)
+A......... [ZBX-10373] fixed check for screen items overlap (gcalenko, Sasha)
+........S. [ZBX-11889] fixed lastaccess update for passive proxy (viktors)
+..F....... [ZBX-11960] fixed interface dragging in host edit page in the Chrome browser (vmurzins)
+..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
+..F....... [ZBX-11975] fixed undefined index error in web scenario step creation (vmurzins)
+.......PS. [ZBX-11980] fixed incorrect type handling in SSH checks (abs)
+...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
 ..F....... [ZBX-11984] fixed host hyperlink style on event details page (gcalenko)
 .......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
 A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
@@ -1642,11 +1688,32 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
 
 --------------------------------------------------------------------------------
-Changes for 2.2.18rc1
+Changes for 2.2.19rc1
 
 New features:
 
 Bug fixes:
+A......... [ZBX-12023] fixed permission issue with event.get method (Sasha)
+.......PS. [ZBX-12046] fixed handling of database failure during ID selection (vso)
+..F....... [ZBX-11683] fixed problem with lost IDs of unlinkable templates (miks)
+.......PS. [ZBX-11584] fixed selection of ntext data from Microsoft SQL Server using 'db.odbc.select' item key (Sergejs)
+........S. [ZBX-12012] fixed resolving of Critical and Verbose event log levels by {ITEM.LOG.SEVERITY} macro (Sasha)
+..F....... [ZBX-11888] fixed chart name urlencoding for web scenario reports; thanks to Kotaro Miyashita for patch (miks)
+
+--------------------------------------------------------------------------------
+Changes for 2.2.18
+
+2.2.18rc1 was released as 2.2.18 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.18rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
+A......... [ZBX-7492] fixed undefined index and invalid argument supplied to foreach errors in case if macros tag is empty or is not included in the XML import file (miks)
+..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
+...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
 .......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
 A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
 A......... [ZBX-11893] fixed permission issue, when importing hosts that are monitored by proxy by Zabbix Admin type user (vmurzins)
@@ -3183,11 +3250,23 @@ A......... [ZBX-5498] applications API refactoring (Vedmak)
 ..F....... [ZBX-1845] added tabs to host massupdate form (Vedmak)
 
 --------------------------------------------------------------------------------
-Changes for 2.0.21rc1
+Changes for 2.0.22rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.0.21
+
+2.0.21rc1 was released as 2.0.21 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.0.21rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
 ...G...... [ZBX-11479] fixed threaded metric to handle interruption by a signal (vso)
 
 --------------------------------------------------------------------------------
