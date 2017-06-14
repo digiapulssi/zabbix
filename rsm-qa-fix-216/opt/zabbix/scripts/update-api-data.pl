@@ -42,6 +42,8 @@ use constant TARGETS_TARGET_DIR => '/opt/zabbix/sla';
 
 sub get_history_by_itemid($$$);
 sub get_historical_value_by_time($$);
+sub fill_test_data_dns($$$);
+sub fill_test_data_rdds($$);
 
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
 
@@ -791,46 +793,11 @@ foreach (keys(%$servicedata))
 							'testData'	=> []
 						};
 
-						foreach my $ns (keys(%{$probes_ref->{$probe}->{'details'}}))
+						unless ($probe_ref->{'status'} eq PROBE_OFFLINE_STR)
 						{
-							my $test_data_ref = {
-								'target'	=> $ns,
-								'status'	=> undef,
-								'metrics'	=> []
-							};
-
-							foreach my $test (@{$probes_ref->{$probe}->{'details'}->{$ns}})
-							{
-								my $metric = {
-									'testDateTime'	=> $test->{'clock'},
-									'targetIP'	=> $test->{'ip'}
-								};
-
-								if (substr($test->{'rtt'}, 0, 1) eq "-")
-								{
-									$metric->{'rtt'} = undef;
-									$metric->{'result'} = $test->{'rtt'};
-
-									$test_data_ref->{'status'} = "Down";
-								}
-								else
-								{
-									$metric->{'rtt'} = $test->{'rtt'};
-									$metric->{'result'} = "ok";
-
-									# skip threshold check if NS is already known to be down
-									unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
-									{
-										$test_data_ref->{'status'} = ($test->{'rtt'} > get_historical_value_by_time($dns_udp_rtt_high_history, $metric->{'testDateTime'}) ? "Down" : "Up");
-									}
-								}
-
-								push(@{$test_data_ref->{'metrics'}}, $metric);
-							}
-
-							$test_data_ref->{'status'} = "No result" unless (defined($test_data_ref->{'status'}));
-
-							push(@{$probe_ref->{'testData'}}, $test_data_ref);
+							fill_test_data_dns($probes_ref->{$probe}->{'details'},
+									$probe_ref->{'testData'},
+									$dns_udp_rtt_high_history);
 						}
 
 						push(@{$tr_ref->{'testedInterface'}->[0]->{'probes'}}, $probe_ref);
@@ -962,37 +929,17 @@ foreach (keys(%$servicedata))
 								}
 							}
 
-							fail("Gleb was wrong, RDDS test can have more (or less) than one metric") if (scalar(@{$probes_ref->{$probe}->{'details'}}) != 1);
-
-							my $test = $probes_ref->{$probe}->{'details'}->[0];
-
-							my $metric = {
-								'testDateTime'	=> $test->{'clock'},
-								'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
-							};
-
-							if (substr($test->{'rtt'}, 0, 1) eq "-")
-							{
-								$metric->{'rtt'} = undef;
-								$metric->{'result'} = $test->{'rtt'};
-							}
-							else
-							{
-								$metric->{'rtt'} = $test->{'rtt'};
-								$metric->{'result'} = "ok";
-							}
-
 							my $probe_ref = {
 								'city'		=> $probe,
 								'status'	=> $probes_ref->{$probe}->{'status'},
-								'testData'	=> [
-									{
-										'target'	=> undef,
-										'status'	=> defined($metric->{'rtt'}) ? "Up" : "Down",
-										'metrics'	=> [$metric]
-									}
-								]
+								'testData'	=> []
 							};
+
+							unless ($probe_ref->{'status'} eq PROBE_OFFLINE_STR)
+							{
+								fill_test_data_rdds($probes_ref->{$probe}->{'details'},
+										$probe_ref->{'testData'});
+							}
 
 							push(@{($subservice eq JSON_RDDS_43 ? $rdds43_ref : $rdds80_ref)->{'probes'}}, $probe_ref);
 						}
@@ -1233,6 +1180,91 @@ sub get_historical_value_by_time($$)
 	fail("timestamp $timestamp is out of bounds of selected historical data range") unless (defined($value));
 
 	return $value;
+}
+
+sub fill_test_data_dns($$$)
+{
+	my $src = shift;
+	my $dst = shift;
+	my $hist = shift;
+
+	foreach my $ns (keys(%{$src}))
+	{
+		my $test_data_ref = {
+			'target'	=> $ns,
+			'status'	=> undef,
+			'metrics'	=> []
+		};
+
+		foreach my $test (@{$src->{$ns}})
+		{
+			my $metric = {
+				'testDateTime'	=> $test->{'clock'},
+				'targetIP'	=> $test->{'ip'}
+			};
+
+			if (substr($test->{'rtt'}, 0, 1) eq "-")
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $test->{'rtt'};
+
+				$test_data_ref->{'status'} = "Down";
+			}
+			else
+			{
+				$metric->{'rtt'} = $test->{'rtt'};
+				$metric->{'result'} = "ok";
+
+				# skip threshold check if NS is already known to be down
+				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+				{
+					$test_data_ref->{'status'} =
+							($test->{'rtt'} > get_historical_value_by_time($hist,
+									$metric->{'testDateTime'}) ? "Down" : "Up");
+				}
+			}
+
+			push(@{$test_data_ref->{'metrics'}}, $metric);
+		}
+
+		$test_data_ref->{'status'} = "No result" unless (defined($test_data_ref->{'status'}));
+
+		push(@{$dst}, $test_data_ref);
+	}
+}
+
+sub fill_test_data_rdds($$)
+{
+	my $src = shift;
+	my $dst = shift;
+
+	fail("Gleb was wrong, RDDS test data can have more (or less) than one metric") if (scalar(@{$src}) != 1);
+
+	my $test = $src->[0];
+
+	my $metric = {
+		'testDateTime'	=> $test->{'clock'},
+		'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+	};
+
+	if (substr($test->{'rtt'}, 0, 1) eq "-")
+	{
+		$metric->{'rtt'} = undef;
+		$metric->{'result'} = $test->{'rtt'};
+	}
+	else
+	{
+		$metric->{'rtt'} = $test->{'rtt'};
+		$metric->{'result'} = "ok";
+	}
+
+	push(@{$dst}, {
+		'target'	=> undef,
+		'status'	=> defined($metric->{'rtt'}) ? "Up" : "Down",
+		'metrics'	=> [
+			$metric
+		]
+	});
 }
 
 # values are organized like this:
