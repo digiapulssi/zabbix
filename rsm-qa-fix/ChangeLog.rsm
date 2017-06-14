@@ -11,7 +11,7 @@ New features:
 ....I..... [216] implemented new format of SLA API (dimir, gleb)
 
 Bug fixes:
-A.F....... [223] added multiconnection for other DB's (Oleg)
+A.F....... [sub-223] added multiconnection for other DB's (Oleg)
 ....I..... [sub-219] fixed SLA API maintenance mode JSON key ("testedServices" vs. "testedService") (gleb)
 
 --------------------------------------------------------------------------------
