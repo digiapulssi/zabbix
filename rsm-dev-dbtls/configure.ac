@@ -1209,9 +1209,9 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	dnl Checking for SQLite3 support
 	AX_LIB_SQLITE3()
 	if test "x$want_sqlite3" = "xyes"; then
-		dnl if test "x$have_dbtls" = "xyes"; then
-		dnl 	AC_MSG_ERROR([Secure connections are not supported for SQLite3])
-		dnl fi
+		if test "x$have_dbtls" = "xyes"; then
+			AC_MSG_ERROR([Secure connections are not supported for SQLite3])
+		fi
 
 		if test "x$have_db" != "xno"; then
 			AC_MSG_ERROR([You can configure for only one database.])
