@@ -78,7 +78,13 @@ class CWebUser {
 					'DATABASE' => $DB['DATABASE'],
 					'USER' => $DB['USER'],
 					'PASSWORD' => $DB['PASSWORD'],
-					'SCHEMA' => $DB['SCHEMA']
+					'SCHEMA' => $DB['SCHEMA'],
+					'DB_SSL' => $DB['DB_SSL'],
+					'DB_KEY_FILE' => $DB['DB_KEY_FILE'],
+					'DB_CERT_FILE' => $DB['DB_CERT_FILE'],
+					'DB_CA_PACTH' => $DB['DB_CA_PACTH'],
+					'DB_CA_FILE' => $DB['DB_CA_FILE'],
+					'DB_CA_CIPHER' => $DB['DB_CA_CIPHER']
 				];
 
 				foreach ($DB['SERVERS'] as $server) {
