@@ -133,8 +133,8 @@ class CConfigFile {
 			$this->config['DB']['DB_CA_FILE'] = $DB['DB_CA_FILE'];
 		}
 
-		if (array_key_exists('DB_CA_PACTH', $DB)) {
-			$this->config['DB']['DB_CA_PACTH'] = $DB['DB_CA_PACTH'];
+		if (array_key_exists('DB_CA_PATH', $DB)) {
+			$this->config['DB']['DB_CA_PATH'] = $DB['DB_CA_PATH'];
 		}
 
 		if (array_key_exists('DB_CA_CIPHER', $DB)) {

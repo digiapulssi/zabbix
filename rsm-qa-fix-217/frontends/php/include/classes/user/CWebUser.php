@@ -82,7 +82,7 @@ class CWebUser {
 					'DB_SSL' => $DB['DB_SSL'],
 					'DB_KEY_FILE' => $DB['DB_KEY_FILE'],
 					'DB_CERT_FILE' => $DB['DB_CERT_FILE'],
-					'DB_CA_PACTH' => $DB['DB_CA_PACTH'],
+					'DB_CA_PATH' => $DB['DB_CA_PATH'],
 					'DB_CA_FILE' => $DB['DB_CA_FILE'],
 					'DB_CA_CIPHER' => $DB['DB_CA_CIPHER']
 				];
@@ -100,7 +100,7 @@ class CWebUser {
 					$DB['DB_SSL'] = $server['DB_SSL'];
 					$DB['DB_KEY_FILE'] = $server['DB_KEY_FILE'];
 					$DB['DB_CERT_FILE'] = $server['DB_CERT_FILE'];
-					$DB['DB_CA_PACTH'] = $server['DB_CA_PACTH'];
+					$DB['DB_CA_PATH'] = $server['DB_CA_PATH'];
 					$DB['DB_CA_FILE'] = $server['DB_CA_FILE'];
 					$DB['DB_CA_CIPHER'] = $server['DB_CA_CIPHER'];
 					DBconnect($error);
@@ -131,7 +131,7 @@ class CWebUser {
 				$DB['DB_SSL'] = $master['DB_SSL'];
 				$DB['DB_KEY_FILE'] = $master['DB_KEY_FILE'];
 				$DB['DB_CERT_FILE'] = $master['DB_CERT_FILE'];
-				$DB['DB_CA_PACTH'] = $master['DB_CA_PACTH'];
+				$DB['DB_CA_PATH'] = $master['DB_CA_PATH'];
 				$DB['DB_CA_FILE'] = $master['DB_CA_FILE'];
 				$DB['DB_CA_CIPHER'] = $master['DB_CA_CIPHER'];
 				DBconnect($error);

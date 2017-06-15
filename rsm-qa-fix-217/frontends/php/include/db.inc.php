@@ -53,7 +53,7 @@ function DBconnect(&$error) {
 				if ($DB['DB_SSL'] === true) {
 					$DB['DB'] = mysqli_init();
 					mysqli_ssl_set($DB['DB'], $DB['DB_KEY_FILE'], $DB['DB_CERT_FILE'], $DB['DB_CA_FILE'],
-						$DB['DB_CA_PACTH'], $DB['DB_CA_CIPHER']);
+						$DB['DB_CA_PATH'], $DB['DB_CA_CIPHER']);
 					mysqli_real_connect($DB['DB'], $DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'],
 						$DB['PORT']);
 				}
