@@ -793,6 +793,7 @@ sub db_connect
 
 	$dbh = DBI->connect($global_sql, $section->{'db_user'}, $section->{'db_password'},
 		{
+			get_db_tls_options($section),
 			PrintError  => 0,
 			HandleError => \&handle_db_error,
 		}) or handle_db_error(DBI->errstr);
