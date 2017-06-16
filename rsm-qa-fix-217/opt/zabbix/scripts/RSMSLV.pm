@@ -789,13 +789,25 @@ sub db_connect
 			unless (defined($section->{$key}));
 	}
 
-	$global_sql = 'DBI:mysql:'.$section->{'db_name'}.':'.$section->{'db_host'};
+	my $db_tls_settings = get_db_tls_settings($section);
+
+	$global_sql = "DBI:mysql:database=$section->{'db_name'};host=$section->{'db_host'};$db_tls_settings";
 
 	$dbh = DBI->connect($global_sql, $section->{'db_user'}, $section->{'db_password'},
 		{
 			PrintError  => 0,
 			HandleError => \&handle_db_error,
 		}) or handle_db_error(DBI->errstr);
+
+	# verify that established database connection uses TLS if there was any hint that it is required in the config
+	unless ($db_tls_settings eq "mysql_ssl=0")
+	{
+		my $rows_ref = db_select("show status like 'Ssl_cipher';");
+
+		fail("established connection is not secure") if ($rows_ref->[0]->[1] eq "");
+
+		dbg("established connection uses \"" . $rows_ref->[0]->[1] . "\" cipher");
+	}
 
 	# improve performance of selects, see
 	# http://search.cpan.org/~capttofu/DBD-mysql-4.028/lib/DBD/mysql.pm
