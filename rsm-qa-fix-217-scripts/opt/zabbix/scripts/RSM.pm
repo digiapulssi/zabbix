@@ -252,5 +252,4 @@ sub get_db_tls_settings($)
 	return $db_tls_settings;
 }
 
-
 1;
