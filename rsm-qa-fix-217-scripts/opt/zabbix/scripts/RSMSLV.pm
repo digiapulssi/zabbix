@@ -789,7 +789,7 @@ sub db_connect
 			unless (defined($section->{$key}));
 	}
 
-	$global_sql = 'DBI:mysql:'.$section->{'db_name'}.':'.$section->{'db_host'}.get_db_tls_settings($section);
+	$global_sql = "DBI:mysql:database=$section->{'db_name'};host=$section->{'db_host'};" . get_db_tls_settings($section);
 
 	$dbh = DBI->connect($global_sql, $section->{'db_user'}, $section->{'db_password'},
 		{

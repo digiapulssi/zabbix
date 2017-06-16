@@ -235,21 +235,15 @@ my %mapping = (
 sub get_db_tls_settings($)
 {
 	my $section = shift;
+
 	my $db_tls_settings = "";
 
 	while (my ($config_param, $mysql_param) = each %mapping)
 	{
-		next unless (exists($section->{$config_param}));
-
-		$db_tls_settings .= ";".$mysql_param."=".$section->{$config_param};
+		$db_tls_settings .= ";$mysql_param=$section->{$config_param}" if (exists($section->{$config_param}));
 	}
 
-	if ("" ne $db_tls_settings)
-	{
-		$db_tls_settings .= ";mysql_ssl=1";
-	}
-
-	return $db_tls_settings;
+	return $db_tls_settings eq "" ? "mysql_ssl=0" : "mysql_ssl=1$db_tls_settings";
 }
 
 1;
