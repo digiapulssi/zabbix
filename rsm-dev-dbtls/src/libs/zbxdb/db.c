@@ -430,16 +430,15 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 #ifdef DBTLS
 	if (ZBX_DB_OK == ret && 1 == use_tls)
 	{
-		const char	*ssl_cipher = mysql_get_ssl_cipher(conn);
+		const char	*ssl_cipher;
 
-		if (NULL != ssl_cipher)
-			zabbix_log(LOG_LEVEL_DEBUG, "Cipher in use: \"%s\".", ZBX_NULL2EMPTY_STR(ssl_cipher));
-		else
+		if (NULL == (ssl_cipher = mysql_get_ssl_cipher(conn)))
 		{
 			zabbix_log(LOG_LEVEL_ERR, "cannot establish TLS to MySQL database");
 			ret = ZBX_DB_FAIL;
 		}
-
+		else
+			zabbix_log(LOG_LEVEL_DEBUG, "Cipher in use: \"%s\".", ssl_cipher);
 	}
 #endif
 	/* The RECONNECT option setting is placed here, AFTER the connection	*/
