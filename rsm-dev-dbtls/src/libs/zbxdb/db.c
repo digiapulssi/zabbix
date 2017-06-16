@@ -299,6 +299,9 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	char		*connect = NULL;
 #elif defined(HAVE_MYSQL)
 	my_bool		mysql_reconnect = 1;
+#ifdef DBTLS
+	unsigned char	use_tls;
+#endif
 #elif defined(HAVE_ORACLE)
 	char		*connect = NULL;
 	sword		err = OCI_SUCCESS;
@@ -407,14 +410,14 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	{
 		my_bool	verify = 1;
 
+		use_tls = 1;
+
 		mysql_ssl_set(conn, key, cert, ca, capath, cipher);
-
 		mysql_options(conn, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&verify);
-
-		/* might be useful to set MYSQL_OPT_SSL_CRL and MYSQL_OPT_SSL_CRLPATH too */
 	}
 	else
 	{
+		use_tls = 0;
 		zabbix_log(LOG_LEVEL_WARNING, "None of encryption parameters was provided. Database connection is going"
 				" to be unencrypted.");
 	}
@@ -425,8 +428,19 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 		ret = ZBX_DB_FAIL;
 	}
 #ifdef DBTLS
-	if (ZBX_DB_OK == ret)
-		zabbix_log(LOG_LEVEL_DEBUG, "Cipher in use: \"%s\".", ZBX_NULL2EMPTY_STR(mysql_get_ssl_cipher(conn)));
+	if (ZBX_DB_OK == ret && 1 == use_tls)
+	{
+		const char	*ssl_cipher = mysql_get_ssl_cipher(conn);
+
+		if (NULL != ssl_cipher)
+			zabbix_log(LOG_LEVEL_DEBUG, "Cipher in use: \"%s\".", ZBX_NULL2EMPTY_STR(ssl_cipher));
+		else
+		{
+			zabbix_log(LOG_LEVEL_ERR, "cannot establish TLS to MySQL database");
+			ret = ZBX_DB_FAIL;
+		}
+
+	}
 #endif
 	/* The RECONNECT option setting is placed here, AFTER the connection	*/
 	/* is made, due to a bug in MySQL versions prior to 5.1.6 where it	*/
