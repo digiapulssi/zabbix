@@ -246,7 +246,7 @@ sub get_db_tls_settings($)
 
 	if ("" ne $db_tls_settings)
 	{
-		$db_tls_settings .= "mysql_ssl=1";
+		$db_tls_settings .= ";mysql_ssl=1";
 	}
 
 	return $db_tls_settings;
