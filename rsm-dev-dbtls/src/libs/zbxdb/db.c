@@ -290,7 +290,7 @@ static int	is_recoverable_mysql_error(void)
 int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *dbschema, char *dbsocket, int port
 #ifdef DBTLS
 		, const char *key, const char *cert, const char *ca, const char *capath
-		, const char *cipher, int verify_identity
+		, const char *cipher
 #endif
 )
 {
@@ -405,7 +405,7 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	/* if at least one of DB TLS parameters was provided, pass them to MySQL and require secure connection */
 	if (NULL != key || NULL != cert || NULL != ca || NULL != capath || NULL != cipher)
 	{
-		my_bool	verify = verify_identity;
+		my_bool	verify = 1;
 
 		mysql_ssl_set(conn, key, cert, ca, capath, cipher);
 

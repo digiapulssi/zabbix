@@ -38,7 +38,6 @@ extern char	*CONFIG_DB_CERT_FILE;
 extern char	*CONFIG_DB_CA_FILE;
 extern char	*CONFIG_DB_CA_PATH;
 extern char	*CONFIG_DB_CIPHER;
-int		CONFIG_DB_VERIFY_IDENTITY;
 #endif
 extern int	CONFIG_HISTSYNCER_FORKS;
 extern int	CONFIG_UNAVAILABLE_DELAY;
