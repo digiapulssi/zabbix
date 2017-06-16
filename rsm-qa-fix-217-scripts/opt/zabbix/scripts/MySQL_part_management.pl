@@ -59,7 +59,7 @@ my $curr_tz = 'UTC';
 
 my $part_tables;
 
-my $dbh = DBI->connect($dsn, $db_user_name, $db_password, get_db_tls_options($section));
+my $dbh = DBI->connect($dsn.get_db_tls_settings($section), $db_user_name, $db_password);
 
 unless ( check_have_partition() ) {
     print "Your installation of MySQL is not support partitioning tables function!\n";

@@ -7,7 +7,7 @@ use File::Path qw(make_path remove_tree);
 use base 'Exporter';
 
 our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_server_id get_rsm_local_key
-		get_rsm_local_id rsm_targets_prepare rsm_targets_apply rsm_targets_delete get_db_tls_options);
+		get_rsm_local_id rsm_targets_prepare rsm_targets_apply rsm_targets_delete get_db_tls_settings);
 
 use constant RSM_SERVER_KEY_PREFIX => 'server_';
 use constant RSM_DEFAULT_CONFIG_FILE => '/opt/zabbix/scripts/rsm.conf';
@@ -232,23 +232,25 @@ my %mapping = (
 );
 
 # reads database TLS settings from configuration file section
-sub get_db_tls_options($)
+sub get_db_tls_settings($)
 {
 	my $section = shift;
-
-	my $db_tls_options = {
-		'mysql_ssl'	=> 0
-	};
+	my $db_tls_settings = "";
 
 	while (my ($config_param, $mysql_param) = each %mapping)
 	{
 		next unless (exists($section->{$config_param}));
 
-		$db_tls_options->{$mysql_param} = $section->{$config_param};
-		$db_tls_options->{'mysql_ssl'} = 1;
+		$db_tls_settings .= ";".$mysql_param."=".$section->{$config_param};
 	}
 
-	return $db_tls_options;
+	if ("" ne $db_tls_settings)
+	{
+		$db_tls_settings .= "mysql_ssl=1";
+	}
+
+	return $db_tls_settings;
 }
+
 
 1;
