@@ -73,7 +73,12 @@ int	DBconnect(int flag)
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flag:%d", __function_name, flag);
 
 	while (ZBX_DB_OK != (err = zbx_db_connect(CONFIG_DBHOST, CONFIG_DBUSER, CONFIG_DBPASSWORD,
-			CONFIG_DBNAME, CONFIG_DBSCHEMA, CONFIG_DBSOCKET, CONFIG_DBPORT)))
+			CONFIG_DBNAME, CONFIG_DBSCHEMA, CONFIG_DBSOCKET, CONFIG_DBPORT
+#ifdef DBTLS
+			, CONFIG_DB_KEY_FILE, CONFIG_DB_CERT_FILE, CONFIG_DB_CA_FILE, CONFIG_DB_CA_PATH
+			, CONFIG_DB_CIPHER
+#endif
+			)))
 	{
 		if (ZBX_DB_CONNECT_ONCE == flag)
 			break;

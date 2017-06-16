@@ -283,7 +283,7 @@ CXXFLAGS="$RPM_OPT_FLAGS -fPIC -pie -Wl,-z,relro -Wl,-z,now"
 
 export CFLAGS
 export CXXFLAGS
-%configure $build_flags --with-mysql
+%configure $build_flags --with-mysql --enable-dbtls
 make -s %{?_smp_mflags}
 %if 0%{?build_server}
 mv src/zabbix_server/zabbix_server src/zabbix_server/zabbix_server_mysql
