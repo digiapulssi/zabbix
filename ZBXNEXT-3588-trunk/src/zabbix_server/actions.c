@@ -636,7 +636,7 @@ static void	check_object_hierarchy(zbx_vector_uint64_t *objectids, zbx_vector_ui
  ******************************************************************************/
 static int	check_trigger_id_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION *condition)
 {
-	zbx_uint64_t			condition_objectid;
+	zbx_uint64_t			condition_value;
 	zbx_vector_uint64_t		objectids;
 	zbx_vector_uint64_pair_t	objectids_pair;
 	int				i;
@@ -644,7 +644,7 @@ static int	check_trigger_id_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION
 	if (CONDITION_OPERATOR_EQUAL != condition->operator && CONDITION_OPERATOR_NOT_EQUAL != condition->operator)
 		return NOTSUPPORTED;
 
-	ZBX_STR2UINT64(condition_objectid, condition->value);
+	ZBX_STR2UINT64(condition_value, condition->value);
 
 	zbx_vector_uint64_create(&objectids);
 	zbx_vector_uint64_pair_create(&objectids_pair);
@@ -653,7 +653,7 @@ static int	check_trigger_id_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION
 	{
 		const DB_EVENT	*event = esc_events->values[i];
 
-		if (event->objectid == condition_objectid)
+		if (event->objectid == condition_value)
 		{
 			if (CONDITION_OPERATOR_EQUAL == condition->operator)
 				zbx_vector_uint64_append(&condition->objectids, event->objectid);
@@ -666,7 +666,7 @@ static int	check_trigger_id_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION
 	{
 		objectids_to_pair(&objectids, &objectids_pair);
 
-		check_object_hierarchy(&objectids, &objectids_pair, condition, condition_objectid,
+		check_object_hierarchy(&objectids, &objectids_pair, condition, condition_value,
 				check_trigger_id_sql_alloc, check_trigger_id_row);
 	}
 
