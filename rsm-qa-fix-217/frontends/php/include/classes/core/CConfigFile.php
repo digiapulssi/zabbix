@@ -117,29 +117,11 @@ class CConfigFile {
 			$this->config['DB']['SERVERS'] = $DB['SERVERS'];
 		}
 
-		if (array_key_exists('DB_SSL', $DB)) {
-			$this->config['DB']['DB_SSL'] = $DB['DB_SSL'];
-		}
-
-		if (array_key_exists('DB_KEY_FILE', $DB)) {
-			$this->config['DB']['DB_KEY_FILE'] = $DB['DB_KEY_FILE'];
-		}
-
-		if (array_key_exists('DB_CERT_FILE', $DB)) {
-			$this->config['DB']['DB_CERT_FILE'] = $DB['DB_CERT_FILE'];
-		}
-
-		if (array_key_exists('DB_CA_FILE', $DB)) {
-			$this->config['DB']['DB_CA_FILE'] = $DB['DB_CA_FILE'];
-		}
-
-		if (array_key_exists('DB_CA_PATH', $DB)) {
-			$this->config['DB']['DB_CA_PATH'] = $DB['DB_CA_PATH'];
-		}
-
-		if (array_key_exists('DB_CA_CIPHER', $DB)) {
-			$this->config['DB']['DB_CA_CIPHER'] = $DB['DB_CA_CIPHER'];
-		}
+		$this->config['DB']['DB_KEY_FILE'] = array_key_exists('DB_KEY_FILE', $DB) ? $DB['DB_KEY_FILE'] : null;
+		$this->config['DB']['DB_CERT_FILE'] = array_key_exists('DB_CERT_FILE', $DB) ? $DB['DB_CERT_FILE'] : null;
+		$this->config['DB']['DB_CA_FILE'] = array_key_exists('DB_CA_FILE', $DB) ? $DB['DB_CA_FILE'] : null;
+		$this->config['DB']['DB_CA_PATH'] = array_key_exists('DB_CA_PATH', $DB) ? $DB['DB_CA_PATH'] : null;
+		$this->config['DB']['DB_CA_CIPHER'] = array_key_exists('DB_CA_CIPHER', $DB) ? $DB['DB_CA_CIPHER'] : null;
 
 		if (isset($ZBX_SERVER)) {
 			$this->config['ZBX_SERVER'] = $ZBX_SERVER;

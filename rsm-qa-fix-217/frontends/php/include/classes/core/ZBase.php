@@ -297,29 +297,11 @@ class ZBase {
 		$error = null;
 		if (!DBconnect($error)) {
 			foreach ($DB['SERVERS'] as $server) {
-				if ($DB['TYPE'] !== $server['TYPE'] || $DB['SERVER'] !== $server['SERVER']
+				if (($DB['TYPE'] !== $server['TYPE'] || $DB['SERVER'] !== $server['SERVER']
 						|| $DB['PORT'] !== $server['PORT'] || $DB['DATABASE'] !== $server['DATABASE']
-						|| $DB['USER'] !== $server['USER'] || $DB['PASSWORD'] !== $server['PASSWORD']) {
-					unset($DB['DB'], $error);
-
-					$DB['TYPE'] = $server['TYPE'];
-					$DB['SERVER'] = $server['SERVER'];
-					$DB['PORT'] = $server['PORT'];
-					$DB['DATABASE'] = $server['DATABASE'];
-					$DB['USER'] = $server['USER'];
-					$DB['PASSWORD'] = $server['PASSWORD'];
-					$DB['SCHEMA'] = $server['SCHEMA'];
-					$DB['DB_SSL'] = $server['DB_SSL'];
-					$DB['DB_KEY_FILE'] = $server['DB_KEY_FILE'];
-					$DB['DB_CERT_FILE'] = $server['DB_CERT_FILE'];
-					$DB['DB_CA_PATH'] = $server['DB_CA_PATH'];
-					$DB['DB_CA_FILE'] = $server['DB_CA_FILE'];
-					$DB['DB_CA_CIPHER'] = $server['DB_CA_CIPHER'];
-					DBconnect($error);
-
-					if (!$error) {
-						redirect($server['URL']);
-					}
+						|| $DB['USER'] !== $server['USER'] || $DB['PASSWORD'] !== $server['PASSWORD'])
+							&& multiDBconnect($server, $error)) {
+					redirect($server['URL']);
 				}
 			}
 

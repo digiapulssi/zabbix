@@ -91,41 +91,10 @@ else {
 }
 
 if ($data['filter_search']) {
-	$master = [
-		'TYPE' => $DB['TYPE'],
-		'SERVER' => $DB['SERVER'],
-		'PORT' => $DB['PORT'],
-		'DATABASE' => $DB['DATABASE'],
-		'USER' => $DB['USER'],
-		'PASSWORD' => $DB['PASSWORD'],
-		'SCHEMA' => $DB['SCHEMA'],
-		'DB_SSL' => $DB['DB_SSL'],
-		'DB_KEY_FILE' => $DB['DB_KEY_FILE'],
-		'DB_CERT_FILE' => $DB['DB_CERT_FILE'],
-		'DB_CA_PATH' => $DB['DB_CA_PATH'],
-		'DB_CA_FILE' => $DB['DB_CA_FILE'],
-		'DB_CA_CIPHER' => $DB['DB_CA_CIPHER']
-	];
+	$master = $DB;
 
 	foreach ($DB['SERVERS'] as $server) {
-		$error = false;
-		unset($DB['DB']);
-		$DB['TYPE'] = $server['TYPE'];
-		$DB['SERVER'] = $server['SERVER'];
-		$DB['PORT'] = $server['PORT'];
-		$DB['DATABASE'] = $server['DATABASE'];
-		$DB['USER'] = $server['USER'];
-		$DB['PASSWORD'] = $server['PASSWORD'];
-		$DB['SCHEMA'] = $server['SCHEMA'];
-		$DB['DB_SSL'] = $server['DB_SSL'];
-		$DB['DB_KEY_FILE'] = $server['DB_KEY_FILE'];
-		$DB['DB_CERT_FILE'] = $server['DB_CERT_FILE'];
-		$DB['DB_CA_PATH'] = $server['DB_CA_PATH'];
-		$DB['DB_CA_FILE'] = $server['DB_CA_FILE'];
-		$DB['DB_CA_CIPHER'] = $server['DB_CA_CIPHER'];
-		DBconnect($error);
-
-		if ($error) {
+		if (!multiDBconnect($server, $error)) {
 			show_error_message(_($server['NAME'].': '.$error));
 			continue;
 		}
@@ -645,19 +614,7 @@ if ($data['filter_search']) {
 	}
 
 	unset($DB['DB']);
-	$DB['TYPE'] = $master['TYPE'];
-	$DB['SERVER'] = $master['SERVER'];
-	$DB['PORT'] = $master['PORT'];
-	$DB['DATABASE'] = $master['DATABASE'];
-	$DB['USER'] = $master['USER'];
-	$DB['PASSWORD'] = $master['PASSWORD'];
-	$DB['SCHEMA'] = $master['SCHEMA'];
-	$DB['DB_SSL'] = $master['DB_SSL'];
-	$DB['DB_KEY_FILE'] = $master['DB_KEY_FILE'];
-	$DB['DB_CERT_FILE'] = $master['DB_CERT_FILE'];
-	$DB['DB_CA_PATH'] = $master['DB_CA_PATH'];
-	$DB['DB_CA_FILE'] = $master['DB_CA_FILE'];
-	$DB['DB_CA_CIPHER'] = $master['DB_CA_CIPHER'];
+	$DB = $master;
 	DBconnect($error);
 }
 
