@@ -949,7 +949,7 @@ sub validate_measurement_file($)
 													'member'	=> {
 														'value'		=> JSON_VALUE_STRING,
 														'not null'	=> 1,
-														'pattern'	=> qr/^(Up|Down|Nodata)$/
+														'pattern'	=> qr/^(Up|Down|No result|Offline)$/
 													}
 												},
 												JSON_KEY_TEST_DATA,
@@ -977,7 +977,7 @@ sub validate_measurement_file($)
 																	'member'	=> {
 																		'value'		=> JSON_VALUE_STRING,
 																		'not null'	=> 1,
-																		'pattern'	=> qr/^(Up|Down|No result|Offline)$/
+																		'pattern'	=> qr/^(Up|Down)$/
 																	}
 																},
 																JSON_KEY_METRICS,
@@ -1004,7 +1004,7 @@ sub validate_measurement_file($)
 																					'mandatory'	=> 1,
 																					'member'	=> {
 																						'value'		=> JSON_VALUE_STRING,
-																						'not null'	=> 1,
+																						'not null'	=> 0,
 																						'rule'		=> \&validate_ip
 																					}
 																				},
