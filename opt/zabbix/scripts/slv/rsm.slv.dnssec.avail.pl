@@ -100,8 +100,6 @@ while ($period > 0)
 			next;
 		}
 
-		info("  itemid:", $_->[0], " value:", $_->[1]) foreach (@$values_ref);
-
 		my $probes_with_results = get_probes_count($items_ref, $values_ref);
 		if ($probes_with_results < $cfg_minonline)
 		{
