@@ -935,7 +935,7 @@ foreach (keys(%$servicedata))
 								'testData'	=> []
 							};
 
-							unless ($probe_ref->{'status'} eq PROBE_OFFLINE_STR)
+							if (exists($probes_ref->{$probe}->{'details'}))
 							{
 								fill_test_data_rdds($probes_ref->{$probe}->{'details'},
 										$probe_ref->{'testData'});
