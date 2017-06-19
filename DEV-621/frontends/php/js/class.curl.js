@@ -133,7 +133,7 @@ Curl.prototype = {
 			sid = location.href.substr(possition + 4, 16);
 		}
 		else {
-			sid = cookie.read('zbx_sessionid');
+			sid = jQuery('meta[name="zbx_sessionid"]').attr('content');
 			if (!is_null(sid)) {
 				sid = sid.substr(16, 16);
 			}

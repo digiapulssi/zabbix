@@ -24,7 +24,7 @@ var RPC = {
 
 	auth: function(auth_) {
 		if (is_null(this._auth)) {
-			this._auth = cookie.read('zbx_sessionid');
+			this._auth = jQuery('meta[name="zbx_sessionid"]').attr('content');
 		}
 
 		if ('undefined' == typeof(url_)) {

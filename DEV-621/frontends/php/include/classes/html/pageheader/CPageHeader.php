@@ -55,10 +55,16 @@ class CPageHeader {
 	protected $js = [];
 
 	/**
+	 * @var string of cookie zbx_sessionid
+	 */
+	protected $zbx_sessionid;
+
+	/**
 	 * @param string $title
 	 */
 	public function __construct($title = '') {
 		$this->title = CHtml::encode($title);
+		$this->zbx_sessionid = get_cookie('zbx_sessionid');
 	}
 
 	/**
@@ -133,6 +139,7 @@ class CPageHeader {
 		<meta name="msapplication-TileImage" content="img/ms-tile-144x144.png">
 		<meta name="msapplication-TileColor" content="#d40000">
 		<meta name="msapplication-config" content="none"/>
+		<meta name="zbx_sessionid" content="$this->zbx_sessionid"/>
 
 HTML;
 
