@@ -818,7 +818,7 @@ sub validate_test_result($$$)
 		'-200, No reply from name server'			=> 'DNS',
 		'-201, Invalid reply from name server'			=> 'DNS',
 		'-204, DNSSEC error'					=> 'DNS',
-		'-206, Keyset is not valid'				=> 'DNS',
+		'-206, No AD bit in the answer from resolver'		=> 'DNS',
 		'-200, No reply from RDDS43 server'			=> 'RDDS',
 		'-201, Syntax error on RDDS43 output'			=> 'RDDS',
 		'-204, No reply from RDDS80 server'			=> 'RDDS',
