@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc10
 New features:
 
 Bug fixes:
+..F....... [243] fixed header size (Oleg)
 ....I..... [244] fixed excessive logging by DNSSEC SLV script (gleb)
 
 --------------------------------------------------------------------------------
