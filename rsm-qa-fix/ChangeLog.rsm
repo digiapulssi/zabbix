@@ -1,6 +1,11 @@
-Changes for rsm1.0.0rc10
+Changes for rsm1.0.0rc11
 
 New features:
+
+Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc10
 
 Bug fixes:
 ..F....... [243] fixed header size (Oleg)
