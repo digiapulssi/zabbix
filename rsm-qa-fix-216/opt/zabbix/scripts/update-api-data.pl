@@ -27,8 +27,8 @@ use constant JSON_OBJECT_DISABLED_SERVICE => {
 	'status'	=> 'Disabled'
 };
 
-use constant JSON_OBJECT_NODATA_PROBE => {
-	'status'	=> 'Nodata'
+use constant JSON_OBJECT_NORESULT_PROBE => {
+	'status'	=> 'No result'
 };
 
 use constant DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
@@ -746,7 +746,7 @@ foreach (keys(%$servicedata))
 					foreach my $tr_ref (@test_results)
 					{
 						next if (exists($tr_ref->{'probes'}->{$probe}));
-						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NODATA_PROBE;
+						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 					}
 				}
 
@@ -880,7 +880,7 @@ foreach (keys(%$servicedata))
 						foreach my $subservice (keys(%$subservices_ref))
 						{
 							next if (exists($subservices_ref->{$subservice}->{$probe}));
-							$subservices_ref->{$subservice}->{$probe} = JSON_OBJECT_NODATA_PROBE;
+							$subservices_ref->{$subservice}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 						}
 					}
 				}
@@ -1018,7 +1018,7 @@ foreach (keys(%$servicedata))
 					foreach my $tr_ref (@test_results)
 					{
 						next if (exists($tr_ref->{'probes'}->{$probe}));
-						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NODATA_PROBE;
+						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 					}
 				}
 
