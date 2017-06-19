@@ -822,7 +822,7 @@ sub validate_test_result($$$)
 		'-200, No reply from RDDS43 server'			=> 'RDDS',
 		'-201, Syntax error on RDDS43 output'			=> 'RDDS',
 		'-204, No reply from RDDS80 server'			=> 'RDDS',
-		'-205, Cannot resolve the Whois server hostname'	=> 'RDDS',
+		'-205, Cannot resolve a Whois host name'		=> 'RDDS',
 		'-207, Invalid HTTP status code'			=> 'RDDS',
 		'ok'							=> 'both'
 	);
