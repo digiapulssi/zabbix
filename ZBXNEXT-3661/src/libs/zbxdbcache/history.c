@@ -232,7 +232,7 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 
 	if (num > 0)
 	{
-		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s/items",
+		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s",
 				HISTORY_SERVICE_URL, types[value_type]);
 
 		zbx_send_data(json.buffer, url);
@@ -352,12 +352,17 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 		return;
 	}
 
-	zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s/" ZBX_FS_UI64
-			"/values?end=%d&count=%d", HISTORY_SERVICE_URL, types[value_type], itemid,
-			end, count);
+	zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s/" ZBX_FS_UI64,
+			HISTORY_SERVICE_URL, types[value_type], itemid);
 
 	if (0 != start)
 		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "&start=%d", start);
+
+	if (0 != end)
+		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "&end=%d", end);
+
+	if (0 != count)
+		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "&count=%d", count);
 
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, NULL);
@@ -458,7 +463,7 @@ void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 
 	if (num > 0)
 	{
-		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/trends/%s/items",
+		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/trends/%s",
 				HISTORY_SERVICE_URL, types[value_type]);
 
 		zbx_send_data(json.buffer, url);

@@ -411,7 +411,7 @@ out:
 		return ret;
 	}
 	else
-		zbx_history_get_values(itemid, value_type, seconds, -1, end_timestamp, values);
+		zbx_history_get_values(itemid, value_type, seconds, 0, end_timestamp, values);
 
 	return SUCCEED;
 }
