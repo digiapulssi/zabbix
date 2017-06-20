@@ -878,6 +878,15 @@ sub validate_measurement_file($)
 						'pattern'	=> qr/.*/
 					}
 				},
+				JSON_KEY_SERVICE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_STRING,
+						'not nutt'	=> 1,
+						'pattern'	=> qr/^(DNS|DNSSEC|EPP|RDDS)$/
+					}
+				},
 				JSON_KEY_CYCLE_CALCULATION_TIME,
 				{
 					'mandatory'	=> 1,
@@ -913,15 +922,6 @@ sub validate_measurement_file($)
 										'value'		=> JSON_VALUE_STRING,
 										'not null'	=> 1,
 										'pattern'	=> qr/^(DNS|DNSSEC|EPP|RDDS43|RDDS80)$/
-									}
-								},
-								JSON_KEY_STATUS,
-								{
-									'mandatory'	=> 1,
-									'member'	=> {
-										'value'		=> JSON_VALUE_STRING,
-										'not null'	=> 1,
-										'pattern'	=> qr/^(Up|Down)$/
 									}
 								},
 								JSON_KEY_PROBES,
