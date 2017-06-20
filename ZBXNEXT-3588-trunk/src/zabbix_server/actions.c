@@ -414,55 +414,6 @@ static int	check_application_condition(zbx_vector_ptr_t *esc_events, DB_CONDITIO
 
 /******************************************************************************
  *                                                                            *
- * Function: check_trigger_id_sql_alloc                                       *
- *                                                                            *
- * Purpose: allocate sql query for trigger id condition                       *
- *                                                                            *
- * Parameters: sql           - [IN/OUT] allocated sql query                   *
- *             sql_alloc     - [IN/OUT] how much bytes allocated              *
- *             objectids_tmp - [IN/OUT] uses to allocate query, removes       *
- *                                      duplicates                            *
- *                                                                            *
- ******************************************************************************/
-static void	check_trigger_id_sql_alloc(char **sql, size_t *sql_alloc, zbx_vector_uint64_t *objectids_tmp)
-{
-	size_t	sql_offset = 0;
-
-	zbx_vector_uint64_sort(objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	/* multiple hosts can share trigger from same template, don't allocate duplicate ids */
-	zbx_vector_uint64_uniq(objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_snprintf_alloc(sql, sql_alloc, &sql_offset,
-			"select triggerid,templateid"
-			" from triggers"
-			" where templateid is not null and");
-
-	DBadd_condition_alloc(sql, sql_alloc, &sql_offset, "triggerid", objectids_tmp->values,
-			objectids_tmp->values_num);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: check_trigger_id_row                                             *
- *                                                                            *
- * Purpose: check trigger id row and set value to compare, to condition       *
- *                                                                            *
- * Parameters: row        - [IN]  fetched row                                 *
- *             objectid   - [OUT] trigger id                                  *
- *             templateid - [OUT] template id                                 *
- *             value      - [OUT] value to compare to condition               *
- *                                                                            *
- ******************************************************************************/
-static void	check_trigger_id_row(DB_ROW row, zbx_uint64_t *objectid, zbx_uint64_t *templateid, zbx_uint64_t *value)
-{
-	ZBX_STR2UINT64(*objectid, row[0]);
-	ZBX_STR2UINT64(*templateid, row[1]);
-	*value = *templateid;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: objectids_to_pair                                                *
  *                                                                            *
  * Purpose: copy objects to pair, for hierarchy checks                        *
@@ -485,10 +436,6 @@ static void	objectids_to_pair(zbx_vector_uint64_t *objectids, zbx_vector_uint64_
 	}
 }
 
-typedef void	(*hierarchy_sql_allocate_func_t) (char **sql, size_t *sql_alloc, zbx_vector_uint64_t *objectids_tmp);
-typedef void	(*hierarchy_row_check_func_t) (DB_ROW row, zbx_uint64_t *objectid, zbx_uint64_t *templateid,
-		zbx_uint64_t *value);
-
 /******************************************************************************
  *                                                                            *
  * Function: check_object_hierarchy                                           *
@@ -496,28 +443,23 @@ typedef void	(*hierarchy_row_check_func_t) (DB_ROW row, zbx_uint64_t *objectid, 
  * Purpose: there can be multiple levels of templates, that need              *
  *          resolving in order to compare to condition                        *
  *                                                                            *
- * Parameters: objectids              - [IN] event ids to check in case of    *
- *                                           not equal condition will delete  *
- *                                           objectids that match condition   *
- *                                           for internal usage               *
- *             objectids_pair         - [IN] first is original trigger id,    *
- *                                           second is parent trigger id and  *
- *                                           will be updated for internal     *
- *                                           usage                            *
- *             condition              - [IN/OUT] condition for matching,      *
- *                                               outputs event ids that match *
- *                                               condition                    *
- *             condition_value        - [IN] condition value for matching     *
- *             hierarchy_sql_allocate - [IN] custom sql query, must obtain    *
- *                                           object, template id and value    *
- *                                                                            *
- *             hierarchy_row_check    - [IN] custom function to fetch trigger *
- *                                           id, object id and value          *
+ * Parameters: objectids       - [IN] event ids to check in case of not equal *
+ *                                    condition will delete objectids that    *
+ *                                    match condition for internal usage      *
+ *             objectids_pair  - [IN] first is original trigger id, second is *
+ *                                    parent trigger id and will be updated   *
+ *                                    for internal usage                      *
+ *             condition       - [IN/OUT] condition for matching, outputs     *
+ *                                    event ids that match condition          *
+ *             condition_value - [IN] condition value for matching            *
+ *             sql_str         - [IN] custom sql query, must obtain object,   *
+ *                                    template id and value                   *
+ *             sql_field       - [IN] field name that is added to the sql     *
+ *                                    query condition                         *
  *                                                                            *
  ******************************************************************************/
 static void	check_object_hierarchy(zbx_vector_uint64_t *objectids, zbx_vector_uint64_pair_t *objectids_pair,
-		DB_CONDITION *condition, zbx_uint64_t condition_value,
-		hierarchy_sql_allocate_func_t hierarchy_sql_allocate, hierarchy_row_check_func_t hierarchy_row_check)
+		DB_CONDITION *condition, zbx_uint64_t condition_value, char *sql_str, char *sql_field)
 {
 	int				i;
 	zbx_vector_uint64_t		objectids_tmp;
@@ -527,22 +469,28 @@ static void	check_object_hierarchy(zbx_vector_uint64_t *objectids, zbx_vector_ui
 
 	zbx_vector_uint64_pair_create(&objectids_pair_tmp);
 	zbx_vector_uint64_create(&objectids_tmp);
-
-	sql = zbx_malloc(sql, sql_alloc);
-
 	zbx_vector_uint64_reserve(&objectids_tmp, objectids_pair->values_num);
 
 	while (0 != objectids_pair->values_num)
 	{
 		DB_RESULT	result;
 		DB_ROW		row;
+		size_t		sql_offset = 0;
 
 		for (i = 0; i < objectids_pair->values_num; i++)
 		{
 			zbx_vector_uint64_append(&objectids_tmp, objectids_pair->values[i].second);
 		}
 
-		hierarchy_sql_allocate(&sql, &sql_alloc, &objectids_tmp);
+		zbx_vector_uint64_sort(&objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+		/* multiple hosts can share trigger from same template, don't allocate duplicate ids */
+		zbx_vector_uint64_uniq(&objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, sql_str);
+
+		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, sql_field, objectids_tmp.values,
+				objectids_tmp.values_num);
 
 		result = DBselect("%s", sql);
 
@@ -550,7 +498,9 @@ static void	check_object_hierarchy(zbx_vector_uint64_t *objectids, zbx_vector_ui
 		{
 			zbx_uint64_t	objectid, templateid, value;
 
-			hierarchy_row_check(row, &objectid, &templateid, &value);
+			ZBX_STR2UINT64(objectid, row[0]);
+			ZBX_STR2UINT64(templateid, row[1]);
+			ZBX_STR2UINT64(value, row[2]);
 
 			/* find all templates or trigger ids that match our condition and get original id */
 			for (i = 0; i < objectids_pair->values_num; i++)
@@ -591,6 +541,7 @@ static void	check_object_hierarchy(zbx_vector_uint64_t *objectids, zbx_vector_ui
 				objectids_pair->values[i].second = 0;
 			}
 		}
+		zbx_free(sql);
 		DBfree_result(result);
 
 		/* resolve in next select only those triggerids that have template id and not equal to condition */
@@ -616,8 +567,6 @@ static void	check_object_hierarchy(zbx_vector_uint64_t *objectids, zbx_vector_ui
 
 	zbx_vector_uint64_pair_destroy(&objectids_pair_tmp);
 	zbx_vector_uint64_destroy(&objectids_tmp);
-
-	zbx_free(sql);
 }
 
 /******************************************************************************
@@ -667,64 +616,16 @@ static int	check_trigger_id_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION
 		objectids_to_pair(&objectids, &objectids_pair);
 
 		check_object_hierarchy(&objectids, &objectids_pair, condition, condition_value,
-				check_trigger_id_sql_alloc, check_trigger_id_row);
+				"select triggerid,templateid,templateid"
+					" from triggers"
+					" where templateid is not null and",
+					"triggerid");
 	}
 
 	zbx_vector_uint64_destroy(&objectids);
 	zbx_vector_uint64_pair_destroy(&objectids_pair);
 
 	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: check_template_id_sql_alloc                                      *
- *                                                                            *
- * Purpose: allocate sql query for template id condition                      *
- *                                                                            *
- * Parameters: sql           - [IN/OUT] allocated sql query                   *
- *             sql_alloc     - [IN/OUT] how much bytes allocated              *
- *             objectids_tmp - [IN/OUT] uses to allocate query, removes       *
- *                                      duplicates                            *
- *                                                                            *
- ******************************************************************************/
-static void	check_template_id_sql_alloc(char **sql, size_t *sql_alloc, zbx_vector_uint64_t *objectids_tmp)
-{
-	size_t	sql_offset = 0;
-
-	zbx_vector_uint64_sort(objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	/* multiple hosts can share trigger from same template, don't allocate duplicate ids */
-	zbx_vector_uint64_uniq(objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_snprintf_alloc(sql, sql_alloc, &sql_offset,
-			"select distinct t.triggerid,t.templateid,i.hostid"
-			" from items i,functions f,triggers t"
-			" where i.itemid=f.itemid"
-				" and f.triggerid=t.templateid"
-				" and");
-
-	DBadd_condition_alloc(sql, sql_alloc, &sql_offset, "t.triggerid",
-			objectids_tmp->values, objectids_tmp->values_num);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: check_template_id_row                                            *
- *                                                                            *
- * Purpose: check template id row                                             *
- *                                                                            *
- * Parameters: row        [IN]  - fetched row                                 *
- *             objectid   [OUT] - trigger id                                  *
- *             templateid [OUT] - template id                                 *
- *             value      [OUT] - hostid to compare to condition              *
- *                                                                            *
- ******************************************************************************/
-static void	check_template_id_row(DB_ROW row, zbx_uint64_t *objectid, zbx_uint64_t *templateid, zbx_uint64_t *value)
-{
-	ZBX_STR2UINT64(*objectid, row[0]);
-	ZBX_STR2UINT64(*templateid, row[1]);
-	ZBX_STR2UINT64(*value, row[2]);
 }
 
 /******************************************************************************
@@ -803,8 +704,13 @@ static int	check_host_template_condition(zbx_vector_ptr_t *esc_events, DB_CONDIT
 	}
 	DBfree_result(result);
 
-	check_object_hierarchy(&objectids, &objectids_pair, condition, condition_value, check_template_id_sql_alloc,
-			check_template_id_row);
+	check_object_hierarchy(&objectids, &objectids_pair, condition, condition_value,
+			"select distinct t.triggerid,t.templateid,i.hostid"
+				" from items i,functions f,triggers t"
+				" where i.itemid=f.itemid"
+					" and f.triggerid=t.templateid"
+					" and",
+			"t.triggerid");
 
 	zbx_vector_uint64_destroy(&objectids);
 	zbx_vector_uint64_pair_destroy(&objectids_pair);
@@ -2352,38 +2258,6 @@ static int	check_intern_host_group_condition(zbx_vector_ptr_t *esc_events, DB_CO
 
 /******************************************************************************
  *                                                                            *
- * Function: check_template_id_item_sql_alloc                                 *
- *                                                                            *
- * Purpose: allocate sql query for template id condition                      *
- *                                                                            *
- * Parameters: sql           - [IN/OUT] allocated sql query                   *
- *             sql_alloc     - [IN/OUT] how much bytes allocated              *
- *             objectids_tmp - [IN/OUT] uses to allocate query, removes       *
- *                                      duplicates                            *
- *                                                                            *
- ******************************************************************************/
-
-static void	check_template_id_item_sql_alloc(char **sql, size_t *sql_alloc, zbx_vector_uint64_t *objectids_tmp)
-{
-	size_t	sql_offset = 0;
-
-	zbx_vector_uint64_sort(objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	/* multiple hosts can share item from same template, don't allocate duplicate ids */
-	zbx_vector_uint64_uniq(objectids_tmp, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_snprintf_alloc(sql, sql_alloc, &sql_offset,
-			"select distinct h.itemid,t.itemid,t.hostid"
-			" from items t,items h"
-			" where t.itemid=h.templateid"
-				" and");
-
-	DBadd_condition_alloc(sql, sql_alloc, &sql_offset, "h.itemid",
-			objectids_tmp->values, objectids_tmp->values_num);
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: item_parents_sql_alloc                                           *
  *                                                                            *
  * Purpose: get parent id from item discovery                                 *
@@ -2482,8 +2356,17 @@ static int	check_intern_host_template_condition(zbx_vector_ptr_t *esc_events, DB
 		DBfree_result(result);
 
 		check_object_hierarchy(objectids_ptr, objectids_pair_ptr, condition, condition_value,
-				i == 0 ? check_template_id_sql_alloc : check_template_id_item_sql_alloc,
-				check_template_id_row);
+				0 == i ?
+					"select distinct t.triggerid,t.templateid,i.hostid"
+						" from items i,functions f,triggers t"
+						" where i.itemid=f.itemid"
+							" and f.triggerid=t.templateid"
+							" and" :
+					"select distinct h.itemid,t.itemid,t.hostid"
+						" from items t,items h"
+						" where t.itemid=h.templateid"
+							" and",
+				0 == i ? "t.triggerid" : "h.itemid");
 	}
 
 	for (i = 0; i < 2; i++)
