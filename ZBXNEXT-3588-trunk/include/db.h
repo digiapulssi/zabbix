@@ -275,13 +275,13 @@ DB_MEDIATYPE;
 
 typedef struct
 {
-	zbx_uint64_t		conditionid;
-	zbx_uint64_t		actionid;
-	char			*value;
-	char			*value2;
-	unsigned char		conditiontype;
-	unsigned char		operator;
-	zbx_vector_uint64_t	objectids;
+	zbx_uint64_t			conditionid;
+	zbx_uint64_t			actionid;
+	char				*value;
+	char				*value2;
+	unsigned char			conditiontype;
+	unsigned char			operator;
+	zbx_vector_uint64_pair_t	matches;
 }
 DB_CONDITION;
 
