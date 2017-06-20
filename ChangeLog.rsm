@@ -1,6 +1,13 @@
-Changes for rsm1.0.0rc10
+Changes for rsm1.0.0rc11
 
-New features:
+Bug fixes:
+....I..... [245] fixed "MySQL server has gone away" error when running Data Export script (dimir)
+..F....... [241] fixed date-time format (Oleg)
+....I..... [sub-216] updated format of SLA API files and fixed handling of offline probes (gleb)
+..F....... [218] fixed "Affects rolling week" column in Tests page (Oleg)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc10
 
 Bug fixes:
 ..F....... [243] fixed header size (Oleg)

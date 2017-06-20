@@ -86,7 +86,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec
-		db_select set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
+		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
 		minutes_last_month max_avail_time get_online_probes get_probe_times probe_offline_at probes2tldhostids
 		init_values push_value send_values get_nsip_from_key is_service_error process_slv_ns_monthly
 		process_slv_avail process_slv_ns_avail process_slv_monthly get_results get_item_values avail_value_exists
@@ -775,6 +775,8 @@ sub db_connect
 {
 	$server_key = shift;
 
+	dbg("server_key:", ($server_key ? $server_key : "UNDEF"));
+
 	fail("Error: no database configuration") unless (defined($config));
 
 	$server_key = get_rsm_local_key($config) unless ($server_key);
@@ -805,6 +807,8 @@ sub db_connect
 
 sub db_disconnect
 {
+	dbg("connection: ", (defined($dbh) ? 'defined' : 'UNDEF'));
+
 	if (defined($dbh))
 	{
 		$dbh->disconnect() || wrn($dbh->errstr);
@@ -870,6 +874,71 @@ sub db_select
 	}
 
 	return $rows_ref;
+}
+
+# todo phase 1: taken from RSMSLV.pm phase 2
+sub db_select_binds
+{
+	$global_sql = shift;
+	my $global_sql_bind_values = shift;
+
+	my $sth = $dbh->prepare($global_sql)
+		or fail("cannot prepare [$global_sql]: ", $dbh->errstr);
+
+	dbg("[$global_sql] ", join(',', @{$global_sql_bind_values}));
+
+	my ($start, $exe, $fetch, $total);
+
+	my @rows;
+	foreach my $bind_value (@{$global_sql_bind_values})
+	{
+		if (opt('warnslow'))
+		{
+			$start = time();
+		}
+
+		$sth->execute($bind_value)
+			or fail("cannot execute [$global_sql] bind_value:$bind_value: ", $sth->errstr);
+
+		if (opt('warnslow'))
+		{
+			$exe = time();
+		}
+
+		while (my @row = $sth->fetchrow_array())
+		{
+			push(@rows, \@row);
+		}
+
+		if (opt('warnslow'))
+		{
+			my $now = time();
+			$total = $now - $start;
+
+			if ($total > getopt('warnslow'))
+			{
+				$fetch = $now - $exe;
+				$exe = $exe - $start;
+
+				wrn("slow query: [$global_sql], bind values: [", join(',', @{$global_sql_bind_values}), "] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)", $total, $exe, $fetch));
+			}
+		}
+	}
+
+	if (opt('debug'))
+	{
+		my $rows_num = scalar(@rows);
+
+		dbg("$rows_num row", ($rows_num != 1 ? "s" : ""));
+
+		my $rows_ref = db_select("select 1");
+
+		$rows_num = scalar(@{$rows_ref});
+
+		dbg("$rows_num row", ($rows_num != 1 ? "s" : ""));
+	}
+
+	return \@rows;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2 for DaWa.pm::dw_get_id()
@@ -3139,6 +3208,8 @@ sub __log
 	{
 		$priority = 'UND';
 	}
+
+	$priority .= ':'.$$ if (opt('debug'));
 
 	my $cur_tld = $tld || "";
 	my $server_str = ($server_key ? "\@$server_key " : "");

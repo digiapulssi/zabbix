@@ -71,7 +71,7 @@ $particularProxys = [
 	BR(),
 	new CSpan([bold(_('Service')), ':', SPACE, $this->data['slvItem']['name']]),
 	BR(),
-	new CSpan([bold(_('Test time')), ':', SPACE, date('d.m.Y H:i:s', $this->data['time'])]),
+	new CSpan([bold(_('Test time')), ':', SPACE, date(DATE_TIME_FORMAT_SECONDS, $this->data['time'])]),
 	BR(),
 	new CSpan([bold(_('Probe')), ':', SPACE, $this->data['probe']['name']]),
 ];
