@@ -67,12 +67,12 @@ static void	check_condition_event_tag(zbx_vector_ptr_t *esc_events, DB_CONDITION
 	for (i = 0; i < esc_events->values_num; i++)
 	{
 		const DB_EVENT	*event = esc_events->values[i];
-
+		int		j;
 		ret = ret_continue;
 
-		for (i = 0; i < event->tags.values_num && ret == ret_continue; i++)
+		for (j = 0; j < event->tags.values_num && ret == ret_continue; j++)
 		{
-			const zbx_tag_t	*tag = (zbx_tag_t *)event->tags.values[i];
+			const zbx_tag_t	*tag = (zbx_tag_t *)event->tags.values[j];
 
 			ret = zbx_strmatch_condition(tag->tag, condition->value, condition->operator);
 		}
@@ -105,12 +105,12 @@ static void	check_condition_event_tag_value(zbx_vector_ptr_t *esc_events, DB_CON
 	for (i = 0; i < esc_events->values_num; i++)
 	{
 		const DB_EVENT	*event = esc_events->values[i];
-
+		int		j;
 		ret = ret_continue;
 
-		for (i = 0; i < event->tags.values_num && ret == ret_continue; i++)
+		for (j = 0; j < event->tags.values_num && ret == ret_continue; j++)
 		{
-			zbx_tag_t	*tag = (zbx_tag_t *)event->tags.values[i];
+			zbx_tag_t	*tag = (zbx_tag_t *)event->tags.values[j];
 
 			if (0 == strcmp(condition->value2, tag->tag))
 				ret = zbx_strmatch_condition(tag->value, condition->value, condition->operator);
