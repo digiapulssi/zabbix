@@ -946,7 +946,6 @@ foreach (keys(%$servicedata))
 						$rdds80_ref
 					];
 
-					delete($tr_ref->{'status'});
 					delete($tr_ref->{+JSON_RDDS_SUBSERVICE});
 
 					if (opt('dry-run'))
