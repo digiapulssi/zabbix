@@ -395,8 +395,8 @@ if ($items) {
 
 	foreach ($incidentsData as $incident) {
 		foreach ($data['tests'] as $key => $test) {
-			if (!$test['updated'] && $incident['startTime'] < $test['clock'] && (!isset($incident['endTime'])
-					|| (isset($incident['endTime']) && $incident['endTime'] > $test['clock']))) {
+			if (!$test['updated'] && $incident['startTime'] <= $test['clock'] && (!isset($incident['endTime'])
+					|| (isset($incident['endTime']) && $incident['endTime'] >= $test['clock']))) {
 				$data['tests'][$key]['incident'] = $incident['false_positive'] ? INCIDENT_FALSE_POSITIVE : INCIDENT_RESOLVED;
 				$data['tests'][$key]['updated'] = true;
 			}

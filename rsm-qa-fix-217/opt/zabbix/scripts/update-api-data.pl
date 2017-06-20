@@ -27,8 +27,8 @@ use constant JSON_OBJECT_DISABLED_SERVICE => {
 	'status'	=> 'Disabled'
 };
 
-use constant JSON_OBJECT_NODATA_PROBE => {
-	'status'	=> 'Nodata'
+use constant JSON_OBJECT_NORESULT_PROBE => {
+	'status'	=> 'No result'
 };
 
 use constant DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
@@ -42,6 +42,8 @@ use constant TARGETS_TARGET_DIR => '/opt/zabbix/sla';
 
 sub get_history_by_itemid($$$);
 sub get_historical_value_by_time($$);
+sub fill_test_data_dns($$$);
+sub fill_test_data_rdds($$);
 
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
 
@@ -432,8 +434,6 @@ foreach (keys(%$servicedata))
 	# NB! This is needed in order to set the value globally.
 	$tld = $_;
 
-	my @tld_measurements = ();
-
 	my $ah_tld = ah_get_api_tld($tld);
 	my $json_state_ref;
 
@@ -744,7 +744,7 @@ foreach (keys(%$servicedata))
 					foreach my $tr_ref (@test_results)
 					{
 						next if (exists($tr_ref->{'probes'}->{$probe}));
-						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NODATA_PROBE;
+						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 					}
 				}
 
@@ -761,15 +761,14 @@ foreach (keys(%$servicedata))
 					delete($tr_ref->{'start'});
 					delete($tr_ref->{'end'});
 
+					$tr_ref->{'service'} = uc($service);
+
 					$tr_ref->{'testedInterface'} = [
 						{
 							'interface'	=> uc($service),
-							'status'	=> $tr_ref->{'status'},
 							'probes'	=> []
 						}
 					];
-
-					delete($tr_ref->{'status'});
 
 					my $probes_ref = $tr_ref->{'probes'};
 					foreach my $probe (keys(%$probes_ref))
@@ -791,46 +790,11 @@ foreach (keys(%$servicedata))
 							'testData'	=> []
 						};
 
-						foreach my $ns (keys(%{$probes_ref->{$probe}->{'details'}}))
+						if (exists($probes_ref->{$probe}->{'details'}))
 						{
-							my $test_data_ref = {
-								'target'	=> $ns,
-								'status'	=> undef,
-								'metrics'	=> []
-							};
-
-							foreach my $test (@{$probes_ref->{$probe}->{'details'}->{$ns}})
-							{
-								my $metric = {
-									'testDateTime'	=> $test->{'clock'},
-									'targetIP'	=> $test->{'ip'}
-								};
-
-								if (substr($test->{'rtt'}, 0, 1) eq "-")
-								{
-									$metric->{'rtt'} = undef;
-									$metric->{'result'} = $test->{'rtt'};
-
-									$test_data_ref->{'status'} = "Down";
-								}
-								else
-								{
-									$metric->{'rtt'} = $test->{'rtt'};
-									$metric->{'result'} = "ok";
-
-									# skip threshold check if NS is already known to be down
-									unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
-									{
-										$test_data_ref->{'status'} = ($test->{'rtt'} > get_historical_value_by_time($dns_udp_rtt_high_history, $metric->{'testDateTime'}) ? "Down" : "Up");
-									}
-								}
-
-								push(@{$test_data_ref->{'metrics'}}, $metric);
-							}
-
-							$test_data_ref->{'status'} = "No result" unless (defined($test_data_ref->{'status'}));
-
-							push(@{$probe_ref->{'testData'}}, $test_data_ref);
+							fill_test_data_dns($probes_ref->{$probe}->{'details'},
+									$probe_ref->{'testData'},
+									$dns_udp_rtt_high_history);
 						}
 
 						push(@{$tr_ref->{'testedInterface'}->[0]->{'probes'}}, $probe_ref);
@@ -844,13 +808,10 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						push(@tld_measurements, {
-							'ah_tld'	=> $ah_tld,
-							'service'	=> $service,
-							'eventid'	=> $eventid,
-							'event_start'	=> $event_start,
-							'tr_ref'	=> $tr_ref
-						});
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+						{
+							fail("cannot save incident: ", ah_get_error());
+						}
 					}
 				}
 			}
@@ -913,7 +874,7 @@ foreach (keys(%$servicedata))
 						foreach my $subservice (keys(%$subservices_ref))
 						{
 							next if (exists($subservices_ref->{$subservice}->{$probe}));
-							$subservices_ref->{$subservice}->{$probe} = JSON_OBJECT_NODATA_PROBE;
+							$subservices_ref->{$subservice}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 						}
 					}
 				}
@@ -930,6 +891,8 @@ foreach (keys(%$servicedata))
 
 					delete($tr_ref->{'start'});
 					delete($tr_ref->{'end'});
+
+					$tr_ref->{'service'} = uc($service);
 
 					my $rdds43_ref = {
 						'interface'	=> JSON_RDDS_43,
@@ -962,37 +925,17 @@ foreach (keys(%$servicedata))
 								}
 							}
 
-							fail("Gleb was wrong, RDDS test can have more (or less) than one metric") if (scalar(@{$probes_ref->{$probe}->{'details'}}) != 1);
-
-							my $test = $probes_ref->{$probe}->{'details'}->[0];
-
-							my $metric = {
-								'testDateTime'	=> $test->{'clock'},
-								'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
-							};
-
-							if (substr($test->{'rtt'}, 0, 1) eq "-")
-							{
-								$metric->{'rtt'} = undef;
-								$metric->{'result'} = $test->{'rtt'};
-							}
-							else
-							{
-								$metric->{'rtt'} = $test->{'rtt'};
-								$metric->{'result'} = "ok";
-							}
-
 							my $probe_ref = {
 								'city'		=> $probe,
 								'status'	=> $probes_ref->{$probe}->{'status'},
-								'testData'	=> [
-									{
-										'target'	=> undef,
-										'status'	=> defined($metric->{'rtt'}) ? "Up" : "Down",
-										'metrics'	=> [$metric]
-									}
-								]
+								'testData'	=> []
 							};
+
+							if (exists($probes_ref->{$probe}->{'details'}))
+							{
+								fill_test_data_rdds($probes_ref->{$probe}->{'details'},
+										$probe_ref->{'testData'});
+							}
 
 							push(@{($subservice eq JSON_RDDS_43 ? $rdds43_ref : $rdds80_ref)->{'probes'}}, $probe_ref);
 						}
@@ -1003,7 +946,6 @@ foreach (keys(%$servicedata))
 						$rdds80_ref
 					];
 
-					delete($tr_ref->{'status'});
 					delete($tr_ref->{+JSON_RDDS_SUBSERVICE});
 
 					if (opt('dry-run'))
@@ -1012,13 +954,10 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						push(@tld_measurements, {
-							'ah_tld'	=> $ah_tld,
-							'service'	=> $service,
-							'eventid'	=> $eventid,
-							'event_start'	=> $event_start,
-							'tr_ref'	=> $tr_ref
-						});
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+						{
+							fail("cannot save incident: ", ah_get_error());
+						}
 					}
 				}
 			}
@@ -1071,7 +1010,7 @@ foreach (keys(%$servicedata))
 					foreach my $tr_ref (@test_results)
 					{
 						next if (exists($tr_ref->{'probes'}->{$probe}));
-						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NODATA_PROBE;
+						$tr_ref->{'probes'}->{$probe} = JSON_OBJECT_NORESULT_PROBE;
 					}
 				}
 
@@ -1110,13 +1049,10 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						push(@tld_measurements, {
-							'ah_tld'	=> $ah_tld,
-							'service'	=> $service,
-							'eventid'	=> $eventid,
-							'event_start'	=> $event_start,
-							'tr_ref'	=> $tr_ref
-						});
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+						{
+							fail("cannot save incident: ", ah_get_error());
+						}
 					}
 				}
 			}
@@ -1148,19 +1084,6 @@ foreach (keys(%$servicedata))
 	if (ah_save_state($ah_tld, $json_state_ref) != AH_SUCCESS)
 	{
 		fail("cannot save TLD state: ", ah_get_error());
-	}
-
-	# enrich measurements with TLD status and save them
-	foreach my $measurement (@tld_measurements)
-	{
-		$measurement->{'tr_ref'}->{'status'} = $json_state_ref->{'status'};
-
-		if (ah_save_measurement($measurement->{'ah_tld'}, $measurement->{'service'}, $measurement->{'eventid'},
-				$measurement->{'event_start'}, $measurement->{'tr_ref'},
-				$measurement->{'tr_ref'}->{'cycleCalculationDateTime'}) != AH_SUCCESS)
-		{
-			fail("cannot save measurement: ", ah_get_error());
-		}
 	}
 }
 # unset TLD (for the logs)
@@ -1233,6 +1156,91 @@ sub get_historical_value_by_time($$)
 	fail("timestamp $timestamp is out of bounds of selected historical data range") unless (defined($value));
 
 	return $value;
+}
+
+sub fill_test_data_dns($$$)
+{
+	my $src = shift;
+	my $dst = shift;
+	my $hist = shift;
+
+	foreach my $ns (keys(%{$src}))
+	{
+		my $test_data_ref = {
+			'target'	=> $ns,
+			'status'	=> undef,
+			'metrics'	=> []
+		};
+
+		foreach my $test (@{$src->{$ns}})
+		{
+			my $metric = {
+				'testDateTime'	=> $test->{'clock'},
+				'targetIP'	=> $test->{'ip'}
+			};
+
+			if (substr($test->{'rtt'}, 0, 1) eq "-")
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $test->{'rtt'};
+
+				$test_data_ref->{'status'} = "Down";
+			}
+			else
+			{
+				$metric->{'rtt'} = $test->{'rtt'};
+				$metric->{'result'} = "ok";
+
+				# skip threshold check if NS is already known to be down
+				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+				{
+					$test_data_ref->{'status'} =
+							($test->{'rtt'} > get_historical_value_by_time($hist,
+									$metric->{'testDateTime'}) ? "Down" : "Up");
+				}
+			}
+
+			push(@{$test_data_ref->{'metrics'}}, $metric);
+		}
+
+		$test_data_ref->{'status'} = "No result" unless (defined($test_data_ref->{'status'}));
+
+		push(@{$dst}, $test_data_ref);
+	}
+}
+
+sub fill_test_data_rdds($$)
+{
+	my $src = shift;
+	my $dst = shift;
+
+	fail("Gleb was wrong, RDDS test data can have more (or less) than one metric") if (scalar(@{$src}) != 1);
+
+	my $test = $src->[0];
+
+	my $metric = {
+		'testDateTime'	=> $test->{'clock'},
+		'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+	};
+
+	if (substr($test->{'rtt'}, 0, 1) eq "-")
+	{
+		$metric->{'rtt'} = undef;
+		$metric->{'result'} = $test->{'rtt'};
+	}
+	else
+	{
+		$metric->{'rtt'} = $test->{'rtt'};
+		$metric->{'result'} = "ok";
+	}
+
+	push(@{$dst}, {
+		'target'	=> undef,
+		'status'	=> defined($metric->{'rtt'}) ? "Up" : "Down",
+		'metrics'	=> [
+			$metric
+		]
+	});
 }
 
 # values are organized like this:
