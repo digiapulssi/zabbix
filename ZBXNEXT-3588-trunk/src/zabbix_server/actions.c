@@ -485,7 +485,7 @@ static void	check_object_hierarchy(int object, zbx_vector_uint64_t *objectids,
 	zbx_vector_uint64_t		objectids_tmp;
 	zbx_vector_uint64_pair_t	objectids_pair_tmp;
 	char				*sql = NULL;
-	size_t				sql_alloc = 256;
+	size_t				sql_alloc = 0;
 
 	zbx_vector_uint64_pair_create(&objectids_pair_tmp);
 	zbx_vector_uint64_create(&objectids_tmp);
