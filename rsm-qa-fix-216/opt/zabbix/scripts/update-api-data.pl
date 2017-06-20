@@ -434,8 +434,6 @@ foreach (keys(%$servicedata))
 	# NB! This is needed in order to set the value globally.
 	$tld = $_;
 
-	my @tld_measurements = ();
-
 	my $ah_tld = ah_get_api_tld($tld);
 	my $json_state_ref;
 
@@ -811,13 +809,10 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						push(@tld_measurements, {
-							'ah_tld'	=> $ah_tld,
-							'service'	=> $service,
-							'eventid'	=> $eventid,
-							'event_start'	=> $event_start,
-							'tr_ref'	=> $tr_ref
-						});
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+						{
+							fail("cannot save incident: ", ah_get_error());
+						}
 					}
 				}
 			}
@@ -959,13 +954,10 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						push(@tld_measurements, {
-							'ah_tld'	=> $ah_tld,
-							'service'	=> $service,
-							'eventid'	=> $eventid,
-							'event_start'	=> $event_start,
-							'tr_ref'	=> $tr_ref
-						});
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+						{
+							fail("cannot save incident: ", ah_get_error());
+						}
 					}
 				}
 			}
@@ -1057,13 +1049,10 @@ foreach (keys(%$servicedata))
 					}
 					else
 					{
-						push(@tld_measurements, {
-							'ah_tld'	=> $ah_tld,
-							'service'	=> $service,
-							'eventid'	=> $eventid,
-							'event_start'	=> $event_start,
-							'tr_ref'	=> $tr_ref
-						});
+						if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+						{
+							fail("cannot save incident: ", ah_get_error());
+						}
 					}
 				}
 			}
@@ -1095,19 +1084,6 @@ foreach (keys(%$servicedata))
 	if (ah_save_state($ah_tld, $json_state_ref) != AH_SUCCESS)
 	{
 		fail("cannot save TLD state: ", ah_get_error());
-	}
-
-	# enrich measurements with TLD status and save them
-	foreach my $measurement (@tld_measurements)
-	{
-		$measurement->{'tr_ref'}->{'status'} = $json_state_ref->{'status'};
-
-		if (ah_save_measurement($measurement->{'ah_tld'}, $measurement->{'service'}, $measurement->{'eventid'},
-				$measurement->{'event_start'}, $measurement->{'tr_ref'},
-				$measurement->{'tr_ref'}->{'cycleCalculationDateTime'}) != AH_SUCCESS)
-		{
-			fail("cannot save measurement: ", ah_get_error());
-		}
 	}
 }
 # unset TLD (for the logs)
