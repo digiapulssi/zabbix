@@ -3153,6 +3153,29 @@ static int	is_escalation_event(const DB_EVENT *event)
 
 /******************************************************************************
  *                                                                            *
+ * Function: compare_events                                                   *
+ *                                                                            *
+ * Purpose: compare events by objectid                                        *
+ *                                                                            *
+ * Parameters: d1 - [IN] event structure to compare to d2                     *
+ *             d2 - [IN] event structure to compare to d1                     *
+ *                                                                            *
+ * Return value: 0 - equal                                                    *
+ *               not 0 - otherwise                                            *
+ *                                                                            *
+ ******************************************************************************/
+static int	compare_events(const void *d1, const void *d2)
+{
+	const DB_EVENT	*p1 = *(const DB_EVENT **)d1;
+	const DB_EVENT	*p2 = *(const DB_EVENT **)d2;
+
+	ZBX_RETURN_IF_NOT_EQUAL(p1->objectid, p2->objectid);
+
+	return 0;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: uniq_conditions_compare_func                                     *
  *                                                                            *
  * Purpose: compare to find equal conditions                                  *
@@ -3368,7 +3391,7 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 
 	size_t			i;
 	zbx_vector_ptr_t	actions;
-	zbx_vector_ptr_t 	new_escalations;
+	zbx_vector_ptr_t	new_escalations;
 	zbx_vector_ptr_t	esc_events[EVENT_SOURCE_COUNT];
 	zbx_hashset_t		rec_escalations;
 	zbx_hashset_t		uniq_conditions[EVENT_SOURCE_COUNT];
@@ -3395,6 +3418,8 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 
 	for (i = 0; i < EVENT_SOURCE_COUNT; i++)
 	{
+		zbx_vector_ptr_sort(&esc_events[i], compare_events);
+
 		zbx_hashset_iter_reset(&uniq_conditions[i], &iter);
 
 		while (NULL != (condition = (DB_CONDITION *)zbx_hashset_iter_next(&iter)))
