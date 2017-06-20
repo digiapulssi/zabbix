@@ -68,6 +68,7 @@ static void	check_condition_event_tag(zbx_vector_ptr_t *esc_events, DB_CONDITION
 	{
 		const DB_EVENT	*event = esc_events->values[i];
 		int		j;
+
 		ret = ret_continue;
 
 		for (j = 0; j < event->tags.values_num && ret == ret_continue; j++)
@@ -106,6 +107,7 @@ static void	check_condition_event_tag_value(zbx_vector_ptr_t *esc_events, DB_CON
 	{
 		const DB_EVENT	*event = esc_events->values[i];
 		int		j;
+
 		ret = ret_continue;
 
 		for (j = 0; j < event->tags.values_num && ret == ret_continue; j++)
