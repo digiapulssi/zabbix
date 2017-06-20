@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc11
 New features:
 
 Bug fixes:
+....I..... [sub-216] updated format of SLA API files and fixed handling of offline probes (gleb)
 ..F....... [218] fixed "Affects rolling week" column in Tests page (Oleg)
 
 --------------------------------------------------------------------------------
