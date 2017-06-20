@@ -761,15 +761,14 @@ foreach (keys(%$servicedata))
 					delete($tr_ref->{'start'});
 					delete($tr_ref->{'end'});
 
+					$tr_ref->{'service'} = uc($service);
+
 					$tr_ref->{'testedInterface'} = [
 						{
 							'interface'	=> uc($service),
-							'status'	=> $tr_ref->{'status'},
 							'probes'	=> []
 						}
 					];
-
-					delete($tr_ref->{'status'});
 
 					my $probes_ref = $tr_ref->{'probes'};
 					foreach my $probe (keys(%$probes_ref))
@@ -892,6 +891,8 @@ foreach (keys(%$servicedata))
 
 					delete($tr_ref->{'start'});
 					delete($tr_ref->{'end'});
+
+					$tr_ref->{'service'} = uc($service);
 
 					my $rdds43_ref = {
 						'interface'	=> JSON_RDDS_43,
