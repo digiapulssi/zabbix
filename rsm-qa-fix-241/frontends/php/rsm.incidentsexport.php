@@ -627,8 +627,8 @@ foreach ($tlds as $data['tld']) {
 				$data['tld']['name'],
 				_('DNS'),
 				getIncidentStatus($event['false_positive'], $event['status']),
-				date('d.m.Y H:i:s', $event['startTime']),
-				isset($event['endTime']) ? date('d.m.Y H:i:s', $event['endTime']) : '',
+				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
+				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '',
 				$event['incidentFailedTests']
 			);
 		}
@@ -644,8 +644,8 @@ foreach ($tlds as $data['tld']) {
 				$data['tld']['name'],
 				_('DNSSEC'),
 				getIncidentStatus($event['false_positive'], $event['status']),
-				date('d.m.Y H:i:s', $event['startTime']),
-				isset($event['endTime']) ? date('d.m.Y H:i:s', $event['endTime']) : '',
+				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
+				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '',
 				$event['incidentFailedTests']
 			);
 		}
@@ -661,8 +661,8 @@ foreach ($tlds as $data['tld']) {
 				$data['tld']['name'],
 				_('RDDS'),
 				getIncidentStatus($event['false_positive'], $event['status']),
-				date('d.m.Y H:i:s', $event['startTime']),
-				isset($event['endTime']) ? date('d.m.Y H:i:s', $event['endTime']) : '',
+				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
+				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '',
 				$event['incidentFailedTests']
 			);
 		}
@@ -678,8 +678,8 @@ foreach ($tlds as $data['tld']) {
 				$data['tld']['name'],
 				_('EPP'),
 				getIncidentStatus($event['false_positive'], $event['status']),
-				date('d.m.Y H:i:s', $event['startTime']),
-				isset($event['endTime']) ? date('d.m.Y H:i:s', $event['endTime']) : '',
+				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
+				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '',
 				$event['incidentFailedTests']
 			);
 		}
