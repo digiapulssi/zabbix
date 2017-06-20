@@ -411,7 +411,7 @@ out:
 		return ret;
 	}
 	else
-		zbx_history_get_values(itemid, value_type, seconds, 0, end_timestamp, values);
+		zbx_history_get_values(itemid, value_type, end_timestamp - seconds, 0, end_timestamp, values);
 
 	return SUCCEED;
 }
@@ -628,7 +628,7 @@ out:
 	}
 	else
 	{
-		zbx_history_get_values(itemid, value_type, seconds, count, end_timestamp, values);
+		zbx_history_get_values(itemid, value_type, end_timestamp - seconds, count, end_timestamp, values);
 
 		return SUCCEED;
 	}

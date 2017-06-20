@@ -252,7 +252,7 @@ static history_value_t	history_str2value(char *str, unsigned char value_type)
 		case ITEM_VALUE_TYPE_LOG:
 			value.log = zbx_malloc(NULL, sizeof(zbx_log_value_t));
 			memset(value.log, 0, sizeof(zbx_log_value_t));
-			zbx_strdup(value.log->value, str);
+			value.log->value = zbx_strdup(NULL, str);
 			break;
 		case ITEM_VALUE_TYPE_STR:
 		case ITEM_VALUE_TYPE_TEXT:
@@ -355,11 +355,10 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s/" ZBX_FS_UI64,
 			HISTORY_SERVICE_URL, types[value_type], itemid);
 
+	zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "?end=%d", end);
+
 	if (0 != start)
 		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "&start=%d", start);
-
-	if (0 != end)
-		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "&end=%d", end);
 
 	if (0 != count)
 		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "&count=%d", count);
