@@ -818,11 +818,11 @@ sub validate_test_result($$$)
 		'-200, No reply from name server'			=> 'DNS',
 		'-201, Invalid reply from name server'			=> 'DNS',
 		'-204, DNSSEC error'					=> 'DNS',
-		'-206, Keyset is not valid'				=> 'DNS',
+		'-206, No AD bit in the answer from resolver'		=> 'DNS',
 		'-200, No reply from RDDS43 server'			=> 'RDDS',
 		'-201, Syntax error on RDDS43 output'			=> 'RDDS',
 		'-204, No reply from RDDS80 server'			=> 'RDDS',
-		'-205, Cannot resolve the Whois server hostname'	=> 'RDDS',
+		'-205, Cannot resolve a Whois host name'		=> 'RDDS',
 		'-207, Invalid HTTP status code'			=> 'RDDS',
 		'ok'							=> 'both'
 	);
@@ -878,6 +878,15 @@ sub validate_measurement_file($)
 						'pattern'	=> qr/.*/
 					}
 				},
+				JSON_KEY_SERVICE,
+				{
+					'mandatory'	=> 1,
+					'member'	=> {
+						'value'		=> JSON_VALUE_STRING,
+						'not nutt'	=> 1,
+						'pattern'	=> qr/^(DNS|DNSSEC|EPP|RDDS)$/
+					}
+				},
 				JSON_KEY_CYCLE_CALCULATION_TIME,
 				{
 					'mandatory'	=> 1,
@@ -915,15 +924,6 @@ sub validate_measurement_file($)
 										'pattern'	=> qr/^(DNS|DNSSEC|EPP|RDDS43|RDDS80)$/
 									}
 								},
-								JSON_KEY_STATUS,
-								{
-									'mandatory'	=> 1,
-									'member'	=> {
-										'value'		=> JSON_VALUE_STRING,
-										'not null'	=> 1,
-										'pattern'	=> qr/^(Up|Down)$/
-									}
-								},
 								JSON_KEY_PROBES,
 								{
 									'mandatory'	=> 1,
@@ -949,7 +949,7 @@ sub validate_measurement_file($)
 													'member'	=> {
 														'value'		=> JSON_VALUE_STRING,
 														'not null'	=> 1,
-														'pattern'	=> qr/^(Up|Down|Nodata)$/
+														'pattern'	=> qr/^(Up|Down|No result|Offline)$/
 													}
 												},
 												JSON_KEY_TEST_DATA,
@@ -977,7 +977,7 @@ sub validate_measurement_file($)
 																	'member'	=> {
 																		'value'		=> JSON_VALUE_STRING,
 																		'not null'	=> 1,
-																		'pattern'	=> qr/^(Up|Down|No result|Offline)$/
+																		'pattern'	=> qr/^(Up|Down)$/
 																	}
 																},
 																JSON_KEY_METRICS,
@@ -1004,7 +1004,7 @@ sub validate_measurement_file($)
 																					'mandatory'	=> 1,
 																					'member'	=> {
 																						'value'		=> JSON_VALUE_STRING,
-																						'not null'	=> 1,
+																						'not null'	=> 0,
 																						'rule'		=> \&validate_ip
 																					}
 																				},

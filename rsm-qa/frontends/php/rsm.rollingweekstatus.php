@@ -679,6 +679,8 @@ if (array_key_exists('tld', $data) && $data['tld']) {
 	}
 }
 
+$data['paging'] = getPagingLine($data['tld'], ZBX_SORT_UP, new CUrl());
+
 $rsmView = new CView('rsm.rollingweekstatus.list', $data);
 $rsmView->render();
 $rsmView->show();
