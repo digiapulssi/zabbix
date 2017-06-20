@@ -321,10 +321,10 @@ $particularTests = [
 	BR(),
 	new CSpan([bold(_('Service')), ':', SPACE, $this->data['slvItem']['name']]),
 	BR(),
-	new CSpan([bold(_('Test time')), ':', SPACE, date('d.m.Y H:i:s', $this->data['time'])]),
+	new CSpan([bold(_('Test time')), ':', SPACE, date(DATE_TIME_FORMAT_SECONDS, $this->data['time'])]),
 	BR(),
 	new CSpan([bold(_('Test result')), ':', SPACE, $testResult, SPACE,
-		_s('(calculated at %1$s)', date('d.m.Y H:i:s', $this->data['time'] + RSM_ROLLWEEK_SHIFT_BACK))
+		_s('(calculated at %1$s)', date(DATE_TIME_FORMAT_SECONDS, $this->data['time'] + RSM_ROLLWEEK_SHIFT_BACK))
 	]),
 	BR(),
 	new CSpan([bold(_('Note')), ':', SPACE, _('The following table displays the data that has being received by '.

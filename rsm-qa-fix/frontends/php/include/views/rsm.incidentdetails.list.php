@@ -93,7 +93,7 @@ foreach ($data['tests'] as $test) {
 
 	$row = [
 		$startEndIncident,
-		date('d.m.Y H:i:s', $test['clock']),
+		date(DATE_TIME_FORMAT_SECONDS, $test['clock']),
 		$value,
 		isset($test['slv']) ? $test['slv'].'%' : '-',
 		new CLink(
@@ -140,7 +140,7 @@ $testsInfoTable->addRow([
 	[
 		(new CSpan(_s('%1$s Rolling week status', $this->data['slv'].'%')))->addClass('rolling-week-status'),
 		BR(),
-		(new CSpan(date('d.m.Y H:i', $this->data['slvTestTime'])))->addClass('rsm-date-time'),
+		(new CSpan(date(DATE_TIME_FORMAT, $this->data['slvTestTime'])))->addClass('rsm-date-time'),
 	]
 ]);
 
