@@ -2791,8 +2791,9 @@ static int	check_action_conditions(const DB_EVENT *event, const zbx_action_eval_
 		condition_result = FAIL == zbx_vector_uint64_pair_search(&condition->matches, pair,
 				ZBX_DEFAULT_UINT64_PAIR_COMPARE_FUNC) ? FAIL : SUCCEED;
 
-		zabbix_log(LOG_LEVEL_DEBUG, " conditionid:" ZBX_FS_UI64 " cond.value:'%s' cond.value2:'%s' result:%s",
-				condition->conditionid, condition->value, condition->value2,
+		zabbix_log(LOG_LEVEL_DEBUG, " conditionid:" ZBX_FS_UI64 " conditiontype:" ZBX_FS_UI64
+				" cond.value:'%s' cond.value2:'%s' result:%s", condition->conditionid,
+				condition->conditiontype, condition->value, condition->value2,
 				zbx_result_string(condition_result));
 
 		switch (action->evaltype)
