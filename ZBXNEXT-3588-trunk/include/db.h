@@ -281,7 +281,7 @@ typedef struct
 	char				*value2;
 	unsigned char			conditiontype;
 	unsigned char			operator;
-	zbx_vector_uint64_pair_t	matches;
+	zbx_vector_uint64_t		eventids;
 }
 DB_CONDITION;
 
