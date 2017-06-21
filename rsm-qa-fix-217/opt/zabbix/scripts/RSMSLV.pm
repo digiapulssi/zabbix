@@ -793,6 +793,8 @@ sub db_connect
 
 	$global_sql = "DBI:mysql:database=$section->{'db_name'};host=$section->{'db_host'};$db_tls_settings";
 
+	dbg($global_sql);
+
 	$dbh = DBI->connect($global_sql, $section->{'db_user'}, $section->{'db_password'},
 		{
 			PrintError  => 0,
@@ -808,6 +810,10 @@ sub db_connect
 
 		dbg("established connection uses \"" . $rows_ref->[0]->[1] . "\" cipher");
 	}
+	else
+	{
+		dbg("established connection is unencrypted");
+	}
 
 	# improve performance of selects, see
 	# http://search.cpan.org/~capttofu/DBD-mysql-4.028/lib/DBD/mysql.pm
@@ -817,6 +823,8 @@ sub db_connect
 
 sub db_disconnect
 {
+	dbg("connection: ", (defined($dbh) ? 'defined' : 'UNDEF'));
+
 	if (defined($dbh))
 	{
 		$dbh->disconnect() || wrn($dbh->errstr);
