@@ -890,7 +890,7 @@ int	is_ip(const char *ip)
 
 int	zbx_validate_hostname(const char *hostname, int len)
 {
-	unsigned char	component = 0;	/* periods are only allowed when they serve to delimit components */
+	unsigned char	component = 0;	/* periods ('.') are only allowed when they serve to delimit components */
 	int		i;
 
 	/* single character names or nicknames are not allowed */
