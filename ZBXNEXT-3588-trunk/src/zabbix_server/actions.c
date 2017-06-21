@@ -1926,7 +1926,7 @@ static int	check_hostname_metadata_condition(zbx_vector_ptr_t *esc_events, DB_CO
 	size_t			sql_alloc = 0, sql_offset = 0;
 	DB_RESULT		result;
 	DB_ROW			row;
-	int			object = 0;
+	int			object = EVENT_OBJECT_ZABBIX_ACTIVE;
 	zbx_vector_uint64_t	objectids;
 	const char		*condition_field;
 
@@ -1998,7 +1998,7 @@ static int	check_areg_proxy_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION
 	size_t			sql_alloc = 0, sql_offset = 0;
 	DB_RESULT		result;
 	DB_ROW			row;
-	int			object = 0;
+	int			object = EVENT_OBJECT_ZABBIX_ACTIVE;
 	zbx_vector_uint64_t	objectids;
 	zbx_uint64_t		condition_value;
 
@@ -2779,7 +2779,8 @@ static int	check_action_conditions(const DB_EVENT *event, const zbx_action_eval_
 	char		*expression = NULL, tmp[ZBX_MAX_UINT64_LEN + 2], *ptr, error[256];
 	double		eval_result;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() actionid:" ZBX_FS_UI64, __function_name, action->actionid);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() actionid:" ZBX_FS_UI64 " eventsource:" ZBX_FS_UI64, __function_name,
+			action->actionid, action->eventsource);
 
 	if (action->evaltype == CONDITION_EVAL_TYPE_EXPRESSION)
 		expression = zbx_strdup(expression, action->formula);
