@@ -177,7 +177,7 @@ switch ($data['item']['key_']) {
 
 			foreach ($item_values as $item_value) {
 				$table->addRow(array(
-					date('d.m.Y H:i', $item_value['clock']),
+					date(DATE_TIME_FORMAT, $item_value['clock']),
 					$item_value['value']
 				));
 			}
@@ -274,13 +274,13 @@ switch ($data['item']['key_']) {
 
 			$test_results = [];
 			foreach ($pfail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
 			foreach ($fail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['fail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['fail'] = $histoty['value'];
 			}
 			foreach ($max as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['max'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['max'] = $histoty['value'];
 			}
 
 			foreach ($test_results as $key => $test_result) {
@@ -384,13 +384,13 @@ switch ($data['item']['key_']) {
 
 			$test_results = [];
 			foreach ($pfail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
 			foreach ($fail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['fail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['fail'] = $histoty['value'];
 			}
 			foreach ($max as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['max'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['max'] = $histoty['value'];
 			}
 
 			foreach ($test_results as $key => $test_result) {
@@ -494,13 +494,13 @@ switch ($data['item']['key_']) {
 
 			$test_results = [];
 			foreach ($pfail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
 			foreach ($fail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['fail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['fail'] = $histoty['value'];
 			}
 			foreach ($max as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['max'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['max'] = $histoty['value'];
 			}
 
 			foreach ($test_results as $key => $test_result) {
@@ -551,7 +551,7 @@ switch ($data['item']['key_']) {
 
 			foreach ($item_values as $item_value) {
 				$table->addRow(array(
-					date('d.m.Y H:i', $item_value['clock']),
+					date(DATE_TIME_FORMAT, $item_value['clock']),
 					$item_value['value'],
 					'-'
 				));
@@ -603,7 +603,7 @@ switch ($data['item']['key_']) {
 
 			foreach ($item_values as $item_value) {
 				$table->addRow(array(
-					date('d.m.Y H:i', $item_value['clock']),
+					date(DATE_TIME_FORMAT, $item_value['clock']),
 					$item_value['value'],
 					'-'
 				));
@@ -710,13 +710,13 @@ switch ($data['item']['key_']) {
 
 			$test_results = [];
 			foreach ($pfail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
 			foreach ($fail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['fail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['fail'] = $histoty['value'];
 			}
 			foreach ($max as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['max'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['max'] = $histoty['value'];
 			}
 
 			foreach ($test_results as $key => $test_result) {
@@ -766,7 +766,7 @@ switch ($data['item']['key_']) {
 
 			foreach ($item_values as $item_value) {
 				$table->addRow(array(
-					date('d.m.Y H:i', $item_value['clock']),
+					date(DATE_TIME_FORMAT, $item_value['clock']),
 					$item_value['value']
 				));
 			}
@@ -863,13 +863,13 @@ switch ($data['item']['key_']) {
 
 			$test_results = [];
 			foreach ($pfail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
 			foreach ($fail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['fail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['fail'] = $histoty['value'];
 			}
 			foreach ($max as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['max'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['max'] = $histoty['value'];
 			}
 
 			foreach ($test_results as $key => $test_result) {
@@ -973,13 +973,13 @@ switch ($data['item']['key_']) {
 
 			$test_results = [];
 			foreach ($pfail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
 			foreach ($fail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['fail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['fail'] = $histoty['value'];
 			}
 			foreach ($max as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['max'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['max'] = $histoty['value'];
 			}
 
 			foreach ($test_results as $key => $test_result) {
@@ -1083,13 +1083,13 @@ switch ($data['item']['key_']) {
 
 			$test_results = [];
 			foreach ($pfail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['pfail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['pfail'] = $histoty['value'];
 			}
 			foreach ($fail as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['fail'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['fail'] = $histoty['value'];
 			}
 			foreach ($max as $histoty) {
-				$test_results[date('d.m.Y H:i', $histoty['clock'])]['max'] = $histoty['value'];
+				$test_results[date(DATE_TIME_FORMAT, $histoty['clock'])]['max'] = $histoty['value'];
 			}
 
 			foreach ($test_results as $key => $test_result) {
@@ -1151,7 +1151,7 @@ switch ($data['item']['key_']) {
 
 			foreach ($item_values as $item_value) {
 				$table->addRow(array(
-					date('d.m.Y H:i', $item_value['clock']),
+					date(DATE_TIME_FORMAT, $item_value['clock']),
 					$item_value['value']
 				));
 			}

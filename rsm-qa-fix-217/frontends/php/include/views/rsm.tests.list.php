@@ -70,7 +70,7 @@ foreach ($this->data['tests'] as $test) {
 	}
 
 	$row = [
-		date('d.m.Y H:i:s', $test['clock']),
+		date(DATE_TIME_FORMAT_SECONDS, $test['clock']),
 		$rollingWeekEffects,
 		new CLink(
 			_('details'),

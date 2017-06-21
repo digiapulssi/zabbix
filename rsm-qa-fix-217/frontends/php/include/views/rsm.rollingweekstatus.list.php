@@ -373,9 +373,7 @@ if (isset($this->data['tld'])) {
 	}
 }
 
-$form->addItem([
-	$table
-]);
+$form->addItem([$table, $data['paging']]);
 // append form to widget
 $widget->addItem($form);
 
