@@ -2230,7 +2230,8 @@ static int	check_intern_event_type_condition(zbx_vector_ptr_t *esc_events, DB_CO
  *                                trigger object ids, second is rest          *
  *                                                                            *
  ******************************************************************************/
-static void	get_object_ids_internal(zbx_vector_ptr_t *esc_events, zbx_vector_uint64_t *objectids)
+static void	get_object_ids_internal(zbx_vector_ptr_t *esc_events, zbx_vector_uint64_t *objectids,
+		const int *objects)
 {
 	int	i;
 
@@ -2238,20 +2239,19 @@ static void	get_object_ids_internal(zbx_vector_ptr_t *esc_events, zbx_vector_uin
 	{
 		const DB_EVENT	*event = esc_events->values[i];
 
-		if (FAIL == is_supported_event_object(event))
-		{
-			zabbix_log(LOG_LEVEL_ERR, "unsupported event object [%d]", event->object);
-			continue;
-		}
-
-		if (event->object == EVENT_OBJECT_TRIGGER)
+		if (event->object == objects[0])
 			zbx_vector_uint64_append(&objectids[0], event->objectid);
-		else
+		else if (event->object == objects[1])
 			zbx_vector_uint64_append(&objectids[1], event->objectid);
+		else if (event->object == objects[2])
+			zbx_vector_uint64_append(&objectids[2], event->objectid);
+		else
+			zabbix_log(LOG_LEVEL_ERR, "unsupported event object [%d]", event->object);
 	}
 
 	zbx_vector_uint64_uniq(&objectids[0], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 	zbx_vector_uint64_uniq(&objectids[1], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(&objectids[2], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 }
 
 /******************************************************************************
@@ -2274,8 +2274,8 @@ static int	check_intern_host_group_condition(zbx_vector_ptr_t *esc_events, DB_CO
 	size_t			sql_alloc = 0, i;
 	DB_RESULT		result;
 	DB_ROW			row;
-	int			objects[2] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM};
-	zbx_vector_uint64_t	objectids[2], groupids;
+	int			objects[3] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE};
+	zbx_vector_uint64_t	objectids[3], groupids;
 	zbx_uint64_t		condition_value;
 
 	if (CONDITION_OPERATOR_EQUAL == condition->operator)
@@ -2287,11 +2287,12 @@ static int	check_intern_host_group_condition(zbx_vector_ptr_t *esc_events, DB_CO
 
 	ZBX_STR2UINT64(condition_value, condition->value);
 
-	zbx_vector_uint64_create(&objectids[0]);
-	zbx_vector_uint64_create(&objectids[1]);
+	for (i = 0; i < (int)ARRSIZE(objects); i++)
+		zbx_vector_uint64_create(&objectids[i]);
+
 	zbx_vector_uint64_create(&groupids);
 
-	get_object_ids_internal(esc_events, objectids);
+	get_object_ids_internal(esc_events, objectids, objects);
 
 	zbx_dc_get_nested_hostgroupids(&condition_value, 1, &groupids);
 
@@ -2316,7 +2317,7 @@ static int	check_intern_host_group_condition(zbx_vector_ptr_t *esc_events, DB_CO
 			DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.triggerid",
 					objectids[i].values, objectids[i].values_num);
 		}
-		else	/* EVENT_OBJECT_ITEM */
+		else	/* EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE */
 		{
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 					"select distinct i.itemid"
@@ -2345,8 +2346,9 @@ static int	check_intern_host_group_condition(zbx_vector_ptr_t *esc_events, DB_CO
 		DBfree_result(result);
 	}
 
-	zbx_vector_uint64_destroy(&objectids[0]);
-	zbx_vector_uint64_destroy(&objectids[1]);
+	for (i = 0; i < (int)ARRSIZE(objects); i++)
+		zbx_vector_uint64_destroy(&objectids[i]);
+
 	zbx_vector_uint64_destroy(&groupids);
 	zbx_free(sql);
 
@@ -2405,9 +2407,9 @@ static int	check_intern_host_template_condition(zbx_vector_ptr_t *esc_events, DB
 	DB_ROW				row;
 	zbx_uint64_t			condition_value;
 	int				i, j;
-	int				objects[2] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM};
-	zbx_vector_uint64_t		objectids[2];
-	zbx_vector_uint64_pair_t	objectids_pair[2];
+	int				objects[3] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE};
+	zbx_vector_uint64_t		objectids[3];
+	zbx_vector_uint64_pair_t	objectids_pair[3];
 
 	if (CONDITION_OPERATOR_EQUAL != condition->operator && CONDITION_OPERATOR_NOT_EQUAL != condition->operator)
 		return NOTSUPPORTED;
@@ -2418,7 +2420,7 @@ static int	check_intern_host_template_condition(zbx_vector_ptr_t *esc_events, DB
 		zbx_vector_uint64_pair_create(&objectids_pair[i]);
 	}
 
-	get_object_ids_internal(esc_events, objectids);
+	get_object_ids_internal(esc_events, objectids, objects);
 
 	ZBX_STR2UINT64(condition_value, condition->value);
 
@@ -2434,7 +2436,7 @@ static int	check_intern_host_template_condition(zbx_vector_ptr_t *esc_events, DB
 
 		if (EVENT_OBJECT_TRIGGER == objects[i])
 			trigger_parents_sql_alloc(&sql, &sql_alloc, objectids_ptr);
-		else
+		else	/* EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE */
 			item_parents_sql_alloc(&sql, &sql_alloc, objectids_ptr);
 
 		result = DBselect("%s", sql);
@@ -2498,8 +2500,8 @@ static int	check_intern_host_condition(zbx_vector_ptr_t *esc_events, DB_CONDITIO
 	size_t			sql_alloc = 0, i;
 	DB_RESULT		result;
 	DB_ROW			row;
-	int			objects[2] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM};
-	zbx_vector_uint64_t	objectids[2];
+	int			objects[3] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE};
+	zbx_vector_uint64_t	objectids[3];
 	zbx_uint64_t		condition_value;
 
 	if (CONDITION_OPERATOR_EQUAL == condition->operator)
@@ -2517,10 +2519,10 @@ static int	check_intern_host_condition(zbx_vector_ptr_t *esc_events, DB_CONDITIO
 
 	ZBX_STR2UINT64(condition_value, condition->value);
 
-	zbx_vector_uint64_create(&objectids[0]);
-	zbx_vector_uint64_create(&objectids[1]);
+	for (i = 0; i < (int)ARRSIZE(objects); i++)
+		zbx_vector_uint64_create(&objectids[i]);
 
-	get_object_ids_internal(esc_events, objectids);
+	get_object_ids_internal(esc_events, objectids, objects);
 
 	for (i = 0; i < (int)ARRSIZE(objects); i++)
 	{
@@ -2544,7 +2546,7 @@ static int	check_intern_host_condition(zbx_vector_ptr_t *esc_events, DB_CONDITIO
 			DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.triggerid",
 					objectids[i].values, objectids[i].values_num);
 		}
-		else
+		else	/* EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE */
 		{
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 					"select itemid"
@@ -2570,8 +2572,9 @@ static int	check_intern_host_condition(zbx_vector_ptr_t *esc_events, DB_CONDITIO
 		DBfree_result(result);
 	}
 
-	zbx_vector_uint64_destroy(&objectids[0]);
-	zbx_vector_uint64_destroy(&objectids[1]);
+	for (i = 0; i < (int)ARRSIZE(objects); i++)
+		zbx_vector_uint64_destroy(&objectids[i]);
+
 	zbx_free(sql);
 
 	return SUCCEED;
@@ -2597,18 +2600,18 @@ static int	check_intern_application_condition(zbx_vector_ptr_t *esc_events, DB_C
 	size_t			sql_alloc = 0, i;
 	DB_RESULT		result;
 	DB_ROW			row;
-	int			objects[2] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM};
-	zbx_vector_uint64_t	objectids[2];
+	int			objects[3] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE};
+	zbx_vector_uint64_t	objectids[3];
 	zbx_uint64_t		objectid;
 
 	if (CONDITION_OPERATOR_EQUAL != condition->operator && CONDITION_OPERATOR_LIKE != condition->operator &&
 			CONDITION_OPERATOR_NOT_LIKE != condition->operator)
 		return NOTSUPPORTED;
 
-	zbx_vector_uint64_create(&objectids[0]);
-	zbx_vector_uint64_create(&objectids[1]);
+	for (i = 0; i < (int)ARRSIZE(objects); i++)
+		zbx_vector_uint64_create(&objectids[i]);
 
-	get_object_ids_internal(esc_events, objectids);
+	get_object_ids_internal(esc_events, objectids, objects);
 
 	for (i = 0; i < (int)ARRSIZE(objects); i++)
 	{
@@ -2630,7 +2633,7 @@ static int	check_intern_application_condition(zbx_vector_ptr_t *esc_events, DB_C
 			DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.triggerid",
 					objectids[i].values, objectids[i].values_num);
 		}
-		else
+		else	/* EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE */
 		{
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 					"select distinct i.itemid,a.name"
@@ -2680,8 +2683,9 @@ static int	check_intern_application_condition(zbx_vector_ptr_t *esc_events, DB_C
 		DBfree_result(result);
 	}
 
-	zbx_vector_uint64_destroy(&objectids[0]);
-	zbx_vector_uint64_destroy(&objectids[1]);
+	for (i = 0; i < (int)ARRSIZE(objects); i++)
+		zbx_vector_uint64_destroy(&objectids[i]);
+
 	zbx_free(sql);
 
 	return SUCCEED;
