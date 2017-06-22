@@ -2138,6 +2138,29 @@ out:
 	return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_resolve_host                                                 *
+ *                                                                            *
+ * Purpose: resolve specified host to IPs                                     *
+ *                                                                            *
+ * Parameters: res          - [IN]  resolver object to use for resolving      *
+ *             host         - [IN]  host name to resolve                      *
+ *             ips          - [OUT] IPs resolved from specified host          *
+ *             ipv4_enabled - [IN]  use IPv4 protocol to resolve              *
+ *             ipv6_enabled - [IN]  use IPv6 protocol to resolve              *
+ *             log_fd       - [IN]  print resolved packets to specified file  *
+ *                                  descriptor, cannot be NULL                *
+ *             internal     - [OUT] in case of error, if it's internal (1) or *
+ *                                  not (0), cannot be NULL                   *
+ *             err          - [OUT] in case of error, write the error string  *
+ *                                  to specified buffer                       *
+ *             err_size     - [IN]  error buffer size                         *
+ *                                                                            *
+ * Return value: SUCCEED - host resolved successfully                         *
+ *               FAIL - otherwise                                             *
+ *                                                                            *
+ ******************************************************************************/
 static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vector_str_t *ips,
 		int ipv4_enabled, int ipv6_enabled, FILE *log_fd, char *internal, char *err, size_t err_size)
 {
