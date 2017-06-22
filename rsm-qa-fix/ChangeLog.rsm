@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc12
 New features:
 
 Bug fixes:
+.......P.. [248] fixed possible memory leak in proxy poller when rsm.dns check is performed (dimir, gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc11
