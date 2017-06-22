@@ -54,12 +54,13 @@ static int	compare_events(const void *d1, const void *d2)
  *                                                                            *
  * Function: add_condition_match                                              *
  *                                                                            *
- * Purpose: add object and objectid of event that match condition            *
+ * Purpose: save eventids that match condition                                *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
  *             condition  - [IN/OUT] condition for matching, outputs          *
  *                                   event ids that match condition           *
- *                                                                            *
+ *             objectid   - [IN] object id, for example trigger or item id    *
+ *             object     - [IN] object, for example EVENT_OBJECT_TRIGGER     *
  ******************************************************************************/
 static void	add_condition_match(zbx_vector_ptr_t *esc_events, DB_CONDITION *condition, zbx_uint64_t objectid,
 		int object)
@@ -518,6 +519,7 @@ static void	objectids_to_pair(zbx_vector_uint64_t *objectids, zbx_vector_uint64_
  *          resolving in order to compare to condition                        *
  *                                                                            *
  * Parameters: object          - [IN] object that generated event             *
+ * Parameters: esc_events      - [IN] to find eventid by object and objectid  *
  *             objectids       - [IN] event ids to check in case of not equal *
  *                                    condition will delete objectids that    *
  *                                    match condition for internal usage      *
