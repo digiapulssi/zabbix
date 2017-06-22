@@ -590,7 +590,7 @@ static void	check_object_hierarchy(int object, zbx_vector_ptr_t *esc_events, zbx
 	if (CONDITION_OPERATOR_NOT_EQUAL == condition->operator)
 	{
 		for (i = 0; i < objectids->values_num; i++)
-			add_condition_match(esc_events, condition, objectids_pair->values[i].first, object);
+			add_condition_match(esc_events, condition, objectids->values[i], object);
 	}
 
 	zbx_vector_uint64_pair_destroy(&objectids_pair_tmp);
