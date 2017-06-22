@@ -1179,33 +1179,35 @@ static size_t	zbx_get_dns_items(const char *keyname, DC_ITEM *item, const char *
 	{
 		in_item = &in_items[i];
 
-		ZBX_STRDUP(in_item->key, in_item->key_orig);
+		in_item->key = NULL;
 		in_item->params = NULL;
+
+		ZBX_STRDUP(in_item->key, in_item->key_orig);
 
 		if (SUCCEED != substitute_key_macros(&in_item->key, NULL, item, NULL, MACRO_TYPE_ITEM_KEY, NULL, 0))
 		{
 			/* problem with key macros, skip it */
 			zbx_rsm_warnf(log_fd, "%s: cannot substitute key macros", in_item->key_orig);
-			continue;
+			goto clean_in_item;
 		}
 
 		if (SUCCEED != zbx_parse_dns_item(in_item, host, sizeof(host)))
 		{
 			/* unexpected item key syntax, skip it */
 			zbx_rsm_warnf(log_fd, "%s: unexpected key syntax", in_item->key);
-			continue;
+			goto clean_in_item;
 		}
 
 		if (0 != strcmp(host, domain))
 		{
 			/* first parameter does not match expected domain name, skip it */
 			zbx_rsm_warnf(log_fd, "%s: first parameter does not match host %s", in_item->key, domain);
-			continue;
+			goto clean_in_item;
 		}
 
 		p = in_item->key + keypart_size;
 		if (0 != strncmp(p, "rtt[", 4) && 0 != strncmp(p, "upd[", 4))
-			continue;
+			goto clean_in_item;
 
 		if (0 == out_items_num)
 		{
@@ -1220,10 +1222,13 @@ static size_t	zbx_get_dns_items(const char *keyname, DC_ITEM *item, const char *
 		memcpy(&(*out_items)[out_items_num], in_item, sizeof(DC_ITEM));
 		(*out_items)[out_items_num].key = in_item->key;
 		(*out_items)[out_items_num].params = in_item->params;
-		in_item->key = NULL;
-		in_item->params = NULL;
 
 		out_items_num++;
+
+		continue;
+clean_in_item:
+		zbx_free(in_item->key);
+		zbx_free(in_item->params);
 	}
 
 	free_items(in_items, in_items_num);
