@@ -198,6 +198,8 @@ static void	get_object_ids(zbx_vector_ptr_t *esc_events, zbx_vector_uint64_t *ob
 
 		zbx_vector_uint64_append(objectids, event->objectid);
 	}
+
+	zbx_vector_uint64_uniq(objectids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 }
 
 /******************************************************************************
@@ -685,6 +687,7 @@ static int	check_trigger_id_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION
 
 	if (0 != objectids.values_num)
 	{
+		zbx_vector_uint64_uniq(&objectids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		objectids_to_pair(&objectids, &objectids_pair);
 
 		check_object_hierarchy(EVENT_OBJECT_TRIGGER, esc_events, &objectids, &objectids_pair, condition, condition_value,
@@ -1099,6 +1102,9 @@ static void	get_object_ids_discovery(zbx_vector_ptr_t *esc_events, zbx_vector_ui
 		else
 			zbx_vector_uint64_append(&objectids[1], event->objectid);
 	}
+
+	zbx_vector_uint64_uniq(&objectids[0], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(&objectids[1], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 }
 /******************************************************************************
  *                                                                            *
@@ -1252,6 +1258,7 @@ static int	check_dcheck_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION *co
 				operation_where,
 				condition_value);
 
+		zbx_vector_uint64_uniq(&objectids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "dserviceid",
 					objectids.values, objectids.values_num);
 
@@ -1452,6 +1459,7 @@ static int	check_dvalue_condition(zbx_vector_ptr_t *esc_events, DB_CONDITION *co
 					" from dservices"
 					" where");
 
+		zbx_vector_uint64_uniq(&objectids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "dserviceid",
 					objectids.values, objectids.values_num);
 
@@ -1638,6 +1646,7 @@ static int	check_dservice_type_condition(zbx_vector_ptr_t *esc_events, DB_CONDIT
 				" where ds.dcheckid=dc.dcheckid"
 					" and");
 
+		zbx_vector_uint64_uniq(&objectids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "ds.dserviceid",
 					objectids.values, objectids.values_num);
 
@@ -1853,6 +1862,7 @@ static int	check_dservice_port_condition(zbx_vector_ptr_t *esc_events, DB_CONDIT
 				" from dservices"
 				" where");
 
+		zbx_vector_uint64_uniq(&objectids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "dserviceid",
 					objectids.values, objectids.values_num);
 
@@ -2239,6 +2249,9 @@ static void	get_object_ids_internal(zbx_vector_ptr_t *esc_events, zbx_vector_uin
 		else
 			zbx_vector_uint64_append(&objectids[1], event->objectid);
 	}
+
+	zbx_vector_uint64_uniq(&objectids[0], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(&objectids[1], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 }
 
 /******************************************************************************
