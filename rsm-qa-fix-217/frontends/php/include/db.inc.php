@@ -1211,10 +1211,6 @@ function zbx_dbcast_2bigint($field) {
 function multiDBconnect($server, &$error) {
 	global $DB;
 
-	if ($DB['TRANSACTIONS'] == 1) {
-		DBend();
-	}
-
 	unset($DB['DB']);
 	$DB['TYPE'] = $server['TYPE'];
 	$DB['SERVER'] = $server['SERVER'];

@@ -71,6 +71,8 @@ class CWebUser {
 
 				add_audit_ext(AUDIT_ACTION_LOGIN, AUDIT_RESOURCE_USER, self::$data['userid'], '', null, null, null);
 
+				DBend();
+
 				$master = $DB;
 
 				foreach ($DB['SERVERS'] as $server) {
