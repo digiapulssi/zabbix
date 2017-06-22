@@ -28,6 +28,30 @@
 
 /******************************************************************************
  *                                                                            *
+ * Function: compare_events                                                   *
+ *                                                                            *
+ * Purpose: compare events by objectid                                        *
+ *                                                                            *
+ * Parameters: d1 - [IN] event structure to compare to d2                     *
+ *             d2 - [IN] event structure to compare to d1                     *
+ *                                                                            *
+ * Return value: 0 - equal                                                    *
+ *               not 0 - otherwise                                            *
+ *                                                                            *
+ ******************************************************************************/
+static int	compare_events(const void *d1, const void *d2)
+{
+	const DB_EVENT	*p1 = *(const DB_EVENT **)d1;
+	const DB_EVENT	*p2 = *(const DB_EVENT **)d2;
+
+	ZBX_RETURN_IF_NOT_EQUAL(p1->objectid, p2->objectid);
+	ZBX_RETURN_IF_NOT_EQUAL(p1->object, p2->object);
+
+	return 0;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: add_condition_match                                              *
  *                                                                            *
  * Purpose: add object and objectid of event that match condition            *
@@ -40,17 +64,37 @@
 static void	add_condition_match(zbx_vector_ptr_t *esc_events, DB_CONDITION *condition, zbx_uint64_t objectid,
 		int object)
 {
-	int	i;
+	int		index;
+	const DB_EVENT	event_search = {.objectid = objectid, .object = object};
 
-	for (i = 0; i < esc_events->values_num; i++)
+	if (FAIL != (index = zbx_vector_ptr_bsearch(esc_events, &event_search, compare_events)))
 	{
-		const DB_EVENT	*event = esc_events->values[i];
+		const DB_EVENT	*event = esc_events->values[index];
+		int		i;
 
-		if (event->objectid == objectid && event->object == object)
+		zbx_vector_uint64_append(&condition->eventids, event->eventid);
+
+		for (i = index - 1; 0 <= i; i--)
+		{
+			event = esc_events->values[i];
+
+			if (event->objectid != objectid || event->object != object)
+				break;
+
 			zbx_vector_uint64_append(&condition->eventids, event->eventid);
+		}
+
+		for (i = index + 1; i < esc_events->values_num; i++)
+		{
+			event = esc_events->values[i];
+
+			if (event->objectid != objectid || event->object != object)
+				break;
+
+			zbx_vector_uint64_append(&condition->eventids, event->eventid);
+		}
 	}
 }
-
 
 /******************************************************************************
  *                                                                            *
@@ -3077,29 +3121,6 @@ static int	is_escalation_event(const DB_EVENT *event)
 		return FAIL;
 
 	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: compare_events                                                   *
- *                                                                            *
- * Purpose: compare events by objectid                                        *
- *                                                                            *
- * Parameters: d1 - [IN] event structure to compare to d2                     *
- *             d2 - [IN] event structure to compare to d1                     *
- *                                                                            *
- * Return value: 0 - equal                                                    *
- *               not 0 - otherwise                                            *
- *                                                                            *
- ******************************************************************************/
-static int	compare_events(const void *d1, const void *d2)
-{
-	const DB_EVENT	*p1 = *(const DB_EVENT **)d1;
-	const DB_EVENT	*p2 = *(const DB_EVENT **)d2;
-
-	ZBX_RETURN_IF_NOT_EQUAL(p1->objectid, p2->objectid);
-
-	return 0;
 }
 
 /******************************************************************************
