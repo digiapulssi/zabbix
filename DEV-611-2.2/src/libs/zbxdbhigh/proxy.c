@@ -2510,7 +2510,7 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 
 		if (SUCCEED != is_ip(ip))
 		{
-			zabbix_log(LOG_LEVEL_DEBUG, "\"%s\" is not a valid IP address", ip);
+			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid IP address", ip);
 			goto next;
 		}
 
@@ -2666,7 +2666,7 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 
 		if (SUCCEED != is_ip(ip))
 		{
-			zabbix_log(LOG_LEVEL_DEBUG, "\"%s\" is not a valid IP address", ip);
+			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid IP address", ip);
 			goto next;
 		}
 
