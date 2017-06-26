@@ -190,7 +190,6 @@ static int	zbx_set_resolver_ns(ldns_resolver *res, const char *name, const char 
 		return FAIL;
 	}
 
-	/* push nameserver to it */
 	status = ldns_resolver_push_nameserver(res, ip_rdf);
 	ldns_rdf_deep_free(ip_rdf);
 
