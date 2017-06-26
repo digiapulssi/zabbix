@@ -181,32 +181,28 @@ static int	zbx_validate_ip(const char *ip, char ipv4_enabled, char ipv6_enabled,
 static int	zbx_set_resolver_ns(ldns_resolver *res, const char *name, const char *ip, char ipv4_enabled,
 		char ipv6_enabled, FILE *log_fd, char *err, size_t err_size)
 {
-	ldns_rdf	*ip_rdf = NULL;
+	ldns_rdf	*ip_rdf;
 	ldns_status	status;
-	int		ret = FAIL;
 
 	if (SUCCEED != zbx_validate_ip(ip, ipv4_enabled, ipv6_enabled, &ip_rdf, NULL))
 	{
 		zbx_snprintf(err, err_size, "invalid or unsupported IP of \"%s\": \"%s\"", name, ip);
-		goto out;
+		return FAIL;
 	}
 
 	/* push nameserver to it */
-	if (LDNS_STATUS_OK != (status = ldns_resolver_push_nameserver(res, ip_rdf)))
+	status = ldns_resolver_push_nameserver(res, ip_rdf);
+	ldns_rdf_deep_free(ip_rdf);
+
+	if (LDNS_STATUS_OK != status)
 	{
-		zbx_snprintf(err, err_size, "cannot set %s (%s) as resolver. %s.", name, ip,
+		zbx_snprintf(err, err_size, "cannot set \"%s\" (%s) as resolver. %s.", name, ip,
 				ldns_get_errorstr_by_id(status));
-		goto out;
+		return FAIL;
 	}
 
 	zbx_rsm_infof(log_fd, "successfully using %s (%s)", name, ip);
-
-	ret = SUCCEED;
-out:
-	if (NULL != ip_rdf)
-		ldns_rdf_deep_free(ip_rdf);
-
-	return ret;
+	return SUCCEED;
 }
 
 static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char *ip, char proto,
