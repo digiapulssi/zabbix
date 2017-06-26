@@ -134,13 +134,13 @@ class DB {
 		}
 
 		/*
-		 * Detect either the query is executable at all? If query is valid and schema is correct but query still can not be
-		 * executed, then there is a good chance that previous transaction has left row level lock unreleased
-		 * or it is still running.
+		 * Detect either the query is executable at all? If query is valid and schema is correct but query still cannot
+		 * be executed, then there is a good chance that previous transaction has left row level lock unreleased or it
+		 * is still running. In such a case execution must be stopped, otherwise it will call self::refreshIds method.
 		 */
 		elseif (!DBexecute($sql)) {
 			self::exception(self::DBEXECUTE_ERROR,
-				_('Zabbix database is not working properly. Please retry later. If problem still persists, please contact system administrator.')
+				_('Your database is not working properly. Please retry later. If the problem still persists, please contact system administrator.')
 			);
 		}
 		// If query is executable, but still returns false, only then call refreshIds.
