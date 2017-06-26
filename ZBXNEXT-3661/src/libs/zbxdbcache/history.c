@@ -251,7 +251,7 @@ static history_value_t	history_str2value(char *str, unsigned char value_type)
 			break;
 		case ITEM_VALUE_TYPE_STR:
 		case ITEM_VALUE_TYPE_TEXT:
-			zbx_strdup(value.str, str);
+			value.str = zbx_strdup(NULL, str);
 			break;
 		case ITEM_VALUE_TYPE_FLOAT:
 			value.dbl = atof(str);
@@ -310,7 +310,7 @@ static int	history_parse_value(struct zbx_json_parse *jp, unsigned char value_ty
 		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "source", &value, &value_alloc))
 			goto out;
 
-		zbx_strdup(hr->value.log->source, value);
+		hr->value.log->source = zbx_strdup(NULL, value);
 	}
 	else
 	{
