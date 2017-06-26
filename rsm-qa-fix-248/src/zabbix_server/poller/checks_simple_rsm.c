@@ -4367,6 +4367,12 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		return SYSINFO_RET_FAIL;
 	}
 
+	if (0 != strcmp("automatic", get_rparam(request, 0)))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "first parameter has to be \"automatic\""));
+		return SYSINFO_RET_FAIL;
+	}
+
 	/* open probestatus log file */
 	if (NULL == (log_fd = open_item_log(item->host.host, NULL, ZBX_PROBESTATUS_LOG_PREFIX, NULL, err, sizeof(err))))
 	{
