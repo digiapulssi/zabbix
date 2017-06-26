@@ -2514,8 +2514,12 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 			goto next;
 		}
 
-		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-			port = atoi(tmp);
+		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)) &&
+				FAIL == is_ushort(tmp, &port))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid port", tmp);
+			goto next;
+		}
 
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_KEY, key_, sizeof(key_));
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_VALUE, value, sizeof(value));
@@ -2683,10 +2687,14 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-			*tmp = '\0';
-
-		if (FAIL == is_ushort(tmp, &port))
+		{
 			port = ZBX_DEFAULT_AGENT_PORT;
+		}
+		else if (FAIL == is_ushort(tmp, &port))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid port", tmp);
+			goto next;
+		}
 
 		DBregister_host_prepare(&autoreg_hosts, host, ip, dns, port, host_metadata, itemtime);
 next:

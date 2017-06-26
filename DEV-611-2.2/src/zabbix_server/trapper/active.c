@@ -345,10 +345,15 @@ int	send_list_of_active_checks_json(zbx_sock_t *sock, struct zbx_json_parse *jp)
 	}
 
 	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-		*tmp = '\0';
-
-	if (FAIL == is_ushort(tmp, &port))
+	{
 		port = ZBX_DEFAULT_AGENT_PORT;
+	}
+	else if (FAIL == is_ushort(tmp, &port))
+	{
+		zbx_snprintf(error, MAX_STRING_LEN, "\"%s\" is not a valid port", tmp);
+		goto error;
+	}
+
 
 	if (FAIL == get_hostid_by_host(host, ip, port, host_metadata, &hostid, error))
 		goto error;
