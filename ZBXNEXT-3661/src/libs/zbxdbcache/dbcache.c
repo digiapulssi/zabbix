@@ -805,21 +805,20 @@ static void	dc_send_trends(ZBX_DC_TREND *trends, int trends_num)
 
 	zbx_vector_ptr_create(&tr);
 
-	for (i = 0; i < trends_num; ++i)
+	for (i = 1; i <= trends_num; ++i)
 	{
-		zbx_vector_ptr_append(&tr, &trends[i]);
+		zbx_vector_ptr_append(&tr, &trends[i - 1]);
 
-		if (0 == i % ZBX_TRENDS_MAX_SYNC || i == trends_num - 1)
+		if (0 == i % ZBX_TRENDS_MAX_SYNC || i == trends_num)
 		{
 			zbx_trends_send_values(&tr, ITEM_VALUE_TYPE_FLOAT);
 			zbx_trends_send_values(&tr, ITEM_VALUE_TYPE_UINT64);
 
-			zbx_vector_ptr_destroy(&tr);
-
-			if (i < trends_num - 1)
-				zbx_vector_ptr_create(&tr);
+			zbx_vector_ptr_clear(&tr);
 		}
 	}
+
+	zbx_vector_ptr_destroy(&tr);
 }
 
 /******************************************************************************
