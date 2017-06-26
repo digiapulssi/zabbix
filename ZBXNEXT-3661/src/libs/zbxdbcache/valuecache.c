@@ -361,7 +361,7 @@ static void	vc_try_unlock(void)
 static int	vc_db_read_values_by_time(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
 		int seconds, int end_timestamp, zbx_uint64_t *queries)
 {
-	if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(value_type)))
+	if (0 == zbx_history_check_type(value_type))
 	{
 		char			*sql = NULL;
 		size_t	 		sql_alloc = 0, sql_offset = 0;
@@ -445,7 +445,7 @@ out:
 static int	vc_db_read_values_by_count(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
 		int count, int end_timestamp, zbx_uint64_t *queries)
 {
-	if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(value_type)))
+	if (0 == zbx_history_check_type(value_type))
 	{
 		char			*sql = NULL;
 		size_t	 		sql_alloc = 0, sql_offset;
@@ -559,7 +559,7 @@ static int	vc_db_read_values_by_time_and_count(zbx_uint64_t itemid, int value_ty
 {
 	int			ret = FAIL;
 
-	if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(value_type)))
+	if (0 == zbx_history_check_type(value_type))
 	{
 		char			*sql = NULL;
 		size_t	 		sql_alloc = 0, sql_offset;
@@ -2882,23 +2882,20 @@ void	zbx_vc_add_values(zbx_vector_ptr_t *history)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (NULL != HISTORY_SERVICE_URL)
-	{
-		if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_UINT64))
-			zbx_history_add_values(history, ITEM_VALUE_TYPE_UINT64);
+	if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_UINT64))
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_UINT64);
 
-		if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_FLOAT))
-			zbx_history_add_values(history, ITEM_VALUE_TYPE_FLOAT);
+	if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_FLOAT))
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_FLOAT);
 
-		if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_STR))
-			zbx_history_add_values(history, ITEM_VALUE_TYPE_STR);
+	if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_STR))
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_STR);
 
-		if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_TEXT))
-			zbx_history_add_values(history, ITEM_VALUE_TYPE_TEXT);
+	if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_TEXT))
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_TEXT);
 
-		if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_LOG))
-			zbx_history_add_values(history, ITEM_VALUE_TYPE_LOG);
-	}
+	if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_LOG))
+		zbx_history_add_values(history, ITEM_VALUE_TYPE_LOG);
 
 	if (NULL == vc_cache)
 		return;

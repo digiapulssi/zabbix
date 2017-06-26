@@ -470,6 +470,10 @@ void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 
 int	zbx_history_check_type(int value_type)
 {
+
+	if (NULL == HISTORY_SERVICE_URL)
+		return 0;
+
 	switch (value_type)
 	{
 		case ITEM_VALUE_TYPE_FLOAT:

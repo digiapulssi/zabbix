@@ -854,7 +854,7 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 		if (0 != (ZBX_DC_FLAGS_NOT_FOR_TRENDS & h->flags))
 			continue;
 
-		if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(h->value_type)))
+		if (0 == zbx_history_check_type(h->value_type))
 			DCadd_trend(h, &trends, &trends_alloc, &trends_num);
 		else
 			DCadd_trend(h, &trends_serv, &trends_alloc_serv, &trends_num_serv);
@@ -872,7 +872,7 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 			if (trend->clock == hour)
 				continue;
 
-			if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(trend->value_type)))
+			if (0 == zbx_history_check_type(trend->value_type))
 			{
 				DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
 			}
@@ -928,7 +928,7 @@ static void	DCsync_trends(void)
 
 	while (NULL != (trend = (ZBX_DC_TREND *)zbx_hashset_iter_next(&iter)))
 	{
-		if (NULL == HISTORY_SERVICE_URL || !(0 < zbx_history_check_type(trend->value_type)))
+		if (0 == zbx_history_check_type(trend->value_type))
 			DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
 		else
 			DCflush_trend(trend, &trends_serv, &trends_alloc_serv, &trends_num_serv);
@@ -1823,45 +1823,20 @@ static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num)
 	}
 
 	/* If a URL for the history service is not provided, use the old history management */
-	if (NULL == HISTORY_SERVICE_URL)
-	{
-		/* history */
-		if (0 != h_num)
-			dc_add_history_dbl(history, history_num);
+	if (0 != huint_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_UINT64)))
+		dc_add_history_uint(history, history_num);
 
-		/* history_uint */
-		if (0 != huint_num)
-			dc_add_history_uint(history, history_num);
+	if (0 != h_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_FLOAT)))
+		dc_add_history_dbl(history, history_num);
 
-		/* history_str */
-		if (0 != hstr_num)
-			dc_add_history_str(history, history_num);
+	if (0 != hstr_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_STR)))
+		dc_add_history_str(history, history_num);
 
-		/* history_text */
-		if (0 != htext_num)
-			dc_add_history_text(history, history_num);
+	if (0 != htext_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_TEXT)))
+		dc_add_history_text(history, history_num);
 
-		/* history_log */
-		if (0 != hlog_num)
-			dc_add_history_log(history, history_num);
-	}
-	else
-	{
-		if (0 != huint_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_UINT64)))
-			dc_add_history_uint(history, history_num);
-
-		if (0 != h_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_FLOAT)))
-			dc_add_history_dbl(history, history_num);
-
-		if (0 != hstr_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_STR)))
-			dc_add_history_str(history, history_num);
-
-		if (0 != htext_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_TEXT)))
-			dc_add_history_text(history, history_num);
-
-		if (0 != hlog_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_LOG)))
-			dc_add_history_log(history, history_num);
-	}
+	if (0 != hlog_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_LOG)))
+		dc_add_history_log(history, history_num);
 
 	/* update value cache */
 	if (ZBX_DB_OK <= rc && 0 != (program_type & ZBX_PROGRAM_TYPE_SERVER) &&
