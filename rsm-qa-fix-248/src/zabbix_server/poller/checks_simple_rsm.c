@@ -285,7 +285,7 @@ static int	zbx_change_resolver(ldns_resolver *res, const char *name, const char 
  * Author: Vladimir Levijev                                                   *
  *                                                                            *
  ******************************************************************************/
-static int      zbx_get_ts_from_host(char *host, time_t *ts)
+static int      zbx_get_ts_from_host(const char *host, time_t *ts)
 {
 	char	*p, *p2;
 
@@ -314,9 +314,7 @@ static int      zbx_get_ts_from_host(char *host, time_t *ts)
 	if (p2 == p || '0' == *p)
 		return FAIL;
 
-	*p2 = '\0';
 	*ts = atoi(p);
-	*p2 = '.';
 
 	return SUCCEED;
 }
