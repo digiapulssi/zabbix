@@ -2626,10 +2626,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	/* start RDDS43 test, resolve host to ips */
 	if (SUCCEED != zbx_resolve_host(res, random_host, &ips43, 1, 1, log_fd, &internal, err, sizeof(err)))
 	{
-		if (0 == internal)
-			rtt43 = ZBX_EC_RDDS_ERES;
-		else
-			rtt43 = ZBX_EC_INTERNAL;
+		rtt43 = (0 == internal ? ZBX_EC_RDDS_ERES : ZBX_EC_INTERNAL);
 		zbx_rsm_errf(log_fd, "RDDS43 \"%s\": %s", random_host, err);
 	}
 
@@ -2739,10 +2736,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (SUCCEED != zbx_resolve_host(res, random_host, &ips80, ipv4_enabled, ipv6_enabled, log_fd, &internal,
 			err, sizeof(err)))
 	{
-		if (0 == internal)
-			rtt80 = ZBX_EC_RDDS_ERES;
-		else
-			rtt80 = ZBX_EC_INTERNAL;
+		rtt80 = (0 == internal ? ZBX_EC_RDDS_ERES : ZBX_EC_INTERNAL);
 		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": %s", random_host, err);
 		goto out;
 	}
@@ -4012,14 +4006,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (SUCCEED != zbx_resolve_host(res, random_host, &epp_ips, ipv4_enabled, ipv6_enabled, log_fd, &internal,
 			err, sizeof(err)))
 	{
-		if (0 == internal)
-		{
-			rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_NO_IP;
-		}
-		else
-		{
-			rtt1 = rtt2 = rtt3 = ZBX_EC_INTERNAL;
-		}
+		rtt1 = rtt2 = rtt3 = (0 == internal ? ZBX_EC_EPP_NO_IP : ZBX_EC_INTERNAL);
 		zbx_rsm_errf(log_fd, "\"%s\": %s", random_host, err);
 		goto out;
 	}
