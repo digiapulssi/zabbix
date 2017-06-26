@@ -287,7 +287,7 @@ static int	zbx_change_resolver(ldns_resolver *res, const char *name, const char 
  ******************************************************************************/
 static int      zbx_get_ts_from_host(const char *host, time_t *ts)
 {
-	char	*p, *p2;
+	const char	*p, *p2;
 
 	p = host;
 
@@ -533,7 +533,7 @@ static void	zbx_get_owners(const ldns_rr_list *rr_list, zbx_vector_ptr_t *owners
 
 static void	zbx_destroy_owners(zbx_vector_ptr_t *owners)
 {
-	size_t	i;
+	int	i;
 
 	for (i = 0; i < owners->values_num; i++)
 		ldns_rdf_deep_free((ldns_rdf *)owners->values[i]);
@@ -560,9 +560,8 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, ldns_pkt_section section, int 
 	zbx_vector_ptr_t	owners;
 	ldns_rr_list		*rrset = NULL, *rrsigs = NULL;
 	ldns_rdf		*owner_rdf;
-	size_t			i;
 	char			*owner_str, owner_buf[256];
-	int			ret = FAIL;
+	int			i, ret = FAIL;
 
 	zbx_vector_ptr_create(&owners);
 
@@ -2144,9 +2143,9 @@ static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vect
 	ldns_pkt	*pkt = NULL;
 	ldns_rdf	*host_rdf = NULL;
 	ldns_rr_list	*rrset = NULL;
-	size_t		i;
+	size_t		i, rr_count;
 	char		*ip;
-	int		ret = FAIL, rr_count;
+	int		ret = FAIL;
 
 	if (0 != ipv4_enabled)
 	{
@@ -2238,7 +2237,7 @@ out:
 
 static void	zbx_delete_unsupported_ips(zbx_vector_str_t *ips, char ipv4_enabled, char ipv6_enabled)
 {
-	size_t	i;
+	int	i;
 	char	is_ipv4;
 
 	for (i = 0; i < ips->values_num; i++)
@@ -2446,7 +2445,7 @@ static int	zbx_ec_noerror(int ec)
 
 static void	zbx_vector_str_clean_and_destroy(zbx_vector_str_t *v)
 {
-	size_t	i;
+	int	i;
 
 	for (i = 0; i < v->values_num; i++)
 		zbx_free(v->values[i]);
@@ -4328,9 +4327,8 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 	zbx_vector_str_t	ips4, ips6;
 	ldns_resolver		*res = NULL;
 	ldns_rdf		*query_rdf = NULL;
-	size_t			i;
 	FILE			*log_fd = NULL;
-	int			ipv4_enabled = 0, ipv6_enabled = 0, min_servers, reply_ms, online_delay, dns_res,
+	int			i, ipv4_enabled = 0, ipv6_enabled = 0, min_servers, reply_ms, online_delay, dns_res,
 				ok_servers, ret, status = ZBX_EC_PROBE_UNSUPPORTED;
 
 	if (3 != request->nparam)
