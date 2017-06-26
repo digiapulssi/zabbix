@@ -893,10 +893,7 @@ int	zbx_validate_hostname(const char *hostname)
 	unsigned char	component = 0;	/* periods ('.') are only allowed when they serve to delimit components */
 	int		i, len;
 
-	len = strlen(hostname);
-
-	/* single character names or nicknames are not allowed */
-	if (1 >= len)
+	if (0 == (len = strlen(hostname)))
 		return FAIL;
 
 	/* the first character must be an alphanumeric character */
