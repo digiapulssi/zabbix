@@ -888,10 +888,12 @@ int	is_ip(const char *ip)
 	return SUCCEED == is_ip4(ip) ? SUCCEED : is_ip6(ip);
 }
 
-int	zbx_validate_hostname(const char *hostname, int len)
+int	zbx_validate_hostname(const char *hostname)
 {
 	unsigned char	component = 0;	/* periods ('.') are only allowed when they serve to delimit components */
-	int		i;
+	int		i, len;
+
+	len = strlen(hostname);
 
 	/* single character names or nicknames are not allowed */
 	if (1 >= len)
