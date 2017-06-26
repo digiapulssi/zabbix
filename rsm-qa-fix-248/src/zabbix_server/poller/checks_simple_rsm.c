@@ -833,12 +833,6 @@ out:
 	return ret;
 }
 
-static void	zbx_set_value_ts(zbx_timespec_t *ts, int sec)
-{
-	ts->sec = sec;
-	ts->ns = 0;
-}
-
 /******************************************************************************
  *                                                                            *
  * Function: zbx_add_value                                                    *
@@ -851,9 +845,7 @@ static void	zbx_set_value_ts(zbx_timespec_t *ts, int sec)
  ******************************************************************************/
 static void	zbx_add_value(const DC_ITEM *item, AGENT_RESULT *result, int ts)
 {
-	zbx_timespec_t	timespec;
-
-	zbx_set_value_ts(&timespec, ts);
+	zbx_timespec_t	timespec = {.sec = ts, .ns = 0};
 
 	dc_add_history(item->itemid, item->value_type, item->flags, result, &timespec, ITEM_STATUS_ACTIVE, NULL);
 }
