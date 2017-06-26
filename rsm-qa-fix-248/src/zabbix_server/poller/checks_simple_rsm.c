@@ -155,37 +155,27 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 static int	zbx_validate_ip(const char *ip, char ipv4_enabled, char ipv6_enabled, ldns_rdf **ip_rdf_out,
 		char *is_ipv4)
 {
-	ldns_rdf	*ip_rdf = NULL;
-	int		ret = FAIL;
+	ldns_rdf	*ip_rdf;
 
-	/* try IPv4 */
-	if (0 == ipv4_enabled || NULL == (ip_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, ip)))
-	{
-		/* try IPv6 */
-		if (0 != ipv6_enabled && NULL != (ip_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_AAAA, ip)))
-		{
-			if (NULL != is_ipv4)
-				*is_ipv4 = 0;
-		}
-	}
-	else
+	if (0 != ipv4_enabled && NULL != (ip_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, ip)))	/* try IPv4 */
 	{
 		if (NULL != is_ipv4)
 			*is_ipv4 = 1;
 	}
-
-	if (NULL == ip_rdf)
-		goto out;
+	else if (0 != ipv6_enabled && NULL != (ip_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_AAAA, ip)))	/* try IPv6 */
+	{
+		if (NULL != is_ipv4)
+			*is_ipv4 = 0;
+	}
+	else
+		return FAIL;
 
 	if (NULL != ip_rdf_out)
 		*ip_rdf_out = ldns_rdf_clone(ip_rdf);
 
-	ret = SUCCEED;
-out:
-	if (NULL != ip_rdf)
-		ldns_rdf_deep_free(ip_rdf);
+	ldns_rdf_deep_free(ip_rdf);
 
-	return ret;
+	return SUCCEED;
 }
 
 static int	zbx_set_resolver_ns(ldns_resolver *res, const char *name, const char *ip, char ipv4_enabled,
