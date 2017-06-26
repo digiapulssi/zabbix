@@ -1100,7 +1100,7 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 	s_count = rate * metric->refresh;
 
 	/* do not flood local system if file grows too fast */
-	p_count = 4 * s_count;
+	p_count = MAX_VALUE_LINES_MULTIPLIER * s_count;
 
 	ret = process_logrt(metric->flags, filename, &metric->lastlogsize, &metric->mtime, lastlogsize_sent, mtime_sent,
 			&metric->skip_old_data, &metric->big_rec, &metric->use_ino, error, &metric->logfiles,
@@ -1354,7 +1354,7 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 					break;
 
 				/* do not flood local system if file grows too fast */
-				if (p_count >= (4 * rate * metric->refresh))
+				if (p_count >= (MAX_VALUE_LINES_MULTIPLIER * rate * metric->refresh))
 					break;
 
 			}	/* while processing an eventlog */
@@ -1447,7 +1447,7 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 				break;
 
 			/* do not flood local system if file grows too fast */
-			if (p_count >= (4 * rate * metric->refresh))
+			if (p_count >= (MAX_VALUE_LINES_MULTIPLIER * rate * metric->refresh))
 				break;
 		} /* while processing an eventlog */
 	}
