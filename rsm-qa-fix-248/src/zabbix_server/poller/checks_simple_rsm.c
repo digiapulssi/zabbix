@@ -1112,6 +1112,13 @@ static void	free_items(DC_ITEM *items, size_t items_num)
 
 			zbx_free(item->key);
 			zbx_free(item->params);
+			zbx_free(item->db_error);
+
+			if (ITEM_VALUE_TYPE_FLOAT == item->value_type || ITEM_VALUE_TYPE_UINT64 == item->value_type)
+			{
+				zbx_free(item->formula);
+				zbx_free(item->units);
+			}
 		}
 
 		zbx_free(items);
@@ -1177,10 +1184,11 @@ static size_t	zbx_get_dns_items(const char *keyname, DC_ITEM *item, const char *
 		}
 
 		memcpy(&(*out_items)[out_items_num], in_item, sizeof(DC_ITEM));
-		(*out_items)[out_items_num].key = in_item->key;
-		(*out_items)[out_items_num].params = in_item->params;
 		in_item->key = NULL;
 		in_item->params = NULL;
+		in_item->db_error = NULL;
+		in_item->formula = NULL;
+		in_item->units = NULL;
 
 		out_items_num++;
 	}
@@ -2037,10 +2045,11 @@ static size_t	zbx_get_rdds_items(const char *keyname, DC_ITEM *item, const char 
 		}
 
 		memcpy(&(*out_items)[out_items_num], in_item, sizeof(DC_ITEM));
-		(*out_items)[out_items_num].key = in_item->key;
-		(*out_items)[out_items_num].params = in_item->params;
 		in_item->key = NULL;
 		in_item->params = NULL;
+		in_item->db_error = NULL;
+		in_item->formula = NULL;
+		in_item->units = NULL;
 
 		out_items_num++;
 	}
@@ -3386,10 +3395,11 @@ static size_t	zbx_get_epp_items(const char *keyname, DC_ITEM *item, const char *
 		}
 
 		memcpy(&(*out_items)[out_items_num], in_item, sizeof(DC_ITEM));
-		(*out_items)[out_items_num].key = in_item->key;
-		(*out_items)[out_items_num].params = in_item->params;
 		in_item->key = NULL;
 		in_item->params = NULL;
+		in_item->db_error = NULL;
+		in_item->formula = NULL;
+		in_item->units = NULL;
 
 		out_items_num++;
 	}
