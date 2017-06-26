@@ -354,7 +354,6 @@ int	send_list_of_active_checks_json(zbx_sock_t *sock, struct zbx_json_parse *jp)
 		goto error;
 	}
 
-
 	if (FAIL == get_hostid_by_host(host, ip, port, host_metadata, &hostid, error))
 		goto error;
 
