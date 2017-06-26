@@ -204,47 +204,45 @@ static int	zbx_set_resolver_ns(ldns_resolver *res, const char *name, const char 
 	return SUCCEED;
 }
 
+static char	ip_support(char ipv4_enabled, char ipv6_enabled)
+{
+	if (0 == ipv4_enabled)
+		return 2;	/* IPv6 only, assuming ipv6_enabled and ipv4_enabled cannot be both 0 */
+
+	if (0 == ipv6_enabled)
+		return 1;	/* IPv4 only */
+
+	return 0;	/* no preference */
+}
+
 static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char *ip, char proto,
 		char ipv4_enabled, char ipv6_enabled, FILE *log_fd, char *err, size_t err_size)
 {
-	struct timeval	tv;
-	int		retries, ip_support, ret = FAIL;
+	struct timeval	timeout = {.tv_usec = 0};
 
 	if (NULL != *res)
 	{
 		zbx_strlcpy(err, "unfreed memory detected", err_size);
-		goto out;
+		return FAIL;
 	}
 
 	/* create a new resolver */
 	if (NULL == (*res = ldns_resolver_new()))
 	{
-		zbx_strlcpy(err, "out of memory", err_size);
-		goto out;
+		zbx_strlcpy(err, "cannot create new resolver (out of memory)", err_size);
+		return FAIL;
 	}
 
 	/* push nameserver to it */
 	if (SUCCEED != zbx_set_resolver_ns(*res, name, ip, ipv4_enabled, ipv6_enabled, log_fd, err, err_size))
-		goto out;
-
-	if (ZBX_RSM_UDP == proto)
-	{
-		tv.tv_sec = ZBX_RSM_UDP_TIMEOUT;
-		tv.tv_usec = 0;
-		retries = ZBX_RSM_UDP_RETRY;
-	}
-	else
-	{
-		tv.tv_sec = ZBX_RSM_TCP_TIMEOUT;
-		tv.tv_usec = 0;
-		retries = ZBX_RSM_TCP_RETRY;
-	}
+		return FAIL;
 
 	/* set timeout of one try */
-	ldns_resolver_set_timeout(*res, tv);
+	timeout.tv_sec = (ZBX_RSM_UDP == proto ? ZBX_RSM_UDP_TIMEOUT : ZBX_RSM_TCP_TIMEOUT);
+	ldns_resolver_set_timeout(*res, timeout);
 
 	/* set number of tries */
-	ldns_resolver_set_retry(*res, retries);
+	ldns_resolver_set_retry(*res, (ZBX_RSM_UDP == proto ? ZBX_RSM_UDP_RETRY : ZBX_RSM_TCP_RETRY));
 
 	/* set DNSSEC */
 	ldns_resolver_set_dnssec(*res, true);
@@ -253,21 +251,12 @@ static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char
 	ldns_resolver_set_dnssec_cd(*res, false);
 
 	/* use TCP or UDP */
-	ldns_resolver_set_usevc(*res, ZBX_RSM_UDP == proto ? false : true);
+	ldns_resolver_set_usevc(*res, (ZBX_RSM_UDP == proto ? false : true));
 
-	/* set IP version support: 0: both, 1: IPv4 only, 2: IPv6 only */
-	if (0 != ipv4_enabled && 0 != ipv6_enabled)
-		ip_support = 0;
-	else if (0 != ipv4_enabled && 0 == ipv6_enabled)
-		ip_support = 1;
-	else
-		ip_support = 2;
+	/* set IP version support */
+	ldns_resolver_set_ip6(*res, ip_support(ipv4_enabled, ipv6_enabled));
 
-	ldns_resolver_set_ip6(*res, ip_support);
-
-	ret = SUCCEED;
-out:
-	return ret;
+	return SUCCEED;
 }
 
 static int	zbx_change_resolver(ldns_resolver *res, const char *name, const char *ip, char ipv4_enabled,
