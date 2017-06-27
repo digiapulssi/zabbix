@@ -338,7 +338,7 @@ int	send_list_of_active_checks_json(zbx_sock_t *sock, struct zbx_json_parse *jp)
 	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
 		strscpy(ip, get_ip_by_socket(sock));
 
-	if (FAIL == is_ip(ip))
+	if (FAIL == is_ip(ip))	/* check even if 'ip' came from get_ip_by_socket() - it can return not a valid IP */
 	{
 		zbx_snprintf(error, MAX_STRING_LEN, "\"%s\" is not a valid IP address", ip);
 		goto error;
