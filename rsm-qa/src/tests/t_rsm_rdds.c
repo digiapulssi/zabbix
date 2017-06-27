@@ -16,7 +16,7 @@ void	exit_usage(const char *progname)
 			" [-f] [-h]\n", progname);
 	fprintf(stderr, "       -t <tld>          TLD to test\n");
 	fprintf(stderr, "       -r <res_ip>       IP address of resolver to use (default: %s)\n", DEFAULT_RES_IP);
-	fprintf(stderr, "       -n <whos_prefix>  TLD prefix to use when querying RDDS43 server (default: %s)\n",
+	fprintf(stderr, "       -w <whos_prefix>  TLD prefix to use when querying RDDS43 server (default: %s)\n",
 			DEFAULT_WHOIS_PREFIX);
 	fprintf(stderr, "       -p <testprefix>   TLD prefix to use in RDDS43/RDDS80 tests (default: %s)\n",
 			DEFAULT_TESTPREFIX);
@@ -31,7 +31,7 @@ void	exit_usage(const char *progname)
 int	main(int argc, char *argv[])
 {
 	char			err[256], *tld = NULL, *res_ip = DEFAULT_RES_IP, *whois_prefix = DEFAULT_WHOIS_PREFIX,
-				*ip43 = NULL, *ip80 = NULL, *testprefix = DEFAULT_TESTPREFIX, ignore_err = 0,
+				*ip43 = NULL, *ip80 = NULL, *testprefix = DEFAULT_TESTPREFIX, ignore_err = 0, internal,
 				testname[ZBX_HOST_BUF_SIZE], testurl[ZBX_HOST_BUF_SIZE], *answer = NULL;
 	ldns_resolver		*res = NULL;
 	int			c, index, rtt43 = -1, rtt80 = -1, maxredirs = DEFAULT_MAXREDIRS, log_to_file = 0;
@@ -116,7 +116,7 @@ int	main(int argc, char *argv[])
 
 	zbx_snprintf(testname, sizeof(testname), "%s.%s", testprefix, tld);
 
-	if (SUCCEED != zbx_resolve_host(res, testname, &ips43, 1, 1, log_fd, err, sizeof(err)))
+	if (SUCCEED != zbx_resolve_host(res, testname, &ips43, 1, 1, log_fd, &internal, err, sizeof(err)))
 	{
 		zbx_rsm_errf(stderr, "RDDS43 \"%s\": %s", testname, err);
 		if (0 == ignore_err)
