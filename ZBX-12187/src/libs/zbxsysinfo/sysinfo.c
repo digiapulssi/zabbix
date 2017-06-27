@@ -645,6 +645,8 @@ int	process(const char *in_command, unsigned flags, AGENT_RESULT *result)
 
 			if (FAIL == replace_param(command->test_param, &request, &parameters, error, sizeof(error)))
 			{
+				zbx_free(parameters);
+
 				zabbix_log(LOG_LEVEL_WARNING, "item [%s] error: %s", in_command, error);
 				goto notsupported;
 			}
