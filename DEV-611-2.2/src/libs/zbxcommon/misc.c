@@ -893,7 +893,7 @@ int	zbx_validate_hostname(const char *hostname)
 	unsigned char	component = 0;	/* periods ('.') are only allowed when they serve to delimit components */
 	int		i, len;
 
-	if (0 == (len = strlen(hostname)))
+	if (0 >= (len = (int)strlen(hostname)) || 255 < len)		/* max len comes from RFC 1035 */
 		return FAIL;
 
 	/* the first character must be an alphanumeric character */
