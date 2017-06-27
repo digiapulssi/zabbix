@@ -236,9 +236,6 @@ ZBX_VECTOR_IMPL(vc_itemweight, zbx_vc_item_weight_t);
 /* the value cache */
 static zbx_vc_cache_t	*vc_cache = NULL;
 
-/* History service URL reference, from history.c */
-extern const char		*HISTORY_SERVICE_URL;
-
 /* function prototypes */
 static void	vc_history_record_copy(zbx_history_record_t *dst, const zbx_history_record_t *src, int value_type);
 static int	vc_history_record_compare_asc_func(const zbx_history_record_t *d1, const zbx_history_record_t *d2);
