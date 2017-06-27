@@ -72,13 +72,17 @@ typedef struct
 }
 zbx_ns_t;
 
+/* used as argument to zbx_dns_thread_start() */
 typedef struct
 {
-	pid_t	pid;
-	int	fd;	/* read from this file descriptor */
-	int	log_fd;	/* read logs from this file descriptor */
+	pthread_t	thread_id;
+	char		thread_initialized;
+	const char	*ns;
+	const char	*ip;
+	int		*rtt;
+	int		*upd;
 }
-writer_thread_t;
+zbx_dns_thread_t;
 
 #define PACK_NUM_VARS	4
 #define PACK_FORMAT	ZBX_FS_SIZE_T "|" ZBX_FS_SIZE_T "|%d|%d"
@@ -155,111 +159,94 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 static int	zbx_validate_ip(const char *ip, char ipv4_enabled, char ipv6_enabled, ldns_rdf **ip_rdf_out,
 		char *is_ipv4)
 {
-	ldns_rdf	*ip_rdf = NULL;
-	int		ret = FAIL;
+	ldns_rdf	*ip_rdf;
 
-	/* try IPv4 */
-	if (0 == ipv4_enabled || NULL == (ip_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, ip)))
-	{
-		/* try IPv6 */
-		if (0 != ipv6_enabled && NULL != (ip_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_AAAA, ip)))
-		{
-			if (NULL != is_ipv4)
-				*is_ipv4 = 0;
-		}
-	}
-	else
+	if (0 != ipv4_enabled && NULL != (ip_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_A, ip)))	/* try IPv4 */
 	{
 		if (NULL != is_ipv4)
 			*is_ipv4 = 1;
 	}
-
-	if (NULL == ip_rdf)
-		goto out;
+	else if (0 != ipv6_enabled && NULL != (ip_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_AAAA, ip)))	/* try IPv6 */
+	{
+		if (NULL != is_ipv4)
+			*is_ipv4 = 0;
+	}
+	else
+		return FAIL;
 
 	if (NULL != ip_rdf_out)
 		*ip_rdf_out = ldns_rdf_clone(ip_rdf);
 
-	ret = SUCCEED;
-out:
-	if (NULL != ip_rdf)
-		ldns_rdf_deep_free(ip_rdf);
+	ldns_rdf_deep_free(ip_rdf);
 
-	return ret;
+	return SUCCEED;
 }
 
 static int	zbx_set_resolver_ns(ldns_resolver *res, const char *name, const char *ip, char ipv4_enabled,
 		char ipv6_enabled, FILE *log_fd, char *err, size_t err_size)
 {
-	ldns_rdf	*ip_rdf = NULL;
+	ldns_rdf	*ip_rdf;
 	ldns_status	status;
-	int		ret = FAIL;
 
 	if (SUCCEED != zbx_validate_ip(ip, ipv4_enabled, ipv6_enabled, &ip_rdf, NULL))
 	{
 		zbx_snprintf(err, err_size, "invalid or unsupported IP of \"%s\": \"%s\"", name, ip);
-		goto out;
+		return FAIL;
 	}
 
-	/* push nameserver to it */
-	if (LDNS_STATUS_OK != (status = ldns_resolver_push_nameserver(res, ip_rdf)))
+	status = ldns_resolver_push_nameserver(res, ip_rdf);
+	ldns_rdf_deep_free(ip_rdf);
+
+	if (LDNS_STATUS_OK != status)
 	{
-		zbx_snprintf(err, err_size, "cannot set %s (%s) as resolver. %s.", name, ip,
+		zbx_snprintf(err, err_size, "cannot set \"%s\" (%s) as resolver. %s.", name, ip,
 				ldns_get_errorstr_by_id(status));
-		goto out;
+		return FAIL;
 	}
 
 	zbx_rsm_infof(log_fd, "successfully using %s (%s)", name, ip);
+	return SUCCEED;
+}
 
-	ret = SUCCEED;
-out:
-	if (NULL != ip_rdf)
-		ldns_rdf_deep_free(ip_rdf);
+static char	ip_support(char ipv4_enabled, char ipv6_enabled)
+{
+	if (0 == ipv4_enabled)
+		return 2;	/* IPv6 only, assuming ipv6_enabled and ipv4_enabled cannot be both 0 */
 
-	return ret;
+	if (0 == ipv6_enabled)
+		return 1;	/* IPv4 only */
+
+	return 0;	/* no preference */
 }
 
 static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char *ip, char proto,
 		char ipv4_enabled, char ipv6_enabled, FILE *log_fd, char *err, size_t err_size)
 {
-	struct timeval	tv;
-	int		retries, ip_support, ret = FAIL;
+	struct timeval	timeout = {.tv_usec = 0};
 
 	if (NULL != *res)
 	{
 		zbx_strlcpy(err, "unfreed memory detected", err_size);
-		goto out;
+		return FAIL;
 	}
 
 	/* create a new resolver */
 	if (NULL == (*res = ldns_resolver_new()))
 	{
-		zbx_strlcpy(err, "out of memory", err_size);
-		goto out;
+		zbx_strlcpy(err, "cannot create new resolver (out of memory)", err_size);
+		return FAIL;
 	}
 
 	/* push nameserver to it */
 	if (SUCCEED != zbx_set_resolver_ns(*res, name, ip, ipv4_enabled, ipv6_enabled, log_fd, err, err_size))
-		goto out;
-
-	if (ZBX_RSM_UDP == proto)
-	{
-		tv.tv_sec = ZBX_RSM_UDP_TIMEOUT;
-		tv.tv_usec = 0;
-		retries = ZBX_RSM_UDP_RETRY;
-	}
-	else
-	{
-		tv.tv_sec = ZBX_RSM_TCP_TIMEOUT;
-		tv.tv_usec = 0;
-		retries = ZBX_RSM_TCP_RETRY;
-	}
+		return FAIL;
 
 	/* set timeout of one try */
-	ldns_resolver_set_timeout(*res, tv);
+	timeout.tv_sec = (ZBX_RSM_UDP == proto ? ZBX_RSM_UDP_TIMEOUT : ZBX_RSM_TCP_TIMEOUT);
+	ldns_resolver_set_timeout(*res, timeout);
 
 	/* set number of tries */
-	ldns_resolver_set_retry(*res, retries);
+	ldns_resolver_set_retry(*res, (ZBX_RSM_UDP == proto ? ZBX_RSM_UDP_RETRY : ZBX_RSM_TCP_RETRY));
 
 	/* set DNSSEC */
 	ldns_resolver_set_dnssec(*res, true);
@@ -268,21 +255,12 @@ static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char
 	ldns_resolver_set_dnssec_cd(*res, false);
 
 	/* use TCP or UDP */
-	ldns_resolver_set_usevc(*res, ZBX_RSM_UDP == proto ? false : true);
+	ldns_resolver_set_usevc(*res, (ZBX_RSM_UDP == proto ? false : true));
 
-	/* set IP version support: 0: both, 1: IPv4 only, 2: IPv6 only */
-	if (0 != ipv4_enabled && 0 != ipv6_enabled)
-		ip_support = 0;
-	else if (0 != ipv4_enabled && 0 == ipv6_enabled)
-		ip_support = 1;
-	else
-		ip_support = 2;
+	/* set IP version support */
+	ldns_resolver_set_ip6(*res, ip_support(ipv4_enabled, ipv6_enabled));
 
-	ldns_resolver_set_ip6(*res, ip_support);
-
-	ret = SUCCEED;
-out:
-	return ret;
+	return SUCCEED;
 }
 
 static int	zbx_change_resolver(ldns_resolver *res, const char *name, const char *ip, char ipv4_enabled,
@@ -311,9 +289,9 @@ static int	zbx_change_resolver(ldns_resolver *res, const char *name, const char 
  * Author: Vladimir Levijev                                                   *
  *                                                                            *
  ******************************************************************************/
-static int      zbx_get_ts_from_host(char *host, time_t *ts)
+static int      zbx_get_ts_from_host(const char *host, time_t *ts)
 {
-	char	*p, *p2;
+	const char	*p, *p2;
 
 	p = host;
 
@@ -340,9 +318,7 @@ static int      zbx_get_ts_from_host(char *host, time_t *ts)
 	if (p2 == p || '0' == *p)
 		return FAIL;
 
-	*p2 = '\0';
 	*ts = atoi(p);
-	*p2 = '.';
 
 	return SUCCEED;
 }
@@ -545,15 +521,11 @@ static int	zbx_ldns_rdf_compare(const void *d1, const void *d2)
 static void	zbx_get_owners(const ldns_rr_list *rr_list, zbx_vector_ptr_t *owners)
 {
 	size_t		i, count;
-	ldns_rdf	*owner;
 
 	count = ldns_rr_list_rr_count(rr_list);
-	for (i = 0; i < count; i++)
-	{
-		owner = ldns_rr_owner(ldns_rr_list_rr(rr_list, i));
 
-		zbx_vector_ptr_append(owners, ldns_rdf_clone(owner));
-	}
+	for (i = 0; i < count; i++)
+		zbx_vector_ptr_append(owners, ldns_rdf_clone(ldns_rr_owner(ldns_rr_list_rr(rr_list, i))));
 
 	zbx_vector_ptr_sort(owners, zbx_ldns_rdf_compare);
 	zbx_vector_ptr_uniq(owners, zbx_ldns_rdf_compare);
@@ -561,7 +533,7 @@ static void	zbx_get_owners(const ldns_rr_list *rr_list, zbx_vector_ptr_t *owners
 
 static void	zbx_destroy_owners(zbx_vector_ptr_t *owners)
 {
-	size_t	i;
+	int	i;
 
 	for (i = 0; i < owners->values_num; i++)
 		ldns_rdf_deep_free((ldns_rdf *)owners->values[i]);
@@ -588,9 +560,8 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, ldns_pkt_section section, int 
 	zbx_vector_ptr_t	owners;
 	ldns_rr_list		*rrset = NULL, *rrsigs = NULL;
 	ldns_rdf		*owner_rdf;
-	size_t			i;
 	char			*owner_str, owner_buf[256];
-	int			ret = FAIL;
+	int			i, ret = FAIL;
 
 	zbx_vector_ptr_create(&owners);
 
@@ -690,11 +661,12 @@ out:
 	return ret;
 }
 
-static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *ip, const ldns_rr_list *keys,
+static int	get_ns_ip_values(char proto, const char *ns, const char *ip, const ldns_rr_list *keys,
 		const char *testprefix, const char *domain, FILE *log_fd, int *rtt, int *upd, char ipv4_enabled,
 		char ipv6_enabled, char epp_enabled, char *err, size_t err_size)
 {
 	char		testname[ZBX_HOST_BUF_SIZE], *host, *last_label = NULL;
+	ldns_resolver	*res = NULL;
 	ldns_rdf	*testname_rdf = NULL, *last_label_rdf = NULL;
 	ldns_pkt	*pkt = NULL;
 	ldns_rr_list	*nsset = NULL;
@@ -703,8 +675,8 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	ldns_pkt_rcode	rcode;
 	int		ret = FAIL;
 
-	/* change the resolver */
-	if (SUCCEED != zbx_change_resolver(res, ns, ip, ipv4_enabled, ipv6_enabled, log_fd, err, err_size))
+	/* create the resolver */
+	if (SUCCEED != zbx_create_resolver(&res, ns, ip, proto, ipv4_enabled, ipv6_enabled, log_fd, err, err_size))
 	{
 		*rtt = ZBX_EC_INTERNAL;
 		goto out;
@@ -863,13 +835,10 @@ out:
 	if (NULL != last_label)
 		zbx_free(last_label);
 
-	return ret;
-}
+	if (NULL != res)
+		ldns_resolver_deep_free(res);
 
-static void	zbx_set_value_ts(zbx_timespec_t *ts, int sec)
-{
-	ts->sec = sec;
-	ts->ns = 0;
+	return ret;
 }
 
 /******************************************************************************
@@ -884,9 +853,7 @@ static void	zbx_set_value_ts(zbx_timespec_t *ts, int sec)
  ******************************************************************************/
 static void	zbx_add_value(const DC_ITEM *item, AGENT_RESULT *result, int ts)
 {
-	zbx_timespec_t	timespec;
-
-	zbx_set_value_ts(&timespec, ts);
+	zbx_timespec_t	timespec = {.sec = ts, .ns = 0};
 
 	dc_add_history(item->itemid, item->value_type, item->flags, result, &timespec, ITEM_STATUS_ACTIVE, NULL);
 }
@@ -1153,6 +1120,13 @@ static void	free_items(DC_ITEM *items, size_t items_num)
 
 			zbx_free(item->key);
 			zbx_free(item->params);
+			zbx_free(item->db_error);
+
+			if (ITEM_VALUE_TYPE_FLOAT == item->value_type || ITEM_VALUE_TYPE_UINT64 == item->value_type)
+			{
+				zbx_free(item->formula);
+				zbx_free(item->units);
+			}
 		}
 
 		zbx_free(items);
@@ -1218,10 +1192,11 @@ static size_t	zbx_get_dns_items(const char *keyname, DC_ITEM *item, const char *
 		}
 
 		memcpy(&(*out_items)[out_items_num], in_item, sizeof(DC_ITEM));
-		(*out_items)[out_items_num].key = in_item->key;
-		(*out_items)[out_items_num].params = in_item->params;
 		in_item->key = NULL;
 		in_item->params = NULL;
+		in_item->db_error = NULL;
+		in_item->formula = NULL;
+		in_item->units = NULL;
 
 		out_items_num++;
 	}
@@ -1627,6 +1602,43 @@ out:
 	return tld;
 }
 
+/* these are used for threading the DNS checks */
+static char		zbx_dns_thread_ipv4_enabled;
+static char		zbx_dns_thread_ipv6_enabled;
+static char		zbx_dns_thread_epp_enabled;
+static char		zbx_dns_thread_proto;
+static ldns_rr_list	*zbx_dns_thread_keys;
+static char		*zbx_dns_thread_testprefix;
+static char		*zbx_dns_thread_domain;
+static char		*zbx_dns_thread_host;
+
+static void	*zbx_dns_thread_start(void *arg)
+{
+	zbx_dns_thread_t	*tinfo = arg;
+	FILE			*log_fd = NULL;
+	char			err[ZBX_ERR_BUF_SIZE];
+	int			*ret;
+
+	ret = zbx_malloc(NULL, sizeof(*ret));
+
+	log_fd = open_item_log(zbx_dns_thread_host, zbx_dns_thread_domain, ZBX_DNS_LOG_PREFIX,
+			(ZBX_RSM_UDP == zbx_dns_thread_proto ? "udp" : "tcp"), err, sizeof(err));
+
+	*ret = get_ns_ip_values(zbx_dns_thread_proto, tinfo->ns, tinfo->ip, zbx_dns_thread_keys,
+			zbx_dns_thread_testprefix, zbx_dns_thread_domain, log_fd, tinfo->rtt,
+			tinfo->upd, zbx_dns_thread_ipv4_enabled, zbx_dns_thread_ipv6_enabled, zbx_dns_thread_epp_enabled,
+			err, sizeof(err));
+
+	if (SUCCEED != *ret)
+		zbx_rsm_err(log_fd, err);
+
+	if (NULL != log_fd)
+		fclose(log_fd);
+
+	return ret;
+}
+
+
 int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result, char proto)
 {
 	char		err[ZBX_ERR_BUF_SIZE], *domain, ok_nss_num = 0, *res_ip = NULL, *testprefix = NULL;
@@ -1759,164 +1771,67 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	}
 	else
 	{
-		int		th_num = 0, threads_num = 0, status, last_test_failed = 0;
-		char		buf[2048];
-		pid_t		pid;
-		writer_thread_t	*threads = NULL;
+		int			i, j, tnum, num_threads = 0, th_ret;
+		zbx_dns_thread_t	*tinfo;
+		void			*th_res;
+
+		zbx_dns_thread_ipv4_enabled = ipv4_enabled;
+		zbx_dns_thread_ipv6_enabled = ipv6_enabled;
+		zbx_dns_thread_epp_enabled = epp_enabled;
+		zbx_dns_thread_proto = proto;
+		zbx_dns_thread_keys = keys;
+		zbx_dns_thread_testprefix = testprefix;
+		zbx_dns_thread_domain = domain;
+		zbx_dns_thread_host = item->host.host;
 
 		for (i = 0; i < nss_num; i++)
 		{
 			for (j = 0; j < nss[i].ips_num; j++)
-				threads_num++;
+				num_threads++;
 		}
 
-		threads = zbx_calloc(threads, threads_num, sizeof(*threads));
-		memset(threads, 0, threads_num * sizeof(*threads));
+		tinfo = zbx_calloc(NULL, num_threads, sizeof(*tinfo));
 
-		fflush(log_fd);
-
-		for (i = 0; i < nss_num; i++)
+		for (tnum = 0, i = 0; i < nss_num; i++)
 		{
-			for (j = 0; j < nss[i].ips_num; j++)
+			for (j = 0; j < nss[i].ips_num; j++, tnum++)
 			{
-				int	fd[2];		/* reader and writer fd for data */
-				int	log_pipe[2];	/* reader and writer fd for logs */
-				int	rv_fd, rv_log_pipe = 0;
+				tinfo[tnum].ns = nss[i].name;
+				tinfo[tnum].ip = nss[i].ips[j].ip;
+				tinfo[tnum].rtt = &nss[i].ips[j].rtt;
+				tinfo[tnum].upd = ((ZBX_RSM_UDP == proto && 0 != rdds_enabled) ?
+						&nss[i].ips[j].upd : NULL);
+				tinfo[tnum].thread_initialized = 0;
 
-				if (0 != last_test_failed)
+				if (0 != (th_ret = pthread_create(&tinfo[tnum].thread_id, NULL, &zbx_dns_thread_start,
+						&tinfo[tnum])))
 				{
-					nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
-
-					continue;
-				}
-
-				if (-1 == (rv_fd = pipe(fd)) || -1 == (rv_log_pipe = pipe(log_pipe)))
-				{
-					zbx_rsm_errf(log_fd, "cannot create pipe: %s", zbx_strerror(errno));
-
-					if (-1 == rv_log_pipe)
-					{
-						close(fd[0]);
-						close(fd[1]);
-					}
-
-					nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
-					last_test_failed = 1;
-
-					continue;
-				}
-
-				if (0 > (pid = zbx_child_fork()))
-				{
-					zbx_rsm_errf(log_fd, "cannot create process: %s", zbx_strerror(errno));
-
-					close(fd[0]);
-					close(fd[1]);
-					close(log_pipe[0]);
-					close(log_pipe[1]);
-
-					nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
-					last_test_failed = 1;
-
-					continue;
-				}
-				else if (0 == pid)
-				{
-					/* child */
-
-					FILE	*th_log_fd;
-
-					close(fd[0]);		/* child does not need data reader fd */
-					close(log_pipe[0]);	/* child does not need log reader fd */
-					fclose(log_fd);		/* child does not need log writer */
-
-					if (NULL == (th_log_fd = fdopen(log_pipe[1], "w")))
-					{
-						zbx_rsm_errf(log_fd, "cannot open log pipe: %s", zbx_strerror(errno));
-
-						nss[i].ips[j].rtt = ZBX_EC_INTERNAL;
-					}
-
-					if (NULL != th_log_fd && SUCCEED != zbx_get_ns_ip_values(res, nss[i].name,
-							nss[i].ips[j].ip, keys, testprefix, domain, th_log_fd,
-							&nss[i].ips[j].rtt, (ZBX_RSM_UDP == proto && 0 != rdds_enabled ?
-							&nss[i].ips[j].upd : NULL), ipv4_enabled, ipv6_enabled,
-							epp_enabled, err, sizeof(err)))
-					{
-						zbx_rsm_err(th_log_fd, err);
-					}
-
-					pack_values(i, j, nss[i].ips[j].rtt, nss[i].ips[j].upd, buf, sizeof(buf));
-
-					if (-1 == write(fd[1], buf, strlen(buf) + 1))
-						zbx_rsm_errf(th_log_fd, "cannot write to pipe: %s", zbx_strerror(errno));
-
-					fclose(th_log_fd);
-					close(fd[1]);
-					close(log_pipe[1]);
-
-					exit(EXIT_SUCCESS);
+					zbx_rsm_errf(log_fd, "cannot start pthread: %s (%s:%s will not be tested)",
+							zbx_strerror(th_ret), nss[i].name, nss[i].ips[j].ip);
 				}
 				else
-				{
-					/* parent */
-
-					close(fd[1]);		/* parent does not need data writer fd */
-					close(log_pipe[1]);	/* parent does not need log writer fd */
-
-					threads[th_num].pid = pid;
-					threads[th_num].fd = fd[0];
-					threads[th_num].log_fd = log_pipe[0];
-
-					th_num++;
-				}
+					tinfo[tnum].thread_initialized = 1;
 			}
 		}
 
-		for (th_num = 0; th_num < threads_num; th_num++)
+		for (tnum = 0; tnum < num_threads; tnum++)
 		{
-			int	bytes;
-
-			if (0 == threads[th_num].pid)
-				continue;
-
-			if (-1 != read(threads[th_num].fd, buf, sizeof(buf)))
+			if (1 == tinfo[tnum].thread_initialized)
 			{
-				int	rv, rtt, upd;
+				th_res = NULL;
 
-				if (PACK_NUM_VARS == (rv = unpack_values(&i, &j, &rtt, &upd, buf)))
+				if (0 != (th_ret = pthread_join(tinfo[tnum].thread_id, &th_res)))
 				{
-					nss[i].ips[j].rtt = rtt;
-					nss[i].ips[j].upd = upd;
-				}
-				else
-				{
-					zbx_rsm_errf(log_fd, "cannot unpack values (unpacked %d, need %d)", rv,
-							PACK_NUM_VARS);
-				}
-			}
-			else
-				zbx_rsm_errf(log_fd, "cannot read from pipe: %s", zbx_strerror(errno));
-
-			while (0 != (bytes = read(threads[th_num].log_fd, buf, sizeof(buf))))
-			{
-				if (-1 == bytes)
-				{
-					zbx_rsm_errf(log_fd, "cannot read logs from pipe: %s", zbx_strerror(errno));
-					break;
+					zbx_rsm_errf(log_fd, "cannot join pthread: %s "
+							"(monitoring information of %s:%s might be lost)",
+							zbx_strerror(th_ret), nss[i].name, nss[i].ips[j].ip);
 				}
 
-				zbx_rsm_dump(log_fd, "%.*s", bytes, buf);
+				zbx_free(th_res);
 			}
 
-			if (0 >= waitpid(threads[th_num].pid, &status, 0))
-				zbx_rsm_err(log_fd, "error on thread waiting");
-
-			close(threads[th_num].fd);
-			close(threads[th_num].log_fd);
+			zbx_free(tinfo);
 		}
-
-		zbx_free(threads);
 	}
 
 	for (i = 0; i < nss_num; i++)
@@ -2078,10 +1993,11 @@ static size_t	zbx_get_rdds_items(const char *keyname, DC_ITEM *item, const char 
 		}
 
 		memcpy(&(*out_items)[out_items_num], in_item, sizeof(DC_ITEM));
-		(*out_items)[out_items_num].key = in_item->key;
-		(*out_items)[out_items_num].params = in_item->params;
 		in_item->key = NULL;
 		in_item->params = NULL;
+		in_item->db_error = NULL;
+		in_item->formula = NULL;
+		in_item->units = NULL;
 
 		out_items_num++;
 	}
@@ -2167,9 +2083,9 @@ static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vect
 	ldns_pkt	*pkt = NULL;
 	ldns_rdf	*host_rdf = NULL;
 	ldns_rr_list	*rrset = NULL;
-	size_t		i;
+	size_t		i, rr_count;
 	char		*ip;
-	int		ret = FAIL, rr_count;
+	int		ret = FAIL;
 
 	if (0 != ipv4_enabled)
 	{
@@ -2261,7 +2177,7 @@ out:
 
 static void	zbx_delete_unsupported_ips(zbx_vector_str_t *ips, char ipv4_enabled, char ipv6_enabled)
 {
-	size_t	i;
+	int	i;
 	char	is_ipv4;
 
 	for (i = 0; i < ips->values_num; i++)
@@ -2469,7 +2385,7 @@ static int	zbx_ec_noerror(int ec)
 
 static void	zbx_vector_str_clean_and_destroy(zbx_vector_str_t *v)
 {
-	size_t	i;
+	int	i;
 
 	for (i = 0; i < v->values_num; i++)
 		zbx_free(v->values[i]);
@@ -2667,10 +2583,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	/* start RDDS43 test, resolve host to ips */
 	if (SUCCEED != zbx_resolve_host(res, random_host, &ips43, 1, 1, log_fd, &internal, err, sizeof(err)))
 	{
-		if (0 == internal)
-			rtt43 = ZBX_EC_RDDS_ERES;
-		else
-			rtt43 = ZBX_EC_INTERNAL;
+		rtt43 = (0 == internal ? ZBX_EC_RDDS_ERES : ZBX_EC_INTERNAL);
 		zbx_rsm_errf(log_fd, "RDDS43 \"%s\": %s", random_host, err);
 	}
 
@@ -2780,10 +2693,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (SUCCEED != zbx_resolve_host(res, random_host, &ips80, ipv4_enabled, ipv6_enabled, log_fd, &internal,
 			err, sizeof(err)))
 	{
-		if (0 == internal)
-			rtt80 = ZBX_EC_RDDS_ERES;
-		else
-			rtt80 = ZBX_EC_INTERNAL;
+		rtt80 = (0 == internal ? ZBX_EC_RDDS_ERES : ZBX_EC_INTERNAL);
 		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": %s", random_host, err);
 		goto out;
 	}
@@ -3433,10 +3343,11 @@ static size_t	zbx_get_epp_items(const char *keyname, DC_ITEM *item, const char *
 		}
 
 		memcpy(&(*out_items)[out_items_num], in_item, sizeof(DC_ITEM));
-		(*out_items)[out_items_num].key = in_item->key;
-		(*out_items)[out_items_num].params = in_item->params;
 		in_item->key = NULL;
 		in_item->params = NULL;
+		in_item->db_error = NULL;
+		in_item->formula = NULL;
+		in_item->units = NULL;
 
 		out_items_num++;
 	}
@@ -4053,14 +3964,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (SUCCEED != zbx_resolve_host(res, random_host, &epp_ips, ipv4_enabled, ipv6_enabled, log_fd, &internal,
 			err, sizeof(err)))
 	{
-		if (0 == internal)
-		{
-			rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_NO_IP;
-		}
-		else
-		{
-			rtt1 = rtt2 = rtt3 = ZBX_EC_INTERNAL;
-		}
+		rtt1 = rtt2 = rtt3 = (0 == internal ? ZBX_EC_EPP_NO_IP : ZBX_EC_INTERNAL);
 		zbx_rsm_errf(log_fd, "\"%s\": %s", random_host, err);
 		goto out;
 	}
@@ -4351,14 +4255,19 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 	zbx_vector_str_t	ips4, ips6;
 	ldns_resolver		*res = NULL;
 	ldns_rdf		*query_rdf = NULL;
-	size_t			i;
 	FILE			*log_fd = NULL;
-	int			ipv4_enabled = 0, ipv6_enabled = 0, min_servers, reply_ms, online_delay, dns_res,
+	int			i, ipv4_enabled = 0, ipv6_enabled = 0, min_servers, reply_ms, online_delay, dns_res,
 				ok_servers, ret, status = ZBX_EC_PROBE_UNSUPPORTED;
 
 	if (3 != request->nparam)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "item must contain 3 parameters"));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (0 != strcmp("automatic", get_rparam(request, 0)))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "first parameter has to be \"automatic\""));
 		return SYSINFO_RET_FAIL;
 	}
 
