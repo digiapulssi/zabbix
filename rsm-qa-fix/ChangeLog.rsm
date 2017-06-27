@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc12
 New features:
 
 Bug fixes:
+.......PS. [248] fixed memory leak in checks; various minor code improvements (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc11
