@@ -2226,14 +2226,16 @@ static int	check_intern_event_type_condition(zbx_vector_ptr_t *esc_events, DB_CO
  *                                                                            *
  * Purpose: get objectids of escalation internal events                       *
  *                                                                            *
- * Parameters: esc_events - [IN]  events to check                             *
- *             objectids  - [OUT] event objectids to be used in condition     *
+ * Parameters: esc_events  - [IN]  events to check                            *
+ *             objectids   - [OUT] event objectids to be used in condition    *
  *                                allocation 2 vectors where first one is     *
  *                                trigger object ids, second is rest          *
+ *             objects     - [IN] the array of event objects                  *
+ *             objects_num - [IN] the number of objects in objects array      *
  *                                                                            *
  ******************************************************************************/
 static void	get_object_ids_internal(zbx_vector_ptr_t *esc_events, zbx_vector_uint64_t *objectids,
-		const int *objects)
+		const int *objects, const int objects_num)
 {
 	int	i, j;
 
@@ -2241,7 +2243,7 @@ static void	get_object_ids_internal(zbx_vector_ptr_t *esc_events, zbx_vector_uin
 	{
 		const DB_EVENT	*event = esc_events->values[i];
 
-		for (j = 0; j < (int)ARRSIZE(objects); j++)
+		for (j = 0; j < objects_num; j++)
 		{
 			if (event->object == objects[j])
 			{
@@ -2250,11 +2252,11 @@ static void	get_object_ids_internal(zbx_vector_ptr_t *esc_events, zbx_vector_uin
 			}
 		}
 
-		if (j == (int)ARRSIZE(objects))
+		if (j == objects_num)
 			zabbix_log(LOG_LEVEL_ERR, "unsupported event object [%d]", event->object);
 	}
 
-	for (i = 0; i < (int)ARRSIZE(objects); i++)
+	for (i = 0; i < objects_num; i++)
 		zbx_vector_uint64_uniq(&objectids[i], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 }
 
@@ -2296,7 +2298,7 @@ static int	check_intern_host_group_condition(zbx_vector_ptr_t *esc_events, DB_CO
 
 	zbx_vector_uint64_create(&groupids);
 
-	get_object_ids_internal(esc_events, objectids, objects);
+	get_object_ids_internal(esc_events, objectids, objects, (int)ARRSIZE(objects));
 
 	zbx_dc_get_nested_hostgroupids(&condition_value, 1, &groupids);
 
@@ -2424,7 +2426,7 @@ static int	check_intern_host_template_condition(zbx_vector_ptr_t *esc_events, DB
 		zbx_vector_uint64_pair_create(&objectids_pair[i]);
 	}
 
-	get_object_ids_internal(esc_events, objectids, objects);
+	get_object_ids_internal(esc_events, objectids, objects, (int)ARRSIZE(objects));
 
 	ZBX_STR2UINT64(condition_value, condition->value);
 
@@ -2526,7 +2528,7 @@ static int	check_intern_host_condition(zbx_vector_ptr_t *esc_events, DB_CONDITIO
 	for (i = 0; i < (int)ARRSIZE(objects); i++)
 		zbx_vector_uint64_create(&objectids[i]);
 
-	get_object_ids_internal(esc_events, objectids, objects);
+	get_object_ids_internal(esc_events, objectids, objects, (int)ARRSIZE(objects));
 
 	for (i = 0; i < (int)ARRSIZE(objects); i++)
 	{
@@ -2615,7 +2617,7 @@ static int	check_intern_application_condition(zbx_vector_ptr_t *esc_events, DB_C
 	for (i = 0; i < (int)ARRSIZE(objects); i++)
 		zbx_vector_uint64_create(&objectids[i]);
 
-	get_object_ids_internal(esc_events, objectids, objects);
+	get_object_ids_internal(esc_events, objectids, objects, (int)ARRSIZE(objects));
 
 	for (i = 0; i < (int)ARRSIZE(objects); i++)
 	{
