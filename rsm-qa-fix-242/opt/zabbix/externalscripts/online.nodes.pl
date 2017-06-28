@@ -3,7 +3,7 @@
 
 BEGIN
 {
-	our $MYDIR = $0; $MYDIR =~ s,(.*)/externalscripts/.*,$1/scripts,; $MYDIR = '../scripts' if ($MYDIR eq $0);
+	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1/../scripts/pm,;
 }
 use lib $MYDIR;
 

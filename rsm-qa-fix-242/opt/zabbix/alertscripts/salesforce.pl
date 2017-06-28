@@ -9,7 +9,11 @@
 # DateTime format: http://www.salesforce.com/us/developer/docs/officetoolkit/Content/sforce_api_calls_soql_select_dateformats.htm
 #
 
-use lib '/opt/zabbix/scripts';
+BEGIN
+{
+	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1/../scripts/pm,;
+}
+use lib $MYDIR;
 
 use strict;
 use WWW::Salesforce;
