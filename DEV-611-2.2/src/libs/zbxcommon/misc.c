@@ -892,11 +892,17 @@ int	is_ip(const char *ip)
  *                                                                            *
  * Function: zbx_validate_hostname                                            *
  *                                                                            *
- * Purpose: is string a valid internet hostname                               *
+ * Purpose: check if string is a valid internet hostname                      *
  *                                                                            *
  * Parameters: hostname - [IN] hostname string to be checked                  *
  *                                                                            *
- * Return value: SUCCEED - is valid hostname, FAIL - otherwise                *
+ * Return value: SUCCEED - could be a valid hostname,                         *
+ *               FAIL - definitely not a valid hostname                       *
+ * Comments:                                                                  *
+ *     Validation is not strict. Restrictions not checked:                    *
+ *         - individual label (component) length 1-63,                        *
+ *         - hyphens ('-') allowed only as interior characters in labels,     *
+ *         - underscores ('_') allowed in domain name, but not in hostname.   *
  *                                                                            *
  ******************************************************************************/
 int	zbx_validate_hostname(const char *hostname)
@@ -916,17 +922,13 @@ int	zbx_validate_hostname(const char *hostname)
 			return FAIL;
 
 		/* check for allowed characters */
-		if (0 != isalnum(*p) || '-' == *p)
+		if (0 != isalnum(*p) || '-' == *p || '_' == *p)
 			component = 1;
 		else if ('.' == *p && 1 == component)
 			component = 0;
 		else
 			return FAIL;
 	}
-
-	/* the last character must not be a minus sign */
-	if ('-' == *(p - 1))
-		return FAIL;
 
 	return SUCCEED;
 }
