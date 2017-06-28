@@ -3101,12 +3101,13 @@ sub ts_str
 
 	$ts = time() unless ($ts);
 
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
+	# sec, min, hour, mday, mon, year, wday, yday, isdst
+	my ($sec, $min, $hour, $mday, $mon, $year) = localtime($ts);
 
 	$year += 1900;
 	$mon++;
 
-	return sprintf("%4.2d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
+	return sprintf("%4.2d%2.2d%2.2d:%2.2d%2.2d%2.2d", $year, $mon, $mday, $hour, $min, $sec);
 }
 
 sub ts_full

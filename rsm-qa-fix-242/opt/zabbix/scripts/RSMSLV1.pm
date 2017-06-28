@@ -4845,14 +4845,17 @@ sub optkeys
 
 sub ts_str
 {
-	my $ts = shift || time();
+	my $ts = shift;
 
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
+	$ts = time() unless ($ts);
+
+	# sec, min, hour, mday, mon, year, wday, yday, isdst
+	my ($sec, $min, $hour, $mday, $mon, $year) = localtime($ts);
 
 	$year += 1900;
 	$mon++;
 
-	return sprintf("%4.2d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
+	return sprintf("%4.2d%2.2d%2.2d:%2.2d%2.2d%2.2d", $year, $mon, $mday, $hour, $min, $sec);
 }
 
 sub ts_full
