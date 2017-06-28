@@ -28,13 +28,8 @@
 #define	ZBX_HISTORY_TYPE_TEXT_STR	"text"
 #define	ZBX_HISTORY_TYPE_LOG_STR		"log"
 
-#define	ZBX_HISTORY_SERVICE_ENABLED	1
-
-#define	ZBX_HISTORY_TYPE_UNUM		2
-#define	ZBX_HISTORY_TYPE_FLOAT		4
-#define	ZBX_HISTORY_TYPE_CHAR		8
-#define	ZBX_HISTORY_TYPE_TEXT		16
-#define	ZBX_HISTORY_TYPE_LOG		32
+/* Keep a bit of room for the types, in the case in a future we add one or two more */
+#define	ZBX_HISTORY_SERVICE_ENABLED	8
 
 int	zbx_init_history_service(const char *url, const char *types);
 

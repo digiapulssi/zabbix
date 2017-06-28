@@ -31,6 +31,10 @@
 #define		ZBX_HISTORY_SERVICE_DOWN	10
 
 const char	*HISTORY_SERVICE_URL	= NULL;
+
+/* The bitmask for this variable is defined by the item types as defined*/
+/*  in the enum zbx_item_value_type_t in include/common.h and */
+/* by the ZBX_HISTORY_SERVICE_ENABLED macro in history.h. */
 static int		HISTORY_SERVICE_OPTS	= 0;
 
 #if defined (HAVE_LIBCURL)
@@ -65,7 +69,7 @@ int	zbx_init_history_service(const char *url, const char *types)
 		return SUCCEED;
 
 	HISTORY_SERVICE_URL = url;
-	HISTORY_SERVICE_OPTS |= ZBX_HISTORY_SERVICE_ENABLED;
+	HISTORY_SERVICE_OPTS |= 1 << ZBX_HISTORY_SERVICE_ENABLED;
 
 	str = zbx_strdup(str, types);
 
@@ -73,23 +77,23 @@ int	zbx_init_history_service(const char *url, const char *types)
 	{
 		if (0 == strcmp(ZBX_HISTORY_TYPE_UNUM_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= ZBX_HISTORY_TYPE_UNUM;
+			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_UINT64;
 		}
 		else if (0 == strcmp(ZBX_HISTORY_TYPE_FLOAT_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= ZBX_HISTORY_TYPE_FLOAT;
+			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_FLOAT;
 		}
 		else if (0 == strcmp(ZBX_HISTORY_TYPE_CHAR_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= ZBX_HISTORY_TYPE_CHAR;
+			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_STR;
 		}
 		else if (0 == strcmp(ZBX_HISTORY_TYPE_TEXT_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= ZBX_HISTORY_TYPE_TEXT;
+			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_TEXT;
 		}
 		else if (0 == strcmp(ZBX_HISTORY_TYPE_LOG_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= ZBX_HISTORY_TYPE_LOG;
+			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_LOG;
 		}
 		else
 		{
@@ -471,24 +475,10 @@ void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 
 int	zbx_history_check_type(int value_type)
 {
-	if (0 != HISTORY_SERVICE_OPTS & ZBX_HISTORY_SERVICE_ENABLED)
-	{
-		switch (value_type)
-		{
-			case ITEM_VALUE_TYPE_FLOAT:
-				return HISTORY_SERVICE_OPTS & ZBX_HISTORY_TYPE_FLOAT;
-			case ITEM_VALUE_TYPE_UINT64:
-				return HISTORY_SERVICE_OPTS & ZBX_HISTORY_TYPE_UNUM;
-			case ITEM_VALUE_TYPE_STR:
-				return HISTORY_SERVICE_OPTS & ZBX_HISTORY_TYPE_CHAR;
-			case ITEM_VALUE_TYPE_TEXT:
-				return HISTORY_SERVICE_OPTS & ZBX_HISTORY_TYPE_TEXT;
-			case ITEM_VALUE_TYPE_LOG:
-				return HISTORY_SERVICE_OPTS & ZBX_HISTORY_TYPE_LOG;
-		}
-	}
-
-	return 0;
+	if (0 != (HISTORY_SERVICE_OPTS & (1 << ZBX_HISTORY_SERVICE_ENABLED)))
+		return HISTORY_SERVICE_OPTS & (1 << value_type);
+	else
+		return 0;
 }
 
 #else
