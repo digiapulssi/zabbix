@@ -2,18 +2,16 @@
 
 BEGIN
 {
-	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1,; $MYDIR = '.' if ($MYDIR eq $0);
-	our $MYDIR2 = $0; $MYDIR2 =~ s,(.*)/.*/.*,$1,; $MYDIR2 = '..' if ($MYDIR2 eq $0);
+	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1/../pm,;
 }
 use lib $MYDIR;
-use lib $MYDIR2;
 
 use warnings;
 use strict;
 
 use RSM;
 use RSMSLV;
-use DaWa;
+use DataExport;
 use Data::Dumper;
 use Time::Local;
 use POSIX qw(floor);

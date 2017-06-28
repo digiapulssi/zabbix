@@ -1,13 +1,13 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 BEGIN
 {
-	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1,; $MYDIR = '.' if ($MYDIR eq $0);
-	our $MYDIR2 = $0; $MYDIR2 =~ s,(.*)/.*/.*,$1,; $MYDIR2 = '..' if ($MYDIR2 eq $0);
+	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1/../pm,;
 }
 use lib $MYDIR;
-use lib $MYDIR2;
 
+use strict;
+use warnings;
 use RSM;
 use RSMSLV;
 use Getopt::Long;
@@ -17,7 +17,7 @@ set_slv_config(get_rsm_config());
 parse_opts('type=n', 'delay=n');
 usage() unless (__validate_input() == SUCCESS);
 
-my ($key_part, $macro, $sql);
+my ($key_part, $macro, $sql, $sth);
 if (getopt('type') == 1)
 {
 	$key_part = 'rsm.dns.udp[%';

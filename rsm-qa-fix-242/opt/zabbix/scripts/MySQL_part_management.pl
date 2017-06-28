@@ -10,7 +10,7 @@
 
 BEGIN
 {
-	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1,; $MYDIR = '.' if ($MYDIR eq $0);
+	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1/pm,;
 }
 use lib $MYDIR;
 
@@ -83,7 +83,7 @@ $sth->finish();
 
 foreach my $key (sort keys %{$tables}) {
     unless (defined($part_tables->{$key})) {
-	syslog(LOG_ERR, 'Partitioning for "'.$part_tables->{$key}.'" is not found! There is possible the table is not partitioned.');
+	syslog(LOG_ERR, 'Partitioning for "'.$key.'" not found! The table is not configured for partitioning.');
 	next;
     }
 

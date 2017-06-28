@@ -2,17 +2,15 @@
 
 BEGIN
 {
-	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1,; $MYDIR = '.' if ($MYDIR eq $0);
-	our $MYDIR2 = $0; $MYDIR2 =~ s,(.*)/.*/.*,$1,; $MYDIR2 = '..' if ($MYDIR2 eq $0);
+	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1/../pm,;
 }
 use lib $MYDIR;
-use lib $MYDIR2;
 
 use strict;
 use warnings;
 
 use File::Basename;
-use DaWa;
+use DataExport;
 use RSM;
 use RSMSLV;
 
@@ -48,7 +46,7 @@ sub __usage
 	print("Error: ", join('', @_), "\n\n") if (@_);
 
 	print <<EOF;
-usage: $0 <csv file> <line>
+usage: $0 <csv file> [line]
 
 example: $0 /opt/zabbix/export/2017/02/22/tld1/cycles.csv
 EOF
