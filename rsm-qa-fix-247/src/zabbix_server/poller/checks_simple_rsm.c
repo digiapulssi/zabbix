@@ -29,7 +29,7 @@
 #include "log.h"
 #include "rsm.h"
 
-#define RSM_DEBUG_ENABLED	1
+#define RSM_DEBUG_ENABLED	0
 
 #define ZBX_HOST_BUF_SIZE	128
 #define ZBX_IP_BUF_SIZE		64
