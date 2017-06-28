@@ -2235,25 +2235,27 @@ static int	check_intern_event_type_condition(zbx_vector_ptr_t *esc_events, DB_CO
 static void	get_object_ids_internal(zbx_vector_ptr_t *esc_events, zbx_vector_uint64_t *objectids,
 		const int *objects)
 {
-	int	i;
+	int	i, j;
 
 	for (i = 0; i < esc_events->values_num; i++)
 	{
 		const DB_EVENT	*event = esc_events->values[i];
 
-		if (event->object == objects[0])
-			zbx_vector_uint64_append(&objectids[0], event->objectid);
-		else if (event->object == objects[1])
-			zbx_vector_uint64_append(&objectids[1], event->objectid);
-		else if (event->object == objects[2])
-			zbx_vector_uint64_append(&objectids[2], event->objectid);
-		else
+		for (j = 0; j < (int)ARRSIZE(objects); j++)
+		{
+			if (event->object == objects[j])
+			{
+				zbx_vector_uint64_append(&objectids[j], event->objectid);
+				break;
+			}
+		}
+
+		if (j == (int)ARRSIZE(objects))
 			zabbix_log(LOG_LEVEL_ERR, "unsupported event object [%d]", event->object);
 	}
 
-	zbx_vector_uint64_uniq(&objectids[0], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-	zbx_vector_uint64_uniq(&objectids[1], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-	zbx_vector_uint64_uniq(&objectids[2], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	for (i = 0; i < (int)ARRSIZE(objects); i++)
+		zbx_vector_uint64_uniq(&objectids[i], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 }
 
 /******************************************************************************
