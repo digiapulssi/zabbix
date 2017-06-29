@@ -2510,14 +2510,14 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 
 		if (SUCCEED != is_ip(ip))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid IP address", ip);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid IP address", __function_name, ip);
 			goto next;
 		}
 
 		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)) &&
 				FAIL == is_ushort(tmp, &port))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid port", tmp);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
 			goto next;
 		}
 
@@ -2527,7 +2527,7 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)) &&
 				FAIL == zbx_validate_hostname(dns))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid DNS address", dns);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
 			goto next;
 		}
 
@@ -2658,7 +2658,8 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 
 		if (FAIL == zbx_check_hostname(host))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid host name", host);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid Zabbix host name", __function_name,
+					host);
 			goto next;
 		}
 
@@ -2673,7 +2674,7 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 
 		if (SUCCEED != is_ip(ip))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid IP address", ip);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid IP address", __function_name, ip);
 			goto next;
 		}
 
@@ -2683,7 +2684,7 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		}
 		else if (FAIL == zbx_validate_hostname(dns))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid DNS address", dns);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
 			goto next;
 		}
 
@@ -2693,7 +2694,7 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		}
 		else if (FAIL == is_ushort(tmp, &port))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "\"%s\" is not a valid port", tmp);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
 			goto next;
 		}
 
