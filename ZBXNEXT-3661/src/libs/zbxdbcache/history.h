@@ -28,9 +28,6 @@
 #define	ZBX_HISTORY_TYPE_TEXT_STR	"text"
 #define	ZBX_HISTORY_TYPE_LOG_STR		"log"
 
-/* Keep a bit of room for the types, in the case in a future we add one or two more */
-#define	ZBX_HISTORY_SERVICE_ENABLED	8
-
 int	zbx_init_history_service(const char *url, const char *types);
 
 void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type);

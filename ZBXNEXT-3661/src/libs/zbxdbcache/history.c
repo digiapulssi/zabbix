@@ -33,8 +33,7 @@
 const char	*HISTORY_SERVICE_URL	= NULL;
 
 /* The bitmask for this variable is defined by the item types as defined*/
-/*  in the enum zbx_item_value_type_t in include/common.h and */
-/* by the ZBX_HISTORY_SERVICE_ENABLED macro in history.h. */
+/*  in the enum zbx_item_value_type_t in include/common.h.*/
 static int		HISTORY_SERVICE_OPTS	= 0;
 
 #if defined (HAVE_LIBCURL)
@@ -69,7 +68,6 @@ int	zbx_init_history_service(const char *url, const char *types)
 		return SUCCEED;
 
 	HISTORY_SERVICE_URL = url;
-	HISTORY_SERVICE_OPTS |= 1 << ZBX_HISTORY_SERVICE_ENABLED;
 
 	str = zbx_strdup(str, types);
 
@@ -475,10 +473,7 @@ void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
 
 int	zbx_history_check_type(int value_type)
 {
-	if (0 != (HISTORY_SERVICE_OPTS & (1 << ZBX_HISTORY_SERVICE_ENABLED)))
-		return HISTORY_SERVICE_OPTS & (1 << value_type);
-	else
-		return 0;
+	return HISTORY_SERVICE_OPTS & (1 << value_type);
 }
 
 #else
