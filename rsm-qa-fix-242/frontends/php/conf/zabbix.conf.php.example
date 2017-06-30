@@ -10,6 +10,12 @@ $DB['USER']				= 'zabbix';
 $DB['PASSWORD']			= '';
 // Schema name. Used for IBM DB2 and PostgreSQL.
 $DB['SCHEMA']			= '';
+// TLS parameters. Used only for MySQL.
+$DB['DB_KEY_FILE']		= null;
+$DB['DB_CERT_FILE']		= null;
+$DB['DB_CA_FILE']		= null;
+$DB['DB_CA_PATH']		= null;
+$DB['DB_CA_CIPHER']		= null;
 
 $ZBX_SERVER				= 'localhost';
 $ZBX_SERVER_PORT		= '10051';
@@ -29,5 +35,10 @@ $DB['SERVERS'] = [
 		'PASSWORD' => '',
 		'SCHEMA' => '',
 		'URL' => 'http://localhost/zabbix/',
+		'DB_KEY_FILE' => null,
+		'DB_CERT_FILE' => null,
+		'DB_CA_FILE' => null,
+		'DB_CA_PATH' => null,
+		'DB_CA_CIPHER' => null
 	]
 ];

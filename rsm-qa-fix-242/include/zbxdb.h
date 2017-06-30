@@ -50,7 +50,11 @@ typedef struct zbx_db_result	*DB_RESULT;
 #	define ZBX_ROW_DL	";\n"
 #endif
 
-int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *dbschema, char *dbsocket, int port);
+int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *dbschema, char *dbsocket, int port
+#ifdef DBTLS
+		, const char *key, const char *cert, const char *ca, const char *capath, const char *cipher
+#endif
+);
 #ifdef HAVE_SQLITE3
 void	zbx_create_sqlite3_mutex(void);
 void	zbx_remove_sqlite3_mutex(void);
