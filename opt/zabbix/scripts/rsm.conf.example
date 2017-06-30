@@ -8,6 +8,11 @@ db_name = zabbix1
 db_user = user
 db_password = password
 db_host = localhost
+# db_key_file =
+# db_cert_file =
+# db_ca_file =
+# db_ca_path =
+# db_cipher =
 
 [server_2]
 za_url = https://zabbix2.example.com
@@ -17,6 +22,11 @@ db_name = zabbix2
 db_user = user
 db_password = password
 db_host = localhost
+# db_key_file =
+# db_cert_file =
+# db_ca_file =
+# db_ca_path =
+# db_cipher =
 
 [slv]
 path = /opt/zabbix/scripts/slv

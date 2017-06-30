@@ -38,11 +38,6 @@ my $server_key = ($OPTS{'server_id'} ? get_rsm_server_key($OPTS{'server-id'}) : 
 my $section = $config->{$server_key};
 
 my $db_schema = $section->{'db_name'};
-my $db_host = $section->{'db_host'};
-
-my $dsn = 'DBI:mysql:'.$db_schema.':host='.$db_host;
-my $db_user_name = $section->{'db_user'};
-my $db_password = $section->{'db_password'};
 
 my $tables = {	'history' => { 'period' => 'day', 'keep_history' => '60'},
 		'history_log' => { 'period' => 'day', 'keep_history' => '60'},
@@ -59,7 +54,8 @@ my $curr_tz = 'UTC';
 
 my $part_tables;
 
-my $dbh = DBI->connect($dsn, $db_user_name, $db_password);
+my $dbh = DBI->connect("DBI:mysql:database=$db_schema;host=$section->{'db_host'};" . get_db_tls_settings($section),
+		$section->{'db_user'}, $section->{'db_password'});
 
 unless ( check_have_partition() ) {
     print "Your installation of MySQL is not support partitioning tables function!\n";

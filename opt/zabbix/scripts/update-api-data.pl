@@ -1126,11 +1126,16 @@ sub get_history_by_itemid($$$)
 	my $timestamp_from = shift;
 	my $timestamp_till = shift;
 
+	# we need previous value to have at the time of @timestamp_from
+	my $rows_ref = db_select("select delay from items where itemid=$itemid");
+
+	$timestamp_from -= $rows_ref->[0]->[0];
+
 	return db_select(
 			"select clock,value" .
 			" from history_uint" .
 			" where itemid=$itemid" .
-			" and " . sql_time_condition($timestamp_from, $timestamp_till) .
+				" and " . sql_time_condition($timestamp_from, $timestamp_till) .
 			" order by clock");
 }
 
@@ -1174,12 +1179,27 @@ sub fill_test_data_dns($$$)
 
 		foreach my $test (@{$src->{$ns}})
 		{
+			dbg("ns:$ns ip:$test->{'ip'} clock:", (defined($test->{'clock'}) ? $test->{'clock'} : 'UNDEF'), " rtt:",
+				(defined($test->{'rtt'}) ? $test->{'rtt'} : 'UNDEF')) if (opt('debug'));
+
+			# if Name Server has no data yet clock and rtt should be both undefined
+			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
+					defined($test->{'clock'}) && !defined($test->{'rtt'}))
+			{
+				fail("Gleb/dimir were wrong, DNS test clock and rtt can be undefined independently");
+			}
+
 			my $metric = {
 				'testDateTime'	=> $test->{'clock'},
 				'targetIP'	=> $test->{'ip'}
 			};
 
-			if (substr($test->{'rtt'}, 0, 1) eq "-")
+			if (!defined($test->{'rtt'}))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = 'no data';
+			}
+			elsif (substr($test->{'rtt'}, 0, 1) eq "-")
 			{
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = $test->{'rtt'};
@@ -1214,33 +1234,53 @@ sub fill_test_data_rdds($$)
 	my $src = shift;
 	my $dst = shift;
 
-	fail("Gleb was wrong, RDDS test data can have more (or less) than one metric") if (scalar(@{$src}) != 1);
+	fail("Gleb was wrong, RDDS test data can have more than one metric") if (scalar(@{$src}) > 1);
 
-	my $test = $src->[0];
+	my ($metric, $test_data_ref);
 
-	my $metric = {
-		'testDateTime'	=> $test->{'clock'},
-		'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+	$test_data_ref = {
+		'target'	=> undef
 	};
 
-	if (substr($test->{'rtt'}, 0, 1) eq "-")
+	if (scalar(@{$src}) == 0)
 	{
-		$metric->{'rtt'} = undef;
-		$metric->{'result'} = $test->{'rtt'};
+		$test_data_ref->{'status'} = "No result";
+
+		$metric = {
+			'testDateTime'	=> undef,
+			'targetIP'	=> undef,
+			'rtt'		=> undef,
+			'result'	=> 'no data'
+		}
 	}
 	else
 	{
-		$metric->{'rtt'} = $test->{'rtt'};
-		$metric->{'result'} = "ok";
+		my $test = $src->[0];
+
+		$metric = {
+			'testDateTime'	=> $test->{'clock'},
+			'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+		};
+
+		if (substr($test->{'rtt'}, 0, 1) eq "-")
+		{
+			$test_data_ref->{'status'} = "Down";
+
+			$metric->{'rtt'} = undef;
+			$metric->{'result'} = $test->{'rtt'};
+		}
+		else
+		{
+			$test_data_ref->{'status'} = "Up";
+
+			$metric->{'rtt'} = $test->{'rtt'};
+			$metric->{'result'} = "ok";
+		}
 	}
 
-	push(@{$dst}, {
-		'target'	=> undef,
-		'status'	=> defined($metric->{'rtt'}) ? "Up" : "Down",
-		'metrics'	=> [
-			$metric
-		]
-	});
+	$test_data_ref->{'metrics'} = [$metric];
+
+	push(@{$dst}, $test_data_ref);
 }
 
 # values are organized like this:
@@ -1309,8 +1349,10 @@ sub __get_dns_test_values
 
 			unless (defined($nsip))
 			{
-				wrn("internal error: Name Server,IP pair of item $itemid not found");
-				next;
+				my $rows_ref = db_select("select key_ from items where itemid=$itemid");
+				my $key = $rows_ref->[0]->[0];
+
+				fail("internal error: Name Server,IP of item $key (itemid:$itemid) not found");
 			}
 
 			$result{$probe}->{$nsip}->{$clock} = get_detailed_result($services{'dns'}{'valuemaps'}, $value);

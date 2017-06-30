@@ -1,3 +1,14 @@
+Changes for rsm1.0.0rc13
+
+New features:
+ADF.I..PS. [217] added support for encrypted connections to MySQL database(s) in PHP, C and Perl code (dimir, gleb, Oleg, vso)
+
+Bug fixes:
+....I..... [sub-216] fixed handling of name servers that do not have results (dimir)
+....I..PS. [232.1] added permissions on "Mon" and "Probes - Mon" host groups to "Technical services users" user group (gleb)
+....I..PS. [242] made date format in logs consistent (dimir, gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc12
 
 Bug fixes:

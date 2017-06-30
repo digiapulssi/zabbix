@@ -14,26 +14,11 @@ our @EXPORT = qw(fork_without_pipe fork_with_pipe handle_children print_children
 my $MAX_CHILDREN = 64;
 my %PIDS;
 
-sub ts_str
-{
-	my $ts = shift;
-	$ts = time() unless ($ts);
-
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
-
-	$year += 1900;
-	$mon++;
-
-	return sprintf("%4.2d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
-}
-
 # SIGCHLD handler
 $SIG{CHLD} = sub
 {
         while ((my $pid = waitpid(-1, WNOHANG)) > 0)
 	{
-		#print(ts_str(), " child $pid exited\n");
-
 		$PIDS{$pid}{'alive'} = 0 if ($PIDS{$pid});
         }
 };
@@ -96,8 +81,6 @@ sub fork_with_pipe
 
 sub handle_children
 {
-	my $t0 = time();
-
 	foreach my $pid (keys(%PIDS))
 	{
 		if (my $pipe = $PIDS{$pid}{'pipe'})
@@ -110,11 +93,6 @@ sub handle_children
 
 		delete($PIDS{$pid}) unless ($PIDS{$pid}{'alive'});
 	}
-
-	my $t1 = time();
-	my $diff = $t1 - $t0;
-
-	#printf("%s handle_children() took %f s\n", ts_str($1), $diff) if ($diff > 0.001);
 }
 
 sub print_children
