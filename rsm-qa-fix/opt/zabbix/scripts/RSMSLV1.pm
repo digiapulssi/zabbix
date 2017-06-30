@@ -4845,14 +4845,14 @@ sub optkeys
 
 sub ts_str
 {
-	my $ts = shift || time();
+	my $ts = shift;
 
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
+	$ts = time() unless ($ts);
 
-	$year += 1900;
-	$mon++;
+	# sec, min, hour, mday, mon, year, wday, yday, isdst
+	my ($sec, $min, $hour, $mday, $mon, $year) = localtime($ts);
 
-	return sprintf("%4.2d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
+	return sprintf("%.4d%.2d%.2d:%.2d%.2d%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
 sub ts_full
@@ -5034,7 +5034,7 @@ sub __log
 
 	if (opt('dry-run') or opt('nolog'))
 	{
-		print {$stdout ? *STDOUT : *STDERR} (ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
+		print {$stdout ? *STDOUT : *STDERR} (sprintf("%6d:", $$), ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
 		return;
 	}
 

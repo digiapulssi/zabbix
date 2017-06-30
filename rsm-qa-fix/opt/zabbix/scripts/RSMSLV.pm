@@ -3126,12 +3126,10 @@ sub ts_str
 
 	$ts = time() unless ($ts);
 
-	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
+	# sec, min, hour, mday, mon, year, wday, yday, isdst
+	my ($sec, $min, $hour, $mday, $mon, $year) = localtime($ts);
 
-	$year += 1900;
-	$mon++;
-
-	return sprintf("%4.2d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
+	return sprintf("%.4d%.2d%.2d:%.2d%.2d%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
 sub ts_full
@@ -3234,14 +3232,12 @@ sub __log
 		$priority = 'UND';
 	}
 
-	$priority .= ':'.$$ if (opt('debug'));
-
 	my $cur_tld = $tld || "";
 	my $server_str = ($server_key ? "\@$server_key " : "");
 
 	if (opt('dry-run') or opt('nolog'))
 	{
-		print {$stdout ? *STDOUT : *STDERR} (ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
+		print {$stdout ? *STDOUT : *STDERR} (sprintf("%6d:", $$), ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
 		return;
 	}
 
