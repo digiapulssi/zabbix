@@ -882,13 +882,13 @@ sub db_select
 	{
 		my $rows = scalar(@$rows_ref);
 
-		if (scalar(@$rows_ref) == 1)
+		if ($rows == 1)
 		{
 			dbg(join(',', @{$rows_ref->[0]}));
 		}
 		else
 		{
-			dbg("$rows row", ($rows != 1 ? "s" : ""));
+			dbg("$rows rows");
 		}
 	}
 
