@@ -35,7 +35,6 @@ typedef struct
 }
 zbx_condition_t;
 
-int	zbx_check_action_condition(const DB_EVENT *event, zbx_condition_t *condition);
 int	zbx_check_operation_condition(const DB_EVENT *event, zbx_condition_t *opcondition);
 void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint64_pair_t *closed_events);
 
