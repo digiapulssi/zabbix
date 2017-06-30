@@ -3207,14 +3207,12 @@ sub __log
 		$priority = 'UND';
 	}
 
-	$priority .= ':'.$$ if (opt('debug'));
-
 	my $cur_tld = $tld || "";
 	my $server_str = ($server_key ? "\@$server_key " : "");
 
 	if (opt('dry-run') or opt('nolog'))
 	{
-		print {$stdout ? *STDOUT : *STDERR} (ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
+		print {$stdout ? *STDOUT : *STDERR} (sprintf("%6d:", $$), ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
 		return;
 	}
 
