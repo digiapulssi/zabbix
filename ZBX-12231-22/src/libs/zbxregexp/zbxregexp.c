@@ -500,7 +500,7 @@ int	regexp_sub_ex(zbx_vector_ptr_t *regexps, const char *string, const char *pat
 		goto out;
 	}
 
-	if ('@' != *pattern)
+	if ('@' != *pattern)		/* not a global regexp */
 	{
 		ret = regexp_match_ex_regsub(string, pattern, case_sensitive, output_template, output);
 		goto out;
@@ -508,7 +508,7 @@ int	regexp_sub_ex(zbx_vector_ptr_t *regexps, const char *string, const char *pat
 
 	pattern++;
 
-	for (i = 0; i < regexps->values_num; i++)
+	for (i = 0; i < regexps->values_num; i++)	/* loop over global regexp subexpressions */
 	{
 		zbx_expression_t	*regexp = regexps->values[i];
 
