@@ -2812,7 +2812,7 @@ sub get_detailed_result
 	my $maps = shift;
 	my $value = shift;
 
-	return undef unless($value);
+	return undef unless(defined($value));
 
 	my $value_int = int($value);
 
