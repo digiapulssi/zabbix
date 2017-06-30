@@ -57,8 +57,8 @@ $widget->addItem($filter);
 
 if (isset($this->data['tld'])) {
 	$infoBlock = new CTable(null, 'filter info-block');
-	$dateFrom = date('d.m.Y H:i', zbxDateToTime($this->data['filter_from']));
-	$dateTill = date('d.m.Y H:i', zbxDateToTime($this->data['filter_to']));
+	$dateFrom = date(DATE_TIME_FORMAT, zbxDateToTime($this->data['filter_from']));
+	$dateTill = date(DATE_TIME_FORMAT, zbxDateToTime($this->data['filter_to']));
 	$infoBlock->addRow([[
 		bold(_('TLD')),
 		':',
@@ -117,8 +117,8 @@ if (isset($this->data['tld'])) {
 						'&availItemId='.$this->data['dns']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
-				date('d.m.Y H:i:s', $event['startTime']),
-				isset($event['endTime']) ? date('d.m.Y H:i:s', $event['endTime']) : '-',
+				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
+				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '-',
 				$event['incidentFailedTests'],
 				$event['incidentTotalTests']
 			];
@@ -163,7 +163,7 @@ if (isset($this->data['tld'])) {
 		$rollingWeek = [
 			(new CSpan(_s('%1$s Rolling week status', $this->data['dns']['slv'].'%')))->addClass('rolling-week-status'),
 			BR(),
-			(new CSpan(date('d.m.Y H:i', $this->data['dns']['slvTestTime'])))->addClass('rsm-date-time')
+			(new CSpan(date(DATE_TIME_FORMAT, $this->data['dns']['slvTestTime'])))->addClass('rsm-date-time')
 		];
 		$dnsInfoTable->addRow([$details, $rollingWeek]);
 		$dnsTab->additem($dnsInfoTable);
@@ -193,8 +193,8 @@ if (isset($this->data['tld'])) {
 						'&availItemId='.$this->data['dnssec']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
-				date('d.m.Y H:i:s', $event['startTime']),
-				isset($event['endTime']) ? date('d.m.Y H:i:s', $event['endTime']) : '-',
+				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
+				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '-',
 				$event['incidentFailedTests'],
 				$event['incidentTotalTests']
 			];
@@ -239,7 +239,7 @@ if (isset($this->data['tld'])) {
 		$rollingWeek = [
 			(new CSpan(_s('%1$s Rolling week status', $this->data['dnssec']['slv'].'%')))->addClass('rolling-week-status'),
 			BR(),
-			(new CSpan(date('d.m.Y H:i', $this->data['dnssec']['slvTestTime'])))->addClass('rsm-date-time')
+			(new CSpan(date(DATE_TIME_FORMAT, $this->data['dnssec']['slvTestTime'])))->addClass('rsm-date-time')
 		];
 		$dnssecInfoTable->addRow([$details, $rollingWeek]);
 		$dnssecTab->additem($dnssecInfoTable);
@@ -269,8 +269,8 @@ if (isset($this->data['tld'])) {
 						'&availItemId='.$this->data['rdds']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
-				date('d.m.Y H:i:s', $event['startTime']),
-				isset($event['endTime']) ? date('d.m.Y H:i:s', $event['endTime']) : '-',
+				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
+				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '-',
 				$event['incidentFailedTests'],
 				$event['incidentTotalTests']
 			];
@@ -315,7 +315,7 @@ if (isset($this->data['tld'])) {
 		$rollingWeek = [
 			(new CSpan(_s('%1$s Rolling week status', $this->data['rdds']['slv'].'%')))->addClass('rolling-week-status'),
 			BR(),
-			(new CSpan(date('d.m.Y H:i', $this->data['rdds']['slvTestTime'])))->addClass('rsm-date-time')
+			(new CSpan(date(DATE_TIME_FORMAT, $this->data['rdds']['slvTestTime'])))->addClass('rsm-date-time')
 		];
 		$rddsInfoTable->addRow([$details, $rollingWeek]);
 		$rddsTab->additem($rddsInfoTable);
@@ -345,8 +345,8 @@ if (isset($this->data['tld'])) {
 						'&availItemId='.$this->data['epp']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
-				date('d.m.Y H:i:s', $event['startTime']),
-				isset($event['endTime']) ? date('d.m.Y H:i:s', $event['endTime']) : '-',
+				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
+				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '-',
 				$event['incidentFailedTests'],
 				$event['incidentTotalTests']
 			];
@@ -391,7 +391,7 @@ if (isset($this->data['tld'])) {
 		$rollingWeek = [
 			(new CSpan(_s('%1$s Rolling week status', $this->data['epp']['slv'].'%')))->addClass('rolling-week-status'),
 			BR(),
-			(new CSpan(date('d.m.Y H:i', $this->data['epp']['slvTestTime'])))->addClass('rsm-date-time')
+			(new CSpan(date(DATE_TIME_FORMAT, $this->data['epp']['slvTestTime'])))->addClass('rsm-date-time')
 		];
 		$eppInfoTable->addRow([$details, $rollingWeek]);
 		$eppTab->additem($eppInfoTable);

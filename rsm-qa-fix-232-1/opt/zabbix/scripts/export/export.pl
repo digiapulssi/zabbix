@@ -700,7 +700,7 @@ sub __get_test_data
 			if (!$probe_dns_results_ref)
 			{
 				my $itemids_ref = __get_service_status_itemids($tld, $services->{$service}->{'key_status'});
-				my $probe_results_ref = __get_probe_results($itemids_ref, $service_from, $service_till);
+				$probe_dns_results_ref = __get_probe_results($itemids_ref, $service_from, $service_till);
 			}
 
 			$probe_results_ref = $probe_dns_results_ref;
@@ -1303,7 +1303,7 @@ sub __get_probe_statuses
 
 	if (scalar(@itemids) != 0)
 	{
-		my $rows_ref = __db_select_binds(
+		my $rows_ref = db_select_binds(
 			"select itemid,value,clock" .
 			" from history_uint" .
 			" where itemid=?" .
@@ -1524,65 +1524,6 @@ sub __get_dns_itemids
 	return \%result;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __db_select_binds
-{
-	my $_global_sql = shift;
-	my $_global_sql_bind_values = shift;
-
-	my $sth = $dbh->prepare($_global_sql)
-		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
-
-	dbg("[$_global_sql] ", join(',', @{$_global_sql_bind_values}));
-
-	my ($start, $exe, $fetch, $total);
-
-	my @rows;
-	foreach my $bind_value (@{$_global_sql_bind_values})
-	{
-		if (opt('warnslow'))
-		{
-			$start = time();
-		}
-
-		$sth->execute($bind_value)
-			or fail("cannot execute [$_global_sql] bind_value:$bind_value: ", $sth->errstr);
-
-		if (opt('warnslow'))
-		{
-			$exe = time();
-		}
-
-		while (my @row = $sth->fetchrow_array())
-		{
-			push(@rows, \@row);
-		}
-
-		if (opt('warnslow'))
-		{
-			my $now = time();
-			$total = $now - $start;
-
-			if ($total > getopt('warnslow'))
-			{
-				$fetch = $now - $exe;
-				$exe = $exe - $start;
-
-				wrn("slow query: [$_global_sql], bind values: [", join(',', @{$_global_sql_bind_values}), "] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)", $total, $exe, $fetch));
-			}
-		}
-	}
-
-	if (opt('debug'))
-	{
-		my $rows_num = scalar(@rows);
-
-		dbg("$rows_num row", ($rows_num != 1 ? "s" : ""));
-	}
-
-	return \@rows;
-}
-
 sub __print_undef
 {
 	my $string = shift;
@@ -1602,8 +1543,8 @@ sub __best_rtt
 
 	if (opt('debug'))
 	{
-		dbg("cur_rtt:%s cur_description:%s new_rtt:%s new_description:%s", __print_undef($cur_rtt),
-			__print_undef($cur_description), __print_undef($new_rtt), __print_undef($new_description));
+		dbg(sprintf("cur_rtt:%s cur_description:%s new_rtt:%s new_description:%s", __print_undef($cur_rtt),
+			__print_undef($cur_description), __print_undef($new_rtt), __print_undef($new_description)));
 	}
 
 	if (!defined($cur_rtt) && !defined($cur_description))
@@ -1636,7 +1577,8 @@ sub __best_rtt
 
 # todo phase 1: taken from RSMSLV.pm phase 2
 # NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
-# (fixes incorrect handling of set_idx: $set_idx = 0)
+# 1. Fixes incorrect handling of set_idx: $set_idx = 0.
+# 2. Improves speed by using itemid -> probe, target, ip hash.
 sub __get_dns_test_values
 {
 	my $dns_items_ref = shift;
@@ -1659,16 +1601,25 @@ sub __get_dns_test_values
 
 	my $result;
 
-	# generate list if itemids
-	my @itemids;
+	# hash of itemids -> probe, target, ip
+	my %itemids;
 	foreach my $probe (keys(%$dns_items_ref))
 	{
-		push(@itemids, keys(%{$dns_items_ref->{$probe}}));
+		foreach my $itemid (keys(%{$dns_items_ref->{$probe}}))
+		{
+			my ($target, $ip) = split(',', $dns_items_ref->{$probe}->{$itemid});
+
+			$itemids{$itemid}{'probe'} = $probe;
+			$itemids{$itemid}{'target'} = $target;
+			$itemids{$itemid}{'ip'} = $ip;
+		}
 	}
 
-	if (scalar(@itemids) != 0)
+	if (scalar(keys(%itemids)) != 0)
 	{
-		my $rows_ref = __db_select_binds("select itemid,value,clock from history where itemid=? and " . sql_time_condition($start, $end), \@itemids);
+		my @itemids = keys(%itemids);
+
+		my $rows_ref = db_select_binds("select itemid,value,clock from history where itemid=? and " . sql_time_condition($start, $end), \@itemids);
 
 		foreach my $row_ref (sort { $a->[2] <=> $b->[2] } @$rows_ref)
 		{
@@ -1676,33 +1627,9 @@ sub __get_dns_test_values
 			my $value = $row_ref->[1];
 			my $clock = $row_ref->[2];
 
-			my ($nsip, $probe);
-			my $last = 0;
-
-			foreach my $pr (keys(%$dns_items_ref))
-			{
-				my $itemids_ref = $dns_items_ref->{$pr};
-
-				foreach my $i (keys(%$itemids_ref))
-				{
-					if ($i == $itemid)
-					{
-						$nsip = $dns_items_ref->{$pr}->{$i};
-						$probe = $pr;
-						$last = 1;
-						last;
-					}
-				}
-				last if ($last == 1);
-			}
-
-			unless (defined($nsip))
-			{
-				wrn("internal error: Name Server,IP pair of item $itemid not found");
-				next;
-			}
-
-			my ($target, $ip) = split(',', $nsip);
+			my $probe = $itemids{$itemid}{'probe'};
+			my $target = $itemids{$itemid}{'target'};
+			my $ip = $itemids{$itemid}{'ip'};
 
 			my ($new_value, $new_description, $set_idx);
 
@@ -2044,6 +1971,8 @@ sub __get_service_status_itemids
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
+# NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
+# 1. Improves speed by using itemid -> probe hash.
 sub __get_probe_results
 {
 	my $itemids_ref = shift;
@@ -2053,16 +1982,20 @@ sub __get_probe_results
 	my %result;
 
 	# generate list if itemids
-	my $itemids_str = '';
+	my %itemids;
 	foreach my $probe (keys(%$itemids_ref))
 	{
-		$itemids_str .= ',' unless ($itemids_str eq '');
-		$itemids_str .= $itemids_ref->{$probe};
+		$itemids{$itemids_ref->{$probe}} = $probe;
 	}
 
-	if ($itemids_str ne '')
+	if (scalar(keys(%itemids)) != 0)
 	{
-		my $rows_ref = db_select("select itemid,value,clock from history_uint where itemid in ($itemids_str) and " . sql_time_condition($from, $till). " order by clock");
+		my $rows_ref = db_select(
+			"select itemid,value,clock".
+			" from history_uint".
+			" where itemid in (".join(',', keys(%itemids)).")".
+				" and " . sql_time_condition($from, $till).
+			" order by clock");
 
 		foreach my $row_ref (@$rows_ref)
 		{
@@ -2070,18 +2003,7 @@ sub __get_probe_results
 			my $value = $row_ref->[1];
 			my $clock = $row_ref->[2];
 
-			my $probe;
-			foreach my $pr (keys(%$itemids_ref))
-			{
-				my $i = $itemids_ref->{$pr};
-
-				if ($i == $itemid)
-				{
-					$probe = $pr;
-
-					last;
-				}
-			}
+			my $probe = $itemids{$itemid};
 
 			fail("internal error: Probe of item (itemid:$itemid) not found") unless (defined($probe));
 
@@ -2149,7 +2071,7 @@ sub __get_rdds_test_values
 	my $result;
 	my $target = '';
 
-	my $dbl_rows_ref = __db_select_binds("select itemid,value,clock from history where itemid=? and " . sql_time_condition($start, $end), \@dbl_itemids);
+	my $dbl_rows_ref = db_select_binds("select itemid,value,clock from history where itemid=? and " . sql_time_condition($start, $end), \@dbl_itemids);
 
 	foreach my $row_ref (sort { $a->[2] <=> $b->[2] } @$dbl_rows_ref)
 	{
@@ -2188,7 +2110,7 @@ sub __get_rdds_test_values
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{JSON_TAG_DESCRIPTION()} = $description;
 	}
 
-	my $str_rows_ref = __db_select_binds("select itemid,value,clock from history_str where itemid=? and " . sql_time_condition($start, $end), \@str_itemids);
+	my $str_rows_ref = db_select_binds("select itemid,value,clock from history_str where itemid=? and " . sql_time_condition($start, $end), \@str_itemids);
 
 	foreach my $row_ref (sort { $a->[2] <=> $b->[2] } @$str_rows_ref)
 	{
@@ -2254,7 +2176,7 @@ sub __get_epp_test_values
 	my $result;
 	my $target = '';
 
-	my $dbl_rows_ref = __db_select_binds("select itemid,value,clock from history where itemid=? and " . sql_time_condition($start, $end), \@dbl_itemids);
+	my $dbl_rows_ref = db_select_binds("select itemid,value,clock from history where itemid=? and " . sql_time_condition($start, $end), \@dbl_itemids);
 
 	foreach my $row_ref (sort { $a->[2] <=> $b->[2] } @$dbl_rows_ref)
 	{
@@ -2284,7 +2206,7 @@ sub __get_epp_test_values
 		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_DESCRIPTION()} = get_detailed_result($valuemaps, $value);
 	}
 
-	my $str_rows_ref = __db_select_binds("select itemid,value,clock from history_str where itemid=? and " . sql_time_condition($start, $end), \@str_itemids);
+	my $str_rows_ref = db_select_binds("select itemid,value,clock from history_str where itemid=? and " . sql_time_condition($start, $end), \@str_itemids);
 
 	foreach my $row_ref (sort { $a->[2] <=> $b->[2] } @$str_rows_ref)
 	{

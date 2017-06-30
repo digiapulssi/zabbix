@@ -184,7 +184,7 @@ if ($items) {
 
 	$events = API::Event()->get([
 		'output' => API_OUTPUT_EXTEND,
-		'triggerids' => $triggerIds,
+		'objectids' => $triggerIds,
 		'source' => EVENT_SOURCE_TRIGGERS,
 		'object' => EVENT_OBJECT_TRIGGER,
 		'selectTriggers' => API_OUTPUT_EXTEND,
@@ -242,7 +242,7 @@ if ($items) {
 				// get event start time
 				$addEvent = API::Event()->get([
 					'output' => API_OUTPUT_EXTEND,
-					'triggerids' => $event['objectid'],
+					'objectids' => [$event['objectid']],
 					'source' => EVENT_SOURCE_TRIGGERS,
 					'object' => EVENT_OBJECT_TRIGGER,
 					'selectTriggers' => API_OUTPUT_EXTEND,
@@ -395,8 +395,8 @@ if ($items) {
 
 	foreach ($incidentsData as $incident) {
 		foreach ($data['tests'] as $key => $test) {
-			if (!$test['updated'] && $incident['startTime'] < $test['clock'] && (!isset($incident['endTime'])
-					|| (isset($incident['endTime']) && $incident['endTime'] > $test['clock']))) {
+			if (!$test['updated'] && $incident['startTime'] <= $test['clock'] && (!isset($incident['endTime'])
+					|| (isset($incident['endTime']) && $incident['endTime'] >= $test['clock']))) {
 				$data['tests'][$key]['incident'] = $incident['false_positive'] ? INCIDENT_FALSE_POSITIVE : INCIDENT_RESOLVED;
 				$data['tests'][$key]['updated'] = true;
 			}

@@ -66,11 +66,11 @@ foreach ($this->data['tests'] as $test) {
 		$rollingWeekEffects = _('Yes');
 	}
 	else {
-		$rollingWeekEffects = _('Yes / False positive');
+		$rollingWeekEffects = _('No / False positive');
 	}
 
 	$row = [
-		date('d.m.Y H:i:s', $test['clock']),
+		date(DATE_TIME_FORMAT_SECONDS, $test['clock']),
 		$rollingWeekEffects,
 		new CLink(
 			_('details'),

@@ -607,17 +607,15 @@ foreach ($DB['SERVERS'] as $server) {
 	}
 }
 
-if ($error) {
-	unset($DB['DB']);
-	$DB['TYPE'] = $master['TYPE'];
-	$DB['SERVER'] = $master['SERVER'];
-	$DB['PORT'] = $master['PORT'];
-	$DB['DATABASE'] = $master['DATABASE'];
-	$DB['USER'] = $master['USER'];
-	$DB['PASSWORD'] = $master['PASSWORD'];
-	$DB['SCHEMA'] = $master['SCHEMA'];
-	DBconnect($error);
-}
+unset($DB['DB']);
+$DB['TYPE'] = $master['TYPE'];
+$DB['SERVER'] = $master['SERVER'];
+$DB['PORT'] = $master['PORT'];
+$DB['DATABASE'] = $master['DATABASE'];
+$DB['USER'] = $master['USER'];
+$DB['PASSWORD'] = $master['PASSWORD'];
+$DB['SCHEMA'] = $master['SCHEMA'];
+DBconnect($error);
 
 if (array_key_exists('tld', $data) && $data['tld']) {
 	$data['sid'] = CWebUser::getSessionCookie();
@@ -680,6 +678,8 @@ if (array_key_exists('tld', $data) && $data['tld']) {
 		order_result($data['tld'], 'type');
 	}
 }
+
+$data['paging'] = getPagingLine($data['tld'], ZBX_SORT_UP, new CUrl());
 
 $rsmView = new CView('rsm.rollingweekstatus.list', $data);
 $rsmView->render();
