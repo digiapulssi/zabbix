@@ -4852,10 +4852,7 @@ sub ts_str
 	# sec, min, hour, mday, mon, year, wday, yday, isdst
 	my ($sec, $min, $hour, $mday, $mon, $year) = localtime($ts);
 
-	$year += 1900;
-	$mon++;
-
-	return sprintf("%4.2d%2.2d%2.2d:%2.2d%2.2d%2.2d", $year, $mon, $mday, $hour, $min, $sec);
+	return sprintf("%.4d%.2d%.2d:%.2d%.2d%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
 sub ts_full

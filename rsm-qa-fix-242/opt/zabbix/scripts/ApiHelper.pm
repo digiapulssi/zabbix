@@ -52,14 +52,9 @@ sub __ts_str
 {
 	my $ts = shift;
 
-	$ts = time() unless ($ts);
-
 	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
 
-	$year += 1900;
-	$mon++;
-
-	return sprintf("%4.2d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
+	return sprintf("%.4d%.2d%.2d:%.2d%.2d%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
 sub __ts_full
@@ -68,9 +63,7 @@ sub __ts_full
 
 	$ts = time() unless ($ts);
 
-	my $str = __ts_str($ts);
-
-	return "$str ($ts)";
+	return __ts_str($ts) . " ($ts)";
 }
 
 sub __make_base_path
