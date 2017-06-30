@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc13
 
 New features:
+ADF.I..PS. [217] added support for encrypted connections to MySQL database(s) in PHP, C and Perl code (dimir, gleb, Oleg, vso)
 
 Bug fixes:
 

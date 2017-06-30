@@ -7,7 +7,7 @@ use File::Path qw(make_path remove_tree);
 use base 'Exporter';
 
 our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_server_id get_rsm_local_key
-		get_rsm_local_id rsm_targets_prepare rsm_targets_apply rsm_targets_delete);
+		get_rsm_local_id rsm_targets_prepare rsm_targets_apply rsm_targets_delete get_db_tls_settings);
 
 use constant RSM_SERVER_KEY_PREFIX => 'server_';
 use constant RSM_DEFAULT_CONFIG_FILE => '/opt/zabbix/scripts/rsm.conf';
@@ -220,6 +220,30 @@ sub __get_file_error
 	}
 
 	return join('', $err, @_);
+}
+
+# mapping between configuration file parameters and MySQL driver options
+my %mapping = (
+	'db_key_file'	=> 'mysql_ssl_client_key',
+	'db_cert_file'	=> 'mysql_ssl_client_cert',
+	'db_ca_file'	=> 'mysql_ssl_ca_file',
+	'db_ca_path'	=> 'mysql_ssl_ca_path',
+	'db_cipher'	=> 'mysql_ssl_cipher'
+);
+
+# reads database TLS settings from configuration file section
+sub get_db_tls_settings($)
+{
+	my $section = shift;
+
+	my $db_tls_settings = "";
+
+	while (my ($config_param, $mysql_param) = each(%mapping))
+	{
+		$db_tls_settings .= ";$mysql_param=$section->{$config_param}" if (exists($section->{$config_param}));
+	}
+
+	return $db_tls_settings eq "" ? "mysql_ssl=0" : "mysql_ssl=1$db_tls_settings";
 }
 
 1;

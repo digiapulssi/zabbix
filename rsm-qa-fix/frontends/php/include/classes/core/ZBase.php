@@ -297,23 +297,11 @@ class ZBase {
 		$error = null;
 		if (!DBconnect($error)) {
 			foreach ($DB['SERVERS'] as $server) {
-				if ($DB['TYPE'] !== $server['TYPE'] || $DB['SERVER'] !== $server['SERVER']
+				if (($DB['TYPE'] !== $server['TYPE'] || $DB['SERVER'] !== $server['SERVER']
 						|| $DB['PORT'] !== $server['PORT'] || $DB['DATABASE'] !== $server['DATABASE']
-						|| $DB['USER'] !== $server['USER'] || $DB['PASSWORD'] !== $server['PASSWORD']) {
-					unset($DB['DB'], $error);
-
-					$DB['TYPE'] = $server['TYPE'];
-					$DB['SERVER'] = $server['SERVER'];
-					$DB['PORT'] = $server['PORT'];
-					$DB['DATABASE'] = $server['DATABASE'];
-					$DB['USER'] = $server['USER'];
-					$DB['PASSWORD'] = $server['PASSWORD'];
-					$DB['SCHEMA'] = $server['SCHEMA'];
-					DBconnect($error);
-
-					if (!$error) {
-						redirect($server['URL']);
-					}
+						|| $DB['USER'] !== $server['USER'] || $DB['PASSWORD'] !== $server['PASSWORD'])
+							&& multiDBconnect($server, $error)) {
+					redirect($server['URL']);
 				}
 			}
 

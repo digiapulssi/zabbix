@@ -149,29 +149,10 @@ $data['allowedGroups'] = array(
 	RSM_TEST_GROUP => false
 );
 
-$master = [
-	'TYPE' => $DB['TYPE'],
-	'SERVER' => $DB['SERVER'],
-	'PORT' => $DB['PORT'],
-	'DATABASE' => $DB['DATABASE'],
-	'USER' => $DB['USER'],
-	'PASSWORD' => $DB['PASSWORD'],
-	'SCHEMA' => $DB['SCHEMA']
-];
+$master = $DB;
 
 foreach ($DB['SERVERS'] as $server) {
-	$error = false;
-	unset($DB['DB']);
-	$DB['TYPE'] = $server['TYPE'];
-	$DB['SERVER'] = $server['SERVER'];
-	$DB['PORT'] = $server['PORT'];
-	$DB['DATABASE'] = $server['DATABASE'];
-	$DB['USER'] = $server['USER'];
-	$DB['PASSWORD'] = $server['PASSWORD'];
-	$DB['SCHEMA'] = $server['SCHEMA'];
-	DBconnect($error);
-
-	if ($error) {
+	if (!multiDBconnect($server, $error)) {
 		show_error_message(_($server['NAME'].': '.$error));
 		continue;
 	}
@@ -608,13 +589,7 @@ foreach ($DB['SERVERS'] as $server) {
 }
 
 unset($DB['DB']);
-$DB['TYPE'] = $master['TYPE'];
-$DB['SERVER'] = $master['SERVER'];
-$DB['PORT'] = $master['PORT'];
-$DB['DATABASE'] = $master['DATABASE'];
-$DB['USER'] = $master['USER'];
-$DB['PASSWORD'] = $master['PASSWORD'];
-$DB['SCHEMA'] = $master['SCHEMA'];
+$DB = $master;
 DBconnect($error);
 
 if (array_key_exists('tld', $data) && $data['tld']) {

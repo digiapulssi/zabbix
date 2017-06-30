@@ -32,6 +32,13 @@ extern char	*CONFIG_DBUSER;
 extern char	*CONFIG_DBPASSWORD;
 extern char	*CONFIG_DBSOCKET;
 extern int	CONFIG_DBPORT;
+#ifdef DBTLS
+extern char	*CONFIG_DB_KEY_FILE;
+extern char	*CONFIG_DB_CERT_FILE;
+extern char	*CONFIG_DB_CA_FILE;
+extern char	*CONFIG_DB_CA_PATH;
+extern char	*CONFIG_DB_CIPHER;
+#endif
 extern int	CONFIG_HISTSYNCER_FORKS;
 extern int	CONFIG_UNAVAILABLE_DELAY;
 
