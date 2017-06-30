@@ -882,7 +882,14 @@ sub db_select
 	{
 		my $rows = scalar(@$rows_ref);
 
-		dbg("$rows row", ($rows != 1 ? "s" : ""));
+		if (scalar(@$rows_ref) == 1)
+		{
+			dbg(join(',', @{$rows_ref->[0]}));
+		}
+		else
+		{
+			dbg("$rows row", ($rows != 1 ? "s" : ""));
+		}
 	}
 
 	if (opt('stats'))
