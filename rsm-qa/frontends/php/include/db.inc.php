@@ -50,7 +50,26 @@ function DBconnect(&$error) {
 	else {
 		switch ($DB['TYPE']) {
 			case ZBX_DB_MYSQL:
-				$DB['DB'] = @mysqli_connect($DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'], $DB['PORT']);
+				if ($DB['DB_KEY_FILE'] !== null || $DB['DB_CERT_FILE'] !== null || $DB['DB_CA_FILE'] !== null
+						|| $DB['DB_CA_PATH'] !== null || $DB['DB_CA_CIPHER'] !== null) {
+					$DB['DB'] = mysqli_init();
+					mysqli_ssl_set($DB['DB'], $DB['DB_KEY_FILE'], $DB['DB_CERT_FILE'], $DB['DB_CA_FILE'],
+						$DB['DB_CA_PATH'], $DB['DB_CA_CIPHER']);
+					mysqli_real_connect($DB['DB'], $DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'],
+						$DB['PORT']);
+
+					$ssl = DBfetch(DBselect("SHOW STATUS LIKE 'Ssl_cipher'"));
+
+					if ($DB['DB'] && (!$ssl || $ssl['Value'] === '')) {
+						$error = 'Established connection is not secure';
+						$result = false;
+					}
+				}
+				else {
+					$DB['DB'] = @mysqli_connect($DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'],
+						$DB['PORT']);
+				}
+
 				if (!$DB['DB']) {
 					$error = 'Error connecting to database: '.trim(mysqli_connect_error());
 					$result = false;
@@ -1179,4 +1198,32 @@ function zbx_dbcast_2bigint($field) {
 		default:
 			return false;
 	}
+}
+
+/**
+ * Create DB connection to other DB server.
+ *
+ * @param array  $server	Database server parameters
+ * @param string $error		returns a message in case of an error
+ *
+ * @return bool
+ */
+function multiDBconnect($server, &$error) {
+	global $DB;
+
+	unset($DB['DB']);
+	$DB['TYPE'] = $server['TYPE'];
+	$DB['SERVER'] = $server['SERVER'];
+	$DB['PORT'] = $server['PORT'];
+	$DB['DATABASE'] = $server['DATABASE'];
+	$DB['USER'] = $server['USER'];
+	$DB['PASSWORD'] = $server['PASSWORD'];
+	$DB['SCHEMA'] = $server['SCHEMA'];
+	$DB['DB_KEY_FILE'] = $server['DB_KEY_FILE'];
+	$DB['DB_CERT_FILE'] = $server['DB_CERT_FILE'];
+	$DB['DB_CA_PATH'] = $server['DB_CA_PATH'];
+	$DB['DB_CA_FILE'] = $server['DB_CA_FILE'];
+	$DB['DB_CA_CIPHER'] = $server['DB_CA_CIPHER'];
+
+	return DBconnect($error);
 }

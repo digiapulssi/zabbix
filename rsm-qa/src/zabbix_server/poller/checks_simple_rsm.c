@@ -109,7 +109,7 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 	tm = localtime(&current_time.tv_sec);
 	ms = current_time.tv_usec / 1000;
 
-	zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+	zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%6d:%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld %s: %s\n",
 			getpid(),
 			tm->tm_year + 1900,
 			tm->tm_mon + 1,
@@ -139,7 +139,7 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 	tm = localtime(&current_time.tv_sec);
 	ms = current_time.tv_usec / 1000;
 
-	fprintf(log_fd, "%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+	fprintf(log_fd, "%6d:%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld %s: %s\n",
 			getpid(),
 			tm->tm_year + 1900,
 			tm->tm_mon + 1,

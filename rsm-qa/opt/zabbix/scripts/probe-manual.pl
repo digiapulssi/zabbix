@@ -143,7 +143,6 @@ sub __send_to_probe
 		'retries' => 5,
 		'debug' => getopt('debug') });
 
-	
 	fail("Cannot connect to Probe ($ip:$port)") if (!defined($sender));
 
 	my @hashes;
@@ -178,10 +177,6 @@ Specify the name of the Probe.
 =item B<--set> num
 
 Specify 0 to set Probe as Offline, specify 1 to set it Online.
-
-=item B<--probe> name
-
-Process only specified probe.
 
 =item B<--debug>
 
