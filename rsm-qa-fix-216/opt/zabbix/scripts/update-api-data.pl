@@ -1126,11 +1126,16 @@ sub get_history_by_itemid($$$)
 	my $timestamp_from = shift;
 	my $timestamp_till = shift;
 
+	# we need previous value to have at the time of @timestamp_from
+	my $rows_ref = db_select("select delay from items where itemid=$itemid");
+
+	$timestamp_from -= $rows_ref->[0]->[0];
+
 	return db_select(
 			"select clock,value" .
 			" from history_uint" .
 			" where itemid=$itemid" .
-			" and " . sql_time_condition($timestamp_from, $timestamp_till) .
+				" and " . sql_time_condition($timestamp_from, $timestamp_till) .
 			" order by clock");
 }
 
@@ -1179,7 +1184,14 @@ sub fill_test_data_dns($$$)
 				'targetIP'	=> $test->{'ip'}
 			};
 
-			if (substr($test->{'rtt'}, 0, 1) eq "-")
+			dbg("ns:$ns rtt:", (defined($test->{'rtt'}) ? $test->{'rtt'} : 'UNDEF'));
+
+			if (!defined($test->{'rtt'}))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = 'nodata';
+			}
+			elsif (substr($test->{'rtt'}, 0, 1) eq "-")
 			{
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = $test->{'rtt'};
