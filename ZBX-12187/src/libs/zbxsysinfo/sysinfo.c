@@ -554,7 +554,7 @@ static int	zbx_check_user_parameter(const char *param, char *error, int max_erro
 	return SUCCEED;
 }
 
-static int	replace_param(const char *cmd, AGENT_REQUEST *request, char **out, char *error, int max_error_len)
+static int	replace_param(const char *cmd, const AGENT_REQUEST *request, char **out, char *error, int max_error_len)
 {
 	const char	*pl = cmd, *pr, *tmp;
 	size_t		out_alloc = 0, out_offset = 0;
@@ -596,6 +596,8 @@ static int	replace_param(const char *cmd, AGENT_REQUEST *request, char **out, ch
 
 	if (SUCCEED == ret)
 		zbx_strcpy_alloc(out, &out_alloc, &out_offset, pl);
+	else
+		zbx_free(*out);
 
 	return ret;
 }
@@ -645,8 +647,6 @@ int	process(const char *in_command, unsigned flags, AGENT_RESULT *result)
 
 			if (FAIL == replace_param(command->test_param, &request, &parameters, error, sizeof(error)))
 			{
-				zbx_free(parameters);
-
 				zabbix_log(LOG_LEVEL_WARNING, "item [%s] error: %s", in_command, error);
 				goto notsupported;
 			}
