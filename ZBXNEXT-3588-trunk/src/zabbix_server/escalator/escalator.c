@@ -1042,8 +1042,9 @@ static void	add_message_alert(const DB_EVENT *event, const DB_EVENT *r_event, zb
  *                                                                            *
  * Purpose:                                                                   *
  *                                                                            *
- * Parameters: event    - event to check                                      *
- *             actionid - action ID for matching                              *
+ * Parameters: event       - event to check                                   *
+ *             operationid - ID of operation                                  *
+ *             evaltype    - condition evaluation type                        *
  *                                                                            *
  * Return value: SUCCEED - matches, FAIL - otherwise                          *
  *                                                                            *
@@ -1058,7 +1059,7 @@ static int	check_operation_conditions(const DB_EVENT *event, zbx_uint64_t operat
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	DB_CONDITION	condition;
+	zbx_condition_t	opcondition;
 
 	int		ret = SUCCEED; /* SUCCEED required for CONDITION_EVAL_TYPE_AND_OR */
 	int		cond, exit = 0;
@@ -1074,17 +1075,17 @@ static int	check_operation_conditions(const DB_EVENT *event, zbx_uint64_t operat
 
 	while (NULL != (row = DBfetch(result)) && 0 == exit)
 	{
-		memset(&condition, 0, sizeof(condition));
-		condition.conditiontype	= (unsigned char)atoi(row[0]);
-		condition.operator = (unsigned char)atoi(row[1]);
-		condition.value = row[2];
+		memset(&opcondition, 0, sizeof(opcondition));
+		opcondition.conditiontype	= (unsigned char)atoi(row[0]);
+		opcondition.operator = (unsigned char)atoi(row[1]);
+		opcondition.value = row[2];
 
 		switch (evaltype)
 		{
 			case CONDITION_EVAL_TYPE_AND_OR:
-				if (old_type == condition.conditiontype)	/* OR conditions */
+				if (old_type == opcondition.conditiontype)	/* OR conditions */
 				{
-					if (SUCCEED == zbx_check_action_condition(event, &condition))
+					if (SUCCEED == zbx_check_operation_condition(event, &opcondition))
 						ret = SUCCEED;
 				}
 				else						/* AND conditions */
@@ -1092,13 +1093,13 @@ static int	check_operation_conditions(const DB_EVENT *event, zbx_uint64_t operat
 					/* Break if PREVIOUS AND condition is FALSE */
 					if (ret == FAIL)
 						exit = 1;
-					else if (FAIL == zbx_check_action_condition(event, &condition))
+					else if (FAIL == zbx_check_operation_condition(event, &opcondition))
 						ret = FAIL;
 				}
-				old_type = condition.conditiontype;
+				old_type = opcondition.conditiontype;
 				break;
 			case CONDITION_EVAL_TYPE_AND:
-				cond = zbx_check_action_condition(event, &condition);
+				cond = zbx_check_operation_condition(event, &opcondition);
 				/* Break if any of AND conditions is FALSE */
 				if (cond == FAIL)
 				{
@@ -1109,7 +1110,7 @@ static int	check_operation_conditions(const DB_EVENT *event, zbx_uint64_t operat
 					ret = SUCCEED;
 				break;
 			case CONDITION_EVAL_TYPE_OR:
-				cond = zbx_check_action_condition(event, &condition);
+				cond = zbx_check_operation_condition(event, &opcondition);
 				/* Break if any of OR conditions is TRUE */
 				if (cond == SUCCEED)
 				{

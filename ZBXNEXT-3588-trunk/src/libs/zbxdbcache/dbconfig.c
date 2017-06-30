@@ -35,6 +35,7 @@
 #include "zbxtasks.h"
 #include "../zbxcrypto/tls_tcp_active.h"
 #include "dbcache.h"
+#include "actions.h"
 
 #define ZBX_DBCONFIG_IMPL
 #include "dbconfig.h"
@@ -9604,7 +9605,7 @@ int	DCget_hosts_availability(zbx_vector_ptr_t *hosts, int *ts)
 static void	dc_action_copy_conditions(const zbx_dc_action_t *dc_action, zbx_vector_ptr_t *conditions)
 {
 	int				i;
-	DB_CONDITION			*condition;
+	zbx_condition_t			*condition;
 	zbx_dc_action_condition_t	*dc_condition;
 
 	zbx_vector_ptr_reserve(conditions, dc_action->conditions.values_num);
@@ -9613,7 +9614,7 @@ static void	dc_action_copy_conditions(const zbx_dc_action_t *dc_action, zbx_vect
 	{
 		dc_condition = (zbx_dc_action_condition_t *)dc_action->conditions.values[i];
 
-		condition = (DB_CONDITION *)zbx_malloc(NULL, sizeof(DB_CONDITION));
+		condition = (zbx_condition_t *)zbx_malloc(NULL, sizeof(zbx_condition_t));
 
 		condition->conditionid = dc_condition->conditionid;
 		condition->actionid = dc_action->actionid;

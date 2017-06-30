@@ -23,7 +23,20 @@
 #include "common.h"
 #include "db.h"
 
-int	zbx_check_action_condition(const DB_EVENT *event, DB_CONDITION *condition);
+typedef struct
+{
+	zbx_uint64_t			conditionid;
+	zbx_uint64_t			actionid;
+	char				*value;
+	char				*value2;
+	unsigned char			conditiontype;
+	unsigned char			operator;
+	zbx_vector_uint64_t		eventids;
+}
+zbx_condition_t;
+
+int	zbx_check_action_condition(const DB_EVENT *event, zbx_condition_t *condition);
+int	zbx_check_operation_condition(const DB_EVENT *event, zbx_condition_t *opcondition);
 void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint64_pair_t *closed_events);
 
 #endif
