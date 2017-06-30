@@ -357,18 +357,24 @@ void	add_regexp_ex(zbx_vector_ptr_t *regexps, const char *name, const char *expr
 static int	regexp_match_ex_regsub(const char *string, const char *pattern, int case_sensitive,
 		const char *output_template, char **output)
 {
-	char	*ptr = NULL;
+	char	*ptr;
 	int	regexp_flags = REG_EXTENDED | REG_NEWLINE;
 
 	if (ZBX_IGNORE_CASE == case_sensitive)
 		regexp_flags |= REG_ICASE;
 
 	if (NULL == output)
-		ptr = zbx_regexp(string, pattern, NULL, regexp_flags);
-	else
-		*output = ptr = regexp_sub(string, pattern, output_template, regexp_flags);
+	{
+		if (NULL != (ptr = zbx_regexp(string, pattern, NULL, regexp_flags)))
+			return SUCCEED;
+	}
+	else if (NULL != (ptr = regexp_sub(string, pattern, output_template, regexp_flags)))
+	{
+		*output = ptr;
+		return SUCCEED;
+	}
 
-	return NULL != ptr ? SUCCEED : FAIL;
+	return FAIL;
 }
 
 /**********************************************************************************
