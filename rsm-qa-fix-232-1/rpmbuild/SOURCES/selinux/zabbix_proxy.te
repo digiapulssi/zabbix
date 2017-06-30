@@ -7,9 +7,11 @@ require {
     type mysqld_port_t;
     type whois_port_t;
     type unreserved_port_t;
+    type var_lib_t;
     class process setrlimit;
     class tcp_socket { name_bind name_connect };
     class file { open read };
+    class sock_file write;
 }
 
 #============= zabbix_t ==============
@@ -32,3 +34,6 @@ allow zabbix_t user_home_t:file { open read };
 
 #!!!! This avc is allowed in the current policy
 allow zabbix_t whois_port_t:tcp_socket name_connect;
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_t var_lib_t:sock_file write;
