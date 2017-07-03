@@ -2746,13 +2746,13 @@ static void	check_events_condition(zbx_vector_ptr_t *esc_events, unsigned char s
  * Purpose: check if action have to be processed for the event                *
  *          (check all conditions of the action)                              *
  *                                                                            *
- * Parameters: event  - [IN] event to check                                   *
- *             action - [IN] action for matching                              *
+ * Parameters: eventid - [IN] the id of event that will be checked            *
+ *             action  - [IN] action for matching                             *
  *                                                                            *
  * Return value: SUCCEED - matches, FAIL - otherwise                          *
  *                                                                            *
  ******************************************************************************/
-static int	check_action_conditions(const DB_EVENT *event, const zbx_action_eval_t *action)
+static int	check_action_conditions(zbx_uint64_t eventid, const zbx_action_eval_t *action)
 {
 	const char	*__function_name = "check_action_conditions";
 
@@ -2763,7 +2763,7 @@ static int	check_action_conditions(const DB_EVENT *event, const zbx_action_eval_
 	double		eval_result;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() actionid:" ZBX_FS_UI64 " eventsource:%d", __function_name,
-			action->actionid, action->eventsource);
+			action->actionid, (int)action->eventsource);
 
 	if (action->evaltype == CONDITION_EVAL_TYPE_EXPRESSION)
 		expression = zbx_strdup(expression, action->formula);
@@ -2778,13 +2778,12 @@ static int	check_action_conditions(const DB_EVENT *event, const zbx_action_eval_
 			continue;	/* short-circuit true OR condition block to the next AND condition */
 		}
 
-		condition_result = FAIL == zbx_vector_uint64_search(&condition->eventids, event->eventid,
+		condition_result = FAIL == zbx_vector_uint64_search(&condition->eventids, eventid,
 				ZBX_DEFAULT_UINT64_COMPARE_FUNC) ? FAIL : SUCCEED;
 
-		zabbix_log(LOG_LEVEL_DEBUG, " conditionid:" ZBX_FS_UI64 " conditiontype:%d"
-				" cond.value:'%s' cond.value2:'%s' result:%s", condition->conditionid,
-				condition->conditiontype, condition->value, condition->value2,
-				zbx_result_string(condition_result));
+		zabbix_log(LOG_LEVEL_DEBUG, " conditionid:" ZBX_FS_UI64 " conditiontype:%d cond.value:'%s' "
+				"cond.value2:'%s' result:%s", condition->conditionid, (int)condition->conditiontype,
+				condition->value, condition->value2, zbx_result_string(condition_result));
 
 		switch (action->evaltype)
 		{
@@ -3417,7 +3416,7 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 			if (action->eventsource != event->source)
 				continue;
 
-			if (SUCCEED == check_action_conditions(event, action))
+			if (SUCCEED == check_action_conditions(event->eventid, action))
 			{
 				zbx_escalation_new_t	*new_escalation;
 
