@@ -3254,7 +3254,7 @@ sub __log
 		openlog($ident, $logopt, $facility);
 	}
 
-	syslog($syslog_priority, ts_str() . " [$priority] " . $server_str . $msg);	# second parameter is the log message
+	syslog($syslog_priority, sprintf("%6d:", $$) . ts_str() . " [$priority] " . $server_str . $msg);	# second parameter is the log message
 
 	$prev_tld = $cur_tld;
 }
