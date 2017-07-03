@@ -18,21 +18,28 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+require_once dirname(__FILE__).'/../../include/defines.inc.php';
 require_once dirname(__FILE__).'/../../include/classes/validators/CHtmlUrlValidator.php';
 
 class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
 	public static function providerValidateURL() {
 		return array(
-			array('',						false),
-			array('javascript:alert()',		false),
-			array('http://zabbix.com',		true),
-			array('https://zabbix.com',		true),
-			array('zabbix.php?a=1',			true),
-			array('adm.images.php?a=1',		true),
-			array('chart_bar.php?a=1&b=2',	true),
-			array('/chart_bar.php?a=1&b=2',	false),
-			array('vbscript:msgbox()',		false),
-			array('../././not_so_zabbix',	false)
+			array('',								false),
+			array('javascript:alert()',				false),
+			array('http://zabbix.com',				true),
+			array('https://zabbix.com',				true),
+			array('zabbix.php?a=1',					true),
+			array('adm.images.php?a=1',				true),
+			array('chart_bar.php?a=1&b=2',			true),
+			array('/chart_bar.php?a=1&b=2',			false),
+			array('vbscript:msgbox()',				false),
+			array('../././not_so_zabbix',			false),
+			array('mailto:example@example.com',		true),
+			array('file://localhost/path',			true),
+			array('ftp://user@host:port',			true),
+			array('tel:1-111-111-1111',				true),
+			array('ssh://username@hostname:/path ',	true),
+			array('jav&#x09;ascript:alert(1);', 	false)
 		);
 	}
 

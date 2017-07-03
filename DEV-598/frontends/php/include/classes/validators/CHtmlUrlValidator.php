@@ -22,8 +22,8 @@
 class CHtmlUrlValidator {
 
 	/**
-	 * Validate URL for xss vulnerability. Absolute URL should use 'http' or 'https' schema, relative URL should start
-	 * with PHP filename.
+	 * Relative URL should start with .php file name.
+	 * Absolute URL schema must match schemes mentioned in ZBX_URL_VALID_SCHEMES comma separated list.
 	 *
 	 * @static
 	 *
@@ -32,6 +32,9 @@ class CHtmlUrlValidator {
 	 * @return bool
 	 */
 	public static function validate($url) {
-		return (preg_match('/^(http:\/\/|https:\/\/|[a-z_\.]+\.php)+/i', $url) == 1);
+		$scheme = (strpos($url, ':')  === false) ? '' : substr($url, 0, strpos($url, ':'));
+		$allowed_schemes = explode(',', strtolower(ZBX_URI_VALID_SCHEMES));
+
+		return (in_array(strtolower($scheme), $allowed_schemes)) || (preg_match('/^[a-z_\.]+\.php/i', $url) == 1);
 	}
 }
