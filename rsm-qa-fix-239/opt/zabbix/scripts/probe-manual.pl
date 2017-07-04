@@ -187,12 +187,12 @@ Print a brief help message and exit.
 
 =head1 DESCRIPTION
 
-B<This program> will print information about Probe availability at a specified period.
+B<This program> will manually set Probe status to Online/Offline.
 
 =head1 EXAMPLES
 
-./probe-avail.pl --from 1443015000 --period 10
+./probe-manual.pl --server-id 1 --probe Probe1_S1 --set 0
 
-This will output Probe availability for all service tests that fall under period 23.09.2015 16:30:00-16:40:00 .
+This will set Probe1_S1 manual status to Offline, which result in Probe main status also Offline.
 
 =cut
