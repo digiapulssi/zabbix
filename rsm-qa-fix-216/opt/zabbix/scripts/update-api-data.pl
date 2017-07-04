@@ -713,12 +713,17 @@ foreach (keys(%$servicedata))
 							}
 
 							# move to corresponding test result
-							$test_result_index++ while ($test_result_index < $test_results_count and $clock > $test_results[$test_result_index]->{'end'});
+							while ($test_result_index < $test_results_count &&
+									($clock < $test_results[$test_result_index]->{'start'} ||
+										$clock > $test_results[$test_result_index]->{'end'}))
+							{
+								$test_result_index++;
+							}
 
 							if ($test_result_index == $test_results_count)
 							{
-								__no_status_result($service, $avail_key, $probe, $clock, $nsip);
-								next;
+								__no_status_result($subservice, $avail_key, $probe, $clock);
+								last;
 							}
 
 							my $tr_ref = $test_results[$test_result_index];
@@ -841,12 +846,17 @@ foreach (keys(%$servicedata))
 							}
 
 							# move to corresponding test result
-							$test_result_index++ while ($test_result_index < $test_results_count and $clock > $test_results[$test_result_index]->{'end'});
+							while ($test_result_index < $test_results_count &&
+									($clock < $test_results[$test_result_index]->{'start'} ||
+										$clock > $test_results[$test_result_index]->{'end'}))
+							{
+								$test_result_index++;
+							}
 
 							if ($test_result_index == $test_results_count)
 							{
 								__no_status_result($subservice, $avail_key, $probe, $clock);
-								next;
+								last;
 							}
 
 							my $tr_ref = $test_results[$test_result_index];
@@ -982,12 +992,17 @@ foreach (keys(%$servicedata))
 						}
 
 						# move to corresponding test result
-						$test_result_index++ while ($test_result_index < $test_results_count and $clock > $test_results[$test_result_index]->{'end'});
+						while ($test_result_index < $test_results_count &&
+								($clock < $test_results[$test_result_index]->{'start'} ||
+									$clock > $test_results[$test_result_index]->{'end'}))
+						{
+							$test_result_index++;
+						}
 
 						if ($test_result_index == $test_results_count)
 						{
-							__no_status_result($service, $avail_key, $probe, $clock);
-							next;
+							__no_status_result($subservice, $avail_key, $probe, $clock);
+							last;
 						}
 
 						my $tr_ref = $test_results[$test_result_index];
@@ -1234,7 +1249,11 @@ sub fill_test_data_rdds($$)
 	my $src = shift;
 	my $dst = shift;
 
-	fail("Gleb was wrong, RDDS test data can have more than one metric") if (scalar(@{$src}) > 1);
+	if (scalar(@{$src}) > 1)
+	{
+		use Data::Dumper;
+		fail("Gleb was wrong, RDDS test data can have more than one metric:\n", Dumper($src));
+	}
 
 	my ($metric, $test_data_ref);
 
