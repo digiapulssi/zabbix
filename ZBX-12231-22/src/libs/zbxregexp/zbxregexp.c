@@ -484,8 +484,8 @@ static int	regexp_match_ex_substring_list(const char *string, char *pattern, int
  *                                                                                *
  * Comments: For regular expressions and global regular expressions with 'Result  *
  *           is TRUE' type the output_template substitution result is stored into *
- *           'output'  variable. For the other global regular expression types    *
- *           the whole string is stored into 'output' variable.                   *
+ *           'output' variable. For the other global regular expression types the *
+ *           whole string is stored into 'output' variable.                       *
  *                                                                                *
  **********************************************************************************/
 int	regexp_sub_ex(zbx_vector_ptr_t *regexps, const char *string, const char *pattern,
