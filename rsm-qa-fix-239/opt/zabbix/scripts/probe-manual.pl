@@ -12,6 +12,7 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);
 use Data::Dumper;
+use Pusher qw(push_to_trapper);
 
 # todo phase 1: use these 3 from RSMSLV.pm, e. g. create function there that will do what's done in this script
 use constant ONLINE => 1;
@@ -136,20 +137,16 @@ sub __send_to_probe
 
 	my $section = $config->{$server_key};
 
-	my $sender = Zabbix::Sender->new({
-		'server' => $ip,
-		'port' => $port,
-		'timeout' => 10,
-		'retries' => 5,
-		'debug' => getopt('debug') });
+	my $data = [
+		{
+			'host'	=> $hostname,
+			'key'	=> $key,
+			'clock'	=> $timestamp,
+			'value'	=> $value
+		}
+	];
 
-	fail("Cannot connect to Probe ($ip:$port)") if (!defined($sender));
-
-	my @hashes;
-
-	push(@hashes, {'host' => $hostname, 'key' => $key, 'clock' => $timestamp, 'value' => $value});
-
-	fail("Cannot send data to Zabbix server: " . $sender->sender_err()) unless (defined($sender->send_arrref(\@hashes)));
+	push_to_trapper($ip, $port, 10, 5, $data);
 }
 
 __END__
