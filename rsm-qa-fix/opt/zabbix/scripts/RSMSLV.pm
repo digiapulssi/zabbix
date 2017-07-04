@@ -952,15 +952,14 @@ sub db_select_binds
 
 	if (opt('debug'))
 	{
-		my $rows_num = scalar(@rows);
-
-		dbg("$rows_num row", ($rows_num != 1 ? "s" : ""));
-
-		my $rows_ref = db_select("select 1");
-
-		$rows_num = scalar(@{$rows_ref});
-
-		dbg("$rows_num row", ($rows_num != 1 ? "s" : ""));
+		if (scalar(@rows) == 1)
+		{
+			dbg(join(',', map {$_ ? $_ : 'UNDEF'} ($rows[0])));
+		}
+		else
+		{
+			dbg(scalar(@rows), " rows");
+		}
 	}
 
 	return \@rows;
@@ -1476,7 +1475,7 @@ sub probe_offline_at
 	# if a probe was down for the whole period it won't be in a hash
 	unless (exists($probe_times_ref->{$probe}))
 	{
-		dbg("Probe $probe does not exist in a hash, OFFLINE");
+		dbg("Probe $probe OFFLINE at ", ts_full($clock));
 		return 1;	# offline
 	}
 
@@ -1490,12 +1489,14 @@ sub probe_offline_at
 		my $from = $times_ref->[$clock_index++];
 		my $till = $times_ref->[$clock_index++];
 
-		if (($from < $clock) and ($clock < $till))
+		if ($from < $clock && $clock < $till)
 		{
+			dbg("Probe $probe ONLINE at ", ts_full($clock));
 			return 0;	# online
 		}
 	}
 
+	dbg("Probe $probe ONLINE at ", ts_full($clock));
 	return 1;	# offline
 }
 
