@@ -150,6 +150,7 @@ typedef struct
 	char			key_orig[ITEM_KEY_LEN * 4 + 1], *key;
 	char			*units;
 	char			*delay;
+	int			history_sec;
 	int			nextcheck;
 	int			lastclock;
 	int			mtime;
@@ -438,6 +439,7 @@ typedef struct
 	unsigned char	value_type;
 	unsigned char	flags;		/* see ZBX_DC_FLAG_* */
 	unsigned char	state;
+	int		ttl;		/* time-to-live of the history value */
 }
 ZBX_DC_HISTORY;
 

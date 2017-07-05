@@ -1454,36 +1454,25 @@ out:
  * Author: Alexei Vladishev, Eugene Grigorjev, Alexander Vladishev            *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
+static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, DC_ITEM *items,
+		int *errcodes, zbx_vector_uint64_t *itemids)
 {
 	const char		*__function_name = "DCmass_update_items";
 
 	size_t			sql_offset = 0;
-	zbx_vector_uint64_t	itemids;
-	DC_ITEM			*items = NULL;
-	int			i, *errcodes = NULL;
+	int			i;
 	zbx_hashset_t		delta_history = {NULL};
 	zbx_vector_ptr_t	inventory_values;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
-	errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
 	zbx_hashset_create(&delta_history, 1000, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	zbx_vector_ptr_create(&inventory_values);
-	zbx_vector_uint64_create(&itemids);
-	zbx_vector_uint64_reserve(&itemids, history_num);
 
-	for (i = 0; i < history_num; i++)
-		zbx_vector_uint64_append(&itemids, history[i].itemid);
+	DCget_delta_items(&delta_history, itemids);
 
-	zbx_vector_uint64_sort(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, history_num, ZBX_FLAG_ITEM_FIELDS_PREPROC);
-	DCget_delta_items(&delta_history, &itemids);
-
-	zbx_vector_uint64_clear(&itemids);	/* item ids that are not disabled and not deleted in DB */
+	zbx_vector_uint64_clear(itemids);	/* item ids that are not disabled and not deleted in DB */
 
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
@@ -1531,7 +1520,7 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 
 		DCinventory_value_add(&inventory_values, &items[i], h);
 
-		zbx_vector_uint64_append(&itemids, items[i].itemid);
+		zbx_vector_uint64_append(itemids, items[i].itemid);
 	}
 
 	zbx_vector_ptr_sort(&inventory_values, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
@@ -1544,19 +1533,13 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	/* disable processing of deleted and disabled items by setting ZBX_DC_FLAG_UNDEF flag */
 	for (i = 0; i < history_num; i++)
 	{
-		if (FAIL == zbx_vector_uint64_bsearch(&itemids, history[i].itemid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+		if (FAIL == zbx_vector_uint64_bsearch(itemids, history[i].itemid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
 			history[i].flags |= ZBX_DC_FLAG_UNDEF;
 	}
 
-	zbx_vector_uint64_destroy(&itemids);
-
 	DCset_delta_items(&delta_history);
 
-	DCconfig_clean_items(items, errcodes, history_num);
-
 	zbx_hashset_destroy(&delta_history);
-	zbx_free(errcodes);
-	zbx_free(items);
 
 	if (sql_offset > 16)	/* In ORACLE always present begin..end; */
 	{
@@ -1788,10 +1771,11 @@ static void	dc_add_history_log(ZBX_DC_HISTORY *history, int history_num)
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num)
+static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num, DC_ITEM *items)
 {
 	const char	*__function_name = "DCmass_add_history";
 	int		i, h_num = 0, huint_num = 0, hstr_num = 0, htext_num = 0, hlog_num = 0, rc = ZBX_DB_OK;
+	int		j;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1819,6 +1803,12 @@ static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num)
 			case ITEM_VALUE_TYPE_LOG:
 				hlog_num++;
 				break;
+		}
+
+		for (j = 0; j < history_num; j++)
+		{
+			if (items[i].itemid == history[j].itemid)
+				history[j].ttl = items[i].history_sec;
 		}
 	}
 
@@ -2294,8 +2284,34 @@ int	DCsync_history(int sync_type, int *total_num)
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
-			DCmass_update_items(history, history_num);
-			DCmass_add_history(history, history_num);
+			zbx_vector_uint64_t	itemids;
+			DC_ITEM			*items = NULL;
+			int			*errcodes = NULL, i;
+
+			items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
+			errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
+
+			zbx_vector_uint64_create(&itemids);
+			zbx_vector_uint64_reserve(&itemids, history_num);
+
+			for (i = 0; i < history_num; i++)
+				zbx_vector_uint64_append(&itemids, history[i].itemid);
+
+			zbx_vector_uint64_sort(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+			DCconfig_get_items_by_itemids(items, itemids.values, errcodes, history_num,
+					ZBX_FLAG_ITEM_FIELDS_PREPROC);
+
+			DCmass_update_items(history, history_num, items, errcodes, &itemids);
+			DCmass_add_history(history, history_num, items);
+
+			zbx_vector_uint64_destroy(&itemids);
+
+			DCconfig_clean_items(items, errcodes, history_num);
+
+			zbx_free(errcodes);
+			zbx_free(items);
+
 			DCmass_update_triggers(history, history_num, &trigger_diff);
 			DCmass_update_trends(history, history_num);
 

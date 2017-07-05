@@ -221,6 +221,7 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 
 		zbx_json_adduint64(&json, "sec", h->ts.sec);
 		zbx_json_adduint64(&json, "ns", h->ts.ns);
+		zbx_json_adduint64(&json, "ttl", h->ttl);
 
 		zbx_json_close(&json);
 
