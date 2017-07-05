@@ -6,6 +6,7 @@ use warnings;
 use IO::Socket;
 use JSON::XS qw(decode_json encode_json);
 use RSMSLV qw(dbg info wrn fail);
+
 use base 'Exporter';
 
 our @EXPORT = qw(push_to_trapper);
