@@ -4303,7 +4303,7 @@ out:
 int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	char			*value_str = NULL, err[ZBX_ERR_BUF_SIZE], ips4_init = 0, ips6_init = 0;
-	const char		*ip;
+	const char		*ip, *p;
 	zbx_vector_str_t	ips4, ips6;
 	ldns_resolver		*res = NULL;
 	ldns_rdf		*query_rdf = NULL;
@@ -4317,7 +4317,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (0 != strcmp("automatic", get_rparam(request, 0)))
+	if (NULL == (p = get_rparam(request, 0)) || 0 != strcmp("automatic", p))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "first parameter has to be \"automatic\""));
 		return SYSINFO_RET_FAIL;
