@@ -791,38 +791,6 @@ static void	DCadd_trend(const ZBX_DC_HISTORY *history, ZBX_DC_TREND **trends, in
 
 /******************************************************************************
  *                                                                            *
- * Function: dc_send_trends                                                   *
- *                                                                            *
- * Purpose: Send updated trends to the history service                        *
- *                                                                            *
- * Author: Andrea Biscuola                                                    *
- *                                                                            *
- ******************************************************************************/
-static void	dc_send_trends(ZBX_DC_TREND *trends, int trends_num)
-{
-	zbx_vector_ptr_t	tr;
-	int			i;
-
-	zbx_vector_ptr_create(&tr);
-
-	for (i = 1; i <= trends_num; ++i)
-	{
-		zbx_vector_ptr_append(&tr, &trends[i - 1]);
-
-		if (0 == i % ZBX_TRENDS_MAX_SYNC || i == trends_num)
-		{
-			zbx_trends_send_values(&tr, ITEM_VALUE_TYPE_FLOAT);
-			zbx_trends_send_values(&tr, ITEM_VALUE_TYPE_UINT64);
-
-			zbx_vector_ptr_clear(&tr);
-		}
-	}
-
-	zbx_vector_ptr_destroy(&tr);
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: DCmass_update_trends                                             *
  *                                                                            *
  * Parameters: history     - array of history data                            *
@@ -834,10 +802,9 @@ static void	dc_send_trends(ZBX_DC_TREND *trends, int trends_num)
 static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 {
 	const char	*__function_name = "DCmass_update_trends";
-	ZBX_DC_TREND	*trends = NULL, *trends_serv = NULL;
+	ZBX_DC_TREND	*trends = NULL;
 	zbx_timespec_t	ts;
 	int		trends_alloc = 0, trends_num = 0, i, hour, seconds;
-	int		trends_alloc_serv = 0, trends_num_serv = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -856,8 +823,6 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 
 		if (0 == zbx_history_check_type(h->value_type))
 			DCadd_trend(h, &trends, &trends_alloc, &trends_num);
-		else
-			DCadd_trend(h, &trends_serv, &trends_alloc_serv, &trends_num_serv);
 	}
 
 	if (cache->trends_last_cleanup_hour < hour && ZBX_TRENDS_CLEANUP_TIME < seconds)
@@ -873,13 +838,7 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 				continue;
 
 			if (0 == zbx_history_check_type(trend->value_type))
-			{
 				DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
-			}
-			else
-			{
-				DCflush_trend(trend, &trends_serv, &trends_alloc_serv, &trends_num_serv);
-			}
 
 			zbx_hashset_iter_remove(&iter);
 		}
@@ -892,11 +851,7 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 	while (0 < trends_num)
 		DCflush_trends(trends, &trends_num, 1);
 
-	if (0 < trends_num_serv)
-		dc_send_trends(trends_serv, trends_num_serv);
-
 	zbx_free(trends);
-	zbx_free(trends_serv);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -914,9 +869,8 @@ static void	DCsync_trends(void)
 {
 	const char		*__function_name = "DCsync_trends";
 	zbx_hashset_iter_t	iter;
-	ZBX_DC_TREND		*trends = NULL, *trends_serv = NULL, *trend;
+	ZBX_DC_TREND		*trends = NULL, *trend;
 	int			trends_alloc = 0, trends_num = 0;
-	int			trends_alloc_serv = 0, trends_num_serv = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() trends_num:%d", __function_name, cache->trends_num);
 
@@ -930,8 +884,6 @@ static void	DCsync_trends(void)
 	{
 		if (0 == zbx_history_check_type(trend->value_type))
 			DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
-		else
-			DCflush_trend(trend, &trends_serv, &trends_alloc_serv, &trends_num_serv);
 	}
 
 	UNLOCK_TRENDS;
@@ -946,11 +898,7 @@ static void	DCsync_trends(void)
 		DBcommit();
 	}
 
-	if (0 < trends_num_serv)
-		dc_send_trends(trends_serv, trends_num_serv);
-
 	zbx_free(trends);
-	zbx_free(trends_serv);
 
 	zabbix_log(LOG_LEVEL_WARNING, "syncing trend data done");
 

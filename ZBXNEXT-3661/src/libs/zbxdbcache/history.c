@@ -402,76 +402,6 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	zbx_free(url);
 }
 
-void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
-{
-	int		i, num = 0;
-	ZBX_DC_TREND	*t;
-	struct zbx_json	json;
-	const char	*types[] = {"float", "char", "log", "unum", "text"};
-	char		*url = NULL;
-	size_t		url_alloc = 0, url_offset = 0;
-	char		*buffer = NULL;
-	size_t		buffer_alloc = 0, buffer_offset;
-
-	zbx_json_initarray(&json, trends->values_num * 100);
-
-	for (i = 0; i < trends->values_num; i++)
-	{
-		t = (ZBX_DC_TREND *)trends->values[i];
-
-		if (value_type != t->value_type)
-			continue;
-
-		zbx_json_addobject(&json, NULL);
-		zbx_json_adduint64(&json, "itemid", t->itemid);
-		zbx_json_adduint64(&json, "clock", t->clock);
-		zbx_json_adduint64(&json, "num", t->num);
-
-		if (ITEM_VALUE_TYPE_FLOAT == value_type)
-		{
-			buffer_offset = 0;
-			zbx_snprintf_alloc(&buffer, &buffer_alloc, &buffer_offset, ZBX_FS_DBL, t->value_min.dbl);
-			zbx_json_addstring(&json, "min", buffer, ZBX_JSON_TYPE_STRING);
-
-			buffer_offset = 0;
-			zbx_snprintf_alloc(&buffer, &buffer_alloc, &buffer_offset, ZBX_FS_DBL, t->value_max.dbl);
-			zbx_json_addstring(&json, "max", buffer, ZBX_JSON_TYPE_STRING);
-
-			buffer_offset = 0;
-			zbx_snprintf_alloc(&buffer, &buffer_alloc, &buffer_offset, ZBX_FS_DBL, t->value_avg.dbl);
-			zbx_json_addstring(&json, "avg", buffer, ZBX_JSON_TYPE_STRING);
-		}
-		else
-		{
-			zbx_uint128_t	avg;
-
-			zbx_json_adduint64(&json, "min", t->value_min.ui64);
-			zbx_json_adduint64(&json, "max", t->value_max.ui64);
-
-			udiv128_64(&avg, &t->value_avg.ui64, t->num);
-			zbx_json_adduint64(&json, "avg", avg.lo);
-		}
-
-		num++;
-
-		zbx_json_close(&json);
-	}
-	zbx_json_close(&json);
-	zbx_free(buffer);
-
-	if (num > 0)
-	{
-		zbx_snprintf_alloc(&url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/trends/%s",
-				HISTORY_SERVICE_URL, types[value_type]);
-
-		zbx_send_data(json.buffer, url);
-
-		zbx_free(url);
-	}
-
-	zbx_json_free(&json);
-}
-
 int	zbx_history_check_type(int value_type)
 {
 	return HISTORY_SERVICE_OPTS & (1 << value_type);
@@ -504,12 +434,6 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	ZBX_UNUSED(count);
 	ZBX_UNUSED(end);
 	ZBX_UNUSED(values);
-}
-
-void	zbx_trends_send_values(zbx_vector_ptr_t *trends, unsigned char value_type)
-{
-	ZBX_UNUSED(trends);
-	ZBX_UNUSED(value_type);
 }
 
 int	zbx_history_check_type(int value_type)
