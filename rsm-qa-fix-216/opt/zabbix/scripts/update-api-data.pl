@@ -1194,8 +1194,7 @@ sub fill_test_data_dns($$$)
 
 		foreach my $test (@{$src->{$ns}})
 		{
-			dbg("ns:$ns ip:$test->{'ip'} clock:", (defined($test->{'clock'}) ? $test->{'clock'} : 'UNDEF'), " rtt:",
-				(defined($test->{'rtt'}) ? $test->{'rtt'} : 'UNDEF')) if (opt('debug'));
+			dbg("ns:$ns ip:$test->{'ip'} clock:", $test->{'clock'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
 
 			# if Name Server has no data yet clock and rtt should be both undefined
 			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
@@ -1238,7 +1237,7 @@ sub fill_test_data_dns($$$)
 			push(@{$test_data_ref->{'metrics'}}, $metric);
 		}
 
-		$test_data_ref->{'status'} = "No result" unless (defined($test_data_ref->{'status'}));
+		$test_data_ref->{'status'} //= "No result";
 
 		push(@{$dst}, $test_data_ref);
 	}
@@ -1249,34 +1248,36 @@ sub fill_test_data_rdds($$)
 	my $src = shift;
 	my $dst = shift;
 
+	# sanity check, RDDS test data with more than one metric signifies data consistency problems upstream
 	if (scalar(@{$src}) > 1)
 	{
 		use Data::Dumper;
-		fail("Gleb was wrong, RDDS test data can have more than one metric:\n", Dumper($src));
+
+		fail("Unexpected RDDS test data having more than one metric:\n", Dumper($src));
 	}
 
-	my ($metric, $test_data_ref);
-
-	$test_data_ref = {
+	my $test_data_ref = {
 		'target'	=> undef
+		'status'	=> undef,
+		'metrics'	=> []
 	};
 
 	if (scalar(@{$src}) == 0)
 	{
-		$test_data_ref->{'status'} = "No result";
-
-		$metric = {
+		my $metric = {
 			'testDateTime'	=> undef,
 			'targetIP'	=> undef,
 			'rtt'		=> undef,
 			'result'	=> 'no data'
 		}
+
+		push(@{$test_data_ref->{'metrics'}}, $metric);
 	}
 	else
 	{
 		my $test = $src->[0];
 
-		$metric = {
+		my $metric = {
 			'testDateTime'	=> $test->{'clock'},
 			'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
 		};
@@ -1295,9 +1296,11 @@ sub fill_test_data_rdds($$)
 			$metric->{'rtt'} = $test->{'rtt'};
 			$metric->{'result'} = "ok";
 		}
+
+		push(@{$test_data_ref->{'metrics'}}, $metric);
 	}
 
-	$test_data_ref->{'metrics'} = [$metric];
+	$test_data_ref->{'status'} //= "No result";
 
 	push(@{$dst}, $test_data_ref);
 }
