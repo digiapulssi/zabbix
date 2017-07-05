@@ -17,7 +17,7 @@ sub validate_data($)
 {
 	my $data = shift();
 
-	dbg("validating data to send");
+	RSMSLV::dbg("validating data to send");
 
 	croak("'data' must be an array reference") unless(ref($data) eq 'ARRAY');
 
@@ -45,7 +45,7 @@ sub validate_data($)
 		}
 	}
 
-	dbg("data successfully validated");
+	RSMSLV::dbg("data successfully validated");
 }
 
 sub send_request($$)
@@ -55,7 +55,7 @@ sub send_request($$)
 
 	my $length = length($request);
 
-	dbg("sending request:'$request' length:$length");
+	RSMSLV::dbg("sending request:'$request' length:$length");
 
 	my $header = ZBX_HEADER;
 
@@ -67,7 +67,7 @@ sub send_request($$)
 
 	print{$socket}($header . $request);
 
-	dbg("request successfully written to TCP layer buffer");
+	RSMSLV::dbg("request successfully written to TCP layer buffer");
 }
 
 sub connect_to_server($$$$)
@@ -77,7 +77,7 @@ sub connect_to_server($$$$)
 	my $timeout = shift();
 	my $attempts = shift();
 
-	dbg("connecting to '$server:$port' (timeout:$timeout, attempts:$attempts)");
+	RSMSLV::dbg("connecting to '$server:$port' (timeout:$timeout, attempts:$attempts)");
 
 	while ($attempts-- > 0)
 	{
@@ -90,11 +90,11 @@ sub connect_to_server($$$$)
 
 		if ($socket)
 		{
-			dbg("connected successfully");
+			RSMSLV::dbg("connected successfully");
 			return $socket;
 		}
 
-		dbg("cannot connect to '$server:$port', $attempts attempts left");
+		RSMSLV::dbg("cannot connect to '$server:$port', $attempts attempts left");
 	}
 
 	fail("failed to connect to '$server:$port'");
@@ -104,7 +104,7 @@ sub receive_response($)
 {
 	my $socket = shift();
 
-	dbg("reading from TCP layer buffer");
+	RSMSLV::dbg("reading from TCP layer buffer");
 
 	my $response = "";
 
@@ -113,7 +113,7 @@ sub receive_response($)
 		$response .= $block;
 	}
 
-	dbg("finished reading: '$response'");
+	RSMSLV::dbg("finished reading: '$response'");
 	return $response;
 }
 
@@ -128,7 +128,7 @@ sub decode_response($)
 {
 	my $response = shift();
 
-	dbg("decoding '$response'");
+	RSMSLV::dbg("decoding '$response'");
 
 	fail("response is shorter than expected Zabbix protocol header") if (length($response) < length(ZBX_HEADER) + 8);
 	fail("unexpected response header") unless (substr($response, 0, length(ZBX_HEADER)) eq ZBX_HEADER);
@@ -149,7 +149,7 @@ sub decode_response($)
 				" this can only happen if we've sent invalid request");
 	}
 
-	dbg("decoded successfully, 'info':'" . ($json->{'info'} // "null") . "'");
+	RSMSLV::dbg("decoded successfully, 'info':'" . ($json->{'info'} // "null") . "'");
 }
 
 sub push_to_trapper($$$$$)
