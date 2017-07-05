@@ -1257,7 +1257,7 @@ sub fill_test_data_rdds($$)
 	}
 
 	my $test_data_ref = {
-		'target'	=> undef
+		'target'	=> undef,
 		'status'	=> undef,
 		'metrics'	=> []
 	};
@@ -1269,7 +1269,7 @@ sub fill_test_data_rdds($$)
 			'targetIP'	=> undef,
 			'rtt'		=> undef,
 			'result'	=> 'no data'
-		}
+		};
 
 		push(@{$test_data_ref->{'metrics'}}, $metric);
 	}
