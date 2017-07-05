@@ -26,7 +26,7 @@ my $type = shift || 'dns';
 die("$command: invalid command") if ($command ne 'total' and $command ne 'online');
 die("$type: invalid type") if ($type ne 'dns' and $type ne 'epp' and $type ne 'rdds' and $type ne 'ip4' and $type ne 'ip6');
 
-sub dbg
+sub __dbg
 {
 	if (opt('debug'))
 	{
@@ -64,8 +64,8 @@ foreach my $probe (keys(%{$probes_ref}))
 	$total++;
 }
 
-dbg($total, " total probes available for $type tests") if ($command eq 'total');
-dbg($online, " online probes available for $type tests") if ($command eq 'online');
+__dbg($total, " total probes available for $type tests") if ($command eq 'total');
+__dbg($online, " online probes available for $type tests") if ($command eq 'online');
 
 print $total if $command eq 'total';
 print $online if $command eq 'online';
