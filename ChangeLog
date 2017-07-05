@@ -3,6 +3,7 @@ Changes for 2.2.19rc1
 New features:
 
 Bug fixes:
+...G...... [ZBX-12231] fixed memory leak in agent if log[], logrt[] items use global regexps with multiple subexpressions (Andris)
 ...G...... [ZBX-12187] fixed memory leak when using UserParameter with suppressed characters passed in arguments (viktors)
 A......... [ZBX-12023] fixed permission issue with event.get method (Sasha)
 .......PS. [ZBX-12046] fixed handling of database failure during ID selection (vso)
