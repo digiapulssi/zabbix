@@ -722,7 +722,7 @@ foreach (keys(%$servicedata))
 
 							if ($test_result_index == $test_results_count)
 							{
-								__no_status_result($subservice, $avail_key, $probe, $clock);
+								__no_status_result($service, $avail_key, $probe, $clock);
 								last;
 							}
 
@@ -1001,7 +1001,7 @@ foreach (keys(%$servicedata))
 
 						if ($test_result_index == $test_results_count)
 						{
-							__no_status_result($subservice, $avail_key, $probe, $clock);
+							__no_status_result($service, $avail_key, $probe, $clock);
 							last;
 						}
 
