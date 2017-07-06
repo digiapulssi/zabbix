@@ -182,7 +182,7 @@ Summary:			Zabbix web frontend for MySQL
 Group:				Applications/Internet
 BuildArch:			noarch
 %if 0%{?rhel} >= 7
-Requires:			php-mysql
+Requires:			php-mysqlnd
 %endif
 Requires:			zabbix-web = %{version}-%{release}
 Provides:			zabbix-web-database = %{version}-%{release}
