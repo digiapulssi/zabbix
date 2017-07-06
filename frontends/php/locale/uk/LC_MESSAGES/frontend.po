@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-07-07 01:30+0300\n"
-"PO-Revision-Date: 2017-05-03 19:03+0300\n"
+"PO-Revision-Date: 2017-07-06 22:59+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: uk\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1493830996.000000\n"
+"X-POOTLE-MTIME: 1499374757.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -11831,11 +11831,11 @@ msgstr "Власник"
 
 #: include/classes/setup/CFrontendSetup.php:560
 msgid "PHP LDAP"
-msgstr ""
+msgstr "PHP LDAP"
 
 #: include/classes/setup/CFrontendSetup.php:564
 msgid "PHP LDAP extension missing."
-msgstr ""
+msgstr "PHP LDAP модуль відсутній."
 
 #: include/classes/setup/CFrontendSetup.php:312
 msgid "PHP bcmath"

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-07-07 01:30+0300\n"
-"PO-Revision-Date: 2017-05-03 19:03+0300\n"
+"PO-Revision-Date: 2017-07-06 22:59+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
-"X-POOTLE-MTIME: 1493831015.000000\n"
+"X-POOTLE-MTIME: 1499374772.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -11756,11 +11756,11 @@ msgstr "Owner"
 
 #: include/classes/setup/CFrontendSetup.php:560
 msgid "PHP LDAP"
-msgstr ""
+msgstr "PHP LDAP"
 
 #: include/classes/setup/CFrontendSetup.php:564
 msgid "PHP LDAP extension missing."
-msgstr ""
+msgstr "PHP LDAP extension missing."
 
 #: include/classes/setup/CFrontendSetup.php:312
 msgid "PHP bcmath"

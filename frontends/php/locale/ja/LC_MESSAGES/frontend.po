@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-07-07 01:30+0300\n"
-"PO-Revision-Date: 2016-12-22 05:19+0300\n"
+"PO-Revision-Date: 2017-05-08 01:41+0300\n"
 "Last-Translator: Atsushi <a.tanaka77@gmail.com>\n"
 "Language-Team: Zabbix\n"
 "Language: ja\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1482376784.000000\n"
+"X-POOTLE-MTIME: 1494200519.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -2627,7 +2627,7 @@ msgstr "大文字小文字を区別"
 
 #: include/locales.inc.php:55
 msgid "Catalan (ca_ES)"
-msgstr ""
+msgstr "カタロニア語 (ca_ES)"
 
 #: include/classes/items/CHelpItems.php:877
 msgid "Catches all SNMP traps that match regex. If regexp is unspecified, catches any trap."
@@ -16969,7 +16969,7 @@ msgstr "空の文字列で指定してください"
 
 #: include/classes/api/services/CHost.php:1560
 msgid "an even number of hexadecimal characters is expected"
-msgstr ""
+msgstr "16進文字列で指定してください"
 
 #: include/views/monitoring.history.php:165
 msgid "as Blue"
@@ -17266,7 +17266,7 @@ msgstr "最小60秒"
 #: include/classes/api/services/CHost.php:1566
 #, c-format
 msgid "minimum length is %1$s characters"
-msgstr ""
+msgstr "%1$s文字以上で指定してください"
 
 #: include/html.inc.php:765 include/html.inc.php:788
 #: include/views/configuration.services.edit.php:273

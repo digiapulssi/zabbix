@@ -1,3 +1,9 @@
+Changes for 3.2.7
+
+New features:
+A.F....... [ZBX-1357] updated Catalan, Chinese (China), English (United States), Japanese, Korean, Polish, Portuguese (Brazil), Ukrainian translations; thanks to Zabbix translators (zalex_ua)
+
+--------------------------------------------------------------------------------
 Changes for 3.2.7rc1
 
 Bug fixes:
