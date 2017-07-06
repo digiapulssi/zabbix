@@ -1260,6 +1260,7 @@ sub db_connect
 		{
 			PrintError  => 0,
 			HandleError => \&handle_db_error,
+			mysql_auto_reconnect => 1
 		}) or handle_db_error(DBI->errstr);
 
 	# improve performance of selects, see

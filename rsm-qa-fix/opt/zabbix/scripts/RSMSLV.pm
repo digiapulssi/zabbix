@@ -800,6 +800,7 @@ sub db_connect
 		{
 			PrintError  => 0,
 			HandleError => \&handle_db_error,
+			mysql_auto_reconnect => 1
 		}) or handle_db_error(DBI->errstr);
 
 	# verify that established database connection uses TLS if there was any hint that it is required in the config
