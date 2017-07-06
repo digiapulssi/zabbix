@@ -879,13 +879,13 @@ sub db_select
 
 	if (opt('debug'))
 	{
-		if (scalar(@rows) == 1)
+		if (scalar(@{$rows_ref}) == 1)
 		{
-			dbg(join(',', map {$_ // 'UNDEF'} ($rows[0])));
+			dbg(join(',', map {$_ // 'UNDEF'} (@{$rows_ref->[0]})));
 		}
 		else
 		{
-			dbg(scalar(@rows), " rows");
+			dbg(scalar(@{$rows_ref}), " rows");
 		}
 	}
 
