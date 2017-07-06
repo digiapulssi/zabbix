@@ -29,8 +29,6 @@
 #include "log.h"
 #include "rsm.h"
 
-#define RSM_DEBUG_ENABLED	0
-
 #define ZBX_HOST_BUF_SIZE	128
 #define ZBX_IP_BUF_SIZE		64
 #define ZBX_ERR_BUF_SIZE	8192
@@ -102,11 +100,15 @@ static int	unpack_values(size_t *v1, size_t *v2, int *v3, int *v4, char *buf)
 #define zbx_rsm_errf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Error", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
 #define zbx_rsm_warnf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Warn ", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
 #define zbx_rsm_infof(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Info ", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
-#if RSM_DEBUG_ENABLED == 0
-#define zbx_rsm_dbgf(log_fd, fmt, ...)
-#else
-#define zbx_rsm_dbgf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Debug", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
-#endif
+
+#define zbx_rsm_dbgf(log_fd, fmt, ...)							\
+do											\
+{											\
+	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))				\
+		zbx_rsm_logf(log_fd, "Debug", ZBX_CONST_STRING(fmt), ##__VA_ARGS__);	\
+}											\
+while (0)
+
 static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 {
 	va_list		args;
@@ -119,23 +121,36 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 	tm = localtime(&current_time.tv_sec);
 	ms = current_time.tv_usec / 1000;
 
-#if RSM_DEBUG_ENABLED != 0
-	zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%5d:%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
-			getpid(),
-			syscall(__NR_gettid),
-#else
-	zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
-			getpid(),
-#endif
-			tm->tm_year + 1900,
-			tm->tm_mon + 1,
-			tm->tm_mday,
-			tm->tm_hour,
-			tm->tm_min,
-			tm->tm_sec,
-			ms,
-			prefix,
-			fmt);
+	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
+	{
+		zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%5d:%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+				getpid(),
+				syscall(__NR_gettid),
+				tm->tm_year + 1900,
+				tm->tm_mon + 1,
+				tm->tm_mday,
+				tm->tm_hour,
+				tm->tm_min,
+				tm->tm_sec,
+				ms,
+				prefix,
+				fmt);
+	}
+	else
+	{
+		zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+				getpid(),
+				tm->tm_year + 1900,
+				tm->tm_mon + 1,
+				tm->tm_mday,
+				tm->tm_hour,
+				tm->tm_min,
+				tm->tm_sec,
+				ms,
+				prefix,
+				fmt);
+	}
+
 	fmt = fmt_buf;
 
 	va_start(args, fmt);
@@ -145,11 +160,15 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 
 #define zbx_rsm_err(log_fd, text)		zbx_rsm_log(log_fd, "Error", text)
 #define zbx_rsm_info(log_fd, text)		zbx_rsm_log(log_fd, "Info ", text)
-#if RSM_DEBUG_ENABLED == 0
-#	define zbx_rsm_dbg(log_fd, text)
-#else
-#	define zbx_rsm_dbg(log_fd, text)	zbx_rsm_log(log_fd, "Debug", text)
-#endif
+
+#define zbx_rsm_dbg(log_fd, text)							\
+do											\
+{											\
+	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))				\
+		zbx_rsm_log(log_fd, "Debug", text);					\
+}											\
+while (0)
+
 static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 {
 	struct timeval	current_time;
@@ -160,23 +179,35 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 	tm = localtime(&current_time.tv_sec);
 	ms = current_time.tv_usec / 1000;
 
-#if RSM_DEBUG_ENABLED != 0
-	fprintf(log_fd, "%5d:%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
-			getpid(),
-			syscall(__NR_gettid),
-#else
-	fprintf(log_fd, "%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
-			getpid(),
-#endif
-			tm->tm_year + 1900,
-			tm->tm_mon + 1,
-			tm->tm_mday,
-			tm->tm_hour,
-			tm->tm_min,
-			tm->tm_sec,
-			ms,
-			prefix,
-			text);
+	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
+	{
+		fprintf(log_fd, "%5d:%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+				getpid(),
+				syscall(__NR_gettid),
+				tm->tm_year + 1900,
+				tm->tm_mon + 1,
+				tm->tm_mday,
+				tm->tm_hour,
+				tm->tm_min,
+				tm->tm_sec,
+				ms,
+				prefix,
+				text);
+	}
+	else
+	{
+		fprintf(log_fd, "%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+				getpid(),
+				tm->tm_year + 1900,
+				tm->tm_mon + 1,
+				tm->tm_mday,
+				tm->tm_hour,
+				tm->tm_min,
+				tm->tm_sec,
+				ms,
+				prefix,
+				text);
+	}
 }
 
 static int	zbx_validate_ip(const char *ip, char ipv4_enabled, char ipv6_enabled, ldns_rdf **ip_rdf_out,
