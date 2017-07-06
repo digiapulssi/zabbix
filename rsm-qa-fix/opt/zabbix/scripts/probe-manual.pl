@@ -9,9 +9,10 @@ use lib $MYDIR;
 use strict;
 use warnings;
 use RSM;
-use RSMSLV;
 use TLD_constants qw(:api);
 use Data::Dumper;
+use Pusher qw(push_to_trapper);
+use RSMSLV;
 
 # todo phase 1: use these 3 from RSMSLV.pm, e. g. create function there that will do what's done in this script
 use constant ONLINE => 1;
@@ -136,20 +137,16 @@ sub __send_to_probe
 
 	my $section = $config->{$server_key};
 
-	my $sender = Zabbix::Sender->new({
-		'server' => $ip,
-		'port' => $port,
-		'timeout' => 10,
-		'retries' => 5,
-		'debug' => getopt('debug') });
+	my $data = [
+		{
+			'host'	=> $hostname,
+			'key'	=> $key,
+			'clock'	=> $timestamp,
+			'value'	=> $value
+		}
+	];
 
-	fail("Cannot connect to Probe ($ip:$port)") if (!defined($sender));
-
-	my @hashes;
-
-	push(@hashes, {'host' => $hostname, 'key' => $key, 'clock' => $timestamp, 'value' => $value});
-
-	fail("Cannot send data to Zabbix server: " . $sender->sender_err()) unless (defined($sender->send_arrref(\@hashes)));
+	push_to_trapper($ip, $port, 10, 5, $data);
 }
 
 __END__
@@ -190,12 +187,12 @@ Print a brief help message and exit.
 
 =head1 DESCRIPTION
 
-B<This program> will print information about Probe availability at a specified period.
+B<This program> will manually set Probe status to Online/Offline.
 
 =head1 EXAMPLES
 
-./probe-avail.pl --from 1443015000 --period 10
+./probe-manual.pl --server-id 1 --probe Probe1_S1 --set 0
 
-This will output Probe availability for all service tests that fall under period 23.09.2015 16:30:00-16:40:00 .
+This will set Probe1_S1 manual status to Offline, which result in Probe main status also Offline.
 
 =cut
