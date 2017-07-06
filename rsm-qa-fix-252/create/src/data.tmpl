@@ -812,29 +812,29 @@ ROW   |2           |dark-theme|2B2B2B         |2B2B2B    |454545   |4F4F4F      
 
 TABLE |globalmacro
 FIELDS|globalmacroid|macro                         |value              |
-ROW   |1            |{$RSM.IP4.MIN.PROBE.ONLINE}   |2                  |
-ROW   |2            |{$RSM.IP6.MIN.PROBE.ONLINE}   |2                  |
+ROW   |1            |{$RSM.IP4.MIN.PROBE.ONLINE}   |22                 |
+ROW   |2            |{$RSM.IP6.MIN.PROBE.ONLINE}   |20                 |
 ROW   |3            |{$RSM.PROBE.MAX.OFFLINE}      |1h                 |
-ROW   |4            |{$RSM.IP4.MIN.SERVERS}        |4                  |
-ROW   |5            |{$RSM.IP6.MIN.SERVERS}        |4                  |
-ROW   |6            |{$RSM.IP4.REPLY.MS}           |500                |
-ROW   |7            |{$RSM.IP6.REPLY.MS}           |500                |
+ROW   |4            |{$RSM.IP4.MIN.SERVERS}        |5                  |
+ROW   |5            |{$RSM.IP6.MIN.SERVERS}        |5                  |
+ROW   |6            |{$RSM.IP4.REPLY.MS}           |250                |
+ROW   |7            |{$RSM.IP6.REPLY.MS}           |250                |
 ROW   |8            |{$RSM.DNS.TCP.RTT.LOW}        |1500               |
 ROW   |9            |{$RSM.DNS.TCP.RTT.HIGH}       |7500               |
 ROW   |10           |{$RSM.DNS.UDP.RTT.LOW}        |500                |
 ROW   |11           |{$RSM.DNS.UDP.RTT.HIGH}       |2500               |
 ROW   |12           |{$RSM.DNS.UDP.DELAY}          |60                 |
-ROW   |13           |{$RSM.DNS.TCP.DELAY}          |60                 |
+ROW   |13           |{$RSM.DNS.TCP.DELAY}          |3600               |
 ROW   |14           |{$RSM.DNS.UPDATE.TIME}        |3600               |
-ROW   |15           |{$RSM.DNS.PROBE.ONLINE}       |2                  |
+ROW   |15           |{$RSM.DNS.PROBE.ONLINE}       |20                 |
 ROW   |16           |{$RSM.DNS.AVAIL.MINNS}        |2                  |
-ROW   |17           |{$RSM.DNS.ROLLWEEK.SLA}       |60                 |
+ROW   |17           |{$RSM.DNS.ROLLWEEK.SLA}       |240                |
 ROW   |18           |{$RSM.RDDS.RTT.LOW}           |2000               |
 ROW   |19           |{$RSM.RDDS.RTT.HIGH}          |10000              |
-ROW   |20           |{$RSM.RDDS.DELAY}             |60                 |
+ROW   |20           |{$RSM.RDDS.DELAY}             |300                |
 ROW   |21           |{$RSM.RDDS.UPDATE.TIME}       |3600               |
-ROW   |22           |{$RSM.RDDS.PROBE.ONLINE}      |2                  |
-ROW   |23           |{$RSM.RDDS.ROLLWEEK.SLA}      |60                 |
+ROW   |22           |{$RSM.RDDS.PROBE.ONLINE}      |10                 |
+ROW   |23           |{$RSM.RDDS.ROLLWEEK.SLA}      |1440               |
 ROW   |24           |{$RSM.RDDS.MAXREDIRS}         |10                 |
 ROW   |25           |{$RSM.EPP.DELAY}              |60                 |
 ROW   |26           |{$RSM.EPP.LOGIN.RTT.LOW}      |4000               |
@@ -845,7 +845,7 @@ ROW   |30           |{$RSM.EPP.INFO.RTT.LOW}       |2000               |
 ROW   |31           |{$RSM.EPP.INFO.RTT.HIGH}      |10000              |
 ROW   |32           |{$RSM.EPP.PROBE.ONLINE}       |2                  |
 ROW   |33           |{$RSM.EPP.ROLLWEEK.SLA}       |60                 |
-ROW   |34           |{$RSM.PROBE.ONLINE.DELAY}     |60                 |
+ROW   |34           |{$RSM.PROBE.ONLINE.DELAY}     |180                |
 ROW   |35           |{$RSM.INCIDENT.DNS.FAIL}      |3                  |
 ROW   |36           |{$RSM.INCIDENT.DNS.RECOVER}   |3                  |
 ROW   |37           |{$RSM.INCIDENT.DNSSEC.FAIL}   |3                  |
@@ -865,7 +865,7 @@ ROW   |50           |{$RSM.SLV.EPP.LOGIN}          |99                 |
 ROW   |51           |{$RSM.SLV.EPP.UPDATE}         |99                 |
 ROW   |52           |{$RSM.SLV.EPP.INFO}           |99                 |
 ROW   |53           |{$RSM.ROLLWEEK.THRESHOLDS}    |0,5,10,25,50,75,100|
-ROW   |54           |{$RSM.ROLLWEEK.SECONDS}       |7200               |
+ROW   |54           |{$RSM.ROLLWEEK.SECONDS}       |604800             |
 ROW   |55           |{$RSM.PROBE.AVAIL.LIMIT}      |60                 |
 
 TABLE |hosts_groups
