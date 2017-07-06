@@ -8,7 +8,6 @@ use Getopt::Long;
 use Pod::Usage;
 use Exporter qw(import);
 use Zabbix;
-use Sender;
 use Alerts;
 use File::Pid;
 use POSIX qw(floor);
@@ -19,6 +18,7 @@ use Fcntl qw(:flock);
 use TLD_constants1 qw(:api);	# todo phase 1
 use ApiHelper1;			# todo phase 1
 use RSM;			# get_rsm_local_key()
+use Pusher qw(push_to_trapper);
 
 use constant SUCCESS	=> 0;
 use constant E_FAIL	=> -1;
@@ -41,7 +41,6 @@ use constant EVENT_SOURCE_TRIGGERS	=> 0;
 use constant TRIGGER_VALUE_FALSE	=> 0;
 use constant TRIGGER_VALUE_TRUE		=> 1;
 use constant INCIDENT_FALSE_POSITIVE	=> 1; # NB! must be in sync with frontend
-use constant SENDER_BATCH_COUNT		=> 250;
 use constant PROBE_GROUP_NAME		=> 'Probes';
 use constant PROBE_KEY_ONLINE		=> 'rsm.probe.online';
 
@@ -1261,6 +1260,7 @@ sub db_connect
 		{
 			PrintError  => 0,
 			HandleError => \&handle_db_error,
+			mysql_auto_reconnect => 1
 		}) or handle_db_error(DBI->errstr);
 
 	# improve performance of selects, see
@@ -1982,64 +1982,33 @@ sub send_values
 		return;
 	}
 
-	if (scalar(@{$_sender_values->{'data'}}) == 0)
+	my $total_values = scalar(@{$_sender_values->{'data'}});
+
+	if ($total_values == 0)
 	{
 		wrn("will not send values, nothing to send");
 		return;
 	}
 
-	my $sender = Zabbix::Sender->new({
-		'server' => $config->{'slv'}->{'zserver'},
-		'port' => $config->{'slv'}->{'zport'},
-		'timeout' => 10,
-		'retries' => 5 });
+	my $data = [];
 
-	fail("cannot connect to Zabbix server") unless (defined($sender));
-
-	my $total_values = scalar(@{$_sender_values->{'data'}});
-
-	while (scalar(@{$_sender_values->{'data'}}) > 0)
+	foreach my $sender_value (@{$_sender_values->{'data'}})
 	{
-		my @suba = splice(@{$_sender_values->{'data'}}, 0, SENDER_BATCH_COUNT);
-
-		dbg("sending ", scalar(@suba), "/$total_values values");
-
-		my @hashes;
-
-		foreach my $hash_ref (@suba)
-		{
-			push(@hashes, $hash_ref->{'data'});
-		}
-
-		unless (defined($sender->send_arrref(\@hashes)))
-		{
-			my $msg = "Cannot send data to Zabbix server: " . $sender->sender_err() . ". The query was:";
-
-			foreach my $hash_ref (@suba)
-			{
-				my $data_ref = $hash_ref->{'data'};
-
-				my $line = '{';
-
-				$line .= ($line ne '{' ? ', ' : '') . $_ . ' => ' . $data_ref->{$_} foreach (keys(%$data_ref));
-
-				$line .= '}';
-
-				$msg .= "\n  $line";
-			}
-
-			fail($msg);
-		}
-
-		# $tld is a global variable which is used in info()
-		my $saved_tld = $tld;
-		foreach my $hash_ref (@suba)
-		{
-			$tld = $hash_ref->{'tld'};
-			info($hash_ref->{'data'}->{'key'}, '=', $hash_ref->{'data'}->{'value'}, " ", $hash_ref->{'info'});
-		}
-		$tld = $saved_tld;
+		push(@{$data}, $sender_value->{'data'});
 	}
+
+	dbg("sending $total_values values");	# send everything in one batch since server should be local
+	push_to_trapper($config->{'slv'}->{'zserver'}, $config->{'slv'}->{'zport'}, 10, 5, $data);
+
+	# $tld is a global variable which is used in info()
+	my $saved_tld = $tld;
+	foreach my $sender_value (@{$_sender_values->{'data'}})
+	{
+		$tld = $sender_value->{'tld'};
+		info($sender_value->{'data'}->{'key'} . "=" . $sender_value->{'data'}->{'value'} . " " .
+				$sender_value->{'info'});
+	}
+	$tld = $saved_tld;
 }
 
 # Get name server details (name, IP) from item key.

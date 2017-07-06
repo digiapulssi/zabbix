@@ -182,7 +182,7 @@ Summary:			Zabbix web frontend for MySQL
 Group:				Applications/Internet
 BuildArch:			noarch
 %if 0%{?rhel} >= 7
-Requires:			php-mysql
+Requires:			php-mysqlnd
 %endif
 Requires:			zabbix-web = %{version}-%{release}
 Provides:			zabbix-web-database = %{version}-%{release}
@@ -220,7 +220,7 @@ Requires:			perl-Data-Dumper, perl-DBD-MySQL, perl-Sys-Syslog
 Requires:			perl-DateTime, perl-Config-Tiny, perl-libwww-perl
 Requires:			perl-LWP-Protocol-https, perl-JSON-XS, perl-Expect, perl-JSON
 Requires:			perl-Redis, perl-File-Pid, perl-DateTime-Format-RFC3339
-Requires:			perl-Text-CSV_XS
+Requires:			perl-Text-CSV_XS, perl-Types-Serialiser
 Requires:			perl-Path-Tiny
 %endif
 AutoReq:			no

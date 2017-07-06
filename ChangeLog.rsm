@@ -1,3 +1,15 @@
+Changes for rsm1.0.0rc14
+
+New features:
+....I..... [252] adjusted initial configuration parameters (NOTE: For this change to have effect one needs to recreate the database!) (gleb)
+
+Bug fixes:
+....I..... [245] fixed "MySQL has gone away" errors during export.pl execution (dimir, gleb)
+....I..... [sub-216] fixed Perl warning regarding JSON::true and JSON::false redefinition (dimir, gleb)
+....I..... [sub-216] fixed incorrect cycle and test matching resulting in assert fails (dimir, gleb)
+....I..... [sub-242] added PID and fixed missing first character in script logs (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc13
 
 New features:

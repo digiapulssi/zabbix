@@ -94,11 +94,6 @@ while ($period > 0)
 		}
 
 		my $values_ref = get_values_by_items($items_ref, $from, $till);
-		if (scalar(@$values_ref) == 0)
-		{
-			wrn("no item values ($cfg_key_in) found");
-			next;
-		}
 
 		my $probes_with_results = get_probes_count($items_ref, $values_ref);
 		if ($probes_with_results < $cfg_minonline)
