@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-07-07 01:29+0300\n"
-"PO-Revision-Date: 2016-12-22 05:21+0300\n"
+"PO-Revision-Date: 2017-05-08 01:39+0300\n"
 "Last-Translator: Atsushi <a.tanaka77@gmail.com>\n"
 "Language-Team: Zabbix\n"
 "Language: ja\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1482376870.000000\n"
+"X-POOTLE-MTIME: 1494200366.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -16292,7 +16292,7 @@ msgstr "空の文字列で指定してください"
 
 #: include/classes/api/services/CHost.php:1564
 msgid "an even number of hexadecimal characters is expected"
-msgstr ""
+msgstr "16進文字列で指定してください"
 
 #: include/views/monitoring.history.php:165
 msgid "as Blue"
@@ -16555,7 +16555,7 @@ msgstr "最小60秒"
 #: include/classes/api/services/CHost.php:1570
 #, c-format
 msgid "minimum length is %1$s characters"
-msgstr ""
+msgstr "%1$s文字以上で指定してください"
 
 #: include/html.inc.php:765 include/html.inc.php:788
 #: include/views/configuration.services.edit.php:273
@@ -16719,7 +16719,7 @@ msgstr "短い説明"
 #: include/classes/api/services/CHost.php:1592
 #: include/classes/api/services/CHost.php:1598
 msgid "should be empty"
-msgstr ""
+msgstr "空白を指定してください"
 
 #: include/views/monitoring.sysmap.edit.php:128
 msgid "show icon mappings"
