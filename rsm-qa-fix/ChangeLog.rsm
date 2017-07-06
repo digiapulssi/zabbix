@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc14
 
 New features:
+....I..... [252] adjusted initial configuration parameters (NOTE: For this change to have effect one needs to recreate the database!) (gleb)
 
 Bug fixes:
 ....I..... [245] fixed "MySQL has gone away" errors during export.pl execution (dimir, gleb)
