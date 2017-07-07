@@ -1342,7 +1342,7 @@ out:
  * Author: Alexei Vladishev, Eugene Grigorjev, Alexander Vladishev            *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
+static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, zbx_hashset_t *delta_history)
 {
 	const char		*__function_name = "DCmass_update_items";
 
@@ -1350,14 +1350,13 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	zbx_vector_uint64_t	itemids;
 	DC_ITEM			*items = NULL;
 	int			i, *errcodes = NULL;
-	zbx_hashset_t		delta_history = {NULL};
 	zbx_vector_ptr_t	inventory_values;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
 	errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
-	zbx_hashset_create(&delta_history, 1000, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_hashset_create(delta_history, 1000, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	zbx_vector_ptr_create(&inventory_values);
 	zbx_vector_uint64_create(&itemids);
@@ -1369,7 +1368,7 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	zbx_vector_uint64_sort(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, history_num, ZBX_FLAG_ITEM_FIELDS_PREPROC);
-	DCget_delta_items(&delta_history, &itemids);
+	DCget_delta_items(delta_history, &itemids);
 
 	zbx_vector_uint64_clear(&itemids);	/* item ids that are not disabled and not deleted in DB */
 
@@ -1412,7 +1411,7 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 			h->flags |= ZBX_DC_FLAG_NOTRENDS;
 		}
 
-		preprocess_item_value(&items[i], h, &delta_history);
+		preprocess_item_value(&items[i], h, delta_history);
 
 		DCadd_update_item_sql(&sql_offset, &items[i], h);
 		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
@@ -1438,11 +1437,8 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 
 	zbx_vector_uint64_destroy(&itemids);
 
-	DCset_delta_items(&delta_history);
-
 	DCconfig_clean_items(items, errcodes, history_num);
 
-	zbx_hashset_destroy(&delta_history);
 	zbx_free(errcodes);
 	zbx_free(items);
 
@@ -2075,6 +2071,7 @@ int	DCsync_history(int sync_type, int *total_num)
 	time_t				sync_start, now;
 	zbx_vector_uint64_t		triggerids;
 	zbx_vector_ptr_t		history_items, trigger_diff;
+	zbx_hashset_t			delta_history;
 	zbx_binary_heap_t		tmp_history_queue;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() history_num:%d", __function_name, cache->history_num);
@@ -2185,7 +2182,7 @@ retry_txn:
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
-			DCmass_update_items(history, history_num);
+			DCmass_update_items(history, history_num, &delta_history);
 			DCmass_add_history(history, history_num);
 			DCmass_update_triggers(history, history_num, &trigger_diff);
 			DCmass_update_trends(history, history_num);
@@ -2206,13 +2203,19 @@ retry_txn:
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "restarting transaction");
 			hc_free_item_values(history, history_num);
+
+			zbx_hashset_destroy(&delta_history);
+			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 			goto retry_txn;
 		}
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
+			DCset_delta_items(&delta_history);
 			DCconfig_triggers_apply_changes(&trigger_diff);
 			DCconfig_unlock_triggers(&triggerids);
+
+			zbx_hashset_destroy(&delta_history);
 			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 		}
 
