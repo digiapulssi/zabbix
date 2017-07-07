@@ -75,6 +75,7 @@ struct zbx_db_result
 
 static int	txn_level = 0;	/* transaction level, nested transactions are not supported */
 static int	txn_error = ZBX_DB_OK;	/* failed transaction */
+static int	txn_end_error = ZBX_DB_OK;	/* transaction result */
 
 extern int	CONFIG_LOG_SLOW_QUERIES;
 
@@ -887,7 +888,10 @@ rollback:
 #endif
 
 	if (ZBX_DB_DOWN != rc)	/* ZBX_DB_OK or number of changes */
+	{
 		txn_level--;
+		txn_end_error = ZBX_DB_OK;
+	}
 
 	return rc;
 }
@@ -948,7 +952,17 @@ int	zbx_db_rollback(void)
 #endif
 
 	if (ZBX_DB_DOWN != rc)	/* ZBX_DB_FAIL or ZBX_DB_OK or number of changes */
+	{
 		txn_level--;
+
+		if (ZBX_DB_FAIL == rc)
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "cannot perform rollback");
+			txn_end_error = ZBX_DB_FAIL;
+		}
+		else
+			txn_end_error = last_txn_error;	/* error that caused rollback */
+	}
 	else
 		txn_error = last_txn_error;	/* in case of DB down we will repeat this operation */
 
@@ -963,6 +977,11 @@ int	zbx_db_txn_level(void)
 int	zbx_db_txn_error(void)
 {
 	return txn_error;
+}
+
+int	zbx_db_txn_end_error(void)
+{
+	return txn_end_error;
 }
 
 #ifdef HAVE_ORACLE

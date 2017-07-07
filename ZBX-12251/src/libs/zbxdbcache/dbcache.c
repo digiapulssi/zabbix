@@ -2181,31 +2181,33 @@ int	DCsync_history(int sync_type, int *total_num)
 
 		hc_get_item_values(history, &history_items);	/* copy item data from history cache */
 
-		DBbegin();
-
-		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		do
 		{
-			DCmass_update_items(history, history_num);
-			DCmass_add_history(history, history_num);
-			DCmass_update_triggers(history, history_num, &trigger_diff);
-			DCmass_update_trends(history, history_num);
+			DBbegin();
 
-			/* processing of events, generated in functions: */
-			/*   DCmass_update_items() */
-			/*   DCmass_update_triggers() */
-			process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
+			if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+			{
+				DCmass_update_items(history, history_num);
+				DCmass_add_history(history, history_num);
+				DCmass_update_triggers(history, history_num, &trigger_diff);
+				DCmass_update_trends(history, history_num);
 
-			DCconfig_triggers_apply_changes(&trigger_diff);
-			zbx_save_trigger_changes(&trigger_diff);
-			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+				/* processing of events, generated in functions: */
+				/*   DCmass_update_items() */
+				/*   DCmass_update_triggers() */
+				process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
+
+				DCconfig_triggers_apply_changes(&trigger_diff);
+				zbx_save_trigger_changes(&trigger_diff);
+				zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+			}
+			else
+			{
+				DCmass_proxy_add_history(history, history_num);
+				DCmass_proxy_update_items(history, history_num);
+			}
 		}
-		else
-		{
-			DCmass_proxy_add_history(history, history_num);
-			DCmass_proxy_update_items(history, history_num);
-		}
-
-		DBcommit();
+		while (ZBX_DB_DOWN == DBcommit());
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 			DCconfig_unlock_triggers(&triggerids);
