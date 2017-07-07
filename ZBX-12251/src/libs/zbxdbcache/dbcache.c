@@ -2196,10 +2196,7 @@ int	DCsync_history(int sync_type, int *total_num)
 				/*   DCmass_update_items() */
 				/*   DCmass_update_triggers() */
 				process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
-
-				DCconfig_triggers_apply_changes(&trigger_diff);
 				zbx_save_trigger_changes(&trigger_diff);
-				zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 			}
 			else
 			{
@@ -2210,7 +2207,11 @@ int	DCsync_history(int sync_type, int *total_num)
 		while (ZBX_DB_DOWN == DBcommit());
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		{
+			DCconfig_triggers_apply_changes(&trigger_diff);
 			DCconfig_unlock_triggers(&triggerids);
+			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+		}
 
 		LOCK_CACHE;
 
