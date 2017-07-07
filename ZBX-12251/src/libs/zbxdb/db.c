@@ -74,7 +74,7 @@ struct zbx_db_result
 };
 
 static int	txn_level = 0;	/* transaction level, nested transactions are not supported */
-static int	txn_error = 0;	/* failed transaction */
+static int	txn_error = ZBX_DB_OK;	/* failed transaction */
 
 extern int	CONFIG_LOG_SLOW_QUERIES;
 
@@ -301,12 +301,12 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 #endif
 	/* Allow executing statements during a connection initialization. Make sure to mark transaction as failed. */
 	if (0 != txn_level)
-		txn_error = 1;
+		txn_error = ZBX_DB_DOWN;
 
 	last_txn_error = txn_error;
 	last_txn_level = txn_level;
 
-	txn_error = 0;
+	txn_error = ZBX_DB_OK;
 	txn_level = 0;
 
 #if defined(HAVE_IBM_DB2)
@@ -852,7 +852,7 @@ int	zbx_db_commit(void)
 		assert(0);
 	}
 
-	if (1 == txn_error)
+	if (ZBX_DB_OK != txn_error)
 		goto rollback;
 
 #if defined(HAVE_IBM_DB2)
@@ -918,7 +918,7 @@ int	zbx_db_rollback(void)
 	last_txn_error = txn_error;
 
 	/* allow rollback of failed transaction */
-	txn_error = 0;
+	txn_error = ZBX_DB_OK;
 
 #if defined(HAVE_IBM_DB2)
 
@@ -1267,7 +1267,7 @@ int	zbx_db_vexecute(const char *fmt, va_list args)
 	if (0 == txn_level)
 		zabbix_log(LOG_LEVEL_DEBUG, "query without transaction detected");
 
-	if (1 == txn_error)
+	if (ZBX_DB_OK != txn_error)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "ignoring query [txnlev:%d] [%s] within failed transaction", txn_level, sql);
 		ret = ZBX_DB_FAIL;
@@ -1432,7 +1432,7 @@ lbl_exec:
 	if (ZBX_DB_FAIL == ret && 0 < txn_level)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "query [%s] failed, setting transaction as failed", sql);
-		txn_error = 1;
+		txn_error = ZBX_DB_FAIL;
 	}
 clean:
 	zbx_free(sql);
@@ -1472,7 +1472,7 @@ DB_RESULT	zbx_db_vselect(const char *fmt, va_list args)
 
 	sql = zbx_dvsprintf(sql, fmt, args);
 
-	if (1 == txn_error)
+	if (ZBX_DB_OK != txn_error)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "ignoring query [txnlev:%d] [%s] within failed transaction", txn_level, sql);
 		goto clean;
@@ -1772,7 +1772,7 @@ lbl_get_table:
 	if (NULL == result && 0 < txn_level)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "query [%s] failed, setting transaction as failed", sql);
-		txn_error = 1;
+		txn_error = ZBX_DB_FAIL;
 	}
 clean:
 	zbx_free(sql);
