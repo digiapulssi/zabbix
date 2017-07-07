@@ -2178,33 +2178,36 @@ int	DCsync_history(int sync_type, int *total_num)
 
 		if (0 == history_num)
 			break;
-
+retry_txn:
 		hc_get_item_values(history, &history_items);	/* copy item data from history cache */
 
-		do
+		DBbegin();
+
+		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
-			DBbegin();
+			DCmass_update_items(history, history_num);
+			DCmass_add_history(history, history_num);
+			DCmass_update_triggers(history, history_num, &trigger_diff);
+			DCmass_update_trends(history, history_num);
 
-			if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-			{
-				DCmass_update_items(history, history_num);
-				DCmass_add_history(history, history_num);
-				DCmass_update_triggers(history, history_num, &trigger_diff);
-				DCmass_update_trends(history, history_num);
-
-				/* processing of events, generated in functions: */
-				/*   DCmass_update_items() */
-				/*   DCmass_update_triggers() */
-				process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
-				zbx_save_trigger_changes(&trigger_diff);
-			}
-			else
-			{
-				DCmass_proxy_add_history(history, history_num);
-				DCmass_proxy_update_items(history, history_num);
-			}
+			/* processing of events, generated in functions: */
+			/*   DCmass_update_items() */
+			/*   DCmass_update_triggers() */
+			process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
+			zbx_save_trigger_changes(&trigger_diff);
 		}
-		while (ZBX_DB_DOWN == DBcommit());
+		else
+		{
+			DCmass_proxy_add_history(history, history_num);
+			DCmass_proxy_update_items(history, history_num);
+		}
+
+		if (ZBX_DB_DOWN == DBcommit())
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "restarting transaction");
+			hc_free_item_values(history, history_num);
+			goto retry_txn;
+		}
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
