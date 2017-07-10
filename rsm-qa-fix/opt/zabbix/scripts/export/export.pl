@@ -578,7 +578,7 @@ sub __get_test_data
 
 			$last_avail_clock = $clock;
 
-			dbg("$service availability at ", ts_full($clock), ": $value");
+			#dbg("$service availability at ", ts_full($clock), ": $value");
 
 			# todo phase 1: remove the cycle here that counts failed_incidents, it's already calculated in __get_incidents()
 			# NB! REMOVED CODE HERE
@@ -625,7 +625,7 @@ sub __get_test_data
 			my $value = $row_ref->[0];
 			my $clock = $row_ref->[1];
 
-			dbg("$service rolling week at ", ts_full($clock), ": $value");
+			#dbg("$service rolling week at ", ts_full($clock), ": $value");
 
 			my $cycleclock = __cycle_start($clock, $delay);
 
@@ -1014,7 +1014,7 @@ sub __save_csv_data
 						{
 							foreach my $ip (keys(%{$nscycle{$ns}}))
 							{
-								dbg("NS $ns,$ip : positive ", $nscycle{$ns}{$ip}{'positive'}, "/", $nscycle{$ns}{$ip}{'total'});
+								#dbg("NS $ns,$ip : positive ", $nscycle{$ns}{$ip}{'positive'}, "/", $nscycle{$ns}{$ip}{'total'});
 
 								my $nscyclestatus;
 
@@ -1028,7 +1028,7 @@ sub __save_csv_data
 									$nscyclestatus = ($perc > SLV_UNAVAILABILITY_LIMIT ? $general_status_up : $general_status_down);
 								}
 
-								dbg("get ip version, csv:ns_avail service:$service, ip:", (defined($ip) ? $ip : "UNDEF"));
+								#dbg("get ip version, csv:ns_avail service:$service, ip:", (defined($ip) ? $ip : "UNDEF"));
 
 								my $ns_id = dw_get_id(ID_NS_NAME, $ns);
 								my $ip_id = dw_get_id(ID_NS_IP, $ip);
