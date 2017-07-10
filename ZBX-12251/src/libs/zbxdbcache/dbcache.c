@@ -2310,7 +2310,7 @@ int	DCsync_history(int sync_type, int *total_num)
 
 				DBmass_update_items(history, history_num, &delta_history, &state_diff);
 				DBmass_add_history(history, history_num);
-				DCmass_add_history(history, history_num);
+				DCmass_add_history(history, history_num);	/* same timestamp is not added */
 				DBmass_update_triggers(history, history_num, &trigger_diff);
 				DBmass_update_trends(history, history_num, &trends_diff);
 
