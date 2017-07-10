@@ -355,6 +355,23 @@ static ZBX_DC_TREND	*DCget_trend(zbx_uint64_t itemid)
 	return (ZBX_DC_TREND *)zbx_hashset_insert(&cache->trends, &trend, sizeof(ZBX_DC_TREND));
 }
 
+static void	DCupdate_trends(zbx_vector_uint64_pair_t *trends_diff)
+{
+	int	i;
+
+	LOCK_TRENDS;
+
+	for (i = 0; i < trends_diff->values_num; i++)
+	{
+		ZBX_DC_TREND	*trend;
+
+		if (NULL != (trend = zbx_hashset_search(&cache->trends, &trends_diff->values[i].first)))
+			trend->disable_from = trends_diff->values[i].second;
+	}
+
+	UNLOCK_TRENDS;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DCflush_trends                                                   *
@@ -364,7 +381,7 @@ static ZBX_DC_TREND	*DCget_trend(zbx_uint64_t itemid)
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static void	DCflush_trends(ZBX_DC_TREND *trends, int *trends_num, int update_cache)
+static void	DCflush_trends(ZBX_DC_TREND *trends, int *trends_num, zbx_vector_uint64_pair_t *trends_diff)
 {
 	const char	*__function_name = "DCflush_trends";
 	DB_RESULT	result;
@@ -587,13 +604,13 @@ static void	DCflush_trends(ZBX_DC_TREND *trends, int *trends_num, int update_cac
 	zbx_free(itemids);
 
 	/* if 'trends' is not a primary trends buffer */
-	if (0 != update_cache)
+	if (NULL != trends_diff)
 	{
 		/* we update it too */
-		LOCK_TRENDS;
-
 		for (i = 0; i < trends_to; i++)
 		{
+			zbx_uint64_pair_t	pair;
+
 			if (0 == trends[i].itemid)
 				continue;
 
@@ -603,11 +620,10 @@ static void	DCflush_trends(ZBX_DC_TREND *trends, int *trends_num, int update_cac
 			if (0 == trends[i].disable_from || trends[i].disable_from > clock)
 				continue;
 
-			if (NULL != (trend = zbx_hashset_search(&cache->trends, &trends[i].itemid)))
-				trend->disable_from = clock + SEC_PER_HOUR;
+			pair.first = trends[i].itemid;
+			pair.second = clock + SEC_PER_HOUR;
+			zbx_vector_uint64_pair_append(trends_diff, pair);
 		}
-
-		UNLOCK_TRENDS;
 	}
 
 	if (0 != inserts_num)
@@ -735,7 +751,7 @@ static void	DCadd_trend(const ZBX_DC_HISTORY *history, ZBX_DC_TREND **trends, in
 
 /******************************************************************************
  *                                                                            *
- * Function: DCmass_update_trends                                             *
+ * Function: DBmass_update_trends                                             *
  *                                                                            *
  * Parameters: history     - array of history data                            *
  *             history_num - number of history structures                     *
@@ -743,9 +759,10 @@ static void	DCadd_trend(const ZBX_DC_HISTORY *history, ZBX_DC_TREND **trends, in
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
+static void	DBmass_update_trends(const ZBX_DC_HISTORY *history, int history_num,
+		zbx_vector_uint64_pair_t *trends_diff)
 {
-	const char	*__function_name = "DCmass_update_trends";
+	const char	*__function_name = "DBmass_update_trends";
 	ZBX_DC_TREND	*trends = NULL;
 	zbx_timespec_t	ts;
 	int		trends_alloc = 0, trends_num = 0, i, hour, seconds;
@@ -790,7 +807,7 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 	UNLOCK_TRENDS;
 
 	while (0 < trends_num)
-		DCflush_trends(trends, &trends_num, 1);
+		DCflush_trends(trends, &trends_num, trends_diff);
 
 	zbx_free(trends);
 
@@ -829,7 +846,7 @@ static void	DCsync_trends(void)
 	DBbegin();
 
 	while (trends_num > 0)
-		DCflush_trends(trends, &trends_num, 0);
+		DCflush_trends(trends, &trends_num, NULL);
 
 	DBcommit();
 
@@ -842,7 +859,7 @@ static void	DCsync_trends(void)
 
 /******************************************************************************
  *                                                                            *
- * Function: DCmass_update_triggers                                           *
+ * Function: DBmass_update_triggers                                           *
  *                                                                            *
  * Purpose: re-calculate and update values of triggers related to the items   *
  *                                                                            *
@@ -852,9 +869,9 @@ static void	DCsync_trends(void)
  * Author: Alexei Vladishev, Alexander Vladishev                              *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_update_triggers(ZBX_DC_HISTORY *history, int history_num, zbx_vector_ptr_t *trigger_diff)
+static void	DBmass_update_triggers(ZBX_DC_HISTORY *history, int history_num, zbx_vector_ptr_t *trigger_diff)
 {
-	const char		*__function_name = "DCmass_update_triggers";
+	const char		*__function_name = "DBmass_update_triggers";
 	int			i, item_num = 0;
 	zbx_uint64_t		*itemids = NULL;
 	zbx_timespec_t		*timespecs = NULL;
@@ -2092,6 +2109,7 @@ int	DCsync_history(int sync_type, int *total_num)
 	time_t				sync_start, now;
 	zbx_vector_uint64_t		triggerids;
 	zbx_vector_ptr_t		history_items, trigger_diff, state_diff;
+	zbx_vector_uint64_pair_t	trends_diff;
 	zbx_hashset_t			delta_history;
 	zbx_binary_heap_t		tmp_history_queue;
 
@@ -2167,6 +2185,7 @@ int	DCsync_history(int sync_type, int *total_num)
 		zbx_hashset_create(&delta_history, 1000, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		zbx_vector_ptr_create(&state_diff);
 		zbx_vector_ptr_create(&trigger_diff);
+		zbx_vector_uint64_pair_create(&trends_diff);
 
 		zbx_vector_uint64_create(&triggerids);
 		zbx_vector_uint64_reserve(&triggerids, MIN(cache->history_num, ZBX_HC_SYNC_MAX) + 32);
@@ -2208,12 +2227,12 @@ retry_txn:
 		{
 			DBmass_update_items(history, history_num, &delta_history, &state_diff);
 			DBmass_add_history(history, history_num);
-			DCmass_update_triggers(history, history_num, &trigger_diff);
-			DCmass_update_trends(history, history_num);
+			DBmass_update_triggers(history, history_num, &trigger_diff);
+			DBmass_update_trends(history, history_num, &trends_diff);
 
 			/* processing of events, generated in functions: */
 			/*   DCmass_update_items() */
-			/*   DCmass_update_triggers() */
+			/*   DBmass_update_triggers() */
 			process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
 			zbx_save_trigger_changes(&trigger_diff);
 		}
@@ -2233,6 +2252,7 @@ retry_txn:
 				zbx_hashset_clear(&delta_history);
 				zbx_vector_ptr_clear(&state_diff);
 				zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+				zbx_vector_uint64_pair_clear(&trends_diff);
 			}
 
 			goto retry_txn;
@@ -2244,12 +2264,14 @@ retry_txn:
 			DCset_delta_items(&delta_history);
 			DCmass_add_history(history, history_num);
 			DCconfig_triggers_apply_changes(&trigger_diff);
+			DCupdate_trends(&trends_diff);
 
 			DCconfig_unlock_triggers(&triggerids);
 
 			zbx_hashset_clear(&delta_history);
 			zbx_vector_ptr_clear(&state_diff);
 			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+			zbx_vector_uint64_pair_clear(&trends_diff);
 		}
 
 		LOCK_CACHE;
@@ -2376,6 +2398,8 @@ retry_txn:
 		zbx_hashset_destroy(&delta_history);
 		zbx_vector_ptr_destroy(&state_diff);
 		zbx_vector_ptr_destroy(&trigger_diff);
+		zbx_vector_uint64_pair_destroy(&trends_diff);
+
 		zbx_vector_uint64_destroy(&triggerids);
 	}
 finish:
