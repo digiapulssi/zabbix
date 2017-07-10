@@ -122,6 +122,9 @@ class CConfigFile {
 		$this->config['DB']['DB_CA_FILE'] = array_key_exists('DB_CA_FILE', $DB) ? $DB['DB_CA_FILE'] : null;
 		$this->config['DB']['DB_CA_PATH'] = array_key_exists('DB_CA_PATH', $DB) ? $DB['DB_CA_PATH'] : null;
 		$this->config['DB']['DB_CA_CIPHER'] = array_key_exists('DB_CA_CIPHER', $DB) ? $DB['DB_CA_CIPHER'] : null;
+		$this->config['DB']['MYSQLI_OPT_CONNECT_TIMEOUT'] = array_key_exists('MYSQLI_OPT_CONNECT_TIMEOUT', $DB)
+			? $DB['MYSQLI_OPT_CONNECT_TIMEOUT']
+			: 3;
 
 		if (isset($ZBX_SERVER)) {
 			$this->config['ZBX_SERVER'] = $ZBX_SERVER;

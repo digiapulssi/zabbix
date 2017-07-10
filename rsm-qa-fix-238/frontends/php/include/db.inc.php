@@ -50,27 +50,20 @@ function DBconnect(&$error) {
 	else {
 		switch ($DB['TYPE']) {
 			case ZBX_DB_MYSQL:
+				$ssl_connection = false;
+
+				$DB['DB'] = mysqli_init();
+				mysqli_options($DB['DB'], MYSQLI_OPT_CONNECT_TIMEOUT, $DB['MYSQLI_OPT_CONNECT_TIMEOUT']);
+
 				if ($DB['DB_KEY_FILE'] !== null || $DB['DB_CERT_FILE'] !== null || $DB['DB_CA_FILE'] !== null
 						|| $DB['DB_CA_PATH'] !== null || $DB['DB_CA_CIPHER'] !== null) {
-					$DB['DB'] = mysqli_init();
 					mysqli_ssl_set($DB['DB'], $DB['DB_KEY_FILE'], $DB['DB_CERT_FILE'], $DB['DB_CA_FILE'],
 						$DB['DB_CA_PATH'], $DB['DB_CA_CIPHER']);
-					mysqli_real_connect($DB['DB'], $DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'],
-						$DB['PORT']);
-
-					$ssl = DBfetch(DBselect("SHOW STATUS LIKE 'Ssl_cipher'"));
-
-					if ($DB['DB'] && (!$ssl || $ssl['Value'] === '')) {
-						$error = 'Established connection is not secure';
-						$result = false;
-					}
-				}
-				else {
-					$DB['DB'] = @mysqli_connect($DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'],
-						$DB['PORT']);
+					$ssl_connection = true;
 				}
 
-				if (!$DB['DB']) {
+				if (!@mysqli_real_connect($DB['DB'], $DB['SERVER'], $DB['USER'], $DB['PASSWORD'], $DB['DATABASE'],
+						$DB['PORT'])) {
 					$error = 'Error connecting to database: '.trim(mysqli_connect_error());
 					$result = false;
 				}
@@ -80,6 +73,15 @@ function DBconnect(&$error) {
 				}
 				else {
 					DBexecute('SET NAMES utf8');
+				}
+
+				if ($result && $ssl_connection) {
+					$ssl = DBfetch(DBselect("SHOW STATUS LIKE 'Ssl_cipher'"));
+
+					if (!$ssl || $ssl['Value'] === '') {
+						$error = 'Established connection is not secure';
+						$result = false;
+					}
 				}
 
 				if ($result) {
