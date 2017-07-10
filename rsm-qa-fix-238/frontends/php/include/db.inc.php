@@ -53,7 +53,10 @@ function DBconnect(&$error) {
 				$ssl_connection = false;
 
 				$DB['DB'] = mysqli_init();
-				mysqli_options($DB['DB'], MYSQLI_OPT_CONNECT_TIMEOUT, $DB['MYSQLI_OPT_CONNECT_TIMEOUT']);
+
+				if ($DB['DB_CONN_TIMEOUT'] !== null) {
+					mysqli_options($DB['DB'], MYSQLI_OPT_CONNECT_TIMEOUT, $DB['DB_CONN_TIMEOUT']);
+				}
 
 				if ($DB['DB_KEY_FILE'] !== null || $DB['DB_CERT_FILE'] !== null || $DB['DB_CA_FILE'] !== null
 						|| $DB['DB_CA_PATH'] !== null || $DB['DB_CA_CIPHER'] !== null) {
@@ -1214,18 +1217,17 @@ function multiDBconnect($server, &$error) {
 	global $DB;
 
 	unset($DB['DB']);
-	$DB['TYPE'] = $server['TYPE'];
 	$DB['SERVER'] = $server['SERVER'];
 	$DB['PORT'] = $server['PORT'];
 	$DB['DATABASE'] = $server['DATABASE'];
 	$DB['USER'] = $server['USER'];
 	$DB['PASSWORD'] = $server['PASSWORD'];
 	$DB['SCHEMA'] = $server['SCHEMA'];
-	$DB['DB_KEY_FILE'] = $server['DB_KEY_FILE'];
-	$DB['DB_CERT_FILE'] = $server['DB_CERT_FILE'];
-	$DB['DB_CA_PATH'] = $server['DB_CA_PATH'];
-	$DB['DB_CA_FILE'] = $server['DB_CA_FILE'];
-	$DB['DB_CA_CIPHER'] = $server['DB_CA_CIPHER'];
+
+	$db_tls_options = array('DB_KEY_FILE', 'DB_CERT_FILE', 'DB_CA_FILE', 'DB_CA_PATH', 'DB_CA_CIPHER');
+	foreach ($db_tls_options as $db_tls_option) {
+		$DB[$db_tls_option] = array_key_exists($db_tls_option, $server) ? $server[$db_tls_option] : null;
+	}
 
 	return DBconnect($error);
 }
