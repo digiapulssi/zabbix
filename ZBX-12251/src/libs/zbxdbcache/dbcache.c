@@ -922,7 +922,8 @@ clean_items:
  *             h    - [IN/OUT] a reference to history cache value             *
  *                                                                            *
  ******************************************************************************/
-static void	DCadd_update_item_sql(size_t *sql_offset, DC_ITEM *item, ZBX_DC_HISTORY *h)
+static void	DCadd_update_item_sql(size_t *sql_offset, DC_ITEM *item, ZBX_DC_HISTORY *h,
+		zbx_vector_ptr_t *state_diff)
 {
 	char				*value_esc;
 	const char			*sql_start = "update items set ", *sql_continue = ",";
@@ -979,7 +980,7 @@ notsupported:
 		}
 
 		if (0 != update_cache)
-			DCconfig_set_item_db_state(item->itemid, h->state, h->value.err);
+			zbx_vector_ptr_append(state_diff, h);
 	}
 	else
 	{
@@ -997,7 +998,7 @@ notsupported:
 					(int)h->state);
 			sql_start = sql_continue;
 
-			DCconfig_set_item_db_state(item->itemid, h->state, "");
+			zbx_vector_ptr_append(state_diff, h);
 		}
 	}
 	if (sql_start == sql_continue)
@@ -1332,7 +1333,7 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: DCmass_update_items                                              *
+ * Function: DBmass_update_items                                              *
  *                                                                            *
  * Purpose: update items info after new value is received                     *
  *                                                                            *
@@ -1342,7 +1343,8 @@ out:
  * Author: Alexei Vladishev, Eugene Grigorjev, Alexander Vladishev            *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, zbx_hashset_t *delta_history)
+static void	DBmass_update_items(ZBX_DC_HISTORY *history, int history_num, zbx_hashset_t *delta_history,
+		zbx_vector_ptr_t *state_diff)
 {
 	const char		*__function_name = "DCmass_update_items";
 
@@ -1356,7 +1358,6 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, zbx_ha
 
 	items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
 	errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
-	zbx_hashset_create(delta_history, 1000, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	zbx_vector_ptr_create(&inventory_values);
 	zbx_vector_uint64_create(&itemids);
@@ -1413,7 +1414,7 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, zbx_ha
 
 		preprocess_item_value(&items[i], h, delta_history);
 
-		DCadd_update_item_sql(&sql_offset, &items[i], h);
+		DCadd_update_item_sql(&sql_offset, &items[i], h, state_diff);
 		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
 
 		DCinventory_value_add(&inventory_values, &items[i], h);
@@ -1504,7 +1505,7 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
  *                                                                            *
  * Function: dc_add_history_dbl                                               *
  *                                                                            *
- * Purpose: helper function for DCmass_add_history()                          *
+ * Purpose: helper function for DBmass_add_history()                          *
  *                                                                            *
  ******************************************************************************/
 static void	dc_add_history_dbl(ZBX_DC_HISTORY *history, int history_num)
@@ -1535,7 +1536,7 @@ static void	dc_add_history_dbl(ZBX_DC_HISTORY *history, int history_num)
  *                                                                            *
  * Function: dc_add_history_uint                                              *
  *                                                                            *
- * Purpose: helper function for DCmass_add_history()                          *
+ * Purpose: helper function for DBmass_add_history()                          *
  *                                                                            *
  ******************************************************************************/
 static void	dc_add_history_uint(ZBX_DC_HISTORY *history, int history_num)
@@ -1566,7 +1567,7 @@ static void	dc_add_history_uint(ZBX_DC_HISTORY *history, int history_num)
  *                                                                            *
  * Function: dc_add_history_str                                               *
  *                                                                            *
- * Purpose: helper function for DCmass_add_history()                          *
+ * Purpose: helper function for DBmass_add_history()                          *
  *                                                                            *
  ******************************************************************************/
 static void	dc_add_history_str(ZBX_DC_HISTORY *history, int history_num)
@@ -1597,7 +1598,7 @@ static void	dc_add_history_str(ZBX_DC_HISTORY *history, int history_num)
  *                                                                            *
  * Function: dc_add_history_text                                              *
  *                                                                            *
- * Purpose: helper function for DCmass_add_history()                          *
+ * Purpose: helper function for DBmass_add_history()                          *
  *                                                                            *
  ******************************************************************************/
 static void	dc_add_history_text(ZBX_DC_HISTORY *history, int history_num)
@@ -1628,7 +1629,7 @@ static void	dc_add_history_text(ZBX_DC_HISTORY *history, int history_num)
  *                                                                            *
  * Function: dc_add_history_log                                               *
  *                                                                            *
- * Purpose: helper function for DCmass_add_history()                          *
+ * Purpose: helper function for DBmass_add_history()                          *
  *                                                                            *
  ******************************************************************************/
 static void	dc_add_history_log(ZBX_DC_HISTORY *history, int history_num)
@@ -1662,7 +1663,7 @@ static void	dc_add_history_log(ZBX_DC_HISTORY *history, int history_num)
 
 /******************************************************************************
  *                                                                            *
- * Function: DCmass_add_history                                               *
+ * Function: DBmass_add_history                                               *
  *                                                                            *
  * Purpose: inserting new history data after new value is received            *
  *                                                                            *
@@ -1672,11 +1673,11 @@ static void	dc_add_history_log(ZBX_DC_HISTORY *history, int history_num)
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num)
+static void	DBmass_add_history(ZBX_DC_HISTORY *history, int history_num)
 {
-	const char	*__function_name = "DCmass_add_history";
+	const char	*__function_name = "DBmass_add_history";
 
-	int		i, h_num = 0, huint_num = 0, hstr_num = 0, htext_num = 0, hlog_num = 0, rc = ZBX_DB_OK;
+	int		i, h_num = 0, huint_num = 0, hstr_num = 0, htext_num = 0, hlog_num = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1727,25 +1728,30 @@ static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num)
 	if (0 != hlog_num)
 		dc_add_history_log(history, history_num);
 
-	/* update value cache */
-	if (ZBX_DB_OK <= rc && 0 != (program_type & ZBX_PROGRAM_TYPE_SERVER) &&
-			0 != h_num + huint_num + hstr_num + htext_num + hlog_num)
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+}
+
+static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num)
+{
+	int		i;
+	const char	*__function_name = "DCmass_add_history";
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	/* add to value cache */
+	zbx_vc_lock();
+
+	for (i = 0; i < history_num; i++)
 	{
-		/* the history values were written into database, now add to value cache */
-		zbx_vc_lock();
+		ZBX_DC_HISTORY	*h = &history[i];
 
-		for (i = 0; i < history_num; i++)
-		{
-			ZBX_DC_HISTORY	*h = &history[i];
+		if (0 != (ZBX_DC_FLAGS_NOT_FOR_HISTORY & h->flags))
+			continue;
 
-			if (0 != (ZBX_DC_FLAGS_NOT_FOR_HISTORY & h->flags))
-				continue;
-
-			zbx_vc_add_value(h->itemid, h->value_type, &h->ts, &h->value);
-		}
-
-		zbx_vc_unlock();
+		zbx_vc_add_value(h->itemid, h->value_type, &h->ts, &h->value);
 	}
+
+	zbx_vc_unlock();
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -2041,6 +2047,21 @@ static void	DCmodule_prepare_history(ZBX_DC_HISTORY *history, int history_num, Z
 	}
 }
 
+static void	DCset_item_states(zbx_vector_ptr_t *state_diff)
+{
+	int	i;
+
+	for (i = 0; i < state_diff->values_num; i++)
+	{
+		ZBX_DC_HISTORY	*h = state_diff->values[i];
+
+		if (ITEM_STATE_NOTSUPPORTED == h->state)
+			DCconfig_set_item_db_state(h->itemid, h->state, h->value.err);
+		else
+			DCconfig_set_item_db_state(h->itemid, h->state, "");
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DCsync_history                                                   *
@@ -2070,7 +2091,7 @@ int	DCsync_history(int sync_type, int *total_num)
 					history_integer_num, history_string_num, history_text_num, history_log_num;
 	time_t				sync_start, now;
 	zbx_vector_uint64_t		triggerids;
-	zbx_vector_ptr_t		history_items, trigger_diff;
+	zbx_vector_ptr_t		history_items, trigger_diff, state_diff;
 	zbx_hashset_t			delta_history;
 	zbx_binary_heap_t		tmp_history_queue;
 
@@ -2143,9 +2164,12 @@ int	DCsync_history(int sync_type, int *total_num)
 
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 	{
+		zbx_hashset_create(&delta_history, 1000, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+		zbx_vector_ptr_create(&state_diff);
+		zbx_vector_ptr_create(&trigger_diff);
+
 		zbx_vector_uint64_create(&triggerids);
 		zbx_vector_uint64_reserve(&triggerids, MIN(cache->history_num, ZBX_HC_SYNC_MAX) + 32);
-		zbx_vector_ptr_create(&trigger_diff);
 	}
 
 	zbx_vector_ptr_create(&history_items);
@@ -2182,8 +2206,8 @@ retry_txn:
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
-			DCmass_update_items(history, history_num, &delta_history);
-			DCmass_add_history(history, history_num);
+			DBmass_update_items(history, history_num, &delta_history, &state_diff);
+			DBmass_add_history(history, history_num);
 			DCmass_update_triggers(history, history_num, &trigger_diff);
 			DCmass_update_trends(history, history_num);
 
@@ -2204,18 +2228,27 @@ retry_txn:
 			zabbix_log(LOG_LEVEL_WARNING, "restarting transaction");
 			hc_free_item_values(history, history_num);
 
-			zbx_hashset_destroy(&delta_history);
-			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+			if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+			{
+				zbx_hashset_clear(&delta_history);
+				zbx_vector_ptr_clear(&state_diff);
+				zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+			}
+
 			goto retry_txn;
 		}
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
+			DCset_item_states(&state_diff);
 			DCset_delta_items(&delta_history);
+			DCmass_add_history(history, history_num);
 			DCconfig_triggers_apply_changes(&trigger_diff);
+
 			DCconfig_unlock_triggers(&triggerids);
 
-			zbx_hashset_destroy(&delta_history);
+			zbx_hashset_clear(&delta_history);
+			zbx_vector_ptr_clear(&state_diff);
 			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 		}
 
@@ -2340,6 +2373,8 @@ retry_txn:
 	zbx_vector_ptr_destroy(&history_items);
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 	{
+		zbx_hashset_destroy(&delta_history);
+		zbx_vector_ptr_destroy(&state_diff);
 		zbx_vector_ptr_destroy(&trigger_diff);
 		zbx_vector_uint64_destroy(&triggerids);
 	}
