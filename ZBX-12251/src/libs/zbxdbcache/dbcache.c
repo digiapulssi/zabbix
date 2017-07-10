@@ -2064,6 +2064,87 @@ static void	DCmodule_prepare_history(ZBX_DC_HISTORY *history, int history_num, Z
 	}
 }
 
+static void	DCmodule_sync_history(int history_float_num, int history_integer_num, int history_string_num,
+		int history_text_num, int history_log_num, ZBX_HISTORY_FLOAT *history_float,
+		ZBX_HISTORY_INTEGER *history_integer, ZBX_HISTORY_STRING *history_string,
+		ZBX_HISTORY_TEXT *history_text, ZBX_HISTORY_LOG *history_log)
+{
+	if (0 != history_float_num)
+	{
+		int	i;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "syncing float history data with modules...");
+
+		for (i = 0; NULL != history_float_cbs[i].module; i++)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_float_cbs[i].module->name);
+			history_float_cbs[i].history_float_cb(history_float, history_float_num);
+		}
+
+		zabbix_log(LOG_LEVEL_DEBUG, "synced %d float values with modules", history_float_num);
+	}
+
+	if (0 != history_integer_num)
+	{
+		int	i;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "syncing integer history data with modules...");
+
+		for (i = 0; NULL != history_integer_cbs[i].module; i++)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_integer_cbs[i].module->name);
+			history_integer_cbs[i].history_integer_cb(history_integer, history_integer_num);
+		}
+
+		zabbix_log(LOG_LEVEL_DEBUG, "synced %d integer values with modules", history_integer_num);
+	}
+
+	if (0 != history_string_num)
+	{
+		int	i;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "syncing string history data with modules...");
+
+		for (i = 0; NULL != history_string_cbs[i].module; i++)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_string_cbs[i].module->name);
+			history_string_cbs[i].history_string_cb(history_string, history_string_num);
+		}
+
+		zabbix_log(LOG_LEVEL_DEBUG, "synced %d string values with modules", history_string_num);
+	}
+
+	if (0 != history_text_num)
+	{
+		int	i;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "syncing text history data with modules...");
+
+		for (i = 0; NULL != history_text_cbs[i].module; i++)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_text_cbs[i].module->name);
+			history_text_cbs[i].history_text_cb(history_text, history_text_num);
+		}
+
+		zabbix_log(LOG_LEVEL_DEBUG, "synced %d text values with modules", history_text_num);
+	}
+
+	if (0 != history_log_num)
+	{
+		int	i;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "syncing log history data with modules...");
+
+		for (i = 0; NULL != history_log_cbs[i].module; i++)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_log_cbs[i].module->name);
+			history_log_cbs[i].history_log_cb(history_log, history_log_num);
+		}
+
+		zabbix_log(LOG_LEVEL_DEBUG, "synced %d log values with modules", history_log_num);
+	}
+}
+
 static void	DCset_item_states(zbx_vector_ptr_t *state_diff)
 {
 	int	i;
@@ -2105,7 +2186,7 @@ int	DCsync_history(int sync_type, int *total_num)
 	static ZBX_HISTORY_TEXT		*history_text;
 	static ZBX_HISTORY_LOG		*history_log;
 	int				history_num, candidate_num, next_sync = 0, history_float_num,
-					history_integer_num, history_string_num, history_text_num, history_log_num;
+					history_integer_num, history_string_num, history_text_num, history_log_num, ret;
 	time_t				sync_start, now;
 	zbx_vector_uint64_t		triggerids;
 	zbx_vector_ptr_t		history_items, trigger_diff, state_diff;
@@ -2218,60 +2299,59 @@ int	DCsync_history(int sync_type, int *total_num)
 
 		if (0 == history_num)
 			break;
-retry_txn:
-		hc_get_item_values(history, &history_items);	/* copy item data from history cache */
 
-		DBbegin();
+		hc_get_item_values(history, &history_items);	/* copy item data from history cache */
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
-			DBmass_update_items(history, history_num, &delta_history, &state_diff);
-			DBmass_add_history(history, history_num);
-			DBmass_update_triggers(history, history_num, &trigger_diff);
-			DBmass_update_trends(history, history_num, &trends_diff);
-
-			/* processing of events, generated in functions: */
-			/*   DCmass_update_items() */
-			/*   DBmass_update_triggers() */
-			process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
-			zbx_save_trigger_changes(&trigger_diff);
-		}
-		else
-		{
-			DCmass_proxy_add_history(history, history_num);
-			DCmass_proxy_update_items(history, history_num);
-		}
-
-		if (ZBX_DB_DOWN == DBcommit())
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "restarting transaction");
-			hc_free_item_values(history, history_num);
-
-			if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+			do
 			{
+				DBbegin();
+
+				DBmass_update_items(history, history_num, &delta_history, &state_diff);
+				DBmass_add_history(history, history_num);
+				DBmass_update_triggers(history, history_num, &trigger_diff);
+				DBmass_update_trends(history, history_num, &trends_diff);
+
+				/* processing of events, generated in functions: */
+				/* DBmass_update_items() */
+				/* DBmass_update_triggers() */
+				process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
+				zbx_save_trigger_changes(&trigger_diff);
+
+				if (ZBX_DB_OK == (ret = DBcommit()))
+				{
+					DCset_item_states(&state_diff);
+					DCset_delta_items(&delta_history);
+					DCmass_add_history(history, history_num);
+					DCconfig_triggers_apply_changes(&trigger_diff);
+					DCupdate_trends(&trends_diff);
+				}
+				else if (ZBX_DB_DOWN == ret)	/* revert to original item data from history cache */
+				{
+					hc_free_item_values(history, history_num);
+					hc_get_item_values(history, &history_items);
+				}
+
 				zbx_hashset_clear(&delta_history);
 				zbx_vector_ptr_clear(&state_diff);
 				zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 				zbx_vector_uint64_pair_clear(&trends_diff);
 			}
-
-			goto retry_txn;
-		}
-
-		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-		{
-			DCset_item_states(&state_diff);
-			DCset_delta_items(&delta_history);
-			DCmass_add_history(history, history_num);
-			DCconfig_triggers_apply_changes(&trigger_diff);
-			DCupdate_trends(&trends_diff);
+			while (ZBX_DB_DOWN == ret);
 
 			DCconfig_unlock_triggers(&triggerids);
+		}
+		else
+		{
+			do
+			{
+				DBbegin();
 
-			zbx_hashset_clear(&delta_history);
-			zbx_vector_ptr_clear(&state_diff);
-			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
-			zbx_vector_uint64_pair_clear(&trends_diff);
+				DCmass_proxy_add_history(history, history_num);
+				DCmass_proxy_update_items(history, history_num);
+			}
+			while (ZBX_DB_DOWN == (ret = DBcommit()));
 		}
 
 		LOCK_CACHE;
@@ -2284,84 +2364,17 @@ retry_txn:
 		*total_num += history_num;
 		candidate_num = history_items.values_num;
 
-		DCmodule_prepare_history(history, history_num, history_float, &history_float_num, history_integer,
-				&history_integer_num, history_string, &history_string_num, history_text,
-				&history_text_num, history_log, &history_log_num);
-
-		if (0 != history_float_num)
+		if (ZBX_DB_OK == ret)
 		{
-			int	i;
+			DCmodule_prepare_history(history, history_num, history_float, &history_float_num,
+					history_integer, &history_integer_num, history_string, &history_string_num,
+					history_text, &history_text_num, history_log, &history_log_num);
 
-			zabbix_log(LOG_LEVEL_DEBUG, "syncing float history data with modules...");
-
-			for (i = 0; NULL != history_float_cbs[i].module; i++)
-			{
-				zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_float_cbs[i].module->name);
-				history_float_cbs[i].history_float_cb(history_float, history_float_num);
-			}
-
-			zabbix_log(LOG_LEVEL_DEBUG, "synced %d float values with modules", history_float_num);
+			DCmodule_sync_history(history_float_num, history_integer_num, history_string_num,
+					history_text_num, history_log_num, history_float, history_integer,
+					history_string, history_text, history_log);
 		}
 
-		if (0 != history_integer_num)
-		{
-			int	i;
-
-			zabbix_log(LOG_LEVEL_DEBUG, "syncing integer history data with modules...");
-
-			for (i = 0; NULL != history_integer_cbs[i].module; i++)
-			{
-				zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_integer_cbs[i].module->name);
-				history_integer_cbs[i].history_integer_cb(history_integer, history_integer_num);
-			}
-
-			zabbix_log(LOG_LEVEL_DEBUG, "synced %d integer values with modules", history_integer_num);
-		}
-
-		if (0 != history_string_num)
-		{
-			int	i;
-
-			zabbix_log(LOG_LEVEL_DEBUG, "syncing string history data with modules...");
-
-			for (i = 0; NULL != history_string_cbs[i].module; i++)
-			{
-				zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_string_cbs[i].module->name);
-				history_string_cbs[i].history_string_cb(history_string, history_string_num);
-			}
-
-			zabbix_log(LOG_LEVEL_DEBUG, "synced %d string values with modules", history_string_num);
-		}
-
-		if (0 != history_text_num)
-		{
-			int	i;
-
-			zabbix_log(LOG_LEVEL_DEBUG, "syncing text history data with modules...");
-
-			for (i = 0; NULL != history_text_cbs[i].module; i++)
-			{
-				zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_text_cbs[i].module->name);
-				history_text_cbs[i].history_text_cb(history_text, history_text_num);
-			}
-
-			zabbix_log(LOG_LEVEL_DEBUG, "synced %d text values with modules", history_text_num);
-		}
-
-		if (0 != history_log_num)
-		{
-			int	i;
-
-			zabbix_log(LOG_LEVEL_DEBUG, "syncing log history data with modules...");
-
-			for (i = 0; NULL != history_log_cbs[i].module; i++)
-			{
-				zabbix_log(LOG_LEVEL_DEBUG, "... module \"%s\"", history_log_cbs[i].module->name);
-				history_log_cbs[i].history_log_cb(history_log, history_log_num);
-			}
-
-			zabbix_log(LOG_LEVEL_DEBUG, "synced %d log values with modules", history_log_num);
-		}
 
 		now = time(NULL);
 
