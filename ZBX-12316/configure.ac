@@ -31,6 +31,9 @@ AM_CONFIG_HEADER(include/config.h)
 
 AC_CANONICAL_HOST
 
+dnl Silence warning: ar: 'u' modifier ignored since 'D' is the default
+AC_SUBST(ARFLAGS, [cr])
+
 dnl *****************************************************************
 dnl *                                                               *
 dnl *                     Checks for programs                       *
