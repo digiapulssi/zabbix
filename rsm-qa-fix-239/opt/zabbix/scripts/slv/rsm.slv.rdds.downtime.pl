@@ -39,6 +39,12 @@ foreach (@$tlds_ref)
 {
 	$tld = $_; # set global variable here
 
+	if (uint_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)) == SUCCESS)
+	{
+		# value already exists
+		next unless (opt('dry-run'));
+	}
+
 	# for future calculation of downtime
 	$tld_items{$tld} = get_itemid_by_host($tld, $cfg_key_in);
 }
@@ -66,3 +72,16 @@ $tld = undef;
 send_values();
 
 slv_exit(SUCCESS);
+
+# todo phase 1: taken from RSMSLV1.pm
+sub uint_value_exists
+{
+        my $clock = shift;
+        my $itemid = shift;
+
+        my $rows_ref = db_select("select 1 from history_uint where itemid=$itemid and clock=$clock");
+
+        return SUCCESS if ($rows_ref->[0]->[0]);
+
+        return E_FAIL;
+}

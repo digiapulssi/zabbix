@@ -2153,7 +2153,6 @@ sub __no_status_result
 # todo phase 1: this function was modified to allow earlier run on freshly installed database
 sub __get_config_minclock
 {
-	my $probe_item_key = 'rsm.probe.online';
 	my $minclock;
 
 	foreach (@server_keys)
@@ -2165,7 +2164,10 @@ sub __get_config_minclock
 			"select min(clock)".
 			" from history_uint".
 			" where itemid in".
-				" (select itemid from items where key_='$probe_item_key' and templateid is not null)");
+				" (select itemid".
+				" from items".
+				" where key_='" . PROBE_KEY_ONLINE.
+					"' and templateid is not null)");
 
 	next unless (defined($rows_ref->[0]->[0]));
 
