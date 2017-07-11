@@ -254,29 +254,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	$data['totalProbes'] = count($hostIds);
 
-	// get probes items
-	$probeItems = API::Item()->get(array(
-		'output' => array('itemid', 'key_', 'hostid'),
-		'hostids' => $hostIds,
-		'filter' => array(
-			'key_' => array(PROBE_STATUS_MANUAL, PROBE_STATUS_AUTOMATIC)
-		),
-		'monitored' => true,
-		'preservekeys' => true
-	));
-
-	foreach ($probeItems as $probeItem) {
-		// manual items
-		if ($probeItem['key_'] == PROBE_STATUS_MANUAL) {
-			$manualItemIds[] = $probeItem['itemid'];
-		}
-		// automatic items
-		if ($probeItem['key_'] == PROBE_STATUS_AUTOMATIC) {
-			$automaticItemIds[$probeItem['itemid']] = $probeItem['hostid'];
-		}
-	}
-
-	// probe main data generation
+	// Probe main data generation
 	foreach ($hosts as $host) {
 		$data['probes'][$host['hostid']] = array(
 			'host' => $host['host'],
@@ -284,43 +262,31 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		);
 	}
 
-	// get manual data
-	$ignoredHostIds = [];
-	$hostNames = [];
+	// Get probe status.
+	$probeItems = API::Item()->get(array(
+		'output' => array('itemid', 'key_', 'hostid'),
+		'hostids' => $hostIds,
+		'filter' => array(
+			'key_' => PROBE_STATUS_ONLINE
+		),
+		'monitored' => true,
+		'preservekeys' => true
+	));
 
-	foreach ($manualItemIds as $itemId) {
+	foreach ($probeItems as $probeItem) {
 		$itemValue = DBfetch(DBselect(DBaddLimit(
 			'SELECT h.value'.
 			' FROM history_uint h'.
-			' WHERE h.itemid='.$itemId.
-				' AND h.clock<='.$testTimeTill.
-			' ORDER BY h.clock DESC',
+			' WHERE h.itemid='.$probeItem['itemid'].
+				' AND h.clock='.$testTimeFrom,
 			1
 		)));
-
 		if ($itemValue && $itemValue['value'] == PROBE_DOWN) {
-			$data['probes'][$probeItems[$itemId]['hostid']]['status'] = PROBE_DOWN;
-			$ignoredHostIds[] = $probeItems[$itemId]['hostid'];
+			$data['probes'][$probeItem['hostid']]['status'] = $itemValue['value'];
 		}
 	}
 
-	// get automatic data
-	foreach ($automaticItemIds as $itemId => $hostId) {
-		if (!in_array($hostId, $ignoredHostIds)) {
-			$itemValue = DBfetch(DBselect(DBaddLimit(
-				'SELECT h.value'.
-				' FROM history_uint h'.
-				' WHERE h.itemid='.$itemId.
-					' AND h.clock>='.$testTimeFrom.
-					' AND h.clock<='.$testTimeTill,
-				1
-			)));
-
-			if ($itemValue && $itemValue['value'] == PROBE_DOWN) {
-				$data['probes'][$hostId]['status'] = PROBE_DOWN;
-			}
-		}
-	}
+	$hostNames = [];
 
 	// get probes data hosts
 	foreach ($data['probes'] as $hostId => $probe) {

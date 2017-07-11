@@ -1423,8 +1423,7 @@ define('CALCULATED_RDDS_ROLLWEEK_SLA',			'rsm.configvalue[RSM.RDDS.ROLLWEEK.SLA]
 define('CALCULATED_EPP_ROLLWEEK_SLA',			'rsm.configvalue[RSM.EPP.ROLLWEEK.SLA]');
 
 // SLA monitoring probe status items keys
-define('PROBE_STATUS_AUTOMATIC',	'rsm.probe.status[automatic,"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"]');
-define('PROBE_STATUS_MANUAL',		'rsm.probe.status[manual]');
+define('PROBE_STATUS_ONLINE',		'rsm.probe.online');
 define('PROBE_DNS_UDP_ITEM',		'rsm.dns.udp[{$RSM.TLD}]');
 define('PROBE_DNS_UDP_ITEM_RTT',	'rsm.dns.udp.rtt[');
 define('PROBE_RDDS_ITEM',			'rsm.rdds[');
