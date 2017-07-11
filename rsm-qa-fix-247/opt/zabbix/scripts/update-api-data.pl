@@ -44,6 +44,7 @@ sub get_history_by_itemid($$$);
 sub get_historical_value_by_time($$);
 sub fill_test_data_dns($$$);
 sub fill_test_data_rdds($$);
+sub match_clocks_with_results($$);
 
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
 
@@ -702,26 +703,18 @@ foreach (keys(%$servicedata))
 
 						dbg("  values for $nsip:");
 
-						my $test_result_index = 0;
+						my @clocks = keys(%{$endvalues_ref});
+						my $matches = match_clocks_with_results(\@clocks, \@test_results);
 
-						foreach my $clock (sort(keys(%$endvalues_ref))) # must be sorted by clock
+						foreach my $clock (@clocks)
 						{
-							if ($clock < $test_results[$test_result_index]->{'start'})
+							unless (exists($matches->{$clock}))
 							{
 								__no_status_result($service, $avail_key, $probe, $clock, $nsip);
 								next;
 							}
 
-							# move to corresponding test result
-							$test_result_index++ while ($test_result_index < $test_results_count and $clock > $test_results[$test_result_index]->{'end'});
-
-							if ($test_result_index == $test_results_count)
-							{
-								__no_status_result($service, $avail_key, $probe, $clock, $nsip);
-								next;
-							}
-
-							my $tr_ref = $test_results[$test_result_index];
+							my $tr_ref = $matches->{$clock};
 							$tr_ref->{'probes'}->{$probe}->{'status'} = undef;	# the status is set later
 
 							if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
@@ -830,26 +823,26 @@ foreach (keys(%$servicedata))
 					{
 						my $test_result_index = 0;
 
+						my @clocks = ();
+
+						foreach my $endvalues_ref (@{$subservices_ref->{$subservice}})
+						{
+							push(@clocks, $endvalues_ref->{'clock'});
+						}
+
+						my $matches = match_clocks_with_results(\@clocks, \@test_results);
+
 						foreach my $endvalues_ref (@{$subservices_ref->{$subservice}})
 						{
 							my $clock = $endvalues_ref->{'clock'};
 
-							if ($clock < $test_results[$test_result_index]->{'start'})
+							unless (exists($matches->{$clock}))
 							{
 								__no_status_result($subservice, $avail_key, $probe, $clock);
 								next;
 							}
 
-							# move to corresponding test result
-							$test_result_index++ while ($test_result_index < $test_results_count and $clock > $test_results[$test_result_index]->{'end'});
-
-							if ($test_result_index == $test_results_count)
-							{
-								__no_status_result($subservice, $avail_key, $probe, $clock);
-								next;
-							}
-
-							my $tr_ref = $test_results[$test_result_index];
+							my $tr_ref = $matches->{$clock};
 							$tr_ref->{+JSON_RDDS_SUBSERVICE}->{$subservice}->{$probe}->{'status'} = undef;	# the status is set later
 
 							if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
@@ -971,26 +964,18 @@ foreach (keys(%$servicedata))
 				{
 					my $endvalues_ref = $values_ref->{$probe};
 
-					my $test_result_index = 0;
+					my @clocks = keys(%{$endvalues_ref});
+					my $matches = match_clocks_with_results(\@clocks, \@test_results);
 
-					foreach my $clock (sort(keys(%$endvalues_ref))) # must be sorted by clock
+					foreach my $clock (@clocks)
 					{
-						if ($clock < $test_results[$test_result_index]->{'start'})
+						unless (exists($matches->{$clock}))
 						{
 							__no_status_result($service, $avail_key, $probe, $clock);
 							next;
 						}
 
-						# move to corresponding test result
-						$test_result_index++ while ($test_result_index < $test_results_count and $clock > $test_results[$test_result_index]->{'end'});
-
-						if ($test_result_index == $test_results_count)
-						{
-							__no_status_result($service, $avail_key, $probe, $clock);
-							next;
-						}
-
-						my $tr_ref = $test_results[$test_result_index];
+						my $tr_ref = $matches->{$clock};
 						$tr_ref->{'probes'}->{$probe}->{'status'} = undef;	# the status is set later
 
 						if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
@@ -1126,11 +1111,16 @@ sub get_history_by_itemid($$$)
 	my $timestamp_from = shift;
 	my $timestamp_till = shift;
 
+	# we need previous value to have at the time of @timestamp_from
+	my $rows_ref = db_select("select delay from items where itemid=$itemid");
+
+	$timestamp_from -= $rows_ref->[0]->[0];
+
 	return db_select(
 			"select clock,value" .
 			" from history_uint" .
 			" where itemid=$itemid" .
-			" and " . sql_time_condition($timestamp_from, $timestamp_till) .
+				" and " . sql_time_condition($timestamp_from, $timestamp_till) .
 			" order by clock");
 }
 
@@ -1174,12 +1164,26 @@ sub fill_test_data_dns($$$)
 
 		foreach my $test (@{$src->{$ns}})
 		{
+			dbg("ns:$ns ip:$test->{'ip'} clock:", $test->{'clock'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
+
+			# if Name Server has no data yet clock and rtt should be both undefined
+			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
+					defined($test->{'clock'}) && !defined($test->{'rtt'}))
+			{
+				fail("Gleb/dimir were wrong, DNS test clock and rtt can be undefined independently");
+			}
+
 			my $metric = {
 				'testDateTime'	=> $test->{'clock'},
 				'targetIP'	=> $test->{'ip'}
 			};
 
-			if (substr($test->{'rtt'}, 0, 1) eq "-")
+			if (!defined($test->{'rtt'}))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = 'no data';
+			}
+			elsif (substr($test->{'rtt'}, 0, 1) eq "-")
 			{
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = $test->{'rtt'};
@@ -1203,7 +1207,7 @@ sub fill_test_data_dns($$$)
 			push(@{$test_data_ref->{'metrics'}}, $metric);
 		}
 
-		$test_data_ref->{'status'} = "No result" unless (defined($test_data_ref->{'status'}));
+		$test_data_ref->{'status'} //= "No result";
 
 		push(@{$dst}, $test_data_ref);
 	}
@@ -1214,33 +1218,82 @@ sub fill_test_data_rdds($$)
 	my $src = shift;
 	my $dst = shift;
 
-	fail("Gleb was wrong, RDDS test data can have more (or less) than one metric") if (scalar(@{$src}) != 1);
+	# sanity check, RDDS test data with more than one metric signifies data consistency problems upstream
+	if (scalar(@{$src}) > 1)
+	{
+		use Data::Dumper;
 
-	my $test = $src->[0];
+		fail("Unexpected RDDS test data having more than one metric:\n", Dumper($src));
+	}
 
-	my $metric = {
-		'testDateTime'	=> $test->{'clock'},
-		'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+	my $test_data_ref = {
+		'target'	=> undef,
+		'status'	=> undef,
+		'metrics'	=> []
 	};
 
-	if (substr($test->{'rtt'}, 0, 1) eq "-")
+	if (scalar(@{$src}) == 0)
 	{
-		$metric->{'rtt'} = undef;
-		$metric->{'result'} = $test->{'rtt'};
+		my $metric = {
+			'testDateTime'	=> undef,
+			'targetIP'	=> undef,
+			'rtt'		=> undef,
+			'result'	=> 'no data'
+		};
+
+		push(@{$test_data_ref->{'metrics'}}, $metric);
 	}
 	else
 	{
-		$metric->{'rtt'} = $test->{'rtt'};
-		$metric->{'result'} = "ok";
+		my $test = $src->[0];
+
+		my $metric = {
+			'testDateTime'	=> $test->{'clock'},
+			'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+		};
+
+		if (substr($test->{'rtt'}, 0, 1) eq "-")
+		{
+			$test_data_ref->{'status'} = "Down";
+
+			$metric->{'rtt'} = undef;
+			$metric->{'result'} = $test->{'rtt'};
+		}
+		else
+		{
+			$test_data_ref->{'status'} = "Up";
+
+			$metric->{'rtt'} = $test->{'rtt'};
+			$metric->{'result'} = "ok";
+		}
+
+		push(@{$test_data_ref->{'metrics'}}, $metric);
 	}
 
-	push(@{$dst}, {
-		'target'	=> undef,
-		'status'	=> defined($metric->{'rtt'}) ? "Up" : "Down",
-		'metrics'	=> [
-			$metric
-		]
-	});
+	$test_data_ref->{'status'} //= "No result";
+
+	push(@{$dst}, $test_data_ref);
+}
+
+# matches clocks with tests they correspond to (assuming that tests are sorted by time)
+sub match_clocks_with_results($$)
+{
+	my $clocks = shift();
+	my $test_results = shift();
+
+	my $matches = {};
+	my $index = 0;
+	my $total = scalar(@{$test_results});
+
+	foreach my $clock (sort(@{$clocks}))
+	{
+		$index++ while ($index < $total && $clock > $test_results->[$index]->{'end'});
+		last unless ($index < $total);
+		next if ($clock < $test_results->[$index]->{'start'});
+		$matches->{$clock} = $test_results->[$index];
+	}
+
+	return $matches;
 }
 
 # values are organized like this:
@@ -1309,8 +1362,10 @@ sub __get_dns_test_values
 
 			unless (defined($nsip))
 			{
-				wrn("internal error: Name Server,IP pair of item $itemid not found");
-				next;
+				my $rows_ref = db_select("select key_ from items where itemid=$itemid");
+				my $key = $rows_ref->[0]->[0];
+
+				fail("internal error: Name Server,IP of item $key (itemid:$itemid) not found");
 			}
 
 			$result{$probe}->{$nsip}->{$clock} = get_detailed_result($services{'dns'}{'valuemaps'}, $value);

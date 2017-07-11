@@ -1,8 +1,31 @@
-Changes for rsm1.0.0rc13
+Changes for rsm1.0.0rc15
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc14
+
+New features:
+....I..... [252] adjusted initial configuration parameters (NOTE: For this change to have effect one needs to recreate the database!) (gleb)
+
+Bug fixes:
+....I..... [245] fixed "MySQL has gone away" errors during export.pl execution (dimir, gleb)
+....I..... [sub-216] fixed Perl warning regarding JSON::true and JSON::false redefinition (dimir, gleb)
+....I..... [sub-216] fixed incorrect cycle and test matching resulting in assert fails (dimir, gleb)
+....I..... [sub-242] added PID and fixed missing first character in script logs (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc13
+
+New features:
+ADF.I..PS. [217] added support for encrypted connections to MySQL database(s) in PHP, C and Perl code (dimir, gleb, Oleg, vso)
+
+Bug fixes:
+....I..... [sub-216] fixed handling of name servers that do not have results (dimir)
+....I..PS. [232.1] added permissions on "Mon" and "Probes - Mon" host groups to "Technical services users" user group (gleb)
+....I..PS. [242] made date format in logs consistent (dimir, gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc12

@@ -6,6 +6,7 @@ use File::Path qw(make_path);
 use DateTime::Format::RFC3339;
 use base 'Exporter';
 use JSON::XS;
+use Types::Serialiser;
 
 use constant AH_DEBUG => 0;
 
@@ -52,14 +53,9 @@ sub __ts_str
 {
 	my $ts = shift;
 
-	$ts = time() unless ($ts);
-
 	my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($ts);
 
-	$year += 1900;
-	$mon++;
-
-	return sprintf("%4.2d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d", $year, $mon, $mday, $hour, $min, $sec);
+	return sprintf("%.4d%.2d%.2d:%.2d%.2d%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
 sub __ts_full
@@ -68,9 +64,7 @@ sub __ts_full
 
 	$ts = time() unless ($ts);
 
-	my $str = __ts_str($ts);
-
-	return "$str ($ts)";
+	return __ts_str($ts) . " ($ts)";
 }
 
 sub __make_base_path
@@ -185,7 +179,7 @@ sub __save_inc_false_positive
 
 	my $json =
 	{
-		'falsePositive' => ($false_positive ? JSON::true : JSON::false),
+		'falsePositive' => ($false_positive ? Types::Serialiser::true : Types::Serialiser::false),
 		'updateTime' => $clock
 	};
 
@@ -256,7 +250,7 @@ sub ah_create_incident_json
 		'incidentID' => "$start.$eventid",
 		'startTime' => $start,
 		'endTime' => $end,
-		'falsePositive' => ($false_positive ? JSON::true : JSON::false),
+		'falsePositive' => ($false_positive ? Types::Serialiser::true : Types::Serialiser::false),
 		'state' => (defined($end) ? JSON_VALUE_INCIDENT_RESOLVED : JSON_VALUE_INCIDENT_ACTIVE)
 	};
 }
@@ -400,13 +394,13 @@ sub ah_save_false_positive
 
 	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, AH_PATH_FULL) == AH_SUCCESS);
 
-	my $curr_false_positive = (($json->{'incidents'}->[0]->{'falsePositive'} eq JSON::true) ? 1 : 0);
+	my $curr_false_positive = (($json->{'incidents'}->[0]->{'falsePositive'} eq Types::Serialiser::true) ? 1 : 0);
 
 	if ($curr_false_positive != $false_positive)
 	{
 		dbg("false positiveness of $eventid changed: $false_positive");
 
-		$json->{'incidents'}->[0]->{'falsePositive'} = ($false_positive ? JSON::true : JSON::false);
+		$json->{'incidents'}->[0]->{'falsePositive'} = ($false_positive ? Types::Serialiser::true : Types::Serialiser::false);
 
 		return AH_FAIL unless (__save_inc_state($inc_path, $json, $clock) == AH_SUCCESS);
 	}

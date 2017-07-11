@@ -123,7 +123,7 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
 	{
-		zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%5d:%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+		zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%6d.%.2d:%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld %s: %s\n",
 				getpid(),
 				syscall(__NR_gettid),
 				tm->tm_year + 1900,
@@ -138,7 +138,7 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 	}
 	else
 	{
-		zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+		zbx_snprintf(fmt_buf, sizeof(fmt_buf), "%6d:%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld %s: %s\n",
 				getpid(),
 				tm->tm_year + 1900,
 				tm->tm_mon + 1,
@@ -181,7 +181,7 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
 	{
-		fprintf(log_fd, "%5d:%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+		fprintf(log_fd, "%6d.%.2d:%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld %s: %s\n",
 				getpid(),
 				syscall(__NR_gettid),
 				tm->tm_year + 1900,
@@ -196,7 +196,7 @@ static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
 	}
 	else
 	{
-		fprintf(log_fd, "%5d [%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld] %s: %s\n",
+		fprintf(log_fd, "%6d:%.4d%.2d%.2d:%.2d%.2d%.2d.%03ld %s: %s\n",
 				getpid(),
 				tm->tm_year + 1900,
 				tm->tm_mon + 1,
@@ -4318,7 +4318,7 @@ out:
 int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	char			*value_str = NULL, err[ZBX_ERR_BUF_SIZE], ips4_init = 0, ips6_init = 0;
-	const char		*ip;
+	const char		*ip, *p;
 	zbx_vector_str_t	ips4, ips6;
 	ldns_resolver		*res = NULL;
 	ldns_rdf		*query_rdf = NULL;
@@ -4332,7 +4332,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (0 != strcmp("automatic", get_rparam(request, 0)))
+	if (NULL == (p = get_rparam(request, 0)) || 0 != strcmp("automatic", p))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "first parameter has to be \"automatic\""));
 		return SYSINFO_RET_FAIL;
