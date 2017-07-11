@@ -2045,45 +2045,38 @@ int	close_event(zbx_uint64_t eventid, unsigned char source, unsigned char object
  *          structure                                                         *
  *                                                                            *
  * Parameters: eventid    - [IN] requested event of ids                       *
- *             ids_num    - [IN] the number of event ids                      *
  *             events     - [OUT] the array of events                         *
  *                                                                            *
- * Comments: use 'free_event_info' function to release allocated memory       *
+ * Comments: use 'free_db_event' function to release allocated memory         *
  *                                                                            *
  ******************************************************************************/
-void	get_events_info(zbx_uint64_t *eventids, int ids_num, DB_EVENT *events)
+void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 {
 	DB_RESULT		result;
 	DB_ROW			row;
 	char			*filter = NULL;
 	size_t			filter_alloc = 0, filter_offset = 0;
 	zbx_vector_uint64_t	trigger_eventids, triggerids;
-	zbx_uint64_t		last_eventid = 0, triggerid, eventid, *peventid;
+	zbx_uint64_t		last_eventid = 0, triggerid, eventid;
 	DB_EVENT 		*event = NULL;
-	int			i;
+	int			i, index;
 	zbx_tag_t		*tag;
 
 	zbx_vector_uint64_create(&trigger_eventids);
 	zbx_vector_uint64_create(&triggerids);
 
-	DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "eventid", eventids, ids_num);
+	DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "eventid", eventids->values,
+			eventids->values_num);
 
 	result = DBselect("select eventid,source,object,objectid,clock,value,acknowledged,ns"
 			" from events"
 			" where%s order by eventid",
 			filter);
 
-
-	for (i = 0; NULL != (row = DBfetch(result)); i++)
+	while (NULL != (row = DBfetch(result)))
 	{
-		ZBX_STR2UINT64(eventid, row[0]);
-
-		while (eventids[i] != eventid)
-			events[i++].eventid = 0;
-
-		event = &events[i];
-		event->eventid = eventid;
-
+		event = (DB_EVENT *)zbx_malloc(NULL, sizeof(DB_EVENT));
+		ZBX_STR2UINT64(event->eventid, row[0]);
 		event->source = atoi(row[1]);
 		event->object = atoi(row[2]);
 		ZBX_STR2UINT64(event->objectid, row[3]);
@@ -2102,11 +2095,10 @@ void	get_events_info(zbx_uint64_t *eventids, int ids_num, DB_EVENT *events)
 
 		if (EVENT_OBJECT_TRIGGER == event->object)
 			zbx_vector_uint64_append(&triggerids, event->objectid);
+
+		zbx_vector_ptr_append(events, event);
 	}
 	DBfree_result(result);
-
-	while (i < ids_num)
-		events[i++].eventid = 0;
 
 	last_eventid = 0;
 
@@ -2124,14 +2116,14 @@ void	get_events_info(zbx_uint64_t *eventids, int ids_num, DB_EVENT *events)
 
 			if (last_eventid != eventid)
 			{
-				if (NULL == (peventid = bsearch(&eventid, eventids, ids_num, sizeof(eventid),
-						ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+				if (FAIL == (index = zbx_vector_ptr_bsearch(events, &eventid,
+						ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
 				{
 					THIS_SHOULD_NEVER_HAPPEN;
 					continue;
 				}
 
-				event = &events[peventid - eventids];
+				event = events->values[index];
 				last_eventid = eventid;
 			}
 
@@ -2163,9 +2155,9 @@ void	get_events_info(zbx_uint64_t *eventids, int ids_num, DB_EVENT *events)
 		{
 			ZBX_STR2UINT64(triggerid, row[0]);
 
-			for (i = 0; i < ids_num; i++)
+			for (i = 0; i < events->values_num; i++)
 			{
-				event = &events[i];
+				event = events->values[i];
 
 				if (0 == event->eventid || EVENT_OBJECT_TRIGGER != event->object)
 					continue;
@@ -2190,4 +2182,33 @@ void	get_events_info(zbx_uint64_t *eventids, int ids_num, DB_EVENT *events)
 
 	zbx_vector_uint64_destroy(&trigger_eventids);
 	zbx_vector_uint64_destroy(&triggerids);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: free_db_event                                                    *
+ *                                                                            *
+ * Purpose: deallocate memory allocated in function 'get_db_events_info'      *
+ *                                                                            *
+ * Parameters: event - [IN] event data                                        *
+ *                                                                            *
+ ******************************************************************************/
+void	free_db_event(DB_EVENT *event)
+{
+	if (EVENT_SOURCE_TRIGGERS == event->source)
+	{
+		zbx_vector_ptr_clear_ext(&event->tags, (zbx_clean_func_t)zbx_free_tag);
+		zbx_vector_ptr_destroy(&event->tags);
+	}
+
+	if (0 == event->trigger.triggerid)
+	{
+		zbx_free(event->trigger.description);
+		zbx_free(event->trigger.expression);
+		zbx_free(event->trigger.recovery_expression);
+		zbx_free(event->trigger.comments);
+		zbx_free(event->trigger.url);
+	}
+
+	zbx_free(event);
 }

@@ -274,8 +274,8 @@ DB_TRIGGER;
 
 typedef struct
 {
-	DB_TRIGGER		trigger;
 	zbx_uint64_t		eventid;
+	DB_TRIGGER		trigger;
 	zbx_uint64_t		objectid;
 	int			source;
 	int			object;

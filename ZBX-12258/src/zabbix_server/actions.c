@@ -1876,41 +1876,34 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
  * Purpose: reads actions from database                                       *
  *                                                                            *
  * Parameters: actionids - [IN] requested action of ids                       *
- *             ids_num   - [IN] the number of action ids                      *
  *             actions   - [OUT] the array of actions                         *
  *                                                                            *
  * Comments: use 'free_db_action' function to release allocated memory        *
  *                                                                            *
  ******************************************************************************/
-void	get_db_actions_info(zbx_uint64_t *actionids, int ids_num, DB_ACTION *actions)
+void	get_db_actions_info(zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actions)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 	char		*filter = NULL;
 	size_t		filter_alloc = 0, filter_offset = 0;
 	DB_ACTION 	*action = NULL;
-	int		i, esc_idx = 0;
+	int		index = 0;
 	zbx_uint64_t	actionid;
 
-	DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "actionid", actionids, ids_num);
+	DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "actionid", actionids->values,
+			actionids->values_num);
 
 	result = DBselect("select actionid,name,status,eventsource,esc_period,def_shortdata,def_longdata,r_shortdata,"
 				"r_longdata,maintenance_mode"
 				" from actions"
 				" where%s order by actionid", filter);
 
-	for (i = 0; NULL != (row = DBfetch(result)); i++)
+	while (NULL != (row = DBfetch(result)))
 	{
-		ZBX_STR2UINT64(actionid, row[0]);
-
-		while (actionids[i] != actionid)
-			actions[i++].actionid = 0;
-
-		action = &actions[i];
-		action->actionid = actionid;
-
-		ZBX_STR2UCHAR(action->status, row[2]);
+		action = (DB_ACTION *)zbx_malloc(NULL, sizeof(DB_ACTION));
 		ZBX_STR2UINT64(action->actionid, row[0]);
+		ZBX_STR2UCHAR(action->status, row[2]);
 		ZBX_STR2UCHAR(action->eventsource, row[3]);
 		action->esc_period = atoi(row[4]);
 		action->shortdata = zbx_strdup(NULL, row[5]);
@@ -1919,40 +1912,35 @@ void	get_db_actions_info(zbx_uint64_t *actionids, int ids_num, DB_ACTION *action
 		action->r_longdata = zbx_strdup(NULL, row[8]);
 		ZBX_STR2UCHAR(action->maintenance_mode, row[9]);
 		action->name = zbx_strdup(NULL, row[1]);
+		action->recovery = ZBX_ACTION_RECOVERY_NONE;
+
+		zbx_vector_ptr_append(actions, action);
 	}
 	DBfree_result(result);
-
-	while (i < ids_num)
-		actions[i++].actionid = 0;
 
 	result = DBselect("select actionid from operations where recovery=%d and%s order by actionid",
 			ZBX_OPERATION_MODE_RECOVERY, filter);
 
-	for (i = 0; NULL != (row = DBfetch(result)); i++)
+	while (NULL != (row = DBfetch(result)))
 	{
 		ZBX_STR2UINT64(actionid, row[0]);
-
-		while (actionids[esc_idx] != actionid)
-			actions[esc_idx++].recovery = ZBX_ACTION_RECOVERY_NONE;
-
-		actions[esc_idx++].recovery = ZBX_ACTION_RECOVERY_OPERATIONS;
+		if (FAIL != (index = zbx_vector_ptr_bsearch(actions, &actionid, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
+		{
+			action = (DB_ACTION *)actions->values[index];
+			action->recovery = ZBX_ACTION_RECOVERY_OPERATIONS;
+		}
 	}
-
-	while (i > esc_idx)
-		actions[esc_idx++].recovery = ZBX_ACTION_RECOVERY_NONE;
-
 	DBfree_result(result);
+
 	zbx_free(filter);
 }
 
 void	free_db_action(DB_ACTION *action)
 {
-	if (0 != action->actionid)
-	{
-		zbx_free(action->shortdata);
-		zbx_free(action->longdata);
-		zbx_free(action->r_shortdata);
-		zbx_free(action->r_longdata);
-		zbx_free(action->name);
-	}
+	zbx_free(action->shortdata);
+	zbx_free(action->longdata);
+	zbx_free(action->r_shortdata);
+	zbx_free(action->r_longdata);
+	zbx_free(action->name);
+	zbx_free(action);
 }
