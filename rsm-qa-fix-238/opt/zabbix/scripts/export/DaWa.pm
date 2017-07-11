@@ -379,10 +379,6 @@ sub __fix_row
 	{
 		wrn("$id_type entry with UNDEF value: ", $str);
 	}
-	elsif (opt('debug'))
-	{
-		dbg("$id_type ", join(',', @{$row_ref}));
-	}
 }
 
 # only works with data files
