@@ -1,8 +1,10 @@
 Changes for rsm1.0.0rc15
 
 New features:
+..F....... [238] added possibility to configure database connection timeout for the frontend (Oleg)
 
 Bug fixes:
+..F.I..... [sub-217] simplified frontend database connection encryption configuration (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc14
