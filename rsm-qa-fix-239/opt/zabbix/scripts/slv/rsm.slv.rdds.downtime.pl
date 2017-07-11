@@ -25,10 +25,12 @@ db_connect();
 
 my $interval = get_macro_rdds_delay();
 
-my ($from, $till, $value_ts) = get_interval_bounds($interval);
+my $now = time() - 60;	# we need fully finished minute
+
+my (undef, $till, $value_ts) = get_interval_bounds($interval, $now);
 
 my ($curmon_from) = get_curmon_bounds();
-my $curmon_till = $from;
+my $curmon_till = $till;
 
 my %tld_items;
 
