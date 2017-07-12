@@ -492,20 +492,6 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 		}
 	}
-	elseif ($data['type'] == RSM_DNSSEC) {
-		// get tests items
-		$testItems = API::Item()->get(array(
-			'output' => array('itemid', 'value_type'),
-			'hostids' => $hostIds,
-			'search' => array(
-				'key_' => PROBE_DNS_UDP_ITEM_RTT
-			),
-			'startSearch' => true,
-			'monitored' => true
-		));
-
-		$data['totalTests'] = count($testItems);
-	}
 
 	foreach ($hosts as $host) {
 		foreach ($data['probes'] as $hostId => $probe) {
