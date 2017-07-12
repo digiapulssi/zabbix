@@ -2044,23 +2044,21 @@ int	close_event(zbx_uint64_t eventid, unsigned char source, unsigned char object
  * Purpose: get events and flags that indicate what was filled in DB_EVENT    *
  *          structure                                                         *
  *                                                                            *
- * Parameters: eventid    - [IN] requested event of ids                       *
+ * Parameters: eventid    - [IN] requested event ids                          *
  *             events     - [OUT] the array of events                         *
  *                                                                            *
  * Comments: use 'free_db_event' function to release allocated memory         *
  *                                                                            *
  ******************************************************************************/
-void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
+void	get_db_events_info(const zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 {
 	DB_RESULT		result;
 	DB_ROW			row;
 	char			*filter = NULL;
 	size_t			filter_alloc = 0, filter_offset = 0;
 	zbx_vector_uint64_t	trigger_eventids, triggerids;
-	zbx_uint64_t		last_eventid = 0, triggerid, eventid;
-	DB_EVENT 		*event = NULL;
+	DB_EVENT 		*event;
 	int			i, index;
-	zbx_tag_t		*tag;
 
 	zbx_vector_uint64_create(&trigger_eventids);
 	zbx_vector_uint64_create(&triggerids);
@@ -2100,10 +2098,10 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 	}
 	DBfree_result(result);
 
-	last_eventid = 0;
-
-	if (0 != trigger_eventids.values_num)
+	if (0 != trigger_eventids.values_num)	/* EVENT_SOURCE_TRIGGERS */
 	{
+		zbx_uint64_t	last_eventid = 0,
+
 		filter_offset = 0;
 		DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "eventid", trigger_eventids.values,
 				trigger_eventids.values_num);
@@ -2112,6 +2110,9 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 
 		while (NULL != (row = DBfetch(result)))
 		{
+			zbx_uint64_t	eventid;
+			zbx_tag_t	*tag;
+
 			ZBX_STR2UINT64(eventid, row[0]);
 
 			if (last_eventid != eventid)
@@ -2135,7 +2136,7 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 		DBfree_result(result);
 	}
 
-	if (0 != triggerids.values_num)
+	if (0 != triggerids.values_num)	/* EVENT_OBJECT_TRIGGER */
 	{
 		zbx_vector_uint64_sort(&triggerids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		zbx_vector_uint64_uniq(&triggerids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
@@ -2153,13 +2154,15 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 
 		while (NULL != (row = DBfetch(result)))
 		{
+			zbx_uint64_t	triggerid;
+
 			ZBX_STR2UINT64(triggerid, row[0]);
 
 			for (i = 0; i < events->values_num; i++)
 			{
 				event = events->values[i];
 
-				if (0 == event->eventid || EVENT_OBJECT_TRIGGER != event->object)
+				if (EVENT_OBJECT_TRIGGER != event->object)
 					continue;
 
 				if (triggerid == event->objectid)

@@ -1875,21 +1875,19 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
  *                                                                            *
  * Purpose: reads actions from database                                       *
  *                                                                            *
- * Parameters: actionids - [IN] requested action of ids                       *
+ * Parameters: actionids - [IN] requested action ids                          *
  *             actions   - [OUT] the array of actions                         *
  *                                                                            *
  * Comments: use 'free_db_action' function to release allocated memory        *
  *                                                                            *
  ******************************************************************************/
-void	get_db_actions_info(zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actions)
+void	get_db_actions_info(const zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actions)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 	char		*filter = NULL;
 	size_t		filter_alloc = 0, filter_offset = 0;
-	DB_ACTION 	*action = NULL;
-	int		index = 0;
-	zbx_uint64_t	actionid;
+	DB_ACTION	*action;
 
 	DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "actionid", actionids->values,
 			actionids->values_num);
@@ -1918,11 +1916,14 @@ void	get_db_actions_info(zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actio
 	}
 	DBfree_result(result);
 
-	result = DBselect("select actionid from operations where recovery=%d and%s order by actionid",
+	result = DBselect("select actionid from operations where recovery=%d and%s",
 			ZBX_OPERATION_MODE_RECOVERY, filter);
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		zbx_uint64_t	actionid;
+		int		index;
+
 		ZBX_STR2UINT64(actionid, row[0]);
 		if (FAIL != (index = zbx_vector_ptr_bsearch(actions, &actionid, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
 		{
