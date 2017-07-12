@@ -327,8 +327,8 @@ $particularTests = [
 		_s('(calculated at %1$s)', date(DATE_TIME_FORMAT_SECONDS, $this->data['time'] + RSM_ROLLWEEK_SHIFT_BACK))
 	]),
 	BR(),
-	new CSpan([bold(_('Note')), ':', SPACE, _('The following table displays the data that has being received by '.
-		'the central node, some of the values might have not being available at the time of the calculation of the '.
+	new CSpan([bold(_('Note')), ':', SPACE, _('The following table displays the data that has been received by '.
+		'the central node, some of the values may not have been available at the time of the calculation of the '.
 		'"Test result"')
 	])
 ];
