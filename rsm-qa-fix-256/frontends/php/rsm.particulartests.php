@@ -363,6 +363,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		'SELECT i.itemid,i.key_,i.hostid,i.value_type,i.valuemapid,i.units'.
 		' FROM items i'.
 		' WHERE '.dbConditionInt('i.hostid', $hostIds).
+			' AND i.status='.ITEM_STATUS_ACTIVE.
 			$probeItemKey
 	);
 
