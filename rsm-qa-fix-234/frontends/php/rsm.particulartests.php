@@ -274,14 +274,12 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	));
 
 	foreach ($probeItems as $probeItem) {
-		$itemValue = DBfetch(DBselect(DBaddLimit(
+		$itemValue = DBfetch(DBselect(
 			'SELECT h.value'.
 			' FROM history_uint h'.
 			' WHERE h.itemid='.$probeItem['itemid'].
-				' AND h.clock>='.$testTimeFrom.
-				' AND h.clock<='.$testTimeTill,
-			1
-		)));
+				' AND h.clock='.$testTimeFrom
+		));
 		if ($itemValue && $itemValue['value'] == PROBE_DOWN) {
 			$data['probes'][$probeItem['hostid']]['status'] = PROBE_DOWN;
 		}
