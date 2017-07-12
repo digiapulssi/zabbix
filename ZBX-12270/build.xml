@@ -83,16 +83,7 @@
 	<target name="init-common">
 		<!-- Create the different build directories -->
 		<mkdir dir="build/logs" />
-		<exec executable="./bootstrap.sh" failonerror="on"></exec>
-		<exec executable="./configure" failonerror="on"></exec>
-		<exec executable="make" failonerror="on">
-			<arg value="-s"/>
-			<arg line="dbschema"/>
-		</exec>
-		<exec executable="make" failonerror="on">
-			<arg value="-s"/>
-			<arg line="dist"/>
-		</exec>
+		<!-- Create bootstrap.php file -->
 		<copy overwrite="true" file="frontends/php/tests/bootstrap.php.template" tofile="frontends/php/tests/bootstrap.php"/>
 		<replace file="frontends/php/tests/bootstrap.php" token="{URL}" value="${url}"/>
 		<replace file="frontends/php/tests/bootstrap.php" token="{HOST}" value="${host}"/>
@@ -125,7 +116,16 @@
 		<replace file="etc/zabbix_server.conf" token="{DBPASSWORD}" value="${dbpassword}"/>
 	</target>
 
-	<target name="init-postgresql" depends="create-configs">
+	<target name="init-dbschema">
+		<exec executable="./bootstrap.sh" failonerror="on"></exec>
+		<exec executable="./configure" failonerror="on"></exec>
+		<exec executable="make" failonerror="on">
+			<arg value="-s"/>
+			<arg line="dbschema"/>
+		</exec>
+	</target>
+
+	<target name="init-postgresql" depends="init-dbschema">
 		<!-- Create PostgreSQL database -->
 		<exec executable="psql" failonerror="on">
 			<arg line="-h '${dbhost}'"/>
@@ -218,7 +218,7 @@
 		</exec>
 	</target>
 
-	<target name="init-mysql" depends="create-configs">
+	<target name="init-mysql" depends="init-dbschema">
 		<!-- Create MySQL database -->
 		<exec executable="mysql" failonerror="on">
 			<arg line="-h '${dbhost}'"/>
@@ -258,8 +258,8 @@
 		</exec>
 	</target>
 
-	<target name="build-mysql" depends="init-mysql,runagent,runserver,buildproxy,sleep5m,killdaemons,test-frontend" />
-	<target name="build-postgresql" depends="init-postgresql,runagent,runserver,buildproxy,sleep5m,killdaemons,test-frontend" />
+	<target name="build-mysql" depends="create-configs,init-mysql,runagent,runserver,buildproxy,sleep5m,killdaemons,test-frontend" />
+	<target name="build-postgresql" depends="create-configs,init-postgresql,runagent,runserver,buildproxy,sleep5m,killdaemons,test-frontend" />
 
 	<!-- Default target -->
 	<target name="build" depends="build-mysql,build-postgresql" />
