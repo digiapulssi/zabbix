@@ -282,7 +282,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			1
 		)));
 		if ($itemValue && $itemValue['value'] == PROBE_DOWN) {
-			$data['probes'][$probeItem['hostid']]['status'] = $itemValue['value'];
+			$data['probes'][$probeItem['hostid']]['status'] = PROBE_DOWN;
 		}
 	}
 
