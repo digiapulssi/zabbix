@@ -1747,7 +1747,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 				ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
 		{
 			error = zbx_dsprintf(error, "action id:" ZBX_FS_UI64 " deleted", escalation->actionid);
-			goto skip;
+			goto cancel_warning;
 		}
 
 		action = (DB_ACTION *)actions.values[index];
@@ -1755,14 +1755,14 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 		if (ACTION_STATUS_ACTIVE != action->status)
 		{
 			error = zbx_dsprintf(error, "action '%s' disabled.", action->name);
-			goto skip;
+			goto cancel_warning;
 		}
 
 		if (FAIL == (index = zbx_vector_ptr_bsearch(&events, &escalation->eventid,
 				ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
 		{
 			error = zbx_dsprintf(error, "event id:" ZBX_FS_UI64 " deleted.", escalation->eventid);
-			goto skip;
+			goto cancel_warning;
 		}
 
 		event = (DB_EVENT *)events.values[index];
@@ -1770,7 +1770,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 		if (EVENT_SOURCE_TRIGGERS == event->source && 0 == event->trigger.triggerid)
 		{
 			error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", event->objectid);
-			goto skip;
+			goto cancel_warning;
 		}
 
 		if (0 != escalation->r_eventid)
@@ -1779,7 +1779,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 					ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
 			{
 				error = zbx_dsprintf(error, "event id:" ZBX_FS_UI64 " deleted.", escalation->r_eventid);
-				goto skip;
+				goto cancel_warning;
 			}
 
 			r_event = (DB_EVENT *)events.values[index];
@@ -1787,9 +1787,11 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 			if (EVENT_SOURCE_TRIGGERS == r_event->source && 0 == r_event->trigger.triggerid)
 			{
 				error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", r_event->objectid);
-				goto skip;
+				goto cancel_warning;
 			}
 		}
+		else
+			r_event = NULL;
 
 		/* Handle escalation taking into account status of items, triggers, hosts, */
 		/* maintenance and trigger dependencies.                                   */
@@ -1803,7 +1805,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 				zbx_vector_uint64_append(&escalationids, escalation->escalationid);
 				/* break; is not missing here */
 			case ZBX_ESCALATION_SKIP:
-				goto skip;
+				goto cancel_warning;	/* error is NULL on skip */
 			case ZBX_ESCALATION_PROCESS:
 				break;
 			default:
@@ -1814,7 +1816,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 		/* Execute operations and recovery operations, mark changes in 'diffs' for batch saving in DB below. */
 		diff = escalation_create_diff(escalation);
 
-		if (0 != escalation->r_eventid)
+		if (NULL != r_event)
 		{
 			if (0 == escalation->esc_step)
 				escalation_execute(escalation, action, event);
@@ -1843,7 +1845,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 
 		escalation_update_diff(escalation, diff);
 		zbx_vector_ptr_append(&diffs, diff);
-skip:
+cancel_warning:
 		if (NULL != error)
 		{
 			escalation_log_cancel_warning(escalation, error);
