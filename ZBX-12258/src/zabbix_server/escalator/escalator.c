@@ -1569,7 +1569,7 @@ out:
  *             error      - [IN] the error message                            *
  *                                                                            *
  ******************************************************************************/
-static void	escalation_log_cancel_warning(DB_ESCALATION *escalation, const char *error)
+static void	escalation_log_cancel_warning(const DB_ESCALATION *escalation, const char *error)
 {
 	if (0 != escalation->esc_step)
 		zabbix_log(LOG_LEVEL_WARNING, "escalation cancelled: %s", error);
@@ -1718,13 +1718,12 @@ static void	escalation_update_diff(const DB_ESCALATION *escalation, zbx_escalati
 }
 
 static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *escalations,
-		zbx_vector_uint64_t *eventids, zbx_vector_uint64_t *actionids)
+		const zbx_vector_uint64_t *eventids, const zbx_vector_uint64_t *actionids)
 {
 	int			i, ret;
 	zbx_vector_uint64_t	escalationids;
 	zbx_vector_ptr_t	diffs, actions, events;
 	zbx_escalation_diff_t	*diff;
-	DB_ESCALATION		*escalation;
 
 	zbx_vector_uint64_create(&escalationids);
 	zbx_vector_ptr_create(&diffs);
@@ -1739,9 +1738,10 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 		int		index;
 		char		*error = NULL;
 		DB_ACTION	*action;
-		DB_EVENT	*event, *r_event = NULL;
+		DB_EVENT	*event, *r_event;
+		DB_ESCALATION	*escalation;
 
-		escalation = escalations->values[i];
+		escalation = (DB_ESCALATION *)escalations->values[i];
 
 		if (FAIL == (index = zbx_vector_ptr_bsearch(&actions, &escalation->actionid,
 				ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
@@ -1766,6 +1766,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 		}
 
 		event = (DB_EVENT *)events.values[index];
+
 		if (EVENT_SOURCE_TRIGGERS == event->source && 0 == event->trigger.triggerid)
 		{
 			error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", r_event->objectid);
@@ -1782,6 +1783,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 			}
 
 			r_event = (DB_EVENT *)events.values[index];
+
 			if (EVENT_SOURCE_TRIGGERS == r_event->source && 0 == r_event->trigger.triggerid)
 			{
 				error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", r_event->objectid);
