@@ -57,8 +57,6 @@ static void	tm_execute_task_close_problem(zbx_uint64_t taskid, zbx_uint64_t trig
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() taskid:" ZBX_FS_UI64 " eventid:" ZBX_FS_UI64, __function_name,
 			taskid, eventid);
 
-	DBbegin();
-
 	result = DBselect("select null from problem where eventid=" ZBX_FS_UI64 " and r_eventid is null", eventid);
 
 	/* check if the task hasn't been already closed by another process */
@@ -94,8 +92,6 @@ static void	tm_execute_task_close_problem(zbx_uint64_t taskid, zbx_uint64_t trig
 		DCconfig_clean_triggers(&trigger, &errcode, 1);
 	}
 	DBfree_result(result);
-
-	DBcommit();
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -136,6 +132,8 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 				" where tcp.taskid=" ZBX_FS_UI64,
 			taskid);
 
+	DBbegin();
+
 	if (NULL != (row = DBfetch(result)))
 	{
 		if (SUCCEED != DBis_null(row[1]))
@@ -149,10 +147,9 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 			{
 				ZBX_STR2UINT64(userid, row[0]);
 				ZBX_STR2UINT64(eventid, row[1]);
+
 				tm_execute_task_close_problem(taskid, triggerid, eventid, userid, &locked_triggerids);
 				remove_task = 1;
-
-				DCconfig_unlock_triggers(&locked_triggerids);
 
 				ret = SUCCEED;
 			}
@@ -165,6 +162,11 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 	/* remove the task if it was executed or related event was deleted before task was processed */
 	if (1 == remove_task)
 		DBexecute("delete from task where taskid=" ZBX_FS_UI64, taskid);
+
+	DBcommit();
+
+	if (0 != locked_triggerids.values_num)
+		DCconfig_unlock_triggers(&locked_triggerids);
 
 	zbx_vector_uint64_destroy(&locked_triggerids);
 	zbx_vector_uint64_destroy(&triggerids);
