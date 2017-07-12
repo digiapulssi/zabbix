@@ -278,7 +278,8 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			'SELECT h.value'.
 			' FROM history_uint h'.
 			' WHERE h.itemid='.$probeItem['itemid'].
-				' AND h.clock='.$testTimeFrom,
+				' AND h.clock>='.$testTimeFrom.
+				' AND h.clock<='.$testTimeTill,
 			1
 		)));
 		if ($itemValue && $itemValue['value'] == PROBE_DOWN) {
