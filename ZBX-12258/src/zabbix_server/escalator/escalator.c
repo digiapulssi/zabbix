@@ -1769,7 +1769,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 
 		if (EVENT_SOURCE_TRIGGERS == event->source && 0 == event->trigger.triggerid)
 		{
-			error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", r_event->objectid);
+			error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", event->objectid);
 			goto skip;
 		}
 
