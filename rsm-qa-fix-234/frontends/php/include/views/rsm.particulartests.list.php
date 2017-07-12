@@ -61,6 +61,7 @@ $offlineProbes = 0;
 $noResultProbes = 0;
 
 if ($this->data['type'] == RSM_DNSSEC) {
+	$testTotal = 0;
 	$testUp = 0;
 	$testDown = 0;
 }
@@ -134,6 +135,9 @@ foreach ($this->data['probes'] as $probe) {
 				if ($probe['value']['noResult']) {
 					$values[] = _s('%1$s NO RESULT', $probe['value']['noResult']);
 					$noResults = true;
+				}
+				if ($probe['value']['total']) {
+					$testTotal += $probe['value']['total'];
 				}
 
 				// get test results color
@@ -298,7 +302,7 @@ elseif ($this->data['type'] == RSM_DNSSEC) {
 			$this->data['totalProbes'] - $offlineProbes - $noResultProbes
 		]),
 		BR(),
-		new CSpan([bold(_('Tests total')), ':', SPACE, $this->data['totalTests']]),
+		new CSpan([bold(_('Tests total')), ':', SPACE, $testTotal]),
 		BR(),
 		new CSpan([bold(_('Tests Up')), ':', SPACE, $testUp]),
 		BR(),
@@ -327,8 +331,8 @@ $particularTests = [
 		_s('(calculated at %1$s)', date(DATE_TIME_FORMAT_SECONDS, $this->data['time'] + RSM_ROLLWEEK_SHIFT_BACK))
 	]),
 	BR(),
-	new CSpan([bold(_('Note')), ':', SPACE, _('The following table displays the data that has being received by '.
-		'the central node, some of the values might have not being available at the time of the calculation of the '.
+	new CSpan([bold(_('Note')), ':', SPACE, _('The following table displays the data that has been received by '.
+		'the central node, some of the values may not have been available at the time of the calculation of the '.
 		'"Test result"')
 	])
 ];
