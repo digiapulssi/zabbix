@@ -2204,7 +2204,7 @@ void	free_db_event(DB_EVENT *event)
 		zbx_vector_ptr_destroy(&event->tags);
 	}
 
-	if (0 == event->trigger.triggerid)
+	if (0 != event->trigger.triggerid)
 	{
 		zbx_free(event->trigger.description);
 		zbx_free(event->trigger.expression);
