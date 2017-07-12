@@ -363,6 +363,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		'SELECT i.itemid,i.key_,i.hostid,i.value_type,i.valuemapid,i.units'.
 		' FROM items i'.
 		' WHERE '.dbConditionInt('i.hostid', $hostIds).
+			' AND i.status='.ITEM_STATUS_ACTIVE.
 			$probeItemKey
 	);
 
@@ -490,20 +491,6 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$hosts[$hostId]['class'] = 'green';
 			}
 		}
-	}
-	elseif ($data['type'] == RSM_DNSSEC) {
-		// get tests items
-		$testItems = API::Item()->get(array(
-			'output' => array('itemid', 'value_type'),
-			'hostids' => $hostIds,
-			'search' => array(
-				'key_' => PROBE_DNS_UDP_ITEM_RTT
-			),
-			'startSearch' => true,
-			'monitored' => true
-		));
-
-		$data['totalTests'] = count($testItems);
 	}
 
 	foreach ($hosts as $host) {
