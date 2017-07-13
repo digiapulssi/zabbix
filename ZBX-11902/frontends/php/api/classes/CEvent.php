@@ -147,18 +147,19 @@ class CEvent extends CZBXAPI {
 				// all triggers
 				else {
 					$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
-					$sqlParts['where'][] = 'EXISTS ('.
+					$sqlParts['where'][] = 'NOT EXISTS ('.
 							'SELECT NULL'.
 							' FROM functions f,items i,hosts_groups hgg'.
-								' JOIN rights r'.
+								' LEFT JOIN rights r'.
 									' ON r.id=hgg.groupid'.
 										' AND '.dbConditionInt('r.groupid', getUserGroupsByUserId($userid)).
 							' WHERE e.objectid=f.triggerid'.
 								' AND f.itemid=i.itemid'.
 								' AND i.hostid=hgg.hostid'.
-							' GROUP BY f.triggerid'.
-							' HAVING MIN(r.permission)>'.PERM_DENY.
-								' AND MAX(r.permission)>='.$permission.
+							' GROUP BY i.hostid'.
+							' HAVING MAX(permission)<'.$permission.
+								' OR MIN(permission) IS NULL'.
+								' OR MIN(permission)='.PERM_DENY.
 							')';
 				}
 			}

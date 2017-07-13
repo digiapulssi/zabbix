@@ -1,8 +1,34 @@
-Changes for 2.2.18rc1
-
-New features:
+Changes for 2.2.19rc1
 
 Bug fixes:
+........S. [ZBX-12349] fixed security vulnerability with execution of the remote commands on server; thanks to MATSUDA Daiki, Ron Waisberg for report (vso)
+...G...... [ZBX-12231] fixed memory leak in agent if log[], logrt[] items use global regexps with multiple subexpressions (Andris)
+...G...... [ZBX-12187] fixed memory leak when using UserParameter with suppressed characters passed in arguments (viktors)
+A......... [ZBX-12023] fixed permission issue with event.get method (Sasha)
+.......PS. [ZBX-12046] fixed handling of database failure during ID selection (vso)
+..F....... [ZBX-11683] fixed problem with lost IDs of unlinkable templates (miks)
+.......PS. [ZBX-11584] fixed selection of ntext data from Microsoft SQL Server using 'db.odbc.select' item key (Sergejs)
+........S. [ZBX-12012] fixed resolving of Critical and Verbose event log levels by {ITEM.LOG.SEVERITY} macro (Sasha)
+..F....... [ZBX-11888] fixed chart name urlencoding for web scenario reports; thanks to Kotaro Miyashita for patch (miks)
+
+--------------------------------------------------------------------------------
+Changes for 2.2.18
+
+2.2.18rc1 was released as 2.2.18 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.18rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
+A......... [ZBX-7492] fixed undefined index and invalid argument supplied to foreach errors in case if macros tag is empty or is not included in the XML import file (miks)
+..F....... [ZBX-11345] fixed webscenario update error when step does not exist (gcalenko)
+...G...... [ZBX-11959] fixed memory leak in the agent on OpenBSD, FreeBSD and NetBSD (abs)
+.......PS. [ZBX-11807] fixed poller stalling due to incorrect handling of unixODBC library (viktors)
+A......... [ZBX-9358] improved randomness in session ID generation (vmurzins)
+A......... [ZBX-11893] fixed permission issue, when importing hosts that are monitored by proxy by Zabbix Admin type user (vmurzins)
+..F....... [ZBX-11933] added fullscreen parameter in link to submap in maps (vmurzins)
 .......PS. [ZBX-11864] fixed formatting of URLs if an IPv6 is used in simple HTTPS checks (abs)
 ..F....... [ZBX-6851] fixed zero number display in Event ID column in windows eventlog history (vmurzins)
 .......PS. [ZBX-11758] fixed crash in web monitoring when variable is empty or the first step was called regexp function on Solaris (Sergejs)
@@ -24,7 +50,7 @@ Bug fixes:
 .......PS. [ZBX-11587] fixed handling database failure during transaction commit (viktors)
 .......PS. [ZBX-9889,ZBX-11674] fixed vmware.eventlog item values to have unique timestamps in history table (dimir)
 ........S. [ZBX-11635] fixed possible deadlocks when removing obsolete VMWare services (Sergejs)
-.......PS. [ZBX-11481] fixed resolving macros for ip and dns fields in interfaces that are linked to main interface with {HOST.IP} and {HOST.DNS} macros (Sergejs)
+.......PS. [ZBX-11481] fixed resolving macros for the IP and DNS fields in interfaces that are linked to the main interface with {HOST.IP} and {HOST.DNS} macros (Sergejs)
 ..F....... [ZBX-11527] fixed displaying maintenance icon for trigger element in maps (Cemeris)
 ..F....... [ZBX-11354] fixed applications being reset in templated items and item prototypes when modifying its parent (Ivo)
 ...G...... [ZBX-11494] fixed "system.stat" returning not supported after Zabbix agent restart on AIX (viktors)
@@ -1535,11 +1561,23 @@ A......... [ZBX-5498] applications API refactoring (Vedmak)
 ..F....... [ZBX-1845] added tabs to host massupdate form (Vedmak)
 
 --------------------------------------------------------------------------------
-Changes for 2.0.21rc1
+Changes for 2.0.22rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.0.21
+
+2.0.21rc1 was released as 2.0.21 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.0.21rc1
+
+Bug fixes:
+........S. [ZBX-12075] fixed security vulnerability with execution of the remote commands on server; thanks to Lilith Wyatt, Cisco Systems (gleb)
+........S. [ZBX-12076] fixed security vulnerability with execution of the remote commands on proxy; thanks to Lilith Wyatt, Cisco Systems (gleb)
 ...G...... [ZBX-11479] fixed threaded metric to handle interruption by a signal (vso)
 
 --------------------------------------------------------------------------------
