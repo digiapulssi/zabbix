@@ -111,6 +111,10 @@
 			row = 0;
 		}
 
+		if (row > data['options']['max-rows'] - height) {
+			row = data['options']['max-rows'] - height;
+		}
+
 		if (col > data['options']['columns'] - width) {
 			col = data['options']['columns'] - width;
 		}
@@ -413,13 +417,16 @@
 
 		ajax_data = {
 			'fullscreen': data['options']['fullscreen'],
-			'widgetid': widget['widgetid'],
 			'uniqueid': widget['uniqueid'],
-			'initial_load': widget['initial_load'],
-			'edit_mode': data['options']['edit_mode']
+			'initial_load': widget['initial_load'] ? 1 : 0,
+			'edit_mode': data['options']['edit_mode'] ? 1 : 0,
+			'storage': widget['storage']
 		}
 		widget['initial_load'] = false;
 
+		if (widget['widgetid'] !== '') {
+			ajax_data['widgetid'] = widget['widgetid'];
+		}
 		if (widget['header'] !== '') {
 			ajax_data['name'] = widget['header'];
 		}
@@ -554,6 +561,7 @@
 							'rf_rate': data['widget_defaults'][type]['rf_rate'],
 							'fields': fields
 						}
+						updateWidgetDynamic($obj, data, widget_data);
 						methods.addWidget.call($obj, widget_data);
 						// new widget is last element in data['widgets'] array
 						widget = data['widgets'].slice(-1)[0];
@@ -567,10 +575,10 @@
 						}
 						widget['header'] = name;
 						widget['fields'] = fields;
-					}
 
-					updateWidgetDynamic($obj, data, widget);
-					refreshWidget($obj, data, widget);
+						updateWidgetDynamic($obj, data, widget);
+						refreshWidget($obj, data, widget);
+					}
 
 					// mark dashboard as updated
 					data['options']['updated'] = true;
@@ -682,6 +690,7 @@
 			.append($('<li>').append(btn_delete))
 		);
 
+		stopWidgetRefreshTimer(widget);
 		makeDraggable($obj, data, widget);
 		makeResizable($obj, data, widget);
 	}
@@ -766,6 +775,7 @@
 	}
 
 	function updateWidgetDynamic($obj, data, widget) {
+		// this function may be called for widget that is not in data['widgets'] array yet.
 		if (typeof(widget['fields']['dynamic']) !== 'undefined' && widget['fields']['dynamic'] === '1') {
 			if (data['dashboard']['dynamic']['has_dynamic_widgets'] === true) {
 				widget['dynamic'] = {
@@ -799,11 +809,11 @@
 		return ref;
 	}
 
-	function doAction($obj, data, trigger_name) {
-		if (typeof(data['triggers'][trigger_name]) === 'undefined') {
+	function doAction($obj, data, hook_name) {
+		if (typeof(data['triggers'][hook_name]) === 'undefined') {
 			return;
 		}
-		var triggers = data['triggers'][trigger_name];
+		var triggers = data['triggers'][hook_name];
 
 		triggers.sort(function(a,b) {
 			var priority_a = (typeof(a['options']['priority']) !== 'undefined') ? a['options']['priority'] : 10;
@@ -859,6 +869,7 @@
 				'fullscreen': 0,
 				'widget-height': 70,
 				'columns': 12,
+				'max-rows': 64,
 				'rows': 0,
 				'updated': false
 			};
@@ -876,7 +887,8 @@
 					widgets: [],
 					widget_defaults: {},
 					triggers: {},
-					placeholder: $placeholder
+					placeholder: $placeholder,
+					data_buffer: []
 				});
 
 				var	data = $this.data('dashboardGrid');
@@ -934,7 +946,8 @@
 				'preloader_fadespeed': 500,
 				'update_attempts': 0,
 				'initial_load': true,
-				'fields': {}
+				'fields': {},
+				'storage': {}
 			}, widget);
 
 			return this.each(function() {
@@ -985,14 +998,14 @@
 			});
 		},
 
-		setWidgetFieldValue: function(uniqueid, field, value) {
+		setWidgetStorageValue: function(uniqueid, field, value) {
 			return this.each(function() {
 				var	$this = $(this),
 					data = $this.data('dashboardGrid');
 
 				$.each(data['widgets'], function(index, widget) {
 					if (widget['uniqueid'] === uniqueid) {
-						widget['fields'][field] = value;
+						widget['storage'][field] = value;
 					}
 				});
 			});
@@ -1061,11 +1074,6 @@
 
 				openConfigDialogue($this, data, widget);
 			});
-		},
-
-		// Call stopWidgetRefreshTimer on some speciffic widget.
-		stopWidgetRefreshTimer: function(widget) {
-			stopWidgetRefreshTimer(widget);
 		},
 
 		// After pressing "delete" button on widget
@@ -1150,6 +1158,9 @@
 						// Enable save button after sucessfull form update
 						$('.dialogue-widget-save', footer).prop('disabled', false);
 					},
+					complete: function() {
+						overlayDialogueOnLoad(true);
+					},
 					error: function() {
 						// TODO VM: add error message box
 					}
@@ -1178,7 +1189,7 @@
 		registerAsSharedDataReceiver: function(obj) {
 			return this.each(function() {
 				var $this = $(this),
-						data = $this.data('dashboardGrid');
+					data = $this.data('dashboardGrid');
 
 				for (var i = 0, l = data['widgets'].length; l > i; i++) {
 					if (data['widgets'][i]['uniqueid'] == obj.uniqueid) {
@@ -1191,32 +1202,80 @@
 			});
 		},
 
-		widgetDataShare: function(widget) {
-			var args = Array.prototype.slice.call(arguments, 1),
-					reference = '';
+		widgetDataShare: function(widget, data_key) {
+			var args = Array.prototype.slice.call(arguments, 2);
 
 			if (!args.length) {
 				return false;
 			}
 
-			if (typeof widget['fields']['reference'] !== 'undefined') {
+			if (typeof widget['fields'] === 'object' && typeof widget['fields']['reference'] !== 'undefined') {
 				var reference = widget['fields']['reference'];
 
 				return this.each(function() {
 					var $this = $(this),
-							data = $this.data('dashboardGrid');
+						data = $this.data('dashboardGrid'),
+						indx = -1;
 
-					for (var i = 0, l = data['widgets'].length; l > i; i++) {
-						if (typeof(data['widgets'][i]['listen_for']) != 'undefined') {
-							for (var t = 0, j = data['widgets'][i]['listen_for'].length; j > t; t++) {
-								if (data['widgets'][i]['listen_for'][t]['source_widget_reference'] === reference) {
-									data['widgets'][i]['listen_for'][t].callback.apply(this, [data['widgets'][i], args]);
-								}
+					if (typeof data['data_buffer'][reference] === 'undefined') {
+						data['data_buffer'][reference] = [];
+					}
+					else if (typeof data['data_buffer'][reference] !== 'undefined') {
+						$.each(data['data_buffer'][reference], function(i, arr) {
+							if (arr['data_key'] === data_key) {
+								indx = i;
 							}
+						});
+					}
+
+					if (indx === -1) {
+						data['data_buffer'][reference].push({
+							data_key: data_key,
+							args: args,
+							old: false
+						});
+					}
+					else {
+						if (data['data_buffer'][reference][indx]['args'] !== args) {
+							data['data_buffer'][reference][indx]['args'] = args;
+							data['data_buffer'][reference][indx]['old'] = false;
 						}
 					}
+
+					methods.callWidgetDataShare.call($(this), true);
 				});
 			}
+		},
+
+		callWidgetDataShare: function($obj) {
+			var ignore_old_data = arguments[0];
+
+			return this.each(function() {
+				var $this = $(this),
+					data = $this.data('dashboardGrid');
+
+				for (var reference in data['data_buffer']) {
+					if (typeof data['data_buffer'][reference] === 'object') {
+						$.each(data['data_buffer'][reference], function(i, shared_data) {
+							if (!shared_data['old'] || !ignore_old_data) {
+								for (var i = 0, l = data['widgets'].length; l > i; i++) {
+									if (typeof(data['widgets'][i]['listen_for']) != 'undefined') {
+										for (var t = 0, j = data['widgets'][i]['listen_for'].length; j > t; t++) {
+											var wr = data['widgets'][i]['listen_for'][t]['source_widget_reference'];
+											if (wr === reference) {
+												data['widgets'][i]['listen_for'][t].callback.apply($obj,
+													[data['widgets'][i], shared_data['args']]
+												);
+											}
+										}
+									}
+								}
+							}
+							shared_data['old'] = true;
+						});
+					}
+				}
+			});
 		},
 
 		makeReference: function() {
@@ -1262,9 +1321,9 @@
 		},
 
 		/**
-		 * Add action, that will be performed on $hook trigger
+		 * Add action, that will be performed on $hook_name trigger
 		 *
-		 * @param string hook  name of trigger, when $function_to_call should be called
+		 * @param string hook_name  name of trigger, when $function_to_call should be called
 		 * @param string function_to_call  name of function in global scope that will be called
 		 * @param array options  any key in options is optional
 		 * @param array options['parameters']  array of parameters with which the function will be called
@@ -1274,23 +1333,23 @@
 		 * @param string options['grid']['data']  should contain '1'. Will add dashboard grid data object.
 		 * @param string options['grid']['obj']  should contain '1'. Will add dashboard grid object ($this).
 		 * @param int options['priority']  order, when it should be called, compared to others. Default = 10
-		 * @param int options['name']  unique name. There can be only one trigger with this name for each hook.
+		 * @param int options['trigger_name']  unique name. There can be only one trigger with this name for each hook.
 		 */
-		addAction: function(hook, function_to_call, options) {
+		addAction: function(hook_name, function_to_call, options) {
 			this.each(function() {
 				var	$this = $(this),
 					data = $this.data('dashboardGrid'),
 					found = false,
 					trigger_name = null;
 
-				if (typeof(data['triggers'][hook]) === 'undefined') {
-					data['triggers'][hook] = [];
+				if (typeof(data['triggers'][hook_name]) === 'undefined') {
+					data['triggers'][hook_name] = [];
 				}
 
 				// add trigger with each name only once
 				if (typeof(options['trigger_name']) !== 'undefined') {
 					trigger_name = options['trigger_name'];
-					$.each(data['triggers'][hook], function(index, trigger) {
+					$.each(data['triggers'][hook_name], function(index, trigger) {
 						if (trigger['trigger_name'] === trigger_name) {
 							found = true;
 						}
@@ -1298,7 +1357,7 @@
 				}
 
 				if (!found) {
-					data['triggers'][hook].push({
+					data['triggers'][hook_name].push({
 						'trigger_name': trigger_name,
 						'function': function_to_call,
 						'options': options
