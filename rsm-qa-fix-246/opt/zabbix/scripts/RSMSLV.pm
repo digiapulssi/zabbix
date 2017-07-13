@@ -1438,7 +1438,7 @@ sub process_slv_avail
 	my $probes_ref = shift;		# Probes with Online times
 	my $check_value_ref = shift;
 
-	my $probes_count = (defined($probes_ref) ? scalar(@{$probes_ref}) : 0);
+	my $probes_count = (defined($probes_ref) ? scalar(keys(%{$probes_ref})) : 0);
 
 	if ($probes_count < $cfg_minonline)
 	{
@@ -1517,7 +1517,7 @@ sub process_slv_ns_avail
 
 	dbg("using filter '$cfg_key_out' found next name servers:\n", Dumper($nsips_ref)) if (opt('debug'));
 
-	my $probes_count = (defined($probes_ref) ? scalar(@{$probes_ref}) : 0);
+	my $probes_count = (defined($probes_ref) ? scalar(keys(%{$probes_ref})) : 0);
 
 	my $nsip_items_ref = get_nsip_items($nsips_ref, $cfg_key_in, $tld);
 	my $hostids_ref = probes2tldhostids($tld, $probes_ref);
@@ -1580,57 +1580,6 @@ sub process_slv_ns_avail
 		push_value($tld, "rsm.slv.dns.ns.positive[$nsip]", $value_ts, $probes_with_positive, "probes with positive results");
 		push_value($tld, "rsm.slv.dns.ns.sla[$nsip]", $value_ts, $positive_sla, "positive results according to SLA");
 	}
-}
-
-#
-# get total and successful number of results of a service within given period of time for
-# a specified TLD
-#
-sub get_results
-{
-	my $tld = shift;
-	my $value_ts = shift;        # value timestamp
-	my $probe_times_ref = shift; # probe online times (for history data)
-	my $items_ref = shift;       # list of items to get results
-	my $check_value_ref = shift; # a pointer to subroutine to check if the value was successful
-
-	my %result;
-	foreach my $hostid (keys(%$items_ref))
-	{
-		my $hostitems = $items_ref->{$hostid};
-		foreach my $itemid (keys(%$hostitems))
-		{
-			my $nsip = $items_ref->{$hostid}->{$itemid};
-			$result{$nsip} = {'total' => 0, 'successful' => 0} unless (exists($result{$nsip}));
-		}
-	}
-
-	foreach my $probe (keys(%$probe_times_ref))
-	{
-		my $times_ref = $probe_times_ref->{$probe};
-		my $hostids_ref = probes2tldhostids($tld, [$probe]);
-		my $itemids_ref = get_itemids_by_hostids($hostids_ref, $items_ref);
-		my $values_ref = get_nsip_values($itemids_ref, $times_ref, $items_ref);
-
-		foreach my $nsip (keys(%$values_ref))
-		{
-			my $item_values_ref = $values_ref->{$nsip}->{'values'};
-
-			foreach (@$item_values_ref)
-			{
-				$result{$nsip}->{'total'}++;
-
-				if ($check_value_ref->($_) == SUCCESS)
-				{
-					$result{$nsip}->{'successful'}++;
-				}
-			}
-
-			dbg("[$probe] $nsip: ", $result{$nsip}->{'successful'}, "/", $result{$nsip}->{'total'});
-		}
-	}
-
-	return \%result;
 }
 
 # organize values from all hosts grouped by itemid and return itemid->values hash
