@@ -23,14 +23,10 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $interval = get_macro_dns_udp_delay();
-
-my $now = time() - 60;	# we need fully finished minute
-
-my (undef, $till, $value_ts) = get_interval_bounds($interval, $now);
-
 my ($curmon_from) = get_curmon_bounds();
-my $curmon_till = $till;
+my $curmon_till = truncate_from(time()) - 1;	# we need fully finished minute
+
+my (undef, undef, $value_ts) = get_interval_bounds(60, $curmon_till);
 
 my %tld_items;
 
