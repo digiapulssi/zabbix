@@ -45,20 +45,23 @@ if (opt('tld'))
 }
 else
 {
-        $tlds_ref = get_tlds('DNSSEC');
+        $tlds_ref = get_tlds('DNSSEC');	# todo phase 1: add parameter ENABLED_DNSSEC
 }
 
 while ($period > 0)
 {
 	my ($from, $till, $value_ts) = get_interval_bounds($interval, $clock);
 
+	dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+
 	$period -= $interval / 60;
 	$clock += $interval;
 
 	next if ($till > $max_avail_time);
 
-	my $probes_ref = get_online_probes($from, $till, $probe_avail_limit, undef);
-	my $probes_count = scalar(@$probes_ref);
+	my $probes_ref = get_probe_times($from, $till, $probe_avail_limit, get_probes('DNSSEC'));	# todo phase 1: change to ENABLED_DNSSEC
+
+	my $probes_count = (defined($probes_ref) ? scalar(@{$probes_ref}) : 0);
 
 	init_values();
 

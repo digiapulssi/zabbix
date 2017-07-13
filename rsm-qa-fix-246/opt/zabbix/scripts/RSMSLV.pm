@@ -86,9 +86,9 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec
 		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
-		minutes_last_month max_avail_time get_online_probes get_probe_times probe_offline_at probes2tldhostids
-		init_values push_value send_values get_nsip_from_key is_service_error process_slv_ns_monthly
-		process_slv_avail process_slv_ns_avail process_slv_monthly get_results get_item_values avail_value_exists
+		minutes_last_month max_avail_time get_probe_times probe_offline_at probes2tldhostids
+		init_values push_value send_values get_nsip_from_key is_service_error
+		process_slv_avail process_slv_ns_avail get_results get_item_values avail_value_exists
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute avail_result_msg
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
@@ -1112,232 +1112,6 @@ sub max_avail_time
 	return $now - ($now % 60) - 1 - AVAIL_SHIFT_BACK;
 }
 
-# Returns a reference to an array of probe names which are online from/till. The algorithm goes like this:
-#
-# for each manual probe status item
-#   get values between $from and $till
-#   if there is something
-#     if there is at least one DOWN
-#       add to the list
-#       break
-#   else
-#     get the latest value before $from
-#     if it is DOWN
-#       add to the list
-# if we did not add it to the list
-#   do the same loop for automatic probe status item
-#
-# You must be connected to the database before calling this function.
-sub get_online_probes
-{
-	my $from = shift;
-	my $till = shift;
-	my $probe_avail_limit = shift; # max "last seen" of proxy
-	my $all_probes_ref = shift;
-
-	# todo phase 1: this function must be obsoleted in phase 2, use function get_probe_times() instead!
-
-	$all_probes_ref = get_probes() unless ($all_probes_ref);
-	my %reachable_probes = %$all_probes_ref; # we should work on a copy
-
-	my (@result, @row, $sql, $host, $hostid, $rows_ref, $probe_down, $no_values);
-
-	my $host_postfix = ' - mon';
-
-	# Filter out unreachable probes. Probes are considered unreachable if last access time is over $probe_avail_limit seconds.
-	my (@hosts, @hosts_mon);
-	foreach my $host (keys(%reachable_probes))
-	{
-		my %h;
-
-		$h{'host'} = $host;
-
-		push(@hosts, \%h);
-		push(@hosts_mon, "'$host$host_postfix'");
-	}
-
-	return \@result if (scalar(@hosts_mon) == 0);
-
-	my $hosts_str = join(',', @hosts_mon);
-
-	$rows_ref = db_select("select host,hostid from hosts where host in ($hosts_str)");
-
-	my @hostids;
-	foreach my $row_ref (@$rows_ref)
-	{
-		my $host = $row_ref->[0];
-		my $hostid = $row_ref->[1];
-
-		my $found = 0;
-		foreach my $h (@hosts)
-		{
-			if ($h->{'host'} . $host_postfix eq $host)
-			{
-				$h->{'hostid'} = $hostid;
-				$found = 1;
-
-				last;
-			}
-		}
-
-		fail("something impossible has just happened") unless ($found);
-
-		push(@hostids, $hostid);
-	}
-
-	return \@result if (scalar(@hostids) == 0);
-
-	my $hostids_str = join(',', @hostids);
-
-	$rows_ref = db_select("select itemid,hostid from items where key_='" . PROBE_LASTACCESS_ITEM . "' and hostid in ($hostids_str)");
-
-	my @itemids;
-	foreach my $row_ref (@$rows_ref)
-	{
-		my $itemid = $row_ref->[0];
-		my $hostid = $row_ref->[1];
-
-		my $found = 0;
-		foreach my $h (@hosts)
-		{
-			if ($h->{'hostid'} == $hostid)
-			{
-				$h->{'itemid'} = $itemid;
-				$found = 1;
-
-				last;
-			}
-		}
-
-		fail("something impossible has just happened") unless ($found);
-
-		push(@itemids, $itemid);
-	}
-
-	return \@result if (scalar(@itemids) == 0);
-
-	my $itemids_str = join(',', @itemids);
-
-	$rows_ref = db_select(
-		"select itemid".
-		" from history_uint".
-		" where itemid in ($itemids_str)".
-	    		" and clock between $from and $till".
-	    		" and clock-value>$probe_avail_limit");
-
-	foreach my $row_ref (@$rows_ref)
-	{
-		my $itemid = $row_ref->[0];
-
-		foreach my $h (@hosts)
-		{
-			if ($h->{'itemid'} == $itemid)
-			{
-				delete($reachable_probes{$h->{'host'}});
-				last;
-			}
-		}
-	}
-
-	foreach my $host (keys(%reachable_probes))
-	{
-		$hostid = $reachable_probes{$host};
-
-		# get itemid
-		my $key = PROBE_KEY_MANUAL;
-		my $itemid = get_itemid_by_hostid($hostid, $key);
-
-		if ($itemid < 0)
-                {
-                        fail("misconfiguration: no item \"$key\" to check manual online status found at probe host \"$host\"") if ($itemid == E_ID_NONEXIST);
-                        fail("misconfiguration: multiple items \"$key\" to check manual online status found at probe host \"$host\"") if ($itemid == E_ID_MULTIPLE);
-
-                        fail("cannot get ID of item \"$key\" at probe host \"$host\": unknown error");
-                }
-
-		$rows_ref = db_select("select value from history_uint where itemid=$itemid and clock between $from and $till order by clock");
-
-		$probe_down = 0;
-		$no_values = 1;
-		foreach my $row_ref (@$rows_ref)
-		{
-			$no_values = 0;
-
-			if ($row_ref->[0] == DOWN)
-			{
-				$probe_down = 1;
-				dbg("$host ($hostid) down (manual: between $from and $till)");
-				last;
-			}
-		}
-
-		next if ($probe_down == 1);
-
-		if ($no_values == 1)
-		{
-			# we did not get any values between $from and $till, consider lastvalue
-
-			my $lastvalue;
-
-			if (get_current_value($itemid, ITEM_VALUE_TYPE_UINT64, \$lastvalue) == SUCCESS && $lastvalue == DOWN)
-			{
-				dbg("$host ($hostid) down (manual: $lastvalue)");
-				next;
-			}
-		}
-
-		dbg("$host ($hostid) up (manual)");
-
-		# Probe is considered manually up, check automatic status.
-
-		$key = PROBE_KEY_AUTOMATIC;
-		$itemid = get_itemid_like_by_hostid($hostid, $key);
-
-		if ($itemid < 0)
-                {
-                        fail("misconfiguration: no item \"$key\" to check automatic online status found at probe host \"$host\"") if ($itemid == E_ID_NONEXIST);
-                        fail("misconfiguration: multiple items \"$key\" to check automatic online status found at probe host \"$host\"") if ($itemid == E_ID_MULTIPLE);
-
-                        fail("cannot get ID of item \"$key\" at probe host \"$host\": unknown error");
-                }
-
-		$rows_ref = db_select("select value from history_uint where itemid=$itemid and clock between $from and $till order by clock");
-
-		$probe_down = 0;
-		$no_values = 1;
-		foreach my $row_ref (@$rows_ref)
-		{
-			$no_values = 0;
-
-			if ($row_ref->[0] == DOWN)
-			{
-				dbg("$host ($hostid) down (automatic: between $from and $till)");
-				$probe_down = 1;
-				last;
-			}
-		}
-
-		next if ($probe_down == 1);
-
-		if ($no_values == 1)
-		{
-			# we did not get any values between $from and $till, consider lastvalue
-
-			my $lastvalue;
-
-			if (get_current_value($itemid, ITEM_VALUE_TYPE_UINT64, \$lastvalue) == SUCCESS && $lastvalue == DOWN)
-			{
-				dbg("$host ($hostid) down (automatic: $lastvalue)");
-				next;
-			}
-		}
-
-		push(@result, $host);
-	}
-
-	return \@result;
-}
-
 # todo phase 1: taken from RSMSLV.pm of phase 2
 sub __print_probe_times
 {
@@ -1454,7 +1228,7 @@ sub get_probe_times
 
 	if (!defined($result))
 	{
-		wrn("Probes have no values yet.");
+		dbg("Probes have no values yet.");
 	}
 	elsif (opt('dry-run'))
 	{
@@ -1512,6 +1286,8 @@ sub probes2tldhostids
 	my $probes_ref = shift;
 
 	my @result;
+
+	return \@result unless(defined($probes_ref));
 
 	my $hosts_str = '';
 	foreach (@$probes_ref)
@@ -1649,157 +1425,6 @@ sub is_service_error
 	return E_FAIL;
 }
 
-sub process_slv_ns_monthly
-{
-	my $tld = shift;
-	my $cfg_key_in = shift;        # part of input key, e. g. 'rsm.dns.udp.upd[{$RSM.TLD},'
-	my $cfg_key_out = shift;       # part of output key, e. g. 'rsm.slv.dns.ns.upd['
-	my $from = shift;              # start of SLV period
-	my $till = shift;              # end of SLV period
-	my $value_ts = shift;          # value timestamp
-	my $cfg_interval = shift;      # input values interval
-	my $probe_avail_limit = shift; # max "last seen" of proxy
-	my $check_value_ref = shift;   # a pointer to subroutine to check if the value was successful
-
-	# first we need to get the list of name servers
-	my $nsips_ref = get_nsips($tld, $cfg_key_out);
-
-	dbg("using filter '$cfg_key_out' found next name servers:\n", Dumper($nsips_ref)) if (opt('debug'));
-
-	# %successful_values is a hash of name server as key and its number of successful results as a value. Name server is
-	# represented by a string consisting of name and IP separated by comma. Each successful result means the IP was UP at
-	# certain period. E. g.:
-	#
-	# 'g.ns.se.,2001:6b0:e:3::1' => 150,
-	# 'b.ns.se.,192.36.133.107' => 200,
-	# ...
-	my %total_values;
-	my %successful_values;
-	foreach my $nsip (@$nsips_ref)
-	{
-		$total_values{$nsip} = 0;
-		$successful_values{$nsip} = 0;
-	}
-
-	my $probes_ref = get_probes();
-
-	my $nsip_items_ref = get_nsip_items($nsips_ref, $cfg_key_in, $tld);
-
-	dbg("using filter '$cfg_key_in' found next name server items:\n", Dumper($nsip_items_ref)) if (opt('debug'));
-
-	my $cur_from = $from;
-	my ($interval, $cur_till);
-	while ($cur_from < $till)
-	{
-		$interval = ($cur_from + $cfg_interval > $till ? $till - $cur_from : $cfg_interval);
-		$cur_till = $cur_from + $interval;
-		$cur_till-- unless ($cur_till == $till); # SQL BETWEEN includes upper bound
-
-		my $online_probes_ref = get_online_probes($cur_from, $cur_till, $probe_avail_limit, $probes_ref);
-
-		info("from:$cur_from till:$cur_till diff:", $cur_till - $cur_from, " online:", scalar(@$online_probes_ref));
-
-		my $hostids_ref = probes2tldhostids($tld, $online_probes_ref);
-
-		my $itemids_ref = get_itemids_by_hostids($hostids_ref, $nsip_items_ref);
-
-		my $values_ref = get_nsip_values($itemids_ref, [$cur_from, $cur_till], $nsip_items_ref);
-
-		foreach my $nsip (keys(%$values_ref))
-		{
-			my $item_values_ref = $values_ref->{$nsip}->{'values'};
-
-			foreach (@$item_values_ref)
-			{
-				$total_values{$nsip}++;
-				$successful_values{$nsip}++ if ($check_value_ref->($_) == SUCCESS);
-			}
-		}
-
-		$cur_from += $interval;
-	}
-
-	foreach my $nsip (keys(%total_values))
-	{
-		if ($total_values{$nsip} == 0)
-		{
-			info("$nsip: no values found in the database for a given period");
-			next;
-		}
-
-		my $perc = sprintf("%.3f", $successful_values{$nsip} * 100 / $total_values{$nsip});
-		my $key_out = $cfg_key_out . $nsip . ']';
-
-		push_value($tld, $key_out, $value_ts, $perc, "$nsip: $perc% successful values (", $successful_values{$nsip}, "/", $total_values{$nsip});
-	}
-}
-
-sub process_slv_monthly
-{
-	my $tld = shift;
-	my $cfg_key_in = shift;        # e. g. 'rsm.rdds.43.rtt[{$RSM.TLD}]'
-	my $cfg_key_out = shift;       # e. g. 'rsm.slv.rdds.43.rtt'
-	my $from = shift;              # start of SLV period
-	my $till = shift;              # end of SLV period
-	my $value_ts = shift;          # value timestamp
-	my $cfg_interval = shift;      # input values interval
-	my $probe_avail_limit = shift; # max "last seen" of proxy
-	my $check_value_ref = shift;   # a pointer to subroutine to check if the value was successful
-	my $min_error = shift;         # optional: min error that relates to this item
-	my $max_error = shift;         # optional: max error that relates to this item
-
-	my $probes_ref = get_probes();
-
-	my $all_items_ref = get_all_items($cfg_key_in);
-
-	dbg("using filter '$cfg_key_in' found next items:\n", Dumper($all_items_ref)) if (opt('debug'));
-
-	my $cur_from = $from;
-	my ($interval, $cur_till);
-	my $total_values = 0;
-	my $successful_values = 0;
-
-	while ($cur_from < $till)
-	{
-		$interval = ($cur_from + $cfg_interval > $till ? $till - $cur_from : $cfg_interval);
-		$cur_till = $cur_from + $interval;
-		$cur_till-- unless ($cur_till == $till); # SQL BETWEEN includes upper bound
-
-		my $online_probes_ref = get_online_probes($cur_from, $cur_till, $probe_avail_limit, $probes_ref);
-
-		info("from:$cur_from till:$cur_till diff:", $cur_till - $cur_from, " online:", scalar(@$online_probes_ref));
-
-		my $hostids_ref = probes2tldhostids($tld, $online_probes_ref);
-
-		my $itemids_ref = get_itemids_by_hostids($hostids_ref, $all_items_ref);
-
-		my $values_ref = __get_dbl_values($itemids_ref, $cur_from, $cur_till);
-
-		foreach my $value (@$values_ref)
-		{
-			if ($value < 0 and (defined($min_error) or defined($max_error)))
-			{
-				next if ((defined($min_error) and $value < $min_error) or (defined($max_error) and $value > $max_error));
-			}
-
-			$total_values++;
-			$successful_values++ if ($check_value_ref->($value) == SUCCESS);
-		}
-
-		$cur_from += $interval;
-	}
-
-	if ($total_values == 0)
-	{
-		info("no values found in the database for a given period");
-		return;
-	}
-
-	my $perc = sprintf("%.3f", $successful_values * 100 / $total_values);
-
-	push_value($tld, $cfg_key_out, $value_ts, $perc, "$perc% successful values ($successful_values/$total_values)");
-}
-
 sub process_slv_avail
 {
 	my $tld = shift;
@@ -1809,12 +1434,11 @@ sub process_slv_avail
 	my $till = shift;
 	my $value_ts = shift;
 	my $cfg_minonline = shift;
-	my $probe_avail_limit = shift; # max "last seen" of proxy
-	my $probes_ref = shift;
+	my $probe_avail_limit = shift;	# max "last seen" of proxy
+	my $probes_ref = shift;		# Probes with Online times
 	my $check_value_ref = shift;
 
-	# calculate the availability at a particular minute
-	my $probes_count = scalar(@$probes_ref);
+	my $probes_count = (defined($probes_ref) ? scalar(@{$probes_ref}) : 0);
 
 	if ($probes_count < $cfg_minonline)
 	{
@@ -1874,6 +1498,8 @@ sub process_slv_avail
 	push_value($tld, $cfg_key_out, $value_ts, $result, avail_result_msg($result, $probes_with_positive, $probes_with_results, $perc, $value_ts));
 }
 
+# todo probe 1: this function is for future Compliance Monitoring and it must be checked when will be used
+# Name Server availability at a particular minute
 sub process_slv_ns_avail
 {
 	my $tld = shift;
@@ -1883,19 +1509,18 @@ sub process_slv_ns_avail
 	my $till = shift;
 	my $value_ts = shift;
 	my $cfg_minonline = shift;
-	my $probe_avail_limit = shift; # max "last seen" of proxy
+	my $probe_avail_limit = shift;	# max "last seen" of proxy
+	my $probes_ref = shift;		# Probes with Online times
 	my $check_value_ref = shift;
 
 	my $nsips_ref = get_nsips($tld, $cfg_key_out);
 
 	dbg("using filter '$cfg_key_out' found next name servers:\n", Dumper($nsips_ref)) if (opt('debug'));
 
-	my $online_probes_ref = get_online_probes($from, $till, $probe_avail_limit, undef);
-
-	my $online_probes_count = scalar(@$online_probes_ref);
+	my $probes_count = (defined($probes_ref) ? scalar(@{$probes_ref}) : 0);
 
 	my $nsip_items_ref = get_nsip_items($nsips_ref, $cfg_key_in, $tld);
-	my $hostids_ref = probes2tldhostids($tld, $online_probes_ref);
+	my $hostids_ref = probes2tldhostids($tld, $probes_ref);
 	my $itemids_ref = get_itemids_by_hostids($hostids_ref, $nsip_items_ref);
 	my $values_ref = get_nsip_values($itemids_ref, [$from, $till], $nsip_items_ref);
 
@@ -1933,10 +1558,10 @@ sub process_slv_ns_avail
 			$probes_with_positive++ if ($check_value_ref->($_) == SUCCESS);
 		}
 
-		if ($online_probes_count < $cfg_minonline)
+		if ($probes_count < $cfg_minonline)
 		{
-			push_value($tld, $out_key, $value_ts, UP, "Up (not enough probes online, $online_probes_count while $cfg_minonline required)");
-			add_alert(ts_str($value_ts) . "#system#zabbix#$out_key#PROBLEM#$tld (not enough probes online, $online_probes_count while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
+			push_value($tld, $out_key, $value_ts, UP, "Up (not enough probes online, $probes_count while $cfg_minonline required)");
+			add_alert(ts_str($value_ts) . "#system#zabbix#$out_key#PROBLEM#$tld (not enough probes online, $probes_count while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
 		}
 		elsif ($probes_with_results < $cfg_minonline)
 		{
