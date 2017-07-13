@@ -1767,7 +1767,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 
 		event = (DB_EVENT *)events.values[index];
 
-		if (EVENT_SOURCE_TRIGGERS == event->source && 0 == event->trigger.triggerid)
+		if (EVENT_OBJECT_TRIGGER == event->object && 0 == event->trigger.triggerid)
 		{
 			error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", event->objectid);
 			goto cancel_warning;
@@ -1784,7 +1784,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 
 			r_event = (DB_EVENT *)events.values[index];
 
-			if (EVENT_SOURCE_TRIGGERS == r_event->source && 0 == r_event->trigger.triggerid)
+			if (EVENT_OBJECT_TRIGGER == r_event->object && 0 == r_event->trigger.triggerid)
 			{
 				error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", r_event->objectid);
 				goto cancel_warning;
