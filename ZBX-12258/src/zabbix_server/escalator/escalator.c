@@ -1718,7 +1718,7 @@ static void	escalation_update_diff(const DB_ESCALATION *escalation, zbx_escalati
 }
 
 static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *escalations,
-		const zbx_vector_uint64_t *eventids, const zbx_vector_uint64_t *actionids)
+		zbx_vector_uint64_t *eventids, zbx_vector_uint64_t *actionids)
 {
 	int			i, ret;
 	zbx_vector_uint64_t	escalationids;
@@ -1991,12 +1991,6 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 	zbx_vector_ptr_create(&escalations);
 	zbx_vector_uint64_create(&actionids);
 	zbx_vector_uint64_create(&eventids);
-
-	zbx_vector_uint64_sort(&actionids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-	zbx_vector_uint64_uniq(&actionids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	zbx_vector_uint64_sort(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-	zbx_vector_uint64_uniq(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	/* Selection of escalations to be processed:                                                          */
 	/*                                                                                                    */

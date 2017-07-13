@@ -1881,13 +1881,16 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
  * Comments: use 'free_db_action' function to release allocated memory        *
  *                                                                            *
  ******************************************************************************/
-void	get_db_actions_info(const zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actions)
+void	get_db_actions_info(zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actions)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 	char		*filter = NULL;
 	size_t		filter_alloc = 0, filter_offset = 0;
 	DB_ACTION	*action;
+
+	zbx_vector_uint64_sort(actionids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(actionids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "actionid", actionids->values,
 			actionids->values_num);

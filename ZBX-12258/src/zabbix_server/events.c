@@ -2050,7 +2050,7 @@ int	close_event(zbx_uint64_t eventid, unsigned char source, unsigned char object
  * Comments: use 'free_db_event' function to release allocated memory         *
  *                                                                            *
  ******************************************************************************/
-void	get_db_events_info(const zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
+void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 {
 	DB_RESULT		result;
 	DB_ROW			row;
@@ -2062,6 +2062,9 @@ void	get_db_events_info(const zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *e
 
 	zbx_vector_uint64_create(&trigger_eventids);
 	zbx_vector_uint64_create(&triggerids);
+
+	zbx_vector_uint64_sort(eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "eventid", eventids->values,
 			eventids->values_num);
