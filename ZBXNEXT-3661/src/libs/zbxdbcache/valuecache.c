@@ -17,6 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+#include <time.h>
+
 #include "common.h"
 #include "log.h"
 #include "memalloc.h"
@@ -2893,6 +2895,8 @@ void	zbx_vc_add_values(zbx_vector_ptr_t *history)
 
 	if (0 < zbx_history_check_type(ITEM_VALUE_TYPE_LOG))
 		zbx_history_add_values(history, ITEM_VALUE_TYPE_LOG);
+
+	zbx_send_data();
 
 	if (NULL == vc_cache)
 		return;

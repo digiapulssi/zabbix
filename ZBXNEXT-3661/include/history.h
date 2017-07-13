@@ -30,6 +30,8 @@
 
 int	zbx_init_history_service(const char *url, const char *types);
 
+void	zbx_send_data(void);
+
 void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type);
 
 void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
