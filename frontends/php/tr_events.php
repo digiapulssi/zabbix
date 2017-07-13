@@ -102,7 +102,7 @@ $r_alerts = [];
 
 if ($event['alerts']) {
 	$alerts = $event['alerts'];
-	CArrayHelper::sort($event['alerts'], [['field' => 'alertid', 'order' => SORT_DESC]]);
+	CArrayHelper::sort($alerts, [['field' => 'alertid', 'order' => ZBX_SORT_DOWN]]);
 }
 
 if ($event['r_eventid'] != 0) {
@@ -123,7 +123,7 @@ if ($event['r_eventid'] != 0) {
 
 		if ($r_event['alerts']) {
 			$r_alerts = $r_event['alerts'];
-			CArrayHelper::sort($r_alerts, [['field' => 'alertid', 'order' => SORT_DESC]]);
+			CArrayHelper::sort($r_alerts, [['field' => 'alertid', 'order' => ZBX_SORT_DOWN]]);
 		}
 	}
 }
