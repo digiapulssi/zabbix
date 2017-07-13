@@ -1290,7 +1290,7 @@ sub probes2tldhostids
 	return \@result unless(defined($probes_ref));
 
 	my $hosts_str = '';
-	foreach (@$probes_ref)
+	foreach (keys(%{$probes_ref}))
 	{
 		$hosts_str .= ' or ' unless ($hosts_str eq '');
 		$hosts_str .= "host='$tld $_'";

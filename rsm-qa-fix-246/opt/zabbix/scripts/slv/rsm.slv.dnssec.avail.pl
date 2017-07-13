@@ -61,7 +61,7 @@ while ($period > 0)
 
 	my $probes_ref = get_probe_times($from, $till, $probe_avail_limit, get_probes('DNSSEC'));	# todo phase 1: change to ENABLED_DNSSEC
 
-	my $probes_count = (defined($probes_ref) ? scalar(@{$probes_ref}) : 0);
+	my $probes_count = (defined($probes_ref) ? scalar(keys(%{$probes_ref})) : 0);
 
 	init_values();
 
