@@ -75,9 +75,6 @@ extern unsigned char	program_type;
 /* the maximum number of characters for history cache values */
 #define ZBX_HISTORY_VALUE_LEN	(1024 * 64)
 
-/* max number of trends to post to the history service in one call */
-#define ZBX_TRENDS_MAX_SYNC	100
-
 #define ZBX_DC_FLAGS_NOT_FOR_HISTORY	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOHISTORY)
 #define ZBX_DC_FLAGS_NOT_FOR_TRENDS	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOTRENDS)
 #define ZBX_DC_FLAGS_NOT_FOR_MODULES	(ZBX_DC_FLAGS_NOT_FOR_HISTORY | ZBX_DC_FLAG_LLD)
