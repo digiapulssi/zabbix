@@ -82,7 +82,7 @@ while ($period > 0)
 			next;
 		}
 
-		my $hostids_ref = probes2tldhostids($tld, @probe_names);
+		my $hostids_ref = probes2tldhostids($tld, \@probe_names);
 		if (scalar(@$hostids_ref) == 0)
 		{
 			wrn("no probe hosts found");
