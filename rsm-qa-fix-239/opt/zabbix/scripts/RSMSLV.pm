@@ -87,7 +87,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec
 		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_curmon_bounds
-		max_avail_time get_online_probes get_probe_times probe_offline_at probes2tldhostids
+		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error
 		process_slv_avail get_item_values avail_value_exists
