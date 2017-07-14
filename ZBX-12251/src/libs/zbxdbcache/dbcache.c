@@ -1324,7 +1324,7 @@ static int	preprocess_item_value(const DC_ITEM *item, ZBX_DC_HISTORY *hdata, zbx
 
 	for (i = 0; i < item->preproc_ops_num; i++)
 	{
-		if (SUCCEED != (ret = zbx_item_preproc(item,  &value_var, &hdata->ts, &item->preproc_ops[i],
+		if (SUCCEED != (ret = zbx_item_preproc(item, &value_var, &hdata->ts, &item->preproc_ops[i],
 				delta_history, &errmsg)))
 		{
 			char	*errmsg_full;
@@ -2304,13 +2304,20 @@ int	DCsync_history(int sync_type, int *total_num)
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
+			ret = ZBX_DB_OK;
+
 			do
 			{
 				DBbegin();
 
 				DBmass_update_items(history, history_num, &delta_history, &state_diff);
 				DBmass_add_history(history, history_num);
-				DCmass_add_history(history, history_num);	/* same timestamp is not added */
+
+				/* value cache must be updated for trigger calculation, but only once per transaction */
+				/* value cache is not reverted, assuming transaction will succeed eventually */
+				if (ZBX_DB_OK == ret)
+					DCmass_add_history(history, history_num);
+
 				DBmass_update_triggers(history, history_num, &trigger_diff);
 				DBmass_update_trends(history, history_num, &trends_diff);
 
@@ -2327,8 +2334,9 @@ int	DCsync_history(int sync_type, int *total_num)
 					DCconfig_triggers_apply_changes(&trigger_diff);
 					DCupdate_trends(&trends_diff);
 				}
-				else if (ZBX_DB_DOWN == ret)	/* revert to original item data from history cache */
+				else if (ZBX_DB_DOWN == ret)
 				{
+					/* revert to original item data to avoid double preprocess */
 					hc_free_item_values(history, history_num);
 					hc_get_item_values(history, &history_items);
 				}
