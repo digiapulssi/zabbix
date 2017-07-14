@@ -59,9 +59,9 @@ while ($period > 0)
 
 	next if ($till > $max_avail_time);
 
-	my $probes_ref = get_probe_times($from, $till, $probe_avail_limit, get_probes('DNSSEC'));	# todo phase 1: change to ENABLED_DNSSEC
+	my @probe_names = keys(%{get_probe_times($from, $till, $probe_avail_limit, get_probes('DNSSEC'))});	# todo phase 1: change to ENABLED_DNSSEC
 
-	my $probes_count = (defined($probes_ref) ? scalar(keys(%{$probes_ref})) : 0);
+	my $probes_count = scalar(@probe_names);
 
 	init_values();
 
@@ -82,7 +82,7 @@ while ($period > 0)
 			next;
 		}
 
-		my $hostids_ref = probes2tldhostids($tld, [keys(%{$probes_ref})]);
+		my $hostids_ref = probes2tldhostids($tld, @probe_names);
 		if (scalar(@$hostids_ref) == 0)
 		{
 			wrn("no probe hosts found");
