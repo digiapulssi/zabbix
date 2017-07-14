@@ -45,19 +45,21 @@ if (opt('tld'))
 }
 else
 {
-        $tlds_ref = get_tlds();
+        $tlds_ref = get_tlds('DNS');	# todo phase 1: change to ENABLED_DNS
 }
 
 while ($period > 0)
 {
 	my ($from, $till, $value_ts) = get_interval_bounds($interval, $clock);
 
+	dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+
 	$period -= $interval / 60;
 	$clock += $interval;
 
 	next if ($till > $max_avail_time);
 
-	my $probes_ref = get_online_probes($from, $till, $probe_avail_limit, undef);
+	my @probe_names = keys(%{get_probe_times($from, $till, $probe_avail_limit, get_probes('DNS'))});	# todo phase 1: change to ENABLED_DNS
 
 	init_values();
 
@@ -72,7 +74,7 @@ while ($period > 0)
 		}
 
 		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			$probe_avail_limit, $probes_ref, \&check_item_values);
+			$probe_avail_limit, \@probe_names, \&check_item_values);
 	}
 
 	# unset TLD (for the logs)
