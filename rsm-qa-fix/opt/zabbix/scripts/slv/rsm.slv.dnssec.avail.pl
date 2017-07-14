@@ -45,23 +45,20 @@ if (opt('tld'))
 }
 else
 {
-        $tlds_ref = get_tlds('DNSSEC');	# todo phase 1: add parameter ENABLED_DNSSEC
+        $tlds_ref = get_tlds('DNSSEC');
 }
 
 while ($period > 0)
 {
 	my ($from, $till, $value_ts) = get_interval_bounds($interval, $clock);
 
-	dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
-
 	$period -= $interval / 60;
 	$clock += $interval;
 
 	next if ($till > $max_avail_time);
 
-	my @probe_names = keys(%{get_probe_times($from, $till, $probe_avail_limit, get_probes('DNSSEC'))});	# todo phase 1: change to ENABLED_DNSSEC
-
-	my $probes_count = scalar(@probe_names);
+	my $probes_ref = get_online_probes($from, $till, $probe_avail_limit, undef);
+	my $probes_count = scalar(@$probes_ref);
 
 	init_values();
 
@@ -82,7 +79,7 @@ while ($period > 0)
 			next;
 		}
 
-		my $hostids_ref = probes2tldhostids($tld, \@probe_names);
+		my $hostids_ref = probes2tldhostids($tld, $probes_ref);
 		if (scalar(@$hostids_ref) == 0)
 		{
 			wrn("no probe hosts found");
