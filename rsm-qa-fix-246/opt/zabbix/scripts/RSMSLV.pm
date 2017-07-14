@@ -88,7 +88,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
 		minutes_last_month max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		init_values push_value send_values get_nsip_from_key is_service_error
-		process_slv_avail process_slv_ns_avail get_item_values avail_value_exists
+		process_slv_avail get_item_values avail_value_exists
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute avail_result_msg
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
@@ -1500,90 +1500,6 @@ sub process_slv_avail
 	$result = UP if ($perc > SLV_UNAVAILABILITY_LIMIT);
 
 	push_value($tld, $cfg_key_out, $value_ts, $result, avail_result_msg($result, $probes_with_positive, $probes_with_results, $perc, $value_ts));
-}
-
-# todo probe 1: this function is for future Compliance Monitoring and it must be checked when will be used
-# Name Server availability at a particular minute
-sub process_slv_ns_avail
-{
-	my $tld = shift;
-	my $cfg_key_in = shift;
-	my $cfg_key_out = shift;
-	my $from = shift;
-	my $till = shift;
-	my $value_ts = shift;
-	my $cfg_minonline = shift;
-	my $probe_avail_limit = shift;	# max "last seen" of proxy
-	my $probes_ref = shift;		# Probes with Online times
-	my $check_value_ref = shift;
-
-	my $nsips_ref = get_nsips($tld, $cfg_key_out);
-
-	dbg("using filter '$cfg_key_out' found next name servers:\n", Dumper($nsips_ref)) if (opt('debug'));
-
-	my $probes_count = (defined($probes_ref) ? scalar(keys(%{$probes_ref})) : 0);
-
-	my $nsip_items_ref = get_nsip_items($nsips_ref, $cfg_key_in, $tld);
-	my $hostids_ref = probes2tldhostids($tld, [keys(%{$probes_ref})]);
-	my $itemids_ref = get_itemids_by_hostids($hostids_ref, $nsip_items_ref);
-	my $values_ref = get_nsip_values($itemids_ref, [$from, $till], $nsip_items_ref);
-
-	wrn("no values of items ($cfg_key_in) at host $tld found in the database") if (scalar(keys(%$values_ref)) == 0);
-
-	# for current month downtime
-	my ($curmon_from) = get_curmon_bounds();
-	my $curmon_till = $from;
-
-	# use binds for faster execution of the same SQL query
-	my $sth = get_downtime_prepare();
-
-	foreach my $nsip (keys(%$values_ref))
-	{
-		my $itemid = $values_ref->{$nsip}->{'itemid'};
-		my $item_values_ref = $values_ref->{$nsip}->{'values'};
-
-		my $out_key = $cfg_key_out . $nsip . ']';
-
-		# get current month downtime
-		my $downtime = get_downtime_execute($sth, $itemid, $curmon_from, $curmon_till, 1); # ignore incidents
-
-		push_value($tld, "rsm.slv.dns.ns.downtime[$nsip]", $value_ts, $downtime,
-			"$downtime minutes of downtime from ", ts_str($curmon_from), " ($curmon_from) till ",
-			ts_str($curmon_till), " ($curmon_till)");
-
-		# calculate other things
-		my $probes_with_results = scalar(@$item_values_ref);
-		my $probes_with_positive = 0;
-		my $positive_sla = floor($probes_with_results * SLV_UNAVAILABILITY_LIMIT / 100);
-
-		foreach (@$item_values_ref)
-		{
-			dbg($_);
-			$probes_with_positive++ if ($check_value_ref->($_) == SUCCESS);
-		}
-
-		if ($probes_count < $cfg_minonline)
-		{
-			push_value($tld, $out_key, $value_ts, UP, "Up (not enough probes online, $probes_count while $cfg_minonline required)");
-			add_alert(ts_str($value_ts) . "#system#zabbix#$out_key#PROBLEM#$tld (not enough probes online, $probes_count while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
-		}
-		elsif ($probes_with_results < $cfg_minonline)
-		{
-			push_value($tld, $out_key, $value_ts, UP, "Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
-			add_alert(ts_str($value_ts) . "#system#zabbix#$out_key#PROBLEM#$tld (not enough probes with results, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
-		}
-		else
-		{
-			my $perc = $probes_with_positive * 100 / $probes_with_results;
-			my $test_result = $perc > SLV_UNAVAILABILITY_LIMIT ? UP : DOWN;
-
-			push_value($tld, $out_key, $value_ts, $test_result, avail_result_msg($test_result, $probes_with_positive, $probes_with_results, $perc, $value_ts));
-		}
-
-		push_value($tld, "rsm.slv.dns.ns.results[$nsip]", $value_ts, $probes_with_results, "probes with results");
-		push_value($tld, "rsm.slv.dns.ns.positive[$nsip]", $value_ts, $probes_with_positive, "probes with positive results");
-		push_value($tld, "rsm.slv.dns.ns.sla[$nsip]", $value_ts, $positive_sla, "positive results according to SLA");
-	}
 }
 
 # organize values from all hosts grouped by itemid and return itemid->values hash
