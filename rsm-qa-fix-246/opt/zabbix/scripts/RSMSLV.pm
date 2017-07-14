@@ -1159,7 +1159,7 @@ sub get_probe_times
 	my $probe_avail_limit = shift;	# todo phase 1: this param is ignored, remove in phase 2
 	my $probes_ref = shift; # { host => hostid, ... }
 
-	my $result;
+	my $result = {};
 
 	return $result if (scalar(keys(%{$probes_ref})) == 0);
 
@@ -1437,10 +1437,12 @@ sub process_slv_avail
 	my $value_ts = shift;
 	my $cfg_minonline = shift;
 	my $probe_avail_limit = shift;	# max "last seen" of proxy
-	my $probes_ref = shift;		# Probes with Online times
+	my $probe_names = shift;	# names of online probes
 	my $check_value_ref = shift;
 
-	my $probes_count = (defined($probes_ref) ? scalar(keys(%{$probes_ref})) : 0);
+	croak("Internal error: invalid argument to process_slv_avail()") unless (ref($probe_names) eq 'ARRAY');
+
+	my $probes_count = scalar(@{$probe_names});
 
 	if ($probes_count < $cfg_minonline)
 	{
@@ -1449,7 +1451,7 @@ sub process_slv_avail
 		return;
 	}
 
-	my $hostids_ref = probes2tldhostids($tld, [keys(%{$probes_ref})]);
+	my $hostids_ref = probes2tldhostids($tld, $probe_names);
 	if (scalar(@$hostids_ref) == 0)
 	{
 		wrn("no probe hosts found");
