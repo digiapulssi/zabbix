@@ -1063,10 +1063,10 @@ sub get_month_bounds
 
 	my $dt = DateTime->now;
 
-	$dt->truncate(to => 'month');
+	$dt->truncate('to' => 'month');
 	my $till = $dt->epoch - 1;
 
-	$dt->subtract(months => 1);
+	$dt->subtract('months' => 1);
 	my $from = $dt->epoch;
 
 	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
@@ -1077,17 +1077,13 @@ sub get_curmon_bounds
 {
 	require DateTime;
 
-	my $dt = DateTime->now;
-	my $till = $dt->epoch;
+	my $till = truncate_from(time()) - 1;
 
-	$dt->truncate(to => 'month');
+	my $dt = DateTime->from_epoch('epoch' => $till);
+	$dt->truncate('to' => 'month');
 	my $from = $dt->epoch;
 
-	$dt->add(months => 1);
-	$dt->subtract(seconds => 1);
-	my $eomonth = $dt->epoch; # end of month
-
-	return ($from, $till, $eomonth);
+	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
 }
 
 sub minutes_last_month
@@ -1096,10 +1092,10 @@ sub minutes_last_month
 
 	my $dt = DateTime->now;
 
-	$dt->truncate(to => 'month');
+	$dt->truncate('to' => 'month');
 	my $till = $dt->epoch;
 
-	$dt->subtract(months => 1);
+	$dt->subtract('months' => 1);
 	my $from = $dt->epoch;
 
 	return ($till - $from) / 60;
@@ -1617,7 +1613,7 @@ sub send_values
 				$h->{'data'}->{'host'},
 				$h->{'data'}->{'key'},
 				$h->{'data'}->{'value'},
-				ts_full($h->{'data'}->{'clock'}),
+				ts_str($h->{'data'}->{'clock'}),
 				$h->{'info'});
 
 			info($msg);

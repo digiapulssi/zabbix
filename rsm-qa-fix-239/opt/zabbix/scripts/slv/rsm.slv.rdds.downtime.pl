@@ -23,10 +23,7 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my ($curmon_from) = get_curmon_bounds();
-my $curmon_till = truncate_from(time()) - 1;	# we need fully finished minute
-
-my (undef, undef, $value_ts) = get_interval_bounds(60, $curmon_till);
+my ($from, $till, $value_ts) = get_curmon_bounds();
 
 my %tld_items;
 
@@ -58,10 +55,9 @@ foreach (keys(%tld_items))
 
 	my $itemid = $tld_items{$tld};
 
-	my $downtime = get_downtime_execute($sth, $itemid, $curmon_from, $curmon_till, 1); # ignore incidents
+	my $downtime = get_downtime_execute($sth, $itemid, $from, $till, 1); # ignore incidents
 
-	push_value($tld, $cfg_key_out, $value_ts, $downtime, "$downtime minutes of downtime from ",
-		ts_str($curmon_from), " ($curmon_from) till ", ts_str($curmon_till), " ($curmon_till)");
+	push_value($tld, $cfg_key_out, $value_ts, $downtime, ts_str($from), " - ", ts_str($till));
 }
 
 # unset TLD (for the logs)
