@@ -1,1 +1,0 @@
-* * * * * root sleep 1; /opt/zabbix/scripts/slv/rsm.slv.dnssec.avail.pl >> /var/log/zabbix/rsm.slv.err 2>&1
