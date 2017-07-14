@@ -23,12 +23,7 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $interval = get_macro_rdds_delay();
-
-my ($from, $till, $value_ts) = get_interval_bounds($interval);
-
-my ($curmon_from) = get_curmon_bounds();
-my $curmon_till = $from;
+my ($from, $till, $value_ts) = get_downtime_bounds();
 
 my %tld_items;
 
@@ -38,6 +33,12 @@ my $tlds_ref = get_tlds('RDDS');
 foreach (@$tlds_ref)
 {
 	$tld = $_; # set global variable here
+
+	if (uint_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)) == SUCCESS)
+	{
+		# value already exists
+		next unless (opt('dry-run'));
+	}
 
 	# for future calculation of downtime
 	$tld_items{$tld} = get_itemid_by_host($tld, $cfg_key_in);
@@ -54,10 +55,9 @@ foreach (keys(%tld_items))
 
 	my $itemid = $tld_items{$tld};
 
-	my $downtime = get_downtime_execute($sth, $itemid, $curmon_from, $curmon_till, 1); # ignore incidents
+	my $downtime = get_downtime_execute($sth, $itemid, $from, $till, 1); # ignore incidents
 
-	push_value($tld, $cfg_key_out, $value_ts, $downtime, "$downtime minutes of downtime from ",
-		ts_str($curmon_from), " ($curmon_from) till ", ts_str($curmon_till), " ($curmon_till)");
+	push_value($tld, $cfg_key_out, $value_ts, $downtime, ts_str($from), " - ", ts_str($till));
 }
 
 # unset TLD (for the logs)
@@ -66,3 +66,16 @@ $tld = undef;
 send_values();
 
 slv_exit(SUCCESS);
+
+# todo phase 1: taken from RSMSLV1.pm
+sub uint_value_exists
+{
+        my $clock = shift;
+        my $itemid = shift;
+
+        my $rows_ref = db_select("select 1 from history_uint where itemid=$itemid and clock=$clock");
+
+        return SUCCESS if ($rows_ref->[0]->[0]);
+
+        return E_FAIL;
+}

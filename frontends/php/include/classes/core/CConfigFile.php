@@ -117,11 +117,12 @@ class CConfigFile {
 			$this->config['DB']['SERVERS'] = $DB['SERVERS'];
 		}
 
-		$this->config['DB']['DB_KEY_FILE'] = array_key_exists('DB_KEY_FILE', $DB) ? $DB['DB_KEY_FILE'] : null;
-		$this->config['DB']['DB_CERT_FILE'] = array_key_exists('DB_CERT_FILE', $DB) ? $DB['DB_CERT_FILE'] : null;
-		$this->config['DB']['DB_CA_FILE'] = array_key_exists('DB_CA_FILE', $DB) ? $DB['DB_CA_FILE'] : null;
-		$this->config['DB']['DB_CA_PATH'] = array_key_exists('DB_CA_PATH', $DB) ? $DB['DB_CA_PATH'] : null;
-		$this->config['DB']['DB_CA_CIPHER'] = array_key_exists('DB_CA_CIPHER', $DB) ? $DB['DB_CA_CIPHER'] : null;
+		$db_tls_options = array('DB_KEY_FILE', 'DB_CERT_FILE', 'DB_CA_FILE', 'DB_CA_PATH', 'DB_CA_CIPHER');
+		foreach ($db_tls_options as $db_tls_option) {
+			$this->config['DB'][$db_tls_option] = array_key_exists($db_tls_option, $DB) ? $DB[$db_tls_option] : null;
+		}
+
+		$this->config['DB']['DB_CONN_TIMEOUT'] = array_key_exists('DB_CONN_TIMEOUT', $DB) ? $DB['DB_CONN_TIMEOUT'] : null;
 
 		if (isset($ZBX_SERVER)) {
 			$this->config['ZBX_SERVER'] = $ZBX_SERVER;

@@ -11,7 +11,7 @@ use lib $MYDIR;
 use strict;
 use warnings;
 use RSM;
-use RSMSLV1;
+use RSMSLV;
 
 use constant PROBE_LASTACCESS_ITEM	=> 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
 use constant PROBE_KEY_MANUAL		=> 'rsm.probe.status[manual]';
@@ -19,8 +19,6 @@ use constant PROBE_KEY_AUTOMATIC	=> 'rsm.probe.status[automatic,%]';	# match all
 
 use constant ONLINE	=> 1;
 use constant OFFLINE	=> 0;
-
-my $cfg_key_out = 'rsm.probe.online';
 
 parse_opts('now=i');
 exit_if_running();
@@ -40,9 +38,9 @@ my $value_ts = $from;
 dbg("selected period: ", selected_period($from, $till), ", with value timestamp: ", ts_full($value_ts));
 
 # todo phase 1: add parameter: ENABLED_DNS
-my $probes_ref = get_probes(ENABLED_DNS);
+my $probes_ref = get_probes();
 
-my $probe_times_ref = __get_probe_times($from, $till, $probes_ref);
+my $probe_times_ref = __get_main_probe_status_times($from, $till, $probes_ref);
 my @online_probes = keys(%{$probe_times_ref});
 
 init_values();
@@ -60,14 +58,14 @@ foreach my $probe (keys(%$probes_ref))
 
 	my $status_str = ($status == UP ? "Up" : "Down");
 
-	push_value("$probe - mon", $cfg_key_out, $value_ts, $status, $status_str);
+	push_value("$probe - mon", PROBE_KEY_ONLINE, $value_ts, $status, $status_str);
 }
 
 send_values();
 
 slv_exit(SUCCESS);
 
-sub __get_probe_times
+sub __get_main_probe_status_times
 {
 	my $from = shift;
 	my $till = shift;
