@@ -40,7 +40,7 @@ dbg("selected period: ", selected_period($from, $till), ", with value timestamp:
 # todo phase 1: add parameter: ENABLED_DNS
 my $probes_ref = get_probes();
 
-my $probe_times_ref = __get_probe_times($from, $till, $probes_ref);
+my $probe_times_ref = __get_main_probe_status_times($from, $till, $probes_ref);
 my @online_probes = keys(%{$probe_times_ref});
 
 init_values();
@@ -65,7 +65,7 @@ send_values();
 
 slv_exit(SUCCESS);
 
-sub __get_probe_times
+sub __get_main_probe_status_times
 {
 	my $from = shift;
 	my $till = shift;
