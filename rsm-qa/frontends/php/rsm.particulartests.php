@@ -254,29 +254,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	$data['totalProbes'] = count($hostIds);
 
-	// get probes items
-	$probeItems = API::Item()->get(array(
-		'output' => array('itemid', 'key_', 'hostid'),
-		'hostids' => $hostIds,
-		'filter' => array(
-			'key_' => array(PROBE_STATUS_MANUAL, PROBE_STATUS_AUTOMATIC)
-		),
-		'monitored' => true,
-		'preservekeys' => true
-	));
-
-	foreach ($probeItems as $probeItem) {
-		// manual items
-		if ($probeItem['key_'] == PROBE_STATUS_MANUAL) {
-			$manualItemIds[] = $probeItem['itemid'];
-		}
-		// automatic items
-		if ($probeItem['key_'] == PROBE_STATUS_AUTOMATIC) {
-			$automaticItemIds[$probeItem['itemid']] = $probeItem['hostid'];
-		}
-	}
-
-	// probe main data generation
+	// Probe main data generation
 	foreach ($hosts as $host) {
 		$data['probes'][$host['hostid']] = array(
 			'host' => $host['host'],
@@ -284,43 +262,30 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		);
 	}
 
-	// get manual data
-	$ignoredHostIds = [];
-	$hostNames = [];
+	// Get probe status.
+	$probeItems = API::Item()->get(array(
+		'output' => array('itemid', 'key_', 'hostid'),
+		'hostids' => $hostIds,
+		'filter' => array(
+			'key_' => PROBE_STATUS_ONLINE
+		),
+		'monitored' => true,
+		'preservekeys' => true
+	));
 
-	foreach ($manualItemIds as $itemId) {
-		$itemValue = DBfetch(DBselect(DBaddLimit(
+	foreach ($probeItems as $probeItem) {
+		$itemValue = DBfetch(DBselect(
 			'SELECT h.value'.
 			' FROM history_uint h'.
-			' WHERE h.itemid='.$itemId.
-				' AND h.clock<='.$testTimeTill.
-			' ORDER BY h.clock DESC',
-			1
-		)));
-
+			' WHERE h.itemid='.$probeItem['itemid'].
+				' AND h.clock='.$testTimeFrom
+		));
 		if ($itemValue && $itemValue['value'] == PROBE_DOWN) {
-			$data['probes'][$probeItems[$itemId]['hostid']]['status'] = PROBE_DOWN;
-			$ignoredHostIds[] = $probeItems[$itemId]['hostid'];
+			$data['probes'][$probeItem['hostid']]['status'] = PROBE_DOWN;
 		}
 	}
 
-	// get automatic data
-	foreach ($automaticItemIds as $itemId => $hostId) {
-		if (!in_array($hostId, $ignoredHostIds)) {
-			$itemValue = DBfetch(DBselect(DBaddLimit(
-				'SELECT h.value'.
-				' FROM history_uint h'.
-				' WHERE h.itemid='.$itemId.
-					' AND h.clock>='.$testTimeFrom.
-					' AND h.clock<='.$testTimeTill,
-				1
-			)));
-
-			if ($itemValue && $itemValue['value'] == PROBE_DOWN) {
-				$data['probes'][$hostId]['status'] = PROBE_DOWN;
-			}
-		}
-	}
+	$hostNames = [];
 
 	// get probes data hosts
 	foreach ($data['probes'] as $hostId => $probe) {
@@ -363,6 +328,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		'SELECT i.itemid,i.key_,i.hostid,i.value_type,i.valuemapid,i.units'.
 		' FROM items i'.
 		' WHERE '.dbConditionInt('i.hostid', $hostIds).
+			' AND i.status='.ITEM_STATUS_ACTIVE.
 			$probeItemKey
 	);
 
@@ -490,20 +456,6 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$hosts[$hostId]['class'] = 'green';
 			}
 		}
-	}
-	elseif ($data['type'] == RSM_DNSSEC) {
-		// get tests items
-		$testItems = API::Item()->get(array(
-			'output' => array('itemid', 'value_type'),
-			'hostids' => $hostIds,
-			'search' => array(
-				'key_' => PROBE_DNS_UDP_ITEM_RTT
-			),
-			'startSearch' => true,
-			'monitored' => true
-		));
-
-		$data['totalTests'] = count($testItems);
 	}
 
 	foreach ($hosts as $host) {

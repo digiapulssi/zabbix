@@ -1,9 +1,23 @@
+Changes for rsm1.0.0rc15
+
+New features:
+..F....... [238] added possibility to configure database connection timeout for the frontend (Oleg)
+
+Bug fixes:
+....I..... [sub-239] fixed Service downtime calculation (dimir)
+....I..... [246] fixed Probe status calculation in Service availability scripts (dimir)
+..F....... [234] made frontend use probe main status instead of calculating it from manual and automatic ones (Oleg)
+..F....... [255, 256] fixed counting DNS and DNSSEC name server results in "Details of particular test" page (gleb)
+..F.I..... [sub-217] simplified frontend database connection encryption configuration (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc14
 
 New features:
 ....I..... [252] adjusted initial configuration parameters (NOTE: For this change to have effect one needs to recreate the database!) (gleb)
 
 Bug fixes:
+....I..... [239] improved sender functionality to push calculated data to Zabbix server (gleb)
 ....I..... [245] fixed "MySQL has gone away" errors during export.pl execution (dimir, gleb)
 ....I..... [sub-216] fixed Perl warning regarding JSON::true and JSON::false redefinition (dimir, gleb)
 ....I..... [sub-216] fixed incorrect cycle and test matching resulting in assert fails (dimir, gleb)
