@@ -86,8 +86,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec
-		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
-		minutes_last_month max_avail_time get_online_probes get_probe_times probe_offline_at probes2tldhostids
+		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_curmon_bounds
+		max_avail_time get_online_probes get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error process_slv_ns_monthly
 		process_slv_avail process_slv_ns_avail process_slv_monthly get_results get_item_values avail_value_exists
@@ -1056,22 +1056,6 @@ sub get_rollweek_bounds
 	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
 }
 
-# Get bounds of previous month.
-sub get_month_bounds
-{
-	require DateTime;
-
-	my $dt = DateTime->now;
-
-	$dt->truncate('to' => 'month');
-	my $till = $dt->epoch - 1;
-
-	$dt->subtract('months' => 1);
-	my $from = $dt->epoch;
-
-	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
-}
-
 # Get bounds of current month.
 sub get_curmon_bounds
 {
@@ -1084,21 +1068,6 @@ sub get_curmon_bounds
 	my $from = $dt->epoch;
 
 	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
-}
-
-sub minutes_last_month
-{
-	require DateTime;
-
-	my $dt = DateTime->now;
-
-	$dt->truncate('to' => 'month');
-	my $till = $dt->epoch;
-
-	$dt->subtract('months' => 1);
-	my $from = $dt->epoch;
-
-	return ($till - $from) / 60;
 }
 
 # maximum timestamp for calculation of service availability
