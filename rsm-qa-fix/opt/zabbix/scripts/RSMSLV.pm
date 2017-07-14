@@ -52,8 +52,9 @@ use constant PROBE_KEY_AUTOMATIC => 'rsm.probe.status[automatic,%]'; # match all
 # in case of "availability" and 3 minutes in case of "rolling week"
 # calculations.
 # NB! These numbers must be in sync with Frontend (details page)!
-use constant AVAIL_SHIFT_BACK => 120; # seconds (must be divisible by 60 without remainder)
-use constant ROLLWEEK_SHIFT_BACK => 180; # seconds (must be divisible by 60 without remainder)
+use constant PROBE_ONLINE_SHIFT		=> 120;	# seconds (must be divisible by 60) to go back for Probe online status calculation
+use constant AVAIL_SHIFT_BACK		=> 120;	# seconds (must be divisible by 60) to go back for Service Availability calculation
+use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) to go back for Rolling Week calculation
 
 use constant RESULT_TIMESTAMP_SHIFT => 29; # seconds (shift back from upper time bound of the period for the value timestamp)
 
@@ -61,7 +62,7 @@ use constant PROBE_ONLINE_STR => 'Online';
 use constant PROBE_OFFLINE_STR => 'Offline';
 use constant PROBE_NORESULT_STR => 'No result';
 
-use constant PROBE_KEY_ONLINE		=> 'rsm.probe.online';	# todo phase 1: taken from phase 2 for get_probe_times()
+use constant PROBE_KEY_ONLINE => 'rsm.probe.online';	# todo phase 1: taken from phase 2 for get_probe_times()
 
 our ($result, $dbh, $tld, $server_key);
 
@@ -74,7 +75,7 @@ our %OPTS; # specified command-line options
 our @EXPORT = qw($result $dbh $tld $server_key
 		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR RESULT_TIMESTAMP_SHIFT PROBE_ONLINE_STR PROBE_OFFLINE_STR
-		PROBE_NORESULT_STR AVAIL_SHIFT_BACK
+		PROBE_NORESULT_STR AVAIL_SHIFT_BACK PROBE_ONLINE_SHIFT PROBE_KEY_ONLINE
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
@@ -85,8 +86,9 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec
-		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
-		minutes_last_month max_avail_time get_probe_times probe_offline_at probes2tldhostids
+		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_downtime_bounds
+		max_avail_time get_probe_times probe_offline_at probes2tldhostids
+		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error
 		process_slv_avail get_item_values avail_value_exists
 		rollweek_value_exists
@@ -105,7 +107,7 @@ my $config = undef;
 my $pidfile;
 use constant PID_DIR => '/tmp';
 
-my @_sender_values;	# used to send values to Zabbix server
+my $_sender_values;	# used to send values to Zabbix server
 
 my $POD2USAGE_FILE;	# usage message file
 
@@ -1054,53 +1056,20 @@ sub get_rollweek_bounds
 	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
 }
 
-# Get bounds of previous month.
-sub get_month_bounds
+# todo phase 1: old name of this function was 'get_curmon_bounds'
+# Get bounds for monthly downtime calculation. $till is the last second of the last elapsed minute.
+# $from is the first second of the month (of the previous one if time() is within the fisrt minute of the month).
+sub get_downtime_bounds
 {
 	require DateTime;
 
-	my $dt = DateTime->now;
+	my $till = truncate_from(time()) - 1;
 
-	$dt->truncate(to => 'month');
-	my $till = $dt->epoch - 1;
-
-	$dt->subtract(months => 1);
+	my $dt = DateTime->from_epoch('epoch' => $till);
+	$dt->truncate('to' => 'month');
 	my $from = $dt->epoch;
 
 	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
-}
-
-# Get bounds of current month.
-sub get_curmon_bounds
-{
-	require DateTime;
-
-	my $dt = DateTime->now;
-	my $till = $dt->epoch;
-
-	$dt->truncate(to => 'month');
-	my $from = $dt->epoch;
-
-	$dt->add(months => 1);
-	$dt->subtract(seconds => 1);
-	my $eomonth = $dt->epoch; # end of month
-
-	return ($from, $till, $eomonth);
-}
-
-sub minutes_last_month
-{
-	require DateTime;
-
-	my $dt = DateTime->now;
-
-	$dt->truncate(to => 'month');
-	my $till = $dt->epoch;
-
-	$dt->subtract(months => 1);
-	my $from = $dt->epoch;
-
-	return ($till - $from) / 60;
 }
 
 # maximum timestamp for calculation of service availability
@@ -1311,28 +1280,59 @@ sub probes2tldhostids
 	return \@result;
 }
 
+sub get_probe_online_key_itemid
+{
+	my $probe = shift;
+
+	return get_itemid_by_host("$probe - mon", PROBE_KEY_ONLINE);
+}
+
 sub init_values
 {
-	@_sender_values = ();
+	$_sender_values->{'data'} = [];
+
+	if (opt('dry-run'))
+	{
+		$_sender_values->{'maxhost'} = 0;
+		$_sender_values->{'maxkey'} = 0;
+		$_sender_values->{'maxclock'} = 0;
+		$_sender_values->{'maxvalue'} = 0;
+	}
 }
 
 sub push_value
 {
 	my $hostname = shift;
 	my $key = shift;
-	my $timestamp = shift;
+	my $clock = shift;
 	my $value = shift;
 
 	my $info = join('', @_);
 
-	push(@_sender_values, {
-		'data' => {
-			'host' => $hostname,
-			'key' => $key,
-			'value' => "$value",
-			'clock' => $timestamp},
-		'info' => $info,
-		'tld' => $hostname});
+	push(@{$_sender_values->{'data'}},
+		{
+			'data' =>
+			{
+				'host' => $hostname,
+				'key' => $key,
+				'value' => "$value",
+				'clock' => $clock
+			},
+			'info' => $info,
+		});
+
+	if (opt('dry-run'))
+	{
+		my $hostlen = length($hostname);
+		my $keylen = length($key);
+		my $clocklen = length($clock);
+		my $valuelen = length($value);
+
+		$_sender_values->{'maxhost'} = $hostlen if (!$_sender_values->{'maxhost'} || $hostlen > $_sender_values->{'maxhost'});
+		$_sender_values->{'maxkey'} = $keylen if (!$_sender_values->{'maxkey'} || $keylen > $_sender_values->{'maxkey'});
+		$_sender_values->{'maxclock'} = $clocklen if (!$_sender_values->{'maxclock'} || $clocklen > $_sender_values->{'maxclock'});
+		$_sender_values->{'maxvalue'} = $valuelen if (!$_sender_values->{'maxvalue'} || $valuelen > $_sender_values->{'maxvalue'});
+	}
 }
 
 #
@@ -1348,29 +1348,40 @@ sub send_values
 {
 	if (opt('dry-run'))
 	{
+		my $mh = $_sender_values->{'maxhost'};
+		my $mk = $_sender_values->{'maxkey'};
+		my $mv = $_sender_values->{'maxvalue'};
+		my $mc = $_sender_values->{'maxclock'};
+
+		my $fmt = "%-${mh}s | %${mk}s | %-${mv}s | %-${mc}s | %s";
+
 		# $tld is a global variable which is used in info()
-		my $saved_tld = $tld;
-		foreach my $hash_ref (@_sender_values)
+		foreach my $h (@{$_sender_values->{'data'}})
 		{
-			$tld = $hash_ref->{'tld'};
-			info($hash_ref->{'info'}, " (", $hash_ref->{'data'}->{'key'}, '=', $hash_ref->{'data'}->{'value'}, ")");
+			my $msg = sprintf($fmt,
+				$h->{'data'}->{'host'},
+				$h->{'data'}->{'key'},
+				$h->{'data'}->{'value'},
+				ts_str($h->{'data'}->{'clock'}),
+				$h->{'info'});
+
+			info($msg);
 		}
-		$tld = $saved_tld;
 
 		return;
 	}
 
-	my $total_values = scalar(@_sender_values);
+	my $total_values = scalar(@{$_sender_values->{'data'}});
 
 	if ($total_values == 0)
 	{
-		wrn("no values to push to the server");
+		wrn("will not send values, nothing to send");
 		return;
 	}
 
 	my $data = [];
 
-	foreach my $sender_value (@_sender_values)
+	foreach my $sender_value (@{$_sender_values->{'data'}})
 	{
 		push(@{$data}, $sender_value->{'data'});
 	}
@@ -1380,7 +1391,7 @@ sub send_values
 
 	# $tld is a global variable which is used in info()
 	my $saved_tld = $tld;
-	foreach my $sender_value (@_sender_values)
+	foreach my $sender_value (@{$_sender_values->{'data'}})
 	{
 		$tld = $sender_value->{'tld'};
 		info($sender_value->{'data'}->{'key'} . "=" . $sender_value->{'data'}->{'value'} . " " .
@@ -2472,7 +2483,7 @@ sub exit_if_running
 
 	# pid file exists and has valid pid
 	my $pid = $pidfile->running();
-	fail("already running (pid:$pid)") if ($pid);
+	fail(__script() . " is already running (pid:$pid)") if ($pid);
 
 	$pidfile->pid($$);
 	$pidfile->write() or fail("cannot write to a pid file ", $pidfile->file);
