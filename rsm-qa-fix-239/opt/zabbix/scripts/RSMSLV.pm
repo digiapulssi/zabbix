@@ -86,7 +86,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_all_items get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec
-		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_curmon_bounds
+		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_downtime_bounds
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error
@@ -1056,8 +1056,10 @@ sub get_rollweek_bounds
 	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
 }
 
-# Get bounds of current month.
-sub get_curmon_bounds
+# todo phase 1: old name of this function was 'get_curmon_bounds'
+# Get bounds for monthly downtime calculation. $till is the last second of the last elapsed minute.
+# $from is the first second of the month (of the previous one if time() is within the fisrt minute of the month).
+sub get_downtime_bounds
 {
 	require DateTime;
 

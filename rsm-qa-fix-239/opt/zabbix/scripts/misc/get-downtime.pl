@@ -55,18 +55,16 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my ($from, $till, @bounds);
+my $from = getopt('from');
+my $till = getopt('till');
 
-$from = getopt('from');
-$till = getopt('till');
-
-unless (defined($from) and defined($till))
+unless (defined($from) && defined($till))
 {
 	dbg("getting current month bounds");
-	@bounds = get_curmon_bounds();
+	my ($downtime_from, $downtime_till) = get_downtime_bounds();
 
-	$from = $bounds[0] unless (defined($from));
-	$till = $bounds[1] unless (defined($till));
+	$from //= $downtime_from;
+	$till //= $downtime_till;
 }
 
 my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($service_type);

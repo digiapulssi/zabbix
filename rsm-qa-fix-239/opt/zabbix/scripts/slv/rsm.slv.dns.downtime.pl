@@ -23,7 +23,7 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my ($from, $till, $value_ts) = get_curmon_bounds();
+my ($from, $till, $value_ts) = get_downtime_bounds();
 
 my %tld_items;
 
