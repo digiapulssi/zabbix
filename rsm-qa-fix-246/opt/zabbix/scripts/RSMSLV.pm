@@ -1274,8 +1274,8 @@ sub probe_offline_at
 # E. g., we have hosts (host/hostid):
 #   "Probe2"		1
 #   "Probe12"		2
-#   "ORG Probe2"	100
-#   "ORG Probe12"	101
+#   "org Probe2"	100
+#   "org Probe12"	101
 # calling
 #   probes2tldhostids("org", ("Probe2", "Probe12"))
 # will return
@@ -1285,12 +1285,14 @@ sub probes2tldhostids
 	my $tld = shift;
 	my $probes_ref = shift;
 
+	croak("Internal error: invalid argument to probes2tldhostids()") unless (ref($probes_ref) eq 'ARRAY');
+
 	my @result;
 
-	return \@result unless(defined($probes_ref));
+	return \@result if (scalar(@{$probes_ref}) == 0);
 
 	my $hosts_str = '';
-	foreach (keys(%{$probes_ref}))
+	foreach (@{$probes_ref})
 	{
 		$hosts_str .= ' or ' unless ($hosts_str eq '');
 		$hosts_str .= "host='$tld $_'";
@@ -1447,7 +1449,7 @@ sub process_slv_avail
 		return;
 	}
 
-	my $hostids_ref = probes2tldhostids($tld, $probes_ref);
+	my $hostids_ref = probes2tldhostids($tld, [keys(%{$probes_ref})]);
 	if (scalar(@$hostids_ref) == 0)
 	{
 		wrn("no probe hosts found");
@@ -1520,7 +1522,7 @@ sub process_slv_ns_avail
 	my $probes_count = (defined($probes_ref) ? scalar(keys(%{$probes_ref})) : 0);
 
 	my $nsip_items_ref = get_nsip_items($nsips_ref, $cfg_key_in, $tld);
-	my $hostids_ref = probes2tldhostids($tld, $probes_ref);
+	my $hostids_ref = probes2tldhostids($tld, [keys(%{$probes_ref})]);
 	my $itemids_ref = get_itemids_by_hostids($hostids_ref, $nsip_items_ref);
 	my $values_ref = get_nsip_values($itemids_ref, [$from, $till], $nsip_items_ref);
 
@@ -2351,7 +2353,7 @@ sub get_detailed_result
 	my $maps = shift;
 	my $value = shift;
 
-	return undef unless(defined($value));
+	return undef unless (defined($value));
 
 	my $value_int = int($value);
 
