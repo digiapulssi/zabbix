@@ -88,7 +88,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_month_bounds get_curmon_bounds
 		minutes_last_month max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		init_values push_value send_values get_nsip_from_key is_service_error
-		process_slv_avail process_slv_ns_avail get_results get_item_values avail_value_exists
+		process_slv_avail process_slv_ns_avail get_item_values avail_value_exists
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute avail_result_msg
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
