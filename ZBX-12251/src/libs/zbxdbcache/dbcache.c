@@ -2145,7 +2145,7 @@ static void	DCmodule_sync_history(int history_float_num, int history_integer_num
 	}
 }
 
-static void	DCset_item_states(zbx_vector_ptr_t *state_diff)
+static void	DCset_item_db_states(zbx_vector_ptr_t *state_diff)
 {
 	int	i;
 
@@ -2322,7 +2322,7 @@ int	DCsync_history(int sync_type, int *total_num)
 
 				if (ZBX_DB_OK == (ret = DBcommit()))
 				{
-					DCset_item_states(&state_diff);
+					DCset_item_db_states(&state_diff);
 					DCset_delta_items(&delta_history);
 					DCconfig_triggers_apply_changes(&trigger_diff);
 					DCupdate_trends(&trends_diff);
