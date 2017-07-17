@@ -7836,9 +7836,12 @@ static void	DCconfig_sort_triggers_topologically(void)
  ******************************************************************************/
 void	DCconfig_triggers_apply_changes(zbx_vector_ptr_t *trigger_diff)
 {
+	const char		*__function_name = "DCconfig_triggers_apply_changes";
 	int			i;
 	zbx_trigger_diff_t	*diff;
 	ZBX_DC_TRIGGER		*dc_trigger;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	LOCK_CACHE;
 
@@ -7863,6 +7866,8 @@ void	DCconfig_triggers_apply_changes(zbx_vector_ptr_t *trigger_diff)
 	}
 
 	UNLOCK_CACHE;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************
@@ -8583,8 +8588,11 @@ void	DCget_delta_items(zbx_hashset_t *items, const zbx_vector_uint64_t *ids)
  ******************************************************************************/
 void	DCset_delta_items(zbx_hashset_t *items)
 {
+	const char		*__function_name = "DCset_delta_items";
 	zbx_hashset_iter_t	iter;
 	ZBX_DC_DELTAITEM	*deltaitem, *item;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	zbx_hashset_iter_reset(items, &iter);
 
@@ -8613,6 +8621,8 @@ void	DCset_delta_items(zbx_hashset_t *items)
 	}
 
 	UNLOCK_CACHE;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************

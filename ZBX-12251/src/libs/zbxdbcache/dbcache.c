@@ -357,7 +357,10 @@ static ZBX_DC_TREND	*DCget_trend(zbx_uint64_t itemid)
 
 static void	DCupdate_trends(zbx_vector_uint64_pair_t *trends_diff)
 {
-	int	i;
+	const char	*__function_name = "DCupdate_trends";
+	int		i;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	LOCK_TRENDS;
 
@@ -370,6 +373,8 @@ static void	DCupdate_trends(zbx_vector_uint64_pair_t *trends_diff)
 	}
 
 	UNLOCK_TRENDS;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************
@@ -2147,7 +2152,10 @@ static void	DCmodule_sync_history(int history_float_num, int history_integer_num
 
 static void	DCset_item_db_states(zbx_vector_ptr_t *state_diff)
 {
-	int	i;
+	const char	*__function_name = "DCset_item_db_states";
+	int		i;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	for (i = 0; i < state_diff->values_num; i++)
 	{
@@ -2158,6 +2166,8 @@ static void	DCset_item_db_states(zbx_vector_ptr_t *state_diff)
 		else
 			DCconfig_set_item_db_state(h->itemid, h->state, "");
 	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************
