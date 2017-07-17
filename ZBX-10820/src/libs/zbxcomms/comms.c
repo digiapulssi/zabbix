@@ -26,17 +26,17 @@
 #define IPV6_MAX_CIDR_PREFIX	128
 
 #ifdef HAVE_IPV6
-#	define ZBX_SOCKADDR struct sockaddr_storage
+#	define ZBX_SOCKADDR	struct sockaddr_storage
 #else
-#	define ZBX_SOCKADDR struct sockaddr_in
+#	define ZBX_SOCKADDR	struct sockaddr_in
 #endif
 
 #ifndef ZBX_SOCKLEN_T
-#	define ZBX_SOCKLEN_T socklen_t
+#	define ZBX_SOCKLEN_T	socklen_t
 #endif
 
 #ifndef SOCK_CLOEXEC
-#	define SOCK_CLOEXEC 0	/* SOCK_CLOEXEC is Linux-specific, available since 2.6.23 */
+#	define SOCK_CLOEXEC	0	/* SOCK_CLOEXEC is Linux-specific, available since 2.6.23 */
 #endif
 
 #ifdef HAVE_OPENSSL
