@@ -95,7 +95,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute avail_result_msg
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps
-		get_result_string get_tld_by_trigger truncate_from alerts_enabled get_test_start_time
+		get_result_string get_tld_by_trigger truncate_from alerts_enabled get_test_start_time uint_value_exists
 		get_real_services_period dbg info wrn fail format_stats_time slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
 		write_file usage);
@@ -2368,6 +2368,19 @@ sub get_test_start_time
 	return 0 if ($remainder != 0);
 
 	return $till - $delay;
+}
+
+# todo phase 1: taken from RSMSLV1.pm
+sub uint_value_exists
+{
+	my $clock = shift;
+	my $itemid = shift;
+
+	my $rows_ref = db_select("select 1 from history_uint where itemid=$itemid and clock=$clock");
+
+	return SUCCESS if ($rows_ref->[0]->[0]);
+
+	return E_FAIL;
 }
 
 # $services is a hash reference of services that need to be checked.

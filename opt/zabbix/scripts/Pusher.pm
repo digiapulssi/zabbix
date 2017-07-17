@@ -97,7 +97,7 @@ sub connect_to_server($$$$)
 		RSMSLV::dbg("cannot connect to '$server:$port', $attempts attempts left");
 	}
 
-	fail("failed to connect to '$server:$port'");
+	RSMSLV::fail("failed to connect to '$server:$port'");
 }
 
 sub receive_response($)
@@ -130,22 +130,22 @@ sub decode_response($)
 
 	RSMSLV::dbg("decoding '$response'");
 
-	fail("response is shorter than expected Zabbix protocol header") if (length($response) < length(ZBX_HEADER) + 8);
-	fail("unexpected response header") unless (substr($response, 0, length(ZBX_HEADER)) eq ZBX_HEADER);
+	RSMSLV::fail("response is shorter than expected Zabbix protocol header") if (length($response) < length(ZBX_HEADER) + 8);
+	RSMSLV::fail("unexpected response header") unless (substr($response, 0, length(ZBX_HEADER)) eq ZBX_HEADER);
 
 	# TODO validate response length properly
 
 	my $json;
 
 	eval {$json = decode_json(substr($response, length(ZBX_HEADER) + 8))};
-	fail("error reading response: '$@'") if ($@);
+	RSMSLV::fail("error reading response: '$@'") if ($@);
 
-	fail("missing 'response' field in response, most likely it's not Zabbix") unless (exists($json->{'response'}));
-	fail("missing 'info' field in response, most likely it's not Zabbix") unless (exists($json->{'info'}));
+	RSMSLV::fail("missing 'response' field in response, most likely it's not Zabbix") unless (exists($json->{'response'}));
+	RSMSLV::fail("missing 'info' field in response, most likely it's not Zabbix") unless (exists($json->{'info'}));
 
 	unless ($json->{'response'} eq "success")
 	{
-		fail("got 'response':'" . $json->{'response'} . "' instead of 'success'," .
+		RSMSLV::fail("got 'response':'" . $json->{'response'} . "' instead of 'success'," .
 				" this can only happen if we've sent invalid request");
 	}
 
