@@ -523,7 +523,7 @@ static int	zbx_socket_create(zbx_socket_t *s, int type, const char *source_ip, c
 	ZBX_UNUSED(tls_arg1);
 	ZBX_UNUSED(tls_arg2);
 #endif
-	zbx_strlcpy(s->peer, ip, sizeof(s->peer));
+	strscpy(s->peer, ip);
 
 	ret = SUCCEED;
 out:
@@ -638,7 +638,7 @@ static int	zbx_socket_create(zbx_socket_t *s, int type, const char *source_ip, c
 	ZBX_UNUSED(tls_arg1);
 	ZBX_UNUSED(tls_arg2);
 #endif
-	zbx_strlcpy(s->peer, ip, sizeof(s->peer));
+	strscpy(s->peer, ip);
 
 	return SUCCEED;
 }
@@ -1220,7 +1220,7 @@ int	zbx_tcp_accept(zbx_socket_t *s, unsigned int tls_accept)
 	s->socket = accepted_socket;	/* replace socket to accepted */
 	s->accepted = 1;
 
-	zbx_strlcpy(s->peer, zbx_get_ip_by_socket(s), sizeof(s->peer));	/* save peer IP address */
+	strscpy(s->peer, zbx_get_ip_by_socket(s));	/* save peer IP address */
 
 	zbx_socket_timeout_set(s, CONFIG_TIMEOUT);
 
