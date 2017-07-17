@@ -370,6 +370,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 	multiDBconnect($DB['SERVERS'][$key], $error);
 
 	$itemIds = [];
+	$filter_slv = [];
 
 	if ($hosts) {
 		// get items
@@ -395,10 +396,12 @@ foreach ($tlds_by_server as $key => $hosts) {
 						&& (($data['filter_dns'] && $item['key_'] == RSM_SLV_DNS_ROLLWEEK)
 							|| ($data['filter_dnssec'] && $item['key_'] == RSM_SLV_DNSSEC_ROLLWEEK)
 							|| ($data['filter_rdds'] && $item['key_'] == RSM_SLV_RDDS_ROLLWEEK)
-							|| ($data['filter_epp'] && $item['key_'] == RSM_SLV_EPP_ROLLWEEK))) {
-					unset($data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']],
-						$hosts[$item['hostid']]);
-					continue;
+							|| ($data['filter_epp'] && $item['key_'] == RSM_SLV_EPP_ROLLWEEK)
+						&& !array_key_exists($item['hostid'], $filter_slv))) {
+					$filter_slv[$item['hostid']] = false;
+				}
+				elseif ($data['filter_slv'] !== '') {
+					$filter_slv[$item['hostid']] = true;
 				}
 
 				if (!array_key_exists($DB['SERVERS'][$key]['NR'].$item['hostid'], $data['tld'])) {
@@ -452,6 +455,14 @@ foreach ($tlds_by_server as $key => $hosts) {
 				elseif ($item['key_'] == RSM_SLV_EPP_AVAIL) {
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['availItemId'] = $item['itemid'];
 					$itemIds[$item['itemid']] = true;
+				}
+			}
+
+			if ($data['filter_slv']) {
+				foreach ($filter_slv as $filtred_hostid => $value) {
+					if ($value === false) {
+						unset($data['tld'][$DB['SERVERS'][$key]['NR'].$filtred_hostid], $hosts[$filtred_hostid]);
+					}
 				}
 			}
 
@@ -579,6 +590,10 @@ foreach ($tlds_by_server as $key => $hosts) {
 		}
 	}
 }
+
+unset($DB['DB']);
+$DB = $master;
+DBconnect($error);
 
 if ($data['filter_status']) {
 	foreach ($data['tld'] as $key => $tld) {
