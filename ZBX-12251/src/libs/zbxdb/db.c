@@ -1017,7 +1017,7 @@ int	zbx_db_statement_prepare(const char *sql)
 	if (0 == txn_level)
 		zabbix_log(LOG_LEVEL_DEBUG, "query without transaction detected");
 
-	if (1 == txn_error)
+	if (ZBX_DB_OK != txn_error)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "ignoring query [txnlev:%d] within failed transaction", txn_level);
 		return ZBX_DB_FAIL;
@@ -1031,7 +1031,7 @@ int	zbx_db_statement_prepare(const char *sql)
 	if (ZBX_DB_FAIL == ret && 0 < txn_level)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "query [%s] failed, setting transaction as failed", sql);
-		txn_error = 1;
+		txn_error = ZBX_DB_FAIL;
 	}
 
 	return ret;
@@ -1183,7 +1183,7 @@ int	zbx_db_bind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsi
 		if (ZBX_DB_FAIL == ret && 0 < txn_level)
 		{
 			zabbix_log(LOG_LEVEL_DEBUG, "query failed, setting transaction as failed");
-			txn_error = 1;
+			txn_error = ZBX_DB_FAIL;
 		}
 
 		goto out;
@@ -1198,7 +1198,7 @@ int	zbx_db_bind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsi
 		if (ZBX_DB_FAIL == ret && 0 < txn_level)
 		{
 			zabbix_log(LOG_LEVEL_DEBUG, "query failed, setting transaction as failed");
-			txn_error = 1;
+			txn_error = ZBX_DB_FAIL;
 		}
 
 		goto out;
@@ -1223,7 +1223,7 @@ int	zbx_db_statement_execute(int iters)
 	ub4	nrows;
 	int	ret;
 
-	if (1 == txn_error)
+	if (ZBX_DB_OK != txn_error)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "ignoring query [txnlev:%d] within failed transaction", txn_level);
 		ret = ZBX_DB_FAIL;
@@ -1238,7 +1238,7 @@ int	zbx_db_statement_execute(int iters)
 	if (ZBX_DB_FAIL == ret && 0 < txn_level)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "query failed, setting transaction as failed");
-		txn_error = 1;
+		txn_error = ZBX_DB_FAIL;
 	}
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "%s():%d", __function_name, ret);
