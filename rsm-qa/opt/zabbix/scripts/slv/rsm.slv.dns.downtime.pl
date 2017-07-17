@@ -66,16 +66,3 @@ $tld = undef;
 send_values();
 
 slv_exit(SUCCESS);
-
-# todo phase 1: taken from RSMSLV1.pm
-sub uint_value_exists
-{
-        my $clock = shift;
-        my $itemid = shift;
-
-        my $rows_ref = db_select("select 1 from history_uint where itemid=$itemid and clock=$clock");
-
-        return SUCCESS if ($rows_ref->[0]->[0]);
-
-        return E_FAIL;
-}

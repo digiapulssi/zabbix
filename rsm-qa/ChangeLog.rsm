@@ -1,3 +1,9 @@
+Changes for rsm1.0.0rc16
+
+Bug fixes:
+....I..... [257] fixed undefined subroutine error (uint_value_exists) in rsm.probe.online.pl script (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc15
 
 New features:
