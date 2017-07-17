@@ -1720,14 +1720,14 @@ static int	subnet_match(int af, unsigned int prefix_size, void *address1, void *
 
 	if (af == AF_INET)
 	{
-		if (prefix_size > IPV4_MAX_CIDR_PREFIX)
+		if (IPV4_MAX_CIDR_PREFIX < prefix_size)
 			return FAIL;
 
 		bytes = 4;
 	}
 	else
 	{
-		if (prefix_size > IPV6_MAX_CIDR_PREFIX)
+		if (IPV6_MAX_CIDR_PREFIX < prefix_size)
 			return FAIL;
 
 		bytes = 16;
