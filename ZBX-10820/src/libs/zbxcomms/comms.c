@@ -1722,18 +1722,20 @@ static int	subnet_match(int af, unsigned int prefix_size, void *address1, void *
 	{
 		if (prefix_size > IPV4_MAX_CIDR_PREFIX)
 			return FAIL;
+
 		bytes = 4;
 	}
 	else
 	{
 		if (prefix_size > IPV6_MAX_CIDR_PREFIX)
 			return FAIL;
+
 		bytes = 16;
 	}
 
 	/* CIDR notation to subnet mask */
-	for (i = prefix_size, j = 0; i > 0 && j < bytes; i -= 8, j++)
-		netmask[j] = i >= 8 ? 0xFF : ~((1 << (8 - i)) - 1);
+	for (i = prefix_size, j = 0; 0 < i && j < bytes; i -= 8, j++)
+		netmask[j] = 8 <= i ? 0xff : ~((1 << (8 - i)) - 1);
 
 	/* The result of the bitwise AND operation of IP address and the subnet mask is the network prefix. */
 	/* All hosts on a subnetwork have the same network prefix. */
