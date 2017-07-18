@@ -98,25 +98,10 @@ sub dw_csv_init
 sub dw_append_csv
 {
 	my $id_type = shift;
-	my $rows_ref = shift;	# [] or [[], [], ...]
+	my $array_ref = shift;
 
-	if (ref($rows_ref->[0]) eq '')
-	{
-		__fix_row($id_type, $rows_ref);
-		push(@{$_csv_files{$id_type}{'rows'}}, $rows_ref);
-	}
-        elsif (ref($rows_ref->[0]) eq 'ARRAY')
-        {
-                foreach my $row (@$rows_ref)
-                {
-			__fix_row($id_type, $row);
-			push(@{$_csv_files{$id_type}{'rows'}}, $row);
-                }
-        }
-        else
-        {
-                fail("internal error: invalid row format for CSV");
-        }
+	__fix_row($id_type, $array_ref);
+	push(@{$_csv_files{$id_type}{'rows'}}, $array_ref);
 }
 
 sub __dw_check_id
@@ -390,11 +375,15 @@ sub __fix_row
 	{
 		if (!defined($_))
 		{
-			$has_undef = 1;
-			$str .= " [UNDEF]";
+			if (opt('debug'))
+			{
+				$has_undef = 1;
+				$str .= " [UNDEF]";
+			}
+
 			$_ = '';
 		}
-		else
+		elsif (opt('debug'))
 		{
 			$str .= " [$_]";
 		}
@@ -402,7 +391,7 @@ sub __fix_row
 
 	if ($has_undef == 1)
 	{
-		wrn("$id_type entry with UNDEF value: ", $str);
+		dbg("$id_type entry with UNDEF value: ", $str);
 	}
 }
 
