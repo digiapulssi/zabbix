@@ -67,9 +67,10 @@ int	SYSTEM_STAT(AGENT_REQUEST *request, AGENT_RESULT *result)
 			return SYSINFO_RET_FAIL;
 	}
 	else if (NULL == type)
+	{
 		return SYSINFO_RET_FAIL;
-
-	if (0 == strcmp(section, "kthr"))
+	}
+	else if (0 == strcmp(section, "kthr"))
 	{
 		if (0 == strcmp(type, "r"))
 			SET_DBL_RESULT(result, collector->vmstat.kthr_r);

@@ -3,6 +3,7 @@ Changes for 2.2.20rc1
 New features:
 
 Bug fixes:
+...G...... [ZBX-12270] fixed processing of AIX item 'system.stat[ent]' in agent; thanks to Marc for patch (Andris)
 
 --------------------------------------------------------------------------------
 Changes for 2.2.19
