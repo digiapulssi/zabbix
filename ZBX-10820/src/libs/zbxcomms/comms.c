@@ -769,6 +769,7 @@ int	zbx_tcp_send_ext(zbx_socket_t *s, const char *data, size_t len, unsigned cha
 				ret = FAIL;
 				goto cleanup;
 			}
+
 			written += bytes_sent;
 		}
 
@@ -787,6 +788,7 @@ int	zbx_tcp_send_ext(zbx_socket_t *s, const char *data, size_t len, unsigned cha
 			ret = FAIL;
 			goto cleanup;
 		}
+
 		written += bytes_sent;
 	}
 cleanup:
@@ -1133,6 +1135,7 @@ int	zbx_tcp_listen(zbx_socket_t *s, const char *listen_ip, unsigned short listen
 
 		if (NULL == ip || NULL == delim)
 			break;
+
 		*delim = ',';
 		ip = delim + 1;
 	}
@@ -1454,7 +1457,6 @@ const char	*zbx_tcp_recv_line(zbx_socket_t *s)
 		}
 
 		line_length += nbytes;
-
 	}
 	while (NULL == ptr);
 
@@ -1907,7 +1909,6 @@ int	zbx_tcp_check_security(zbx_socket_t *s, const char *peer_list, int action_if
 	int		prefix_size;
 	ZBX_SOCKADDR	name;
 	ZBX_SOCKLEN_T	nlen;
-
 	char		tmp[MAX_STRING_LEN], *start = NULL, *end = NULL, *cidr_sep;
 
 	if (NULL == peer_list || '\0' == *peer_list)
@@ -1976,6 +1977,7 @@ int	zbx_tcp_check_security(zbx_socket_t *s, const char *peer_list, int action_if
 					return SUCCEED;
 				}
 			}
+
 			freeaddrinfo(ai);
 		}
 #else
