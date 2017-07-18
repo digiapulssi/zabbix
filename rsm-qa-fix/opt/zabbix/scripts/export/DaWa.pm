@@ -5,6 +5,7 @@ use warnings;
 use RSMSLV;
 use Text::CSV_XS;
 use File::Path qw(make_path);
+use Fcntl qw(:flock);		# todo phase 1: taken from phase 2 export.pl
 
 use constant CSV_FILES_DIR => '/opt/zabbix/export-tmp';
 
@@ -172,7 +173,31 @@ sub dw_get_id
 
 	return $_csv_catalogs{$id_type}{$name} if ($_csv_catalogs{$id_type}{$name});
 
-	my $id = db_exec("insert into rsm_$id_type (name) values ('$name')");
+	# LOCK
+	__slv_lock() unless (opt('dry-run'));
+
+	# search for ID in the database, it might have been added by other process
+	my $rows_ref = db_select("select id from rsm_$id_type where name='$name'");
+
+	if (scalar(@{$rows_ref}) > 1)
+	{
+		# UNLOCK
+		__slv_unlock() unless (opt('dry-run'));
+		fail("THIS_SHOULD_NEVER_HAPPEN: more than one \"$name\" record in table \"rsm_$id_type\"");
+	}
+
+	my $id;
+	if (scalar(@{$rows_ref}) == 1)
+	{
+		$id = $rows_ref->[0]->[0];
+	}
+	else
+	{
+		$id = db_exec("insert into rsm_$id_type (name) values ('$name')");
+	}
+
+	# UNLOCK
+	__slv_unlock() unless (opt('dry-run'));
 
 	fail("ID overflow of catalog \"$id_type\": $id") unless (__dw_check_id($id_type, $id) == SUCCESS);
 
@@ -510,6 +535,28 @@ sub __make_path
 sub __set_dw_error
 {
 	$_dw_error = join('', @_);
+}
+
+# todo phase 1: taken from RSMSLV.pm phase 2
+my $_lock_fh;
+use constant _LOCK_FILE => '/tmp/rsm.slv.data.export.lock';
+sub __slv_lock
+{
+	dbg(sprintf("%7d: %s", $$, 'TRY'));
+
+        open($_lock_fh, ">", _LOCK_FILE) or fail("cannot open lock file " . _LOCK_FILE . ": $!");
+
+	flock($_lock_fh, LOCK_EX) or fail("cannot lock using file " . _LOCK_FILE . ": $!");
+
+	dbg(sprintf("%7d: %s", $$, 'LOCK'));
+}
+
+# todo phase 1: taken from RSMSLV.pm phase 2
+sub __slv_unlock
+{
+	close($_lock_fh) or fail("cannot close lock file " . _LOCK_FILE . ": $!");
+
+	dbg(sprintf("%7d: %s", $$, 'UNLOCK'));
 }
 
 #sub __read_csv_file
