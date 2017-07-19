@@ -65,7 +65,11 @@ use constant rsm_rdds_probe_result => [
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
 
-parse_opts('probe=s', 'service=s', 'tld=s', 'date=s', 'day=n', 'shift=n', 'force!');
+use constant EXPORT_MAX_CHILDREN_DEFAULT => 16;
+use constant EXPORT_MAX_CHILDREN_FLOOR => 1;
+use constant EXPORT_MAX_CHILDREN_CEIL => 128;
+
+parse_opts('probe=s', 'service=s', 'tld=s', 'date=s', 'day=n', 'shift=n', 'force!', 'max-children=n');
 setopt('nolog');
 
 my $config = get_rsm_config();
@@ -166,13 +170,20 @@ foreach my $service (sort(keys(%{$services})))
 		dbg("  delay\t : ", $services->{$service}->{'delay'});
 		dbg("  from\t : ", ts_full($services->{$service}->{'from'}));
 		dbg("  till\t : ", ts_full($services->{$service}->{'till'}));
-		dbg("  avail key\t : ", $services->{$service}->{'key_avail'});
+		dbg("  avail\t : ", $services->{$service}->{'key_avail'} // 'UNDEF');
 	}
 }
 
 my $probes_data;
 
-set_max_children(32);
+if (opt('max-children'))
+{
+	set_max_children(getopt('max-children'));
+}
+else
+{
+	set_max_children(EXPORT_MAX_CHILDREN_DEFAULT);
+}
 
 my ($time_start, $time_get_test_data, $time_load_ids, $time_process_records, $time_write_csv);
 
@@ -360,6 +371,12 @@ sub __validate_input
 	{
 		print("Error: parameter of option --day must be multiple of 60\n");
 		$error_found = 1;
+	}
+
+	if (opt('max-children') && (getopt('max-children') < EXPORT_MAX_CHILDREN_FLOOR ||
+			EXPORT_MAX_CHILDREN_CEIL < getopt('max-children')))
+	{
+		usage(sprintf("allowed max-children: %d-%d", EXPORT_MAX_CHILDREN_FLOOR, EXPORT_MAX_CHILDREN_CEIL));
 	}
 
 	usage() unless ($error_found == 0);

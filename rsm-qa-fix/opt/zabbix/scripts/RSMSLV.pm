@@ -2590,16 +2590,12 @@ sub parse_rollweek_opts
 
 sub opt
 {
-	my $key = shift;
-
-	return defined($OPTS{$key});
+	return defined($OPTS{shift()});
 }
 
 sub getopt
 {
-	my $key = shift;
-
-	return $OPTS{$key};
+	return $OPTS{shift()};
 }
 
 sub setopt
@@ -2614,9 +2610,7 @@ sub setopt
 
 sub unsetopt
 {
-	my $key = shift;
-
-	$OPTS{$key} = undef;
+	$OPTS{shift()} = undef;
 }
 
 sub optkeys

@@ -366,30 +366,31 @@ sub dw_set_date
 sub __fix_row
 {
 	my $id_type = shift;
-	my $row_ref = shift;
+	my $array_ref = shift;
 
+	my $debug = opt('debug');
 	my $has_undef = 0;
 	my $str = '';
 
-	foreach (@{$row_ref})
+	foreach (@{$array_ref})
 	{
-		if (!defined($_))
+		if ($debug)
 		{
-			if (opt('debug'))
+			unless (defined($_))
 			{
 				$has_undef = 1;
 				$str .= " [UNDEF]";
 			}
+			else
+			{
+				$str .= " [$_]";
+			}
+		}
 
-			$_ = '';
-		}
-		elsif (opt('debug'))
-		{
-			$str .= " [$_]";
-		}
+		$_ //= '';
 	}
 
-	if ($has_undef == 1)
+	if ($debug && $has_undef)
 	{
 		dbg("$id_type entry with UNDEF value: ", $str);
 	}
@@ -451,6 +452,8 @@ sub __write_csv_file
 sub __write_csv_catalog
 {
 	my $id_type = shift;
+
+	die("THIS_SHOULD_NEVER_HAPPEN: no ID type specified with __write_csv_catalog()") unless ($id_type);
 
 	return 1 if (opt('dry-run'));
 
