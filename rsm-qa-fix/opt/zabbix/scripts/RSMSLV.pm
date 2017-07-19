@@ -1321,6 +1321,7 @@ sub push_value
 
 	push(@{$_sender_values->{'data'}},
 		{
+			'tld' => $tld,
 			'data' =>
 			{
 				'host' => $hostname,
@@ -2730,7 +2731,7 @@ sub __log
 		$priority = 'UND';
 	}
 
-	my $cur_tld = $tld || "";
+	my $cur_tld = $tld // "";
 	my $server_str = ($server_key ? "\@$server_key " : "");
 
 	if (opt('dry-run') or opt('nolog'))
