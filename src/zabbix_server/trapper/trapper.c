@@ -303,7 +303,7 @@ static int	queue_compare_by_nextcheck_asc(void **d1, void **d2)
  *                                                                            *
  * Return value:  SUCCEED - the session is active and user has the required   *
  *                          access rights.                                    *
- *                FAIL    - the session is not active or usr has not enough   *
+ *                FAIL    - the session is not active or user has not enough  *
  *                          access rights.                                    *
  *                                                                            *
  ******************************************************************************/
