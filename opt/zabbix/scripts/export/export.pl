@@ -28,7 +28,6 @@ use constant PROBE_STATUS_UP => 'Up';
 use constant PROBE_STATUS_DOWN => 'Down';
 use constant PROBE_STATUS_UNKNOWN => 'Unknown';
 
-use Fcntl qw(:flock);					# todo phase 1: taken from phase 2
 use constant PROTO_UDP	=> 0;				# todo phase 1: taken from phase 2
 use constant PROTO_TCP	=> 1;				# todo phase 1: taken from phase 2
 use constant JSON_INTERFACE_DNS		=> 'DNS';	# todo phase 1: taken from phase 2
@@ -66,7 +65,11 @@ use constant rsm_rdds_probe_result => [
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
 
-parse_opts('probe=s', 'service=s', 'tld=s', 'date=s', 'day=n', 'shift=n', 'force!');
+use constant EXPORT_MAX_CHILDREN_DEFAULT => 16;
+use constant EXPORT_MAX_CHILDREN_FLOOR => 1;
+use constant EXPORT_MAX_CHILDREN_CEIL => 128;
+
+parse_opts('probe=s', 'service=s', 'tld=s', 'date=s', 'day=n', 'shift=n', 'force!', 'max-children=n');
 setopt('nolog');
 
 my $config = get_rsm_config();
@@ -167,11 +170,22 @@ foreach my $service (sort(keys(%{$services})))
 		dbg("  delay\t : ", $services->{$service}->{'delay'});
 		dbg("  from\t : ", ts_full($services->{$service}->{'from'}));
 		dbg("  till\t : ", ts_full($services->{$service}->{'till'}));
-		dbg("  avail key\t : ", $services->{$service}->{'key_avail'});
+		dbg("  avail\t : ", $services->{$service}->{'key_avail'} // 'UNDEF');
 	}
 }
 
 my $probes_data;
+
+if (opt('max-children'))
+{
+	set_max_children(getopt('max-children'));
+}
+else
+{
+	set_max_children(EXPORT_MAX_CHILDREN_DEFAULT);
+}
+
+my ($time_start, $time_get_test_data, $time_load_ids, $time_process_records, $time_write_csv);
 
 # go through all the databases
 my @server_keys = get_rsm_server_keys($config);
@@ -186,17 +200,17 @@ my $probes_ref = get_probes();
 my $check_probes_from = $from - 60;	# NB! We need previous value for probeChanges file (see __get_probe_changes())
 $probes_data->{$server_key} = get_probe_times($check_probes_from, $till, undef, $probes_ref);	# todo phase 1: this param is ignored, remove in phase 2
 
-if (opt('debug'))
-{
-	foreach my $probe (keys(%{$probes_data->{$server_key}}))
-	{
-		for (my $idx = 0; defined($probes_data->{$server_key}->{$probe}->[$idx]); $idx++)
-		{
-			my $status = ($idx % 2 == 0 ? "ONLINE" : "OFFLINE");
-			dbg("$probe: $status ", ts_full($probes_data->{$server_key}->{$probe}->[$idx]));
-		}
-	}
-}
+#if (opt('debug'))
+#{
+#	foreach my $probe (keys(%{$probes_data->{$server_key}}))
+#	{
+#		for (my $idx = 0; defined($probes_data->{$server_key}->{$probe}->[$idx]); $idx++)
+#		{
+#			my $status = ($idx % 2 == 0 ? "ONLINE" : "OFFLINE");
+#			dbg("$probe: $status ", ts_full($probes_data->{$server_key}->{$probe}->[$idx]));
+#		}
+#	}
+#}
 
 my $tlds_ref;
 if (opt('tld'))
@@ -240,15 +254,27 @@ while ($tld_index < $tld_count)
 		# child
 		$tld = $tlds_ref->[$tld_index];
 
-		#slv_stats_reset();	# todo phase 1: this is part of phase 2
+		slv_stats_reset();	# todo phase 1: this is part of phase 2
 
 		db_connect($server_key);
+
+		$time_start = time();
+
 		my $result = __get_test_data($from, $till, $probes_data->{$server_key});
+
+		$time_get_test_data = time();
+
 		db_disconnect();
 
 		db_connect();	# connect to the local node
 		__save_csv_data($result);
 		db_disconnect();
+
+		info(sprintf("get data: %s, load ids: %s, process records: %s, write csv: %s",
+				format_stats_time($time_get_test_data - $time_start),
+				format_stats_time($time_load_ids - $time_get_test_data),
+				format_stats_time($time_process_records - $time_load_ids),
+				format_stats_time($time_write_csv - $time_process_records))) if (opt('stats'));
 
 		slv_exit(SUCCESS);
 	}
@@ -345,6 +371,12 @@ sub __validate_input
 	{
 		print("Error: parameter of option --day must be multiple of 60\n");
 		$error_found = 1;
+	}
+
+	if (opt('max-children') && (getopt('max-children') < EXPORT_MAX_CHILDREN_FLOOR ||
+			EXPORT_MAX_CHILDREN_CEIL < getopt('max-children')))
+	{
+		usage(sprintf("allowed max-children: %d-%d", EXPORT_MAX_CHILDREN_FLOOR, EXPORT_MAX_CHILDREN_CEIL));
 	}
 
 	usage() unless ($error_found == 0);
@@ -715,22 +747,21 @@ sub __get_test_data
 			$probe_results_ref = __get_probe_results($itemids_ref, $service_from, $service_till);
 		}
 
-		foreach my $cycleclock (keys(%$cycles))
+		if ($probe_results_ref)
 		{
-			# set status on particular probe
-			foreach my $interface (keys(%{$cycles->{$cycleclock}->{'interfaces'}}))
+			foreach my $cycle (values(%{$cycles}))
 			{
-				foreach my $probe (keys(%{$cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}}))
+				# set status on particular probe
+				while (my ($interface, $cycle_interface) = each(%{$cycle->{'interfaces'}}))
 				{
-					if ($probe_results_ref)
+					while (my ($probe, $cycle_interface_probe) = each(%{$cycle_interface->{'probes'}}))
 					{
+						next if (defined($cycle_interface_probe->{'status'}));
+
 						foreach my $probe_result_ref (@{$probe_results_ref->{$probe}})
 						{
-							if (!defined($cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}->{$probe}->{'status'}))
-							{
-								$cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}->{$probe}->{'status'} =
-									__interface_status($interface, $probe_result_ref->{'value'}, $services->{$service});
-							}
+							$cycle_interface_probe->{'status'} =
+								__interface_status($interface, $probe_result_ref->{'value'}, $services->{$service});
 						}
 					}
 				}
@@ -754,11 +785,10 @@ sub __save_csv_data
 	{
 		$tld = $_;	# set to global variable
 
-		__slv_lock() unless (opt('dry-run'));
-		my $time_start = time();
 		dw_csv_init();
 		dw_load_ids_from_db();
-		my $time_load_ids = time();
+
+		$time_load_ids = time();
 
 		my $ns_service_category_id = dw_get_id(ID_SERVICE_CATEGORY, 'ns');
 		my $dns_service_category_id = dw_get_id(ID_SERVICE_CATEGORY, 'dns');
@@ -1095,22 +1125,14 @@ sub __save_csv_data
 			}
 		}
 
-		__slv_unlock() unless (opt('dry-run'));
-
-		my $time_process_records = time();
+		$time_process_records = time();
 
 		my $real_tld = $tld;
 		$tld = get_readable_tld($real_tld);
 		dw_write_csv_files();
 		$tld = $real_tld;
 
-		my $time_write_csv = time();
-
-		dbg(sprintf("load ids: %.3fs, process records: %.3fs, write csv: %.3fs",
-			$time_load_ids - $time_start,
-			$time_process_records - $time_load_ids,
-			$time_write_csv - $time_process_records)) if (opt('debug') && !opt('dry-run'));
-
+		$time_write_csv = time();
 	}
 	$tld = undef;
 }
@@ -1260,85 +1282,6 @@ sub __get_status_itemids
 	return \%result;
 }
 
-#
-# {
-#     'Probe1' =>
-#     [
-#         {
-#             'clock' => 1234234234,
-#             'value' => 'Up'
-#         },
-#         {
-#             'clock' => 1234234294,
-#             'value' => 'Up'
-#         }
-#     ],
-#     'Probe2' =>
-#     [
-#         {
-#             'clock' => 1234234234,
-#             'value' => 'Down'
-#         },
-#         {
-#             'clock' => 1234234294,
-#             'value' => 'Up'
-#         }
-#     ]
-# }
-#
-sub __get_probe_statuses
-{
-	my $itemids_ref = shift;
-	my $from = shift;
-	my $till = shift;
-
-	my %result;
-
-	# generate list if itemids
-	my @itemids;
-	foreach my $probe (keys(%$itemids_ref))
-	{
-		push(@itemids, $itemids_ref->{$probe});
-	}
-
-	if (scalar(@itemids) != 0)
-	{
-		my $rows_ref = db_select_binds(
-			"select itemid,value,clock" .
-			" from history_uint" .
-			" where itemid=?" .
-				" and " . sql_time_condition($from, $till),
-			\@itemids);
-
-		# NB! It's important to order by clock here, see how this result is used.
-		foreach my $row_ref (sort { $a->[2] <=> $b->[2] } @$rows_ref)
-		{
-			my $itemid = $row_ref->[0];
-			my $value = $row_ref->[1];
-			my $clock = $row_ref->[2];
-
-			my $probe;
-			foreach my $pr (keys(%$itemids_ref))
-			{
-				my $i = $itemids_ref->{$pr};
-
-				if ($i == $itemid)
-				{
-					$probe = $pr;
-
-					last;
-				}
-			}
-
-			fail("internal error: Probe of item (itemid:$itemid) not found") unless (defined($probe));
-
-			push(@{$result{$probe}}, {'value' => $value, 'clock' => $clock});
-		}
-	}
-
-	return \%result;
-}
-
 sub __check_dns_udp_rtt
 {
 	my $value = shift;
@@ -1429,8 +1372,6 @@ sub __get_probe_changes
 					# ignore last second status
 					next;
 				}
-
-				dbg("    changed status to \"$status\" on ", ts_full($clock));
 
 				push(@result, {'probe' => $probe, 'status' => $status, 'clock' => $clock});
 			}
@@ -1540,12 +1481,6 @@ sub __best_rtt
 	my $cur_description = shift;
 	my $new_rtt = shift;
 	my $new_description = shift;
-
-	if (opt('debug'))
-	{
-		dbg(sprintf("cur_rtt:%s cur_description:%s new_rtt:%s new_description:%s", __print_undef($cur_rtt),
-			__print_undef($cur_description), __print_undef($new_rtt), __print_undef($new_description)));
-	}
 
 	if (!defined($cur_rtt) && !defined($cur_description))
 	{
@@ -2352,28 +2287,6 @@ sub __interface_status
 	}
 
 	return $status;
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-my $_lock_fh;
-use constant _LOCK_FILE => '/tmp/rsm.slv.lock';
-sub __slv_lock
-{
-	dbg(sprintf("%7d: %s", $$, 'TRY'));
-
-        open($_lock_fh, ">", _LOCK_FILE) or fail("cannot open lock file " . _LOCK_FILE . ": $!");
-
-	flock($_lock_fh, LOCK_EX) or fail("cannot lock using file " . _LOCK_FILE . ": $!");
-
-	dbg(sprintf("%7d: %s", $$, 'LOCK'));
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __slv_unlock
-{
-	close($_lock_fh) or fail("cannot close lock file " . _LOCK_FILE . ": $!");
-
-	dbg(sprintf("%7d: %s", $$, 'UNLOCK'));
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2

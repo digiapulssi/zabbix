@@ -161,7 +161,7 @@ $table = (new CTableInfo())
 ]);
 
 
-if (isset($this->data['tld'])) {
+if ($this->data['tld']) {
 	$serverTime = time() - RSM_ROLLWEEK_SHIFT_BACK;
 	$from = date('YmdHis', $serverTime - $this->data['rollWeekSeconds']);
 	$till = date('YmdHis', $serverTime);
