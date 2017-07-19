@@ -5,6 +5,7 @@ use warnings;
 use RSMSLV;
 use Text::CSV_XS;
 use File::Path qw(make_path);
+use Fcntl qw(:flock);		# todo phase 1: taken from phase 2 export.pl
 
 use constant CSV_FILES_DIR => '/opt/zabbix/export-tmp';
 
@@ -97,25 +98,10 @@ sub dw_csv_init
 sub dw_append_csv
 {
 	my $id_type = shift;
-	my $rows_ref = shift;	# [] or [[], [], ...]
+	my $array_ref = shift;
 
-	if (ref($rows_ref->[0]) eq '')
-	{
-		__fix_row($id_type, $rows_ref);
-		push(@{$_csv_files{$id_type}{'rows'}}, $rows_ref);
-	}
-        elsif (ref($rows_ref->[0]) eq 'ARRAY')
-        {
-                foreach my $row (@$rows_ref)
-                {
-			__fix_row($id_type, $row);
-			push(@{$_csv_files{$id_type}{'rows'}}, $row);
-                }
-        }
-        else
-        {
-                fail("internal error: invalid row format for CSV");
-        }
+	__fix_row($id_type, $array_ref);
+	push(@{$_csv_files{$id_type}{'rows'}}, $array_ref);
 }
 
 sub __dw_check_id
@@ -172,7 +158,31 @@ sub dw_get_id
 
 	return $_csv_catalogs{$id_type}{$name} if ($_csv_catalogs{$id_type}{$name});
 
-	my $id = db_exec("insert into rsm_$id_type (name) values ('$name')");
+	# LOCK
+	__slv_lock() unless (opt('dry-run'));
+
+	# search for ID in the database, it might have been added by other process
+	my $rows_ref = db_select("select id from rsm_$id_type where name='$name'");
+
+	if (scalar(@{$rows_ref}) > 1)
+	{
+		# UNLOCK
+		__slv_unlock() unless (opt('dry-run'));
+		fail("THIS_SHOULD_NEVER_HAPPEN: more than one \"$name\" record in table \"rsm_$id_type\"");
+	}
+
+	my $id;
+	if (scalar(@{$rows_ref}) == 1)
+	{
+		$id = $rows_ref->[0]->[0];
+	}
+	else
+	{
+		$id = db_exec("insert into rsm_$id_type (name) values ('$name')");
+	}
+
+	# UNLOCK
+	__slv_unlock() unless (opt('dry-run'));
 
 	fail("ID overflow of catalog \"$id_type\": $id") unless (__dw_check_id($id_type, $id) == SUCCESS);
 
@@ -356,28 +366,33 @@ sub dw_set_date
 sub __fix_row
 {
 	my $id_type = shift;
-	my $row_ref = shift;
+	my $array_ref = shift;
 
+	my $debug = opt('debug');
 	my $has_undef = 0;
 	my $str = '';
 
-	foreach (@{$row_ref})
+	foreach (@{$array_ref})
 	{
-		if (!defined($_))
+		if ($debug)
 		{
-			$has_undef = 1;
-			$str .= " [UNDEF]";
-			$_ = '';
+			unless (defined($_))
+			{
+				$has_undef = 1;
+				$str .= " [UNDEF]";
+			}
+			else
+			{
+				$str .= " [$_]";
+			}
 		}
-		else
-		{
-			$str .= " [$_]";
-		}
+
+		$_ //= '';
 	}
 
-	if ($has_undef == 1)
+	if ($debug && $has_undef)
 	{
-		wrn("$id_type entry with UNDEF value: ", $str);
+		dbg("$id_type entry with UNDEF value: ", $str);
 	}
 }
 
@@ -437,6 +452,8 @@ sub __write_csv_file
 sub __write_csv_catalog
 {
 	my $id_type = shift;
+
+	die("THIS_SHOULD_NEVER_HAPPEN: no ID type specified with __write_csv_catalog()") unless ($id_type);
 
 	return 1 if (opt('dry-run'));
 
@@ -510,6 +527,28 @@ sub __make_path
 sub __set_dw_error
 {
 	$_dw_error = join('', @_);
+}
+
+# todo phase 1: taken from RSMSLV.pm phase 2
+my $_lock_fh;
+use constant _LOCK_FILE => '/tmp/rsm.slv.data.export.lock';
+sub __slv_lock
+{
+	dbg(sprintf("%7d: %s", $$, 'TRY'));
+
+        open($_lock_fh, ">", _LOCK_FILE) or fail("cannot open lock file " . _LOCK_FILE . ": $!");
+
+	flock($_lock_fh, LOCK_EX) or fail("cannot lock using file " . _LOCK_FILE . ": $!");
+
+	dbg(sprintf("%7d: %s", $$, 'LOCK'));
+}
+
+# todo phase 1: taken from RSMSLV.pm phase 2
+sub __slv_unlock
+{
+	close($_lock_fh) or fail("cannot close lock file " . _LOCK_FILE . ": $!");
+
+	dbg(sprintf("%7d: %s", $$, 'UNLOCK'));
 }
 
 #sub __read_csv_file
