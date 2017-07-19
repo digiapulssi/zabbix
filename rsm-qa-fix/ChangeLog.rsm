@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc17
 New features:
 
 Bug fixes:
+....I..... [261] fixed log file names of SLV scripts, TLD was missing from filename (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc16
