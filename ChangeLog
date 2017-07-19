@@ -20,6 +20,7 @@ New features:
 A.F....... [ZBX-1357] updated Catalan, Chinese (China), English (United States), Japanese, Korean, Polish, Portuguese (Brazil), Ukrainian translations; thanks to Zabbix translators (zalex_ua)
 
 Bug fixes:
+........S. [ZBX-12318] fixed maintenance status not being updated in cache if host is disabled (vso)
 ..F....... [ZBX-12252] fixed history page to display values in chronological order (Sasha)
 
 --------------------------------------------------------------------------------
