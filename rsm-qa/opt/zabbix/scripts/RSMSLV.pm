@@ -66,10 +66,6 @@ use constant PROBE_KEY_ONLINE => 'rsm.probe.online';	# todo phase 1: taken from 
 
 our ($result, $dbh, $tld, $server_key);
 
-my $total_sec;
-my $sql_time = 0.0;
-my $sql_count = 0;
-
 our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
@@ -94,7 +90,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute avail_result_msg
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
-		get_avail_valuemaps
+		get_avail_valuemaps slv_stats_reset
 		get_result_string get_tld_by_trigger truncate_from alerts_enabled get_test_start_time uint_value_exists
 		get_real_services_period dbg info wrn fail format_stats_time slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
@@ -111,7 +107,11 @@ my $_sender_values;	# used to send values to Zabbix server
 
 my $POD2USAGE_FILE;	# usage message file
 
-my $global_sql;
+my ($_global_sql, $_global_sql_bind_values, $_lock_fh);
+
+my $start_time;
+my $sql_time = 0.0;
+my $sql_count = 0;
 
 sub get_macro_minns
 {
@@ -769,7 +769,15 @@ sub handle_db_error
 {
 	my $msg = shift;
 
-	fail("database error: $msg (query was: $global_sql)");
+	my $prefix = "";
+
+	$prefix = "[tld:$tld] " if ($tld);
+
+	my $bind_values_str = "";
+
+	$bind_values_str = ' bind values: ' . join(',', @{$_global_sql_bind_values}) if (defined($_global_sql_bind_values));
+
+	fail($prefix . "database error: $msg (query was: [$_global_sql]$bind_values_str)");
 }
 
 sub db_connect
@@ -794,11 +802,11 @@ sub db_connect
 
 	my $db_tls_settings = get_db_tls_settings($section);
 
-	$global_sql = "DBI:mysql:database=$section->{'db_name'};host=$section->{'db_host'};$db_tls_settings";
+	$_global_sql = "DBI:mysql:database=$section->{'db_name'};host=$section->{'db_host'};$db_tls_settings";
 
-	dbg($global_sql);
+	dbg($_global_sql);
 
-	$dbh = DBI->connect($global_sql, $section->{'db_user'}, $section->{'db_password'},
+	$dbh = DBI->connect($_global_sql, $section->{'db_user'}, $section->{'db_password'},
 		{
 			PrintError  => 0,
 			HandleError => \&handle_db_error,
@@ -838,7 +846,9 @@ sub db_disconnect
 
 sub db_select
 {
-	$global_sql = shift;
+	$_global_sql = shift;
+
+	undef($_global_sql_bind_values);
 
 	my $sec;
 	if (opt('stats'))
@@ -846,10 +856,10 @@ sub db_select
 		$sec = Time::HiRes::time();
 	}
 
-	my $sth = $dbh->prepare($global_sql)
-		or fail("cannot prepare [$global_sql]: ", $dbh->errstr);
+	my $sth = $dbh->prepare($_global_sql)
+		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
-	dbg("[$global_sql]");
+	dbg("[$_global_sql]");
 
 	my ($start, $exe, $fetch, $total);
 	if (opt('warnslow'))
@@ -858,7 +868,7 @@ sub db_select
 	}
 
 	$sth->execute()
-		or fail("cannot execute [$global_sql]: ", $sth->errstr);
+		or fail("cannot execute [$_global_sql]: ", $sth->errstr);
 
 	if (opt('warnslow'))
 	{
@@ -876,7 +886,7 @@ sub db_select
 		{
 			$fetch = $now - $exe;
 			$exe = $exe - $start;
-			wrn("slow query: [$global_sql] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)", $total, $exe, $fetch));
+			wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)", $total, $exe, $fetch));
 		}
 	}
 
@@ -904,18 +914,18 @@ sub db_select
 # todo phase 1: taken from RSMSLV.pm phase 2
 sub db_select_binds
 {
-	$global_sql = shift;
-	my $global_sql_bind_values = shift;
+	$_global_sql = shift;
+	$_global_sql_bind_values = shift;
 
-	my $sth = $dbh->prepare($global_sql)
-		or fail("cannot prepare [$global_sql]: ", $dbh->errstr);
+	my $sth = $dbh->prepare($_global_sql)
+		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
-	dbg("[$global_sql] ", join(',', @{$global_sql_bind_values}));
+	dbg("[$_global_sql] ", join(',', @{$_global_sql_bind_values}));
 
 	my ($start, $exe, $fetch, $total);
 
 	my @rows;
-	foreach my $bind_value (@{$global_sql_bind_values})
+	foreach my $bind_value (@{$_global_sql_bind_values})
 	{
 		if (opt('warnslow'))
 		{
@@ -923,7 +933,7 @@ sub db_select_binds
 		}
 
 		$sth->execute($bind_value)
-			or fail("cannot execute [$global_sql] bind_value:$bind_value: ", $sth->errstr);
+			or fail("cannot execute [$_global_sql] bind_value:$bind_value: ", $sth->errstr);
 
 		if (opt('warnslow'))
 		{
@@ -945,7 +955,7 @@ sub db_select_binds
 				$fetch = $now - $exe;
 				$exe = $exe - $start;
 
-				wrn("slow query: [$global_sql], bind values: [", join(',', @{$global_sql_bind_values}), "] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)", $total, $exe, $fetch));
+				wrn("slow query: [$_global_sql], bind values: [", join(',', @{$_global_sql_bind_values}), "] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)", $total, $exe, $fetch));
 			}
 		}
 	}
@@ -968,7 +978,7 @@ sub db_select_binds
 # todo phase 1: taken from RSMSLV.pm phase 2 for DaWa.pm::dw_get_id()
 sub db_exec
 {
-	$global_sql = shift;
+	$_global_sql = shift;
 
 	my $sec;
 	if (opt('stats'))
@@ -976,10 +986,10 @@ sub db_exec
 		$sec = time();
 	}
 
-	my $sth = $dbh->prepare($global_sql)
-		or fail("cannot prepare [$global_sql]: ", $dbh->errstr);
+	my $sth = $dbh->prepare($_global_sql)
+		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
-	dbg("[$global_sql]");
+	dbg("[$_global_sql]");
 
 	my ($start, $total);
 	if (opt('warnslow'))
@@ -988,7 +998,7 @@ sub db_exec
 	}
 
 	$sth->execute()
-		or fail("cannot execute [$global_sql]: ", $sth->errstr);
+		or fail("cannot execute [$_global_sql]: ", $sth->errstr);
 
 	if (opt('warnslow'))
 	{
@@ -996,7 +1006,7 @@ sub db_exec
 
 		if ($total > getopt('warnslow'))
 		{
-			wrn("slow query: [$global_sql] took ", sprintf("%.3f seconds", $total));
+			wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds", $total));
 		}
 	}
 
@@ -1311,6 +1321,7 @@ sub push_value
 
 	push(@{$_sender_values->{'data'}},
 		{
+			'tld' => $tld,
 			'data' =>
 			{
 				'host' => $hostname,
@@ -2470,15 +2481,26 @@ sub slv_exit
 
 	if (SUCCESS == $rv && opt('stats'))
 	{
+		my $prefix = $tld ? "$tld " : '';
+
 		my $sql_str = format_stats_time($sql_time);
+
 		$sql_str .= " ($sql_count queries)";
 
-		my $total_str = format_stats_time(time() - $total_sec);
+		my $total_str = format_stats_time(time() - $start_time);
 
-		print("stats: total:$total_str sql:$sql_str\n");
+		print($prefix, "total     : $total_str\n");
+		print($prefix, "sql       : $sql_str\n");
 	}
 
 	exit($rv);
+}
+
+sub slv_stats_reset
+{
+	$start_time = time();
+	$sql_time = 0.0;
+	$sql_count = 0;
 }
 
 sub exit_if_running
@@ -2550,7 +2572,7 @@ sub parse_opts
 
 	setopt('nolog') if (opt('dry-run') || opt('debug'));
 
-	$total_sec = time() if (opt('stats'));
+	$start_time = time() if (opt('stats'));
 }
 
 sub parse_avail_opts
@@ -2569,16 +2591,12 @@ sub parse_rollweek_opts
 
 sub opt
 {
-	my $key = shift;
-
-	return defined($OPTS{$key});
+	return defined($OPTS{shift()});
 }
 
 sub getopt
 {
-	my $key = shift;
-
-	return $OPTS{$key};
+	return $OPTS{shift()};
 }
 
 sub setopt
@@ -2593,9 +2611,7 @@ sub setopt
 
 sub unsetopt
 {
-	my $key = shift;
-
-	$OPTS{$key} = undef;
+	$OPTS{shift()} = undef;
 }
 
 sub optkeys
@@ -2715,7 +2731,7 @@ sub __log
 		$priority = 'UND';
 	}
 
-	my $cur_tld = $tld || "";
+	my $cur_tld = $tld // "";
 	my $server_str = ($server_key ? "\@$server_key " : "");
 
 	if (opt('dry-run') or opt('nolog'))
