@@ -78,7 +78,7 @@ my ($rsm_groupid, $rsm_hostid);
 
 my ($ns_servers, $root_servers_macros);
 
-my ($main_templateid, $tld_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tld_hostid);
+my ($main_templateid, $tld_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid);
 
 my $config = get_rsm_config();
 
@@ -313,7 +313,7 @@ $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
 
-$tld_hostid = create_tld_host($OPTS{'tld'}, $OPTS{'type'}, $tld_groupid);
+create_tld_host($OPTS{'tld'}, $OPTS{'type'}, $tld_groupid);
 
 my $proxy_mon_templateid = create_probe_health_tmpl();
 
@@ -1406,8 +1406,6 @@ sub create_tld_host($$$)
 	pfail($tld_hostid->{'data'}) if (check_api_error($tld_hostid) eq true);
 
 	create_slv_items($ns_servers, $tld_hostid, $tld_name);
-
-	return $tld_hostid;
 }
 
 # todo phase 1: moved create_probe_health_tmpl() to TLDs.pm to be used by both tld.pl and probes.pl
