@@ -206,32 +206,64 @@ sub add_probe($$$$$) {
 
     ########## Creating TLD hosts for the Probe
 
-    my $tld_list = get_host_group('TLDs', true, true);
+	my $tld_list = get_host_group('TLDs', true, true);
 
-    print "Creating TLD hosts for the Probe...\n";
+	print("Creating TLD hosts for the Probe...\n");
 
-    foreach my $tld (@{$tld_list->{'hosts'}}) {
-	my $tld_name = $tld->{'name'};
-	my $tld_groupid = create_group('TLD '.$tld_name);
-	my $tld_type = $tld->{'type'};
+	foreach my $tld (@{$tld_list->{'hosts'}})
+	{
+		my $tld_name = $tld->{'name'};
+		my $tld_groupid = create_group("TLD $tld_name");
+		my $tld_type = $tld->{'type'};
 
-	my $main_templateid = create_template('Template '.$tld_name);
+		my $main_templateid = create_template("Template $tld_name");
 
-	print "Creating '$tld_name $probe_name' host for '$tld_name' TLD: ";
+		print("Creating '$tld_name $probe_name' host for '$tld_name' TLD: ");
 
-	my $tld_host = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $probe_hostgroup}, {'groupid' => TLD_PROBE_RESULTS_GROUPID}, {'groupid' => TLD_TYPE_PROBE_RESULTS_GROUPIDS->{$tld_type}}],
-                                          'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_tmpl}],
-                                          'host' => $tld_name.' '.$probe_name,
-                                          'proxy_hostid' => $probe,
-                                          'status' => HOST_STATUS_MONITORED,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
+		my $tld_host = create_host({
+			'groups'	=> [
+				{
+					'groupid'	=> $tld_groupid
+				},
+				{
+					'groupid'	=> $probe_hostgroup
+				},
+				{
+					'groupid'	=> TLD_PROBE_RESULTS_GROUPID
+				},
+				{
+					'groupid'	=> TLD_TYPE_PROBE_RESULTS_GROUPIDS->{$tld_type}
+				}
+			],
+			'templates'	=> [
+				{
+					'templateid'	=> $main_templateid
+				},
+				{
+					'templateid'	=> $probe_tmpl
+				}
+			],
+			'host'		=> "$tld_name $probe_name",
+			'proxy_hostid'	=> $probe,
+			'status'	=> HOST_STATUS_MONITORED,
+			'interfaces'	=> [
+				{
+					'type'	=> 1,
+					'main'	=> true,
+					'useip'	=> true,
+					'ip'	=> '127.0.0.1',
+					'dns'	=> '',
+					'port'	=> '10050'
+				}
+			]
+		});
 
-	is_not_empty($tld_host, false);
-    }
+		is_not_empty($tld_host, false);
+	}
 
     ##########
 
-    print "The probe has been added successfully\n";
+	print("The probe has been added successfully\n");
 }
 
 sub delete_probe($) {
