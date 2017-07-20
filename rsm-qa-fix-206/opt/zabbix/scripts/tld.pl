@@ -58,7 +58,7 @@ use Digest::MD5 qw(md5_hex);
 use Expect;
 use Data::Dumper;
 use RSM;
-use TLD_constants qw(:general :templates :groups :value_types :ec :rsm :slv :config :api);
+use TLD_constants qw(:general :templates :groups :value_types :ec :slv :config :api);
 use TLDs;
 
 sub create_tld_host($$$);
@@ -73,8 +73,6 @@ sub get_services($);
 my $trigger_rollweek_thresholds = rsm_trigger_rollweek_thresholds;
 
 my $cfg_global_macros = cfg_global_macros;
-
-my ($rsm_groupid, $rsm_hostid);
 
 my ($ns_servers, $root_servers_macros);
 
