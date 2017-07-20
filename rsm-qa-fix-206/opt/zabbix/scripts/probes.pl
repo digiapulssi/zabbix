@@ -88,7 +88,7 @@ sub add_probe($$$$$) {
     my $psk_identity = shift;
     my $psk = shift;
 
-    my ($probe, $probe_hostgroup, $probe_host, $probe_host_mon, $probe_tmpl, $probe_tmpl_status);
+    my ($probe, $probe_host, $probe_host_mon, $probe_tmpl);
 
     print "Trying to add '".$probe_name."' probe...\n";
 
@@ -114,9 +114,9 @@ sub add_probe($$$$$) {
 
     print "Creating '$probe_name' host group: ";
 
-    $probe_hostgroup = create_group($probe_name);
+    my $probe_groupid = create_group($probe_name);
 
-    is_not_empty($probe_hostgroup, true);
+    is_not_empty($probe_groupid, true);
 
     ########## Creating Probe template
 
@@ -131,9 +131,9 @@ sub add_probe($$$$$) {
     print "Creating '$probe_name' probe status template: ";
 
     my $root_servers_macros = update_root_servers();
-    $probe_tmpl_status = create_probe_status_template($probe_name, $probe_tmpl, $root_servers_macros);
+    my $probe_status_templateid = create_probe_status_template($probe_name, $probe_tmpl, $root_servers_macros);
 
-    is_not_empty($probe_tmpl_status, true);
+    is_not_empty($probe_status_templateid, true);
 
     ########## Creating Probe host
 
@@ -141,7 +141,7 @@ sub add_probe($$$$$) {
 	$probe_host = create_host({
 		'groups'	=> [
 			{
-				'groupid'	=> $probe_hostgroup
+				'groupid'	=> $probe_groupid
 			},
 			{
 				'groupid'	=> PROBES_GROUPID
@@ -149,7 +149,7 @@ sub add_probe($$$$$) {
 		],
 		'templates'	=> [
 			{
-				'templateid'	=> $probe_tmpl_status
+				'templateid'	=> $probe_status_templateid
 			},
 			{
 				'templateid'	=> APP_ZABBIX_PROXY_TEMPLATEID
@@ -219,7 +219,7 @@ sub add_probe($$$$$) {
 					'groupid'	=> $tld_groupid
 				},
 				{
-					'groupid'	=> $probe_hostgroup
+					'groupid'	=> $probe_groupid
 				},
 				{
 					'groupid'	=> TLD_PROBE_RESULTS_GROUPID

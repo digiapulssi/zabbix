@@ -323,7 +323,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 
 	print("$proxyid\n$probe_name\n");
 
-	my $proxy_groupid = create_group($probe_name);
+	my $probe_groupid = create_group($probe_name);
 	my $probe_templateid;
 	my $status;
 
@@ -343,7 +343,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 	create_host({
 		'groups'	=> [
 			{
-				'groupid'	=> $proxy_groupid
+				'groupid'	=> $probe_groupid
 			},
 			{
 				'groupid'	=> PROBES_GROUPID
@@ -398,7 +398,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 				'groupid'	=> $tld_groupid
 			},
 			{
-				'groupid'	=> $proxy_groupid
+				'groupid'	=> $probe_groupid
 			},
 			{
 				'groupid'	=> $tld_probe_results_groupid
