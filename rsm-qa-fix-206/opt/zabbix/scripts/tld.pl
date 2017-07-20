@@ -360,14 +360,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 		'status'	=> $status,
 		'proxy_hostid'	=> $proxyid,
 		'interfaces'	=> [
-			{
-				'type'	=> 1,
-				'main'	=> true,
-				'useip'	=> true,
-				'ip'	=> '127.0.0.1',
-				'dns'	=> '',
-				'port'	=> '10050'
-			}
+			DEFAULT_MAIN_INTERFACE
 		]
 	});
 
@@ -386,7 +379,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 		'status'	=> $status,
 		'interfaces'	=> [
 			{
-				'type'	=> 1,
+				'type'	=> INTERFACE_TYPE_AGENT,
 				'main'	=> true,
 				'useip'	=> true,
 				'ip'	=> $proxies->{$proxyid}->{'interface'}->{'ip'},
@@ -428,14 +421,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 		'status'	=> $status,
 		'proxy_hostid'	=> $proxyid,
 		'interfaces'	=> [
-			{
-				'type'	=> 1,
-				'main'	=> true,
-				'useip'	=> true,
-				'ip'	=> '127.0.0.1',
-				'dns'	=> '',
-				'port'	=> '10050'
-			}
+			DEFAULT_MAIN_INTERFACE
 		]
 	});
 }
@@ -1392,14 +1378,7 @@ sub create_tld_host($$$)
 		'host'		=> $tld_name,
 		'status'	=> HOST_STATUS_MONITORED,
 		'interfaces'	=> [
-			{
-				'type'	=> INTERFACE_TYPE_AGENT,
-				'main'	=> true,
-				'useip'	=> true,
-				'ip'	=> '127.0.0.1',
-				'dns'	=> '',
-				'port'	=> '10050'
-			}
+			DEFAULT_MAIN_INTERFACE
 		]
 	});
 

@@ -159,14 +159,7 @@ sub add_probe($$$$$) {
 		'status'	=> HOST_STATUS_MONITORED,
 		'proxy_hostid'	=> $probe,
 		'interfaces'	=> [
-			{
-				'type'	=> 1,
-				'main'	=> true,
-				'useip'	=> true,
-				'ip'	=> '127.0.0.1',
-				'dns'	=> '',
-				'port'	=> '10050'
-			}
+			DEFAULT_MAIN_INTERFACE
 		]
 	});
 
@@ -190,7 +183,7 @@ sub add_probe($$$$$) {
 		'status'	=> HOST_STATUS_MONITORED,
 		'interfaces'	=> [
 			{
-				'type'	=> 1,
+				'type'	=> INTERFACE_TYPE_AGENT,
 				'main'	=> true,
 				'useip'	=> true,
 				'ip'	=> $probe_ip,
@@ -247,14 +240,7 @@ sub add_probe($$$$$) {
 			'proxy_hostid'	=> $probe,
 			'status'	=> HOST_STATUS_MONITORED,
 			'interfaces'	=> [
-				{
-					'type'	=> 1,
-					'main'	=> true,
-					'useip'	=> true,
-					'ip'	=> '127.0.0.1',
-					'dns'	=> '',
-					'port'	=> '10050'
-				}
+				DEFAULT_MAIN_INTERFACE
 			]
 		});
 
