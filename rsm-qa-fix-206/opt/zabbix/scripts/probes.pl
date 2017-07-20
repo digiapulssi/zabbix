@@ -208,21 +208,18 @@ sub add_probe($$$$$) {
 
     my $tld_list = get_host_group('TLDs', true, true);
 
-    my $tld_probe_results_groupid = create_group('TLD Probe results');
-
     print "Creating TLD hosts for the Probe...\n";
 
     foreach my $tld (@{$tld_list->{'hosts'}}) {
 	my $tld_name = $tld->{'name'};
 	my $tld_groupid = create_group('TLD '.$tld_name);
 	my $tld_type = $tld->{'type'};
-	my $tld_type_probe_results_groupid = create_group($tld_type.' Probe results');
 
 	my $main_templateid = create_template('Template '.$tld_name);
 
 	print "Creating '$tld_name $probe_name' host for '$tld_name' TLD: ";
 
-	my $tld_host = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $probe_hostgroup}, {'groupid' => $tld_probe_results_groupid}, {'groupid' => $tld_type_probe_results_groupid}],
+	my $tld_host = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $probe_hostgroup}, {'groupid' => TLD_PROBE_RESULTS_GROUPID}, {'groupid' => TLD_TYPE_PROBE_RESULTS_GROUPIDS->{$tld_type}}],
                                           'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_tmpl}],
                                           'host' => $tld_name.' '.$probe_name,
                                           'proxy_hostid' => $probe,
