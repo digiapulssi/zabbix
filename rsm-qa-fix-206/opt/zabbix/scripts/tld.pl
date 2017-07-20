@@ -78,7 +78,7 @@ my ($rsm_groupid, $rsm_hostid);
 
 my ($ns_servers, $root_servers_macros);
 
-my ($main_templateid, $tld_groupid, $tld_type_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tlds_groupid, $tld_hostid);
+my ($main_templateid, $tld_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tld_hostid);
 
 my $config = get_rsm_config();
 
@@ -313,15 +313,7 @@ $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
 
-$tlds_groupid = create_group('TLDs');
-
-pfail $tlds_groupid->{'data'} if check_api_error($tlds_groupid) eq true;
-
-$tld_type_groupid = create_group($OPTS{'type'});
-
-pfail $tld_type_groupid->{'data'} if check_api_error($tld_type_groupid) eq true;
-
-$tld_hostid = create_tld_host($OPTS{'tld'}, $tld_groupid, $tlds_groupid, $tld_type_groupid);
+$tld_hostid = create_tld_host($OPTS{'tld'}, $tld_groupid, TLDS_GROUPID, TLD_TYPE_GROUPIDS->{$OPTS{'type'}});
 
 my $proxy_mon_templateid = create_probe_health_tmpl();
 
