@@ -11,12 +11,8 @@ use warnings;
 use Getopt::Long;
 use Data::Dumper;
 use RSM;
-use TLD_constants qw(:general :templates :api :config);
+use TLD_constants qw(:general :templates :groups :api :config);
 use TLDs;
-
-use constant HOST_STATUS_NOT_MONITORED => 1;
-
-use constant HOST_STATUS_PROXY_ACTIVE => 5;
 
 use constant DEFAULT_PROBE_PORT => 10051;
 
@@ -94,7 +90,7 @@ sub add_probe($$$$$) {
 
     my ($probe, $probe_hostgroup, $probe_host, $probe_host_mon, $probe_tmpl, $probe_tmpl_status);
 
-    my ($result, $probes_groupid, $probes_mon_groupid, $probe_tmpl_health);
+    my ($result, $probe_tmpl_health);
 
     print "Trying to add '".$probe_name."' probe...\n";
 
@@ -103,14 +99,6 @@ sub add_probe($$$$$) {
     }
 
     ###### Checking and creating required groups and templates
-
-    print "Getting 'Probes' host group: ";
-    $probes_groupid = create_group('Probes');
-    is_not_empty($probes_groupid, true);
-
-    print "Getting 'Probes - Mon' host group: ";
-    $probes_mon_groupid = create_group('Probes - Mon');
-    is_not_empty($probes_mon_groupid, true);
 
     print "Getting 'Template Proxy Health' template: ";
     $probe_tmpl_health = create_probe_health_tmpl();
@@ -152,7 +140,7 @@ sub add_probe($$$$$) {
     ########## Creating Probe host
 
     print "Creating '$probe_name' host: ";
-    $probe_host = create_host({'groups' => [{'groupid' => $probe_hostgroup}, {'groupid' => $probes_groupid}],
+    $probe_host = create_host({'groups' => [{'groupid' => $probe_hostgroup}, {'groupid' => PROBES_GROUPID}],
                                           'templates' => [{'templateid' => $probe_tmpl_status}, {'templateid' => APP_ZABBIX_PROXY_TEMPLATEID}],
                                           'host' => $probe_name,
                                           'status' => HOST_STATUS_MONITORED,
@@ -167,7 +155,7 @@ sub add_probe($$$$$) {
     ########## Creating Probe monitoring host
 
     print "Creating Probe monitoring host: ";
-    $probe_host_mon = create_host({'groups' => [{'groupid' => $probes_mon_groupid}],
+    $probe_host_mon = create_host({'groups' => [{'groupid' => PROBES_MON_GROUPID}],
                                           'templates' => [{'templateid' => $probe_tmpl_health}],
                                           'host' => $probe_name.' - mon',
                                           'status' => HOST_STATUS_MONITORED,
