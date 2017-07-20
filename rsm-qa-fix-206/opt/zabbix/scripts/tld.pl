@@ -58,7 +58,7 @@ use Digest::MD5 qw(md5_hex);
 use Expect;
 use Data::Dumper;
 use RSM;
-use TLD_constants qw(:general :templates :value_types :ec :rsm :slv :config :api);
+use TLD_constants qw(:general :templates :groups :value_types :ec :rsm :slv :config :api);
 use TLDs;
 
 sub create_tld_host($$$$);
@@ -78,7 +78,7 @@ my ($rsm_groupid, $rsm_hostid);
 
 my ($ns_servers, $root_servers_macros);
 
-my ($main_templateid, $tld_groupid, $tld_type_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid);
+my ($main_templateid, $tld_groupid, $tld_type_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tlds_groupid, $tld_hostid);
 
 my $config = get_rsm_config();
 
@@ -323,14 +323,6 @@ pfail $tld_type_groupid->{'data'} if check_api_error($tld_type_groupid) eq true;
 
 $tld_hostid = create_tld_host($OPTS{'tld'}, $tld_groupid, $tlds_groupid, $tld_type_groupid);
 
-$probes_groupid = create_group('Probes');
-
-pfail $probes_groupid->{'data'} if check_api_error($probes_groupid) eq true;
-
-$probes_mon_groupid = create_group('Probes - Mon');
-
-pfail $probes_mon_groupid->{'data'} if check_api_error($probes_mon_groupid) eq true;
-
 my $proxy_mon_templateid = create_probe_health_tmpl();
 
 ## Creating TLD hosts for each probe ##
@@ -364,7 +356,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 				'groupid'	=> $proxy_groupid
 			},
 			{
-				'groupid'	=> $probes_groupid
+				'groupid'	=> PROBES_GROUPID
 			}
 		],
 		'templates'	=> [
@@ -390,7 +382,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 	my $hostid = create_host({
 		'groups'	=> [
 			{
-				'groupid'	=> $probes_mon_groupid
+				'groupid'	=> PROBES_MON_GROUPID
 			}
 		],
 		'templates'	=> [
