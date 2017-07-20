@@ -78,7 +78,7 @@ my ($rsm_groupid, $rsm_hostid);
 
 my ($ns_servers, $root_servers_macros);
 
-my ($main_templateid, $tld_groupid, $tld_type_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid, $proxy_mon_templateid);
+my ($main_templateid, $tld_groupid, $tld_type_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid);
 
 my $config = get_rsm_config();
 
@@ -331,68 +331,129 @@ $probes_mon_groupid = create_group('Probes - Mon');
 
 pfail $probes_mon_groupid->{'data'} if check_api_error($probes_mon_groupid) eq true;
 
-$proxy_mon_templateid = create_probe_health_tmpl();
+my $proxy_mon_templateid = create_probe_health_tmpl();
 
 ## Creating TLD hosts for each probe ##
 
-foreach my $proxyid (sort keys %{$proxies}) {
-    my $probe_name = $proxies->{$proxyid}->{'host'};
+foreach my $proxyid (sort(keys(%{$proxies})))
+{
+	my $probe_name = $proxies->{$proxyid}->{'host'};
 
-    my $status = HOST_STATUS_MONITORED;
+	print("$proxyid\n$probe_name\n");
 
-    print $proxyid."\n";
-    print $proxies->{$proxyid}->{'host'}."\n";
+	my $proxy_groupid = create_group($probe_name);
+	my $probe_templateid;
+	my $status;
 
-    my $probe_status = $proxies->{$proxyid}->{'status'};
+	if ($proxies->{$proxyid}->{'status'} == HOST_STATUS_PROXY_ACTIVE)	# probe is "disabled"
+	{
+		$probe_templateid = create_probe_template($probe_name, 0, 0, 0, 0);
+		$status = HOST_STATUS_NOT_MONITORED;
+	}
+	else
+	{
+		$probe_templateid = create_probe_template($probe_name);
+		$status = HOST_STATUS_MONITORED;
+	}
 
-    if ($probe_status == HOST_STATUS_PROXY_ACTIVE) {
-	$status = HOST_STATUS_NOT_MONITORED;
-    }
+	my $probe_status_templateid = create_probe_status_template($probe_name, $probe_templateid, $root_servers_macros);
 
-    my $proxy_groupid = create_group($probe_name);
+	create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $proxy_groupid
+			},
+			{
+				'groupid'	=> $probes_groupid
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $probe_status_templateid
+			}
+		],
+		'host'		=> $probe_name,
+		'status'	=> $status,
+		'proxy_hostid'	=> $proxyid,
+		'interfaces'	=> [
+			{
+				'type'	=> 1,
+				'main'	=> true,
+				'useip'	=> true,
+				'ip'	=> '127.0.0.1',
+				'dns'	=> '',
+				'port'	=> '10050'
+			}
+		]
+	});
 
-    my $probe_templateid;
+	my $hostid = create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $probes_mon_groupid
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $proxy_mon_templateid
+			}
+		],
+		'host'		=> "$probe_name - mon",
+		'status'	=> $status,
+		'interfaces'	=> [
+			{
+				'type'	=> 1,
+				'main'	=> true,
+				'useip'	=> true,
+				'ip'	=> $proxies->{$proxyid}->{'interface'}->{'ip'},
+				'dns'	=> 'tt',
+				'port'	=> '10050'
+			}
+		]
+	});
 
-    if ($probe_status == HOST_STATUS_PROXY_ACTIVE) {
-	$probe_templateid = create_probe_template($probe_name, 0, 0, 0, 0);
-    }
-    else {
-	$probe_templateid = create_probe_template($probe_name);
-    }
-
-
-    my $probe_status_templateid = create_probe_status_template($probe_name, $probe_templateid, $root_servers_macros);
-
-    create_host({'groups' => [{'groupid' => $proxy_groupid}, {'groupid' => $probes_groupid}],
-                                          'templates' => [{'templateid' => $probe_status_templateid}],
-                                          'host' => $probe_name,
-                                          'status' => $status,
-                                          'proxy_hostid' => $proxyid,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-							    'ip'=> '127.0.0.1',
-							    'dns' => '', 'port' => '10050'}]
-		});
-
-    my $hostid = create_host({'groups' => [{'groupid' => $probes_mon_groupid}],
-                                          'templates' => [{'templateid' => $proxy_mon_templateid}],
-                                          'host' => $probe_name.' - mon',
-                                          'status' => $status,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-                                                            'ip'=> $proxies->{$proxyid}->{'interface'}->{'ip'},
-                                                            'dns' => 'tt', 'port' => '10050'}]
-            		    });
-
-    create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1);
+	create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1);
 
 #  TODO: add the host above
 #	  to more host groups: "TLD Probe Results" and\/or "gTLD Probe Results" and perhaps others
 
-    create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $proxy_groupid}, {'groupid' => $tld_probe_results_groupid}, {'groupid' => $tld_type_probe_results_groupid}],
-                                          'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_templateid}],
-                                          'host' => $OPTS{'tld'}.' '.$probe_name,
-                                          'status' => $status,
-                                          'proxy_hostid' => $proxyid,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
+	create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $tld_groupid
+			},
+			{
+				'groupid'	=> $proxy_groupid
+			},
+			{
+				'groupid'	=> $tld_probe_results_groupid
+			},
+			{
+				'groupid'	=> $tld_type_probe_results_groupid
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $main_templateid
+			},
+			{
+				'templateid'	=> $probe_templateid
+			}
+		],
+		'host'		=> $OPTS{'tld'}.' '.$probe_name,
+		'status'	=> $status,
+		'proxy_hostid'	=> $proxyid,
+		'interfaces'	=> [
+			{
+				'type'	=> 1,
+				'main'	=> true,
+				'useip'	=> true,
+				'ip'	=> '127.0.0.1',
+				'dns'	=> '',
+				'port'	=> '10050'
+			}
+		]
+	});
 }
 
 exit;
