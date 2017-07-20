@@ -352,6 +352,9 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 		'templates'	=> [
 			{
 				'templateid'	=> $probe_status_templateid
+			},
+			{
+				'templateid'	=> APP_ZABBIX_PROXY_TEMPLATEID
 			}
 		],
 		'host'		=> $probe_name,
