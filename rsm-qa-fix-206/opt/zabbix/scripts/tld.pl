@@ -61,7 +61,7 @@ use RSM;
 use TLD_constants qw(:general :templates :groups :value_types :ec :rsm :slv :config :api);
 use TLDs;
 
-sub create_tld_host($$$$);
+sub create_tld_host($$$);
 sub manage_tld_objects($$$$$$);
 sub manage_tld_hosts($$);
 
@@ -313,7 +313,7 @@ $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
 
-$tld_hostid = create_tld_host($OPTS{'tld'}, $tld_groupid, TLDS_GROUPID, TLD_TYPE_GROUPIDS->{$OPTS{'type'}});
+$tld_hostid = create_tld_host($OPTS{'tld'}, $OPTS{'type'}, $tld_groupid);
 
 my $proxy_mon_templateid = create_probe_health_tmpl();
 
@@ -1371,22 +1371,43 @@ sub add_default_actions() {
 
 }
 
-sub create_tld_host($$$$) {
-    my $tld_name = shift;
-    my $tld_groupid = shift;
-    my $tlds_groupid = shift;
-    my $tld_type_groupid = shift;
+sub create_tld_host($$$)
+{
+	my $tld_name = shift;
+	my $tld_type = shift;
+	my $tld_groupid = shift;
 
-    my $tld_hostid = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $tlds_groupid}, {'groupid' => $tld_type_groupid}],
-                              'host' => $tld_name,
-                              'status' => HOST_STATUS_MONITORED,
-                              'interfaces' => [{'type' => INTERFACE_TYPE_AGENT, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
+	my $tld_hostid = create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $tld_groupid
+			},
+			{
+				'groupid'	=> TLDS_GROUPID
+			},
+			{
+				'groupid'	=> TLD_TYPE_GROUPIDS->{$tld_type}
+			}
+		],
+		'host'		=> $tld_name,
+		'status'	=> HOST_STATUS_MONITORED,
+		'interfaces'	=> [
+			{
+				'type'	=> INTERFACE_TYPE_AGENT,
+				'main'	=> true,
+				'useip'	=> true,
+				'ip'	=> '127.0.0.1',
+				'dns'	=> '',
+				'port'	=> '10050'
+			}
+		]
+	});
 
-    pfail $tld_hostid->{'data'} if check_api_error($tld_hostid) eq true;
+	pfail($tld_hostid->{'data'}) if (check_api_error($tld_hostid) eq true);
 
-    create_slv_items($ns_servers, $tld_hostid, $tld_name);
+	create_slv_items($ns_servers, $tld_hostid, $tld_name);
 
-    return $tld_hostid;
+	return $tld_hostid;
 }
 
 # todo phase 1: moved create_probe_health_tmpl() to TLDs.pm to be used by both tld.pl and probes.pl
