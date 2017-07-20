@@ -90,8 +90,6 @@ sub add_probe($$$$$) {
 
     my ($probe, $probe_hostgroup, $probe_host, $probe_host_mon, $probe_tmpl, $probe_tmpl_status);
 
-    my ($result, $probe_tmpl_health);
-
     print "Trying to add '".$probe_name."' probe...\n";
 
     if (is_probe_exist($probe_name)) {
@@ -100,9 +98,9 @@ sub add_probe($$$$$) {
 
     ###### Checking and creating required groups and templates
 
-    print "Getting 'Template Proxy Health' template: ";
-    $probe_tmpl_health = create_probe_health_tmpl();
-    is_not_empty($probe_tmpl_health, true);
+	print("Getting 'Template Proxy Health' template: ");
+	my $probe_tmpl_health = create_probe_health_tmpl();
+	is_not_empty($probe_tmpl_health, true);
 
     ########## Creating new Probe
 
@@ -139,34 +137,72 @@ sub add_probe($$$$$) {
 
     ########## Creating Probe host
 
-    print "Creating '$probe_name' host: ";
-    $probe_host = create_host({'groups' => [{'groupid' => $probe_hostgroup}, {'groupid' => PROBES_GROUPID}],
-                                          'templates' => [{'templateid' => $probe_tmpl_status}, {'templateid' => APP_ZABBIX_PROXY_TEMPLATEID}],
-                                          'host' => $probe_name,
-                                          'status' => HOST_STATUS_MONITORED,
-                                          'proxy_hostid' => $probe,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-                                                            'ip'=> '127.0.0.1',
-                                                            'dns' => '', 'port' => '10050'}]
-                });
+	print("Creating '$probe_name' host: ");
+	$probe_host = create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $probe_hostgroup
+			},
+			{
+				'groupid'	=> PROBES_GROUPID
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $probe_tmpl_status
+			},
+			{
+				'templateid'	=> APP_ZABBIX_PROXY_TEMPLATEID
+			}
+		],
+		'host'		=> $probe_name,
+		'status'	=> HOST_STATUS_MONITORED,
+		'proxy_hostid'	=> $probe,
+		'interfaces'	=> [
+			{
+				'type'	=> 1,
+				'main'	=> true,
+				'useip'	=> true,
+				'ip'	=> '127.0.0.1',
+				'dns'	=> '',
+				'port'	=> '10050'
+			}
+		]
+	});
 
-    is_not_empty($probe_host);
+	is_not_empty($probe_host);
 
     ########## Creating Probe monitoring host
 
-    print "Creating Probe monitoring host: ";
-    $probe_host_mon = create_host({'groups' => [{'groupid' => PROBES_MON_GROUPID}],
-                                          'templates' => [{'templateid' => $probe_tmpl_health}],
-                                          'host' => $probe_name.' - mon',
-                                          'status' => HOST_STATUS_MONITORED,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-                                                            'ip'=> $probe_ip,
-                                                            'dns' => '', 'port' => '10050'}]
-                            });
+	print("Creating Probe monitoring host: ");
+	$probe_host_mon = create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> PROBES_MON_GROUPID
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $probe_tmpl_health
+			}
+		],
+		'host'		=> "$probe_name - mon",
+		'status'	=> HOST_STATUS_MONITORED,
+		'interfaces'	=> [
+			{
+				'type'	=> 1,
+				'main'	=> true,
+				'useip'	=> true,
+				'ip'	=> $probe_ip,
+				'dns'	=> '',
+				'port'	=> '10050'
+			}
+		]
+	});
 
-    is_not_empty($probe_host_mon, true);
+	is_not_empty($probe_host_mon, true);
 
-    create_macro('{$RSM.PROXY_NAME}', $probe_name, $probe_host_mon, true);
+	create_macro('{$RSM.PROXY_NAME}', $probe_name, $probe_host_mon, true);
 
     ########## Creating TLD hosts for the Probe
 
