@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc18
 New features:
 
 Bug fixes:
+....I..PS. [sub-206] fixed "Template App Zabbix Proxy" being unlinked from "<Probe>" hosts when onboarding TLD
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc17
