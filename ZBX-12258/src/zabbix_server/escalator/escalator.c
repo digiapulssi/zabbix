@@ -34,7 +34,7 @@
 
 extern int	CONFIG_ESCALATOR_FORKS;
 
-#define CONFIG_ESCALATOR_FREQUENCY	3
+#define CONFIG_ESCALATOR_FREQUENCY	120
 
 #define ZBX_ESCALATION_SOURCE_DEFAULT	0
 #define ZBX_ESCALATION_SOURCE_ITEM	1
@@ -125,8 +125,7 @@ static int	get_host_permission(zbx_uint64_t userid, zbx_uint64_t hostid)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	result = DBselect("select type from users where userid=" ZBX_FS_UI64,
-			userid);
+	result = DBselect("select type from users where userid=" ZBX_FS_UI64, userid);
 
 	if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
 		user_type = atoi(row[0]);
@@ -1767,7 +1766,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 
 		event = (DB_EVENT *)events.values[index];
 
-		if (EVENT_OBJECT_TRIGGER == event->object && 0 == event->trigger.triggerid)
+		if (EVENT_SOURCE_TRIGGERS == event->source && 0 == event->trigger.triggerid)
 		{
 			error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", event->objectid);
 			goto cancel_warning;
@@ -1784,7 +1783,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 
 			r_event = (DB_EVENT *)events.values[index];
 
-			if (EVENT_OBJECT_TRIGGER == r_event->object && 0 == r_event->trigger.triggerid)
+			if (EVENT_SOURCE_TRIGGERS == event->source && 0 == r_event->trigger.triggerid)
 			{
 				error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", r_event->objectid);
 				goto cancel_warning;

@@ -2131,6 +2131,7 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 				last_eventid = eventid;
 			}
 
+
 			tag = zbx_malloc(NULL, sizeof(zbx_tag_t));
 			tag->tag = zbx_strdup(NULL, row[1]);
 			tag->value = zbx_strdup(NULL, row[2]);
