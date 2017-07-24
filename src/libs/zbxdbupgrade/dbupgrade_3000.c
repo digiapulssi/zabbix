@@ -316,6 +316,300 @@ static int	DBpatch_3000119(void)
 	return add_right(119, 110, 110);
 }
 
+static int	DBpatch_3000120(void)
+{
+	return DBpatch_3000117();
+}
+
+typedef enum
+{
+	OP_MESSAGE
+}
+operation_type_t;
+
+typedef enum
+{
+	OP_MESSAGE_USR
+}
+opmessage_type_t;
+
+typedef union
+{
+	zbx_uint64_t	userid;
+}
+opmessage_data_t;
+
+typedef struct
+{
+	zbx_uint64_t		id;
+	opmessage_type_t	type;
+	opmessage_data_t	data;
+}
+recipient_t;
+
+typedef struct
+{
+#define MAX_RECIPIENTS	1
+
+	int		default_msg;
+	const char	*subject;
+	const char	*message;
+	zbx_uint64_t	mediatypeid;
+	recipient_t	recipients[MAX_RECIPIENTS + 1];
+
+#undef MAX_RECIPIENTS
+}
+opmessage_t;
+
+typedef union
+{
+	opmessage_t	opmessage;
+}
+operation_data_t;
+
+typedef struct
+{
+	zbx_uint64_t		id;
+	operation_type_t	type;
+	operation_data_t	data;
+}
+operation_t;
+
+typedef struct
+{
+	zbx_uint64_t	id;
+	int		conditiontype;
+	int		operator;
+	const char	*value;
+}
+condition_t;
+
+typedef struct
+{
+#define MAX_OPERATIONS	1
+#define MAX_CONDITIONS	4
+
+	zbx_uint64_t	id;
+	const char	*name;
+	int		esc_period;
+	const char	*def_shortdata;
+	const char	*def_longdata;
+	int		recovery_msg;
+	const char	*r_shortdata;
+	const char	*r_longdata;
+	operation_t	operations[MAX_OPERATIONS + 1];
+	condition_t	conditions[MAX_CONDITIONS + 1];
+
+#undef MAX_OPERATIONS
+#undef MAX_CONDITIONS
+}
+action_t;
+
+static int	db_insert_action(const action_t *action)
+{
+	char	*name_esc = NULL, *def_shortdata_esc = NULL, *def_longdata_esc = NULL, *r_shortdata_esc = NULL,
+		*r_longdata_esc = NULL;
+	int	ret;
+
+	name_esc = zbx_db_dyn_escape_string(action->name);
+	def_shortdata_esc = zbx_db_dyn_escape_string(action->def_shortdata);
+	def_longdata_esc = zbx_db_dyn_escape_string(action->def_longdata);
+	r_shortdata_esc = zbx_db_dyn_escape_string(action->r_shortdata);
+	r_longdata_esc = zbx_db_dyn_escape_string(action->r_longdata);
+
+	ret = DBexecute(
+			"insert into actions (actionid,name,esc_period,def_shortdata,def_longdata,"
+				"recovery_msg,r_shortdata,r_longdata)"
+			" values (" ZBX_FS_UI64 ",'%s',%d,'%s','%s',%d,'%s','%s')",
+			action->id, name_esc, action->esc_period, def_shortdata_esc, def_longdata_esc,
+			action->recovery_msg, r_shortdata_esc, r_longdata_esc);
+
+	zbx_free(name_esc);
+	zbx_free(def_shortdata_esc);
+	zbx_free(def_longdata_esc);
+	zbx_free(r_shortdata_esc);
+	zbx_free(r_longdata_esc);
+
+	return ZBX_DB_OK > ret ? FAIL : SUCCEED;
+}
+
+static int	db_insert_opmessage(zbx_uint64_t operationid, const opmessage_t *opmessage)
+{
+	const recipient_t	*recipient;
+	char			*subject_esc = NULL, *message_esc = NULL;
+	int			ret;
+
+	subject_esc = zbx_db_dyn_escape_string(opmessage->subject);
+	message_esc = zbx_db_dyn_escape_string(opmessage->message);
+
+	ret = DBexecute(
+			"insert into opmessage (operationid,default_msg,subject,message,mediatypeid)"
+			" values (" ZBX_FS_UI64 ",%d,'%s','%s'," ZBX_FS_UI64 ")",
+			operationid, opmessage->default_msg, subject_esc, message_esc, opmessage->mediatypeid);
+
+	zbx_free(subject_esc);
+	zbx_free(message_esc);
+
+	if (ZBX_DB_OK > ret)
+		return FAIL;
+
+	for (recipient = opmessage->recipients; 0 != recipient->id; recipient++)
+	{
+		switch (recipient->type)
+		{
+			case OP_MESSAGE_USR:
+				if (ZBX_DB_OK > DBexecute(
+						"insert into opmessage_usr (opmessage_usrid,operationid,userid)"
+						" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ")",
+						recipient->id, operationid, recipient->data.userid))
+				{
+					return FAIL;
+				}
+				break;
+			default:
+				THIS_SHOULD_NEVER_HAPPEN;
+				return FAIL;
+		}
+	}
+
+	return SUCCEED;
+}
+
+static int	db_insert_condition(zbx_uint64_t actionid, const condition_t *condition)
+{
+	char	*value_esc = NULL;
+	int	ret;
+
+	value_esc = zbx_db_dyn_escape_string(condition->value);
+
+	ret = DBexecute(
+			"insert into conditions (conditionid,actionid,conditiontype,operator,value)"
+			" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",%d,%d,'%s')",
+			condition->id, actionid, condition->conditiontype, condition->operator, value_esc);
+
+	zbx_free(value_esc);
+
+	return ZBX_DB_OK > ret ? FAIL : SUCCEED;
+}
+
+static int	add_actions(const action_t *actions)
+{
+	const action_t		*action;
+	const operation_t	*operation;
+	const condition_t	*condition;
+
+	for (action = actions; 0 != action->id; action++)
+	{
+		if (SUCCEED != db_insert_action(action))
+			return FAIL;
+
+		for (operation = action->operations; 0 != operation->id; operation++)
+		{
+			if (ZBX_DB_OK > DBexecute(
+					"insert into operations (operationid,actionid)"
+					" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ")",
+					operation->id, action->id))
+			{
+				return FAIL;
+			}
+
+			switch (operation->type)
+			{
+				case OP_MESSAGE:
+					if (SUCCEED != db_insert_opmessage(operation->id, &operation->data.opmessage))
+						return FAIL;
+					break;
+				default:
+					THIS_SHOULD_NEVER_HAPPEN;
+					return FAIL;
+			}
+		}
+
+		for (condition = action->conditions; 0 != condition->id; condition++)
+		{
+			if (SUCCEED != db_insert_condition(action->id, condition))
+				return FAIL;
+		}
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"delete from ids"
+			" where table_name in ('actions','operations','opmessage','opmessage_usr','conditions')"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static const action_t	actions[] = {
+	{110,	"Probes-Mon",		3600,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
+		1,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
+		{
+			{110,	OP_MESSAGE,	{.opmessage = {1,	"",	"",	10,	{
+					{110,	OP_MESSAGE_USR,	{.userid = 100}},
+					{0}
+			}}}},
+			{0}
+		},
+		{
+			{110,	16,	7,	""},
+			{111,	5,	0,	"1"},
+			{112,	4,	5,	"2"},
+			{113,	0,	0,	"130"},
+			{0}
+		}
+	},
+	{120,	"Central-Server",	3600,
+		"system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
+		1,
+		"system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
+		{
+			{120,	OP_MESSAGE,	{.opmessage = {1,	"",	"",	10,	{
+					{120,	OP_MESSAGE_USR,	{.userid = 100}},
+					{0}
+			}}}},
+			{0}
+		},
+		{
+			{120,	16,	7,	""},
+			{121,	5,	0,	"1"},
+			{122,	4,	5,	"2"},
+			{123,	0,	0,	"110"},
+			{0}
+		}
+	},
+	{130,	"TLDs",			3600,
+		"tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",		"{EVENT.DATE} {EVENT.TIME} UTC",
+		1,
+		"tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",		"{EVENT.DATE} {EVENT.TIME} UTC",
+		{
+			{130,	OP_MESSAGE,	{.opmessage = {1,	"",	"",	10,	{
+					{130,	OP_MESSAGE_USR,	{.userid = 100}},
+					{0}
+			}}}},
+			{0}
+		},
+		{
+			{130,	16,	7,	""},
+			{131,	5,	0,	"1"},
+			{132,	0,	0,	"140"},
+			{0}
+		}
+	},
+	{0}
+};
+
+static int	DBpatch_3000121(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	return add_actions(actions);
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -343,5 +637,7 @@ DBPATCH_ADD(3000116, 0, 0)	/* fixed trigger expression for minimum online IPv6 e
 DBPATCH_ADD(3000117, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts */
 DBPATCH_ADD(3000118, 0, 0)	/* read permissions on "Probes - Mon" host group for "Technical services users" */
 DBPATCH_ADD(3000119, 0, 0)	/* read permissions on "Mon" host group for "Technical services users" */
+DBPATCH_ADD(3000120, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts (again) */
+DBPATCH_ADD(3000121, 0, 0)	/* new actions: "Probes-Mon", "Central-Server", "TLDs" */
 
 DBPATCH_END()

@@ -11,12 +11,8 @@ use warnings;
 use Getopt::Long;
 use Data::Dumper;
 use RSM;
-use TLD_constants qw(:general :templates :api :config);
+use TLD_constants qw(:general :templates :groups :api :config);
 use TLDs;
-
-use constant HOST_STATUS_NOT_MONITORED => 1;
-
-use constant HOST_STATUS_PROXY_ACTIVE => 5;
 
 use constant DEFAULT_PROBE_PORT => 10051;
 
@@ -92,9 +88,7 @@ sub add_probe($$$$$) {
     my $psk_identity = shift;
     my $psk = shift;
 
-    my ($probe, $probe_hostgroup, $probe_host, $probe_host_mon, $probe_tmpl, $probe_tmpl_status);
-
-    my ($result, $probes_groupid, $probes_mon_groupid, $probe_tmpl_health);
+    my ($probe, $probe_host, $probe_host_mon, $probe_tmpl);
 
     print "Trying to add '".$probe_name."' probe...\n";
 
@@ -104,17 +98,9 @@ sub add_probe($$$$$) {
 
     ###### Checking and creating required groups and templates
 
-    print "Getting 'Probes' host group: ";
-    $probes_groupid = create_group('Probes');
-    is_not_empty($probes_groupid, true);
-
-    print "Getting 'Probes - Mon' host group: ";
-    $probes_mon_groupid = create_group('Probes - Mon');
-    is_not_empty($probes_mon_groupid, true);
-
-    print "Getting 'Template Proxy Health' template: ";
-    $probe_tmpl_health = create_probe_health_tmpl();
-    is_not_empty($probe_tmpl_health, true);
+	print("Getting 'Template Proxy Health' template: ");
+	my $probe_tmpl_health = create_probe_health_tmpl();
+	is_not_empty($probe_tmpl_health, true);
 
     ########## Creating new Probe
 
@@ -128,9 +114,9 @@ sub add_probe($$$$$) {
 
     print "Creating '$probe_name' host group: ";
 
-    $probe_hostgroup = create_group($probe_name);
+    my $probe_groupid = create_group($probe_name);
 
-    is_not_empty($probe_hostgroup, true);
+    is_not_empty($probe_groupid, true);
 
     ########## Creating Probe template
 
@@ -145,72 +131,125 @@ sub add_probe($$$$$) {
     print "Creating '$probe_name' probe status template: ";
 
     my $root_servers_macros = update_root_servers();
-    $probe_tmpl_status = create_probe_status_template($probe_name, $probe_tmpl, $root_servers_macros);
+    my $probe_status_templateid = create_probe_status_template($probe_name, $probe_tmpl, $root_servers_macros);
 
-    is_not_empty($probe_tmpl_status, true);
+    is_not_empty($probe_status_templateid, true);
 
     ########## Creating Probe host
 
-    print "Creating '$probe_name' host: ";
-    $probe_host = create_host({'groups' => [{'groupid' => $probe_hostgroup}, {'groupid' => $probes_groupid}],
-                                          'templates' => [{'templateid' => $probe_tmpl_status}, {'templateid' => APP_ZABBIX_PROXY_TEMPLATEID}],
-                                          'host' => $probe_name,
-                                          'status' => HOST_STATUS_MONITORED,
-                                          'proxy_hostid' => $probe,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-                                                            'ip'=> '127.0.0.1',
-                                                            'dns' => '', 'port' => '10050'}]
-                });
+	print("Creating '$probe_name' host: ");
+	$probe_host = create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $probe_groupid
+			},
+			{
+				'groupid'	=> PROBES_GROUPID
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $probe_status_templateid
+			},
+			{
+				'templateid'	=> APP_ZABBIX_PROXY_TEMPLATEID
+			}
+		],
+		'host'		=> $probe_name,
+		'status'	=> HOST_STATUS_MONITORED,
+		'proxy_hostid'	=> $probe,
+		'interfaces'	=> [
+			DEFAULT_MAIN_INTERFACE
+		]
+	});
 
-    is_not_empty($probe_host);
+	is_not_empty($probe_host);
 
     ########## Creating Probe monitoring host
 
-    print "Creating Probe monitoring host: ";
-    $probe_host_mon = create_host({'groups' => [{'groupid' => $probes_mon_groupid}],
-                                          'templates' => [{'templateid' => $probe_tmpl_health}],
-                                          'host' => $probe_name.' - mon',
-                                          'status' => HOST_STATUS_MONITORED,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-                                                            'ip'=> $probe_ip,
-                                                            'dns' => '', 'port' => '10050'}]
-                            });
+	print("Creating Probe monitoring host: ");
+	$probe_host_mon = create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> PROBES_MON_GROUPID
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $probe_tmpl_health
+			}
+		],
+		'host'		=> "$probe_name - mon",
+		'status'	=> HOST_STATUS_MONITORED,
+		'interfaces'	=> [
+			{
+				'type'	=> INTERFACE_TYPE_AGENT,
+				'main'	=> true,
+				'useip'	=> true,
+				'ip'	=> $probe_ip,
+				'dns'	=> '',
+				'port'	=> '10050'
+			}
+		]
+	});
 
-    is_not_empty($probe_host_mon, true);
+	is_not_empty($probe_host_mon, true);
 
-    create_macro('{$RSM.PROXY_NAME}', $probe_name, $probe_host_mon, true);
+	create_macro('{$RSM.PROXY_NAME}', $probe_name, $probe_host_mon, true);
 
     ########## Creating TLD hosts for the Probe
 
-    my $tld_list = get_host_group('TLDs', true, true);
+	my $tld_list = get_host_group('TLDs', true, true);
 
-    my $tld_probe_results_groupid = create_group('TLD Probe results');
+	print("Creating TLD hosts for the Probe...\n");
 
-    print "Creating TLD hosts for the Probe...\n";
+	foreach my $tld (@{$tld_list->{'hosts'}})
+	{
+		my $tld_name = $tld->{'name'};
+		my $tld_groupid = create_group("TLD $tld_name");
+		my $tld_type = $tld->{'type'};
 
-    foreach my $tld (@{$tld_list->{'hosts'}}) {
-	my $tld_name = $tld->{'name'};
-	my $tld_groupid = create_group('TLD '.$tld_name);
-	my $tld_type = $tld->{'type'};
-	my $tld_type_probe_results_groupid = create_group($tld_type.' Probe results');
+		my $main_templateid = create_template("Template $tld_name");
 
-	my $main_templateid = create_template('Template '.$tld_name);
+		print("Creating '$tld_name $probe_name' host for '$tld_name' TLD: ");
 
-	print "Creating '$tld_name $probe_name' host for '$tld_name' TLD: ";
+		my $tld_host = create_host({
+			'groups'	=> [
+				{
+					'groupid'	=> $tld_groupid
+				},
+				{
+					'groupid'	=> $probe_groupid
+				},
+				{
+					'groupid'	=> TLD_PROBE_RESULTS_GROUPID
+				},
+				{
+					'groupid'	=> TLD_TYPE_PROBE_RESULTS_GROUPIDS->{$tld_type}
+				}
+			],
+			'templates'	=> [
+				{
+					'templateid'	=> $main_templateid
+				},
+				{
+					'templateid'	=> $probe_tmpl
+				}
+			],
+			'host'		=> "$tld_name $probe_name",
+			'proxy_hostid'	=> $probe,
+			'status'	=> HOST_STATUS_MONITORED,
+			'interfaces'	=> [
+				DEFAULT_MAIN_INTERFACE
+			]
+		});
 
-	my $tld_host = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $probe_hostgroup}, {'groupid' => $tld_probe_results_groupid}, {'groupid' => $tld_type_probe_results_groupid}],
-                                          'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_tmpl}],
-                                          'host' => $tld_name.' '.$probe_name,
-                                          'proxy_hostid' => $probe,
-                                          'status' => HOST_STATUS_MONITORED,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
-
-	is_not_empty($tld_host, false);
-    }
+		is_not_empty($tld_host, false);
+	}
 
     ##########
 
-    print "The probe has been added successfully\n";
+	print("The probe has been added successfully\n");
 }
 
 sub delete_probe($) {
