@@ -73,20 +73,7 @@ $data = [];
 /*
  * Filter
  */
-if (hasRequest('filter_set')) {
-	CProfile::update('web.rsm.rollingweekstatus.filter_search', getRequest('filter_search'), PROFILE_TYPE_STR);
-	CProfile::update('web.rsm.rollingweekstatus.filter_dns', getRequest('filter_dns', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_dnssec', getRequest('filter_dnssec', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_rdds', getRequest('filter_rdds', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_epp', getRequest('filter_epp', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_slv', getRequest('filter_slv', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_status', getRequest('filter_status', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_gtld_group', getRequest('filter_gtld_group', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_cctld_group', getRequest('filter_cctld_group', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_othertld_group', getRequest('filter_othertld_group', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_test_group', getRequest('filter_test_group', 0), PROFILE_TYPE_INT);
-}
-elseif (hasRequest('filter_rst')) {
+if (hasRequest('filter_rst')) {
 	DBStart();
 	CProfile::delete('web.rsm.rollingweekstatus.filter_search');
 	CProfile::delete('web.rsm.rollingweekstatus.filter_dns');
@@ -102,17 +89,32 @@ elseif (hasRequest('filter_rst')) {
 	DBend();
 }
 
-$data['filter_search'] = CProfile::get('web.rsm.rollingweekstatus.filter_search');
-$data['filter_dns'] = CProfile::get('web.rsm.rollingweekstatus.filter_dns');
-$data['filter_dnssec'] = CProfile::get('web.rsm.rollingweekstatus.filter_dnssec');
-$data['filter_rdds'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdds');
-$data['filter_epp'] = CProfile::get('web.rsm.rollingweekstatus.filter_epp');
-$data['filter_slv'] = CProfile::get('web.rsm.rollingweekstatus.filter_slv', 0);
-$data['filter_status'] = CProfile::get('web.rsm.rollingweekstatus.filter_status');
-$data['filter_gtld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_gtld_group');
-$data['filter_cctld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_cctld_group');
-$data['filter_othertld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_othertld_group');
-$data['filter_test_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_test_group');
+if (hasRequest('filter_set')) {
+	$data['filter_search'] = getRequest('filter_search');
+	$data['filter_dns'] = getRequest('filter_dns', 0);
+	$data['filter_dnssec'] = getRequest('filter_dnssec', 0);
+	$data['filter_rdds'] = getRequest('filter_rdds', 0);
+	$data['filter_epp'] = getRequest('filter_epp', 0);
+	$data['filter_slv'] = getRequest('filter_slv', 0);
+	$data['filter_status'] = getRequest('filter_status', 0);
+	$data['filter_gtld_group'] = getRequest('filter_gtld_group', 0);
+	$data['filter_cctld_group'] = getRequest('filter_cctld_group', 0);
+	$data['filter_othertld_group'] = getRequest('filter_othertld_group', 0);
+	$data['filter_test_group'] = getRequest('filter_test_group', 0);
+}
+else {
+	$data['filter_search'] = CProfile::get('web.rsm.rollingweekstatus.filter_search');
+	$data['filter_dns'] = CProfile::get('web.rsm.rollingweekstatus.filter_dns');
+	$data['filter_dnssec'] = CProfile::get('web.rsm.rollingweekstatus.filter_dnssec');
+	$data['filter_rdds'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdds');
+	$data['filter_epp'] = CProfile::get('web.rsm.rollingweekstatus.filter_epp');
+	$data['filter_slv'] = CProfile::get('web.rsm.rollingweekstatus.filter_slv', 0);
+	$data['filter_status'] = CProfile::get('web.rsm.rollingweekstatus.filter_status');
+	$data['filter_gtld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_gtld_group');
+	$data['filter_cctld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_cctld_group');
+	$data['filter_othertld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_othertld_group');
+	$data['filter_test_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_test_group');
+}
 
 $macro = API::UserMacro()->get(array(
 	'globalmacro' => true,
@@ -616,6 +618,20 @@ if ($data['filter_status']) {
 
 if (!$no_history) {
 	$data['paging'] = getPagingLine($data['tld'], ZBX_SORT_UP, new CUrl());
+}
+
+if (hasRequest('filter_set')) {
+	CProfile::update('web.rsm.rollingweekstatus.filter_search', getRequest('filter_search'), PROFILE_TYPE_STR);
+	CProfile::update('web.rsm.rollingweekstatus.filter_dns', getRequest('filter_dns', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_dnssec', getRequest('filter_dnssec', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_rdds', getRequest('filter_rdds', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_epp', getRequest('filter_epp', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_slv', getRequest('filter_slv', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_status', getRequest('filter_status', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_gtld_group', getRequest('filter_gtld_group', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_cctld_group', getRequest('filter_cctld_group', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_othertld_group', getRequest('filter_othertld_group', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_test_group', getRequest('filter_test_group', 0), PROFILE_TYPE_INT);
 }
 
 $rsmView = new CView('rsm.rollingweekstatus.list', $data);
