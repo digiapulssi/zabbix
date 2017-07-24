@@ -384,7 +384,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 				'main'	=> true,
 				'useip'	=> true,
 				'ip'	=> $proxies->{$proxyid}->{'interface'}->{'ip'},
-				'dns'	=> 'tt',
+				'dns'	=> '',
 				'port'	=> '10050'
 			}
 		]
