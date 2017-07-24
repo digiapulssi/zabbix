@@ -316,6 +316,11 @@ static int	DBpatch_3000119(void)
 	return add_right(119, 110, 110);
 }
 
+static int	DBpatch_3000120(void)
+{
+	return DBpatch_3000117();
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -343,5 +348,6 @@ DBPATCH_ADD(3000116, 0, 0)	/* fixed trigger expression for minimum online IPv6 e
 DBPATCH_ADD(3000117, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts */
 DBPATCH_ADD(3000118, 0, 0)	/* read permissions on "Probes - Mon" host group for "Technical services users" */
 DBPATCH_ADD(3000119, 0, 0)	/* read permissions on "Mon" host group for "Technical services users" */
+DBPATCH_ADD(3000120, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts (again) */
 
 DBPATCH_END()
