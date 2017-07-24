@@ -1,0 +1,11 @@
+/var/log/zabbix/zabbix_COMPONENT.log {
+	daily
+	rotate 2
+	size=64M
+	compress
+	delaycompress
+	missingok
+	notifempty
+	copytruncate
+	create 0664 zabbix zabbix
+}
