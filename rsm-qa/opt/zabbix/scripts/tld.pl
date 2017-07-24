@@ -58,10 +58,10 @@ use Digest::MD5 qw(md5_hex);
 use Expect;
 use Data::Dumper;
 use RSM;
-use TLD_constants qw(:general :templates :value_types :ec :rsm :slv :config :api);
+use TLD_constants qw(:general :templates :groups :value_types :ec :slv :config :api);
 use TLDs;
 
-sub create_tld_host($$$$);
+sub create_tld_host($$$);
 sub manage_tld_objects($$$$$$);
 sub manage_tld_hosts($$);
 
@@ -74,11 +74,9 @@ my $trigger_rollweek_thresholds = rsm_trigger_rollweek_thresholds;
 
 my $cfg_global_macros = cfg_global_macros;
 
-my ($rsm_groupid, $rsm_hostid);
-
 my ($ns_servers, $root_servers_macros);
 
-my ($main_templateid, $tld_groupid, $tld_type_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid, $tlds_groupid, $tld_hostid, $probes_groupid, $probes_mon_groupid, $proxy_mon_templateid);
+my ($main_templateid, $tld_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid);
 
 my $config = get_rsm_config();
 
@@ -313,86 +311,120 @@ $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
 
-$tlds_groupid = create_group('TLDs');
+create_tld_host($OPTS{'tld'}, $OPTS{'type'}, $tld_groupid);
 
-pfail $tlds_groupid->{'data'} if check_api_error($tlds_groupid) eq true;
-
-$tld_type_groupid = create_group($OPTS{'type'});
-
-pfail $tld_type_groupid->{'data'} if check_api_error($tld_type_groupid) eq true;
-
-$tld_hostid = create_tld_host($OPTS{'tld'}, $tld_groupid, $tlds_groupid, $tld_type_groupid);
-
-$probes_groupid = create_group('Probes');
-
-pfail $probes_groupid->{'data'} if check_api_error($probes_groupid) eq true;
-
-$probes_mon_groupid = create_group('Probes - Mon');
-
-pfail $probes_mon_groupid->{'data'} if check_api_error($probes_mon_groupid) eq true;
-
-$proxy_mon_templateid = create_probe_health_tmpl();
+my $proxy_mon_templateid = create_probe_health_tmpl();
 
 ## Creating TLD hosts for each probe ##
 
-foreach my $proxyid (sort keys %{$proxies}) {
-    my $probe_name = $proxies->{$proxyid}->{'host'};
+foreach my $proxyid (sort(keys(%{$proxies})))
+{
+	my $probe_name = $proxies->{$proxyid}->{'host'};
 
-    my $status = HOST_STATUS_MONITORED;
+	print("$proxyid\n$probe_name\n");
 
-    print $proxyid."\n";
-    print $proxies->{$proxyid}->{'host'}."\n";
+	my $probe_groupid = create_group($probe_name);
+	my $probe_templateid;
+	my $status;
 
-    my $probe_status = $proxies->{$proxyid}->{'status'};
+	if ($proxies->{$proxyid}->{'status'} == HOST_STATUS_PROXY_ACTIVE)	# probe is "disabled"
+	{
+		$probe_templateid = create_probe_template($probe_name, 0, 0, 0, 0);
+		$status = HOST_STATUS_NOT_MONITORED;
+	}
+	else
+	{
+		$probe_templateid = create_probe_template($probe_name);
+		$status = HOST_STATUS_MONITORED;
+	}
 
-    if ($probe_status == HOST_STATUS_PROXY_ACTIVE) {
-	$status = HOST_STATUS_NOT_MONITORED;
-    }
+	my $probe_status_templateid = create_probe_status_template($probe_name, $probe_templateid, $root_servers_macros);
 
-    my $proxy_groupid = create_group($probe_name);
+	create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $probe_groupid
+			},
+			{
+				'groupid'	=> PROBES_GROUPID
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $probe_status_templateid
+			},
+			{
+				'templateid'	=> APP_ZABBIX_PROXY_TEMPLATEID
+			}
+		],
+		'host'		=> $probe_name,
+		'status'	=> $status,
+		'proxy_hostid'	=> $proxyid,
+		'interfaces'	=> [
+			DEFAULT_MAIN_INTERFACE
+		]
+	});
 
-    my $probe_templateid;
+	my $hostid = create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> PROBES_MON_GROUPID
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $proxy_mon_templateid
+			}
+		],
+		'host'		=> "$probe_name - mon",
+		'status'	=> $status,
+		'interfaces'	=> [
+			{
+				'type'	=> INTERFACE_TYPE_AGENT,
+				'main'	=> true,
+				'useip'	=> true,
+				'ip'	=> $proxies->{$proxyid}->{'interface'}->{'ip'},
+				'dns'	=> '',
+				'port'	=> '10050'
+			}
+		]
+	});
 
-    if ($probe_status == HOST_STATUS_PROXY_ACTIVE) {
-	$probe_templateid = create_probe_template($probe_name, 0, 0, 0, 0);
-    }
-    else {
-	$probe_templateid = create_probe_template($probe_name);
-    }
-
-
-    my $probe_status_templateid = create_probe_status_template($probe_name, $probe_templateid, $root_servers_macros);
-
-    create_host({'groups' => [{'groupid' => $proxy_groupid}, {'groupid' => $probes_groupid}],
-                                          'templates' => [{'templateid' => $probe_status_templateid}],
-                                          'host' => $probe_name,
-                                          'status' => $status,
-                                          'proxy_hostid' => $proxyid,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-							    'ip'=> '127.0.0.1',
-							    'dns' => '', 'port' => '10050'}]
-		});
-
-    my $hostid = create_host({'groups' => [{'groupid' => $probes_mon_groupid}],
-                                          'templates' => [{'templateid' => $proxy_mon_templateid}],
-                                          'host' => $probe_name.' - mon',
-                                          'status' => $status,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true,
-                                                            'ip'=> $proxies->{$proxyid}->{'interface'}->{'ip'},
-                                                            'dns' => 'tt', 'port' => '10050'}]
-            		    });
-
-    create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1);
+	create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1);
 
 #  TODO: add the host above
 #	  to more host groups: "TLD Probe Results" and\/or "gTLD Probe Results" and perhaps others
 
-    create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $proxy_groupid}, {'groupid' => $tld_probe_results_groupid}, {'groupid' => $tld_type_probe_results_groupid}],
-                                          'templates' => [{'templateid' => $main_templateid}, {'templateid' => $probe_templateid}],
-                                          'host' => $OPTS{'tld'}.' '.$probe_name,
-                                          'status' => $status,
-                                          'proxy_hostid' => $proxyid,
-                                          'interfaces' => [{'type' => 1, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
+	create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $tld_groupid
+			},
+			{
+				'groupid'	=> $probe_groupid
+			},
+			{
+				'groupid'	=> $tld_probe_results_groupid
+			},
+			{
+				'groupid'	=> $tld_type_probe_results_groupid
+			}
+		],
+		'templates'	=> [
+			{
+				'templateid'	=> $main_templateid
+			},
+			{
+				'templateid'	=> $probe_templateid
+			}
+		],
+		'host'		=> $OPTS{'tld'}.' '.$probe_name,
+		'status'	=> $status,
+		'proxy_hostid'	=> $proxyid,
+		'interfaces'	=> [
+			DEFAULT_MAIN_INTERFACE
+		]
+	});
 }
 
 exit;
@@ -1326,22 +1358,34 @@ sub add_default_actions() {
 
 }
 
-sub create_tld_host($$$$) {
-    my $tld_name = shift;
-    my $tld_groupid = shift;
-    my $tlds_groupid = shift;
-    my $tld_type_groupid = shift;
+sub create_tld_host($$$)
+{
+	my $tld_name = shift;
+	my $tld_type = shift;
+	my $tld_groupid = shift;
 
-    my $tld_hostid = create_host({'groups' => [{'groupid' => $tld_groupid}, {'groupid' => $tlds_groupid}, {'groupid' => $tld_type_groupid}],
-                              'host' => $tld_name,
-                              'status' => HOST_STATUS_MONITORED,
-                              'interfaces' => [{'type' => INTERFACE_TYPE_AGENT, 'main' => true, 'useip' => true, 'ip'=> '127.0.0.1', 'dns' => '', 'port' => '10050'}]});
+	my $tld_hostid = create_host({
+		'groups'	=> [
+			{
+				'groupid'	=> $tld_groupid
+			},
+			{
+				'groupid'	=> TLDS_GROUPID
+			},
+			{
+				'groupid'	=> TLD_TYPE_GROUPIDS->{$tld_type}
+			}
+		],
+		'host'		=> $tld_name,
+		'status'	=> HOST_STATUS_MONITORED,
+		'interfaces'	=> [
+			DEFAULT_MAIN_INTERFACE
+		]
+	});
 
-    pfail $tld_hostid->{'data'} if check_api_error($tld_hostid) eq true;
+	pfail($tld_hostid->{'data'}) if (check_api_error($tld_hostid) eq true);
 
-    create_slv_items($ns_servers, $tld_hostid, $tld_name);
-
-    return $tld_hostid;
+	create_slv_items($ns_servers, $tld_hostid, $tld_name);
 }
 
 # todo phase 1: moved create_probe_health_tmpl() to TLDs.pm to be used by both tld.pl and probes.pl
