@@ -813,6 +813,20 @@ static void	DCmass_update_trends(const ZBX_DC_HISTORY *history, int history_num,
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
+static void	DBmass_update_trends(const ZBX_DC_TREND *trends, int trends_num,
+		zbx_vector_uint64_pair_t *trends_diff)
+{
+	ZBX_DC_TREND	*trends_tmp;
+
+	trends_tmp = zbx_malloc(NULL, trends_num * sizeof(ZBX_DC_TREND));
+	memcpy(trends_tmp, trends, trends_num * sizeof(ZBX_DC_TREND));
+
+	while (0 < trends_num)
+		DBflush_trends(trends_tmp, &trends_num, trends_diff);
+
+	zbx_free(trends_tmp);
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DCsync_trends                                                    *
@@ -2308,13 +2322,13 @@ int	DCsync_history(int sync_type, int *total_num)
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
+			int		trends_num = 0;
+			ZBX_DC_TREND	*trends = NULL;
+
 			ret = ZBX_DB_OK;
 
 			do
 			{
-				int		trends_num = 0;
-				ZBX_DC_TREND	*trends = NULL;
-
 				DBbegin();
 
 				DBmass_update_items(history, history_num, &delta_history, &state_diff);
@@ -2327,12 +2341,10 @@ int	DCsync_history(int sync_type, int *total_num)
 
 				DBmass_update_triggers(history, history_num, &trigger_diff);
 
-				DCmass_update_trends(history, history_num, &trends, &trends_num);
+				if (ZBX_DB_OK == ret)
+					DCmass_update_trends(history, history_num, &trends, &trends_num);
 
-				while (0 < trends_num)
-					DBflush_trends(trends, &trends_num, &trends_diff);
-
-				zbx_free(trends);
+				DBmass_update_trends(trends, trends_num, &trends_diff);
 
 				/* processing of events, generated in functions: */
 				/* DBmass_update_items() */
@@ -2362,6 +2374,7 @@ int	DCsync_history(int sync_type, int *total_num)
 			while (ZBX_DB_DOWN == ret);
 
 			DCconfig_unlock_triggers(&triggerids);
+			zbx_free(trends);
 		}
 		else
 		{
