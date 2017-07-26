@@ -96,9 +96,9 @@ while ($period > 0)
 			next;
 		}
 
-		my $values_ref = get_values_by_items($items_ref, $from, $till);
+		my $values_ref = __get_values_by_items($items_ref, $from, $till);
 
-		my $probes_with_results = get_probes_count($items_ref, $values_ref);
+		my $probes_with_results = __probes_with_results($items_ref, $values_ref);
 		if ($probes_with_results < $cfg_minonline)
 		{
 			# todo phase 1: fix typo "reults -> results" here and in all other files
@@ -129,7 +129,7 @@ while ($period > 0)
 
 slv_exit(SUCCESS);
 
-sub get_values_by_items
+sub __get_values_by_items
 {
 	my $items_ref = shift;
 	my $from = shift;
@@ -153,24 +153,15 @@ sub get_values_by_items
 	return \@values;
 }
 
-sub get_probes_count
+# map received values to the number of Probes with results
+sub __probes_with_results
 {
-	my $items_ref = shift;
-	my $values_ref = shift;
+	my $items_ref = shift;	# array ref of hashes {'itemid', 'hostid'}
+	my $values_ref = shift;	# array ref of arrays [itemid, value]
 
-	my @hostids;
-	foreach my $value_ref (@$values_ref)
-	{
-		foreach my $item_ref (@$items_ref)
-		{
-			if ($value_ref->[0] == $item_ref->{'itemid'})
-			{
-				my $hostid = $item_ref->{'hostid'};
-				push(@hostids, $hostid) unless (grep(/\b$hostid\b/, @hostids));
-				last;
-			}
-		}
-	}
+	my %itemids = map {$_->[0] => 1} (@{$values_ref});
+	my %hostids;
+	map {$hostids{$_->{'hostid'}} = 1 if $itemids{$_->{'itemid'}}} (@{$items_ref});
 
-	return scalar(@hostids);
+	return scalar(keys(%hostids));
 }
