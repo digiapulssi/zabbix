@@ -1498,9 +1498,10 @@ sub process_slv_avail
 	}
 
 	my $probes_with_positive = 0;
-	foreach my $itemid (keys(%$values_ref))
+
+	while (my ($itemid, $values) = each(%{$values_ref}))
 	{
-		my $result = $check_value_ref->($values_ref->{$itemid});
+		my $result = $check_value_ref->($values);
 
 		$probes_with_positive++ if (SUCCESS == $result);
 
@@ -1514,7 +1515,7 @@ sub process_slv_avail
 			}
 		}
 
-		dbg("i:$itemid (h:$hostid): ", (SUCCESS == $result ? "up" : "down"), " (values: ", join(', ', @{$values_ref->{$itemid}}), ")");
+		dbg("i:$itemid (h:$hostid): ", (SUCCESS == $result ? "up" : "down"), " (values: ", join(', ', @{$values}), ")");
 	}
 
 	my $result = DOWN;
