@@ -379,16 +379,16 @@ static void	DCupdate_trends(zbx_vector_uint64_pair_t *trends_diff)
 
 /******************************************************************************
  *                                                                            *
- * Function: DCflush_trends                                                   *
+ * Function: DBflush_trends                                                   *
  *                                                                            *
  * Purpose: flush trend to the database                                       *
  *                                                                            *
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static void	DCflush_trends(ZBX_DC_TREND *trends, int *trends_num, zbx_vector_uint64_pair_t *trends_diff)
+static void	DBflush_trends(ZBX_DC_TREND *trends, int *trends_num, zbx_vector_uint64_pair_t *trends_diff)
 {
-	const char	*__function_name = "DCflush_trends";
+	const char	*__function_name = "DBflush_trends";
 	DB_RESULT	result;
 	DB_ROW		row;
 	size_t		sql_offset;
@@ -756,7 +756,7 @@ static void	DCadd_trend(const ZBX_DC_HISTORY *history, ZBX_DC_TREND **trends, in
 
 /******************************************************************************
  *                                                                            *
- * Function: DBmass_update_trends                                             *
+ * Function: DCmass_update_trends                                             *
  *                                                                            *
  * Parameters: history     - array of history data                            *
  *             history_num - number of history structures                     *
@@ -764,13 +764,12 @@ static void	DCadd_trend(const ZBX_DC_HISTORY *history, ZBX_DC_TREND **trends, in
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static void	DBmass_update_trends(const ZBX_DC_HISTORY *history, int history_num,
-		zbx_vector_uint64_pair_t *trends_diff)
+static void	DCmass_update_trends(const ZBX_DC_HISTORY *history, int history_num, ZBX_DC_TREND **trends,
+		int *trends_num)
 {
-	const char	*__function_name = "DBmass_update_trends";
-	ZBX_DC_TREND	*trends = NULL;
+	const char	*__function_name = "DCmass_update_trends";
 	zbx_timespec_t	ts;
-	int		trends_alloc = 0, trends_num = 0, i, hour, seconds;
+	int		trends_alloc = 0, i, hour, seconds;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -787,7 +786,7 @@ static void	DBmass_update_trends(const ZBX_DC_HISTORY *history, int history_num,
 		if (0 != (ZBX_DC_FLAGS_NOT_FOR_TRENDS & h->flags))
 			continue;
 
-		DCadd_trend(h, &trends, &trends_alloc, &trends_num);
+		DCadd_trend(h, trends, &trends_alloc, trends_num);
 	}
 
 	if (cache->trends_last_cleanup_hour < hour && ZBX_TRENDS_CLEANUP_TIME < seconds)
@@ -801,7 +800,7 @@ static void	DBmass_update_trends(const ZBX_DC_HISTORY *history, int history_num,
 		{
 			if (trend->clock != hour)
 			{
-				DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
+				DCflush_trend(trend, trends, &trends_alloc, trends_num);
 				zbx_hashset_iter_remove(&iter);
 			}
 		}
@@ -810,11 +809,6 @@ static void	DBmass_update_trends(const ZBX_DC_HISTORY *history, int history_num,
 	}
 
 	UNLOCK_TRENDS;
-
-	while (0 < trends_num)
-		DCflush_trends(trends, &trends_num, trends_diff);
-
-	zbx_free(trends);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -851,7 +845,7 @@ static void	DCsync_trends(void)
 	DBbegin();
 
 	while (trends_num > 0)
-		DCflush_trends(trends, &trends_num, NULL);
+		DBflush_trends(trends, &trends_num, NULL);
 
 	DBcommit();
 
@@ -2318,6 +2312,9 @@ int	DCsync_history(int sync_type, int *total_num)
 
 			do
 			{
+				int		trends_num = 0;
+				ZBX_DC_TREND	*trends = NULL;
+
 				DBbegin();
 
 				DBmass_update_items(history, history_num, &delta_history, &state_diff);
@@ -2329,7 +2326,13 @@ int	DCsync_history(int sync_type, int *total_num)
 					DCmass_add_history(history, history_num);
 
 				DBmass_update_triggers(history, history_num, &trigger_diff);
-				DBmass_update_trends(history, history_num, &trends_diff);
+
+				DCmass_update_trends(history, history_num, &trends, &trends_num);
+
+				while (0 < trends_num)
+					DBflush_trends(trends, &trends_num, &trends_diff);
+
+				zbx_free(trends);
 
 				/* processing of events, generated in functions: */
 				/* DBmass_update_items() */
