@@ -104,7 +104,7 @@ static char	*zbx_get_ip_by_socket(zbx_socket_t *s)
 		zbx_set_socket_strerror("connection rejected, getnameinfo() failed: %s", error_message);
 	}
 #else
-	zbx_snprintf(host, sizeof(host), "%s", inet_ntoa(sa.sin_addr));
+	strscpy(host, inet_ntoa(sa.sin_addr));
 #endif
 out:
 	if (NULL != error_message)
