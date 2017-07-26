@@ -84,11 +84,9 @@ sub new($$)
 			'error'		=> undef,
 		};
 
-		my $res = bless($self, $class);
-
 		croak("cannot get Zabbix API version information") unless (defined($self->api_version()));
 
-		return $res;
+		return bless($self, $class);
 	}
 
 	print("no authid in the file, logging in...\n") if ($DEBUG);
@@ -529,15 +527,18 @@ sub __fetch($$$)
 		return $result;
 	}
 
-	$self->set_last_error();
-
-	if (is_array($result->{'result'}))
+	unless (is_array($result->{'result'}))
 	{
-		# return direct reference to the only element or reference to the whole array
-		return scalar(@{$result->{'result'}}) == 1 ? $result->{'result'}->[0] : $result->{'result'};
+		$self->set_last_error("non-array result received when checking " . $class . ":\nREQUEST:\n" .
+				Dumper($params) . "\nREPLY:\n" . Dumper($result->{'result'}) . "\n");
+
+		return undef;
 	}
 
-	return $result->{'result'};
+	$self->set_last_error();
+
+	# return direct reference to the only element or reference to the whole array
+	return scalar(@{$result->{'result'}}) == 1 ? $result->{'result'}->[0] : $result->{'result'};
 }
 
 # TODO consider deleting this unused method
