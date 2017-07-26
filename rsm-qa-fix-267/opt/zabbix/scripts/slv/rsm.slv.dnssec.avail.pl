@@ -98,7 +98,13 @@ while ($period > 0)
 
 		my $values_ref = __get_values_by_items($items_ref, $from, $till);
 
-		my $probes_with_results = __probes_with_results($items_ref, $values_ref);
+		my $probes_with_results = 0;
+
+		foreach my $item (@{$items_ref})
+		{
+			$probes_with_results++ if (exists($values_ref->{$item->{'itemid'}}));
+		}
+
 		if ($probes_with_results < $cfg_minonline)
 		{
 			# todo phase 1: fix typo "reults -> results" here and in all other files
@@ -107,16 +113,21 @@ while ($period > 0)
 			next;
 		}
 
-		my $success_values = scalar(@$values_ref);
-		foreach (@$values_ref)
+		my $total_values = 0;
+		my $success_values = 0
+
+		foreach my $itemid_values (values(%{$values_ref}))
 		{
-			$success_values-- if (ZBX_EC_DNS_NS_ERRSIG == $_->[1] || ZBX_EC_DNS_RES_NOADBIT == $_->[1]);
+			foreach my $value (@{$itemid_values})
+			{
+				$total_values++;
+				next if (ZBX_EC_DNS_NS_ERRSIG == $value || ZBX_EC_DNS_RES_NOADBIT == $value);
+				$success_values++;
+			}
 		}
 
-		my $test_result = DOWN;
-		my $total_values = scalar(@$values_ref);
 		my $perc = $success_values * 100 / $total_values;
-		$test_result = UP if ($perc > SLV_UNAVAILABILITY_LIMIT);
+		my $test_result = ($perc > SLV_UNAVAILABILITY_LIMIT ? UP : DOWN);
 
 		push_value($tld, $cfg_key_out, $value_ts, $test_result, avail_result_msg($test_result, $success_values, $total_values, $perc, $value_ts));
 	}
@@ -131,37 +142,26 @@ slv_exit(SUCCESS);
 
 sub __get_values_by_items
 {
-	my $items_ref = shift;
+	my $items = shift;
 	my $from = shift;
 	my $till = shift;
 
-	my $items_str = "";
-	foreach (@$items_ref)
+	my @itemids = ();
+
+	foreach my $item (@{$items})
 	{
-		$items_str .= "," if ("" ne $items_str);
-		$items_str .= $_->{'itemid'};
+		push(@itemids, $item->{'itemid'});
 	}
 
+	my $items_str = join(",", @itemids);
 	my $rows_ref = db_select("select itemid,value from history where itemid in ($items_str) and clock between $from and $till");
 
-	my @values;
-	foreach my $row_ref (@$rows_ref)
+	my $result = {};
+
+	foreach my $row_ref (@{$rows_ref})
 	{
-		push(@values, [$row_ref->[0], $row_ref->[1]]);
+		push($result->{$row_ref->[0]}, $row_ref->[1]);	# there is no guarantee that value will be the only one
 	}
 
-	return \@values;
-}
-
-# map received values to the number of Probes with results
-sub __probes_with_results
-{
-	my $items_ref = shift;	# array ref of hashes {'itemid', 'hostid'}
-	my $values_ref = shift;	# array ref of arrays [itemid, value]
-
-	my %itemids = map {$_->[0] => 1} (@{$values_ref});
-	my %hostids;
-	map {$hostids{$_->{'hostid'}} = 1 if $itemids{$_->{'itemid'}}} (@{$items_ref});
-
-	return scalar(keys(%hostids));
+	return $result;
 }
