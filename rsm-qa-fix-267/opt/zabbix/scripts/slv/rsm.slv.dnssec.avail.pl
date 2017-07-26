@@ -96,7 +96,7 @@ while ($period > 0)
 			next;
 		}
 
-		my $values_ref = __get_values_by_items($items_ref, $from, $till);
+		my $values_ref = get_values_by_items($items_ref, $from, $till);
 		my $probes_with_results = scalar(keys(%{$values_ref}));
 
 		if ($probes_with_results < $cfg_minonline)
@@ -133,29 +133,3 @@ while ($period > 0)
 }
 
 slv_exit(SUCCESS);
-
-sub __get_values_by_items
-{
-	my $items = shift;
-	my $from = shift;
-	my $till = shift;
-
-	my @itemids = ();
-
-	foreach my $item (@{$items})
-	{
-		push(@itemids, $item->{'itemid'});
-	}
-
-	my $items_str = join(",", @itemids);
-	my $rows_ref = db_select("select itemid,value from history where itemid in ($items_str) and clock between $from and $till");
-
-	my $result = {};
-
-	foreach my $row_ref (@{$rows_ref})
-	{
-		push($result->{$row_ref->[0]}, $row_ref->[1]);	# there is no guarantee that value will be the only one
-	}
-
-	return $result;
-}
