@@ -97,13 +97,7 @@ while ($period > 0)
 		}
 
 		my $values_ref = __get_values_by_items($items_ref, $from, $till);
-
-		my $probes_with_results = 0;
-
-		foreach my $item (@{$items_ref})
-		{
-			$probes_with_results++ if (exists($values_ref->{$item->{'itemid'}}));
-		}
+		my $probes_with_results = scalar(keys(%{$values_ref}));
 
 		if ($probes_with_results < $cfg_minonline)
 		{
