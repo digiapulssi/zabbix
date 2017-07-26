@@ -96,7 +96,7 @@ while ($period > 0)
 			next;
 		}
 
-		my $values_ref = get_values_by_items($items_ref, $from, $till);
+		my $values_ref = get_item_values($items_ref, $from, $till);
 		my $probes_with_results = scalar(keys(%{$values_ref}));
 
 		if ($probes_with_results < $cfg_minonline)
