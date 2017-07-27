@@ -12,7 +12,6 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
-use Alerts;
 use TLD_constants qw(:ec);
 
 my $cfg_key_in = 'rsm.dns.udp.rtt[';
@@ -60,8 +59,6 @@ while ($period > 0)
 
 	my @probe_names = keys(%{get_probe_times($from, $till, get_probes('DNSSEC'))});	# todo phase 1: change to ENABLED_DNSSEC
 
-	my $probes_count = scalar(@probe_names);
-
 	init_values();
 
 	foreach (@$tlds_ref)
@@ -74,55 +71,8 @@ while ($period > 0)
 			next unless (opt('dry-run'));
 		}
 
-		if ($probes_count < $cfg_minonline)
-		{
-			push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes online, $probes_count while $cfg_minonline required)");
-			add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes online, $probes_count while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
-			next;
-		}
-
-		my $hostids_ref = probes2tldhostids($tld, \@probe_names);
-		if (scalar(@$hostids_ref) == 0)
-		{
-			wrn("no probe hosts found");
-			next;
-		}
-
-		my $items_ref = get_items_by_hostids($hostids_ref, $cfg_key_in, 0); # incomplete key
-		if (scalar(@$items_ref) == 0)
-		{
-			wrn("no items ($cfg_key_in) found");
-			next;
-		}
-
-		my $values_ref = get_item_values($items_ref, $from, $till);
-		my $probes_with_results = scalar(keys(%{$values_ref}));
-
-		if ($probes_with_results < $cfg_minonline)
-		{
-			# todo phase 1: fix typo "reults -> results" here and in all other files
-			push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
-			add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes with results, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
-			next;
-		}
-
-		my $total_values = 0;
-		my $success_values = 0
-
-		foreach my $itemid_values (values(%{$values_ref}))
-		{
-			foreach my $value (@{$itemid_values})
-			{
-				$total_values++;
-				next if (ZBX_EC_DNS_NS_ERRSIG == $value || ZBX_EC_DNS_RES_NOADBIT == $value);
-				$success_values++;
-			}
-		}
-
-		my $perc = $success_values * 100 / $total_values;
-		my $test_result = ($perc > SLV_UNAVAILABILITY_LIMIT ? UP : DOWN);
-
-		push_value($tld, $cfg_key_out, $value_ts, $test_result, avail_result_msg($test_result, $success_values, $total_values, $perc, $value_ts));
+		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
+			\@probe_names, \&check_item_values);
 	}
 
 	# unset TLD (for the logs)
@@ -132,3 +82,19 @@ while ($period > 0)
 }
 
 slv_exit(SUCCESS);
+
+# SUCCESS - no values or at least one successful value
+# E_FAIL  - all values unsuccessful
+sub check_item_values
+{
+	my $values_ref = shift;
+
+	return SUCCESS if (scalar(@{$values_ref}) == 0);
+
+	foreach my $value (@{$values_ref})
+	{
+		return SUCCESS unless (ZBX_EC_DNS_NS_ERRSIG == $value || ZBX_EC_DNS_RES_NOADBIT == $value);
+	}
+
+	return E_FAIL;
+}
