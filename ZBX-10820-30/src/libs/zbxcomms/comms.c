@@ -80,11 +80,21 @@ static void	__zbx_zbx_set_socket_strerror(const char *fmt, ...)
 	va_end(args);
 }
 
-static char	*zbx_get_ip_by_socket(zbx_socket_t *s)
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_socket_peer_ip_save                                          *
+ *                                                                            *
+ * Purpose: get peer IP address from a socket while it is connected.          *
+ *          The IP address is used later for error reporting.                 *
+ *                                                                            *
+ * Comments: the IP address is stored as a text string.                       *
+ *           "unknown IP" in case of error.                                   *
+ *                                                                            *
+ ******************************************************************************/
+static void	zbx_socket_peer_ip_save(zbx_socket_t *s)
 {
 	ZBX_SOCKADDR			sa;
 	ZBX_SOCKLEN_T			sz = sizeof(sa);
-	ZBX_THREAD_LOCAL static char	host[64];
 	char				*error_message = NULL;
 
 	if (ZBX_PROTO_ERROR == getpeername(s->socket, (struct sockaddr *)&sa, &sz))
@@ -95,22 +105,20 @@ static char	*zbx_get_ip_by_socket(zbx_socket_t *s)
 	}
 
 #if defined(HAVE_IPV6)
-	if (0 != zbx_getnameinfo((struct sockaddr *)&sa, host, sizeof(host), NULL, 0, NI_NUMERICHOST))
+	if (0 != zbx_getnameinfo((struct sockaddr *)&sa, s->peer, sizeof(s->peer), NULL, 0, NI_NUMERICHOST))
 	{
 		error_message = strerror_from_system(zbx_socket_last_error());
 		zbx_set_socket_strerror("connection rejected, getnameinfo() failed: %s", error_message);
 	}
 #else
-	zbx_snprintf(host, sizeof(host), "%s", inet_ntoa(sa.sin_addr));
+	strscpy(s->peer, inet_ntoa(sa.sin_addr));
 #endif
 out:
 	if (NULL != error_message)
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "Cannot get socket IP address: %s", error_message);
-		strscpy(host, "unknown IP");
+		strscpy(s->peer, "unknown IP");
 	}
-
-	return host;
 }
 
 #if !defined(_WINDOWS)
@@ -1209,7 +1217,7 @@ int	zbx_tcp_accept(zbx_socket_t *s, unsigned int tls_accept)
 	s->socket = accepted_socket;	/* replace socket to accepted */
 	s->accepted = 1;
 
-	zbx_strlcpy(s->peer, zbx_get_ip_by_socket(s), sizeof(s->peer));	/* save peer IP address */
+	zbx_socket_peer_ip_save(s);
 
 	zbx_socket_timeout_set(s, CONFIG_TIMEOUT);
 
