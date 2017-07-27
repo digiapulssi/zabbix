@@ -49,13 +49,6 @@ ZBX_DISKDEVICES_DATA	*diskdevices = NULL;
 ZBX_MUTEX		diskstats_lock = ZBX_MUTEX_NULL;
 #endif
 
-#if defined(_WINDOWS)
-
-/* Define a function pointer type for the GetActiveProcessorCount API */
-typedef DWORD (WINAPI *GETACTIVEPC) (WORD);
-
-#endif
-
 /******************************************************************************
  *                                                                            *
  * Function: zbx_get_cpu_num                                                  *
@@ -71,6 +64,9 @@ typedef DWORD (WINAPI *GETACTIVEPC) (WORD);
 static int	zbx_get_cpu_num()
 {
 #if defined(_WINDOWS)
+	/* Define a function pointer type for the GetActiveProcessorCount API */
+	typedef DWORD (WINAPI *GETACTIVEPC) (WORD);
+
 	GETACTIVEPC	get_act;
 	SYSTEM_INFO	sysInfo;
 
@@ -88,6 +84,8 @@ static int	zbx_get_cpu_num()
 	}
 	else
 	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot find address of GetActiveProcessorCount function");
+
 		GetNativeSystemInfo(&sysInfo);
 
 		return (int)sysInfo.dwNumberOfProcessors;
