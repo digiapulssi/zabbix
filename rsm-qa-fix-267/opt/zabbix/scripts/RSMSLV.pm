@@ -1503,6 +1503,8 @@ sub process_slv_avail($$$$$$$$$)
 
 		$probes_with_positive++ if (SUCCESS == $result);
 
+		next unless (opt('debug'));
+
 		my $hostid = -1;
 		foreach my $item (@$items_ref)
 		{
