@@ -267,7 +267,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		'output' => array('itemid', 'key_', 'hostid'),
 		'hostids' => $hostIds,
 		'filter' => array(
-			'key_' => PROBE_STATUS_ONLINE
+			'key_' => PROBE_KEY_ONLINE
 		),
 		'monitored' => true,
 		'preservekeys' => true
