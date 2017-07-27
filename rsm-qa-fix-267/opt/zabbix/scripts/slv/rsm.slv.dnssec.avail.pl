@@ -27,7 +27,6 @@ db_connect();
 
 my $interval = get_macro_dns_udp_delay();
 my $cfg_minonline = get_macro_dns_probe_online();
-my $probe_avail_limit = get_macro_probe_avail_limit();
 
 my $now = time();
 
@@ -59,7 +58,7 @@ while ($period > 0)
 
 	next if ($till > $max_avail_time);
 
-	my @probe_names = keys(%{get_probe_times($from, $till, $probe_avail_limit, get_probes('DNSSEC'))});	# todo phase 1: change to ENABLED_DNSSEC
+	my @probe_names = keys(%{get_probe_times($from, $till, get_probes('DNSSEC'))});	# todo phase 1: change to ENABLED_DNSSEC
 
 	my $probes_count = scalar(@probe_names);
 

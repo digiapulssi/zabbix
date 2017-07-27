@@ -1131,11 +1131,10 @@ sub __print_probe_times
 # }
 #
 # NB! If a probe was down for the whole specified period it won't be in a hash.
-sub get_probe_times
+sub get_probe_times($$$)
 {
 	my $from = shift;
 	my $till = shift;
-	my $probe_avail_limit = shift;	# todo phase 1: this param is ignored, remove in phase 2
 	my $probes_ref = shift; # { host => hostid, ... }
 
 	my $result = {};
@@ -1449,7 +1448,7 @@ sub is_service_error
 	return E_FAIL;
 }
 
-sub process_slv_avail
+sub process_slv_avail($$$$$$$$$)
 {
 	my $tld = shift;
 	my $cfg_key_in = shift;
@@ -1458,7 +1457,6 @@ sub process_slv_avail
 	my $till = shift;
 	my $value_ts = shift;
 	my $cfg_minonline = shift;
-	my $probe_avail_limit = shift;	# max "last seen" of proxy
 	my $probe_names = shift;	# names of online probes
 	my $check_value_ref = shift;
 
