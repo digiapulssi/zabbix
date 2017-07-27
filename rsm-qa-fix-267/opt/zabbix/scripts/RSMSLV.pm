@@ -1457,21 +1457,21 @@ sub process_slv_avail($$$$$$$$$)
 	my $till = shift;
 	my $value_ts = shift;
 	my $cfg_minonline = shift;
-	my $probe_names = shift;	# names of online probes
+	my $online_probe_names = shift;
 	my $check_value_ref = shift;
 
-	croak("Internal error: invalid argument to process_slv_avail()") unless (ref($probe_names) eq 'ARRAY');
+	croak("Internal error: invalid argument to process_slv_avail()") unless (ref($online_probe_names) eq 'ARRAY');
 
-	my $probes_count = scalar(@{$probe_names});
+	my $online_probe_count = scalar(@{$online_probe_names});
 
-	if ($probes_count < $cfg_minonline)
+	if ($online_probe_count < $cfg_minonline)
 	{
-		push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes online, $probes_count while $cfg_minonline required)");
-		add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes online, $probes_count while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
+		push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes online, $online_probe_count while $cfg_minonline required)");
+		add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes online, $online_probe_count while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
 		return;
 	}
 
-	my $hostids_ref = probes2tldhostids($tld, $probe_names);
+	my $hostids_ref = probes2tldhostids($tld, $online_probe_names);
 	if (scalar(@$hostids_ref) == 0)
 	{
 		wrn("no probe hosts found");

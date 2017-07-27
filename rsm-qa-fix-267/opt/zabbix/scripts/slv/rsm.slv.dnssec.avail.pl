@@ -57,7 +57,7 @@ while ($period > 0)
 
 	next if ($till > $max_avail_time);
 
-	my @probe_names = keys(%{get_probe_times($from, $till, get_probes('DNSSEC'))});	# todo phase 1: change to ENABLED_DNSSEC
+	my @online_probe_names = keys(%{get_probe_times($from, $till, get_probes('DNSSEC'))});	# todo phase 1: change to ENABLED_DNSSEC
 
 	init_values();
 
@@ -72,7 +72,7 @@ while ($period > 0)
 		}
 
 		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			\@probe_names, \&check_item_values);
+			\@online_probe_names, \&check_item_values);
 	}
 
 	# unset TLD (for the logs)
