@@ -364,8 +364,6 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 
 				$newValues['templates_clear'] = zbx_toObject($templatesToDelete, 'templateid');
 			}
-
-			$hosts['templates'] = $templateids;
 		}
 
 		$host_inventory = array_intersect_key(getRequest('host_inventory', []), $visible);
