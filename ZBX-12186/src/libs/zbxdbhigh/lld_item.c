@@ -2073,7 +2073,7 @@ static void	lld_remove_lost_items(const zbx_vector_ptr_t *items, unsigned short 
 	char				*sql = NULL;
 	size_t				sql_alloc = 0, sql_offset = 0;
 	zbx_lld_item_t			*item;
-	zbx_vector_uint64_t		del_itemids, lc_itemids, ts_itemids;
+	zbx_vector_uint64_t		itemids, del_itemids, lc_itemids, ts_itemids;
 	zbx_vector_uint64_pair_t	discovery_itemts;
 	int				i, lifetime_sec;
 
@@ -2084,6 +2084,7 @@ static void	lld_remove_lost_items(const zbx_vector_ptr_t *items, unsigned short 
 
 	lifetime_sec = lifetime * SEC_PER_DAY;
 
+	zbx_vector_uint64_create(&itemids);
 	zbx_vector_uint64_create(&del_itemids);
 	zbx_vector_uint64_create(&lc_itemids);
 	zbx_vector_uint64_create(&ts_itemids);
@@ -2095,6 +2096,8 @@ static void	lld_remove_lost_items(const zbx_vector_ptr_t *items, unsigned short 
 
 		if (0 == item->itemid)
 			continue;
+
+		zbx_vector_uint64_append(&itemids, item->itemid);
 
 		if (0 == (item->flags & ZBX_FLAG_LLD_ITEM_DISCOVERED))
 		{
@@ -2128,6 +2131,16 @@ static void	lld_remove_lost_items(const zbx_vector_ptr_t *items, unsigned short 
 	/* update item discovery table */
 
 	DBbegin();
+
+	if (SUCCEED != DBlock_records("item_discovery", &itemids))
+	{
+		/* failed to lock item_discovery records */
+		DBrollback();
+
+		zabbix_log(LOG_LEVEL_DEBUG, "item_discovery was deleted during processing, stopping");
+
+		goto clean;
+	}
 
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
@@ -2178,6 +2191,7 @@ static void	lld_remove_lost_items(const zbx_vector_ptr_t *items, unsigned short 
 	DBcommit();
 clean:
 	zbx_vector_uint64_pair_destroy(&discovery_itemts);
+	zbx_vector_uint64_destroy(&itemids);
 	zbx_vector_uint64_destroy(&ts_itemids);
 	zbx_vector_uint64_destroy(&lc_itemids);
 	zbx_vector_uint64_destroy(&del_itemids);
