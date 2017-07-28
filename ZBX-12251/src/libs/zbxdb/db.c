@@ -271,7 +271,6 @@ static int	is_recoverable_postgresql_error(const PGconn *conn, const PGresult *p
 	if (CONNECTION_OK != PQstatus(conn))
 		return SUCCEED;
 
-	zabbix_log(LOG_LEVEL_INFORMATION, "error '%s'", PQresultErrorField(pg_result, PG_DIAG_SQLSTATE));
 	if (0 == zbx_strcmp_null(PQresultErrorField(pg_result, PG_DIAG_SQLSTATE), "40P01"))
 		return SUCCEED;
 
