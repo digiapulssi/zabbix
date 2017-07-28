@@ -265,6 +265,18 @@ static int	is_recoverable_mysql_error(void)
 
 	return FAIL;
 }
+#elif defined(HAVE_POSTGRESQL)
+static int	is_recoverable_postgresql_error(const PGconn *conn, const PGresult *pg_result)
+{
+	if (CONNECTION_OK != PQstatus(conn))
+		return SUCCEED;
+
+	zabbix_log(LOG_LEVEL_INFORMATION, "error '%s'", PQresultErrorField(pg_result, PG_DIAG_SQLSTATE));
+	if (0 == zbx_strcmp_null(PQresultErrorField(pg_result, PG_DIAG_SQLSTATE), "40P01"))
+		return SUCCEED;
+
+	return FAIL;
+}
 #endif
 
 /******************************************************************************
@@ -1399,7 +1411,7 @@ int	zbx_db_vexecute(const char *fmt, va_list args)
 		zabbix_errlog(ERR_Z3005, 0, error, sql);
 		zbx_free(error);
 
-		ret = (CONNECTION_OK == PQstatus(conn) ? ZBX_DB_FAIL : ZBX_DB_DOWN);
+		ret = (SUCCEED == is_recoverable_postgresql_error(conn, result) ? ZBX_DB_DOWN : ZBX_DB_FAIL);
 	}
 
 	if (ZBX_DB_OK == ret)
@@ -1742,7 +1754,8 @@ error:
 		zbx_free(error);
 
 		DBfree_result(result);
-		result = (CONNECTION_OK == PQstatus(conn) ? NULL : (DB_RESULT)ZBX_DB_DOWN);
+		result = (SUCCEED == is_recoverable_postgresql_error(conn, result->pg_result) ? (DB_RESULT)ZBX_DB_DOWN :
+				NULL);
 	}
 	else	/* init rownum */
 		result->row_num = PQntuples(result->pg_result);
