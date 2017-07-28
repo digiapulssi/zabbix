@@ -53,6 +53,32 @@ static void	prepare_value(int value_type, zbx_uint64_t value)
 	}
 }
 
+static int		dbrow_cur, dbrow_total;
+static DB_ROW		dbrow;
+static DB_RESULT	result;
+
+#define MAX_DBROWS	16
+static void	prepare_dbrow(char *a1, char *a2, char *a3)
+{
+	char	*args[] = {a1, a2, a3, NULL};
+	int	i;
+
+	dbrow = zbx_calloc(NULL, MAX_DBROWS, sizeof(char *));
+
+	for (i = 0; args[i] != NULL; i++)
+	{
+		if (MAX_DBROWS == i - 1)
+		{
+			printf("please increas maximum db rows (currently %d)\n", MAX_DBROWS);
+			exit(EXIT_FAILURE);
+		}
+
+		dbrow[i] = args[i];
+	}
+
+	dbrow[i] = NULL;
+}
+
 static void	zbxtest_key_macro(const char *key, const char *expected)
 {
 	char	*data, error[128];
@@ -143,32 +169,6 @@ int	zbx_vc_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *
 	value->value = global_value;
 
 	return SUCCEED;
-}
-
-static int		dbrow_cur, dbrow_total;
-static DB_ROW		dbrow;
-static DB_RESULT	result;
-
-#define MAX_DBROWS	16
-static void	prepare_dbrow(char *a1, char *a2, char *a3)
-{
-	char	*args[] = {a1, a2, a3, NULL};
-	int	i;
-
-	dbrow = zbx_calloc(NULL, MAX_DBROWS, sizeof(char *));
-
-	for (i = 0; args[i] != NULL; i++)
-	{
-		if (MAX_DBROWS == i - 1)
-		{
-			printf("please increas maximum db rows (currently %d)\n", MAX_DBROWS);
-			exit(EXIT_FAILURE);
-		}
-
-		dbrow[i] = args[i];
-	}
-
-	dbrow[i] = NULL;
 }
 
 DB_RESULT       zbx_db_vselect(const char *fmt, va_list args)
