@@ -22,12 +22,6 @@
 #include "log.h"
 #include "../zbxcrypto/tls_tcp.h"
 
-#if defined(HAVE_IPV6)
-#	define ZBX_SOCKADDR struct sockaddr_storage
-#else
-#	define ZBX_SOCKADDR struct sockaddr_in
-#endif
-
 #if !defined(ZBX_SOCKLEN_T)
 #	define ZBX_SOCKLEN_T socklen_t
 #endif
@@ -84,12 +78,11 @@ static void	__zbx_zbx_set_socket_strerror(const char *fmt, ...)
  *                                                                            *
  * Function: zbx_socket_peer_ip_save                                          *
  *                                                                            *
- * Purpose: get peer IP address from a socket while it is connected.          *
- *          The IP address is used later for error reporting.                 *
+ * Purpose: get peer IP address info from a socket early while it is          *
+ *          connected. Connection can be terminated due to various errors at  *
+ *          any time and peer IP address will not be available anymore.       *
  *                                                                            *
  * Return value: SUCCEED or FAIL                                              *
- *                                                                            *
- * Comments: the IP address is stored as a text string                        *
  *                                                                            *
  ******************************************************************************/
 static int	zbx_socket_peer_ip_save(zbx_socket_t *s)
@@ -104,6 +97,11 @@ static int	zbx_socket_peer_ip_save(zbx_socket_t *s)
 		zbx_set_socket_strerror("connection rejected, getpeername() failed: %s", error_message);
 		return FAIL;
 	}
+
+	/* store getpeername() result to have IP address in numerical form for security check */
+	memcpy(&s->peer_info, &sa, (size_t)sz);
+
+	/* store IP address as a text string for error reporting */
 
 #if defined(HAVE_IPV6)
 	if (0 != zbx_getnameinfo((struct sockaddr *)&sa, s->peer, sizeof(s->peer), NULL, 0, NI_NUMERICHOST))
@@ -1807,78 +1805,52 @@ int	zbx_tcp_check_security(zbx_socket_t *s, const char *ip_list, int allow_if_em
 	struct hostent	*hp;
 	int		i;
 #endif
-	ZBX_SOCKADDR	name;
-	ZBX_SOCKLEN_T	nlen;
-
 	char		tmp[MAX_STRING_LEN], *start = NULL, *end = NULL;
 
 	if (1 == allow_if_empty && (NULL == ip_list || '\0' == *ip_list))
 		return SUCCEED;
 
-	nlen = sizeof(name);
+	strscpy(tmp, ip_list);
 
-	if (ZBX_PROTO_ERROR == getpeername(s->socket, (struct sockaddr *)&name, &nlen))
+	for (start = tmp; '\0' != *start;)
 	{
-		zbx_set_socket_strerror("connection rejected, getpeername() failed: %s",
-				strerror_from_system(zbx_socket_last_error()));
-		return FAIL;
-	}
-	else
-	{
-		strscpy(tmp, ip_list);
+		if (NULL != (end = strchr(start, ',')))
+			*end = '\0';
 
-		for (start = tmp; '\0' != *start;)
+		/* allow IP addresses or DNS names for authorization */
+#if defined(HAVE_IPV6)
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = PF_UNSPEC;
+		if (0 == getaddrinfo(start, NULL, &hints, &ai))
 		{
-			if (NULL != (end = strchr(start, ',')))
-				*end = '\0';
-
-			/* allow IP addresses or DNS names for authorization */
-#if defined(HAVE_IPV6)
-			memset(&hints, 0, sizeof(hints));
-			hints.ai_family = PF_UNSPEC;
-			if (0 == getaddrinfo(start, NULL, &hints, &ai))
+			for (current_ai = ai; NULL != current_ai; current_ai = current_ai->ai_next)
 			{
-				for (current_ai = ai; NULL != current_ai; current_ai = current_ai->ai_next)
+				if (SUCCEED == zbx_ip_cmp(current_ai, s->peer_info))
 				{
-					if (SUCCEED == zbx_ip_cmp(current_ai, name))
-					{
-						freeaddrinfo(ai);
-						return SUCCEED;
-					}
-				}
-				freeaddrinfo(ai);
-			}
-#else
-			if (NULL != (hp = gethostbyname(start)))
-			{
-				for (i = 0; NULL != hp->h_addr_list[i]; i++)
-				{
-					if (name.sin_addr.s_addr == ((struct in_addr *)hp->h_addr_list[i])->s_addr)
-						return SUCCEED;
+					freeaddrinfo(ai);
+					return SUCCEED;
 				}
 			}
-#endif	/* HAVE_IPV6 */
-			if (NULL != end)
-			{
-				*end = ',';
-				start = end + 1;
-			}
-			else
-				break;
+			freeaddrinfo(ai);
 		}
-
-		if (NULL != end)
-			*end = ',';
-	}
-#if defined(HAVE_IPV6)
-	if (0 == zbx_getnameinfo((struct sockaddr *)&name, tmp, sizeof(tmp), NULL, 0, NI_NUMERICHOST))
-		zbx_set_socket_strerror("connection from \"%s\" rejected, allowed hosts: \"%s\"", tmp, ip_list);
-	else
-		zbx_set_socket_strerror("connection rejected, allowed hosts: \"%s\"", ip_list);
 #else
-	zbx_set_socket_strerror("connection from \"%s\" rejected, allowed hosts: \"%s\"",
-			inet_ntoa(name.sin_addr), ip_list);
-#endif
+		if (NULL != (hp = gethostbyname(start)))
+		{
+			for (i = 0; NULL != hp->h_addr_list[i]; i++)
+			{
+				if (s->peer_info.sin_addr.s_addr == ((struct in_addr *)hp->h_addr_list[i])->s_addr)
+					return SUCCEED;
+			}
+		}
+#endif	/* HAVE_IPV6 */
+		if (NULL != end)
+			start = end + 1;
+		else
+			break;
+	}
+
+	zbx_set_socket_strerror("connection from \"%s\" rejected, allowed hosts: \"%s\"", s->peer, ip_list);
+
 	return FAIL;
 }
 

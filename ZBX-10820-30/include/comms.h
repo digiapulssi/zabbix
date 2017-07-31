@@ -56,6 +56,12 @@ typedef SOCKET	ZBX_SOCKET;
 typedef int	ZBX_SOCKET;
 #endif
 
+#if defined(HAVE_IPV6)
+#	define ZBX_SOCKADDR struct sockaddr_storage
+#else
+#	define ZBX_SOCKADDR struct sockaddr_in
+#endif
+
 typedef enum
 {
 	ZBX_BUF_TYPE_STAT = 0,
@@ -90,6 +96,7 @@ typedef struct
 	int				num_socks;
 	ZBX_SOCKET			sockets[ZBX_SOCKET_COUNT];
 	char				buf_stat[ZBX_STAT_BUF_LEN];
+	ZBX_SOCKADDR			peer_info;		/* getpeername() result */
 	/* Peer hostname or IP address for diagnostics (after TCP connection is established). */
 	/* TLS connection may be shut down at any time and it will not be possible to get peer IP address anymore. */
 	char				peer[ZBX_SOCKET_PEER_BUF_LEN];
