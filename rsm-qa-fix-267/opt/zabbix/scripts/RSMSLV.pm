@@ -375,7 +375,7 @@ sub get_itemids_by_host_and_keypart
 
 	fail("cannot find items ($key_part%) at host ($host)") if (scalar(@$rows_ref) == 0);
 
-	my %result;
+	my $result = {};
 
 	foreach my $row_ref (@$rows_ref)
 	{
@@ -384,10 +384,10 @@ sub get_itemids_by_host_and_keypart
 
 		my $nsip = get_nsip_from_key($key);
 
-		$result{$nsip} = $itemid;
+		$result->{$nsip} = $itemid;
 	}
 
-	return \%result;
+	return $result;
 }
 
 # returns:
@@ -507,7 +507,7 @@ sub get_probes
 			$name_cond.
 			" and g.name='".PROBE_GROUP_NAME."'");
 
-	my %result;
+	my $result = {};
 	foreach my $row_ref (@$rows_ref)
 	{
 		my $host = $row_ref->[0];
@@ -525,10 +525,10 @@ sub get_probes
 			next if (scalar(@$rows_ref) != 0 and $rows_ref->[0]->[0] == 0);
 		}
 
-		$result{$host} = $hostid;
+		$result->{$host} = $hostid;
 	}
 
-	return \%result;
+	return $result;
 }
 
 # get array of key nameservers ('i.ns.se,130.239.5.114', ...)
@@ -588,14 +588,14 @@ sub get_all_items
 
 	my $rows_ref = db_select($sql);
 
-	my %result;
+	my $result;
 
 	foreach my $row_ref (@$rows_ref)
 	{
-		$result{$row_ref->[0]}{$row_ref->[1]} = '';
+		$result->{$row_ref->[0]}{$row_ref->[1]} = '';
 	}
 
-	if (scalar(keys(%result)) == 0)
+	if (scalar(keys(%{$result})) == 0)
 	{
 		if (defined($tld))
 		{
@@ -607,7 +607,7 @@ sub get_all_items
 		}
 	}
 
-	return \%result;
+	return $result;
 }
 
 # return itemids grouped by hosts:
@@ -641,15 +641,15 @@ sub get_nsip_items
 			" and i.templateid is not null".
 			" and i.key_ in ($keys_str)");
 
-	my %result;
+	my $result = {};
 	foreach my $row_ref (@$rows_ref)
 	{
-		$result{$row_ref->[0]}{$row_ref->[1]} = get_nsip_from_key($row_ref->[2]);
+		$result->{$row_ref->[0]}{$row_ref->[1]} = get_nsip_from_key($row_ref->[2]);
 	}
 
-	fail("cannot find items ($keys_str) at host ($tld *)") if (scalar(keys(%result)) == 0);
+	fail("cannot find items ($keys_str) at host ($tld *)") if (scalar(keys(%{$result})) == 0);
 
-	return \%result;
+	return $result;
 }
 
 sub get_items_by_hostids
@@ -1265,9 +1265,9 @@ sub probes2tldhostids
 
 	croak("Internal error: invalid argument to probes2tldhostids()") unless (ref($probes_ref) eq 'ARRAY');
 
-	my @result;
+	my $result = [];
 
-	return \@result if (scalar(@{$probes_ref}) == 0);
+	return $result if (scalar(@{$probes_ref}) == 0);
 
 	my $hosts_str = '';
 	foreach (@{$probes_ref})
@@ -1282,11 +1282,11 @@ sub probes2tldhostids
 
 		foreach my $row_ref (@$rows_ref)
 		{
-			push(@result, $row_ref->[0]);
+			push(@{$result}, $row_ref->[0]);
 		}
 	}
 
-	return \@result;
+	return $result;
 }
 
 sub get_probe_online_key_itemid
@@ -1538,7 +1538,7 @@ sub get_item_values
 	my $from = shift;
 	my $till = shift;
 
-	my %result;
+	my $result = {};
 
 	if (0 != scalar(@$items_ref))
 	{
@@ -1556,18 +1556,18 @@ sub get_item_values
 			my $itemid = $row_ref->[0];
 			my $value = $row_ref->[1];
 
-			if (exists($result{$itemid}))
+			if (exists($result->{$itemid}))
 			{
-				$result{$itemid} = [@{$result{$itemid}}, $value];
+				$result->{$itemid} = [@{$result->{$itemid}}, $value];
 			}
 			else
 			{
-				$result{$itemid} = [$value];
+				$result->{$itemid} = [$value];
 			}
 		}
 	}
 
-	return \%result;
+	return $result;
 }
 
 sub avail_value_exists
@@ -2112,7 +2112,7 @@ sub get_itemids_by_hostids
 	my $hostids_ref = shift;
 	my $all_items = shift;
 
-	my @result = ();
+	my $result = [];
 
 	foreach my $hostid (@$hostids_ref)
 	{
@@ -2124,11 +2124,11 @@ sub get_itemids_by_hostids
 
 		foreach my $itemid (keys(%{$all_items->{$hostid}}))
 		{
-			push(@result, $itemid);
+			push(@{$result}, $itemid);
 		}
 	}
 
-	return \@result;
+	return $result;
 }
 
 # organize values from all probes grouped by nsip and return "nsip"->values hash
@@ -2149,7 +2149,7 @@ sub get_nsip_values
 	my $times_ref = shift; # from, till, ...
 	my $items_ref = shift;
 
-	my %result;
+	my $result = {};
 
 	if (scalar(@$itemids_ref) != 0)
 	{
@@ -2192,9 +2192,9 @@ sub get_nsip_values
 
 				fail("internal error: name server of item $itemid not found") unless (defined($nsip));
 
-				if (exists($result{$nsip}))
+				if (exists($result->{$nsip}))
 				{
-					push(@{$result{$nsip}->{'values'}}, $value);
+					push(@{$result->{$nsip}->{'values'}}, $value);
 				}
 				else
 				{
@@ -2203,13 +2203,13 @@ sub get_nsip_values
 					$h{'itemid'} = $itemid;
 					$h{'values'} = [$value];
 
-					$result{$nsip} = \%h;
+					$result->{$nsip} = \%h;
 				}
 			}
 		}
 	}
 
-	return \%result;
+	return $result;
 }
 
 sub __get_valuemappings
@@ -2218,13 +2218,13 @@ sub __get_valuemappings
 
 	my $rows_ref = db_select("select m.value,m.newvalue from valuemaps v,mappings m where v.valuemapid=m.valuemapid and v.name='$vmname'");
 
-	my %result;
+	my $result = {};
 	foreach my $row_ref (@$rows_ref)
 	{
-		$result{$row_ref->[0]} = $row_ref->[1];
+		$result->{$row_ref->[0]} = $row_ref->[1];
 	}
 
-	return \%result;
+	return $result;
 }
 
 # todo phase 1: the $vmname's must be fixed accordingly in phase 2
@@ -2777,7 +2777,7 @@ sub __get_dbl_values
 	my $from = shift;
 	my $till = shift;
 
-	my @result;
+	my $result = [];
 
 	if (0 != scalar(@$itemids_ref))
 	{
@@ -2792,11 +2792,11 @@ sub __get_dbl_values
 
 		foreach my $row_ref (@$rows_ref)
 		{
-			push(@result, $row_ref->[0]);
+			push(@{$result}, $row_ref->[0]);
 		}
 	}
 
-	return \@result;
+	return $result;
 }
 
 sub __script
