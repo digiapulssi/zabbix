@@ -974,6 +974,8 @@ int	zbx_db_rollback(void)
 		}
 		else
 			txn_end_error = last_txn_error;	/* error that caused rollback */
+
+		txn_error = ZBX_DB_OK;
 	}
 	else
 		txn_error = last_txn_error;	/* in case of DB down we will repeat this operation */
