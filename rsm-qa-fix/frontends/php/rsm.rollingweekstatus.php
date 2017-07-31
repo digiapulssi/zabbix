@@ -289,6 +289,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 		);
 
 		if ($db_tlds) {
+			$hostIds = [];
 			while ($db_tld = DBfetch($db_tlds)) {
 				$hostids[] = $db_tld['hostid'];
 
