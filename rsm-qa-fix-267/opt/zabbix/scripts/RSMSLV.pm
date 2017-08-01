@@ -2192,7 +2192,7 @@ sub get_nsip_values
 				{
 					$result->{$nsip} = {
 						'itemid'	=> $itemid,
-						'values'	=> [];
+						'values'	=> []
 					};
 				}
 
