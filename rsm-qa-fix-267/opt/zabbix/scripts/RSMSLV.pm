@@ -2098,7 +2098,7 @@ sub get_nsip_values
 
 	if (scalar(@$itemids_ref) != 0)
 	{
-		my $itemids_str = join(',', map {$_} (@{$itemids_ref}));
+		my $itemids_str = join(',', @{$itemids_ref});
 
 		my $idx = 0;
 		my $times_count = scalar(@$times_ref);
