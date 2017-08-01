@@ -1496,25 +1496,20 @@ sub get_item_values
 
 	my $result = {};
 
-	if (0 != scalar(@$items_ref))
+	return $result if (0 == scalar(@$items_ref));
+
+	my $itemids_str = join(',', map {$_->{'itemid'}} (@{$items_ref}));
+
+	my $rows_ref = db_select("select itemid,value from history_uint where itemid in ($itemids_str) and clock between $from and $till order by clock");
+
+	foreach my $row_ref (@$rows_ref)
 	{
-		my $itemids_str = "";
-		foreach (@$items_ref)
-		{
-			$itemids_str .= "," unless ($itemids_str eq "");
-			$itemids_str .= $_->{'itemid'};
-		}
+		my $itemid = $row_ref->[0];
+		my $value = $row_ref->[1];
 
-		my $rows_ref = db_select("select itemid,value from history_uint where itemid in ($itemids_str) and clock between $from and $till order by clock");
+		$result->{$itemid} = [] unless (exists($result->{$itemid}));
 
-		foreach my $row_ref (@$rows_ref)
-		{
-			my $itemid = $row_ref->[0];
-			my $value = $row_ref->[1];
-
-			$result->{$itemid} = [] unless (exists($result->{$itemid}));
-			push(@{$result->{$itemid}}, $value);
-		}
+		push(@{$result->{$itemid}}, $value);
 	}
 
 	return $result;
@@ -2103,12 +2098,7 @@ sub get_nsip_values
 
 	if (scalar(@$itemids_ref) != 0)
 	{
-		my $itemids_str = "";
-		foreach my $itemid (@$itemids_ref)
-		{
-			$itemids_str .= "," unless ($itemids_str eq "");
-			$itemids_str .= $itemid;
-		}
+		my $itemids_str = join(',', map {$_} (@{$itemids_ref}));
 
 		my $idx = 0;
 		my $times_count = scalar(@$times_ref);
