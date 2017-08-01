@@ -3828,8 +3828,8 @@ static void	zbx_evaluate_item_functions(zbx_hashset_t *funcs)
 			continue;
 		}
 
-		if (SUCCEED != evaluate_function(value, &items[i], func->function, func->parameter,
-				func->timespec.sec, &error))
+		if (SUCCEED != evaluate_function(value, &items[i], func->function, func->parameter, &func->timespec,
+				&error))
 		{
 			if (NULL != error)
 			{

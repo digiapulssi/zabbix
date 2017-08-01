@@ -170,10 +170,10 @@ static int	calcitem_evaluate_expression(expression_t *exp, char *error, int max_
 	function_t	*f = NULL;
 	char		*buf, replace[16], *errstr = NULL;
 	int		i, ret = SUCCEED;
-	time_t		now;
 	zbx_host_key_t	*keys = NULL;
 	DC_ITEM		*items = NULL;
 	int		*errcodes = NULL;
+	zbx_timespec_t	ts;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -192,7 +192,7 @@ static int	calcitem_evaluate_expression(expression_t *exp, char *error, int max_
 
 	DCconfig_get_items_by_keys(items, keys, errcodes, exp->functions_num);
 
-	now = time(NULL);
+	zbx_timespec(&ts);
 
 	for (i = 0; i < exp->functions_num; i++)
 	{
@@ -239,7 +239,7 @@ static int	calcitem_evaluate_expression(expression_t *exp, char *error, int max_
 
 		f->value = zbx_malloc(f->value, MAX_BUFFER_LEN);
 
-		if (SUCCEED != evaluate_function(f->value, &items[i], f->func, f->params, now, &errstr))
+		if (SUCCEED != evaluate_function(f->value, &items[i], f->func, f->params, &ts, &errstr))
 		{
 			if (NULL != errstr)
 			{

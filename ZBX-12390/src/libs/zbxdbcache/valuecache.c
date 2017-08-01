@@ -2909,7 +2909,7 @@ int	zbx_vc_add_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_vc_get_value_range                                           *
+ * Function: zbx_vc_get_values                                                *
  *                                                                            *
  * Purpose: get item history data for the specified time period               *
  *                                                                            *
@@ -2932,8 +2932,8 @@ int	zbx_vc_add_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *
  *           seconds before <timestamp>.                                      *
  *                                                                            *
  ******************************************************************************/
-int	zbx_vc_get_value_range(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values, int seconds,
-		int count, int timestamp)
+int	zbx_vc_get_values(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values, int seconds,
+		int count, const zbx_timespec_t *timestamp)
 {
 	const char	*__function_name = "zbx_vc_get_value_range";
 	zbx_vc_item_t	*item = NULL;
@@ -2968,7 +2968,7 @@ int	zbx_vc_get_value_range(zbx_uint64_t itemid, int value_type, zbx_vector_histo
 	if (0 != (item->state & ZBX_ITEM_STATE_REMOVE_PENDING) || item->value_type != value_type)
 		goto out;
 
-	ret = vch_item_get_value_range(item, values, seconds, count, timestamp);
+	ret = vch_item_get_value_range(item, values, seconds, count, timestamp->sec);
 out:
 	if (FAIL == ret)
 	{
@@ -2983,7 +2983,7 @@ out:
 
 		if (0 == count)
 		{
-			if (SUCCEED == (ret = vc_db_read_values_by_time(itemid, value_type, values, seconds, timestamp,
+			if (SUCCEED == (ret = vc_db_read_values_by_time(itemid, value_type, values, seconds, timestamp->sec,
 					&queries)))
 			{
 				zbx_vector_history_record_sort(values,
@@ -2994,13 +2994,13 @@ out:
 		{
 			if (0 == seconds)
 			{
-				ret = vc_db_read_values_by_count(itemid, value_type, values, count, timestamp,
+				ret = vc_db_read_values_by_count(itemid, value_type, values, count, timestamp->sec,
 						&queries);
 			}
 			else
 			{
 				ret = vc_db_read_values_by_time_and_count(itemid, value_type, values, seconds, count,
-						timestamp, &queries);
+						timestamp->sec, &queries);
 			}
 
 			if (SUCCEED == ret)
@@ -3058,76 +3058,22 @@ out:
  ******************************************************************************/
 int	zbx_vc_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *ts, zbx_history_record_t *value)
 {
-	const char	*__function_name = "zbx_vc_get_value";
-	zbx_vc_item_t	*item = NULL;
-	int 		ret = FAIL, cache_used = 1, found = 0;
+	zbx_vector_history_record_t	values;
+	int				ret = FAIL;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid:" ZBX_FS_UI64 " value_type:%d timestamp:%d.%d",
-			__function_name, itemid, value_type, ts->sec, ts->ns);
+	zbx_history_record_vector_create(&values);
 
-	vc_try_lock();
-
-	if (NULL == vc_cache)
+	if (SUCCEED != zbx_vc_get_values(itemid, value_type, &values, 0, 1, ts) || 0 == values.values_num)
 		goto out;
 
-	if (ZBX_VC_MODE_LOWMEM == vc_cache->mode)
-		vc_warn_low_memory();
+	*value = values.values[0];
 
-	if (NULL == (item = zbx_hashset_search(&vc_cache->items, &itemid)))
-	{
-		if (ZBX_VC_MODE_NORMAL == vc_cache->mode)
-		{
-			zbx_vc_item_t   new_item = {itemid, value_type};
+	/* reset values vector size so the returned value is not cleared when destroying the vector */
+	values.values_num = 0;
 
-			if (NULL == (item = zbx_hashset_insert(&vc_cache->items, &new_item, sizeof(zbx_vc_item_t))))
-				goto out;
-		}
-		else
-			goto out;
-	}
-
-	vc_item_addref(item);
-
-	if (0 != (item->state & ZBX_ITEM_STATE_REMOVE_PENDING) || item->value_type != value_type)
-		goto out;
-
-	ret = vch_item_get_value(item, ts, value, &found);
+	ret = SUCCEED;
 out:
-	if (FAIL == ret)
-	{
-		zbx_uint64_t	queries = 0;
-
-		if (NULL != item)
-			item->state |= ZBX_ITEM_STATE_REMOVE_PENDING;
-
-		cache_used = 0;
-
-		vc_try_unlock();
-
-		ret = vc_db_read_value(itemid, value_type, ts, value, &queries);
-
-		vc_try_lock();
-
-		if (NULL != vc_cache)
-			vc_cache->db_queries += queries;
-
-		if (SUCCEED == ret)
-		{
-			vc_update_statistics(NULL, 0, 1);
-			found = 1;
-		}
-	}
-
-	if (NULL != item)
-		vc_item_release(item);
-
-	vc_try_unlock();
-
-	ret = (1 == found ? SUCCEED : FAIL);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s cache_used:%d", __function_name, zbx_result_string(ret),
-			cache_used);
-
+	zbx_history_record_vector_destroy(&values, value_type);
 	return ret;
 }
 
