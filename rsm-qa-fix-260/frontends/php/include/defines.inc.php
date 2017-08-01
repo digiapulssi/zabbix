@@ -1476,6 +1476,8 @@ define('RSM_G_TLD_GROUP',		'gTLD');
 define('RSM_OTHER_TLD_GROUP',	'otherTLD');
 define('RSM_TEST_GROUP',		'testTLD');
 
+define('PROBES_MON_GROUPID',	130);
+
 // if magic quotes on, then get rid of them
 if (get_magic_quotes_gpc()) {
 	function zbx_stripslashes($value) {

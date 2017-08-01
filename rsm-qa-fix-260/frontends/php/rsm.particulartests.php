@@ -230,37 +230,27 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		exit;
 	}
 
-	// get "Probes" groupId
-	$groups = API::HostGroup()->get(array(
-		'filter' => array(
-			'name' => 'Probes'
-		),
-		'output' => array('groupid')
-	));
-
-	$group = reset($groups);
-
 	// get probes
 	$hosts = API::Host()->get(array(
-		'groupids' => $group['groupid'],
-		'output' => array('hostid', 'host', 'name'),
+		'groupids' => PROBES_MON_GROUPID,
+		'output' => array('hostid', 'host'),
 		'preservekeys' => true
 	));
 
 	$hostIds = [];
 	foreach ($hosts as $host) {
+		$pos = strrpos($host['host'], " - mon");
+		if ($pos === false) {
+			show_error_message(_s('Unexpected host name "%1$s" among probe hosts.', $host['host']));
+			continue;
+		}
+		$data['probes'][$host['hostid']] = array(
+			'host' => substr($host['host'], 0, $pos)
+		);
 		$hostIds[] = $host['hostid'];
 	}
 
 	$data['totalProbes'] = count($hostIds);
-
-	// Probe main data generation
-	foreach ($hosts as $host) {
-		$data['probes'][$host['hostid']] = array(
-			'host' => $host['host'],
-			'name' => $host['name']
-		);
-	}
 
 	// Get probe status.
 	$probeItems = API::Item()->get(array(
