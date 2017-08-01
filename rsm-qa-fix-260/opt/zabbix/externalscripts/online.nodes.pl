@@ -10,7 +10,7 @@ use lib $MYDIR;
 use strict;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:api);
+use TLD_constants qw(:api :items);
 use Data::Dumper;
 
 parse_opts();

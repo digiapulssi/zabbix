@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:api);	# ITEM_VALUE_TYPE_FLOAT
+use TLD_constants qw(:api :items);
 use ApiHelper;
 
 use constant JSON_RDDS_SUBSERVICE => 'subService';

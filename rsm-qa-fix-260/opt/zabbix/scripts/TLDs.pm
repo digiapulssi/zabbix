@@ -3,7 +3,7 @@ package TLDs;
 use strict;
 use warnings;
 use Zabbix;
-use TLD_constants qw(:general :templates :groups :api :config :tls);
+use TLD_constants qw(:general :templates :groups :api :config :tls :items);
 use Data::Dumper;
 use base 'Exporter';
 
