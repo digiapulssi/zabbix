@@ -615,7 +615,7 @@ static int	DBpatch_3000122(void)
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	if (ZBX_DB_OK > DBexecute("update hosts_groups set groupid=100 where hostgroupid=1001"))
+	if (ZBX_DB_OK > DBexecute("update hosts_groups set groupid=110 where hostgroupid=1001"))
 		return FAIL;
 
 	return SUCCEED;
