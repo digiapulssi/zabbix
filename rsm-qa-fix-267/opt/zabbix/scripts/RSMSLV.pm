@@ -508,6 +508,7 @@ sub get_probes
 			" and g.name='".PROBE_GROUP_NAME."'");
 
 	my $result = {};
+
 	foreach my $row_ref (@$rows_ref)
 	{
 		my $host = $row_ref->[0];
@@ -588,7 +589,7 @@ sub get_all_items
 
 	my $rows_ref = db_select($sql);
 
-	my $result;
+	my $result = {};
 
 	foreach my $row_ref (@$rows_ref)
 	{
@@ -642,6 +643,7 @@ sub get_nsip_items
 			" and i.key_ in ($keys_str)");
 
 	my $result = {};
+
 	foreach my $row_ref (@$rows_ref)
 	{
 		$result->{$row_ref->[0]}{$row_ref->[1]} = get_nsip_from_key($row_ref->[2]);
@@ -1556,14 +1558,8 @@ sub get_item_values
 			my $itemid = $row_ref->[0];
 			my $value = $row_ref->[1];
 
-			if (exists($result->{$itemid}))
-			{
-				$result->{$itemid} = [@{$result->{$itemid}}, $value];
-			}
-			else
-			{
-				$result->{$itemid} = [$value];
-			}
+			$result->{$itemid} = [] unless (exists($result->{$itemid}));
+			push(@{$result->{$itemid}}, $value);
 		}
 	}
 
@@ -2192,19 +2188,15 @@ sub get_nsip_values
 
 				fail("internal error: name server of item $itemid not found") unless (defined($nsip));
 
-				if (exists($result->{$nsip}))
+				unless (exists($result->{$nsip}))
 				{
-					push(@{$result->{$nsip}->{'values'}}, $value);
+					$result->{$nsip} = {
+						'itemid'	=> $itemid,
+						'values'	=> [];
+					};
 				}
-				else
-				{
-					my %h;
 
-					$h{'itemid'} = $itemid;
-					$h{'values'} = [$value];
-
-					$result->{$nsip} = \%h;
-				}
+				push(@{$result->{$nsip}->{'values'}}, $value);
 			}
 		}
 	}
@@ -2219,6 +2211,7 @@ sub __get_valuemappings
 	my $rows_ref = db_select("select m.value,m.newvalue from valuemaps v,mappings m where v.valuemapid=m.valuemapid and v.name='$vmname'");
 
 	my $result = {};
+
 	foreach my $row_ref (@$rows_ref)
 	{
 		$result->{$row_ref->[0]} = $row_ref->[1];
@@ -2779,21 +2772,15 @@ sub __get_dbl_values
 
 	my $result = [];
 
-	if (0 != scalar(@$itemids_ref))
+	return $result if (scalar(@{$itemids_ref}) == 0);
+
+	my $itemids_str = join(',', @{$itemids_ref});
+
+	my $rows_ref = db_select("select value from history where itemid in ($itemids_str) and clock between $from and $till order by clock");
+
+	foreach my $row_ref (@$rows_ref)
 	{
-		my $itemids_str = "";
-		foreach my $itemid (@$itemids_ref)
-		{
-			$itemids_str .= "," unless ($itemids_str eq "");
-			$itemids_str .= $itemid;
-		}
-
-		my $rows_ref = db_select("select value from history where itemid in ($itemids_str) and clock between $from and $till order by clock");
-
-		foreach my $row_ref (@$rows_ref)
-		{
-			push(@{$result}, $row_ref->[0]);
-		}
+		push(@{$result}, $row_ref->[0]);
 	}
 
 	return $result;
