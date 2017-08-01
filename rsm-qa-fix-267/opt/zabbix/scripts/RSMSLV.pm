@@ -77,7 +77,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
 		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_macro_dns_udp_delay get_macro_dns_tcp_delay
 		get_macro_rdds_delay get_macro_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
-		get_macro_dns_update_time get_macro_rdds_update_time get_items_by_hostids get_tld_items get_hostid
+		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_item_data get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
@@ -86,7 +86,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error
-		process_slv_avail get_item_values avail_value_exists
+		process_slv_avail avail_value_exists
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute avail_result_msg
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
@@ -608,6 +608,7 @@ sub get_nsip_items
 	return $result;
 }
 
+# returns a reference to a hash of itemid => hostid pairs
 sub get_items_by_hostids
 {
 	my $hostids_ref = shift;
@@ -626,18 +627,16 @@ sub get_items_by_hostids
 		$rows_ref = db_select("select itemid,hostid from items where hostid in ($hostids) and key_ like '$cfg_key%'");
 	}
 
-	my @items;
+	my $result = {};
+
 	foreach my $row_ref (@$rows_ref)
 	{
-		my %hash;
-		$hash{'itemid'} = $row_ref->[0];
-		$hash{'hostid'} = $row_ref->[1];
-		push(@items, \%hash);
+		$result->{$row_ref->[0]} = $row_ref->[1];
 	}
 
-	fail("cannot find items ($cfg_key", ($complete ? '' : '*'), ") at hostids ($hostids)") if (scalar(@items) == 0);
+	fail("cannot find items ($cfg_key", ($complete ? '' : '*'), ") at hostids ($hostids)") if (scalar(keys(%{$result})) == 0);
 
-	return \@items;
+	return $result;
 }
 
 sub get_tld_items
@@ -1436,13 +1435,13 @@ sub process_slv_avail($$$$$$$$$)
 
 	my $complete_key = ("]" eq substr($cfg_key_in, -1)) ? 1 : 0;
 	my $items_ref = get_items_by_hostids($hostids_ref, $cfg_key_in, $complete_key);
-	if (scalar(@$items_ref) == 0)
+	if (scalar(keys(%{$items_ref})) == 0)	# TODO sort it out, get_items_by_hostids() actually fails in this case
 	{
 		wrn("no items ($cfg_key_in) found");
 		return;
 	}
 
-	my $values_ref = get_item_values($items_ref, $from, $till);
+	my $values_ref = get_item_values(keys(%{$items_ref}), $from, $till);
 	my $probes_with_results = scalar(keys(%$values_ref));
 	if ($probes_with_results < $cfg_minonline)
 	{
@@ -1461,17 +1460,7 @@ sub process_slv_avail($$$$$$$$$)
 
 		next unless (opt('debug'));
 
-		my $hostid = -1;
-		foreach my $item (@$items_ref)
-		{
-			if ($item->{'itemid'} == $itemid)
-			{
-				$hostid = $item->{'hostid'};
-				last;
-			}
-		}
-
-		dbg("i:$itemid (h:$hostid): ", (SUCCESS == $result ? "up" : "down"), " (values: ", join(', ', @{$values}), ")");
+		dbg("i:$itemid (h:$items_ref->{$itemid}): ", (SUCCESS == $result ? "up" : "down"), " (values: ", join(', ', @{$values}), ")");
 	}
 
 	my $result = DOWN;
@@ -1490,15 +1479,15 @@ sub process_slv_avail($$$$$$$$$)
 # ...
 sub get_item_values
 {
-	my $items_ref = shift;
+	my $itemids = shift;
 	my $from = shift;
 	my $till = shift;
 
 	my $result = {};
 
-	return $result if (0 == scalar(@$items_ref));
+	return $result if (0 == scalar(@{$itemids}));
 
-	my $itemids_str = join(',', map {$_->{'itemid'}} (@{$items_ref}));
+	my $itemids_str = join(',', @{$itemids});
 
 	my $rows_ref = db_select("select itemid,value from history_uint where itemid in ($itemids_str) and clock between $from and $till order by clock");
 
