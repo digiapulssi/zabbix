@@ -25,7 +25,6 @@ db_connect();
 
 my $interval = get_macro_dns_udp_delay();
 my $cfg_minonline = get_macro_dns_probe_online();
-my $probe_avail_limit = get_macro_probe_avail_limit();
 
 my $cfg_minns = get_macro_minns();
 
@@ -59,7 +58,7 @@ while ($period > 0)
 
 	next if ($till > $max_avail_time);
 
-	my @probe_names = keys(%{get_probe_times($from, $till, $probe_avail_limit, get_probes('DNS'))});	# todo phase 1: change to ENABLED_DNS
+	my @online_probe_names = keys(%{get_probe_times($from, $till, get_probes('DNS'))});	# todo phase 1: change to ENABLED_DNS
 
 	init_values();
 
@@ -74,7 +73,7 @@ while ($period > 0)
 		}
 
 		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			$probe_avail_limit, \@probe_names, \&check_item_values);
+			\@online_probe_names, \&check_item_values);
 	}
 
 	# unset TLD (for the logs)

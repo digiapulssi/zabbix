@@ -198,7 +198,7 @@ db_connect($server_key);
 
 my $probes_ref = get_probes();
 my $check_probes_from = $from - 60;	# NB! We need previous value for probeChanges file (see __get_probe_changes())
-$probes_data->{$server_key} = get_probe_times($check_probes_from, $till, undef, $probes_ref);	# todo phase 1: this param is ignored, remove in phase 2
+$probes_data->{$server_key} = get_probe_times($check_probes_from, $till, $probes_ref);
 
 #if (opt('debug'))
 #{
