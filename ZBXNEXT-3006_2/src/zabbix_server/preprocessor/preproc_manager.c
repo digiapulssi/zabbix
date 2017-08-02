@@ -685,6 +685,9 @@ static int	preprocessor_set_variant_result(zbx_preprocessing_request_t *request,
 			type = ZBX_VARIANT_STR;
 	}
 
+	free_result(request->value.result);
+	init_result(request->value.result);
+
 	if (FAIL != (ret = zbx_variant_convert(value, type)))
 	{
 		switch (request->value_type)
