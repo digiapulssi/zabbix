@@ -615,16 +615,16 @@ sub get_items_by_hostids
 	my $cfg_key = shift;
 	my $complete = shift;
 
-	my $hostids = join(',', @$hostids_ref);
+	my $hostids_str = join(',', @$hostids_ref);
 
 	my $rows_ref;
 	if ($complete)
 	{
-		$rows_ref = db_select("select itemid,hostid from items where hostid in ($hostids) and key_='$cfg_key'");
+		$rows_ref = db_select("select itemid,hostid from items where hostid in ($hostids_str) and key_='$cfg_key'");
 	}
 	else
 	{
-		$rows_ref = db_select("select itemid,hostid from items where hostid in ($hostids) and key_ like '$cfg_key%'");
+		$rows_ref = db_select("select itemid,hostid from items where hostid in ($hostids_str) and key_ like '$cfg_key%'");
 	}
 
 	my $result = {};
@@ -633,8 +633,6 @@ sub get_items_by_hostids
 	{
 		$result->{$row_ref->[0]} = $row_ref->[1];
 	}
-
-	fail("cannot find items ($cfg_key", ($complete ? '' : '*'), ") at hostids ($hostids)") if (scalar(keys(%{$result})) == 0);
 
 	return $result;
 }
@@ -1435,14 +1433,14 @@ sub process_slv_avail($$$$$$$$$)
 
 	my $complete_key = ("]" eq substr($cfg_key_in, -1)) ? 1 : 0;
 	my $items_ref = get_items_by_hostids($hostids_ref, $cfg_key_in, $complete_key);
-	if (scalar(keys(%{$items_ref})) == 0)	# TODO sort it out, get_items_by_hostids() actually fails in this case
+	if (scalar(keys(%{$items_ref})) == 0)
 	{
 		wrn("no items ($cfg_key_in) found");
 		return;
 	}
 
 	my $values_ref = get_item_values(keys(%{$items_ref}), $from, $till);
-	my $probes_with_results = scalar(keys(%$values_ref));
+	my $probes_with_results = scalar(keys(%{$values_ref}));
 	if ($probes_with_results < $cfg_minonline)
 	{
 		push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
