@@ -323,8 +323,6 @@ else
 
 my $servicedata;	# hash with various data of TLD service
 
-my $probe_avail_limit = get_macro_probe_avail_limit();
-
 foreach (@$tlds_ref)
 {
 	$tlds_processed++;
@@ -428,7 +426,7 @@ if (opt('probe'))
 	$all_probes_ref->{getopt('probe')} = $temp->{getopt('probe')};
 }
 
-my $probe_times_ref = get_probe_times($from, $till, $probe_avail_limit, $all_probes_ref);
+my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
 
 foreach (keys(%$servicedata))
 {

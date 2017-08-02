@@ -1024,14 +1024,14 @@ sub get_all_items
 
 	my $rows_ref = db_select($sql);
 
-	my %result;
+	my $result = {};
 
 	foreach my $row_ref (@$rows_ref)
 	{
-		$result{$row_ref->[0]}{$row_ref->[1]} = '';
+		$result->{$row_ref->[0]}{$row_ref->[1]} = '';
 	}
 
-	if (scalar(keys(%result)) == 0)
+	if (scalar(keys(%{$result})) == 0)
 	{
 		if (defined($tld))
 		{
@@ -1043,7 +1043,7 @@ sub get_all_items
 		}
 	}
 
-	return \%result;
+	return $result;
 }
 
 # return itemids grouped by hosts:

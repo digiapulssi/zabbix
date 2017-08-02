@@ -612,6 +612,23 @@ static int	DBpatch_3000121(void)
 
 static int	DBpatch_3000122(void)
 {
+	char		*params_esc = NULL;
+	int		ret;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	params_esc = zbx_db_dyn_escape_string("{ALERT.SENDTO}\n{ALERT.SUBJECT}\n{ALERT.MESSAGE}\n");
+
+	ret = DBexecute("update media_type set exec_params='%s' where mediatypeid=10", params_esc);
+
+	zbx_free(params_esc);
+
+	return ZBX_DB_OK > ret ? FAIL : SUCCEED;
+}
+
+static int	DBpatch_3000123(void)
+{
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
@@ -621,7 +638,7 @@ static int	DBpatch_3000122(void)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000123(void)
+static int	DBpatch_3000124(void)
 {
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
@@ -661,7 +678,8 @@ DBPATCH_ADD(3000118, 0, 0)	/* read permissions on "Probes - Mon" host group for 
 DBPATCH_ADD(3000119, 0, 0)	/* read permissions on "Mon" host group for "Technical services users" */
 DBPATCH_ADD(3000120, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts (again) */
 DBPATCH_ADD(3000121, 0, 0)	/* new actions: "Probes-Mon", "Central-Server", "TLDs" */
-DBPATCH_ADD(3000122, 0, 0)	/* move "Probe statuses" host from "Probes - Mon" group to "Mon" group */
-DBPATCH_ADD(3000123, 0, 1)	/* change read permissions on "Probes" host group to "Probes - Mon" host group for "EBERO users" */
+DBPATCH_ADD(3000122, 0, 0)	/* parameters for "Script" media type */
+DBPATCH_ADD(3000123, 0, 0)	/* move "Probe statuses" host from "Probes - Mon" group to "Mon" group */
+DBPATCH_ADD(3000124, 0, 1)	/* change read permissions on "Probes" host group to "Probes - Mon" host group for "EBERO users" */
 
 DBPATCH_END()

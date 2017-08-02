@@ -94,8 +94,6 @@ foreach my $service (keys(%services))
 	}
 }
 
-my $probe_avail_limit = get_macro_probe_avail_limit();
-
 my ($check_from, $check_till, $continue_file);
 
 $check_from = $opt_from;
@@ -127,7 +125,7 @@ else
 	$all_probes_ref = get_probes(undef);
 }
 
-my $probe_times_ref = get_probe_times($from, $till, $probe_avail_limit, $all_probes_ref);
+my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
 
 print("Status of Probes at ", ts_str(getopt('from')), "\n");
 print("---------------------------------------\n");
