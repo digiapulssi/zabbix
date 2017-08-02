@@ -20,7 +20,7 @@
 
 
 if ($data['uncheck']) {
-	uncheckTableRows();
+	uncheckTableRows('mediatype');
 }
 
 $widget = (new CWidget())
@@ -152,7 +152,7 @@ $mediaTypeForm->addItem([
 		'mediatype.enable' => ['name' => _('Enable'), 'confirm' => _('Enable selected media types?')],
 		'mediatype.disable' => ['name' => _('Disable'), 'confirm' => _('Disable selected media types?')],
 		'mediatype.delete' => ['name' => _('Delete'), 'confirm' => _('Delete selected media types?')]
-	])
+	], 'mediatype')
 ]);
 
 // append form to widget

@@ -1,3 +1,4 @@
+﻿<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -17,21 +18,36 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_VERSION_H
-#define ZABBIX_VERSION_H
 
-#define ZBX_STR2(str)	#str
-#define ZBX_STR(str)	ZBX_STR2(str)
+class Cstr2memTest extends PHPUnit_Framework_TestCase {
 
-#define APPLICATION_NAME	"Zabbix Agent"
-#define ZABBIX_REVDATE		"18 July 2017"
-#define ZABBIX_VERSION_MAJOR	3
-#define ZABBIX_VERSION_MINOR	2
-#define ZABBIX_VERSION_PATCH	7
-#define ZABBIX_VERSION_REVISION	{ZABBIX_REVISION}
-#define ZABBIX_VERSION_RC	""
-#define ZABBIX_VERSION		ZBX_STR(ZABBIX_VERSION_MAJOR) "." ZBX_STR(ZABBIX_VERSION_MINOR) "." \
-				ZBX_STR(ZABBIX_VERSION_PATCH) ZABBIX_VERSION_RC
-#define ZABBIX_REVISION		ZBX_STR(ZABBIX_VERSION_REVISION)
+	public static function testProvider() {
+		return [
+			['1', 1],
+			['1024', 1024],
+			['0', 0],
+			['1K', 1024],
+			['1k', 1024],
+			['1M', 1024 * 1024],
+			['1m', 1024 * 1024],
+			['1G', 1024 * 1024 * 1024],
+			['1g', 1024 * 1024 * 1024],
+			['8K', 8 * 1024],
+			['8k', 8 * 1024],
+			['8M', 8 * 1024 * 1024],
+			['8m', 8 * 1024 * 1024],
+			['8G', 8 * 1024 * 1024 * 1024],
+			['8g', 8 * 1024 * 1024 * 1024]
+		];
+	}
 
-#endif
+	/**
+	 * @dataProvider testProvider
+	 *
+	 * @param string $source
+	 * @param string $expected
+	*/
+	public function testTriggerExpressionReplaceHost($source, $expected) {
+		$this->assertSame($expected, str2mem($source));
+	}
+}

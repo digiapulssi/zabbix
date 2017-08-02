@@ -20,7 +20,7 @@
 
 
 if ($data['uncheck']) {
-	uncheckTableRows();
+	uncheckTableRows('proxy');
 }
 
 $widget = (new CWidget())
@@ -155,7 +155,7 @@ $proxyForm->addItem([
 			'confirm' => _('Disable hosts monitored by selected proxies?')
 		],
 		'proxy.delete' => ['name' => _('Delete'), 'confirm' => _('Delete selected proxies?')]
-	])
+	], 'proxy')
 ]);
 
 // append form to widget
