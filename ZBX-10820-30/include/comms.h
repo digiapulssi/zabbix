@@ -71,7 +71,6 @@ zbx_buf_type_t;
 
 #define ZBX_SOCKET_COUNT	256
 #define ZBX_STAT_BUF_LEN	2048
-#define ZBX_SOCKET_PEER_BUF_LEN	129
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 typedef struct zbx_tls_context	zbx_tls_context_t;
@@ -97,9 +96,9 @@ typedef struct
 	ZBX_SOCKET			sockets[ZBX_SOCKET_COUNT];
 	char				buf_stat[ZBX_STAT_BUF_LEN];
 	ZBX_SOCKADDR			peer_info;		/* getpeername() result */
-	/* Peer hostname or IP address for diagnostics (after TCP connection is established). */
+	/* Peer host DNS name or IP address for diagnostics (after TCP connection is established). */
 	/* TLS connection may be shut down at any time and it will not be possible to get peer IP address anymore. */
-	char				peer[ZBX_SOCKET_PEER_BUF_LEN];
+	char				peer[MAX_ZBX_DNSNAME_LEN + 1];
 }
 zbx_socket_t;
 
