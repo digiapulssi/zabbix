@@ -22,34 +22,10 @@ macros: macros.o unresolved.o
 		--redefine-sym zbx_db_fetch=mocked_zbx_db_fetch \
 		--redefine-sym DBfree_result=mocked_DBfree_result
 	$(CC) $(LDFLAGS) -o $@ $^ \
-		../../src/libs/zbxsysinfo/libzbxserversysinfo.a \
-		../../src/libs/zbxsysinfo/common/libcommonsysinfo.a \
-		../../src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
-		libmockmacroszbxdbcache.a \
 		../../src/libs/zbxserver/libzbxserver.a \
-		../../src/libs/zbxmemory/libzbxmemory.a \
-		../../src/libs/zbxregexp/libzbxregexp.a \
-		../../src/libs/zbxself/libzbxself.a \
-		../../src/libs/zbxnix/libzbxnix.a \
-		../../src/libs/zbxalgo/libzbxalgo.a \
-		../../src/libs/zbxsys/libzbxsys.a \
-		../../src/libs/zbxconf/libzbxconf.a \
-		../../src/libs/zbxmedia/libzbxmedia.a \
-		../../src/libs/zbxcommon/libzbxcommon.a \
-		../../src/libs/zbxcrypto/libzbxcrypto.a \
+		libmockmacroszbxdbcache.a \
 		../../src/libs/zbxcomms/libzbxcomms.a \
-		../../src/libs/zbxcommshigh/libzbxcommshigh.a \
-		../../src/libs/zbxjson/libzbxjson.a \
-		../../src/libs/zbxhttp/libzbxhttp.a \
-		../../src/libs/zbxexec/libzbxexec.a \
-		../../src/libs/zbxicmpping/libzbxicmpping.a \
-		../../src/libs/zbxdbupgrade/libzbxdbupgrade.a \
-		../../src/libs/zbxdbhigh/libzbxdbhigh.a \
 		libmockmacroszbxdb.a \
-		../../src/libs/zbxmodules/libzbxmodules.a \
-		../../src/libs/zbxtasks/libzbxtasks.a \
-		../../src/libs/zbxalgo/libzbxalgo.a \
-		../../src/libs/zbxcommon/libzbxcommon.a \
 		../../src/libs/zbxsysinfo/libzbxserversysinfo.a \
 		../../src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 		../../src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
@@ -81,33 +57,10 @@ poc: poc.c unresolved.c
 		--redefine-sym zbx_vc_get_value_range=mocked_zbx_vc_get_value_range
 	gcc -c poc.c unresolved.c -I../../include
 	gcc -o poc poc.o unresolved.o \
-		../../src/libs/zbxsysinfo/common/libcommonsysinfo.a \
-		../../src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
 		../../src/libs/zbxserver/libzbxserver.a \
 		libmockpoczbxdbcache.a \
-		../../src/libs/zbxmemory/libzbxmemory.a \
-		../../src/libs/zbxregexp/libzbxregexp.a \
-		../../src/libs/zbxself/libzbxself.a \
-		../../src/libs/zbxnix/libzbxnix.a \
-		../../src/libs/zbxalgo/libzbxalgo.a \
-		../../src/libs/zbxsys/libzbxsys.a \
-		../../src/libs/zbxconf/libzbxconf.a \
-		../../src/libs/zbxmedia/libzbxmedia.a \
-		../../src/libs/zbxcommon/libzbxcommon.a \
-		../../src/libs/zbxcrypto/libzbxcrypto.a \
 		../../src/libs/zbxcomms/libzbxcomms.a \
-		../../src/libs/zbxcommshigh/libzbxcommshigh.a \
-		../../src/libs/zbxjson/libzbxjson.a \
-		../../src/libs/zbxhttp/libzbxhttp.a \
-		../../src/libs/zbxexec/libzbxexec.a \
-		../../src/libs/zbxicmpping/libzbxicmpping.a \
-		../../src/libs/zbxdbupgrade/libzbxdbupgrade.a \
-		../../src/libs/zbxdbhigh/libzbxdbhigh.a \
 		../../src/libs/zbxdb/libzbxdb.a \
-		../../src/libs/zbxmodules/libzbxmodules.a \
-		../../src/libs/zbxtasks/libzbxtasks.a \
-		../../src/libs/zbxalgo/libzbxalgo.a \
-		../../src/libs/zbxcommon/libzbxcommon.a \
 		../../src/libs/zbxsysinfo/libzbxserversysinfo.a \
 		../../src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 		../../src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
