@@ -164,9 +164,9 @@ else {
 foreach ($DB['SERVERS'] as $key => $value) {
 	if ($data['filter_cctld_group'] || $data['filter_gtld_group'] || $data['filter_othertld_group']
 			|| $data['filter_test_group']) {
-		if ($DB['TYPE'] !== $DB['SERVERS'][$key]['TYPE'] || $DB['SERVER'] !== $DB['SERVERS'][$key]['SERVER']
-				|| $DB['PORT'] !== $DB['SERVERS'][$key]['PORT'] || $DB['DATABASE'] !== $DB['SERVERS'][$key]['DATABASE']
-				|| $DB['USER'] !== $DB['SERVERS'][$key]['USER'] || $DB['PASSWORD'] !== $DB['SERVERS'][$key]['PASSWORD']) {
+		if ($DB['SERVER'] !== $DB['SERVERS'][$key]['SERVER'] || $DB['PORT'] !== $DB['SERVERS'][$key]['PORT']
+				|| $DB['DATABASE'] !== $DB['SERVERS'][$key]['DATABASE'] || $DB['USER'] !== $DB['SERVERS'][$key]['USER']
+				|| $DB['PASSWORD'] !== $DB['SERVERS'][$key]['PASSWORD']) {
 			if (!multiDBconnect($DB['SERVERS'][$key], $error)) {
 				show_error_message(_($DB['SERVERS'][$key]['NAME'].': '.$error));
 				continue;
@@ -289,6 +289,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 		);
 
 		if ($db_tlds) {
+			$hostIds = [];
 			while ($db_tld = DBfetch($db_tlds)) {
 				$hostids[] = $db_tld['hostid'];
 

@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc19
 New features:
 
 Bug fixes:
+..F....... [268] fixed undefined variable error in "Rolling week status" page (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc18
