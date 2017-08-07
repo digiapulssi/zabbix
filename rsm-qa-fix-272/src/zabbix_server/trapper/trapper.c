@@ -132,10 +132,11 @@ static void	send_proxyhistory(zbx_socket_t *sock, zbx_timespec_t *ts)
 
 	zbx_json_close(&j);
 
-	/* NB! RSM: do not add timestamp to history data parcel to avoid */
+	/* Spoil "clock" and "ns" tags of a history data parcel to avoid */
 	/* server applying proxy_timediff, it might mess up test cycles! */
-	/*zbx_json_adduint64(&j, ZBX_PROTO_TAG_CLOCK, ts->sec);*/
-	/*zbx_json_adduint64(&j, ZBX_PROTO_TAG_NS, ts->ns);*/
+	/* Keep the parcel timestamp information for debugging purposes. */
+	zbx_json_adduint64(&j, "_" ZBX_PROTO_TAG_CLOCK, ts->sec);
+	zbx_json_adduint64(&j, "_" ZBX_PROTO_TAG_NS, ts->ns);
 
 	if (SUCCEED != zbx_tcp_send_to(sock, j.buffer, CONFIG_TIMEOUT))
 	{
