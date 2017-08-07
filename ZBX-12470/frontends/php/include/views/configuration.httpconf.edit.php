@@ -102,7 +102,7 @@ $httpFormList
 	->addRow(_('HTTP proxy'),
 		(new CTextBox('http_proxy', $this->data['http_proxy'], false, 255))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
-			->setAttribute('placeholder', 'http://[user[:password]@]proxy.example.com[:port]'));
+			->setAttribute('placeholder', _('http://[user[:password]@]proxy.example.com[:port]')));
 
 $pair_tables = [
 	['id' => 'variables', 'label' => _('Variables'), 'class' => 'pair-container'],
