@@ -156,7 +156,8 @@ typedef enum
 	ITEM_TYPE_TELNET,
 	ITEM_TYPE_CALCULATED,
 	ITEM_TYPE_JMX,
-	ITEM_TYPE_SNMPTRAP	/* 17 */
+	ITEM_TYPE_SNMPTRAP,
+	ITEM_TYPE_DEPENDENT	/* 18 */
 }
 zbx_item_type_t;
 const char	*zbx_agent_type_string(zbx_item_type_t item_type);
@@ -635,10 +636,12 @@ const char	*zbx_item_logtype_string(unsigned char logtype);
 #define OPERATION_TYPE_HOST_DISABLE	9
 #define OPERATION_TYPE_HOST_INVENTORY	10
 #define OPERATION_TYPE_RECOVERY_MESSAGE	11
+#define OPERATION_TYPE_ACK_MESSAGE	12
 
 /* normal and recovery operations */
 #define ZBX_OPERATION_MODE_NORMAL	0
 #define ZBX_OPERATION_MODE_RECOVERY	1
+#define ZBX_OPERATION_MODE_ACK		2
 
 /* algorithms for service status calculation */
 #define SERVICE_ALGORITHM_NONE	0

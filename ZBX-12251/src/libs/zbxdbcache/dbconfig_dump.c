@@ -528,6 +528,14 @@ static void	DCdump_items(ZBX_DC_CONFIG *config)
 		if (0 != item->preproc_ops.values_num)
 			DCdump_item_preproc(item);
 
+		if (0 != item->dep_itemids.values_num)
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "  dependent:");
+
+			for (j = 0; j < item->dep_itemids.values_num; j++)
+				zabbix_log(LOG_LEVEL_TRACE, "    " ZBX_FS_UI64, item->dep_itemids.values[j]);
+		}
+
 		if (NULL != item->triggers)
 		{
 			ZBX_DC_TRIGGER	*trigger;
@@ -770,8 +778,9 @@ static void	DCdump_actions(ZBX_DC_CONFIG *config)
 	for (i = 0; i < index.values_num; i++)
 	{
 		action = (zbx_dc_action_t *)index.values[i];
-		zabbix_log(LOG_LEVEL_TRACE, "actionid:" ZBX_FS_UI64 " formula:'%s' eventsource:%u evaltype:%u",
-				action->actionid, action->formula, action->eventsource, action->evaltype);
+		zabbix_log(LOG_LEVEL_TRACE, "actionid:" ZBX_FS_UI64 " formula:'%s' eventsource:%u evaltype:%u"
+				" opflags:%x", action->actionid, action->formula, action->eventsource, action->evaltype,
+				action->opflags);
 
 		for (j = 0; j < action->conditions.values_num; j++)
 		{
