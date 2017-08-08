@@ -377,7 +377,6 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 {
 	int			i, num = 0;
 	ZBX_DC_HISTORY		*h;
-	static struct zbx_json	json;
 	size_t			url_alloc = 0, url_offset = 0;
 	ZBX_SENDER		*sender;
 
