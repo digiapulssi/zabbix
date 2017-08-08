@@ -76,7 +76,7 @@ my $cfg_global_macros = cfg_global_macros;
 
 my ($ns_servers, $root_servers_macros);
 
-my ($main_templateid, $tld_groupid, $tld_probe_results_groupid, $tld_type_probe_results_groupid);
+my ($main_templateid, $tld_groupid, $tld_probe_results_groupid);
 
 my $config = get_rsm_config();
 
@@ -177,16 +177,8 @@ if (defined($error)) {
     pfail($error);
 }
 
-# todo phase 1: get $tld_type_probe_results_groupid early for set-type
-if (defined($OPTS{'type'}))
-{
-    $tld_type_probe_results_groupid = create_group($OPTS{'type'}.' Probe results');
-
-    pfail $tld_type_probe_results_groupid->{'data'} if check_api_error($tld_type_probe_results_groupid) eq true;
-}
-
 if (defined($OPTS{'set-type'})) {
-    if (set_tld_type($OPTS{'tld'}, $OPTS{'type'}, $tld_type_probe_results_groupid) == true)
+    if (_set_tld_type($OPTS{'tld'}, $OPTS{'type'}, TLD_TYPE_PROBE_RESULTS_GROUPIDS->{$OPTS{'type'}}) == true)
     {
 	print("${OPTS{'tld'}} set to \"${OPTS{'type'}}\"\n");
     }
@@ -401,10 +393,10 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 				'groupid'	=> $probe_groupid
 			},
 			{
-				'groupid'	=> $tld_probe_results_groupid
+				'groupid'	=> TLD_PROBE_RESULTS_GROUPID
 			},
 			{
-				'groupid'	=> $tld_type_probe_results_groupid
+				'groupid'	=> TLD_TYPE_PROBE_RESULTS_GROUPIDS->{$OPTS{'type'}}
 			}
 		],
 		'templates'	=> [
