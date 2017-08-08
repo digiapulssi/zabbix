@@ -1444,14 +1444,6 @@ static DC_ITEM	*DCmass_prepare_history_items(ZBX_DC_HISTORY *history, int histor
 	return items;
 }
 
-static void destroy_history_items(DC_ITEM **items, int **errcodes, size_t num)
-{
-	DCconfig_clean_items(*items, *errcodes, num);
-
-	zbx_free(*errcodes);
-	zbx_free(*items);
-}
-
 /******************************************************************************
  *                                                                            *
  * Function: DBmass_update_items                                              *
@@ -2401,7 +2393,10 @@ int	DCsync_history(int sync_type, int *total_num)
 
 			DCconfig_unlock_triggers(&triggerids);
 			zbx_free(trends);
-			destroy_history_items(&items, &errcodes, history_num);
+
+			DCconfig_clean_items(items, errcodes, history_num);
+			zbx_free(errcodes);
+			zbx_free(items);
 		}
 		else
 		{
