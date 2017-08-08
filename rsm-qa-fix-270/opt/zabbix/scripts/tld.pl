@@ -343,9 +343,6 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 	create_host({
 		'groups'	=> [
 			{
-				'groupid'	=> $probe_groupid
-			},
-			{
 				'groupid'	=> PROBES_GROUPID
 			}
 		],

@@ -141,9 +141,6 @@ sub add_probe($$$$$) {
 	$probe_host = create_host({
 		'groups'	=> [
 			{
-				'groupid'	=> $probe_groupid
-			},
-			{
 				'groupid'	=> PROBES_GROUPID
 			}
 		],
