@@ -98,6 +98,7 @@ var timeControl = {
 					obj.sliderMaximumTimePeriod,
 					obj.time.isNow
 				);
+				this.timeline.is_selectall_period = (obj.time.period == this.timeline.maxperiod);
 
 				// scrollbar
 				var width = get_bodywidth() - 100;
@@ -247,7 +248,7 @@ var timeControl = {
 
 	objectUpdate: function() {
 		var usertime = this.timeline.usertime(),
-			period = this.timeline.period();
+			period = this.timeline.is_selectall_period ? this.timeline.maxperiod : this.timeline.period();
 
 		// secure browser from fast user operations
 		if (isNaN(usertime) || isNaN(period)) {
@@ -328,6 +329,7 @@ var CTimeLine = Class.create({
 	_isNow:		false,	// state if time is set to NOW (for outside usage)
 	minperiod:	60,		// minimal allowed period
 	maxperiod:	null,	// max period in seconds
+	is_selectall_period: false, // Will be set to true if period 'All' is selected.
 
 	initialize: function(period, starttime, usertime, endtime, maximumPeriod, isNow) {
 		if ((endtime - starttime) < (3 * this.minperiod)) {
@@ -373,8 +375,10 @@ var CTimeLine = Class.create({
 
 	period: function(period) {
 		if (empty(period)) {
-			return this._period;
+			return this.is_selectall_period ? this._endtime - this._starttime : this._period;
 		}
+
+		this.is_selectall_period = period == this.maxperiod;
 
 		if ((this._usertime - period) < this._starttime) {
 			period = this._usertime - this._starttime;
@@ -1043,7 +1047,8 @@ var CScrollBar = Class.create({
 
 	setTabInfo: function() {
 		var period = timeControl.timeline.period(),
-			usertime = timeControl.timeline.usertime();
+			usertime = timeControl.timeline.usertime(),
+			user_starttime = usertime;
 
 		// secure browser from incorrect user actions
 		if (isNaN(period) || isNaN(usertime)) {
@@ -1053,9 +1058,12 @@ var CScrollBar = Class.create({
 		this.dom.info_period.innerHTML = formatTimestamp(period, false, true);
 
 		// info left
-		var userStartTime = usertime - period;
-		this.dom.info_left.innerHTML = new CDate(userStartTime * 1000).format(locale['S_DATE_FORMAT']);
-		this.dom.info_left.setAttribute('data-timestamp', userStartTime);
+		if (timeControl.timeline.is_selectall_period) {
+			user_starttime = user_starttime - period;
+		}
+
+		this.dom.info_left.innerHTML = new CDate(user_starttime * 1000).format(locale['S_DATE_FORMAT']);
+		this.dom.info_left.setAttribute('data-timestamp', user_starttime);
 
 		// info right
 		var right_info = new CDate(usertime * 1000).format(locale['S_DATE_FORMAT']);
@@ -1217,7 +1225,7 @@ var CScrollBar = Class.create({
 		}
 
 		i = this.dom.linklist.length - 1;
-		if (period == (timeControl.timeline.endtime() - timeControl.timeline.starttime())) {
+		if (timeControl.timeline.is_selectall_period) {
 			this.dom.linklist[i].className = 'link-action selected';
 		}
 	},

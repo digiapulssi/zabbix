@@ -136,9 +136,16 @@ class CScreenHistory extends CScreenBase {
 			elseif ($this->action == HISTORY_VALUES) {
 				$config = select_config();
 
-				// interval start value is non-inclusive, hence the + 1 second
-				$options['time_from'] = $stime + 1;
-				$options['time_till'] = $stime + $this->timeline['period'];
+				// When 'All' mode is selected request only config.search_limit latest rows.
+				if ($this->timeline['period'] == ZBX_MAX_PERIOD) {
+					$options['time_from'] = time() - ZBX_MAX_PERIOD;
+				}
+				else {
+					// interval start value is non-inclusive, hence the + 1 second
+					$options['time_from'] = $stime + 1;
+					$options['time_till'] = $stime + $this->timeline['period'];
+				}
+
 				$options['limit'] = $config['search_limit'];
 			}
 
@@ -309,7 +316,9 @@ class CScreenHistory extends CScreenBase {
 		if (!$this->plaintext && str_in_array($this->action, [HISTORY_VALUES, HISTORY_GRAPH, HISTORY_BATCH_GRAPH])) {
 			$graphDims = getGraphDims();
 
-			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($firstItem['itemid']));
+			// Interval start value is non-inclusive, therefore should subtract 1 second to be able to show row with
+			// minimum clock value.
+			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($firstItem['itemid']) - 1);
 
 			$this->dataId = 'historyGraph';
 
