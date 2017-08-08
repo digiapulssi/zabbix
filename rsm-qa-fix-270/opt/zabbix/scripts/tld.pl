@@ -61,7 +61,7 @@ use RSM;
 use TLD_constants qw(:general :templates :groups :value_types :ec :slv :config :api);
 use TLDs;
 
-sub create_tld_host($$$);
+sub create_tld_host($$);
 sub manage_tld_objects($$$$$$);
 sub manage_tld_hosts($$);
 
@@ -311,7 +311,7 @@ $tld_groupid = create_group('TLD '.$OPTS{'tld'});
 
 pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
 
-create_tld_host($OPTS{'tld'}, $OPTS{'type'}, $tld_groupid);
+create_tld_host($OPTS{'tld'}, $OPTS{'type'});
 
 my $proxy_mon_templateid = create_probe_health_tmpl();
 
@@ -1355,17 +1355,13 @@ sub add_default_actions() {
 
 }
 
-sub create_tld_host($$$)
+sub create_tld_host($$)
 {
 	my $tld_name = shift;
 	my $tld_type = shift;
-	my $tld_groupid = shift;
 
 	my $tld_hostid = create_host({
 		'groups'	=> [
-			{
-				'groupid'	=> $tld_groupid
-			},
 			{
 				'groupid'	=> TLDS_GROUPID
 			},
