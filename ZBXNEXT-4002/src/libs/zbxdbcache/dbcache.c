@@ -179,7 +179,7 @@ static dc_item_value_t	*item_values = NULL;
 static size_t		item_values_alloc = 0, item_values_num = 0;
 
 /* History service URL reference, from history.c */
-extern const char	*HISTORY_SERVICE_URL;
+extern const char	*HISTORY_STORAGE_URL;
 
 static void	hc_add_item_values(dc_item_value_t *values, int values_num);
 static void	hc_pop_items(zbx_vector_ptr_t *history_items);

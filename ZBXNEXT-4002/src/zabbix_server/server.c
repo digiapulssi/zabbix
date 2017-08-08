@@ -258,8 +258,8 @@ char	*CONFIG_TLS_PSK_FILE		= NULL;
 #endif
 
 char	*CONFIG_SOCKET_PATH		= NULL;
-char	*CONFIG_HISTORY_SERVICE_URL	= NULL;
-char	*CONFIG_HISTORY_SERVICE_OPTS	= NULL;
+char	*CONFIG_HISTORY_STORAGE_URL	= NULL;
+char	*CONFIG_HISTORY_STORAGE_OPTS	= NULL;
 
 int	get_process_info_by_thread(int local_server_num, unsigned char *local_process_type, int *local_process_num);
 
@@ -439,8 +439,8 @@ static void	zbx_set_defaults(void)
 	if (NULL == CONFIG_SSL_KEY_LOCATION)
 		CONFIG_SSL_KEY_LOCATION = zbx_strdup(CONFIG_SSL_KEY_LOCATION, DATADIR "/zabbix/ssl/keys");
 
-	if (NULL == CONFIG_HISTORY_SERVICE_OPTS)
-		CONFIG_HISTORY_SERVICE_OPTS = zbx_strdup(CONFIG_HISTORY_SERVICE_OPTS, "unum,float,char,log,text");
+	if (NULL == CONFIG_HISTORY_STORAGE_OPTS)
+		CONFIG_HISTORY_STORAGE_OPTS = zbx_strdup(CONFIG_HISTORY_STORAGE_OPTS, "unum,float,char,log,text");
 #endif
 
 #ifdef HAVE_SQLITE3
@@ -499,8 +499,8 @@ static void	zbx_validate_config(ZBX_TASK_EX *task)
 	err |= (FAIL == check_cfg_feature_str("SSLCALocation", CONFIG_SSL_CA_LOCATION, "cURL library"));
 	err |= (FAIL == check_cfg_feature_str("SSLCertLocation", CONFIG_SSL_CERT_LOCATION, "cURL library"));
 	err |= (FAIL == check_cfg_feature_str("SSLKeyLocation", CONFIG_SSL_KEY_LOCATION, "cURL library"));
-	err |= (FAIL == check_cfg_feature_str("HistoryServiceURL", CONFIG_HISTORY_SERVICE_URL, "cURL library"));
-	err |= (FAIL == check_cfg_feature_str("HistoryServiceTypes", CONFIG_HISTORY_SERVICE_OPTS, "cURL library"));
+	err |= (FAIL == check_cfg_feature_str("HistoryStorageURL", CONFIG_HISTORY_STORAGE_URL, "cURL library"));
+	err |= (FAIL == check_cfg_feature_str("HistoryStorageTypes", CONFIG_HISTORY_STORAGE_OPTS, "cURL library"));
 #endif
 
 #if !defined(HAVE_LIBXML2) || !defined(HAVE_LIBCURL)
@@ -692,9 +692,9 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	1,			100},
 		{"StartPreprocessors",		&CONFIG_PREPROCESSOR_FORKS,		TYPE_INT,
 			PARM_OPT,	1,			1000},
-		{"HistoryServiceURL",		&CONFIG_HISTORY_SERVICE_URL,		TYPE_STRING,
+		{"HistoryStorageURL",		&CONFIG_HISTORY_STORAGE_URL,		TYPE_STRING,
 			PARM_OPT,	0,			0},
-		{"HistoryServiceTypes",		&CONFIG_HISTORY_SERVICE_OPTS,		TYPE_STRING_LIST,
+		{"HistoryStorageTypes",		&CONFIG_HISTORY_STORAGE_OPTS,		TYPE_STRING_LIST,
 			PARM_OPT,	0,			0},
 		{NULL}
 	};
@@ -713,7 +713,7 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 	zbx_tls_validate_config();
 #endif
 
-	if (SUCCEED != zbx_init_history_service(CONFIG_HISTORY_SERVICE_URL, CONFIG_HISTORY_SERVICE_OPTS))
+	if (SUCCEED != zbx_init_history_service(CONFIG_HISTORY_STORAGE_URL, CONFIG_HISTORY_STORAGE_OPTS))
 		exit(EXIT_FAILURE);
 }
 

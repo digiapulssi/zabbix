@@ -28,13 +28,13 @@
 
 #include "history.h"
 
-#define		ZBX_HISTORY_SERVICE_DOWN	10000 /* Timeout in milliseconds */
+#define		ZBX_HISTORY_STORAGE_DOWN	10000 /* Timeout in milliseconds */
 
-const char	*HISTORY_SERVICE_URL	= NULL;
+const char	*HISTORY_STORAGE_URL	= NULL;
 
 /* The bitmask for this variable is defined by the item types as defined*/
 /*  in the enum zbx_item_value_type_t in include/common.h.*/
-static int		HISTORY_SERVICE_OPTS	= 0;
+static int		HISTORY_STORAGE_OPTS	= 0;
 
 #if defined (HAVE_LIBCURL)
 
@@ -272,7 +272,7 @@ int	zbx_init_history_service(const char *url, const char *types)
 	if (NULL == url)
 		return SUCCEED;
 
-	HISTORY_SERVICE_URL = url;
+	HISTORY_STORAGE_URL = url;
 
 	str = zbx_strdup(str, types);
 
@@ -280,23 +280,23 @@ int	zbx_init_history_service(const char *url, const char *types)
 	{
 		if (0 == strcmp(ZBX_HISTORY_TYPE_UNUM_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_UINT64;
+			HISTORY_STORAGE_OPTS |= 1 << ITEM_VALUE_TYPE_UINT64;
 		}
 		else if (0 == strcmp(ZBX_HISTORY_TYPE_FLOAT_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_FLOAT;
+			HISTORY_STORAGE_OPTS |= 1 << ITEM_VALUE_TYPE_FLOAT;
 		}
 		else if (0 == strcmp(ZBX_HISTORY_TYPE_CHAR_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_STR;
+			HISTORY_STORAGE_OPTS |= 1 << ITEM_VALUE_TYPE_STR;
 		}
 		else if (0 == strcmp(ZBX_HISTORY_TYPE_TEXT_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_TEXT;
+			HISTORY_STORAGE_OPTS |= 1 << ITEM_VALUE_TYPE_TEXT;
 		}
 		else if (0 == strcmp(ZBX_HISTORY_TYPE_LOG_STR, tok))
 		{
-			HISTORY_SERVICE_OPTS |= 1 << ITEM_VALUE_TYPE_LOG;
+			HISTORY_STORAGE_OPTS |= 1 << ITEM_VALUE_TYPE_LOG;
 		}
 		else
 		{
@@ -337,7 +337,7 @@ void	zbx_send_data(void)
 		code = curl_multi_perform(multi, &running);
 
 		if (CURLM_OK == code)
-			code = curl_multi_wait(multi, NULL, 0, ZBX_HISTORY_SERVICE_DOWN, &fds);
+			code = curl_multi_wait(multi, NULL, 0, ZBX_HISTORY_STORAGE_DOWN, &fds);
 
 		if (CURLM_OK != code)
 		{
@@ -438,7 +438,7 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 	if (num > 0)
 	{
 		zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s",
-				HISTORY_SERVICE_URL, sender->type);
+				HISTORY_STORAGE_URL, sender->type);
 
 		zbx_sender_prepare(sender);
 
@@ -472,7 +472,7 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	}
 
 	zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s/" ZBX_FS_UI64,
-			HISTORY_SERVICE_URL, sender->type, itemid);
+			HISTORY_STORAGE_URL, sender->type, itemid);
 
 	zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "?end=%d", end);
 
@@ -528,7 +528,7 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 
 int	zbx_history_check_type(int value_type)
 {
-	return HISTORY_SERVICE_OPTS & (1 << value_type);
+	return HISTORY_STORAGE_OPTS & (1 << value_type);
 }
 
 #else
