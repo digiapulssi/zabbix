@@ -962,7 +962,7 @@ clean_items:
  *             h    - [IN/OUT] a reference to history cache value             *
  *                                                                            *
  ******************************************************************************/
-static void	DCadd_update_item_sql(size_t *sql_offset, const DC_ITEM *item, ZBX_DC_HISTORY *h,
+static void	DCadd_update_item_sql(size_t *sql_offset, const DC_ITEM *item, const ZBX_DC_HISTORY *h,
 		zbx_vector_ptr_t *state_diff)
 {
 	char				*value_esc;
@@ -1020,7 +1020,7 @@ notsupported:
 		}
 
 		if (0 != update_cache)
-			zbx_vector_ptr_append(state_diff, h);
+			zbx_vector_ptr_append(state_diff, (DC_ITEM *)h);
 	}
 	else
 	{
@@ -1038,7 +1038,7 @@ notsupported:
 					(int)h->state);
 			sql_start = sql_continue;
 
-			zbx_vector_ptr_append(state_diff, h);
+			zbx_vector_ptr_append(state_diff, (DC_ITEM *)h);
 		}
 	}
 	if (sql_start == sql_continue)
@@ -1466,7 +1466,7 @@ static void destroy_history_items(DC_ITEM **items, int **errcodes, size_t num)
  * Author: Alexei Vladishev, Eugene Grigorjev, Alexander Vladishev            *
  *                                                                            *
  ******************************************************************************/
-static void	DBmass_update_items(ZBX_DC_HISTORY *history, int history_num, const DC_ITEM *items,
+static void	DBmass_update_items(const ZBX_DC_HISTORY *history, int history_num, const DC_ITEM *items,
 		zbx_vector_ptr_t *state_diff)
 {
 	const char		*__function_name = "DCmass_update_items";
@@ -1483,7 +1483,7 @@ static void	DBmass_update_items(ZBX_DC_HISTORY *history, int history_num, const 
 
 	for (i = 0; i < history_num; i++)
 	{
-		ZBX_DC_HISTORY	*h;
+		const ZBX_DC_HISTORY	*h;
 		int		j;
 
 		for (j = 0; j < history_num; j++)
