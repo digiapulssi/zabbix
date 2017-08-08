@@ -136,6 +136,19 @@ DC_HOST;
 
 typedef struct
 {
+	zbx_uint64_t	itemid;
+	history_value_t	value;
+	zbx_uint64_t	lastlogsize;
+	zbx_timespec_t	ts;
+	int		mtime;
+	unsigned char	value_type;
+	unsigned char	flags;		/* see ZBX_DC_FLAG_* above */
+	unsigned char	state;
+}
+ZBX_DC_HISTORY;		/* structure for copying data about one item from history cache to temporary array */
+
+typedef struct
+{
 	unsigned char	type;
 	char		params[ITEM_PREPROC_PARAMS_LEN * 4 + 1];
 }
@@ -510,7 +523,7 @@ void	DCconfig_get_items_by_keys(DC_ITEM *items, zbx_host_key_t *keys, int *errco
 void	DCconfig_get_items_by_itemids(DC_ITEM *items, const zbx_uint64_t *itemids, int *errcodes, size_t num,
 		zbx_uint64_t flags);
 void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp);
-void	DCconfig_set_item_db_state(zbx_uint64_t itemid, unsigned char state, const char *error);
+void	DCset_item_db_states(const zbx_vector_ptr_t *state_diff);
 void	DCconfig_get_functions_by_functionids(DC_FUNCTION *functions,
 		zbx_uint64_t *functionids, int *errcodes, size_t num);
 void	DCconfig_clean_functions(DC_FUNCTION *functions, int *errcodes, size_t num);

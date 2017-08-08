@@ -947,48 +947,6 @@ static void	DCdump_host_group_index(ZBX_DC_CONFIG *config)
 	zabbix_log(LOG_LEVEL_TRACE, "End of %s()", __function_name);
 }
 
-static void	DCdump_deltaitems(ZBX_DC_CONFIG *config)
-{
-	const char		*__function_name = "DCdump_deltaitems";
-
-	ZBX_DC_DELTAITEM	*deltaitem;
-	zbx_hashset_iter_t	iter;
-	int			i;
-	zbx_vector_ptr_t	index;
-
-	zabbix_log(LOG_LEVEL_TRACE, "In %s()", __function_name);
-
-	zbx_vector_ptr_create(&index);
-	zbx_hashset_iter_reset(&config->deltaitems, &iter);
-
-	while (NULL != (deltaitem = (ZBX_DC_DELTAITEM *)zbx_hashset_iter_next(&iter)))
-		zbx_vector_ptr_append(&index, deltaitem);
-
-	zbx_vector_ptr_sort(&index, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
-
-	for (i = 0; i < index.values_num; i++)
-	{
-		deltaitem = (ZBX_DC_DELTAITEM *)index.values[i];
-
-		if (deltaitem->value.type == ITEM_VALUE_TYPE_UINT64)
-		{
-			zabbix_log(LOG_LEVEL_TRACE, "itemid:" ZBX_FS_UI64 " sec:%d ns:%d type:%u value:" ZBX_FS_UI64,
-					deltaitem->itemid, deltaitem->timestamp.sec, deltaitem->timestamp.ns,
-					deltaitem->value.type, deltaitem->value.data.ui64);
-		}
-		else
-		{
-			zabbix_log(LOG_LEVEL_TRACE, "itemid:" ZBX_FS_UI64 " sec:%d ns:%d type:%u value:%f",
-					deltaitem->itemid, deltaitem->timestamp.sec, deltaitem->timestamp.ns,
-					deltaitem->value.type, deltaitem->value.data.dbl);
-		}
-	}
-
-	zbx_vector_ptr_destroy(&index);
-
-	zabbix_log(LOG_LEVEL_TRACE, "End of %s()", __function_name);
-}
-
 void	DCdump_configuration(ZBX_DC_CONFIG *config)
 {
 	DCdump_config(config);
@@ -1010,5 +968,4 @@ void	DCdump_configuration(ZBX_DC_CONFIG *config)
 	DCdump_correlations(config);
 	DCdump_host_groups(config);
 	DCdump_host_group_index(config);
-	DCdump_deltaitems(config);
 }

@@ -100,19 +100,6 @@ static ZBX_DC_IDS	*ids = NULL;
 
 typedef struct
 {
-	zbx_uint64_t	itemid;
-	history_value_t	value;
-	zbx_uint64_t	lastlogsize;
-	zbx_timespec_t	ts;
-	int		mtime;
-	unsigned char	value_type;
-	unsigned char	flags;		/* see ZBX_DC_FLAG_* above */
-	unsigned char	state;
-}
-ZBX_DC_HISTORY;		/* structure for copying data about one item from history cache to temporary array */
-
-typedef struct
-{
 	zbx_uint64_t	hostid;
 	const char	*field_name;
 	char		*value_esc;
@@ -757,6 +744,8 @@ static void	DCadd_trend(const ZBX_DC_HISTORY *history, ZBX_DC_TREND **trends, in
  *                                                                            *
  * Function: DCmass_update_trends                                             *
  *                                                                            *
+ * Purpose: update trends cache and get list of trends to flush into database *
+ *                                                                            *
  * Parameters: history     - array of history data                            *
  *             history_num - number of history structures                     *
  *                                                                            *
@@ -1396,10 +1385,7 @@ static DC_ITEM	*DCmass_prepare_history_items(ZBX_DC_HISTORY *history, int histor
 		if (SUCCEED != (*errcodes)[i])
 			continue;
 
-		if (ITEM_STATUS_ACTIVE != items[i].status)
-			continue;
-
-		if (HOST_STATUS_MONITORED != items[i].host.status)
+		if (ITEM_STATUS_ACTIVE != items[i].status && HOST_STATUS_MONITORED != items[i].host.status)
 			continue;
 
 		for (j = 0; j < history_num; j++)
@@ -1459,7 +1445,7 @@ static DC_ITEM	*DCmass_prepare_history_items(ZBX_DC_HISTORY *history, int histor
  *                                                                            *
  ******************************************************************************/
 static void	DBmass_update_items(const ZBX_DC_HISTORY *history, int history_num, const DC_ITEM *items,
-		zbx_vector_ptr_t *state_diff)
+		const int *errcodes, zbx_vector_ptr_t *state_diff)
 {
 	const char		*__function_name = "DCmass_update_items";
 
@@ -1476,7 +1462,13 @@ static void	DBmass_update_items(const ZBX_DC_HISTORY *history, int history_num, 
 	for (i = 0; i < history_num; i++)
 	{
 		const ZBX_DC_HISTORY	*h;
-		int		j;
+		int			j;
+
+		if (SUCCEED != errcodes[i])
+			continue;
+
+		if (ITEM_STATUS_ACTIVE != items[i].status && HOST_STATUS_MONITORED != items[i].host.status)
+			continue;
 
 		for (j = 0; j < history_num; j++)
 		{
@@ -1491,9 +1483,6 @@ static void	DBmass_update_items(const ZBX_DC_HISTORY *history, int history_num, 
 		}
 
 		h = &history[j];
-
-		if (0 != (h->flags & ZBX_DC_FLAG_UNDEF))
-			continue;
 
 		DCadd_update_item_sql(&sql_offset, &items[i], h, state_diff);
 		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
@@ -2193,26 +2182,6 @@ static void	DCmodule_sync_history(int history_float_num, int history_integer_num
 	}
 }
 
-static void	DCset_item_db_states(const zbx_vector_ptr_t *state_diff)
-{
-	const char	*__function_name = "DCset_item_db_states";
-	int		i;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
-	for (i = 0; i < state_diff->values_num; i++)
-	{
-		ZBX_DC_HISTORY	*h = state_diff->values[i];
-
-		if (ITEM_STATE_NOTSUPPORTED == h->state)
-			DCconfig_set_item_db_state(h->itemid, h->state, h->value.err);
-		else
-			DCconfig_set_item_db_state(h->itemid, h->state, "");
-	}
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
-}
-
 /******************************************************************************
  *                                                                            *
  * Function: DCsync_history                                                   *
@@ -2367,7 +2336,7 @@ int	DCsync_history(int sync_type, int *total_num)
 			{
 				DBbegin();
 
-				DBmass_update_items(history, history_num, items, &state_diff);
+				DBmass_update_items(history, history_num, items, errcodes, &state_diff);
 				DBmass_add_history(history, history_num);
 				DBmass_update_triggers(history, history_num, &trigger_diff);
 				DBmass_update_trends(trends, trends_num, &trends_diff);

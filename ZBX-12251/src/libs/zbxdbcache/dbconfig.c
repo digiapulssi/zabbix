@@ -6196,24 +6196,41 @@ void	DCconfig_get_triggers_by_triggerids(DC_TRIGGER *triggers, const zbx_uint64_
 
 /******************************************************************************
  *                                                                            *
- * Function: DCconfig_set_item_db_state                                       *
+ * Function: DCset_item_db_states                                             *
  *                                                                            *
- * Purpose: set item db_state and db_error                                    *
+ * Purpose: update cache with item state changes in database                  *
+ *                                                                            *
+ * Parameters: state_diff - [IN] history values that changed item state       *
  *                                                                            *
  ******************************************************************************/
-void	DCconfig_set_item_db_state(zbx_uint64_t itemid, unsigned char state, const char *error)
+void	DCset_item_db_states(const zbx_vector_ptr_t *state_diff)
 {
-	ZBX_DC_ITEM	*dc_item;
+	const char	*__function_name = "DCset_item_db_states";
+	int		i;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	LOCK_CACHE;
 
-	if (NULL != (dc_item = zbx_hashset_search(&config->items, &itemid)))
+	for (i = 0; i < state_diff->values_num; i++)
 	{
-		dc_item->db_state = state;
-		DCstrpool_replace(1, &dc_item->db_error, error);
+		ZBX_DC_ITEM	*dc_item;
+		ZBX_DC_HISTORY	*h = state_diff->values[i];
+
+		if (NULL != (dc_item = zbx_hashset_search(&config->items, &h->itemid)))
+		{
+			dc_item->db_state = h->state;
+
+			if (ITEM_STATE_NOTSUPPORTED == h->state)
+				DCstrpool_replace(1, &dc_item->db_error, h->value.err);
+			else
+				DCstrpool_replace(1, &dc_item->db_error, "");
+		}
 	}
 
 	UNLOCK_CACHE;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************
