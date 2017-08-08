@@ -90,11 +90,11 @@ switch ($srctbl) {
 		break;
 	case 'graph_prototypes':
 		$page['title'] = _('Graph prototypes');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'item_prototypes':
 		$page['title'] = _('Item prototypes');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'sysmaps':
 		$page['title'] = _('Maps');
@@ -102,7 +102,7 @@ switch ($srctbl) {
 		break;
 	case 'screens2':
 		$page['title'] = _('Screens');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'drules':
 		$page['title'] = _('Discovery rules');
@@ -142,10 +142,10 @@ $allowedSrcFields = [
 	'users'					=> '"usergrpid", "alias", "fullname", "userid"',
 	'triggers'				=> '"description", "triggerid", "expression"',
 	'trigger_prototypes'	=> '"description", "triggerid", "expression"',
-	'items'					=> '"itemid", "name"',
+	'items'					=> '"itemid", "name", "master_itemname"',
 	'graphs'				=> '"graphid", "name"',
 	'graph_prototypes'		=> '"graphid", "name"',
-	'item_prototypes'		=> '"itemid", "name", "flags"',
+	'item_prototypes'		=> '"itemid", "name", "flags", "master_itemname"',
 	'sysmaps'				=> '"sysmapid", "name"',
 	'help_items'			=> '"key"',
 	'screens'				=> '"screenid"',
@@ -198,12 +198,13 @@ $fields = [
 	'noempty' =>					[T_ZBX_STR, O_OPT, null,	null,		null],
 	'select' =>						[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'submitParent' =>				[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
-	'templateid' =>					[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null]
+	'templateid' =>					[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null],
+	'with_webitems' =>				[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 
 // unset disabled item types
 $allowedItemTypes = [ITEM_TYPE_ZABBIX, ITEM_TYPE_ZABBIX_ACTIVE, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL,
-	ITEM_TYPE_AGGREGATE, ITEM_TYPE_SNMPTRAP, ITEM_TYPE_DB_MONITOR
+	ITEM_TYPE_AGGREGATE, ITEM_TYPE_SNMPTRAP, ITEM_TYPE_DB_MONITOR, ITEM_TYPE_JMX
 ];
 if (hasRequest('itemtype') && !str_in_array(getRequest('itemtype'), $allowedItemTypes)) {
 	unset($_REQUEST['itemtype']);
@@ -274,6 +275,7 @@ $host = getRequest('host', '');
 $onlyHostid = getRequest('only_hostid');
 $parentDiscoveryId = getRequest('parent_discoveryid');
 $templateid = getRequest('templateid');
+$with_webitems = (bool) getRequest('with_webitems', true);
 
 if (isset($onlyHostid)) {
 	$_REQUEST['hostid'] = $onlyHostid;
@@ -1260,7 +1262,9 @@ elseif ($srctbl === 'items' || $srctbl === 'item_prototypes') {
 		$items = API::ItemPrototype()->get($options);
 	}
 	else {
-		$options['webitems'] = true;
+		if ($with_webitems) {
+			$options['webitems'] = true;
+		}
 
 		if ($normalOnly !== null) {
 			$options['filter']['flags'] = ZBX_FLAG_DISCOVERY_NORMAL;
@@ -1277,11 +1281,17 @@ elseif ($srctbl === 'items' || $srctbl === 'item_prototypes') {
 	}
 
 	foreach ($items as $item) {
+		if ($excludeids && array_key_exists($item['itemid'], $excludeids)) {
+			// Exclude item from list.
+			continue;
+		}
+
 		$host = reset($item['hosts']);
 		$item['hostname'] = $host['name'];
 
 		$description = new CLink($item['name_expanded'], 'javascript:void(0);');
 		$item['name'] = $item['hostname'].NAME_DELIMITER.$item['name_expanded'];
+		$item['master_itemname'] = $item['name_expanded'].NAME_DELIMITER.$item['key_'];
 
 		if ($multiselect) {
 			$js_action = 'javascript: addValue('.zbx_jsvalue($reference).', '.zbx_jsvalue($item['itemid']).');';

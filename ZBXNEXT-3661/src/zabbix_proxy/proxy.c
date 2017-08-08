@@ -146,13 +146,15 @@ int	CONFIG_PROXYPOLLER_FORKS	= 0;
 int	CONFIG_ESCALATOR_FORKS		= 0;
 int	CONFIG_ALERTER_FORKS		= 0;
 int	CONFIG_TIMER_FORKS		= 0;
-int	CONFIG_WATCHDOG_FORKS		= 0;
 int	CONFIG_HEARTBEAT_FORKS		= 1;
 int	CONFIG_COLLECTOR_FORKS		= 0;
 int	CONFIG_PASSIVE_FORKS		= 0;
 int	CONFIG_ACTIVE_FORKS		= 0;
 int	CONFIG_TASKMANAGER_FORKS	= 1;
 int	CONFIG_IPMIMANAGER_FORKS	= 0;
+int	CONFIG_ALERTMANAGER_FORKS	= 0;
+int	CONFIG_PREPROCMAN_FORKS		= 0;
+int	CONFIG_PREPROCESSOR_FORKS	= 0;
 
 int	CONFIG_LISTEN_PORT		= ZBX_DEFAULT_SERVER_PORT;
 char	*CONFIG_LISTEN_IP		= NULL;
@@ -168,7 +170,6 @@ int	CONFIG_HEARTBEAT_FREQUENCY	= 60;
 int	CONFIG_PROXYCONFIG_FREQUENCY	= SEC_PER_HOUR;
 int	CONFIG_PROXYDATA_FREQUENCY	= 1;
 
-int	CONFIG_SENDER_FREQUENCY		= 30;
 int	CONFIG_HISTSYNCER_FORKS		= 4;
 int	CONFIG_HISTSYNCER_FREQUENCY	= 1;
 int	CONFIG_CONFSYNCER_FORKS		= 1;
@@ -831,9 +832,9 @@ int	main(int argc, char **argv)
 	if (ZBX_TASK_RUNTIME_CONTROL == t.task)
 		exit(SUCCEED == zbx_sigusr_send(t.data) ? EXIT_SUCCESS : EXIT_FAILURE);
 
-#ifdef HAVE_IPCSERVICE
+#ifdef HAVE_IPMI
 	{
-		char	*error = NULL;
+		char *error = NULL;
 
 		if (FAIL == zbx_ipc_service_init_env(CONFIG_SOCKET_PATH, &error))
 		{
@@ -1149,7 +1150,7 @@ void	zbx_on_exit(void)
 
 	zbx_sleep(2);	/* wait for all child processes to exit */
 
-#ifdef HAVE_IPCSERVICE
+#ifdef HAVE_IPMI
 	zbx_ipc_service_free_env();
 #endif
 

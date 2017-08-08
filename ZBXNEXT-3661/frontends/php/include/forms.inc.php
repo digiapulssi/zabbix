@@ -753,8 +753,8 @@ function getItemFilterForm(&$items) {
 		}
 
 		// interval
-		if ($filter_delay === '' && $filter_type != ITEM_TYPE_TRAPPER
-				&& $item['type'] != ITEM_TYPE_TRAPPER && $item['type'] != ITEM_TYPE_SNMPTRAP) {
+		if ($filter_delay === '' && $filter_type != ITEM_TYPE_TRAPPER && $item['type'] != ITEM_TYPE_TRAPPER
+				&& $item['type'] != ITEM_TYPE_SNMPTRAP && $item['type'] != ITEM_TYPE_DEPENDENT) {
 			// Use temporary variable for delay, because the original will be used for sorting later.
 			$delay = $item['delay'];
 			$value = $delay;
@@ -876,6 +876,8 @@ function getItemFormData(array $item = [], array $options = []) {
 		'name' => getRequest('name', ''),
 		'description' => getRequest('description', ''),
 		'key' => getRequest('key', ''),
+		'master_itemid' => getRequest('master_itemid', 0),
+		'master_itemname' => getRequest('master_itemname', ''),
 		'hostname' => getRequest('hostname'),
 		'delay' => getRequest('delay', ZBX_ITEM_DELAY_DEFAULT),
 		'history' => getRequest('history', DB::getDefault('items', 'history')),
@@ -911,8 +913,20 @@ function getItemFormData(array $item = [], array $options = []) {
 		'possibleHostInventories' => null,
 		'alreadyPopulated' => null,
 		'initial_item_type' => null,
-		'templates' => []
+		'templates' => [],
+		'jmx_endpoint' => getRequest('jmx_endpoint', ZBX_DEFAULT_JMX_ENDPOINT)
 	];
+
+	// Dependent item initialization by master_itemid.
+	if (!hasRequest('form_refresh') && array_key_exists('master_item', $item)) {
+		$expanded = CMacrosResolverHelper::resolveItemNames([$item['master_item']]);
+		$master_item = reset($expanded);
+		$data['type'] = ITEM_TYPE_DEPENDENT;
+		$data['master_itemid'] = $master_item['itemid'];
+		$data['master_itemname'] = $master_item['name_expanded'].NAME_DELIMITER.$master_item['key_'];
+		// Do not initialize item data if only master_item array was passed.
+		unset($item['master_item']);
+	}
 
 	// hostid
 	if (!empty($data['parent_discoveryid'])) {
@@ -941,12 +955,13 @@ function getItemFormData(array $item = [], array $options = []) {
 	if (!empty($options['is_discovery_rule'])) {
 		unset($data['types'][ITEM_TYPE_AGGREGATE],
 			$data['types'][ITEM_TYPE_CALCULATED],
-			$data['types'][ITEM_TYPE_SNMPTRAP]
+			$data['types'][ITEM_TYPE_SNMPTRAP],
+			$data['types'][ITEM_TYPE_DEPENDENT]
 		);
 	}
 
 	// item
-	if ($item) {
+	if (array_key_exists('itemid', $item)) {
 		$data['item'] = $item;
 		$data['hostid'] = !empty($data['hostid']) ? $data['hostid'] : $data['item']['hostid'];
 		$data['limited'] = ($data['item']['templateid'] != 0);
@@ -972,28 +987,55 @@ function getItemFormData(array $item = [], array $options = []) {
 			if (!empty($item)) {
 				$host = reset($item['hosts']);
 				if (!empty($item['hosts'])) {
+					if (bccomp($data['itemid'], $itemid) != 0) {
+						$writable = API::Template()->get([
+							'output' => ['templateid'],
+							'templateids' => [$host['hostid']],
+							'editable' => true,
+							'preservekeys' => true
+						]);
+					}
+
 					$host['name'] = CHtml::encode($host['name']);
 					if (bccomp($data['itemid'], $itemid) == 0) {
 					}
 					// discovery rule
 					elseif ($data['is_discovery_rule']) {
-						$data['templates'][] = new CLink($host['name'],
-							'host_discovery.php?form=update&itemid='.$item['itemid']
-						);
+						if (array_key_exists($host['hostid'], $writable)) {
+							$data['templates'][] = new CLink($host['name'],
+								'host_discovery.php?form=update&itemid='.$item['itemid']
+							);
+						}
+						else {
+							$data['templates'][] = new CSpan($host['name']);
+						}
+
 						$data['templates'][] = SPACE.'&rArr;'.SPACE;
 					}
 					// item prototype
 					elseif ($item['discoveryRule']) {
-						$data['templates'][] = new CLink($host['name'], 'disc_prototypes.php?form=update'.
-							'&itemid='.$item['itemid'].'&parent_discoveryid='.$item['discoveryRule']['itemid']
-						);
+						if (array_key_exists($host['hostid'], $writable)) {
+							$data['templates'][] = new CLink($host['name'], 'disc_prototypes.php?form=update'.
+								'&itemid='.$item['itemid'].'&parent_discoveryid='.$item['discoveryRule']['itemid']
+							);
+						}
+						else {
+							$data['templates'][] = new CSpan($host['name']);
+						}
+
 						$data['templates'][] = SPACE.'&rArr;'.SPACE;
 					}
 					// plain item
 					else {
-						$data['templates'][] = new CLink($host['name'],
-							'items.php?form=update&itemid='.$item['itemid']
-						);
+						if (array_key_exists($host['hostid'], $writable)) {
+							$data['templates'][] = new CLink($host['name'],
+								'items.php?form=update&itemid='.$item['itemid']
+							);
+						}
+						else {
+							$data['templates'][] = new CSpan($host['name']);
+						}
+
 						$data['templates'][] = SPACE.'&rArr;'.SPACE;
 					}
 				}
@@ -1062,6 +1104,7 @@ function getItemFormData(array $item = [], array $options = []) {
 		$data['publickey'] = $data['item']['publickey'];
 		$data['privatekey'] = $data['item']['privatekey'];
 		$data['logtimefmt'] = $data['item']['logtimefmt'];
+		$data['jmx_endpoint'] = $data['item']['jmx_endpoint'];
 		$data['new_application'] = getRequest('new_application', '');
 
 		if (!$data['is_discovery_rule']) {
@@ -1086,7 +1129,8 @@ function getItemFormData(array $item = [], array $options = []) {
 				if ($data['delay'][0] !== '{') {
 					$delay = timeUnitToSeconds($data['delay']);
 
-					if (($data['type'] == ITEM_TYPE_TRAPPER || $data['type'] == ITEM_TYPE_SNMPTRAP) && $delay == 0) {
+					if ($delay == 0 && ($data['type'] == ITEM_TYPE_TRAPPER || $data['type'] == ITEM_TYPE_SNMPTRAP
+							|| $data['type'] == ITEM_TYPE_DEPENDENT)) {
 						$data['delay'] = ZBX_ITEM_DELAY_DEFAULT;
 					}
 				}
@@ -1176,7 +1220,7 @@ function getItemFormData(array $item = [], array $options = []) {
 		'output' => API_OUTPUT_EXTEND
 	]);
 
-	if ($data['limited'] || ($item && $data['parent_discoveryid'] === null
+	if ($data['limited'] || (array_key_exists('item', $data) && $data['parent_discoveryid'] === null
 			&& $data['item']['flags'] == ZBX_FLAG_DISCOVERY_CREATED)) {
 		if ($data['valuemapid'] != 0) {
 			$valuemaps = API::ValueMap()->get([
@@ -1226,6 +1270,10 @@ function getItemFormData(array $item = [], array $options = []) {
 		$data['authtype'] = ITEM_AUTHTYPE_PASSWORD;
 		$data['publickey'] = '';
 		$data['privatekey'] = '';
+	}
+
+	if ($data['type'] != ITEM_TYPE_DEPENDENT) {
+		$data['master_itemid'] = 0;
 	}
 
 	return $data;
@@ -1424,19 +1472,34 @@ function getTriggerFormData(array $data) {
 					' LEFT JOIN item_discovery id ON i.itemid=id.itemid'.
 				' WHERE t.triggerid='.zbx_dbstr($tmp_triggerid)
 			));
+
 			if (bccomp($data['triggerid'], $tmp_triggerid) != 0) {
-				// parent trigger prototype link
-				if ($data['parent_discoveryid']) {
-					$link = 'trigger_prototypes.php?form=update&triggerid='.$db_triggers['triggerid'].
-						'&parent_discoveryid='.$db_triggers['parent_itemid'].'&hostid='.$db_triggers['hostid'];
+				// Test if template is editable by user
+				$writable = API::Template()->get([
+					'output' => ['templateid'],
+					'templateids' => [$db_triggers['hostid']],
+					'preservekeys' => true,
+					'editable' => true
+				]);
+
+				if (array_key_exists($db_triggers['hostid'], $writable)) {
+					// parent trigger prototype link
+					if ($data['parent_discoveryid']) {
+						$link = 'trigger_prototypes.php?form=update&triggerid='.$db_triggers['triggerid'].
+							'&parent_discoveryid='.$db_triggers['parent_itemid'].'&hostid='.$db_triggers['hostid'];
+					}
+					// parent trigger link
+					else {
+						$link = 'triggers.php?form=update&triggerid='.$db_triggers['triggerid'].
+							'&hostid='.$db_triggers['hostid'];
+					}
+
+					$data['templates'][] = new CLink(CHtml::encode($db_triggers['name']), $link);
 				}
-				// parent trigger link
 				else {
-					$link = 'triggers.php?form=update&triggerid='.$db_triggers['triggerid'].
-						'&hostid='.$db_triggers['hostid'];
+					$data['templates'][] = new CSpan(CHtml::encode($db_triggers['name']));
 				}
 
-				$data['templates'][] = new CLink(CHtml::encode($db_triggers['name']), $link);
 				$data['templates'][] = SPACE.'&rArr;'.SPACE;
 			}
 			$tmp_triggerid = $db_triggers['templateid'];

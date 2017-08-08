@@ -1519,7 +1519,7 @@ void	process_proxyconfig(struct zbx_json_parse *jp_data)
 
 	if (SUCCEED == ret)
 	{
-		char 	*sql = NULL;
+		char	*sql = NULL;
 		size_t	sql_alloc = 512, sql_offset = 0;
 
 		sql = zbx_malloc(sql, sql_alloc * sizeof(char));
@@ -2349,7 +2349,7 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 		zabbix_log(LOG_LEVEL_DEBUG, "item [%s:%s] error: %s", item->host.host, item->key_orig, value->value);
 
 		item->state = ITEM_STATE_NOTSUPPORTED;
-		dc_add_history(item->itemid, item->flags, NULL, &value->ts, item->state, value->value);
+		zbx_preprocess_item_value(item->itemid, item->flags, NULL, &value->ts, item->state, value->value);
 	}
 	else
 	{
@@ -2395,7 +2395,7 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 			set_result_meta(&result, value->lastlogsize, value->mtime);
 
 		item->state = ITEM_STATE_NORMAL;
-		dc_add_history(item->itemid, item->flags, &result, &value->ts, item->state, NULL);
+		zbx_preprocess_item_value(item->itemid, item->flags, &result, &value->ts, item->state, NULL);
 
 		free_result(&result);
 	}
@@ -2445,10 +2445,9 @@ int	process_history_data(DC_ITEM *items, zbx_agent_value_t *values, int *errcode
 	}
 
 	if (0 < processed_num)
-	{
 		zbx_dc_items_update_runtime_data(items, values, errcodes, values_num);
-		dc_flush_history();
-	}
+
+	zbx_preprocessor_flush();
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() processed:%d", __function_name, processed_num);
 
@@ -2945,7 +2944,7 @@ static int	sender_item_validator(DC_ITEM *item, zbx_socket_t *sock, void *args, 
 		return FAIL;
 
 	allowed_hosts = zbx_strdup(NULL, item->trapper_hosts);
-	substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, item, NULL, &allowed_hosts,
+	substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, item, NULL, NULL, &allowed_hosts,
 			MACRO_TYPE_PARAMS_FIELD, NULL, 0);
 	ret = zbx_tcp_check_security(sock, allowed_hosts, ZBX_TCP_PERMIT_IF_EMPTY);
 	zbx_free(allowed_hosts);
@@ -3217,20 +3216,28 @@ static int	process_discovery_data_contents(struct zbx_json_parse *jp_data, const
 
 		if (SUCCEED != is_ip(ip))
 		{
-			zabbix_log(LOG_LEVEL_DEBUG, "\"%s\" is not a valid IP address", ip);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid IP address", __function_name, ip);
 			continue;
 		}
 
-		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-			port = atoi(tmp);
+		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)) &&
+				FAIL == is_ushort(tmp, &port))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
+			continue;
+		}
 		else
 			port = 0;
 
 		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_VALUE, &value, &value_alloc))
 			*value = '\0';
 
-		if (SUCCEED != zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)))
-			*dns = '\0';
+		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)) && '\0' != *dns &&
+				FAIL == zbx_validate_hostname(dns))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
+			continue;
+		}
 
 		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_STATUS, tmp, sizeof(tmp)))
 			status = atoi(tmp);
@@ -3405,23 +3412,47 @@ static int	process_auto_registration_contents(struct zbx_json_parse *jp_data, zb
 		if (FAIL == (ret = zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_HOST, host, sizeof(host))))
 			break;
 
+		if (FAIL == zbx_check_hostname(host, NULL))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid Zabbix host name", __function_name,
+					host);
+			continue;
+		}
+
 		if (FAIL == zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_HOST_METADATA,
 				&host_metadata, &host_metadata_alloc))
 		{
 			*host_metadata = '\0';
 		}
 
-		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
-			*ip = '\0';
+		if (FAIL == (ret = zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_IP, ip, sizeof(ip))))
+			break;
+
+		if (SUCCEED != is_ip(ip))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid IP address", __function_name, ip);
+			continue;
+		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)))
+		{
 			*dns = '\0';
+		}
+		else if ('\0' != *dns && FAIL == zbx_validate_hostname(dns))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
+			continue;
+		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-			*tmp = '\0';
-
-		if (FAIL == is_ushort(tmp, &port))
+		{
 			port = ZBX_DEFAULT_AGENT_PORT;
+		}
+		else if (FAIL == is_ushort(tmp, &port))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
+			continue;
+		}
 
 		DBregister_host_prepare(&autoreg_hosts, host, ip, dns, port, host_metadata, itemtime);
 	}
@@ -3506,7 +3537,7 @@ int	proxy_get_history_count(void)
 	DB_RESULT	result;
 	DB_ROW		row;
 	zbx_uint64_t	id;
-	int 		count = 0;
+	int		count = 0;
 
 	proxy_get_lastid("proxy_history", "history_lastid", &id);
 

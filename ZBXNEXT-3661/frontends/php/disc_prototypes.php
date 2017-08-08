@@ -44,9 +44,13 @@ $fields = [
 	'key' =>						[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({add}) || isset({update})',
 		_('Key')
 	],
+	'master_itemid' =>				[T_ZBX_STR, O_OPT, null,	null,
+		'(isset({add}) || isset({update})) && isset({type}) && {type}=='.ITEM_TYPE_DEPENDENT, _('Master item')],
+	'master_itemname' =>			[T_ZBX_STR, O_OPT, null,	null,			null],
 	'delay' =>						[T_ZBX_TU, O_OPT, P_ALLOW_USER_MACRO | P_ALLOW_LLD_MACRO, null,
 		'(isset({add}) || isset({update}))'.
-			' && (isset({type}) && ({type} != '.ITEM_TYPE_TRAPPER.' && {type} != '.ITEM_TYPE_SNMPTRAP.'))',
+			' && (isset({type}) && ({type} != '.ITEM_TYPE_TRAPPER.' && {type} != '.ITEM_TYPE_SNMPTRAP.')'.
+			' && {type}!='.ITEM_TYPE_DEPENDENT.')',
 		_('Update interval')
 	],
 	'delay_flex' =>					[T_ZBX_STR, O_OPT, null,	null,			null],
@@ -55,7 +59,7 @@ $fields = [
 		IN([-1, ITEM_TYPE_ZABBIX, ITEM_TYPE_SNMPV1, ITEM_TYPE_TRAPPER, ITEM_TYPE_SIMPLE, ITEM_TYPE_SNMPV2C,
 			ITEM_TYPE_INTERNAL, ITEM_TYPE_SNMPV3, ITEM_TYPE_ZABBIX_ACTIVE, ITEM_TYPE_AGGREGATE, ITEM_TYPE_EXTERNAL,
 			ITEM_TYPE_DB_MONITOR, ITEM_TYPE_IPMI, ITEM_TYPE_SSH, ITEM_TYPE_TELNET, ITEM_TYPE_JMX, ITEM_TYPE_CALCULATED,
-			ITEM_TYPE_SNMPTRAP]
+			ITEM_TYPE_SNMPTRAP, ITEM_TYPE_DEPENDENT]
 		),
 		'isset({add}) || isset({update})'
 	],
@@ -156,6 +160,9 @@ $fields = [
 		'(isset({add}) || isset({update})) && isset({value_type})'.
 			' && '.IN(ITEM_VALUE_TYPE_FLOAT.','.ITEM_VALUE_TYPE_UINT64, 'value_type'),
 		_('Trend storage period')
+	],
+	'jmx_endpoint' =>				[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,
+		'(isset({add}) || isset({update})) && isset({type}) && {type} == '.ITEM_TYPE_JMX
 	],
 	// actions
 	'action' =>						[T_ZBX_STR, O_OPT, P_SYS|P_ACT,
@@ -325,6 +332,8 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				case ZBX_PREPROC_RTRIM:
 				case ZBX_PREPROC_LTRIM:
 				case ZBX_PREPROC_TRIM:
+				case ZBX_PREPROC_XPATH:
+				case ZBX_PREPROC_JSONPATH:
 					$step['params'] = $step['params'][0];
 					break;
 
@@ -373,8 +382,16 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			'ruleid'		=> getRequest('parent_discoveryid')
 		];
 
+		if ($item['type'] == ITEM_TYPE_JMX) {
+			$item['jmx_endpoint'] = getRequest('jmx_endpoint', '');
+		}
+
 		if ($item['value_type'] == ITEM_VALUE_TYPE_FLOAT || $item['value_type'] == ITEM_VALUE_TYPE_UINT64) {
 			$item['trends'] = getRequest('trends');
+		}
+
+		if ($item['type'] == ITEM_TYPE_DEPENDENT) {
+			$item['master_itemid'] = getRequest('master_itemid');
 		}
 
 		if (hasRequest('update')) {
@@ -386,7 +403,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 					'snmpv3_securitylevel', 'snmpv3_authpassphrase', 'snmpv3_privpassphrase', 'logtimefmt',
 					'templateid', 'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username', 'password',
 					'publickey', 'privatekey', 'interfaceid', 'port', 'description', 'snmpv3_authprotocol',
-					'snmpv3_privprotocol', 'snmpv3_contextname'
+					'snmpv3_privprotocol', 'snmpv3_contextname', 'jmx_endpoint', 'master_itemid'
 				],
 				'selectApplications' => ['applicationid'],
 				'selectApplicationPrototypes' => ['name'],
@@ -500,6 +517,9 @@ elseif (hasRequest('action') && getRequest('action') == 'itemprototype.massdelet
  */
 if (isset($_REQUEST['form'])) {
 	$itemPrototype = [];
+	$has_errors = false;
+	$master_prototype_options = [];
+
 	if (hasRequest('itemid')) {
 		$itemPrototype = API::ItemPrototype()->get([
 			'itemids' => getRequest('itemid'),
@@ -508,7 +528,8 @@ if (isset($_REQUEST['form'])) {
 				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_securityname',
 				'snmpv3_securitylevel', 'snmpv3_authpassphrase', 'snmpv3_privpassphrase', 'logtimefmt', 'templateid',
 				'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username', 'password', 'publickey', 'privatekey',
-				'interfaceid', 'port', 'description', 'snmpv3_authprotocol', 'snmpv3_privprotocol', 'snmpv3_contextname'
+				'interfaceid', 'port', 'description', 'snmpv3_authprotocol', 'snmpv3_privprotocol',
+				'snmpv3_contextname', 'jmx_endpoint', 'master_itemid'
 			],
 			'selectPreprocessing' => ['type', 'params']
 		]);
@@ -517,15 +538,57 @@ if (isset($_REQUEST['form'])) {
 			$step['params'] = explode("\n", $step['params']);
 		}
 		unset($step);
+
+		if ($itemPrototype['type'] == ITEM_TYPE_DEPENDENT) {
+			$master_prototype_options = [
+				'itemids'	=> $itemPrototype['master_itemid'],
+				'output'	=> ['itemid', 'type', 'hostid', 'name', 'key_']
+			];
+		}
+	}
+	elseif (getRequest('master_itemid') && getRequest('parent_discoveryid')) {
+		$discovery_rule = API::DiscoveryRule()->get([
+			'output'	=> ['hostid'],
+			'itemids'	=> getRequest('parent_discoveryid'),
+			'editable'	=> true
+		]);
+
+		if ($discovery_rule) {
+			$master_prototype_options = [
+				'itemids'	=> getRequest('master_itemid'),
+				'output'	=> ['itemid', 'type', 'hostid', 'name', 'key_'],
+				'filter'	=> ['hostid' => $discovery_rule[0]['hostid']]
+			];
+		}
+	}
+
+	if ($master_prototype_options) {
+		$master_prototypes = API::ItemPrototype()->get($master_prototype_options);
+
+		if ($master_prototypes) {
+			$itemPrototype['master_item'] = reset($master_prototypes);
+		}
+		else {
+			show_messages(false, '', _('No permissions to referred object or it does not exist!'));
+			$has_errors = true;
+		}
 	}
 
 	$data = getItemFormData($itemPrototype);
 	$data['config'] = select_config();
+	$data['trends_default'] = DB::getDefault('items', 'trends');
+
+	// Sort interfaces to be listed starting with one selected as 'main'.
+	CArrayHelper::sort($data['interfaces'], [
+		['field' => 'main', 'order' => ZBX_SORT_DOWN]
+	]);
 
 	// render view
-	$itemView = new CView('configuration.item.prototype.edit', $data);
-	$itemView->render();
-	$itemView->show();
+	if (!$has_errors) {
+		$itemView = new CView('configuration.item.prototype.edit', $data);
+		$itemView->render();
+		$itemView->show();
+	}
 }
 else {
 	$sortField = getRequest('sort', CProfile::get('web.'.$page['file'].'.sort', 'name'));
@@ -553,7 +616,7 @@ else {
 		'limit' => $config['search_limit'] + 1
 	]);
 
-	$data['items'] = CMacrosResolverHelper::resolveItemNames($data['items']);
+	$data['items'] = expandItemNamesWithMasterItems($data['items'], API::ItemPrototype());
 
 	switch ($sortField) {
 		case 'delay':

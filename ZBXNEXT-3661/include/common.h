@@ -156,7 +156,8 @@ typedef enum
 	ITEM_TYPE_TELNET,
 	ITEM_TYPE_CALCULATED,
 	ITEM_TYPE_JMX,
-	ITEM_TYPE_SNMPTRAP	/* 17 */
+	ITEM_TYPE_SNMPTRAP,
+	ITEM_TYPE_DEPENDENT	/* 18 */
 }
 zbx_item_type_t;
 const char	*zbx_agent_type_string(zbx_item_type_t item_type);
@@ -435,7 +436,8 @@ typedef enum
 {
 	ALERT_STATUS_NOT_SENT = 0,
 	ALERT_STATUS_SENT,
-	ALERT_STATUS_FAILED
+	ALERT_STATUS_FAILED,
+	ALERT_STATUS_NEW
 }
 zbx_alert_status_t;
 const char	*zbx_alert_status_string(unsigned char type, unsigned char status);
@@ -634,10 +636,12 @@ const char	*zbx_item_logtype_string(unsigned char logtype);
 #define OPERATION_TYPE_HOST_DISABLE	9
 #define OPERATION_TYPE_HOST_INVENTORY	10
 #define OPERATION_TYPE_RECOVERY_MESSAGE	11
+#define OPERATION_TYPE_ACK_MESSAGE	12
 
 /* normal and recovery operations */
 #define ZBX_OPERATION_MODE_NORMAL	0
 #define ZBX_OPERATION_MODE_RECOVERY	1
+#define ZBX_OPERATION_MODE_ACK		2
 
 /* algorithms for service status calculation */
 #define SERVICE_ALGORITHM_NONE	0
@@ -679,22 +683,21 @@ const char	*zbx_item_logtype_string(unsigned char logtype);
 
 #define ZBX_USER_ONLINE_TIME	600
 
-typedef struct
-{
-	zbx_uint64_t	userid;
-	unsigned char	type;
-}
-zbx_user_t;
-
 /* user permissions */
 typedef enum
 {
-	USER_TYPE_UNDEFINED = 0,
-	USER_TYPE_ZABBIX_USER,
+	USER_TYPE_ZABBIX_USER = 1,
 	USER_TYPE_ZABBIX_ADMIN,
 	USER_TYPE_SUPER_ADMIN
 }
 zbx_user_type_t;
+
+typedef struct
+{
+	zbx_uint64_t	userid;
+	zbx_user_type_t	type;
+}
+zbx_user_t;
 
 typedef enum
 {
@@ -1058,6 +1061,8 @@ int	is_ip4(const char *ip);
 int	is_supported_ip(const char *ip);
 int	is_ip(const char *ip);
 
+int	zbx_validate_hostname(const char *hostname);
+
 void	zbx_on_exit(void); /* calls exit() at the end! */
 
 int	int_in_list(char *list, int value);
@@ -1368,7 +1373,9 @@ int	zbx_strmatch_condition(const char *value, const char *pattern, unsigned char
 #define ZBX_PREPROC_OCT2DEC		7
 #define ZBX_PREPROC_HEX2DEC		8
 #define ZBX_PREPROC_DELTA_VALUE		9
-#define ZBX_PREPROC_DELTA_SPEED 	10
+#define ZBX_PREPROC_DELTA_SPEED		10
+#define ZBX_PREPROC_XPATH		11
+#define ZBX_PREPROC_JSONPATH		12
 
 #define ZBX_HTTPFIELD_HEADER		0
 #define ZBX_HTTPFIELD_VARIABLE		1

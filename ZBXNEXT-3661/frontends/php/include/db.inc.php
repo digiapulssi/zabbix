@@ -184,8 +184,8 @@ function DBconnect(&$error) {
 		$DB['DB'] = null;
 	}
 
-	if ($result == false && ZBX_SHOW_SQL_ERRORS == false) {
-		$error = _('SQL error, please contact Zabbix administrator.');
+	if (!$result && !ZBX_SHOW_SQL_ERRORS) {
+		$error = _('SQL error. Please contact Zabbix administrator.');
 	}
 
 	return $result;
@@ -679,8 +679,8 @@ function zbx_db_search($table, $options, &$sql_parts) {
 		info(_s('Error in search request for table "%1$s".', $table));
 	}
 
-	$start = is_null($options['startSearch']) ? '%' : '';
-	$exclude = is_null($options['excludeSearch']) ? '' : ' NOT ';
+	$start = $options['startSearch'] ? '' : '%';
+	$exclude = $options['excludeSearch'] ? ' NOT ' : '';
 	$glue = (!$options['searchByAny']) ? ' AND ' : ' OR ';
 
 	$search = [];

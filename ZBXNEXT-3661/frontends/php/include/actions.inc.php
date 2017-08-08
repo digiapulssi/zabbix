@@ -450,7 +450,11 @@ function getActionOperationDescriptions(array $actions, $type) {
 			}
 		}
 		else {
-			foreach ($action['recovery_operations'] as $j => $operation) {
+			$operations_key = ($type == ACTION_RECOVERY_OPERATION)
+				? 'recovery_operations'
+				: 'ack_operations';
+
+			foreach ($action[$operations_key] as $j => $operation) {
 				$result[$i][$j] = [];
 
 				switch ($operation['operationtype']) {
@@ -716,7 +720,11 @@ function getActionOperationDescriptions(array $actions, $type) {
 			}
 		}
 		else {
-			foreach ($action['recovery_operations'] as $j => $operation) {
+			$operations_key = ($type == ACTION_RECOVERY_OPERATION)
+				? 'recovery_operations'
+				: 'ack_operations';
+
+			foreach ($action[$operations_key] as $j => $operation) {
 				switch ($operation['operationtype']) {
 					case OPERATION_TYPE_MESSAGE:
 						$media_type = _('all media');
@@ -808,6 +816,10 @@ function getActionOperationDescriptions(array $actions, $type) {
 							_('Notify all who received any messages regarding the problem before')
 						);
 						break;
+
+					case OPERATION_TYPE_ACK_MESSAGE:
+						$result[$i][$j][] = bold(_('Notify all who left acknowledgement and comments'));
+						break;
 				}
 			}
 		}
@@ -867,7 +879,14 @@ function getActionOperationHints(array $operations, array $defaultMessage) {
 					? $defaultMessage['message']
 					: $operation['opmessage']['message'];
 
-				$result[$key][] = [bold($subject), BR(), BR(), zbx_nl2br($message)];
+				$result_hint = [];
+				if ($subject) {
+					$result_hint = [bold($subject), BR(), BR()];
+				}
+				if ($message) {
+					$result_hint[] = zbx_nl2br($message);
+				}
+				$result[$key][] = $result_hint;
 				break;
 
 			case OPERATION_TYPE_COMMAND:
@@ -923,6 +942,27 @@ function getActionOperationHints(array $operations, array $defaultMessage) {
 							italic(zbx_nl2br($operation['opcommand']['command']))
 						];
 				}
+				break;
+
+			case OPERATION_TYPE_ACK_MESSAGE:
+				$opmessage = array_key_exists('opmessage', $operation) ? $operation['opmessage'] : [];
+
+				if (array_key_exists('default_msg', $opmessage) && $opmessage['default_msg']) {
+					$subject = $defaultMessage['subject'];
+					$message = $defaultMessage['message'];
+				}
+				else {
+					$opmessage += [
+						'subject'	=> ACTION_DEFAULT_SUBJ_ACKNOWLEDGE,
+						'message'	=> ACTION_DEFAULT_MSG_ACKNOWLEDGE
+					];
+
+					$subject = $opmessage['subject'];
+					$message = $opmessage['message'];
+				}
+
+				$result[$key][] = [bold($subject), BR(), BR(), zbx_nl2br($message)];
+				break;
 		}
 	}
 
@@ -1011,6 +1051,11 @@ function getAllowedOperations($eventsource) {
 				OPERATION_TYPE_MESSAGE,
 				OPERATION_TYPE_COMMAND,
 				OPERATION_TYPE_RECOVERY_MESSAGE
+			],
+			ACTION_ACKNOWLEDGE_OPERATION => [
+				OPERATION_TYPE_MESSAGE,
+				OPERATION_TYPE_COMMAND,
+				OPERATION_TYPE_ACK_MESSAGE
 			]
 		];
 	}
@@ -1069,7 +1114,8 @@ function operation_type2str($type = null) {
 		OPERATION_TYPE_TEMPLATE_ADD => _('Link to template'),
 		OPERATION_TYPE_TEMPLATE_REMOVE => _('Unlink from template'),
 		OPERATION_TYPE_HOST_INVENTORY => _('Set host inventory mode'),
-		OPERATION_TYPE_RECOVERY_MESSAGE => _('Send recovery message')
+		OPERATION_TYPE_RECOVERY_MESSAGE => _('Send recovery message'),
+		OPERATION_TYPE_ACK_MESSAGE => _('Notify all who left acknowledgement and comments')
 	];
 
 	if (is_null($type)) {
@@ -1337,9 +1383,11 @@ function getActionMessages(array $alerts, array $r_alerts) {
 					$retries = '';
 					break;
 
+				case ALERT_STATUS_NEW:
+					// falls through
 				case ALERT_STATUS_NOT_SENT:
 					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
-					$retries = (new CSpan(ALERT_MAX_RETRIES - $alert['retries']))->addClass(ZBX_STYLE_YELLOW);
+					$retries = (new CSpan($mediaType['maxattempts'] - $alert['retries']))->addClass(ZBX_STYLE_YELLOW);
 					break;
 
 				default:
@@ -1354,7 +1402,8 @@ function getActionMessages(array $alerts, array $r_alerts) {
 				: $alert['sendto'];
 
 			$info_icons = [];
-			if ($alert['error'] !== '') {
+			if ($alert['error'] !== ''
+					&& !($alert['status'] == ALERT_STATUS_NEW || $alert['status'] == ALERT_STATUS_NOT_SENT)) {
 				$info_icons[] = makeErrorIcon($alert['error']);
 			}
 
@@ -1427,11 +1476,11 @@ function getActionCommands(array $alerts, array $r_alerts) {
 				case ALERT_STATUS_SENT:
 					$status = (new CSpan(_('Executed')))->addClass(ZBX_STYLE_GREEN);
 					break;
-
+				case ALERT_STATUS_NEW:
+					// falls through
 				case ALERT_STATUS_NOT_SENT:
 					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
 					break;
-
 				default:
 					$status = (new CSpan(_('Failed')))->addClass(ZBX_STYLE_RED);
 					break;
@@ -1449,12 +1498,18 @@ function getActionCommands(array $alerts, array $r_alerts) {
 				$show_header = false;
 			}
 
+			$error_span = '';
+			if ($alert['error']
+					&& !($alert['status'] == ALERT_STATUS_NEW || $alert['status'] == ALERT_STATUS_NOT_SENT)) {
+				$error_span = (new CSpan($alert['error']))->addClass(ZBX_STYLE_RED);
+			}
+
 			$table->addRow([
 				$alert['esc_step'],
 				zbx_date2str(DATE_TIME_FORMAT_SECONDS, $alert['clock']),
 				$status,
 				zbx_nl2br($alert['message']),
-				$alert['error'] ? (new CSpan($alert['error']))->addClass(ZBX_STYLE_RED) : ''
+				$error_span
 			]);
 		}
 
@@ -1476,16 +1531,16 @@ function makeActionHints($alerts, $r_alerts, $mediatypes, $users, $display_recov
 		foreach ($alerts_data as $alert) {
 			switch ($alert['status']) {
 				case ALERT_STATUS_SENT:
-					$status_str = (new CSpan($alert['alerttype'] == ALERT_TYPE_COMMAND ? _('Executed') : _('Sent')))
+					$status = (new CSpan(($alert['alerttype'] == ALERT_TYPE_COMMAND) ? _('Executed') : _('Sent')))
 						->addClass(ZBX_STYLE_GREEN);
 					break;
-
+				case ALERT_STATUS_NEW:
+					// falls through
 				case ALERT_STATUS_NOT_SENT:
-					$status_str = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
+					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
 					break;
-
 				default:
-					$status_str = (new CSpan(_('Failed')))->addClass(ZBX_STYLE_RED);
+					$status = (new CSpan(_('Failed')))->addClass(ZBX_STYLE_RED);
 			}
 
 			switch ($alert['alerttype']) {
@@ -1498,17 +1553,20 @@ function makeActionHints($alerts, $r_alerts, $mediatypes, $users, $display_recov
 						? $mediatypes[$alert['mediatypeid']]['description']
 						: '';
 					break;
+
 				case ALERT_TYPE_COMMAND:
 					$user = '';
 					$message = _('Remote command');
 					break;
+
 				default:
 					$user = '';
 					$message = '';
 			}
 
 			$info_icons = [];
-			if ($alert['error'] !== '') {
+			if ($alert['error'] !== ''
+					&& !($alert['status'] == ALERT_STATUS_NEW || $alert['status'] == ALERT_STATUS_NOT_SENT)) {
 				$info_icons[] = makeErrorIcon($alert['error']);
 			}
 
@@ -1528,7 +1586,7 @@ function makeActionHints($alerts, $r_alerts, $mediatypes, $users, $display_recov
 				zbx_date2str(DATE_TIME_FORMAT_SECONDS, $alert['clock']),
 				$user,
 				$message,
-				$status_str,
+				$status,
 				makeInformationList($info_icons)
 			]);
 
@@ -1583,6 +1641,7 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 		' FROM alerts a'.
 		' WHERE '.dbConditionInt('a.eventid', array_keys($eventids)).
 			' AND a.alerttype IN ('.ALERT_TYPE_MESSAGE.','.ALERT_TYPE_COMMAND.')'.
+			' AND a.acknowledgeid IS NULL'.
 		' ORDER BY a.alertid DESC'
 	);
 
@@ -1647,7 +1706,7 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 			$status = ALERT_STATUS_SENT;
 			foreach ([$event_alerts, $r_event_alerts] as $alerts_data) {
 				foreach ($alerts_data as $alert) {
-					if ($alert['status'] == ALERT_STATUS_NOT_SENT) {
+					if ($alert['status'] == ALERT_STATUS_NOT_SENT || $alert['status'] == ALERT_STATUS_NEW) {
 						$status = ALERT_STATUS_NOT_SENT;
 					}
 					elseif ($alert['status'] == ALERT_STATUS_FAILED && $status != ALERT_STATUS_NOT_SENT) {

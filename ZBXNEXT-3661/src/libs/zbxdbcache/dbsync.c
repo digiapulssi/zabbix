@@ -131,18 +131,6 @@ static int	dbsync_compare_int(const char *value_raw, int value)
 
 /******************************************************************************
  *                                                                            *
- * Function: dbsync_compare_bool_time                                         *
- *                                                                            *
- * Purpose: compares history/trends storing flag with a raw database value    *
- *                                                                            *
- ******************************************************************************/
-static int	dbsync_compare_bool_time(const char *value_raw, unsigned char value)
-{
-	return (zbx_time2bool(value_raw) == value ? SUCCEED : FAIL);
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: dbsync_compare_uchar                                             *
  *                                                                            *
  * Purpose: compares unsigned character with a raw database value             *
@@ -196,7 +184,7 @@ static void	dbsync_add_row(zbx_dbsync_t *sync, zbx_uint64_t rowid, unsigned char
 		row->row = (char **)zbx_malloc(NULL, sizeof(char *) * sync->columns_num);
 
 		for (i = 0; i < sync->columns_num; i++)
-			row->row[i] = (SUCCEED == DBis_null(dbrow[i]) ? NULL : dbsync_strdup(dbrow[i]));
+			row->row[i] = (NULL == dbrow[i] ? NULL : dbsync_strdup(dbrow[i]));
 	}
 	else
 		row->row = NULL;
@@ -1251,8 +1239,9 @@ static int	dbsync_compare_item(const ZBX_DC_ITEM *item, const DB_ROW dbrow)
 	ZBX_DC_SIMPLEITEM	*simpleitem;
 	ZBX_DC_JMXITEM		*jmxitem;
 	ZBX_DC_CALCITEM		*calcitem;
+	ZBX_DC_DEPENDENTITEM	*depitem;
 	ZBX_DC_HOST		*host;
-	unsigned char		value_type, type;
+	unsigned char		value_type, type, history, trends;
 	int			history_sec = 0;
 
 	if (FAIL == dbsync_compare_uint64(dbrow[1], item->hostid))
@@ -1282,22 +1271,20 @@ static int	dbsync_compare_item(const ZBX_DC_ITEM *item, const DB_ROW dbrow)
 
 	if (ZBX_HK_OPTION_ENABLED == dbsync_env.cache->config->hk.history_global)
 	{
-		if (item->history_sec != dbsync_env.cache->config->hk.history)
-			return FAIL;
-
-		if (item->history != dbsync_env.cache->config->hk.history)
-			return FAIL;
+		history = (0 != dbsync_env.cache->config->hk.history);
+		history_sec = dbsync_env.cache->config->hk.history;
 	}
 	else
 	{
 		is_time_suffix(dbrow[31], &history_sec, ZBX_LENGTH_UNLIMITED);
-
-		if (history_sec != item->history_sec)
-			return FAIL;
-
-		if (FAIL == dbsync_compare_bool_time(dbrow[31], item->history))
-			return FAIL;
+		history = zbx_time2bool(dbrow[31]);
 	}
+
+	if (item->history != history)
+		return FAIL;
+
+	if (history_sec != item->history_sec)
+		return FAIL;
 
 	if (FAIL == dbsync_compare_uchar(dbrow[33], item->inventory_link))
 		return FAIL;
@@ -1322,15 +1309,12 @@ static int	dbsync_compare_item(const ZBX_DC_ITEM *item, const DB_ROW dbrow)
 			return FAIL;
 
 		if (ZBX_HK_OPTION_ENABLED == dbsync_env.cache->config->hk.trends_global)
-		{
-			if (numitem->trends != dbsync_env.cache->config->hk.trends)
-				return FAIL;
-		}
+			trends = (0 != dbsync_env.cache->config->hk.trends);
 		else
-		{
-			if (FAIL == dbsync_compare_bool_time(dbrow[32], numitem->trends))
-				return FAIL;
-		}
+			trends = zbx_time2bool(dbrow[32]);
+
+		if (trends != numitem->trends)
+			return FAIL;
 
 		if (FAIL == dbsync_compare_str(dbrow[35], numitem->units))
 			return FAIL;
@@ -1501,6 +1485,9 @@ static int	dbsync_compare_item(const ZBX_DC_ITEM *item, const DB_ROW dbrow)
 
 		if (FAIL == dbsync_compare_str(dbrow[21], jmxitem->password))
 			return FAIL;
+
+		if (FAIL == dbsync_compare_str(dbrow[37], jmxitem->jmx_endpoint))
+			return FAIL;
 	}
 	else if (NULL != jmxitem)
 		return FAIL;
@@ -1515,6 +1502,18 @@ static int	dbsync_compare_item(const ZBX_DC_ITEM *item, const DB_ROW dbrow)
 			return FAIL;
 	}
 	else if (NULL != calcitem)
+		return FAIL;
+
+	depitem = (ZBX_DC_DEPENDENTITEM *)zbx_hashset_search(&dbsync_env.cache->dependentitems, &item->itemid);
+	if (ITEM_TYPE_DEPENDENT == item->type)
+	{
+		if (NULL == depitem)
+			return FAIL;
+
+		if (FAIL == dbsync_compare_uint64(dbrow[38], depitem->master_itemid))
+			return FAIL;
+	}
+	else if (NULL != depitem)
 		return FAIL;
 
 	return SUCCEED;
@@ -1608,7 +1607,8 @@ int	zbx_dbsync_compare_items(zbx_dbsync_t *sync)
 				"i.trapper_hosts,i.logtimefmt,i.params,i.state,i.authtype,i.username,i.password,"
 				"i.publickey,i.privatekey,i.flags,i.interfaceid,i.snmpv3_authprotocol,"
 				"i.snmpv3_privprotocol,i.snmpv3_contextname,i.lastlogsize,i.mtime,"
-				"i.history,i.trends,i.inventory_link,i.valuemapid,i.units,i.error"
+				"i.history,i.trends,i.inventory_link,i.valuemapid,i.units,i.error,i.jmx_endpoint,"
+				"i.master_itemid"
 			" from items i,hosts h"
 			" where i.hostid=h.hostid"
 				" and h.status in (%d,%d)"
@@ -1619,7 +1619,7 @@ int	zbx_dbsync_compare_items(zbx_dbsync_t *sync)
 		return FAIL;
 	}
 
-	dbsync_prepare(sync, 37, dbsync_item_preproc_row);
+	dbsync_prepare(sync, 39, dbsync_item_preproc_row);
 
 	if (ZBX_DBSYNC_INIT == sync->mode)
 	{
@@ -1828,7 +1828,7 @@ int	zbx_dbsync_compare_triggers(zbx_dbsync_t *sync)
 
 		if (NULL == (trigger = (ZBX_DC_TRIGGER *)zbx_hashset_search(&dbsync_env.cache->triggers, &rowid)))
 		{
-			dbsync_add_row(sync, rowid, ZBX_DBSYNC_ROW_ADD, dbrow);
+			dbsync_add_row(sync, rowid, ZBX_DBSYNC_ROW_ADD, row);
 		}
 		else
 		{
@@ -2251,6 +2251,107 @@ int	zbx_dbsync_compare_actions(zbx_dbsync_t *sync)
 
 	return SUCCEED;
 }
+
+/******************************************************************************
+ *                                                                            *
+ * Function: dbsync_compare_action_op                                         *
+ *                                                                            *
+ * Purpose: compares action opereation class and flushes update row if        *
+ *          necessary                                                         *
+ *                                                                            *
+ * Parameter: sync     - [OUT] the changeset                                  *
+ *            actionid - [IN] the action identifier                           *
+ *            opflags  - [IN] the action operation class flags                *
+ *                                                                            *
+ ******************************************************************************/
+static void	dbsync_compare_action_op(zbx_dbsync_t *sync, zbx_uint64_t actionid, unsigned char opflags)
+{
+	zbx_dc_action_t	*action;
+
+	if (0 == actionid)
+		return;
+
+	if (NULL == (action = (zbx_dc_action_t *)zbx_hashset_search(&dbsync_env.cache->actions, &actionid)) ||
+			opflags != action->opflags)
+	{
+		char	actionid_s[MAX_ID_LEN], opflags_s[MAX_ID_LEN];
+		char	*row[] = {actionid_s, opflags_s};
+
+		zbx_snprintf(actionid_s, sizeof(actionid_s), ZBX_FS_UI64, actionid);
+		zbx_snprintf(opflags_s, sizeof(opflags_s), "%d", opflags);
+
+		dbsync_add_row(sync, actionid, ZBX_DBSYNC_ROW_UPDATE, (DB_ROW)row);
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_dbsync_compare_action_ops                                    *
+ *                                                                            *
+ * Purpose: compares actions by operation class                               *
+ *                                                                            *
+ * Parameter: cache - [IN] the configuration cache                            *
+ *            sync  - [OUT] the changeset                                     *
+ *                                                                            *
+ * Return value: SUCCEED - the changeset was successfully calculated          *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_dbsync_compare_action_ops(zbx_dbsync_t *sync)
+{
+	DB_ROW			dbrow;
+	DB_RESULT		result;
+	zbx_uint64_t		rowid, actionid = 0;
+	unsigned char		opclass, opflags = ZBX_ACTION_OPCLASS_NONE;
+
+	if (NULL == (result = DBselect(
+			"select a.actionid,o.recovery"
+			" from actions a"
+			" left join operations o"
+				" on a.actionid=o.actionid"
+			" where a.status=%d"
+			" group by a.actionid,o.recovery"
+			" order by a.actionid",
+			ACTION_STATUS_ACTIVE)))
+	{
+		return FAIL;
+	}
+
+	dbsync_prepare(sync, 2, NULL);
+
+	while (NULL != (dbrow = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(rowid, dbrow[0]);
+		opclass = atoi(dbrow[1]);
+
+		if (actionid != rowid)
+		{
+			dbsync_compare_action_op(sync, actionid, opflags);
+			actionid = rowid;
+			opflags = ZBX_ACTION_OPCLASS_NONE;
+		}
+
+		switch (opclass)
+		{
+			case 0:
+				opflags |= ZBX_ACTION_OPCLASS_NORMAL;
+				break;
+			case 1:
+				opflags |= ZBX_ACTION_OPCLASS_RECOVERY;
+				break;
+			case 2:
+				opflags |= ZBX_ACTION_OPCLASS_ACKNOWLEDGE;
+				break;
+		}
+	}
+
+	dbsync_compare_action_op(sync, actionid, opflags);
+
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
 
 /******************************************************************************
  *                                                                            *

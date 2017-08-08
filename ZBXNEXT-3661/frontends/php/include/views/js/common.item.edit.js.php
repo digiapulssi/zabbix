@@ -141,6 +141,14 @@
 							$(inputs[1]).hide();
 							break;
 
+						case '<?= ZBX_PREPROC_XPATH ?>':
+						case '<?= ZBX_PREPROC_JSONPATH ?>':
+							$(inputs[0])
+								.show()
+								.attr('placeholder', '<?= _('path') ?>');
+							$(inputs[1]).hide();
+							break;
+
 						case '<?= ZBX_PREPROC_REGSUB ?>':
 							$(inputs[0])
 								.show()
@@ -175,7 +183,8 @@ foreach ($this->data['delay_flex'] as $delayFlex) {
 	}
 
 	foreach ($this->data['types'] as $type => $label) {
-		if ($type == ITEM_TYPE_TRAPPER || $type == ITEM_TYPE_ZABBIX_ACTIVE || $type == ITEM_TYPE_SNMPTRAP) {
+		if ($type == ITEM_TYPE_TRAPPER || $type == ITEM_TYPE_ZABBIX_ACTIVE || $type == ITEM_TYPE_SNMPTRAP
+				|| $type == ITEM_TYPE_DEPENDENT) {
 			continue;
 		}
 		zbx_subarray_push($this->data['typeVisibility'], $type, 'delay_flex['.$i.'][delay]');
@@ -247,6 +256,8 @@ zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_DB_MONITOR, 'username
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_DB_MONITOR, 'row_username');
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_JMX, 'username');
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_JMX, 'row_username');
+zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_JMX, 'jmx_endpoint');
+zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_JMX, 'row_jmx_endpoint');
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_SSH, 'password');
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_SSH, 'row_password');
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_TELNET, 'password');
@@ -269,6 +280,7 @@ zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_CALCULATED, 'params_c
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_CALCULATED, 'row_params');
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_TRAPPER, 'trapper_hosts');
 zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_TRAPPER, 'row_trapper_hosts');
+zbx_subarray_push($this->data['typeVisibility'], ITEM_TYPE_DEPENDENT, 'row_master_item');
 foreach ($this->data['types'] as $type => $label) {
 	switch ($type) {
 		case ITEM_TYPE_DB_MONITOR:
@@ -289,17 +301,13 @@ foreach ($this->data['types'] as $type => $label) {
 				['id' => 'key', 'defaultValue' => ZBX_DEFAULT_KEY_TELNET]
 			);
 			break;
-		case ITEM_TYPE_JMX:
-			zbx_subarray_push($this->data['typeVisibility'], $type,
-				['id' => 'key', 'defaultValue' => ZBX_DEFAULT_KEY_JMX]
-			);
-			break;
 		default:
 			zbx_subarray_push($this->data['typeVisibility'], $type, ['id' => 'key', 'defaultValue' => '']);
 	}
 }
 foreach ($this->data['types'] as $type => $label) {
-	if ($type == ITEM_TYPE_TRAPPER || $type == ITEM_TYPE_ZABBIX_ACTIVE || $type == ITEM_TYPE_SNMPTRAP) {
+	if ($type == ITEM_TYPE_TRAPPER || $type == ITEM_TYPE_ZABBIX_ACTIVE || $type == ITEM_TYPE_SNMPTRAP
+			|| $type == ITEM_TYPE_DEPENDENT) {
 		continue;
 	}
 	zbx_subarray_push($this->data['typeVisibility'], $type, 'row_flex_intervals');
@@ -309,7 +317,7 @@ foreach ($this->data['types'] as $type => $label) {
 	zbx_subarray_push($this->data['typeVisibility'], $type, 'add_delay_flex');
 }
 foreach ($this->data['types'] as $type => $label) {
-	if ($type == ITEM_TYPE_TRAPPER || $type == ITEM_TYPE_SNMPTRAP) {
+	if ($type == ITEM_TYPE_TRAPPER || $type == ITEM_TYPE_SNMPTRAP || $type == ITEM_TYPE_DEPENDENT) {
 		continue;
 	}
 	zbx_subarray_push($this->data['typeVisibility'], $type, 'delay');

@@ -42,6 +42,7 @@
 #include "../libs/zbxnix/control.h"
 
 #include "alerter/alerter.h"
+#include "alerter/alert_manager.h"
 #include "dbsyncer/dbsyncer.h"
 #include "dbconfig/dbconfig.h"
 #include "discoverer/discoverer.h"
@@ -52,12 +53,13 @@
 #include "timer/timer.h"
 #include "trapper/trapper.h"
 #include "snmptrapper/snmptrapper.h"
-#include "watchdog/watchdog.h"
 #include "escalator/escalator.h"
 #include "proxypoller/proxypoller.h"
 #include "selfmon/selfmon.h"
 #include "vmware/vmware.h"
 #include "taskmanager/taskmanager.h"
+#include "preprocessor/preproc_manager.h"
+#include "preprocessor/preproc_worker.h"
 #include "events.h"
 #include "valuecache.h"
 #include "setproctitle.h"
@@ -127,8 +129,6 @@ static struct zbx_option	longopts[] =
 	{NULL}
 };
 
-
-
 /* short options */
 static char	shortopts[] = "c:hVR:f";
 
@@ -142,7 +142,7 @@ unsigned char	process_type		= ZBX_PROCESS_TYPE_UNKNOWN;
 int		process_num		= 0;
 int		server_num		= 0;
 
-int	CONFIG_ALERTER_FORKS		= 1;
+int	CONFIG_ALERTER_FORKS		= 3;
 int	CONFIG_DISCOVERER_FORKS		= 1;
 int	CONFIG_HOUSEKEEPER_FORKS	= 1;
 int	CONFIG_PINGER_FORKS		= 1;
@@ -156,7 +156,6 @@ int	CONFIG_SNMPTRAPPER_FORKS	= 0;
 int	CONFIG_JAVAPOLLER_FORKS		= 0;
 int	CONFIG_ESCALATOR_FORKS		= 1;
 int	CONFIG_SELFMON_FORKS		= 1;
-int	CONFIG_WATCHDOG_FORKS		= 1;
 int	CONFIG_DATASENDER_FORKS		= 0;
 int	CONFIG_HEARTBEAT_FORKS		= 0;
 int	CONFIG_COLLECTOR_FORKS		= 0;
@@ -164,6 +163,9 @@ int	CONFIG_PASSIVE_FORKS		= 0;
 int	CONFIG_ACTIVE_FORKS		= 0;
 int	CONFIG_TASKMANAGER_FORKS	= 1;
 int	CONFIG_IPMIMANAGER_FORKS	= 0;
+int	CONFIG_ALERTMANAGER_FORKS	= 1;
+int	CONFIG_PREPROCMAN_FORKS		= 1;
+int	CONFIG_PREPROCESSOR_FORKS	= 3;
 
 int	CONFIG_LISTEN_PORT		= ZBX_DEFAULT_SERVER_PORT;
 char	*CONFIG_LISTEN_IP		= NULL;
@@ -172,7 +174,6 @@ int	CONFIG_TRAPPER_TIMEOUT		= 300;
 
 int	CONFIG_HOUSEKEEPING_FREQUENCY	= 1;
 int	CONFIG_MAX_HOUSEKEEPER_DELETE	= 5000;		/* applies for every separate field value */
-int	CONFIG_SENDER_FREQUENCY		= 30;
 int	CONFIG_HISTSYNCER_FORKS		= 4;
 int	CONFIG_HISTSYNCER_FREQUENCY	= 1;
 int	CONFIG_CONFSYNCER_FORKS		= 1;
@@ -276,11 +277,6 @@ int	get_process_info_by_thread(int local_server_num, unsigned char *local_proces
 		*local_process_type = ZBX_PROCESS_TYPE_CONFSYNCER;
 		*local_process_num = local_server_num - server_count + CONFIG_CONFSYNCER_FORKS;
 	}
-	else if (local_server_num <= (server_count += CONFIG_WATCHDOG_FORKS))
-	{
-		*local_process_type = ZBX_PROCESS_TYPE_WATCHDOG;
-		*local_process_num = local_server_num - server_count + CONFIG_WATCHDOG_FORKS;
-	}
 	else if (local_server_num <= (server_count += CONFIG_IPMIMANAGER_FORKS))
 	{
 		*local_process_type = ZBX_PROCESS_TYPE_IPMIMANAGER;
@@ -375,6 +371,21 @@ int	get_process_info_by_thread(int local_server_num, unsigned char *local_proces
 	{
 		*local_process_type = ZBX_PROCESS_TYPE_PINGER;
 		*local_process_num = local_server_num - server_count + CONFIG_PINGER_FORKS;
+	}
+	else if (local_server_num <= (server_count += CONFIG_ALERTMANAGER_FORKS))
+	{
+		*local_process_type = ZBX_PROCESS_TYPE_ALERTMANAGER;
+		*local_process_num = local_server_num - server_count + CONFIG_ALERTMANAGER_FORKS;
+	}
+	else if (local_server_num <= (server_count += CONFIG_PREPROCMAN_FORKS))
+	{
+		*local_process_type = ZBX_PROCESS_TYPE_PREPROCMAN;
+		*local_process_num = local_server_num - server_count + CONFIG_PREPROCMAN_FORKS;
+	}
+	else if (local_server_num <= (server_count += CONFIG_PREPROCESSOR_FORKS))
+	{
+		*local_process_type = ZBX_PROCESS_TYPE_PREPROCESSOR;
+		*local_process_num = local_server_num - server_count + CONFIG_PREPROCESSOR_FORKS;
 	}
 	else
 		return FAIL;
@@ -583,8 +594,6 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	0,			24},
 		{"MaxHousekeeperDelete",	&CONFIG_MAX_HOUSEKEEPER_DELETE,		TYPE_INT,
 			PARM_OPT,	0,			1000000},
-		{"SenderFrequency",		&CONFIG_SENDER_FREQUENCY,		TYPE_INT,
-			PARM_OPT,	5,			SEC_PER_HOUR},
 		{"TmpDir",			&CONFIG_TMPDIR,				TYPE_STRING,
 			PARM_OPT,	0,			0},
 		{"FpingLocation",		&CONFIG_FPING_LOCATION,			TYPE_STRING,
@@ -679,6 +688,10 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 		{"SocketDir",			&CONFIG_SOCKET_PATH,			TYPE_STRING,
 			PARM_OPT,	0,			0},
+		{"StartAlerters",		&CONFIG_ALERTER_FORKS,			TYPE_INT,
+			PARM_OPT,	1,			100},
+		{"StartPreprocessors",		&CONFIG_PREPROCESSOR_FORKS,		TYPE_INT,
+			PARM_OPT,	1,			1000},
 		{"HistoryServiceURL",		&CONFIG_HISTORY_SERVICE_URL,		TYPE_STRING,
 			PARM_OPT,	0,			0},
 		{"HistoryServiceTypes",		&CONFIG_HISTORY_SERVICE_OPTS,		TYPE_STRING_LIST,
@@ -728,7 +741,7 @@ static void	zbx_free_config(void)
 int	main(int argc, char **argv)
 {
 	ZBX_TASK_EX	t = {ZBX_TASK_START};
-	char		ch;
+	char		ch, *error = NULL;
 	int		opt_c = 0, opt_r = 0;
 
 #if defined(PS_OVERWRITE_ARGV) || defined(PS_PSTAT_ARGV)
@@ -812,18 +825,12 @@ int	main(int argc, char **argv)
 
 	zbx_initialize_events();
 
-#ifdef HAVE_IPCSERVICE
+	if (FAIL == zbx_ipc_service_init_env(CONFIG_SOCKET_PATH, &error))
 	{
-		char	*error = NULL;
-
-		if (FAIL == zbx_ipc_service_init_env(CONFIG_SOCKET_PATH, &error))
-		{
-			zbx_error("Cannot initialize IPC services: %s", error);
-			zbx_free(error);
-			exit(EXIT_FAILURE);
-		}
+		zbx_error("Cannot initialize IPC services: %s", error);
+		zbx_free(error);
+		exit(EXIT_FAILURE);
 	}
-#endif
 
 	return daemon_start(CONFIG_ALLOW_ROOT, CONFIG_USER, t.flags);
 }
@@ -1000,13 +1007,14 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	if (0 != CONFIG_IPMIPOLLER_FORKS)
 		CONFIG_IPMIMANAGER_FORKS = 1;
 
-	threads_num = CONFIG_CONFSYNCER_FORKS + CONFIG_WATCHDOG_FORKS + CONFIG_POLLER_FORKS
+	threads_num = CONFIG_CONFSYNCER_FORKS + CONFIG_POLLER_FORKS
 			+ CONFIG_UNREACHABLE_POLLER_FORKS + CONFIG_TRAPPER_FORKS + CONFIG_PINGER_FORKS
 			+ CONFIG_ALERTER_FORKS + CONFIG_HOUSEKEEPER_FORKS + CONFIG_TIMER_FORKS
 			+ CONFIG_HTTPPOLLER_FORKS + CONFIG_DISCOVERER_FORKS + CONFIG_HISTSYNCER_FORKS
 			+ CONFIG_ESCALATOR_FORKS + CONFIG_IPMIPOLLER_FORKS + CONFIG_JAVAPOLLER_FORKS
 			+ CONFIG_SNMPTRAPPER_FORKS + CONFIG_PROXYPOLLER_FORKS + CONFIG_SELFMON_FORKS
-			+ CONFIG_VMWARE_FORKS + CONFIG_TASKMANAGER_FORKS + CONFIG_IPMIMANAGER_FORKS;
+			+ CONFIG_VMWARE_FORKS + CONFIG_TASKMANAGER_FORKS + CONFIG_IPMIMANAGER_FORKS
+			+ CONFIG_ALERTMANAGER_FORKS + CONFIG_PREPROCMAN_FORKS + CONFIG_PREPROCESSOR_FORKS;
 	threads = zbx_calloc(threads, threads_num, sizeof(pid_t));
 
 	if (0 != CONFIG_TRAPPER_FORKS)
@@ -1041,9 +1049,6 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 		{
 			case ZBX_PROCESS_TYPE_CONFSYNCER:
 				threads[i] = zbx_thread_start(dbconfig_thread, &thread_args);
-				break;
-			case ZBX_PROCESS_TYPE_WATCHDOG:
-				threads[i] = zbx_thread_start(watchdog_thread, &thread_args);
 				break;
 			case ZBX_PROCESS_TYPE_POLLER:
 				poller_type = ZBX_PROCESS_TYPE_POLLER;
@@ -1103,6 +1108,12 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 			case ZBX_PROCESS_TYPE_TASKMANAGER:
 				threads[i] = zbx_thread_start(taskmanager_thread, &thread_args);
 				break;
+			case ZBX_PROCESS_TYPE_PREPROCMAN:
+				threads[i] = zbx_thread_start(preprocessing_manager_thread, &thread_args);
+				break;
+			case ZBX_PROCESS_TYPE_PREPROCESSOR:
+				threads[i] = zbx_thread_start(preprocessing_worker_thread, &thread_args);
+				break;
 #ifdef HAVE_OPENIPMI
 			case ZBX_PROCESS_TYPE_IPMIMANAGER:
 				threads[i] = zbx_thread_start(ipmi_manager_thread, &thread_args);
@@ -1111,6 +1122,9 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 				threads[i] = zbx_thread_start(ipmi_poller_thread, &thread_args);
 				break;
 #endif
+			case ZBX_PROCESS_TYPE_ALERTMANAGER:
+				threads[i] = zbx_thread_start(alert_manager_thread, &thread_args);
+				break;
 		}
 	}
 
@@ -1164,9 +1178,7 @@ void	zbx_on_exit(void)
 
 	zbx_sleep(2);	/* wait for all child processes to exit */
 
-#ifdef HAVE_IPCSERVICE
 	zbx_ipc_service_free_env();
-#endif
 
 	DBconnect(ZBX_DB_CONNECT_EXIT);
 

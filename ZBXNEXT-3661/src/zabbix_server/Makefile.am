@@ -13,14 +13,14 @@ SUBDIRS = \
 	snmptrapper \
 	timer \
 	trapper \
-	watchdog \
 	escalator \
 	proxypoller \
 	selfmon \
 	vmware \
 	taskmanager \
 	ipmi \
-	scripts
+	scripts \
+	preprocessor
 
 sbin_PROGRAMS = zabbix_server
 
@@ -46,7 +46,6 @@ zabbix_server_LDADD = \
 	trapper/libzbxtrapper.a \
 	snmptrapper/libzbxsnmptrapper.a \
 	httppoller/libzbxhttppoller.a \
-	watchdog/libzbxwatchdog.a \
 	escalator/libzbxescalator.a \
 	proxypoller/libzbxproxypoller.a \
 	selfmon/libzbxselfmon.a \
@@ -54,6 +53,7 @@ zabbix_server_LDADD = \
 	taskmanager/libzbxtaskmanager.a \
 	ipmi/libipmi.a \
 	scripts/libzbxscripts.a \
+	preprocessor/libpreprocessor.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxserversysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
@@ -74,6 +74,7 @@ zabbix_server_LDADD = \
 	$(top_srcdir)/src/libs/zbxcommshigh/libzbxcommshigh.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
 	$(top_srcdir)/src/libs/zbxhttp/libzbxhttp.a \
+	$(top_srcdir)/src/libs/zbxipcservice/libzbxipcservice.a \
 	$(top_srcdir)/src/libs/zbxexec/libzbxexec.a \
 	$(top_srcdir)/src/libs/zbxicmpping/libzbxicmpping.a \
 	$(top_srcdir)/src/libs/zbxdbupgrade/libzbxdbupgrade.a \

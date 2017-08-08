@@ -90,9 +90,11 @@ static void	DCdump_hosts(ZBX_DC_CONFIG *config)
 
 	for (i = 0; i < index.values_num; i++)
 	{
+		int	j;
+
 		host = (ZBX_DC_HOST *)index.values[i];
-		zabbix_log(LOG_LEVEL_TRACE, "hostid:" ZBX_FS_UI64 " host:'%s' name:'%s'", host->hostid, host->host,
-				host->name);
+		zabbix_log(LOG_LEVEL_TRACE, "hostid:" ZBX_FS_UI64 " host:'%s' name:'%s' status:%u", host->hostid,
+				host->host, host->name, host->status);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  proxy_hostid:%d", host->proxy_hostid);
 		zabbix_log(LOG_LEVEL_TRACE, "  data_expected_from:%d", host->data_expected_from);
@@ -129,6 +131,12 @@ static void	DCdump_hosts(ZBX_DC_CONFIG *config)
 					host->tls_dc_psk->refcount);
 		}
 #endif
+		for (j = 0; j < host->interfaces_v.values_num; j++)
+		{
+			ZBX_DC_INTERFACE	*interface = host->interfaces_v.values[j];
+
+			zabbix_log(LOG_LEVEL_TRACE, "  interfaceid:" ZBX_FS_UI64, interface->interfaceid);
+		}
 	}
 
 	zbx_vector_ptr_destroy(&index);
@@ -423,7 +431,8 @@ static void	DCdump_simpleitem(const ZBX_DC_SIMPLEITEM *simpleitem)
 
 static void	DCdump_jmxitem(const ZBX_DC_JMXITEM *jmxitem)
 {
-	zabbix_log(LOG_LEVEL_TRACE, "  jmx:[username:'%s' password:'%s']", jmxitem->username, jmxitem->password);
+	zabbix_log(LOG_LEVEL_TRACE, "  jmx:[username:'%s' password:'%s' endpoint:'%s']",
+			jmxitem->username, jmxitem->password, jmxitem->jmx_endpoint);
 }
 
 static void	DCdump_calcitem(const ZBX_DC_CALCITEM *calcitem)
@@ -518,6 +527,14 @@ static void	DCdump_items(ZBX_DC_CONFIG *config)
 
 		if (0 != item->preproc_ops.values_num)
 			DCdump_item_preproc(item);
+
+		if (0 != item->dep_itemids.values_num)
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "  dependent:");
+
+			for (j = 0; j < item->dep_itemids.values_num; j++)
+				zabbix_log(LOG_LEVEL_TRACE, "    " ZBX_FS_UI64, item->dep_itemids.values[j]);
+		}
 
 		if (NULL != item->triggers)
 		{
@@ -761,8 +778,9 @@ static void	DCdump_actions(ZBX_DC_CONFIG *config)
 	for (i = 0; i < index.values_num; i++)
 	{
 		action = (zbx_dc_action_t *)index.values[i];
-		zabbix_log(LOG_LEVEL_TRACE, "actionid:" ZBX_FS_UI64 " formula:'%s' eventsource:%u evaltype:%u",
-				action->actionid, action->formula, action->eventsource, action->evaltype);
+		zabbix_log(LOG_LEVEL_TRACE, "actionid:" ZBX_FS_UI64 " formula:'%s' eventsource:%u evaltype:%u"
+				" opflags:%x", action->actionid, action->formula, action->eventsource, action->evaltype,
+				action->opflags);
 
 		for (j = 0; j < action->conditions.values_num; j++)
 		{

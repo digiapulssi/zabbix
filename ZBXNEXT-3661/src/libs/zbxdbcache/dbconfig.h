@@ -100,6 +100,7 @@ typedef struct
 	unsigned char		update_triggers;
 
 	zbx_vector_ptr_t	preproc_ops;
+	zbx_vector_uint64_t	dep_itemids;
 }
 ZBX_DC_ITEM;
 
@@ -152,6 +153,14 @@ ZBX_DC_TRAPITEM;
 typedef struct
 {
 	zbx_uint64_t	itemid;
+	zbx_uint64_t	master_itemid;
+	zbx_uint64_t	last_master_itemid;
+}
+ZBX_DC_DEPENDENTITEM;
+
+typedef struct
+{
+	zbx_uint64_t	itemid;
 	const char	*logtimefmt;
 }
 ZBX_DC_LOGITEM;
@@ -199,6 +208,7 @@ typedef struct
 	zbx_uint64_t	itemid;
 	const char	*username;
 	const char	*password;
+	const char	*jmx_endpoint;
 }
 ZBX_DC_JMXITEM;
 
@@ -261,7 +271,7 @@ typedef struct
 	unsigned char	jmx_available;
 	unsigned char	status;
 
-	/* flag to reset host availability to uknown */
+	/* flag to reset host availability to unknown */
 	unsigned char	reset_availability;
 
 	/* flag to force update for all items */
@@ -279,6 +289,9 @@ typedef struct
 	const char	*snmp_error;
 	const char	*ipmi_error;
 	const char	*jmx_error;
+
+	zbx_vector_ptr_t	interfaces_v;	/* for quick finding of all host interfaces in */
+						/* 'config->interfaces' hashset */
 }
 ZBX_DC_HOST;
 
@@ -467,6 +480,7 @@ typedef struct
 	const char		*formula;
 	unsigned char		eventsource;
 	unsigned char		evaltype;
+	unsigned char		opflags;
 	zbx_vector_ptr_t	conditions;
 }
 zbx_dc_action_t;
@@ -582,6 +596,7 @@ typedef struct
 	zbx_hashset_t		snmpitems;
 	zbx_hashset_t		ipmiitems;
 	zbx_hashset_t		trapitems;
+	zbx_hashset_t		dependentitems;
 	zbx_hashset_t		logitems;
 	zbx_hashset_t		dbitems;
 	zbx_hashset_t		sshitems;

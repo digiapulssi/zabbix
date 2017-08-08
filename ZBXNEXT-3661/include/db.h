@@ -136,6 +136,8 @@ struct	_DC_TRIGGER;
 #define ITEM_PUBLICKEY_LEN_MAX		(ITEM_PUBLICKEY_LEN + 1)
 #define ITEM_PRIVATEKEY_LEN		64
 #define ITEM_PRIVATEKEY_LEN_MAX		(ITEM_PRIVATEKEY_LEN + 1)
+#define ITEM_JMX_ENDPOINT_LEN		255
+#define ITEM_JMX_ENDPOINT_LEN_MAX	(ITEM_JMX_ENDPOINT_LEN + 1)
 #if defined(HAVE_IBM_DB2) || defined(HAVE_ORACLE)
 #	define ITEM_PARAM_LEN		2048
 #	define ITEM_DESCRIPTION_LEN	2048
@@ -274,8 +276,8 @@ DB_TRIGGER;
 
 typedef struct
 {
-	DB_TRIGGER		trigger;
 	zbx_uint64_t		eventid;
+	DB_TRIGGER		trigger;
 	zbx_uint64_t		objectid;
 	int			source;
 	int			object;
@@ -289,7 +291,7 @@ typedef struct
 #define ZBX_FLAGS_DB_EVENT_UNSET		0x0000
 #define ZBX_FLAGS_DB_EVENT_CREATE		0x0001
 #define ZBX_FLAGS_DB_EVENT_NO_ACTION		0x0002
-#define ZBX_FLAGS_DB_EVENT_LINKED	0x0004
+#define ZBX_FLAGS_DB_EVENT_LINKED		0x0004
 	zbx_uint64_t		flags;
 }
 DB_EVENT;
@@ -394,11 +396,39 @@ typedef struct
 	zbx_uint64_t		itemid;
 	zbx_uint64_t		eventid;
 	zbx_uint64_t		r_eventid;
+	zbx_uint64_t		acknowledgeid;
 	int			nextcheck;
 	int			esc_step;
 	zbx_escalation_status_t	status;
 }
 DB_ESCALATION;
+
+typedef struct
+{
+	zbx_uint64_t	actionid;
+	char		*name;
+	char		*shortdata;
+	char		*longdata;
+	char		*r_shortdata;
+	char		*r_longdata;
+	char		*ack_shortdata;
+	char		*ack_longdata;
+	int		esc_period;
+	unsigned char	eventsource;
+	unsigned char	maintenance_mode;
+	unsigned char	recovery;
+	unsigned char	status;
+}
+DB_ACTION;
+
+typedef struct
+{
+	zbx_uint64_t	acknowledgeid;
+	zbx_uint64_t	userid;
+	char		*message;
+	int		clock;
+}
+DB_ACKNOWLEDGE;
 
 int	DBinit(char **error);
 void	DBdeinit(void);
@@ -412,10 +442,13 @@ int	DBstatement_execute();
 #endif
 #ifdef HAVE___VA_ARGS__
 #	define DBexecute(fmt, ...) __zbx_DBexecute(ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
+#	define DBexecute_once(fmt, ...) __zbx_DBexecute_once(ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
 #else
 #	define DBexecute __zbx_DBexecute
+#	define DBexecute_once __zbx_DBexecute_once
 #endif
 int	__zbx_DBexecute(const char *fmt, ...);
+int	__zbx_DBexecute_once(const char *fmt, ...);
 
 #ifdef HAVE___VA_ARGS__
 #	define DBselect_once(fmt, ...)	__zbx_DBselect_once(ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
@@ -647,6 +680,6 @@ zbx_host_availability_t;
 
 int	zbx_sql_add_host_availability(char **sql, size_t *sql_alloc, size_t *sql_offset,
 		const zbx_host_availability_t *ha);
-int	DBget_user_by_active_session(zbx_user_t *user, const char *sessionid);
+int	DBget_user_by_active_session(const char *sessionid, zbx_user_t *user);
 
 #endif

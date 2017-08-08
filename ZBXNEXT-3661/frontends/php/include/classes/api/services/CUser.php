@@ -65,8 +65,8 @@ class CUser extends CApiService {
 			'filter'					=> null,
 			'search'					=> null,
 			'searchByAny'				=> null,
-			'startSearch'				=> null,
-			'excludeSearch'				=> null,
+			'startSearch'				=> false,
+			'excludeSearch'				=> false,
 			'searchWildcardsEnabled'	=> null,
 			// output
 			'output'					=> API_OUTPUT_EXTEND,
@@ -75,8 +75,8 @@ class CUser extends CApiService {
 			'selectMedias'				=> null,
 			'selectMediatypes'			=> null,
 			'getAccess'					=> null,
-			'countOutput'				=> null,
-			'preservekeys'				=> null,
+			'countOutput'				=> false,
+			'preservekeys'				=> false,
 			'sortfield'					=> '',
 			'sortorder'					=> '',
 			'limit'						=> null
@@ -173,7 +173,7 @@ class CUser extends CApiService {
 		while ($user = DBfetch($res)) {
 			unset($user['passwd']);
 
-			if ($options['countOutput'] !== null) {
+			if ($options['countOutput']) {
 				$result = $user['rowscount'];
 			}
 			else {
@@ -183,7 +183,7 @@ class CUser extends CApiService {
 			}
 		}
 
-		if ($options['countOutput'] !== null) {
+		if ($options['countOutput']) {
 			return $result;
 		}
 
@@ -214,7 +214,7 @@ class CUser extends CApiService {
 		}
 
 		// removing keys
-		if ($options['preservekeys'] === null) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 
@@ -901,6 +901,21 @@ class CUser extends CApiService {
 				)
 			);
 		}
+
+		// Check if deleted users have dashboards.
+		$db_dashboards = API::Dashboard()->get([
+			'output' => ['name', 'userid'],
+			'filter' => ['userid' => $userids],
+			'limit' => 1
+		]);
+
+		if ($db_dashboards) {
+			self::exception(ZBX_API_ERROR_PARAMETERS,
+				_s('User "%1$s" is dashboard "%2$s" owner.', $db_users[$db_dashboards[0]['userid']]['alias'],
+					$db_dashboards[0]['name']
+				)
+			);
+		}
 	}
 
 	/**
@@ -1273,8 +1288,10 @@ class CUser extends CApiService {
 			}
 		}
 
-		if (!function_exists('ldap_connect')) {
-			self::exception(ZBX_API_ERROR_PARAMETERS, _('Probably php-ldap module is missing.'));
+		$ldap_status = (new CFrontendSetup())->checkPhpLdapModule();
+
+		if ($ldap_status['result'] != CFrontendSetup::CHECK_OK) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, $ldap_status['error']);
 		}
 
 		$ldapValidator = new CLdapAuthValidator(['conf' => $cnf]);

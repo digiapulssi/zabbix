@@ -33,7 +33,6 @@
 #include "valuecache.h"
 #include "zbxmodules.h"
 #include "module.h"
-#include "item_preproc.h"
 
 #include "history.h"
 
@@ -1297,38 +1296,35 @@ static int	dc_history_set_value(ZBX_DC_HISTORY *hdata, unsigned char value_type,
 
 /******************************************************************************
  *                                                                            *
- * Function: preprocess_item_value                                            *
+ * Function: normalize_item_value                                             *
  *                                                                            *
- * Purpose: execute preprocessing operations defined by the item              *
+ * Purpose: normalize item value by performing truncation of long text        *
+ *          values and changes value format according to the item value type  *
  *                                                                            *
  * Parameters: item          - [IN] the item                                  *
  *             hdata         - [IN/OUT] the historical data to process        *
- *             delta_history - [IN/OUT] hashset with last historical data     *
- *                                      of items with preprocessing option of *
- *                                      delta type.                           *
  *                                                                            *
- * Return value: SUCCEED - Value preprocessing was successful. Note that in   *
- *                         some situations preprocessing can be successful    *
- *                         while setting ZBX_DC_FLAG_UNDEF flag, for example  *
- *                         when processing first value for item with delta    *
- *                         preprocessing operation.                           *
- *               FAIL    - Otherwise - ZBX_DC_FLAG_UNDEF will be set and data *
+ * Return value: SUCCEED - Normalization was successful.                      *
+ *               FAIL    - Otherwise - ZBX_DC_FLAG_UNDEF will be set and item *
  *                         state changed to ZBX_NOTSUPPORTED.                 *
  *                                                                            *
  ******************************************************************************/
-static int	preprocess_item_value(const DC_ITEM *item, ZBX_DC_HISTORY *hdata, zbx_hashset_t *delta_history)
+static int	normalize_item_value(const DC_ITEM *item, ZBX_DC_HISTORY *hdata)
 {
-	int		i, ret;
-	char		*errmsg = NULL;
+	int		ret = FAIL;
+	char		*logvalue;
 	zbx_variant_t	value_var;
 
 	if (0 != (hdata->flags & ZBX_DC_FLAG_NOVALUE))
-		return SUCCEED;
+	{
+		ret = SUCCEED;
+		goto out;
+	}
 
 	if (ITEM_STATE_NOTSUPPORTED == hdata->state)
-		return FAIL;
+		goto out;
 
-	if (0 == item->preproc_ops_num && item->value_type == hdata->value_type)
+	if (item->value_type == hdata->value_type)
 	{
 		/* truncate text based values if necessary */
 		switch (hdata->value_type)
@@ -1340,7 +1336,8 @@ static int	preprocess_item_value(const DC_ITEM *item, ZBX_DC_HISTORY *hdata, zbx
 				hdata->value.str[zbx_db_strlen_n(hdata->value.str, HISTORY_TEXT_VALUE_LEN)] = '\0';
 				break;
 			case ITEM_VALUE_TYPE_LOG:
-				hdata->value.str[zbx_db_strlen_n(hdata->value.str, HISTORY_LOG_VALUE_LEN)] = '\0';
+				logvalue = hdata->value.log->value;
+				logvalue[zbx_db_strlen_n(logvalue, HISTORY_LOG_VALUE_LEN)] = '\0';
 				break;
 		}
 		return SUCCEED;
@@ -1365,25 +1362,9 @@ static int	preprocess_item_value(const DC_ITEM *item, ZBX_DC_HISTORY *hdata, zbx
 			break;
 	}
 
-	for (i = 0; i < item->preproc_ops_num; i++)
-	{
-		if (SUCCEED != (ret = zbx_item_preproc(item,  &value_var, &hdata->ts, &item->preproc_ops[i],
-				delta_history, &errmsg)))
-		{
-			dc_history_set_error(hdata, errmsg);
-			goto out;
-		}
-
-		if (ZBX_VARIANT_NONE == value_var.type)
-		{
-			hdata->flags |= ZBX_DC_FLAG_UNDEF;
-			goto out;
-		}
-	}
-	dc_history_set_value(hdata, item->value_type, &value_var);
-out:
+	ret = dc_history_set_value(hdata, item->value_type, &value_var);
 	zbx_variant_clear(&value_var);
-
+out:
 	return ret;
 }
 
@@ -1406,18 +1387,11 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, DC_ITE
 
 	size_t			sql_offset = 0;
 	int			i;
-	zbx_hashset_t		delta_history = {NULL};
 	zbx_vector_ptr_t	inventory_values;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_hashset_create(&delta_history, 1000, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
 	zbx_vector_ptr_create(&inventory_values);
-
-	DCget_delta_items(&delta_history, itemids);
-
-	zbx_vector_uint64_clear(itemids);	/* item ids that are not disabled and not deleted in DB */
 
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
@@ -1458,7 +1432,7 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, DC_ITE
 			h->flags |= ZBX_DC_FLAG_NOTRENDS;
 		}
 
-		preprocess_item_value(&items[i], h, &delta_history);
+		normalize_item_value(&items[i], h);
 
 		DCadd_update_item_sql(&sql_offset, &items[i], h);
 		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
@@ -1481,10 +1455,6 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, DC_ITE
 		if (FAIL == zbx_vector_uint64_bsearch(itemids, history[i].itemid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
 			history[i].flags |= ZBX_DC_FLAG_UNDEF;
 	}
-
-	DCset_delta_items(&delta_history);
-
-	zbx_hashset_destroy(&delta_history);
 
 	if (sql_offset > 16)	/* In ORACLE always present begin..end; */
 	{
@@ -2247,6 +2217,8 @@ int	DCsync_history(int sync_type, int *total_num)
 			DCconfig_get_items_by_itemids(items, itemids.values, errcodes, history_num,
 					ZBX_FLAG_ITEM_FIELDS_PREPROC);
 
+			zbx_vector_uint64_clear(&itemids);	/* item ids that are not disabled and not deleted in DB */
+
 			DCmass_update_items(history, history_num, items, errcodes, &itemids);
 			DCmass_add_history(history, history_num, items);
 
@@ -2659,10 +2631,8 @@ void	dc_add_history(zbx_uint64_t itemid, unsigned char item_flags, AGENT_RESULT 
 		if (NULL == GET_TEXT_RESULT(result))
 			return;
 
-		/* server processes low-level discovery (lld) items while proxy stores their values in db */
-		if (0 != (ZBX_PROGRAM_TYPE_SERVER & program_type))
-			lld_process_discovery_rule(itemid, result->text, ts);
-		else
+		/* proxy stores low-level discovery (lld) values in db */
+		if (0 == (ZBX_PROGRAM_TYPE_SERVER & program_type))
 			dc_local_add_history_lld(itemid, ts, result->text);
 
 		return;
@@ -3544,21 +3514,26 @@ zbx_uint64_t	DCget_nextid(const char *table_name, int num)
 		exit(EXIT_FAILURE);
 	}
 
-	zbx_strlcpy(id->table_name, table_name, sizeof(id->table_name));
-
 	table = DBget_table(table_name);
 
 	result = DBselect("select max(%s) from %s where %s between " ZBX_FS_UI64 " and " ZBX_FS_UI64,
 			table->recid, table_name, table->recid, min, max);
 
-	if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]))
-		id->lastid = min;
-	else
-		ZBX_STR2UINT64(id->lastid, row[0]);
+	if (NULL != result)
+	{
+		zbx_strlcpy(id->table_name, table_name, sizeof(id->table_name));
 
-	nextid = id->lastid + 1;
-	id->lastid += num;
-	lastid = id->lastid;
+		if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]))
+			id->lastid = min;
+		else
+			ZBX_STR2UINT64(id->lastid, row[0]);
+
+		nextid = id->lastid + 1;
+		id->lastid += num;
+		lastid = id->lastid;
+	}
+	else
+		nextid = lastid = 0;
 
 	UNLOCK_CACHE_IDS;
 
