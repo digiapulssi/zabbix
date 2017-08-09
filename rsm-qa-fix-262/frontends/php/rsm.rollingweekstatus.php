@@ -398,8 +398,6 @@ foreach ($tlds_by_server as $key => $hosts) {
 			'preservekeys' => true
 		));
 
-		$items += $avail_items;
-
 		if ($items) {
 			foreach ($items as $item) {
 				// service type filter
@@ -453,7 +451,10 @@ foreach ($tlds_by_server as $key => $hosts) {
 					);
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['trigger'] = false;
 				}
-				elseif ($item['key_'] == RSM_SLV_DNS_AVAIL) {
+			}
+
+			foreach ($avail_items as $item) {
+				if ($item['key_'] == RSM_SLV_DNS_AVAIL) {
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['availItemId'] = $item['itemid'];
 					$itemIds[$item['itemid']] = true;
 				}
@@ -470,6 +471,8 @@ foreach ($tlds_by_server as $key => $hosts) {
 					$itemIds[$item['itemid']] = true;
 				}
 			}
+
+			$items += $avail_items;
 
 			if ($data['filter_slv']) {
 				foreach ($filter_slv as $filtred_hostid => $value) {
