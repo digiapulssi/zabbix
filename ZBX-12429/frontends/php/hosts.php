@@ -391,7 +391,7 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 				$host['inventory'] = [];
 			}
 
-			if ($newHostGroupIds && (!isset($visible['groups']) || !isset($replaceHostGroups))) {
+			if ($newHostGroupIds && !array_key_exists('groups', $visible)) {
 				$add_groups = [];
 
 				foreach ($newHostGroupIds as $groupid) {
