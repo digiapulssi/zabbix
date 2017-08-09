@@ -380,13 +380,25 @@ foreach ($tlds_by_server as $key => $hosts) {
 			'filter' => array(
 				'key_' => array(
 					RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK,
-					RSM_SLV_EPP_ROLLWEEK, RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL,
-					RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
+					RSM_SLV_EPP_ROLLWEEK
 				)
 			),
 			'output' => array('itemid', 'hostid', 'key_', 'lastvalue'),
 			'preservekeys' => true
 		));
+
+		$avail_items = API::Item()->get(array(
+			'hostids' => array_keys($hosts),
+			'filter' => array(
+				'key_' => array(
+					RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
+				)
+			),
+			'output' => array('itemid', 'hostid', 'key_'),
+			'preservekeys' => true
+		));
+
+		$items += $avail_items;
 
 		if ($items) {
 			foreach ($items as $item) {
