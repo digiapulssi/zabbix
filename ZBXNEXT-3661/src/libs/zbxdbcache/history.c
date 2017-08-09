@@ -319,6 +319,9 @@ void	zbx_send_data(void)
 	int		running, previous, msgnum;
 	CURLMsg		*msg;
 
+	if (NULL == multi)
+		return;
+
 	curl_headers = curl_slist_append(curl_headers, "Content-Type:application/json");
 
 	for (sender = senders; ITEM_VALUE_TYPE_MAX != sender->value_type; sender++)
