@@ -497,7 +497,7 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 		struct zbx_json_parse	jp, jp_values, jp_item;
 		zbx_history_record_t	hr;
 		const char		*p = NULL;
-;
+
 		if (NULL != page.data)
 		{
 			zbx_json_open(page.data, &jp);
