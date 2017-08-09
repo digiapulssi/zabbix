@@ -6198,9 +6198,10 @@ void	DCconfig_get_triggers_by_triggerids(DC_TRIGGER *triggers, const zbx_uint64_
  *                                                                            *
  * Function: DCset_item_db_states                                             *
  *                                                                            *
- * Purpose: update cache with item state changes in database                  *
+ * Purpose: update cache with item state changes committed to database        *
  *                                                                            *
- * Parameters: state_diff - [IN] history values that changed item state       *
+ * Parameters: state_diff - [IN] item state changes, supported or             *
+ *                               not supported                                *
  *                                                                            *
  ******************************************************************************/
 void	DCset_item_db_states(const zbx_vector_ptr_t *state_diff)
@@ -8050,7 +8051,7 @@ static void	DCconfig_sort_triggers_topologically(void)
  * Function: DCconfig_triggers_apply_changes                                  *
  *                                                                            *
  * Purpose: apply trigger value,state,lastchange or error changes to          *
- *          configuration cache                                               *
+ *          configuration cache after committed to database                   *
  *                                                                            *
  ******************************************************************************/
 void	DCconfig_triggers_apply_changes(zbx_vector_ptr_t *trigger_diff)

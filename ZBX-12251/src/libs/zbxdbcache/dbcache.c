@@ -341,6 +341,13 @@ static ZBX_DC_TREND	*DCget_trend(zbx_uint64_t itemid)
 	return (ZBX_DC_TREND *)zbx_hashset_insert(&cache->trends, &trend, sizeof(ZBX_DC_TREND));
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: DCupdate_trends                                                  *
+ *                                                                            *
+ * Purpose: apply disable_from changes to cache                               *
+ *                                                                            *
+ ******************************************************************************/
 static void	DCupdate_trends(zbx_vector_uint64_pair_t *trends_diff)
 {
 	const char	*__function_name = "DCupdate_trends";
@@ -748,6 +755,8 @@ static void	DCadd_trend(const ZBX_DC_HISTORY *history, ZBX_DC_TREND **trends, in
  *                                                                            *
  * Parameters: history     - array of history data                            *
  *             history_num - number of history structures                     *
+ *             trends      - list of trends to flush into database            *
+ *             trends_num  - number of trends                                 *
  *                                                                            *
  * Author: Alexander Vladishev                                                *
  *                                                                            *
@@ -756,6 +765,7 @@ static void	DCmass_update_trends(const ZBX_DC_HISTORY *history, int history_num,
 		int *trends_num)
 {
 	const char	*__function_name = "DCmass_update_trends";
+
 	zbx_timespec_t	ts;
 	int		trends_alloc = 0, i, hour, seconds;
 
@@ -943,13 +953,13 @@ clean_items:
  * Function: DCadd_update_item_sql                                            *
  *                                                                            *
  * Purpose: 1) generate sql for updating item in database                     *
- *          2) calculate item delta value                                     *
- *          3) add events (item supported/not supported)                      *
- *          4) update cache (requeue item)                                    *
+ *          2) add events (item supported/not supported)                      *
+ *          3) generate updates for cache                                     *
  *                                                                            *
- * Parameters: item - [IN/OUT] item reference                                 *
- *             h    - [IN/OUT] a reference to history cache value             *
- *                                                                            *
+ * Parameters: item       - [IN]  item reference                              *
+ *             h          - [IN]  a reference to history cache value          *
+ *             state_diff - [OUT] item state changes, supported or            *
+ *                                not supported                               *
  ******************************************************************************/
 static void	DCadd_update_item_sql(size_t *sql_offset, const DC_ITEM *item, const ZBX_DC_HISTORY *h,
 		zbx_vector_ptr_t *state_diff)
@@ -1439,7 +1449,7 @@ static DC_ITEM	*DCmass_prepare_history_items(ZBX_DC_HISTORY *history, int histor
  * Parameters: history     - array of history data                            *
  *             history_num - number of history structures                     *
  *             items       - items that are used by history data              *
- *             state_diff  - item state changes, supported, not supported     *
+ *             state_diff  - item state changes, supported or not supported   *
  *                                                                            *
  * Author: Alexei Vladishev, Eugene Grigorjev, Alexander Vladishev            *
  *                                                                            *
