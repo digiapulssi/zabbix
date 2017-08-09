@@ -483,8 +483,6 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	curl_easy_setopt(sender->handle, CURLOPT_POST, 0);
 	curl_easy_setopt(sender->handle, CURLOPT_WRITEFUNCTION, curl_write_cb);
 
-	zabbix_log(LOG_LEVEL_WARNING, "Requesting %s", sender->url);
-
 	page.offset = 0;
 	if (CURLE_OK != (err = curl_easy_perform(sender->handle)))
 		zabbix_log(LOG_LEVEL_ERR, "Failed to get values from history service: %s", curl_easy_strerror(err));
