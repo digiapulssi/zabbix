@@ -1,7 +1,6 @@
 Changes for rsm1.0.0rc19
 
 New features:
-....I..PS. [270] improved host group structure for better Monitoring->Overview experience (gleb)
 
 Bug fixes:
 ..F.I..PS. [260] made frontend look for rsm.probe.online item on correct hosts; adjusted user permissions accordingly (dimir, gleb, Oleg)
