@@ -627,6 +627,28 @@ static int	DBpatch_3000122(void)
 	return ZBX_DB_OK > ret ? FAIL : SUCCEED;
 }
 
+static int	DBpatch_3000123(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update hosts_groups set groupid=110 where hostgroupid=1001"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000124(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update rights set id=130 where rightid=106"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -657,5 +679,7 @@ DBPATCH_ADD(3000119, 0, 0)	/* read permissions on "Mon" host group for "Technica
 DBPATCH_ADD(3000120, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts (again) */
 DBPATCH_ADD(3000121, 0, 0)	/* new actions: "Probes-Mon", "Central-Server", "TLDs" */
 DBPATCH_ADD(3000122, 0, 0)	/* parameters for "Script" media type */
+DBPATCH_ADD(3000123, 0, 0)	/* move "Probe statuses" host from "Probes - Mon" group to "Mon" group */
+DBPATCH_ADD(3000124, 0, 1)	/* change read permissions on "Probes" host group to "Probes - Mon" host group for "EBERO users" */
 
 DBPATCH_END()

@@ -12,6 +12,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
+use TLD_constants qw(:items);
 
 use constant PROBE_LASTACCESS_ITEM	=> 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
 use constant PROBE_KEY_MANUAL		=> 'rsm.probe.status[manual]';
