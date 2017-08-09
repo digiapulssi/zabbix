@@ -122,18 +122,6 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		access_deny();
 	}
 
-	// get probe host
-	$hostName = $data['probe']['host'];
-
-	$host = API::Host()->get(array(
-		'output' => array('hostid'),
-		'filter' => array(
-			'host' => $hostName
-		)
-	));
-
-	$host = reset($host);
-
 	// get host with calculated items
 	$rsm = API::Host()->get(array(
 		'output' => array('hostid'),
@@ -256,7 +244,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	// get items
 	$probeItems = API::Item()->get(array(
 		'output' => array('itemid', 'key_', 'hostid', 'valuemapid', 'units', 'value_type'),
-		'hostids' => $host['hostid'],
+		'hostids' => $data['probe']['hostid'],
 		'search' => array(
 			'key_' => PROBE_DNS_UDP_ITEM_RTT
 		),
