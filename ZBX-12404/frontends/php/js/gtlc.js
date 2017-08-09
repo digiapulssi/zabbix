@@ -375,7 +375,9 @@ var CTimeLine = Class.create({
 
 	period: function(period) {
 		if (empty(period)) {
-			return this.is_selectall_period ? this._endtime - this._starttime : this._period;
+			return this.is_selectall_period
+				? Math.min(this._endtime - this._starttime, this.maxperiod)
+				: this._period;
 		}
 
 		this.is_selectall_period = period == this.maxperiod;
