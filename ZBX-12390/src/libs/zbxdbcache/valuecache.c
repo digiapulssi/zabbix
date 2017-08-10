@@ -408,42 +408,6 @@ out:
 
 /************************************************************************************
  *                                                                                  *
- * Function: vc_db_reload_first_second                                              *
- *                                                                                  *
- * Purpose: reloads values for the first (earliest) second of the value interval    *
- *                                                                                  *
- * Parameters:  itemid        - [IN] the itemid                                     *
- *              value_type    - [IN] the value type (see ITEM_VALUE_TYPE_* defs)    *
- *              values        - [OUT] the item history data values in descending    *
- *                                    order based on value timestamp seconds        *
- *              queries       - [IN/OUT] the database queries counter               *
- *                                                                                  *
- * Return value: SUCCEED - the history data were read successfully                  *
- *               FAIL - otherwise                                                   *
- *                                                                                  *
- *                                                                                  *
- ************************************************************************************/
-static int	vc_db_reload_first_second(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
-		zbx_uint64_t *queries)
-{
-	int	first_clock;
-
-	if (0 == values->values_num)
-		return SUCCEED;
-
-	first_clock = values->values[values->values_num - 1].timestamp.sec;
-
-	while (0 < values->values_num && values->values[values->values_num - 1].timestamp.sec == first_clock)
-	{
-		values->values_num--;
-		zbx_history_record_clear(&values->values[values->values_num], value_type);
-	}
-
-	return vc_db_read_values_by_time(itemid, value_type, values, 1, first_clock, queries);
-}
-
-/************************************************************************************
- *                                                                                  *
  * Function: vc_db_read_values_by_count                                             *
  *                                                                                  *
  * Purpose: reads item history data from database                                   *
@@ -606,6 +570,335 @@ out:
 	zbx_free(sql);
 
 	return ret;
+}
+
+/************************************************************************************
+ *                                                                                  *
+ * Function: vc_db_reload_first_second                                              *
+ *                                                                                  *
+ * Purpose: reloads values for the first (earliest) second of the value interval    *
+ *                                                                                  *
+ * Parameters:  itemid        - [IN] the itemid                                     *
+ *              value_type    - [IN] the value type (see ITEM_VALUE_TYPE_* defs)    *
+ *              values        - [OUT] the item history data values in descending    *
+ *                                    order based on value timestamp seconds        *
+ *              queries       - [IN/OUT] the database queries counter               *
+ *                                                                                  *
+ * Return value: SUCCEED - the history data were read successfully                  *
+ *               FAIL - otherwise                                                   *
+ *                                                                                  *
+ *                                                                                  *
+ ************************************************************************************/
+static int	vc_db_reload_first_second(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
+		zbx_uint64_t *queries)
+{
+	int	first_clock;
+
+	if (0 == values->values_num)
+		return SUCCEED;
+
+	first_clock = values->values[values->values_num - 1].timestamp.sec;
+
+	while (0 < values->values_num && values->values[values->values_num - 1].timestamp.sec == first_clock)
+	{
+		values->values_num--;
+		zbx_history_record_clear(&values->values[values->values_num], value_type);
+	}
+
+	return vc_db_read_values_by_time(itemid, value_type, values, 1, first_clock, queries);
+}
+/************************************************************************************
+ *                                                                                  *
+ * Function: vc_db_get_last_values                                                  *
+ *                                                                                  *
+ * Purpose: reads item history data from database                                   *
+ *                                                                                  *
+ * Parameters:  itemid        - [IN] the itemid                                     *
+ *              value_type    - [IN] the value type (see ITEM_VALUE_TYPE_* defs)    *
+ *              values        - [OUT] the item history data values                  *
+ *              count         - [IN] the number of values to read                   *
+ *              end_timestamp - [IN] the value timestamp to start reading with      *
+ *              queries       - [IN/OUT] the database queries counter               *
+ *                                                                                  *
+ * Return value: SUCCEED - the history data were read successfully                  *
+ *               FAIL - otherwise                                                   *
+ *                                                                                  *
+ * Comments: This function returns <count> values with timestamp <= end_timestamp   *
+ *           plus all values with timestamp > end_timestamp and matching the        *
+ *           end_timestamp seconds.                                                 *
+ *                                                                                  *
+ ************************************************************************************/
+static int	vc_db_get_last_values(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
+		int count, const zbx_timespec_t *end_timestamp, zbx_uint64_t *queries)
+{
+	int	i, first_clock, left;
+
+	if (FAIL == vc_db_read_values_by_count(itemid, value_type, values, count, end_timestamp->sec, queries))
+		return FAIL;
+
+	/* not enough values in database, return success */
+	if (count > values->values_num)
+		return SUCCEED;
+
+	/* if all returned values are within the same second, reload it */
+	if (values->values[0].timestamp.sec == values->values[values->values_num - 1].timestamp.sec)
+	{
+		if (FAIL == vc_db_reload_first_second(itemid, value_type, values, queries))
+			return FAIL;
+	}
+
+	left = count;
+
+	/* Check if all returned values match requested range. Nanoseconds are not used when */
+	/* reading values from database, so some of the values could have timestamp larger   */
+	/* than the specified end_timestamp.                                                 */
+	for (i = 0; i < values->values_num; i++)
+	{
+		if (0 <= zbx_timespec_compare(end_timestamp, &values->values[i].timestamp))
+		{
+			if (--left == 0)
+				goto finish;
+		}
+	}
+
+	/* some of values did not match our range, we must read more values */
+
+	first_clock = values->values[values->values_num - 1].timestamp.sec;
+
+	if (values->values[0].timestamp.sec != first_clock)
+	{
+		/* remove values matching first second - they need to reloaded */
+		/* so all values for this second is returned                   */
+		while (0 < values->values_num && values->values[values->values_num - 1].timestamp.sec == first_clock)
+		{
+			values->values_num--;
+			if (0 <= zbx_timespec_compare(end_timestamp, &values->values[values->values_num].timestamp))
+				left++;
+			zbx_history_record_clear(&values->values[values->values_num], value_type);
+		}
+	}
+	else
+		first_clock--;
+
+	/* read the missing values */
+
+	if (FAIL == vc_db_read_values_by_count(itemid, value_type, values, left, first_clock, queries))
+		return FAIL;
+finish:
+	/* The data of the first timestamp must be reloaded to keep data cached on second boundaries */
+	/* The exceptions are:                                                                       */
+	/*    1) all data is within the same second - in the case the data has been already reloaded */
+	/*    2) the number of returned values is less than requested - in this case there are no    */
+	/*       more data in database and reloading the first second will not return more data      */
+	if (values->values[0].timestamp.sec != values->values[values->values_num - 1].timestamp.sec &&
+			count <= values->values_num)
+	{
+		if (FAIL == vc_db_reload_first_second(itemid, value_type, values, queries))
+			return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+/************************************************************************************
+ *                                                                                  *
+ * Function: vc_db_get_last_values_during                                           *
+ *                                                                                  *
+ * Purpose: reads item history data from database                                   *
+ *                                                                                  *
+ * Parameters:  itemid        - [IN] the itemid                                     *
+ *              value_type    - [IN] the value type (see ITEM_VALUE_TYPE_* defs)    *
+ *              values        - [OUT] the item history data values                  *
+ *              seconds       - [IN] the time period to read                        *
+ *              count         - [IN] the number of values to read                   *
+ *              end_timestamp - [IN] the value timestamp to start reading with      *
+ *              queries       - [IN/OUT] the database queries counter               *
+ *                                                                                  *
+ * Return value: SUCCEED - the history data were read successfully                  *
+ *               FAIL - otherwise                                                   *
+ *                                                                                  *
+ * Comments: This function returns <count> values with timestamp <= end_timestamp   *
+ *           plus all values with timestamp > end_timestamp and matching the        *
+ *           end_timestamp seconds.                                                 *
+ *                                                                                  *
+ ************************************************************************************/
+static int	vc_db_get_last_values_during(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values,
+		int seconds, int count, const zbx_timespec_t *end_timestamp, zbx_uint64_t *queries)
+{
+	int	i, first_clock, left;
+
+	if (1 == seconds)
+		return vc_db_read_values_by_time(itemid, value_type, values, 1, end_timestamp->sec, queries);
+
+	if (FAIL == vc_db_read_values_by_time_and_count(itemid, value_type, values, seconds, count, end_timestamp->sec,
+			queries))
+	{
+		return FAIL;
+	}
+
+	/* not enough values in the specified range, return success */
+	if (count > values->values_num)
+		return SUCCEED;
+
+	/* if all returned values are within the same second, return (this second will be reloaded anyway) */
+	if (values->values[0].timestamp.sec == values->values[values->values_num - 1].timestamp.sec)
+	{
+		if (FAIL == vc_db_reload_first_second(itemid, value_type, values, queries))
+			return FAIL;
+	}
+
+	left = count;
+
+	/* Check if all returned values match requested range. Nanoseconds are not used when */
+	/* reading values from database, so some of the values could have timestamp larger   */
+	/* than the specified end_timestamp.                                                 */
+	for (i = 0; i < values->values_num; i++)
+	{
+		if (0 <= zbx_timespec_compare(end_timestamp, &values->values[i].timestamp))
+		{
+			if (--left == 0)
+				goto finish;
+		}
+	}
+
+	/* some of values did not match our range, we must read more values */
+
+	first_clock = values->values[values->values_num - 1].timestamp.sec;
+
+	if (values->values[0].timestamp.sec != first_clock)
+	{
+		/* remove values matching first second - they need to reloaded */
+		/* so all values for this second is returned                   */
+		while (0 < values->values_num && values->values[values->values_num - 1].timestamp.sec == first_clock)
+		{
+			values->values_num--;
+			if (0 <= zbx_timespec_compare(end_timestamp, &values->values[values->values_num].timestamp))
+				left++;
+			zbx_history_record_clear(&values->values[values->values_num], value_type);
+		}
+	}
+	else
+		first_clock--;
+
+	/* adjust requested range by the range of read data */
+	if (0 != values->values_num)
+		seconds -= end_timestamp->sec - first_clock;
+
+	/* read the missing values */
+
+	if (FAIL == vc_db_read_values_by_time_and_count(itemid, value_type, values, seconds, left, first_clock,
+			queries))
+	{
+		return FAIL;
+	}
+finish:
+	/* The data of the first timestamp must be reloaded to keep data cached on second boundaries */
+	/* The exceptions are:                                                                       */
+	/*    1) all data is within the same second - in the case the data has been already reloaded */
+	/*    2) the number of returned values is less than requested - in this case there are no    */
+	/*       more data in database and reloading the first second will not return more data      */
+	if (values->values[0].timestamp.sec != values->values[values->values_num - 1].timestamp.sec &&
+			count <= values->values_num)
+	{
+		if (FAIL == vc_db_reload_first_second(itemid, value_type, values, queries))
+			return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: vc_db_get_values                                                 *
+ *                                                                            *
+ * Purpose: get item history data for the specified time period directly from *
+ *          database                                                          *
+ *                                                                            *
+ * Parameters: itemid     - [IN] the item id                                  *
+ *             value_type - [IN] the item value type                          *
+ *             values     - [OUT] the item history data stored time/value     *
+ *                          pairs in descending order                         *
+ *             seconds    - [IN] the time period to retrieve data for         *
+ *             count      - [IN] the number of history values to retrieve     *
+ *             timestamp  - [IN] the period end timestamp                     *
+ *             queries    - [OUT] the number of performed database queries    *
+ *                                                                            *
+ * Return value:  SUCCEED - the item history data was retrieved successfully  *
+ *                FAIL    - the item history data was not retrieved           *
+ *                                                                            *
+ ******************************************************************************/
+int	vc_db_get_values(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values, int seconds,
+		int count, const zbx_timespec_t *timestamp, zbx_uint64_t *queries)
+{
+	int	ret = FAIL, i, j;
+
+	if (0 == count)
+	{
+		ret = vc_db_read_values_by_time(itemid, value_type, values, seconds + 1, timestamp->sec, queries);
+	}
+	else
+	{
+		if (0 == seconds)
+		{
+			ret = vc_db_get_last_values(itemid, value_type, values, count, timestamp, queries);
+		}
+		else
+		{
+			ret = vc_db_get_last_values_during(itemid, value_type, values, seconds, count, timestamp,
+					queries);
+		}
+	}
+
+	if (SUCCEED != ret)
+		return ret;
+
+	zbx_vector_history_record_sort(values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
+
+	for (i = 0; i < values->values_num; i++)
+	{
+		if (0 >= zbx_timespec_compare(&values->values[i].timestamp, timestamp))
+			break;
+	}
+
+	/* check if we have any values with timestamp less than requested */
+	if (i == values->values_num)
+	{
+		vc_history_record_vector_clean(values, value_type);
+		return SUCCEED;
+	}
+
+	/* check if we have any values with timestamp greater than requested and remove them */
+	if (0 != i)
+	{
+		for (j = 0; j < i; j++)
+			zbx_history_record_clear(&values->values[j], value_type);
+
+		for (j = 0; i < values->values_num; i++, j++)
+			values->values[j] = values->values[i];
+
+		values->values_num = j;
+	}
+
+	/* for count based requests check if we have more values than requested and remove them */
+	if (0 != count)
+	{
+		while (count < values->values_num)
+			zbx_history_record_clear(&values->values[--values->values_num], value_type);
+	}
+
+	/* for time based requests check if we have values with timestamp outside requested interval and remove them */
+	if (0 != seconds)
+	{
+		zbx_timespec_t	start = {timestamp->sec - seconds, timestamp->ns};
+
+		while (0 >= zbx_timespec_compare(&values->values[values->values_num - 1].timestamp, &start) &&
+				0 < values->values_num)
+		{
+			zbx_history_record_clear(&values->values[--values->values_num], value_type);
+		}
+	}
+
+	return SUCCEED;
 }
 
 /******************************************************************************************************************
@@ -2025,7 +2318,7 @@ out:
  ******************************************************************************/
 static int	vch_item_cache_values_by_time(zbx_vc_item_t *item, int seconds, const zbx_timespec_t *timestamp)
 {
-	int	ret = SUCCEED, update_seconds = 0, update_end, start;
+	int	ret = SUCCEED, update_seconds, update_end, start;
 
 	if (ZBX_ITEM_STATUS_CACHED_ALL == item->status)
 		return SUCCEED;
@@ -2136,7 +2429,7 @@ static int	vch_item_cache_values_by_count(zbx_vc_item_t *item, int count, const 
 	{
 		zbx_vector_history_record_t	records;
 		zbx_uint64_t			queries = 0;
-		int				read_from, first_sec;
+		zbx_timespec_t			ts;
 
 		/* get the end timestamp to which (including) the values should be cached */
 		if (NULL != item->head)
@@ -2148,21 +2441,21 @@ static int	vch_item_cache_values_by_count(zbx_vc_item_t *item, int count, const 
 
 		zbx_vector_history_record_create(&records);
 
-		if (update_end < (read_from = timestamp->sec - 1))
-			read_from = update_end;
+		if (update_end < timestamp->sec)
+		{
+			ts.sec = update_end;
+			ts.ns = 1e9 - 1;
+		}
+		else
+			ts = *timestamp;
 
-		ret = vc_db_read_values_by_count(item->itemid, item->value_type, &records, count - cached_records,
-				read_from, &queries);
+		ret = vc_db_get_last_values(item->itemid, item->value_type, &records, count - cached_records, &ts,
+				&queries);
 
-		/* drop data from the last second and read the whole second again  */
-		/* to ensure that data is cached by seconds                        */
-		if (SUCCEED == ret)
-			ret = vc_db_reload_first_second(item->itemid, item->value_type, &records, &queries);
-
-		if (SUCCEED == ret && update_end > read_from)
+		if (SUCCEED == ret && update_end > timestamp->sec)
 		{
 			ret = vc_db_read_values_by_time(item->itemid, item->value_type, &records,
-					update_end - read_from, update_end, &queries);
+					update_end - timestamp->sec, update_end, &queries);
 		}
 
 		if (SUCCEED == ret)
@@ -2246,7 +2539,8 @@ static int	vch_item_cache_values_by_time_and_count(zbx_vc_item_t *item, int seco
 	{
 		zbx_vector_history_record_t	records;
 		zbx_uint64_t			queries = 0;
-		int				update_end, read_from;
+		int				update_end, update_seconds;
+		zbx_timespec_t			ts;
 
 		/* get the end timestamp to which (including) the values should be cached */
 		if (NULL != item->head)
@@ -2256,27 +2550,26 @@ static int	vch_item_cache_values_by_time_and_count(zbx_vc_item_t *item, int seco
 
 		vc_try_unlock();
 
+		update_seconds = update_end - start;
+
 		zbx_vector_history_record_create(&records);
 
-		if (update_end < (read_from = timestamp->sec - 1))
-			read_from = update_end;
+		if (update_end < timestamp->sec)
+		{
+			ts.sec = update_end;
+			ts.ns = 1e9 - 1;
+		}
+		else
+			ts = *timestamp;
 
-		if (read_from > update_end)
-			seconds -= read_from - update_end;
+		ret = vc_db_get_last_values_during(item->itemid, item->value_type, &records, update_seconds,
+				count - cached_records, &ts, &queries);
 
-		ret = vc_db_read_values_by_time_and_count(item->itemid, item->value_type, &records, seconds,
-				count - cached_records, read_from, &queries);
-
-		/* drop data from the last second and read the whole second again  */
-		/* to ensure that data is cached by seconds                        */
-		if (SUCCEED == ret)
-			ret = vc_db_reload_first_second(item->itemid, item->value_type, &records, &queries);
-
-		if (SUCCEED == ret && update_end > read_from)
+		if (SUCCEED == ret && update_end > timestamp->sec)
 		{
 			/* fill in possible gap between requested period and what we have in cache */
 			ret = vc_db_read_values_by_time(item->itemid, item->value_type, &records,
-					update_end - read_from, update_end, &queries);
+					update_end - timestamp->sec, update_end, &queries);
 		}
 
 		if (SUCCEED == ret)
@@ -2298,7 +2591,7 @@ static int	vch_item_cache_values_by_time_and_count(zbx_vc_item_t *item, int seco
 			{
 				ret = records.values_num;
 
-				if (count <= records.values_num)
+				if (0 != records.values_num && cached_records <= records.values_num)
 				{
 					vc_item_update_db_cached_from(item,
 							item->tail->slots[item->tail->first_value].timestamp.sec);
@@ -2544,106 +2837,6 @@ static size_t	vch_item_free_cache(zbx_vc_item_t *item)
 	item->tail = NULL;
 
 	return freed;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: vc_db_get_values                                                 *
- *                                                                            *
- * Purpose: get item history data for the specified time period directly from *
- *          database                                                          *
- *                                                                            *
- * Parameters: itemid     - [IN] the item id                                  *
- *             value_type - [IN] the item value type                          *
- *             values     - [OUT] the item history data stored time/value     *
- *                          pairs in descending order                         *
- *             seconds    - [IN] the time period to retrieve data for         *
- *             count      - [IN] the number of history values to retrieve     *
- *             timestamp  - [IN] the period end timestamp                     *
- *             queries    - [OUT] the number of performed database queries    *
- *                                                                            *
- * Return value:  SUCCEED - the item history data was retrieved successfully  *
- *                FAIL    - the item history data was not retrieved           *
- *                                                                            *
- ******************************************************************************/
-int	vc_db_get_values(zbx_uint64_t itemid, int value_type, zbx_vector_history_record_t *values, int seconds,
-		int count, const zbx_timespec_t *timestamp, zbx_uint64_t *queries)
-{
-	int	ret = FAIL, i, j;
-
-	if (0 == count)
-	{
-		ret = vc_db_read_values_by_time(itemid, value_type, values, seconds + 1, timestamp->sec, queries);
-	}
-	else
-	{
-		if (0 == seconds)
-		{
-			ret = vc_db_read_values_by_count(itemid, value_type, values, count, timestamp->sec - 1, queries);
-		}
-		else
-		{
-			ret = vc_db_read_values_by_time_and_count(itemid, value_type, values, seconds, count,
-					timestamp->sec - 1, queries);
-		}
-
-		if (SUCCEED == ret)
-			ret = vc_db_reload_first_second(itemid, value_type, values, queries);
-
-		if (SUCCEED == ret)
-			ret = vc_db_read_values_by_time(itemid, value_type, values, 1, timestamp->sec, queries);
-	}
-
-	if (SUCCEED != ret)
-		return ret;
-
-	zbx_vector_history_record_sort(values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
-
-	for (i = 0; i < values->values_num; i++)
-	{
-		if (0 >= zbx_timespec_compare(&values->values[i].timestamp, timestamp))
-			break;
-	}
-
-	/* check if we have any values with timestamp less than requested */
-	if (i == values->values_num)
-	{
-		vc_history_record_vector_clean(values, value_type);
-		return SUCCEED;
-	}
-
-	/* check if we have any values with timestamp greater than requested and remove them */
-	if (0 != i)
-	{
-		for (j = 0; j < i; j++)
-			zbx_history_record_clear(&values->values[j], value_type);
-
-		for (j = 0; i < values->values_num; i++, j++)
-			values->values[j] = values->values[i];
-
-		values->values_num = j;
-	}
-
-	/* for count based requests check if we have more values than requested and remove them */
-	if (0 != count)
-	{
-		while (count < values->values_num)
-			zbx_history_record_clear(&values->values[--values->values_num], value_type);
-	}
-
-	/* for time based requests check if we have values with timestamp outside requested interval and remove them */
-	if (0 != seconds)
-	{
-		zbx_timespec_t	start = {timestamp->sec - seconds, timestamp->ns};
-
-		while (0 >= zbx_timespec_compare(&values->values[values->values_num - 1].timestamp, &start) &&
-				0 < values->values_num)
-		{
-			zbx_history_record_clear(&values->values[--values->values_num], value_type);
-		}
-	}
-
-	return SUCCEED;
 }
 
 /******************************************************************************************************************
