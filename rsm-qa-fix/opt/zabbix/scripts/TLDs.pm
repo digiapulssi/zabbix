@@ -873,7 +873,7 @@ sub create_probe_health_tmpl()
 	my $item_key = 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
 
 	create_item({
-		'name'		=> 'Availability of $2 Probe',
+		'name'		=> 'Availability of probe',
 		'key_'		=> $item_key,
 		'status'	=> ITEM_STATUS_ACTIVE,
 		'hostid'	=> $templateid,
