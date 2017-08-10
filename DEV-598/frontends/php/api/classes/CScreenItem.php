@@ -916,7 +916,7 @@ class CScreenItem extends CZBXAPI {
 	}
 
 	/**
-	 * Validates URL fields for submited screen items.
+	 * Validates URL fields for submitted screen items.
 	 *
 	 * @throws APIException for invalid URL
 	 *
