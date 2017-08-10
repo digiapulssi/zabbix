@@ -140,7 +140,7 @@ typedef struct
 	/* the item delete queue */
 	zbx_vector_ptr_t	delete_queue;
 
-	/* type for checking which values are sent to the history service */
+	/* type for checking which values are sent to the history storage */
 	unsigned char		type;
 }
 zbx_hk_history_rule_t;

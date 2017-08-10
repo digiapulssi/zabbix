@@ -30,6 +30,9 @@
 
 #define		ZBX_HISTORY_STORAGE_DOWN	10000 /* Timeout in milliseconds */
 
+#define		ZBX_IDX_JSON_ALLOCATE		256
+#define		ZBX_JSON_ALLOCATE		2048
+
 const char	*HISTORY_STORAGE_URL	= NULL;
 
 /* The bitmask for this variable is defined by the item types as defined*/
@@ -42,7 +45,7 @@ static CURLM	*multi = NULL;
 
 typedef struct
 {
-	struct zbx_json	json;
+	char		*buf;
 	CURL		*handle;
 	const char	*type;
 	char		*url;
@@ -51,12 +54,12 @@ typedef struct
 ZBX_SENDER;
 
 static ZBX_SENDER	senders[] = {
-	{.handle = NULL, .value_type = ITEM_VALUE_TYPE_UINT64, .url = NULL, .type = "unum"},
-	{.handle = NULL, .value_type = ITEM_VALUE_TYPE_FLOAT, .url = NULL, .type = "float"},
-	{.handle = NULL, .value_type = ITEM_VALUE_TYPE_STR, .url = NULL, .type = "char"},
-	{.handle = NULL, .value_type = ITEM_VALUE_TYPE_TEXT, .url = NULL, .type = "text"},
-	{.handle = NULL, .value_type = ITEM_VALUE_TYPE_LOG, .url = NULL, .type = "log"},
-	{.handle = NULL, .value_type = ITEM_VALUE_TYPE_MAX, .url = NULL, .type = ""}
+	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_UINT64, .url = NULL, .type = "unum"},
+	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_FLOAT, .url = NULL, .type = "float"},
+	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_STR, .url = NULL, .type = "char"},
+	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_TEXT, .url = NULL, .type = "text"},
+	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_LOG, .url = NULL, .type = "log"},
+	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_MAX, .url = NULL, .type = ""}
 };
 
 typedef struct
@@ -80,6 +83,12 @@ static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata
 	return r_size;
 }
 
+/* Stub function for avoiding LibCURL to print on the standard output. */
+/* In case of success, elasticsearch return a JSON, but the HTTP error code is enough */
+static size_t	curl_write_send_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	return size * nmemb;
+}
 
 static void	history_init(void)
 {
@@ -225,7 +234,8 @@ static void	zbx_history_free_handles(void)
 		curl_easy_cleanup(sender->handle);
 		sender->handle = NULL;
 
-		zbx_json_free(&sender->json);
+		zbx_free(sender->buf);
+		sender->buf = NULL;
 
 		zbx_free(sender->url);
 		sender->url = NULL;
@@ -258,13 +268,13 @@ static void	zbx_sender_prepare(ZBX_SENDER *sender)
 
 	curl_easy_setopt(sender->handle, CURLOPT_URL, sender->url);
 	curl_easy_setopt(sender->handle, CURLOPT_POST, 1);
-	curl_easy_setopt(sender->handle, CURLOPT_POSTFIELDS, sender->json.buffer);
-	curl_easy_setopt(sender->handle, CURLOPT_WRITEFUNCTION, NULL);
+	curl_easy_setopt(sender->handle, CURLOPT_POSTFIELDS, sender->buf);
+	curl_easy_setopt(sender->handle, CURLOPT_WRITEFUNCTION, curl_write_send_cb);
 
 	curl_multi_add_handle(multi, sender->handle);
 }
 
-int	zbx_init_history_service(const char *url, const char *types)
+int	zbx_init_history_storage(const char *url, const char *types)
 {
 	char	*str = NULL, *tok = NULL;
 	int	ret = SUCCEED;
@@ -300,7 +310,7 @@ int	zbx_init_history_service(const char *url, const char *types)
 		}
 		else
 		{
-			zbx_error("Invalid history service type; %s", tok);
+			zbx_error("Invalid history storage type; %s", tok);
 			ret = FAIL;
 
 			break;
@@ -319,7 +329,10 @@ void	zbx_send_data(void)
 	int		running, previous, msgnum;
 	CURLMsg		*msg;
 
-	curl_headers = curl_slist_append(curl_headers, "Content-Type:application/json");
+	if (NULL == multi)
+		return;
+
+	curl_headers = curl_slist_append(curl_headers, "Content-Type: application/x-ndjson");
 
 	for (sender = senders; ITEM_VALUE_TYPE_MAX != sender->value_type; sender++)
 	{
@@ -353,7 +366,7 @@ void	zbx_send_data(void)
 		{
 			if (CURLE_OK != msg->data.result)
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "Error on sending to history service: %s",
+				zabbix_log(LOG_LEVEL_WARNING, "Error on sending to history storage: %s",
 						curl_easy_strerror(msg->data.result));
 
 				/* Add back the handle and set the flag to 1 for retrying what failed */
@@ -377,7 +390,8 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 {
 	int			i, num = 0;
 	ZBX_DC_HISTORY		*h;
-	size_t			url_alloc = 0, url_offset = 0;
+	struct zbx_json		json_idx, json;
+	size_t			url_alloc = 0, url_offset = 0, buf_alloc = 0, buf_offset = 0;
 	ZBX_SENDER		*sender;
 
 	for (sender = senders; ITEM_VALUE_TYPE_MAX != sender->value_type; sender++)
@@ -388,12 +402,19 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 
 	if (ITEM_VALUE_TYPE_MAX == sender->value_type)
 	{
-		zbx_error("Error on preparing for sending to history service: Unsupported value type");
+		zbx_error("Error on preparing for sending to history storage: Unsupported value type");
 
 		return;
 	}
 
-	zbx_json_initarray(&sender->json, history->values_num * 100);
+	zbx_json_init(&json_idx, ZBX_IDX_JSON_ALLOCATE);
+
+	zbx_json_addobject(&json_idx, "index");
+	zbx_json_addstring(&json_idx, "_index", sender->type, ZBX_JSON_TYPE_STRING);
+	zbx_json_addstring(&json_idx, "_type", "values", ZBX_JSON_TYPE_STRING);
+
+	zbx_json_close(&json_idx);
+	zbx_json_close(&json_idx);
 
 	for (i = 0; i < history->values_num; i++)
 	{
@@ -402,8 +423,9 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 		if (value_type != h->value_type)
 			continue;
 
-		zbx_json_addobject(&sender->json, NULL);
-		zbx_json_adduint64(&sender->json, "itemid", h->itemid);
+		zbx_json_init(&json, ZBX_JSON_ALLOCATE);
+
+		zbx_json_adduint64(&json, "itemid", h->itemid);
 
 		if (ITEM_VALUE_TYPE_LOG == h->value_type)
 		{
@@ -411,36 +433,39 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 
 			log = h->value.log;
 
-			zbx_json_addobject(&sender->json, "value");
-			zbx_json_addstring(&sender->json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
-			zbx_json_adduint64(&sender->json, "timestamp", log->timestamp);
-			zbx_json_addstring(&sender->json, "source", ZBX_NULL2EMPTY_STR(log->source), ZBX_JSON_TYPE_STRING);
-			zbx_json_adduint64(&sender->json, "severity", log->severity);
-			zbx_json_adduint64(&sender->json, "logeventid", log->logeventid);
+			zbx_json_addobject(&json, "value");
+			zbx_json_addstring(&json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
+			zbx_json_adduint64(&json, "timestamp", log->timestamp);
+			zbx_json_addstring(&json, "source", ZBX_NULL2EMPTY_STR(log->source), ZBX_JSON_TYPE_STRING);
+			zbx_json_adduint64(&json, "severity", log->severity);
+			zbx_json_adduint64(&json, "logeventid", log->logeventid);
 
-			zbx_json_close(&sender->json);
+			zbx_json_close(&json);
 		}
 		else
-			zbx_json_addstring(&sender->json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
+			zbx_json_addstring(&json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
 
-		zbx_json_adduint64(&sender->json, "sec", h->ts.sec);
-		zbx_json_adduint64(&sender->json, "ns", h->ts.ns);
-		zbx_json_adduint64(&sender->json, "ttl", h->ttl);
+		zbx_json_adduint64(&json, "sec", h->ts.sec);
+		zbx_json_adduint64(&json, "ns", h->ts.ns);
+		zbx_json_adduint64(&json, "ttl", h->ttl);
 
-		zbx_json_close(&sender->json);
+		zbx_json_close(&json);
+
+		zbx_snprintf_alloc(&sender->buf, &buf_alloc, &buf_offset, "%s\n%s\n", json_idx.buffer, json.buffer);
+
+		zbx_json_free(&json);
 
 		num++;
 	}
-	zbx_json_close(&sender->json);
 
 	if (num > 0)
 	{
-		zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "%s/", HISTORY_STORAGE_URL);
+		zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "%s/_bulk", HISTORY_STORAGE_URL);
 
 		zbx_sender_prepare(sender);
 	}
-	else
-		zbx_json_free(&sender->json);
+
+	zbx_json_free(&json_idx);
 }
 
 void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
@@ -449,7 +474,9 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	size_t		url_alloc = 0, url_offset = 0;
 	int		err;
 	long		http_code;
+	struct zbx_json	query;
 	ZBX_SENDER	*sender;
+	struct curl_slist	*curl_headers = NULL;
 
 	history_init();
 
@@ -466,47 +493,76 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 		return;
 	}
 
-	zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "%s/" HISTORY_API_VERSION "/history/%s/" ZBX_FS_UI64,
-			HISTORY_STORAGE_URL, sender->type, itemid);
+	zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "%s/%s/values/_search", HISTORY_STORAGE_URL, sender->type);
 
-	zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "?end=%d", end);
+	zbx_json_init(&query, ZBX_JSON_ALLOCATE);
 
-	if (0 != start)
-		zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "&start=%d", start);
+	if (0 < count)
+		zbx_json_adduint64(&query, "size", count);
 
-	if (0 != count)
-		zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "&count=%d", count);
+	zbx_json_addobject(&query, "query");
+	zbx_json_addobject(&query, "bool");
+	zbx_json_addarray(&query, "must");
+	zbx_json_addobject(&query, NULL);
+	zbx_json_addobject(&query, "match");
+	zbx_json_adduint64(&query, "itemid", itemid);
+	zbx_json_close(&query);
+	zbx_json_close(&query);
+	zbx_json_close(&query);
+	zbx_json_addarray(&query, "filter");
+	zbx_json_addobject(&query, NULL);
+	zbx_json_addobject(&query, "range");
+	zbx_json_addobject(&query, "sec");
+
+	if (0 < start)
+		zbx_json_adduint64(&query, "gte", start);
+
+	if (0 < end)
+		zbx_json_adduint64(&query, "lte", end);
+
+	zbx_json_close(&query);
+	zbx_json_close(&query);
+	zbx_json_close(&query);
+	zbx_json_close(&query);
+	zbx_json_close(&query);
+	zbx_json_close(&query);
+	zbx_json_close(&query);
+
+	curl_headers = curl_slist_append(curl_headers, "Content-Type: application/json");
 
 	curl_easy_setopt(sender->handle, CURLOPT_URL, sender->url);
-	curl_easy_setopt(sender->handle, CURLOPT_HTTPHEADER, NULL);
-	curl_easy_setopt(sender->handle, CURLOPT_POST, 0);
+	curl_easy_setopt(sender->handle, CURLOPT_POSTFIELDS, query.buffer);
 	curl_easy_setopt(sender->handle, CURLOPT_WRITEFUNCTION, curl_write_cb);
-
-	zabbix_log(LOG_LEVEL_WARNING, "Requesting %s", sender->url);
+	curl_easy_setopt(sender->handle, CURLOPT_HTTPHEADER, curl_headers);
 
 	page.offset = 0;
 	if (CURLE_OK != (err = curl_easy_perform(sender->handle)))
-		zabbix_log(LOG_LEVEL_ERR, "Failed to get values from history service: %s", curl_easy_strerror(err));
+		zabbix_log(LOG_LEVEL_ERR, "Failed to get values from history storage: %s", curl_easy_strerror(err));
 
 	curl_easy_getinfo(sender->handle, CURLINFO_RESPONSE_CODE, &http_code);
 
 	if (200 == http_code)
 	{
-		struct zbx_json_parse	jp, jp_values, jp_item;
+		struct zbx_json_parse	jp, jp_values, jp_item, jp_sub, jp_hits, jp_source;
 		zbx_history_record_t	hr;
 		const char		*p = NULL;
-;
+
 		if (NULL != page.data)
 		{
 			zbx_json_open(page.data, &jp);
 			zbx_json_brackets_open(jp.start, &jp_values);
+			zbx_json_brackets_by_name(&jp_values, "hits", &jp_sub);
+			zbx_json_brackets_by_name(&jp_sub, "hits", &jp_hits);
 
-			while (NULL != (p = zbx_json_next(&jp_values, p)))
+			while (NULL != (p = zbx_json_next(&jp_hits, p)))
 			{
 				if (SUCCEED != zbx_json_brackets_open(p, &jp_item))
 					continue;
 
-				if (SUCCEED != history_parse_value(&jp_item, value_type, &hr))
+				if (SUCCEED != zbx_json_brackets_by_name(&jp_item, "_source", &jp_source))
+					continue;
+
+				if (SUCCEED != history_parse_value(&jp_source, value_type, &hr))
 					continue;
 
 				zbx_vector_history_record_append_ptr(values, &hr);
@@ -519,6 +575,10 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 
 	zbx_free(sender->url);
 	sender->url = NULL;
+
+	curl_slist_free_all(curl_headers);
+
+	zbx_json_free(&query);
 }
 
 int	zbx_history_check_type(int value_type)
@@ -530,7 +590,7 @@ int	zbx_history_check_type(int value_type)
 
 /* Stub functions if LibCURL support is not compiled in zabbix */
 
-int	zbx_init_history_service(const char *url, const char *types)
+int	zbx_init_history_storage(const char *url, const char *types)
 {
 	ZBX_UNUSED(url);
 	ZBX_UNUSED(types);
@@ -566,7 +626,5 @@ int	zbx_history_check_type(int value_type)
 
 	return 0;
 }
-
-
 
 #endif /* HAVE_LIBCURL */

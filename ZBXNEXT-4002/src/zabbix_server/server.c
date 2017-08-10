@@ -713,7 +713,7 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 	zbx_tls_validate_config();
 #endif
 
-	if (SUCCEED != zbx_init_history_service(CONFIG_HISTORY_STORAGE_URL, CONFIG_HISTORY_STORAGE_OPTS))
+	if (SUCCEED != zbx_init_history_storage(CONFIG_HISTORY_STORAGE_URL, CONFIG_HISTORY_STORAGE_OPTS))
 		exit(EXIT_FAILURE);
 }
 

@@ -28,7 +28,7 @@
 #define	ZBX_HISTORY_TYPE_TEXT_STR	"text"
 #define	ZBX_HISTORY_TYPE_LOG_STR		"log"
 
-int	zbx_init_history_service(const char *url, const char *types);
+int	zbx_init_history_storage(const char *url, const char *types);
 
 void	zbx_send_data(void);
 

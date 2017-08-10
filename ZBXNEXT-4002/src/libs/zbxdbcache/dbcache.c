@@ -178,7 +178,7 @@ static size_t		string_values_alloc = 0, string_values_offset = 0;
 static dc_item_value_t	*item_values = NULL;
 static size_t		item_values_alloc = 0, item_values_num = 0;
 
-/* History service URL reference, from history.c */
+/* History storage URL reference, from history.c */
 extern const char	*HISTORY_STORAGE_URL;
 
 static void	hc_add_item_values(dc_item_value_t *values, int values_num);
@@ -1727,7 +1727,7 @@ static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num, DC_ITEM
 		}
 	}
 
-	/* If a URL for the history service is not provided, use the old history management */
+	/* If a URL for the history storage is not provided, use the old history management */
 	if (0 != huint_num && !(0 < zbx_history_check_type(ITEM_VALUE_TYPE_UINT64)))
 		dc_add_history_uint(history, history_num);
 
