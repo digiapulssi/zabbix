@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc19
 
 New features:
+..F....... [262] improved loading time of "Rolling week status" page with worst case filter settings (gleb, Oleg)
 ....I..PS. [270] improved host group structure for better Monitoring->Overview experience (gleb)
 
 Bug fixes:
