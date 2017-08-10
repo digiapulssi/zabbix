@@ -245,7 +245,8 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			continue;
 		}
 		$data['probes'][$host['hostid']] = [
-			'host' => substr($host['host'], 0, $pos)
+			'host' => substr($host['host'], 0, $pos),
+			'name' => substr($host['host'], 0, $pos)
 		];
 		$hostIds[] = $host['hostid'];
 	}
