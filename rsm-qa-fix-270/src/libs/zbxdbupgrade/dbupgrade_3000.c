@@ -673,10 +673,10 @@ static int	DBpatch_3000126(void)
 
 	if (ZBX_DB_OK > DBexecute(
 			"delete from hosts_groups"
-			" where hostid in ("
+			" where hostid in (select * from ("
 				"select hostid from hosts_groups"
-				" where groupid=120)"	/* groupid of "Probes" host group */
-			" and groupid<>120"))		/* groupid of "Probes" host group */
+				" where groupid=120) as probes)"	/* groupid of "Probes" host group */
+			" and groupid<>120"))				/* groupid of "Probes" host group */
 	{
 		return FAIL;
 	}
@@ -691,9 +691,9 @@ static int	DBpatch_3000127(void)
 
 	if (ZBX_DB_OK > DBexecute(
 			"delete from hosts_groups"
-			" where hostid in ("
+			" where hostid in (select * from ("
 				"select hostid from hosts_groups"
-				" where groupid=140)"			/* groupid of "TLDs" host group */
+				" where groupid=140) as tlds)"		/* groupid of "TLDs" host group */
 			" and groupid not in (140,150,160,170,180)"))	/* groupids of host groups: "TLDs", "gTLD", */
 	{								/* "ccTLD", "testTLD" and "otherTLD" */
 		return FAIL;
