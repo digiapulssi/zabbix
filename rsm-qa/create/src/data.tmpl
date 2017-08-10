@@ -337,11 +337,11 @@ ROW   |100108|10  |              |        |100001|Total number of probes with en
 ROW   |100109|10  |              |        |100001|Total number of probes for RDDS tests       |online.nodes.pl[total,rdds]                  |300  |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
 
 TABLE |media_type
-FIELDS|mediatypeid|type|description|smtp_server     |smtp_helo  |smtp_email        |exec_path|gsm_modem |username          |passwd|status|smtp_port|smtp_security|smtp_verify_peer|smtp_verify_host|smtp_authentication|exec_params|
-ROW   |1          |0   |Email      |mail.company.com|company.com|zabbix@company.com|         |          |                  |      |0     |25       |0            |0               |0               |0                  |           |
-ROW   |2          |3   |Jabber     |                |           |                  |         |          |jabber@company.com|zabbix|0     |25       |0            |0               |0               |0                  |           |
-ROW   |3          |2   |SMS        |                |           |                  |         |/dev/ttyS0|                  |      |0     |25       |0            |0               |0               |0                  |           |
-ROW   |10         |1   |Script     |                |           |                  |script.py|          |                  |      |0     |25       |0            |0               |0               |0                  |           |
+FIELDS|mediatypeid|type|description|smtp_server     |smtp_helo  |smtp_email        |exec_path|gsm_modem |username          |passwd|status|smtp_port|smtp_security|smtp_verify_peer|smtp_verify_host|smtp_authentication|exec_params                                                |
+ROW   |1          |0   |Email      |mail.company.com|company.com|zabbix@company.com|         |          |                  |      |0     |25       |0            |0               |0               |0                  |                                                           |
+ROW   |2          |3   |Jabber     |                |           |                  |         |          |jabber@company.com|zabbix|0     |25       |0            |0               |0               |0                  |                                                           |
+ROW   |3          |2   |SMS        |                |           |                  |         |/dev/ttyS0|                  |      |0     |25       |0            |0               |0               |0                  |                                                           |
+ROW   |10         |1   |Script     |                |           |                  |script.py|          |                  |      |0     |25       |0            |0               |0               |0                  |{ALERT.SENDTO}&eol;{ALERT.SUBJECT}&eol;{ALERT.MESSAGE}&eol;|
 
 TABLE |users
 FIELDS|userid|alias      |name   |surname      |passwd                          |url|autologin|autologout|lang |refresh|type|theme  |rows_per_page|
@@ -900,7 +900,7 @@ ROW   |56         |10056 |1      |
 ROW   |57         |10057 |110    |
 ROW   |58         |10058 |1      |
 ROW   |1000       |100000|100    |
-ROW   |1001       |100001|130    |
+ROW   |1001       |100001|110    |
 
 TABLE |hosts_templates
 FIELDS|hosttemplateid|hostid|templateid|
@@ -1221,7 +1221,7 @@ ROW   |102    |100    |0         |160|
 ROW   |103    |100    |0         |170|
 ROW   |104    |100    |0         |180|
 ROW   |105    |100    |2         |100|
-ROW   |106    |100    |2         |120|
+ROW   |106    |100    |2         |130|
 ROW   |107    |100    |2         |200|
 ROW   |108    |100    |2         |240|
 ROW   |109    |110    |2         |130|

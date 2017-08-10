@@ -610,6 +610,98 @@ static int	DBpatch_3000121(void)
 	return add_actions(actions);
 }
 
+static int	DBpatch_3000122(void)
+{
+	char	*params_esc = NULL;
+	int	ret;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	params_esc = zbx_db_dyn_escape_string("{ALERT.SENDTO}\n{ALERT.SUBJECT}\n{ALERT.MESSAGE}\n");
+
+	ret = DBexecute("update media_type set exec_params='%s' where mediatypeid=10", params_esc);
+
+	zbx_free(params_esc);
+
+	return ZBX_DB_OK > ret ? FAIL : SUCCEED;
+}
+
+static int	DBpatch_3000123(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update hosts_groups set groupid=110 where hostgroupid=1001"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000124(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update rights set id=130 where rightid=106"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000125(void)
+{
+	char	*key_esc = NULL;
+	int	ret;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	key_esc = zbx_db_dyn_escape_string("zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]");
+
+	ret = DBexecute("update items set name='Availability of probe' where key_='%s'", key_esc);
+
+	zbx_free(key_esc);
+
+	return ZBX_DB_OK > ret ? FAIL : SUCCEED;
+}
+
+static int	DBpatch_3000126(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(
+			"delete from hosts_groups"
+			" where hostid in (select * from ("
+				"select hostid from hosts_groups"
+				" where groupid=120) as probes)"	/* groupid of "Probes" host group */
+			" and groupid<>120"))				/* groupid of "Probes" host group */
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000127(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(
+			"delete from hosts_groups"
+			" where hostid in (select * from ("
+				"select hostid from hosts_groups"
+				" where groupid=140) as tlds)"		/* groupid of "TLDs" host group */
+			" and groupid not in (140,150,160,170,180)"))	/* groupids of host groups: "TLDs", "gTLD", */
+	{								/* "ccTLD", "testTLD" and "otherTLD" */
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -639,5 +731,11 @@ DBPATCH_ADD(3000118, 0, 0)	/* read permissions on "Probes - Mon" host group for 
 DBPATCH_ADD(3000119, 0, 0)	/* read permissions on "Mon" host group for "Technical services users" */
 DBPATCH_ADD(3000120, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts (again) */
 DBPATCH_ADD(3000121, 0, 0)	/* new actions: "Probes-Mon", "Central-Server", "TLDs" */
+DBPATCH_ADD(3000122, 0, 0)	/* parameters for "Script" media type */
+DBPATCH_ADD(3000123, 0, 0)	/* move "Probe statuses" host from "Probes - Mon" group to "Mon" group */
+DBPATCH_ADD(3000124, 0, 1)	/* change read permissions on "Probes" host group to "Probes - Mon" host group for "EBERO users" */
+DBPATCH_ADD(3000125, 0, 0)	/* dropped "$2" and fixed capitalization in "zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]" item name */
+DBPATCH_ADD(3000126, 0, 0)	/* removed "<probe>" hosts from "<probe>" host group */
+DBPATCH_ADD(3000127, 0, 0)	/* removed "<TLD>" hosts from "TLD <TLD>" host group */
 
 DBPATCH_END()

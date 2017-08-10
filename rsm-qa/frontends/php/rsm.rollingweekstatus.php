@@ -164,9 +164,9 @@ else {
 foreach ($DB['SERVERS'] as $key => $value) {
 	if ($data['filter_cctld_group'] || $data['filter_gtld_group'] || $data['filter_othertld_group']
 			|| $data['filter_test_group']) {
-		if ($DB['TYPE'] !== $DB['SERVERS'][$key]['TYPE'] || $DB['SERVER'] !== $DB['SERVERS'][$key]['SERVER']
-				|| $DB['PORT'] !== $DB['SERVERS'][$key]['PORT'] || $DB['DATABASE'] !== $DB['SERVERS'][$key]['DATABASE']
-				|| $DB['USER'] !== $DB['SERVERS'][$key]['USER'] || $DB['PASSWORD'] !== $DB['SERVERS'][$key]['PASSWORD']) {
+		if ($DB['SERVER'] !== $DB['SERVERS'][$key]['SERVER'] || $DB['PORT'] !== $DB['SERVERS'][$key]['PORT']
+				|| $DB['DATABASE'] !== $DB['SERVERS'][$key]['DATABASE'] || $DB['USER'] !== $DB['SERVERS'][$key]['USER']
+				|| $DB['PASSWORD'] !== $DB['SERVERS'][$key]['PASSWORD']) {
 			if (!multiDBconnect($DB['SERVERS'][$key], $error)) {
 				show_error_message(_($DB['SERVERS'][$key]['NAME'].': '.$error));
 				continue;
@@ -289,6 +289,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 		);
 
 		if ($db_tlds) {
+			$hostIds = [];
 			while ($db_tld = DBfetch($db_tlds)) {
 				$hostids[] = $db_tld['hostid'];
 
@@ -379,11 +380,21 @@ foreach ($tlds_by_server as $key => $hosts) {
 			'filter' => array(
 				'key_' => array(
 					RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK,
-					RSM_SLV_EPP_ROLLWEEK, RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL,
-					RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
+					RSM_SLV_EPP_ROLLWEEK
 				)
 			),
 			'output' => array('itemid', 'hostid', 'key_', 'lastvalue'),
+			'preservekeys' => true
+		));
+
+		$avail_items = API::Item()->get(array(
+			'hostids' => array_keys($hosts),
+			'filter' => array(
+				'key_' => array(
+					RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
+				)
+			),
+			'output' => array('itemid', 'hostid', 'key_'),
 			'preservekeys' => true
 		));
 
@@ -440,7 +451,10 @@ foreach ($tlds_by_server as $key => $hosts) {
 					);
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['trigger'] = false;
 				}
-				elseif ($item['key_'] == RSM_SLV_DNS_AVAIL) {
+			}
+
+			foreach ($avail_items as $item) {
+				if ($item['key_'] == RSM_SLV_DNS_AVAIL) {
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['availItemId'] = $item['itemid'];
 					$itemIds[$item['itemid']] = true;
 				}
@@ -457,6 +471,8 @@ foreach ($tlds_by_server as $key => $hosts) {
 					$itemIds[$item['itemid']] = true;
 				}
 			}
+
+			$items += $avail_items;
 
 			if ($data['filter_slv']) {
 				foreach ($filter_slv as $filtred_hostid => $value) {

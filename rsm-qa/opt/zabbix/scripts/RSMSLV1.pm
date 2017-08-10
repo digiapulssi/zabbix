@@ -15,9 +15,9 @@ use Sys::Syslog;
 use Data::Dumper;
 use Time::HiRes qw(time);
 use Fcntl qw(:flock);
-use TLD_constants1 qw(:api);	# todo phase 1
-use ApiHelper1;			# todo phase 1
-use RSM;			# get_rsm_local_key()
+use TLD_constants1 qw(:api :items);	# todo phase 1
+use ApiHelper1;				# todo phase 1
+use RSM;				# get_rsm_local_key()
 use Pusher qw(push_to_trapper);
 
 use constant SUCCESS	=> 0;
@@ -42,7 +42,6 @@ use constant TRIGGER_VALUE_FALSE	=> 0;
 use constant TRIGGER_VALUE_TRUE		=> 1;
 use constant INCIDENT_FALSE_POSITIVE	=> 1; # NB! must be in sync with frontend
 use constant PROBE_GROUP_NAME		=> 'Probes';
-use constant PROBE_KEY_ONLINE		=> 'rsm.probe.online';
 
 # In order to do the calculation we should wait till all the results
 # are available on the server (from proxies). We shift back 2 minutes
@@ -1025,14 +1024,14 @@ sub get_all_items
 
 	my $rows_ref = db_select($sql);
 
-	my %result;
+	my $result = {};
 
 	foreach my $row_ref (@$rows_ref)
 	{
-		$result{$row_ref->[0]}{$row_ref->[1]} = '';
+		$result->{$row_ref->[0]}{$row_ref->[1]} = '';
 	}
 
-	if (scalar(keys(%result)) == 0)
+	if (scalar(keys(%{$result})) == 0)
 	{
 		if (defined($tld))
 		{
@@ -1044,7 +1043,7 @@ sub get_all_items
 		}
 	}
 
-	return \%result;
+	return $result;
 }
 
 # return itemids grouped by hosts:

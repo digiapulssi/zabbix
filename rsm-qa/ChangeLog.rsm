@@ -1,3 +1,17 @@
+Changes for rsm1.0.0rc19
+
+New features:
+..F....... [262] improved loading time of "Rolling week status" page with worst case filter settings (gleb, Oleg)
+....I..PS. [270] improved host group structure for better Monitoring->Overview experience (gleb)
+
+Bug fixes:
+..F.I..PS. [260] made frontend look for rsm.probe.online item on correct hosts; adjusted user permissions accordingly (dimir, gleb, Oleg)
+.......P.. [272] made server not adjust timestamps of values coming from proxies, proxy will include parcel timestamp with a different tag (dimir, gleb)
+....I..PS. [266] added missing parameters to "Script" media type (gleb)
+....I..... [267] fixed slow DNSSEC Availability script (rsm.slv.dnssec.avail.pl), also possibly improved performance of other scripts (dimir, gleb)
+..F....... [268] fixed undefined variable error in "Rolling week status" page (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc18
 
 New features:

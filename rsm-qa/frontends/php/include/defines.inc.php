@@ -22,7 +22,7 @@
 define('ZABBIX_VERSION',		'3.0.7');
 define('ZABBIX_API_VERSION',	'3.0.7');
 define('ZABBIX_EXPORT_VERSION',	'3.0');
-define('ZABBIX_DB_VERSION',		3000114);
+define('ZABBIX_DB_VERSION',		3000124);
 
 define('ZABBIX_COPYRIGHT_FROM',	'2001');
 define('ZABBIX_COPYRIGHT_TO',	'2016');
@@ -1423,7 +1423,7 @@ define('CALCULATED_RDDS_ROLLWEEK_SLA',			'rsm.configvalue[RSM.RDDS.ROLLWEEK.SLA]
 define('CALCULATED_EPP_ROLLWEEK_SLA',			'rsm.configvalue[RSM.EPP.ROLLWEEK.SLA]');
 
 // SLA monitoring probe status items keys
-define('PROBE_STATUS_ONLINE',		'rsm.probe.online');
+define('PROBE_KEY_ONLINE',			'rsm.probe.online');
 define('PROBE_DNS_UDP_ITEM',		'rsm.dns.udp[{$RSM.TLD}]');
 define('PROBE_DNS_UDP_ITEM_RTT',	'rsm.dns.udp.rtt[');
 define('PROBE_RDDS_ITEM',			'rsm.rdds[');
@@ -1475,6 +1475,8 @@ define('RSM_CC_TLD_GROUP',		'ccTLD');
 define('RSM_G_TLD_GROUP',		'gTLD');
 define('RSM_OTHER_TLD_GROUP',	'otherTLD');
 define('RSM_TEST_GROUP',		'testTLD');
+
+define('PROBES_MON_GROUPID',	130);
 
 // if magic quotes on, then get rid of them
 if (get_magic_quotes_gpc()) {
