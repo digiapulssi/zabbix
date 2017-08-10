@@ -18,6 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 class CWidgetFieldReference extends CWidgetField {
 
 	/**
@@ -41,5 +42,13 @@ class CWidgetFieldReference extends CWidgetField {
 				'var reference = jQuery(".dashbrd-grid-widget-container").dashboardGrid("makeReference");'.
 				'reference_field.val(reference);'.
 			'}';
+	}
+
+	public function setValue($value) {
+		if ($value === '' || ctype_alnum($value)) {
+			$this->value = $value;
+		}
+
+		return $this;
 	}
 }

@@ -24,222 +24,365 @@ require_once dirname(__FILE__).'/screens.inc.php';
 require_once dirname(__FILE__).'/maps.inc.php';
 require_once dirname(__FILE__).'/users.inc.php';
 
-function make_system_status($filter, $backurl) {
-	$config = select_config();
+/**
+ * @param array  $filter
+ * @param array  $filter['groupids']           (optional)
+ * @param array  $filter['exclude_groupids']   (optional)
+ * @param array  $filter['hostids']            (optional)
+ * @param string $filter['problem']            (optional)
+ * @param array  $filter['severities']         (optional)
+ * @param int    $filter['maintenance']        (optional)
+ * @param int    $filter['hide_empty_groups']  (optional)
+ * @param int    $filter['ext_ack']            (optional)
+ * @param array  $config
+ * @param int    $config['event_ack_enable']
+ *
+ * @return array
+ */
+function getSystemStatusData(array $filter, array $config) {
+	$filter_groupids = (array_key_exists('groupids', $filter) && $filter['groupids']) ? $filter['groupids'] : null;
+	$filter_hostids = (array_key_exists('hostids', $filter) && $filter['hostids']) ? $filter['hostids'] : null;
+	$filter_triggerids = null;
+	$filter_severities = (array_key_exists('severities', $filter) && $filter['severities'])
+		? $filter['severities']
+		: range(TRIGGER_SEVERITY_NOT_CLASSIFIED, TRIGGER_SEVERITY_COUNT - 1);
+	$filter_ext_ack = $config['event_ack_enable'] && array_key_exists('ext_ack', $filter)
+		? $filter['ext_ack']
+		: EXTACK_OPTION_ALL;
 
-	$table = new CTableInfo();
+	if (array_key_exists('exclude_groupids', $filter) && $filter['exclude_groupids']) {
+		if ($filter_hostids === null) {
+			// Get all groups if no selected groups defined.
+			if ($filter_groupids === null) {
+				$filter_groupids = array_keys(API::HostGroup()->get([
+					'output' => [],
+					'preservekeys' => true
+				]));
+			}
 
-	// set trigger severities as table header starting from highest severity
-	$header = [];
+			$filter_groupids = array_diff($filter_groupids, $filter['exclude_groupids']);
 
-	for ($severity = TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity < TRIGGER_SEVERITY_COUNT; $severity++) {
-		$header[] = ($filter['severity'] === null || isset($filter['severity'][$severity]))
-			? getSeverityName($severity, $config)
-			: null;
+			// Get available hosts.
+			$filter_hostids = array_keys(API::Host()->get([
+				'output' => [],
+				'groupids' => $filter_groupids,
+				'preservekeys' => true
+			]));
+		}
+
+		$exclude_hostids = array_keys(API::Host()->get([
+			'output' => [],
+			'groupids' => $filter['exclude_groupids'],
+			'preservekeys' => true
+		]));
+
+		$filter_hostids = array_diff($filter_hostids, $exclude_hostids);
 	}
-	krsort($header);
-	array_unshift($header, _('Host group'));
 
-	$table->setHeader($header);
+	if (array_key_exists('problem', $filter) && $filter['problem'] !== '') {
+		$filter_triggerids = array_keys(API::Trigger()->get([
+			'output' => [],
+			'groupids' => $filter_groupids,
+			'hostids' => $filter_hostids,
+			'search' => ['description' => $filter['problem']],
+			'preservekeys' => true
+		]));
 
-	$options = [
-		'output' => ['groupid', 'name'],
-		'groupids' => $filter['groupids'],
-		'monitored_hosts' => true,
-		'preservekeys' => true
+		$filter_groupids = null;
+		$filter_hostids = null;
+	}
+
+	$data = [
+		'groups' => API::HostGroup()->get([
+			'output' => ['groupid', 'name'],
+			'groupids' => $filter_groupids,
+			'hostids' => $filter_hostids,
+			'monitored_hosts' => true,
+			'preservekeys' => true
+		]),
+		'triggers' => [],
+		'actions' => []
 	];
 
-	if (array_key_exists('hostids', $filter)) {
-		$options['hostids'] = $filter['hostids'];
+	CArrayHelper::sort($data['groups'], [['field' => 'name', 'order' => ZBX_SORT_UP]]);
+
+	$default_stats = [];
+
+	for ($severity = TRIGGER_SEVERITY_COUNT - 1; $severity >= TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity--) {
+		if (in_array($severity, $filter_severities)) {
+			$default_stats[$severity] = ['count' => 0, 'problems' => [], 'count_unack' => 0, 'problems_unack' => []];
+		}
 	}
 
-	$groups = API::HostGroup()->get($options);
-
-	$filter_groups = API::HostGroup()->get([
-		'output' => ['groupid', 'name'],
-		'groupids' => $filter['groupids']
-	]);
-
-	$filter_groups_names = [];
-
-	foreach ($filter_groups as $group) {
-		$filter_groups_names[] = $group['name'].'/';
+	foreach ($data['groups'] as &$group) {
+		$group['stats'] = $default_stats;
+		$group['has_problems'] = false;
 	}
+	unset($group);
 
 	$options = [
-		'output' => ['groupid', 'name'],
-		'monitored_hosts' => true,
-		'search' => ['name' => $filter_groups_names],
-		'startSearch' => true
-	];
-
-	if (array_key_exists('hostids', $filter)) {
-		$options['hostids'] = $filter['hostids'];
-	}
-
-	$child_groups = API::HostGroup()->get($options);
-
-	foreach ($child_groups as $child_group) {
-		$groups[$child_group['groupid']] = $child_group;
-	}
-
-	CArrayHelper::sort($groups, [
-		['field' => 'name', 'order' => ZBX_SORT_UP]
-	]);
-
-	$groupIds = [];
-	foreach ($groups as $group) {
-		$groupIds[$group['groupid']] = $group['groupid'];
-
-		$group['tab_priority'] = [
-			TRIGGER_SEVERITY_DISASTER => ['count' => 0, 'triggers' => [], 'count_unack' => 0, 'triggers_unack' => []],
-			TRIGGER_SEVERITY_HIGH => ['count' => 0, 'triggers' => [], 'count_unack' => 0, 'triggers_unack' => []],
-			TRIGGER_SEVERITY_AVERAGE => ['count' => 0, 'triggers' => [], 'count_unack' => 0, 'triggers_unack' => []],
-			TRIGGER_SEVERITY_WARNING => ['count' => 0, 'triggers' => [], 'count_unack' => 0, 'triggers_unack' => []],
-			TRIGGER_SEVERITY_INFORMATION => ['count' => 0, 'triggers' => [], 'count_unack' => 0, 'triggers_unack' => []],
-			TRIGGER_SEVERITY_NOT_CLASSIFIED => ['count' => 0, 'triggers' => [], 'count_unack' => 0, 'triggers_unack' => []]
-		];
-		$groups[$group['groupid']] = $group;
-	}
-
-	// get triggers
-	$triggers = API::Trigger()->get([
-		'output' => ['triggerid', 'priority', 'state', 'description', 'error', 'value', 'lastchange', 'expression'],
-		'selectGroups' => ['groupid'],
-		'selectHosts' => ['name'],
-		'withLastEventUnacknowledged' => ($filter['extAck'] == EXTACK_OPTION_UNACK) ? true : null,
-		'skipDependent' => true,
-		'groupids' => $groupIds,
-		'hostids' => isset($filter['hostids']) ? $filter['hostids'] : null,
-		'monitored' => true,
-		'maintenance' => $filter['maintenance'],
-		'search' => ($filter['trigger_name'] !== '') ? ['description' => $filter['trigger_name']] : null,
-		'filter' => [
-			'priority' => $filter['severity'],
-			'value' => TRIGGER_VALUE_TRUE
-		],
-		'sortfield' => 'lastchange',
+		'output' => ['eventid', 'objectid', 'clock', 'ns'],
+		'groupids' => array_keys($data['groups']),
+		'hostids' => $filter_hostids,
+		'source' => EVENT_SOURCE_TRIGGERS,
+		'object' => EVENT_OBJECT_TRIGGER,
+		'objectids' => $filter_triggerids,
+		'sortfield' => ['eventid'],
 		'sortorder' => ZBX_SORT_DOWN,
 		'preservekeys' => true
-	]);
+	];
+	if (array_key_exists('severities', $filter)) {
+		$filter_severities = implode(',', $filter['severities']);
+		$all_severities = implode(',', range(TRIGGER_SEVERITY_NOT_CLASSIFIED, TRIGGER_SEVERITY_COUNT - 1));
 
-	$problems = getTriggerLastProblems(array_keys($triggers), ['eventid', 'objectid', 'clock', 'acknowledged', 'ns']);
-
-	$events = [];
-	foreach ($problems as $problem) {
-		$triggers[$problem['objectid']]['event'] = $problem;
-		$events[$problem['eventid']] = ['eventid' => $problem['eventid']];
+		if ($filter_severities !== '' && $filter_severities !== $all_severities) {
+			$options['severities'] = $filter['severities'];
+		}
+	}
+	if ($filter_ext_ack == EXTACK_OPTION_UNACK) {
+		$options['acknowledged'] = false;
 	}
 
-	// get acknowledges
-	if ($events) {
-		$eventAcknowledges = API::Event()->get([
-			'output' => ['eventid'],
-			'eventids' => array_keys($events),
-			'select_acknowledges' => ['eventid', 'clock', 'message', 'action', 'alias', 'name', 'surname'],
+	$problems = API::Problem()->get($options);
+
+	if ($problems) {
+		$triggerids = [];
+
+		foreach ($problems as $problem) {
+			$triggerids[$problem['objectid']] = true;
+		}
+
+		$options = [
+			'output' => ['description', 'expression', 'priority'],
+			'selectGroups' => ['groupid'],
+			'selectHosts' => ['name'],
+			'triggerids' => array_keys($triggerids),
+			'monitored' => true,
+			'skipDependent' => true,
 			'preservekeys' => true
-		]);
+		];
+		if (array_key_exists('maintenance', $filter) && $filter['maintenance'] == 0) {
+			$options['maintenance'] = false;
+		}
+
+		$data['triggers'] = API::Trigger()->get($options);
+
+		foreach ($data['triggers'] as &$trigger) {
+			CArrayHelper::sort($trigger['hosts'], [['field' => 'name', 'order' => ZBX_SORT_UP]]);
+		}
+		unset($trigger);
+
+		foreach ($problems as $eventid => $problem) {
+			if (!array_key_exists($problem['objectid'], $data['triggers'])) {
+				unset($problems[$eventid]);
+			}
+		}
+
+		// get acknowledges and tags
+		$problems_data = ($config['event_ack_enable']
+				&& in_array($filter_ext_ack, [EXTACK_OPTION_ALL, EXTACK_OPTION_BOTH]))
+			? API::Problem()->get([
+				'output' => [],
+				'eventids' => array_keys($problems),
+				'selectAcknowledges' => ['clock', 'message', 'action', 'alias', 'name', 'surname'],
+				'selectTags' => ['tag', 'value'],
+				'preservekeys' => true
+			])
+			: [];
+
+		$visible_problems = [];
+
+		foreach ($problems as $eventid => $problem) {
+			$trigger = $data['triggers'][$problem['objectid']];
+
+			if (array_key_exists($eventid, $problems_data)) {
+				$problem['acknowledges'] = $problems_data[$eventid]['acknowledges'];
+				$problem['tags'] = $problems_data[$eventid]['tags'];
+			}
+			else {
+				$problem['acknowledges'] = [];
+				$problem['tags'] = [];
+			}
+
+			// groups
+			foreach ($trigger['groups'] as $trigger_group) {
+				if (!array_key_exists($trigger_group['groupid'], $data['groups'])) {
+					continue;
+				}
+
+				$group = &$data['groups'][$trigger_group['groupid']];
+
+				if (in_array($filter_ext_ack, [EXTACK_OPTION_ALL, EXTACK_OPTION_BOTH])) {
+					if ($group['stats'][$trigger['priority']]['count'] < ZBX_WIDGET_ROWS) {
+						$group['stats'][$trigger['priority']]['problems'][] = $problem;
+						$visible_problems[$eventid] = ['eventid' => $eventid];
+					}
+
+					$group['stats'][$trigger['priority']]['count']++;
+				}
+
+				if (in_array($filter_ext_ack, [EXTACK_OPTION_UNACK, EXTACK_OPTION_BOTH]) && !$problem['acknowledges']) {
+					if ($group['stats'][$trigger['priority']]['count_unack'] < ZBX_WIDGET_ROWS) {
+						$group['stats'][$trigger['priority']]['problems_unack'][] = $problem;
+						$visible_problems[$eventid] = ['eventid' => $eventid];
+					}
+
+					$group['stats'][$trigger['priority']]['count_unack']++;
+				}
+
+				$group['has_problems'] = true;
+			}
+			unset($group);
+		}
+
+		// actions
+		$data['actions'] = makeEventsActions($visible_problems);
 	}
 
-	// actions
-	$actions = makeEventsActions($events);
+	return $data;
+}
 
-	// triggers
-	foreach ($triggers as $trigger) {
-		// event
-		if (array_key_exists('event', $trigger)) {
-			$trigger['event']['acknowledges'] = isset($eventAcknowledges[$trigger['event']['eventid']])
-				? $eventAcknowledges[$trigger['event']['eventid']]['acknowledges']
-				: 0;
+/**
+ * @param array  $filter
+ * @param array  $filter['hostids']            (optional)
+ * @param string $filter['problem']            (optional)
+ * @param array  $filter['severities']         (optional)
+ * @param int    $filter['maintenance']        (optional)
+ * @param int    $filter['hide_empty_groups']  (optional)
+ * @param int    $filter['ext_ack']            (optional)
+ * @param array  $data
+ * @param array  $data['groups']
+ * @param string $data['groups'][]['groupid']
+ * @param string $data['groups'][]['name']
+ * @param bool   $data['groups'][]['has_problems']
+ * @param array  $data['groups'][]['stats']
+ * @param int    $data['groups'][]['stats']['count']
+ * @param array  $data['groups'][]['stats']['problems']
+ * @param string $data['groups'][]['stats']['problems'][]['eventid']
+ * @param string $data['groups'][]['stats']['problems'][]['objectid']
+ * @param int    $data['groups'][]['stats']['problems'][]['clock']
+ * @param int    $data['groups'][]['stats']['problems'][]['ns']
+ * @param int    $data['groups'][]['stats']['problems'][]['acknowledges']
+ * @param int    $data['groups'][]['stats']['problems'][]['acknowledges'][]['clock']
+ * @param string $data['groups'][]['stats']['problems'][]['acknowledges'][]['message']
+ * @param int    $data['groups'][]['stats']['problems'][]['acknowledges'][]['action']
+ * @param string $data['groups'][]['stats']['problems'][]['acknowledges'][]['alias']
+ * @param string $data['groups'][]['stats']['problems'][]['acknowledges'][]['name']
+ * @param string $data['groups'][]['stats']['problems'][]['acknowledges'][]['surname']
+ * @param array  $data['groups'][]['stats']['problems'][]['tags']
+ * @param string $data['groups'][]['stats']['problems'][]['tags'][]['tag']
+ * @param string $data['groups'][]['stats']['problems'][]['tags'][]['value']
+ * @param int    $data['groups'][]['stats']['count_unack']
+ * @param array  $data['groups'][]['stats']['problems_unack']
+ * @param array  $data['triggers']
+ * @param string $data['triggers'][<triggerid>]['expression']
+ * @param string $data['triggers'][<triggerid>]['description']
+ * @param int    $data['triggers'][<triggerid>]['priority']
+ * @param array  $data['triggers'][<triggerid>]['hosts']
+ * @param string $data['triggers'][<triggerid>]['hosts'][]['name']
+ * @param array  $config
+ * @param int    $config['event_ack_enable']
+ * @param string $config['severity_name_*']
+ * @param string $backurl
+ * @param int    $fullscreen
+ *
+ * @return CDiv
+ */
+function makeSystemStatus(array $filter, array $data, array $config, $backurl, $fullscreen = 0) {
+	$filter_severities = (array_key_exists('severities', $filter) && $filter['severities'])
+		? $filter['severities']
+		: range(TRIGGER_SEVERITY_NOT_CLASSIFIED, TRIGGER_SEVERITY_COUNT - 1);
+	$filter_hide_empty_groups = array_key_exists('hide_empty_groups', $filter) ? $filter['hide_empty_groups'] : 0;
+	$filter_ext_ack = $config['event_ack_enable'] && array_key_exists('ext_ack', $filter)
+		? $filter['ext_ack']
+		: EXTACK_OPTION_ALL;
+
+	// indicator of sort field
+	$sort_div = (new CSpan())->addClass(ZBX_STYLE_ARROW_UP);
+
+	// Set trigger severities as table header starting from highest severity.
+	$header = [[_('Host group'), $sort_div]];
+
+	for ($severity = TRIGGER_SEVERITY_COUNT - 1; $severity >= TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity--) {
+		if (in_array($severity, $filter_severities)) {
+			$header[] = getSeverityName($severity, $config);
 		}
-		else {
-			$trigger['event'] = [
-				'acknowledged' => false,
-				'clock' => $trigger['lastchange'],
-				'ns' => '999999999',
-				'value' => $trigger['value']
-			];
+	}
+
+	$table = (new CTableInfo())->setHeader($header);
+
+	$url_group = (new CUrl('zabbix.php'))
+		->setArgument('action', 'problem.view')
+		->setArgument('filter_set', 1)
+		->setArgument('filter_show', TRIGGERS_OPTION_RECENT_PROBLEM)
+		->setArgument('filter_groupids', null)
+		->setArgument('filter_hostids', array_key_exists('hostids', $filter) ? $filter['hostids'] : null)
+		->setArgument('filter_problem', array_key_exists('problem', $filter) ? $filter['problem'] : null)
+		->setArgument('filter_maintenance', (array_key_exists('maintenance', $filter) && $filter['maintenance'])
+			? 1
+			: null
+		)
+		->setArgument('fullscreen', $fullscreen ? '1' : null);
+
+	foreach ($data['groups'] as $group) {
+		if ($filter_hide_empty_groups && !$group['has_problems']) {
+			continue;
 		}
 
-		// groups
-		foreach ($trigger['groups'] as $group) {
-			if (!isset($groups[$group['groupid']])) {
+		$row = new CRow();
+
+		$url_group->setArgument('filter_groupids', [$group['groupid']]);
+		$name = new CLink($group['name'], $url_group->getUrl());
+
+		$row->addItem($name);
+
+		foreach ($group['stats'] as $severity => $stat) {
+			if ($stat['count'] == 0 && $stat['count_unack'] == 0) {
+				$row->addItem('');
 				continue;
 			}
 
-			if (in_array($filter['extAck'], [EXTACK_OPTION_ALL, EXTACK_OPTION_BOTH])) {
-				if ($groups[$group['groupid']]['tab_priority'][$trigger['priority']]['count'] < ZBX_WIDGET_ROWS) {
-					$groups[$group['groupid']]['tab_priority'][$trigger['priority']]['triggers'][] = $trigger;
-				}
-
-				$groups[$group['groupid']]['tab_priority'][$trigger['priority']]['count']++;
-			}
-
-			if (in_array($filter['extAck'], [EXTACK_OPTION_UNACK, EXTACK_OPTION_BOTH])
-					&& isset($trigger['event']) && !$trigger['event']['acknowledged']) {
-				if ($groups[$group['groupid']]['tab_priority'][$trigger['priority']]['count_unack'] < ZBX_WIDGET_ROWS) {
-					$groups[$group['groupid']]['tab_priority'][$trigger['priority']]['triggers_unack'][] = $trigger;
-				}
-
-				$groups[$group['groupid']]['tab_priority'][$trigger['priority']]['count_unack']++;
-			}
-		}
-	}
-	unset($triggers);
-
-	foreach ($groups as $group) {
-		$groupRow = new CRow();
-
-		$name = new CLink($group['name'], 'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid=0'.
-			'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM
-		);
-
-		$groupRow->addItem($name);
-
-		foreach ($group['tab_priority'] as $severity => $data) {
-			if (!is_null($filter['severity']) && !isset($filter['severity'][$severity])) {
-				continue;
-			}
-
-			$allTriggersNum = $data['count'];
+			$allTriggersNum = $stat['count'];
 			if ($allTriggersNum) {
 				$allTriggersNum = (new CSpan($allTriggersNum))
 					->addClass(ZBX_STYLE_LINK_ACTION)
-					->setHint(makeTriggersPopup($data['triggers'], $backurl, $actions, $config));
+					->setHint(makeProblemsPopup($stat['problems'], $data['triggers'], $backurl, $data['actions'],
+						$config
+					));
 			}
 
-			$unackTriggersNum = $data['count_unack'];
+			$unackTriggersNum = $stat['count_unack'];
 			if ($unackTriggersNum) {
 				$unackTriggersNum = (new CSpan($unackTriggersNum))
 					->addClass(ZBX_STYLE_LINK_ACTION)
-					->setHint(makeTriggersPopup($data['triggers_unack'], $backurl, $actions, $config));
+					->setHint(makeProblemsPopup($stat['problems_unack'], $data['triggers'], $backurl, $data['actions'],
+						$config
+					));
 			}
 
-			switch ($filter['extAck']) {
+			switch ($filter_ext_ack) {
 				case EXTACK_OPTION_ALL:
-					$groupRow->addItem(getSeverityCell($severity, $config, $allTriggersNum, $data['count'] == 0));
+					$row->addItem(getSeverityCell($severity, null, $allTriggersNum));
 					break;
 
 				case EXTACK_OPTION_UNACK:
-					$groupRow->addItem(getSeverityCell($severity, $config, $unackTriggersNum,
-						$data['count_unack'] == 0
-					));
+					$row->addItem(getSeverityCell($severity, null, $unackTriggersNum));
 					break;
 
 				case EXTACK_OPTION_BOTH:
-					if ($data['count_unack'] != 0) {
-						$groupRow->addItem(getSeverityCell($severity, $config, [
+					if ($stat['count_unack'] != 0) {
+						$row->addItem(getSeverityCell($severity, $config, [
 							$unackTriggersNum, ' '._('of').' ', $allTriggersNum
 						]));
 					}
 					else {
-						$groupRow->addItem(getSeverityCell($severity, $config, $allTriggersNum, $data['count'] == 0));
+						$row->addItem(getSeverityCell($severity, $config, $allTriggersNum));
 					}
 					break;
 			}
 		}
 
-		$table->addRow($groupRow);
+		$table->addRow($row);
 	}
 
 	return $table;
@@ -583,64 +726,79 @@ function make_latest_issues(array $filter = [], $backurl) {
 /**
  * Generate table for dashboard triggers popup.
  *
- * @see make_system_status
+ * @see makeSystemStatus
  *
- * @param array $triggers
+ * @param array  $problems
+ * @param string $problems[]['objectid']
+ * @param int    $problems[]['clock']
+ * @param int    $problems[]['ns']
+ * @param array  $problems[]['acknowledges']
+ * @param int    $problems[]['acknowledges'][]['clock']
+ * @param string $problems[]['acknowledges'][]['message']
+ * @param int    $problems[]['acknowledges'][]['action']
+ * @param string $problems[]['acknowledges'][]['alias']
+ * @param string $problems[]['acknowledges'][]['name']
+ * @param string $problems[]['acknowledges'][]['surname']
+ * @param array  $problems[]['tags']
+ * @param string $problems[]['tags'][]['tag']
+ * @param string $problems[]['tags'][]['value']
+ * @param array  $triggers
+ * @param string $triggers[<triggerid>]['expression']
+ * @param string $triggers[<triggerid>]['description']
+ * @param int    $triggers[<triggerid>]['priority']
+ * @param array  $triggers[<triggerid>]['hosts']
+ * @param string $triggers[<triggerid>]['hosts'][]['name']
  * @param string $backurl
- * @param array $actions
- * @param array $config
+ * @param array  $actions
+ * @param array  $config
+ * @param int    $config['event_ack_enable']
  *
  * @return CTableInfo
  */
-function makeTriggersPopup(array $triggers, $backurl, array $actions, array $config) {
-	$popupTable = (new CTableInfo())
+function makeProblemsPopup(array $problems, array $triggers, $backurl, array $actions, array $config) {
+	if ($problems) {
+		$tags = makeEventsTags($problems);
+	}
+
+	$table = (new CTableInfo())
 		->setHeader([
 			_('Host'),
-			_('Issue'),
-			_('Age'),
-			_('Info'),
+			_('Problem'),
+			_('Duration'),
 			$config['event_ack_enable'] ? _('Ack') : null,
-			_('Actions')
+			_('Actions'),
+			_('Tags')
 		]);
 
-	CArrayHelper::sort($triggers, [['field' => 'lastchange', 'order' => ZBX_SORT_DOWN]]);
+	foreach ($problems as $problem) {
+		$trigger = $triggers[$problem['objectid']];
 
-	foreach ($triggers as $trigger) {
-		$description = CMacrosResolverHelper::resolveEventDescription(zbx_array_merge($trigger, [
-			'clock' => $trigger['event']['clock'],
-			'ns' => $trigger['event']['ns']
-		]));
+		$hosts = zbx_objectValues($trigger['hosts'], 'name');
 
-		// unknown triggers
-		$info_icons = [];
-		if ($trigger['state'] == TRIGGER_STATE_UNKNOWN) {
-			$info_icons[] = makeUnknownIcon($trigger['error']);
-		}
+		$description = CMacrosResolverHelper::resolveEventDescription(
+			$trigger + ['clock' => $problem['clock'], 'ns' => $problem['ns']]
+		);
 
 		// ack
 		if ($config['event_ack_enable']) {
-			$ack = isset($trigger['event']['eventid'])
-				? getEventAckState($trigger['event'], $backurl)
-				: (new CSpan(_('No events')))->addClass(ZBX_STYLE_GREY);
+			$problem['acknowledged'] = $problem['acknowledges'] ? EVENT_ACKNOWLEDGED : EVENT_NOT_ACKNOWLEDGED;
+			$ack = getEventAckState($problem, $backurl);
 		}
 		else {
 			$ack = null;
 		}
 
-		// action
-		$action = (isset($trigger['event']['eventid']) && isset($actions[$trigger['event']['eventid']]))
-			? $actions[$trigger['event']['eventid']]
-			: '';
-
-		$popupTable->addRow([
-			$trigger['hosts'][0]['name'],
-			getSeverityCell($trigger['priority'], $config, $description),
-			zbx_date2age($trigger['lastchange']),
-			makeInformationList($info_icons),
+		$table->addRow([
+			implode(', ', $hosts),
+			getSeverityCell($trigger['priority'], null, $description),
+			zbx_date2age($problem['clock']),
 			$ack,
-			(new CCol($action))->addClass(ZBX_STYLE_NOWRAP)
+			array_key_exists($problem['eventid'], $actions)
+				? (new CCol($actions[$problem['eventid']]))->addClass(ZBX_STYLE_NOWRAP)
+				: '',
+			$tags[$problem['eventid']]
 		]);
 	}
 
-	return $popupTable;
+	return $table;
 }

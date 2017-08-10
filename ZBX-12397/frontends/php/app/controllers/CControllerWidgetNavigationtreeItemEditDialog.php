@@ -64,7 +64,7 @@ class CControllerWidgetNavigationtreeItemEditDialog extends CController {
 			_('Name'),
 			(new CTextBox('map.name.'.$map_id, $map_item_name))
 				->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
-				->setAttribute('tabindex', 1)
+				->setAttribute('class', 'auto-focus')
 		);
 
 		$sysmap_id = 0;
@@ -80,6 +80,9 @@ class CControllerWidgetNavigationtreeItemEditDialog extends CController {
 				$sysmap_caption = $map['name'];
 				$sysmap_id = $map['sysmapid'];
 			}
+			else {
+				$sysmap_caption = _('Inaccessible map');
+			}
 		}
 
 		$formList->addVar('linked_map_id', $sysmap_id);
@@ -92,18 +95,17 @@ class CControllerWidgetNavigationtreeItemEditDialog extends CController {
 			(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
 			(new CButton('select', _('Select')))
 				->addClass(ZBX_STYLE_BTN_GREY)
-				->setAttribute('tabindex', 2)
 				->onClick('javascript: return PopUp("popup.php?srctbl=sysmaps&srcfld1=sysmapid&srcfld2=name'.
 					'&dstfrm='.$form->getName().'&dstfld1=linked_map_id&dstfld2=caption");'
 				)
 		]);
 
 		if ($depth >= WIDGET_NAVIGATION_TREE_MAX_DEPTH) {
-			$formList->addRow(null, _('Can not add submaps. Max depth reached.'));
+			$formList->addRow(null, _('Cannot add submaps. Max depth reached.'));
 		}
 		else {
 			$formList->addRow(null, [
-				(new CCheckBox('add_submaps', 1))->setAttribute('tabindex', 3),
+				new CCheckBox('add_submaps', 1),
 				new CLabel(_('Add submaps'), 'add_submaps')
 			]);
 		}

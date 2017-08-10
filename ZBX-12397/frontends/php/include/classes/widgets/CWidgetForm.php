@@ -23,14 +23,56 @@ class CWidgetForm {
 
 	protected $fields;
 
+	/**
+	 * Widget fields array that came from AJAX request.
+	 *
+	 * @var array
+	 */
+	protected $data;
+
 	public function __construct($data) {
+		$this->data = CJs::decodeJson($data);
+
 		$this->fields = [];
+	}
+
+	/**
+	 * Convert all dot-delimited keys to arrays of objets.
+	 * Example:
+	 *   source: [
+	 *               'tags.tag.1' => 'tag1',
+	 *               'tags.value.1' => 'value1',
+	 *               'tags.tag.2' => 'tag2',
+	 *               'tags.value.2' => 'value2'
+	 *           ]
+	 *   result: [
+	 *               'tags' => [
+	 *                   ['tag' => 'tag1', 'value' => 'value1'],
+	 *                   ['tag' => 'tag2', 'value' => 'value2']
+	 *               ]
+	 *           ]
+	 *
+	 * @static
+	 *
+	 * @param array $data  An array of key => value pairs.
+	 *
+	 * @return array
+	 */
+	protected static function convertDottedKeys(array $data) {
+		foreach ($data as $key => $value) {
+			if (preg_match('/^([a-z]+)\.([a-z]+)\.(\d+)$/', $key, $matches) === 1) {
+				$data[$matches[1]][$matches[3]][$matches[2]] = $value;
+				unset($data[$key]);
+			}
+		}
+
+		return $data;
 	}
 
 	/**
 	 * Return fields for this form.
 	 *
-	 * @return array  an array of CWidgetField
+	 * @return array  An array of CWidgetField.
 	 */
 	public function getFields() {
 		return $this->fields;
@@ -39,7 +81,7 @@ class CWidgetForm {
 	/**
 	 * Returns widget fields data as array.
 	 *
-	 * @return array  key/value pairs where key is field name and value is it's data
+	 * @return array  Key/value pairs where key is field name and value is it's data.
 	 */
 	public function getFieldsData() {
 		$data = [];
@@ -52,26 +94,34 @@ class CWidgetForm {
 		return $data;
 	}
 
-	public function validate() {
+	/**
+	 * Validate form fields.
+	 *
+	 * @param bool $strict  Enables more strict validation of the form fields.
+	 *                      Must be enabled for validation of input parameters in the widget configuration form.
+	 *
+	 * @return bool
+	 */
+	public function validate($strict = false) {
 		$errors = [];
 
 		foreach ($this->fields as $field) {
-			$errors = array_merge($errors, $field->validate());
+			$errors = array_merge($errors, $field->validate($strict));
 		}
 
 		return $errors;
 	}
 
 	/**
-	 * Prepares array, ready to be passed to CDashboard API functions
+	 * Prepares array, ready to be passed to CDashboard API functions.
 	 *
-	 * @return array  Array of widget fields ready for saving in API
+	 * @return array  Array of widget fields ready for saving in API.
 	 */
 	public function fieldsToApi() {
 		$api_fields = [];
 
 		foreach ($this->fields as $field) {
-			$api_fields = array_merge($api_fields, $field->toApi());
+			$field->toApi($api_fields);
 		}
 
 		return $api_fields;

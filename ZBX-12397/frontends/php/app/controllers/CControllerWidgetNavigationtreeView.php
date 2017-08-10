@@ -21,50 +21,21 @@
 
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
-class CControllerWidgetNavigationtreeView extends CController {
+class CControllerWidgetNavigationtreeView extends CControllerWidget {
+
 	private $problems_per_severity_tpl;
 
-	private $form;
+	public function __construct() {
+		parent::__construct();
 
-	protected function init() {
-		$this->disableSIDValidation();
-	}
-
-	protected function checkInput() {
-		$fields = [
-			'name'		=>	'string',
-			'uniqueid' =>	'required|string',
-			'widgetid'	=>	'db widget.widgetid',
-			'fields'	=>	'array',
-			'initial_load' => 'in 0,1'
-		];
-
-		$ret = $this->validateInput($fields);
-
-		if ($ret) {
-			/*
-			 * @var array  $fields
-			 * @var string $fields['map.name.#']
-			 * @var int    $fields['map.parent.#']
-			 * @var int    $fields['map.order.#']
-			 * @var id     $fields['mapid.#']
-			 */
-			$this->form = CWidgetConfig::getForm(WIDGET_NAVIGATION_TREE, $this->getInput('fields', []));
-
-			if ($errors = $this->form->validate()) {
-				$ret = false;
-			}
-		}
-
-		if (!$ret) {
-			$this->setResponse(new CControllerResponseData(['main_block' => CJs::encodeJson('')]));
-		}
-
-		return $ret;
-	}
-
-	protected function checkPermissions() {
-		return ($this->getUserType() >= USER_TYPE_ZABBIX_USER);
+		$this->setType(WIDGET_NAVIGATION_TREE);
+		$this->setValidationRules([
+			'name' => 'string',
+			'uniqueid' => 'required|string',
+			'widgetid' => 'db widget.widgetid',
+			'initial_load' => 'in 0,1',
+			'fields' => 'json'
+		]);
 	}
 
 	protected function getNumberOfProblemsBySysmap(array $navtree_items = []) {
@@ -75,8 +46,8 @@ class CControllerWidgetNavigationtreeView extends CController {
 			'sysmapids' => $sysmapids,
 			'preservekeys' => true,
 			'output' => ['sysmapid', 'severity_min'],
-			'selectLinks' => ['linktriggers'],
-			'selectSelements' => ['elements', 'elementtype']
+			'selectLinks' => ['linktriggers', 'permission'],
+			'selectSelements' => ['elements', 'elementtype', 'permission']
 		]);
 
 		if ($sysmaps) {
@@ -107,8 +78,8 @@ class CControllerWidgetNavigationtreeView extends CController {
 					'sysmapids' => $diff,
 					'preservekeys' => true,
 					'output' => ['sysmapid', 'severity_min'],
-					'selectLinks' => ['linktriggers'],
-					'selectSelements' => ['elements', 'elementtype']
+					'selectLinks' => ['linktriggers', 'permission'],
+					'selectSelements' => ['elements', 'elementtype', 'permission']
 				]);
 
 				$sysmaps_resolved = array_merge($sysmaps_resolved, $diff);
@@ -292,6 +263,14 @@ class CControllerWidgetNavigationtreeView extends CController {
 			}
 		}
 
+		foreach ($response as &$row) {
+			// Reduce the amount of data transferred over Ajax.
+			if ($row === $this->problems_per_severity_tpl) {
+				$row = 0;
+			}
+		}
+		unset($row);
+
 		return $response;
 	}
 
@@ -423,7 +402,7 @@ class CControllerWidgetNavigationtreeView extends CController {
 	}
 
 	protected function doAction() {
-		$fields = $this->form->getFieldsData();
+		$fields = $this->getForm()->getFieldsData();
 		$error = null;
 
 		// Get list of sysmapids.
@@ -481,18 +460,17 @@ class CControllerWidgetNavigationtreeView extends CController {
 		$navtree_item_selected = 0;
 		$navtree_items_opened = [];
 		if ($widgetid) {
-			$navtree_items_opened = array_keys(
-				CProfile::findByIDXs('web.dashbrd.navtree-%.toggle', $widgetid, 'idx', true));
-
+			$navtree_items_opened = CProfile::findByIDXs('/^web\.dashbrd\.navtree-(\d+)\.toggle$/', $widgetid);
 			$navtree_item_selected = CProfile::get('web.dashbrd.navtree.item.selected', 0, $widgetid);
 		}
 
 		$this->setResponse(new CControllerResponseData([
-			'name' => $this->getInput('name', CWidgetConfig::getKnownWidgetTypes()[WIDGET_NAVIGATION_TREE]),
+			'name' => $this->getInput('name', $this->getDefaultHeader()),
 			'uniqueid' => $this->getInput('uniqueid'),
 			'navtree_item_selected' => $navtree_item_selected,
 			'navtree_items_opened' => $navtree_items_opened,
 			'problems' => $this->getNumberOfProblemsBySysmap($navtree_items),
+			'show_unavailable' => array_key_exists('show_unavailable', $fields) ? $fields['show_unavailable'] : 0,
 			'maps_accessible' => $maps_accessible,
 			'severity_config' => $severity_config,
 			'initial_load' => $this->getInput('initial_load', 0),

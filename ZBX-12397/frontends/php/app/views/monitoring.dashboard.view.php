@@ -19,7 +19,11 @@
 **/
 
 
+$this->addJsFile('flickerfreescreen.js');
+$this->addJsFile('gtlc.js');
 $this->addJsFile('dashboard.grid.js');
+$this->addJsFile('class.calendar.js');
+
 $this->includeJSfile('app/views/monitoring.dashboard.view.js.php');
 
 $sharing_form = include 'monitoring.dashboard.sharing_form.php';
@@ -43,28 +47,26 @@ if ($data['dynamic']['has_dynamic_widgets']) {
 
 $url_create = (new CUrl('zabbix.php'))
 	->setArgument('action', 'dashboard.view')
-	->setArgument('new', '1');
+	->setArgument('new', '1')
+	->setArgument('fullscreen', $data['fullscreen'] ? '1' : null);
 $url_clone = (new CUrl('zabbix.php'))
 	->setArgument('action', 'dashboard.view')
-	->setArgument('source_dashboardid', $data['dashboard']['dashboardid']);
+	->setArgument('source_dashboardid', $data['dashboard']['dashboardid'])
+	->setArgument('fullscreen', $data['fullscreen'] ? '1' : null);
 if ($data['dashboard']['editable']) {
 	$url_delete = (new CUrl('zabbix.php'))
 		->setArgument('action', 'dashboard.delete')
 		->setArgument('dashboardids', [$data['dashboard']['dashboardid']])
+		->setArgument('fullscreen', $data['fullscreen'] ? '1' : null)
 		->setArgumentSID();
-}
-if ($data['fullscreen']) {
-	$url_create->setArgument('fullscreen', '1');
-	$url_clone->setArgument('fullscreen', '1');
-	if ($data['dashboard']['editable']) {
-		$url_delete->setArgument('fullscreen', '1');
-	}
 }
 
 (new CWidget())
 	->setTitle($data['dashboard']['name'])
-	->setControls((new CForm('post', 'zabbix.php?action=dashboard.view'))
+	->setControls((new CForm('get'))
 		->cleanItems()
+		->addVar('action', 'dashboard.view')
+		->addVar('fullscreen', $data['fullscreen'] ? '1' : null)
 		->addItem((new CList())
 			// $item_groupid and $item_hostid will be hidden, when 'Edit Dashboard' will be clicked.
 			->addItem($item_groupid)
@@ -114,6 +116,7 @@ if ($data['fullscreen']) {
 		->addItem($breadcrumbs)
 		->addClass(ZBX_STYLE_OBJECT_GROUP)
 	)
+	->addItem(($data['show_timeline']) ? (new CFilter('web.dashbrd.filter.state'))->addNavigator() : null)
 	->addItem((new CDiv())->addClass(ZBX_STYLE_DASHBRD_GRID_WIDGET_CONTAINER))
 	->addItem($edit_form)
 	->addItem($sharing_form)
@@ -127,12 +130,18 @@ $this->addPostJS('jqBlink.blink();');
 
 $dashboard_data = [
 	// name is required for new dashboard creation
-	'name'   => $data['dashboard']['name'],
-	'userid' => $data['dashboard']['owner']['id'],
-	'dynamic' => $data['dynamic']
+	'name'		=> $data['dashboard']['name'],
+	'userid'	=> $data['dashboard']['owner']['id'],
+	'dynamic'	=> $data['dynamic']
 ];
+if (array_key_exists('sharing', $data['dashboard'])) {
+	$dashboard_data['sharing'] = $data['dashboard']['sharing'];
+}
 $dashboard_options = [
-	'fullscreen' => $data['fullscreen']
+	'fullscreen' => $data['fullscreen'],
+	'max-rows' => DASHBOARD_MAX_ROWS,
+	'max-columns' => DASHBOARD_MAX_COLUMNS,
+	'editable' => $data['dashboard']['editable']
 ];
 if ($data['dashboard']['dashboardid'] != 0) {
 	$dashboard_data['id'] = $data['dashboard']['dashboardid'];
@@ -148,3 +157,12 @@ $this->addPostJS(
 		'.dashboardGrid("setWidgetDefaults", '.CJs::encodeJson($data['widget_defaults']).')'.
 		'.dashboardGrid("addWidgets", '.CJs::encodeJson($data['grid_widgets']).');'
 );
+
+if ($data['show_timeline']) {
+	$this->addPostJS(
+		'timeControl.useTimeRefresh('.CWebUser::getRefresh().');'.
+		'timeControl.addObject("scrollbar", '.CJs::encodeJson($data['timeline']).', '.
+			CJs::encodeJson($data['timeControlData']).');'.
+		'timeControl.processObjects();'
+	);
+}

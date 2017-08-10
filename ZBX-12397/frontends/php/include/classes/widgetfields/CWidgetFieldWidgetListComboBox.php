@@ -18,6 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 class CWidgetFieldWidgetListComboBox extends CWidgetField {
 
 	private $search_by_key;
@@ -62,5 +63,13 @@ class CWidgetFieldWidgetListComboBox extends CWidgetField {
 						'.appendTo(filters_box);'.
 				'});'.
 			'}';
+	}
+
+	public function setValue($value) {
+		if ($value === '' || ctype_alnum($value)) {
+			$this->value = $value;
+		}
+
+		return $this;
 	}
 }

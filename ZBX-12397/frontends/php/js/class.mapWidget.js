@@ -18,8 +18,25 @@
 **/
 
 if (typeof(zbx_sysmap_widget_trigger) !== typeof(Function)) {
-	function zbx_sysmap_widget_trigger(hook_name, grid) {
-		jQuery(".dashbrd-grid-widget-container").dashboardGrid('refreshWidget', grid['widget']['widgetid']);
+	function zbx_sysmap_widget_trigger(hook_name, data, grid) {
+		switch(hook_name) {
+			case 'onWidgetRefresh':
+				var div_id = jQuery('[data-uniqueid="'+grid['widget']['uniqueid']+'"]').attr('id');
+				jQuery('#'+div_id).zbx_mapwidget('update', grid['widget']);
+				break;
+			case 'afterUpdateWidgetConfig':
+				jQuery('.dashbrd-grid-widget-container').dashboardGrid('setWidgetStorageValue',
+					grid['widget']['uniqueid'], 'current_sysmapid', grid['widget']['fields']['sysmapid']);
+				break;
+			case 'onDashboardReady':
+				if (typeof grid['widget']['storage']['current_sysmapid'] === 'undefined') {
+					grid['widget']['content_body'].html(data['html']);
+				}
+				break;
+			case 'onEditStart':
+				jQuery(".dashbrd-grid-widget-container").dashboardGrid('refreshWidget', grid['widget']['widgetid']);
+				break;
+		}
 	}
 }
 
@@ -40,7 +57,7 @@ if (typeof(navigateToSubmap) !== typeof(Function)) {
 				}
 				else {
 					if (reset_previous) {
-						previous_maps = widget[0]['storage']['previous_maps'].split(',').filter(Number);
+						previous_maps = widget[0]['storage']['previous_maps'].toString().split(',').filter(Number);
 						delete previous_maps[previous_maps.length-1];
 						previous_maps = previous_maps.filter(Number).join(',');
 					}
@@ -55,9 +72,76 @@ if (typeof(navigateToSubmap) !== typeof(Function)) {
 			jQuery('.dashbrd-grid-widget-container').dashboardGrid('setWidgetStorageValue', uniqueid, 'previous_maps',
 				previous_maps);
 			jQuery('.dashbrd-grid-widget-container').dashboardGrid('refreshWidget', uniqueid);
-			jQuery('.dashbrd-grid-widget-container').dashboardGrid('widgetDataShare', widget[0], 'selected_mapid',
+			jQuery('.dashbrd-grid-widget-container').dashboardGrid('widgetDataShare', widget[0], 'current_sysmapid',
 				{submapid: submapid, previous_maps: previous_maps, moving_upward: reset_previous ? 1 : 0});
 			jQuery('.action-menu').fadeOut(100);
 		}
 	}
 }
+
+jQuery(function($) {
+	/**
+	 * Create Map Widget.
+	 *
+	 * @return object
+	 */
+	if (typeof($.fn.zbx_mapwidget) === 'undefined') {
+		$.fn.zbx_mapwidget = function(input, widget) {
+			var methods = {
+				// Update map.
+				update: function() {
+					var $this = $(this);
+
+					return this.each(function() {
+						var widget_data = $this.data('widgetData');
+
+						if (widget_data['is_refreshing'] === false) {
+							widget_data['is_refreshing'] = true;
+
+							var url = new Curl(widget_data['map_instance'].options.refresh);
+							url.setArgument('curtime', new CDate().getTime());
+							url.setArgument('uniqueid', widget['uniqueid']);
+							url.setArgument('used_in_widget', 1);
+
+							$.ajax({
+								'url': url.getUrl()
+							})
+							.done(function(data) {
+								widget_data['is_refreshing'] = false;
+								if (+data.mapid > 0) {
+									widget_data['map_instance'].update(data);
+									widget['content_footer'].html(data.map_widget_footer);
+								}
+								else {
+									jQuery('.dashbrd-grid-widget-container').dashboardGrid('refreshWidget',
+										widget_data['uniqueid']);
+								}
+							});
+						}
+					});
+				},
+
+				// initialization of widget
+				init: function(options) {
+					var widget_data = $.extend({}, options);
+
+					return this.each(function() {
+						var $this = $(this);
+
+						widget_data['map_instance'] = new SVGMap(options['map_options']);
+						widget_data['is_refreshing'] = false;
+						$this.data('widgetData', widget_data);
+					});
+				}
+			};
+
+			if (methods[input]) {
+				return methods[input].apply(this, Array.prototype.slice.call(arguments, 1));
+			} else if (typeof input === 'object') {
+				return methods.init.apply(this, arguments);
+			} else {
+				return null;
+			}
+		}
+	}
+});

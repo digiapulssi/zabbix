@@ -23,27 +23,30 @@ $form = (new CForm('post'))
 	->cleanItems()
 	->setId('widget_dialogue_form')
 	->setName('widget_dialogue_form');
+$jq_templates = [];
 $js_scripts = [];
 
 $form_list = new CFormList();
 
-$known_widget_types = CWidgetConfig::getKnownWidgetTypes();
-natsort($known_widget_types);
-
-// Common fields
+// common fields
 $form_list->addRow(_('Type'),
-	new CComboBox('type', $data['dialogue']['type'], 'updateWidgetConfigDialogue()', $known_widget_types)
+	new CComboBox('type', $data['dialogue']['type'], 'updateWidgetConfigDialogue()', $data['known_widget_types'])
 );
 
 $form_list->addRow(_('Name'),
 	(new CTextBox('name', $data['dialogue']['name']))
 		->setAttribute('placeholder', _('default'))
-		->setAttribute('tabindex', 1)
+		->setAttribute('class', 'auto-focus')
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
-// Widget specific fields
-foreach ($data['dialogue']['form']->getFields() as $field) {
+// widget specific fields
+foreach ($data['dialogue']['fields'] as $field) {
+	if (!$data['config']['event_ack_enable'] && ($field->getFlags() & CWidgetField::FLAG_ACKNOWLEDGES)) {
+		$form->addVar($field->getName(), $field->getValue());
+		continue;
+	}
+
 	if ($field instanceof CWidgetFieldComboBox) {
 		$form_list->addRow($field->getLabel(),
 			new CComboBox($field->getName(), $field->getValue(), $field->getAction(), $field->getValues())
@@ -61,31 +64,30 @@ foreach ($data['dialogue']['form']->getFields() as $field) {
 		]);
 	}
 	elseif ($field instanceof CWidgetFieldGroup) {
-		// multiselect.js must be preloaded in parent view`
+		// multiselect.js must be preloaded in parent view.
 
 		$field_groupids = (new CMultiSelect([
 			'name' => $field->getName().'[]',
 			'objectName' => 'hostGroup',
-			'data' => $data['captions']['groups'][$field->getName()],
+			'data' => $data['captions']['ms']['groups'][$field->getName()],
 			'popup' => [
 				'parameters' => 'srctbl=host_groups&dstfrm='.$form->getName().'&dstfld1='.$field->getName().'_'.
 					'&srcfld1=groupid&multiselect=1'
 			],
 			'add_post_js' => false
-		]))
-			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH);
+		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH);
 
 		$form_list->addRow($field->getLabel(), $field_groupids);
 
 		$js_scripts[] = $field_groupids->getPostJS();
 	}
 	elseif ($field instanceof CWidgetFieldHost) {
-		// multiselect.js must be preloaded in parent view`
+		// multiselect.js must be preloaded in parent view.
 
 		$field_hostids = (new CMultiSelect([
 			'name' => $field->getName().'[]',
 			'objectName' => 'hosts',
-			'data' => $data['captions']['hosts'][$field->getName()],
+			'data' => $data['captions']['ms']['hosts'][$field->getName()],
 			'popup' => [
 				'parameters' => 'srctbl=hosts&dstfrm='.$form->getName().'&dstfld1='.$field->getName().'_'.
 					'&srcfld1=hostid&multiselect=1'
@@ -99,7 +101,7 @@ foreach ($data['dialogue']['form']->getFields() as $field) {
 		$js_scripts[] = $field_hostids->getPostJS();
 	}
 	elseif ($field instanceof CWidgetFieldReference) {
-		$form->addVar($field->getName(), $field->getValue() ?: '');
+		$form->addVar($field->getName(), $field->getValue() ? $field->getValue() : '');
 
 		if (!$field->getValue()) {
 			$javascript = $field->getJavascript('#'.$form->getAttribute('id'));
@@ -110,13 +112,14 @@ foreach ($data['dialogue']['form']->getFields() as $field) {
 		$form->addVar($field->getName(), $field->getValue());
 	}
 	elseif ($field instanceof CWidgetFieldSelectResource) {
-		$caption = array_key_exists($field->getValue(), $data['captions'][$field->getResourceType()])
-			? $data['captions'][$field->getResourceType()][$field->getValue()]
+		$caption = ($field->getValue() != 0)
+			? $data['captions']['simple'][$field->getResourceType()][$field->getValue()]
 			: '';
-		// needed for popup script
+
+		// Needed for popup script.
 		$form->addVar($field->getName(), $field->getValue());
 		$form_list->addRow($field->getLabel(), [
-			(new CTextBox($field->getName().'_caption', $caption, true))->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH),
+			(new CTextBox($field->getName().'_caption', $caption, true))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH),
 			(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
 			(new CButton('select', _('Select')))
 				->addClass(ZBX_STYLE_BTN_GREY)
@@ -124,7 +127,10 @@ foreach ($data['dialogue']['form']->getFields() as $field) {
 		]);
 	}
 	elseif ($field instanceof CWidgetFieldWidgetListComboBox) {
-		$form_list->addRow($field->getLabel(), new CComboBox($field->getName(), [], $field->getAction(), []));
+		$form_list->addRow($field->getLabel(),
+			(new CComboBox($field->getName(), [], $field->getAction(), []))
+				->setAttribute('style', 'width: '.ZBX_TEXTAREA_STANDARD_WIDTH.'px')
+		);
 
 		$form->addItem(new CJsScript(get_js($field->getJavascript(), true))); // TODO VM: rewrite to use js_scripts
 	}
@@ -147,23 +153,85 @@ foreach ($data['dialogue']['form']->getFields() as $field) {
 
 		for ($severity = TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity < TRIGGER_SEVERITY_COUNT; $severity++) {
 			$severities->addItem(
-				(new CCheckBox('severities[]', $severity))
+				(new CCheckBox($field->getName().'[]', $severity))
 					->setLabel(getSeverityName($severity, $data['config']))
-					->setId('severities_'.$severity)
-					->setChecked(in_array($severity, $field->getValue(true)))
+					->setId($field->getName().'_'.$severity)
+					->setChecked(in_array($severity, $field->getValue()))
 			);
 		}
 
 		$form_list->addRow($field->getLabel(), $severities);
 	}
+	elseif ($field instanceof CWidgetFieldTags) {
+		$tags = $field->getValue();
+
+		if (!$tags) {
+			$tags = [['tag' => '', 'value' => '']];
+		}
+
+		$tags_table = (new CTable())->setId('tags_table');
+		$i = 0;
+
+		foreach ($tags as $tag) {
+			$tags_table->addRow([
+				(new CTextBox($field->getName().'['.$i.'][tag]', $tag['tag']))
+					->setAttribute('placeholder', _('tag'))
+					->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
+				(new CTextBox($field->getName().'['.$i.'][value]', $tag['value']))
+					->setAttribute('placeholder', _('value'))
+					->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
+				(new CCol(
+					(new CButton($field->getName().'['.$i.'][remove]', _('Remove')))
+						->addClass(ZBX_STYLE_BTN_LINK)
+						->addClass('element-table-remove')
+				))->addClass(ZBX_STYLE_NOWRAP)
+			], 'form_row');
+
+			$i++;
+		}
+
+		$tags_table->addRow(
+			(new CCol(
+				(new CButton('tags_add', _('Add')))
+					->addClass(ZBX_STYLE_BTN_LINK)
+					->addClass('element-table-add')
+			))->setColSpan(3)
+		);
+
+		$form_list->addRow($field->getLabel(), $tags_table);
+
+		$jq_templates['tag-row'] = (new CRow([
+			(new CTextBox($field->getName().'[#{rowNum}][tag]'))
+				->setAttribute('placeholder', _('tag'))
+				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
+			(new CTextBox($field->getName().'[#{rowNum}][value]'))
+				->setAttribute('placeholder', _('value'))
+				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
+			(new CCol(
+				(new CButton($field->getName().'[#{rowNum}][remove]', _('Remove')))
+					->addClass(ZBX_STYLE_BTN_LINK)
+					->addClass('element-table-remove')
+			))->addClass(ZBX_STYLE_NOWRAP)
+		]))
+			->addClass('form_row')
+			->toString();
+
+		$js_scripts[] = 'jQuery("#tags_table").dynamicRows({template: "#tag-row"});';
+	}
 }
 
 $form->addItem($form_list);
+
+// Submit button is needed to enable submit event on Enter on inputs.
+$form->addItem((new CInput('submit', 'dashboard_widget_config_submit'))->addStyle('display: none;'));
 
 $output = [
 	'body' => $form->toString()
 ];
 
+foreach ($jq_templates as $id => $jq_template) {
+	$output['body'] .= '<script type="text/x-jquery-tmpl" id="'.$id.'">'.$jq_template.'</script>';
+}
 if ($js_scripts) {
 	$output['body'] .= get_js(implode("\n", $js_scripts));
 }

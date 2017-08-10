@@ -23,10 +23,9 @@ class CControllerDashbrdWidgetConfig extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'widgetid'	=> 'db widget.widgetid',
-			'type'		=> 'in '.implode(',', array_keys(CWidgetConfig::getKnownWidgetTypes())),
-			'name'		=> 'string',
-			'fields'	=> 'array'
+			'type' => 'in '.implode(',', array_keys(CWidgetConfig::getKnownWidgetTypes())),
+			'name' => 'string',
+			'fields' => 'json'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -50,13 +49,17 @@ class CControllerDashbrdWidgetConfig extends CController {
 	}
 
 	protected function doAction() {
-		$type = $this->getInput('type', WIDGET_CLOCK);
-		$form = CWidgetConfig::getForm($type, $this->getInput('fields', []));
+		$known_widget_types = CWidgetConfig::getKnownWidgetTypes();
+		natsort($known_widget_types);
+
+		$type = $this->getInput('type', array_keys($known_widget_types)[0]);
+		$form = CWidgetConfig::getForm($type, $this->getInput('fields', '{}'));
 
 		$config = select_config();
 
 		$this->setResponse(new CControllerResponseData([
 			'config' => [
+				'event_ack_enable' => $config['event_ack_enable'],
 				'severity_name_0' => $config['severity_name_0'],
 				'severity_name_1' => $config['severity_name_1'],
 				'severity_name_2' => $config['severity_name_2'],
@@ -68,42 +71,58 @@ class CControllerDashbrdWidgetConfig extends CController {
 				'debug_mode' => $this->getDebugMode()
 			],
 			'dialogue' => [
-				'type' => $this->getInput('type', WIDGET_CLOCK),
+				'type' => $type,
 				'name' => $this->getInput('name', ''),
-				'form' => $form,
+				'fields' => $form->getFields(),
 			],
+			'known_widget_types' => $known_widget_types,
 			'captions' => $this->getCaptions($form)
 		]));
 	}
 
 	/**
-	 * Prepares mapped list of names for all required resources
+	 * Prepares mapped list of names for all required resources.
 	 *
 	 * @param CWidgetForm $form
 	 *
 	 * @return array
 	 */
 	private function getCaptions($form) {
-		// TODO VM: (?) currently it will have both, numeric and textual keys. Also, ones will come from defines, others will not.
-		//				(maybe it is good to add 'groups' to defines as well? Or maybe it can be improved, not to mix different key types.
-		$captions = [];
+		$captions = ['simple' => [], 'ms' => []];
 
 		foreach ($form->getFields() as $field) {
 			if ($field instanceof CWidgetFieldSelectResource) {
-				if (!array_key_exists($field->getResourceType(), $captions)) {
-					$captions[$field->getResourceType()] = [];
+				$resource_type = $field->getResourceType();
+				$id = $field->getValue();
+
+				if (!array_key_exists($resource_type, $captions['simple'])) {
+					$captions['simple'][$resource_type] = [];
 				}
-				if ($field->getValue() != 0) {
-					$captions[$field->getResourceType()][$field->getValue()] = true;
+
+				if ($id != 0) {
+					switch ($resource_type) {
+						case WIDGET_FIELD_SELECT_RES_ITEM:
+							$captions['simple'][$resource_type][$id] = _('Inaccessible item');
+							break;
+
+						case WIDGET_FIELD_SELECT_RES_SYSMAP:
+							$captions['simple'][$resource_type][$id] = _('Inaccessible map');
+							break;
+
+						case WIDGET_FIELD_SELECT_RES_GRAPH:
+							$captions['simple'][$resource_type][$id] = _('Inaccessible graph');
+							break;
+					}
 				}
 			}
 		}
 
-		foreach ($captions as $resource => $list) {
+		foreach ($captions['simple'] as $resource_type => &$list) {
 			if (!$list) {
 				continue;
 			}
-			switch ($resource) {
+
+			switch ($resource_type) {
 				case WIDGET_FIELD_SELECT_RES_ITEM:
 					$items = API::Item()->get([
 						'output' => ['itemid', 'hostid', 'key_', 'name'],
@@ -116,7 +135,7 @@ class CControllerDashbrdWidgetConfig extends CController {
 						$items = CMacrosResolverHelper::resolveItemNames($items);
 
 						foreach ($items as $key => $item) {
-							$captions[$resource][$item['itemid']] = $item['hosts'][0]['name'].NAME_DELIMITER.$item['name_expanded'];
+							$list[$item['itemid']] = $item['hosts'][0]['name'].NAME_DELIMITER.$item['name_expanded'];
 						}
 					}
 					break;
@@ -129,31 +148,50 @@ class CControllerDashbrdWidgetConfig extends CController {
 
 					if ($maps) {
 						foreach ($maps as $key => $map) {
-							$captions[$resource][$map['sysmapid']] = $map['name'];
+							$list[$map['sysmapid']] = $map['name'];
+						}
+					}
+					break;
+
+				case WIDGET_FIELD_SELECT_RES_GRAPH:
+					$graphs = API::Graph()->get([
+						'graphids' => array_keys($list),
+						'selectHosts' => ['name'],
+						'output' => ['graphid', 'name']
+					]);
+
+					if ($graphs) {
+						foreach ($graphs as $key => $graph) {
+							order_result($graph['hosts'], 'name');
+							$graph['host'] = reset($graph['hosts']);
+							$list[$graph['graphid']] = $graph['host']['name'].NAME_DELIMITER.$graph['name'];
 						}
 					}
 					break;
 			}
 		}
+		unset($list);
 
-		// Prepare data for CMultiselect controls.
+		// Prepare data for CMultiSelect controls.
 		$groupids = [];
 		$hostids = [];
 
 		foreach ($form->getFields() as $field) {
 			if ($field instanceof CWidgetFieldGroup) {
 				$field_name = $field->getName();
-				$captions['groups'][$field_name] = [];
+				$captions['ms']['groups'][$field_name] = [];
 
 				foreach ($field->getValue() as $groupid) {
+					$captions['ms']['groups'][$field_name][$groupid] = ['id' => $groupid];
 					$groupids[$groupid][] = $field_name;
 				}
 			}
 			elseif ($field instanceof CWidgetFieldHost) {
 				$field_name = $field->getName();
-				$captions['hosts'][$field_name] = [];
+				$captions['ms']['hosts'][$field_name] = [];
 
 				foreach ($field->getValue() as $hostid) {
+					$captions['ms']['hosts'][$field_name][$hostid] = ['id' => $hostid];
 					$hostids[$hostid][] = $field_name;
 				}
 			}
@@ -168,10 +206,8 @@ class CControllerDashbrdWidgetConfig extends CController {
 
 			foreach ($groups as $groupid => $group) {
 				foreach ($groupids[$groupid] as $field_name) {
-					$captions['groups'][$field_name][] = [
-						'id' => $groupid,
-						'name' => $group['name']
-					];
+					$captions['ms']['groups'][$field_name][$groupid]['name'] = $group['name'];
+					unset($captions['ms']['groups'][$field_name][$groupid]['inaccessible']);
 				}
 			}
 		}
@@ -185,13 +221,32 @@ class CControllerDashbrdWidgetConfig extends CController {
 
 			foreach ($hosts as $hostid => $host) {
 				foreach ($hostids[$hostid] as $field_name) {
-					$captions['hosts'][$field_name][] = [
-						'id' => $hostid,
-						'name' => $host['name']
-					];
+					$captions['ms']['hosts'][$field_name][$hostid]['name'] = $host['name'];
 				}
 			}
 		}
+
+		$inaccessible_resources = [
+			'groups' => _('Inaccessible group'),
+			'hosts' => _('Inaccessible host')
+		];
+
+		foreach ($captions['ms'] as $resource_type => &$fields_captions) {
+			foreach ($fields_captions as &$field_captions) {
+				$n = 0;
+
+				foreach ($field_captions as &$caption) {
+					if (!array_key_exists('name', $caption)) {
+						$postfix = (++$n > 1) ? ' ('.$n.')' : '';
+						$caption['name'] = $inaccessible_resources[$resource_type].$postfix;
+						$caption['inaccessible'] = true;
+					}
+				}
+				unset($caption);
+			}
+			unset($field_captions);
+		}
+		unset($fields_captions);
 
 		return $captions;
 	}
