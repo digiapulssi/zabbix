@@ -337,11 +337,11 @@ ROW   |100108|10  |              |        |100001|Total number of probes with en
 ROW   |100109|10  |              |        |100001|Total number of probes for RDDS tests       |online.nodes.pl[total,rdds]                  |300  |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
 
 TABLE |media_type
-FIELDS|mediatypeid|type|description|smtp_server     |smtp_helo  |smtp_email        |exec_path|gsm_modem |username          |passwd|status|smtp_port|smtp_security|smtp_verify_peer|smtp_verify_host|smtp_authentication|exec_params|
-ROW   |1          |0   |Email      |mail.company.com|company.com|zabbix@company.com|         |          |                  |      |0     |25       |0            |0               |0               |0                  |           |
-ROW   |2          |3   |Jabber     |                |           |                  |         |          |jabber@company.com|zabbix|0     |25       |0            |0               |0               |0                  |           |
-ROW   |3          |2   |SMS        |                |           |                  |         |/dev/ttyS0|                  |      |0     |25       |0            |0               |0               |0                  |           |
-ROW   |10         |1   |Script     |                |           |                  |script.py|          |                  |      |0     |25       |0            |0               |0               |0                  |           |
+FIELDS|mediatypeid|type|description|smtp_server     |smtp_helo  |smtp_email        |exec_path|gsm_modem |username          |passwd|status|smtp_port|smtp_security|smtp_verify_peer|smtp_verify_host|smtp_authentication|exec_params                                                |
+ROW   |1          |0   |Email      |mail.company.com|company.com|zabbix@company.com|         |          |                  |      |0     |25       |0            |0               |0               |0                  |                                                           |
+ROW   |2          |3   |Jabber     |                |           |                  |         |          |jabber@company.com|zabbix|0     |25       |0            |0               |0               |0                  |                                                           |
+ROW   |3          |2   |SMS        |                |           |                  |         |/dev/ttyS0|                  |      |0     |25       |0            |0               |0               |0                  |                                                           |
+ROW   |10         |1   |Script     |                |           |                  |script.py|          |                  |      |0     |25       |0            |0               |0               |0                  |{ALERT.SENDTO}&eol;{ALERT.SUBJECT}&eol;{ALERT.MESSAGE}&eol;|
 
 TABLE |users
 FIELDS|userid|alias      |name   |surname      |passwd                          |url|autologin|autologout|lang |refresh|type|theme  |rows_per_page|
@@ -369,18 +369,30 @@ ROW   |100|120     |100   |
 TABLE |actions
 FIELDS|actionid|name           |esc_period|def_shortdata                                                           |def_longdata                 |recovery_msg|r_shortdata                                                             |r_longdata                   |
 ROW   |100     |Probes-Critical|3600      |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.DATE} {EVENT.TIME} UTC|1           |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.DATE} {EVENT.TIME} UTC|
+ROW   |110     |Probes-Mon     |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|
+ROW   |120     |Central-Server |3600      |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|
+ROW   |130     |TLDs           |3600      |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.DATE} {EVENT.TIME} UTC|1           |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.DATE} {EVENT.TIME} UTC|
 
 TABLE |operations
 FIELDS|operationid|actionid|
 ROW   |100        |100     |
+ROW   |110        |110     |
+ROW   |120        |120     |
+ROW   |130        |130     |
 
 TABLE |opmessage
 FIELDS|operationid|default_msg|subject|message|mediatypeid|
 ROW   |100        |1          |       |       |10         |
+ROW   |110        |1          |       |       |10         |
+ROW   |120        |1          |       |       |10         |
+ROW   |130        |1          |       |       |10         |
 
 TABLE |opmessage_usr
 FIELDS|opmessage_usrid|operationid|userid|
 ROW   |100            |100        |100   |
+ROW   |110            |110        |100   |
+ROW   |120            |120        |100   |
+ROW   |130            |130        |100   |
 
 TABLE |conditions
 FIELDS|conditionid|actionid|conditiontype|operator|value |
@@ -388,6 +400,17 @@ ROW   |101        |100     |16           |7       |      |
 ROW   |102        |100     |5            |0       |1     |
 ROW   |103        |100     |4            |5       |2     |
 ROW   |104        |100     |1            |0       |100001|
+ROW   |110        |110     |16           |7       |      |
+ROW   |111        |110     |5            |0       |1     |
+ROW   |112        |110     |4            |5       |2     |
+ROW   |113        |110     |0            |0       |130   |
+ROW   |120        |120     |16           |7       |      |
+ROW   |121        |120     |5            |0       |1     |
+ROW   |122        |120     |4            |5       |2     |
+ROW   |123        |120     |0            |0       |110   |
+ROW   |130        |130     |16           |7       |      |
+ROW   |131        |130     |5            |0       |1     |
+ROW   |132        |130     |0            |0       |140   |
 
 TABLE |config
 FIELDS|configid|refresh_unsupported|work_period     |alert_usrgrpid|discovery_groupid|hk_history_mode|hk_trends_mode|
@@ -877,7 +900,7 @@ ROW   |56         |10056 |1      |
 ROW   |57         |10057 |110    |
 ROW   |58         |10058 |1      |
 ROW   |1000       |100000|100    |
-ROW   |1001       |100001|130    |
+ROW   |1001       |100001|110    |
 
 TABLE |hosts_templates
 FIELDS|hosttemplateid|hostid|templateid|
@@ -1198,7 +1221,7 @@ ROW   |102    |100    |0         |160|
 ROW   |103    |100    |0         |170|
 ROW   |104    |100    |0         |180|
 ROW   |105    |100    |2         |100|
-ROW   |106    |100    |2         |120|
+ROW   |106    |100    |2         |130|
 ROW   |107    |100    |2         |200|
 ROW   |108    |100    |2         |240|
 ROW   |109    |110    |2         |130|

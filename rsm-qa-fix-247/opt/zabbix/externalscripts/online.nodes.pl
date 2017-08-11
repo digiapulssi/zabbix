@@ -10,15 +10,13 @@ use lib $MYDIR;
 use strict;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:api);
+use TLD_constants qw(:api :items);
 use Data::Dumper;
 
 parse_opts();
 
 use constant ENABLE_LOGFILE => 0;
 use constant LOGFILE => '/tmp/online.nodes.debug.log';
-
-use constant PROBE_KEY_ONLINE	=> 'rsm.probe.online';	# todo phase 1: taken from RSMSLV.pm, define in single place in phase 2
 
 my $command = shift || 'total';
 my $type = shift || 'dns';

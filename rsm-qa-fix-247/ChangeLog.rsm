@@ -1,8 +1,59 @@
-Changes for rsm1.0.0rc15
+Changes for rsm1.0.0rc20
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc19
+
+New features:
+..F....... [262] improved loading time of "Rolling week status" page with worst case filter settings (gleb, Oleg)
+....I..PS. [270] improved host group structure for better Monitoring->Overview experience (gleb)
+
+Bug fixes:
+..F.I..PS. [260] made frontend look for rsm.probe.online item on correct hosts; adjusted user permissions accordingly (dimir, gleb, Oleg)
+.......P.. [272] made server not adjust timestamps of values coming from proxies, proxy will include parcel timestamp with a different tag (dimir, gleb)
+....I..PS. [266] added missing parameters to "Script" media type (gleb)
+....I..... [267] fixed slow DNSSEC Availability script (rsm.slv.dnssec.avail.pl), also possibly improved performance of other scripts (dimir, gleb)
+..F....... [268] fixed undefined variable error in "Rolling week status" page (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc18
+
+New features:
+....I..PS. [264] added "Probes-Mon", "Central-Server" and "TLDs" actions (gleb)
+
+Bug fixes:
+....I..PS. [sub-206] fixed "Template App Zabbix Proxy" being unlinked from "<Probe>" hosts when onboarding TLD (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc17
+
+New features:
+..F....... [262] improved loading time of "Rolling week" page (Oleg)
+
+Bug fixes:
+....I..... [261] fixed log file names of SLV scripts, TLD was missing from filename (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc16
+
+Bug fixes:
+....I..... [257] fixed undefined subroutine error (uint_value_exists) in rsm.probe.online.pl script (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc15
+
+New features:
+..F....... [238] added possibility to configure database connection timeout for the frontend (Oleg)
+
+Bug fixes:
+....I..... [sub-239] fixed Service downtime calculation (dimir)
+....I..... [246] fixed Probe status calculation in Service availability scripts (dimir)
+..F....... [234] made frontend use probe main status instead of calculating it from manual and automatic ones (Oleg)
+..F....... [255, 256] fixed counting DNS and DNSSEC name server results in "Details of particular test" page (gleb)
+..F.I..... [sub-217] simplified frontend database connection encryption configuration (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc14
@@ -11,6 +62,7 @@ New features:
 ....I..... [252] adjusted initial configuration parameters (NOTE: For this change to have effect one needs to recreate the database!) (gleb)
 
 Bug fixes:
+....I..... [239] improved sender functionality to push calculated data to Zabbix server (gleb)
 ....I..... [245] fixed "MySQL has gone away" errors during export.pl execution (dimir, gleb)
 ....I..... [sub-216] fixed Perl warning regarding JSON::true and JSON::false redefinition (dimir, gleb)
 ....I..... [sub-216] fixed incorrect cycle and test matching resulting in assert fails (dimir, gleb)

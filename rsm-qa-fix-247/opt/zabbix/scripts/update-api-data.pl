@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:api);	# ITEM_VALUE_TYPE_FLOAT
+use TLD_constants qw(:api :items);
 use ApiHelper;
 
 use constant JSON_RDDS_SUBSERVICE => 'subService';
@@ -323,8 +323,6 @@ else
 
 my $servicedata;	# hash with various data of TLD service
 
-my $probe_avail_limit = get_macro_probe_avail_limit();
-
 foreach (@$tlds_ref)
 {
 	$tlds_processed++;
@@ -428,7 +426,7 @@ if (opt('probe'))
 	$all_probes_ref->{getopt('probe')} = $temp->{getopt('probe')};
 }
 
-my $probe_times_ref = get_probe_times($from, $till, $probe_avail_limit, $all_probes_ref);
+my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
 
 foreach (keys(%$servicedata))
 {
@@ -2153,7 +2151,6 @@ sub __no_status_result
 # todo phase 1: this function was modified to allow earlier run on freshly installed database
 sub __get_config_minclock
 {
-	my $probe_item_key = 'rsm.probe.online';
 	my $minclock;
 
 	foreach (@server_keys)
@@ -2165,7 +2162,10 @@ sub __get_config_minclock
 			"select min(clock)".
 			" from history_uint".
 			" where itemid in".
-				" (select itemid from items where key_='$probe_item_key' and templateid is not null)");
+				" (select itemid".
+				" from items".
+				" where key_='" . PROBE_KEY_ONLINE.
+					"' and templateid is not null)");
 
 	next unless (defined($rows_ref->[0]->[0]));
 
