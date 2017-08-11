@@ -87,6 +87,7 @@ static zbx_hk_cleanup_table_t	hk_cleanup_tables[] = {
 	{"history_uint", &cfg.hk.history_mode},
 	{"trends", &cfg.hk.trends_mode},
 	{"trends_uint", &cfg.hk.trends_mode},
+	{"events", &cfg.hk.events_mode},
 	{NULL}
 };
 
@@ -646,8 +647,16 @@ static int	housekeeping_cleanup()
 		housekeeper.field = row[2];
 		ZBX_STR2UINT64(housekeeper.value, row[3]);
 
-		zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "%s=" ZBX_FS_UI64, housekeeper.field,
-				housekeeper.value);
+		if (0 == strcmp(housekeeper.tablename, "events"))
+		{
+			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "object=%s and objectid="
+					ZBX_FS_UI64, housekeeper.field, housekeeper.value);
+		}
+		else
+		{
+			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "%s=" ZBX_FS_UI64, housekeeper.field,
+					housekeeper.value);
+		}
 
 		if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
 		{
