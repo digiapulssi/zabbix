@@ -381,7 +381,8 @@ foreach ($tlds_by_server as $key => $hosts) {
 		$db_items = DBselect(
 			'SELECT i.itemid, i.hostid, i.key_'.
 			' FROM items i'.
-			' WHERE '.dbConditionString('i.key_', $item_keys)
+			' WHERE '.dbConditionString('i.key_', $item_keys).
+				' AND '.dbConditionInt('i.hostid', array_keys($hosts))
 		);
 
 		$i = 0;
