@@ -671,6 +671,21 @@ class CItem extends CItemGeneral {
 				];
 			}
 		}
+
+		$itemObjects = [
+			EVENT_OBJECT_ITEM,
+			EVENT_OBJECT_LLDRULE
+		];
+		foreach ($itemIds as $itemId) {
+			foreach ($itemObjects as $object) {
+				$insert[] = [
+						'tablename' => 'events',
+						'field' => $object,
+						'value' => $itemId
+				];
+			}
+		}
+
 		DB::insert('housekeeper', $insert);
 
 		// TODO: remove info from API
