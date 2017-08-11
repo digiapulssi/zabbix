@@ -1054,7 +1054,7 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 	int			i;
 	zbx_vector_uint64_t	profileids, selementids;
 	const char		*profile_idx = "web.events.filter.triggerid";
-	const char		*tables[] = {"events"};
+	const char		*event_tables[] = {"events"};
 
 	if (0 == triggerids->values_num)
 		return;
@@ -1100,7 +1100,7 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 
 	DBexecute("%s", sql);
 
-	DBdelete_by_ids(triggerids, "0", tables, ARRSIZE(tables));
+	DBdelete_by_ids(triggerids, "0", event_tables, ARRSIZE(event_tables));	/* EVENT_OBJECT_TRIGGER */
 
 	zbx_vector_uint64_destroy(&selementids);
 	zbx_vector_uint64_destroy(&profileids);
@@ -1373,8 +1373,9 @@ void	DBdelete_items(zbx_vector_uint64_t *itemids)
 	zbx_vector_uint64_t	screen_itemids, profileids;
 	int			num;
 	zbx_uint64_t		resource_types[] = {SCREEN_RESOURCE_PLAIN_TEXT, SCREEN_RESOURCE_SIMPLE_GRAPH};
-	const char		*tables[] = {"history", "history_str", "history_uint", "history_log", "history_text",
-				"trends", "trends_uint"};
+	const char		*history_tables[] = {"history", "history_str", "history_uint", "history_log",
+				"history_text", "trends", "trends_uint"};
+	const char		*event_tables[] = {"events"};
 	const char		*profile_idx = "web.favorite.graphids";
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() values_num:%d", __function_name, itemids->values_num);
@@ -1401,7 +1402,10 @@ void	DBdelete_items(zbx_vector_uint64_t *itemids)
 
 	DBdelete_graphs_by_itemids(itemids);
 	DBdelete_triggers_by_itemids(itemids);
-	DBdelete_by_ids(itemids, "itemid", tables, ARRSIZE(tables));
+	DBdelete_by_ids(itemids, "itemid", history_tables, ARRSIZE(history_tables));
+
+	DBdelete_by_ids(itemids, "4", event_tables, ARRSIZE(event_tables));	/* EVENT_OBJECT_ITEM */
+	DBdelete_by_ids(itemids, "5", event_tables, ARRSIZE(event_tables));	/* EVENT_OBJECT_LLDRULE */
 
 	sql_offset = 0;
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
