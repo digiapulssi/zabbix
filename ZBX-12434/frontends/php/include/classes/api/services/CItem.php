@@ -674,9 +674,9 @@ class CItem extends CItemGeneral {
 
 		foreach ($itemIds as $itemId) {
 			$insert[] = [
-					'tablename' => 'events',
-					'field' => EVENT_OBJECT_ITEM,
-					'value' => $itemId
+				'tablename' => 'events',
+				'field' => EVENT_OBJECT_ITEM,
+				'value' => $itemId
 			];
 		}
 

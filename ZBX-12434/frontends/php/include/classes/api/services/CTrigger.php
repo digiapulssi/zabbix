@@ -824,9 +824,9 @@ class CTrigger extends CTriggerGeneral {
 		$insert = [];
 		foreach ($triggerIds as $triggerId) {
 			$insert[] = [
-					'tablename' => 'events',
-					'field' => EVENT_OBJECT_TRIGGER,
-					'value' => $triggerId
+				'tablename' => 'events',
+				'field' => EVENT_OBJECT_TRIGGER,
+				'value' => $triggerId
 			];
 		}
 		DB::insert('housekeeper', $insert);

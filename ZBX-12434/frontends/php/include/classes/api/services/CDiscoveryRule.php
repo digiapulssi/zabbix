@@ -419,9 +419,9 @@ class CDiscoveryRule extends CItemGeneral {
 		$insert = [];
 		foreach ($ruleids as $ruleid) {
 			$insert[] = [
-					'tablename' => 'events',
-					'field' => EVENT_OBJECT_LLDRULE,
-					'value' => $ruleid
+				'tablename' => 'events',
+				'field' => EVENT_OBJECT_LLDRULE,
+				'value' => $ruleid
 			];
 		}
 		DB::insert('housekeeper', $insert);
