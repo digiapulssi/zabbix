@@ -391,7 +391,8 @@ foreach ($tlds_by_server as $key => $hosts) {
 			$items[$item['itemid']] = [
 				'itemid' => $item['itemid'],
 				'hostid' => $item['hostid'],
-				'key_' => $item['key_']
+				'key_' => $item['key_'],
+				'lastvalue' => null
 			];
 
 			$history_union[] = 'SELECT itemid, value'.
@@ -399,7 +400,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 				' WHERE itemid = '.$item['itemid'].
 					' AND clock = (SELECT MAX(clock) FROM history WHERE itemid = '.$item['itemid'].')';
 
-			if ($i == 3) {
+			if ($i == 40) {
 				$db_histories = DBselect(
 					'SELECT itemid, value'.
 					' FROM ('.implode(' UNION ', $history_union).') result'
@@ -414,6 +415,17 @@ foreach ($tlds_by_server as $key => $hosts) {
 			}
 			else {
 				$i++;
+			}
+		}
+
+		if ($history_union) {
+			$db_histories = DBselect(
+				'SELECT itemid, value'.
+				' FROM ('.implode(' UNION ', $history_union).') result'
+			);
+
+			while ($history = DBfetch($db_histories)) {
+				$items[$history['itemid']]['lastvalue'] = $history['value'];
 			}
 		}
 
