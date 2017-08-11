@@ -134,6 +134,7 @@ $url = (new CUrl('chart3.php'))
 	->setArgument('stime', $graph_in->timeline['stime'])
 	->setArgument('profileIdx', $graph_in->profileIdx)
 	->setArgument('profileIdx2', $graph_in->profileIdx2)
+	->setArgument('select_all', $graph_in->timeline['is_selectall_period'])
 	->getUrl();
 
 $graphs[] = (new CDiv(new CLink(null, $url)))
@@ -180,6 +181,7 @@ $url = (new CUrl('chart3.php'))
 	->setArgument('stime', $graph_time->timeline['stime'])
 	->setArgument('profileIdx', $graph_time->profileIdx)
 	->setArgument('profileIdx2', $graph_time->profileIdx2)
+	->setArgument('select_all', $graph_in->timeline['is_selectall_period'])
 	->getUrl();
 
 $graphs[] = (new CDiv(new CLink(null, $url)))

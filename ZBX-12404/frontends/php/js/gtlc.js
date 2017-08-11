@@ -98,6 +98,7 @@ var timeControl = {
 					obj.sliderMaximumTimePeriod,
 					obj.time.isNow
 				);
+				this.timeline.is_selectall_period = obj.time.is_selectall_period;
 
 				// scrollbar
 				var width = get_bodywidth() - 100;
