@@ -672,18 +672,12 @@ class CItem extends CItemGeneral {
 			}
 		}
 
-		$itemObjects = [
-			EVENT_OBJECT_ITEM,
-			EVENT_OBJECT_LLDRULE
-		];
 		foreach ($itemIds as $itemId) {
-			foreach ($itemObjects as $object) {
-				$insert[] = [
-						'tablename' => 'events',
-						'field' => $object,
-						'value' => $itemId
-				];
-			}
+			$insert[] = [
+					'tablename' => 'events',
+					'field' => EVENT_OBJECT_ITEM,
+					'value' => $itemId
+			];
 		}
 
 		DB::insert('housekeeper', $insert);
