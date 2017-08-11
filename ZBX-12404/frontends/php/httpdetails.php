@@ -108,6 +108,11 @@ $graph_dims['graphHeight'] = 150;
 /*
  * Graph in
  */
+$httptest_manager = new CHttpTestManager();
+$itemids = $httptest_manager->getHttpStepItems($httptest['httptestid']);
+$itemids = zbx_objectValues($itemids, 'itemid');
+$starttime = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($itemids));
+
 $graph_in = new CScreenBase([
 	'resourcetype' => SCREEN_RESOURCE_GRAPH,
 	'mode' => SCREEN_MODE_PREVIEW,
@@ -115,14 +120,9 @@ $graph_in = new CScreenBase([
 	'profileIdx' => 'web.httptest',
 	'profileIdx2' => getRequest('httptestid'),
 	'period' => getRequest('period'),
-	'stime' => getRequest('stime')
+	'stime' => getRequest('stime'),
+	'starttime' => $starttime
 ]);
-
-$httptest_manager = new CHttpTestManager();
-$itemids = $httptest_manager->getHttpStepItems($httptest['httptestid']);
-$itemids = zbx_objectValues($itemids, 'itemid');
-
-$graph_in->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($itemids));
 
 $url = (new CUrl('chart3.php'))
 	->setArgument('height', 150)
@@ -166,7 +166,8 @@ $graph_time = new CScreenBase([
 	'profileIdx' => 'web.httptest',
 	'profileIdx2' => getRequest('httptestid'),
 	'period' => getRequest('period'),
-	'stime' => getRequest('stime')
+	'stime' => getRequest('stime'),
+	'starttime' => $starttime
 ]);
 
 $url = (new CUrl('chart3.php'))

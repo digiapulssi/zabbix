@@ -49,7 +49,8 @@ $fields = [
 	'yaxismax' =>		[T_ZBX_DBL, O_OPT, null,		null,				null],
 	'percent_left' =>	[T_ZBX_DBL, O_OPT, null,		BETWEEN(0, 100),	null],
 	'percent_right' =>	[T_ZBX_DBL, O_OPT, null,		BETWEEN(0, 100),	null],
-	'items' =>			[T_ZBX_STR, O_OPT, null,		null,				null]
+	'items' =>			[T_ZBX_STR, O_OPT, null,		null,				null],
+	'select_all' =>		[T_ZBX_INT, O_OPT, null,		IN('0,1'),			null]
 ];
 if (!check_fields($fields)) {
 	exit();
@@ -130,7 +131,8 @@ $timeline = CScreenBase::calculateTime([
 	'profileIdx' => $profileIdx,
 	'profileIdx2' => $profileIdx2,
 	'period' => getRequest('period'),
-	'stime' => getRequest('stime')
+	'stime' => getRequest('stime'),
+	'select_all' => getRequest('select_all', 0)
 ]);
 
 CProfile::update($profileIdx.'.httptestid', $profileIdx2, PROFILE_TYPE_ID);

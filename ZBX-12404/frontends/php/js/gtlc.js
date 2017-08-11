@@ -98,7 +98,6 @@ var timeControl = {
 					obj.sliderMaximumTimePeriod,
 					obj.time.isNow
 				);
-				this.timeline.is_selectall_period = (obj.time.period == this.timeline.maxperiod);
 
 				// scrollbar
 				var width = get_bodywidth() - 100;
@@ -248,7 +247,7 @@ var timeControl = {
 
 	objectUpdate: function() {
 		var usertime = this.timeline.usertime(),
-			period = this.timeline.is_selectall_period ? this.timeline.maxperiod : this.timeline.period();
+			period = this.timeline.period();
 
 		// secure browser from fast user operations
 		if (isNaN(usertime) || isNaN(period)) {
