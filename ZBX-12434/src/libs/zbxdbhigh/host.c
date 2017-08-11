@@ -996,6 +996,50 @@ static void	DBdelete_action_conditions(int conditiontype, zbx_uint64_t elementid
 
 /******************************************************************************
  *                                                                            *
+ * Function: DBdelete_by_ids                                                  *
+ *                                                                            *
+ * Purpose:  add rows that need cleanup to housekeeper table                  *
+ *                                                                            *
+ * Parameters: ids    - [IN] identificators of table rows that need cleaning  *
+ *             field  - [IN] identificator field                              *
+ *             tables - [IN] tables that need to be cleaned                   *
+ *             count  - [IN] number of tables in tables array                 *
+ *                                                                            *
+ * Author: Eugene Grigorjev, Alexander Vladishev                              *
+ *                                                                            *
+ * Comments: !!! Don't forget to sync the code with PHP !!!                   *
+ *                                                                            *
+ ******************************************************************************/
+static void	DBdelete_by_ids(zbx_vector_uint64_t *ids, const char *field, const char **tables, int count)
+{
+	const char	*__function_name = "DBdelete_by_ids";
+	int		i, j;
+	zbx_uint64_t	housekeeperid;
+	zbx_db_insert_t	db_insert;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() values_num:%d", __function_name, ids->values_num);
+
+	if (0 == ids->values_num)
+		goto out;
+
+	housekeeperid = DBget_maxid_num("housekeeper", count * ids->values_num);
+
+	zbx_db_insert_prepare(&db_insert, "housekeeper", "housekeeperid", "tablename", "field", "value", NULL);
+
+	for (i = 0; i < ids->values_num; i++)
+	{
+		for (j = 0; j < count; j++)
+			zbx_db_insert_add_values(&db_insert, housekeeperid++, tables[j], field, ids->values[i]);
+	}
+
+	zbx_db_insert_execute(&db_insert);
+	zbx_db_insert_clean(&db_insert);
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: DBdelete_triggers                                                *
  *                                                                            *
  * Purpose: delete trigger from database                                      *
@@ -1010,6 +1054,7 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 	int			i;
 	zbx_vector_uint64_t	profileids, selementids;
 	const char		*profile_idx = "web.events.filter.triggerid";
+	const char		*tables[] = {"events"};
 
 	if (0 == triggerids->values_num)
 		return;
@@ -1054,6 +1099,8 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
 
 	DBexecute("%s", sql);
+
+	DBdelete_by_ids(triggerids, "0", tables, ARRSIZE(tables));
 
 	zbx_vector_uint64_destroy(&selementids);
 	zbx_vector_uint64_destroy(&profileids);
@@ -1132,54 +1179,8 @@ static void	DBdelete_triggers_by_itemids(zbx_vector_uint64_t *itemids)
 	DBselect_uint64(sql, &triggerids);
 
 	DBdelete_trigger_hierarchy(&triggerids);
-
 	zbx_vector_uint64_destroy(&triggerids);
 	zbx_free(sql);
-out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: DBdelete_history_by_itemids                                      *
- *                                                                            *
- * Purpose: delete item history                                               *
- *                                                                            *
- * Parameters: itemids - [IN] item identificators from database               *
- *                                                                            *
- * Author: Eugene Grigorjev, Alexander Vladishev                              *
- *                                                                            *
- * Comments: !!! Don't forget to sync the code with PHP !!!                   *
- *                                                                            *
- ******************************************************************************/
-static void	DBdelete_history_by_itemids(zbx_vector_uint64_t *itemids)
-{
-	const char	*__function_name = "DBdelete_history_by_itemids";
-	int		i, j;
-	zbx_uint64_t	housekeeperid;
-	zbx_db_insert_t	db_insert;
-
-#define        ZBX_HISTORY_TABLES_COUNT        7
-	const char	*tables[ZBX_HISTORY_TABLES_COUNT] = {"history", "history_str", "history_uint", "history_log",
-			"history_text", "trends", "trends_uint"};
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() values_num:%d", __function_name, itemids->values_num);
-
-	if (0 == itemids->values_num)
-		goto out;
-
-	housekeeperid = DBget_maxid_num("housekeeper", ZBX_HISTORY_TABLES_COUNT * itemids->values_num);
-
-	zbx_db_insert_prepare(&db_insert, "housekeeper", "housekeeperid", "tablename", "field", "value", NULL);
-
-	for (i = 0; i < itemids->values_num; i++)
-	{
-		for (j = 0; j < ZBX_HISTORY_TABLES_COUNT; j++)
-			zbx_db_insert_add_values(&db_insert, housekeeperid++, tables[j], "itemid", itemids->values[i]);
-	}
-
-	zbx_db_insert_execute(&db_insert);
-	zbx_db_insert_clean(&db_insert);
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -1372,6 +1373,8 @@ void	DBdelete_items(zbx_vector_uint64_t *itemids)
 	zbx_vector_uint64_t	screen_itemids, profileids;
 	int			num;
 	zbx_uint64_t		resource_types[] = {SCREEN_RESOURCE_PLAIN_TEXT, SCREEN_RESOURCE_SIMPLE_GRAPH};
+	const char		*tables[] = {"history", "history_str", "history_uint", "history_log", "history_text",
+				"trends", "trends_uint"};
 	const char		*profile_idx = "web.favorite.graphids";
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() values_num:%d", __function_name, itemids->values_num);
@@ -1398,7 +1401,7 @@ void	DBdelete_items(zbx_vector_uint64_t *itemids)
 
 	DBdelete_graphs_by_itemids(itemids);
 	DBdelete_triggers_by_itemids(itemids);
-	DBdelete_history_by_itemids(itemids);
+	DBdelete_by_ids(itemids, "itemid", tables, ARRSIZE(tables));
 
 	sql_offset = 0;
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
