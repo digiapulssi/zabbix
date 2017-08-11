@@ -87,33 +87,37 @@ static void	__zbx_zbx_set_socket_strerror(const char *fmt, ...)
  ******************************************************************************/
 static int	zbx_socket_peer_ip_save(zbx_socket_t *s)
 {
+	int		ret = SUCCEED;
 	ZBX_SOCKADDR	sa;
 	ZBX_SOCKLEN_T	sz = sizeof(sa);
-	char		*error_message = NULL;
 
 	if (ZBX_PROTO_ERROR == getpeername(s->socket, (struct sockaddr *)&sa, &sz))
 	{
-		error_message = strerror_from_system(zbx_socket_last_error());
-		zbx_set_socket_strerror("connection rejected, getpeername() failed: %s", error_message);
-		return FAIL;
+		ret = FAIL;
+		goto out;
 	}
 
 	/* store getpeername() result to have IP address in numerical form for security check */
 	memcpy(&s->peer_info, &sa, (size_t)sz);
 
 	/* store IP address as a text string for error reporting */
-
 #if defined(HAVE_IPV6)
 	if (0 != zbx_getnameinfo((struct sockaddr *)&sa, s->peer, sizeof(s->peer), NULL, 0, NI_NUMERICHOST))
 	{
-		error_message = strerror_from_system(zbx_socket_last_error());
-		zbx_set_socket_strerror("connection rejected, getnameinfo() failed: %s", error_message);
-		return FAIL;
+		ret = FAIL;
+		goto out;
 	}
 #else
 	strscpy(s->peer, inet_ntoa(sa.sin_addr));
 #endif
-	return SUCCEED;
+out:
+	if (FAIL == ret)
+	{
+		zbx_set_socket_strerror("connection rejected, getpeername() failed: %s",
+				strerror_from_system(zbx_socket_last_error()));
+	}
+
+	return ret;
 }
 
 #if !defined(_WINDOWS)
