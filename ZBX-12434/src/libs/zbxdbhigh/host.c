@@ -998,11 +998,11 @@ static void	DBdelete_action_conditions(int conditiontype, zbx_uint64_t elementid
  *                                                                            *
  * Function: DBdelete_by_ids                                                  *
  *                                                                            *
- * Purpose:  add rows that need cleanup to housekeeper table                  *
+ * Purpose:  adds table and field with specific id to housekeeper list        *
  *                                                                            *
- * Parameters: ids    - [IN] identificators of table rows that need cleaning  *
- *             field  - [IN] identificator field                              *
- *             tables - [IN] tables that need to be cleaned                   *
+ * Parameters: ids    - [IN] identificators for data removal                  *
+ *             field  - [IN] field name from table                            *
+ *             tables - [IN] table name to delete information from            *
  *             count  - [IN] number of tables in tables array                 *
  *                                                                            *
  * Author: Eugene Grigorjev, Alexander Vladishev                              *
