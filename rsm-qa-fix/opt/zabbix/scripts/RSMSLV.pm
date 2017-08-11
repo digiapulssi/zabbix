@@ -1437,7 +1437,8 @@ sub process_slv_avail($$$$$$$$$)
 		return;
 	}
 
-	my $values_ref = get_item_values(keys(%{$items_ref}), $from, $till);
+	my @itemids = keys(%{$items_ref});
+	my $values_ref = get_item_values(\@itemids, $from, $till);
 	my $probes_with_results = scalar(keys(%{$values_ref}));
 	if ($probes_with_results < $cfg_minonline)
 	{
