@@ -51,7 +51,8 @@ $servicesFormList->addRow(_('Parent service'), [
 	(new CButton('select_parent', _('Change')))
 		->addClass(ZBX_STYLE_BTN_GREY)
 		->onClick('return PopUp("services.php?pservices=1'.url_param('serviceid').
-			'&parentid="+this.form.parentid.value);')
+			'&parentid="+this.form.parentid.value);'
+		)
 ]);
 
 // append algorithm to form list
@@ -125,8 +126,9 @@ $servicesDependenciesFormList->addRow(
 	(new CDiv([
 		$servicesChildTable,
 		(new CButton('add_child_service', _('Add')))
-			->onClick('return PopUp("services.php?pservices=1'.url_param('serviceid').
-				'&parentid="+this.form.parentid.value);')
+			->onClick('return PopUp("services.php?cservices=1'.url_param('serviceid').
+				'&parentid="+this.form.parentid.value);'
+			)
 			->addClass(ZBX_STYLE_BTN_LINK)
 	]))
 		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
@@ -263,10 +265,14 @@ else {
 		$weekFromComboBox->addItem($dow, getDayOfWeekCaption($dow));
 		$weekToComboBox->addItem($dow, getDayOfWeekCaption($dow));
 	}
-	$timeFromHourTextBox = (new CTextBox('new_service_time[from_hour]', isset($_REQUEST['new_service_time']['from_hour'])
-			? $_REQUEST['new_service_time']['from_hour'] : '', false, 2
-		))->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
+
+	$service_time_from_hours = isset($_REQUEST['new_service_time']['from_hour'])
+		? $_REQUEST['new_service_time']['from_hour']
+		: '';
+	$timeFromHourTextBox = (new CTextBox('new_service_time[from_hour]', $service_time_from_hours, false, 2))
+		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('hh'));
+
 	$timeFromMinuteTextBox = (new CTextBox('new_service_time[from_minute]',
 			isset($_REQUEST['new_service_time']['from_minute']) ? $_REQUEST['new_service_time']['from_minute'] : '',
 			false, 2
