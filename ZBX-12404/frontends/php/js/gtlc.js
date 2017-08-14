@@ -328,6 +328,7 @@ var CTimeLine = Class.create({
 	_isNow:		false,	// state if time is set to NOW (for outside usage)
 	minperiod:	60,		// minimal allowed period
 	maxperiod:	null,	// max period in seconds
+	is_selectall_period: false, // Will be set to true if period 'All' is selected.
 
 	initialize: function(period, starttime, usertime, endtime, maximumPeriod, isNow) {
 		if ((endtime - starttime) < (3 * this.minperiod)) {
@@ -373,8 +374,10 @@ var CTimeLine = Class.create({
 
 	period: function(period) {
 		if (empty(period)) {
-			return this._period;
+			return this.is_selectall_period ? Math.min(this._endtime - this._starttime, this.maxperiod) : this._period;
 		}
+
+		this.is_selectall_period = period == this.maxperiod;
 
 		if ((this._usertime - period) < this._starttime) {
 			period = this._usertime - this._starttime;
@@ -389,7 +392,7 @@ var CTimeLine = Class.create({
 
 	usertime: function(usertime) {
 		if (empty(usertime)) {
-			return this._usertime;
+			return this.is_selectall_period ? this._endtime : this._usertime;
 		}
 
 		if ((usertime - this._period) < this._starttime) {
