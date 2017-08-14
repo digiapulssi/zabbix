@@ -366,15 +366,25 @@ var CTimeLine = Class.create({
 		this._endtime = end;
 		this._usertime = end;
 		this._now = true;
+
+		if (this.is_selectall_period && this._isNow) {
+			this._period = Math.min(this._endtime - this._starttime, this.maxperiod);
+			this._usertime = this._endtime;
+		}
 	},
 
 	refreshEndtime: function() {
 		this._endtime = parseInt(new CDate().getTime() / 1000);
+
+		if (this.is_selectall_period && this._isNow) {
+			this._period = Math.min(this._endtime - this._starttime, this.maxperiod);
+			this._usertime = this._endtime;
+		}
 	},
 
 	period: function(period) {
 		if (empty(period)) {
-			return this.is_selectall_period ? Math.min(this._endtime - this._starttime, this.maxperiod) : this._period;
+			return this._period;
 		}
 
 		this.is_selectall_period = period == this.maxperiod;
@@ -392,7 +402,7 @@ var CTimeLine = Class.create({
 
 	usertime: function(usertime) {
 		if (empty(usertime)) {
-			return this.is_selectall_period ? this._endtime : this._usertime;
+			return this._usertime;
 		}
 
 		if ((usertime - this._period) < this._starttime) {

@@ -96,6 +96,9 @@ jQuery(function($) {
 
 			// timeline params
 			if (jQuery.inArray(screen.resourcetype, [21, 22, 23]) === -1) {
+				if (!empty(timeControl.timeline)) {
+					timeControl.timeline.refreshEndtime();
+				}
 				ajaxUrl.setArgument('period', empty(screen.timeline.period) ? null : this.getCalculatedPeriod(screen));
 				ajaxUrl.setArgument('stime', this.getCalculatedSTime(screen));
 			}
