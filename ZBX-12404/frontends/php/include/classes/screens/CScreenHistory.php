@@ -136,16 +136,9 @@ class CScreenHistory extends CScreenBase {
 			elseif ($this->action == HISTORY_VALUES) {
 				$config = select_config();
 
-				// When 'All' mode is selected request only config.search_limit latest rows.
-				if ($this->timeline['period'] == ZBX_MAX_PERIOD) {
-					$options['time_from'] = time() - ZBX_MAX_PERIOD;
-				}
-				else {
-					// interval start value is non-inclusive, hence the + 1 second
-					$options['time_from'] = $stime + 1;
-					$options['time_till'] = $stime + $this->timeline['period'];
-				}
-
+				// interval start value is non-inclusive, hence the + 1 second
+				$options['time_from'] = $stime + 1;
+				$options['time_till'] = $stime + $this->timeline['period'];
 				$options['limit'] = $config['search_limit'];
 			}
 
