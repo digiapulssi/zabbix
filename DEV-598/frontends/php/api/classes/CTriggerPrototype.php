@@ -693,6 +693,10 @@ class CTriggerPrototype extends CTriggerGeneral {
 
 		foreach ($triggers as $key => $trigger) {
 			$triggers[$key]['flags'] = ZBX_FLAG_DISCOVERY_PROTOTYPE;
+
+			if (array_key_exists('url', $trigger) && $trigger['url'] && !CHtmlUrlValidator::validate($trigger['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
 		}
 
 		// insert triggers without expression
@@ -740,6 +744,10 @@ class CTriggerPrototype extends CTriggerGeneral {
 		foreach ($triggers as &$trigger) {
 			$dbTrigger = $dbTriggers[$trigger['triggerid']];
 			$hosts = zbx_objectValues($dbTrigger['hosts'], 'name');
+
+			if (array_key_exists('url', $trigger) && $trigger['url'] && !CHtmlUrlValidator::validate($trigger['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
 
 			if (isset($trigger['description']) && strcmp($dbTrigger['description'], $trigger['description']) != 0) {
 				$descriptionChanged = true;
