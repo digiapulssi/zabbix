@@ -39,7 +39,6 @@ $fields = [
 	'width' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(20, 65535),	null],
 	'height' =>			[T_ZBX_INT, O_OPT, null,	'{} > 0',	null],
 	'batch' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
-	'select_all' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
 	exit();
@@ -82,8 +81,7 @@ $timeline = CScreenBase::calculateTime([
 	'profileIdx2' => getRequest('profileIdx2'),
 	'updateProfile' => getRequest('updateProfile', true),
 	'period' => getRequest('period'),
-	'stime' => getRequest('stime'),
-	'select_all' => getRequest('select_all', 0)
+	'stime' => getRequest('stime')
 ]);
 
 $graph = new CLineGraphDraw(getRequest('type'));

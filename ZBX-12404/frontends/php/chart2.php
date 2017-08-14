@@ -36,8 +36,7 @@ $fields = [
 	'profileIdx2' =>	[T_ZBX_STR, O_OPT, null,		null,		null],
 	'updateProfile' =>	[T_ZBX_STR, O_OPT, null,		null,		null],
 	'width' =>			[T_ZBX_INT, O_OPT, P_NZERO,	BETWEEN(20, 65535),		null],
-	'height' =>			[T_ZBX_INT, O_OPT, P_NZERO,	'{} > 0',		null],
-	'select_all' =>		[T_ZBX_INT, O_OPT, null,		IN('0,1'),	null]
+	'height' =>			[T_ZBX_INT, O_OPT, P_NZERO,	'{} > 0',		null]
 ];
 if (!check_fields($fields)) {
 	exit();
@@ -68,8 +67,7 @@ $timeline = CScreenBase::calculateTime([
 	'profileIdx2' => getRequest('profileIdx2'),
 	'updateProfile' => getRequest('updateProfile', true),
 	'period' => getRequest('period'),
-	'stime' => getRequest('stime'),
-	'select_all' => getRequest('select_all', 0)
+	'stime' => getRequest('stime')
 ]);
 
 CProfile::update('web.screens.graphid', $_REQUEST['graphid'], PROFILE_TYPE_ID);

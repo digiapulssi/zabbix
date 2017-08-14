@@ -106,18 +106,10 @@ jQuery(function($) {
 					this.refreshImg(id, function() {
 						$('#flickerfreescreen_' + id + ' a').each(function() {
 							var obj = $(this),
-								url = new Curl(obj.attr('href')),
-								period =  empty(screen.timeline.period)
-									? null
-									: window.flickerfreeScreen.getCalculatedPeriod(screen);
+								url = new Curl(obj.attr('href'));
 
-							url.setArgument('period', period);
+							url.setArgument('period', empty(screen.timeline.period) ? null : screen.timeline.period);
 							url.setArgument('stime', window.flickerfreeScreen.getCalculatedSTime(screen));
-
-							if (timeControl.timeline && timeControl.timeline.is_selectall_period) {
-								url.setArgument('select_all', 1);
-							}
-
 							obj.attr('href', url.getUrl());
 						});
 					});
@@ -315,13 +307,9 @@ jQuery(function($) {
 					url.setArgument('screenid', empty(screen.screenid) ? null : screen.screenid);
 					url.setArgument('updateProfile', (typeof screen.updateProfile === 'undefined')
 						? null : + screen.updateProfile);
-					url.setArgument('period', window.flickerfreeScreen.getCalculatedPeriod(screen));
+					url.setArgument('period', empty(screen.timeline.period) ? null : screen.timeline.period);
 					url.setArgument('stime', window.flickerfreeScreen.getCalculatedSTime(screen));
 					url.setArgument('curtime', new CDate().getTime());
-
-					if (timeControl.timeline && timeControl.timeline.is_selectall_period) {
-						url.setArgument('select_all', 1);
-					}
 
 					// create temp image in buffer
 					$('<img>', {
@@ -451,18 +439,6 @@ jQuery(function($) {
 				// 31536000 = 86400 * 365 = 1 year
 				? new CDate((new CDate().setZBXDate(screen.timeline.stime) / 1000 + 31536000) * 1000).getZBXDate()
 				: screen.timeline.stime;
-		},
-
-		/**
-		 * Return period in seconds for requesting data. Automatically calculates period when 'All' period is selected.
-		 *
-		 * @property {Object} screen screen object
-		 *
-		 * @return {int}
-		 */
-		getCalculatedPeriod: function (screen) {
-
-			return timeControl.timeline ? timeControl.timeline.period() : screen.timeline.period;
 		},
 
 		submitForm: function(formName) {

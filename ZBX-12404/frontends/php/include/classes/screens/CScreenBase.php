@@ -314,9 +314,7 @@ class CScreenBase {
 				'profileIdx2' => $this->profileIdx2,
 				'updateProfile' => $this->updateProfile,
 				'period' => array_key_exists('period', $options) ? $options['period'] : null,
-				'stime' => array_key_exists('stime', $options) ? $options['stime'] : null,
-				'starttime' => array_key_exists('starttime', $options) ? $options['starttime'] : null,
-				'select_all' => array_key_exists('select_all', $options) ? $options['select_all'] : 0
+				'stime' => array_key_exists('stime', $options) ? $options['stime'] : null
 			]);
 		}
 
@@ -452,8 +450,6 @@ class CScreenBase {
 	 * @return array
 	 */
 	public static function calculateTime(array $options = []) {
-		$is_selectall_period = (array_key_exists('select_all', $options) && $options['select_all'] == 1) ? 1 : 0;
-
 		if (!array_key_exists('updateProfile', $options)) {
 			$options['updateProfile'] = true;
 		}
@@ -489,11 +485,8 @@ class CScreenBase {
 				$options['period'] = ZBX_MAX_PERIOD;
 			}
 		}
-		$is_selectall_period = ($is_selectall_period || $options['period'] == ZBX_MAX_PERIOD) ? 1 : 0;
-
 		if ($options['updateProfile'] && !empty($options['profileIdx'])) {
-			$period = $is_selectall_period ? ZBX_MAX_PERIOD : $options['period'];
-			CProfile::update($options['profileIdx'].'.period', $period, PROFILE_TYPE_INT, $options['profileIdx2']);
+			CProfile::update($options['profileIdx'].'.period', $options['period'], PROFILE_TYPE_INT, $options['profileIdx2']);
 		}
 
 		// stime
@@ -507,11 +500,6 @@ class CScreenBase {
 
 			if ($stimeUnix > $time || zbxAddSecondsToUnixtime($options['period'], $stimeUnix) > $time) {
 				$stimeNow = zbxAddSecondsToUnixtime(SEC_PER_YEAR, $options['stime']);
-
-				if (array_key_exists('starttime', $options) && $options['starttime'] && zbxDateToTime($options['starttime']) > $stimeUnix) {
-					$options['period'] = time() - zbxDateToTime($options['starttime']);
-				}
-
 				$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
 				$usertime = date(TIMESTAMP_FORMAT, $time);
 				$isNow = 1;
@@ -530,11 +518,6 @@ class CScreenBase {
 			if (!empty($options['profileIdx'])) {
 				$isNow = CProfile::get($options['profileIdx'].'.isnow', null, $options['profileIdx2']);
 				if ($isNow) {
-
-					if (array_key_exists('starttime', $options) && $options['starttime']) {
-						$options['period'] = time() - zbxDateToTime($options['starttime']);
-					}
-
 					$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
 					$usertime = date(TIMESTAMP_FORMAT, $time);
 					$stimeNow = date(TIMESTAMP_FORMAT, zbxAddSecondsToUnixtime(SEC_PER_YEAR, $options['stime']));
@@ -550,10 +533,6 @@ class CScreenBase {
 			}
 
 			if (empty($options['stime'])) {
-				if (array_key_exists('starttime', $options) && $options['starttime']) {
-					$options['period'] = time() - zbxDateToTime($options['starttime']);
-				}
-
 				$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
 				$usertime = date(TIMESTAMP_FORMAT, $time);
 				$stimeNow = date(TIMESTAMP_FORMAT, zbxAddSecondsToUnixtime(SEC_PER_YEAR, $options['stime']));
@@ -572,12 +551,9 @@ class CScreenBase {
 			'stimeNow' => ($stimeNow === null)
 				? date(TIMESTAMP_FORMAT, zbxAddSecondsToUnixtime(SEC_PER_YEAR, $options['stime']))
 				: $stimeNow,
-			'starttime' => array_key_exists('starttime', $options)
-				? $options['starttime']
-				: date(TIMESTAMP_FORMAT, $time - ZBX_MAX_PERIOD),
+			'starttime' => date(TIMESTAMP_FORMAT, $time - ZBX_MAX_PERIOD),
 			'usertime' => $usertime,
-			'isNow' => $isNow,
-			'is_selectall_period' => $is_selectall_period
+			'isNow' => $isNow
 		];
 	}
 }
