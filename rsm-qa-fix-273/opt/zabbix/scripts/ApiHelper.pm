@@ -67,7 +67,34 @@ sub __ts_full
 	return __ts_str($ts) . " ($ts)";
 }
 
-sub __make_base_path
+sub __gen_base_path($$$$)
+{
+	my $tld = shift;
+	my $service = shift;
+	my $add_path = shift;
+	my $path_type = shift;	# relative/full
+
+	my $path = "";
+	$path .= AH_TMP_DIR . "/" if ($path_type == AH_PATH_FULL);
+	$path .= "$tld/";
+	$path .= "$service/" if ($service);
+	$path .= $add_path if ($add_path);
+
+	return $path;
+}
+
+sub __gen_inc_path($$$$$)
+{
+	my $tld = shift;
+	my $service = shift;
+	my $eventid = shift;
+	my $start = shift;
+	my $path_type = shift;		# relative/full
+
+	return __gen_base_path($tld, $service, "incidents/$start.$eventid", $path_type);
+}
+
+sub __make_base_path($$$$$)
 {
 	my $tld = shift;
 	my $service = shift;
@@ -75,14 +102,7 @@ sub __make_base_path
 	my $add_path = shift;
 	my $path_type = shift;	# relative/full
 
-	$tld = lc($tld);
-	$service = lc($service) if ($service);
-
-	my $path = "";
-	$path .= AH_TMP_DIR . "/" if ($path_type == AH_PATH_FULL);
-	$path .= "$tld/";
-	$path .= "$service/" if ($service);
-	$path .= $add_path if ($add_path);
+	my $path = __gen_base_path($tld, $service, $add_path, $path_type);
 
 	make_path($path, {error => \my $err});
 
@@ -97,7 +117,7 @@ sub __make_base_path
 	return AH_SUCCESS;
 }
 
-sub __make_inc_path
+sub __make_inc_path($$$$$$)
 {
 	my $tld = shift;
 	my $service = shift;
@@ -106,7 +126,19 @@ sub __make_inc_path
 	my $inc_path_ptr = shift;	# pointer
 	my $path_type = shift;
 
-	return __make_base_path($tld, $service, $inc_path_ptr, "incidents/$start.$eventid", $path_type);
+	my $path = __gen_inc_path($tld, $service, $eventid, $start, $path_type);
+
+	make_path($path, {error => \my $err});
+
+	if (@$err)
+	{
+		__set_file_error($err);
+		return AH_FAIL;
+	}
+
+	$$inc_path_ptr = $path;
+
+	return AH_SUCCESS;
 }
 
 sub __set_error
@@ -169,7 +201,7 @@ sub __write_file
 	return AH_SUCCESS;
 }
 
-sub __save_inc_false_positive
+sub __save_inc_false_positive($$$)
 {
 	my $inc_path = shift;
 	my $false_positive = shift;
@@ -284,18 +316,16 @@ sub ah_save_incident
 
 	return AH_FAIL unless ( __save_inc_state($inc_path, $json, $lastclock) == AH_SUCCESS);
 
-	# If the there's no falsePositive file yet, just write create it with updateTime null.
+	# If the there's no falsePositive file yet, just create it with updateTime null.
 	# Otherwise do nothing, it should always contain correct false positiveness.
+	# The false_positive changes will be updated later, when calling ah_save_false_positive().
 
-	my $rel_inc_path;
-
-	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$rel_inc_path, AH_PATH_RELATIVE) == AH_SUCCESS);
+	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_RELATIVE);
 
 	my $buf;
-
 	if (__read_false_positive_file($rel_inc_path, \$buf) == AH_FAIL)
 	{
-		return __save_inc_false_positive($inc_path, $false_positive);
+		return __save_inc_false_positive($inc_path, $false_positive, undef);
 	}
 }
 
@@ -349,8 +379,9 @@ sub __read_false_positive_file
 # When saving false positiveness, read from AH_BASE_DIR, write to AH_TMP_DIR.
 #
 # We need to get the incident state file from AH_BASE_DIR in order to get current
-# "falsePositive" value and if it has changed, update it in the state file.
-# We don't want to change any other parameter of the incident in the state file.
+# "falsePositive" value and if it has changed, update it in the state file. We
+# don't want to change any other parameter (e. g. incident start time) of the
+# incident in the state file.
 #
 # If we received a false positiveness update request but the incident is not yet
 # processed (no incident state file) we ignore this change and notify the caller
@@ -364,19 +395,16 @@ sub ah_save_false_positive
 	my $start = shift;
 	my $false_positive = shift;
 	my $clock = shift;
-	my $later_ref = shift;	# should we update fasle positiveness later? (incident state file does not exist yet)
+	my $later_ref = shift;	# should we update false positiveness later? (incident state file does not exist yet)
 
 	if (!defined($later_ref))
 	{
 		die("internal error: ah_save_false_positive() called without last parameter");
 	}
 
-	my $rel_inc_path;
-
-	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$rel_inc_path, AH_PATH_RELATIVE) == AH_SUCCESS);
+	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_RELATIVE);
 
 	my $buf;
-
 	if (__read_incident_state_file($rel_inc_path, \$buf) == AH_FAIL)
 	{
 		# no incident state file yet, do not update false positiveness at this point
