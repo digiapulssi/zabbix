@@ -180,11 +180,11 @@ class CHostGroup extends CApiService {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
-					'SELECT NULL'.
-					' FROM hosts h'.
-					' WHERE hg.hostid=h.hostid'.
-						' AND h.status='.HOST_STATUS_MONITORED.
-					')';
+				'SELECT NULL'.
+				' FROM hosts h'.
+				' WHERE hg.hostid=h.hostid'.
+					' AND h.status='.HOST_STATUS_MONITORED.
+				')';
 		}
 		elseif (!is_null($options['real_hosts'])) {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
@@ -213,36 +213,36 @@ class CHostGroup extends CApiService {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
-					'SELECT NULL'.
-					' FROM items i'.
-					' WHERE hg.hostid=i.hostid'.
-						' AND i.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
-					')';
+				'SELECT NULL'.
+				' FROM items i'.
+				' WHERE hg.hostid=i.hostid'.
+					' AND i.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
+				')';
 		}
 		elseif (!is_null($options['with_monitored_items'])) {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
-					'SELECT NULL'.
-					' FROM items i,hosts h'.
-					' WHERE hg.hostid=i.hostid'.
-						' AND i.hostid=h.hostid'.
-						' AND h.status='.HOST_STATUS_MONITORED.
-						' AND i.status='.ITEM_STATUS_ACTIVE.
-						' AND i.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
-					')';
+				'SELECT NULL'.
+				' FROM items i,hosts h'.
+				' WHERE hg.hostid=i.hostid'.
+					' AND i.hostid=h.hostid'.
+					' AND h.status='.HOST_STATUS_MONITORED.
+					' AND i.status='.ITEM_STATUS_ACTIVE.
+					' AND i.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
+				')';
 		}
 		elseif (!is_null($options['with_simple_graph_items'])) {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
-					'SELECT NULL'.
-					' FROM items i'.
-					' WHERE hg.hostid=i.hostid'.
-						' AND i.value_type IN ('.ITEM_VALUE_TYPE_FLOAT.','.ITEM_VALUE_TYPE_UINT64.')'.
-						' AND i.status='.ITEM_STATUS_ACTIVE.
-						' AND i.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
-					')';
+				'SELECT NULL'.
+				' FROM items i'.
+				' WHERE hg.hostid=i.hostid'.
+					' AND i.value_type IN ('.ITEM_VALUE_TYPE_FLOAT.','.ITEM_VALUE_TYPE_UINT64.')'.
+					' AND i.status='.ITEM_STATUS_ACTIVE.
+					' AND i.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
+				')';
 		}
 
 		// with_triggers, with_monitored_triggers
@@ -250,29 +250,29 @@ class CHostGroup extends CApiService {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
-					'SELECT NULL'.
-					' FROM items i,functions f,triggers t'.
-					' WHERE hg.hostid=i.hostid'.
-						' AND i.itemid=f.itemid'.
-						' AND f.triggerid=t.triggerid'.
-						' AND t.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
-					')';
+				'SELECT NULL'.
+				' FROM items i,functions f,triggers t'.
+				' WHERE hg.hostid=i.hostid'.
+					' AND i.itemid=f.itemid'.
+					' AND f.triggerid=t.triggerid'.
+					' AND t.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
+				')';
 		}
 		elseif (!is_null($options['with_monitored_triggers'])) {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
-					'SELECT NULL'.
-					' FROM items i,hosts h,functions f,triggers t'.
-					' WHERE hg.hostid=i.hostid'.
-						' AND i.hostid=h.hostid'.
-						' AND i.itemid=f.itemid'.
-						' AND f.triggerid=t.triggerid'.
-						' AND h.status='.HOST_STATUS_MONITORED.
-						' AND i.status='.ITEM_STATUS_ACTIVE.
-						' AND t.status='.TRIGGER_STATUS_ENABLED.
-						' AND t.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
-					')';
+				'SELECT NULL'.
+				' FROM items i,hosts h,functions f,triggers t'.
+				' WHERE hg.hostid=i.hostid'.
+					' AND i.hostid=h.hostid'.
+					' AND i.itemid=f.itemid'.
+					' AND f.triggerid=t.triggerid'.
+					' AND h.status='.HOST_STATUS_MONITORED.
+					' AND i.status='.ITEM_STATUS_ACTIVE.
+					' AND t.status='.TRIGGER_STATUS_ENABLED.
+					' AND t.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
+				')';
 		}
 
 		// with_httptests, with_monitored_httptests
@@ -280,20 +280,20 @@ class CHostGroup extends CApiService {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
-					'SELECT NULL'.
-					' FROM httptest ht'.
-					' WHERE hg.hostid=ht.hostid'.
-					')';
+				'SELECT NULL'.
+				' FROM httptest ht'.
+				' WHERE hg.hostid=ht.hostid'.
+				')';
 		}
 		elseif (!is_null($options['with_monitored_httptests'])) {
 			$sqlParts['from']['hosts_groups'] = 'hosts_groups hg';
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
-					'SELECT NULL'.
-					' FROM httptest ht'.
-					' WHERE hg.hostid=ht.hostid'.
-						' AND ht.status='.HTTPTEST_STATUS_ACTIVE.
-					')';
+				'SELECT NULL'.
+				' FROM httptest ht'.
+				' WHERE hg.hostid=ht.hostid'.
+					' AND ht.status='.HTTPTEST_STATUS_ACTIVE.
+				')';
 		}
 
 		// with_graphs
@@ -302,12 +302,12 @@ class CHostGroup extends CApiService {
 			$sqlParts['where']['hgg'] = 'g.groupid=hg.groupid';
 			$sqlParts['where'][] = 'EXISTS ('.
 				'SELECT NULL'.
-					' FROM items i,graphs_items gi,graphs g'.
-					' WHERE hg.hostid=i.hostid'.
-						' AND i.itemid=gi.itemid'.
-						' AND gi.graphid=g.graphid'.
-						' AND g.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
-			')';
+				' FROM items i,graphs_items gi,graphs g'.
+				' WHERE hg.hostid=i.hostid'.
+					' AND i.itemid=gi.itemid'.
+					' AND gi.graphid=g.graphid'.
+					' AND g.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'.
+				')';
 		}
 
 		if (!is_null($options['with_applications'])) {
