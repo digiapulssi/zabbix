@@ -57,7 +57,7 @@ foreach my $probe (keys(%$probes_ref))
 	my @result = grep(/^$probe$/, @online_probes);
 	my $status = (@result ? UP : DOWN);
 
-	my $status_str = ($status == UP ? "Up" : "Down");
+	my $status_str = "$probe is " . ($status == UP ? "Up" : "Down");
 
 	push_value("$probe - mon", PROBE_KEY_ONLINE, $value_ts, $status, $status_str);
 }
