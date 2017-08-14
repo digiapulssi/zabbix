@@ -375,16 +375,68 @@ foreach ($tlds_by_server as $key => $hosts) {
 
 	if ($hosts) {
 		// get items
-		$items = API::Item()->get(array(
+		$item_keys = [RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
+
+		$items = [];
+		$db_items = DBselect(
+			'SELECT i.itemid, i.hostid, i.key_'.
+			' FROM items i'.
+			' WHERE '.dbConditionString('i.key_', $item_keys).
+				' AND '.dbConditionInt('i.hostid', array_keys($hosts))
+		);
+
+		$i = 0;
+		$history_union = [];
+		while ($item = DBfetch($db_items)) {
+			$items[$item['itemid']] = [
+				'itemid' => $item['itemid'],
+				'hostid' => $item['hostid'],
+				'key_' => $item['key_'],
+				'lastvalue' => null
+			];
+
+			$history_union[] = 'SELECT itemid, value'.
+				' FROM history'.
+				' WHERE itemid = '.$item['itemid'].
+					' AND clock = (SELECT MAX(clock) FROM history WHERE itemid = '.$item['itemid'].')';
+
+			if ($i == 40) {
+				$db_histories = DBselect(
+					'SELECT itemid, value'.
+					' FROM ('.implode(' UNION ', $history_union).') result'
+				);
+
+				while ($history = DBfetch($db_histories)) {
+					$items[$history['itemid']]['lastvalue'] = $history['value'];
+				}
+
+				$history_union = [];
+				$i = 0;
+			}
+			else {
+				$i++;
+			}
+		}
+
+		if ($history_union) {
+			$db_histories = DBselect(
+				'SELECT itemid, value'.
+				' FROM ('.implode(' UNION ', $history_union).') result'
+			);
+
+			while ($history = DBfetch($db_histories)) {
+				$items[$history['itemid']]['lastvalue'] = $history['value'];
+			}
+		}
+
+		$avail_items = API::Item()->get(array(
 			'hostids' => array_keys($hosts),
 			'filter' => array(
 				'key_' => array(
-					RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK,
-					RSM_SLV_EPP_ROLLWEEK, RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL,
-					RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
+					RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
 				)
 			),
-			'output' => array('itemid', 'hostid', 'key_', 'lastvalue'),
+			'output' => array('itemid', 'hostid', 'key_'),
 			'preservekeys' => true
 		));
 
@@ -441,7 +493,10 @@ foreach ($tlds_by_server as $key => $hosts) {
 					);
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['trigger'] = false;
 				}
-				elseif ($item['key_'] == RSM_SLV_DNS_AVAIL) {
+			}
+
+			foreach ($avail_items as $item) {
+				if ($item['key_'] == RSM_SLV_DNS_AVAIL) {
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['availItemId'] = $item['itemid'];
 					$itemIds[$item['itemid']] = true;
 				}
@@ -458,6 +513,8 @@ foreach ($tlds_by_server as $key => $hosts) {
 					$itemIds[$item['itemid']] = true;
 				}
 			}
+
+			$items += $avail_items;
 
 			if ($data['filter_slv']) {
 				foreach ($filter_slv as $filtred_hostid => $value) {

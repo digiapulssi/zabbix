@@ -24,17 +24,17 @@ require_once dirname(__FILE__).'/include/incidentdetails.inc.php';
 
 $page['title'] = _('Details of particular test');
 $page['file'] = 'rsm.particulartests.php';
-$page['hist_arg'] = array('groupid', 'hostid');
+$page['hist_arg'] = ['groupid', 'hostid'];
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
-$fields = array(
-	'host' =>		array(T_ZBX_STR, O_OPT,	P_SYS,	null,			null),
-	'type' =>		array(T_ZBX_INT, O_OPT,	null,	IN('0,1,2,3'),	null),
-	'time' =>		array(T_ZBX_INT, O_OPT,	null,	null,			null),
-	'slvItemId' =>	array(T_ZBX_INT, O_OPT,	P_SYS,	DB_ID,			null)
-);
+$fields = [
+	'host' =>		[T_ZBX_STR, O_OPT,	P_SYS,	null,			null],
+	'type' =>		[T_ZBX_INT, O_OPT,	null,	IN('0,1,2,3'),	null],
+	'time' =>		[T_ZBX_INT, O_OPT,	null,	null,			null],
+	'slvItemId' =>	[T_ZBX_INT, O_OPT,	P_SYS,	DB_ID,			null]
+];
 check_fields($fields);
 
 $data['probes'] = [];
@@ -97,12 +97,12 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 
 	// get host with calculated items
-	$rsm = API::Host()->get(array(
-		'output' => array('hostid'),
-		'filter' => array(
+	$rsm = API::Host()->get([
+		'output' => ['hostid'],
+		'filter' => [
 			'host' => RSM_HOST
-		)
-	));
+		]
+	]);
 
 	if ($rsm) {
 		$rsm = reset($rsm);
@@ -114,22 +114,22 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 
 	// get macros old value
-	$macroItems = API::Item()->get(array(
+	$macroItems = API::Item()->get([
 		'hostids' => $rsm['hostid'],
-		'output' => array('itemid', 'key_', 'value_type'),
-		'filter' => array(
+		'output' => ['itemid', 'key_', 'value_type'],
+		'filter' => [
 			'key_' => $calculatedItemKey
-		)
-	));
+		]
+	]);
 
 	foreach ($macroItems as $macroItem) {
-		$macroItemValue = API::History()->get(array(
+		$macroItemValue = API::History()->get([
 			'itemids' => $macroItem['itemid'],
 			'time_from' => $testTimeFrom,
 			'history' => $macroItem['value_type'],
 			'output' => API_OUTPUT_EXTEND,
 			'limit' => 1
-		));
+		]);
 
 		$macroItemValue = reset($macroItemValue);
 
@@ -155,13 +155,13 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	$testTimeFrom -= $timeFrom;
 
 	// get TLD
-	$tld = API::Host()->get(array(
+	$tld = API::Host()->get([
 		'tlds' => true,
-		'output' => array('hostid', 'host', 'name'),
-		'filter' => array(
+		'output' => ['hostid', 'host', 'name'],
+		'filter' => [
 			'host' => $data['host']
-		)
-	));
+		]
+	]);
 
 	if ($tld) {
 		$data['tld'] = reset($tld);
@@ -173,10 +173,10 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 
 	// get slv item
-	$slvItems = API::Item()->get(array(
+	$slvItems = API::Item()->get([
 		'itemids' => $data['slvItemId'],
-		'output' => array('name')
-	));
+		'output' => ['name']
+	]);
 
 	if ($slvItems) {
 		$data['slvItem'] = reset($slvItems);
@@ -202,25 +202,25 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 
 	// get items
-	$availItems = API::Item()->get(array(
+	$availItems = API::Item()->get([
 		'hostids' => $data['tld']['hostid'],
-		'filter' => array(
+		'filter' => [
 			'key_' => $key
-		),
-		'output' => array('itemid', 'value_type'),
+		],
+		'output' => ['itemid', 'value_type'],
 		'preservekeys' => true
-	));
+	]);
 
 	if ($availItems) {
 		$availItem = reset($availItems);
-		$testResults = API::History()->get(array(
+		$testResults = API::History()->get([
 			'output' => API_OUTPUT_EXTEND,
 			'itemids' => $availItem['itemid'],
 			'time_from' => $testTimeFrom,
 			'time_till' => $testTimeTill,
 			'history' => $availItem['value_type'],
 			'limit' => 1
-		));
+		]);
 		$testResult = reset($testResults);
 		$data['testResult'] = $testResult['value'];
 	}
@@ -230,48 +230,39 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		exit;
 	}
 
-	// get "Probes" groupId
-	$groups = API::HostGroup()->get(array(
-		'filter' => array(
-			'name' => 'Probes'
-		),
-		'output' => array('groupid')
-	));
-
-	$group = reset($groups);
-
 	// get probes
-	$hosts = API::Host()->get(array(
-		'groupids' => $group['groupid'],
-		'output' => array('hostid', 'host', 'name'),
+	$hosts = API::Host()->get([
+		'groupids' => PROBES_MON_GROUPID,
+		'output' => ['hostid', 'host'],
 		'preservekeys' => true
-	));
+	]);
 
 	$hostIds = [];
 	foreach ($hosts as $host) {
+		$pos = strrpos($host['host'], " - mon");
+		if ($pos === false) {
+			show_error_message(_s('Unexpected host name "%1$s" among probe hosts.', $host['host']));
+			continue;
+		}
+		$data['probes'][$host['hostid']] = [
+			'host' => substr($host['host'], 0, $pos),
+			'name' => substr($host['host'], 0, $pos)
+		];
 		$hostIds[] = $host['hostid'];
 	}
 
 	$data['totalProbes'] = count($hostIds);
 
-	// Probe main data generation
-	foreach ($hosts as $host) {
-		$data['probes'][$host['hostid']] = array(
-			'host' => $host['host'],
-			'name' => $host['name']
-		);
-	}
-
 	// Get probe status.
-	$probeItems = API::Item()->get(array(
-		'output' => array('itemid', 'key_', 'hostid'),
+	$probeItems = API::Item()->get([
+		'output' => ['itemid', 'key_', 'hostid'],
 		'hostids' => $hostIds,
-		'filter' => array(
-			'key_' => PROBE_STATUS_ONLINE
-		),
+		'filter' => [
+			'key_' => PROBE_KEY_ONLINE
+		],
 		'monitored' => true,
 		'preservekeys' => true
-	));
+	]);
 
 	foreach ($probeItems as $probeItem) {
 		$itemValue = DBfetch(DBselect(
@@ -294,13 +285,13 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		}
 	}
 
-	$hosts = API::Host()->get(array(
-		'output' => array('hostid', 'host', 'name'),
-		'filter' => array(
+	$hosts = API::Host()->get([
+		'output' => ['hostid', 'host', 'name'],
+		'filter' => [
 			'host' => $hostNames
-		),
+		],
 		'preservekeys' => true
-	));
+	]);
 
 	$hostIds = [];
 	foreach ($hosts as $host) {
@@ -320,7 +311,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 	else {
 		$probeItemKey = ' AND (i.key_ LIKE ('.zbx_dbstr(PROBE_EPP_RESULT.'%').')'.
-		' OR '.dbConditionString('i.key_', array(PROBE_EPP_IP, PROBE_EPP_UPDATE, PROBE_EPP_INFO, PROBE_EPP_LOGIN)).')';
+		' OR '.dbConditionString('i.key_', [PROBE_EPP_IP, PROBE_EPP_UPDATE, PROBE_EPP_INFO, PROBE_EPP_LOGIN]).')';
 	}
 
 	// get items
@@ -336,13 +327,13 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	// get items value
 	while ($item = DBfetch($items)) {
-		$itemValue = API::History()->get(array(
+		$itemValue = API::History()->get([
 			'itemids' => $item['itemid'],
 			'time_from' => $testTimeFrom,
 			'time_till' => $testTimeTill,
 			'history' => $item['value_type'],
 			'output' => API_OUTPUT_EXTEND
-		));
+		]);
 
 		$itemValue = reset($itemValue);
 
@@ -469,7 +460,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		}
 	}
 
-	CArrayHelper::sort($data['probes'], array('name'));
+	CArrayHelper::sort($data['probes'], ['name']);
 }
 else {
 	access_deny();

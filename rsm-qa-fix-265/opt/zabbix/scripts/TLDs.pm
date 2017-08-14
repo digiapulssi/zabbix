@@ -3,7 +3,7 @@ package TLDs;
 use strict;
 use warnings;
 use Zabbix;
-use TLD_constants qw(:general :templates :groups :api :config :tls);
+use TLD_constants qw(:general :templates :groups :api :config :tls :items);
 use Data::Dumper;
 use base 'Exporter';
 
@@ -873,7 +873,7 @@ sub create_probe_health_tmpl()
 	my $item_key = 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
 
 	create_item({
-		'name'		=> 'Availability of $2 Probe',
+		'name'		=> 'Availability of probe',
 		'key_'		=> $item_key,
 		'status'	=> ITEM_STATUS_ACTIVE,
 		'hostid'	=> $templateid,
@@ -898,7 +898,7 @@ sub create_probe_health_tmpl()
 	# todo phase 1: make sure this is in phase 2
 	create_item({
 		'name'		=> 'Probe main status',
-		'key_'		=> 'rsm.probe.online',
+		'key_'		=> PROBE_KEY_ONLINE,
 		'status'	=> ITEM_STATUS_ACTIVE,
 		'hostid'	=> $templateid,
 		'applications'	=> [get_application_id('Probe Availability', $templateid)],
