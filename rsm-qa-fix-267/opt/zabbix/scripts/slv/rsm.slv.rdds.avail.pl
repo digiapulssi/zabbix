@@ -16,6 +16,7 @@ use TLD_constants qw(:api);
 
 my $cfg_key_in = 'rsm.rdds[{$RSM.TLD}';
 my $cfg_key_out = 'rsm.slv.rdds.avail';
+my $cfg_value_type = ITEM_VALUE_TYPE_UINT64;
 
 parse_avail_opts();
 exit_if_running();
@@ -72,7 +73,7 @@ while ($period > 0)
 		}
 
 		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			\@online_probe_names, \&check_item_values, ITEM_VALUE_TYPE_UINT64);
+			\@online_probe_names, \&check_item_values, $cfg_value_type);
 	}
 
 	# unset TLD (for the logs)
