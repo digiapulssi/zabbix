@@ -1163,6 +1163,7 @@ static void	DBdelete_triggers_by_itemids(zbx_vector_uint64_t *itemids)
 	DBselect_uint64(sql, &triggerids);
 
 	DBdelete_trigger_hierarchy(&triggerids);
+
 	zbx_vector_uint64_destroy(&triggerids);
 	zbx_free(sql);
 out:
@@ -1386,8 +1387,8 @@ void	DBdelete_items(zbx_vector_uint64_t *itemids)
 
 	DBdelete_graphs_by_itemids(itemids);
 	DBdelete_triggers_by_itemids(itemids);
-	DBdelete_by_ids(itemids, "itemid", history_tables, ARRSIZE(history_tables));
 
+	DBdelete_by_ids(itemids, "itemid", history_tables, ARRSIZE(history_tables));
 	DBdelete_by_ids(itemids, ZBX_STR(EVENT_OBJECT_ITEM), event_tables, ARRSIZE(event_tables));
 	DBdelete_by_ids(itemids, ZBX_STR(EVENT_OBJECT_LLDRULE), event_tables, ARRSIZE(event_tables));
 
