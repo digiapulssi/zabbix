@@ -12,7 +12,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:ec);
+use TLD_constants qw(:ec :api);
 
 my $cfg_key_in = 'rsm.dns.udp.rtt[';
 my $cfg_key_out = 'rsm.slv.dnssec.avail';
@@ -72,7 +72,7 @@ while ($period > 0)
 		}
 
 		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			\@online_probe_names, \&check_item_values);
+			\@online_probe_names, \&check_item_values, ITEM_VALUE_TYPE_FLOAT);
 	}
 
 	# unset TLD (for the logs)
