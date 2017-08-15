@@ -123,7 +123,7 @@ sub __make_inc_path($$$$$)
 	my $eventid = shift;
 	my $inc_path_ptr = shift;	# pointer
 
-	my $path = __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_FULL);
+	my $path = AH_TMP_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_RELATIVE);
 
 	make_path($path, {error => \my $err});
 
