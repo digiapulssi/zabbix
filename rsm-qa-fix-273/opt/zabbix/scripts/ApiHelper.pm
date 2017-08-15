@@ -99,7 +99,7 @@ sub __make_base_path($$$)
 	my $service = shift;
 	my $result_path_ptr = shift;	# pointer
 
-	my $path = __gen_base_path($tld, $service, undef, AH_PATH_FULL);
+	my $path = AH_TMP_DIR . '/' . __gen_base_path($tld, $service, undef, AH_PATH_RELATIVE);
 
 	make_path($path, {error => \my $err});
 
