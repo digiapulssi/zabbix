@@ -587,7 +587,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 					if (array_key_exists(RSM_RDDS, $tld)) {
 						if (!array_key_exists('subservices', $tld[RSM_RDDS]) || !array_sum($tld[RSM_RDDS]['subservices'])) {
 							unset($itemIds[$tld[RSM_RDDS]['availItemId']]);
-							unset($tld[RSM_RDDS]);
+							unset($data['tld'][$tld_key][RSM_RDDS]);
 						}
 					}
 				}
