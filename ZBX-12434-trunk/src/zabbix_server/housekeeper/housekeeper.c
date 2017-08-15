@@ -645,7 +645,8 @@ static int	housekeeping_cleanup()
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	/* first handle the trivial case when history and trend housekeeping is disabled */
-	if (ZBX_HK_OPTION_DISABLED == cfg.hk.history_mode && ZBX_HK_OPTION_DISABLED == cfg.hk.trends_mode)
+	if (ZBX_HK_OPTION_DISABLED == cfg.hk.history_mode && ZBX_HK_OPTION_DISABLED == cfg.hk.trends_mode &&
+			ZBX_HK_OPTION_DISABLED == cfg.hk.events_mode)
 		goto out;
 
 	zbx_vector_uint64_create(&housekeeperids);
