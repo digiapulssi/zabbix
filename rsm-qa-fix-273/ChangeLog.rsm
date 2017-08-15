@@ -4,6 +4,9 @@ New features:
 ..F....... [262] improved loading time of "Rolling week status" page (gleb, Oleg)
 
 Bug fixes:
+..F....... [277] fixed displaying RDDS enabled/disabled state in "Rolling week status" page (gleb)
+....I..... [276] improved rsm.probe.online.pl script logging, fixed rsyslog configuration (dimir)
+..F....... [sub-268] fixed undefined variable error in "Rolling week status" page (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc19
