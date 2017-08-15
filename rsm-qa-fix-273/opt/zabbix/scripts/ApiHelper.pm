@@ -13,9 +13,6 @@ use constant AH_DEBUG => 0;
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
 
-use constant AH_PATH_RELATIVE	=> 0;
-use constant AH_PATH_FULL	=> 1;
-
 use constant AH_INCIDENT_ACTIVE => 'ACTIVE';
 use constant AH_STATE_FILE => 'state';
 use constant AH_INCIDENT_STATE_FILE => 'state';
@@ -72,11 +69,8 @@ sub __gen_base_path($$$$)
 	my $tld = shift;
 	my $service = shift;
 	my $add_path = shift;
-	my $path_type = shift;	# relative/full
 
-	my $path = "";
-	$path .= AH_TMP_DIR . "/" if ($path_type == AH_PATH_FULL);
-	$path .= "$tld/";
+	my $path = "$tld/";
 	$path .= "$service/" if ($service);
 	$path .= $add_path if ($add_path);
 
@@ -90,7 +84,7 @@ sub __gen_inc_path($$$$)
 	my $eventid = shift;
 	my $start = shift;
 
-	return __gen_base_path($tld, $service, "incidents/$start.$eventid", AH_PATH_RELATIVE);
+	return __gen_base_path($tld, $service, "incidents/$start.$eventid");
 }
 
 sub __make_base_path($$$)
@@ -99,7 +93,7 @@ sub __make_base_path($$$)
 	my $service = shift;
 	my $result_path_ptr = shift;	# pointer
 
-	my $path = AH_TMP_DIR . '/' . __gen_base_path($tld, $service, undef, AH_PATH_RELATIVE);
+	my $path = AH_TMP_DIR . '/' . __gen_base_path($tld, $service, undef);
 
 	make_path($path, {error => \my $err});
 
