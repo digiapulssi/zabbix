@@ -51,9 +51,9 @@ typedef struct
 	char		*url;
 	unsigned char	value_type;
 }
-ZBX_SENDER;
+zbx_sender_t;
 
-static ZBX_SENDER	senders[] = {
+static zbx_sender_t	senders[] = {
 	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_UINT64, .url = NULL, .type = "unum"},
 	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_FLOAT, .url = NULL, .type = "float"},
 	{.buf = NULL, .handle = NULL, .value_type = ITEM_VALUE_TYPE_STR, .url = NULL, .type = "char"},
@@ -68,9 +68,9 @@ typedef struct
 	size_t	alloc;
 	size_t	offset;
 }
-ZBX_HTTPPAGE;
+zbx_httppage_t;
 
-static ZBX_HTTPPAGE	page;
+static zbx_httppage_t	page;
 
 static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
@@ -220,7 +220,7 @@ out:
 
 static void	zbx_history_free_handles(void)
 {
-	ZBX_SENDER	*sender;
+	zbx_sender_t	*sender;
 
 	if (NULL == multi)
 		return;
@@ -235,17 +235,14 @@ static void	zbx_history_free_handles(void)
 		sender->handle = NULL;
 
 		zbx_free(sender->buf);
-		sender->buf = NULL;
-
 		zbx_free(sender->url);
-		sender->url = NULL;
 	}
 
 	curl_multi_cleanup(multi);
 	multi = NULL;
 }
 
-static void	zbx_sender_prepare(ZBX_SENDER *sender)
+static void	zbx_sender_prepare(zbx_sender_t *sender)
 {
 	history_init();
 
@@ -325,7 +322,7 @@ int	zbx_init_history_storage(const char *url, const char *types)
 void	zbx_send_data(void)
 {
 	struct curl_slist	*curl_headers = NULL;
-	ZBX_SENDER	*sender;
+	zbx_sender_t	*sender;
 	int		running, previous, msgnum;
 	CURLMsg		*msg;
 
@@ -392,7 +389,7 @@ void	zbx_history_add_values(zbx_vector_ptr_t *history, unsigned char value_type)
 	ZBX_DC_HISTORY		*h;
 	struct zbx_json		json_idx, json;
 	size_t			url_alloc = 0, url_offset = 0, buf_alloc = 0, buf_offset = 0;
-	ZBX_SENDER		*sender;
+	zbx_sender_t		*sender;
 
 	for (sender = senders; ITEM_VALUE_TYPE_MAX != sender->value_type; sender++)
 	{
@@ -475,7 +472,7 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	int		err;
 	long		http_code;
 	struct zbx_json	query;
-	ZBX_SENDER	*sender;
+	zbx_sender_t	*sender;
 	struct curl_slist	*curl_headers = NULL;
 
 	history_init();
@@ -493,7 +490,8 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 		return;
 	}
 
-	zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "%s/%s/values/_search", HISTORY_STORAGE_URL, sender->type);
+	zbx_snprintf_alloc(&sender->url, &url_alloc, &url_offset, "%s/%s/values/_search", HISTORY_STORAGE_URL,
+			sender->type);
 
 	zbx_json_init(&query, ZBX_JSON_ALLOCATE);
 
@@ -515,7 +513,7 @@ void	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int 
 	zbx_json_addobject(&query, "sec");
 
 	if (0 < start)
-		zbx_json_adduint64(&query, "gte", start);
+		zbx_json_adduint64(&query, "gt", start);
 
 	if (0 < end)
 		zbx_json_adduint64(&query, "lte", end);
