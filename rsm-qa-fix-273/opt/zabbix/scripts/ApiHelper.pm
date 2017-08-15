@@ -83,15 +83,14 @@ sub __gen_base_path($$$$)
 	return $path;
 }
 
-sub __gen_inc_path($$$$$)
+sub __gen_inc_path($$$$)
 {
 	my $tld = shift;
 	my $service = shift;
 	my $eventid = shift;
 	my $start = shift;
-	my $path_type = shift;		# relative/full
 
-	return __gen_base_path($tld, $service, "incidents/$start.$eventid", $path_type);
+	return __gen_base_path($tld, $service, "incidents/$start.$eventid", AH_PATH_RELATIVE);
 }
 
 sub __make_base_path($$$)
@@ -123,7 +122,7 @@ sub __make_inc_path($$$$$)
 	my $eventid = shift;
 	my $inc_path_ptr = shift;	# pointer
 
-	my $path = AH_TMP_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_RELATIVE);
+	my $path = AH_TMP_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start);
 
 	make_path($path, {error => \my $err});
 
@@ -319,7 +318,7 @@ sub ah_save_incident
 	# Otherwise do nothing, it should always contain correct false positiveness.
 	# The false_positive changes will be updated later, when calling ah_save_false_positive().
 
-	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_RELATIVE);
+	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start);
 
 	my $buf;
 	if (__read_file(AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_FALSE_POSITIVE_FILE, \$buf) == AH_FAIL)
@@ -379,7 +378,7 @@ sub ah_save_false_positive
 		die("internal error: ah_save_false_positive() called without last parameter");
 	}
 
-	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_RELATIVE);
+	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start);
 
 	my $buf;
 	if (__read_file(AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_INCIDENT_STATE_FILE, \$buf) == AH_FAIL)
