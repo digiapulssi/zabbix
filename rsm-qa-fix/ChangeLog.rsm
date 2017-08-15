@@ -4,6 +4,7 @@ New features:
 ..F....... [262] improved loading time of "Rolling week status" page (gleb, Oleg)
 
 Bug fixes:
+..F....... [sub-268] fixed undefined variable error in "Rolling week status" page (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc19
