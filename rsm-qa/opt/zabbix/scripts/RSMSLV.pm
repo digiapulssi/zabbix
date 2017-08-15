@@ -86,7 +86,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		init_values push_value send_values get_nsip_from_key is_service_error
 		process_slv_avail avail_value_exists
 		rollweek_value_exists
-		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute avail_result_msg
+		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps slv_stats_reset
 		get_result_string get_tld_by_trigger truncate_from alerts_enabled get_test_start_time uint_value_exists
@@ -1253,6 +1253,7 @@ sub init_values
 
 	if (opt('dry-run'))
 	{
+		# data that helps format the output nicely
 		$_sender_values->{'maxhost'} = 0;
 		$_sender_values->{'maxkey'} = 0;
 		$_sender_values->{'maxclock'} = 0;
@@ -1336,7 +1337,7 @@ sub send_values
 
 	if ($total_values == 0)
 	{
-		wrn("will not send values, nothing to send");
+		wrn(__script(), ": no data collected, nothing to send");
 		return;
 	}
 
@@ -1352,11 +1353,15 @@ sub send_values
 
 	# $tld is a global variable which is used in info()
 	my $saved_tld = $tld;
-	foreach my $sender_value (@{$_sender_values->{'data'}})
+	foreach my $h (@{$_sender_values->{'data'}})
 	{
-		$tld = $sender_value->{'tld'};
-		info($sender_value->{'data'}->{'key'} . "=" . $sender_value->{'data'}->{'value'} . " " .
-				$sender_value->{'info'});
+		$tld = $h->{'tld'};
+		info(sprintf("%s:%s=%s | %s | %s",
+				$h->{'data'}->{'host'},
+				$h->{'data'}->{'key'},
+				$h->{'data'}->{'value'},
+				ts_str($h->{'data'}->{'clock'}),
+				$h->{'info'}));
 	}
 	$tld = $saved_tld;
 }
@@ -1399,7 +1404,7 @@ sub is_service_error
 	return E_FAIL;
 }
 
-sub process_slv_avail($$$$$$$$$)
+sub process_slv_avail($$$$$$$$$$)
 {
 	my $tld = shift;
 	my $cfg_key_in = shift;
@@ -1410,6 +1415,7 @@ sub process_slv_avail($$$$$$$$$)
 	my $cfg_minonline = shift;
 	my $online_probe_names = shift;
 	my $check_value_ref = shift;
+	my $value_type = shift;
 
 	croak("Internal error: invalid argument to process_slv_avail()") unless (ref($online_probe_names) eq 'ARRAY');
 
@@ -1437,7 +1443,8 @@ sub process_slv_avail($$$$$$$$$)
 		return;
 	}
 
-	my $values_ref = get_item_values(keys(%{$items_ref}), $from, $till);
+	my @itemids = keys(%{$items_ref});
+	my $values_ref = __get_item_values(\@itemids, $from, $till, $value_type);
 	my $probes_with_results = scalar(keys(%{$values_ref}));
 	if ($probes_with_results < $cfg_minonline)
 	{
@@ -1463,7 +1470,8 @@ sub process_slv_avail($$$$$$$$$)
 	my $perc = $probes_with_positive * 100 / $probes_with_results;
 	$result = UP if ($perc > SLV_UNAVAILABILITY_LIMIT);
 
-	push_value($tld, $cfg_key_out, $value_ts, $result, avail_result_msg($result, $probes_with_positive, $probes_with_results, $perc, $value_ts));
+	push_value($tld, $cfg_key_out, $value_ts, $result,
+			__avail_result_msg($result, $probes_with_positive, $probes_with_results, $perc));
 }
 
 # organize values from all hosts grouped by itemid and return itemid->values hash
@@ -1473,11 +1481,12 @@ sub process_slv_avail($$$$$$$$$)
 # '10010' => [1],
 # '10011' => [2, 0]
 # ...
-sub get_item_values
+sub __get_item_values($$$$)
 {
 	my $itemids = shift;
 	my $from = shift;
 	my $till = shift;
+	my $value_type = shift;
 
 	my $result = {};
 
@@ -1485,7 +1494,12 @@ sub get_item_values
 
 	my $itemids_str = join(',', @{$itemids});
 
-	my $rows_ref = db_select("select itemid,value from history_uint where itemid in ($itemids_str) and clock between $from and $till order by clock");
+	my $rows_ref = db_select(
+		"select itemid,value".
+		" from " . __get_history_table_by_value_type($value_type).
+		" where itemid in ($itemids_str)".
+			" and clock between $from and $till".
+		" order by clock");
 
 	foreach my $row_ref (@$rows_ref)
 	{
@@ -1976,17 +1990,16 @@ sub get_downtime_execute
 	return $downtime;
 }
 
-sub avail_result_msg
+sub __avail_result_msg($$$$)
 {
 	my $test_result = shift;
 	my $success_values = shift;
 	my $total_results = shift;
 	my $perc = shift;
-	my $value_ts = shift;
 
 	my $result_str = ($test_result == UP ? "Up" : "Down");
 
-	return sprintf("$result_str (%d/%d positive, %.3f%%, %s)", $success_values, $total_results, $perc, ts_str($value_ts));
+	return sprintf("$result_str (%d/%d positive, %.3f%%)", $success_values, $total_results, $perc);
 }
 
 sub __get_history_table_by_value_type

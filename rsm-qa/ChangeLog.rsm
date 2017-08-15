@@ -1,3 +1,17 @@
+Changes for rsm1.0.0rc20
+
+New features:
+....I..PS. [274] adjusted system time difference threshold for probe nodes and updated the name of corresponding trigger (gleb)
+..F....... [262] improved loading time of "Rolling week status" page (gleb, Oleg)
+
+Bug fixes:
+....I..... [267] fixed DNSSEC Availability calculation looking for test results in a wrong history table (dimir)
+....I..... [273] stopped creation of empty incident directories outside of SLA API directory (dimir, gleb)
+..F....... [277] fixed displaying RDDS enabled/disabled state in "Rolling week status" page (gleb)
+....I..... [276] improved rsm.probe.online.pl script logging, fixed rsyslog configuration (dimir)
+..F....... [sub-268] fixed undefined variable error in "Rolling week status" page (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc19
 
 New features:

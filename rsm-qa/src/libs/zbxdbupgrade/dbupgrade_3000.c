@@ -702,6 +702,34 @@ static int	DBpatch_3000127(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000128(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update functions set parameter='10s' where function='fuzzytime'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000129(void)
+{
+	char	*desc_esc = NULL;
+	int	ret;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	desc_esc = zbx_db_dyn_escape_string("System time on {HOST.HOST} is out of sync with Zabbix Server");
+
+	ret = DBexecute("update triggers set description='%s' where triggerid=13509 or templateid=13509", desc_esc);
+
+	zbx_free(desc_esc);
+
+	return ZBX_DB_OK > ret ? FAIL : SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -737,5 +765,7 @@ DBPATCH_ADD(3000124, 0, 1)	/* change read permissions on "Probes" host group to 
 DBPATCH_ADD(3000125, 0, 0)	/* dropped "$2" and fixed capitalization in "zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]" item name */
 DBPATCH_ADD(3000126, 0, 0)	/* removed "<probe>" hosts from "<probe>" host group */
 DBPATCH_ADD(3000127, 0, 0)	/* removed "<TLD>" hosts from "TLD <TLD>" host group */
+DBPATCH_ADD(3000128, 0, 0)	/* adjusted allowed system time difference between Zabbix Server and other hosts */
+DBPATCH_ADD(3000129, 0, 0)	/* renamed corresponding trigger */
 
 DBPATCH_END()
