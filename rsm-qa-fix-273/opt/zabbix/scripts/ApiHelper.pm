@@ -64,7 +64,7 @@ sub __ts_full
 	return __ts_str($ts) . " ($ts)";
 }
 
-sub __gen_base_path($$$$)
+sub __gen_base_path($$$)
 {
 	my $tld = shift;
 	my $service = shift;
