@@ -94,15 +94,13 @@ sub __gen_inc_path($$$$$)
 	return __gen_base_path($tld, $service, "incidents/$start.$eventid", $path_type);
 }
 
-sub __make_base_path($$$$$)
+sub __make_base_path($$$)
 {
 	my $tld = shift;
 	my $service = shift;
 	my $result_path_ptr = shift;	# pointer
-	my $add_path = shift;
-	my $path_type = shift;	# relative/full
 
-	my $path = __gen_base_path($tld, $service, $add_path, $path_type);
+	my $path = __gen_base_path($tld, $service, undef, AH_PATH_FULL);
 
 	make_path($path, {error => \my $err});
 
@@ -117,16 +115,15 @@ sub __make_base_path($$$$$)
 	return AH_SUCCESS;
 }
 
-sub __make_inc_path($$$$$$)
+sub __make_inc_path($$$$$)
 {
 	my $tld = shift;
 	my $service = shift;
 	my $start = shift;
 	my $eventid = shift;
 	my $inc_path_ptr = shift;	# pointer
-	my $path_type = shift;
 
-	my $path = __gen_inc_path($tld, $service, $eventid, $start, $path_type);
+	my $path = __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_FULL);
 
 	make_path($path, {error => \my $err});
 
@@ -225,7 +222,7 @@ sub ah_save_state
 
 	my $base_path;
 
-	return AH_FAIL unless (__make_base_path($ah_tld, undef, \$base_path, undef, AH_PATH_FULL) == AH_SUCCESS);
+	return AH_FAIL unless (__make_base_path($ah_tld, undef, \$base_path) == AH_SUCCESS);
 
 	my $state_path = "$base_path/" . AH_STATE_FILE;
 
@@ -243,7 +240,7 @@ sub ah_save_alarmed
 
 	my $base_path;
 
-	return AH_FAIL unless (__make_base_path($tld, $service, \$base_path, undef, AH_PATH_FULL) == AH_SUCCESS);
+	return AH_FAIL unless (__make_base_path($tld, $service, \$base_path) == AH_SUCCESS);
 
 	my $alarmed_path = "$base_path/" . AH_ALARMED_FILE;
 
@@ -261,7 +258,7 @@ sub ah_save_downtime
 
 	my $base_path;
 
-	return AH_FAIL unless (__make_base_path($tld, $service, \$base_path, undef, AH_PATH_FULL) == AH_SUCCESS);
+	return AH_FAIL unless (__make_base_path($tld, $service, \$base_path) == AH_SUCCESS);
 
 	my $alarmed_path = "$base_path/" . AH_DOWNTIME_FILE;
 
@@ -310,7 +307,7 @@ sub ah_save_incident
 
 	my $inc_path;
 
-	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, AH_PATH_FULL) == AH_SUCCESS);
+	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path) == AH_SUCCESS);
 
 	my $json = {'incidents' => [ah_create_incident_json($eventid, $start, $end, $false_positive)]};
 
@@ -420,7 +417,7 @@ sub ah_save_false_positive
 
 	my $inc_path;
 
-	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, AH_PATH_FULL) == AH_SUCCESS);
+	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path) == AH_SUCCESS);
 
 	my $curr_false_positive = (($json->{'incidents'}->[0]->{'falsePositive'} eq Types::Serialiser::true) ? 1 : 0);
 
@@ -447,7 +444,7 @@ sub ah_save_measurement
 
 	my $inc_path;
 
-	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path, AH_PATH_FULL) == AH_SUCCESS);
+	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path) == AH_SUCCESS);
 
 	my $json_path = "$inc_path/$clock.$eventid.json";
 
