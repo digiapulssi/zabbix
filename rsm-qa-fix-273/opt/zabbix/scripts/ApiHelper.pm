@@ -311,7 +311,7 @@ sub ah_save_incident
 
 	my $json = {'incidents' => [ah_create_incident_json($eventid, $start, $end, $false_positive)]};
 
-	return AH_FAIL unless ( __save_inc_state($inc_path, $json, $lastclock) == AH_SUCCESS);
+	return AH_FAIL unless (__save_inc_state($inc_path, $json, $lastclock) == AH_SUCCESS);
 
 	# If the there's no falsePositive file yet, just create it with updateTime null.
 	# Otherwise do nothing, it should always contain correct false positiveness.
