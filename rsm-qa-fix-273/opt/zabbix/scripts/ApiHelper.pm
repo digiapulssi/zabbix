@@ -295,6 +295,8 @@ sub __save_inc_state
 	return __write_file($inc_state_path, __encode_json($json), $lastclock);
 }
 
+sub __read_file($$);
+
 sub ah_save_incident
 {
 	my $tld = shift;
@@ -320,13 +322,13 @@ sub ah_save_incident
 	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_RELATIVE);
 
 	my $buf;
-	if (__read_false_positive_file($rel_inc_path, \$buf) == AH_FAIL)
+	if (__read_file(AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_FALSE_POSITIVE_FILE, \$buf) == AH_FAIL)
 	{
 		return __save_inc_false_positive($inc_path, $false_positive, undef);
 	}
 }
 
-sub __read_file
+sub __read_file($$)
 {
 	my $file = shift;
 	my $buf_ref = shift;
@@ -349,28 +351,6 @@ sub __read_file
 	dbg("buf: ", $$buf_ref);
 
 	return AH_SUCCESS;
-}
-
-# read previously saved data from AH_BASE_DIR
-sub __read_incident_state_file
-{
-	my $rel_inc_path = shift;	# relative incident path
-	my $buf_ref = shift;
-
-	my $inc_state_path = AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_INCIDENT_STATE_FILE;
-
-	return __read_file($inc_state_path, $buf_ref);
-}
-
-# read previously saved data from AH_BASE_DIR
-sub __read_false_positive_file
-{
-	my $rel_inc_path = shift;	# relative incident path
-	my $buf_ref = shift;
-
-	my $inc_fp_path = AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_FALSE_POSITIVE_FILE;
-
-	return __read_file($inc_fp_path, $buf_ref);
 }
 
 # When saving false positiveness, read from AH_BASE_DIR, write to AH_TMP_DIR.
@@ -402,7 +382,7 @@ sub ah_save_false_positive
 	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start, AH_PATH_RELATIVE);
 
 	my $buf;
-	if (__read_incident_state_file($rel_inc_path, \$buf) == AH_FAIL)
+	if (__read_file(AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_INCIDENT_STATE_FILE, \$buf) == AH_FAIL)
 	{
 		# no incident state file yet, do not update false positiveness at this point
 		$$later_ref = 1;
