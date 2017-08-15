@@ -288,7 +288,7 @@ sub __save_inc_state
 	return __write_file($inc_state_path, __encode_json($json), $lastclock);
 }
 
-sub __read_file($$);
+sub __read_inc_file($$$$$$);
 
 sub ah_save_incident
 {
@@ -312,19 +312,24 @@ sub ah_save_incident
 	# Otherwise do nothing, it should always contain correct false positiveness.
 	# The false_positive changes will be updated later, when calling ah_save_false_positive().
 
-	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start);
-
 	my $buf;
-	if (__read_file(AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_FALSE_POSITIVE_FILE, \$buf) == AH_FAIL)
+	if (__read_inc_file($tld, $service, $eventid, $start, AH_FALSE_POSITIVE_FILE, \$buf) == AH_FAIL)
 	{
 		return __save_inc_false_positive($inc_path, $false_positive, undef);
 	}
 }
 
-sub __read_file($$)
+# read an old file from incident directory
+sub __read_inc_file($$$$$$)
 {
+	my $tld = shift;
+	my $service = shift;
+	my $eventid = shift;
+	my $start = shift;
 	my $file = shift;
 	my $buf_ref = shift;
+
+	$file = AH_BASE_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
 
 	dbg("file: $file");
 
@@ -372,10 +377,8 @@ sub ah_save_false_positive
 		die("internal error: ah_save_false_positive() called without last parameter");
 	}
 
-	my $rel_inc_path = __gen_inc_path($tld, $service, $eventid, $start);
-
 	my $buf;
-	if (__read_file(AH_BASE_DIR . '/' . $rel_inc_path . '/' . AH_INCIDENT_STATE_FILE, \$buf) == AH_FAIL)
+	if (__read_inc_file($tld, $service, $eventid, $start, AH_INCIDENT_STATE_FILE, \$buf) == AH_FAIL)
 	{
 		# no incident state file yet, do not update false positiveness at this point
 		$$later_ref = 1;
