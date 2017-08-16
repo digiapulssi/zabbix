@@ -545,6 +545,8 @@ static int	replace_param(const char *cmd, AGENT_REQUEST *request, char **out, ch
 
 	if (SUCCEED == ret)
 		zbx_strcpy_alloc(out, &out_alloc, &out_offset, pl);
+	else
+		zbx_free(*out);
 
 	return ret;
 }
