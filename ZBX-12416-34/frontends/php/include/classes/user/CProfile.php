@@ -203,31 +203,13 @@ class CProfile {
 			self::init();
 		}
 
-		if (!array_key_exists($idx, self::$profiles) && is_null(self::get($idx, null, $idx2))) {
-			return;
-		}
+		$idx2 = is_array($idx2) ? $idx2 : [$idx2];
+		self::deleteValues($idx, $idx2);
 
-		// pick existing Idx2
-		$deleteIdx2 = [];
-		foreach ((array) $idx2 as $checkIdx2) {
-			if (isset(self::$profiles[$idx][$checkIdx2])) {
-				$deleteIdx2[] = $checkIdx2;
+		if (array_key_exists($idx, self::$profiles)) {
+			foreach ($idx2 as $index) {
+				unset(self::$profiles[$idx][$index]);
 			}
-		}
-
-		if (!$deleteIdx2) {
-			return;
-		}
-
-		// remove from DB
-		self::deleteValues($idx, $deleteIdx2);
-
-		// remove from cache
-		foreach ($deleteIdx2 as $v) {
-			unset(self::$profiles[$idx][$v]);
-		}
-		if (!self::$profiles[$idx]) {
-			unset(self::$profiles[$idx]);
 		}
 	}
 
@@ -241,13 +223,8 @@ class CProfile {
 			self::init();
 		}
 
-		// Cache rows to be deleted.
-		self::findByIdxPattern($idx, 0);
-
-		if (array_key_exists($idx, self::$profiles)) {
-			self::deleteValues($idx, array_keys(self::$profiles[$idx]));
-			unset(self::$profiles[$idx]);
-		}
+		DB::delete('profiles', ['idx' => $idx, 'userid' => self::$userDetails['userid']]);
+		unset(self::$profiles[$idx]);
 	}
 
 	/**
