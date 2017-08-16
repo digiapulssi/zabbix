@@ -121,7 +121,10 @@ class CProfile {
 			}
 
 			self::$profiles[$idx][$row['idx2']] = $row[$value_type];
-			$results[] = $idx;
+
+			if ($row['idx2'] == $idx2) {
+				$results[] = $idx;
+			}
 		}
 
 		return $results;
@@ -141,11 +144,12 @@ class CProfile {
 			return self::$profiles[$idx][$idx2];
 		}
 
+		$idx2 = is_array($idx2) ? $idx2 : [$idx2];
 		$row = DBfetch(DBselect(
-			'SELECT type, value_id, value_int, value_str'.
+			'SELECT type, value_id, value_int, value_str, idx2'.
 			' FROM profiles'.
 			' WHERE userid='.self::$userDetails['userid'].
-				' AND idx2='.zbx_dbstr($idx2).
+				' AND '.dbConditionInt('idx2', $idx2).
 				' AND idx='.zbx_dbstr($idx)
 		));
 		$value = $default_value;
@@ -157,7 +161,7 @@ class CProfile {
 				self::$profiles[$idx] = [];
 			}
 
-			self::$profiles[$idx][$idx2] = $row[$value_type];
+			self::$profiles[$idx][$row['idx2']] = $row[$value_type];
 			$value = $row[$value_type];
 		}
 
@@ -199,7 +203,7 @@ class CProfile {
 			self::init();
 		}
 
-		if (!isset(self::$profiles[$idx])) {
+		if (!array_key_exists($idx, self::$profiles) && is_null(self::get($idx, null, $idx2))) {
 			return;
 		}
 
@@ -237,12 +241,13 @@ class CProfile {
 			self::init();
 		}
 
-		if (!isset(self::$profiles[$idx])) {
-			return;
-		}
+		// Cache rows to be deleted.
+		self::findByIdxPattern($idx, 0);
 
-		self::deleteValues($idx, array_keys(self::$profiles[$idx]));
-		unset(self::$profiles[$idx]);
+		if (array_key_exists($idx, self::$profiles)) {
+			self::deleteValues($idx, array_keys(self::$profiles[$idx]));
+			unset(self::$profiles[$idx]);
+		}
 	}
 
 	/**
