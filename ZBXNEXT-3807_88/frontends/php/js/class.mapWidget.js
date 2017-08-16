@@ -18,8 +18,11 @@
 **/
 
 if (typeof(zbx_sysmap_widget_trigger) !== typeof(Function)) {
-	function zbx_sysmap_widget_trigger(hook_name, data, grid) {
-		switch(hook_name) {
+	function zbx_sysmap_widget_trigger(hook_name, data) {
+		var grid = Array.prototype.slice.call(arguments, -1),
+			grid = grid.length ? grid[0] : null;
+
+		switch (hook_name) {
 			case 'onWidgetRefresh':
 				var div_id = jQuery('[data-uniqueid="'+grid['widget']['uniqueid']+'"]').attr('id');
 				jQuery('#'+div_id).zbx_mapwidget('update', grid['widget']);
