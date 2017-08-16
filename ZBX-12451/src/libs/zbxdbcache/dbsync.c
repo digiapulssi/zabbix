@@ -1983,7 +1983,7 @@ int	zbx_dbsync_compare_functions(zbx_dbsync_t *sync)
 	ZBX_DC_FUNCTION		*function;
 
 	if (NULL == (result = DBselect(
-			"select i.itemid,f.functionid,f.function,f.parameter,t.triggerid"
+			"select i.itemid,f.functionid,f.func,f.parameter,t.triggerid"
 			" from hosts h,items i,functions f,triggers t"
 			" where h.hostid=i.hostid"
 				" and i.itemid=f.itemid"
@@ -2941,7 +2941,7 @@ int	zbx_dbsync_compare_host_groups(zbx_dbsync_t *sync)
 	zbx_uint64_t		rowid;
 	zbx_dc_hostgroup_t	*group;
 
-	if (NULL == (result = DBselect("select groupid,name from groups")))
+	if (NULL == (result = DBselect("select groupid,name from hstgrp")))
 		return FAIL;
 
 	dbsync_prepare(sync, 2, NULL);
