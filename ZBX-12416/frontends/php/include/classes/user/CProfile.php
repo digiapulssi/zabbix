@@ -87,11 +87,12 @@ class CProfile {
 			return self::$profiles[$idx][$idx2];
 		}
 
+		$idx2 = is_array($idx2) ? $idx2 : [$idx2];
 		$row = DBfetch(DBselect(
-			'SELECT type, value_id, value_int, value_str'.
+			'SELECT type, value_id, value_int, value_str, idx2'.
 			' FROM profiles'.
 			' WHERE userid='.self::$userDetails['userid'].
-				' AND idx2='.zbx_dbstr($idx2).
+				' AND '.dbConditionInt('idx2', $idx2).
 				' AND idx='.zbx_dbstr($idx)
 		));
 		$value = $default_value;
@@ -103,7 +104,7 @@ class CProfile {
 				self::$profiles[$idx] = [];
 			}
 
-			self::$profiles[$idx][$idx2] = $row[$value_type];
+			self::$profiles[$idx][$row['idx2']] = $row[$value_type];
 			$value = $row[$value_type];
 		}
 
@@ -145,31 +146,13 @@ class CProfile {
 			self::init();
 		}
 
-		if (!isset(self::$profiles[$idx])) {
-			return;
-		}
+		$idx2 = is_array($idx2) ? $idx2 : [$idx2];
+		self::deleteValues($idx, $idx2);
 
-		// pick existing Idx2
-		$deleteIdx2 = [];
-		foreach ((array) $idx2 as $checkIdx2) {
-			if (isset(self::$profiles[$idx][$checkIdx2])) {
-				$deleteIdx2[] = $checkIdx2;
+		if (array_key_exists($idx, self::$profiles)) {
+			foreach ($idx2 as $index) {
+				unset(self::$profiles[$idx][$index]);
 			}
-		}
-
-		if (!$deleteIdx2) {
-			return;
-		}
-
-		// remove from DB
-		self::deleteValues($idx, $deleteIdx2);
-
-		// remove from cache
-		foreach ($deleteIdx2 as $v) {
-			unset(self::$profiles[$idx][$v]);
-		}
-		if (!self::$profiles[$idx]) {
-			unset(self::$profiles[$idx]);
 		}
 	}
 
@@ -183,11 +166,7 @@ class CProfile {
 			self::init();
 		}
 
-		if (!isset(self::$profiles[$idx])) {
-			return;
-		}
-
-		self::deleteValues($idx, array_keys(self::$profiles[$idx]));
+		DB::delete('profiles', ['idx' => $idx, 'userid' => self::$userDetails['userid']]);
 		unset(self::$profiles[$idx]);
 	}
 
