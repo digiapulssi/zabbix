@@ -1812,9 +1812,9 @@ function get_item_function_info($expr) {
 	];
 
 	$function_info = [
-		'band' =>		['value_type' => _('Numeric (integer 64bit)'),	'type' => T_ZBX_INT, 'validation' => NOT_EMPTY],
 		'abschange' =>	['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'avg' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
+		'band' =>		['value_type' => _('Numeric (integer 64bit)'),	'type' => T_ZBX_INT, 'validation' => NOT_EMPTY],
 		'change' =>		['value_type' => $value_type,	'type' => $type_of_value_type,	'validation' => $validation_of_type],
 		'count' =>		['value_type' => _('Numeric (integer 64bit)'), 'type' => T_ZBX_INT, 'validation' => NOT_EMPTY],
 		'date' =>		['value_type' => 'YYYYMMDD',	'type' => T_ZBX_INT,			'validation' => '{}>=19700101&&{}<=99991231'],
