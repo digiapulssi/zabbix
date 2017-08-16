@@ -73,6 +73,15 @@ class CProfile {
 		self::$update = [];
 	}
 
+	/**
+	 * Return matched idx value for current user.
+	 *
+	 * @param string $idx           Search pattern.
+	 * @param mixed  $default_value Default value if no rows was found.
+	 * @param int    $idx2          Numerical index will be matched against idx2 index.
+	 *
+	 * @return mixed
+	 */
 	public static function get($idx, $default_value = null, $idx2 = 0) {
 		// no user data available, just return the default value
 		if (!CWebUser::$data || is_null($idx2)) {
@@ -83,32 +92,29 @@ class CProfile {
 			self::init();
 		}
 
-		if (isset(self::$profiles[$idx][$idx2])) {
+		if (!array_key_exists($idx, self::$profiles)) {
+			self::$profiles[$idx] = [];
+		}
+
+		if (array_key_exists($idx2, self::$profiles[$idx])) {
 			return self::$profiles[$idx][$idx2];
 		}
 
-		$idx2 = is_array($idx2) ? $idx2 : [$idx2];
-		$row = DBfetch(DBselect(
+		// Aggressive caching, cache all items matched $idx key.
+		$query = DBselect(
 			'SELECT type, value_id, value_int, value_str, idx2'.
 			' FROM profiles'.
-			' WHERE userid='.self::$userDetails['userid'].
-				' AND '.dbConditionInt('idx2', $idx2).
+			' WHERE userid='.zbx_dbstr(self::$userDetails['userid']).
 				' AND idx='.zbx_dbstr($idx)
-		));
-		$value = $default_value;
+		);
 
-		if ($row) {
+		while ($row = DBfetch($query)) {
 			$value_type = self::getFieldByType($row['type']);
 
-			if (!array_key_exists($idx, self::$profiles)) {
-				self::$profiles[$idx] = [];
-			}
-
 			self::$profiles[$idx][$row['idx2']] = $row[$value_type];
-			$value = $row[$value_type];
 		}
 
-		return $value;
+		return array_key_exists($idx2, self::$profiles[$idx]) ? self::$profiles[$idx][$idx2] : $default_value;
 	}
 
 	/**
@@ -124,15 +130,7 @@ class CProfile {
 			return $defaultValue;
 		}
 
-		$i = 0;
-		$values = [];
-		while (self::get($idx, null, $i) !== null) {
-			$values[] = self::get($idx, null, $i);
-
-			$i++;
-		}
-
-		return $values;
+		return self::$profiles[$idx];
 	}
 
 	/**
