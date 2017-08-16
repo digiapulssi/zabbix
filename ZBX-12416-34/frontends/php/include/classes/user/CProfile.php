@@ -89,16 +89,14 @@ class CProfile {
 	}
 
 	/**
-	 * Returns the array of numbers matched by regex of attribute $idx where idx2 matches the number passed by $idx2.
+	 * Return array of matched idx for current user.
 	 *
-	 * @param string    $idx				Required. Regular expression pattern that is used to search rows by idx.
-	 *										Only the first match is used.
-	 * @param number    $idx2				Required. Numerical value searched in idx2 field.
+	 * @param string $idx_pattern   Search pattern, SQL like wildcards can be used.
+	 * @param int    $idx2          Numerical index will be matched against idx2 index.
 	 *
 	 * @return array
 	 */
-	public static function findByIDXs($idx = null, $idx2 = null) {
-		// no user data available, just return the null
+	public static function findByIdxPattern($idx_pattern, $idx2) {
 		if (!CWebUser::$data) {
 			return null;
 		}
@@ -107,11 +105,38 @@ class CProfile {
 			self::init();
 		}
 
+		// Convert SQL _ and % wildcard characters to regexp.
+		$regexp = str_replace(['_', '%'], ['.', '.*'], preg_quote($idx_pattern, '/'));
+		$regexp = '/^'.$regexp.'/';
+
 		$results = [];
 		foreach (self::$profiles as $k => $v) {
-			if (preg_match($idx, $k, $match) && array_key_exists($idx2, $v)) {
-				$results[] = $match[1];
+			if (preg_match($regexp, $k, $match) && array_key_exists($idx2, $v)) {
+				$results[] = $k;
 			}
+		}
+
+		if ($results) {
+			return $results;
+		}
+
+		$query = DBselect(
+			'SELECT type, value_id, value_int, value_str, idx, idx2'.
+			' FROM profiles'.
+			' WHERE userid='.self::$userDetails['userid'].
+				' AND idx LIKE '.zbx_dbstr($idx_pattern)
+		);
+
+		while ($row = DBfetch($query)) {
+			$value_type = self::getFieldByType($row['type']);
+			$idx = $row['idx'];
+
+			if (!array_key_exists($idx, self::$profiles)) {
+				self::$profiles[$idx] = [];
+			}
+
+			self::$profiles[$idx][$row['idx2']] = $row[$value_type];
+			$results[] = $idx;
 		}
 
 		return $results;
