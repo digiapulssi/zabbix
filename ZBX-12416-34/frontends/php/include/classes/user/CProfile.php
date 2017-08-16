@@ -33,21 +33,6 @@ class CProfile {
 
 		$profilesTableSchema = DB::getSchema('profiles');
 		self::$stringProfileMaxLength = $profilesTableSchema['fields']['value_str']['length'];
-
-		$db_profiles = DBselect(
-			'SELECT p.*'.
-			' FROM profiles p'.
-			' WHERE p.userid='.self::$userDetails['userid'].
-			' ORDER BY p.userid,p.profileid'
-		);
-		while ($profile = DBfetch($db_profiles)) {
-			$value_type = self::getFieldByType($profile['type']);
-
-			if (!isset(self::$profiles[$profile['idx']])) {
-				self::$profiles[$profile['idx']] = [];
-			}
-			self::$profiles[$profile['idx']][$profile['idx2']] = $profile[$value_type];
-		}
 	}
 
 	/**
@@ -144,7 +129,7 @@ class CProfile {
 
 	public static function get($idx, $default_value = null, $idx2 = 0) {
 		// no user data available, just return the default value
-		if (!CWebUser::$data) {
+		if (!CWebUser::$data || is_null($idx2)) {
 			return $default_value;
 		}
 
@@ -155,9 +140,28 @@ class CProfile {
 		if (isset(self::$profiles[$idx][$idx2])) {
 			return self::$profiles[$idx][$idx2];
 		}
-		else {
-			return $default_value;
+
+		$row = DBfetch(DBselect(
+			'SELECT type, value_id, value_int, value_str'.
+			' FROM profiles'.
+			' WHERE userid='.self::$userDetails['userid'].
+				' AND idx2='.zbx_dbstr($idx2).
+				' AND idx='.zbx_dbstr($idx)
+		));
+		$value = $default_value;
+
+		if ($row) {
+			$value_type = self::getFieldByType($row['type']);
+
+			if (!array_key_exists($idx, self::$profiles)) {
+				self::$profiles[$idx] = [];
+			}
+
+			self::$profiles[$idx][$idx2] = $row[$value_type];
+			$value = $row[$value_type];
 		}
+
+		return $value;
 	}
 
 	/**
