@@ -42,6 +42,12 @@ zbx_dbpatch_t;
 
 #define DBPATCH_ADD(version, duplicates, mandatory)	{DBpatch_##version, version, duplicates, mandatory},
 
+#ifdef HAVE_MYSQL
+#define ZBX_SQL_QUOTE(x) "`" x "`"
+#else
+#define ZBX_SQL_QUOTE(x) x
+#endif
+
 int	DBcreate_table(const ZBX_TABLE *table);
 int	DBdrop_table(const char *table_name);
 int	DBadd_field(const char *table_name, const ZBX_FIELD *field);
