@@ -338,6 +338,12 @@ static void	DBrename_field_sql(char **sql, size_t *sql_alloc, size_t *sql_offset
 #endif
 }
 
+static void	DBrename_table_sql(char **sql, size_t *sql_alloc, size_t *sql_offset, const char *table_name,
+		const char *new_name)
+{
+	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "alter table %s rename %s", table_name, new_name);
+}
+
 static void	DBdrop_field_sql(char **sql, size_t *sql_alloc, size_t *sql_offset,
 		const char *table_name, const char *field_name)
 {
@@ -473,6 +479,22 @@ int	DBrename_field(const char *table_name, const char *field_name, const ZBX_FIE
 
 	if (ZBX_DB_OK <= DBexecute("%s", sql))
 		ret = DBreorg_table(table_name);
+
+	zbx_free(sql);
+
+	return ret;
+}
+
+int	DBrename_table(const char *table_name, const char *new_name)
+{
+	char	*sql = NULL;
+	size_t	sql_alloc = 0, sql_offset = 0;
+	int	ret = FAIL;
+
+	DBrename_table_sql(&sql, &sql_alloc, &sql_offset, table_name, new_name);
+
+	if (ZBX_DB_OK <= DBexecute("%s", sql))
+		ret = DBreorg_table(new_name);
 
 	zbx_free(sql);
 
