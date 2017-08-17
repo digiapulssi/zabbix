@@ -8,6 +8,7 @@ Bug fixes:
 Changes for rsm1.0.0rc20
 
 New features:
+..F....... [265] improved loading time of "Incidents" page (Oleg)
 ....I..PS. [274] adjusted system time difference threshold for probe nodes and updated the name of corresponding trigger (gleb)
 ..F....... [262] improved loading time of "Rolling week status" page (gleb, Oleg)
 

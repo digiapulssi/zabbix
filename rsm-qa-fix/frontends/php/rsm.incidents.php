@@ -67,7 +67,7 @@ if (isset($_REQUEST['mark_incident']) && (CWebUser::getType() == USER_TYPE_ZABBI
 		|| CWebUser::getType() == USER_TYPE_SUPER_ADMIN || CWebUser::getType() == USER_TYPE_TEHNICAL_SERVICE)) {
 	$event = API::Event()->get(array(
 		'eventids' => getRequest('eventid'),
-		'output' => API_OUTPUT_EXTEND,
+		'output' => ['eventid', 'objectid', 'clock', 'false_positive'],
 		'filter' => array(
 			'value' => TRIGGER_VALUE_TRUE
 		)
@@ -246,18 +246,56 @@ if ($host || $data['filter_search']) {
 			}
 
 			// get items
-			$items = API::Item()->get(array(
-				'hostids' => $data['tld']['hostid'],
+			$item_keys = [RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
+
+			$items = [];
+			$db_items = DBselect(
+				'SELECT i.itemid, i.hostid, i.key_'.
+				' FROM items i'.
+				' WHERE '.dbConditionString('i.key_', $item_keys).
+					' AND i.hostid = '.zbx_dbstr($data['tld']['hostid'])
+			);
+
+			$history_union = [];
+			while ($item = DBfetch($db_items)) {
+				$items[$item['itemid']] = [
+					'itemid' => $item['itemid'],
+					'hostid' => $item['hostid'],
+					'key_' => $item['key_'],
+					'lastvalue' => null,
+					'lastclock' => null
+				];
+
+				$history_union[] = 'SELECT itemid, value, clock'.
+					' FROM history'.
+					' WHERE itemid = '.$item['itemid'].
+						' AND clock = (SELECT MAX(clock) FROM history WHERE itemid = '.$item['itemid'].')';
+			}
+
+			if ($history_union) {
+				$db_histories = DBselect(
+					'SELECT itemid, value, clock'.
+					' FROM ('.implode(' UNION ', $history_union).') result'
+				);
+
+				while ($history = DBfetch($db_histories)) {
+					$items[$history['itemid']]['lastvalue'] = $history['value'];
+					$items[$history['itemid']]['lastclock'] = $history['clock'];
+				}
+			}
+
+			$avail_items = API::Item()->get(array(
+				'hostids' => [$data['tld']['hostid']],
 				'filter' => array(
 					'key_' => array(
-						RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK,
-						RSM_SLV_EPP_ROLLWEEK, RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL,
-						RSM_SLV_EPP_AVAIL
+						RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
 					)
 				),
-				'output' => array('itemid', 'hostid', 'key_', 'lastvalue', 'lastclock'),
+				'output' => array('itemid', 'hostid', 'key_'),
 				'preservekeys' => true
 			));
+
+			$items += $avail_items;
 
 			if ($items) {
 				$dnsItems = [];
@@ -268,6 +306,7 @@ if ($host || $data['filter_search']) {
 				$dnssecAvailItem = [];
 				$rddsAvailItem = [];
 				$eppAvailItem = [];
+				$itemIds = [];
 
 				foreach ($items as $item) {
 					switch ($item['key_']) {
@@ -378,7 +417,7 @@ if ($host || $data['filter_search']) {
 				// get events
 				$events = API::Event()->get(array(
 					'output' => API_OUTPUT_EXTEND,
-					'triggerids' => $triggerIds,
+					'objectids' => $triggerIds,
 					'source' => EVENT_SOURCE_TRIGGERS,
 					'object' => EVENT_OBJECT_TRIGGER,
 					'selectTriggers' => API_OUTPUT_EXTEND,
@@ -556,7 +595,7 @@ if ($host || $data['filter_search']) {
 							// get event start time
 							$addEvent = API::Event()->get(array(
 								'output' => API_OUTPUT_EXTEND,
-								'triggerids' => array($event['objectid']),
+								'objectids' => array($event['objectid']),
 								'source' => EVENT_SOURCE_TRIGGERS,
 								'object' => EVENT_OBJECT_TRIGGER,
 								'time_till' => $event['clock'] - 1,
