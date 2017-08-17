@@ -681,7 +681,7 @@ jQuery(function($) {
 															parent: parent
 														};
 
-														root.append(createTreeItem($obj, new_item, 1, true, true));
+														root.appendChild(createTreeItem($obj, new_item, 1, true, true));
 
 														$(root).closest('.tree-item')
 															.removeClass('closed')
@@ -706,7 +706,7 @@ jQuery(function($) {
 																				parent: +itemid
 																			};
 
-																		root.append(createTreeItem($obj, new_item, 1,
+																		root.appendChild(createTreeItem($obj, new_item, 1,
 																			true, true
 																		));
 																		add_child_levels($obj, +submapid,
@@ -781,7 +781,7 @@ jQuery(function($) {
 
 					$.each(item.children, function(i, item) {
 						if (typeof item === 'object') {
-							ul.append(createTreeItem($obj, item, depth+1, true, isEditMode));
+							ul.appendChild(createTreeItem($obj, item, depth+1, true, isEditMode));
 
 							if (item.id > widget_data.lastId) {
 								widget_data.lastId = item.id;
@@ -930,7 +930,7 @@ jQuery(function($) {
 									parent: id
 								};
 
-								root.append(createTreeItem($obj, new_item, 1, true, isEditMode));
+								root.appendChild(createTreeItem($obj, new_item, 1, true, isEditMode));
 							});
 
 							$(root)
