@@ -65,7 +65,7 @@
 #include "setproctitle.h"
 #include "../libs/zbxcrypto/tls.h"
 #include "zbxipcservice.h"
-#include "history.h"
+#include "zbxhistory.h"
 
 #ifdef ZBX_CUNIT
 #include "../libs/zbxcunit/zbxcunit.h"
@@ -712,9 +712,6 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_validate_config();
 #endif
-
-	if (SUCCEED != zbx_init_history_storage(CONFIG_HISTORY_STORAGE_URL, CONFIG_HISTORY_STORAGE_OPTS))
-		exit(EXIT_FAILURE);
 }
 
 /******************************************************************************
@@ -977,6 +974,13 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	if (SUCCEED != zbx_create_itservices_lock(&error))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "cannot create IT services lock: %s", error);
+		zbx_free(error);
+		exit(EXIT_FAILURE);
+	}
+
+	if (SUCCEED != zbx_history_init(&error))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "cannot initialize history storage: %s", error);
 		zbx_free(error);
 		exit(EXIT_FAILURE);
 	}

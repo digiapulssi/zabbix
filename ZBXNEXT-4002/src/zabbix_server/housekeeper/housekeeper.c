@@ -22,12 +22,11 @@
 #include "dbcache.h"
 #include "log.h"
 #include "daemon.h"
-#include "valuecache.h"
 #include "zbxself.h"
 #include "zbxalgo.h"
 #include "zbxserver.h"
 
-#include "history.h"
+#include "zbxhistory.h"
 #include "housekeeper.h"
 
 extern unsigned char	process_type, program_type;
@@ -542,7 +541,7 @@ static int	housekeeping_history_and_trends(int now)
 
 	for (rule = hk_history_rules; NULL != rule->table; rule++)
 	{
-		if (ZBX_HK_OPTION_DISABLED == *rule->poption_mode || 0 != zbx_history_check_type(rule->type))
+		if (ZBX_HK_OPTION_DISABLED == *rule->poption_mode || FAIL == zbx_history_requires_trends(rule->type))
 			continue;
 
 		/* process housekeeping rule */

@@ -10,8 +10,6 @@ libzbxdbcache_a_SOURCES = \
 	dbsync.h \
 	valuecache.c \
 	valuecache.h \
-	history.c \
-	history.h \
 	dbconfig_dump.c
 
 libzbxdbcache_a_CFLAGS = \
