@@ -341,7 +341,11 @@ static void	DBrename_field_sql(char **sql, size_t *sql_alloc, size_t *sql_offset
 static void	DBrename_table_sql(char **sql, size_t *sql_alloc, size_t *sql_offset, const char *table_name,
 		const char *new_name)
 {
+#ifdef HAVE_ORACLE
+	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "rename %s to %s", table_name, new_name);
+#else
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "alter table %s rename %s", table_name, new_name);
+#endif
 }
 
 static void	DBdrop_field_sql(char **sql, size_t *sql_alloc, size_t *sql_offset,
