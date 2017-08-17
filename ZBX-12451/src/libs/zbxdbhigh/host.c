@@ -393,7 +393,7 @@ static int	DBcmp_triggers(zbx_uint64_t triggerid1, const char *expression1, cons
 	result = DBselect(
 			"select f1.functionid,f2.functionid"
 			" from functions f1,functions f2,items i1,items i2"
-			" where f1.func=f2.func"
+			" where f1.func_name=f2.func_name"
 				" and f1.parameter=f2.parameter"
 				" and i1.key_=i2.key_"
 				" and i1.itemid=f1.itemid"
@@ -2207,7 +2207,7 @@ static int	DBcopy_trigger_to_host(zbx_uint64_t *new_triggerid, zbx_uint64_t *cur
 
 		/* Loop: functions */
 		result = DBselect(
-				"select hi.itemid,tf.functionid,tf.func,tf.parameter,ti.key_"
+				"select hi.itemid,tf.functionid,tf.func_name,tf.parameter,ti.key_"
 				" from functions tf,items ti"
 				" left join items hi"
 					" on hi.key_=ti.key_"
@@ -2232,7 +2232,7 @@ static int	DBcopy_trigger_to_host(zbx_uint64_t *new_triggerid, zbx_uint64_t *cur
 
 				zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 						"insert into functions"
-						" (functionid,itemid,triggerid,func,parameter)"
+						" (functionid,itemid,triggerid,func_name,parameter)"
 						" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ","
 							ZBX_FS_UI64 ",'%s','%s');\n",
 						functionid, itemid, *new_triggerid,

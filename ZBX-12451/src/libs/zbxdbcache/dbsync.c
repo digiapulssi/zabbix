@@ -1983,7 +1983,7 @@ int	zbx_dbsync_compare_functions(zbx_dbsync_t *sync)
 	ZBX_DC_FUNCTION		*function;
 
 	if (NULL == (result = DBselect(
-			"select i.itemid,f.functionid,f.func,f.parameter,t.triggerid"
+			"select i.itemid,f.functionid,f.func_name,f.parameter,t.triggerid"
 			" from hosts h,items i,functions f,triggers t"
 			" where h.hostid=i.hostid"
 				" and i.itemid=f.itemid"
