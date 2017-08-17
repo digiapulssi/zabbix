@@ -76,7 +76,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			$graph_dims['graphHeight'] = $height;
 			$graph_dims['width'] = $width;
 		}
-		elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH && $fields['itemid']) {
+		elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_ITEM && $fields['itemid']) {
 			$resource_type = SCREEN_RESOURCE_SIMPLE_GRAPH;
 			$resourceid = $fields['itemid'];
 			$graph_dims = getGraphDims();
@@ -123,7 +123,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 		// Replace graph item by particular host item if dynamic items are used.
 		if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid && $resourceid) {
 			// Find same simple-graph item in selected $dynamic_hostid host.
-			if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
+			if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_ITEM) {
 				$new_itemid = get_same_item_for_host($resourceid, $dynamic_hostid);
 				$resourceid = !empty($new_itemid) ? $new_itemid : null;
 
@@ -205,7 +205,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			if (!$resourceid) {
 				$critical_error = _('No permissions to referred object or it does not exist!');
 			}
-			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
+			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_ITEM) {
 				$item = API::Item()->get([
 					'itemids' => $resourceid,
 					'output' => null
@@ -232,7 +232,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 
 		if (!$critical_error) {
 			// Build graph action and data source links.
-			if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
+			if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_ITEM) {
 				if (!$edit_mode) {
 					$time_control_data['loadSBox'] = 1;
 				}
