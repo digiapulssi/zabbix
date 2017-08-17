@@ -265,26 +265,21 @@ else {
 		$weekFromComboBox->addItem($dow, getDayOfWeekCaption($dow));
 		$weekToComboBox->addItem($dow, getDayOfWeekCaption($dow));
 	}
-
-	$service_time_from_hours = isset($_REQUEST['new_service_time']['from_hour'])
-		? $_REQUEST['new_service_time']['from_hour']
-		: '';
-	$timeFromHourTextBox = (new CTextBox('new_service_time[from_hour]', $service_time_from_hours, false, 2))
+	$timeFromHourTextBox = (new CTextBox('new_service_time[from_hour]', isset($_REQUEST['new_service_time']['from_hour'])
+			? $_REQUEST['new_service_time']['from_hour'] : '', false, 2))
 		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('hh'));
-
-	$timeFromMinuteTextBox = (new CTextBox('new_service_time[from_minute]',
-			isset($_REQUEST['new_service_time']['from_minute']) ? $_REQUEST['new_service_time']['from_minute'] : '',
-			false, 2
-		))->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
+	$timeFromMinuteTextBox = (new CTextBox('new_service_time[from_minute]', isset($_REQUEST['new_service_time']['from_minute'])
+			? $_REQUEST['new_service_time']['from_minute'] : '', false, 2))
+		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('mm'));
 	$timeToHourTextBox = (new CTextBox('new_service_time[to_hour]', isset($_REQUEST['new_service_time']['to_hour'])
-			? $_REQUEST['new_service_time']['to_hour'] : '', false, 2
-		))->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
+			? $_REQUEST['new_service_time']['to_hour'] : '', false, 2))
+		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('hh'));
 	$timeToMinuteTextBox = (new CTextBox('new_service_time[to_minute]', isset($_REQUEST['new_service_time']['to_minute'])
-			? $_REQUEST['new_service_time']['to_minute'] : '', false, 2
-		))->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
+			? $_REQUEST['new_service_time']['to_minute'] : '', false, 2))
+		->setWidth(ZBX_TEXTAREA_2DIGITS_WIDTH)
 		->setAttribute('placeholder', _('mm'));
 
 	$serviceTimeTable->addRow([
