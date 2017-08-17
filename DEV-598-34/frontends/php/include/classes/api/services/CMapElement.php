@@ -57,6 +57,14 @@ abstract class CMapElement extends CApiService {
 				}
 			}
 
+			if (array_key_exists('urls', $selement)) {
+				foreach ($selement['urls'] as $url_data) {
+					if (!CHtmlUrlValidator::validate($url_data['url'])) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+					}
+				}
+			}
+
 			/*
 			 * @deprecated  As of version 3.4, use elements data array.
 			 */
@@ -967,6 +975,25 @@ abstract class CMapElement extends CApiService {
 		foreach ($linkTriggers as $linkTrigger) {
 			if (!check_db_fields($linktriggerDbFields, $linkTrigger)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong fields for linktrigger delete.'));
+			}
+		}
+	}
+
+	/**
+	 * Validates URL fields for map elements.
+	 *
+	 * @throws APIException for invalid URL
+	 *
+	 * @param array $selements	Array of map elements, 'urls' key array will be validated for every element.
+	 */
+	protected function validateSelementsUrl($selements) {
+		foreach ($selements as $selement) {
+			if (array_key_exists('urls', $selement)) {
+				foreach ($selement['urls'] as $url_data) {
+					if (!CHtmlUrlValidator::validate($url_data['url'])) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+					}
+				}
 			}
 		}
 	}

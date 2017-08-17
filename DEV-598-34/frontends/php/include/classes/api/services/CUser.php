@@ -294,6 +294,10 @@ class CUser extends CApiService {
 			$user = $this->checkLoginOptions($user);
 
 			$user['passwd'] = md5($user['passwd']);
+
+			if (array_key_exists('url', $user) && $user['url'] && !CHtmlUrlValidator::validate($user['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
 		}
 		unset($user);
 
@@ -413,6 +417,10 @@ class CUser extends CApiService {
 				self::exception(ZBX_API_ERROR_PERMISSIONS,
 					_('No permissions to referred object or it does not exist!')
 				);
+			}
+
+			if (array_key_exists('url', $user) && $user['url'] && !CHtmlUrlValidator::validate($user['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
 			$db_user = $db_users[$user['userid']];

@@ -708,6 +708,10 @@ abstract class CTriggerGeneral extends CApiService {
 			}
 			$_db_trigger = $_db_triggers[$trigger['triggerid']];
 
+			if (array_key_exists('url', $trigger) && $trigger['url'] && !CHtmlUrlValidator::validate($trigger['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
+
 			$description = array_key_exists('description', $trigger)
 				? $trigger['description']
 				: $_db_trigger['description'];
