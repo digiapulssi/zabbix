@@ -2295,6 +2295,11 @@ static int	DBpatch_3030199(void)
 
 static int	DBpatch_3030200(void)
 {
+	return DBrename_index("hstgrp", "groups_1", "hstgrp_1", "name", 0);
+}
+
+static int	DBpatch_3030201(void)
+{
 	const ZBX_FIELD	field = {"func_name", "", NULL, NULL, 12, ZBX_TYPE_CHAR, ZBX_NOTNULL, 0};
 
 	return DBrename_field("functions", ZBX_SQL_QUOTE("function"), &field);
@@ -2506,5 +2511,6 @@ DBPATCH_ADD(3030197, 0, 1)
 DBPATCH_ADD(3030198, 0, 1)
 DBPATCH_ADD(3030199, 0, 1)
 DBPATCH_ADD(3030200, 0, 1)
+DBPATCH_ADD(3030201, 0, 1)
 
 DBPATCH_END()
