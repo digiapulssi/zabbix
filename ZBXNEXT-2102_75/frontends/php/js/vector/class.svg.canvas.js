@@ -160,7 +160,12 @@ SVGCanvas.prototype.resize = function (width, height) {
 	if (this.options.width !== width || this.options.height !== height) {
 		this.options.width = width;
 		this.options.height = height;
-		this.root.update({'width': width, 'height': height});
+		this.root.update({
+			'width': width,
+			'height': height,
+			'style': 'max-width: ' + width + 'px; max-height: ' + height + 'px',
+			'viewBox': '0 0 ' + width + ' ' + height
+		});
 
 		return true;
 	}
