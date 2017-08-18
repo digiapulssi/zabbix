@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -467,6 +467,7 @@ if ($config['event_ack_enable']) {
 
 if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
 	foreach ($triggers as &$trigger) {
+		$trigger['display_events'] = false;
 		$trigger['events'] = [];
 	}
 	unset($trigger);
@@ -490,7 +491,20 @@ if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
 
 	foreach ($events as $event) {
 		$triggers[$event['objectid']]['events'][] = $event;
+
+		if ($showEvents == EVENTS_OPTION_ALL) {
+			$triggers[$event['objectid']]['display_events'] = true;
+		}
+		elseif (!$event['acknowledged'] && $event['value'] == TRIGGER_VALUE_TRUE) {
+			$triggers[$event['objectid']]['display_events'] = true;
+		}
 	}
+}
+else {
+	foreach ($triggers as &$trigger) {
+		$trigger['display_events'] = false;
+	}
+	unset($trigger);
 }
 
 // get host ids
@@ -708,7 +722,7 @@ foreach ($triggers as $trigger) {
 	}
 
 	if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
-		$openOrCloseButton = $trigger['events']
+		$openOrCloseButton = $trigger['display_events']
 			? (new CSimpleButton())
 				->addClass(ZBX_STYLE_TREEVIEW)
 				->setAttribute('data-switcherid', $trigger['triggerid'])

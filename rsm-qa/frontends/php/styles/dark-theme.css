@@ -709,7 +709,8 @@ footer, .footer {
 .multiselect-wrapper {
   position: relative;
   vertical-align: top;
-  display: inline-block; }
+  display: inline-block;
+  white-space: nowrap; }
 
 .multiselect {
   position: relative;
@@ -926,7 +927,8 @@ footer, .footer {
     display: block; }
   .table-forms th {
     color: #737373;
-    padding: 0 5px 0 0; }
+    padding: 0 5px 0 0;
+    text-align: left; }
     .table-forms th:last-child {
       padding: 0; }
   .table-forms tfoot .table-forms-td-right, .table-forms .tfoot-buttons .table-forms-td-right {

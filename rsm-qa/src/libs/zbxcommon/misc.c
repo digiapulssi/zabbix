@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1798,7 +1798,6 @@ int	is_ip4(const char *ip)
 	return res;
 }
 
-#if defined(HAVE_IPV6)
 /******************************************************************************
  *                                                                            *
  * Function: is_ip6                                                           *
@@ -1855,7 +1854,31 @@ int	is_ip6(const char *ip)
 
 	return res;
 }
-#endif	/*HAVE_IPV6*/
+
+/******************************************************************************
+ *                                                                            *
+ * Function: is_supported_ip                                                  *
+ *                                                                            *
+ * Purpose: is string IP address of supported version                         *
+ *                                                                            *
+ * Parameters: ip - string                                                    *
+ *                                                                            *
+ * Return value: SUCCEED - is IP address                                      *
+ *               FAIL - otherwise                                             *
+ *                                                                            *
+ * Author: Alexander Vladishev                                                *
+ *                                                                            *
+ ******************************************************************************/
+int	is_supported_ip(const char *ip)
+{
+	if (SUCCEED == is_ip4(ip))
+		return SUCCEED;
+#ifdef HAVE_IPV6
+	if (SUCCEED == is_ip6(ip))
+		return SUCCEED;
+#endif
+	return FAIL;
+}
 
 /******************************************************************************
  *                                                                            *
@@ -1873,15 +1896,52 @@ int	is_ip6(const char *ip)
  ******************************************************************************/
 int	is_ip(const char *ip)
 {
-	zabbix_log(LOG_LEVEL_DEBUG, "In is_ip() ip:'%s'", ip);
+	return SUCCEED == is_ip4(ip) ? SUCCEED : is_ip6(ip);
+}
 
-	if (SUCCEED == is_ip4(ip))
-		return SUCCEED;
-#if defined(HAVE_IPV6)
-	if (SUCCEED == is_ip6(ip))
-		return SUCCEED;
-#endif
-	return FAIL;
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_validate_hostname                                            *
+ *                                                                            *
+ * Purpose: check if string is a valid internet hostname                      *
+ *                                                                            *
+ * Parameters: hostname - [IN] hostname string to be checked                  *
+ *                                                                            *
+ * Return value: SUCCEED - could be a valid hostname,                         *
+ *               FAIL - definitely not a valid hostname                       *
+ * Comments:                                                                  *
+ *     Validation is not strict. Restrictions not checked:                    *
+ *         - individual label (component) length 1-63,                        *
+ *         - hyphens ('-') allowed only as interior characters in labels,     *
+ *         - underscores ('_') allowed in domain name, but not in hostname.   *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_validate_hostname(const char *hostname)
+{
+	int		component;	/* periods ('.') are only allowed when they serve to delimit components */
+	int		len = 255;	/* maximum hostname length comes from RFC 1035 (without terminating '\0') */
+	const char	*p;
+
+	/* the first character must be an alphanumeric character */
+	if (0 == isalnum(*hostname))
+		return FAIL;
+
+	/* check only up to the first 'len' characters, the 1st character is already successfully checked */
+	for (p = hostname + 1, component = 1; '\0' != *p; p++)
+	{
+		if (0 == --len)				/* hostname too long */
+			return FAIL;
+
+		/* check for allowed characters */
+		if (0 != isalnum(*p) || '-' == *p || '_' == *p)
+			component = 1;
+		else if ('.' == *p && 1 == component)
+			component = 0;
+		else
+			return FAIL;
+	}
+
+	return SUCCEED;
 }
 
 /******************************************************************************

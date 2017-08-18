@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2360,6 +2360,9 @@ class testFormItemPrototype extends CWebTest {
 
 		if (isset($data['key'])) {
 			$this->zbxTestInputTypeOverwrite('key', $data['key']);
+			if ($data['key'] != $this->zbxTestGetValue("//input[@id='key']")) {
+				$this->zbxTestInputTypeOverwrite('key', $data['key']);
+			}
 			$this->zbxTestAssertElementValue('key', $data['key']);
 		}
 		$key = $this->zbxTestGetValue("//input[@id='key']");

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -545,6 +545,8 @@ static int	replace_param(const char *cmd, AGENT_REQUEST *request, char **out, ch
 
 	if (SUCCEED == ret)
 		zbx_strcpy_alloc(out, &out_alloc, &out_offset, pl);
+	else
+		zbx_free(*out);
 
 	return ret;
 }
@@ -1267,7 +1269,7 @@ static int	deserialize_agent_result(char *data, AGENT_RESULT *result)
  *               FAIL    - less than n bytes are written                      *
  *                                                                            *
  ******************************************************************************/
-static int	write_all(int fd, const void *buf, size_t n)
+static int	write_all(int fd, const char *buf, size_t n)
 {
 	ssize_t	ret;
 

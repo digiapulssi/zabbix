@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ static int	get_hostid_by_host(const zbx_socket_t *sock, const char *host, const 
 			if (0 == (tls_accept & sock->connection_type))
 			{
 				zbx_snprintf(error, MAX_STRING_LEN, "connection of type \"%s\" is not allowed for host"
-						" \"%s\"", zbx_tls_connection_type_name(sock->connection_type), host);
+						" \"%s\"", zbx_tcp_connection_type_name(sock->connection_type), host);
 				goto done;
 			}
 
@@ -459,11 +459,21 @@ int	send_list_of_active_checks_json(zbx_socket_t *sock, struct zbx_json_parse *j
 	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
 		strscpy(ip, sock->peer);
 
-	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-		*tmp = '\0';
+	if (FAIL == is_ip(ip))	/* check even if 'ip' came from get_ip_by_socket() - it can return not a valid IP */
+	{
+		zbx_snprintf(error, MAX_STRING_LEN, "\"%s\" is not a valid IP address", ip);
+		goto error;
+	}
 
-	if (FAIL == is_ushort(tmp, &port))
+	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
+	{
 		port = ZBX_DEFAULT_AGENT_PORT;
+	}
+	else if (FAIL == is_ushort(tmp, &port))
+	{
+		zbx_snprintf(error, MAX_STRING_LEN, "\"%s\" is not a valid port", tmp);
+		goto error;
+	}
 
 	if (FAIL == get_hostid_by_host(sock, host, ip, port, host_metadata, &hostid, error))
 		goto error;

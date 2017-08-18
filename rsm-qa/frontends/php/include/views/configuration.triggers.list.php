@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,11 +115,16 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 			$real_hosts = $this->data['realHosts'][$triggerid];
 			$real_host = reset($real_hosts);
 
-			$description[] = (new CLink(
-				CHtml::encode($real_host['name']),
-				'triggers.php?hostid='.$real_host['hostid']))
-				->addClass(ZBX_STYLE_LINK_ALT)
-				->addClass(ZBX_STYLE_GREY);
+			if (array_key_exists($real_host['hostid'], $data['writable_templates'])) {
+				$description[] = (new CLink(CHtml::encode($real_host['name']),
+					'triggers.php?hostid='.$real_host['hostid']
+				))
+					->addClass(ZBX_STYLE_LINK_ALT)
+					->addClass(ZBX_STYLE_GREY);
+			}
+			else {
+				$description[] = (new CSpan(CHtml::encode($real_host['name'])))->addClass(ZBX_STYLE_GREY);
+			}
 
 			$description[] = NAME_DELIMITER;
 		}

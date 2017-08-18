@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -509,10 +509,9 @@ function make_status_of_zbx() {
 	// check requirements
 	if (CWebUser::$data['type'] == USER_TYPE_SUPER_ADMIN) {
 		foreach ((new CFrontendSetup())->checkRequirements() as $req) {
-			if ($req['result'] != CFrontendSetup::CHECK_OK) {
-				$class = ($req['result'] == CFrontendSetup::CHECK_WARNING) ? ZBX_STYLE_ORANGE : ZBX_STYLE_RED;
+			if ($req['result'] == CFrontendSetup::CHECK_FATAL) {
 				$table->addRow(
-					(new CRow([$req['name'], $req['current'], $req['error']]))->addClass($class)
+					(new CRow([$req['name'], $req['current'], $req['error']]))->addClass(ZBX_STYLE_RED)
 				);
 			}
 		}

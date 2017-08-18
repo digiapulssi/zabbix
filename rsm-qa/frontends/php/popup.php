@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -93,11 +93,11 @@ switch ($srctbl) {
 		break;
 	case 'graph_prototypes':
 		$page['title'] = _('Graph prototypes');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'item_prototypes':
 		$page['title'] = _('Item prototypes');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'sysmaps':
 		$page['title'] = _('Maps');
@@ -105,7 +105,7 @@ switch ($srctbl) {
 		break;
 	case 'screens2':
 		$page['title'] = _('Screens');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'drules':
 		$page['title'] = _('Discovery rules');

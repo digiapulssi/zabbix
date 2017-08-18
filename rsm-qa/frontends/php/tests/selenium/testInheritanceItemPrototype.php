@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -93,15 +93,16 @@ class testInheritanceItemPrototype extends CWebTest {
 		$this->zbxTestLogin('disc_prototypes.php?form=Create+item+prototype&parent_discoveryid='.$this->discoveryRuleId);
 
 		$this->zbxTestInputType('name', $data['name']);
+		$this->assertEquals($data['name'], $this->zbxTestGetValue("//input[@id='name']"));
 		$this->zbxTestInputType('key', $data['key']);
+		$this->assertEquals($data['key'], $this->zbxTestGetValue("//input[@id='key']"));
 
 		$this->zbxTestClickWait('add');
 		switch ($data['expected']) {
 			case TEST_GOOD:
-				$this->zbxTestCheckTitle('Configuration of item prototypes');
-				$this->zbxTestCheckHeader('Item prototypes');
-				$this->zbxTestTextPresent('Item prototype added');
+				$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Item prototype added');
 				$this->zbxTestTextPresent($data['name']);
+				$this->zbxTestCheckFatalErrors();
 
 				$itemId = 0;
 

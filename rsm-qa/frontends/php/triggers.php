@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -377,7 +377,7 @@ elseif (hasRequest('action') && getRequest('action') == 'trigger.massdelete' && 
 /*
  * Display
  */
-if (hasRequest('action') && getRequest('action') == 'trigger.massupdateform' && hasRequest('g_triggerid')) {
+if ((getRequest('action') === 'trigger.massupdateform' || hasRequest('massupdate')) && hasRequest('g_triggerid')) {
 	$data = getTriggerMassupdateFormData();
 	$data['action'] = 'trigger.massupdate';
 	$triggersView = new CView('configuration.triggers.massupdate', $data);
@@ -545,6 +545,24 @@ else {
 
 	// get real hosts
 	$data['realHosts'] = getParentHostsByTriggers($data['triggers']);
+
+	// Select writable template IDs.
+	$hostids = [];
+
+	foreach ($data['realHosts'] as $realHost) {
+		$hostids = array_merge($hostids, zbx_objectValues($realHost, 'hostid'));
+	}
+
+	$data['writable_templates'] = [];
+
+	if ($hostids) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $hostids,
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
 
 	// do not show 'Info' column, if it is a template
 	if ($data['hostid']) {

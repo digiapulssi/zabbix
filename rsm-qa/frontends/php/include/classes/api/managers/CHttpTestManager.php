@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -200,10 +200,6 @@ class CHttpTestManager {
 					}
 					elseif (!isset($webstep['httpstepid'])) {
 						$steps_create[$key][] = $webstep;
-					}
-
-					if ($db_http_test['templateid'] != 0) {
-						unset($dbSteps[$webstep['httpstepid']]);
 					}
 				}
 
@@ -1024,7 +1020,7 @@ class CHttpTestManager {
 	 * - lastfailedstep - number of the last failed step
 	 * - error          - error message
 	 *
-	 * If a HTTP test has never been executed, no value will be returned.
+	 * If a HTTP test has not been executed in last ZBX_HISTORY_PERIOD, no value will be returned.
 	 *
 	 * @param array $httpTestIds
 	 *
@@ -1039,7 +1035,7 @@ class CHttpTestManager {
 				' AND '.dbConditionInt('hti.httptestid', $httpTestIds)
 		));
 
-		$history = Manager::History()->getLast($httpItems);
+		$history = Manager::History()->getLast($httpItems, 1, ZBX_HISTORY_PERIOD);
 
 		$data = [];
 

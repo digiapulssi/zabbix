@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -316,6 +316,8 @@ if (isset($_REQUEST['form'])) {
 	}
 
 	// host prototype edit form
+	$templateids = [];
+
 	if (getRequest('hostid') && !getRequest('form_refresh')) {
 		$data['host_prototype'] = array_merge($data['host_prototype'], $hostPrototype);
 
@@ -347,9 +349,23 @@ if (isset($_REQUEST['form'])) {
 				if ($parentHostPrototype) {
 					$data['parents'][] = $parentHostPrototype;
 					$hostPrototypeId = $parentHostPrototype['templateid'];
+					$templateids[] = $parentHostPrototype['parentHost']['hostid'];
 				}
 			}
 		}
+	}
+
+	// Select writable templates
+	$templateids = array_merge(zbx_objectValues($data['host_prototype']['templates'], 'templateid'), $templateids);
+	$data['host_prototype']['writable_templates'] = [];
+
+	if ($templateids) {
+		$data['host_prototype']['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $templateids,
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	// order linked templates
@@ -392,15 +408,15 @@ else {
 
 	$data['paging'] = getPagingLine($data['hostPrototypes'], $sortOrder, $url);
 	// fetch templates linked to the prototypes
-	$templateIds = [];
+	$templateids = [];
 	foreach ($data['hostPrototypes'] as $hostPrototype) {
-		$templateIds = array_merge($templateIds, zbx_objectValues($hostPrototype['templates'], 'templateid'));
+		$templateids = array_merge($templateids, zbx_objectValues($hostPrototype['templates'], 'templateid'));
 	}
-	$templateIds = array_unique($templateIds);
+	$templateids = array_keys(array_flip($templateids));
 
 	$linkedTemplates = API::Template()->get([
 		'output' => ['templateid', 'name'],
-		'templateids' => $templateIds,
+		'templateids' => $templateids,
 		'selectParentTemplates' => ['hostid', 'name']
 	]);
 	$data['linkedTemplates'] = zbx_toHash($linkedTemplates, 'templateid');
@@ -425,9 +441,28 @@ else {
 				];
 				$sourceDiscoveryRuleId = get_realrule_by_itemid_and_hostid($discoveryRule['itemid'], $sourceTemplate['hostid']);
 				$hostPrototype['sourceDiscoveryRuleId'] = $sourceDiscoveryRuleId;
+				$templateids[] = $sourceTemplate['parent_hostid'];
 			}
 		}
 		unset($hostPrototype);
+	}
+
+	foreach ($data['linkedTemplates'] as $linked_template) {
+		foreach ($linked_template['parentTemplates'] as $parent_template) {
+			$templateids[] = $parent_template['templateid'];
+		}
+	}
+
+	// Select writable template IDs.
+	$data['writable_templates'] = [];
+
+	if ($templateids) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $templateids,
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	// render view

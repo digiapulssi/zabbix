@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@
 include('include/views/js/administration.users.edit.js.php');
 
 if ($this->data['is_profile']) {
-	$userWidget = (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['name'].' '.$this->data['surname']);
+	$userWidget = ($this->data['name'] !== '' || $this->data['surname'] !== '')
+		? (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['name'].' '.$this->data['surname'])
+		: (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['alias']);
 }
 else {
 	$userWidget = (new CWidget())->setTitle(_('Users'));

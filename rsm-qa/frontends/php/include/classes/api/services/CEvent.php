@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -139,18 +139,19 @@ class CEvent extends CApiService {
 				// all triggers
 				else {
 					$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
-					$sqlParts['where'][] = 'EXISTS ('.
+					$sqlParts['where'][] = 'NOT EXISTS ('.
 							'SELECT NULL'.
 							' FROM functions f,items i,hosts_groups hgg'.
-								' JOIN rights r'.
+								' LEFT JOIN rights r'.
 									' ON r.id=hgg.groupid'.
 										' AND '.dbConditionInt('r.groupid', getUserGroupsByUserId($userid)).
 							' WHERE e.objectid=f.triggerid'.
 								' AND f.itemid=i.itemid'.
 								' AND i.hostid=hgg.hostid'.
-							' GROUP BY f.triggerid'.
-							' HAVING MIN(r.permission)>'.PERM_DENY.
-								' AND MAX(r.permission)>='.zbx_dbstr($permission).
+							' GROUP BY i.hostid'.
+							' HAVING MAX(r.permission)<'.zbx_dbstr($permission).
+								' OR MIN(r.permission) IS NULL'.
+								' OR MIN(r.permission)='.PERM_DENY.
 							')';
 				}
 			}
