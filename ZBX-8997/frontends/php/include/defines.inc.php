@@ -816,6 +816,7 @@ define('EXPRESSION_HOST_UNKNOWN',		'#ERROR_HOST#');
 define('EXPRESSION_HOST_ITEM_UNKNOWN',	'#ERROR_ITEM#');
 define('EXPRESSION_NOT_A_MACRO_ERROR',	'#ERROR_MACRO#');
 define('EXPRESSION_FUNCTION_UNKNOWN',	'#ERROR_FUNCTION#');
+define('EXPRESSION_UNSUPPORTED_VALUE_TYPE',	'#ERROR_VALUE_TYPE#');
 
 /**
  * @deprecated use either a literal space " " or a non-breakable space "&nbsp;" instead
