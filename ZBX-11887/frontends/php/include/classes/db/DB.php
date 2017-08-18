@@ -140,7 +140,7 @@ class DB {
 		 */
 		elseif (!DBexecute($sql)) {
 			self::exception(self::DBEXECUTE_ERROR,
-				_('Your database is not working properly. Please retry later. If the problem still persists, please contact system administrator.')
+				_('Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system.')
 			);
 		}
 		// If query is executable, but still returns false, only then call refreshIds.
