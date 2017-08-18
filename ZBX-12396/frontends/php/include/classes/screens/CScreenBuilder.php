@@ -190,8 +190,14 @@ class CScreenBuilder {
 				$options['screenitem'] = reset($options['screenitem']);
 			}
 
-			if (array_key_exists('screenitem', $options) && array_key_exists('resourcetype', $options['screenitem'])) {
+			if (is_array($options['screenitem']) && array_key_exists('screenitem', $options)
+					&& array_key_exists('resourcetype', $options['screenitem'])
+			) {
 				$options['resourcetype'] = $options['screenitem']['resourcetype'];
+			}
+			else {
+				show_error_message(_('No permissions to referred object or it does not exist!'));
+				return null;
 			}
 		}
 
