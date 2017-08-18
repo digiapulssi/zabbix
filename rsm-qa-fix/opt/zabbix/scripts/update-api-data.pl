@@ -1253,7 +1253,7 @@ sub fill_test_data_rdds($$)
 		if (!defined($test->{'rtt'}))
 		{
 			$metric->{'rtt'} = undef;
-			$metric->{'result'} = undef;
+			$metric->{'result'} = 'no data';
 		}
 		elsif (substr($test->{'rtt'}, 0, 1) eq "-")
 		{
