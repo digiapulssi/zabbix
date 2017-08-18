@@ -4,6 +4,7 @@ New features:
 ..F....... [265] improved loading time of "Incidents" page (Oleg)
 
 Bug fixes:
+....I..... [278] fixed logging of SLV scripts (gleb)
 ....I..... [280] added handling of missing RDDS test RTT in SLA API script (gleb)
 
 --------------------------------------------------------------------------------
