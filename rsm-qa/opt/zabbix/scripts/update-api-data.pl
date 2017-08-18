@@ -1250,7 +1250,12 @@ sub fill_test_data_rdds($$)
 			'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
 		};
 
-		if (substr($test->{'rtt'}, 0, 1) eq "-")
+		if (!defined($test->{'rtt'}))
+		{
+			$metric->{'rtt'} = undef;
+			$metric->{'result'} = 'no data';
+		}
+		elsif (substr($test->{'rtt'}, 0, 1) eq "-")
 		{
 			$test_data_ref->{'status'} = "Down";
 
