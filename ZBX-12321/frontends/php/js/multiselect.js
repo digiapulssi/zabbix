@@ -731,6 +731,7 @@ jQuery(function($) {
 			}
 
 			var li = $('<li>', {
+				'data-name': item.name,
 				'data-id': item.id
 			}).append(
 				$('<span>', {
