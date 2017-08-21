@@ -96,7 +96,10 @@ void	zbx_history_destroy()
  ************************************************************************************/
 void	zbx_history_add_values(const zbx_vector_ptr_t *history)
 {
-	int	i, flags = 0;
+	const char	*__function_name = "zbx_history_add_values";
+	int		i, flags = 0;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	for (i = 0; i < ITEM_VALUE_TYPE_MAX; i++)
 	{
@@ -113,6 +116,8 @@ void	zbx_history_add_values(const zbx_vector_ptr_t *history)
 		if (0 != (flags & (1 << i)))
 			writer->flush(writer);
 	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /************************************************************************************
@@ -138,9 +143,33 @@ void	zbx_history_add_values(const zbx_vector_ptr_t *history)
 int	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
 		zbx_vector_history_record_t *values)
 {
+	const char		*__function_name = "zbx_history_get_values";
+	int			ret, pos;
 	zbx_history_iface_t	*writer = &history_ifaces[value_type];
 
-	return writer->get_values(writer, itemid, start, count, end, values);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid:" ZBX_FS_UI64 " value_type:%d start:%d count:%d end:%d",
+			__function_name, itemid, value_type, start, count, end);
+
+	pos = values->values_num;
+	ret = writer->get_values(writer, itemid, start, count, end, values);
+
+	if (SUCCEED == ret && SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
+	{
+		int	i;
+		char	buffer[MAX_STRING_LEN];
+
+		for (i = pos; i < values->values_num; i++)
+		{
+			zbx_history_record_t	*h = &values->values[i];
+
+			zbx_history_value2str(buffer, sizeof(buffer), &h->value, value_type);
+			zabbix_log(LOG_LEVEL_TRACE, "  %d.%09d %s", h->timestamp.sec, h->timestamp.ns, buffer);
+		}
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
 }
 
 /************************************************************************************
@@ -227,7 +256,7 @@ void	zbx_history_record_clear(zbx_history_record_t *value, int value_type)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_vc_history_value2str                                         *
+ * Function: zbx_history_value2str                                            *
  *                                                                            *
  * Purpose: converts history value to string format                           *
  *                                                                            *
@@ -237,7 +266,7 @@ void	zbx_history_record_clear(zbx_history_record_t *value, int value_type)
  *             value_type - [IN] the history value type                       *
  *                                                                            *
  ******************************************************************************/
-void	zbx_vc_history_value2str(char *buffer, size_t size, history_value_t *value, int value_type)
+void	zbx_history_value2str(char *buffer, size_t size, history_value_t *value, int value_type)
 {
 	switch (value_type)
 	{

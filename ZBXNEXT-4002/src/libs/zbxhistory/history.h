@@ -43,7 +43,6 @@ struct zbx_history_iface
 	zbx_history_flush_func_t	flush;
 };
 
-
 /* SQL hist */
 int	zbx_history_sql_init(zbx_history_iface_t *hist, unsigned char value_type, char **error);
 

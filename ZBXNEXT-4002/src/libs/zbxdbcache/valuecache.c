@@ -1758,7 +1758,7 @@ out:
  ******************************************************************************/
 static int	vch_item_cache_values(zbx_vc_item_t *item, int seconds, int count, int timestamp)
 {
-	int				i, ret = SUCCEED, cached_records = 0, start, end, update_end;
+	int				ret = SUCCEED, cached_records = 0, start, end, update_end;
 	zbx_vector_history_record_t	records;
 	zbx_uint64_t			queries = 0;
 
@@ -1814,7 +1814,7 @@ static int	vch_item_cache_values(zbx_vc_item_t *item, int seconds, int count, in
 		/* fill in possible gap between requested period and what we have in cache */
 		ret = vc_db_get_values(item->itemid, item->value_type, start, 0, update_end, &records, &queries);
 	}
-lock:
+
 	vc_try_lock();
 
 	vc_cache->db_queries += queries;
@@ -2252,7 +2252,6 @@ void	zbx_vc_add_values(zbx_vector_ptr_t *history)
 	zbx_vc_item_t		*item;
 	int 			i;
 	ZBX_DC_HISTORY		*h;
-	const char		*__function_name = "zbx_vc_add_values";
 
 	zbx_history_add_values(history);
 
@@ -2293,7 +2292,6 @@ void	zbx_vc_add_values(zbx_vector_ptr_t *history)
 
 	vc_try_unlock();
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************

@@ -111,7 +111,7 @@ static history_value_t	history_str2value(char *str, unsigned char value_type)
 	return value;
 }
 
-static const char	*history_value2str(ZBX_DC_HISTORY *h)
+static const char	*history_value2str(const ZBX_DC_HISTORY *h)
 {
 	static char	buffer[MAX_ID_LEN + 1];
 
@@ -139,7 +139,7 @@ static int	history_parse_value(struct zbx_json_parse *jp, unsigned char value_ty
 	size_t	value_alloc = 0;
 	int	ret = FAIL;
 
-	if (SUCCEED != zbx_json_value_by_name_dyn(jp, "sec", &value, &value_alloc))
+	if (SUCCEED != zbx_json_value_by_name_dyn(jp, "clock", &value, &value_alloc))
 		goto out;
 
 	hr->timestamp.sec = atoi(value);
@@ -446,7 +446,16 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	zbx_json_init(&query, ZBX_JSON_ALLOCATE);
 
 	if (0 < count)
+	{
 		zbx_json_adduint64(&query, "size", count);
+		zbx_json_addarray(&query, "sort");
+		zbx_json_addobject(&query, NULL);
+		zbx_json_addobject(&query, "clock");
+		zbx_json_addstring(&query, "order", "desc", ZBX_JSON_TYPE_STRING);
+		zbx_json_close(&query);
+		zbx_json_close(&query);
+		zbx_json_close(&query);
+	}
 
 	zbx_json_addobject(&query, "query");
 	zbx_json_addobject(&query, "bool");
