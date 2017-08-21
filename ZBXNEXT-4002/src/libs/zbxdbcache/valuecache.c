@@ -1596,7 +1596,7 @@ static int	vch_item_add_value_at_head(zbx_vc_item_t *item, const zbx_history_rec
 
 			/* if the value is newer than the database cached from timestamp we must */
 			/* adjust the cached from timestamp to exclude this value                */
-			if (item->db_cached_from < value->timestamp.sec)
+			if (item->db_cached_from <= value->timestamp.sec)
 				item->db_cached_from = value->timestamp.sec + 1;
 
 			ret = SUCCEED;
@@ -1758,7 +1758,7 @@ out:
  ******************************************************************************/
 static int	vch_item_cache_values(zbx_vc_item_t *item, int seconds, int count, int timestamp)
 {
-	int				ret = SUCCEED, cached_records = 0, start, end, update_end;
+	int				i, ret = SUCCEED, cached_records = 0, start, end, update_end;
 	zbx_vector_history_record_t	records;
 	zbx_uint64_t			queries = 0;
 
@@ -1809,12 +1809,12 @@ static int	vch_item_cache_values(zbx_vc_item_t *item, int seconds, int count, in
 		start = end;
 	}
 
-	if (SUCCEED == ret && start < timestamp)
+	if (SUCCEED == ret && start < update_end)
 	{
 		/* fill in possible gap between requested period and what we have in cache */
-		ret = vc_db_get_values(item->itemid, item->value_type, start, 0, timestamp, &records, &queries);
+		ret = vc_db_get_values(item->itemid, item->value_type, start, 0, update_end, &records, &queries);
 	}
-
+lock:
 	vc_try_lock();
 
 	vc_cache->db_queries += queries;
@@ -1827,17 +1827,19 @@ static int	vch_item_cache_values(zbx_vc_item_t *item, int seconds, int count, in
 	if (0 < records.values_num)
 		ret = vch_item_add_values_at_tail(item, records.values, records.values_num);
 
-	if (SUCCEED == ret)
-	{
-		ret = records.values_num;
+	if (SUCCEED != ret)
+		goto out;
 
-		if (count <= records.values_num)
-		{
-			vc_item_update_db_cached_from(item,
-					item->tail->slots[item->tail->first_value].timestamp.sec);
-		}
-		else
-			vc_item_update_db_cached_from(item, start + 1);
+	ret = records.values_num;
+
+	if (0 == count || (seconds != timestamp && count > records.values_num))
+	{
+		vc_item_update_db_cached_from(item, timestamp - seconds + 1);
+	}
+	else
+	{
+		if (0 != records.values_num)
+			vc_item_update_db_cached_from(item, item->tail->slots[item->tail->first_value].timestamp.sec);
 	}
 out:
 	zbx_history_record_vector_destroy(&records, item->value_type);
@@ -1944,7 +1946,7 @@ static void	vch_item_get_values_by_time_and_count(zbx_vc_item_t *item, zbx_vecto
 out:
 	if (count > values->values_num)
 	{
-		if (seconds == timestamp)
+		if (timestamp == seconds)
 		{
 			/* not enough data in db to fulfill a count based request request */
 			item->active_range = 0;
@@ -2000,6 +2002,9 @@ static int	vch_item_get_value_range(zbx_vc_item_t *item, zbx_vector_history_reco
 
 	zbx_vector_history_record_clear(values);
 
+	if (0 == seconds)
+		seconds = timestamp;
+
 	if (FAIL == (ret = vch_item_cache_values(item, seconds, count, timestamp)))
 		goto out;
 
@@ -2049,25 +2054,27 @@ out:
  *           memory to cache DB values), then this function also fails.       *
  *                                                                            *
  ******************************************************************************/
-static int	vch_item_get_value(zbx_vc_item_t *item, const zbx_timespec_t *ts, zbx_history_record_t *value,
-		int *found)
+static int	vch_item_get_value(zbx_vc_item_t *item, const zbx_timespec_t *ts, zbx_history_record_t *value)
 {
 	int		index, ret = FAIL, hits = 0, misses = 0, now;
 	zbx_vc_chunk_t	*chunk;
 
-	*found = 0;
-
 	if (NULL == item->tail || 0 < zbx_timespec_compare(&item->tail->slots[item->tail->first_value].timestamp, ts))
 	{
-		if (FAIL == vch_item_cache_values(item, ts->sec, 1, ts->sec))
-			goto out;
-
 		misses++;
+
+		if (NULL == item->tail || item->tail->slots[item->tail->first_value].timestamp.sec > ts->sec)
+			vch_item_cache_values(item, 1, 0, ts->sec);
+
+		if (NULL == item->tail ||
+				0 < zbx_timespec_compare(&item->tail->slots[item->tail->first_value].timestamp, ts))
+		{
+			if (0 == vch_item_cache_values(item, ts->sec - 1, 1, ts->sec - 1))
+				goto out;
+		}
 	}
 	else
 		hits++;
-
-	ret = SUCCEED;
 
 	if (FAIL == vch_item_get_last_value(item, ts->sec, &chunk, &index))
 	{
@@ -2093,9 +2100,9 @@ static int	vch_item_get_value(zbx_vc_item_t *item, const zbx_timespec_t *ts, zbx
 	now = ZBX_VC_TIME();
 	vch_item_update_range(item, now - value->timestamp.sec + 1, now);
 
-	*found = 1;
+	ret = SUCCEED;
 out:
-	if (0 == *found)
+	if (SUCCEED != ret)
 	{
 		/* not enough data in db to fulfill the request */
 		item->active_range = 0;
@@ -2364,8 +2371,8 @@ out:
 
 		vc_try_unlock();
 
-		if (SUCCEED == vc_db_get_values(itemid, value_type, timestamp - seconds, count, timestamp,
-				values, &queries))
+		if (SUCCEED == (ret = vc_db_get_values(itemid, value_type, timestamp - seconds, count, timestamp,
+				values, &queries)))
 		{
 			zbx_vector_history_record_sort(values, (zbx_compare_func_t)vc_history_record_compare_desc_func);
 
@@ -2423,7 +2430,7 @@ int	zbx_vc_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *
 {
 	const char	*__function_name = "zbx_vc_get_value";
 	zbx_vc_item_t	*item = NULL;
-	int 		ret = FAIL, cache_used = 1, found = 0;
+	int 		ret = FAIL, cache_used = 1, cached = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid:" ZBX_FS_UI64 " value_type:%d timestamp:%d.%d",
 			__function_name, itemid, value_type, ts->sec, ts->ns);
@@ -2454,9 +2461,10 @@ int	zbx_vc_get_value(zbx_uint64_t itemid, int value_type, const zbx_timespec_t *
 	if (0 != (item->state & ZBX_ITEM_STATE_REMOVE_PENDING) || item->value_type != value_type)
 		goto out;
 
-	ret = vch_item_get_value(item, ts, value, &found);
+	ret = vch_item_get_value(item, ts, value);
+	cached = 1;
 out:
-	if (FAIL == ret)
+	if (0 == cached)
 	{
 		zbx_uint64_t	queries = 0;
 
@@ -2475,18 +2483,13 @@ out:
 			vc_cache->db_queries += queries;
 
 		if (SUCCEED == ret)
-		{
 			vc_update_statistics(NULL, 0, 1);
-			found = 1;
-		}
 	}
 
 	if (NULL != item)
 		vc_item_release(item);
 
 	vc_try_unlock();
-
-	ret = (1 == found ? SUCCEED : FAIL);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s cache_used:%d", __function_name, zbx_result_string(ret),
 			cache_used);
