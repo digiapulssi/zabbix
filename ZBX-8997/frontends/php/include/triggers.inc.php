@@ -1793,14 +1793,14 @@ function get_item_function_info($expr) {
 	$result_types = [
 			// Every nested array should have two elements: label, validation
 		'integer' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (integer 64bit)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})']
+			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), 'valid_uint({})']
 		],
 		'float' => [
-			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})']
+			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), 'valid_float({})']
 		],
 		'numeric' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (integer 64bit)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'],
-			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})']
+			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), 'valid_uint({})'],
+			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), 'valid_float({})']
 		],
 		'numeric_as_0or1' => [
 			ITEM_VALUE_TYPE_UINT64 => [_('0 or 1'), IN('0,1')],
@@ -1812,14 +1812,14 @@ function get_item_function_info($expr) {
 			ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]
 		],
 		'string_as_asis' => [
-			ITEM_VALUE_TYPE_TEXT => [_('Text'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'],
-			ITEM_VALUE_TYPE_STR => [_('Character'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'],
-			ITEM_VALUE_TYPE_LOG => [_('Log'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})']
+			ITEM_VALUE_TYPE_TEXT => [_('Text'), 'valid_uint({})'],
+			ITEM_VALUE_TYPE_STR => [_('Character'), 'valid_uint({})'],
+			ITEM_VALUE_TYPE_LOG => [_('Log'), 'valid_uint({})']
 		],
 		'string_as_numeric' => [
-			ITEM_VALUE_TYPE_TEXT => [_('Numeric (integer 64bit)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'],
-			ITEM_VALUE_TYPE_STR => [_('Numeric (integer 64bit)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'],
-			ITEM_VALUE_TYPE_LOG => [_('Numeric (integer 64bit)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})']
+			ITEM_VALUE_TYPE_TEXT => [_('Numeric (unsigned)'), 'valid_uint({})'],
+			ITEM_VALUE_TYPE_STR => [_('Numeric (unsigned)'), 'valid_uint({})'],
+			ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), 'valid_uint({})']
 		]
 	];
 	$result_types['date'] = array_fill_keys(
@@ -1836,7 +1836,7 @@ function get_item_function_info($expr) {
 	);
 	$result_types['time'] = array_fill_keys(
 		[ITEM_VALUE_TYPE_UINT64, ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_TEXT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG],
-		['HHMMSS', 'strlen({})==6']
+		['HHMMSS', 'preg_match("/^([01]?\d|2[0-3])([0-5]?\d)([0-5]?\d)$/", {})']/*'strlen({})==6'*/
 	);
 
 	$functions = [
@@ -1854,15 +1854,9 @@ function get_item_function_info($expr) {
 		'fuzzytime' => $result_types['numeric_as_0or1'],
 		'iregexp' => $result_types['string_as_0or1'],
 		'last' => $result_types['numeric'] + $result_types['string_as_numeric'],
-		'logeventid' => [
-			ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]
-		],
-		'logseverity' => [
-			ITEM_VALUE_TYPE_LOG => [_('Numeric (integer 64bit)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})']
-		],
-		'logsource' => [
-			ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]
-		],
+		'logeventid' => [ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]],
+		'logseverity' => [ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), 'valid_uint({})']],
+		'logsource' => [ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]],
 		'max' => $result_types['numeric'],
 		'min' => $result_types['numeric'],
 		'nodata' => $result_types['numeric_as_0or1'] + $result_types['string_as_0or1'],
@@ -1881,8 +1875,7 @@ function get_item_function_info($expr) {
 	$expression = $expr_data->parse($expr);
 
 	if (!$expression) {
-		// TODO: Unable to parse, what should be returned?! Before was returned uninitialized protperty.
-		return null;
+		return EXPRESSION_NOT_A_MACRO_ERROR;
 	}
 
 	switch (true) {
@@ -1897,9 +1890,9 @@ function get_item_function_info($expr) {
 		case ($expression->hasTokenOfType(CTriggerExpressionParserResult::TOKEN_TYPE_USER_MACRO)):
 		case ($expression->hasTokenOfType(CTriggerExpressionParserResult::TOKEN_TYPE_LLD_MACRO)):
 			$result = [
-				'value_type' => $value_type[ITEM_VALUE_TYPE_FLOAT],
+				'value_type' => _('Numeric (float)'),
 				'type' => T_ZBX_STR,
-				'validation' => 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'
+				'validation' => 'valid_float({})'
 			];
 			break;
 
@@ -1955,7 +1948,6 @@ function get_item_function_info($expr) {
 			}
 
 			$result = [
-				// TODO: set type T_ZBX_INT for all except float.
 				'type' => T_ZBX_STR,
 				'value_type' => $function[$value_type][0],
 				'validation' => $function[$value_type][1]

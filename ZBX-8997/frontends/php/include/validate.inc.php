@@ -39,6 +39,28 @@ function HEX($var = null) {
 	return 'preg_match("/^([a-zA-Z0-9]+)$/",{'.$var.'})&&';
 }
 
+/**
+ * Validate is supplied argument valid unsigned integer type value. Supports time or byte size suffixes.
+ *
+ * @param string $val	Validated value
+ *
+ * @return bool
+ */
+function valid_uint($val) {
+	return preg_match('/^[0-9]+['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?$/', $val) === 1;
+}
+
+/**
+ * Validate is supplied argument valid float type value. Supports time or byte size suffixes and negative number.
+ *
+ * @param string $val	Validated value
+ *
+ * @return bool
+ */
+function valid_float($val) {
+	return preg_match('/^'.ZBX_PREG_NUMBER.'$/', $val) === 1;
+}
+
 function validate_port_list($str) {
 	foreach (explode(',', $str) as $port_range) {
 		$port_range = explode('-', $port_range);
