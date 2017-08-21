@@ -5,7 +5,7 @@
 			<?php
 				echo CJs::encodeJson([
 					WIDGET_SLIDESHOW => [
-						'frequency' => $this->data['element']['delay'] * $this->data['refreshMultiplier'],
+						'frequency' => (integer) $this->data['element']['delay'] * $this->data['refreshMultiplier'],
 						'url' => 'slides.php?output=html&elementid='.$this->data['elementId'].
 							(isset($this->data['groupid']) ? '&groupid='.$this->data['groupid'] : '').
 							(isset($this->data['hostid']) ? '&hostid='.$this->data['hostid'] : ''),
