@@ -638,6 +638,7 @@ jQuery(function($) {
 												add_submaps: $('[name="add_submaps"]', form).is(':checked') ? 1 : 0,
 												map_name: $('[name="map.name.' + id + '"]', form).val(),
 												map_mapid: +$('[name="linked_map_id"]', form).val(),
+												depth: depth || 1,
 												mapid: id
 											};
 
@@ -894,7 +895,7 @@ jQuery(function($) {
 						}
 
 						if (widget_data.max_depth > +depth) {
-							itemEditDialog($obj, 0, parentId, +depth);
+							itemEditDialog($obj, 0, parentId, +depth + 1);
 						}
 					});
 					tools.appendChild(btn1);
