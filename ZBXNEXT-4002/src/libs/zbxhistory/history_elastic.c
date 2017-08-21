@@ -609,7 +609,7 @@ static int	elastic_add_values(zbx_history_iface_t *hist, const zbx_vector_ptr_t 
 
 	if (num > 0)
 	{
-		data->post_url = zbx_dsprintf(NULL, "%s/_bulk", data->base_url);
+		data->post_url = zbx_dsprintf(NULL, "%s/_bulk?refresh=wait_for", data->base_url);
 		elastic_writer_add_iface(hist);
 	}
 
