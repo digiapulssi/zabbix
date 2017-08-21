@@ -1345,7 +1345,8 @@ function expressionHighLevelErrors($expression) {
 			EXPRESSION_HOST_UNKNOWN => _('Unknown host, no such host present in system'),
 			EXPRESSION_HOST_ITEM_UNKNOWN => _('Unknown host item, no such item in selected host'),
 			EXPRESSION_NOT_A_MACRO_ERROR => _('Given expression is not a macro'),
-			EXPRESSION_FUNCTION_UNKNOWN => _('Incorrect function is used')
+			EXPRESSION_FUNCTION_UNKNOWN => _('Incorrect function is used'),
+			EXPRESSION_UNSUPPORTED_VALUE_TYPE => _('Incorrect item value type')
 		];
 		$errors = [];
 	}
@@ -1836,7 +1837,7 @@ function get_item_function_info($expr) {
 	);
 	$result_types['time'] = array_fill_keys(
 		[ITEM_VALUE_TYPE_UINT64, ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_TEXT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG],
-		['HHMMSS', 'preg_match("/^([01]?\d|2[0-3])([0-5]?\d)([0-5]?\d)$/", {})']/*'strlen({})==6'*/
+		['HHMMSS', 'preg_match("/^([01]?\d|2[0-3])([0-5]?\d)([0-5]?\d)$/", {})']
 	);
 
 	$functions = [

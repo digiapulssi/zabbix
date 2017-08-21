@@ -51,7 +51,7 @@ function valid_uint($val) {
 }
 
 /**
- * Validate is supplied argument valid float type value. Supports time or byte size suffixes and negative number.
+ * Validate is supplied argument valid float type value. Supports time or byte size suffixes and negative numbers.
  *
  * @param string $val	Validated value
  *
