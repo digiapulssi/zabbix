@@ -2510,16 +2510,26 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 
 		if (SUCCEED != is_ip(ip))
 		{
-			zabbix_log(LOG_LEVEL_DEBUG, "\"%s\" is not a valid IP address", ip);
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid IP address", __function_name, ip);
 			goto next;
 		}
 
-		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-			port = atoi(tmp);
+		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)) &&
+				FAIL == is_ushort(tmp, &port))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
+			goto next;
+		}
 
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_KEY, key_, sizeof(key_));
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_VALUE, value, sizeof(value));
-		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns));
+
+		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)) && '\0' != *dns &&
+				FAIL == zbx_validate_hostname(dns))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
+			goto next;
+		}
 
 		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_STATUS, tmp, sizeof(tmp)))
 			status = atoi(tmp);
@@ -2646,6 +2656,13 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_HOST, host, sizeof(host)))
 			goto json_parse_error;
 
+		if (FAIL == zbx_check_hostname(host))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid Zabbix host name", __function_name,
+					host);
+			goto next;
+		}
+
 		if (FAIL == zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_HOST_METADATA,
 				&host_metadata, &host_metadata_alloc))
 		{
@@ -2653,19 +2670,36 @@ void	process_areg_data(struct zbx_json_parse *jp, zbx_uint64_t proxy_hostid)
 		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
-			*ip = '\0';
+			goto json_parse_error;
+
+		if (SUCCEED != is_ip(ip))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid IP address", __function_name, ip);
+			goto next;
+		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)))
+		{
 			*dns = '\0';
+		}
+		else if ('\0' != *dns && FAIL == zbx_validate_hostname(dns))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
+			goto next;
+		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-			*tmp = '\0';
-
-		if (FAIL == is_ushort(tmp, &port))
+		{
 			port = ZBX_DEFAULT_AGENT_PORT;
+		}
+		else if (FAIL == is_ushort(tmp, &port))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
+			goto next;
+		}
 
 		DBregister_host_prepare(&autoreg_hosts, host, ip, dns, port, host_metadata, itemtime);
-
+next:
 		continue;
 json_parse_error:
 		zabbix_log(LOG_LEVEL_WARNING, "invalid auto registration data: %s", zbx_json_strerror());
@@ -2697,7 +2731,7 @@ exit:
  * Return value: the number of history values                                 *
  *                                                                            *
  ******************************************************************************/
-int	proxy_get_history_count()
+int	proxy_get_history_count(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
