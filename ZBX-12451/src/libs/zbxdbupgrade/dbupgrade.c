@@ -343,6 +343,8 @@ static void	DBrename_table_sql(char **sql, size_t *sql_alloc, size_t *sql_offset
 {
 #ifdef HAVE_ORACLE
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "rename %s to %s", table_name, new_name);
+#elif HAVE_IBM_DB2
+	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "rename table %s to %s", table_name, new_name);
 #else
 	zbx_snprintf_alloc(sql, sql_alloc, sql_offset, "alter table %s rename %s", table_name, new_name);
 #endif

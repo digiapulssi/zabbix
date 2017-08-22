@@ -2288,17 +2288,155 @@ static int	DBpatch_3030198(void)
 	return SUCCEED;
 }
 
+/* Patches 3030199-3030209 are to remove references to table that is about to be renamed, this is required on IBM DB2 */
+
 static int	DBpatch_3030199(void)
 {
-	return DBrename_table(ZBX_SQL_QUOTE("groups"), "hstgrp");
+	return DBdrop_foreign_key("group_prototype", 2);
 }
 
 static int	DBpatch_3030200(void)
 {
-	return DBrename_index("hstgrp", "groups_1", "hstgrp_1", "name", 0);
+	return DBdrop_foreign_key("group_discovery", 1);
 }
 
 static int	DBpatch_3030201(void)
+{
+	return DBdrop_foreign_key("scripts", 2);
+}
+
+static int	DBpatch_3030202(void)
+{
+	return DBdrop_foreign_key("opcommand_grp", 2);
+}
+
+static int	DBpatch_3030203(void)
+{
+	return DBdrop_foreign_key("opgroup", 2);
+}
+
+static int	DBpatch_3030204(void)
+{
+	return DBdrop_foreign_key("config", 2);
+}
+
+static int	DBpatch_3030205(void)
+{
+	return DBdrop_foreign_key("hosts_groups", 2);
+}
+
+static int	DBpatch_3030206(void)
+{
+	return DBdrop_foreign_key("rights", 2);
+}
+
+static int	DBpatch_3030207(void)
+{
+	return DBdrop_foreign_key("maintenances_groups", 2);
+}
+
+static int	DBpatch_3030208(void)
+{
+	return DBdrop_foreign_key("corr_condition_group", 2);
+}
+
+static int	DBpatch_3030209(void)
+{
+	return DBdrop_foreign_key("widget_field", 2);
+}
+
+/* groups is reserved key word since MySQL 8.0 */
+
+static int	DBpatch_3030210(void)
+{
+	return DBrename_table(ZBX_SQL_QUOTE("groups"), "hstgrp");
+}
+
+static int	DBpatch_3030211(void)
+{
+	return DBrename_index("hstgrp", "groups_1", "hstgrp_1", "name", 0);
+}
+
+/* Patches 3030212-3030222 are to restore references after renaming table on IBM DB2 */
+
+static int	DBpatch_3030212(void)
+{
+	const ZBX_FIELD	field = {"groupid", NULL, "hstgrp", "groupid", 0, 0, 0, 0};
+
+	return DBadd_foreign_key("group_prototype", 2, &field);
+}
+
+static int	DBpatch_3030213(void)
+{
+	const ZBX_FIELD	field = {"groupid", NULL, "hstgrp", "groupid", 0, 0, 0, ZBX_FK_CASCADE_DELETE};
+
+	return DBadd_foreign_key("group_discovery", 1, &field);
+}
+
+static int	DBpatch_3030214(void)
+{
+	const ZBX_FIELD	field = {"groupid", NULL, "hstgrp", "groupid", 0, 0, 0, 0};
+
+	return DBadd_foreign_key("scripts", 2, &field);
+}
+
+static int	DBpatch_3030215(void)
+{
+	const ZBX_FIELD	field = {"groupid", NULL, "hstgrp", "groupid", 0, 0, 0, 0};
+
+	return DBadd_foreign_key("opcommand_grp", 2, &field);
+}
+
+static int	DBpatch_3030216(void)
+{
+	const ZBX_FIELD	field = {"groupid", NULL, "hstgrp", "groupid", 0, 0, 0, 0};
+
+	return DBadd_foreign_key("opgroup", 2, &field);
+}
+
+static int	DBpatch_3030217(void)
+{
+	const ZBX_FIELD	field = {"discovery_groupid", NULL, "hstgrp", "groupid", 0, 0, 0, 0};
+
+	return DBadd_foreign_key("config", 2, &field);
+}
+
+static int	DBpatch_3030218(void)
+{
+	const ZBX_FIELD	field = {"groupid", NULL, "hstgrp", "groupid", 0, 0, 0, ZBX_FK_CASCADE_DELETE};
+
+	return DBadd_foreign_key("hosts_groups", 2, &field);
+}
+
+static int	DBpatch_3030219(void)
+{
+	const ZBX_FIELD	field = {"id",	NULL, "hstgrp", "groupid", 0, 0, 0, ZBX_FK_CASCADE_DELETE};
+
+	return DBadd_foreign_key("rights", 2, &field);
+}
+
+static int	DBpatch_3030220(void)
+{
+	const ZBX_FIELD	field = {"groupid", NULL, "hstgrp", "groupid", 0, 0, 0, ZBX_FK_CASCADE_DELETE};
+
+	return DBadd_foreign_key("maintenances_groups", 2, &field);
+}
+
+static int	DBpatch_3030221(void)
+{
+	const ZBX_FIELD	field = {"groupid", NULL, "hstgrp", "groupid", 0, ZBX_TYPE_ID, ZBX_NOTNULL, 0};
+
+	return DBadd_foreign_key("corr_condition_group", 2, &field);
+}
+
+static int	DBpatch_3030222(void)
+{
+	const ZBX_FIELD	field = {"value_groupid", NULL, "hstgrp", "groupid", 0, 0, 0, ZBX_FK_CASCADE_DELETE};
+
+	return DBadd_foreign_key("widget_field", 2, &field);
+}
+
+static int	DBpatch_3030223(void)
 {
 	const ZBX_FIELD	field = {"func_name", "", NULL, NULL, 12, ZBX_TYPE_CHAR, ZBX_NOTNULL, 0};
 
@@ -2512,5 +2650,27 @@ DBPATCH_ADD(3030198, 0, 1)
 DBPATCH_ADD(3030199, 0, 1)
 DBPATCH_ADD(3030200, 0, 1)
 DBPATCH_ADD(3030201, 0, 1)
+DBPATCH_ADD(3030202, 0, 1)
+DBPATCH_ADD(3030203, 0, 1)
+DBPATCH_ADD(3030204, 0, 1)
+DBPATCH_ADD(3030205, 0, 1)
+DBPATCH_ADD(3030206, 0, 1)
+DBPATCH_ADD(3030207, 0, 1)
+DBPATCH_ADD(3030208, 0, 1)
+DBPATCH_ADD(3030209, 0, 1)
+DBPATCH_ADD(3030210, 0, 1)
+DBPATCH_ADD(3030211, 0, 1)
+DBPATCH_ADD(3030212, 0, 1)
+DBPATCH_ADD(3030213, 0, 1)
+DBPATCH_ADD(3030214, 0, 1)
+DBPATCH_ADD(3030215, 0, 1)
+DBPATCH_ADD(3030216, 0, 1)
+DBPATCH_ADD(3030217, 0, 1)
+DBPATCH_ADD(3030218, 0, 1)
+DBPATCH_ADD(3030219, 0, 1)
+DBPATCH_ADD(3030220, 0, 1)
+DBPATCH_ADD(3030221, 0, 1)
+DBPATCH_ADD(3030222, 0, 1)
+DBPATCH_ADD(3030223, 0, 1)
 
 DBPATCH_END()
