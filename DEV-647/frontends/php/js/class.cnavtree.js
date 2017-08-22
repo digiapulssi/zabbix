@@ -781,7 +781,7 @@ jQuery(function($) {
 
 					$.each(item.children, function(i, item) {
 						if (typeof item === 'object') {
-							ul.appendChild(createTreeItem($obj, item, depth+1, true, isEditMode));
+							ul.appendChild(createTreeItem($obj, item, depth + 1, true, isEditMode));
 
 							if (item.id > widget_data.lastId) {
 								widget_data.lastId = item.id;
