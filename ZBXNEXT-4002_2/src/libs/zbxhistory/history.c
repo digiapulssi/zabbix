@@ -23,6 +23,10 @@
 #include "zbxhistory.h"
 #include "history.h"
 
+#include "../zbxalgo/vectorimpl.h"
+
+ZBX_VECTOR_IMPL(history_record, zbx_history_record_t);
+
 extern char	*CONFIG_HISTORY_STORAGE_URL;
 extern char	*CONFIG_HISTORY_STORAGE_OPTS;
 
