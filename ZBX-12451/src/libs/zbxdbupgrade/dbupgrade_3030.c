@@ -2345,7 +2345,7 @@ static int	DBpatch_3030209(void)
 	return DBdrop_foreign_key("widget_field", 2);
 }
 
-/* groups is reserved key word since MySQL 8.0 */
+/* groups is reserved keyword since MySQL 8.0 */
 
 static int	DBpatch_3030210(void)
 {
@@ -2436,7 +2436,7 @@ static int	DBpatch_3030222(void)
 	return DBadd_foreign_key("widget_field", 2, &field);
 }
 
-/* function is reserved key word since MySQL 8.0 */
+/* function is reserved keyword since MySQL 8.0 */
 
 static int	DBpatch_3030223(void)
 {
