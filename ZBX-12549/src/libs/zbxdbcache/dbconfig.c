@@ -405,10 +405,10 @@ static void	DCitem_poller_type_update(ZBX_DC_ITEM *dc_item, const ZBX_DC_HOST *d
 
 	poller_type = poller_by_item(dc_item->type, dc_item->key);
 
-	if (ZBX_POLLER_TYPE_UNREACHABLE == dc_item->poller_type)
+	if (ZBX_POLLER_TYPE_UNREACHABLE == dc_item->poller_type &&
+			(ZBX_POLLER_TYPE_NORMAL == poller_type || ZBX_POLLER_TYPE_JAVA == poller_type))
 	{
-		if (ZBX_POLLER_TYPE_NORMAL == poller_type || ZBX_POLLER_TYPE_JAVA == poller_type)
-			return;
+		return;
 	}
 
 	dc_item->poller_type = poller_type;
