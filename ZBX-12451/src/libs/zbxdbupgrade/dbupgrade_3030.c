@@ -2436,11 +2436,35 @@ static int	DBpatch_3030222(void)
 	return DBadd_foreign_key("widget_field", 2, &field);
 }
 
+/* function is reserved key word since MySQL 8.0 */
+
 static int	DBpatch_3030223(void)
+{
+	return DBdrop_foreign_key("functions", 1);
+}
+
+static int	DBpatch_3030224(void)
+{
+	return DBdrop_index("functions", "functions_2");
+}
+
+static int	DBpatch_3030225(void)
 {
 	const ZBX_FIELD	field = {"func_name", "", NULL, NULL, 12, ZBX_TYPE_CHAR, ZBX_NOTNULL, 0};
 
 	return DBrename_field("functions", ZBX_SQL_QUOTE("function"), &field);
+}
+
+static int	DBpatch_3030226(void)
+{
+	return DBcreate_index("functions", "functions_2", "itemid,func_name,parameter", 0);
+}
+
+static int	DBpatch_3030227(void)
+{
+	const ZBX_FIELD	field = {"itemid", NULL, "items", "itemid", 0, 0, 0, ZBX_FK_CASCADE_DELETE};
+
+	return DBadd_foreign_key("functions", 1, &field);
 }
 
 #endif
@@ -2672,5 +2696,9 @@ DBPATCH_ADD(3030220, 0, 1)
 DBPATCH_ADD(3030221, 0, 1)
 DBPATCH_ADD(3030222, 0, 1)
 DBPATCH_ADD(3030223, 0, 1)
+DBPATCH_ADD(3030224, 0, 1)
+DBPATCH_ADD(3030225, 0, 1)
+DBPATCH_ADD(3030226, 0, 1)
+DBPATCH_ADD(3030227, 0, 1)
 
 DBPATCH_END()
