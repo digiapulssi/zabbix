@@ -332,7 +332,7 @@ static int	vc_db_read_values_by_count(zbx_uint64_t itemid, int value_type, zbx_v
 {
 	(*queries)++;
 
-	if (FAIL == zbx_history_get_values(itemid, value_type, end_timestamp, count, end_timestamp, values))
+	if (FAIL == zbx_history_get_values(itemid, value_type, 0, count, end_timestamp, values))
 		return FAIL;
 
 	if (0 == values->values_num)
@@ -349,7 +349,7 @@ static int	vc_db_read_values_by_count(zbx_uint64_t itemid, int value_type, zbx_v
 	}
 
 	(*queries)++;
-	return zbx_history_get_values(itemid, value_type, 1, 0, end_timestamp, values);
+	return zbx_history_get_values(itemid, value_type, end_timestamp - 1, 0, end_timestamp, values);
 }
 
 /************************************************************************************
@@ -396,7 +396,7 @@ static int	vc_db_read_values_by_time_and_count(zbx_uint64_t itemid, int value_ty
 	}
 
 	(*queries)++;
-	return zbx_history_get_values(itemid, value_type, 1, 0, end_timestamp, values);
+	return zbx_history_get_values(itemid, value_type, end_timestamp - 1, 0, end_timestamp, values);
 }
 
 /*********************************************************************************
@@ -1714,7 +1714,7 @@ static int	vch_item_add_value_at_head(zbx_vc_item_t *item, const zbx_history_rec
 
 			/* if the value is newer than the database cached from timestamp we must */
 			/* adjust the cached from timestamp to exclude this value                */
-			if (item->db_cached_from < value->timestamp.sec)
+			if (item->db_cached_from <= value->timestamp.sec)
 				item->db_cached_from = value->timestamp.sec + 1;
 
 			ret = SUCCEED;
