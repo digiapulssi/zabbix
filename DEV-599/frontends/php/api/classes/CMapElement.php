@@ -239,6 +239,7 @@ abstract class CMapElement extends CZBXAPI {
 	protected function createSelements(array $selements) {
 		$selements = zbx_toArray($selements);
 
+		$this->validateSelementsUrl($selements);
 		$this->checkSelementInput($selements, __FUNCTION__);
 
 		$selementIds = DB::insert('sysmaps_elements', $selements);
@@ -277,8 +278,9 @@ abstract class CMapElement extends CZBXAPI {
 	protected function updateSelements(array $selements) {
 		$selements = zbx_toArray($selements);
 		$selementIds = array();
-
 		$dbSelements = $this->checkSelementInput($selements, __FUNCTION__);
+
+		$this->validateSelementsUrl($selements);
 
 		$update = array();
 		$urlsToDelete = $urlsToUpdate = $urlsToAdd = array();
@@ -495,6 +497,25 @@ abstract class CMapElement extends CZBXAPI {
 		foreach ($linkTriggers as $linkTrigger) {
 			if (!check_db_fields($linktriggerDbFields, $linkTrigger)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong fields for linktrigger delete.'));
+			}
+		}
+	}
+
+	/**
+	 * Validates URL fields for map elements.
+	 *
+	 * @throws APIException for invalid URL
+	 *
+	 * @param array $selements	Array of map elements, 'urls' key array will be validated for every element.
+	 */
+	protected function validateSelementsUrl($selements) {
+		foreach ($selements as $selement) {
+			if (array_key_exists('urls', $selement)) {
+				foreach ($selement['urls'] as $url_data) {
+					if (!CHtmlUrlValidator::validate($url_data['url'])) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+					}
+				}
 			}
 		}
 	}

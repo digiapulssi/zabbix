@@ -657,6 +657,10 @@ class CTrigger extends CTriggerGeneral {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect fields for trigger.'));
 			}
 
+			if (array_key_exists('url', $trigger) && $trigger['url'] && !CHtmlUrlValidator::validate($trigger['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
+
 			$expressionChanged = true;
 			if ($update) {
 				$dbTrigger = $dbTriggers[$trigger['triggerid']];
