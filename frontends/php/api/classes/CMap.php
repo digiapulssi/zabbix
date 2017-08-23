@@ -493,6 +493,10 @@ class CMap extends CMapElement {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s('Link name should be unique for map "%s".', $dbMap['name']));
 					}
 
+					if (!CHtmlUrlValidator::validate($url['url'])) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+					}
+
 					unset($urlNames[$url['name']]);
 				}
 			}
