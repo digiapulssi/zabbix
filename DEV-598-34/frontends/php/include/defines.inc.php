@@ -1085,6 +1085,7 @@ define('API_HTTP_POST',			16);
 define('API_VARIABLE_NAME',		17);
 define('API_OUTPUT',			18);
 define('API_TIME_UNIT',			19);
+define('API_URL',				20);
 
 // flags
 define('API_REQUIRED',			0x01);
