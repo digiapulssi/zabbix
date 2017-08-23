@@ -672,6 +672,7 @@
 		var edit_mode = (widget !== null);
 
 		data.dialogue = {};
+		data.dialogue.defer = jQuery.Deferred();
 		data.dialogue.widget = widget;
 
 		overlayDialogue({
@@ -692,7 +693,7 @@
 					'action': function() {}
 				}
 			]
-		});
+		}, data.dialogue.defer);
 
 		var overlay_dialogue = $('#overlay_dialogue');
 		data.dialogue.div = overlay_dialogue;
@@ -1238,6 +1239,7 @@
 					footer = $('.overlay-dialogue-footer', data.dialogue['div']),
 					form = $('form', body),
 					widget = data.dialogue['widget'], // widget currently beeing edited
+					defer = data.dialogue.defer || null,
 					url = new Curl('zabbix.php'),
 					ajax_data = {},
 					fields;
@@ -1308,6 +1310,9 @@
 						$('.dialogue-widget-save', footer).prop('disabled', false);
 					},
 					complete: function() {
+						if (defer) {
+							defer.notify();
+						}
 						overlayDialogueOnLoad(true);
 					}
 				});

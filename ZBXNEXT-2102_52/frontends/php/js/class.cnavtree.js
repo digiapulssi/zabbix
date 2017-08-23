@@ -615,6 +615,7 @@ jQuery(function($) {
 				}
 
 				url.setArgument('action', 'widget.navigationtree.edititemdialog');
+				var defer = jQuery.Deferred()
 
 				jQuery.ajax({
 					url: url.getUrl(),
@@ -739,7 +740,10 @@ jQuery(function($) {
 									'action': function() {}
 								}
 							]
-						});
+						}, defer);
+					},
+					complete: function() {
+						defer.notify();
 					}
 				});
 			};
