@@ -160,6 +160,7 @@ class CScreenItem extends CApiService {
 			$screenItem += $defaults;
 		}
 		unset($screenItem);
+		$this->validateItemsURL($screenItems);
 
 		$screenIds = array_keys(array_flip(zbx_objectValues($screenItems, 'screenid')));
 
@@ -272,6 +273,7 @@ class CScreenItem extends CApiService {
 			}
 		}
 
+		$this->validateItemsURL($screenItems);
 		$screenItems = zbx_toHash($screenItems, 'screenitemid');
 		$screenItemIds = array_keys($screenItems);
 
@@ -1000,5 +1002,22 @@ class CScreenItem extends CApiService {
 	 */
 	protected function isValidMaxColumns($maxColumns) {
 		return ($maxColumns >= SCREEN_SURROGATE_MAX_COLUMNS_MIN && $maxColumns <= SCREEN_SURROGATE_MAX_COLUMNS_MAX);
+	}
+
+	/**
+	 * Validates URL fields for submitted screen items.
+	 *
+	 * @throws APIException for invalid URL
+	 *
+	 * @param array $screen_items	Array of screen items.
+	 */
+	protected function validateItemsURL($screen_items) {
+		foreach ($screen_items as $screen_item) {
+			if ($screen_item['resourcetype'] == SCREEN_RESOURCE_URL && array_key_exists('url', $screen_item)
+					&& !CHtmlUrlValidator::validate($screen_item['url'])
+			) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
+		}
 	}
 }
