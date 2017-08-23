@@ -72,7 +72,8 @@ require_once dirname(__FILE__).'/include/views/js/monitoring.latest.js.php';
 /*
  * Filter
  */
-if (hasRequest('filter_set')) {
+$can_update = (validateSid() == ZBX_VALID_OK);
+if ($can_update && hasRequest('filter_set')) {
 	CProfile::update('web.latest.filter.select', getRequest('select', ''), PROFILE_TYPE_STR);
 	CProfile::update('web.latest.filter.show_without_data', getRequest('show_without_data', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.latest.filter.show_details', getRequest('show_details', 0), PROFILE_TYPE_INT);
@@ -80,7 +81,7 @@ if (hasRequest('filter_set')) {
 	CProfile::updateArray('web.latest.filter.groupids', getRequest('groupids', []), PROFILE_TYPE_STR);
 	CProfile::updateArray('web.latest.filter.hostids', getRequest('hostids', []), PROFILE_TYPE_STR);
 }
-elseif (hasRequest('filter_rst')) {
+elseif ($can_update && hasRequest('filter_rst')) {
 	DBStart();
 	CProfile::delete('web.latest.filter.select');
 	CProfile::delete('web.latest.filter.show_without_data');
@@ -106,8 +107,10 @@ $singleHostSelected = (count($filter['hostids']) == 1);
 $sortField = getRequest('sort', CProfile::get('web.'.$page['file'].'.sort', 'name'));
 $sortOrder = getRequest('sortorder', CProfile::get('web.'.$page['file'].'.sortorder', ZBX_SORT_UP));
 
-CProfile::update('web.'.$page['file'].'.sort', $sortField, PROFILE_TYPE_STR);
-CProfile::update('web.'.$page['file'].'.sortorder', $sortOrder, PROFILE_TYPE_STR);
+if ($can_update) {
+	CProfile::update('web.'.$page['file'].'.sort', $sortField, PROFILE_TYPE_STR);
+	CProfile::update('web.'.$page['file'].'.sortorder', $sortOrder, PROFILE_TYPE_STR);
+}
 
 $applications = [];
 $items = [];

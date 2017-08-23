@@ -42,6 +42,10 @@ class CFilter extends CTag {
 			->setAttribute('name', $this->name)
 			->setId('id', $this->name);
 
+		if (array_key_exists('zbx_sessionid', $_COOKIE)) {
+			$this->addVar('sid', substr($_COOKIE['zbx_sessionid'], 16, 16));
+		}
+
 		// filter is opened by default
 		$this->opened = (CProfile::get($this->filterid, 1) == 1);
 	}

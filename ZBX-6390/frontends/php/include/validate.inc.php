@@ -510,3 +510,15 @@ function validateTimeUnit($value, $min, $max, $allow_zero, &$error, array $optio
 
 	return true;
 }
+
+/**
+ * Returns ZBX_VALID_OK if sid token is present in request and valid, ZBX_VALID_ERROR otherwise.
+ *
+ * @return int
+ */
+function validateSid() {
+	$sid = getRequest('sid');
+
+	return (array_key_exists('zbx_sessionid', $_COOKIE) && $sid && substr($_COOKIE['zbx_sessionid'], 16, 16) == $sid)
+		? ZBX_VALID_OK : ZBX_VALID_ERROR;
+}
