@@ -506,10 +506,6 @@ class CTrigger extends CTriggerGeneral {
 				}
 				$dbTrigger = $dbTriggers[$triggerId];
 
-				if (array_key_exists('url', $trigger) && $trigger['url'] && !CHtmlUrlValidator::validate($trigger['url'])) {
-					self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
-				}
-
 				$triggerName = isset($trigger['description']) ? $trigger['description'] : $dbTrigger['description'];
 				$updateDiscoveredValidator->setObjectName($triggerName);
 
@@ -539,6 +535,10 @@ class CTrigger extends CTriggerGeneral {
 
 			if (!check_db_fields($triggerDbFields, $trigger)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect fields for trigger.'));
+			}
+
+			if (array_key_exists('url', $trigger) && $trigger['url'] && !CHtmlUrlValidator::validate($trigger['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
 			$expressionChanged = true;
