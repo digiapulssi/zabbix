@@ -20,16 +20,6 @@
 #ifndef ZABBIX_ZBXHISTORY_H
 #define ZABBIX_ZBXHISTORY_H
 
-
-#define	ZBX_HISTORY_API_VERSION	"v1"
-
-#define	ZBX_HISTORY_TYPE_UNUM_STR	"unum"
-#define	ZBX_HISTORY_TYPE_FLOAT_STR	"float"
-#define	ZBX_HISTORY_TYPE_CHAR_STR	"char"
-#define	ZBX_HISTORY_TYPE_TEXT_STR	"text"
-#define	ZBX_HISTORY_TYPE_LOG_STR	"log"
-
-
 /* the item history value */
 typedef struct
 {

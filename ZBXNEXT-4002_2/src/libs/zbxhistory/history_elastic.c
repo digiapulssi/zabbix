@@ -33,6 +33,8 @@
 #define		ZBX_JSON_ALLOCATE		2048
 
 
+const char	*value_type_str[] = {"dbl", "str", "log", "uint", "text"};
+
 extern char	*CONFIG_HISTORY_STORAGE_URL;
 
 typedef struct
@@ -430,8 +432,6 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	long			http_code;
 	struct zbx_json		query;
 	struct curl_slist	*curl_headers = NULL;
-	const char		*index[] = {ZBX_HISTORY_TYPE_FLOAT_STR, ZBX_HISTORY_TYPE_CHAR_STR,
-				ZBX_HISTORY_TYPE_LOG_STR, ZBX_HISTORY_TYPE_UNUM_STR, ZBX_HISTORY_TYPE_TEXT_STR};
 
 	if (NULL == (data->handle = curl_easy_init()))
 	{
@@ -441,7 +441,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	}
 
 	zbx_snprintf_alloc(&data->post_url, &url_alloc, &url_offset, "%s/%s/values/_search", data->base_url,
-			index[hist->value_type]);
+			value_type_str[hist->value_type]);
 
 	zbx_json_init(&query, ZBX_JSON_ALLOCATE);
 
@@ -553,13 +553,11 @@ static int	elastic_add_values(zbx_history_iface_t *hist, const zbx_vector_ptr_t 
 	ZBX_DC_HISTORY			*h;
 	struct zbx_json			json_idx, json;
 	size_t				buf_alloc = 0, buf_offset = 0;
-	const char			*index[] = {ZBX_HISTORY_TYPE_FLOAT_STR, ZBX_HISTORY_TYPE_CHAR_STR,
-					ZBX_HISTORY_TYPE_LOG_STR, ZBX_HISTORY_TYPE_UNUM_STR, ZBX_HISTORY_TYPE_TEXT_STR};
 
 	zbx_json_init(&json_idx, ZBX_IDX_JSON_ALLOCATE);
 
 	zbx_json_addobject(&json_idx, "index");
-	zbx_json_addstring(&json_idx, "_index", index[hist->value_type], ZBX_JSON_TYPE_STRING);
+	zbx_json_addstring(&json_idx, "_index", value_type_str[hist->value_type], ZBX_JSON_TYPE_STRING);
 	zbx_json_addstring(&json_idx, "_type", "values", ZBX_JSON_TYPE_STRING);
 
 	zbx_json_close(&json_idx);
