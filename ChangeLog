@@ -463,6 +463,7 @@ Changes for 3.0.11rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-12439] fixed macro name field length in host configuration form (gcalenko)
 ...G...PS. [ZBX-10820] fixed potential loss of data when server/proxy processes zabbix_sender data (Andris)
 ........S. [ZBX-12446] fixed discovery and auto registration to accept empty DNS names (vso)
 .......PS. [ZBX-12224] fixed connection to Oracle database when database server gives out warnings (gleb)
