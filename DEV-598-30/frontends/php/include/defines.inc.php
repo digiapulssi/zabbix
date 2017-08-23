@@ -143,6 +143,7 @@ define('P_UNSET_EMPTY',		2);
 define('P_ACT',				16);
 define('P_NZERO',			32);
 define('P_NO_TRIM',			64);
+define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
 
 //	misc parameters
 define('IMAGE_FORMAT_PNG',	'PNG');
