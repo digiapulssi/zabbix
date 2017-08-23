@@ -154,7 +154,7 @@ class CHelpItems {
 				],
 				[
 					'key' => 'proc_info[process,<attribute>,<type>]',
-					'description' => _('Different information about specific process(es). Returns float')
+					'description' => _('Various information about specific process(es). Returns float')
 				],
 				[
 					'key' => 'sensor[device,sensor,<mode>]',
@@ -452,7 +452,7 @@ class CHelpItems {
 				],
 				[
 					'key' => 'proc_info[process,<attribute>,<type>]',
-					'description' => _('Different information about specific process(es). Returns float')
+					'description' => _('Various information about specific process(es). Returns float')
 				],
 				[
 					'key' => 'sensor[device,sensor,<mode>]',
