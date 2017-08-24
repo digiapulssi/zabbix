@@ -1214,12 +1214,12 @@ static void	test_DCitem_poller_type_update(void)
 		/* check */
 
 		zbx_snprintf(desc, sizeof(desc), "item's poller type is correctly updated when %s", test_case_desc);
-		ZBX_CU_ASSERT_INT_EQ_FATAL(desc, item->poller_type, test_cases[i].success_poller_type);
+		ZBX_CU_ASSERT_INT_EQ(desc, item->poller_type, test_cases[i].success_poller_type);
 
 		item->poller_type = test_cases[i].item_poller_type;
 
 		zbx_snprintf(desc, sizeof(desc), "nothing but item's poller type was modified when %s", test_case_desc);
-		ZBX_CU_ASSERT_INT_EQ_FATAL(desc, memcmp(&item_copy, item, sizeof(ZBX_DC_ITEM)), 0);
+		ZBX_CU_ASSERT_INT_EQ(desc, memcmp(&item_copy, item, sizeof(ZBX_DC_ITEM)), 0);
 
 		/* clean */
 
