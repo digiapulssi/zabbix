@@ -388,22 +388,22 @@ static void	DCitem_poller_type_update(ZBX_DC_ITEM *dc_item, const ZBX_DC_HOST *d
 		return;
 	}
 
+	poller_type = poller_by_item(dc_item->type, dc_item->key);
+
 	if (0 != (flags & ZBX_HOST_UNREACHABLE))
 	{
-		if (ZBX_POLLER_TYPE_NORMAL == dc_item->poller_type || ZBX_POLLER_TYPE_JAVA == dc_item->poller_type)
-			dc_item->poller_type = ZBX_POLLER_TYPE_UNREACHABLE;
+		if (ZBX_POLLER_TYPE_NORMAL == poller_type || ZBX_POLLER_TYPE_JAVA == poller_type)
+			poller_type = ZBX_POLLER_TYPE_UNREACHABLE;
 
+		dc_item->poller_type = poller_type;
 		return;
 	}
 
 	if (0 != (flags & ZBX_ITEM_COLLECTED))
 	{
-		if (ZBX_POLLER_TYPE_UNREACHABLE == dc_item->poller_type)
-			dc_item->poller_type = poller_by_item(dc_item->type, dc_item->key);
+		dc_item->poller_type = poller_type;
 		return;
 	}
-
-	poller_type = poller_by_item(dc_item->type, dc_item->key);
 
 	if (ZBX_POLLER_TYPE_UNREACHABLE != dc_item->poller_type ||
 			(ZBX_POLLER_TYPE_NORMAL != poller_type && ZBX_POLLER_TYPE_JAVA != poller_type))
