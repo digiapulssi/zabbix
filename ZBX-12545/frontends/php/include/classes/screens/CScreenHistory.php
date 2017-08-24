@@ -108,6 +108,10 @@ class CScreenHistory extends CScreenBase {
 				'preservekeys' => true
 			));
 
+			if (!$this->items) {
+				show_error_message(_('No permissions to referred object or it does not exist!'));
+			}
+
 			$this->items = CMacrosResolverHelper::resolveItemNames($this->items);
 
 			$this->item = reset($this->items);
@@ -181,7 +185,7 @@ class CScreenHistory extends CScreenBase {
 				}
 				$options['sortfield'] = 'id';
 
-				$historyData = API::History()->get($options);
+				$historyData = ($this->items) ? API::History()->get($options) : [];
 
 				foreach ($historyData as $data) {
 					$data['value'] = encode_log(trim($data['value'], "\r\n"));
@@ -261,7 +265,7 @@ class CScreenHistory extends CScreenBase {
 				}
 
 				$options['sortfield'] = array('itemid', 'clock');
-				$historyData = API::History()->get($options);
+				$historyData = ($this->items) ? API::History()->get($options) : [];
 
 				foreach ($historyData as $data) {
 					$item = $this->items[$data['itemid']];
@@ -305,7 +309,7 @@ class CScreenHistory extends CScreenBase {
 		}
 
 		// time control
-		if (!$this->plaintext && str_in_array($this->action, array('showvalues', 'showgraph'))) {
+		if (!$this->plaintext && str_in_array($this->action, array('showvalues', 'showgraph')) && $this->item) {
 			$graphDims = getGraphDims();
 
 			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($this->item['itemid']));
