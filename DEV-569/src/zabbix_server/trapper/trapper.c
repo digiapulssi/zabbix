@@ -46,6 +46,8 @@ extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 extern size_t		(*find_psk_in_cache)(const unsigned char *, unsigned char *, size_t);
 
+extern char	*CONFIG_PEERS_ALLOWED;
+
 typedef struct
 {
 	zbx_counter_value_t	online;
@@ -1155,7 +1157,6 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 		if (SUCCEED == zbx_tcp_accept(&s, ZBX_TCP_SEC_TLS_CERT | ZBX_TCP_SEC_TLS_PSK | ZBX_TCP_SEC_UNENCRYPTED))
 		{
 			zbx_timespec_t	ts;
-
 			/* get connection timestamp */
 			zbx_timespec(&ts);
 
@@ -1165,7 +1166,17 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 					process_num);
 
 			sec = zbx_time();
-			process_trapper_child(&s, &ts);
+
+			if (SUCCEED == zbx_tcp_check_security(&s, CONFIG_PEERS_ALLOWED, ZBX_TCP_PERMIT_IF_EMPTY))
+			{
+				process_trapper_child(&s, &ts);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "failed to accept an incoming connection: %s",
+						zbx_socket_strerror());
+			}
+
 			sec = zbx_time() - sec;
 
 			zbx_tcp_unaccept(&s);
