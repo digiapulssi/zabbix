@@ -1004,9 +1004,9 @@ static void	test_DCitem_poller_type_update(void)
 
 		/* compose case description */
 
-		zbx_snprintf(test_case_desc, sizeof(test_case_desc), "host is monitored %s and is %sreachable, "
-				"item type is '%s', key is '%s', poller type is '%s' and it has%s been just collected"
-				"(#" ZBX_FS_SIZE_T ")",
+		zbx_snprintf(test_case_desc, sizeof(test_case_desc), "host is monitored %s and is %sreachable,"
+				" item type is '%s', key is '%s', poller type is '%s' and it has%s been just collected"
+				" (#" ZBX_FS_SIZE_T ")",
 				host_monitored,
 				(0 == (test_cases[i].flags & ZBX_HOST_UNREACHABLE) ? "" : "un"),
 				zbx_cu_item_type_string(test_cases[i].item_type),
