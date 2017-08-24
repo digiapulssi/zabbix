@@ -46,8 +46,9 @@ zbx_history_iface_t	history_ifaces[ITEM_VALUE_TYPE_MAX];
 int	zbx_history_init(char **error)
 {
 	int		i, ret;
-	const char	*opts[] = {ZBX_HISTORY_TYPE_FLOAT_STR, ZBX_HISTORY_TYPE_CHAR_STR, ZBX_HISTORY_TYPE_LOG_STR,
-			ZBX_HISTORY_TYPE_UNUM_STR, ZBX_HISTORY_TYPE_TEXT_STR};
+	/* TODO: support per value type specific configuration */
+
+	const char	*opts[] = {"dbl", "str", "log", "uint", "text"};
 
 	for (i = 0; i < ITEM_VALUE_TYPE_MAX; i++)
 	{
