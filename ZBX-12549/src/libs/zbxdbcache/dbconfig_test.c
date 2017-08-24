@@ -1193,15 +1193,15 @@ static void	test_DCitem_poller_type_update(void)
 		memcpy(&item_copy, item, sizeof(ZBX_DC_ITEM));
 
 		flags = rand();
-		flags ^= ZBX_HOST_UNREACHABLE | ZBX_ITEM_COLLECTED;
+		flags &= ~(ZBX_HOST_UNREACHABLE | ZBX_ITEM_COLLECTED);
 		flags |= test_cases[i].flags;
 
 		/* compose case description */
 
-		zbx_snprintf(test_case_desc, sizeof(test_case_desc), "host is monitored %s and is%s reachable, "
+		zbx_snprintf(test_case_desc, sizeof(test_case_desc), "host is monitored %s and is %sreachable, "
 				"item type is '%s', key is '%s', poller type is '%s' and it has%s been just collected",
 				host_monitored,
-				(0 == (test_cases[i].flags & ZBX_HOST_UNREACHABLE) ? "" : "n't"),
+				(0 == (test_cases[i].flags & ZBX_HOST_UNREACHABLE) ? "" : "un"),
 				zbx_cu_item_type_string(test_cases[i].item_type),
 				test_cases[i].item_key,
 				zbx_cu_poller_type_string(test_cases[i].item_poller_type),
