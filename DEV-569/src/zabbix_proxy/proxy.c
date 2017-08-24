@@ -502,6 +502,14 @@ static void	zbx_validate_config(ZBX_TASK_EX *task)
 		zabbix_log(LOG_LEVEL_CRIT, "invalid \"SourceIP\" configuration parameter: '%s'", CONFIG_SOURCE_IP);
 		err = 1;
 	}
+
+	if (NULL != CONFIG_PEERS_ALLOWED && SUCCEED != zbx_validate_peer_list(CONFIG_PEERS_ALLOWED, &ch_error))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "invalid entry in \"PeerIP\" configuration parameter: %s", ch_error);
+		zbx_free(ch_error);
+		err = 1;
+	}
+
 #if !defined(HAVE_IPV6)
 	err |= (FAIL == check_cfg_feature_str("Fping6Location", CONFIG_FPING6_LOCATION, "IPv6 support"));
 #endif
@@ -628,6 +636,8 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	1,			SEC_PER_HOUR},
 		{"UnavailableDelay",		&CONFIG_UNAVAILABLE_DELAY,		TYPE_INT,
 			PARM_OPT,	1,			SEC_PER_HOUR},
+		{"PeerIP",			&CONFIG_PEERS_ALLOWED,			TYPE_STRING_LIST,
+			PARM_OPT,	0,			0},
 		{"ListenIP",			&CONFIG_LISTEN_IP,			TYPE_STRING_LIST,
 			PARM_OPT,	0,			0},
 		{"ListenPort",			&CONFIG_LISTEN_PORT,			TYPE_INT,
