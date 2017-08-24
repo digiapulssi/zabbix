@@ -480,7 +480,7 @@ class testFormTrigger extends CWebTest {
 					'description' => 'MyTrigger_allFields',
 					'type' => true,
 					'comments' => 'MyTrigger_allFields -Description textbox for comments',
-					'url' => 'MyTrigger_allFields -URL field for link',
+					'url' => 'http://MyTrigger_allFields.com',
 					'severity' => 'Disaster',
 					'status' => false,
 					'expression' => '{Simple form test host:test-item-reuse.last(0)}<0',
@@ -574,7 +574,7 @@ class testFormTrigger extends CWebTest {
 					'expression' => '{Simple form test host:test-item-reuse.last(0)}<5',
 					'type' => true,
 					'comments' => 'Trigger status (expression) is recalculated every time Zabbix server receives new value, if this value is part of this expression. If time based functions are used in the expression, it is recalculated every 30 seconds by a zabbix timer process.',
-					'url' => 'www.zabbix.com',
+					'url' => 'http://www.zabbix.com',
 					'severity' => 'High',
 					'status' => false
 				)
