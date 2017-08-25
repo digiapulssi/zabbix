@@ -112,7 +112,9 @@
 			y = (target_top - (target_top % data['options']['widget-height'])) / data['options']['widget-height'],
 			width = (target_width - (target_width % widget_width_px)) / widget_width_px,
 			height = (target_height - (target_height % data['options']['widget-height'])) /
-				data['options']['widget-height'];
+				data['options']['widget-height'],
+			min_rows = ('min-rows' in data['options']) ? data['options']['min-rows'] : 1;
+
 
 		if (x > data['options']['max-columns'] - width) {
 			x = data['options']['max-columns'] - width;
@@ -137,8 +139,8 @@
 			width = data['options']['max-columns'];
 		}
 
-		if (height < 1) {
-			height = 1;
+		if (height < min_rows) {
+			height = min_rows;
 		}
 
 		return {'x': x, 'y': y, 'width': width, 'height': height};
@@ -316,7 +318,8 @@
 	}
 
 	function makeResizable($obj, data, widget) {
-		var	handles = {};
+		var	handles = {},
+			widgetMinRows = ('min-rows' in data['options']) ? data['options']['min-rows'] : 1;
 
 		$.each(['n', 'e', 's', 'w', 'ne', 'se', 'sw', 'nw'], function(index, key) {
 			var	$handle = $('<div>').addClass('ui-resizable-handle').addClass('ui-resizable-' + key);
@@ -362,7 +365,8 @@
 				}
 
 				doAction('onResizeEnd', $obj, data, widget);
-			}
+			},
+			minHeight: widgetMinRows * data['options']['widget-height']
 		});
 	}
 
@@ -1002,6 +1006,7 @@
 			var default_options = {
 				'fullscreen': 0,
 				'widget-height': 70,
+				'min-rows': 2,
 				'max-rows': 64,
 				'max-columns': 12,
 				'rows': 0,
