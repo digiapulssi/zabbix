@@ -53,6 +53,9 @@ if (array_key_exists('dashboardid', $data)) {
 		$js_scripts[] = 'jQuery("#userid").multiSelect("addData", '.CJs::encodeJson($data['owner']).')';
 	}
 
+	// Submit button is needed to enable submit event on Enter on inputs.
+	$form->addItem((new CInput('submit', 'dashboard_widget_config_submit'))->addStyle('display: none;'));
+
 	$output = [
 		'body' => $form->toString() . get_js(implode("\n", $js_scripts))
 	];
