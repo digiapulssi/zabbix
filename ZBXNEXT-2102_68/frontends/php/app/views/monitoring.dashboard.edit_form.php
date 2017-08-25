@@ -18,44 +18,56 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+if (array_key_exists('dashboardid', $data)) {
+	$form = (new CForm())
+		->setAttribute('id', 'dashboard_form')
+		->setName('dashboard_form');
 
-$this->addJsFile('multiselect.js');
-$this->includeJSfile('app/views/monitoring.dashboard.edit_form.js.php');
-
-$form = (new CForm())
-	->setName('dashboard_form')
-	->setAttribute('style', 'display: none;');
-
-$multiselect = (new CMultiSelect([
-	'name' => 'userid',
-	'selectedLimit' => 1,
-	'objectName' => 'users',
-	'disabled' => (CWebUser::getType() != USER_TYPE_SUPER_ADMIN && CWebUser::getType() != USER_TYPE_ZABBIX_ADMIN),
-	'popup' => [
-		'parameters' => 'srctbl=users&dstfrm='.$form->getName().'&dstfld1=userid&srcfld1=userid&srcfld2=fullname'
-	],
-	'callPostEvent' => true
-]))
-	->setAttribute('data-default-owner', CJs::encodeJson($data['dashboard']['owner']))
+	$multiselect = (new CMultiSelect([
+		'name' => 'userid',
+		'selectedLimit' => 1,
+		'objectName' => 'users',
+		'disabled' => (CWebUser::getType() != USER_TYPE_SUPER_ADMIN && CWebUser::getType() != USER_TYPE_ZABBIX_ADMIN),
+		'popup' => [
+			'parameters' => 'srctbl=users&dstfrm='.$form->getName().'&dstfld1=userid&srcfld1=userid&srcfld2=fullname'
+		],
+		'callPostEvent' => false
+	]))
+	->setAttribute('data-default-owner', CJs::encodeJson($data['owner']))
 	->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH);
 
-$form->addItem((new CFormList())
-	->addRow(_('Owner'), $multiselect)
-	->addRow(_('Name'),
-		(new CTextBox('name', $data['dashboard']['name'], false, DB::getFieldLength('dashboard', 'name')))
-			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
-			->setAttribute('autofocus', 'autofocus')
-	)
-);
-
-if ($data['dashboard']['dashboardid'] == 0) {
-	// Edit Form should be opened after multiselect initialization
-	$this->addPostJS(
-		'jQuery(document).on("'.$multiselect->getJsEventName().'", function() {'.
-			'showEditMode();'.
-			'dashbrd_config();'.
-		'});'
+	$form->addItem((new CFormList())
+		->addRow(_('Owner'), $multiselect)
+		->addRow(_('Name'),
+			(new CTextBox('name', $data['name'], false, DB::getFieldLength('dashboard', 'name')))
+				->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+				->setAttribute('autofocus', 'autofocus')
+		)
 	);
+
+	$js_scripts = [
+		$multiselect->getPostJS()
+	];
+
+	if ($data['owner']) {
+		$js_scripts[] = 'jQuery("#userid").multiSelect("addData", '.CJs::encodeJson($data['owner']).')';
+	}
+
+	$output = [
+		'body' => $form->toString() . get_js(implode("\n", $js_scripts))
+	];
+}
+else {
+	$output = [];
 }
 
-return $form;
+if (($messages = getMessages()) !== null) {
+	$output['messages'] = $messages->toString();
+}
+
+if ($data['user']['debug_mode'] == GROUP_DEBUG_MODE_ENABLED) {
+	CProfiler::getInstance()->stop();
+	$output['debug'] = CProfiler::getInstance()->make()->toString();
+}
+
+echo (new CJson())->encode($output);

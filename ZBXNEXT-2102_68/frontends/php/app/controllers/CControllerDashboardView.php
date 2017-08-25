@@ -341,7 +341,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getNewDashboard()
+	public function getNewDashboard()
 	{
 		return [
 			'dashboardid' => 0,

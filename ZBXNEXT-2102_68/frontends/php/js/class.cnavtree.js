@@ -17,18 +17,6 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-
-/*
- * Since function addPopupValues can be defined by several dashboard widgets, the variable addPopupValues should be
- * defined in global scope and always re-written with function right before usage. Do this in all widgets where it is
- * needed.
- */
-var old_addPopupValues = null;
-
-if (typeof addPopupValues === 'undefined') {
-	var addPopupValues = null;
-}
-
 if (typeof (zbx_widget_navtree_trigger) !== typeof (Function)) {
 	function zbx_widget_navtree_trigger(action, grid) {
 		var $navtree = jQuery('.navtree', grid['widget']['content_body']);

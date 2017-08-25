@@ -18,6 +18,19 @@
 **/
 
 
+/*
+ * Since function addPopupValues can be defined by several dashboard widgets, the variable addPopupValues should be
+ * defined in global scope and always re-written with function right before usage. Do this in all widgets where it is
+ * needed.
+ *
+ * It is utilized also to re-defien addPopupValues in Dashboard sharing modal window.
+ */
+var old_addPopupValues = null;
+
+if (typeof addPopupValues === 'undefined') {
+	var addPopupValues = null;
+}
+
 (function($) {
 	"use strict"
 
@@ -978,6 +991,284 @@
 		return triggers.length;
 	}
 
+	function getSharingPermissionRow(value, type) {
+		switch (type) {
+			case 'usrgrpid':
+				var prexix = 'user_group_',
+					objectid = value.usrgrpid,
+					radio_name = 'userGroups['+objectid+'][permission]',
+					objectid_name = 'userGroups['+objectid+'][usrgrpid]';
+				break;
+			case 'userid':
+				var prexix = 'user_',
+					objectid = value.id,
+					radio_name = 'users['+objectid+'][permission]',
+					objectid_name = 'users['+objectid+'][userid]';
+				break;
+			default:
+				return null;
+		}
+
+		return jQuery('<tr>', {
+				'id': prexix + 'shares_' + objectid
+			})
+			.append(jQuery('<td>')
+				.append(jQuery('<input>', {
+						'type': 'hidden',
+						'name': objectid_name
+					})
+					.val(objectid)
+				)
+				.append(document.createTextNode(value.name))
+			)
+			.append(jQuery('<td>')
+				.append(jQuery('<ul>')
+					.addClass('radio-segmented')
+					.append(jQuery('<li>')
+						.append(jQuery('<input>', {
+								'type': 'radio',
+								'name': radio_name,
+								'id': prexix + objectid + '_permission_' + PERM_READ,
+							})
+							.val(PERM_READ)
+						)
+						.append(jQuery('<label>', {
+								'for': prexix + objectid + '_permission_' + PERM_READ
+							})
+							.text(t('Read-only'))
+						)
+					)
+					.append(jQuery('<li>')
+						.append(jQuery('<input>', {
+								'type': 'radio',
+								'name': radio_name,
+								'id': prexix + objectid + '_permission_' + PERM_READ_WRITE,
+							})
+							.val(PERM_READ_WRITE)
+						)
+						.append(jQuery('<label>', {
+								'for': prexix + objectid + '_permission_' + PERM_READ_WRITE
+							})
+							.text(t('Read-write'))
+						)
+					)
+				)
+			)
+			.append(jQuery('<td>', {'class': 'nowrap'})
+				.append(jQuery('<button>', {
+						'type': 'button',
+						'class': 'btn-link'
+					})
+					.text(t('Remove'))
+					.click(function() {
+						jQuery(this).closest('tr').remove();
+					})
+				)
+			);
+	}
+
+	/**
+	 * Opens a Dashboard sharing modal window and initializes all actions and listeners on objects into it.
+	 *
+	 * @param {object} $obj       Dashboard grid object.
+	 * @param {object} data       Data from dashboard grid.
+	 */
+	function openDashboardSharingDialog($obj, data) {
+		var	url = new Curl('zabbix.php');
+
+		url.setArgument('action', 'dashboard.share.dialog');
+
+		jQuery.ajax({
+			url: url.getUrl(),
+			data: {
+				'dashboardid': data['dashboard']['id'],
+				'editable': '1'
+			},
+			success: function(response) {
+				// Revrite javascript function addPopupValues to be used in sharing window.
+				if (typeof addPopupValues === 'function') {
+					old_addPopupValues = addPopupValues;
+				}
+
+				addPopupValues = function(list) {
+					for (var i = 0, l = list.values.length; l > i; i++) {
+						var	value = list.values[i];
+
+						if (empty(value)) {
+							continue;
+						}
+
+						if (typeof value.permission === 'undefined') {
+							value.permission = (jQuery('input[name=private]:checked').val() == PRIVATE_SHARING)
+								? PERM_READ
+								: PERM_READ_WRITE;
+						}
+
+						switch (list.object) {
+							case 'private':
+								jQuery('input[name=private][value=' + value + ']').prop('checked', 'checked');
+								break;
+
+							case 'usrgrpid':
+								if (jQuery('#user_group_shares_' + value.usrgrpid).length) {
+									continue;
+								}
+
+								var row = getSharingPermissionRow(value, list.object);
+								jQuery('#user_group_list_footer').before(row);
+								jQuery('#user_group_' + value.usrgrpid + '_permission_' + value.permission)
+									.prop('checked', true);
+								break;
+
+							case 'userid':
+								if (jQuery('#user_shares_' + value.id).length) {
+									continue;
+								}
+
+								var row = getSharingPermissionRow(value, list.object);
+								jQuery('#user_list_footer').before(row);
+								jQuery('#user_' + value.id + '_permission_' + value.permission).prop('checked', true);
+								break;
+						}
+					}
+
+					if (typeof old_addPopupValues === 'function') {
+						addPopupValues = old_addPopupValues;
+						old_addPopupValues = null;
+					}
+				};
+
+				// Open overlay dialog.
+				overlayDialogue({
+					'title': t('Dashboard sharing'),
+					'content': response.body,
+					'buttons': [
+						{
+							'title': t('Update'),
+							'focused': true,
+							'class': 'dialogue-widget-save',
+							'keepOpen': false,
+							'action': function() {
+								jQuery('#dashboard_sharing_form').submit();
+							}
+						},
+						{
+							'title': t('Cancel'),
+							'class': 'btn-alt',
+							'cancel': true,
+							'action': function() {
+								overlayDialogueDestroy();
+							}
+						}
+					]
+				});
+
+				// Overwrite default form submit.
+				jQuery('#dashboard_sharing_form').submit(function(e) {
+					e.preventDefault();
+
+					jQuery.ajax({
+						url: jQuery(this).attr('action'),
+						data: jQuery(this).serialize(),
+						type: jQuery(this).attr('method')
+					});
+				});
+
+				// Initialize javascript listeners.
+				jQuery('[name="remove"]', jQuery('#dashboard_sharing_form')).click(function() {
+					jQuery(this).closest('tr').remove();
+				});
+			},
+			error: function() {
+				alert(t('Something went wrong. Please try again later!'));
+			},
+			dataType: 'json',
+			type: 'GET'
+		});
+	}
+
+	/**
+	 * Opens a Dashboard properties modal window and initializes all actions and listeners on objects into it.
+	 *
+	 * @param {object} $obj       Dashboard grid object.
+	 * @param {object} data       Data from dashboard grid.
+	 */
+	function openDashboardPropertiesDialog($obj, data) {
+		var	url = new Curl('zabbix.php'),
+			post_data = {
+				'dashboardid': data['dashboard']['id'],
+				'name': data['dashboard']['name'],
+				'userid': data['dashboard']['userid'],
+				'editable': '1'
+			};
+
+		url.setArgument('action', 'dashboard.prop.dialog');
+
+		var	current_url = new Curl(location.href);
+		if (current_url.getArgument('new') === '1') {
+			post_data.new = 1;
+		}
+
+		jQuery.ajax({
+			url: url.getUrl(),
+			data: post_data,
+			success: function(response) {
+				// Open overlay dialog.
+				overlayDialogue({
+					'title': t('Dashboard properties'),
+					'content': response.body,
+					'buttons': [
+						{
+							'title': t('Apply'),
+							'focused': true,
+							'class': 'dialogue-widget-save',
+							'keepOpen': false,
+							'action': function() {
+								jQuery('#dashboard_form').submit();
+							}
+						},
+						{
+							'title': t('Cancel'),
+							'class': 'btn-alt',
+							'cancel': true,
+							'action': function() {
+								overlayDialogueDestroy();
+							}
+						}
+					]
+				});
+
+				// Overwrite default form submit.
+				jQuery('#dashboard_form').submit(function(e) {
+					var	$this = jQuery(this),
+						name = jQuery('[name="name"]', $this).val(),
+						userid = jQuery('[name="userid"]', $this).val() || 0;
+					e.preventDefault();
+
+					$obj.dashboardGrid('setDashboardData', {
+						'name': name,
+						'userid': userid
+					});
+
+					jQuery('div.article .header-title .cell:first h1, #dashboard-direct-link').text(name);
+
+					overlayDialogueDestroy();
+				});
+
+				jQuery('#dashboard_form').on('keyup', function(e) {
+					if (e.which == 13) {
+						jQuery('#dashboard_form').submit();
+					}
+				});
+			},
+			error: function() {
+				alert(t('Something went wrong. Please try again later!'));
+			},
+			dataType: 'json',
+			type: 'GET'
+		});
+	}
+
 	var	methods = {
 		init: function(options) {
 			var default_options = {
@@ -1223,6 +1514,30 @@
 					data = $this.data('dashboardGrid');
 
 				deleteWidget($this, data, widget);
+			});
+		},
+
+		/*
+		 * Opens and initializes Dashboard sharing dialog.
+		 */
+		openDashboardSharingDialog: function() {
+			return this.each(function() {
+				var	$this = $(this),
+					data = $this.data('dashboardGrid');
+
+				openDashboardSharingDialog($this, data);
+			});
+		},
+
+		/*
+		 * Opens and initializes Dashboard properties dialog.
+		 */
+		openDashboardPropertiesDialog: function() {
+			return this.each(function() {
+				var	$this = $(this),
+					data = $this.data('dashboardGrid');
+
+				openDashboardPropertiesDialog($this, data);
 			});
 		},
 
@@ -1536,6 +1851,21 @@
 
 			this.each(function() {
 				response = $(this).data('dashboardGrid')['options']['edit_mode'];
+			});
+
+			return response;
+		},
+
+		/**
+		 * Indicates either dashboard has been saved.
+		 *
+		 * @returns {Boolean}	True if dasboard has assigned dashboardid.
+		 */
+		isDashboardSaved: function() {
+			var response = false;
+
+			this.each(function() {
+				response = (+$(this).data('dashboardGrid')['dashboard']['id'] > 0);
 			});
 
 			return response;

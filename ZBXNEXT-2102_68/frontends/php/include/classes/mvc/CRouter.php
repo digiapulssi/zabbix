@@ -65,6 +65,8 @@ class CRouter {
 		'dashbrd.widget.update'	=> ['CControllerDashbrdWidgetUpdate',	'layout.json',			null],
 		'dashboard.get'	        => ['CControllerDashboardGet',	        'layout.json',			null],
 		'dashboard.update'	    => ['CControllerDashboardUpdate',	    'layout.json',			null],
+		'dashboard.share.dialog'=> ['CControllerDashboardSharing',		'layout.json',			'monitoring.dashboard.sharing_form'],
+		'dashboard.prop.dialog' => ['CControllerDashboardProperties',	'layout.json',			'monitoring.dashboard.edit_form'],
 		'dashbrd.widget.rfrate'	=> ['CControllerDashbrdWidgetRfRate',	'layout.json',			null],
 		'discovery.view'		=> ['CControllerDiscoveryView',			'layout.htmlpage',		'monitoring.discovery.view'],
 		'favourite.create'		=> ['CControllerFavouriteCreate',		'layout.javascript',	null],
