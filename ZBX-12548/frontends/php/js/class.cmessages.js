@@ -352,11 +352,11 @@ var CMessageList = Class.create({
 	},
 
 	serverRespond: function(messages) {
-		for (var i = 0; i < messages.length; i++) {
-			this.addMessage(messages[i]);
-		}
-
 		if (messages.length) {
+			for (var i = 0; i < messages.length; i++) {
+				this.addMessage(messages[i]);
+			}
+
 			this.messages = messages;
 			this.playSound();
 		}
