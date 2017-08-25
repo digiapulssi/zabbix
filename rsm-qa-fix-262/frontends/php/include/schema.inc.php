@@ -6157,4 +6157,28 @@ return [
 			],
 		],
 	],
+	'lastvalue' => [
+		'key' => 'itemid',
+		'fields' => [
+			'itemid' => [
+				'null' => false,
+				'type' => DB::FIELD_TYPE_ID,
+				'length' => 20,
+				'ref_table' => 'items',
+				'ref_field' => 'itemid',
+			],
+			'clock' => [
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '0',
+			],
+			'value' => [
+				'null' => false,
+				'type' => DB::FIELD_TYPE_FLOAT,
+				'length' => 16,
+				'default' => '0.0000',
+			],
+		],
+	],
 ];
