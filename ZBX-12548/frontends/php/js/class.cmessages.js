@@ -356,8 +356,11 @@ var CMessageList = Class.create({
 			this.addMessage(messages[i]);
 		}
 
-		this.messages = messages;
-		this.playSound();
+		if (messages.length) {
+			this.messages = messages;
+			this.playSound();
+		}
+
 		this.ready = true;
 	},
 
