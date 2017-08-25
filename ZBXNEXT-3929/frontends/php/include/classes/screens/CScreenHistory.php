@@ -316,7 +316,7 @@ class CScreenHistory extends CScreenBase {
 		if (!$this->plaintext && str_in_array($this->action, [HISTORY_VALUES, HISTORY_GRAPH, HISTORY_BATCH_GRAPH])) {
 			$graphDims = getGraphDims();
 
-			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid([$firstItem]));
+			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, Manager::History()->getMinClock([$firstItem]));
 
 			$this->dataId = 'historyGraph';
 
