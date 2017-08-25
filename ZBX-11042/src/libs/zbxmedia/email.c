@@ -553,7 +553,7 @@ static int	send_email_curl(const char *smtp_server, unsigned short smtp_port, co
 #ifdef HAVE_SMTP_AUTHENTICATION
 	int			err, ret = FAIL;
 	CURL            	*easyhandle;
-	char			url[MAX_STRING_LEN], errbuf[CURL_ERROR_SIZE];
+	char			url[MAX_STRING_LEN], errbuf[CURL_ERROR_SIZE] = "";
 	size_t			url_offset= 0;
 	struct curl_slist	*recipients = NULL;
 	smtp_payload_status_t	payload_status = {};
@@ -656,7 +656,8 @@ static int	send_email_curl(const char *smtp_server, unsigned short smtp_port, co
 
 	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
 	{
-		zbx_snprintf(error, max_error_len, "%s: %s", curl_easy_strerror(err), errbuf);
+		zbx_snprintf(error, max_error_len, "%s%s%s", curl_easy_strerror(err), ('\0' != *errbuf ? ": " : ""),
+				errbuf);
 		goto clean;
 	}
 
@@ -723,7 +724,7 @@ clean:
 	zbx_free(to_angle_addr);
 
 	if ('\0' != *error)
-		zabbix_log(LOG_LEVEL_WARNING, "%s", error);
+		zabbix_log(LOG_LEVEL_WARNING, "failed to send email: %s", error);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
