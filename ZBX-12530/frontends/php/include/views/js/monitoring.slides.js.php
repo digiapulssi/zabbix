@@ -2,11 +2,10 @@
 	jQuery(function() {
 		initPMaster(
 			'slideshows',
-			<?php
-				$delay = timeUnitToSeconds($this->data['element']['delay']);
-				echo CJs::encodeJson([
+			<?=
+				CJs::encodeJson([
 					WIDGET_SLIDESHOW => [
-						'frequency' => $delay * $this->data['refreshMultiplier'],
+						'frequency' => timeUnitToSeconds($data['element']['delay']) * $data['refreshMultiplier'],
 						'url' => 'slides.php?output=html&elementid='.$this->data['elementId'].
 							(isset($this->data['groupid']) ? '&groupid='.$this->data['groupid'] : '').
 							(isset($this->data['hostid']) ? '&hostid='.$this->data['hostid'] : ''),
