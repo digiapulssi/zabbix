@@ -1863,7 +1863,7 @@ function get_item_function_info($expr) {
 		'iregexp' => $result_types['string_as_0or1'],
 		'last' => $result_types['numeric'] + $result_types['string_as_float'],
 		'logeventid' => [ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]],
-		'logseverity' => [ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), 'valid_uint({})']],
+		'logseverity' => [ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), $valid_uint]],
 		'logsource' => [ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]],
 		'max' => $result_types['numeric'],
 		'min' => $result_types['numeric'],
