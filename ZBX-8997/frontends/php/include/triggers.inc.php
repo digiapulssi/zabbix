@@ -1821,24 +1821,20 @@ function get_item_function_info($expr) {
 			ITEM_VALUE_TYPE_TEXT => [_('Numeric (unsigned)'), 'valid_uint({})'],
 			ITEM_VALUE_TYPE_STR => [_('Numeric (unsigned)'), 'valid_uint({})'],
 			ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), 'valid_uint({})']
+		],
+		'date' => [
+			'any' => ['YYYYMMDD', '{}>=19700101&&{}<=99991231']
+		],
+		'time' => [
+			'any' => ['HHMMSS', 'preg_match("/^([01]?\d|2[0-3])([0-5]?\d)([0-5]?\d)$/", {})']
+		],
+		'day_of_month' => [
+			'any' => ['1-31', '{}>=1&&{}<=31']
+		],
+		'day_of_week' => [
+			'any' => ['1-7', IN('1,2,3,4,5,6,7')]
 		]
 	];
-	$result_types['date'] = array_fill_keys(
-		[ITEM_VALUE_TYPE_UINT64, ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_TEXT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG],
-		['YYYYMMDD', '{}>=19700101&&{}<=99991231']
-	);
-	$result_types['day_of_month'] = array_fill_keys(
-		[ITEM_VALUE_TYPE_UINT64, ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_TEXT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG],
-		['1-31', '{}>=1&&{}<=31']
-	);
-	$result_types['day_of_week'] = array_fill_keys(
-		[ITEM_VALUE_TYPE_UINT64, ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_TEXT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG],
-		['1-7', IN('1,2,3,4,5,6,7')]
-	);
-	$result_types['time'] = array_fill_keys(
-		[ITEM_VALUE_TYPE_UINT64, ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_TEXT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG],
-		['HHMMSS', 'preg_match("/^([01]?\d|2[0-3])([0-5]?\d)([0-5]?\d)$/", {})']
-	);
 
 	$functions = [
 		'abschange' => $result_types['numeric'] + $result_types['string_as_0or1'],
@@ -1943,7 +1939,10 @@ function get_item_function_info($expr) {
 			$function = $functions[$expr_part['functionName']];
 			$value_type = $item[0]['value_type'];
 
-			if (!array_key_exists($value_type, $function)) {
+			if (array_key_exists('any', $function)) {
+				$value_type = 'any';
+			}
+			elseif (!array_key_exists($value_type, $function)) {
 				$result = EXPRESSION_UNSUPPORTED_VALUE_TYPE;
 				break;
 			}
