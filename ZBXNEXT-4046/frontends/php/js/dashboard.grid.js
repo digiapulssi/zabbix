@@ -319,7 +319,7 @@
 
 	function makeResizable($obj, data, widget) {
 		var	handles = {},
-			widgetMinRows = ('min-rows' in data['options']) ? data['options']['min-rows'] : 1;
+			widget_min_rows = ('min-rows' in data['options']) ? data['options']['min-rows'] : 1;
 
 		$.each(['n', 'e', 's', 'w', 'ne', 'se', 'sw', 'nw'], function(index, key) {
 			var	$handle = $('<div>').addClass('ui-resizable-handle').addClass('ui-resizable-' + key);
@@ -366,7 +366,7 @@
 
 				doAction('onResizeEnd', $obj, data, widget);
 			},
-			minHeight: widgetMinRows * data['options']['widget-height']
+			minHeight: widget_min_rows * data['options']['widget-height']
 		});
 	}
 
