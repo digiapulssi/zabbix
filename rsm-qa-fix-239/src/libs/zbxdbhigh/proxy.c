@@ -2291,6 +2291,8 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 						items[i].itemid, values[i].ts.sec, values[i].ts.ns, values[i].host_name,
 						values[i].key);
 			}
+
+			zbx_history_record_clear(&vc_value, items[i].value_type);
 		}
 	}
 
