@@ -619,7 +619,7 @@ function convert_units($options = []) {
 
 	if (in_array($options['units'], $blackList) || (zbx_empty($options['units'])
 			&& ($options['convert'] == ITEM_CONVERT_WITH_UNITS))) {
-		$is_float = preg_match('/^\\d+\\.\\d+$/', $options['value']);
+		$is_float = preg_match('/^\-?\d+\.\d+$/', $options['value']);
 
 		if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD && $is_float) {
 			$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
