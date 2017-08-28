@@ -2287,9 +2287,9 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 					values[i].ts.sec == vc_value.timestamp.sec &&
 					values[i].ts.ns == vc_value.timestamp.ns)
 			{
-				zabbix_log(LOG_LEVEL_CRIT, "potential Duplicate entry '" ZBX_FS_UI64 "-%d-%d' (%s:%s)",
-						items[i].itemid, values[i].ts.sec, values[i].ts.ns, values[i].host_name,
-						values[i].key);
+				zabbix_log(LOG_LEVEL_CRIT, "potential Duplicate entry '" ZBX_FS_UI64 "-%d-%d' (%s:%s)"
+						" " ZBX_FS_SIZE_T "/" ZBX_FS_SIZE_T, items[i].itemid, values[i].ts.sec,
+						values[i].ts.ns, values[i].host_name, values[i].key, i, values_num);
 			}
 
 			zbx_history_record_clear(&vc_value, items[i].value_type);
