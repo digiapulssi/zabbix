@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc22
 
 New features:
+....I..... [284] added directory "monitoring/" to the base path of TLD (dimir)
 
 Bug fixes:
 
