@@ -32,9 +32,9 @@ class CHtmlUrlValidator {
 	 * @return bool
 	 */
 	public static function validate($url) {
-		$scheme = (strpos($url, ':')  === false) ? '' : substr($url, 0, strpos($url, ':'));
+		$scheme = (strpos($url, ':') === false) ? '' : substr($url, 0, strpos($url, ':'));
 		$allowed_schemes = explode(',', strtolower(ZBX_URI_VALID_SCHEMES));
 
-		return (in_array(strtolower($scheme), $allowed_schemes)) || (preg_match('/^[a-z_\.]+\.php/i', $url) == 1);
+		return (in_array(strtolower($scheme), $allowed_schemes) || preg_match('/^[a-z_\.]+\.php/i', $url) == 1);
 	}
 }
