@@ -1791,17 +1791,23 @@ function makeExpression(array $expressionTree, $level = 0, $operator = null) {
 }
 
 function get_item_function_info($expr) {
+	$valid_float = 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})';
+	$valid_uint = 'preg_match("/^[0-9]+['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?$/", {})';
 	$result_types = [
 		// Every nested array should have two elements: label, validation.
 		'integer' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), 'valid_uint({})']
+			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), $valid_uint]
 		],
 		'float' => [
-			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), 'valid_float({})']
+			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), $valid_float]
 		],
 		'numeric' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), 'valid_uint({})'],
-			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), 'valid_float({})']
+			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), $valid_uint],
+			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), $valid_float]
+		],
+		'numeric_as_float' => [
+			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (float)'), $valid_float],
+			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), $valid_float]
 		],
 		'numeric_as_0or1' => [
 			ITEM_VALUE_TYPE_UINT64 => [_('0 or 1'), IN('0,1')],
@@ -1813,14 +1819,19 @@ function get_item_function_info($expr) {
 			ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]
 		],
 		'string_as_asis' => [
-			ITEM_VALUE_TYPE_TEXT => [_('Text'), 'valid_uint({})'],
-			ITEM_VALUE_TYPE_STR => [_('Character'), 'valid_uint({})'],
-			ITEM_VALUE_TYPE_LOG => [_('Log'), 'valid_uint({})']
+			ITEM_VALUE_TYPE_TEXT => [_('Text'), $valid_uint],
+			ITEM_VALUE_TYPE_STR => [_('Character'), $valid_uint],
+			ITEM_VALUE_TYPE_LOG => [_('Log'), $valid_uint]
 		],
-		'string_as_numeric' => [
-			ITEM_VALUE_TYPE_TEXT => [_('Numeric (unsigned)'), 'valid_uint({})'],
-			ITEM_VALUE_TYPE_STR => [_('Numeric (unsigned)'), 'valid_uint({})'],
-			ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), 'valid_uint({})']
+		'string_as_uint' => [
+			ITEM_VALUE_TYPE_TEXT => [_('Numeric (unsigned)'), $valid_uint],
+			ITEM_VALUE_TYPE_STR => [_('Numeric (unsigned)'), $valid_uint],
+			ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), $valid_uint]
+		],
+		'string_as_float' => [
+			ITEM_VALUE_TYPE_TEXT => [_('Numeric (float)'), $valid_float],
+			ITEM_VALUE_TYPE_STR => [_('Numeric (float)'), $valid_float],
+			ITEM_VALUE_TYPE_LOG => [_('Numeric (float)'), $valid_float]
 		],
 		'date' => [
 			'any' => ['YYYYMMDD', '{}>=19700101&&{}<=99991231']
@@ -1838,34 +1849,34 @@ function get_item_function_info($expr) {
 
 	$functions = [
 		'abschange' => $result_types['numeric'] + $result_types['string_as_0or1'],
-		'avg' => $result_types['numeric'],
+		'avg' => $result_types['numeric_as_float'],
 		'band' => $result_types['integer'],
 		'change' => $result_types['numeric'] + $result_types['string_as_0or1'],
-		'count' => $result_types['numeric'] + $result_types['string_as_numeric'],
+		'count' => $result_types['numeric'] + $result_types['string_as_uint'],
 		'date' => $result_types['date'],
 		'dayofmonth' => $result_types['day_of_month'],
 		'dayofweek' => $result_types['day_of_week'],
 		'delta' => $result_types['numeric'],
-		'diff' => $result_types['numeric'] + $result_types['string_as_0or1'],
-		'forecast' => $result_types['numeric'],
+		'diff' => $result_types['numeric_as_0or1'] + $result_types['string_as_0or1'],
+		'forecast' => $result_types['numeric_as_float'],
 		'fuzzytime' => $result_types['numeric_as_0or1'],
 		'iregexp' => $result_types['string_as_0or1'],
-		'last' => $result_types['numeric'] + $result_types['string_as_numeric'],
+		'last' => $result_types['numeric'] + $result_types['string_as_float'],
 		'logeventid' => [ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]],
 		'logseverity' => [ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), 'valid_uint({})']],
 		'logsource' => [ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]],
 		'max' => $result_types['numeric'],
 		'min' => $result_types['numeric'],
 		'nodata' => $result_types['numeric_as_0or1'] + $result_types['string_as_0or1'],
-		'now' => $result_types['numeric'] + $result_types['string_as_numeric'],
+		'now' => $result_types['numeric'] + $result_types['string_as_uint'],
 		'percentile' => $result_types['numeric'],
-		'prev' => $result_types['numeric'] + $result_types['string_as_numeric'],
+		'prev' => $result_types['numeric'] + $result_types['string_as_float'],
 		'regexp' => $result_types['string_as_0or1'],
 		'str' => $result_types['string_as_0or1'],
-		'strlen' => $result_types['string_as_numeric'],
+		'strlen' => $result_types['string_as_uint'],
 		'sum' => $result_types['numeric'],
 		'time' => $result_types['time'],
-		'timeleft' => $result_types['numeric']
+		'timeleft' => $result_types['numeric_as_float']
 	];
 
 	$expr_data = new CTriggerExpression();
