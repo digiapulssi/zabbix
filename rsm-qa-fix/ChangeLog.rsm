@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc22
 
 New features:
+..F.....S. [262] improved performance of Rolling Week page by introducing new table "lastvalue" (dimir, Oleg)
 ....I..... [284] added directory "monitoring/" to the base path of TLD (dimir)
 
 Bug fixes:

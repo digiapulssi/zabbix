@@ -1472,6 +1472,8 @@ static void	dc_add_history_dbl(ZBX_DC_HISTORY *history, int history_num)
 {
 	int		i;
 	zbx_db_insert_t	db_insert;
+	char		*sql = NULL;
+	size_t		sql_alloc = 0, sql_offset;
 
 	zbx_db_insert_prepare(&db_insert, "history", "itemid", "clock", "ns", "value", NULL);
 
@@ -1489,10 +1491,20 @@ static void	dc_add_history_dbl(ZBX_DC_HISTORY *history, int history_num)
 			continue;
 
 		zbx_db_insert_add_values(&db_insert, h->itemid, h->ts.sec, h->ts.ns, h->value.dbl);
+
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+				"insert into lastvalue (itemid,clock,value)"
+				" values(" ZBX_FS_UI64 ",%d," ZBX_FS_DBL ")"
+				" on duplicate key update clock=%d,value=" ZBX_FS_DBL ";\n",
+				h->itemid, h->ts.sec, h->value.dbl, h->ts.sec, h->value.dbl);
 	}
 
 	zbx_db_insert_execute(&db_insert);
 	zbx_db_insert_clean(&db_insert);
+
+	DBexecute("%s", sql);
+
+	zbx_free(sql);
 }
 
 /******************************************************************************
