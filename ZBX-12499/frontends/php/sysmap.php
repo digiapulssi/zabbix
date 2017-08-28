@@ -58,8 +58,8 @@ check_fields($fields);
 if (isset($_REQUEST['favobj'])) {
 	$json = new CJson();
 
-	if (getRequest('favobj') == 'sysmap' && hasRequest('action')) {
-		if (getRequest('action') == 'update') {
+	if (getRequest('favobj') === 'sysmap' && hasRequest('action')) {
+		if (getRequest('action') === 'update') {
 			$sysmapid = getRequest('sysmapid', 0);
 
 			@ob_start();
@@ -123,7 +123,7 @@ if (isset($_REQUEST['favobj'])) {
 			@ob_flush();
 			exit;
 		}
-		elseif (getRequest('action') == 'expand') {
+		elseif (getRequest('action') === 'expand') {
 			$values = [];
 			$sources = json_decode(getRequest('source'), true);
 
@@ -135,9 +135,7 @@ if (isset($_REQUEST['favobj'])) {
 						$values[] = CMacrosResolverHelper::resolveMapLabelMacrosAll($source);
 					}
 					else {
-						$label = array_key_exists('label', $source) ? $source['label']
-								: (array_key_exists('text', $source) ? $source['text'] : '');
-
+						$label = array_key_exists('label', $source) ? $source['label'] : $source['text'];
 						$values[] = CMacrosResolverHelper::resolveMapLabelMacros($label);
 					}
 				}

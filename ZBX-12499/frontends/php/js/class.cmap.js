@@ -269,7 +269,7 @@ ZABBIX.apps.map = (function($) {
 			},
 
 			setExpandedLabels: function (elements, labels) {
-				for (var i = 0; i < elements.length; i++) {
+				for (var i = 0, ln = elements.length; i < ln; i++) {
 					if (labels !== null) {
 						elements[i].expanded = labels[i];
 					}
@@ -304,7 +304,7 @@ ZABBIX.apps.map = (function($) {
 
 					this.expand_sources = [];
 
-					for (var i = 0; i < sources.length; i++) {
+					for (var i = 0, ln = sources.length; i < ln; i++) {
 						post.push(sources[i].data);
 					}
 
@@ -356,7 +356,7 @@ ZABBIX.apps.map = (function($) {
 						element[name] = this.selements[key].data[name];
 					}, this);
 
-					if (this.data.expand_macros == '1' && typeof(this.selements[key].expanded) == 'string') {
+					if (this.data.expand_macros === '1' && typeof(this.selements[key].expanded) === 'string') {
 						element['label'] = this.selements[key].expanded;
 					}
 
@@ -382,7 +382,7 @@ ZABBIX.apps.map = (function($) {
 						link[name] = this.links[key].data[name];
 					}, this);
 
-					if (this.data.expand_macros == '1' && typeof(this.links[key].expanded) == 'string') {
+					if (this.data.expand_macros === '1' && typeof(this.links[key].expanded) === 'string') {
 						link['label'] = this.links[key].expanded;
 					}
 
@@ -395,8 +395,8 @@ ZABBIX.apps.map = (function($) {
 						shape[name] = this.shapes[key].data[name];
 					}, this);
 
-					if (this.data.expand_macros == '1') {
-						if (typeof(this.shapes[key].expanded) == 'string') {
+					if (this.data.expand_macros === '1') {
+						if (typeof(this.shapes[key].expanded) === 'string') {
 							shape['text'] = this.shapes[key].expanded;
 						}
 
@@ -2259,17 +2259,17 @@ ZABBIX.apps.map = (function($) {
 					var k,
 						id,
 						key,
+						kln,
 						keys,
 						ids = Object.keys(this.data.elements);
 
-					for (i = 0; i < ids.length && !invalidate; i++) {
+					for (i = 0, ln = ids.length; i < ln && !invalidate; i++) {
 						id = ids[i];
 						keys = Object.keys(this.data.elements[id]);
 
-						for (k = 0; k < keys.length; k++) {
+						for (k = 0, kln = keys.length; k < kln; k++) {
 							key = keys[k];
-
-							if (this.data.elements[id][key] != data.elements[id][key]) {
+							if (this.data.elements[id][key] !== data.elements[id][key]) {
 								invalidate = true;
 								break;
 							}
