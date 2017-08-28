@@ -1806,6 +1806,10 @@ function get_item_function_info($expr) {
 			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (float)'), $valid_float],
 			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), $valid_float]
 		],
+		'numeric_as_uint' => [
+			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), $valid_uint],
+			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (unsigned)'), $valid_uint]
+		],
 		'numeric_as_0or1' => [
 			ITEM_VALUE_TYPE_UINT64 => [_('0 or 1'), IN('0,1')],
 			ITEM_VALUE_TYPE_FLOAT => [_('0 or 1'), IN('0,1')]
@@ -1844,7 +1848,7 @@ function get_item_function_info($expr) {
 		'avg' => $result_types['numeric_as_float'],
 		'band' => $result_types['integer'],
 		'change' => $result_types['numeric'] + $result_types['string_as_0or1'],
-		'count' => $result_types['numeric'] + $result_types['string_as_uint'],
+		'count' => $result_types['numeric_as_uint'] + $result_types['string_as_uint'],
 		'date' => $result_types['date'],
 		'dayofmonth' => $result_types['day_of_month'],
 		'dayofweek' => $result_types['day_of_week'],
@@ -1860,7 +1864,7 @@ function get_item_function_info($expr) {
 		'max' => $result_types['numeric'],
 		'min' => $result_types['numeric'],
 		'nodata' => $result_types['numeric_as_0or1'] + $result_types['string_as_0or1'],
-		'now' => $result_types['numeric'] + $result_types['string_as_uint'],
+		'now' => $result_types['numeric_as_uint'] + $result_types['string_as_uint'],
 		'percentile' => $result_types['numeric'],
 		'prev' => $result_types['numeric'] + $result_types['string_as_float'],
 		'regexp' => $result_types['string_as_0or1'],
