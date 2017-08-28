@@ -1792,7 +1792,7 @@ function makeExpression(array $expressionTree, $level = 0, $operator = null) {
 
 function get_item_function_info($expr) {
 	$result_types = [
-			// Every nested array should have two elements: label, validation
+		// Every nested array should have two elements: label, validation.
 		'integer' => [
 			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), 'valid_uint({})']
 		],
