@@ -304,6 +304,8 @@ retry_history:
 				{
 					last_access = time(NULL);
 
+/* ATTENTION: For debugging only! */	zabbix_log(LOG_LEVEL_CRIT, "about to proces history data from %s: %s",
+							proxy.addr, answer);
 					process_hist_data(NULL, &jp, proxy.hostid, &ts, NULL);
 
 					if (SUCCEED == zbx_json_brackets_by_name(&jp, ZBX_PROTO_TAG_DATA, &jp_data))

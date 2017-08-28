@@ -2274,6 +2274,23 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 		mtimes[num] = values[i].mtime;
 		errcodes2[num] = SUCCEED;
 		num++;
+
+		/* ATTENTION: This is a runtime duplicate check. For debugging purposes only! */
+		if (0 != proxy_hostid)
+		{
+			#include "../zbxdbcache/valuecache.h"
+
+			zbx_timespec_t		ts = {values[i].ts.sec, 999999999};
+			zbx_history_record_t	vc_value;
+
+			if (SUCCEED == zbx_vc_get_value(items[i].itemid, items[i].value_type, &ts, &vc_value) &&
+					values[i].ts.ns == vc_value.timestamp.ns)
+			{
+				zabbix_log(LOG_LEVEL_CRIT, "potential Duplicate entry '" ZBX_FS_UI64 "-%d-%d' (%s:%s)",
+						items[i].itemid, values[i].ts.sec, values[i].ts.ns, values[i].host_name,
+						values[i].key);
+			}
+		}
 	}
 
 	DCconfig_clean_items(items, errcodes, values_num);

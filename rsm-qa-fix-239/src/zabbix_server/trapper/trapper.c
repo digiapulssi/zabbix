@@ -131,6 +131,7 @@ static void	send_proxyhistory(zbx_socket_t *sock, zbx_timespec_t *ts)
 	zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
 
 	proxy_get_hist_data(&j, &lastid);
+	zbx_json_adduint64(&j, "lastid", lastid);	/* ATTENTION: For debugging only! */
 
 	zbx_json_close(&j);
 
