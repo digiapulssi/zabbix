@@ -825,7 +825,7 @@ class CTrigger extends CTriggerGeneral {
 		foreach ($triggerIds as $triggerId) {
 			$insert[] = [
 				'tablename' => 'events',
-				'field' => EVENT_OBJECT_TRIGGER,
+				'field' => 'triggerid',
 				'value' => $triggerId
 			];
 		}

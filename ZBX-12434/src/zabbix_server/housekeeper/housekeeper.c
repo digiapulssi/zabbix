@@ -650,8 +650,17 @@ static int	housekeeping_cleanup()
 
 		if (0 == strcmp(housekeeper.tablename, "events"))
 		{
+			char	*object;
+
+			if (0 == strcmp(housekeeper.field, "triggerid"))
+				object = ZBX_STR(EVENT_OBJECT_TRIGGER);
+			else if (0 == strcmp(housekeeper.field, "itemid"))
+				object = ZBX_STR(EVENT_OBJECT_ITEM);
+			else
+				object = ZBX_STR(EVENT_OBJECT_LLDRULE);
+
 			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "object=%s and objectid="
-					ZBX_FS_UI64, housekeeper.field, housekeeper.value);
+					ZBX_FS_UI64, object, housekeeper.value);
 		}
 		else
 		{

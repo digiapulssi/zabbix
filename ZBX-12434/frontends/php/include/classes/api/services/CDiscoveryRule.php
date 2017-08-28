@@ -420,7 +420,7 @@ class CDiscoveryRule extends CItemGeneral {
 		foreach ($ruleids as $ruleid) {
 			$insert[] = [
 				'tablename' => 'events',
-				'field' => EVENT_OBJECT_LLDRULE,
+				'field' => 'lldruleid',
 				'value' => $ruleid
 			];
 		}

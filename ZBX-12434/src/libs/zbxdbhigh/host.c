@@ -1100,7 +1100,7 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 
 	DBexecute("%s", sql);
 
-	DBdelete_by_ids(triggerids, ZBX_STR(EVENT_OBJECT_TRIGGER), event_tables, ARRSIZE(event_tables));
+	DBdelete_by_ids(triggerids,"triggerid", event_tables, ARRSIZE(event_tables));
 
 	zbx_vector_uint64_destroy(&selementids);
 	zbx_vector_uint64_destroy(&profileids);
@@ -1404,8 +1404,8 @@ void	DBdelete_items(zbx_vector_uint64_t *itemids)
 	DBdelete_triggers_by_itemids(itemids);
 
 	DBdelete_by_ids(itemids, "itemid", history_tables, ARRSIZE(history_tables));
-	DBdelete_by_ids(itemids, ZBX_STR(EVENT_OBJECT_ITEM), event_tables, ARRSIZE(event_tables));
-	DBdelete_by_ids(itemids, ZBX_STR(EVENT_OBJECT_LLDRULE), event_tables, ARRSIZE(event_tables));
+	DBdelete_by_ids(itemids, "itemid", event_tables, ARRSIZE(event_tables));
+	DBdelete_by_ids(itemids, "lldruleid", event_tables, ARRSIZE(event_tables));
 
 	sql_offset = 0;
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
