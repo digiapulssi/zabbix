@@ -2284,6 +2284,7 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 			zbx_history_record_t	vc_value;
 
 			if (SUCCEED == zbx_vc_get_value(items[i].itemid, items[i].value_type, &ts, &vc_value) &&
+					values[i].ts.sec == vc_value.timestamp.sec &&
 					values[i].ts.ns == vc_value.timestamp.ns)
 			{
 				zabbix_log(LOG_LEVEL_CRIT, "potential Duplicate entry '" ZBX_FS_UI64 "-%d-%d' (%s:%s)",
