@@ -622,7 +622,7 @@
 							}
 
 							$('html, body')
-								.animate({scrollTop: '+=' + scroll_by + 'px'}, 800)
+								.animate({scrollTop: '+=' + scroll_by + 'px'}, Math.floor(scroll_by / 250) * 200)
 								.promise()
 								.then(add_new_widget);
 						}
