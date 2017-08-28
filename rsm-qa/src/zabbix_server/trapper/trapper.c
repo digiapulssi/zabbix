@@ -129,6 +129,7 @@ static void	send_proxyhistory(zbx_socket_t *sock, zbx_timespec_t *ts)
 	zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
 
 	zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+	zbx_json_adduint64(&j, "lastid", lastid);	/* ATTENTION: For debugging only! */
 
 	proxy_get_hist_data(&j, &lastid);
 
@@ -681,6 +682,11 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
 	process_num = ((zbx_thread_args_t *)args)->process_num;
+
+	/* ATTENTION: For debugging purposes unconditionally set logging level to 4 for all proxy trappers. */
+#define FORCE_DEBUG_LOGGING(x)	zabbix_set_log_##x(LOG_LEVEL_DEBUG)
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		FORCE_DEBUG_LOGGING(level);
 
 	zabbix_log(LOG_LEVEL_INFORMATION, "%s #%d started [%s #%d]", get_program_type_string(program_type),
 			server_num, get_process_type_string(process_type), process_num);
