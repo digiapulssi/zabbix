@@ -1180,6 +1180,10 @@ done:
 				proxy->timediff = 0;
 				proxy->location = ZBX_LOC_NOWHERE;
 				proxy->lastaccess = atoi(row[24]);
+				/* ATTENTION: Storing two latest history data packages for debugging. */
+				DCstrpool_replace(found, &proxy->lastanswers[0], "");
+				DCstrpool_replace(found, &proxy->lastanswers[1], "");
+				proxy->latestanswer = 0;
 			}
 
 			if (HOST_STATUS_PROXY_PASSIVE == status && (0 == found || status != host->status))
@@ -1204,6 +1208,10 @@ done:
 				zbx_binary_heap_remove_direct(&config->pqueue, proxy->hostid);
 				proxy->location = ZBX_LOC_NOWHERE;
 			}
+
+			/* ATTENTION: Cleanup of memory allocated for raw history data storage. */
+			zbx_strpool_release(proxy->lastanswers[0]);
+			zbx_strpool_release(proxy->lastanswers[1]);
 
 			zbx_hashset_remove_direct(&config->proxies, proxy);
 		}
@@ -8570,6 +8578,33 @@ void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
 
 	if (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_search(&config->proxies, &hostid)))
 		proxy->lastaccess = lastaccess;
+
+	UNLOCK_CACHE;
+}
+
+void	DCremember_proxy_answer(zbx_uint64_t hostid, const char *answer)
+{
+	ZBX_DC_PROXY	*proxy;
+
+	LOCK_CACHE;
+
+	if (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_search(&config->proxies, &hostid)))
+		DCstrpool_replace(1, &proxy->lastanswers[proxy->latestanswer ^= 1], answer);
+
+	UNLOCK_CACHE;
+}
+
+void	DCrecall_proxy_answers(zbx_uint64_t hostid, char *answers[])
+{
+	ZBX_DC_PROXY	*proxy;
+
+	LOCK_CACHE;
+
+	if (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_search(&config->proxies, &hostid)))
+	{
+		answers[0] = zbx_strdup(NULL, proxy->lastanswers[proxy->latestanswer]);
+		answers[1] = zbx_strdup(NULL, proxy->lastanswers[proxy->latestanswer ^ 1]);
+	}
 
 	UNLOCK_CACHE;
 }

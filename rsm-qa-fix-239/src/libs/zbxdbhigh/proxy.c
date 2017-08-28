@@ -2044,6 +2044,7 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 	int			*lastclocks = NULL, *errcodes = NULL, *mtimes = NULL, *errcodes2 = NULL,
 				flag_host_allow = 0;
 	size_t			num = 0;
+	int			log_proxy_answers = 0;	/* ATTENTION: A flag to log proxy answers stored in cache. */
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_conn_attr_t	attr;
 #endif
@@ -2287,13 +2288,30 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 					values[i].ts.sec == vc_value.timestamp.sec &&
 					values[i].ts.ns == vc_value.timestamp.ns)
 			{
-				zabbix_log(LOG_LEVEL_CRIT, "potential Duplicate entry '" ZBX_FS_UI64 "-%d-%d' (%s:%s)"
-						" " ZBX_FS_SIZE_T "/" ZBX_FS_SIZE_T, items[i].itemid, values[i].ts.sec,
-						values[i].ts.ns, values[i].host_name, values[i].key, i, values_num);
+				log_proxy_answers = 1;
+				zabbix_log(LOG_LEVEL_CRIT, "value " ZBX_FS_SIZE_T "/" ZBX_FS_SIZE_T " can potentially"
+						" cause Duplicate entry '" ZBX_FS_UI64 "-%d-%d' (%s:%s)", i + 1,
+						values_num, items[i].itemid, values[i].ts.sec, values[i].ts.ns,
+						values[i].host_name, values[i].key);
 			}
 
 			zbx_history_record_clear(&vc_value, items[i].value_type);
 		}
+	}
+
+	/* ATTENTION: Dumping two last history data packages from this particular proxy in case of duplicates. */
+	if (0 != proxy_hostid && 0 != log_proxy_answers)
+	{
+		char	*answers[2];
+
+		DCrecall_proxy_answers(proxy_hostid, answers);
+		zabbix_log(LOG_LEVEL_CRIT, "proxy " ZBX_FS_UI64 " is sending Duplicate data, the latest package was: %s",
+				proxy_hostid, answers[0]);
+		zabbix_log(LOG_LEVEL_CRIT, "proxy " ZBX_FS_UI64 " is sending Duplicate data, one package before was: %s",
+				proxy_hostid, answers[1]);
+
+		zbx_free(answers[0]);
+		zbx_free(answers[1]);
 	}
 
 	DCconfig_clean_items(items, errcodes, values_num);

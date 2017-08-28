@@ -301,6 +301,8 @@ typedef struct
 	int		timediff;
 	int		lastaccess;
 	unsigned char	location;
+	char		*lastanswers[2];	/* ATTENTION: Two latest history data packages for debugging. */
+	int		latestanswer;		/* ATTENTION: Index of the most recent value in the array above. */
 }
 ZBX_DC_PROXY;
 

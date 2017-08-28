@@ -497,4 +497,7 @@ char	DCget_probe_last_status(void);
 
 void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess);
 
+void	DCremember_proxy_answer(zbx_uint64_t hostid, const char *answer);	/* ATTENTION: Debugging! */
+void	DCrecall_proxy_answers(zbx_uint64_t hostid, char *answers[]);		/* ATTENTION: Debugging! */
+
 #endif
