@@ -1798,9 +1798,6 @@ function get_item_function_info($expr) {
 		'integer' => [
 			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), $valid_uint]
 		],
-		'float' => [
-			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), $valid_float]
-		],
 		'numeric' => [
 			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), $valid_uint],
 			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), $valid_float]
@@ -1817,11 +1814,6 @@ function get_item_function_info($expr) {
 			ITEM_VALUE_TYPE_TEXT => [_('0 or 1'), IN('0,1')],
 			ITEM_VALUE_TYPE_STR => [_('0 or 1'), IN('0,1')],
 			ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]
-		],
-		'string_as_asis' => [
-			ITEM_VALUE_TYPE_TEXT => [_('Text'), $valid_uint],
-			ITEM_VALUE_TYPE_STR => [_('Character'), $valid_uint],
-			ITEM_VALUE_TYPE_LOG => [_('Log'), $valid_uint]
 		],
 		'string_as_uint' => [
 			ITEM_VALUE_TYPE_TEXT => [_('Numeric (unsigned)'), $valid_uint],
