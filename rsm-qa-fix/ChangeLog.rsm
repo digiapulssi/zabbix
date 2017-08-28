@@ -5,6 +5,7 @@ New features:
 ....I..... [284] added directory "monitoring/" to the base path of TLD (dimir)
 
 Bug fixes:
+..F.I..... [285] fixed undefined index error in frontend due to missing "events.false_positive" field in DB schema (Oleg)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc21
