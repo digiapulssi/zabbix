@@ -147,12 +147,12 @@ class CWidgetConfig {
 	public static function getRfRates() {
 		return [
 			0 => _('No refresh'),
-			SEC_PER_MIN / 6 => _('10 seconds'),
-			SEC_PER_MIN / 2 => _('30 seconds'),
-			SEC_PER_MIN => _('1 minute'),
-			SEC_PER_MIN * 2 => _('2 minutes'),
-			SEC_PER_MIN * 10 => _('10 minutes'),
-			SEC_PER_MIN * 15 => _('15 minutes')
+			SEC_PER_MIN / 6 => _n('%1$s second', '%1$s seconds', 10),
+			SEC_PER_MIN / 2 => _n('%1$s second', '%1$s seconds', 30),
+			SEC_PER_MIN => _n('%1$s minute', '%1$s minutes', 1),
+			SEC_PER_MIN * 2 => _n('%1$s minute', '%1$s minutes', 2),
+			SEC_PER_MIN * 10 => _n('%1$s minute', '%1$s minutes', 10),
+			SEC_PER_MIN * 15 => _n('%1$s minute', '%1$s minutes', 15)
 		];
 	}
 
