@@ -272,7 +272,7 @@ class CLineGraphDraw extends CGraphDraw {
 				$this->dataFrom = 'trends';
 
 				if (!$item['has_scheduling_intervals'] || $item['delay'] != 0) {
-					$item['delay'] = max($item['delay'], SEC_PER_HOUR);
+					$this->items[$i]['delay'] = max($item['delay'], SEC_PER_HOUR);
 				}
 
 				$sql_select = 'SUM(num) AS count,AVG(value_avg) AS avg,MIN(value_min) AS min,MAX(value_max) AS max';
