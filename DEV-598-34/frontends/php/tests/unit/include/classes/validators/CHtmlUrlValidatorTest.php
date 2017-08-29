@@ -18,11 +18,9 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-require_once dirname(__FILE__).'/../../include/defines.inc.php';
-require_once dirname(__FILE__).'/../../include/classes/validators/CHtmlUrlValidator.php';
 
 class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
-	public static function providerValidateURL() {
+	public function providerValidateURL() {
 		return array(
 			array('',								false),
 			array('javascript:alert()',				false),

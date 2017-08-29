@@ -19,22 +19,29 @@
 **/
 
 
-class CHtmlUrlValidator {
+class CWidgetFieldUrl extends CWidgetField {
 
 	/**
-	 * Relative URL should start with .php file name.
-	 * Absolute URL schema must match schemes mentioned in ZBX_URL_VALID_SCHEMES comma separated list.
+	 * URL widget field.
 	 *
-	 * @static
-	 *
-	 * @param string $url	URL string to validate
-	 *
-	 * @return bool
+	 * @param string $name  field name in form
+	 * @param string $label  label for the field in form
 	 */
-	public static function validate($url) {
-		$scheme = (strpos($url, ':') === false) ? '' : substr($url, 0, strpos($url, ':'));
-		$allowed_schemes = explode(',', strtolower(ZBX_URI_VALID_SCHEMES));
+	public function __construct($name, $label) {
+		parent::__construct($name, $label);
 
-		return (in_array(strtolower($scheme), $allowed_schemes) || preg_match('/^[a-z_\.]+\.php/i', $url) == 1);
+		$this->setSaveType(ZBX_WIDGET_FIELD_TYPE_STR);
+		$this->setValidationRules(['type' => API_URL]);
+		$this->setDefault('');
+	}
+
+	public function validate($strict = false) {
+		$errors = parent::validate($strict);
+
+		if (!$errors && $strict && ($this->getFlags() & CWidgetField::FLAG_NOT_EMPTY) && $this->getValue() === '') {
+			$errors[] = _s('Invalid parameter "%1$s": %2$s.', $this->getLabel(), _('cannot be empty'));
+		}
+
+		return $errors;
 	}
 }

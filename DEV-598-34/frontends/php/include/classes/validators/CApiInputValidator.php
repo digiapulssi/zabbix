@@ -1154,7 +1154,6 @@ class CApiInputValidator {
 	 * URL validator.
 	 *
 	 * @param array  $rule
-	 * @param int    $rule['flags']   (optional) API_NOT_EMPTY, API_ALLOW_NULL
 	 * @param int    $rule['length']  (optional)
 	 * @param mixed  $data
 	 * @param string $path
@@ -1163,13 +1162,7 @@ class CApiInputValidator {
 	 * @return bool
 	 */
 	private static function validateUrl($rule, &$data, $path, &$error) {
-		$flags = array_key_exists('flags', $rule) ? $rule['flags'] : 0x00;
-
-		if (($flags & API_ALLOW_NULL) && $data === null) {
-			return true;
-		}
-
-		if (self::checkStringUtf8($flags, $data, $path, $error) === false) {
+		if (self::checkStringUtf8(0x00, $data, $path, $error) === false) {
 			return false;
 		}
 
@@ -1178,8 +1171,8 @@ class CApiInputValidator {
 			return false;
 		}
 
-		if ($data && !CHtmlUrlValidator::validate($data)) {
-			$error = _('Wrong value for url field.');
+		if ($data !== '' && CHtmlUrlValidator::validate($data) === false) {
+			$error = _s('Invalid parameter "%1$s": %2$s.', $path, _('unacceptible URL'));
 			return false;
 		}
 

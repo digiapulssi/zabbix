@@ -28,7 +28,7 @@ class CUrlWidgetForm extends CWidgetForm {
 		parent::__construct($data);
 
 		// URL field
-		$field_url = (new CWidgetFieldTextBox('url', _('URL')))
+		$field_url = (new CWidgetFieldUrl('url', _('URL')))
 			->setFlags(CWidgetField::FLAG_NOT_EMPTY);
 
 		if (array_key_exists('url', $this->data)) {
@@ -43,27 +43,5 @@ class CUrlWidgetForm extends CWidgetForm {
 			$field_dynamic->setValue($this->data['dynamic']);
 		}
 		$this->fields[] = $field_dynamic;
-	}
-
-	/**
-	 * Validate form fields.
-	 *
-	 * @param bool $strict  Enables more strict validation of the form fields.
-	 *                      Must be enabled for validation of input parameters in the widget configuration form.
-	 *
-	 * @return bool
-	 */
-	public function validate($strict = false) {
-		$errors = parent::validate($strict);
-
-		if (!$errors) {
-			$fields = $this->getFieldsData();
-
-			if (!CHtmlUrlValidator::validate($fields['url'])) {
-				$errors[] = _('Wrong value for url field.');
-			}
-		}
-
-		return $errors;
 	}
 }
