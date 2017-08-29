@@ -20,30 +20,31 @@
 
 
 class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
+
 	public function providerValidateURL() {
-		return array(
-			array('',								false),
-			array('javascript:alert()',				false),
-			array('http://zabbix.com',				true),
-			array('https://zabbix.com',				true),
-			array('zabbix.php?a=1',					true),
-			array('adm.images.php?a=1',				true),
-			array('chart_bar.php?a=1&b=2',			true),
-			array('/chart_bar.php?a=1&b=2',			false),
-			array('vbscript:msgbox()',				false),
-			array('../././not_so_zabbix',			false),
-			array('mailto:example@example.com',		true),
-			array('file://localhost/path',			true),
-			array('ftp://user@host:port',			true),
-			array('tel:1-111-111-1111',				true),
-			array('ssh://username@hostname:/path ',	true),
-			array('jav&#x09;ascript:alert(1);', 	false)
-		);
+		return [
+			['http://zabbix.com',				true],
+			['https://zabbix.com',				true],
+			['zabbix.php?a=1',					true],
+			['adm.images.php?a=1',				true],
+			['chart_bar.php?a=1&b=2',			true],
+			['mailto:example@example.com',		true],
+			['file://localhost/path',			true],
+			['ftp://user@host:port',			true],
+			['tel:1-111-111-1111',				true],
+			['ssh://username@hostname:/path ',	true],
+			['',								false],
+			['javascript:alert(]',				false],
+			['/chart_bar.php?a=1&b=2',			false],
+			['vbscript:msgbox(]',				false],
+			['../././not_so_zabbix',			false],
+			['jav&#x09;ascript:alert(1];', 		false]
+		];
 	}
 
 	/**
-	* @dataProvider providerValidateURL
-	*/
+	 * @dataProvider providerValidateURL
+	 */
 	public function test_validateURL($url, $expected) {
 		$this->assertEquals(CHtmlUrlValidator::validate($url), $expected);
 	}
