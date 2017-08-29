@@ -42,11 +42,11 @@ class CDnsParser extends CParser {
 		}
 		$p++;
 
-		// Periods are only allowed when they serve to delimit components.
-		$component = false;
+		$component = true;
 
+		// Validation logic should be consistent with C code in zbx_validate_hostname function.
 		for (; isset($source[$p]); $p++) {
-			if ($source[$p] === '-' || self::isalnum($source[$p])) {
+			if ($source[$p] === '-' || self::isalnum($source[$p]) || $source[$p] === '_') {
 				$component = true;
 			}
 			elseif ($source[$p] === '.' && $component) {
@@ -57,15 +57,9 @@ class CDnsParser extends CParser {
 			}
 		}
 
-		// The last character must not be a minus sign.
-		if ($source[$p - 1] === '-') {
-			$p--;
-		}
-
 		$length = $p - $pos;
 
-		// Single character names or nicknames are not allowed.
-		if ($length == 1) {
+		if ($length >= 255) {
 			return self::PARSE_FAIL;
 		}
 
