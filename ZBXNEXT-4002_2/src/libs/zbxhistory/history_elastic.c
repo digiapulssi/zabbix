@@ -78,8 +78,13 @@ static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata
 	return r_size;
 }
 
-/* Stub function for avoiding LibCURL to print on the standard output. */
-/* In case of success, elasticsearch return a JSON, but the HTTP error code is enough */
+/************************************************************************************
+ *                                                                                  *
+ * Comments: stub function for avoiding LibCURL to print on the standard output.    *
+ *           In case of success, elasticsearch return a JSON, but the HTTP error    *
+ *           code is enough                                                         *
+ *                                                                                  *
+ ************************************************************************************/
 static size_t	curl_write_send_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	ZBX_UNUSED(ptr);
