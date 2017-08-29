@@ -387,7 +387,7 @@ var CTimeLine = Class.create({
 			return this._period;
 		}
 
-		this.is_selectall_period = period == this.maxperiod;
+		this.is_selectall_period = (period == this.maxperiod);
 
 		if ((this._usertime - period) < this._starttime) {
 			period = this._usertime - this._starttime;
