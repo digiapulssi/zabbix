@@ -32,7 +32,7 @@ static int	DBpatch_3020000(void)
 	return SUCCEED;
 }
 
-static int	DBpatch_3020001(void)
+int	DBpatch_3020001(void)
 {
 	DB_RESULT		result;
 	zbx_vector_uint64_t	eventids;
