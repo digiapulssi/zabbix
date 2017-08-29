@@ -694,6 +694,16 @@ class CTrigger extends CTriggerGeneral {
 			updateItServices();
 		}
 
+		$insert = [];
+		foreach ($triggerIds as $triggerId) {
+			$insert[] = [
+				'tablename' => 'events',
+				'field' => 'triggerid',
+				'value' => $triggerId
+			];
+		}
+		DB::insert('housekeeper', $insert);
+
 		parent::deleteByIds($triggerIds);
 	}
 

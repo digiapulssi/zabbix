@@ -87,6 +87,7 @@ static zbx_hk_cleanup_table_t	hk_cleanup_tables[] = {
 	{"history_uint", &cfg.hk.history_mode},
 	{"trends", &cfg.hk.trends_mode},
 	{"trends_uint", &cfg.hk.trends_mode},
+	{"events", &cfg.hk.events_mode},
 	{NULL}
 };
 
@@ -598,14 +599,15 @@ static int	housekeeping_cleanup()
 	DB_ROW			row;
 	int			d, deleted = 0;
 	zbx_vector_uint64_t	housekeeperids;
-	char			*sql = NULL, *table_name_esc;
-	size_t			sql_alloc = 0, sql_offset = 0;
+	char			*sql = NULL, *filter = NULL, *table_name_esc;
+	size_t			sql_alloc = 0, sql_offset = 0, filter_alloc = 0;
 	zbx_hk_cleanup_table_t *table;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	/* first handle the trivial case when history and trend housekeeping is disabled */
-	if (ZBX_HK_OPTION_DISABLED == cfg.hk.history_mode && ZBX_HK_OPTION_DISABLED == cfg.hk.trends_mode)
+	if (ZBX_HK_OPTION_DISABLED == cfg.hk.history_mode && ZBX_HK_OPTION_DISABLED == cfg.hk.trends_mode &&
+			ZBX_HK_OPTION_DISABLED == cfg.hk.events_mode)
 		goto out;
 
 	zbx_vector_uint64_create(&housekeeperids);
@@ -638,48 +640,66 @@ static int	housekeeping_cleanup()
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		size_t	filter_offset = 0;
+
 		ZBX_STR2UINT64(housekeeper.housekeeperid, row[0]);
 		housekeeper.tablename = row[1];
 		housekeeper.field = row[2];
 		ZBX_STR2UINT64(housekeeper.value, row[3]);
 
+		if (0 == strcmp(housekeeper.tablename, "events"))
+		{
+			char	*object;
+
+			if (0 == strcmp(housekeeper.field, "triggerid"))
+				object = ZBX_STR(EVENT_OBJECT_TRIGGER);
+			else if (0 == strcmp(housekeeper.field, "itemid"))
+				object = ZBX_STR(EVENT_OBJECT_ITEM);
+			else
+				object = ZBX_STR(EVENT_OBJECT_LLDRULE);
+
+			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "object=%s and objectid="
+					ZBX_FS_UI64, object, housekeeper.value);
+		}
+		else
+		{
+			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "%s=" ZBX_FS_UI64, housekeeper.field,
+					housekeeper.value);
+		}
+
 		if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
 		{
 			d = DBexecute(
 					"delete from %s"
-					" where %s=" ZBX_FS_UI64,
+					" where %s",
 					housekeeper.tablename,
-					housekeeper.field,
-					housekeeper.value);
+					filter);
 		}
 		else
 		{
 #if defined(HAVE_IBM_DB2) || defined(HAVE_ORACLE)
 			d = DBexecute(
 					"delete from %s"
-					" where %s=" ZBX_FS_UI64
+					" where %s"
 						" and rownum<=%d",
 					housekeeper.tablename,
-					housekeeper.field,
-					housekeeper.value,
+					filter,
 					CONFIG_MAX_HOUSEKEEPER_DELETE);
 #elif defined(HAVE_MYSQL)
 			d = DBexecute(
 					"delete from %s"
-					" where %s=" ZBX_FS_UI64 " limit %d",
+					" where %s limit %d",
 					housekeeper.tablename,
-					housekeeper.field,
-					housekeeper.value,
+					filter,
 					CONFIG_MAX_HOUSEKEEPER_DELETE);
 #elif defined(HAVE_POSTGRESQL)
 			d = DBexecute(
 					"delete from %s"
 					" where ctid = any(array(select ctid from %s"
-						" where %s=" ZBX_FS_UI64 " limit %d))",
+						" where %s limit %d))",
 					housekeeper.tablename,
 					housekeeper.tablename,
-					housekeeper.field,
-					housekeeper.value,
+					filter,
 					CONFIG_MAX_HOUSEKEEPER_DELETE);
 #elif defined(HAVE_SQLITE3)
 			d = 0;
@@ -708,6 +728,7 @@ static int	housekeeping_cleanup()
 		DBexecute("%s", sql);
 	}
 
+	zbx_free(filter);
 	zbx_free(sql);
 
 	zbx_vector_uint64_destroy(&housekeeperids);
