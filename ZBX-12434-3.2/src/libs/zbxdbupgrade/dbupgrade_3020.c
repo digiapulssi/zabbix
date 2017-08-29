@@ -37,6 +37,7 @@ static int	DBpatch_3020001(void)
 	DB_RESULT		result;
 	zbx_vector_uint64_t	eventids;
 	DB_ROW			row;
+	zbx_uint64_t		eventid;
 
 	zbx_vector_uint64_create(&eventids);
 
@@ -50,10 +51,22 @@ static int	DBpatch_3020001(void)
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		zbx_uint64_t	eventid;
-
 		ZBX_STR2UINT64(eventid, row[0]);
+		zbx_vector_uint64_append(&eventids, eventid);
+	}
+	DBfree_result(result);
 
+	result = DBselect(
+			"select eventid"
+			" from problem"
+			" where (object=4 or object=5) and objectid not in ("
+				"select itemid"
+				" from items"
+			")");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(eventid, row[0]);
 		zbx_vector_uint64_append(&eventids, eventid);
 	}
 	DBfree_result(result);
