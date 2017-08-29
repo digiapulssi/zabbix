@@ -25,7 +25,7 @@
 class CActionLogWidgetForm extends CWidgetForm {
 
 	public function __construct($data) {
-		parent::__construct($data);
+		parent::__construct($data, WIDGET_ACTION_LOG);
 
 		$sort_types = [
 			SCREEN_SORT_TRIGGERS_TIME_DESC => _('Time').' ('._('descending').')',

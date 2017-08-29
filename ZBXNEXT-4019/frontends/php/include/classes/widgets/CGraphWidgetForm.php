@@ -22,7 +22,7 @@
 class CGraphWidgetForm extends CWidgetForm {
 
 	public function __construct($data) {
-		parent::__construct($data);
+		parent::__construct($data, WIDGET_GRAPH);
 
 		// Select graph type field.
 		$source_types = [

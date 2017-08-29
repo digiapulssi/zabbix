@@ -140,6 +140,23 @@ class CWidgetConfig {
 	}
 
 	/**
+	 * Get all possible widget refresh intervals.
+	 *
+	 * @return array
+	 */
+	public static function getRfRates() {
+		return [
+			0 => _('No refresh'),
+			SEC_PER_MIN / 6 => _('10 seconds'),
+			SEC_PER_MIN / 2 => _('30 seconds'),
+			SEC_PER_MIN => _('1 minute'),
+			SEC_PER_MIN * 2 => _('2 minutes'),
+			SEC_PER_MIN * 10 => _('10 minutes'),
+			SEC_PER_MIN * 15 => _('15 minutes')
+		];
+	}
+
+	/**
 	 * Does this widget type use timeline
 	 *
 	 * @param type $type  WIDGET_ constant
@@ -207,7 +224,7 @@ class CWidgetConfig {
 				return new CPlainTextWidgetForm($data);
 
 			default:
-				return new CWidgetForm($data);
+				return new CWidgetForm($data, $type);
 		}
 	}
 }

@@ -396,7 +396,13 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			}
 
 			$widgetid = $widget['widgetid'];
-			$default_rf_rate = CWidgetConfig::getDefaultRfRate($widget['type']);
+			$fields = self::convertWidgetFields($widget['fields']);
+
+			$rf_rate = (array_key_exists('rf_rate', $fields))
+				? ($fields['rf_rate'] == -1)
+					? CWidgetConfig::getDefaultRfRate($widget['type'])
+					: $fields['rf_rate']
+				: CWidgetConfig::getDefaultRfRate($widget['type']);
 
 			$grid_widgets[$widgetid] = [
 				'widgetid' => $widgetid,
@@ -408,8 +414,8 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 					'width' => (int) $widget['width'],
 					'height' => (int) $widget['height']
 				],
-				'rf_rate' => (int) CProfile::get('web.dashbrd.widget.rf_rate', $default_rf_rate, $widgetid),
-				'fields' => self::convertWidgetFields($widget['fields'])
+				'rf_rate' => (int) CProfile::get('web.dashbrd.widget.rf_rate', $rf_rate, $widgetid),
+				'fields' => $fields
 			];
 		}
 

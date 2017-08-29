@@ -25,7 +25,7 @@
 class CUrlWidgetForm extends CWidgetForm {
 
 	public function __construct($data) {
-		parent::__construct($data);
+		parent::__construct($data, WIDGET_URL);
 
 		// URL field
 		$field_url = (new CWidgetFieldTextBox('url', _('URL')))
