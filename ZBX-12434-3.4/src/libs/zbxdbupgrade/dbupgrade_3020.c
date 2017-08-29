@@ -32,6 +32,55 @@ static int	DBpatch_3020000(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3020001(void)
+{
+	DB_RESULT		result;
+	zbx_vector_uint64_t	eventids;
+	DB_ROW			row;
+	zbx_uint64_t		eventid;
+
+	zbx_vector_uint64_create(&eventids);
+
+	result = DBselect(
+			"select eventid"
+			" from problem"
+			" where object=0 and objectid not in ("
+				"select triggerid"
+				" from triggers"
+			")");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(eventid, row[0]);
+		zbx_vector_uint64_append(&eventids, eventid);
+	}
+	DBfree_result(result);
+
+	result = DBselect(
+			"select eventid"
+			" from problem"
+			" where (object=4 or object=5) and objectid not in ("
+				"select itemid"
+				" from items"
+			")");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(eventid, row[0]);
+		zbx_vector_uint64_append(&eventids, eventid);
+	}
+	DBfree_result(result);
+
+	zbx_vector_uint64_sort(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	if (0 != eventids.values_num)
+		DBexecute_multiple_query("delete from events where", "eventid", &eventids);
+
+	zbx_vector_uint64_destroy(&eventids);
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3020)
@@ -39,5 +88,6 @@ DBPATCH_START(3020)
 /* version, duplicates flag, mandatory flag */
 
 DBPATCH_ADD(3020000, 0, 1)
+DBPATCH_ADD(3020001, 0, 0)
 
 DBPATCH_END()
