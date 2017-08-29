@@ -732,6 +732,29 @@ static int	DBpatch_3000129(void)
 	return ZBX_DB_OK > ret ? FAIL : SUCCEED;
 }
 
+static int	DBpatch_3000130(void)
+{
+	const ZBX_TABLE table =
+			{"lastvalue", "itemid", 0,
+				{
+					{"itemid", NULL, NULL, NULL, 0, ZBX_TYPE_ID, ZBX_NOTNULL, 0},
+					{"clock", "0", NULL, NULL, 0, ZBX_TYPE_INT, ZBX_NOTNULL, 0},
+					{"value", "0.0000", NULL, NULL, 0, ZBX_TYPE_FLOAT, ZBX_NOTNULL, 0},
+					{0}
+				},
+				NULL
+			};
+
+	return DBcreate_table(&table);
+}
+
+static int	DBpatch_3000131(void)
+{
+	const ZBX_FIELD	field = {"itemid", NULL, "items", "itemid", 0, 0, 0, ZBX_FK_CASCADE_DELETE};
+
+	return DBadd_foreign_key("lastvalue", 1, &field);
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -769,5 +792,7 @@ DBPATCH_ADD(3000126, 0, 0)	/* removed "<probe>" hosts from "<probe>" host group 
 DBPATCH_ADD(3000127, 0, 0)	/* removed "<TLD>" hosts from "TLD <TLD>" host group */
 DBPATCH_ADD(3000128, 0, 0)	/* adjusted allowed system time difference between Zabbix Server and other hosts */
 DBPATCH_ADD(3000129, 0, 0)	/* renamed corresponding trigger */
+DBPATCH_ADD(3000130, 0, 1)	/* created lastvalue table */
+DBPATCH_ADD(3000131, 0, 1)	/* added itemid constraint to lastvalue */
 
 DBPATCH_END()

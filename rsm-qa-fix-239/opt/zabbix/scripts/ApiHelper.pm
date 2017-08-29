@@ -70,9 +70,10 @@ sub __gen_base_path($$$)
 	my $service = shift;
 	my $add_path = shift;
 
-	my $path = "$tld/";
-	$path .= "$service/" if ($service);
-	$path .= $add_path if ($add_path);
+	my $path = "$tld/monitoring";
+
+	$path .= "/$service" if (defined($service));
+	$path .= "/$add_path" if (defined($add_path));
 
 	return $path;
 }
