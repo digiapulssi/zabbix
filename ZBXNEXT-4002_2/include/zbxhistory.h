@@ -42,7 +42,7 @@ void	zbx_history_value2str(char *buffer, size_t size, history_value_t *value, in
 #define zbx_history_record_vector_create(vector)	zbx_vector_history_record_create(vector)
 
 
-int	zbx_history_init(void);
+int	zbx_history_init(char **error);
 
 void	zbx_history_add_values(const zbx_vector_ptr_t *values);
 int	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int count, int end,
