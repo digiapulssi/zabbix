@@ -504,26 +504,23 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		zbx_history_record_t	hr;
 		const char		*p = NULL;
 
-		if (NULL != page.data)
+		zbx_json_open(page.data, &jp);
+		zbx_json_brackets_open(jp.start, &jp_values);
+		zbx_json_brackets_by_name(&jp_values, "hits", &jp_sub);
+		zbx_json_brackets_by_name(&jp_sub, "hits", &jp_hits);
+
+		while (NULL != (p = zbx_json_next(&jp_hits, p)))
 		{
-			zbx_json_open(page.data, &jp);
-			zbx_json_brackets_open(jp.start, &jp_values);
-			zbx_json_brackets_by_name(&jp_values, "hits", &jp_sub);
-			zbx_json_brackets_by_name(&jp_sub, "hits", &jp_hits);
+			if (SUCCEED != zbx_json_brackets_open(p, &jp_item))
+				continue;
 
-			while (NULL != (p = zbx_json_next(&jp_hits, p)))
-			{
-				if (SUCCEED != zbx_json_brackets_open(p, &jp_item))
-					continue;
+			if (SUCCEED != zbx_json_brackets_by_name(&jp_item, "_source", &jp_source))
+				continue;
 
-				if (SUCCEED != zbx_json_brackets_by_name(&jp_item, "_source", &jp_source))
-					continue;
+			if (SUCCEED != history_parse_value(&jp_source, hist->value_type, &hr))
+				continue;
 
-				if (SUCCEED != history_parse_value(&jp_source, hist->value_type, &hr))
-					continue;
-
-				zbx_vector_history_record_append_ptr(values, &hr);
-			}
+			zbx_vector_history_record_append_ptr(values, &hr);
 		}
 	}
 
