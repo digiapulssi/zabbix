@@ -1636,10 +1636,6 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 	 * @return string
 	 */
 	public function resolveMapLabelMacros($label, $replaceHosts = null) {
-		/*
-		 * Extract all macros into $matches - keys: macros, hosts, keys, functions and parameters are used
-		 * searches for macros, for example, "{somehost:somekey["param[123]"].min(10m)}"
-		 */
 		$pattern = '/(?P<macros>{'.
 				'('.ZBX_PREG_HOST_FORMAT.(($replaceHosts !== null)
 						? '|({('.self::PATTERN_HOST_INTERNAL.')'.self::PATTERN_MACRO_PARAM.'})' : '').'):'.
