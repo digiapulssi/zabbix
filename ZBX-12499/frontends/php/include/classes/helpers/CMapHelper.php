@@ -203,6 +203,7 @@ class CMapHelper {
 
 		foreach ($sysmap['shapes'] as &$shape) {
 			if (array_key_exists('text', $shape)) {
+				$shape['text'] = CMacrosResolverHelper::resolveMapLabelMacros($shape['text']);
 				$shape['text'] = str_replace('{MAP.NAME}', $sysmap['name'], $shape['text']);
 			}
 		}
