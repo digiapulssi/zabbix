@@ -491,7 +491,7 @@ void	DBadd_str_condition_alloc(char **sql, size_t *sql_alloc, size_t *sql_offset
 
 const char	*zbx_host_string(zbx_uint64_t hostid);
 const char	*zbx_host_key_string(zbx_uint64_t itemid);
-const char	*zbx_user_string(zbx_uint64_t userid);
+const char     *zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *event_userid);
 
 void	DBregister_host(zbx_uint64_t proxy_hostid, const char *host, const char *ip, const char *dns,
 		unsigned short port, const char *host_metadata, int now);

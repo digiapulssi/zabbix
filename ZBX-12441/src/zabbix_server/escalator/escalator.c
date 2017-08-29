@@ -780,9 +780,25 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 
 	if (0 == mediatypeid)
 	{
+		zbx_uint64_t	event_userid;
+
 		medias_num++;
 
-		zbx_snprintf(error, sizeof(error), "No media defined for user \"%s\"", zbx_user_string(userid));
+		result = DBselect("select a.userid"
+				" from alerts a"
+				" left join media_type mt"
+				" on mt.mediatypeid=a.mediatypeid"
+				" where a.eventid=" ZBX_FS_UI64
+				" and a.actionid=" ZBX_FS_UI64
+				" order by a.clock",
+				event->eventid, action->actionid);
+
+		while (NULL != (row = DBfetch(result)))
+			ZBX_STR2UINT64(event_userid, row[0]);
+		DBfree_result(result);
+
+		zbx_snprintf(error, sizeof(error), "No media defined for user \"%s\"",
+				zbx_user_string(&userid, &event_userid));
 
 		zbx_db_insert_prepare(&db_insert, "alerts", "alertid", "actionid", "eventid", "userid", "clock",
 				"subject", "message", "status", "retries", "error", "esc_step", "alerttype", NULL);

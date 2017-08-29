@@ -1251,20 +1251,63 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-const char	*zbx_user_string(zbx_uint64_t userid)
+const char     *zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *event_userid)
 {
+	const char	*__function_name = "zbx_user_string";
+
 	DB_RESULT	result;
 	DB_ROW		row;
+	int             user_type = -1, event_user_type = -1;
 
-	result = DBselect("select name,surname,alias from users where userid=" ZBX_FS_UI64,
-			userid);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): userid = " ZBX_FS_UI64 ", event_userid = " ZBX_FS_UI64,
+			__function_name, *userid, *event_userid);
 
-	if (NULL != (row = DBfetch(result)))
-		zbx_snprintf(buf_string, sizeof(buf_string), "%s %s (%s)", row[0], row[1], row[2]);
+	if (NULL != userid)
+	{
+		result = DBselect("select type from users where userid=" ZBX_FS_UI64, *userid);
+
+		if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
+			user_type = atoi(row[0]);
+		DBfree_result(result);
+
+		zabbix_log(LOG_LEVEL_DEBUG, "user_type = %d", user_type);
+
+		if (-1 == user_type)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "%s() cannot check permissions", __function_name);
+		}
+		else if (NULL != event_userid)
+		{
+			result = DBselect("select type from users where userid=" ZBX_FS_UI64, *event_userid);
+
+			if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
+				event_user_type = atoi(row[0]);
+			DBfree_result(result);
+
+			zabbix_log(LOG_LEVEL_DEBUG, "event_user_type = %d", event_user_type);
+
+			if (-1 == event_user_type)
+				zabbix_log(LOG_LEVEL_DEBUG, "%s() cannot check permissions", __function_name);
+		}
+	}
+
+	if (user_type > event_user_type)
+	{
+		zbx_snprintf(buf_string, sizeof(buf_string), "Inaccessible user");
+	}
 	else
-		zbx_snprintf(buf_string, sizeof(buf_string), "unknown");
+	{
+		result = DBselect("select name,surname,alias from users where userid=" ZBX_FS_UI64, *userid);
 
-	DBfree_result(result);
+		if (NULL != (row = DBfetch(result)))
+			zbx_snprintf(buf_string, sizeof(buf_string), "%s %s (%s)", row[0], row[1], row[2]);
+		else
+			zbx_snprintf(buf_string, sizeof(buf_string), "unknown");
+
+		DBfree_result(result);
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 
 	return buf_string;
 }
