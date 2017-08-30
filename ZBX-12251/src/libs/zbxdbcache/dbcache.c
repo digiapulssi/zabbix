@@ -2384,8 +2384,6 @@ int	DCsync_history(int sync_type, int *total_num)
 			DCconfig_clean_items(items, errcodes, history_num);
 			zbx_free(errcodes);
 			zbx_free(items);
-
-			ret = ZBX_DB_OK == txn_error ? SUCCEED : FAIL;
 		}
 		else
 		{
