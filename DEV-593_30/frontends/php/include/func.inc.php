@@ -2312,3 +2312,25 @@ function zbx_err_handler($errno, $errstr, $errfile, $errline) {
 	// Don't show the call to this handler function.
 	error($errstr.' ['.CProfiler::getInstance()->formatCallStack().']');
 }
+
+/************* SECURITY *************/
+/**
+ * Generates a random CSRF token and stores it in the Session's 'csrf_tokens' array.
+ *
+ * @return string
+ */
+function createCSRFToken() {
+	$csrf_token = substr(md5(rand()), 0, 10);
+	$csrf_tokens = CSession::keyExists('csrf_tokens') ? CSession::getValue('csrf_tokens') : [];
+
+	if ($csrf_tokens) {
+		while (array_key_exists($csrf_token, $csrf_tokens)) {
+			$csrf_token = substr(md5(rand()), 0, 10);
+		}
+	}
+
+	$csrf_tokens[$csrf_token] = true;
+	CSession::setValue('csrf_tokens', $csrf_tokens);
+
+	return $csrf_token;
+}
