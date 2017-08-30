@@ -550,12 +550,15 @@ sub __send_request {
     my $result = decode_json($res->content);
 
     if (defined($result->{'error'})) {
-	print("REQUEST FAILED:\n", Dumper($req), "\n");
-	print("REPLY:\n", Dumper($result), "\n");
-
 	if ($result->{'error'}->{'data'} =~ /Session terminated/) {
-	    delete_authid();
+		delete_authid();
 	}
+	else
+	{
+		print("REQUEST FAILED:\n", Dumper($req), "\n");
+		print("REPLY:\n", Dumper($result), "\n");
+	}
+
     }
     elsif ($DEBUG) {
 	print("REQUEST:\n", Dumper($req), "\n");
