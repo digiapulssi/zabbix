@@ -275,6 +275,8 @@ static void	elastic_writer_release()
 		elastic_close(writer.ifaces.values[i]);
 
 	curl_multi_cleanup(writer.handle);
+	writer.handle = NULL;
+
 	zbx_vector_ptr_destroy(&writer.ifaces);
 
 	writer.initialized = 0;
