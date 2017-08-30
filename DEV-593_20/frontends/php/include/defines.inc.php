@@ -881,6 +881,7 @@ define('DB_ID',		"({}>=0&&bccomp({},\"100000000000000000\")<0)&&");
 define('NOT_EMPTY',	"({}!='')&&");
 define('NOT_ZERO',	"({}!=0)&&");
 define('NO_TRIM',	'NO_TRIM');
+define('VALID_CSRF_TOKEN', 'is_valid_csrf_token({})');
 
 define('ZBX_VALID_OK',		0);
 define('ZBX_VALID_ERROR',	1);
