@@ -1791,43 +1791,50 @@ function makeExpression(array $expressionTree, $level = 0, $operator = null) {
 }
 
 function get_item_function_info($expr) {
-	$valid_float = 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})';
-	$valid_uint = 'preg_match("/^[0-9]+['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?$/", {})';
-	$result_types = [
+	$rule_float = [_('Numeric (float)'), 'preg_match("/^'.ZBX_PREG_NUMBER.'$/", {})'];
+	$rule_int = [_('Numeric (integer)'), 'preg_match("/^'.ZBX_PREG_INT.'$/", {})'];
+	$rule_0or1 = [_('0 or 1'), IN('0,1')];
+	$rules = [
 		// Every nested array should have two elements: label, validation.
 		'integer' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), $valid_uint]
+			ITEM_VALUE_TYPE_UINT64 => $rule_int
 		],
 		'numeric' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), $valid_uint],
-			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), $valid_float]
+			ITEM_VALUE_TYPE_UINT64 => $rule_int,
+			ITEM_VALUE_TYPE_FLOAT => $rule_float
 		],
 		'numeric_as_float' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (float)'), $valid_float],
-			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (float)'), $valid_float]
+			ITEM_VALUE_TYPE_UINT64 => $rule_float,
+			ITEM_VALUE_TYPE_FLOAT => $rule_float
 		],
 		'numeric_as_uint' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('Numeric (unsigned)'), $valid_uint],
-			ITEM_VALUE_TYPE_FLOAT => [_('Numeric (unsigned)'), $valid_uint]
+			ITEM_VALUE_TYPE_UINT64 => $rule_int,
+			ITEM_VALUE_TYPE_FLOAT => $rule_int
 		],
 		'numeric_as_0or1' => [
-			ITEM_VALUE_TYPE_UINT64 => [_('0 or 1'), IN('0,1')],
-			ITEM_VALUE_TYPE_FLOAT => [_('0 or 1'), IN('0,1')]
+			ITEM_VALUE_TYPE_UINT64 => $rule_0or1,
+			ITEM_VALUE_TYPE_FLOAT => $rule_0or1
 		],
 		'string_as_0or1' => [
-			ITEM_VALUE_TYPE_TEXT => [_('0 or 1'), IN('0,1')],
-			ITEM_VALUE_TYPE_STR => [_('0 or 1'), IN('0,1')],
-			ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]
+			ITEM_VALUE_TYPE_TEXT => $rule_0or1,
+			ITEM_VALUE_TYPE_STR => $rule_0or1,
+			ITEM_VALUE_TYPE_LOG => $rule_0or1
 		],
 		'string_as_uint' => [
-			ITEM_VALUE_TYPE_TEXT => [_('Numeric (unsigned)'), $valid_uint],
-			ITEM_VALUE_TYPE_STR => [_('Numeric (unsigned)'), $valid_uint],
-			ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), $valid_uint]
+			ITEM_VALUE_TYPE_TEXT => $rule_int,
+			ITEM_VALUE_TYPE_STR => $rule_int,
+			ITEM_VALUE_TYPE_LOG => $rule_int
 		],
 		'string_as_float' => [
-			ITEM_VALUE_TYPE_TEXT => [_('Numeric (float)'), $valid_float],
-			ITEM_VALUE_TYPE_STR => [_('Numeric (float)'), $valid_float],
-			ITEM_VALUE_TYPE_LOG => [_('Numeric (float)'), $valid_float]
+			ITEM_VALUE_TYPE_TEXT => $rule_float,
+			ITEM_VALUE_TYPE_STR => $rule_float,
+			ITEM_VALUE_TYPE_LOG => $rule_float
+		],
+		'log_as_uint' => [
+			ITEM_VALUE_TYPE_LOG => $rule_int
+		],
+		'log_as_0or1' => [
+			ITEM_VALUE_TYPE_LOG => $rule_0or1
 		],
 		'date' => [
 			'any' => ['YYYYMMDD', '{}>=19700101&&{}<=99991231']
@@ -1844,35 +1851,35 @@ function get_item_function_info($expr) {
 	];
 
 	$functions = [
-		'abschange' => $result_types['numeric'] + $result_types['string_as_0or1'],
-		'avg' => $result_types['numeric_as_float'],
-		'band' => $result_types['integer'],
-		'change' => $result_types['numeric'] + $result_types['string_as_0or1'],
-		'count' => $result_types['numeric_as_uint'] + $result_types['string_as_uint'],
-		'date' => $result_types['date'],
-		'dayofmonth' => $result_types['day_of_month'],
-		'dayofweek' => $result_types['day_of_week'],
-		'delta' => $result_types['numeric'],
-		'diff' => $result_types['numeric_as_0or1'] + $result_types['string_as_0or1'],
-		'forecast' => $result_types['numeric_as_float'],
-		'fuzzytime' => $result_types['numeric_as_0or1'],
-		'iregexp' => $result_types['string_as_0or1'],
-		'last' => $result_types['numeric'] + $result_types['string_as_float'],
-		'logeventid' => [ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]],
-		'logseverity' => [ITEM_VALUE_TYPE_LOG => [_('Numeric (unsigned)'), $valid_uint]],
-		'logsource' => [ITEM_VALUE_TYPE_LOG => [_('0 or 1'), IN('0,1')]],
-		'max' => $result_types['numeric'],
-		'min' => $result_types['numeric'],
-		'nodata' => $result_types['numeric_as_0or1'] + $result_types['string_as_0or1'],
-		'now' => $result_types['numeric_as_uint'] + $result_types['string_as_uint'],
-		'percentile' => $result_types['numeric'],
-		'prev' => $result_types['numeric'] + $result_types['string_as_float'],
-		'regexp' => $result_types['string_as_0or1'],
-		'str' => $result_types['string_as_0or1'],
-		'strlen' => $result_types['string_as_uint'],
-		'sum' => $result_types['numeric'],
-		'time' => $result_types['time'],
-		'timeleft' => $result_types['numeric_as_float']
+		'abschange' => $rules['numeric'] + $rules['string_as_0or1'],
+		'avg' => $rules['numeric_as_float'],
+		'band' => $rules['integer'],
+		'change' => $rules['numeric'] + $rules['string_as_0or1'],
+		'count' => $rules['numeric_as_uint'] + $rules['string_as_uint'],
+		'date' => $rules['date'],
+		'dayofmonth' => $rules['day_of_month'],
+		'dayofweek' => $rules['day_of_week'],
+		'delta' => $rules['numeric'],
+		'diff' => $rules['numeric_as_0or1'] + $rules['string_as_0or1'],
+		'forecast' => $rules['numeric_as_float'],
+		'fuzzytime' => $rules['numeric_as_0or1'],
+		'iregexp' => $rules['string_as_0or1'],
+		'last' => $rules['numeric'] + $rules['string_as_float'],
+		'logeventid' => $rules['log_as_0or1'],
+		'logseverity' => $rules['log_as_uint'],
+		'logsource' => $rules['log_as_0or1'],
+		'max' => $rules['numeric'],
+		'min' => $rules['numeric'],
+		'nodata' => $rules['numeric_as_0or1'] + $rules['string_as_0or1'],
+		'now' => $rules['numeric_as_uint'] + $rules['string_as_uint'],
+		'percentile' => $rules['numeric'],
+		'prev' => $rules['numeric'] + $rules['string_as_float'],
+		'regexp' => $rules['string_as_0or1'],
+		'str' => $rules['string_as_0or1'],
+		'strlen' => $rules['string_as_uint'],
+		'sum' => $rules['numeric'],
+		'time' => $rules['time'],
+		'timeleft' => $rules['numeric_as_float']
 	];
 
 	$expr_data = new CTriggerExpression();
@@ -1885,18 +1892,18 @@ function get_item_function_info($expr) {
 	switch (true) {
 		case ($expression->hasTokenOfType(CTriggerExpressionParserResult::TOKEN_TYPE_MACRO)):
 			$result = [
-				'value_type' => _('0 or 1'),
-				'type' => T_ZBX_INT,
-				'validation' => IN('0,1')
+				'type' => T_ZBX_STR,
+				'value_type' => $rule_0or1[0],
+				'validation' => $rule_0or1[1]
 			];
 			break;
 
 		case ($expression->hasTokenOfType(CTriggerExpressionParserResult::TOKEN_TYPE_USER_MACRO)):
 		case ($expression->hasTokenOfType(CTriggerExpressionParserResult::TOKEN_TYPE_LLD_MACRO)):
 			$result = [
-				'value_type' => _('Numeric (float)'),
 				'type' => T_ZBX_STR,
-				'validation' => 'valid_float({})'
+				'value_type' => $rule_float[0],
+				'validation' => $rule_float[1]
 			];
 			break;
 
