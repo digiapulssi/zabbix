@@ -43,8 +43,8 @@ class CDnsParserTest extends PHPUnit_Framework_TestCase {
 			[
 				'www.zabbix.com-', 0,
 				[
-					'rc' => CParser::PARSE_SUCCESS_CONT,
-					'match' => 'www.zabbix.com'
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'www.zabbix.com-'
 				]
 			],
 			[
@@ -64,8 +64,22 @@ class CDnsParserTest extends PHPUnit_Framework_TestCase {
 			[
 				'a', 0,
 				[
-					'rc' => CParser::PARSE_FAIL,
-					'match' => ''
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'a'
+				]
+			],
+			[
+				'a.root-servers.net', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'a.root-servers.net'
+				]
+			],
+			[
+				'x--ample.example.net', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'x--ample.example.net'
 				]
 			],
 			[
