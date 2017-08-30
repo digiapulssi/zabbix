@@ -565,7 +565,7 @@ class testFormTriggerPrototype extends CWebTest {
 					'expression' => '{Simple form test host:item-prototype-reuse.last(0)}<5',
 					'type' => true,
 					'comments' => 'Trigger status (expression) is recalculated every time Zabbix server receives new value, if this value is part of this expression. If time based functions are used in the expression, it is recalculated every 30 seconds by a zabbix timer process. ',
-					'url' => 'www.zabbix.com',
+					'url' => 'http://www.zabbix.com',
 					'severity' => 'High',
 					'status' => false,
 				)

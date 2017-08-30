@@ -18,22 +18,23 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-require_once dirname(__FILE__).'/../include/class.czabbixtest.php';
 
-class API_JSON_APIInfo extends CZabbixTest {
+class CHtmlUrlValidator {
 
-	public function testAPIInfo_VersionWithAuth() {
-		$result = $this->api_acall('apiinfo.version', array(), $debug);
+	/**
+	 * Relative URL should start with .php file name.
+	 * Absolute URL schema must match schemes mentioned in ZBX_URL_VALID_SCHEMES comma separated list.
+	 *
+	 * @static
+	 *
+	 * @param string $url	URL string to validate
+	 *
+	 * @return bool
+	 */
+	public static function validate($url) {
+		$scheme = (strpos($url, ':')  === false) ? '' : substr($url, 0, strpos($url, ':'));
+		$allowed_schemes = explode(',', strtolower(ZBX_URI_VALID_SCHEMES));
 
-		$this->assertTrue(isset($result['result']), $debug);
-		$this->assertSame($result['result'], '2.2.20');
+		return (in_array(strtolower($scheme), $allowed_schemes)) || (preg_match('/^[a-z_\.]+\.php/i', $url) == 1);
 	}
-
-	public function testAPIInfo_VersionWithoutAuth() {
-		$result = $this->api_call('apiinfo.version', array(), $debug);
-
-		$this->assertTrue(isset($result['result']), $debug);
-		$this->assertSame($result['result'], '2.2.20');
-	}
-
 }
