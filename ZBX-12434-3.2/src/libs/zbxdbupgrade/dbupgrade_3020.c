@@ -42,11 +42,12 @@ static int	DBpatch_3020001(void)
 	zbx_vector_uint64_create(&eventids);
 
 	result = DBselect(
-			"select eventid"
-			" from problem"
-			" where object=0 and objectid not in ("
-				"select triggerid"
-				" from triggers"
+			"select p.eventid"
+			" from problem p"
+			" where p.object=0 and not exists ("
+				"select null"
+				" from triggers t"
+				" where t.triggerid=p.objectid"
 			")");
 
 	while (NULL != (row = DBfetch(result)))
@@ -57,11 +58,12 @@ static int	DBpatch_3020001(void)
 	DBfree_result(result);
 
 	result = DBselect(
-			"select eventid"
-			" from problem"
-			" where (object=4 or object=5) and objectid not in ("
-				"select itemid"
-				" from items"
+			"select p.eventid"
+			" from problem p "
+			" where (p.object=4 or p.object=5) and not exists ("
+				"select null"
+				" from items i"
+				" where i.itemid=p.objectid"
 			")");
 
 	while (NULL != (row = DBfetch(result)))
