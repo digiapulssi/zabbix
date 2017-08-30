@@ -493,7 +493,7 @@ typedef struct
 #endif
 	zbx_binary_heap_t	queues[ZBX_POLLER_TYPE_COUNT];
 	zbx_binary_heap_t	pqueue;
-	zbx_vector_uint64_t	lld_ruleids;		/* for locking lld rules */
+	zbx_vector_uint64_t	locked_lld_ruleids;	/* for keeping track of lld rules being processed */
 	ZBX_DC_CONFIG_TABLE	*config;
 }
 ZBX_DC_CONFIG;
