@@ -2374,7 +2374,7 @@ int	DCsync_history(int sync_type, int *total_num)
 				zbx_vector_uint64_pair_clear(&trends_diff);
 			}
 			while (ZBX_DB_DOWN == ret);
-
+skip:
 			DCconfig_unlock_triggers(&triggerids);
 			zbx_free(trends);
 
@@ -2393,7 +2393,7 @@ int	DCsync_history(int sync_type, int *total_num)
 			}
 			while (ZBX_DB_DOWN == (ret = DBcommit()));
 		}
-skip:
+
 		LOCK_CACHE;
 
 		next_sync = hc_push_processed_items(&history_items);	/* return processed items into history cache */
