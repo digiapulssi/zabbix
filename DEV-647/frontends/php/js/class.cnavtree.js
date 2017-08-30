@@ -672,7 +672,7 @@ jQuery(function($) {
 													else {
 														root = $('.tree-item[data-id=' + parent + ']>ul.tree-list',
 																$obj
-															),
+															).get(0),
 														id = +resp['map_id'];
 														new_item = {
 															name: resp['map_name'],
@@ -693,7 +693,7 @@ jQuery(function($) {
 															if (typeof resp.hierarchy[mapid] !== 'undefined') {
 																var root = $('.tree-item[data-id=' + itemid +
 																		']>ul.tree-list', $obj
-																	);
+																	).get(0);
 
 																$.each(resp.hierarchy[mapid], function(i, submapid) {
 																	if (typeof resp.submaps[submapid] !== 'undefined') {
@@ -919,7 +919,7 @@ jQuery(function($) {
 						}
 
 						addPopupValues = function(data) {
-							var root = $('.tree-item[data-id=' + id + ']>ul.tree-list', $obj),
+							var root = $('.tree-item[data-id=' + id + ']>ul.tree-list', $obj).get(0),
 								new_item;
 
 							$.each(data.values, function() {
