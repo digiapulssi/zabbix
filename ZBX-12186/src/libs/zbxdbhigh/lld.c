@@ -532,8 +532,8 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 
 	if (FAIL == DCconfig_lock_discovery_rule(lld_ruleid))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot process discovery rule: lld rule ID [" ZBX_FS_UI64 "] is locked",
-				lld_ruleid);
+		zabbix_log(LOG_LEVEL_WARNING, "cannot process discovery rule: another value for lld rule ID ["
+				ZBX_FS_UI64 "] is being processed", lld_ruleid);
 		goto out;
 	}
 
