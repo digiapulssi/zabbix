@@ -46,7 +46,7 @@ sub fill_test_data_dns($$$);
 sub fill_test_data_rdds($$);
 sub match_clocks_with_results($$);
 
-parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'ignore-file=s', 'probe=s', 'limit=n');
+parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n');
 
 # do not write any logs
 setopt('nolog');
@@ -285,7 +285,14 @@ if ($check_till > $max_till)
 
 my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till);
 
-dbg("real services period: ", selected_period($from, $till));
+if (opt('print-period'))
+{
+	print("selected period: ", selected_period($from, $till), "\n");
+}
+else
+{
+	dbg("real services period: ", selected_period($from, $till));
+}
 
 if (!$from)
 {
@@ -2197,7 +2204,7 @@ update-api-data.pl - save information about the incidents to a filesystem
 
 =head1 SYNOPSIS
 
-update-api-data.pl [--service <dns|dnssec|rdds|epp>] [--tld <tld>|--ignore-file <file>] [--from <timestamp>|--continue] [--period minutes] [--dry-run [--probe name]] [--warnslow <seconds>] [--debug] [--help]
+update-api-data.pl [--service <dns|dnssec|rdds|epp>] [--tld <tld>|--ignore-file <file>] [--from <timestamp>|--continue] [--print-period] [--period minutes] [--dry-run [--probe name]] [--warnslow <seconds>] [--debug] [--help]
 
 =head1 OPTIONS
 
@@ -2242,6 +2249,10 @@ but not more than 30 minutes.
 
 Note, that continue token is not updated if this option was specified together with --dry-run or when you use
 --from option.
+
+=item B<--print-period>
+
+Print selected period on the screen.
 
 =item B<--probe> name
 
