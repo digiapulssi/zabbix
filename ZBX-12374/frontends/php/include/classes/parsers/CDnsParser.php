@@ -59,7 +59,7 @@ class CDnsParser extends CParser {
 
 		$length = $p - $pos;
 
-		if ($length >= 255) {
+		if ($length > 255) {
 			return self::PARSE_FAIL;
 		}
 
