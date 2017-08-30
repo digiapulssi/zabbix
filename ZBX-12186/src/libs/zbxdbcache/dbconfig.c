@@ -8497,7 +8497,7 @@ void	zbx_set_availability_diff_ts(int ts)
  *            lastaccess - [IN] the last time proxy data was received/sent    *
  *                                                                            *
  ******************************************************************************/
-void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
+void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
 {
 	ZBX_DC_PROXY	*proxy;
 
