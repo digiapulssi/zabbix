@@ -586,16 +586,20 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	while (0 == empty);
 
 	/* as recommended by the elasticsearch documentation, we close the scroll search through a DELETE request */
-	url_offset = 0;
-	zbx_snprintf_alloc(&data->post_url, &url_alloc, &url_offset, "%s/_search/scroll/%s", data->base_url, scroll_id);
+	if (NULL != scroll_id)
+	{
+		url_offset = 0;
+		zbx_snprintf_alloc(&data->post_url, &url_alloc, &url_offset, "%s/_search/scroll/%s", data->base_url,
+				scroll_id);
 
-	curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
-	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, NULL);
-	curl_easy_setopt(data->handle, CURLOPT_CUSTOMREQUEST, "DELETE");
+		curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
+		curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, NULL);
+		curl_easy_setopt(data->handle, CURLOPT_CUSTOMREQUEST, "DELETE");
 
-	page.offset = 0;
-	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
-		zabbix_log(LOG_LEVEL_WARNING, "Failed to close the scroll query: %s", curl_easy_strerror(err));
+		page.offset = 0;
+		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
+			zabbix_log(LOG_LEVEL_WARNING, "Failed to close the scroll query: %s", curl_easy_strerror(err));
+	}
 
 	elastic_close(hist);
 
