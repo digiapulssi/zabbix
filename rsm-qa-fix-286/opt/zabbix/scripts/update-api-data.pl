@@ -182,7 +182,7 @@ if (opt('continue'))
 		if (!defined($config_minclock))
 		{
 			info("no data from Probe nodes yet");
-			exit(0);
+			slv_exit(SUCCESS);
 		}
 
 		dbg("oldest data found: ", ts_full($config_minclock));
@@ -262,7 +262,7 @@ dbg("check_from:", ts_full($check_from), " check_till:", ts_full($check_till), "
 if ($check_till < $check_from)
 {
 	info("no new data yet, we are up-to-date");
-	exit(0);
+	slv_exit(SUCCESS);
 }
 
 if ($check_till > $max_till)
@@ -281,7 +281,7 @@ if ($check_till > $max_till)
 
 	wrn(sprintf("the specified period (%s) is in the future, please wait for %s", selected_period($check_from, $check_till), $left_str));
 
-	exit(0);
+	slv_exit(SUCCESS);
 }
 
 my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till);
@@ -298,7 +298,8 @@ else
 if (!$from)
 {
 	info("no full test periods within specified time range: ", selected_period($check_from, $check_till));
-	exit(0);
+
+	slv_exit(SUCCESS);
 }
 
 db_disconnect();
@@ -340,7 +341,6 @@ TRYFORK:
 			if (tld_exists(getopt('tld')) == 0)
 			{
 				fail("TLD ", getopt('tld'), " does not exist.") if ($server_keys[-1] eq $server_key);
-				next;
 			}
 
 			$tlds_ref = [ getopt('tld') ];
@@ -439,15 +439,14 @@ TRYFORK:
 
 			if ($valid == 0)
 			{
-				print("Error: unknown probe \"$probe\"\n");
-				print("\nAvailable probes:\n");
+				my $msg = "unknown probe \"$probe\"\n\nAvailable probes:\n";
 
 				foreach my $name (keys(%$all_probes_ref))
 				{
-					print("  $name\n");
+					$msg .= "  $name\n";
 				}
 
-				slv_exit(E_FAIL);
+				fail($msg);
 			}
 
 			my $temp = $all_probes_ref;
@@ -595,7 +594,8 @@ TRYFORK:
 				my $rollweek;
 				if (get_current_value($rollweek_itemid, ITEM_VALUE_TYPE_FLOAT, \$rollweek) != SUCCESS)
 				{
-					fail(uc($service), ": no rolling week data in the database yet");
+					wrn(uc($service), ": no rolling week data in the database yet");
+					next;
 				}
 
 				$json_state_ref->{'testedServices'}->{uc($service)} = {

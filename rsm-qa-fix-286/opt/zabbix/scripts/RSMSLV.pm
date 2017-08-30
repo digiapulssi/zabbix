@@ -2416,6 +2416,8 @@ sub slv_exit
 {
 	my $rv = shift;
 
+	db_disconnect();
+
 	if (SUCCESS == $rv && opt('stats'))
 	{
 		my $prefix = $tld ? "$tld " : '';
