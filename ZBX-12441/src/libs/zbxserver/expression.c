@@ -1458,10 +1458,12 @@ static void	get_escalation_history(zbx_uint64_t actionid, const DB_EVENT *event,
 		}
 		else
 		{
+			/* media type description | send to | alert user */
 			zbx_snprintf_alloc(&buf, &buf_alloc, &buf_offset, " %s %s \"%s\"",
-					SUCCEED == DBis_null(row[3]) ? "" : row[3],	/* media type description */
-					row[4],						/* send to */
-					zbx_user_string(&userid, event_userid));	/* alert user */
+					SUCCEED == DBis_null(row[3]) ? "" : row[3],
+					SUCCEED == zbx_user_validate(&userid, event_userid) ? row[4] :
+							"\"Inaccessible recipient details\"",
+					zbx_user_string(&userid, event_userid));
 		}
 
 		if (ALERT_STATUS_FAILED == status)
@@ -1531,7 +1533,6 @@ static void	get_event_ack_history(const DB_EVENT *event, char **replace_to, zbx_
 				zbx_user_string(&userid, event_userid),
 				row[2]);
 	}
-
 	DBfree_result(result);
 
 	if (0 != buf_offset)

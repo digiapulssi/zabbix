@@ -1244,6 +1244,76 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_user_validate                                                *
+ *                                                                            *
+ * Purpose: check if user has access rights to information - full name, alias,*
+ *          Email, SMS, Jabber, etc                                           *
+ *                                                                            *
+ * Parameters: userid_ow - [IN] user who owns the information                 *
+ *             userid_rq - [IN] user who requests the information             *
+ *                                                                            *
+ * Return value: SUCCEED - if requesting user has access rights               *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ * Comments: Users has access rights or can view personal information only    *
+ *           about themselves and other user who belong to their group.       *
+ *           "Zabbix Super Admin" can view and has access rights to           *
+ *           information about any user.                                      *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_user_validate(const zbx_uint64_t *userid_ow, zbx_uint64_t *userid_rq)
+{
+	const char	*__function_name = "zbx_user_validate";
+
+	DB_RESULT	result;
+	DB_ROW		row;
+	int             user_type = -1;
+	int		ret = FAIL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	if (NULL == userid_rq)
+		goto out;
+
+	result = DBselect("select type from users where userid=" ZBX_FS_UI64, *userid_rq);
+
+	if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
+	{
+		user_type = atoi(row[0]);
+		ret = SUCCEED;
+	}
+	DBfree_result(result);
+
+	if (FAIL == ret || -1 == user_type)
+		goto out;
+
+	if (USER_TYPE_SUPER_ADMIN != user_type || userid_ow != userid_rq)
+	{
+		/* check if users are from the same group */
+		result = DBselect(
+				"select count(*)"
+				" from users u,users_groups ug"
+				" where u.userid=ug.userid"
+					" and ug.usrgrpid"
+						" in ( select uug.usrgrpid"
+							" from users_groups uug"
+							" where uug.userid=" ZBX_FS_UI64
+						")"
+					" and u.userid=" ZBX_FS_UI64,
+				*userid_ow, *userid_rq);
+
+		if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]) || 0 >= atoi(row[0]))
+			ret = FAIL;
+		DBfree_result(result);
+	}
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_user_string                                                  *
  *                                                                            *
  * Return value: "Name Surname (Alias)" or "unknown" if user not found        *
@@ -1257,41 +1327,11 @@ const char     *zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *event_
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	int             user_type = -1, event_user_type = -1;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): userid = " ZBX_FS_UI64 ", event_userid = " ZBX_FS_UI64,
 			__function_name, *userid, *event_userid);
 
-	if (NULL != userid)
-	{
-		result = DBselect("select type from users where userid=" ZBX_FS_UI64, *userid);
-
-		if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
-			user_type = atoi(row[0]);
-		DBfree_result(result);
-
-		zabbix_log(LOG_LEVEL_DEBUG, "user_type = %d", user_type);
-
-		if (-1 == user_type)
-		{
-			zabbix_log(LOG_LEVEL_DEBUG, "%s() cannot check permissions", __function_name);
-		}
-		else if (NULL != event_userid)
-		{
-			result = DBselect("select type from users where userid=" ZBX_FS_UI64, *event_userid);
-
-			if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
-				event_user_type = atoi(row[0]);
-			DBfree_result(result);
-
-			zabbix_log(LOG_LEVEL_DEBUG, "event_user_type = %d", event_user_type);
-
-			if (-1 == event_user_type)
-				zabbix_log(LOG_LEVEL_DEBUG, "%s() cannot check permissions", __function_name);
-		}
-	}
-
-	if (user_type > event_user_type)
+	if (SUCCEED != zbx_user_validate(userid, event_userid))
 	{
 		zbx_snprintf(buf_string, sizeof(buf_string), "Inaccessible user");
 	}
