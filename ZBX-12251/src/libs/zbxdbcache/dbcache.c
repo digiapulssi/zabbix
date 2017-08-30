@@ -2342,40 +2342,42 @@ int	DCsync_history(int sync_type, int *total_num)
 
 			DCmass_update_history(history, items, errcodes, history_num);
 
-			/* unrecoverable error, skip batch */
-			if (FAIL == (ret = DBmass_add_history(history, history_num)))
-				goto skip;
-
-			DCmass_add_history(history, history_num);
-			DCmass_update_trends(history, history_num, &trends, &trends_num);
-
-			do
+			if (FAIL != (ret = DBmass_add_history(history, history_num)))
 			{
-				DBbegin();
+				/* process values only if they were successfully stored by the history backend */
 
-				DBmass_update_items(history, history_num, items, errcodes, &state_diff);
-				DBmass_update_triggers(history, history_num, &trigger_diff);
-				DBmass_update_trends(trends, trends_num, &trends_diff);
+				DCmass_add_history(history, history_num);
+				DCmass_update_trends(history, history_num, &trends, &trends_num);
 
-				/* processing of events, generated in functions: */
-				/* DBmass_update_items() */
-				/* DBmass_update_triggers() */
-				process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION);
-				zbx_save_trigger_changes(&trigger_diff);
-
-				if (ZBX_DB_OK == (txn_error = DBcommit()))
+				do
 				{
-					DCset_item_db_states(&state_diff);
-					DCconfig_triggers_apply_changes(&trigger_diff);
-					DCupdate_trends(&trends_diff);
-				}
+					DBbegin();
 
-				zbx_vector_ptr_clear(&state_diff);
-				zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
-				zbx_vector_uint64_pair_clear(&trends_diff);
+					DBmass_update_items(history, history_num, items, errcodes, &state_diff);
+					DBmass_update_triggers(history, history_num, &trigger_diff);
+					DBmass_update_trends(trends, trends_num, &trends_diff);
+
+					/* processing of events, generated in functions: */
+					/* DBmass_update_items() */
+					/* DBmass_update_triggers() */
+					process_trigger_events(&trigger_diff, &triggerids,
+							ZBX_EVENTS_PROCESS_CORRELATION);
+					zbx_save_trigger_changes(&trigger_diff);
+
+					if (ZBX_DB_OK == (txn_error = DBcommit()))
+					{
+						DCset_item_db_states(&state_diff);
+						DCconfig_triggers_apply_changes(&trigger_diff);
+						DCupdate_trends(&trends_diff);
+					}
+
+					zbx_vector_ptr_clear(&state_diff);
+					zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+					zbx_vector_uint64_pair_clear(&trends_diff);
+				}
+				while (ZBX_DB_DOWN == txn_error);
 			}
-			while (ZBX_DB_DOWN == txn_error);
-skip:
+
 			DCconfig_unlock_triggers(&triggerids);
 			zbx_free(trends);
 
