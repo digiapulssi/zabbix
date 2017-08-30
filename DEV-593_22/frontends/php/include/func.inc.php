@@ -2877,3 +2877,28 @@ function splitPath($path, $stripSlashes = true) {
 
 	return $items;
 }
+
+/************* SECURITY *************/
+/**
+ * Generates a random CSRF token and stores it in the Session's 'csrf_tokens' array.
+ *
+ * @return string
+ */
+function createCSRFToken() {
+	$csrf_token = substr(md5(rand()), 0, 10);
+	$csrf_tokens = ZBase::getInstance()->getSession()->offsetGet('csrf_tokens');
+	if (!$csrf_tokens) {
+		$csrf_tokens = array();
+	}
+
+	if ($csrf_tokens) {
+		while (array_key_exists($csrf_token, $csrf_tokens)) {
+			$csrf_token = substr(md5(rand()), 0, 10);
+		}
+	}
+
+	$csrf_tokens[$csrf_token] = true;
+	ZBase::getInstance()->getSession()->offsetSet('csrf_tokens', $csrf_tokens);
+
+	return $csrf_token;
+}

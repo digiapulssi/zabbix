@@ -32,6 +32,7 @@ class CForm extends CTag {
 			$this->addVar('sid', substr($_COOKIE['zbx_sessionid'], 16, 16));
 		}
 		$this->addVar('form_refresh', get_request('form_refresh', 0) + 1);
+		$this->addVar('csrf_token', createCSRFToken());
 	}
 
 	public function setMethod($value = 'post') {

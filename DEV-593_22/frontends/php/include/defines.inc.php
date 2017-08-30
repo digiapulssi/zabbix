@@ -893,6 +893,7 @@ define('NOT_EMPTY',	"({}!='')&&");
 define('NOT_ZERO',	"({}!=0)&&");
 define('NO_TRIM',	'NO_TRIM');
 define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
+define('VALID_CSRF_TOKEN', 'is_valid_csrf_token({})');
 
 define('ZBX_VALID_OK',		0);
 define('ZBX_VALID_ERROR',	1);
