@@ -434,11 +434,12 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		zbx_vector_history_record_t *values)
 {
 	zbx_elastic_data_t	*data = (zbx_elastic_data_t *)hist->data;
-	size_t			url_alloc = 0, url_offset = 0;
-	int			err;
+	size_t			url_alloc = 0, url_offset = 0, id_alloc = 0, scroll_alloc = 0, scroll_offset = 0;
+	int			err, total, empty;
 	long			http_code;
 	struct zbx_json		query;
 	struct curl_slist	*curl_headers = NULL;
+	char			*scroll_id = NULL, *scroll_query = NULL;
 
 	if (NULL == (data->handle = curl_easy_init()))
 	{
@@ -447,9 +448,10 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		return FAIL;
 	}
 
-	zbx_snprintf_alloc(&data->post_url, &url_alloc, &url_offset, "%s/%s/values/_search", data->base_url,
+	zbx_snprintf_alloc(&data->post_url, &url_alloc, &url_offset, "%s/%s/values/_search?scroll=1m", data->base_url,
 			value_type_str[hist->value_type]);
 
+	/* prepare the json query for elasticsearch, apply ranges if needed */
 	zbx_json_init(&query, ZBX_JSON_ALLOCATE);
 
 	if (0 < count)
@@ -479,7 +481,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	zbx_json_addobject(&query, "clock");
 
 	if (0 < start)
-		zbx_json_adduint64(&query, "gt", start);
+		zbx_json_adduint64(&query, "gte", start);
 
 	if (0 < end)
 		zbx_json_adduint64(&query, "lte", end);
@@ -505,19 +507,41 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 	curl_easy_getinfo(data->handle, CURLINFO_RESPONSE_CODE, &http_code);
 
-	if (200 == http_code)
+	url_offset = 0;
+	zbx_snprintf_alloc(&data->post_url, &url_alloc, &url_offset, "%s/_search/scroll", data->base_url);
+
+	curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
+
+	total = (0 == count ? -1 : count);
+
+	/* For processing the records, we need to keep track of the total requested and if the response from the */
+	/* elasticsearch server is empty. For this we use two variables, empty and total. If the result is empty or */
+	/* the total reach zero, we terminate the scrolling query and return what we currently have. */
+	do
 	{
 		struct zbx_json_parse	jp, jp_values, jp_item, jp_sub, jp_hits, jp_source;
 		zbx_history_record_t	hr;
 		const char		*p = NULL;
 
+		if (200 != http_code)
+			break;
+
+		empty = 1;
+
 		zbx_json_open(page.data, &jp);
 		zbx_json_brackets_open(jp.start, &jp_values);
+
+		/* get the scroll id immediately, for being used in subsequent queries */
+		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_values, "_scroll_id", &scroll_id, &id_alloc))
+			break;
+
 		zbx_json_brackets_by_name(&jp_values, "hits", &jp_sub);
 		zbx_json_brackets_by_name(&jp_sub, "hits", &jp_hits);
 
 		while (NULL != (p = zbx_json_next(&jp_hits, p)))
 		{
+			empty = 0;
+
 			if (SUCCEED != zbx_json_brackets_open(p, &jp_item))
 				continue;
 
@@ -528,14 +552,59 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 				continue;
 
 			zbx_vector_history_record_append_ptr(values, &hr);
+
+			if (-1 != total)
+				--total;
+
+			if (0 == total)
+			{
+				empty = 1;
+
+				break;
+			}
+		}
+
+		if (1 == empty)
+			break;
+
+		/* scroll to the next page */
+		scroll_offset = 0;
+		zbx_snprintf_alloc(&scroll_query, &scroll_alloc, &scroll_offset, "{\"scroll\":\"1m\",\"scroll_id\":\"%s\"}\n",
+				scroll_id);
+
+		curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, scroll_query);
+
+		page.offset = 0;
+		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
+		{
+			zabbix_log(LOG_LEVEL_ERR, "Failed to get values from history storage: %s",
+				curl_easy_strerror(err));
+
+			break;
 		}
 	}
+	while (0 == empty);
+
+	/* as recommended by the elasticsearch documentation, we close the scroll search through a DELETE request */
+	url_offset = 0;
+	zbx_snprintf_alloc(&data->post_url, &url_alloc, &url_offset, "%s/_search/scroll/%s", data->base_url, scroll_id);
+
+	curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
+	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, NULL);
+	curl_easy_setopt(data->handle, CURLOPT_CUSTOMREQUEST, "DELETE");
+
+	page.offset = 0;
+	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
+		zabbix_log(LOG_LEVEL_WARNING, "Failed to close the scroll query: %s", curl_easy_strerror(err));
 
 	elastic_close(hist);
 
 	curl_slist_free_all(curl_headers);
 
 	zbx_json_free(&query);
+
+	zbx_free(scroll_id);
+	zbx_free(scroll_query);
 
 	return SUCCEED;
 }
