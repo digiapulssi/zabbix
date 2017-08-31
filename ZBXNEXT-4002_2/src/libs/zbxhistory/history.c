@@ -95,8 +95,7 @@ void	zbx_history_destroy()
  *                                                                                  *
  * Parameters: history - [IN] the values to store                                   *
  *                                                                                  *
- * Comments: All interfaces created by zbx_history_init() function are destroyed    *
- *           here.                                                                  *
+ * Comments: add history values to the configured storage backends                  *
  *                                                                                  *
  ************************************************************************************/
 void	zbx_history_add_values(const zbx_vector_ptr_t *history)
