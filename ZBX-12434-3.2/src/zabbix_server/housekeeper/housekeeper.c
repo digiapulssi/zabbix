@@ -639,7 +639,7 @@ static int	housekeeping_cleanup()
 	DB_HOUSEKEEPER		housekeeper;
 	DB_RESULT		result;
 	DB_ROW			row;
-	int			d, deleted = 0;
+	int			deleted = 0;
 	zbx_vector_uint64_t	housekeeperids;
 	char			*sql = NULL, *filter = NULL, *table_name_esc;
 	size_t			sql_alloc = 0, sql_offset = 0, filter_alloc = 0;
@@ -691,7 +691,7 @@ static int	housekeeping_cleanup()
 
 		if (0 == strcmp(housekeeper.tablename, "events"))
 		{
-			int	object;
+			int	source = EVENT_SOURCE_TRIGGERS, object, d_trigger, d_internal;
 
 			if (0 == strcmp(housekeeper.field, "triggerid"))
 				object = EVENT_OBJECT_TRIGGER;
@@ -700,23 +700,60 @@ static int	housekeeping_cleanup()
 			else
 				object = EVENT_OBJECT_LLDRULE;
 
-			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "object=%d and objectid="
-					ZBX_FS_UI64, object, housekeeper.value);
+			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d and objectid="
+					ZBX_FS_UI64, source, object, housekeeper.value);
+
+			d_trigger = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
+
+			if (ZBX_DB_OK <= d_trigger)
+			{
+				deleted += d_trigger;
+
+				source = EVENT_SOURCE_INTERNAL;
+				filter_offset = 0;
+				zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d"
+						" and objectid=" ZBX_FS_UI64, source, object, housekeeper.value);
+
+				if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
+				{
+					d_internal = delete_from_table(housekeeper.tablename, filter,
+							CONFIG_MAX_HOUSEKEEPER_DELETE);
+				}
+				else if (CONFIG_MAX_HOUSEKEEPER_DELETE > d_trigger)
+				{
+					d_internal = delete_from_table(housekeeper.tablename, filter,
+						CONFIG_MAX_HOUSEKEEPER_DELETE - d_trigger);
+				}
+				else
+					d_internal = ZBX_DB_OK;
+
+				if (ZBX_DB_OK <= d_internal)
+				{
+					deleted += d_internal;
+
+					if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE ||
+							CONFIG_MAX_HOUSEKEEPER_DELETE > d_trigger + d_internal)
+					{
+						zbx_vector_uint64_append(&housekeeperids, housekeeper.housekeeperid);
+					}
+				}
+			}
 		}
 		else
 		{
+			int	d;
+
 			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "%s=" ZBX_FS_UI64, housekeeper.field,
 					housekeeper.value);
-		}
 
-		d = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
+			d = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
-		if (ZBX_DB_OK <= d)
-		{
-			if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE || CONFIG_MAX_HOUSEKEEPER_DELETE > d)
-				zbx_vector_uint64_append(&housekeeperids, housekeeper.housekeeperid);
-
-			deleted += d;
+			if (ZBX_DB_OK <= d)
+			{
+				deleted += d;
+				if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE || CONFIG_MAX_HOUSEKEEPER_DELETE > d)
+					zbx_vector_uint64_append(&housekeeperids, housekeeper.housekeeperid);
+			}
 		}
 	}
 	DBfree_result(result);
