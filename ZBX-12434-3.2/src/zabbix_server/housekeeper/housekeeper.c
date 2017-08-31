@@ -577,6 +577,48 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 	return deleted;
 }
 
+static int	delete_from_table(const char *tablename, const char *filter, int limit)
+{
+	if (0 == limit)
+	{
+		return DBexecute(
+				"delete from %s"
+				" where %s",
+				tablename,
+				filter);
+	}
+	else
+	{
+#if defined(HAVE_IBM_DB2) || defined(HAVE_ORACLE)
+		return DBexecute(
+				"delete from %s"
+				" where %s"
+					" and rownum<=%d",
+				tablename,
+				filter,
+				limit);
+#elif defined(HAVE_MYSQL)
+		return DBexecute(
+				"delete from %s"
+				" where %s limit %d",
+				tablename,
+				filter,
+				limit);
+#elif defined(HAVE_POSTGRESQL)
+		return DBexecute(
+				"delete from %s"
+				" where ctid = any(array(select ctid from %s"
+					" where %s limit %d))",
+				tablename,
+				tablename,
+				filter,
+				limit);
+#elif defined(HAVE_SQLITE3)
+		return ZBX_DB_OK;
+#endif
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: housekeeping_cleanup                                             *
@@ -649,16 +691,16 @@ static int	housekeeping_cleanup()
 
 		if (0 == strcmp(housekeeper.tablename, "events"))
 		{
-			char	*object;
+			int	object;
 
 			if (0 == strcmp(housekeeper.field, "triggerid"))
-				object = ZBX_STR(EVENT_OBJECT_TRIGGER);
+				object = EVENT_OBJECT_TRIGGER;
 			else if (0 == strcmp(housekeeper.field, "itemid"))
-				object = ZBX_STR(EVENT_OBJECT_ITEM);
+				object = EVENT_OBJECT_ITEM;
 			else
-				object = ZBX_STR(EVENT_OBJECT_LLDRULE);
+				object = EVENT_OBJECT_LLDRULE;
 
-			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "object=%s and objectid="
+			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "object=%d and objectid="
 					ZBX_FS_UI64, object, housekeeper.value);
 		}
 		else
@@ -667,44 +709,7 @@ static int	housekeeping_cleanup()
 					housekeeper.value);
 		}
 
-		if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
-		{
-			d = DBexecute(
-					"delete from %s"
-					" where %s",
-					housekeeper.tablename,
-					filter);
-		}
-		else
-		{
-#if defined(HAVE_IBM_DB2) || defined(HAVE_ORACLE)
-			d = DBexecute(
-					"delete from %s"
-					" where %s"
-						" and rownum<=%d",
-					housekeeper.tablename,
-					filter,
-					CONFIG_MAX_HOUSEKEEPER_DELETE);
-#elif defined(HAVE_MYSQL)
-			d = DBexecute(
-					"delete from %s"
-					" where %s limit %d",
-					housekeeper.tablename,
-					filter,
-					CONFIG_MAX_HOUSEKEEPER_DELETE);
-#elif defined(HAVE_POSTGRESQL)
-			d = DBexecute(
-					"delete from %s"
-					" where ctid = any(array(select ctid from %s"
-						" where %s limit %d))",
-					housekeeper.tablename,
-					housekeeper.tablename,
-					filter,
-					CONFIG_MAX_HOUSEKEEPER_DELETE);
-#elif defined(HAVE_SQLITE3)
-			d = 0;
-#endif
-		}
+		d = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
 		if (ZBX_DB_OK <= d)
 		{
