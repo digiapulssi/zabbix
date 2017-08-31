@@ -1376,23 +1376,24 @@ sub get_nsip_from_key
 {
 	my $key = shift;
 
-	$key =~ s/^[^\[]+\[([^\]]+)]$/$1/;
+	my $offset = index($key, "[");
 
-	my $got_params = 0;
-	my $pos = length($key);
+	return "" if ($offset == -1);
 
-	while ($pos > 0 and $got_params < 2)
+	if (substr($key, $offset + 1, 1) eq "{")
 	{
-		$pos--;
-		my $char = substr($key, $pos, 1);
-		$got_params++ if ($char eq ',')
+		$offset = index($key, ",");
+
+		return "" if ($offset == -1);
 	}
 
-	$pos == 0 ? $got_params++ : $pos++;
+	$offset++;
 
-	return "" unless ($got_params == 2);
+	my $endpos = index($key, "]");
 
-	return substr($key, $pos);
+	return "" if ($endpos == -1 || $endpos <= $offset);
+
+	return substr($key, $offset, $endpos - $offset);
 }
 
 sub is_service_error
@@ -2414,6 +2415,8 @@ sub format_stats_time
 sub slv_exit
 {
 	my $rv = shift;
+
+	db_disconnect();
 
 	if (SUCCESS == $rv && opt('stats'))
 	{

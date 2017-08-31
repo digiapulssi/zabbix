@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc23
 
 New features:
+....I..... [283] introduced parallel processing of servers in SLA API script (dimir)
 
 Bug fixes:
 .......P.. [286] removed printing failed API request on 're-login' error (dimir)
