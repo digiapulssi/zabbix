@@ -1085,7 +1085,7 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 
 	DBexecute("%s", sql);
 
-	DBdelete_by_ids(triggerids,"triggerid", event_tables, ARRSIZE(event_tables));
+	DBdelete_by_ids(triggerids, "triggerid", event_tables, ARRSIZE(event_tables));
 
 	zbx_vector_uint64_destroy(&selementids);
 
@@ -1163,6 +1163,7 @@ static void	DBdelete_triggers_by_itemids(zbx_vector_uint64_t *itemids)
 	DBselect_uint64(sql, &triggerids);
 
 	DBdelete_trigger_hierarchy(&triggerids);
+
 	zbx_vector_uint64_destroy(&triggerids);
 	zbx_free(sql);
 out:
