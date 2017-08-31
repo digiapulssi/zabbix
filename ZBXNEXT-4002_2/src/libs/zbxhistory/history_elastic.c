@@ -334,7 +334,7 @@ static void	elastic_writer_flush()
 	for (i = 0; i < writer.ifaces.values_num; i++)
 	{
 		zbx_history_iface_t		*hist = (zbx_history_iface_t *)writer.ifaces.values[i];
-		zbx_elastic_data_t	*data = (zbx_elastic_data_t *)hist->data;
+		zbx_elastic_data_t	*data = hist->data;
 
 		curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
 	}
@@ -402,7 +402,7 @@ static void	elastic_writer_flush()
  ************************************************************************************/
 static void	elastic_destroy(zbx_history_iface_t *hist)
 {
-	zbx_elastic_data_t	*data = (zbx_elastic_data_t *)hist->data;
+	zbx_elastic_data_t	*data = hist->data;
 
 	elastic_close(hist);
 
@@ -433,7 +433,7 @@ static void	elastic_destroy(zbx_history_iface_t *hist)
 static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, int start, int count, int end,
 		zbx_vector_history_record_t *values)
 {
-	zbx_elastic_data_t	*data = (zbx_elastic_data_t *)hist->data;
+	zbx_elastic_data_t	*data = hist->data;
 	size_t			url_alloc = 0, url_offset = 0, id_alloc = 0, scroll_alloc = 0, scroll_offset = 0;
 	int			err, total, empty;
 	long			http_code;
@@ -625,7 +625,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
  ************************************************************************************/
 static int	elastic_add_values(zbx_history_iface_t *hist, const zbx_vector_ptr_t *history)
 {
-	zbx_elastic_data_t	*data = (zbx_elastic_data_t *)hist->data;
+	zbx_elastic_data_t	*data = hist->data;
 	int				i, num = 0;
 	ZBX_DC_HISTORY			*h;
 	struct zbx_json			json_idx, json;
