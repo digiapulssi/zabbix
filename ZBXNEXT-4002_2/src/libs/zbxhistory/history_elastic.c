@@ -215,7 +215,7 @@ out:
  ************************************************************************************/
 static void	elastic_close(zbx_history_iface_t *hist)
 {
-	zbx_elastic_data_t	*data = (zbx_elastic_data_t *)hist->data;
+	zbx_elastic_data_t	*data = hist->data;
 
 	zbx_free(data->buf);
 	zbx_free(data->post_url);
@@ -293,7 +293,7 @@ static void	elastic_writer_release()
  ************************************************************************************/
 static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
 {
-	zbx_elastic_data_t	*data = (zbx_elastic_data_t *)hist->data;
+	zbx_elastic_data_t	*data = hist->data;
 
 	elastic_writer_init();
 
