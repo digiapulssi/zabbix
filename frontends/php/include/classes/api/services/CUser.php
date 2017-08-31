@@ -264,6 +264,10 @@ class CUser extends CApiService {
 				$dbUser = $dbUsers[$user['userid']];
 			}
 
+			if (array_key_exists('url', $user) && $user['url'] && !CHtmlUrlValidator::validate($user['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
+
 			// check if user alias
 			if (isset($user['alias'])) {
 				// check if we change guest user
