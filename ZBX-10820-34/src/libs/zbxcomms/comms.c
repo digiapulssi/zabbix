@@ -1956,6 +1956,9 @@ int	zbx_tcp_check_security(zbx_socket_t *s, const char *peer_list, int action_if
 #ifdef HAVE_IPV6
 		memset(&hints, 0, sizeof(hints));
 		hints.ai_family = PF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+
 		if (0 == getaddrinfo(start, NULL, &hints, &ai))
 		{
 			for (current_ai = ai; NULL != current_ai; current_ai = current_ai->ai_next)
