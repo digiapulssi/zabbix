@@ -1287,7 +1287,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid_ow, zbx_uint64_t *userid_rq)
 	if (FAIL == ret || -1 == user_type)
 		goto out;
 
-	if (USER_TYPE_SUPER_ADMIN != user_type || userid_ow != userid_rq)
+	if (USER_TYPE_SUPER_ADMIN != user_type && userid_ow != userid_rq)
 	{
 		/* check if users are from the same group */
 		result = DBselect(
@@ -1323,13 +1323,8 @@ out:
  ******************************************************************************/
 const char     *zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *event_userid)
 {
-	const char	*__function_name = "zbx_user_string";
-
 	DB_RESULT	result;
 	DB_ROW		row;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): userid = " ZBX_FS_UI64 ", event_userid = " ZBX_FS_UI64,
-			__function_name, *userid, *event_userid);
 
 	if (SUCCEED != zbx_user_validate(userid, event_userid))
 	{
@@ -1346,8 +1341,6 @@ const char     *zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *event_
 
 		DBfree_result(result);
 	}
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 
 	return buf_string;
 }
