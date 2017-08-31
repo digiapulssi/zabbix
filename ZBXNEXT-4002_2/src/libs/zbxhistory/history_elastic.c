@@ -481,7 +481,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	zbx_json_addobject(&query, "clock");
 
 	if (0 < start)
-		zbx_json_adduint64(&query, "gte", start);
+		zbx_json_adduint64(&query, "gt", start);
 
 	if (0 < end)
 		zbx_json_adduint64(&query, "lte", end);
