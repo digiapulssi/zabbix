@@ -288,7 +288,7 @@ my ($from, $till) = get_real_services_period(\%services, $check_from, $check_til
 
 if (opt('print-period'))
 {
-	print("selected period: ", selected_period($from, $till), "\n");
+	info("selected period: ", selected_period($from, $till));
 }
 else
 {
@@ -318,9 +318,8 @@ TRYFORK:
 	if (!defined($pid))
 	{
 		# max children reached, make sure to handle_children()
+		dbg("max children reached, please wait...");
 		sleep(1);
-
-		print("DBG: max children reached, please wait... (tld=$tld)\n");
 	}
 	elsif ($pid)
 	{
