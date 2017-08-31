@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc23
 New features:
 
 Bug fixes:
+.......P.. [286] removed printing failed API request on 're-login' error (dimir)
 .......P.. [239] fixed passive proxy sending same history data twice (gleb, vjaceslavs)
 
 --------------------------------------------------------------------------------
