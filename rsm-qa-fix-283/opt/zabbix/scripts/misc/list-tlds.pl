@@ -24,12 +24,10 @@ set_slv_config($config);
 
 my @server_keys = get_rsm_server_keys($config);
 my $total_tlds = 0;
-my $total_servers = 0;
+
 foreach (@server_keys)
 {
 	$server_key = $_;
-
-	$total_servers++;
 
 	db_connect($server_key);
 
@@ -39,14 +37,17 @@ foreach (@server_keys)
 
 	$total_tlds += $tlds;
 
-	foreach my $t (@{$tlds_ref})
+	if (opt('verbose'))
 	{
-		printf("    $t\n") if (opt('verbose'));
+		foreach my $tld (@{$tlds_ref})
+		{
+			print("    $tld\n");
+		}
 	}
 
 	db_disconnect();
 
-	printf("  %d TLDs on %s\n", $tlds, $server_key);
+	print("  $tlds TLDs on $server_key\n");
 }
-printf("total %d TLDs on %d servers\n", $total_tlds, $total_servers);
 
+print("total $total_tlds TLDs on " . scalar(@server_keys) . " servers\n");
