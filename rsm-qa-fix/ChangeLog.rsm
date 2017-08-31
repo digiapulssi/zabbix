@@ -4,7 +4,7 @@ New features:
 ....I..... [283] introduced parallel processing of servers in SLA API script (dimir)
 
 Bug fixes:
-.......P.. [286] removed printing failed API request on 're-login' error (dimir)
+....I..... [286] removed printing failed API request on 're-login' error (dimir)
 .......P.. [239] fixed passive proxy sending same history data twice (gleb, vjaceslavs)
 
 --------------------------------------------------------------------------------
