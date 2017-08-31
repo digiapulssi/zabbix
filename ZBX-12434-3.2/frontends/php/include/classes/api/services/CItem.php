@@ -649,7 +649,8 @@ class CItem extends CItemGeneral {
 			'history_log',
 			'history_uint',
 			'history_str',
-			'history'
+			'history',
+			'events'
 		];
 		$insert = [];
 		foreach ($itemIds as $itemId) {
@@ -660,14 +661,6 @@ class CItem extends CItemGeneral {
 					'value' => $itemId
 				];
 			}
-		}
-
-		foreach ($itemIds as $itemId) {
-			$insert[] = [
-				'tablename' => 'events',
-				'field' => 'itemid',
-				'value' => $itemId
-			];
 		}
 
 		DB::insert('housekeeper', $insert);
