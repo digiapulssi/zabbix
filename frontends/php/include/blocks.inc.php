@@ -753,7 +753,9 @@ function make_latest_issues(array $filter = [], $backurl) {
 		if ($config['event_ack_enable']) {
 			if (array_key_exists('lastEvent', $trigger)) {
 				$trigger['lastEvent']['acknowledges'] =
-					$event_acknowledges[$trigger['lastEvent']['eventid']]['acknowledges'];
+					array_key_exists($trigger['lastEvent']['eventid'], $event_acknowledges)
+						? $event_acknowledges[$trigger['lastEvent']['eventid']]['acknowledges']
+						: [];
 
 				$ack = getEventAckState($trigger['lastEvent'], $backurl);
 			}
