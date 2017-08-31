@@ -782,8 +782,6 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 	{
 		medias_num++;
 
-		zabbix_log(LOG_LEVEL_DEBUG, "TEST %s()", __function_name);
-
 		zbx_snprintf(error, sizeof(error), "No media defined for user.");
 
 		zbx_db_insert_prepare(&db_insert, "alerts", "alertid", "actionid", "eventid", "userid", "clock",
