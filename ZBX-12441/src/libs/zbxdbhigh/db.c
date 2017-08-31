@@ -1250,9 +1250,9 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
  *          Email, SMS, Jabber, etc                                           *
  *                                                                            *
  * Parameters: userid           - [IN] user who owns the information          *
- *             recipient_userid - [IN] user who requests the information      *
+ *             recipient_userid - [IN] user who will receive the information  *
  *                                                                            *
- * Return value: SUCCEED - if requesting user has access rights               *
+ * Return value: SUCCEED - if information receiving user has access rights    *
  *               FAIL    - otherwise                                          *
  *                                                                            *
  * Comments: Users has access rights or can view personal information only    *
@@ -1289,7 +1289,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 
 	if (USER_TYPE_SUPER_ADMIN != user_type && userid != recipient_userid)
 	{
-		/* check if users are from the same group */
+		/* check if users are from the same user group */
 		result = DBselect(
 				"select count(*)"
 				" from users u,users_groups ug"
