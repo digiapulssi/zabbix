@@ -111,6 +111,7 @@ class CScreenHistory extends CScreenBase {
 
 		if (!$items) {
 			show_error_message(_('No permissions to referred object or it does not exist!'));
+
 			return;
 		}
 
