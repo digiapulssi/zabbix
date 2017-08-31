@@ -736,7 +736,7 @@ int	zbx_history_elastic_init(zbx_history_iface_t *hist, unsigned char value_type
 		return FAIL;
 	}
 
-	data = (zbx_elastic_data_t *)zbx_malloc(NULL, sizeof(zbx_elastic_data_t));
+	data = zbx_malloc(NULL, sizeof(zbx_elastic_data_t));
 	memset(data, 0, sizeof(zbx_elastic_data_t));
 	data->base_url = zbx_strdup(NULL, CONFIG_HISTORY_STORAGE_URL);
 	data->buf = NULL;
@@ -744,7 +744,7 @@ int	zbx_history_elastic_init(zbx_history_iface_t *hist, unsigned char value_type
 	data->handle = NULL;
 
 	hist->value_type = value_type;
-	hist->data = (void *)data;
+	hist->data = data;
 	hist->destroy = elastic_destroy;
 	hist->add_values = elastic_add_values;
 	hist->flush = elastic_flush;
