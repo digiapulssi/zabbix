@@ -1404,7 +1404,7 @@ out:
  *                                                                            *
  ******************************************************************************/
 static void	get_escalation_history(zbx_uint64_t actionid, const DB_EVENT *event, const DB_EVENT *r_event,
-			char **replace_to, zbx_uint64_t *event_userid)
+			char **replace_to, zbx_uint64_t *recipient_userid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -1458,12 +1458,14 @@ static void	get_escalation_history(zbx_uint64_t actionid, const DB_EVENT *event,
 		}
 		else
 		{
-			/* media type description | send to | alert user */
 			zbx_snprintf_alloc(&buf, &buf_alloc, &buf_offset, " %s %s \"%s\"",
+					/* media type description */
 					SUCCEED == DBis_null(row[3]) ? "" : row[3],
-					SUCCEED == zbx_user_validate(&userid, event_userid) ? row[4] :
+					/* send to */
+					SUCCEED == zbx_user_validate(&userid, recipient_userid) ? row[4] :
 							"\"Inaccessible recipient details\"",
-					zbx_user_string(&userid, event_userid));
+					/* alert user */
+					zbx_user_string(&userid, recipient_userid));
 		}
 
 		if (ALERT_STATUS_FAILED == status)
@@ -1498,7 +1500,7 @@ static void	get_escalation_history(zbx_uint64_t actionid, const DB_EVENT *event,
  * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
-static void	get_event_ack_history(const DB_EVENT *event, char **replace_to, zbx_uint64_t *event_userid)
+static void	get_event_ack_history(const DB_EVENT *event, char **replace_to, zbx_uint64_t *recipient_userid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -1530,7 +1532,7 @@ static void	get_event_ack_history(const DB_EVENT *event, char **replace_to, zbx_
 				"%s %s \"%s\"\n%s\n\n",
 				zbx_date2str(now),
 				zbx_time2str(now),
-				zbx_user_string(&userid, event_userid),
+				zbx_user_string(&userid, recipient_userid),
 				row[2]);
 	}
 	DBfree_result(result);
@@ -2068,7 +2070,8 @@ static void	get_recovery_event_value(const char *macro, DB_EVENT *r_event, char 
  * Purpose: request event value by macro                                      *
  *                                                                            *
  ******************************************************************************/
-static void	get_event_value(const char *macro, const DB_EVENT *event, char **replace_to, zbx_uint64_t *event_userid)
+static void	get_event_value(const char *macro, const DB_EVENT *event, char **replace_to,
+			zbx_uint64_t *recipient_userid)
 {
 	if (0 == strcmp(macro, MVAR_EVENT_AGE))
 	{
@@ -2101,7 +2104,7 @@ static void	get_event_value(const char *macro, const DB_EVENT *event, char **rep
 		{
 			if (0 == strcmp(macro, MVAR_EVENT_ACK_HISTORY))
 			{
-				get_event_ack_history(event, replace_to, event_userid);
+				get_event_ack_history(event, replace_to, recipient_userid);
 			}
 			else if (0 == strcmp(macro, MVAR_EVENT_ACK_STATUS))
 			{

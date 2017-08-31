@@ -1249,8 +1249,8 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
  * Purpose: check if user has access rights to information - full name, alias,*
  *          Email, SMS, Jabber, etc                                           *
  *                                                                            *
- * Parameters: userid_ow - [IN] user who owns the information                 *
- *             userid_rq - [IN] user who requests the information             *
+ * Parameters: userid           - [IN] user who owns the information          *
+ *             recipient_userid - [IN] user who requests the information      *
  *                                                                            *
  * Return value: SUCCEED - if requesting user has access rights               *
  *               FAIL    - otherwise                                          *
@@ -1261,7 +1261,7 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
  *           information about any user.                                      *
  *                                                                            *
  ******************************************************************************/
-int	zbx_user_validate(const zbx_uint64_t *userid_ow, zbx_uint64_t *userid_rq)
+int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid)
 {
 	const char	*__function_name = "zbx_user_validate";
 
@@ -1272,10 +1272,10 @@ int	zbx_user_validate(const zbx_uint64_t *userid_ow, zbx_uint64_t *userid_rq)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (NULL == userid_rq)
+	if (NULL == recipient_userid)
 		goto out;
 
-	result = DBselect("select type from users where userid=" ZBX_FS_UI64, *userid_rq);
+	result = DBselect("select type from users where userid=" ZBX_FS_UI64, *recipient_userid);
 
 	if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
 	{
@@ -1287,7 +1287,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid_ow, zbx_uint64_t *userid_rq)
 	if (FAIL == ret || -1 == user_type)
 		goto out;
 
-	if (USER_TYPE_SUPER_ADMIN != user_type && userid_ow != userid_rq)
+	if (USER_TYPE_SUPER_ADMIN != user_type && userid != recipient_userid)
 	{
 		/* check if users are from the same group */
 		result = DBselect(
@@ -1300,7 +1300,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid_ow, zbx_uint64_t *userid_rq)
 							" where uug.userid=" ZBX_FS_UI64
 						")"
 					" and u.userid=" ZBX_FS_UI64,
-				*userid_ow, *userid_rq);
+				*userid, *recipient_userid);
 
 		if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]) || 0 >= atoi(row[0]))
 			ret = FAIL;
@@ -1321,12 +1321,12 @@ out:
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-const char     *zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *event_userid)
+const char     *zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 
-	if (SUCCEED != zbx_user_validate(userid, event_userid))
+	if (SUCCEED != zbx_user_validate(userid, recipient_userid))
 	{
 		zbx_snprintf(buf_string, sizeof(buf_string), "Inaccessible user");
 	}
