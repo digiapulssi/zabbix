@@ -1214,55 +1214,62 @@ my $expected_in_base_path = [
 		'mandatory'	=> 0,
 		'contents'	=> [
 			{
-				# state
-				'name'		=> 'state',
+				# monitoring
+				'name'		=> 'monitoring',
 				'mandatory'	=> 1,
-				'validator'	=> \&validate_tld_state_file
-			},
-			{
-				# <service>
-				'pattern'	=> qr/^(dns|dnssec|epp|rdds)$/,
-				'mandatory'	=> 0,
 				'contents'	=> [
 					{
-						# alarmed
-						'name'		=> 'alarmed',
+						# state
+						'name'		=> 'state',
 						'mandatory'	=> 1,
-						'validator'	=> \&validate_alarmed_file
+						'validator'	=> \&validate_tld_state_file
 					},
 					{
-						# downtime
-						'name'		=> 'downtime',
-						'mandatory'	=> 0,
-						'validator'	=> \&validate_downtime_file
-					},
-					{
-						# incidents
-						'name'		=> 'incidents',
+						# <service>
+						'pattern'	=> qr/^(dns|dnssec|epp|rdds)$/,
 						'mandatory'	=> 0,
 						'contents'	=> [
 							{
-								# <incidentID>
-								'pattern'	=> qr/\d+\.\d+/,
+								# alarmed
+								'name'		=> 'alarmed',
+								'mandatory'	=> 1,
+								'validator'	=> \&validate_alarmed_file
+							},
+							{
+								# downtime
+								'name'		=> 'downtime',
+								'mandatory'	=> 0,
+								'validator'	=> \&validate_downtime_file
+							},
+							{
+								# incidents
+								'name'		=> 'incidents',
 								'mandatory'	=> 0,
 								'contents'	=> [
 									{
-										# state
-										'name'		=> 'state',
-										'mandatory'	=> 1,
-										'validator'	=> \&validate_incident_state_file
-									},
-									{
-										# falsePositive
-										'name'		=> 'falsePositive',
-										'mandatory'	=> 1,
-										'validator'	=> \&validate_false_positive_file
-									},
-									{
-										# <measurementID>
-										'pattern'	=> qr/\d+\.\d+\.json/,
-										'mandatory'	=> 1,
-										'validator'	=> \&validate_measurement_file
+										# <incidentID>
+										'pattern'	=> qr/\d+\.\d+/,
+										'mandatory'	=> 0,
+										'contents'	=> [
+											{
+												# state
+												'name'		=> 'state',
+												'mandatory'	=> 1,
+												'validator'	=> \&validate_incident_state_file
+											},
+											{
+												# falsePositive
+												'name'		=> 'falsePositive',
+												'mandatory'	=> 1,
+												'validator'	=> \&validate_false_positive_file
+											},
+											{
+												# <measurementID>
+												'pattern'	=> qr/\d+\.\d+\.json/,
+												'mandatory'	=> 1,
+												'validator'	=> \&validate_measurement_file
+											}
+										]
 									}
 								]
 							}
