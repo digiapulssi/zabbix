@@ -42,17 +42,8 @@ usage() if ($OPTS{'help'} or not $rv);
 
 validate_input();
 
-my $config = get_rsm_config();
-
-my $server_key = get_rsm_server_key($OPTS{'server-id'});
-
-my $section = $config->{$server_key};
-
-if (!defined($section))
-{
-	print("Error: server-id \"", $OPTS{'server-id'}, "\" not found in configuration file\n");
-	exit(1);
-}
+my $section = get_rsm_config()->{get_rsm_server_key($OPTS{'server-id'})};
+pfail("server-id \"", $OPTS{'server-id'}, "\" not found in configuration file") unless (defined($section));
 
 my $attempts = 3;
 RELOGIN: zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
