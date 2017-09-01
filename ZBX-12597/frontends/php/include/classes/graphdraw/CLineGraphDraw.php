@@ -107,7 +107,7 @@ class CLineGraphDraw extends CGraphDraw {
 		if ($this->type == GRAPH_TYPE_STACKED) {
 			$graph_item['drawtype'] = GRAPH_ITEM_DRAWTYPE_FILLED_REGION;
 		}
-		$update_interval_parser = new CUpdateIntervalParser();
+		$update_interval_parser = new CUpdateIntervalParser(['usermacros' => true]);
 
 		if ($update_interval_parser->parse($graph_item['delay']) != CParser::PARSE_SUCCESS) {
 			show_error_message(_s('Incorrect value for field "%1$s": %2$s.', 'delay', _('invalid delay')));
@@ -2664,7 +2664,6 @@ class CLineGraphDraw extends CGraphDraw {
 			$graph_item = reset($graph_items);
 			$graph_item['name'] = $graph_item['name_expanded'];
 			// getItemDelay will internally convert delay and flexible delay to seconds.
-			$update_interval_parser->parse($graph_item['delay']);
 			$graph_item['delay'] = getItemDelay($update_interval_parser->getDelay(),
 				$update_interval_parser->getIntervals(ITEM_DELAY_FLEXIBLE)
 			);
