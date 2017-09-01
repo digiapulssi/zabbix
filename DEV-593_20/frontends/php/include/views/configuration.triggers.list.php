@@ -97,6 +97,9 @@ $triggersTable->setHeader(array(
 	make_sorting_header(_('Status'), 'status', $link),
 	empty($this->data['parent_discoveryid']) ? _('Error') : null
 ));
+
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($this->data['triggers'] as $tnum => $trigger) {
 	$triggerid = $trigger['triggerid'];
 	$trigger['discoveryRuleid'] = $this->data['parent_discoveryid'];
@@ -185,6 +188,7 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 	else {
 		$status_link = 'triggers.php?go='.($trigger['status'] == TRIGGER_STATUS_DISABLED ? 'activate' : 'disable').'&hostid='.$this->data['hostid'].'&g_triggerid='.$triggerid;
 	}
+	$status_link .= $csrf_token;
 	if ($trigger['status'] == TRIGGER_STATUS_DISABLED) {
 		$status = new CLink(_('Disabled'), $status_link, 'disabled');
 	}

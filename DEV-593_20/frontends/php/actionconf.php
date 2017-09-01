@@ -70,6 +70,11 @@ $fields = array(
 );
 $_REQUEST['eventsource'] = get_request('eventsource', CProfile::get('web.actionconf.eventsource', EVENT_SOURCE_TRIGGERS));
 
+
+if (get_request('go', 'none') !== 'none') {
+	$fields['csrf_token'] =	array(T_ZBX_STR, O_MAND, P_SYS, VALID_CSRF_TOKEN, null);
+}
+
 check_fields($fields);
 validate_sort_and_sortorder('name', ZBX_SORT_UP);
 

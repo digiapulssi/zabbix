@@ -58,6 +58,9 @@ $discoveryTable->setHeader(array(
 	make_sorting_header(_('Status'), 'status', $sortLink),
 	_('Error')
 ));
+
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($data['discoveries'] as $discovery) {
 	$description = array();
 	if ($discovery['templateid']) {
@@ -70,7 +73,8 @@ foreach ($data['discoveries'] as $discovery) {
 
 	$status = new CLink(
 		item_status2str($discovery['status']),
-		'?hostid='.$_REQUEST['hostid'].'&g_hostdruleid='.$discovery['itemid'].'&go='.($discovery['status'] ? 'activate':'disable'),
+		'?hostid='.$_REQUEST['hostid'].'&g_hostdruleid='.$discovery['itemid'].
+			'&go='.($discovery['status'] ? 'activate':'disable').$csrf_token,
 		item_status2style($discovery['status'])
 	);
 

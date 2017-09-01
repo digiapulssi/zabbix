@@ -99,6 +99,11 @@ $fields = array(
 	'favref' =>		array(T_ZBX_STR, O_OPT, P_ACT,		NOT_EMPTY,	'isset({favobj})'),
 	'favstate' =>		array(T_ZBX_INT, O_OPT, P_ACT,		NOT_EMPTY,	'isset({favobj})&&("filter"=={favobj})')
 );
+
+if (get_request('go', 'none') !== 'none') {
+	$fields['csrf_token'] =	array(T_ZBX_STR, O_MAND, P_SYS, VALID_CSRF_TOKEN, null);
+}
+
 check_fields($fields);
 validate_sort_and_sortorder('name', ZBX_SORT_UP);
 
@@ -795,18 +800,21 @@ else {
 				}
 
 				$status_script = 'return Confirm('.zbx_jsvalue(_('Disable host?')).');';
-				$status_url = 'hosts.php?hosts'.SQUAREBRACKETS.'='.$host['hostid'].'&go=disable'.url_param('groupid');
+				$status_url = 'hosts.php?hosts'.SQUAREBRACKETS.'='.$host['hostid'].'&go=disable'.url_param('groupid').
+					'&csrf_token='.createCSRFToken();
 				break;
 			case HOST_STATUS_NOT_MONITORED:
 				$status_caption = _('Not monitored');
-				$status_url = 'hosts.php?hosts'.SQUAREBRACKETS.'='.$host['hostid'].'&go=activate'.url_param('groupid');
+				$status_url = 'hosts.php?hosts'.SQUAREBRACKETS.'='.$host['hostid'].'&go=activate'.url_param('groupid').
+					'&csrf_token='.createCSRFToken();
 				$status_script = 'return Confirm('.zbx_jsvalue(_('Enable host?')).');';
 				$status_class = 'disabled';
 				break;
 			default:
 				$status_caption = _('Unknown');
 				$status_script = 'return Confirm('.zbx_jsvalue(_('Disable host?')).');';
-				$status_url = 'hosts.php?hosts'.SQUAREBRACKETS.'='.$host['hostid'].'&go=disable'.url_param('groupid');
+				$status_url = 'hosts.php?hosts'.SQUAREBRACKETS.'='.$host['hostid'].'&go=disable'.url_param('groupid').
+					'&csrf_token='.createCSRFToken();
 				$status_class = 'unknown';
 		}
 

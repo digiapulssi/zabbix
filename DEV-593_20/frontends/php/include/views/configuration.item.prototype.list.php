@@ -58,6 +58,8 @@ $itemTable->setHeader(array(
 	_('Applications')
 ));
 
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($this->data['items'] as $item) {
 	$description = array();
 	if (!empty($item['templateid'])) {
@@ -70,7 +72,7 @@ foreach ($this->data['items'] as $item) {
 	$description[] = new CLink(itemName($item), '?form=update&itemid='.$item['itemid'].'&parent_discoveryid='.$this->data['parent_discoveryid']);
 
 	$status = new CLink(item_status2str($item['status']), '?group_itemid='.$item['itemid'].'&parent_discoveryid='.$this->data['parent_discoveryid'].
-		'&go='.($item['status'] ? 'activate' : 'disable'), item_status2style($item['status'])
+		'&go='.($item['status'] ? 'activate' : 'disable').$csrf_token, item_status2style($item['status'])
 	);
 
 	if (!empty($item['applications'])) {

@@ -50,12 +50,14 @@ $userGroupTable->setHeader(array(
 	_('Debug mode')
 ));
 
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($this->data['usergroups'] as $usrgrp) {
 	$usrgrpid = $usrgrp['usrgrpid'];
 
 	$debug_mode = ($usrgrp['debug_mode'] == GROUP_DEBUG_MODE_ENABLED)
-		? new CLink(_('Enabled'), 'usergrps.php?go=disable_debug&usrgrpid='.$usrgrpid, 'orange')
-		: new CLink(_('Disabled'), 'usergrps.php?go=enable_debug&usrgrpid='.$usrgrpid, 'enabled');
+		? new CLink(_('Enabled'), 'usergrps.php?go=disable_debug&usrgrpid='.$usrgrpid.$csrf_token, 'orange')
+		: new CLink(_('Disabled'), 'usergrps.php?go=enable_debug&usrgrpid='.$usrgrpid.$csrf_token, 'enabled');
 
 	// gui access
 	$gui_access = user_auth_type2str($usrgrp['gui_access']);
@@ -71,13 +73,13 @@ foreach ($this->data['usergroups'] as $usrgrp) {
 		$next_gui_auth = ($usrgrp['gui_access'] + 1 > GROUP_GUI_ACCESS_DISABLED) ? GROUP_GUI_ACCESS_SYSTEM : ($usrgrp['gui_access'] + 1);
 		$gui_access = new CLink(
 			$gui_access,
-			'usergrps.php?go=set_gui_access&set_gui_access='.$next_gui_auth.'&usrgrpid='.$usrgrpid,
+			'usergrps.php?go=set_gui_access&set_gui_access='.$next_gui_auth.'&usrgrpid='.$usrgrpid.$csrf_token,
 			$gui_access_style
 		);
 
 		$users_status = ($usrgrp['users_status'] == GROUP_STATUS_ENABLED)
-			? new CLink(_('Enabled'), 'usergrps.php?go=disable_status&usrgrpid='.$usrgrpid, 'enabled')
-			: new CLink(_('Disabled'), 'usergrps.php?go=enable_status&usrgrpid='.$usrgrpid, 'disabled');
+			? new CLink(_('Enabled'), 'usergrps.php?go=disable_status&usrgrpid='.$usrgrpid.$csrf_token, 'enabled')
+			: new CLink(_('Disabled'), 'usergrps.php?go=enable_status&usrgrpid='.$usrgrpid.$csrf_token, 'disabled');
 	}
 	else {
 		$gui_access = new CSpan($gui_access, $gui_access_style);

@@ -42,6 +42,9 @@ $mediaTypeTable->setHeader(array(
 	_('Used in actions'),
 	_('Details')
 ));
+
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($this->data['mediatypes'] as $mediatype) {
 	switch ($mediatype['typeid']) {
 		case MEDIA_TYPE_EMAIL:
@@ -84,7 +87,7 @@ foreach ($this->data['mediatypes'] as $mediatype) {
 	$actionColumn->setAttribute('style', 'white-space: normal;');
 
 	$statusLink = 'media_types.php?go='.(($mediatype['status'] == MEDIA_TYPE_STATUS_DISABLED) ? 'activate' : 'disable').
-		'&mediatypeids'.SQUAREBRACKETS.'='.$mediatype['mediatypeid'];
+		'&mediatypeids'.SQUAREBRACKETS.'='.$mediatype['mediatypeid'].$csrf_token;
 
 	if (MEDIA_TYPE_STATUS_ACTIVE == $mediatype['status']) {
 		$status = new CLink(_('Enabled'), $statusLink, 'enabled');

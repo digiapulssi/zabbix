@@ -72,6 +72,8 @@ $httpTable->setHeader(array(
 );
 
 $httpTableRows = array();
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($this->data['db_httptests'] as $httptestid => $httptest_data) {
 	$db_app = $this->data['db_apps'][$httptest_data['applicationid']];
 
@@ -92,7 +94,8 @@ foreach ($this->data['db_httptests'] as $httptestid => $httptest_data) {
 		new CCol(
 			new CLink(
 				httptest_status2str($httptest_data['status']),
-				'?group_httptestid[]='.$httptest_data['httptestid'].'&go='.($httptest_data['status'] ? 'activate' : 'disable'),
+				'?group_httptestid[]='.$httptest_data['httptestid'].
+					'&go='.($httptest_data['status'] ? 'activate' : 'disable').$csrf_token,
 				httptest_status2style($httptest_data['status'])
 			)
 		)
