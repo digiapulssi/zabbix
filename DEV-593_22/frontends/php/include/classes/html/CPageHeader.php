@@ -59,6 +59,16 @@ class CPageHeader {
 	 */
 	public function __construct($title = '') {
 		$this->title = $title;
+
+		$antiClickjack =
+			'if (self === top) {'.
+				'var antiClickjack = document.getElementById("antiClickjack");'.
+				'antiClickjack.parentNode.removeChild(antiClickjack);'.
+			'} else {'.
+				'top.location = self.location;'.
+			'}';
+
+		$this->addJsBeforeScripts($antiClickjack);
 	}
 
 	/**
@@ -131,6 +141,9 @@ class CPageHeader {
 		<meta charset="utf-8" />
 		<meta name="msapplication-config" content="none"/>
 		<link rel="shortcut icon" href="images/general/zabbix.ico" />
+		<style id="antiClickjack">
+			body{display:none !important;}
+		</style>
 
 HTML;
 
