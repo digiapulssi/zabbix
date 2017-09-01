@@ -21,7 +21,7 @@ use constant false => 0;
 
 my %macros = ('{$RSM.EPP.ENABLED}' => 0, '{$RSM.IP4.ENABLED}' => 0, '{$RSM.IP6.ENABLED}' => 0, '{$RSM.RDDS.ENABLED}' => 0);
 
-sub add_probe($$$$$);
+sub add_probe($$$$$$$$$$);
 sub delete_probe($);
 sub disable_probe($);
 sub rename_probe($$);
@@ -48,40 +48,63 @@ pfail("server-id \"", $OPTS{'server-id'}, "\" not found in configuration file") 
 my $attempts = 3;
 RELOGIN: zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
-if ($OPTS{'delete'}) {
-    delete_probe($OPTS{'probe'});
+if ($OPTS{'delete'})
+{
+	delete_probe($OPTS{'probe'});
 }
-elsif ($OPTS{'disable'}) {
-    disable_probe($OPTS{'probe'});
+elsif ($OPTS{'disable'})
+{
+	disable_probe($OPTS{'probe'});
 }
-elsif ($OPTS{'add'}) {
-    my $result = create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
-    my $error = get_api_error($result);
-    if (defined($error)) {
-	if (zbx_need_relogin($result) eq true) {
-	    goto RELOGIN if (--$attempts);
+elsif ($OPTS{'add'})
+{
+	my $result = create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
+	my $error = get_api_error($result);
+
+	if (defined($error))
+	{
+		if (zbx_need_relogin($result) eq true)
+		{
+			goto RELOGIN if (--$attempts);
+		}
+
+		pfail($error);
 	}
-	pfail($error);
-    }
-    add_probe($OPTS{'probe'}, $OPTS{'ip'}, ($OPTS{'port'} ? $OPTS{'port'} : DEFAULT_PROBE_PORT), $OPTS{'psk-identity'}, $OPTS{'psk'});
+
+	add_probe(
+		$OPTS{'probe'},
+		$OPTS{'ip'},
+		$OPTS{'port'},
+		$OPTS{'psk-identity'},
+		$OPTS{'psk'},
+		$OPTS{'epp'},
+		$OPTS{'ipv4'},
+		$OPTS{'ipv6'},
+		$OPTS{'rdds'},
+		$OPTS{'resolver'}
+	);
 }
-elsif($OPTS{'rename'}) {
-    rename_probe($OPTS{'probe'}, $OPTS{'new-name'});
+elsif ($OPTS{'rename'})
+{
+	rename_probe($OPTS{'probe'}, $OPTS{'new-name'});
 }
 
 exit;
 
 ################
 
-sub add_probe($$$$$)
+sub add_probe($$$$$$$$$$)
 {
 	my $probe_name = shift;
 	my $probe_ip = shift;
 	my $probe_port = shift;
 	my $psk_identity = shift;
 	my $psk = shift;
-
-	my ($probe, $probe_host, $probe_host_mon, $probe_tmpl);
+	my $epp = shift;
+	my $ipv4 = shift;
+	my $ipv6 = shift;
+	my $rdds = shift;
+	my $resolver = shift;
 
 	print("Trying to add '$probe_name' probe...\n");
 	print "The probe with name '$probe_name' already exists! Trying to enable it\n" if (probe_exists($probe_name));
@@ -95,7 +118,7 @@ sub add_probe($$$$$)
     ########## Creating new Probe
 
 	print("Creating '$probe_name' with interface $probe_ip:$probe_port ");
-	$probe = create_passive_proxy($probe_name, $probe_ip, $probe_port, $psk_identity, $psk);
+	my $probe = create_passive_proxy($probe_name, $probe_ip, $probe_port, $psk_identity, $psk);
 	is_not_empty($probe, true);
 
     ########## Creating new Host Group
@@ -107,7 +130,7 @@ sub add_probe($$$$$)
     ########## Creating Probe template
 
 	print("Creating '$probe_name' template: ");
-	$probe_tmpl = create_probe_template($probe_name, $OPTS{'epp'}, $OPTS{'ipv4'}, $OPTS{'ipv6'}, $OPTS{'rdds'}, $OPTS{'resolver'});
+	my $probe_tmpl = create_probe_template($probe_name, $epp, $ipv4, $ipv6, $rdds, $resolver);
 	is_not_empty($probe_tmpl, true);
 
     ########## Creating Probe status template
@@ -120,7 +143,7 @@ sub add_probe($$$$$)
     ########## Creating Probe host
 
 	print("Creating '$probe_name' host: ");
-	$probe_host = create_host({
+	my $probe_host = create_host({
 		'groups'	=> [
 			{
 				'groupid'	=> PROBES_GROUPID
@@ -147,7 +170,7 @@ sub add_probe($$$$$)
     ########## Creating Probe monitoring host
 
 	print("Creating Probe monitoring host: ");
-	$probe_host_mon = create_host({
+	my $probe_host_mon = create_host({
 		'groups'	=> [
 			{
 				'groupid'	=> PROBES_MON_GROUPID
@@ -663,6 +686,7 @@ sub validate_input
 
 	$OPTS{'psk-identity'} //= $OPTS{'probe'} if (defined($OPTS{'psk'}));
 	$OPTS{'resolver'} //= '127.0.0.1' if (defined($OPTS{'add'}));
+	$OPTS{'port'} //= DEFAULT_PROBE_PORT if (defined($OPTS{'add'}));
 
 	foreach my $option (('epp', 'rdds', 'ipv4', 'ipv6'))
 	{
