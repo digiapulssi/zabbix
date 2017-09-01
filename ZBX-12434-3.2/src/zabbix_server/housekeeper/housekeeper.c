@@ -632,7 +632,7 @@ static int	DBdelete_from_table(const char *tablename, const char *filter, int li
  *                                                                            *
  * Function: housekeeping_cleanup                                             *
  *                                                                            *
- * Purpose: remove deleted items data                                         *
+ * Purpose: remove deleted items/triggers data                                *
  *                                                                            *
  * Return value: number of rows deleted                                       *
  *                                                                            *
@@ -756,6 +756,7 @@ static int	housekeeping_cleanup()
 			}
 		}
 	}
+
 	DBfree_result(result);
 
 	if (0 != housekeeperids.values_num)
@@ -957,7 +958,7 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 
 		sec = zbx_time() - sec;
 
-		zabbix_log(LOG_LEVEL_WARNING, "%s [deleted %d hist/trends, %d items, %d events, %d problems,"
+		zabbix_log(LOG_LEVEL_WARNING, "%s [deleted %d hist/trends, %d items/triggers, %d events, %d problems,"
 				" %d sessions, %d alarms, %d audit items in " ZBX_FS_DBL " sec, %s]",
 				get_process_type_string(process_type), d_history_and_trends, d_cleanup, d_events,
 				d_problems, d_sessions, d_services, d_audit, sec, sleeptext);
@@ -966,7 +967,7 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 
 		DBclose();
 
-		zbx_setproctitle("%s [deleted %d hist/trends, %d items, %d events, %d sessions, %d alarms, %d audit "
+		zbx_setproctitle("%s [deleted %d hist/trends, %d items/triggers, %d events, %d sessions, %d alarms, %d audit "
 				"items in " ZBX_FS_DBL " sec, %s]",
 				get_process_type_string(process_type), d_history_and_trends, d_cleanup, d_events,
 				d_sessions, d_services, d_audit, sec, sleeptext);
