@@ -1008,7 +1008,7 @@ static void	DBdelete_action_conditions(int conditiontype, zbx_uint64_t elementid
  ******************************************************************************/
 static void	DBadd_to_housekeeper(zbx_vector_uint64_t *ids, const char *field, const char **tables, int count)
 {
-	const char	*__function_name = "DBdelete_by_ids";
+	const char	*__function_name = "DBadd_to_housekeeper";
 	int		i, j;
 	zbx_uint64_t	housekeeperid;
 	zbx_db_insert_t	db_insert;
