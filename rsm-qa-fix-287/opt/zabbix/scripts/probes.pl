@@ -73,20 +73,18 @@ exit;
 
 ################
 
-sub add_probe($$$$$) {
-    my $probe_name = shift;
-    my $probe_ip = shift;
-    my $probe_port = shift;
-    my $psk_identity = shift;
-    my $psk = shift;
+sub add_probe($$$$$)
+{
+	my $probe_name = shift;
+	my $probe_ip = shift;
+	my $probe_port = shift;
+	my $psk_identity = shift;
+	my $psk = shift;
 
-    my ($probe, $probe_host, $probe_host_mon, $probe_tmpl);
+	my ($probe, $probe_host, $probe_host_mon, $probe_tmpl);
 
-    print "Trying to add '".$probe_name."' probe...\n";
-
-    if (is_probe_exist($probe_name)) {
-	print "The probe with name '".$probe_name."' already exists! Trying to enable it\n";
-    }
+	print("Trying to add '$probe_name' probe...\n");
+	print "The probe with name '$probe_name' already exists! Trying to enable it\n" if (probe_exists($probe_name));
 
     ###### Checking and creating required groups and templates
 
@@ -96,36 +94,28 @@ sub add_probe($$$$$) {
 
     ########## Creating new Probe
 
-    print "Creating '$probe_name' with interface $probe_ip:$probe_port ";
-
-    $probe = create_passive_proxy($probe_name, $probe_ip, $probe_port, $psk_identity, $psk);
-
-    is_not_empty($probe, true);
+	print("Creating '$probe_name' with interface $probe_ip:$probe_port ");
+	$probe = create_passive_proxy($probe_name, $probe_ip, $probe_port, $psk_identity, $psk);
+	is_not_empty($probe, true);
 
     ########## Creating new Host Group
 
-    print "Creating '$probe_name' host group: ";
-
-    my $probe_groupid = create_group($probe_name);
-
-    is_not_empty($probe_groupid, true);
+	print("Creating '$probe_name' host group: ");
+	my $probe_groupid = create_group($probe_name);
+	is_not_empty($probe_groupid, true);
 
     ########## Creating Probe template
 
-    print "Creating '$probe_name' template: ";
-
-    $probe_tmpl = create_probe_template($probe_name, $OPTS{'epp'}, $OPTS{'ipv4'}, $OPTS{'ipv6'}, $OPTS{'rdds'}, $OPTS{'resolver'});
-
-    is_not_empty($probe_tmpl, true);
+	print("Creating '$probe_name' template: ");
+	$probe_tmpl = create_probe_template($probe_name, $OPTS{'epp'}, $OPTS{'ipv4'}, $OPTS{'ipv6'}, $OPTS{'rdds'}, $OPTS{'resolver'});
+	is_not_empty($probe_tmpl, true);
 
     ########## Creating Probe status template
 
-    print "Creating '$probe_name' probe status template: ";
-
-    my $root_servers_macros = update_root_servers();
-    my $probe_status_templateid = create_probe_status_template($probe_name, $probe_tmpl, $root_servers_macros);
-
-    is_not_empty($probe_status_templateid, true);
+	print("Creating '$probe_name' probe status template: ");
+	my $root_servers_macros = update_root_servers();
+	my $probe_status_templateid = create_probe_status_template($probe_name, $probe_tmpl, $root_servers_macros);
+	is_not_empty($probe_status_templateid, true);
 
     ########## Creating Probe host
 
