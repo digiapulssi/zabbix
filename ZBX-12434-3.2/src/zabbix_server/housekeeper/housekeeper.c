@@ -714,25 +714,16 @@ static int	housekeeping_cleanup()
 				zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d"
 						" and objectid=" ZBX_FS_UI64, source, object, housekeeper.value);
 
-				if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
-				{
-					d_internal = delete_from_table(housekeeper.tablename, filter,
-							CONFIG_MAX_HOUSEKEEPER_DELETE);
-				}
-				else if (CONFIG_MAX_HOUSEKEEPER_DELETE > d_trigger)
-				{
-					d_internal = delete_from_table(housekeeper.tablename, filter,
-						CONFIG_MAX_HOUSEKEEPER_DELETE - d_trigger);
-				}
-				else
-					d_internal = ZBX_DB_OK;
+				d_internal = delete_from_table(housekeeper.tablename, filter,
+						CONFIG_MAX_HOUSEKEEPER_DELETE);
 
 				if (ZBX_DB_OK <= d_internal)
 				{
 					deleted += d_internal;
 
 					if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE ||
-							CONFIG_MAX_HOUSEKEEPER_DELETE > d_trigger + d_internal)
+							(CONFIG_MAX_HOUSEKEEPER_DELETE > d_trigger &&
+									CONFIG_MAX_HOUSEKEEPER_DELETE > d_internal))
 					{
 						zbx_vector_uint64_append(&housekeeperids, housekeeper.housekeeperid);
 					}
