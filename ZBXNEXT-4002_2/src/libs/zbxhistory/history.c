@@ -83,7 +83,6 @@ void	zbx_history_destroy()
 		zbx_history_iface_t	*writer = &history_ifaces[i];
 
 		writer->destroy(writer);
-		zbx_free(writer);
 	}
 }
 
@@ -171,7 +170,8 @@ int	zbx_history_get_values(zbx_uint64_t itemid, int value_type, int start, int c
 		}
 	}
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s values:%d", __function_name, zbx_result_string(ret),
+			values->values_num - pos);
 
 	return ret;
 }
