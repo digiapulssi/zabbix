@@ -618,6 +618,57 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 
 /******************************************************************************
  *                                                                            *
+ * Function: delete_from_table                                                *
+ *                                                                            *
+ * Purpose: delete limited count of rows from table                           *
+ *                                                                            *
+ * Return value: number of rows deleted                                       *
+ *                                                                            *
+ ******************************************************************************/
+static int	delete_from_table(const char *tablename, const char *filter, int limit)
+{
+	if (0 == limit)
+	{
+		return DBexecute(
+				"delete from %s"
+				" where %s",
+				tablename,
+				filter);
+	}
+	else
+	{
+#if defined(HAVE_IBM_DB2) || defined(HAVE_ORACLE)
+		return DBexecute(
+				"delete from %s"
+				" where %s"
+					" and rownum<=%d",
+				tablename,
+				filter,
+				limit);
+#elif defined(HAVE_MYSQL)
+		return DBexecute(
+				"delete from %s"
+				" where %s limit %d",
+				tablename,
+				filter,
+				limit);
+#elif defined(HAVE_POSTGRESQL)
+		return DBexecute(
+				"delete from %s"
+				" where ctid = any(array(select ctid from %s"
+					" where %s limit %d))",
+				tablename,
+				tablename,
+				filter,
+				limit);
+#elif defined(HAVE_SQLITE3)
+		return ZBX_DB_OK;
+#endif
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: housekeeping_cleanup                                             *
  *                                                                            *
  * Purpose: remove deleted items data                                         *
@@ -636,7 +687,7 @@ static int	housekeeping_cleanup()
 	DB_HOUSEKEEPER		housekeeper;
 	DB_RESULT		result;
 	DB_ROW			row;
-	int			d, deleted = 0;
+	int			deleted = 0;
 	zbx_vector_uint64_t	housekeeperids;
 	char			*sql = NULL, *filter = NULL, *table_name_esc;
 	size_t			sql_alloc = 0, sql_offset = 0, filter_alloc = 0;
@@ -688,69 +739,60 @@ static int	housekeeping_cleanup()
 
 		if (0 == strcmp(housekeeper.tablename, "events"))
 		{
-			char	*object;
+			int	object, d_trigger, d_internal;
 
 			if (0 == strcmp(housekeeper.field, "triggerid"))
-				object = ZBX_STR(EVENT_OBJECT_TRIGGER);
+				object = EVENT_OBJECT_TRIGGER;
 			else if (0 == strcmp(housekeeper.field, "itemid"))
-				object = ZBX_STR(EVENT_OBJECT_ITEM);
+				object = EVENT_OBJECT_ITEM;
 			else
-				object = ZBX_STR(EVENT_OBJECT_LLDRULE);
+				object = EVENT_OBJECT_LLDRULE;
 
-			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "object=%s and objectid="
-					ZBX_FS_UI64, object, housekeeper.value);
+			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d and"
+					" objectid=" ZBX_FS_UI64, EVENT_SOURCE_TRIGGERS, object, housekeeper.value);
+
+			d_trigger = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
+
+			if (ZBX_DB_OK <= d_trigger)
+			{
+				deleted += d_trigger;
+
+				filter_offset = 0;
+				zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d and"
+						" objectid=" ZBX_FS_UI64, EVENT_SOURCE_INTERNAL, object,
+						housekeeper.value);
+
+				d_internal = delete_from_table(housekeeper.tablename, filter,
+						CONFIG_MAX_HOUSEKEEPER_DELETE);
+
+				if (ZBX_DB_OK <= d_internal)
+				{
+					deleted += d_internal;
+
+					if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE ||
+							(CONFIG_MAX_HOUSEKEEPER_DELETE > d_trigger &&
+									CONFIG_MAX_HOUSEKEEPER_DELETE > d_internal))
+					{
+						zbx_vector_uint64_append(&housekeeperids, housekeeper.housekeeperid);
+					}
+				}
+			}
 		}
 		else
 		{
+			int	d;
+
 			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "%s=" ZBX_FS_UI64, housekeeper.field,
 					housekeeper.value);
-		}
 
-		if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
-		{
-			d = DBexecute(
-					"delete from %s"
-					" where %s",
-					housekeeper.tablename,
-					filter);
-		}
-		else
-		{
-#if defined(HAVE_IBM_DB2) || defined(HAVE_ORACLE)
-			d = DBexecute(
-					"delete from %s"
-					" where %s"
-						" and rownum<=%d",
-					housekeeper.tablename,
-					filter,
-					CONFIG_MAX_HOUSEKEEPER_DELETE);
-#elif defined(HAVE_MYSQL)
-			d = DBexecute(
-					"delete from %s"
-					" where %s limit %d",
-					housekeeper.tablename,
-					filter,
-					CONFIG_MAX_HOUSEKEEPER_DELETE);
-#elif defined(HAVE_POSTGRESQL)
-			d = DBexecute(
-					"delete from %s"
-					" where ctid = any(array(select ctid from %s"
-						" where %s limit %d))",
-					housekeeper.tablename,
-					housekeeper.tablename,
-					filter,
-					CONFIG_MAX_HOUSEKEEPER_DELETE);
-#elif defined(HAVE_SQLITE3)
-			d = 0;
-#endif
-		}
+			d = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
-		if (ZBX_DB_OK <= d)
-		{
-			if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE || CONFIG_MAX_HOUSEKEEPER_DELETE > d)
-				zbx_vector_uint64_append(&housekeeperids, housekeeper.housekeeperid);
-
-			deleted += d;
+			if (ZBX_DB_OK <= d)
+			{
+				deleted += d;
+				if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE || CONFIG_MAX_HOUSEKEEPER_DELETE > d)
+					zbx_vector_uint64_append(&housekeeperids, housekeeper.housekeeperid);
+			}
 		}
 	}
 	DBfree_result(result);

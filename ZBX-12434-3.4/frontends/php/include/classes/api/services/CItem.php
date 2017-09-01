@@ -692,7 +692,8 @@ class CItem extends CItemGeneral {
 		]);
 
 		$table_names = ['trends', 'trends_uint', 'history_text', 'history_log', 'history_uint', 'history_str',
-			'history'
+			'history',
+			'events'
 		];
 
 		$insert = [];
@@ -705,14 +706,6 @@ class CItem extends CItemGeneral {
 					'value' => $itemId
 				];
 			}
-		}
-
-		foreach ($itemIds as $itemId) {
-			$insert[] = [
-				'tablename' => 'events',
-				'field' => 'itemid',
-				'value' => $itemId
-			];
 		}
 
 		DB::insertBatch('housekeeper', $insert);

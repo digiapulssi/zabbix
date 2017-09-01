@@ -992,7 +992,7 @@ static void	DBdelete_action_conditions(int conditiontype, zbx_uint64_t elementid
 
 /******************************************************************************
  *                                                                            *
- * Function: DBdelete_by_ids                                                  *
+ * Function: DBadd_to_housekeeper                                             *
  *                                                                            *
  * Purpose:  adds table and field with specific id to housekeeper list        *
  *                                                                            *
@@ -1006,7 +1006,7 @@ static void	DBdelete_action_conditions(int conditiontype, zbx_uint64_t elementid
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-static void	DBdelete_by_ids(zbx_vector_uint64_t *ids, const char *field, const char **tables, int count)
+static void	DBadd_to_housekeeper(zbx_vector_uint64_t *ids, const char *field, const char **tables, int count)
 {
 	const char	*__function_name = "DBdelete_by_ids";
 	int		i, j;
@@ -1085,7 +1085,7 @@ static void	DBdelete_triggers(zbx_vector_uint64_t *triggerids)
 
 	DBexecute("%s", sql);
 
-	DBdelete_by_ids(triggerids,"triggerid", event_tables, ARRSIZE(event_tables));
+	DBadd_to_housekeeper(triggerids, "triggerid", event_tables, ARRSIZE(event_tables));
 
 	zbx_vector_uint64_destroy(&selementids);
 
@@ -1387,9 +1387,9 @@ void	DBdelete_items(zbx_vector_uint64_t *itemids)
 	DBdelete_graphs_by_itemids(itemids);
 	DBdelete_triggers_by_itemids(itemids);
 
-	DBdelete_by_ids(itemids, "itemid", history_tables, ARRSIZE(history_tables));
-	DBdelete_by_ids(itemids, "itemid", event_tables, ARRSIZE(event_tables));
-	DBdelete_by_ids(itemids, "lldruleid", event_tables, ARRSIZE(event_tables));
+	DBadd_to_housekeeper(itemids, "itemid", history_tables, ARRSIZE(history_tables));
+	DBadd_to_housekeeper(itemids, "itemid", event_tables, ARRSIZE(event_tables));
+	DBadd_to_housekeeper(itemids, "lldruleid", event_tables, ARRSIZE(event_tables));
 
 	sql_offset = 0;
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
