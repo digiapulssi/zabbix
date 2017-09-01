@@ -26,6 +26,7 @@ sub delete_probe($);
 sub disable_probe($);
 sub rename_probe($$);
 
+sub is_not_empty($$);
 
 sub validate_input;
 sub usage;
@@ -160,7 +161,7 @@ sub add_probe($$$$$) {
 		]
 	});
 
-	is_not_empty($probe_host);
+	is_not_empty($probe_host, true);
 
     ########## Creating Probe monitoring host
 
@@ -577,7 +578,7 @@ sub is_not_empty($$) {
     }
     else {
         print "failed\n";
-        exit(1) if !defined($do_exit) or $do_exit != false;
+        exit(1) unless ($do_exit == false);
     }
 }
 
