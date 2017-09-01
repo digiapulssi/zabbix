@@ -577,6 +577,15 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 	return deleted;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: delete_from_table                                                *
+ *                                                                            *
+ * Purpose: delete limited count of rows from table                           *
+ *                                                                            *
+ * Return value: number of rows deleted                                       *
+ *                                                                            *
+ ******************************************************************************/
 static int	delete_from_table(const char *tablename, const char *filter, int limit)
 {
 	if (0 == limit)
@@ -691,7 +700,7 @@ static int	housekeeping_cleanup()
 
 		if (0 == strcmp(housekeeper.tablename, "events"))
 		{
-			int	source = EVENT_SOURCE_TRIGGERS, object, d_trigger, d_internal;
+			int	object, d_trigger, d_internal;
 
 			if (0 == strcmp(housekeeper.field, "triggerid"))
 				object = EVENT_OBJECT_TRIGGER;
@@ -700,8 +709,8 @@ static int	housekeeping_cleanup()
 			else
 				object = EVENT_OBJECT_LLDRULE;
 
-			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d and objectid="
-					ZBX_FS_UI64, source, object, housekeeper.value);
+			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d and"
+					" objectid=" ZBX_FS_UI64, EVENT_SOURCE_TRIGGERS, object, housekeeper.value);
 
 			d_trigger = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
@@ -709,10 +718,10 @@ static int	housekeeping_cleanup()
 			{
 				deleted += d_trigger;
 
-				source = EVENT_SOURCE_INTERNAL;
 				filter_offset = 0;
-				zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d"
-						" and objectid=" ZBX_FS_UI64, source, object, housekeeper.value);
+				zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d and"
+						" objectid=" ZBX_FS_UI64, EVENT_SOURCE_INTERNAL, object,
+						housekeeper.value);
 
 				d_internal = delete_from_table(housekeeper.tablename, filter,
 						CONFIG_MAX_HOUSEKEEPER_DELETE);
