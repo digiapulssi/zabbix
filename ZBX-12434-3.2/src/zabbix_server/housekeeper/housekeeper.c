@@ -586,7 +586,7 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
  * Return value: number of rows deleted                                       *
  *                                                                            *
  ******************************************************************************/
-static int	delete_from_table(const char *tablename, const char *filter, int limit)
+static int	DBdelete_from_table(const char *tablename, const char *filter, int limit)
 {
 	if (0 == limit)
 	{
@@ -712,7 +712,7 @@ static int	housekeeping_cleanup()
 			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "source=%d and object=%d and"
 					" objectid=" ZBX_FS_UI64, EVENT_SOURCE_TRIGGERS, object, housekeeper.value);
 
-			d_trigger = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
+			d_trigger = DBdelete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
 			if (ZBX_DB_OK <= d_trigger)
 			{
@@ -723,7 +723,7 @@ static int	housekeeping_cleanup()
 						" objectid=" ZBX_FS_UI64, EVENT_SOURCE_INTERNAL, object,
 						housekeeper.value);
 
-				d_internal = delete_from_table(housekeeper.tablename, filter,
+				d_internal = DBdelete_from_table(housekeeper.tablename, filter,
 						CONFIG_MAX_HOUSEKEEPER_DELETE);
 
 				if (ZBX_DB_OK <= d_internal)
@@ -746,7 +746,7 @@ static int	housekeeping_cleanup()
 			zbx_snprintf_alloc(&filter, &filter_alloc, &filter_offset, "%s=" ZBX_FS_UI64, housekeeper.field,
 					housekeeper.value);
 
-			d = delete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
+			d = DBdelete_from_table(housekeeper.tablename, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
 			if (ZBX_DB_OK <= d)
 			{
