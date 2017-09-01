@@ -61,6 +61,8 @@ use RSM;
 use TLD_constants qw(:general :templates :groups :value_types :ec :slv :config :api);
 use TLDs;
 
+sub lc_options();
+
 sub create_tld_host($$);
 sub manage_tld_objects($$$$$$);
 sub manage_tld_hosts($$);
@@ -1333,14 +1335,21 @@ sub validate_input {
     }
 }
 
-sub lc_options {
-    foreach my $key (keys(%OPTS))
-    {
-	foreach ("tld", "rdds43-servers", "rdds80-servers=s", "epp-servers", "ns-servers-v4", "ns-servers-v6")
+sub lc_options()
+{
+	my @options_to_lowercase = (
+		"tld",
+		"rdds43-servers",
+		"rdds80-servers=s",
+		"epp-servers",
+		"ns-servers-v4",
+		"ns-servers-v6"
+	);
+
+	foreach my $option (@options_to_lowercase)
 	{
-	    $OPTS{$_} = lc($OPTS{$_}) if ($key eq $_);
+		$OPTS{$option} = lc($OPTS{$option}) if (defined($OPTS{$option}));
 	}
-    }
 }
 
 sub create_tld_host($$)
