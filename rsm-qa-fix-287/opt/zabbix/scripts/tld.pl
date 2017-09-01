@@ -61,6 +61,8 @@ use RSM;
 use TLD_constants qw(:general :templates :groups :value_types :ec :slv :config :api);
 use TLDs;
 
+sub really($);
+
 sub lc_options();
 
 sub create_tld_host($$);
@@ -218,38 +220,35 @@ if (defined($OPTS{'get-nsservers-list'}))
 	exit;
 }
 
-if (defined($OPTS{'list-services'})) {
-    my @tlds = get_tld_list();
+if (defined($OPTS{'list-services'}))
+{
+	my @tlds = get_tld_list();
 
-    my $report;
+	my @columns = (
+		'tld_type',
+		'tld_status',
+		'{$RSM.DNS.TESTPREFIX}',
+		'{$RSM.RDDS.NS.STRING}',
+		'{$RSM.RDDS.TESTPREFIX}',
+		'{$RSM.TLD.DNSSEC.ENABLED}',
+		'{$RSM.TLD.EPP.ENABLED}',
+		'{$RSM.TLD.RDDS.ENABLED}'
+	);
 
-    my @columns = ('tld_type', 'tld_status', '{$RSM.DNS.TESTPREFIX}', '{$RSM.RDDS.NS.STRING}', '{$RSM.RDDS.TESTPREFIX}',
-		    '{$RSM.TLD.DNSSEC.ENABLED}', '{$RSM.TLD.EPP.ENABLED}', '{$RSM.TLD.RDDS.ENABLED}');
+	foreach my $tld (sort(@tlds))
+	{
+		my $services = get_services($tld);
+		print($tld);
 
-    foreach my $tld (@tlds) {
-	my $services = get_services($tld);
-        $report->{$tld} = $services;
-    }
+		foreach my $column (@columns)
+		{
+			print(",", $services->{$column} // "");
+		}
 
-    foreach my $tld (sort keys %{$report}) {
-	print $tld.",";
-
-	my $count = 0;
-
-	foreach my $column (@columns) {
-	    if (defined($report->{$tld}->{$column})) {
-		print $report->{$tld}->{$column};
-	    }
-
-	    $count++;
-
-	    print "," if (scalar(@columns) != $count);
+		print("\n");
 	}
 
-	print "\n";
-    }
-
-    exit;
+	exit;
 }
 
 if (defined($OPTS{'update-nsservers'})) {
@@ -297,9 +296,7 @@ $main_templateid = create_main_template($OPTS{'tld'}, $ns_servers);
 
 pfail("Main templateid is not defined") unless defined $main_templateid;
 
-$tld_groupid = create_group('TLD '.$OPTS{'tld'});
-
-pfail $tld_groupid->{'data'} if check_api_error($tld_groupid) eq true;
+$tld_groupid = really(create_group('TLD '.$OPTS{'tld'}));
 
 create_tld_host($OPTS{'tld'}, $OPTS{'type'});
 
@@ -313,7 +310,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 
 	print("$proxyid\n$probe_name\n");
 
-	my $probe_groupid = create_group($probe_name);
+	my $probe_groupid = really(create_group($probe_name));
 	my $probe_templateid;
 	my $status;
 
@@ -330,7 +327,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 
 	my $probe_status_templateid = create_probe_status_template($probe_name, $probe_templateid, $root_servers_macros);
 
-	create_host({
+	really(create_host({
 		'groups'	=> [
 			{
 				'groupid'	=> PROBES_GROUPID
@@ -350,9 +347,9 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 		'interfaces'	=> [
 			DEFAULT_MAIN_INTERFACE
 		]
-	});
+	}));
 
-	my $hostid = create_host({
+	my $hostid = really(create_host({
 		'groups'	=> [
 			{
 				'groupid'	=> PROBES_MON_GROUPID
@@ -375,14 +372,14 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 				'port'	=> '10050'
 			}
 		]
-	});
+	}));
 
-	create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1);
+	really(create_macro('{$RSM.PROXY_NAME}', $probe_name, $hostid, 1));
 
 #  TODO: add the host above
 #	  to more host groups: "TLD Probe Results" and\/or "gTLD Probe Results" and perhaps others
 
-	create_host({
+	really(create_host({
 		'groups'	=> [
 			{
 				'groupid'	=> $tld_groupid
@@ -411,7 +408,7 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 		'interfaces'	=> [
 			DEFAULT_MAIN_INTERFACE
 		]
-	});
+	}));
 }
 
 exit;
@@ -515,7 +512,7 @@ sub create_item_dns_rtt {
                                               'type' => 2, 'value_type' => 0,
                                               'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'}};
 
-    create_item($options);
+    really(create_item($options));
 
     return;
 }
@@ -561,7 +558,7 @@ sub create_slv_item {
     }
 
 
-    return create_item($options);
+    return really(create_item($options));
 }
 
 sub create_item_dns_udp_upd {
@@ -580,7 +577,7 @@ sub create_item_dns_udp_upd {
                                               'type' => 2, 'value_type' => 0,
                                               'valuemapid' => rsm_value_mappings->{'rsm_dns_rtt'}};
 
-    return create_item($options);
+    return really(create_item($options));
 }
 
 sub create_items_dns {
@@ -599,7 +596,7 @@ sub create_items_dns {
                                               'type' => 3, 'value_type' => 3,
                                               'delay' => $cfg_global_macros->{'{$RSM.DNS.TCP.DELAY}'}};
 
-    create_item($options);
+    really(create_item($options));
 
     $proto = 'udp';
     $proto_uc = uc($proto);
@@ -613,7 +610,7 @@ sub create_items_dns {
                                               'type' => 3, 'value_type' => 3,
                                               'delay' => $cfg_global_macros->{'{$RSM.DNS.UDP.DELAY}'}};
 
-    create_item($options);
+    really(create_item($options));
 }
 
 sub create_items_rdds {
@@ -631,7 +628,7 @@ sub create_items_rdds {
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_43],
                                               'type' => 2, 'value_type' => 1};
-    create_item($options);
+    really(create_item($options));
 
     $item_key = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
 
@@ -642,7 +639,7 @@ sub create_items_rdds {
                                               'applications' => [$applicationid_43],
                                               'type' => 2, 'value_type' => 0,
                                               'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'}};
-    create_item($options);
+    really(create_item($options));
 
     if (defined($OPTS{'epp-servers'})) {
 	$item_key = 'rsm.rdds.43.upd[{$RSM.TLD}]';
@@ -654,7 +651,7 @@ sub create_items_rdds {
 		    'applications' => [$applicationid_43],
 		    'type' => 2, 'value_type' => 0,
 		    'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'}};
-	create_item($options);
+	really(create_item($options));
     }
 
     $item_key = 'rsm.rdds.80.ip[{$RSM.TLD}]';
@@ -665,7 +662,7 @@ sub create_items_rdds {
                                               'hostid' => $templateid,
                                               'applications' => [$applicationid_80],
                                               'type' => 2, 'value_type' => 1};
-    create_item($options);
+    really(create_item($options));
 
     $item_key = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
 
@@ -676,7 +673,7 @@ sub create_items_rdds {
                                               'applications' => [$applicationid_80],
                                               'type' => 2, 'value_type' => 0,
                                               'valuemapid' => rsm_value_mappings->{'rsm_rdds_rtt'}};
-    create_item($options);
+    really(create_item($options));
 
     $item_key = 'rsm.rdds[{$RSM.TLD},"'.$OPTS{'rdds43-servers'}.'","'.$OPTS{'rdds80-servers'}.'"]';
 
@@ -688,7 +685,7 @@ sub create_items_rdds {
                                               'type' => 3, 'value_type' => 3,
 					      'delay' => $cfg_global_macros->{'{$RSM.RDDS.DELAY}'},
                                               'valuemapid' => rsm_value_mappings->{'rsm_rdds_result'}};
-    create_item($options);
+    really(create_item($options));
 }
 
 sub create_items_epp {
@@ -709,7 +706,7 @@ sub create_items_epp {
 		'type' => 3, 'value_type' => 3,
 		'delay' => $cfg_global_macros->{'{$RSM.EPP.DELAY}'}, 'valuemapid' => rsm_value_mappings->{'rsm_epp_result'}};
 
-    create_item($options);
+    really(create_item($options));
 
     $item_key = 'rsm.epp.ip[{$RSM.TLD}]';
 
@@ -720,7 +717,7 @@ sub create_items_epp {
 		'applications' => [$applicationid],
 		'type' => 2, 'value_type' => 1};
 
-    create_item($options);
+    really(create_item($options));
 
     $item_key = 'rsm.epp.rtt[{$RSM.TLD},login]';
 
@@ -732,7 +729,7 @@ sub create_items_epp {
 		'type' => 2, 'value_type' => 0,
 		'valuemapid' => rsm_value_mappings->{'rsm_epp_rtt'}};
 
-    create_item($options);
+    really(create_item($options));
 
     $item_key = 'rsm.epp.rtt[{$RSM.TLD},update]';
 
@@ -744,7 +741,7 @@ sub create_items_epp {
 		'type' => 2, 'value_type' => 0,
 		'valuemapid' => rsm_value_mappings->{'rsm_epp_rtt'}};
 
-    create_item($options);
+    really(create_item($options));
 
     $item_key = 'rsm.epp.rtt[{$RSM.TLD},info]';
 
@@ -756,7 +753,7 @@ sub create_items_epp {
 		'type' => 2, 'value_type' => 0,
 		'valuemapid' => rsm_value_mappings->{'rsm_epp_rtt'}};
 
-    create_item($options);
+    really(create_item($options));
 }
 
 
@@ -887,9 +884,7 @@ sub create_main_template {
 
     my $template_name = 'Template '.$tld;
 
-    my $templateid = create_template($template_name);
-
-    pfail("Could not create main template for '".$tld."' TLD. ".$templateid->{'data'}) if check_api_error($templateid) eq true;
+    my $templateid = really(create_template($template_name));
 
     my $delay = 300;
     my $appid = get_application_id('Configuration', $templateid);
@@ -907,9 +902,7 @@ sub create_main_template {
                     'delay' => $delay,
                     'type' => ITEM_TYPE_CALCULATED, 'value_type' => ITEM_VALUE_TYPE_UINT64};
 
-        my $itemid = create_item($options);
-
-	print $itemid->{'data'}."\n" if check_api_error($itemid) eq true;
+        my $itemid = really(create_item($options));
     }
 
     foreach my $ns_name (sort keys %{$ns_servers}) {
@@ -945,13 +938,13 @@ sub create_main_template {
     create_items_rdds($templateid, $template_name) if (defined($OPTS{'rdds43-servers'}));
     create_items_epp($templateid, $template_name) if (defined($OPTS{'epp-servers'}));
 
-    create_macro('{$RSM.TLD}', $tld, $templateid);
-    create_macro('{$RSM.DNS.TESTPREFIX}', $OPTS{'dns-test-prefix'}, $templateid);
-    create_macro('{$RSM.RDDS.TESTPREFIX}', $OPTS{'rdds-test-prefix'}, $templateid) if (defined($OPTS{'rdds-test-prefix'}));
-    create_macro('{$RSM.RDDS.NS.STRING}', defined($OPTS{'rdds-ns-string'}) ? $OPTS{'rdds-ns-string'} : cfg_default_rdds_ns_string, $templateid);
-    create_macro('{$RSM.TLD.DNSSEC.ENABLED}', $OPTS{'dnssec'}, $templateid, true);
-    create_macro('{$RSM.TLD.RDDS.ENABLED}', defined($OPTS{'rdds43-servers'}) ? 1 : 0, $templateid, true);
-    create_macro('{$RSM.TLD.EPP.ENABLED}', defined($OPTS{'epp-servers'}) ? 1 : 0, $templateid, true);
+    really(create_macro('{$RSM.TLD}', $tld, $templateid));
+    really(create_macro('{$RSM.DNS.TESTPREFIX}', $OPTS{'dns-test-prefix'}, $templateid));
+    really(create_macro('{$RSM.RDDS.TESTPREFIX}', $OPTS{'rdds-test-prefix'}, $templateid)) if (defined($OPTS{'rdds-test-prefix'}));
+    really(create_macro('{$RSM.RDDS.NS.STRING}', defined($OPTS{'rdds-ns-string'}) ? $OPTS{'rdds-ns-string'} : cfg_default_rdds_ns_string, $templateid));
+    really(create_macro('{$RSM.TLD.DNSSEC.ENABLED}', $OPTS{'dnssec'}, $templateid, true));
+    really(create_macro('{$RSM.TLD.RDDS.ENABLED}', defined($OPTS{'rdds43-servers'}) ? 1 : 0, $templateid, true));
+    really(create_macro('{$RSM.TLD.EPP.ENABLED}', defined($OPTS{'epp-servers'}) ? 1 : 0, $templateid, true));
 
     if ($OPTS{'epp-servers'})
     {
@@ -962,21 +955,21 @@ sub create_main_template {
 	pfail("global macro $m must conatin |") unless ($keysalt =~ m/\|/);
 
 	if ($OPTS{'epp-commands'}) {
-	    create_macro('{$RSM.EPP.COMMANDS}', $OPTS{'epp-commands'}, $templateid, 1);
+	    really(create_macro('{$RSM.EPP.COMMANDS}', $OPTS{'epp-commands'}, $templateid, 1));
 	} else {
-	    create_macro('{$RSM.EPP.COMMANDS}', '/opt/test-sla/epp-commands/'.$tld, $templateid);
+	    really(create_macro('{$RSM.EPP.COMMANDS}', '/opt/test-sla/epp-commands/'.$tld, $templateid));
 	}
-	create_macro('{$RSM.EPP.USER}', $OPTS{'epp-user'}, $templateid, 1);
-	create_macro('{$RSM.EPP.CERT}', encode_base64(read_file($OPTS{'epp-cert'}), ''),  $templateid, 1);
-	create_macro('{$RSM.EPP.SERVERID}', $OPTS{'epp-serverid'}, $templateid, 1);
-	create_macro('{$RSM.EPP.TESTPREFIX}', $OPTS{'epp-test-prefix'}, $templateid, 1);
-	create_macro('{$RSM.EPP.SERVERCERTMD5}', get_md5($OPTS{'epp-servercert'}), $templateid, 1);
+	really(create_macro('{$RSM.EPP.USER}', $OPTS{'epp-user'}, $templateid, 1));
+	really(create_macro('{$RSM.EPP.CERT}', encode_base64(read_file($OPTS{'epp-cert'}), ''),  $templateid, 1));
+	really(create_macro('{$RSM.EPP.SERVERID}', $OPTS{'epp-serverid'}, $templateid, 1));
+	really(create_macro('{$RSM.EPP.TESTPREFIX}', $OPTS{'epp-test-prefix'}, $templateid, 1));
+	really(create_macro('{$RSM.EPP.SERVERCERTMD5}', get_md5($OPTS{'epp-servercert'}), $templateid, 1));
 
 	my $passphrase = get_sensdata("Enter EPP secret key passphrase: ");
 	my $passwd = get_sensdata("Enter EPP password: ");
-	create_macro('{$RSM.EPP.PASSWD}', get_encrypted_passwd($keysalt, $passphrase, $passwd), $templateid, 1);
+	really(create_macro('{$RSM.EPP.PASSWD}', get_encrypted_passwd($keysalt, $passphrase, $passwd), $templateid, 1));
 	$passwd = undef;
-	create_macro('{$RSM.EPP.PRIVKEY}', get_encrypted_privkey($keysalt, $passphrase, $OPTS{'epp-privkey'}), $templateid, 1);
+	really(create_macro('{$RSM.EPP.PRIVKEY}', get_encrypted_privkey($keysalt, $passphrase, $OPTS{'epp-privkey'}), $templateid, 1));
 	$passphrase = undef;
 
 	print("EPP data saved successfully.\n");
@@ -1353,7 +1346,7 @@ sub create_tld_host($$)
 	my $tld_name = shift;
 	my $tld_type = shift;
 
-	my $tld_hostid = create_host({
+	my $tld_hostid = really(create_host({
 		'groups'	=> [
 			{
 				'groupid'	=> TLDS_GROUPID
@@ -1367,9 +1360,7 @@ sub create_tld_host($$)
 		'interfaces'	=> [
 			DEFAULT_MAIN_INTERFACE
 		]
-	});
-
-	pfail($tld_hostid->{'data'}) if (check_api_error($tld_hostid) eq true);
+	}));
 
 	create_slv_items($ns_servers, $tld_hostid, $tld_name);
 }
@@ -1483,7 +1474,7 @@ sub manage_tld_objects($$$$$$) {
 
 	if ($type eq 'dnssec')
 	{
-		create_macro('{$RSM.TLD.DNSSEC.ENABLED}', 0, $main_templateid, true) if ($types->{$type} eq true);
+		really(create_macro('{$RSM.TLD.DNSSEC.ENABLED}', 0, $main_templateid, true)) if ($types->{$type} eq true);
 		next;
 	}
 
@@ -1804,7 +1795,7 @@ sub create_avail_trigger($$) {
 		'priority' => '0'
 	};
 
-	return create_trigger($options, $host_name);
+	really(create_trigger($options, $host_name));
 }
 
 sub create_rollweek_trigger($$$$$) {
@@ -1823,5 +1814,14 @@ sub create_rollweek_trigger($$$$$) {
 		'priority' => $priority
 	};
 
-	return create_trigger($options, $host_name, $created_ref);
+	really(create_trigger($options, $host_name, $created_ref));
+}
+
+sub really($)
+{
+	my $api_result = shift;
+
+	pfail($api_result->{'data'}) if (check_api_error($api_result) == true);
+
+	return $api_result;
 }
