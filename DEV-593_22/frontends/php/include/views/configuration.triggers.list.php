@@ -112,6 +112,9 @@ $triggersTable->setHeader(array(
 	make_sorting_header(_('Status'), 'status', $link),
 	$data['showErrorColumn'] ? _('Error') : null
 ));
+
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($this->data['triggers'] as $tnum => $trigger) {
 	$triggerid = $trigger['triggerid'];
 	$trigger['discoveryRuleid'] = $this->data['parent_discoveryid'];
@@ -215,7 +218,8 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 				'go='.($trigger['status'] == TRIGGER_STATUS_DISABLED ? 'activate' : 'disable').
 				'&hostid='.$this->data['hostid'].
 				'&g_triggerid='.$triggerid.
-				'&parent_discoveryid='.$this->data['parent_discoveryid'],
+				'&parent_discoveryid='.$this->data['parent_discoveryid'].
+				$csrf_token,
 			triggerIndicatorStyle($trigger['status'])
 		);
 	}
@@ -225,7 +229,8 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 			'triggers.php?'.
 				'go='.($trigger['status'] == TRIGGER_STATUS_DISABLED ? 'activate' : 'disable').
 				'&hostid='.$this->data['hostid'].
-				'&g_triggerid='.$triggerid,
+				'&g_triggerid='.$triggerid.
+				$csrf_token,
 			triggerIndicatorStyle($trigger['status'], $trigger['state'])
 		);
 	}

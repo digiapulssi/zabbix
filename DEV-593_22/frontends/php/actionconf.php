@@ -76,6 +76,10 @@ $fields = array(
 	'favstate' =>			array(T_ZBX_INT, O_OPT, P_ACT,	NOT_EMPTY,	'isset({favobj})&&"filter"=={favobj}')
 );
 
+if (get_request('go', 'none') !== 'none') {
+	$fields['csrf_token'] =	array(T_ZBX_STR, O_MAND, P_SYS, VALID_CSRF_TOKEN, null);
+}
+
 $dataValid = check_fields($fields);
 
 if ($dataValid && hasRequest('eventsource') && !hasRequest('form')) {

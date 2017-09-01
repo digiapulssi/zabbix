@@ -73,6 +73,8 @@ $itemTable->setHeader(array(
 	$data['showErrorColumn'] ? _('Error') : null
 ));
 
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($this->data['items'] as $item) {
 	// description
 	$description = array();
@@ -103,7 +105,8 @@ foreach ($this->data['items'] as $item) {
 	// status
 	$status = new CCol(new CLink(
 		itemIndicator($item['status'], $item['state']),
-		'?group_itemid='.$item['itemid'].'&hostid='.$item['hostid'].'&go='.($item['status'] ? 'activate' : 'disable'),
+		'?group_itemid='.$item['itemid'].'&hostid='.$item['hostid'].
+			'&go='.($item['status'] ? 'activate' : 'disable').$csrf_token,
 		itemIndicatorStyle($item['status'], $item['state'])
 	));
 

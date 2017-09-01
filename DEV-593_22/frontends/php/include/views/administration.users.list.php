@@ -64,6 +64,8 @@ $usersTable->setHeader(array(
 	_('Status')
 ));
 
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($this->data['users'] as $user) {
 	$userId = $user['userid'];
 	$session = $this->data['usersSessions'][$userId];
@@ -82,7 +84,7 @@ foreach ($this->data['users'] as $user) {
 
 	// blocked
 	$blocked = ($user['attempt_failed'] >= ZBX_LOGIN_ATTEMPTS)
-		? new CLink(_('Blocked'), 'users.php?go=unblock&group_userid'.SQUAREBRACKETS.'='.$userId, 'on')
+		? new CLink(_('Blocked'), 'users.php?go=unblock&group_userid'.SQUAREBRACKETS.'='.$userId.$csrf_token, 'on')
 		: new CSpan(_('Ok'), 'green');
 
 	// user groups

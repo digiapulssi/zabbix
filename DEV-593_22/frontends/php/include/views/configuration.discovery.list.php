@@ -44,12 +44,16 @@ $discoveryTable->setHeader(array(
 	_('Checks'),
 	_('Status')
 ));
+
+$csrf_token = '&csrf_token='.createCSRFToken();
+
 foreach ($data['drules'] as $drule) {
 	array_push($drule['description'], new CLink($drule['name'], '?form=update&druleid='.$drule['druleid']));
 
 	$status = new CCol(new CLink(
 		discovery_status2str($drule['status']),
-		'?g_druleid'.SQUAREBRACKETS.'='.$drule['druleid'].($drule['status'] == DRULE_STATUS_ACTIVE ? '&go=disable' : '&go=activate'),
+		'?g_druleid'.SQUAREBRACKETS.'='.$drule['druleid'].
+			($drule['status'] == DRULE_STATUS_ACTIVE ? '&go=disable' : '&go=activate').$csrf_token,
 		discovery_status2style($drule['status'])
 	));
 

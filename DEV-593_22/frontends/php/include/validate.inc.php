@@ -440,7 +440,10 @@ function check_field(&$fields, &$field, $checks) {
 
 	if ($opt == O_MAND) {
 		if (!isset($_REQUEST[$field])) {
-			info(_s('Field "%1$s" is mandatory.', $caption));
+			info($validation === VALID_CSRF_TOKEN
+				? _('Request contains invalid or already utilized CSRF token. Please refresh the page and try again.')
+				: _s('Field "%1$s" is mandatory.', $caption)
+			);
 
 			return ($flags & P_SYS) ? ZBX_VALID_ERROR : ZBX_VALID_WARNING;
 		}
@@ -542,9 +545,13 @@ function check_fields(&$fields, $show_messages = true) {
 	 * According the Cross-Origin Resource Sharing (CORS), custom headers cannot be used to make cross-domain requests,
 	 * so the default Ajax header (X-Requested-With = XMLHttpRequest) can be used to authorize request and validation of
 	 * csrf_token is not necessary.
+	 *
+	 * CSRF token is added only to requests which are made using POST HTTP method or, if some actions/features are
+	 * implemented using GET requests, then validation to those requests is added manually.
 	 */
-	if (!array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER)) {
-		$system_fields['csrf_token'] =	array(T_ZBX_STR, O_OPT, P_SYS, VALID_CSRF_TOKEN, null);
+	if (!array_key_exists('HTTP_X_REQUESTED_WITH', $_SERVER) && $_SERVER['REQUEST_METHOD'] === 'POST'
+			&& get_request('go', 'none') !== 'none' && !array_key_exists('csrf_token', $system_fields)) {
+		$system_fields['csrf_token'] =	array(T_ZBX_STR, O_MAND, P_SYS, VALID_CSRF_TOKEN, null);
 	}
 
 	$fields = zbx_array_merge($system_fields, $fields);
