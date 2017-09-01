@@ -105,6 +105,10 @@ switch ($page['type']) {
 	default:
 		header('Content-Type: text/html; charset=UTF-8');
 		header('X-Frame-Options: SAMEORIGIN');
+		if ((array_key_exists('https', $_SERVER) && ($_SERVER['https'] == 1 || $_SERVER['https'] === 'on'))
+				|| $_SERVER['SERVER_PORT'] == 443) {
+			header('strict-transport-security: max-age=31557600');
+		}
 
 		global $ZBX_SERVER_NAME;
 
