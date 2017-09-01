@@ -1343,10 +1343,6 @@ sub lc_options {
     }
 }
 
-sub add_default_actions() {
-
-}
-
 sub create_tld_host($$)
 {
 	my $tld_name = shift;
