@@ -795,7 +795,6 @@ static int	housekeeping_cleanup()
 			}
 		}
 	}
-
 	DBfree_result(result);
 
 	if (0 != housekeeperids.values_num)
