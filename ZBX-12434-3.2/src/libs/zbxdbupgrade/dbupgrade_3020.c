@@ -38,40 +38,50 @@ static int	DBpatch_3020001(void)
 	zbx_vector_uint64_t	eventids;
 	DB_ROW			row;
 	zbx_uint64_t		eventid;
+	int			sources[] = {EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL};
+	int			objects[] = {EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE}, i, j;
 
 	zbx_vector_uint64_create(&eventids);
 
-	result = DBselect(
-			"select p.eventid"
-			" from problem p"
-			" where p.object=0 and not exists ("
-				"select null"
-				" from triggers t"
-				" where t.triggerid=p.objectid"
-			")");
-
-	while (NULL != (row = DBfetch(result)))
+	for (i = 0; i < (int)ARRSIZE(sources); i++)
 	{
-		ZBX_STR2UINT64(eventid, row[0]);
-		zbx_vector_uint64_append(&eventids, eventid);
-	}
-	DBfree_result(result);
+		result = DBselect(
+				"select p.eventid"
+				" from problem p"
+				" where p.source=%d and p.object=%d and not exists ("
+					"select null"
+					" from triggers t"
+					" where t.triggerid=p.objectid"
+				")",
+				sources[i], EVENT_OBJECT_TRIGGER);
 
-	result = DBselect(
-			"select p.eventid"
-			" from problem p "
-			" where (p.object=4 or p.object=5) and not exists ("
-				"select null"
-				" from items i"
-				" where i.itemid=p.objectid"
-			")");
+		while (NULL != (row = DBfetch(result)))
+		{
+			ZBX_STR2UINT64(eventid, row[0]);
+			zbx_vector_uint64_append(&eventids, eventid);
+		}
+		DBfree_result(result);
 
-	while (NULL != (row = DBfetch(result)))
-	{
-		ZBX_STR2UINT64(eventid, row[0]);
-		zbx_vector_uint64_append(&eventids, eventid);
+		for (j = 0; j < (int)ARRSIZE(objects); j++)
+		{
+			result = DBselect(
+					"select p.eventid"
+					" from problem p"
+					" where p.source=%d and p.object=%d and not exists ("
+						"select null"
+						" from items i"
+						" where i.itemid=p.objectid"
+					")",
+					sources[i], objects[j]);
+
+			while (NULL != (row = DBfetch(result)))
+			{
+				ZBX_STR2UINT64(eventid, row[0]);
+				zbx_vector_uint64_append(&eventids, eventid);
+			}
+			DBfree_result(result);
+		}
 	}
-	DBfree_result(result);
 
 	zbx_vector_uint64_sort(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
