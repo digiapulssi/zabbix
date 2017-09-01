@@ -108,6 +108,7 @@ switch ($page['type']) {
 	case PAGE_TYPE_HTML:
 	default:
 		header('Content-Type: text/html; charset=UTF-8');
+		header('X-Frame-Options: SAMEORIGIN');
 
 		// page title
 		$page_title = '';
@@ -197,7 +198,17 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 		echo '<script type="text/javascript" src="'.$path.'"></script>'."\n";
 	}
 ?>
+<style id="antiClickjack">
+	body{display:none !important;}
+</style>
 <script type="text/javascript">
+	if (self === top) {
+		var antiClickjack = document.getElementById("antiClickjack");
+		antiClickjack.parentNode.removeChild(antiClickjack);
+	} else {
+		top.location = self.location;
+	}
+
 	if (jQuery(window).width() < 1024) {
 		document.write('<link rel="stylesheet" type="text/css" href="styles/handheld.css" />');
 	}
