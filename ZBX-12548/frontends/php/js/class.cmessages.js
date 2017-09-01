@@ -50,6 +50,7 @@ var CMessageList = Class.create({
 		'mute':		0,			// mute alarms
 		'timeout':	0
 	},
+	played_message:		{},		// Message object related to played sound
 
 	initialize: function(messagesListId, args) {
 		this.messageListId = messagesListId;
@@ -216,10 +217,12 @@ var CMessageList = Class.create({
 				continue;
 			}
 
-			if (message.priority >= this.sounds.priority) {
+			if (message.priority >= this.sounds.priority && (!this.played_message.timeout
+					|| this.played_message.timeout < message.timeout)) {
 				this.sounds.priority = message.priority;
 				this.sounds.sound = message.sound;
 				this.sounds.timeout = message.timeout;
+				this.played_message = message;
 			}
 		}
 
@@ -240,6 +243,7 @@ var CMessageList = Class.create({
 
 	stopSound: function() {
 		if (!is_null(this.sounds.sound)) {
+			this.played_message = {};
 			AudioControl.stop();
 		}
 	},
@@ -249,7 +253,9 @@ var CMessageList = Class.create({
 			return true;
 		}
 
-		AudioControl.stop();
+		if (this.played_message && this.played_message.messageid == messageid) {
+			this.stopSound();
+		}
 
 		if (withEffect) {
 			this.messageList[messageid].remove();
@@ -311,7 +317,7 @@ var CMessageList = Class.create({
 			count++;
 		}
 
-		AudioControl.stop();
+		this.stopSound();
 	},
 
 	timeoutMessages: function() {
