@@ -104,6 +104,7 @@ switch ($page['type']) {
 	case PAGE_TYPE_HTML:
 	default:
 		header('Content-Type: text/html; charset=UTF-8');
+		header('X-Frame-Options: SAMEORIGIN');
 
 		global $ZBX_SERVER_NAME;
 
