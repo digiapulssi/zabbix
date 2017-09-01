@@ -2664,6 +2664,7 @@ class CLineGraphDraw extends CGraphDraw {
 			$graph_item = reset($graph_items);
 			$graph_item['name'] = $graph_item['name_expanded'];
 			// getItemDelay will internally convert delay and flexible delay to seconds.
+			$update_interval_parser->parse($graph_item['delay']);
 			$graph_item['delay'] = getItemDelay($update_interval_parser->getDelay(),
 				$update_interval_parser->getIntervals(ITEM_DELAY_FLEXIBLE)
 			);
