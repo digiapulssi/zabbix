@@ -579,7 +579,7 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 
 /******************************************************************************
  *                                                                            *
- * Function: delete_from_table                                                *
+ * Function: DBdelete_from_table                                              *
  *                                                                            *
  * Purpose: delete limited count of rows from table                           *
  *                                                                            *
