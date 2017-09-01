@@ -1295,7 +1295,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 				" from users u,users_groups ug"
 				" where u.userid=ug.userid"
 					" and ug.usrgrpid"
-						" in ( select uug.usrgrpid"
+						" in (select uug.usrgrpid"
 							" from users_groups uug"
 							" where uug.userid=" ZBX_FS_UI64
 						")"
