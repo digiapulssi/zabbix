@@ -134,6 +134,7 @@ foreach ($this->data['hostPrototypes'] as $hostPrototype) {
 	))
 		->addClass(ZBX_STYLE_LINK_ACTION)
 		->addClass(itemIndicatorStyle($hostPrototype['status']))
+		->addCSRF()
 		->addSID();
 
 	$hostTable->addRow([

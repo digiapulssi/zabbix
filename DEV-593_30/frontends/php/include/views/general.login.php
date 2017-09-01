@@ -59,7 +59,10 @@ global $ZBX_SERVER_NAME;
 							_('Remember me for 30 days')
 						], 'autologin')
 					)
-					->addItem(new CSubmit('enter', _('Sign in')))
+					->addItem([
+						new CSubmit('enter', _('Sign in')),
+						new CVar('csrf_token', createCSRFToken())
+					])
 					->addItem($guest)
 			)
 	]))->addClass(ZBX_STYLE_SIGNIN_CONTAINER),

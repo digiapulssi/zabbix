@@ -274,6 +274,13 @@ abstract class CController {
 	}
 
 	/**
+	 * Add validation role of csrf_token input field.
+	 */
+	protected function addCSRFValidationRole(&$fields) {
+		$fields['csrf_token'] = 'csrf_token';
+	}
+
+	/**
 	 * Execute action and generate response object.
 	 *
 	 * @abstract

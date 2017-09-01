@@ -86,6 +86,7 @@ foreach ($this->data['users'] as $user) {
 		? (new CLink(_('Blocked'), 'users.php?action=user.massunblock&group_userid[]='.$userId))
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(ZBX_STYLE_RED)
+			->addCSRF()
 			->addSID()
 		: (new CSpan(_('Ok')))->addClass(ZBX_STYLE_GREEN);
 

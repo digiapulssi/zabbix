@@ -26,6 +26,7 @@ class CControllerScriptDelete extends CController {
 			'scriptids' =>	'required|array_db scripts.scriptid'
 		];
 
+		$this->addCSRFValidationRole($fields);
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {

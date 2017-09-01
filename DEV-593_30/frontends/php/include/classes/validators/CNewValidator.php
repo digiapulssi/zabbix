@@ -56,7 +56,7 @@ class CNewValidator {
 		foreach ($this->rules as $field => $rule) {
 			$result = $this->validateField($field, $rule);
 
-			if (array_key_exists($field, $this->input)) {
+			if (array_key_exists($field, $this->input) && $field !== 'csrf_token') {
 				$this->output[$field] = $this->input[$field];
 			}
 		}
@@ -87,6 +87,16 @@ class CNewValidator {
 						$this->addError($fatal,
 							_s('Incorrect value for field "%1$s": %2$s.', $field, _('cannot be empty'))
 						);
+						return false;
+					}
+					break;
+
+				/*
+				 * 'csrf_token' => true
+				 */
+				case 'csrf_token':
+					if (!is_valid_csrf_token($this->input[$field])) {
+						$this->addError($fatal, _('Request contains invalid or already utilized CSRF token. Please refresh the page and try again.'));
 						return false;
 					}
 					break;

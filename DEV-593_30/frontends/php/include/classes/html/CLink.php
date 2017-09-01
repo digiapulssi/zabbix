@@ -22,6 +22,7 @@
 class CLink extends CTag {
 
 	private	$use_sid = false;
+	private $use_csrf_token = false;
 	private	$confirm_message = '';
 	private $url = null;
 
@@ -44,6 +45,17 @@ class CLink extends CTag {
 	}
 
 	/*
+	 * Add a "csrf_token" argument into the URL.
+	 *
+	 * Must be used for links by which user can make some changes (e.g. enable/disable).
+	 * It's useless to use it for navigation links.
+	 */
+	public function addCSRF() {
+		$this->use_csrf_token = true;
+		return $this;
+	}
+
+	/*
 	 * Add a confirmation message
 	 */
 	public function addConfirmation($value) {
@@ -58,6 +70,10 @@ class CLink extends CTag {
 
 	public function toString($destroy = true) {
 		$url = $this->url;
+
+		if ($this->use_csrf_token) {
+			$url .= '&csrf_token='.createCSRFToken();
+		}
 
 		if ($this->use_sid) {
 			if (array_key_exists('zbx_sessionid', $_COOKIE)) {

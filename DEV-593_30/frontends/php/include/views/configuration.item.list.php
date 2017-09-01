@@ -116,6 +116,7 @@ foreach ($this->data['items'] as $item) {
 			'&action='.($item['status'] == ITEM_STATUS_DISABLED ? 'item.massenable' : 'item.massdisable')))
 		->addClass(ZBX_STYLE_LINK_ACTION)
 		->addClass(itemIndicatorStyle($item['status'], $item['state']))
+		->addCSRF()
 		->addSID()
 	);
 

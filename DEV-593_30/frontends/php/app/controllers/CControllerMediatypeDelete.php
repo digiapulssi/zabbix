@@ -26,6 +26,7 @@ class CControllerMediatypeDelete extends CController {
 			'mediatypeids' =>	'required|array_db media_type.mediatypeid'
 		];
 
+		$this->addCSRFValidationRole($fields);
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {

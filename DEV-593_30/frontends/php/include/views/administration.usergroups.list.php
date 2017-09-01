@@ -49,10 +49,12 @@ foreach ($this->data['usergroups'] as $usrgrp) {
 		? (new CLink(_('Enabled'), 'usergrps.php?action=usergroup.massdisabledebug&usrgrpid='.$userGroupId))
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(ZBX_STYLE_ORANGE)
+			->addCSRF()
 			->addSID()
 		: (new CLink(_('Disabled'), 'usergrps.php?action=usergroup.massenabledebug&usrgrpid='.$userGroupId))
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(ZBX_STYLE_GREEN)
+			->addCSRF()
 			->addSID();
 
 	// gui access
@@ -75,16 +77,19 @@ foreach ($this->data['usergroups'] as $usrgrp) {
 			'usergrps.php?action=usergroup.set_gui_access&set_gui_access='.$nextGuiAuth.'&usrgrpid='.$userGroupId
 		))
 			->addClass($guiAccessStyle)
+			->addCSRF()
 			->addSID();
 
 		$usersStatus = ($usrgrp['users_status'] == GROUP_STATUS_ENABLED)
 			? (new CLink(_('Enabled'), 'usergrps.php?action=usergroup.massdisable&usrgrpid='.$userGroupId))
 				->addClass(ZBX_STYLE_LINK_ACTION)
 				->addClass(ZBX_STYLE_GREEN)
+				->addCSRF()
 				->addSID()
 			: (new CLink(_('Disabled'), 'usergrps.php?action=usergroup.massenable&usrgrpid='.$userGroupId))
 				->addClass(ZBX_STYLE_LINK_ACTION)
 				->addClass(ZBX_STYLE_RED)
+				->addCSRF()
 				->addSID();
 	}
 	else {

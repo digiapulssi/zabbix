@@ -26,6 +26,7 @@ class CControllerProxyDelete extends CController {
 			'proxyids' =>	'array_db hosts.hostid|required'
 		];
 
+		$this->addCSRFValidationRole($fields);
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {

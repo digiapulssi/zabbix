@@ -200,6 +200,7 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 			'&g_triggerid='.$triggerid))
 		->addClass(ZBX_STYLE_LINK_ACTION)
 		->addClass(triggerIndicatorStyle($trigger['status'], $trigger['state']))
+		->addCSRF()
 		->addSID();
 
 	// hosts

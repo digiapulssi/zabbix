@@ -148,6 +148,7 @@ foreach ($httpTests as $httpTestId => $httpTest) {
 		))
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(httptest_status2style($httpTest['status']))
+			->addCSRF()
 			->addSID(),
 		$infoIcon
 	]);
