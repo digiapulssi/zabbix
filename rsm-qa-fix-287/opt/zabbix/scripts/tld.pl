@@ -192,34 +192,30 @@ if (defined($OPTS{'set-type'})) {
 }
 
 #### Manage NS + IP server pairs ####
-if (defined($OPTS{'get-nsservers-list'})) {
-    my $nsservers;
+if (defined($OPTS{'get-nsservers-list'}))
+{
+	my @tlds = ($OPTS{'tld'} // get_tld_list());
 
-    if (defined($OPTS{'tld'})) {
-	$nsservers->{$OPTS{'tld'}} = get_nsservers_list($OPTS{'tld'});
-    }
-    else {
-	my @tlds = get_tld_list();
+	foreach my $tld (sort(@tlds))
+	{
+		my $nsservers = get_nsservers_list($tld);
+		my @ns_types = keys(%{$nsservers});
 
-	foreach my $tld (@tlds) {
-	    my $ns = get_nsservers_list($tld);
+		foreach my $type (sort(@ns_types))
+		{
+			my @ns_names = keys(%{$nsservers->{$type}});
 
-	    $nsservers->{$tld} = $ns;
-	}
-    }
-
-    foreach my $tld (sort keys %{$nsservers}) {
-	my $ns = $nsservers->{$tld};
-	foreach my $type (sort keys %{$ns}) {
-	    foreach my $ns_name (sort keys %{$ns->{$type}}) {
-		my @ip_list = @{$ns->{$type}->{$ns_name}};
-		foreach my $ip (@ip_list) {
-	    	    print $tld.",".$type.",".$ns_name.",".$ip."\n";
+			foreach my $ns_name (sort(@ns_names))
+			{
+				foreach my $ip (@{$nsservers->{$type}->{$ns_name}})
+				{
+					print($tld.",".$type.",".$ns_name.",".$ip."\n");
+				}
+			}
 		}
-	    }
 	}
-    }
-    exit;
+
+	exit;
 }
 
 if (defined($OPTS{'list-services'})) {
