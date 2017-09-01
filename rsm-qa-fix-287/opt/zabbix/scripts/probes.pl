@@ -648,49 +648,48 @@ EOF
 exit(1);
 }
 
-sub validate_input {
-    my $msg = "";
+sub validate_input
+{
+	my @possible_actions = ('disable', 'add', 'delete', 'rename');
+	my $actions_chosen = 0;
+	my $msg = "";
 
-    $msg = "Probe name must be specified (--probe)\n" unless (defined($OPTS{'probe'}));
+	$msg .= "Probe name must be specified (--probe)\n" unless (defined($OPTS{'probe'}));
+	$msg .= "Server id must be specified (--server-id)\n" unless (defined($OPTS{'server-id'}));
 
-    $msg .= "Server id must be specified (--server-id)\n" unless (defined($OPTS{'server-id'}));
+	foreach my $action (@possible_actions)
+	{
+		$actions_chosen++ if (defined($OPTS{$action}));
+	}
 
-    if ((defined($OPTS{'delete'}) and defined($OPTS{'disable'})) or
-	(defined($OPTS{'delete'}) and defined($OPTS{'add'})) or
-	(defined($OPTS{'delete'}) and defined($OPTS{'rename'})) or
-	(defined($OPTS{'disable'}) and defined($OPTS{'add'})) or
-	(defined($OPTS{'disable'}) and defined($OPTS{'rename'})) or
-	(defined($OPTS{'add'}) and defined($OPTS{'rename'}))) {
-	$msg .= "You need to choose only one option from --disable, --add, --delete, --rename\n";
-    }
+	if ($actions_chosen == 0)
+	{
+		$msg .= "At least one option --" . join(", --", @possible_actions) . " must be specified\n";
+	}
+	elsif ($actions_chosen > 1)
+	{
+		$msg .= "You need to choose only one option from --" . join(", --", @possible_actions) . "\n";
+	}
+	elsif (defined($OPTS{'add'}))
+	{
+		$msg .= "You need to specify Probe IP using --ip argument\n" unless (defined($OPTS{'ip'}));
+	}
+	elsif (defined($OPTS{'rename'}))
+	{
+		$msg .= "You need to specify new Probe node name using --new-name argument\n" unless (defined($OPTS{'new-name'}));
+	}
 
-    if (!defined($OPTS{'delete'}) and !defined($OPTS{'add'}) and !defined($OPTS{'disable'}) and !defined($OPTS{'rename'})) {
-	$msg .= "At least one option --disable, --add, --delete, --rename must be specified\n";
-    }
-    
-    if (defined($OPTS{'rename'}) and !defined($OPTS{'new-name'})) {
-	$msg .= "You need to specify new Probe node name using --new-name argument\n";
-    }
+	$OPTS{'psk-identity'} //= $OPTS{'probe'} if (defined($OPTS{'psk'}));
+	$OPTS{'resolver'} //= '127.0.0.1' if (defined($OPTS{'add'}));
 
-    if (defined($OPTS{'add'}) and !defined($OPTS{'ip'})) {
-        $msg .= "You need to specify Probe IP using --ip argument\n";
-    }
+	foreach my $option (('epp', 'rdds', 'ipv4', 'ipv6'))
+	{
+		$OPTS{$option} //= 0;
+	}
 
-    if (!defined($OPTS{'psk-identity'}) and defined($OPTS{'psk'})) {
-	$OPTS{'psk-identity'} = $OPTS{'probe'};
-    }
-
-    if (defined($OPTS{'add'}) and !defined($OPTS{'resolver'})) {
-        $OPTS{'resolver'} = '127.0.0.1';
-    }
-
-    $OPTS{'epp'} = 0 unless defined($OPTS{'epp'});
-    $OPTS{'ipv4'} = 0 unless defined($OPTS{'ipv4'});
-    $OPTS{'ipv6'} = 0 unless defined($OPTS{'ipv6'});
-    $OPTS{'rdds'} = 0 unless defined($OPTS{'rdds'});
-
-    if ($msg ne '') {
-        print($msg);
-        usage();
-    }
+	unless ($msg eq "")
+	{
+		print($msg);
+		usage();
+	}
 }
