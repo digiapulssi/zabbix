@@ -63,11 +63,7 @@ elsif ($OPTS{'add'})
 
 	if (defined($error))
 	{
-		if (zbx_need_relogin($result) eq true)
-		{
-			goto RELOGIN if (--$attempts);
-		}
-
+		goto RELOGIN if (zbx_need_relogin($result) == true && $attempts-- > 0);
 		pfail($error);
 	}
 
@@ -678,19 +674,19 @@ sub validate_input
 	elsif (defined($OPTS{'add'}))
 	{
 		$msg .= "You need to specify Probe IP using --ip argument\n" unless (defined($OPTS{'ip'}));
+
+		$OPTS{'port'} //= DEFAULT_PROBE_PORT;
+		$OPTS{'resolver'} //= '127.0.0.1';
+		$OPTS{'psk-identity'} //= $OPTS{'probe'} if (defined($OPTS{'psk'}));
+
+		foreach my $option (('epp', 'rdds', 'ipv4', 'ipv6'))
+		{
+			$OPTS{$option} //= 0;
+		}
 	}
 	elsif (defined($OPTS{'rename'}))
 	{
 		$msg .= "You need to specify new Probe node name using --new-name argument\n" unless (defined($OPTS{'new-name'}));
-	}
-
-	$OPTS{'psk-identity'} //= $OPTS{'probe'} if (defined($OPTS{'psk'}));
-	$OPTS{'resolver'} //= '127.0.0.1' if (defined($OPTS{'add'}));
-	$OPTS{'port'} //= DEFAULT_PROBE_PORT if (defined($OPTS{'add'}));
-
-	foreach my $option (('epp', 'rdds', 'ipv4', 'ipv6'))
-	{
-		$OPTS{$option} //= 0;
 	}
 
 	unless ($msg eq "")
