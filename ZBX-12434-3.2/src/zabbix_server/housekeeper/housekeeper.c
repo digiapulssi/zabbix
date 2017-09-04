@@ -640,8 +640,9 @@ static int	DBdelete_from_table(const char *tablename, const char *filter, int li
  *                                                                            *
  * Function: hk_events_cleanup                                                *
  *                                                                            *
- * Purpose: perform events table cleanup                                      *
+ * Purpose: perform events or problems table cleanup                          *
  *                                                                            *
+ * Parameters: table    - [IN] the table name                                 *
  * Parameters: source   - [IN] the event source                               *
  *             object   - [IN] the event object type                          *
  *             objectid - [IN] the event object identifier                    *
