@@ -725,10 +725,6 @@ static int	housekeeping_cleanup()
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	/* first handle the trivial case when history and trend housekeeping is disabled */
-	if (ZBX_HK_OPTION_DISABLED == cfg.hk.history_mode && ZBX_HK_OPTION_DISABLED == cfg.hk.trends_mode)
-		goto out;
-
 	zbx_vector_uint64_create(&housekeeperids);
 
 	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
@@ -803,7 +799,7 @@ static int	housekeeping_cleanup()
 	zbx_free(sql);
 
 	zbx_vector_uint64_destroy(&housekeeperids);
-out:
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%d", __function_name, deleted);
 
 	return deleted;
