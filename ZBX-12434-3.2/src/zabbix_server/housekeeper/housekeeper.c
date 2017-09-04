@@ -659,10 +659,10 @@ static int	hk_events_cleanup(int source, int object, zbx_uint64_t objectid, int 
 
 	ret = DBdelete_from_table("events", filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
-	if (0 != CONFIG_MAX_HOUSEKEEPER_DELETE && (ZBX_DB_OK > ret || ret == CONFIG_MAX_HOUSEKEEPER_DELETE))
+	if (ZBX_DB_OK > ret || (0 != CONFIG_MAX_HOUSEKEEPER_DELETE && ret >= CONFIG_MAX_HOUSEKEEPER_DELETE))
 		*more = 1;
 
-	return ret <= ZBX_DB_OK ? ret : 0;
+	return ZBX_DB_OK <= ret ? ret : 0;
 }
 
 /******************************************************************************
@@ -689,10 +689,10 @@ static int	hk_table_cleanup(const char *table, const char *field, zbx_uint64_t i
 
 	ret = DBdelete_from_table(table, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
-	if (0 != CONFIG_MAX_HOUSEKEEPER_DELETE && (ZBX_DB_OK > ret || ret == CONFIG_MAX_HOUSEKEEPER_DELETE))
+	if (ZBX_DB_OK > ret || (0 != CONFIG_MAX_HOUSEKEEPER_DELETE && ret >= CONFIG_MAX_HOUSEKEEPER_DELETE))
 		*more = 1;
 
-	return ret <= ZBX_DB_OK ? ret : 0;
+	return ZBX_DB_OK <= ret ? ret : 0;
 }
 
 /******************************************************************************
