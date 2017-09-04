@@ -34,23 +34,20 @@ class CHistoryManager {
 	 * @return array    an array with items IDs as keys and arrays of history objects as values
 	 */
 	public function getLastValues(array $items, $limit = 1, $period = null) {
-		$rs = [];
-		foreach ($items as $item) {
-			switch (self::getDataSourceType($item['value_type'])) {
-				case ZBX_HISTORY_SOURCE_ELASTIC:
-					$values = $this->getLastValuesFromElasticSearch($item, $limit, $period);
-					break;
+		$results = [];
+		$grouped_items = self::getItemsGroupedByStorage($items);
 
-				default:
-					$values = $this->getLastValuesFromSql($item, $limit, $period);
-			}
-
-			if ($values) {
-				$rs[$item['itemid']] = $values;
-			}
+		if (array_key_exists(ZBX_HISTORY_SOURCE_ELASTIC, $grouped_items)) {
+			$results += $this->getLastValuesFromElasticSearch($grouped_items[ZBX_HISTORY_SOURCE_ELASTIC], $limit,
+					$period
+			);
 		}
 
-		return $rs;
+		if (array_key_exists(ZBX_HISTORY_SOURCE_SQL, $grouped_items)) {
+			$results += $this->getLastValuesFromSql($grouped_items[ZBX_HISTORY_SOURCE_SQL], $limit, $period);
+		}
+
+		return $results;
 	}
 
 	/**
@@ -58,27 +55,38 @@ class CHistoryManager {
 	 *
 	 * @see CHistoryManager::getLastValues
 	 */
-	private function getLastValuesFromElasticSearch($item, $limit, $period) {
+	private function getLastValuesFromElasticSearch($items, $limit, $period) {
+		$terms = [];
+		$results = [];
+		$filter = [];
+
+		foreach ($items as $item) {
+			$terms[$item['value_type']][] = $item['itemid'];
+		}
+
 		$query = [
-			'query' => [
-				'bool' => [
-					'must' => [
-						[
-							'term' => [
-								'itemid' => $item['itemid']
+			'aggs' => [
+				'group_by_itemid' => [
+					'terms' => [
+						'field' => 'itemid'
+					],
+					'aggs' => [
+						'group_by_docs' => [
+							'top_hits' => [
+								'size' => $limit,
+								'sort' => [
+									'clock' => ZBX_SORT_DOWN
+								]
 							]
 						]
 					]
 				]
 			],
-			'sort' => [
-				'clock' => ZBX_SORT_DOWN,
-			],
-			'size' => $limit
+			'size' => 0
 		];
 
 		if ($period) {
-			$query['query']['bool']['must'][] = [
+			$filter[] = [
 				'range' => [
 					'clock' => [
 						'gt' => (time() - $period)
@@ -87,12 +95,35 @@ class CHistoryManager {
 			];
 		}
 
-		$endpoints = self::getElasticSearchEndpoints($item['value_type']);
-		if ($endpoints) {
-			return CElasticSearchHelper::query('POST', reset($endpoints), $query);
+		foreach (self::getElasticSearchEndpoints(array_keys($terms)) as $type => $endpoint) {
+			$query['query']['bool']['must'] = array_merge([[
+				'terms' => [
+					'itemid' => $terms[$type]
+				]
+			]], $filter);
+			// Assure that aggregations for all terms are returned.
+			$query['aggs']['group_by_itemid']['terms']['size'] = count($terms[$type]);
+			$data = CElasticSearchHelper::query('POST', $endpoint, $query);
+
+			foreach ($data['group_by_itemid']['buckets'] as $item) {
+				if (!is_array($item['group_by_docs']) || !array_key_exists('hits', $item['group_by_docs'])
+						|| !is_array($item['group_by_docs']['hits'])
+						|| !array_key_exists('hits', $item['group_by_docs']['hits'])
+						|| !is_array($item['group_by_docs']['hits']['hits'])) {
+					continue;
+				}
+
+				foreach ($item['group_by_docs']['hits']['hits'] as $row) {
+					if (!array_key_exists('_source', $row) || !is_array($row['_source'])) {
+						continue;
+					}
+
+					$results[$item['key']][] = $row['_source'];
+				}
+			}
 		}
 
-		return null;
+		return $results;
 	}
 
 	/**
@@ -100,15 +131,25 @@ class CHistoryManager {
 	 *
 	 * @see CHistoryManager::getLastValues
 	 */
-	private function getLastValuesFromSql($item, $limit, $period) {
-		return DBfetchArray(DBselect(
-			'SELECT *'.
-			' FROM '.self::getTableName($item['value_type']).' h'.
-			' WHERE h.itemid='.zbx_dbstr($item['itemid']).
-				($period ? ' AND h.clock>'.(time() - $period) : '').
-			' ORDER BY h.clock DESC',
-			$limit
-		));
+	private function getLastValuesFromSql($items, $limit, $period) {
+		$results = [];
+
+		foreach ($items as $item) {
+			$values = DBfetchArray(DBselect(
+				'SELECT *'.
+				' FROM '.self::getTableName($item['value_type']).' h'.
+				' WHERE h.itemid='.zbx_dbstr($item['itemid']).
+					($period ? ' AND h.clock>'.(time() - $period) : '').
+				' ORDER BY h.clock DESC',
+				$limit
+			));
+
+			if ($values) {
+				$results[$item['itemid']] = $values;
+			}
+		}
+
+		return $results;
 	}
 
 	/**
@@ -251,21 +292,17 @@ class CHistoryManager {
 			$delta = null;
 		}
 
-		$storage_items = [];
-		foreach ($items as $item) {
-			$source = self::getDataSourceType($item['value_type']);
-			$storage_items[$source][] = $item;
-		}
+		$grouped_items = self::getItemsGroupedByStorage($items);
 
 		$results = [];
-		if (array_key_exists(ZBX_HISTORY_SOURCE_ELASTIC, $storage_items)) {
-			$results += $this->getGraphAggregationFromElasticSearch($storage_items[ZBX_HISTORY_SOURCE_ELASTIC],
+		if (array_key_exists(ZBX_HISTORY_SOURCE_ELASTIC, $grouped_items)) {
+			$results += $this->getGraphAggregationFromElasticSearch($grouped_items[ZBX_HISTORY_SOURCE_ELASTIC],
 					$time_from, $time_to, $width, $size, $delta
 			);
 		}
 
-		if (array_key_exists(ZBX_HISTORY_SOURCE_SQL, $storage_items)) {
-			$results += $this->getGraphAggregationFromSql($storage_items[ZBX_HISTORY_SOURCE_SQL], $time_from, $time_to,
+		if (array_key_exists(ZBX_HISTORY_SOURCE_SQL, $grouped_items)) {
+			$results += $this->getGraphAggregationFromSql($grouped_items[ZBX_HISTORY_SOURCE_SQL], $time_from, $time_to,
 					$width, $size, $delta
 			);
 		}
@@ -980,5 +1017,23 @@ class CHistoryManager {
 		];
 
 		return $tables[$value_type];
+	}
+
+	/**
+	 * Returns the items grouped by the storage type.
+	 *
+	 * @param array $items     an array of items with the 'value_type' property
+	 *
+	 * @return array    an array with storage type as a keys and item arrays as a values
+	 */
+	private function getItemsGroupedByStorage(array $items) {
+		$grouped_items = [];
+
+		foreach ($items as $item) {
+			$source = self::getDataSourceType($item['value_type']);
+			$grouped_items[$source][] = $item;
+		}
+
+		return $grouped_items;
 	}
 }
