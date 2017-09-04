@@ -567,10 +567,10 @@ class CHostInterface extends CApiService {
 				$this->delete(zbx_objectValues($interfacesToDelete, 'interfaceid'));
 			}
 
-			return zbx_objectValues($host['interfaces'], 'interfaceid');
+			return ['interfaceids' => zbx_objectValues($host['interfaces'], 'interfaceid')];
 		}
 
-		return [];
+		return ['interfaceids' => []];
 	}
 
 	/**
