@@ -19,10 +19,10 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.4.0beta3');
-define('ZABBIX_API_VERSION',	'3.4.0');
+define('ZABBIX_VERSION',		'3.4.2rc1');
+define('ZABBIX_API_VERSION',	'3.4.2');
 define('ZABBIX_EXPORT_VERSION',	'3.4');
-define('ZABBIX_DB_VERSION',		3030186);
+define('ZABBIX_DB_VERSION',		3040000);
 
 define('ZABBIX_COPYRIGHT_FROM',	'2001');
 define('ZABBIX_COPYRIGHT_TO',	'2017');
@@ -157,6 +157,7 @@ define('P_NZERO',				0x0020);
 define('P_NO_TRIM',				0x0040);
 define('P_ALLOW_USER_MACRO',	0x0080);
 define('P_ALLOW_LLD_MACRO',		0x0100);
+define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
 
 //	misc parameters
 define('IMAGE_FORMAT_PNG',	'PNG');
@@ -582,18 +583,12 @@ define('SMTP_AUTHENTICATION_NORMAL',	1);
 define('EZ_TEXTING_LIMIT_USA',		0);
 define('EZ_TEXTING_LIMIT_CANADA',	1);
 
-define('ACTION_DEFAULT_SUBJ_TRIGGER', '{TRIGGER.STATUS}: {TRIGGER.NAME}');
 define('ACTION_DEFAULT_SUBJ_AUTOREG', 'Auto registration: {HOST.HOST}');
 define('ACTION_DEFAULT_SUBJ_DISCOVERY', 'Discovery: {DISCOVERY.DEVICE.STATUS} {DISCOVERY.DEVICE.IPADDRESS}');
 define('ACTION_DEFAULT_SUBJ_ACKNOWLEDGE', 'Acknowledged: {TRIGGER.NAME}');
+define('ACTION_DEFAULT_SUBJ_PROBLEM', 'Problem: {TRIGGER.NAME}');
+define('ACTION_DEFAULT_SUBJ_RECOVERY', 'Resolved: {TRIGGER.NAME}');
 
-define('ACTION_DEFAULT_MSG_TRIGGER', "Trigger: {TRIGGER.NAME}\nTrigger status: {TRIGGER.STATUS}\n".
-		"Trigger severity: {TRIGGER.SEVERITY}\nTrigger URL: {TRIGGER.URL}\n\nItem values:\n\n".
-		"1. {ITEM.NAME1} ({HOST.NAME1}:{ITEM.KEY1}): {ITEM.VALUE1}\n".
-		"2. {ITEM.NAME2} ({HOST.NAME2}:{ITEM.KEY2}): {ITEM.VALUE2}\n".
-		"3. {ITEM.NAME3} ({HOST.NAME3}:{ITEM.KEY3}): {ITEM.VALUE3}\n\n".
-		"Original event ID: {EVENT.ID}"
-);
 define('ACTION_DEFAULT_MSG_AUTOREG', "Host name: {HOST.HOST}\nHost IP: {HOST.IP}\nAgent port: {HOST.PORT}");
 define('ACTION_DEFAULT_MSG_DISCOVERY', "Discovery rule: {DISCOVERY.RULE.NAME}\n\nDevice IP:{DISCOVERY.DEVICE.IPADDRESS}\n".
 		"Device DNS: {DISCOVERY.DEVICE.DNS}\nDevice status: {DISCOVERY.DEVICE.STATUS}\n".
@@ -606,6 +601,11 @@ define('ACTION_DEFAULT_MSG_ACKNOWLEDGE',
 		"{ACK.MESSAGE}\n\n".
 		"Current problem status is {EVENT.STATUS}"
 );
+define('ACTION_DEFAULT_MSG_PROBLEM', "Problem started at {EVENT.TIME} on {EVENT.DATE}\nProblem name: {TRIGGER.NAME}\n".
+		"Host: {HOST.NAME}\nSeverity: {TRIGGER.SEVERITY}\n\nOriginal problem ID: {EVENT.ID}\n{TRIGGER.URL}");
+define('ACTION_DEFAULT_MSG_RECOVERY', "Problem has been resolved at {EVENT.RECOVERY.TIME} on {EVENT.RECOVERY.DATE}\n".
+		"Problem name: {TRIGGER.NAME}\nHost: {HOST.NAME}\nSeverity: {TRIGGER.SEVERITY}\n\n".
+		"Original problem ID: {EVENT.ID}\n{TRIGGER.URL}");
 
 define('ACTION_STATUS_ENABLED',		0);
 define('ACTION_STATUS_DISABLED',	1);
@@ -1092,6 +1092,7 @@ define('API_HTTP_POST',			16);
 define('API_VARIABLE_NAME',		17);
 define('API_OUTPUT',			18);
 define('API_TIME_UNIT',			19);
+define('API_URL',				20);
 
 // flags
 define('API_REQUIRED',			0x01);
