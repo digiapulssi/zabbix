@@ -76,6 +76,8 @@ typedef struct
 }
 zbx_hk_cleanup_table_t;
 
+static unsigned char poption_mode_enabled = ZBX_HK_OPTION_ENABLED;
+
 /* Housekeeper table mapping to housekeeping configuration values.    */
 /* This mapping is used to exclude disabled tables from housekeeping  */
 /* cleanup procedure.                                                 */
@@ -87,7 +89,7 @@ static zbx_hk_cleanup_table_t	hk_cleanup_tables[] = {
 	{"history_uint", &cfg.hk.history_mode},
 	{"trends", &cfg.hk.trends_mode},
 	{"trends_uint", &cfg.hk.trends_mode},
-	{"events", &cfg.hk.events_mode},
+	{"events", &poption_mode_enabled},
 	{NULL}
 };
 
@@ -649,7 +651,7 @@ static int	DBdelete_from_table(const char *tablename, const char *filter, int li
  * Return value: number of rows deleted                                       *
  *                                                                            *
  ******************************************************************************/
-static int	hk_events_cleanup(int source, int object, zbx_uint64_t objectid, int *more)
+static int	hk_events_cleanup(const char *table, int source, int object, zbx_uint64_t objectid, int *more)
 {
 	char	filter[MAX_STRING_LEN];
 	int	ret;
@@ -657,7 +659,7 @@ static int	hk_events_cleanup(int source, int object, zbx_uint64_t objectid, int 
 	zbx_snprintf(filter, sizeof(filter), "source=%d and object=%d and objectid=" ZBX_FS_UI64,
 			source, object, objectid);
 
-	ret = DBdelete_from_table("events", filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
+	ret = DBdelete_from_table(table, filter, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
 	if (ZBX_DB_OK > ret || (0 != CONFIG_MAX_HOUSEKEEPER_DELETE && ret >= CONFIG_MAX_HOUSEKEEPER_DELETE))
 		*more = 1;
@@ -724,8 +726,7 @@ static int	housekeeping_cleanup()
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	/* first handle the trivial case when history and trend housekeeping is disabled */
-	if (ZBX_HK_OPTION_DISABLED == cfg.hk.history_mode && ZBX_HK_OPTION_DISABLED == cfg.hk.trends_mode &&
-			ZBX_HK_OPTION_DISABLED == cfg.hk.events_mode)
+	if (ZBX_HK_OPTION_DISABLED == cfg.hk.history_mode && ZBX_HK_OPTION_DISABLED == cfg.hk.trends_mode)
 		goto out;
 
 	zbx_vector_uint64_create(&housekeeperids);
@@ -765,21 +766,24 @@ static int	housekeeping_cleanup()
 
 		if (0 == strcmp(row[1], "events"))
 		{
+			const char	*table_name = ZBX_HK_OPTION_ENABLED == cfg.hk.events_mode ? "events" : "problem";
+
 			if (0 == strcmp(row[2], "triggerid"))
 			{
-				deleted += hk_events_cleanup(EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, objectid,
-						&more);
-				deleted += hk_events_cleanup(EVENT_SOURCE_INTERNAL, EVENT_OBJECT_TRIGGER, objectid,
-						&more);
+				deleted += hk_events_cleanup(table_name, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER,
+						objectid, &more);
+				deleted += hk_events_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_TRIGGER,
+						objectid, &more);
 			}
 			else if (0 == strcmp(row[2], "itemid"))
 			{
-				deleted += hk_events_cleanup(EVENT_SOURCE_INTERNAL, EVENT_OBJECT_ITEM, objectid, &more);
+				deleted += hk_events_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_ITEM,
+						objectid, &more);
 			}
 			else if (0 == strcmp(row[2], "lldruleid"))
 			{
-				deleted += hk_events_cleanup(EVENT_SOURCE_INTERNAL, EVENT_OBJECT_LLDRULE, objectid,
-						&more);
+				deleted += hk_events_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_LLDRULE,
+						objectid, &more);
 			}
 		}
 		else
