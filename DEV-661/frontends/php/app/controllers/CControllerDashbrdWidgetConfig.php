@@ -18,7 +18,9 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-
+/**
+ * Controller to get dashboard widget configuration data.
+ */
 class CControllerDashbrdWidgetConfig extends CController {
 
 	protected function checkInput() {
@@ -29,12 +31,6 @@ class CControllerDashbrdWidgetConfig extends CController {
 		];
 
 		$ret = $this->validateInput($fields);
-
-		if ($ret) {
-			/*
-			 * @var string fields[<name>]  (optional)
-			 */
-		}
 
 		if (!$ret) {
 			$this->setResponse(new CControllerResponseData(['body' => CJs::encodeJson('')]));
