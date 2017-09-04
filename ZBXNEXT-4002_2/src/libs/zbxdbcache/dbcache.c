@@ -1450,7 +1450,7 @@ static void	DCmass_update_history(ZBX_DC_HISTORY *history, const DC_ITEM *items,
  * Author: Alexei Vladishev, Eugene Grigorjev, Alexander Vladishev            *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_update_items(ZBX_DC_HISTORY *history, DC_ITEM *items, int history_num)
+static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num, const DC_ITEM *items, const int *errcodes)
 {
 	const char		*__function_name = "DCmass_update_items";
 
@@ -1469,6 +1469,12 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, DC_ITEM *items, int his
 		ZBX_DC_HISTORY	*h;
 		int		j;
 
+		if (SUCCEED != errcodes[i])
+			continue;
+
+		if (ITEM_STATUS_ACTIVE != items[i].status && HOST_STATUS_MONITORED != items[i].host.status)
+			continue;
+
 		for (j = 0; j < history_num; j++)
 		{
 			if (items[i].itemid == history[j].itemid)
@@ -1482,9 +1488,6 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, DC_ITEM *items, int his
 		}
 
 		h = &history[j];
-
-		if (0 != (h->flags & ZBX_DC_FLAG_UNDEF))
-			continue;
 
 		DCadd_update_item_sql(&sql_offset, &items[i], h);
 		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
@@ -2055,7 +2058,7 @@ int	DCsync_history(int sync_type, int *total_num)
 
 			DBbegin();
 
-			DCmass_update_items(history, items, history_num);
+			DCmass_update_items(history, history_num, items, errcodes);
 
 			DCmass_update_triggers(history, history_num, &trigger_diff);
 			DCmass_update_trends(history, history_num);
