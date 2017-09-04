@@ -86,7 +86,7 @@ static int	DBpatch_3020001(void)
 	zbx_vector_uint64_sort(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	if (0 != eventids.values_num)
-		DBexecute_multiple_query("delete from events where", "eventid", &eventids);
+		DBexecute_multiple_query("delete from problem where", "eventid", &eventids);
 
 	zbx_vector_uint64_destroy(&eventids);
 
