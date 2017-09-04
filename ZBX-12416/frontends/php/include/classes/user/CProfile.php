@@ -252,7 +252,9 @@ class CProfile {
 			$i++;
 		}
 
-		self::delete($idx, $idx2);
+		if ($idx2) {
+			self::delete($idx, $idx2);
+		}
 	}
 
 	private static function insertDB($idx, $value, $type, $idx2) {
