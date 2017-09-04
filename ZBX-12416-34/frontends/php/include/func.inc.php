@@ -620,10 +620,12 @@ function convert_units($options = []) {
 
 	if (in_array($options['units'], $blackList) || (zbx_empty($options['units'])
 			&& ($options['convert'] == ITEM_CONVERT_WITH_UNITS))) {
-		if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD) {
-			$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
+		if (preg_match('/^\-?\d+\.\d+$/', $options['value'])) {
+			if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD) {
+				$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
+			}
+			$options['value'] = sprintf('%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f', $options['value']);
 		}
-		$options['value'] = sprintf('%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f', $options['value']);
 		$options['value'] = preg_replace('/^([\-0-9]+)(\.)([0-9]*)[0]+$/U', '$1$2$3', $options['value']);
 		$options['value'] = rtrim($options['value'], '.');
 
@@ -2528,7 +2530,6 @@ function calculateTime(array $options = []) {
 	}
 	else {
 		if ($options['period'] < ZBX_MIN_PERIOD) {
-			// TODO VM: (?) do we need error message here? Maybe just remove it.
 			error(_n('Minimum time period to display is %1$s minute.',
 				'Minimum time period to display is %1$s minutes.',
 				(int) ZBX_MIN_PERIOD / SEC_PER_MIN
@@ -2536,7 +2537,6 @@ function calculateTime(array $options = []) {
 			$options['period'] = ZBX_MIN_PERIOD;
 		}
 		elseif ($options['period'] > ZBX_MAX_PERIOD) {
-			// TODO VM: (?) do we need error message here? Maybe just remove it.
 			error(_n('Maximum time period to display is %1$s day.',
 				'Maximum time period to display is %1$s days.',
 				(int) ZBX_MAX_PERIOD / SEC_PER_DAY
