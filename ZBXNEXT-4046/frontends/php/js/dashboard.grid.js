@@ -137,8 +137,8 @@
 			width = data['options']['max-columns'];
 		}
 
-		if (height < data['options']['min-rows']) {
-			height = data['options']['min-rows'];
+		if (height < data['options']['widget-min-rows']) {
+			height = data['options']['widget-min-rows'];
 		}
 
 		return {'x': x, 'y': y, 'width': width, 'height': height};
@@ -363,7 +363,7 @@
 
 				doAction('onResizeEnd', $obj, data, widget);
 			},
-			minHeight: data['options']['min-rows'] * data['options']['widget-height']
+			minHeight: data['options']['widget-min-rows'] * data['options']['widget-height']
 		});
 	}
 
@@ -1003,7 +1003,7 @@
 			var default_options = {
 				'fullscreen': 0,
 				'widget-height': 70,
-				'min-rows': 2,
+				'widget-min-rows': 2,
 				'max-rows': 64,
 				'max-columns': 12,
 				'rows': 0,
