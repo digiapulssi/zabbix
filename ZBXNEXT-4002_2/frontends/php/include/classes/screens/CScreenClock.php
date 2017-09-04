@@ -53,7 +53,7 @@ class CScreenClock extends CScreenBase {
 					$title = $item['hosts'][0]['name'];
 					unset($items, $item['hosts']);
 
-					$last_value = Manager::History()->getLast([$item]);
+					$last_value = Manager::History()->getLastValues([$item]);
 
 					if ($last_value) {
 						$last_value = $last_value[$item['itemid']][0];
@@ -61,7 +61,7 @@ class CScreenClock extends CScreenBase {
 						try {
 							$now = new DateTime($last_value['value']);
 
-							$time_zone_string = 'GMT'.$now->format('P');
+							$time_zone_string = _s('GMT%1$s', $now->format('P'));
 							$time_zone_offset = $now->format('Z');
 
 							$time = time() - ($last_value['clock'] - $now->getTimestamp());
@@ -84,7 +84,7 @@ class CScreenClock extends CScreenBase {
 
 				$now = new DateTime();
 				$time = $now->getTimestamp();
-				$time_zone_string = 'GMT'.$now->format('P');
+				$time_zone_string = _s('GMT%1$s', $now->format('P'));
 				$time_zone_offset = $now->format('Z');
 				break;
 

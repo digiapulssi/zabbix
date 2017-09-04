@@ -467,68 +467,6 @@ function findDependentWithMissingMasterItem($items, $data_provider) {
 }
 
 /**
- * Validate merge of template dependent items and every host dependent items, host dependent item will be overwritten
- * by template dependent items.
- * Return false if intersection of host dependent items and template dependent items create dependent items
- * with dependency level greater than ZBX_DEPENDENT_ITEM_MAX_LEVELS.
- *
- * @param array $items
- * @param array $hostids
- *
- * @return bool
- */
-function validateDependentItemsIntersection($db_items, $hostids) {
-	$hosts_items = [];
-	$tmpl_items = [];
-
-	foreach ($db_items as $db_item) {
-		$master_key = ($db_item['type'] == ITEM_TYPE_DEPENDENT)
-			? $db_items[$db_item['master_itemid']]['key_']
-			: '';
-
-		if (in_array($db_item['hostid'], $hostids)) {
-			$hosts_items[$db_item['hostid']][$db_item['key_']] = $master_key;
-		}
-		elseif (!array_key_exists($db_item['key_'], $tmpl_items) || !$tmpl_items[$db_item['key_']]) {
-			$tmpl_items[$db_item['key_']] = $master_key;
-		}
-	}
-
-	foreach ($hosts_items as $hostid => $items) {
-		$linked_items = $items;
-
-		// Merge host items dependency tree with template items dependency tree
-		foreach ($tmpl_items as $tmpl_item_key => $tmpl_master_key) {
-			if (array_key_exists($tmpl_item_key, $linked_items)) {
-				$linked_items[$tmpl_item_key] = ($linked_items[$tmpl_item_key])
-					? $linked_items[$tmpl_item_key]
-					: $tmpl_master_key;
-			}
-			else {
-				$linked_items[$tmpl_item_key] = $tmpl_master_key;
-			}
-		}
-
-		// Check dependency level for every dependent item.
-		foreach ($linked_items as $linked_item => $linked_master_key) {
-			$master_key = $linked_master_key;
-			$dependency_level = 0;
-
-			while ($master_key) {
-				$master_key = $linked_items[$master_key];
-				++$dependency_level;
-			}
-
-			if ($dependency_level > ZBX_DEPENDENT_ITEM_MAX_LEVELS) {
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
-
-/**
  * Copies the given items to the given hosts or templates.
  *
  * @param array $src_itemids		Items which will be copied to $dst_hostids
@@ -979,7 +917,7 @@ function getItemsDataOverview(array $groupids, $application, $viewMode) {
 	]);
 
 	// fetch latest values
-	$history = Manager::History()->getLast(zbx_toHash($db_items, 'itemid'), 1, ZBX_HISTORY_PERIOD);
+	$history = Manager::History()->getLastValues(zbx_toHash($db_items, 'itemid'), 1, ZBX_HISTORY_PERIOD);
 
 	// fetch data for the host JS menu
 	$hosts = API::Host()->get([
@@ -1207,25 +1145,6 @@ function get_applications_by_itemid($itemids, $field = 'applicationid') {
 }
 
 /**
- * Clear item history and trends by provided item IDs.
- *
- * @param array $itemIds
- *
- * @return bool
- */
-function deleteHistoryByItemIds(array $itemIds) {
-	$result = DBexecute('DELETE FROM trends WHERE '.dbConditionInt('itemid', $itemIds));
-	$result = ($result && DBexecute('DELETE FROM trends_uint WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history_text WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history_log WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history_uint WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history_str WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history WHERE '.dbConditionInt('itemid', $itemIds)));
-
-	return $result;
-}
-
-/**
  * Format history value.
  * First format the value according to the configuration of the item. Then apply the value mapping to the formatted (!)
  * value.
@@ -1304,103 +1223,22 @@ function getItemFunctionalValue($item, $function, $parameter) {
 	}
 
 	// allowed item types for min, max and avg function
-	$historyTables = [ITEM_VALUE_TYPE_FLOAT => 'history', ITEM_VALUE_TYPE_UINT64 => 'history_uint'];
+	$history_tables = [ITEM_VALUE_TYPE_FLOAT => 'history', ITEM_VALUE_TYPE_UINT64 => 'history_uint'];
 
-	if (!isset($historyTables[$item['value_type']])) {
+	if (!array_key_exists($item['value_type'], $history_tables)) {
 		return UNRESOLVED_MACRO_STRING;
 	}
 	else {
-		// search for item function data in DB corresponding history table
-		$result = DBselect(
-			'SELECT '.$function.'(value) AS value'.
-			' FROM '.$historyTables[$item['value_type']].
-			' WHERE clock>'.(time() - $parameter).
-			' AND itemid='.zbx_dbstr($item['itemid']).
-			' HAVING COUNT(*)>0' // necessary because DBselect() return 0 if empty data set, for graph templates
-		);
-		if ($row = DBfetch($result)) {
-			return convert_units(['value' => $row['value'], 'units' => $item['units']]);
+		$result = Manager::History()->getAggregatedValue($item, $function, (time() - $parameter));
+
+		if ($result !== null) {
+			return convert_units(['value' => $result, 'units' => $item['units']]);
 		}
 		// no data in history
 		else {
 			return UNRESOLVED_MACRO_STRING;
 		}
 	}
-}
-
-/**
- * Returns the history value of the item at the given time. If no value exists at the given time, the function
- * will return the previous value.
- *
- * The $db_item parameter must have the value_type and itemid properties set.
- *
- * @param array $db_item
- * @param int $clock
- * @param int $ns
- *
- * @return string
- */
-function item_get_history($db_item, $clock, $ns) {
-	$value = null;
-
-	$table = CHistoryManager::getTableName($db_item['value_type']);
-
-	$sql = 'SELECT value'.
-			' FROM '.$table.
-			' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-				' AND clock='.zbx_dbstr($clock).
-				' AND ns='.zbx_dbstr($ns);
-
-	if ($row = DBfetch(DBselect($sql, 1))) {
-		$value = $row['value'];
-	}
-	if ($value !== null) {
-		return $value;
-	}
-
-	$max_clock = 0;
-
-	$sql = 'SELECT DISTINCT clock'.
-			' FROM '.$table.
-			' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-				' AND clock='.zbx_dbstr($clock).
-				' AND ns<'.zbx_dbstr($ns);
-	if (null != ($row = DBfetch(DBselect($sql)))) {
-		$max_clock = $row['clock'];
-	}
-	if ($max_clock == 0) {
-		$sql = 'SELECT MAX(clock) AS clock'.
-				' FROM '.$table.
-				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-					' AND clock<'.zbx_dbstr($clock);
-		if (null != ($row = DBfetch(DBselect($sql)))) {
-			$max_clock = $row['clock'];
-		}
-	}
-	if ($max_clock == 0) {
-		return $value;
-	}
-
-	if ($clock == $max_clock) {
-		$sql = 'SELECT value'.
-				' FROM '.$table.
-				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-					' AND clock='.zbx_dbstr($clock).
-					' AND ns<'.zbx_dbstr($ns);
-	}
-	else {
-		$sql = 'SELECT value'.
-				' FROM '.$table.
-				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-					' AND clock='.zbx_dbstr($max_clock).
-				' ORDER BY itemid,clock desc,ns desc';
-	}
-
-	if (null != ($row = DBfetch(DBselect($sql, 1)))) {
-		$value = $row['value'];
-	}
-
-	return $value;
 }
 
 /**
