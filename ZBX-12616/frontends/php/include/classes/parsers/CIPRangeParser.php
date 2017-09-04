@@ -120,8 +120,8 @@ class CIPRangeParser {
 		foreach (explode(',', $ranges) as $range) {
 			$range = trim($range, " \t\r\n");
 
-			if (!$this->isValidMask($range) && !$this->isValidRange($range) && !$this->isValidDns($range) &&
-					!$this->isValidUserMacrosSyntax($range)) {
+			if (!$this->isValidMask($range) && !$this->isValidRange($range) && !$this->isValidDns($range)
+					&& !$this->isValidUserMacro($range)) {
 				$this->error = _s('invalid address range "%1$s"', $range);
 				$this->max_ip_count = '0';
 				$this->max_ip_range = '';
@@ -366,7 +366,11 @@ class CIPRangeParser {
 	 *
 	 * @return bool
 	 */
-	protected function isValidUserMacrosSyntax($range) {
+	protected function isValidUserMacro($range) {
+		if (!$this->options['usermacros']) {
+			return false;
+		}
+
 		return ($this->user_macro_parser->parse($range) == CParser::PARSE_SUCCESS);
 	}
 }
