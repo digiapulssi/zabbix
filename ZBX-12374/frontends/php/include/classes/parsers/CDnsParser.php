@@ -36,25 +36,11 @@ class CDnsParser extends CParser {
 
 		$p = $pos;
 
-		// The first character must be an alphanumeric character.
-		if (!isset($source[$p]) || !self::isalnum($source[$p])) {
-			return self::PARSE_FAIL;
+		if (preg_match('/^[A-Za-z0-9][A-Za-z0-9_-]*(\.[A-Za-z0-9_-]+)*\.?/', substr($source, $p), $matches)) {
+			$p += strlen($matches[0]);
 		}
-		$p++;
-
-		$component = true;
-
-		// Validation logic should be consistent with C code in zbx_validate_hostname function.
-		for (; isset($source[$p]); $p++) {
-			if ($source[$p] === '-' || self::isalnum($source[$p]) || $source[$p] === '_') {
-				$component = true;
-			}
-			elseif ($source[$p] === '.' && $component) {
-				$component = false;
-			}
-			else {
-				break;
-			}
+		else {
+			return self::PARSE_FAIL;
 		}
 
 		$length = $p - $pos;
@@ -67,9 +53,5 @@ class CDnsParser extends CParser {
 		$this->match = substr($source, $pos, $this->length);
 
 		return (isset($source[$pos + $this->length]) ? self::PARSE_SUCCESS_CONT : self::PARSE_SUCCESS);
-	}
-
-	private static function isalnum($c) {
-		return ('a' <= $c && $c <= 'z') || ('A' <= $c && $c <= 'Z') || ('0' <= $c && $c <= '9');
 	}
 }

@@ -62,10 +62,31 @@ class CDnsParserTest extends PHPUnit_Framework_TestCase {
 				]
 			],
 			[
+				'_a', 0,
+				[
+					'rc' => CParser::PARSE_FAIL,
+					'match' => ''
+				]
+			],
+			[
 				'a', 0,
 				[
 					'rc' => CParser::PARSE_SUCCESS,
 					'match' => 'a'
+				]
+			],
+			[
+				'com.', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'com.'
+				]
+			],
+			[
+				'com..', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS_CONT,
+					'match' => 'com.'
 				]
 			],
 			[
@@ -83,10 +104,10 @@ class CDnsParserTest extends PHPUnit_Framework_TestCase {
 				]
 			],
 			[
-				'abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ-1234567890', 0,
+				'abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ-1234567890_', 0,
 				[
 					'rc' => CParser::PARSE_SUCCESS,
-					'match' => 'abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ-1234567890'
+					'match' => 'abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ-1234567890_'
 				]
 			],
 			[
