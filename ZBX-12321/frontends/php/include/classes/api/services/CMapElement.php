@@ -64,6 +64,14 @@ abstract class CMapElement extends CApiService {
 				$dbSelement = $selement;
 			}
 
+			if (!$delete && array_key_exists('urls', $selement)) {
+				foreach ($selement['urls'] as $url_data) {
+					if (!CHtmlUrlValidator::validate($url_data['url'])) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+					}
+				}
+			}
+
 			if (isset($selement['iconid_off']) && $selement['iconid_off'] == 0) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s('No icon for map element "%s".', $selement['label']));
 			}

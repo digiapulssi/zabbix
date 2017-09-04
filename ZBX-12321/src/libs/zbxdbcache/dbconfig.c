@@ -638,6 +638,7 @@ typedef struct
 #endif
 	zbx_binary_heap_t	queues[ZBX_POLLER_TYPE_COUNT];
 	zbx_binary_heap_t	pqueue;
+	zbx_vector_uint64_t	locked_lld_ruleids;	/* for keeping track of lld rules being processed */
 	ZBX_DC_CONFIG_TABLE	*config;
 }
 ZBX_DC_CONFIG;
@@ -5308,6 +5309,11 @@ void	init_configuration_cache(void)
 	CREATE_HASHSET_EXT(config->interface_snmpaddrs, 0, __config_interface_addr_hash, __config_interface_addr_compare);
 	CREATE_HASHSET_EXT(config->regexps, 0, __config_regexp_hash, __config_regexp_compare);
 
+	zbx_vector_uint64_create_ext(&config->locked_lld_ruleids,
+			__config_mem_malloc_func,
+			__config_mem_realloc_func,
+			__config_mem_free_func);
+
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	CREATE_HASHSET_EXT(config->psks, 0, __config_psk_hash, __config_psk_compare);
 #endif
@@ -6457,6 +6463,63 @@ void	DCconfig_unlock_all_triggers(void)
 
 	UNLOCK_CACHE;
 }
+
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DCconfig_lock_lld_rule                                           *
+ *                                                                            *
+ * Purpose: Lock lld rule to avoid parallel processing of a same lld rule     *
+ *          that was causing deadlocks.                                       *
+ *                                                                            *
+ * Parameters: lld_ruleid - [IN] discovery rule id                            *
+ *                                                                            *
+ * Return value: Returns FAIL if lock failed and SUCCEED on successful lock.  *
+ *                                                                            *
+ ******************************************************************************/
+int	DCconfig_lock_discovery_rule(zbx_uint64_t lld_ruleid)
+{
+	int	ret = FAIL;
+
+	LOCK_CACHE;
+
+	if (FAIL == zbx_vector_uint64_search(&config->locked_lld_ruleids, lld_ruleid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+	{
+		zbx_vector_uint64_append(&config->locked_lld_ruleids, lld_ruleid);
+		ret = SUCCEED;
+	}
+
+	UNLOCK_CACHE;
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DCconfig_unlock_discovery_rule                                   *
+ *                                                                            *
+ * Purpose: Unlock (make it available for processing) lld rule.               *
+ *                                                                            *
+ * Parameters: lld_ruleid - [IN] discovery rule id                            *
+ *                                                                            *
+ ******************************************************************************/
+void	DCconfig_unlock_discovery_rule(zbx_uint64_t lld_ruleid)
+{
+	int	i;
+
+	LOCK_CACHE;
+
+	if (FAIL != (i = zbx_vector_uint64_search(&config->locked_lld_ruleids, lld_ruleid,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+	{
+		zbx_vector_uint64_remove_noorder(&config->locked_lld_ruleids, i);
+	}
+	else
+		THIS_SHOULD_NEVER_HAPPEN;	/* attempt to unlock lld rule that is not locked */
+
+	UNLOCK_CACHE;
+}
+
 
 /******************************************************************************
  *                                                                            *
