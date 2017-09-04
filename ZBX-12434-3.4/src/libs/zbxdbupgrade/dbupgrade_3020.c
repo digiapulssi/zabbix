@@ -39,7 +39,7 @@ int	DBpatch_3020001(void)
 	DB_ROW			row;
 	zbx_uint64_t		eventid;
 	int			sources[] = {EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL};
-	int			objects[] = {EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE}, i, j;
+	int			objects[] = {EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE}, i;
 
 	zbx_vector_uint64_create(&eventids);
 
@@ -61,26 +61,26 @@ int	DBpatch_3020001(void)
 			zbx_vector_uint64_append(&eventids, eventid);
 		}
 		DBfree_result(result);
+	}
 
-		for (j = 0; j < (int)ARRSIZE(objects); j++)
+	for (i = 0; i < (int)ARRSIZE(objects); i++)
+	{
+		result = DBselect(
+				"select p.eventid"
+				" from problem p"
+				" where p.source=%d and p.object=%d and not exists ("
+					"select null"
+					" from items i"
+					" where i.itemid=p.objectid"
+				")",
+				EVENT_SOURCE_INTERNAL, objects[i]);
+
+		while (NULL != (row = DBfetch(result)))
 		{
-			result = DBselect(
-					"select p.eventid"
-					" from problem p"
-					" where p.source=%d and p.object=%d and not exists ("
-						"select null"
-						" from items i"
-						" where i.itemid=p.objectid"
-					")",
-					sources[i], objects[j]);
-
-			while (NULL != (row = DBfetch(result)))
-			{
-				ZBX_STR2UINT64(eventid, row[0]);
-				zbx_vector_uint64_append(&eventids, eventid);
-			}
-			DBfree_result(result);
+			ZBX_STR2UINT64(eventid, row[0]);
+			zbx_vector_uint64_append(&eventids, eventid);
 		}
+		DBfree_result(result);
 	}
 
 	zbx_vector_uint64_sort(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
