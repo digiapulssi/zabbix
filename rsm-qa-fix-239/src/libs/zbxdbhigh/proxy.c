@@ -28,13 +28,6 @@
 #include "discovery.h"
 #include "zbxalgo.h"
 #include "../zbxcrypto/tls_tcp_active.h"
-#include "mutexs.h"
-
-extern unsigned char	program_type;
-static ZBX_MUTEX	proxy_history_lock = ZBX_MUTEX_NULL;
-
-#define	LOCK_PROXY_HISTORY	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE)) zbx_mutex_lock(&proxy_history_lock)
-#define	UNLOCK_PROXY_HISTORY	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE)) zbx_mutex_unlock(&proxy_history_lock)
 
 extern unsigned int	configured_tls_accept_modes;
 
@@ -1774,8 +1767,6 @@ static int	proxy_get_history_data(struct zbx_json *j, zbx_uint64_t *lastid, zbx_
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	LOCK_PROXY_HISTORY;
-
 	if (NULL == string_buffer)
 		string_buffer = zbx_malloc(string_buffer, string_buffer_alloc);
 
@@ -1923,8 +1914,6 @@ try_again:
 	zbx_free(dc_items);
 
 	*records_processed = data_num;
-
-	UNLOCK_PROXY_HISTORY;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%d records_processed:%d lastid:" ZBX_FS_UI64,
 			__function_name, records, *records_processed, *lastid);
@@ -2835,20 +2824,4 @@ int	proxy_get_history_count(void)
 	DBfree_result(result);
 
 	return count;
-}
-
-void	init_proxy_history(void)
-{
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE) &&
-			FAIL == zbx_mutex_create_force(&proxy_history_lock, ZBX_MUTEX_PROXY_HISTORY))
-	{
-		zbx_error("Unable to create mutex for passive proxy history");
-		exit(EXIT_FAILURE);
-	}
-}
-
-void	free_proxy_history(void)
-{
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE))
-		zbx_mutex_destroy(&proxy_history_lock);
 }
