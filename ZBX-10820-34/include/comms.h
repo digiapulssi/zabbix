@@ -149,11 +149,8 @@ void	zbx_tcp_unaccept(zbx_socket_t *s);
 ssize_t		zbx_tcp_recv_ext(zbx_socket_t *s, unsigned char flags, int timeout);
 const char	*zbx_tcp_recv_line(zbx_socket_t *s);
 
-#define ZBX_TCP_REJECT_IF_EMPTY	0
-#define ZBX_TCP_PERMIT_IF_EMPTY	1
-
 int	zbx_validate_peer_list(const char *peer_list, char **error);
-int	zbx_tcp_check_security(zbx_socket_t *s, const char *peer_list, int action_if_empty);
+int	zbx_tcp_check_allowed_peers(zbx_socket_t *s, const char *peer_list);
 
 int	zbx_udp_connect(zbx_socket_t *s, const char *source_ip, const char *ip, unsigned short port, int timeout);
 int	zbx_udp_send(zbx_socket_t *s, const char *data, size_t data_len, int timeout);

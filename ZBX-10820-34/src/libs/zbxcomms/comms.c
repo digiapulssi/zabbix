@@ -1882,17 +1882,14 @@ int	zbx_validate_peer_list(const char *peer_list, char **error)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_tcp_check_security                                           *
+ * Function: zbx_tcp_check_allowed_peers                                      *
  *                                                                            *
  * Purpose: check if connection initiator is in list of peers                 *
  *                                                                            *
- * Parameters: s               - [IN] socket descriptor                       *
- *             peer_list       - [IN] comma-delimited list of allowed peers   *
- *                                    (NULL not allowed, may be empty string) *
- *             action_if_empty - [IN] action if there are no peers given,     *
- *                                 possible values are:                       *
- *                                   - ZBX_TCP_REJECT_IF_EMPTY - deny         *
- *                                   - ZBX_TCP_PERMIT_IF_EMPTY - allow        *
+ * Parameters: s         - [IN] socket descriptor                             *
+ *             peer_list - [IN] comma-delimited list of allowed peers.        *
+ *                              NULL not allowed. Empty string results in     *
+ *                              return value FAIL.                            *
  *                                                                            *
  * Return value: SUCCEED - connection allowed                                 *
  *               FAIL - connection is not allowed                             *
@@ -1903,24 +1900,9 @@ int	zbx_validate_peer_list(const char *peer_list, char **error)
  *           the same: 127.0.0.1 == ::127.0.0.1 == ::ffff:127.0.0.1           *
  *                                                                            *
  ******************************************************************************/
-int	zbx_tcp_check_security(zbx_socket_t *s, const char *peer_list, int action_if_empty)
+int	zbx_tcp_check_allowed_peers(zbx_socket_t *s, const char *peer_list)
 {
 	char	*start = NULL, *end = NULL, *cidr_sep, tmp[MAX_STRING_LEN];
-
-	if ('\0' == *peer_list)
-	{
-		switch (action_if_empty)
-		{
-			case ZBX_TCP_REJECT_IF_EMPTY:
-				zbx_set_socket_strerror("connection from \"%s\" rejected, list of allowed hosts empty",
-						s->peer);
-				return FAIL;
-			case ZBX_TCP_PERMIT_IF_EMPTY:
-				return SUCCEED;
-			default:
-				THIS_SHOULD_NEVER_HAPPEN;
-		}
-	}
 
 	/* examine list of allowed peers which may include DNS names, IPv4/6 addresses and addresses in CIDR notation */
 
@@ -1930,17 +1912,16 @@ int	zbx_tcp_check_security(zbx_socket_t *s, const char *peer_list, int action_if
 	{
 #ifdef HAVE_IPV6
 #ifdef HAVE_SOCKADDR_STORAGE_SS_FAMILY
-		unsigned int	prefix_size = (s->peer_info.ss_family == AF_INET ?
-						IPV4_MAX_CIDR_PREFIX : IPV6_MAX_CIDR_PREFIX);
+		int	ai_family = s->peer_info.ss_family;
 #else
-		unsigned int	prefix_size = (s->peer_info.__ss_family == AF_INET ?
-						IPV4_MAX_CIDR_PREFIX : IPV6_MAX_CIDR_PREFIX);
+		int	ai_family = s->peer_info.__ss_family;
 #endif
+		unsigned int	prefix_size = (ai_family == AF_INET ? IPV4_MAX_CIDR_PREFIX : IPV6_MAX_CIDR_PREFIX);
 		struct addrinfo	hints, *ai = NULL, *current_ai;
 #else
 		unsigned int	prefix_size = IPV4_MAX_CIDR_PREFIX;
 		struct hostent	*hp;
-#endif
+#endif /* HAVE_IPV6 */
 
 		if (NULL != (end = strchr(start, ',')))
 			*end = '\0';
@@ -1960,7 +1941,7 @@ int	zbx_tcp_check_security(zbx_socket_t *s, const char *peer_list, int action_if
 
 #ifdef HAVE_IPV6
 		memset(&hints, 0, sizeof(hints));
-		hints.ai_family = s->peer_info.ss_family;
+		hints.ai_family = ai_family;
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_protocol = IPPROTO_TCP;
 
