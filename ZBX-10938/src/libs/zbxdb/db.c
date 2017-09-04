@@ -470,10 +470,14 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 				(text *)connect, (ub4)strlen(connect),
 				OCI_DEFAULT);
 
-		if (OCI_SUCCESS == err)
+		switch (err)
 		{
-			err = OCIAttrGet((void *)oracle.svchp, OCI_HTYPE_SVCCTX, (void *)&oracle.srvhp, (ub4 *)0,
-					OCI_ATTR_SERVER, oracle.errhp);
+			case OCI_SUCCESS_WITH_INFO:
+				zabbix_log(LOG_LEVEL_WARNING, "%s", zbx_oci_error(err, NULL));
+				/* break; is not missing here */
+			case OCI_SUCCESS:
+				err = OCIAttrGet((void *)oracle.svchp, OCI_HTYPE_SVCCTX, (void *)&oracle.srvhp,
+						(ub4 *)0, OCI_ATTR_SERVER, oracle.errhp);
 		}
 
 		if (OCI_SUCCESS != err)
@@ -1516,15 +1520,13 @@ error:
 	}
 	else
 	{
-		if (0 != mysql_query(conn, sql))
+		if (0 != mysql_query(conn, sql) || NULL == (result->result = mysql_store_result(conn)))
 		{
 			zabbix_errlog(ERR_Z3005, mysql_errno(conn), mysql_error(conn), sql);
 
 			DBfree_result(result);
 			result = (SUCCEED == is_recoverable_mysql_error() ? (DB_RESULT)ZBX_DB_DOWN : NULL);
 		}
-		else
-			result->result = mysql_store_result(conn);
 	}
 #elif defined(HAVE_ORACLE)
 	result = zbx_malloc(NULL, sizeof(struct zbx_db_result));

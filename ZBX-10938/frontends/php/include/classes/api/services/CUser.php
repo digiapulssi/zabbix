@@ -266,6 +266,10 @@ class CUser extends CApiService {
 				$dbUser = $dbUsers[$user['userid']];
 			}
 
+			if (array_key_exists('url', $user) && $user['url'] && !CHtmlUrlValidator::validate($user['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
+
 			// check if user alias
 			if (isset($user['alias'])) {
 				// check if we change guest user
@@ -993,8 +997,10 @@ class CUser extends CApiService {
 			}
 		}
 
-		if (!function_exists('ldap_connect')) {
-			self::exception(ZBX_API_ERROR_PARAMETERS, _('Probably php-ldap module is missing.'));
+		$ldap_status = (new CFrontendSetup())->checkPhpLdapModule();
+
+		if ($ldap_status['result'] != CFrontendSetup::CHECK_OK) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, $ldap_status['error']);
 		}
 
 		$ldapValidator = new CLdapAuthValidator(['conf' => $cnf]);

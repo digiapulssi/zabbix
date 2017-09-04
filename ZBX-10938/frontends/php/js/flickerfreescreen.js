@@ -96,7 +96,10 @@ jQuery(function($) {
 
 			// timeline params
 			if (jQuery.inArray(screen.resourcetype, [21, 22, 23]) === -1) {
-				ajaxUrl.setArgument('period', empty(screen.timeline.period) ? null : screen.timeline.period);
+				if (!empty(timeControl.timeline)) {
+					timeControl.timeline.refreshEndtime();
+				}
+				ajaxUrl.setArgument('period', empty(screen.timeline.period) ? null : this.getCalculatedPeriod(screen));
 				ajaxUrl.setArgument('stime', this.getCalculatedSTime(screen));
 			}
 
@@ -108,7 +111,10 @@ jQuery(function($) {
 							var obj = $(this),
 								url = new Curl(obj.attr('href'));
 
-							url.setArgument('period', empty(screen.timeline.period) ? null : screen.timeline.period);
+							url.setArgument('period', empty(screen.timeline.period)
+								? null
+								: window.flickerfreeScreen.getCalculatedPeriod(screen)
+							);
 							url.setArgument('stime', window.flickerfreeScreen.getCalculatedSTime(screen));
 							obj.attr('href', url.getUrl());
 						});
@@ -238,16 +244,28 @@ jQuery(function($) {
 					data: {},
 					dataType: 'html',
 					success: function(html) {
-						// get timestamp from html
-						var htmlTimestamp = null;
+						// Get timestamp and error message from HTML.
+						var htmlTimestamp = null,
+							msg_bad = null;
 
 						$(html).each(function() {
 							var obj = $(this);
 
-							if (obj.prop('nodeName') == 'DIV') {
+							if (obj.hasClass('msg-bad')) {
+								msg_bad = obj;
+							}
+							else if (obj.prop('nodeName') === 'DIV') {
 								htmlTimestamp = obj.data('timestamp');
 							}
 						});
+
+						$('.msg-bad').remove();
+
+						// set message
+						if (msg_bad) {
+							$(msg_bad).insertBefore('.article > :first-child');
+							html = $(html).not('.msg-bad');
+						}
 
 						// set html
 						if ($('#flickerfreescreen_' + id).data('timestamp') < htmlTimestamp) {
@@ -259,6 +277,9 @@ jQuery(function($) {
 							window.flickerfreeScreenShadow.isShadowed(id, false);
 							window.flickerfreeScreenShadow.fadeSpeed(id, 0);
 							window.flickerfreeScreenShadow.validate(id);
+						}
+						else if (!html.length) {
+							$('#flickerfreescreen_' + id).remove();
 						}
 					},
 					error: function() {
@@ -295,7 +316,10 @@ jQuery(function($) {
 					url.setArgument('screenid', empty(screen.screenid) ? null : screen.screenid);
 					url.setArgument('updateProfile', (typeof screen.updateProfile === 'undefined')
 						? null : + screen.updateProfile);
-					url.setArgument('period', empty(screen.timeline.period) ? null : screen.timeline.period);
+					url.setArgument('period', empty(screen.timeline.period)
+						? null
+						: window.flickerfreeScreen.getCalculatedPeriod(screen)
+					);
 					url.setArgument('stime', window.flickerfreeScreen.getCalculatedSTime(screen));
 					url.setArgument('curtime', new CDate().getTime());
 
@@ -419,8 +443,8 @@ jQuery(function($) {
 		},
 
 		getCalculatedSTime: function(screen) {
-			if (!empty(timeControl.timeline) && screen.timeline.period > timeControl.timeline.maxperiod) {
-				return new CDate(timeControl.timeline.starttime() * 1000).getZBXDate();
+			if (timeControl.timeline && timeControl.timeline.is_selectall_period) {
+				return timeControl.timeline.usertime();
 			}
 
 			return (screen.timeline.isNow || screen.timeline.isNow == 1)
@@ -429,13 +453,24 @@ jQuery(function($) {
 				: screen.timeline.stime;
 		},
 
+		/**
+		 * Return period in seconds for requesting data. Automatically calculates period when 'All' period is selected.
+		 *
+		 * @property {Object} screen screen object
+		 *
+		 * @return {int}
+		 */
+		getCalculatedPeriod: function (screen) {
+			return !empty(timeControl.timeline) ? timeControl.timeline.period() : screen.timeline.period;
+		},
+
 		submitForm: function(formName) {
 			var period = '',
 				stime = '';
 
 			for (var id in this.screens) {
 				if (!empty(this.screens[id])) {
-					period = this.screens[id].timeline.period;
+					period = this.getCalculatedPeriod(this.screens[id]);
 					stime = this.getCalculatedSTime(this.screens[id]);
 					break;
 				}

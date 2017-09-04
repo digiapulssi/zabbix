@@ -19,8 +19,8 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.0.9');
-define('ZABBIX_API_VERSION',	'3.0.9');
+define('ZABBIX_VERSION',		'3.0.11rc1');
+define('ZABBIX_API_VERSION',	'3.0.11');
 define('ZABBIX_EXPORT_VERSION',	'3.0');
 define('ZABBIX_DB_VERSION',		3000000);
 
@@ -143,6 +143,7 @@ define('P_UNSET_EMPTY',		2);
 define('P_ACT',				16);
 define('P_NZERO',			32);
 define('P_NO_TRIM',			64);
+define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
 
 //	misc parameters
 define('IMAGE_FORMAT_PNG',	'PNG');

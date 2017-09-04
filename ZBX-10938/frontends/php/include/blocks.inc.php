@@ -509,10 +509,9 @@ function make_status_of_zbx() {
 	// check requirements
 	if (CWebUser::$data['type'] == USER_TYPE_SUPER_ADMIN) {
 		foreach ((new CFrontendSetup())->checkRequirements() as $req) {
-			if ($req['result'] != CFrontendSetup::CHECK_OK) {
-				$class = ($req['result'] == CFrontendSetup::CHECK_WARNING) ? ZBX_STYLE_ORANGE : ZBX_STYLE_RED;
+			if ($req['result'] == CFrontendSetup::CHECK_FATAL) {
 				$table->addRow(
-					(new CRow([$req['name'], $req['current'], $req['error']]))->addClass($class)
+					(new CRow([$req['name'], $req['current'], $req['error']]))->addClass(ZBX_STYLE_RED)
 				);
 			}
 		}
@@ -724,7 +723,9 @@ function make_latest_issues(array $filter = [], $backurl) {
 		if ($config['event_ack_enable']) {
 			if ($trigger['lastEvent']) {
 				$trigger['lastEvent']['acknowledges'] =
-					$event_acknowledges[$trigger['lastEvent']['eventid']]['acknowledges'];
+					array_key_exists($trigger['lastEvent']['eventid'], $event_acknowledges)
+						? $event_acknowledges[$trigger['lastEvent']['eventid']]['acknowledges']
+						: [];
 
 				$ack = getEventAckState($trigger['lastEvent'], $backurl);
 			}
