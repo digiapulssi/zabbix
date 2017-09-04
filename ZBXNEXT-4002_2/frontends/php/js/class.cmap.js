@@ -945,7 +945,8 @@ ZABBIX.apps.map = (function($) {
 			dragGroupInit: function(draggable) {
 				var buffer,
 					draggable_node = $(draggable.domNode),
-					dimensions = draggable.getDimensions();
+					draggable_left = parseInt(draggable.data.x, 10),
+					draggable_top = parseInt(draggable.data.y, 10);
 
 				if (draggable.selected) {
 					buffer = draggable.sysmap.getSelectionBuffer(draggable.sysmap);
@@ -958,21 +959,21 @@ ZABBIX.apps.map = (function($) {
 							type: draggable_node.attr('data-type'),
 							id: draggable.id
 						}],
-						left: dimensions.x,
-						right: dimensions.x + draggable_node.width(),
-						top: dimensions.y,
-						bottom: dimensions.y + draggable_node.height()
+						left: parseInt(draggable.data.x, 10),
+						right: parseInt(draggable.data.x, 10) + draggable_node.width(),
+						top: parseInt(draggable.data.y, 10),
+						bottom: parseInt(draggable.data.y, 10) + draggable_node.height()
 					};
 				}
 
 				buffer.xaxis = {
-					min: dimensions.x - buffer.left,
-					max: (draggable.sysmap.container).width() - (buffer.right - dimensions.x)
+					min: draggable.data.x - buffer.left,
+					max: (draggable.sysmap.container).width() - (buffer.right - draggable_left)
 				};
 
 				buffer.yaxis = {
-					min: dimensions.y - buffer.top,
-					max: (draggable.sysmap.container).height() - (buffer.bottom - dimensions.y)
+					min: draggable.data.y - buffer.top,
+					max: (draggable.sysmap.container).height() - (buffer.bottom - draggable_top)
 				};
 
 				draggable.sysmap.draggable_buffer = buffer;
@@ -986,30 +987,31 @@ ZABBIX.apps.map = (function($) {
 			 */
 			dragGroupDrag: function(data, draggable) {
 				var cmap = draggable.sysmap,
-					dimensions = draggable.getDimensions(),
-					delta_x = data.position.left - dimensions.x,
-					delta_y = data.position.top - dimensions.y;
+					draggable_left = parseInt(draggable.data.x, 10),
+					draggable_top = parseInt(draggable.data.y, 10),
+					delta_x = data.position.left - parseInt(draggable.data.x, 10),
+					delta_y = data.position.top - parseInt(draggable.data.y, 10);
 
 				if (data.position.left < cmap.draggable_buffer.xaxis.min) {
-					delta_x = dimensions.x < cmap.draggable_buffer.xaxis.min
+					delta_x = draggable_left < cmap.draggable_buffer.xaxis.min
 						? 0
-						: cmap.draggable_buffer.xaxis.min - dimensions.x;
+						: cmap.draggable_buffer.xaxis.min - draggable_left;
 				}
 				else if (data.position.left > cmap.draggable_buffer.xaxis.max) {
-					delta_x = dimensions.x > cmap.draggable_buffer.xaxis.max
+					delta_x = draggable_left > cmap.draggable_buffer.xaxis.max
 						? 0
-						: cmap.draggable_buffer.xaxis.max - dimensions.x;
+						: cmap.draggable_buffer.xaxis.max - draggable_left;
 				}
 
 				if (data.position.top < cmap.draggable_buffer.yaxis.min) {
-					delta_y = dimensions.y < cmap.draggable_buffer.yaxis.min
+					delta_y = draggable_top < cmap.draggable_buffer.yaxis.min
 						? 0
-						: cmap.draggable_buffer.yaxis.min - dimensions.y;
+						: cmap.draggable_buffer.yaxis.min - draggable_top;
 				}
 				else if (data.position.top > cmap.draggable_buffer.yaxis.max) {
-					delta_y = dimensions.y > cmap.draggable_buffer.yaxis.max
+					delta_y = draggable_top > cmap.draggable_buffer.yaxis.max
 						? 0
-						: cmap.draggable_buffer.yaxis.max - dimensions.y;
+						: cmap.draggable_buffer.yaxis.max - draggable_top;
 				}
 
 				if (delta_x != 0 || delta_y != 0) {

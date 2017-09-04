@@ -265,7 +265,6 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			'output' => ['hostid'],
 			'hostids' => $hostIds,
 			'selectInventory' => ['inventory_mode'],
-			'selectGroups' => ['groupid'],
 			'filter' => ['flags' => [ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED]]
 		]);
 
@@ -375,7 +374,7 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 				$newValues['templates_clear'] = zbx_toObject($templatesToDelete, 'templateid');
 			}
 
-			$newValues['templates'] = $templateids;
+			$hosts['templates'] = $templateids;
 		}
 
 		$host_inventory = array_intersect_key(getRequest('host_inventory', []), $visible);
@@ -399,20 +398,6 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			else {
 				$host['inventory'] = [];
 			}
-
-			if ($newHostGroupIds && !array_key_exists('groups', $visible)) {
-				$add_groups = [];
-
-				foreach ($newHostGroupIds as $groupid) {
-					$add_groups[] = ['groupid' => $groupid];
-				}
-
-				$host['groups'] = array_merge($host['groups'], $add_groups);
-			}
-			else {
-				unset($host['groups']);
-			}
-
 			$host = array_merge($host, $newValues);
 		}
 		unset($host);
@@ -421,6 +406,27 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 
 		if ($result === false) {
 			throw new Exception();
+		}
+
+		$add = [];
+		if ($templateids && isset($visible['templates'])) {
+			$add['templates'] = $templateids;
+		}
+
+		// add new host groups
+		if ($newHostGroupIds && (!isset($visible['groups']) || !isset($replaceHostGroups))) {
+			$add['groups'] = zbx_toObject($newHostGroupIds, 'groupid');
+		}
+
+		if ($add) {
+			$hostsids = zbx_objectValues($hosts, 'hostid');
+			$add['hosts'] = zbx_toObject($hostsids, 'hostid');
+
+			$result = API::Host()->massAdd($add);
+
+			if ($result === false) {
+				throw new Exception();
+			}
 		}
 
 		DBend(true);

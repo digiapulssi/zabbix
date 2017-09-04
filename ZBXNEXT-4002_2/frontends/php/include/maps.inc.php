@@ -1225,12 +1225,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 		$subSysmaps = zbx_toHash($subSysmaps, 'sysmapid');
 
 		foreach ($elems['sysmaps'] as $elem) {
-			if (array_key_exists($elem['elements'][0]['sysmapid'], $subSysmaps)) {
-				$info[$elem['selementid']]['name'] = $subSysmaps[$elem['elements'][0]['sysmapid']]['name'];
-			}
-			else {
-				$info[$elem['selementid']]['name'] = '';
-			}
+			$info[$elem['selementid']]['name'] = $subSysmaps[$elem['elements'][0]['sysmapid']]['name'];
 		}
 	}
 	if ($elems['hostgroups'] && $hglabel) {
@@ -1262,12 +1257,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 	}
 	if ($elems['hosts'] && $hlabel) {
 		foreach ($elems['hosts'] as $elem) {
-			if (array_key_exists($elem['elements'][0]['hostid'], $allHosts)) {
-				$info[$elem['selementid']]['name'] = $allHosts[$elem['elements'][0]['hostid']]['name'];
-			}
-			else {
-				$info[$elem['selementid']]['name'] = '';
-			}
+			$info[$elem['selementid']]['name'] = $allHosts[$elem['elements'][0]['hostid']]['name'];
 		}
 	}
 

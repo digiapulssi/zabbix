@@ -18,9 +18,9 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-
 /**
- * Controller to delete dashboards.
+ * controller to delete dashboards
+ *
  */
 class CControllerDashboardDelete extends CController {
 

@@ -36,7 +36,7 @@ $form_list->addRow(_('Type'),
 $form_list->addRow(_('Name'),
 	(new CTextBox('name', $data['dialogue']['name']))
 		->setAttribute('placeholder', _('default'))
-		->setAttribute('autofocus', 'autofocus')
+		->setAttribute('class', 'auto-focus')
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 );
 
@@ -52,7 +52,7 @@ foreach ($data['dialogue']['fields'] as $field) {
 			new CComboBox($field->getName(), $field->getValue(), $field->getAction(), $field->getValues())
 		);
 	}
-	elseif ($field instanceof CWidgetFieldTextBox || $field instanceof CWidgetFieldUrl) {
+	elseif ($field instanceof CWidgetFieldTextBox) {
 		$form_list->addRow($field->getLabel(),
 			(new CTextBox($field->getName(), $field->getValue()))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 		);
@@ -105,7 +105,7 @@ foreach ($data['dialogue']['fields'] as $field) {
 
 		if (!$field->getValue()) {
 			$javascript = $field->getJavascript('#'.$form->getAttribute('id'));
-			$form->addItem(new CJsScript(get_js($javascript, true)));
+			$form->addItem(new CJsScript(get_js($javascript, true))); // TODO VM: rewrite to use js_scripts
 		}
 	}
 	elseif ($field instanceof CWidgetFieldHidden) {
@@ -132,7 +132,7 @@ foreach ($data['dialogue']['fields'] as $field) {
 				->setAttribute('style', 'width: '.ZBX_TEXTAREA_STANDARD_WIDTH.'px')
 		);
 
-		$form->addItem(new CJsScript(get_js($field->getJavascript(), true)));
+		$form->addItem(new CJsScript(get_js($field->getJavascript(), true))); // TODO VM: rewrite to use js_scripts
 	}
 	elseif ($field instanceof CWidgetFieldNumericBox) {
 		$form_list->addRow($field->getLabel(),
@@ -222,7 +222,7 @@ foreach ($data['dialogue']['fields'] as $field) {
 
 $form->addItem($form_list);
 
-// Submit button is needed to enable submit event on Enter on inputs.
+// Submit button is needed to enable submit event on Enter on inputs
 $form->addItem((new CInput('submit', 'dashboard_widget_config_submit'))->addStyle('display: none;'));
 
 $output = [

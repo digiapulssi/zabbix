@@ -20,7 +20,7 @@
 
 
 /**
- * Abstract class to keep common dashboard controller logic.
+ * abstract class to keep common dashboard controller logic
  */
 abstract class CControllerDashboardAbstract extends CController {
 
@@ -29,7 +29,8 @@ abstract class CControllerDashboardAbstract extends CController {
 	 *
 	 * @param array $dashboards  An associative array of the dashboards.
 	 */
-	protected function prepareEditableFlag(array &$dashboards) {
+	protected function prepareEditableFlag(array &$dashboards)
+	{
 		$dashboards_rw = API::Dashboard()->get([
 			'output' => [],
 			'dashboardids' => array_keys($dashboards),

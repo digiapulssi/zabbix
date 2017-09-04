@@ -64,7 +64,7 @@ class CControllerWidgetNavigationtreeItemEditDialog extends CController {
 			_('Name'),
 			(new CTextBox('map.name.'.$map_id, $map_item_name))
 				->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
-				->setAttribute('autofocus', 'autofocus')
+				->setAttribute('class', 'auto-focus')
 		);
 
 		$sysmap_id = 0;
@@ -100,7 +100,7 @@ class CControllerWidgetNavigationtreeItemEditDialog extends CController {
 				)
 		]);
 
-		if ($depth >= WIDGET_NAVIGATION_TREE_MAX_DEPTH - 1) {
+		if ($depth >= WIDGET_NAVIGATION_TREE_MAX_DEPTH) {
 			$formList->addRow(null, _('Cannot add submaps. Max depth reached.'));
 		}
 		else {

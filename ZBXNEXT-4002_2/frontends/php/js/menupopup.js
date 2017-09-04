@@ -195,9 +195,7 @@ function getMenuPopupMap(options) {
 			var url = new Curl('hostinventories.php');
 
 			jQuery.each(options.gotos.inventory, function(name, value) {
-				if (value !== null) {
-					url.setArgument(name, value);
-				}
+				url.setArgument(name, value);
 			});
 
 			gotos[gotos.length] = {
@@ -211,9 +209,7 @@ function getMenuPopupMap(options) {
 			var url = new Curl('latest.php?filter_set=1');
 
 			jQuery.each(options.gotos.latestData, function(name, value) {
-				if (value !== null) {
-					url.setArgument(name, value);
-				}
+				url.setArgument(name, value);
 			});
 
 			gotos[gotos.length] = {
@@ -235,9 +231,7 @@ function getMenuPopupMap(options) {
 				var url = new Curl('tr_status.php?filter_set=1&show_maintenance=1');
 
 				jQuery.each(options.gotos.triggerStatus, function(name, value) {
-					if (value !== null) {
-						url.setArgument(name, value);
-					}
+					url.setArgument(name, value);
 				});
 
 				triggers.url = url.getUrl();
@@ -259,9 +253,7 @@ function getMenuPopupMap(options) {
 				var url = new Curl('charts.php');
 
 				jQuery.each(options.gotos.graphs, function(name, value) {
-					if (value !== null) {
-						url.setArgument(name, value);
-					}
+					url.setArgument(name, value);
 				});
 
 				graphs.url = url.getUrl();
@@ -283,9 +275,7 @@ function getMenuPopupMap(options) {
 				var url = new Curl('host_screen.php');
 
 				jQuery.each(options.gotos.screens, function(name, value) {
-					if (value !== null) {
-						url.setArgument(name, value);
-					}
+					url.setArgument(name, value);
 				});
 
 				screens.url = url.getUrl();
@@ -299,9 +289,7 @@ function getMenuPopupMap(options) {
 			var url = new Curl('zabbix.php?action=map.view');
 
 			jQuery.each(options.gotos.submap, function(name, value) {
-				if (value !== null) {
-					url.setArgument(name, value);
-				}
+				url.setArgument(name, value);
 			});
 
 			gotos[gotos.length] = {
@@ -499,7 +487,7 @@ function getMenuPopupDashboard(options) {
 										response.data
 									);
 								}
-								else if (typeof response === 'string' && response.indexOf(t('Access denied')) !== -1) {
+								else if (typeof response === 'string' && response.indexOf('Access denied') !== -1) {
 									alert(t('You need permission to perform this action!'))
 								}
 								else {
@@ -539,17 +527,16 @@ function getMenuPopupDashboard(options) {
 }
 
 function showDialogForm(form, options, formData) {
+
 	var oldFormParent = form.parent(),
 		errorBlockId = 'dialog-form-error-container';
-
-	// Trick to get outerWidth, outerHeight of "display:none" form.
+	// trick to get outerWidth, outerHeight of "display:none" form
 	form.css('visibility', 'hidden');
 	form.css('display', 'block');
 
 	if (typeof formData !== 'undefined' && typeof form.fillForm === 'function') {
 		form.fillForm(formData);
 	}
-
 	function removeErrorBlock() {
 		form.find('#' + errorBlockId).remove();
 	}
@@ -565,24 +552,20 @@ function showDialogForm(form, options, formData) {
 				'keepOpen': false,
 				'action': function() {
 					removeErrorBlock();
+
 					form.submit();
-
 					var errors = form.data('errors');
-
 					// output errors
 					if (typeof errors === 'object' && errors.length > 0) {
 						var errorBlock = makeErrorMessageBox(errors, errorBlockId);
-
 						form.prepend(errorBlock);
-
-						// If form has errors dialog overlay not be destroyed.
+						// if form has errors dialog overlay not be destroyed
 						return false;
 					}
 
 					form.css('display', 'none');
 					form.css('visibility', 'hidden');
 					oldFormParent.append(form);
-
 					return true;
 				}
 			},
@@ -592,7 +575,7 @@ function showDialogForm(form, options, formData) {
 				'cancel': true,
 				'action': function() {
 					removeErrorBlock();
-					// To not destroy form need to move it to old place.
+					// to not destroy form need to move it to old place
 					form.css('display', 'none');
 					form.css('visibility', 'hidden');
 					oldFormParent.append(form);
@@ -602,7 +585,6 @@ function showDialogForm(form, options, formData) {
 	});
 
 	form.css('visibility', 'visible');
-	overlayDialogueOnLoad(true);
 }
 
 /**

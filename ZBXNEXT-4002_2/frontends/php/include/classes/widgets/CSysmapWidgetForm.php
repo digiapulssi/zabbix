@@ -19,9 +19,6 @@
 **/
 
 
-/**
- * Map widget form.
- */
 class CSysmapWidgetForm extends CWidgetForm {
 
 	public function __construct($data) {

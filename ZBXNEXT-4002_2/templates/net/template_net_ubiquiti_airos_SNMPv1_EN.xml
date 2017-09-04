@@ -9,22 +9,27 @@
    </groups>
    <templates>
       <template>
-         <template>Template Net Ubiquiti AirOS SNMPv1</template>
-         <name>Template Net Ubiquiti AirOS SNMPv1</name>
-         <description>Template Net Ubiquiti AirOS version: 0.12
+         <template>Template Ubiquiti AirOS SNMPv1</template>
+         <name>Template Ubiquiti AirOS SNMPv1</name>
+         <description>Template Ubiquiti AirOS version: 0.10
 MIBs used:
 FROGFOOT-RESOURCES-MIB
 IEEE802dot11-MIB
+
 Known Issues:
 description : UBNT unifi reports speed: like IF-MIB::ifSpeed.1 = Gauge32: 4294967295 for all interfaces
 version : Firmware: BZ.ar7240.v3.7.51.6230.170322.1513
-device : UBNT UAP-LRdescription : UBNT AirMax(NanoStation, NanoBridge etc) reports ifSpeed: as 0 for VLAN and wireless(ath0) interfaces
+device : UBNT UAP-LR
+description : UBNT AirMax(NanoStation, NanoBridge etc) reports ifSpeed: as 0 for VLAN and wireless(ath0) interfaces
 version : Firmware: XW.ar934x.v5.6-beta4.22359.140521.1836
-device : NanoStation M5description : UBNT AirMax(NanoStation, NanoBridge etc) reports always return ifType: as ethernet(6) even for wifi,vlans and other types
+device : NanoStation M5
+description : UBNT AirMax(NanoStation, NanoBridge etc) reports always return ifType: as ethernet(6) even for wifi,vlans and other types
 version : Firmware: XW.ar934x.v5.6-beta4.22359.140521.1836
-device : NanoStation M5description : ifXTable is not provided in IF-MIB. So Interfaces Simple Template is used instead
+device : NanoStation M5
+description : ifXTable is not provided in IF-MIB. So Interfaces Simple Template is used instead
 version : all above
-device : NanoStation, UAP-LR</description>
+device : NanoStation, UAP-LR
+</description>
          <groups>
             <group>
                <name>Templates/Network Devices</name>
@@ -71,7 +76,8 @@ device : NanoStation, UAP-LR</description>
                <privatekey/>
                <port/>
                <description>MIB: FROGFOOT-RESOURCES-MIB
-5 minute load average of processor load.</description>
+5 minute load average of processor load.
+</description>
                <inventory_link>0</inventory_link>
                <applications>
                   <application>
@@ -82,7 +88,6 @@ device : NanoStation, UAP-LR</description>
                <logtimefmt/>
                <preprocessing/>
                <jmx_endpoint/>
-               <master_item/>
             </item>
             <item>
                <name>Available memory</name>
@@ -112,7 +117,9 @@ device : NanoStation, UAP-LR</description>
                <publickey/>
                <privatekey/>
                <port/>
-               <description>MIB: FROGFOOT-RESOURCES-MIB</description>
+               <description>MIB: FROGFOOT-RESOURCES-MIB
+
+</description>
                <inventory_link>0</inventory_link>
                <applications>
                   <application>
@@ -128,7 +135,6 @@ device : NanoStation, UAP-LR</description>
                   </step>
                </preprocessing>
                <jmx_endpoint/>
-               <master_item/>
             </item>
             <item>
                <name>Total memory</name>
@@ -159,7 +165,8 @@ device : NanoStation, UAP-LR</description>
                <privatekey/>
                <port/>
                <description>MIB: FROGFOOT-RESOURCES-MIB
-Total memory in Bytes</description>
+Total memory in Bytes
+</description>
                <inventory_link>0</inventory_link>
                <applications>
                   <application>
@@ -175,7 +182,6 @@ Total memory in Bytes</description>
                   </step>
                </preprocessing>
                <jmx_endpoint/>
-               <master_item/>
             </item>
             <item>
                <name>Memory utilization</name>
@@ -205,7 +211,8 @@ Total memory in Bytes</description>
                <publickey/>
                <privatekey/>
                <port/>
-               <description>Memory utilization in %</description>
+               <description>Memory utilization in %
+</description>
                <inventory_link>0</inventory_link>
                <applications>
                   <application>
@@ -216,7 +223,6 @@ Total memory in Bytes</description>
                <logtimefmt/>
                <preprocessing/>
                <jmx_endpoint/>
-               <master_item/>
             </item>
             <item>
                <name>Hardware model name</name>
@@ -247,7 +253,8 @@ Total memory in Bytes</description>
                <privatekey/>
                <port/>
                <description>MIB: IEEE802dot11-MIB
-A printable string used to identify the manufacturer's product name of the resource. Maximum string length is 128 octets.</description>
+A printable string used to identify the manufacturer's product name of the resource. Maximum string length is 128 octets.
+</description>
                <inventory_link>29</inventory_link>
                <applications>
                   <application>
@@ -258,7 +265,6 @@ A printable string used to identify the manufacturer's product name of the resou
                <logtimefmt/>
                <preprocessing/>
                <jmx_endpoint/>
-               <master_item/>
             </item>
             <item>
                <name>Firmware version</name>
@@ -289,7 +295,8 @@ A printable string used to identify the manufacturer's product name of the resou
                <privatekey/>
                <port/>
                <description>MIB: IEEE802dot11-MIB
-Printable string used to identify the manufacturer's product version of the resource. Maximum string length is 128 octets.</description>
+Printable string used to identify the manufacturer's product version of the resource. Maximum string length is 128 octets.
+</description>
                <inventory_link>0</inventory_link>
                <applications>
                   <application>
@@ -300,7 +307,6 @@ Printable string used to identify the manufacturer's product version of the reso
                <logtimefmt/>
                <preprocessing/>
                <jmx_endpoint/>
-               <master_item/>
             </item>
          </items>
          <discovery_rules/>
@@ -317,10 +323,10 @@ Printable string used to identify the manufacturer's product version of the reso
          </macros>
          <templates>
             <template>
-               <name>Template Module Interfaces Simple SNMPv1</name>
+               <name>Template SNMP Interfaces Simple SNMPv1</name>
             </template>
             <template>
-               <name>Template Module Generic SNMPv1</name>
+               <name>Template SNMP Generic SNMPv1</name>
             </template>
          </templates>
          <screens/>
@@ -345,19 +351,19 @@ Printable string used to identify the manufacturer's product version of the reso
          <ymin_item_1>0</ymin_item_1>
          <ymax_item_1>0</ymax_item_1>
          <graph_items>
-            <graph_item>
-               <sortorder>0</sortorder>
-               <drawtype>5</drawtype>
-               <color>1A7C11</color>
-               <yaxisside>0</yaxisside>
-               <calc_fnc>2</calc_fnc>
-               <type>0</type>
-               <item>
-                  <host>Template Net Ubiquiti AirOS SNMPv1</host>
-                  <key>system.cpu.util[loadValue.2]</key>
-               </item>
-            </graph_item>
-         </graph_items>
+                     <graph_item>
+                        <sortorder>0</sortorder>
+                        <drawtype>5</drawtype>
+                        <color>1A7C11</color>
+                        <yaxisside>0</yaxisside>
+                        <calc_fnc>2</calc_fnc>
+                        <type>0</type>
+                        <item>
+                           <host>Template Ubiquiti AirOS SNMPv1</host>
+                           <key>system.cpu.util[loadValue.2]</key>
+                        </item>
+                     </graph_item>
+                  </graph_items>
       </graph>
       <graph>
          <name>Memory utilization</name>
@@ -377,24 +383,24 @@ Printable string used to identify the manufacturer's product version of the reso
          <ymin_item_1>0</ymin_item_1>
          <ymax_item_1>0</ymax_item_1>
          <graph_items>
-            <graph_item>
-               <sortorder>0</sortorder>
-               <drawtype>5</drawtype>
-               <color>1A7C11</color>
-               <yaxisside>0</yaxisside>
-               <calc_fnc>2</calc_fnc>
-               <type>0</type>
-               <item>
-                  <host>Template Net Ubiquiti AirOS SNMPv1</host>
-                  <key>vm.memory.pused[memoryUsedPercentage]</key>
-               </item>
-            </graph_item>
-         </graph_items>
+                     <graph_item>
+                        <sortorder>0</sortorder>
+                        <drawtype>5</drawtype>
+                        <color>1A7C11</color>
+                        <yaxisside>0</yaxisside>
+                        <calc_fnc>2</calc_fnc>
+                        <type>0</type>
+                        <item>
+                           <host>Template Ubiquiti AirOS SNMPv1</host>
+                           <key>vm.memory.pused[memoryUsedPercentage]</key>
+                        </item>
+                     </graph_item>
+                  </graph_items>
       </graph>
    </graphs>
    <triggers>
       <trigger>
-         <expression>{Template Net Ubiquiti AirOS SNMPv1:system.cpu.util[loadValue.2].avg(5m)}&gt;{$CPU_UTIL_MAX}</expression>
+         <expression>{Template Ubiquiti AirOS SNMPv1:system.cpu.util[loadValue.2].avg(5m)}&gt;{$CPU_UTIL_MAX}</expression>
          <recovery_mode>0</recovery_mode>
          <recovery_expression/>
          <name>High CPU utilization</name>
@@ -403,14 +409,15 @@ Printable string used to identify the manufacturer's product version of the reso
          <url/>
          <status>0</status>
          <priority>3</priority>
-         <description>Last value: {ITEM.LASTVALUE1}.</description>
+         <description>Last value: {ITEM.LASTVALUE1}.
+</description>
          <type>0</type>
          <manual_close>0</manual_close>
          <dependencies/>
          <tags/>
       </trigger>
       <trigger>
-         <expression>{Template Net Ubiquiti AirOS SNMPv1:vm.memory.pused[memoryUsedPercentage].avg(5m)}&gt;{$MEMORY_UTIL_MAX}</expression>
+         <expression>{Template Ubiquiti AirOS SNMPv1:vm.memory.pused[memoryUsedPercentage].avg(5m)}&gt;{$MEMORY_UTIL_MAX}</expression>
          <recovery_mode>0</recovery_mode>
          <recovery_expression/>
          <name>High memory utilization</name>
@@ -419,14 +426,15 @@ Printable string used to identify the manufacturer's product version of the reso
          <url/>
          <status>0</status>
          <priority>3</priority>
-         <description>Last value: {ITEM.LASTVALUE1}.</description>
+         <description>Last value: {ITEM.LASTVALUE1}.
+</description>
          <type>0</type>
          <manual_close>0</manual_close>
          <dependencies/>
          <tags/>
       </trigger>
       <trigger>
-         <expression>{Template Net Ubiquiti AirOS SNMPv1:system.hw.firmware.diff()}=1 and {Template Net Ubiquiti AirOS SNMPv1:system.hw.firmware.strlen()}&gt;0</expression>
+         <expression>{Template Ubiquiti AirOS SNMPv1:system.hw.firmware.diff()}=1 and {Template Ubiquiti AirOS SNMPv1:system.hw.firmware.strlen()}&gt;0</expression>
          <recovery_mode>2</recovery_mode>
          <recovery_expression/>
          <name>Firmware has changed</name>

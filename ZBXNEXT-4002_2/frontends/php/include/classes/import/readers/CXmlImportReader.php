@@ -124,8 +124,6 @@ class CXmlImportReader extends CImportReader {
 					}
 					break;
 
-				case XMLReader::CDATA:
-					// falls through
 				case XMLReader::TEXT:
 					if ($data === null) {
 						$data = $xml->value;

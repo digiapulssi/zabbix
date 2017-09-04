@@ -38,7 +38,7 @@ class CControllerWidgetNavigationtreeItemEdit extends CController {
 		$ret = $this->validateInput($fields);
 
 		if ($ret && trim(getRequest('map_name', '')) === '') {
-			error(_('Please specify element name.'));
+			error(_s('Please specify Item name.'));
 			$ret = false;
 		}
 

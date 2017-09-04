@@ -708,7 +708,6 @@ class CItemPrototype extends CItemGeneral {
 	 */
 	public function update($items) {
 		$items = zbx_toArray($items);
-
 		$this->checkInput($items, true);
 		$this->validateDependentItems($items, API::ItemPrototype());
 
@@ -719,10 +718,10 @@ class CItemPrototype extends CItemGeneral {
 			'preservekeys' => true
 		]);
 
-		$items = $this->extendFromObjects(zbx_toHash($items, 'itemid'), $dbItems, ['type']);
-
 		foreach ($items as &$item) {
-			if ($item['type'] != ITEM_TYPE_DEPENDENT && $dbItems[$item['itemid']]['master_itemid']) {
+			$item_type = array_key_exists('type', $item) ? $item['type'] : $dbItems[$item['itemid']]['type'];
+
+			if ($item_type != ITEM_TYPE_DEPENDENT && $dbItems[$item['itemid']]['master_itemid']) {
 				$item['master_itemid'] = null;
 			}
 			elseif (!array_key_exists('master_itemid', $item)) {
@@ -790,16 +789,14 @@ class CItemPrototype extends CItemGeneral {
 		// Master item deletion will remove dependent items on database level.
 		while ($db_dependent_items) {
 			$db_dependent_items = $this->get([
-				'output' => ['itemid', 'name'],
-				'filter' => ['type' => ITEM_TYPE_DEPENDENT, 'master_itemid' => array_keys($db_dependent_items)],
-				'selectHosts' => ['name'],
-				'preservekeys' => true
+				'output'		=> ['itemid', 'name'],
+				'filter'		=> ['type' => ITEM_TYPE_DEPENDENT, 'master_itemid' => array_keys($db_dependent_items)],
+				'selectHosts'	=> ['name'],
+				'preservekeys'	=> true
 			]);
 			$db_dependent_items = array_diff_key($db_dependent_items, $dependent_itemprototypes);
 			$dependent_itemprototypes += $db_dependent_items;
 		};
-		$dependent_itemprototypeids = array_keys($dependent_itemprototypes);
-		$childPrototypeids += array_combine($dependent_itemprototypeids, $dependent_itemprototypeids);
 
 		$options = [
 			'output' => API_OUTPUT_EXTEND,
@@ -886,7 +883,6 @@ class CItemPrototype extends CItemGeneral {
 			$host = reset($item['hosts']);
 			info(_s('Deleted: Item prototype "%1$s" on "%2$s".', $item['name'], $host['name']));
 		}
-		$prototypeids = array_map('strval', $prototypeids);
 
 		return ['prototypeids' => $prototypeids];
 	}

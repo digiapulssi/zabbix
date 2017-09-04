@@ -37,6 +37,7 @@ class CControllerDashbrdWidgetConfig extends CController {
 		}
 
 		if (!$ret) {
+			// TODO VM: prepare propper response for case of incorrect fields
 			$this->setResponse(new CControllerResponseData(['body' => CJs::encodeJson('')]));
 		}
 

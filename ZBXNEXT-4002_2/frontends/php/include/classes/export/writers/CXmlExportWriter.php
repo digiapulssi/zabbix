@@ -69,13 +69,7 @@ class CXmlExportWriter extends CExportWriter {
 				$this->fromArray($value, $name);
 			}
 			elseif (!zbx_empty($value)) {
-				// Value containing only whitespace characters should be saved as CDATA.
-				if (trim($value) === '') {
-					$this->xmlWriter->writeCData($value);
-				}
-				else {
-					$this->xmlWriter->text($value);
-				}
+				$this->xmlWriter->text($value);
 			}
 
 			$this->xmlWriter->endElement();

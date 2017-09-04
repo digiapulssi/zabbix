@@ -913,7 +913,7 @@ class testFormAction extends CWebTest {
 		$this->zbxTestAssertAttribute("//input[@id='def_shortdata']", 'size', 20);
 		switch ($eventsource) {
 			case 'Triggers':
-				$this->zbxTestAssertElementValue('def_shortdata', 'Problem: {TRIGGER.NAME}');
+				$this->zbxTestAssertElementValue('def_shortdata', '{TRIGGER.STATUS}: {TRIGGER.NAME}');
 				break;
 			case 'Discovery':
 				$this->zbxTestAssertElementValue('def_shortdata', 'Discovery: {DISCOVERY.DEVICE.STATUS} {DISCOVERY.DEVICE.IPADDRESS}');
@@ -930,12 +930,15 @@ class testFormAction extends CWebTest {
 		$this->zbxTestAssertAttribute("//textarea[@id='def_longdata']", 'rows', 7);
 		switch ($eventsource) {
 			case 'Triggers':
-				$def_longdata_val = 'Problem started at {EVENT.TIME} on {EVENT.DATE}'.
-					' Problem name: {TRIGGER.NAME}'.
-					' Host: {HOST.NAME}'.
-					' Severity: {TRIGGER.SEVERITY}'.
-					' Original problem ID: {EVENT.ID}'.
-					' {TRIGGER.URL}';
+				$def_longdata_val = 'Trigger: {TRIGGER.NAME}'.
+					' Trigger status: {TRIGGER.STATUS}'.
+					' Trigger severity: {TRIGGER.SEVERITY}'.
+					' Trigger URL: {TRIGGER.URL}'.
+					' Item values:'.
+					' 1. {ITEM.NAME1} ({HOST.NAME1}:{ITEM.KEY1}): {ITEM.VALUE1}'.
+					' 2. {ITEM.NAME2} ({HOST.NAME2}:{ITEM.KEY2}): {ITEM.VALUE2}'.
+					' 3. {ITEM.NAME3} ({HOST.NAME3}:{ITEM.KEY3}): {ITEM.VALUE3}'.
+					' Original event ID: {EVENT.ID}';
 					break;
 			case 'Discovery':
 				$def_longdata_val = 'Discovery rule: {DISCOVERY.RULE.NAME}'.
@@ -1215,7 +1218,7 @@ class testFormAction extends CWebTest {
 				$this->zbxTestAssertAttribute('//input[@id=\'new_operation_opmessage_subject\']', 'size', 20);
 				switch ($eventsource) {
 					case 'Triggers':
-						$this->zbxTestAssertElementValue('new_operation_opmessage_subject', 'Problem: {TRIGGER.NAME}');
+						$this->zbxTestAssertElementValue('new_operation_opmessage_subject', '{TRIGGER.STATUS}: {TRIGGER.NAME}');
 						break;
 					case 'Discovery':
 						$this->zbxTestAssertElementValue('new_operation_opmessage_subject', 'Discovery: {DISCOVERY.DEVICE.STATUS} {DISCOVERY.DEVICE.IPADDRESS}');
@@ -1233,12 +1236,15 @@ class testFormAction extends CWebTest {
 				$this->zbxTestAssertAttribute('//textarea[@id=\'new_operation_opmessage_message\']', 'rows', 7);
 				switch ($eventsource) {
 					case 'Triggers':
-						$new_operation_opmessage_message_val = 'Problem started at {EVENT.TIME} on {EVENT.DATE}'.
-							' Problem name: {TRIGGER.NAME}'.
-							' Host: {HOST.NAME}'.
-							' Severity: {TRIGGER.SEVERITY}'.
-							' Original problem ID: {EVENT.ID}'.
-							' {TRIGGER.URL}';
+						$new_operation_opmessage_message_val = 'Trigger: {TRIGGER.NAME}'.
+							' Trigger status: {TRIGGER.STATUS}'.
+							' Trigger severity: {TRIGGER.SEVERITY}'.
+							' Trigger URL: {TRIGGER.URL}'.
+							' Item values:'.
+							' 1. {ITEM.NAME1} ({HOST.NAME1}:{ITEM.KEY1}): {ITEM.VALUE1}'.
+							' 2. {ITEM.NAME2} ({HOST.NAME2}:{ITEM.KEY2}): {ITEM.VALUE2}'.
+							' 3. {ITEM.NAME3} ({HOST.NAME3}:{ITEM.KEY3}): {ITEM.VALUE3}'.
+							' Original event ID: {EVENT.ID}';
 							break;
 					case 'Discovery':
 						$new_operation_opmessage_message_val = 'Discovery rule: {DISCOVERY.RULE.NAME}'.
@@ -1562,7 +1568,7 @@ class testFormAction extends CWebTest {
 			$this->zbxTestAssertAttribute("//input[@id='r_shortdata']", 'size', 20);
 			switch ($eventsource) {
 				case 'Triggers':
-					$this->zbxTestAssertElementValue('r_shortdata', 'Resolved: {TRIGGER.NAME}');
+					$this->zbxTestAssertElementValue('r_shortdata', '{TRIGGER.STATUS}: {TRIGGER.NAME}');
 					break;
 				case 'Internal':
 					$this->zbxTestAssertElementValue('r_shortdata', '');
@@ -1574,12 +1580,15 @@ class testFormAction extends CWebTest {
 			$this->zbxTestAssertAttribute("//textarea[@id='r_longdata']", 'rows', 7);
 			switch ($eventsource) {
 				case 'Triggers':
-					$r_longdata_val = 'Problem has been resolved at {EVENT.RECOVERY.TIME} on {EVENT.RECOVERY.DATE}'.
-						' Problem name: {TRIGGER.NAME}'.
-						' Host: {HOST.NAME}'.
-						' Severity: {TRIGGER.SEVERITY}'.
-						' Original problem ID: {EVENT.ID}'.
-						' {TRIGGER.URL}';
+					$r_longdata_val = 'Trigger: {TRIGGER.NAME}'.
+						' Trigger status: {TRIGGER.STATUS}'.
+						' Trigger severity: {TRIGGER.SEVERITY}'.
+						' Trigger URL: {TRIGGER.URL}'.
+						' Item values:'.
+						' 1. {ITEM.NAME1} ({HOST.NAME1}:{ITEM.KEY1}): {ITEM.VALUE1}'.
+						' 2. {ITEM.NAME2} ({HOST.NAME2}:{ITEM.KEY2}): {ITEM.VALUE2}'.
+						' 3. {ITEM.NAME3} ({HOST.NAME3}:{ITEM.KEY3}): {ITEM.VALUE3}'.
+						' Original event ID: {EVENT.ID}';
 						break;
 				case 'Internal':
 					$r_longdata_val = "";

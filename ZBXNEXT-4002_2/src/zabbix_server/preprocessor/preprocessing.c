@@ -82,8 +82,7 @@ static zbx_uint32_t	message_pack_data(zbx_ipc_message_t *message, zbx_packed_fie
 			if (PACKED_FIELD_STRING == fields[i].type)
 			{
 				memcpy(offset, (zbx_uint32_t *)&field_size, sizeof(zbx_uint32_t));
-				if (0 != field_size && NULL != fields[i].value)
-					memcpy(offset + sizeof(zbx_uint32_t), fields[i].value, field_size);
+				memcpy(offset + sizeof(zbx_uint32_t), fields[i].value, field_size);
 				field_size += sizeof(zbx_uint32_t);
 			}
 			else
@@ -653,11 +652,10 @@ void	zbx_preprocess_item_value(zbx_uint64_t itemid, unsigned char item_flags, AG
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (ITEM_STATE_NOTSUPPORTED != state && 0 != (item_flags & ZBX_FLAG_DISCOVERY_RULE))
+	if (0 != (item_flags & ZBX_FLAG_DISCOVERY_RULE))
 	{
 		if (NULL != result && NULL != GET_TEXT_RESULT(result))
 			lld_process_discovery_rule(itemid, result->text, ts);
-
 		goto out;
 	}
 	value.itemid = itemid;

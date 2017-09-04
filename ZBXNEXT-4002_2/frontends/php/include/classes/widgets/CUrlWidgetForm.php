@@ -28,7 +28,7 @@ class CUrlWidgetForm extends CWidgetForm {
 		parent::__construct($data);
 
 		// URL field
-		$field_url = (new CWidgetFieldUrl('url', _('URL')))
+		$field_url = (new CWidgetFieldTextBox('url', _('URL')))
 			->setFlags(CWidgetField::FLAG_NOT_EMPTY);
 
 		if (array_key_exists('url', $this->data)) {

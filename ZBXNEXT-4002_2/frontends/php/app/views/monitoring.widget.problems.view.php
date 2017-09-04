@@ -156,9 +156,8 @@ foreach ($data['data']['problems'] as $eventid => $problem) {
 		(new CSpan(CMacrosResolverHelper::resolveEventDescription(
 			$trigger + ['clock' => $problem['clock'], 'ns' => $problem['ns']]
 		)))
-			->setHint(
-				make_popup_eventlist($trigger, $eventid, $backurl->getUrl(), $data['config'], $data['fullscreen']), '',
-				true
+			->setHint(make_popup_eventlist($trigger, $eventid, $backurl->getUrl(), $data['config'], $data['fullscreen']),
+				'', true, 'max-width: 500px'
 			)
 			->addClass(ZBX_STYLE_LINK_ACTION)
 	]))

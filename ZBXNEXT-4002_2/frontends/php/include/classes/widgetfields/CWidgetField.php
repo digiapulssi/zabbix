@@ -79,6 +79,7 @@ class CWidgetField {
 				break;
 
 			case ZBX_WIDGET_FIELD_TYPE_STR:
+				// TODO VM: (?) should we have define for this?
 				$this->validation_rules = ['type' => API_STRING_UTF8, 'length' => 255];
 				break;
 
@@ -94,7 +95,7 @@ class CWidgetField {
 				break;
 
 			default:
-				exit(_('Internal error.'));
+				exit(_('Internal error'));
 		}
 
 		$this->save_type = $save_type;

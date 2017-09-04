@@ -7113,25 +7113,25 @@ return [
 				'length' => 255,
 				'default' => '',
 			],
-			'x' => [
+			'row' => [
 				'null' => false,
 				'type' => DB::FIELD_TYPE_INT,
 				'length' => 10,
 				'default' => '0',
 			],
-			'y' => [
+			'col' => [
 				'null' => false,
 				'type' => DB::FIELD_TYPE_INT,
 				'length' => 10,
 				'default' => '0',
 			],
-			'width' => [
+			'height' => [
 				'null' => false,
 				'type' => DB::FIELD_TYPE_INT,
 				'length' => 10,
 				'default' => '1',
 			],
-			'height' => [
+			'width' => [
 				'null' => false,
 				'type' => DB::FIELD_TYPE_INT,
 				'length' => 10,

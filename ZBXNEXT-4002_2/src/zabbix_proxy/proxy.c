@@ -835,7 +835,7 @@ int	main(int argc, char **argv)
 	if (ZBX_TASK_RUNTIME_CONTROL == t.task)
 		exit(SUCCEED == zbx_sigusr_send(t.data) ? EXIT_SUCCESS : EXIT_FAILURE);
 
-#ifdef HAVE_OPENIPMI
+#ifdef HAVE_IPMI
 	{
 		char *error = NULL;
 
@@ -1153,7 +1153,7 @@ void	zbx_on_exit(void)
 
 	zbx_sleep(2);	/* wait for all child processes to exit */
 
-#ifdef HAVE_OPENIPMI
+#ifdef HAVE_IPMI
 	zbx_ipc_service_free_env();
 #endif
 
