@@ -21,6 +21,9 @@
 
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
+/**
+ * Controller for "dashboard.widget.rfrate" action. Is used for widget "refresh rate" data access.
+ */
 class CControllerDashbrdWidgetRfRate extends CController {
 
 	protected function checkInput() {

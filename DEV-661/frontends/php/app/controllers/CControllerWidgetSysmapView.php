@@ -18,8 +18,12 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
+/**
+ * Controller for "widget.sysmap.view" action. Is used for widget of type WIDGET_SYSMAP rendering.
+ */
 class CControllerWidgetSysmapView extends CControllerWidget {
 
 	public function __construct() {

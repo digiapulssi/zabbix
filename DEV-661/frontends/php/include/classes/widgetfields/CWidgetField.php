@@ -18,6 +18,10 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
+/**
+ * General purpose class for widget fields.
+ */
 class CWidgetField {
 
 	const FLAG_ACKNOWLEDGES = 0x01;
@@ -34,7 +38,7 @@ class CWidgetField {
 	private		$flags;
 
 	/**
-	 * Create widget field (general)
+	 * Create widget field (general).
 	 *
 	 * @param string $name   Field name in form.
 	 * @param string $label  Label for the field in form.
@@ -47,12 +51,26 @@ class CWidgetField {
 		$this->flags = 0x00;
 	}
 
+	/**
+	 * Set field value.
+	 *
+	 * @param string $value Field value to set.
+	 *
+	 * @return \CWidgetField
+	 */
 	public function setValue($value) {
 		$this->value = $value;
 
 		return $this;
 	}
 
+	/**
+	 * Set field default value.
+	 *
+	 * @param string $value Field default value to set.
+	 *
+	 * @return \CWidgetField
+	 */
 	public function setDefault($value) {
 		$this->default = $value;
 

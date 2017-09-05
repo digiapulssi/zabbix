@@ -20,7 +20,7 @@
 
 
 /**
- * Controller to get dashboard widget configuration data.
+ * Controller for "dashbrd.widget.config" action. Is used for access to dashboard widget configuration data.
  */
 class CControllerDashbrdWidgetConfig extends CController {
 

@@ -108,7 +108,7 @@ class CRouter {
 		'widget.webovr.view'	=> ['CControllerWidgetWebView',			'layout.widget',		'monitoring.widget.web.view'],
 		'widget.clock.view'		=> ['CControllerWidgetClockView',		'layout.widget',		'monitoring.widget.clock.view'],
 		'widget.sysmap.view'	=> ['CControllerWidgetSysmapView',		'layout.widget',		'monitoring.widget.sysmap.view'],
-		'widget.navigationtree.view'			=> ['CControllerWidgetNavigationtreeView',				'layout.widget',	'monitoring.widget.navigationtree.view'],
+		'widget.navigationtree.view'			=> ['CControllerWidgetNavigationTreeView',				'layout.widget',	'monitoring.widget.navigationtree.view'],
 		'widget.navigationtree.edititemdialog'	=> ['CControllerWidgetNavigationtreeItemEditDialog',	'layout.json',		null],
 		'widget.navigationtree.edititem'		=> ['CControllerWidgetNavigationtreeItemEdit',			'layout.json',		null],
 		'widget.actlog.view'	=> ['CControllerWidgetActionLogView',	'layout.widget',		'monitoring.widget.actionlog.view'],

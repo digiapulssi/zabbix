@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * Controller for "widget.clock.view" action. Is used for widget of type WIDGET_CLOCK rendering.
+ */
 class CControllerWidgetClockView extends CControllerWidget {
 
 	public function __construct() {

@@ -21,6 +21,9 @@
 
 require_once dirname(__FILE__).'/../../include/hostgroups.inc.php';
 
+/**
+ * Controller for "widget.problems.view" action. Is used for widget of type WIDGET_PROBLEMS rendering.
+ */
 class CControllerWidgetProblemsView extends CControllerWidget {
 
 	public function __construct() {
@@ -96,7 +99,7 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 	/**
 	 * Get sorting.
 	 *
-	 * @param int $sort_triggers
+	 * @param int $sort_triggers	Sort type, one of SCREEN_SORT_TRIGGERS_* constants value.
 	 *
 	 * @static
 	 *

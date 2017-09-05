@@ -21,8 +21,15 @@
 
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
-class CControllerWidgetNavigationtreeView extends CControllerWidget {
+/**
+ * Controller for "widget.navigationtree.view" action. Is used for widget of type WIDGET_NAVIGATION_TREE rendering.
+ */
+class CControllerWidgetNavigationTreeView extends CControllerWidget {
 
+	/**
+	 * @var array $problems_per_severity_tpl    Count of problems for every severity level. Severety level is used as
+	 *                                          array key.
+	 */
 	private $problems_per_severity_tpl;
 
 	public function __construct() {
@@ -38,6 +45,13 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 		]);
 	}
 
+	/**
+	 * Return number of problems for every navigation tree item.
+	 *
+	 * @param array $navtree_items  Array of navigation tree item arrays.
+	 *
+	 * @return array
+	 */
 	protected function getNumberOfProblemsBySysmap(array $navtree_items = []) {
 		$response = [];
 		$sysmapids = array_keys(array_flip(zbx_objectValues($navtree_items, 'mapid')));
@@ -274,6 +288,22 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 		return $response;
 	}
 
+	/**
+	 * Return array with severity level as key and problems count as value. Problems with less priority as in
+	 * $severity_min will be not counted.
+	 *
+	 * @param array $selement                   Array of checked element arrays.
+	 * @param array $problems_per_trigger       Array of problems count for every trigger where triggerid is array key.
+	 * @param array $sysmaps                    Array of map arrays.
+	 * @param array $submaps_relations          Array of submap ids where key is mapid and value is related mapid.
+	 * @param int   $severity_min               Minimum severity level for counted problems.
+	 * @param array $problems_counted           Array of problems count for every trigger by trigger id. Is passed as
+	 *                                          reference.
+	 * @param array $triggers_per_hosts         Array of trigger arrays grouped by host.
+	 * @param array $triggers_per_host_groups   Array of trigger arrays grouped by host group.
+	 *
+	 * @return array
+	 */
 	protected function getElementProblems(array $selement, array $problems_per_trigger, array $sysmaps,
 			array $submaps_relations, $severity_min = 0, array &$problems_counted = [], array $triggers_per_hosts = [],
 			array $triggers_per_host_groups = []) {

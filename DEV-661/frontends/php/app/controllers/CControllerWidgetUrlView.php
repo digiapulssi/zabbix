@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * Controller for "widget.url.view" action. Is used for widget of type WIDGET_URL rendering.
+ */
 class CControllerWidgetUrlView extends CControllerWidget {
 
 	public function __construct() {

@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * Controller for "widget.actlog.view" action. Is used for widget of type WIDGET_ACTION_LOG rendering.
+ */
 class CControllerWidgetActionLogView extends CControllerWidget {
 
 	public function __construct() {
@@ -60,9 +63,9 @@ class CControllerWidgetActionLogView extends CControllerWidget {
 	/**
 	 * Get alerts.
 	 *
-	 * @param string $sortfield
-	 * @param string $sortorder
-	 * @param int    $show_lines
+	 * @param string $sortfield     Field name.
+	 * @param string $sortorder     Sorting order ZBX_SORT_UP or ZBX_SORT_DOWN.
+	 * @param int    $show_lines    Rows count limit.
 	 *
 	 * @return array
 	 */
@@ -102,7 +105,8 @@ class CControllerWidgetActionLogView extends CControllerWidget {
 	/**
 	 * Get users.
 	 *
-	 * @param array $alerts
+	 * @param array $alerts	           Array of alert arrays.
+	 * @param int   $alerts[]['userid]
 	 *
 	 * @return array
 	 */
@@ -127,7 +131,7 @@ class CControllerWidgetActionLogView extends CControllerWidget {
 	/**
 	 * Get sorting.
 	 *
-	 * @param int $sort_triggers
+	 * @param int $sort_triggers	Sort type, one of SCREEN_SORT_TRIGGERS_* constants value.
 	 *
 	 * @static
 	 *

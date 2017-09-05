@@ -21,6 +21,10 @@
 
 require_once dirname(__FILE__).'/../../include/hostgroups.inc.php';
 
+/**
+ * Controller for "problem.view" and "problem.view.csv" actions. Is used for "Monitoring - Problems" page rendering,
+ * supports rendering into .csv file.
+ */
 class CControllerProblemView extends CController {
 
 	protected function init() {
@@ -283,7 +287,7 @@ class CControllerProblemView extends CController {
 
 		$response = new CControllerResponseData($data);
 		$response->setTitle(_('Problems'));
-		if ($data['action'] == 'problem.view.csv') {
+		if ($data['action'] === 'problem.view.csv') {
 			$response->setFileName('zbx_problems_export.csv');
 		}
 

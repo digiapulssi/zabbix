@@ -21,8 +21,14 @@
 
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
+/**
+ * Controller for "dashboard.view" action. Is used for dashboard rendering.
+ */
 class CControllerDashboardView extends CControllerDashboardAbstract {
 
+	/**
+	 * @var array|null $dashboard   Dashboard configuration data.
+	 */
 	private $dashboard;
 
 	protected function init() {
@@ -51,7 +57,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	}
 
 	protected function checkPermissions() {
-		return  !($this->getUserType() < USER_TYPE_ZABBIX_USER);
+		return !($this->getUserType() < USER_TYPE_ZABBIX_USER);
 	}
 
 	protected function doAction() {
@@ -216,7 +222,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Returns array of widgets without inaccessible fields.
 	 *
-	 * @param array $widgets
+	 * @param array $widgets    Array of widget arrays.
 	 * @param array $widgets[]['fields']
 	 * @param array $widgets[]['fields'][]['type']
 	 * @param array $widgets[]['fields'][]['value']
@@ -367,7 +373,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Get owner datails.
 	 *
-	 * @param string $userid
+	 * @param string $userid	Owner id.
 	 *
 	 * @return array
 	 */
@@ -388,6 +394,8 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 
 	/**
 	 * Get widgets for dashboard.
+	 *
+	 * @param array $grid_widgets   Array of widget arrays.
 	 *
 	 * @static
 	 *
@@ -425,7 +433,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Converts fields, received from API to key/value format.
 	 *
-	 * @param array $fields  fields as received from API
+	 * @param array $fields  Fields as received from API.
 	 *
 	 * @static
 	 *
@@ -449,7 +457,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Checks, if any of widgets has checked dynamic field.
 	 *
-	 * @param array $grid_widgets
+	 * @param array $grid_widgets   Array of widget arrays.
 	 *
 	 * @static
 	 *
@@ -468,7 +476,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Checks, if any of widgets needs timeline.
 	 *
-	 * @param array $widgets
+	 * @param array $widgets    Array of widget arrays.
 	 *
 	 * @static
 	 *
