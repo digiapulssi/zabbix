@@ -99,6 +99,10 @@ class CProfile {
 		if (array_key_exists($idx2, self::$profiles[$idx])) {
 			return self::$profiles[$idx][$idx2];
 		}
+		// When there is cached data for $idx but $idx2 was not found we should return default value.
+		elseif (self::$profiles[$idx]) {
+			return $default_value;
+		}
 
 		// Aggressive caching, cache all items matched $idx key.
 		$query = DBselect(
@@ -144,7 +148,7 @@ class CProfile {
 			self::init();
 		}
 
-		$idx2 = is_array($idx2) ? $idx2 : [$idx2];
+		$idx2 = (array) $idx2;
 		self::deleteValues($idx, $idx2);
 
 		if (array_key_exists($idx, self::$profiles)) {
