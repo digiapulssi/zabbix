@@ -102,9 +102,9 @@ class CProfile {
 
 		// Aggressive caching, cache all items matched $idx key.
 		$query = DBselect(
-			'SELECT type, value_id, value_int, value_str, idx2'.
+			'SELECT type,value_id,value_int,value_str,idx2'.
 			' FROM profiles'.
-			' WHERE userid='.zbx_dbstr(self::$userDetails['userid']).
+			' WHERE userid='.self::$userDetails['userid'].
 				' AND idx='.zbx_dbstr($idx)
 		);
 
