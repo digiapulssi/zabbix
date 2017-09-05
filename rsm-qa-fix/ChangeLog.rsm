@@ -3,6 +3,7 @@ Changes for rsm1.0.0rc24
 New features:
 
 Bug fixes:
+.......P.. [sub-239] fixed passive proxy sending same history data twice, adjusted proxy-side timeouts (gleb, vjaceslavs)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc23

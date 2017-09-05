@@ -77,7 +77,4 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, char *value, const zbx_
 
 int	proxy_get_history_count(void);
 
-void	init_proxy_history(void);
-void	free_proxy_history(void);
-
 #endif
