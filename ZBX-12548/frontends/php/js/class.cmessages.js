@@ -49,7 +49,7 @@ var CMessageList = Class.create({
 		'repeat':	1,			// loop sound for 1,3,5,10 .. times
 		'mute':		0,			// mute alarms
 		'timeout':	0,
-		'messageid': null		// Id of played message.
+		'sourceid': null		// Id of played message.
 	},
 
 	initialize: function(messagesListId, args) {
