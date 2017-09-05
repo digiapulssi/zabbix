@@ -76,9 +76,9 @@ class CProfile {
 	/**
 	 * Return matched idx value for current user.
 	 *
-	 * @param string $idx           Search pattern.
-	 * @param mixed  $default_value Default value if no rows was found.
-	 * @param int    $idx2|null     Numerical index will be matched against idx2 index.
+	 * @param string    $idx           Search pattern.
+	 * @param mixed     $default_value Default value if no rows was found.
+	 * @param int|null  $idx2          Numerical index will be matched against idx2 index.
 	 *
 	 * @return mixed
 	 */
