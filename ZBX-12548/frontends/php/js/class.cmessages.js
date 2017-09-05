@@ -48,9 +48,9 @@ var CMessageList = Class.create({
 		'sound':	null,		// sound to play
 		'repeat':	1,			// loop sound for 1,3,5,10 .. times
 		'mute':		0,			// mute alarms
-		'timeout':	0
+		'timeout':	0,
+		'messageid': null		// Id of played message.
 	},
-	played_message:		{},		// Message object related to played sound
 
 	initialize: function(messagesListId, args) {
 		this.messageListId = messagesListId;
@@ -206,10 +206,6 @@ var CMessageList = Class.create({
 			return true;
 		}
 
-		this.stopSound();
-		this.sounds.priority = 0;
-		this.sounds.sound = null;
-
 		for (var i = 0; i < this.messages.length; i++) {
 			var message = this.messages[i];
 
@@ -217,18 +213,20 @@ var CMessageList = Class.create({
 				continue;
 			}
 
-			if (message.priority >= this.sounds.priority && (!this.played_message.timeout
-					|| this.played_message.timeout < message.timeout)) {
+			if (message.priority > this.sounds.priority || (message.priority == this.sounds.priority
+					&& this.sounds.timeout < message.timeout)) {
 				this.sounds.priority = message.priority;
 				this.sounds.sound = message.sound;
 				this.sounds.timeout = message.timeout;
-				this.played_message = message;
+				this.sounds.sourceid = message.sourceid;
 			}
 		}
 
 		this.ready = true;
 
 		if (this.sounds.sound !== null) {
+			this.stopSound();
+
 			if (this.sounds.repeat == 1) {
 				AudioControl.playOnce(this.sounds.sound);
 			}
@@ -243,7 +241,6 @@ var CMessageList = Class.create({
 
 	stopSound: function() {
 		if (!is_null(this.sounds.sound)) {
-			this.played_message = {};
 			AudioControl.stop();
 		}
 	},
@@ -253,7 +250,10 @@ var CMessageList = Class.create({
 			return true;
 		}
 
-		if (this.played_message && this.played_message.messageid == messageid) {
+		if (this.sounds.sourceid == this.messageList[messageid].sourceid) {
+			this.sounds.timeout = 0;
+			this.sounds.priority = 0;
+			this.sounds.sourceid = null;
 			this.stopSound();
 		}
 
