@@ -649,7 +649,8 @@ class CItem extends CItemGeneral {
 			'history_log',
 			'history_uint',
 			'history_str',
-			'history'
+			'history',
+			'events'
 		];
 		$insert = [];
 		foreach ($itemIds as $itemId) {
@@ -661,6 +662,7 @@ class CItem extends CItemGeneral {
 				];
 			}
 		}
+
 		DB::insert('housekeeper', $insert);
 
 		// TODO: remove info from API

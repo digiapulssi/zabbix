@@ -414,6 +414,16 @@ class CDiscoveryRule extends CItemGeneral {
 		// delete LLD rules
 		DB::delete('items', ['itemid' => $ruleids]);
 
+		$insert = [];
+		foreach ($ruleids as $ruleid) {
+			$insert[] = [
+				'tablename' => 'events',
+				'field' => 'lldruleid',
+				'value' => $ruleid
+			];
+		}
+		DB::insert('housekeeper', $insert);
+
 		// TODO: remove info from API
 		foreach ($delRules as $item) {
 			$host = reset($item['hosts']);
