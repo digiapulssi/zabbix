@@ -673,7 +673,7 @@ jQuery(function($) {
 													else {
 														root = $('.tree-item[data-id=' + parent + ']>ul.tree-list',
 																$obj
-															),
+															).get(0),
 														id = +resp['map_id'];
 														new_item = {
 															name: resp['map_name'],
@@ -682,7 +682,7 @@ jQuery(function($) {
 															parent: parent
 														};
 
-														root.append(createTreeItem($obj, new_item, 1, true, true));
+														root.appendChild(createTreeItem($obj, new_item, 1, true, true));
 
 														$(root).closest('.tree-item')
 															.removeClass('closed')
@@ -694,7 +694,7 @@ jQuery(function($) {
 															if (typeof resp.hierarchy[mapid] !== 'undefined') {
 																var root = $('.tree-item[data-id=' + itemid +
 																		']>ul.tree-list', $obj
-																	);
+																	).get(0);
 
 																$.each(resp.hierarchy[mapid], function(i, submapid) {
 																	if (typeof resp.submaps[submapid] !== 'undefined') {
@@ -707,7 +707,7 @@ jQuery(function($) {
 																				parent: +itemid
 																			};
 
-																		root.append(createTreeItem($obj, new_item, 1,
+																		root.appendChild(createTreeItem($obj, new_item, 1,
 																			true, true
 																		));
 																		add_child_levels($obj, +submapid,
@@ -782,7 +782,7 @@ jQuery(function($) {
 
 					$.each(item.children, function(i, item) {
 						if (typeof item === 'object') {
-							ul.append(createTreeItem($obj, item, depth+1, true, isEditMode));
+							ul.appendChild(createTreeItem($obj, item, depth + 1, true, isEditMode));
 
 							if (item.id > widget_data.lastId) {
 								widget_data.lastId = item.id;
@@ -920,7 +920,7 @@ jQuery(function($) {
 						}
 
 						addPopupValues = function(data) {
-							var root = $('.tree-item[data-id=' + id + ']>ul.tree-list', $obj),
+							var root = $('.tree-item[data-id=' + id + ']>ul.tree-list', $obj).get(0),
 								new_item;
 
 							$.each(data.values, function() {
@@ -931,7 +931,7 @@ jQuery(function($) {
 									parent: id
 								};
 
-								root.append(createTreeItem($obj, new_item, 1, true, isEditMode));
+								root.appendChild(createTreeItem($obj, new_item, 1, true, isEditMode));
 							});
 
 							$(root)
