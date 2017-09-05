@@ -90,6 +90,7 @@ static zbx_hk_cleanup_table_t	hk_cleanup_tables[] = {
 	{"history_uint", &cfg.hk.history_mode},
 	{"trends", &cfg.hk.trends_mode},
 	{"trends_uint", &cfg.hk.trends_mode},
+	/* force events housekeeping mode on to perform problem cleanup when events housekeeping is disabled */
 	{"events", &poption_mode_enabled},
 	{NULL}
 };
