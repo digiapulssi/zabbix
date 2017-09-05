@@ -2182,6 +2182,26 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 		$msg = $okmsg;
 	}
 
+	if (isset(CWebUser::$data['debug_mode'], $ZBX_MESSAGES) && CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_ENABLED
+			&& !ZBX_SHOW_SQL_ERRORS && CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
+		$filtered_messages = array();
+		$generic_exists = false;
+
+		foreach ($ZBX_MESSAGES as $message) {
+			if (array_key_exists('sql_error', $message) && $message['sql_error'] === true) {
+				if (!$generic_exists) {
+					$message['message'] = _('SQL error. Please contact Zabbix administrator.');
+					$filtered_messages[] = $message;
+					$generic_exists = true;
+				}
+			}
+			else {
+				$filtered_messages[] = $message;
+			}
+		}
+		$ZBX_MESSAGES = $filtered_messages;
+	}
+
 	if (isset($msg)) {
 		switch ($page['type']) {
 			case PAGE_TYPE_IMAGE:
@@ -2339,6 +2359,24 @@ function error($msgs) {
 			$msg = preg_replace('/^\[.+?::.+?\]/', '', $msg);
 		}
 		array_push($ZBX_MESSAGES, array('type' => 'error', 'message' => $msg));
+	}
+}
+
+function sqlError($msgs) {
+	global $ZBX_MESSAGES;
+
+	if (!isset($ZBX_MESSAGES)) {
+		$ZBX_MESSAGES = array();
+	}
+
+	$msgs = zbx_toArray($msgs);
+
+	foreach ($msgs as $msg) {
+		$ZBX_MESSAGES[] = array(
+			'type' => 'error',
+			'message' => $msg,
+			'sql_error' => true
+		);
 	}
 }
 
