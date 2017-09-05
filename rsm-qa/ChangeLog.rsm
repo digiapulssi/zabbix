@@ -1,3 +1,10 @@
+Changes for rsm1.0.0rc24
+
+Bug fixes:
+....I..... [287] fixed partial TLD onboarding being considered successful (gleb)
+.......P.. [sub-239] fixed passive proxy sending same history data twice, adjusted proxy-side timeouts (gleb, vjaceslavs)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc23
 
 New features:

@@ -21,11 +21,12 @@ use constant false => 0;
 
 my %macros = ('{$RSM.EPP.ENABLED}' => 0, '{$RSM.IP4.ENABLED}' => 0, '{$RSM.IP6.ENABLED}' => 0, '{$RSM.RDDS.ENABLED}' => 0);
 
-sub add_probe($$$$$);
+sub add_probe($$$$$$$$$$);
 sub delete_probe($);
 sub disable_probe($);
 sub rename_probe($$);
 
+sub is_not_empty($$);
 
 sub validate_input;
 sub usage;
@@ -41,60 +42,68 @@ usage() if ($OPTS{'help'} or not $rv);
 
 validate_input();
 
-my $config = get_rsm_config();
-
-my $server_key = get_rsm_server_key($OPTS{'server-id'});
-
-my $section = $config->{$server_key};
-
-if (!defined($section))
-{
-	print("Error: server-id \"", $OPTS{'server-id'}, "\" not found in configuration file\n");
-	exit(1);
-}
+my $section = get_rsm_config()->{get_rsm_server_key($OPTS{'server-id'})};
+pfail("server-id \"", $OPTS{'server-id'}, "\" not found in configuration file") unless (defined($section));
 
 my $attempts = 3;
 RELOGIN: zbx_connect($section->{'za_url'}, $section->{'za_user'}, $section->{'za_password'}, $OPTS{'verbose'});
 
-if ($OPTS{'delete'}) {
-    delete_probe($OPTS{'probe'});
+if ($OPTS{'delete'})
+{
+	delete_probe($OPTS{'probe'});
 }
-elsif ($OPTS{'disable'}) {
-    disable_probe($OPTS{'probe'});
+elsif ($OPTS{'disable'})
+{
+	disable_probe($OPTS{'probe'});
 }
-elsif ($OPTS{'add'}) {
-    my $result = create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
-    my $error = get_api_error($result);
-    if (defined($error)) {
-	if (zbx_need_relogin($result) eq true) {
-	    goto RELOGIN if (--$attempts);
+elsif ($OPTS{'add'})
+{
+	my $result = create_macro('{$RSM.PROBE.MAX.OFFLINE}', '1h', undef);
+	my $error = get_api_error($result);
+
+	if (defined($error))
+	{
+		goto RELOGIN if (zbx_need_relogin($result) == true && $attempts-- > 0);
+		pfail($error);
 	}
-	pfail($error);
-    }
-    add_probe($OPTS{'probe'}, $OPTS{'ip'}, ($OPTS{'port'} ? $OPTS{'port'} : DEFAULT_PROBE_PORT), $OPTS{'psk-identity'}, $OPTS{'psk'});
+
+	add_probe(
+		$OPTS{'probe'},
+		$OPTS{'ip'},
+		$OPTS{'port'},
+		$OPTS{'psk-identity'},
+		$OPTS{'psk'},
+		$OPTS{'epp'},
+		$OPTS{'ipv4'},
+		$OPTS{'ipv6'},
+		$OPTS{'rdds'},
+		$OPTS{'resolver'}
+	);
 }
-elsif($OPTS{'rename'}) {
-    rename_probe($OPTS{'probe'}, $OPTS{'new-name'});
+elsif ($OPTS{'rename'})
+{
+	rename_probe($OPTS{'probe'}, $OPTS{'new-name'});
 }
 
 exit;
 
 ################
 
-sub add_probe($$$$$) {
-    my $probe_name = shift;
-    my $probe_ip = shift;
-    my $probe_port = shift;
-    my $psk_identity = shift;
-    my $psk = shift;
+sub add_probe($$$$$$$$$$)
+{
+	my $probe_name = shift;
+	my $probe_ip = shift;
+	my $probe_port = shift;
+	my $psk_identity = shift;
+	my $psk = shift;
+	my $epp = shift;
+	my $ipv4 = shift;
+	my $ipv6 = shift;
+	my $rdds = shift;
+	my $resolver = shift;
 
-    my ($probe, $probe_host, $probe_host_mon, $probe_tmpl);
-
-    print "Trying to add '".$probe_name."' probe...\n";
-
-    if (is_probe_exist($probe_name)) {
-	print "The probe with name '".$probe_name."' already exists! Trying to enable it\n";
-    }
+	print("Trying to add '$probe_name' probe...\n");
+	print "The probe with name '$probe_name' already exists! Trying to enable it\n" if (probe_exists($probe_name));
 
     ###### Checking and creating required groups and templates
 
@@ -104,41 +113,33 @@ sub add_probe($$$$$) {
 
     ########## Creating new Probe
 
-    print "Creating '$probe_name' with interface $probe_ip:$probe_port ";
-
-    $probe = create_passive_proxy($probe_name, $probe_ip, $probe_port, $psk_identity, $psk);
-
-    is_not_empty($probe, true);
+	print("Creating '$probe_name' with interface $probe_ip:$probe_port ");
+	my $probe = create_passive_proxy($probe_name, $probe_ip, $probe_port, $psk_identity, $psk);
+	is_not_empty($probe, true);
 
     ########## Creating new Host Group
 
-    print "Creating '$probe_name' host group: ";
-
-    my $probe_groupid = create_group($probe_name);
-
-    is_not_empty($probe_groupid, true);
+	print("Creating '$probe_name' host group: ");
+	my $probe_groupid = create_group($probe_name);
+	is_not_empty($probe_groupid, true);
 
     ########## Creating Probe template
 
-    print "Creating '$probe_name' template: ";
-
-    $probe_tmpl = create_probe_template($probe_name, $OPTS{'epp'}, $OPTS{'ipv4'}, $OPTS{'ipv6'}, $OPTS{'rdds'}, $OPTS{'resolver'});
-
-    is_not_empty($probe_tmpl, true);
+	print("Creating '$probe_name' template: ");
+	my $probe_tmpl = create_probe_template($probe_name, $epp, $ipv4, $ipv6, $rdds, $resolver);
+	is_not_empty($probe_tmpl, true);
 
     ########## Creating Probe status template
 
-    print "Creating '$probe_name' probe status template: ";
-
-    my $root_servers_macros = update_root_servers();
-    my $probe_status_templateid = create_probe_status_template($probe_name, $probe_tmpl, $root_servers_macros);
-
-    is_not_empty($probe_status_templateid, true);
+	print("Creating '$probe_name' probe status template: ");
+	my $root_servers_macros = update_root_servers();
+	my $probe_status_templateid = create_probe_status_template($probe_name, $probe_tmpl, $root_servers_macros);
+	is_not_empty($probe_status_templateid, true);
 
     ########## Creating Probe host
 
 	print("Creating '$probe_name' host: ");
-	$probe_host = create_host({
+	my $probe_host = create_host({
 		'groups'	=> [
 			{
 				'groupid'	=> PROBES_GROUPID
@@ -160,12 +161,12 @@ sub add_probe($$$$$) {
 		]
 	});
 
-	is_not_empty($probe_host);
+	is_not_empty($probe_host, true);
 
     ########## Creating Probe monitoring host
 
 	print("Creating Probe monitoring host: ");
-	$probe_host_mon = create_host({
+	my $probe_host_mon = create_host({
 		'groups'	=> [
 			{
 				'groupid'	=> PROBES_MON_GROUPID
@@ -577,7 +578,7 @@ sub is_not_empty($$) {
     }
     else {
         print "failed\n";
-        exit(1) if !defined($do_exit) or $do_exit != false;
+        exit(1) unless ($do_exit == false);
     }
 }
 
@@ -648,49 +649,49 @@ EOF
 exit(1);
 }
 
-sub validate_input {
-    my $msg = "";
+sub validate_input
+{
+	my @possible_actions = ('disable', 'add', 'delete', 'rename');
+	my $actions_chosen = 0;
+	my $msg = "";
 
-    $msg = "Probe name must be specified (--probe)\n" unless (defined($OPTS{'probe'}));
+	$msg .= "Probe name must be specified (--probe)\n" unless (defined($OPTS{'probe'}));
+	$msg .= "Server id must be specified (--server-id)\n" unless (defined($OPTS{'server-id'}));
 
-    $msg .= "Server id must be specified (--server-id)\n" unless (defined($OPTS{'server-id'}));
+	foreach my $action (@possible_actions)
+	{
+		$actions_chosen++ if (defined($OPTS{$action}));
+	}
 
-    if ((defined($OPTS{'delete'}) and defined($OPTS{'disable'})) or
-	(defined($OPTS{'delete'}) and defined($OPTS{'add'})) or
-	(defined($OPTS{'delete'}) and defined($OPTS{'rename'})) or
-	(defined($OPTS{'disable'}) and defined($OPTS{'add'})) or
-	(defined($OPTS{'disable'}) and defined($OPTS{'rename'})) or
-	(defined($OPTS{'add'}) and defined($OPTS{'rename'}))) {
-	$msg .= "You need to choose only one option from --disable, --add, --delete, --rename\n";
-    }
+	if ($actions_chosen == 0)
+	{
+		$msg .= "At least one option --" . join(", --", @possible_actions) . " must be specified\n";
+	}
+	elsif ($actions_chosen > 1)
+	{
+		$msg .= "You need to choose only one option from --" . join(", --", @possible_actions) . "\n";
+	}
+	elsif (defined($OPTS{'add'}))
+	{
+		$msg .= "You need to specify Probe IP using --ip argument\n" unless (defined($OPTS{'ip'}));
 
-    if (!defined($OPTS{'delete'}) and !defined($OPTS{'add'}) and !defined($OPTS{'disable'}) and !defined($OPTS{'rename'})) {
-	$msg .= "At least one option --disable, --add, --delete, --rename must be specified\n";
-    }
-    
-    if (defined($OPTS{'rename'}) and !defined($OPTS{'new-name'})) {
-	$msg .= "You need to specify new Probe node name using --new-name argument\n";
-    }
+		$OPTS{'port'} //= DEFAULT_PROBE_PORT;
+		$OPTS{'resolver'} //= '127.0.0.1';
+		$OPTS{'psk-identity'} //= $OPTS{'probe'} if (defined($OPTS{'psk'}));
 
-    if (defined($OPTS{'add'}) and !defined($OPTS{'ip'})) {
-        $msg .= "You need to specify Probe IP using --ip argument\n";
-    }
+		foreach my $option (('epp', 'rdds', 'ipv4', 'ipv6'))
+		{
+			$OPTS{$option} //= 0;
+		}
+	}
+	elsif (defined($OPTS{'rename'}))
+	{
+		$msg .= "You need to specify new Probe node name using --new-name argument\n" unless (defined($OPTS{'new-name'}));
+	}
 
-    if (!defined($OPTS{'psk-identity'}) and defined($OPTS{'psk'})) {
-	$OPTS{'psk-identity'} = $OPTS{'probe'};
-    }
-
-    if (defined($OPTS{'add'}) and !defined($OPTS{'resolver'})) {
-        $OPTS{'resolver'} = '127.0.0.1';
-    }
-
-    $OPTS{'epp'} = 0 unless defined($OPTS{'epp'});
-    $OPTS{'ipv4'} = 0 unless defined($OPTS{'ipv4'});
-    $OPTS{'ipv6'} = 0 unless defined($OPTS{'ipv6'});
-    $OPTS{'rdds'} = 0 unless defined($OPTS{'rdds'});
-
-    if ($msg ne '') {
-        print($msg);
-        usage();
-    }
+	unless ($msg eq "")
+	{
+		print($msg);
+		usage();
+	}
 }
