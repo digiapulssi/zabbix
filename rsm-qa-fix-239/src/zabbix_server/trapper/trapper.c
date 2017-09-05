@@ -148,13 +148,13 @@ static void	send_proxyhistory(zbx_socket_t *sock, zbx_timespec_t *ts)
 	zbx_json_adduint64(&j, "_" ZBX_PROTO_TAG_CLOCK, ts->sec);
 	zbx_json_adduint64(&j, "_" ZBX_PROTO_TAG_NS, ts->ns);
 
-	if (SUCCEED != zbx_tcp_send_to(sock, j.buffer, CONFIG_TIMEOUT))
+	if (SUCCEED != zbx_tcp_send_to(sock, j.buffer, CONFIG_TRAPPER_TIMEOUT))
 	{
 		error = zbx_strdup(error, zbx_socket_strerror());
 		goto out;
 	}
 
-	if (SUCCEED != zbx_recv_response(sock, CONFIG_TIMEOUT, &error))
+	if (SUCCEED != zbx_recv_response(sock, CONFIG_TRAPPER_TIMEOUT, &error))
 		goto out;
 
 	if (0 != lastid)
