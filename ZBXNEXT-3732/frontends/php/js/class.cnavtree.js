@@ -1004,6 +1004,7 @@ jQuery(function($) {
 					arrow.appendChild(arrow_btn);
 					arrow_btn.addEventListener('click', function(event) {
 						var widget_data = getWidgetData($obj),
+							widget_options = $obj.data('widgetData'),
 							branch = $(this).closest('[data-id]'),
 							button = $(this),
 							closed_state = '1';
@@ -1029,6 +1030,19 @@ jQuery(function($) {
 								'web.dashbrd.navtree-' + branch.data('id') + '.toggle',
 								closed_state, [widget_data['widgetid']]
 							);
+
+							var index = widget_options['navtree_items_opened'].indexOf(branch.data('id').toString());
+							if (index > -1) {
+								if (closed_state === '1') {
+									widget_options['navtree_items_opened'].splice(index, 1);
+								}
+								else {
+									widget_options['navtree_items_opened'].push(branch.data('id').toString());
+								}
+							}
+							else if (closed_state === '0' && index == -1) {
+								widget_options['navtree_items_opened'].push(branch.data('id').toString());
+							}
 						}
 					});
 				}
