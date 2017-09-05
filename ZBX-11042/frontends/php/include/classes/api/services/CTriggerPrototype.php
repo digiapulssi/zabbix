@@ -470,6 +470,11 @@ class CTriggerPrototype extends CTriggerGeneral {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong fields for trigger.'));
 			}
 
+			if (array_key_exists('url', $triggerPrototype) && $triggerPrototype['url']
+					&& !CHtmlUrlValidator::validate($triggerPrototype['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
+			}
+
 			if (array_key_exists('templateid', $triggerPrototype)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
 					'Cannot set "templateid" for trigger prototype "%1$s".',
@@ -1449,6 +1454,11 @@ class CTriggerPrototype extends CTriggerGeneral {
 
 			if (!isset($dbTriggerPrototypes[$triggerPrototype['triggerid']])) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('No permissions to referred object or it does not exist!'));
+			}
+
+			if (array_key_exists('url', $triggerPrototype) && $triggerPrototype['url']
+					&& !CHtmlUrlValidator::validate($triggerPrototype['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
 			if (array_key_exists('templateid', $triggerPrototype)) {
