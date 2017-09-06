@@ -392,7 +392,7 @@ static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, co
 				" and mediatypeid is not null"
 				" and alerttype=%d"
 				" and (eventid=" ZBX_FS_UI64,
-				actionid,  ALERT_TYPE_MESSAGE, event->eventid);
+				actionid, ALERT_TYPE_MESSAGE, event->eventid);
 
 	if (NULL != r_event)
 	{
@@ -1435,8 +1435,7 @@ static void	escalation_execute_recovery_operations(const DB_EVENT *event, const 
 					message = action->r_longdata;
 				}
 
-				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject,
-						message, NULL);
+				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject, message, NULL);
 				break;
 			case OPERATION_TYPE_COMMAND:
 				execute_commands(event, r_event, NULL, action->actionid, operationid, 1,
@@ -1538,8 +1537,7 @@ static void	escalation_execute_acknowledge_operations(const DB_EVENT *event, con
 					message = action->ack_longdata;
 				}
 
-				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject, message,
-						ack);
+				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject, message, ack);
 				break;
 			case OPERATION_TYPE_ACK_MESSAGE:
 				if (SUCCEED == DBis_null(row[2]))
