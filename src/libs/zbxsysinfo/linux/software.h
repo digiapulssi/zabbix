@@ -22,8 +22,8 @@
 
 #define SW_OS_FULL			"/host/proc/version"
 #define SW_OS_SHORT 			"/host/proc/version_signature"
-#define SW_OS_NAME			"/etc/issue.net"
-#define SW_OS_NAME_RELEASE		"/etc/os-release"
+#define SW_OS_NAME			"/host/etc/issue.net"
+#define SW_OS_NAME_RELEASE		"/host/etc/os-release"
 
 #define SW_OS_OPTION_PRETTY_NAME	"PRETTY_NAME"
 

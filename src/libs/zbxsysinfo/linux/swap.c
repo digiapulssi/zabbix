@@ -215,7 +215,7 @@ static int	get_swap_stat(const char *swapdev, swap_stat_t *result)
 		ret = get_swap_pages(result);
 		swapdev = NULL;
 	}
-	else if (0 != strncmp(swapdev, "/dev/", 5))
+	else if (0 != strncmp(swapdev, "/host/dev/", 5))
 		offset = 5;
 
 	if (NULL == (f = fopen("/host/proc/swaps", "r")))
@@ -223,7 +223,7 @@ static int	get_swap_stat(const char *swapdev, swap_stat_t *result)
 
 	while (NULL != fgets(line, sizeof(line), f))
 	{
-		if (0 != strncmp(line, "/dev/", 5))
+		if (0 != strncmp(line, "/host/dev/", 5))
 			continue;
 
 		if (NULL == (s = strchr(line, ' ')))

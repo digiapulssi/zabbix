@@ -22,7 +22,7 @@
 #include "stats.h"
 #include "diskdevices.h"
 
-#define ZBX_DEV_PFX	"/dev/"
+#define ZBX_DEV_PFX	"/host/dev/"
 #define ZBX_DEV_READ	0
 #define ZBX_DEV_WRITE	1
 
