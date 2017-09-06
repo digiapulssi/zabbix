@@ -19,8 +19,8 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.4.1rc1');
-define('ZABBIX_API_VERSION',	'3.4.1');
+define('ZABBIX_VERSION',		'3.4.2rc1');
+define('ZABBIX_API_VERSION',	'3.4.2');
 define('ZABBIX_EXPORT_VERSION',	'3.4');
 define('ZABBIX_DB_VERSION',		3040000);
 
@@ -150,6 +150,7 @@ define('P_NZERO',				0x0020);
 define('P_NO_TRIM',				0x0040);
 define('P_ALLOW_USER_MACRO',	0x0080);
 define('P_ALLOW_LLD_MACRO',		0x0100);
+define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
 
 //	misc parameters
 define('IMAGE_FORMAT_PNG',	'PNG');
@@ -938,10 +939,11 @@ define('HOST_INVENTORY_DISABLED',	-1);
 define('HOST_INVENTORY_MANUAL',		0);
 define('HOST_INVENTORY_AUTOMATIC',	1);
 
-define('EXPRESSION_HOST_UNKNOWN',		'#ERROR_HOST#');
-define('EXPRESSION_HOST_ITEM_UNKNOWN',	'#ERROR_ITEM#');
-define('EXPRESSION_NOT_A_MACRO_ERROR',	'#ERROR_MACRO#');
-define('EXPRESSION_FUNCTION_UNKNOWN',	'#ERROR_FUNCTION#');
+define('EXPRESSION_HOST_UNKNOWN',			'#ERROR_HOST#');
+define('EXPRESSION_HOST_ITEM_UNKNOWN',		'#ERROR_ITEM#');
+define('EXPRESSION_NOT_A_MACRO_ERROR',		'#ERROR_MACRO#');
+define('EXPRESSION_FUNCTION_UNKNOWN',		'#ERROR_FUNCTION#');
+define('EXPRESSION_UNSUPPORTED_VALUE_TYPE',	'#ERROR_VALUE_TYPE#');
 
 /**
  * @deprecated use either a literal space " " or a non-breakable space "&nbsp;" instead
@@ -967,6 +969,7 @@ define('ZBX_PREG_MACRO_NAME', '([A-Z0-9\._]+)');
 define('ZBX_PREG_MACRO_NAME_LLD', '([A-Z0-9\._]+)');
 define('ZBX_PREG_INTERNAL_NAMES', '([0-9a-zA-Z_\. \-]+)'); // !!! Don't forget sync code with C !!!
 define('ZBX_PREG_NUMBER', '([\-+]?[0-9]+[.]?[0-9]*['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)');
+define('ZBX_PREG_INT', '([\-+]?[0-9]+['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)');
 define('ZBX_PREG_DEF_FONT_STRING', '/^[0-9\.:% ]+$/');
 define('ZBX_PREG_DNS_FORMAT', '([0-9a-zA-Z_\.\-$]|\{\$?'.ZBX_PREG_MACRO_NAME.'\})*');
 define('ZBX_PREG_HOST_FORMAT', ZBX_PREG_INTERNAL_NAMES);
@@ -1084,6 +1087,7 @@ define('API_HTTP_POST',			16);
 define('API_VARIABLE_NAME',		17);
 define('API_OUTPUT',			18);
 define('API_TIME_UNIT',			19);
+define('API_URL',				20);
 
 // flags
 define('API_REQUIRED',			0x01);
