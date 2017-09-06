@@ -39,7 +39,7 @@
 
 #define CPU_MAX_FREQ_FILE	"/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq"
 
-#define HW_CPU_INFO_FILE	"/proc/cpuinfo"
+#define HW_CPU_INFO_FILE	"/host/proc/cpuinfo"
 #define HW_CPU_ALL_CPUS		-1
 #define HW_CPU_SHOW_ALL		1
 #define HW_CPU_SHOW_MAXFREQ	2

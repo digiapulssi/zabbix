@@ -21,7 +21,7 @@
 #include "zbxregexp.h"
 
 #ifdef KERNEL_2_4
-#define DEVICE_DIR	"/proc/sys/dev/sensors"
+#define DEVICE_DIR	"/host/proc/sys/dev/sensors"
 #else
 #define DEVICE_DIR	"/sys/class/hwmon"
 static char	*locations[] = {"", "/device", NULL};

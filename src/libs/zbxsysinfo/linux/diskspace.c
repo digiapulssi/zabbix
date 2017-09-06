@@ -132,9 +132,9 @@ int	VFS_FS_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	ZBX_UNUSED(request);
 
-	if (NULL == (f = fopen("/proc/mounts", "r")))
+	if (NULL == (f = fopen("/host/proc/mounts", "r")))
 	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /proc/mounts: %s", zbx_strerror(errno)));
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /host/proc/mounts: %s", zbx_strerror(errno)));
 		return SYSINFO_RET_FAIL;
 	}
 
