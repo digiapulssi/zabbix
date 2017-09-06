@@ -710,7 +710,7 @@ function getActionOperationDescriptions(array $actions, $type) {
 
 					case OPERATION_TYPE_HOST_INVENTORY:
 						$host_inventory_modes = getHostInventoryModes();
-						$result[$i][$j][] = bold(operation_type2str(OPERATION_TYPE_HOST_INVENTORY).': ');
+						$result[$i][$j][] = bold(operation_type2str(OPERATION_TYPE_HOST_INVENTORY, $type).': ');
 						$result[$i][$j][] = [
 							$host_inventory_modes[$operation['opinventory']['inventory_mode']],
 							BR()
@@ -980,6 +980,26 @@ function getActionOperationHints(array $operations, array $defaultMessage) {
 					$result[$key][] = $result_hint;
 				}
 				break;
+
+			case OPERATION_TYPE_RECOVERY_MESSAGE:
+				$result_hint = [];
+				$message = (array_key_exists('default_msg', $operation['opmessage'])
+					&& $operation['opmessage']['default_msg'])
+					? $defaultMessage
+					: $operation['opmessage'];
+
+				if (trim($message['subject'])) {
+					$result_hint = [bold($message['subject']), BR(), BR()];
+				}
+
+				if (trim($message['message'])) {
+					$result_hint[] = zbx_nl2br($message['message']);
+				}
+
+				if ($result_hint) {
+					$result[$key][] = $result_hint;
+				}
+				break;
 		}
 	}
 
@@ -1072,7 +1092,8 @@ function getAllowedOperations($eventsource) {
 			ACTION_ACKNOWLEDGE_OPERATION => [
 				OPERATION_TYPE_MESSAGE,
 				OPERATION_TYPE_COMMAND,
-				OPERATION_TYPE_ACK_MESSAGE
+				OPERATION_TYPE_ACK_MESSAGE,
+				OPERATION_TYPE_RECOVERY_MESSAGE
 			]
 		];
 	}
@@ -1118,7 +1139,16 @@ function getAllowedOperations($eventsource) {
 	return $operations;
 }
 
-function operation_type2str($type = null) {
+/**
+ * Get operation type text label according $type value. If $type is equal null array of all available operation types
+ * will be returned.
+ *
+ * @param int|null	$type			Operation type, one of OPERATION_TYPE_* constant or null.
+ * @param int		$action_type	Action type of operation.
+ *
+ * @return string|array
+ */
+function operation_type2str($type, $action_type) {
 	$types = [
 		OPERATION_TYPE_MESSAGE => _('Send message'),
 		OPERATION_TYPE_COMMAND => _('Remote command'),
@@ -1131,7 +1161,9 @@ function operation_type2str($type = null) {
 		OPERATION_TYPE_TEMPLATE_ADD => _('Link to template'),
 		OPERATION_TYPE_TEMPLATE_REMOVE => _('Unlink from template'),
 		OPERATION_TYPE_HOST_INVENTORY => _('Set host inventory mode'),
-		OPERATION_TYPE_RECOVERY_MESSAGE => _('Send recovery message'),
+		OPERATION_TYPE_RECOVERY_MESSAGE => ($action_type == ACTION_ACKNOWLEDGE_OPERATION)
+			? _('Notify all who received any messages regarding the problem before')
+			: _('Send recovery message'),
 		OPERATION_TYPE_ACK_MESSAGE => _('Notify all who left acknowledgement and comments')
 	];
 

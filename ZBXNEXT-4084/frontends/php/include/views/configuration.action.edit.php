@@ -575,7 +575,7 @@ if (!empty($data['new_operation'])) {
 	if (count($data['allowedOperations'][ACTION_OPERATION]) == 1) {
 		$operation = $data['allowedOperations'][ACTION_OPERATION][0];
 		$new_operation_formlist->addRow(_('Operation type'),
-			[operation_type2str($operation), new CVar('new_operation[operationtype]', $operation)]
+			[operation_type2str($operation, ACTION_OPERATION), new CVar('new_operation[operationtype]', $operation)]
 		);
 	}
 	// if multiple operation types are available, display a select
@@ -584,7 +584,7 @@ if (!empty($data['new_operation'])) {
 			$data['new_operation']['operationtype'], 'submit()'
 		);
 		foreach ($data['allowedOperations'][ACTION_OPERATION] as $operation) {
-			$operationTypeComboBox->addItem($operation, operation_type2str($operation));
+			$operationTypeComboBox->addItem($operation, operation_type2str($operation, ACTION_OPERATION));
 		}
 		$new_operation_formlist->addRow(_('Operation type'), $operationTypeComboBox);
 	}
@@ -1284,9 +1284,10 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVE
 		// if only one operation is available - show only the label
 		if (count($data['allowedOperations'][ACTION_RECOVERY_OPERATION]) == 1) {
 			$operation = $data['allowedOperations'][ACTION_RECOVERY_OPERATION][0];
-			$new_operation_formlist->addRow(_('Operation type'),
-				[operation_type2str($operation), new CVar('new_recovery_operation[operationtype]', $operation)]
-			);
+			$new_operation_formlist->addRow(_('Operation type'), [
+				operation_type2str($operation, ACTION_RECOVERY_OPERATION),
+				new CVar('new_recovery_operation[operationtype]', $operation)
+			]);
 		}
 		// if multiple operation types are available, display a select
 		else {
@@ -1294,7 +1295,7 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVE
 				$data['new_recovery_operation']['operationtype'], 'submit()'
 			);
 			foreach ($data['allowedOperations'][ACTION_RECOVERY_OPERATION] as $operation) {
-				$operationTypeComboBox->addItem($operation, operation_type2str($operation));
+				$operationTypeComboBox->addItem($operation, operation_type2str($operation, ACTION_RECOVERY_OPERATION));
 			}
 			$new_operation_formlist->addRow(_('Operation type'), $operationTypeComboBox);
 		}
@@ -1816,7 +1817,7 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS) {
 		);
 
 		foreach ($data['allowedOperations'][ACTION_ACKNOWLEDGE_OPERATION] as $operation) {
-			$operationtype->addItem($operation, operation_type2str($operation));
+			$operationtype->addItem($operation, operation_type2str($operation, ACTION_ACKNOWLEDGE_OPERATION));
 		}
 
 		$new_operation_formlist->addRow(_('Operation type'), $operationtype);
