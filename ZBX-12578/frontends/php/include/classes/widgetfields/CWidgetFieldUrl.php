@@ -1,3 +1,4 @@
+<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -17,35 +18,30 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
-#include "db.h"
-#include "dbupgrade.h"
 
-/*
- * 3.4 maintenance database patches
- */
+class CWidgetFieldUrl extends CWidgetField {
 
-#ifndef HAVE_SQLITE3
+	/**
+	 * URL widget field.
+	 *
+	 * @param string $name  field name in form
+	 * @param string $label  label for the field in form
+	 */
+	public function __construct($name, $label) {
+		parent::__construct($name, $label);
 
-static int	DBpatch_3040000(void)
-{
-	return SUCCEED;
+		$this->setSaveType(ZBX_WIDGET_FIELD_TYPE_STR);
+		$this->setValidationRules(['type' => API_URL]);
+		$this->setDefault('');
+	}
+
+	public function validate($strict = false) {
+		$errors = parent::validate($strict);
+
+		if (!$errors && $strict && ($this->getFlags() & CWidgetField::FLAG_NOT_EMPTY) && $this->getValue() === '') {
+			$errors[] = _s('Invalid parameter "%1$s": %2$s.', $this->getLabel(), _('cannot be empty'));
+		}
+
+		return $errors;
+	}
 }
-
-extern int	DBpatch_3020001(void);
-
-static int	DBpatch_3040001(void)
-{
-	return DBpatch_3020001();
-}
-
-#endif
-
-DBPATCH_START(3040)
-
-/* version, duplicates flag, mandatory flag */
-
-DBPATCH_ADD(3040000, 0, 1)
-DBPATCH_ADD(3040001, 0, 0)
-
-DBPATCH_END()
