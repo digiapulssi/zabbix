@@ -1287,7 +1287,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 	if (FAIL == ret || -1 == user_type)
 		goto out;
 
-	if (USER_TYPE_SUPER_ADMIN != user_type && userid != recipient_userid)
+	if (USER_TYPE_SUPER_ADMIN != user_type && *userid != *recipient_userid)
 	{
 		/* check if users are from the same user group */
 		result = DBselect(
