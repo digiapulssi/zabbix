@@ -30,9 +30,9 @@ int	SYSTEM_BOOTTIME(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	ZBX_UNUSED(request);
 
-	if (NULL == (f = fopen("/proc/stat", "r")))
+	if (NULL == (f = fopen("/host/proc/stat", "r")))
 	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /proc/stat: %s", zbx_strerror(errno)));
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /host/proc/stat: %s", zbx_strerror(errno)));
 		return ret;
 	}
 
@@ -51,7 +51,7 @@ int	SYSTEM_BOOTTIME(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_fclose(f);
 
 	if (SYSINFO_RET_FAIL == ret)
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with \"btime\" in /proc/stat."));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find a line with \"btime\" in /host/proc/stat."));
 
 	return ret;
 }
