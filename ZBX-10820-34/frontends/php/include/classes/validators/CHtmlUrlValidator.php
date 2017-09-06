@@ -1,3 +1,4 @@
+<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -17,35 +18,23 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
-#include "db.h"
-#include "dbupgrade.h"
 
-/*
- * 3.4 maintenance database patches
- */
+class CHtmlUrlValidator {
 
-#ifndef HAVE_SQLITE3
+	/**
+	 * Relative URL should start with .php file name.
+	 * Absolute URL schema must match schemes mentioned in ZBX_URL_VALID_SCHEMES comma separated list.
+	 *
+	 * @static
+	 *
+	 * @param string $url	URL string to validate
+	 *
+	 * @return bool
+	 */
+	public static function validate($url) {
+		$scheme = (strpos($url, ':') === false) ? '' : substr($url, 0, strpos($url, ':'));
+		$allowed_schemes = explode(',', strtolower(ZBX_URI_VALID_SCHEMES));
 
-static int	DBpatch_3040000(void)
-{
-	return SUCCEED;
+		return (in_array(strtolower($scheme), $allowed_schemes) || preg_match('/^[a-z_\.]+\.php/i', $url) == 1);
+	}
 }
-
-extern int	DBpatch_3020001(void);
-
-static int	DBpatch_3040001(void)
-{
-	return DBpatch_3020001();
-}
-
-#endif
-
-DBPATCH_START(3040)
-
-/* version, duplicates flag, mandatory flag */
-
-DBPATCH_ADD(3040000, 0, 1)
-DBPATCH_ADD(3040001, 0, 0)
-
-DBPATCH_END()
