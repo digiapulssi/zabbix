@@ -77,7 +77,7 @@ void add_allowed_path(char *config_value, char *item_type) {
 }
 
 #if !defined(_WINDOWS)
-#	define VFS_TEST_FILE "/etc/passwd"
+#	define VFS_TEST_FILE "/host/etc/passwd"
 #	define VFS_TEST_REGEXP "root"
 #	define VFS_TEST_DIR  "/var/log"
 #else

@@ -315,7 +315,7 @@ static void	update_cpustats(ZBX_CPUS_STAT_DATA *pcpus)
 	FILE		*file;
 	char		line[1024];
 	unsigned char	*cpu_status = NULL;
-	const char	*filename = "/proc/stat";
+	const char	*filename = "/host/proc/stat";
 
 #elif defined(HAVE_SYS_PSTAT_H)
 
