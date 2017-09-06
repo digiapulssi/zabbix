@@ -45,9 +45,9 @@ int	KERNEL_MAXFILES(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	ZBX_UNUSED(request);
 
-	if (SYSINFO_RET_FAIL == read_uint64_from_procfs("/proc/sys/fs/file-max", &value))
+	if (SYSINFO_RET_FAIL == read_uint64_from_procfs("/host/proc/sys/fs/file-max", &value))
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain data from /proc/sys/fs/file-max."));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain data from /host/proc/sys/fs/file-max."));
 		return SYSINFO_RET_FAIL;
 	}
 
@@ -61,9 +61,9 @@ int	KERNEL_MAXPROC(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	ZBX_UNUSED(request);
 
-	if (SYSINFO_RET_FAIL == read_uint64_from_procfs("/proc/sys/kernel/pid_max", &value))
+	if (SYSINFO_RET_FAIL == read_uint64_from_procfs("/host/proc/sys/kernel/pid_max", &value))
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain data from /proc/sys/kernel/pid_max."));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain data from /host/proc/sys/kernel/pid_max."));
 		return SYSINFO_RET_FAIL;
 	}
 

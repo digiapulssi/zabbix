@@ -21,9 +21,9 @@
 #include "zbxregexp.h"
 
 #ifdef KERNEL_2_4
-#define DEVICE_DIR	"/proc/sys/dev/sensors"
+#define DEVICE_DIR	"/host/proc/sys/dev/sensors"
 #else
-#define DEVICE_DIR	"/sys/class/hwmon"
+#define DEVICE_DIR	"/host/sys/class/hwmon"
 static char	*locations[] = {"", "/device", NULL};
 #endif
 
@@ -181,7 +181,7 @@ static int	get_device_info(const char *dev_path, const char *dev_name, char *dev
 		}
 		else
 		{
-			zbx_snprintf(bus_path, sizeof(bus_path), "/sys/class/i2c-adapter/i2c-%d", bus_i2c);
+			zbx_snprintf(bus_path, sizeof(bus_path), "/host/sys/class/i2c-adapter/i2c-%d", bus_i2c);
 			bus_subfolder = sysfs_read_attr(bus_path, &bus_attr);
 
 			if (NULL != bus_subfolder && '\0' != *bus_subfolder)

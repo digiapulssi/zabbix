@@ -73,15 +73,15 @@ static int	VM_MEMORY_CACHED(AGENT_RESULT *result)
 	zbx_uint64_t	value;
 	int		res;
 
-	if (NULL == (f = fopen("/proc/meminfo", "r")))
+	if (NULL == (f = fopen("/host/proc/meminfo", "r")))
 	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /proc/meminfo: %s", zbx_strerror(errno)));
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /host/proc/meminfo: %s", zbx_strerror(errno)));
 		return SYSINFO_RET_FAIL;
 	}
 
 	if (FAIL == (res = byte_value_from_proc_file(f, "Cached:", NULL, &value)))
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain the value of Cached from /proc/meminfo."));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain the value of Cached from /host/proc/meminfo."));
 		goto close;
 	}
 
@@ -140,15 +140,15 @@ static int	VM_MEMORY_AVAILABLE(AGENT_RESULT *result)
 
 	/* try MemAvailable (present since Linux 3.14), falling back to a calculation based on sysinfo() and Cached */
 
-	if (NULL == (f = fopen("/proc/meminfo", "r")))
+	if (NULL == (f = fopen("/host/proc/meminfo", "r")))
 	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /proc/meminfo: %s", zbx_strerror(errno)));
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /host/proc/meminfo: %s", zbx_strerror(errno)));
 		return SYSINFO_RET_FAIL;
 	}
 
 	if (FAIL == (res = byte_value_from_proc_file(f, "MemAvailable:", "Cached:", &value)))
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain the value of MemAvailable from /proc/meminfo."));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain the value of MemAvailable from /host/proc/meminfo."));
 		goto close;
 	}
 
@@ -161,7 +161,7 @@ static int	VM_MEMORY_AVAILABLE(AGENT_RESULT *result)
 
 	if (FAIL == (res = byte_value_from_proc_file(f, "Cached:", NULL, &value)))
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain the value of Cached from /proc/meminfo."));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain the value of Cached from /host/proc/meminfo."));
 		goto close;
 	}
 

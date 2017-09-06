@@ -102,7 +102,7 @@ static int	zbx_get_cpu_num()
 	FILE	*f = NULL;
 	int	ncpu = 0;
 
-	if (NULL == (file = fopen("/proc/cpuinfo", "r")))
+	if (NULL == (file = fopen("/host/proc/cpuinfo", "r")))
 		goto return_one;
 
 	while (NULL != fgets(line, 1024, file))

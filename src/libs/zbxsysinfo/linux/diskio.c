@@ -22,12 +22,12 @@
 #include "stats.h"
 #include "diskdevices.h"
 
-#define ZBX_DEV_PFX	"/dev/"
+#define ZBX_DEV_PFX	"/host/dev/"
 #define ZBX_DEV_READ	0
 #define ZBX_DEV_WRITE	1
 
 #if defined(KERNEL_2_4)
-#	define INFO_FILE_NAME	"/proc/partitions"
+#	define INFO_FILE_NAME	"/host/proc/partitions"
 #	define PARSE(line)	if (sscanf(line, ZBX_FS_UI64 ZBX_FS_UI64 " %*d %s " 		\
 					ZBX_FS_UI64 " %*d " ZBX_FS_UI64 " %*d "			\
 					ZBX_FS_UI64 " %*d " ZBX_FS_UI64 " %*d %*d %*d %*d",	\
@@ -40,7 +40,7 @@
 				&ds[ZBX_DSTAT_W_SECT]						\
 				) != 7) continue
 #else
-#	define INFO_FILE_NAME	"/proc/diskstats"
+#	define INFO_FILE_NAME	"/host/proc/diskstats"
 #	define PARSE(line)	if (sscanf(line, ZBX_FS_UI64 ZBX_FS_UI64 " %s "			\
 					ZBX_FS_UI64 " %*d " ZBX_FS_UI64 " %*d "			\
 					ZBX_FS_UI64 " %*d " ZBX_FS_UI64 " %*d %*d %*d %*d",	\

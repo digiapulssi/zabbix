@@ -78,7 +78,7 @@ typedef struct
 swap_stat_t;
 
 #ifdef KERNEL_2_4
-#	define INFO_FILE_NAME	"/proc/partitions"
+#	define INFO_FILE_NAME	"/host/proc/partitions"
 #	define PARSE(line)								\
 											\
 		if (6 != sscanf(line, "%d %d %*d %*s "					\
@@ -92,7 +92,7 @@ swap_stat_t;
 				&result->wsect		/* wsect */			\
 				)) continue
 #else
-#	define INFO_FILE_NAME	"/proc/diskstats"
+#	define INFO_FILE_NAME	"/host/proc/diskstats"
 #	define PARSE(line)								\
 											\
 		if (6 != sscanf(line, "%d %d %*s "					\
@@ -158,9 +158,9 @@ static int	get_swap_pages(swap_stat_t *result)
 	FILE	*f;
 
 #ifdef KERNEL_2_4
-	if (NULL != (f = fopen("/proc/stat", "r")))
+	if (NULL != (f = fopen("/host/proc/stat", "r")))
 #else
-	if (NULL != (f = fopen("/proc/vmstat", "r")))
+	if (NULL != (f = fopen("/host/proc/vmstat", "r")))
 #endif
 	{
 		while (NULL != fgets(line, sizeof(line), f))
@@ -215,15 +215,15 @@ static int	get_swap_stat(const char *swapdev, swap_stat_t *result)
 		ret = get_swap_pages(result);
 		swapdev = NULL;
 	}
-	else if (0 != strncmp(swapdev, "/dev/", 5))
+	else if (0 != strncmp(swapdev, "/host/dev/", 5))
 		offset = 5;
 
-	if (NULL == (f = fopen("/proc/swaps", "r")))
+	if (NULL == (f = fopen("/host/proc/swaps", "r")))
 		return ret;
 
 	while (NULL != fgets(line, sizeof(line), f))
 	{
-		if (0 != strncmp(line, "/dev/", 5))
+		if (0 != strncmp(line, "/host/dev/", 5))
 			continue;
 
 		if (NULL == (s = strchr(line, ' ')))
