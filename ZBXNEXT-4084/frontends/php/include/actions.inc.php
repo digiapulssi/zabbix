@@ -1143,8 +1143,8 @@ function getAllowedOperations($eventsource) {
  * Get operation type text label according $type value. If $type is equal null array of all available operation types
  * will be returned.
  *
- * @param int|null	$type			Operation type, one of OPERATION_TYPE_* constant or null.
- * @param int		$action_type	Action type of operation.
+ * @param int|null  $type           Operation type, one of OPERATION_TYPE_* constant or null.
+ * @param int       $action_type    Action type of operation.
  *
  * @return string|array
  */
