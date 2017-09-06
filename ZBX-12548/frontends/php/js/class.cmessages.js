@@ -49,7 +49,8 @@ var CMessageList = Class.create({
 		'repeat':	1,			// loop sound for 1,3,5,10 .. times
 		'mute':		0,			// mute alarms
 		'timeout':	0,
-		'sourceid': null		// Id of played message.
+		'sourceid': null,		// Id of played message.
+		'time': 0				// Message timestamp.
 	},
 
 	initialize: function(messagesListId, args) {
@@ -214,11 +215,12 @@ var CMessageList = Class.create({
 			}
 
 			if (message.priority > this.sounds.priority || (message.priority == this.sounds.priority
-					&& this.sounds.timeout < message.timeout)) {
+					&& this.sounds.time < message.time)) {
 				this.sounds.priority = message.priority;
 				this.sounds.sound = message.sound;
 				this.sounds.timeout = message.timeout;
 				this.sounds.sourceid = message.sourceid;
+				this.sounds.time = message.time;
 			}
 		}
 
