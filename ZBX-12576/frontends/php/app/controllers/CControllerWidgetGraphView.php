@@ -208,11 +208,16 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
 				$item = API::Item()->get([
 					'itemids' => $resourceid,
-					'output' => null
+					'output' => ['type', 'name', 'hostid', 'key_'],
+					'webitems' => true
 				]);
-				$item = reset($item);
 
-				if (!$item) {
+				if ($item) {
+					$item = ($item[0]['type'] == ITEM_TYPE_HTTPTEST)
+						? CMacrosResolverHelper::resolveItemNames($item)[0]
+						: reset($item);
+				}
+				else {
 					$unavailable_object = true;
 				}
 			}
@@ -237,7 +242,14 @@ class CControllerWidgetGraphView extends CControllerWidget {
 					$time_control_data['loadSBox'] = 1;
 				}
 
-				if ($resourceid) {
+				if ($item && $item['type'] == ITEM_TYPE_HTTPTEST) {
+					$graph_src = new CUrl('chart3.php');
+					$graph_src->setArgument('items[0][itemid]', $resourceid);
+					$graph_src->setArgument('name', $item['name_expanded']);
+					$graph_src->setArgument('width', $width);
+					$graph_src->setArgument('height', $height);
+				}
+				elseif ($resourceid) {
 					$graph_src = new CUrl('chart.php');
 					$graph_src->setArgument('itemids[]', $resourceid);
 					$graph_src->setArgument('width', $width);
