@@ -1267,7 +1267,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	int             user_type = -1;
+	int		user_type = -1;
 	int		ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -1321,7 +1321,7 @@ out:
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-const char     *zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid)
+const char	*zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
