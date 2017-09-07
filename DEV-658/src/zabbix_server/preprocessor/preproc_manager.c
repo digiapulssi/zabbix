@@ -52,7 +52,8 @@ typedef struct preprocessing_request
 	struct preprocessing_request	*dependency;	/* other request that current request depends on */
 	int				locks;		/* count of dependent requests in queue */
 	zbx_preproc_item_value_t	value;		/* unpacked item value */
-	zbx_vector_ptr_t		steps;		/* preprocessing steps */
+	zbx_preproc_op_t		*steps;		/* preprocessing steps */
+	int				steps_num;	/* number of preprocessing steps */
 	unsigned char			value_type;	/* value type from configuration */
 }
 zbx_preprocessing_request_t;
@@ -95,9 +96,22 @@ static void	preprocessor_enqueue_dependent(zbx_preprocessing_manager_t *manager,
 
 static void	preproc_item_clear(zbx_preproc_item_t *item)
 {
-	zbx_vector_uint64_destroy(&item->dep_itemids);
-	zbx_vector_ptr_clear_ext(&item->preproc_ops, (zbx_clean_func_t)zbx_preproc_op_free);
-	zbx_vector_ptr_destroy(&item->preproc_ops);
+	int	i;
+
+	zbx_free(item->dep_itemids);
+
+	for (i = 0; i < item->preproc_ops_num; i++)
+		zbx_free(item->preproc_ops[i].params);
+
+	zbx_free(item->preproc_ops);
+}
+
+static void	request_free_steps(zbx_preprocessing_request_t *request)
+{
+	while (0 < request->steps_num--)
+		zbx_free(request->steps[request->steps_num].params);
+
+	zbx_free(request->steps);
 }
 
 /******************************************************************************
@@ -270,7 +284,8 @@ static zbx_uint32_t	preprocessor_create_task(zbx_preprocessing_manager_t *manage
 		THIS_SHOULD_NEVER_HAPPEN;
 
 	size = zbx_preprocessor_pack_task(task, request->value.itemid, request->value_type, request->value.ts, &value,
-			zbx_hashset_search(&manager->history_cache, &request->value.itemid), &request->steps);
+			zbx_hashset_search(&manager->history_cache, &request->value.itemid), request->steps,
+			request->steps_num);
 
 	return size;
 }
@@ -310,8 +325,7 @@ static void	preprocessor_assign_tasks(zbx_preprocessing_manager_t *manager)
 		request->state = REQUEST_STATE_PROCESSING;
 		worker->queue_item = queue_item;
 
-		zbx_vector_ptr_clear_ext(&request->steps, (zbx_clean_func_t)zbx_preproc_op_free);
-		zbx_vector_ptr_destroy(&request->steps);
+		request_free_steps(request);
 		zbx_free(task);
 
 		if (NULL != request->dependency)
@@ -352,8 +366,7 @@ static void	preprocessor_free_request(zbx_preprocessing_request_t *request)
 	zbx_free(request->value.result);
 	zbx_free(request->value.ts);
 
-	zbx_vector_ptr_clear_ext(&request->steps, (zbx_clean_func_t)zbx_preproc_op_free);
-	zbx_vector_ptr_destroy(&request->steps);
+	request_free_steps(request);
 }
 
 
@@ -420,15 +433,15 @@ static void	preprocessor_link_delta_items(zbx_preprocessing_manager_t *manager, 
 	zbx_delta_item_index_t		*index, index_local;
 	zbx_preproc_op_t		*op;
 
-	for (i = 0; i < item->preproc_ops.values_num; i++)
+	for (i = 0; i < item->preproc_ops_num; i++)
 	{
-		op = (zbx_preproc_op_t *)item->preproc_ops.values[i];
+		op = &item->preproc_ops[i];
 
 		if (ZBX_PREPROC_DELTA_VALUE == op->type || ZBX_PREPROC_DELTA_SPEED == op->type)
 			break;
 	}
 
-	if (i != item->preproc_ops.values_num)
+	if (i != item->preproc_ops_num)
 	{
 		/* existing delta item*/
 		if (NULL != (index = zbx_hashset_search(&manager->delta_items, &item->itemid)))
@@ -529,26 +542,22 @@ static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_prepr
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid: %" PRIu64, __function_name, value->itemid);
 
 	memset(&request, 0, sizeof(zbx_preprocessing_request_t));
-	zbx_vector_ptr_create(&request.steps);
 	memcpy(&request.value, value, sizeof(zbx_preproc_item_value_t));
 	item_local.itemid = value->itemid;
 	item = zbx_hashset_search(&manager->item_config, &item_local);
 
-	if (NULL != value->result && ISSET_VALUE(value->result) && NULL != item && 0 != item->preproc_ops.values_num)
+	if (NULL != value->result && ISSET_VALUE(value->result) && NULL != item && 0 != item->preproc_ops_num)
 	{
 		request.state = REQUEST_STATE_QUEUED;
 		request.value_type = item->value_type;
 
-		zbx_vector_ptr_reserve(&request.steps, item->preproc_ops.values_num);
-		for (i = 0; i < item->preproc_ops.values_num; i++)
-		{
-			zbx_preproc_op_t	*op_new, *op;
+		request.steps = zbx_malloc(NULL, sizeof(zbx_preproc_op_t) * item->preproc_ops_num);
+		request.steps_num = item->preproc_ops_num;
 
-			op = item->preproc_ops.values[i];
-			op_new = (zbx_preproc_op_t *)zbx_malloc(NULL, sizeof(zbx_preproc_op_t));
-			op_new->type = op->type;
-			op_new->params = zbx_strdup(NULL, op->params);
-			zbx_vector_ptr_append(&request.steps, op_new);
+		for (i = 0; i < item->preproc_ops_num; i++)
+		{
+			request.steps[i].type = item->preproc_ops[i].type;
+			request.steps[i].params = zbx_strdup(NULL, item->preproc_ops[i].params);
 		}
 	}
 	else
@@ -612,12 +621,12 @@ static void	preprocessor_enqueue_dependent(zbx_preprocessing_manager_t *manager,
 	{
 		item_local.itemid = request->value.itemid;
 		if (NULL != (item = zbx_hashset_search(&manager->item_config, &item_local)) &&
-				0 != item->dep_itemids.values_num)
+				0 != item->dep_itemids_num)
 		{
-			for (i = 0; i < item->dep_itemids.values_num; i++)
+			for (i = 0; i < item->dep_itemids_num; i++)
 			{
 				preprocessor_copy_value(&value, &request->value);
-				value.itemid = item->dep_itemids.values[i];
+				value.itemid = item->dep_itemids[i];
 				preprocessor_enqueue(manager, &value, master);
 			}
 

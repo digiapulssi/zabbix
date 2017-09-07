@@ -6131,8 +6131,11 @@ static int	dc_preproc_item_init(zbx_preproc_item_t *item, zbx_uint64_t itemid)
 	item->type = dc_item->type;
 	item->value_type = dc_item->value_type;
 
-	zbx_vector_uint64_create(&item->dep_itemids);
-	zbx_vector_ptr_create(&item->preproc_ops);
+	item->dep_itemids = NULL;
+	item->dep_itemids_num = 0;
+
+	item->preproc_ops = NULL;
+	item->preproc_ops_num = 0;
 
 	return SUCCEED;
 }
@@ -6176,15 +6179,16 @@ void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp)
 			continue;
 
 		item = (zbx_preproc_item_t *)zbx_hashset_insert(items, &item_local, sizeof(item_local));
-		zbx_vector_ptr_reserve(&item->preproc_ops, dc_preprocitem->preproc_ops.values_num);
+
+		item->preproc_ops_num = dc_preprocitem->preproc_ops.values_num;
+		item->preproc_ops = zbx_malloc(NULL, sizeof(zbx_preproc_op_t) * item->preproc_ops_num);
 
 		for (i = 0; i < dc_preprocitem->preproc_ops.values_num; i++)
 		{
 			dc_op = (const zbx_dc_preproc_op_t *)dc_preprocitem->preproc_ops.values[i];
-			op = (zbx_preproc_op_t *)zbx_malloc(NULL, sizeof(zbx_preproc_op_t));
+			op = &item->preproc_ops[i];
 			op->type = dc_op->type;
 			op->params = zbx_strdup(NULL, dc_op->params);
-			zbx_vector_ptr_append(&item->preproc_ops, op);
 		}
 	}
 
@@ -6199,8 +6203,10 @@ void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp)
 			item = (zbx_preproc_item_t *)zbx_hashset_insert(items, &item_local, sizeof(item_local));
 		}
 
-		zbx_vector_uint64_append_array(&item->dep_itemids,  dc_masteritem->dep_itemids.values,
-				dc_masteritem->dep_itemids.values_num);
+		item->dep_itemids_num = dc_masteritem->dep_itemids.values_num;
+		item->dep_itemids = zbx_malloc(NULL, sizeof(zbx_uint64_t) * item->dep_itemids_num);
+		memcpy(item->dep_itemids, dc_masteritem->dep_itemids.values,
+				sizeof(zbx_uint64_t) * item->dep_itemids_num);
 	}
 
 	UNLOCK_CACHE;

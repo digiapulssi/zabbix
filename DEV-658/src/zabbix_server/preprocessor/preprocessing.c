@@ -189,7 +189,7 @@ static zbx_uint32_t	preprocessor_pack_value(zbx_ipc_message_t *message, zbx_prep
  ******************************************************************************/
 zbx_uint32_t	zbx_preprocessor_pack_task(unsigned char **data, zbx_uint64_t itemid, unsigned char value_type,
 		zbx_timespec_t *ts, zbx_variant_t *value, zbx_item_history_value_t *history_value,
-		const zbx_vector_ptr_t *steps)
+		const zbx_preproc_op_t *steps, int steps_num)
 {
 	zbx_packed_field_t	*offset, *fields;
 	unsigned char		ts_marker, history_marker;
@@ -198,7 +198,7 @@ zbx_uint32_t	zbx_preprocessor_pack_task(unsigned char **data, zbx_uint64_t itemi
 	zbx_ipc_message_t	message;
 
 	/* 14 is a max field count (without preprocessing step fields) */
-	fields = (zbx_packed_field_t *)zbx_malloc(NULL, (14 + steps->values_num * 2) * sizeof(zbx_packed_field_t));
+	fields = (zbx_packed_field_t *)zbx_malloc(NULL, (14 + steps_num * 2) * sizeof(zbx_packed_field_t));
 
 	offset = fields;
 	ts_marker = (NULL != ts);
@@ -258,14 +258,12 @@ zbx_uint32_t	zbx_preprocessor_pack_task(unsigned char **data, zbx_uint64_t itemi
 		*offset++ = PACKED_FIELD(&history_value->timestamp.ns, sizeof(int));
 	}
 
-	*offset++ = PACKED_FIELD(&steps->values_num, sizeof(int));
+	*offset++ = PACKED_FIELD(&steps_num, sizeof(int));
 
-	for (i = 0; i < steps->values_num; i++)
+	for (i = 0; i < steps_num; i++)
 	{
-		zbx_preproc_op_t	*op = (zbx_preproc_op_t *)steps->values[i];
-
-		*offset++ = PACKED_FIELD(&op->type, sizeof(char));
-		*offset++ = PACKED_FIELD(op->params, 0);
+		*offset++ = PACKED_FIELD(&steps[i].type, sizeof(char));
+		*offset++ = PACKED_FIELD(steps[i].params, 0);
 	}
 
 	zbx_ipc_message_init(&message);
@@ -438,15 +436,15 @@ zbx_uint32_t	zbx_preprocessor_unpack_value(zbx_preproc_item_value_t *value, unsi
  *                                                                            *
  ******************************************************************************/
 void	zbx_preprocessor_unpack_task(zbx_uint64_t *itemid, unsigned char *value_type, zbx_timespec_t **ts,
-		zbx_variant_t *value, zbx_item_history_value_t **history_value, zbx_vector_ptr_t *steps,
-		const unsigned char *data)
+		zbx_variant_t *value, zbx_item_history_value_t **history_value, zbx_preproc_op_t **steps,
+		int *steps_num, const unsigned char *data)
 {
 	zbx_uint32_t			value_len;
 	const unsigned char		*offset = data;
 	unsigned char 			ts_marker, history_marker;
 	zbx_item_history_value_t	*hvalue = NULL;
 	zbx_timespec_t			*timespec = NULL;
-	int				i, step_count;
+	int				i;
 
 	offset += zbx_deserialize_uint64(offset, itemid);
 	offset += zbx_deserialize_char(offset, value_type);
@@ -508,20 +506,18 @@ void	zbx_preprocessor_unpack_task(zbx_uint64_t *itemid, unsigned char *value_typ
 	}
 
 	*history_value = hvalue;
-	offset += zbx_deserialize_int(offset, &step_count);
-	if (0 < step_count)
+	offset += zbx_deserialize_int(offset, steps_num);
+	if (0 < *steps_num)
 	{
-		zbx_vector_ptr_reserve(steps, step_count);
-		for (i = 0; i < step_count; i++)
+		*steps = zbx_malloc(NULL, sizeof(zbx_preproc_op_t) * (*steps_num));
+		for (i = 0; i < *steps_num; i++)
 		{
-			zbx_preproc_op_t	*op;
-
-			op = (zbx_preproc_op_t *)zbx_malloc(NULL, sizeof(zbx_preproc_op_t));
-			offset += zbx_deserialize_char(offset, &op->type);
-			offset += zbx_deserialize_str(offset, &op->params, value_len);
-			zbx_vector_ptr_append(steps, op);
+			offset += zbx_deserialize_char(offset, &(*steps)[i].type);
+			offset += zbx_deserialize_str_ptr(offset, (*steps)[i].params, value_len);
 		}
 	}
+	else
+		*steps = NULL;
 }
 
 /******************************************************************************

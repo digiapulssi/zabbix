@@ -49,18 +49,18 @@ static void worker_preprocess_value(zbx_ipc_socket_t *socket, zbx_ipc_message_t 
 	zbx_uint64_t			itemid;
 	zbx_variant_t			value, value_num;
 	int				i;
-	zbx_vector_ptr_t		steps;
 	char				*error = NULL;
 	zbx_timespec_t			*ts;
 	zbx_item_history_value_t	*history_value, history_value_local;
+	zbx_preproc_op_t		*steps;
+	int				steps_num;
 
-	zbx_vector_ptr_create(&steps);
+	zbx_preprocessor_unpack_task(&itemid, &value_type, &ts, &value, &history_value, &steps, &steps_num,
+			message->data);
 
-	zbx_preprocessor_unpack_task(&itemid, &value_type, &ts, &value, &history_value, &steps, message->data);
-
-	for (i = 0; i < steps.values_num; i++)
+	for (i = 0; i < steps_num; i++)
 	{
-		zbx_preproc_op_t	*op = (zbx_preproc_op_t *)steps.values[i];
+		zbx_preproc_op_t	*op = &steps[i];
 
 		if ((ZBX_PREPROC_DELTA_VALUE == op->type || ZBX_PREPROC_DELTA_SPEED == op->type) &&
 				NULL == history_value)
@@ -95,8 +95,7 @@ static void worker_preprocess_value(zbx_ipc_socket_t *socket, zbx_ipc_message_t 
 	zbx_variant_clear(&value);
 	zbx_free(error);
 	zbx_free(ts);
-	zbx_vector_ptr_clear_ext(&steps, (zbx_clean_func_t)zbx_preproc_op_free);
-	zbx_vector_ptr_destroy(&steps);
+	zbx_free(steps);
 
 	if (history_value != &history_value_local)
 		zbx_free(history_value);

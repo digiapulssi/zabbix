@@ -451,12 +451,15 @@ zbx_preproc_op_t;
 
 typedef struct
 {
-	zbx_uint64_t	itemid;
-	unsigned char	type;
-	unsigned char	value_type;
+	zbx_uint64_t		itemid;
+	unsigned char		type;
+	unsigned char		value_type;
 
-	zbx_vector_uint64_t	dep_itemids;
-	zbx_vector_ptr_t	preproc_ops;
+	int			dep_itemids_num;
+	int			preproc_ops_num;
+
+	zbx_uint64_t		*dep_itemids;
+	zbx_preproc_op_t	*preproc_ops;
 }
 zbx_preproc_item_t;
 
