@@ -1070,16 +1070,15 @@ static zbx_ipmi_host_t	*init_ipmi_host(const char *ip, int port, int authtype, i
 	ipmi_open_option_t	options[4];
 	struct timeval		tv;
 
-	/* Although we use only one address and port we pass them in 2-element arrays. Using 1-element arrays causes */
-	/* a Valgrind warning "Conditional jump or move depends on uninitialised value(s)" (ZBX-12493). The reason is */
-	/* in OpenIPMI file lib/ipmi_lan.c, function ipmi_lanp_setup_con() ending with */
-	/*    for (i=0; i<MAX_IP_ADDR; i++) { */
-	/*        if (!ports[i])              */
+	/* Although we use only one address and port we pass them in 2-element arrays. The reason is */
+	/* OpenIPMI v.2.0.16 - 2.0.24 file lib/ipmi_lan.c, function ipmi_lanp_setup_con() ending with loop */
+	/*    for (i=0; i<MAX_IP_ADDR; i++) {           */
+	/*        if (!ports[i])                        */
 	/*            ports[i] = IPMI_LAN_STD_PORT_STR; */
-	/* } */
+	/*    }                                         */
 	/* MAX_IP_ADDR is '#define MAX_IP_ADDR 2' in OpenIPMI and not available to library users. */
 	/* The loop is running two times regardless of number of addresses supplied by the caller, so we use */
-	/* 2-element arrays. */
+	/* 2-element arrays to match OpenIPMI internals. */
 	char			*addrs[2] = {NULL}, *ports[2] = {NULL};
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() host:'[%s]:%d'", __function_name, ip, port);
