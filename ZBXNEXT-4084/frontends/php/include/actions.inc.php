@@ -1161,9 +1161,7 @@ function operation_type2str($type, $action_type) {
 		OPERATION_TYPE_TEMPLATE_ADD => _('Link to template'),
 		OPERATION_TYPE_TEMPLATE_REMOVE => _('Unlink from template'),
 		OPERATION_TYPE_HOST_INVENTORY => _('Set host inventory mode'),
-		OPERATION_TYPE_RECOVERY_MESSAGE => ($action_type == ACTION_ACKNOWLEDGE_OPERATION)
-			? _('Notify all who received any messages regarding the problem before')
-			: _('Send recovery message'),
+		OPERATION_TYPE_RECOVERY_MESSAGE => _('Notify all who received any messages regarding the problem before'),
 		OPERATION_TYPE_ACK_MESSAGE => _('Notify all who left acknowledgement and comments')
 	];
 
