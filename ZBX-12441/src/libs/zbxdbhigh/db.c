@@ -1284,7 +1284,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 	}
 	DBfree_result(result);
 
-	if (FAIL == ret || -1 == user_type)
+	if (-1 == user_type)
 		goto out;
 
 	if (USER_TYPE_SUPER_ADMIN != user_type && *userid != *recipient_userid)
