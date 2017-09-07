@@ -5212,7 +5212,7 @@ void	DCconfig_unlock_all_triggers()
 
 /******************************************************************************
  *                                                                            *
- * Function: DCconfig_lock_lld_rule                                           *
+ * Function: DCconfig_lock_discovery_rule                                     *
  *                                                                            *
  * Purpose: Lock lld rule to avoid parallel processing of a same lld rule     *
  *          that was causing deadlocks.                                       *
