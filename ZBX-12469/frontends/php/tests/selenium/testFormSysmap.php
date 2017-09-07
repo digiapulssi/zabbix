@@ -114,7 +114,7 @@ class testFormSysmap extends CWebTest {
 					'columns' => 100,
 					'rows' => 100,
 					'url_name' => 'test url',
-					'url' => 'http://zabbix.com',
+					'url' => 'zabbix.com',
 					'dbCheck' => true,
 					'formCheck' => true
 				]
@@ -217,7 +217,7 @@ class testFormSysmap extends CWebTest {
 					'name' => 'map urls',
 					'width' => 1,
 					'height' => 1,
-					'url' => 'http://zabbix.com',
+					'url' => 'zabbix.com',
 					'error_msg' => 'Cannot add network map',
 					'errors' => [
 						'URL should have both "name" and "url" fields for map "map urls".',

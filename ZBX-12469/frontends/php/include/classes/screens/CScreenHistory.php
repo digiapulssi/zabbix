@@ -109,12 +109,6 @@ class CScreenHistory extends CScreenBase {
 			'preservekeys' => true
 		]);
 
-		if (!$items) {
-			show_error_message(_('No permissions to referred object or it does not exist!'));
-
-			return;
-		}
-
 		$items = CMacrosResolverHelper::resolveItemNames($items);
 
 		$stime = zbxDateToTime($this->timeline['stime']);
@@ -315,12 +309,7 @@ class CScreenHistory extends CScreenBase {
 		if (!$this->plaintext && str_in_array($this->action, [HISTORY_VALUES, HISTORY_GRAPH, HISTORY_BATCH_GRAPH])) {
 			$graphDims = getGraphDims();
 
-			/*
-			 * Interval start value is non-inclusive, therefore should subtract 1 second to be able to show row with
-			 * minimum clock value.
-			 */
-			$this->timeline['starttime']
-				= date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($firstItem['itemid']) - 1);
+			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($firstItem['itemid']));
 
 			$this->dataId = 'historyGraph';
 

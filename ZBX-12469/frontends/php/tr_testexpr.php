@@ -33,8 +33,7 @@ $definedErrorPhrases = [
 	EXPRESSION_HOST_UNKNOWN => _('Unknown host, no such host present in system'),
 	EXPRESSION_HOST_ITEM_UNKNOWN => _('Unknown host item, no such item in selected host'),
 	EXPRESSION_NOT_A_MACRO_ERROR => _('Given expression is not a macro'),
-	EXPRESSION_FUNCTION_UNKNOWN => _('Incorrect function is used'),
-	EXPRESSION_UNSUPPORTED_VALUE_TYPE => _('Incorrect item value type')
+	EXPRESSION_FUNCTION_UNKNOWN => _('Incorrect function is used')
 ];
 
 require_once dirname(__FILE__).'/include/page_header.php';

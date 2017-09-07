@@ -19,22 +19,46 @@
 **/
 
 
-class CHtmlUrlValidator {
+require_once dirname(__FILE__).'/../../include/classes/import/readers/CImportReader.php';
+require_once dirname(__FILE__).'/../../include/classes/import/readers/CXmlImportReader.php';
+
+class class_cxmlimportreader extends PHPUnit_Framework_TestCase {
+
+	public static function provider() {
+		return [
+			[
+				<<< XML
+<root>
+	<tag>tag</tag>
+	<empty_tag></empty_tag>
+	<empty />
+	<array>
+		<tag>tag</tag>
+	</array>
+</root>
+XML
+				,
+				[
+					'root' => [
+						'tag' => 'tag',
+						'empty_tag' => '',
+						'empty' => '',
+						'array' => [
+							'tag' => 'tag'
+						]
+					]
+				],
+			],
+		];
+	}
 
 	/**
-	 * Relative URL should start with .php file name.
-	 * Absolute URL schema must match schemes mentioned in ZBX_URL_VALID_SCHEMES comma separated list.
-	 *
-	 * @static
-	 *
-	 * @param string $url	URL string to validate
-	 *
-	 * @return bool
+	 * @dataProvider provider
 	 */
-	public static function validate($url) {
-		$scheme = (strpos($url, ':') === false) ? '' : substr($url, 0, strpos($url, ':'));
-		$allowed_schemes = explode(',', strtolower(ZBX_URI_VALID_SCHEMES));
+	public function test_readXml($xml, $expectedResult) {
+		$reader = new CXmlImportReader();
+		$array = $reader->read($xml);
 
-		return (in_array(strtolower($scheme), $allowed_schemes) || preg_match('/^[a-z_\.]+\.php/i', $url) == 1);
+		$this->assertTrue($array === $expectedResult);
 	}
 }
