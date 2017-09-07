@@ -444,7 +444,8 @@ static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, co
 		substitute_simple_macros(&actionid, event, r_event, &userid, NULL, NULL, NULL, NULL,
 				ack, &message_dyn, message_type, NULL, 0);
 
-		add_user_msg(userid, mediatypeid, user_msg, subject_dyn, message_dyn, 0);
+		add_user_msg(userid, mediatypeid, user_msg, subject_dyn, message_dyn,
+				(NULL != ack ? ack->acknowledgeid : 0));
 
 		zbx_free(subject_dyn);
 		zbx_free(message_dyn);
