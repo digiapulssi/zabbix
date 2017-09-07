@@ -100,7 +100,7 @@ class CControllerDashbrdWidgetConfig extends CController {
 
 				if ($id != 0) {
 					switch ($resource_type) {
-						case WIDGET_FIELD_SELECT_RES_GRAPH_SIMPLE:
+						case WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH:
 							// falls through
 						case WIDGET_FIELD_SELECT_RES_ITEM:
 							$captions['simple'][$resource_type][$id] = _('Inaccessible item');
@@ -124,7 +124,7 @@ class CControllerDashbrdWidgetConfig extends CController {
 			}
 
 			switch ($resource_type) {
-				case WIDGET_FIELD_SELECT_RES_GRAPH_SIMPLE:
+				case WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH:
 					// falls through
 				case WIDGET_FIELD_SELECT_RES_ITEM:
 					$items = API::Item()->get([
