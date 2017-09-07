@@ -506,7 +506,7 @@ class CHostInterface extends CApiService {
 	/**
 	 * Replace existing interfaces with input interfaces.
 	 *
-	 * @param $host
+	 * @param array $host
 	 */
 	public function replaceHostInterfaces(array $host) {
 		if (isset($host['interfaces']) && !is_null($host['interfaces'])) {
@@ -515,8 +515,8 @@ class CHostInterface extends CApiService {
 			$this->checkHostInterfaces($host['interfaces'], $host['hostid']);
 
 			$interfacesToDelete = API::HostInterface()->get([
+				'output' => [],
 				'hostids' => $host['hostid'],
-				'output' => API_OUTPUT_EXTEND,
 				'preservekeys' => true,
 				'nopermissions' => true
 			]);
@@ -551,13 +551,24 @@ class CHostInterface extends CApiService {
 
 			if ($interfacesToAdd) {
 				$this->checkInput($interfacesToAdd, 'create');
-				DB::insert('interface', $interfacesToAdd);
+				$interfaceids = DB::insert('interface', $interfacesToAdd);
+
+				foreach ($host['interfaces'] as &$interface) {
+					if (!array_key_exists('interfaceid', $interface)) {
+						$interface['interfaceid'] = array_shift($interfaceids);
+					}
+				}
+				unset($interface);
 			}
 
 			if ($interfacesToDelete) {
 				$this->delete(zbx_objectValues($interfacesToDelete, 'interfaceid'));
 			}
+
+			return ['interfaceids' => zbx_objectValues($host['interfaces'], 'interfaceid')];
 		}
+
+		return ['interfaceids' => []];
 	}
 
 	/**
