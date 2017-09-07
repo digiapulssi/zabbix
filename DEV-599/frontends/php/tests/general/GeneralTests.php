@@ -41,6 +41,7 @@ require_once dirname(__FILE__).'/dbConditionIntTest.php';
 require_once dirname(__FILE__).'/dbConditionStringTest.php';
 require_once dirname(__FILE__).'/urlParamTest.php';
 require_once dirname(__FILE__).'/CTriggerFunctionValidatorTest.php';
+require_once dirname(__FILE__).'/CHtmlUrlValidatorTest.php';
 
 class GeneralTests {
 
@@ -69,6 +70,7 @@ class GeneralTests {
 		$suite->addTestSuite('dbConditionStringTest');
 		$suite->addTestSuite('urlParamTest');
 		$suite->addTestSuite('CTriggerFunctionValidatorTest');
+		$suite->addTestSuite('CHtmlUrlValidatorTest');
 
 		return $suite;
 	}
