@@ -1267,8 +1267,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	int		user_type = -1;
-	int		ret = FAIL;
+	int		user_type = -1, ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1285,7 +1284,10 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 	DBfree_result(result);
 
 	if (-1 == user_type)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "%s() cannot check permissions", __function_name);
 		goto out;
+	}
 
 	if (USER_TYPE_SUPER_ADMIN != user_type && *userid != *recipient_userid)
 	{
