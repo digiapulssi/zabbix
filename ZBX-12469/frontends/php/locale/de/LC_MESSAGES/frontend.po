@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-07 01:29+0300\n"
+"POT-Creation-Date: 2017-08-24 18:01+0300\n"
 "PO-Revision-Date: 2016-08-23 14:35+0300\n"
 "Last-Translator: Sugarman <timo@twowheels.ch>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -812,8 +812,8 @@ msgstr "Kommend"
 msgid "Apr"
 msgstr "Apr"
 
-#: include/forms.inc.php:1832 include/func.inc.php:119
-#: include/func.inc.php:256 jsLoader.php:116
+#: include/forms.inc.php:1832 include/func.inc.php:119 include/func.inc.php:256
+#: jsLoader.php:116
 msgid "April"
 msgstr "April"
 
@@ -929,8 +929,8 @@ msgstr "Änderungsprotokoll"
 msgid "Aug"
 msgstr "Aug"
 
-#: include/forms.inc.php:1816 include/func.inc.php:123
-#: include/func.inc.php:260 jsLoader.php:120
+#: include/forms.inc.php:1816 include/func.inc.php:123 include/func.inc.php:260
+#: jsLoader.php:120
 msgid "August"
 msgstr "August"
 
@@ -3786,8 +3786,8 @@ msgstr "Debug-Modus geändert"
 msgid "Dec"
 msgstr "Dez"
 
-#: include/forms.inc.php:1856 include/func.inc.php:127
-#: include/func.inc.php:264 jsLoader.php:124
+#: include/forms.inc.php:1856 include/func.inc.php:127 include/func.inc.php:264
+#: jsLoader.php:124
 msgid "December"
 msgstr "Dezember"
 
@@ -4477,7 +4477,7 @@ msgstr ""
 #: include/discovery.inc.php:117 include/hosts.inc.php:1073
 #: include/html.inc.php:338 include/httptest.inc.php:46
 #: include/items.inc.php:159 include/items.inc.php:213
-#: include/triggers.inc.php:1214 include/triggers.inc.php:2046
+#: include/triggers.inc.php:1214 include/triggers.inc.php:2058
 #: include/users.inc.php:85
 #: include/views/administration.general.other.edit.php:50
 #: include/views/administration.usergroups.list.php:53
@@ -4555,9 +4555,8 @@ msgstr "Suchlaufobjekt"
 
 # Überschrift der Suchlauf-Liste bei "network discovery"
 #: app/views/monitoring.discovery.view.php:34
-#: app/views/monitoring.widget.discovery.view.php:46
-#: include/actions.inc.php:49 include/audit.inc.php:43
-#: include/forms.inc.php:1093
+#: app/views/monitoring.widget.discovery.view.php:46 include/actions.inc.php:49
+#: include/audit.inc.php:43 include/forms.inc.php:1093
 #: include/views/configuration.discovery.edit.php:95
 msgid "Discovery rule"
 msgstr "Host-Suchläufe"
@@ -4624,8 +4623,7 @@ msgid "Discovery rules deleted"
 msgstr "Suchläufe gelöscht"
 
 #: app/views/monitoring.dashboard.view.php:118
-#: app/views/monitoring.widget.discovery.view.php:60
-#: include/actions.inc.php:55
+#: app/views/monitoring.widget.discovery.view.php:60 include/actions.inc.php:55
 msgid "Discovery status"
 msgstr "Suchlaufstatus"
 
@@ -5191,7 +5189,7 @@ msgstr ""
 #: app/views/administration.mediatype.list.php:103 auditlogs.php:136
 #: include/discovery.inc.php:116 include/html.inc.php:334
 #: include/httptest.inc.php:45 include/items.inc.php:158
-#: include/items.inc.php:210 include/triggers.inc.php:2043
+#: include/items.inc.php:210 include/triggers.inc.php:2055
 #: include/views/administration.usergroups.edit.php:65
 #: include/views/administration.usergroups.edit.php:79
 #: include/views/administration.usergroups.edit.php:80
@@ -5520,8 +5518,8 @@ msgstr "Favoriten"
 msgid "Feb"
 msgstr "Feb"
 
-#: include/forms.inc.php:1812 include/func.inc.php:117
-#: include/func.inc.php:254 jsLoader.php:114
+#: include/forms.inc.php:1812 include/func.inc.php:117 include/func.inc.php:254
+#: jsLoader.php:114
 msgid "February"
 msgstr "Februar"
 
@@ -6239,8 +6237,7 @@ msgstr ""
 #: include/views/js/monitoring.sysmaps.js.php:47
 #: include/views/monitoring.screen.constructor.edit.php:690
 #: include/views/monitoring.sysmap.edit.php:109
-#: include/views/monitoring.sysmap.list.php:48 screenedit.php:68
-#: sysmaps.php:50
+#: include/views/monitoring.sysmap.list.php:48 screenedit.php:68 sysmaps.php:50
 msgid "Height"
 msgstr "Höhe"
 
@@ -6334,11 +6331,11 @@ msgstr "Horizontale Ausrichtung"
 
 #: app/views/monitoring.web.view.php:37
 #: app/views/monitoring.widget.hosts.view.php:256
-#: app/views/monitoring.widget.hosts.view.php:313 events.php:293
-#: events.php:406 events.php:494 httpconf.php:184 httpconf.php:331
-#: httpconf.php:389 httpconf.php:440 include/actions.inc.php:47
-#: include/audit.inc.php:27 include/blocks.inc.php:624
-#: include/blocks.inc.php:790 include/classes/api/services/CHttpTest.php:417
+#: app/views/monitoring.widget.hosts.view.php:313 events.php:293 events.php:406
+#: events.php:494 httpconf.php:184 httpconf.php:331 httpconf.php:389
+#: httpconf.php:440 include/actions.inc.php:47 include/audit.inc.php:27
+#: include/blocks.inc.php:624 include/blocks.inc.php:790
+#: include/classes/api/services/CHttpTest.php:417
 #: include/classes/screens/CScreenEvents.php:37
 #: include/classes/screens/CScreenHostgroupTriggers.php:135
 #: include/classes/screens/CScreenHostTriggers.php:67
@@ -6683,9 +6680,8 @@ msgstr "Host mit gleichem sichtbaren Namen \"%s\" existiert bereits."
 
 #: app/views/administration.proxy.edit.php:87
 #: app/views/administration.proxy.list.php:50 include/forms.inc.php:212
-#: include/forms.inc.php:853 include/items.inc.php:753
-#: include/menu.inc.php:137 include/menu.inc.php:206
-#: include/views/configuration.copy.elements.php:47
+#: include/forms.inc.php:853 include/items.inc.php:753 include/menu.inc.php:137
+#: include/menu.inc.php:206 include/views/configuration.copy.elements.php:47
 #: include/views/configuration.graph.list.php:78
 #: include/views/configuration.host.discovery.list.php:45
 #: include/views/configuration.host.edit.php:25
@@ -7096,8 +7092,7 @@ msgstr "Import erfolgreich"
 msgid "Impossible to filter by inventory field \"%s\", which does not exist."
 msgstr "Filtern nach Inventarfeld \"%s\" nicht möglich; es existiert nicht."
 
-#: include/classes/html/CTweenBox.php:72
-#: include/classes/html/CTweenBox.php:102
+#: include/classes/html/CTweenBox.php:72 include/classes/html/CTweenBox.php:102
 #: include/views/configuration.template.edit.php:155
 msgid "In"
 msgstr "In"
@@ -8462,8 +8457,7 @@ msgstr "Ungültiger dritter Parameter."
 msgid "Invalid view name given \"%s\". Allowed chars: \"a-z\" and \".\"."
 msgstr "Ungültiger Name für Ansicht \"%s\" angegeben. Erlaubte Zeichen sind: \"a-z\" und \".\"."
 
-#: include/menu.inc.php:127
-#: include/views/configuration.host.massupdate.php:388
+#: include/menu.inc.php:127 include/views/configuration.host.massupdate.php:388
 msgid "Inventory"
 msgstr "Inventar"
 
@@ -8781,8 +8775,8 @@ msgstr "Jabber-Kennung"
 msgid "Jan"
 msgstr "Jan"
 
-#: include/forms.inc.php:1802 include/func.inc.php:116
-#: include/func.inc.php:253 jsLoader.php:113
+#: include/forms.inc.php:1802 include/func.inc.php:116 include/func.inc.php:253
+#: jsLoader.php:113
 msgid "January"
 msgstr "Januar"
 
@@ -8794,8 +8788,8 @@ msgstr "Japanisch (ja_JP)"
 msgid "Jul"
 msgstr "Jul"
 
-#: include/forms.inc.php:1806 include/func.inc.php:122
-#: include/func.inc.php:259 jsLoader.php:119
+#: include/forms.inc.php:1806 include/func.inc.php:122 include/func.inc.php:259
+#: jsLoader.php:119
 msgid "July"
 msgstr "Juli"
 
@@ -8803,8 +8797,8 @@ msgstr "Juli"
 msgid "Jun"
 msgstr "Jun"
 
-#: include/forms.inc.php:1852 include/func.inc.php:121
-#: include/func.inc.php:258 jsLoader.php:118
+#: include/forms.inc.php:1852 include/func.inc.php:121 include/func.inc.php:258
+#: jsLoader.php:118
 msgid "June"
 msgstr "Juni"
 
@@ -9497,8 +9491,8 @@ msgstr "Zuordnungen"
 
 #: app/views/monitoring.dashboard.view.php:58
 #: app/views/monitoring.map.view.php:26 include/menu.inc.php:96
-#: include/views/conf.import.php:39
-#: include/views/monitoring.sysmap.list.php:22 popup.php:103
+#: include/views/conf.import.php:39 include/views/monitoring.sysmap.list.php:22
+#: popup.php:103
 msgid "Maps"
 msgstr "Karten"
 
@@ -9506,8 +9500,8 @@ msgstr "Karten"
 msgid "Mar"
 msgstr "Mar"
 
-#: include/forms.inc.php:1822 include/func.inc.php:118
-#: include/func.inc.php:255 jsLoader.php:115
+#: include/forms.inc.php:1822 include/func.inc.php:118 include/func.inc.php:255
+#: jsLoader.php:115
 msgid "March"
 msgstr "März"
 
@@ -9593,8 +9587,8 @@ msgstr "Maximaler Wert im Zeitraum T ist > N"
 msgid "Maximum value for period T is NOT N"
 msgstr "Maximaler Wert im Zeitraum T ist NICHT N"
 
-#: include/forms.inc.php:1842 include/func.inc.php:120
-#: include/func.inc.php:257 jsLoader.php:117
+#: include/forms.inc.php:1842 include/func.inc.php:120 include/func.inc.php:257
+#: jsLoader.php:117
 msgid "May"
 msgstr "Mai"
 
@@ -10098,8 +10092,7 @@ msgid "Next step"
 msgstr ""
 
 #: events.php:728 include/events.inc.php:377 include/func.inc.php:2004
-#: include/triggers.inc.php:1215
-#: include/views/administration.users.list.php:77
+#: include/triggers.inc.php:1215 include/views/administration.users.list.php:77
 #: include/views/administration.users.list.php:81
 #: include/views/configuration.httpconf.list.php:138 tr_status.php:692
 msgid "No"
@@ -10712,8 +10705,8 @@ msgstr "Benachrichtigungen"
 msgid "Nov"
 msgstr "Nov"
 
-#: include/forms.inc.php:1846 include/func.inc.php:126
-#: include/func.inc.php:263 jsLoader.php:123
+#: include/forms.inc.php:1846 include/func.inc.php:126 include/func.inc.php:263
+#: jsLoader.php:123
 msgid "November"
 msgstr "November"
 
@@ -10949,8 +10942,8 @@ msgstr "Okt"
 msgid "Octal"
 msgstr "Oktal"
 
-#: include/forms.inc.php:1836 include/func.inc.php:125
-#: include/func.inc.php:262 jsLoader.php:122
+#: include/forms.inc.php:1836 include/func.inc.php:125 include/func.inc.php:262
+#: jsLoader.php:122
 msgid "October"
 msgstr "Oktober"
 
@@ -10959,10 +10952,9 @@ msgstr "Oktober"
 msgid "Off"
 msgstr "Aus"
 
-#: app/views/monitoring.widget.web.view.php:76
-#: app/views/report.services.php:60 app/views/report.services.php:61
-#: app/views/report.services.php:62 app/views/report.services.php:63
-#: include/classes/html/CTriggersInfo.php:76
+#: app/views/monitoring.widget.web.view.php:76 app/views/report.services.php:60
+#: app/views/report.services.php:61 app/views/report.services.php:62
+#: app/views/report.services.php:63 include/classes/html/CTriggersInfo.php:76
 #: include/views/administration.users.list.php:90
 #: include/views/js/conf.import.js.php:24 report2.php:374
 msgid "Ok"
@@ -11223,8 +11215,8 @@ msgstr ""
 msgid "Original"
 msgstr "Original"
 
-#: include/classes/html/CTweenBox.php:75
-#: include/classes/html/CTweenBox.php:105 include/html.inc.php:844
+#: include/classes/html/CTweenBox.php:75 include/classes/html/CTweenBox.php:105
+#: include/html.inc.php:844
 msgid "Other"
 msgstr "Weitere Einstellungen"
 
@@ -12629,8 +12621,7 @@ msgstr "Fehler beim Ausführen der SQL-Anweisung \"%1$s\""
 msgid "SQL statement execution has failed \"%1$s\"."
 msgstr "Fehler beim Ausführen der SQL-Anweisung \"%1$s\"."
 
-#: include/discovery.inc.php:56
-#: include/views/configuration.action.edit.php:803
+#: include/discovery.inc.php:56 include/views/configuration.action.edit.php:803
 #: include/views/js/configuration.discovery.edit.js.php:179
 msgid "SSH"
 msgstr "SSH"
@@ -12894,8 +12885,9 @@ msgid "Search/Filter elements limit"
 msgstr "Suche/Filter nach Elementen"
 
 #: include/forms.inc.php:1874 include/maintenances.inc.php:112
+msgctxt "adjective"
 msgid "Second"
-msgstr "Zweiten"
+msgstr ""
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -12947,8 +12939,7 @@ msgid "Security name"
 msgstr ""
 
 #: events.php:356 include/classes/html/CMultiSelect.php:54
-#: include/forms.inc.php:523
-#: include/views/administration.auditacts.list.php:30
+#: include/forms.inc.php:523 include/views/administration.auditacts.list.php:30
 #: include/views/administration.auditlogs.list.php:31
 #: include/views/common.filter.trigger.php:107
 #: include/views/configuration.action.edit.php:264
@@ -13062,8 +13053,8 @@ msgstr "Sep"
 msgid "Separated"
 msgstr "Getrennt"
 
-#: include/forms.inc.php:1826 include/func.inc.php:124
-#: include/func.inc.php:261 jsLoader.php:121
+#: include/forms.inc.php:1826 include/func.inc.php:124 include/func.inc.php:261
+#: jsLoader.php:121
 msgid "September"
 msgstr "September"
 
@@ -13166,8 +13157,8 @@ msgid "Set host inventory mode"
 msgstr ""
 
 #: events.php:409 include/classes/screens/CScreenEvents.php:37
-#: include/classes/screens/CScreenHistory.php:161
-#: include/triggers.inc.php:1205 include/views/configuration.item.list.php:145
+#: include/classes/screens/CScreenHistory.php:161 include/triggers.inc.php:1205
+#: include/views/configuration.item.list.php:145
 #: include/views/configuration.trigger.prototype.edit.php:244
 #: include/views/configuration.trigger.prototype.list.php:42
 #: include/views/configuration.trigger.prototype.massupdate.php:40
@@ -13539,8 +13530,8 @@ msgstr ""
 msgid "State"
 msgstr "Status"
 
-#: app/views/administration.mediatype.list.php:45 events.php:393
-#: events.php:408 include/actions.inc.php:1092 include/actions.inc.php:1151
+#: app/views/administration.mediatype.list.php:45 events.php:393 events.php:408
+#: include/actions.inc.php:1092 include/actions.inc.php:1151
 #: include/actions.inc.php:1185 include/classes/screens/CScreenActions.php:131
 #: include/classes/screens/CScreenHttpTestDetails.php:86
 #: include/classes/screens/CScreenHttpTest.php:122 include/events.inc.php:195
@@ -13847,8 +13838,7 @@ msgstr "Ziel-Liste"
 msgid "Target type"
 msgstr "Zieltyp"
 
-#: include/discovery.inc.php:70
-#: include/views/configuration.action.edit.php:804
+#: include/discovery.inc.php:70 include/views/configuration.action.edit.php:804
 #: include/views/js/configuration.discovery.edit.js.php:180
 msgid "Telnet"
 msgstr "Telnet"
@@ -14509,8 +14499,7 @@ msgstr ""
 #: include/views/configuration.template.edit.php:317
 #: include/views/configuration.trigger.prototype.edit.php:25
 #: include/views/configuration.trigger.prototype.list.php:23
-#: include/views/configuration.trigger.prototype.massupdate.php:24
-#: popup.php:63
+#: include/views/configuration.trigger.prototype.massupdate.php:24 popup.php:63
 msgid "Trigger prototypes"
 msgstr "Auslöser-Prototypen"
 
@@ -14720,8 +14709,7 @@ msgstr "UNBEKANNT"
 msgid "UP"
 msgstr "RAUF"
 
-#: include/screens.inc.php:44
-#: include/views/configuration.httpconf.edit.php:162
+#: include/screens.inc.php:44 include/views/configuration.httpconf.edit.php:162
 #: include/views/configuration.httpconf.popup.php:90
 #: include/views/configuration.trigger.prototype.edit.php:243
 #: include/views/configuration.triggers.edit.php:248
@@ -14842,19 +14830,18 @@ msgstr "Einheit"
 #: include/classes/screens/CScreenHttpTestDetails.php:116
 #: include/discovery.inc.php:124 include/discovery.inc.php:160
 #: include/events.inc.php:47 include/events.inc.php:78
-#: include/graphs.inc.php:37 include/graphs.inc.php:67
-#: include/hosts.inc.php:47 include/hosts.inc.php:74 include/html.inc.php:341
+#: include/graphs.inc.php:37 include/graphs.inc.php:67 include/hosts.inc.php:47
+#: include/hosts.inc.php:74 include/html.inc.php:341
 #: include/httptest.inc.php:39 include/httptest.inc.php:56
-#: include/items.inc.php:45 include/items.inc.php:111
-#: include/items.inc.php:135 include/items.inc.php:152
-#: include/items.inc.php:168 include/items.inc.php:195
-#: include/items.inc.php:216 include/maintenances.inc.php:39
-#: include/maps.inc.php:39 include/regexp.inc.php:236
-#: include/screens.inc.php:57 include/triggers.inc.php:68
-#: include/triggers.inc.php:181 include/triggers.inc.php:200
-#: include/triggers.inc.php:2043 include/triggers.inc.php:2049
-#: include/users.inc.php:66 include/users.inc.php:88
-#: include/views/configuration.triggers.list.php:43
+#: include/items.inc.php:45 include/items.inc.php:111 include/items.inc.php:135
+#: include/items.inc.php:152 include/items.inc.php:168
+#: include/items.inc.php:195 include/items.inc.php:216
+#: include/maintenances.inc.php:39 include/maps.inc.php:39
+#: include/regexp.inc.php:236 include/screens.inc.php:57
+#: include/triggers.inc.php:68 include/triggers.inc.php:181
+#: include/triggers.inc.php:200 include/triggers.inc.php:2055
+#: include/triggers.inc.php:2061 include/users.inc.php:66
+#: include/users.inc.php:88 include/views/configuration.triggers.list.php:43
 #: include/views/js/configuration.discovery.edit.js.php:189
 msgid "Unknown"
 msgstr "Unbekannt"
@@ -15342,8 +15329,7 @@ msgstr ""
 msgid "User group sharing is missing parameters: %1$s for screen \"%2$s\"."
 msgstr ""
 
-#: include/menu.inc.php:274
-#: include/views/administration.usergroups.edit.php:22
+#: include/menu.inc.php:274 include/views/administration.usergroups.edit.php:22
 #: include/views/administration.usergroups.list.php:22
 #: include/views/monitoring.screen.edit.php:129
 #: include/views/monitoring.slideconf.edit.php:173
@@ -15445,8 +15431,7 @@ msgstr "Benutzer mit dem Alias \"%s\" existiert bereits."
 msgid "Username"
 msgstr "Benutzername"
 
-#: include/menu.inc.php:278
-#: include/views/administration.usergroups.edit.php:55
+#: include/menu.inc.php:278 include/views/administration.usergroups.edit.php:55
 #: include/views/administration.usergroups.list.php:130
 #: include/views/administration.users.edit.php:30
 #: include/views/administration.users.list.php:29
@@ -15995,8 +15980,7 @@ msgstr "Aktiv um"
 #: include/views/js/monitoring.sysmaps.js.php:41
 #: include/views/monitoring.screen.constructor.edit.php:687
 #: include/views/monitoring.sysmap.edit.php:105
-#: include/views/monitoring.sysmap.list.php:47 screenedit.php:67
-#: sysmaps.php:49
+#: include/views/monitoring.sysmap.list.php:47 screenedit.php:67 sysmaps.php:49
 msgid "Width"
 msgstr "Breite"
 
