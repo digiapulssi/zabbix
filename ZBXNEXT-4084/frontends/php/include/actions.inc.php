@@ -710,7 +710,7 @@ function getActionOperationDescriptions(array $actions, $type) {
 
 					case OPERATION_TYPE_HOST_INVENTORY:
 						$host_inventory_modes = getHostInventoryModes();
-						$result[$i][$j][] = bold(operation_type2str(OPERATION_TYPE_HOST_INVENTORY, $type).': ');
+						$result[$i][$j][] = bold(operation_type2str(OPERATION_TYPE_HOST_INVENTORY).': ');
 						$result[$i][$j][] = [
 							$host_inventory_modes[$operation['opinventory']['inventory_mode']],
 							BR()
@@ -1144,11 +1144,10 @@ function getAllowedOperations($eventsource) {
  * will be returned.
  *
  * @param int|null  $type           Operation type, one of OPERATION_TYPE_* constant or null.
- * @param int       $action_type    Action type of operation.
  *
  * @return string|array
  */
-function operation_type2str($type, $action_type) {
+function operation_type2str($type) {
 	$types = [
 		OPERATION_TYPE_MESSAGE => _('Send message'),
 		OPERATION_TYPE_COMMAND => _('Remote command'),
