@@ -650,16 +650,16 @@ if (!$no_history) {
 }
 
 foreach ($data['tld'] as &$tld) {
-	if (array_key_exists(RSM_DNS, $tld) && array_key_exists(incident, $tld[RSM_DNS])) {
+	if (array_key_exists(RSM_DNS, $tld) && array_key_exists('incident', $tld[RSM_DNS])) {
 		$tld[RSM_DNS]['incident'] = getLastEvent($tld[RSM_DNS]['incident']);
 	}
-	if (array_key_exists(RSM_DNSSEC, $tld) && array_key_exists(incident, $tld[RSM_DNSSEC])) {
+	if (array_key_exists(RSM_DNSSEC, $tld) && array_key_exists('incident', $tld[RSM_DNSSEC])) {
 		$tld[RSM_DNSSEC]['incident'] = getLastEvent($tld[RSM_DNSSEC]['incident']);
 	}
-	if (array_key_exists(RSM_RDDS, $tld) && array_key_exists(incident, $tld[RSM_RDDS])) {
+	if (array_key_exists(RSM_RDDS, $tld) && array_key_exists('incident', $tld[RSM_RDDS])) {
 		$tld[RSM_RDDS]['incident'] = getLastEvent($tld[RSM_RDDS]['incident']);
 	}
-	if (array_key_exists(RSM_EPP, $tld) && array_key_exists(incident, $tld[RSM_EPP])) {
+	if (array_key_exists(RSM_EPP, $tld) && array_key_exists('incident', $tld[RSM_EPP])) {
 		$tld[RSM_EPP]['incident'] = getLastEvent($tld[RSM_EPP]['incident']);
 	}
 }
