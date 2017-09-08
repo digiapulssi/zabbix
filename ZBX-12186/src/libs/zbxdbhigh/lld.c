@@ -530,7 +530,7 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid:" ZBX_FS_UI64, __function_name, lld_ruleid);
 
-	if (FAIL == DCconfig_lock_discovery_rule(lld_ruleid))
+	if (FAIL == DCconfig_lock_lld_rule(lld_ruleid))
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "cannot process discovery rule: another value for discovery rule \"%s\""
 				" is being processed", zbx_host_key_string(lld_ruleid));
@@ -649,7 +649,7 @@ error:
 		DBcommit();
 	}
 clean:
-	DCconfig_unlock_discovery_rule(lld_ruleid);
+	DCconfig_unlock_lld_rule(lld_ruleid);
 
 	zbx_free(error);
 	zbx_free(db_error);
