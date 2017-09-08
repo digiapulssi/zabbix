@@ -186,7 +186,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 				// Get first available dashboard that user has read permissions.
 				$dashboards = API::Dashboard()->get([
 					'output' => ['dashboardid'],
-					'sortfield' => ['name'],
+					'sortfield' => 'name',
 					'limit' => 1
 				]);
 
