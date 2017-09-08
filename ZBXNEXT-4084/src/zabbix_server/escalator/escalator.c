@@ -1487,10 +1487,10 @@ static void	escalation_execute_acknowledge_operations(const DB_EVENT *event, con
 				" left join opmessage m"
 					" on m.operationid=o.operationid"
 			" where o.actionid=" ZBX_FS_UI64
-				" and o.operationtype in (%d,%d,%d,%d)"
+				" and o.operationtype in (%d,%d,%d)"
 				" and o.recovery=%d",
 			action->actionid,
-			OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND, OPERATION_TYPE_ACK_MESSAGE,
+			OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND,
 			OPERATION_TYPE_RECOVERY_MESSAGE, ZBX_OPERATION_MODE_ACK);
 
 	while (NULL != (row = DBfetch(result)))
@@ -1526,25 +1526,6 @@ static void	escalation_execute_acknowledge_operations(const DB_EVENT *event, con
 					break;
 
 				ZBX_STR2UCHAR(default_msg, row[3]);
-
-				if (0 == default_msg)
-				{
-					subject = row[4];
-					message = row[5];
-				}
-				else
-				{
-					subject = action->ack_shortdata;
-					message = action->ack_longdata;
-				}
-
-				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject, message, ack);
-				break;
-			case OPERATION_TYPE_ACK_MESSAGE:
-				if (SUCCEED == DBis_null(row[2]))
-					break;
-
-				ZBX_STR2UCHAR(default_msg, row[3]);
 				ZBX_DBROW2UINT64(mediatypeid, row[6]);
 
 				if (0 == default_msg)
@@ -1558,8 +1539,10 @@ static void	escalation_execute_acknowledge_operations(const DB_EVENT *event, con
 					message = action->ack_longdata;
 				}
 
+				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject, message, ack);
 				add_sentusers_ack_msg(&user_msg, action->actionid, mediatypeid, event, r_event, ack,
 						subject, message);
+
 				break;
 			case OPERATION_TYPE_COMMAND:
 				execute_commands(event, r_event, ack, action->actionid, operationid, 1,
