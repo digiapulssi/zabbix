@@ -2705,8 +2705,6 @@ class CLineGraphDraw extends CGraphDraw {
 	}
 
 	public function draw() {
-		$start_time = microtime(true);
-
 		set_image_header();
 
 		// $this->sizeX is required for selectData() method
@@ -2841,13 +2839,6 @@ class CLineGraphDraw extends CGraphDraw {
 			$this->drawPercentile();
 			$this->drawLegend();
 		}
-
-		$this->drawLogo();
-
-		$str = sprintf('%0.2f', microtime(true) - $start_time);
-		$str = _s('Data from %1$s. Generated in %2$s sec.', $this->dataFrom, $str);
-		$strSize = imageTextSize(6, 0, $str);
-		imageText($this->im, 6, 0, $this->fullSizeX - $strSize['width'] - 5, $this->fullSizeY - 5, $this->getColor('Gray'), $str);
 
 		unset($this->items, $this->data);
 

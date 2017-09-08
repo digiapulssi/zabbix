@@ -93,37 +93,6 @@ function SVGMap(options) {
 			attributes: {
 				class: 'map-elements'
 			}
-		},
-		// Marks (timestamp and homepage).
-		{
-			type: 'g',
-			attributes: {
-				class: 'map-marks',
-				fill: 'rgba(150,150,150,0.75)',
-				'font-size': '8px',
-				'shape-rendering': 'crispEdges'
-			},
-
-			content: [
-				{
-					type: 'text',
-					attributes: {
-						class: 'map-timestamp',
-						x: options.canvas.width - 107,
-						y: options.canvas.height - 6
-					}
-				},
-				{
-					type: 'text',
-					attributes: {
-						class: 'map-homepage',
-						x: options.canvas.width,
-						y: options.canvas.height - 50,
-						transform: 'rotate(270 ' + (options.canvas.width) + ', ' + (options.canvas.height - 50) + ')'
-					},
-					content: options.homepage
-				}
-			]
 		}
 	]);
 
@@ -142,17 +111,6 @@ function SVGMap(options) {
 	if (this.options.container) {
 		this.render(this.options.container);
 	}
-
-	['timestamp', 'homepage'].forEach(function (attribute) {
-		var elements = this.canvas.getElementsByAttributes({class: 'map-' + attribute});
-
-		if (elements.length === 1) {
-			this[attribute] = elements[0];
-		}
-		else {
-			throw attribute + " element is missing";
-		}
-	}, this);
 
 	this.update(this.options);
 }
@@ -464,17 +422,6 @@ SVGMap.prototype.update = function (options, incremental) {
 			this.container.style.width = options.canvas.width + 'px';
 			this.container.style.height = options.canvas.height + 'px';
 		}
-
-		this.timestamp.update({
-			x: options.canvas.width - 107,
-			y: options.canvas.height - 6
-		});
-
-		this.homepage.update({
-			x: options.canvas.width,
-			y: options.canvas.height - 50,
-			transform: 'rotate(270 ' + (options.canvas.width) + ', ' + (options.canvas.height - 50) + ')'
-		});
 	}
 
 	// Images are preloaded before update.
@@ -487,16 +434,6 @@ SVGMap.prototype.update = function (options, incremental) {
 
 		this.options = SVGElement.mergeAttributes(this.options, options);
 	}, this);
-
-	// Timestamp (date on map) is updated.
-	if (typeof options.timestamp !== 'undefined') {
-		this.timestamp.element.textContent = options.timestamp;
-	}
-
-	// Homepage is updated.
-	if (typeof options.homepage !== 'undefined') {
-		this.homepage.element.textContent = options.homepage;
-	}
 };
 
 /**

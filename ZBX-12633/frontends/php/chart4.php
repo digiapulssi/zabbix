@@ -57,8 +57,6 @@ $dbTrigger = reset($dbTriggers);
 /*
  * Display
  */
-$startTime = microtime(true);
-
 $sizeX = 900;
 $sizeY = 300;
 
@@ -163,13 +161,6 @@ imageText($im, 8, 0, $shiftX + 9, $sizeY + $shiftYup + 45, $black, _('OK').' (%)
 imagefilledrectangle($im, $shiftX, $sizeY + $shiftYup + 54, $shiftX + 5, $sizeY + $shiftYup + 59, imagecolorallocate($im, 235, 120, 120));
 imagerectangle($im, $shiftX, $sizeY + $shiftYup + 54, $shiftX + 5, $sizeY + $shiftYup + 59, $black);
 imageText($im, 8, 0, $shiftX + 9, $sizeY + $shiftYup + 60, $black, _('Problems').' (%)');
-
-imagestringup($im, 1, imagesx($im) - 10, imagesy($im) - 50, ZABBIX_HOMEPAGE, $gray);
-
-$str = sprintf('%0.2f', microtime(true) - $startTime);
-$str = _s('Generated in %s sec', $str);
-$strSize = imageTextSize(6, 0, $str);
-imageText($im, 6, 0, imagesx($im) - $strSize['width'] - 5, imagesy($im) - 5, $gray, $str);
 
 imageOut($im);
 imagedestroy($im);

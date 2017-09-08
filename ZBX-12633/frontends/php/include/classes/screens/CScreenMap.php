@@ -37,11 +37,7 @@ class CScreenMap extends CScreenBase {
 		$map_data['container'] = '#map_'.$this->screenitem['screenitemid'];
 		$this->insertFlickerfreeJs($map_data);
 
-		$output = [
-			(new CDiv())
-				->setId('map_'.$this->screenitem['screenitemid'])
-				->addStyle('overflow: hidden;')
-		];
+		$output = [(new CDiv())->setId('map_'.$this->screenitem['screenitemid'])];
 
 		if ($this->mode == SCREEN_MODE_EDIT) {
 			$output += [BR(), new CLink(_x('Change', 'verb'), $this->action)];
@@ -53,6 +49,9 @@ class CScreenMap extends CScreenBase {
 			->setId($this->getScreenId())
 			->setAttribute('data-timestamp', $this->timestamp)
 			->addStyle('position: relative;');
+
+		// Add map to additional wrapper to enable horizontal scrolling.
+		$div = (new CDiv($div))->addClass('sysmap-scroll-container');
 
 		return $div;
 	}
