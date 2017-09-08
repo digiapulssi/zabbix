@@ -1545,7 +1545,6 @@ static void	escalation_execute_acknowledge_operations(const DB_EVENT *event, con
 				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject, message, ack);
 				add_sentusers_ack_msg(&user_msg, action->actionid, mediatypeid, event, r_event, ack,
 						subject, message);
-
 				break;
 			case OPERATION_TYPE_COMMAND:
 				execute_commands(event, r_event, ack, action->actionid, operationid, 1,
