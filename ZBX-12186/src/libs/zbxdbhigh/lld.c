@@ -532,8 +532,8 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 
 	if (FAIL == DCconfig_lock_discovery_rule(lld_ruleid))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot process discovery rule: another value for lld rule ID ["
-				ZBX_FS_UI64 "] is being processed", lld_ruleid);
+		zabbix_log(LOG_LEVEL_WARNING, "cannot process discovery rule: another value for discovery rule \"%s\""
+				" is being processed", zbx_host_key_string(lld_ruleid));
 		goto out;
 	}
 
@@ -617,8 +617,8 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 
 	if (ITEM_STATE_NOTSUPPORTED == state)
 	{
-		zabbix_log(LOG_LEVEL_WARNING,  "discovery rule [" ZBX_FS_UI64 "][%s] became supported",
-				lld_ruleid, zbx_host_key_string(lld_ruleid));
+		zabbix_log(LOG_LEVEL_WARNING, "discovery rule \"%s\" became supported",
+				zbx_host_key_string(lld_ruleid));
 
 		add_event(0, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_LLDRULE, lld_ruleid, ts, ITEM_STATE_NORMAL,
 				NULL, NULL, 0, 0);
