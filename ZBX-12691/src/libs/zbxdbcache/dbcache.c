@@ -869,7 +869,7 @@ static void	DCmass_update_triggers(ZBX_DC_HISTORY *history, int history_num, zbx
 	{
 		const ZBX_DC_HISTORY	*h = &history[i];
 
-		if (0 != (ZBX_DC_FLAG_NOVALUE & h->flags))
+		if (0 != ((ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF) & h->flags))
 			continue;
 
 		itemids[item_num] = h->itemid;
@@ -1144,7 +1144,7 @@ static void	dc_history_set_error(ZBX_DC_HISTORY *hdata, char *errmsg)
 	dc_history_clean_value(hdata);
 	hdata->value.err = errmsg;
 	hdata->state = ITEM_STATE_NOTSUPPORTED;
-	hdata->flags |= ZBX_DC_FLAG_UNDEF;
+	hdata->flags |= (ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOVALUE);
 }
 
 /******************************************************************************
