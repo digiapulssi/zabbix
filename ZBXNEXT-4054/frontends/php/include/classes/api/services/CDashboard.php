@@ -29,7 +29,7 @@ class CDashboard extends CApiService {
 
 	protected $tableName = 'dashboard';
 	protected $tableAlias = 'd';
-	protected $sortColumns = ['dashboardid'];
+	protected $sortColumns = ['dashboardid', 'name'];
 
 	/**
 	 * @param array $options
