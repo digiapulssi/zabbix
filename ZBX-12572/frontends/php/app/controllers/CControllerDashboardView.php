@@ -185,7 +185,16 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			$dashboardid = $this->getInput('dashboardid', CProfile::get('web.dashbrd.dashboardid', 0));
 
 			if ($dashboardid == 0 && CProfile::get('web.dashbrd.list_was_opened') != 1) {
-				$dashboardid = DASHBOARD_DEFAULT_ID;
+				// Get first available dashboard that user has read permissions.
+				$dashboards = API::Dashboard()->get([
+					'output' => ['dashboardid', 'name']
+				]);
+
+				if ($dashboards) {
+					CArrayHelper::sort($dashboards, ['name']);
+					$dashboard = reset($dashboards);
+					$dashboardid = $dashboard['dashboardid'];
+				}
 			}
 
 			if ($dashboardid != 0) {
@@ -406,6 +415,12 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			$widgetid = $widget['widgetid'];
 			$default_rf_rate = CWidgetConfig::getDefaultRfRate($widget['type']);
 
+			$widget_fields = self::convertWidgetFields($widget['fields']);
+			$widget_form = CWidgetConfig::getForm($widget['type'], CJs::encodeJson($widget_fields));
+			if ($widget_form->validate()) {
+				$widget_fields = $widget_form->getFieldsData();
+			}
+
 			$grid_widgets[$widgetid] = [
 				'widgetid' => $widgetid,
 				'type' => $widget['type'],
@@ -417,7 +432,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 					'height' => (int) $widget['height']
 				],
 				'rf_rate' => (int) CProfile::get('web.dashbrd.widget.rf_rate', $default_rf_rate, $widgetid),
-				'fields' => self::convertWidgetFields($widget['fields'])
+				'fields' => $widget_fields
 			];
 		}
 

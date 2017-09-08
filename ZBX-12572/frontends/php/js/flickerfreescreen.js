@@ -107,9 +107,10 @@
 			// timeline params
 			// SCREEN_RESOURCE_HTTPTEST_DETAILS, SCREEN_RESOURCE_DISCOVERY, SCREEN_RESOURCE_HTTPTEST
 			if (jQuery.inArray(screen.resourcetype, [21, 22, 23]) === -1) {
-				if (typeof screen.timeline.period !== 'undefined') {
-					ajaxUrl.setArgument('period', + screen.timeline.period);
+				if (!empty(timeControl.timeline)) {
+					timeControl.timeline.refreshEndtime();
 				}
+				ajaxUrl.setArgument('period', empty(screen.timeline.period) ? null : this.getCalculatedPeriod(screen));
 				ajaxUrl.setArgument('stime', this.getCalculatedSTime(screen));
 				if (typeof screen.timeline.isNow !== 'undefined') {
 					ajaxUrl.setArgument('isNow', + screen.timeline.isNow);
@@ -124,9 +125,10 @@
 							var obj = $(this),
 								url = new Curl(obj.attr('href'));
 
-							if (typeof screen.timeline.period !== 'undefined') {
-								url.setArgument('period', screen.timeline.period);
-							}
+							url.setArgument('period', empty(screen.timeline.period)
+								? null
+								: window.flickerfreeScreen.getCalculatedPeriod(screen)
+							);
 							url.setArgument('stime', window.flickerfreeScreen.getCalculatedSTime(screen));
 							if (typeof screen.timeline.isNow !== 'undefined') {
 								url.setArgument('isNow', + screen.timeline.isNow);
@@ -367,9 +369,10 @@
 					if (typeof screen.updateProfile === 'undefined') {
 						url.setArgument('updateProfile', + screen.updateProfile);
 					}
-					if (typeof screen.timeline.period !== 'undefined') {
-						url.setArgument('period', screen.timeline.period);
-					}
+					url.setArgument('period', empty(screen.timeline.period)
+						? null
+						: window.flickerfreeScreen.getCalculatedPeriod(screen)
+					);
 					url.setArgument('stime', window.flickerfreeScreen.getCalculatedSTime(screen));
 					if (typeof screen.timeline.isNow !== 'undefined') {
 						url.setArgument('isNow', + screen.timeline.isNow);
@@ -522,11 +525,22 @@
 		},
 
 		getCalculatedSTime: function(screen) {
-			if (!empty(timeControl.timeline) && screen.timeline.period > timeControl.timeline.maxperiod) {
-				return new CDate(timeControl.timeline.starttime() * 1000).getZBXDate();
+			if (timeControl.timeline && timeControl.timeline.is_selectall_period) {
+				return timeControl.timeline.usertime();
 			}
 
 			return screen.timeline.stime;
+		},
+
+		/**
+		 * Return period in seconds for requesting data. Automatically calculates period when 'All' period is selected.
+		 *
+		 * @property {Object} screen screen object
+		 *
+		 * @return {int}
+		 */
+		getCalculatedPeriod: function (screen) {
+			return !empty(timeControl.timeline) ? timeControl.timeline.period() : screen.timeline.period;
 		},
 
 		cleanAll: function() {

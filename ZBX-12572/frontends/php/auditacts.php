@@ -146,7 +146,7 @@ if ($userId) {
 elseif ($data['alias'] === '') {
 	$firstAlert = DBfetch(DBselect('SELECT MIN(a.clock) AS clock FROM alerts a'));
 }
-$minStartTime = ($firstAlert) ? ((int) $firstAlert['clock']) : null;
+$minStartTime = ($firstAlert) ? $firstAlert['clock'] - 1 : null;
 
 // get actions names
 if ($data['alerts']) {

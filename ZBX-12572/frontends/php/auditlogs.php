@@ -161,7 +161,7 @@ $sql = 'SELECT MIN(a.clock) AS clock'.
 		' WHERE a.userid=u.userid'.
 			implode('', $sqlWhere);
 $firstAudit = DBfetch(DBselect($sql, $config['search_limit'] + 1));
-$minStartTime = ($firstAudit) ? ((int) $firstAudit['clock']) : null;
+$minStartTime = ($firstAudit) ? $firstAudit['clock'] - 1 : null;
 
 // Show shorter timeline
 if ($minStartTime !== null && $minStartTime > 0 && ($minStartTime / 1000) < ZBX_MAX_PERIOD) {
