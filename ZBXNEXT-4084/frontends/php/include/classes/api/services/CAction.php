@@ -575,8 +575,7 @@ class CAction extends CApiService {
 					}
 
 					if ($operation['operationtype'] == OPERATION_TYPE_MESSAGE
-							|| $operation['operationtype'] == OPERATION_TYPE_RECOVERY_MESSAGE
-							|| $operation['operationtype'] == OPERATION_TYPE_ACK_MESSAGE) {
+							|| $operation['operationtype'] == OPERATION_TYPE_RECOVERY_MESSAGE) {
 						$message = (array_key_exists('opmessage', $operation) && is_array($operation['opmessage']))
 							? $operation['opmessage']
 							: [];
@@ -826,7 +825,7 @@ class CAction extends CApiService {
 
 					if (!array_key_exists('operationid', $ack_operation)) {
 						if ($ack_operation['operationtype'] == OPERATION_TYPE_MESSAGE
-								|| $ack_operation['operationtype'] == OPERATION_TYPE_ACK_MESSAGE) {
+								|| $ack_operation['operationtype'] == OPERATION_TYPE_RECOVERY_MESSAGE) {
 							$opmessage += [
 								'default_msg'	=> 0,
 								'mediatypeid'	=> 0,
@@ -850,7 +849,7 @@ class CAction extends CApiService {
 					}
 					elseif (array_key_exists($ack_operation['operationid'], $db_ack_operations)) {
 						if ($ack_operation['operationtype'] == OPERATION_TYPE_MESSAGE
-								|| $ack_operation['operationtype'] == OPERATION_TYPE_ACK_MESSAGE) {
+								|| $ack_operation['operationtype'] == OPERATION_TYPE_RECOVERY_MESSAGE) {
 							$db_opmessage = $db_ack_operations[$ack_operation['operationid']]['opmessage'];
 							$default_msg = array_key_exists('default_msg', $opmessage)
 								? $opmessage['default_msg']
@@ -1085,8 +1084,6 @@ class CAction extends CApiService {
 					];
 					break;
 
-				case OPERATION_TYPE_ACK_MESSAGE:
-					// falls through
 				case OPERATION_TYPE_RECOVERY_MESSAGE:
 					if (array_key_exists('opmessage', $operation) && $operation['opmessage']) {
 						$operation['opmessage']['operationid'] = $operationId;
@@ -1216,8 +1213,6 @@ class CAction extends CApiService {
 						$opInventoryToDeleteByOpId[] = $operationDb['operationid'];
 						break;
 
-					case OPERATION_TYPE_ACK_MESSAGE:
-						// falls through
 					case OPERATION_TYPE_RECOVERY_MESSAGE:
 						$opMessagesToDeleteByOpId[] = $operationDb['operationid'];
 						break;
@@ -1427,8 +1422,6 @@ class CAction extends CApiService {
 					}
 					break;
 
-				case OPERATION_TYPE_ACK_MESSAGE:
-					// falls throught
 				case OPERATION_TYPE_RECOVERY_MESSAGE:
 					if ($type_changed) {
 						$operation['opmessage']['operationid'] = $operation['operationid'];
@@ -1597,7 +1590,7 @@ class CAction extends CApiService {
 				EVENT_SOURCE_INTERNAL => [OPERATION_TYPE_MESSAGE, OPERATION_TYPE_RECOVERY_MESSAGE]
 			],
 			ACTION_ACKNOWLEDGE_OPERATION => [
-				EVENT_SOURCE_TRIGGERS => [OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND, OPERATION_TYPE_ACK_MESSAGE,
+				EVENT_SOURCE_TRIGGERS => [OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND,
 					OPERATION_TYPE_RECOVERY_MESSAGE
 				]
 			]
@@ -1672,8 +1665,6 @@ class CAction extends CApiService {
 
 					$all_userids = array_merge($all_userids, $userids);
 					$all_usrgrpids = array_merge($all_usrgrpids, $usrgrpids);
-					// falls through
-				case OPERATION_TYPE_ACK_MESSAGE:
 					$message = array_key_exists('opmessage', $operation) ? $operation['opmessage'] : [];
 
 					if (array_key_exists('mediatypeid', $message) && $message['mediatypeid']) {
@@ -1688,6 +1679,25 @@ class CAction extends CApiService {
 						));
 					}
 					break;
+
+				case OPERATION_TYPE_RECOVERY_MESSAGE:
+					$message = array_key_exists('opmessage', $operation) ? $operation['opmessage'] : [];
+
+					if (array_key_exists('mediatypeid', $message) && $message['mediatypeid']
+							&& $recovery == ACTION_ACKNOWLEDGE_OPERATION) {
+						// Value for mediatypeid can be defined only for acknowledge operation.
+						$all_mediatypeids[$message['mediatypeid']] = true;
+					}
+
+					if (array_key_exists('default_msg', $message)
+							&& (!$default_msg_validator->validate($message['default_msg']))) {
+						self::exception(ZBX_API_ERROR_PARAMETERS,
+							_s('Incorrect value "%1$s" for "%2$s" field: must be between %3$s and %4$s.',
+							$message['default_msg'], 'default_msg', 0, 1
+						));
+					}
+					break;
+
 				case OPERATION_TYPE_COMMAND:
 					if (!isset($operation['opcommand']['type'])) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _('No command type specified for action operation.'));
@@ -2454,8 +2464,6 @@ class CAction extends CApiService {
 
 			switch ($ack_operation['operationtype']) {
 				case OPERATION_TYPE_RECOVERY_MESSAGE:
-					// falls through
-				case OPERATION_TYPE_ACK_MESSAGE:
 					$opmessages[] = $ack_operationid;
 					break;
 				case OPERATION_TYPE_MESSAGE:
