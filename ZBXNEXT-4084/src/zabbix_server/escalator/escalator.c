@@ -391,6 +391,7 @@ static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, co
 			" where actionid=" ZBX_FS_UI64
 				" and mediatypeid is not null"
 				" and alerttype=%d"
+				" and acknowledgeid is null"
 				" and (eventid=" ZBX_FS_UI64,
 				actionid, ALERT_TYPE_MESSAGE, event->eventid);
 
@@ -408,10 +409,11 @@ static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, co
 
 	zbx_chrcpy_alloc(&sql, &sql_alloc, &sql_offset, ')');
 
-	if (NULL == ack)
-		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " and acknowledgeid is null");
-	else
+	if (NULL != ack)
+	{
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and userid<>" ZBX_FS_UI64, ack->userid);
 		message_type = MACRO_TYPE_MESSAGE_ACK;
+	}
 
 	result = DBselect("%s", sql);
 
@@ -487,7 +489,9 @@ static void	add_sentusers_ack_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid
 
 	result = DBselect(
 			"select distinct userid"
-			" from acknowledges where eventid=" ZBX_FS_UI64, event->eventid);
+			" from acknowledges"
+			" where eventid=" ZBX_FS_UI64
+				" and userid<>" ZBX_FS_UI64, event->eventid, ack->userid);
 
 	while (NULL != (row = DBfetch(result)))
 	{
