@@ -37,6 +37,9 @@ function SVGMap(options) {
 	this.imageUrl = 'imgstore.php?iconid=';
 	this.imageCache = new ImageCache();
 	this.canvas = new SVGCanvas(options.canvas, true);
+	if (typeof this.options.showTimestamp !== 'boolean') {
+		this.options.showTimestamp = true;
+	}
 
 	// Extra group for font styles.
 	container = this.canvas.add('g', {
@@ -45,7 +48,7 @@ function SVGMap(options) {
 		'font-size': '10px'
 	});
 
-	layers = container.add([
+	var layers_to_add = [
 		//  Background.
 		{
 			type: 'g',
@@ -94,7 +97,33 @@ function SVGMap(options) {
 				class: 'map-elements'
 			}
 		}
-	]);
+	];
+
+	// Marks (timestamp and homepage).
+	if (options.showTimestamp) {
+		layers_to_add.push({
+			type: 'g',
+			attributes: {
+				class: 'map-marks',
+				fill: 'rgba(150,150,150,0.75)',
+				'font-size': '8px',
+				'shape-rendering': 'crispEdges'
+			},
+
+			content: [
+				{
+					type: 'text',
+					attributes: {
+						class: 'map-timestamp',
+						x: options.canvas.width - 80,
+						y: options.canvas.height - 6
+					}
+				}
+			]
+		});
+	}
+
+	layers = container.add(layers_to_add);
 
 	['background', 'grid', 'shapes', 'highlights', 'links', 'elements', 'marks'].forEach(function (attribute, index) {
 		this.layers[attribute] = layers[index];
@@ -112,6 +141,15 @@ function SVGMap(options) {
 		this.render(this.options.container);
 	}
 
+	if (options.showTimestamp) {
+		var elements = this.canvas.getElementsByAttributes({class: 'map-timestamp'});
+		if (elements.length != 0) {
+			this['timestamp'] = elements[0];
+		}
+		else {
+			throw 'timestamp element is missing';
+		}
+	}
 	this.update(this.options);
 }
 
@@ -422,6 +460,13 @@ SVGMap.prototype.update = function (options, incremental) {
 			this.container.style.width = options.canvas.width + 'px';
 			this.container.style.height = options.canvas.height + 'px';
 		}
+
+		if (options.showTimestamp) {
+			this.timestamp.update({
+				x: options.canvas.width,
+				y: options.canvas.height - 6
+			});
+		}
 	}
 
 	// Images are preloaded before update.
@@ -434,6 +479,11 @@ SVGMap.prototype.update = function (options, incremental) {
 
 		this.options = SVGElement.mergeAttributes(this.options, options);
 	}, this);
+
+	// Timestamp (date on map) is updated.
+	if (options.showTimestamp && typeof options.timestamp !== 'undefined') {
+		this.timestamp.element.textContent = options.timestamp;
+	}
 };
 
 /**

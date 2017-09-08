@@ -4573,9 +4573,8 @@ tr.cursor-move {
 	overflow-y: hidden;
 	position: relative;
 	width: calc(100% - 20px);
-	border-width: 10px 10px 10px 10px;
-	border-color: #ffffff;
-	border-style: solid;
+	border: 10px solid $ui-bg-color;
+	background: $ui-bg-color;
 	display: block;
 
 	.map-container {

@@ -50,6 +50,11 @@ if (!$service) {
 /*
  * Display
  */
+$debug_mode = CWebUser::getDebugMode();
+if ($debug_mode) {
+	$start_time = microtime(true);
+}
+
 $sizeX = 900;
 $sizeY = 300;
 
@@ -192,6 +197,13 @@ imageText($im, 8, 0, $x + 14, $y + 10 + 15 * 1, $textcolor, _('OK').' (%)');
 imagefilledrectangle($im, $x, $y + 15 * 2, $x + 10, $y + 10 + 15 * 2, $red);
 imagerectangle($im, $x, $y + 15 * 2, $x + 10, $y + 10 + 15 * 2, $black);
 imageText($im, 8, 0, $x + 14, $y + 10 + 15 * 2, $textcolor, _('PROBLEM').' (%)');
+
+if ($debug_mode) {
+	$str = sprintf('%0.2f', microtime(true) - $start_time);
+	$str = _s('Generated in %s sec', $str);
+	$strSize = imageTextSize(6, 0, $str);
+	imageText($im, 6, 0, imagesx($im) - $strSize['width'] - 5, imagesy($im) - 5, $grey, $str);
+}
 
 imageOut($im);
 imagedestroy($im);

@@ -109,7 +109,8 @@ class CMapHelper {
 			'shapes' => array_values($map['shapes']),
 			'elements' => array_values($map['selements']),
 			'links' => array_values($map['links']),
-			'shapes' => array_values($map['shapes'])
+			'shapes' => array_values($map['shapes']),
+			'timestamp' => zbx_date2str(DATE_TIME_FORMAT_SECONDS)
 		];
 	}
 
