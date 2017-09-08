@@ -341,7 +341,7 @@ FIELDS|mediatypeid|type|description|smtp_server     |smtp_helo  |smtp_email     
 ROW   |1          |0   |Email      |mail.company.com|company.com|zabbix@company.com|         |          |                  |      |0     |25       |0            |0               |0               |0                  |                                                           |
 ROW   |2          |3   |Jabber     |                |           |                  |         |          |jabber@company.com|zabbix|0     |25       |0            |0               |0               |0                  |                                                           |
 ROW   |3          |2   |SMS        |                |           |                  |         |/dev/ttyS0|                  |      |0     |25       |0            |0               |0               |0                  |                                                           |
-ROW   |10         |1   |Script     |                |           |                  |script.py|          |                  |      |0     |25       |0            |0               |0               |0                  |{ALERT.SENDTO}&eol;{ALERT.SUBJECT}&eol;{ALERT.MESSAGE}&eol;|
+ROW   |10         |1   |Script     |                |           |                  |script.py|          |                  |      |0     |25       |0            |0               |0               |0                  |{ALERT.SENDTO}&bsn;{ALERT.SUBJECT}&bsn;{ALERT.MESSAGE}&bsn;|
 
 TABLE |users
 FIELDS|userid|alias      |name   |surname      |passwd                          |url|autologin|autologout|lang |refresh|type|theme  |rows_per_page|
