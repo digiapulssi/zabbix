@@ -284,16 +284,13 @@
 
 			if (true === hasErrors) {
 				overlayDialogue({
-					'title': '<?= CJs::encodeJson(_('Error')); ?>',
-					'content': jQuery('<span>').html(
-						'<?=
-							CJs::encodeJson(_('Failed to parse URL.')) ?><br><br><?=
-							CJs::encodeJson(_('URL is not properly encoded.'));
-						?>'
-					),
+					'title': <?= CJs::encodeJson(_('Error')); ?>,
+					'content': jQuery('<span>').html(<?=
+						CJs::encodeJson(_('Failed to parse URL.').'<br><br>'._('URL is not properly encoded.'));
+					?>),
 					'buttons': [
 						{
-							title: '<?= CJs::encodeJson(_('Ok')); ?>',
+							title: <?= CJs::encodeJson(_('Ok')); ?>,
 							class: 'btn-alt',
 							focused: true,
 							action: function() {}
@@ -355,15 +352,15 @@
 							pair.value = decodeURIComponent(parts[1].replace(/\+/g, " "));
 						}
 						catch(e) {
-							throw '<?= CJs::encodeJson(_('Data is not properly encoded.')); ?>';
+							throw <?= CJs::encodeJson(_('Data is not properly encoded.')); ?>;
 						}
 
 						if (pair.name === '') {
-							throw '<?= CJs::encodeJson(_('Values without names are not allowed in form fields.')); ?>';
+							throw <?= CJs::encodeJson(_('Values without names are not allowed in form fields.')); ?>;
 						}
 
 						if (pair.name.length > 255) {
-							throw '<?= CJs::encodeJson(_('Name of the form field should not exceed 255 characters.')); ?>';
+							throw <?= CJs::encodeJson(_('Name of the form field should not exceed 255 characters.')); ?>;
 						}
 
 						pairs.push(pair);
@@ -373,17 +370,14 @@
 					jQuery('input[name="post_type"][value="<?= ZBX_POSTTYPE_RAW ?>"]').prop("checked", true);
 
 					overlayDialogue({
-						'title': '<?= CJs::encodeJson(_('Error')); ?>',
-						'content': jQuery('<span>').html(
-							'<?=
-								CJs::encodeJson(
-									_('Cannot convert POST data from raw data format to form field data format.')
-								);
-							?><br><br>' + e
-						),
+						'title': <?= CJs::encodeJson(_('Error')); ?>,
+						'content': jQuery('<span>').html(<?=
+							CJs::encodeJson(
+								_('Cannot convert POST data from raw data format to form field data format.').'<br><br>'
+							); ?> + e),
 						'buttons': [
 							{
-								title: '<?= CJs::encodeJson(_('Ok')); ?>',
+								title: <?= CJs::encodeJson(_('Ok')); ?>,
 								class: 'btn-alt',
 								focused: true,
 								action: function() {}
