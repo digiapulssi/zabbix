@@ -142,8 +142,9 @@ class CScreenGraph extends CScreenBase {
 				.'&height='.$this->screenitem['height'].'&legend='.$legend
 				.'&graph3d='.$graph3d.$this->getProfileUrlParams();
 			$timeControlData['src'] .= ($this->mode == SCREEN_MODE_EDIT)
-				? '&period=3600&stime='.date(TIMESTAMP_FORMAT, time())
-				: '&period='.$this->timeline['period'].'&stime='.$this->timeline['stimeNow'];
+				? '&period=3600&stime='.date(TIMESTAMP_FORMAT, time()).'&isNow=1'
+				: '&period='.$this->timeline['period'].'&stime='.$this->timeline['stime']
+					.'&isNow='.((int) $this->timeline['isNow']);
 		}
 		else {
 			if ($this->screenitem['dynamic'] == SCREEN_SIMPLE_ITEM || $this->screenitem['url'] === '') {
@@ -160,8 +161,9 @@ class CScreenGraph extends CScreenBase {
 			$timeControlData['src'] = $this->screenitem['url'].'&width='.$this->screenitem['width']
 				.'&height='.$this->screenitem['height'].'&legend='.$legend.$this->getProfileUrlParams();
 			$timeControlData['src'] .= ($this->mode == SCREEN_MODE_EDIT)
-				? '&period=3600&stime='.date(TIMESTAMP_FORMAT, time())
-				: '&period='.$this->timeline['period'].'&stime='.$this->timeline['stimeNow'];
+				? '&period=3600&stime='.date(TIMESTAMP_FORMAT, time()).'&isNow=1'
+				: '&period='.$this->timeline['period'].'&stime='.$this->timeline['stime']
+					.'&isNow='.((int) $this->timeline['isNow']);
 		}
 
 		// output
@@ -185,8 +187,8 @@ class CScreenGraph extends CScreenBase {
 				$item = new CDiv();
 			}
 			elseif ($this->mode == SCREEN_MODE_PREVIEW) {
-				$item = new CLink(null, 'charts.php?graphid='.$resourceId.'&period='.$this->timeline['period'].
-						'&stime='.$this->timeline['stimeNow']);
+				$item = new CLink(null, 'charts.php?graphid='.$resourceId.'&period='.$this->timeline['period']
+						.'&stime='.$this->timeline['stime'].'&isNow='.((int) $this->timeline['isNow']));
 			}
 
 			$item->setId($containerId);

@@ -39,23 +39,9 @@ $fields = [
 	'alias' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,	null],
 	'period' =>		[T_ZBX_INT, O_OPT, null,	null,	null],
 	'stime' =>		[T_ZBX_STR, O_OPT, null,	null,	null],
-	// ajax
-	'favobj' =>		[T_ZBX_STR, O_OPT, P_ACT,	null,	null],
-	'favid' =>		[T_ZBX_INT, O_OPT, P_ACT,	null,	null]
+	'isNow' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 check_fields($fields);
-
-/*
- * Ajax
- */
-if (isset($_REQUEST['favobj'])) {
-	// saving fixed/dynamic setting to profile
-	if ($_REQUEST['favobj'] == 'timelinefixedperiod') {
-		if (isset($_REQUEST['favid'])) {
-			CProfile::update('web.auditacts.timelinefixed', $_REQUEST['favid'], PROFILE_TYPE_INT);
-		}
-	}
-}
 
 if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
 	require_once dirname(__FILE__).'/include/page_footer.php';
@@ -77,14 +63,19 @@ elseif (hasRequest('filter_rst')) {
 /*
  * Display
  */
-$effectivePeriod = navigation_bar_calc('web.auditacts.timeline', 0, true);
-
 $data = [
-	'stime' => getRequest('stime'),
 	'alias' => CProfile::get('web.auditacts.filter.alias', ''),
 	'users' => [],
 	'alerts' => [],
-	'paging' => null
+	'paging' => null,
+	'timeline' => calculateTime([
+		'profileIdx' => 'web.auditacts.timeline',
+		'profileIdx2' => 0,
+		'updateProfile' => (hasRequest('period') || hasRequest('stime') || hasRequest('isNow')),
+		'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
+		'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
+		'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
+	])
 ];
 
 $userId = null;
@@ -104,9 +95,6 @@ if ($data['alias']) {
 }
 
 if (!$data['alias'] || $data['users']) {
-	$from = zbxDateToTime($data['stime']);
-	$till = $from + $effectivePeriod;
-
 	$config = select_config();
 
 	// fetch alerts for different objects and sources and combine them in a single stream
@@ -117,8 +105,8 @@ if (!$data['alias'] || $data['users']) {
 			],
 			'selectMediatypes' => ['mediatypeid', 'description', 'maxattempts'],
 			'userids' => $userId,
-			'time_from' => $from,
-			'time_till' => $till,
+			'time_from' => zbxDateToTime($data['timeline']['stime']),
+			'time_till' => zbxDateToTime($data['timeline']['usertime']),
 			'eventsource' => $eventSource['source'],
 			'eventobject' => $eventSource['object'],
 			'sortfield' => 'alertid',
@@ -158,7 +146,7 @@ if ($userId) {
 elseif ($data['alias'] === '') {
 	$firstAlert = DBfetch(DBselect('SELECT MIN(a.clock) AS clock FROM alerts a'));
 }
-$minStartTime = ($firstAlert) ? $firstAlert['clock'] : null;
+$minStartTime = ($firstAlert) ? ((int) $firstAlert['clock']) : null;
 
 // get actions names
 if ($data['alerts']) {
@@ -169,12 +157,10 @@ if ($data['alerts']) {
 	]);
 }
 
-// timeline
-$data['timeline'] = [
-	'period' => $effectivePeriod,
-	'starttime' => date(TIMESTAMP_FORMAT, $minStartTime),
-	'usertime' => $data['stime'] ? date(TIMESTAMP_FORMAT, zbxDateToTime($data['stime']) + $effectivePeriod) : null
-];
+// Show shorter timeline
+if ($minStartTime !== null && $minStartTime > 0 && ($minStartTime / 1000) < ZBX_MAX_PERIOD) {
+	$data['timeline']['starttime'] = date(TIMESTAMP_FORMAT, $minStartTime);
+}
 
 // render view
 $auditView = new CView('administration.auditacts.list', $data);

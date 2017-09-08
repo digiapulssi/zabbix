@@ -46,6 +46,7 @@ $fields = [
 	'step' =>		[T_ZBX_INT, O_OPT, P_SYS,	BETWEEN(0, 65535), null],
 	'period' =>		[T_ZBX_INT, O_OPT, P_SYS,	null,		null],
 	'stime' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
+	'isNow' =>		[T_ZBX_INT, O_OPT, P_SYS,	IN('0,1'),	null],
 	'reset' =>		[T_ZBX_STR, O_OPT, P_SYS,	IN('"reset"'), null],
 	'fullscreen' =>	[T_ZBX_INT, O_OPT, P_SYS,	IN('0,1'), null],
 	// ajax
@@ -97,8 +98,9 @@ if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
  */
 $data = [
 	'fullscreen' => $_REQUEST['fullscreen'],
-	'period' => getRequest('period'),
-	'stime' => getRequest('stime')
+	'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
+	'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
+	'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
 ];
 
 $options = [
