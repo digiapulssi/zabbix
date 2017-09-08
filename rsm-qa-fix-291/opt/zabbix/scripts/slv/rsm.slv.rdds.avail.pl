@@ -33,6 +33,17 @@ my $now = time();
 my $clock = (opt('from') ? getopt('from') : $now - $interval - AVAIL_SHIFT_BACK);
 my $period = (opt('period') ? getopt('period') : 1);
 
+# in normal operation mode
+if (!opt('period') && !opt('from'))
+{
+	# only calculate once a cycle
+	if (truncate_from($clock) % $interval != 0)
+	{
+		dbg("will NOT calculate");
+		slv_exit(EXIT_SUCCESS);
+	}
+}
+
 my $max_avail_time = max_avail_time($now);
 
 my $tlds_ref;
