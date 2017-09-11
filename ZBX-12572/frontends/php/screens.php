@@ -48,10 +48,7 @@ $fields = [
 	'stime' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'isNow' =>		[T_ZBX_INT, O_OPT, P_SYS,	IN('0,1'),	null],
 	'reset' =>		[T_ZBX_STR, O_OPT, P_SYS,	IN('"reset"'), null],
-	'fullscreen' =>	[T_ZBX_INT, O_OPT, P_SYS,	IN('0,1'), null],
-	// ajax
-	'favobj' =>		[T_ZBX_STR, O_OPT, P_ACT,	null,		null],
-	'favid' =>		[T_ZBX_INT, O_OPT, P_ACT,	null,		null]
+	'fullscreen' =>	[T_ZBX_INT, O_OPT, P_SYS,	IN('0,1'), null]
 ];
 check_fields($fields);
 
@@ -72,20 +69,6 @@ if (getRequest('hostid') && !isReadableHosts([getRequest('hostid')])) {
 }
 if (getRequest('tr_hostid') && !isReadableHosts([getRequest('tr_hostid')])) {
 	access_deny();
-}
-
-/*
- * Filter
- */
-if (isset($_REQUEST['favobj'])) {
-	if (getRequest('favobj') === 'timeline' && hasRequest('elementid') && hasRequest('period')) {
-		navigation_bar_calc('web.screens', $_REQUEST['elementid'], true);
-	}
-
-	// saving fixed/dynamic setting to profile
-	if ($_REQUEST['favobj'] == 'timelinefixedperiod' && isset($_REQUEST['favid'])) {
-		CProfile::update('web.screens.timelinefixed', $_REQUEST['favid'], PROFILE_TYPE_INT);
-	}
 }
 
 if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {

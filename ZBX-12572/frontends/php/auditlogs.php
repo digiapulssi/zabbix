@@ -164,7 +164,7 @@ $firstAudit = DBfetch(DBselect($sql, $config['search_limit'] + 1));
 $minStartTime = ($firstAudit) ? $firstAudit['clock'] - 1 : null;
 
 // Show shorter timeline
-if ($minStartTime !== null && $minStartTime > 0 && ($minStartTime / 1000) < ZBX_MAX_PERIOD) {
+if ($minStartTime !== null && $minStartTime > 0) {
 	$data['timeline']['starttime'] = date(TIMESTAMP_FORMAT, $minStartTime);
 }
 

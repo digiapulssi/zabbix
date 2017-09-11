@@ -158,7 +158,7 @@ if ($data['alerts']) {
 }
 
 // Show shorter timeline
-if ($minStartTime !== null && $minStartTime > 0 && ($minStartTime / 1000) < ZBX_MAX_PERIOD) {
+if ($minStartTime !== null && $minStartTime > 0) {
 	$data['timeline']['starttime'] = date(TIMESTAMP_FORMAT, $minStartTime);
 }
 
