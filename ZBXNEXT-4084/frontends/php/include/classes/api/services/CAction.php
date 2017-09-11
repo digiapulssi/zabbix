@@ -575,7 +575,6 @@ class CAction extends CApiService {
 					}
 
 					if ($operation['operationtype'] == OPERATION_TYPE_MESSAGE
-							|| $operation['operationtype'] == OPERATION_TYPE_RECOVERY_MESSAGE
 							|| $operation['operationtype'] == OPERATION_TYPE_ACK_MESSAGE) {
 						$message = (array_key_exists('opmessage', $operation) && is_array($operation['opmessage']))
 							? $operation['opmessage']
@@ -1597,9 +1596,7 @@ class CAction extends CApiService {
 				EVENT_SOURCE_INTERNAL => [OPERATION_TYPE_MESSAGE, OPERATION_TYPE_RECOVERY_MESSAGE]
 			],
 			ACTION_ACKNOWLEDGE_OPERATION => [
-				EVENT_SOURCE_TRIGGERS => [OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND, OPERATION_TYPE_ACK_MESSAGE,
-					OPERATION_TYPE_RECOVERY_MESSAGE
-				]
+				EVENT_SOURCE_TRIGGERS => [OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND, OPERATION_TYPE_ACK_MESSAGE]
 			]
 		];
 
@@ -2453,8 +2450,6 @@ class CAction extends CApiService {
 			unset($ack_operation['esc_period'], $ack_operation['esc_step_from'], $ack_operation['esc_step_to']);
 
 			switch ($ack_operation['operationtype']) {
-				case OPERATION_TYPE_RECOVERY_MESSAGE:
-					// falls through
 				case OPERATION_TYPE_ACK_MESSAGE:
 					$opmessages[] = $ack_operationid;
 					break;

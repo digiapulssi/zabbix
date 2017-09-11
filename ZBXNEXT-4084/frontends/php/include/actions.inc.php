@@ -812,13 +812,9 @@ function getActionOperationDescriptions(array $actions, $type) {
 						break;
 
 					case OPERATION_TYPE_RECOVERY_MESSAGE:
-						$result[$i][$j][] = bold(
-							_('Notify all who received any messages regarding the problem before')
-						);
-						break;
-
+						// falls throught
 					case OPERATION_TYPE_ACK_MESSAGE:
-						$result[$i][$j][] = bold(_('Notify all who left acknowledgement and comments'));
+						$result[$i][$j][] = bold(_('Notify all involved'));
 						break;
 				}
 			}
@@ -1092,8 +1088,7 @@ function getAllowedOperations($eventsource) {
 			ACTION_ACKNOWLEDGE_OPERATION => [
 				OPERATION_TYPE_MESSAGE,
 				OPERATION_TYPE_COMMAND,
-				OPERATION_TYPE_ACK_MESSAGE,
-				OPERATION_TYPE_RECOVERY_MESSAGE
+				OPERATION_TYPE_ACK_MESSAGE
 			]
 		];
 	}
@@ -1160,8 +1155,8 @@ function operation_type2str($type) {
 		OPERATION_TYPE_TEMPLATE_ADD => _('Link to template'),
 		OPERATION_TYPE_TEMPLATE_REMOVE => _('Unlink from template'),
 		OPERATION_TYPE_HOST_INVENTORY => _('Set host inventory mode'),
-		OPERATION_TYPE_RECOVERY_MESSAGE => _('Notify all who received any messages regarding the problem before'),
-		OPERATION_TYPE_ACK_MESSAGE => _('Notify all who left acknowledgement and comments')
+		OPERATION_TYPE_RECOVERY_MESSAGE => _('Notify all involved'),
+		OPERATION_TYPE_ACK_MESSAGE => _('Notify all involved')
 	];
 
 	if (is_null($type)) {
