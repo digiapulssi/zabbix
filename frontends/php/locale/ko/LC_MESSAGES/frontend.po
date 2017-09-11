@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-09-11 23:33+0300\n"
-"PO-Revision-Date: 2017-08-23 16:20+0300\n"
-"Last-Translator: Anonymous Pootle User\n"
+"PO-Revision-Date: 2017-09-05 05:30+0300\n"
+"Last-Translator: JONGKWON <jkkim.photo@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1503498001.000000\n"
+"X-POOTLE-MTIME: 1504582209.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -587,7 +587,7 @@ msgstr "하위 추가"
 
 #: jsLoader.php:260
 msgid "Add child element"
-msgstr ""
+msgstr "하위 요소 추가"
 
 #: include/actions.inc.php:652 include/actions.inc.php:1125
 msgid "Add host"
@@ -595,7 +595,7 @@ msgstr "호스트 추가"
 
 #: jsLoader.php:261
 msgid "Add multiple maps"
-msgstr ""
+msgstr "복수의 맵을 추가"
 
 #: include/views/configuration.item.massupdate.php:575
 msgid "Add new or existing applications"
@@ -1537,7 +1537,7 @@ msgstr "슬라이드 쇼를 추가할 수 없습니다"
 
 #: app/controllers/CControllerWidgetNavigationtreeItemEditDialog.php:104
 msgid "Cannot add submaps. Max depth reached."
-msgstr ""
+msgstr "서브맵을 추가할 수 없습니다. 최대 계층에 도달하였습니다."
 
 #: templates.php:180
 msgid "Cannot add template"
@@ -5155,7 +5155,7 @@ msgstr "슬라이드 쇼 변경"
 
 #: jsLoader.php:256
 msgid "Edit tree element"
-msgstr ""
+msgstr "트리 요소의 변경"
 
 #: jsLoader.php:213
 msgid "Edit trigger"
@@ -6128,7 +6128,7 @@ msgstr "함수\"%1$s\"는 선택된 아이템 \"%2$s\"와 함께 사용할 수 �
 #: include/classes/screens/CScreenClock.php:87
 #, c-format
 msgid "GMT%1$s"
-msgstr ""
+msgstr "GMT%1$s"
 
 #: app/views/administration.mediatype.edit.php:115
 #: app/views/administration.mediatype.list.php:79
@@ -10606,7 +10606,7 @@ msgstr "새 조건"
 
 #: app/controllers/CControllerDashboardView.php:369
 msgid "New dashboard"
-msgstr ""
+msgstr "신규 대시보드"
 
 #: jsLoader.php:172
 msgid "New element"
@@ -11189,7 +11189,7 @@ msgstr "실행하는 액션의 메시지에 송신처가 설정되어 있지 않
 
 #: jsLoader.php:239
 msgid "No refresh"
-msgstr ""
+msgstr "새로고침 없음"
 
 #: include/classes/api/services/CScreenItem.php:543
 msgid "No screen ID provided for screen element."
@@ -12444,7 +12444,7 @@ msgstr "2개의 요소를 선택하여 주십시오"
 
 #: app/controllers/CControllerWidgetNavigationtreeItemEdit.php:41
 msgid "Please specify element name."
-msgstr ""
+msgstr "요소 명을 지정해주세요."
 
 #: include/views/js/monitoring.sysmaps.js.php:357
 msgid "Points"
@@ -14265,7 +14265,7 @@ msgstr "대응하지 않은 항목만 표시하기"
 
 #: include/classes/widgets/CNavigationWidgetForm.php:74
 msgid "Show unavailable maps"
-msgstr ""
+msgstr "사용불가 맵의 표시"
 
 #: include/views/configuration.item.edit.php:468
 #: include/views/configuration.item.massupdate.php:478
@@ -17680,7 +17680,7 @@ msgstr "\"%1$s\"에서 시작되는 조건식을 확인해주세요."
 #: include/classes/api/services/CItemGeneral.php:1562
 #: include/classes/import/CConfigurationImport.php:2534
 msgid "circular item dependency is not allowed"
-msgstr ""
+msgstr "모순된 아이템의 의존관계는 허가되지 않습니다."
 
 # global macro?
 #: include/views/hostmacros.php:38
