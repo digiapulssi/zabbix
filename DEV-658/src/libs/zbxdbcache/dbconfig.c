@@ -6155,17 +6155,22 @@ static int	dc_preproc_item_init(zbx_preproc_item_t *item, zbx_uint64_t itemid)
  ******************************************************************************/
 void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp)
 {
+	const char		*__function_name = "DCconfig_get_preprocessable_items";
+
 	const ZBX_DC_PREPROCITEM	*dc_preprocitem;
 	const ZBX_DC_MASTERITEM		*dc_masteritem;
+	const ZBX_DC_ITEM		*dc_item;
 	const zbx_dc_preproc_op_t	*dc_op;
 	zbx_preproc_item_t		*item, item_local;
 	zbx_hashset_iter_t		iter;
 	zbx_preproc_op_t		*op;
 	int				i;
 
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
 	/* no changes */
 	if (0 != *timestamp && *timestamp == config->sync_ts)
-		return;
+		goto out;
 
 	zbx_hashset_clear(items);
 	*timestamp = config->sync_ts;
@@ -6209,7 +6214,24 @@ void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp)
 				sizeof(zbx_uint64_t) * item->dep_itemids_num);
 	}
 
+	zbx_hashset_iter_reset(&config->items, &iter);
+	while (NULL != (dc_item = (const ZBX_DC_ITEM *)zbx_hashset_iter_next(&iter)))
+	{
+		if (ITEM_TYPE_INTERNAL != dc_item->type)
+			continue;
+
+		if (NULL == (item = (zbx_preproc_item_t *)zbx_hashset_search(items, &dc_item->itemid)))
+		{
+			if (FAIL == dc_preproc_item_init(&item_local, dc_item->itemid))
+				continue;
+
+			item = (zbx_preproc_item_t *)zbx_hashset_insert(items, &item_local, sizeof(item_local));
+		}
+	}
+
 	UNLOCK_CACHE;
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() items:%d", __function_name, items->num_data);
 }
 
 void	DCconfig_get_hosts_by_itemids(DC_HOST *hosts, const zbx_uint64_t *itemids, int *errcodes, size_t num)
