@@ -60,6 +60,4 @@ void	zbx_preprocessor_unpack_task(zbx_uint64_t *itemid, unsigned char *value_typ
 void	zbx_preprocessor_unpack_result(zbx_variant_t *value, zbx_item_history_value_t **history_value,
 		char **error, const unsigned char *data);
 
-void	zbx_preproc_op_free(zbx_preproc_op_t *op);
-
 #endif /* ZABBIX_ZBXPREPROC_H */

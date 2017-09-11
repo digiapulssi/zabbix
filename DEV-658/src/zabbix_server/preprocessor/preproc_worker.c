@@ -48,12 +48,11 @@ static void worker_preprocess_value(zbx_ipc_socket_t *socket, zbx_ipc_message_t 
 	unsigned char			*data = NULL, value_type;
 	zbx_uint64_t			itemid;
 	zbx_variant_t			value, value_num;
-	int				i;
+	int				i, steps_num;
 	char				*error = NULL;
 	zbx_timespec_t			*ts;
 	zbx_item_history_value_t	*history_value, history_value_local;
 	zbx_preproc_op_t		*steps;
-	int				steps_num;
 
 	zbx_preprocessor_unpack_task(&itemid, &value_type, &ts, &value, &history_value, &steps, &steps_num,
 			message->data);
@@ -107,7 +106,6 @@ static void worker_preprocess_value(zbx_ipc_socket_t *socket, zbx_ipc_message_t 
 	}
 
 	zbx_free(data);
-
 }
 
 ZBX_THREAD_ENTRY(preprocessing_worker_thread, args)

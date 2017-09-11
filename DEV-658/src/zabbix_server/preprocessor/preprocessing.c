@@ -181,8 +181,8 @@ static zbx_uint32_t	preprocessor_pack_value(zbx_ipc_message_t *message, zbx_prep
  *             ts            - [IN] value timestamp                           *
  *             value         - [IN] item value                                *
  *             history_value - [IN] history data for delta preprocessing      *
- *             step_count    - [IN] preprocessing step count                  *
- *             steps         - [IN]preprocessing steps                        *
+ *             steps         - [IN] preprocessing steps                       *
+ *             steps_num     - [IN] preprocessing step count                  *
  *                                                                            *
  * Return value: size of packed data                                          *
  *                                                                            *
@@ -432,6 +432,7 @@ zbx_uint32_t	zbx_preprocessor_unpack_value(zbx_preproc_item_value_t *value, unsi
  *             value         - [OUT] item value                               *
  *             history_value - [OUT] history data for delta preprocessing     *
  *             steps         - [OUT] preprocessing steps                      *
+ *             steps_num     - [OUT] preprocessing step count                 *
  *             data          - [IN] IPC data buffer                           *
  *                                                                            *
  ******************************************************************************/
@@ -712,17 +713,4 @@ zbx_uint64_t	zbx_preprocessor_get_queue_size()
 	zbx_ipc_message_clean(&message);
 
 	return size;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_preproc_op_clear                                             *
- *                                                                            *
- * Purpose: clear resources allocated by preprocessing operation              *
- *                                                                            *
- ******************************************************************************/
-void	zbx_preproc_op_free(zbx_preproc_op_t *op)
-{
-	zbx_free(op->params);
-	zbx_free(op);
 }
