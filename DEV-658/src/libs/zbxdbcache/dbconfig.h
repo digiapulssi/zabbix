@@ -645,7 +645,7 @@ typedef struct
 	zbx_hashset_t		corr_operations;
 	zbx_hashset_t		hostgroups;
 	zbx_vector_ptr_t	hostgroups_name; 	/* host groups sorted by name */
-	zbx_hashset_t		item_preproc;
+	zbx_hashset_t		preprocops;
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_hashset_t		psks;			/* for keeping PSK-identity and PSK pairs and for searching */
 							/* by PSK identity */

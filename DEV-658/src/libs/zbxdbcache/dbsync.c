@@ -3069,7 +3069,7 @@ int	zbx_dbsync_compare_item_preprocs(zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(rowid, dbrow[0]);
 		zbx_hashset_insert(&ids, &rowid, sizeof(rowid));
 
-		if (NULL == (preproc = (zbx_dc_preproc_op_t *)zbx_hashset_search(&dbsync_env.cache->item_preproc,
+		if (NULL == (preproc = (zbx_dc_preproc_op_t *)zbx_hashset_search(&dbsync_env.cache->preprocops,
 				&rowid)))
 		{
 			tag = ZBX_DBSYNC_ROW_ADD;
@@ -3081,7 +3081,7 @@ int	zbx_dbsync_compare_item_preprocs(zbx_dbsync_t *sync)
 			dbsync_add_row(sync, rowid, tag, dbrow);
 	}
 
-	zbx_hashset_iter_reset(&dbsync_env.cache->item_preproc, &iter);
+	zbx_hashset_iter_reset(&dbsync_env.cache->preprocops, &iter);
 	while (NULL != (preproc = (zbx_dc_preproc_op_t *)zbx_hashset_iter_next(&iter)))
 	{
 		if (NULL == zbx_hashset_search(&ids, &preproc->item_preprocid))

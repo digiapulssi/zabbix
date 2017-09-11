@@ -4061,7 +4061,7 @@ static void	DCsync_trigger_tags(zbx_dbsync_t *sync)
  * Comments: This function is used to sort correlation conditions by type.    *
  *                                                                            *
  ******************************************************************************/
-static int	dc_compare_item_preproc_by_step(const void *d1, const void *d2)
+static int	dc_compare_preprocops_by_step(const void *d1, const void *d2)
 {
 	zbx_dc_preproc_op_t	*p1 = *(zbx_dc_preproc_op_t **)d1;
 	zbx_dc_preproc_op_t	*p2 = *(zbx_dc_preproc_op_t **)d2;
@@ -4096,7 +4096,7 @@ static void	DCsync_item_preproc(zbx_dbsync_t *sync)
 	zbx_uint64_t		item_preprocid, itemid, lastitemid = 0;
 	int			found, ret, i, index;
 	ZBX_DC_PREPROCITEM	*preprocitem = NULL;
-	zbx_dc_preproc_op_t	*preproc;
+	zbx_dc_preproc_op_t	*op;
 	zbx_vector_ptr_t	items;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -4130,16 +4130,16 @@ static void	DCsync_item_preproc(zbx_dbsync_t *sync)
 
 		ZBX_STR2UINT64(item_preprocid, row[0]);
 
-		preproc = DCfind_id(&config->item_preproc, item_preprocid, sizeof(zbx_dc_preproc_op_t), &found);
+		op = DCfind_id(&config->preprocops, item_preprocid, sizeof(zbx_dc_preproc_op_t), &found);
 
-		ZBX_STR2UCHAR(preproc->type, row[2]);
-		DCstrpool_replace(found, &preproc->params, row[3]);
-		preproc->step = atoi(row[4]);
+		ZBX_STR2UCHAR(op->type, row[2]);
+		DCstrpool_replace(found, &op->params, row[3]);
+		op->step = atoi(row[4]);
 
 		if (0 == found)
 		{
-			preproc->itemid = itemid;
-			zbx_vector_ptr_append(&preprocitem->preproc_ops, preproc);
+			op->itemid = itemid;
+			zbx_vector_ptr_append(&preprocitem->preproc_ops, op);
 		}
 
 		zbx_vector_ptr_append(&items, preprocitem);
@@ -4149,12 +4149,12 @@ static void	DCsync_item_preproc(zbx_dbsync_t *sync)
 
 	for (; SUCCEED == ret; ret = zbx_dbsync_next(sync, &rowid, &row, &tag))
 	{
-		if (NULL == (preproc = zbx_hashset_search(&config->item_preproc, &rowid)))
+		if (NULL == (op = zbx_hashset_search(&config->preprocops, &rowid)))
 			continue;
 
-		if (NULL != (preprocitem = zbx_hashset_search(&config->preprocitems, &preproc->itemid)))
+		if (NULL != (preprocitem = zbx_hashset_search(&config->preprocitems, &op->itemid)))
 		{
-			if (FAIL != (index = zbx_vector_ptr_search(&preprocitem->preproc_ops, preproc,
+			if (FAIL != (index = zbx_vector_ptr_search(&preprocitem->preproc_ops, op,
 					ZBX_DEFAULT_PTR_COMPARE_FUNC)))
 			{
 				zbx_vector_ptr_remove_noorder(&preprocitem->preproc_ops, index);
@@ -4169,7 +4169,7 @@ static void	DCsync_item_preproc(zbx_dbsync_t *sync)
 			}
 		}
 
-		zbx_hashset_remove_direct(&config->item_preproc, preproc);
+		zbx_hashset_remove_direct(&config->preprocops, op);
 	}
 
 	/* sort item  preprocessing operations by step */
@@ -4180,7 +4180,7 @@ static void	DCsync_item_preproc(zbx_dbsync_t *sync)
 	for (i = 0; i < items.values_num; i++)
 	{
 		preprocitem = (ZBX_DC_PREPROCITEM *)items.values[i];
-		zbx_vector_ptr_sort(&preprocitem->preproc_ops, dc_compare_item_preproc_by_step);
+		zbx_vector_ptr_sort(&preprocitem->preproc_ops, dc_compare_preprocops_by_step);
 	}
 
 	zbx_vector_ptr_destroy(&items);
@@ -4844,7 +4844,7 @@ void	DCsync_configuration(unsigned char mode)
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() hgroups    : %d (%d slots)", __function_name,
 				config->hostgroups.num_data, config->hostgroups.num_slots);
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() item procs : %d (%d slots)", __function_name,
-				config->item_preproc.num_data, config->item_preproc.num_slots);
+				config->preprocops.num_data, config->preprocops.num_slots);
 
 		for (i = 0; ZBX_POLLER_TYPE_COUNT > i; i++)
 		{
@@ -5267,7 +5267,7 @@ int	init_configuration_cache(char **error)
 	zbx_vector_ptr_create_ext(&config->hostgroups_name, __config_mem_malloc_func, __config_mem_realloc_func,
 			__config_mem_free_func);
 
-	CREATE_HASHSET(config->item_preproc, 0);
+	CREATE_HASHSET(config->preprocops, 0);
 
 	CREATE_HASHSET_EXT(config->items_hk, 100, __config_item_hk_hash, __config_item_hk_compare);
 	CREATE_HASHSET_EXT(config->hosts_h, 10, __config_host_h_hash, __config_host_h_compare);
