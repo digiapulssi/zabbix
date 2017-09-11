@@ -1482,7 +1482,6 @@ static void	escalation_execute_acknowledge_operations(const DB_EVENT *event, con
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-
 	result = DBselect(
 			"select o.operationid,o.operationtype,m.operationid,m.default_msg,"
 				"m.subject,m.message,m.mediatypeid"
@@ -1493,8 +1492,8 @@ static void	escalation_execute_acknowledge_operations(const DB_EVENT *event, con
 				" and o.operationtype in (%d,%d,%d)"
 				" and o.recovery=%d",
 			action->actionid,
-			OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND,
-			OPERATION_TYPE_ACK_MESSAGE, ZBX_OPERATION_MODE_ACK);
+			OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND, OPERATION_TYPE_ACK_MESSAGE,
+			ZBX_OPERATION_MODE_ACK);
 
 	while (NULL != (row = DBfetch(result)))
 	{
