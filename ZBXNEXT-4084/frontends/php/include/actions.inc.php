@@ -816,6 +816,10 @@ function getActionOperationDescriptions(array $actions, $type) {
 							_('Notify all who received any messages regarding the problem before')
 						);
 						break;
+
+					case OPERATION_TYPE_ACK_MESSAGE:
+						$result[$i][$j][] = bold(_('Notify all who left acknowledgement and comments'));
+						break;
 				}
 			}
 		}
@@ -945,6 +949,38 @@ function getActionOperationHints(array $operations, array $defaultMessage) {
 				}
 				break;
 
+			case OPERATION_TYPE_ACK_MESSAGE:
+				$opmessage = array_key_exists('opmessage', $operation) ? $operation['opmessage'] : [];
+
+				if (array_key_exists('default_msg', $opmessage) && $opmessage['default_msg']) {
+					$subject = $defaultMessage['subject'];
+					$message = $defaultMessage['message'];
+				}
+				else {
+					$opmessage += [
+						'subject'	=> ACTION_DEFAULT_SUBJ_ACKNOWLEDGE,
+						'message'	=> ACTION_DEFAULT_MSG_ACKNOWLEDGE
+					];
+
+					$subject = $opmessage['subject'];
+					$message = $opmessage['message'];
+				}
+
+				$result_hint = [];
+
+				if (trim($subject)) {
+					$result_hint = [bold($subject), BR(), BR()];
+				}
+
+				if (trim($message)) {
+					$result_hint[] = zbx_nl2br($message);
+				}
+
+				if ($result_hint) {
+					$result[$key][] = $result_hint;
+				}
+				break;
+
 			case OPERATION_TYPE_RECOVERY_MESSAGE:
 				$result_hint = [];
 				$message = (array_key_exists('default_msg', $operation['opmessage'])
@@ -1056,6 +1092,7 @@ function getAllowedOperations($eventsource) {
 			ACTION_ACKNOWLEDGE_OPERATION => [
 				OPERATION_TYPE_MESSAGE,
 				OPERATION_TYPE_COMMAND,
+				OPERATION_TYPE_ACK_MESSAGE,
 				OPERATION_TYPE_RECOVERY_MESSAGE
 			]
 		];
@@ -1123,7 +1160,8 @@ function operation_type2str($type) {
 		OPERATION_TYPE_TEMPLATE_ADD => _('Link to template'),
 		OPERATION_TYPE_TEMPLATE_REMOVE => _('Unlink from template'),
 		OPERATION_TYPE_HOST_INVENTORY => _('Set host inventory mode'),
-		OPERATION_TYPE_RECOVERY_MESSAGE => _('Notify all involved')
+		OPERATION_TYPE_RECOVERY_MESSAGE => _('Notify all who received any messages regarding the problem before'),
+		OPERATION_TYPE_ACK_MESSAGE => _('Notify all who left acknowledgement and comments')
 	];
 
 	if (is_null($type)) {
