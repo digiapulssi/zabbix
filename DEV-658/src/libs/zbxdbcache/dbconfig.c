@@ -6225,7 +6225,7 @@ void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp)
 			if (FAIL == dc_preproc_item_init(&item_local, dc_item->itemid))
 				continue;
 
-			item = (zbx_preproc_item_t *)zbx_hashset_insert(items, &item_local, sizeof(item_local));
+			zbx_hashset_insert(items, &item_local, sizeof(item_local));
 		}
 	}
 
