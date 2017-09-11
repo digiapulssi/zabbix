@@ -1,6 +1,7 @@
 Changes for 3.0.11rc1
 
 New features:
+A.F....... [ZBX-1357] enabled Turkish translation to be displayed by default (zalex_ua)
 A.F....... [ZBX-1357] updated Czech, English (United States), French, Italian, Japanese, Korean, Russian, Turkish translations; thanks to Zabbix translators (zalex_ua)
 
 Bug fixes:
