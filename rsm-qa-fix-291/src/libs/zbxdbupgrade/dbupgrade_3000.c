@@ -755,6 +755,11 @@ static int	DBpatch_3000131(void)
 	return DBadd_foreign_key("lastvalue", 1, &field);
 }
 
+static int	DBpatch_3000132(void)
+{
+	return DBpatch_3000122();
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -794,5 +799,6 @@ DBPATCH_ADD(3000128, 0, 0)	/* adjusted allowed system time difference between Za
 DBPATCH_ADD(3000129, 0, 0)	/* renamed corresponding trigger */
 DBPATCH_ADD(3000130, 0, 1)	/* created lastvalue table */
 DBPATCH_ADD(3000131, 0, 1)	/* added itemid constraint to lastvalue */
+DBPATCH_ADD(3000132, 0, 0)	/* deleted carriage returns in parameters of "Script" media type */
 
 DBPATCH_END()

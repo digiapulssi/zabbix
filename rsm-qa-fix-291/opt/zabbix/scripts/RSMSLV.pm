@@ -89,7 +89,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps slv_stats_reset
-		get_result_string get_tld_by_trigger truncate_from alerts_enabled get_test_start_time uint_value_exists
+		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled get_test_start_time
+		uint_value_exists
 		get_real_services_period dbg info wrn fail format_stats_time slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
 		write_file usage);
@@ -2279,15 +2280,26 @@ sub get_tld_by_trigger
 	return ($rows_ref->[0]->[0], $service);
 }
 
+# truncate to the beginning of specified period
 sub truncate_from
 {
 	my $ts = shift;
-	my $delay = shift;
+	my $delay = shift;	# by default 1 minute
 
 	$delay = 60 unless ($delay);
 
-	# truncate to the beginning of the minute
 	return $ts - ($ts % $delay);
+}
+
+# truncate to the end of specified period
+sub truncate_till
+{
+	my $ts = shift;
+	my $delay = shift;	# by default 1 minute
+
+	$delay = 60 unless ($delay);
+
+	return truncate_from($ts, $delay) + $delay - 1;
 }
 
 # whether additional alerts through Redis are enabled, disable in config passed with set_slv_config()
@@ -2431,6 +2443,8 @@ sub slv_exit
 		print($prefix, "total     : $total_str\n");
 		print($prefix, "sql       : $sql_str\n");
 	}
+
+	closelog();
 
 	exit($rv);
 }
