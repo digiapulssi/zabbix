@@ -1296,12 +1296,12 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 				"select count(*)"
 				" from users u,users_groups ug"
 				" where u.userid=ug.userid"
-					" and ug.usrgrpid"
-						" in (select uug.usrgrpid"
-							" from users_groups uug"
-							" where uug.userid=" ZBX_FS_UI64
-						")"
-					" and u.userid=" ZBX_FS_UI64,
+					" and u.userid=" ZBX_FS_UI64
+					" and exists (select null"
+						" from users_groups uug"
+						" where uug.usrgrpid=ug.usrgrpid"
+							" and uug.userid=" ZBX_FS_UI64
+					")",
 				*userid, *recipient_userid);
 
 		if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]) || 0 >= atoi(row[0]))
