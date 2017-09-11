@@ -1261,7 +1261,7 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
  *           information about any user.                                      *
  *                                                                            *
  ******************************************************************************/
-int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid)
+static int	zbx_user_validate(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid)
 {
 	const char	*__function_name = "zbx_user_validate";
 
@@ -1277,10 +1277,7 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 	result = DBselect("select type from users where userid=" ZBX_FS_UI64, *recipient_userid);
 
 	if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
-	{
 		user_type = atoi(row[0]);
-		ret = SUCCEED;
-	}
 	DBfree_result(result);
 
 	if (-1 == user_type)
@@ -1306,8 +1303,12 @@ int	zbx_user_validate(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid
 
 		if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]) || 0 >= atoi(row[0]))
 			ret = FAIL;
+		else
+			ret = SUCCEED;
 		DBfree_result(result);
 	}
+	else
+		ret = SUCCEED;
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
@@ -1323,7 +1324,7 @@ out:
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-const char	*zbx_user_string(const zbx_uint64_t *userid, zbx_uint64_t *recipient_userid)
+const char	*zbx_user_string(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
