@@ -812,7 +812,6 @@ function getActionOperationDescriptions(array $actions, $type) {
 						break;
 
 					case OPERATION_TYPE_RECOVERY_MESSAGE:
-						// falls throught
 					case OPERATION_TYPE_ACK_MESSAGE:
 						$result[$i][$j][] = bold(_('Notify all involved'));
 						break;
@@ -1138,7 +1137,7 @@ function getAllowedOperations($eventsource) {
  * Get operation type text label according $type value. If $type is equal null array of all available operation types
  * will be returned.
  *
- * @param int|null  $type           Operation type, one of OPERATION_TYPE_* constant or null.
+ * @param int|null $type  Operation type, one of OPERATION_TYPE_* constant or null.
  *
  * @return string|array
  */
