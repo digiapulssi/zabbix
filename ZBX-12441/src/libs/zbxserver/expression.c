@@ -1458,14 +1458,21 @@ static void	get_escalation_history(zbx_uint64_t actionid, const DB_EVENT *event,
 		}
 		else
 		{
+			const char	*description = NULL, *user_name = NULL, *send_to = NULL;
+
+			description = (SUCCEED == DBis_null(row[3]) ? "" : row[3]);
+
+			user_name = zbx_user_string(&userid, recipient_userid);
+
+			if (0 == strcmp("Inaccessible user", user_name))
+				send_to = "\"Inaccessible recipient details\"";
+			else
+				send_to = row[4];
+
 			zbx_snprintf_alloc(&buf, &buf_alloc, &buf_offset, " %s %s \"%s\"",
-					/* media type description */
-					SUCCEED == DBis_null(row[3]) ? "" : row[3],
-					/* send to */
-					SUCCEED == zbx_user_validate(&userid, recipient_userid) ? row[4] :
-							"\"Inaccessible recipient details\"",
-					/* alert user */
-					zbx_user_string(&userid, recipient_userid));
+					description,	/* media type description */
+					send_to,	/* send to */
+					user_name);	/* alert user */
 		}
 
 		if (ALERT_STATUS_FAILED == status)
