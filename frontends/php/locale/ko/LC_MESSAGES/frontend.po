@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-09-11 23:33+0300\n"
-"PO-Revision-Date: 2017-05-18 02:27+0300\n"
+"PO-Revision-Date: 2017-07-25 02:37+0300\n"
 "Last-Translator: JONGKWON <jkkim.photo@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: ko\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1495067234.000000\n"
+"X-POOTLE-MTIME: 1500943054.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -4647,7 +4647,7 @@ msgstr "심각한 장애"
 
 #: include/discovery.inc.php:138
 msgid "Discovered"
-msgstr "발견"
+msgstr "발견(Discovered)"
 
 #: include/views/configuration.graph.edit.php:67
 #: include/views/configuration.host.edit.php:56
@@ -9507,7 +9507,7 @@ msgstr "로그아웃"
 
 #: include/discovery.inc.php:139
 msgid "Lost"
-msgstr "불명"
+msgstr "불명(Lost)"
 
 #: include/actions.inc.php:1686
 msgid "Low-level discovery rule in \"not supported\" state"
@@ -11679,11 +11679,11 @@ msgstr "소유자"
 
 #: include/classes/setup/CFrontendSetup.php:560
 msgid "PHP LDAP"
-msgstr ""
+msgstr "PHP LDAP"
 
 #: include/classes/setup/CFrontendSetup.php:564
 msgid "PHP LDAP extension missing."
-msgstr ""
+msgstr "PHP LDAP 모듈이 없습니다."
 
 #: include/classes/setup/CFrontendSetup.php:312
 msgid "PHP bcmath"
