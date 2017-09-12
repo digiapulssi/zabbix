@@ -467,7 +467,7 @@ class CHttpTestManager {
 				&& $httpTest['agent'] === $exHttpTest['agent']
 				&& $httpTest['retries'] == $exHttpTest['retries']
 				&& $httpTest['delay'] === $exHttpTest['delay']
-				&& $httpTest['applicationid'] == $exHttpTest['applicationid']);
+				&& bccomp($httpTest['applicationid'], $exHttpTest['applicationid']) == 0);
 	}
 
 	/**
