@@ -945,7 +945,6 @@ function getActionOperationHints(array $operations, array $defaultMessage) {
 				break;
 
 			case OPERATION_TYPE_ACK_MESSAGE:
-				// falls throught
 			case OPERATION_TYPE_RECOVERY_MESSAGE:
 				$result_hint = [];
 				$message = (array_key_exists('default_msg', $operation['opmessage'])
@@ -1394,7 +1393,6 @@ function getActionMessages(array $alerts, array $r_alerts) {
 					break;
 
 				case ALERT_STATUS_NEW:
-					// falls through
 				case ALERT_STATUS_NOT_SENT:
 					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
 					$retries = (new CSpan($mediaType['maxattempts'] - $alert['retries']))->addClass(ZBX_STYLE_YELLOW);
@@ -1487,7 +1485,6 @@ function getActionCommands(array $alerts, array $r_alerts) {
 					$status = (new CSpan(_('Executed')))->addClass(ZBX_STYLE_GREEN);
 					break;
 				case ALERT_STATUS_NEW:
-					// falls through
 				case ALERT_STATUS_NOT_SENT:
 					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
 					break;
@@ -1545,7 +1542,6 @@ function makeActionHints($alerts, $r_alerts, $mediatypes, $users, $display_recov
 						->addClass(ZBX_STYLE_GREEN);
 					break;
 				case ALERT_STATUS_NEW:
-					// falls through
 				case ALERT_STATUS_NOT_SENT:
 					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
 					break;
