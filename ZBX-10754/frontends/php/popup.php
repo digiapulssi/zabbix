@@ -93,11 +93,11 @@ switch ($srctbl) {
 		break;
 	case 'graph_prototypes':
 		$page['title'] = _('Graph prototypes');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'item_prototypes':
 		$page['title'] = _('Item prototypes');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'sysmaps':
 		$page['title'] = _('Maps');
@@ -105,7 +105,7 @@ switch ($srctbl) {
 		break;
 	case 'screens2':
 		$page['title'] = _('Screens');
-		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
+		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
 	case 'drules':
 		$page['title'] = _('Discovery rules');
