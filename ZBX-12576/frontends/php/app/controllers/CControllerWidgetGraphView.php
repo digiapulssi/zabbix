@@ -223,13 +223,17 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			$item = API::Item()->get([
 				'itemids' => $resourceid,
 				'output' => ['type', 'name', 'hostid', 'key_'],
+				'selectHosts' => ['name'],
 				'webitems' => true
 			]);
 
-			if ($item) {
-				$item = ($item[0]['type'] == ITEM_TYPE_HTTPTEST)
-					? CMacrosResolverHelper::resolveItemNames($item)[0]
-					: reset($item);
+			if ($item && $item[0]['type'] == ITEM_TYPE_HTTPTEST) {
+				$item = CMacrosResolverHelper::resolveItemNames($item)[0];
+
+				$item['name_expanded'] = $item['hosts'][0]['name'].NAME_DELIMITER.$item['name_expanded'];
+			}
+			elseif ($item) {
+				$item = reset($item);
 			}
 			else {
 				$unavailable_object = true;
