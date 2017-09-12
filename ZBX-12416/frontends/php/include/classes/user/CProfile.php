@@ -84,26 +84,20 @@ class CProfile {
 	 */
 	public static function get($idx, $default_value = null, $idx2 = 0) {
 		// no user data available, just return the default value
-		if (!CWebUser::$data || is_null($idx2)) {
+		if (!CWebUser::$data || $idx2 === null) {
 			return $default_value;
 		}
 
-		if (is_null(self::$profiles)) {
+		if (self::$profiles === null) {
 			self::init();
 		}
 
-		if (!array_key_exists($idx, self::$profiles)) {
-			self::$profiles[$idx] = [];
+		if (array_key_exists($idx, self::$profiles)) {
+			// When there is cached data for $idx but $idx2 was not found we should return default value.
+			return array_key_exists($idx2, self::$profiles[$idx]) ? self::$profiles[$idx][$idx2] : $default_value;
 		}
 
-		if (array_key_exists($idx2, self::$profiles[$idx])) {
-			return self::$profiles[$idx][$idx2];
-		}
-		// When there is cached data for $idx but $idx2 was not found we should return default value.
-		elseif (self::$profiles[$idx]) {
-			return $default_value;
-		}
-
+		self::$profiles[$idx] = [];
 		// Aggressive caching, cache all items matched $idx key.
 		$query = DBselect(
 			'SELECT type,value_id,value_int,value_str,idx2'.
