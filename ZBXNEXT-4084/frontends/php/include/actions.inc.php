@@ -945,37 +945,7 @@ function getActionOperationHints(array $operations, array $defaultMessage) {
 				break;
 
 			case OPERATION_TYPE_ACK_MESSAGE:
-				$opmessage = array_key_exists('opmessage', $operation) ? $operation['opmessage'] : [];
-
-				if (array_key_exists('default_msg', $opmessage) && $opmessage['default_msg']) {
-					$subject = $defaultMessage['subject'];
-					$message = $defaultMessage['message'];
-				}
-				else {
-					$opmessage += [
-						'subject'	=> ACTION_DEFAULT_SUBJ_ACKNOWLEDGE,
-						'message'	=> ACTION_DEFAULT_MSG_ACKNOWLEDGE
-					];
-
-					$subject = $opmessage['subject'];
-					$message = $opmessage['message'];
-				}
-
-				$result_hint = [];
-
-				if (trim($subject)) {
-					$result_hint = [bold($subject), BR(), BR()];
-				}
-
-				if (trim($message)) {
-					$result_hint[] = zbx_nl2br($message);
-				}
-
-				if ($result_hint) {
-					$result[$key][] = $result_hint;
-				}
-				break;
-
+				// falls throught
 			case OPERATION_TYPE_RECOVERY_MESSAGE:
 				$result_hint = [];
 				$message = (array_key_exists('default_msg', $operation['opmessage'])
