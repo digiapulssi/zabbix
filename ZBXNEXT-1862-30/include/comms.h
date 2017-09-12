@@ -106,6 +106,7 @@ const char	*zbx_socket_strerror(void);
 
 #ifndef _WINDOWS
 void	zbx_gethost_by_ip(const char *ip, char *host, size_t hostlen);
+void	zbx_update_resolver_conf(void);
 #endif
 
 int	zbx_tcp_connect(zbx_socket_t *s, const char *source_ip, const char *ip, unsigned short port, int timeout,

@@ -127,6 +127,9 @@ ZBX_THREAD_ENTRY(listener_thread, args)
 #endif
 	while (ZBX_IS_RUNNING())
 	{
+#ifndef _WINDOWS
+		int	skip = 0;
+#endif
 		zbx_handle_log();
 
 		zbx_setproctitle("listener #%d [waiting for connection]", process_num);
@@ -150,7 +153,18 @@ ZBX_THREAD_ENTRY(listener_thread, args)
 		}
 
 		if (SUCCEED == ret || EINTR == zbx_socket_last_error())
+#ifdef _WINDOWS
 			continue;
+#else
+			skip = 1;
+
+		/* Handle /etc/resolv.conf update. Do it at the end of the first loop */
+		/* to let the first initialization of libc resolver proceed internally. */
+		zbx_update_resolver_conf();
+
+		if (1 == skip)
+			continue;
+#endif
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 		if (NULL != msg)
