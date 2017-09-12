@@ -9,7 +9,7 @@ use Pod::Usage;
 use Exporter qw(import);
 use Zabbix;
 use Alerts;
-use TLD_constants qw(:api :items :hosts);
+use TLD_constants qw(:api :items);
 use File::Pid;
 use POSIX qw(floor);
 use Sys::Syslog;
@@ -2920,7 +2920,7 @@ sub __get_configvalue
 	my $value = undef;
 
 	my $key = "$item_prefix.configvalue[$item_param]";
-	my $itemid = get_itemid_by_hostid(GLOBAL_MACRO_HISTORY_HOSTID, $key);
+	my $itemid = get_itemid_by_key($key);
 
 	if ($itemid < 0)
 	{
