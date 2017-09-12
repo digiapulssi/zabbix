@@ -1244,7 +1244,7 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_user_validate                                                *
+ * Function: zbx_check_user_permissions                                       *
  *                                                                            *
  * Purpose: check if user has access rights to information - full name, alias,*
  *          Email, SMS, Jabber, etc                                           *
@@ -1261,7 +1261,7 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
  *           information about any user.                                      *
  *                                                                            *
  ******************************************************************************/
-static int	zbx_user_validate(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid)
+int	zbx_check_user_permissions(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid)
 {
 	const char	*__function_name = "zbx_user_validate";
 
@@ -1305,6 +1305,7 @@ static int	zbx_user_validate(const zbx_uint64_t *userid, const zbx_uint64_t *rec
 			ret = FAIL;
 		else
 			ret = SUCCEED;
+
 		DBfree_result(result);
 	}
 	else
@@ -1324,26 +1325,19 @@ out:
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-const char	*zbx_user_string(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid)
+const char	*zbx_user_string(zbx_uint64_t userid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 
-	if (SUCCEED != zbx_user_validate(userid, recipient_userid))
-	{
-		zbx_snprintf(buf_string, sizeof(buf_string), "Inaccessible user");
-	}
+	result = DBselect("select name,surname,alias from users where userid=" ZBX_FS_UI64, userid);
+
+	if (NULL != (row = DBfetch(result)))
+		zbx_snprintf(buf_string, sizeof(buf_string), "%s %s (%s)", row[0], row[1], row[2]);
 	else
-	{
-		result = DBselect("select name,surname,alias from users where userid=" ZBX_FS_UI64, *userid);
+		zbx_snprintf(buf_string, sizeof(buf_string), "unknown");
 
-		if (NULL != (row = DBfetch(result)))
-			zbx_snprintf(buf_string, sizeof(buf_string), "%s %s (%s)", row[0], row[1], row[2]);
-		else
-			zbx_snprintf(buf_string, sizeof(buf_string), "unknown");
-
-		DBfree_result(result);
-	}
+	DBfree_result(result);
 
 	return buf_string;
 }
