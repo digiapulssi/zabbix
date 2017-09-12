@@ -1474,8 +1474,8 @@ static void	get_escalation_history(zbx_uint64_t actionid, const DB_EVENT *event,
 
 			zbx_snprintf_alloc(&buf, &buf_alloc, &buf_offset, " %s %s \"%s\"",
 					description,	/* media type description */
-					send_to,	/* send to */
-					user_name);	/* alert user */
+					send_to,	/* historical recipient */
+					user_name);	/* alert user full name */
 		}
 
 		if (ALERT_STATUS_FAILED == status)

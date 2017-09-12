@@ -1263,15 +1263,21 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
  ******************************************************************************/
 int	zbx_check_user_permissions(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid)
 {
-	const char	*__function_name = "zbx_user_validate";
+	const char	*__function_name = "zbx_check_user_permissions";
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	int		user_type = -1, ret = FAIL;
+	int		user_type = -1, ret = SUCCEED;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (NULL == recipient_userid)
+	{
+		ret = FAIL;
+		goto out;
+	}
+
+	if (*userid == *recipient_userid)
 		goto out;
 
 	result = DBselect("select type from users where userid=" ZBX_FS_UI64, *recipient_userid);
@@ -1286,30 +1292,24 @@ int	zbx_check_user_permissions(const zbx_uint64_t *userid, const zbx_uint64_t *r
 		goto out;
 	}
 
-	if (USER_TYPE_SUPER_ADMIN != user_type && *userid != *recipient_userid)
+	if (USER_TYPE_SUPER_ADMIN != user_type)
 	{
 		/* check if users are from the same user group */
 		result = DBselect(
-				"select count(*)"
-				" from users u,users_groups ug"
-				" where u.userid=ug.userid"
-					" and u.userid=" ZBX_FS_UI64
+				"select null"
+				" from users_groups ug1"
+				" where ug1.userid=" ZBX_FS_UI64
 					" and exists (select null"
-						" from users_groups uug"
-						" where uug.usrgrpid=ug.usrgrpid"
-							" and uug.userid=" ZBX_FS_UI64
+						" from users_groups ug2"
+						" where ug1.usrgrpid=ug2.usrgrpid"
+							" and ug2.userid=" ZBX_FS_UI64
 					")",
 				*userid, *recipient_userid);
 
-		if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]) || 0 >= atoi(row[0]))
+		if (NULL == DBfetch(result))
 			ret = FAIL;
-		else
-			ret = SUCCEED;
-
 		DBfree_result(result);
 	}
-	else
-		ret = SUCCEED;
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
