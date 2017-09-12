@@ -47,6 +47,10 @@ use constant PROBE_GROUP_NAME => 'Probes';
 use constant PROBE_KEY_MANUAL => 'rsm.probe.status[manual]';
 use constant PROBE_KEY_AUTOMATIC => 'rsm.probe.status[automatic,%]'; # match all in SQL
 
+use constant RSM_CONFIG_DNS_UDP_DELAY_ITEMID => 100008;	# rsm.configvalue[RSM.DNS.UDP.DELAY]
+use constant RSM_CONFIG_RDDS_DELAY_ITEMID => 100009;	# rsm.configvalue[RSM.RDDS.DELAY]
+use constant RSM_CONFIG_EPP_DELAY_ITEMID => 100010;	# rsm.configvalue[RSM.EPP.DELAY]
+
 # In order to do the calculation we should wait till all the results
 # are available on the server (from proxies). We shift back 2 minutes
 # in case of "availability" and 3 minutes in case of "rolling week"
@@ -161,54 +165,46 @@ sub get_macro_dns_udp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	my $item_param = 'RSM.DNS.UDP.DELAY';
+	my $value = __get_configvalue(RSM_CONFIG_DNS_UDP_DELAY_ITEMID, $value_time);
 
-	my $value = __get_rsm_configvalue($item_param, $value_time);
+	return $value if (defined($value));
 
-	return $value if ($value);
-
-	return __get_macro('{$' . $item_param . '}');
+	return __get_macro('{$RSM.DNS.UDP.DELAY}');
 }
 
 sub get_macro_dns_tcp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	my $item_param = 'RSM.DNS.TCP.DELAY';
-
 	# todo phase 1: Export DNS-TCP tests
 	# todo phase 1: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
-#	my $value = __get_rsm_configvalue($item_param, $value_time);
+#	my $value = __get_configvalue(RSM_CONFIG_DNS_TCP_DELAY_ITEMID, $value_time);
 #
-#	return $value if ($value);
+#	return $value if (defined($value));
 
-	return __get_macro('{$' . $item_param . '}');
+	return __get_macro('{$RSM.DNS.TCP.DELAY}');
 }
 
 sub get_macro_rdds_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	my $item_param = 'RSM.RDDS.DELAY';
+	my $value = __get_configvalue(RSM_CONFIG_RDDS_DELAY_ITEMID, $value_time);
 
-	my $value = __get_rsm_configvalue($item_param, $value_time);
+	return $value if (defined($value));
 
-	return $value if ($value);
-
-	return __get_macro('{$' . $item_param . '}');
+	return __get_macro('{$RSM.RDDS.DELAY}');
 }
 
 sub get_macro_epp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	my $item_param = 'RSM.EPP.DELAY';
+	my $value = __get_configvalue(RSM_CONFIG_EPP_DELAY_ITEMID, $value_time);
 
-	my $value = __get_rsm_configvalue($item_param, $value_time);
+	return $value if (defined($value));
 
-	return $value if ($value);
-
-	return __get_macro('{$' . $item_param . '}');
+	return __get_macro('{$RSM.EPP.DELAY}');
 }
 
 sub get_macro_dns_update_time
@@ -2908,8 +2904,7 @@ sub __get_probestatus_times
 
 sub __get_configvalue
 {
-	my $item_prefix = shift;
-	my $item_param = shift;
+	my $itemid = shift;
 	my $value_time = shift;
 
 	my $hour = 3600;
@@ -2917,20 +2912,9 @@ sub __get_configvalue
 	my $month = $day * 30;
 
 	my $diff = $hour;
-	my $value = undef;
+	my $value;
 
-	my $key = "$item_prefix.configvalue[$item_param]";
-	my $itemid = get_itemid_by_key($key);
-
-	if ($itemid < 0)
-	{
-		fail("configuration item \"$key\" not found") if ($itemid == E_ID_NONEXIST);
-		fail("more than one configuration item \"$key\" found") if ($itemid == E_ID_MULTIPLE);
-
-		fail("cannot get ID of configuration item \"$key\": unknown error");
-	}
-
-	while (not $value and $diff < $month)
+	while (!defined($value) && $diff < $month)
 	{
 		my $rows_ref = db_select("select value from history_uint where itemid=$itemid and clock between " . ($value_time - $diff) . " and $value_time order by clock desc limit 1");
 
@@ -2945,14 +2929,6 @@ sub __get_configvalue
 	}
 
 	return $value;
-}
-
-sub __get_rsm_configvalue
-{
-	my $item_param = shift;
-	my $value_time = shift;
-
-	return __get_configvalue('rsm', $item_param, $value_time);
 }
 
 1;
