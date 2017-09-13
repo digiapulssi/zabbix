@@ -50,7 +50,6 @@ class CWidgetFieldSelectResource extends CWidgetField {
 				break;
 
 			case WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH:
-				// falls through
 			case WIDGET_FIELD_SELECT_RES_ITEM:
 				$this->setSaveType(ZBX_WIDGET_FIELD_TYPE_ITEM);
 				$this->srctbl = 'items';
