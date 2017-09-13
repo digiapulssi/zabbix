@@ -80,7 +80,7 @@ class CDashboard extends CApiService {
 		];
 
 		// permissions
-		if (self::$userData['type'] == USER_TYPE_ZABBIX_USER) {
+		if (in_array(self::$userData['type'], [USER_TYPE_ZABBIX_USER, USER_TYPE_ZABBIX_ADMIN])) {
 			$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
 
 			$user_groups = getUserGroupsByUserId(self::$userData['userid']);
@@ -455,8 +455,8 @@ class CDashboard extends CApiService {
 			if (array_key_exists('userid', $dashboard)
 					&& ($db_dashboard === null || bccomp($dashboard['userid'], $db_dashboard['userid']) != 0)) {
 				if (bccomp($dashboard['userid'], self::$userData['userid']) != 0
-						&& !in_array(self::$userData['type'], [USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN])) {
-					self::exception(ZBX_API_ERROR_PARAMETERS, _('Only administrators can set dashboard owner.'));
+						&& in_array(self::$userData['type'], [USER_TYPE_ZABBIX_USER, USER_TYPE_ZABBIX_ADMIN])) {
+					self::exception(ZBX_API_ERROR_PARAMETERS, _('Only super admins can set dashboard owner.'));
 				}
 
 				$userids[$dashboard['userid']] = true;
