@@ -543,10 +543,9 @@ size_t	DCconfig_get_snmp_items_by_interfaceid(zbx_uint64_t interfaceid, DC_ITEM 
 #define ZBX_HK_TRENDS_MIN	SEC_PER_DAY
 
 void	DCrequeue_items(const zbx_uint64_t *itemids, const unsigned char *states, const int *lastclocks,
-		const zbx_uint64_t *lastlogsizes, const int *mtimes, const int *errcodes, size_t num);
+		const int *errcodes, size_t num);
 void	DCpoller_requeue_items(const zbx_uint64_t *itemids, const unsigned char *states, const int *lastclocks,
-		const zbx_uint64_t *lastlogsizes, const int *mtimes, const int *errcodes, size_t num,
-		unsigned char poller_type, int *nextcheck);
+		const int *errcodes, size_t num, unsigned char poller_type, int *nextcheck);
 void	zbx_dc_requeue_unreachable_items(zbx_uint64_t *itemids, size_t itemids_num);
 int	DCconfig_activate_host(DC_ITEM *item);
 int	DCconfig_deactivate_host(DC_ITEM *item, int now);
@@ -554,6 +553,8 @@ int	DCconfig_deactivate_host(DC_ITEM *item, int now);
 int	DCconfig_check_trigger_dependencies(zbx_uint64_t triggerid);
 
 void	DCconfig_triggers_apply_changes(zbx_vector_ptr_t *trigger_diff);
+void	DCconfig_items_apply_changes(const zbx_vector_ptr_t *item_diff);
+
 void	DCconfig_set_maintenance(const zbx_uint64_t *hostids, int hostids_num, int maintenance_status,
 		int maintenance_type, int maintenance_from);
 

@@ -908,101 +908,6 @@ clean_items:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-/******************************************************************************
- *                                                                            *
- * Function: DCadd_update_item_sql                                            *
- *                                                                            *
- * Purpose: 1) generate sql for updating item in database                     *
- *          2) calculate item delta value                                     *
- *          3) add events (item supported/not supported)                      *
- *          4) update cache (requeue item)                                    *
- *                                                                            *
- * Parameters: item - [IN/OUT] item reference                                 *
- *             h    - [IN/OUT] a reference to history cache value             *
- *                                                                            *
- ******************************************************************************/
-static void	DCadd_update_item_sql(size_t *sql_offset, DC_ITEM *item, ZBX_DC_HISTORY *h)
-{
-	char				*value_esc;
-	const char			*sql_start = "update items set ", *sql_continue = ",";
-
-	if (ITEM_STATE_NOTSUPPORTED == h->state)
-		goto notsupported;
-
-	if (0 != (ZBX_DC_FLAG_META & h->flags))
-	{
-		zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, "%slastlogsize=" ZBX_FS_UI64 ",mtime=%d",
-				sql_start, h->lastlogsize, h->mtime);
-		sql_start = sql_continue;
-	}
-
-notsupported:
-
-	if (ITEM_STATE_NOTSUPPORTED == h->state)
-	{
-		int	update_cache = 0;
-
-		if (ITEM_STATE_NOTSUPPORTED != item->db_state)
-		{
-			unsigned char	object;
-
-			zabbix_log(LOG_LEVEL_WARNING, "item \"%s:%s\" became not supported: %s",
-					item->host.host, item->key_orig, h->value.str);
-
-			object = (0 != (ZBX_FLAG_DISCOVERY_RULE & item->flags) ?
-					EVENT_OBJECT_LLDRULE : EVENT_OBJECT_ITEM);
-			add_event(EVENT_SOURCE_INTERNAL, object, item->itemid, &h->ts, h->state, NULL, NULL, NULL, 0,
-					0, NULL, 0, NULL, 0);
-
-			zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, "%sstate=%d", sql_start, (int)h->state);
-			sql_start = sql_continue;
-
-			update_cache = 1;
-		}
-
-		if (0 != strcmp(item->db_error, h->value.err))
-		{
-			value_esc = DBdyn_escape_field("items", "error", h->value.err);
-			zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, "%serror='%s'", sql_start, value_esc);
-			sql_start = sql_continue;
-
-			if (ITEM_STATE_NOTSUPPORTED == item->db_state)
-			{
-				zabbix_log(LOG_LEVEL_WARNING, "error reason for \"%s:%s\" changed: %s", item->host.host,
-						item->key_orig, h->value.err);
-			}
-
-			zbx_free(value_esc);
-
-			update_cache = 1;
-		}
-
-		if (0 != update_cache)
-			DCconfig_set_item_db_state(item->itemid, h->state, h->value.err);
-	}
-	else
-	{
-		if (ITEM_STATE_NOTSUPPORTED == item->db_state)
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "item \"%s:%s\" became supported",
-					item->host.host, item->key_orig);
-
-			/* we know it's EVENT_OBJECT_ITEM because LLDRULE that becomes */
-			/* supported is handled in lld_process_discovery_rule()        */
-			add_event(EVENT_SOURCE_INTERNAL, EVENT_OBJECT_ITEM, item->itemid, &h->ts, h->state,
-					NULL, NULL, NULL, 0, 0, NULL, 0, NULL, 0);
-
-			zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, "%sstate=%d,error=''", sql_start,
-					(int)h->state);
-			sql_start = sql_continue;
-
-			DCconfig_set_item_db_state(item->itemid, h->state, "");
-		}
-	}
-	if (sql_start == sql_continue)
-		zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, " where itemid=" ZBX_FS_UI64 ";\n", item->itemid);
-}
-
 static void	DCinventory_value_add(zbx_vector_ptr_t *inventory_values, DC_ITEM *item, ZBX_DC_HISTORY *h)
 {
 	char			value[MAX_BUFFER_LEN];
@@ -1051,9 +956,6 @@ static void	DCinventory_value_add(zbx_vector_ptr_t *inventory_values, DC_ITEM *i
 static void	DCadd_update_inventory_sql(size_t *sql_offset, zbx_vector_ptr_t *inventory_values)
 {
 	int	i;
-
-	if (0 == inventory_values->values_num)
-		return;
 
 	for (i = 0; i < inventory_values->values_num; i++)
 	{
@@ -1308,6 +1210,148 @@ out:
 
 /******************************************************************************
  *                                                                            *
+ * Function: prepare_item_update                                              *
+ *                                                                            *
+ * Purpose: prepares item data to be updated in configuration cache and saved *
+ *          in database                                                       *
+ *                                                                            *
+ * Parameters: item      - [IN] the item                                      *
+ *             h         - [IN] the historical data to process                *
+ *             item_diff - [OUT] vector of item updates to be performed       *
+ *                                                                            *
+ ******************************************************************************/
+static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vector_ptr_t *item_diff)
+{
+	zbx_uint64_t	flags = ZBX_FLAGS_ITEM_DIFF_UNSET;
+	const char	*item_error = NULL;
+	zbx_item_diff_t	*diff;
+	int		object;
+
+	if (ITEM_STATE_NOTSUPPORTED != h->state && 0 != (ZBX_DC_FLAG_META & h->flags))
+		flags |= (ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE | ZBX_FLAGS_ITEM_DIFF_UPDATE_MTIME);
+
+	if (h->state != item->state)
+	{
+		flags |= ZBX_FLAGS_ITEM_DIFF_UPDATE_STATE;
+
+		if (ITEM_STATE_NOTSUPPORTED == h->state)
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "item \"%s:%s\" became not supported: %s",
+					item->host.host, item->key_orig, h->value.str);
+
+			object = (0 != (ZBX_FLAG_DISCOVERY_RULE & item->flags) ?
+					EVENT_OBJECT_LLDRULE : EVENT_OBJECT_ITEM);
+			add_event(EVENT_SOURCE_INTERNAL, object, item->itemid, &h->ts, h->state, NULL, NULL, NULL, 0,
+					0, NULL, 0, NULL, 0);
+
+
+			if (0 != strcmp(item->db_error, h->value.err))
+				item_error =  h->value.err;
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "item \"%s:%s\" became supported",
+					item->host.host, item->key_orig);
+
+			/* we know it's EVENT_OBJECT_ITEM because LLDRULE that becomes */
+			/* supported is handled in lld_process_discovery_rule()        */
+			add_event(EVENT_SOURCE_INTERNAL, EVENT_OBJECT_ITEM, item->itemid, &h->ts, h->state,
+					NULL, NULL, NULL, 0, 0, NULL, 0, NULL, 0);
+
+			item_error = "";
+		}
+	}
+	else if (ITEM_STATE_NOTSUPPORTED == h->state && 0 != strcmp(item->db_error, h->value.err))
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "error reason for \"%s:%s\" changed: %s", item->host.host,
+				item->key_orig, h->value.err);
+
+		item_error =  h->value.err;
+	}
+
+	if (NULL != item_error)
+		flags |= ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR;
+
+
+	if (ZBX_FLAGS_ITEM_DIFF_UNSET == flags)
+		return;
+
+	diff = (zbx_item_diff_t *)zbx_malloc(NULL, sizeof(zbx_item_diff_t));
+	diff->itemid = item->itemid;
+	diff->clock = h->ts.sec;
+	diff->flags = flags;
+
+	if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE & flags))
+		diff->lastlogsize = h->lastlogsize;
+
+	if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_MTIME & flags))
+		diff->mtime = h->mtime;
+
+	if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_STATE & flags))
+		diff->state = h->state;
+
+	if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR & flags))
+		diff->error = item_error;
+
+	zbx_vector_ptr_append(item_diff, diff);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: db_save_item_changes                                             *
+ *                                                                            *
+ * Purpose: save item state, error, mtime, lastlogsize changes to             *
+ *          database                                                          *
+ *                                                                            *
+ ******************************************************************************/
+static void	db_save_item_changes(size_t *sql_offset, const zbx_vector_ptr_t *item_diff)
+{
+	int			i;
+	const zbx_item_diff_t	*diff;
+	char			*value_esc;
+
+	for (i = 0; i < item_diff->values_num; i++)
+	{
+		char	delim = ' ';
+
+		diff = (const zbx_item_diff_t *)item_diff->values[i];
+
+		zbx_strcpy_alloc(&sql, &sql_alloc, sql_offset, "update items set");
+
+		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE & diff->flags))
+		{
+			zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, "%clastlogsize=" ZBX_FS_UI64, delim,
+					diff->lastlogsize);
+			delim = ',';
+		}
+
+		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_MTIME & diff->flags))
+		{
+			zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, "%cmtime=%d", delim, diff->mtime);
+			delim = ',';
+		}
+
+		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_STATE & diff->flags))
+		{
+			zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, "%cstate=%d", delim, (int)diff->state);
+			delim = ',';
+		}
+
+		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR & diff->flags))
+		{
+			value_esc = DBdyn_escape_field("items", "error", diff->error);
+			zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, "%cerror='%s'", delim, value_esc);
+			zbx_free(value_esc);
+		}
+
+		zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, " where itemid=" ZBX_FS_UI64 ";\n", diff->itemid);
+
+		DBexecute_overflowed_sql(&sql, &sql_alloc, sql_offset);
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: DCmass_update_items                                              *
  *                                                                            *
  * Purpose: update items info after new value is received                     *
@@ -1326,12 +1370,14 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	zbx_vector_uint64_t	itemids;
 	DC_ITEM			*items = NULL;
 	int			i, *errcodes = NULL;
-	zbx_vector_ptr_t	inventory_values;
+	zbx_vector_ptr_t	inventory_values, item_diff;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
 	errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
+
+	zbx_vector_ptr_create(&item_diff);
 
 	zbx_vector_ptr_create(&inventory_values);
 	zbx_vector_uint64_create(&itemids);
@@ -1345,8 +1391,6 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, history_num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
 
 	zbx_vector_uint64_clear(&itemids);	/* item ids that are not disabled and not deleted in DB */
-
-	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
 	for (i = 0; i < history_num; i++)
 	{
@@ -1386,18 +1430,33 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 		}
 
 		normalize_item_value(&items[i], h);
-
-		DCadd_update_item_sql(&sql_offset, &items[i], h);
-		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
-
+		prepare_item_update(&items[i], h, &item_diff);
 		DCinventory_value_add(&inventory_values, &items[i], h);
 
 		zbx_vector_uint64_append(&itemids, items[i].itemid);
 	}
 
-	zbx_vector_ptr_sort(&inventory_values, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
+	if (0 != item_diff.values_num || 0 !=  inventory_values.values_num)
+	{
+		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
-	DCadd_update_inventory_sql(&sql_offset, &inventory_values);
+		if (0 != item_diff.values_num)
+		{
+			DCconfig_items_apply_changes(&item_diff);
+			db_save_item_changes(&sql_offset, &item_diff);
+		}
+
+		if (0 == inventory_values.values_num)
+		{
+			zbx_vector_ptr_sort(&inventory_values, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
+			DCadd_update_inventory_sql(&sql_offset, &inventory_values);
+		}
+
+		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+		if (sql_offset > 16)	/* In ORACLE always present begin..end; */
+			DBexecute("%s", sql);
+	}
 
 	zbx_vector_ptr_clear_ext(&inventory_values, (zbx_clean_func_t)DCinventory_value_free);
 	zbx_vector_ptr_destroy(&inventory_values);
@@ -1415,11 +1474,8 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	zbx_free(errcodes);
 	zbx_free(items);
 
-	if (sql_offset > 16)	/* In ORACLE always present begin..end; */
-	{
-		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
-		DBexecute("%s", sql);
-	}
+	zbx_vector_ptr_clear_ext(&item_diff, (zbx_clean_func_t)zbx_ptr_free);
+	zbx_vector_ptr_destroy(&item_diff);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
