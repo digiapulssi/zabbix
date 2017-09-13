@@ -1,9 +1,23 @@
 Changes for 3.4.2rc1
 
 New features:
+A.F....... [ZBX-1357] enabled Turkish translation to be displayed by default (zalex_ua)
+A.F....... [ZBX-1357] updated Chinese (China), English (United States), Japanese, Korean, Turkish translations; thanks to Zabbix translators (zalex_ua)
+..F....... [ZBXNEXT-4054] implemented feature to open first available dashboard from the list (Ivo)
 ..F....... [ZBXNEXT-4046] implemented dashboard widget minimum height limit (gcalenko)
 
 Bug fixes:
+..F....... [ZBX-12647] fixed map minimum severity option in screens (miks)
+........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
+..F....... [ZBX-12548] fixed notification sound not being played for message with timeout set to greater than minute (gcalenko)
+...G...... [ZBX-12653] fixed heap corruption in Windows agent; thanks to Ronnie Kaech for the patch (abs)
+A......... [ZBX-12660] fixed result of hostinterface.replacehostinterfaces method (Sasha)
+..F....... [ZBX-12469] added new context for 'Second' string to be properly translated in maintenance period form (gcalenko)
+..F....... [ZBX-12616] fixed trapper item "Allowed hosts" field user macro support (gcalenko)
+.......PS. [ZBX-12493] fixed address and ports array size in zbx_init_ipmi_host() to match OpenIPMI internals (Andris, vso)
+...G...PS. [ZBX-10820] fixed potential loss of data when server/proxy processes zabbix_sender data (Andris)
+...G...PS. [ZBX-4252] eliminated sending of DNS AAAA queries when checking IPv4 incoming connection in agent or for trapper item and A queries in case of IPv6 (Andris)
+..F....... [ZBXNEXT-2102] fixed multiple browser sensitive javascript bugs in navigation tree widget and improved coding style (miks)
 ..F....... [ZBX-12623] fixed label macro resolving in maps (vjaceslavs)
 ..F....... [ZBX-12578] implemented widget field validation before dashboard is loaded and fixed undefined index for tag field in dashboard widgets (miks)
 A.F....... [ZBX-12499] fixed macro expansion in map editor (vjaceslavs)
@@ -126,7 +140,7 @@ New features:
 ..F....... [ZBXNEXT-2102] implemented validation for empty fields in widget configuration forms (Sasha)
 ..F....... [ZBXNEXT-2102] added placeholder on empty dashboard (vmurzins)
 A.FG...PS. [ZBXNEXT-3006] implemented support of bulk metric collection for dependent items data population (gcalenko, vjaceslavs, wiper)
-....I..... [ZBXNEXT-3725] updated templates for network devices to new version (internal version 0.10beta)
+....I..... [ZBXNEXT-3725] updated templates for network devices to new version (internal version 0.10beta) (vzhuravlev)
 
 Bug fixes:
 ....I..... [ZBXNEXT-3006] fixed libevent build depenedencies (wiper)
@@ -248,9 +262,17 @@ A......... [ZBX-5116] prevented escaping forward slashes while encoding API resp
 Changes for 3.2.8rc1
 
 New features:
+A.F....... [ZBX-1357] enabled Turkish translation to be displayed by default (zalex_ua)
+A.F....... [ZBX-1357] updated Czech, English (United States), French, Italian, Japanese, Korean, Russian, Turkish translations; thanks to Zabbix translators (zalex_ua)
 ........S. [ZBX-12258] added bulk selections to improve performance in processing of escalations (Sergejs)
 
 Bug fixes:
+........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
+..F....... [ZBX-12548] fixed notification sound not being played for message with timeout set to greater than minute (gcalenko)
+...G...... [ZBX-12653] fixed heap corruption in Windows agent; thanks to Ronnie Kaech for the patch (abs)
+A......... [ZBX-12660] fixed result of hostinterface.replacehostinterfaces method (Sasha)
+..F....... [ZBX-12469] added new context for 'Second' string to be properly translated in maintenance period form (gcalenko)
+.......PS. [ZBX-12493] fixed address and ports array size in zbx_init_ipmi_host() to match OpenIPMI internals (Andris, vso)
 ..F....... [ZBX-12623] fixed label macro resolving in maps (vjaceslavs)
 ..F.....S. [ZBX-11042] allowed libcurl to choose SMTP authentication mechanism other than PLAIN (gleb, vjaceslavs)
 ..F....... [ZBX-8997] fixed trigger expression validation test form (gcalenko, Sasha)
@@ -725,8 +747,16 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 Changes for 3.0.11rc1
 
 New features:
+A.F....... [ZBX-1357] enabled Turkish translation to be displayed by default (zalex_ua)
+A.F....... [ZBX-1357] updated Czech, English (United States), French, Italian, Japanese, Korean, Russian, Turkish translations; thanks to Zabbix translators (zalex_ua)
 
 Bug fixes:
+........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
+..F....... [ZBX-12548] fixed notification sound not being played for message with timeout set to greater than minute (gcalenko)
+...G...... [ZBX-12653] fixed heap corruption in Windows agent; thanks to Ronnie Kaech for the patch (abs)
+A......... [ZBX-12660] fixed result of hostinterface.replacehostinterfaces method (Sasha)
+..F....... [ZBX-12469] added new context for 'Second' string to be properly translated in maintenance period form (gcalenko)
+.......PS. [ZBX-12493] fixed address and ports array size in zbx_init_ipmi_host() to match OpenIPMI internals (Andris, vso)
 ..F....... [ZBX-12623] fixed label macro resolving in maps (vjaceslavs)
 ..F.....S. [ZBX-11042] allowed libcurl to choose SMTP authentication mechanism other than PLAIN (gleb, vjaceslavs)
 ..F....... [ZBX-8997] fixed trigger expression validation test form (gcalenko, Sasha)
@@ -2457,6 +2487,8 @@ Changes for 2.2.20rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
+.......PS. [ZBX-12493] fixed address and ports array size in zbx_init_ipmi_host() to match OpenIPMI internals (Andris, vso)
 ........S. [ZBX-12446] fixed discovery and auto registration to accept empty DNS names (vso)
 ...G...... [ZBX-12270] fixed processing of AIX item 'system.stat[ent]' in agent; thanks to Marc for patch (Andris)
 
