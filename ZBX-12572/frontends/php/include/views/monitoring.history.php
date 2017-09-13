@@ -180,7 +180,7 @@ if ($this->data['action'] == HISTORY_BATCH_GRAPH) {
 else {
 	$profileIdx = 'web.item.graph';
 	$profileIdx2 = reset($this->data['itemids']);
-	$updateProfile = ($this->data['period'] != null || $this->data['stime'] !== null || $this->data['isNow'] !== null);
+	$updateProfile = ($this->data['period'] !== null || $this->data['stime'] !== null || $this->data['isNow'] !== null);
 }
 
 // create history screen

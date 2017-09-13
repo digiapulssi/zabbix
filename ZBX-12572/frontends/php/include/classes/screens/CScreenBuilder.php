@@ -645,9 +645,9 @@ class CScreenBuilder {
 	 * @param string $options['profileIdx']
 	 */
 	public static function insertScreenScrollJs(array $options = []) {
-		$options['timeline'] = !array_key_exists('timeline', $options) ? '' : $options['timeline'];
-		$options['profileIdx'] = !array_key_exists('profileIdx', $options) ? '' : $options['profileIdx'];
-		$options['profileIdx2'] = !array_key_exists('profileIdx2', $options) ? 0 : $options['profileIdx2'];
+		$options['timeline'] = array_key_exists('timeline', $options) ? $options['timeline'] : '';
+		$options['profileIdx'] = array_key_exists('profileIdx', $options) ? $options['profileIdx'] : '';
+		$options['profileIdx2'] = array_key_exists('profileIdx2', $options) ? $options['profileIdx2'] : 0;
 
 		$timeControlData = [
 			'id' => 'scrollbar',

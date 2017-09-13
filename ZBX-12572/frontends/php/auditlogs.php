@@ -160,12 +160,12 @@ $sql = 'SELECT MIN(a.clock) AS clock'.
 		' FROM auditlog a,users u'.
 		' WHERE a.userid=u.userid'.
 			implode('', $sqlWhere);
-$firstAudit = DBfetch(DBselect($sql, $config['search_limit'] + 1));
-$minStartTime = ($firstAudit) ? $firstAudit['clock'] - 1 : null;
+$first_audit = DBfetch(DBselect($sql, $config['search_limit'] + 1));
+$min_start_time = ($first_audit) ? $first_audit['clock'] - 1 : null;
 
 // Show shorter timeline
-if ($minStartTime !== null && $minStartTime > 0) {
-	$data['timeline']['starttime'] = date(TIMESTAMP_FORMAT, $minStartTime);
+if ($min_start_time !== null && $min_start_time > 0) {
+	$data['timeline']['starttime'] = date(TIMESTAMP_FORMAT, $min_start_time);
 }
 
 // render view

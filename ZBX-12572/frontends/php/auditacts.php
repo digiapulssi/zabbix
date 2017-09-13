@@ -78,7 +78,7 @@ $data = [
 	])
 ];
 
-$userId = null;
+$userid = null;
 
 if ($data['alias']) {
 	$data['users'] = API::User()->get([
@@ -90,7 +90,7 @@ if ($data['alias']) {
 	if ($data['users']) {
 		$user = reset($data['users']);
 
-		$userId = $user['userid'];
+		$userid = $user['userid'];
 	}
 }
 
@@ -104,7 +104,7 @@ if (!$data['alias'] || $data['users']) {
 				'retries', 'error', 'alerttype'
 			],
 			'selectMediatypes' => ['mediatypeid', 'description', 'maxattempts'],
-			'userids' => $userId,
+			'userids' => $userid,
 			'time_from' => zbxDateToTime($data['timeline']['stime']),
 			'time_till' => zbxDateToTime($data['timeline']['usertime']),
 			'eventsource' => $eventSource['source'],
@@ -135,18 +135,18 @@ if (!$data['alias'] || $data['users']) {
 }
 
 // get first alert clock
-$firstAlert = null;
-if ($userId) {
-	$firstAlert = DBfetch(DBselect(
+$first_alert = null;
+if ($userid) {
+	$first_alert = DBfetch(DBselect(
 		'SELECT MIN(a.clock) AS clock'.
 		' FROM alerts a'.
-		' WHERE a.userid='.zbx_dbstr($userId)
+		' WHERE a.userid='.zbx_dbstr($userid)
 	));
 }
 elseif ($data['alias'] === '') {
-	$firstAlert = DBfetch(DBselect('SELECT MIN(a.clock) AS clock FROM alerts a'));
+	$first_alert = DBfetch(DBselect('SELECT MIN(a.clock) AS clock FROM alerts a'));
 }
-$minStartTime = ($firstAlert) ? $firstAlert['clock'] - 1 : null;
+$min_start_time = ($first_alert) ? $first_alert['clock'] - 1 : null;
 
 // get actions names
 if ($data['alerts']) {
@@ -157,9 +157,9 @@ if ($data['alerts']) {
 	]);
 }
 
-// Show shorter timeline
-if ($minStartTime !== null && $minStartTime > 0) {
-	$data['timeline']['starttime'] = date(TIMESTAMP_FORMAT, $minStartTime);
+// Show shorter timeline.
+if ($min_start_time !== null && $min_start_time > 0) {
+	$data['timeline']['starttime'] = date(TIMESTAMP_FORMAT, $min_start_time);
 }
 
 // render view

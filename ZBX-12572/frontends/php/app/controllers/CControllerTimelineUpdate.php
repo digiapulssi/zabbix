@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * This controller is used by gtlc.js to update timeline state in user's profile.
+ */
 class CControllerTimelineUpdate extends CController {
 
 	protected function checkInput() {
