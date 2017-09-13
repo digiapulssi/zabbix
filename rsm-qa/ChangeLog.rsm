@@ -1,6 +1,10 @@
-Changes for rsm1.0.0rc25
+Changes for rsm1.0.0rc26
 
-New features:
+Bug fixes:
+..F....... [262] improved loading time of "Rolling week status" page (Oleg)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc25
 
 Bug fixes:
 ....I..... [294] fixed run-time error in SLA API script "undefined subroutine probe_exists" (dimir)
