@@ -813,7 +813,7 @@ class CItemPrototype extends CItemGeneral {
 		$delItemPrototypes = array_merge($delItemPrototypes, $delItemPrototypesChildren);
 		$prototypeids = array_merge($prototypeids, $childPrototypeids);
 
-		// delete graphs, leave if graph still have item
+		// Delete graphs or leave them if graphs still have at least one item prototype.
 		$del_graph_prototypes = [];
 		$db_graph_prototypes = DBselect(
 			'SELECT gi.graphid'.
