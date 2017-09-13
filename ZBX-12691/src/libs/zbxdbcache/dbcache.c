@@ -1228,7 +1228,13 @@ static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vect
 	int		object;
 
 	if (ITEM_STATE_NOTSUPPORTED != h->state && 0 != (ZBX_DC_FLAG_META & h->flags))
-		flags |= (ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE | ZBX_FLAGS_ITEM_DIFF_UPDATE_MTIME);
+	{
+		if (item->lastlogsize != h->lastlogsize)
+			flags |= ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE;
+
+		if (item->mtime != h->mtime)
+			flags |= ZBX_FLAGS_ITEM_DIFF_UPDATE_MTIME;
+	}
 
 	if (h->state != item->state)
 	{
@@ -1245,7 +1251,7 @@ static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vect
 					0, NULL, 0, NULL, 0);
 
 
-			if (0 != strcmp(item->db_error, h->value.err))
+			if (0 != strcmp(item->error, h->value.err))
 				item_error =  h->value.err;
 		}
 		else
@@ -1261,7 +1267,7 @@ static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vect
 			item_error = "";
 		}
 	}
-	else if (ITEM_STATE_NOTSUPPORTED == h->state && 0 != strcmp(item->db_error, h->value.err))
+	else if (ITEM_STATE_NOTSUPPORTED == h->state && 0 != strcmp(item->error, h->value.err))
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "error reason for \"%s:%s\" changed: %s", item->host.host,
 				item->key_orig, h->value.err);

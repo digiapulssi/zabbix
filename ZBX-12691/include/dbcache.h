@@ -151,7 +151,6 @@ typedef struct
 	unsigned char		type;
 	unsigned char		value_type;
 	unsigned char		state;
-	unsigned char		db_state;
 	unsigned char		snmpv3_securitylevel;
 	unsigned char		authtype;
 	unsigned char		flags;
@@ -184,7 +183,7 @@ typedef struct
 	char			password_orig[ITEM_PASSWORD_LEN_MAX], *password;
 	char			snmpv3_contextname_orig[ITEM_SNMPV3_CONTEXTNAME_LEN_MAX], *snmpv3_contextname;
 	char			jmx_endpoint_orig[ITEM_JMX_ENDPOINT_LEN_MAX], *jmx_endpoint;
-	char			*db_error;
+	char			*error;
 
 	zbx_item_preproc_t	*preproc_ops;
 	zbx_uint64_t		*dep_itemids;
@@ -510,7 +509,6 @@ void	DCconfig_get_items_by_keys(DC_ITEM *items, zbx_host_key_t *keys, int *errco
 void	DCconfig_get_items_by_itemids(DC_ITEM *items, const zbx_uint64_t *itemids, int *errcodes, size_t num,
 		zbx_uint64_t flags);
 void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp);
-void	DCconfig_set_item_db_state(zbx_uint64_t itemid, unsigned char state, const char *error);
 void	DCconfig_get_functions_by_functionids(DC_FUNCTION *functions,
 		zbx_uint64_t *functionids, int *errcodes, size_t num);
 void	DCconfig_clean_functions(DC_FUNCTION *functions, int *errcodes, size_t num);

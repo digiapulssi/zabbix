@@ -2248,10 +2248,9 @@ static void	DCsync_items(zbx_dbsync_t *sync, int flags)
 			item->nextcheck = 0;
 			item->lastclock = 0;
 			item->state = (unsigned char)atoi(row[18]);
-			item->db_state = item->state;
 			ZBX_STR2UINT64(item->lastlogsize, row[29]);
 			item->mtime = atoi(row[30]);
-			DCstrpool_replace(found, &item->db_error, row[36]);
+			DCstrpool_replace(found, &item->error, row[36]);
 			item->data_expected_from = now;
 			item->location = ZBX_LOC_NOWHERE;
 			item->poller_type = ZBX_NO_POLLER;
@@ -2798,7 +2797,7 @@ static void	DCsync_items(zbx_dbsync_t *sync, int flags)
 
 		zbx_strpool_release(item->key);
 		zbx_strpool_release(item->port);
-		zbx_strpool_release(item->db_error);
+		zbx_strpool_release(item->error);
 
 		if (NULL != item->triggers)
 			config->items.mem_free_func(item->triggers);
@@ -5702,8 +5701,7 @@ static void	DCget_item(DC_ITEM *dst_item, const ZBX_DC_ITEM *src_item, zbx_uint6
 	dst_item->valuemapid = src_item->valuemapid;
 	dst_item->status = src_item->status;
 
-	dst_item->db_state = src_item->db_state;
-	dst_item->db_error = zbx_strdup(NULL, src_item->db_error);
+	dst_item->error = zbx_strdup(NULL, src_item->error);
 
 	switch (src_item->value_type)
 	{
@@ -5943,7 +5941,7 @@ void	DCconfig_clean_items(DC_ITEM *items, int *errcodes, size_t num)
 		}
 
 		zbx_free(items[i].delay);
-		zbx_free(items[i].db_error);
+		zbx_free(items[i].error);
 		zbx_free(items[i].preproc_ops);
 		zbx_free(items[i].dep_itemids);
 	}
@@ -6210,28 +6208,6 @@ void	DCconfig_get_triggers_by_triggerids(DC_TRIGGER *triggers, const zbx_uint64_
 
 		DCget_trigger(&triggers[i], dc_trigger);
 		errcode[i] = SUCCEED;
-	}
-
-	UNLOCK_CACHE;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: DCconfig_set_item_db_state                                       *
- *                                                                            *
- * Purpose: set item db_state and db_error                                    *
- *                                                                            *
- ******************************************************************************/
-void	DCconfig_set_item_db_state(zbx_uint64_t itemid, unsigned char state, const char *error)
-{
-	ZBX_DC_ITEM	*dc_item;
-
-	LOCK_CACHE;
-
-	if (NULL != (dc_item = zbx_hashset_search(&config->items, &itemid)))
-	{
-		dc_item->db_state = state;
-		DCstrpool_replace(1, &dc_item->db_error, error);
 	}
 
 	UNLOCK_CACHE;
@@ -10576,10 +10552,7 @@ void	zbx_dc_items_update_runtime_data(DC_ITEM *items, zbx_agent_value_t *values,
 		if (HOST_STATUS_MONITORED != dc_host->status)
 			continue;
 
-		dc_item->state = values[i].state;
 		dc_item->lastclock = values[i].ts.sec;
-		dc_item->lastlogsize = values[i].lastlogsize;
-		dc_item->mtime = values[i].mtime;
 
 		/* update nextcheck for items that are counted in queue for monitoring purposes */
 		if (SUCCEED == is_counted_in_item_queue(dc_item->type, dc_item->key))
@@ -10709,7 +10682,7 @@ void	DCconfig_items_apply_changes(const zbx_vector_ptr_t *item_diff)
 			dc_item->mtime = diff->mtime;
 
 		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR & diff->flags))
-			DCstrpool_replace(1, &dc_item->db_error, diff->error);
+			DCstrpool_replace(1, &dc_item->error, diff->error);
 
 		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_STATE & diff->flags))
 			dc_item->state = diff->state;
