@@ -80,9 +80,9 @@ if (hasRequest('period') || hasRequest('stime') || hasRequest('isNow')) {
 		'profileIdx' => 'web.graphs',
 		'profileIdx2' => $pageFilter->graphid,
 		'updateProfile' => true,
-		'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-		'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-		'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
+		'period' => getRequest('period'),
+		'stime' => getRequest('stime'),
+		'isNow' => getRequest('isNow')
 	]);
 
 	$curl = (new CUrl())

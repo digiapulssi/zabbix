@@ -81,9 +81,9 @@ if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
  */
 $data = [
 	'fullscreen' => $_REQUEST['fullscreen'],
-	'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-	'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-	'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow')
 ];
 
 $options = [

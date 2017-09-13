@@ -35,7 +35,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = [
 	'period' =>		[T_ZBX_INT, O_OPT, null,	null,		null],
 	'stime' =>		[T_ZBX_STR, O_OPT, null,	null,		null],
-	'isNow' =>		[T_ZBX_INT, O_OPT, null,	null,		null],
+	'isNow' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'reset' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'httptestid' =>	[T_ZBX_INT, O_MAND, P_SYS,	DB_ID,		null],
 	'fullscreen' =>	[T_ZBX_INT, O_OPT, P_SYS,	IN('0,1'),	null]
@@ -104,9 +104,9 @@ $graph_in = new CScreenBase([
 	'dataId' => 'graph_in',
 	'profileIdx' => $profileIdx,
 	'profileIdx2' => $profileIdx2,
-	'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-	'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-	'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null,
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow'),
 	'updateProfile' => (hasRequest('period') || hasRequest('stime') || hasRequest('isNow'))
 ]);
 
@@ -162,9 +162,9 @@ $graph_time = new CScreenBase([
 	'dataId' => 'graph_time',
 	'profileIdx' => $profileIdx,
 	'profileIdx2' => $profileIdx2,
-	'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-	'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-	'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null,
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow'),
 	'updateProfile' => (hasRequest('period') || hasRequest('stime') || hasRequest('isNow'))
 ]);
 

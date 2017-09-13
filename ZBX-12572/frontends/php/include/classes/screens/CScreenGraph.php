@@ -144,7 +144,7 @@ class CScreenGraph extends CScreenBase {
 			$timeControlData['src'] .= ($this->mode == SCREEN_MODE_EDIT)
 				? '&period=3600&stime='.date(TIMESTAMP_FORMAT, time()).'&isNow=1'
 				: '&period='.$this->timeline['period'].'&stime='.$this->timeline['stime'].
-					'&isNow='.((int) $this->timeline['isNow']);
+					'&isNow='.$this->timeline['isNow'];
 		}
 		else {
 			if ($this->screenitem['dynamic'] == SCREEN_SIMPLE_ITEM || $this->screenitem['url'] === '') {
@@ -163,7 +163,7 @@ class CScreenGraph extends CScreenBase {
 			$timeControlData['src'] .= ($this->mode == SCREEN_MODE_EDIT)
 				? '&period=3600&stime='.date(TIMESTAMP_FORMAT, time()).'&isNow=1'
 				: '&period='.$this->timeline['period'].'&stime='.$this->timeline['stime'].
-					'&isNow='.((int) $this->timeline['isNow']);
+					'&isNow='.$this->timeline['isNow'];
 		}
 
 		// output
@@ -188,7 +188,7 @@ class CScreenGraph extends CScreenBase {
 			}
 			elseif ($this->mode == SCREEN_MODE_PREVIEW) {
 				$item = new CLink(null, 'charts.php?graphid='.$resourceId.'&period='.$this->timeline['period'].
-					'&stime='.$this->timeline['stime'].'&isNow='.((int) $this->timeline['isNow']));
+					'&stime='.$this->timeline['stime'].'&isNow='.$this->timeline['isNow']);
 			}
 
 			$item->setId($containerId);

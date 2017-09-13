@@ -72,9 +72,9 @@ $timeline = calculateTime([
 	'profileIdx' => getRequest('profileIdx', 'web.screens'),
 	'profileIdx2' => getRequest('profileIdx2'),
 	'updateProfile' => (getRequest('updateProfile', '0') === '1'),
-	'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-	'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-	'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow')
 ]);
 
 CProfile::update('web.screens.graphid', $_REQUEST['graphid'], PROFILE_TYPE_ID);

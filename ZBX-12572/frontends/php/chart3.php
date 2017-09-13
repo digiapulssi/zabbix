@@ -141,9 +141,9 @@ $timeline = calculateTime([
 	'profileIdx' => $profileIdx,
 	'profileIdx2' => $profileIdx2,
 	'updateProfile' => false,
-	'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-	'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-	'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow')
 ]);
 
 CProfile::update($profileIdx.'.httptestid', $profileIdx2, PROFILE_TYPE_ID);

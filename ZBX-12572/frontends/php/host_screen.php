@@ -60,9 +60,9 @@ $data = [
 	'hostid' => getRequest('hostid', 0),
 	'fullscreen' => getRequest('fullscreen', 0),
 	'screenid' => getRequest('screenid', CProfile::get('web.hostscreen.screenid', null)),
-	'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-	'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-	'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow')
 ];
 CProfile::update('web.hostscreen.screenid', $data['screenid'], PROFILE_TYPE_ID);
 

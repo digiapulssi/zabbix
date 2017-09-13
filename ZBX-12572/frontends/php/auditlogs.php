@@ -80,9 +80,9 @@ $data = [
 		'profileIdx' => 'web.auditlogs.timeline',
 		'profileIdx2' => 0,
 		'updateProfile' => (hasRequest('period') || hasRequest('stime') || hasRequest('isNow')),
-		'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-		'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-		'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
+		'period' => getRequest('period'),
+		'stime' => getRequest('stime'),
+		'isNow' => getRequest('isNow')
 	])
 ];
 

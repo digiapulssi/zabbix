@@ -108,9 +108,9 @@ if ((hasRequest('widgetRefresh') || hasRequest('widgetRefreshRate')) && $data['s
 				'profileIdx' => 'web.slides',
 				'profileIdx2' => $elementId,
 				'hostid' => getRequest('hostid'),
-				'period' => hasRequest('period') ? ((int) getRequest('period')) : null,
-				'stime' => (getRequest('stime', '') !== '') ? getRequest('stime') : null,
-				'isNow' => hasRequest('isNow') ? ((int) getRequest('isNow')) : null
+				'period' => getRequest('period'),
+				'stime' => getRequest('stime'),
+				'isNow' => getRequest('isNow')
 			]);
 
 			CScreenBuilder::insertScreenCleanJs();

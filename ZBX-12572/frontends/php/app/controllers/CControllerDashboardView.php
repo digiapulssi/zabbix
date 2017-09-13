@@ -92,9 +92,9 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 				'profileIdx' => $options['profileIdx'],
 				'profileIdx2' => $options['profileIdx2'],
 				'updateProfile' => true,
-				'period' => $this->hasInput('period') ? ((int) $this->getInput('period')) : null,
+				'period' => $this->hasInput('period') ? $this->getInput('period') : null,
 				'stime' => $this->hasInput('stime') ? $this->getInput('stime') : null,
-				'isNow' => $this->hasInput('isNow') ? ((int) $this->getInput('isNow')) : null
+				'isNow' => $this->hasInput('isNow') ? $this->getInput('isNow') : null
 			]);
 
 			$data['timeControlData'] = [

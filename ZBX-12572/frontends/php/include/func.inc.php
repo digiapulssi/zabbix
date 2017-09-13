@@ -2526,6 +2526,9 @@ function calculateTime(array $options = []) {
 	if ($options['profileIdx2'] === null || $options['profileIdx2'] === '') {
 		$options['profileIdx2'] = $defOptions['profileIdx2'];
 	}
+	if ($options['stime'] === '') {
+		$options['stime'] = $defOptions['stime'];
+	}
 
 	if ($options['profileIdx'] === null) {
 		$options['updateProfile'] = false;
@@ -2534,7 +2537,7 @@ function calculateTime(array $options = []) {
 	// period
 	if ($options['period'] === null) {
 		$options['period'] = ($options['profileIdx'] !== null)
-			? ((int) CProfile::get($options['profileIdx'].'.period', ZBX_PERIOD_DEFAULT, $options['profileIdx2']))
+			? CProfile::get($options['profileIdx'].'.period', ZBX_PERIOD_DEFAULT, $options['profileIdx2'])
 			: ZBX_PERIOD_DEFAULT;
 	}
 	else {
@@ -2562,12 +2565,12 @@ function calculateTime(array $options = []) {
 		$options['isNow'] = ($options['stime'] !== null)
 			? 0
 			: (($options['profileIdx'] !== null)
-				? ((int) CProfile::get($options['profileIdx'].'.isnow', 1, $options['profileIdx2']))
+				? CProfile::get($options['profileIdx'].'.isnow', 1, $options['profileIdx2'])
 				: 1);
 	}
 
 	// stime
-	if ($options['isNow'] === 1) {
+	if ($options['isNow'] == 1) {
 		$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
 		$usertime = date(TIMESTAMP_FORMAT, $time);
 	}
