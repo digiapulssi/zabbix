@@ -455,7 +455,7 @@ sub ah_save_continue_file
 
 sub ah_encode_pretty_json
 {
-	return JSON->new->utf8(1)->pretty(1)->encode(shift);
+	return encode_json(shift);
 }
 
 sub ah_get_api_tld
