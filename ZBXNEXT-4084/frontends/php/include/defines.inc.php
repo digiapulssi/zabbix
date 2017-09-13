@@ -701,7 +701,6 @@ define('ZBX_MIN_WIDGET_LINES', 1);
 define('ZBX_MAX_WIDGET_LINES', 100);
 
 // dashboards
-define('DASHBOARD_DEFAULT_ID', 1);
 define('DASHBOARD_MAX_ROWS', 64);
 define('DASHBOARD_MAX_COLUMNS', 12);
 
@@ -1182,9 +1181,10 @@ define('WIDGET_SYSMAP_SOURCETYPE_MAP',	1);
 define('WIDGET_SYSMAP_SOURCETYPE_FILTER',	2);
 
 // widget select resource field types
-define('WIDGET_FIELD_SELECT_RES_SYSMAP',	1);
-define('WIDGET_FIELD_SELECT_RES_ITEM',		2);
-define('WIDGET_FIELD_SELECT_RES_GRAPH',		3);
+define('WIDGET_FIELD_SELECT_RES_SYSMAP',		1);
+define('WIDGET_FIELD_SELECT_RES_ITEM',			2);
+define('WIDGET_FIELD_SELECT_RES_GRAPH',			3);
+define('WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH',  4);
 
 // max depth of navigation tree
 define('WIDGET_NAVIGATION_TREE_MAX_DEPTH', 10);
