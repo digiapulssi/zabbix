@@ -1136,7 +1136,6 @@ if (defined($continue_file) and not opt('dry-run'))
 	unless (ah_save_continue_file($till) == SUCCESS)
 	{
 		wrn("cannot save continue file \"$continue_file\": $!");
-		next;
 	}
 
 	dbg("last update: ", ts_str($till));
