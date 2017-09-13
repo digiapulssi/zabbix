@@ -319,7 +319,9 @@ TRYFORK:
 	{
 		# max children reached, make sure to handle_children()
 		dbg("max children reached, please wait...");
-		sleep(1);
+
+		# sleep for 100 milliseconds
+		select(undef, undef, undef, 0.1);
 	}
 	elsif ($pid)
 	{
