@@ -2562,7 +2562,7 @@ function calculateTime(array $options = []) {
 		$options['isNow'] = ($options['stime'] !== null)
 			? 0
 			: (($options['profileIdx'] !== null)
-				? ((int) CProfile::get($options['profileIdx'].'.isNow', 1, $options['profileIdx2']))
+				? ((int) CProfile::get($options['profileIdx'].'.isnow', 1, $options['profileIdx2']))
 				: 1);
 	}
 
@@ -2596,7 +2596,7 @@ function calculateTime(array $options = []) {
 	if ($options['updateProfile']) {
 		CProfile::update($options['profileIdx'].'.period', $options['period'], PROFILE_TYPE_INT, $options['profileIdx2']);
 		CProfile::update($options['profileIdx'].'.stime', $options['stime'], PROFILE_TYPE_STR, $options['profileIdx2']);
-		CProfile::update($options['profileIdx'].'.isNow', $options['isNow'], PROFILE_TYPE_INT, $options['profileIdx2']);
+		CProfile::update($options['profileIdx'].'.isnow', $options['isNow'], PROFILE_TYPE_INT, $options['profileIdx2']);
 	}
 
 	return [
