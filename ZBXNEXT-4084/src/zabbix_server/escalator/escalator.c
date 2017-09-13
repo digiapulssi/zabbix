@@ -413,6 +413,9 @@ static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, co
 
 	zbx_chrcpy_alloc(&sql, &sql_alloc, &sql_offset, ')');
 
+	if (NULL != ack)
+		message_type = MACRO_TYPE_MESSAGE_ACK;
+
 	result = DBselect("%s", sql);
 
 	while (NULL != (row = DBfetch(result)))
