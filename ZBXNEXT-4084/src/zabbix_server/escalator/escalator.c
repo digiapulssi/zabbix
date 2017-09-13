@@ -321,6 +321,10 @@ static void	add_object_msg(zbx_uint64_t actionid, zbx_uint64_t operationid, zbx_
 	{
 		ZBX_STR2UINT64(userid, row[0]);
 
+		/* exclude acknowledgment author from the recipient list */
+		if (NULL != ack && ack->userid == userid)
+			continue;
+
 		if (SUCCEED != check_perm2system(userid))
 			continue;
 
@@ -409,21 +413,20 @@ static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, co
 
 	zbx_chrcpy_alloc(&sql, &sql_alloc, &sql_offset, ')');
 
-	if (NULL != ack)
-	{
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " and userid<>" ZBX_FS_UI64, ack->userid);
-		message_type = MACRO_TYPE_MESSAGE_ACK;
-	}
-
 	result = DBselect("%s", sql);
 
 	while (NULL != (row = DBfetch(result)))
 	{
 		ZBX_DBROW2UINT64(userid, row[0]);
-		ZBX_STR2UINT64(mediatypeid, row[1]);
+
+		/* exclude acknowledgment author from the recipient list */
+		if (NULL != ack && ack->userid == userid)
+			continue;
 
 		if (SUCCEED != check_perm2system(userid))
 			continue;
+
+		ZBX_STR2UINT64(mediatypeid, row[1]);
 
 		switch (c_event->object)
 		{
@@ -490,12 +493,16 @@ static void	add_sentusers_ack_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid
 	result = DBselect(
 			"select distinct userid"
 			" from acknowledges"
-			" where eventid=" ZBX_FS_UI64
-				" and userid<>" ZBX_FS_UI64, event->eventid, ack->userid);
+			" where eventid=" ZBX_FS_UI64,
+			event->eventid);
 
 	while (NULL != (row = DBfetch(result)))
 	{
 		ZBX_DBROW2UINT64(userid, row[0]);
+
+		/* exclude acknowledgment author from the recipient list */
+		if (ack->userid == userid)
+			continue;
 
 		if (SUCCEED != check_perm2system(userid) || PERM_READ > get_trigger_permission(userid, event->objectid))
 			continue;
