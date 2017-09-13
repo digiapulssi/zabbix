@@ -1485,6 +1485,15 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
+static int	dc_item_compare(const void *d1, const void *d2)
+{
+	const DC_ITEM	*i1 = (const DC_ITEM *)d1;
+	const DC_ITEM	*i2 = (const DC_ITEM *)d2;
+
+	ZBX_RETURN_IF_NOT_EQUAL(i1->itemid, i2->itemid);
+	return 0;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DCmass_proxy_update_items                                        *
@@ -1501,35 +1510,62 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 {
 	const char	*__function_name = "DCmass_proxy_update_items";
 
-	size_t		sql_offset = 0;
-	int		i;
+	size_t			sql_offset = 0;
+	zbx_vector_uint64_t	itemids;
+	DC_ITEM			*items = NULL;
+	int			i, *errcodes = NULL;
+	zbx_vector_ptr_t	item_diff;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+	items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
+	errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
 
-	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+	zbx_vector_ptr_create(&item_diff);
+
+	zbx_vector_uint64_create(&itemids);
+	zbx_vector_uint64_reserve(&itemids, history_num);
+
+	for (i = 0; i < history_num; i++)
+		zbx_vector_uint64_append(&itemids, history[i].itemid);
+
+	zbx_vector_uint64_sort(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, history_num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
 
 	for (i = 0; i < history_num; i++)
 	{
-		if (ITEM_STATE_NOTSUPPORTED == history[i].state)
+		ZBX_DC_HISTORY	*h = &history[i];
+		const DC_ITEM	*item;
+		DC_ITEM		item_local;
+
+		item_local.itemid = h->itemid;
+
+		if (NULL == (item = bsearch(&item_local, items, history_num, sizeof(DC_ITEM), dc_item_compare)))
 			continue;
 
-		if (0 == (ZBX_DC_FLAG_META & history[i].flags))
-			continue;
-
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-				"update items"
-				" set lastlogsize=" ZBX_FS_UI64
-					",mtime=%d"
-				" where itemid=" ZBX_FS_UI64 ";\n",
-				history[i].lastlogsize, history[i].mtime, history[i].itemid);
-
-		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
+		prepare_item_update(&items[i], h, &item_diff);
 	}
 
-	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+	if (0 != item_diff.values_num)
+	{
+		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
-	if (sql_offset > 16)	/* In ORACLE always present begin..end; */
-		DBexecute("%s", sql);
+		DCconfig_items_apply_changes(&item_diff);
+		db_save_item_changes(&sql_offset, &item_diff);
+
+		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+		if (sql_offset > 16)	/* In ORACLE always present begin..end; */
+			DBexecute("%s", sql);
+	}
+
+	zbx_vector_uint64_destroy(&itemids);
+	DCconfig_clean_items(items, errcodes, history_num);
+
+	zbx_free(errcodes);
+	zbx_free(items);
+
+	zbx_vector_ptr_clear_ext(&item_diff, (zbx_clean_func_t)zbx_ptr_free);
+	zbx_vector_ptr_destroy(&item_diff);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
