@@ -47,6 +47,10 @@ use constant PROBE_GROUP_NAME => 'Probes';
 use constant PROBE_KEY_MANUAL => 'rsm.probe.status[manual]';
 use constant PROBE_KEY_AUTOMATIC => 'rsm.probe.status[automatic,%]'; # match all in SQL
 
+use constant RSM_CONFIG_DNS_UDP_DELAY_ITEMID => 100008;	# rsm.configvalue[RSM.DNS.UDP.DELAY]
+use constant RSM_CONFIG_RDDS_DELAY_ITEMID => 100009;	# rsm.configvalue[RSM.RDDS.DELAY]
+use constant RSM_CONFIG_EPP_DELAY_ITEMID => 100010;	# rsm.configvalue[RSM.EPP.DELAY]
+
 # In order to do the calculation we should wait till all the results
 # are available on the server (from proxies). We shift back 2 minutes
 # in case of "availability" and 3 minutes in case of "rolling week"
@@ -89,7 +93,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps slv_stats_reset
-		get_result_string get_tld_by_trigger truncate_from alerts_enabled get_test_start_time uint_value_exists
+		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled get_test_start_time
+		uint_value_exists
 		get_real_services_period dbg info wrn fail format_stats_time slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
 		write_file usage);
@@ -160,54 +165,46 @@ sub get_macro_dns_udp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	my $item_param = 'RSM.DNS.UDP.DELAY';
+	my $value = __get_configvalue(RSM_CONFIG_DNS_UDP_DELAY_ITEMID, $value_time);
 
-	my $value = __get_rsm_configvalue($item_param, $value_time);
+	return $value if (defined($value));
 
-	return $value if ($value);
-
-	return __get_macro('{$' . $item_param . '}');
+	return __get_macro('{$RSM.DNS.UDP.DELAY}');
 }
 
 sub get_macro_dns_tcp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	my $item_param = 'RSM.DNS.TCP.DELAY';
-
 	# todo phase 1: Export DNS-TCP tests
 	# todo phase 1: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
-#	my $value = __get_rsm_configvalue($item_param, $value_time);
+#	my $value = __get_configvalue(RSM_CONFIG_DNS_TCP_DELAY_ITEMID, $value_time);
 #
-#	return $value if ($value);
+#	return $value if (defined($value));
 
-	return __get_macro('{$' . $item_param . '}');
+	return __get_macro('{$RSM.DNS.TCP.DELAY}');
 }
 
 sub get_macro_rdds_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	my $item_param = 'RSM.RDDS.DELAY';
+	my $value = __get_configvalue(RSM_CONFIG_RDDS_DELAY_ITEMID, $value_time);
 
-	my $value = __get_rsm_configvalue($item_param, $value_time);
+	return $value if (defined($value));
 
-	return $value if ($value);
-
-	return __get_macro('{$' . $item_param . '}');
+	return __get_macro('{$RSM.RDDS.DELAY}');
 }
 
 sub get_macro_epp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	my $item_param = 'RSM.EPP.DELAY';
+	my $value = __get_configvalue(RSM_CONFIG_EPP_DELAY_ITEMID, $value_time);
 
-	my $value = __get_rsm_configvalue($item_param, $value_time);
+	return $value if (defined($value));
 
-	return $value if ($value);
-
-	return __get_macro('{$' . $item_param . '}');
+	return __get_macro('{$RSM.EPP.DELAY}');
 }
 
 sub get_macro_dns_update_time
@@ -2279,15 +2276,26 @@ sub get_tld_by_trigger
 	return ($rows_ref->[0]->[0], $service);
 }
 
+# truncate to the beginning of specified period
 sub truncate_from
 {
 	my $ts = shift;
-	my $delay = shift;
+	my $delay = shift;	# by default 1 minute
 
 	$delay = 60 unless ($delay);
 
-	# truncate to the beginning of the minute
 	return $ts - ($ts % $delay);
+}
+
+# truncate to the end of specified period
+sub truncate_till
+{
+	my $ts = shift;
+	my $delay = shift;	# by default 1 minute
+
+	$delay = 60 unless ($delay);
+
+	return truncate_from($ts, $delay) + $delay - 1;
 }
 
 # whether additional alerts through Redis are enabled, disable in config passed with set_slv_config()
@@ -2431,6 +2439,8 @@ sub slv_exit
 		print($prefix, "total     : $total_str\n");
 		print($prefix, "sql       : $sql_str\n");
 	}
+
+	closelog();
 
 	exit($rv);
 }
@@ -2894,8 +2904,7 @@ sub __get_probestatus_times
 
 sub __get_configvalue
 {
-	my $item_prefix = shift;
-	my $item_param = shift;
+	my $itemid = shift;
 	my $value_time = shift;
 
 	my $hour = 3600;
@@ -2903,20 +2912,9 @@ sub __get_configvalue
 	my $month = $day * 30;
 
 	my $diff = $hour;
-	my $value = undef;
+	my $value;
 
-	my $key = "$item_prefix.configvalue[$item_param]";
-	my $itemid = get_itemid_by_key($key);
-
-	if ($itemid < 0)
-	{
-		fail("configuration item \"$key\" not found") if ($itemid == E_ID_NONEXIST);
-		fail("more than one configuration item \"$key\" found") if ($itemid == E_ID_MULTIPLE);
-
-		fail("cannot get ID of configuration item \"$key\": unknown error");
-	}
-
-	while (not $value and $diff < $month)
+	while (!defined($value) && $diff < $month)
 	{
 		my $rows_ref = db_select("select value from history_uint where itemid=$itemid and clock between " . ($value_time - $diff) . " and $value_time order by clock desc limit 1");
 
@@ -2931,14 +2929,6 @@ sub __get_configvalue
 	}
 
 	return $value;
-}
-
-sub __get_rsm_configvalue
-{
-	my $item_param = shift;
-	my $value_time = shift;
-
-	return __get_configvalue('rsm', $item_param, $value_time);
 }
 
 1;

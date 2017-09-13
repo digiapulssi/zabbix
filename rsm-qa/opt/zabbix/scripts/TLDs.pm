@@ -10,7 +10,7 @@ use base 'Exporter';
 our @EXPORT = qw(zbx_connect check_api_error get_proxies_list
 		get_api_error zbx_need_relogin
 		create_probe_template create_probe_status_template create_host create_group create_template create_item create_trigger create_macro update_root_servers
-		create_passive_proxy is_probe_exist get_host_group get_template get_probe get_host
+		create_passive_proxy probe_exists get_host_group get_template get_probe get_host
 		remove_templates remove_hosts remove_hostgroups remove_probes remove_items
 		disable_host disable_hosts
 		disable_items disable_triggers
@@ -73,7 +73,7 @@ sub get_proxies_list {
     return $proxies_list;
 }
 
-sub is_probe_exist($) {
+sub probe_exists($) {
     my $name = shift;
 
     my $result = $zabbix->get('proxy',{'output' => ['proxyid'], 'filter' => {'host' => $name}, 'preservekeys' => 1 });

@@ -755,6 +755,24 @@ static int	DBpatch_3000131(void)
 	return DBadd_foreign_key("lastvalue", 1, &field);
 }
 
+static int	DBpatch_3000132(void)
+{
+	return DBpatch_3000122();
+}
+
+static int	DBpatch_3000133(void)
+{
+	if (ZBX_DB_OK > DBexecute(
+			"update actions"
+			" set r_longdata='{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC'"
+			" where actionid in (100,110,120,130)"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -777,22 +795,24 @@ DBPATCH_ADD(3000111, 0, 1)	/* add "ccTLD" hosts to "ccTLD Probe results" host gr
 DBPATCH_ADD(3000112, 0, 1)	/* add "testTLD" hosts to "testTLD Probe results" host group */
 DBPATCH_ADD(3000113, 0, 1)	/* add "otherTLD" hosts to "otherTLD Probe results" host group */
 DBPATCH_ADD(3000114, 0, 1)	/* add all TLD hosts to "TLD Probe results" host group */
-DBPATCH_ADD(3000115, 0, 0)	/* fixed trigger expression for minimum online IPv4 enabled probe number */
-DBPATCH_ADD(3000116, 0, 0)	/* fixed trigger expression for minimum online IPv6 enabled probe number */
-DBPATCH_ADD(3000117, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts */
+DBPATCH_ADD(3000115, 0, 0)	/* fix trigger expression for minimum online IPv4 enabled probe number */
+DBPATCH_ADD(3000116, 0, 0)	/* fix trigger expression for minimum online IPv6 enabled probe number */
+DBPATCH_ADD(3000117, 0, 0)	/* link "Template App Zabbix Proxy" to all probe hosts */
 DBPATCH_ADD(3000118, 0, 0)	/* read permissions on "Probes - Mon" host group for "Technical services users" */
 DBPATCH_ADD(3000119, 0, 0)	/* read permissions on "Mon" host group for "Technical services users" */
-DBPATCH_ADD(3000120, 0, 0)	/* linked "Template App Zabbix Proxy" to all probe hosts (again) */
+DBPATCH_ADD(3000120, 0, 0)	/* link "Template App Zabbix Proxy" to all probe hosts (again) */
 DBPATCH_ADD(3000121, 0, 0)	/* new actions: "Probes-Mon", "Central-Server", "TLDs" */
 DBPATCH_ADD(3000122, 0, 0)	/* parameters for "Script" media type */
 DBPATCH_ADD(3000123, 0, 0)	/* move "Probe statuses" host from "Probes - Mon" group to "Mon" group */
 DBPATCH_ADD(3000124, 0, 1)	/* change read permissions on "Probes" host group to "Probes - Mon" host group for "EBERO users" */
-DBPATCH_ADD(3000125, 0, 0)	/* dropped "$2" and fixed capitalization in "zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]" item name */
-DBPATCH_ADD(3000126, 0, 0)	/* removed "<probe>" hosts from "<probe>" host group */
-DBPATCH_ADD(3000127, 0, 0)	/* removed "<TLD>" hosts from "TLD <TLD>" host group */
-DBPATCH_ADD(3000128, 0, 0)	/* adjusted allowed system time difference between Zabbix Server and other hosts */
-DBPATCH_ADD(3000129, 0, 0)	/* renamed corresponding trigger */
-DBPATCH_ADD(3000130, 0, 1)	/* created lastvalue table */
-DBPATCH_ADD(3000131, 0, 1)	/* added itemid constraint to lastvalue */
+DBPATCH_ADD(3000125, 0, 0)	/* drop "$2" and fixed capitalization in "zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]" item name */
+DBPATCH_ADD(3000126, 0, 0)	/* remove "<probe>" hosts from "<probe>" host group */
+DBPATCH_ADD(3000127, 0, 0)	/* remove "<TLD>" hosts from "TLD <TLD>" host group */
+DBPATCH_ADD(3000128, 0, 0)	/* adjust allowed system time difference between Zabbix Server and other hosts */
+DBPATCH_ADD(3000129, 0, 0)	/* rename corresponding trigger */
+DBPATCH_ADD(3000130, 0, 1)	/* create lastvalue table */
+DBPATCH_ADD(3000131, 0, 1)	/* add itemid constraint to lastvalue */
+DBPATCH_ADD(3000132, 0, 0)	/* delete carriage returns in parameters of "Script" media type */
+DBPATCH_ADD(3000133, 0, 1)	/* use recovery event (instead of problem event) date and time in recovery message */
 
 DBPATCH_END()

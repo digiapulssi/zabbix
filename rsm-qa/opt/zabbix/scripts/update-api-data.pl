@@ -319,7 +319,9 @@ TRYFORK:
 	{
 		# max children reached, make sure to handle_children()
 		dbg("max children reached, please wait...");
-		sleep(1);
+
+		# sleep for 100 milliseconds
+		select(undef, undef, undef, 0.1);
 	}
 	elsif ($pid)
 	{
@@ -1134,7 +1136,6 @@ if (defined($continue_file) and not opt('dry-run'))
 	unless (ah_save_continue_file($till) == SUCCESS)
 	{
 		wrn("cannot save continue file \"$continue_file\": $!");
-		next;
 	}
 
 	dbg("last update: ", ts_str($till));
@@ -1363,24 +1364,20 @@ sub __get_dns_test_values
 	my $start = shift;
 	my $end = shift;
 
-	my %result;
+	my $result = {};
 
 	# generate list if itemids
-	my $itemids_str = '';
-	foreach my $probe (keys(%$dns_items_ref))
-	{
-		my $itemids_ref = $dns_items_ref->{$probe};
+	my @itemids;
+	push(@itemids, keys(%{$_})) foreach (values(%{$dns_items_ref}));
 
-		foreach my $itemid (keys(%$itemids_ref))
-		{
-			$itemids_str .= ',' unless ($itemids_str eq '');
-			$itemids_str .= $itemid;
-		}
-	}
-
-	if ($itemids_str ne '')
+	if (scalar(@itemids) != 0)
 	{
-		my $rows_ref = db_select("select itemid,value,clock from history where itemid in ($itemids_str) and " . sql_time_condition($start, $end). " order by clock");
+		my $rows_ref = db_select(
+			"select itemid,value,clock".
+			" from history".
+			" where itemid in (" . join(',', @itemids) . ")".
+				" and " . sql_time_condition($start, $end).
+			" order by clock");
 
 		foreach my $row_ref (@$rows_ref)
 		{
@@ -1389,23 +1386,16 @@ sub __get_dns_test_values
 			my $clock = $row_ref->[2];
 
 			my ($nsip, $probe);
-			my $last = 0;
 
 			foreach my $pr (keys(%$dns_items_ref))
 			{
-				my $itemids_ref = $dns_items_ref->{$pr};
-
-				foreach my $i (keys(%$itemids_ref))
+				if (defined($dns_items_ref->{$pr}->{$itemid}))
 				{
-					if ($i == $itemid)
-					{
-						$nsip = $dns_items_ref->{$pr}->{$i};
-						$probe = $pr;
-						$last = 1;
-						last;
-					}
+					$nsip = $dns_items_ref->{$pr}->{$itemid};
+					$probe = $pr;
+
+					last;
 				}
-				last if ($last == 1);
 			}
 
 			unless (defined($nsip))
@@ -1416,11 +1406,11 @@ sub __get_dns_test_values
 				fail("internal error: Name Server,IP of item $key (itemid:$itemid) not found");
 			}
 
-			$result{$probe}->{$nsip}->{$clock} = get_detailed_result($services{'dns'}{'valuemaps'}, $value);
+			$result->{$probe}->{$nsip}->{$clock} = get_detailed_result($services{'dns'}{'valuemaps'}, $value);
 		}
 	}
 
-	return \%result;
+	return $result;
 }
 
 sub __find_probe_key_by_itemid

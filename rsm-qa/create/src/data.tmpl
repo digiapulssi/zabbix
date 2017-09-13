@@ -341,7 +341,7 @@ FIELDS|mediatypeid|type|description|smtp_server     |smtp_helo  |smtp_email     
 ROW   |1          |0   |Email      |mail.company.com|company.com|zabbix@company.com|         |          |                  |      |0     |25       |0            |0               |0               |0                  |                                                           |
 ROW   |2          |3   |Jabber     |                |           |                  |         |          |jabber@company.com|zabbix|0     |25       |0            |0               |0               |0                  |                                                           |
 ROW   |3          |2   |SMS        |                |           |                  |         |/dev/ttyS0|                  |      |0     |25       |0            |0               |0               |0                  |                                                           |
-ROW   |10         |1   |Script     |                |           |                  |script.py|          |                  |      |0     |25       |0            |0               |0               |0                  |{ALERT.SENDTO}&eol;{ALERT.SUBJECT}&eol;{ALERT.MESSAGE}&eol;|
+ROW   |10         |1   |Script     |                |           |                  |script.py|          |                  |      |0     |25       |0            |0               |0               |0                  |{ALERT.SENDTO}&bsn;{ALERT.SUBJECT}&bsn;{ALERT.MESSAGE}&bsn;|
 
 TABLE |users
 FIELDS|userid|alias      |name   |surname      |passwd                          |url|autologin|autologout|lang |refresh|type|theme  |rows_per_page|
@@ -368,10 +368,10 @@ ROW   |100|120     |100   |
 
 TABLE |actions
 FIELDS|actionid|name           |esc_period|def_shortdata                                                           |def_longdata                 |recovery_msg|r_shortdata                                                             |r_longdata                   |
-ROW   |100     |Probes-Critical|3600      |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.DATE} {EVENT.TIME} UTC|1           |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.DATE} {EVENT.TIME} UTC|
-ROW   |110     |Probes-Mon     |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|
-ROW   |120     |Central-Server |3600      |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|
-ROW   |130     |TLDs           |3600      |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.DATE} {EVENT.TIME} UTC|1           |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.DATE} {EVENT.TIME} UTC|
+ROW   |100     |Probes-Critical|3600      |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.DATE} {EVENT.TIME} UTC|1           |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
+ROW   |110     |Probes-Mon     |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
+ROW   |120     |Central-Server |3600      |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
+ROW   |130     |TLDs           |3600      |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.DATE} {EVENT.TIME} UTC|1           |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 
 TABLE |operations
 FIELDS|operationid|actionid|
