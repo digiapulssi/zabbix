@@ -1,8 +1,28 @@
 Changes for 3.0.11rc1
 
 New features:
+A.F....... [ZBX-1357] enabled Turkish translation to be displayed by default (zalex_ua)
+A.F....... [ZBX-1357] updated Czech, English (United States), French, Italian, Japanese, Korean, Russian, Turkish translations; thanks to Zabbix translators (zalex_ua)
 
 Bug fixes:
+..F....... [ZBX-12617] fixed sorting by host name for items on availability report page (gcalenko)
+........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
+..F....... [ZBX-12548] fixed notification sound not being played for message with timeout set to greater than minute (gcalenko)
+...G...... [ZBX-12653] fixed heap corruption in Windows agent; thanks to Ronnie Kaech for the patch (abs)
+A......... [ZBX-12660] fixed result of hostinterface.replacehostinterfaces method (Sasha)
+..F....... [ZBX-12469] added new context for 'Second' string to be properly translated in maintenance period form (gcalenko)
+.......PS. [ZBX-12493] fixed address and ports array size in zbx_init_ipmi_host() to match OpenIPMI internals (Andris, vso)
+..F....... [ZBX-12623] fixed label macro resolving in maps (vjaceslavs)
+..F.....S. [ZBX-11042] allowed libcurl to choose SMTP authentication mechanism other than PLAIN (gleb, vjaceslavs)
+..F....... [ZBX-8997] fixed trigger expression validation test form (gcalenko, Sasha)
+..F....... [ZBX-12545] fixed undefined index error on latest data page when host was deleted in another session (gcalenko)
+..F....... [ZBX-12416] optimized data selection of user preferences stored in profiles (gcalenko)
+..F....... [ZBX-11607] fixed a rounding of large unsigned numbers (miks)
+..F....... [ZBX-12404] fixed visibility of item data first row for 'latest data' page and 'audit log' page (gcalenko)
+..F....... [ZBX-12463] fixed undefined index error in "Last 20 issues" (Sasha)
+........S. [ZBX-12186] fixed parallel processing of multiple values for same lld rule (vjaceslavs)
+..F....... [ZBX-11887] fixed improper DB::refreshIds() call when selected row is locked (miks)
+..F....... [ZBX-12022] fixed trigger resolving in services configuration; fixed popup window size (miks)
 ..F....... [ZBX-12429] fixed template replacement in mass update form (gcalenko)
 ..F....... [ZBX-12396] fixed an error in screens if screen trigger overview element contains deleted host group (miks)
 ..F....... [ZBX-12439] fixed macro name field length in host configuration form (gcalenko)
@@ -1722,6 +1742,8 @@ Changes for 2.2.20rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
+.......PS. [ZBX-12493] fixed address and ports array size in zbx_init_ipmi_host() to match OpenIPMI internals (Andris, vso)
 ........S. [ZBX-12446] fixed discovery and auto registration to accept empty DNS names (vso)
 ...G...... [ZBX-12270] fixed processing of AIX item 'system.stat[ent]' in agent; thanks to Marc for patch (Andris)
 
