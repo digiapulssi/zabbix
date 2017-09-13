@@ -126,7 +126,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
 				$items = get_same_item_for_host(['itemid' => $resourceid], [$dynamic_hostid]);
 				$item = reset($items);
-				$resourceid = array_key_exists('itemid', $item) ? $item['itemid'] : null;
+				$resourceid = ($item && array_key_exists('itemid', $item)) ? $item['itemid'] : null;
 
 				if ($resourceid === null
 						|| !in_array($item['value_type'], [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64])) {
