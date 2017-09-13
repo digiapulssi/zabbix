@@ -62,9 +62,6 @@ class CControllerTimelineUpdate extends CController {
 	}
 
 	protected function doAction() {
-
-		DBstart();
-
 		calculateTime([
 			'profileIdx' => $this->getInput('idx'),
 			'profileIdx2' => $this->getInput('idx2'),
@@ -73,8 +70,6 @@ class CControllerTimelineUpdate extends CController {
 			'stime' => $this->hasInput('stime') ? $this->getInput('stime') : null,
 			'isNow' => $this->hasInput('isNow') ? ((int) $this->getInput('isNow')) : null
 		]);
-
-		DBend();
 
 		$this->setResponse(new CControllerResponseData(['main_block' => '']));
 	}
