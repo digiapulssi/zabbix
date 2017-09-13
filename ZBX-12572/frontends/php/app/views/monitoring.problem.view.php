@@ -294,6 +294,7 @@ if ($data['action'] == 'problem.view') {
 			]
 		];
 
+		$this->addPostJS('timeControl.useTimeRefresh('.zbx_jsvalue(CWebUser::getRefresh()).');');
 		$this->addPostJS('timeControl.addObject("scroll_events_id", '.zbx_jsvalue($screen->timeline).', '.zbx_jsvalue($objData).');');
 		$this->addPostJS('timeControl.processObjects();');
 	}
