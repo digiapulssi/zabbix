@@ -1227,7 +1227,7 @@ static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vect
 	zbx_item_diff_t	*diff;
 	int		object;
 
-	if (ITEM_STATE_NOTSUPPORTED != h->state && 0 != (ZBX_DC_FLAG_META & h->flags))
+	if (0 != (ZBX_DC_FLAG_META & h->flags))
 	{
 		if (item->lastlogsize != h->lastlogsize)
 			flags |= ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE;
@@ -1277,7 +1277,6 @@ static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vect
 
 	if (NULL != item_error)
 		flags |= ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR;
-
 
 	if (ZBX_FLAGS_ITEM_DIFF_UNSET == flags)
 		return;
