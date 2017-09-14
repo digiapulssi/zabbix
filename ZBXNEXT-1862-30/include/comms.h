@@ -106,9 +106,6 @@ const char	*zbx_socket_strerror(void);
 
 #ifndef _WINDOWS
 void	zbx_gethost_by_ip(const char *ip, char *host, size_t hostlen);
-#if defined(HAVE_RESOLV_H)
-void	zbx_update_resolver_conf(void);			/* handle /etc/resolv.conf update */
-#endif
 #endif
 
 int	zbx_tcp_connect(zbx_socket_t *s, const char *source_ip, const char *ip, unsigned short port, int timeout,
