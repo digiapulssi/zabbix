@@ -1289,6 +1289,7 @@ int	zbx_check_user_permissions(const zbx_uint64_t *userid, const zbx_uint64_t *r
 	if (-1 == user_type)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() cannot check permissions", __function_name);
+		ret = FAIL;
 		goto out;
 	}
 
