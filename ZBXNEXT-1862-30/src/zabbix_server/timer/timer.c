@@ -866,6 +866,8 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 next:
 #if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
 		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#else
+		;
 #endif
 	}
 
