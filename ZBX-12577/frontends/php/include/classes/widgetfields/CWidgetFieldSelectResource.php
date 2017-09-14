@@ -94,6 +94,7 @@ class CWidgetFieldSelectResource extends CWidgetField {
 
 			case WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH:
 				$url->setArgument('numeric', '1');
+				$url->setArgument('real_hosts', '1');
 				break;
 		}
 
