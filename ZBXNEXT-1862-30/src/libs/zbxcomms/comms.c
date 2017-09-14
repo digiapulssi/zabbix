@@ -1954,7 +1954,7 @@ void	zbx_udp_close(zbx_socket_t *s)
  * Purpose: react to "/etc/resolv.conf" update                                *
  *                                                                            *
  * Comments: it is intended to call this function in the end of each process  *
- *           main loop. The purpose of calling it at he end (instead of the   *
+ *           main loop. The purpose of calling it at the end (instead of the  *
  *           beginning of main loop) is to let the first initialization of    *
  *           libc resolver proceed internally.                                *
  *                                                                            *
