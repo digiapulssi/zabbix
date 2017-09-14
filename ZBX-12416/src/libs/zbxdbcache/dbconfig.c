@@ -5222,7 +5222,7 @@ void	DCconfig_unlock_all_triggers()
  * Return value: Returns FAIL if lock failed and SUCCEED on successful lock.  *
  *                                                                            *
  ******************************************************************************/
-int	DCconfig_lock_discovery_rule(zbx_uint64_t lld_ruleid)
+int	DCconfig_lock_lld_rule(zbx_uint64_t lld_ruleid)
 {
 	int	ret = FAIL;
 
@@ -5241,14 +5241,14 @@ int	DCconfig_lock_discovery_rule(zbx_uint64_t lld_ruleid)
 
 /******************************************************************************
  *                                                                            *
- * Function: DCconfig_unlock_discovery_rule                                   *
+ * Function: DCconfig_unlock_lld_rule                                         *
  *                                                                            *
  * Purpose: Unlock (make it available for processing) lld rule.               *
  *                                                                            *
  * Parameters: lld_ruleid - [IN] discovery rule id                            *
  *                                                                            *
  ******************************************************************************/
-void	DCconfig_unlock_discovery_rule(zbx_uint64_t lld_ruleid)
+void	DCconfig_unlock_lld_rule(zbx_uint64_t lld_ruleid)
 {
 	int	i;
 
