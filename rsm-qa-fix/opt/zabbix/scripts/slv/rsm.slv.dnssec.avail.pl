@@ -40,7 +40,7 @@ if (!opt('period') && !opt('from'))
 	if (truncate_from($clock) % $interval != 0)
 	{
 		dbg("will NOT calculate");
-		slv_exit(EXIT_SUCCESS);
+		slv_exit(SUCCESS);
 	}
 }
 
