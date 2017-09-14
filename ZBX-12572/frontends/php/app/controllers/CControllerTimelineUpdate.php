@@ -69,9 +69,9 @@ class CControllerTimelineUpdate extends CController {
 			'profileIdx' => $this->getInput('idx'),
 			'profileIdx2' => $this->getInput('idx2'),
 			'updateProfile' => true,
-			'period' => $this->hasInput('period') ? ((int) $this->getInput('period')) : null,
-			'stime' => $this->hasInput('stime') ? $this->getInput('stime') : null,
-			'isNow' => $this->hasInput('isNow') ? ((int) $this->getInput('isNow')) : null
+			'period' => $this->getInput('period'),
+			'stime' => $this->getInput('stime'),
+			'isNow' => $this->getInput('isNow')
 		]);
 
 		$this->setResponse(new CControllerResponseData(['main_block' => '']));

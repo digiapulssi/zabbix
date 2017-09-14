@@ -2564,9 +2564,9 @@ function calculateTime(array $options = []) {
 	if ($options['isNow'] === null) {
 		$options['isNow'] = ($options['stime'] !== null)
 			? 0
-			: (($options['profileIdx'] !== null)
+			: ($options['profileIdx'] !== null)
 				? CProfile::get($options['profileIdx'].'.isnow', 1, $options['profileIdx2'])
-				: 1);
+				: 1;
 	}
 
 	// stime
