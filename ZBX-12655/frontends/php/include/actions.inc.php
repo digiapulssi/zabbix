@@ -1244,8 +1244,7 @@ function makeEventsActions($eventids) {
 		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
 		'eventids' => $eventids,
 		'selectUsers' => ['alias', 'name', 'surname'],
-		'selectMediatypes' => ['description'],
-		'preservekeys' => true
+		'selectMediatypes' => ['description']
 	]);
 
 	$events = [];
