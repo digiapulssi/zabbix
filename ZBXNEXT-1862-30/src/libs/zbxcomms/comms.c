@@ -1957,7 +1957,9 @@ void	zbx_update_resolver_conf(void)
 	if (0 == zbx_stat(ZBX_RESOLV_CONF_FILE, &buf) && mtime != buf.st_mtime)
 	{
 		mtime = buf.st_mtime;
-		res_init();
+
+		if (0 != res_init())
+			zabbix_log(LOG_LEVEL_WARNING, "zbx_update_resolver_conf(): res_init() failed");
 	}
 
 #undef ZBX_RESOLV_CONF_FILE
