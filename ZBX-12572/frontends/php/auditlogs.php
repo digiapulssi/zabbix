@@ -163,7 +163,7 @@ $sql = 'SELECT MIN(a.clock) AS clock'.
 $first_audit = DBfetch(DBselect($sql, $config['search_limit'] + 1));
 $min_start_time = ($first_audit) ? $first_audit['clock'] - 1 : null;
 
-// Show shorter timeline
+// Show shorter timeline.
 if ($min_start_time !== null && $min_start_time > 0) {
 	$data['timeline']['starttime'] = date(TIMESTAMP_FORMAT, $min_start_time);
 }

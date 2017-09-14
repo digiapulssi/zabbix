@@ -2597,7 +2597,9 @@ function calculateTime(array $options = []) {
 	}
 
 	if ($options['updateProfile']) {
-		CProfile::update($options['profileIdx'].'.period', $options['period'], PROFILE_TYPE_INT, $options['profileIdx2']);
+		CProfile::update($options['profileIdx'].'.period', $options['period'], PROFILE_TYPE_INT,
+			$options['profileIdx2']
+		);
 		CProfile::update($options['profileIdx'].'.stime', $options['stime'], PROFILE_TYPE_STR, $options['profileIdx2']);
 		CProfile::update($options['profileIdx'].'.isnow', $options['isNow'], PROFILE_TYPE_INT, $options['profileIdx2']);
 	}

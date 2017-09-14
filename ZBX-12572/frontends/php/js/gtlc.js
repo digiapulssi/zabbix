@@ -62,7 +62,7 @@ var timeControl = {
 				}
 			}
 
-			if (isset('isNow', time) && time.isNow == '0') {
+			if (isset('isNow', time) && time.isNow == 0) {
 				time.isNow = false;
 			}
 			this.objectList[id].time = time;

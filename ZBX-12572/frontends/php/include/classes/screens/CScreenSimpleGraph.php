@@ -91,7 +91,8 @@ class CScreenSimpleGraph extends CScreenBase {
 			elseif ($this->mode == SCREEN_MODE_PREVIEW) {
 				$item = new CLink(null, 'history.php?action='.HISTORY_GRAPH.'&itemids[]='.$resourceid.
 					'&period='.$this->timeline['period'].'&stime='.$this->timeline['stime'].
-					'&isNow='.$this->timeline['isNow']);
+					'&isNow='.$this->timeline['isNow']
+				);
 			}
 			$item->setId($containerid);
 
