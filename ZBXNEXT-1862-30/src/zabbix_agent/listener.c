@@ -127,7 +127,7 @@ ZBX_THREAD_ENTRY(listener_thread, args)
 #endif
 	while (ZBX_IS_RUNNING())
 	{
-#ifndef _WINDOWS
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
 		int	skip = 0;
 #endif
 		zbx_handle_log();
@@ -153,7 +153,7 @@ ZBX_THREAD_ENTRY(listener_thread, args)
 		}
 
 		if (SUCCEED == ret || EINTR == zbx_socket_last_error())
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || !defined(HAVE_RESOLV_H)
 			continue;
 #else
 			skip = 1;

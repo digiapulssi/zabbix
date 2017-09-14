@@ -1946,7 +1946,7 @@ void	zbx_udp_close(zbx_socket_t *s)
 	zbx_socket_close(s->socket);
 }
 
-#ifndef _WINDOWS
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
 void	zbx_update_resolver_conf(void)
 {
 #define ZBX_RESOLV_CONF_FILE	"/etc/resolv.conf"
