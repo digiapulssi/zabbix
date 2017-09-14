@@ -3194,8 +3194,6 @@ static int	process_discovery_data_contents(struct zbx_json_parse *jp_data, const
 
 	while (NULL != (p = zbx_json_next(jp_data, p)))
 	{
-		port = 0;
-
 		if (FAIL == zbx_json_brackets_open(p, &jp_row))
 			goto json_parse_error;
 
@@ -3226,8 +3224,11 @@ static int	process_discovery_data_contents(struct zbx_json_parse *jp_data, const
 			continue;
 		}
 
-		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)) &&
-				FAIL == is_ushort(tmp, &port))
+		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
+		{
+			port = 0;
+		}
+		else if (FAIL == is_ushort(tmp, &port))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
 			continue;
