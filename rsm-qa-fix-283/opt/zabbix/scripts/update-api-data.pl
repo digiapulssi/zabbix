@@ -175,8 +175,9 @@ if (opt('continue'))
 
 	if (! -e $continue_file)
 	{
-		db_disconnect();
 		my $config_minclock = __get_config_minclock();
+
+		# __get_config_minclock() goes through all the databases
 		db_connect();
 
 		if (!defined($config_minclock))
@@ -302,7 +303,7 @@ if (!$from)
 	slv_exit(SUCCESS);
 }
 
-set_max_children(20);
+set_max_children(30);
 
 my $dns_udp_rtt_high_history = get_history_by_itemid(CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
 
