@@ -2445,7 +2445,7 @@ int	process_history_data(DC_ITEM *items, zbx_agent_value_t *values, int *errcode
 	}
 
 	if (0 < processed_num)
-		zbx_dc_items_update_runtime_data(items, values, errcodes, values_num);
+		zbx_dc_items_update_nextcheck(items, values, errcodes, values_num);
 
 	zbx_preprocessor_flush();
 

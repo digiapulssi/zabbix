@@ -7325,8 +7325,6 @@ static void	dc_requeue_items(const zbx_uint64_t *itemids, const unsigned char *s
 		if (HOST_STATUS_MONITORED != dc_host->status)
 			continue;
 
-		dc_item->lastclock = lastclocks[i];
-
 		if (SUCCEED != is_counted_in_item_queue(dc_item->type, dc_item->key))
 			continue;
 
@@ -10515,9 +10513,9 @@ void	zbx_dc_update_proxy_version(zbx_uint64_t hostid, int version)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_dc_items_update_runtime_data                                 *
+ * Function: zbx_dc_items_update_nextcheck                                    *
  *                                                                            *
- * Purpose: updates item runtime properties in configuration cache            *
+ * Purpose: updates item nextcheck values in configuration cache              *
  *                                                                            *
  * Parameters: items      - [IN] the items to update                          *
  *             values     - [IN] the items values containing new properties   *
@@ -10527,7 +10525,7 @@ void	zbx_dc_update_proxy_version(zbx_uint64_t hostid, int version)
  *                               errcodes arrays                              *
  *                                                                            *
  ******************************************************************************/
-void	zbx_dc_items_update_runtime_data(DC_ITEM *items, zbx_agent_value_t *values, int *errcodes, size_t values_num)
+void	zbx_dc_items_update_nextcheck(DC_ITEM *items, zbx_agent_value_t *values, int *errcodes, size_t values_num)
 {
 	size_t		i;
 	ZBX_DC_ITEM	*dc_item;
@@ -10552,13 +10550,11 @@ void	zbx_dc_items_update_runtime_data(DC_ITEM *items, zbx_agent_value_t *values,
 		if (HOST_STATUS_MONITORED != dc_host->status)
 			continue;
 
-		dc_item->lastclock = values[i].ts.sec;
-
 		/* update nextcheck for items that are counted in queue for monitoring purposes */
 		if (SUCCEED == is_counted_in_item_queue(dc_item->type, dc_item->key))
 		{
 			DCitem_nextcheck_update(dc_item, dc_host, dc_item->state, ZBX_ITEM_COLLECTED,
-					dc_item->lastclock);
+					values[i].ts.sec);
 		}
 	}
 
@@ -10687,6 +10683,8 @@ void	DCconfig_items_apply_changes(const zbx_vector_ptr_t *item_diff)
 		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_STATE & diff->flags))
 			dc_item->state = diff->state;
 
+		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTCLOCK & diff->flags))
+			dc_item->lastclock = diff->lastclock;
 	}
 
 	UNLOCK_CACHE;

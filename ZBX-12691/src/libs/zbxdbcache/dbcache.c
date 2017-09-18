@@ -1210,19 +1210,19 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: prepare_item_update                                              *
+ * Function: calculate_item_update_diff                                       *
  *                                                                            *
- * Purpose: prepares item data to be updated in configuration cache and saved *
- *          in database                                                       *
+ * Purpose: calculates what item fields must be updated                       *
  *                                                                            *
  * Parameters: item      - [IN] the item                                      *
  *             h         - [IN] the historical data to process                *
- *             item_diff - [OUT] vector of item updates to be performed       *
+ *                                                                            *
+ * Return value: The update data.                                             *
  *                                                                            *
  ******************************************************************************/
-static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vector_ptr_t *item_diff)
+static zbx_item_diff_t *calculate_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h)
 {
-	zbx_uint64_t	flags = ZBX_FLAGS_ITEM_DIFF_UNSET;
+	zbx_uint64_t	flags = ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTCLOCK;
 	const char	*item_error = NULL;
 	zbx_item_diff_t	*diff;
 	int		object;
@@ -1278,12 +1278,9 @@ static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vect
 	if (NULL != item_error)
 		flags |= ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR;
 
-	if (ZBX_FLAGS_ITEM_DIFF_UNSET == flags)
-		return;
-
 	diff = (zbx_item_diff_t *)zbx_malloc(NULL, sizeof(zbx_item_diff_t));
 	diff->itemid = item->itemid;
-	diff->clock = h->ts.sec;
+	diff->lastclock = h->ts.sec;
 	diff->flags = flags;
 
 	if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE & flags))
@@ -1298,7 +1295,7 @@ static void	prepare_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h, zbx_vect
 	if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR & flags))
 		diff->error = item_error;
 
-	zbx_vector_ptr_append(item_diff, diff);
+	return diff;
 }
 
 /******************************************************************************
@@ -1374,8 +1371,9 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	size_t			sql_offset = 0;
 	zbx_vector_uint64_t	itemids;
 	DC_ITEM			*items = NULL;
-	int			i, *errcodes = NULL;
+	int			i, *errcodes = NULL, update_items_db = 0;
 	zbx_vector_ptr_t	inventory_values, item_diff;
+	zbx_item_diff_t		*diff;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1435,21 +1433,22 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 		}
 
 		normalize_item_value(&items[i], h);
-		prepare_item_update(&items[i], h, &item_diff);
+		if (NULL != (diff = calculate_item_update(&items[i], h)))
+		{
+			zbx_vector_ptr_append(&item_diff, diff);
+			update_items_db |= (ZBX_FLAGS_ITEM_DIFF_UPDATE_DB & diff->flags);
+		}
 		DCinventory_value_add(&inventory_values, &items[i], h);
 
 		zbx_vector_uint64_append(&itemids, items[i].itemid);
 	}
 
-	if (0 != item_diff.values_num || 0 !=  inventory_values.values_num)
+	if (0 != update_items_db || 0 !=  inventory_values.values_num)
 	{
 		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
 		if (0 != item_diff.values_num)
-		{
-			DCconfig_items_apply_changes(&item_diff);
 			db_save_item_changes(&sql_offset, &item_diff);
-		}
 
 		if (0 == inventory_values.values_num)
 		{
@@ -1462,6 +1461,9 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 		if (sql_offset > 16)	/* In ORACLE always present begin..end; */
 			DBexecute("%s", sql);
 	}
+
+	if (0 != item_diff.values_num)
+		DCconfig_items_apply_changes(&item_diff);
 
 	zbx_vector_ptr_clear_ext(&inventory_values, (zbx_clean_func_t)DCinventory_value_free);
 	zbx_vector_ptr_destroy(&inventory_values);
@@ -1513,8 +1515,9 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 	size_t			sql_offset = 0;
 	zbx_vector_uint64_t	itemids;
 	DC_ITEM			*items = NULL;
-	int			i, *errcodes = NULL;
+	int			i, *errcodes = NULL, update_items_db = 0;
 	zbx_vector_ptr_t	item_diff;
+	zbx_item_diff_t		*diff;
 
 	items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
 	errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
@@ -1542,20 +1545,26 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 		if (NULL == (item = bsearch(&item_local, items, history_num, sizeof(DC_ITEM), dc_item_compare)))
 			continue;
 
-		prepare_item_update(&items[i], h, &item_diff);
+		if (NULL != (diff = calculate_item_update(&items[i], h)))
+		{
+			zbx_vector_ptr_append(&item_diff, diff);
+			update_items_db |= (ZBX_FLAGS_ITEM_DIFF_UPDATE_DB & diff->flags);
+		}
 	}
 
 	if (0 != item_diff.values_num)
 	{
-		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+		if (0 != update_items_db)
+		{
+			DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+			db_save_item_changes(&sql_offset, &item_diff);
+			DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+			if (sql_offset > 16)	/* In ORACLE always present begin..end; */
+				DBexecute("%s", sql);
+		}
 
 		DCconfig_items_apply_changes(&item_diff);
-		db_save_item_changes(&sql_offset, &item_diff);
-
-		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
-
-		if (sql_offset > 16)	/* In ORACLE always present begin..end; */
-			DBexecute("%s", sql);
 	}
 
 	zbx_vector_uint64_destroy(&itemids);
