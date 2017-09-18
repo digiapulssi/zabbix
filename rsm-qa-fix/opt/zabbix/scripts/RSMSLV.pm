@@ -736,6 +736,8 @@ sub db_connect
 
 	fail("Error: no database configuration") unless (defined($config));
 
+	db_disconnect() if (defined($dbh));
+
 	$server_key = get_rsm_local_key($config) unless ($server_key);
 
 	fail("Configuration error: section \"$server_key\" not found") unless (defined($config->{$server_key}));
