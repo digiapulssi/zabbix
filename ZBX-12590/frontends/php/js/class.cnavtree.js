@@ -1439,10 +1439,8 @@ jQuery(function($) {
 								callback: function(widget, data) {
 									var item,
 										selector = '',
-										mapid_selector = '',
-										prev_map_selector = '';
-
-									mapid_selector = '.tree-item[data-mapid=' + data[0]['submapid'] + ']';
+										prev_map_selector = '',
+										mapid_selector = '.tree-item[data-mapid=' + data[0]['submapid'] + ']';
 
 									if (data[0]['previous_maps'].length) {
 										var prev_maps = data[0]['previous_maps'].split(','),
@@ -1463,8 +1461,7 @@ jQuery(function($) {
 													Array(3).join(sc + ' ') + '.tree-item' + sc + mapid,
 													Array(2).join(sc + ' ') + '.tree-item' + sc + mapid,
 													sc + ' .tree-item' + sc + mapid,
-													'.tree-item' + sc + mapid,
-													'.tree-item' + mapid
+													'.tree-item' + sc + mapid
 												],
 												indx = 0;
 
@@ -1478,7 +1475,7 @@ jQuery(function($) {
 										}
 									}
 
-									if (prev_map_selector.length && mapid_selector.length) {
+									if (prev_map_selector.length) {
 										selector = prev_map_selector + ' > .tree-list > ' + mapid_selector;
 										if (!data[0]['moving_upward']) {
 											selector = selector + ':first';
