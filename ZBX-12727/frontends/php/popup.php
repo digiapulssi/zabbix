@@ -1687,7 +1687,7 @@ elseif ($srctbl == 'screens') {
 	$screens = API::Screen()->get([
 		'output' => ['screenid', 'name'],
 		'preservekeys' => true,
-		'editable' => ($writeonly === null) ? null: true
+		'editable' => ($writeonly !== null)
 	]);
 	order_result($screens, 'name');
 
@@ -1736,7 +1736,7 @@ elseif ($srctbl == 'screens2') {
 
 	$screens = API::Screen()->get([
 		'output' => ['screenid', 'name'],
-		'editable' => ($writeonly === null) ? null: true
+		'editable' => ($writeonly !== null)
 	]);
 	order_result($screens, 'name');
 
