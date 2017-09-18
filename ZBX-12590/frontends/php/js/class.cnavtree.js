@@ -1454,6 +1454,11 @@ jQuery(function($) {
 											var sc = '.selected',
 												mapid = '[data-mapid=' + prev_maps + ']',
 												prev_map_selectors = [
+													Array(9).join(sc + ' ') + '.tree-item' + sc + mapid,
+													Array(8).join(sc + ' ') + '.tree-item' + sc + mapid,
+													Array(7).join(sc + ' ') + '.tree-item' + sc + mapid,
+													Array(6).join(sc + ' ') + '.tree-item' + sc + mapid,
+													Array(5).join(sc + ' ') + '.tree-item' + sc + mapid,
 													Array(4).join(sc + ' ') + '.tree-item' + sc + mapid,
 													Array(3).join(sc + ' ') + '.tree-item' + sc + mapid,
 													Array(2).join(sc + ' ') + '.tree-item' + sc + mapid,
@@ -1465,7 +1470,7 @@ jQuery(function($) {
 
 											while (!prev_map_selector.length
 													&& typeof prev_map_selectors[indx] !== 'undefined') {
-												if ($(prev_map_selectors[indx], $this).length) {
+												if ($(widget['content_body']).find(prev_map_selectors[indx]).length) {
 													prev_map_selector = prev_map_selectors[indx] + ' ';
 												}
 												indx++;
@@ -1478,10 +1483,10 @@ jQuery(function($) {
 										if (!data[0]['moving_upward']) {
 											selector = selector + ':first';
 										}
-										item = $(selector.trim(), $this);
+										item = $(widget['content_body']).find(selector.trim());
 									}
 									else {
-										item = $('.selected', $this).closest(mapid_selector);
+										item = $(widget['content_body']).find('.selected').closest(mapid_selector);
 									}
 
 									if (item.length) {
