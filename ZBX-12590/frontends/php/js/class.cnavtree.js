@@ -1478,18 +1478,18 @@ jQuery(function($) {
 										if (!data[0]['moving_upward']) {
 											selector = selector + ':first';
 										}
-										item = $(selector.trim(selector), $this);
+										item = $(selector.trim(), $this);
 									}
 									else {
 										item = $('.selected', $this).closest(mapid_selector);
 									}
 
 									if (item.length) {
-										item = item.first();
+										item = $(widget['content_body']).find('#'+$(item).attr('id'));
 
 										var step_in_path = $(item).closest('.tree-item');
 
-										$('.selected', $this).removeClass('selected');
+										$(widget['content_body']).find('.selected').removeClass('selected');
 										$(item).addClass('selected');
 
 										while ($(step_in_path).length) {
