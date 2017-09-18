@@ -1318,6 +1318,9 @@ static void	db_save_item_changes(size_t *sql_offset, const zbx_vector_ptr_t *ite
 
 		diff = (const zbx_item_diff_t *)item_diff->values[i];
 
+		if (0 == (ZBX_FLAGS_ITEM_DIFF_UPDATE_DB & diff->flags))
+			continue;
+
 		zbx_strcpy_alloc(&sql, &sql_alloc, sql_offset, "update items set");
 
 		if (0 != (ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE & diff->flags))
