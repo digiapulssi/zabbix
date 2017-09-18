@@ -591,33 +591,25 @@ foreach ($tlds_by_server as $key => $hosts) {
 
 						switch ($items[$trItem]['key_']) {
 							case RSM_SLV_DNS_AVAIL:
-								$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_DNS]['incident'] = getLastEvent(
-									$trigger['triggerid']
-								);
+								$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_DNS]['incident'] = $trigger['triggerid'];
 								if ($data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_DNS]['incident']) {
 									$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_DNS]['trigger'] = true;
 								}
 								break;
 							case RSM_SLV_DNSSEC_AVAIL:
-								$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_DNSSEC]['incident'] = getLastEvent(
-									$trigger['triggerid']
-								);
+								$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_DNSSEC]['incident'] = $trigger['triggerid'];
 								if ($data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_DNSSEC]['incident']) {
 									$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_DNSSEC]['trigger'] = true;
 								}
 								break;
 							case RSM_SLV_RDDS_AVAIL:
-								$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_RDDS]['incident'] = getLastEvent(
-									$trigger['triggerid']
-								);
+								$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_RDDS]['incident'] = $trigger['triggerid'];
 								if ($data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_RDDS]['incident']) {
 									$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_RDDS]['trigger'] = true;
 								}
 								break;
 							case RSM_SLV_EPP_AVAIL:
-								$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_EPP]['incident'] = getLastEvent(
-									$trigger['triggerid']
-								);
+								$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_EPP]['incident'] = $trigger['triggerid'];
 								if ($data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_EPP]['incident']) {
 									$data['tld'][$DB['SERVERS'][$key]['NR'].$items[$trItem]['hostid']][RSM_EPP]['trigger'] = true;
 								}
@@ -656,6 +648,22 @@ if ($data['filter_status']) {
 if (!$no_history) {
 	$data['paging'] = getPagingLine($data['tld'], ZBX_SORT_UP, new CUrl());
 }
+
+foreach ($data['tld'] as &$tld) {
+	if (array_key_exists(RSM_DNS, $tld) && array_key_exists('incident', $tld[RSM_DNS])) {
+		$tld[RSM_DNS]['incident'] = getLastEvent($tld[RSM_DNS]['incident']);
+	}
+	if (array_key_exists(RSM_DNSSEC, $tld) && array_key_exists('incident', $tld[RSM_DNSSEC])) {
+		$tld[RSM_DNSSEC]['incident'] = getLastEvent($tld[RSM_DNSSEC]['incident']);
+	}
+	if (array_key_exists(RSM_RDDS, $tld) && array_key_exists('incident', $tld[RSM_RDDS])) {
+		$tld[RSM_RDDS]['incident'] = getLastEvent($tld[RSM_RDDS]['incident']);
+	}
+	if (array_key_exists(RSM_EPP, $tld) && array_key_exists('incident', $tld[RSM_EPP])) {
+		$tld[RSM_EPP]['incident'] = getLastEvent($tld[RSM_EPP]['incident']);
+	}
+}
+unset($tld);
 
 $rsmView = new CView('rsm.rollingweekstatus.list', $data);
 $rsmView->render();

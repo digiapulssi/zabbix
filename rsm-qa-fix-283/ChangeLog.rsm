@@ -1,8 +1,21 @@
-Changes for rsm1.0.0rc25
+Changes for rsm1.0.0rc27
 
 New features:
 
 Bug fixes:
+....I..... [RSM-1] 295: fixed run-time undefined symbol error "EXIT_SUCCESS" in Service Availability calculation scripts (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc26
+
+Bug fixes:
+..F....... [262] improved loading time of "Rolling week status" page (Oleg)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc25
+
+Bug fixes:
+....I..... [294] fixed run-time error in SLA API script "undefined subroutine probe_exists" (dimir)
 ....I..... [292] set recovery event (instead of problem event) date and time in recovery message (dimir)
 ....I..... [291] improved running Service Availability calculation scripts (rsm.slv.*.avail.pl) to avoid duplicates (dimir)
 ....I..... [293] fixed undefined subroutine (truncate_till) error in rsm.probe.online.pl script (dimir)
