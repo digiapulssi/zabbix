@@ -1,3 +1,12 @@
+Changes for rsm1.0.0rc27
+
+New features:
+
+Bug fixes:
+....I..... [sub-283] improved performance by parallelizing by TLD instead of Zabbix server (dimir)
+....I..... [295] fixed run-time undefined symbol error "EXIT_SUCCESS" in Service Availability calculation scripts (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc26
 
 Bug fixes:

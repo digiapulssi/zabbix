@@ -32,7 +32,7 @@ use constant JSON_OBJECT_NORESULT_PROBE => {
 	'status'	=> 'No result'
 };
 
-use constant DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
+use constant CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
 
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
@@ -175,8 +175,9 @@ if (opt('continue'))
 
 	if (! -e $continue_file)
 	{
-		db_disconnect();
 		my $config_minclock = __get_config_minclock();
+
+		# __get_config_minclock() goes through all the databases
 		db_connect();
 
 		if (!defined($config_minclock))
@@ -302,73 +303,114 @@ if (!$from)
 	slv_exit(SUCCESS);
 }
 
-db_disconnect();
+set_max_children(30);
+
+my $dns_udp_rtt_high_history = get_history_by_itemid(CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
 
 # go through all the databases
 foreach (@server_keys)
 {
 	$server_key = $_;
 
+	dbg("getting probe statuses for period:", selected_period($from, $till));
+
+	db_connect($server_key);
+
+	my $all_probes_ref = get_probes();
+
+	if (opt('probe'))
+	{
+		my $probe = getopt('probe');
+		my $valid = 0;
+
+		foreach my $name (keys(%$all_probes_ref))
+		{
+			if ($name eq $probe)
+			{
+				$valid = 1;
+				last;
+			}
+		}
+
+		if ($valid == 0)
+		{
+			my $msg = "unknown probe \"$probe\"\n\nAvailable probes:\n";
+
+			foreach my $name (keys(%$all_probes_ref))
+			{
+				$msg .= "  $name\n";
+			}
+
+			fail($msg);
+		}
+
+		my $temp = $all_probes_ref;
+
+		undef($all_probes_ref);
+
+		$all_probes_ref->{getopt('probe')} = $temp->{getopt('probe')};
+	}
+
+	my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
+
 	my $tlds_processed = 0;
 
-	my $fork_successful = 0;
-TRYFORK:
-	my $pid = fork_without_pipe();
-
-	if (!defined($pid))
+	my $tlds_ref;
+	if (opt('tld'))
 	{
-		# max children reached, make sure to handle_children()
-		dbg("max children reached, please wait...");
+		if (tld_exists(getopt('tld')) == 0)
+		{
+			fail("TLD ", getopt('tld'), " does not exist.") if ($server_keys[-1] eq $server_key);
+		}
 
-		# sleep for 100 milliseconds
-		select(undef, undef, undef, 0.1);
-	}
-	elsif ($pid)
-	{
-		# parent
-		$fork_successful = 1;
+		$tlds_ref = [ getopt('tld') ];
 	}
 	else
 	{
-		# child
+		$tlds_ref = get_tlds();
+	}
 
-		db_connect($server_key);
+	foreach (@$tlds_ref)
+	{
+		# NB! This is needed in order to set the value globally.
+		$tld = $_;
 
-		my $dns_udp_rtt_high_history = get_history_by_itemid(DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
+		last if (opt('limit') && $tlds_processed == getopt('limit'));
 
-		my $tlds_ref;
-		if (opt('tld'))
+		my $fork_successful = 0;
+TRYFORK:
+		my $pid = fork_without_pipe();
+
+		if (!defined($pid))
 		{
-			if (tld_exists(getopt('tld')) == 0)
-			{
-				fail("TLD ", getopt('tld'), " does not exist.") if ($server_keys[-1] eq $server_key);
-			}
+			# max children reached, make sure to handle_children()
+			dbg("max children reached, please wait...");
 
-			$tlds_ref = [ getopt('tld') ];
+			# sleep for 100 milliseconds
+			select(undef, undef, undef, 0.1);
+		}
+		elsif ($pid)
+		{
+			# parent
+			$fork_successful = 1;
+
+			$tlds_processed++;
 		}
 		else
 		{
-			$tlds_ref = get_tlds();
-		}
-
-		my $servicedata;	# hash with various data of TLD service
-
-		foreach (@$tlds_ref)
-		{
-			$tlds_processed++;
-
-			last if (opt('limit') && $tlds_processed == getopt('limit'));
-
-			# NB! This is needed in order to set the value globally.
-			$tld = $_;
+			# child
 
 			if (__tld_ignored($tld) == SUCCESS)
 			{
 				dbg("tld \"$tld\" found in IGNORE list");
-				next;
+				slv_exit(SUCCESS);
 			}
 
+			db_connect($server_key);
+
 			my $ah_tld = ah_get_api_tld($tld);
+
+			my $tld_data = {};
 
 			foreach my $service (keys(%services))
 			{
@@ -415,65 +457,18 @@ TRYFORK:
 
 				dbg("lastclock:$lastclock");
 
-				$servicedata->{$tld}->{$service}->{'lastclock'} = $lastclock;
-			}
-		}
-		undef($tld);
-
-		dbg("getting probe statuses for period:", selected_period($from, $till));
-
-		my $all_probes_ref = get_probes();
-
-		if (opt('probe'))
-		{
-			my $probe = getopt('probe');
-			my $valid = 0;
-
-			foreach my $name (keys(%$all_probes_ref))
-			{
-				if ($name eq $probe)
-				{
-					$valid = 1;
-					last;
-				}
+				$tld_data->{$service}->{'lastclock'} = $lastclock;
 			}
 
-			if ($valid == 0)
-			{
-				my $msg = "unknown probe \"$probe\"\n\nAvailable probes:\n";
-
-				foreach my $name (keys(%$all_probes_ref))
-				{
-					$msg .= "  $name\n";
-				}
-
-				fail($msg);
-			}
-
-			my $temp = $all_probes_ref;
-
-			undef($all_probes_ref);
-
-			$all_probes_ref->{getopt('probe')} = $temp->{getopt('probe')};
-		}
-
-		my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
-
-		foreach (keys(%$servicedata))
-		{
-			# NB! This is needed in order to set the value globally.
-			$tld = $_;
-
-			my $ah_tld = ah_get_api_tld($tld);
 			my $json_state_ref;
 
 			$json_state_ref->{'tld'} = $tld;
 			$json_state_ref->{'status'} = JSON_VALUE_UP;
 			$json_state_ref->{'testedServices'} = {};
 
-			foreach my $service (keys(%{$servicedata->{$tld}}))
+			foreach my $service (keys(%{$tld_data}))
 			{
-				my $lastclock = $servicedata->{$tld}->{$service}->{'lastclock'};
+				my $lastclock = $tld_data->{$service}->{'lastclock'};
 
 				my $delay = $services{$service}{'delay'};
 				my $service_from = $services{$service}{'from'};
@@ -1101,26 +1096,25 @@ TRYFORK:
 				fail("cannot save TLD state: ", ah_get_error());
 			}
 
-			last if (opt('tld'));
-		} # for each TLD
-
-		# unset TLD (for the logs)
-		$tld = undef;
-
-		if (!opt('dry-run') && !opt('tld'))
-		{
-			__update_false_positives();
+			# child exit
+			slv_exit(SUCCESS);
 		}
 
-		db_disconnect();
+		handle_children();
 
-		slv_exit(SUCCESS);
+		goto TRYFORK unless ($fork_successful == 1);
+
+		last if (opt('tld'));
+
+	} # for each TLD
+
+	# unset TLD (for the logs)
+	undef($tld);
+
+	if (!opt('dry-run') && !opt('tld'))
+	{
+		__update_false_positives();
 	}
-
-	handle_children();
-
-	goto TRYFORK unless ($fork_successful == 1);
-
 } # foreach (@server_keys)
 undef($server_key);
 
