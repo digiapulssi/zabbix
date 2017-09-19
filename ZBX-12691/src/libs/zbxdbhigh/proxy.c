@@ -2586,8 +2586,8 @@ static int	parse_history_data_row_value(const struct zbx_json_parse *jp_row, zbx
 		av->state = (unsigned char)atoi(tmp);
 
 
-	/* Unsupported item meta information must be ignore for backwards compatibility. */
-	/* New agents will not send meta information for items in unsupported state.     */
+	/* Unsupported item meta information must be ignored for backwards compatibility. */
+	/* New agents will not send meta information for items in unsupported state.      */
 	if (ITEM_STATE_NOTSUPPORTED != av->state)
 	{
 		if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_LASTLOGSIZE, &tmp, &tmp_alloc))

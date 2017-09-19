@@ -1450,7 +1450,7 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	{
 		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
-		if (0 != item_diff.values_num)
+		if (0 != update_items_db)
 			db_save_item_changes(&sql_offset, &item_diff);
 
 		if (0 == inventory_values.values_num)
