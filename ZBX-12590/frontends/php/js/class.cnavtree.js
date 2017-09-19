@@ -814,8 +814,7 @@ jQuery(function($) {
 							widget = getWidgetData($obj);
 
 						if ($('.dashbrd-grid-widget-container').dashboardGrid('widgetDataShare', widget,
-								'selected_mapid', data_to_share)
-						) {
+								'selected_mapid', data_to_share)) {
 							$('.selected', $obj).removeClass('selected');
 							while ($(step_in_path).length) {
 								$(step_in_path).addClass('selected');
@@ -1015,7 +1014,7 @@ jQuery(function($) {
 
 							branch.removeClass('opened').addClass('closed');
 						}
-						else {prefix
+						else {
 							$('span', button)
 								.addClass('arrow-down')
 								.removeClass('arrow-right');
@@ -1293,10 +1292,17 @@ jQuery(function($) {
 				dashboard_widget['fields'] = widget_fields;
 			};
 
-			var openBranch = function($obj, id) {
+			var openBranch = function($obj, id, widget_id) {
 				if (!$('.tree-item[data-id=' + id + ']').is(':visible')) {
 					var selector = '> .tree-row > .content > .arrow > .treeview > span',
 						branch_to_open = $('.tree-item[data-id=' + id + ']').closest('.tree-list').not('.root');
+
+					if (widget_id && branch_to_open.length) {
+						var parent = +branch_to_open.closest('.tree-item').attr('data-id');
+						if (parent) {
+							updateUserProfile('web.dashbrd.navtree-' + parent + '.toggle', '0', [widget_id]);
+						}
+					}
 
 					while (branch_to_open.length) {
 						branch_to_open.closest('.tree-item.is-parent')
@@ -1332,15 +1338,25 @@ jQuery(function($) {
 			var markTreeItemSelected = function($obj, item_id, send_data) {
 				var widget = getWidgetData($obj),
 					prefix = widget['uniqueid'] + '_',
+					initial_item_id = item_id,
 					selected_item,
 					step_in_path;
 
-				if (!item_id || !$('.tree-item[data-id=' + item_id + ']').not('.inaccessible').is(':visible')) {
+				while (item_id && !$('.tree-item[data-id=' + item_id + ']').not('.inaccessible').is(':visible')) {
+					item_id = $('.tree-item[data-id=' + item_id + ']').parent().closest('.tree-item')
+							.attr('data-id');
+				}
+
+				// If node selected is not found, selects the first visible node in the tree that is not a root.
+				if (!item_id) {
 					item_id = $('.tree-item:visible', $obj)
 						.not('[data-mapid="0"]')
 						.not('.inaccessible')
 						.first()
 						.data('id');
+				}
+				else {
+					item_id = initial_item_id;
 				}
 
 				if (item_id) {
@@ -1503,7 +1519,7 @@ jQuery(function($) {
 											step_in_path = $(step_in_path).parent().closest('.tree-item');
 										}
 
-										openBranch($this, $(item).data('id'));
+										openBranch($this, $(item).data('id'), widget['widgetid']);
 										updateUserProfile('web.dashbrd.navtree.item.selected', $(item).data('id'),
 											[widget['widgetid']]
 										);
