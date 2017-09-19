@@ -105,11 +105,10 @@ function SVGMap(options) {
 			type: 'g',
 			attributes: {
 				class: 'map-marks',
-				fill: 'rgba(150,150,150,0.75)',
+				fill: 'rgba(150, 150, 150, 0.75)',
 				'font-size': '8px',
 				'shape-rendering': 'crispEdges'
 			},
-
 			content: [
 				{
 					type: 'text',
