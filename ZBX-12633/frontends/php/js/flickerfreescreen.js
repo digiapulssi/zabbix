@@ -333,7 +333,7 @@
 					window.flickerfreeScreen.calculateReRefresh(id);
 				})
 				.done(function(data) {
-					data.showTimestamp = screen.data.options.showTimestamp;
+					data.show_timestamp = screen.data.options.show_timestamp;
 					screen.isRefreshing = false;
 					screen.data.update(data);
 					screen.timestamp = screen.timestampActual;

@@ -37,8 +37,8 @@ function SVGMap(options) {
 	this.imageUrl = 'imgstore.php?iconid=';
 	this.imageCache = new ImageCache();
 	this.canvas = new SVGCanvas(options.canvas, true);
-	if (typeof this.options.showTimestamp !== 'boolean') {
-		this.options.showTimestamp = true;
+	if (typeof this.options.show_timestamp !== 'boolean') {
+		this.options.show_timestamp = true;
 	}
 
 	// Extra group for font styles.
@@ -100,7 +100,7 @@ function SVGMap(options) {
 	];
 
 	// Marks (timestamp and homepage).
-	if (options.showTimestamp) {
+	if (options.show_timestamp) {
 		layers_to_add.push({
 			type: 'g',
 			attributes: {
@@ -141,13 +141,13 @@ function SVGMap(options) {
 		this.render(this.options.container);
 	}
 
-	if (options.showTimestamp) {
+	if (options.show_timestamp) {
 		var elements = this.canvas.getElementsByAttributes({class: 'map-timestamp'});
-		if (elements.length != 0) {
-			this['timestamp'] = elements[0];
+		if (elements.length == 0) {
+			throw 'timestamp element is missing';
 		}
 		else {
-			throw 'timestamp element is missing';
+			this['timestamp'] = elements[0];
 		}
 	}
 	this.update(this.options);
@@ -461,7 +461,7 @@ SVGMap.prototype.update = function (options, incremental) {
 			this.container.style.height = options.canvas.height + 'px';
 		}
 
-		if (options.showTimestamp) {
+		if (options.show_timestamp) {
 			this.timestamp.update({
 				x: options.canvas.width,
 				y: options.canvas.height - 6
@@ -481,7 +481,7 @@ SVGMap.prototype.update = function (options, incremental) {
 	}, this);
 
 	// Timestamp (date on map) is updated.
-	if (options.showTimestamp && typeof options.timestamp !== 'undefined') {
+	if (options.show_timestamp && typeof options.timestamp !== 'undefined') {
 		this.timestamp.element.textContent = options.timestamp;
 	}
 };

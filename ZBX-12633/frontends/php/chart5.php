@@ -201,8 +201,8 @@ imageText($im, 8, 0, $x + 14, $y + 10 + 15 * 2, $textcolor, _('PROBLEM').' (%)')
 if ($debug_mode) {
 	$str = sprintf('%0.2f', microtime(true) - $start_time);
 	$str = _s('Generated in %s sec', $str);
-	$strSize = imageTextSize(6, 0, $str);
-	imageText($im, 6, 0, imagesx($im) - $strSize['width'] - 5, imagesy($im) - 5, $grey, $str);
+	$str_size = imageTextSize(6, 0, $str);
+	imageText($im, 6, 0, imagesx($im) - $str_size['width'] - 5, imagesy($im) - 5, $grey, $str);
 }
 
 imageOut($im);
