@@ -292,16 +292,17 @@ class CHttpTestManager {
 		];
 
 		foreach ($httpTests as &$httpTest) {
-			foreach ($properties_to_compare as $prp) {
+			foreach ($properties_to_compare as $property) {
 				// Do not compare unexisting properties.
-				if (!array_key_exists($prp, $httpTest)) {
+				if (!array_key_exists($property, $httpTest)) {
 					continue;
 				}
 
 				// Unset unchanged properties.
-				if (($prp === 'applicationid' && !bccomp($httpTest[$prp], $dbHttpTest[$httpTest['httptestid']][$prp]))
-						|| $httpTest[$prp] === $dbHttpTest[$httpTest['httptestid']][$prp]) {
-					unset($httpTest[$prp]);
+				if (($property === 'applicationid'
+						&& bccomp($httpTest[$property], $dbHttpTest[$httpTest['httptestid']][$property]) == 0)
+						|| $httpTest[$property] === $dbHttpTest[$httpTest['httptestid']][$property]) {
+					unset($httpTest[$property]);
 				}
 			}
 		}
