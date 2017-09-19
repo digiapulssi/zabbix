@@ -1251,6 +1251,7 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
  *                                                                            *
  * Parameters: userid           - [IN] user who owns the information          *
  *             recipient_userid - [IN] user who will receive the information  *
+ *                                     can be NULL for remote command         *
  *                                                                            *
  * Return value: SUCCEED - if information receiving user has access rights    *
  *               FAIL    - otherwise                                          *
