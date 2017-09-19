@@ -133,7 +133,16 @@ sub children_running
 
 sub set_max_children
 {
-	$MAX_CHILDREN = shift;
+	my $value = shift;
+
+	if (!$value)
+	{
+		open(my $fh, '/proc/cpuinfo') or die("cannot open \"/proc/cpuinfo\": $!\n");
+		$value = scalar(map /^processor/, <$fh>);
+		close($fh);
+	}
+
+	$MAX_CHILDREN = $value;
 }
 
 1;

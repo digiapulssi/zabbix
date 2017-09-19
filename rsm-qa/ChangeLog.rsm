@@ -1,6 +1,10 @@
-Changes for rsm1.0.0rc27
+Changes for rsm1.0.0rc28
 
-New features:
+Bug fixes:
+....I..... [sub-283] fixed MySQL errors when using parallel processes by TLD (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.0rc27
 
 Bug fixes:
 ....I..... [sub-283] improved performance by parallelizing by TLD instead of Zabbix server (dimir)

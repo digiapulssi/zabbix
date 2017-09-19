@@ -47,7 +47,7 @@ sub fill_test_data_dns($$$);
 sub fill_test_data_rdds($$);
 sub match_clocks_with_results($$);
 
-parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n');
+parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'maxproc=n');
 
 # do not write any logs
 setopt('nolog');
@@ -303,7 +303,7 @@ if (!$from)
 	slv_exit(SUCCESS);
 }
 
-set_max_children(30);
+set_max_children(getopt('maxproc')) if (opt('maxproc'));
 
 my $dns_udp_rtt_high_history = get_history_by_itemid(CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
 
@@ -369,6 +369,8 @@ foreach (@server_keys)
 	{
 		$tlds_ref = get_tlds();
 	}
+
+	db_disconnect();
 
 	foreach (@$tlds_ref)
 	{
@@ -1100,9 +1102,10 @@ TRYFORK:
 			slv_exit(SUCCESS);
 		}
 
+		# parent process, fork() either successful or failed
 		handle_children();
 
-		goto TRYFORK unless ($fork_successful == 1);
+		goto TRYFORK if ($fork_successful == 0);
 
 		last if (opt('tld'));
 
@@ -1111,18 +1114,22 @@ TRYFORK:
 	# unset TLD (for the logs)
 	undef($tld);
 
+	# wait till children finish
+	while (children_running() > 0)
+	{
+		handle_children();
+	}
+
+	db_connect($server_key);
+
 	if (!opt('dry-run') && !opt('tld'))
 	{
 		__update_false_positives();
 	}
+
+	db_disconnect();
 } # foreach (@server_keys)
 undef($server_key);
-
-# wait till children finish
-while (children_running() > 0)
-{
-	handle_children();
-}
 
 if (defined($continue_file) and not opt('dry-run'))
 {
