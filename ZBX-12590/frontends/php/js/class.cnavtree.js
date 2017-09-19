@@ -1332,20 +1332,33 @@ jQuery(function($) {
 			var markTreeItemSelected = function($obj, item_id, send_data) {
 				var widget = getWidgetData($obj),
 					prefix = widget['uniqueid'] + '_',
-					selected_item = $('#' + prefix + 'tree-item-' + item_id).not('.inaccessible'),
+					selected_item,
+					step_in_path;
+
+				if (!item_id || !$('.tree-item[data-id=' + item_id + ']').not('.inaccessible').is(':visible')) {
+					item_id = $('.tree-item:visible', $obj)
+						.not('[data-mapid="0"]')
+						.not('.inaccessible')
+						.first()
+						.data('id');
+				}
+
+				if (item_id) {
+					selected_item = $('#' + prefix + 'tree-item-' + item_id);
 					step_in_path = selected_item;
 
-				/**
-				 * If 'send_data' is set to be 'false', use an unexisting 'data_name', just to check if widget has
-				 * linked widgets, but avoid real data sharing.
-				 */
-				if ($(step_in_path).length && $('.dashbrd-grid-widget-container').dashboardGrid('widgetDataShare',
-						widget, send_data ? 'selected_mapid' : '', {mapid: $(selected_item).data('mapid')})) {
-					$('.selected', $obj).removeClass('selected');
+					/**
+					 * If 'send_data' is set to be 'false', use an unexisting 'data_name', just to check if widget has
+					 * linked widgets, but avoid real data sharing.
+					 */
+					if ($(step_in_path).length && $('.dashbrd-grid-widget-container').dashboardGrid('widgetDataShare',
+							widget, send_data ? 'selected_mapid' : '', {mapid: $(selected_item).data('mapid')})) {
+						$('.selected', $obj).removeClass('selected');
 
-					while ($(step_in_path).length) {
-						$(step_in_path).addClass('selected');
-						step_in_path = $(step_in_path).parent().closest('.tree-item');
+						while ($(step_in_path).length) {
+							$(step_in_path).addClass('selected');
+							step_in_path = $(step_in_path).parent().closest('.tree-item');
+						}
 					}
 				}
 			};
@@ -1382,14 +1395,6 @@ jQuery(function($) {
 					return this.each(function() {
 						var widget = getWidgetData($this),
 							widget_data = $this.data('widgetData');
-
-						if (!widget_data.navtree_item_selected
-								|| !$('.tree-item[data-id=' + widget_data.navtree_item_selected + ']').is(':visible')) {
-							widget_data.navtree_item_selected = $('.tree-item:visible', $this)
-								.not('[data-mapid="0"]')
-								.first()
-								.data('id');
-						}
 
 						markTreeItemSelected($this, widget_data.navtree_item_selected, true);
 					});
