@@ -1332,16 +1332,15 @@ jQuery(function($) {
 			var markTreeItemSelected = function($obj, item_id, send_data) {
 				var widget = getWidgetData($obj),
 					prefix = widget['uniqueid'] + '_',
-					selected_item = $('#' + prefix + 'tree-item-' + item_id),
+					selected_item = $('#' + prefix + 'tree-item-' + item_id).not('.inaccessible'),
 					step_in_path = selected_item;
 
 				/**
 				 * If 'send_data' is set to be 'false', use an unexisting 'data_name', just to check if widget has
 				 * linked widgets, but avoid real data sharing.
 				 */
-				if (item_id && $('.dashbrd-grid-widget-container').dashboardGrid('widgetDataShare', widget,
-						send_data ? 'selected_mapid' : '', {mapid: $(selected_item).data('mapid')})
-				) {
+				if ($(step_in_path).length && $('.dashbrd-grid-widget-container').dashboardGrid('widgetDataShare',
+						widget, send_data ? 'selected_mapid' : '', {mapid: $(selected_item).data('mapid')})) {
 					$('.selected', $obj).removeClass('selected');
 
 					while ($(step_in_path).length) {
