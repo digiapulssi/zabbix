@@ -1271,13 +1271,7 @@ int	zbx_check_user_permissions(const zbx_uint64_t *userid, const zbx_uint64_t *r
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (NULL == recipient_userid)
-	{
-		ret = FAIL;
-		goto out;
-	}
-
-	if (*userid == *recipient_userid)
+	if (NULL == recipient_userid || *userid == *recipient_userid)
 		goto out;
 
 	result = DBselect("select type from users where userid=" ZBX_FS_UI64, *recipient_userid);
