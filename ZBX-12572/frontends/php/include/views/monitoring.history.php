@@ -173,8 +173,8 @@ if ($this->data['action'] == HISTORY_VALUES || $this->data['action'] == HISTORY_
 
 // for batch graphs don't remember the time selection in the profiles
 if ($this->data['action'] == HISTORY_BATCH_GRAPH) {
-	$profileIdx = false;
-	$profileIdx2 = false;
+	$profileIdx = null;
+	$profileIdx2 = null;
 	$updateProfile = false;
 }
 else {
