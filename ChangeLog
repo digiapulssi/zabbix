@@ -1,6 +1,7 @@
 Changes for 3.4.2rc2
 
 Bug fixes:
+..F....... [ZBX-12572] fixed loosing "now" on timeline (vmurzins)
 .......PS. [ZBX-12739] fixed data conversion for ssh checks of numeric value type (wiper)
 
 --------------------------------------------------------------------------------
