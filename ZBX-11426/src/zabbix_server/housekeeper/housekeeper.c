@@ -607,8 +607,8 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 	{
 		rule->min_clock = MIN(keep_from, rule->min_clock + HK_MAX_DELETE_PERIODS * hk_period);
 
-		rc = DBexecute("delete from %s where clock<%d %s %s", rule->table, rule->min_clock,
-				('\0' != *rule->filter ? "and" : ""), rule->filter);
+		rc = DBexecute("delete from %s where clock<%d%s%s", rule->table, rule->min_clock,
+				('\0' != *rule->filter ? " and " : ""), rule->filter);
 
 		if (ZBX_DB_OK <= rc)
 			deleted = rc;
