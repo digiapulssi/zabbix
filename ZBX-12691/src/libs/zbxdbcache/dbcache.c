@@ -1376,7 +1376,6 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	DC_ITEM			*items = NULL;
 	int			i, *errcodes = NULL, update_items_db = 0;
 	zbx_vector_ptr_t	inventory_values, item_diff;
-	zbx_item_diff_t		*diff;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1401,6 +1400,7 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 	for (i = 0; i < history_num; i++)
 	{
 		ZBX_DC_HISTORY	*h;
+		zbx_item_diff_t	*diff;
 		int		j;
 
 		if (SUCCEED != errcodes[i])
@@ -1436,11 +1436,9 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 		}
 
 		normalize_item_value(&items[i], h);
-		if (NULL != (diff = calculate_item_update(&items[i], h)))
-		{
-			zbx_vector_ptr_append(&item_diff, diff);
-			update_items_db |= (ZBX_FLAGS_ITEM_DIFF_UPDATE_DB & diff->flags);
-		}
+		diff = calculate_item_update(&items[i], h);
+		zbx_vector_ptr_append(&item_diff, diff);
+		update_items_db |= (ZBX_FLAGS_ITEM_DIFF_UPDATE_DB & diff->flags);
 		DCinventory_value_add(&inventory_values, &items[i], h);
 
 		zbx_vector_uint64_append(&itemids, items[i].itemid);
