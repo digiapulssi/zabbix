@@ -605,7 +605,9 @@
 		end: function(id) {
 			var screen = window.flickerfreeScreen.screens[id];
 
-			if (!empty(screen) && (screen.timestamp + this.timeout) >= screen.timestampActual) {
+			if (typeof this.timers[id] !== 'undefined' && !empty(screen)
+					&& (screen.timestamp + this.timeout) >= screen.timestampActual
+			) {
 				var timer = this.timers[id];
 				timer.inUpdate = false;
 
