@@ -1446,14 +1446,14 @@ static void	DCmass_update_items(ZBX_DC_HISTORY *history, int history_num)
 		zbx_vector_uint64_append(&itemids, items[i].itemid);
 	}
 
-	if (0 != update_items_db || 0 !=  inventory_values.values_num)
+	if (0 != update_items_db || 0 != inventory_values.values_num)
 	{
 		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
 		if (0 != update_items_db)
 			db_save_item_changes(&sql_offset, &item_diff);
 
-		if (0 == inventory_values.values_num)
+		if (0 != inventory_values.values_num)
 		{
 			zbx_vector_ptr_sort(&inventory_values, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 			DCadd_update_inventory_sql(&sql_offset, &inventory_values);
