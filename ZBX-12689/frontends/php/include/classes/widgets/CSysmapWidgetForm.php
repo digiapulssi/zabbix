@@ -71,4 +71,24 @@ class CSysmapWidgetForm extends CWidgetForm {
 			$this->fields[] = $field_map;
 		}
 	}
+
+	/**
+	 * Validate form fields.
+	 *
+	 * @param bool $strict  Enables more strict validation of the form fields.
+	 *                      Must be enabled for validation of input parameters in the widget configuration form.
+	 *
+	 * @return array
+	 */
+	public function validate($strict = false) {
+		$errors = parent::validate($strict);
+
+		if (!$errors && intval($this->data['source_type']) === WIDGET_SYSMAP_SOURCETYPE_FILTER
+				&& (!array_key_exists('filter_widget_reference', $this->data)
+				|| $this->data['filter_widget_reference'] === '')) {
+			$errors[] = _s('Invalid parameter "%1$s": %2$s.', _('Filter'), _('cannot be empty'));
+		}
+
+		return $errors;
+	}
 }
