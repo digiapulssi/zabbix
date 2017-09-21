@@ -1210,7 +1210,7 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: calculate_item_update_diff                                       *
+ * Function: calculate_item_update                                            *
  *                                                                            *
  * Purpose: calculates what item fields must be updated                       *
  *                                                                            *
@@ -1220,7 +1220,7 @@ out:
  * Return value: The update data.                                             *
  *                                                                            *
  ******************************************************************************/
-static zbx_item_diff_t *calculate_item_update(const DC_ITEM *item, ZBX_DC_HISTORY *h)
+static zbx_item_diff_t	*calculate_item_update(const DC_ITEM *item, const ZBX_DC_HISTORY *h)
 {
 	zbx_uint64_t	flags = ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTCLOCK;
 	const char	*item_error = NULL;
@@ -1252,7 +1252,7 @@ static zbx_item_diff_t *calculate_item_update(const DC_ITEM *item, ZBX_DC_HISTOR
 
 
 			if (0 != strcmp(item->error, h->value.err))
-				item_error =  h->value.err;
+				item_error = h->value.err;
 		}
 		else
 		{
@@ -1272,7 +1272,7 @@ static zbx_item_diff_t *calculate_item_update(const DC_ITEM *item, ZBX_DC_HISTOR
 		zabbix_log(LOG_LEVEL_WARNING, "error reason for \"%s:%s\" changed: %s", item->host.host,
 				item->key_orig, h->value.err);
 
-		item_error =  h->value.err;
+		item_error = h->value.err;
 	}
 
 	if (NULL != item_error)
