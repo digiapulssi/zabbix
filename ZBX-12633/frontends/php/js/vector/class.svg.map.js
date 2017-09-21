@@ -37,7 +37,7 @@ function SVGMap(options) {
 	this.imageUrl = 'imgstore.php?iconid=';
 	this.imageCache = new ImageCache();
 	this.canvas = new SVGCanvas(options.canvas, true);
-	if (typeof this.options.show_timestamp !== 'boolean') {
+	if (typeof this.options.show_timestamp === 'undefined') {
 		this.options.show_timestamp = true;
 	}
 
