@@ -324,7 +324,7 @@ function add_elementNames(&$selements) {
 
 	if ($sysmapids) {
 		$maps = API::Map()->get([
-			'mapids' => $sysmapids,
+			'sysmapids' => $sysmapids,
 			'output' => ['name'],
 			'preservekeys' => true
 		]);
