@@ -1518,7 +1518,8 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 	DC_ITEM			*items = NULL;
 	int			i, *errcodes = NULL, update_items_db = 0;
 	zbx_vector_ptr_t	item_diff;
-	zbx_item_diff_t		*diff;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
 	errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
@@ -1540,17 +1541,16 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 		ZBX_DC_HISTORY	*h = &history[i];
 		const DC_ITEM	*item;
 		DC_ITEM		item_local;
+		zbx_item_diff_t	*diff;
 
 		item_local.itemid = h->itemid;
 
 		if (NULL == (item = bsearch(&item_local, items, history_num, sizeof(DC_ITEM), dc_item_compare)))
 			continue;
 
-		if (NULL != (diff = calculate_item_update(&items[i], h)))
-		{
-			zbx_vector_ptr_append(&item_diff, diff);
-			update_items_db |= (ZBX_FLAGS_ITEM_DIFF_UPDATE_DB & diff->flags);
-		}
+		diff = calculate_item_update(item, h);
+		zbx_vector_ptr_append(&item_diff, diff);
+		update_items_db |= (ZBX_FLAGS_ITEM_DIFF_UPDATE_DB & diff->flags);
 	}
 
 	if (0 != item_diff.values_num)
