@@ -1,12 +1,34 @@
+Changes for 3.4.2rc2
+
+Bug fixes:
+..F....... [ZBX-12572] fixed loosing "now" on timeline (vmurzins)
+.......PS. [ZBX-12739] fixed data conversion for ssh checks of numeric value type (wiper)
+
+--------------------------------------------------------------------------------
 Changes for 3.4.2rc1
 
 New features:
+A.F....... [ZBXNEXT-4091] improved permission schema of the dashboards for normal administrators (Sasha)
+.........T [ZBXNEXT-4099] removed starting point from all OIDs; shortened old IOS Cisco templates names (vso, vzhuravlev)
+.........T [ZBXNEXT-4067] added preprocessing_queue item/graph/screen widget in Template App Zabbix Server (vso, vzhuravlev)
+A.F....... [ZBXNEXT-4084] renamed action acknowledgment operation 'Notify all who left acknowledgement and comments' to 'Notify all involved' (gcalenko)
+........S. [ZBXNEXT-4084] added users who received notifications regarding the problem to 'Notify all involved' acknowledgment operation recipient list (wiper)
 A.F....... [ZBX-1357] enabled Turkish translation to be displayed by default (zalex_ua)
 A.F....... [ZBX-1357] updated Chinese (China), English (United States), Japanese, Korean, Turkish translations; thanks to Zabbix translators (zalex_ua)
 ..F....... [ZBXNEXT-4054] implemented feature to open first available dashboard from the list (Ivo)
 ..F....... [ZBXNEXT-4046] implemented dashboard widget minimum height limit (gcalenko)
 
 Bug fixes:
+.......PS. [ZBX-12708] fixed service port validation if auto-discovery is performed by the zabbix proxy (abs, vso)
+...G...PS. [ZBX-12718] fixed crash when using item of log value type as master item for dependent items (wiper)
+.......P.. [ZBX-12720] fixed processing of log keys with non log value types for items monitored by proxies (wiper)
+..F....... [ZBX-12530] fixed non well formed numeric value encaunteration in slideshow; implemented getBBox workaround for Firefox (miks)
+.........T [ZBX-12688] fixed false positives on 'High bandwidth usage' trigger in Template_Module_Interfaces_* templates (vso, vzhuravlev)
+.......PS. [ZBX-11675] fixed crash that could occur during connection failures to MySQL (Sergejs, vso)
+..F....... [ZBX-12617] fixed sorting by host name for items on availability report page (gcalenko)
+A......... [ZBX-12699] added support of strings in "sortfield" and "sortorder" parameters, and added sorting by "name" for dashboard.get() (Sasha)
+..F....... [ZBX-12577] added item select filter for simple graph to allow select only supported item (gcalenko)
+..F....... [ZBX-12647] fixed map minimum severity option in screens (miks)
 ........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
 ..F....... [ZBX-12548] fixed notification sound not being played for message with timeout set to greater than minute (gcalenko)
 ...G...... [ZBX-12653] fixed heap corruption in Windows agent; thanks to Ronnie Kaech for the patch (abs)
@@ -266,6 +288,8 @@ A.F....... [ZBX-1357] updated Czech, English (United States), French, Italian, J
 ........S. [ZBX-12258] added bulk selections to improve performance in processing of escalations (Sergejs)
 
 Bug fixes:
+.......PS. [ZBX-11675] fixed crash that could occur during connection failures to MySQL (Sergejs, vso)
+..F....... [ZBX-12617] fixed sorting by host name for items on availability report page (gcalenko)
 ........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
 ..F....... [ZBX-12548] fixed notification sound not being played for message with timeout set to greater than minute (gcalenko)
 ...G...... [ZBX-12653] fixed heap corruption in Windows agent; thanks to Ronnie Kaech for the patch (abs)
@@ -750,6 +774,8 @@ A.F....... [ZBX-1357] enabled Turkish translation to be displayed by default (za
 A.F....... [ZBX-1357] updated Czech, English (United States), French, Italian, Japanese, Korean, Russian, Turkish translations; thanks to Zabbix translators (zalex_ua)
 
 Bug fixes:
+.......PS. [ZBX-11675] fixed crash that could occur during connection failures to MySQL (Sergejs, vso)
+..F....... [ZBX-12617] fixed sorting by host name for items on availability report page (gcalenko)
 ........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
 ..F....... [ZBX-12548] fixed notification sound not being played for message with timeout set to greater than minute (gcalenko)
 ...G...... [ZBX-12653] fixed heap corruption in Windows agent; thanks to Ronnie Kaech for the patch (abs)
@@ -2482,8 +2508,6 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 
 --------------------------------------------------------------------------------
 Changes for 2.2.20rc1
-
-New features:
 
 Bug fixes:
 ........S. [ZBX-12696] fixed trigger not being calculated for newly received item values if last one of those is unsupported value (vso)
