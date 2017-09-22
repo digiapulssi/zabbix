@@ -1,6 +1,6 @@
 <?php
 // Zabbix GUI configuration file.
-global $DB;
+global $DB, $HISTORY;
 
 $DB['TYPE']				= 'MYSQL';
 $DB['SERVER']			= 'localhost';
