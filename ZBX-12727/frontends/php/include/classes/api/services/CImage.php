@@ -83,7 +83,7 @@ class CImage extends CApiService {
 
 		// editable + PERMISSION CHECK
 		if ($options['editable'] && self::$userData['type'] < USER_TYPE_ZABBIX_ADMIN) {
-			return $result;
+			return [];
 		}
 
 		// imageids
