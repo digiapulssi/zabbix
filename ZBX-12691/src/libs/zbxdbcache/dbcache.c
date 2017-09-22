@@ -1557,6 +1557,7 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 	if (0 != item_diff.values_num)
 		DCconfig_items_apply_changes(&item_diff);
 
+	zbx_vector_ptr_clear_ext(&item_diff, (zbx_clean_func_t)zbx_ptr_free);
 	zbx_vector_ptr_destroy(&item_diff);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
