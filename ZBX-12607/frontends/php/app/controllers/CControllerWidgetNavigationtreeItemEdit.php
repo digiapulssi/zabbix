@@ -69,7 +69,7 @@ class CControllerWidgetNavigationtreeItemEdit extends CController {
 		if ($map_mapid) {
 			$maps = API::Map()->get([
 				'sysmapids' => [$map_mapid],
-				'output' => API_OUTPUT_EXTEND
+				'output' => []
 			]);
 
 			if (($map = reset($maps)) === false) {
