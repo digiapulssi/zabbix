@@ -271,8 +271,7 @@ foreach ($files as $file) {
 	}
 }
 
-$jsLength = strlen($js);
-$etag = md5($jsLength);
+$etag = md5($js);
 /**
  * strpos function allow to check ETag value to fix cases when web server compression is used:
  * - For case when apache server appends "-gzip" suffix to ETag.
@@ -281,7 +280,7 @@ $etag = md5($jsLength);
  * - For case when nginx v1.7.3+ server mark ETag as weak adding "W/" prefix
  *   http://nginx.org/en/CHANGES
  */
-if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && strpos($_SERVER['HTTP_IF_NONE_MATCH'], $etag) !== false) {
+if (array_key_exists('HTTP_IF_NONE_MATCH', $_SERVER) && strpos($_SERVER['HTTP_IF_NONE_MATCH'], $etag) !== false) {
 	header('HTTP/1.1 304 Not Modified');
 	header('ETag: "'.$etag.'"');
 	exit;
