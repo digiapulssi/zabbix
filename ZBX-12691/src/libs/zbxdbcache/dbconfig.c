@@ -298,7 +298,7 @@ static int	DCget_disable_until(const ZBX_DC_ITEM *item, const ZBX_DC_HOST *host)
 #define ZBX_ITEM_DELAY_CHANGED		0x10
 #define ZBX_REFRESH_UNSUPPORTED_CHANGED	0x20
 
-static void	 DCitem_nextcheck_update(ZBX_DC_ITEM *item, const ZBX_DC_HOST *host, unsigned char new_state,
+static void	DCitem_nextcheck_update(ZBX_DC_ITEM *item, const ZBX_DC_HOST *host, unsigned char new_state,
 		int flags, int now)
 {
 	ZBX_DC_PROXY	*proxy = NULL;

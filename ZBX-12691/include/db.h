@@ -683,7 +683,6 @@ int	zbx_sql_add_host_availability(char **sql, size_t *sql_alloc, size_t *sql_off
 		const zbx_host_availability_t *ha);
 int	DBget_user_by_active_session(const char *sessionid, zbx_user_t *user);
 
-
 typedef struct
 {
 	zbx_uint64_t	itemid;
@@ -706,6 +705,5 @@ typedef struct
 #define ZBX_FLAGS_ITEM_DIFF_UPDATE	(ZBX_FLAGS_ITEM_DIFF_UPDATE_DB | ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTCLOCK)
 }
 zbx_item_diff_t;
-
 
 #endif
