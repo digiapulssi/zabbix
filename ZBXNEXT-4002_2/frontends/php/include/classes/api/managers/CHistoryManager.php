@@ -105,6 +105,12 @@ class CHistoryManager {
 			$query['aggs']['group_by_itemid']['terms']['size'] = count($terms[$type]);
 			$data = CElasticSearchHelper::query('POST', $endpoint, $query);
 
+			if (!is_array($data) || !array_key_exists('group_by_itemid', $data)
+					|| !array_key_exists('buckets', $data['group_by_itemid'])
+					|| !is_array($data['group_by_itemid']['buckets'])) {
+				continue;
+			}
+
 			foreach ($data['group_by_itemid']['buckets'] as $item) {
 				if (!is_array($item['group_by_docs']) || !array_key_exists('hits', $item['group_by_docs'])
 						|| !is_array($item['group_by_docs']['hits'])
