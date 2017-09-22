@@ -1511,6 +1511,7 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	zbx_vector_ptr_create(&item_diff);
+	zbx_vector_ptr_reserve(&item_diff, history_num);
 
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
