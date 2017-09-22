@@ -79,8 +79,11 @@ class CConfigFile {
 
 		if (!array_key_exists($DB['TYPE'], CFrontendSetup::getSupportedDatabases())) {
 			self::exception(
-				'DB type "'.$DB['TYPE'].'" is not supported by current setup. Possible values '.
-				implode(', ', array_keys(CFrontendSetup::getSupportedDatabases())).'.'
+				'DB type "'.$DB['TYPE'].'" is not supported by current setup. '.
+				(CFrontendSetup::getSupportedDatabases()
+					? 'Possible values '.implode(', ', array_keys(CFrontendSetup::getSupportedDatabases())).'.'
+					: ''
+				)
 			);
 		}
 
