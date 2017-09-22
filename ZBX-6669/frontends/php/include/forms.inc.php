@@ -1437,8 +1437,28 @@ function getTriggerFormData($exprAction) {
 		'input_method' => getRequest('input_method', IM_ESTABLISHED),
 		'limited' => false,
 		'templates' => [],
-		'hostid' => getRequest('hostid', 0)
+		'hostid' => getRequest('hostid', 0),
+		'groupid' => getRequest('groupid', 0)
 	];
+
+	// Read groupid for selected host or template if groupid filter is set to 'All' (is equal 0).
+	if ($data['hostid'] && !$data['groupid']) {
+		$db_host = API::Host()->get([
+			'selectGroups' => ['groupid'],
+			'hostids' => $data['hostid']
+		]);
+
+		if (!$db_host) {
+			$db_host = API::Template()->get([
+				'selectGroups' => ['groupid'],
+				'templateids' => $data['hostid']
+			]);
+		}
+
+		if ($db_host) {
+			$data['groupid'] = $db_host[0]['groups'][0]['groupid'];
+		}
+	}
 
 	if (!empty($data['triggerid'])) {
 		// get trigger
