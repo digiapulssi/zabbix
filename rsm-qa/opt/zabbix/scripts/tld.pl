@@ -1389,8 +1389,7 @@ sub manage_tld_objects($$$$$$) {
 	print "$main_hostid\n";
     }
     else {
-        print "Could not find '$tld' host\n";
-        exit;
+        pfail("cannot find host \"$tld\"");
     }
 
     print "Getting main template of the TLD: ";
@@ -1401,8 +1400,7 @@ sub manage_tld_objects($$$$$$) {
 	print "$main_templateid\n";
     }
     else {
-        print "Could not find 'Template .$tld' template\n";
-        exit;
+        pfail("cannot find template \"Template .$tld\"");
     }
 
     my @tld_hostids;
@@ -1451,7 +1449,7 @@ sub manage_tld_objects($$$$$$) {
 		compare_arrays(\@hostids_arr, \@{$result->{'hostids'}});
 	    }
 	    else {
-		print "An error happened while disabling hosts!\n";
+		pfail("en error occurred while disabling hosts!");
 	    }
 
 	    exit;

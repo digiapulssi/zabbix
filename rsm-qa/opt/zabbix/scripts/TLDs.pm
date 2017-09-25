@@ -912,7 +912,7 @@ sub create_probe_health_tmpl()
 
 sub pfail {
     print("Error: ", @_, "\n");
-    exit -1;
+    exit(-1);
 }
 
 1;
