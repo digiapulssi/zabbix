@@ -61,7 +61,7 @@ class CEvent extends CApiService {
 	 * @param array $options['eventids']
 	 * @param array $options['applicationids']
 	 * @param array $options['status']
-	 * @param array $options['editable']
+	 * @param bool  $options['editable']
 	 * @param array $options['count']
 	 * @param array $options['pattern']
 	 * @param array $options['limit']
@@ -71,8 +71,6 @@ class CEvent extends CApiService {
 	 */
 	public function get($options = []) {
 		$result = [];
-		$userType = self::$userData['type'];
-		$userid = self::$userData['userid'];
 
 		$sqlParts = [
 			'select'	=> [$this->fieldId('eventid')],
@@ -88,7 +86,7 @@ class CEvent extends CApiService {
 			'hostids'					=> null,
 			'objectids'					=> null,
 			'eventids'					=> null,
-			'editable'					=> null,
+			'editable'					=> false,
 			'object'					=> EVENT_OBJECT_TRIGGER,
 			'source'					=> EVENT_SOURCE_TRIGGERS,
 			'acknowledged'				=> null,
@@ -124,7 +122,7 @@ class CEvent extends CApiService {
 		$this->validateGet($options);
 
 		// editable + PERMISSION CHECK
-		if ($userType != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
 			// triggers
 			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
 				// specific triggers
@@ -139,12 +137,14 @@ class CEvent extends CApiService {
 				// all triggers
 				else {
 					$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
+					$userGroups = getUserGroupsByUserId(self::$userData['userid']);
+
 					$sqlParts['where'][] = 'NOT EXISTS ('.
 							'SELECT NULL'.
 							' FROM functions f,items i,hosts_groups hgg'.
 								' LEFT JOIN rights r'.
 									' ON r.id=hgg.groupid'.
-										' AND '.dbConditionInt('r.groupid', getUserGroupsByUserId($userid)).
+										' AND '.dbConditionInt('r.groupid', $userGroups).
 							' WHERE e.objectid=f.triggerid'.
 								' AND f.itemid=i.itemid'.
 								' AND i.hostid=hgg.hostid'.
@@ -179,12 +179,14 @@ class CEvent extends CApiService {
 				// all items and LLD rules
 				else {
 					$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
+					$userGroups = getUserGroupsByUserId(self::$userData['userid']);
+
 					$sqlParts['where'][] = 'EXISTS ('.
 							'SELECT NULL'.
 							' FROM items i,hosts_groups hgg'.
 								' JOIN rights r'.
 									' ON r.id=hgg.groupid'.
-										' AND '.dbConditionInt('r.groupid', getUserGroupsByUserId($userid)).
+										' AND '.dbConditionInt('r.groupid', $userGroups).
 							' WHERE e.objectid=i.itemid'.
 								' AND i.hostid=hgg.hostid'.
 							' GROUP BY hgg.hostid'.
