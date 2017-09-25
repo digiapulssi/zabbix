@@ -753,7 +753,7 @@ static void	execute_commands(const DB_EVENT *event, const DB_EVENT *r_event, con
 	const char		*__function_name = "execute_commands";
 	DB_RESULT		result;
 	DB_ROW			row;
-	zbx_db_insert_t         db_insert;
+	zbx_db_insert_t		db_insert;
 	int			alerts_num = 0;
 	char			*buffer = NULL;
 	size_t			buffer_alloc = 2 * ZBX_KIBIBYTE, buffer_offset = 0;
