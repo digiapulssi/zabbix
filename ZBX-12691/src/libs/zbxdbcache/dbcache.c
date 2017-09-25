@@ -1217,7 +1217,7 @@ out:
  * Parameters: item      - [IN] the item                                      *
  *             h         - [IN] the historical data to process                *
  *                                                                            *
- * Return value: The update data.                                             *
+ * Return value: The update data. This data must be freed by the caller.      *
  *                                                                            *
  ******************************************************************************/
 static zbx_item_diff_t	*calculate_item_update(const DC_ITEM *item, const ZBX_DC_HISTORY *h)
@@ -1507,19 +1507,22 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 	size_t			sql_offset = 0;
 	int			i;
 	zbx_vector_ptr_t	item_diff;
+	zbx_item_diff_t		*diffs;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	zbx_vector_ptr_create(&item_diff);
 	zbx_vector_ptr_reserve(&item_diff, history_num);
 
+	/* preallocate zbx_item_diff_t structures for item_diff vector */
+	diffs = (zbx_item_diff_t *)zbx_malloc(NULL, sizeof(zbx_item_diff_t) * history_num);
+
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
 	for (i = 0; i < history_num; i++)
 	{
-		zbx_item_diff_t	*diff;
+		zbx_item_diff_t	*diff = &diffs[i];
 
-		diff = (zbx_item_diff_t *)zbx_malloc(NULL, sizeof(zbx_item_diff_t));
 		diff->itemid = history[i].itemid;
 		diff->state = history[i].state;
 		diff->lastclock = history[i].ts.sec;
@@ -1558,8 +1561,8 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
 	if (0 != item_diff.values_num)
 		DCconfig_items_apply_changes(&item_diff);
 
-	zbx_vector_ptr_clear_ext(&item_diff, (zbx_clean_func_t)zbx_ptr_free);
 	zbx_vector_ptr_destroy(&item_diff);
+	zbx_free(diffs);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
