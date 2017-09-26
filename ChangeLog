@@ -1,6 +1,7 @@
 Changes for 3.4.3rc1
 
 New features:
+........S. [DEV-658] reduced memory used by pre-processor manager item cache (wiper)
 
 Bug fixes:
 ..F....... [ZBX-12619] fixed error displaying of zabbix server status widget (gcalenko)
