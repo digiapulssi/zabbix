@@ -39,8 +39,6 @@ class CHostGroup extends CApiService {
 	 */
 	public function get($params) {
 		$result = [];
-		$userType = self::$userData['type'];
-		$userid = self::$userData['userid'];
 
 		$sqlParts = [
 			'select'	=> ['groups' => 'g.groupid'],
@@ -70,7 +68,7 @@ class CHostGroup extends CApiService {
 			'with_monitored_httptests'	=> null,
 			'with_graphs'				=> null,
 			'with_applications'			=> null,
-			'editable'					=> null,
+			'editable'					=> false,
 			'nopermissions'				=> null,
 			// filter
 			'filter'					=> null,
@@ -96,10 +94,9 @@ class CHostGroup extends CApiService {
 		$options = zbx_array_merge($defOptions, $params);
 
 		// editable + PERMISSION CHECK
-		if ($userType != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
 			$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
-
-			$userGroups = getUserGroupsByUserId($userid);
+			$userGroups = getUserGroupsByUserId(self::$userData['userid']);
 
 			$sqlParts['where'][] = 'EXISTS ('.
 				'SELECT NULL'.
