@@ -75,8 +75,8 @@ if (!$this->data['is_profile']) {
 			'objectName' => 'usersGroups',
 			'data' => $user_groups,
 			'popup' => [
-				'parameters' => 'srctbl=usrgrp&dstfrm='.$userForm->getName().'&dstfld1=user_groups_'.
-					'&srcfld1=usrgrpid&multiselect=1'
+				'parameters' => 'srctbl=usrgrp&dstfrm='.$userForm->getName().'&dstfld1=user_groups_&srcfld1=usrgrpid'.
+					'&multiselect=1'
 			]
 		]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 	);

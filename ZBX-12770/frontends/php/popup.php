@@ -585,7 +585,7 @@ if ($srctbl == 'usrgrp') {
 	$parentid = $dstfld1 ? zbx_jsvalue($dstfld1) : 'null';
 	$data = [];
 
-	foreach ($userGroups as $userGroup) {
+	foreach ($userGroups as &$userGroup) {
 		$name = (new CLink($userGroup['name'], 'javascript:void(0);'))
 			->setId('spanid'.$userGroup['usrgrpid']);
 
@@ -608,11 +608,9 @@ if ($srctbl == 'usrgrp') {
 			$name,
 		]);
 
-		$data[$userGroup['usrgrpid']] = [
-			'id' => $userGroup['usrgrpid'],
-			'name' => $userGroup['name']
-		];
+		$userGroup['id'] = $userGroup['usrgrpid'];
 	}
+	unset($userGroup);
 
 	if ($multiselect) {
 		$table->setFooter(
@@ -622,7 +620,7 @@ if ($srctbl == 'usrgrp') {
 			)
 		);
 
-		insert_js('var popupReference = '.zbx_jsvalue($data, true).';');
+		insert_js('var popupReference = '.zbx_jsvalue($userGroups, true).';');
 	}
 
 	$form->addItem($table);
