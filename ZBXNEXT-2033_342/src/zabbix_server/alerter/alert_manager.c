@@ -100,6 +100,8 @@ typedef struct
 	char		*message;
 	int		status;
 	int		retries;
+	zbx_uint64_t	eventid;
+	zbx_uint64_t	userid;
 }
 zbx_am_alert_t;
 
@@ -634,7 +636,7 @@ static int	am_release_alertpool(zbx_am_t *manager, zbx_am_alertpool_t *alertpool
  ******************************************************************************/
 static zbx_am_alert_t	*am_create_alert(zbx_uint64_t alertid, zbx_uint64_t mediatypeid, int source, int object,
 		zbx_uint64_t objectid, const char *sendto, const char *subject, const char *message, int status,
-		int retries, int nextsend)
+		int retries, zbx_uint64_t eventid, zbx_uint64_t userid, int nextsend)
 {
 	zbx_am_alert_t	*alert;
 
@@ -649,6 +651,8 @@ static zbx_am_alert_t	*am_create_alert(zbx_uint64_t alertid, zbx_uint64_t mediat
 	alert->status = status;
 	alert->retries = retries;
 	alert->nextsend = nextsend;
+	alert->eventid = eventid;
+	alert->userid = userid;
 
 	return alert;
 }
@@ -928,7 +932,7 @@ static void	am_queue_watchdog_alerts(zbx_am_t *manager)
 			continue;
 
 		mediatype->refcount++;
-		alert = am_create_alert(0, media->mediatypeid, 0, 0, 0, media->sendto, message, message, 0, 0, 0);
+		alert = am_create_alert(0, media->mediatypeid, 0, 0, 0, media->sendto, message, message, 0, 0, 0, 0, 0);
 
 		alertpool = am_get_alertpool(manager, alert->mediatypeid, alert->alertpoolid);
 		alertpool->refcount++;
@@ -1046,7 +1050,7 @@ static int	am_db_get_alerts(zbx_vector_ptr_t *alerts, int now)
 	DB_ROW			row;
 	char			*sql = NULL;
 	size_t			sql_alloc = 0, sql_offset = 0;
-	zbx_uint64_t		alertid, mediatypeid, objectid;
+	zbx_uint64_t		alertid, mediatypeid, objectid, eventid, userid;
 	int			status, attempts, source, object, ret = SUCCEED;
 	zbx_am_alert_t		*alert;
 	zbx_vector_uint64_t	alertids;
@@ -1057,7 +1061,7 @@ static int	am_db_get_alerts(zbx_vector_ptr_t *alerts, int now)
 
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 			"select a.alertid,a.mediatypeid,a.sendto,a.subject,a.message,a.status,a.retries,"
-				"e.source,e.object,e.objectid"
+				"e.source,e.object,e.objectid,a.eventid,a.userid"
 			" from alerts a"
 			" left join events e"
 				" on a.eventid=e.eventid"
@@ -1085,9 +1089,11 @@ static int	am_db_get_alerts(zbx_vector_ptr_t *alerts, int now)
 		source = atoi(row[7]);
 		object = atoi(row[8]);
 		ZBX_STR2UINT64(objectid, row[9]);
+		ZBX_STR2UINT64(eventid, row[10]);
+		ZBX_STR2UINT64(userid, row[11]);
 
 		alert = am_create_alert(alertid, mediatypeid, source, object, objectid, row[2], row[3], row[4],
-				status, attempts, now);
+				status, attempts, eventid, userid, now);
 
 		zbx_vector_ptr_append(alerts, alert);
 
@@ -1705,6 +1711,13 @@ static int	am_process_alert(zbx_am_t *manager, zbx_am_alerter_t *alerter, zbx_am
 			}
 			data_len = zbx_alerter_serialize_exec(&data, alert->alertid, cmd);
 			zbx_free(cmd);
+			break;
+		case MEDIA_TYPE_REMEDY:
+			command = ZBX_IPC_ALERTER_REMEDY;
+			data_len = zbx_alerter_serialize_remedy(&data, alert->eventid, alert->userid, alert->sendto,
+					alert->subject, alert->message, mediatype->smtp_server, mediatype->smtp_helo,
+					mediatype->smtp_email, mediatype->username, mediatype->passwd,
+					mediatype->exec_path);
 			break;
 		default:
 			am_db_update_alert(manager, alert->alertid, ALERT_STATUS_FAILED, 0, "unsupported media type");

@@ -1583,6 +1583,17 @@ INDEX		|4		|value_itemid
 INDEX		|5		|value_graphid
 INDEX		|6		|value_sysmapid
 
+TABLE|ticket|ticketid|0
+FIELD		|ticketid	|t_id		|	|NOT NULL	|0
+FIELD		|externalid	|t_varchar(255)	|	|NOT NULL	|0
+FIELD		|eventid	|t_id		|	|NOT NULL	|0
+FIELD		|triggerid	|t_id		|	|NOT NULL	|0
+FIELD		|clock		|t_time		|	|NOT NULL	|0
+FIELD		|new		|t_integer	|	|NOT NULL	|0
+INDEX		|1		|eventid,clock
+INDEX		|2		|triggerid,clock
+INDEX		|3		|externalid,new
+
 TABLE|dbversion||
 FIELD		|mandatory	|t_integer	|'0'	|NOT NULL	|
 FIELD		|optional	|t_integer	|'0'	|NOT NULL	|

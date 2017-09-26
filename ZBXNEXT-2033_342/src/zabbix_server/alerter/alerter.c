@@ -264,6 +264,50 @@ static void	alerter_process_exec(zbx_ipc_socket_t *socket, zbx_ipc_message_t *ip
 	zbx_free(command);
 }
 
+
+/******************************************************************************
+ *                                                                            *
+ * Function: alerter_process_remedy                                           *
+ *                                                                            *
+ * Purpose: processes remedy alert                                            *
+ *                                                                            *
+ * Parameters: socket      - [IN] the connections socket                      *
+ *             ipc_message - [IN] the ipc message with media type and alert   *
+ *                                data                                        *
+ *                                                                            *
+ ******************************************************************************/
+static void	alerter_process_remedy(zbx_ipc_socket_t *socket, zbx_ipc_message_t *ipc_message)
+{
+	zbx_uint64_t	eventid, userid;
+	char		*sendto, *subject, *message, *smtp_server, *smtp_helo, *smtp_email, *username, *password,
+			*exec_path, *error = NULL;
+	int		ret;
+	DB_MEDIATYPE	mt;
+
+	zbx_alerter_deserialize_remedy(ipc_message->data, &eventid, &userid, &sendto, &subject, &message, &smtp_server,
+			&smtp_helo, &smtp_email, &username, &password, &exec_path);
+
+	mt.smtp_server = smtp_server;
+	mt.smtp_helo = smtp_helo;
+	mt.smtp_email = smtp_email;
+	mt.username = username;
+	mt.passwd = password;
+	mt.exec_path = exec_path;
+
+	ret = zbx_remedy_process_alert(eventid, userid, sendto, subject, message, &mt, &error);
+	alerter_send_result(socket, ret, (SUCCEED == ret ? NULL : error));
+
+	zbx_free(sendto);
+	zbx_free(subject);
+	zbx_free(message);
+	zbx_free(smtp_server);
+	zbx_free(smtp_helo);
+	zbx_free(smtp_email);
+	zbx_free(username);
+	zbx_free(password);
+	zbx_free(error);
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: main_alerter_loop                                                *
@@ -303,6 +347,8 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 	}
 
 	alerter_register(&alerter_socket);
+
+	DBconnect(ZBX_DB_CONNECT_NORMAL);
 
 	/* initialize statistics */
 	time_stat = zbx_time();
@@ -361,6 +407,9 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 				break;
 			case ZBX_IPC_ALERTER_EXEC:
 				alerter_process_exec(&alerter_socket, &message);
+				break;
+			case ZBX_IPC_ALERTER_REMEDY:
+				alerter_process_remedy(&alerter_socket, &message);
 				break;
 		}
 

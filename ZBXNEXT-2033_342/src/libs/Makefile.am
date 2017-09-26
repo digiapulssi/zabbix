@@ -39,7 +39,6 @@ SERVER_SUBDIRS = \
 	zbxmemory \
 	zbxserver \
 	zbxicmpping \
-	zbxmedia \
 	zbxself \
 	zbxtasks
 else
@@ -80,6 +79,7 @@ SUBDIRS = \
 	zbxmodules \
 	zbxregexp \
 	zbxipcservice \
+	zbxmedia \
 	$(PROXY_SUBDIRS) \
 	$(SERVER_SUBDIRS) \
 	$(AGENT_SUBDIRS)
