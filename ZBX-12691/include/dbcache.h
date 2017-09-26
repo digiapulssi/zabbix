@@ -136,13 +136,6 @@ DC_HOST;
 
 typedef struct
 {
-	unsigned char	type;
-	char		params[ITEM_PREPROC_PARAMS_LEN * 4 + 1];
-}
-zbx_item_preproc_t;
-
-typedef struct
-{
 	DC_HOST			host;
 	DC_INTERFACE		interface;
 	zbx_uint64_t		itemid;
@@ -166,8 +159,6 @@ typedef struct
 	int			nextcheck;
 	int			lastclock;
 	int			mtime;
-	int			preproc_ops_num;
-	int			dep_itemids_num;
 	char			trapper_hosts[ITEM_TRAPPER_HOSTS_LEN_MAX];
 	char			logtimefmt[ITEM_LOGTIMEFMT_LEN_MAX];
 	char			snmp_community_orig[ITEM_SNMP_COMMUNITY_LEN_MAX], *snmp_community;
@@ -184,9 +175,6 @@ typedef struct
 	char			snmpv3_contextname_orig[ITEM_SNMPV3_CONTEXTNAME_LEN_MAX], *snmpv3_contextname;
 	char			jmx_endpoint_orig[ITEM_JMX_ENDPOINT_LEN_MAX], *jmx_endpoint;
 	char			*error;
-
-	zbx_item_preproc_t	*preproc_ops;
-	zbx_uint64_t		*dep_itemids;
 }
 DC_ITEM;
 
@@ -453,6 +441,27 @@ typedef enum
 }
 zbx_counter_type_t;
 
+typedef struct
+{
+	unsigned char	type;
+	char		*params;
+}
+zbx_preproc_op_t;
+
+typedef struct
+{
+	zbx_uint64_t		itemid;
+	unsigned char		type;
+	unsigned char		value_type;
+
+	int			dep_itemids_num;
+	int			preproc_ops_num;
+
+	zbx_uint64_t		*dep_itemids;
+	zbx_preproc_op_t	*preproc_ops;
+}
+zbx_preproc_item_t;
+
 int	is_item_processed_by_server(unsigned char type, const char *key);
 int	in_maintenance_without_data_collection(unsigned char maintenance_status, unsigned char maintenance_type,
 		unsigned char type);
@@ -484,11 +493,6 @@ void	free_database_cache(void);
 #define ZBX_STATS_HISTORY_INDEX_PFREE	18
 void	*DCget_stats(int request);
 
-/* flags for DCconfig_get_items_by_itemids() function to specify the data needed */
-#define ZBX_FLAG_ITEM_FIELDS_DEFAULT		__UINT64_C(0x0000)
-#define ZBX_FLAG_ITEM_FIELDS_PREPROC		__UINT64_C(0x0001)
-#define ZBX_FLAG_ITEM_FIELDS_DEPENDENT		__UINT64_C(0x0002)
-
 zbx_uint64_t	DCget_nextid(const char *table_name, int num);
 
 /* initial sync, get all data */
@@ -506,8 +510,7 @@ void	DCconfig_clean_items(DC_ITEM *items, int *errcodes, size_t num);
 int	DCget_host_by_hostid(DC_HOST *host, zbx_uint64_t hostid);
 void	DCconfig_get_hosts_by_itemids(DC_HOST *hosts, const zbx_uint64_t *itemids, int *errcodes, size_t num);
 void	DCconfig_get_items_by_keys(DC_ITEM *items, zbx_host_key_t *keys, int *errcodes, size_t num);
-void	DCconfig_get_items_by_itemids(DC_ITEM *items, const zbx_uint64_t *itemids, int *errcodes, size_t num,
-		zbx_uint64_t flags);
+void	DCconfig_get_items_by_itemids(DC_ITEM *items, const zbx_uint64_t *itemids, int *errcodes, size_t num);
 void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp);
 void	DCconfig_get_functions_by_functionids(DC_FUNCTION *functions,
 		zbx_uint64_t *functionids, int *errcodes, size_t num);
