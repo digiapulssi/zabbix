@@ -83,7 +83,8 @@ class CSysmapWidgetForm extends CWidgetForm {
 	public function validate($strict = false) {
 		$errors = parent::validate($strict);
 
-		if (!$errors && (int) $this->data['source_type'] === WIDGET_SYSMAP_SOURCETYPE_FILTER
+		if (!$errors && $this->data['source_type'] == WIDGET_SYSMAP_SOURCETYPE_FILTER
+				&& array_key_exists('filter_widget_reference', $this->data)
 				&& $this->data['filter_widget_reference'] === '') {
 			$errors[] = _s('Invalid parameter "%1$s": %2$s.', _('Filter'), _('cannot be empty'));
 		}
