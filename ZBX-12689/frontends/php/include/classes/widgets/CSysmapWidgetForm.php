@@ -82,7 +82,7 @@ class CSysmapWidgetForm extends CWidgetForm {
 	 */
 	public function validate($strict = false) {
 		$errors = parent::validate($strict);
-		// For strict validation key should exists.
+		// In strict validation 'filter_widget_reference' key should exist.
 		$invalid = $strict
 			? (!array_key_exists('filter_widget_reference', $this->data)
 				|| $this->data['filter_widget_reference'] === '')
