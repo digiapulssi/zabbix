@@ -375,7 +375,10 @@ ul.top-nav-icons {
 .header-title {
   position: relative;
   width: 100%;
-  margin: 0 0 7px 0; }
+  padding: 0 0 6px 0;
+  margin: 0 0 10px 0;
+  text-align: right;
+  border-bottom: 1px solid #303030; }
   .header-title .cell:first-child {
     max-width: calc(100vw - 370px); }
   .header-title h1 {
@@ -386,15 +389,13 @@ ul.top-nav-icons {
   .header-title form {
     display: flex;
     justify-content: flex-end; }
-  .header-title .cell:last-child:not(:only-child) {
+  .header-title .cell {
     text-align: right; }
-    .header-title .cell:last-child:not(:only-child) ul li {
+    .header-title .cell ul li {
       display: inline-block;
       vertical-align: top;
       position: relative;
       padding: 0 0 0 10px; }
-  .header-title .cell form {
-    display: inline-block; }
   .header-title .dashbrd-edit {
     position: relative;
     display: inline-block;

@@ -506,7 +506,10 @@ ul.top-nav-icons {
 .header-title {
 	position: relative;
 	width: 100%;
-	margin: 0 0 7px 0;
+	padding: 0 0 6px 0;
+	margin: 0 0 10px 0;
+	text-align: right;
+	border-bottom: 1px solid $ui-border-color;
 
 	.cell:first-child {
 		max-width: calc(100vw - 370px);
@@ -525,7 +528,6 @@ ul.top-nav-icons {
 	}
 
 	.cell {
-		&:last-child:not(:only-child) {
 			text-align: right;
 			ul {
 				li {
@@ -535,10 +537,6 @@ ul.top-nav-icons {
 					padding: 0 0 0 10px;
 				}
 			}
-		}
-		form {
-			display: inline-block;
-		}
 	}
 
 	.dashbrd-edit {
