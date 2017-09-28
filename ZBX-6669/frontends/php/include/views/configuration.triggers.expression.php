@@ -44,8 +44,8 @@ $item = [
 	(new CButton('select', _('Select')))
 		->addClass(ZBX_STYLE_BTN_GREY)
 		->onClick('return PopUp(\'popup.php?writeonly=1&dstfrm='.$expressionForm->getName().
-			(($this->data['groupid'] && $this->data['hostid'])
-				? '&groupid='.$this->data['groupid'].'&hostid='.$this->data['hostid']
+			(($data['groupid'] && $data['hostid'])
+				? '&groupid='.$data['groupid'].'&hostid='.$data['hostid']
 				: ''
 			).
 			'&dstfld1=itemid&dstfld2=description&submitParent=1'.(!empty($this->data['parent_discoveryid']) ? '&normal_only=1' : '').

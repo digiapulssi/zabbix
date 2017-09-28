@@ -66,8 +66,8 @@ $addExpressionButton = (new CButton('insert', ($this->data['input_method'] == IM
 	->onClick(
 		'return PopUp("popup_trexpr.php?dstfrm='.$triggersForm->getName().
 			'&dstfld1='.$this->data['expression_field_name'].'&srctbl=expression'.url_param('parent_discoveryid').
-			(($this->data['groupid'] && $this->data['hostid'])
-				? '&groupid='.$this->data['groupid'].'&hostid='.$this->data['hostid']
+			(($data['groupid'] && $data['hostid'])
+				? '&groupid='.$data['groupid'].'&hostid='.$data['hostid']
 				: ''
 			).
 			'&srcfld1=expression'.
