@@ -69,7 +69,6 @@ $fields = [
 	'update' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'delete' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'delete_selected' =>	[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
-	'del_user_group' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'del_user_media' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'del_group_user' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'change_password' =>	[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],

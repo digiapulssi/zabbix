@@ -62,10 +62,7 @@ if (!$this->data['is_profile']) {
 	$user_groups = [];
 
 	foreach ($this->data['groups'] as $group) {
-		$user_groups[] = [
-			'id' => $group['usrgrpid'],
-			'name' => $group['name']
-		];
+		$user_groups[] = CArrayHelper::renameKeys($group, ['usrgrpid' => 'id']);
 	}
 
 	$userFormList->addRow(

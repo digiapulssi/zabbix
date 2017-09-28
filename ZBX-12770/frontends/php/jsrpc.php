@@ -401,10 +401,7 @@ switch ($data['method']) {
 					}
 
 					foreach ($groups as $group) {
-						$result[] = [
-							'id' => $group['usrgrpid'],
-							'name' => $group['name']
-						];
+						$result[] = CArrayHelper::renameKeys($group, ['usrgrpid' => 'id']);
 					}
 				}
 				break;

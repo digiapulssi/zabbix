@@ -590,7 +590,8 @@ if ($srctbl == 'usrgrp') {
 			->setId('spanid'.$userGroup['usrgrpid']);
 
 		if ($multiselect) {
-			$js_action = "javascript: addValue(".zbx_jsvalue($reference).', '.zbx_jsvalue($userGroup['usrgrpid']).', '.$parentid.');';
+			$js_action = "javascript: addValue(".zbx_jsvalue($reference).', '.zbx_jsvalue($userGroup['usrgrpid'])
+				.', '.$parentid.');';
 		}
 		else {
 			$values = [
