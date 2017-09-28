@@ -47,6 +47,11 @@ class CControllerMediatypeEdit extends CController {
 			'jabber_username' =>		'db media_type.username',
 			'eztext_username' =>		'db media_type.username',
 			'smtp_username' =>			'db media_type.username',
+			'remedy_username' =>		'db media_type.username',
+			'remedy_url' =>				'db media_type.smtp_server',
+			'remedy_proxy' =>			'db media_type.smtp_helo',
+			'remedy_mapping' =>			'db media_type.smtp_email',
+			'remedy_company' =>			'db media_type.exec_path',
 			'passwd' =>					'db media_type.passwd',
 			'status' =>					'db media_type.status|in '.MEDIA_TYPE_STATUS_ACTIVE.','.MEDIA_TYPE_STATUS_DISABLED,
 			'maxsessions' =>			'db media_type.maxsessions',
@@ -125,6 +130,11 @@ class CControllerMediatypeEdit extends CController {
 			'smtp_username' => '',
 			'passwd' => '',
 			'status' => MEDIA_TYPE_STATUS_ACTIVE,
+			'remedy_url' => 'localhost',
+			'remedy_proxy' => '',
+			'remedy_mapping' => '',
+			'remedy_company' => '',
+			'remedy_username' => '',
 			'maxsessions' => $db_defaults['maxsessions'],
 			'maxattempts' => $db_defaults['maxattempts'],
 			'attempt_interval' => $db_defaults['attempt_interval'],
@@ -177,6 +187,14 @@ class CControllerMediatypeEdit extends CController {
 				case MEDIA_TYPE_SMS:
 					$data['maxsessions'] = 1;
 					break;
+
+				case MEDIA_TYPE_REMEDY:
+					$data['remedy_url'] = $this->mediatype['smtp_server'];
+					$data['remedy_proxy'] = $this->mediatype['smtp_helo'];
+					$data['remedy_mapping'] = $this->mediatype['smtp_email'];
+					$data['remedy_company'] = $this->mediatype['exec_path'];
+					$data['remedy_username'] = $this->mediatype['username'];
+					break;
 			}
 		}
 
@@ -199,6 +217,11 @@ class CControllerMediatypeEdit extends CController {
 			'jabber_username',
 			'eztext_username',
 			'smtp_username',
+			'remedy_url',
+			'remedy_proxy',
+			'remedy_mapping',
+			'remedy_company',
+			'remedy_username',
 			'passwd',
 			'status',
 			'maxsessions',

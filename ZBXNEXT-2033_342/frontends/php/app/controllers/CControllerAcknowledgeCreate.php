@@ -25,6 +25,7 @@ class CControllerAcknowledgeCreate extends CController {
 		$fields = [
 			'eventids' =>			'required|array_db acknowledges.eventid',
 			'message' =>			'db acknowledges.message',
+			'ticket_status' =>		'in 1,0',
 			'acknowledge_type' =>	'in '.ZBX_ACKNOWLEDGE_SELECTED.','.ZBX_ACKNOWLEDGE_PROBLEM,
 			'close_problem' =>		'db acknowledges.action|in '.
 										ZBX_ACKNOWLEDGE_ACTION_NONE.','.ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM,
@@ -68,20 +69,50 @@ class CControllerAcknowledgeCreate extends CController {
 		$eventids_to_ack = $eventids;
 		$result = true;
 
-		// Select events with trigger IDs only if there is a need to close problems or to find related all other events.
-		if ($acknowledge_type == ZBX_ACKNOWLEDGE_PROBLEM || $close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM) {
+		/*
+		 * Select events with trigger IDs if there is a need to close problems, to find all other related events
+		 * or create a Remedy ticket. The only time that it's not required, when we acknowlege single problem
+		 * and do nothing else.
+		 */
+		if ($acknowledge_type == ZBX_ACKNOWLEDGE_PROBLEM || $close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM
+				|| (count($eventids) == 1 && $this->hasInput('ticket_status'))) {
 			// Get trigger IDs for selected events.
-			$events = API::Event()->get([
+
+			$options = [
 				'output' => ['eventid', 'objectid'],
 				'eventids' => $eventids,
 				'source' => EVENT_SOURCE_TRIGGERS,
 				'object' => EVENT_OBJECT_TRIGGER,
 				'preservekeys' => true
-			]);
+			];
+
+			// Additionally select trigger data for Remedy.
+			if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
+				$options['selectRelatedObject'] = ['priority', 'description', 'expression'];
+			}
+
+			$events = API::Event()->get($options);
+
 			$triggerids = zbx_objectValues($events, 'objectid');
 		}
 
-		if ($close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM) {
+		// Create or update and incident on Remedy for current event.
+		if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
+			$event = reset($events);
+			CRemedyService::init(['triggerSeverity' => $event['relatedObject']['priority']]);
+
+			if (CRemedyService::$enabled) {
+				$event_trigger_name = CMacrosResolverHelper::resolveTriggerName($event['relatedObject']);
+
+				$result = (bool) CRemedyService::mediaAcknowledge([
+					'eventid' => $event['eventid'],
+					'message' => $this->getInput('message', ''),
+					'subject' => $event_trigger_name
+				]);
+			}
+		}
+
+		if ($result && $close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM) {
 			// User should have read-write permissions to trigger and trigger must have "manual_close" set to "1".
 			$triggers = API::Trigger()->get([
 				'output' => [],

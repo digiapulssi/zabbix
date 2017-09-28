@@ -1783,8 +1783,7 @@ function detect_page_type($default = PAGE_TYPE_HTML) {
 	return $default;
 }
 
-function makeMessageBox($good, array $messages, $title = null, $show_close_box = true, $show_details = false)
-{
+function makeMessageBox($good, array $messages, $title = null, $show_close_box = true, $show_details = false) {
 	$class = $good ? ZBX_STYLE_MSG_GOOD : ZBX_STYLE_MSG_BAD;
 	$msg_box = (new CDiv($title))->addClass($class);
 
@@ -1808,7 +1807,9 @@ function makeMessageBox($good, array $messages, $title = null, $show_close_box =
 		}
 		foreach ($messages as $message) {
 			foreach (explode("\n", $message['message']) as $message_part) {
-				$list->addItem($message_part);
+				if ($message_part !== '') {
+					$list->addItem($message_part);
+				}
 			}
 		}
 		$msg_details->addItem($list);
