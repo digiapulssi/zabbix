@@ -271,8 +271,7 @@ int	send_list_of_active_checks(zbx_socket_t *sock, char *request)
 		dc_items = zbx_malloc(NULL, sizeof(DC_ITEM) * itemids.values_num);
 		errcodes = zbx_malloc(NULL, sizeof(int) * itemids.values_num);
 
-		DCconfig_get_items_by_itemids(dc_items, itemids.values, errcodes, itemids.values_num,
-				ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+		DCconfig_get_items_by_itemids(dc_items, itemids.values, errcodes, itemids.values_num);
 		zbx_config_get(&cfg, ZBX_CONFIG_FLAGS_REFRESH_UNSUPPORTED);
 
 		now = time(NULL);
@@ -461,11 +460,21 @@ int	send_list_of_active_checks_json(zbx_socket_t *sock, struct zbx_json_parse *j
 	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
 		strscpy(ip, sock->peer);
 
-	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-		*tmp = '\0';
+	if (FAIL == is_ip(ip))	/* check even if 'ip' came from get_ip_by_socket() - it can return not a valid IP */
+	{
+		zbx_snprintf(error, MAX_STRING_LEN, "\"%s\" is not a valid IP address", ip);
+		goto error;
+	}
 
-	if (FAIL == is_ushort(tmp, &port))
+	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
+	{
 		port = ZBX_DEFAULT_AGENT_PORT;
+	}
+	else if (FAIL == is_ushort(tmp, &port))
+	{
+		zbx_snprintf(error, MAX_STRING_LEN, "\"%s\" is not a valid port", tmp);
+		goto error;
+	}
 
 	if (FAIL == get_hostid_by_host(sock, host, ip, port, host_metadata, &hostid, error))
 		goto error;
@@ -481,14 +490,13 @@ int	send_list_of_active_checks_json(zbx_socket_t *sock, struct zbx_json_parse *j
 	if (0 != itemids.values_num)
 	{
 		DC_ITEM		*dc_items;
-		int		*errcodes, now;
+		int		*errcodes, now, delay;
 		zbx_config_t	cfg;
 
 		dc_items = zbx_malloc(NULL, sizeof(DC_ITEM) * itemids.values_num);
 		errcodes = zbx_malloc(NULL, sizeof(int) * itemids.values_num);
 
-		DCconfig_get_items_by_itemids(dc_items, itemids.values, errcodes, itemids.values_num,
-				ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+		DCconfig_get_items_by_itemids(dc_items, itemids.values, errcodes, itemids.values_num);
 		zbx_config_get(&cfg, ZBX_CONFIG_FLAGS_REFRESH_UNSUPPORTED);
 
 		now = time(NULL);
@@ -517,6 +525,9 @@ int	send_list_of_active_checks_json(zbx_socket_t *sock, struct zbx_json_parse *j
 					continue;
 			}
 
+			if (SUCCEED != zbx_interval_preproc(dc_items[i].delay, &delay, NULL, NULL))
+				continue;
+
 			dc_items[i].key = zbx_strdup(dc_items[i].key, dc_items[i].key_orig);
 			substitute_key_macros(&dc_items[i].key, NULL, &dc_items[i], NULL, MACRO_TYPE_ITEM_KEY, NULL, 0);
 
@@ -527,7 +538,7 @@ int	send_list_of_active_checks_json(zbx_socket_t *sock, struct zbx_json_parse *j
 				zbx_json_addstring(&json, ZBX_PROTO_TAG_KEY_ORIG,
 						dc_items[i].key_orig, ZBX_JSON_TYPE_STRING);
 			}
-			zbx_json_adduint64(&json, ZBX_PROTO_TAG_DELAY, dc_items[i].delay);
+			zbx_json_adduint64(&json, ZBX_PROTO_TAG_DELAY, delay);
 			/* The agent expects ALWAYS to have lastlogsize and mtime tags. */
 			/* Removing those would cause older agents to fail. */
 			zbx_json_adduint64(&json, ZBX_PROTO_TAG_LASTLOGSIZE, dc_items[i].lastlogsize);

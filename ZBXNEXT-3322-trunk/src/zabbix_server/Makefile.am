@@ -13,14 +13,14 @@ SUBDIRS = \
 	snmptrapper \
 	timer \
 	trapper \
-	watchdog \
 	escalator \
 	proxypoller \
 	selfmon \
 	vmware \
 	taskmanager \
 	ipmi \
-	scripts
+	scripts \
+	preprocessor
 
 sbin_PROGRAMS = zabbix_server
 
@@ -29,6 +29,10 @@ zabbix_server_SOURCES = \
 	operations.c operations.h \
 	events.c events.h \
 	server.c
+	
+if ZBXCUNIT
+nodist_zabbix_server_SOURCES = ../libs/zbxcunit/zbxcunit.c ../libs/zbxcunit/zbxcunit.h
+endif
 
 zabbix_server_LDADD = \
 	alerter/libzbxalerter.a \
@@ -42,7 +46,6 @@ zabbix_server_LDADD = \
 	trapper/libzbxtrapper.a \
 	snmptrapper/libzbxsnmptrapper.a \
 	httppoller/libzbxhttppoller.a \
-	watchdog/libzbxwatchdog.a \
 	escalator/libzbxescalator.a \
 	proxypoller/libzbxproxypoller.a \
 	selfmon/libzbxselfmon.a \
@@ -50,6 +53,7 @@ zabbix_server_LDADD = \
 	taskmanager/libzbxtaskmanager.a \
 	ipmi/libipmi.a \
 	scripts/libzbxscripts.a \
+	preprocessor/libpreprocessor.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxserversysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
@@ -70,6 +74,7 @@ zabbix_server_LDADD = \
 	$(top_srcdir)/src/libs/zbxcommshigh/libzbxcommshigh.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
 	$(top_srcdir)/src/libs/zbxhttp/libzbxhttp.a \
+	$(top_srcdir)/src/libs/zbxipcservice/libzbxipcservice.a \
 	$(top_srcdir)/src/libs/zbxexec/libzbxexec.a \
 	$(top_srcdir)/src/libs/zbxicmpping/libzbxicmpping.a \
 	$(top_srcdir)/src/libs/zbxdbupgrade/libzbxdbupgrade.a \
@@ -78,7 +83,7 @@ zabbix_server_LDADD = \
 	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a \
 	$(top_srcdir)/src/libs/zbxtasks/libzbxtasks.a
 
-zabbix_server_LDADD += @SERVER_LIBS@
+zabbix_server_LDADD += @SERVER_LIBS@ $(CUNIT_LDADD)
 
 zabbix_server_LDFLAGS = @SERVER_LDFLAGS@
 
@@ -87,7 +92,7 @@ zabbix_server_CFLAGS = \
 	-DSYSCONFDIR="\"@sysconfdir@\"" \
 	-DDATADIR="\"@datadir@\"" \
 	-DLIBDIR="\"@libdir@\"" \
-	-I@top_srcdir@/src/libs/zbxdbcache
+	-I@top_srcdir@/src/libs/zbxdbcache 
 
 SERVER_CONFIG = zabbix_server.conf
 INCLUDE_DIR = $(DESTDIR)@sysconfdir@/$(SERVER_CONFIG).d

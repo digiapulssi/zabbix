@@ -37,7 +37,7 @@ class CIconMap extends CApiService {
 	 * @param array $options
 	 * @param array $options['iconmapids']
 	 * @param array $options['sysmapids']
-	 * @param array $options['editable']
+	 * @param bool  $options['editable']
 	 * @param array $options['count']
 	 * @param array $options['limit']
 	 * @param array $options['order']
@@ -58,19 +58,19 @@ class CIconMap extends CApiService {
 			'iconmapids'				=> null,
 			'sysmapids'					=> null,
 			'nopermissions'				=> null,
-			'editable'					=> null,
+			'editable'					=> false,
 			// filter
 			'filter'					=> null,
 			'search'					=> null,
 			'searchByAny'				=> null,
-			'startSearch'				=> null,
-			'excludeSearch'				=> null,
+			'startSearch'				=> false,
+			'excludeSearch'				=> false,
 			'searchWildcardsEnabled'	=> null,
 			// output
 			'output'					=> API_OUTPUT_EXTEND,
 			'selectMappings'			=> null,
-			'countOutput'				=> null,
-			'preservekeys'				=> null,
+			'countOutput'				=> false,
+			'preservekeys'				=> false,
 			'sortfield'					=> '',
 			'sortorder'					=> '',
 			'limit'						=> null
@@ -124,7 +124,7 @@ class CIconMap extends CApiService {
 			}
 		}
 
-		if (!is_null($options['countOutput'])) {
+		if ($options['countOutput']) {
 			return $result;
 		}
 
@@ -133,7 +133,7 @@ class CIconMap extends CApiService {
 		}
 
 		// removing keys (hash -> array)
-		if (is_null($options['preservekeys'])) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 		return $result;

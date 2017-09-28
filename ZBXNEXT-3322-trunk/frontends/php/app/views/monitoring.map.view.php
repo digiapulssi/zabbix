@@ -21,8 +21,8 @@
 
 $this->addJsFile('gtlc.js');
 $this->addJsFile('flickerfreescreen.js');
-$this->addJsFile("class.svg.canvas.js");
-$this->addJsFile("class.svg.map.js");
+$this->addJsFile('class.svg.canvas.js');
+$this->addJsFile('class.svg.map.js');
 
 (new CWidget())
 	->setTitle(_('Maps'))
@@ -60,6 +60,7 @@ $this->addJsFile("class.svg.map.js");
 	->addItem(
 		(new CDiv())
 			->addClass(ZBX_STYLE_TABLE_FORMS_CONTAINER)
+			->addStyle('padding: 0;')
 			->addItem(
 				CScreenBuilder::getScreen([
 					'resourcetype' => SCREEN_RESOURCE_MAP,

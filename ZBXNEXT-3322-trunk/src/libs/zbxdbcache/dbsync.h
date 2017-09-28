@@ -106,7 +106,7 @@ typedef struct zbx_dbsync
 zbx_dbsync_t;
 
 void	zbx_dbsync_init_env(ZBX_DC_CONFIG *cache);
-void	zbx_dbsync_free_env();
+void	zbx_dbsync_free_env(void);
 
 void	zbx_dbsync_init(zbx_dbsync_t *sync, unsigned char mode);
 void	zbx_dbsync_clear(zbx_dbsync_t *sync);
@@ -125,6 +125,7 @@ int	zbx_dbsync_compare_trigger_dependency(zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_functions(zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_expressions(zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_actions(zbx_dbsync_t *sync);
+int	zbx_dbsync_compare_action_ops(zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_action_conditions(zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_trigger_tags(zbx_dbsync_t *sync);
 int	zbx_dbsync_compare_correlations(zbx_dbsync_t *sync);

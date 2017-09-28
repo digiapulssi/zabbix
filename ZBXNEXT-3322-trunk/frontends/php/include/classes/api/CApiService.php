@@ -81,14 +81,14 @@ class CApiService {
 			'filter'				=> null,
 			'search'				=> null,
 			'searchByAny'			=> null,
-			'startSearch'			=> null,
-			'excludeSearch'			=> null,
+			'startSearch'			=> false,
+			'excludeSearch'			=> false,
 			'searchWildcardsEnabled'=> null,
 			// output
 			'output'				=> API_OUTPUT_EXTEND,
-			'countOutput'			=> null,
-			'groupCount'			=> null,
-			'preservekeys'			=> null,
+			'countOutput'			=> false,
+			'groupCount'			=> false,
+			'preservekeys'			=> false,
 			'limit'					=> null
 		];
 		$this->getOptions = $this->globalGetOptions;
@@ -349,7 +349,7 @@ class CApiService {
 
 		$objects = DBfetchArray(DBSelect($sql, $limit));
 
-		if (isset($options['preservekeys'])) {
+		if (array_key_exists('preservekeys', $options) && $options['preservekeys']) {
 			$rs = [];
 			foreach ($objects as $object) {
 				$rs[$object[$this->pk($tableName)]] = $object;
@@ -418,22 +418,25 @@ class CApiService {
 	 * @return string			The resulting SQL query
 	 */
 	protected function createSelectQueryFromParts(array $sqlParts) {
-		// build query
-		$sqlSelect = implode(',', array_unique($sqlParts['select']));
-		$sqlFrom = implode(',', array_unique($sqlParts['from']));
-
 		$sql_left_join = '';
 		if (array_key_exists('left_join', $sqlParts)) {
 			foreach ($sqlParts['left_join'] as $join) {
 				$sql_left_join .= ' LEFT JOIN '.$join['from'].' ON '.$join['on'];
 			}
+
+			// Moving a left table to the end.
+			$left_table = $sqlParts['from'][$sqlParts['left_table']];
+			unset($sqlParts['from'][$sqlParts['left_table']]);
+			$sqlParts['from'][$sqlParts['left_table']] = $left_table;
 		}
 
+		$sqlSelect = implode(',', array_unique($sqlParts['select']));
+		$sqlFrom = implode(',', array_unique($sqlParts['from']));
 		$sqlWhere = empty($sqlParts['where']) ? '' : ' WHERE '.implode(' AND ', array_unique($sqlParts['where']));
 		$sqlGroup = empty($sqlParts['group']) ? '' : ' GROUP BY '.implode(',', array_unique($sqlParts['group']));
 		$sqlOrder = empty($sqlParts['order']) ? '' : ' ORDER BY '.implode(',', array_unique($sqlParts['order']));
 
-		return 'SELECT '.zbx_db_distinct($sqlParts).' '.$sqlSelect.
+		return 'SELECT'.zbx_db_distinct($sqlParts).' '.$sqlSelect.
 				' FROM '.$sqlFrom.
 				$sql_left_join.
 				$sqlWhere.
@@ -455,11 +458,12 @@ class CApiService {
 		$pkFieldId = $this->fieldId($this->pk($tableName), $tableAlias);
 
 		// count
-		if (isset($options['countOutput']) && !$this->requiresPostSqlFiltering($options)) {
+		if (array_key_exists('countOutput', $options) && $options['countOutput']
+				&& !$this->requiresPostSqlFiltering($options)) {
 			$sqlParts['select'] = ['COUNT(DISTINCT '.$pkFieldId.') AS rowscount'];
 
 			// select columns used by group count
-			if (isset($options['groupCount'])) {
+			if (array_key_exists('groupCount', $options) && $options['groupCount']) {
 				foreach ($sqlParts['group'] as $fields) {
 					$sqlParts['select'][] = $fields;
 				}

@@ -77,14 +77,14 @@ typedef struct
 	zbx_uint64_t		valuemapid;
 	const char		*key;
 	const char		*port;
-	const char		*db_error;
+	const char		*error;
+	const char		*delay;
 	ZBX_DC_TRIGGER		**triggers;
-	int			delay;
 	int			nextcheck;
 	int			lastclock;
 	int			mtime;
 	int			data_expected_from;
-	int			history;
+	unsigned char		history;
 	unsigned char		type;
 	unsigned char		value_type;
 	unsigned char		poller_type;
@@ -95,9 +95,8 @@ typedef struct
 	unsigned char		flags;
 	unsigned char		status;
 	unsigned char		unreachable;
+	unsigned char		schedulable;
 	unsigned char		update_triggers;
-
-	zbx_vector_ptr_t	preproc_ops;
 }
 ZBX_DC_ITEM;
 
@@ -113,7 +112,7 @@ typedef struct
 {
 	zbx_uint64_t	itemid;
 	const char	*units;
-	int		trends;
+	unsigned char	trends;
 }
 ZBX_DC_NUMITEM;
 
@@ -143,16 +142,17 @@ ZBX_DC_IPMIITEM;
 typedef struct
 {
 	zbx_uint64_t	itemid;
-	const char	*delay_flex;
+	const char	*trapper_hosts;
 }
-ZBX_DC_FLEXITEM;
+ZBX_DC_TRAPITEM;
 
 typedef struct
 {
 	zbx_uint64_t	itemid;
-	const char	*trapper_hosts;
+	zbx_uint64_t	master_itemid;
+	zbx_uint64_t	last_master_itemid;
 }
-ZBX_DC_TRAPITEM;
+ZBX_DC_DEPENDENTITEM;
 
 typedef struct
 {
@@ -204,6 +204,7 @@ typedef struct
 	zbx_uint64_t	itemid;
 	const char	*username;
 	const char	*password;
+	const char	*jmx_endpoint;
 }
 ZBX_DC_JMXITEM;
 
@@ -213,6 +214,20 @@ typedef struct
 	const char	*params;
 }
 ZBX_DC_CALCITEM;
+
+typedef struct
+{
+	zbx_uint64_t		itemid;
+	zbx_vector_uint64_t	dep_itemids;
+}
+ZBX_DC_MASTERITEM;
+
+typedef struct
+{
+	zbx_uint64_t		itemid;
+	zbx_vector_ptr_t	preproc_ops;
+}
+ZBX_DC_PREPROCITEM;
 
 typedef zbx_item_history_value_t	ZBX_DC_DELTAITEM;
 
@@ -230,6 +245,12 @@ typedef struct
 {
 	zbx_uint64_t	hostid;
 	zbx_uint64_t	proxy_hostid;
+	zbx_uint64_t	items_active_normal;		/* On enabled hosts these two fields store number of enabled */
+	zbx_uint64_t	items_active_notsupported;	/* and supported items and enabled and not supported items.  */
+	zbx_uint64_t	items_disabled;			/* On "hosts" corresponding to proxies this and two fields   */
+							/* above store cumulative statistics for all hosts monitored */
+							/* by a particular proxy. */
+							/* NOTE: On disabled hosts all items are counted as disabled. */
 	const char	*host;
 	const char	*name;
 	int		maintenance_from;
@@ -260,7 +281,7 @@ typedef struct
 	unsigned char	jmx_available;
 	unsigned char	status;
 
-	/* flag to reset host availability to uknown */
+	/* flag to reset host availability to unknown */
 	unsigned char	reset_availability;
 
 	/* flag to force update for all items */
@@ -278,6 +299,9 @@ typedef struct
 	const char	*snmp_error;
 	const char	*ipmi_error;
 	const char	*jmx_error;
+
+	zbx_vector_ptr_t	interfaces_v;	/* for quick finding of all host interfaces in */
+						/* 'config->interfaces' hashset */
 }
 ZBX_DC_HOST;
 
@@ -298,6 +322,9 @@ ZBX_DC_HOST_H;
 typedef struct
 {
 	zbx_uint64_t	hostid;
+	zbx_uint64_t	hosts_monitored;	/* number of enabled hosts assigned to proxy */
+	zbx_uint64_t	hosts_not_monitored;	/* number of disabled hosts assigned to proxy */
+	double		required_performance;
 	int		proxy_config_nextcheck;
 	int		proxy_data_nextcheck;
 	int		proxy_tasks_nextcheck;
@@ -430,6 +457,24 @@ ZBX_DC_CONFIG_TABLE;
 
 typedef struct
 {
+	zbx_uint64_t	hosts_monitored;		/* total number of enabled hosts */
+	zbx_uint64_t	hosts_not_monitored;		/* total number of disabled hosts */
+	zbx_uint64_t	items_active_normal;		/* total number of enabled and supported items */
+	zbx_uint64_t	items_active_notsupported;	/* total number of enabled and not supported items */
+	zbx_uint64_t	items_disabled;			/* total number of disabled items */
+							/* (all items of disabled host are counted as disabled) */
+	zbx_uint64_t	triggers_enabled_ok;		/* total number of enabled triggers with value OK */
+	zbx_uint64_t	triggers_enabled_problem;	/* total number of enabled triggers with value PROBLEM */
+	zbx_uint64_t	triggers_disabled;		/* total number of disabled triggers */
+							/* (if at least one item or host involved in trigger is */
+							/* disabled then trigger is counted as disabled) */
+	double		required_performance;		/* required performance of server (values per second) */
+	time_t		last_update;
+}
+ZBX_DC_STATUS;
+
+typedef struct
+{
 	zbx_uint64_t	conditionid;
 	zbx_uint64_t	actionid;
 	unsigned char	conditiontype;
@@ -445,6 +490,7 @@ typedef struct
 	const char		*formula;
 	unsigned char		eventsource;
 	unsigned char		evaltype;
+	unsigned char		opflags;
 	zbx_vector_ptr_t	conditions;
 }
 zbx_dc_action_t;
@@ -546,7 +592,7 @@ typedef struct
 	unsigned char	type;
 	const char	*params;
 }
-zbx_dc_item_preproc_t;
+zbx_dc_preproc_op_t;
 
 typedef struct
 {
@@ -559,8 +605,8 @@ typedef struct
 	zbx_hashset_t		numitems;
 	zbx_hashset_t		snmpitems;
 	zbx_hashset_t		ipmiitems;
-	zbx_hashset_t		flexitems;
 	zbx_hashset_t		trapitems;
+	zbx_hashset_t		dependentitems;
 	zbx_hashset_t		logitems;
 	zbx_hashset_t		dbitems;
 	zbx_hashset_t		sshitems;
@@ -568,7 +614,8 @@ typedef struct
 	zbx_hashset_t		simpleitems;
 	zbx_hashset_t		jmxitems;
 	zbx_hashset_t		calcitems;
-	zbx_hashset_t		deltaitems;		/* history data for delta value calculations */
+	zbx_hashset_t		masteritems;
+	zbx_hashset_t		preprocitems;
 	zbx_hashset_t		functions;
 	zbx_hashset_t		triggers;
 	zbx_hashset_t		trigdeps;
@@ -598,14 +645,16 @@ typedef struct
 	zbx_hashset_t		corr_operations;
 	zbx_hashset_t		hostgroups;
 	zbx_vector_ptr_t	hostgroups_name; 	/* host groups sorted by name */
-	zbx_hashset_t		item_preproc;
+	zbx_hashset_t		preprocops;
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_hashset_t		psks;			/* for keeping PSK-identity and PSK pairs and for searching */
 							/* by PSK identity */
 #endif
 	zbx_binary_heap_t	queues[ZBX_POLLER_TYPE_COUNT];
 	zbx_binary_heap_t	pqueue;
+	zbx_vector_uint64_t	locked_lld_ruleids;	/* for keeping track of lld rules being processed */
 	ZBX_DC_CONFIG_TABLE	*config;
+	ZBX_DC_STATUS		*status;
 }
 ZBX_DC_CONFIG;
 

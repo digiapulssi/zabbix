@@ -52,6 +52,7 @@ function getLocales() {
 		'en_GB' => ['name' => _('English (en_GB)'),	'display' => true],
 		'en_US' => ['name' => _('English (en_US)'),	'display' => true],
 		'bg_BG' => ['name' => _('Bulgarian (bg_BG)'),	'display' => false],
+		'ca_ES' => ['name' => _('Catalan (ca_ES)'),	'display' => false],
 		'zh_CN' => ['name' => _('Chinese (zh_CN)'),	'display' => true],
 		'zh_TW' => ['name' => _('Chinese (zh_TW)'),	'display' => false],
 		'cs_CZ' => ['name' => _('Czech (cs_CZ)'),	'display' => true],
@@ -78,7 +79,7 @@ function getLocales() {
 		'sk_SK' => ['name' => _('Slovak (sk_SK)'),	'display' => true],
 		'es_ES' => ['name' => _('Spanish (es_ES)'),	'display' => false],
 		'sv_SE' => ['name' => _('Swedish (sv_SE)'),	'display' => false],
-		'tr_TR' => ['name' => _('Turkish (tr_TR)'),	'display' => false],
+		'tr_TR' => ['name' => _('Turkish (tr_TR)'),	'display' => true],
 		'uk_UA' => ['name' => _('Ukrainian (uk_UA)'),	'display' => true],
 		'vi_VN' => ['name' => _('Vietnamese (vi_VN)'),	'display' => false]
 	];
@@ -152,6 +153,7 @@ function zbx_locale_variants_win($language) {
 		'en_gb' => ['English_United Kingdom.1252', 'english-uk'],
 		'en_us' => ['English_United States.1252', 'english-usa'],
 		'bg_bg' => ['Bulgarian_Bulgaria.1251'],
+		'ca_es' => ['Catalan_Spain.1252'],
 		'zh_cn' => ['Chinese (Simplified)_People\'s Republic of China.936', 'chinese'],
 		'zh_tw' => ['Chinese_Taiwan.950', 'chinese'],
 		'cs_cz' => ['Czech_Czech Republic.1250', 'czech'],

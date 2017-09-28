@@ -30,7 +30,7 @@ extern int		CONFIG_CONFSYNCER_FREQUENCY;
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 
-void	zbx_dbconfig_sigusr_handler(int flags)
+static void	zbx_dbconfig_sigusr_handler(int flags)
 {
 	if (ZBX_RTC_CONFIG_CACHE_RELOAD == ZBX_RTC_GET_MSG(flags))
 	{
@@ -92,6 +92,7 @@ ZBX_THREAD_ENTRY(dbconfig_thread, args)
 		sec = zbx_time();
 		DCsync_configuration(ZBX_DBSYNC_UPDATE);
 		DCupdate_hosts_availability();
+		dc_flush_history();	/* misconfigured items generate pseudo-historic values to become notsupported */
 		sec = zbx_time() - sec;
 
 		zbx_setproctitle("%s [synced configuration in " ZBX_FS_DBL " sec, idle %d sec]",

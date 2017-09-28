@@ -2797,7 +2797,7 @@ out:
 }
 
 /* hash/comparison functions to support cache/vector lookups by trigger reference */
-zbx_hash_t	zbx_lld_trigger_ref_hash_func(const void *data)
+static zbx_hash_t	zbx_lld_trigger_ref_hash_func(const void *data)
 {
 	zbx_hash_t			hash;
 	const zbx_lld_trigger_node_t	*trigger_node = (const zbx_lld_trigger_node_t *)data;
@@ -2812,7 +2812,7 @@ zbx_hash_t	zbx_lld_trigger_ref_hash_func(const void *data)
 	return ZBX_DEFAULT_PTR_HASH_ALGO(&ptr, sizeof(trigger_node->trigger_ref.trigger), hash);
 }
 
-int	zbx_lld_trigger_ref_compare_func(const void *d1, const void *d2)
+static int	zbx_lld_trigger_ref_compare_func(const void *d1, const void *d2)
 {
 	const zbx_lld_trigger_node_t	*n1 = (const zbx_lld_trigger_node_t *)d1;
 	const zbx_lld_trigger_node_t	*n2 = (const zbx_lld_trigger_node_t *)d2;
@@ -2829,7 +2829,7 @@ int	zbx_lld_trigger_ref_compare_func(const void *d1, const void *d2)
 }
 
 /* comparison function to determine trigger dependency validation order */
-int	zbx_lld_trigger_node_compare_func(const void *d1, const void *d2)
+static int	zbx_lld_trigger_node_compare_func(const void *d1, const void *d2)
 {
 	const zbx_lld_trigger_node_t	*n1 = *(const zbx_lld_trigger_node_t **)d1;
 	const zbx_lld_trigger_node_t	*n2 = *(const zbx_lld_trigger_node_t **)d2;
@@ -3129,8 +3129,7 @@ static void	lld_trigger_cache_init(zbx_hashset_t *cache, zbx_vector_ptr_t *trigg
 				if (NULL != zbx_hashset_search(cache, &trigger_node_local))
 					continue;
 
-				trigger_node = lld_trigger_cache_append(cache, trigger_node_local.trigger_ref.triggerid,
-						NULL);
+				lld_trigger_cache_append(cache, trigger_node_local.trigger_ref.triggerid, NULL);
 
 				zbx_vector_uint64_append(&triggerids_up, trigger_node_local.trigger_ref.triggerid);
 				zbx_vector_uint64_append(&triggerids_down, trigger_node_local.trigger_ref.triggerid);

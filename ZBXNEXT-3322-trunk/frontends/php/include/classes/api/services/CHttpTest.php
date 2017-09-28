@@ -37,8 +37,6 @@ class CHttpTest extends CApiService {
 	 */
 	public function get($options = []) {
 		$result = [];
-		$userType = self::$userData['type'];
-		$userid = self::$userData['userid'];
 
 		$sqlParts = [
 			'select'	=> ['httptests' => 'ht.httptestid'],
@@ -55,7 +53,7 @@ class CHttpTest extends CApiService {
 			'hostids'        => null,
 			'groupids'       => null,
 			'templateids'    => null,
-			'editable'       => null,
+			'editable'       => false,
 			'inherited'      => null,
 			'templated'      => null,
 			'monitored'      => null,
@@ -64,17 +62,17 @@ class CHttpTest extends CApiService {
 			'filter'         => null,
 			'search'         => null,
 			'searchByAny'    => null,
-			'startSearch'    => null,
-			'excludeSearch'  => null,
+			'startSearch'    => false,
+			'excludeSearch'  => false,
 			// output
 			'output'         => API_OUTPUT_EXTEND,
 			'expandName'     => null,
 			'expandStepName' => null,
 			'selectHosts'    => null,
 			'selectSteps'    => null,
-			'countOutput'    => null,
-			'groupCount'     => null,
-			'preservekeys'   => null,
+			'countOutput'    => false,
+			'groupCount'     => false,
+			'preservekeys'   => false,
 			'sortfield'      => '',
 			'sortorder'      => '',
 			'limit'          => null
@@ -82,10 +80,9 @@ class CHttpTest extends CApiService {
 		$options = zbx_array_merge($defOptions, $options);
 
 		// editable + PERMISSION CHECK
-		if ($userType != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
 			$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
-
-			$userGroups = getUserGroupsByUserId($userid);
+			$userGroups = getUserGroupsByUserId(self::$userData['userid']);
 
 			$sqlParts['where'][] = 'EXISTS ('.
 					'SELECT NULL'.
@@ -125,7 +122,7 @@ class CHttpTest extends CApiService {
 
 			$sqlParts['where']['hostid'] = dbConditionInt('ht.hostid', $options['hostids']);
 
-			if (!is_null($options['groupCount'])) {
+			if ($options['groupCount']) {
 				$sqlParts['group']['hostid'] = 'ht.hostid';
 			}
 		}
@@ -138,7 +135,7 @@ class CHttpTest extends CApiService {
 			$sqlParts['where'][] = dbConditionInt('hg.groupid', $options['groupids']);
 			$sqlParts['where'][] = 'hg.hostid=ht.hostid';
 
-			if (!is_null($options['groupCount'])) {
+			if ($options['groupCount']) {
 				$sqlParts['group']['hg'] = 'hg.groupid';
 			}
 		}
@@ -188,6 +185,10 @@ class CHttpTest extends CApiService {
 
 		// filter
 		if (is_array($options['filter'])) {
+			if (array_key_exists('delay', $options['filter']) && $options['filter']['delay'] !== null) {
+				$options['filter']['delay'] = getTimeUnitFilters($options['filter']['delay']);
+			}
+
 			$this->dbFilter('httptest ht', $options, $sqlParts);
 		}
 
@@ -200,8 +201,8 @@ class CHttpTest extends CApiService {
 		$sqlParts = $this->applyQuerySortOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
 		$res = DBselect($this->createSelectQueryFromParts($sqlParts), $sqlParts['limit']);
 		while ($httpTest = DBfetch($res)) {
-			if (!is_null($options['countOutput'])) {
-				if (!is_null($options['groupCount'])) {
+			if ($options['countOutput']) {
+				if ($options['groupCount']) {
 					$result[] = $httpTest;
 				}
 				else {
@@ -213,7 +214,7 @@ class CHttpTest extends CApiService {
 			}
 		}
 
-		if (!is_null($options['countOutput'])) {
+		if ($options['countOutput']) {
 			return $result;
 		}
 
@@ -238,7 +239,7 @@ class CHttpTest extends CApiService {
 		}
 
 		// removing keys (hash -> array)
-		if (is_null($options['preservekeys'])) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 
@@ -273,7 +274,7 @@ class CHttpTest extends CApiService {
 			'hostid' =>				['type' => API_ID, 'flags' => API_REQUIRED],
 			'name' =>				['type' => API_STRING_UTF8, 'flags' => API_REQUIRED | API_NOT_EMPTY, 'length' => DB::getFieldLength('httptest', 'name')],
 			'applicationid' =>		['type' => API_ID],
-			'delay' =>				['type' => API_INT32, 'in' => '1:'.SEC_PER_DAY],
+			'delay' =>				['type' => API_TIME_UNIT, 'flags' => API_ALLOW_USER_MACRO, 'in' => '1:'.SEC_PER_DAY],
 			'retries' =>			['type' => API_INT32, 'in' => '1:10'],
 			'agent' =>				['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('httptest', 'agent')],
 			'http_proxy' =>			['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('httptest', 'http_proxy')],
@@ -313,7 +314,7 @@ class CHttpTest extends CApiService {
 				]],
 				'follow_redirects' =>	['type' => API_INT32, 'in' => implode(',', [HTTPTEST_STEP_FOLLOW_REDIRECTS_OFF, HTTPTEST_STEP_FOLLOW_REDIRECTS_ON])],
 				'retrieve_mode' =>		['type' => API_INT32, 'in' => implode(',', [HTTPTEST_STEP_RETRIEVE_MODE_CONTENT, HTTPTEST_STEP_RETRIEVE_MODE_HEADERS])],
-				'timeout' =>			['type' => API_INT32, 'in' => '0:65535'],
+				'timeout' =>			['type' => API_TIME_UNIT, 'flags' => API_ALLOW_USER_MACRO, 'in' => '0:'.SEC_PER_HOUR],
 				'required' =>			['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('httpstep', 'required')],
 				'status_codes' =>		['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('httpstep', 'status_codes')]
 			]]
@@ -368,7 +369,7 @@ class CHttpTest extends CApiService {
 			'httptestid' =>			['type' => API_ID, 'flags' => API_REQUIRED],
 			'name' =>				['type' => API_STRING_UTF8, 'flags' => API_NOT_EMPTY, 'length' => DB::getFieldLength('httptest', 'name')],
 			'applicationid' =>		['type' => API_ID],
-			'delay' =>				['type' => API_INT32, 'in' => '1:'.SEC_PER_DAY],
+			'delay' =>				['type' => API_TIME_UNIT, 'flags' => API_ALLOW_USER_MACRO, 'in' => '1:'.SEC_PER_DAY],
 			'retries' =>			['type' => API_INT32, 'in' => '1:10'],
 			'agent' =>				['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('httptest', 'agent')],
 			'http_proxy' =>			['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('httptest', 'http_proxy')],
@@ -409,7 +410,7 @@ class CHttpTest extends CApiService {
 				]],
 				'follow_redirects' =>	['type' => API_INT32, 'in' => implode(',', [HTTPTEST_STEP_FOLLOW_REDIRECTS_OFF, HTTPTEST_STEP_FOLLOW_REDIRECTS_ON])],
 				'retrieve_mode' =>		['type' => API_INT32, 'in' => implode(',', [HTTPTEST_STEP_RETRIEVE_MODE_CONTENT, HTTPTEST_STEP_RETRIEVE_MODE_HEADERS])],
-				'timeout' =>			['type' => API_INT32, 'in' => '0:65535'],
+				'timeout' =>			['type' => API_TIME_UNIT, 'flags' => API_ALLOW_USER_MACRO, 'in' => '0:'.SEC_PER_HOUR],
 				'required' =>			['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('httpstep', 'required')],
 				'status_codes' =>		['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('httpstep', 'status_codes')]
 			]]
@@ -815,7 +816,7 @@ class CHttpTest extends CApiService {
 	protected function applyQueryOutputOptions($tableName, $tableAlias, array $options, array $sqlParts) {
 		$sqlParts = parent::applyQueryOutputOptions($tableName, $tableAlias, $options, $sqlParts);
 
-		if ($options['countOutput'] === null) {
+		if (!$options['countOutput']) {
 			// make sure we request the hostid to be able to expand macros
 			if ($options['expandName'] !== null || $options['expandStepName'] !== null || $options['selectHosts'] !== null) {
 				$sqlParts = $this->addQuerySelect($this->fieldId('hostid'), $sqlParts);

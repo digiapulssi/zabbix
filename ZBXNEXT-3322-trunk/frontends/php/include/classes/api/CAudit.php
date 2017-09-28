@@ -63,6 +63,12 @@ class CAudit {
 				$table_name = 'applications';
 				break;
 
+			case AUDIT_RESOURCE_DASHBOARD:
+				$field_name_resourceid = 'dashboardid';
+				$field_name_resourcename = 'name';
+				$table_name = 'dashboard';
+				break;
+
 			case AUDIT_RESOURCE_ICON_MAP:
 				$field_name_resourceid = 'iconmapid';
 				$field_name_resourcename = 'name';
@@ -79,6 +85,18 @@ class CAudit {
 				$field_name_resourceid = 'globalmacroid';
 				$field_name_resourcename = 'macro';
 				$table_name = 'globalmacro';
+				break;
+
+			case AUDIT_RESOURCE_PROXY:
+				$field_name_resourceid = 'proxyid';
+				$field_name_resourcename = 'host';
+				$table_name = 'hosts';
+				break;
+
+			case AUDIT_RESOURCE_SCENARIO:
+				$field_name_resourceid = 'httptestid';
+				$field_name_resourcename = 'name';
+				$table_name = 'httptest';
 				break;
 
 			case AUDIT_RESOURCE_SCRIPT:
@@ -103,12 +121,6 @@ class CAudit {
 				$field_name_resourceid = 'valuemapid';
 				$field_name_resourcename = 'name';
 				$table_name = 'valuemaps';
-				break;
-
-			case AUDIT_RESOURCE_SCENARIO:
-				$field_name_resourceid = 'httptestid';
-				$field_name_resourcename = 'name';
-				$table_name = 'httptest';
 				break;
 
 			default:

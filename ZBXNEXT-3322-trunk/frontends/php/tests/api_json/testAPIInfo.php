@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 require_once dirname(__FILE__).'/../include/class.czabbixtest.php';
 
 class testAPIInfo extends CZabbixTest {
@@ -27,7 +28,7 @@ class testAPIInfo extends CZabbixTest {
 
 		$this->assertTrue(array_key_exists('result', $result));
 		$this->assertFalse(array_key_exists('error', $result));
-		$this->assertSame('3.4.0', $result['result']);
+		$this->assertSame('4.0.0', $result['result']);
 	}
 
 	public function testAPIInfo_VersionWithAuth() {

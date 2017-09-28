@@ -69,7 +69,13 @@ class CXmlExportWriter extends CExportWriter {
 				$this->fromArray($value, $name);
 			}
 			elseif (!zbx_empty($value)) {
-				$this->xmlWriter->text($value);
+				// Value containing only whitespace characters should be saved as CDATA.
+				if (trim($value) === '') {
+					$this->xmlWriter->writeCData($value);
+				}
+				else {
+					$this->xmlWriter->text($value);
+				}
 			}
 
 			$this->xmlWriter->endElement();
@@ -124,7 +130,8 @@ class CXmlExportWriter extends CExportWriter {
 			'variables' => 'variable',
 			'query_fields' => 'query_field',
 			'posts' => 'post_field',
-			'shapes' => 'shape'
+			'shapes' => 'shape',
+			'lines' => 'line'
 		];
 
 		return isset($map[$name]) ? $map[$name] : false;

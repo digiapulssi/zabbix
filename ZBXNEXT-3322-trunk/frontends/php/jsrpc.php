@@ -67,7 +67,9 @@ switch ($data['method']) {
 		break;
 
 	case 'message.settings':
-		$result = getMessageSettings();
+		$msgsettings = getMessageSettings();
+		$msgsettings['timeout'] = timeUnitToSeconds($msgsettings['timeout']);
+		$result = $msgsettings;
 		break;
 
 	case 'message.get':
@@ -79,13 +81,14 @@ switch ($data['method']) {
 		}
 
 		// timeout
-		$timeout = time() - $msgsettings['timeout'];
+		$timeout = time() - timeUnitToSeconds($msgsettings['timeout']);
 		$lastMsgTime = 0;
 		if (isset($data['params']['messageLast']['events'])) {
 			$lastMsgTime = $data['params']['messageLast']['events']['time'];
 		}
 
 		$options = [
+			'monitored' => true,
 			'lastChangeSince' => max([$lastMsgTime, $msgsettings['last.clock'], $timeout]),
 			'value' => [TRIGGER_VALUE_TRUE, TRIGGER_VALUE_FALSE],
 			'priority' => array_keys($msgsettings['triggers.severities']),
@@ -169,7 +172,7 @@ switch ($data['method']) {
 		if (!CSession::keyExists('serverCheckResult')
 				|| (CSession::getValue('serverCheckTime') + SERVER_CHECK_INTERVAL) <= time()) {
 			$zabbixServer = new CZabbixServer($ZBX_SERVER, $ZBX_SERVER_PORT, ZBX_SOCKET_TIMEOUT, 0);
-			CSession::setValue('serverCheckResult', $zabbixServer->isRunning());
+			CSession::setValue('serverCheckResult', $zabbixServer->isRunning(CWebUser::getSessionCookie()));
 			CSession::setValue('serverCheckTime', time());
 		}
 
@@ -234,7 +237,7 @@ switch ($data['method']) {
 		switch ($data['objectName']) {
 			case 'hostGroup':
 				$hostGroups = API::HostGroup()->get([
-					'editable' => isset($data['editable']) ? $data['editable'] : null,
+					'editable' => isset($data['editable']) ? $data['editable'] : false,
 					'output' => ['groupid', 'name'],
 					'search' => isset($data['search']) ? ['name' => $data['search']] : null,
 					'filter' => isset($data['filter']) ? $data['filter'] : null,
@@ -261,7 +264,7 @@ switch ($data['method']) {
 
 			case 'hosts':
 				$hosts = API::Host()->get([
-					'editable' => isset($data['editable']) ? $data['editable'] : null,
+					'editable' => isset($data['editable']) ? $data['editable'] : false,
 					'output' => ['hostid', 'name'],
 					'templated_hosts' => isset($data['templated_hosts']) ? $data['templated_hosts'] : null,
 					'search' => isset($data['search']) ? ['name' => $data['search']] : null,
@@ -288,7 +291,7 @@ switch ($data['method']) {
 
 			case 'templates':
 				$templates = API::Template()->get([
-					'editable' => isset($data['editable']) ? $data['editable'] : null,
+					'editable' => isset($data['editable']) ? $data['editable'] : false,
 					'output' => ['templateid', 'name'],
 					'search' => isset($data['search']) ? ['name' => $data['search']] : null,
 					'limit' => $config['search_limit']
@@ -339,16 +342,33 @@ switch ($data['method']) {
 				break;
 
 			case 'triggers':
+				$host_fields = ['name'];
+				if (array_key_exists('real_hosts', $data) && $data['real_hosts']) {
+					$host_fields[] = 'status';
+				}
+
 				$triggers = API::Trigger()->get([
 					'output' => ['triggerid', 'description'],
-					'selectHosts' => ['name'],
-					'editable' => isset($data['editable']) ? $data['editable'] : null,
+					'selectHosts' => $host_fields,
+					'editable' => isset($data['editable']) ? $data['editable'] : false,
 					'monitored' => isset($data['monitored']) ? $data['monitored'] : null,
 					'search' => isset($data['search']) ? ['description' => $data['search']] : null,
 					'limit' => $config['search_limit']
 				]);
 
 				if ($triggers) {
+					if (array_key_exists('real_hosts', $data) && $data['real_hosts']) {
+						foreach ($triggers as $key => $trigger) {
+							foreach ($triggers[$key]['hosts'] as $host) {
+								if ($host['status'] != HOST_STATUS_MONITORED
+										&& $host['status'] != HOST_STATUS_NOT_MONITORED) {
+									unset($triggers[$key]);
+									break;
+								}
+							}
+						}
+					}
+
 					CArrayHelper::sort($triggers, [
 						['field' => 'description', 'order' => ZBX_SORT_UP]
 					]);
@@ -377,7 +397,7 @@ switch ($data['method']) {
 
 			case 'users':
 				$users = API::User()->get([
-					'editable' => array_key_exists('editable', $data) ? $data['editable'] : null,
+					'editable' => array_key_exists('editable', $data) ? $data['editable'] : false,
 					'output' => ['userid', 'alias', 'name', 'surname'],
 					'search' => array_key_exists('search', $data)
 						? [

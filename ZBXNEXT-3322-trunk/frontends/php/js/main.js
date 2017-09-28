@@ -301,7 +301,7 @@ var AudioControl = {
  * @author Konstantin Buravcov
  */
 var jqBlink = {
-	shown: false, // are objects currently shown or hidden?
+	shown: true, // are objects currently shown or hidden?
 	blinkInterval: 1000, // how fast will they blink (ms)
 	secondsSinceInit: 0,
 
@@ -346,11 +346,7 @@ var jqBlink = {
 			if (typeof obj.data('timeToBlink') !== 'undefined') {
 				var shouldBlink = parseInt(obj.data('timeToBlink'), 10) > that.secondsSinceInit;
 
-				// if object stops blinking, it should be left visible
-				if (!shouldBlink && !that.shown) {
-					obj.css('visibility', 'visible');
-				}
-				return shouldBlink;
+				return shouldBlink || !that.shown;
 			}
 			else {
 				// no time-to-blink attribute, should blink forever
@@ -408,8 +404,10 @@ var hintBox = {
 		return box;
 	},
 
-	HintWraper: function(e, target, hintText, className, styles) {
+	HintWrapper: function(e, target, className, styles) {
 		target.isStatic = false;
+
+		var	hintText = jQuery('.hint-box', target).html();
 
 		jQuery(target).on('mouseenter', function(e, d) {
 			if (d) {
@@ -428,16 +426,20 @@ var hintBox = {
 		jQuery(target).trigger('mouseenter', e);
 	},
 
-	showStaticHint: function(e, target, hint, className, resizeAfterLoad, styles) {
+	showStaticHint: function(e, target, className, resizeAfterLoad, styles, hintText) {
 		var isStatic = target.isStatic;
 		hintBox.hideHint(e, target, true);
 
 		if (!isStatic) {
+			if (typeof hintText === 'undefined') {
+				hintText = jQuery('.hint-box', target).html();
+			}
+
 			target.isStatic = true;
-			hintBox.showHint(e, target, hint, className, true, styles);
+			hintBox.showHint(e, target, hintText, className, true, styles);
 
 			if (resizeAfterLoad) {
-				hint.one('load', function(e) {
+				hintText.one('load', function(e) {
 					hintBox.positionHint(e, target);
 				});
 			}
@@ -592,11 +594,14 @@ function create_color_picker() {
 
 function set_color(color) {
 	var background = color;
+
 	if (curr_lbl) {
 		if (color.trim() !== '') {
 			background = '#' + color;
 		}
-		curr_lbl.style.background = curr_lbl.style.color = background;
+
+		curr_lbl.style.color = background;
+		curr_lbl.style.background = background;
 		curr_lbl.title = background;
 	}
 	if (curr_txt) {
