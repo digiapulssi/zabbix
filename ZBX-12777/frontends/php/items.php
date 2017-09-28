@@ -1367,6 +1367,8 @@ elseif (((hasRequest('action') && getRequest('action') === 'item.massupdateform'
 		$data['delay_flex'][] = ['delay' => '', 'period' => '', 'type' => ITEM_DELAY_FLEXIBLE];
 	}
 
+	$data['jmx_endpoint'] = ZBX_DEFAULT_JMX_ENDPOINT;
+
 	// render view
 	$itemView = new CView('configuration.item.massupdate', $data);
 	$itemView->render();
