@@ -1443,14 +1443,14 @@ function getTriggerFormData($exprAction) {
 
 	// Read groupid for selected host or template if groupid filter is set to 'All' (is equal 0).
 	if ($data['hostid'] && !$data['groupid']) {
-		$db_host = API::HostGroup()->get([
+		$db_hostgroup = API::HostGroup()->get([
 			'output' => ['groupid'],
 			'hostids' => $data['hostid'],
 			'templateids' => $data['hostid']
 		]);
 
-		if ($db_host) {
-			$data['groupid'] = $db_host[0]['groupid'];
+		if ($db_hostgroup) {
+			$data['groupid'] = $db_hostgroup[0]['groupid'];
 		}
 	}
 

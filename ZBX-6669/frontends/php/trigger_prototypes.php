@@ -340,14 +340,14 @@ elseif (isset($_REQUEST['form'])) {
 	$data = getTriggerFormData($exprAction);
 	$data['hostid'] = $discoveryRule['hostid'];
 
-	$db_host = API::HostGroup()->get([
+	$db_hostgroup = API::HostGroup()->get([
 		'output' => ['groupid'],
 		'hostids' => $data['hostid'],
 		'templateids' => $data['hostid']
 	]);
 
-	if ($db_host) {
-		$data['groupid'] = $db_host[0]['groupid'];
+	if ($db_hostgroup) {
+		$data['groupid'] = $db_hostgroup[0]['groupid'];
 	}
 
 	$triggersView = new CView('configuration.trigger.prototype.edit', $data);
