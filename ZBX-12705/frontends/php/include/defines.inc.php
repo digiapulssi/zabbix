@@ -19,8 +19,8 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.4.2rc2');
-define('ZABBIX_API_VERSION',	'3.4.2');
+define('ZABBIX_VERSION',		'3.4.3rc1');
+define('ZABBIX_API_VERSION',	'3.4.3');
 define('ZABBIX_EXPORT_VERSION',	'3.4');
 define('ZABBIX_DB_VERSION',		3040000);
 
@@ -1236,7 +1236,6 @@ define('THEME_DEFAULT', 'default');
 // the default theme
 define('ZBX_DEFAULT_THEME', 'blue-theme');
 
-define('ZABBIX_HOMEPAGE', 'http://www.zabbix.com');
 define('ZBX_DEFAULT_URL', 'zabbix.php?action=dashboard.view');
 
 // non translatable date formats
