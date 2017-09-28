@@ -994,25 +994,16 @@ class CMediatype extends CApiService {
 		if ($options['selectMedia'] !== null && $options['selectMedia'] != API_OUTPUT_COUNT) {
 			$relationMap = $this->createRelationMap($result, 'mediatypeid', 'mediaid', 'media');
 
-			$user_media = [];
-			$mediaids = $relationMap->getRelatedIds();
-
 			$users = API::User()->get([
 				'output' => [],
 				'selectMedias' => $options['selectMedia'],
-				'mediaids' => $mediaids
+				'mediaids' => $relationMap->getRelatedIds(),
+				'userids' => $options['userids']
 			]);
 
-			// We know that there is only one remedy media ID.
-			foreach ($users[0]['medias'] as $media) {
-				if ($media['mediaid'] == $mediaids[0]) {
-					// preserve key for mapping
-					$user_media[$media['mediaid']] = $media;
-					break;
-				}
-			}
+			$medias = zbx_toHash($users[0]['medias'], 'mediaid');
 
-			$result = $relationMap->mapMany($result, $user_media, 'media');
+			$result = $relationMap->mapMany($result, $medias, 'media');
 		}
 
 		return $result;
