@@ -957,7 +957,10 @@ ZBX_THREAD_ENTRY(ipmi_manager_thread, args)
 	zbx_ipmi_manager_t	ipmi_manager;
 	zbx_ipmi_poller_t	*poller;
 	int			ret, nextcheck, timeout, nextcleanup, polled_num, scheduled_num, now;
-	double			time_stat, time_idle, time_now, resolver_timestamp = 0.0;
+	double			time_stat, time_idle, time_now;
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+	double			resolver_timestamp = 0.0;
+#endif
 
 #define	STAT_INTERVAL	5	/* if a process is busy and does not sleep then update status not faster than */
 				/* once in STAT_INTERVAL seconds */

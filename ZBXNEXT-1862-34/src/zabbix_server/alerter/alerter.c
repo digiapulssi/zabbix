@@ -282,8 +282,10 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 	int			success_num, fail_num;
 	zbx_ipc_socket_t	alerter_socket;
 	zbx_ipc_message_t	message;
-	double			time_stat, time_idle, time_now, time_read, resolver_timestamp = 0.0;
-
+	double			time_stat, time_idle, time_now, time_read;
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+	double			resolver_timestamp = 0.0;
+#endif
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
 	process_num = ((zbx_thread_args_t *)args)->process_num;

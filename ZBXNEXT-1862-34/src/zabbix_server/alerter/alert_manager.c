@@ -1852,8 +1852,10 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 	zbx_ipc_message_t	*message;
 	zbx_am_alerter_t	*alerter;
 	int			ret, sent_num, failed_num, now, time_db, time_watchdog, freq_watchdog, time_connect;
-	double			time_stat, time_idle, time_now, resolver_timestamp = 0.0;
-
+	double			time_stat, time_idle, time_now;
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+	double			resolver_timestamp = 0.0;
+#endif
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
 	process_num = ((zbx_thread_args_t *)args)->process_num;

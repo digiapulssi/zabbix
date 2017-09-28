@@ -950,7 +950,10 @@ ZBX_THREAD_ENTRY(preprocessing_manager_thread, args)
 	zbx_ipc_message_t		*message;
 	zbx_preprocessing_manager_t	manager;
 	int				ret;
-	double				time_stat, time_idle, time_now, resolver_timestamp = 0.0;
+	double				time_stat, time_idle, time_now;
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+	double				resolver_timestamp = 0.0;
+#endif
 
 #define	STAT_INTERVAL	5	/* if a process is busy and does not sleep then update status not faster than */
 				/* once in STAT_INTERVAL seconds */
