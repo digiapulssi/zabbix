@@ -37,13 +37,9 @@ for ($severity = TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity < TRIGGER_SEVERITY_C
 $help = get_icon('overviewhelp');
 $help->setHint($help_hint);
 
-$menu_items = prepareHeaderMenuItems(
-	[SHOW_TRIGGERS => ['title' => _('Overview triggers')], SHOW_DATA => ['title' => _('Overview data')]],
-	'type',
-	(int) $this->data['type']
-);
+$page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('type', (int)$data['type'])->getUrl();
 
-$widget = (new CHeaderMenuWidget($menu_items))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url)))
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addItem((new CList())

@@ -71,12 +71,9 @@ if ($blink_period > 0) {
 $help = get_icon('overviewhelp');
 $help->setHint($help_hint);
 
-$menu_items = prepareHeaderMenuItems(
-	[SHOW_TRIGGERS => ['title' => _('Overview triggers')], SHOW_DATA => ['title' => _('Overview data')]],
-	'type',
-	(int) $this->data['type']
-);
-$widget = (new CHeaderMenuWidget($menu_items))
+$page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('type', $data['type'])->getUrl();
+
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url)))
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addItem((new CList())

@@ -61,16 +61,10 @@ if ($zabbixServer->getError()) {
 
 	require_once dirname(__FILE__).'/include/page_footer.php';
 }
-$menu_items = prepareHeaderMenuItems(
-	$menu = [
-		QUEUE_OVERVIEW          => ['title' => _('Queue overview')],
-		QUEUE_OVERVIEW_BY_PROXY => ['title' => _('Queue overview by proxy')],
-		QUEUE_DETAILS           => ['title' => _('Queue details')]
-	],
-	'config',
-	(int) $config
-);
-$widget = new CHeaderMenuWidget($menu_items);
+
+$page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('config', (int)$config)->getUrl();
+
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url));
 
 $table = new CTableInfo();
 

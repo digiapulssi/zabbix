@@ -829,6 +829,20 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 			['title' => _('Screens'), 'url' => 'screens.php'],
 			['title' => _('Slide shows'), 'url' => 'slides.php']
 		],
+		// Location "Monitoring > Overview".
+		[
+			['title' => _('Overview triggers'), 'url' => 'overview.php?type=0'],// SHOW_TRIGGERS
+			['title' => _('Overview data'), 'url' => 'overview.php?type=1']// SHOW_DATA
+		],
+		// Location "Configuration > Actions"
+		[
+			['title' => _('Trigger actions'), 'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_TRIGGERS],
+			['title' => _('Discovery actions'), 'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_DISCOVERY],
+			['title' => _('Auto registration actions'),
+				'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_AUTO_REGISTRATION
+			],
+			['title' => _('Internal actions'), 'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_INTERNAL]
+		],
 		// Location "Administration > General".
 		[
 			['title' => _('GUI'), 'url' => 'adm.gui.php'],
@@ -842,6 +856,12 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 			['title' => _('Trigger severities'), 'url' => 'adm.triggerseverities.php'],
 			['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
 			['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
+		],
+		// Location "Administration > Queue"
+		[
+			['title' => _('Queue overview'), 'url' => 'queue.php?config='.QUEUE_OVERVIEW],
+			['title' => _('Queue overview by proxy'), 'url' => 'queue.php?config='.QUEUE_OVERVIEW_BY_PROXY],
+			['title' => _('Queue details'), 'url' => 'queue.php?config='.QUEUE_DETAILS]
 		]
 	];
 	$menu_items = [];
@@ -984,26 +1004,4 @@ function getTriggerSeverityCss($config)
 	}
 
 	return $css;
-}
-
-/**
- * Prepare dropdown menu item by given items and current url
- *
- * @param array  $menu_items          menu items
- * @param string $param_name          name of url parameter
- * @param mixed  $current_param_value url param value from current url (selected menu item)
- * @return array
- */
-function prepareHeaderMenuItems($menu_items, $param_name, $current_param_value) {
-
-	$url_builder = CUrlFactory::getContextUrl();
-	$url_builder->clearArguments();
-	foreach ($menu_items as $param_value => &$data) {
-		$data['selected'] = false;
-		if ($param_value === $current_param_value) {
-			$data['selected'] = true;
-		}
-		$data['url'] = $url_builder->setArgument($param_name, $param_value)->getUrl();
-	}
-	return $menu_items;
 }

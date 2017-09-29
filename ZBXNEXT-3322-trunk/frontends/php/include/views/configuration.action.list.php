@@ -19,18 +19,10 @@
 **/
 
 
-$menu_items = prepareHeaderMenuItems(
-	[
-		EVENT_SOURCE_TRIGGERS          => ['title' => _('Trigger actions')],
-		EVENT_SOURCE_DISCOVERY         => ['title' => _('Discovery actions')],
-		EVENT_SOURCE_AUTO_REGISTRATION => ['title' => _('Auto registration actions')],
-		EVENT_SOURCE_INTERNAL          => ['title' => _('Internal actions')]
-	],
-	'eventsource',
-	(int) $data['eventsource']
-);
+$page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('eventsource', (int)$data['eventsource'])
+	->getUrl();
 
-$widget = (new CHeaderMenuWidget($menu_items))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url)))
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addVar('eventsource', $data['eventsource'])
