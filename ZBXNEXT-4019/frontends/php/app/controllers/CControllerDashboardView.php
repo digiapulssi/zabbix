@@ -413,16 +413,16 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			$widgetid = $widget['widgetid'];
 			$fields = self::convertWidgetFields($widget['fields']);
 
-			$widget_form = CWidgetConfig::getForm($widget['type'], CJs::encodeJson($fields));
-			if ($widget_form->validate()) {
-				$fields = $widget_form->getFieldsData();
-			}
-
 			$rf_rate = (array_key_exists('rf_rate', $fields))
 				? ($fields['rf_rate'] == -1)
 					? CWidgetConfig::getDefaultRfRate($widget['type'])
 					: $fields['rf_rate']
 				: CWidgetConfig::getDefaultRfRate($widget['type']);
+
+			$widget_form = CWidgetConfig::getForm($widget['type'], CJs::encodeJson($fields));
+			if ($widget_form->validate()) {
+				$fields = $widget_form->getFieldsData();
+			}
 
 			$grid_widgets[$widgetid] = [
 				'widgetid' => $widgetid,
