@@ -249,10 +249,12 @@ else {
 
 	$historyWidget->addItem($screen->get());
 
-	CScreenBuilder::insertScreenStandardJs([
-		'timeline' => $screen->timeline,
-		'profileIdx' => $screen->profileIdx
-	]);
+	if ($data['action'] === 'showvalues' || $data['action'] === 'showgraph') {
+		CScreenBuilder::insertScreenStandardJs([
+			'timeline' => $screen->timeline,
+			'profileIdx' => $screen->profileIdx
+		]);
+	}
 }
 
 return $historyWidget;
