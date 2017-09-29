@@ -63,9 +63,9 @@ if ($zabbixServer->getError()) {
 }
 $menu_items = prepareHeaderMenuItems(
 	$menu = [
-		QUEUE_OVERVIEW          => ['title' => _('Queue Overview')],
-		QUEUE_OVERVIEW_BY_PROXY => ['title' => _('Queue Overview by proxy')],
-		QUEUE_DETAILS           => ['title' => _('Queue Details')]
+		QUEUE_OVERVIEW          => ['title' => _('Queue overview')],
+		QUEUE_OVERVIEW_BY_PROXY => ['title' => _('Queue overview by proxy')],
+		QUEUE_DETAILS           => ['title' => _('Queue details')]
 	],
 	'config',
 	(int) $config

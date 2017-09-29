@@ -38,7 +38,7 @@ $help = get_icon('overviewhelp');
 $help->setHint($help_hint);
 
 $menu_items = prepareHeaderMenuItems(
-	[SHOW_TRIGGERS => ['title' => _('Overview Triggers')], SHOW_DATA => ['title' => _('Overview Data')]],
+	[SHOW_TRIGGERS => ['title' => _('Overview triggers')], SHOW_DATA => ['title' => _('Overview data')]],
 	'type',
 	(int) $this->data['type']
 );
