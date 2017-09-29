@@ -38,7 +38,8 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			'hostid' =>				'db hosts.hostid',
 			'new' =>				'in 1',
 			'period' =>				'int32',
-			'stime' =>				'time'
+			'stime' =>				'time',
+			'isNow' =>				'in 0,1'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -55,22 +56,18 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	}
 
 	protected function doAction() {
-		$dashboard_requested = ($this->hasInput('dashboardid') || $this->hasInput('source_dashboardid')
-			|| $this->hasInput('new'));
-		$this->dashboard = $this->getDashboard();
+		list($this->dashboard, $error) = $this->getDashboard();
 
-		if (!$dashboard_requested) {
-			$url = (new CUrl('zabbix.php'))
-				->setArgument('action', 'dashboard.list')
-				->setArgument('fullscreen', $this->getInput('fullscreen', '0') ? '1' : null);
-			$this->setResponse(new CControllerResponseRedirect($url->getUrl()));
+		if ($error !== null) {
+			$this->setResponse(new CControllerResponseData(['error' => $error]));
 
 			return;
 		}
 		elseif ($this->dashboard === null) {
-			$this->setResponse(new CControllerResponseData([
-				'error' => _('No permissions to referred object or it does not exist!')
-			]));
+			$url = (new CUrl('zabbix.php'))
+				->setArgument('action', 'dashboard.list')
+				->setArgument('fullscreen', $this->getInput('fullscreen', '0') ? '1' : null);
+			$this->setResponse(new CControllerResponseRedirect($url->getUrl()));
 
 			return;
 		}
@@ -94,9 +91,10 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			$data['timeline'] = calculateTime([
 				'profileIdx' => $options['profileIdx'],
 				'profileIdx2' => $options['profileIdx2'],
-				'updateProfile' => 1,
+				'updateProfile' => true,
 				'period' => $this->hasInput('period') ? $this->getInput('period') : null,
-				'stime' => $this->hasInput('stime') ? $this->getInput('stime') : null
+				'stime' => $this->hasInput('stime') ? $this->getInput('stime') : null,
+				'isNow' => $this->hasInput('isNow') ? $this->getInput('isNow') : null
 			]);
 
 			$data['timeControlData'] = [
@@ -153,6 +151,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 */
 	private function getDashboard() {
 		$dashboard = null;
+		$error = null;
 
 		if ($this->hasInput('new')) {
 			$dashboard = $this->getNewDashboard();
@@ -177,13 +176,25 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 					'userGroups' => $dashboards[0]['userGroups']
 				];
 			}
+			else {
+				$error = _('No permissions to referred object or it does not exist!');
+			}
 		}
 		else {
 			// Getting existing dashboard.
 			$dashboardid = $this->getInput('dashboardid', CProfile::get('web.dashbrd.dashboardid', 0));
 
 			if ($dashboardid == 0 && CProfile::get('web.dashbrd.list_was_opened') != 1) {
-				$dashboardid = DASHBOARD_DEFAULT_ID;
+				// Get first available dashboard that user has read permissions.
+				$dashboards = API::Dashboard()->get([
+					'output' => ['dashboardid'],
+					'sortfield' => 'name',
+					'limit' => 1
+				]);
+
+				if ($dashboards) {
+					$dashboardid = $dashboards[0]['dashboardid'];
+				}
 			}
 
 			if ($dashboardid != 0) {
@@ -201,10 +212,16 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 
 					CProfile::update('web.dashbrd.dashboardid', $dashboardid, PROFILE_TYPE_ID);
 				}
+				elseif ($this->hasInput('dashboardid')) {
+					$error = _('No permissions to referred object or it does not exist!');
+				}
+				else {
+					// In case if previous dashboard is deleted, show dashboard list.
+				}
 			}
 		}
 
-		return $dashboard;
+		return [$dashboard, $error];
 	}
 
 	/**
@@ -347,8 +364,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getNewDashboard()
-	{
+	private function getNewDashboard() {
 		return [
 			'dashboardid' => 0,
 			'name' => _('New dashboard'),
@@ -365,8 +381,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getOwnerData($userid)
-	{
+	private function getOwnerData($userid) {
 		$owner = ['id' => $userid, 'name' => _('Inaccessible user')];
 
 		$users = API::User()->get([
@@ -397,6 +412,11 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 
 			$widgetid = $widget['widgetid'];
 			$fields = self::convertWidgetFields($widget['fields']);
+
+			$widget_form = CWidgetConfig::getForm($widget['type'], CJs::encodeJson($fields));
+			if ($widget_form->validate()) {
+				$fields = $widget_form->getFieldsData();
+			}
 
 			$rf_rate = (array_key_exists('rf_rate', $fields))
 				? ($fields['rf_rate'] == -1)

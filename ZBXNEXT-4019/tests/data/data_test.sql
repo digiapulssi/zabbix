@@ -36,7 +36,7 @@ INSERT INTO interface (interfaceid, hostid, main, type, useip, ip, dns, port) VA
 INSERT INTO interface (interfaceid,hostid,main,type,useip,ip,dns,port) values (10022,10053,1,2,1,'127.0.0.1','','161');
 INSERT INTO interface (interfaceid,hostid,main,type,useip,ip,dns,port) values (10023,10053,1,3,1,'127.0.0.1','','623');
 INSERT INTO interface (interfaceid,hostid,main,type,useip,ip,dns,port) values (10024,10053,1,4,1,'127.0.0.1','','12345');
-INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (278, 10053, 4);
+INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (90278, 10053, 4);
 
 -- Add regular expressions
 INSERT INTO regexps (regexpid, name, test_string) VALUES (20,'1_regexp_1','first test string');
@@ -347,8 +347,8 @@ INSERT INTO sysmaps_links (linkid, sysmapid, selementid1, selementid2, drawtype,
 
 INSERT INTO sysmaps_link_triggers (linktriggerid, linkid, triggerid, drawtype, color) VALUES (1,1,13545,4,'DD0000');
 
-INSERT INTO sysmap_element_url (sysmapelementurlid, selementid, name, url) VALUES (1,4,'Zabbix home','www.zabbix.com');
-INSERT INTO sysmap_element_url (sysmapelementurlid, selementid, name, url) VALUES (2,5,'www.wikipedia.org','www.wikipedia.org');
+INSERT INTO sysmap_element_url (sysmapelementurlid, selementid, name, url) VALUES (1,4,'Zabbix home','http://www.zabbix.com');
+INSERT INTO sysmap_element_url (sysmapelementurlid, selementid, name, url) VALUES (2,5,'www.wikipedia.org','http://www.wikipedia.org');
 -- Add shapes
 INSERT INTO sysmap_shape (sysmap_shapeid, sysmapid, type, x, y, width, height, text, font, font_size, font_color, text_halign, text_valign, border_type, border_width, border_color, background_color, zindex) VALUES (100,3,1,425,257,199,135,'',9,11,'000000',0,0,1,2,'000000','FFCCCC',0);
 INSERT INTO sysmap_shape (sysmap_shapeid, sysmapid, type, x, y, width, height, text, font, font_size, font_color, text_halign, text_valign, border_type, border_width, border_color, background_color, zindex) VALUES (101,3,0,113,82,124,86,'',9,11,'000000',0,0,3,5,'009900','',1);
@@ -680,7 +680,7 @@ INSERT INTO alerts (alertid, actionid, eventid, userid, clock, mediatypeid, send
 
 -- host, item, trigger  for testing macro resolving in trigger description
 INSERT INTO hosts (hostid, host, name, status, description) VALUES (20006, 'Host for trigger description macros', 'Host for trigger description macros', 0, '');
-INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (279, 20006, 4);
+INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (90279, 20006, 4);
 INSERT INTO interface (type, ip, dns, useip, port, main, hostid, interfaceid) VALUES (1, '127.0.0.1', '', '1', '10050', '1', 20006, 10025);
 INSERT INTO items (itemid, name, key_, hostid, interfaceid, delay, value_type, params, description) VALUES (24338, 'item1', 'key1', 20006, 10025, '30s', 3, '', '');
 INSERT INTO triggers (triggerid, description, value, state, lastchange, comments) VALUES (15517, 'trigger host.host:{HOST.HOST} | host.host2:{HOST.HOST2} | host.name:{HOST.NAME} | item.value:{ITEM.VALUE} | item.value1:{ITEM.VALUE1} | item.lastvalue:{ITEM.LASTVALUE} | host.ip:{HOST.IP} | host.dns:{HOST.DNS} | host.conn:{HOST.CONN}', 0, 1, '1339761311', '');
@@ -755,10 +755,10 @@ INSERT INTO triggers (triggerid, expression, description, comments)             
 INSERT INTO triggers (triggerid, expression, description, comments)             VALUES (99001, '{99730}=0', 'testInheritanceTrigger2', '');
 INSERT INTO triggers (triggerid, expression, description, comments)             VALUES (99002, '{99731}=0', 'testInheritanceTrigger3', '');
 INSERT INTO triggers (triggerid, expression, description, comments)             VALUES (99003, '{99732}=0', 'testInheritanceTrigger4', '');
-INSERT INTO triggers (triggerid, expression, description, comments, templateid) VALUES (99004, '{99733}=0', 'testInheritanceTrigger1', '', 15000);
-INSERT INTO triggers (triggerid, expression, description, comments, templateid) VALUES (99005, '{99734}=0', 'testInheritanceTrigger2', '', 15001);
-INSERT INTO triggers (triggerid, expression, description, comments, templateid) VALUES (99006, '{99735}=0', 'testInheritanceTrigger3', '', 15002);
-INSERT INTO triggers (triggerid, expression, description, comments, templateid) VALUES (99007, '{99736}=0', 'testInheritanceTrigger4', '', 15003);
+INSERT INTO triggers (triggerid, expression, description, comments, templateid) VALUES (99004, '{99733}=0', 'testInheritanceTrigger1', '', 99000);
+INSERT INTO triggers (triggerid, expression, description, comments, templateid) VALUES (99005, '{99734}=0', 'testInheritanceTrigger2', '', 99001);
+INSERT INTO triggers (triggerid, expression, description, comments, templateid) VALUES (99006, '{99735}=0', 'testInheritanceTrigger3', '', 99002);
+INSERT INTO triggers (triggerid, expression, description, comments, templateid) VALUES (99007, '{99736}=0', 'testInheritanceTrigger4', '', 99003);
 INSERT INTO functions (functionid, triggerid, itemid, function, parameter) VALUES (99729, 99000, 15000, 'last', '');
 INSERT INTO functions (functionid, triggerid, itemid, function, parameter) VALUES (99730, 99001, 15000, 'last', '');
 INSERT INTO functions (functionid, triggerid, itemid, function, parameter) VALUES (99731, 99002, 15000, 'last', '');
@@ -892,10 +892,10 @@ INSERT INTO triggers (triggerid, expression, description, comments, flags)      
 INSERT INTO triggers (triggerid, expression, description, comments, flags)             VALUES (99009, '{99738}=0', 'testInheritanceTriggerPrototype2', '', 2);
 INSERT INTO triggers (triggerid, expression, description, comments, flags)             VALUES (99010, '{99739}=0', 'testInheritanceTriggerPrototype3', '', 2);
 INSERT INTO triggers (triggerid, expression, description, comments, flags)             VALUES (99011, '{99740}=0', 'testInheritanceTriggerPrototype4', '', 2);
-INSERT INTO triggers (triggerid, expression, description, comments, flags, templateid) VALUES (99012, '{99741}=0', 'testInheritanceTriggerPrototype1', '', 2, 15008);
-INSERT INTO triggers (triggerid, expression, description, comments, flags, templateid) VALUES (99013, '{99742}=0', 'testInheritanceTriggerPrototype2', '', 2, 15009);
-INSERT INTO triggers (triggerid, expression, description, comments, flags, templateid) VALUES (99014, '{99743}=0', 'testInheritanceTriggerPrototype3', '', 2, 15010);
-INSERT INTO triggers (triggerid, expression, description, comments, flags, templateid) VALUES (99015, '{99744}=0', 'testInheritanceTriggerPrototype4', '', 2, 15011);
+INSERT INTO triggers (triggerid, expression, description, comments, flags, templateid) VALUES (99012, '{99741}=0', 'testInheritanceTriggerPrototype1', '', 2, 99008);
+INSERT INTO triggers (triggerid, expression, description, comments, flags, templateid) VALUES (99013, '{99742}=0', 'testInheritanceTriggerPrototype2', '', 2, 99009);
+INSERT INTO triggers (triggerid, expression, description, comments, flags, templateid) VALUES (99014, '{99743}=0', 'testInheritanceTriggerPrototype3', '', 2, 99010);
+INSERT INTO triggers (triggerid, expression, description, comments, flags, templateid) VALUES (99015, '{99744}=0', 'testInheritanceTriggerPrototype4', '', 2, 99011);
 INSERT INTO functions (functionid, itemid, triggerid, function, parameter) VALUES (99737, 15021, 99008, 'last', '');
 INSERT INTO functions (functionid, itemid, triggerid, function, parameter) VALUES (99738, 15021, 99009, 'last', '');
 INSERT INTO functions (functionid, itemid, triggerid, function, parameter) VALUES (99739, 15021, 99010, 'last', '');

@@ -30,6 +30,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = [
 	'period' =>			[T_ZBX_INT, O_OPT, P_NZERO,	BETWEEN(ZBX_MIN_PERIOD, ZBX_MAX_PERIOD), null],
 	'stime' =>			[T_ZBX_INT, O_OPT, P_NZERO,	null,				null],
+	'isNow' =>			[T_ZBX_INT, O_OPT, null,		IN('0,1'),			null],
 	'profileIdx' =>		[T_ZBX_STR, O_OPT, null,		null,				null],
 	'profileIdx2' =>	[T_ZBX_STR, O_OPT, null,		null,				null],
 	'httptestid' =>		[T_ZBX_INT, O_OPT, P_NZERO,	null,				null],
@@ -77,7 +78,7 @@ if ($httptestid = getRequest('httptestid', false)) {
 	$hosts = zbx_toHash($httptests[0]['hosts'], 'hostid');
 
 	$dbItems = DBselect(
-		'SELECT i.itemid, i.type, i.name, i.delay, i.units, i.hostid, i.history, i.trends, i.value_type, i.key_'.
+		'SELECT i.itemid,i.type,i.name,i.delay,i.units,i.hostid,i.history,i.trends,i.value_type,i.key_'.
 		' FROM httpstepitem hi,items i,httpstep hs'.
 		' WHERE i.itemid=hi.itemid'.
 			' AND hs.httptestid='.zbx_dbstr($httptestid).
@@ -136,11 +137,13 @@ else {
 $profileIdx = getRequest('profileIdx', 'web.httptest');
 $profileIdx2 = getRequest('httptestid', getRequest('profileIdx2'));
 
-$timeline = CScreenBase::calculateTime([
+$timeline = calculateTime([
 	'profileIdx' => $profileIdx,
 	'profileIdx2' => $profileIdx2,
+	'updateProfile' => false,
 	'period' => getRequest('period'),
-	'stime' => getRequest('stime')
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow')
 ]);
 
 CProfile::update($profileIdx.'.httptestid', $profileIdx2, PROFILE_TYPE_ID);
