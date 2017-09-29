@@ -65,10 +65,8 @@ class CHeaderMenuWidget extends CWidget
 					->onClick('javascript: jQuery("#'.$list->getId().'").toggle();');
 			}
 			$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
-			$list->addItem(
-				(new CLink($title, $item['url']))->addClass(ZBX_STYLE_ACTION_MENU_ITEM),
-				ZBX_STYLE_HEADER_DROPDOWN_LIST_ITEM
-			);
+
+			$list->addItem((new CLink($title, $item['url']))->addClass(ZBX_STYLE_ACTION_MENU_ITEM));
 		}
 		$div = (new CDiv([$header, $list]))->addClass(ZBX_STYLE_HEADER_DROPDOWN_MENU);
 

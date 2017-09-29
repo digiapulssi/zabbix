@@ -1468,7 +1468,6 @@ define('ZBX_STYLE_YELLOW', 'yellow');
 define('ZBX_STYLE_HEADER_DROPDOWN', 'header-dropdown');
 define('ZBX_STYLE_ACTION_MENU_ITEM', 'action-menu-item');
 define('ZBX_STYLE_HEADER_DROPDOWN_LIST', 'header-dropdown-list');
-define('ZBX_STYLE_HEADER_DROPDOWN_LIST_ITEM', 'header-dropdown-list-item');
 define('ZBX_STYLE_HEADER_DROPDOWN_MENU', 'header-dropdown-menu');
 
 // server variables

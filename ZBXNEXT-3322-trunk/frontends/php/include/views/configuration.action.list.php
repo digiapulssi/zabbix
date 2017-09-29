@@ -31,7 +31,6 @@ $menu_items = prepareHeaderMenuItems(
 );
 
 $widget = (new CHeaderMenuWidget($menu_items))
-	->setTitle(_('Actions'))
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addVar('eventsource', $data['eventsource'])

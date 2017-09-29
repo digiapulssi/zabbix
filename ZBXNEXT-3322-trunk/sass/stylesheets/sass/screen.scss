@@ -3273,24 +3273,13 @@ a.header-dropdown {
 }
 
 .header-dropdown-list {
+	@extend .action-menu;
 	display: none;
-
-	&.example {
-		display: block;
-	}
+	overflow: hidden;
 	top: 32px;
 	left: -8px;
-
 	padding: 5px 8px;
 	font-size: $font-h4-size;
-	@extend .action-menu;
-
-	.action-menu-item {
-		padding: 0 8px;
-		margin: 0 -8px;
-		height: 26px;
-		line-height: 26px;
-	}
 
 	&::before, &::after {
 		content: '';

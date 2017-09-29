@@ -2294,17 +2294,11 @@ a.header-dropdown {
 
 .header-dropdown-list {
   display: none;
+  overflow: hidden;
   top: 32px;
   left: -8px;
   padding: 5px 8px;
   font-size: 1.167em; }
-  .header-dropdown-list.example {
-    display: block; }
-  .header-dropdown-list .action-menu-item {
-    padding: 0 8px;
-    margin: 0 -8px;
-    height: 26px;
-    line-height: 26px; }
   .header-dropdown-list::before, .header-dropdown-list::after {
     content: '';
     position: absolute;
