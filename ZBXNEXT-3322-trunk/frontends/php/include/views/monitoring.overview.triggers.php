@@ -71,7 +71,7 @@ if ($blink_period > 0) {
 $help = get_icon('overviewhelp');
 $help->setHint($help_hint);
 
-$page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('type', $data['type'])->getUrl();
+$page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('type', (int)$data['type'])->getUrl();
 
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url)))
 	->setControls((new CForm('get'))
