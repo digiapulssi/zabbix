@@ -306,11 +306,11 @@ int	tm_save_remote_command_result_tasks(zbx_tm_task_t **tasks, int tasks_num)
  * Parameters: tasks     - [IN] the tasks                                     *
  *             tasks_num - [IN] the number of tasks to process                *
  *                                                                            *
- * Return value: SUCCEED - the tasksw ere saved successfully                  *
+ * Return value: SUCCEED - the tasks were saved successfully                  *
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static void	tm_save_tasks(const zbx_tm_task_t **tasks, int tasks_num)
+static int	tm_save_tasks(zbx_tm_task_t **tasks, int tasks_num)
 {
 	int		i, ret, remote_command_num = 0, remote_command_result_num = 0, ids_num = 0;
 	zbx_uint64_t	taskid;
@@ -362,7 +362,9 @@ static void	tm_save_tasks(const zbx_tm_task_t **tasks, int tasks_num)
 		ret = tm_save_remote_command_tasks(tasks, tasks_num);
 
 	if (SUCCEED == ret && 0 != remote_command_result_num)
-		tm_save_remote_command_result_tasks(tasks, tasks_num);
+		ret = tm_save_remote_command_result_tasks(tasks, tasks_num);
+
+	return ret;
 }
 
 /******************************************************************************
@@ -377,9 +379,6 @@ static void	tm_save_tasks(const zbx_tm_task_t **tasks, int tasks_num)
 void	zbx_tm_save_tasks(zbx_vector_ptr_t *tasks)
 {
 	const char	*__function_name = "zbx_tm_save_tasks";
-	int		i, rc, remote_command_num = 0, remote_command_result_num = 0, ids_num = 0;
-	zbx_uint64_t	taskid;
-	zbx_tm_task_t	*task;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() tasks_num:%d", __function_name, tasks->values_num);
 
@@ -404,7 +403,6 @@ int	zbx_tm_save_task(zbx_tm_task_t *task)
 {
 	const char	*__function_name = "zbx_tm_save_task";
 	int		ret;
-	int		(*save_task_data_func)(zbx_tm_task_t **tasks, int tasks_num);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
