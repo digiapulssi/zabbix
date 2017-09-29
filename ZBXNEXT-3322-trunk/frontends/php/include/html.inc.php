@@ -831,8 +831,8 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 		],
 		// Location "Monitoring > Overview".
 		[
-			['title' => _('Overview triggers'), 'url' => 'overview.php?type=0'],// SHOW_TRIGGERS
-			['title' => _('Overview data'), 'url' => 'overview.php?type=1']// SHOW_DATA
+			['title' => _('Overview triggers'), 'url' => 'overview.php?type='.ZBX_OVERVIEW_TRIGGERS],
+			['title' => _('Overview data'), 'url' => 'overview.php?type='.ZBX_OVERVIEW_DATA]
 		],
 		// Location "Configuration > Actions"
 		[

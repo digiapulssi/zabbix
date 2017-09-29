@@ -30,8 +30,6 @@ $page['file'] = 'overview.php';
 $page['type'] = detect_page_type(PAGE_TYPE_HTML);
 
 define('ZBX_PAGE_DO_REFRESH', 1);
-define('SHOW_TRIGGERS', 0);
-define('SHOW_DATA', 1);
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
@@ -117,7 +115,7 @@ elseif (hasRequest('filter_rst')) {
 if (hasRequest('type')) {
 	CProfile::update('web.overview.type', getRequest('type'), PROFILE_TYPE_INT);
 }
-$type = CProfile::get('web.overview.type', SHOW_TRIGGERS);
+$type = CProfile::get('web.overview.type', ZBX_OVERVIEW_TRIGGERS);
 
 // overview style
 if (hasRequest('view_style')) {
@@ -139,11 +137,11 @@ $data = [
 
 $data['pageFilter'] = new CPageFilter([
 	'groups' => [
-		($data['type'] == SHOW_TRIGGERS ? 'with_monitored_triggers' : 'with_monitored_items') => true
+		($data['type'] == ZBX_OVERVIEW_TRIGGERS ? 'with_monitored_triggers' : 'with_monitored_items') => true
 	],
 	'hosts' => [
 		'monitored_hosts' => true,
-		($data['type'] == SHOW_TRIGGERS ? 'with_monitored_triggers' : 'with_monitored_items') => true
+		($data['type'] == ZBX_OVERVIEW_TRIGGERS ? 'with_monitored_triggers' : 'with_monitored_items') => true
 	],
 	'hostid' => getRequest('hostid'),
 	'groupid' => getRequest('groupid')
@@ -153,7 +151,7 @@ $data['groupid'] = $data['pageFilter']->groupid;
 $data['hostid'] = $data['pageFilter']->hostid;
 
 // fetch trigger data
-if ($type == SHOW_TRIGGERS) {
+if ($type == ZBX_OVERVIEW_TRIGGERS) {
 	// filter data
 	$filter = [
 		'showTriggers' => $showTriggers,

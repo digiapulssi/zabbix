@@ -1257,6 +1257,10 @@ define('QUEUE_DETAILS', 2);
 // item count to display in the details queue
 define('QUEUE_DETAIL_ITEM_COUNT', 500);
 
+// Monitoring overview triggers displayed data list type.
+define('ZBX_OVERVIEW_TRIGGERS', 0);
+define('ZBX_OVERVIEW_DATA', 1);
+
 // constants for element "copy to..." target types
 define('COPY_TYPE_TO_HOST', 0);
 define('COPY_TYPE_TO_TEMPLATE', 2);
