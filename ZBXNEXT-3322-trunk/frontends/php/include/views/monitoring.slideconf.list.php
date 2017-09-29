@@ -18,19 +18,10 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-$widget = (new CWidget())
-	->setTitle(_('Slide shows'))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('slides.php')))
 	->setControls((new CForm('get'))
 		->cleanItems()
-		->addItem((new CList())
-			->addItem(
-				new CComboBox('config', 'slides.php', 'redirect(this.options[this.selectedIndex].value);', [
-					'screens.php' => _('Screens'),
-					'slides.php' => _('Slide shows')
-				])
-			)
-			->addItem(new CSubmit('form', _('Create slide show')))
-		)
+		->addItem(new CSubmit('form', _('Create slide show')))
 	);
 
 // filter

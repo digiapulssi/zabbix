@@ -18,7 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-$widget = (new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.valuemapping.php')))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.valuemapping.php')))
 	->setControls((new CForm())
 		->cleanItems()
 		->addItem((new CList())

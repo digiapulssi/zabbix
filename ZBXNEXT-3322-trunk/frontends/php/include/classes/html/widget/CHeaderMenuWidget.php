@@ -55,14 +55,14 @@ class CHeaderMenuWidget extends CWidget
 	{
 		$list = (new CList())
 			->addClass(ZBX_STYLE_HEADER_DROPDOWN_LIST)
-			->setId(ZBX_STYLE_HEADER_DROPDOWN_LIST_ID);
+			->setId(uniqid(ZBX_STYLE_HEADER_DROPDOWN_LIST));
 
 		$header = null;
 		foreach ($this->menu_map as $item) {
 			if ($item['selected']) {
 				$header = (new CLink(new CTag('h1', true, $item['title'])))
 					->addClass(ZBX_STYLE_HEADER_DROPDOWN)
-					->onClick('javascript: showHide($(this).next(\'.header-dropdown-list\'));');
+					->onClick('javascript: jQuery("#'.$list->getId().'").toggle();');
 			}
 			$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
 			$list->addItem(

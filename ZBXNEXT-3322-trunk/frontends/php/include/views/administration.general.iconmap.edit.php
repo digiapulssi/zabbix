@@ -21,7 +21,7 @@
 
 include('include/views/js/administration.general.iconmap.js.php');
 
-$widget = new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.iconmapping.php'));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.iconmapping.php'));
 
 $iconMapTab = new CFormList();
 

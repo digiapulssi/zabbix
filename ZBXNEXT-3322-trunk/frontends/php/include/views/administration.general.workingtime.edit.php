@@ -18,7 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-$widget = new CHeaderMenuWidget(getAdministrationGeneralMenuItems('adm.workingtime.php'));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.workingtime.php'));
 
 $workingTimeView = (new CTabView())
 	->addTab('workingTime', _('Working time'),

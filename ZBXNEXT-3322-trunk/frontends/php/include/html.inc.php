@@ -816,37 +816,51 @@ function makePageFooter($with_version = true)
 }
 
 /**
- * Get header menu items for administration page
+ * Get CHeaderMenuWidget header menu items array.
  *
- * @param string $selected_url selected menu item url
+ * @param string $selected_url      URL of selected item, value will be used to determine retun items.
+ *
  * @return array
  */
-function getAdministrationGeneralMenuItems($selected_url)
-{
-	$menu_map = [
-		['title' => _('GUI'), 'url' => 'adm.gui.php'],
-		['title' => _('Housekeeping'), 'url' => 'adm.housekeeper.php'],
-		['title' => _('Images'), 'url' => 'adm.images.php'],
-		['title' => _('Icon mapping'), 'url' => 'adm.iconmapping.php'],
-		['title' => _('Regular expressions'), 'url' => 'adm.regexps.php'],
-		['title' => _('Macros'), 'url' => 'adm.macros.php'],
-		['title' => _('Value mapping'), 'url' => 'adm.valuemapping.php'],
-		['title' => _('Working time'), 'url' => 'adm.workingtime.php'],
-		['title' => _('Trigger severities'), 'url' => 'adm.triggerseverities.php'],
-		['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
-		['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
+function getHeaderWidgetHeaderMenuItems($selected_url) {
+	$menu_items_map = [
+		// Location "Monitoring > Screens".
+		[
+			['title' => _('Screens'), 'url' => 'screens.php'],
+			['title' => _('Slide shows'), 'url' => 'slides.php']
+		],
+		// Location "Administration > General".
+		[
+			['title' => _('GUI'), 'url' => 'adm.gui.php'],
+			['title' => _('Housekeeping'), 'url' => 'adm.housekeeper.php'],
+			['title' => _('Images'), 'url' => 'adm.images.php'],
+			['title' => _('Icon mapping'), 'url' => 'adm.iconmapping.php'],
+			['title' => _('Regular expressions'), 'url' => 'adm.regexps.php'],
+			['title' => _('Macros'), 'url' => 'adm.macros.php'],
+			['title' => _('Value mapping'), 'url' => 'adm.valuemapping.php'],
+			['title' => _('Working time'), 'url' => 'adm.workingtime.php'],
+			['title' => _('Trigger severities'), 'url' => 'adm.triggerseverities.php'],
+			['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
+			['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
+		]
 	];
+	$menu_items = [];
 
-	foreach ($menu_map as &$data) {
-		if ($data['url'] === $selected_url) {
-			$data['selected'] = true;
-		} else {
-			$data['selected'] = false;
+	foreach ($menu_items_map as $menu_items_array) {
+		if (in_array($selected_url, zbx_objectValues($menu_items_array, 'url'))) {
+			foreach ($menu_items_array as $menu_item) {
+				$menu_item['selected'] = ($selected_url === $menu_item['url']);
+				$menu_items[] = $menu_item;
+			}
+
+			break;
 		}
 	}
 
-	return $menu_map;
+	return $menu_items;
 }
+
+
 
 /**
  * Renders an icon list

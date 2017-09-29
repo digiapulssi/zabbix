@@ -18,17 +18,14 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-$widget = (new CWidget())->setTitle(_('Screens'));
 
 $controls = new CList();
 
-if (!$data['templateid']) {
-	$controls->addItem(
-		new CComboBox('config', 'screens.php', 'redirect(this.options[this.selectedIndex].value);', [
-			'screens.php' => _('Screens'),
-			'slides.php' => _('Slide shows')
-		])
-	);
+if ($data['templateid']) {
+	$widget = (new CWidget())->setTitle(_('Screens'));
+}
+else {
+	$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('screens.php'));
 }
 
 $controls->addItem(new CSubmit('form', _('Create screen')));
