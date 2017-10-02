@@ -404,28 +404,59 @@ else {
 		],
 		'usrgrpids' => ($_REQUEST['filter_usrgrpid'] > 0) ? $_REQUEST['filter_usrgrpid'] : null,
 		'getAccess' => 1,
-		'limit' => $config['search_limit'] + 1
+		'limit' => $config['search_limit'] + 1,
+		'preservekeys' => true
 	]);
 
 	// sorting & paging
 	order_result($data['users'], $sortField, $sortOrder);
 	$data['paging'] = getPagingLine($data['users'], $sortOrder, new CUrl('users.php'));
 
+	$now = time();
+
 	// set default lastaccess time to 0
 	foreach ($data['users'] as $user) {
-		$data['usersSessions'][$user['userid']] = ['lastaccess' => 0];
-	}
-
-	$dbSessions = DBselect(
-		'SELECT s.userid,MAX(s.lastaccess) AS lastaccess,s.status'.
-		' FROM sessions s'.
-		' WHERE '.dbConditionInt('s.userid', zbx_objectValues($data['users'], 'userid')).
-		' GROUP BY s.userid,s.status'
-	);
-	while ($session = DBfetch($dbSessions)) {
-		if ($data['usersSessions'][$session['userid']]['lastaccess'] < $session['lastaccess']) {
-			$data['usersSessions'][$session['userid']] = $session;
+		if ($user['users_status'] != GROUP_STATUS_ENABLED) {
+			continue;
 		}
+
+		$session = ['status' => ZBX_SESSION_PASSIVE, 'lastaccess' => 0];
+
+		$autologout = timeUnitToSeconds($user['autologout']);
+		$online_time = ($autologout == 0 || ZBX_USER_ONLINE_TIME < $autologout) ? ZBX_USER_ONLINE_TIME : $autologout;
+
+		$db_sessions = DBselect(
+			'SELECT MAX(s.lastaccess) AS lastaccess'.
+			' FROM sessions s'.
+			' WHERE s.userid='.$user['userid'].
+				' AND s.status='.ZBX_SESSION_ACTIVE.
+			' HAVING MAX(s.lastaccess) IS NOT NULL'
+		);
+
+		if ($db_session = DBfetch($db_sessions)) {
+			if ($db_session['lastaccess'] > $now - $online_time) {
+				$session['status'] = ZBX_SESSION_ACTIVE;
+			}
+			$session['lastaccess'] = $db_session['lastaccess'];
+		}
+
+		if ($session['status'] == ZBX_SESSION_PASSIVE) {
+			$db_sessions = DBselect(
+				'SELECT MAX(s.lastaccess) AS lastaccess'.
+				' FROM sessions s'.
+				' WHERE s.userid='.$user['userid'].
+					' AND s.status='.ZBX_SESSION_PASSIVE.
+				' HAVING MAX(s.lastaccess) IS NOT NULL'
+			);
+
+			if ($db_session = DBfetch($db_sessions)) {
+				if ($db_session['lastaccess'] > $session['lastaccess']) {
+					$session['lastaccess'] = $db_session['lastaccess'];
+				}
+			}
+		}
+
+		$data['usersSessions'][$user['userid']] = $session;
 	}
 
 	// render view

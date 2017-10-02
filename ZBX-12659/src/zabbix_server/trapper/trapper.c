@@ -527,40 +527,39 @@ out:
 static int	DBget_user_count(zbx_uint64_t *count_online, zbx_uint64_t *count_offline)
 {
 	DB_RESULT	result;
+	DB_RESULT	result2;
 	DB_ROW		row;
-	zbx_uint64_t	users_offline, users_online = 0;
+	zbx_uint64_t	users_offline = 0, users_online = 0;
 	int		now, ret = FAIL;
 
-	if (NULL == (result = DBselect("select count(*) from users")))
-		goto out;
+	if (NULL == (result = DBselect("select userid from users")))
+		return FAIL;
 
-	if (NULL == (row = DBfetch(result)) || SUCCEED != is_uint64(row[0], &users_offline))
-		goto out;
-
-	DBfree_result(result);
 	now = time(NULL);
-
-	if (NULL == (result = DBselect("select max(lastaccess) from sessions where status=%d group by userid,status",
-			ZBX_SESSION_ACTIVE)))
-	{
-		goto out;
-	}
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		if (atoi(row[0]) + ZBX_USER_ONLINE_TIME < now)
-			continue;
+		if (NULL == (result2 = DBselect(
+				"select null"
+				" from sessions"
+				" where userid=%s"
+					" and status=%d"
+				" having max(lastaccess)>%d", row[0], ZBX_SESSION_ACTIVE, now - ZBX_USER_ONLINE_TIME)))
+		{
+			goto out;
+		}
 
-		users_online++;
+		if (NULL != DBfetch(result2))
+			users_online++;
+		else
+			users_offline++;
 
-		if (0 == users_offline)	/* new user can be created and log in between two selects */
-			continue;
-
-		users_offline--;
+		DBfree_result(result2);
 	}
 
 	*count_online = users_online;
 	*count_offline = users_offline;
+
 	ret = SUCCEED;
 out:
 	DBfree_result(result);
