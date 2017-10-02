@@ -2859,7 +2859,8 @@ ZABBIX.apps.map = (function($) {
 								triggerid: $(this).val(),
 								elementName: $('input[name^="element_name[' + $(this).val() + ']"]').val(),
 								priority: $('input[name^="element_priority[' + $(this).val() + ']"]').val(),
-								elementExpressionTrigger: $('input[name^="element_expression[' + $(this).val() + ']"]').val()
+								elementExpressionTrigger: $('input[name^="element_expression[' + $(this).val()
+									+ ']"]').val()
 							};
 							i++;
 						});
