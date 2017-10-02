@@ -582,13 +582,16 @@ if ($srctbl == 'usrgrp') {
 	}
 	$userGroups = API::UserGroup()->get($options);
 	order_result($userGroups, 'name');
+	$parentid = $dstfld1 ? zbx_jsvalue($dstfld1) : 'null';
+	$data = [];
 
-	foreach ($userGroups as $userGroup) {
+	foreach ($userGroups as &$userGroup) {
 		$name = (new CLink($userGroup['name'], 'javascript:void(0);'))
 			->setId('spanid'.$userGroup['usrgrpid']);
 
 		if ($multiselect) {
-			$js_action = "javascript: addValue(".zbx_jsvalue($reference).', '.zbx_jsvalue($userGroup['usrgrpid']).');';
+			$js_action = "javascript: addValue(".zbx_jsvalue($reference).', '.zbx_jsvalue($userGroup['usrgrpid'])
+				.', '.$parentid.');';
 		}
 		else {
 			$values = [
@@ -605,13 +608,16 @@ if ($srctbl == 'usrgrp') {
 				: null,
 			$name,
 		]);
+
+		$userGroup['id'] = $userGroup['usrgrpid'];
 	}
+	unset($userGroup);
 
 	if ($multiselect) {
 		$table->setFooter(
 			new CCol(
 				(new CButton('select', _('Select')))
-					->onClick("javascript: addSelectedValues('usrgrps', ".zbx_jsvalue($reference).');')
+					->onClick("javascript: addSelectedValues('usrgrps', ".zbx_jsvalue($reference).', '.$parentid.');')
 			)
 		);
 
