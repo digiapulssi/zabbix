@@ -87,7 +87,6 @@ static int	DBpatch_2020008(void)
 
 DBPATCH_START(2020)
 
-
 /* version, duplicates flag, mandatory flag */
 
 DBPATCH_ADD(2020000, 0, 1)
@@ -98,6 +97,5 @@ DBPATCH_ADD(2020005, 0, 1)
 DBPATCH_ADD(2020006, 0, 1)
 DBPATCH_ADD(2020007, 0, 1)
 DBPATCH_ADD(2020008, 0, 1)
-
 
 DBPATCH_END()

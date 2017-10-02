@@ -264,7 +264,6 @@ static void	alerter_process_exec(zbx_ipc_socket_t *socket, zbx_ipc_message_t *ip
 	zbx_free(command);
 }
 
-
 /******************************************************************************
  *                                                                            *
  * Function: alerter_process_remedy                                           *
