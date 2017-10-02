@@ -512,6 +512,7 @@ New features:
 ...G...PS. [ZBXNEXT-1862] modified server, proxy and agent to follow changes in /etc/resolv.conf (Andris)
 
 Bug fixes:
+..F....... [ZBX-12770] fixed links in select popup for user groups; updated group selection field in Administration->Users (gcalenko)
 A......... [ZBX-8277] improved performance of hostgeneral.unlink() method; fixed SQL statement (Sasha)
 A......... [ZBX-10754] fixed inheritance of template properties in web scenarios (miks)
 A......... [ZBX-12727] fixed response for script.get() method with "editable" flag (Sasha)
