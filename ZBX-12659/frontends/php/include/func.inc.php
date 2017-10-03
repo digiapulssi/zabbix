@@ -2088,7 +2088,7 @@ function get_status() {
 		return $status;
 	}
 
-	$server = new CZabbixServer($ZBX_SERVER, $ZBX_SERVER_PORT, ZBX_SOCKET_TIMEOUT, ZBX_SOCKET_BYTES_LIMIT);
+	$server = new CZabbixServer($ZBX_SERVER, $ZBX_SERVER_PORT, 15, ZBX_SOCKET_BYTES_LIMIT);
 	$server_status = $server->getStatus(get_cookie('zbx_sessionid'));
 	$status['has_status'] = (bool) $server_status;
 

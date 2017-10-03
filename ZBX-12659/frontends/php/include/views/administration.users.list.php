@@ -83,20 +83,22 @@ $usersTable = (new CTableInfo())
 
 foreach ($this->data['users'] as $user) {
 	$userId = $user['userid'];
+	$session = $this->data['usersSessions'][$userId];
 
-	if ($user['users_status'] == GROUP_STATUS_ENABLED) {
-		$session = $this->data['usersSessions'][$userId];
+	// online time
+	if ($session['lastaccess']) {
+		$autologout = timeUnitToSeconds($user['autologout']);
 
-		// online time
-		if ($session['lastaccess']) {
-			$lastaccess = zbx_date2str(DATE_TIME_FORMAT_SECONDS, $session['lastaccess']);
-			$online = ($session['status'] == ZBX_SESSION_ACTIVE)
-				? (new CCol(_('Yes').' ('.$lastaccess.')'))->addClass(ZBX_STYLE_GREEN)
-				: (new CCol(_('No').' ('.$lastaccess.')'))->addClass(ZBX_STYLE_RED);
-		}
-		else {
-			$online = (new CCol(_('No')))->addClass(ZBX_STYLE_RED);
-		}
+		$online_time = ($autologout == 0 || ZBX_USER_ONLINE_TIME < $autologout)
+			? ZBX_USER_ONLINE_TIME
+			: $autologout;
+
+		$online = ($session['status'] == ZBX_SESSION_ACTIVE && $user['users_status'] == GROUP_STATUS_ENABLED
+				&& ($session['lastaccess'] + $online_time) >= time())
+			? (new CCol(_('Yes').' ('.zbx_date2str(DATE_TIME_FORMAT_SECONDS, $session['lastaccess']).')'))
+				->addClass(ZBX_STYLE_GREEN)
+			: (new CCol(_('No').' ('.zbx_date2str(DATE_TIME_FORMAT_SECONDS, $session['lastaccess']).')'))
+				->addClass(ZBX_STYLE_RED);
 	}
 	else {
 		$online = (new CCol(_('No')))->addClass(ZBX_STYLE_RED);
