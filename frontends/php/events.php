@@ -642,7 +642,9 @@ else {
 		$url = (new CUrl('events.php'))
 			->setArgument('fullscreen', getRequest('fullscreen'))
 			->setArgument('groupid', $pageFilter->groupid)
-			->setArgument('hostid', $pageFilter->hostid);
+			->setArgument('hostid', $pageFilter->hostid)
+			->setArgument('stime', $stime)
+			->setArgument('period', $period);
 
 		$paging = getPagingLine($events, ZBX_SORT_UP, $url);
 
