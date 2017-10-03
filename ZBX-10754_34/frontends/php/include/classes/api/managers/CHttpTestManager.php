@@ -655,8 +655,8 @@ class CHttpTestManager {
 
 		if (!empty($httpTestsCreate)) {
 			$newHttpTests = $this->create($httpTestsCreate);
-			foreach ($newHttpTests as $num => $newHttpTest) {
-				$httpTests[$num]['httptestid'] = $newHttpTest['httptestid'];
+			foreach ($newHttpTests as $new_http_test) {
+				$httpTests[$new_http_test['httptestid']] = $new_http_test;
 			}
 		}
 		if (!empty($httpTestsUpdate)) {
