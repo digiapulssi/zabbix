@@ -39,7 +39,8 @@ typedef struct
 }
 zbx_packed_field_t;
 
-#define PACKED_FIELD(value, size) (zbx_packed_field_t){value, size, (0 == size)?PACKED_FIELD_STRING : PACKED_FIELD_RAW};
+#define PACKED_FIELD(value, size)	\
+		(zbx_packed_field_t){(value), (size), (0 == (size) ? PACKED_FIELD_STRING : PACKED_FIELD_RAW)};
 
 zbx_ipc_message_t	message		= (zbx_ipc_message_t){0, 0, NULL};
 int			values_num	= 0;
@@ -122,7 +123,7 @@ static zbx_uint32_t	message_pack_data(zbx_ipc_message_t *message, zbx_packed_fie
  ******************************************************************************/
 static zbx_uint32_t	preprocessor_pack_value(zbx_ipc_message_t *message, zbx_preproc_item_value_t *value)
 {
-	zbx_packed_field_t	fields[22], *offset = fields; /* 22 - max field count */
+	zbx_packed_field_t	fields[22], *offset = fields;	/* 22 - max field count */
 	unsigned char		ts_marker, result_marker, log_marker;
 
 	ts_marker = (NULL != value->ts);
