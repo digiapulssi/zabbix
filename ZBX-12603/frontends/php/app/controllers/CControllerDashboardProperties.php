@@ -69,11 +69,6 @@ class CControllerDashboardProperties extends CControllerDashboardAbstract {
 		}
 
 		if ($dashboard !== false) {
-			/*
-			 * TODO miks: improve consistancy.
-			 *
-			 * CControllerDashboardView::getNewDashboard returns owner as array, but API returns only integer userid.
-			 */
 			if ($dashboard['userid']) {
 				$userid = $this->getInput('userid', $dashboard['userid']);
 
