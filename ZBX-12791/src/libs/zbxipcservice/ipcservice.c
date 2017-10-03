@@ -1633,7 +1633,7 @@ int	zbx_ipc_client_send(zbx_ipc_client_t *client, zbx_uint32_t code, const unsig
 	zbx_ipc_message_t	*message;
 	int			ret = FAIL;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() client:" ZBX_FS_UI64, __function_name, client, client->id);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() clientid:" ZBX_FS_UI64, __function_name, client->id);
 
 	if (0 != client->tx_bytes)
 	{
