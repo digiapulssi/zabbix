@@ -79,7 +79,7 @@ if (hasRequest('filter_set')) {
 	CProfile::update('web.rsm.rollingweekstatus.filter_dnssec', getRequest('filter_dnssec', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_rdds', getRequest('filter_rdds', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_epp', getRequest('filter_epp', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.rsm.rollingweekstatus.filter_slv', getRequest('filter_slv', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_slv', getRequest('filter_slv', 0), PROFILE_TYPE_STR);
 	CProfile::update('web.rsm.rollingweekstatus.filter_status', getRequest('filter_status', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_gtld_group', getRequest('filter_gtld_group', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_cctld_group', getRequest('filter_cctld_group', 0), PROFILE_TYPE_INT);
@@ -107,7 +107,7 @@ $data['filter_dns'] = CProfile::get('web.rsm.rollingweekstatus.filter_dns');
 $data['filter_dnssec'] = CProfile::get('web.rsm.rollingweekstatus.filter_dnssec');
 $data['filter_rdds'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdds');
 $data['filter_epp'] = CProfile::get('web.rsm.rollingweekstatus.filter_epp');
-$data['filter_slv'] = CProfile::get('web.rsm.rollingweekstatus.filter_slv', 0);
+$data['filter_slv'] = CProfile::get('web.rsm.rollingweekstatus.filter_slv');
 $data['filter_status'] = CProfile::get('web.rsm.rollingweekstatus.filter_status');
 $data['filter_gtld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_gtld_group');
 $data['filter_cctld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_cctld_group');
@@ -477,23 +477,23 @@ foreach ($tlds_by_server as $key => $hosts) {
 			}
 
 			foreach ($avail_items as $item) {
-				if ($item['key_'] == RSM_SLV_DNS_AVAIL) {
-					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['availItemId'] = $item['itemid'];
-					$itemIds[$item['itemid']] = true;
+					if ($item['key_'] == RSM_SLV_DNS_AVAIL) {
+						$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['availItemId'] = $item['itemid'];
+						$itemIds[$item['itemid']] = true;
+					}
+					elseif ($item['key_'] == RSM_SLV_DNSSEC_AVAIL) {
+						$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNSSEC]['availItemId'] = $item['itemid'];
+						$itemIds[$item['itemid']] = true;
+					}
+					elseif ($item['key_'] == RSM_SLV_RDDS_AVAIL) {
+						$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_RDDS]['availItemId'] = $item['itemid'];
+						$itemIds[$item['itemid']] = true;
+					}
+					elseif ($item['key_'] == RSM_SLV_EPP_AVAIL) {
+						$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['availItemId'] = $item['itemid'];
+						$itemIds[$item['itemid']] = true;
+					}
 				}
-				elseif ($item['key_'] == RSM_SLV_DNSSEC_AVAIL) {
-					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNSSEC]['availItemId'] = $item['itemid'];
-					$itemIds[$item['itemid']] = true;
-				}
-				elseif ($item['key_'] == RSM_SLV_RDDS_AVAIL) {
-					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_RDDS]['availItemId'] = $item['itemid'];
-					$itemIds[$item['itemid']] = true;
-				}
-				elseif ($item['key_'] == RSM_SLV_EPP_AVAIL) {
-					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['availItemId'] = $item['itemid'];
-					$itemIds[$item['itemid']] = true;
-				}
-			}
 
 			$items += $avail_items;
 
@@ -501,6 +501,15 @@ foreach ($tlds_by_server as $key => $hosts) {
 				foreach ($filter_slv as $filtred_hostid => $value) {
 					if ($value === false) {
 						unset($data['tld'][$DB['SERVERS'][$key]['NR'].$filtred_hostid], $hosts[$filtred_hostid]);
+					}
+				}
+
+				foreach ($data['tld'] as $tld_key => $tld) {
+					if ($data['filter_dns'] && !array_key_exists(RSM_SLV_DNS_ROLLWEEK, $tld)
+							|| $data['filter_dnssec'] && !array_key_exists(RSM_SLV_DNSSEC_ROLLWEEK, $tld)
+							|| $data['filter_rdds'] && !array_key_exists(RSM_RDDS, $tld)
+							|| $data['filter_epp'] && !array_key_exists(RSM_EPP, $tld)) {
+						unset($data['tld'][$DB['SERVERS'][$key]['NR'].$tld['hostid']], $hosts[$tld['hostid']]);
 					}
 				}
 			}
