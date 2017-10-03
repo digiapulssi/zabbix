@@ -35,7 +35,7 @@ class CControllerDashbrdWidgetUpdate extends CController {
 		$fields = [
 			'fullscreen' =>	'in 0,1',
 			'dashboardid' => 'db dashboard.dashboardid',
-			'userid' => 'db dashboard.userid',
+			'userid' => 'db users.userid',
 			'name' => 'db dashboard.name|not_empty',
 			'widgets' => 'array',
 			'sharing' => 'array'
