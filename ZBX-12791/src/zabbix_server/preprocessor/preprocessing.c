@@ -43,8 +43,8 @@ zbx_packed_field_t;
 #define PACKED_FIELD(value, size)	\
 		(zbx_packed_field_t){(value), (size), (0 == (size) ? PACKED_FIELD_STRING : PACKED_FIELD_RAW)};
 
-zbx_ipc_message_t	message		= (zbx_ipc_message_t){0, 0, NULL};
-int			values_num	= 0;
+zbx_ipc_message_t	cached_message	= (zbx_ipc_message_t){0, 0, NULL};
+int			cached_values	= 0;
 
 /******************************************************************************
  *                                                                            *
@@ -667,10 +667,10 @@ void	zbx_preprocess_item_value(zbx_uint64_t itemid, unsigned char item_flags, AG
 	value.state = state;
 	value.ts = ts;
 
-	preprocessor_pack_value(&message, &value);
-	values_num++;
+	preprocessor_pack_value(&cached_message, &value);
+	cached_values++;
 
-	if (MAX_VALUES_LOCAL < values_num)
+	if (MAX_VALUES_LOCAL < cached_values)
 		zbx_preprocessor_flush();
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -685,13 +685,13 @@ out:
  ******************************************************************************/
 void	zbx_preprocessor_flush(void)
 {
-	if (0 < message.size)
+	if (0 < cached_message.size)
 	{
-		preprocessor_send(ZBX_IPC_PREPROCESSOR_REQUEST, message.data, message.size, NULL);
+		preprocessor_send(ZBX_IPC_PREPROCESSOR_REQUEST, cached_message.data, cached_message.size, NULL);
 
-		zbx_ipc_message_clean(&message);
-		zbx_ipc_message_init(&message);
-		values_num = 0;
+		zbx_ipc_message_clean(&cached_message);
+		zbx_ipc_message_init(&cached_message);
+		cached_values = 0;
 	}
 }
 
