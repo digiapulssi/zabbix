@@ -304,6 +304,7 @@ static void	alerter_process_remedy(zbx_ipc_socket_t *socket, zbx_ipc_message_t *
 	zbx_free(smtp_email);
 	zbx_free(username);
 	zbx_free(password);
+	zbx_free(exec_path);
 	zbx_free(error);
 }
 
