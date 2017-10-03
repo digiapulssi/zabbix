@@ -1102,8 +1102,7 @@ if (typeof addPopupValues === 'undefined') {
 		jQuery.ajax({
 			url: url.getUrl(),
 			data: {
-				'dashboardid': data['dashboard']['id'],
-				'editable': '1'
+				'dashboardid': data['dashboard']['id']
 			},
 			success: function(response) {
 				// Revrite javascript function addPopupValues to be used in sharing window.
@@ -1219,8 +1218,7 @@ if (typeof addPopupValues === 'undefined') {
 			post_data = {
 				'dashboardid': data['dashboard']['id'],
 				'name': data['dashboard']['name'],
-				'userid': data['dashboard']['userid'],
-				'editable': '1'
+				'userid': data['dashboard']['userid']
 			};
 
 		url.setArgument('action', 'dashboard.prop.dialog');

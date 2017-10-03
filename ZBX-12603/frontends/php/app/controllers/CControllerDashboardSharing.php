@@ -29,8 +29,7 @@ class CControllerDashboardSharing extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'dashboardid' =>		'db dashboard.dashboardid',
-			'editable'	  =>		'in 0,1'
+			'dashboardid' =>		'db dashboard.dashboardid'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -56,7 +55,7 @@ class CControllerDashboardSharing extends CController {
 			'selectUsers' => 'extend',
 			'selectUserGroups' => 'extend',
 			'dashboardids' => $this->getInput('dashboardid'),
-			'editable' => (bool) $this->getInput('editable', false)
+			'editable' => true
 		]);
 
 		if (($dashboard = reset($dashboards)) !== false) {

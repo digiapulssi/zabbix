@@ -30,7 +30,6 @@ class CControllerDashboardProperties extends CControllerDashboardAbstract {
 	protected function checkInput() {
 		$fields = [
 			'dashboardid' =>		'db dashboard.dashboardid',
-			'editable'	  =>		'in 0,1',
 			'name'		  =>		'string',
 			'userid'	  =>		'db users.userid',
 			'new'		  =>		'in 1'
@@ -61,7 +60,7 @@ class CControllerDashboardProperties extends CControllerDashboardAbstract {
 			$dashboards = API::Dashboard()->get([
 				'output' => ['name', 'dashboardid', 'userid'],
 				'dashboardids' => $this->getInput('dashboardid'),
-				'editable' => (bool) $this->getInput('editable', false),
+				'editable' => true,
 				'preservekeys' => true
 			]);
 
