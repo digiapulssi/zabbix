@@ -1275,12 +1275,6 @@ if (typeof addPopupValues === 'undefined') {
 
 					overlayDialogueDestroy();
 				});
-
-				jQuery('#dashboard_form').on('keyup', function(e) {
-					if (e.which == 13) {
-						jQuery('#dashboard_form').submit();
-					}
-				});
 			},
 			error: function() {
 				alert(t('Something went wrong. Please try again later!'));
