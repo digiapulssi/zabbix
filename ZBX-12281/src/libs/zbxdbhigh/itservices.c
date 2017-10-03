@@ -808,7 +808,7 @@ out:
 	return ret;
 }
 
-void	zbx_create_itservices_lock()
+void	zbx_create_itservices_lock(void)
 {
 	if (FAIL == zbx_mutex_create_force(&itservices_lock, ZBX_MUTEX_ITSERVICES))
 	{
@@ -817,7 +817,7 @@ void	zbx_create_itservices_lock()
 	}
 }
 
-void	zbx_destroy_itservices_lock()
+void	zbx_destroy_itservices_lock(void)
 {
 	zbx_mutex_destroy(&itservices_lock);
 }
