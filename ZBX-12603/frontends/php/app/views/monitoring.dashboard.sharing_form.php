@@ -24,11 +24,11 @@ if ($data['dashboardid']) {
 		->setArgument('action', 'dashboard.update')
 		->getUrl()
 	))
-	->setAttribute('id', 'dashboard_sharing_form')
-	// indicator to help delete all users
-	->addItem(new CInput('hidden', 'users['.CControllerDashboardUpdate::EMPTY_USER.']', '1'))
-	// indicator to help delete all user groups
-	->addItem(new CInput('hidden', 'userGroups['.CControllerDashboardUpdate::EMPTY_GROUP.']', '1'));
+		->setAttribute('id', 'dashboard_sharing_form')
+		// indicator to help delete all users
+		->addItem(new CInput('hidden', 'users['.CControllerDashboardUpdate::EMPTY_USER.']', '1'))
+		// indicator to help delete all user groups
+		->addItem(new CInput('hidden', 'userGroups['.CControllerDashboardUpdate::EMPTY_GROUP.']', '1'));
 
 	// Create table and put a header on it.
 	$table_user_groups = (new CTable())
@@ -37,8 +37,8 @@ if ($data['dashboardid']) {
 
 	// Add user groups to the list.
 	foreach ($data['userGroups'] as $user_groups) {
-		$table_user_groups
-			->addRow((new CRow([
+		$table_user_groups->addRow(
+			(new CRow([
 				new CCol([
 					(new CTextBox('userGroups['.$user_groups['usrgrpid'].'][usrgrpid]', $user_groups['usrgrpid']))->setAttribute('type', 'hidden'),
 					$user_groups['name']
@@ -52,8 +52,7 @@ if ($data['dashboardid']) {
 				(new CCol(
 					(new CButton('remove', _('Remove')))->addClass(ZBX_STYLE_BTN_LINK)
 				))->addClass(ZBX_STYLE_NOWRAP)
-			]))
-			->setId('user_group_shares_'.$user_groups['usrgrpid'])
+			]))->setId('user_group_shares_'.$user_groups['usrgrpid'])
 		);
 	}
 
@@ -68,8 +67,7 @@ if ($data['dashboardid']) {
 						)
 						->addClass(ZBX_STYLE_BTN_LINK)
 				))->setColSpan(3)
-			))
-			->setId('user_group_list_footer')
+			))->setId('user_group_list_footer')
 		);
 
 	// Create table and put a header on it.
@@ -79,7 +77,8 @@ if ($data['dashboardid']) {
 
 	// Add users to the list.
 	foreach ($data['users'] as $user) {
-		$table_users->addRow((new CRow([
+		$table_users->addRow(
+			(new CRow([
 				new CCol([
 					(new CTextBox('users['.$user['userid'].'][userid]', $user['userid']))->setAttribute('type', 'hidden'),
 					$user['name']

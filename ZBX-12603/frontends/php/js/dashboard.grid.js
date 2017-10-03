@@ -1241,7 +1241,6 @@ if (typeof addPopupValues === 'undefined') {
 					'buttons': [
 						{
 							'title': t('Apply'),
-							'focused': true,
 							'class': 'dialogue-widget-save',
 							'keepOpen': false,
 							'action': function() {
