@@ -32,7 +32,6 @@ static int	DBpatch_2020000(void)
 	return SUCCEED;
 }
 
-
 static int	DBpatch_2020002(void)
 {
 	const ZBX_TABLE	table = {"ticket", "ticketid", 0,
