@@ -24,6 +24,7 @@
 #include "zbxserialize.h"
 #include "zbxipcservice.h"
 
+#include "preproc.h"
 #include "preprocessing.h"
 
 #define PACKED_FIELD_RAW	0
@@ -682,7 +683,7 @@ out:
  * Purpose: send flush command to preprocessing manager                       *
  *                                                                            *
  ******************************************************************************/
-void	zbx_preprocessor_flush()
+void	zbx_preprocessor_flush(void)
 {
 	if (0 < message.size)
 	{
@@ -703,7 +704,7 @@ void	zbx_preprocessor_flush()
  * Return value: enqueued item count                                          *
  *                                                                            *
  ******************************************************************************/
-zbx_uint64_t	zbx_preprocessor_get_queue_size()
+zbx_uint64_t	zbx_preprocessor_get_queue_size(void)
 {
 	zbx_uint64_t		size;
 	zbx_ipc_message_t	message;
