@@ -62,8 +62,8 @@ if ($data['dashboardid']) {
 			(new CRow(
 				(new CCol(
 					(new CButton(null, _('Add')))
-						->onClick("return PopUp('popup.php?dstfrm=".$form->getName().
-							"&srctbl=usrgrp&srcfld1=usrgrpid&srcfld2=name&multiselect=1')"
+						->onClick('return PopUp("popup.php?dstfrm='.$form->getName().
+							'&srctbl=usrgrp&srcfld1=usrgrpid&srcfld2=name&multiselect=1")'
 						)
 						->addClass(ZBX_STYLE_BTN_LINK)
 				))->setColSpan(3)
@@ -102,8 +102,8 @@ if ($data['dashboardid']) {
 			(new CRow(
 				(new CCol(
 					(new CButton(null, _('Add')))
-						->onClick("return PopUp('popup.php?dstfrm=".$form->getName().
-							"&srctbl=users&srcfld1=userid&srcfld2=fullname&multiselect=1')"
+						->onClick('return PopUp("popup.php?dstfrm='.$form->getName().
+							'&srctbl=users&srcfld1=userid&srcfld2=fullname&multiselect=1")'
 						)
 						->addClass(ZBX_STYLE_BTN_LINK)
 				))->setColSpan(3)

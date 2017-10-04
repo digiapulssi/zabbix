@@ -1101,7 +1101,7 @@ jQuery(function($) {
 
 			var getWidgetData = function($obj) {
 				var widget_data = $obj.data('widgetData'),
-					response = $(".dashbrd-grid-widget-container")
+					response = $('.dashbrd-grid-widget-container')
 						.dashboardGrid('getWidgetsBy', 'uniqueid', widget_data['uniqueid']);
 
 				if (response.length) {
@@ -1118,7 +1118,7 @@ jQuery(function($) {
 			 * @returns {boolean}
 			 */
 			var isEditMode = function() {
-				return $(".dashbrd-grid-widget-container").dashboardGrid('isEditMode');
+				return $('.dashbrd-grid-widget-container').dashboardGrid('isEditMode');
 			};
 
 			/*
@@ -1407,7 +1407,7 @@ jQuery(function($) {
 							triggers = ['onEditStart', 'beforeDashboardSave','beforeConfigLoad', 'onDashboardReady'];
 
 						$.each(triggers, function(index, trigger) {
-							$(".dashbrd-grid-widget-container").dashboardGrid("addAction", trigger,
+							$('.dashbrd-grid-widget-container').dashboardGrid('addAction', trigger,
 								'zbx_widget_navtree_trigger', options.uniqueid, {
 									'parameters': [trigger],
 									'grid': {'widget': 1},

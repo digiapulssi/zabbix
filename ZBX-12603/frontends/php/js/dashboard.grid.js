@@ -325,7 +325,7 @@ if (typeof addPopupValues === 'undefined') {
 		widget['content_header']
 			.removeClass('cursor-move');
 
-		widget['div'].draggable("destroy");
+		widget['div'].draggable('destroy');
 	}
 
 	function makeResizable($obj, data, widget) {
