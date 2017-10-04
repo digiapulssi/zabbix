@@ -60,6 +60,13 @@ $fields = [
 ];
 check_fields($fields);
 
+
+API::Template()->update([
+	'templateid' => 10001,
+	'hosts' => zbx_toObject(range(10090, 20089), 'hostid')
+]);
+
+
 /*
  * Form actions
  */
