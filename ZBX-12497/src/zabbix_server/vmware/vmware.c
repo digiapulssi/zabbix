@@ -1419,6 +1419,123 @@ out:
 	return ret;
 }
 
+typedef struct
+{
+	const char	*property_collector;
+	CURL		*easyhandle;
+	char		*error;
+	char		*token;
+}
+zbx_property_collection_iter;
+
+static zbx_property_collection_iter	*zbx_property_collection_init(CURL *easyhandle,
+		const char *property_collection_query, const char *property_collector)
+{
+#	define ZBX_XPATH_RETRIEVE_PROPERTIES_TOKEN			\
+		"/*[local-name()='Envelope']/*[local-name()='Body']"	\
+		"/*[local-name()='RetrievePropertiesExResponse']"	\
+		"/*[local-name()='returnval']/*[local-name()='token']"
+
+	zbx_property_collection_iter	*iter = NULL;
+	int				err, opt;
+
+	iter = zbx_malloc(iter, sizeof(zbx_property_collection_iter));
+	iter->property_collector = property_collector;
+	iter->easyhandle = easyhandle;
+	iter->token = NULL;
+
+	if (CURLE_OK == (err = curl_easy_setopt(iter->easyhandle, opt = CURLOPT_POSTFIELDS, property_collection_query)))
+	{
+		page.offset = 0;
+
+		if (CURLE_OK == (err = curl_easy_perform(iter->easyhandle)))
+		{
+			if (NULL == (iter->error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
+				iter->token = zbx_xml_read_value(page.data, ZBX_XPATH_RETRIEVE_PROPERTIES_TOKEN);
+		}
+		else
+			iter->error = zbx_strdup(iter->error, curl_easy_strerror(err));
+	}
+	else
+		iter->error = zbx_dsprintf(iter->error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
+
+	return iter;
+}
+
+static const char	*zbx_property_collection_chunk(zbx_property_collection_iter *iter, char **error)
+{
+	const char	*__function_name = "zbx_property_collection_chunk";
+
+	if (NULL == iter->error)
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
+		return (const char *)page.data;
+	}
+
+	zbx_free(*error);
+	*error = iter->error;
+	iter->error = NULL;
+	return NULL;
+}
+
+static int	zbx_property_collection_next(zbx_property_collection_iter *iter)
+{
+#	define ZBX_POST_CONTINUE_RETRIEVE_PROPERTIES									\
+		ZBX_POST_VSPHERE_HEADER										\
+		"<ns0:ContinueRetrievePropertiesEx xsi:type=\"ns0:ContinueRetrievePropertiesExRequestType\">"	\
+			"<ns0:_this type=\"PropertyCollector\">%s</ns0:_this>"			\
+			"<ns0:token>%s</ns0:token>"								\
+		"</ns0:ContinueRetrievePropertiesEx>"								\
+		ZBX_POST_VSPHERE_FOOTER
+
+#	define ZBX_XPATH_CONTINUE_RETRIEVE_PROPERTIES_TOKEN			\
+		"/*[local-name()='Envelope']/*[local-name()='Body']"		\
+		"/*[local-name()='ContinueRetrievePropertiesExResponse']"	\
+		"/*[local-name()='returnval']/*[local-name()='token']"
+
+	const char	*__function_name = "zbx_property_collection_next";
+	char		*token_esc, post[MAX_STRING_LEN];
+	int		err, opt;
+
+	if (NULL == iter->token)
+		return FAIL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() continue retrieving properties with token: '%s'", __function_name, iter->token);
+
+	token_esc = xml_escape_dyn(iter->token);
+	zbx_snprintf(post, sizeof(post), ZBX_POST_CONTINUE_RETRIEVE_PROPERTIES, iter->property_collector, token_esc);
+	zbx_free(token_esc);
+
+	if (CURLE_OK == (err = curl_easy_setopt(iter->easyhandle, opt = CURLOPT_POSTFIELDS, post)))
+	{
+		page.offset = 0;
+
+		if (CURLE_OK == (err = curl_easy_perform(iter->easyhandle)))
+		{
+			zbx_free(iter->error);
+
+			if (NULL == (iter->error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
+			{
+				zbx_free(iter->token);
+				iter->token = zbx_xml_read_value(page.data, ZBX_XPATH_CONTINUE_RETRIEVE_PROPERTIES_TOKEN);
+			}
+		}
+		else
+			iter->error = zbx_strdup(iter->error, curl_easy_strerror(err));
+	}
+	else
+		iter->error = zbx_dsprintf(iter->error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
+
+	return SUCCEED;
+}
+
+static void	zbx_property_collection_free(zbx_property_collection_iter *iter)
+{
+	zbx_free(iter->error);
+	zbx_free(iter->token);
+	zbx_free(iter);
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: vmware_service_get_contents                                      *
@@ -2519,82 +2636,32 @@ static int	vmware_service_get_hv_list(const zbx_vmware_service_t *service, CURL 
 		"</ns0:RetrievePropertiesEx>"							\
 		ZBX_POST_VSPHERE_FOOTER
 
-#	define ZBX_POST_VCENTER_HV_LIST_CONTINUE								\
-		ZBX_POST_VSPHERE_HEADER										\
-		"<ns0:ContinueRetrievePropertiesEx xsi:type=\"ns0:ContinueRetrievePropertiesExRequestType\">"	\
-			"<ns0:_this type=\"PropertyCollector\">propertyCollector</ns0:_this>"			\
-			"<ns0:token>%s</ns0:token>"								\
-		"</ns0:ContinueRetrievePropertiesEx>"								\
-		ZBX_POST_VSPHERE_FOOTER
-
-#	define ZBX_XPATH_RETRIEVE_PROPERTIES_TOKEN			\
-		"/*[local-name()='Envelope']/*[local-name()='Body']"	\
-		"/*[local-name()='RetrievePropertiesExResponse']"	\
-		"/*[local-name()='returnval']/*[local-name()='token']"
-
-#	define ZBX_XPATH_CONTINUE_RETRIEVE_PROPERTIES_TOKEN			\
-		"/*[local-name()='Envelope']/*[local-name()='Body']"		\
-		"/*[local-name()='ContinueRetrievePropertiesExResponse']"	\
-		"/*[local-name()='returnval']/*[local-name()='token']"
-
 	const char	*__function_name = "vmware_service_get_hv_list";
 
-	char		tmp[MAX_STRING_LEN];
-	int		err, opt, ret = FAIL;
+	int		ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (ZBX_VMWARE_TYPE_VCENTER == service->type)
 	{
-		char	*token, *token_esc, *token_xpath = NULL;
+		zbx_property_collection_iter	*iter;
+		const char			*chunk;
 
-		if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, ZBX_POST_VCENTER_HV_LIST)))
+		iter = zbx_property_collection_init(easyhandle, ZBX_POST_VCENTER_HV_LIST, "propertyCollector");
+
+		do
 		{
-			*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
-			goto out;
-		}
-
-		while (1)
-		{
-			page.offset = 0;
-
-			if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
+			if (NULL == (chunk = zbx_property_collection_chunk(iter, error)))
 			{
-				*error = zbx_strdup(*error, curl_easy_strerror(err));
+				zbx_property_collection_free(iter);
 				goto out;
 			}
 
-			zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
-
-			if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
-				goto out;
-
-			zbx_xml_read_values(page.data, "//*[@type='HostSystem']", hvs);
-
-			if (NULL == token_xpath)
-				token_xpath = ZBX_XPATH_RETRIEVE_PROPERTIES_TOKEN;
-			else
-				token_xpath = ZBX_XPATH_CONTINUE_RETRIEVE_PROPERTIES_TOKEN;
-
-			if (NULL == (token = zbx_xml_read_value(page.data, token_xpath)))
-				break;
-
-			zabbix_log(LOG_LEVEL_DEBUG, "%s() continue retrieving properties with token: '%s'",
-					__function_name, token);
-
-			token_esc = xml_escape_dyn(token);
-			zbx_free(token);
-
-			zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VCENTER_HV_LIST_CONTINUE, token_esc);
-			zbx_free(token_esc);
-
-			if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
-			{
-				*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt,
-						curl_easy_strerror(err));
-				goto out;
-			}
+			zbx_xml_read_values(chunk, "//*[@type='HostSystem']", hvs);
 		}
+		while (SUCCEED == zbx_property_collection_next(iter));
+
+		zbx_property_collection_free(iter);
 	}
 	else
 		zbx_vector_str_append(hvs, zbx_strdup(NULL, "ha-host"));
