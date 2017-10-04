@@ -35,10 +35,11 @@ class CSysmapWidgetForm extends CWidgetForm {
 		$this->fields[] = $field_reference;
 
 		// select source type field
-		$field_source_type = (new CWidgetFieldRadioButtonList('source_type', _('Source type'), [
+		$source_types = [
 			WIDGET_SYSMAP_SOURCETYPE_MAP => _('Map'),
 			WIDGET_SYSMAP_SOURCETYPE_FILTER => _('Map navigation tree'),
-		]))
+		];
+		$field_source_type = (new CWidgetFieldRadioButtonList('source_type', _('Source type'), $source_types))
 			->setDefault(WIDGET_SYSMAP_SOURCETYPE_MAP)
 			->setAction('updateWidgetConfigDialogue()')
 			->setModern(true);

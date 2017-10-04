@@ -25,10 +25,11 @@ class CGraphWidgetForm extends CWidgetForm {
 		parent::__construct($data);
 
 		// Select graph type field.
-		$field_source = (new CWidgetFieldRadioButtonList('source_type', _('Source'), [
+		$source_types = [
 			ZBX_WIDGET_FIELD_RESOURCE_GRAPH => _('Graph'),
 			ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH => _('Simple graph'),
-		]))
+		];
+		$field_source = (new CWidgetFieldRadioButtonList('source_type', _('Source'), $source_types))
 			->setDefault(ZBX_WIDGET_FIELD_RESOURCE_GRAPH)
 			->setAction('updateWidgetConfigDialogue()')
 			->setModern(true);
