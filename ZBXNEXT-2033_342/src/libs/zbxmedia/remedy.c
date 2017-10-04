@@ -1726,7 +1726,8 @@ void	zbx_free_acknowledge(zbx_acknowledge_t *ack)
 
 #else
 
-int	zbx_remedy_process_alert(const DB_ALERT *alert, const DB_MEDIATYPE *mediatype, char **error)
+int	zbx_remedy_process_alert(zbx_uint64_t eventid, zbx_uint64_t userid, const char *sendto, const char *subject,
+		const char *message, const DB_MEDIATYPE *mediatype, char **error)
 {
 	*error = zbx_dsprintf(*error, "Zabbix server is built without Remedy ticket support");
 	return FAIL;
