@@ -600,4 +600,13 @@ zbx_hc_item_t;
 
 void	zbx_free_tag(zbx_tag_t *tag);
 
+typedef struct
+{
+	zbx_uint64_t		triggerid;
+	zbx_vector_uint64_t	depids;
+}
+zbx_trigger_dep_t;
+
+void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_vector_ptr_t *deps);
+
 #endif

@@ -1378,7 +1378,7 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 		zbx_free(sql);
 	}
 
-	process_events();
+	process_events(NULL, NULL);
 exit:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
