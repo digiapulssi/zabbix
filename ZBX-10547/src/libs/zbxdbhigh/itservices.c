@@ -620,16 +620,16 @@ out:
  *              service alarm queue into database.                            *
  *                                                                            *
  ******************************************************************************/
-static int	its_flush_updates(zbx_vector_ptr_t *updates)
+static int	its_flush_updates(const zbx_vector_ptr_t *updates)
 {
-	const char		*__function_name = "its_flush_updates";
+	const char			*__function_name = "its_flush_updates";
 
-	int			i, j, k, ret = FAIL;
-	zbx_status_update_t	*update;
-	zbx_itservices_t	itservices;
-	zbx_vector_ptr_t	alarms;
-	zbx_itservice_index_t	*index;
-	zbx_vector_uint64_t	triggerids;
+	int				i, j, k, ret = FAIL;
+	const zbx_status_update_t	*update;
+	zbx_itservices_t		itservices;
+	zbx_vector_ptr_t		alarms;
+	zbx_itservice_index_t		*index;
+	zbx_vector_uint64_t		triggerids;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -707,6 +707,20 @@ out:
  * Public API
  */
 
+void	DBget_itservices_updates(const DB_EVENT *events, size_t events_num, zbx_vector_ptr_t *itservice_updates)
+{
+	size_t	i;
+
+	for (i = 0; i < events_num; i++)
+	{
+		if (EVENT_SOURCE_TRIGGERS != events[i].source)
+			continue;
+
+		its_updates_append(itservice_updates, events[i].objectid, TRIGGER_VALUE_PROBLEM == events[i].value ?
+				events[i].trigger.priority : 0, events[i].clock);
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DBupdate_itservices                                              *
@@ -717,39 +731,24 @@ out:
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	DBupdate_itservices(const DB_EVENT *events, size_t events_num)
+int	DBupdate_itservices(const zbx_vector_ptr_t *itservice_updates)
 {
-	const char		*__function_name = "DBupdate_itservices";
+	const char	*__function_name = "DBupdate_itservices";
 
-	int			ret = SUCCEED;
-	zbx_vector_ptr_t	updates;
-	size_t			i;
+	int		ret = SUCCEED;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_vector_ptr_create(&updates);
-
-	for (i = 0; i < events_num; i++)
-	{
-		if (EVENT_SOURCE_TRIGGERS != events[i].source)
-			continue;
-
-		its_updates_append(&updates, events[i].objectid, TRIGGER_VALUE_PROBLEM == events[i].value ?
-				events[i].trigger.priority : 0, events[i].clock);
-	}
-
-	if (0 != updates.values_num)
+	if (0 != itservice_updates->values_num)
 	{
 		LOCK_ITSERVICES;
+		DBbegin();
 
-		ret = its_flush_updates(&updates);
+		ret = its_flush_updates(itservice_updates);
 
+		DBcommit();
 		UNLOCK_ITSERVICES;
-
-		zbx_vector_ptr_clear_ext(&updates, zbx_ptr_free);
 	}
-
-	zbx_vector_ptr_destroy(&updates);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
