@@ -1571,7 +1571,7 @@ out:
 static int	vmware_service_get_perf_counters(zbx_vmware_service_t *service, CURL *easyhandle,
 		zbx_vector_ptr_t *counters, char **error)
 {
-#	define ZBX_POST_VMWARE_GET_PERFCOUTNER							\
+#	define ZBX_POST_VMWARE_GET_PERFCOUNTER							\
 		ZBX_POST_VSPHERE_HEADER								\
 		"<ns0:RetrieveProperties>"							\
 			"<ns0:_this type=\"PropertyCollector\">%s</ns0:_this>"			\
@@ -1598,7 +1598,7 @@ static int	vmware_service_get_perf_counters(zbx_vmware_service_t *service, CURL 
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_GET_PERFCOUTNER,
+	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_GET_PERFCOUNTER,
 			vmware_service_objects[service->type].property_collector,
 			vmware_service_objects[service->type].performance_manager);
 
