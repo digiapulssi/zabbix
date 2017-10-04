@@ -478,7 +478,7 @@ void	DBdelete_graphs(zbx_vector_uint64_t *graphids);
 void	DBdelete_hosts(zbx_vector_uint64_t *hostids);
 void	DBdelete_hosts_with_prototypes(zbx_vector_uint64_t *hostids);
 
-void	DBget_itservices_updates(const DB_EVENT *events, size_t events_num, zbx_vector_ptr_t *itservice_updates);
+void	zbx_get_itservices_updates(const DB_EVENT *events, size_t events_num, zbx_vector_ptr_t *itservice_updates);
 int	DBupdate_itservices(const zbx_vector_ptr_t *itservice_updates);
 int	DBremove_triggers_from_itservices(zbx_uint64_t *triggerids, int triggerids_num);
 

@@ -154,7 +154,7 @@ int	process_events(zbx_vector_ptr_t *itservice_updates)
 		process_actions(events, events_num);
 
 		if (NULL != itservice_updates)
-			DBget_itservices_updates(events, events_num, itservice_updates);
+			zbx_get_itservices_updates(events, events_num, itservice_updates);
 
 		clean_events();
 	}
