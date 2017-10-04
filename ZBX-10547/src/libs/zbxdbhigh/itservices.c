@@ -707,6 +707,13 @@ out:
  * Public API
  */
 
+/******************************************************************************
+ *                                                                            *
+ * Function: DBget_itservices_updates                                         *
+ *                                                                            *
+ * Purpose: use events to generate list of updates for IT services            *
+ *                                                                            *
+ ******************************************************************************/
 void	DBget_itservices_updates(const DB_EVENT *events, size_t events_num, zbx_vector_ptr_t *itservice_updates)
 {
 	size_t	i;
@@ -725,7 +732,7 @@ void	DBget_itservices_updates(const DB_EVENT *events, size_t events_num, zbx_vec
  *                                                                            *
  * Function: DBupdate_itservices                                              *
  *                                                                            *
- * Purpose: updates IT services by applying event list                        *
+ * Purpose: apply updates for IT service tree                                 *
  *                                                                            *
  * Return value: SUCCEED - the IT services were updated successfully          *
  *               FAIL    - otherwise                                          *
