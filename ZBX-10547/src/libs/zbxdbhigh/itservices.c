@@ -264,7 +264,7 @@ static void	its_itservices_load_children(zbx_itservices_t *itservices)
 	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "sl.serviceupid", serviceids.values,
 			serviceids.values_num);
 
-	result = DBselect("%s", sql);
+	result = DBselect("%s" ZBX_FOR_UPDATE, sql);
 
 	while (NULL != (row = DBfetch(result)))
 	{
@@ -330,7 +330,7 @@ static void	its_itservices_load_parents(zbx_itservices_t *itservices, zbx_vector
 
 	zbx_vector_uint64_clear(serviceids);
 
-	result = DBselect("%s", sql);
+	result = DBselect("%s" ZBX_FOR_UPDATE, sql);
 
 	while (NULL != (row = DBfetch(result)))
 	{
@@ -398,7 +398,7 @@ static void	its_load_services_by_triggerids(zbx_itservices_t *itservices, const 
 			" where");
 	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "triggerid", triggerids->values, triggerids->values_num);
 
-	result = DBselect("%s", sql);
+	result = DBselect("%s" ZBX_FOR_UPDATE, sql);
 
 	zbx_free(sql);
 
