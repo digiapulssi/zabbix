@@ -19,7 +19,7 @@
 **/
 
 
-if ($data['dashboardid']) {
+if (array_key_exists('dashboardid', $data) && $data['dashboardid']) {
 	$form = (new CForm('post', (new CUrl('zabbix.php'))
 		->setArgument('action', 'dashboard.update')
 		->getUrl()

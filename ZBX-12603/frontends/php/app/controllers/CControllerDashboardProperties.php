@@ -45,18 +45,19 @@ class CControllerDashboardProperties extends CControllerDashboardAbstract {
 	}
 
 	protected function checkPermissions() {
-		return !$this->getInput('dashboardid') || (bool) API::Dashboard()->get([
-			'output' => [],
-			'dashboardids' => $this->getInput('dashboardid'),
-			'editable' => true
-		]);
+		return $this->hasInput('dashboardid')
+			? !$this->getInput('dashboardid') || (bool) API::Dashboard()->get([
+				'output' => [],
+				'dashboardids' => $this->getInput('dashboardid')
+			])
+			: true;
 	}
 
 	protected function doAction() {
-		if ($this->getInput('new', false)) {
+		if ($this->hasInput('new')) {
 			$dashboard = (new CControllerDashboardView())->getNewDashboard();
 		}
-		else {
+		elseif ($this->hasInput('dashboardid')) {
 			$dashboards = API::Dashboard()->get([
 				'output' => ['name', 'dashboardid', 'userid'],
 				'dashboardids' => $this->getInput('dashboardid'),
@@ -66,24 +67,16 @@ class CControllerDashboardProperties extends CControllerDashboardAbstract {
 
 			$dashboard = reset($dashboards);
 		}
+		else {
+			$dashboard = false;
+		}
 
 		if ($dashboard !== false) {
-			if ($dashboard['userid']) {
-				$userid = $this->getInput('userid', $dashboard['userid']);
-
-				// Get user data.
-				$user = API::User()->get([
-					'output' => ['alias', 'name', 'surname', 'userid'],
-					'userids' => $userid
-				]);
-
-				if (($user = reset($user)) !== false) {
-					$user['name'] = getUserFullname($user);
-					unset($user['alias'], $user['surname']);
-				}
-
-				$user['id'] = $user['userid'];
-				unset($user['userid']);
+			if ($this->hasInput('userid')) {
+				$user = (new CControllerDashboardView())->getOwnerData($this->getInput('userid'));
+			}
+			elseif (array_key_exists('userid', $dashboard)) {
+				$user = (new CControllerDashboardView())->getOwnerData($dashboard['userid']);
 			}
 			elseif (array_key_exists('owner', $dashboard)) {
 				$user = $dashboard['owner'];
@@ -97,7 +90,8 @@ class CControllerDashboardProperties extends CControllerDashboardAbstract {
 			];
 		}
 		else {
-			$data['error'] = _('No permissions to referred object or it does not exist!');
+			error(_('No permissions to referred object or it does not exist!'));
+			$data = [];
 		}
 
 		$this->setResponse(new CControllerResponseData($data));

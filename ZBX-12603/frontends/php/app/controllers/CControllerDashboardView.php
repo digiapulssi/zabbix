@@ -382,7 +382,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getOwnerData($userid)
+	public function getOwnerData($userid)
 	{
 		$owner = ['id' => $userid, 'name' => _('Inaccessible user')];
 

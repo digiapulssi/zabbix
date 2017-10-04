@@ -1105,7 +1105,7 @@ if (typeof addPopupValues === 'undefined') {
 				'dashboardid': data['dashboard']['id']
 			},
 			success: function(response) {
-				// Revrite javascript function addPopupValues to be used in sharing window.
+				// Rewrite javascript function 'addPopupValues' to be used in sharing window.
 				if (typeof addPopupValues === 'function') {
 					old_addPopupValues = addPopupValues;
 				}
@@ -1158,18 +1158,25 @@ if (typeof addPopupValues === 'undefined') {
 					}
 				};
 
+				var content = '';
+				if (typeof response.messages !== 'undefined') {
+					content += response.messages;
+				}
+				if (typeof response.body !== 'undefined') {
+					content += response.body;
+				}
+
 				// Open overlay dialog.
 				overlayDialogue({
 					'title': t('Dashboard sharing'),
-					'content': response.body,
+					'content': content,
 					'buttons': [
 						{
 							'title': t('Update'),
 							'focused': true,
 							'class': 'dialogue-widget-save',
-							'keepOpen': false,
 							'action': function() {
-								jQuery('#dashboard_sharing_form').submit();
+								return submitDashboardSharingForm();
 							}
 						},
 						{
@@ -1183,15 +1190,33 @@ if (typeof addPopupValues === 'undefined') {
 					]
 				});
 
+				var submitDashboardSharingForm = function() {
+					var form = jQuery('#dashboard_sharing_form'),
+						ret = false;
+
+					jQuery.ajax({
+						url: form.attr('action'),
+						data: form.serialize(),
+						type: form.attr('method'),
+						success: function(response) {
+							jQuery('.msg-bad', jQuery(form).parent()).remove();
+
+							if (typeof response.errors !== 'undefined' && response.errors.length > 0) {
+								jQuery(response.errors).insertBefore(form);
+							}
+
+							ret = response.result;
+						},
+						async: false
+					});
+
+					return ret;
+				};
+
 				// Overwrite default form submit.
 				jQuery('#dashboard_sharing_form').submit(function(e) {
 					e.preventDefault();
-
-					jQuery.ajax({
-						url: jQuery(this).attr('action'),
-						data: jQuery(this).serialize(),
-						type: jQuery(this).attr('method')
-					});
+					submitDashboardSharingForm();
 				});
 
 				// Initialize javascript listeners.
@@ -1224,7 +1249,7 @@ if (typeof addPopupValues === 'undefined') {
 		url.setArgument('action', 'dashboard.prop.dialog');
 
 		var	current_url = new Curl(location.href);
-		if (current_url.getArgument('new') === '1') {
+		if (current_url.getArgument('new') === '1' || current_url.getArgument('source_dashboardid') !== null) {
 			post_data.new = 1;
 		}
 
@@ -1232,10 +1257,18 @@ if (typeof addPopupValues === 'undefined') {
 			url: url.getUrl(),
 			data: post_data,
 			success: function(response) {
+				var content = '';
+				if (typeof response.messages !== 'undefined') {
+					content += response.messages;
+				}
+				if (typeof response.body !== 'undefined') {
+					content += response.body;
+				}
+
 				// Open overlay dialog.
 				overlayDialogue({
 					'title': t('Dashboard properties'),
-					'content': response.body,
+					'content': content,
 					'buttons': [
 						{
 							'title': t('Apply'),

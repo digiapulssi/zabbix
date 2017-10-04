@@ -42,10 +42,9 @@ class CControllerDashboardSharing extends CController {
 	}
 
 	protected function checkPermissions() {
-		return (bool) API::Dashboard()->get([
+		return $this->hasInput('dashboardid') && (bool) API::Dashboard()->get([
 			'output' => [],
-			'dashboardids' => $this->getInput('dashboardid'),
-			'editable' => true
+			'dashboardids' => $this->getInput('dashboardid')
 		]);
 	}
 
@@ -97,7 +96,8 @@ class CControllerDashboardSharing extends CController {
 			];
 		}
 		else {
-			$data['error'] = _('No permissions to referred object or it does not exist!');
+			error(_('No permissions to referred object or it does not exist!'));
+			$data = [];
 		}
 
 		$this->setResponse(new CControllerResponseData($data));
