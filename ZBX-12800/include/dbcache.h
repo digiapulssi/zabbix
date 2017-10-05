@@ -43,6 +43,9 @@
 
 #define ZBX_TRIGGER_DEPENDENCY_LEVELS_MAX	32
 
+#define ZBX_TRIGGER_DEPENDENCY_FAIL		1
+#define ZBX_TRIGGER_DEPENDENCY_UNRESOLVED	2
+
 #define ZBX_SNMPTRAP_LOGGING_ENABLED	1
 
 #define ZBX_EXPAND_MACROS		1
@@ -600,9 +603,11 @@ zbx_hc_item_t;
 
 void	zbx_free_tag(zbx_tag_t *tag);
 
+
 typedef struct
 {
 	zbx_uint64_t		triggerid;
+	unsigned char		status;
 	zbx_vector_uint64_t	depids;
 }
 zbx_trigger_dep_t;

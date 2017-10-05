@@ -1789,30 +1789,36 @@ static void	get_open_problems(const zbx_vector_uint64_t *triggerids, zbx_vector_
 	}
 	DBfree_result(result);
 
-	zbx_vector_ptr_sort(problems, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
-	zbx_vector_uint64_sort(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
-	sql_offset = 0;
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select eventid,tag,value from problem_tag where ");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "eventid", eventids.values, eventids.values_num);
-
-	result = DBselect("%s", sql);
-
-	while (NULL != (row = DBfetch(result)))
+	if (0 != problems->values_num)
 	{
-		ZBX_STR2UINT64(eventid, row[0]);
-		if (FAIL == (index = zbx_vector_ptr_bsearch(problems, &eventid, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
-		{
-			THIS_SHOULD_NEVER_HAPPEN;
-			continue;
-		}
+		zbx_vector_ptr_sort(problems, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
+		zbx_vector_uint64_sort(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
-		tag = (zbx_tag_t *)zbx_malloc(NULL, sizeof(zbx_tag_t));
-		tag->tag = zbx_strdup(NULL, row[1]);
-		tag->value = zbx_strdup(NULL, row[2]);
-		zbx_vector_ptr_append(&problem->tags, tag);
+		sql_offset = 0;
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select eventid,tag,value from problem_tag where ");
+		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "eventid", eventids.values, eventids.values_num);
+
+		result = DBselect("%s", sql);
+
+		while (NULL != (row = DBfetch(result)))
+		{
+			ZBX_STR2UINT64(eventid, row[0]);
+			if (FAIL == (index = zbx_vector_ptr_bsearch(problems, &eventid,
+					ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
+			{
+				THIS_SHOULD_NEVER_HAPPEN;
+				continue;
+			}
+
+			problem = (zbx_event_problem_t *)problems->values[index];
+
+			tag = (zbx_tag_t *)zbx_malloc(NULL, sizeof(zbx_tag_t));
+			tag->tag = zbx_strdup(NULL, row[1]);
+			tag->value = zbx_strdup(NULL, row[2]);
+			zbx_vector_ptr_append(&problem->tags, tag);
+		}
+		DBfree_result(result);
 	}
-	DBfree_result(result);
 
 	zbx_free(sql);
 
@@ -1871,8 +1877,7 @@ static int	event_check_dependency(const DB_EVENT *event, const zbx_vector_ptr_t 
 
 	dep = (zbx_trigger_dep_t *)deps->values[index];
 
-	/* trigger dependency data without dependent triggers signals dependency check failure */
-	if (0 == dep->depids.values_num)
+	if (ZBX_TRIGGER_DEPENDENCY_FAIL == dep->status)
 		return FAIL;
 
 	/* check the trigger dependency based on actual (currently being processed) trigger values */
@@ -1922,7 +1927,7 @@ static int	match_tags(const zbx_vector_ptr_t *tags1, const zbx_vector_ptr_t *tag
 
 		for (j = 0; j < tags2->values_num; j++)
 		{
-			tag2 = (zbx_tag_t *)tags2->values[i];
+			tag2 = (zbx_tag_t *)tags2->values[j];
 
 			if (0 == strcmp(tag1->tag, tag2->tag) && 0 == strcmp(tag1->value, tag2->value))
 				return SUCCEED;
@@ -2063,7 +2068,7 @@ static void	process_trigger_events(zbx_vector_ptr_t *trigger_events, zbx_vector_
 
 				if (problem->triggerid == event->objectid)
 				{
-					if (match_tags(&problem->tags, &event->tags))
+					if (SUCCEED == match_tags(&problem->tags, &event->tags))
 					{
 						recover_event(problem->eventid, EVENT_SOURCE_TRIGGERS,
 								EVENT_OBJECT_TRIGGER, event->objectid);

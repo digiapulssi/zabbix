@@ -10206,9 +10206,7 @@ static int	dc_get_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST *trigdep
 					return FAIL;
 			}
 			else
-			{
 				zbx_vector_uint64_append(dep_triggerids, next_trigger->triggerid);
-			}
 		}
 
 		if (FAIL == dc_get_trigger_dependencies_rec(next_trigdep, level + 1, triggerids, dep_triggerids))
@@ -10229,17 +10227,16 @@ static int	dc_get_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST *trigdep
  *                                or unresolved dependencies                  *
  *                                                                            *
  * Comments: This function returns list of zbx_trigger_dep_t structures       *
- *           for failed or unresolved dependency checks. If the dependency    *
- *           check was failed, then zbx_trigger_dep_t:depids vector length    *
- *           will be 0. If the dependency was unresolved (dependent triggers  *
- *           are also being processed), then zbx_trigger_dep_t:depids vector  *
- *           will contain dependent trigger identifiers. To resolve trigger   *
- *           dependency lookup the actual values of triggers being processed. *
+ *           for failed or unresolved dependency checks. Dependency check is  *
+ *           failed if any of the dependent triggers in cache has problem     *
+ *           value. Dependency check is unresolved if no cached triggers      *
+ *           have problem value, but some of dependent triggers are being     *
+ *           processed in the same batch.                                     *
  *                                                                            *
  ******************************************************************************/
 void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_vector_ptr_t *deps)
 {
-	int				i;
+	int				i, ret;
 	const ZBX_DC_TRIGGER_DEPLIST	*trigdep;
 	zbx_vector_uint64_t		depids;
 	zbx_trigger_dep_t		*dep;
@@ -10253,21 +10250,25 @@ void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_
 	{
 		if (NULL != (trigdep = zbx_hashset_search(&config->trigdeps, &triggerids->values[i])))
 		{
-			if (FAIL == dc_get_trigger_dependencies_rec(trigdep, 0, triggerids, &depids) ||
+			if (FAIL == (ret = dc_get_trigger_dependencies_rec(trigdep, 0, triggerids, &depids)) ||
 					0 != depids.values_num)
 			{
 				dep = (zbx_trigger_dep_t *)zbx_malloc(NULL, sizeof(zbx_trigger_dep_t));
 				dep->triggerid = triggerids->values[i];
 				zbx_vector_uint64_create(&dep->depids);
 
-				if (0 != depids.values_num)
+				if (SUCCEED == ret)
 				{
+					dep->status = ZBX_TRIGGER_DEPENDENCY_UNRESOLVED;
 					zbx_vector_uint64_append_array(&dep->depids, depids.values, depids.values_num);
-					zbx_vector_uint64_clear(&depids);
 				}
+				else
+					dep->status = ZBX_TRIGGER_DEPENDENCY_FAIL;
 
 				zbx_vector_ptr_append(deps, dep);
 			}
+
+			zbx_vector_uint64_clear(&depids);
 		}
 	}
 
