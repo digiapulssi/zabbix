@@ -1195,6 +1195,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 				}
 
 				$info[$selementId] = getTriggersInfo($selement, $i, $showUnacknowledged);
+				$info[$selementId]['triggerid'] = $critical_triggerid;
 				break;
 
 			case SYSMAP_ELEMENT_TYPE_IMAGE:

@@ -166,6 +166,24 @@ class CMapHelper {
 						CArrayHelper::sort($element['elements'], [
 							['field' => 'priority', 'order' => ZBX_SORT_DOWN]
 						]);
+
+						// Move the trigger with problem and highiest priority to the beginning of the trigger list.
+						if (array_key_exists('triggerid', $map_info[$id])) {
+							$trigger_pos = 0;
+
+							foreach ($element['elements'] as $i => $trigger) {
+								if ($trigger['triggerid'] == $map_info[$id]['triggerid']) {
+									$trigger_pos = $i;
+									break;
+								}
+							}
+
+							if ($trigger_pos > 0) {
+								$trigger = $element['elements'][$trigger_pos];
+								unset($element['elements'][$trigger_pos]);
+								array_unshift($element['elements'], $trigger);
+							}
+						}
 					}
 
 					break;
