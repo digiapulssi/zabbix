@@ -40,7 +40,7 @@ class CHostPrototype extends CHostBase {
 			'selectParentHost'		=> null,
 			'selectTemplates' 		=> null,
 			'selectInventory' 		=> null,
-			'editable'				=> null,
+			'editable'				=> false,
 			'nopermissions'			=> null,
 			'sortfield'    			=> '',
 			'sortorder'     		=> ''
@@ -1212,7 +1212,7 @@ class CHostPrototype extends CHostBase {
 		$sqlParts['where'][] = 'i.hostid=ph.hostid';
 		$sqlParts['where'][] = 'ph.flags='.ZBX_FLAG_DISCOVERY_NORMAL;
 
-		if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
 			$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
 
 			$sqlParts['where'][] = 'EXISTS ('.
