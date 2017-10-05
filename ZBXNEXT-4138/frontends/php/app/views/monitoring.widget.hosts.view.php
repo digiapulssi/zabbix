@@ -59,6 +59,8 @@ foreach ($data['groups'] as $group) {
 	}
 
 	$group_row = new CRow();
+	$last_unack_hint_table_inf = null;
+	$problematic_count_hint_table_inf = null;
 
 	$url_group->setArgument('filter_groupids', [$group['groupid']]);
 	$url_host->setArgument('filter_groupids', [$group['groupid']]);
@@ -81,7 +83,7 @@ foreach ($data['groups'] as $group) {
 				}
 			}
 
-			$table_inf = (new CTableInfo())->setHeader($header);
+			$last_unack_hint_table_inf = (new CTableInfo())->setHeader($header);
 
 			$popup_rows = 0;
 
@@ -114,15 +116,14 @@ foreach ($data['groups'] as $group) {
 					}
 				}
 
-				$table_inf->addRow($r);
+				$last_unack_hint_table_inf->addRow($r);
 
 				if (++$popup_rows == ZBX_WIDGET_ROWS) {
 					break;
 				}
 			}
 			$lastUnack_count = (new CSpan($data['hosts_data'][$group['groupid']]['lastUnack']))
-				->addClass(ZBX_STYLE_LINK_ACTION)
-				->setHint($table_inf);
+				->addClass(ZBX_STYLE_LINK_ACTION);
 		}
 		else {
 			$lastUnack_count = 0;
@@ -140,7 +141,7 @@ foreach ($data['groups'] as $group) {
 			}
 		}
 
-		$table_inf = (new CTableInfo())->setHeader($header);
+		$problematic_count_hint_table_inf = (new CTableInfo())->setHeader($header);
 
 		$popup_rows = 0;
 
@@ -173,15 +174,14 @@ foreach ($data['groups'] as $group) {
 				}
 			}
 
-			$table_inf->addRow($r);
+			$problematic_count_hint_table_inf->addRow($r);
 
 			if (++$popup_rows == ZBX_WIDGET_ROWS) {
 				break;
 			}
 		}
 		$problematic_count = (new CSpan($data['hosts_data'][$group['groupid']]['problematic']))
-			->addClass(ZBX_STYLE_LINK_ACTION)
-			->setHint($table_inf);
+			->addClass(ZBX_STYLE_LINK_ACTION);
 	}
 	else {
 		$problematic_count = 0;
@@ -192,6 +192,7 @@ foreach ($data['groups'] as $group) {
 			if ($data['hosts_data'][$group['groupid']]['problematic'] != 0) {
 				$group_row->addItem((new CCol($problematic_count))
 					->addClass(getSeverityStyle($data['highest_severity'][$group['groupid']]))
+					->setHint($problematic_count_hint_table_inf)
 				);
 			}
 			else {
@@ -210,8 +211,9 @@ foreach ($data['groups'] as $group) {
 							? $data['highest_severity2'][$group['groupid']]
 							: TRIGGER_SEVERITY_NOT_CLASSIFIED
 					))
+					->setHint($last_unack_hint_table_inf)
 				);
-			}
+				}
 			else {
 				$group_row->addItem('');
 			}
@@ -225,6 +227,7 @@ foreach ($data['groups'] as $group) {
 				$unackspan = $lastUnack_count ? [$lastUnack_count, ' '._('of').' '] : null;
 				$group_row->addItem((new CCol([$unackspan, $problematic_count]))
 					->addClass(getSeverityStyle($data['highest_severity'][$group['groupid']]))
+					->setHint($problematic_count_hint_table_inf)
 				);
 			}
 			else {

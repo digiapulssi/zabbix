@@ -361,40 +361,51 @@ function makeSystemStatus(array $filter, array $data, array $config, $backurl, $
 
 			$allTriggersNum = $stat['count'];
 			if ($allTriggersNum) {
-				$allTriggersNum = (new CSpan($allTriggersNum))
-					->addClass(ZBX_STYLE_LINK_ACTION)
-					->setHint(makeProblemsPopup($stat['problems'], $data['triggers'], $backurl, $data['actions'],
-						$config
-					));
+				$allTriggersNum = (new CSpan($allTriggersNum))->addClass(ZBX_STYLE_LINK_ACTION);
 			}
 
 			$unackTriggersNum = $stat['count_unack'];
 			if ($unackTriggersNum) {
-				$unackTriggersNum = (new CSpan($unackTriggersNum))
-					->addClass(ZBX_STYLE_LINK_ACTION)
-					->setHint(makeProblemsPopup($stat['problems_unack'], $data['triggers'], $backurl, $data['actions'],
-						$config
-					));
+				$unackTriggersNum = (new CSpan($unackTriggersNum))->addClass(ZBX_STYLE_LINK_ACTION);
 			}
 
 			switch ($filter_ext_ack) {
 				case EXTACK_OPTION_ALL:
-					$row->addItem(getSeverityCell($severity, null, $allTriggersNum));
+					$severity_cell = getSeverityCell($severity, null, $allTriggersNum);
+					if ($allTriggersNum instanceof CSpan) {
+						$severity_cell->setHint(makeProblemsPopup($stat['problems'], $data['triggers'], $backurl,
+							$data['actions'], $config
+						));
+					}
+					$row->addItem($severity_cell);
 					break;
 
 				case EXTACK_OPTION_UNACK:
-					$row->addItem(getSeverityCell($severity, null, $unackTriggersNum));
+					$severity_cell = getSeverityCell($severity, null, $unackTriggersNum);
+					if ($unackTriggersNum instanceof CSpan) {
+						$unackTriggersNum->setHint(makeProblemsPopup($stat['problems_unack'], $data['triggers'],
+							$backurl, $data['actions'], $config
+						));
+					}
+					$row->addItem($severity_cell);
 					break;
 
 				case EXTACK_OPTION_BOTH:
 					if ($stat['count_unack'] != 0) {
-						$row->addItem(getSeverityCell($severity, $config, [
+						$severity_cell = getSeverityCell($severity, $config, [
 							$unackTriggersNum, ' '._('of').' ', $allTriggersNum
-						]));
+						]);
 					}
 					else {
-						$row->addItem(getSeverityCell($severity, $config, $allTriggersNum));
+						$severity_cell = getSeverityCell($severity, $config, $allTriggersNum);
 					}
+
+					if ($allTriggersNum instanceof CSpan) {
+						$severity_cell->setHint(makeProblemsPopup($stat['problems'], $data['triggers'], $backurl,
+							$data['actions'], $config
+						));
+					}
+					$row->addItem($severity_cell);
 					break;
 			}
 		}
@@ -701,11 +712,19 @@ function make_latest_issues(array $filter = [], $backurl) {
 		// description
 		if (array_key_exists('lastEvent', $trigger) || $trigger['comments'] !== '' || $trigger['url'] !== '') {
 			$eventid = array_key_exists('lastEvent', $trigger) ? $trigger['lastEvent']['eventid'] : 0;
-			$description = (new CSpan($description))
-				->setHint(make_popup_eventlist($trigger, $eventid, $backurl, $config),'', true, 'max-width: 500px')
-				->addClass(ZBX_STYLE_LINK_ACTION);
+			$last_event_hint = make_popup_eventlist($trigger, $eventid, $backurl, $config);
+			$description = (new CSpan($description))->addClass(ZBX_STYLE_LINK_ACTION);
+		}
+		else {
+			$last_event_hint = null;
 		}
 		$description = (new CCol($description))->addClass(getSeverityStyle($trigger['priority']));
+
+		if ($last_event_hint) {
+			$description->setHint(make_popup_eventlist($trigger, $eventid, $backurl, $config), '', true,
+				'max-width: 500px'
+			);
+		}
 
 		// clock
 		$clock = new CLink(zbx_date2str(DATE_TIME_FORMAT_SECONDS, $trigger['lastchange']),
