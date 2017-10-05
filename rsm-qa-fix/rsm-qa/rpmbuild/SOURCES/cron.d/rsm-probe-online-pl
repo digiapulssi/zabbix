@@ -1,0 +1,1 @@
+* * * * * root /opt/zabbix/scripts/slv/rsm.probe.online.pl >> /var/log/zabbix/rsm.slv.err 2>&1
