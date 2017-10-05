@@ -19,6 +19,9 @@
 **/
 
 
+require_once dirname(__FILE__).'/include/classes/core/Z.php';
+Z::disableAutoAuthentification();
+
 require_once dirname(__FILE__).'/include/config.inc.php';
 require_once dirname(__FILE__).'/include/forms.inc.php';
 

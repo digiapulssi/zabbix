@@ -28,4 +28,28 @@ require_once dirname(__FILE__).'/ZBase.php';
  */
 class Z extends ZBase {
 
+	/**
+	 * Flag used to ignore automatic authentification performed by ZBase::run().
+	 */
+	static $authentificate = true;
+
+	/**
+	 * Disable automatic authentification.
+	 * First authenticateUser call (performed in initialization phase) will be ignored.
+	 */
+	public static function disableAutoAuthentification() {
+		self::$authentificate = false;
+	}
+
+	/**
+	 * Authenticate user if self::$authentificate is set to true.
+	 */
+	protected function authenticateUser() {
+		if (self::$authentificate) {
+			parent::authenticateUser();
+		}
+		else {
+			self::$authentificate = true;
+		}
+	}
 }
