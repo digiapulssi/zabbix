@@ -2130,10 +2130,7 @@ int	DCsync_history(int sync_type, int *total_num)
 	do
 	{
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-		{
 			zbx_vector_uint64_clear(&triggerids);
-			zbx_vector_ptr_clear_ext(&itservice_updates, zbx_ptr_free);
-		}
 
 		LOCK_CACHE;
 
@@ -2184,6 +2181,7 @@ int	DCsync_history(int sync_type, int *total_num)
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
 			DBupdate_itservices(&itservice_updates);
+			zbx_vector_ptr_clear_ext(&itservice_updates, zbx_ptr_free);
 			DCconfig_unlock_triggers(&triggerids);
 		}
 
@@ -2231,7 +2229,6 @@ int	DCsync_history(int sync_type, int *total_num)
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 	{
 		zbx_vector_uint64_destroy(&triggerids);
-		zbx_vector_ptr_clear_ext(&itservice_updates, zbx_ptr_free);
 		zbx_vector_ptr_destroy(&itservice_updates);
 	}
 finish:
