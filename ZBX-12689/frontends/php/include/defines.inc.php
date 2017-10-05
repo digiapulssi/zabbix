@@ -19,8 +19,8 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.4.2rc1');
-define('ZABBIX_API_VERSION',	'3.4.2');
+define('ZABBIX_VERSION',		'3.4.3rc1');
+define('ZABBIX_API_VERSION',	'3.4.3');
 define('ZABBIX_EXPORT_VERSION',	'3.4');
 define('ZABBIX_DB_VERSION',		3040000);
 
@@ -1221,9 +1221,6 @@ define('ZBX_WIDGET_FIELD_TYPE_MAP',				8);
 define('ZBX_WIDGET_FIELD_RESOURCE_GRAPH',				0);
 define('ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH',		1);
 
-define('UPDATE_PROFILE_OFF',	0);
-define('UPDATE_PROFILE_ON',		1);
-
 // validation
 define('DB_ID',		"({}>=0&&bccomp({},\"9223372036854775807\")<=0)&&");
 define('NOT_EMPTY',	"({}!='')&&");
@@ -1239,7 +1236,6 @@ define('THEME_DEFAULT', 'default');
 // the default theme
 define('ZBX_DEFAULT_THEME', 'blue-theme');
 
-define('ZABBIX_HOMEPAGE', 'http://www.zabbix.com');
 define('ZBX_DEFAULT_URL', 'zabbix.php?action=dashboard.view');
 
 // non translatable date formats
