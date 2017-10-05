@@ -1,0 +1,16 @@
+module zbx_php-fpm 1.0;
+
+require {
+	type mysqld_port_t;
+	type httpd_t;
+	type zabbix_port_t;
+	class tcp_socket name_connect;
+}
+
+#============= httpd_t ==============
+#!!!! This avc is allowed in the current policy
+allow httpd_t mysqld_port_t:tcp_socket name_connect;
+
+#!!!! This avc can be allowed using one of the these booleans:
+#     httpd_can_network_connect, httpd_can_connect_zabbix
+allow httpd_t zabbix_port_t:tcp_socket name_connect;
