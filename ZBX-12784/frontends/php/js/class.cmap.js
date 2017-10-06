@@ -245,12 +245,12 @@ ZABBIX.apps.map = (function($) {
 			});
 		};
 
-		CMap.LABEL_TYPE_LABEL	= 0;
-		CMap.LABEL_TYPE_IP		= 1;
-		CMap.LABEL_TYPE_NAME	= 2;
-		CMap.LABEL_TYPE_STATUS	= 3;
-		CMap.LABEL_TYPE_NOTHING	= 4;
-		CMap.LABEL_TYPE_CUSTOM	= 5;
+		CMap.LABEL_TYPE_LABEL	= 0; // MAP_LABEL_TYPE_LABEL
+		CMap.LABEL_TYPE_IP		= 1; // MAP_LABEL_TYPE_IP
+		CMap.LABEL_TYPE_NAME	= 2; // MAP_LABEL_TYPE_NAME
+		CMap.LABEL_TYPE_STATUS	= 3; // MAP_LABEL_TYPE_STATUS
+		CMap.LABEL_TYPE_NOTHING	= 4; // MAP_LABEL_TYPE_NOTHING
+		CMap.LABEL_TYPE_CUSTOM	= 5; // MAP_LABEL_TYPE_CUSTOM
 
 		CMap.prototype = {
 			copypaste_buffer: [],
@@ -2258,11 +2258,11 @@ ZABBIX.apps.map = (function($) {
 			});
 		}
 
-		Selement.TYPE_HOST			= 0;
-		Selement.TYPE_MAP			= 1;
-		Selement.TYPE_TRIGGER		= 2;
-		Selement.TYPE_HOST_GROUP	= 3;
-		Selement.TYPE_IMAGE			= 4;
+		Selement.TYPE_HOST			= 0; // SYSMAP_ELEMENT_TYPE_HOST
+		Selement.TYPE_MAP			= 1; // SYSMAP_ELEMENT_TYPE_MAP
+		Selement.TYPE_TRIGGER		= 2; // SYSMAP_ELEMENT_TYPE_TRIGGER
+		Selement.TYPE_HOST_GROUP	= 3; // SYSMAP_ELEMENT_TYPE_HOST_GROUP
+		Selement.TYPE_IMAGE			= 4; // SYSMAP_ELEMENT_TYPE_IMAGE
 
 		Selement.prototype = {
 			/**
@@ -2281,7 +2281,7 @@ ZABBIX.apps.map = (function($) {
 			makeResizable: Shape.prototype.makeResizable,
 
 			/**
-			 * Update label data inherited from map confguration.
+			 * Update label data inherited from map configuration.
 			 */
 			updateLabel: function () {
 				if (this.sysmap.data.label_format != 0) {
@@ -2350,7 +2350,7 @@ ZABBIX.apps.map = (function($) {
 			 *
 			 * @param {boolean} return label with expanded macros.
 			 *
-			 * @returns {string}
+			 * @returns {string} or null
 			 */
 			getLabel: function (expand) {
 				var label = this.data.label;

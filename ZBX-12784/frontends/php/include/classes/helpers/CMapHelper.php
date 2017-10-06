@@ -446,9 +446,9 @@ class CMapHelper {
 	 *
 	 * @param array $map
 	 *
-	 * @return array map with inherited labels set for emements.
+	 * @return array map with inherited labels set for elements.
 	 */
-	public static function setElementInheritedLabels($map) {
+	public static function setElementInheritedLabels(array $map) {
 		foreach ($map['selements'] as &$selement) {
 			$selement['inherited_label'] = null;
 			$selement['label_type'] = $map['label_type'];
