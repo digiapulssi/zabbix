@@ -107,7 +107,7 @@ class CLineGraphDraw extends CGraphDraw {
 		if ($this->type == GRAPH_TYPE_STACKED) {
 			$graph_item['drawtype'] = GRAPH_ITEM_DRAWTYPE_FILLED_REGION;
 		}
-		$update_interval_parser = new CUpdateIntervalParser();
+		$update_interval_parser = new CUpdateIntervalParser(['usermacros' => true]);
 
 		if ($update_interval_parser->parse($graph_item['delay']) != CParser::PARSE_SUCCESS) {
 			show_error_message(_s('Incorrect value for field "%1$s": %2$s.', 'delay', _('invalid delay')));
@@ -1910,7 +1910,7 @@ class CLineGraphDraw extends CGraphDraw {
 			$this->to_time = $this->stime + $this->period;
 		}
 		else {
-			$this->to_time = $now - SEC_PER_HOUR * $this->from;
+			$this->to_time = $now;
 			$this->from_time = $this->to_time - $this->period;
 		}
 
@@ -2705,7 +2705,10 @@ class CLineGraphDraw extends CGraphDraw {
 	}
 
 	public function draw() {
-		$start_time = microtime(true);
+		$debug_mode = CWebUser::getDebugMode();
+		if ($debug_mode) {
+			$start_time = microtime(true);
+		}
 
 		set_image_header();
 
@@ -2842,12 +2845,12 @@ class CLineGraphDraw extends CGraphDraw {
 			$this->drawLegend();
 		}
 
-		$this->drawLogo();
-
-		$str = sprintf('%0.2f', microtime(true) - $start_time);
-		$str = _s('Data from %1$s. Generated in %2$s sec.', $this->dataFrom, $str);
-		$strSize = imageTextSize(6, 0, $str);
-		imageText($this->im, 6, 0, $this->fullSizeX - $strSize['width'] - 5, $this->fullSizeY - 5, $this->getColor('Gray'), $str);
+		if ($debug_mode) {
+			$str = sprintf('%0.2f', microtime(true) - $start_time);
+			$str = _s('Data from %1$s. Generated in %2$s sec.', $this->dataFrom, $str);
+			$str_size = imageTextSize(6, 0, $str);
+			imageText($this->im, 6, 0, $this->fullSizeX - $str_size['width'] - 5, $this->fullSizeY - 5, $this->getColor('Gray'), $str);
+		}
 
 		unset($this->items, $this->data);
 
