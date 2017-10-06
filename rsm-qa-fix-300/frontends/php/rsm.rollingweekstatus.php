@@ -503,15 +503,6 @@ foreach ($tlds_by_server as $key => $hosts) {
 						unset($data['tld'][$DB['SERVERS'][$key]['NR'].$filtred_hostid], $hosts[$filtred_hostid]);
 					}
 				}
-
-				foreach ($data['tld'] as $tld_key => $tld) {
-					if ($data['filter_dns'] && !array_key_exists(RSM_SLV_DNS_ROLLWEEK, $tld)
-							|| $data['filter_dnssec'] && !array_key_exists(RSM_SLV_DNSSEC_ROLLWEEK, $tld)
-							|| $data['filter_rdds'] && !array_key_exists(RSM_RDDS, $tld)
-							|| $data['filter_epp'] && !array_key_exists(RSM_EPP, $tld)) {
-						unset($data['tld'][$DB['SERVERS'][$key]['NR'].$tld['hostid']], $hosts[$tld['hostid']]);
-					}
-				}
 			}
 
 			if ($hosts) {
@@ -658,21 +649,37 @@ if (!$no_history) {
 	$data['paging'] = getPagingLine($data['tld'], ZBX_SORT_UP, new CUrl());
 }
 
-foreach ($data['tld'] as &$tld) {
-	if (array_key_exists(RSM_DNS, $tld) && array_key_exists('incident', $tld[RSM_DNS])) {
-		$tld[RSM_DNS]['incident'] = getLastEvent($tld[RSM_DNS]['incident']);
+foreach ($data['tld'] as $key => $value) {
+	$false_positive = true;
+	if (array_key_exists(RSM_DNS, $data['tld'][$key]) && array_key_exists('incident', $data['tld'][$key][RSM_DNS])) {
+		$data['tld'][$key][RSM_DNS]['incident'] = getLastEvent($data['tld'][$key][RSM_DNS]['incident']);
+		if ($data['tld'][$key][RSM_DNS]['incident']) {
+			$false_positive = false;
+		}
 	}
-	if (array_key_exists(RSM_DNSSEC, $tld) && array_key_exists('incident', $tld[RSM_DNSSEC])) {
-		$tld[RSM_DNSSEC]['incident'] = getLastEvent($tld[RSM_DNSSEC]['incident']);
+	if (array_key_exists(RSM_DNSSEC, $data['tld'][$key]) && array_key_exists('incident', $data['tld'][$key][RSM_DNSSEC])) {
+		$data['tld'][$key][RSM_DNSSEC]['incident'] = getLastEvent($data['tld'][$key][RSM_DNSSEC]['incident']);
+		if ($data['tld'][$key][RSM_DNSSEC]['incident']) {
+			$false_positive = false;
+		}
 	}
-	if (array_key_exists(RSM_RDDS, $tld) && array_key_exists('incident', $tld[RSM_RDDS])) {
-		$tld[RSM_RDDS]['incident'] = getLastEvent($tld[RSM_RDDS]['incident']);
+	if (array_key_exists(RSM_RDDS, $data['tld'][$key]) && array_key_exists('incident', $data['tld'][$key][RSM_RDDS])) {
+		$data['tld'][$key][RSM_RDDS]['incident'] = getLastEvent($data['tld'][$key][RSM_RDDS]['incident']);
+		if ($data['tld'][$key][RSM_RDDS]['incident']) {
+			$false_positive = false;
+		}
 	}
-	if (array_key_exists(RSM_EPP, $tld) && array_key_exists('incident', $tld[RSM_EPP])) {
-		$tld[RSM_EPP]['incident'] = getLastEvent($tld[RSM_EPP]['incident']);
+	if (array_key_exists(RSM_EPP, $data['tld'][$key]) && array_key_exists('incident', $data['tld'][$key][RSM_EPP])) {
+		$data['tld'][$key][RSM_EPP]['incident'] = getLastEvent($data['tld'][$key][RSM_EPP]['incident']);
+		if ($data['tld'][$key][RSM_EPP]['incident']) {
+			$false_positive = false;
+		}
+	}
+
+	if ($data['filter_status'] == 1 && $false_positive) {
+		unset($data['tld'][$key]);
 	}
 }
-unset($tld);
 
 $rsmView = new CView('rsm.rollingweekstatus.list', $data);
 $rsmView->render();
