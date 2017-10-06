@@ -52,7 +52,10 @@ $fields = [
 	// ajax
 	'favobj' =>					[T_ZBX_STR, O_OPT, P_ACT,	null,		null],
 	'favref' =>					[T_ZBX_STR, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})'],
-	'favstate' =>				[T_ZBX_INT, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})&&("filter"=={favobj})']
+	'favstate' =>				[T_ZBX_INT, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})&&("filter"=={favobj})'],
+	// sort and sortorder
+	'sort' =>			[T_ZBX_STR, O_OPT, P_SYS, IN('"name","status"'),						null],
+	'sortorder' =>		[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null]
 ];
 
 check_fields($fields);
@@ -113,6 +116,15 @@ $data['filter_gtld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_gtl
 $data['filter_cctld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_cctld_group');
 $data['filter_othertld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_othertld_group');
 $data['filter_test_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_test_group');
+
+$sort_field = getRequest('sort', CProfile::get('web.rsm.rollingweekstatus.sort', 'name'));
+$sort_order = getRequest('sortorder', CProfile::get('web.rsm.rollingweekstatus.sortorder', ZBX_SORT_UP));
+
+CProfile::update('web.rsm.rollingweekstatus.sort', $sort_field, PROFILE_TYPE_STR);
+CProfile::update('web.rsm.rollingweekstatus.sortorder', $sort_order, PROFILE_TYPE_STR);
+
+$data['sort'] = $sort_field;
+$data['sortorder'] = $sort_order;
 
 $macro = API::UserMacro()->get(array(
 	'globalmacro' => true,
@@ -359,6 +371,7 @@ if ($data['tld']) {
 }
 
 if ($no_history) {
+	order_result($data['tld'], $sort_field, $sort_order);
 	$data['paging'] = getPagingLine($data['tld'], ZBX_SORT_UP, new CUrl());
 }
 
@@ -424,18 +437,20 @@ foreach ($tlds_by_server as $key => $hosts) {
 		if ($items) {
 			foreach ($items as $item) {
 				// service type filter
-				if ($data['filter_slv'] !== '' && ($data['filter_slv'] > $item['lastvalue']
-						|| ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO
-							&& $item['lastvalue'] == 0))
-						&& (($data['filter_dns'] && $item['key_'] == RSM_SLV_DNS_ROLLWEEK)
-							|| ($data['filter_dnssec'] && $item['key_'] == RSM_SLV_DNSSEC_ROLLWEEK)
-							|| ($data['filter_rdds'] && $item['key_'] == RSM_SLV_RDDS_ROLLWEEK)
-							|| ($data['filter_epp'] && $item['key_'] == RSM_SLV_EPP_ROLLWEEK)
-						&& !array_key_exists($item['hostid'], $filter_slv))) {
-					$filter_slv[$item['hostid']] = false;
-				}
-				elseif ($data['filter_slv'] !== '') {
-					$filter_slv[$item['hostid']] = true;
+				if ($data['filter_slv'] !== '' && (($data['filter_dns'] && $item['key_'] == RSM_SLV_DNS_ROLLWEEK)
+						|| ($data['filter_dnssec'] && $item['key_'] == RSM_SLV_DNSSEC_ROLLWEEK)
+						|| ($data['filter_rdds'] && $item['key_'] == RSM_SLV_RDDS_ROLLWEEK)
+						|| ($data['filter_epp'] && $item['key_'] == RSM_SLV_EPP_ROLLWEEK))) {
+					if (($data['filter_slv'] != SLA_MONITORING_SLV_FILTER_NON_ZERO
+							&& $data['filter_slv'] > $item['lastvalue'])) {
+						$filter_slv[$item['hostid']] = false;
+					}
+					elseif ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO && $item['lastvalue'] == 0) {
+						$filter_slv[$item['hostid']] = false;
+					}
+					else {
+						$filter_slv[$item['hostid']] = true;
+					}
 				}
 
 				if (!array_key_exists($DB['SERVERS'][$key]['NR'].$item['hostid'], $data['tld'])) {
@@ -646,6 +661,7 @@ if ($data['filter_status']) {
 }
 
 if (!$no_history) {
+	order_result($data['tld'], $sort_field, $sort_order);
 	$data['paging'] = getPagingLine($data['tld'], ZBX_SORT_UP, new CUrl());
 }
 

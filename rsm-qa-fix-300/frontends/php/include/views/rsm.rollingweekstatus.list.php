@@ -151,6 +151,7 @@ $form = (new CForm())
 
 $table = (new CTableInfo())
 	->setHeader([
+		make_sorting_header(_('TLD'), 'name', $data['sort'], $data['sortorder']),
 		_('TLD'),
 		_('Type'),
 		_('DNS (4Hrs)'),
