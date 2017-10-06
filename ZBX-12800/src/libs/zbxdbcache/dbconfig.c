@@ -7871,7 +7871,8 @@ int	DCset_hosts_availability(zbx_vector_ptr_t *availabilities)
  * Comments: helper function for DCconfig_check_trigger_dependencies()        *
  *                                                                            *
  ******************************************************************************/
-static int	DCconfig_check_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST *trigdep, int level)
+static int	DCconfig_check_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST *trigdep, int level,
+		const zbx_vector_uint64_t *triggerids, zbx_vector_uint64_t *dep_triggerids)
 {
 	int				i;
 	const ZBX_DC_TRIGGER		*next_trigger;
@@ -7889,15 +7890,25 @@ static int	DCconfig_check_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST 
 		for (i = 0; NULL != (next_trigdep = trigdep->dependencies[i]); i++)
 		{
 			if (NULL != (next_trigger = next_trigdep->trigger) &&
-					TRIGGER_VALUE_PROBLEM == next_trigger->value &&
 					TRIGGER_STATUS_ENABLED == next_trigger->status &&
 					TRIGGER_FUNCTIONAL_TRUE == next_trigger->functional)
 			{
-				return FAIL;
+
+				if (NULL == triggerids || FAIL == zbx_vector_uint64_bsearch(triggerids,
+						next_trigger->triggerid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+				{
+					if (TRIGGER_VALUE_PROBLEM == next_trigger->value)
+						return FAIL;
+				}
+				else
+					zbx_vector_uint64_append(dep_triggerids, next_trigger->triggerid);
 			}
 
-			if (FAIL == DCconfig_check_trigger_dependencies_rec(next_trigdep, level + 1))
+			if (FAIL == DCconfig_check_trigger_dependencies_rec(next_trigdep, level + 1, triggerids,
+					dep_triggerids))
+			{
 				return FAIL;
+			}
 		}
 	}
 
@@ -7924,7 +7935,7 @@ int	DCconfig_check_trigger_dependencies(zbx_uint64_t triggerid)
 	LOCK_CACHE;
 
 	if (NULL != (trigdep = zbx_hashset_search(&config->trigdeps, &triggerid)))
-		ret = DCconfig_check_trigger_dependencies_rec(trigdep, 0);
+		ret = DCconfig_check_trigger_dependencies_rec(trigdep, 0, NULL, NULL);
 
 	UNLOCK_CACHE;
 
@@ -10160,64 +10171,6 @@ void	zbx_dc_get_nested_hostgroupids_by_names(char **names, int names_num, zbx_ve
 
 /******************************************************************************
  *                                                                            *
- * Function: dc_get_trigger_dependencies_rec                                  *
- *                                                                            *
- * Purpose: checks/returns trigger dependencies                               *
- *                                                                            *
- * Parameter: trigdep        - [IN] the trigger dependency data               *
- *            level          - [IN] the current dependency nesting level      *
- *            triggerids     - [IN] the currently processing trigger ids      *
- *            dep_triggerids - [OUT] the ids of currently processing triggers *
- *                                   that were found in dependency list       *
- *                                                                            *
- * Return value: SUCCEED - either dependency check succeeded or failure       *
- *                         cannot be determinated because dependent triggers  *
- *                         are currently being processed                      *
- *               FAIL    - the dependency check failed                        *
- *                                                                            *
- ******************************************************************************/
-static int	dc_get_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST *trigdep, int level,
-		const zbx_vector_uint64_t *triggerids, zbx_vector_uint64_t *dep_triggerids)
-{
-	int				i;
-	const ZBX_DC_TRIGGER		*next_trigger;
-	const ZBX_DC_TRIGGER_DEPLIST	*next_trigdep;
-
-	if (ZBX_TRIGGER_DEPENDENCY_LEVELS_MAX < level)
-	{
-		zabbix_log(LOG_LEVEL_CRIT, "recursive trigger dependency is too deep (triggerid:" ZBX_FS_UI64 ")",
-				trigdep->triggerid);
-		return SUCCEED;
-	}
-
-	if (NULL == trigdep->dependencies)
-		return SUCCEED;
-
-	for (i = 0; NULL != (next_trigdep = trigdep->dependencies[i]); i++)
-	{
-		if (NULL != (next_trigger = next_trigdep->trigger) &&
-				TRIGGER_STATUS_ENABLED == next_trigger->status &&
-				TRIGGER_FUNCTIONAL_TRUE == next_trigger->functional)
-		{
-			if (FAIL == zbx_vector_uint64_bsearch(triggerids, next_trigger->triggerid,
-					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
-			{
-				if (TRIGGER_VALUE_PROBLEM == next_trigger->value)
-					return FAIL;
-			}
-			else
-				zbx_vector_uint64_append(dep_triggerids, next_trigger->triggerid);
-		}
-
-		if (FAIL == dc_get_trigger_dependencies_rec(next_trigdep, level + 1, triggerids, dep_triggerids))
-			return FAIL;
-	}
-
-	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: zbx_dc_get_trigger_dependencies_rec                              *
  *                                                                            *
  * Purpose: checks/returns trigger dependencies for a set of triggers         *
@@ -10250,7 +10203,7 @@ void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_
 	{
 		if (NULL != (trigdep = zbx_hashset_search(&config->trigdeps, &triggerids->values[i])))
 		{
-			if (FAIL == (ret = dc_get_trigger_dependencies_rec(trigdep, 0, triggerids, &depids)) ||
+			if (FAIL == (ret = DCconfig_check_trigger_dependencies_rec(trigdep, 0, triggerids, &depids)) ||
 					0 != depids.values_num)
 			{
 				dep = (zbx_trigger_dep_t *)zbx_malloc(NULL, sizeof(zbx_trigger_dep_t));
