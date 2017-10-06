@@ -185,7 +185,7 @@ static void	update_triggers_status_to_unknown(zbx_uint64_t hostid, zbx_item_type
 	DBfree_result(result);
 
 	DBbegin();
-	process_events();
+	process_events(NULL);
 	DBcommit();
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);

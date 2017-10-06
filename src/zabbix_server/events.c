@@ -140,7 +140,7 @@ static void	clean_events()
 	events_num = 0;
 }
 
-int	process_events(void)
+int	process_events(zbx_vector_ptr_t *itservice_updates)
 {
 	const char	*__function_name = "process_events";
 	int		ret = (int)events_num;
@@ -153,7 +153,8 @@ int	process_events(void)
 
 		process_actions(events, events_num);
 
-		DBupdate_itservices(events, events_num);
+		if (NULL != itservice_updates)
+			zbx_get_itservices_updates(events, events_num, itservice_updates);
 
 		clean_events();
 	}
@@ -162,3 +163,4 @@ int	process_events(void)
 
 	return ret;		/* performance metric */
 }
+
