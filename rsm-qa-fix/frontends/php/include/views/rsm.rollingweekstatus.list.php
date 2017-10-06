@@ -151,6 +151,7 @@ $form = (new CForm())
 
 $table = (new CTableInfo())
 	->setHeader([
+		make_sorting_header(_('TLD'), 'name', $data['sort'], $data['sortorder']),
 		_('TLD'),
 		_('Type'),
 		_('DNS (4Hrs)'),
@@ -168,9 +169,8 @@ if ($this->data['tld']) {
 	foreach ($this->data['tld'] as $key => $tld) {
 		// DNS
 		if (isset($tld[RSM_DNS])) {
-			if ($tld[RSM_DNS]['trigger']) {
-				if ($tld[RSM_DNS]['incident'] && isset($tld[RSM_DNS]['availItemId'])
-						&& isset($tld[RSM_DNS]['itemid'])) {
+			if ($tld[RSM_DNS]['trigger'] && $tld[RSM_DNS]['incident']) {
+				if (array_key_exists('availItemId', $tld[RSM_DNS]) && array_key_exists('itemid', $tld[RSM_DNS])) {
 					$dnsStatus =  new CLink(
 						(new CDiv(null))
 							->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
@@ -212,9 +212,8 @@ if ($this->data['tld']) {
 
 		// DNSSEC
 		if (isset($tld[RSM_DNSSEC])) {
-			if ($tld[RSM_DNSSEC]['trigger']) {
-				if ($tld[RSM_DNSSEC]['incident'] && isset($tld[RSM_DNSSEC]['availItemId'])
-						&& isset($tld[RSM_DNSSEC]['itemid'])) {
+			if ($tld[RSM_DNSSEC]['trigger'] && $tld[RSM_DNSSEC]['incident']) {
+				if (array_key_exists('availItemId', $tld[RSM_DNSSEC]) && array_key_exists('itemid', $tld[RSM_DNSSEC])) {
 					$dnssecStatus =  new CLink(
 						(new CDiv(null))
 							->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
@@ -257,9 +256,8 @@ if ($this->data['tld']) {
 
 		// RDDS
 		if (isset($tld[RSM_RDDS])) {
-			if ($tld[RSM_RDDS]['trigger']) {
-				if ($tld[RSM_RDDS]['incident'] && isset($tld[RSM_RDDS]['availItemId'])
-						&& isset($tld[RSM_RDDS]['itemid'])) {
+			if ($tld[RSM_RDDS]['trigger'] && $tld[RSM_RDDS]['incident']) {
+				if (array_key_exists('availItemId', $tld[RSM_RDDS]) && array_key_exists('itemid', $tld[RSM_RDDS])) {
 					$rddsStatus =  new CLink(
 						(new CDiv(null))
 							->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
@@ -318,9 +316,8 @@ if ($this->data['tld']) {
 
 		// EPP
 		if (isset($tld[RSM_EPP])) {
-			if ($tld[RSM_EPP]['trigger']) {
-				if ($tld[RSM_EPP]['incident'] && isset($tld[RSM_EPP]['availItemId'])
-						&& isset($tld[RSM_EPP]['itemid'])) {
+			if ($tld[RSM_EPP]['trigger'] && $tld[RSM_EPP]['incident']) {
+				if (array_key_exists('availItemId', $tld[RSM_EPP]) && array_key_exists('itemid', $tld[RSM_EPP])) {
 					$eppStatus = new CLink(
 						(new CDiv(null))
 							->addClass('service-icon status_icon_extra iconrollingweekfail cell-value pointer'),
