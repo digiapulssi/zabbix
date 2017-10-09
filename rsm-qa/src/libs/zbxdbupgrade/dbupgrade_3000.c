@@ -773,6 +773,264 @@ static int	DBpatch_3000133(void)
 	return SUCCEED;
 }
 
+static int	move_interface(zbx_uint64_t interfaceid)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	zbx_uint64_t	nextid;
+
+	if (NULL == (result = DBselect("select max(interfaceid)+1 from interface")))
+		return FAIL;
+
+	if (NULL == (row = DBfetch(result)))
+	{
+		THIS_SHOULD_NEVER_HAPPEN;	/* there is "Zabbix Server" host, 'interface' table can't be empty */
+		DBfree_result(result);
+		return FAIL;
+	}
+
+	ZBX_STR2UINT64(nextid, row[0]);
+	DBfree_result(result);
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into interface (interfaceid,hostid,main,type,useip,ip,dns,port,bulk)"
+			" select " ZBX_FS_UI64 ",hostid,main,type,useip,ip,dns,port,bulk from interface"
+			" where interfaceid=" ZBX_FS_UI64,
+			nextid, interfaceid))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"update items set interfaceid=" ZBX_FS_UI64
+			" where interfaceid=" ZBX_FS_UI64,
+			nextid, interfaceid))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"update interface_discovery set interfaceid=" ZBX_FS_UI64
+			" where interfaceid=" ZBX_FS_UI64,
+			nextid, interfaceid))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"update interface_discovery set parent_interfaceid=" ZBX_FS_UI64
+			" where parent_interfaceid=" ZBX_FS_UI64,
+			nextid, interfaceid))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from interface where interfaceid=" ZBX_FS_UI64, interfaceid))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	reserve_interfaceid(zbx_uint64_t interfaceid)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	if (NULL == (result = DBselect("select null from interface where interfaceid=" ZBX_FS_UI64, interfaceid)))
+		return FAIL;
+
+	row = DBfetch(result);
+	DBfree_result(result);
+	return NULL == row ? SUCCEED : move_interface(interfaceid);
+}
+
+static int	DBpatch_3000134(void)
+{
+#define DEFAULT_INTERFACE_INSERT								\
+	"insert into interface (interfaceid,hostid,main,type,useip,ip,dns,port,bulk)"		\
+	" values ('" ZBX_FS_UI64 "','" ZBX_FS_UI64 "','1','1','1','127.0.0.1','','10050','1')"
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (SUCCEED != reserve_interfaceid(2) || ZBX_DB_OK > DBexecute(DEFAULT_INTERFACE_INSERT, 2, 100000))
+		return FAIL;
+
+	if (SUCCEED != reserve_interfaceid(3) || ZBX_DB_OK > DBexecute(DEFAULT_INTERFACE_INSERT, 3, 100001))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='interface'"))
+		return FAIL;
+
+	return SUCCEED;
+
+#undef DEFAULT_INTERFACE_INSERT
+}
+
+static int	DBpatch_3000135(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into globalmacro (globalmacroid,macro,value)"
+			" values (56,'{$MAX_CPU_LOAD}','50')"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into globalmacro (globalmacroid,macro,value)"
+			" values (57,'{$MAX_RUN_PROCESSES}','1500')"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='globalmacro'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000136(void)
+{
+#define RESERVE_HOSTMACROID								\
+		"update hostmacro"							\
+		" set hostmacroid=(select nextid from ("				\
+			"select max(hostmacroid)+1 as nextid from hostmacro) as tmp)"	\
+		" where hostmacroid=" ZBX_FS_UI64
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(RESERVE_HOSTMACROID, 1))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into hostmacro (hostmacroid,hostid,macro,value)"
+			" values (1,10057,'{$MAX_CPU_LOAD}','5')"))		/* hostid of "Zabbix Server" host */
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(RESERVE_HOSTMACROID, 2))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into hostmacro (hostmacroid,hostid,macro,value)"
+			" values (2,10057,'{$MAX_RUN_PROCESSES}','30')"))	/* hostid of "Zabbix Server" host */
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='hostmacro'"))
+		return FAIL;
+
+	return SUCCEED;
+
+#undef RESERVE_HOSTMACROID
+}
+
+static int	DBpatch_3000137(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update functions"
+			" set function='avg',parameter='#2'"	/* "Processor load is too high on {HOST.NAME}" trigger */
+			" where triggerid=10010"		/* triggerids on "Template OS Linux" template */
+			" or triggerid=13541"))			/* and "Zabbix Server" host */
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("update triggers"
+			" set expression='{12586}>{$MAX_CPU_LOAD}'"
+			" where triggerid=10010"))	/* triggerid of "Processor load is too high on {HOST.NAME}" */
+							/* trigger from "Template OS Linux" template */
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("update triggers"
+			" set expression='{12970}>{$MAX_CPU_LOAD}'"
+			" where triggerid=13541"))	/* triggerid of "Processor load is too high on {HOST.NAME}" */
+							/* trigger from "Zabbix Server" host */
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000138(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update triggers"
+			" set expression='{12555}>{$MAX_RUN_PROCESSES}'"
+			" where triggerid=10011"))	/* triggerid of "Too many processes running on {HOST.NAME}" */
+							/* trigger from "Template OS Linux" template */
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("update triggers"
+			" set expression='{12968}>{$MAX_RUN_PROCESSES}'"
+			" where triggerid=13539"))	/* triggerid of "Too many processes running on {HOST.NAME}" */
+							/* trigger from "Zabbix Server" host */
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000139(void)
+{
+	zbx_vector_uint64_t	templateids;
+	DB_RESULT		result;
+	DB_ROW			row;
+	int			ret = SUCCEED;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* get hosts "Template OS Linux" is currently linked to (except "Zabbix Server") */
+	if (NULL == (result = DBselect(
+			"select hostid from hosts_templates"
+			" where templateid=10001"	/* hostid of "Template OS Linux" template */
+			" and hostid<>10057")))		/* hostid of "Zabbix Server" host */
+	{
+		return FAIL;
+	}
+
+	zbx_vector_uint64_create(&templateids);
+	zbx_vector_uint64_reserve(&templateids, 1);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t		hostid;
+
+		ZBX_STR2UINT64(hostid, row[0]);
+		zbx_vector_uint64_append(&templateids, 10001);	/* hostid of "Template OS Linux" template */
+
+		if (SUCCEED != (ret = DBdelete_template_elements(hostid, &templateids)))	/* unlink */
+			break;
+
+		if (SUCCEED != (ret = DBcopy_template_elements(hostid, &templateids)))		/* link back */
+			break;
+
+		zbx_vector_uint64_clear(&templateids);
+	}
+
+	zbx_vector_uint64_destroy(&templateids);
+	DBfree_result(result);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -814,5 +1072,11 @@ DBPATCH_ADD(3000130, 0, 1)	/* create lastvalue table */
 DBPATCH_ADD(3000131, 0, 1)	/* add itemid constraint to lastvalue */
 DBPATCH_ADD(3000132, 0, 0)	/* delete carriage returns in parameters of "Script" media type */
 DBPATCH_ADD(3000133, 0, 1)	/* use recovery event (instead of problem event) date and time in recovery message */
+DBPATCH_ADD(3000134, 0, 0)	/* add missing interfaces for "Global macro history" and "Probe statuses" hosts */
+DBPATCH_ADD(3000135, 0, 0)	/* add global "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" macros */
+DBPATCH_ADD(3000136, 0, 0)	/* add "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" macros on "Zabbix Server" host */
+DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
+DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
+DBPATCH_ADD(3000139, 0, 0)	/* unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
 
 DBPATCH_END()

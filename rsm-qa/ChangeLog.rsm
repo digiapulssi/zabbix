@@ -1,3 +1,15 @@
+Changes for rsm1.0.0rc30
+
+New features:
+....I...S. [290] tuned "Processor load is too high on {HOST.NAME}" and "Too many processes running on {HOST.NAME}" triggers (dotneft, gleb)
+..F....... [299] added support by false positive events in Rolling week status page (Oleg)
+..F....... [298] added sorting by TLD name in Rolling week status page (Oleg)
+
+Bug fixes:
+....I..PS. [301] fixed resolving of {ITEM.NAME} by adding missing interfaces to "Global macro history" and "Probe statuses" hosts (gleb)
+..F....... [300] fixed filtering by non-zero value in Rolling week status page (Oleg)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc29
 
 New features:

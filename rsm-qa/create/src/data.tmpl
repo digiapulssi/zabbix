@@ -103,6 +103,8 @@ ROW   |1001         |100001|Probe availability|0    |
 TABLE |interface
 FIELDS|interfaceid|hostid|main|type|useip|ip       |dns|port |bulk|
 ROW   |1          |10057 |1   |1   |1    |127.0.0.1|   |10050|1   |
+ROW   |2          |100000|1   |1   |1    |127.0.0.1|   |10050|1   |
+ROW   |3          |100001|1   |1   |1    |127.0.0.1|   |10050|1   |
 
 TABLE |valuemaps
 FIELDS|valuemapid|name                      |
@@ -418,8 +420,8 @@ ROW   |1       |600                |1-5,09:00-18:00;|7             |5           
 
 TABLE |triggers
 FIELDS|triggerid|expression                                                              |description                                                     |url|status|priority|comments                                                                                                                              |templateid|type|flags|
-ROW   |10010    |{12586}>5                                                               |Processor load is too high on {HOST.NAME}                       |   |0     |2       |                                                                                                                                      |NULL      |0   |0    |
-ROW   |10011    |{12555}>30                                                              |Too many processes running on {HOST.NAME}                       |   |0     |2       |                                                                                                                                      |NULL      |0   |0    |
+ROW   |10010    |{12586}>{$MAX_CPU_LOAD}                                                 |Processor load is too high on {HOST.NAME}                       |   |0     |2       |                                                                                                                                      |NULL      |0   |0    |
+ROW   |10011    |{12555}>{$MAX_RUN_PROCESSES}                                            |Too many processes running on {HOST.NAME}                       |   |0     |2       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |10012    |{12580}<50                                                              |Lack of free swap space on {HOST.NAME}                          |   |0     |2       |It probably means that the systems requires more physical memory.                                                                     |NULL      |0   |0    |
 ROW   |10016    |{10199}>0                                                               |/etc/passwd has been changed on {HOST.NAME}                     |   |0     |2       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |10021    |{12583}<0                                                               |{HOST.NAME} has just been restarted                             |   |0     |1       |                                                                                                                                      |NULL      |0   |0    |
@@ -502,9 +504,9 @@ ROW   |13535    |{12964}=1                                                      
 ROW   |13536    |{12965}>0                                                               |Version of zabbix_agent(d) was changed on {HOST.NAME}           |   |0     |1       |                                                                                                                                      |10045     |0   |0    |
 ROW   |13537    |{12966}<1024                                                            |Configured max number of opened files is too low on {HOST.NAME} |   |0     |1       |                                                                                                                                      |10042     |0   |0    |
 ROW   |13538    |{12967}<256                                                             |Configured max number of processes is too low on {HOST.NAME}    |   |0     |1       |                                                                                                                                      |10041     |0   |0    |
-ROW   |13539    |{12968}>30                                                              |Too many processes running on {HOST.NAME}                       |   |0     |2       |                                                                                                                                      |10011     |0   |0    |
+ROW   |13539    |{12968}>{$MAX_RUN_PROCESSES}                                            |Too many processes running on {HOST.NAME}                       |   |0     |2       |                                                                                                                                      |10011     |0   |0    |
 ROW   |13540    |{12969}>300                                                             |Too many processes on {HOST.NAME}                               |   |0     |2       |                                                                                                                                      |10190     |0   |0    |
-ROW   |13541    |{12970}>5                                                               |Processor load is too high on {HOST.NAME}                       |   |0     |2       |                                                                                                                                      |10010     |0   |0    |
+ROW   |13541    |{12970}>{$MAX_CPU_LOAD}                                                 |Processor load is too high on {HOST.NAME}                       |   |0     |2       |                                                                                                                                      |10010     |0   |0    |
 ROW   |13542    |{12971}>20                                                              |Disk I/O is overloaded on {HOST.NAME}                           |   |0     |2       |OS spends significant time waiting for I/O (input/output) operations. It could be indicator of performance issues with storage system.|13243     |0   |0    |
 ROW   |13543    |{12972}>0                                                               |Hostname was changed on {HOST.NAME}                             |   |0     |1       |                                                                                                                                      |10043     |0   |0    |
 ROW   |13544    |{12973}=0                                                               |System time on {HOST.HOST} is out of sync with Zabbix Server    |   |0     |4       |                                                                                                                                      |13509     |0   |0    |
@@ -890,6 +892,13 @@ ROW   |52           |{$RSM.SLV.EPP.INFO}           |99                 |
 ROW   |53           |{$RSM.ROLLWEEK.THRESHOLDS}    |0,5,10,25,50,75,100|
 ROW   |54           |{$RSM.ROLLWEEK.SECONDS}       |604800             |
 ROW   |55           |{$RSM.PROBE.AVAIL.LIMIT}      |60                 |
+ROW   |56           |{$MAX_CPU_LOAD}               |50                 |
+ROW   |57           |{$MAX_RUN_PROCESSES}          |1500               |
+
+TABLE |hostmacro
+FIELDS|hostmacroid|hostid|macro               |value|
+ROW   |1          |10057 |{$MAX_CPU_LOAD}     |5    |
+ROW   |2          |10057 |{$MAX_RUN_PROCESSES}|30   |
 
 TABLE |hosts_groups
 FIELDS|hostgroupid|hostid|groupid|
