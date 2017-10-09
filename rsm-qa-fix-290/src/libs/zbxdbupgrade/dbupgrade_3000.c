@@ -937,9 +937,9 @@ static int	DBpatch_3000137(void)
 		return SUCCEED;
 
 	if (ZBX_DB_OK > DBexecute("update functions"
-			" set function='avg',parameter='#2'"
-			" where triggerid=10010"))	/* triggerid of "Processor load is too high on {HOST.NAME}" */
-							/* trigger from "Template OS Linux" template */
+			" set function='avg',parameter='#2'"	/* "Processor load is too high on {HOST.NAME}" trigger */
+			" where triggerid=10010"		/* triggerids on "Template OS Linux" template */
+			" or triggerid=13541"))			/* and "Zabbix Server" host */
 	{
 		return FAIL;
 	}
@@ -948,6 +948,14 @@ static int	DBpatch_3000137(void)
 			" set expression='{12586}>{$MAX_CPU_LOAD}'"
 			" where triggerid=10010"))	/* triggerid of "Processor load is too high on {HOST.NAME}" */
 							/* trigger from "Template OS Linux" template */
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("update triggers"
+			" set expression='{12970}>{$MAX_CPU_LOAD}'"
+			" where triggerid=13541"))	/* triggerid of "Processor load is too high on {HOST.NAME}" */
+							/* trigger from "Zabbix Server" host */
 	{
 		return FAIL;
 	}
@@ -968,6 +976,14 @@ static int	DBpatch_3000138(void)
 		return FAIL;
 	}
 
+	if (ZBX_DB_OK > DBexecute("update triggers"
+			" set expression='{12968}>{$MAX_RUN_PROCESSES}'"
+			" where triggerid=13539"))	/* triggerid of "Too many processes running on {HOST.NAME}" */
+							/* trigger from "Zabbix Server" host */
+	{
+		return FAIL;
+	}
+
 	return SUCCEED;
 }
 
@@ -981,9 +997,14 @@ static int	DBpatch_3000139(void)
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	/* get hosts "Template OS Linux" is currently linked to */
-	if (NULL == (result = DBselect("select hostid from hosts_templates where templateid=10001")))
+	/* get hosts "Template OS Linux" is currently linked to (except "Zabbix Server") */
+	if (NULL == (result = DBselect(
+			"select hostid from hosts_templates"
+			" where templateid=10001"	/* hostid of "Template OS Linux" template */
+			" and hostid<>10057")))		/* hostid of "Zabbix Server" host */
+	{
 		return FAIL;
+	}
 
 	zbx_vector_uint64_create(&templateids);
 	zbx_vector_uint64_reserve(&templateids, 1);
@@ -1054,8 +1075,8 @@ DBPATCH_ADD(3000133, 0, 1)	/* use recovery event (instead of problem event) date
 DBPATCH_ADD(3000134, 0, 0)	/* add missing interfaces for "Global macro history" and "Probe statuses" hosts */
 DBPATCH_ADD(3000135, 0, 0)	/* add global "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" macros */
 DBPATCH_ADD(3000136, 0, 0)	/* add "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" macros on "Zabbix Server" host */
-DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}" trigger in "Template OS Linux" template */
-DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template */
-DBPATCH_ADD(3000139, 0, 0)	/* link updated "Template OS Linux" template to all hosts it is currently linked to */
+DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
+DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
+DBPATCH_ADD(3000139, 0, 0)	/* unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
 
 DBPATCH_END()
