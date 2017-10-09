@@ -1,3 +1,4 @@
+<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -17,22 +18,18 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_PROXYDATA_H
-#define ZABBIX_PROXYDATA_H
+/**
+ * A class that allows changing message of an Exception without recreating it.
+ */
+class CExceptionHelper extends Exception {
 
-#include "comms.h"
-#include "zbxjson.h"
-
-extern int	CONFIG_TIMEOUT;
-extern int	CONFIG_TRAPPER_TIMEOUT;
-
-void	zbx_recv_proxy_data(zbx_socket_t *sock, struct zbx_json_parse *jp, zbx_timespec_t *ts);
-void	zbx_send_proxy_data(zbx_socket_t *sock, zbx_timespec_t *ts);
-void	zbx_send_task_data(zbx_socket_t *sock, zbx_timespec_t *ts);
-
-int	zbx_send_proxy_data_respose(const DC_PROXY *proxy, zbx_socket_t *sock, const char *info);
-
-void	init_proxy_history_lock(void);
-void	free_proxy_history_lock(void);
-
-#endif
+	/**
+	 * Set exception message.
+	 *
+	 * @param Exception $exception				Exception to be updated.
+	 * @param string    $message				Message to be set.
+	 */
+	public static function setMessage(Exception $exception, $message) {
+		$exception->message = $message;
+	}
+}
