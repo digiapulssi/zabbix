@@ -19,8 +19,8 @@
 **/
 
 
-require_once dirname(__FILE__).'/include/classes/core/Z.php';
-Z::disableAutoAuthentication();
+require_once dirname(__FILE__).'/include/classes/user/CWebUser.php';
+CWebUser::disableSessionCookie();
 
 require_once dirname(__FILE__).'/include/config.inc.php';
 require_once dirname(__FILE__).'/include/forms.inc.php';
