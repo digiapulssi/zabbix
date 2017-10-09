@@ -5,6 +5,7 @@ New features:
 ..F....... [298] added sorting by TLD name in Rolling week status page (Oleg)
 
 Bug fixes:
+....I..PS. [301] fixed resolving of {ITEM.NAME} by adding missing interfaces to "Global macro history" and "Probe statuses" hosts (gleb)
 ..F....... [300] fixed filtering by non-zero value in Rolling week status page (Oleg)
 
 --------------------------------------------------------------------------------
