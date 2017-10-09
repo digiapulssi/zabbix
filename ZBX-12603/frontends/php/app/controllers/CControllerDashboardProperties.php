@@ -72,7 +72,10 @@ class CControllerDashboardProperties extends CControllerDashboardAbstract {
 		}
 
 		if ($dashboard !== false) {
-			if ($this->hasInput('userid')) {
+			if ($this->hasInput('userid') && $this->getInput('userid') == 0) {
+				$user = null;
+			}
+			elseif ($this->hasInput('userid')) {
 				$user = (new CControllerDashboardView())->getOwnerData($this->getInput('userid'));
 			}
 			elseif (array_key_exists('userid', $dashboard)) {
