@@ -1004,6 +1004,7 @@ static int	DBpatch_3000138(void)
 static int	DBpatch_3000139(void)
 {
 	zbx_vector_uint64_t	templateids;
+	zbx_uint64_t		templateid;
 	DB_RESULT		result;
 	DB_ROW			row;
 	int			ret = SUCCEED;
@@ -1011,11 +1012,29 @@ static int	DBpatch_3000139(void)
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	/* get hosts "Template OS Linux" is currently linked to (except "Zabbix Server") */
+	/* get id of "Template Proxy Health" template */
+	if (NULL == (result = DBselect(
+			"select hostid from hosts"
+			" where host='Template Proxy Health'")))
+	{
+		return FAIL;
+	}
+
+	if (NULL == (row = DBfetch(result)))
+	{
+		/* assuming there are no probes on this server, nothing to do */
+		DBfree_result(result);
+		return SUCCEED;
+	}
+
+	ZBX_STR2UINT64(templateid, row[0]);
+	DBfree_result(result);
+
+	/* get hosts "Template Proxy Health" is currently linked to */
 	if (NULL == (result = DBselect(
 			"select hostid from hosts_templates"
-			" where templateid=10001"	/* hostid of "Template OS Linux" template */
-			" and hostid<>10057")))		/* hostid of "Zabbix Server" host */
+			" where templateid=" ZBX_FS_UI64,
+			templateid)))
 	{
 		return FAIL;
 	}
@@ -1028,7 +1047,7 @@ static int	DBpatch_3000139(void)
 		zbx_uint64_t		hostid;
 
 		ZBX_STR2UINT64(hostid, row[0]);
-		zbx_vector_uint64_append(&templateids, 10001);	/* hostid of "Template OS Linux" template */
+		zbx_vector_uint64_append(&templateids, templateid);
 
 		if (SUCCEED != (ret = DBdelete_template_elements(hostid, &templateids)))	/* unlink */
 			break;
