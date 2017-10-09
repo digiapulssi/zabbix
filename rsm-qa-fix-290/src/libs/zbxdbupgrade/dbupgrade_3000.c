@@ -973,45 +973,38 @@ static int	DBpatch_3000138(void)
 
 static int	DBpatch_3000139(void)
 {
-	DB_RESULT	result;
-	DB_ROW		row;
-	int		ret = SUCCEED;
+	zbx_vector_uint64_t	templateids;
+	DB_RESULT		result;
+	DB_ROW			row;
+	int			ret = SUCCEED;
 
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
 	/* get hosts "Template OS Linux" is currently linked to */
-
-	result = DBselect("select hostid from hosts_templates where templateid=10001");
-
-	if (NULL == result)
+	if (NULL == (result = DBselect("select hostid from hosts_templates where templateid=10001")))
 		return FAIL;
 
-	/* unlink template */
+	zbx_vector_uint64_create(&templateids);
+	zbx_vector_uint64_reserve(&templateids, 1);
 
-	if (ZBX_DB_OK > DBexecute("delete from hosts_templates where templateid=10001"))
-		return FAIL;
-
-	if (ZBX_DB_OK > DBexecute("delete from application_template where templateid=10001"))
-		return FAIL;
-
-	/* link template back */
-
-	while (NULL != (row = DBfetch(result)) && SUCCEED == ret)
+	while (NULL != (row = DBfetch(result)))
 	{
 		zbx_uint64_t		hostid;
-		zbx_vector_uint64_t	templateids;
 
 		ZBX_STR2UINT64(hostid, row[0]);
-		zbx_vector_uint64_create(&templateids);
-		zbx_vector_uint64_reserve(&templateids, 1);
 		zbx_vector_uint64_append(&templateids, 10001);	/* hostid of "Template OS Linux" template */
 
-		ret = DBcopy_template_elements(hostid, &templateids);
+		if (SUCCEED != (ret = DBdelete_template_elements(hostid, &templateids)))	/* unlink */
+			break;
 
-		zbx_vector_uint64_destroy(&templateids);
+		if (SUCCEED != (ret = DBcopy_template_elements(hostid, &templateids)))		/* link back */
+			break;
+
+		zbx_vector_uint64_clear(&templateids);
 	}
 
+	zbx_vector_uint64_destroy(&templateids);
 	DBfree_result(result);
 
 	return ret;
