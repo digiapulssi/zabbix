@@ -24,7 +24,7 @@
 		<replace file="frontends/php/tests/bootstrap.php" token="{SCREENSHOT_URL}" value="${env.SCREENSHOT_URL}"/>
 
 		<!-- Create PHP config file -->
-		<copy overwrite="true" file="tests/templates/zabbix.conf.php" tofile="frontends/php/conf/zabbix.conf.php"/>
+		<copy overwrite="true" file="frontends/php/tests/templates/zabbix.conf.php" tofile="frontends/php/conf/zabbix.conf.php"/>
 		<replace file="frontends/php/conf/zabbix.conf.php" token="{DBTYPE}" value="${dbtype}"/>
 		<replace file="frontends/php/conf/zabbix.conf.php" token="{DBHOST}" value="${dbhost}"/>
 		<replace file="frontends/php/conf/zabbix.conf.php" token="{DBNAME}" value="${dbname}"/>
@@ -84,7 +84,7 @@
 			<arg line="--set ON_ERROR_STOP=1"/>
 			<arg line="${dbname}"/>
 		</exec>
-		<exec executable="psql" input="tests/data/data_test.sql" failonerror="on">
+		<exec executable="psql" input="frontends/php/tests/selenium/data/data_test.sql" failonerror="on">
 			<env key="PGPASSWORD" value="${dbpassword}"/>
 			<arg line="-h '${dbhost}'"/>
 			<arg line="-U '${dbuser}'"/>
@@ -126,7 +126,7 @@
 			<arg line="--password=${dbpassword}"/>
 			<arg line="${dbname}"/>
 		</exec>
-		<exec executable="mysql" input="tests/data/data_test.sql" failonerror="on">
+		<exec executable="mysql" input="frontends/php/tests/selenium/data/data_test.sql" failonerror="on">
 			<arg line="--host=${dbhost}"/>
 			<arg line="--user=${dbuser}"/>
 			<arg line="--password=${dbpassword}"/>
