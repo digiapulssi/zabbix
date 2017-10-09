@@ -869,8 +869,17 @@ static int	DBpatch_3000134(void)
 
 static int	DBpatch_3000135(void)
 {
+#define RESERVE_GLOBALMACROID								\
+		"update globalmacro"							\
+		" set globalmacroid=(select nextid from ("				\
+			"select max(globalmacroid)+1 as nextid from globalmacro) as tmp)"	\
+		" where globalmacroid=" ZBX_FS_UI64
+
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(RESERVE_GLOBALMACROID, 56))
+		return FAIL;
 
 	if (ZBX_DB_OK > DBexecute(
 			"insert into globalmacro (globalmacroid,macro,value)"
@@ -878,6 +887,9 @@ static int	DBpatch_3000135(void)
 	{
 		return FAIL;
 	}
+
+	if (ZBX_DB_OK > DBexecute(RESERVE_GLOBALMACROID, 57))
+		return FAIL;
 
 	if (ZBX_DB_OK > DBexecute(
 			"insert into globalmacro (globalmacroid,macro,value)"
@@ -890,6 +902,8 @@ static int	DBpatch_3000135(void)
 		return FAIL;
 
 	return SUCCEED;
+
+#undef RESERVE_GLOBALMACROID
 }
 
 static int	DBpatch_3000136(void)
