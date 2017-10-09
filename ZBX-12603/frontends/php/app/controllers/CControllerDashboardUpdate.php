@@ -37,8 +37,18 @@ class CControllerDashboardUpdate extends CController {
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {
+			if (($messages = getMessages()) !== null) {
+				$errors = $messages->toString();
+			}
+			else {
+				$errors = '';
+			}
+
 			$this->setResponse(new CControllerResponseData([
-				'main_block' => CJs::encodeJson(['errors' => getMessagesAsArray()])
+				'main_block' => CJs::encodeJson([
+					'errors' => $errors,
+					'result' => false
+				])
 			]));
 		}
 
