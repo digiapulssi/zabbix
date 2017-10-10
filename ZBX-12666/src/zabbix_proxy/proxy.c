@@ -894,6 +894,7 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	init_database_cache();
 	init_configuration_cache();
 	init_selfmon_collector();
+	init_proxy_history_lock();
 
 	/* initialize vmware support */
 	if (0 != CONFIG_VMWARE_FORKS)
@@ -1084,6 +1085,7 @@ void	zbx_on_exit(void)
 		zbx_vmware_destroy();
 
 	free_selfmon_collector();
+	free_proxy_history_lock();
 
 	unload_modules();
 
