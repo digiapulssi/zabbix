@@ -80,12 +80,8 @@ class CConfigFile {
 		$php_supported_db = array_keys(CFrontendSetup::getSupportedDatabases());
 
 		if (!in_array($DB['TYPE'], $php_supported_db)) {
-			self::exception(
-				'DB type "'.$DB['TYPE'].'" is not supported by current setup.'.
-				($php_supported_db
-					? ' Possible values '.implode(', ', $php_supported_db).'.'
-					: ''
-				)
+			self::exception('DB type "'.$DB['TYPE'].'" is not supported by current setup.'.
+				($php_supported_db ? ' Possible values '.implode(', ', $php_supported_db).'.' : '')
 			);
 		}
 
