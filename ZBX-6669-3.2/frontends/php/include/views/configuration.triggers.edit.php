@@ -89,13 +89,6 @@ else {
 	$severity = new CSeverity(['name' => 'priority', 'value' => (int) $data['priority']]);
 }
 
-$triggersFormList->addRow(_('Severity'), $severity);
-
-// Append expression to form list.
-if ($data['expression_field_readonly']) {
-	$triggersForm->addVar('expression', $data['expression']);
-}
-
 if ($data['recovery_expression_field_readonly']) {
 	$triggersForm->addVar('recovery_expression', $data['recovery_expression']);
 }
@@ -113,6 +106,10 @@ $expression_row = [
 			'return PopUp("popup_trexpr.php?dstfrm='.$triggersForm->getName().
 				'&dstfld1='.$data['expression_field_name'].'&srctbl='.$data['expression_field_name'].
 				'&srcfld1='.$data['expression_field_name'].
+				(($data['groupid'] && $data['hostid'])
+					? '&groupid='.$data['groupid'].'&hostid='.$data['hostid']
+					: ''
+				).
 				'&expression="+encodeURIComponent(jQuery(\'[name="'.$data['expression_field_name'].'"]\').val()));'
 		)
 		->setEnabled(!$readonly)
