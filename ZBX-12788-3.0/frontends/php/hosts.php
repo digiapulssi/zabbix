@@ -411,9 +411,9 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 			}
 
 			if ($templateids && array_key_exists('parentTemplates', $host)) {
-				$host['templates'] = array_unique(array_merge($templateids, zbx_objectValues($host['parentTemplates'],
-					'templateid')
-				));
+				$host['templates'] = array_unique(
+					array_merge($templateids, zbx_objectValues($host['parentTemplates'], 'templateid'))
+				);
 			}
 
 			unset($host['parentTemplates']);
