@@ -26,6 +26,7 @@ function local_generateHeader($data) {
 	global $page;
 
 	header('Content-Type: text/html; charset=UTF-8');
+	header('X-Content-Type-Options: nosniff');
 
 	// construct menu
 	$main_menu = [];
