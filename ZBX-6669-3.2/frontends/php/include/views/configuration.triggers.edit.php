@@ -89,6 +89,13 @@ else {
 	$severity = new CSeverity(['name' => 'priority', 'value' => (int) $data['priority']]);
 }
 
+$triggersFormList->addRow(_('Severity'), $severity);
+
+// Append expression to form list.
+if ($data['expression_field_readonly']) {
+	$triggersForm->addVar('expression', $data['expression']);
+}
+
 if ($data['recovery_expression_field_readonly']) {
 	$triggersForm->addVar('recovery_expression', $data['recovery_expression']);
 }
