@@ -17,14 +17,17 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_ZBXEXEC_H
-#define ZABBIX_ZBXEXEC_H
+#ifndef ZABBIX_PREPROC_H
+#define ZABBIX_PREPROC_H
 
-#define ZBX_EXIT_CODE_CHECKS_DISABLED	0
-#define ZBX_EXIT_CODE_CHECKS_ENABLED	1
+#include "common.h"
+#include "module.h"
 
-int	zbx_execute(const char *command, char **buffer, char *error, size_t max_error_len, int timeout,
-		unsigned char flag);
-int	zbx_execute_nowait(const char *command);
+/* the following functions are implemened differently for server and proxy */
 
-#endif
+void	zbx_preprocess_item_value(zbx_uint64_t itemid, unsigned char item_flags, AGENT_RESULT *result,
+		zbx_timespec_t *ts, unsigned char state, char *error);
+void	zbx_preprocessor_flush(void);
+zbx_uint64_t	zbx_preprocessor_get_queue_size(void);
+
+#endif /* ZABBIX_PREPROC_H */
