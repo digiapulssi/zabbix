@@ -2537,7 +2537,27 @@ char	*convert_to_utf8(char *in, size_t in_size, const char *encoding)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "convert_to_utf8() in_size:%d encoding:'%s' codepage:%u", in_size, encoding, codepage);
 
-	if (1200 != codepage)	/* UTF-16 */
+	if (1200 == codepage)	/* UTF-16 */
+	{
+		wide_string = (wchar_t *)in;
+		wide_size = (int)in_size / 2;
+	}
+	else if (1201 == codepage)	/* unicodeFFFE */
+	{
+		wchar_t	*wide_string_be = in;
+		int	i;
+
+		wide_size = (int)in_size / 2;
+
+		if (wide_size > STATIC_SIZE)
+			wide_string = (wchar_t *)zbx_malloc(wide_string, (size_t)wide_size * sizeof(wchar_t));
+		else
+			wide_string = wide_string_static;
+
+		for (i = 0; i < wide_size; i++)
+			wide_string[i] = ((wide_string_be[i] << 8) & 0xff00) | ((wide_string_be[i] >> 8) & 0xff);
+	}
+	else
 	{
 		wide_size = MultiByteToWideChar(codepage, 0, in, (int)in_size, NULL, 0);
 		if (wide_size > STATIC_SIZE)
@@ -2547,11 +2567,6 @@ char	*convert_to_utf8(char *in, size_t in_size, const char *encoding)
 
 		/* convert from in to wide_string */
 		MultiByteToWideChar(codepage, 0, in, (int)in_size, wide_string, wide_size);
-	}
-	else
-	{
-		wide_string = (wchar_t *)in;
-		wide_size = (int)in_size / 2;
 	}
 
 	utf8_size = WideCharToMultiByte(CP_UTF8, 0, wide_string, wide_size, NULL, 0, NULL, NULL);
