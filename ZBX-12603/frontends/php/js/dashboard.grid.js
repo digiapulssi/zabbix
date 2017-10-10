@@ -1294,6 +1294,7 @@ if (typeof addPopupValues === 'undefined') {
 					var	$this = jQuery(this),
 						name = jQuery('[name="name"]', $this).val(),
 						userid = jQuery('[name="userid"]', $this).val() || 0;
+
 					e.preventDefault();
 
 					$obj.dashboardGrid('setDashboardData', {

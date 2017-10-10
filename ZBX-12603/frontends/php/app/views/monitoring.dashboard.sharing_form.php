@@ -40,13 +40,20 @@ if (array_key_exists('dashboardid', $data) && $data['dashboardid']) {
 		$table_user_groups->addRow(
 			(new CRow([
 				new CCol([
-					(new CTextBox('userGroups['.$user_groups['usrgrpid'].'][usrgrpid]', $user_groups['usrgrpid']))->setAttribute('type', 'hidden'),
+					(new CTextBox('userGroups['.$user_groups['usrgrpid'].'][usrgrpid]', $user_groups['usrgrpid']))
+						->setAttribute('type', 'hidden'),
 					$user_groups['name']
 				]),
 				new CCol(
-					$a = (new CRadioButtonList('userGroups['.$user_groups['usrgrpid'].'][permission]', (integer) $user_groups['permission']))
-						->addValue(_('Read-only'), PERM_READ, 'user_group_'.$user_groups['usrgrpid'].'_permission_'.PERM_READ)
-						->addValue(_('Read-write'), PERM_READ_WRITE, 'user_group_'.$user_groups['usrgrpid'].'_permission_'.PERM_READ_WRITE)
+					(new CRadioButtonList('userGroups['.$user_groups['usrgrpid'].'][permission]',
+						(integer) $user_groups['permission'])
+					)
+						->addValue(_('Read-only'), PERM_READ,
+							'user_group_'.$user_groups['usrgrpid'].'_permission_'.PERM_READ
+						)
+						->addValue(_('Read-write'), PERM_READ_WRITE,
+							'user_group_'.$user_groups['usrgrpid'].'_permission_'.PERM_READ_WRITE
+						)
 						->setModern(true)
 				),
 				(new CCol(
@@ -80,13 +87,16 @@ if (array_key_exists('dashboardid', $data) && $data['dashboardid']) {
 		$table_users->addRow(
 			(new CRow([
 				new CCol([
-					(new CTextBox('users['.$user['userid'].'][userid]', $user['userid']))->setAttribute('type', 'hidden'),
+					(new CTextBox('users['.$user['userid'].'][userid]', $user['userid']))
+						->setAttribute('type', 'hidden'),
 					$user['name']
 				]),
 				new CCol(
 					(new CRadioButtonList('users['.$user['userid'].'][permission]', (integer) $user['permission']))
 						->addValue(_('Read-only'), PERM_READ, 'user_'.$user['userid'].'_permission_'.PERM_READ)
-						->addValue(_('Read-write'), PERM_READ_WRITE, 'user_'.$user['userid'].'_permission_'.PERM_READ_WRITE)
+						->addValue(_('Read-write'), PERM_READ_WRITE,
+							'user_'.$user['userid'].'_permission_'.PERM_READ_WRITE
+						)
 						->setModern(true)
 				),
 				(new CCol(

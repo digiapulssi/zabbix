@@ -32,9 +32,7 @@ if (array_key_exists('dashboardid', $data)) {
 		'popup' => [
 			'parameters' => 'srctbl=users&dstfrm='.$form->getName().'&dstfld1=userid&srcfld1=userid&srcfld2=fullname'
 		]
-	]))
-		->setAttribute('data-default-owner', CJs::encodeJson($data['owner']))
-		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH);
+	]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH);
 
 	$form->addItem((new CFormList())
 		->addRow(_('Owner'), $multiselect)

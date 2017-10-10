@@ -69,7 +69,7 @@ class CControllerDashboardUpdate extends CController {
 			'editable' => true
 		]);
 
-		if (false !== reset($db_dashboards)) {
+		if (reset($db_dashboards) !== false) {
 			$dashboard = ['dashboardid' => $this->getInput('dashboardid')];
 
 			if ($this->hasInput('private')) {
@@ -99,7 +99,7 @@ class CControllerDashboardUpdate extends CController {
 
 		$response = [
 			'result' => $result,
-			'errors' => []
+			'errors' => ''
 		];
 
 		if (($messages = getMessages()) !== null) {
