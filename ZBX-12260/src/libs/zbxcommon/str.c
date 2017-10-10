@@ -2543,7 +2543,7 @@ char	*convert_to_utf8(char *in, size_t in_size, const char *encoding)
 	}
 	else if (1201 == codepage)	/* unicodeFFFE */
 	{
-		wchar_t	*wide_string_be = in;
+		wchar_t	*wide_string_be = (wchar_t *)in;
 		int	i;
 
 		wide_size = (int)in_size / 2;
