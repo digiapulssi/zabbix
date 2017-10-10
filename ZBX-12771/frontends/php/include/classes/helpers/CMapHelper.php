@@ -160,7 +160,6 @@ class CMapHelper {
 					} else {
 						$map_info[$id]['name'] = '';
 					}
-
 					break;
 
 				default:
