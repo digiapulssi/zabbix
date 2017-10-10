@@ -82,12 +82,9 @@ if (isset($_REQUEST['enter']) && $_REQUEST['enter'] == _('Sign in')) {
 		if ($request) {
 			preg_match('/^\/?(?<filename>(?:[a-z0-9\_\.]+)\.php).*$/i', $request, $test_request);
 
-			if (!array_key_exists('filename', $test_request) || !file_exists('./'.$test_request['filename'])) {
-				$request = '';
-			}
-			elseif (array_key_exists('filename', $test_request)) {
-				$request = $test_request['filename'];
-			}
+			$request = (array_key_exists('filename', $test_request) && file_exists('./'.$test_request['filename']))
+				? $test_request['filename']
+				: '';
 		}
 
 		if (!zbx_empty($request)) {
