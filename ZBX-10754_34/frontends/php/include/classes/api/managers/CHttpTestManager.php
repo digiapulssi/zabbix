@@ -629,20 +629,20 @@ class CHttpTestManager {
 	/**
 	 * Save http tests. If http test has httptestid it gets updated otherwise a new one is created.
 	 *
-	 * @param array $httpTests
+	 * @param array $http_tests
 	 *
 	 * @return array
 	 */
-	protected function save(array $httpTests) {
-		$httpTestsCreate = [];
-		$httpTestsUpdate = [];
+	protected function save(array $http_tests) {
+		$http_tests_to_create = [];
+		$http_tests_to_update = [];
 
-		foreach ($httpTests as $num => $httpTest) {
-			if (isset($httpTest['httptestid'])) {
-				$httpTestsUpdate[] = $httpTest;
+		foreach ($http_tests as $num => $http_test) {
+			if (array_key_exists('httptestid', $http_test)) {
+				$http_tests_to_update[] = $http_test;
 			}
 			else {
-				$httpTestsCreate[] = $httpTest;
+				$http_tests_to_create[] = $http_test;
 			}
 
 			/*
@@ -650,23 +650,26 @@ class CHttpTestManager {
 			 * it. This is done in such a way because $httpTests array holds items with incremental keys which are not
 			 * a real httptestids.
 			 */
-			unset($httpTests[$num]);
+			unset($http_tests[$num]);
 		}
 
-		if (!empty($httpTestsCreate)) {
-			$newHttpTests = $this->create($httpTestsCreate);
-			foreach ($newHttpTests as $new_http_test) {
-				$httpTests[$new_http_test['httptestid']] = $new_http_test;
+		if ($http_tests_to_create) {
+			$new_http_tests = $this->create($http_tests_to_create);
+
+			foreach ($new_http_tests as $new_http_test) {
+				$http_tests[$new_http_test['httptestid']] = $new_http_test;
 			}
 		}
-		if (!empty($httpTestsUpdate)) {
-			$updated_http_tests = $this->update($httpTestsUpdate);
+
+		if ($http_tests_to_update) {
+			$updated_http_tests = $this->update($http_tests_to_update);
+
 			foreach ($updated_http_tests as $updated_http_test) {
-				$httpTests[$updated_http_test['httptestid']] = $updated_http_test;
+				$http_tests[$updated_http_test['httptestid']] = $updated_http_test;
 			}
 		}
 
-		return $httpTests;
+		return $http_tests;
 	}
 
 	/**
