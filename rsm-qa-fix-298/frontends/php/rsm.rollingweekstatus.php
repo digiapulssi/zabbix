@@ -54,7 +54,7 @@ $fields = [
 	'favref' =>					[T_ZBX_STR, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})'],
 	'favstate' =>				[T_ZBX_INT, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})&&("filter"=={favobj})'],
 	// sort and sortorder
-	'sort' =>			[T_ZBX_STR, O_OPT, P_SYS, IN('"name","status"'),						null],
+	'sort' =>			[T_ZBX_STR, O_OPT, P_SYS, IN('"name","type","server","dns_lastvalue","dnssec_lastvalue","rdds_lastvalue","epp_lastvalue"'),	null],
 	'sortorder' =>		[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null]
 ];
 
@@ -308,6 +308,10 @@ foreach ($DB['SERVERS'] as $key => $value) {
 					'hostid' => $db_tld['hostid'],
 					'host' => $db_tld['host'],
 					'name' => $db_tld['name'],
+					'dns_lastvalue' => 0,
+					'dnssec_lastvalue' => 0,
+					'rdds_lastvalue' => 0,
+					'epp_lastvalue' => 0,
 					'server' => $DB['SERVERS'][$key]['NAME'],
 					'url' => $DB['SERVERS'][$key]['URL'],
 					'db' => $key
@@ -458,6 +462,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 
 				if ($item['key_'] == RSM_SLV_DNS_ROLLWEEK) {
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['itemid'] = $item['itemid'];
+					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']]['dns_lastvalue'] = $item['lastvalue'];
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['lastvalue'] = sprintf(
 						'%.3f',
 						$item['lastvalue']
@@ -466,6 +471,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 				}
 				elseif ($item['key_'] == RSM_SLV_DNSSEC_ROLLWEEK) {
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNSSEC]['itemid'] = $item['itemid'];
+					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']]['dnssec_lastvalue'] = $item['lastvalue'];
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNSSEC]['lastvalue'] = sprintf(
 						'%.3f',
 						$item['lastvalue']
@@ -474,6 +480,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 				}
 				elseif ($item['key_'] == RSM_SLV_RDDS_ROLLWEEK) {
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_RDDS]['itemid'] = $item['itemid'];
+					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']]['rdds_lastvalue'] = $item['lastvalue'];
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_RDDS]['lastvalue'] = sprintf(
 						'%.3f',
 						$item['lastvalue']
@@ -482,6 +489,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 				}
 				elseif ($item['key_'] == RSM_SLV_EPP_ROLLWEEK) {
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['itemid'] = $item['itemid'];
+					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']]['epp_lastvalue'] = $item['lastvalue'];
 					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['lastvalue'] = sprintf(
 						'%.3f',
 						$item['lastvalue']
