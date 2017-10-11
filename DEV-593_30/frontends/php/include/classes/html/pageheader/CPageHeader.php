@@ -59,16 +59,6 @@ class CPageHeader {
 	 */
 	public function __construct($title = '') {
 		$this->title = $title;
-
-		$antiClickjack =
-			'if (self === top) {'.
-				'var antiClickjack = document.getElementById("antiClickjack");'.
-				'antiClickjack.parentNode.removeChild(antiClickjack);'.
-			'} else {'.
-				'top.location = self.location;'.
-			'}';
-
-		$this->addJsBeforeScripts($antiClickjack);
 	}
 
 	/**
@@ -143,9 +133,6 @@ class CPageHeader {
 		<meta name="msapplication-TileImage" content="img/ms-tile-144x144.png">
 		<meta name="msapplication-TileColor" content="#d40000">
 		<meta name="msapplication-config" content="none"/>
-		<style id="antiClickjack">
-			body{display:none !important;}
-		</style>
 
 HTML;
 
