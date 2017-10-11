@@ -2807,8 +2807,7 @@ out:
  *                                                                            *
  * Purpose: destroys event session                                            *
  *                                                                            *
- * Parameters: service        - [IN] the vmware service                       *
- *             easyhandle     - [IN] the CURL handle                          *
+ * Parameters: easyhandle     - [IN] the CURL handle                          *
  *             event_session  - [IN] event session (EventHistoryCollector)    *
  *                                   identifier                               *
  *             error          - [OUT] the error message in the case of failure*
@@ -2817,8 +2816,7 @@ out:
  *               FAIL    - the operation has failed                           *
  *                                                                            *
  ******************************************************************************/
-static int	vmware_service_destroy_event_session(const zbx_vmware_service_t *service, CURL *easyhandle,
-		const char *event_session, char **error)
+static int	vmware_service_destroy_event_session(CURL *easyhandle, const char *event_session, char **error)
 {
 #	define ZBX_POST_VMWARE_DESTROY_EVENT_COLLECTOR					\
 		ZBX_POST_VSPHERE_HEADER							\
@@ -3011,8 +3009,10 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 
 	const char	*__function_name = "vmware_service_get_event_data";
 
-	char		tmp[MAX_STRING_LEN], *event_session = NULL, *event_session_esc;
-	int		err, o, ret = FAIL;
+	char				tmp[MAX_STRING_LEN], *event_session = NULL, *event_session_esc;
+	zbx_property_collection_iter	*iter;
+	const char			*chunk;
+	int				ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() event_session:'%s'", __function_name, event_session);
 
@@ -3020,34 +3020,27 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 		goto out;
 
 	event_session_esc = xml_escape_dyn(event_session);
-
 	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_EVENTS_GET,
 			vmware_service_objects[service->type].property_collector, event_session_esc);
-
 	zbx_free(event_session_esc);
 
-	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, o = CURLOPT_POSTFIELDS, tmp)))
+	iter = zbx_property_collection_init(easyhandle, tmp, vmware_service_objects[service->type].property_collector);
+
+	do
 	{
-		*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", o, curl_easy_strerror(err));
-		goto end_session;
+		if (NULL == (chunk = zbx_property_collection_chunk(iter, error)))
+			break;
+
+		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, chunk);
+
+		if (SUCCEED != (ret = vmware_service_parse_event_data(events, service->last_key, chunk)))
+			break;
 	}
+	while (SUCCEED == zbx_property_collection_next(iter));
 
-	page.offset = 0;
-
-	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
-	{
-		*error = zbx_strdup(*error, curl_easy_strerror(err));
-		goto end_session;
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
-
-	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
-		goto end_session;
-
-	ret = vmware_service_parse_event_data(events, service->last_key, page.data);
+	zbx_property_collection_free(iter);
 end_session:
-	if (SUCCEED != vmware_service_destroy_event_session(service, easyhandle, event_session, error))
+	if (SUCCEED != vmware_service_destroy_event_session(easyhandle, event_session, error))
 		ret = FAIL;
 out:
 	zbx_free(event_session);
