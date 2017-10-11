@@ -2140,7 +2140,8 @@ static int	vmware_service_get_event_session(const zbx_vmware_service_t *service,
 
 	ret = SUCCEED;
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s event_session:'%s'", __function_name, zbx_result_string(ret),
+			ZBX_NULL2EMPTY_STR(*event_session));
 
 	return ret;
 }
@@ -2245,7 +2246,7 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 	char		tmp[MAX_STRING_LEN], *event_session = NULL;
 	int		err, o, ret = FAIL;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() event_session:'%s'", __function_name, event_session);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (SUCCEED != vmware_service_get_event_session(service, easyhandle, &event_session, error))
 		goto out;
