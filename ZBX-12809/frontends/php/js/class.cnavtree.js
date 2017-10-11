@@ -598,6 +598,7 @@ jQuery(function($) {
 			 */
 			var itemEditDialog = function($obj, id, parent, depth) {
 				var url = new Curl('zabbix.php'),
+					defer = jQuery.Deferred(),
 					item_edit = !!id,
 					ajax_data = {
 						map_name: '',
@@ -707,8 +708,8 @@ jQuery(function($) {
 																				parent: +itemid
 																			};
 
-																		root.appendChild(createTreeItem($obj, new_item, 1,
-																			true, true
+																		root.appendChild(createTreeItem($obj, new_item,
+																			1, true, true
 																		));
 																		add_child_levels($obj, +submapid,
 																			submap_itemid
@@ -740,7 +741,10 @@ jQuery(function($) {
 									'action': function() {}
 								}
 							]
-						});
+						}, defer);
+					},
+					complete: function() {
+						defer.notify();
 					}
 				});
 			};

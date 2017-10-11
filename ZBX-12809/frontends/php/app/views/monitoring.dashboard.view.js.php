@@ -63,14 +63,20 @@
 <script type="text/javascript">
 	// Change dashboard settings.
 	function dashbrd_config() {
-		var form = jQuery('form[name="dashboard_form"]');
+		var form = jQuery('form[name="dashboard_form"]'),
+			defer = jQuery.Deferred();
+
 		showDialogForm(
 			form,
 			{
-				"title": <?= CJs::encodeJson(_('Dashboard properties')) ?>,
-				"action_title": <?= CJs::encodeJson(_('Apply')) ?>
+				'title': <?= CJs::encodeJson(_('Dashboard properties')) ?>,
+				'action_title': <?= CJs::encodeJson(_('Apply')) ?>
 			},
-			{"name": form.data('data').name, "owner": form.data('data').owner}
+			{
+				'name': form.data('data').name,
+				'owner': form.data('data').owner
+			},
+			defer
 		);
 	};
 
@@ -157,8 +163,8 @@
 	}
 
 	// Function is in global scope, because it should be accessable by html onchange() attribute.
-	function updateWidgetConfigDialogue() {
-		jQuery('.dashbrd-grid-widget-container').dashboardGrid('updateWidgetConfigDialogue');
+	function updateWidgetConfigDialogue(defer) {
+		jQuery('.dashbrd-grid-widget-container').dashboardGrid('updateWidgetConfigDialogue', defer);
 	}
 
 	/**
@@ -219,6 +225,8 @@
 					break;
 			}
 		}
+
+		window.dispatchEvent(new Event('dialogResize'));
 	}
 
 	function removeUserGroupShares(usrgrpid) {
@@ -228,6 +236,8 @@
 		else {
 			jQuery('#user_group_shares_' + usrgrpid).remove();
 		}
+
+		window.dispatchEvent(new Event('overlayDialogResize'));
 	}
 
 	function removeUserShares(userid) {
@@ -237,5 +247,7 @@
 		else {
 			jQuery('#user_shares_' + userid).remove();
 		}
+
+		window.dispatchEvent(new Event('overlayDialogResize'));
 	}
 </script>

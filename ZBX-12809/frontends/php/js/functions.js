@@ -528,10 +528,12 @@ function overlayDialogueDestroy() {
  * @param {bool}   params.buttons[]['focused']   (optional) Focus this button.
  * @param {bool}   params.buttons[]['enabled']   (optional) Should the button be enabled? Default: true.
  * @param {bool}   params.buttons[]['keepOpen']  (optional) Prevent dialogue closing, if button action returned false.
+ * @param {object} defer						 (optional) jQuery.Deferred() object used to trigger window
+ *												 re-positioning once the 'notify' method is called.
  *
  * @return {bool}
  */
-function overlayDialogue(params) {
+function overlayDialogue(params, defer) {
 	jQuery('<div>', {
 		id: 'overlay_bg',
 		class: 'overlay-bg'
@@ -616,7 +618,34 @@ function overlayDialogue(params) {
 				return false;
 			}
 		})
+		.css({'visibility': 'hidden'})
 		.appendTo('body');
+
+	if (!defer) {
+		var defer = jQuery.Deferred();
+		defer.notify();
+	}
+
+	// Triggers modal window position each time when defer.notify() is called.
+	jQuery.when(defer).progress(function() {
+		overlay_dialogue.css({
+			'left': Math.round((jQuery(window.top).width() - jQuery(overlay_dialogue).width()) / 2) + 'px',
+			'top': Math.round((jQuery(window.top).height() - jQuery(overlay_dialogue).height()) / 2) + 'px',
+			'visibility': 'visible'
+		});
+	});
+
+	jQuery(window).on('overlayDialogResize', function() {
+		if (jQuery('#overlay_dialogue').length) {
+			defer.notify();
+		}
+	});
+
+	jQuery(window).resize(function() {
+		if (jQuery('#overlay_dialogue').length) {
+			defer.notify();
+		}
+	});
 
 	var focusable = jQuery(':focusable', overlay_dialogue);
 
