@@ -3275,16 +3275,16 @@ a.header-dropdown {
 .header-dropdown-list {
 	@extend .action-menu;
 	display: none;
-	overflow: hidden;
 	top: 32px;
 	left: -8px;
-	padding: 5px 8px;
+	padding: 5px 0px;
 	font-size: $font-h4-size;
 
 	&::before, &::after {
 		content: '';
 		position: absolute;
 		top: -10px;
+		left: 8px;
 		border-left: 10px solid transparent;
 		border-right: 10px solid transparent;
 		border-bottom: 10px solid darken($action-border-color, 1%);
@@ -3294,6 +3294,11 @@ a.header-dropdown {
 	&::after {
 		top: -9px;
 		border-bottom-color: $ui-bg-color;
+	}
+
+	.action-menu-item {
+		padding: 0 15px 0 15px;
+		margin: 0px;
 	}
 }
 
