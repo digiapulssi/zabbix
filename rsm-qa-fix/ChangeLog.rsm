@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc31
 
 New features:
+..F....... [298] added sorting by all columns in TLD Rolling week status page and fixed false positive incidents (Oleg)
 
 Bug fixes:
 
