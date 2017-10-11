@@ -152,15 +152,13 @@ $form = (new CForm())
 $table = (new CTableInfo())
 	->setHeader([
 		make_sorting_header(_('TLD'), 'name', $data['sort'], $data['sortorder']),
-		_('TLD'),
-		_('Type'),
-		_('DNS (4Hrs)'),
-		_('DNSSEC (4Hrs)'),
-		_('RDDS (24Hrs)'),
-		_('EPP (24Hrs)'),
-		_('Server')
+		make_sorting_header(_('Type'), 'type', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('DNS (4Hrs)'), 'dns_lastvalue', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('DNSSEC (4Hrs)'), 'dnssec_lastvalue', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('RDDS (24Hrs)'), 'rdds_lastvalue', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('EPP (24Hrs)'), 'epp_lastvalue', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('Server'), 'server', $data['sort'], $data['sortorder'])
 ]);
-
 
 if ($this->data['tld']) {
 	$serverTime = time() - RSM_ROLLWEEK_SHIFT_BACK;

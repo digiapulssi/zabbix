@@ -1,3 +1,12 @@
+Changes for rsm1.0.0rc31
+
+New features:
+..F....... [298] added sorting by all columns in TLD Rolling week status page and fixed false positive incidents (Oleg)
+
+Bug fixes:
+..F....... [302] fixed displaying statuses of TLDs with active incidents in "Rolling week status" page (Oleg)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc30
 
 New features:

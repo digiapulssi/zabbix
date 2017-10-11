@@ -1003,65 +1003,7 @@ static int	DBpatch_3000138(void)
 
 static int	DBpatch_3000139(void)
 {
-	zbx_vector_uint64_t	templateids;
-	zbx_uint64_t		templateid;
-	DB_RESULT		result;
-	DB_ROW			row;
-	int			ret = SUCCEED;
-
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	/* get id of "Template Proxy Health" template */
-	if (NULL == (result = DBselect(
-			"select hostid from hosts"
-			" where host='Template Proxy Health'")))
-	{
-		return FAIL;
-	}
-
-	if (NULL == (row = DBfetch(result)))
-	{
-		/* assuming there are no probes on this server, nothing to do */
-		DBfree_result(result);
-		return SUCCEED;
-	}
-
-	ZBX_STR2UINT64(templateid, row[0]);
-	DBfree_result(result);
-
-	/* get hosts "Template Proxy Health" is currently linked to */
-	if (NULL == (result = DBselect(
-			"select hostid from hosts_templates"
-			" where templateid=" ZBX_FS_UI64,
-			templateid)))
-	{
-		return FAIL;
-	}
-
-	zbx_vector_uint64_create(&templateids);
-	zbx_vector_uint64_reserve(&templateids, 1);
-
-	while (NULL != (row = DBfetch(result)))
-	{
-		zbx_uint64_t		hostid;
-
-		ZBX_STR2UINT64(hostid, row[0]);
-		zbx_vector_uint64_append(&templateids, templateid);
-
-		if (SUCCEED != (ret = DBdelete_template_elements(hostid, &templateids)))	/* unlink */
-			break;
-
-		if (SUCCEED != (ret = DBcopy_template_elements(hostid, &templateids)))		/* link back */
-			break;
-
-		zbx_vector_uint64_clear(&templateids);
-	}
-
-	zbx_vector_uint64_destroy(&templateids);
-	DBfree_result(result);
-
-	return ret;
+	return SUCCEED;
 }
 
 #endif
@@ -1110,6 +1052,6 @@ DBPATCH_ADD(3000135, 0, 0)	/* add global "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCES
 DBPATCH_ADD(3000136, 0, 0)	/* add "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" macros on "Zabbix Server" host */
 DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
-DBPATCH_ADD(3000139, 0, 0)	/* unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
+DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
 
 DBPATCH_END()
