@@ -137,8 +137,8 @@
 			width = data['options']['max-columns'];
 		}
 
-		if (height < 1) {
-			height = 1;
+		if (height < data['options']['widget-min-rows']) {
+			height = data['options']['widget-min-rows'];
 		}
 
 		return {'x': x, 'y': y, 'width': width, 'height': height};
@@ -338,12 +338,32 @@
 				startWidgetPositioning($(event.target), data);
 			},
 			resize: function(event, ui) {
+				// Hack for Safari to manually accept parent container height in pixels on widget resize.
+				if (SF) {
+					$.each(data['widgets'], function() {
+						if (this.type === 'clock' || this.type === 'sysmap') {
+							this.content_body.find(':first').height(this.content_body.height());
+						}
+					});
+				}
+
 				doWidgetPositioning($obj, $(event.target), data);
 			},
 			stop: function(event, ui) {
 				stopWidgetPositioning($obj, $(event.target), data);
+
+				// Hack for Safari to manually accept parent container height in pixels when done widget snapping to grid.
+				if (SF) {
+					$.each(data['widgets'], function() {
+						if (this.type === 'clock' || this.type === 'sysmap') {
+							this.content_body.find(':first').height(this.content_body.height());
+						}
+					});
+				}
+
 				doAction('onResizeEnd', $obj, data, widget);
-			}
+			},
+			minHeight: data['options']['widget-min-rows'] * data['options']['widget-height']
 		});
 	}
 
@@ -603,7 +623,8 @@
 							}
 
 							$('html, body')
-								.animate({scrollTop: '+=' + scroll_by + 'px'}, 800)
+								// Estimated scroll speed: 200ms for each 250px.
+								.animate({scrollTop: '+=' + scroll_by + 'px'}, Math.floor(scroll_by / 250) * 200)
 								.promise()
 								.then(add_new_widget);
 						}
@@ -984,6 +1005,7 @@
 			var default_options = {
 				'fullscreen': 0,
 				'widget-height': 70,
+				'widget-min-rows': 2,
 				'max-rows': 64,
 				'max-columns': 12,
 				'rows': 0,
@@ -1188,6 +1210,7 @@
 			return this.each(function() {
 				var	$this = $(this),
 					data = $this.data('dashboardGrid'),
+					current_url = new Curl(location.href),
 					url = new Curl('zabbix.php');
 
 				// Don't show warning about existing updates
@@ -1197,6 +1220,9 @@
 				url.setArgument('action', 'dashboard.view');
 				if (data['options']['fullscreen'] == 1) {
 					url.setArgument('fullscreen', '1');
+				}
+				if (current_url.getArgument('dashboardid')) {
+					url.setArgument('dashboardid', current_url.getArgument('dashboardid'));
 				}
 
 				// Redirect to last active dashboard.

@@ -66,8 +66,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 		$resourceid = null;
 		$profileIdx = 'web.dashbrd';
 		$profileIdx2 = $dashboardid;
-		$update_profile = $dashboardid ? UPDATE_PROFILE_ON : UPDATE_PROFILE_OFF;
-		$critical_error = null;
+		$unavailable_object = false;
 
 		if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH && $fields['graphid']) {
 			$resource_type = SCREEN_RESOURCE_GRAPH;
@@ -92,9 +91,10 @@ class CControllerWidgetGraphView extends CControllerWidget {
 		$timeline = calculateTime([
 			'profileIdx' => $profileIdx,
 			'profileIdx2' => $profileIdx2,
-			'updateProfile' => $update_profile,
+			'updateProfile' => false,
 			'period' => null,
-			'stime' => null
+			'stime' => null,
+			'isNow' => null
 		]);
 
 		$time_control_data = [
@@ -117,18 +117,21 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			'resourcetype' => $resource_type,
 			'profileIdx' => $profileIdx,
 			'profileIdx2' => $profileIdx2,
-			'updateProfile' => $update_profile
+			'updateProfile' => false
 		];
 
 		// Replace graph item by particular host item if dynamic items are used.
 		if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid && $resourceid) {
 			// Find same simple-graph item in selected $dynamic_hostid host.
 			if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
-				$new_itemid = get_same_item_for_host($resourceid, $dynamic_hostid);
-				$resourceid = !empty($new_itemid) ? $new_itemid : null;
+				$items = get_same_item_for_host(['itemid' => $resourceid], [$dynamic_hostid]);
+				$item = reset($items);
+				$resourceid = ($item && array_key_exists('itemid', $item)) ? $item['itemid'] : null;
 
-				if ($resourceid === null) {
-					$critical_error = _('No permissions to referred object or it does not exist!');
+				if ($resourceid === null
+						|| !in_array($item['value_type'], [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64])) {
+					$unavailable_object = true;
+					$resourceid = null;
 				}
 			}
 			// Find requested host and change graph details.
@@ -193,28 +196,17 @@ class CControllerWidgetGraphView extends CControllerWidget {
 					);
 
 					if (!$new_dynamic) {
-						$critical_error = _('No permissions to referred object or it does not exist!');
+						$unavailable_object = true;
 					}
 				}
 				else {
-					$critical_error = _('No permissions to referred object or it does not exist!');
+					$unavailable_object = true;
 				}
 			}
 		}
 		else {
 			if (!$resourceid) {
-				$critical_error = _('No permissions to referred object or it does not exist!');
-			}
-			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
-				$item = API::Item()->get([
-					'itemids' => $resourceid,
-					'output' => null
-				]);
-				$item = reset($item);
-
-				if (!$item) {
-					$critical_error = _('No permissions to referred object or it does not exist!');
-				}
+				$unavailable_object = true;
 			}
 			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH) {
 				// get graph, used below
@@ -225,12 +217,29 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				$graph = reset($graph);
 
 				if (!$graph) {
-					$critical_error = _('No permissions to referred object or it does not exist!');
+					$unavailable_object = true;
 				}
 			}
 		}
 
-		if (!$critical_error) {
+		if (!$unavailable_object && $fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
+			$item = API::Item()->get([
+				'itemids' => $resourceid,
+				'output' => ['type', 'name', 'hostid', 'key_'],
+				'filter' => ['value_type' => [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64]],
+				'selectHosts' => ['name'],
+				'webitems' => true
+			]);
+
+			if ($item) {
+				$item = reset($item);
+			}
+			else {
+				$unavailable_object = true;
+			}
+		}
+
+		if (!$unavailable_object) {
 			// Build graph action and data source links.
 			if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
 				if (!$edit_mode) {
@@ -249,6 +258,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 
 				$graph_src->setArgument('period', $timeline['period']);
 				$graph_src->setArgument('stime', $timeline['stime']);
+				$graph_src->setArgument('isNow', $timeline['isNow']);
 			}
 			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH) {
 				$graph_src = '';
@@ -304,13 +314,14 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				$graph_src->setArgument('legend', $graph['show_legend']);
 				$graph_src->setArgument('period', $timeline['period']);
 				$graph_src->setArgument('stime', $timeline['stime']);
+				$graph_src->setArgument('isNow', $timeline['isNow']);
 
 				if ($graph_dims['graphtype'] == GRAPH_TYPE_PIE || $graph_dims['graphtype'] == GRAPH_TYPE_EXPLODED) {
 					$graph_src->setArgument('graph3d', $graph['show_3d']);
 				}
 			}
 
-			$graph_src->setArgument('updateProfile', $update_profile);
+			$graph_src->setArgument('updateProfile', false);
 			$graph_src->setArgument('profileIdx', $profileIdx);
 			$graph_src->setArgument('profileIdx2', $profileIdx2);
 
@@ -327,7 +338,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				'dataid' => $dataid,
 				'containerid' => $containerid,
 				'timestamp' => time(),
-				'critical_error' => $critical_error
+				'unavailable_object' => $unavailable_object
 			],
 			'widget' => [
 				'uniqueid' => $uniqueid,

@@ -21,6 +21,9 @@
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 require_once dirname(__FILE__).'/../../include/items.inc.php';
 
+/**
+ * @backup items
+ */
 class testFormItem extends CWebTest {
 
 	/**
@@ -36,14 +39,6 @@ class testFormItem extends CWebTest {
 	 * @var string
 	 */
 	protected $item = 'testFormItem1';
-
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testFormItem_Setup() {
-		DBsave_tables('items');
-	}
 
 	// Returns layout data
 	public static function layout() {
@@ -1838,7 +1833,6 @@ class testFormItem extends CWebTest {
 					'type' => 'SNMP trap',
 					'name' => 'SNMP trap',
 					'key' => 'snmptrap.fallback',
-					'dbCheck' => true,
 					'formCheck' => true
 				]
 			],
@@ -1858,6 +1852,28 @@ class testFormItem extends CWebTest {
 					'type' => 'Zabbix trapper',
 					'name' => 'Zabbix trapper',
 					'key' => 'item-zabbix-trapper',
+					'dbCheck' => true,
+					'formCheck' => true
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'type' => 'Zabbix trapper',
+					'name' => 'Zabbix trapper with macro in allowed hosts field',
+					'key' => 'item-zabbix-trapper-macro',
+					'allowed_hosts' => '{$TEST}',
+					'dbCheck' => true,
+					'formCheck' => true
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'type' => 'Zabbix trapper',
+					'name' => 'Zabbix trapper with macro and ip in allowed hosts field',
+					'key' => 'item-zabbix-trapper-macro-ip',
+					'allowed_hosts' => '{$MACRO},127.0.0.1',
 					'dbCheck' => true,
 					'formCheck' => true
 				]
@@ -2119,6 +2135,10 @@ class testFormItem extends CWebTest {
 		if (isset($data['ipmi_sensor'])) {
 				$this->zbxTestInputType('ipmi_sensor', $data['ipmi_sensor']);
 				$ipmi_sensor = $this->zbxTestGetValue("//input[@id='ipmi_sensor']");
+		}
+
+		if (isset($data['allowed_hosts'])) {
+			$this->zbxTestInputType('trapper_hosts', $data['allowed_hosts']);
 		}
 
 		if (isset($data['params_f'])) {
@@ -2704,12 +2724,5 @@ class testFormItem extends CWebTest {
 				$this->zbxTestAssertElementValue("preprocessing_".($itemPreproc['step']-1)."_params_1", $reg_exp[1]);
 			}
 		}
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testFormItem_Teardown() {
-		DBrestore_tables('items');
 	}
 }

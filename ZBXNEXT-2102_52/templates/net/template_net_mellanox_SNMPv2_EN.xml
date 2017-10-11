@@ -11,12 +11,11 @@
       <template>
          <template>Template Net Mellanox SNMPv2</template>
          <name>Template Net Mellanox SNMPv2</name>
-         <description>Template Net Mellanox version: 0.11
+         <description>Template Net Mellanox version: 0.13
 MIBs used:
 ENTITY-SENSORS-MIB
 ENTITY-STATE-MIB
-ENTITY-MIB
-</description>
+ENTITY-MIB</description>
          <groups>
             <group>
                <name>Templates/Network Devices</name>
@@ -42,7 +41,7 @@ ENTITY-MIB
                <name>Temperature Discovery</name>
                <type>4</type>
                <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
-               <snmp_oid>discovery[{#SNMPVALUE},.1.3.6.1.2.1.99.1.1.1.1,{#SENSOR_INFO},1.3.6.1.2.1.47.1.1.1.1.2,{#SENSOR_PRECISION},1.3.6.1.2.1.99.1.1.1.3]</snmp_oid>
+               <snmp_oid>discovery[{#SNMPVALUE},1.3.6.1.2.1.99.1.1.1.1,{#SENSOR_INFO},1.3.6.1.2.1.47.1.1.1.1.2,{#SENSOR_PRECISION},1.3.6.1.2.1.99.1.1.1.3]</snmp_oid>
                <key>temp.discovery</key>
                <delay>3600</delay>
                <status>0</status>
@@ -89,7 +88,7 @@ ENTITY-MIB
                      <name>{#SENSOR_INFO}: Temperature</name>
                      <type>4</type>
                      <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
-                     <snmp_oid>.1.3.6.1.2.1.99.1.1.1.4.{#SNMPINDEX}</snmp_oid>
+                     <snmp_oid>1.3.6.1.2.1.99.1.1.1.4.{#SNMPINDEX}</snmp_oid>
                      <key>sensor.temp.value[entPhySensorValue.{#SNMPINDEX}]</key>
                      <delay>180</delay>
                      <history>30d</history>
@@ -116,8 +115,7 @@ ENTITY-MIB
                      <description>MIB: ENTITY-SENSORS-MIB
 The most recent measurement obtained by the agent for this sensor.
 				  To correctly interpret the value of this object, the associated entPhySensorType,
-				  entPhySensorScale, and entPhySensorPrecision objects must also be examined.
-</description>
+				  entPhySensorScale, and entPhySensorPrecision objects must also be examined.</description>
                      <inventory_link>0</inventory_link>
                      <applications>
                         <application>
@@ -140,7 +138,7 @@ The most recent measurement obtained by the agent for this sensor.
                      <name>{#SENSOR_INFO}: Temperature status</name>
                      <type>4</type>
                      <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
-                     <snmp_oid>.1.3.6.1.2.1.99.1.1.1.5.{#SNMPINDEX}</snmp_oid>
+                     <snmp_oid>1.3.6.1.2.1.99.1.1.1.5.{#SNMPINDEX}</snmp_oid>
                      <key>sensor.temp.status[entPhySensorOperStatus.{#SNMPINDEX}]</key>
                      <delay>180</delay>
                      <history>14d</history>
@@ -165,8 +163,7 @@ The most recent measurement obtained by the agent for this sensor.
                      <privatekey/>
                      <port/>
                      <description>MIB: ENTITY-SENSORS-MIB
-The operational status of the sensor {#SENSOR_INFO}
-</description>
+The operational status of the sensor {#SENSOR_INFO}</description>
                      <inventory_link>0</inventory_link>
                      <applications>
                         <application>
@@ -236,8 +233,7 @@ This trigger uses temperature sensor values as well as temperature sensor status
                      <url/>
                      <status>0</status>
                      <priority>3</priority>
-                     <description>Last value: {ITEM.LASTVALUE1}.
-</description>
+                     <description>Last value: {ITEM.LASTVALUE1}.</description>
                      <type>0</type>
                      <manual_close>0</manual_close>
                      <dependencies/>
@@ -252,7 +248,7 @@ This trigger uses temperature sensor values as well as temperature sensor status
                <name>Fan Discovery</name>
                <type>4</type>
                <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
-               <snmp_oid>discovery[{#SNMPVALUE},.1.3.6.1.2.1.99.1.1.1.1,{#SENSOR_INFO},1.3.6.1.2.1.47.1.1.1.1.2]</snmp_oid>
+               <snmp_oid>discovery[{#SNMPVALUE},1.3.6.1.2.1.99.1.1.1.1,{#SENSOR_INFO},1.3.6.1.2.1.47.1.1.1.1.2]</snmp_oid>
                <key>fan.discovery</key>
                <delay>3600</delay>
                <status>0</status>
@@ -292,7 +288,7 @@ This trigger uses temperature sensor values as well as temperature sensor status
                      <name>{#SENSOR_INFO}: Fan speed</name>
                      <type>4</type>
                      <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
-                     <snmp_oid>.1.3.6.1.2.1.99.1.1.1.4.{#SNMPINDEX}</snmp_oid>
+                     <snmp_oid>1.3.6.1.2.1.99.1.1.1.4.{#SNMPINDEX}</snmp_oid>
                      <key>sensor.fan.speed[entPhySensorValue.{#SNMPINDEX}]</key>
                      <delay>300</delay>
                      <history>30d</history>
@@ -319,8 +315,7 @@ This trigger uses temperature sensor values as well as temperature sensor status
                      <description>MIB: ENTITY-SENSORS-MIB
 The most recent measurement obtained by the agent for this sensor.
 To correctly interpret the value of this object, the associated entPhySensorType,
-entPhySensorScale, and entPhySensorPrecision objects must also be examined.
-</description>
+entPhySensorScale, and entPhySensorPrecision objects must also be examined.</description>
                      <inventory_link>0</inventory_link>
                      <applications>
                         <application>
@@ -338,7 +333,7 @@ entPhySensorScale, and entPhySensorPrecision objects must also be examined.
                      <name>{#SENSOR_INFO}: Fan status</name>
                      <type>4</type>
                      <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
-                     <snmp_oid>.1.3.6.1.2.1.99.1.1.1.5.{#SNMPINDEX}</snmp_oid>
+                     <snmp_oid>1.3.6.1.2.1.99.1.1.1.5.{#SNMPINDEX}</snmp_oid>
                      <key>sensor.fan.status[entPhySensorOperStatus.{#SNMPINDEX}]</key>
                      <delay>180</delay>
                      <history>14d</history>
@@ -363,8 +358,7 @@ entPhySensorScale, and entPhySensorPrecision objects must also be examined.
                      <privatekey/>
                      <port/>
                      <description>MIB: ENTITY-SENSORS-MIB
-The operational status of the sensor {#SENSOR_INFO}
-</description>
+The operational status of the sensor {#SENSOR_INFO}</description>
                      <inventory_link>0</inventory_link>
                      <applications>
                         <application>
@@ -408,7 +402,7 @@ Please check the fan unit</description>
                <name>Entity Discovery</name>
                <type>4</type>
                <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
-               <snmp_oid>discovery[{#ENT_CLASS},.1.3.6.1.2.1.47.1.1.1.1.5,{#ENT_NAME},.1.3.6.1.2.1.47.1.1.1.1.7]</snmp_oid>
+               <snmp_oid>discovery[{#ENT_CLASS},1.3.6.1.2.1.47.1.1.1.1.5,{#ENT_NAME},1.3.6.1.2.1.47.1.1.1.1.7]</snmp_oid>
                <key>entity.discovery</key>
                <delay>3600</delay>
                <status>0</status>
@@ -472,9 +466,7 @@ Please check the fan unit</description>
                      <publickey/>
                      <privatekey/>
                      <port/>
-                     <description>MIB: ENTITY-MIB
-
-</description>
+                     <description>MIB: ENTITY-MIB</description>
                      <inventory_link>0</inventory_link>
                      <applications>
                         <application>
@@ -516,9 +508,7 @@ Please check the fan unit</description>
                      <publickey/>
                      <privatekey/>
                      <port/>
-                     <description>MIB: ENTITY-MIB
-
-</description>
+                     <description>MIB: ENTITY-MIB</description>
                      <inventory_link>0</inventory_link>
                      <applications>
                         <application>
@@ -560,7 +550,7 @@ Device serial number has changed. Ack to close</description>
                <name>PSU Discovery</name>
                <type>4</type>
                <snmp_community>{$SNMP_COMMUNITY}</snmp_community>
-               <snmp_oid>discovery[{#ENT_CLASS},.1.3.6.1.2.1.47.1.1.1.1.5,{#ENT_NAME},.1.3.6.1.2.1.47.1.1.1.1.7]</snmp_oid>
+               <snmp_oid>discovery[{#ENT_CLASS},1.3.6.1.2.1.47.1.1.1.1.5,{#ENT_NAME},1.3.6.1.2.1.47.1.1.1.1.7]</snmp_oid>
                <key>psu.discovery</key>
                <delay>3600</delay>
                <status>0</status>
@@ -624,9 +614,7 @@ Device serial number has changed. Ack to close</description>
                      <publickey/>
                      <privatekey/>
                      <port/>
-                     <description>MIB: ENTITY-STATE-MIB
-
-</description>
+                     <description>MIB: ENTITY-STATE-MIB</description>
                      <inventory_link>0</inventory_link>
                      <applications>
                         <application>

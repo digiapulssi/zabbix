@@ -68,7 +68,10 @@
 
 		showDialogForm(
 			form,
-			{"title": "<?= _('Dashboard properties') ?>", "action_title": "<?= _('Apply') ?>"},
+			{
+				"title": <?= CJs::encodeJson(_('Dashboard properties')) ?>,
+				"action_title": <?= CJs::encodeJson(_('Apply')) ?>
+			},
 			{"name": form.data('data').name, "owner": form.data('data').owner},
 			defer
 		);
