@@ -759,6 +759,10 @@ class CEvent extends CApiService {
 
 		// Adding event tags.
 		if ($options['selectTags'] !== null && $options['selectTags'] != API_OUTPUT_COUNT) {
+			if ($this->outputIsRequested(API_OUTPUT_EXTEND, $options['selectTags'])) {
+				$options['selectTags'] = ['eventtagid', 'eventid', 'tag', 'value'];
+			}
+
 			$tags_options = [
 				'output' => $this->outputExtend($options['selectTags'], ['eventid']),
 				'filter' => ['eventid' => $eventIds]
