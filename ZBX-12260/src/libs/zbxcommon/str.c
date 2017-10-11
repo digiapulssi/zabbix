@@ -2534,14 +2534,15 @@ char	*convert_to_utf8(char *in, size_t in_size, const char *encoding)
 		return utf8_string;
 	}
 
-	zabbix_log(LOG_LEVEL_DEBUG, "convert_to_utf8() in_size:%d encoding:'%s' codepage:%u", in_size, encoding, codepage);
+	zabbix_log(LOG_LEVEL_DEBUG, "convert_to_utf8() in_size:%d encoding:'%s' codepage:%u", in_size, encoding,
+			codepage);
 
-	if (1200 == codepage)	/* UTF-16 */
+	if (1200 == codepage)		/* Unicode UTF-16, little-endian byte order */
 	{
 		wide_string = (wchar_t *)in;
 		wide_size = (int)in_size / 2;
 	}
-	else if (1201 == codepage)	/* unicodeFFFE */
+	else if (1201 == codepage)	/* unicodeFFFE UTF-16, big-endian byte order */
 	{
 		wchar_t	*wide_string_be = (wchar_t *)in;
 		int	i;
@@ -2553,25 +2554,27 @@ char	*convert_to_utf8(char *in, size_t in_size, const char *encoding)
 		else
 			wide_string = wide_string_static;
 
+		/* convert from big-endian 'in' to little-endian 'wide_string' */
 		for (i = 0; i < wide_size; i++)
 			wide_string[i] = ((wide_string_be[i] << 8) & 0xff00) | ((wide_string_be[i] >> 8) & 0xff);
 	}
 	else
 	{
 		wide_size = MultiByteToWideChar(codepage, 0, in, (int)in_size, NULL, 0);
+
 		if (wide_size > STATIC_SIZE)
 			wide_string = (wchar_t *)zbx_malloc(wide_string, (size_t)wide_size * sizeof(wchar_t));
 		else
 			wide_string = wide_string_static;
 
-		/* convert from in to wide_string */
+		/* convert from 'in' to 'wide_string' */
 		MultiByteToWideChar(codepage, 0, in, (int)in_size, wide_string, wide_size);
 	}
 
 	utf8_size = WideCharToMultiByte(CP_UTF8, 0, wide_string, wide_size, NULL, 0, NULL, NULL);
 	utf8_string = (char *)zbx_malloc(utf8_string, (size_t)utf8_size + 1/* '\0' */);
 
-	/* convert from wide_string to utf8_string */
+	/* convert from 'wide_string' to 'utf8_string' */
 	WideCharToMultiByte(CP_UTF8, 0, wide_string, wide_size, utf8_string, utf8_size, NULL, NULL);
 	utf8_string[utf8_size] = '\0';
 	zabbix_log(LOG_LEVEL_DEBUG, "convert_to_utf8() utf8_size:%d utf8_string:'%s'", utf8_size, utf8_string);
