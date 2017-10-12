@@ -63,14 +63,13 @@ void	zbx_list_destroy(zbx_list_t *list)
  *             created  - [OUT] pointer to the created list item              *
  *                                                                            *
  ******************************************************************************/
-static void	list_create_item(zbx_list_t *list, const void *value, zbx_list_item_t **created)
+static void	list_create_item(zbx_list_t *list, void *value, zbx_list_item_t **created)
 {
 	zbx_list_item_t *item;
 
 	item = (zbx_list_item_t *)zbx_malloc(NULL, sizeof(zbx_list_item_t));
 	item->next = NULL;
-	item->data = zbx_malloc(NULL, list->size);
-	memcpy(item->data, value, list->size);
+	item->data = value;
 
 	*created = item;
 }
@@ -88,7 +87,7 @@ static void	list_create_item(zbx_list_t *list, const void *value, zbx_list_item_
  *             inserted - [OUT] pointer to the inserted list item             *
  *                                                                            *
  ******************************************************************************/
-void	zbx_list_insert_after(zbx_list_t *list, zbx_list_item_t *after, const void *value, zbx_list_item_t **inserted)
+void	zbx_list_insert_after(zbx_list_t *list, zbx_list_item_t *after, void *value, zbx_list_item_t **inserted)
 {
 	zbx_list_item_t *item;
 
@@ -123,7 +122,7 @@ void	zbx_list_insert_after(zbx_list_t *list, zbx_list_item_t *after, const void 
  *             inserted - [OUT] pointer to the inserted list item             *
  *                                                                            *
  ******************************************************************************/
-void	zbx_list_append(zbx_list_t *list, const void *value, zbx_list_item_t **inserted)
+void	zbx_list_append(zbx_list_t *list, void *value, zbx_list_item_t **inserted)
 {
 	return zbx_list_insert_after(list, NULL, value, inserted);
 }
@@ -139,7 +138,7 @@ void	zbx_list_append(zbx_list_t *list, const void *value, zbx_list_item_t **inse
  *             inserted - [OUT] pointer to the inserted list item             *
  *                                                                            *
  ******************************************************************************/
-void	zbx_list_prepend(zbx_list_t *list, const void *value, zbx_list_item_t **inserted)
+void	zbx_list_prepend(zbx_list_t *list, void *value, zbx_list_item_t **inserted)
 {
 	zbx_list_item_t *item;
 
@@ -167,7 +166,7 @@ void	zbx_list_prepend(zbx_list_t *list, const void *value, zbx_list_item_t **ins
  *               returned.                                                    *
  *                                                                            *
  ******************************************************************************/
-int	zbx_list_pop(zbx_list_t *list, void *value)
+int	zbx_list_pop(zbx_list_t *list, void **value)
 {
 	zbx_list_item_t	*head;
 
@@ -175,11 +174,10 @@ int	zbx_list_pop(zbx_list_t *list, void *value)
 		return FAIL;
 
 	if (NULL != value)
-		memcpy(value, list->head->data, list->size);
+		*value = head->data;
 
 	head = list->head;
 	list->head = list->head->next;
-	zbx_free(head->data);
 	zbx_free(head);
 
 	if (NULL == list->head)
