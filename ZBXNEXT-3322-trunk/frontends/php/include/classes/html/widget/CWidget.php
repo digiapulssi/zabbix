@@ -21,8 +21,8 @@
 
 class CWidget {
 
-	private $title = null;
-	private $controls = null;
+	protected $title = null;
+	protected $controls = null;
 
 	/**
 	 * The contents of the body of the widget.
@@ -55,9 +55,8 @@ class CWidget {
 	public function get() {
 		$widget = [];
 
-		$topHeader = $this->createTopHeader();
-		if ($topHeader !== null) {
-			$widget[] = $topHeader;
+		if ($this->title !== null || $this->controls !== null) {
+			$widget[] = $this->createTopHeader();
 		}
 
 		return [$widget, $this->body];
@@ -75,17 +74,11 @@ class CWidget {
 		return unpack_object($tab);
 	}
 
-	/**
-	 * Create top header
-	 *
-	 * @return CDiv|null
-	 */
 	private function createTopHeader() {
 		$divs = [];
 
-		$title = $this->createTitle();
-		if ($title !== null) {
-			$divs[] = $title;
+		if ($this->title !== null) {
+			$divs[] = (new CDiv(new CTag('h1', true, $this->title)))->addClass(ZBX_STYLE_CELL);
 		}
 
 		if ($this->controls !== null) {
@@ -94,21 +87,8 @@ class CWidget {
 				->addClass(ZBX_STYLE_NOWRAP);
 		}
 
-		if (count($divs) > 0) {
-			return (new CDiv($divs))
-				->addClass(ZBX_STYLE_HEADER_TITLE)
-				->addClass(ZBX_STYLE_TABLE);
-		}
-	}
-
-	/**
-	 * Create title
-	 *
-	 * @return CDiv
-	 */
-	protected function createTitle() {
-		if ($this->title !== null) {
-			return (new CDiv(new CTag('h1', true, $this->title)))->addClass(ZBX_STYLE_CELL);
-		}
+		return (new CDiv($divs))
+			->addClass(ZBX_STYLE_HEADER_TITLE)
+			->addClass(ZBX_STYLE_TABLE);
 	}
 }

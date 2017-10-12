@@ -32,6 +32,11 @@ class CHeaderMenuWidget extends CWidget
 	private $menu_map = [];
 
 	/**
+	 * Unique HTML id used for header menu.
+	 */
+	private $header_menuid;
+
+	/**
 	 * Constructor
 	 *
 	 * @param array   $menu_map
@@ -44,10 +49,39 @@ class CHeaderMenuWidget extends CWidget
 	public function __construct(array $menu_map)
 	{
 		$this->menu_map = $menu_map;
+		$this->header_menuid = uniqid(ZBX_STYLE_HEADER_DROPDOWN_LIST);
 	}
 
 	/**
-	 * Create dropdown menu in title
+	 * Get widget content as array.
+	 *
+	 * @return array
+	 */
+	public function get() {
+		return [$this->createTopHeader(), $this->body];
+	}
+
+	/**
+	 * Create dropdown header control.
+	 *
+	 * @return CDiv
+	 */
+	private function createTopHeader() {
+		$divs = [(new CDiv($this->createTitle()))->addClass(ZBX_STYLE_TABLE)];
+
+		if ($this->controls !== null) {
+			$divs[] = (new CDiv($this->controls))
+				->addClass(ZBX_STYLE_CELL)
+				->addClass(ZBX_STYLE_NOWRAP);
+		}
+
+		return (new CDiv($divs))
+			->addClass(ZBX_STYLE_HEADER_TITLE)
+			->addClass(ZBX_STYLE_TABLE);
+	}
+
+	/**
+	 * Create dropdown menu in title.
 	 *
 	 * @return CDiv
 	 */
@@ -55,21 +89,21 @@ class CHeaderMenuWidget extends CWidget
 	{
 		$list = (new CList())
 			->addClass(ZBX_STYLE_HEADER_DROPDOWN_LIST)
-			->setId(uniqid(ZBX_STYLE_HEADER_DROPDOWN_LIST));
+			->setId($this->header_menuid);
 
 		$header = null;
+
 		foreach ($this->menu_map as $item) {
 			if ($item['selected']) {
 				$header = (new CLink(new CTag('h1', true, $item['title'])))
 					->addClass(ZBX_STYLE_HEADER_DROPDOWN)
-					->onClick('javascript: jQuery("#'.$list->getId().'").toggle();');
+					->setAttribute('data-dropdown-list', '#'.$this->header_menuid);
 			}
 			$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
 
 			$list->addItem((new CLink($title, $item['url']))->addClass(ZBX_STYLE_ACTION_MENU_ITEM));
 		}
-		$div = (new CDiv([$header, $list]))->addClass(ZBX_STYLE_HEADER_DROPDOWN_MENU);
 
-		return $div;
+		return (new CDiv([$header, $list]))->addClass(ZBX_STYLE_HEADER_DROPDOWN_MENU);
 	}
 }

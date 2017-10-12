@@ -429,28 +429,10 @@ function redirect(uri, method, needle, invert_needle) {
 
 function showHide(obj) {
 	if (jQuery(obj).is(':hidden')) {
-		showElement(obj);
-	} else {
-		hideElement(obj);
-	}
-}
-
-/**
- * Hide html element
- * @param {object} obj
- */
-function hideElement(obj) {
-	jQuery(obj).css('display', 'none');
-}
-
-/**
- * Show html element
- *
- * @param {object} obj
- */
-function showElement(obj) {
-	if (jQuery(obj).is(':hidden')) {
 		jQuery(obj).css('display', 'block');
+	}
+	else {
+		jQuery(obj).css('display', 'none');
 	}
 }
 

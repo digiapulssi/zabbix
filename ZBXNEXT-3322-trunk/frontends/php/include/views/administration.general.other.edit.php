@@ -18,7 +18,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.other.php')));
+
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.other.php'));
 
 $otherTab = new CFormList();
 

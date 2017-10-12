@@ -115,7 +115,7 @@ class CUrl {
 	}
 
 	/**
-	 * Clear all arguments
+	 * Clear all arguments.
 	 *
 	 * @return $this
 	 */

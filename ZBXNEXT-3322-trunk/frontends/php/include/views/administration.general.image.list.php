@@ -17,6 +17,8 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
+
+
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php')))
 	->setControls((new CForm())
 		->cleanItems()
@@ -30,7 +32,6 @@ $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php'
 						IMAGE_TYPE_BACKGROUND => _('Background')
 					])
 				])
-				->addClass('adm-header-list')
 				->addItem(
 					new CSubmit('form', ($data['imagetype'] == IMAGE_TYPE_ICON)
 						? _('Create icon')

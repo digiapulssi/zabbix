@@ -834,7 +834,7 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 			['title' => _('Overview triggers'), 'url' => 'overview.php?type='.ZBX_OVERVIEW_TRIGGERS],
 			['title' => _('Overview data'), 'url' => 'overview.php?type='.ZBX_OVERVIEW_DATA]
 		],
-		// Location "Configuration > Actions"
+		// Location "Configuration > Actions".
 		[
 			['title' => _('Trigger actions'), 'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_TRIGGERS],
 			['title' => _('Discovery actions'), 'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_DISCOVERY],
@@ -857,7 +857,7 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 			['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
 			['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
 		],
-		// Location "Administration > Queue"
+		// Location "Administration > Queue".
 		[
 			['title' => _('Queue overview'), 'url' => 'queue.php?config='.QUEUE_OVERVIEW],
 			['title' => _('Queue overview by proxy'), 'url' => 'queue.php?config='.QUEUE_OVERVIEW_BY_PROXY],
@@ -879,8 +879,6 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 
 	return $menu_items;
 }
-
-
 
 /**
  * Renders an icon list

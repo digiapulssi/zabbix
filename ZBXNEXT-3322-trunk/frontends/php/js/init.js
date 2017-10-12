@@ -49,14 +49,23 @@ jQuery(function($) {
 		changeClass(comboBox);
 	});
 
-	$(document).click(function(e) {
-		var openDropdown = $('#adm-menu-dropdown-list');
-		if (openDropdown && !openDropdown.is(':hidden')) {
-			var menu = $('.header-dropdown-menu');
-			if (menu && menu.has(e.target).length === 0) {
-				openDropdown.hide();
+	$('[data-dropdown-list]').click(function () {
+		var menu = $($(this).data('dropdown-list')),
+			handler = function () {
+				$(document).off('click', handler);
+				menu.hide();
 			}
+
+		menu.toggle();
+
+		if (menu.is(':visible')) {
+			$(document).on('click', handler);
 		}
+		else {
+			$(document).off('click', handler);
+		}
+
+		return false;
 	});
 
 	/**

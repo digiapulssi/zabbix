@@ -19,24 +19,18 @@
 **/
 
 
-$controls = new CList();
-
-if ($data['templateid']) {
-	$widget = (new CWidget())->setTitle(_('Screens'));
-}
-else {
-	$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('screens.php'));
-}
-
-$controls->addItem(new CSubmit('form', _('Create screen')));
+$controls = (new CList())->addItem(new CSubmit('form', _('Create screen')));
 
 $createForm = (new CForm('get'))->cleanItems();
 
 if ($data['templateid']) {
 	$createForm->addVar('templateid', $data['templateid']);
-	$widget->addItem(get_header_host_table('screens', $data['templateid']));
+	$widget = (new CWidget())
+		->setTitle(_('Screens'))
+		->addItem(get_header_host_table('screens', $data['templateid']));
 }
 else {
+	$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('screens.php'));
 	$controls->addItem((new CButton('form', _('Import')))->onClick('redirect("screen.import.php?rules_preset=screen")'));
 }
 

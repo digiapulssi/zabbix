@@ -21,7 +21,7 @@
 
 require_once dirname(__FILE__).'/js/administration.general.macros.edit.js.php';
 
-$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.macros.php')));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.macros.php'));
 
 $table = (new CTable())
 	->setId('tbl_macros')
