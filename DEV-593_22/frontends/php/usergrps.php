@@ -73,11 +73,6 @@ $fields = array(
 	'form' =>				array(T_ZBX_STR, O_OPT, P_SYS,		 null,	null),
 	'form_refresh' =>		array(T_ZBX_STR, O_OPT, null,		 null,	null)
 );
-
-if (get_request('go', 'none') !== 'none') {
-	$fields['csrf_token'] =	array(T_ZBX_STR, O_MAND, P_SYS, VALID_CSRF_TOKEN, null);
-}
-
 check_fields($fields);
 validate_sort_and_sortorder('name', ZBX_SORT_UP);
 

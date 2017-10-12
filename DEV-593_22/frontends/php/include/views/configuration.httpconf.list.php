@@ -66,8 +66,6 @@ $httpTable->setHeader(array(
 	make_sorting_header(_('Status'), 'status'))
 );
 
-$csrf_token = '&csrf_token='.createCSRFToken();
-
 foreach ($this->data['httpTests'] as $httpTestId => $httpTest) {
 	$name = array();
 	if (isset($this->data['parentTemplates'][$httpTestId])) {
@@ -88,7 +86,7 @@ foreach ($this->data['httpTests'] as $httpTestId => $httpTest) {
 			httptest_status2str($httpTest['status']),
 			'?group_httptestid[]='.$httpTest['httptestid'].
 				'&hostid='.$httpTest['hostid'].
-				'&go='.($httpTest['status'] ? 'activate' : 'disable').$csrf_token,
+				'&go='.($httpTest['status'] ? 'activate' : 'disable'),
 			httptest_status2style($httpTest['status'])
 		)
 	));

@@ -54,8 +54,6 @@ $hostTable->setHeader(array(
 	make_sorting_header(_('Status'),'status', $sortLink)
 ));
 
-$csrf = '&csrf_token='.createCSRFToken();
-
 foreach ($this->data['hostPrototypes'] as $hostPrototype) {
 	// name
 	$name = array();
@@ -105,7 +103,7 @@ foreach ($this->data['hostPrototypes'] as $hostPrototype) {
 	// status
 	$status = new CLink(item_status2str($hostPrototype['status']),
 		'?group_hostid='.$hostPrototype['hostid'].'&parent_discoveryid='.$discoveryRule['itemid'].
-		'&go='.($hostPrototype['status'] ? 'activate' : 'disable').$csrf, itemIndicatorStyle($hostPrototype['status'])
+		'&go='.($hostPrototype['status'] ? 'activate' : 'disable'), itemIndicatorStyle($hostPrototype['status'])
 	);
 
 	$hostTable->addRow(array(

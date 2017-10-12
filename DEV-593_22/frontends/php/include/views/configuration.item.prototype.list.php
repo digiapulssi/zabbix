@@ -58,8 +58,6 @@ $itemTable->setHeader(array(
 	make_sorting_header(_('Status'), 'status', $sortLink)
 ));
 
-$csrf_token = '&csrf_token='.createCSRFToken();
-
 foreach ($this->data['items'] as $item) {
 	$description = array();
 	if (!empty($item['templateid'])) {
@@ -78,7 +76,7 @@ foreach ($this->data['items'] as $item) {
 		itemIndicator($item['status']),
 		'?group_itemid='.$item['itemid'].
 			'&parent_discoveryid='.$this->data['parent_discoveryid'].
-			'&go='.($item['status'] ? 'activate' : 'disable').$csrf_token,
+			'&go='.($item['status'] ? 'activate' : 'disable'),
 		itemIndicatorStyle($item['status'])
 	);
 

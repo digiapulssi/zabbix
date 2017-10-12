@@ -55,8 +55,6 @@ $actionTable->setHeader(array(
 	make_sorting_header(_('Status'), 'status')
 ));
 
-$tk = '&csrf_token='.createCSRFToken();
-
 foreach ($this->data['actions'] as $action) {
 	$conditions = array();
 	order_result($action['conditions'], 'conditiontype', ZBX_SORT_DOWN);
@@ -73,13 +71,13 @@ foreach ($this->data['actions'] as $action) {
 
 	if ($action['status'] == ACTION_STATUS_DISABLED) {
 		$status = new CLink(_('Disabled'),
-			'actionconf.php?go=activate&g_actionid'.SQUAREBRACKETS.'='.$action['actionid'].url_param('eventsource').$tk,
+			'actionconf.php?go=activate&g_actionid'.SQUAREBRACKETS.'='.$action['actionid'].url_param('eventsource'),
 			'disabled'
 		);
 	}
 	else {
 		$status = new CLink(_('Enabled'),
-			'actionconf.php?go=disable&g_actionid'.SQUAREBRACKETS.'='.$action['actionid'].url_param('eventsource').$tk,
+			'actionconf.php?go=disable&g_actionid'.SQUAREBRACKETS.'='.$action['actionid'].url_param('eventsource'),
 			'enabled'
 		);
 	}

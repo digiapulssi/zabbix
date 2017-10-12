@@ -82,11 +82,6 @@ if (isset($_REQUEST['yaxismin']) && zbx_empty($_REQUEST['yaxismin'])) {
 if (isset($_REQUEST['yaxismax']) && zbx_empty($_REQUEST['yaxismax'])) {
 	unset($_REQUEST['yaxismax']);
 }
-
-if (get_request('go', 'none') !== 'none') {
-	$fields['csrf_token'] =	array(T_ZBX_STR, O_MAND, P_SYS, VALID_CSRF_TOKEN, null);
-}
-
 check_fields($fields);
 validate_sort_and_sortorder('name', ZBX_SORT_UP);
 

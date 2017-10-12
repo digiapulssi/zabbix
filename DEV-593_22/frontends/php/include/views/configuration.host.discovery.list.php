@@ -59,8 +59,6 @@ $discoveryTable->setHeader(array(
 	$data['showErrorColumn'] ? _('Error') : null
 ));
 
-$csrf_token = '&csrf_token='.createCSRFToken();
-
 foreach ($data['discoveries'] as $discovery) {
 	$description = array();
 
@@ -74,8 +72,7 @@ foreach ($data['discoveries'] as $discovery) {
 
 	$status = new CLink(
 		itemIndicator($discovery['status'], $discovery['state']),
-		'?hostid='.$_REQUEST['hostid'].'&g_hostdruleid='.$discovery['itemid'].
-			'&go='.($discovery['status'] ? 'activate' : 'disable').$csrf_token,
+		'?hostid='.$_REQUEST['hostid'].'&g_hostdruleid='.$discovery['itemid'].'&go='.($discovery['status'] ? 'activate' : 'disable'),
 		itemIndicatorStyle($discovery['status'], $discovery['state'])
 	);
 
