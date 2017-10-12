@@ -1332,8 +1332,6 @@ static void	flush_correlation_queue(zbx_vector_ptr_t *trigger_diff, zbx_vector_u
 		zbx_hashset_iter_reset(&event_queue, &iter);
 		while (NULL != (queue = zbx_hashset_iter_next(&iter)))
 		{
-			int	index;
-
 			if (FAIL == (index = zbx_vector_uint64_bsearch(&triggerids, queue->objectid,
 					ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
 			{
@@ -2326,7 +2324,6 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 	char			*filter = NULL;
 	size_t			filter_alloc = 0, filter_offset = 0;
 	zbx_vector_uint64_t	trigger_eventids, triggerids;
-	DB_EVENT 		*event;
 	int			i, index;
 
 	zbx_vector_uint64_create(&trigger_eventids);
@@ -2345,7 +2342,9 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		event = (DB_EVENT *)zbx_malloc(NULL, sizeof(DB_EVENT));
+		DB_EVENT	*event = NULL;
+
+		event = zbx_malloc(event, sizeof(DB_EVENT));
 		ZBX_STR2UINT64(event->eventid, row[0]);
 		event->source = atoi(row[1]);
 		event->object = atoi(row[2]);
@@ -2372,8 +2371,6 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 
 	if (0 != trigger_eventids.values_num)	/* EVENT_SOURCE_TRIGGERS */
 	{
-		zbx_uint64_t	last_eventid = 0;
-
 		filter_offset = 0;
 		DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "eventid", trigger_eventids.values,
 				trigger_eventids.values_num);
@@ -2382,12 +2379,13 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 
 		while (NULL != (row = DBfetch(result)))
 		{
+			DB_EVENT	*event = NULL;
 			zbx_uint64_t	eventid;
 			zbx_tag_t	*tag;
 
 			ZBX_STR2UINT64(eventid, row[0]);
 
-			if (last_eventid != eventid)
+			if (NULL == event || eventid != event->eventid)
 			{
 				if (FAIL == (index = zbx_vector_ptr_bsearch(events, &eventid,
 						ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
@@ -2397,9 +2395,7 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 				}
 
 				event = events->values[index];
-				last_eventid = eventid;
 			}
-
 
 			tag = zbx_malloc(NULL, sizeof(zbx_tag_t));
 			tag->tag = zbx_strdup(NULL, row[1]);
@@ -2433,7 +2429,7 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 
 			for (i = 0; i < events->values_num; i++)
 			{
-				event = events->values[i];
+				DB_EVENT	*event = events->values[i];
 
 				if (EVENT_OBJECT_TRIGGER != event->object)
 					continue;
