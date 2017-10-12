@@ -2372,7 +2372,7 @@ void	get_db_events_info(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
 
 	if (0 != trigger_eventids.values_num)	/* EVENT_SOURCE_TRIGGERS */
 	{
-		zbx_uint64_t	last_eventid = 0,
+		zbx_uint64_t	last_eventid = 0;
 
 		filter_offset = 0;
 		DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "eventid", trigger_eventids.values,
