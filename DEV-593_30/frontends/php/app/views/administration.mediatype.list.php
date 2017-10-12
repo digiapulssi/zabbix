@@ -103,12 +103,10 @@ foreach ($data['mediatypes'] as $mediaType) {
 		? (new CLink(_('Enabled'), $statusLink))
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(ZBX_STYLE_GREEN)
-			->addCSRF()
 			->addSID()
 		: (new CLink(_('Disabled'), $statusLink))
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(ZBX_STYLE_RED)
-			->addCSRF()
 			->addSID();
 
 	$name = new CLink($mediaType['description'], '?action=mediatype.edit&mediatypeid='.$mediaType['mediatypeid']);

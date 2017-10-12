@@ -29,7 +29,6 @@ class CControllerAcknowledgeCreate extends CController {
 			'backurl' =>			'string'
 		];
 
-		$this->addCSRFValidationRole($fields);
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {

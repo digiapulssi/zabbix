@@ -84,7 +84,6 @@ foreach ($data['discoveries'] as $discovery) {
 		)
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(itemIndicatorStyle($discovery['status'], $discovery['state']))
-			->addCSRF()
 			->addSID();
 
 	// info

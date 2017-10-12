@@ -61,7 +61,6 @@ class CValidationRule {
 									&& !$this->parseNotEmpty($buffer, $pos, $rule)		// not_empty
 									&& !$this->parseJson($buffer, $pos, $rule)			// json
 									&& !$this->parseInt32($buffer, $pos, $rule)			// int32
-									&& !$this->parseCSRFToken($buffer, $pos, $rule)		// csrf_token
 									&& !$this->parseIn($buffer, $pos, $rule)			// in
 									&& !$this->parseId($buffer, $pos, $rule)			// id
 									&& !$this->parseFatal($buffer, $pos, $rule)			// fatal
@@ -148,22 +147,6 @@ class CValidationRule {
 
 		$pos += 6;
 		$rules['string'] = true;
-
-		return true;
-	}
-
-	/**
-	 * csrf_token
-	 *
-	 * 'csrf_token' => true
-	 */
-	private function parseCSRFToken($buffer, &$pos, &$rules) {
-		if (0 != strncmp(substr($buffer, $pos), 'csrf_token', 10)) {
-			return false;
-		}
-
-		$pos += 10;
-		$rules['csrf_token'] = true;
 
 		return true;
 	}

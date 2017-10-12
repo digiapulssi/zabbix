@@ -1020,7 +1020,6 @@ define('WIDGET_SLIDESHOW',				'hat_slides');
 define('DB_ID',		"({}>=0&&bccomp({},\"9223372036854775807\")<=0)&&");
 define('NOT_EMPTY',	"({}!='')&&");
 define('NOT_ZERO',	"({}!=0)&&");
-define('VALID_CSRF_TOKEN', 'is_valid_csrf_token({})');
 
 define('ZBX_VALID_OK',		0);
 define('ZBX_VALID_ERROR',	1);

@@ -118,7 +118,6 @@ function createServiceConfigurationTree(array $services, &$tree, array $parentSe
 					? (new CLink(_('Delete'), 'services.php?delete=1&serviceid='.$service['serviceid']))
 						->addClass(ZBX_STYLE_LINK_ACTION)
 						->addConfirmation(_s('Delete service "%1$s"?', $service['name']))
-						->addCSRF()
 						->addSID()
 					: null
 			]),

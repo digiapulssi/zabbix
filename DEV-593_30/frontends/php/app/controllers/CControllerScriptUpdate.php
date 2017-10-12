@@ -38,7 +38,6 @@ class CControllerScriptUpdate extends CController {
 			'enable_confirmation' =>	'                                       in 1'
 		];
 
-		$this->addCSRFValidationRole($fields);
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {

@@ -129,7 +129,6 @@ foreach ($this->data['triggers'] as $trigger) {
 	))
 		->addClass(ZBX_STYLE_LINK_ACTION)
 		->addClass(triggerIndicatorStyle($trigger['status']))
-		->addCSRF()
 		->addSID();
 
 	// checkbox

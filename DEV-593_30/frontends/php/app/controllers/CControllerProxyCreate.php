@@ -46,7 +46,6 @@ class CControllerProxyCreate extends CController {
 			'form_refresh' =>	'int32'
 		];
 
-		$this->addCSRFValidationRole($fields);
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {

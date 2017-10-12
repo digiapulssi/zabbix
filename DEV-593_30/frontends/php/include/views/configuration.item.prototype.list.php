@@ -76,7 +76,6 @@ foreach ($this->data['items'] as $item) {
 	))
 		->addClass(ZBX_STYLE_LINK_ACTION)
 		->addClass(itemIndicatorStyle($item['status']))
-		->addCSRF()
 		->addSID();
 
 	if (!empty($item['applications'])) {

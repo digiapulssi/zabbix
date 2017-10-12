@@ -135,7 +135,6 @@ foreach ($data['hosts'] as $host) {
 		->addClass(ZBX_STYLE_LINK_ACTION)
 		->addClass($statusClass)
 		->addConfirmation($confirm_message)
-		->addCSRF()
 		->addSID();
 
 	order_result($host['parentTemplates'], 'name');

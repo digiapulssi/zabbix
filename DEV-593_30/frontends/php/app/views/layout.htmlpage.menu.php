@@ -54,7 +54,6 @@ $icons->addItem(
 	(new CLink(SPACE, 'index.php?reconnect=1'))
 		->addClass(ZBX_STYLE_TOP_NAV_SIGNOUT)
 		->setAttribute('title', _('Sign out'))
-		->addCSRF()
 		->addSID()
 );
 

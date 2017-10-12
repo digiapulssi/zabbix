@@ -26,7 +26,6 @@ class CControllerProxyHostDisable extends CController {
 			'proxyids' =>	'required|array_db hosts.hostid'
 		];
 
-		$this->addCSRFValidationRole($fields);
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {

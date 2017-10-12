@@ -360,7 +360,6 @@ class CScreenBuilder {
 						url_param('templateid').'&add_col='.$i
 					))
 						->addClass(ZBX_STYLE_TREEVIEW_PLUS)
-						->addCSRF()
 						->addSID();
 				}
 
@@ -379,7 +378,6 @@ class CScreenBuilder {
 					'&add_col='.$this->screen['hsize']
 				))
 					->addClass(ZBX_STYLE_TREEVIEW_PLUS)
-					->addCSRF()
 					->addSID();
 			}
 
@@ -407,7 +405,6 @@ class CScreenBuilder {
 						url_param('templateid').'&add_row='.$r
 					))
 						->addClass(ZBX_STYLE_TREEVIEW_PLUS)
-						->addCSRF()
 						->addSID();
 				}
 
@@ -570,7 +567,6 @@ class CScreenBuilder {
 						url_param('templateid').'&rmv_row='.$r
 					))
 						->addClass(ZBX_STYLE_TREEVIEW_PLUS)
-						->addCSRF()
 						->addSID();
 					if (!$emptyScreenRow) {
 						$link->addConfirmation(_('This screen row is not empty. Delete it?'));
@@ -596,7 +592,6 @@ class CScreenBuilder {
 					'&add_row='.$this->screen['vsize']
 				))
 					->addClass(ZBX_STYLE_TREEVIEW_PLUS)
-					->addCSRF()
 					->addSID();
 			}
 
@@ -617,7 +612,6 @@ class CScreenBuilder {
 						url_param('templateid').'&rmv_col='.$i
 					))
 						->addClass(ZBX_STYLE_TREEVIEW_PLUS)
-						->addCSRF()
 						->addSID();
 
 					if (array_key_exists($i, $emptyScreenColumns)) {

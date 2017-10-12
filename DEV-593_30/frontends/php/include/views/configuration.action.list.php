@@ -82,7 +82,6 @@ if ($this->data['actions']) {
 			)
 				->addClass(ZBX_STYLE_LINK_ACTION)
 				->addClass(ZBX_STYLE_RED)
-				->addCSRF()
 				->addSID();
 		}
 		else {
@@ -91,7 +90,6 @@ if ($this->data['actions']) {
 			)
 				->addClass(ZBX_STYLE_LINK_ACTION)
 				->addClass(ZBX_STYLE_GREEN)
-				->addCSRF()
 				->addSID();
 		}
 

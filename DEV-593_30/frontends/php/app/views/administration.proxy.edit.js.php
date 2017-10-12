@@ -28,7 +28,6 @@
 			url.setArgument('tls_issuer', $('#tls_issuer').val());
 			url.setArgument('tls_subject', $('#tls_subject').val());
 			url.setArgument('tls_accept', getTlsAccept());
-			url.setArgument('csrf_token', '<?=createCSRFToken();?>');
 			redirect(url.getUrl(), 'post', 'action');
 		});
 

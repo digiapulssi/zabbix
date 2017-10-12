@@ -51,7 +51,6 @@ foreach ($data['drules'] as $drule) {
 		))
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(discovery_status2style($drule['status']))
-			->addCSRF()
 			->addSID()
 	);
 
