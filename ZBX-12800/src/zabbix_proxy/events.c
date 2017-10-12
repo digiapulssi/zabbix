@@ -19,7 +19,6 @@
 
 #include "common.h"
 #include "zbxalgo.h"
-#include "db.h"
 
 int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
 		const zbx_timespec_t *timespec, int value, const char *trigger_description,
