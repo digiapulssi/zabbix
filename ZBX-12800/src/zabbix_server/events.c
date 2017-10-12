@@ -308,7 +308,7 @@ static int	save_events(void)
  *                                                                            *
  * Function: save_problems                                                    *
  *                                                                            *
- * Purpose: generates problems f problem events (trigger and internal      *
+ * Purpose: generates problems from problem events (trigger and internal      *
  *          event sources)                                                    *
  *                                                                            *
  ******************************************************************************/
