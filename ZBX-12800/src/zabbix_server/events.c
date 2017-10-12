@@ -189,7 +189,7 @@ int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
  *             object   - [IN] event object (EVENT_OBJECT_*)                  *
  *             objectid - [IN] trigger, item ... identificator from database, *
  *                             depends on source and object                   *
- *             timespec - [IN] event time                                     *
+ *             ts       - [IN] event time                                     *
  *             userid   - [IN] the user closing the problem                   *
  *             correlationid - [IN] the correlation rule                      *
  *             c_eventid - [IN] the correlation event                         *
@@ -780,8 +780,8 @@ static int	correlation_has_old_event_operation(const zbx_correlation_t *correlat
  *             op          - [IN] the matching operation (CONDITION_OPERATOR_)*
  *                                                                            *
  ******************************************************************************/
-static void	correlation_condition_add_tag_match(char **sql, size_t *sql_alloc, size_t *sql_offset,
-		const char *tag, const char *value, unsigned char op)
+static void	correlation_condition_add_tag_match(char **sql, size_t *sql_alloc, size_t *sql_offset, const char *tag,
+		const char *value, unsigned char op)
 {
 	char	*tag_esc, *value_esc;
 
@@ -988,10 +988,10 @@ out:
  * Purpose: execute correlation operations for the new event and matched      *
  *          old eventid                                                       *
  *                                                                            *
- * Parameters: correlation - [IN] the correlation to execute                  *
- *             event       - [IN] the new event                               *
- *             eventid     - [IN] the old eventid                             *
- *             objectid    - [IN] the old event source objectid (triggerid)   *
+ * Parameters: correlation  - [IN] the correlation to execute                 *
+ *             event        - [IN] the new event                              *
+ *             old_eventid  - [IN] the old eventid                            *
+ *             old_objectid - [IN] the old event source objectid (triggerid)  *
  *                                                                            *
  ******************************************************************************/
 static void	correlation_execute_operations(zbx_correlation_t *correlation, DB_EVENT *event,
@@ -1576,7 +1576,7 @@ static void	clean_events(void)
  *                                                                            *
  * Function: flush_events                                                     *
  *                                                                            *
- * Purpose: flushes local event cache to disk                                 *
+ * Purpose: flushes local event cache to database                             *
  *                                                                            *
  ******************************************************************************/
 static int	flush_events(void)
@@ -1842,7 +1842,9 @@ static void	event_problem_free(zbx_event_problem_t *problem)
 
 /******************************************************************************
  *                                                                            *
- * Function: frees trigger dependency                                         *
+ * Function: trigger_dep_free                                                 *
+ *                                                                            *
+ * Purpose: frees trigger dependency                                          *
  *                                                                            *
  ******************************************************************************/
 
@@ -1943,9 +1945,8 @@ static int	match_tags(const zbx_vector_ptr_t *tags1, const zbx_vector_ptr_t *tag
  *                                                                            *
  * Purpose: processes trigger events                                          *
  *                                                                            *
- * Parameters: trigegr_events - [IN] the trigger events to process            *
+ * Parameters: trigger_events - [IN] the trigger events to process            *
  *             trigger_diff   - [IN] the trigger changeset                    *
- *             tags2 - [IN] the second tag vector                             *
  *                                                                            *
  ******************************************************************************/
 static void	process_trigger_events(zbx_vector_ptr_t *trigger_events, zbx_vector_ptr_t *trigger_diff)
@@ -2307,12 +2308,12 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: get_events_info                                                  *
+ * Function: get_db_events_info                                               *
  *                                                                            *
  * Purpose: get events and flags that indicate what was filled in DB_EVENT    *
  *          structure                                                         *
  *                                                                            *
- * Parameters: eventid    - [IN] requested event ids                          *
+ * Parameters: eventids   - [IN] requested event ids                          *
  *             events     - [OUT] the array of events                         *
  *                                                                            *
  * Comments: use 'free_db_event' function to release allocated memory         *
