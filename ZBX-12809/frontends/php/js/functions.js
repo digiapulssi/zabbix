@@ -604,7 +604,11 @@ function overlayDialogue(params, defer) {
 		.append(
 			jQuery('<div>', {
 				class: 'overlay-dialogue-body',
-			}).append(params.content)
+			})
+				.append(params.content)
+				.bind('DOMSubtreeModified', function() {
+					defer.notify();
+				})
 		)
 		.append(overlay_dialogue_footer)
 		.on('keydown', function(e) {
