@@ -31,10 +31,9 @@
  *             size - [IN] size of an item value                              *
  *                                                                            *
  ******************************************************************************/
-void	zbx_list_create(zbx_list_t *queue, unsigned int size)
+void	zbx_list_create(zbx_list_t *queue)
 {
 	memset(queue, 0, sizeof(*queue));
-	queue->size = size;
 }
 
 /******************************************************************************
@@ -194,7 +193,7 @@ int	zbx_list_pop(zbx_list_t *list, void **value)
  *                                                                            *
  * Purpose: get value from the queue without dequeuing                        *
  *                                                                            *
- * Parameters: list - [IN]  the list                                          *
+ * Parameters: list  - [IN]  the list                                         *
  *             value - [OUT] the value                                        *
  *                                                                            *
  * Return value: SUCCEED is returned if list is not empty, otherwise, FAIL is *
@@ -332,4 +331,19 @@ int	zbx_list_iterator_isset(const zbx_list_iterator_t *iterator)
 	return (NULL == iterator->list ? FAIL : SUCCEED);
 }
 
-
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_list_iterator_update                                         *
+ *                                                                            *
+ * Purpose: updates iterator                                                  *
+ *                                                                            *
+ * Parameters: iterator - [IN]  list iterator                                 *
+ *                                                                            *
+ * Comments: This function must be used after an item has been inserted in    *
+ *           list during iteration process.                                   *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_list_iterator_update(zbx_list_iterator_t *iterator)
+{
+	iterator->next = iterator->current->next;
+}

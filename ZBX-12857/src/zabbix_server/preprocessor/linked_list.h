@@ -35,7 +35,6 @@ typedef struct
 {
 	zbx_list_item_t		*head;
 	zbx_list_item_t		*tail;
-	unsigned int		size;
 }
 zbx_list_t;
 
@@ -48,7 +47,7 @@ typedef struct
 }
 zbx_list_iterator_t;
 
-void	zbx_list_create(zbx_list_t *list, unsigned int size);
+void	zbx_list_create(zbx_list_t *list);
 void	zbx_list_destroy(zbx_list_t *list);
 void	zbx_list_append(zbx_list_t *list, void *value, zbx_list_item_t **enqueued);
 void	zbx_list_insert_after(zbx_list_t *list, zbx_list_item_t *after, void *value, zbx_list_item_t **enqueued);
@@ -61,5 +60,6 @@ int	zbx_list_iterator_peek(const zbx_list_iterator_t *iterator, void **value);
 void	zbx_list_iterator_clear(zbx_list_iterator_t *iterator);
 int	zbx_list_iterator_equal(const zbx_list_iterator_t *iterator1, const zbx_list_iterator_t *iterator2);
 int	zbx_list_iterator_isset(const zbx_list_iterator_t *iterator);
+void	zbx_list_iterator_update(zbx_list_iterator_t *iterator);
 
 #endif
