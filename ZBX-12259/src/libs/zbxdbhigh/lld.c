@@ -41,6 +41,7 @@ typedef struct
 	zbx_vector_ptr_t	conditions;
 	char			*expression;
 	int			evaltype;
+	char			*error;
 }
 lld_filter_t;
 
@@ -110,6 +111,7 @@ static void	lld_filter_init(lld_filter_t *filter)
 	zbx_vector_ptr_create(&filter->conditions);
 	filter->expression = NULL;
 	filter->evaltype = CONDITION_EVAL_TYPE_AND_OR;
+	filter->error = NULL;
 }
 
 /******************************************************************************
@@ -125,6 +127,7 @@ static void	lld_filter_clean(lld_filter_t *filter)
 {
 	zbx_free(filter->expression);
 	lld_conditions_free(&filter->conditions);
+	zbx_free(filter->error);
 }
 
 /******************************************************************************
@@ -436,6 +439,37 @@ static int	filter_evaluate(const lld_filter_t *filter, const struct zbx_json_par
 	return FAIL;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: check_usable_data_for_filter                                     *
+ *                                                                            *
+ * Purpose: check if the lld data contains a value for macro used in filter   *
+ *                                                                            *
+ * Parameters: filter     - [IN] the lld filter                               *
+ *             jp_row     - [IN] the lld data row                             *
+ *             error      - [OUT] the error description                       *
+ *                                                                            *
+ ******************************************************************************/
+static void	check_usable_data_for_filter(lld_filter_t *filter, const struct zbx_json_parse *jp_row)
+{
+	int		i;
+
+	for (i = 0; i < filter->conditions.values_num; i++)
+	{
+		const lld_condition_t	*condition = (lld_condition_t *)filter->conditions.values[i];
+
+		if (NULL == zbx_json_pair_by_name(jp_row, condition->macro))
+		{
+			if (NULL == filter->error)
+				filter->error = zbx_strdup(filter->error, "");
+
+			filter->error = zbx_strdcatf(filter->error,
+					"Cannot accurately apply filter: no value received for macro \"%s\".\n",
+					condition->macro);
+		}
+	}
+}
+
 static int	lld_rows_get(const char *value, lld_filter_t *filter, zbx_vector_ptr_t *lld_rows, char **error)
 {
 	const char		*__function_name = "lld_rows_get";
@@ -471,6 +505,8 @@ static int	lld_rows_get(const char *value, lld_filter_t *filter, zbx_vector_ptr_
 		/*          ^------------------^                          */
 		if (FAIL == zbx_json_brackets_open(p, &jp_row))
 			continue;
+
+		check_usable_data_for_filter(filter, &jp_row);
 
 		if (SUCCEED != filter_evaluate(filter, &jp_row))
 			continue;
@@ -586,7 +622,10 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 	if (SUCCEED != lld_rows_get(value, &filter, &lld_rows, &error))
 		goto error;
 
-	error = zbx_strdup(error, "");
+	if (NULL == filter.error)
+		error = zbx_strdup(error, "");
+	else
+		error = zbx_strdup(error, filter.error);
 
 	now = time(NULL);
 
@@ -596,6 +635,8 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 				" processing lld rule");
 		goto clean;
 	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "LLD after item update error: %s", error);
 
 	lld_item_links_sort(&lld_rows);
 
