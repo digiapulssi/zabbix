@@ -25,7 +25,7 @@
 #include "dbcache.h"
 #include "../events.h"
 
-#define ZBX_TASKMANAGER_TIMEOUT		5
+#define ZBX_TASKMANAGER_TIMEOUT	5
 
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
@@ -36,23 +36,20 @@ extern int		server_num, process_num;
  *                                                                            *
  * Purpose: close the specified problem event and remove task                 *
  *                                                                            *
- * Parameters: taskid            - [IN] the task identifier                   *
- *             triggerid         - [IN] the source trigger id                 *
+ * Parameters: triggerid         - [IN] the source trigger id                 *
  *             eventid           - [IN] the problem eventid to close          *
  *             userid            - [IN] the user that requested to close the  *
  *                                      problem                               *
- *             locked_triggerids - [IN] the locked trigger identifiers        *
  *                                                                            *
  ******************************************************************************/
-static void	tm_execute_task_close_problem(zbx_uint64_t taskid, zbx_uint64_t triggerid, zbx_uint64_t eventid,
+static void	tm_execute_task_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid,
 		zbx_uint64_t userid)
 {
 	const char	*__function_name = "tm_execute_task_close_problem";
 
 	DB_RESULT	result;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() taskid:" ZBX_FS_UI64 " eventid:" ZBX_FS_UI64, __function_name,
-			taskid, eventid);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() eventid:" ZBX_FS_UI64, __function_name, eventid);
 
 	result = DBselect("select null from problem where eventid=" ZBX_FS_UI64 " and r_eventid is null", eventid);
 
@@ -117,7 +114,7 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 				ZBX_STR2UINT64(userid, row[0]);
 				ZBX_STR2UINT64(eventid, row[1]);
 
-				tm_execute_task_close_problem(taskid, triggerid, eventid, userid);
+				tm_execute_task_close_problem(triggerid, eventid, userid);
 				remove_task = 1;
 
 				ret = SUCCEED;

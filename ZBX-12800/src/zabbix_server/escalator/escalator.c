@@ -1941,7 +1941,7 @@ out:
 	zbx_vector_ptr_clear_ext(&events, (zbx_clean_func_t)free_db_event);
 	zbx_vector_ptr_destroy(&events);
 
-	ret = escalationids.values_num; /* performance metric */
+	ret = escalationids.values_num;	/* performance metric */
 
 	zbx_vector_uint64_destroy(&escalationids);
 
