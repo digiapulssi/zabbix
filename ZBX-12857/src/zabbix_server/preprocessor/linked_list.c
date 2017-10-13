@@ -345,5 +345,6 @@ int	zbx_list_iterator_isset(const zbx_list_iterator_t *iterator)
  ******************************************************************************/
 void	zbx_list_iterator_update(zbx_list_iterator_t *iterator)
 {
-	iterator->next = iterator->current->next;
+	if (NULL != iterator->current)
+		iterator->next = iterator->current->next;
 }

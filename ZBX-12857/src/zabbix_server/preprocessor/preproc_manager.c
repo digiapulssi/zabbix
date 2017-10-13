@@ -59,7 +59,6 @@ typedef struct preprocessing_request
 	zbx_preproc_op_t		*steps;		/* preprocessing steps */
 	int				steps_num;	/* number of preprocessing steps */
 	unsigned char			value_type;	/* value type from configuration */
-	unsigned char			priority;	/* requests with priority will be inserted */
 							/* at the beginning of preprocessing queue */
 }
 zbx_preprocessing_request_t;
@@ -98,7 +97,7 @@ typedef struct
 zbx_preprocessing_manager_t;
 
 static void	preprocessor_enqueue_dependent(zbx_preprocessing_manager_t *manager,
-		zbx_preproc_item_value_t *value, zbx_list_item_t *master, unsigned char priority);
+		zbx_preproc_item_value_t *value, zbx_list_item_t *master);
 
 /* cleanup functions */
 
@@ -538,12 +537,10 @@ static void	preprocessor_copy_value(zbx_preproc_item_value_t *target, zbx_prepro
  *             value    - [IN] item value                                     *
  *             master   - [IN] request should be enqueued after this item     *
  *                            (NULL for the end of the queue)                 *
- *             priority - [IN] item priority. Prioritized items will be       *
- *                             enqueued before other items.                   *
  *                                                                            *
  ******************************************************************************/
 static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_preproc_item_value_t *value,
-		zbx_list_item_t *master, unsigned char priority)
+		zbx_list_item_t *master)
 {
 	const char			*__function_name = "preprocessor_enqueue";
 	zbx_preprocessing_request_t	*request;
@@ -551,6 +548,7 @@ static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_prepr
 	zbx_list_item_t			*enqueued_at;
 	int				i;
 	zbx_preprocessing_states_t	state;
+	unsigned char			priority = ZBX_PREPROC_PRIORITY_NONE;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid: %" PRIu64, __function_name, value->itemid);
 
@@ -567,10 +565,10 @@ static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_prepr
 
 		if (NULL == manager->queue.head)
 		{
-			/* queue is empty (or item is an internal check), item is done, it can be flushed */
+			/* queue is empty and item is done, it can be flushed */
 			preprocessor_flush_value(value);
 			manager->processed_num++;
-			preprocessor_enqueue_dependent(manager, value, NULL, priority);
+			preprocessor_enqueue_dependent(manager, value, NULL);
 			preproc_item_value_clear(value);
 			goto out;
 		}
@@ -581,7 +579,6 @@ static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_prepr
 	request = (zbx_preprocessing_request_t *)zbx_malloc(NULL, sizeof(zbx_preprocessing_request_t));
 	memset(request, 0, sizeof(zbx_preprocessing_request_t));
 	memcpy(&request->value, value, sizeof(zbx_preproc_item_value_t));
-	request->priority = priority;
 	request->state = state;
 
 	if (REQUEST_STATE_QUEUED == state)
@@ -620,13 +617,11 @@ static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_prepr
 	else
 	{
 		zbx_list_insert_after(&manager->queue, master, request, &enqueued_at);
+		zbx_list_iterator_update(&manager->priority_tail);
 
 		/* move internal item tail position if we are inserting after last internal item */
 		if (NULL != master && master == manager->priority_tail.current)
-		{
-			zbx_list_iterator_update(&manager->priority_tail);
 			zbx_list_iterator_next(&manager->priority_tail);
-		}
 	}
 
 	if (REQUEST_STATE_QUEUED == request->state)
@@ -634,7 +629,7 @@ static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_prepr
 
 	/* if no preprocessing is needed, dependent items are enqueued */
 	if (REQUEST_STATE_DONE == request->state)
-		preprocessor_enqueue_dependent(manager, value, enqueued_at, priority);
+		preprocessor_enqueue_dependent(manager, value, enqueued_at);
 
 	manager->queued_num++;
 out:
@@ -651,12 +646,10 @@ out:
  *             value    - [IN] master item value                              *
  *             master   - [IN] dependent item should be enqueued after this   *
  *                            item                                            *
- *             priority - [IN] item priority. Prioritized items will be       *
- *                             enqueued before other items.                   *
  *                                                                            *
  ******************************************************************************/
 static void	preprocessor_enqueue_dependent(zbx_preprocessing_manager_t *manager,
-		zbx_preproc_item_value_t *source_value, zbx_list_item_t *master, unsigned char priority)
+		zbx_preproc_item_value_t *source_value, zbx_list_item_t *master)
 {
 	const char			*__function_name = "preprocessor_enqueue_dependent";
 	int				i;
@@ -675,7 +668,7 @@ static void	preprocessor_enqueue_dependent(zbx_preprocessing_manager_t *manager,
 			{
 				preprocessor_copy_value(&value, source_value);
 				value.itemid = item->dep_itemids[i];
-				preprocessor_enqueue(manager, &value, master, priority);
+				preprocessor_enqueue(manager, &value, master);
 			}
 
 			preprocessor_assign_tasks(manager);
@@ -709,7 +702,7 @@ static void	preprocessor_add_request(zbx_preprocessing_manager_t *manager, zbx_i
 	while (offset < message->size)
 	{
 		offset += zbx_preprocessor_unpack_value(&value, message->data + offset);
-		preprocessor_enqueue(manager, &value, NULL, ZBX_PREPROC_PRIORITY_NONE);
+		preprocessor_enqueue(manager, &value, NULL);
 	}
 
 	preprocessor_assign_tasks(manager);
@@ -884,7 +877,7 @@ static void	preprocessor_add_result(zbx_preprocessing_manager_t *manager, zbx_ip
 	}
 
 	if (FAIL != preprocessor_set_variant_result(request, &value, error))
-		preprocessor_enqueue_dependent(manager, &request->value, worker->queue_item, request->priority);
+		preprocessor_enqueue_dependent(manager, &request->value, worker->queue_item);
 
 	worker->queue_item = NULL;
 	zbx_variant_clear(&value);
