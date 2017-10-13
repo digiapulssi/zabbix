@@ -447,7 +447,6 @@ static int	filter_evaluate(const lld_filter_t *filter, const struct zbx_json_par
  *                                                                            *
  * Parameters: filter     - [IN] the lld filter                               *
  *             jp_row     - [IN] the lld data row                             *
- *             error      - [OUT] the error description                       *
  *                                                                            *
  ******************************************************************************/
 static void	check_usable_data_for_filter(lld_filter_t *filter, const struct zbx_json_parse *jp_row)
