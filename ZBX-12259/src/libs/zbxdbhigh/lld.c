@@ -636,8 +636,6 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 		goto clean;
 	}
 
-	zabbix_log(LOG_LEVEL_DEBUG, "LLD after item update error: %s", error);
-
 	lld_item_links_sort(&lld_rows);
 
 	if (SUCCEED != lld_update_triggers(hostid, lld_ruleid, &lld_rows, &error))
