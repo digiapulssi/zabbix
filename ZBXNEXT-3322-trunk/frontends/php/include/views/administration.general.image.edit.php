@@ -19,7 +19,7 @@
 **/
 
 
-$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php'));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php', 'administration.general'));
 
 $imageForm = (new CForm('post', null, 'multipart/form-data'))
 	->addVar('form', $this->data['form']);

@@ -19,7 +19,7 @@
 **/
 
 
-$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('slides.php')))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('slides.php', 'monitoring.screens')))
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addItem(new CSubmit('form', _('Create slide show')))

@@ -21,7 +21,7 @@
 
 require_once dirname(__FILE__).'/js/adm.regexprs.edit.js.php';
 
-$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.regexps.php'));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.regexps.php', 'administration.general'));
 
 $form = (new CForm())
 	->setId('zabbixRegExpForm')

@@ -37,7 +37,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = [
 	'groupid'     => [T_ZBX_INT, O_OPT, P_SYS, DB_ID,     null],
 	'view_style'  => [T_ZBX_INT, O_OPT, P_SYS, IN('0,1'), null],
-	'type'        => [T_ZBX_INT, O_OPT, P_SYS, IN('0,1'), null],
+	'type'        => [T_ZBX_INT, O_OPT, P_SYS, IN([ZBX_OVERVIEW_TRIGGERS, ZBX_OVERVIEW_DATA]), null],
 	'fullscreen'  => [T_ZBX_INT, O_OPT, P_SYS, IN('0,1'), null],
 	// filter
 	'filter_rst' =>			[T_ZBX_STR, O_OPT, P_SYS,	null,		null],

@@ -19,7 +19,7 @@
 **/
 
 
-$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.workingtime.php'));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.workingtime.php', 'administration.general'));
 
 $workingTimeView = (new CTabView())
 	->addTab('workingTime', _('Working time'),

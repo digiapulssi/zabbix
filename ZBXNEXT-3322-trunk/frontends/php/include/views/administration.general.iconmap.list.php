@@ -19,7 +19,7 @@
 **/
 
 
-$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.iconmapping.php')))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.iconmapping.php', 'administration.general')))
 	->setControls((new CForm())
 		->cleanItems()
 		->addItem((new CList())

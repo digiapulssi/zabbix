@@ -19,7 +19,7 @@
 **/
 
 
-$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php')))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php', 'administration.general')))
 	->setControls((new CForm())
 		->cleanItems()
 		->addItem(

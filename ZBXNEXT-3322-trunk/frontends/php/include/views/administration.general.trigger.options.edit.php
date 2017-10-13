@@ -21,7 +21,9 @@
 
 include('include/views/js/administration.general.trigger.options.js.php');
 
-$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.triggerdisplayoptions.php'));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.triggerdisplayoptions.php',
+	'administration.general'
+));
 
 $triggerDOFormList = (new CFormList())
 	->addRow(_('Unacknowledged PROBLEM events'), [

@@ -819,23 +819,21 @@ function makePageFooter($with_version = true)
  * Get CHeaderMenuWidget header menu items array.
  *
  * @param string $selected_url      URL of selected item, value will be used to determine retun items.
+ * @param string $page              Page value key for desired menu.
  *
  * @return array
  */
-function getHeaderWidgetHeaderMenuItems($selected_url) {
+function getHeaderWidgetHeaderMenuItems($url, $page) {
 	$menu_items_map = [
-		// Location "Monitoring > Screens".
-		[
+		'monitoring.screens' => [
 			['title' => _('Screens'), 'url' => 'screens.php'],
 			['title' => _('Slide shows'), 'url' => 'slides.php']
 		],
-		// Location "Monitoring > Overview".
-		[
+		'monitoring.overview' => [
 			['title' => _('Overview triggers'), 'url' => 'overview.php?type='.ZBX_OVERVIEW_TRIGGERS],
 			['title' => _('Overview data'), 'url' => 'overview.php?type='.ZBX_OVERVIEW_DATA]
 		],
-		// Location "Configuration > Actions".
-		[
+		'configuration.action' => [
 			['title' => _('Trigger actions'), 'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_TRIGGERS],
 			['title' => _('Discovery actions'), 'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_DISCOVERY],
 			['title' => _('Auto registration actions'),
@@ -843,8 +841,7 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 			],
 			['title' => _('Internal actions'), 'url' => 'actionconf.php?eventsource='.EVENT_SOURCE_INTERNAL]
 		],
-		// Location "Administration > General".
-		[
+		'administration.general' => [
 			['title' => _('GUI'), 'url' => 'adm.gui.php'],
 			['title' => _('Housekeeping'), 'url' => 'adm.housekeeper.php'],
 			['title' => _('Images'), 'url' => 'adm.images.php'],
@@ -857,8 +854,7 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 			['title' => _('Trigger displaying options'), 'url' => 'adm.triggerdisplayoptions.php'],
 			['title' => _('Other configuration parameters'), 'menu_name' => _('Other'), 'url' => 'adm.other.php']
 		],
-		// Location "Administration > Queue".
-		[
+		'administration.queue' => [
 			['title' => _('Queue overview'), 'url' => 'queue.php?config='.QUEUE_OVERVIEW],
 			['title' => _('Queue overview by proxy'), 'url' => 'queue.php?config='.QUEUE_OVERVIEW_BY_PROXY],
 			['title' => _('Queue details'), 'url' => 'queue.php?config='.QUEUE_DETAILS]
@@ -866,14 +862,10 @@ function getHeaderWidgetHeaderMenuItems($selected_url) {
 	];
 	$menu_items = [];
 
-	foreach ($menu_items_map as $menu_items_array) {
-		if (in_array($selected_url, zbx_objectValues($menu_items_array, 'url'))) {
-			foreach ($menu_items_array as $menu_item) {
-				$menu_item['selected'] = ($selected_url === $menu_item['url']);
-				$menu_items[] = $menu_item;
-			}
-
-			break;
+	if (array_key_exists($page, $menu_items_map)) {
+		foreach ($menu_items_map[$page] as $menu_item) {
+			$menu_item['selected'] = ($url === $menu_item['url']);
+			$menu_items[] = $menu_item;
 		}
 	}
 

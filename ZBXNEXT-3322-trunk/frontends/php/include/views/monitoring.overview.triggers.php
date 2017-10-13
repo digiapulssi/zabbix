@@ -73,7 +73,7 @@ $help->setHint($help_hint);
 
 $page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('type', (int)$data['type'])->getUrl();
 
-$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url)))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url, 'monitoring.overview')))
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addItem((new CList())

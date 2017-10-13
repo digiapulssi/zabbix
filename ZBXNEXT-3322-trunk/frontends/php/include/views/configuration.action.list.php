@@ -22,7 +22,7 @@
 $page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('eventsource', (int)$data['eventsource'])
 	->getUrl();
 
-$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url)))
+$widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url, 'configuration.action')))
 	->setControls((new CForm('get'))
 		->cleanItems()
 		->addVar('eventsource', $data['eventsource'])

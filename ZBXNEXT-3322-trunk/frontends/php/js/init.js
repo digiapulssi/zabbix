@@ -54,7 +54,7 @@ jQuery(function($) {
 			handler = function () {
 				$(document).off('click', handler);
 				menu.hide();
-			}
+			};
 
 		menu.toggle();
 

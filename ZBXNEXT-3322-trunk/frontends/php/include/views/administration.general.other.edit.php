@@ -19,7 +19,7 @@
 **/
 
 
-$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.other.php'));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.other.php', 'administration.general'));
 
 $otherTab = new CFormList();
 

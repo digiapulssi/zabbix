@@ -64,7 +64,7 @@ if ($zabbixServer->getError()) {
 
 $page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('config', (int)$config)->getUrl();
 
-$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url));
+$widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url, 'administration.queue'));
 
 $table = new CTableInfo();
 

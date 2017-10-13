@@ -18,8 +18,9 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 /**
- * C header menu widget
+ * Header menu widget with navigation drop down list.
  *
  */
 class CHeaderMenuWidget extends CWidget
@@ -46,8 +47,7 @@ class CHeaderMenuWidget extends CWidget
 	 * @param string  $menu_map[]['menu_name'] (optional) menu item title (shown only in dropdown menu)
 	 *
 	 */
-	public function __construct(array $menu_map)
-	{
+	public function __construct(array $menu_map) {
 		$this->menu_map = $menu_map;
 		$this->header_menuid = uniqid(ZBX_STYLE_HEADER_DROPDOWN_LIST);
 	}
@@ -85,8 +85,7 @@ class CHeaderMenuWidget extends CWidget
 	 *
 	 * @return CDiv
 	 */
-	protected function createTitle()
-	{
+	protected function createTitle() {
 		$list = (new CList())
 			->addClass(ZBX_STYLE_HEADER_DROPDOWN_LIST)
 			->setId($this->header_menuid);
