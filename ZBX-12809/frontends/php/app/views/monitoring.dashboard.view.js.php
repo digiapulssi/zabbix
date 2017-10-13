@@ -226,7 +226,7 @@
 			}
 		}
 
-		window.dispatchEvent(new Event('dialogResize'));
+		window.dispatchEvent(new Event('overlayDialogResize'));
 	}
 
 	function removeUserGroupShares(usrgrpid) {
