@@ -563,7 +563,7 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 
 	/* Delete the old records from database. Don't remove more than 4 x housekeeping */
 	/* periods worth of data to prevent database stalling.                           */
-	keep_from = now;
+	keep_from = now - *rule->phistory * SEC_PER_DAY;
 	if (keep_from > rule->min_clock)
 	{
 		rule->min_clock = MIN(keep_from, rule->min_clock + HK_MAX_DELETE_PERIODS * hk_period);
