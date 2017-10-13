@@ -185,8 +185,6 @@ int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
  * Purpose: add closing OK event for the specified problem event to an array  *
  *                                                                            *
  * Parameters: eventid  - [IN] the problem eventid                            *
- *             source   - [IN] event source (EVENT_SOURCE_*)                  *
- *             object   - [IN] event object (EVENT_OBJECT_*)                  *
  *             objectid - [IN] trigger, item ... identificator from database, *
  *                             depends on source and object                   *
  *             ts       - [IN] event time                                     *
@@ -198,24 +196,19 @@ int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
  *             trigger_recovery_expression - [IN] trigger recovery expression *
  *             trigger_priority            - [IN] trigger priority            *
  *             trigger_type                - [IN] TRIGGER_TYPE_* defines      *
- *             trigger_tags                - [IN] trigger tags                *
- *             trigger_correlation_mode    - [IN] trigger correlation mode    *
- *             trigger_correlation_tag     - [IN] trigger correlation tag     *
  *                                                                            *
  ******************************************************************************/
-static int	close_event(zbx_uint64_t eventid, unsigned char source, unsigned char object, zbx_uint64_t objectid,
-		const zbx_timespec_t *ts, zbx_uint64_t userid, zbx_uint64_t correlationid, zbx_uint64_t c_eventid,
-		const char *trigger_description, const char *trigger_expression,
-		const char *trigger_recovery_expression, unsigned char trigger_priority, unsigned char trigger_type,
-		const zbx_vector_ptr_t *trigger_tags, unsigned char trigger_correlation_mode,
-		const char *trigger_correlation_tag)
+static int	close_event(zbx_uint64_t eventid, zbx_uint64_t objectid, const zbx_timespec_t *ts, zbx_uint64_t userid,
+		zbx_uint64_t correlationid, zbx_uint64_t c_eventid, const char *trigger_description,
+		const char *trigger_expression, const char *trigger_recovery_expression, unsigned char trigger_priority,
+		unsigned char trigger_type)
 {
 	int			index;
 	zbx_event_recovery_t	recovery_local;
 
-	index = add_event(source, object, objectid, ts, TRIGGER_VALUE_OK, trigger_description, trigger_expression,
-			trigger_recovery_expression, trigger_priority, trigger_type, trigger_tags,
-			trigger_correlation_mode, trigger_correlation_tag);
+	index = add_event(EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, objectid, ts, TRIGGER_VALUE_OK,
+			trigger_description, trigger_expression, trigger_recovery_expression, trigger_priority,
+			trigger_type, NULL, ZBX_TRIGGER_CORRELATION_NONE, "");
 
 	recovery_local.eventid = eventid;
 	recovery_local.objectid = objectid;
@@ -1018,11 +1011,10 @@ static void	correlation_execute_operations(zbx_correlation_t *correlation, DB_EV
 				ts.sec = event->clock;
 				ts.ns = event->ns;
 
-				index = close_event(event->eventid, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER,
-						event->objectid, &ts, 0, correlation->correlationid, event->eventid,
-						event->trigger.description, event->trigger.expression,
+				index = close_event(event->eventid, event->objectid, &ts, 0, correlation->correlationid,
+						event->eventid, event->trigger.description, event->trigger.expression,
 						event->trigger.recovery_expression, event->trigger.priority,
-						event->trigger.type, NULL, ZBX_TRIGGER_CORRELATION_NONE, "");
+						event->trigger.type);
 
 				event->flags |= ZBX_FLAGS_DB_EVENT_NO_ACTION;
 				events[index].flags |= ZBX_FLAGS_DB_EVENT_NO_ACTION;
@@ -1344,11 +1336,9 @@ static void	flush_correlation_queue(zbx_vector_ptr_t *trigger_diff, zbx_vector_u
 			{
 				trigger = &triggers[index];
 
-				close_event(queue->eventid, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER,
-						queue->objectid, &queue->ts, 0, queue->correlationid,
+				close_event(queue->eventid, queue->objectid, &queue->ts, 0, queue->correlationid,
 						queue->c_eventid, trigger->description, trigger->expression_orig,
-						trigger->recovery_expression_orig, trigger->priority, trigger->type,
-						NULL, ZBX_TRIGGER_CORRELATION_NONE, "");
+						trigger->recovery_expression_orig, trigger->priority, trigger->type);
 
 				closed_num++;
 			}
@@ -2228,10 +2218,8 @@ int	zbx_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t
 
 		zbx_timespec(&ts);
 
-		index = close_event(eventid, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, triggerid,
-				&ts, userid, 0, 0, trigger.description, trigger.expression_orig,
-				trigger.recovery_expression_orig, trigger.priority, trigger.type, NULL,
-				ZBX_TRIGGER_CORRELATION_NONE, "");
+		index = close_event(eventid, triggerid, &ts, userid, 0, 0, trigger.description, trigger.expression_orig,
+				trigger.recovery_expression_orig, trigger.priority, trigger.type);
 
 		events[index].eventid = DBget_maxid_num("events", 1);
 
