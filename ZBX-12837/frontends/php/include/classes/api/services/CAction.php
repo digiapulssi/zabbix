@@ -3142,10 +3142,10 @@ class CAction extends CApiService {
 	}
 
 	/**
-	 * Checks if all given media types are valid.
+	 * Checks if the current user has 'read' access to the given media types.
 	 *
 	 * @param array  $mediatypeids  Array of media type ids where key is checked media type id.
-	 * @param string $error         Error message to throw if invalid media type id was supplied.
+	 * @param string $error         Error message to throw if inaccessible media type id was supplied.
 	 *
 	 * @throws APIException if invalid media types given.
 	 */
@@ -3153,8 +3153,7 @@ class CAction extends CApiService {
 		if ($mediatypeids) {
 			$count = API::MediaType()->get([
 				'countOutput' => true,
-				'mediatypeids' => array_keys($mediatypeids),
-				'editable' => true
+				'mediatypeids' => array_keys($mediatypeids)
 			]);
 
 			if ($count != count($mediatypeids)) {
