@@ -225,8 +225,6 @@
 					break;
 			}
 		}
-
-		window.dispatchEvent(new Event('overlayDialogResize'));
 	}
 
 	function removeUserGroupShares(usrgrpid) {
@@ -236,8 +234,6 @@
 		else {
 			jQuery('#user_group_shares_' + usrgrpid).remove();
 		}
-
-		window.dispatchEvent(new Event('overlayDialogResize'));
 	}
 
 	function removeUserShares(userid) {
@@ -247,7 +243,5 @@
 		else {
 			jQuery('#user_shares_' + userid).remove();
 		}
-
-		window.dispatchEvent(new Event('overlayDialogResize'));
 	}
 </script>

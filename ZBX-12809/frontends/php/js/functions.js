@@ -639,12 +639,6 @@ function overlayDialogue(params, defer) {
 		});
 	});
 
-	jQuery(window).on('overlayDialogResize', function() {
-		if (jQuery('#overlay_dialogue').length) {
-			defer.notify();
-		}
-	});
-
 	jQuery(window).resize(function() {
 		if (jQuery('#overlay_dialogue').length) {
 			defer.notify();
