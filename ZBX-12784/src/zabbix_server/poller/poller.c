@@ -24,6 +24,7 @@
 #include "daemon.h"
 #include "zbxserver.h"
 #include "zbxself.h"
+#include "preproc.h"
 #include "../events.h"
 
 #include "poller.h"
@@ -793,6 +794,10 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 
 #undef STAT_INTERVAL

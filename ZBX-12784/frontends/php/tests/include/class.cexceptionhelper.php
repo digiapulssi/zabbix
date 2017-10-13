@@ -1,3 +1,4 @@
+<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -17,17 +18,18 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package com.zabbix.gateway;
+/**
+ * A class that allows changing message of an Exception without recreating it.
+ */
+class CExceptionHelper extends Exception {
 
-class GeneralInformation
-{
-	static final String APPLICATION_NAME = "Zabbix Java Gateway";
-	static final String REVISION_DATE = "11 October 2017";
-	static final String REVISION = "{ZABBIX_REVISION}";
-	static final String VERSION = "3.4.3rc1";
-
-	static void printVersion()
-	{
-		System.out.println(String.format("%s v%s (revision %s) (%s)", APPLICATION_NAME, VERSION, REVISION, REVISION_DATE));
+	/**
+	 * Set exception message.
+	 *
+	 * @param Exception $exception				Exception to be updated.
+	 * @param string    $message				Message to be set.
+	 */
+	public static function setMessage(Exception $exception, $message) {
+		$exception->message = $message;
 	}
 }
