@@ -2182,12 +2182,18 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 		$msg = $okmsg;
 	}
 
-	if (isset(CWebUser::$data['debug_mode'], $ZBX_MESSAGES) && CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_ENABLED
-			&& !ZBX_SHOW_SQL_ERRORS && CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
+	$messages = array();
+	if (isset($ZBX_MESSAGES) && is_array($ZBX_MESSAGES)) {
+		$messages = $ZBX_MESSAGES;
+	}
+	$ZBX_MESSAGES = array();
+
+	if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN && CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_DISABLED
+			&& !ZBX_SHOW_SQL_ERRORS) {
 		$filtered_messages = array();
 		$generic_exists = false;
 
-		foreach ($ZBX_MESSAGES as $message) {
+		foreach ($messages as $message) {
 			if (array_key_exists('sql_error', $message) && $message['sql_error'] === true) {
 				if (!$generic_exists) {
 					$message['message'] = _('SQL error. Please contact Zabbix administrator.');
@@ -2199,7 +2205,7 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 				$filtered_messages[] = $message;
 			}
 		}
-		$ZBX_MESSAGES = $filtered_messages;
+		$messages = $filtered_messages;
 	}
 
 	if (isset($msg)) {
@@ -2362,22 +2368,23 @@ function error($msgs) {
 	}
 }
 
-function sqlError($msgs) {
+/**
+ * Add SQL error message to global messages array.
+ *
+ * @param string $msg		Error message text.
+ */
+function sqlError($msg) {
 	global $ZBX_MESSAGES;
 
 	if (!isset($ZBX_MESSAGES)) {
 		$ZBX_MESSAGES = array();
 	}
 
-	$msgs = zbx_toArray($msgs);
-
-	foreach ($msgs as $msg) {
-		$ZBX_MESSAGES[] = array(
-			'type' => 'error',
-			'message' => $msg,
-			'sql_error' => true
-		);
-	}
+	$ZBX_MESSAGES[] = array(
+		'type' => 'error',
+		'message' => $msg,
+		'sql_error' => true
+	);
 }
 
 function clear_messages($count = null) {
