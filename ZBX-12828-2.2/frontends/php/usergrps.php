@@ -449,6 +449,7 @@ if (isset($_REQUEST['form'])) {
 			whereDbNode('usrgrpid')
 	));
 	order_result($data['usergroups'], 'name');
+	$data['gname_maxlength'] = DB::getFieldMaxLength('usrgrp', 'name');
 
 	// render view
 	$userGroupsView = new CView('administration.usergroups.edit', $data);

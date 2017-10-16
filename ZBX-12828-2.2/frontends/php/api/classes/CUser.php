@@ -323,13 +323,13 @@ class CUser extends CZBXAPI {
 					}
 				}
 
-				if (zbx_strlen($user['alias']) > 64) {
+				if (zbx_strlen($user['alias']) > DB::getFieldMaxLength('users', 'alias')) {
 					self::exception(
 						ZBX_API_ERROR_PARAMETERS,
 						_n(
 							'Maximum alias length is %1$d characters, "%2$s" is %3$d character.',
 							'Maximum alias length is %1$d characters, "%2$s" is %3$d characters.',
-							64,
+							DB::getFieldMaxLength('users', 'alias'),
 							$user['alias'],
 							zbx_strlen($user['alias'])
 						)

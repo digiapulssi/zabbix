@@ -249,7 +249,8 @@ elseif (isset($_REQUEST['save'])) {
 		}
 
 		if ($result) {
-			add_audit($action, AUDIT_RESOURCE_USER, 'User alias ['.$_REQUEST['alias'].'] name ['.$_REQUEST['name'].'] surname ['.$_REQUEST['surname'].']');
+			add_audit($action, AUDIT_RESOURCE_USER, 'User alias ['.getRequest('alias', '').'] name ['.
+				getRequest('name', '').'] surname ['.getRequest('surname', '').']');
 			unset($_REQUEST['form']);
 			clearCookies($result);
 		}
@@ -401,6 +402,11 @@ if (!empty($_REQUEST['form'])) {
 	$data['userid'] = $userId;
 	$data['form'] = get_request('form');
 	$data['form_refresh'] = get_request('form_refresh', 0);
+	$data['maxlength'] = [
+		'alias' => DB::getFieldMaxLength('users', 'alias'),
+		'name' => DB::getFieldMaxLength('users', 'name'),
+		'surname' => DB::getFieldMaxLength('users', 'surname')
+	];
 
 	// render view
 	$usersView = new CView('administration.users.edit', $data);

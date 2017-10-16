@@ -492,6 +492,8 @@ if (!empty($data['form'])) {
 		}
 	}
 
+	$data['mname_maxlength'] = DB::getFieldMaxLength('maintenances', 'name');
+
 	// render view
 	$maintenanceView = new CView('configuration.maintenance.edit', $data);
 	$maintenanceView->render();

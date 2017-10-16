@@ -260,6 +260,16 @@ class DB {
 	}
 
 	/**
+	 * Get table field max length value.
+	 *
+	 * @param string $table_name    Table name.
+	 * @param string $field_name    Field name.
+	 */
+	public static function getFieldMaxLength($table_name, $field_name) {
+		return self::$schema[$table_name]['fields'][$field_name]['length'];
+	}
+
+	/**
 	 * Returns true if the table $tableName has the $fieldName field.
 	 *
 	 * @static
