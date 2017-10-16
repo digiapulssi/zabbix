@@ -144,7 +144,7 @@ class CMapHelper {
 		processAreasCoordinates($sysmap, $areas, $map_info);
 		add_elementNames($sysmap['selements']);
 
-		foreach ($sysmap['selements'] as $id => $element) {
+		foreach ($sysmap['selements'] as $id => &$element) {
 			switch ($element['elementtype']) {
 				case SYSMAP_ELEMENT_TYPE_IMAGE:
 					$map_info[$id]['name'] = _('Image');
@@ -186,6 +186,7 @@ class CMapHelper {
 					break;
 			}
 		}
+		unset($element);
 
 		$labels = getMapLabels($sysmap, $map_info, true);
 		$highlights = getMapHighligts($sysmap, $map_info);
