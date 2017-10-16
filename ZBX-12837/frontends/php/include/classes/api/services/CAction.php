@@ -1888,7 +1888,7 @@ class CAction extends CApiService {
 			}
 		}
 
-		$this->checkMediatypesPermissions($all_mediatypeids, _s('Incorrect value for field "%1$s": %2$s.', 'mediatypeid',
+		$this->checkMediatypesExists($all_mediatypeids, _s('Incorrect value for field "%1$s": %2$s.', 'mediatypeid',
 			_('No permissions to referred object or it does not exist!')
 		));
 		$this->checkHostGroupsPermissions($all_groupids, _(
@@ -3142,18 +3142,19 @@ class CAction extends CApiService {
 	}
 
 	/**
-	 * Checks if the current user has 'read' access to the given media types.
+	 * Checks if all given media types are valid.
 	 *
 	 * @param array  $mediatypeids  Array of media type ids where key is checked media type id.
-	 * @param string $error         Error message to throw if inaccessible media type id was supplied.
+	 * @param string $error         Error message to throw if invalid media type id was supplied.
 	 *
-	 * @throws APIException if inaccessible media types given.
+	 * @throws APIException if invalid media types given.
 	 */
-	private function checkMediatypesPermissions(array $mediatypeids, $error) {
+	private function checkMediatypesExists(array $mediatypeids, $error) {
 		if ($mediatypeids) {
 			$count = API::MediaType()->get([
 				'countOutput' => true,
-				'mediatypeids' => array_keys($mediatypeids)
+				'mediatypeids' => array_keys($mediatypeids),
+				'editable' => true
 			]);
 
 			if ($count != count($mediatypeids)) {
