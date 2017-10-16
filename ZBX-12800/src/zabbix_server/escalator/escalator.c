@@ -1544,7 +1544,7 @@ static int	check_escalation(const DB_ESCALATION *escalation, const DB_ACTION *ac
 
 	if (0 != skip)
 	{
-		/* dependable trigger in PROBLEM state, process escalation later */
+		/* one of trigger dependencies is in PROBLEM state, process escalation later */
 		ret = ZBX_ESCALATION_SKIP;
 		goto out;
 	}
