@@ -17,17 +17,17 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package com.zabbix.gateway;
+#ifndef ZABBIX_PREPROC_H
+#define ZABBIX_PREPROC_H
 
-class GeneralInformation
-{
-	static final String APPLICATION_NAME = "Zabbix Java Gateway";
-	static final String REVISION_DATE = "11 October 2017";
-	static final String REVISION = "{ZABBIX_REVISION}";
-	static final String VERSION = "3.4.3rc1";
+#include "common.h"
+#include "module.h"
 
-	static void printVersion()
-	{
-		System.out.println(String.format("%s v%s (revision %s) (%s)", APPLICATION_NAME, VERSION, REVISION, REVISION_DATE));
-	}
-}
+/* the following functions are implemened differently for server and proxy */
+
+void	zbx_preprocess_item_value(zbx_uint64_t itemid, unsigned char item_flags, AGENT_RESULT *result,
+		zbx_timespec_t *ts, unsigned char state, char *error);
+void	zbx_preprocessor_flush(void);
+zbx_uint64_t	zbx_preprocessor_get_queue_size(void);
+
+#endif /* ZABBIX_PREPROC_H */

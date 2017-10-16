@@ -144,7 +144,7 @@ class CMapHelper {
 		processAreasCoordinates($sysmap, $areas, $map_info);
 		add_elementNames($sysmap['selements']);
 
-		foreach ($sysmap['selements'] as $id => &$element) {
+		foreach ($sysmap['selements'] as $id => $element) {
 			switch ($element['elementtype']) {
 				case SYSMAP_ELEMENT_TYPE_IMAGE:
 					$map_info[$id]['name'] = _('Image');
@@ -161,28 +161,21 @@ class CMapHelper {
 						$map_info[$id]['name'] = '';
 					}
 
-					// Order triggers by priority.
-					if (array_key_exists('elements', $element) && is_array($element['elements'])) {
-						CArrayHelper::sort($element['elements'], [
-							['field' => 'priority', 'order' => ZBX_SORT_DOWN]
-						]);
+					// Move the trigger with problem and highiest priority to the beginning of the trigger list.
+					if (array_key_exists('triggerid', $map_info[$id])) {
+						$trigger_pos = 0;
 
-						// Move the trigger with problem and highiest priority to the beginning of the trigger list.
-						if (array_key_exists('triggerid', $map_info[$id])) {
-							$trigger_pos = 0;
-
-							foreach ($element['elements'] as $i => $trigger) {
-								if ($trigger['triggerid'] == $map_info[$id]['triggerid']) {
-									$trigger_pos = $i;
-									break;
-								}
+						foreach ($element['elements'] as $i => $trigger) {
+							if ($trigger['triggerid'] == $map_info[$id]['triggerid']) {
+								$trigger_pos = $i;
+								break;
 							}
+						}
 
-							if ($trigger_pos > 0) {
-								$trigger = $element['elements'][$trigger_pos];
-								unset($element['elements'][$trigger_pos]);
-								array_unshift($element['elements'], $trigger);
-							}
+						if ($trigger_pos > 0) {
+							$trigger = $element['elements'][$trigger_pos];
+							unset($element['elements'][$trigger_pos]);
+							array_unshift($element['elements'], $trigger);
 						}
 					}
 
@@ -193,7 +186,6 @@ class CMapHelper {
 					break;
 			}
 		}
-		unset($element);
 
 		$labels = getMapLabels($sysmap, $map_info, true);
 		$highlights = getMapHighligts($sysmap, $map_info);
