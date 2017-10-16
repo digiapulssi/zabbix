@@ -88,11 +88,11 @@ if ($data['auth_type'] == ZBX_AUTH_INTERNAL) {
 	if (!$this->data['userid'] || isset($this->data['change_password'])) {
 		$userFormList->addRow(
 			_('Password'),
-			new CPassBox('password1', $this->data['password1'], ZBX_TEXTBOX_SMALL_SIZE)
+			new CPassBox('password1', $this->data['password1'], ZBX_TEXTBOX_SMALL_SIZE, $data['maxlength']['passwd'])
 		);
 		$userFormList->addRow(
 			_('Password (once again)'),
-			new CPassBox('password2', $this->data['password2'], ZBX_TEXTBOX_SMALL_SIZE)
+			new CPassBox('password2', $this->data['password2'], ZBX_TEXTBOX_SMALL_SIZE, $data['maxlength']['passwd'])
 		);
 
 		if (isset($this->data['change_password'])) {

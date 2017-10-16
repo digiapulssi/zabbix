@@ -405,7 +405,8 @@ if (!empty($_REQUEST['form'])) {
 	$data['maxlength'] = [
 		'alias' => DB::getFieldMaxLength('users', 'alias'),
 		'name' => DB::getFieldMaxLength('users', 'name'),
-		'surname' => DB::getFieldMaxLength('users', 'surname')
+		'surname' => DB::getFieldMaxLength('users', 'surname'),
+		'passwd' => DB::getFieldMaxLength('users', 'passwd')
 	];
 
 	// render view
