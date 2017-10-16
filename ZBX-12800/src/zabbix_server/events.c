@@ -2129,9 +2129,9 @@ int	process_events(zbx_vector_ptr_t *trigger_diff, zbx_vector_uint64_t *triggeri
 
 			event->eventid = eventid++;
 
-			if (EVENT_SOURCE_TRIGGERS ==event->source)
+			if (EVENT_SOURCE_TRIGGERS == event->source)
 			{
-				zbx_vector_ptr_append(&trigger_events, &events[i]);
+				zbx_vector_ptr_append(&trigger_events, event);
 				continue;
 			}
 

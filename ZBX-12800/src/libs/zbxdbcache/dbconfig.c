@@ -10171,7 +10171,7 @@ void	zbx_dc_get_nested_hostgroupids_by_names(char **names, int names_num, zbx_ve
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_dc_get_trigger_dependencies_rec                              *
+ * Function: zbx_dc_get_trigger_dependencies                                  *
  *                                                                            *
  * Purpose: checks/returns trigger dependencies for a set of triggers         *
  *                                                                            *
