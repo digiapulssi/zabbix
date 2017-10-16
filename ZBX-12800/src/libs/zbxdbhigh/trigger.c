@@ -232,7 +232,7 @@ void	zbx_trigger_diff_free(zbx_trigger_diff_t *diff)
 
 /******************************************************************************
  *                                                                            *
- * Comments: helper function for process_triggers()                           *
+ * Comments: helper function for zbx_process_triggers()                       *
  *                                                                            *
  ******************************************************************************/
 static int	zbx_trigger_topoindex_compare(const void *d1, const void *d2)
@@ -265,9 +265,9 @@ static int	zbx_trigger_topoindex_compare(const void *d1, const void *d2)
  ******************************************************************************/
 void	zbx_process_triggers(zbx_vector_ptr_t *triggers, zbx_vector_ptr_t *trigger_diff)
 {
-	const char		*__function_name = "zbx_process_triggers";
+	const char	*__function_name = "zbx_process_triggers";
 
-	int			i;
+	int		i;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() values_num:%d", __function_name, triggers->values_num);
 
@@ -280,7 +280,6 @@ void	zbx_process_triggers(zbx_vector_ptr_t *triggers, zbx_vector_ptr_t *trigger_
 		zbx_process_trigger(triggers->values[i], trigger_diff);
 
 	zbx_vector_ptr_sort(trigger_diff, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
-
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
