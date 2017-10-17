@@ -237,11 +237,8 @@ void	zbx_trigger_diff_free(zbx_trigger_diff_t *diff)
  ******************************************************************************/
 static int	zbx_trigger_topoindex_compare(const void *d1, const void *d2)
 {
-	const zbx_ptr_pair_t	*p1 = (const zbx_ptr_pair_t *)d1;
-	const zbx_ptr_pair_t	*p2 = (const zbx_ptr_pair_t *)d2;
-
-	const DC_TRIGGER	*t1 = (const DC_TRIGGER *)p1->first;
-	const DC_TRIGGER	*t2 = (const DC_TRIGGER *)p2->first;
+	const DC_TRIGGER	*t1 = *(const DC_TRIGGER **)d1;
+	const DC_TRIGGER	*t2 = *(const DC_TRIGGER **)d2;
 
 	ZBX_RETURN_IF_NOT_EQUAL(t1->topoindex, t2->topoindex);
 
