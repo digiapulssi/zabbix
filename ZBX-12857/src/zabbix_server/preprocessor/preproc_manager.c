@@ -45,7 +45,7 @@ typedef enum
 	REQUEST_STATE_QUEUED		= 0,		/* requires preprocessing */
 	REQUEST_STATE_PROCESSING	= 1,		/* is being preprocessed  */
 	REQUEST_STATE_DONE		= 2,		/* value is set, waiting for flush */
-	REQUEST_STATE_PENDING		= 3             /* value requires preprocessing, */
+	REQUEST_STATE_PENDING		= 3		/* value requires preprocessing, */
 							/* but is waiting on other request to complete */
 }
 zbx_preprocessing_states_t;
@@ -346,6 +346,8 @@ static void	preprocessor_assign_tasks(zbx_preprocessing_manager_t *manager)
  *                                                                            *
  * Purpose: frees resources allocated by preprocessor item value              *
  *                                                                            *
+ * Parameters: value - [IN] value to be freed                                 *
+ *                                                                            *
  ******************************************************************************/
 static void	preproc_item_value_clear(zbx_preproc_item_value_t *value)
 {
@@ -378,7 +380,7 @@ static void	preprocessor_free_request(zbx_preprocessing_request_t *request)
  *                                                                            *
  * Purpose: add new value to the local history cache                          *
  *                                                                            *
- * Parameters: request - [IN] request to be added                             *
+ * Parameters: value - [IN] value to be added                                 *
  *                                                                            *
  ******************************************************************************/
 static void	preprocessor_flush_value(zbx_preproc_item_value_t *value)
@@ -536,7 +538,7 @@ static void	preprocessor_copy_value(zbx_preproc_item_value_t *target, zbx_prepro
  * Parameters: manage   - [IN] preprocessing manager                          *
  *             value    - [IN] item value                                     *
  *             master   - [IN] request should be enqueued after this item     *
- *                            (NULL for the end of the queue)                 *
+ *                             (NULL for the end of the queue)                *
  *                                                                            *
  ******************************************************************************/
 static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_preproc_item_value_t *value,
@@ -601,13 +603,13 @@ static void	preprocessor_enqueue(zbx_preprocessing_manager_t *manager, zbx_prepr
 	{
 		if (SUCCEED == zbx_list_iterator_isset(&manager->priority_tail))
 		{
-			/* no internal items in queue, insert at the beginning */
+			/* insert after the last internal item */
 			zbx_list_insert_after(&manager->queue, manager->priority_tail.current, request, &enqueued_at);
 			zbx_list_iterator_update(&manager->priority_tail);
 		}
 		else
 		{
-			/* insert after the last internal item */
+			/* no internal items in queue, insert at the beginning */
 			zbx_list_prepend(&manager->queue, request, &enqueued_at);
 			zbx_list_iterator_init(&manager->queue, &manager->priority_tail);
 		}
@@ -642,10 +644,10 @@ out:
  *                                                                            *
  * Purpose: enqueue dependent items (if any)                                  *
  *                                                                            *
- * Parameters: manager  - [IN] preprocessing manager                          *
- *             value    - [IN] master item value                              *
- *             master   - [IN] dependent item should be enqueued after this   *
- *                            item                                            *
+ * Parameters: manager      - [IN] preprocessing manager                      *
+ *             source_value - [IN] master item value                          *
+ *             master       - [IN] dependent item should be enqueued after    *
+ *                                 this item                                  *
  *                                                                            *
  ******************************************************************************/
 static void	preprocessor_enqueue_dependent(zbx_preprocessing_manager_t *manager,
@@ -928,6 +930,7 @@ static void	preprocessor_init_manager(zbx_preprocessing_manager_t *manager)
  *                                                                            *
  * Parameters: manager - [IN] the manager                                     *
  *             client  - [IN] the connected preprocessing worker              *
+ *             message - [IN] message recieved by preprocessing manager       *
  *                                                                            *
  ******************************************************************************/
 static void preprocessor_register_worker(zbx_preprocessing_manager_t *manager, zbx_ipc_client_t *client,

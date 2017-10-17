@@ -28,7 +28,6 @@
  * Purpose: create singly linked list                                         *
  *                                                                            *
  * Parameters: list - [IN] the list                                           *
- *             size - [IN] size of an item value                              *
  *                                                                            *
  ******************************************************************************/
 void	zbx_list_create(zbx_list_t *queue)
@@ -55,7 +54,7 @@ void	zbx_list_destroy(zbx_list_t *list)
  *                                                                            *
  * Function: list_create_item                                                 *
  *                                                                            *
- * Purpose: allocate memory and copy data for a new list item                 *
+ * Purpose: allocate memory and initialize a new list item                    *
  *                                                                            *
  * Parameters: list     - [IN] the list                                       *
  *             value    - [IN] the data to be stored                          *
@@ -286,9 +285,6 @@ int	zbx_list_iterator_peek(const zbx_list_iterator_t *iterator, void **value)
  *                                                                            *
  * Parameters: iterator - [IN]  list iterator                                 *
  *                                                                            *
- * Return value: SUCCEED is returned if item exists, otherwise, FAIL is       *
- *               returned.                                                    *
- *                                                                            *
  ******************************************************************************/
 void	zbx_list_iterator_clear(zbx_list_iterator_t *iterator)
 {
@@ -322,7 +318,7 @@ int	zbx_list_iterator_equal(const zbx_list_iterator_t *iterator1, const zbx_list
  *                                                                            *
  * Purpose: checks if the iterator points at some list item                   *
  *                                                                            *
- * Parameters: iterator - [IN]  list iterator                                 *
+ * Parameters: iterator - [IN] list iterator                                  *
  *                                                                            *
  * Return value: SUCCEED is returned if iterator is set, FAIL otherwise.      *
  *                                                                            *
@@ -338,7 +334,7 @@ int	zbx_list_iterator_isset(const zbx_list_iterator_t *iterator)
  *                                                                            *
  * Purpose: updates iterator                                                  *
  *                                                                            *
- * Parameters: iterator - [IN]  list iterator                                 *
+ * Parameters: iterator - [IN] list iterator                                  *
  *                                                                            *
  * Comments: This function must be used after an item has been inserted in    *
  *           list during iteration process.                                   *
