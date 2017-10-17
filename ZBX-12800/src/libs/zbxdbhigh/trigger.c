@@ -45,7 +45,7 @@
  * Return value: SUCCEED - trigger processed successfully                     *
  *               FAIL    - no changes                                         *
  *                                                                            *
- * Comments: do not process if there are dependencies with value PROBLEM      *
+ * Comments: Trigger dependency checks will be done during event processing.  *
  *                                                                            *
  * Event generation depending on trigger value/state changes:                 *
  *                                                                            *
