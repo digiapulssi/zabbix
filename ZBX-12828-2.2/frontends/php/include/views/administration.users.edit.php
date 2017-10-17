@@ -47,16 +47,16 @@ if (isset($_REQUEST['userid'])) {
 $userFormList = new CFormList('userFormList');
 
 if (!$data['is_profile']) {
-	$nameTextBox = new CTextBox('alias', $this->data['alias'], ZBX_TEXTBOX_STANDARD_SIZE, 'no',
+	$nameTextBox = new CTextBox('alias', $this->data['alias'], ZBX_TEXTBOX_STANDARD_SIZE, false,
 		$data['maxlength']['alias']
 	);
 	$nameTextBox->attr('autofocus', 'autofocus');
 	$userFormList->addRow(_('Alias'), $nameTextBox);
-	$userFormList->addRow(_('Name'), new CTextBox('name', $this->data['name'], ZBX_TEXTBOX_STANDARD_SIZE, 'no',
+	$userFormList->addRow(_('Name'), new CTextBox('name', $this->data['name'], ZBX_TEXTBOX_STANDARD_SIZE, false,
 		$data['maxlength']['name']
 	));
-	$userFormList->addRow(_('Surname'), new CTextBox('surname', $this->data['surname'], ZBX_TEXTBOX_STANDARD_SIZE, 'no',
-		$data['maxlength']['surname']
+	$userFormList->addRow(_('Surname'), new CTextBox('surname', $this->data['surname'], ZBX_TEXTBOX_STANDARD_SIZE,
+		false, $data['maxlength']['surname']
 	));
 }
 
@@ -88,11 +88,11 @@ if ($data['auth_type'] == ZBX_AUTH_INTERNAL) {
 	if (!$this->data['userid'] || isset($this->data['change_password'])) {
 		$userFormList->addRow(
 			_('Password'),
-			new CPassBox('password1', $this->data['password1'], ZBX_TEXTBOX_SMALL_SIZE, $data['maxlength']['passwd'])
+			new CPassBox('password1', $this->data['password1'], ZBX_TEXTBOX_SMALL_SIZE)
 		);
 		$userFormList->addRow(
 			_('Password (once again)'),
-			new CPassBox('password2', $this->data['password2'], ZBX_TEXTBOX_SMALL_SIZE, $data['maxlength']['passwd'])
+			new CPassBox('password2', $this->data['password2'], ZBX_TEXTBOX_SMALL_SIZE)
 		);
 
 		if (isset($this->data['change_password'])) {

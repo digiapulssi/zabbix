@@ -34,7 +34,7 @@ if (isset($this->data['maintenanceid'])) {
  * Maintenance tab
  */
 $maintenanceFormList = new CFormList('maintenanceFormList');
-$nameTextBox = new CTextBox('mname', $this->data['mname'], ZBX_TEXTBOX_STANDARD_SIZE, 'no', $data['mname_maxlength']);
+$nameTextBox = new CTextBox('mname', $this->data['mname'], ZBX_TEXTBOX_STANDARD_SIZE, false, $data['mname_maxlength']);
 $nameTextBox->attr('autofocus', 'autofocus');
 $maintenanceFormList->addRow(_('Name'), $nameTextBox);
 $typeComboBox = new CComboBox('maintenance_type', $this->data['maintenance_type']);

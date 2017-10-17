@@ -36,7 +36,7 @@ if (isset($this->data['sysmap']['sysmapid'])) {
 // create sysmap form list
 $sysmapList = new CFormList('sysmaplist');
 
-$nameTextBox = new CTextBox('name', $this->data['sysmap']['name'], ZBX_TEXTBOX_STANDARD_SIZE, 'no',
+$nameTextBox = new CTextBox('name', $this->data['sysmap']['name'], ZBX_TEXTBOX_STANDARD_SIZE, false,
 	$data['name_maxlength']
 );
 $nameTextBox->attr('autofocus', 'autofocus');
