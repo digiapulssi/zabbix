@@ -41,7 +41,6 @@ typedef struct
 	zbx_vector_ptr_t	conditions;
 	char			*expression;
 	int			evaltype;
-	char			*error;
 }
 lld_filter_t;
 
@@ -111,7 +110,6 @@ static void	lld_filter_init(lld_filter_t *filter)
 	zbx_vector_ptr_create(&filter->conditions);
 	filter->expression = NULL;
 	filter->evaltype = CONDITION_EVAL_TYPE_AND_OR;
-	filter->error = NULL;
 }
 
 /******************************************************************************
@@ -127,7 +125,6 @@ static void	lld_filter_clean(lld_filter_t *filter)
 {
 	zbx_free(filter->expression);
 	lld_conditions_free(&filter->conditions);
-	zbx_free(filter->error);
 }
 
 /******************************************************************************
@@ -441,17 +438,21 @@ static int	filter_evaluate(const lld_filter_t *filter, const struct zbx_json_par
 
 /******************************************************************************
  *                                                                            *
- * Function: check_usable_data_for_filter                                     *
+ * Function: lld_check_received_data_for_filter                               *
  *                                                                            *
- * Purpose: check if the lld data contains a value for macro used in filter   *
+ * Purpose: Check if the LLD data contains a values for macros used in filter.*
+ *          Create and informative warning for every macro that has not       *
+ *          received any value.                                               *
  *                                                                            *
  * Parameters: filter     - [IN] the lld filter                               *
  *             jp_row     - [IN] the lld data row                             *
+ *             info       - [OUT] the warning description                     *
  *                                                                            *
  ******************************************************************************/
-static void	check_usable_data_for_filter(lld_filter_t *filter, const struct zbx_json_parse *jp_row)
+static void	lld_check_received_data_for_filter(lld_filter_t *filter, const struct zbx_json_parse *jp_row,
+			char **info)
 {
-	int		i;
+	int	i;
 
 	for (i = 0; i < filter->conditions.values_num; i++)
 	{
@@ -459,17 +460,15 @@ static void	check_usable_data_for_filter(lld_filter_t *filter, const struct zbx_
 
 		if (NULL == zbx_json_pair_by_name(jp_row, condition->macro))
 		{
-			if (NULL == filter->error)
-				filter->error = zbx_strdup(filter->error, "");
-
-			filter->error = zbx_strdcatf(filter->error,
+			*info = zbx_strdcatf(*info,
 					"Cannot accurately apply filter: no value received for macro \"%s\".\n",
 					condition->macro);
 		}
 	}
 }
 
-static int	lld_rows_get(const char *value, lld_filter_t *filter, zbx_vector_ptr_t *lld_rows, char **error)
+static int	lld_rows_get(const char *value, lld_filter_t *filter, zbx_vector_ptr_t *lld_rows, char **error,
+			char **info)
 {
 	const char		*__function_name = "lld_rows_get";
 
@@ -505,7 +504,7 @@ static int	lld_rows_get(const char *value, lld_filter_t *filter, zbx_vector_ptr_
 		if (FAIL == zbx_json_brackets_open(p, &jp_row))
 			continue;
 
-		check_usable_data_for_filter(filter, &jp_row);
+		lld_check_received_data_for_filter(filter, &jp_row, info);
 
 		if (SUCCEED != filter_evaluate(filter, &jp_row))
 			continue;
@@ -553,7 +552,7 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 	DB_RESULT		result;
 	DB_ROW			row;
 	zbx_uint64_t		hostid;
-	char			*discovery_key = NULL, *error = NULL, *db_error = NULL, *error_esc;
+	char			*discovery_key = NULL, *error = NULL, *db_error = NULL, *error_esc, *info = NULL;
 	unsigned char		state;
 	unsigned short		lifetime;
 	zbx_vector_ptr_t	lld_rows;
@@ -618,13 +617,10 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 	if (SUCCEED != lld_filter_load(&filter, lld_ruleid, &error))
 		goto error;
 
-	if (SUCCEED != lld_rows_get(value, &filter, &lld_rows, &error))
+	if (SUCCEED != lld_rows_get(value, &filter, &lld_rows, &error, &info))
 		goto error;
 
-	if (NULL == filter.error)
-		error = zbx_strdup(error, "");
-	else
-		error = zbx_strdup(error, filter.error);
+	error = zbx_strdup(error, "");
 
 	now = time(NULL);
 
@@ -664,6 +660,10 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%sstate=%d", sql_start, ITEM_STATE_NORMAL);
 		sql_start = sql_continue;
 	}
+
+	/* add informative warning to the error message about lack of data for macros used in filter */
+	if (NULL != info)
+		error = zbx_strdcat(error, info);
 error:
 	if (NULL != error && 0 != strcmp(error, db_error))
 	{
@@ -692,6 +692,7 @@ clean:
 	zbx_free(db_error);
 	zbx_free(discovery_key);
 	zbx_free(sql);
+	zbx_free(info);
 
 	lld_filter_clean(&filter);
 
