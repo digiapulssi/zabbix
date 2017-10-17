@@ -441,7 +441,7 @@ static int	filter_evaluate(const lld_filter_t *filter, const struct zbx_json_par
  * Function: lld_check_received_data_for_filter                               *
  *                                                                            *
  * Purpose: Check if the LLD data contains a values for macros used in filter.*
- *          Create and informative warning for every macro that has not       *
+ *          Create an informative warning for every macro that has not        *
  *          received any value.                                               *
  *                                                                            *
  * Parameters: filter     - [IN] the lld filter                               *
@@ -467,8 +467,8 @@ static void	lld_check_received_data_for_filter(lld_filter_t *filter, const struc
 	}
 }
 
-static int	lld_rows_get(const char *value, lld_filter_t *filter, zbx_vector_ptr_t *lld_rows, char **error,
-			char **info)
+static int	lld_rows_get(const char *value, lld_filter_t *filter, zbx_vector_ptr_t *lld_rows, char **info,
+		char **error)
 {
 	const char		*__function_name = "lld_rows_get";
 
@@ -617,7 +617,7 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 	if (SUCCEED != lld_filter_load(&filter, lld_ruleid, &error))
 		goto error;
 
-	if (SUCCEED != lld_rows_get(value, &filter, &lld_rows, &error, &info))
+	if (SUCCEED != lld_rows_get(value, &filter, &lld_rows, &info, &error))
 		goto error;
 
 	error = zbx_strdup(error, "");
@@ -688,11 +688,11 @@ error:
 clean:
 	DCconfig_unlock_lld_rule(lld_ruleid);
 
+	zbx_free(info);
 	zbx_free(error);
 	zbx_free(db_error);
 	zbx_free(discovery_key);
 	zbx_free(sql);
-	zbx_free(info);
 
 	lld_filter_clean(&filter);
 
