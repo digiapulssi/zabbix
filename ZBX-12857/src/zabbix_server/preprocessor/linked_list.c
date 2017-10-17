@@ -174,10 +174,11 @@ int	zbx_list_pop(zbx_list_t *list, void **value)
 	if (NULL == list->head)
 		return FAIL;
 
+	head = list->head;
+
 	if (NULL != value)
 		*value = head->data;
 
-	head = list->head;
 	list->head = list->head->next;
 	zbx_free(head);
 
