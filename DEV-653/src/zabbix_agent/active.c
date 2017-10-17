@@ -253,6 +253,8 @@ static void	add_check(const char *key, const char *key_orig, int refresh, zbx_ui
 		metric->flags |= ZBX_METRIC_FLAG_LOG_LOGRT;
 	else if (0 == strncmp(metric->key, "eventlog[", 9))
 		metric->flags |= ZBX_METRIC_FLAG_LOG_EVENTLOG;
+	else if (0 == strncmp(metric->key, "logcpt[", 7))
+		metric->flags |= ZBX_METRIC_FLAG_LOG_LOGCPT;
 
 	zbx_vector_ptr_append(&active_metrics, metric);
 out:
@@ -728,7 +730,7 @@ static int	send_buffer(const char *host, unsigned short port)
 			zbx_json_adduint64(&json, ZBX_PROTO_TAG_STATE, ITEM_STATE_NOTSUPPORTED);
 		if (0 != (ZBX_METRIC_FLAG_LOG & el->flags))
 			zbx_json_adduint64(&json, ZBX_PROTO_TAG_LASTLOGSIZE, el->lastlogsize);
-		if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & el->flags))
+		if (0 != ((ZBX_METRIC_FLAG_LOG_LOGRT | ZBX_METRIC_FLAG_LOG_LOGCPT) & el->flags))
 			zbx_json_adduint64(&json, ZBX_PROTO_TAG_MTIME, el->mtime);
 		if (0 != el->timestamp)
 			zbx_json_adduint64(&json, ZBX_PROTO_TAG_LOGTIMESTAMP, el->timestamp);
@@ -1524,8 +1526,11 @@ static void	process_active_checks(char *server, unsigned short port)
 			ret = FAIL;
 			error = zbx_strdup(error, "Incorrect update interval.");
 		}
-		else if (0 != ((ZBX_METRIC_FLAG_LOG_LOG | ZBX_METRIC_FLAG_LOG_LOGRT) & metric->flags))
+		else if (0 != ((ZBX_METRIC_FLAG_LOG_LOG | ZBX_METRIC_FLAG_LOG_LOGRT | ZBX_METRIC_FLAG_LOG_LOGCPT) &
+				metric->flags))
+		{
 			ret = process_log_check(server, port, metric, &lastlogsize_sent, &mtime_sent, &error);
+		}
 		else if (0 != (ZBX_METRIC_FLAG_LOG_EVENTLOG & metric->flags))
 			ret = process_eventlog_check(server, port, metric, &lastlogsize_sent, &error);
 		else
