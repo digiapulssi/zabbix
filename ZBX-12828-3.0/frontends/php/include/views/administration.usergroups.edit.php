@@ -35,7 +35,7 @@ if (isset($this->data['usrgrpid'])) {
 */
 $userGroupFormList = (new CFormList())
 	->addRow(_('Group name'),
-		(new CTextBox('gname', $this->data['name']))
+		(new CTextBox('gname', $this->data['name'], false, $data['gname_maxlength']))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 			->setAttribute('autofocus', 'autofocus')
 	);

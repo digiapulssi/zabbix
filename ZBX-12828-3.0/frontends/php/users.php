@@ -320,6 +320,11 @@ if (!empty($_REQUEST['form'])) {
 	$data['form'] = getRequest('form');
 	$data['form_refresh'] = getRequest('form_refresh', 0);
 	$data['autologout'] = getRequest('autologout');
+	$data['maxlength'] = [
+		'alias' => DB::getFieldMaxLength('users', 'alias'),
+		'name' => DB::getFieldMaxLength('users', 'name'),
+		'surname' => DB::getFieldMaxLength('users', 'surname')
+	];
 
 	// render view
 	$usersView = new CView('administration.users.edit', $data);

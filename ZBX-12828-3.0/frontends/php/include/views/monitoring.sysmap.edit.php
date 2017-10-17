@@ -98,7 +98,7 @@ else {
 }
 
 $map_tab->addRow(_('Name'),
-		(new CTextBox('name', $data['sysmap']['name']))
+		(new CTextBox('name', $data['sysmap']['name'], false, $data['name_maxlength']))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 			->setAttribute('autofocus', 'autofocus')
 	)

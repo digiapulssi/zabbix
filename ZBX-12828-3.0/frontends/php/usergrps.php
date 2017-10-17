@@ -462,6 +462,7 @@ if (isset($_REQUEST['form'])) {
 	));
 
 	order_result($data['usergroups'], 'name');
+	$data['gname_maxlength'] = DB::getFieldMaxLength('usrgrp', 'name');
 
 	// render view
 	$view = new CView('administration.usergroups.edit', $data);

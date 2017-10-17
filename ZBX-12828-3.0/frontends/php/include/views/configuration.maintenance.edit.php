@@ -34,7 +34,7 @@ if (isset($this->data['maintenanceid'])) {
  */
 $maintenanceFormList = new CFormList('maintenanceFormList');
 $maintenanceFormList->addRow(_('Name'),
-	(new CTextBox('mname', $this->data['mname']))
+	(new CTextBox('mname', $this->data['mname'], false, $data['mname_maxlength']))
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 		->setAttribute('autofocus', 'autofocus')
 );

@@ -361,6 +361,7 @@ if (hasRequest('form')) {
 		'preservekeys' => true
 	]);
 	order_result($data['iconMaps'], 'name');
+	$data['name_maxlength'] = DB::getFieldMaxLength('sysmaps', 'name');
 
 	// render view
 	$mapView = new CView('monitoring.sysmap.edit', $data);

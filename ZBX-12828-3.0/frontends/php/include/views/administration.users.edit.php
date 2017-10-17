@@ -45,15 +45,17 @@ if ($data['userid'] != 0) {
 $userFormList = new CFormList('userFormList');
 
 if (!$data['is_profile']) {
-	$userFormList->addRow(_('Alias'), (new CTextBox('alias', $this->data['alias']))
+	$userFormList->addRow(_('Alias'), (new CTextBox('alias', $this->data['alias'], false, $data['maxlength']['alias']))
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 		->setAttribute('autofocus', 'autofocus')
 	);
 	$userFormList->addRow(_x('Name', 'user first name'),
-		(new CTextBox('name', $this->data['name']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+		(new CTextBox('name', $this->data['name'], false, $data['maxlength']['alias']))
+			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	);
 	$userFormList->addRow(_('Surname'),
-		(new CTextBox('surname', $this->data['surname']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+		(new CTextBox('surname', $this->data['surname'], false, $data['maxlength']['surname']))
+			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	);
 }
 
