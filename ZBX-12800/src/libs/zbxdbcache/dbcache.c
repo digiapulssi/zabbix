@@ -2208,7 +2208,8 @@ int	DCsync_history(int sync_type, int *total_num)
 
 	if (0 == cache->history_num)
 	{
-		/* even with no history there might be events queued to be closed, flush them */
+		/* try flushing correlated event queue in the case      */
+		/* some OK events are queued from the last history sync */
 		zbx_flush_correlated_events();
 		goto finish;
 	}
@@ -2435,6 +2436,7 @@ finish:
 
 		UNLOCK_CACHE;
 
+		/* try flushing correlated event queue until it's empty */
 		while (0 != zbx_flush_correlated_events())
 			;
 

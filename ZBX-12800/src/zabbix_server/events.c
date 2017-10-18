@@ -2244,11 +2244,15 @@ int	zbx_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t
 
 /******************************************************************************
  *                                                                            *
- * Function: flush_correlated_events                                          *
+ * Function: zbx_flush_correlated_events                                      *
  *                                                                            *
- * Purpose: flush the correlated events that were queued for closing          *
+ * Purpose: try flushing closing events queued by correlation operations      *
  *                                                                            *
  * Return value: The number of events left in correlation queue               *
+ *                                                                            *
+ * Comments: This function will try to lock corresponding triggers before     *
+ *           flushing closing events. If the trigger cannot be locked the     *
+ *           event will stay in the queue.                                    *
  *                                                                            *
  ******************************************************************************/
 int	zbx_flush_correlated_events(void)
