@@ -27,7 +27,9 @@ function local_generateHeader($data) {
 
 	header('Content-Type: text/html; charset=UTF-8');
 	header('X-Content-Type-Options: nosniff');
-	header('X-Frame-Options: SAMEORIGIN');
+	if (X_FRAME_OPTIONS !== null) {
+		header('X-Frame-Options: '.X_FRAME_OPTIONS);
+	}
 
 	if ((array_key_exists('https', $_SERVER) && ($_SERVER['https'] == 1 || $_SERVER['https'] === 'on'))
 			|| $_SERVER['SERVER_PORT'] == 443) {
