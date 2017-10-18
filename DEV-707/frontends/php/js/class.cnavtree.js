@@ -477,10 +477,18 @@ jQuery(function($) {
 					parents;
 
 				$.each(tree_items, function(i, item) {
+					if (item['parent'] == item['id']) {
+						item['parent'] = 0;
+					}
+
 					if (item['parent'] != 0) {
 						item_to_test = item;
 
 						while (item_to_test['parent'] != 0) {
+							if (item_to_test['parent'] == item_to_test['id']) {
+								item_to_test['parent'] = 0;
+							}
+
 							if (item_to_test['parent'] == item['id']) {
 								tree_items[i]['parent'] = 0;
 								break;
