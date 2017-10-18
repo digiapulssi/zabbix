@@ -105,9 +105,26 @@ switch ($page['type']) {
 	default:
 		header('Content-Type: text/html; charset=UTF-8');
 		header('X-Content-Type-Options: nosniff');
-		if (X_FRAME_OPTIONS !== null) {
-			header('X-Frame-Options: '.X_FRAME_OPTIONS);
+
+		if (!is_null(X_FRAME_OPTIONS)) {
+			if (strcasecmp(X_FRAME_OPTIONS, 'SAMEORIGIN') == 0 || strcasecmp(X_FRAME_OPTIONS, 'DENY') == 0) {
+				$x_frame_options = X_FRAME_OPTIONS;
+			}
+			else {
+				$x_frame_options = 'SAMEORIGIN';
+				$allowed_urls = explode(',', X_FRAME_OPTIONS);
+
+				foreach ($allowed_urls as $allowed_url) {
+					if (strcasecmp(trim($allowed_url), $_SERVER['SERVER_NAME']) == 0) {
+						$x_frame_options = 'ALLOW-FROM '.$allowed_url;
+						break;
+					}
+				}
+			}
+
+			header('X-Frame-Options: '.$x_frame_options);
 		}
+
 		if ((array_key_exists('https', $_SERVER) && ($_SERVER['https'] == 1 || $_SERVER['https'] === 'on'))
 				|| $_SERVER['SERVER_PORT'] == 443) {
 			header('strict-transport-security: max-age=31557600');
