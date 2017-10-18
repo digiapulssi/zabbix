@@ -7868,11 +7868,31 @@ int	DCset_hosts_availability(zbx_vector_ptr_t *availabilities)
 
 /******************************************************************************
  *                                                                            *
- * Comments: helper function for DCconfig_check_trigger_dependencies()        *
+ * Comments: helper function trigger dependency checking                      *
+ *                                                                            *
+ * Parameters: trigdep        - [IN] the trigger dependency data              *
+ *             level          - [IN] the trigger dependency level             *
+ *             triggerids     - [IN] the currently processing trigger ids     *
+ *                                   for bulk trigger operations              *
+ *                                   (optional, can be NULL)                  *
+ *             master_triggerids - [OUT] unresolved master trigger ids        *
+ *                                   for bulk trigger operations              *
+ *                                   (optional together with triggerids       *
+ *                                   parameter)                               *
+ *                                                                            *
+ * Return value: SUCCEED - trigger dependency check succeed / was unresolved  *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ * Comments: With bulk trigger processing a master trigger can be in the same *
+ *           batch as dependent trigger. In this case it might be impossible  *
+ *           to perform dependency check based on cashed trigger values. The  *
+ *           unresolved master trigger ids will be added to master_triggerids *
+ *           vector, so the dependency check can be performed after a new     *
+ *           master trigger value has been calculated.                        *
  *                                                                            *
  ******************************************************************************/
 static int	DCconfig_check_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST *trigdep, int level,
-		const zbx_vector_uint64_t *triggerids, zbx_vector_uint64_t *dep_triggerids)
+		const zbx_vector_uint64_t *triggerids, zbx_vector_uint64_t *master_triggerids)
 {
 	int				i;
 	const ZBX_DC_TRIGGER		*next_trigger;
@@ -7901,11 +7921,11 @@ static int	DCconfig_check_trigger_dependencies_rec(const ZBX_DC_TRIGGER_DEPLIST 
 						return FAIL;
 				}
 				else
-					zbx_vector_uint64_append(dep_triggerids, next_trigger->triggerid);
+					zbx_vector_uint64_append(master_triggerids, next_trigger->triggerid);
 			}
 
 			if (FAIL == DCconfig_check_trigger_dependencies_rec(next_trigdep, level + 1, triggerids,
-					dep_triggerids))
+					master_triggerids))
 			{
 				return FAIL;
 			}
@@ -10180,11 +10200,13 @@ void	zbx_dc_get_nested_hostgroupids_by_names(char **names, int names_num, zbx_ve
  *                                or unresolved dependencies                  *
  *                                                                            *
  * Comments: This function returns list of zbx_trigger_dep_t structures       *
- *           for failed or unresolved dependency checks. Dependency check is  *
- *           failed if any of the dependent triggers in cache has problem     *
- *           value. Dependency check is unresolved if no cached triggers      *
- *           have problem value, but some of dependent triggers are being     *
- *           processed in the same batch.                                     *
+ *           for failed or unresolved dependency checks.                      *
+ *           Dependency check is failed if any of the master triggers that    *
+ *           are not being processed in this batch (present in triggerids     *
+ *           vector) has a problem value.                                     *
+ *           Dependency check is unresolved if a master trigger is being      *
+ *           processed in this batch (present in triggerids vector) and no    *
+ *           other master triggers have problem value.                        *
  *                                                                            *
  ******************************************************************************/
 void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_vector_ptr_t *deps)
@@ -10208,12 +10230,13 @@ void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_
 			{
 				dep = (zbx_trigger_dep_t *)zbx_malloc(NULL, sizeof(zbx_trigger_dep_t));
 				dep->triggerid = triggerids->values[i];
-				zbx_vector_uint64_create(&dep->depids);
+				zbx_vector_uint64_create(&dep->masterids);
 
 				if (SUCCEED == ret)
 				{
 					dep->status = ZBX_TRIGGER_DEPENDENCY_UNRESOLVED;
-					zbx_vector_uint64_append_array(&dep->depids, depids.values, depids.values_num);
+					zbx_vector_uint64_append_array(&dep->masterids, depids.values,
+							depids.values_num);
 				}
 				else
 					dep->status = ZBX_TRIGGER_DEPENDENCY_FAIL;

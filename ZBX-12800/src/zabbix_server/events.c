@@ -1839,7 +1839,7 @@ static void	event_problem_free(zbx_event_problem_t *problem)
 
 static void	trigger_dep_free(zbx_trigger_dep_t *dep)
 {
-	zbx_vector_uint64_destroy(&dep->depids);
+	zbx_vector_uint64_destroy(&dep->masterids);
 	zbx_free(dep);
 }
 
@@ -1872,9 +1872,9 @@ static int	event_check_dependency(const DB_EVENT *event, const zbx_vector_ptr_t 
 		return FAIL;
 
 	/* check the trigger dependency based on actual (currently being processed) trigger values */
-	for (i = 0; i < dep->depids.values_num; i++)
+	for (i = 0; i < dep->masterids.values_num; i++)
 	{
-		if (FAIL == (index = zbx_vector_ptr_bsearch(trigger_diff, &dep->depids.values[i],
+		if (FAIL == (index = zbx_vector_ptr_bsearch(trigger_diff, &dep->masterids.values[i],
 				ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
 		{
 			THIS_SHOULD_NEVER_HAPPEN;

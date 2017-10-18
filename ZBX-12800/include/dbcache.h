@@ -608,7 +608,7 @@ typedef struct
 {
 	zbx_uint64_t		triggerid;
 	unsigned char		status;
-	zbx_vector_uint64_t	depids;
+	zbx_vector_uint64_t	masterids;
 }
 zbx_trigger_dep_t;
 
