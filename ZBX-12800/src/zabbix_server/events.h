@@ -22,7 +22,7 @@
 
 void	zbx_initialize_events(void);
 void	zbx_uninitialize_events(void);
-int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
+int	zbx_add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
 		const zbx_timespec_t *timespec, int value, const char *trigger_description,
 		const char *trigger_expression, const char *trigger_recovery_expression, unsigned char trigger_priority,
 		unsigned char trigger_type, const zbx_vector_ptr_t *trigger_tags,
@@ -30,7 +30,7 @@ int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
 
 int	zbx_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t userid);
 
-int	process_events(zbx_vector_ptr_t *trigger_diff, zbx_vector_uint64_t *triggerids_lock);
-int	flush_correlated_events(void);
+int	zbx_process_events(zbx_vector_ptr_t *trigger_diff, zbx_vector_uint64_t *triggerids_lock);
+int	zbx_flush_correlated_events(void);
 
 #endif

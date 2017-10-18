@@ -102,7 +102,7 @@ static int	validate_event_tag(const DB_EVENT* event, const zbx_tag_t *tag)
  *             trigger_correlation_tag     - [IN] trigger correlation tag     *
  *                                                                            *
  ******************************************************************************/
-int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
+int	zbx_add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
 		const zbx_timespec_t *timespec, int value, const char *trigger_description,
 		const char *trigger_expression, const char *trigger_recovery_expression, unsigned char trigger_priority,
 		unsigned char trigger_type, const zbx_vector_ptr_t *trigger_tags,
@@ -206,7 +206,7 @@ static int	close_trigger_event(zbx_uint64_t eventid, zbx_uint64_t objectid, cons
 	int			index;
 	zbx_event_recovery_t	recovery_local;
 
-	index = add_event(EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, objectid, ts, TRIGGER_VALUE_OK,
+	index = zbx_add_event(EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, objectid, ts, TRIGGER_VALUE_OK,
 			trigger_description, trigger_expression, trigger_recovery_expression, trigger_priority,
 			trigger_type, NULL, ZBX_TRIGGER_CORRELATION_NONE, "");
 
@@ -2105,7 +2105,7 @@ static void	process_trigger_events(zbx_vector_ptr_t *trigger_events, zbx_vector_
  * Return value: The number of processed events                               *
  *                                                                            *
  ******************************************************************************/
-int	process_events(zbx_vector_ptr_t *trigger_diff, zbx_vector_uint64_t *triggerids_lock)
+int	zbx_process_events(zbx_vector_ptr_t *trigger_diff, zbx_vector_uint64_t *triggerids_lock)
 {
 	const char		*__function_name = "process_events";
 	size_t			i, processed_num = 0;
@@ -2251,7 +2251,7 @@ int	zbx_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t
  * Return value: The number of events left in correlation queue               *
  *                                                                            *
  ******************************************************************************/
-int	flush_correlated_events(void)
+int	zbx_flush_correlated_events(void)
 {
 	const char		*__function_name = "flush_correlated_events";
 	zbx_vector_ptr_t	trigger_diff;

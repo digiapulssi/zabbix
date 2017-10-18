@@ -20,7 +20,17 @@
 #include "common.h"
 #include "zbxalgo.h"
 
-int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
+void	zbx_initialize_events(void)
+{
+	THIS_SHOULD_NEVER_HAPPEN;
+}
+
+void	zbx_uninitialize_events(void)
+{
+	THIS_SHOULD_NEVER_HAPPEN;
+}
+
+int	zbx_add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
 		const zbx_timespec_t *timespec, int value, const char *trigger_description,
 		const char *trigger_expression, const char *trigger_recovery_expression, unsigned char trigger_priority,
 		unsigned char trigger_type, const zbx_vector_ptr_t *trigger_tags,
@@ -40,6 +50,7 @@ int	add_event(unsigned char source, unsigned char object, zbx_uint64_t objectid,
 	ZBX_UNUSED(trigger_correlation_mode);
 	ZBX_UNUSED(trigger_correlation_tag);
 
+	THIS_SHOULD_NEVER_HAPPEN;
 	return FAIL;
 }
 
@@ -49,18 +60,21 @@ int	zbx_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t
 	ZBX_UNUSED(eventid);
 	ZBX_UNUSED(userid);
 
+	THIS_SHOULD_NEVER_HAPPEN;
 	return 0;
 }
 
-int	process_events(zbx_vector_ptr_t *trigger_diff, zbx_vector_uint64_t *triggerids_lock)
+int	zbx_process_events(zbx_vector_ptr_t *trigger_diff, zbx_vector_uint64_t *triggerids_lock)
 {
 	ZBX_UNUSED(trigger_diff);
 	ZBX_UNUSED(triggerids_lock);
 
+	THIS_SHOULD_NEVER_HAPPEN;
 	return 0;
 }
 
-int	flush_correlated_events(void)
+int	zbx_flush_correlated_events(void)
 {
+	THIS_SHOULD_NEVER_HAPPEN;
 	return 0;
 }

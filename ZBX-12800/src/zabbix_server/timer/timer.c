@@ -79,7 +79,7 @@ static void	process_time_functions(int *triggers_count, int *events_count)
 
 		zbx_process_triggers(&trigger_order, &trigger_diff);
 
-		if (0 != (events_num = process_events(&trigger_diff, &triggerids)))
+		if (0 != (events_num = zbx_process_events(&trigger_diff, &triggerids)))
 		{
 			*events_count += events_num;
 
@@ -653,7 +653,7 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 		sleeptime = nextcheck - now;
 
 		/* flush correlated event queue and set minimal sleep time if queue is not empty */
-		if (0 != flush_correlated_events() && 1 < sleeptime)
+		if (0 != zbx_flush_correlated_events() && 1 < sleeptime)
 			sleeptime = 1;
 
 		if (0 != sleeptime || STAT_INTERVAL <= time(NULL) - last_stat_time)
