@@ -3,6 +3,7 @@ Changes for 3.2.10rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-12259] added an informative warning about lack of data for macros used in LLD rule filter (viktors)
 
 --------------------------------------------------------------------------------
 Changes for 3.2.9
@@ -530,6 +531,7 @@ Changes for 3.0.13rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-12259] added an informative warning about lack of data for macros used in LLD rule filter (viktors)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.12
