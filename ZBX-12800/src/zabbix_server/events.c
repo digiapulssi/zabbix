@@ -51,7 +51,7 @@ zbx_event_problem_t;
 static DB_EVENT			*events = NULL;
 static size_t			events_alloc = 0, events_num = 0;
 static zbx_hashset_t		event_recovery;
-static zbx_hashset_t		event_queue;
+static zbx_hashset_t		correlation_cache;
 static zbx_correlation_rules_t	correlation_rules;
 
 /******************************************************************************
@@ -80,7 +80,7 @@ static int	validate_event_tag(const DB_EVENT* event, const zbx_tag_t *tag)
 
 /******************************************************************************
  *                                                                            *
- * Function: add_event                                                        *
+ * Function: zbx_add_event                                                    *
  *                                                                            *
  * Purpose: add event to an array                                             *
  *                                                                            *
@@ -992,7 +992,7 @@ static void	correlation_execute_operations(zbx_correlation_t *correlation, DB_EV
 {
 	int			i, index;
 	zbx_corr_operation_t	*operation;
-	zbx_event_recovery_t	queue_local;
+	zbx_event_recovery_t	recovery_local;
 	zbx_timespec_t		ts;
 
 	for (i = 0; i < correlation->operations.values_num; i++)
@@ -1024,14 +1024,14 @@ static void	correlation_execute_operations(zbx_correlation_t *correlation, DB_EV
 				/* queue closing of old events to lock them by triggerids */
 				if (0 != old_eventid)
 				{
-					queue_local.eventid = old_eventid;
-					queue_local.c_eventid = event->eventid;
-					queue_local.correlationid = correlation->correlationid;
-					queue_local.objectid = old_objectid;
-					queue_local.ts.sec = event->clock;
-					queue_local.ts.ns = event->ns;
+					recovery_local.eventid = old_eventid;
+					recovery_local.c_eventid = event->eventid;
+					recovery_local.correlationid = correlation->correlationid;
+					recovery_local.objectid = old_objectid;
+					recovery_local.ts.sec = event->clock;
+					recovery_local.ts.ns = event->ns;
 
-					zbx_hashset_insert(&event_queue, &queue_local, sizeof(queue_local));
+					zbx_hashset_insert(&correlation_cache, &recovery_local, sizeof(recovery_local));
 				}
 				break;
 		}
@@ -1123,7 +1123,7 @@ static void	correlate_event_by_global_rules(DB_EVENT *event)
 			ZBX_STR2UINT64(eventid, row[0]);
 
 			/* check if this event is not already recovered by another correlation rule */
-			if (NULL != zbx_hashset_search(&event_queue, &eventid))
+			if (NULL != zbx_hashset_search(&correlation_cache, &eventid))
 				continue;
 
 			ZBX_STR2UINT64(correlationid, row[2]);
@@ -1162,7 +1162,7 @@ static void	correlate_events_by_global_rules(zbx_vector_ptr_t *trigger_events, z
 	int			i, index;
 	zbx_trigger_diff_t	*diff;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() events:%d", __function_name, event_queue.num_data);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() events:%d", __function_name, correlation_cache.num_data);
 
 	zbx_dc_correlation_rules_get(&correlation_rules);
 
@@ -1206,12 +1206,12 @@ static void	flush_correlation_queue(zbx_vector_ptr_t *trigger_diff, zbx_vector_u
 
 	zbx_vector_uint64_t	triggerids, lockids, eventids;
 	zbx_hashset_iter_t	iter;
-	zbx_event_recovery_t	*queue;
+	zbx_event_recovery_t	*recovery;
 	int			i, closed_num = 0;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() events:%d", __function_name, event_queue.num_data);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() events:%d", __function_name, correlation_cache.num_data);
 
-	if (0 == event_queue.num_data)
+	if (0 == correlation_cache.num_data)
 		goto out;
 
 	zbx_vector_uint64_create(&triggerids);
@@ -1222,18 +1222,18 @@ static void	flush_correlation_queue(zbx_vector_ptr_t *trigger_diff, zbx_vector_u
 
 	zbx_vector_uint64_sort(triggerids_lock, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
-	/* create a list of triggers that must be locked to close queued events */
-	zbx_hashset_iter_reset(&event_queue, &iter);
-	while (NULL != (queue = zbx_hashset_iter_next(&iter)))
+	/* create a list of triggers that must be locked to close correlated events */
+	zbx_hashset_iter_reset(&correlation_cache, &iter);
+	while (NULL != (recovery = zbx_hashset_iter_next(&iter)))
 	{
-		if (FAIL != zbx_vector_uint64_bsearch(triggerids_lock, queue->objectid,
+		if (FAIL != zbx_vector_uint64_bsearch(triggerids_lock, recovery->objectid,
 				ZBX_DEFAULT_UINT64_COMPARE_FUNC))
 		{
 			/* trigger already locked by this process, add to locked triggerids */
-			zbx_vector_uint64_append(&triggerids, queue->objectid);
+			zbx_vector_uint64_append(&triggerids, recovery->objectid);
 		}
 		else
-			zbx_vector_uint64_append(&lockids, queue->objectid);
+			zbx_vector_uint64_append(&lockids, recovery->objectid);
 	}
 
 	if (0 != lockids.values_num)
@@ -1294,13 +1294,13 @@ static void	flush_correlation_queue(zbx_vector_ptr_t *trigger_diff, zbx_vector_u
 			}
 		}
 
-		/* get queued eventids that are still open (unresolved) */
+		/* get correlated eventids that are still open (unresolved) */
 
-		zbx_hashset_iter_reset(&event_queue, &iter);
-		while (NULL != (queue = zbx_hashset_iter_next(&iter)))
+		zbx_hashset_iter_reset(&correlation_cache, &iter);
+		while (NULL != (recovery = zbx_hashset_iter_next(&iter)))
 		{
 			/* close event only if its source trigger has been locked */
-			if (FAIL == (index = zbx_vector_uint64_bsearch(&triggerids, queue->objectid,
+			if (FAIL == (index = zbx_vector_uint64_bsearch(&triggerids, recovery->objectid,
 					ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
 			{
 				continue;
@@ -1309,7 +1309,7 @@ static void	flush_correlation_queue(zbx_vector_ptr_t *trigger_diff, zbx_vector_u
 			if (SUCCEED != errcodes[index])
 				continue;
 
-			zbx_vector_uint64_append(&eventids, queue->eventid);
+			zbx_vector_uint64_append(&eventids, recovery->eventid);
 		}
 
 		zbx_vector_uint64_sort(&eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
@@ -1321,23 +1321,23 @@ static void	flush_correlation_queue(zbx_vector_ptr_t *trigger_diff, zbx_vector_u
 		zbx_free(sql);
 
 		/* generate OK events and add event_recovery data for closed events */
-		zbx_hashset_iter_reset(&event_queue, &iter);
-		while (NULL != (queue = zbx_hashset_iter_next(&iter)))
+		zbx_hashset_iter_reset(&correlation_cache, &iter);
+		while (NULL != (recovery = zbx_hashset_iter_next(&iter)))
 		{
-			if (FAIL == (index = zbx_vector_uint64_bsearch(&triggerids, queue->objectid,
+			if (FAIL == (index = zbx_vector_uint64_bsearch(&triggerids, recovery->objectid,
 					ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
 			{
 				continue;
 			}
 
 			/* close the old problem only if it's still open and trigger is not removed */
-			if (SUCCEED == errcodes[index] && FAIL != zbx_vector_uint64_bsearch(&eventids, queue->eventid,
+			if (SUCCEED == errcodes[index] && FAIL != zbx_vector_uint64_bsearch(&eventids, recovery->eventid,
 					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
 			{
 				trigger = &triggers[index];
 
-				close_trigger_event(queue->eventid, queue->objectid, &queue->ts, 0,
-						queue->correlationid, queue->c_eventid, trigger->description,
+				close_trigger_event(recovery->eventid, recovery->objectid, &recovery->ts, 0,
+						recovery->correlationid, recovery->c_eventid, trigger->description,
 						trigger->expression_orig, trigger->recovery_expression_orig,
 						trigger->priority, trigger->type);
 
@@ -1511,7 +1511,7 @@ static void	update_trigger_changes(zbx_vector_ptr_t *trigger_diff)
 void	zbx_initialize_events(void)
 {
 	zbx_hashset_create(&event_recovery, 0, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-	zbx_hashset_create(&event_queue, 0, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_hashset_create(&correlation_cache, 0, ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	zbx_dc_correlation_rules_init(&correlation_rules);
 }
@@ -1526,7 +1526,7 @@ void	zbx_initialize_events(void)
 void	zbx_uninitialize_events(void)
 {
 	zbx_hashset_destroy(&event_recovery);
-	zbx_hashset_destroy(&event_queue);
+	zbx_hashset_destroy(&correlation_cache);
 
 	zbx_dc_correlation_rules_free(&correlation_rules);
 }
@@ -2085,7 +2085,7 @@ static void	process_trigger_events(zbx_vector_ptr_t *trigger_events, zbx_vector_
 
 /******************************************************************************
  *                                                                            *
- * Function: process_events                                                   *
+ * Function: zbx_process_events                                               *
  *                                                                            *
  * Purpose: processes cached events                                           *
  *                                                                            *
@@ -2261,9 +2261,9 @@ int	zbx_flush_correlated_events(void)
 	zbx_vector_ptr_t	trigger_diff;
 	zbx_vector_uint64_t	triggerids_lock;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() events_num:%d", __function_name, event_queue.num_data);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() events_num:%d", __function_name, correlation_cache.num_data);
 
-	if (0 == event_queue.num_data)
+	if (0 == correlation_cache.num_data)
 		goto out;
 
 	zbx_vector_ptr_create(&trigger_diff);
@@ -2293,8 +2293,8 @@ int	zbx_flush_correlated_events(void)
 	zbx_vector_uint64_destroy(&triggerids_lock);
 	zbx_vector_ptr_destroy(&trigger_diff);
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() events_num:%d", __function_name, event_queue.num_data);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() events_num:%d", __function_name, correlation_cache.num_data);
 
-	return event_queue.num_data;
+	return correlation_cache.num_data;
 }
 
