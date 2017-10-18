@@ -956,3 +956,10 @@ ini_set('precision', 14);
 if (function_exists('bcscale')) {
 	bcscale(7);
 }
+
+// HTTP headers
+/*
+ * Value of HTTP X-Frame-options header.
+ * Allowed all options that are compatible with rfc7034. Use null to disable X-Frame-options header.
+ */
+define('X_FRAME_OPTIONS', 'SAMEORIGIN');
