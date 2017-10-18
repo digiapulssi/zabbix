@@ -431,8 +431,8 @@ class CProblem extends CApiService {
 
 		// Adding event tags.
 		if ($options['selectTags'] !== null && $options['selectTags'] != API_OUTPUT_COUNT) {
-			if ($this->outputIsRequested(API_OUTPUT_EXTEND, $options['selectTags'])) {
-				$options['selectTags'] = ['problemtagid', 'eventid', 'tag', 'value'];
+			if ($options['selectTags'] === API_OUTPUT_EXTEND) {
+				$options['selectTags'] = ['tag', 'value'];
 			}
 
 			$tags_options = [
