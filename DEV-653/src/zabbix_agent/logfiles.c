@@ -1036,8 +1036,6 @@ static int	find_old2new(char *old2new, int num_new, int i_old)
  *             filename - name of a logfile (with full path)                  *
  *             st - structure returned by stat()                              *
  *                                                                            *
- * Return value: none                                                         *
- *                                                                            *
  * Author: Dmitry Borovikov                                                   *
  *                                                                            *
  ******************************************************************************/
@@ -1050,7 +1048,6 @@ static void	add_logfile(struct st_logfile **logfiles, int *logfiles_alloc, int *
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() filename:'%s' mtime:%d size:" ZBX_FS_UI64, __function_name, filename,
 			(int)st->st_mtime, (zbx_uint64_t)st->st_size);
 
-	/* must be done in any case */
 	if (*logfiles_alloc == *logfiles_num)
 	{
 		*logfiles_alloc += 64;
@@ -1320,11 +1317,12 @@ clean:
 static int	make_logfile_list(unsigned char flags, const char *filename, const int *mtime,
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num, int *use_ino, char **err_msg)
 {
-	int		ret = SUCCEED, i;
-	zbx_stat_t	file_buf;
+	int	ret = SUCCEED, i;
 
 	if (0 != (ZBX_METRIC_FLAG_LOG_LOG & flags))	/* log[] item */
 	{
+		zbx_stat_t	file_buf;
+
 		if (0 != zbx_stat(filename, &file_buf))
 		{
 			*err_msg = zbx_dsprintf(*err_msg, "Cannot obtain information for file \"%s\": %s", filename,
