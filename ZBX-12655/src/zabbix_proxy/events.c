@@ -18,6 +18,7 @@
 **/
 
 #include "common.h"
+#include "zbxalgo.h"
 
 void	add_event(zbx_uint64_t eventid, unsigned char source, unsigned char object, zbx_uint64_t objectid,
 		const zbx_timespec_t *timespec, int value, const char *trigger_description,
@@ -25,7 +26,9 @@ void	add_event(zbx_uint64_t eventid, unsigned char source, unsigned char object,
 {
 }
 
-int	process_events(void)
+int	process_events(zbx_vector_ptr_t *itservice_updates)
 {
+	(void)itservice_updates;
+
 	return 0;
 }
