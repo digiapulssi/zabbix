@@ -304,6 +304,7 @@ static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
 	curl_easy_setopt(data->handle, CURLOPT_POST, 1);
 	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, data->buf);
 	curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_send_cb);
+	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
 
 	curl_multi_add_handle(writer.handle, data->handle);
 
@@ -360,7 +361,18 @@ static void	elastic_writer_flush()
 
 		while (NULL != (msg = curl_multi_info_read(writer.handle, &msgnum)))
 		{
-			if (CURLE_OK != msg->data.result)
+			/* If the error is due to malformed data, there is no sense on re-trying to send. */
+			/* That's why we actually check for transport and curl errors separately */
+			if (CURLE_HTTP_RETURNED_ERROR == msg->data.result)
+			{
+				long int	err;
+
+				curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &err);
+
+				zabbix_log(LOG_LEVEL_ERR, "%s: %li: %s", "HTTP transport error, elasticsearch answer",
+						err, curl_easy_strerror(msg->data.result));
+			}
+			else if (CURLE_OK != msg->data.result)
 			{
 				zabbix_log(LOG_LEVEL_WARNING, "Error on sending to history storage: %s",
 						curl_easy_strerror(msg->data.result));
