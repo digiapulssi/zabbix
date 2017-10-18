@@ -160,9 +160,6 @@ static int	history_parse_value(struct zbx_json_parse *jp, unsigned char value_ty
 	{
 		struct zbx_json_parse	jp_value;
 
-		if (SUCCEED != zbx_json_brackets_by_name(jp, "value", &jp_value))
-			goto out;
-
 		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "value", &value, &value_alloc))
 			goto out;
 
@@ -657,14 +654,11 @@ static int	elastic_add_values(zbx_history_iface_t *hist, const zbx_vector_ptr_t 
 
 			log = h->value.log;
 
-			zbx_json_addobject(&json, "value");
 			zbx_json_addstring(&json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
 			zbx_json_adduint64(&json, "timestamp", log->timestamp);
 			zbx_json_addstring(&json, "source", ZBX_NULL2EMPTY_STR(log->source), ZBX_JSON_TYPE_STRING);
 			zbx_json_adduint64(&json, "severity", log->severity);
 			zbx_json_adduint64(&json, "logeventid", log->logeventid);
-
-			zbx_json_close(&json);
 		}
 		else
 			zbx_json_addstring(&json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
