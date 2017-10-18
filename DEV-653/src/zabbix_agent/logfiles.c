@@ -1373,7 +1373,7 @@ clean:
  *          parameter                                                         *
  *                                                                            *
  * Parameters:                                                                *
- *     flags          - [IN] metric flags to check item type: log or logrt    *
+ *     flags          - [IN] bit flags with item type: log, logrt or logcpt   *
  *     filename       - [IN] logfile name (regular expression with a path)    *
  *     mtime          - [IN] last modification time of the file               *
  *     logfiles       - [IN/OUT] pointer to the list of logfiles              *
@@ -1422,7 +1422,7 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 		*use_ino = 1;
 #endif
 	}
-	else if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags))	/* logrt[] item */
+	else if (0 != ((ZBX_METRIC_FLAG_LOG_LOGRT | ZBX_METRIC_FLAG_LOG_LOGCPT) & flags)) /* logrt[] or logcpt[] */
 	{
 		char	*directory = NULL, *filename_regexp = NULL;
 		regex_t	re;
@@ -1449,8 +1449,8 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 
 		if (0 == *logfiles_num)
 		{
-			/* Do not make a logrt[] item NOTSUPPORTED if there are no matching log files or they are not */
-			/* accessible (can happen during a rotation), just log the problem. */
+			/* Do not make a logrt[] or logcpt[] item NOTSUPPORTED if there are no matching log files or */
+			/* they are not accessible (can happen during a rotation), just log the problem. */
 #ifdef _WINDOWS
 			zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\" or insufficient "
 					"access rights", filename_regexp, directory);
