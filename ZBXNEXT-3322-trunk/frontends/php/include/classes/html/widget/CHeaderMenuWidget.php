@@ -67,7 +67,7 @@ class CHeaderMenuWidget extends CWidget
 	 * @return CDiv
 	 */
 	private function createTopHeader() {
-		$divs = [(new CDiv($this->createTitle()))->addClass(ZBX_STYLE_TABLE)];
+		$divs = [(new CDiv($this->createTitle()))->addClass(ZBX_STYLE_CELL)];
 
 		if ($this->controls !== null) {
 			$divs[] = (new CDiv($this->controls))
