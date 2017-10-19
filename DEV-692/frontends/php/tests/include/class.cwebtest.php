@@ -406,8 +406,18 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		$this->zbxTestAssertElementPresentXpath("//select[@name='".$name."']//option[text()='".$text."' and @selected]");
 	}
 
-	public function zbxTestGetSelectedLabel ($id) {
-		return $this->webDriver->findElement(WebDriverBy::xpath("//select[@id='".$id."']//option[@selected='selected']"))->getText();
+	public function zbxTestGetSelectedLabel($id) {
+		$elements = $this->webDriver->findElements(WebDriverBy::id($id));
+
+		if (count($elements) !== 0 && $elements[0]->getTagName() === 'select') {
+			foreach ($elements[0]->findElements(WebDriverBy::tagName('option')) as $child) {
+				if ($child->isSelected()) {
+					return $child->getText();
+				}
+			}
+		}
+
+		$this->fail("Element was not found");
 	}
 
 	public function zbxTestElementPresentId($id) {
