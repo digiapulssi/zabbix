@@ -445,7 +445,7 @@ jQuery(function($) {
 
 				widget_data.lastId++;
 
-				while ($('[name="map.name.' + widget_data.lastId + '"]').length) {
+				while ($('[name="map.name.' + widget_data.lastId + '"]', $obj).length) {
 					widget_data.lastId++;
 				}
 
@@ -455,7 +455,7 @@ jQuery(function($) {
 			var makeSortable = function($obj) {
 				var widget_data = $obj.data('widgetData');
 
-				$('.root-item>.tree-list')
+				$('.root-item>.tree-list', $obj)
 					.sortable_tree({
 						max_depth: widget_data['max_depth'],
 						stop: function(event, ui) {
@@ -553,7 +553,7 @@ jQuery(function($) {
 
 					$.each(problems, function(sev, numb) {
 						if (numb) {
-							$('.tree-item[data-id=' + itemid + ']').attr('data-problems' + sev, numb);
+							$('.tree-item[data-id=' + itemid + ']', $obj).attr('data-problems' + sev, numb);
 						}
 					});
 				});
