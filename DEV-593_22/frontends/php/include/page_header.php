@@ -105,6 +105,7 @@ switch ($page['type']) {
 	default:
 		header('Content-Type: text/html; charset=UTF-8');
 		header('X-Content-Type-Options: nosniff');
+		header('X-XSS-Protection: 1; mode=block');
 
 		if (!is_null(X_FRAME_OPTIONS)) {
 			if (strcasecmp(X_FRAME_OPTIONS, 'SAMEORIGIN') == 0 || strcasecmp(X_FRAME_OPTIONS, 'DENY') == 0) {
