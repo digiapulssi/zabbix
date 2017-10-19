@@ -1822,6 +1822,26 @@ function show_messages($good = false, $okmsg = null, $errmsg = null) {
 
 	$ZBX_MESSAGES = [];
 
+	if (!ZBX_SHOW_TECHNICAL_ERRORS && CWebUser::getType() != USER_TYPE_SUPER_ADMIN && !CWebUser::getDebugMode()) {
+		$filtered_messages = [];
+		$generic_exists = false;
+
+		foreach ($messages as $message) {
+			if ((array_key_exists('sql_error', $message) && $message['sql_error'] === true)
+					|| (array_key_exists('php_error', $message) && $message['php_error'] === true)) {
+				if (!$generic_exists) {
+					$message['message'] = _('System error occurred. Please contact Zabbix administrator.');
+					$filtered_messages[] = $message;
+					$generic_exists = true;
+				}
+			}
+			else {
+				$filtered_messages[] = $message;
+			}
+		}
+		$messages = $filtered_messages;
+	}
+
 	switch ($page['type']) {
 		case PAGE_TYPE_IMAGE:
 			if ($title !== null) {
@@ -1930,6 +1950,44 @@ function error($msgs) {
 	foreach ($msgs as $msg) {
 		$ZBX_MESSAGES[] = ['type' => 'error', 'message' => $msg];
 	}
+}
+
+/**
+ * Add SQL error message to global messages array.
+ *
+ * @param string $msg		Error message text.
+ */
+function sqlError($msg) {
+	global $ZBX_MESSAGES;
+
+	if (!isset($ZBX_MESSAGES)) {
+		$ZBX_MESSAGES = [];
+	}
+
+	$ZBX_MESSAGES[] = [
+		'type' => 'error',
+		'message' => $msg,
+		'sql_error' => true
+	];
+}
+
+/**
+ * Add PHP error message to global messages array.
+ *
+ * @param string $msg		Error message text.
+ */
+function phpError($msg) {
+	global $ZBX_MESSAGES;
+
+	if (!isset($ZBX_MESSAGES)) {
+		$ZBX_MESSAGES = [];
+	}
+
+	$ZBX_MESSAGES[] = [
+		'type' => 'error',
+		'message' => $msg,
+		'php_error' => true
+	];
 }
 
 function clear_messages($count = null) {
@@ -2312,5 +2370,5 @@ function zbx_err_handler($errno, $errstr, $errfile, $errline) {
 	}
 
 	// Don't show the call to this handler function.
-	error($errstr.' ['.CProfiler::getInstance()->formatCallStack().']');
+	phpError($errstr.' ['.CProfiler::getInstance()->formatCallStack().']');
 }
