@@ -1437,8 +1437,22 @@ function getTriggerFormData($exprAction) {
 		'input_method' => getRequest('input_method', IM_ESTABLISHED),
 		'limited' => false,
 		'templates' => [],
-		'hostid' => getRequest('hostid', 0)
+		'hostid' => getRequest('hostid', 0),
+		'groupid' => getRequest('groupid', 0)
 	];
+
+	// Read groupid for selected host or template if groupid filter is set to 'All' (is equal 0).
+	if ($data['hostid'] && !$data['groupid']) {
+		$db_hostgroup = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'hostids' => $data['hostid'],
+			'templateids' => $data['hostid']
+		]);
+
+		if ($db_hostgroup) {
+			$data['groupid'] = $db_hostgroup[0]['groupid'];
+		}
+	}
 
 	if (!empty($data['triggerid'])) {
 		// get trigger
@@ -1871,7 +1885,7 @@ function get_timeperiod_form() {
 
 			$cmbCount = new CComboBox('new_timeperiod[every]', $new_timeperiod['every']);
 			$cmbCount->addItem(1, _('First'));
-			$cmbCount->addItem(2, _('Second'));
+			$cmbCount->addItem(2, _x('Second', 'adjective'));
 			$cmbCount->addItem(3, _('Third'));
 			$cmbCount->addItem(4, _('Fourth'));
 			$cmbCount->addItem(5, _('Last'));
