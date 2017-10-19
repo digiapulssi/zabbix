@@ -31,6 +31,8 @@ define('TEST_BAD', 1);
 
 class CWebTest extends PHPUnit_Framework_TestCase {
 
+	const WAIT_ITERATION = 50;
+
 	// List of strings that should NOT appear on any page
 	public $failIfExists = [
 		'pg_query',
@@ -291,7 +293,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestDoubleClickBeforeMessage($click_id, $id) {
-		$this->webDriver->wait(30)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::id($click_id)));
+		$this->webDriver->wait(30, self::WAIT_ITERATION)->until(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::id($click_id)));
 		$this->zbxTestClickWait($click_id);
 		$msg = count($this->webDriver->findElements(WebDriverBy::className('msg-bad')));
 		if (!$this->zbxTestElementPresentId($id) and $msg === 0){
@@ -458,25 +460,25 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestWaitUntil($condition, $message) {
-		$this->webDriver->wait(60)->until($condition, $message);
+		$this->webDriver->wait(60, self::WAIT_ITERATION)->until($condition, $message);
 		$this->zbxTestCheckFatalErrors();
 	}
 
 	public function zbxTestWaitUntilElementVisible($by) {
-		$this->webDriver->wait(60)->until(WebDriverExpectedCondition::visibilityOfElementLocated($by), 'after 60 sec element still not visible');
+		$this->webDriver->wait(60, self::WAIT_ITERATION)->until(WebDriverExpectedCondition::visibilityOfElementLocated($by), 'after 60 sec element still not visible');
 	}
 
 	public function zbxTestWaitUntilElementClickable($by) {
-		$this->webDriver->wait(60)->until(WebDriverExpectedCondition::elementToBeClickable($by));
+		$this->webDriver->wait(60, self::WAIT_ITERATION)->until(WebDriverExpectedCondition::elementToBeClickable($by));
 	}
 
 	public function zbxTestWaitUntilElementPresent($by) {
-		$this->webDriver->wait(60)->until(WebDriverExpectedCondition::presenceOfElementLocated($by));
+		$this->webDriver->wait(60, self::WAIT_ITERATION)->until(WebDriverExpectedCondition::presenceOfElementLocated($by));
 	}
 
 	public function zbxTestWaitUntilMessageTextPresent($css, $string) {
 		$this->zbxTestWaitUntilElementVisible(WebDriverBy::className($css));
-		$this->webDriver->wait(60)->until(WebDriverExpectedCondition::textToBePresentInElement(WebDriverBy::className($css), $string));
+		$this->webDriver->wait(60, self::WAIT_ITERATION)->until(WebDriverExpectedCondition::textToBePresentInElement(WebDriverBy::className($css), $string));
 	}
 
 	public function zbxTestTabSwitch($tab) {
@@ -501,7 +503,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestWaitWindowAndSwitchToIt($id) {
-		$this->webDriver->wait(90)->until(function () use ($id) {
+		$this->webDriver->wait(90, self::WAIT_ITERATION)->until(function () use ($id) {
 			try {
 				$handles = count($this->webDriver->getWindowHandles());
 					if ($handles > 1) {
@@ -515,7 +517,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestSwitchToNewWindow() {
-		$this->webDriver->wait(60)->until(function () {
+		$this->webDriver->wait(60, self::WAIT_ITERATION)->until(function () {
 			try {
 				$handles = count($this->webDriver->getWindowHandles());
 					if ($handles > 1) {
@@ -532,7 +534,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	public function zbxTestClickAndSwitchToNewWindow($xpath) {
 		$this->zbxTestClickXpathWait($xpath);
 			try {
-				$this->webDriver->wait(30)->until(function () {
+				$this->webDriver->wait(30, self::WAIT_ITERATION)->until(function () {
 					$handles = count($this->webDriver->getWindowHandles());
 						if ($handles > 1) {
 							$all = $this->webDriver->getWindowHandles();
@@ -548,11 +550,11 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestWaitWindowClose() {
-		$this->webDriver->wait(10)->until(function () {
+		$this->webDriver->wait(10, self::WAIT_ITERATION)->until(function () {
 			try {
 				$handles = count($this->webDriver->getWindowHandles());
-					if ($handles == 1) {
-						return $this->webDriver->switchTo()->window('');
+				if ($handles == 1) {
+					return $this->webDriver->switchTo()->window('');
 				}
 			}
 			catch (NoSuchElementException $ex) {
@@ -566,7 +568,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	public function zbxTestClickLinkAndWaitWindowClose($link) {
 		$this->zbxTestClickLinkTextWait($link);
 		try {
-			$this->webDriver->wait(10)->until(function () {
+			$this->webDriver->wait(10, self::WAIT_ITERATION)->until(function () {
 				$handles = count($this->webDriver->getWindowHandles());
 					if ($handles == 1) {
 						return $this->webDriver->switchTo()->window('');
@@ -585,7 +587,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	public function zbxTestClickAndAcceptAlert($id) {
 		$this->zbxTestClickWait($id);
 			try {
-				$this->webDriver->wait(10)->until(WebDriverExpectedCondition::alertIsPresent());
+				$this->webDriver->wait(10, self::WAIT_ITERATION)->until(WebDriverExpectedCondition::alertIsPresent());
 				$this->webDriver->switchTo()->alert()->accept();
 			}
 			catch (TimeoutException $ex) {
@@ -665,7 +667,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestWaitForPageToLoad() {
-		$this->webDriver->wait(10, 2000)->until(function () {
+		$this->webDriver->wait(10, self::WAIT_ITERATION)->until(function () {
 			return $this->webDriver->executeScript("return document.readyState;") == "complete";
 			}
 		);
