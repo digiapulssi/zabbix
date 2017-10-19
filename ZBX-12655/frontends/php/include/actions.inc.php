@@ -1239,21 +1239,22 @@ function makeEventsActions($eventids) {
 		return [];
 	}
 
-	$alerts = API::Alert()->get([
-		'output' => ['eventid', 'message', 'status', 'clock', 'alerttype', 'error'],
-		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
+	$db_alerts = API::Alert()->get([
+		'output' => ['eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype', 'error'],
 		'eventids' => $eventids,
-		'selectUsers' => ['alias', 'name', 'surname'],
-		'selectMediatypes' => ['description']
+		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
+		'sortOrder' => ['alertid' => ZBX_SORT_DOWN]
 	]);
 
 	$events = [];
+	$userids = [];
 	$users = [];
+	$mediatypeids = [];
 	$mediatypes = [];
 
-	foreach ($alerts as $alert) {
-		if (!array_key_exists($alert['eventid'], $events)) {
-			$events[$alert['eventid']] = [
+	foreach ($db_alerts as $db_alert) {
+		if (!array_key_exists($row['eventid'], $events)) {
+			$events[$db_alert['eventid']] = [
 				ALERT_STATUS_NOT_SENT => [],
 				ALERT_STATUS_SENT => [],
 				ALERT_STATUS_FAILED => []
@@ -1261,33 +1262,47 @@ function makeEventsActions($eventids) {
 		}
 
 		$event = [
-			'clock' => $alert['clock'],
-			'alerttype' => $alert['alerttype'],
-			'error' => $alert['error'],
-			'mediatypeid' => 0,
-			'userid' => 0
+			'clock' => $db_alert['clock'],
+			'alerttype' => $db_alert['alerttype'],
+			'error' => $db_alert['error']
 		];
 
 		switch ($event['alerttype']) {
 			case ALERT_TYPE_COMMAND:
-				$event['message'] = $alert['message'];
-				unset($alert['mediatypeid'], $alert['userid']);
+				$event['message'] = $db_alert['message'];
 				break;
 
 			case ALERT_TYPE_MESSAGE:
-				if ($alert['mediatypes']) {
-					$event['mediatypeid'] = $alert['mediatypes'][0]['mediatypeid'];
-					$mediatypes[$event['mediatypeid']] = $alert['mediatypes'][0];
+				$event['mediatypeid'] = $db_alert['mediatypeid'];
+				$event['userid'] = $db_alert['userid'];
+
+				if ($event['mediatypeid'] != 0) {
+					$mediatypeids[$db_alert['mediatypeid']] = true;
 				}
 
-				if ($alert['users']) {
-					$event['userid'] = $alert['users'][0]['userid'];
-					$users[$event['userid']] = $alert['users'][0];
+				if ($event['userid'] != 0) {
+					$userids[$db_alert['userid']] = true;
 				}
 				break;
 		}
 
-		$events[$alert['eventid']][$alert['status']][] = $event;
+		$events[$db_alert['eventid']][$db_alert['status']][] = $event;
+	}
+
+	if ($mediatypeids) {
+		$mediatypes = API::Mediatype()->get([
+			'output' => ['description'],
+			'mediatypeids' => array_keys($mediatypeids),
+			'preservekeys' => true
+		]);
+	}
+
+	if ($userids) {
+		$users = API::User()->get([
+			'output' => ['alias', 'name', 'surname'],
+			'userids' => array_keys($userids),
+			'preservekeys' => true
+		]);
 	}
 
 	foreach ($events as $eventid => &$event) {
