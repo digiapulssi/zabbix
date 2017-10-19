@@ -185,8 +185,8 @@ function DBconnect(&$error) {
 		$DB['DB'] = null;
 	}
 
-	if (!$result && !ZBX_SHOW_SQL_ERRORS) {
-		$error = _('SQL error. Please contact Zabbix administrator.');
+	if (!$result && !ZBX_SHOW_TECHNICAL_ERRORS) {
+		$error = _('System error occurred. Please contact Zabbix administrator.');
 	}
 
 	return $result;
