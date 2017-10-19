@@ -123,33 +123,22 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function authenticate() {
-		$this->webDriver->get(PHPUNIT_URL);
-		$row = DBfetch(DBselect("select null from sessions where sessionid='09e7d4286dfdca4ba7be15e0f3b2b55a'"));
-
-		if (!$row) {
-			DBexecute("insert into sessions (sessionid, userid) values ('09e7d4286dfdca4ba7be15e0f3b2b55a', 1)");
-		}
-
-		$domain = parse_url(PHPUNIT_URL, PHP_URL_HOST);
-		$path = parse_url(PHPUNIT_URL, PHP_URL_PATH);
-
-		$cookie  = ['name' => 'zbx_sessionid', 'value' => '09e7d4286dfdca4ba7be15e0f3b2b55a', 'domain' => $domain, 'path' => $path];
-		$this->webDriver->manage()->addCookie($cookie);
+		authenticateUser('09e7d4286dfdca4ba7be15e0f3b2b55a', 1);
 	}
 
 	public function authenticateUser($sessionid, $userId) {
-		$this->webDriver->get(PHPUNIT_URL);
 		$row = DBfetch(DBselect("select null from sessions where sessionid='$sessionid'"));
 
 		if (!$row) {
 			DBexecute("insert into sessions (sessionid, userid) values ('$sessionid', $userId)");
 		}
 
-		$domain = parse_url(PHPUNIT_URL, PHP_URL_HOST);
-		$path = parse_url(PHPUNIT_URL, PHP_URL_PATH);
-
-		$cookie  = ['name' => 'zbx_sessionid', 'value' => $sessionid, 'domain' => $domain, 'path' => $path];
-		$this->webDriver->manage()->addCookie($cookie);
+		$this->webDriver->manage()->addCookie([
+			'name' => 'zbx_sessionid',
+			'value' => $sessionid,
+			'domain' => parse_url(PHPUNIT_URL, PHP_URL_HOST),
+			'path' => parse_url(PHPUNIT_URL, PHP_URL_PATH)
+		]);
 	}
 
 	public function zbxTestOpen($url) {
