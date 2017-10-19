@@ -363,11 +363,21 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestDropdownHasOptions($id, array $strings) {
-		$attribute = $this->zbxTestIsElementPresent("//select[@id='".$id."']") ? 'id' : 'name';
-		$this->zbxTestAssertElementPresentXpath("//select[@".$attribute."='".$id."']");
+		$elements = $this->webDriver->findElements(WebDriverBy::id($id));
 
-		foreach ($strings as $string) {
-			$this->zbxTestAssertElementPresentXpath("//select[@".$attribute."='".$id."']//option[text()='".$string."']");
+		if (count($elements) === 0 || $elements[0]->getTagName() !== 'select') {
+			$elements = $this->webDriver->findElements(WebDriverBy::name($id));
+
+			if (count($elements) === 0 || $elements[0]->getTagName() !== 'select') {
+				$this->fail("Element was not found");
+			}
+
+			$options = [];
+			foreach ($elements[0]->findElements(WebDriverBy::tagName('option')) as $child) {
+				$options[] = $child->getText();
+			}
+
+			$this->assertTrue(empty(array_diff($strings, $options)));
 		}
 	}
 
