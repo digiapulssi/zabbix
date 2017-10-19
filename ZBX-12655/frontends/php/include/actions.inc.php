@@ -1253,7 +1253,7 @@ function makeEventsActions($eventids) {
 	$mediatypes = [];
 
 	foreach ($db_alerts as $db_alert) {
-		if (!array_key_exists($row['eventid'], $events)) {
+		if (!array_key_exists($db_alert['eventid'], $events)) {
 			$events[$db_alert['eventid']] = [
 				ALERT_STATUS_NOT_SENT => [],
 				ALERT_STATUS_SENT => [],
