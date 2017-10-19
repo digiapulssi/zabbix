@@ -459,10 +459,10 @@ static void	print_logfile_list(struct st_logfile *logfiles, int logfiles_num)
 
 /******************************************************************************
  *                                                                            *
- * Function: is_same_file                                                     *
+ * Function: is_same_file_logrt                                               *
  *                                                                            *
- * Purpose: find out wheter a file from the old list and a file from the new  *
- *          list could be the same file                                       *
+ * Purpose: find out if a file from the old list and a file from the new list *
+ *          could be the same file for logrt[] item                           *
  *                                                                            *
  * Parameters:                                                                *
  *          old     - [IN] file from the old list                             *
@@ -483,7 +483,8 @@ static void	print_logfile_list(struct st_logfile *logfiles, int logfiles_num)
  *           truncated and replaced with a similar one.                       *
  *                                                                            *
  ******************************************************************************/
-static int	is_same_file(const struct st_logfile *old, const struct st_logfile *new, int use_ino, char **err_msg)
+static int	is_same_file_logrt(const struct st_logfile *old, const struct st_logfile *new, int use_ino,
+		char **err_msg)
 {
 	int	ret = ZBX_SAME_FILE_NO;
 
@@ -631,14 +632,16 @@ out:
 static int	setup_old2new(char *old2new, struct st_logfile *old, int num_old,
 		const struct st_logfile *new, int num_new, int use_ino, char **err_msg)
 {
-	int	i, j, rc;
+	int	i, j;
 	char	*p = old2new;
 
 	for (i = 0; i < num_old; i++)
 	{
 		for (j = 0; j < num_new; j++)
 		{
-			rc = is_same_file(old + i, new + j, use_ino, err_msg);
+			int	rc;
+
+			rc = is_same_file_logrt(old + i, new + j, use_ino, err_msg);
 
 			switch (rc)
 			{
