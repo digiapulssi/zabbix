@@ -1388,7 +1388,7 @@ elseif ($srctbl == 'applications') {
 	CArrayHelper::sort($apps, ['name']);
 
 	$data = [];
-	$parentId = $dstfld1 ? CJs::encodeJson($dstfld1) : 'null';
+	$parentId = $dstfld1 ? zbx_jsvalue($dstfld1) : 'null';
 
 	foreach ($apps as $app) {
 		$data[$app['applicationid']] = [
@@ -1403,7 +1403,7 @@ elseif ($srctbl == 'applications') {
 			(new CLink($app['name'], 'javascript:void(0);'))
 				->setId('spanid'.$app['applicationid'])
 				->onClick(
-					'javascript: addValue('.CJs::encodeJson($reference).', '.$app['applicationid'].', '.$parentId.');'
+					'javascript: addValue('.zbx_jsvalue($reference).', '.$app['applicationid'].', '.$parentId.');'
 				)
 		]);
 	}
@@ -1413,7 +1413,7 @@ elseif ($srctbl == 'applications') {
 			new CCol(
 				(new CButton('select', _('Select')))
 					->onClick(
-						"javascript: addSelectedValues('applications', ".CJs::encodeJson($reference).', '.$parentId.');'
+						"javascript: addSelectedValues('applications', ".zbx_jsvalue($reference).', '.$parentId.');'
 					)
 			)
 		);
