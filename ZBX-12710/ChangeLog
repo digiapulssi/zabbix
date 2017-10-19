@@ -1,6 +1,7 @@
 Changes for 4.0.0alpha1
 
 New features:
+...G...... [ZBXNEXT-3493] added Windows service configuration check to determine if service can be trigger started (andris, viktors)
 A.F....PS. [ZBXNEXT-4181] fixed Zabbix server to accept active Zabbix proxy requests only from allowed address if specified (sasha, vso)
 .......P.. [ZBXNEXT-4181] fixed passive Zabbix proxy to accept Zabbix server requests only from allowed address (vso)
 ....I..PS. [ZBX-10576] restructured unixODBC related code, moved it to a dedicated directory (gleb)
@@ -11,6 +12,21 @@ Bug fixes:
 ........S. [ZBX-10578] fixed redundant init_result() calls; thanks to MATSUDA Daiki for the patch (abs)
 ....I..... [ZBX-12793] fixed system compiler checks during source configuration (abs)
 ...G...... [ZBX-11970] fixed style for some enumerators and structure type declarations (abs, andris)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.4rc1
+
+New features:
+..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
+
+Bug fixes:
+..F....... [ZBX-12543] fixed problems with session management (vjaceslavs)
+..F....... [ZBX-12670] fixed {HOST.*} macro support in map trigger elements (vjaceslavs)
+..F....... [ZBX-12784] fixed advanced label support in map editing mode (vjaceslavs)
+..F....... [ZBX-12666] fixed ETag comparison check in jsLoader for web server with enabled compression (gcalenko)
+..F....... [ZBX-12775] fixed undefined index error in dashboard problems widget (miks)
+........S. [ZBX-12857] improved pre-processing manager performance when processing large number of values (wiper)
+........S. [ZBX-12259] added an informative warning about lack of data for macros used in LLD rule filter (viktors)
 
 --------------------------------------------------------------------------------
 Changes for 3.4.3
@@ -343,6 +359,16 @@ A.F.....S. [ZBX-11470] fixed unary minus and prefix extraction for trigger expre
 ..F....... [ZBX-11371] prevented executing client side script by changing value of $ZBX_SERVER_NAME from setup.php page (Cemeris)
 A......... [ZBX-5116] prevented escaping forward slashes while encoding API response to JSON text (Cemeris)
 .......PS. [ZBX-11036] fixed server not to synchronize IPMI configuration for new hosts without IPMI (vso)
+
+--------------------------------------------------------------------------------
+Changes for 3.2.10rc1
+
+New features:
+..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
+
+Bug fixes:
+..F....... [ZBX-12543] fixed problems with session management (vjaceslavs)
+........S. [ZBX-12259] added an informative warning about lack of data for macros used in LLD rule filter (viktors)
 
 --------------------------------------------------------------------------------
 Changes for 3.2.9
@@ -863,6 +889,17 @@ A......... [ZBX-10030] fixed API action update method request with only "actioni
 A......... [ZBX-10049] fixed optional field validation in drule.update API method (Gunars)
 ..F....PS. [ZBX-10076] fixed text information containing non-ASCII characters being saved incorrectly to IBM DB2 database in case of system locale misconfiguration (gleb, Oleg)
 ..F....... [ZBX-9989] optimized SQL queries for graphs building (Gunars, Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.13rc1
+
+New features:
+..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
+
+Bug fixes:
+..F....... [ZBX-12543] fixed problems with session management (vjaceslavs)
+..F....... [ZBX-12655] fixed action message visibility in event details when users belongs to different groups (gcalenko)
+........S. [ZBX-12259] added an informative warning about lack of data for macros used in LLD rule filter (viktors)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.12
