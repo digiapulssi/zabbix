@@ -820,7 +820,7 @@ elseif ($srctbl == 'hosts') {
 	order_result($hosts, 'name');
 
 	$data = [];
-	$parentId = $dstfld1 ? $dstfld1 : '';
+	$parentid = $dstfld1 ? $dstfld1 : '';
 	$form->addVar('parentid', $parentid);
 
 	foreach ($hosts as &$host) {
@@ -1537,6 +1537,8 @@ elseif ($srctbl == 'sysmaps') {
 			$description = $sysmap['name'];
 		}
 		else {
+			$description = new CLink($sysmap['name'], 'javascript:void(0);');
+
 			if ($multiselect) {
 				$description->setAttribute('data-value', $sysmap['sysmapid']);
 			}
