@@ -364,18 +364,18 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 
 		if (count($elements) === 0 || $elements[0]->getTagName() !== 'select') {
 			$elements = $this->webDriver->findElements(WebDriverBy::name($id));
-
-			if (count($elements) === 0 || $elements[0]->getTagName() !== 'select') {
-				$this->fail("Element was not found");
-			}
-
-			$options = [];
-			foreach ($elements[0]->findElements(WebDriverBy::tagName('option')) as $child) {
-				$options[] = $child->getText();
-			}
-
-			$this->assertTrue(empty(array_diff($strings, $options)));
 		}
+
+		if (count($elements) === 0 || $elements[0]->getTagName() !== 'select') {
+			$this->fail("Element was not found");
+		}
+
+		$options = [];
+		foreach ($elements[0]->findElements(WebDriverBy::tagName('option')) as $child) {
+			$options[] = $child->getText();
+		}
+
+		$this->assertTrue(empty(array_diff($strings, $options)));
 	}
 
 	public function zbxTestDropdownSelect($id, $string) {
