@@ -544,7 +544,8 @@ function overlayDialogue(params, defer) {
 		cancel_action = null,
 		overlay_dialogue_footer = jQuery('<div>', {
 			class: 'overlay-dialogue-footer'
-		});
+		}),
+		defer = defer || jQuery.Deferred();
 
 	jQuery.each(params.buttons, function(index, obj) {
 		var button = jQuery('<button>', {
@@ -579,15 +580,23 @@ function overlayDialogue(params, defer) {
 		overlay_dialogue_footer.append(button);
 	});
 
+	var body_mutation_observer = window.MutationObserver || window.WebKitMutationObserver,
+		body_mutation_observer = new body_mutation_observer(function(mutations) {
+		mutations.forEach(function(m) {
+			defer.notify();
+		})
+	});
+
 	var overlay_dialogue = jQuery('<div>', {
-		id: 'overlay_dialogue',
-		class: 'overlay-dialogue modal'
-	})
+			id: 'overlay_dialogue',
+			class: 'overlay-dialogue modal'
+		})
 		.append(
 			jQuery('<button>', {
 				class: 'overlay-close-btn'
 			})
 				.click(function() {
+					body_mutation_observer.disconnect();
 					if (cancel_action !== null) {
 						cancel_action();
 					}
@@ -606,14 +615,15 @@ function overlayDialogue(params, defer) {
 				class: 'overlay-dialogue-body',
 			})
 				.append(params.content)
-				.bind('DOMSubtreeModified', function() {
-					defer.notify();
+				.each(function() {
+					body_mutation_observer.observe(this, {childList: true, subtree: true});
 				})
 		)
 		.append(overlay_dialogue_footer)
 		.on('keydown', function(e) {
 			// ESC
 			if (e.which == 27) {
+				body_mutation_observer.disconnect();
 				if (cancel_action !== null) {
 					cancel_action();
 				}
@@ -625,16 +635,11 @@ function overlayDialogue(params, defer) {
 		.css({'visibility': 'hidden'})
 		.appendTo('body');
 
-	if (!defer) {
-		var defer = jQuery.Deferred();
-		defer.notify();
-	}
-
 	// Triggers modal window position each time when defer.notify() is called.
 	jQuery.when(defer).progress(function() {
 		overlay_dialogue.css({
-			'left': Math.round((jQuery(window.top).width() - jQuery(overlay_dialogue).width()) / 2) + 'px',
-			'top': Math.round((jQuery(window.top).height() - jQuery(overlay_dialogue).height()) / 2) + 'px',
+			'left': Math.round((jQuery(window).width() - jQuery(overlay_dialogue).width()) / 2) + 'px',
+			'top': Math.round((jQuery(window).height() - jQuery(overlay_dialogue).height()) / 2) + 'px',
 			'visibility': 'visible'
 		});
 	});
