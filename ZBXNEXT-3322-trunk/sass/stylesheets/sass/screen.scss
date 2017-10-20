@@ -528,15 +528,22 @@ ul.top-nav-icons {
 	}
 
 	.cell {
-			text-align: right;
-			ul {
-				li {
-					display: inline-block;
-					vertical-align: top;
-					position: relative;
-					padding: 0 0 0 10px;
-				}
+		text-align: right;
+		ul {
+			li {
+				display: inline-block;
+				vertical-align: top;
+				position: relative;
+				padding: 0 0 0 10px;
 			}
+		}
+
+		.header-dropdown-list {
+			li {
+				display: block;
+				padding: 0;
+			}
+		}
 	}
 
 	.dashbrd-edit {

@@ -396,6 +396,9 @@ ul.top-nav-icons {
       vertical-align: top;
       position: relative;
       padding: 0 0 0 10px; }
+    .header-title .cell .header-dropdown-list li {
+      display: block;
+      padding: 0; }
   .header-title .dashbrd-edit {
     position: relative;
     display: inline-block;
