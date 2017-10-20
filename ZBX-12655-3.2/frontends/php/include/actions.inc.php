@@ -1562,7 +1562,7 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 		'output' => ['eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype', 'error'],
 		'eventids' => $eventids,
 		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
-		'sortOrder' => ['alertid' => ZBX_SORT_DOWN]
+		'sortorder' => ['alertid' => ZBX_SORT_DOWN]
 	]);
 
 	$alerts = [];
