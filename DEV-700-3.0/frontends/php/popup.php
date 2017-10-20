@@ -240,7 +240,8 @@ if (getRequest('parent_discoveryid') && !API::DiscoveryRule()->isReadable([$_REQ
 	access_deny();
 }
 
-$dstfrm = getRequest('dstfrm', ''); // destination form
+// Destination form.
+$dstfrm = html_entity_decode(getRequest('dstfrm', ''), ENT_QUOTES | ENT_HTML5);
 // Output field on destination form.
 $dstfld1 = html_entity_decode(getRequest('dstfld1', ''), ENT_QUOTES | ENT_HTML5);
 // Second output field on destination form.
