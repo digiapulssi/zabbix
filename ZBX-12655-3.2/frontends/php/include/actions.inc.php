@@ -1560,7 +1560,7 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 
 	$db_alerts = API::Alert()->get([
 		'output' => ['eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype', 'error'],
-		'eventids' => $eventids,
+		'eventids' => array_keys($eventids),
 		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
 		'sortorder' => ['alertid' => ZBX_SORT_DOWN]
 	]);
