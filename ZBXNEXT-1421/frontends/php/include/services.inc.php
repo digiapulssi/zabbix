@@ -521,8 +521,18 @@ function sortServices(array &$services) {
 		['field' => 'name', 'order' => ZBX_SORT_UP]
 	];
 
+	// Put dependent services in separate array just to avoid them to be sorted before right time.
+	$dependent_services = [];
+	foreach ($services as $serviceid => $service) {
+		if ($service['parent']) {
+			$dependent_services[$serviceid] = $service;
+			unset($services[$serviceid]);
+		}
+	}
+
 	// Sort first level entries.
 	CArrayHelper::sort($services, $sort_options);
+	$services += $dependent_services;
 
 	// Sort dependencies.
 	foreach ($services as &$service) {
