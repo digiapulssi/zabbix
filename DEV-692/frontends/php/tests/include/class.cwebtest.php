@@ -75,11 +75,15 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	protected $current_url = null;
 
 	// Table that should be backed up at the test suite level.
-	protected static $suite_table = null;
+	protected static $suite_backup = null;
 	// Table that should be backed up at the test case level.
-	protected $case_table = null;
+	protected $case_backup = null;
+	// Table that should be backed up at the test case level once (for multiple case executions).
+	protected static $case_backup_once = null;
 	// Shared browser instance.
 	protected static $shared_browser = null;
+	// Name of the last executed test.
+	protected static $last_test_case = null;
 	// Shared cookie value.
 	protected static $cookie = null;
 
@@ -749,6 +753,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		global $DB;
 		static $suite = null;
 		$class_name = get_class($this);
+		$case_name = $this->getName(false);
 
 		if (!isset($DB['DB'])) {
 			DBconnect($error);
@@ -757,20 +762,36 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		// Perform parsing of test method annotations.
 		$annotations = PHPUnit_Util_Test::parseTestMethodAnnotations($class_name, $this->getName(false));
 
-		// Perform test case level backup.
-		if (array_key_exists('method', $annotations) && is_array($annotations['method'])
-				&& array_key_exists('backup', $annotations['method']) && is_array($annotations['method']['backup'])
-				&& count($annotations['method']['backup']) === 1) {
-			$this->case_table = $annotations['method']['backup'][0];
-			DBsave_tables($this->case_table);
+		// Restore data from backup if test case changed
+		if (self::$case_backup_once !== null && self::$last_test_case !== $case_name) {
+			DBrestore_tables(self::$case_backup_once);
+			self::$case_backup_once = null;
+		}
+
+		// Perform test case level backups.
+		if (array_key_exists('method', $annotations) && is_array($annotations['method'])) {
+			// Backup performed before every test case execution.
+			if (array_key_exists('backup', $annotations['method']) && is_array($annotations['method']['backup'])
+					&& count($annotations['method']['backup']) === 1) {
+				$this->case_backup = $annotations['method']['backup'][0];
+				DBsave_tables($this->case_backup);
+			}
+
+			// Backup performed once before first test case execution.
+			if (self::$last_test_case !== $case_name && array_key_exists('backup-once', $annotations['method'])
+					&& is_array($annotations['method']['backup-once'])
+					&& count($annotations['method']['backup-once']) === 1) {
+				self::$case_backup_once = $annotations['method']['backup-once'][0];
+				DBsave_tables(self::$case_backup_once);
+			}
 		}
 
 		// Perform test suite level backup.
 		if ($suite !== $class_name && array_key_exists('class', $annotations) && is_array($annotations['class'])
 				&& array_key_exists('backup', $annotations['class']) && is_array($annotations['class']['backup'])
 				&& count($annotations['class']['backup']) === 1) {
-			self::$suite_table = $annotations['class']['backup'][0];
-			DBsave_tables(self::$suite_table);
+			self::$suite_backup = $annotations['class']['backup'][0];
+			DBsave_tables(self::$suite_backup);
 		}
 
 		// Share browser when it is possible.
@@ -783,6 +804,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		}
 
 		$suite = $class_name;
+		self::$last_test_case = $case_name;
 	}
 
 	/**
@@ -793,8 +815,8 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	public function onAfterTestCase() {
 		global $DB;
 
-		if ($this->case_table !== null) {
-			DBrestore_tables($this->case_table);
+		if ($this->case_backup !== null) {
+			DBrestore_tables($this->case_backup);
 		}
 
 		// Perform browser cleanup.
@@ -810,13 +832,23 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	public static function onAfterTestSuite() {
 		global $DB;
 
-		if (self::$suite_table !== null) {
+		if (self::$suite_backup !== null || self::$case_backup_once !== null) {
 			DBconnect($error);
-			DBrestore_tables(self::$suite_table);
+
+			// Restore suite level backups.
+			if (self::$suite_backup !== null) {
+				DBrestore_tables(self::$suite_backup);
+				self::$suite_backup = null;
+			}
+
+			// Restore case level backups.
+			if (self::$case_backup_once !== null) {
+				DBrestore_tables(self::$case_backup_once);
+				self::$case_backup_once = null;
+			}
+
 			DBclose();
 		}
-
-		self::$suite_table = null;
 
 		// Browser is always terminated at the end of the test suite.
 		self::closeBrowser();
