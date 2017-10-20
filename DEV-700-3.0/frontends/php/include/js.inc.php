@@ -339,6 +339,50 @@ function insert_js_function($fnct_name) {
 					close_window();
 				}');
 			break;
+
+		case 'popupSelectHandlers':
+			insert_js('
+				var processing = false;
+
+				jQuery(document)
+					.on("click", "[data-value]", function() {
+						var reference = jQuery("[name=reference]").val(),
+							parentid = jQuery("[name=parentid]").val()||"",
+							value = jQuery(this).data("value");
+
+						if (!processing) {
+							processing = true;
+							addValue(reference, value, parentid != "" ? parentid : null);
+						}
+
+						return false;
+					})
+					.on("click", "[data-values]", function() {
+						var dstfrm = jQuery("[name=dstfrm]").val(),
+							values = jQuery(this).data("values"),
+							submit_parent = jQuery("[name=submit_parent]").val();
+
+						if (!processing) {
+							processing = true;
+							addValues(dstfrm, values, submit_parent ? submit_parent : false);
+						}
+
+						return false;
+					});
+
+				function addSelectedFormValuesHandler(formid) {
+					var reference = jQuery("[name=reference]").val(),
+						parentid = jQuery("[name=parentid]").val()||"";
+
+					if (!processing) {
+						processing = true;
+						addSelectedValues(formid, reference, parentid != "" ? parentid : null);
+					}
+
+					return false;
+				};
+			');
+			break;
 	}
 };
 
