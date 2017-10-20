@@ -131,7 +131,7 @@ class testPageAdministrationMediaTypes extends CWebTest {
 
 	/**
 	 * @dataProvider allMediaTypes
-	 * @backup media_type
+	 * @backup-once media_type
 	 */
 	public function testPageAdministrationMediaTypes_Delete($mediatype) {
 		$dbRow = DBfetch(DBselect(
