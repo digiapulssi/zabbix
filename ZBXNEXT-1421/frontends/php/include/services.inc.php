@@ -527,6 +527,10 @@ function sortServices(array &$services) {
 	// Sort dependencies.
 	foreach ($services as &$service) {
 		if ($service['dependencies']) {
+			$service['dependencies'] = array_map(function($dependent_item) use($services) {
+				return $dependent_item + ['name' => $services[$dependent_item['serviceid']]['name']];
+			}, $service['dependencies']);
+
 			CArrayHelper::sort($service['dependencies'], $sort_options);
 		}
 	}
