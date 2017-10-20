@@ -220,6 +220,10 @@ void	get_values_java(unsigned char request, const DC_ITEM *items, AGENT_RESULT *
 
 		zbx_tcp_close(&s);
 	}
+	else
+	{
+		err = NETWORK_ERROR;
+	}
 
 	zbx_json_free(&json);
 
