@@ -95,7 +95,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	protected function onNotSuccessfulTest($e) {
-		if ($this->screenshot !== null) {
+		if ($this->screenshot !== null && $e instanceof Exception) {
 			$screenshot_name = md5(microtime(true)).'.png';
 
 			if (file_put_contents(PHPUNIT_SCREENSHOT_DIR.$screenshot_name, $this->screenshot) !== false) {
