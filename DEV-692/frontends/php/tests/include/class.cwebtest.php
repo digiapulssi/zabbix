@@ -80,6 +80,8 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	protected $case_table = null;
 	// Shared browser instance.
 	protected static $shared_browser = null;
+	// Shared cookie value.
+	protected static $cookie = null;
 
 	protected function putBreak() {
 		fwrite(STDOUT, "\033[s    \033[93m[Breakpoint] Press \033[1;93m[RETURN]\033[0;93m to continue...\033[0m");
@@ -102,11 +104,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			}
 		}
 
-		if (self::$shared_browser !== null) {
-			self::$shared_browser->quit();
-			self::$shared_browser = null;
-		}
-
+		self::closeBrowser();
 		parent::onNotSuccessfulTest($e);
 	}
 
@@ -123,7 +121,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function authenticate() {
-		authenticateUser('09e7d4286dfdca4ba7be15e0f3b2b55a', 1);
+		$this->authenticateUser('09e7d4286dfdca4ba7be15e0f3b2b55a', 1);
 	}
 
 	public function authenticateUser($sessionid, $userId) {
@@ -133,12 +131,18 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			DBexecute("insert into sessions (sessionid, userid) values ('$sessionid', $userId)");
 		}
 
-		$this->webDriver->manage()->addCookie([
-			'name' => 'zbx_sessionid',
-			'value' => $sessionid,
-			'domain' => parse_url(PHPUNIT_URL, PHP_URL_HOST),
-			'path' => parse_url(PHPUNIT_URL, PHP_URL_PATH)
-		]);
+		if (self::$cookie === null || $sessionid !== self::$cookie['value']) {
+			self::$cookie = [
+				'name' => 'zbx_sessionid',
+				'value' => $sessionid,
+				'domain' => parse_url(PHPUNIT_URL, PHP_URL_HOST),
+				'path' => parse_url(PHPUNIT_URL, PHP_URL_PATH)
+			];
+
+			$this->webDriver->get(PHPUNIT_URL);
+		}
+
+		$this->webDriver->manage()->addCookie(self::$cookie);
 	}
 
 	public function zbxTestOpen($url) {
@@ -691,6 +695,15 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 
 		if (self::$shared_browser !== null) {
 			try {
+				if (self::$cookie !== null) {
+					$session_id = self::$shared_browser->manage()->getCookieNamed('zbx_sessionid');
+
+					if ($session_id === null || !array_key_exists('value', $session_id)
+							|| $session_id['value'] !== self::$cookie['value']) {
+						self::$cookie = null;
+					}
+				}
+
 				$windows = self::$shared_browser->getWindowHandles();
 
 				if (count($windows) > 1) {
@@ -723,13 +736,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 
 		if ($error) {
 			// Cleanup failed, browser will be terminated.
-			try {
-				self::$shared_browser->quit();
-				self::$shared_browser = null;
-			}
-			catch (Exception $e) {
-				// Error handling is not missing here.
-			}
+			self::closeBrowser();
 		}
 	}
 
@@ -812,9 +819,22 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		self::$suite_table = null;
 
 		// Browser is always terminated at the end of the test suite.
-		if (self::$shared_browser !== null) {
-			self::$shared_browser->quit();
-			self::$shared_browser = null;
+		self::closeBrowser();
+	}
+
+	/**
+	 * Close shared browser instance.
+	 */
+	protected static function closeBrowser() {
+		try {
+			if (self::$shared_browser !== null) {
+				self::$shared_browser->quit();
+				self::$shared_browser = null;
+				self::$cookie = null;
+			}
+		}
+		catch (Exception $e) {
+			// Error handling is not missing here.
 		}
 	}
 }
