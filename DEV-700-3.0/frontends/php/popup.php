@@ -240,14 +240,10 @@ if (getRequest('parent_discoveryid') && !API::DiscoveryRule()->isReadable([$_REQ
 	access_deny();
 }
 
-// Destination form.
-$dstfrm = html_entity_decode(getRequest('dstfrm', ''), ENT_QUOTES | ENT_HTML5);
-// Output field on destination form.
-$dstfld1 = html_entity_decode(getRequest('dstfld1', ''), ENT_QUOTES | ENT_HTML5);
-// Second output field on destination form.
-$dstfld2 = html_entity_decode(getRequest('dstfld2', ''), ENT_QUOTES | ENT_HTML5);
-// Third output field on destination form.
-$dstfld3 = html_entity_decode(getRequest('dstfld3', ''), ENT_QUOTES | ENT_HTML5);
+$dstfrm = getRequest('dstfrm', ''); // destination form
+$dstfld1 = getRequest('dstfld1', ''); // output field on destination form
+$dstfld2 = getRequest('dstfld2', ''); // second output field on destination form
+$dstfld3 = getRequest('dstfld3', ''); // third output field on destination form
 $srcfld1 = getRequest('srcfld1', ''); // source table field [can be different from fields of source table]
 $srcfld2 = getRequest('srcfld2'); // second source table field [can be different from fields of source table]
 $srcfld3 = getRequest('srcfld3'); //  source table field [can be different from fields of source table]
@@ -259,7 +255,7 @@ $withGraphs = getRequest('with_graphs', 0);
 $withItems = getRequest('with_items', 0);
 $noempty = getRequest('noempty'); // display/hide "Empty" button
 $excludeids = zbx_toHash(getRequest('excludeids', []));
-$reference = html_entity_decode(getRequest('reference', getRequest('srcfld1', 'unknown')), ENT_QUOTES | ENT_HTML5);
+$reference = getRequest('reference', getRequest('srcfld1', 'unknown'));
 $realHosts = getRequest('real_hosts', 0);
 $monitoredHosts = getRequest('monitored_hosts', 0);
 $templatedHosts = getRequest('templated_hosts', 0);
