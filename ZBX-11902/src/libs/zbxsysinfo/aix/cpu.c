@@ -25,9 +25,9 @@
 int	SYSTEM_CPU_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 #ifdef HAVE_LIBPERFSTAT
-	char			*tmp;
+	char				*tmp;
 	perfstat_partition_config_t	part_cfg;
-	int			rc;
+	int				rc;
 
 	if (1 < request->nparam)
 	{

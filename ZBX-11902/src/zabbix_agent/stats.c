@@ -120,7 +120,7 @@ static int	zbx_get_cpu_num()
 #elif defined(HAVE_LIBPERFSTAT)
 	/* AIX 6.1 */
 	perfstat_partition_config_t	part_cfg;
-	int			rc;
+	int				rc;
 
 	rc = perfstat_partition_config(NULL, &part_cfg, sizeof(perfstat_partition_config_t), 1);
 
