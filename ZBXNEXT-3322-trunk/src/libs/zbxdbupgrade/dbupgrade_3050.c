@@ -1,4 +1,3 @@
-<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -18,20 +17,29 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-$pageHeader = (new CPageHeader(_('Warning').' ['._s('refreshed every %1$s sec.', 30).']'))
-	->addCssFile('styles/'.CHtml::encode($data['theme']).'.css')
-	->display();
+#include "common.h"
+#include "db.h"
+#include "dbupgrade.h"
 
-$buttons = array_key_exists('buttons', $data)
-	? $data['buttons']
-	: [(new CButton(null, _('Retry')))->onClick('document.location.reload();')];
+/*
+ * 4.0 development database patches
+ */
 
-echo '<body lang="'.CWebUser::getLang().'">';
+#ifndef HAVE_SQLITE3
 
-(new CDiv(new CWarning($data['header'], $data['messages'], $buttons)))
-	->addClass(ZBX_STYLE_ARTICLE)
-	->show();
+static int	DBpatch_3050000(void)
+{
+	const ZBX_FIELD	field = {"proxy_address", "", NULL, NULL, 255, ZBX_TYPE_CHAR, ZBX_NOTNULL, 0};
 
-echo get_js("setTimeout('document.location.reload();', 30000);");
-echo '</body>';
-echo '</html>';
+	return DBadd_field("hosts", &field);
+}
+
+#endif
+
+DBPATCH_START(3050)
+
+/* version, duplicates flag, mandatory flag */
+
+DBPATCH_ADD(3050000, 0, 1)
+
+DBPATCH_END()
