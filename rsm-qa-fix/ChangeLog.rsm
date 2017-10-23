@@ -1,6 +1,7 @@
 Changes for rsm1.0.0rc32
 
 New features:
+....I....T [290] fine-tuned and parametrized "Template OS Linux"; added macros with default values (dotneft, gleb)
 
 Bug fixes:
 
