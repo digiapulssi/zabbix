@@ -270,7 +270,7 @@ function insert_js_function($fnct_name) {
 						}
 					});
 
-					if (values.length) {
+					if (window.opener && values.length) {
 						window.opener.jQuery(window.opener.document)
 							.trigger("add.popup", {
 								"object": reference,
