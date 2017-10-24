@@ -4,6 +4,7 @@ New features:
 ..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
 
 Bug fixes:
+...G...... [ZBX-11902] fixed CPU count for LPAR partitions in IBM AIX (abs)
 ...G...... [ZBX-12260] fixed windows agent to support UTF-16LE, UCS-2, UCS-2LE encodings (vso)
 ..F....... [ZBX-6669] fixed use of current host as filter when selecting items for graph forms and trigger forms (gcalenko)
 ..F....... [ZBX-12722] fixed scrollbar causing a JS error in "500 latest values" page due to unnecessarily initialization (Ivo)
@@ -538,6 +539,7 @@ New features:
 ..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
 
 Bug fixes:
+...G...... [ZBX-11902] fixed CPU count for LPAR partitions in IBM AIX (abs)
 ...G...... [ZBX-12260] fixed windows agent to support UTF-16LE, UCS-2, UCS-2LE encodings (vso)
 ..F....... [ZBX-12722] fixed scrollbar causing a JS error in "500 latest values" page due to unnecessarily initialization (Ivo)
 ..F....... [ZBX-12710] fixed OS type detection logic (vjaceslavs)
