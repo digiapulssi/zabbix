@@ -36,7 +36,9 @@ function local_generateHeader($data) {
 		else {
 			$x_frame_options = 'SAMEORIGIN';
 			$allowed_urls = explode(',', X_FRAME_OPTIONS);
-			$url_to_check = array_key_exists('HTTP_REFERER', $_SERVER) ? $_SERVER['HTTP_REFERER'] : null;
+			$url_to_check = array_key_exists('HTTP_REFERER', $_SERVER)
+				? parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)
+				: null;
 
 			if ($url_to_check) {
 				foreach ($allowed_urls as $allowed_url) {
