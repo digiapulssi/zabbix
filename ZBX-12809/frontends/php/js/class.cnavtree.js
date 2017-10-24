@@ -598,7 +598,6 @@ jQuery(function($) {
 			 */
 			var itemEditDialog = function($obj, id, parent, depth) {
 				var url = new Curl('zabbix.php'),
-					defer = jQuery.Deferred(),
 					item_edit = !!id,
 					ajax_data = {
 						map_name: '',
@@ -741,10 +740,7 @@ jQuery(function($) {
 									'action': function() {}
 								}
 							]
-						}, defer);
-					},
-					complete: function() {
-						defer.notify();
+						});
 					}
 				});
 			};

@@ -528,12 +528,10 @@ function overlayDialogueDestroy() {
  * @param {bool}   params.buttons[]['focused']   (optional) Focus this button.
  * @param {bool}   params.buttons[]['enabled']   (optional) Should the button be enabled? Default: true.
  * @param {bool}   params.buttons[]['keepOpen']  (optional) Prevent dialogue closing, if button action returned false.
- * @param {object} defer						 (optional) jQuery.Deferred() object used to trigger window
- *												 re-positioning once the 'notify' method is called.
  *
  * @return {bool}
  */
-function overlayDialogue(params, defer) {
+function overlayDialogue(params) {
 	jQuery('<div>', {
 		id: 'overlay_bg',
 		class: 'overlay-bg'
@@ -545,7 +543,7 @@ function overlayDialogue(params, defer) {
 		overlay_dialogue_footer = jQuery('<div>', {
 			class: 'overlay-dialogue-footer'
 		}),
-		defer = defer || jQuery.Deferred();
+		defer = jQuery.Deferred();
 
 	jQuery.each(params.buttons, function(index, obj) {
 		var button = jQuery('<button>', {

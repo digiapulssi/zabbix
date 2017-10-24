@@ -484,8 +484,7 @@ function getMenuPopupDashboard(options) {
 					item.clickCallback = function () {
 						var	obj = jQuery(this),
 							url = new Curl('zabbix.php'),
-							error_message = t('Something went wrong. Please try again later!'),
-							defer = jQuery.Deferred();
+							error_message = t('Something went wrong. Please try again later!');
 						url.setArgument('action', 'dashboard.get');
 
 						jQuery.ajax({
@@ -497,7 +496,7 @@ function getMenuPopupDashboard(options) {
 									var form = jQuery('form[name="dashboard_sharing_form"]');
 
 									showDialogForm(form, {"title": t('Dashboard sharing'), "action_title": t('Update')},
-										response.data, defer
+										response.data
 									);
 								}
 								else if (typeof response === 'string' && response.indexOf(t('Access denied')) !== -1) {
@@ -506,9 +505,6 @@ function getMenuPopupDashboard(options) {
 								else {
 									alert(error_message);
 								}
-							},
-							complete: function() {
-								defer.notify();
 							},
 							error: function() {
 								alert(error_message);
@@ -542,10 +538,9 @@ function getMenuPopupDashboard(options) {
 	return [{label: options.label, items: options.items}];
 }
 
-function showDialogForm(form, options, formData, defer) {
+function showDialogForm(form, options, formData) {
 	var oldFormParent = form.parent(),
-		errorBlockId = 'dialog-form-error-container',
-		defer = defer || null;
+		errorBlockId = 'dialog-form-error-container';
 
 	// Trick to get outerWidth, outerHeight of "display:none" form.
 	form.css('visibility', 'hidden');
@@ -604,14 +599,10 @@ function showDialogForm(form, options, formData, defer) {
 				}
 			}
 		]
-	}, defer);
+	});
 
 	form.css('visibility', 'visible');
 	overlayDialogueOnLoad(true);
-
-	if (defer) {
-		defer.notify();
-	}
 }
 
 /**

@@ -63,8 +63,7 @@
 <script type="text/javascript">
 	// Change dashboard settings.
 	function dashbrd_config() {
-		var form = jQuery('form[name="dashboard_form"]'),
-			defer = jQuery.Deferred();
+		var form = jQuery('form[name="dashboard_form"]');
 
 		showDialogForm(
 			form,
@@ -75,8 +74,7 @@
 			{
 				'name': form.data('data').name,
 				'owner': form.data('data').owner
-			},
-			defer
+			}
 		);
 	};
 
@@ -163,8 +161,8 @@
 	}
 
 	// Function is in global scope, because it should be accessable by html onchange() attribute.
-	function updateWidgetConfigDialogue(defer) {
-		jQuery('.dashbrd-grid-widget-container').dashboardGrid('updateWidgetConfigDialogue', defer);
+	function updateWidgetConfigDialogue() {
+		jQuery('.dashbrd-grid-widget-container').dashboardGrid('updateWidgetConfigDialogue');
 	}
 
 	/**
