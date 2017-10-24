@@ -69,11 +69,13 @@ class testPageApplications extends CWebTest {
 		);
 	}
 
+	/**
+	* select Host and HostGroup
+	*/
 	public static function selectHostGroup() {
 		return [
 			[
 				[
-					// "Zabbix servers" "Test host"
 					'groupid' => 4,
 					'groupname' => 'Zabbix servers',
 					'hostid' => 10084,
@@ -83,6 +85,9 @@ class testPageApplications extends CWebTest {
 		];
 	}
 
+	/**
+	* select Application for operations
+	*/
 	public function selectApp() {
 		$this->zbxTestCheckboxSelect('applications_349');
 		$this->zbxTestCheckboxSelect('applications_350');
@@ -91,6 +96,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
+	* Test check of redirect Configuration -> Hosts -> Applications.
 	* @dataProvider selectHostGroup
 	*/
 	public function testPageApplications_CheckSelectHost($data) {
@@ -102,6 +108,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
+	* Test check of correct select Host and HostGroup.
 	* @dataProvider selectHostGroup
 	*/
 	public function testPageApplications_CheckSelectGroupAndHost($data) {
@@ -112,6 +119,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
+	* Test check of activate selected Applications.
 	* @dataProvider selectHostGroup
 	*/
 	public function testPageApplications_EnableSelectApp($data) {
@@ -126,6 +134,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
+	* Test check of deactivate selected Applications.
 	* @dataProvider selectHostGroup
 	*/
 	public function testPageApplications_DisableSelectApp($data) {
@@ -140,9 +149,10 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
+	* Test check for attempt of delete selected Applications.
 	* @dataProvider selectHostGroup
 	*/
-	public function testPageApplications_AttempDeleteSelectApp($data) {
+	public function testPageApplications_AttemptDeleteSelectApp($data) {
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
 		$this->selectApp();
@@ -154,6 +164,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
+	* Test check of activate all Applications for selected Host and HostGroup.
 	* @dataProvider selectHostGroup
 	*/
 	public function testPageApplications_EnableAllApp($data) {
@@ -168,6 +179,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
+	 * Test check of deactivate all Applications for selected Host and HostGroup.
 	* @dataProvider selectHostGroup
 	*/
 	public function testPageApplications_DisableAllApp($data) {
@@ -182,6 +194,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
+	* Test check for attempt of delete all Applications for selected Host and HostGroup.
 	* @dataProvider selectHostGroup
 	*/
 	public function testPageApplications_AttempDeleteAllApp($data) {
