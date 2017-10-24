@@ -52,7 +52,7 @@ int	SYSTEM_CPU_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	SET_UI64_RESULT(result, part_cfg.vcpus.online);
+	SET_UI64_RESULT(result, part_cfg.lcpus);
 
 	return SYSINFO_RET_OK;
 #else

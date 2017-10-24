@@ -127,7 +127,7 @@ static int	zbx_get_cpu_num()
 	if (-1 == rc || 1 != rc)
 		goto return_one;
 
-	return (int)part_cfg.vcpus.online;
+	return (int)part_cfg.lcpus;
 #endif
 
 #ifndef _WINDOWS
