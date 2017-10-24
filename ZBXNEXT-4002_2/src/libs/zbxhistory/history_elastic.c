@@ -320,9 +320,13 @@ static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
  ************************************************************************************/
 static void	elastic_writer_flush()
 {
+	const char		*__function_name = "elastic_writer_flush";
+
 	struct curl_slist	*curl_headers = NULL;
 	int			i, running, previous, msgnum;
 	CURLMsg			*msg;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (0 == writer.initialized)
 		return;
@@ -335,6 +339,8 @@ static void	elastic_writer_flush()
 		zbx_elastic_data_t	*data = hist->data;
 
 		curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
+
+		zabbix_log(LOG_LEVEL_DEBUG, "Sending %s", data->buf);
 	}
 
 	previous = 0;
@@ -392,6 +398,8 @@ static void	elastic_writer_flush()
 	curl_slist_free_all(curl_headers);
 
 	elastic_writer_release();
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************************************************
@@ -442,6 +450,8 @@ static void	elastic_destroy(zbx_history_iface_t *hist)
 static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, int start, int count, int end,
 		zbx_vector_history_record_t *values)
 {
+	const char		*__function_name = "elastic_get_values";
+
 	zbx_elastic_data_t	*data = hist->data;
 	size_t			url_alloc = 0, url_offset = 0, id_alloc = 0, scroll_alloc = 0, scroll_offset = 0;
 	int			err, total, empty;
@@ -449,6 +459,8 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	struct zbx_json		query;
 	struct curl_slist	*curl_headers = NULL;
 	char			*scroll_id = NULL, *scroll_query = NULL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (NULL == (data->handle = curl_easy_init()))
 	{
@@ -511,6 +523,8 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
 	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
 
+	zabbix_log(LOG_LEVEL_DEBUG, "Sending query to %s; post data: %s", data->post_url, query.buffer);
+
 	page.offset = 0;
 	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 		zabbix_log(LOG_LEVEL_ERR, "Failed to get values from history storage: %s", curl_easy_strerror(err));
@@ -534,9 +548,15 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		const char		*p = NULL;
 
 		if (200 != http_code)
+		{
+			zabbix_log(LOG_LEVEL_ERR, "Error during receive from elasticsearch: %s", page.data);
+
 			break;
+		}
 
 		empty = 1;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "Received from elasticsearch: %s", page.data);
 
 		zbx_json_open(page.data, &jp);
 		zbx_json_brackets_open(jp.start, &jp_values);
@@ -606,6 +626,8 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, NULL);
 		curl_easy_setopt(data->handle, CURLOPT_CUSTOMREQUEST, "DELETE");
 
+		zabbix_log(LOG_LEVEL_DEBUG, "Elasticsearch closing scroll %s", data->post_url);
+
 		page.offset = 0;
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 			zabbix_log(LOG_LEVEL_WARNING, "Failed to close the scroll query: %s", curl_easy_strerror(err));
@@ -619,6 +641,8 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 	zbx_free(scroll_id);
 	zbx_free(scroll_query);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 
 	return SUCCEED;
 }
@@ -635,11 +659,15 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
  ************************************************************************************/
 static int	elastic_add_values(zbx_history_iface_t *hist, const zbx_vector_ptr_t *history)
 {
+	const char	*__function_name = "elastic_add_values";
+
 	zbx_elastic_data_t	*data = hist->data;
 	int				i, num = 0;
 	ZBX_DC_HISTORY			*h;
 	struct zbx_json			json_idx, json;
 	size_t				buf_alloc = 0, buf_offset = 0;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	zbx_json_init(&json_idx, ZBX_IDX_JSON_ALLOCATE);
 
@@ -696,6 +724,8 @@ static int	elastic_add_values(zbx_history_iface_t *hist, const zbx_vector_ptr_t 
 	}
 
 	zbx_json_free(&json_idx);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 
 	return num;
 }
