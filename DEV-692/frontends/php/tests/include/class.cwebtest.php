@@ -512,89 +512,58 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	// zbx_popup is the default opened window id if none is passed
 	public function zbxTestLaunchPopup($buttonId, $windowId = 'zbx_popup') {
 		$this->zbxTestClickWait($buttonId);
-		$this->zbxTestWaitWindowAndSwitchToIt($windowId);
+		$this->zbxTestSwitchToWindow($windowId);
 	}
 
-	public function zbxTestWaitWindowAndSwitchToIt($id) {
-		$this->webDriver->wait(90, self::WAIT_ITERATION)->until(function () use ($id) {
-			try {
-				$handles = count($this->webDriver->getWindowHandles());
-					if ($handles > 1) {
-						return $this->webDriver->switchTo()->window($id);
-				}
-			}
-			catch (NoSuchElementException $ex) {
-				return false;
-			}
-		});
+	public function zbxTestSwitchToWindow($id) {
+		// No need to wait for default window
+		if ($id !== '') {
+			$this->webDriver->wait(60, self::WAIT_ITERATION)->until(function () use ($id) {
+				$handle = $this->webDriver->getWindowHandle();
+				return ($handle !== $this->webDriver->switchTo()->window($id)->getWindowHandle());
+			});
+		}
+		else {
+			$this->webDriver->switchTo()->window($id);
+		}
 	}
 
 	public function zbxTestSwitchToNewWindow() {
-		$this->webDriver->wait(60, self::WAIT_ITERATION)->until(function () {
-			try {
-				$handles = count($this->webDriver->getWindowHandles());
-					if ($handles > 1) {
-						$all = $this->webDriver->getWindowHandles();
-						return $this->webDriver->switchTo()->window(end($all));
-				}
-			}
-			catch (NoSuchElementException $ex) {
-				return false;
-			}
-		});
+		$handles = $this->webDriver->getWindowHandles();
+		if (count($handles) <= 1) {
+			$this->webDriver->wait(60, self::WAIT_ITERATION)->until(function () {
+				return count($this->webDriver->getWindowHandles()) > 1;
+			});
+
+			$handles = $this->webDriver->getWindowHandles();
+		}
+
+		$this->webDriver->switchTo()->window(end($handles));
 	}
 
 	public function zbxTestClickAndSwitchToNewWindow($xpath) {
+		$handles = count($this->webDriver->getWindowHandles());
 		$this->zbxTestClickXpathWait($xpath);
-			try {
-				$this->webDriver->wait(30, self::WAIT_ITERATION)->until(function () {
-					$handles = count($this->webDriver->getWindowHandles());
-						if ($handles > 1) {
-							$all = $this->webDriver->getWindowHandles();
-							return $this->webDriver->switchTo()->window(end($all));
-						}
-					}
-				);
-			}
-			catch (TimeoutException $ex) {
-				$this->zbxTestClickXpathWait($xpath);
-				$this->webDriver->switchTo()->window('zbx_popup');
-			}
+
+		$this->webDriver->wait(60, self::WAIT_ITERATION)->until(function () use ($handles) {
+			return count($this->webDriver->getWindowHandles()) > $handles;
+		});
+
+		$this->zbxTestSwitchToNewWindow();
 	}
 
 	public function zbxTestWaitWindowClose() {
 		$this->webDriver->wait(10, self::WAIT_ITERATION)->until(function () {
-			try {
-				$handles = count($this->webDriver->getWindowHandles());
-				if ($handles == 1) {
-					return $this->webDriver->switchTo()->window('');
-				}
-			}
-			catch (NoSuchElementException $ex) {
-				return false;
-			}
+			return count($this->webDriver->getWindowHandles()) === 1;
 		});
 
+		$this->webDriver->switchTo()->window('');
 		$this->zbxTestCheckFatalErrors();
 	}
 
 	public function zbxTestClickLinkAndWaitWindowClose($link) {
 		$this->zbxTestClickLinkTextWait($link);
-		try {
-			$this->webDriver->wait(10, self::WAIT_ITERATION)->until(function () {
-				$handles = count($this->webDriver->getWindowHandles());
-					if ($handles == 1) {
-						return $this->webDriver->switchTo()->window('');
-					}
-				}
-			);
-		}
-		catch (TimeoutException $ex) {
-			$this->zbxTestClickLinkTextWait($link);
-			return $this->webDriver->switchTo()->window('');
-		}
-
-		$this->zbxTestCheckFatalErrors();
+		$this->zbxTestWaitWindowClose();
 	}
 
 	public function zbxTestClickAndAcceptAlert($id) {
