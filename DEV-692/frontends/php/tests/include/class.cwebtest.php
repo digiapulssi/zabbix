@@ -360,61 +360,57 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestDropdownHasOptions($id, array $strings) {
-		$elements = $this->webDriver->findElements(WebDriverBy::id($id));
-
-		if (count($elements) === 0 || $elements[0]->getTagName() !== 'select') {
-			$elements = $this->webDriver->findElements(WebDriverBy::name($id));
+		$values = [];
+		foreach ($this->getDropdownOptions($id) as $option) {
+			$values[] = $option->getText();
 		}
 
-		if (count($elements) === 0 || $elements[0]->getTagName() !== 'select') {
-			$this->fail("Element was not found");
-		}
-
-		$options = [];
-		foreach ($elements[0]->findElements(WebDriverBy::tagName('option')) as $child) {
-			$options[] = $child->getText();
-		}
-
-		$this->assertTrue(empty(array_diff($strings, $options)));
+		$this->assertTrue(empty(array_diff($strings, $values)));
 	}
 
 	public function zbxTestDropdownSelect($id, $string) {
-		$attribute = $this->zbxTestIsElementPresent("//select[@id='".$id."']") ? 'id' : 'name';
-		$this->zbxTestAssertElementPresentXpath("//select[@".$attribute."='".$id."']");
+		// Simplified escaping of xpath string.
+		if (strpos($string, '"') !== false) {
+			$string = '\''.$string.'\'';
+		}
+		else {
+			$string = '"'.$string.'"';
+		}
 
-		$this->zbxTestAssertElementPresentXpath("//select[@".$attribute."='".$id."']//option[text()='".$string."']");
-		$this->webDriver->findElement(WebDriverBy::xpath("//select[@".$attribute."='".$id."']//option[text()='".$string."']"))->click();
+		$option = $this->getDropdown($id)->findElement(WebDriverBy::xpath('.//option[text()='.$string.']'));
+
+		if (!$option->isSelected()) {
+			$option->click();
+
+			return $option;
+		}
+
+		return null;
 	}
 
 	public function zbxTestDropdownSelectWait($id, $string) {
-		$attribute = $this->zbxTestIsElementPresent("//select[@id='".$id."']") ? 'id' : 'name';
-		$this->zbxTestAssertElementPresentXpath("//select[@".$attribute."='".$id."']");
-		$this->zbxTestAssertElementPresentXpath("//select[@".$attribute."='".$id."']//option[text()='".$string."']");
+		$option = $this->zbxTestDropdownSelect($id, $string);
 
-		$selected = $this->webDriver->findElement(WebDriverBy::xpath("//select[@".$attribute."='".$id."']/option[@selected='selected']"))->getText();
-
-		if ($selected != $string) {
-			$this->webDriver->findElement(WebDriverBy::xpath("//select[@".$attribute."='".$id."']//option[text()='".$string."']"))->click();
-			$this->zbxTestWaitUntil(WebDriverExpectedCondition::elementToBeSelected(WebDriverBy::xpath("//select[@".$attribute."='".$id."']//option[text()='".$string."']")), 'element not selected');
+		if ($option !== null) {
+			try {
+				$this->zbxTestWaitUntil(WebDriverExpectedCondition::elementToBeSelected($option), null);
+			} catch (StaleElementReferenceException $e) {
+				// Element not found in the cache, looks like page changed.
+				$this->zbxTestWaitForPageToLoad();
+			}
 		}
 	}
 
 	public function zbxTestDropdownAssertSelected($name, $text) {
-		$this->zbxTestAssertElementPresentXpath("//select[@name='".$name."']//option[text()='".$text."' and @selected]");
+		$this->assertEquals($text, $this->zbxTestGetSelectedLabel($name));
 	}
 
 	public function zbxTestGetSelectedLabel($id) {
-		$elements = $this->webDriver->findElements(WebDriverBy::id($id));
-
-		if (count($elements) !== 0 && $elements[0]->getTagName() === 'select') {
-			foreach ($elements[0]->findElements(WebDriverBy::tagName('option')) as $child) {
-				if ($child->isSelected()) {
-					return $child->getText();
-				}
+		foreach ($this->getDropdownOptions($id) as $option) {
+			if ($option->isSelected()) {
+				return $option->getText();
 			}
 		}
-
-		$this->fail("Element was not found");
 	}
 
 	public function zbxTestElementPresentId($id) {
@@ -614,15 +610,15 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function zbxTestGetDropDownElements($dropdownId) {
-		$optionCount = count($this->webDriver->findElements(WebDriverBy::xpath('//*[@id="'.$dropdownId.'"]/option')));
-		$optionList = [];
-		for ($i = 1; $i <= $optionCount; $i++) {
-			$optionList[] = [
-				'id' => $this->webDriver->findElement(WebDriverBy::xpath('//*[@id="'.$dropdownId.'"]/option['.$i.']'))->getAttribute('value'),
-				'content' => $this->webDriver->findElement(WebDriverBy::xpath('//*[@id="'.$dropdownId.'"]/option['.$i.']'))->getText()
+		$elements = [];
+		foreach ($this->getDropdownOptions($dropdownId) as $option) {
+			$elements[] = [
+				'id' => $option->getAttribute('value'),
+				'content' => $option->getText()
 			];
 		}
-		return $optionList;
+
+		return $elements;
 	}
 
 	public function zbxTestAssertElementValue($id, $value) {
@@ -868,5 +864,38 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		catch (Exception $e) {
 			// Error handling is not missing here.
 		}
+	}
+
+	/**
+	 * Get dropdown element by id or name.
+	 *
+	 * @param string $id    dropdown id or name
+	 *
+	 * @return WebDriverElement
+	 */
+	protected function getDropdown($id) {
+		foreach (['id', 'name'] as $type) {
+			$by = call_user_func(['WebDriverBy', $type], $id);
+			$elements = $this->webDriver->findElements($by);
+
+			foreach ($elements as $element) {
+				if ($element->getTagName() === 'select') {
+					return $element;
+				}
+			}
+		}
+
+		$this->fail('Dropdown element "' . $id . '" was not found!');
+	}
+
+	/**
+	 * Get dropdown option elements by dropdown id or name.
+	 *
+	 * @param string $id    dropdown id or name
+	 *
+	 * @return array of WebDriverElement
+	 */
+	protected function getDropdownOptions($id) {
+		return $this->getDropdown($id)->findElements(WebDriverBy::tagName('option'));
 	}
 }
