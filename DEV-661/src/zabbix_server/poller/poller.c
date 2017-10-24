@@ -24,6 +24,7 @@
 #include "daemon.h"
 #include "zbxserver.h"
 #include "zbxself.h"
+#include "preproc.h"
 #include "../events.h"
 
 #include "poller.h"
@@ -332,7 +333,7 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-static void    free_result_ptr(AGENT_RESULT *result)
+static void	free_result_ptr(AGENT_RESULT *result)
 {
 	free_result(result);
 	zbx_free(result);
@@ -599,8 +600,6 @@ static int	get_values(unsigned char poller_type, int *nextcheck)
 	/* process item values */
 	for (i = 0; i < num; i++)
 	{
-		zbx_uint64_t	lastlogsize, *plastlogsize = NULL;
-
 		switch (errcodes[i])
 		{
 			case SUCCEED:
@@ -659,12 +658,6 @@ static int	get_values(unsigned char poller_type, int *nextcheck)
 						items[i].state = ITEM_STATE_NORMAL;
 						zbx_preprocess_item_value(items[i].itemid, items[i].flags, add_result,
 								&ts_tmp, items[i].state, NULL);
-
-						if (0 != ISSET_META(add_result))
-						{
-							plastlogsize = &lastlogsize;
-							lastlogsize = add_result->lastlogsize;
-						}
 					}
 
 					/* ensure that every log item value timestamp is unique */
@@ -683,8 +676,8 @@ static int	get_values(unsigned char poller_type, int *nextcheck)
 					results[i].msg);
 		}
 
-		DCpoller_requeue_items(&items[i].itemid, &items[i].state, &timespec.sec, plastlogsize, NULL,
-				&errcodes[i], 1, poller_type, nextcheck);
+		DCpoller_requeue_items(&items[i].itemid, &items[i].state, &timespec.sec, &errcodes[i], 1, poller_type,
+				nextcheck);
 
 		zbx_free(items[i].key);
 
@@ -801,6 +794,10 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 
 #undef STAT_INTERVAL
