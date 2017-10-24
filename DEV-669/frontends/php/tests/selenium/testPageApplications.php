@@ -68,4 +68,130 @@ class testPageApplications extends CWebTest {
 				]
 		);
 	}
+
+	public static function selectHostGroup() {
+		return [
+			[
+				[
+					// "Zabbix servers" "Test host"
+					'groupid' => 4,
+					'groupname' => 'Zabbix servers',
+					'hostid' => 10084,
+					'hostname' => 'ЗАББИКС Сервер',
+				]
+			]
+		];
+	}
+
+	public function selectApp() {
+		$this->zbxTestCheckboxSelect('applications_349');
+		$this->zbxTestCheckboxSelect('applications_350');
+		$this->zbxTestCheckboxSelect('applications_352');
+		$this->zbxTestCheckboxSelect('applications_354');
+	}
+
+	/**
+	* @dataProvider selectHostGroup
+	*/
+	public function testPageApplications_CheckSelectHost($data) {
+		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestClickLinkText($data['hostname']);
+		$this->zbxTestClickLinkText('Applications');
+
+		$this->zbxTestDropdownAssertSelected('hostid', $data['hostname']);
+	}
+
+	/**
+	* @dataProvider selectHostGroup
+	*/
+	public function testPageApplications_CheckSelectGroupAndHost($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$this->zbxTestDropdownAssertSelected('groupid', $data['groupname']);
+		$this->zbxTestDropdownAssertSelected('hostid', $data['hostname']);
+	}
+
+	/**
+	* @dataProvider selectHostGroup
+	*/
+	public function testPageApplications_EnableSelectApp($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$this->selectApp();
+		$this->zbxTestClickButton('application.massenable');
+		$this->webDriver->switchTo()->alert()->accept();
+
+		$this->zbxTestCheckTitle('Configuration of applications');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
+	}
+
+	/**
+	* @dataProvider selectHostGroup
+	*/
+	public function testPageApplications_DisableSelectApp($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$this->selectApp();
+		$this->zbxTestClickButton('application.massdisable');
+		$this->webDriver->switchTo()->alert()->accept();
+
+		$this->zbxTestCheckTitle('Configuration of applications');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items disabled');
+	}
+
+	/**
+	* @dataProvider selectHostGroup
+	*/
+	public function testPageApplications_AttempDeleteSelectApp($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$this->selectApp();
+		$this->zbxTestClickButton('application.massdelete');
+		$this->webDriver->switchTo()->alert()->accept();
+
+		$this->zbxTestCheckTitle('Configuration of applications');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot delete applications');
+	}
+
+	/**
+	* @dataProvider selectHostGroup
+	*/
+	public function testPageApplications_EnableAllApp($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$this->zbxTestCheckboxSelect('all_applications');
+		$this->zbxTestClickButton('application.massenable');
+		$this->webDriver->switchTo()->alert()->accept();
+
+		$this->zbxTestCheckTitle('Configuration of applications');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
+	}
+
+	/**
+	* @dataProvider selectHostGroup
+	*/
+	public function testPageApplications_DisableAllApp($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$this->zbxTestCheckboxSelect('all_applications');
+		$this->zbxTestClickButton('application.massdisable');
+		$this->webDriver->switchTo()->alert()->accept();
+
+		$this->zbxTestCheckTitle('Configuration of applications');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items disabled');
+	}
+
+	/**
+	* @dataProvider selectHostGroup
+	*/
+	public function testPageApplications_AttempDeleteAllApp($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$this->zbxTestCheckboxSelect('all_applications');
+		$this->zbxTestClickButton('application.massdelete');
+		$this->webDriver->switchTo()->alert()->accept();
+
+		$this->zbxTestCheckTitle('Configuration of applications');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot delete applications');
+	}
 }
