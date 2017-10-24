@@ -1096,7 +1096,7 @@ class testFormItemPrototype extends CWebTest {
 		}
 
 		if (!isset($templateid)) {
-			$this->zbxTestDropdownAssertSelected('value_type', 'Numeric (unsigned)');
+			$this->zbxTestDropdownAssertSelected('value_type', $value_type);
 			$this->zbxTestIsEnabled("//*[@id='value_type']/option[text()='Numeric (unsigned)']");
 			$this->zbxTestIsEnabled("//*[@id='value_type']/option[text()='Numeric (float)']");
 		}
@@ -1105,7 +1105,7 @@ class testFormItemPrototype extends CWebTest {
 			$this->zbxTestTextPresent('Data type');
 			$this->zbxTestAssertVisibleId('data_type');
 			$this->zbxTestDropdownHasOptions('data_type', ['Boolean', 'Octal', 'Decimal', 'Hexadecimal']);
-			$this->zbxTestDropdownAssertSelected('data_type', 'Decimal');
+			$this->zbxTestDropdownAssertSelected('data_type', $data_type);
 			$this->zbxTestIsEnabled("//*[@id='data_type']/option[text()='Decimal']");
 
 			if ($type == 'Zabbix aggregate' || $type == 'Calculated') {
