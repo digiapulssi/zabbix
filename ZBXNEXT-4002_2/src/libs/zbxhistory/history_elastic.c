@@ -509,6 +509,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, query.buffer);
 	curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_cb);
 	curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
+	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
 
 	page.offset = 0;
 	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
