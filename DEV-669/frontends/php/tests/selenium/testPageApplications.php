@@ -194,7 +194,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
-	* Test check for attempt of delete all Applications for selected Host and HostGroup.
+	* Test check for attempt of delete all Applications for selected Host and  HostGroup.
 	* @dataProvider selectHostGroup
 	*/
 	public function testPageApplications_AttempDeleteAllApp($data) {
