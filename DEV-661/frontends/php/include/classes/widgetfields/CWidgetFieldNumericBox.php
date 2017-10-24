@@ -20,7 +20,7 @@
 
 
 /**
- * Widget Field for numeric box
+ * A class to create an integer (text) type field in widget.
  */
 class CWidgetFieldNumericBox extends CWidgetField {
 
@@ -41,10 +41,10 @@ class CWidgetFieldNumericBox extends CWidgetField {
 	/**
 	 * A numeric box widget field.
 	 *
-	 * @param string $name   field name in form
-	 * @param string $label  label for the field in form
-	 * @param int    $min    minimal allowed value (this included)
-	 * @param int    $max    maximal allowed value (this included)
+	 * @param string $name   Field name in form.
+	 * @param string $label  Label for the field in form.
+	 * @param int    $min    Minimal allowed value (this included).
+	 * @param int    $max    Maximal allowed value (this included).
 	 */
 	public function __construct($name, $label, $min = 0, $max = ZBX_MAX_INT32) {
 		parent::__construct($name, $label);

@@ -52,8 +52,7 @@ class CWebWidgetForm extends CWidgetForm {
 		$this->fields[] = $field_hosts;
 
 		// Show hosts in maintenance.
-		$field_maintenance = (new CWidgetFieldCheckBox('maintenance', _('Show hosts in maintenance')))
-			->setDefault(1);
+		$field_maintenance = (new CWidgetFieldCheckBox('maintenance', _('Show hosts in maintenance')))->setDefault(1);
 
 		if (array_key_exists('maintenance', $this->data)) {
 			$field_maintenance->setValue($this->data['maintenance']);

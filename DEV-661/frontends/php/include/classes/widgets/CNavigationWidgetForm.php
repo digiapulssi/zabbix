@@ -27,7 +27,7 @@ class CNavigationWidgetForm extends CWidgetForm {
 	public function __construct($data) {
 		parent::__construct($data);
 
-		// Widget reference field.
+		// widget reference field
 		$field_reference = new CWidgetFieldReference();
 		if (array_key_exists($field_reference->getName(), $this->data)) {
 			$field_reference->setValue($this->data[$field_reference->getName()]);
@@ -70,7 +70,7 @@ class CNavigationWidgetForm extends CWidgetForm {
 			}
 		}
 
-		// show unavailable maps
+		// Show unavailable maps.
 		$show_unavailable_maps = (new CWidgetFieldCheckBox('show_unavailable', _('Show unavailable maps')))
 			->setDefault(0);
 

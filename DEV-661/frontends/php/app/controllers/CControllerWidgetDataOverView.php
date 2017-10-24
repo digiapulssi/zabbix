@@ -22,7 +22,7 @@
 require_once dirname(__FILE__).'/../../include/hostgroups.inc.php';
 
 /**
- * Controller for "widget.dataover.view" action. Is used for widget of type WIDGET_DATA_OVERVIEW rendering.
+ * Controller for "widget.dataover.view" action. Used for widget of type WIDGET_DATA_OVERVIEW rendering.
  */
 class CControllerWidgetDataOverView extends CControllerWidget {
 

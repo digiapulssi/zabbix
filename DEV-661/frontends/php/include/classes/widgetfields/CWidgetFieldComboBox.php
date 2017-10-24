@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * A class to create a select drowdown type field in widget.
+ */
 class CWidgetFieldComboBox extends CWidgetField {
 
 	protected $values;

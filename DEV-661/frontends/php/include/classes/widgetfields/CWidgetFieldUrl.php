@@ -19,13 +19,16 @@
 **/
 
 
+/**
+ * A class to create an URL text field in widget.
+ */
 class CWidgetFieldUrl extends CWidgetField {
 
 	/**
 	 * URL widget field.
 	 *
-	 * @param string $name  field name in form
-	 * @param string $label  label for the field in form
+	 * @param string $name   Field name in form.
+	 * @param string $label  Label for the field in form.
 	 */
 	public function __construct($name, $label) {
 		parent::__construct($name, $label);

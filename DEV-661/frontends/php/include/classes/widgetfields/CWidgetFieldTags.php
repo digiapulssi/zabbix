@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * A class to create input fields for tags.
+ */
 class CWidgetFieldTags extends CWidgetField {
 
 	/**
@@ -55,7 +58,7 @@ class CWidgetFieldTags extends CWidgetField {
 	 * Reference is needed here to avoid array merging in CWidgetForm::fieldsToApi method. With large number of widget
 	 * fields it causes significant performance decrease.
 	 *
-	 * @param array $widget_fields   reference to Array of widget fields.
+	 * @param array $widget_fields  Reference to array of widget fields.
 	 */
 	public function toApi(array &$widget_fields = []) {
 		$value = $this->getValue();

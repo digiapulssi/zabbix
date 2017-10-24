@@ -18,6 +18,10 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
+/**
+ * A class to create a checkbox type field in widget.
+ */
 class CWidgetFieldCheckBox extends CWidgetField {
 
 	/**

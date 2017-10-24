@@ -22,7 +22,7 @@
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
 /**
- * Controller for "widget.navigationtree.view" action. Is used for widget of type WIDGET_NAVIGATION_TREE rendering.
+ * Controller for "widget.navigationtree.view" action. Used for widget of type WIDGET_NAVIGATION_TREE rendering.
  */
 class CControllerWidgetNavigationTreeView extends CControllerWidget {
 
@@ -76,11 +76,10 @@ class CControllerWidgetNavigationTreeView extends CControllerWidget {
 			// Gather submaps from all selected maps.
 			foreach ($sysmaps as $map) {
 				foreach ($map['selements'] as $selement) {
-					if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP) {
-						if (($element = reset($selement['elements'])) !== false) {
-							$submaps_relations[$map['sysmapid']][] = $element['sysmapid'];
-							$submaps_found[] = $element['sysmapid'];
-						}
+					if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP
+							&& ($element = reset($selement['elements'])) !== false) {
+						$submaps_relations[$map['sysmapid']][] = $element['sysmapid'];
+						$submaps_found[] = $element['sysmapid'];
 					}
 				}
 			}
@@ -130,11 +129,13 @@ class CControllerWidgetNavigationTreeView extends CControllerWidget {
 								$host_groups[$element['groupid']] = true;
 							}
 							break;
+
 						case SYSMAP_ELEMENT_TYPE_TRIGGER:
 							foreach (zbx_objectValues($selement['elements'], 'triggerid') as $triggerid) {
 								$problems_per_trigger[$triggerid] = $this->problems_per_severity_tpl;
 							}
 							break;
+
 						case SYSMAP_ELEMENT_TYPE_HOST:
 							if (($element = reset($selement['elements'])) !== false) {
 								$hosts[$element['hostid']] = true;
@@ -313,19 +314,19 @@ class CControllerWidgetNavigationTreeView extends CControllerWidget {
 			case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
 				$problems = $this->problems_per_severity_tpl;
 
-				if (($element = reset($selement['elements'])) !== false) {
-					if (array_key_exists($element['groupid'], $triggers_per_host_groups)) {
-						foreach ($triggers_per_host_groups[$element['groupid']] as $triggerid => $val) {
-							if (!array_key_exists($triggerid, $problems_counted)) {
-								$problems_counted[$triggerid] = true;
-								$problems = array_map(function() {
-									return array_sum(func_get_args());
-								}, $problems_per_trigger[$triggerid], $problems);
-							}
+				if (array_key_exists($element['groupid'], $triggers_per_host_groups)
+						&& ($element = reset($selement['elements'])) !== false) {
+					foreach ($triggers_per_host_groups[$element['groupid']] as $triggerid => $val) {
+						if (!array_key_exists($triggerid, $problems_counted)) {
+							$problems_counted[$triggerid] = true;
+							$problems = array_map(function() {
+								return array_sum(func_get_args());
+							}, $problems_per_trigger[$triggerid], $problems);
 						}
 					}
 				}
 				break;
+
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
 				$problems = $this->problems_per_severity_tpl;
 
@@ -339,22 +340,23 @@ class CControllerWidgetNavigationTreeView extends CControllerWidget {
 					}
 				}
 				break;
+
 			case SYSMAP_ELEMENT_TYPE_HOST:
 				$problems = $this->problems_per_severity_tpl;
 
-				if (($element = reset($selement['elements'])) !== false) {
-					if (array_key_exists($element['hostid'], $triggers_per_hosts)) {
-						foreach ($triggers_per_hosts[$element['hostid']] as $triggerid => $val) {
-							if (!array_key_exists($triggerid, $problems_counted)) {
-								$problems_counted[$triggerid] = true;
-								$problems = array_map(function() {
-									return array_sum(func_get_args());
-								}, $problems_per_trigger[$triggerid], $problems);
-							}
+				if (array_key_exists($element['hostid'], $triggers_per_hosts)
+						&& ($element = reset($selement['elements'])) !== false) {
+					foreach ($triggers_per_hosts[$element['hostid']] as $triggerid => $val) {
+						if (!array_key_exists($triggerid, $problems_counted)) {
+							$problems_counted[$triggerid] = true;
+							$problems = array_map(function() {
+								return array_sum(func_get_args());
+							}, $problems_per_trigger[$triggerid], $problems);
 						}
 					}
 				}
 				break;
+
 			case SYSMAP_ELEMENT_TYPE_MAP:
 				$problems = $this->problems_per_severity_tpl;
 

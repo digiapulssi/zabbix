@@ -19,10 +19,13 @@
 **/
 
 
+/**
+ * A class to create a multiselect host group type field in widget.
+ */
 class CWidgetFieldGroup extends CWidgetField {
 
 	/**
-	 * Create widget field for Host Group selection.
+	 * Create widget field for host group selection.
 	 *
 	 * @param string $name   Field name in form.
 	 * @param string $label  Label for the field in form.

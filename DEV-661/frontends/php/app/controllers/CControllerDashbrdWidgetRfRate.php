@@ -22,13 +22,13 @@
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
 /**
- * Controller for "dashboard.widget.rfrate" action. Is used for widget "refresh rate" data access.
+ * Controller for "dashboard.widget.rfrate" action. Used for widget "refresh rate" data access.
  */
 class CControllerDashbrdWidgetRfRate extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'widgets' =>	'required|array'
+			'widgets' => 'required|array'
 		];
 
 		$ret = $this->validateInput($fields);

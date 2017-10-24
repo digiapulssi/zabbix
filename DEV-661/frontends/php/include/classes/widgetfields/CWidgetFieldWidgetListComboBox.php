@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * A class to create a select dropdown with widgets of current dashboard.
+ */
 class CWidgetFieldWidgetListComboBox extends CWidgetField {
 
 	private $search_by_key;

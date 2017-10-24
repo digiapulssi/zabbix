@@ -22,7 +22,7 @@
 require_once dirname(__FILE__).'/../../include/hostgroups.inc.php';
 
 /**
- * Controller for "widget.problems.view" action. Is used for widget of type WIDGET_PROBLEMS rendering.
+ * Controller for "widget.problems.view" action. Used for widget of type WIDGET_PROBLEMS rendering.
  */
 class CControllerWidgetProblemsView extends CControllerWidget {
 
@@ -99,14 +99,13 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 	/**
 	 * Get sorting.
 	 *
-	 * @param int $sort_triggers	Sort type, one of SCREEN_SORT_TRIGGERS_* constants value.
-	 *
 	 * @static
+	 *
+	 * @param int $sort_triggers  Sort type, one of SCREEN_SORT_TRIGGERS_* constants value.
 	 *
 	 * @return array
 	 */
-	private static function getSorting($sort_triggers)
-	{
+	private static function getSorting($sort_triggers) {
 		switch ($sort_triggers) {
 			case SCREEN_SORT_TRIGGERS_TIME_ASC:
 				return ['clock', ZBX_SORT_UP];

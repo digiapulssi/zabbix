@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * A class of commonly used functions, variables, calculations done in all widgets.
+ */
 class CWidgetConfig {
 
 	/**
@@ -109,7 +112,7 @@ class CWidgetConfig {
 	 *
 	 * @param int $type  WIDGET_ constant
 	 *
-	 * @return int  default refresh rate, "0" for no refresh
+	 * @return int  Default refresh rate, "0" for no refresh.
 	 */
 	public static function getDefaultRfRate($type) {
 		switch ($type) {
@@ -144,7 +147,7 @@ class CWidgetConfig {
 	 *
 	 * @param type $type  WIDGET_ constant
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public static function usesTimeline($type) {
 		switch ($type) {

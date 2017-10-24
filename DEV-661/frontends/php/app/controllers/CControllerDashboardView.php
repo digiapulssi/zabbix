@@ -22,12 +22,12 @@
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
 /**
- * Controller for "dashboard.view" action. Is used for dashboard rendering.
+ * Controller for "dashboard.view" action. Used for dashboard rendering.
  */
 class CControllerDashboardView extends CControllerDashboardAbstract {
 
 	/**
-	 * @var array|null $dashboard   Dashboard configuration data.
+	 * @var array|null $dashboard  Dashboard configuration data.
 	 */
 	private $dashboard;
 
@@ -210,9 +210,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 				elseif ($this->hasInput('dashboardid')) {
 					$error = _('No permissions to referred object or it does not exist!');
 				}
-				else {
-					// In case if previous dashboard is deleted, show dashboard list.
-				}
+				// Else in case if the previous dashboard is deleted, show dashboard list.
 			}
 		}
 
@@ -222,10 +220,10 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Returns array of widgets without inaccessible fields.
 	 *
-	 * @param array $widgets    Array of widget arrays.
-	 * @param array $widgets[]['fields']
-	 * @param array $widgets[]['fields'][]['type']
-	 * @param array $widgets[]['fields'][]['value']
+	 * @param array  $widgets                         Array of widget arrays.
+	 * @param array  $widgets[]['fields']			  Array of fields.
+	 * @param string $widgets[]['fields'][]['type']   Numerical representation of field type.
+	 * @param string $widgets[]['fields'][]['value']  Field value.
 	 *
 	 * @return array
 	 */
@@ -359,8 +357,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getNewDashboard()
-	{
+	private function getNewDashboard() {
 		return [
 			'dashboardid' => 0,
 			'name' => _('New dashboard'),
@@ -373,12 +370,11 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Get owner datails.
 	 *
-	 * @param string $userid	Owner id.
+	 * @param string $userid  Owner id.
 	 *
 	 * @return array
 	 */
-	private function getOwnerData($userid)
-	{
+	private function getOwnerData($userid) {
 		$owner = ['id' => $userid, 'name' => _('Inaccessible user')];
 
 		$users = API::User()->get([
@@ -395,9 +391,9 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Get widgets for dashboard.
 	 *
-	 * @param array $grid_widgets   Array of widget arrays.
-	 *
 	 * @static
+	 *
+	 * @param array $widgets  Array of widget arrays.
 	 *
 	 * @return array
 	 */
@@ -433,14 +429,15 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Converts fields, received from API to key/value format.
 	 *
-	 * @param array $fields  Fields as received from API.
-	 *
 	 * @static
+	 *
+	 * @param array $fields  Fields as received from API.
 	 *
 	 * @return array
 	 */
 	private static function convertWidgetFields($fields) {
 		$ret = [];
+
 		foreach ($fields as $field) {
 			if (array_key_exists($field['name'], $ret)) {
 				$ret[$field['name']] = (array) $ret[$field['name']];
@@ -457,14 +454,14 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Checks, if any of widgets has checked dynamic field.
 	 *
-	 * @param array $grid_widgets   Array of widget arrays.
-	 *
 	 * @static
+	 *
+	 * @param array $widgets  Array of widget arrays.
 	 *
 	 * @return bool
 	 */
-	private static function hasDynamicWidgets($grid_widgets) {
-		foreach ($grid_widgets as $widget) {
+	private static function hasDynamicWidgets($widgets) {
+		foreach ($widgets as $widget) {
 			if (array_key_exists('dynamic', $widget['fields']) && $widget['fields']['dynamic'] == 1) {
 				return true;
 			}
@@ -476,9 +473,9 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	/**
 	 * Checks, if any of widgets needs timeline.
 	 *
-	 * @param array $widgets    Array of widget arrays.
-	 *
 	 * @static
+	 *
+	 * @param array $widgets  Array of widget arrays.
 	 *
 	 * @return bool
 	 */

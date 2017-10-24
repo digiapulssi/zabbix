@@ -20,7 +20,7 @@
 
 
 /**
- * Controller for "widget.actlog.view" action. Is used for widget of type WIDGET_ACTION_LOG rendering.
+ * Controller for "widget.actlog.view" action. Used for widget of type WIDGET_ACTION_LOG rendering.
  */
 class CControllerWidgetActionLogView extends CControllerWidget {
 
@@ -63,35 +63,36 @@ class CControllerWidgetActionLogView extends CControllerWidget {
 	/**
 	 * Get alerts.
 	 *
-	 * @param string $sortfield     Field name.
-	 * @param string $sortorder     Sorting order ZBX_SORT_UP or ZBX_SORT_DOWN.
-	 * @param int    $show_lines    Rows count limit.
+	 * @param string $sortfield   Field name.
+	 * @param string $sortorder   Sorting order ZBX_SORT_UP or ZBX_SORT_DOWN.
+	 * @param int    $show_lines  Rows count limit.
 	 *
 	 * @return array
 	 */
-	private function getAlerts($sortfield, $sortorder, $show_lines)
-	{
-		$sql = 'SELECT a.alertid,a.clock,a.sendto,a.subject,a.message,a.status,a.retries,a.error,'.
-			'a.userid,a.actionid,a.mediatypeid,mt.description,mt.maxattempts'.
-			' FROM events e,alerts a'.
-			' LEFT JOIN media_type mt ON mt.mediatypeid=a.mediatypeid'.
-			' WHERE e.eventid=a.eventid'.
-			' AND alerttype='.ALERT_TYPE_MESSAGE;
+	private function getAlerts($sortfield, $sortorder, $show_lines) {
+		$sql = 'SELECT a.alertid,a.clock,a.sendto,a.subject,a.message,a.status,a.retries,a.error,a.userid,a.actionid,'.
+					'a.mediatypeid,mt.description,mt.maxattempts'.
+				' FROM events e,alerts a'.
+					' LEFT JOIN media_type mt'.
+						' ON mt.mediatypeid=a.mediatypeid'.
+				' WHERE e.eventid=a.eventid'.
+					' AND alerttype='.ALERT_TYPE_MESSAGE;
 
 		if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
 			$userid = CWebUser::$data['userid'];
 			$userGroups = getUserGroupsByUserId($userid);
+
 			$sql .= ' AND EXISTS ('.
-				'SELECT NULL'.
-				' FROM functions f,items i,hosts_groups hgg'.
-				' JOIN rights r'.
-				' ON r.id=hgg.groupid'.
-				' AND '.dbConditionInt('r.groupid', $userGroups).
-				' WHERE e.objectid=f.triggerid'.
-				' AND f.itemid=i.itemid'.
-				' AND i.hostid=hgg.hostid'.
-				' GROUP BY f.triggerid'.
-				' HAVING MIN(r.permission)>'.PERM_DENY.
+					'SELECT NULL'.
+					' FROM functions f,items i,hosts_groups hgg'.
+						' JOIN rights r'.
+							' ON r.id=hgg.groupid'.
+								' AND '.dbConditionInt('r.groupid', $userGroups).
+					' WHERE e.objectid=f.triggerid'.
+						' AND f.itemid=i.itemid'.
+						' AND i.hostid=hgg.hostid'.
+					' GROUP BY f.triggerid'.
+					' HAVING MIN(r.permission)>'.PERM_DENY.
 				')';
 		}
 
@@ -105,13 +106,12 @@ class CControllerWidgetActionLogView extends CControllerWidget {
 	/**
 	 * Get users.
 	 *
-	 * @param array $alerts	           Array of alert arrays.
-	 * @param int   $alerts[]['userid]
+	 * @param array  $alerts             Array of alert arrays.
+	 * @param string $alerts[]['userid]  User ID.
 	 *
 	 * @return array
 	 */
-	private function getDbUsers(array $alerts)
-	{
+	private function getDbUsers(array $alerts) {
 		$userids = [];
 
 		foreach ($alerts as $alert) {
@@ -131,14 +131,13 @@ class CControllerWidgetActionLogView extends CControllerWidget {
 	/**
 	 * Get sorting.
 	 *
-	 * @param int $sort_triggers	Sort type, one of SCREEN_SORT_TRIGGERS_* constants value.
-	 *
 	 * @static
+	 *
+	 * @param int $sort_triggers  Sort type, one of SCREEN_SORT_TRIGGERS_* constants value.
 	 *
 	 * @return array
 	 */
-	private static function getSorting($sort_triggers)
-	{
+	private static function getSorting($sort_triggers) {
 		switch ($sort_triggers) {
 			case SCREEN_SORT_TRIGGERS_TIME_ASC:
 				return ['clock', ZBX_SORT_UP];

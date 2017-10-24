@@ -18,6 +18,10 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
+/**
+ * A class to stylized horizontal radio buttons with trigger severity colors in widget.
+ */
 class CWidgetFieldSeverities extends CWidgetField {
 
 	public function __construct($name, $label) {

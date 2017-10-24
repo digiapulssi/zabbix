@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * A class to create a resource field with a select button.
+ */
 class CWidgetFieldSelectResource extends CWidgetField {
 
 	protected $srctbl;
@@ -32,9 +35,9 @@ class CWidgetFieldSelectResource extends CWidgetField {
 	 * Select resource type widget field. Will create text box field with select button,
 	 * that will allow to select specified resource.
 	 *
-	 * @param string $name           field name in form
-	 * @param string $label          label for the field in form
-	 * @param int    $resource_type  WIDGET_FIELD_SELECT_RES_ constant.
+	 * @param string $name           Field name in form.
+	 * @param string $label          Label for the field in form.
+	 * @param int    $resource_type  WIDGET_FIELD_SELECT_RES_* constant.
 	 */
 	public function __construct($name, $label, $resource_type) {
 		parent::__construct($name, $label);

@@ -22,7 +22,7 @@
 require_once dirname(__FILE__).'/../../include/hostgroups.inc.php';
 
 /**
- * Controller for "widget.trigover.view" action. Is used for widget of type WIDGET_TRIG_OVERVIEW rendering.
+ * Controller for "widget.trigover.view" action. Used for widget of type WIDGET_TRIG_OVERVIEW rendering.
  */
 class CControllerWidgetTrigOverView extends CControllerWidget {
 

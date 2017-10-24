@@ -19,8 +19,16 @@
 **/
 
 
+/**
+ * A general class of widget form.
+ */
 class CWidgetForm {
 
+	/**
+	 * An array of widget fields that are visible to form.
+	 *
+	 * @var array
+	 */
 	protected $fields;
 
 	/**

@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * Plain text widget form.
+ */
 class CPlainTextWidgetForm extends CWidgetForm {
 
 	public function __construct($data) {

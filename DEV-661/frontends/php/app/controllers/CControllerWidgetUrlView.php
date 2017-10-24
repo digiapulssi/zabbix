@@ -20,7 +20,7 @@
 
 
 /**
- * Controller for "widget.url.view" action. Is used for widget of type WIDGET_URL rendering.
+ * Controller for "widget.url.view" action. Used for widget of type WIDGET_URL rendering.
  */
 class CControllerWidgetUrlView extends CControllerWidget {
 
@@ -44,12 +44,12 @@ class CControllerWidgetUrlView extends CControllerWidget {
 			$error = _('No host selected.');
 		}
 		else {
-			$resolveHostMacros = ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM);
+			$resolve_host_macros = ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM);
 
 			$resolved_url = CMacrosResolverHelper::resolveWidgetURL([
-				'config' => $resolveHostMacros ? 'widgetURL' : 'widgetURLUser',
+				'config' => $resolve_host_macros ? 'widgetURL' : 'widgetURLUser',
 				'url' => $fields['url'],
-				'hostid' => $resolveHostMacros ? $dynamic_hostid : '0'
+				'hostid' => $resolve_host_macros ? $dynamic_hostid : '0'
 			]);
 
 			$fields['url'] = $resolved_url ? $resolved_url : $fields['url'];

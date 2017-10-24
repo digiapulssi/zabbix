@@ -19,6 +19,9 @@
 **/
 
 
+/**
+ * A class to create a unique text type field called the reference field in widget.
+ */
 class CWidgetFieldReference extends CWidgetField {
 
 	/**

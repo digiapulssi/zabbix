@@ -22,7 +22,7 @@
 require_once dirname(__FILE__).'/../../include/hostgroups.inc.php';
 
 /**
- * Controller for "problem.view" and "problem.view.csv" actions. Is used for "Monitoring - Problems" page rendering,
+ * Controller for "problem.view" and "problem.view.csv" actions. Used for "Monitoring - Problems" page rendering,
  * supports rendering into .csv file.
  */
 class CControllerProblemView extends CController {

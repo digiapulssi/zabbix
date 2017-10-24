@@ -27,7 +27,7 @@ class CClockWidgetForm extends CWidgetForm {
 	public function __construct($data) {
 		parent::__construct($data);
 
-		// Time type field
+		// time type field
 		$time_types = [
 			TIME_TYPE_LOCAL => _('Local time'),
 			TIME_TYPE_SERVER => _('Server time'),
@@ -42,8 +42,8 @@ class CClockWidgetForm extends CWidgetForm {
 		}
 		$this->fields[] = $field_time_type;
 
-		// Item field
-		if ($field_time_type->getValue() === TIME_TYPE_HOST) {
+		// item field
+		if ($field_time_type->getValue() == TIME_TYPE_HOST) {
 			$field_item = (new CWidgetFieldSelectResource('itemid', _('Item'), WIDGET_FIELD_SELECT_RES_ITEM))
 				->setFlags(CWidgetField::FLAG_NOT_EMPTY);
 

@@ -19,13 +19,16 @@
 **/
 
 
+/**
+ * A class to create a multiselect host type field in widget.
+ */
 class CWidgetFieldHost extends CWidgetField {
 
 	/**
-	 * Create widget field for Item selection
+	 * Create widget field for host selection
 	 *
-	 * @param string      $name     field name in form
-	 * @param string      $label    label for the field in form
+	 * @param string $name   Field name in form.
+	 * @param string $label  label for the field in form.
 	 */
 	public function __construct($name, $label) {
 		parent::__construct($name, $label);

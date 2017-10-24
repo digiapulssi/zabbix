@@ -54,9 +54,9 @@ class CWidgetField {
 	/**
 	 * Set field value.
 	 *
-	 * @param string $value Field value to set.
+	 * @param string $value  Field value to set.
 	 *
-	 * @return \CWidgetField
+	 * @return CWidgetField
 	 */
 	public function setValue($value) {
 		$this->value = $value;
@@ -67,9 +67,9 @@ class CWidgetField {
 	/**
 	 * Set field default value.
 	 *
-	 * @param string $value Field default value to set.
+	 * @param string $value  Field default value to set.
 	 *
-	 * @return \CWidgetField
+	 * @return CWidgetField
 	 */
 	public function setDefault($value) {
 		$this->default = $value;
@@ -82,7 +82,7 @@ class CWidgetField {
 	 *
 	 * @param string $action  JS function to call on field change.
 	 *
-	 * @return $this
+	 * @return CWidgetField
 	 */
 	public function setAction($action) {
 		$this->action = $action;
@@ -90,6 +90,13 @@ class CWidgetField {
 		return $this;
 	}
 
+	/**
+	 * Set type validation for API.
+	 *
+	 * @param int $save_type  One of possible widget field ZBX_WIDGET_FIELD_TYPE_* types.
+	 *
+	 * @return CWidgetField
+	 */
 	protected function setSaveType($save_type) {
 		switch ($save_type) {
 			case ZBX_WIDGET_FIELD_TYPE_INT32:
@@ -120,10 +127,20 @@ class CWidgetField {
 		return $this;
 	}
 
+	/**
+	 * Set validation rules for API.
+	 *
+	 * @param array $validation_rules  Array of validation rules.
+	 */
 	protected function setValidationRules(array $validation_rules) {
 		$this->validation_rules = $validation_rules;
 	}
 
+	/**
+	 * Set addition validation rules for API.
+	 *
+	 * @param array $ex_validation_rules  Array of validation rules.
+	 */
 	protected function setExValidationRules(array $ex_validation_rules) {
 		$this->ex_validation_rules = $ex_validation_rules;
 	}
@@ -158,7 +175,7 @@ class CWidgetField {
 	 *
 	 * @param int $flags
 	 *
-	 * @return $this
+	 * @return CWidgetField
 	 */
 	public function setFlags($flags) {
 		$this->flags = $flags;
@@ -180,7 +197,7 @@ class CWidgetField {
 	 *
 	 * @param bool $strict  Enables more strict validation of the field.
 	 *
-	 * @return bool
+	 * @return array
 	 */
 	public function validate($strict = false) {
 		$errors = [];
@@ -201,7 +218,7 @@ class CWidgetField {
 	 * Reference is needed here to avoid array merging in CWidgetForm::fieldsToApi method. With large number of widget
 	 * fields it causes significant performance decrease.
 	 *
-	 * @param array $widget_fields   reference to Array of widget fields.
+	 * @param array $widget_fields  Reference to array of widget fields.
 	 */
 	public function toApi(array &$widget_fields = []) {
 		$value = $this->getValue();

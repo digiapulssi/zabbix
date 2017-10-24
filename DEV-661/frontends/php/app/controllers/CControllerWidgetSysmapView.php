@@ -22,7 +22,7 @@
 require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
 /**
- * Controller for "widget.sysmap.view" action. Is used for widget of type WIDGET_SYSMAP rendering.
+ * Controller for "widget.sysmap.view" action. Used for widget of type WIDGET_SYSMAP rendering.
  */
 class CControllerWidgetSysmapView extends CControllerWidget {
 
@@ -71,8 +71,10 @@ class CControllerWidgetSysmapView extends CControllerWidget {
 
 		$sysmapid = array_key_exists('current_sysmapid', $storage)
 			? $storage['current_sysmapid']
-			: (array_key_exists('sysmapid', $fields) ? $fields['sysmapid'] : null);
-		$sysmap_data = CMapHelper::get(($sysmapid === null ? [] : [$sysmapid]), $options);
+			: array_key_exists('sysmapid', $fields)
+				? $fields['sysmapid']
+				: null;
+		$sysmap_data = CMapHelper::get(($sysmapid === null) ? [] : [$sysmapid], $options);
 
 		if ($sysmapid === null || $sysmap_data['id'] < 0) {
 			$error = _('No permissions to referred object or it does not exist!');

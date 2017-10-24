@@ -18,9 +18,9 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 /**
- * controller dashboard list
- *
+ * Controller for dashboard list.
  */
 class CControllerDashboardList extends CControllerDashboardAbstract {
 
@@ -68,18 +68,18 @@ class CControllerDashboardList extends CControllerDashboardAbstract {
 			'sortorder' => $sortOrder
 		];
 
-		// list of dashboards
+		// List of dashboards.
 		$data['dashboards'] = API::Dashboard()->get([
 			'output' => ['dashboardid', 'name'],
 			'limit' => $config['search_limit'] + 1,
 			'preservekeys' => true
 		]);
 
-		// sorting & paging
+		// Sorting and paging.
 		order_result($data['dashboards'], $sortField, $sortOrder);
 
-		$url = (new CUrl('zabbix.php'))
-			->setArgument('action', 'dashboard.list');
+		$url = (new CUrl('zabbix.php'))->setArgument('action', 'dashboard.list');
+
 		if ($data['fullscreen']) {
 			$url->setArgument('fullscreen', '1');
 		}
