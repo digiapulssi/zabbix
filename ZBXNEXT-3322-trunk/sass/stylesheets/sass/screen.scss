@@ -513,6 +513,7 @@ ul.top-nav-icons {
 
 	.cell:first-child {
 		max-width: calc(100vw - 370px);
+		text-align: left;
 	}
 
 	h1 {
@@ -527,22 +528,12 @@ ul.top-nav-icons {
 		justify-content: flex-end;
 	}
 
-	.cell {
-		text-align: right;
-		ul {
-			li {
-				display: inline-block;
-				vertical-align: top;
-				position: relative;
-				padding: 0 0 0 10px;
-			}
-		}
-
-		.header-dropdown-list {
-			li {
-				display: block;
-				padding: 0;
-			}
+	ul {
+		li {
+			display: inline-block;
+			vertical-align: top;
+			position: relative;
+			padding: 0 0 0 10px;
 		}
 	}
 
@@ -576,6 +567,61 @@ ul.top-nav-icons {
 					vertical-align: middle;
 				}
 			}
+		}
+	}
+
+	.header-dropdown {
+		margin-right: 20px;
+		color: $font-color;
+		cursor: pointer;
+		display: inline-block;
+
+		&::after {
+			content: '';
+			vertical-align: middle;
+			display: inline-block;
+			width: 7px;
+			height: 7px;
+			margin-left: 0.5em;
+			margin-right: 0.5em;
+			margin-top: -7px;
+			border-left: 2px solid $font-color;
+			border-bottom: 2px solid $font-color;
+			@include rotate(-45);
+		}
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	.header-dropdown-list {
+		@extend .action-menu;
+		display: none;
+		top: 32px;
+		left: -8px;
+		font-size: $font-h4-size;
+		text-align: left;
+
+		&::before, &::after {
+			content: '';
+			position: absolute;
+			top: -10px;
+			left: 8px;
+			border-left: 10px solid transparent;
+			border-right: 10px solid transparent;
+			border-bottom: 10px solid darken($action-border-color, 1%);
+			@extend %arrow;
+		}
+
+		&::after {
+			top: -9px;
+			border-bottom-color: $ui-bg-color;
+		}
+
+		li {
+			display: block;
+			padding: 0;
 		}
 	}
 }
@@ -3222,73 +3268,6 @@ $form-icon-btn: (
 		&.suggest-hover {
 			background-color: $action-hover-color;
 		}
-	}
-}
-
-.header-dropdown {
-	position: relative;
-	margin-right: 20px;
-	color: $font-color;
-	cursor: pointer;
-
-	&::after {
-		content: '';
-		vertical-align: middle;
-		display: inline-block;
-		width: 7px;
-		height: 7px;
-		margin-left: 0.5em;
-		border-left: 2px solid $font-color;
-		border-bottom: 2px solid $font-color;
-		@include rotate(-45);
-	}
-
-	h1 {
-		display: inline-block;
-		vertical-align: middle;
-	}
-}
-
-.header-dropdown-menu {
-	text-align: left;
-
-	h1:hover {
-		text-decoration: underline;
-	}
-}
-
-a.header-dropdown {
-	border: none;
-	color: $font-color;
-}
-
-.header-dropdown-list {
-	@extend .action-menu;
-	display: none;
-	top: 32px;
-	left: -8px;
-	padding: 5px 0px;
-	font-size: $font-h4-size;
-
-	&::before, &::after {
-		content: '';
-		position: absolute;
-		top: -10px;
-		left: 8px;
-		border-left: 10px solid transparent;
-		border-right: 10px solid transparent;
-		border-bottom: 10px solid darken($action-border-color, 1%);
-		@extend %arrow;
-	}
-
-	&::after {
-		top: -9px;
-		border-bottom-color: $ui-bg-color;
-	}
-
-	.action-menu-item {
-		padding: 0 15px 0 15px;
-		margin: 0px;
 	}
 }
 

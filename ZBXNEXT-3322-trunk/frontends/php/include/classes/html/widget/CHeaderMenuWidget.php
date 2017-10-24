@@ -85,7 +85,7 @@ class CHeaderMenuWidget extends CWidget
 	 *
 	 * @return CDiv
 	 */
-	protected function createTitle() {
+	private function createTitle() {
 		$list = (new CList())
 			->addClass(ZBX_STYLE_HEADER_DROPDOWN_LIST)
 			->setId($this->header_menuid);
@@ -94,7 +94,7 @@ class CHeaderMenuWidget extends CWidget
 
 		foreach ($this->menu_map as $item) {
 			if ($item['selected']) {
-				$header = (new CLink(new CTag('h1', true, $item['title'])))
+				$header = (new CTag('h1', true, $item['title']))
 					->addClass(ZBX_STYLE_HEADER_DROPDOWN)
 					->setAttribute('data-dropdown-list', '#'.$this->header_menuid);
 			}
@@ -103,6 +103,6 @@ class CHeaderMenuWidget extends CWidget
 			$list->addItem((new CLink($title, $item['url']))->addClass(ZBX_STYLE_ACTION_MENU_ITEM));
 		}
 
-		return (new CDiv([$header, $list]))->addClass(ZBX_STYLE_HEADER_DROPDOWN_MENU);
+		return [$header, $list];
 	}
 }
