@@ -37,6 +37,13 @@ class CWidgetFieldCheckBox extends CWidgetField {
 		$this->setDefault(0);
 	}
 
+	/**
+	 * Set field value forcing it to be integer.
+	 *
+	 * @param string $value  Field value to set.
+	 *
+	 * @return CWidgetFieldCheckBox
+	 */
 	public function setValue($value) {
 		return parent::setValue((int) $value);
 	}

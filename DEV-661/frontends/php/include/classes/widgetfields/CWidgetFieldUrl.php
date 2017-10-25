@@ -38,6 +38,13 @@ class CWidgetFieldUrl extends CWidgetField {
 		$this->setDefault('');
 	}
 
+	/**
+	 * Validate URL field.
+	 *
+	 * @param bool $strict  Use strict validation.
+	 *
+	 * @return array
+	 */
 	public function validate($strict = false) {
 		$errors = parent::validate($strict);
 

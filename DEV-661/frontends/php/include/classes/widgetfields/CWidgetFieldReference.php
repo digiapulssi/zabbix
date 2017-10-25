@@ -38,6 +38,13 @@ class CWidgetFieldReference extends CWidgetField {
 		$this->setSaveType(ZBX_WIDGET_FIELD_TYPE_STR);
 	}
 
+	/**
+	 * Get JS code for reference field.
+	 *
+	 * @param string $form_selector  JS selector.
+	 *
+	 * @return string
+	 */
 	public function getJavascript($form_selector) {
 		return
 			'var reference_field = jQuery("input[name=\"'.$this->name.'\"]", "'.$form_selector.'");'.
@@ -47,6 +54,13 @@ class CWidgetFieldReference extends CWidgetField {
 			'}';
 	}
 
+	/**
+	 * Set field value.
+	 *
+	 * @param string $value
+	 *
+	 * @return CWidgetFieldReference
+	 */
 	public function setValue($value) {
 		if ($value === '' || ctype_alnum($value)) {
 			$this->value = $value;

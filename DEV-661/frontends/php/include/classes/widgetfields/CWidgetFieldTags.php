@@ -41,6 +41,13 @@ class CWidgetFieldTags extends CWidgetField {
 		$this->setDefault([]);
 	}
 
+	/**
+	 * Set field value forcing it to be array. Skips empty tags and values.
+	 *
+	 * @param string $value  Field value to set.
+	 *
+	 * @return CWidgetFieldTags
+	 */
 	public function setValue($value) {
 		$this->value = (array) $value;
 

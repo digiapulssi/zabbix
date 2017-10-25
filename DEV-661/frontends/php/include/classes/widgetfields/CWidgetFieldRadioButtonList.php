@@ -24,7 +24,18 @@
  */
 class CWidgetFieldRadioButtonList extends CWidgetField {
 
+	/**
+	 * Combo box values.
+	 *
+	 * @var array
+	 */
 	private $values;
+
+	/**
+	 * Stylish (modern) radio button list.
+	 *
+	 * @var bool
+	 */
 	private $modern = false;
 
 	/**
@@ -42,20 +53,44 @@ class CWidgetFieldRadioButtonList extends CWidgetField {
 		$this->setExValidationRules(['in' => implode(',', array_keys($this->values))]);
 	}
 
+	/**
+	 * Set field value forcing it to be integer.
+	 *
+	 * @param string $value  Field value to set.
+	 *
+	 * @return CWidgetFieldRadioButtonList
+	 */
 	public function setValue($value) {
 		return parent::setValue((int) $value);
 	}
 
+	/**
+	 * Set radio button list to modern.
+	 *
+	 * @param bool $modern  "true" if radio button list should be set to modern.
+	 *
+	 * @return CWidgetFieldRadioButtonList
+	 */
 	public function setModern($modern) {
 		$this->modern = $modern;
 
 		return $this;
 	}
 
+	/**
+	 * Check if radio button list style is set to modern.
+	 *
+	 * @return bool
+	 */
 	public function getModern() {
 		return $this->modern;
 	}
 
+	/**
+	 * Get field values.
+	 *
+	 * @return array
+	 */
 	public function getValues() {
 		return $this->values;
 	}

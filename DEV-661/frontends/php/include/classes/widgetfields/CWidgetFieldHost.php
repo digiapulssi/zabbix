@@ -37,9 +37,14 @@ class CWidgetFieldHost extends CWidgetField {
 		$this->setDefault([]);
 	}
 
+	/**
+	 * Set field value forcing it to be array.
+	 *
+	 * @param string $value  Field value to set.
+	 *
+	 * @return CWidgetField
+	 */
 	public function setValue($value) {
-		$this->value = (array) $value;
-
-		return $this;
+		return parent::setValue((array) $value);
 	}
 }

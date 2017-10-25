@@ -24,7 +24,12 @@
  */
 class CWidgetFieldComboBox extends CWidgetField {
 
-	protected $values;
+	/**
+	 * Combo box values.
+	 *
+	 * @var array
+	 */
+	private $values;
 
 	/**
 	 * Combo box widget field. Can use both, string and integer type keys.
@@ -41,10 +46,22 @@ class CWidgetFieldComboBox extends CWidgetField {
 		$this->setExValidationRules(['in' => implode(',', array_keys($this->values))]);
 	}
 
+	/**
+	 * Set field value forcing it to be integer.
+	 *
+	 * @param string $value  Field value to set.
+	 *
+	 * @return CWidgetFieldComboBox
+	 */
 	public function setValue($value) {
 		return parent::setValue((int) $value);
 	}
 
+	/**
+	 * Get field values.
+	 *
+	 * @return array
+	 */
 	public function getValues() {
 		return $this->values;
 	}

@@ -68,6 +68,13 @@ class CWidgetFieldWidgetListComboBox extends CWidgetField {
 			'}';
 	}
 
+	/**
+	 * Set field value.
+	 *
+	 * @param string $value
+	 *
+	 * @return CWidgetFieldWidgetListComboBox
+	 */
 	public function setValue($value) {
 		if ($value === '' || ctype_alnum($value)) {
 			$this->value = $value;

@@ -37,6 +37,13 @@ class CWidgetFieldTextBox extends CWidgetField {
 		$this->setDefault('');
 	}
 
+	/**
+	 * Validate text field.
+	 *
+	 * @param bool $strict  Use strict validation.
+	 *
+	 * @return array
+	 */
 	public function validate($strict = false) {
 		$errors = parent::validate($strict);
 

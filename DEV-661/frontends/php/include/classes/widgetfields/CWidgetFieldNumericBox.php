@@ -25,14 +25,14 @@
 class CWidgetFieldNumericBox extends CWidgetField {
 
 	/**
-	 * Allowed min value
+	 * Allowed min value.
 	 *
 	 * @var int
 	 */
 	private $min;
 
 	/**
-	 * Allowed max value
+	 * Allowed max value.
 	 *
 	 * @var int
 	 */
@@ -55,10 +55,22 @@ class CWidgetFieldNumericBox extends CWidgetField {
 		$this->setExValidationRules(['in' => $this->min.':'.$this->max]);
 	}
 
+	/**
+	 * Get field max length.
+	 *
+	 * @return int
+	 */
 	public function getMaxLength() {
 		return strlen((string) $this->max);
 	}
 
+	/**
+	 * Set field value forcing it to be array.
+	 *
+	 * @param string $value  Field value to set.
+	 *
+	 * @return CWidgetFieldNumericBox
+	 */
 	public function setValue($value) {
 		return parent::setValue((int) $value);
 	}

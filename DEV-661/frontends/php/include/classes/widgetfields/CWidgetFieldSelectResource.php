@@ -24,12 +24,47 @@
  */
 class CWidgetFieldSelectResource extends CWidgetField {
 
-	protected $srctbl;
-	protected $srcfld1;
-	protected $srcfld2;
-	protected $dstfld1;
-	protected $dstfld2;
-	protected $resource_type;
+	/**
+	 * Source table.
+	 *
+	 * @var string
+	 */
+	private $srctbl;
+
+	/**
+	 * Primary source field.
+	 *
+	 * @var string
+	 */
+	private $srcfld1;
+
+	/**
+	 * Additional source field.
+	 *
+	 * @var string
+	 */
+	private $srcfld2;
+
+	/**
+	 * Primary destination field.
+	 *
+	 * @var string
+	 */
+	private $dstfld1;
+
+	/**
+	 * Additional destination field.
+	 *
+	 * @var string
+	 */
+	private $dstfld2;
+
+	/**
+	 * Resource type.
+	 *
+	 * @var int
+	 */
+	private $resource_type;
 
 	/**
 	 * Select resource type widget field. Will create text box field with select button,
@@ -73,10 +108,20 @@ class CWidgetFieldSelectResource extends CWidgetField {
 		$this->setDefault(0);
 	}
 
+	/**
+	 * Get resource type. WIDGET_FIELD_SELECT_RES_* constant.
+	 *
+	 * @return int
+	 */
 	public function getResourceType() {
 		return $this->resource_type;
 	}
 
+	/**
+	 * Form the URL of popup depeding on resource type.
+	 *
+	 * @return string
+	 */
 	public function getPopupUrl() {
 		$url = (new CUrl('popup.php'))
 			->setArgument('srctbl', $this->srctbl)
@@ -105,6 +150,13 @@ class CWidgetFieldSelectResource extends CWidgetField {
 		return $url->getUrl();
 	}
 
+	/**
+	 * Validate resource.
+	 *
+	 * @param bool $strict  Use strict validation.
+	 *
+	 * @return array
+	 */
 	public function validate($strict = false) {
 		$errors = parent::validate($strict);
 
