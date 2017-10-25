@@ -552,6 +552,7 @@ function overlayDialogue(params) {
 			var res = obj.action();
 
 			if (res !== false && (!('keepOpen' in obj) || obj.keepOpen === false)) {
+				body_mutation_observer.disconnect();
 				overlayDialogueDestroy();
 			}
 
@@ -578,15 +579,15 @@ function overlayDialogue(params) {
 	});
 
 	var center_overlay_dialog = function() {
-		overlay_dialogue.css({
-			'left': Math.round((jQuery(window).width() - jQuery(overlay_dialogue).width()) / 2) + 'px',
-			'top': Math.round((jQuery(window).height() - jQuery(overlay_dialogue).height()) / 2) + 'px'
+			overlay_dialogue.css({
+				'left': Math.round((jQuery(window).width() - jQuery(overlay_dialogue).width()) / 2) + 'px',
+				'top': Math.round((jQuery(window).height() - jQuery(overlay_dialogue).height()) / 2) + 'px'
+			});
+		},
+		body_mutation_observer = window.MutationObserver || window.WebKitMutationObserver,
+		body_mutation_observer = new body_mutation_observer(function(mutation) {
+			center_overlay_dialog();
 		});
-	},
-	body_mutation_observer = window.MutationObserver || window.WebKitMutationObserver,
-	body_mutation_observer = new body_mutation_observer(function() {
-		center_overlay_dialog();
-	});
 
 	var overlay_dialogue = jQuery('<div>', {
 		id: 'overlay_dialogue',
@@ -598,9 +599,11 @@ function overlayDialogue(params) {
 			})
 				.click(function() {
 					body_mutation_observer.disconnect();
+
 					if (cancel_action !== null) {
 						cancel_action();
 					}
+
 					overlayDialogueDestroy();
 
 					return false;
