@@ -24,6 +24,11 @@
  */
 class CNavigationWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Map navigation tree" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_NAVIGATION_TREE);
 

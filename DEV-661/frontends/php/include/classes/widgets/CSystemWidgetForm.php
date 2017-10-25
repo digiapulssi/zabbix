@@ -24,6 +24,11 @@
  */
 class CSystemWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "System status" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_SYSTEM_STATUS);
 

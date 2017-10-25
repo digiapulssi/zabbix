@@ -24,6 +24,11 @@
  */
 class CProblemsWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Problems" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_PROBLEMS);
 

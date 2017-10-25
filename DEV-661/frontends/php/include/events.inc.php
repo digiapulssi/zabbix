@@ -396,15 +396,15 @@ function make_small_eventlist($startEvent, $backurl) {
 /**
  * Create table with trigger description and events.
  *
- * @param array  $trigger							An array of trigger data.
- * @param string $trigger['triggerid']				Trigger ID to select events.
- * @param string $trigger['description']			Trigger description.
- * @param string $trigger['url']					Trigger URL.
- * @param string $eventid_till
- * @param string $backurl							URL to return to.
- * @param array  $config
- * @param int    $config['event_ack_enable']
- * @param int    $fullscreen
+ * @param array  $trigger                     An array of trigger data.
+ * @param string $trigger['triggerid']        Trigger ID to select events.
+ * @param string $trigger['description']      Trigger description.
+ * @param string $trigger['url']              Trigger URL.
+ * @param string $eventid_till                Event ID.
+ * @param string $backurl                     URL to return to.
+ * @param array  $config                      General configuration.
+ * @param int    $config['event_ack_enable']  Is event acknowledgement enabled.
+ * @param int    $fullscreen                  Is full screen enabled.
  *
  * @return CDiv
  */

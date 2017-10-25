@@ -219,7 +219,7 @@ class CApiInputValidator {
 	}
 
 	/**
-	 * Myltiple data types validator.
+	 * Multiple data types validator.
 	 *
 	 * @param array  $rule
 	 * @param array  $rule['rules']

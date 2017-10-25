@@ -24,6 +24,11 @@
  */
 class CHostsWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Host status" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_HOST_STATUS);
 

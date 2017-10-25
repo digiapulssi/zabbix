@@ -21,6 +21,11 @@
 
 class CGraphWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Graph" widget form fields. Simple graphs are included as a switchable option (radio button).
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_GRAPH);
 

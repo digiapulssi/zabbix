@@ -24,6 +24,11 @@
  */
 class CClockWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Clock" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_CLOCK);
 

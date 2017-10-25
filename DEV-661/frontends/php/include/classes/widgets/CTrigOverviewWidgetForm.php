@@ -24,6 +24,11 @@
  */
 class CTrigOverviewWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Trigger overview" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_TRIG_OVERVIEW);
 

@@ -24,6 +24,11 @@
  */
 class CActionLogWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Action log" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_ACTION_LOG);
 

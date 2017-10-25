@@ -186,7 +186,7 @@ class CScreenProblem extends CScreenBase {
 
 		if (array_key_exists('exclude_groupids', $filter) && $filter['exclude_groupids']) {
 			if ($filter_hostids === null) {
-				// get all groups if no selected groups defined
+				// Get all groups if no selected groups defined.
 				if ($filter_groupids === null) {
 					$filter_groupids = array_keys(API::HostGroup()->get([
 						'output' => [],
@@ -196,7 +196,7 @@ class CScreenProblem extends CScreenBase {
 
 				$filter_groupids = array_diff($filter_groupids, $filter['exclude_groupids']);
 
-				// get available hosts
+				// Get available hosts.
 				$filter_hostids = array_keys(API::Host()->get([
 					'output' => [],
 					'groupids' => $filter_groupids,
@@ -634,8 +634,8 @@ class CScreenProblem extends CScreenBase {
 	 * Add timeline breakpoint to a table if needed.
 	 *
 	 * @param CTableInfo $table
-	 * @param int        $last_clock  timestamp of the previous record
-	 * @param int        $clock       timestamp of the current record
+	 * @param int        $last_clock  Timestamp of the previous record.
+	 * @param int        $clock       Timestamp of the current record.
 	 * @param string     $sortorder
 	 *
 	 * @static

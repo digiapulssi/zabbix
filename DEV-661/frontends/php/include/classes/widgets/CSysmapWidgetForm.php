@@ -24,6 +24,11 @@
  */
 class CSysmapWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Map" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_SYSMAP);
 

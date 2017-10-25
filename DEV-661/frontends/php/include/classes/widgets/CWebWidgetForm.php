@@ -20,10 +20,15 @@
 
 
 /**
- * Web widget form.
+ * Web monitoring widget form.
  */
 class CWebWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Web monitoring" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_WEB_OVERVIEW);
 

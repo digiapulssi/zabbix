@@ -112,8 +112,8 @@ function inheritPermissions($groupid, $name) {
 /**
  * Get sub-groups of elected host groups.
  *
- * @param array $groupids
- * @param array $ms_groups  [OUT] the list of groups for multiselect
+ * @param array $groupids   Host group IDs.
+ * @param array $ms_groups  [OUT] The list of groups for multiselect.
  *
  * @return array
  */

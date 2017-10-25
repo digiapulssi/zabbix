@@ -130,7 +130,7 @@ foreach ($data['data']['problems'] as $eventid => $problem) {
 		);
 	}
 
-	// Info.
+	// info
 	$info_icons = [];
 	if ($problem['r_eventid'] != 0) {
 		if ($problem['correlationid'] != 0) {

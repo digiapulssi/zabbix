@@ -24,6 +24,11 @@
  */
 class CDataOverviewWidgetForm extends CWidgetForm {
 
+	/**
+	 * Set the "Data overview" widget form fields.
+	 *
+	 * @param string $data  JSON data string.
+	 */
 	public function __construct($data) {
 		parent::__construct($data, WIDGET_DATA_OVERVIEW);
 

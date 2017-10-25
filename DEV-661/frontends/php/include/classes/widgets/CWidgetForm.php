@@ -38,6 +38,12 @@ class CWidgetForm {
 	 */
 	protected $data;
 
+	/**
+	 * Convert JSON data to array; add default widget refresh rate.
+	 *
+	 * @param string $data  JSON data string.
+	 * @param string $type  Widget type.
+	 */
 	public function __construct($data, $type) {
 		$this->data = CJs::decodeJson($data);
 
