@@ -10213,42 +10213,42 @@ void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_
 {
 	int				i, ret;
 	const ZBX_DC_TRIGGER_DEPLIST	*trigdep;
-	zbx_vector_uint64_t		depids;
+	zbx_vector_uint64_t		masterids;
 	zbx_trigger_dep_t		*dep;
 
-	zbx_vector_uint64_create(&depids);
-	zbx_vector_uint64_reserve(&depids, 64);
+	zbx_vector_uint64_create(&masterids);
+	zbx_vector_uint64_reserve(&masterids, 64);
 
 	LOCK_CACHE;
 
 	for (i = 0; i < triggerids->values_num; i++)
 	{
-		if (NULL != (trigdep = zbx_hashset_search(&config->trigdeps, &triggerids->values[i])))
+		if (NULL == (trigdep = zbx_hashset_search(&config->trigdeps, &triggerids->values[i])))
+			continue;
+
+		if (FAIL == (ret = DCconfig_check_trigger_dependencies_rec(trigdep, 0, triggerids, &masterids)) ||
+				0 != masterids.values_num)
 		{
-			if (FAIL == (ret = DCconfig_check_trigger_dependencies_rec(trigdep, 0, triggerids, &depids)) ||
-					0 != depids.values_num)
+			dep = (zbx_trigger_dep_t *)zbx_malloc(NULL, sizeof(zbx_trigger_dep_t));
+			dep->triggerid = triggerids->values[i];
+			zbx_vector_uint64_create(&dep->masterids);
+
+			if (SUCCEED == ret)
 			{
-				dep = (zbx_trigger_dep_t *)zbx_malloc(NULL, sizeof(zbx_trigger_dep_t));
-				dep->triggerid = triggerids->values[i];
-				zbx_vector_uint64_create(&dep->masterids);
-
-				if (SUCCEED == ret)
-				{
-					dep->status = ZBX_TRIGGER_DEPENDENCY_UNRESOLVED;
-					zbx_vector_uint64_append_array(&dep->masterids, depids.values,
-							depids.values_num);
-				}
-				else
-					dep->status = ZBX_TRIGGER_DEPENDENCY_FAIL;
-
-				zbx_vector_ptr_append(deps, dep);
+				dep->status = ZBX_TRIGGER_DEPENDENCY_UNRESOLVED;
+				zbx_vector_uint64_append_array(&dep->masterids, masterids.values,
+						masterids.values_num);
 			}
+			else
+				dep->status = ZBX_TRIGGER_DEPENDENCY_FAIL;
 
-			zbx_vector_uint64_clear(&depids);
+			zbx_vector_ptr_append(deps, dep);
 		}
+
+		zbx_vector_uint64_clear(&masterids);
 	}
 
 	UNLOCK_CACHE;
 
-	zbx_vector_uint64_destroy(&depids);
+	zbx_vector_uint64_destroy(&masterids);
 }
