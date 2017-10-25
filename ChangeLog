@@ -1,6 +1,7 @@
 Changes for 3.2.10rc1
 
 New features:
+..F....... [ZBXNEXT-1421] added service sorting by name if multiple services has same 'sortorder' value (miks)
 ..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
 
 Bug fixes:
@@ -536,6 +537,7 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 Changes for 3.0.13rc1
 
 New features:
+..F....... [ZBXNEXT-1421] added service sorting by name if multiple services has same 'sortorder' value (miks)
 ..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
 
 Bug fixes:
