@@ -390,8 +390,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getNewDashboard()
-	{
+	private function getNewDashboard() {
 		return [
 			'dashboardid' => 0,
 			'name' => _('New dashboard'),
@@ -408,8 +407,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getOwnerData($userid)
-	{
+	private function getOwnerData($userid) {
 		$owner = ['id' => $userid, 'name' => _('Inaccessible user')];
 
 		$users = API::User()->get([
@@ -439,12 +437,17 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			}
 
 			$widgetid = $widget['widgetid'];
-			$default_rf_rate = CWidgetConfig::getDefaultRfRate($widget['type']);
+			$fields = self::convertWidgetFields($widget['fields']);
 
-			$widget_fields = self::convertWidgetFields($widget['fields']);
-			$widget_form = CWidgetConfig::getForm($widget['type'], CJs::encodeJson($widget_fields));
+			$rf_rate = (array_key_exists('rf_rate', $fields))
+				? ($fields['rf_rate'] == -1)
+					? CWidgetConfig::getDefaultRfRate($widget['type'])
+					: $fields['rf_rate']
+				: CWidgetConfig::getDefaultRfRate($widget['type']);
+
+			$widget_form = CWidgetConfig::getForm($widget['type'], CJs::encodeJson($fields));
 			if ($widget_form->validate()) {
-				$widget_fields = $widget_form->getFieldsData();
+				$fields = $widget_form->getFieldsData();
 			}
 
 			$grid_widgets[$widgetid] = [
@@ -457,8 +460,8 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 					'width' => (int) $widget['width'],
 					'height' => (int) $widget['height']
 				],
-				'rf_rate' => (int) CProfile::get('web.dashbrd.widget.rf_rate', $default_rf_rate, $widgetid),
-				'fields' => $widget_fields
+				'rf_rate' => (int) CProfile::get('web.dashbrd.widget.rf_rate', $rf_rate, $widgetid),
+				'fields' => $fields
 			];
 		}
 

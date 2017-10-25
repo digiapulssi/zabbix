@@ -1,9 +1,18 @@
 Changes for 3.4.4rc1
 
 New features:
+...G...... [ZBXNEXT-3493] added Windows service configuration check to determine if service can be trigger started (andris, viktors)
+..F....... [ZBXNEXT-4019] implemented default widget refresh interval (Ivo)
 ..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
 
 Bug fixes:
+A......... [ZBX-12837] fixed error in action update when changing media type (gcalenko)
+...G...... [ZBX-11902] fixed CPU count for LPAR partitions in IBM AIX (abs)
+A......... [ZBX-12778] fixed problem.get and event.get API methods when "selectTags" option contains extended output (Ivo)
+...G...... [ZBX-12260] fixed windows agent to support UTF-16LE, UCS-2, UCS-2LE encodings (vso)
+........S. [ZBX-12853] fixed last access not being updated for passive proxies after getting historical data (vso)
+..F....... [ZBX-6669] fixed use of current host as filter when selecting items for graph forms and trigger forms (gcalenko)
+..F....... [ZBX-12722] fixed scrollbar causing a JS error in "500 latest values" page due to unnecessarily initialization (Ivo)
 ..F....... [ZBX-12860] fixed problem counting in host groups in navigation tree widget (miks)
 ..F....... [ZBX-12710] fixed OS type detection logic (vjaceslavs)
 ..F....... [ZBX-12543] fixed problems with session management (vjaceslavs)
@@ -354,6 +363,10 @@ New features:
 ..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
 
 Bug fixes:
+...G...... [ZBX-11902] fixed CPU count for LPAR partitions in IBM AIX (abs)
+...G...... [ZBX-12260] fixed windows agent to support UTF-16LE, UCS-2, UCS-2LE encodings (vso)
+..F....... [ZBX-6669] fixed use of current host as filter when selecting items for graph forms and trigger forms (gcalenko)
+..F....... [ZBX-12722] fixed scrollbar causing a JS error in "500 latest values" page due to unnecessarily initialization (Ivo)
 ..F....... [ZBX-12710] fixed OS type detection logic (vjaceslavs)
 ..F....... [ZBX-12543] fixed problems with session management (vjaceslavs)
 ........S. [ZBX-12259] added an informative warning about lack of data for macros used in LLD rule filter (viktors)
@@ -885,9 +898,11 @@ New features:
 ..F....... [ZBXNEXT-4081] improved error message for case when none of supported database modules exists (gcalenko)
 
 Bug fixes:
+...G...... [ZBX-11902] fixed CPU count for LPAR partitions in IBM AIX (abs)
+...G...... [ZBX-12260] fixed windows agent to support UTF-16LE, UCS-2, UCS-2LE encodings (vso)
+..F....... [ZBX-12722] fixed scrollbar causing a JS error in "500 latest values" page due to unnecessarily initialization (Ivo)
 ..F....... [ZBX-12710] fixed OS type detection logic (vjaceslavs)
 ..F....... [ZBX-12543] fixed problems with session management (vjaceslavs)
-..F....... [ZBX-12655] fixed action message visibility in event details when users belongs to different groups (gcalenko)
 ........S. [ZBX-12259] added an informative warning about lack of data for macros used in LLD rule filter (viktors)
 
 --------------------------------------------------------------------------------
