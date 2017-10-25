@@ -202,4 +202,3 @@ void	zbx_db_free_event(DB_EVENT *event)
 
 	zbx_free(event);
 }
-
