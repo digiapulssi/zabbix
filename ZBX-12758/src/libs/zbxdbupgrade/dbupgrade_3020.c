@@ -93,6 +93,11 @@ static int	DBpatch_3020001(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3020002(void)
+{
+	return DBcreate_index("problem", "problem_3", "r_eventid", 0);
+}
+
 #endif
 
 DBPATCH_START(3020)
@@ -101,5 +106,6 @@ DBPATCH_START(3020)
 
 DBPATCH_ADD(3020000, 0, 1)
 DBPATCH_ADD(3020001, 0, 0)
+DBPATCH_ADD(3020002, 0, 0)
 
 DBPATCH_END()
