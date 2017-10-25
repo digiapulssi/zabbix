@@ -156,41 +156,33 @@ static int	history_parse_value(struct zbx_json_parse *jp, unsigned char value_ty
 
 	hr->timestamp.ns = atoi(value);
 
+	if (SUCCEED != zbx_json_value_by_name_dyn(jp, "value", &value, &value_alloc))
+		goto out;
+
+	hr->value = history_str2value(value, value_type);
+
 	if (ITEM_VALUE_TYPE_LOG == value_type)
 	{
-		struct zbx_json_parse	jp_value;
 
-		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "value", &value, &value_alloc))
-			goto out;
-
-		hr->value = history_str2value(value, value_type);
-
-		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "timestamp", &value, &value_alloc))
+		if (SUCCEED != zbx_json_value_by_name_dyn(jp, "timestamp", &value, &value_alloc))
 			goto out;
 
 		hr->value.log->timestamp = atoi(value);
 
-		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "logeventid", &value, &value_alloc))
+		if (SUCCEED != zbx_json_value_by_name_dyn(jp, "logeventid", &value, &value_alloc))
 			goto out;
 
 		hr->value.log->logeventid = atoi(value);
 
-		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "severity", &value, &value_alloc))
+		if (SUCCEED != zbx_json_value_by_name_dyn(jp, "severity", &value, &value_alloc))
 			goto out;
 
 		hr->value.log->severity = atoi(value);
 
-		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_value, "source", &value, &value_alloc))
+		if (SUCCEED != zbx_json_value_by_name_dyn(jp, "source", &value, &value_alloc))
 			goto out;
 
 		hr->value.log->source = zbx_strdup(NULL, value);
-	}
-	else
-	{
-		if (SUCCEED != zbx_json_value_by_name_dyn(jp, "value", &value, &value_alloc))
-			goto out;
-
-		hr->value = history_str2value(value, value_type);
 	}
 
 	ret = SUCCEED;
@@ -357,8 +349,7 @@ static void	elastic_writer_flush()
 
 		if (CURLM_OK != code)
 		{
-			zabbix_log(LOG_LEVEL_ERR, "cannot wait on curl multi handlefailed to wait on curl multi"
-					" handle");
+			zabbix_log(LOG_LEVEL_ERR, "cannot wait on curl multi handle");
 			break;
 		}
 
