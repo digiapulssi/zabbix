@@ -375,7 +375,7 @@ static void	elastic_writer_flush()
 
 				curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &err);
 
-				zabbix_log(LOG_LEVEL_ERR, "%s: %li: %s", "cannot store in elasticsearch server",
+				zabbix_log(LOG_LEVEL_WARNING, "%s: %li: %s", "cannot store in elasticsearch server",
 						err, curl_easy_strerror(msg->data.result));
 			}
 			else if (CURLE_OK != msg->data.result)
@@ -630,7 +630,10 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 		page.offset = 0;
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
-			zabbix_log(LOG_LEVEL_WARNING, "cannot close the scroll query: %s", curl_easy_strerror(err));
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "cannot close elasticsearch scroll query: %s",
+					curl_easy_strerror(err));
+		}
 	}
 
 	elastic_close(hist);
