@@ -7868,7 +7868,7 @@ int	DCset_hosts_availability(zbx_vector_ptr_t *availabilities)
 
 /******************************************************************************
  *                                                                            *
- * Comments: helper function trigger dependency checking                      *
+ * Comments: helper function for trigger dependency checking                  *
  *                                                                            *
  * Parameters: trigdep        - [IN] the trigger dependency data              *
  *             level          - [IN] the trigger dependency level             *
@@ -10207,6 +10207,8 @@ void	zbx_dc_get_nested_hostgroupids_by_names(char **names, int names_num, zbx_ve
  *           Dependency check is unresolved if a master trigger is being      *
  *           processed in this batch (present in triggerids vector) and no    *
  *           other master triggers have problem value.                        *
+ *           Dependency check is successful if all master triggers (if any)   *
+ *           have OK value and are not being processed in this batch.         *
  *                                                                            *
  ******************************************************************************/
 void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_vector_ptr_t *deps)
@@ -10236,8 +10238,7 @@ void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_
 			if (SUCCEED == ret)
 			{
 				dep->status = ZBX_TRIGGER_DEPENDENCY_UNRESOLVED;
-				zbx_vector_uint64_append_array(&dep->masterids, masterids.values,
-						masterids.values_num);
+				zbx_vector_uint64_append_array(&dep->masterids, masterids.values, masterids.values_num);
 			}
 			else
 				dep->status = ZBX_TRIGGER_DEPENDENCY_FAIL;
