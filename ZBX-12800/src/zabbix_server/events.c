@@ -2257,7 +2257,7 @@ int	zbx_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t
  ******************************************************************************/
 int	zbx_flush_correlated_events(void)
 {
-	const char		*__function_name = "flush_correlated_events";
+	const char		*__function_name = "zbx_flush_correlated_events";
 	zbx_vector_ptr_t	trigger_diff;
 	zbx_vector_uint64_t	triggerids_lock;
 
@@ -2297,4 +2297,3 @@ out:
 
 	return correlation_cache.num_data;
 }
-
