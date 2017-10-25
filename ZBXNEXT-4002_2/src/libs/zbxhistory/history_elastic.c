@@ -340,7 +340,7 @@ static void	elastic_writer_flush()
 
 		curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
 
-		zabbix_log(LOG_LEVEL_DEBUG, "Sending %s", data->buf);
+		zabbix_log(LOG_LEVEL_DEBUG, "sending %s", data->buf);
 	}
 
 	previous = 0;
@@ -357,8 +357,8 @@ static void	elastic_writer_flush()
 
 		if (CURLM_OK != code)
 		{
-			zabbix_log(LOG_LEVEL_ERR, "elastic history interface failed to wait on curl multi handle"
-					" when posting new values");
+			zabbix_log(LOG_LEVEL_ERR, "cannot wait on curl multi handlefailed to wait on curl multi"
+					" handle");
 			break;
 		}
 
@@ -375,12 +375,12 @@ static void	elastic_writer_flush()
 
 				curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &err);
 
-				zabbix_log(LOG_LEVEL_ERR, "%s: %li: %s", "HTTP transport error, elasticsearch answer",
+				zabbix_log(LOG_LEVEL_ERR, "%s: %li: %s", "cannot store in elasticsearch server",
 						err, curl_easy_strerror(msg->data.result));
 			}
 			else if (CURLE_OK != msg->data.result)
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "Error on sending to history storage: %s",
+				zabbix_log(LOG_LEVEL_WARNING, "cannot send data to elasticsearch: %s",
 						curl_easy_strerror(msg->data.result));
 
 				/* Add back the handle and set the flag to 1 for retrying what failed */
@@ -464,7 +464,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 	if (NULL == (data->handle = curl_easy_init()))
 	{
-		zabbix_log(LOG_LEVEL_ERR, "Cannot initialize cURL session");
+		zabbix_log(LOG_LEVEL_ERR, "cannot initialize cURL session");
 
 		return FAIL;
 	}
@@ -523,11 +523,11 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
 	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "Sending query to %s; post data: %s", data->post_url, query.buffer);
+	zabbix_log(LOG_LEVEL_DEBUG, "sending query to %s; post data: %s", data->post_url, query.buffer);
 
 	page.offset = 0;
 	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
-		zabbix_log(LOG_LEVEL_ERR, "Failed to get values from history storage: %s", curl_easy_strerror(err));
+		zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s", curl_easy_strerror(err));
 
 	curl_easy_getinfo(data->handle, CURLINFO_RESPONSE_CODE, &http_code);
 
@@ -549,14 +549,14 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 		if (200 != http_code)
 		{
-			zabbix_log(LOG_LEVEL_ERR, "Error during receive from elasticsearch: %s", page.data);
+			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s", page.data);
 
 			break;
 		}
 
 		empty = 1;
 
-		zabbix_log(LOG_LEVEL_DEBUG, "Received from elasticsearch: %s", page.data);
+		zabbix_log(LOG_LEVEL_DEBUG, "received from elasticsearch: %s", page.data);
 
 		zbx_json_open(page.data, &jp);
 		zbx_json_brackets_open(jp.start, &jp_values);
@@ -607,8 +607,8 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		page.offset = 0;
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 		{
-			zabbix_log(LOG_LEVEL_ERR, "Failed to get values from history storage: %s",
-				curl_easy_strerror(err));
+			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s",
+					curl_easy_strerror(err));
 
 			break;
 		}
@@ -626,11 +626,11 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, NULL);
 		curl_easy_setopt(data->handle, CURLOPT_CUSTOMREQUEST, "DELETE");
 
-		zabbix_log(LOG_LEVEL_DEBUG, "Elasticsearch closing scroll %s", data->post_url);
+		zabbix_log(LOG_LEVEL_DEBUG, "elasticsearch closing scroll %s", data->post_url);
 
 		page.offset = 0;
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
-			zabbix_log(LOG_LEVEL_WARNING, "Failed to close the scroll query: %s", curl_easy_strerror(err));
+			zabbix_log(LOG_LEVEL_WARNING, "cannot close the scroll query: %s", curl_easy_strerror(err));
 	}
 
 	elastic_close(hist);
