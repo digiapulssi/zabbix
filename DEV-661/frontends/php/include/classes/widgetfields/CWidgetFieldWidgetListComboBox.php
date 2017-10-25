@@ -54,7 +54,7 @@ class CWidgetFieldWidgetListComboBox extends CWidgetField {
 			'widgets = jQuery(".dashbrd-grid-widget-container")'.
 				'.dashboardGrid("getWidgetsBy", "'.$this->search_by_key.'", "'.$this->search_by_value.'"),'.
 			'dashboard_data = jQuery(".dashbrd-grid-widget-container").data("dashboardGrid"),'.
-			'filters_box = jQuery("#'.$this->getName().'");'.
+			'filters_box = jQuery("#'.$this->name.'");'.
 			'jQuery("<option>'._('Select widget').'</option>").val("").appendTo(filters_box);'.
 			'if (widgets.length) {'.
 				'jQuery.each(widgets, function(i, widget) {'.

@@ -42,7 +42,7 @@ class CWidgetFieldUrl extends CWidgetField {
 		$errors = parent::validate($strict);
 
 		if (!$errors && $strict && ($this->getFlags() & CWidgetField::FLAG_NOT_EMPTY) && $this->getValue() === '') {
-			$errors[] = _s('Invalid parameter "%1$s": %2$s.', $this->getLabel(), _('cannot be empty'));
+			$errors[] = _s('Invalid parameter "%1$s": %2$s.', $this->label, _('cannot be empty'));
 		}
 
 		return $errors;

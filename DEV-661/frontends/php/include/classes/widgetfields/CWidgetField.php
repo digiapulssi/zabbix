@@ -166,10 +166,6 @@ class CWidgetField {
 		return $this->action;
 	}
 
-	public function getSaveType() {
-		return $this->save_type;
-	}
-
 	/**
 	 * Set additional flags, which can be used in configuration form.
 	 *
