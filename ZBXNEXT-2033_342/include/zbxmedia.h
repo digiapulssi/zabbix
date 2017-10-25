@@ -74,10 +74,8 @@ zbx_acknowledge_t;
 void zbx_free_ticket(zbx_ticket_t *ticket);
 void zbx_free_acknowledge(zbx_acknowledge_t *ticket);
 
-typedef struct DB_MEDIATYPE DB_MEDIATYPE;
-
 int	zbx_remedy_process_alert(zbx_uint64_t eventid, zbx_uint64_t userid, const char *sendto, const char *subject,
-		const char *message, const DB_MEDIATYPE *mediatype, char **error);
+		const char *message, const struct DB_MEDIATYPE *mediatype, char **error);
 int	zbx_remedy_query_events(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tickets, char **error);
 int	zbx_remedy_acknowledge_events(zbx_uint64_t userid, zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets,
 		char **error);
