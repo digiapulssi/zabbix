@@ -683,20 +683,19 @@ static int	elastic_add_values(zbx_history_iface_t *hist, const zbx_vector_ptr_t 
 
 		zbx_json_adduint64(&json, "itemid", h->itemid);
 
+		zbx_json_addstring(&json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
+
 		if (ITEM_VALUE_TYPE_LOG == h->value_type)
 		{
 			const zbx_log_value_t	*log;
 
 			log = h->value.log;
 
-			zbx_json_addstring(&json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
 			zbx_json_adduint64(&json, "timestamp", log->timestamp);
 			zbx_json_addstring(&json, "source", ZBX_NULL2EMPTY_STR(log->source), ZBX_JSON_TYPE_STRING);
 			zbx_json_adduint64(&json, "severity", log->severity);
 			zbx_json_adduint64(&json, "logeventid", log->logeventid);
 		}
-		else
-			zbx_json_addstring(&json, "value", history_value2str(h), ZBX_JSON_TYPE_STRING);
 
 		zbx_json_adduint64(&json, "clock", h->ts.sec);
 		zbx_json_adduint64(&json, "ns", h->ts.ns);
