@@ -580,15 +580,15 @@ function overlayDialogue(params) {
 
 	var body_mutation_observer = window.MutationObserver || window.WebKitMutationObserver,
 		body_mutation_observer = new body_mutation_observer(function(mutations) {
-		mutations.forEach(function(m) {
-			defer.notify();
-		})
-	});
+			mutations.forEach(function(m) {
+				defer.notify();
+			})
+		});
 
 	var overlay_dialogue = jQuery('<div>', {
-			id: 'overlay_dialogue',
-			class: 'overlay-dialogue modal'
-		})
+		id: 'overlay_dialogue',
+		class: 'overlay-dialogue modal'
+	})
 		.append(
 			jQuery('<button>', {
 				class: 'overlay-close-btn'
