@@ -29,7 +29,7 @@ function local_generateHeader($data) {
 	header('X-Content-Type-Options: nosniff');
 	header('X-XSS-Protection: 1; mode=block');
 
-	if (!is_null(X_FRAME_OPTIONS)) {
+	if (X_FRAME_OPTIONS === null) {
 		if (strcasecmp(X_FRAME_OPTIONS, 'SAMEORIGIN') == 0 || strcasecmp(X_FRAME_OPTIONS, 'DENY') == 0) {
 			$x_frame_options = X_FRAME_OPTIONS;
 		}
