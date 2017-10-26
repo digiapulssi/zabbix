@@ -2864,7 +2864,7 @@ out:
 
 static int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml)
 {
-	const char		*__function_name = "vmware_get_events";
+	const char		*__function_name = "vmware_service_parse_event_data";
 
 	zbx_vector_str_t	keys;
 	zbx_vector_uint64_t	ids;
