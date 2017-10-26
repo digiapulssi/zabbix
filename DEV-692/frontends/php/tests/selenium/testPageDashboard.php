@@ -133,7 +133,7 @@ class testPageDashboard extends CWebTest {
 		$this->zbxTestClickXpathWait("//button[@class='btn-conf']");
 		$this->zbxTestCheckTitle('Dashboard configuration');
 		$this->zbxTestAssertElementText("//span[@class='link-action red']", 'Disabled');
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.filter.enable' AND value_int=0"));
+		$this->assertEquals(0, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.filter.enable' AND value_int=1"));
 	}
 
 	public function testPageDashboard_Configuration() {
