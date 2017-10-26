@@ -114,11 +114,16 @@ switch ($page['type']) {
 			else {
 				$x_frame_options = 'SAMEORIGIN';
 				$allowed_urls = explode(',', X_FRAME_OPTIONS);
+				$url_to_check = array_key_exists('HTTP_REFERER', $_SERVER)
+					? parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)
+					: null;
 
-				foreach ($allowed_urls as $allowed_url) {
-					if (strcasecmp(trim($allowed_url), $_SERVER['SERVER_NAME']) == 0) {
-						$x_frame_options = 'ALLOW-FROM '.$allowed_url;
-						break;
+				if ($url_to_check) {
+					foreach ($allowed_urls as $allowed_url) {
+						if (strcasecmp(trim($allowed_url), $url_to_check) == 0) {
+							$x_frame_options = 'ALLOW-FROM '.$allowed_url;
+							break;
+						}
 					}
 				}
 			}
