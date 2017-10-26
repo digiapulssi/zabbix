@@ -657,7 +657,7 @@ static int	setup_old2new(char *old2new, struct st_logfile *old, int num_old,
 					break;
 				case ZBX_SAME_FILE_RETRY:
 					old[i].retry = 1;
-					/* break; is not missing here */
+					return FAIL;
 				case ZBX_SAME_FILE_ERROR:
 					return FAIL;
 			}
