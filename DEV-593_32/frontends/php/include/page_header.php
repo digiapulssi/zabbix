@@ -104,6 +104,7 @@ switch ($page['type']) {
 	case PAGE_TYPE_HTML:
 	default:
 		header('Content-Type: text/html; charset=UTF-8');
+		header('X-Content-Type-Options: nosniff');
 
 		if (!is_null(X_FRAME_OPTIONS)) {
 			if (strcasecmp(X_FRAME_OPTIONS, 'SAMEORIGIN') == 0 || strcasecmp(X_FRAME_OPTIONS, 'DENY') == 0) {
