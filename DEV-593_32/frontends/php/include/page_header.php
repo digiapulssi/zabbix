@@ -105,6 +105,25 @@ switch ($page['type']) {
 	default:
 		header('Content-Type: text/html; charset=UTF-8');
 
+		if (!is_null(X_FRAME_OPTIONS)) {
+			if (strcasecmp(X_FRAME_OPTIONS, 'SAMEORIGIN') == 0 || strcasecmp(X_FRAME_OPTIONS, 'DENY') == 0) {
+				$x_frame_options = X_FRAME_OPTIONS;
+			}
+			else {
+				$x_frame_options = 'SAMEORIGIN';
+				$allowed_urls = explode(',', X_FRAME_OPTIONS);
+
+				foreach ($allowed_urls as $allowed_url) {
+					if (strcasecmp(trim($allowed_url), $_SERVER['SERVER_NAME']) == 0) {
+						$x_frame_options = 'ALLOW-FROM '.$allowed_url;
+						break;
+					}
+				}
+			}
+
+			header('X-Frame-Options: '.$x_frame_options);
+		}
+
 		global $ZBX_SERVER_NAME;
 
 		// page title
