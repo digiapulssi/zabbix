@@ -1888,6 +1888,25 @@ out:
 	return ret;
 }
 
+static void	adjust_mtime_to_clock(int *mtime)
+{
+	time_t	now;
+
+	/* Adjust 'mtime' if the system clock has been set back in time. Otherwise records can be skipped. */
+	/* Setting the clock ahead of time is harmless in our case. */
+
+	if (*mtime > (now = time(NULL)))
+	{
+		int	old_mtime;
+
+		old_mtime = *mtime;
+		*mtime = (int)now;
+
+		zabbix_log(LOG_LEVEL_WARNING, "System clock has been set back in time. Setting agent mtime %d "
+				"seconds back.", (int)(old_mtime - now));
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: process_logrt                                                    *
@@ -1895,7 +1914,7 @@ out:
  * Purpose: Find new records in logfiles                                      *
  *                                                                            *
  * Parameters:                                                                *
- *     flags            - [IN] metric flags to check item type: log or logrt  *
+ *     flags            - [IN] bit flags with item type: log or logrt         *
  *     filename         - [IN] logfile name (regular expression with a path)  *
  *     lastlogsize      - [IN/OUT] offset from the beginning of the file      *
  *     mtime            - [IN/OUT] last modification time of the file         *
@@ -1944,23 +1963,11 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 				max_old_seq = 0, old_last, from_first_file = 1;
 	char			*old2new = NULL;
 	struct st_logfile	*logfiles = NULL;
-	time_t			now;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() is_logrt:%d filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
-			__function_name, ZBX_METRIC_FLAG_LOG_LOGRT & flags, filename, *lastlogsize, *mtime);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:'0x%02x' filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
+			__function_name, (unsigned int)flags, filename, *lastlogsize, *mtime);
 
-	/* Minimize data loss if the system clock has been set back in time. */
-	/* Setting the clock ahead of time is harmless in our case. */
-	if (*mtime > (now = time(NULL)))
-	{
-		int	old_mtime;
-
-		old_mtime = *mtime;
-		*mtime = (int)now;
-
-		zabbix_log(LOG_LEVEL_WARNING, "System clock has been set back in time. Setting agent mtime %d "
-				"seconds back.", (int)(old_mtime - now));
-	}
+	adjust_mtime_to_clock(mtime);
 
 	if (SUCCEED != make_logfile_list(flags, filename, mtime, &logfiles, &logfiles_alloc, &logfiles_num, use_ino,
 			err_msg))
