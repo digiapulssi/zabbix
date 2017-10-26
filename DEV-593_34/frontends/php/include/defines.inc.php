@@ -1501,3 +1501,15 @@ if (function_exists('bcscale')) {
 
 // Maximum number of tags to display in events list.
 define('EVENTS_LIST_TAGS_COUNT', 3);
+
+// HTTP headers
+/*
+ * Value of HTTP X-Frame-options header.
+ *
+ * Supported options:
+ *  - SAMEORIGIN (string) - compatible with rfc7034.
+ *  - DENY (string) - compatible with rfc7034.
+ *  - a list (string) of comma-separated hostnames. If hostname is not between allowed, the SAMEORIGIN option is used.
+ *  - null - disable X-Frame-options header.
+ */
+define('X_FRAME_OPTIONS', 'SAMEORIGIN');
