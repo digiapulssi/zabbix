@@ -792,7 +792,7 @@ static int	setup_old2new_and_copy_of(int rotation_type, char *old2new, struct st
 
 			if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 			{
-				zabbix_log(LOG_LEVEL_DEBUG, "setup_old2new: is_same_file(%s, %s) = %c",
+				zabbix_log(LOG_LEVEL_DEBUG, "setup_old2new_and_copy_of: is_same_file(%s, %s) = %c",
 						old[i].filename, new[j].filename, p[j]);
 			}
 		}
