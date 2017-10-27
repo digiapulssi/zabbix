@@ -655,7 +655,6 @@ static int	examine_md5_and_place(const md5_byte_t *buf1, const md5_byte_t *buf2,
  *               ZBX_SAME_FILE_YES - it could be the same file                *
  *               ZBX_SAME_FILE_COPY - it is a copy                            *
  *               ZBX_SAME_FILE_ERROR - error                                  *
- *               ZBX_SAME_FILE_RETRY - retry on the next check                *
  *                                                                            *
  * Comments: In some cases we can say that it IS NOT the same file.           *
  *           In other cases it COULD BE the same file or copy.                *
@@ -672,32 +671,6 @@ static int	is_same_file_logcpt(const struct st_logfile *old, const struct st_log
 	if (old->size > new->size)
 		return ZBX_SAME_FILE_NO;
 
-	is_same_place = compare_file_places(old, new, use_ino);
-
-	if (ZBX_FILE_PLACE_SAME == is_same_place && old->size == new->size && old->mtime < new->mtime)
-	{
-		/* Depending on file system it's possible that stat() was called */
-		/* between mtime and file size update. In this situation we will */
-		/* get a file with the old size and a new mtime.                 */
-		/* On the first try we assume it's the same file, just its size  */
-		/* has not been changed yet.                                     */
-		/* If the size has not changed on the next check, then we assume */
-		/* that some tampering was done and to be safe we will treat it  */
-		/* as a different file.                                          */
-		if (0 == old->retry)
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "the modification time of log file \"%s\" has been updated"
-					" without changing its size, try checking again later", old->filename);
-			return ZBX_SAME_FILE_RETRY;
-		}
-		else
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "after changing modification time the size of log file \"%s\""
-					" still has not been updated, consider it to be a new file", old->filename);
-			return ZBX_SAME_FILE_NO;
-		}
-	}
-
 	if (-1 == old->md5size || -1 == new->md5size)
 	{
 		/* Cannot compare MD5 sums. Assume two different files - reporting twice is better than skipping. */
@@ -706,6 +679,8 @@ static int	is_same_file_logcpt(const struct st_logfile *old, const struct st_log
 
 	if (old->md5size > new->md5size)
 		return ZBX_SAME_FILE_NO;
+
+	is_same_place = compare_file_places(old, new, use_ino);
 
 	if (old->md5size == new->md5size)
 		return examine_md5_and_place(old->md5buf, new->md5buf, sizeof(new->md5buf), is_same_place);
