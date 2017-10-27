@@ -90,6 +90,10 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	protected $supress_case_errors = false;
 	// Enable supressing of browser errors on test suite level.
 	protected static $supress_suite_errors = false;
+	// Test case data key.
+	protected $data_key = null;
+	// Lists of test case data set keys.
+	protected static $test_data_sets = [];
 
 	protected function putBreak() {
 		fwrite(STDOUT, "\033[s    \033[93m[Breakpoint] Press \033[1;93m[RETURN]\033[0;93m to continue...\033[0m");
@@ -112,7 +116,10 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			}
 		}
 
-		self::closeBrowser();
+		if (($e instanceof PHPUnit_Framework_SkippedTestError) === false) {
+			self::closeBrowser();
+		}
+
 		parent::onNotSuccessfulTest($e);
 	}
 
@@ -732,6 +739,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		static $suite = null;
 		$class_name = get_class($this);
 		$case_name = $this->getName(false);
+		$backup = [];
 
 		if (!isset($DB['DB'])) {
 			DBconnect($error);
@@ -753,17 +761,27 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			$case_backup = $this->getAnnotationsByType($method_annotations, 'backup');
 
 			if ($case_backup !== null && count($case_backup) === 1) {
-				$this->case_backup = $case_backup[0];
-				DBsave_tables($this->case_backup);
+				$backup['case'] = $case_backup[0];
 			}
 
 			if (self::$last_test_case !== $case_name) {
+				if (array_key_exists($case_name, self::$test_data_sets)) {
+					// Check for data data set limit.
+					$limit = $this->getAnnotationsByType($method_annotations, 'data-limit');
+
+					if ($limit !== null && count($limit) === 1 && is_numeric($limit[0]) && $limit[0] >= 1
+							&& count(self::$test_data_sets[$case_name]) > $limit[0]) {
+						$sets = self::$test_data_sets[$case_name];
+						shuffle($sets);
+						self::$test_data_sets[$case_name] = array_slice($sets, 0, (int)$limit[0]);
+					}
+				}
+
 				// Backup performed once before first test case execution.
 				$case_backup_once = $this->getAnnotationsByType($method_annotations, 'backup-once');
 
 				if ($case_backup_once !== null && count($case_backup_once) === 1) {
-					self::$case_backup_once = $case_backup_once[0];
-					DBsave_tables(self::$case_backup_once);
+					$backup['case-once'] = $case_backup_once[0];
 				}
 			}
 
@@ -784,8 +802,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			$suite_backup = $this->getAnnotationsByType($class_annotations, 'backup');
 
 			if ($suite_backup !== null && count($suite_backup) === 1) {
-				self::$suite_backup = $suite_backup[0];
-				DBsave_tables(self::$suite_backup);
+				$backup['suite'] = $suite_backup[0];
 			}
 
 			// Supress browser error on a test case level.
@@ -798,6 +815,34 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			$this->supress_case_errors = self::$supress_suite_errors;
 		}
 
+		$suite = $class_name;
+		self::$last_test_case = $case_name;
+
+		// Mark excessive test cases as skipped.
+		if (array_key_exists($case_name, self::$test_data_sets)
+				&& !in_array($this->data_key, self::$test_data_sets[$case_name])) {
+			self::markTestSkipped('Test case skipped by data provider limit check.');
+		}
+
+		// Backup is performed only for non-skipped tests.
+		foreach ($backup as $level => $table) {
+			switch ($level) {
+				case 'suite':
+					self::$suite_backup = $table;
+					break;
+
+				case 'case-once':
+					self::$case_backup_once = $table;
+					break;
+
+				case 'case':
+					$this->case_backup = $table;
+					break;
+			}
+
+			DBsave_tables($table);
+		}
+
 		// Share browser when it is possible.
 		if (self::$shared_browser !== null) {
 			$this->webDriver = self::$shared_browser;
@@ -808,9 +853,6 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			);
 			self::$shared_browser = $this->webDriver;
 		}
-
-		$suite = $class_name;
-		self::$last_test_case = $case_name;
 	}
 
 	/**
@@ -935,5 +977,22 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		return (array_key_exists($type, $annotations) && is_array($annotations[$type]))
 				? $annotations[$type]
 				: null;
+	}
+
+	/**
+	 * Overriden constructor for collecting data on data sets from dataProvider annotations.
+	 *
+	 * @param string $name
+	 * @param array  $data
+	 * @param string $data_name
+	 */
+	public function __construct($name = null, array $data = [], $data_name = '') {
+		parent::__construct($name, $data, $data_name);
+
+		// If data limits are enabled and test case uses data.
+		if (defined('PHPUNIT_ENABLE_DATA_LIMITS') && PHPUNIT_ENABLE_DATA_LIMITS && $data) {
+			$this->data_key = $data_name;
+			self::$test_data_sets[$name][] = $data_name;
+		}
 	}
 }
