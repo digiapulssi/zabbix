@@ -756,7 +756,7 @@ static void	cross_out(char *arr, int n_rows, int n_cols, int row, int col, char 
  ******************************************************************************/
 static int	is_uniq_row(const char *arr, int n_cols, int row)
 {
-	int		i, ones = 0, ret = -1;
+	int		i, mappings = 0, ret = -1;
 	const char	*p;
 
 	p = arr + row * n_cols;			/* point to the first element of the 'row' */
@@ -765,7 +765,7 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
 	{
 		if ('1' == *p++)
 		{
-			if (2 == ++ones)
+			if (2 == ++mappings)
 			{
 				ret = -1;	/* non-unique mapping in the row */
 				break;
@@ -796,7 +796,7 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
  ******************************************************************************/
 static int	is_uniq_col(const char *arr, int n_rows, int n_cols, int col)
 {
-	int		i, ones = 0, ret = -1;
+	int		i, mappings = 0, ret = -1;
 	const char	*p;
 
 	p = arr + col;				/* point to the top element of the 'col' */
@@ -805,7 +805,7 @@ static int	is_uniq_col(const char *arr, int n_rows, int n_cols, int col)
 	{
 		if ('1' == *p)
 		{
-			if (2 == ++ones)
+			if (2 == ++mappings)
 			{
 				ret = -1;	/* non-unique mapping in the column */
 				break;
@@ -834,7 +834,7 @@ static int	is_uniq_col(const char *arr, int n_rows, int n_cols, int col)
  ******************************************************************************/
 static void	resolve_old2new(char *old2new, int num_old, int num_new)
 {
-	int	i, j, ones;
+	int	i, j, mappings;
 	char	*p, *protected_rows = NULL, *protected_cols = NULL;
 
 	/* Is there 1:1 mapping in both directions between files in the old and the new list ? */
@@ -845,13 +845,13 @@ static void	resolve_old2new(char *old2new, int num_old, int num_new)
 
 	for (i = 0; i < num_old; i++)		/* loop over rows (old files) */
 	{
-		ones = 0;
+		mappings = 0;
 
 		for (j = 0; j < num_new; j++)	/* loop over columns (new files) */
 		{
 			if ('1' == *p++)
 			{
-				if (2 == ++ones)
+				if (2 == ++mappings)
 					goto non_unique;
 			}
 		}
@@ -860,13 +860,13 @@ static void	resolve_old2new(char *old2new, int num_old, int num_new)
 	for (i = 0; i < num_new; i++)		/* loop over columns */
 	{
 		p = old2new + i;
-		ones = 0;
+		mappings = 0;
 
 		for (j = 0; j < num_old; j++)	/* loop over rows */
 		{
 			if ('1' == *p)
 			{
-				if (2 == ++ones)
+				if (2 == ++mappings)
 					goto non_unique;
 			}
 			p += num_new;
