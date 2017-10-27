@@ -33,6 +33,10 @@
 #define ZBX_SAME_FILE_NO	0
 #define ZBX_SAME_FILE_YES	1
 #define ZBX_SAME_FILE_RETRY	2
+#define ZBX_SAME_FILE_COPY	3
+
+#define ZBX_LOG_ROTATION_LOGRT	0	/* pure rotation model */
+#define ZBX_LOG_ROTATION_LOGCPT	1	/* copy-truncate rotation model */
 
 #define ZBX_FILE_PLACE_UNKNOWN	-1	/* cannot compare file device and inode numbers */
 #define ZBX_FILE_PLACE_OTHER	0	/* both files have different device or inode numbers */
@@ -616,30 +620,33 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: setup_old2new                                                    *
+ * Function: setup_old2new_and_copy_of                                        *
  *                                                                            *
  * Purpose: fill an array of possible mappings from the old log files to the  *
  *          new log files.                                                    *
  *                                                                            *
  * Parameters:                                                                *
- *          old2new - [IN] two dimensional array of possible mappings         *
- *          old     - [IN] old file list                                      *
- *          num_old - [IN] number of elements in the old file list            *
- *          new     - [IN] new file list                                      *
- *          num_new - [IN] number of elements in the new file list            *
- *          use_ino - [IN] how to use inodes in is_same_file()                *
- *          err_msg - [IN/OUT] error message why an item became NOTSUPPORTED  *
+ *     rotation_type - [IN] file rotation type                                *
+ *     old2new       - [IN] two dimensional array of possible mappings        *
+ *     old           - [IN] old file list                                     *
+ *     num_old       - [IN] number of elements in the old file list           *
+ *     new           - [IN] new file list                                     *
+ *     num_new       - [IN] number of elements in the new file list           *
+ *     use_ino       - [IN] how to use inodes in is_same_file()               *
+ *     err_msg       - [IN/OUT] error message why an item became NOTSUPPORTED *
  *                                                                            *
  * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  * Comments:                                                                  *
- *    The array is filled with '0' and '1' which mean:                        *
+ *    The array is filled with '0', '1' and '2'  which mean:                  *
  *       old2new[i][j] = '0' - the i-th old file IS NOT the j-th new file     *
  *       old2new[i][j] = '1' - the i-th old file COULD BE the j-th new file   *
+ *       old2new[i][j] = '2' - the j-th new file is a copy of the i-th old    *
+ *                             file                                           *
  *                                                                            *
  ******************************************************************************/
-static int	setup_old2new(char *old2new, struct st_logfile *old, int num_old,
-		const struct st_logfile *new, int num_new, int use_ino, char **err_msg)
+static int	setup_old2new_and_copy_of(int rotation_type, char *old2new, struct st_logfile *old,
+		int num_old, struct st_logfile *new, int num_new, int use_ino, char **err_msg)
 {
 	int	i, j;
 	char	*p = old2new;
@@ -650,7 +657,10 @@ static int	setup_old2new(char *old2new, struct st_logfile *old, int num_old,
 		{
 			int	rc;
 
-			rc = is_same_file_logrt(old + i, new + j, use_ino, err_msg);
+			if (ZBX_LOG_ROTATION_LOGRT == rotation_type)
+				rc = is_same_file_logrt(old + i, new + j, use_ino, err_msg);
+			else
+				rc = is_same_file_logcpt(old + i, new + j, use_ino, err_msg);
 
 			switch (rc)
 			{
@@ -666,6 +676,10 @@ static int	setup_old2new(char *old2new, struct st_logfile *old, int num_old,
 						old[i].retry = 0;
 					}
 					p[j] = '1';
+					break;
+				case ZBX_SAME_FILE_COPY:
+					p[j] = '2';
+					new[j].copy_of = i;
 					break;
 				case ZBX_SAME_FILE_RETRY:
 					old[i].retry = 1;
@@ -2022,6 +2036,7 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 				max_old_seq = 0, old_last, from_first_file = 1;
 	char			*old2new = NULL;
 	struct st_logfile	*logfiles = NULL;
+	int			rotation_type;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:'0x%02x' filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
 			__function_name, (unsigned int)flags, filename, *lastlogsize, *mtime);
@@ -2056,13 +2071,18 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	else
 		start_idx = 0;
 
+	if (0 != (ZBX_METRIC_FLAG_LOG_LOGCPT & flags))
+		rotation_type = ZBX_LOG_ROTATION_LOGCPT;
+	else
+		rotation_type = ZBX_LOG_ROTATION_LOGRT;
+
 	if (0 < *logfiles_num_old && 0 < logfiles_num)
 	{
 		/* set up a mapping array from old files to new files */
 		old2new = zbx_malloc(old2new, (size_t)logfiles_num * (size_t)(*logfiles_num_old) * sizeof(char));
 
-		if (SUCCEED != setup_old2new(old2new, *logfiles_old, *logfiles_num_old, logfiles, logfiles_num,
-				*use_ino, err_msg))
+		if (SUCCEED != setup_old2new_and_copy_of(rotation_type, old2new, *logfiles_old, *logfiles_num_old,
+				logfiles, logfiles_num, *use_ino, err_msg))
 		{
 			destroy_logfile_list(&logfiles, &logfiles_alloc, &logfiles_num);
 			zbx_free(old2new);
