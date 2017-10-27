@@ -1871,7 +1871,7 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 {
 	ZBX_THREAD_ACTIVECHK_ARGS activechk_args;
 
-	int	nextcheck = 0, nextrefresh = 0, nextsend = 0, now, delta, lastcheck = 0;
+	time_t	nextcheck = 0, nextrefresh = 0, nextsend = 0, now, delta, lastcheck = 0;
 
 	assert(args);
 	assert(((zbx_thread_args_t *)args)->args);
@@ -1938,7 +1938,7 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 			{
 				zabbix_log(LOG_LEVEL_WARNING, "the system time has been pushed back,"
 						" adjusting active check schedule");
-				update_schedule(delta);
+				update_schedule((int)delta);
 				nextcheck += delta;
 				nextsend += delta;
 				nextrefresh += delta;

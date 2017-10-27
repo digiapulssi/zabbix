@@ -29,8 +29,8 @@ typedef long	ssize_t;
 #endif
 
 #ifdef _WINDOWS
-#	define ZBX_TCP_WRITE(s, b, bl)	((ssize_t)send((s), (b), (bl), 0))
-#	define ZBX_TCP_READ(s, b, bl)	((ssize_t)recv((s), (b), (bl), 0))
+#	define ZBX_TCP_WRITE(s, b, bl)	((ssize_t)send((s), (b), (int)(bl), 0))
+#	define ZBX_TCP_READ(s, b, bl)	((ssize_t)recv((s), (b), (int)(bl), 0))
 #	define zbx_socket_close(s)	if (ZBX_SOCKET_ERROR != (s)) closesocket(s)
 #	define zbx_socket_last_error()	WSAGetLastError()
 

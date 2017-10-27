@@ -107,7 +107,7 @@ int	zbx_read(int fd, char *buf, size_t count, const char *encoding)
 	if ((zbx_offset_t)-1 == (offset = zbx_lseek(fd, 0, SEEK_CUR)))
 		return -1;
 
-	if (0 >= (nbytes = (int)read(fd, buf, count)))
+	if (0 >= (nbytes = (int)read(fd, buf, (unsigned int)count)))
 		return nbytes;
 
 	find_cr_lf_szbyte(encoding, &cr, &lf, &szbyte);
