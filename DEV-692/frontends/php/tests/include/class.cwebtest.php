@@ -86,6 +86,10 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	protected static $last_test_case = null;
 	// Shared cookie value.
 	protected static $cookie = null;
+	// Enable supressing of browser errors on test case level.
+	protected $supress_case_errors = false;
+	// Enable supressing of browser errors on test suite level.
+	protected static $supress_suite_errors = false;
 
 	protected function putBreak() {
 		fwrite(STDOUT, "\033[s    \033[93m[Breakpoint] Press \033[1;93m[RETURN]\033[0;93m to continue...\033[0m");
@@ -113,14 +117,23 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	}
 
 	protected function tearDown() {
-		try {
-			if ($this->capture_screenshot && $this->hasFailed()) {
-				$this->current_url = $this->webDriver->getCurrentURL();
-				$this->screenshot = $this->webDriver->takeScreenshot();
+		// Check for JS errors.
+		if (!$this->hasFailed()) {
+			if (!$this->supress_case_errors) {
+				$errors = [];
+
+				foreach ($this->webDriver->manage()->getLog('browser') as $log) {
+					$errors[] = $log['message'];
+				}
+
+				if ($errors) {
+					$this->captureScreenshot();
+					$this->fail("Severe browser errors:\n" . implode("\n", array_unique($errors)));
+				}
 			}
 		}
-		catch (Exception $ex) {
-			// Error handling is not missing here.
+		else {
+			$this->captureScreenshot();
 		}
 	}
 
@@ -724,8 +737,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			DBconnect($error);
 		}
 
-		// Perform parsing of test method annotations.
-		$annotations = PHPUnit_Util_Test::parseTestMethodAnnotations($class_name, $this->getName(false));
+		$annotations = $this->getAnnotations();
 
 		// Restore data from backup if test case changed
 		if (self::$case_backup_once !== null && self::$last_test_case !== $case_name) {
@@ -733,30 +745,57 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			self::$case_backup_once = null;
 		}
 
-		// Perform test case level backups.
-		if (array_key_exists('method', $annotations) && is_array($annotations['method'])) {
+		// Test case level annotations.
+		$method_annotations = $this->getAnnotationsByType($annotations, 'method');
+
+		if ($method_annotations !== null) {
 			// Backup performed before every test case execution.
-			if (array_key_exists('backup', $annotations['method']) && is_array($annotations['method']['backup'])
-					&& count($annotations['method']['backup']) === 1) {
-				$this->case_backup = $annotations['method']['backup'][0];
+			$case_backup = $this->getAnnotationsByType($method_annotations, 'backup');
+
+			if ($case_backup !== null && count($case_backup) === 1) {
+				$this->case_backup = $case_backup[0];
 				DBsave_tables($this->case_backup);
 			}
 
-			// Backup performed once before first test case execution.
-			if (self::$last_test_case !== $case_name && array_key_exists('backup-once', $annotations['method'])
-					&& is_array($annotations['method']['backup-once'])
-					&& count($annotations['method']['backup-once']) === 1) {
-				self::$case_backup_once = $annotations['method']['backup-once'][0];
-				DBsave_tables(self::$case_backup_once);
+			if (self::$last_test_case !== $case_name) {
+				// Backup performed once before first test case execution.
+				$case_backup_once = $this->getAnnotationsByType($method_annotations, 'backup-once');
+
+				if ($case_backup_once !== null && count($case_backup_once) === 1) {
+					self::$case_backup_once = $case_backup_once[0];
+					DBsave_tables(self::$case_backup_once);
+				}
 			}
+
+			// Supress browser error on a test case level.
+			$supress_case_errors = $this->getAnnotationsByType($method_annotations, 'ignore-browser-errors');
+			$this->supress_case_errors = ($supress_case_errors !== null);
 		}
 
-		// Perform test suite level backup.
-		if ($suite !== $class_name && array_key_exists('class', $annotations) && is_array($annotations['class'])
-				&& array_key_exists('backup', $annotations['class']) && is_array($annotations['class']['backup'])
-				&& count($annotations['class']['backup']) === 1) {
-			self::$suite_backup = $annotations['class']['backup'][0];
-			DBsave_tables(self::$suite_backup);
+		// Class name change is used to determine suite change.
+		if ($suite !== $class_name) {
+			// Browser errors are not ignored by default.
+			self::$supress_suite_errors = false;
+
+			// Test suite level annotations.
+			$class_annotations = $this->getAnnotationsByType($annotations, 'class');
+
+			// Backup performed before test suite execution.
+			$suite_backup = $this->getAnnotationsByType($class_annotations, 'backup');
+
+			if ($suite_backup !== null && count($suite_backup) === 1) {
+				self::$suite_backup = $suite_backup[0];
+				DBsave_tables(self::$suite_backup);
+			}
+
+			// Supress browser error on a test case level.
+			$supress_suite_errors = $this->getAnnotationsByType($class_annotations, 'ignore-browser-errors');
+			self::$supress_suite_errors = ($supress_suite_errors !== null);
+		}
+
+		// Errors on a test case level should be supressed if suite level error supression is enabled.
+		if (self::$supress_suite_errors) {
+			$this->supress_case_errors = self::$supress_suite_errors;
 		}
 
 		// Share browser when it is possible.
@@ -764,7 +803,9 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 			$this->webDriver = self::$shared_browser;
 		}
 		else {
-			$this->webDriver = RemoteWebDriver::create('http://localhost:4444/wd/hub', DesiredCapabilities::firefox());
+			$this->webDriver = RemoteWebDriver::create('http://localhost:4444/wd/hub',
+					DesiredCapabilities::firefox()->setCapability('loggingPrefs', ["browser" => "SEVERE"])
+			);
 			self::$shared_browser = $this->webDriver;
 		}
 
@@ -778,8 +819,6 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	 * @after
 	 */
 	public function onAfterTestCase() {
-		global $DB;
-
 		if ($this->case_backup !== null) {
 			DBrestore_tables($this->case_backup);
 		}
@@ -866,5 +905,35 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 	 */
 	protected function getDropdownOptions($id) {
 		return $this->getDropdown($id)->findElements(WebDriverBy::tagName('option'));
+	}
+
+	/**
+	 * Capture screenshot if screenshot capturing is enabled.
+	 */
+	protected function captureScreenshot() {
+		try {
+			if ($this->capture_screenshot && $this->webDriver !== null) {
+				$this->current_url = $this->webDriver->getCurrentURL();
+				$this->screenshot = $this->webDriver->takeScreenshot();
+			}
+		}
+		catch (Exception $ex) {
+			// Error handling is not missing here.
+		}
+	}
+
+	/**
+	 * Get annotations by type name.
+	 * Helper function for method / class annotation processing.
+	 *
+	 * @param array  $annotations    annotations
+	 * @param string $type	         type name
+	 *
+	 * @return array or null
+	 */
+	protected function getAnnotationsByType($annotations, $type) {
+		return (array_key_exists($type, $annotations) && is_array($annotations[$type]))
+				? $annotations[$type]
+				: null;
 	}
 }
