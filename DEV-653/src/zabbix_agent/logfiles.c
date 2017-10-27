@@ -887,15 +887,16 @@ static void	cross_out(char *arr, int n_rows, int n_cols, int row, int col, char 
  *                                                                            *
  * Function: is_uniq_row                                                      *
  *                                                                            *
- * Purpose: check if there is only one element '1' in the given row           *
+ * Purpose: check if there is only one element '1' or '2' in the given row    *
  *                                                                            *
  * Parameters:                                                                *
  *          arr    - [IN] two dimensional array                               *
  *          n_cols - [IN] number of columns in the array                      *
  *          row    - [IN] number of row to search                             *
  *                                                                            *
- * Return value: number of column where the '1' element was found or          *
- *               -1 if there are zero or multiple '1' elements in the row     *
+ * Return value: number of column where the element '1' or '2' was found or   *
+ *               -1 if there are zero or multiple elements '1' or '2' in the  *
+ *               row                                                          *
  *                                                                            *
  ******************************************************************************/
 static int	is_uniq_row(const char *arr, int n_cols, int row)
@@ -907,7 +908,7 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
 
 	for (i = 0; i < n_cols; i++)
 	{
-		if ('1' == *p++)
+		if ('1' == *p || '2' == *p)
 		{
 			if (2 == ++mappings)
 			{
@@ -917,6 +918,8 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
 
 			ret = i;
 		}
+
+		p++;
 	}
 
 	return ret;
@@ -926,7 +929,7 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
  *                                                                            *
  * Function: is_uniq_col                                                      *
  *                                                                            *
- * Purpose: check if there is only one element '1' in the given column        *
+ * Purpose: check if there is only one element '1' or '2' in the given column *
  *                                                                            *
  * Parameters:                                                                *
  *          arr    - [IN] two dimensional array                               *
@@ -934,8 +937,9 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
  *          n_cols - [IN] number of columns in the array                      *
  *          col    - [IN] number of column to search                          *
  *                                                                            *
- * Return value: number of row where the '1' element was found or             *
- *               -1 if there are zero or multiple '1' elements in the column  *
+ * Return value: number of column where the element '1' or '2 ' was found or  *
+ *               -1 if there are zero or multiple elements '1' or '2' in the  *
+ *               row                                                          *
  *                                                                            *
  ******************************************************************************/
 static int	is_uniq_col(const char *arr, int n_rows, int n_cols, int col)
@@ -947,7 +951,7 @@ static int	is_uniq_col(const char *arr, int n_rows, int n_cols, int col)
 
 	for (i = 0; i < n_rows; i++)
 	{
-		if ('1' == *p)
+		if ('1' == *p || '2' == *p)
 		{
 			if (2 == ++mappings)
 			{
@@ -982,7 +986,7 @@ static void	resolve_old2new(char *old2new, int num_old, int num_new)
 	char	*p, *protected_rows = NULL, *protected_cols = NULL;
 
 	/* Is there 1:1 mapping in both directions between files in the old and the new list ? */
-	/* In this case every row and column has not more than one element '1'. */
+	/* In this case every row and column has not more than one element '1' or '2', others are '0'. */
 	/* This is expected on UNIX (using inode numbers) and MS Windows (using FileID on NTFS, ReFS) */
 
 	p = old2new;
@@ -993,11 +997,13 @@ static void	resolve_old2new(char *old2new, int num_old, int num_new)
 
 		for (j = 0; j < num_new; j++)	/* loop over columns (new files) */
 		{
-			if ('1' == *p++)
+			if ('1' == *p || '2' == *p)
 			{
 				if (2 == ++mappings)
 					goto non_unique;
 			}
+
+			p++;
 		}
 	}
 
@@ -1008,7 +1014,7 @@ static void	resolve_old2new(char *old2new, int num_old, int num_new)
 
 		for (j = 0; j < num_old; j++)	/* loop over rows */
 		{
-			if ('1' == *p)
+			if ('1' == *p || '2' == *p)
 			{
 				if (2 == ++mappings)
 					goto non_unique;
@@ -1081,7 +1087,7 @@ non_unique:
 
 			for (j = 0; j < num_new; j++)
 			{
-				if ('1' == p[j] && '1' != protected_cols[j])
+				if (('1' == p[j] || '2' == p[j]) && '1' != protected_cols[j])
 				{
 					cross_out(old2new, num_old, num_new, i, j, protected_rows, protected_cols);
 					break;
@@ -1133,7 +1139,7 @@ non_unique:
 
 			for (j = num_new - 1; j >= 0; j--)
 			{
-				if ('1' == p[j] && '1' != protected_cols[j])
+				if (('1' == p[j] || '2' == p[j]) && '1' != protected_cols[j])
 				{
 					cross_out(old2new, num_old, num_new, i, j, protected_rows, protected_cols);
 					break;
@@ -1164,14 +1170,14 @@ non_unique:
 static int	find_old2new(char *old2new, int num_new, int i_old)
 {
 	int	i;
-	char	*p;
-
-	p = old2new + i_old * num_new;
+	char	*p = old2new + i_old * num_new;
 
 	for (i = 0; i < num_new; i++)		/* loop over columns (new files) on i_old-th row */
 	{
-		if ('1' == *p++)
+		if ('1' == *p || '2' == *p)
 			return i;
+
+		p++;
 	}
 
 	return -1;
