@@ -34,6 +34,10 @@
 #define ZBX_SAME_FILE_YES	1
 #define ZBX_SAME_FILE_RETRY	2
 
+#define ZBX_FILE_PLACE_UNKNOWN	-1
+#define ZBX_FILE_PLACE_OTHER	0
+#define ZBX_FILE_PLACE_SAME	1
+
 /******************************************************************************
  *                                                                            *
  * Function: split_string                                                     *
@@ -458,6 +462,19 @@ static void	print_logfile_list(struct st_logfile *logfiles, int logfiles_num)
 	}
 }
 
+static int	compare_file_places(const struct st_logfile *old, const struct st_logfile *new, int use_ino)
+{
+	if (1 == use_ino || 2 == use_ino)
+	{
+		if (old->ino_lo != new->ino_lo || old->dev != new->dev || (2 == use_ino && old->ino_hi != new->ino_hi))
+			return ZBX_FILE_PLACE_OTHER;
+		else
+			return ZBX_FILE_PLACE_SAME;
+	}
+
+	return ZBX_FILE_PLACE_UNKNOWN;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: is_same_file_logrt                                               *
@@ -489,18 +506,9 @@ static int	is_same_file_logrt(const struct st_logfile *old, const struct st_logf
 {
 	int	ret = ZBX_SAME_FILE_NO;
 
-	if (1 == use_ino || 2 == use_ino)
+	if (ZBX_FILE_PLACE_OTHER == compare_file_places(old, new, use_ino))
 	{
-		if (old->ino_lo != new->ino_lo || old->dev != new->dev)
-		{
-			/* file inode and device id cannot differ */
-			goto out;
-		}
-	}
-
-	if (2 == use_ino && old->ino_hi != new->ino_hi)
-	{
-		/* file inode (older 64-bits) cannot differ */
+		/* files cannot reside on different devices or occupy different inodes */
 		goto out;
 	}
 
