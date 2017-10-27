@@ -1,3 +1,12 @@
+Changes for rsm1.0.0rc32
+
+New features:
+....I....T [290] fine-tuned and parametrized "Template OS Linux"; added macros with default values (dotneft, gleb)
+....I..... [282] removed foreign key constraint in "lastvalue" table to increase performance of insertions into history (gleb)
+
+Bug fixes:
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.0rc31
 
 New features:
