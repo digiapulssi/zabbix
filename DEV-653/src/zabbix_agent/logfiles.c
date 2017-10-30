@@ -2109,7 +2109,7 @@ static int	is_swap_required(struct st_logfile *old, struct st_logfile *new, int 
 	/* there is a high possibility that the truncated file has the same inode (index) as before. */
 	is_same_place = compare_file_places(old + new[idx + 1].copy_of, new + idx, use_ino);
 
-	if (ZBX_FILE_PLACE_SAME == is_same_place)
+	if (ZBX_FILE_PLACE_SAME == is_same_place && new[idx].seq <= new[idx + 1].seq)
 		return SUCCEED;
 
 	/* The last attempt - compare file names. It is less reliable as file rotation can change file names. */
