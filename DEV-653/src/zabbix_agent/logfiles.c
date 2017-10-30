@@ -2364,9 +2364,9 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 				*lastlogsize = logfiles[i].processed_size;
 
 			ret = process_log(flags, logfiles[i].filename, lastlogsize,
-					(0 != ((ZBX_METRIC_FLAG_LOG_LOGRT | ZBX_LOG_ROTATION_LOGCPT) & flags) ?
+					(0 != ((ZBX_METRIC_FLAG_LOG_LOGRT | ZBX_METRIC_FLAG_LOG_LOGCPT) & flags) ?
 					mtime : NULL), lastlogsize_sent,
-					(0 != ((ZBX_METRIC_FLAG_LOG_LOGRT | ZBX_LOG_ROTATION_LOGCPT) & flags) ?
+					(0 != ((ZBX_METRIC_FLAG_LOG_LOGRT | ZBX_METRIC_FLAG_LOG_LOGCPT) & flags) ?
 					mtime_sent : NULL), skip_old_data,
 					big_rec, &logfiles[i].incomplete, err_msg, encoding, regexps, pattern,
 					output_template, p_count, s_count, process_value, server, port, hostname, key);
