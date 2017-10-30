@@ -3286,7 +3286,8 @@ int	zbx_user_macro_parse(const char *macro, int *macro_r, int *context_l, int *c
 int	zbx_user_macro_parse_dyn(const char *macro, char **name, char **context, int *length)
 {
 	const char	*ptr;
-	int		macro_r, context_l, context_r, len;
+	int		macro_r, context_l, context_r;
+	size_t		len;
 
 	if (SUCCEED != zbx_user_macro_parse(macro, &macro_r, &context_l, &context_r))
 		return FAIL;
@@ -3302,7 +3303,7 @@ int	zbx_user_macro_parse_dyn(const char *macro, char **name, char **context, int
 			;
 
 		/* extract the macro name and close with '}' character */
-		len = (int)(ptr - macro) + 1;
+		len = (ptr - macro) + 1;
 		*name = zbx_realloc(*name, len + 1);
 		memcpy(*name, macro, len - 1);
 		(*name)[len - 1] = '}';
