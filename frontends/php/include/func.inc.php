@@ -2182,6 +2182,33 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 		$msg = $okmsg;
 	}
 
+	$messages = array();
+	if (isset($ZBX_MESSAGES) && is_array($ZBX_MESSAGES)) {
+		$messages = $ZBX_MESSAGES;
+	}
+	$ZBX_MESSAGES = array();
+
+	if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN && CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_DISABLED
+			&& !ZBX_SHOW_TECHNICAL_ERRORS) {
+		$filtered_messages = array();
+		$generic_exists = false;
+
+		foreach ($messages as $message) {
+			if ((array_key_exists('sql_error', $message) && $message['sql_error'] === true)
+					|| (array_key_exists('php_error', $message) && $message['php_error'] === true)) {
+				if (!$generic_exists) {
+					$message['message'] = _('System error occurred. Please contact Zabbix administrator.');
+					$filtered_messages[] = $message;
+					$generic_exists = true;
+				}
+			}
+			else {
+				$filtered_messages[] = $message;
+			}
+		}
+		$messages = $filtered_messages;
+	}
+
 	if (isset($msg)) {
 		switch ($page['type']) {
 			case PAGE_TYPE_IMAGE:
@@ -2340,6 +2367,44 @@ function error($msgs) {
 		}
 		array_push($ZBX_MESSAGES, array('type' => 'error', 'message' => $msg));
 	}
+}
+
+/**
+ * Add SQL error message to global messages array.
+ *
+ * @param string $msg		Error message text.
+ */
+function sqlError($msg) {
+	global $ZBX_MESSAGES;
+
+	if (!isset($ZBX_MESSAGES)) {
+		$ZBX_MESSAGES = array();
+	}
+
+	$ZBX_MESSAGES[] = array(
+		'type' => 'error',
+		'message' => $msg,
+		'sql_error' => true
+	);
+}
+
+/**
+ * Add PHP error message to global messages array.
+ *
+ * @param string $msg		Error message text.
+ */
+function phpError($msg) {
+	global $ZBX_MESSAGES;
+
+	if (!isset($ZBX_MESSAGES)) {
+		$ZBX_MESSAGES = array();
+	}
+
+	$ZBX_MESSAGES[] = array(
+		'type' => 'error',
+		'message' => $msg,
+		'php_error' => true
+	);
 }
 
 function clear_messages($count = null) {

@@ -534,6 +534,7 @@ function check_fields(&$fields, $show_messages = true) {
 		'page' =>			array(T_ZBX_INT, O_OPT, P_SYS, null,		null), // paging
 		'ddreset' =>		array(T_ZBX_INT, O_OPT, P_SYS, null,		null)
 	);
+
 	$fields = zbx_array_merge($system_fields, $fields);
 
 	$err = ZBX_VALID_OK;
