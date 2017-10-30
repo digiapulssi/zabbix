@@ -1902,7 +1902,7 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 		if (now >= nextsend)
 		{
 			send_buffer(activechk_args.host, activechk_args.port);
-			nextsend = (int)time(NULL) + 1;
+			nextsend = time(NULL) + 1;
 		}
 
 		if (now >= nextrefresh)
@@ -1911,11 +1911,11 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 
 			if (FAIL == refresh_active_checks(activechk_args.host, activechk_args.port))
 			{
-				nextrefresh = (int)time(NULL) + 60;
+				nextrefresh = time(NULL) + 60;
 			}
 			else
 			{
-				nextrefresh = (int)time(NULL) + CONFIG_REFRESH_ACTIVE_CHECKS;
+				nextrefresh = time(NULL) + CONFIG_REFRESH_ACTIVE_CHECKS;
 			}
 		}
 
@@ -1930,7 +1930,7 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 
 			nextcheck = get_min_nextcheck();
 			if (FAIL == nextcheck)
-				nextcheck = (int)time(NULL) + 60;
+				nextcheck = time(NULL) + 60;
 		}
 		else
 		{
