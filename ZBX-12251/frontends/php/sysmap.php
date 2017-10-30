@@ -36,18 +36,19 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = [
 	'sysmapid' =>	[T_ZBX_INT, O_MAND, P_SYS,	DB_ID,		null],
 	'selementid' =>	[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null],
-	'sysmap' =>		[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({action})'],
+	'sysmap' =>		[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({action}) && {action} == "update"'],
 	'selements' =>	[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'links' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	// actions
-	'action' =>		[T_ZBX_STR, O_OPT, P_ACT,	IN('"update"'),	null],
+	'action' =>		[T_ZBX_STR, O_OPT, P_ACT,	IN('"update","expand"'),	null],
 	'delete' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'cancel' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'form' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'form_refresh' => [T_ZBX_INT, O_OPT, null,	null,		null],
 	// ajax
 	'favobj' =>		[T_ZBX_STR, O_OPT, P_ACT,	null,		null],
-	'favid' =>		[T_ZBX_STR, O_OPT, P_ACT,	null,		null]
+	'favid' =>		[T_ZBX_STR, O_OPT, P_ACT,	null,		null],
+	'source' =>		[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({action}) && {action} == "expand"'],
 ];
 check_fields($fields);
 
@@ -57,70 +58,99 @@ check_fields($fields);
 if (isset($_REQUEST['favobj'])) {
 	$json = new CJson();
 
-	if (getRequest('favobj') == 'sysmap' && hasRequest('action') && getRequest('action') == 'update') {
-		$sysmapid = getRequest('sysmapid', 0);
+	if (getRequest('favobj') === 'sysmap' && hasRequest('action')) {
+		if (getRequest('action') === 'update') {
+			$sysmapid = getRequest('sysmapid', 0);
 
-		@ob_start();
+			@ob_start();
 
-		try {
-			DBstart();
+			try {
+				DBstart();
 
-			$sysmap = API::Map()->get([
-				'sysmapids' => $sysmapid,
-				'editable' => true,
-				'output' => ['sysmapid']
-			]);
-			$sysmap = reset($sysmap);
+				$sysmap = API::Map()->get([
+					'sysmapids' => $sysmapid,
+					'editable' => true,
+					'output' => ['sysmapid']
+				]);
+				$sysmap = reset($sysmap);
 
-			if ($sysmap === false) {
-				throw new Exception(_('Access denied!'));
+				if ($sysmap === false) {
+					throw new Exception(_('Access denied!'));
+				}
+
+				$sysmapUpdate = $json->decode($_REQUEST['sysmap'], true);
+				$sysmapUpdate['sysmapid'] = $sysmapid;
+				$sysmapUpdate['lines'] = [];
+
+				if (array_key_exists('shapes', $sysmapUpdate)) {
+					foreach ($sysmapUpdate['shapes'] as $key => &$shape) {
+						if (array_key_exists('sysmap_shapeid', $shape) && !is_numeric($shape['sysmap_shapeid'])) {
+							unset($shape['sysmap_shapeid']);
+						}
+
+						if ($shape['type'] == SYSMAP_SHAPE_TYPE_LINE) {
+							$sysmapUpdate['lines'][$key] = CMapHelper::convertShapeToLine($shape);
+							unset($sysmapUpdate['shapes'][$key]);
+						}
+					}
+					unset($shape);
+				}
+
+				$result = API::Map()->update($sysmapUpdate);
+
+				if ($result !== false) {
+					echo 'if (confirm('.CJs::encodeJson(_('Map is updated! Return?')).')) { location.href = "sysmaps.php"; }';
+				}
+				else {
+					throw new Exception(_('Map update failed.'));
+				}
+
+				DBend(true);
+			}
+			catch (Exception $e) {
+				DBend(false);
+				$msg = [$e->getMessage()];
+
+				foreach (clear_messages() as $errMsg) {
+					$msg[] = $errMsg['type'].': '.$errMsg['message'];
+				}
+
+				ob_clean();
+
+				echo 'alert('.zbx_jsvalue(implode("\r\n", $msg)).');';
 			}
 
-			$sysmapUpdate = $json->decode($_REQUEST['sysmap'], true);
-			$sysmapUpdate['sysmapid'] = $sysmapid;
-			$sysmapUpdate['lines'] = [];
+			@ob_flush();
+			exit;
+		}
+		elseif (getRequest('action') === 'expand') {
+			$values = [];
+			$sources = json_decode(getRequest('source'), true);
 
-			if (array_key_exists('shapes', $sysmapUpdate)) {
-				foreach ($sysmapUpdate['shapes'] as $key => &$shape) {
-					if (array_key_exists('sysmap_shapeid', $shape) && !is_numeric($shape['sysmap_shapeid'])) {
-						unset($shape['sysmap_shapeid']);
+			foreach ($sources as $source) {
+				if (is_array($source) && (array_key_exists('label', $source) || array_key_exists('text', $source))) {
+					if (array_key_exists('inherited_label', $source) && $source['inherited_label'] !== null) {
+						$source['label'] = $source['inherited_label'];
 					}
 
-					if ($shape['type'] == SYSMAP_SHAPE_TYPE_LINE) {
-						$sysmapUpdate['lines'][$key] = CMapHelper::convertShapeToLine($shape);
-						unset($sysmapUpdate['shapes'][$key]);
+					if (array_key_exists('elementtype', $source) && array_key_exists('elements', $source)
+							&& is_array($source['elements']) && CMapHelper::checkSelementPermissions([$source])) {
+
+						$values[] = CMacrosResolverHelper::resolveMapLabelMacrosAll($source);
+					}
+					else {
+						$label = array_key_exists('label', $source) ? $source['label'] : $source['text'];
+						$values[] = CMacrosResolverHelper::resolveMapLabelMacros($label);
 					}
 				}
-				unset($shape);
+				else {
+					$values[] = null;
+				}
 			}
 
-			$result = API::Map()->update($sysmapUpdate);
-
-			if ($result !== false) {
-				echo 'if (confirm('.CJs::encodeJson(_('Map is updated! Return?')).')) { location.href = "sysmaps.php"; }';
-			}
-			else {
-				throw new Exception(_('Map update failed.'));
-			}
-
-			DBend(true);
+			echo CJs::encodeJson($values);
+			exit;
 		}
-		catch (Exception $e) {
-			DBend(false);
-			$msg = [$e->getMessage()];
-
-			foreach (clear_messages() as $errMsg) {
-				$msg[] = $errMsg['type'].': '.$errMsg['message'];
-			}
-
-			ob_clean();
-
-			echo 'alert('.zbx_jsvalue(implode("\r\n", $msg)).');';
-		}
-
-		@ob_flush();
-		exit;
-
 	}
 }
 
@@ -134,8 +164,10 @@ if (PAGE_TYPE_HTML != $page['type']) {
  */
 if (isset($_REQUEST['sysmapid'])) {
 	$sysmap = API::Map()->get([
-		'output' => ['sysmapid', 'expand_macros', 'grid_show', 'grid_align', 'grid_size', 'width', 'height',
-			'iconmapid', 'backgroundid', 'label_location'
+		'output' => ['sysmapid', 'name', 'expand_macros', 'grid_show', 'grid_align', 'grid_size', 'width', 'height',
+			'iconmapid', 'backgroundid', 'label_location', 'label_type', 'label_format', 'label_type_host',
+			'label_type_hostgroup', 'label_type_trigger', 'label_type_map', 'label_type_image', 'label_string_host',
+			'label_string_hostgroup', 'label_string_trigger', 'label_string_map', 'label_string_image'
 		],
 		'selectShapes' => ['sysmap_shapeid', 'type', 'x', 'y', 'width', 'height', 'text', 'font', 'font_size',
 			'font_color', 'text_halign', 'text_valign', 'border_type', 'border_width', 'border_color',
@@ -170,6 +202,11 @@ $data = [
 // get selements
 add_elementNames($data['sysmap']['selements']);
 
+foreach ($data['sysmap']['shapes'] as &$shape) {
+	$shape['expanded'] = CMacrosResolverHelper::resolveMapLabelMacros($shape['text']);
+}
+unset($shape);
+
 foreach ($data['sysmap']['lines'] as $line) {
 	$data['sysmap']['shapes'][] = CMapHelper::convertLineToShape($line);
 }
@@ -178,6 +215,21 @@ unset($data['sysmap']['lines']);
 $data['sysmap']['selements'] = zbx_toHash($data['sysmap']['selements'], 'selementid');
 $data['sysmap']['shapes'] = zbx_toHash($data['sysmap']['shapes'], 'sysmap_shapeid');
 $data['sysmap']['links'] = zbx_toHash($data['sysmap']['links'], 'linkid');
+
+$data['sysmap'] = CMapHelper::setElementInheritedLabels($data['sysmap']);
+foreach ($data['sysmap']['selements'] as &$selement) {
+	if ($selement['inherited_label'] !== null) {
+		$label = $selement['label'];
+		$selement['label'] = $selement['inherited_label'];
+	}
+
+	$selement['expanded'] = CMacrosResolverHelper::resolveMapLabelMacrosAll($selement);
+
+	if ($selement['inherited_label'] !== null) {
+		$selement['label'] = $label;
+	}
+}
+unset($selement);
 
 // get links
 foreach ($data['sysmap']['links'] as &$link) {
@@ -194,6 +246,8 @@ foreach ($data['sysmap']['links'] as &$link) {
 
 		$link['linktriggers'][$lnum]['desc_exp'] = $host['name'].NAME_DELIMITER.$dbTrigger['description'];
 	}
+
+	$link['expanded'] = CMacrosResolverHelper::resolveMapLabelMacros($link['label']);
 	order_result($link['linktriggers'], 'desc_exp');
 }
 unset($link);

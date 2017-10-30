@@ -145,10 +145,10 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 				]);
 
 				foreach ($triggers as $trigger) {
-					if (($host_group = reset($trigger['groups'])) !== false) {
+					foreach ($trigger['groups'] as $host_group) {
 						$triggers_per_host_groups[$host_group['groupid']][$trigger['triggerid']] = true;
-						$problems_per_trigger[$trigger['triggerid']] = $this->problems_per_severity_tpl;
 					}
+					$problems_per_trigger[$trigger['triggerid']] = $this->problems_per_severity_tpl;
 				}
 
 				unset($host_groups);
@@ -479,7 +479,12 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 		$navtree_item_selected = 0;
 		$navtree_items_opened = [];
 		if ($widgetid) {
-			$navtree_items_opened = CProfile::findByIDXs('/^web\.dashbrd\.navtree-(\d+)\.toggle$/', $widgetid);
+			$navtree_items_opened = CProfile::findByIdxPattern('web.dashbrd.navtree-%.toggle', $widgetid);
+			// Keep only numerical value from idx key name.
+			foreach ($navtree_items_opened as &$item_opened) {
+				$item_opened = substr($item_opened, 20, -7);
+			}
+			unset($item_opened);
 			$navtree_item_selected = CProfile::get('web.dashbrd.navtree.item.selected', 0, $widgetid);
 		}
 

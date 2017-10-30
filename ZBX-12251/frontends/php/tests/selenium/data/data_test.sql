@@ -36,7 +36,7 @@ INSERT INTO interface (interfaceid, hostid, main, type, useip, ip, dns, port) VA
 INSERT INTO interface (interfaceid,hostid,main,type,useip,ip,dns,port) values (10022,10053,1,2,1,'127.0.0.1','','161');
 INSERT INTO interface (interfaceid,hostid,main,type,useip,ip,dns,port) values (10023,10053,1,3,1,'127.0.0.1','','623');
 INSERT INTO interface (interfaceid,hostid,main,type,useip,ip,dns,port) values (10024,10053,1,4,1,'127.0.0.1','','12345');
-INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (278, 10053, 4);
+INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (90278, 10053, 4);
 
 -- Add regular expressions
 INSERT INTO regexps (regexpid, name, test_string) VALUES (20,'1_regexp_1','first test string');
@@ -347,8 +347,8 @@ INSERT INTO sysmaps_links (linkid, sysmapid, selementid1, selementid2, drawtype,
 
 INSERT INTO sysmaps_link_triggers (linktriggerid, linkid, triggerid, drawtype, color) VALUES (1,1,13545,4,'DD0000');
 
-INSERT INTO sysmap_element_url (sysmapelementurlid, selementid, name, url) VALUES (1,4,'Zabbix home','www.zabbix.com');
-INSERT INTO sysmap_element_url (sysmapelementurlid, selementid, name, url) VALUES (2,5,'www.wikipedia.org','www.wikipedia.org');
+INSERT INTO sysmap_element_url (sysmapelementurlid, selementid, name, url) VALUES (1,4,'Zabbix home','http://www.zabbix.com');
+INSERT INTO sysmap_element_url (sysmapelementurlid, selementid, name, url) VALUES (2,5,'www.wikipedia.org','http://www.wikipedia.org');
 -- Add shapes
 INSERT INTO sysmap_shape (sysmap_shapeid, sysmapid, type, x, y, width, height, text, font, font_size, font_color, text_halign, text_valign, border_type, border_width, border_color, background_color, zindex) VALUES (100,3,1,425,257,199,135,'',9,11,'000000',0,0,1,2,'000000','FFCCCC',0);
 INSERT INTO sysmap_shape (sysmap_shapeid, sysmapid, type, x, y, width, height, text, font, font_size, font_color, text_halign, text_valign, border_type, border_width, border_color, background_color, zindex) VALUES (101,3,0,113,82,124,86,'',9,11,'000000',0,0,3,5,'009900','',1);
@@ -680,7 +680,7 @@ INSERT INTO alerts (alertid, actionid, eventid, userid, clock, mediatypeid, send
 
 -- host, item, trigger  for testing macro resolving in trigger description
 INSERT INTO hosts (hostid, host, name, status, description) VALUES (20006, 'Host for trigger description macros', 'Host for trigger description macros', 0, '');
-INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (279, 20006, 4);
+INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (90279, 20006, 4);
 INSERT INTO interface (type, ip, dns, useip, port, main, hostid, interfaceid) VALUES (1, '127.0.0.1', '', '1', '10050', '1', 20006, 10025);
 INSERT INTO items (itemid, name, key_, hostid, interfaceid, delay, value_type, params, description) VALUES (24338, 'item1', 'key1', 20006, 10025, '30s', 3, '', '');
 INSERT INTO triggers (triggerid, description, value, state, lastchange, comments) VALUES (15517, 'trigger host.host:{HOST.HOST} | host.host2:{HOST.HOST2} | host.name:{HOST.NAME} | item.value:{ITEM.VALUE} | item.value1:{ITEM.VALUE1} | item.lastvalue:{ITEM.LASTVALUE} | host.ip:{HOST.IP} | host.dns:{HOST.DNS} | host.conn:{HOST.CONN}', 0, 1, '1339761311', '');

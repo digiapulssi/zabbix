@@ -23,6 +23,8 @@ require_once dirname(__FILE__).'/../../include/items.inc.php';
 
 /**
  * Test the creation of inheritance of new objects on a previously linked template.
+ *
+ * @backup items
  */
 class testFormItemPrototype extends CWebTest {
 
@@ -54,14 +56,6 @@ class testFormItemPrototype extends CWebTest {
 	 * @var string
 	 */
 	protected $discoveryRuleTemplate = 'testInheritanceDiscoveryRule';
-
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testFormItemPrototype_backup() {
-		DBsave_tables('items');
-	}
 
 	// Returns layout data
 	public static function layout() {
@@ -2009,6 +2003,28 @@ class testFormItemPrototype extends CWebTest {
 			[
 				[
 					'expected' => TEST_GOOD,
+					'type' => 'Zabbix trapper',
+					'name' => 'Zabbix trapper with macro in allowed hosts field',
+					'key' => 'item-zabbix-trapper-macro',
+					'allowed_hosts' => '{$TEST}',
+					'dbCheck' => true,
+					'formCheck' => true
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'type' => 'Zabbix trapper',
+					'name' => 'Zabbix trapper with macro and ip in allowed hosts field',
+					'key' => 'item-zabbix-trapper-macro-ip',
+					'allowed_hosts' => '{$MACRO},127.0.0.1',
+					'dbCheck' => true,
+					'formCheck' => true
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
 					'type' => 'Zabbix aggregate',
 					'name' => 'Zabbix aggregate',
 					'key' => 'grpmax[Zabbix servers group,some-item-key,last,0]',
@@ -2287,6 +2303,10 @@ class testFormItemPrototype extends CWebTest {
 		if (isset($data['ipmi_sensor'])) {
 				$this->zbxTestInputType('ipmi_sensor', $data['ipmi_sensor']);
 				$ipmi_sensor = $this->zbxTestGetValue("//input[@id='ipmi_sensor']");
+		}
+
+		if (isset($data['allowed_hosts'])) {
+			$this->zbxTestInputType('trapper_hosts', $data['allowed_hosts']);
 		}
 
 		if (isset($data['params_ap'])) {
@@ -2773,12 +2793,5 @@ class testFormItemPrototype extends CWebTest {
 				$this->assertEquals(0, DBcount($sqlItem));
 				break;
 		}
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testFormItemPrototype_Teardown() {
-		DBrestore_tables('items');
 	}
 }
