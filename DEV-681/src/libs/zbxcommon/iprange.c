@@ -134,13 +134,14 @@ static void	iprange_apply_mask(zbx_iprange_t *iprange, int bits)
  ******************************************************************************/
 static int	iprangev4_parse(zbx_iprange_t *iprange, const char *address)
 {
-	int		index, len, bits = -1;
+	int		index, bits = -1;
 	const char	*ptr = address, *dash, *end;
+	size_t		len;
 
 	iprange->type = ZBX_IPRANGE_V4;
 
 	/* ignore trailing whitespace characters */
-	len = (int)iprange_address_length(address);
+	len = iprange_address_length(address);
 
 	if (NULL != (end = strchr(address, '/')))
 	{
@@ -172,7 +173,7 @@ static int	iprangev4_parse(zbx_iprange_t *iprange, const char *address)
 				dash = NULL;
 		}
 
-		len = (int)((NULL == dash ? ptr : dash) - address);
+		len = (NULL == dash ? ptr : dash) - address;
 
 		/* extract the range start value */
 		if (FAIL == is_uint_n_range(address, len, &iprange->range[index].from,
@@ -227,13 +228,14 @@ static int	iprangev4_parse(zbx_iprange_t *iprange, const char *address)
  ******************************************************************************/
 static int	iprangev6_parse(zbx_iprange_t *iprange, const char *address)
 {
-	int		index, len, fill = -1, bits = -1, target;
+	int		index, fill = -1, bits = -1, target;
 	const char	*ptr = address, *dash, *end;
+	size_t		len;
 
 	iprange->type = ZBX_IPRANGE_V6;
 
 	/* ignore trailing whitespace characters */
-	len = (int)iprange_address_length(address);
+	len = iprange_address_length(address);
 
 	if (NULL != (end = strchr(address, '/')))
 	{
@@ -274,7 +276,7 @@ static int	iprangev6_parse(zbx_iprange_t *iprange, const char *address)
 				dash = NULL;
 		}
 
-		len = (int)((NULL == dash ? ptr : dash) - address);
+		len = (NULL == dash ? ptr : dash) - address;
 
 		/* extract the range start value */
 		if (FAIL == is_hex_n_range(address, len, &iprange->range[index].from, 4, 0, (1 << 16) - 1))
