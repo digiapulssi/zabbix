@@ -115,6 +115,7 @@ class CWebUser {
 			'userid' => 0,
 			'lang' => 'en_gb',
 			'type' => '0',
+			'debug_mode' => GROUP_DEBUG_MODE_DISABLED,
 			'node' => array('name' => '- unknown -', 'nodeid' => 0)
 		);
 	}
