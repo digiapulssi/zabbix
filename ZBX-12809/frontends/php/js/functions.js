@@ -620,11 +620,7 @@ function overlayDialogue(params) {
 			})
 				.append(params.content)
 				.each(function() {
-					body_mutation_observer.observe(this, {
-						childList: true,
-						subtree: true,
-						attributeFilter: ['class', 'style']
-					});
+					body_mutation_observer.observe(this, {childList: true, subtree: true});
 				})
 		)
 		.append(overlay_dialogue_footer)
