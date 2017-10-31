@@ -76,7 +76,7 @@ jQuery(function($) {
 				data[data.length] = {
 					id: item.id,
 					name: item.name,
-					prefix: item.prefix === 'undefined' ? '' : item.prefix
+					prefix: (item.prefix === 'undefined') ? '' : item.prefix
 				};
 			}
 
@@ -111,8 +111,8 @@ jQuery(function($) {
 
 				// clean input if selectedLimit == 1
 				if (ms.options.selectedLimit == 1) {
-					for (var name in ms.values.selected) {
-						removeSelected(ms.values.selected[name], obj, ms.values, ms.options);
+					for (var key in ms.values.selected) {
+						removeSelected(ms.values.selected[key], obj, ms.values, ms.options);
 					}
 
 					cleanAvailable(item, ms.values);
@@ -131,8 +131,8 @@ jQuery(function($) {
 				var obj = $(this);
 				var ms = $(this).data('multiSelect');
 
-				for (var name in ms.values.selected) {
-					removeSelected(ms.values.selected[name], obj, ms.values, ms.options);
+				for (var key in ms.values.selected) {
+					removeSelected(ms.values.selected[key], obj, ms.values, ms.options);
 				}
 
 				cleanAvailable(obj, ms.values);
@@ -336,10 +336,11 @@ jQuery(function($) {
 							if (!empty(input.val())) {
 								var selected = $('.available li.suggest-hover', obj);
 
-								select(selected.data('name'), obj, values, options);
+								select(selected.data, obj, values, options);
 
 								// stop form submit
 								cancelEvent(e);
+
 								return false;
 							}
 							break;
@@ -351,9 +352,10 @@ jQuery(function($) {
 								if (selected.length > 0) {
 									var prev = selected.prev(),
 										item = {
-										id: selected.data('id'),
-										name: selected.data('name')
-									};
+											id: selected.data('id'),
+											name: selected.data('name')
+										};
+
 									removeSelected(item, obj, values, options);
 
 									if (prev.length > 0) {
@@ -368,6 +370,7 @@ jQuery(function($) {
 								}
 
 								cancelEvent(e);
+
 								return false;
 							}
 							break;
@@ -379,9 +382,10 @@ jQuery(function($) {
 								if (selected.length > 0) {
 									var next = selected.next(),
 										item = {
-										id: selected.data('id'),
-										name: selected.data('name')
-									};
+											id: selected.data('id'),
+											name: selected.data('name')
+										};
+
 									removeSelected(item, obj, values, options);
 
 									if (next.length > 0) {
@@ -393,6 +397,7 @@ jQuery(function($) {
 								}
 
 								cancelEvent(e);
+
 								return false;
 							}
 							break;
@@ -606,7 +611,7 @@ jQuery(function($) {
 							names[item.name.toUpperCase()] = true;
 						});
 
-						if (typeof(names[value.toUpperCase()]) == 'undefined') {
+						if (typeof names[value.toUpperCase()] === 'undefined') {
 							addNew = true;
 						}
 					}
@@ -616,7 +621,7 @@ jQuery(function($) {
 						var names = {};
 
 						$.each(values.selected, function(i, item) {
-							if (typeof(item.isNew) == 'undefined') {
+							if (typeof item.isNew === 'undefined') {
 								names[item.name.toUpperCase()] = true;
 							}
 							else {
@@ -624,7 +629,7 @@ jQuery(function($) {
 							}
 						});
 
-						if (typeof(names[value.toUpperCase()]) == 'undefined') {
+						if (typeof names[value.toUpperCase()] === 'undefined') {
 							addNew = true;
 						}
 					}
@@ -647,10 +652,10 @@ jQuery(function($) {
 		if (!empty(data)) {
 			$.each(data, function(i, item) {
 				if (options.limit != 0 && objectLength(values.available) < options.limit) {
-					if (typeof values.available[item.name] === 'undefined'
-							&& typeof values.selected[item.name] === 'undefined'
-							&& typeof values.ignored[item.name] === 'undefined') {
-						values.available[item.name] = item;
+					if (typeof values.available[item.id] === 'undefined'
+							&& typeof values.selected[item.id] === 'undefined'
+							&& typeof values.ignored[item.id] === 'undefined') {
+						values.available[item.id] = item;
 					}
 				}
 				else {
@@ -705,11 +710,11 @@ jQuery(function($) {
 	}
 
 	function addSelected(item, obj, values, options) {
-		if (typeof(values.selected[item.name]) == 'undefined') {
+		if (typeof values.selected[item.id] === 'undefined') {
 			removeDefaultValue(obj, options);
-			values.selected[item.name] = item;
+			values.selected[item.id] = item;
 
-			var prefix = typeof(item.prefix) == 'undefined' ? '' : item.prefix;
+			var prefix = (typeof item.prefix === 'undefined') ? '' : item.prefix;
 
 			// add hidden input
 			obj.append($('<input>', {
@@ -759,7 +764,7 @@ jQuery(function($) {
 		$('.selected li[data-id="' + item.id + '"]', obj).remove();
 		$('input[value="' + item.id + '"]', obj).remove();
 
-		delete values.selected[item.name];
+		delete values.selected[item.id];
 
 		// remove readonly
 		if ($('.selected li', obj).length == 0) {
@@ -781,7 +786,7 @@ jQuery(function($) {
 			'data-name': item.name
 		})
 		.click(function() {
-			select(item.name, obj, values, options);
+			select(item, obj, values, options);
 		})
 		.hover(function() {
 			$('.available li.suggest-hover', obj).removeClass('suggest-hover');
@@ -829,9 +834,9 @@ jQuery(function($) {
 		$('.available ul', obj).append(li);
 	}
 
-	function select(name, obj, values, options) {
+	function select(item, obj, values, options) {
 		if (values.isAjaxLoaded && !values.isWaiting) {
-			addSelected(values.available[name], obj, values, options);
+			addSelected(values.available[item.id], obj, values, options);
 
 			hideAvailable(obj);
 			cleanAvailable(obj, values);
@@ -912,18 +917,10 @@ jQuery(function($) {
 			var li = $(this),
 				span = $('span.subfilter-enabled', li),
 				text = $('span:first-child', span),
-				key = '';
-
-			$.each(values.selected, function(i, item) {
-				if (item.id == li.data('id')) {
-					key = item.name;
-					return false;
-				}
-			});
-
-			var t = empty(values.selected[key].prefix)
-				? values.selected[key].name
-				: values.selected[key].prefix + values.selected[key].name;
+				key = li.data('id'),
+				t = empty(values.selected[key].prefix)
+					? values.selected[key].name
+					: values.selected[key].prefix + values.selected[key].name;
 
 			// rewrite previous text to original
 			text.text(t);
