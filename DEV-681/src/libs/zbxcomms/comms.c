@@ -322,14 +322,20 @@ static void	zbx_socket_timeout_cleanup(zbx_socket_t *s)
  *           and if successful change socket back to blocking mode.           *
  *                                                                            *
  ******************************************************************************/
+#ifdef _WINDOWS
+static int	zbx_socket_connect(zbx_socket_t *s, const struct sockaddr *addr, size_t _addrlen, int timeout,
+		char **error)
+#else
 static int	zbx_socket_connect(zbx_socket_t *s, const struct sockaddr *addr, socklen_t addrlen, int timeout,
 		char **error)
+#endif
 {
 #ifdef _WINDOWS
 	u_long		mode = 1;
 	FD_SET		fdw, fde;
 	int		res;
 	struct timeval	tv, *ptv;
+	socklen_t	addrlen = (socklen_t)_addrlen;
 #endif
 	if (0 != timeout)
 		zbx_socket_timeout_set(s, timeout);
@@ -497,7 +503,7 @@ static int	zbx_socket_create(zbx_socket_t *s, int type, const char *source_ip, c
 			goto out;
 		}
 
-		if (ZBX_PROTO_ERROR == bind(s->socket, ai_bind->ai_addr, ai_bind->ai_addrlen))
+		if (ZBX_PROTO_ERROR == zbx_bind(s->socket, ai_bind->ai_addr, ai_bind->ai_addrlen))
 		{
 			zbx_set_socket_strerror("bind() failed: %s", strerror_from_system(zbx_socket_last_error()));
 			func_socket_close(s);
@@ -982,7 +988,7 @@ int	zbx_tcp_listen(zbx_socket_t *s, const char *listen_ip, unsigned short listen
 						strerror_from_system(zbx_socket_last_error()));
 			}
 #endif
-			if (ZBX_PROTO_ERROR == bind(s->sockets[s->num_socks], current_ai->ai_addr,
+			if (ZBX_PROTO_ERROR == zbx_bind(s->sockets[s->num_socks], current_ai->ai_addr,
 					current_ai->ai_addrlen))
 			{
 				zbx_set_socket_strerror("bind() for [[%s]:%s] failed: %s",
@@ -2021,7 +2027,7 @@ int	zbx_udp_send(zbx_socket_t *s, const char *data, size_t data_len, int timeout
 	if (0 != timeout)
 		zbx_socket_timeout_set(s, timeout);
 
-	if (ZBX_PROTO_ERROR == sendto(s->socket, data, data_len, 0, NULL, 0))
+	if (ZBX_PROTO_ERROR == zbx_sendto(s->socket, data, data_len, 0, NULL, 0))
 	{
 		zbx_set_socket_strerror("sendto() failed: %s", strerror_from_system(zbx_socket_last_error()));
 		ret = FAIL;
