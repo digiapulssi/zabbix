@@ -654,40 +654,42 @@ if ($data['filter_status']) {
 
 foreach ($tlds_by_server as $key => $hosts) {
 	multiDBconnect($DB['SERVERS'][$key], $error);
-	$tld_key = $DB['SERVERS'][$key]['NR'].key($hosts);
-	if (array_key_exists($tld_key, $data['tld'])) {
-		$false_positive = true;
-		if (array_key_exists(RSM_DNS, $data['tld'][$tld_key])
-				&& array_key_exists('incident', $data['tld'][$tld_key][RSM_DNS])) {
-			$data['tld'][$tld_key][RSM_DNS]['incident'] = getLastEvent($data['tld'][$tld_key][RSM_DNS]['incident']);
-			if ($data['tld'][$tld_key][RSM_DNS]['incident']) {
-				$false_positive = false;
+	foreach ($hosts as $hostid => $host) {
+		$tld_key = $DB['SERVERS'][$key]['NR'].$hostid;
+		if (array_key_exists($tld_key, $data['tld'])) {
+			$false_positive = true;
+			if (array_key_exists(RSM_DNS, $data['tld'][$tld_key])
+					&& array_key_exists('incident', $data['tld'][$tld_key][RSM_DNS])) {
+				$data['tld'][$tld_key][RSM_DNS]['incident'] = getLastEvent($data['tld'][$tld_key][RSM_DNS]['incident']);
+				if ($data['tld'][$tld_key][RSM_DNS]['incident']) {
+					$false_positive = false;
+				}
 			}
-		}
-		if (array_key_exists(RSM_DNSSEC, $data['tld'][$tld_key])
-				&& array_key_exists('incident', $data['tld'][$tld_key][RSM_DNSSEC])) {
-			$data['tld'][$tld_key][RSM_DNSSEC]['incident'] = getLastEvent($data['tld'][$tld_key][RSM_DNSSEC]['incident']);
-			if ($data['tld'][$tld_key][RSM_DNSSEC]['incident']) {
-				$false_positive = false;
+			if (array_key_exists(RSM_DNSSEC, $data['tld'][$tld_key])
+					&& array_key_exists('incident', $data['tld'][$tld_key][RSM_DNSSEC])) {
+				$data['tld'][$tld_key][RSM_DNSSEC]['incident'] = getLastEvent($data['tld'][$tld_key][RSM_DNSSEC]['incident']);
+				if ($data['tld'][$tld_key][RSM_DNSSEC]['incident']) {
+					$false_positive = false;
+				}
 			}
-		}
-		if (array_key_exists(RSM_RDDS, $data['tld'][$tld_key])
-				&& array_key_exists('incident', $data['tld'][$tld_key][RSM_RDDS])) {
-			$data['tld'][$tld_key][RSM_RDDS]['incident'] = getLastEvent($data['tld'][$tld_key][RSM_RDDS]['incident']);
-			if ($data['tld'][$tld_key][RSM_RDDS]['incident']) {
-				$false_positive = false;
+			if (array_key_exists(RSM_RDDS, $data['tld'][$tld_key])
+					&& array_key_exists('incident', $data['tld'][$tld_key][RSM_RDDS])) {
+				$data['tld'][$tld_key][RSM_RDDS]['incident'] = getLastEvent($data['tld'][$tld_key][RSM_RDDS]['incident']);
+				if ($data['tld'][$tld_key][RSM_RDDS]['incident']) {
+					$false_positive = false;
+				}
 			}
-		}
-		if (array_key_exists(RSM_EPP, $data['tld'][$tld_key])
-				&& array_key_exists('incident', $data['tld'][$tld_key][RSM_EPP])) {
-			$data['tld'][$tld_key][RSM_EPP]['incident'] = getLastEvent($data['tld'][$tld_key][RSM_EPP]['incident']);
-			if ($data['tld'][$tld_key][RSM_EPP]['incident']) {
-				$false_positive = false;
+			if (array_key_exists(RSM_EPP, $data['tld'][$tld_key])
+					&& array_key_exists('incident', $data['tld'][$tld_key][RSM_EPP])) {
+				$data['tld'][$tld_key][RSM_EPP]['incident'] = getLastEvent($data['tld'][$tld_key][RSM_EPP]['incident']);
+				if ($data['tld'][$tld_key][RSM_EPP]['incident']) {
+					$false_positive = false;
+				}
 			}
-		}
 
-		if ($data['filter_status'] == 1 && $false_positive) {
-			unset($data['tld'][$tld_key]);
+			if ($data['filter_status'] == 1 && $false_positive) {
+				unset($data['tld'][$tld_key]);
+			}
 		}
 	}
 }
