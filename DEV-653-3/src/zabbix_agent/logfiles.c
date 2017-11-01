@@ -443,17 +443,18 @@ static void	print_logfile_list(struct st_logfile *logfiles, int logfiles_num)
 	for (i = 0; i < logfiles_num; i++)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "   nr:%d filename:'%s' mtime:%d size:" ZBX_FS_UI64 " processed_size:"
-				ZBX_FS_UI64 " seq:%d incomplete:%d dev:" ZBX_FS_UI64 " ino_hi:" ZBX_FS_UI64 " ino_lo:"
-				ZBX_FS_UI64
+				ZBX_FS_UI64 " seq:%d copy_of:%d incomplete:%d dev:" ZBX_FS_UI64 " ino_hi:" ZBX_FS_UI64
+				" ino_lo:" ZBX_FS_UI64
 				" md5size:%d md5buf:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 				i, logfiles[i].filename, logfiles[i].mtime, logfiles[i].size,
-				logfiles[i].processed_size, logfiles[i].seq, logfiles[i].incomplete, logfiles[i].dev,
-				logfiles[i].ino_hi, logfiles[i].ino_lo, logfiles[i].md5size, logfiles[i].md5buf[0],
-				logfiles[i].md5buf[1], logfiles[i].md5buf[2], logfiles[i].md5buf[3],
-				logfiles[i].md5buf[4], logfiles[i].md5buf[5], logfiles[i].md5buf[6],
-				logfiles[i].md5buf[7], logfiles[i].md5buf[8], logfiles[i].md5buf[9],
-				logfiles[i].md5buf[10], logfiles[i].md5buf[11], logfiles[i].md5buf[12],
-				logfiles[i].md5buf[13], logfiles[i].md5buf[14], logfiles[i].md5buf[15]);
+				logfiles[i].processed_size, logfiles[i].seq, logfiles[i].copy_of,
+				logfiles[i].incomplete, logfiles[i].dev, logfiles[i].ino_hi, logfiles[i].ino_lo,
+				logfiles[i].md5size, logfiles[i].md5buf[0], logfiles[i].md5buf[1],
+				logfiles[i].md5buf[2], logfiles[i].md5buf[3], logfiles[i].md5buf[4],
+				logfiles[i].md5buf[5], logfiles[i].md5buf[6], logfiles[i].md5buf[7],
+				logfiles[i].md5buf[8], logfiles[i].md5buf[9], logfiles[i].md5buf[10],
+				logfiles[i].md5buf[11], logfiles[i].md5buf[12], logfiles[i].md5buf[13],
+				logfiles[i].md5buf[14], logfiles[i].md5buf[15]);
 	}
 }
 
@@ -1110,6 +1111,7 @@ static void	add_logfile(struct st_logfile **logfiles, int *logfiles_alloc, int *
 	(*logfiles)[i].md5size = -1;
 	(*logfiles)[i].seq = 0;
 	(*logfiles)[i].incomplete = 0;
+	(*logfiles)[i].copy_of = -1;
 #ifndef _WINDOWS
 	(*logfiles)[i].dev = (zbx_uint64_t)st->st_dev;
 	(*logfiles)[i].ino_lo = (zbx_uint64_t)st->st_ino;
