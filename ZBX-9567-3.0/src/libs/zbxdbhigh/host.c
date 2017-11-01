@@ -3909,9 +3909,9 @@ typedef struct
 	int			no;
 	int			timeout;
 	char			*variables;
+	char			*headers;
 	unsigned char		follow_redirects;
 	unsigned char		retrieve_mode;
-	char			*headers;
 }
 httpstep_t;
 
