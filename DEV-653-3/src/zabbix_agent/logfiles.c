@@ -35,6 +35,10 @@
 #define ZBX_SAME_FILE_RETRY	2
 #define ZBX_SAME_FILE_COPY	3
 
+#define ZBX_FILE_PLACE_UNKNOWN	-1	/* cannot compare file device and inode numbers */
+#define ZBX_FILE_PLACE_OTHER	0	/* both files have different device or inode numbers */
+#define ZBX_FILE_PLACE_SAME	1	/* both files have the same device and inode numbers */
+
 /******************************************************************************
  *                                                                            *
  * Function: split_string                                                     *
@@ -457,6 +461,19 @@ static void	print_logfile_list(struct st_logfile *logfiles, int logfiles_num)
 				logfiles[i].md5buf[11], logfiles[i].md5buf[12], logfiles[i].md5buf[13],
 				logfiles[i].md5buf[14], logfiles[i].md5buf[15]);
 	}
+}
+
+static int	compare_file_places(const struct st_logfile *old, const struct st_logfile *new, int use_ino)
+{
+	if (1 == use_ino || 2 == use_ino)
+	{
+		if (old->ino_lo != new->ino_lo || old->dev != new->dev || (2 == use_ino && old->ino_hi != new->ino_hi))
+			return ZBX_FILE_PLACE_OTHER;
+		else
+			return ZBX_FILE_PLACE_SAME;
+	}
+
+	return ZBX_FILE_PLACE_UNKNOWN;
 }
 
 /******************************************************************************
@@ -1904,6 +1921,49 @@ out:
 			__function_name, filename, *lastlogsize, NULL != mtime ? *mtime : 0, zbx_result_string(ret));
 
 	return ret;
+}
+
+static int	is_swap_required(struct st_logfile *old, struct st_logfile *new, int use_ino, int idx)
+{
+	int	is_same_place;
+
+	/* if the 1st file is not processed at all while the 2nd file was processed (at least partially) */
+	/* then swap them */
+	if (0 == new[idx].seq && 0 < new[idx + 1].seq)
+		return SUCCEED;
+
+	/* if the 2nd file is not a copy of some other file then no need to swap */
+	if (-1 == new[idx + 1].copy_of)
+		return FAIL;
+
+	/* The 2nd file is a copy. But is it a copy of the 1st file ? */
+
+	/* On file systems with inodes or file indices if a file is copied and truncated, we assume that */
+	/* there is a high possibility that the truncated file has the same inode (index) as before. */
+	is_same_place = compare_file_places(old + new[idx + 1].copy_of, new + idx, use_ino);
+
+	if (ZBX_FILE_PLACE_SAME == is_same_place && new[idx].seq <= new[idx + 1].seq)
+		return SUCCEED;
+
+	/* The last attempt - compare file names. It is less reliable as file rotation can change file names. */
+	if (ZBX_FILE_PLACE_OTHER == is_same_place || ZBX_FILE_PLACE_UNKNOWN == is_same_place)
+	{
+		if (0 == strcmp((old + new[idx + 1].copy_of)->filename, (new + idx)->filename))
+			return SUCCEED;
+	}
+
+	return FAIL;
+}
+
+static void	swap_logfile_array_elements(struct st_logfile *array, int idx1, int idx2)
+{
+	struct st_logfile	*p1 = array + idx1;
+	struct st_logfile	*p2 = array + idx2;
+	struct st_logfile	tmp;
+
+	memcpy(&tmp, p1, sizeof(struct st_logfile));
+	memcpy(p1, p2, sizeof(struct st_logfile));
+	memcpy(p2, &tmp, sizeof(struct st_logfile));
 }
 
 /******************************************************************************
