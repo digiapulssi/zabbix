@@ -825,6 +825,28 @@ static int	get_next_delay_interval(const char *flex_intervals, time_t now, time_
 
 /******************************************************************************
  *                                                                            *
+ * Function: scheduler_mktime                                                 *
+ *                                                                            *
+ * Purpose: used for repeated calls of mktime during scheduled nextcheck      *
+ *          validation                                                        *
+ *                                                                            *
+ * Parameters: tm - [IN] the date/time                                        *
+ *                                                                            *
+ * Return value: the converted time or -1 if tm has invalid value             *
+ *                                                                            *
+ * Comments: Without tm_isdst -1 mktime might try to adjust tm_hour value to  *
+ *           provide sane results. With -1 set to tm_isdst mktime will adjust *
+ *           tm_isdst value (0/1) instead.                                    *
+ *                                                                            *
+ ******************************************************************************/
+static time_t	scheduler_mktime(struct tm *tm)
+{
+	tm->tm_isdst = -1;
+	return mktime(tm);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: scheduler_filter_free                                            *
  *                                                                            *
  * Purpose: frees scheduler interval filter                                   *
@@ -1285,7 +1307,7 @@ static int	scheduler_get_wday_nextcheck(const zbx_scheduler_interval_t *interval
 	tm->tm_mday += value_next - value_now;
 
 	/* check if the resulting month day is valid */
-	return (-1 != mktime(tm) ? SUCCEED : FAIL);
+	return (-1 != scheduler_mktime(tm) ? SUCCEED : FAIL);
 }
 
 /******************************************************************************
@@ -1311,7 +1333,7 @@ static int	scheduler_validate_wday_filter(const zbx_scheduler_interval_t *interv
 		return SUCCEED;
 
 	/* mktime will aso set correct wday value */
-	if (-1 == (nextcheck = mktime(tm)))
+	if (-1 == (nextcheck = scheduler_mktime(tm)))
 		return FAIL;
 
 	value = (0 == tm->tm_wday ? 7 : tm->tm_wday);
@@ -1354,7 +1376,7 @@ static int	scheduler_validate_wday_filter(const zbx_scheduler_interval_t *interv
 static int	scheduler_get_day_nextcheck(const zbx_scheduler_interval_t *interval, struct tm *tm)
 {
 	/* first check if the provided tm structure has valid date format */
-	if (-1 == mktime(tm))
+	if (-1 == scheduler_mktime(tm))
 		return FAIL;
 
 	if (NULL == interval->mdays)
@@ -1369,7 +1391,7 @@ static int	scheduler_get_day_nextcheck(const zbx_scheduler_interval_t *interval,
 		tm->tm_mday++;
 
 		/* check if the date is still valid - we haven't ran out of month days */
-		if (-1 == mktime(tm))
+		if (-1 == scheduler_mktime(tm))
 			break;
 	}
 
@@ -1581,7 +1603,6 @@ static time_t	scheduler_get_nextcheck(zbx_scheduler_interval_t *interval, time_t
 	int		nextcheck = 0, current_nextcheck;
 
 	tm_start = *(localtime(&now));
-	tm_start.tm_isdst = -1;
 
 	for (; NULL != interval; interval = interval->next)
 	{
@@ -1592,6 +1613,7 @@ static time_t	scheduler_get_nextcheck(zbx_scheduler_interval_t *interval, time_t
 		scheduler_apply_minute_filter(interval, &tm);
 		scheduler_apply_second_filter(interval, &tm);
 
+		tm.tm_isdst = -1;
 		current_nextcheck = mktime(&tm);
 
 		if (0 == nextcheck || current_nextcheck < nextcheck)
