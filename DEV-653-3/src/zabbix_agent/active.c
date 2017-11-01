@@ -1022,9 +1022,10 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 		zbx_uint64_t *lastlogsize_sent, int *mtime_sent, char **error)
 {
 	AGENT_REQUEST	request;
-	const char	*filename, *pattern, *encoding, *maxlines_persec, *skip, *template;
+	const char	*filename, *pattern, *encoding, *maxlines_persec, *skip, *template, *options;
 	char		*encoding_uc = NULL;
 	int		rate, ret = FAIL, s_count, p_count;
+	int		max_parameter_num, rotation_type = ZBX_LOG_ROTATION_LOGRT;
 
 	init_request(&request);
 
@@ -1040,7 +1041,12 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 		goto out;
 	}
 
-	if (6 < get_rparams_num(&request))
+	if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & metric->flags))
+		max_parameter_num = 8;	/* logrt[] */
+	else
+		max_parameter_num = 6;	/* log[] */
+
+	if (max_parameter_num < get_rparams_num(&request))
 	{
 		*error = zbx_strdup(*error, "Too many parameters.");
 		goto out;
@@ -1095,6 +1101,29 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 
 	if (NULL == (template = get_rparam(&request, 5)))
 		template = "";
+
+	if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & metric->flags))
+	{
+		const char	*maxdelay;
+
+		/* logrt[] 7th parameter must be empty in 3.0 */
+		if (NULL != (maxdelay = get_rparam(&request, 6)) && '\0' != *maxdelay)
+		{
+			*error = zbx_strdup(*error, "Invalid seventh parameter.");
+			goto out;
+		}
+
+		if (NULL != (options = get_rparam(&request, 7)))
+		{
+			if (0 == strcmp(options, "copytruncate"))
+				rotation_type = ZBX_LOG_ROTATION_LOGCPT;
+			else if (0 != strcmp(options, "rotate"))
+			{
+				*error = zbx_strdup(*error, "Invalid eighth parameter.");
+				goto out;
+			}
+		}
+	}
 
 	/* do not flood Zabbix server if file grows too fast */
 	s_count = rate * metric->refresh;

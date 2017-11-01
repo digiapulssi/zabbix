@@ -23,6 +23,9 @@
 #include "zbxregexp.h"
 #include "md5.h"
 
+#define ZBX_LOG_ROTATION_LOGRT	0	/* pure rotation model */
+#define ZBX_LOG_ROTATION_LOGCPT	1	/* copy-truncate rotation model */
+
 struct	st_logfile
 {
 	char		*filename;
