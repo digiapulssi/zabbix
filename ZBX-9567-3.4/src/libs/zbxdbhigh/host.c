@@ -4018,12 +4018,12 @@ typedef struct
 	char			*required;
 	char			*status_codes;
 	zbx_vector_ptr_t	httpstepitems;
-	int			no;
+	zbx_vector_ptr_t	fields;
 	char			*timeout;
+	int			no;
 	int			follow_redirects;
 	int			retrieve_mode;
 	int			post_type;
-	zbx_vector_ptr_t	fields;
 }
 httpstep_t;
 
