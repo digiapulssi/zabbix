@@ -1925,6 +1925,7 @@ out:
  *     port             - [IN] port to send data to                           *
  *     hostname         - [IN] hostname the data comes from                   *
  *     key              - [IN] item key the data belongs to                   *
+ *     rotation_type    - [IN] simple rotation or copy/truncate rotation      *
  *                                                                            *
  * Return value: returns SUCCEED on successful reading,                       *
  *               FAIL on other cases                                          *
@@ -1937,7 +1938,7 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		int *use_ino, char **err_msg, struct st_logfile **logfiles_old, int *logfiles_num_old,
 		const char *encoding, zbx_vector_ptr_t *regexps, const char *pattern, const char *output_template,
 		int *p_count, int *s_count, zbx_process_value_func_t process_value, const char *server,
-		unsigned short port, const char *hostname, const char *key)
+		unsigned short port, const char *hostname, const char *key, int rotation_type)
 {
 	const char		*__function_name = "process_logrt";
 	int			i, j, start_idx, ret = FAIL, logfiles_num = 0, logfiles_alloc = 0, seq = 1,
@@ -2051,6 +2052,31 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 			/* 'lastlogsize' does not apply in this case. */
 			*lastlogsize = 0;
 			start_idx = 0;
+		}
+	}
+
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type)
+	{
+		/* There is a special case when within 1 second of time: */
+		/*   1. a log file ORG.log is copied to other file COPY.log, */
+		/*   2. the original file ORG.log is truncated, */
+		/*   3. new records are appended to the original file ORG.log, */
+		/*   4. both files ORG.log and COPY.log have the same 'mtime'. */
+		/* Now in the list 'logfiles' the file ORG.log precedes the COPY.log because */
+		/* if 'mtime' is the same then add_logfile() function sorts files by name in descending order. */
+		/* This would lead to an error - processing ORG.log before COPY.log. */
+		/* We need to correct the order by swapping ORG.log and COPY.log elements in the 'logfiles' list. */
+
+		for (i = 0; i < logfiles_num - 1; i++)
+		{
+			if (logfiles[i].mtime == logfiles[i + 1].mtime &&
+					SUCCEED == is_swap_required(*logfiles_old, logfiles, *use_ino, i))
+			{
+				swap_logfile_array_elements(logfiles, i, i + 1);
+
+				if (start_idx == i + 1)
+					start_idx = i;
+			}
 		}
 	}
 
