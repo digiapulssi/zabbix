@@ -3939,9 +3939,9 @@ typedef struct
 	zbx_vector_ptr_t	httptestitems;
 	int			delay;
 	int			retries;
+	char			*headers;
 	unsigned char		status;
 	unsigned char		authentication;
-	char			*headers;
 }
 httptest_t;
 
