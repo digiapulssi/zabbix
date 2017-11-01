@@ -1049,11 +1049,12 @@ static int	am_db_get_alerts(zbx_vector_ptr_t *alerts, int now)
 	zbx_uint64_t		alertid, mediatypeid, objectid;
 	int			status, attempts, source, object, ret = SUCCEED;
 	zbx_am_alert_t		*alert;
-	zbx_vector_uint64_t	alertids;
+	zbx_vector_uint64_t	alertids, alertids_failed;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	zbx_vector_uint64_create(&alertids);
+	zbx_vector_uint64_create(&alertids_failed);
 
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 			"select a.alertid,a.mediatypeid,a.sendto,a.subject,a.message,a.status,a.retries,"
@@ -1082,6 +1083,14 @@ static int	am_db_get_alerts(zbx_vector_ptr_t *alerts, int now)
 		ZBX_STR2UINT64(mediatypeid, row[1]);
 		status = atoi(row[5]);
 		attempts = atoi(row[6]);
+
+		if (SUCCEED == DBis_null(row[7]))
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "cannot process alert because related event was removed");
+			zbx_vector_uint64_append(&alertids_failed, alertid);
+			continue;
+		}
+
 		source = atoi(row[7]);
 		object = atoi(row[8]);
 		ZBX_STR2UINT64(objectid, row[9]);
@@ -1110,7 +1119,19 @@ static int	am_db_get_alerts(zbx_vector_ptr_t *alerts, int now)
 		}
 	}
 
+	if (0 != alertids_failed.values_num)
+	{
+		sql_offset = 0;
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update alerts set status=%d where",
+				ALERT_STATUS_FAILED);
+		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "alertid", alertids_failed.values,
+				alertids_failed.values_num);
+
+		DBexecute_once("%s", sql);
+	}
+
 	zbx_vector_uint64_destroy(&alertids);
+	zbx_vector_uint64_destroy(&alertids_failed);
 
 	if (SUCCEED == ret)
 		status_limit = 1;
