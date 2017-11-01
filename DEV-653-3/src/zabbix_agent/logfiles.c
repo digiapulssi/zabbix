@@ -1036,8 +1036,6 @@ static int	find_old2new(char *old2new, int num_new, int i_old)
  *             filename - name of a logfile (with full path)                  *
  *             st - structure returned by stat()                              *
  *                                                                            *
- * Return value: none                                                         *
- *                                                                            *
  * Author: Dmitry Borovikov                                                   *
  *                                                                            *
  ******************************************************************************/
@@ -1050,7 +1048,6 @@ static void	add_logfile(struct st_logfile **logfiles, int *logfiles_alloc, int *
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() filename:'%s' mtime:%d size:" ZBX_FS_UI64, __function_name, filename,
 			(int)st->st_mtime, (zbx_uint64_t)st->st_size);
 
-	/* must be done in any case */
 	if (*logfiles_alloc == *logfiles_num)
 	{
 		*logfiles_alloc += 64;
@@ -1304,7 +1301,7 @@ clean:
  *          parameter                                                         *
  *                                                                            *
  * Parameters:                                                                *
- *     flags          - [IN] metric flags to check item type: log or logrt    *
+ *     flags          - [IN] bit flags to check item type: log or logrt       *
  *     filename       - [IN] logfile name (regular expression with a path)    *
  *     mtime          - [IN] last modification time of the file               *
  *     logfiles       - [IN/OUT] pointer to the list of logfiles              *
@@ -1947,8 +1944,8 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	struct st_logfile	*logfiles = NULL;
 	time_t			now;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() is_logrt:%d filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
-			__function_name, ZBX_METRIC_FLAG_LOG_LOGRT & flags, filename, *lastlogsize, *mtime);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:'0x%02x' filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
+			__function_name, (unsigned int)flags, filename, *lastlogsize, *mtime);
 
 	/* Minimize data loss if the system clock has been set back in time. */
 	/* Setting the clock ahead of time is harmless in our case. */
