@@ -91,13 +91,13 @@ AC_DEFUN([AX_LIB_MYSQL],
 
             for i in $_full_libmysql_libs; do
                 case $i in
-                    -lmysqlclient|-lperconaserverclient|-lmariadbclient|lmariadb)
+                    -lmysqlclient|-lperconaserverclient|-lmariadbclient|-lmariadb)
 
                         _lib_name="`echo "$i" | cut -b3-`"
                         AC_CHECK_LIB($_lib_name, main, [
                         	MYSQL_LIBS="-l${_lib_name} ${MYSQL_LIBS}"
                         	],[
-                        	AC_MSG_ERROR([Not found mysqlclient library])
+                        	AC_MSG_ERROR([Not found $_lib_name library])
                         	])
                 ;;
                     -L*)
