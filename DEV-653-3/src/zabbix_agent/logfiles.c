@@ -1448,6 +1448,55 @@ static int	compile_filename_regexp(regex_t *re, const char *filename_regexp, cha
 	return SUCCEED;
 }
 
+#ifdef _WINDOWS
+static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, int use_ino, char **err_msg)
+#else
+static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, char **err_msg)
+#endif
+{
+	int	i, ret = SUCCEED;
+
+	/* Fill in MD5 sums and file indexes in the logfile list. */
+	/* These operations require opening of file, therefore we group them together. */
+
+	for (i = 0; i < logfiles_num; i++)
+	{
+		int			f;
+		struct st_logfile	*p = *logfiles + i;
+
+		if (-1 == (f = zbx_open(p->filename, O_RDONLY)))
+		{
+			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", p->filename,
+					zbx_strerror(errno));
+			return FAIL;
+		}
+
+		p->md5size = (zbx_uint64_t)MAX_LEN_MD5 > p->size ? (int)p->size : MAX_LEN_MD5;
+
+		if (SUCCEED != file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg))
+		{
+			ret = FAIL;
+			goto clean;
+		}
+#ifdef _WINDOWS
+		if (SUCCEED != file_id(f, *use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
+			ret = FAIL;
+#endif	/*_WINDOWS*/
+clean:
+		if (0 != close(f))
+		{
+			*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", p->filename,
+					zbx_strerror(errno));
+			return FAIL;
+		}
+
+		if (FAIL == ret)
+			return FAIL;
+	}
+
+	return ret;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: make_logfile_list                                                *
@@ -1472,7 +1521,7 @@ static int	compile_filename_regexp(regex_t *re, const char *filename_regexp, cha
 static int	make_logfile_list(unsigned char flags, const char *filename, const int *mtime,
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num, int *use_ino, char **err_msg)
 {
-	int		ret = SUCCEED, i;
+	int	ret = SUCCEED;
 
 	if (0 != (ZBX_METRIC_FLAG_LOG_LOG & flags))	/* log[] item */
 	{
@@ -1505,7 +1554,7 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 		*use_ino = 1;
 #endif
 	}
-	else if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags))	/* logrt[] item */
+	else if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags))	/* logrt[] */
 	{
 		char	*directory = NULL, *filename_regexp = NULL;
 		regex_t	re;
@@ -1562,43 +1611,12 @@ clean1:
 	else
 		THIS_SHOULD_NEVER_HAPPEN;
 
-	/* Fill in MD5 sums and file indexes in the logfile list. */
-	/* These operations require opening of file, therefore we group them together. */
-	for (i = 0; i < *logfiles_num; i++)
-	{
-		int			f;
-		struct st_logfile	*p;
-
-		p = *logfiles + i;
-
-		if (-1 == (f = zbx_open(p->filename, O_RDONLY)))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", p->filename,
-					zbx_strerror(errno));
-			ret = FAIL;
-			break;
-		}
-
-		p->md5size = (zbx_uint64_t)MAX_LEN_MD5 > p->size ? (int)p->size : MAX_LEN_MD5;
-
-		if (SUCCEED != file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg))
-		{
-			ret = FAIL;
-			goto clean3;
-		}
 #ifdef _WINDOWS
-		if (SUCCEED != file_id(f, *use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
-			ret = FAIL;
-#endif	/*_WINDOWS*/
-clean3:
-		if (0 != close(f))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", p->filename,
-					zbx_strerror(errno));
-			ret = FAIL;
-			break;
-		}
-	}
+	if (SUCCEED != fill_file_details(logfiles, *logfiles_num, *use_ino, err_msg))
+#else
+	if (SUCCEED != fill_file_details(logfiles, *logfiles_num, err_msg))
+#endif
+		ret = FAIL;
 clean:
 	if (FAIL == ret && NULL != *logfiles)
 		destroy_logfile_list(logfiles, logfiles_alloc, logfiles_num);
