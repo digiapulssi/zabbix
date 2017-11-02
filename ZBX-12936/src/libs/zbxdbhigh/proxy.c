@@ -372,6 +372,35 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
 	return SUCCEED;
 }
 
+static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxies)
+{
+	char	*sql = NULL;
+	size_t	sql_alloc = 256, sql_offset = 0;
+	int	i;
+
+	sql = zbx_malloc(sql, sql_alloc);
+	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	for (i = 0; i < proxies->values_num; i++)
+	{
+		zbx_uint64_pair_t	pair = proxies->values[i];
+
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update hosts"
+				" set lastaccess=%d"
+				" where hostid=" ZBX_FS_UI64 ";\n",
+				pair.first, pair.second);
+
+		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
+	}
+
+	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	if (16 < sql_offset)	/* in ORACLE always present begin..end; */
+		DBexecute("%s", sql);
+
+	zbx_free(sql);
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: update_proxy_lastaccess                                          *
@@ -379,8 +408,16 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
  ******************************************************************************/
 void	update_proxy_lastaccess(const zbx_uint64_t hostid, time_t last_access)
 {
-	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, last_access, hostid);
-	zbx_dc_update_proxy_lastaccess(hostid, last_access);
+	zbx_vector_uint64_pair_t	proxies;
+
+	zbx_vector_uint64_pair_create(&proxies);
+
+	zbx_dc_update_proxy_lastaccess(hostid, last_access, &proxies);
+
+	if (0 != proxies.values_num)
+		db_update_proxies_lastaccess(&proxies);
+
+	zbx_vector_uint64_pair_destroy(&proxies);
 }
 
 /******************************************************************************

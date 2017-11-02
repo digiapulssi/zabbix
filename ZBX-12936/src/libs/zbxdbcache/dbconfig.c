@@ -10630,14 +10630,39 @@ void	zbx_dc_items_update_nextcheck(DC_ITEM *items, zbx_agent_value_t *values, in
  *            lastaccess - [IN] the last time proxy data was received/sent    *
  *                                                                            *
  ******************************************************************************/
-void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
+void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess, zbx_vector_uint64_pair_t *proxies)
 {
 	ZBX_DC_PROXY	*proxy;
 
 	LOCK_CACHE;
 
 	if (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_search(&config->proxies, &hostid)))
-		proxy->lastaccess = lastaccess;
+	{
+
+		if (lastaccess < config->lastaccess_ts)
+			proxy->lastaccess = config->lastaccess_ts;
+		else
+			proxy->lastaccess = lastaccess;
+	}
+
+	if (ZBX_PROXY_LASTACCESS_UPDATE_FREQUENCY < time(NULL) - config->lastaccess_ts)
+	{
+		zbx_hashset_iter_t	iter;
+
+		zbx_hashset_iter_reset(&config->proxies, &iter);
+
+		while (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_iter_next(&iter)))
+		{
+			if (proxy->lastaccess >= config->lastaccess_ts)
+			{
+				zbx_uint64_pair_t	pair = {proxy->lastaccess, proxy->hostid};
+
+				zbx_vector_uint64_pair_append(proxies, pair);
+			}
+		}
+
+		config->lastaccess_ts = time(NULL);
+	}
 
 	UNLOCK_CACHE;
 }
