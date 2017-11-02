@@ -3,7 +3,8 @@ Changes for rsm1.0.0rc33
 New features:
 
 Bug fixes:
-..F....... [RSM-1] fixed incident details page errors (Oleg)
+..F....... [308] fixed undefined index in rolling week status report (miks)
+..F....... [306] fixed incident details page errors (Oleg)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0rc32

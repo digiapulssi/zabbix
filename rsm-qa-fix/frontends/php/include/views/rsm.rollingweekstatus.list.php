@@ -166,7 +166,7 @@ if ($this->data['tld']) {
 	$till = date('YmdHis', $serverTime);
 	foreach ($this->data['tld'] as $key => $tld) {
 		// DNS
-		if (isset($tld[RSM_DNS])) {
+		if (isset($tld[RSM_DNS]) && array_key_exists('trigger', $tld[RSM_DNS])) {
 			if ($tld[RSM_DNS]['trigger'] && $tld[RSM_DNS]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_DNS]) && array_key_exists('itemid', $tld[RSM_DNS])) {
 					$dnsStatus =  new CLink(
@@ -209,7 +209,7 @@ if ($this->data['tld']) {
 		}
 
 		// DNSSEC
-		if (isset($tld[RSM_DNSSEC])) {
+		if (isset($tld[RSM_DNSSEC]) && array_key_exists('trigger', $tld[RSM_DNSSEC])) {
 			if ($tld[RSM_DNSSEC]['trigger'] && $tld[RSM_DNSSEC]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_DNSSEC]) && array_key_exists('itemid', $tld[RSM_DNSSEC])) {
 					$dnssecStatus =  new CLink(
@@ -253,7 +253,7 @@ if ($this->data['tld']) {
 		}
 
 		// RDDS
-		if (isset($tld[RSM_RDDS])) {
+		if (isset($tld[RSM_RDDS]) && array_key_exists('trigger', $tld[RSM_RDDS])) {
 			if ($tld[RSM_RDDS]['trigger'] && $tld[RSM_RDDS]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_RDDS]) && array_key_exists('itemid', $tld[RSM_RDDS])) {
 					$rddsStatus =  new CLink(
@@ -313,7 +313,7 @@ if ($this->data['tld']) {
 		}
 
 		// EPP
-		if (isset($tld[RSM_EPP])) {
+		if (isset($tld[RSM_EPP]) && array_key_exists('trigger', $tld[RSM_EPP])) {
 			if ($tld[RSM_EPP]['trigger'] && $tld[RSM_EPP]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_EPP]) && array_key_exists('itemid', $tld[RSM_EPP])) {
 					$eppStatus = new CLink(
