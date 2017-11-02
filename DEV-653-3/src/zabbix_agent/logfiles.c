@@ -1425,6 +1425,29 @@ clean:
 #endif
 }
 
+static int	compile_filename_regexp(regex_t *re, const char *filename_regexp, char **err_msg)
+{
+	int	err_code;
+
+	if (0 != (err_code = regcomp(re, filename_regexp, REG_EXTENDED | REG_NEWLINE | REG_NOSUB)))
+	{
+		char	err_buf[MAX_STRING_LEN];
+
+		regerror(err_code, re, err_buf, sizeof(err_buf));
+
+		*err_msg = zbx_dsprintf(*err_msg, "Cannot compile a regular expression describing filename pattern: %s",
+				err_buf);
+#ifdef _WINDOWS
+		/* the Windows gnuregex implementation does not correctly clean up */
+		/* allocated memory after regcomp() failure                        */
+		regfree(re);
+#endif
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: make_logfile_list                                                *
@@ -1485,7 +1508,6 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 	else if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags))	/* logrt[] item */
 	{
 		char	*directory = NULL, *filename_regexp = NULL;
-		int	reg_error;
 		regex_t	re;
 
 		/* split a filename into directory and file name regular expression parts */
@@ -1495,19 +1517,9 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 			goto clean;
 		}
 
-		if (0 != (reg_error = regcomp(&re, filename_regexp, REG_EXTENDED | REG_NEWLINE | REG_NOSUB)))
+		if (SUCCEED != compile_filename_regexp(&re, filename_regexp, err_msg))
 		{
-			char	err_buf[MAX_STRING_LEN];
-
-			regerror(reg_error, &re, err_buf, sizeof(err_buf));
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot compile a regular expression describing filename"
-					" pattern: %s", err_buf);
 			ret = FAIL;
-#ifdef _WINDOWS
-			/* the Windows gnuregex implementation does not correctly clean up */
-			/* allocated memory after regcomp() failure                        */
-			regfree(&re);
-#endif
 			goto clean1;
 		}
 
