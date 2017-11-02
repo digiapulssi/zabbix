@@ -1121,13 +1121,19 @@ static int	am_db_get_alerts(zbx_vector_ptr_t *alerts, int now)
 
 	if (0 != alertids_failed.values_num)
 	{
+		char	*error;
+
+		error = DBdyn_escape_string_len("Related event was removed.", ALERT_ERROR_LEN);
+
 		sql_offset = 0;
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update alerts set status=%d where",
-				ALERT_STATUS_FAILED);
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update alerts set error='%s',status=%d where",
+				error, ALERT_STATUS_FAILED);
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "alertid", alertids_failed.values,
 				alertids_failed.values_num);
 
 		DBexecute_once("%s", sql);
+
+		zbx_free(error);
 	}
 
 	zbx_vector_uint64_destroy(&alertids);
