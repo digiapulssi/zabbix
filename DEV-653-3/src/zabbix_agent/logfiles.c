@@ -2150,14 +2150,19 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		goto out;
 	}
 
-	start_idx = (1 == *skip_old_data ? logfiles_num - 1 : 0);
-
-	/* mark files to be skipped as processed (in case of 'skip_old_data' was set) */
-	for (i = 0; i < start_idx; i++)
+	if (1 == *skip_old_data)
 	{
-		logfiles[i].processed_size = logfiles[i].size;
-		logfiles[i].seq = seq++;
+		start_idx = logfiles_num - 1;
+
+		/* mark files to be skipped as processed (except the last one) */
+		for (i = 0; i < start_idx; i++)
+		{
+			logfiles[i].processed_size = logfiles[i].size;
+			logfiles[i].seq = seq++;
+		}
 	}
+	else
+		start_idx = 0;
 
 	if (0 < *logfiles_num_old && 0 < logfiles_num)
 	{
