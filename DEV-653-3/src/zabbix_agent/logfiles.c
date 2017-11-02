@@ -1479,7 +1479,7 @@ static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, cha
 			goto clean;
 		}
 #ifdef _WINDOWS
-		if (SUCCEED != file_id(f, *use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
+		if (SUCCEED != file_id(f, use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
 			ret = FAIL;
 #endif	/*_WINDOWS*/
 clean:
