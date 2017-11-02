@@ -10630,7 +10630,7 @@ void	zbx_dc_items_update_nextcheck(DC_ITEM *items, zbx_agent_value_t *values, in
  *            lastaccess - [IN] the last time proxy data was received/sent    *
  *                                                                            *
  ******************************************************************************/
-void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess, zbx_vector_uint64_pair_t *proxies)
+void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess, zbx_vector_uint64_pair_t *proxy_diff)
 {
 	ZBX_DC_PROXY	*proxy;
 
@@ -10657,7 +10657,7 @@ void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess, zbx_vec
 			{
 				zbx_uint64_pair_t	pair = {proxy->lastaccess, proxy->hostid};
 
-				zbx_vector_uint64_pair_append(proxies, pair);
+				zbx_vector_uint64_pair_append(proxy_diff, pair);
 			}
 		}
 

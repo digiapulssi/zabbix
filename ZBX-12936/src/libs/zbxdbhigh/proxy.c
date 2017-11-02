@@ -372,7 +372,7 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
 	return SUCCEED;
 }
 
-static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxies)
+static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxy_diff)
 {
 	char	*sql = NULL;
 	size_t	sql_alloc = 256, sql_offset = 0;
@@ -381,9 +381,9 @@ static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxies
 	sql = zbx_malloc(sql, sql_alloc);
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
-	for (i = 0; i < proxies->values_num; i++)
+	for (i = 0; i < proxy_diff->values_num; i++)
 	{
-		zbx_uint64_pair_t	pair = proxies->values[i];
+		zbx_uint64_pair_t	pair = proxy_diff->values[i];
 
 		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update hosts"
 				" set lastaccess=%d"
@@ -408,16 +408,16 @@ static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxies
  ******************************************************************************/
 void	update_proxy_lastaccess(const zbx_uint64_t hostid, time_t last_access)
 {
-	zbx_vector_uint64_pair_t	proxies;
+	zbx_vector_uint64_pair_t	proxy_diff;
 
-	zbx_vector_uint64_pair_create(&proxies);
+	zbx_vector_uint64_pair_create(&proxy_diff);
 
-	zbx_dc_update_proxy_lastaccess(hostid, last_access, &proxies);
+	zbx_dc_update_proxy_lastaccess(hostid, last_access, &proxy_diff);
 
-	if (0 != proxies.values_num)
-		db_update_proxies_lastaccess(&proxies);
+	if (0 != proxy_diff.values_num)
+		db_update_proxies_lastaccess(&proxy_diff);
 
-	zbx_vector_uint64_pair_destroy(&proxies);
+	zbx_vector_uint64_pair_destroy(&proxy_diff);
 }
 
 /******************************************************************************
