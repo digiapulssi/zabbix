@@ -481,7 +481,7 @@ static int	compare_file_places(const struct st_logfile *old, const struct st_log
  * Function: is_same_file_logrt                                               *
  *                                                                            *
  * Purpose: find out if a file from the old list and a file from the new list *
- *          list could be the same file in case of simple rotation            *
+ *          could be the same file in case of simple rotation                 *
  *                                                                            *
  * Parameters:                                                                *
  *          old     - [IN] file from the old list                             *
@@ -637,7 +637,7 @@ static int	examine_md5_and_place(const md5_byte_t *buf1, const md5_byte_t *buf2,
  * Function: is_same_file_logcpt                                              *
  *                                                                            *
  * Purpose: find out if a file from the old list and a file from the new list *
- *          could be the same file or copy for logcpt[] item                  *
+ *          could be the same file or copy in case of copy/truncate rotation  *
  *                                                                            *
  * Parameters:                                                                *
  *          old     - [IN] file from the old list                             *
@@ -1433,7 +1433,7 @@ clean:
  *          parameter                                                         *
  *                                                                            *
  * Parameters:                                                                *
- *     flags          - [IN] bit flags to check item type: log or logrt       *
+ *     flags          - [IN] bit flags with item type: log or logrt           *
  *     filename       - [IN] logfile name (regular expression with a path)    *
  *     mtime          - [IN] last modification time of the file               *
  *     logfiles       - [IN/OUT] pointer to the list of logfiles              *
@@ -1450,10 +1450,11 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num, int *use_ino, char **err_msg)
 {
 	int		ret = SUCCEED, i;
-	zbx_stat_t	file_buf;
 
 	if (0 != (ZBX_METRIC_FLAG_LOG_LOG & flags))	/* log[] item */
 	{
+		zbx_stat_t	file_buf;
+
 		if (0 != zbx_stat(filename, &file_buf))
 		{
 			*err_msg = zbx_dsprintf(*err_msg, "Cannot obtain information for file \"%s\": %s", filename,
@@ -1487,7 +1488,7 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 		int	reg_error;
 		regex_t	re;
 
-		/* split a filename into directory and file mask (regular expression) parts */
+		/* split a filename into directory and file name regular expression parts */
 		if (SUCCEED != split_filename(filename, &directory, &format, err_msg))
 		{
 			ret = FAIL;
@@ -1519,8 +1520,8 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 
 		if (0 == *logfiles_num)
 		{
-			/* Do not make a logrt[] item NOTSUPPORTED if there are no matching log files or they are not */
-			/* accessible (can happen during a rotation), just log the problem. */
+			/* do not make a logrt[] item NOTSUPPORTED if there are no matching log files or */
+			/* they are not accessible (can happen during a rotation), just log the problem */
 #ifdef _WINDOWS
 			zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\" or insufficient "
 					"access rights", format, directory);
@@ -1901,7 +1902,7 @@ out:
  *          records to Zabbix server                                          *
  *                                                                            *
  * Parameters:                                                                *
- *     flags           - [IN] metric flags to check item type: log or logrt   *
+ *     flags           - [IN] bit flags with item type: log or logrt          *
  *     filename        - [IN] logfile name                                    *
  *     lastlogsize     - [IN/OUT] offset from the beginning of the file       *
  *     mtime           - [IN] file modification time for reporting to server  *
@@ -2067,7 +2068,7 @@ static void	swap_logfile_array_elements(struct st_logfile *array, int idx1, int 
  * Purpose: Find new records in logfiles                                      *
  *                                                                            *
  * Parameters:                                                                *
- *     flags            - [IN] metric flags to check item type: log or logrt  *
+ *     flags            - [IN] bit flags with item type: log or logrt         *
  *     filename         - [IN] logfile name (regular expression with a path)  *
  *     lastlogsize      - [IN/OUT] offset from the beginning of the file      *
  *     mtime            - [IN/OUT] last modification time of the file         *
