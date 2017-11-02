@@ -313,12 +313,14 @@ int	get_value_internal(DC_ITEM *item, AGENT_RESULT *result)
 		res = get_value_java(ZBX_JAVA_GATEWAY_REQUEST_INTERNAL, item, result);
 		zbx_alarm_off();
 
-		/* the default error code "NOTSUPPORTED" renders nodata() trigger function nonfunctional */
-		if(res == GATEWAY_ERROR)
-			ret = res;
-
 		if (SUCCEED != res)
+		{
+			tmp1 = get_rparam(&request, 2);
+			/* the default error code "NOTSUPPORTED" renders nodata() trigger function nonfunctional */
+			if (0 == strcmp(tmp1, "ping"))
+				ret = GATEWAY_ERROR;
 			goto out;
+		}
 	}
 	else if (0 == strcmp(tmp, "process"))			/* zabbix["process",<type>,<mode>,<state>] */
 	{
