@@ -427,60 +427,58 @@ jQuery(function($) {
 						case KEY.ARROW_UP:
 							if ($('.available', obj).is(':visible') && $('.available li', obj).length > 0) {
 								var selected = $('.available li.suggest-hover', obj);
+									prev = null;
 
 								if (selected.length === 0) {
 									// Select last element.
-									var prev = $('ul.multiselect-suggest li:last-child', obj);
-
-									prev.addClass('suggest-hover');
-									$('input[type="text"]', obj).val(prev.attr('data-name'));
+									prev = $('ul.multiselect-suggest li:last-child', obj);
 								}
 								else {
 									selected.removeClass('suggest-hover');
+									prev = selected.prev();
+								}
 
-									var prev = selected.prev();
-
-									if (prev.length > 0) {
-										prev.addClass('suggest-hover');
-										$('input[type="text"]', obj).val(prev.attr('data-name'));
-									}
-									else {
-										// Select search input.
-										$('input[type="text"]', obj).val(values.search);
-									}
+								if (prev.length === 0) {
+									// Select search input.
+									$('input[type="text"]', obj).val(values.search);
+								}
+								else {
+									prev.addClass('suggest-hover');
+									$('input[type="text"]', obj).val(values.available[prev.data('id')]['name']);
 								}
 
 								// Position cursor at the end of search input.
 								cancelEvent(e);
-								$('input[type="text"]', obj).focus();
+
+								scrollAvailable(obj);
 							}
 							break;
 
 						case KEY.ARROW_DOWN:
 							if ($('.available', obj).is(':visible') && $('.available li', obj).length > 0) {
-								var selected = $('.available li.suggest-hover', obj);
+								var selected = $('.available li.suggest-hover', obj),
+									next;
 
 								if (selected.length === 0) {
 									// Select first element.
-									var next = $('ul.multiselect-suggest li:first-child', obj);
-
-									$('input[type="text"]', obj).val(next.attr('data-name'));
-									next.addClass('suggest-hover');
+									next = $('ul.multiselect-suggest li:first-child', obj);
 								}
 								else {
 									selected.removeClass('suggest-hover');
 
-									var next = selected.next();
-
-									if (next.length > 0) {
-										next.addClass('suggest-hover');
-										$('input[type="text"]', obj).val(next.attr('data-name'));
-									}
-									else {
-										// Select search input.
-										$('input[type="text"]', obj).val(values.search);
-									}
+									next = selected.next();
 								}
+
+								if (next.length === 0) {
+									// Select search input.
+									$('input[type="text"]', obj).val(values.search);
+								}
+								else {
+									next.addClass('suggest-hover');
+									$('input[type="text"]', obj).val(values.available[next.data('id')]['name']);
+								}
+
+								scrollAvailable(obj);
 							}
 							break;
 
@@ -730,7 +728,6 @@ jQuery(function($) {
 			}
 
 			var li = $('<li>', {
-				'data-name': item.name,
 				'data-id': item.id
 			}).append(
 				$('<span>', {
@@ -776,8 +773,7 @@ jQuery(function($) {
 
 	function addAvailable(item, obj, values, options) {
 		var li = $('<li>', {
-			'data-id': item.id,
-			'data-name': item.name
+			'data-id': item.id
 		})
 		.click(function() {
 			select(item.id, obj, values, options);
@@ -924,12 +920,11 @@ jQuery(function($) {
 	}
 
 	function scrollAvailable(obj) {
-		var selected = $('.available li.suggest-hover', obj);
+		var	selected = $('.available li.suggest-hover', obj),
+			available = $('.available', obj);
 
 		if (selected.length > 0) {
-
-			var available = $('.available', obj),
-				available_height = available.height();
+			var	available_height = available.height(),
 				selected_top = 0,
 				selected_height = selected.outerHeight(true);
 
@@ -953,6 +948,9 @@ jQuery(function($) {
 			else if (selected_top + selected_height > available.scrollTop() + available_height) {
 				available.scrollTop(selected_top - available_height + selected_height);
 			}
+		}
+		else {
+			available.scrollTop(0);
 		}
 	}
 
