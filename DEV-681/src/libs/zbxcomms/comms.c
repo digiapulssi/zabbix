@@ -322,20 +322,14 @@ static void	zbx_socket_timeout_cleanup(zbx_socket_t *s)
  *           and if successful change socket back to blocking mode.           *
  *                                                                            *
  ******************************************************************************/
-#ifdef _WINDOWS
-static int	zbx_socket_connect(zbx_socket_t *s, const struct sockaddr *addr, size_t _addrlen, int timeout,
-		char **error)
-#else
 static int	zbx_socket_connect(zbx_socket_t *s, const struct sockaddr *addr, socklen_t addrlen, int timeout,
 		char **error)
-#endif
 {
 #ifdef _WINDOWS
 	u_long		mode = 1;
 	FD_SET		fdw, fde;
 	int		res;
 	struct timeval	tv, *ptv;
-	socklen_t	addrlen = (socklen_t)_addrlen;
 #endif
 	if (0 != timeout)
 		zbx_socket_timeout_set(s, timeout);
@@ -511,7 +505,7 @@ static int	zbx_socket_create(zbx_socket_t *s, int type, const char *source_ip, c
 		}
 	}
 
-	if (SUCCEED != zbx_socket_connect(s, ai->ai_addr, ai->ai_addrlen, timeout, &error))
+	if (SUCCEED != zbx_socket_connect(s, ai->ai_addr, (socklen_t)ai->ai_addrlen, timeout, &error))
 	{
 		func_socket_close(s);
 		zbx_set_socket_strerror("cannot connect to [[%s]:%hu]: %s", ip, port, error);
