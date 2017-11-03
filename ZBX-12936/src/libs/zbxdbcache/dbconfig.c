@@ -4865,6 +4865,7 @@ void	DCsync_configuration(unsigned char mode)
 
 	config->status->last_update = 0;
 	config->sync_ts = time(NULL);
+	config->lastaccess_ts = time(NULL);
 
 	FINISH_SYNC;
 out:
