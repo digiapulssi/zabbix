@@ -1325,7 +1325,6 @@ static int	scheduler_get_wday_nextcheck(const zbx_scheduler_interval_t *interval
  ******************************************************************************/
 static int	scheduler_validate_wday_filter(const zbx_scheduler_interval_t *interval, struct tm *tm)
 {
-	time_t				nextcheck;
 	const zbx_scheduler_filter_t	*filter;
 	int				value;
 
@@ -1333,7 +1332,7 @@ static int	scheduler_validate_wday_filter(const zbx_scheduler_interval_t *interv
 		return SUCCEED;
 
 	/* mktime will aso set correct wday value */
-	if (-1 == (nextcheck = scheduler_mktime(tm)))
+	if (-1 == scheduler_mktime(tm))
 		return FAIL;
 
 	value = (0 == tm->tm_wday ? 7 : tm->tm_wday);
