@@ -1613,8 +1613,7 @@ static time_t	scheduler_get_nextcheck(zbx_scheduler_interval_t *interval, time_t
 		scheduler_apply_minute_filter(interval, &tm);
 		scheduler_apply_second_filter(interval, &tm);
 
-		tm.tm_isdst = -1;
-		current_nextcheck = mktime(&tm);
+		current_nextcheck = scheduler_mktime(&tm);
 
 		if (0 == nextcheck || current_nextcheck < nextcheck)
 			nextcheck = current_nextcheck;
