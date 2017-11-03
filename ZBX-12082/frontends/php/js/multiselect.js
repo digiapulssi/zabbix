@@ -70,11 +70,11 @@ jQuery(function($) {
 			var ms = this.first().data('multiSelect');
 
 			var data = [];
-			for (var key in ms.values.selected) {
-				var item = ms.values.selected[key];
+			for (var id in ms.values.selected) {
+				var item = ms.values.selected[id];
 
 				data[data.length] = {
-					id: item.id,
+					id: id,
 					name: item.name,
 					prefix: (item.prefix === 'undefined') ? '' : item.prefix
 				};
@@ -111,8 +111,8 @@ jQuery(function($) {
 
 				// clean input if selectedLimit == 1
 				if (ms.options.selectedLimit == 1) {
-					for (var key in ms.values.selected) {
-						removeSelected(ms.values.selected[key], obj, ms.values, ms.options);
+					for (var id in ms.values.selected) {
+						removeSelected(id, obj, ms.values, ms.options);
 					}
 
 					cleanAvailable(item, ms.values);
@@ -131,8 +131,8 @@ jQuery(function($) {
 				var obj = $(this);
 				var ms = $(this).data('multiSelect');
 
-				for (var key in ms.values.selected) {
-					removeSelected(ms.values.selected[key], obj, ms.values, ms.options);
+				for (var id in ms.values.selected) {
+					removeSelected(id, obj, ms.values, ms.options);
 				}
 
 				cleanAvailable(obj, ms.values);
@@ -350,13 +350,9 @@ jQuery(function($) {
 								var selected = $('.selected li.selected', obj);
 
 								if (selected.length > 0) {
-									var prev = selected.prev(),
-										item = {
-											id: selected.data('id'),
-											name: selected.data('name')
-										};
+									var prev = selected.prev();
 
-									removeSelected(item, obj, values, options);
+									removeSelected(selected.data('id'), obj, values, options);
 
 									if (prev.length > 0) {
 										prev.addClass('selected');
@@ -380,13 +376,9 @@ jQuery(function($) {
 								var selected = $('.selected li.selected', obj);
 
 								if (selected.length > 0) {
-									var next = selected.next(),
-										item = {
-											id: selected.data('id'),
-											name: selected.data('name')
-										};
+									var next = selected.next();
 
-									removeSelected(item, obj, values, options);
+									removeSelected(selected.data('id'), obj, values, options);
 
 									if (next.length > 0) {
 										next.addClass('selected');
@@ -731,7 +723,7 @@ jQuery(function($) {
 
 			if (!options.disabled) {
 				close_btn.click(function() {
-					removeSelected(item, obj, values, options);
+					removeSelected(item.id, obj, values, options);
 				});
 			}
 
@@ -759,12 +751,12 @@ jQuery(function($) {
 		}
 	}
 
-	function removeSelected(item, obj, values, options) {
+	function removeSelected(id, obj, values, options) {
 		// remove
-		$('.selected li[data-id="' + item.id + '"]', obj).remove();
-		$('input[value="' + item.id + '"]', obj).remove();
+		$('.selected li[data-id="' + id + '"]', obj).remove();
+		$('input[value="' + id + '"]', obj).remove();
 
-		delete values.selected[item.id];
+		delete values.selected[id];
 
 		// remove readonly
 		if ($('.selected li', obj).length == 0) {
