@@ -445,13 +445,15 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 	zbx_elastic_data_t	*data = hist->data;
 	size_t			url_alloc = 0, url_offset = 0, id_alloc = 0, scroll_alloc = 0, scroll_offset = 0;
-	int			err, total, empty;
+	int			err, total, empty, ret;
 	long			http_code;
 	struct zbx_json		query;
 	struct curl_slist	*curl_headers = NULL;
 	char			*scroll_id = NULL, *scroll_query = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	ret = FAIL;
 
 	if (NULL == (data->handle = curl_easy_init()))
 	{
@@ -518,7 +520,11 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 	page.offset = 0;
 	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
+	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s", curl_easy_strerror(err));
+
+		goto out;
+	}
 
 	curl_easy_getinfo(data->handle, CURLINFO_RESPONSE_CODE, &http_code);
 
@@ -538,13 +544,6 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		zbx_history_record_t	hr;
 		const char		*p = NULL;
 
-		if (200 != http_code)
-		{
-			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s", page.data);
-
-			break;
-		}
-
 		empty = 1;
 
 		zabbix_log(LOG_LEVEL_DEBUG, "received from elasticsearch: %s", page.data);
@@ -553,8 +552,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		zbx_json_brackets_open(jp.start, &jp_values);
 
 		/* get the scroll id immediately, for being used in subsequent queries */
-		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_values, "_scroll_id", &scroll_id, &id_alloc))
-			break;
+		zbx_json_value_by_name_dyn(&jp_values, "_scroll_id", &scroll_id, &id_alloc);
 
 		zbx_json_brackets_by_name(&jp_values, "hits", &jp_sub);
 		zbx_json_brackets_by_name(&jp_sub, "hits", &jp_hits);
@@ -586,7 +584,11 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		}
 
 		if (1 == empty)
+		{
+			ret = SUCCEED;
+
 			break;
+		}
 
 		/* scroll to the next page */
 		scroll_offset = 0;
@@ -627,6 +629,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		}
 	}
 
+out:
 	elastic_close(hist);
 
 	curl_slist_free_all(curl_headers);
@@ -638,7 +641,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 
-	return SUCCEED;
+	return ret;
 }
 
 /************************************************************************************
