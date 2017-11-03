@@ -253,6 +253,7 @@ static void	unlock_log(void)
 		zbx_error("cannot restore sigprocmask");
 }
 #endif
+
 void	zbx_handle_log(void)
 {
 	if (LOG_TYPE_FILE != log_type)
