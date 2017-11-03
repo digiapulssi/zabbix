@@ -1419,7 +1419,7 @@ static void 	lld_trigger_dependency_make(const zbx_lld_trigger_prototype_t *trig
 
 	zbx_lld_trigger_t			*trigger, *dep_trigger;
 	const zbx_lld_trigger_prototype_t	*dep_trigger_prototype;
-	zbx_lld_dependency_t			*dependency = NULL;
+	zbx_lld_dependency_t			*dependency;
 	zbx_uint64_t				triggerid_up;
 	int					i, j, index;
 
