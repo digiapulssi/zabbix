@@ -363,7 +363,7 @@ class CHelpItems {
 					'description' => _('Log file monitoring. Returns log')
 				],
 				[
-					'key' => 'logrt[file_regexp,<regexp>,<encoding>,<maxlines>,<mode>,<output>]',
+					'key' => 'logrt[file_regexp,<regexp>,<encoding>,<maxlines>,<mode>,<output>,,<rotate (default) | copytruncate>]',
 					'description' => _('Log file monitoring with log rotation support. Returns log')
 				],
 				[
