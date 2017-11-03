@@ -193,6 +193,31 @@ out:
 	return ret;
 }
 
+static void	elastic_log_error(CURL *handle, CURLcode error)
+{
+	long	http_code;
+
+	if (CURLE_HTTP_RETURNED_ERROR == error)
+	{
+		curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &http_code);
+
+		if (0 != page.offset)
+		{
+			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch, HTTP error: %d,",
+					" message: %s", http_code, page.data);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch, HTTP error: %d",
+					http_code);
+		}
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s", curl_easy_strerror(error));
+	}
+}
+
 /************************************************************************************
  *                                                                                  *
  * Function: elastic_close                                                          *
@@ -224,6 +249,8 @@ static void	elastic_close(zbx_history_iface_t *hist)
  * common sql service support                                                                                     *
  *                                                                                                                *
  ******************************************************************************************************************/
+
+
 
 /************************************************************************************
  *                                                                                  *
@@ -445,8 +472,8 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 	zbx_elastic_data_t	*data = hist->data;
 	size_t			url_alloc = 0, url_offset = 0, id_alloc = 0, scroll_alloc = 0, scroll_offset = 0;
-	int			err, total, empty, ret;
-	long			http_code;
+	int			total, empty, ret;
+	CURLcode			err;
 	struct zbx_json		query;
 	struct curl_slist	*curl_headers = NULL;
 	char			*scroll_id = NULL, *scroll_query = NULL;
@@ -521,12 +548,10 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	page.offset = 0;
 	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 	{
-		zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s", curl_easy_strerror(err));
+		elastic_log_error(data->handle, err);
 
 		goto out;
 	}
-
-	curl_easy_getinfo(data->handle, CURLINFO_RESPONSE_CODE, &http_code);
 
 	url_offset = 0;
 	zbx_snprintf_alloc(&data->post_url, &url_alloc, &url_offset, "%s/_search/scroll", data->base_url);
@@ -600,8 +625,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		page.offset = 0;
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 		{
-			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s",
-					curl_easy_strerror(err));
+			elastic_log_error(data->handle, err);
 
 			break;
 		}
@@ -623,10 +647,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 		page.offset = 0;
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "cannot close elasticsearch scroll query: %s",
-					curl_easy_strerror(err));
-		}
+			elastic_log_error(data->handle, err);
 	}
 
 out:
