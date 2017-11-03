@@ -2168,7 +2168,7 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	char			*old2new = NULL;
 	struct st_logfile	*logfiles = NULL;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:'0x%02x' filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:0x%02x filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
 			__function_name, (unsigned int)flags, filename, *lastlogsize, *mtime);
 
 	adjust_mtime_to_clock(mtime);
