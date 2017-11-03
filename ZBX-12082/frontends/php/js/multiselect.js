@@ -336,7 +336,9 @@ jQuery(function($) {
 							if (!empty(input.val())) {
 								var selected = $('.available li.suggest-hover', obj);
 
-								select(selected.data, obj, values, options);
+								if (selected.length > 0) {
+									select(selected.data('id'), obj, values, options);
+								}
 
 								// stop form submit
 								cancelEvent(e);
@@ -778,7 +780,7 @@ jQuery(function($) {
 			'data-name': item.name
 		})
 		.click(function() {
-			select(item, obj, values, options);
+			select(item.id, obj, values, options);
 		})
 		.hover(function() {
 			$('.available li.suggest-hover', obj).removeClass('suggest-hover');
@@ -826,9 +828,9 @@ jQuery(function($) {
 		$('.available ul', obj).append(li);
 	}
 
-	function select(item, obj, values, options) {
+	function select(id, obj, values, options) {
 		if (values.isAjaxLoaded && !values.isWaiting) {
-			addSelected(values.available[item.id], obj, values, options);
+			addSelected(values.available[id], obj, values, options);
 
 			hideAvailable(obj);
 			cleanAvailable(obj, values);
