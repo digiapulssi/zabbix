@@ -1852,10 +1852,8 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 	zbx_ipc_message_t	*message;
 	zbx_am_alerter_t	*alerter;
 	int			ret, sent_num, failed_num, now, time_db, time_watchdog, freq_watchdog, time_connect;
-	double			time_stat, time_idle, time_now;
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
-	double			resolver_timestamp = 0.0;
-#endif
+	double			time_stat, time_idle, time_now, time_file;
+
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
 	process_num = ((zbx_thread_args_t *)args)->process_num;
@@ -1885,6 +1883,7 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 	failed_num = 0;
 	time_db = 0;
 	time_watchdog = 0;
+	time_file = 0;
 
 	if (ZBX_WATCHDOG_ALERT_FREQUENCY < (freq_watchdog = CONFIG_CONFSYNCER_FREQUENCY))
 		freq_watchdog = ZBX_WATCHDOG_ALERT_FREQUENCY;
@@ -1929,8 +1928,6 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 			failed_num = 0;
 		}
 
-		zbx_handle_log();
-
 		if (ZBX_DB_OK == manager.dbstatus && now - time_db >= ZBX_AM_DB_POLL_DELAY)
 		{
 			if (SUCCEED == (ret = am_db_flush_alert_updates(&manager)))
@@ -1968,15 +1965,16 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 		ret = zbx_ipc_service_recv(&alerter_service, 1, &client, &message);
 		update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
-		/* handle /etc/resolv.conf update less often than once a second */
-
-		if (1.0 < time_now - resolver_timestamp)
+		/* handle /etc/resolv.conf update and log rotate less often than once a second */
+		if (1.0 < time_now - time_file)
 		{
-			resolver_timestamp = time_now;
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+			time_file = time_now;
 			zbx_update_resolver_conf();
-		}
 #endif
+			zbx_handle_log();
+		}
+
 		if (ZBX_IPC_RECV_IMMEDIATE != ret)
 			time_idle += zbx_time() - time_now;
 
