@@ -909,12 +909,12 @@ jQuery(function($) {
 	function resizeAllSelectedTexts(obj, options, values) {
 		$('.selected li', obj).each(function() {
 			var li = $(this),
+				id = li.data('id'),
 				span = $('span.subfilter-enabled', li),
 				text = $('span:first-child', span),
-				key = li.data('id'),
-				t = empty(values.selected[key].prefix)
-					? values.selected[key].name
-					: values.selected[key].prefix + values.selected[key].name;
+				t = empty(values.selected[id].prefix)
+					? values.selected[id].name
+					: values.selected[id].prefix + values.selected[id].name;
 
 			// rewrite previous text to original
 			text.text(t);
