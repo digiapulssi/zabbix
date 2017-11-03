@@ -157,7 +157,7 @@ class JMXItemChecker extends ItemChecker
 
 			JSONArray counters = new JSONArray();
 			ObjectName filter = (2 == argumentCount) ? new ObjectName(item.getArgument(2)) : null;
-			
+
 			int mode = DISCOVERY_MODE_ATTRIBUTES;
 			if (0 != argumentCount)
 			{
@@ -262,7 +262,7 @@ class JMXItemChecker extends ItemChecker
 		{
 			HashSet<String> properties = new HashSet<String>();
 			JSONObject counter = new JSONObject();
-			
+
 			// Default properties are added.
 			counter.put("{#JMXOBJ}", name);
 			counter.put("{#JMXDOMAIN}", name.getDomain());
@@ -272,7 +272,7 @@ class JMXItemChecker extends ItemChecker
 			for (Map.Entry<String, String> property : name.getKeyPropertyList().entrySet())
 			{
 				String key = property.getKey().toUpperCase();
-				
+
 				// Property key should only contain valid characters and should not be already added to attribute list.
 				if (key.matches("^[A-Z0-9_\\.]+$") && !properties.contains(key))
 				{
