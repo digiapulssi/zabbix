@@ -2114,6 +2114,74 @@ static void	swap_logfile_array_elements(struct st_logfile *array, int idx1, int 
 	memcpy(p2, &tmp, sizeof(struct st_logfile));
 }
 
+static void	modify_list_in_special_cases(const struct st_logfile *logfiles_old, struct st_logfile *logfiles,
+		int logfiles_num, int use_ino, int *start_idx, int *seq)
+{
+	int	i;
+
+	/* There is a special case when within 1 second of time:       */
+	/*   1. a log file ORG.log is copied to other file COPY.log,   */
+	/*   2. the original file ORG.log is truncated,                */
+	/*   3. new records are appended to the original file ORG.log, */
+	/*   4. both files ORG.log and COPY.log have the same 'mtime'. */
+	/* Now in the list 'logfiles' the file ORG.log precedes the COPY.log because if 'mtime' is the same   */
+	/* then add_logfile() function sorts files by name in descending order. This would lead to an error - */
+	/* processing ORG.log before COPY.log. We need to correct the order by swapping ORG.log and COPY.log  */
+	/* elements in the 'logfiles' list. */
+
+	for (i = 0; i < logfiles_num - 1; i++)
+	{
+		if (logfiles[i].mtime == logfiles[i + 1].mtime &&
+				SUCCEED == is_swap_required(logfiles_old, logfiles, use_ino, i))
+		{
+			swap_logfile_array_elements(logfiles, i, i + 1);
+
+			if (*start_idx == i + 1)
+				*start_idx = i;
+		}
+	}
+
+	/* There is a special case when the latest log file is copied to other file but not yet truncated. */
+	/* So there are two files and we don't know which one will stay as the copy and which one will be  */
+	/* truncated. Similar cases: the latest log file is copied but not truncated or is copied multiple */
+	/* times. */
+
+	for (i = 0; i < logfiles_num - 1; i++)
+	{
+		int	j;
+
+		for (j = i + 1; j < logfiles_num; j++)
+		{
+			if (-1 != logfiles[i].md5size && -1 != logfiles[j].md5size &&
+					logfiles[i].md5size == logfiles[j].md5size &&
+					0 == memcmp(logfiles[i].md5buf, logfiles[j].md5buf, logfiles[i].md5size))
+			{
+				/* logfiles[i] and logfiles[j] are original and copy (or vice versa). */
+				/* If logfiles[i] has been at least partially processed then transfer its */
+				/* processed size to logfiles[j], too. */
+
+				if (0 < logfiles[i].processed_size)
+				{
+					if (logfiles[i].processed_size <= logfiles[j].size)
+						logfiles[j].processed_size = logfiles[i].processed_size;
+					else
+						logfiles[j].processed_size = logfiles[j].size;
+
+					if (0 != logfiles[i].seq && 0 == logfiles[j].seq)
+						logfiles[j].seq = *seq++;
+
+					zabbix_log(LOG_LEVEL_DEBUG, "modify_list_in_special_cases() file '%s'"
+							" processed_size:" ZBX_FS_UI64 " seq:%d transferred to"
+							" file '%s' processed_size:" ZBX_FS_UI64 " seq:%d",
+							logfiles[i].filename, logfiles[i].processed_size,
+							logfiles[i].seq, logfiles[i].filename,
+							logfiles[i].processed_size, logfiles[i].seq);
+				}
+			}
+		}
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: process_logrt                                                    *
@@ -2167,7 +2235,7 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		unsigned short port, const char *hostname, const char *key, int rotation_type)
 {
 	const char		*__function_name = "process_logrt";
-	int			i, j, start_idx, ret = FAIL, logfiles_num = 0, logfiles_alloc = 0, seq = 1,
+	int			i, start_idx, ret = FAIL, logfiles_num = 0, logfiles_alloc = 0, seq = 1,
 				max_old_seq = 0, old_last, from_first_file = 1;
 	char			*old2new = NULL;
 	struct st_logfile	*logfiles = NULL;
@@ -2224,6 +2292,8 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		/* Transfer data about fully and partially processed files from the old file list to the new list. */
 		for (i = 0; i < *logfiles_num_old; i++)
 		{
+			int	j;
+
 			if (0 < (*logfiles_old)[i].processed_size && 0 == (*logfiles_old)[i].incomplete &&
 					-1 != (j = find_old2new(old2new, logfiles_num, i)))
 			{
@@ -2274,30 +2344,8 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		}
 	}
 
-	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type)
-	{
-		/* There is a special case when within 1 second of time: */
-		/*   1. a log file ORG.log is copied to other file COPY.log, */
-		/*   2. the original file ORG.log is truncated, */
-		/*   3. new records are appended to the original file ORG.log, */
-		/*   4. both files ORG.log and COPY.log have the same 'mtime'. */
-		/* Now in the list 'logfiles' the file ORG.log precedes the COPY.log because */
-		/* if 'mtime' is the same then add_logfile() function sorts files by name in descending order. */
-		/* This would lead to an error - processing ORG.log before COPY.log. */
-		/* We need to correct the order by swapping ORG.log and COPY.log elements in the 'logfiles' list. */
-
-		for (i = 0; i < logfiles_num - 1; i++)
-		{
-			if (logfiles[i].mtime == logfiles[i + 1].mtime &&
-					SUCCEED == is_swap_required(*logfiles_old, logfiles, *use_ino, i))
-			{
-				swap_logfile_array_elements(logfiles, i, i + 1);
-
-				if (start_idx == i + 1)
-					start_idx = i;
-			}
-		}
-	}
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+		modify_list_in_special_cases(*logfiles_old, logfiles, logfiles_num, *use_ino, &start_idx, &seq);
 
 	zbx_free(old2new);
 
