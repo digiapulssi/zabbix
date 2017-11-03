@@ -2114,6 +2114,37 @@ static void	swap_logfile_array_elements(struct st_logfile *array, int idx1, int 
 	memcpy(p2, &tmp, sizeof(struct st_logfile));
 }
 
+static void	ensure_order_if_mtimes_equal(const struct st_logfile *logfiles_old, struct st_logfile *logfiles,
+		int logfiles_num, int use_ino, int *start_idx)
+{
+	int	i;
+
+	/* There is a special case when within 1 second of time:       */
+	/*   1. a log file ORG.log is copied to other file COPY.log,   */
+	/*   2. the original file ORG.log is truncated,                */
+	/*   3. new records are appended to the original file ORG.log, */
+	/*   4. both files ORG.log and COPY.log have the same 'mtime'. */
+	/* Now in the list 'logfiles' the file ORG.log precedes the COPY.log because if 'mtime' is the same   */
+	/* then add_logfile() function sorts files by name in descending order. This would lead to an error - */
+	/* processing ORG.log before COPY.log. We need to correct the order by swapping ORG.log and COPY.log  */
+	/* elements in the 'logfiles' list. */
+
+	for (i = 0; i < logfiles_num - 1; i++)
+	{
+		if (logfiles[i].mtime == logfiles[i + 1].mtime &&
+				SUCCEED == is_swap_required(logfiles_old, logfiles, use_ino, i))
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "ensure_order_if_mtimes_equal() swapping files '%s' and '%s'",
+					logfiles[i].filename, logfiles[i + 1].filename);
+
+			swap_logfile_array_elements(logfiles, i, i + 1);
+
+			if (*start_idx == i + 1)
+				*start_idx = i;
+		}
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: process_logrt                                                    *
@@ -2274,30 +2305,8 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		}
 	}
 
-	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type)
-	{
-		/* There is a special case when within 1 second of time: */
-		/*   1. a log file ORG.log is copied to other file COPY.log, */
-		/*   2. the original file ORG.log is truncated, */
-		/*   3. new records are appended to the original file ORG.log, */
-		/*   4. both files ORG.log and COPY.log have the same 'mtime'. */
-		/* Now in the list 'logfiles' the file ORG.log precedes the COPY.log because */
-		/* if 'mtime' is the same then add_logfile() function sorts files by name in descending order. */
-		/* This would lead to an error - processing ORG.log before COPY.log. */
-		/* We need to correct the order by swapping ORG.log and COPY.log elements in the 'logfiles' list. */
-
-		for (i = 0; i < logfiles_num - 1; i++)
-		{
-			if (logfiles[i].mtime == logfiles[i + 1].mtime &&
-					SUCCEED == is_swap_required(*logfiles_old, logfiles, *use_ino, i))
-			{
-				swap_logfile_array_elements(logfiles, i, i + 1);
-
-				if (start_idx == i + 1)
-					start_idx = i;
-			}
-		}
-	}
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+		ensure_order_if_mtimes_equal(*logfiles_old, logfiles, logfiles_num, *use_ino, &start_idx);
 
 	zbx_free(old2new);
 
