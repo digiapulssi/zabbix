@@ -372,9 +372,10 @@ static void	elastic_writer_flush()
 		code = curl_multi_perform(writer.handle, &running);
 
 		if (CURLM_OK == code)
+		{
 			code = curl_multi_wait(writer.handle, NULL, 0, ZBX_HISTORY_STORAGE_DOWN, &fds);
-
-		if (CURLM_OK != code)
+		}
+		else
 		{
 			zabbix_log(LOG_LEVEL_ERR, "cannot wait on curl multi handle");
 			break;
@@ -393,12 +394,11 @@ static void	elastic_writer_flush()
 
 				curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &err);
 
-				zabbix_log(LOG_LEVEL_WARNING, "%s: %li: %s", "cannot store in elasticsearch server",
-						err, curl_easy_strerror(msg->data.result));
+				zabbix_log(LOG_LEVEL_ERR, "%s: %d", "cannot data to elasticsearch, HTTP error",  err);
 			}
 			else if (CURLE_OK != msg->data.result)
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "cannot send data to elasticsearch: %s",
+				zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send to elasticsearch",
 						curl_easy_strerror(msg->data.result));
 
 				/* Add back the handle and set the flag to 1 for retrying what failed */
