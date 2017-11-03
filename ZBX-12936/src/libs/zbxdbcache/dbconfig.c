@@ -10629,6 +10629,8 @@ void	zbx_dc_items_update_nextcheck(DC_ITEM *items, zbx_agent_value_t *values, in
  *                                                                            *
  * Parameter: hostid     - [IN] the proxy identifier (hostid)                 *
  *            lastaccess - [IN] the last time proxy data was received/sent    *
+ *            proxy_diff - [OUT] last access updates for proxies that need    *
+ *                               to be synced with database                   *
  *                                                                            *
  ******************************************************************************/
 void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess, zbx_vector_uint64_pair_t *proxy_diff)

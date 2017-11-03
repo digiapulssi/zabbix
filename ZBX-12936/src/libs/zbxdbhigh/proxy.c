@@ -372,6 +372,15 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
 	return SUCCEED;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: db_update_proxies_lastaccess                                     *
+ *                                                                            *
+ * Purpose: updates proxy last access timestamp in database                   *
+ *                                                                            *
+ * Parameter: proxy_diff - [IN] last access updates for proxies               *
+ *                                                                            *
+ ******************************************************************************/
 static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxy_diff)
 {
 	char	*sql = NULL;
