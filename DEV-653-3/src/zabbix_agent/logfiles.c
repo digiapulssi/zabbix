@@ -2067,7 +2067,7 @@ static void	adjust_mtime_to_clock(int *mtime)
 	}
 }
 
-static int	is_swap_required(struct st_logfile *old, struct st_logfile *new, int use_ino, int idx)
+static int	is_swap_required(const struct st_logfile *old, struct st_logfile *new, int use_ino, int idx)
 {
 	int	is_same_place;
 
@@ -2084,6 +2084,10 @@ static int	is_swap_required(struct st_logfile *old, struct st_logfile *new, int 
 
 	/* On file systems with inodes or file indices if a file is copied and truncated, we assume that */
 	/* there is a high possibility that the truncated file has the same inode (index) as before. */
+
+	if (NULL == old)	/* cannot consult the old file list */
+		return FAIL;
+
 	is_same_place = compare_file_places(old + new[idx + 1].copy_of, new + idx, use_ino);
 
 	if (ZBX_FILE_PLACE_SAME == is_same_place && new[idx].seq <= new[idx + 1].seq)
