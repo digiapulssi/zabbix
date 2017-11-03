@@ -63,18 +63,24 @@
 					<arg line="./configure"/>
 					<arg line="${@{name}}"/>
 				</exec>
-				<exec executable="make" failonerror="on">
-					<arg line="-s"/>
-					<arg line="-j5"/>
-					<arg line="clean"/>
-				</exec>
-				<exec executable="scan-build" failonerror="on">
-					<arg line="-o"/>
-					<arg line="./clang-scan-build-reports"/>
-					<arg line="make"/>
-					<arg line="-s"/>
-					<arg line="-j5"/>
-				</exec>
+				<trycatch>
+					<try>
+						<exec executable="scan-build" failonerror="on">
+							<arg line="-o"/>
+							<arg line="./clang-scan-build-reports"/>
+							<arg line="make"/>
+							<arg line="-s"/>
+							<arg line="-j5"/>
+						</exec>
+					</try>
+					<finally>
+						<exec executable="make" failonerror="on">
+							<arg line="-s"/>
+							<arg line="-j5"/>
+							<arg line="clean"/>
+						</exec>
+					</finally>
+				</trycatch>
 			</sequential>
 		</for>
 	</target>
