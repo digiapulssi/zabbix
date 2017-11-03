@@ -375,6 +375,8 @@
 				image.remove();
 			}
 
+			$('#previewChar .msg-bad').remove();
+
 			$('#previewChar')
 				.attr('class', 'preloader');
 
@@ -382,6 +384,11 @@
 				$('#previewChar')
 					.removeAttr('class')
 					.append($(this));
+			}).error(function() {
+				$('#previewChar').removeAttr('class');
+				$('<div class="msg-bad" />')
+					.html(<?= CJs::encodeJson(_('Cannot load graph preview image.')) ?>)
+					.appendTo('#previewChar');
 			});
 		});
 
