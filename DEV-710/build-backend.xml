@@ -122,16 +122,22 @@
 				<arg line="--prefix=$(pwd)/install"/>
 				<arg line="CFLAGS=&quot;${common.cflags} ${cc.cflags}&quot;"/>
 			</exec>
-			<exec executable="make" failonerror="on">
-				<arg line="-s"/>
-				<arg line="-j5"/>
-				<arg line="clean"/>
-			</exec>
-			<exec executable="make" failonerror="on">
-				<arg line="-s"/>
-				<arg line="-j5"/>
-				<arg line="@{target}"/>
-			</exec>
+			<trycatch>
+				<try>
+					<exec executable="make" failonerror="on">
+						<arg line="-s"/>
+						<arg line="-j5"/>
+						<arg line="@{target}"/>
+					</exec>
+				</try>
+				<finally>
+					<exec executable="make" failonerror="on">
+						<arg line="-s"/>
+						<arg line="-j5"/>
+						<arg line="clean"/>
+					</exec>
+				</finally>
+			</trycatch>
 		</sequential>
 	</macrodef>
 
