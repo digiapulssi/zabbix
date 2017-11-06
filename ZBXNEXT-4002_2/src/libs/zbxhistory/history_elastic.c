@@ -23,6 +23,7 @@
 #include "zbxalgo.h"
 #include "dbcache.h"
 #include "zbxhistory.h"
+#include "zbxself.h"
 #include "history.h"
 
 #ifdef HAVE_LIBCURL
@@ -344,11 +345,14 @@ static void	elastic_writer_flush()
 	struct curl_slist	*curl_headers = NULL;
 	int			i, running, previous, msgnum;
 	CURLMsg			*msg;
+	zbx_vector_ptr_t		retries;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (0 == writer.initialized)
 		return;
+
+	zbx_vector_ptr_create(&retries);
 
 	curl_headers = curl_slist_append(curl_headers, "Content-Type: application/x-ndjson");
 
@@ -362,6 +366,7 @@ static void	elastic_writer_flush()
 		zabbix_log(LOG_LEVEL_DEBUG, "sending %s", data->buf);
 	}
 
+try_again:
 	previous = 0;
 
 	do
@@ -401,11 +406,11 @@ static void	elastic_writer_flush()
 				zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send to elasticsearch",
 						curl_easy_strerror(msg->data.result));
 
-				/* Add back the handle and set the flag to 1 for retrying what failed */
+				/* If the error is due to curl internal problems or unrelated */
+				/* problems with HTTP, we put the handle in a retry list and */
+				/* remove it from the current execution loop */
+				zbx_vector_ptr_append(&retries, msg->easy_handle);
 				curl_multi_remove_handle(writer.handle, msg->easy_handle);
-				curl_multi_add_handle(writer.handle, msg->easy_handle);
-
-				running = 1;
 			}
 		}
 
@@ -413,7 +418,23 @@ static void	elastic_writer_flush()
 	}
 	while (running);
 
+	/* We check if we have handles to retry. If yes, we put them back in the multi */
+	/* handle and go to the beginning of the do while() for try sending the data again */
+	/* after sleeping for ZBX_HISTORY_STORAGE_DOWN / 1000 (seconds) */
+	if (0 < retries.values_num)
+	{
+		for (i = 0; i < retries.values_num; i++)
+			curl_multi_add_handle(writer.handle, retries.values[i]);
+
+		zbx_vector_ptr_clear(&retries);
+
+		zbx_sleep_loop(ZBX_HISTORY_STORAGE_DOWN / 1000);
+		goto try_again;
+	}
+
 	curl_slist_free_all(curl_headers);
+
+	zbx_vector_ptr_destroy(&retries);
 
 	elastic_writer_release();
 
