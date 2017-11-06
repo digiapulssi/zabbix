@@ -107,7 +107,7 @@ class testPageScreens extends CWebTest {
 		$this->zbxTestCheckTitle('Configuration of screens');
 		$this->zbxTestCheckboxSelect('screens_'.$screen['screenid']);
 		$this->zbxTestClickButton('screen.massdelete');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 
 		$this->zbxTestCheckTitle('Configuration of screens');
 		$this->zbxTestTextPresent('Screen deleted');

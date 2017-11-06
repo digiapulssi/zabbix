@@ -96,7 +96,7 @@ class testPageSlideShows extends CWebTest {
 		$this->zbxTestCheckTitle('Configuration of slide shows');
 		$this->zbxTestCheckboxSelect('shows_'.$slideshowid);
 		$this->zbxTestClickButton('slideshow.massdelete');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 
 		$this->zbxTestCheckTitle('Configuration of slide shows');
 		$this->zbxTestTextPresent('Slide show deleted');

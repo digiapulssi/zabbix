@@ -20,6 +20,9 @@
 
 require_once dirname(__FILE__) . '/../include/class.cwebtest.php';
 
+/**
+ * @backup applications
+ */
 class testPageApplications extends CWebTest {
 
 	public static function allHosts() {
@@ -70,9 +73,9 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
-	* select Host and HostGroup
+	* Data for select
 	*/
-	public static function selectHostGroup() {
+	public static function data() {
 		return [
 			[
 				[
@@ -80,84 +83,119 @@ class testPageApplications extends CWebTest {
 					'groupname' => 'Zabbix servers',
 					'hostid' => 10084,
 					'hostname' => 'ЗАББИКС Сервер',
+					'applications' => [349,350,352,354]
 				]
 			]
 		];
 	}
 
 	/**
-	* select Application for operations
+	* select of Applications
 	*/
-	public function selectApp() {
-		$this->zbxTestCheckboxSelect('applications_349');
-		$this->zbxTestCheckboxSelect('applications_350');
-		$this->zbxTestCheckboxSelect('applications_352');
-		$this->zbxTestCheckboxSelect('applications_354');
+	public function selectApplications($id) {
+		foreach ($id as $appid) {
+			$this->zbxTestCheckboxSelect('applications_'.$appid);
+		}
 	}
 
 	/**
 	* Test check of redirect Configuration -> Hosts -> Applications.
-	* @dataProvider selectHostGroup
+	* Test check of correct select Host and HostGroup with redirect to link.
+	* @dataProvider data
 	*/
-	public function testPageApplications_CheckSelectHost($data) {
+	public function testPageApplications_CheckLinkSelectHost($data) {
 		$this->zbxTestLogin('hosts.php');
-		$this->zbxTestClickLinkText($data['hostname']);
-		$this->zbxTestClickLinkText('Applications');
+		$this->zbxTestClickLinkTextWait($data['hostname']);
+		$this->zbxTestClickLinkTextWait('Applications');
 
+		$this->zbxTestWaitForPageToLoad();
 		$this->zbxTestDropdownAssertSelected('hostid', $data['hostname']);
-	}
 
-	/**
-	* Test check of correct select Host and HostGroup.
-	* @dataProvider selectHostGroup
-	*/
-	public function testPageApplications_CheckSelectGroupAndHost($data) {
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
 		$this->zbxTestDropdownAssertSelected('groupid', $data['groupname']);
 		$this->zbxTestDropdownAssertSelected('hostid', $data['hostname']);
+
+	}
+
+	/**
+	* Check of Applications for selected Host from DataBase.
+	* @dataProvider data
+	*/
+	public function testPageApplications_CheckForSelectHost($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$sqlAllApplications = 'SELECT A.name FROM applications A WHERE A.hostid='.$data['hostid'];
+		$result = DBselect($sqlAllApplications);
+		while ($row = DBfetch($result)) {
+			$this->zbxTestTextPresent($row['name']);
+		}
+	}
+
+	/**
+	* Check: when selected all Hosts, appears button "Create application (select host first)" and it is disabled
+	*/
+	public function testPageApplications_CheckDisableButton() {
+		$this->zbxTestLogin('applications.php?groupid=0&hostid=0');
+
+		$this->zbxTestTextPresent('Create application (select host first)');
+		$this->zbxTestAssertAttribute("//button[@id='form']",'disabled','true');
 	}
 
 	/**
 	* Test check of activate selected Applications.
-	* @dataProvider selectHostGroup
+	* @dataProvider data
 	*/
 	public function testPageApplications_EnableSelectApp($data) {
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
-		$this->selectApp();
+		$this->selectApplications($data['applications']);
 		$this->zbxTestClickButton('application.massenable');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
+
+		$applications = implode(", ", $data['applications']);
+		$hostid= $data['hostid'];
+		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
+		WHERE IA.applicationid IN ('.$applications.') && I.hostid='.$hostid.' && I.status='.ITEM_STATUS_DISABLED;
+
+		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Not all Items for ApplicationsID: '.$applications.' have the status ITEM_STATUS_ACTIVE');
 	}
 
 	/**
 	* Test check of deactivate selected Applications.
-	* @dataProvider selectHostGroup
+	* @dataProvider data
 	*/
 	public function testPageApplications_DisableSelectApp($data) {
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
-		$this->selectApp();
+		$this->selectApplications($data['applications']);
 		$this->zbxTestClickButton('application.massdisable');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items disabled');
+
+		$applications = implode(", ", $data['applications']);
+		$hostid= $data['hostid'];
+		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
+		WHERE IA.applicationid IN ('.$applications.') && I.flags<>2 && I.hostid='.$hostid.' && I.status='.ITEM_STATUS_ACTIVE;
+
+		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Not all Items for ApplicationsID: '.$applications.' have the status ITEM_STATUS_DISABLED');
 	}
 
 	/**
 	* Test check for attempt of delete selected Applications.
-	* @dataProvider selectHostGroup
+	* @dataProvider data
 	*/
 	public function testPageApplications_AttemptDeleteSelectApp($data) {
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
-		$this->selectApp();
+		$this->selectApplications($data['applications']);
 		$this->zbxTestClickButton('application.massdelete');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot delete applications');
@@ -165,44 +203,54 @@ class testPageApplications extends CWebTest {
 
 	/**
 	* Test check of activate all Applications for selected Host and HostGroup.
-	* @dataProvider selectHostGroup
+	* @dataProvider data
 	*/
 	public function testPageApplications_EnableAllApp($data) {
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
 		$this->zbxTestCheckboxSelect('all_applications');
 		$this->zbxTestClickButton('application.massenable');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
+
+		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
+		WHERE IA.applicationid>0 && I.flags<>2 && I.hostid='.$data['hostid'].' && I.status='.ITEM_STATUS_DISABLED;
+
+		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Not all Items for Applications have the status ITEM_STATUS_ACTIVE');
 	}
 
 	/**
-	 * Test check of deactivate all Applications for selected Host and HostGroup.
-	* @dataProvider selectHostGroup
+	* Test check of deactivate all Applications for selected Host and HostGroup.
+	* @dataProvider data
 	*/
 	public function testPageApplications_DisableAllApp($data) {
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
 		$this->zbxTestCheckboxSelect('all_applications');
 		$this->zbxTestClickButton('application.massdisable');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items disabled');
+
+		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
+		WHERE IA.applicationid>0 && I.flags<>2 && I.hostid='.$data['hostid'].' && I.status='.ITEM_STATUS_ACTIVE;
+
+		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Not all Items for Applications have the status ITEM_STATUS_DISABLED');
 	}
 
 	/**
 	* Test check for attempt of delete all Applications for selected Host and  HostGroup.
-	* @dataProvider selectHostGroup
+	* @dataProvider data
 	*/
 	public function testPageApplications_AttempDeleteAllApp($data) {
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
 		$this->zbxTestCheckboxSelect('all_applications');
 		$this->zbxTestClickButton('application.massdelete');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot delete applications');

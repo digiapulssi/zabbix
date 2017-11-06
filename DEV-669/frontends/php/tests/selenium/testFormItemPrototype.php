@@ -2470,7 +2470,7 @@ class testFormItemPrototype extends CWebTest {
 			$this->zbxTestCheckboxSelect("group_itemid_$itemId");
 			$this->zbxTestClickButton('itemprototype.massdelete');
 
-			$this->webDriver->switchTo()->alert()->accept();
+			$this->zbxTestAlertAcceptWait();
 			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Item prototypes deleted');
 		}
 	}

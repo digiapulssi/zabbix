@@ -587,6 +587,11 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		$this->zbxTestCheckFatalErrors();
 	}
 
+	public function zbxTestAlertAcceptWait() {
+		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestWaitForPageToLoad();
+	}
+
 	public function zbxTestClickAndAcceptAlert($id) {
 		$this->zbxTestClickWait($id);
 			try {

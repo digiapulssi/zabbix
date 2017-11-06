@@ -181,7 +181,7 @@ class testFormAdministrationGeneralRegexp extends CWebTest {
 		$this->zbxTestClickLinkTextWait($this->regexp2);
 
 		$this->zbxTestClickWait('delete');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Regular expression deleted');
 		$this->zbxTestTextPresent(['Regular expressions', 'Name', 'Expressions']);
 
@@ -200,7 +200,7 @@ class testFormAdministrationGeneralRegexp extends CWebTest {
 		$this->zbxTestCheckboxSelect('all_regexps');
 		$this->zbxTestClickButton('regexp.massdelete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAlertAcceptWait();
 		$this->zbxTestCheckHeader('Regular expressions');
 		$this->zbxTestTextPresent('Regular expressions deleted');
 
