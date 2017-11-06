@@ -308,7 +308,8 @@ $dependenciesFormList->addRow(_('Dependencies'),
 		$dependenciesTable,
 		(new CButton('bnt1', _('Add')))
 			->onClick('return PopUp("popup.php?srctbl=triggers&srcfld1=triggerid&reference=deptrigger&multiselect=1'.
-				'&with_triggers=1&noempty=1");')
+				'&hostid='.$data['hostid'].'&groupid='.$data['groupid'].'&with_triggers=1&noempty=1");'
+			)
 			->addClass(ZBX_STYLE_BTN_LINK)
 	]))
 		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
