@@ -389,8 +389,6 @@ static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxy_d
 
 	sql = zbx_malloc(NULL, sql_alloc);
 
-	zbx_vector_uint64_pair_sort(proxy_diff, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-
 	DBbegin();
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
