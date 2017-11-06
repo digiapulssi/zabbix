@@ -10658,7 +10658,7 @@ void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess, zbx_vec
 		{
 			if (proxy->lastaccess >= config->lastaccess_ts)
 			{
-				zbx_uint64_pair_t	pair = {proxy->lastaccess, proxy->hostid};
+				zbx_uint64_pair_t	pair = {proxy->hostid, proxy->lastaccess};
 
 				zbx_vector_uint64_pair_append(proxy_diff, pair);
 			}
