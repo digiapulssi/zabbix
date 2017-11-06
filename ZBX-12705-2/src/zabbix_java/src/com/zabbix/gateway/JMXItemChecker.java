@@ -280,7 +280,7 @@ class JMXItemChecker extends ItemChecker
 					properties.add(key);
 				}
 				else
-					logger.trace("bean '{}' property '{}' was ignored", name, property.getKey());
+					logger.debug("bean '{}' property '{}' was ignored", name, property.getKey());
 			}
 
 			counters.put(counter);
