@@ -1423,3 +1423,17 @@ UPDATE config SET alert_usrgrpid = 15 WHERE configid = 1;
 UPDATE config SET server_check_interval = 0 WHERE configid = 1;
 -- Super admin rows per page
 UPDATE users SET rows_per_page = 100 WHERE userid = 1;
+
+-- testIconMapping
+INSERT INTO icon_map (iconmapid, name, default_iconid) VALUES (100, 'Icon mapping one for testPage', 10);
+INSERT INTO icon_mapping (iconmappingid, iconmapid, iconid, inventory_link, expression, sortorder) VALUES (1, 100, 2, 1, 'expresssion one', 0);
+INSERT INTO icon_mapping (iconmappingid, iconmapid, iconid, inventory_link, expression, sortorder) VALUES (2, 100, 2, 1, 'expresssion two', 1);
+INSERT INTO icon_map (iconmapid, name, default_iconid) VALUES (101, 'Icon mapping two for testPage', 15);
+INSERT INTO icon_mapping (iconmappingid, iconmapid, iconid, inventory_link, expression, sortorder) VALUES (3, 101, 5, 4, '!@#$%^&*()-=', 0);
+INSERT INTO icon_map (iconmapid, name, default_iconid) VALUES (102, 'Icon mapping testForm update expression', 16);
+INSERT INTO icon_mapping (iconmappingid, iconmapid, iconid, inventory_link, expression, sortorder) VALUES (4, 102, 6, 5, 'one more expression', 0);
+INSERT INTO icon_map (iconmapid, name, default_iconid) VALUES (103, 'Icon mapping to check delete functionality', 10);
+INSERT INTO icon_mapping (iconmappingid, iconmapid, iconid, inventory_link, expression, sortorder) VALUES (5, 103, 2, 1, 'expresssion 1', 0);
+INSERT INTO icon_mapping (iconmappingid, iconmapid, iconid, inventory_link, expression, sortorder) VALUES (6, 103, 2, 1, 'expresssion 2', 0);
+INSERT INTO icon_mapping (iconmappingid, iconmapid, iconid, inventory_link, expression, sortorder) VALUES (7, 103, 2, 1, 'expresssion 3', 0);
+INSERT INTO icon_mapping (iconmappingid, iconmapid, iconid, inventory_link, expression, sortorder) VALUES (8, 103, 2, 1, 'expresssion 4', 0);
