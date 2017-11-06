@@ -2145,6 +2145,41 @@ static void	ensure_order_if_mtimes_equal(const struct st_logfile *logfiles_old, 
 	}
 }
 
+static void	handle_multiple_copies(struct st_logfile *logfiles, int logfiles_num, int i)
+{
+	/* There is a special case when the latest log file is copied to other file but not yet truncated. */
+	/* So there are two files and we don't know which one will stay as the copy and which one will be  */
+	/* truncated. Similar cases: the latest log file is copied but not truncated or is copied multiple */
+	/* times. */
+
+	int	j;
+
+	for (j = i + 1; j < logfiles_num; j++)
+	{
+		if (-1 != logfiles[i].md5size && -1 != logfiles[j].md5size &&
+				logfiles[i].md5size == logfiles[j].md5size &&
+				0 == memcmp(logfiles[i].md5buf, logfiles[j].md5buf, sizeof(logfiles[i].md5buf)))
+		{
+			/* logfiles[i] and logfiles[j] are original and copy (or vice versa). */
+			/* If logfiles[i] has been at least partially processed then transfer its */
+			/* processed size to logfiles[j], too. */
+
+			if (0 < logfiles[i].processed_size)
+			{
+				if (logfiles[i].processed_size <= logfiles[j].size)
+					logfiles[j].processed_size = logfiles[i].processed_size;
+				else
+					logfiles[j].processed_size = logfiles[j].size;
+
+				zabbix_log(LOG_LEVEL_DEBUG, "handle_multiple_copies() file '%s' processed_size:"
+						ZBX_FS_UI64 " transferred to" " file '%s' processed_size:" ZBX_FS_UI64,
+						logfiles[i].filename, logfiles[i].processed_size,
+						logfiles[j].filename, logfiles[j].processed_size);
+			}
+		}
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: process_logrt                                                    *
@@ -2344,6 +2379,9 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 
 	while (i < logfiles_num)
 	{
+		if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+			handle_multiple_copies(logfiles, logfiles_num, i);
+
 		if (0 == logfiles[i].incomplete && (logfiles[i].size != logfiles[i].processed_size ||
 				0 == logfiles[i].seq))
 		{
