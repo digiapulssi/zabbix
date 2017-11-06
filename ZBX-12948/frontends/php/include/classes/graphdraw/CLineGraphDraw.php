@@ -2562,7 +2562,8 @@ class CLineGraphDraw extends CGraphDraw {
 		$this->fullSizeY = $this->sizeY;
 
 		if ($this->drawLegend) {
-			$h_legend_items = 14 * ($this->num + 1) + 8;
+			// Reserve N+1 item rows, last row is used as padding for legend.
+			$h_legend_items = 14 * $this->num + 14;
 			$h_legend_triggers = 14 * count($this->triggers);
 			$h_legend_percentile = 0;
 
