@@ -2425,6 +2425,9 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		i++;
 	}
 
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+		handle_multiple_copies(logfiles, logfiles_num, 0);
+
 	/* remember the current logfile list */
 	*logfiles_num_old = logfiles_num;
 
