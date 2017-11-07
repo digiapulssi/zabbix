@@ -1612,11 +1612,10 @@ clean1:
 		THIS_SHOULD_NEVER_HAPPEN;
 
 #ifdef _WINDOWS
-	if (SUCCEED != fill_file_details(logfiles, *logfiles_num, *use_ino, err_msg))
+	ret = fill_file_details(logfiles, *logfiles_num, *use_ino, err_msg);
 #else
-	if (SUCCEED != fill_file_details(logfiles, *logfiles_num, err_msg))
+	ret = fill_file_details(logfiles, *logfiles_num, err_msg);
 #endif
-		ret = FAIL;
 clean:
 	if (FAIL == ret && NULL != *logfiles)
 		destroy_logfile_list(logfiles, logfiles_alloc, logfiles_num);
