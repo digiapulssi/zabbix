@@ -40,7 +40,7 @@
 		},
 		"out": {
 			"names": ["return", "error", "nextcheck_num", "nextcheck#1", "nextcheck#2"],
-			"values": [0, "N/A", 1, 1509238800, 1509238860]
+			"values": [0, "N/A", 2, 1509238800, 1509238860]
 		}
 	},
 	{
@@ -51,7 +51,18 @@
 		},
 		"out": {
 			"names": ["return", "error", "nextcheck_num", "nextcheck#1", "nextcheck#2"],
-			"values": [0, "N/A", 1, 1509321600, 1509408000]
+			"values": [0, "N/A", 2, 1509321600, 1509408000]
+		}
+	},
+	{
+		"test_case": "one of scheduling interval month days is outside of current month day range (Mon Feb  1 00:00:00 UTC 1970, Sun Mar  1 00:00:00 UTC 1970)",
+		"in": {
+			"names": ["TZ", "interval", "seed", "type", "now"],
+			"values": ["UTC", "0;md1,31", 0, 0, 2678400]
+		},
+		"out": {
+			"names": ["return", "error", "nextcheck_num", "nextcheck#1"],
+			"values": [0, "N/A", 1, 5097600]
 		}
 	}
 ]
