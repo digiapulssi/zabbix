@@ -375,7 +375,7 @@
 				image.remove();
 			}
 
-			$('#previewChar .msg-bad').remove();
+			$('#previewChar').children().remove();
 
 			$('#previewChar')
 				.attr('class', 'preloader');
@@ -385,10 +385,12 @@
 					.removeAttr('class')
 					.append($(this));
 			}).error(function() {
-				$('#previewChar').removeAttr('class');
-				$('<div class="msg-bad" />')
-					.html(<?= CJs::encodeJson(_('Cannot load graph preview image.')) ?>)
-					.appendTo('#previewChar');
+				$('#previewChar').removeAttr('class').append(
+				<?=
+					CJs::encodeJson(makeMessageBox(false, [['message' => _('Cannot load graph preview image.')]], null,
+						false, true)->toString()
+					)
+				?>);
 			});
 		});
 
