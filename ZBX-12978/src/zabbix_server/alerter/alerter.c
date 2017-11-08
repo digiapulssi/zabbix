@@ -340,11 +340,11 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 		/* handle /etc/resolv.conf update and log rotate less often than once a second */
 		if (1.0 < time_now - time_file)
 		{
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
 			time_file = time_now;
+			zbx_handle_log();
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
 			zbx_update_resolver_conf();
 #endif
-			zbx_handle_log();
 		}
 
 		time_read = zbx_time();
