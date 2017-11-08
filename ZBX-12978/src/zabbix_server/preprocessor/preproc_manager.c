@@ -1003,7 +1003,7 @@ ZBX_THREAD_ENTRY(preprocessing_manager_thread, args)
 	zbx_ipc_message_t		*message;
 	zbx_preprocessing_manager_t	manager;
 	int				ret;
-	double				time_stat, time_idle, time_now, time_flush, time_file;
+	double				time_stat, time_idle = 0, time_now, time_flush, time_file = 0;
 
 #define	STAT_INTERVAL	5	/* if a process is busy and does not sleep then update status not faster than */
 				/* once in STAT_INTERVAL seconds */
@@ -1030,8 +1030,6 @@ ZBX_THREAD_ENTRY(preprocessing_manager_thread, args)
 	time_stat = zbx_time();
 	time_now = time_stat;
 	time_flush = time_stat;
-	time_idle = 0;
-	time_file = 0;
 
 	zbx_setproctitle("%s #%d started", get_process_type_string(process_type), process_num);
 

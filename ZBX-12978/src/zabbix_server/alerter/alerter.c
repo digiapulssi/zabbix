@@ -280,10 +280,10 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 				/* once in STAT_INTERVAL seconds */
 
 	char			*error = NULL;
-	int			success_num, fail_num;
+	int			success_num = 0, fail_num = 0;
 	zbx_ipc_socket_t	alerter_socket;
 	zbx_ipc_message_t	message;
-	double			time_stat, time_idle, time_now, time_read, time_file;
+	double			time_stat, time_idle = 0, time_now, time_read, time_file = 0;
 
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
@@ -305,12 +305,7 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 
 	alerter_register(&alerter_socket);
 
-	/* initialize statistics */
 	time_stat = zbx_time();
-	time_idle = 0;
-	success_num = 0;
-	fail_num = 0;
-	time_file = 0;
 
 	zbx_setproctitle("%s #%d started", get_process_type_string(process_type), process_num);
 

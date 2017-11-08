@@ -168,8 +168,8 @@ ZBX_THREAD_ENTRY(ipmi_poller_thread, args)
 	char			*error = NULL;
 	zbx_ipc_socket_t	ipmi_socket;
 	zbx_ipc_message_t	message;
-	int			polled_num;
-	double			time_stat, time_idle, time_now, time_read, time_file;
+	int			polled_num = 0;
+	double			time_stat, time_idle = 0, time_now, time_read, time_file = 0;
 
 #define	STAT_INTERVAL	5	/* if a process is busy and does not sleep then update status not faster than */
 				/* once in STAT_INTERVAL seconds */
@@ -197,11 +197,7 @@ ZBX_THREAD_ENTRY(ipmi_poller_thread, args)
 
 	ipmi_poller_register(&ipmi_socket);
 
-	/* initialize statistics */
 	time_stat = zbx_time();
-	time_idle = 0;
-	polled_num = 0;
-	time_file = 0;
 
 	zbx_setproctitle("%s #%d started", get_process_type_string(process_type), process_num);
 

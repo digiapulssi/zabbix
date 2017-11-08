@@ -1851,8 +1851,9 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 	zbx_ipc_client_t	*client;
 	zbx_ipc_message_t	*message;
 	zbx_am_alerter_t	*alerter;
-	int			ret, sent_num, failed_num, now, time_db, time_watchdog, freq_watchdog, time_connect;
-	double			time_stat, time_idle, time_now, time_file;
+	int			ret, sent_num = 0, failed_num = 0, now, time_db = 0, time_watchdog = 0, freq_watchdog;
+	int			time_connect;
+	double			time_stat, time_idle = 0, time_now, time_file = 0;
 
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
@@ -1878,12 +1879,6 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 	time_stat = zbx_time();
 	time_now = time_stat;
 	time_connect = time_now;
-	time_idle = 0;
-	sent_num = 0;
-	failed_num = 0;
-	time_db = 0;
-	time_watchdog = 0;
-	time_file = 0;
 
 	if (ZBX_WATCHDOG_ALERT_FREQUENCY < (freq_watchdog = CONFIG_CONFSYNCER_FREQUENCY))
 		freq_watchdog = ZBX_WATCHDOG_ALERT_FREQUENCY;

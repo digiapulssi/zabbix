@@ -957,8 +957,8 @@ ZBX_THREAD_ENTRY(ipmi_manager_thread, args)
 	zbx_ipc_message_t	*message;
 	zbx_ipmi_manager_t	ipmi_manager;
 	zbx_ipmi_poller_t	*poller;
-	int			ret, nextcheck, timeout, nextcleanup, polled_num, scheduled_num, now;
-	double			time_stat, time_idle, time_now, time_file;
+	int			ret, nextcheck, timeout, nextcleanup, polled_num = 0, scheduled_num = 0, now;
+	double			time_stat, time_idle = 0, time_now, time_file = 0;
 
 #define	STAT_INTERVAL	5	/* if a process is busy and does not sleep then update status not faster than */
 				/* once in STAT_INTERVAL seconds */
@@ -985,12 +985,7 @@ ZBX_THREAD_ENTRY(ipmi_manager_thread, args)
 
 	nextcleanup = time(NULL) + ZBX_IPMI_MANAGER_CLEANUP_DELAY;
 
-	/* initialize statistics */
 	time_stat = zbx_time();
-	time_idle = 0;
-	polled_num = 0;
-	scheduled_num = 0;
-	time_file = 0;
 
 	zbx_setproctitle("%s #%d started", get_process_type_string(process_type), process_num);
 
