@@ -388,7 +388,7 @@
 				$('#previewChar').removeAttr('class').append(
 				<?=
 					CJs::encodeJson(makeMessageBox(false, [['message' => _('Cannot load graph preview image.')]], null,
-						false, true)->toString()
+						false)->toString()
 					)
 				?>);
 			});
