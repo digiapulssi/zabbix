@@ -30,6 +30,7 @@
 #include "ipmi_manager.h"
 #include "ipmi_protocol.h"
 #include "checks_ipmi.h"
+#include "ipmi_poller.h"
 
 #define ZBX_IPMI_MANAGER_CLEANUP_DELAY		SEC_PER_DAY
 
