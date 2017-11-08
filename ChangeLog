@@ -1,11 +1,3 @@
-Changes for 3.4.5rc1
-
-New features:
-
-Bug fixes:
-...G...... [ZBX-12544] fixed compilation warnings (valdis)
-
---------------------------------------------------------------------------------
 Changes for 3.4.4
 
 3.4.4rc1 was released as 3.4.4 without any changes
