@@ -19,7 +19,7 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.0.13rc1');
+define('ZABBIX_VERSION',		'3.0.13');
 define('ZABBIX_API_VERSION',	'3.0.13');
 define('ZABBIX_EXPORT_VERSION',	'3.0');
 define('ZABBIX_DB_VERSION',		3000000);
@@ -106,6 +106,8 @@ define('ZBX_DB_MAX_ID', '9223372036854775807');
 
 // maximum number of records for create() or update() API calls
 define('ZBX_DB_MAX_INSERTS', 10000);
+
+define('ZBX_SHOW_TECHNICAL_ERRORS', false);
 
 define('PAGE_TYPE_HTML',				0);
 define('PAGE_TYPE_IMAGE',				1);
@@ -1276,3 +1278,15 @@ ini_set('precision', 14);
 if (function_exists('bcscale')) {
 	bcscale(7);
 }
+
+// HTTP headers
+/*
+ * Value of HTTP X-Frame-options header.
+ *
+ * Supported options:
+ *  - SAMEORIGIN (string) - compatible with rfc7034.
+ *  - DENY (string) - compatible with rfc7034.
+ *  - a list (string) of comma-separated hostnames. If hostname is not between allowed, the SAMEORIGIN option is used.
+ *  - null - disable X-Frame-options header.
+ */
+define('X_FRAME_OPTIONS', 'SAMEORIGIN');
