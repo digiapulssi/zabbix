@@ -312,7 +312,7 @@ class CMaintenance extends CApiService {
 		$now -= $now % SEC_PER_MIN;
 
 		// check fields
-		foreach ($maintenances as $maintenance) {
+		foreach ($maintenances as &$maintenance) {
 			$dbFields = [
 				'name' => null,
 				'active_since' => $now,
@@ -322,7 +322,16 @@ class CMaintenance extends CApiService {
 			if (!check_db_fields($dbFields, $maintenance)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect parameters for maintenance.'));
 			}
+
+			if (!array_key_exists('active_since', $maintenance)) {
+				$maintenance['active_since'] = $now;
+			}
+
+			if (!array_key_exists('active_till', $maintenance)) {
+				$maintenance['active_till'] = $now + SEC_PER_DAY;
+			}
 		}
+		unset($maintenance);
 
 		$collectionValidator = new CCollectionValidator([
 			'uniqueField' => 'name',
