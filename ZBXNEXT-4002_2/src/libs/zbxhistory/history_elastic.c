@@ -376,13 +376,13 @@ try_again:
 
 		if (CURLM_OK != (code = curl_multi_perform(writer.handle, &running)))
 		{
-			zabbix_log(LOG_LEVEL_ERR, "cannot perform on curl multi handle");
+			zabbix_log(LOG_LEVEL_ERR, "cannot perform on curl multi handle: %s", curl_multi_strerror(code));
 			break;
 		}
 
 		if (CURLM_OK != (code = curl_multi_wait(writer.handle, NULL, 0, ZBX_HISTORY_STORAGE_DOWN, &fds)))
 		{
-			zabbix_log(LOG_LEVEL_ERR, "cannot wait on curl multi handle");
+			zabbix_log(LOG_LEVEL_ERR, "cannot wait on curl multi handle: %s", curl_multi_strerror(code));
 			break;
 		}
 
