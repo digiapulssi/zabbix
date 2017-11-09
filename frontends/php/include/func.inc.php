@@ -2233,7 +2233,7 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 				$msg_col->setAttribute('id', 'page_msg');
 				$row[] = $msg_col;
 
-				if (isset($ZBX_MESSAGES) && !empty($ZBX_MESSAGES)) {
+				if (isset($messages) && !empty($messages)) {
 					$msg_details = new CDiv(_('Details'), 'blacklink');
 					$msg_details->setAttribute('onclick', 'javascript: showHide("msg_messages", IE ? "block" : "table");');
 					$msg_details->setAttribute('title', _('Maximize').'/'._('Minimize'));
@@ -2245,9 +2245,9 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 		}
 	}
 
-	if (isset($ZBX_MESSAGES) && !empty($ZBX_MESSAGES)) {
+	if (isset($messages) && !empty($messages)) {
 		if ($page['type'] == PAGE_TYPE_IMAGE) {
-			foreach ($ZBX_MESSAGES as $msg) {
+			foreach ($messages as $msg) {
 				// save all of the messages in an array to display them later in an image
 				if ($msg['type'] == 'error') {
 					$imageMessages[] = array(
@@ -2264,18 +2264,18 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 			}
 		}
 		elseif ($page['type'] == PAGE_TYPE_XML) {
-			foreach ($ZBX_MESSAGES as $msg) {
+			foreach ($messages as $msg) {
 				echo '['.$msg['type'].'] '.$msg['message']."\n";
 			}
 		}
 		else {
 			$lst_error = new CList(null,'messages');
-			foreach ($ZBX_MESSAGES as $msg) {
+			foreach ($messages as $msg) {
 				$lst_error->addItem($msg['message'], $msg['type']);
 				$bool = ($bool && 'error' != zbx_strtolower($msg['type']));
 			}
 			$msg_show = 6;
-			$msg_count = count($ZBX_MESSAGES);
+			$msg_count = count($messages);
 			if ($msg_count > $msg_show) {
 				$msg_count = $msg_show * 16;
 				$lst_error->setAttribute('style', 'height: '.$msg_count.'px;');
@@ -2291,7 +2291,7 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 			$tab->addRow(new CCol($lst_error, 'msg'));
 			$tab->show();
 		}
-		$ZBX_MESSAGES = null;
+		$messages = null;
 	}
 
 	// draw an image with the messages
