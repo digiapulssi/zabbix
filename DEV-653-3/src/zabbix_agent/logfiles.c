@@ -2376,11 +2376,16 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	/* from now assume success - it could be that there is nothing to do */
 	ret = SUCCEED;
 
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+	{
+		int	k;
+
+		for (k = 0; k < logfiles_num - 1; k++)
+			handle_multiple_copies(logfiles, logfiles_num, k);
+	}
+
 	while (i < logfiles_num)
 	{
-		if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
-			handle_multiple_copies(logfiles, logfiles_num, i);
-
 		if (0 == logfiles[i].incomplete && (logfiles[i].size != logfiles[i].processed_size ||
 				0 == logfiles[i].seq))
 		{
@@ -2401,6 +2406,9 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 			/* the current checking. In the next check the file will be marked in the list of old files */
 			/* and we will know where we left off. */
 			logfiles[i].seq = seq++;
+
+			if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+				handle_multiple_copies(logfiles, logfiles_num, i);
 
 			if (SUCCEED != ret)
 				break;
@@ -2424,9 +2432,6 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 
 		i++;
 	}
-
-	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
-		handle_multiple_copies(logfiles, logfiles_num, 0);
 
 	/* remember the current logfile list */
 	*logfiles_num_old = logfiles_num;
