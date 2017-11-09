@@ -336,47 +336,58 @@ static int	DBpatch_3030029(void)
  ******************************************************************************/
 static int	DBpatch_3030030(void)
 {
-	int			ret = FAIL;
+	int			ret = SUCCEED;
 	DB_ROW			row;
 	DB_RESULT		result;
-	char			*sql = NULL;
-	size_t			sql_alloc = 0, sql_offset = 0;
-	zbx_uint64_t		prev_eventid = 0, curr_eventid;
+	char			*s_sql = NULL, *u_sql = NULL;
+	size_t			s_sql_alloc, s_sql_offset, u_sql_alloc, u_sql_offset;
+	zbx_uint64_t		last_upd_id, curr_id = 0;
 
-	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
-
-	result = DBselect("select eventid, r_eventid"
-			" from event_recovery"
-			" order by r_eventid, eventid desc");
-
-	while (NULL != (row = DBfetch(result)))
+	do
 	{
-		ZBX_STR2UINT64(curr_eventid, row[1]);
-		if (prev_eventid == curr_eventid)
-			continue;
+		last_upd_id = curr_id;
+		s_sql_alloc = 0;
+		s_sql_offset = 0;
 
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-				"update alerts set p_eventid=%s where eventid=%s;\n",
-				row[0], row[1]);
+		zbx_snprintf_alloc(&s_sql, &s_sql_alloc, &s_sql_offset,
+					"select r.eventid, r.r_eventid from event_recovery r"
+					" join alerts a on a.eventid=r.r_eventid where r.eventid>" ZBX_FS_UI64
+					" order by r.eventid", last_upd_id);
 
-		if (SUCCEED != DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset))
-			goto out;
+		if (NULL == (result = DBselectN(s_sql, 10000)))
+		{
+			ret = FAIL;
+			goto free;
+		}
 
-		prev_eventid = curr_eventid;
+		u_sql_alloc = 0;
+		u_sql_offset = 0;
+
+		DBbegin_multiple_update(&u_sql, &u_sql_alloc, &u_sql_offset);
+		while (NULL != (row = DBfetch(result)))
+		{
+			zbx_snprintf_alloc(&u_sql, &u_sql_alloc, &u_sql_offset,
+					"update alerts set p_eventid=%s where eventid=%s;\n",
+					row[0], row[1]);
+
+			if (SUCCEED != (ret = DBexecute_overflowed_sql(&u_sql, &u_sql_alloc, &u_sql_offset)))
+				goto free;
+
+			ZBX_STR2UINT64(curr_id, row[0]);
+		}
+		DBend_multiple_update(&u_sql, &u_sql_alloc, &u_sql_offset);
+
+		if (16 < u_sql_offset)
+		{
+			if (ZBX_DB_OK > DBexecute("%s", u_sql))
+				ret = FAIL;
+		}
+free:
+		DBfree_result(result);
+		zbx_free(u_sql);
+		zbx_free(s_sql);
 	}
-
-	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
-
-	if (16 < sql_offset)
-	{
-		if (ZBX_DB_OK > DBexecute("%s", sql))
-			goto out;
-	}
-
-	ret = SUCCEED;
-out:
-	DBfree_result(result);
-	zbx_free(sql);
+	while (last_upd_id < curr_id && SUCCEED == ret);
 
 	return ret;
 }
