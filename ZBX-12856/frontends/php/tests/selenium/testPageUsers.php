@@ -86,9 +86,10 @@ class testPageUsers extends CWebTest {
 		$this->assertEquals($oldHashMedia, DBhash($sqlHashMedia), 'Chuck Norris: User update changed data in table medias');
 	}
 
+	/**
+	 * @backup users
+	 */
 	public function testPageUsers_MassDelete() {
-		DBsave_tables('users');
-
 		$result=DBselect("select userid from users where alias not in ('guest','Admin')");
 
 		while ($user = DBfetch($result)) {
@@ -112,13 +113,12 @@ class testPageUsers extends CWebTest {
 			$sql = "select * from media where userid=$id";
 			$this->assertEquals(0, DBcount($sql), "Chuck Norris: user $id deleted but still exists in table media");
 		}
-
-		DBrestore_tables('users');
 	}
 
+	/**
+	 * @backup users
+	 */
 	public function testPageUsers_MassDeleteSpecialUsers() {
-		DBsave_tables('users');
-
 		$result = DBselect("select userid from users where alias in ('guest','Admin')");
 
 		while ($user = DBfetch($result)) {
@@ -143,7 +143,5 @@ class testPageUsers extends CWebTest {
 //			$sql = "select * from media where userid=$id";
 //			$this->assertNotEquals(0, DBcount($sql));
 		}
-
-		DBrestore_tables('users');
 	}
 }
