@@ -573,16 +573,16 @@ if ($srctbl == 'usrgrp') {
 	}
 	$userGroups = API::UserGroup()->get($options);
 	order_result($userGroups, 'name');
-
 	$parentid = $dstfld1 ? zbx_jsvalue($dstfld1) : 'null';
+	$data = [];
 
-	foreach ($userGroups as $userGroup) {
+	foreach ($userGroups as &$userGroup) {
 		$name = (new CLink($userGroup['name'], 'javascript:void(0);'))
 			->setId('spanid'.$userGroup['usrgrpid']);
 
 		if ($multiselect) {
-			$js_action = "javascript: addValue(".zbx_jsvalue($reference).', '.zbx_jsvalue($userGroup['usrgrpid']).', '.
-				$parentid.');';
+			$js_action = "javascript: addValue(".zbx_jsvalue($reference).', '.zbx_jsvalue($userGroup['usrgrpid'])
+				.', '.$parentid.');';
 		}
 		else {
 			$values = [
@@ -600,7 +600,10 @@ if ($srctbl == 'usrgrp') {
 				: null,
 			$name,
 		]);
+
+		$userGroup['id'] = $userGroup['usrgrpid'];
 	}
+	unset($userGroup);
 
 	if ($multiselect) {
 		$table->setFooter(
@@ -1684,7 +1687,7 @@ elseif ($srctbl == 'screens') {
 	$screens = API::Screen()->get([
 		'output' => ['screenid', 'name'],
 		'preservekeys' => true,
-		'editable' => ($writeonly === null) ? null: true
+		'editable' => ($writeonly !== null)
 	]);
 	order_result($screens, 'name');
 
@@ -1733,7 +1736,7 @@ elseif ($srctbl == 'screens2') {
 
 	$screens = API::Screen()->get([
 		'output' => ['screenid', 'name'],
-		'editable' => ($writeonly === null) ? null: true
+		'editable' => ($writeonly !== null)
 	]);
 	order_result($screens, 'name');
 

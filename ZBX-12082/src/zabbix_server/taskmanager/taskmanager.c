@@ -45,7 +45,7 @@ extern int		server_num, process_num;
  *                                                                            *
  ******************************************************************************/
 static void	tm_execute_task_close_problem(zbx_uint64_t taskid, zbx_uint64_t triggerid, zbx_uint64_t eventid,
-		zbx_uint64_t userid, zbx_vector_uint64_t *locked_triggerids)
+		zbx_uint64_t userid, zbx_vector_uint64_t *locked_triggerids, zbx_vector_ptr_t *trigger_diff)
 {
 	const char	*__function_name = "tm_execute_task_close_problem";
 
@@ -66,11 +66,7 @@ static void	tm_execute_task_close_problem(zbx_uint64_t taskid, zbx_uint64_t trig
 
 		if (SUCCEED == errcode)
 		{
-			zbx_vector_ptr_t	trigger_diff;
-
-			zbx_vector_ptr_create(&trigger_diff);
-
-			zbx_append_trigger_diff(&trigger_diff, triggerid, trigger.priority,
+			zbx_append_trigger_diff(trigger_diff, triggerid, trigger.priority,
 					ZBX_FLAGS_TRIGGER_DIFF_RECALCULATE_PROBLEM_COUNT, trigger.value,
 					TRIGGER_STATE_NORMAL, 0, NULL);
 
@@ -81,12 +77,9 @@ static void	tm_execute_task_close_problem(zbx_uint64_t taskid, zbx_uint64_t trig
 					trigger.recovery_expression_orig, trigger.priority, trigger.type, NULL,
 					ZBX_TRIGGER_CORRELATION_NONE, "");
 
-			process_trigger_events(&trigger_diff, locked_triggerids, ZBX_EVENTS_SKIP_CORRELATION);
-			DCconfig_triggers_apply_changes(&trigger_diff);
-			zbx_save_trigger_changes(&trigger_diff);
-
-			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
-			zbx_vector_ptr_destroy(&trigger_diff);
+			process_trigger_events(trigger_diff, locked_triggerids, ZBX_EVENTS_SKIP_CORRELATION);
+			DCconfig_triggers_apply_changes(trigger_diff);
+			zbx_save_trigger_changes(trigger_diff);
 		}
 
 		DCconfig_clean_triggers(&trigger, &errcode, 1);
@@ -117,11 +110,13 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 	int			ret = FAIL, remove_task = 0;
 	zbx_uint64_t		userid, triggerid, eventid;
 	zbx_vector_uint64_t	triggerids, locked_triggerids;
+	zbx_vector_ptr_t	trigger_diff;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() taskid:" ZBX_FS_UI64, __function_name, taskid);
 
 	zbx_vector_uint64_create(&triggerids);
 	zbx_vector_uint64_create(&locked_triggerids);
+	zbx_vector_ptr_create(&trigger_diff);
 
 	result = DBselect("select a.userid,e.eventid,e.objectid"
 				" from task_close_problem tcp"
@@ -148,7 +143,8 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 				ZBX_STR2UINT64(userid, row[0]);
 				ZBX_STR2UINT64(eventid, row[1]);
 
-				tm_execute_task_close_problem(taskid, triggerid, eventid, userid, &locked_triggerids);
+				tm_execute_task_close_problem(taskid, triggerid, eventid, userid, &locked_triggerids,
+						&trigger_diff);
 				remove_task = 1;
 
 				ret = SUCCEED;
@@ -165,9 +161,13 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 
 	DBcommit();
 
+	DBupdate_itservices(&trigger_diff);
+
 	if (0 != locked_triggerids.values_num)
 		DCconfig_unlock_triggers(&locked_triggerids);
 
+	zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
+	zbx_vector_ptr_destroy(&trigger_diff);
 	zbx_vector_uint64_destroy(&locked_triggerids);
 	zbx_vector_uint64_destroy(&triggerids);
 
@@ -259,5 +259,9 @@ ZBX_THREAD_ENTRY(taskmanager_thread, args)
 
 		zbx_setproctitle("%s [processed %d task(s) in " ZBX_FS_DBL " sec, idle %d sec]",
 				get_process_type_string(process_type), tasks_num, sec2 - sec1, sleeptime);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 }

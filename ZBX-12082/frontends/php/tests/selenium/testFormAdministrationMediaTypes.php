@@ -20,6 +20,9 @@
 
 require_once dirname(__FILE__) . '/../include/class.cwebtest.php';
 
+/**
+ * @backup media_type
+ */
 class testFormAdministrationMediaTypes extends CWebTest {
 
 	public static function allMediaTypes() {
@@ -55,10 +58,6 @@ class testFormAdministrationMediaTypes extends CWebTest {
 			]
 		];
 		return $data;
-	}
-
-	public function testFormAdministrationMediaTypes_backup() {
-		DBsave_tables('media_type');
 	}
 
 	/**
@@ -234,9 +233,5 @@ class testFormAdministrationMediaTypes extends CWebTest {
 				$this->assertEquals(0, DBcount($sql), "Chuck Norris: Media type has not been deleted from the DB");
 		}
 
-	}
-
-	public function testFormAdministrationMediaTypes_restore() {
-		DBrestore_tables('media_type');
 	}
 }

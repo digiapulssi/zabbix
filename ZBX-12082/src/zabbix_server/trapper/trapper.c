@@ -37,12 +37,18 @@
 
 #include "daemon.h"
 #include "../../libs/zbxcrypto/tls.h"
+#include "mutexs.h"
 
 #define MAX_QUEUE_DETAILS_ITEMS	501
 
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 extern size_t		(*find_psk_in_cache)(const unsigned char *, unsigned char *, size_t);
+
+static ZBX_MUTEX	proxy_lock = ZBX_MUTEX_NULL;
+
+#define	LOCK_PROXY_HISTORY	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE)) zbx_mutex_lock(&proxy_lock)
+#define	UNLOCK_PROXY_HISTORY	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE)) zbx_mutex_unlock(&proxy_lock)
 
 /******************************************************************************
  *                                                                            *
@@ -132,6 +138,8 @@ static void	send_proxyhistory(zbx_socket_t *sock, zbx_timespec_t *ts)
 		goto out1;
 	}
 
+	LOCK_PROXY_HISTORY;
+
 	zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
 
 	zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
@@ -157,6 +165,8 @@ static void	send_proxyhistory(zbx_socket_t *sock, zbx_timespec_t *ts)
 
 	ret = SUCCEED;
 out:
+	UNLOCK_PROXY_HISTORY;
+
 	if (SUCCEED != ret)
 		zabbix_log(LOG_LEVEL_WARNING, "cannot send history data to server at \"%s\": %s", sock->peer, error);
 
@@ -733,5 +743,25 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 			zabbix_log(LOG_LEVEL_WARNING, "failed to accept an incoming connection: %s",
 					zbx_socket_strerror());
 		}
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
+}
+
+void	init_proxy_history_lock(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE) &&
+			FAIL == zbx_mutex_create_force(&proxy_lock, ZBX_MUTEX_PROXY_HISTORY))
+	{
+		zbx_error("Unable to create mutex for passive proxy history");
+		exit(EXIT_FAILURE);
+	}
+}
+
+void	free_proxy_history_lock(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE))
+		zbx_mutex_destroy(&proxy_lock);
 }
