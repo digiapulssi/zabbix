@@ -322,14 +322,6 @@ class CMaintenance extends CApiService {
 			if (!check_db_fields($dbFields, $maintenance)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect parameters for maintenance.'));
 			}
-
-			if (!array_key_exists('active_since', $maintenance)) {
-				$maintenance['active_since'] = $now;
-			}
-
-			if (!array_key_exists('active_till', $maintenance)) {
-				$maintenance['active_till'] = $now + SEC_PER_DAY;
-			}
 		}
 		unset($maintenance);
 
