@@ -4,6 +4,7 @@ New features:
 ..F....... [ZBX-12809] implemented overlay dialog centering using javascript (miks)
 
 Bug fixes:
+........S. [ZBX-9567] added missing fields to webscenario data handling (valdis)
 ..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
 ........S. [ZBX-12978] improved performance of preprocessor manager, alert manager/worker, IPMI manager/poller by reducing frequency of log rotation checks that handle stdout/stderr (vso)
 ........S. [ZBX-12936] improved SQL performance by updating proxy last access in bulks (vso)
@@ -941,7 +942,7 @@ New features:
 
 Bug fixes:
 ..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
-...G...... [ZBX-10710] fixed CPU guest time utilization accounting (valdis)
+...G...... [ZBX-10710] fixed CPU guest time utilization accounting in Linux (valdis)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.13
