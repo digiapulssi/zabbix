@@ -4,6 +4,7 @@ New features:
 ..F....... [ZBX-12809] implemented overlay dialog centering using javascript (miks)
 
 Bug fixes:
+..F....... [ZBX-12082] fixed possibility to select triggers with same name in multiselect (Ivo)
 ........S. [ZBX-9567] added missing fields to webscenario data handling (valdis)
 ..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
 ........S. [ZBX-12978] improved performance of preprocessor manager, alert manager/worker, IPMI manager/poller by reducing frequency of log rotation checks that handle stdout/stderr (vso)
@@ -389,6 +390,7 @@ Changes for 3.2.11rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-12082] fixed possibility to select triggers with same name in multiselect (Ivo)
 ..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
 
 --------------------------------------------------------------------------------
