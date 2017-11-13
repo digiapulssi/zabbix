@@ -4,6 +4,14 @@ New features:
 ..F....... [ZBX-12809] implemented overlay dialog centering using javascript (miks)
 
 Bug fixes:
+..F....... [ZBX-12926] fixed translation string on administration general housekeeping page (gcalenko)
+..F....... [ZBX-12738] added missing key "vfs.dir.size" for active agent in item edit form (gcalenko)
+..F....... [ZBX-12856] fixed wrong default value for host filter when adding dependent trigger in trigger edit form (gcalenko)
+..F....... [ZBX-12082] fixed possibility to select triggers with same name in multiselect (Ivo)
+........S. [ZBX-9567] added missing fields to webscenario data handling (valdis)
+..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
+........S. [ZBX-12978] improved performance of preprocessor manager, alert manager/worker, IPMI manager/poller by reducing frequency of log rotation checks that handle stdout/stderr (vso)
+........S. [ZBX-12936] improved SQL performance by updating proxy last access in bulks (vso)
 .....J.... [ZBX-12705] added check for collisions and unsupported characters in macro names in jmx.discovery (vjaceslavs)
 ........S. [ZBX-12970] fixed processing of alerts when related event is removed (vso)
 ...G...... [ZBX-12544] fixed compilation warnings (valdis)
@@ -385,6 +393,10 @@ Changes for 3.2.11rc1
 New features:
 
 Bug fixes:
+A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
+..F....... [ZBX-12856] fixed wrong default value for host filter when adding dependent trigger in trigger edit form (gcalenko)
+..F....... [ZBX-12082] fixed possibility to select triggers with same name in multiselect (Ivo)
+..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
 
 --------------------------------------------------------------------------------
 Changes for 3.2.10
@@ -936,6 +948,11 @@ Changes for 3.0.14rc1
 New features:
 
 Bug fixes:
+A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
+..F....... [ZBX-12856] fixed wrong default value for host filter when adding dependent trigger in trigger edit form (gcalenko)
+........S. [ZBX-9567] added missing fields to webscenario data handling (valdis)
+..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
+...G...... [ZBX-10710] fixed CPU guest time utilization accounting in Linux (valdis)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.13
