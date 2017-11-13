@@ -136,7 +136,7 @@ class testPageDashboard extends CWebTest {
 		$this->zbxTestClickXpathWait("//button[@class='btn-conf']");
 		$this->zbxTestCheckTitle('Dashboard configuration');
 		$this->zbxTestAssertElementText("//span[@class='link-action red']", 'Disabled');
-		$this->assertEquals(0, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.filter.enable' AND value_int=1"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.filter.enable' AND value_int=0"));
 	}
 
 	public function testPageDashboard_Configuration() {
@@ -165,13 +165,13 @@ class testPageDashboard extends CWebTest {
 		$this->zbxTestCheckTitle('Dashboard');
 		$this->zbxTestCheckFatalErrors();
 
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.filter.enable' AND value_int=1"));
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.groups.grpswitch' AND value_int=1"));
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.hosts.maintenance' AND value_int=0"));
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.triggers.severity' AND value_str='1;2;3;4;5'"));
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.triggers.name' AND value_str='test'"));
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.events.extAck' AND value_int=2"));
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.groups.groupids' AND value_id=4"));
-		$this->assertEquals(1, DBcount("SELECT profileid FROM profiles WHERE idx='web.dashconf.groups.hide.groupids' AND value_id=5"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.filter.enable' AND value_int=1"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.groups.grpswitch' AND value_int=1"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.hosts.maintenance' AND value_int=0"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.triggers.severity' AND value_str='1;2;3;4;5'"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.triggers.name' AND value_str='test'"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.events.extAck' AND value_int=2"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.groups.groupids' AND value_id=4"));
+		$this->assertEquals(1, count("SELECT profileid FROM profiles WHERE idx='web.dashconf.groups.hide.groupids' AND value_id=5"));
 	}
 }

@@ -84,10 +84,13 @@ class testPageSlideShows extends CWebTest {
 		$this->zbxTestTextPresent('Slide shows');
 	}
 
+	public function testPageSlideShows_backup() {
+		DBsave_tables('slideshows');
+	}
+
 	/**
-	 * @dataProvider allSlideShows
-	 * @backup-once slideshows
-	 */
+	* @dataProvider allSlideShows
+	*/
 	public function testPageSlideShows_MassDelete($slideshow) {
 		$slideshowid = $slideshow['slideshowid'];
 		$name = $slideshow['name'];
@@ -107,4 +110,9 @@ class testPageSlideShows extends CWebTest {
 		$sql = "select * from slides where slideshowid=$slideshowid";
 		$this->assertEquals(0, DBcount($sql));
 	}
+
+	public function testPageSlideShows_restore() {
+		DBrestore_tables('slideshows');
+	}
+
 }

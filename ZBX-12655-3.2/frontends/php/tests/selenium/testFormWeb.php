@@ -21,9 +21,6 @@
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 require_once dirname(__FILE__).'/../../include/items.inc.php';
 
-/**
- * @backup httptest
- */
 class testFormWeb extends CWebTest {
 
 	/**
@@ -46,6 +43,10 @@ class testFormWeb extends CWebTest {
 	 * @var int
 	 */
 	protected $hostid = 40001;
+
+	public function testFormWeb_backup() {
+		DBsave_tables('httptest');
+	}
 
 	// Returns layout data
 	public static function layout() {
@@ -1477,7 +1478,7 @@ class testFormWeb extends CWebTest {
 			$this->zbxTestTabSwitchById('tab_stepTab' ,'Steps');
 			foreach($data['add_step'] as $item) {
 				$this->zbxTestClickWait('add_step');
-				$this->zbxTestSwitchToWindow('zbx_popup');
+				$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
 				$this->zbxTestCheckFatalErrors();
 				$step = $item['step']." step";
 				$this->zbxTestInputTypeWait('name',$step);
@@ -1524,7 +1525,6 @@ class testFormWeb extends CWebTest {
 				$httptestid = $row['httptestid'];
 			}
 		}
-
 		if (isset($data['formCheck'])) {
 			if (isset ($data['dbName'])) {
 				$dbName = $data['dbName'];
@@ -1577,5 +1577,9 @@ class testFormWeb extends CWebTest {
 				"step.httptestid = test.httptestid ".
 				"WHERE test.name = '".$name."' AND step.name = '".$step."'"));
 		}
+	}
+
+	public function testFormWeb_restore() {
+		DBrestore_tables('httptest');
 	}
 }

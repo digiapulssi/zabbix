@@ -23,10 +23,11 @@ require_once dirname(__FILE__) . '/../include/class.cwebtest.php';
 define('ACTION_GOOD', 0);
 define('ACTION_BAD', 1);
 
-/**
- * @backup actions
- */
 class testFormAction extends CWebTest {
+
+	public function testFormAction_Setup() {
+		DBsave_tables('actions');
+	}
 
 	public static function layout() {
 		return [
@@ -437,6 +438,7 @@ class testFormAction extends CWebTest {
 			]
 		];
 	}
+
 
 	/**
 	 * @dataProvider layout
@@ -1326,7 +1328,7 @@ class testFormAction extends CWebTest {
 		if ($new_operation_opcommand_type != null) {
 			$this->zbxTestTextPresent ('Type');
 			$this->zbxTestAssertVisibleXpath('//select[@id=\'new_operation_opcommand_type\']');
-			$this->zbxTestDropdownAssertSelected('new_operation[opcommand][type]', $new_operation_opcommand_type);
+			$this->zbxTestDropdownAssertSelected('new_operation[opcommand][type]', 'Custom script');
 			$this->zbxTestDropdownHasOptions('new_operation_opcommand_type', [
 					'IPMI',
 					'Custom script',
@@ -1395,9 +1397,7 @@ class testFormAction extends CWebTest {
 						'Password',
 						'Public key'
 				]);
-				$this->zbxTestDropdownAssertSelected('new_operation[opcommand][authtype]',
-						$new_operation_opcommand_authtype
-				);
+				$this->zbxTestDropdownAssertSelected('new_operation[opcommand][authtype]', 'Password');
 				break;
 			case 'IPMI':
 			case 'Custom script':
@@ -1900,7 +1900,7 @@ class testFormAction extends CWebTest {
 				switch ($operation['type']) {
 					case 'Send message':
 						$this->zbxTestClickXpathWait('//tr[@id="opmsgUsrgrpListFooter"]//button');
-						$this->zbxTestSwitchToWindow('zbx_popup');
+						$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
 						$this->zbxTestClickWait('all_usrgrps');
 						$this->zbxTestClick('select');
 						$this->zbxTestWaitWindowClose();
@@ -2076,5 +2076,9 @@ class testFormAction extends CWebTest {
 
 		$sql = "SELECT actionid FROM actions WHERE name='action test'";
 		$this->assertEquals(1, DBcount($sql), 'Action has not been created in the DB.');
+	}
+
+	public function testFormAction_Teardown() {
+		DBrestore_tables('actions');
 	}
 }

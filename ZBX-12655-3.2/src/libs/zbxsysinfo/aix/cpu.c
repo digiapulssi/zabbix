@@ -25,9 +25,8 @@
 int	SYSTEM_CPU_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 #ifdef HAVE_LIBPERFSTAT
-	char				*tmp;
-	perfstat_partition_config_t	part_cfg;
-	int				rc;
+	char			*tmp;
+	perfstat_cpu_total_t	ps_cpu_total;
 
 	if (1 < request->nparam)
 	{
@@ -44,15 +43,13 @@ int	SYSTEM_CPU_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	rc = perfstat_partition_config(NULL, &part_cfg, sizeof(perfstat_partition_config_t), 1);
-
-	if (1 != rc)
+	if (-1 == perfstat_cpu_total(NULL, &ps_cpu_total, sizeof(ps_cpu_total), 1))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot obtain system information: %s", zbx_strerror(errno)));
 		return SYSINFO_RET_FAIL;
 	}
 
-	SET_UI64_RESULT(result, part_cfg.lcpus);
+	SET_UI64_RESULT(result, ps_cpu_total.ncpus);
 
 	return SYSINFO_RET_OK;
 #else

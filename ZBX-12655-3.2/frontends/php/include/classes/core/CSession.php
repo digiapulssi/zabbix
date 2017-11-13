@@ -133,13 +133,7 @@ class CSession {
 	 * Open session for writing
 	 */
 	private static function open() {
-		static $options = [];
-
-		session_start($options);
-
-		if (!$options) {
-			$options = ['use_cookies' => 0];
-		}
+		session_start();
 	}
 
 	/**

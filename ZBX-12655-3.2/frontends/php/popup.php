@@ -1133,13 +1133,12 @@ elseif ($srctbl === 'triggers' || $srctbl === 'trigger_prototypes') {
 		$trigger['hostname'] = $host['name'];
 
 		$description = new CLink($trigger['description'], 'javascript:void(0);');
+		$trigger['description'] = $trigger['hostname'].NAME_DELIMITER.$trigger['description'];
 
 		if ($multiselect) {
 			$js_action = 'addValue('.zbx_jsvalue($reference).', '.zbx_jsvalue($trigger['triggerid']).', '.$parentId.');';
 		}
 		else {
-			$trigger['description'] = $trigger['hostname'].NAME_DELIMITER.$trigger['description'];
-
 			$values = [
 				$dstfld1 => $trigger[$srcfld1],
 				$dstfld2 => $trigger[$srcfld2]
@@ -1180,7 +1179,6 @@ elseif ($srctbl === 'triggers' || $srctbl === 'trigger_prototypes') {
 			$jsTriggers[$trigger['triggerid']] = [
 				'id' => $trigger['triggerid'],
 				'name' => $trigger['description'],
-				'prefix' => $trigger['hostname'].NAME_DELIMITER,
 				'triggerid' => $trigger['triggerid'],
 				'description' => $trigger['description'],
 				'expression' => $trigger['expression'],

@@ -20,9 +20,6 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
-/**
- * @backup globalmacro
- */
 class testFormAdministrationGeneralMacro extends CWebTest {
 	private $macroSize = 20;
 	private $macroMaxLength = 255;
@@ -125,6 +122,10 @@ class testFormAdministrationGeneralMacro extends CWebTest {
 			['{$$MACRO}'],
 			['{$MACRO$}']
 		];
+	}
+
+	public function testFormAdministrationGeneralMacros_backup() {
+		DBsave_tables('globalmacro');
 	}
 
 	public function testFormAdministrationGeneralMacros_CheckLayout() {
@@ -567,5 +568,9 @@ class testFormAdministrationGeneralMacro extends CWebTest {
 		$this->checkGlobalMacrosOrder();
 
 		$this->verifyHash();
+	}
+
+	public function testFormAdministrationGeneralMacros_restore() {
+		DBrestore_tables('globalmacro');
 	}
 }

@@ -22,8 +22,6 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
 /**
  * Test the creation of inheritance of new objects on a previously linked template.
- *
- * @backup triggers
  */
 class testInheritanceTriggerPrototype extends CWebTest {
 
@@ -35,6 +33,10 @@ class testInheritanceTriggerPrototype extends CWebTest {
 
 	private $discoveryRuleId = 15011;	// 'testInheritanceDiscoveryRule'
 	private $discoveryRule = 'testInheritanceDiscoveryRule';
+
+	public function testInheritanceTriggerPrototype_backup() {
+		DBsave_tables('triggers');
+	}
 
 	// Returns update data
 	public static function update() {
@@ -120,5 +122,12 @@ class testInheritanceTriggerPrototype extends CWebTest {
 				$this->zbxTestTextPresent($data['errors']);
 				break;
 		}
+	}
+
+	/**
+	 * Restore the original tables.
+	 */
+	public function testInheritanceTriggerPrototype_restore() {
+		DBrestore_tables('triggers');
 	}
 }

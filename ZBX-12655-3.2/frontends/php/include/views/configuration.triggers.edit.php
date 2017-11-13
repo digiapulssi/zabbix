@@ -113,10 +113,6 @@ $expression_row = [
 			'return PopUp("popup_trexpr.php?dstfrm='.$triggersForm->getName().
 				'&dstfld1='.$data['expression_field_name'].'&srctbl='.$data['expression_field_name'].
 				'&srcfld1='.$data['expression_field_name'].
-				(($data['groupid'] && $data['hostid'])
-					? '&groupid='.$data['groupid'].'&hostid='.$data['hostid']
-					: ''
-				).
 				'&expression="+encodeURIComponent(jQuery(\'[name="'.$data['expression_field_name'].'"]\').val()));'
 		)
 		->setEnabled(!$readonly)
@@ -304,10 +300,6 @@ $recovery_expression_row = [
 			'return PopUp("popup_trexpr.php?dstfrm='.$triggersForm->getName().
 				'&dstfld1='.$data['recovery_expression_field_name'].
 				'&srctbl='.$data['recovery_expression_field_name'].'&srcfld1='.$data['recovery_expression_field_name'].
-				(($data['groupid'] && $data['hostid'])
-					? '&groupid='.$data['groupid'].'&hostid='.$data['hostid']
-					: ''
-				).
 				'&expression="+encodeURIComponent(jQuery(\'[name="'.$data['recovery_expression_field_name'].
 				'"]\').val()));'
 		)
@@ -602,7 +594,7 @@ $dependenciesFormList->addRow(_('Dependencies'),
 			? null
 			: (new CButton('bnt1', _('Add')))
 				->onClick('return PopUp("popup.php?srctbl=triggers&srcfld1=triggerid&reference=deptrigger'.
-					'&hostid='.$data['hostid'].'&groupid='.$data['groupid'].'&multiselect=1&with_triggers=1&noempty=1");'
+					'&multiselect=1&with_triggers=1&noempty=1");'
 				)
 				->addClass(ZBX_STYLE_BTN_LINK)
 	]))

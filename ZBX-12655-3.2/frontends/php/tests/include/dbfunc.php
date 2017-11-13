@@ -35,10 +35,8 @@ require_once dirname(__FILE__).'/../../include/classes/db/PostgresqlDbBackend.ph
 /**
  * Returns database data suitable for PHPUnit data provider functions
  */
-function DBdata($sql, $make_connection = true) {
-	if ($make_connection) {
-		DBconnect($error);
-	}
+function DBdata($sql) {
+	DBconnect($error);
 
 	$data = [];
 
@@ -46,10 +44,7 @@ function DBdata($sql, $make_connection = true) {
 	while ($row = DBfetch($result)) {
 		$data[] = [$row];
 	}
-
-	if ($make_connection) {
-		DBclose();
-	}
+	DBclose();
 
 	return $data;
 }
@@ -187,10 +182,6 @@ function DBcount($sql, $limit = null, $offset = null) {
 	}
 	else {
 		$result = DBselect($sql);
-	}
-
-	if ($result === false) {
-		return -1;
 	}
 
 	while (DBfetch($result)) {

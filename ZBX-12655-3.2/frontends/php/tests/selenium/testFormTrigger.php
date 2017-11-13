@@ -20,9 +20,6 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
-/**
- * @backup triggers
- */
 class testFormTrigger extends CWebTest {
 
 	/**
@@ -167,6 +164,13 @@ class testFormTrigger extends CWebTest {
 				]
 			]
 		];
+	}
+
+	/**
+	 * Backup the tables that will be modified during the tests.
+	 */
+	public function testFormTrigger_Setup() {
+		DBsave_tables('triggers');
 	}
 
 	/**
@@ -944,5 +948,12 @@ class testFormTrigger extends CWebTest {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Restore the original tables.
+	 */
+	public function testFormTrigger_Teardown() {
+		DBrestore_tables('triggers');
 	}
 }

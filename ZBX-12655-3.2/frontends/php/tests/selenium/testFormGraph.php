@@ -21,9 +21,6 @@
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 require_once dirname(__FILE__).'/../../include/items.inc.php';
 
-/**
- * @backup graphs
- */
 class testFormGraph extends CWebTest {
 
 	/**
@@ -46,6 +43,14 @@ class testFormGraph extends CWebTest {
 	 * @var string
 	 */
 	protected $itemInheritance = 'itemInheritance';
+
+	/**
+	 * Backup the tables that will be modified during the tests.
+	 */
+	public function testFormGraph_Setup() {
+		DBsave_tables('graphs');
+	}
+
 
 	// Returns layout data
 	public static function layout() {
@@ -937,7 +942,7 @@ class testFormGraph extends CWebTest {
 
 		if (isset($data['ymax_name'])) {
 			$this->zbxTestClickWait('yaxis_max');
-			$this->zbxTestSwitchToWindow('zbx_popup_item');
+			$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup_item');
 
 			$this->zbxTestWaitUntilElementVisible(WebDriverBy::id('groupid'));
 			$this->zbxTestDropdownSelect('groupid', 'Zabbix servers');
@@ -987,5 +992,12 @@ class testFormGraph extends CWebTest {
 			$this->zbxTestAssertElementValue('width', $width);
 			$this->zbxTestAssertElementValue('height', $height);
 		}
+	}
+
+	/**
+	 * Restore the original tables.
+	 */
+	public function testFormGraph_Teardown() {
+		DBrestore_tables('graphs');
 	}
 }

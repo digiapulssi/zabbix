@@ -650,9 +650,7 @@ $fields = [
 	'value' =>				[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({insert})'],
 	// action
 	'insert' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
-	'cancel' =>				[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
-	'hostid' =>				[T_ZBX_INT, O_OPT, null,	null,		null],
-	'groupid' =>			[T_ZBX_INT, O_OPT, null,	null,		null]
+	'cancel' =>				[T_ZBX_STR, O_OPT, P_SYS,	null,		null]
 ];
 check_fields($fields);
 
@@ -800,9 +798,7 @@ $data = [
 	'selectedFunction' => null,
 	'expr_type' => $exprType,
 	'insert' => getRequest('insert'),
-	'cancel' => getRequest('cancel'),
-	'groupid' => getRequest('groupid'),
-	'hostid' => getRequest('hostid')
+	'cancel' => getRequest('cancel')
 ];
 
 // check if submitted function is usable with selected item

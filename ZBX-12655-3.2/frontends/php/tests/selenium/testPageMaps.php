@@ -109,11 +109,12 @@ class testPageMaps extends CWebTest {
 	}
 
 	/**
-	 * @dataProvider allMaps
-	 * @backup sysmaps
-	 */
+	* @dataProvider allMaps
+	*/
 	public function testPageMaps_MassDelete($map) {
 		$sysmapid = $map['sysmapid'];
+
+		DBsave_tables('sysmaps');
 
 		$this->zbxTestLogin('sysmaps.php');
 		$this->zbxTestCheckTitle('Configuration of network maps');
@@ -134,6 +135,8 @@ class testPageMaps extends CWebTest {
 		$this->assertEquals(0, DBcount($sql), 'Data from sysmaps_link_triggers table was not deleted');
 		$sql = "select * from screens_items where resourcetype=".SCREEN_RESOURCE_MAP." and resourceid=$sysmapid;";
 		$this->assertEquals(0, DBcount($sql), 'Data from screens_items table was not deleted');
+
+		DBrestore_tables('sysmaps');
 	}
 
 	public function testPageMaps_Create() {

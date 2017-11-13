@@ -119,15 +119,12 @@ static int	zbx_get_cpu_num()
 	return ncpu;
 #elif defined(HAVE_LIBPERFSTAT)
 	/* AIX 6.1 */
-	perfstat_partition_config_t	part_cfg;
-	int				rc;
+	perfstat_cpu_total_t	ps_cpu_total;
 
-	rc = perfstat_partition_config(NULL, &part_cfg, sizeof(perfstat_partition_config_t), 1);
-
-	if (1 != rc)
+	if (-1 == perfstat_cpu_total(NULL, &ps_cpu_total, sizeof(ps_cpu_total), 1))
 		goto return_one;
 
-	return (int)part_cfg.lcpus;
+	return (int)ps_cpu_total.ncpus;
 #endif
 
 #ifndef _WINDOWS

@@ -206,10 +206,6 @@ function DBconnect(&$error) {
 		$DB['DB'] = null;
 	}
 
-	if (!$result && !ZBX_SHOW_TECHNICAL_ERRORS) {
-		$error = _('System error occurred. Please contact Zabbix administrator.');
-	}
-
 	return $result;
 }
 
@@ -406,22 +402,22 @@ function DBselect($query, $limit = null, $offset = 0) {
 	switch ($DB['TYPE']) {
 		case ZBX_DB_MYSQL:
 			if (!$result = mysqli_query($DB['DB'], $query)) {
-				error('Error in query ['.$query.'] ['.mysqli_error($DB['DB']).']', 'sql');
+				error('Error in query ['.$query.'] ['.mysqli_error($DB['DB']).']');
 			}
 			break;
 		case ZBX_DB_POSTGRESQL:
 			if (!$result = pg_query($DB['DB'], $query)) {
-				error('Error in query ['.$query.'] ['.pg_last_error().']', 'sql');
+				error('Error in query ['.$query.'] ['.pg_last_error().']');
 			}
 			break;
 		case ZBX_DB_ORACLE:
 			if (!$result = oci_parse($DB['DB'], $query)) {
 				$e = @oci_error();
-				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']', 'sql');
+				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']');
 			}
 			elseif (!@oci_execute($result, ($DB['TRANSACTIONS'] ? OCI_DEFAULT : OCI_COMMIT_ON_SUCCESS))) {
 				$e = oci_error($result);
-				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']', 'sql');
+				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']');
 			}
 			break;
 		case ZBX_DB_DB2:
@@ -432,11 +428,11 @@ function DBselect($query, $limit = null, $offset = 0) {
 
 			if (!$result = db2_prepare($DB['DB'], $query)) {
 				$e = @db2_stmt_errormsg($result);
-				error('SQL error ['.$query.'] in ['.$e.']', 'sql');
+				error('SQL error ['.$query.'] in ['.$e.']');
 			}
 			elseif (true !== @db2_execute($result, $options)) {
 				$e = @db2_stmt_errormsg($result);
-				error('SQL error ['.$query.'] in ['.$e.']', 'sql');
+				error('SQL error ['.$query.'] in ['.$e.']');
 				$result = false;
 			}
 			break;
@@ -445,9 +441,7 @@ function DBselect($query, $limit = null, $offset = 0) {
 				lock_sqlite3_access();
 			}
 			if (false === ($result = $DB['DB']->query($query))) {
-				$msg = 'Error in query ['.$query.'] Error code ['.$DB['DB']->lastErrorCode().'] Message ['.
-						$DB['DB']->lastErrorMsg().']';
-				error($msg, 'sql');
+				error('Error in query ['.$query.'] Error code ['.$DB['DB']->lastErrorCode().'] Message ['.$DB['DB']->lastErrorMsg().']');
 			}
 			if ($DB['TRANSACTIONS'] == 0) {
 				unlock_sqlite3_access();
@@ -494,7 +488,7 @@ function DBaddLimit($query, $limit = 0, $offset = 0) {
 
 	if ((isset($limit) && ($limit < 0 || !zbx_ctype_digit($limit))) || $offset < 0 || !zbx_ctype_digit($offset)) {
 		$moreDetails = isset($limit) ? ' Limit ['.$limit.'] Offset ['.$offset.']' : ' Offset ['.$offset.']';
-		error('Incorrect parameters for limit and/or offset. Query ['.$query.']'.$moreDetails, 'sql');
+		error('Incorrect parameters for limit and/or offset. Query ['.$query.']'.$moreDetails);
 
 		return false;
 	}
@@ -533,22 +527,22 @@ function DBexecute($query, $skip_error_messages = 0) {
 	switch ($DB['TYPE']) {
 		case ZBX_DB_MYSQL:
 			if (!$result = mysqli_query($DB['DB'], $query)) {
-				error('Error in query ['.$query.'] ['.mysqli_error($DB['DB']).']', 'sql');
+				error('Error in query ['.$query.'] ['.mysqli_error($DB['DB']).']');
 			}
 			break;
 		case ZBX_DB_POSTGRESQL:
 			if (!$result = (bool) pg_query($DB['DB'], $query)) {
-				error('Error in query ['.$query.'] ['.pg_last_error().']', 'sql');
+				error('Error in query ['.$query.'] ['.pg_last_error().']');
 			}
 			break;
 		case ZBX_DB_ORACLE:
 			if (!$result = oci_parse($DB['DB'], $query)) {
 				$e = @oci_error();
-				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']', 'sql');
+				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']');
 			}
 			elseif (!@oci_execute($result, ($DB['TRANSACTIONS'] ? OCI_DEFAULT : OCI_COMMIT_ON_SUCCESS))) {
 				$e = oci_error($result);
-				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']', 'sql');
+				error('SQL error ['.$e['message'].'] in ['.$e['sqltext'].']');
 			}
 			else {
 				$result = true; // function must return boolean
@@ -557,11 +551,11 @@ function DBexecute($query, $skip_error_messages = 0) {
 		case ZBX_DB_DB2:
 			if (!$result = db2_prepare($DB['DB'], $query)) {
 				$e = @db2_stmt_errormsg($result);
-				error('SQL error ['.$query.'] in ['.$e.']', 'sql');
+				error('SQL error ['.$query.'] in ['.$e.']');
 			}
 			elseif (true !== @db2_execute($result)) {
 				$e = @db2_stmt_errormsg($result);
-				error('SQL error ['.$query.'] in ['.$e.']', 'sql');
+				error('SQL error ['.$query.'] in ['.$e.']');
 			}
 			else {
 				$result = true; // function must return boolean
@@ -572,9 +566,7 @@ function DBexecute($query, $skip_error_messages = 0) {
 				lock_sqlite3_access();
 			}
 			if (!$result = $DB['DB']->exec($query)) {
-				$msg = 'Error in query ['.$query.'] Error code ['.$DB['DB']->lastErrorCode().'] Message ['.
-						$DB['DB']->lastErrorMsg().']';
-				error($msg, 'sql');
+				error('Error in query ['.$query.'] Error code ['.$DB['DB']->lastErrorCode().'] Message ['.$DB['DB']->lastErrorMsg().']');
 			}
 			if ($DB['TRANSACTIONS'] == 0) {
 				unlock_sqlite3_access();

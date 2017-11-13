@@ -431,14 +431,14 @@ elseif (isset($_REQUEST['form'])) {
 else {
 	// services
 	$services = API::Service()->get([
-		'output' => ['name', 'serviceid', 'algorithm', 'sortorder'],
+		'output' => ['name', 'serviceid', 'algorithm'],
 		'selectParent' => ['serviceid'],
 		'selectDependencies' => ['servicedownid', 'soft', 'linkid'],
 		'selectTrigger' => ['description'],
-		'preservekeys' => true
+		'preservekeys' => true,
+		'sortfield' => 'sortorder',
+		'sortorder' => ZBX_SORT_UP
 	]);
-
-	sortServices($services);
 
 	$treeData = [];
 	createServiceConfigurationTree($services, $treeData);

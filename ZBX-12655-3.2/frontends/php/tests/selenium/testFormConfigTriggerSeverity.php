@@ -20,9 +20,6 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
-/**
- * @backup config
- */
 class testFormConfigTriggerSeverity extends CWebTest {
 	// Data provider
 	public static function providerTriggerSeverity() {
@@ -145,6 +142,10 @@ class testFormConfigTriggerSeverity extends CWebTest {
 		$this->zbxTestAssertVisibleXpath('//div[@class="color-picker"]');
 	}
 
+	public function testFormTriggerSeverity_backup() {
+		DBsave_tables('config');
+	}
+
 	/**
 	 * @dataProvider providerTriggerSeverity
 	 */
@@ -178,4 +179,9 @@ class testFormConfigTriggerSeverity extends CWebTest {
 		}
 
 	}
+
+	public function testFormTriggerSeverity_restore() {
+		DBrestore_tables('config');
+	}
+
 }

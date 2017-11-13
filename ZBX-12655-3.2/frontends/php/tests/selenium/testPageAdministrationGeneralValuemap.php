@@ -22,27 +22,33 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
 class testPageAdministrationGeneralValuemap extends CWebTest {
 
-	public function testPageAdministrationGeneralValuemap_CheckLayout() {
+	public static function allValuemaps() {
+		return DBdata('select * from valuemaps');
+	}
+
+	/**
+	* @dataProvider allValuemaps
+	*/
+	public function testPageAdministrationGeneralValuemap_CheckLayout($valuemap) {
 		$this->zbxTestLogin('adm.valuemapping.php');
 		$this->zbxTestCheckTitle('Configuration of value mapping');
 		$this->zbxTestCheckHeader('Value mapping');
 		$this->zbxTestTextPresent(['Name', 'Value map']);
 		$this->zbxTestAssertElementPresentId('form');
+		$this->zbxTestTextPresent($valuemap['name']);
 
-		$strings = [];
-
-		foreach (DBdata('select name,valuemapid from valuemaps', false) as $valuemap) {
-			$strings[] = $valuemap[0]['name'];
+		// checking that in the "Value map" column are correct values
+		$sqlMappings = 'SELECT value,newvalue FROM mappings WHERE valuemapid='.$valuemap['valuemapid'];
+		$result = DBselect($sqlMappings);
+		while ($row = DBfetch($result)) {
+			$this->zbxTestTextPresent($row['value'].' ⇒ '.$row['newvalue']);
 		}
-
-		foreach (DBdata('SELECT value,newvalue FROM mappings', false) as $mapping) {
-			$strings[] = $mapping[0]['value'].' ⇒ '.$mapping[0]['newvalue'];
-		}
-
-		$this->zbxTestTextPresent($strings);
 	}
 
-	public function testPageAdministrationGeneralValuemap_SimpleUpdate() {
+	/**
+	* @dataProvider allValuemaps
+	*/
+	public function testPageAdministrationGeneralValuemap_SimpleUpdate($valuemap) {
 		$sqlValuemaps = 'select * from valuemaps order by valuemapid';
 		$oldHashValuemap = DBhash($sqlValuemaps);
 
@@ -50,19 +56,16 @@ class testPageAdministrationGeneralValuemap extends CWebTest {
 		$oldHashMappings = DBhash($sqlMappings);
 
 		$this->zbxTestLogin('adm.valuemapping.php');
-
-		// There is no need to check simple update of every valuemap.
-		foreach (DBdata('select name from valuemaps limit 10', false) as $valuemap) {
-			$valuemap = $valuemap[0];
-			$this->zbxTestClickLinkText($valuemap['name']);
-			$this->zbxTestClickWait('update');
-			$this->zbxTestTextPresent('Value map updated');
-		}
+		$this->zbxTestClickLinkText($valuemap['name']);
+		$this->zbxTestClickWait('update');
+		$this->zbxTestTextPresent('Value map updated');
 
 		$newHashValuemap = DBhash($sqlValuemaps);
-		$this->assertEquals($oldHashValuemap, $newHashValuemap);
+		$this->assertEquals($oldHashValuemap, $newHashValuemap,
+				"Chuck Norris: no-change valuemap update should not update data in table 'valuemaps'");
 
 		$newHashMappings = DBhash($sqlMappings);
-		$this->assertEquals($oldHashMappings, $newHashMappings);
+		$this->assertEquals($oldHashMappings, $newHashMappings,
+				"Chuck Norris: no-change valuemap update should not update data in table 'mappings'");
 	}
 }

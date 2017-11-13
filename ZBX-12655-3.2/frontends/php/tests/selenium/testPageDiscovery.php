@@ -59,10 +59,11 @@ class testPageDiscovery extends CWebTest {
 	}
 
 	/**
-	 * @dataProvider allRules
-	 * @backup drules
-	 */
+	* @dataProvider allRules
+	*/
 	public function testPageDiscovery_MassDelete($drule) {
+		DBsave_tables('drules');
+
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestCheckTitle('Configuration of discovery rules');
 		$this->zbxTestCheckboxSelect('g_druleid_'.$drule['druleid']);
@@ -74,6 +75,8 @@ class testPageDiscovery extends CWebTest {
 
 		$this->assertEquals(0, DBcount('SELECT * FROM drules WHERE druleid='.$drule['druleid']));
 		$this->assertEquals(0, DBcount('SELECT * FROM dchecks WHERE druleid='.$drule['druleid']));
+
+		DBrestore_tables('drules');
 	}
 
 	public function testPageDiscovery_MassDisableAll() {
@@ -151,4 +154,5 @@ class testPageDiscovery extends CWebTest {
 				' AND status='.DRULE_STATUS_ACTIVE
 		));
 	}
+
 }

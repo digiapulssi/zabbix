@@ -92,7 +92,7 @@ function getLocales() {
  * @return array a list of possible locale names
  */
 function zbx_locale_variants($language) {
-	if (strtolower(substr(PHP_OS, 0, 3)) === 'win') {
+	if ((stristr($_SERVER['SERVER_SOFTWARE'], 'win32') !== false) || (stristr($_SERVER['SERVER_SOFTWARE'], 'win64') !== false)) {
 		return zbx_locale_variants_win($language);
 	}
 	else {
