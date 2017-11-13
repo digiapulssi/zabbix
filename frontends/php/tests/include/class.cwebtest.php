@@ -599,7 +599,7 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 
 	public function zbxTestAcceptAlert() {
 		$this->webDriver->wait(10, self::WAIT_ITERATION)->until(WebDriverExpectedCondition::alertIsPresent());
-		$this->zbxTestAcceptAlert();
+		$this->webDriver->switchTo()->alert()->accept();
 		$this->zbxTestWaitForPageToLoad();
 	}
 
