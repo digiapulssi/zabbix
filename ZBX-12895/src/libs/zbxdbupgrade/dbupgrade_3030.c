@@ -336,58 +336,61 @@ static int	DBpatch_3030029(void)
  ******************************************************************************/
 static int	DBpatch_3030030(void)
 {
-	int			ret = SUCCEED;
-	DB_ROW			row;
-	DB_RESULT		result;
-	char			*s_sql = NULL, *u_sql = NULL;
-	size_t			s_sql_alloc, s_sql_offset, u_sql_alloc, u_sql_offset;
-	zbx_uint64_t		last_upd_id, curr_id = 0;
+	int		ret = SUCCEED;
+	DB_ROW		row;
+	DB_RESULT	result;
+	char		*sql = NULL;
+	size_t		sql_alloc = 0, sql_offset;
+	zbx_uint64_t	last_eventid, eventid = 0;
 
 	do
 	{
-		last_upd_id = curr_id;
-		s_sql_alloc = 0;
-		s_sql_offset = 0;
+		last_eventid = eventid;
 
-		zbx_snprintf_alloc(&s_sql, &s_sql_alloc, &s_sql_offset,
-					"select r.eventid, r.r_eventid from event_recovery r"
-					" join alerts a on a.eventid=r.r_eventid where r.eventid>" ZBX_FS_UI64
-					" order by r.eventid", last_upd_id);
+		sql_offset = 0;
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+					"select e.eventid, e.r_eventid"
+					" from event_recovery e"
+						" join alerts a"
+							" on a.eventid=e.r_eventid"
+					" where e.eventid>" ZBX_FS_UI64
+					" order by e.eventid",
+					last_eventid);
 
-		if (NULL == (result = DBselectN(s_sql, 10000)))
+		if (NULL == (result = DBselectN(sql, 10000)))
 		{
 			ret = FAIL;
-			goto free;
+			break;
 		}
 
-		u_sql_alloc = 0;
-		u_sql_offset = 0;
+		sql_offset = 0;
+		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
-		DBbegin_multiple_update(&u_sql, &u_sql_alloc, &u_sql_offset);
 		while (NULL != (row = DBfetch(result)))
 		{
-			zbx_snprintf_alloc(&u_sql, &u_sql_alloc, &u_sql_offset,
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 					"update alerts set p_eventid=%s where eventid=%s;\n",
 					row[0], row[1]);
 
-			if (SUCCEED != (ret = DBexecute_overflowed_sql(&u_sql, &u_sql_alloc, &u_sql_offset)))
+			if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
 				goto free;
 
-			ZBX_STR2UINT64(curr_id, row[0]);
+			ZBX_STR2UINT64(eventid, row[0]);
 		}
-		DBend_multiple_update(&u_sql, &u_sql_alloc, &u_sql_offset);
 
-		if (16 < u_sql_offset)
+		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+		if (16 < sql_offset)
 		{
-			if (ZBX_DB_OK > DBexecute("%s", u_sql))
+			if (ZBX_DB_OK > DBexecute("%s", sql))
 				ret = FAIL;
 		}
 free:
 		DBfree_result(result);
-		zbx_free(u_sql);
-		zbx_free(s_sql);
 	}
-	while (last_upd_id < curr_id && SUCCEED == ret);
+	while (last_eventid < eventid && SUCCEED == ret);
+
+	zbx_free(sql);
 
 	return ret;
 }
