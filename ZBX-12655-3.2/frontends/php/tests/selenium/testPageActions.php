@@ -308,13 +308,10 @@ class testPageActions extends CWebTest {
 		$this->assertEquals($this->oldHashAction, DBhash($this->sqlHashAction));
 	}
 
-	public function testPageActions_Backup() {
-		DBsave_tables('actions');
-	}
-
 	/**
-	* @dataProvider allActions
-	*/
+	 * @dataProvider allActions
+	 * @backup-once actions
+	 */
 	public function testPageActions_MassDelete($action) {
 		$this->sqlHashAction = 'SELECT * FROM actions WHERE actionid<>'.$action['actionid'].' ORDER BY actionid';
 		$this->oldHashAction = DBhash($this->sqlHashAction);
@@ -334,9 +331,4 @@ class testPageActions extends CWebTest {
 
 		$this->assertEquals($this->oldHashAction, DBhash($this->sqlHashAction));
 	}
-
-	public function testPageActions_Restore() {
-		DBrestore_tables('actions');
-	}
-
 }
