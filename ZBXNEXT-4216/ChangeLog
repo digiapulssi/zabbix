@@ -12,9 +12,7 @@ A......... [ZBX-3783] added strict validation for proxy.delete() method; proxy c
 ....I..... [ZBX-11909] replaced company.com with example.com in data.sql (vmurzins)
 
 Bug fixes:
-A......... [ZBX-10754] fixed inheritance of template properties in web scenarios (miks)
 ..F....... [ZBX-12082] fixed possibility to select triggers with same name in multiselect (Ivo)
-..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
 ...G...PS. [ZBX-12983] fixed compilation warnings under Windows (valdis)
 ........S. [ZBX-10578] fixed redundant init_result() calls; thanks to MATSUDA Daiki for the patch (abs)
 ....I..... [ZBX-12793] fixed system compiler checks during source configuration (abs)
@@ -417,7 +415,7 @@ Changes for 3.2.11rc1
 New features:
 
 Bug fixes:
-A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
+.......P.. [ZBX-12117] fixed proxy passing zeros to history export modules instead of actual numeric values (gleb)
 ..F....... [ZBX-12856] fixed wrong default value for host filter when adding dependent trigger in trigger edit form (gcalenko)
 ..F....... [ZBX-12082] fixed possibility to select triggers with same name in multiselect (Ivo)
 ..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
