@@ -51,14 +51,12 @@ class testPageAdministrationGeneralValuemap extends CWebTest {
 
 		$this->zbxTestLogin('adm.valuemapping.php');
 
-		// There is no need to check simple update of every valuemap.
-		foreach (DBdata('select name from valuemaps limit 10', false) as $valuemap) {
+		foreach (DBdata('select name from valuemaps', false) as $valuemap) {
 			$valuemap = $valuemap[0];
-			$this->zbxTestClickLinkText($valuemap['name']);
-			$this->zbxTestWaitForPageToLoad();
+			$this->zbxTestWaitUntilElementClickable(WebDriverBy::linkText($valuemap['name']));
+			$this->zbxTestClickLinkTextWait($valuemap['name']);
 			$this->zbxTestClickWait('update');
-			$this->zbxTestWaitForPageToLoad();
-			$this->zbxTestTextPresent('Value map updated');
+			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Value map updated');
 		}
 
 		$newHashValuemap = DBhash($sqlValuemaps);
