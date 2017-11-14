@@ -53,9 +53,17 @@ class testPageAdministrationGeneralValuemap extends CWebTest {
 
 		foreach (DBdata('select name from valuemaps', false) as $valuemap) {
 			$valuemap = $valuemap[0];
-			$this->zbxTestWaitUntilElementClickable(WebDriverBy::linkText($valuemap['name']));
-			$this->zbxTestClickLinkTextWait($valuemap['name']);
-			$this->zbxTestClickWait('update');
+
+			for ($i = 0; $i < 3; $i++) {
+				$this->zbxTestClickLinkTextWait($valuemap['name']);
+				$this->zbxTestWaitForPageToLoad();
+
+				if ($this->zbxTestElementPresentId('update')) {
+					break;
+				}
+			}
+
+			$this->zbxTestClick('update');
 			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Value map updated');
 		}
 
