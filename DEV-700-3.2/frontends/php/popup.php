@@ -1088,7 +1088,6 @@ elseif ($srctbl === 'triggers' || $srctbl === 'trigger_prototypes') {
 		$trigger['hostname'] = $host['name'];
 
 		$description = new CLink($trigger['description'], 'javascript:void(0);');
-		$trigger['description'] = $trigger['hostname'].NAME_DELIMITER.$trigger['description'];
 		$js_object = [];
 
 		if ($multiselect) {
@@ -1109,6 +1108,7 @@ elseif ($srctbl === 'triggers' || $srctbl === 'trigger_prototypes') {
 		}
 		else {
 			$elements = [];
+			$trigger['description'] = $trigger['hostname'].NAME_DELIMITER.$trigger['description'];
 
 			if (array_key_exists($srcfld1, $trigger)) {
 				$elements[] = ['id' => $dstfld1, 'value' => $trigger[$srcfld1]];
@@ -1151,6 +1151,21 @@ elseif ($srctbl === 'triggers' || $srctbl === 'trigger_prototypes') {
 			(new CSpan(triggerIndicator($trigger['status'], $trigger['state'])))
 				->addClass(triggerIndicatorStyle($trigger['status'], $trigger['state']))
 		]);
+
+		// made to save memory usage
+		if ($multiselect) {
+			$jsTriggers[$trigger['triggerid']] = [
+				'id' => $trigger['triggerid'],
+				'name' => $trigger['description'],
+				'prefix' => $trigger['hostname'].NAME_DELIMITER,
+				'triggerid' => $trigger['triggerid'],
+				'description' => $trigger['description'],
+				'expression' => $trigger['expression'],
+				'priority' => $trigger['priority'],
+				'status' => $trigger['status'],
+				'host' => $trigger['hostname']
+			];
+		}
 	}
 
 	if ($multiselect) {

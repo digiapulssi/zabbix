@@ -124,7 +124,7 @@ jQuery(function($) {
 						'name': data.values[i].name
 					};
 
-					if (typeof(data.values[i].prefix) !== 'undefined') {
+					if (typeof data.values[i].prefix !== 'undefined') {
 						item.prefix = data.values[i].prefix;
 					}
 
