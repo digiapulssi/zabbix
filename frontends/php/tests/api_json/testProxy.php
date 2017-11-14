@@ -28,17 +28,17 @@ class testProxy extends CZabbixTest {
 			[
 				'proxy' => [''],
 				'success_expected' => false,
-				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+				'expected_error' => 'No permissions to referred object or it does not exist!'
 			],
 			[
 				'proxy' => ['abc'],
 				'success_expected' => false,
-				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+				'expected_error' => 'No permissions to referred object or it does not exist!'
 			],
 			[
 				'proxy' => ['1.1'],
 				'success_expected' => false,
-				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+				'expected_error' => 'No permissions to referred object or it does not exist!'
 			],
 			[
 				'proxy' => ['123456'],
@@ -46,25 +46,9 @@ class testProxy extends CZabbixTest {
 				'expected_error' => 'No permissions to referred object or it does not exist!'
 			],
 			[
-				'proxy' => ['99000', '99000'],
-				'success_expected' => false,
-				'expected_error' => 'Invalid parameter "/2": value (99000) already exists.'
-			],
-			[
 				'proxy' => ['99000', 'abcd'],
 				'success_expected' => false,
-				'expected_error' => 'Invalid parameter "/2": a number is expected.'
-			],
-			// Check if proxy used in actions.
-			[
-				'proxy' => ['99003'],
-				'success_expected' => false,
-				'expected_error' => 'Proxy "Api active proxy in action" is used by action "API action with proxy".'
-			],
-			[
-				'proxy' => ['99000', '99003'],
-				'success_expected' => false,
-				'expected_error' => 'Proxy "Api active proxy in action" is used by action "API action with proxy".'
+				'expected_error' => 'No permissions to referred object or it does not exist!'
 			],
 			// Check if proxy used in host.
 			[
