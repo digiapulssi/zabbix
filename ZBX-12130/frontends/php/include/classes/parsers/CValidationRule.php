@@ -415,6 +415,8 @@ class CValidationRule {
 
 		$i += 6;
 
+		$value = 0x00;
+
 		if (!$this->parseValue($buffer, $i, $value)) {
 			return false;
 		}
