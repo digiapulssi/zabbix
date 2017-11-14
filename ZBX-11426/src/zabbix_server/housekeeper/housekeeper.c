@@ -975,11 +975,11 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 		zbx_setproctitle("%s [removing deleted items data]", get_process_type_string(process_type));
 		d_cleanup = housekeeping_cleanup();
 
-		zbx_setproctitle("%s [removing old events]", get_process_type_string(process_type));
-		d_events = housekeeping_events(now);
-
 		zbx_setproctitle("%s [removing old problems]", get_process_type_string(process_type));
 		d_problems = housekeeping_problems(now);
+
+		zbx_setproctitle("%s [removing old events]", get_process_type_string(process_type));
+		d_events = housekeeping_events(now);
 
 		zbx_setproctitle("%s [removing old sessions]", get_process_type_string(process_type));
 		d_sessions = housekeeping_sessions(now);
