@@ -1049,7 +1049,7 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 		zbx_uint64_t *lastlogsize_sent, int *mtime_sent, char **error)
 {
 	AGENT_REQUEST		request;
-	const char		*filename, *pattern, *encoding, *maxlines_persec, *skip, *template;
+	const char		*filename, *regexp, *encoding, *maxlines_persec, *skip, *template;
 	char			*encoding_uc = NULL, *max_delay_str;
 	int			rate, ret = FAIL, s_count, p_count, s_count_orig, is_count_item, max_delay_par_nr,
 				mtime_orig, big_rec_orig, logfiles_num_new = 0, jumped = 0;
@@ -1063,6 +1063,12 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 		is_count_item = 0;
 
 	init_request(&request);
+
+	/* Expected parameters by item: */
+	/* log        [file,       <regexp>,<encoding>,<maxlines>,    <mode>,<output>,<maxdelay>]            7 params */
+	/* log.count  [file,       <regexp>,<encoding>,<maxproclines>,<mode>,         <maxdelay>]            6 params */
+	/* logrt      [file_regexp,<regexp>,<encoding>,<maxlines>,    <mode>,<output>,<maxdelay>, <options>] 8 params */
+	/* logrt.count[file_regexp,<regexp>,<encoding>,<maxproclines>,<mode>,         <maxdelay>, <options>] 7 params */
 
 	if (SUCCEED != parse_item_key(metric->key, &request))
 	{
@@ -1088,13 +1094,13 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 		goto out;
 	}
 
-	if (NULL == (pattern = get_rparam(&request, 1)))
+	if (NULL == (regexp = get_rparam(&request, 1)))
 	{
-		pattern = "";
+		regexp = "";
 	}
-	else if ('@' == *pattern && SUCCEED != global_regexp_exists(pattern + 1))
+	else if ('@' == *regexp && SUCCEED != global_regexp_exists(regexp + 1))
 	{
-		*error = zbx_dsprintf(*error, "Global regular expression \"%s\" does not exist.", pattern + 1);
+		*error = zbx_dsprintf(*error, "Global regular expression \"%s\" does not exist.", regexp + 1);
 		goto out;
 	}
 
@@ -1189,7 +1195,7 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 
 	ret = process_logrt(metric->flags, filename, &metric->lastlogsize, &metric->mtime, lastlogsize_sent, mtime_sent,
 			&metric->skip_old_data, &metric->big_rec, &metric->use_ino, error, &metric->logfiles,
-			&metric->logfiles_num, &logfiles_new, &logfiles_num_new, encoding, &regexps, pattern, template,
+			&metric->logfiles_num, &logfiles_new, &logfiles_num_new, encoding, &regexps, regexp, template,
 			&p_count, &s_count, process_value, server, port, CONFIG_HOSTNAME, metric->key_orig, &jumped,
 			max_delay, &metric->start_time, &metric->processed_bytes);
 
