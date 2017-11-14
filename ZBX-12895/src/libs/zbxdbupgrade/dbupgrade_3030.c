@@ -336,16 +336,16 @@ static int	DBpatch_3030029(void)
  ******************************************************************************/
 static int	DBpatch_3030030(void)
 {
-	int		ret = SUCCEED;
+	int		ret = SUCCEED, upd_num;
 	DB_ROW		row;
 	DB_RESULT	result;
 	char		*sql = NULL;
 	size_t		sql_alloc = 0, sql_offset;
-	zbx_uint64_t	last_eventid, eventid = 0;
+	zbx_uint64_t	last_eventid = 0, eventid = 0;
 
 	do
 	{
-		last_eventid = eventid;
+		upd_num = 0;
 
 		sql_offset = 0;
 		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
@@ -368,14 +368,19 @@ static int	DBpatch_3030030(void)
 
 		while (NULL != (row = DBfetch(result)))
 		{
+			ZBX_STR2UINT64(eventid, row[0]);
+			if (last_eventid == eventid)
+				continue;
+
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 					"update alerts set p_eventid=%s where eventid=%s;\n",
 					row[0], row[1]);
 
 			if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
-				goto free;
+				goto out;
 
-			ZBX_STR2UINT64(eventid, row[0]);
+			last_eventid = eventid;
+			upd_num++;
 		}
 
 		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
@@ -385,10 +390,10 @@ static int	DBpatch_3030030(void)
 			if (ZBX_DB_OK > DBexecute("%s", sql))
 				ret = FAIL;
 		}
-free:
+out:
 		DBfree_result(result);
 	}
-	while (last_eventid < eventid && SUCCEED == ret);
+	while (0 < upd_num && SUCCEED == ret);
 
 	zbx_free(sql);
 
