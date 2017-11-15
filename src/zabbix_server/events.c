@@ -211,7 +211,7 @@ static int	close_trigger_event(zbx_uint64_t eventid, zbx_uint64_t objectid, cons
 
 	index = zbx_add_event(EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, objectid, ts, TRIGGER_VALUE_OK,
 			trigger_description, trigger_expression, trigger_recovery_expression, trigger_priority,
-			trigger_type, NULL, ZBX_TRIGGER_CORRELATION_NONE, "", TRIGGER_VALUE_OK);
+			trigger_type, NULL, ZBX_TRIGGER_CORRELATION_NONE, "", TRIGGER_VALUE_PROBLEM);
 
 	recovery_local.eventid = eventid;
 	recovery_local.objectid = objectid;
