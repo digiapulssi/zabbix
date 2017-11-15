@@ -1128,6 +1128,39 @@ static int	init_max_delay(int is_count_item, const AGENT_REQUEST *request, float
 	return SUCCEED;
 }
 
+static int	init_rotation_type(unsigned char flags, const AGENT_REQUEST *request, int *rotation_type, char **error)
+{
+	if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags))
+	{
+		char	*options;
+		int	options_par_nr;
+
+		if (0 == (ZBX_METRIC_FLAG_LOG_COUNT & flags))	/* logrt */
+			options_par_nr = 7;
+		else						/* logrt.count */
+			options_par_nr = 6;
+
+		if (NULL != (options = get_rparam(request, options_par_nr)))
+		{
+			if (0 == strcmp(options, "copytruncate"))
+			{
+				*rotation_type = ZBX_LOG_ROTATION_LOGCPT;
+				return SUCCEED;
+			}
+
+			if (0 != strcmp(options, "rotate"))
+			{
+				*error = zbx_dsprintf(*error, "Invalid %s parameter.", (6 == options_par_nr) ?
+						"seventh" : "eighth");
+				return FAIL;
+			}
+		}
+	}
+
+	*rotation_type = ZBX_LOG_ROTATION_LOGRT;	/* default */
+	return SUCCEED;
+}
+
 static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRIC *metric,
 		zbx_uint64_t *lastlogsize_sent, int *mtime_sent, char **error)
 {
@@ -1135,7 +1168,7 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 	const char		*filename, *regexp, *encoding, *skip, *output_templ;
 	char			*encoding_uc = NULL;
 	int			max_lines_per_sec, ret = FAIL, s_count, p_count, s_count_orig, is_count_item,
-				mtime_orig, big_rec_orig, logfiles_num_new = 0, jumped = 0;
+				mtime_orig, big_rec_orig, logfiles_num_new = 0, jumped = 0, rotation_type;
 	zbx_uint64_t		lastlogsize_orig;
 	float			max_delay;
 	struct st_logfile	*logfiles_new = NULL;
@@ -1217,6 +1250,10 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 
 	/* parameter 'maxdelay' */
 	if (SUCCEED != init_max_delay(is_count_item, &request, &max_delay, error))
+		goto out;
+
+	/* parameter 'options' */
+	if (SUCCEED != init_rotation_type(metric->flags, &request, &rotation_type, error))
 		goto out;
 
 	/* do not flood Zabbix server if file grows too fast */
