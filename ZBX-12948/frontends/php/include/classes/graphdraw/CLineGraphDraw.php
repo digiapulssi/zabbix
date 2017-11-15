@@ -2583,7 +2583,7 @@ class CLineGraphDraw extends CGraphDraw {
 					$this->sizeY -= $h_legend_items;
 					$this->drawItemsLegend = true;
 
-					if ($this->sizeY - $h_legend_triggers - $h_legend_percentile >= ZBX_GRAPH_LEGEND_HEIGHT) {
+					if ($this->sizeY - $h_legend_triggers - $h_legend_percentile >= self::GRAPH_HEIGHT_MIN) {
 						$this->sizeY -= $h_legend_triggers + $h_legend_percentile;
 						$this->drawExLegend = true;
 					}
