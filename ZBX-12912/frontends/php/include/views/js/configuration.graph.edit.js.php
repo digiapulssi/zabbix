@@ -369,16 +369,7 @@
 				}
 			});
 
-			var image = $('#previewChar img');
-
-			if (image.length != 0) {
-				image.remove();
-			}
-
-			$('#previewChar').children().remove();
-
-			$('#previewChar')
-				.attr('class', 'preloader');
+			$('#previewChar').attr('class', 'preloader').children().remove();
 
 			$('<img />').attr('src', name + '?period=3600' + src).load(function() {
 				$('#previewChar')
