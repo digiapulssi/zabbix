@@ -1540,10 +1540,10 @@ static const char	*zbx_property_collection_chunk(zbx_property_collection_iter *i
 
 static int	zbx_property_collection_next(zbx_property_collection_iter *iter)
 {
-#	define ZBX_POST_CONTINUE_RETRIEVE_PROPERTIES									\
+#	define ZBX_POST_CONTINUE_RETRIEVE_PROPERTIES								\
 		ZBX_POST_VSPHERE_HEADER										\
 		"<ns0:ContinueRetrievePropertiesEx xsi:type=\"ns0:ContinueRetrievePropertiesExRequestType\">"	\
-			"<ns0:_this type=\"PropertyCollector\">%s</ns0:_this>"			\
+			"<ns0:_this type=\"PropertyCollector\">%s</ns0:_this>"					\
 			"<ns0:token>%s</ns0:token>"								\
 		"</ns0:ContinueRetrievePropertiesEx>"								\
 		ZBX_POST_VSPHERE_FOOTER
