@@ -147,14 +147,10 @@ int	is_item_processed_by_server(unsigned char type, const char *key)
 								0 == strcmp(arg3, "items_unsupported"))
 						{
 							ret = SUCCEED;
-							goto clean;
 						}
 					}
 					else if (0 == strcmp(arg2, "discovery") && 0 == strcmp(arg3, "interfaces"))
-					{
 						ret = SUCCEED;
-						goto clean;
-					}
 				}
 				else if (0 == strcmp(arg1, "proxy") && 0 == strcmp(arg3, "lastaccess"))
 					ret = SUCCEED;
@@ -4869,6 +4865,7 @@ void	DCsync_configuration(unsigned char mode)
 
 	config->status->last_update = 0;
 	config->sync_ts = time(NULL);
+	config->proxy_lastaccess_ts = time(NULL);
 
 	FINISH_SYNC;
 out:
@@ -10632,18 +10629,47 @@ void	zbx_dc_items_update_nextcheck(DC_ITEM *items, zbx_agent_value_t *values, in
  *                                                                            *
  * Parameter: hostid     - [IN] the proxy identifier (hostid)                 *
  *            lastaccess - [IN] the last time proxy data was received/sent    *
+ *            proxy_diff - [OUT] last access updates for proxies that need    *
+ *                               to be synced with database                   *
  *                                                                            *
  ******************************************************************************/
-void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
+void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess, zbx_vector_uint64_pair_t *proxy_diff)
 {
 	ZBX_DC_PROXY	*proxy;
+	int		now;
 
 	LOCK_CACHE;
 
 	if (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_search(&config->proxies, &hostid)))
-		proxy->lastaccess = lastaccess;
+	{
+		if (lastaccess < config->proxy_lastaccess_ts)
+			proxy->lastaccess = config->proxy_lastaccess_ts;
+		else
+			proxy->lastaccess = lastaccess;
+	}
+
+	if (ZBX_PROXY_LASTACCESS_UPDATE_FREQUENCY < (now = time(NULL)) - config->proxy_lastaccess_ts)
+	{
+		zbx_hashset_iter_t	iter;
+
+		zbx_hashset_iter_reset(&config->proxies, &iter);
+
+		while (NULL != (proxy = (ZBX_DC_PROXY *)zbx_hashset_iter_next(&iter)))
+		{
+			if (proxy->lastaccess >= config->proxy_lastaccess_ts)
+			{
+				zbx_uint64_pair_t	pair = {proxy->hostid, proxy->lastaccess};
+
+				zbx_vector_uint64_pair_append(proxy_diff, pair);
+			}
+		}
+
+		config->proxy_lastaccess_ts = now;
+	}
 
 	UNLOCK_CACHE;
+
+	zbx_vector_uint64_pair_sort(proxy_diff, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 }
 
 /******************************************************************************

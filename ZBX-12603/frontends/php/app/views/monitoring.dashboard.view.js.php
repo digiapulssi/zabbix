@@ -20,6 +20,23 @@
 		PERM_READ_WRITE = <?= PERM_READ_WRITE; ?>,
 		PERM_READ = <?= PERM_READ; ?>;
 
+	// Change dashboard settings.
+	function dashbrd_config() {
+		var form = jQuery('form[name="dashboard_form"]');
+
+		showDialogForm(
+			form,
+			{
+				'title': <?= CJs::encodeJson(_('Dashboard properties')) ?>,
+				'action_title': <?= CJs::encodeJson(_('Apply')) ?>
+			},
+			{
+				'name': form.data('data').name,
+				'owner': form.data('data').owner
+			}
+		);
+	};
+
 	// Save changes and cancel editing dashboard.
 	function dashbrd_save_changes() {
 		// Update buttons on existing widgets to view mode.
@@ -72,7 +89,7 @@
 		}
 	});
 
-	function dashbaordAddMessages(messages) {
+	function dashboardAddMessages(messages) {
 		var $message_div = jQuery('<div>').attr('id','dashbrd-messages');
 		$message_div.append(messages);
 		jQuery('.article').prepend($message_div);
@@ -83,7 +100,7 @@
 		jQuery('.msg-good').remove();
 	}
 
-	// Function is in global scope, because it should be accessable by html onchange() attribute.
+	// Function is in global scope, because it should be accessible by html onchange() attribute.
 	function updateWidgetConfigDialogue() {
 		jQuery('.dashbrd-grid-widget-container').dashboardGrid('updateWidgetConfigDialogue');
 	}
