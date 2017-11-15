@@ -639,11 +639,11 @@ static int	DBdelete_from_table(const char *tablename, const char *filter, int li
 
 /******************************************************************************
  *                                                                            *
- * Function: hk_events_cleanup                                                *
+ * Function: hk_problem_cleanup                                              *
  *                                                                            *
- * Purpose: perform events or problems table cleanup                          *
+ * Purpose: perform problem table cleanup                                     *
  *                                                                            *
- * Parameters: table    - [IN] the table name                                 *
+ * Parameters: table    - [IN] the problem table name                         *
  * Parameters: source   - [IN] the event source                               *
  *             object   - [IN] the event object type                          *
  *             objectid - [IN] the event object identifier                    *
@@ -653,7 +653,7 @@ static int	DBdelete_from_table(const char *tablename, const char *filter, int li
  * Return value: number of rows deleted                                       *
  *                                                                            *
  ******************************************************************************/
-static int	hk_events_cleanup(const char *table, int source, int object, zbx_uint64_t objectid, int *more)
+static int	hk_problem_cleanup(const char *table, int source, int object, zbx_uint64_t objectid, int *more)
 {
 	char	filter[MAX_STRING_LEN];
 	int	ret;
@@ -768,19 +768,19 @@ static int	housekeeping_cleanup()
 
 			if (0 == strcmp(row[2], "triggerid"))
 			{
-				deleted += hk_events_cleanup(table_name, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER,
+				deleted += hk_problem_cleanup(table_name, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER,
 						objectid, &more);
-				deleted += hk_events_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_TRIGGER,
+				deleted += hk_problem_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_TRIGGER,
 						objectid, &more);
 			}
 			else if (0 == strcmp(row[2], "itemid"))
 			{
-				deleted += hk_events_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_ITEM,
+				deleted += hk_problem_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_ITEM,
 						objectid, &more);
 			}
 			else if (0 == strcmp(row[2], "lldruleid"))
 			{
-				deleted += hk_events_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_LLDRULE,
+				deleted += hk_problem_cleanup(table_name, EVENT_SOURCE_INTERNAL, EVENT_OBJECT_LLDRULE,
 						objectid, &more);
 			}
 		}
