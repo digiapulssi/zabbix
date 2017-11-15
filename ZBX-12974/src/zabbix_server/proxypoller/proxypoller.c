@@ -63,6 +63,12 @@ static int	connect_to_proxy(DC_PROXY *proxy, zbx_socket_t *sock, int timeout)
 			tls_arg1 = proxy->tls_psk_identity;
 			tls_arg2 = proxy->tls_psk;
 			break;
+#else
+		case ZBX_TCP_SEC_TLS_CERT:
+		case ZBX_TCP_SEC_TLS_PSK:
+			zbx_error("Server was compiled without cryptographic libraries. "
+					"Cannot create encrypted connection to proxy.");
+			goto out;
 #endif
 		default:
 			THIS_SHOULD_NEVER_HAPPEN;
