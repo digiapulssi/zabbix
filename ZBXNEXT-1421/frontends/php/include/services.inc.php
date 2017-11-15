@@ -529,6 +529,7 @@ function sortServices(array &$services) {
 		if ($service['dependencies']) {
 			foreach ($service['dependencies'] as &$dependent_item) {
 				$dependent_item['name'] = $services[$dependent_item['serviceid']]['name'];
+				$dependent_item['sortorder'] = $services[$dependent_item['serviceid']]['sortorder'];
 			}
 			unset($dependent_item);
 
