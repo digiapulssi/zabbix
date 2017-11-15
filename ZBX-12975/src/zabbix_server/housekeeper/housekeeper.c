@@ -762,9 +762,9 @@ static int	housekeeping_cleanup()
 		ZBX_STR2UINT64(housekeeperid, row[0]);
 		ZBX_STR2UINT64(objectid, row[3]);
 
-		if (0 == strcmp(row[1], "events"))
+		if (0 == strcmp(row[1], "events")) /* events name is used for backwards compatibility with frontend */
 		{
-			const char	*table_name = ZBX_HK_OPTION_ENABLED == cfg.hk.events_mode ? "events" : "problem";
+			const char	*table_name = "problem";
 
 			if (0 == strcmp(row[2], "triggerid"))
 			{
@@ -972,9 +972,6 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 		sec = zbx_time();
 		d_history_and_trends = housekeeping_history_and_trends(now);
 
-		zbx_setproctitle("%s [removing deleted items data]", get_process_type_string(process_type));
-		d_cleanup = housekeeping_cleanup();
-
 		zbx_setproctitle("%s [removing old events]", get_process_type_string(process_type));
 		d_events = housekeeping_events(now);
 
@@ -989,6 +986,9 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 
 		zbx_setproctitle("%s [removing old audit log items]", get_process_type_string(process_type));
 		d_audit = housekeeping_audit(now);
+
+		zbx_setproctitle("%s [removing deleted items data]", get_process_type_string(process_type));
+		d_cleanup = housekeeping_cleanup();
 
 		sec = zbx_time() - sec;
 
