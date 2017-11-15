@@ -2281,12 +2281,12 @@ int	zbx_flush_correlated_events(void)
 
 		flush_events();
 		update_trigger_changes(&trigger_diff);
-		DBupdate_itservices(&trigger_diff);
-
 		DCconfig_triggers_apply_changes(&trigger_diff);
 		zbx_save_trigger_changes(&trigger_diff);
 
 		DBcommit();
+
+		DBupdate_itservices(&trigger_diff);
 
 		clean_events();
 	}
