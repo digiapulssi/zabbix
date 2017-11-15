@@ -352,10 +352,13 @@ static int	DBpatch_3030030(void)
 					"select e.eventid, e.r_eventid"
 					" from event_recovery e"
 						" join alerts a"
-							" on a.eventid=e.r_eventid"
-					" where e.eventid>" ZBX_FS_UI64
-					" order by e.eventid",
+							" on a.eventid=e.r_eventid");
+		if (0 < last_eventid)
+		{
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " where e.r_eventid<" ZBX_FS_UI64,
 					last_eventid);
+		}
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by e.r_eventid desc, e.eventid desc");
 
 		if (NULL == (result = DBselectN(sql, 10000)))
 		{
@@ -368,7 +371,7 @@ static int	DBpatch_3030030(void)
 
 		while (NULL != (row = DBfetch(result)))
 		{
-			ZBX_STR2UINT64(eventid, row[0]);
+			ZBX_STR2UINT64(eventid, row[1]);
 			if (last_eventid == eventid)
 				continue;
 
