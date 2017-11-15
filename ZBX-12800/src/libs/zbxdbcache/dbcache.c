@@ -2082,7 +2082,10 @@ static void	DCmodule_prepare_history(ZBX_DC_HISTORY *history, int history_num, Z
 				h_float->itemid = h->itemid;
 				h_float->clock = h->ts.sec;
 				h_float->ns = h->ts.ns;
-				h_float->value = h->value.dbl;
+				if (0 != (ZBX_PROGRAM_TYPE_SERVER & program_type))
+					h_float->value = h->value.dbl;
+				else
+					h_float->value = h->value_orig.dbl;
 				break;
 			case ITEM_VALUE_TYPE_UINT64:
 				if (NULL == history_integer_cbs)
@@ -2092,7 +2095,10 @@ static void	DCmodule_prepare_history(ZBX_DC_HISTORY *history, int history_num, Z
 				h_integer->itemid = h->itemid;
 				h_integer->clock = h->ts.sec;
 				h_integer->ns = h->ts.ns;
-				h_integer->value = h->value.ui64;
+				if (0 != (ZBX_PROGRAM_TYPE_SERVER & program_type))
+					h_integer->value = h->value.ui64;
+				else
+					h_integer->value = h->value_orig.ui64;
 				break;
 			case ITEM_VALUE_TYPE_STR:
 				if (NULL == history_string_cbs)
@@ -2288,8 +2294,6 @@ int	DCsync_history(int sync_type, int *total_num)
 				DCconfig_triggers_apply_changes(&trigger_diff);
 				zbx_save_trigger_changes(&trigger_diff);
 			}
-
-			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 		}
 		else
 		{
@@ -2300,7 +2304,11 @@ int	DCsync_history(int sync_type, int *total_num)
 		DBcommit();
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		{
+			DBupdate_itservices(&trigger_diff);
+			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 			DCconfig_unlock_triggers(&triggerids);
+		}
 
 		LOCK_CACHE;
 

@@ -42,8 +42,7 @@ extern int		server_num, process_num;
  *                                      problem                               *
  *                                                                            *
  ******************************************************************************/
-static void	tm_execute_task_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid,
-		zbx_uint64_t userid)
+static void	tm_execute_task_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t userid)
 {
 	const char	*__function_name = "tm_execute_task_close_problem";
 
@@ -98,8 +97,6 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 				" where tcp.taskid=" ZBX_FS_UI64,
 			taskid);
 
-	DBbegin();
-
 	if (NULL != (row = DBfetch(result)))
 	{
 		if (SUCCEED != DBis_null(row[1]))
@@ -128,8 +125,6 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 	/* remove the task if it was executed or related event was deleted before task was processed */
 	if (1 == remove_task)
 		DBexecute("delete from task where taskid=" ZBX_FS_UI64, taskid);
-
-	DBcommit();
 
 	if (0 != locked_triggerids.values_num)
 		DCconfig_unlock_triggers(&locked_triggerids);

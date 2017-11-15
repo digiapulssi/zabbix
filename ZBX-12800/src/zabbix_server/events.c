@@ -2219,6 +2219,8 @@ int	zbx_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t
 
 		zbx_timespec(&ts);
 
+		DBbegin();
+
 		index = close_trigger_event(eventid, triggerid, &ts, userid, 0, 0, trigger.description,
 				trigger.expression_orig, trigger.recovery_expression_orig, trigger.priority,
 				trigger.type);
@@ -2227,12 +2229,14 @@ int	zbx_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t
 
 		processed_num = flush_events();
 		update_trigger_changes(&trigger_diff);
-		DBupdate_itservices(&trigger_diff);
-		clean_events();
-
-		DCconfig_triggers_apply_changes(&trigger_diff);
 		zbx_save_trigger_changes(&trigger_diff);
 
+		DBcommit();
+
+		DCconfig_triggers_apply_changes(&trigger_diff);
+		DBupdate_itservices(&trigger_diff);
+
+		clean_events();
 		zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 		zbx_vector_ptr_destroy(&trigger_diff);
 	}
