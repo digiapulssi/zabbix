@@ -89,6 +89,8 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 
 	if (0 != trigger_eventids.values_num)	/* EVENT_SOURCE_TRIGGERS */
 	{
+		DB_EVENT	*event = NULL;
+
 		filter_offset = 0;
 		DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "eventid", trigger_eventids.values,
 				trigger_eventids.values_num);
@@ -97,7 +99,6 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 
 		while (NULL != (row = DBfetch(result)))
 		{
-			DB_EVENT	*event = NULL;
 			zbx_uint64_t	eventid;
 			zbx_tag_t	*tag;
 
