@@ -1971,7 +1971,7 @@ out:
  *          records to Zabbix server                                          *
  *                                                                            *
  * Parameters:                                                                *
- *     flags           - [IN] metric flags to check item type: log, logrt,    *
+ *     flags           - [IN] bit flags to check item type: log, logrt,       *
  *                       log.count or logrt.count                             *
  *     filename        - [IN] logfile name                                    *
  *     lastlogsize     - [IN/OUT] offset from the beginning of the file       *
@@ -2561,7 +2561,7 @@ static int	jump_ahead(const char *key, struct st_logfile *logfiles, int logfiles
  * Purpose: Find new records in logfiles                                      *
  *                                                                            *
  * Parameters:                                                                *
- *     flags            - [IN] metric flags to check item type: log, logrt,   *
+ *     flags            - [IN] bit flags to check item type: log, logrt,      *
  *                        log.count or logrt.count                            *
  *     filename         - [IN] logfile name (regular expression with a path)  *
  *     lastlogsize      - [IN/OUT] offset from the beginning of the file      *
@@ -2620,26 +2620,13 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 				max_old_seq = 0, old_last, from_first_file = 1, last_processed, limit_reached = 0;
 	char			*old2new = NULL;
 	struct st_logfile	*logfiles = NULL;
-	time_t			now;
 	zbx_uint64_t		processed_bytes_sum = 0, processed_bytes_tmp = 0, remaining_bytes = 0;
 	double			delay;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() is_logrt:%d is_count:%d filename:'%s' lastlogsize:" ZBX_FS_UI64
-			" mtime:%d", __function_name, ZBX_METRIC_FLAG_LOG_LOGRT & flags,
-			ZBX_METRIC_FLAG_LOG_COUNT & flags, filename, *lastlogsize, *mtime);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:0x%02x filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
+			__function_name, (unsigned int)flags, filename, *lastlogsize, *mtime);
 
-	/* Minimize data loss if the system clock has been set back in time. */
-	/* Setting the clock ahead of time is harmless in our case. */
-	if (*mtime > (now = time(NULL)))
-	{
-		int	old_mtime;
-
-		old_mtime = *mtime;
-		*mtime = (int)now;
-
-		zabbix_log(LOG_LEVEL_WARNING, "System clock has been set back in time. Setting agent mtime %d "
-				"seconds back.", (int)(old_mtime - now));
-	}
+	adjust_mtime_to_clock(mtime);
 
 	if (SUCCEED != make_logfile_list(flags, filename, mtime, &logfiles, &logfiles_alloc, &logfiles_num, use_ino,
 			err_msg))
@@ -2655,22 +2642,27 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		goto out;
 	}
 
-	start_idx = (1 == *skip_old_data ? logfiles_num - 1 : 0);
-
-	/* mark files to be skipped as processed (in case of 'skip_old_data' was set) */
-	for (i = 0; i < start_idx; i++)
+	if (1 == *skip_old_data)
 	{
-		logfiles[i].processed_size = logfiles[i].size;
-		logfiles[i].seq = seq++;
+		start_idx = logfiles_num - 1;
+
+		/* mark files to be skipped as processed (except the last one) */
+		for (i = 0; i < start_idx; i++)
+		{
+			logfiles[i].processed_size = logfiles[i].size;
+			logfiles[i].seq = seq++;
+		}
 	}
+	else
+		start_idx = 0;
 
 	if (0 < *logfiles_num_old && 0 < logfiles_num)
 	{
 		/* set up a mapping array from old files to new files */
 		old2new = zbx_malloc(old2new, (size_t)logfiles_num * (size_t)(*logfiles_num_old) * sizeof(char));
 
-		if (SUCCEED != setup_old2new(old2new, *logfiles_old, *logfiles_num_old, logfiles, logfiles_num,
-				*use_ino, err_msg))
+		if (SUCCEED != setup_old2new_and_copy_of(rotation_type, old2new, *logfiles_old, *logfiles_num_old,
+				logfiles, logfiles_num, *use_ino, err_msg))
 		{
 			destroy_logfile_list(&logfiles, &logfiles_alloc, &logfiles_num);
 			zbx_free(old2new);
@@ -2733,6 +2725,9 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		}
 	}
 
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+		ensure_order_if_mtimes_equal(*logfiles_old, logfiles, logfiles_num, *use_ino, &start_idx);
+
 	zbx_free(old2new);
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
@@ -2756,6 +2751,14 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 
 	/* from now assume success - it could be that there is nothing to do */
 	ret = SUCCEED;
+
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+	{
+		int	k;
+
+		for (k = 0; k < logfiles_num - 1; k++)
+			handle_multiple_copies(logfiles, logfiles_num, k);
+	}
 
 	if (0.0f != max_delay)
 	{
@@ -2813,6 +2816,9 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 			/* the current checking. In the next check the file will be marked in the list of old files */
 			/* and we will know where we left off. */
 			logfiles[i].seq = seq++;
+
+			if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+				handle_multiple_copies(logfiles, logfiles_num, i);
 
 			if (SUCCEED != ret)
 				break;
