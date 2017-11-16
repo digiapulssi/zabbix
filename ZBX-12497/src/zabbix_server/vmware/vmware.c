@@ -3111,7 +3111,7 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 {
 	const char	*__function_name = "vmware_service_get_event_data";
 
-	char		tmp[MAX_STRING_LEN], *event_session = NULL;
+	char		*event_session = NULL;
 	int		event_num, ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
