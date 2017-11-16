@@ -1506,7 +1506,7 @@ clean:
  *          parameter                                                         *
  *                                                                            *
  * Parameters:                                                                *
- *     flags          - [IN] metric flags to check item type: log, logrt,     *
+ *     flags          - [IN] bit flags to check item type: log, logrt,        *
  *                      log.count or logrt.count                              *
  *     filename       - [IN] logfile name (regular expression with a path)    *
  *     mtime          - [IN] last modification time of the file               *
@@ -1523,11 +1523,12 @@ clean:
 static int	make_logfile_list(unsigned char flags, const char *filename, const int *mtime,
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num, int *use_ino, char **err_msg)
 {
-	int		ret = SUCCEED, i;
-	zbx_stat_t	file_buf;
+	int	ret = SUCCEED;
 
 	if (0 != (ZBX_METRIC_FLAG_LOG_LOG & flags))	/* log[] or log.count[] item */
 	{
+		zbx_stat_t	file_buf;
+
 		if (0 != zbx_stat(filename, &file_buf))
 		{
 			*err_msg = zbx_dsprintf(*err_msg, "Cannot obtain information for file \"%s\": %s", filename,
@@ -1557,30 +1558,19 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 	}
 	else if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags))	/* logrt[] or logrt.count[] item */
 	{
-		char	*directory = NULL, *format = NULL;
-		int	reg_error;
+		char	*directory = NULL, *filename_regexp = NULL;
 		regex_t	re;
 
-		/* split a filename into directory and file mask (regular expression) parts */
-		if (SUCCEED != split_filename(filename, &directory, &format, err_msg))
+		/* split a filename into directory and file name regular expression parts */
+		if (SUCCEED != split_filename(filename, &directory, &filename_regexp, err_msg))
 		{
 			ret = FAIL;
 			goto clean;
 		}
 
-		if (0 != (reg_error = regcomp(&re, format, REG_EXTENDED | REG_NEWLINE | REG_NOSUB)))
+		if (SUCCEED != compile_filename_regexp(&re, filename_regexp, err_msg))
 		{
-			char	err_buf[MAX_STRING_LEN];
-
-			regerror(reg_error, &re, err_buf, sizeof(err_buf));
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot compile a regular expression describing filename"
-					" pattern: %s", err_buf);
 			ret = FAIL;
-#ifdef _WINDOWS
-			/* the Windows gnuregex implementation does not correctly clean up */
-			/* allocated memory after regcomp() failure                        */
-			regfree(&re);
-#endif
 			goto clean1;
 		}
 
@@ -1593,11 +1583,11 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 
 		if (0 == *logfiles_num)
 		{
-			/* Do not make logrt[] and logrt.count[] items NOTSUPPORTED if there are no matching log */
-			/* files or they are not accessible (can happen during a rotation), just log the problem. */
+			/* do not make logrt[] and logrt.count[] items NOTSUPPORTED if there are no matching log */
+			/* files or they are not accessible (can happen during a rotation), just log the problem */
 #ifdef _WINDOWS
 			zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\" or insufficient "
-					"access rights", format, directory);
+					"access rights", filename_regexp, directory);
 #else
 			if (0 != access(directory, X_OK))
 			{
@@ -1606,8 +1596,8 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\"", format,
-						directory);
+				zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\"",
+						filename_regexp, directory);
 			}
 #endif
 		}
@@ -1615,7 +1605,7 @@ clean2:
 		regfree(&re);
 clean1:
 		zbx_free(directory);
-		zbx_free(format);
+		zbx_free(filename_regexp);
 
 		if (FAIL == ret)
 			goto clean;
@@ -1623,43 +1613,11 @@ clean1:
 	else
 		THIS_SHOULD_NEVER_HAPPEN;
 
-	/* Fill in MD5 sums and file indexes in the logfile list. */
-	/* These operations require opening of file, therefore we group them together. */
-	for (i = 0; i < *logfiles_num; i++)
-	{
-		int			f;
-		struct st_logfile	*p;
-
-		p = *logfiles + i;
-
-		if (-1 == (f = zbx_open(p->filename, O_RDONLY)))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", p->filename,
-					zbx_strerror(errno));
-			ret = FAIL;
-			break;
-		}
-
-		p->md5size = (zbx_uint64_t)MAX_LEN_MD5 > p->size ? (int)p->size : MAX_LEN_MD5;
-
-		if (SUCCEED != file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg))
-		{
-			ret = FAIL;
-			goto clean3;
-		}
 #ifdef _WINDOWS
-		if (SUCCEED != file_id(f, *use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
-			ret = FAIL;
-#endif	/*_WINDOWS*/
-clean3:
-		if (0 != close(f))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", p->filename,
-					zbx_strerror(errno));
-			ret = FAIL;
-			break;
-		}
-	}
+	ret = fill_file_details(logfiles, *logfiles_num, *use_ino, err_msg);
+#else
+	ret = fill_file_details(logfiles, *logfiles_num, err_msg);
+#endif
 clean:
 	if (FAIL == ret && NULL != *logfiles)
 		destroy_logfile_list(logfiles, logfiles_alloc, logfiles_num);
