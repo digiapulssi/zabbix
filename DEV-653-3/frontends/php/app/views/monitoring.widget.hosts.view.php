@@ -125,7 +125,13 @@ foreach ($triggers as $trigger) {
 					$highest_severity2[$group['groupid']] = 0;
 				}
 
-				if ($trigger['priority'] > $highest_severity2[$group['groupid']]) {
+				if ($data['filter']['extAck'] == EXTACK_OPTION_UNACK) {
+					if ($trigger['priority'] > $highest_severity2[$group['groupid']]
+							&& array_key_exists($trigger['triggerid'], $triggers_unack)) {
+						$highest_severity2[$group['groupid']] = $trigger['priority'];
+					}
+				}
+				elseif ($trigger['priority'] > $highest_severity2[$group['groupid']]) {
 					$highest_severity2[$group['groupid']] = $trigger['priority'];
 				}
 
