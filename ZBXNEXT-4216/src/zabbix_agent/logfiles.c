@@ -45,10 +45,11 @@
  *                                                                            *
  * Purpose: separates given string to two parts by given delimiter in string  *
  *                                                                            *
- * Parameters: str - the string to split                                      *
- *             del - pointer to a character in the string                     *
- *             part1 - pointer to buffer for the first part with delimiter    *
- *             part2 - pointer to buffer for the second part                  *
+ * Parameters:                                                                *
+ *     str -   [IN] a not-empty string to split                               *
+ *     del -   [IN] pointer to a character in the string                      *
+ *     part1 - [OUT] pointer to buffer for the first part with delimiter      *
+ *     part2 - [OUT] pointer to buffer for the second part                    *
  *                                                                            *
  * Return value: SUCCEED - on splitting without errors                        *
  *               FAIL - on splitting with errors                              *
@@ -61,13 +62,8 @@
 static int	split_string(const char *str, const char *del, char **part1, char **part2)
 {
 	const char	*__function_name = "split_string";
-	size_t		str_length = 0, part1_length = 0, part2_length = 0;
+	size_t		str_length, part1_length, part2_length;
 	int		ret = FAIL;
-
-	assert(NULL != str && '\0' != *str);
-	assert(NULL != del && '\0' != *del);
-	assert(NULL != part1 && NULL == *part1);	/* target 1 must be empty */
-	assert(NULL != part2 && NULL == *part2);	/* target 2 must be empty */
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() str:'%s' del:'%s'", __function_name, str, del);
 
