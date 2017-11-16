@@ -227,6 +227,7 @@
 		</for>
 	</target>
 	
+	<!-- Target "make-gcc" cannot have "init" dependency because it brakes "build-dist" -->
 	<target name="init-make-gcc" depends="init,make-gcc"/>
 
 	<target name="make-clang">
