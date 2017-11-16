@@ -460,6 +460,19 @@ static void	print_logfile_list(const struct st_logfile *logfiles, int logfiles_n
 	}
 }
 
+static int	compare_file_places(const struct st_logfile *old, const struct st_logfile *new, int use_ino)
+{
+	if (1 == use_ino || 2 == use_ino)
+	{
+		if (old->ino_lo != new->ino_lo || old->dev != new->dev || (2 == use_ino && old->ino_hi != new->ino_hi))
+			return ZBX_FILE_PLACE_OTHER;
+		else
+			return ZBX_FILE_PLACE_SAME;
+	}
+
+	return ZBX_FILE_PLACE_UNKNOWN;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: is_same_file                                                     *
@@ -605,6 +618,108 @@ static int	is_same_file(const struct st_logfile *old, const struct st_logfile *n
 	ret = ZBX_SAME_FILE_YES;
 out:
 	return ret;
+}
+
+static int	examine_md5_and_place(const md5_byte_t *buf1, const md5_byte_t *buf2, size_t size, int is_same_place)
+{
+	if (0 == memcmp(buf1, buf2, size))
+	{
+		switch (is_same_place)
+		{
+			case ZBX_FILE_PLACE_UNKNOWN:
+			case ZBX_FILE_PLACE_SAME:
+				return ZBX_SAME_FILE_YES;
+			case ZBX_FILE_PLACE_OTHER:
+				return ZBX_SAME_FILE_COPY;
+		}
+	}
+
+	return ZBX_SAME_FILE_NO;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: is_same_file_logcpt                                              *
+ *                                                                            *
+ * Purpose: find out if a file from the old list and a file from the new list *
+ *          could be the same file or copy in case of copy/truncate rotation  *
+ *                                                                            *
+ * Parameters:                                                                *
+ *          old     - [IN] file from the old list                             *
+ *          new     - [IN] file from the new list                             *
+ *          use_ino - [IN] 0 - do not use inodes in comparison,               *
+ *                         1 - use up to 64-bit inodes in comparison,         *
+ *                         2 - use 128-bit inodes in comparison.              *
+ *          err_msg - [IN/OUT] error message why an item became               *
+ *                    NOTSUPPORTED                                            *
+ *                                                                            *
+ * Return value: ZBX_SAME_FILE_NO - it is not the same file                   *
+ *               ZBX_SAME_FILE_YES - it could be the same file                *
+ *               ZBX_SAME_FILE_COPY - it is a copy                            *
+ *               ZBX_SAME_FILE_ERROR - error                                  *
+ *                                                                            *
+ * Comments: In some cases we can say that it IS NOT the same file.           *
+ *           In other cases it COULD BE the same file or copy.                *
+ *                                                                            *
+ ******************************************************************************/
+static int	is_same_file_logcpt(const struct st_logfile *old, const struct st_logfile *new, int use_ino,
+		char **err_msg)
+{
+	int	is_same_place;
+
+	if (old->mtime > new->mtime)
+		return ZBX_SAME_FILE_NO;
+
+	if (old->size > new->size)
+		return ZBX_SAME_FILE_NO;
+
+	if (-1 == old->md5size || -1 == new->md5size)
+	{
+		/* Cannot compare MD5 sums. Assume two different files - reporting twice is better than skipping. */
+		return ZBX_SAME_FILE_NO;
+	}
+
+	if (old->md5size > new->md5size)
+		return ZBX_SAME_FILE_NO;
+
+	is_same_place = compare_file_places(old, new, use_ino);
+
+	if (old->md5size == new->md5size)
+		return examine_md5_and_place(old->md5buf, new->md5buf, sizeof(new->md5buf), is_same_place);
+
+	if (0 < old->md5size)
+	{
+		/* MD5 for the old file has been calculated from a smaller block than for the new file */
+
+		int		f, ret;
+		md5_byte_t	md5tmp[MD5_DIGEST_SIZE];
+
+		if (-1 == (f = zbx_open(new->filename, O_RDONLY)))
+		{
+			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", new->filename,
+			zbx_strerror(errno));
+			return ZBX_SAME_FILE_ERROR;
+		}
+
+		if (SUCCEED == file_start_md5(f, old->md5size, md5tmp, new->filename, err_msg))
+			ret = examine_md5_and_place(old->md5buf, md5tmp, sizeof(md5tmp), is_same_place);
+		else
+			ret = ZBX_SAME_FILE_ERROR;
+
+		if (0 != close(f))
+		{
+			if (ZBX_SAME_FILE_ERROR != ret)
+			{
+				*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", new->filename,
+						zbx_strerror(errno));
+				ret = ZBX_SAME_FILE_ERROR;
+			}
+		}
+
+		return ret;
+	}
+
+	return ZBX_SAME_FILE_NO;
 }
 
 /******************************************************************************
@@ -1303,6 +1418,78 @@ clean:
 #endif
 }
 
+static int	compile_filename_regexp(regex_t *re, const char *filename_regexp, char **err_msg)
+{
+	int	err_code;
+
+	if (0 != (err_code = regcomp(re, filename_regexp, REG_EXTENDED | REG_NEWLINE | REG_NOSUB)))
+	{
+		char	err_buf[MAX_STRING_LEN];
+
+		regerror(err_code, re, err_buf, sizeof(err_buf));
+
+		*err_msg = zbx_dsprintf(*err_msg, "Cannot compile a regular expression describing filename pattern: %s",
+				err_buf);
+#ifdef _WINDOWS
+		/* the Windows gnuregex implementation does not correctly clean up */
+		/* allocated memory after regcomp() failure                        */
+		regfree(re);
+#endif
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+#ifdef _WINDOWS
+static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, int use_ino, char **err_msg)
+#else
+static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, char **err_msg)
+#endif
+{
+	int	i, ret = SUCCEED;
+
+	/* Fill in MD5 sums and file indexes in the logfile list. */
+	/* These operations require opening of file, therefore we group them together. */
+
+	for (i = 0; i < logfiles_num; i++)
+	{
+		int			f;
+		struct st_logfile	*p = *logfiles + i;
+
+		if (-1 == (f = zbx_open(p->filename, O_RDONLY)))
+		{
+			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", p->filename,
+					zbx_strerror(errno));
+			return FAIL;
+		}
+
+		p->md5size = (zbx_uint64_t)MAX_LEN_MD5 > p->size ? (int)p->size : MAX_LEN_MD5;
+
+		if (SUCCEED != file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg))
+		{
+			ret = FAIL;
+			goto clean;
+		}
+#ifdef _WINDOWS
+		if (SUCCEED != file_id(f, use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
+			ret = FAIL;
+#endif	/*_WINDOWS*/
+clean:
+		if (0 != close(f))
+		{
+			*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", p->filename,
+					zbx_strerror(errno));
+			return FAIL;
+		}
+
+		if (FAIL == ret)
+			return FAIL;
+	}
+
+	return ret;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: make_logfile_list                                                *
@@ -1945,6 +2132,138 @@ out:
 	}
 
 	return ret;
+}
+
+static void	adjust_mtime_to_clock(int *mtime)
+{
+	time_t	now;
+
+	/* Adjust 'mtime' if the system clock has been set back in time. */
+	/* Setting the clock ahead of time is harmless in our case. */
+
+	if (*mtime > (now = time(NULL)))
+	{
+		int	old_mtime;
+
+		old_mtime = *mtime;
+		*mtime = (int)now;
+
+		zabbix_log(LOG_LEVEL_WARNING, "System clock has been set back in time. Setting agent mtime %d "
+				"seconds back.", (int)(old_mtime - now));
+	}
+}
+
+static int	is_swap_required(const struct st_logfile *old, struct st_logfile *new, int use_ino, int idx)
+{
+	int	is_same_place;
+
+	/* if the 1st file is not processed at all while the 2nd file was processed (at least partially) */
+	/* then swap them */
+	if (0 == new[idx].seq && 0 < new[idx + 1].seq)
+		return SUCCEED;
+
+	/* if the 2nd file is not a copy of some other file then no need to swap */
+	if (-1 == new[idx + 1].copy_of)
+		return FAIL;
+
+	/* The 2nd file is a copy. But is it a copy of the 1st file ? */
+
+	/* On file systems with inodes or file indices if a file is copied and truncated, we assume that */
+	/* there is a high possibility that the truncated file has the same inode (index) as before. */
+
+	if (NULL == old)	/* cannot consult the old file list */
+		return FAIL;
+
+	is_same_place = compare_file_places(old + new[idx + 1].copy_of, new + idx, use_ino);
+
+	if (ZBX_FILE_PLACE_SAME == is_same_place && new[idx].seq <= new[idx + 1].seq)
+		return SUCCEED;
+
+	/* The last attempt - compare file names. It is less reliable as file rotation can change file names. */
+	if (ZBX_FILE_PLACE_OTHER == is_same_place || ZBX_FILE_PLACE_UNKNOWN == is_same_place)
+	{
+		if (0 == strcmp((old + new[idx + 1].copy_of)->filename, (new + idx)->filename))
+			return SUCCEED;
+	}
+
+	return FAIL;
+}
+
+static void	swap_logfile_array_elements(struct st_logfile *array, int idx1, int idx2)
+{
+	struct st_logfile	*p1 = array + idx1;
+	struct st_logfile	*p2 = array + idx2;
+	struct st_logfile	tmp;
+
+	memcpy(&tmp, p1, sizeof(struct st_logfile));
+	memcpy(p1, p2, sizeof(struct st_logfile));
+	memcpy(p2, &tmp, sizeof(struct st_logfile));
+}
+
+static void	ensure_order_if_mtimes_equal(const struct st_logfile *logfiles_old, struct st_logfile *logfiles,
+		int logfiles_num, int use_ino, int *start_idx)
+{
+	int	i;
+
+	/* There is a special case when within 1 second of time:       */
+	/*   1. a log file ORG.log is copied to other file COPY.log,   */
+	/*   2. the original file ORG.log is truncated,                */
+	/*   3. new records are appended to the original file ORG.log, */
+	/*   4. both files ORG.log and COPY.log have the same 'mtime'. */
+	/* Now in the list 'logfiles' the file ORG.log precedes the COPY.log because if 'mtime' is the same   */
+	/* then add_logfile() function sorts files by name in descending order. This would lead to an error - */
+	/* processing ORG.log before COPY.log. We need to correct the order by swapping ORG.log and COPY.log  */
+	/* elements in the 'logfiles' list. */
+
+	for (i = 0; i < logfiles_num - 1; i++)
+	{
+		if (logfiles[i].mtime == logfiles[i + 1].mtime &&
+				SUCCEED == is_swap_required(logfiles_old, logfiles, use_ino, i))
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "ensure_order_if_mtimes_equal() swapping files '%s' and '%s'",
+					logfiles[i].filename, logfiles[i + 1].filename);
+
+			swap_logfile_array_elements(logfiles, i, i + 1);
+
+			if (*start_idx == i + 1)
+				*start_idx = i;
+		}
+	}
+}
+
+static void	handle_multiple_copies(struct st_logfile *logfiles, int logfiles_num, int i)
+{
+	/* There is a special case when the latest log file is copied to other file but not yet truncated. */
+	/* So there are two files and we don't know which one will stay as the copy and which one will be  */
+	/* truncated. Similar cases: the latest log file is copied but not truncated or is copied multiple */
+	/* times. */
+
+	int	j;
+
+	for (j = i + 1; j < logfiles_num; j++)
+	{
+		if (-1 != logfiles[i].md5size && -1 != logfiles[j].md5size &&
+				logfiles[i].md5size == logfiles[j].md5size &&
+				0 == memcmp(logfiles[i].md5buf, logfiles[j].md5buf, sizeof(logfiles[i].md5buf)))
+		{
+			/* logfiles[i] and logfiles[j] are original and copy (or vice versa). */
+			/* If logfiles[i] has been at least partially processed then transfer its */
+			/* processed size to logfiles[j], too. */
+
+			if (0 < logfiles[i].processed_size)
+			{
+				if (logfiles[i].processed_size <= logfiles[j].size)
+					logfiles[j].processed_size = logfiles[i].processed_size;
+				else
+					logfiles[j].processed_size = logfiles[j].size;
+
+				zabbix_log(LOG_LEVEL_DEBUG, "handle_multiple_copies() file '%s' processed_size:"
+						ZBX_FS_UI64 " transferred to" " file '%s' processed_size:" ZBX_FS_UI64,
+						logfiles[i].filename, logfiles[i].processed_size,
+						logfiles[j].filename, logfiles[j].processed_size);
+			}
+		}
+	}
 }
 
 /******************************************************************************
