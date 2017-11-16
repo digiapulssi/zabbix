@@ -657,7 +657,23 @@ int	check_vcenter_eventlog(AGENT_REQUEST *request, const DC_ITEM *item, AGENT_RE
 	if (NULL == (service = get_vmware_service(url, item->username, item->password, result, &ret)))
 		goto unlock;
 
-	vmware_get_events(&service->data->events, service->last_key = request->lastlogsize, item, add_results);
+	if (ZBX_VMWARE_EVENT_KEY_UNINITIALIZED == service->last_key)
+	{
+		service->last_key = request->lastlogsize;
+	}
+	else if (request->lastlogsize < service->last_key)
+	{
+		/* this may happen if there are multiple vmware.eventlog items for the same service URL or item has  */
+		/* been polled, but values got stuck in history cache and item's lastlogsize hasn't been updated yet */
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too old events requested."));
+		goto unlock;
+	}
+	else if (0 < service->data->events.values_num)
+	{
+		vmware_get_events(&service->data->events, request->lastlogsize, item, add_results);
+		service->last_key = ((const zbx_vmware_event_t *)service->data->events.values[0])->key;
+	}
+
 	ret = SYSINFO_RET_OK;
 unlock:
 	zbx_vmware_unlock();
