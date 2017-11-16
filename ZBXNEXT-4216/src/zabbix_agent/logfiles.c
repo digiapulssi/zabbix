@@ -689,7 +689,7 @@ static int	is_same_file_logcpt(const struct st_logfile *old, const struct st_log
 		if (-1 == (f = zbx_open(new->filename, O_RDONLY)))
 		{
 			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", new->filename,
-			zbx_strerror(errno));
+					zbx_strerror(errno));
 			return ZBX_SAME_FILE_ERROR;
 		}
 
@@ -1506,8 +1506,8 @@ clean:
  *          parameter                                                         *
  *                                                                            *
  * Parameters:                                                                *
- *     flags          - [IN] bit flags to check item type: log, logrt,        *
- *                      log.count or logrt.count                              *
+ *     flags          - [IN] bit flags with item type: log, logrt, log.count  *
+ *                      or logrt.count                                        *
  *     filename       - [IN] logfile name (regular expression with a path)    *
  *     mtime          - [IN] last modification time of the file               *
  *     logfiles       - [IN/OUT] pointer to the list of logfiles              *
@@ -1971,8 +1971,8 @@ out:
  *          records to Zabbix server                                          *
  *                                                                            *
  * Parameters:                                                                *
- *     flags           - [IN] bit flags to check item type: log, logrt,       *
- *                       log.count or logrt.count                             *
+ *     flags           - [IN] bit flags with item type: log, logrt, log.count *
+ *                       or logrt.count                                       *
  *     filename        - [IN] logfile name                                    *
  *     lastlogsize     - [IN/OUT] offset from the beginning of the file       *
  *     mtime           - [IN] file modification time for reporting to server  *
@@ -2561,7 +2561,7 @@ static int	jump_ahead(const char *key, struct st_logfile *logfiles, int logfiles
  * Purpose: Find new records in logfiles                                      *
  *                                                                            *
  * Parameters:                                                                *
- *     flags            - [IN] bit flags to check item type: log, logrt,      *
+ *     flags            - [IN] bit flags with item type: log, logrt,          *
  *                        log.count or logrt.count                            *
  *     filename         - [IN] logfile name (regular expression with a path)  *
  *     lastlogsize      - [IN/OUT] offset from the beginning of the file      *
