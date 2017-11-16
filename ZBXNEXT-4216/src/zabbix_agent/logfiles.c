@@ -475,10 +475,10 @@ static int	compare_file_places(const struct st_logfile *old, const struct st_log
 
 /******************************************************************************
  *                                                                            *
- * Function: is_same_file                                                     *
+ * Function: is_same_file_logrt                                               *
  *                                                                            *
- * Purpose: find out wheter a file from the old list and a file from the new  *
- *          list could be the same file                                       *
+ * Purpose: find out if a file from the old list and a file from the new list *
+ *          could be the same file in case of simple rotation                 *
  *                                                                            *
  * Parameters:                                                                *
  *          old     - [IN] file from the old list                             *
@@ -499,22 +499,14 @@ static int	compare_file_places(const struct st_logfile *old, const struct st_log
  *           truncated and replaced with a similar one.                       *
  *                                                                            *
  ******************************************************************************/
-static int	is_same_file(const struct st_logfile *old, const struct st_logfile *new, int use_ino, char **err_msg)
+static int	is_same_file_logrt(const struct st_logfile *old, const struct st_logfile *new, int use_ino,
+		char **err_msg)
 {
 	int	ret = ZBX_SAME_FILE_NO;
 
-	if (1 == use_ino || 2 == use_ino)
+	if (ZBX_FILE_PLACE_OTHER == compare_file_places(old, new, use_ino))
 	{
-		if (old->ino_lo != new->ino_lo || old->dev != new->dev)
-		{
-			/* file inode and device id cannot differ */
-			goto out;
-		}
-	}
-
-	if (2 == use_ino && old->ino_hi != new->ino_hi)
-	{
-		/* file inode (older 64-bits) cannot differ */
+		/* files cannot reside on different devices or occupy different inodes */
 		goto out;
 	}
 
