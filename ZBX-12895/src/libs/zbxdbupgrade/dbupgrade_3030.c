@@ -341,7 +341,7 @@ static int	DBpatch_3030030(void)
 	DB_RESULT	result;
 	char		*sql = NULL;
 	size_t		sql_alloc = 0, sql_offset;
-	zbx_uint64_t	last_eventid = 0, eventid = 0;
+	zbx_uint64_t	last_r_eventid = 0, r_eventid;
 
 	do
 	{
@@ -353,10 +353,10 @@ static int	DBpatch_3030030(void)
 					" from event_recovery e"
 						" join alerts a"
 							" on a.eventid=e.r_eventid");
-		if (0 < last_eventid)
+		if (0 < last_r_eventid)
 		{
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " where e.r_eventid<" ZBX_FS_UI64,
-					last_eventid);
+					last_r_eventid);
 		}
 		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by e.r_eventid desc, e.eventid desc");
 
@@ -371,8 +371,8 @@ static int	DBpatch_3030030(void)
 
 		while (NULL != (row = DBfetch(result)))
 		{
-			ZBX_STR2UINT64(eventid, row[1]);
-			if (last_eventid == eventid)
+			ZBX_STR2UINT64(r_eventid, row[1]);
+			if (last_r_eventid == r_eventid)
 				continue;
 
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
@@ -382,7 +382,7 @@ static int	DBpatch_3030030(void)
 			if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
 				goto out;
 
-			last_eventid = eventid;
+			last_r_eventid = r_eventid;
 			upd_num++;
 		}
 
