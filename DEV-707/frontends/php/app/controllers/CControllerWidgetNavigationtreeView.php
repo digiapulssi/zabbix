@@ -423,7 +423,7 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 
 		// Find and fix circular dependencies.
 		foreach ($navtree_items as $fieldid => &$field_details) {
-			if ($field_details['parent'] == $fieldid) {
+			if ($field_details['parent'] == $fieldid || !array_key_exists($field_details['parent'], $navtree_items)) {
 				$field_details['parent'] = 0;
 			}
 
@@ -436,7 +436,7 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 						$parent['parent'] = 0;
 					}
 
-					if ($parent['parent'] == $fieldid) {
+					if ($parent['parent'] == $fieldid || !array_key_exists($parent['parent'], $navtree_items)) {
 						$field_details['parent'] = 0;
 						break;
 					}

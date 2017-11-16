@@ -477,7 +477,7 @@ jQuery(function($) {
 					parents;
 
 				$.each(tree_items, function(i, item) {
-					if (item['parent'] == item['id']) {
+					if (item['parent'] == item['id'] || typeof tree_items[item['parent']] === 'undefined') {
 						item['parent'] = 0;
 					}
 
