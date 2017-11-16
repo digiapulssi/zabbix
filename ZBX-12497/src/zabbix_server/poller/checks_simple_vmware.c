@@ -604,7 +604,8 @@ static void	vmware_get_events(const zbx_vector_ptr_t *events, zbx_uint64_t last_
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() last_key:" ZBX_FS_UI64, __function_name, last_key);
 
-	for (i = 0; i < events->values_num; i++)
+	/* events were retrieved in reverse chronological order */
+	for (i = events->values_num - 1; i >= 0; i--)
 	{
 		const zbx_vmware_event_t	*event = events->values[i];
 		AGENT_RESULT			*add_result = NULL;

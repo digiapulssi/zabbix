@@ -2803,6 +2803,129 @@ out:
 
 /******************************************************************************
  *                                                                            *
+ * Function: vmware_service_reset_event_history_collector                     *
+ *                                                                            *
+ * Purpose: resets "scrollable view" to the latest events                     *
+ *                                                                            *
+ * Parameters: easyhandle     - [IN] the CURL handle                          *
+ *             event_session  - [IN] event session (EventHistoryCollector)    *
+ *                                   identifier                               *
+ *             error          - [OUT] the error message in the case of failure*
+ *                                                                            *
+ * Return value: SUCCEED - the operation has completed successfully           *
+ *               FAIL    - the operation has failed                           *
+ *                                                                            *
+ ******************************************************************************/
+static int	vmware_service_reset_event_history_collector(CURL *easyhandle, const char *event_session, char **error)
+{
+#	define ZBX_POST_VMWARE_RESET_EVENT_COLLECTOR					\
+		ZBX_POST_VSPHERE_HEADER							\
+		"<ns0:ResetCollector>"							\
+			"<ns0:_this type=\"EventHistoryCollector\">%s</ns0:_this>"	\
+		"</ns0:ResetCollector>"							\
+		ZBX_POST_VSPHERE_FOOTER
+
+	const char	*__function_name = "vmware_service_reset_event_history_collector";
+
+	int		err, opt, ret = FAIL;
+	char		tmp[MAX_STRING_LEN], *event_session_esc;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	event_session_esc = xml_escape_dyn(event_session);
+
+	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_RESET_EVENT_COLLECTOR, event_session_esc);
+
+	zbx_free(event_session_esc);
+
+	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
+	{
+		*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
+		goto out;
+	}
+
+	page.offset = 0;
+
+	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
+	{
+		*error = zbx_strdup(*error, curl_easy_strerror(err));
+		goto out;
+	}
+
+	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
+		goto out;
+
+	ret = SUCCEED;
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: vmware_service_read_previous_events                              *
+ *                                                                            *
+ * Purpose: reads events from "scrollable view" and moves it back in time     *
+ *                                                                            *
+ * Parameters: easyhandle     - [IN] the CURL handle                          *
+ *             event_session  - [IN] event session (EventHistoryCollector)    *
+ *                                   identifier                               *
+ *             error          - [OUT] the error message in the case of failure*
+ *                                                                            *
+ * Return value: SUCCEED - the operation has completed successfully           *
+ *               FAIL    - the operation has failed                           *
+ *                                                                            *
+ ******************************************************************************/
+static int	vmware_service_read_previous_events(CURL *easyhandle, const char *event_session, char **error)
+{
+#	define ZBX_POST_VMWARE_READ_PREVIOUS_EVENTS					\
+		ZBX_POST_VSPHERE_HEADER							\
+		"<ns0:ReadPreviousEvents>"						\
+			"<ns0:_this type=\"EventHistoryCollector\">%s</ns0:_this>"	\
+			"<ns0:maxCount>10</ns0:maxCount>"				\
+		"</ns0:ReadPreviousEvents>"						\
+		ZBX_POST_VSPHERE_FOOTER
+
+	const char	*__function_name = "vmware_service_read_previous_events";
+
+	int		err, opt, ret = FAIL;
+	char		tmp[MAX_STRING_LEN], *event_session_esc;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	event_session_esc = xml_escape_dyn(event_session);
+
+	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_READ_PREVIOUS_EVENTS, event_session_esc);
+
+	zbx_free(event_session_esc);
+
+	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
+	{
+		*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
+		goto out;
+	}
+
+	page.offset = 0;
+
+	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
+	{
+		*error = zbx_strdup(*error, curl_easy_strerror(err));
+		goto out;
+	}
+
+	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
+		goto out;
+
+	ret = SUCCEED;
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: vmware_service_destroy_event_session                             *
  *                                                                            *
  * Purpose: destroys event session                                            *
@@ -2862,19 +2985,19 @@ out:
 	return ret;
 }
 
-static int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml)
+void	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml)
 {
 	const char		*__function_name = "vmware_service_parse_event_data";
 
 	zbx_vector_str_t	keys;
 	zbx_vector_uint64_t	ids;
-	int			i, ret = FAIL;
+	int			i;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() last_key:" ZBX_FS_UI64, __function_name, last_key);
 
 	zbx_vector_str_create(&keys);
 
-	if (SUCCEED != zbx_xml_read_values(xml, ZBX_XPATH_LN2("Event", "key"), &keys))
+	if (SUCCEED != zbx_xml_read_values(xml, ZBX_XPATH_LN2("returnval", "key"), &keys))
 		goto out;
 
 	zbx_vector_uint64_create(&ids);
@@ -2904,13 +3027,15 @@ static int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_
 	{
 		zbx_vector_uint64_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
-		for (i = 0; i < ids.values_num; i++)
+		/* we are reading "scrollable views" in reverse chronological order, */
+		/* so inside a "scrollable view" latest events should come first too */
+		for (i = ids.values_num - 1; i >= 0; i--)
 		{
 			zbx_vmware_event_t	*event = NULL;
 			char			*message, *time_str, xpath[MAX_STRING_LEN];
 			int			timestamp = 0;
 
-			zbx_snprintf(xpath, sizeof(xpath), ZBX_XPATH_LN2("Event", "key") "[.='" ZBX_FS_UI64 "']/.."
+			zbx_snprintf(xpath, sizeof(xpath), ZBX_XPATH_LN2("returnval", "key") "[.='" ZBX_FS_UI64 "']/.."
 					ZBX_XPATH_LN("fullFormattedMessage"), ids.values[i]);
 
 			if (NULL == (message = zbx_xml_read_value(xml, xpath)))
@@ -2922,7 +3047,7 @@ static int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_
 
 			zbx_replace_invalid_utf8(message);
 
-			zbx_snprintf(xpath, sizeof(xpath), ZBX_XPATH_LN2("Event", "key") "[.='" ZBX_FS_UI64 "']/.."
+			zbx_snprintf(xpath, sizeof(xpath), ZBX_XPATH_LN2("returnval", "key") "[.='" ZBX_FS_UI64 "']/.."
 					ZBX_XPATH_LN("createdTime"), ids.values[i]);
 
 			if (NULL == (time_str = zbx_xml_read_value(xml, xpath)))
@@ -2960,15 +3085,10 @@ static int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_
 	}
 
 	zbx_vector_uint64_destroy(&ids);
-
-	ret = SUCCEED;
 out:
 	zbx_vector_str_destroy(&keys);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s events:%d", __function_name, zbx_result_string(ret),
-			events->values_num);
-
-	return ret;
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() events:%d", __function_name, events->values_num);
 }
 
 /******************************************************************************
@@ -2989,56 +3109,32 @@ out:
 static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CURL *easyhandle,
 		zbx_vector_ptr_t *events, char **error)
 {
-#	define ZBX_POST_VMWARE_EVENTS_GET							\
-		ZBX_POST_VSPHERE_HEADER								\
-		"<ns0:RetrievePropertiesEx>"							\
-			"<ns0:_this type=\"PropertyCollector\">%s</ns0:_this>"			\
-			"<ns0:specSet>"								\
-				"<ns0:propSet>"							\
-					"<ns0:type>EventHistoryCollector</ns0:type>"		\
-					"<ns0:all>true</ns0:all>"				\
-				"</ns0:propSet>"						\
-				"<ns0:objectSet>"						\
-					"<ns0:obj type=\"EventHistoryCollector\">%s</ns0:obj>"	\
-					"<ns0:skip>false</ns0:skip>"				\
-				"</ns0:objectSet>"						\
-			"</ns0:specSet>"							\
-			"<ns0:options/>"							\
-		"</ns0:RetrievePropertiesEx>"							\
-		ZBX_POST_VSPHERE_FOOTER
-
 	const char	*__function_name = "vmware_service_get_event_data";
 
-	char				tmp[MAX_STRING_LEN], *event_session = NULL, *event_session_esc;
-	zbx_property_collection_iter	*iter;
-	const char			*chunk;
-	int				ret = FAIL;
+	char		tmp[MAX_STRING_LEN], *event_session = NULL;
+	int		event_num, ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() event_session:'%s'", __function_name, event_session);
 
 	if (SUCCEED != vmware_service_get_event_session(service, easyhandle, &event_session, error))
 		goto out;
 
-	event_session_esc = xml_escape_dyn(event_session);
-	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_EVENTS_GET,
-			vmware_service_objects[service->type].property_collector, event_session_esc);
-	zbx_free(event_session_esc);
-
-	iter = zbx_property_collection_init(easyhandle, tmp, vmware_service_objects[service->type].property_collector);
+	if (SUCCEED != vmware_service_reset_event_history_collector(easyhandle, event_session, error))
+		goto end_session;
 
 	do
 	{
-		if (NULL == (chunk = zbx_property_collection_chunk(iter, error)))
-			break;
+		event_num = events->values_num;
 
-		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, chunk);
+		if (SUCCEED != vmware_service_read_previous_events(easyhandle, event_session, error))
+			goto end_session;
 
-		if (SUCCEED != (ret = vmware_service_parse_event_data(events, service->last_key, chunk)))
-			break;
+		zabbix_log(LOG_LEVEL_TRACE, "SOAP response: %s", page.data);
+		vmware_service_parse_event_data(events, service->last_key, page.data);
 	}
-	while (SUCCEED == zbx_property_collection_next(iter));
+	while (events->values_num > event_num);	/* keep looping while vmware_service_parse_event_data() appends events */
 
-	zbx_property_collection_free(iter);
+	ret = SUCCEED;
 end_session:
 	if (SUCCEED != vmware_service_destroy_event_session(easyhandle, event_session, error))
 		ret = FAIL;
