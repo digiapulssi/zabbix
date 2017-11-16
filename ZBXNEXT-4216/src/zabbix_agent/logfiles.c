@@ -716,39 +716,47 @@ static int	is_same_file_logcpt(const struct st_logfile *old, const struct st_log
 
 /******************************************************************************
  *                                                                            *
- * Function: setup_old2new                                                    *
+ * Function: setup_old2new_and_copy_of                                        *
  *                                                                            *
  * Purpose: fill an array of possible mappings from the old log files to the  *
  *          new log files.                                                    *
  *                                                                            *
  * Parameters:                                                                *
- *          old2new - [IN] two dimensional array of possible mappings         *
- *          old     - [IN] old file list                                      *
- *          num_old - [IN] number of elements in the old file list            *
- *          new     - [IN] new file list                                      *
- *          num_new - [IN] number of elements in the new file list            *
- *          use_ino - [IN] how to use inodes in is_same_file()                *
- *          err_msg - [IN/OUT] error message why an item became NOTSUPPORTED  *
+ *     rotation_type - [IN] file rotation type                                *
+ *     old2new       - [IN] two dimensional array of possible mappings        *
+ *     old           - [IN] old file list                                     *
+ *     num_old       - [IN] number of elements in the old file list           *
+ *     new           - [IN] new file list                                     *
+ *     num_new       - [IN] number of elements in the new file list           *
+ *     use_ino       - [IN] how to use inodes in is_same_file()               *
+ *     err_msg       - [IN/OUT] error message why an item became NOTSUPPORTED *
  *                                                                            *
  * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  * Comments:                                                                  *
- *    The array is filled with '0' and '1' which mean:                        *
+ *    The array is filled with '0', '1' and '2'  which mean:                  *
  *       old2new[i][j] = '0' - the i-th old file IS NOT the j-th new file     *
  *       old2new[i][j] = '1' - the i-th old file COULD BE the j-th new file   *
+ *       old2new[i][j] = '2' - the j-th new file is a copy of the i-th old    *
+ *                             file                                           *
  *                                                                            *
  ******************************************************************************/
-static int	setup_old2new(char *old2new, struct st_logfile *old, int num_old,
-		const struct st_logfile *new, int num_new, int use_ino, char **err_msg)
+static int	setup_old2new_and_copy_of(int rotation_type, char *old2new, struct st_logfile *old,
+		int num_old, struct st_logfile *new, int num_new, int use_ino, char **err_msg)
 {
-	int	i, j, rc;
+	int	i, j;
 	char	*p = old2new;
 
 	for (i = 0; i < num_old; i++)
 	{
 		for (j = 0; j < num_new; j++)
 		{
-			rc = is_same_file(old + i, new + j, use_ino, err_msg);
+			int	rc;
+
+			if (ZBX_LOG_ROTATION_LOGRT == rotation_type)
+				rc = is_same_file_logrt(old + i, new + j, use_ino, err_msg);
+			else
+				rc = is_same_file_logcpt(old + i, new + j, use_ino, err_msg);
 
 			switch (rc)
 			{
@@ -765,16 +773,20 @@ static int	setup_old2new(char *old2new, struct st_logfile *old, int num_old,
 					}
 					p[j] = '1';
 					break;
+				case ZBX_SAME_FILE_COPY:
+					p[j] = '2';
+					new[j].copy_of = i;
+					break;
 				case ZBX_SAME_FILE_RETRY:
 					old[i].retry = 1;
-					/* break; is not missing here */
+					return FAIL;
 				case ZBX_SAME_FILE_ERROR:
 					return FAIL;
 			}
 
 			if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 			{
-				zabbix_log(LOG_LEVEL_DEBUG, "setup_old2new: is_same_file(%s, %s) = %c",
+				zabbix_log(LOG_LEVEL_DEBUG, "setup_old2new_and_copy_of: is_same_file(%s, %s) = %c",
 						old[i].filename, new[j].filename, p[j]);
 			}
 		}
@@ -844,29 +856,30 @@ static void	cross_out(char *arr, int n_rows, int n_cols, int row, int col, char 
  *                                                                            *
  * Function: is_uniq_row                                                      *
  *                                                                            *
- * Purpose: check if there is only one element '1' in the given row           *
+ * Purpose: check if there is only one element '1' or '2' in the given row    *
  *                                                                            *
  * Parameters:                                                                *
  *          arr    - [IN] two dimensional array                               *
  *          n_cols - [IN] number of columns in the array                      *
  *          row    - [IN] number of row to search                             *
  *                                                                            *
- * Return value: number of column where the '1' element was found or          *
- *               -1 if there are zero or multiple '1' elements in the row     *
+ * Return value: number of column where the element '1' or '2' was found or   *
+ *               -1 if there are zero or multiple elements '1' or '2' in the  *
+ *               row                                                          *
  *                                                                            *
  ******************************************************************************/
 static int	is_uniq_row(const char *arr, int n_cols, int row)
 {
-	int		i, ones = 0, ret = -1;
+	int		i, mappings = 0, ret = -1;
 	const char	*p;
 
 	p = arr + row * n_cols;			/* point to the first element of the 'row' */
 
 	for (i = 0; i < n_cols; i++)
 	{
-		if ('1' == *p++)
+		if ('1' == *p || '2' == *p)
 		{
-			if (2 == ++ones)
+			if (2 == ++mappings)
 			{
 				ret = -1;	/* non-unique mapping in the row */
 				break;
@@ -874,6 +887,8 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
 
 			ret = i;
 		}
+
+		p++;
 	}
 
 	return ret;
@@ -883,7 +898,7 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
  *                                                                            *
  * Function: is_uniq_col                                                      *
  *                                                                            *
- * Purpose: check if there is only one element '1' in the given column        *
+ * Purpose: check if there is only one element '1' or '2' in the given column *
  *                                                                            *
  * Parameters:                                                                *
  *          arr    - [IN] two dimensional array                               *
@@ -891,22 +906,23 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
  *          n_cols - [IN] number of columns in the array                      *
  *          col    - [IN] number of column to search                          *
  *                                                                            *
- * Return value: number of row where the '1' element was found or             *
- *               -1 if there are zero or multiple '1' elements in the column  *
+ * Return value: number of column where the element '1' or '2 ' was found or  *
+ *               -1 if there are zero or multiple elements '1' or '2' in the  *
+ *               row                                                          *
  *                                                                            *
  ******************************************************************************/
 static int	is_uniq_col(const char *arr, int n_rows, int n_cols, int col)
 {
-	int		i, ones = 0, ret = -1;
+	int		i, mappings = 0, ret = -1;
 	const char	*p;
 
 	p = arr + col;				/* point to the top element of the 'col' */
 
 	for (i = 0; i < n_rows; i++)
 	{
-		if ('1' == *p)
+		if ('1' == *p || '2' == *p)
 		{
-			if (2 == ++ones)
+			if (2 == ++mappings)
 			{
 				ret = -1;	/* non-unique mapping in the column */
 				break;
