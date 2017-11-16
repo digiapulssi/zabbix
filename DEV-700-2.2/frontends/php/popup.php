@@ -584,28 +584,29 @@ if ($srctbl == 'usrgrp') {
 	$userGroups = API::UserGroup()->get($options);
 	order_result($userGroups, 'name');
 
-	foreach ($userGroups as $usrgrpid => &$userGroup) {
+	foreach ($userGroups as &$userGroup) {
 		$name = new CSpan($userGroup['name'], 'link');
-		$name->attr('id', 'spanid'.$usrgrpid);
+		$name->attr('id', 'spanid'.$userGroup['usrgrpid']);
 
 		if ($multiselect) {
-			$js_action = "javascript: addValue(".zbx_jsvalue($usrgrpid).');';
-			$userGroup[$reference] = $usrgrpid;
+			$js_action = "javascript: addValue(".zbx_jsvalue($userGroup['usrgrpid']).');';
+			$userGroup[$reference] = $userGroup['usrgrpid'];
 		}
 		else {
 			$userGroup = array(
 				$dstfld1 => $userGroup[$srcfld1],
 				$dstfld2 => $userGroup[$srcfld2]
 			);
-			$js_action = 'javascript: addValues('.zbx_jsvalue($usrgrpid).');';
+			$js_action = 'javascript: addValues('.zbx_jsvalue($userGroup['usrgrpid']).');';
 		}
 		$name->setAttribute('onclick', $js_action.' jQuery(this).removeAttr("onclick");');
 
 		$table->addRow(array(
-			$multiselect ? new CCheckBox('usrgrps['.$usrgrpid.']', null, null, $usrgrpid) : null,
+			$multiselect ? new CCheckBox('usrgrps['.$userGroup['usrgrpid'].']', null, null, $userGroup['usrgrpid']) : null,
 			$name,
 		));
 	}
+	unset($userGroup);
 
 	if ($multiselect) {
 		$button = new CButton('select', _('Select'), "javascript: addSelectedValues('usrgrps');");
@@ -645,22 +646,22 @@ elseif ($srctbl == 'users') {
 	$users = API::User()->get($options);
 	order_result($users, 'alias');
 
-	foreach ($users as $userid => &$user) {
+	foreach ($users as &$user) {
 		$alias = new CSpan($user['alias'], 'link');
-		$alias->attr('id', 'spanid'.$userid);
+		$alias->attr('id', 'spanid'.$user['userid']);
 
 		if (isset($srcfld2) && $srcfld2 == 'fullname') {
 			$user[$srcfld2] = getUserFullname($user);
 		}
 
 		$js_action = $multiselect
-			? 'javascript: addValue('.zbx_jsvalue($userid).');'
-			: 'javascript: addValues('.zbx_jsvalue($userid).');';
+			? 'javascript: addValue('.zbx_jsvalue($user['userid']).');'
+			: 'javascript: addValues('.zbx_jsvalue($user['userid']).');';
 
 		$alias->setAttribute('onclick', $js_action.' jQuery(this).removeAttr("onclick");');
 
 		$table->addRow(array(
-			$multiselect ? new CCheckBox('users['.zbx_jsValue($user[$srcfld1]).']', null, null, $userid) : null,
+			$multiselect ? new CCheckBox('users['.zbx_jsValue($user[$srcfld1]).']', null, null, $user['userid']) : null,
 			$alias,
 			$user['name'],
 			$user['surname']
