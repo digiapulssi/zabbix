@@ -66,14 +66,15 @@ static int	connect_to_proxy(DC_PROXY *proxy, zbx_socket_t *sock, int timeout)
 #else
 		case ZBX_TCP_SEC_TLS_CERT:
 		case ZBX_TCP_SEC_TLS_PSK:
-			zbx_error("Server was compiled without cryptographic libraries. "
-					"Cannot create encrypted connection to proxy.");
+			zabbix_log(LOG_LEVEL_ERR, "cannot create encrypted connection to proxy \"%s\":"
+					" cryptographic libraries not compiled in", proxy->host);
 			goto out;
 #endif
 		default:
 			THIS_SHOULD_NEVER_HAPPEN;
 			goto out;
 	}
+
 	if (FAIL == (ret = zbx_tcp_connect(sock, CONFIG_SOURCE_IP, proxy->addr, proxy->port, timeout,
 			proxy->tls_connect, tls_arg1, tls_arg2)))
 	{
