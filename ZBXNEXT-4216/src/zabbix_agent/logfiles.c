@@ -951,39 +951,41 @@ static int	is_uniq_col(const char *arr, int n_rows, int n_cols, int col)
  ******************************************************************************/
 static void	resolve_old2new(char *old2new, int num_old, int num_new)
 {
-	int	i, j, ones;
+	int	i, j, mappings;
 	char	*p, *protected_rows = NULL, *protected_cols = NULL;
 
 	/* Is there 1:1 mapping in both directions between files in the old and the new list ? */
-	/* In this case every row and column has not more than one element '1'. */
+	/* In this case every row and column has not more than one element '1' or '2', others are '0'. */
 	/* This is expected on UNIX (using inode numbers) and MS Windows (using FileID on NTFS, ReFS) */
 
 	p = old2new;
 
 	for (i = 0; i < num_old; i++)		/* loop over rows (old files) */
 	{
-		ones = 0;
+		mappings = 0;
 
 		for (j = 0; j < num_new; j++)	/* loop over columns (new files) */
 		{
-			if ('1' == *p++)
+			if ('1' == *p || '2' == *p)
 			{
-				if (2 == ++ones)
+				if (2 == ++mappings)
 					goto non_unique;
 			}
+
+			p++;
 		}
 	}
 
 	for (i = 0; i < num_new; i++)		/* loop over columns */
 	{
 		p = old2new + i;
-		ones = 0;
+		mappings = 0;
 
 		for (j = 0; j < num_old; j++)	/* loop over rows */
 		{
-			if ('1' == *p)
+			if ('1' == *p || '2' == *p)
 			{
-				if (2 == ++ones)
+				if (2 == ++mappings)
 					goto non_unique;
 			}
 			p += num_new;
@@ -1054,7 +1056,7 @@ non_unique:
 
 			for (j = 0; j < num_new; j++)
 			{
-				if ('1' == p[j] && '1' != protected_cols[j])
+				if (('1' == p[j] || '2' == p[j]) && '1' != protected_cols[j])
 				{
 					cross_out(old2new, num_old, num_new, i, j, protected_rows, protected_cols);
 					break;
@@ -1106,7 +1108,7 @@ non_unique:
 
 			for (j = num_new - 1; j >= 0; j--)
 			{
-				if ('1' == p[j] && '1' != protected_cols[j])
+				if (('1' == p[j] || '2' == p[j]) && '1' != protected_cols[j])
 				{
 					cross_out(old2new, num_old, num_new, i, j, protected_rows, protected_cols);
 					break;
@@ -1137,14 +1139,14 @@ non_unique:
 static int	find_old2new(char *old2new, int num_new, int i_old)
 {
 	int	i;
-	char	*p;
-
-	p = old2new + i_old * num_new;
+	char	*p = old2new + i_old * num_new;
 
 	for (i = 0; i < num_new; i++)		/* loop over columns (new files) on i_old-th row */
 	{
-		if ('1' == *p++)
+		if ('1' == *p || '2' == *p)
 			return i;
+
+		p++;
 	}
 
 	return -1;
