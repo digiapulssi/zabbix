@@ -329,7 +329,7 @@ static int	DBpatch_3030029(void)
  * Comments: This procedure fills in field 'p_eventid' for all recovery       *
  *           actions. 'p_eventid' value is defined as per last problematic    *
  *           event, that was closed by correct recovery event.                *
- *           This is done because the relation beetwen ecovery alerts and     *
+ *           This is done because the relation between recovery alerts and    *
  *           this method is most successful for updating zabbix 3.0 to latest *
  *           versions.                                                        *
  *                                                                            *
