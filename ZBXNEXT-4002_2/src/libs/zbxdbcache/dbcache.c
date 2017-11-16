@@ -980,7 +980,7 @@ clean_items:
  *             h    - [IN/OUT] a reference to history cache value             *
  *                                                                            *
  ******************************************************************************/
-static void	DCadd_update_item_sql(size_t *sql_offset, DC_ITEM *item, ZBX_DC_HISTORY *h)
+static void	DCadd_update_item_sql(size_t *sql_offset, const DC_ITEM *item, ZBX_DC_HISTORY *h)
 {
 	char				*value_esc;
 	const char			*sql_start = "update items set ", *sql_continue = ",";
@@ -1062,7 +1062,7 @@ notsupported:
 		zbx_snprintf_alloc(&sql, &sql_alloc, sql_offset, " where itemid=" ZBX_FS_UI64 ";\n", item->itemid);
 }
 
-static void	DCinventory_value_add(zbx_vector_ptr_t *inventory_values, DC_ITEM *item, ZBX_DC_HISTORY *h)
+static void	DCinventory_value_add(zbx_vector_ptr_t *inventory_values, const DC_ITEM *item, ZBX_DC_HISTORY *h)
 {
 	char			value[MAX_BUFFER_LEN];
 	const char		*inventory_field;
