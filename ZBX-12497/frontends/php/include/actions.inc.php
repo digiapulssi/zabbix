@@ -1113,9 +1113,7 @@ function getActionMessages(array $alerts) {
 		}
 
 		$recipient = $alert['userid']
-			? array_key_exists($alert['userid'], $dbUsers)
-				? [bold(getUserFullname($dbUsers[$alert['userid']])), BR(), $alert['sendto']]
-				: _('Inaccessible user')
+			? [bold(getUserFullname($dbUsers[$alert['userid']])), BR(), $alert['sendto']]
 			: $alert['sendto'];
 
 		$table->addRow([
@@ -1241,13 +1239,12 @@ function makeEventsActions($eventids) {
 		return [];
 	}
 
-	$result = DBselect(
-		'SELECT a.eventid,a.mediatypeid,a.userid,a.clock,a.message,a.status,a.alerttype,a.error'.
-		' FROM alerts a'.
-		' WHERE '.dbConditionInt('a.eventid', $eventids).
-			' AND a.alerttype IN ('.ALERT_TYPE_MESSAGE.','.ALERT_TYPE_COMMAND.')'.
-		' ORDER BY a.alertid DESC'
-	);
+	$db_alerts = API::Alert()->get([
+		'output' => ['eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype', 'error'],
+		'eventids' => $eventids,
+		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
+		'sortorder' => ['alertid' => ZBX_SORT_DOWN]
+	]);
 
 	$events = [];
 	$userids = [];
@@ -1255,9 +1252,9 @@ function makeEventsActions($eventids) {
 	$mediatypeids = [];
 	$mediatypes = [];
 
-	while ($row = DBfetch($result)) {
-		if (!array_key_exists($row['eventid'], $events)) {
-			$events[$row['eventid']] = [
+	foreach ($db_alerts as $db_alert) {
+		if (!array_key_exists($db_alert['eventid'], $events)) {
+			$events[$db_alert['eventid']] = [
 				ALERT_STATUS_NOT_SENT => [],
 				ALERT_STATUS_SENT => [],
 				ALERT_STATUS_FAILED => []
@@ -1265,31 +1262,31 @@ function makeEventsActions($eventids) {
 		}
 
 		$event = [
-			'clock' => $row['clock'],
-			'alerttype' => $row['alerttype'],
-			'error' => $row['error']
+			'clock' => $db_alert['clock'],
+			'alerttype' => $db_alert['alerttype'],
+			'error' => $db_alert['error']
 		];
 
 		switch ($event['alerttype']) {
 			case ALERT_TYPE_COMMAND:
-				$event['message'] = $row['message'];
+				$event['message'] = $db_alert['message'];
 				break;
 
 			case ALERT_TYPE_MESSAGE:
-				$event['mediatypeid'] = $row['mediatypeid'];
-				$event['userid'] = $row['userid'];
+				$event['mediatypeid'] = $db_alert['mediatypeid'];
+				$event['userid'] = $db_alert['userid'];
 
 				if ($event['mediatypeid'] != 0) {
-					$mediatypeids[$row['mediatypeid']] = true;
+					$mediatypeids[$db_alert['mediatypeid']] = true;
 				}
 
 				if ($event['userid'] != 0) {
-					$userids[$row['userid']] = true;
+					$userids[$db_alert['userid']] = true;
 				}
 				break;
 		}
 
-		$events[$row['eventid']][$row['status']][] = $event;
+		$events[$db_alert['eventid']][$db_alert['status']][] = $event;
 	}
 
 	if ($mediatypeids) {

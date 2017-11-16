@@ -1,3 +1,4 @@
+<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -17,12 +18,18 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_EVENTS_H
-#define ZABBIX_EVENTS_H
+/**
+ * A class that allows changing message of an Exception without recreating it.
+ */
+class CExceptionHelper extends Exception {
 
-void	add_event(zbx_uint64_t eventid, unsigned char source, unsigned char object, zbx_uint64_t objectid,
-		const zbx_timespec_t *timespec, int value, const char *trigger_description,
-		const char *trigger_expression, unsigned char trigger_priority, unsigned char trigger_type);
-int	process_events(zbx_vector_ptr_t *itservice_updates);
-
-#endif
+	/**
+	 * Set exception message.
+	 *
+	 * @param Exception $exception				Exception to be updated.
+	 * @param string    $message				Message to be set.
+	 */
+	public static function setMessage(Exception $exception, $message) {
+		$exception->message = $message;
+	}
+}

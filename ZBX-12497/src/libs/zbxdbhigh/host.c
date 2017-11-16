@@ -3909,6 +3909,9 @@ typedef struct
 	int			no;
 	int			timeout;
 	char			*variables;
+	char			*headers;
+	unsigned char		follow_redirects;
+	unsigned char		retrieve_mode;
 }
 httpstep_t;
 
@@ -3936,6 +3939,7 @@ typedef struct
 	zbx_vector_ptr_t	httptestitems;
 	int			delay;
 	int			retries;
+	char			*headers;
 	unsigned char		status;
 	unsigned char		authentication;
 }
@@ -3976,7 +3980,8 @@ static void	DBget_httptests(zbx_uint64_t hostid, const zbx_vector_uint64_t *temp
 
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 			"select t.httptestid,t.name,t.applicationid,t.delay,t.status,t.variables,t.agent,"
-				"t.authentication,t.http_user,t.http_password,t.http_proxy,t.retries,h.httptestid"
+				"t.authentication,t.http_user,t.http_password,t.http_proxy,t.retries,h.httptestid,"
+				"t.headers"
 			" from httptest t"
 				" left join httptest h"
 					" on h.hostid=" ZBX_FS_UI64
@@ -4011,6 +4016,7 @@ static void	DBget_httptests(zbx_uint64_t hostid, const zbx_vector_uint64_t *temp
 			httptest->http_password = zbx_strdup(NULL, row[9]);
 			httptest->http_proxy = zbx_strdup(NULL, row[10]);
 			httptest->retries = atoi(row[11]);
+			httptest->headers = zbx_strdup(NULL, row[13]);
 
 			zbx_vector_uint64_append(&httptestids, httptest->templateid);
 
@@ -4027,7 +4033,8 @@ static void	DBget_httptests(zbx_uint64_t hostid, const zbx_vector_uint64_t *temp
 
 		sql_offset = 0;
 		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
-				"select httpstepid,httptestid,name,no,url,timeout,posts,required,status_codes,variables"
+				"select httpstepid,httptestid,name,no,url,timeout,posts,required,status_codes,"
+					"variables,follow_redirects,retrieve_mode,headers"
 				" from httpstep"
 				" where");
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "httptestid",
@@ -4063,6 +4070,9 @@ static void	DBget_httptests(zbx_uint64_t hostid, const zbx_vector_uint64_t *temp
 			httpstep->required = zbx_strdup(NULL, row[7]);
 			httpstep->status_codes = zbx_strdup(NULL, row[8]);
 			httpstep->variables = zbx_strdup(NULL, row[9]);
+			httpstep->follow_redirects = atoi(row[10]);
+			httpstep->retrieve_mode = atoi(row[11]);
+			httpstep->headers = zbx_strdup(NULL, row[12]);
 			zbx_vector_ptr_create(&httpstep->httpstepitems);
 
 			zbx_vector_ptr_append(&httptest->httpsteps, httpstep);
@@ -4322,7 +4332,7 @@ static void	DBsave_httptests(zbx_uint64_t hostid, zbx_vector_ptr_t *httptests)
 
 		zbx_db_insert_prepare(&db_insert_htest, "httptest", "httptestid", "name", "applicationid", "delay",
 				"status", "variables", "agent", "authentication", "http_user", "http_password",
-				"http_proxy", "retries", "hostid", "templateid", NULL);
+				"http_proxy", "retries", "hostid", "templateid", "headers", NULL);
 	}
 
 	if (httptests->values_num != num_httptests)
@@ -4333,7 +4343,8 @@ static void	DBsave_httptests(zbx_uint64_t hostid, zbx_vector_ptr_t *httptests)
 		httpstepid = DBget_maxid_num("httpstep", num_httpsteps);
 
 		zbx_db_insert_prepare(&db_insert_hstep, "httpstep", "httpstepid", "httptestid", "name", "no", "url",
-				"timeout", "posts", "required", "status_codes", "variables", NULL);
+				"timeout", "posts", "required", "status_codes", "variables", "follow_redirects",
+				"retrieve_mode", "headers", NULL);
 	}
 
 	if (0 != num_httptestitems)
@@ -4366,7 +4377,7 @@ static void	DBsave_httptests(zbx_uint64_t hostid, zbx_vector_ptr_t *httptests)
 					httptest->h_applicationid, httptest->delay, (int)httptest->status,
 					httptest->variables, httptest->agent, (int)httptest->authentication,
 					httptest->http_user, httptest->http_password, httptest->http_proxy,
-					httptest->retries, hostid, httptest->templateid);
+					httptest->retries, hostid, httptest->templateid, httptest->headers);
 
 			for (j = 0; j < httptest->httpsteps.values_num; j++)
 			{
@@ -4375,7 +4386,8 @@ static void	DBsave_httptests(zbx_uint64_t hostid, zbx_vector_ptr_t *httptests)
 				zbx_db_insert_add_values(&db_insert_hstep, httpstepid, httptest->httptestid,
 						httpstep->name, httpstep->no, httpstep->url, httpstep->timeout,
 						httpstep->posts, httpstep->required, httpstep->status_codes,
-						httpstep->variables);
+						httpstep->variables, httpstep->follow_redirects,
+						httpstep->retrieve_mode, httpstep->headers);
 
 				for (k = 0; k < httpstep->httpstepitems.values_num; k++)
 				{
@@ -4465,6 +4477,7 @@ static void	clean_httptests(zbx_vector_ptr_t *httptests)
 		zbx_free(httptest->agent);
 		zbx_free(httptest->variables);
 		zbx_free(httptest->name);
+		zbx_free(httptest->headers);
 
 		for (j = 0; j < httptest->httpsteps.values_num; j++)
 		{
@@ -4476,6 +4489,7 @@ static void	clean_httptests(zbx_vector_ptr_t *httptests)
 			zbx_free(httpstep->url);
 			zbx_free(httpstep->name);
 			zbx_free(httpstep->variables);
+			zbx_free(httpstep->headers);
 
 			for (k = 0; k < httpstep->httpstepitems.values_num; k++)
 				zbx_free(httpstep->httpstepitems.values[k]);
