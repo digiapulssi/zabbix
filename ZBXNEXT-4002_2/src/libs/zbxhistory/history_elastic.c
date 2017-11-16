@@ -814,6 +814,7 @@ int	zbx_history_elastic_init(zbx_history_iface_t *hist, unsigned char value_type
 	data = zbx_malloc(NULL, sizeof(zbx_elastic_data_t));
 	memset(data, 0, sizeof(zbx_elastic_data_t));
 	data->base_url = zbx_strdup(NULL, CONFIG_HISTORY_STORAGE_URL);
+	zbx_rtrim(data->base_url, "/");
 	data->buf = NULL;
 	data->post_url = NULL;
 	data->handle = NULL;
