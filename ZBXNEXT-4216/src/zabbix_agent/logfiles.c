@@ -1534,11 +1534,8 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 
 		add_logfile(logfiles, logfiles_alloc, logfiles_num, filename, &file_buf);
 #ifdef _WINDOWS
-		if (SUCCEED != set_use_ino_by_fs_type(filename, use_ino, err_msg))
-		{
-			ret = FAIL;
+		if (SUCCEED != (ret = set_use_ino_by_fs_type(filename, use_ino, err_msg)))
 			goto clean;
-		}
 #else
 		/* on UNIX file systems we always assume that inodes can be used to identify files */
 		*use_ino = 1;
@@ -1550,22 +1547,15 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 		regex_t	re;
 
 		/* split a filename into directory and file name regular expression parts */
-		if (SUCCEED != split_filename(filename, &directory, &filename_regexp, err_msg))
-		{
-			ret = FAIL;
+		if (SUCCEED != (ret = split_filename(filename, &directory, &filename_regexp, err_msg)))
 			goto clean;
-		}
 
-		if (SUCCEED != compile_filename_regexp(&re, filename_regexp, err_msg))
-		{
-			ret = FAIL;
+		if (SUCCEED != (ret = compile_filename_regexp(&re, filename_regexp, err_msg)))
 			goto clean1;
-		}
 
-		if (SUCCEED != pick_logfiles(directory, *mtime, &re, use_ino, logfiles, logfiles_alloc, logfiles_num,
-				err_msg))
+		if (SUCCEED != (ret = pick_logfiles(directory, *mtime, &re, use_ino, logfiles, logfiles_alloc,
+				logfiles_num, err_msg)))
 		{
-			ret = FAIL;
 			goto clean2;
 		}
 
