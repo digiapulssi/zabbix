@@ -104,7 +104,7 @@
 		<attribute name="args"/>
 		<attribute name="cc" default="gcc"/>
 		<attribute name="target" default=""/>
-		<attribute name="post-make-acton" default=""/>
+		<attribute name="post-action" default=""/>
 		<sequential>
 			<!-- initialize cflags depending on used compiler -->
 			<local name="common.cflags"/>
@@ -138,10 +138,10 @@
 					</exec>
 					<if>
 						<not >
-							<equals arg1="${post-make-acton}" arg2=""/>
+							<equals arg1="${post-action}" arg2=""/>
 						</not>
 						<then>
-							<antcall target="@{post-make-acton}"/>
+							<antcall target="@{post-action}"/>
 						</then>
 					</if>
 				</try>
@@ -280,7 +280,7 @@
 	
 	<target name="unit-test" depends="init">
 		<!-- Build Zabbix with C unit tests -->
-		<make args="--enable-server --with-mysql --with-libxml2" target="test" post-make-acton="run-unit-test"/>
+		<make args="--enable-server --with-mysql --with-libxml2" target="test" post-action="run-unit-test"/>
 	</target>
 	
 	<target name="build-dist" depends="create-db,make-gcc,make-db"/>
