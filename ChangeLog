@@ -3,6 +3,7 @@ Changes for 3.0.14rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
 ........S. [ZBX-8049] fixed zabbix[java,,ping] to stay supported when java gateway is down (valdis)
 ........S. [ZBX-12971] fixed possibility of host availability being stuck in unknown state when monitoring though proxy (vso)
 A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
