@@ -187,7 +187,11 @@ class CElasticSearchHelper {
 		}
 
 		if (array_key_exists('error', $result)) {
-			error(_s('ElasticSearch error: %1$s.', $result['error']['reason']));
+			$error = (is_array($result['error']) && array_key_exists('reason', $result['error']))
+					? $result['error']['reason']
+					: _('Unknown error');
+
+			error(_s('ElasticSearch error: %1$s.', $error));
 
 			return [];
 		}
