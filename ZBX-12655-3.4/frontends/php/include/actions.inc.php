@@ -1642,14 +1642,14 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 		}
 	}
 
-	$db_alerts = API::Alert()->get([
-		'output' => ['eventid', 'p_eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype',
-			'error'
-		],
-		'eventids' => array_keys($eventids),
-		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
-		'sortorder' => ['alertid' => ZBX_SORT_DOWN]
-	]);
+	$result = DBselect(
+		'SELECT a.eventid,a.p_eventid,a.mediatypeid,a.userid,a.esc_step,a.clock,a.status,a.alerttype,a.error'.
+		' FROM alerts a'.
+		' WHERE '.dbConditionInt('a.eventid', array_keys($eventids)).
+			' AND a.alerttype IN ('.ALERT_TYPE_MESSAGE.','.ALERT_TYPE_COMMAND.')'.
+			' AND a.acknowledgeid IS NULL'.
+		' ORDER BY a.alertid DESC'
+	);
 
 	$alerts = [];
 	$userids = [];
@@ -1657,30 +1657,30 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 	$mediatypeids = [];
 	$mediatypes = [];
 
-	foreach ($db_alerts as $db_alert) {
+	while ($row = DBfetch($result)) {
 		$alert = [
-			'esc_step' => $db_alert['esc_step'],
-			'clock' => $db_alert['clock'],
-			'status' => $db_alert['status'],
-			'alerttype' => $db_alert['alerttype'],
-			'error' => $db_alert['error'],
-			'p_eventid' => $db_alert['p_eventid']
+			'esc_step' => $row['esc_step'],
+			'clock' => $row['clock'],
+			'status' => $row['status'],
+			'alerttype' => $row['alerttype'],
+			'error' => $row['error'],
+			'p_eventid' => $row['p_eventid']
 		];
 
 		if ($alert['alerttype'] == ALERT_TYPE_MESSAGE) {
-			$alert['mediatypeid'] = $db_alert['mediatypeid'];
-			$alert['userid'] = $db_alert['userid'];
+			$alert['mediatypeid'] = $row['mediatypeid'];
+			$alert['userid'] = $row['userid'];
 
 			if ($alert['mediatypeid'] != 0) {
-				$mediatypeids[$db_alert['mediatypeid']] = true;
+				$mediatypeids[$row['mediatypeid']] = true;
 			}
 
 			if ($alert['userid'] != 0) {
-				$userids[$db_alert['userid']] = true;
+				$userids[$row['userid']] = true;
 			}
 		}
 
-		$alerts[$db_alert['eventid']][$db_alert['p_eventid']][] = $alert;
+		$alerts[$row['eventid']][$row['p_eventid']][] = $alert;
 	}
 
 	if ($mediatypeids) {
