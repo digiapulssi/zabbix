@@ -1921,6 +1921,13 @@ int	DBindex_exists(const char *table_name, const char *index_name)
 			"show index from %s"
 			" where key_name='%s'",
 			table_name_esc, index_name);
+#elif defined(HAVE_ORACLE)
+	result = DBselect(
+			"select 1"
+			" from user_indexes"
+			" where lower(table_name)='%s'"
+				" and lower(index_name)='%s'",
+			table_name_esc, index_name);
 #endif
 
 	ret = (NULL == DBfetch(result) ? FAIL : SUCCEED);
