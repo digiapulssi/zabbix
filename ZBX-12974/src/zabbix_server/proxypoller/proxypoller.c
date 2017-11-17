@@ -38,7 +38,7 @@
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 
-static int	connect_to_proxy(DC_PROXY *proxy, zbx_socket_t *sock, int timeout)
+static int	connect_to_proxy(const DC_PROXY *proxy, zbx_socket_t *sock, int timeout)
 {
 	const char	*__function_name = "connect_to_proxy";
 
@@ -87,7 +87,7 @@ out:
 	return ret;
 }
 
-static int	send_data_to_proxy(DC_PROXY *proxy, zbx_socket_t *sock, const char *data)
+static int	send_data_to_proxy(const DC_PROXY *proxy, zbx_socket_t *sock, const char *data)
 {
 	const char	*__function_name = "send_data_to_proxy";
 
@@ -107,7 +107,7 @@ static int	send_data_to_proxy(DC_PROXY *proxy, zbx_socket_t *sock, const char *d
 	return ret;
 }
 
-static int	recv_data_from_proxy(DC_PROXY *proxy, zbx_socket_t *sock)
+static int	recv_data_from_proxy(const DC_PROXY *proxy, zbx_socket_t *sock)
 {
 	const char	*__function_name = "recv_data_from_proxy";
 	int		ret;
@@ -157,7 +157,7 @@ static void	disconnect_proxy(zbx_socket_t *sock)
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static int	get_data_from_proxy(DC_PROXY *proxy, const char *request, char **data, zbx_timespec_t *ts, int tasks)
+static int	get_data_from_proxy(const DC_PROXY *proxy, const char *request, char **data, zbx_timespec_t *ts, int tasks)
 {
 	const char	*__function_name = "get_data_from_proxy";
 
@@ -775,13 +775,13 @@ out:
  ******************************************************************************/
 static int	process_proxy(void)
 {
-	const char		*__function_name = "process_proxy";
+	const char	*__function_name = "process_proxy";
 
-	DC_PROXY		proxy;
-	int			num, i, more;
-	char			*port = NULL;
-	time_t			now, last_access;
-	unsigned char		update_nextcheck;
+	DC_PROXY	proxy;
+	int		num, i, more;
+	char		*port = NULL;
+	time_t		now, last_access;
+	unsigned char	update_nextcheck;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
