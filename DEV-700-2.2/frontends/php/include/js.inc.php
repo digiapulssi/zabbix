@@ -410,7 +410,7 @@ function insert_js_function($fnct_name) {
 				function addSelectedValues(formid, parentid) {
 					var values = [];
 
-					jQuery("form#"+formid+" input:checked").not("[name*=all_]").each(function() {
+					jQuery("form#"+formid+" input:checked").not("[name*=all_],:disabled").each(function() {
 						values.push(popupReference[jQuery(this).val()]);
 					});
 					close_window();
