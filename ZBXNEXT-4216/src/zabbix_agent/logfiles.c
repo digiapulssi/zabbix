@@ -485,6 +485,16 @@ static int	open_file_helper(const char *pathname, char **err_msg)
 	return fd;
 }
 
+static int	close_file_helper(int fd, const char *pathname, char **err_msg)
+{
+	if (0 == close(fd))
+		return SUCCEED;
+
+	*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", pathname, zbx_strerror(errno));
+
+	return FAIL;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: is_same_file_logrt                                               *
@@ -1486,14 +1496,7 @@ static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, cha
 			ret = FAIL;
 #endif	/*_WINDOWS*/
 clean:
-		if (0 != close(f))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", p->filename,
-					zbx_strerror(errno));
-			return FAIL;
-		}
-
-		if (FAIL == ret)
+		if (SUCCEED != close_file_helper(f, p->filename, err_msg) || FAIL == ret)
 			return FAIL;
 	}
 
@@ -2082,11 +2085,8 @@ static int	process_log(unsigned char flags, const char *filename, zbx_uint64_t *
 				l_size, filename, zbx_strerror(errno));
 	}
 
-	if (0 != close(f))
-	{
-		*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", filename, zbx_strerror(errno));
+	if (SUCCEED != close_file_helper(f, filename, err_msg))
 		ret = FAIL;
-	}
 out:
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 	{
@@ -2418,12 +2418,8 @@ static int	adjust_position_after_jump(struct st_logfile *logfile, zbx_uint64_t *
 		}
 	}
 out:
-	if (0 != close(fd))
-	{
-		*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", logfile->filename,
-				zbx_strerror(errno));
+	if (SUCCEED != close_file_helper(fd, logfile->filename, err_msg))
 		ret = FAIL;
-	}
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 	{
