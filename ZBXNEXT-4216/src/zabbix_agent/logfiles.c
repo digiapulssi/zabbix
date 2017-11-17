@@ -475,6 +475,16 @@ static int	compare_file_places(const struct st_logfile *old, const struct st_log
 	return ZBX_FILE_PLACE_UNKNOWN;
 }
 
+static int	open_file_helper(const char *pathname, char **err_msg)
+{
+	int	fd;
+
+	if (-1 == (fd = zbx_open(pathname, O_RDONLY)))
+		*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", pathname, zbx_strerror(errno));
+
+	return fd;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: is_same_file_logrt                                               *
@@ -579,10 +589,8 @@ static int	is_same_file_logrt(const struct st_logfile *old, const struct st_logf
 			int		f;
 			md5_byte_t	md5tmp[MD5_DIGEST_SIZE];
 
-			if (-1 == (f = zbx_open(new->filename, O_RDONLY)))
+			if (-1 == (f = open_file_helper(new->filename, err_msg)))
 			{
-				*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", new->filename,
-						zbx_strerror(errno));
 				ret = ZBX_SAME_FILE_ERROR;
 				goto out;
 			}
@@ -688,12 +696,8 @@ static int	is_same_file_logcpt(const struct st_logfile *old, const struct st_log
 		int		f, ret;
 		md5_byte_t	md5tmp[MD5_DIGEST_SIZE];
 
-		if (-1 == (f = zbx_open(new->filename, O_RDONLY)))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", new->filename,
-					zbx_strerror(errno));
+		if (-1 == (f = open_file_helper(new->filename, err_msg)))
 			return ZBX_SAME_FILE_ERROR;
-		}
 
 		if (SUCCEED == file_start_md5(f, old->md5size, md5tmp, new->filename, err_msg))
 			ret = examine_md5_and_place(old->md5buf, md5tmp, sizeof(md5tmp), is_same_place);
@@ -1467,12 +1471,8 @@ static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, cha
 		int			f;
 		struct st_logfile	*p = *logfiles + i;
 
-		if (-1 == (f = zbx_open(p->filename, O_RDONLY)))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", p->filename,
-					zbx_strerror(errno));
+		if (-1 == (f = open_file_helper(p->filename, err_msg)))
 			return FAIL;
-		}
 
 		p->md5size = (zbx_uint64_t)MAX_LEN_MD5 > p->size ? (int)p->size : MAX_LEN_MD5;
 
@@ -2049,11 +2049,8 @@ static int	process_log(unsigned char flags, const char *filename, zbx_uint64_t *
 		goto out;
 	}
 
-	if (-1 == (f = zbx_open(filename, O_RDONLY)))
-	{
-		*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", filename, zbx_strerror(errno));
+	if (-1 == (f = open_file_helper(filename, err_msg)))
 		goto out;
-	}
 
 	l_size = *lastlogsize;
 
@@ -2305,12 +2302,8 @@ static int	adjust_position_after_jump(struct st_logfile *logfile, zbx_uint64_t *
 	char   		buf[32 * ZBX_KIBIBYTE];		/* buffer must be of size multiple of 4 as some character */
 							/* encodings use 4 bytes for every character */
 
-	if (-1 == (fd = zbx_open(logfile->filename, O_RDONLY)))
-	{
-		*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", logfile->filename,
-				zbx_strerror(errno));
+	if (-1 == (fd = open_file_helper(logfile->filename, err_msg)))
 		return FAIL;
-	}
 
 	find_cr_lf_szbyte(encoding, &cr, &lf, &szbyte);
 
