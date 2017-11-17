@@ -1076,7 +1076,7 @@ static int	dc_history_set_value(ZBX_DC_HISTORY *hdata, unsigned char value_type,
 				if (FAIL == (ret = zbx_validate_value_dbl(value->data.dbl)))
 				{
 					errmsg = zbx_dsprintf(NULL, "Value " ZBX_FS_DBL " is too small or too large.",
-							hdata->value.dbl);
+							value->data.dbl);
 				}
 			}
 			break;
