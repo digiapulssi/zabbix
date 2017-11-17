@@ -1901,6 +1901,38 @@ int	DBfield_exists(const char *table_name, const char *field_name)
 	return ret;
 }
 
+int	DBindex_exists(const char *table_name, const char *index_name)
+{
+	char		*table_name_esc, *index_name_esc;
+	DB_RESULT	result;
+	int		ret;
+
+	table_name_esc = DBdyn_escape_string(table_name);
+	index_name_esc = DBdyn_escape_string(index_name);
+
+#if defined(HAVE_POSTGRESQL)
+	result = DBselect(
+			"select 1"
+			" from pg_indexes"
+			" where tablename='%s' and indexname='%s'",
+			table_name_esc, index_name);
+#elif defined(HAVE_MYSQL)
+	result = DBselect(
+			"show index from %s"
+			" where key_name='%s'",
+			table_name_esc, index_name);
+#endif
+
+	ret = (NULL == DBfetch(result) ? FAIL : SUCCEED);
+
+	DBfree_result(result);
+
+	zbx_free(table_name_esc);
+	zbx_free(index_name_esc);
+
+	return ret;
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: DBselect_uint64                                                  *
