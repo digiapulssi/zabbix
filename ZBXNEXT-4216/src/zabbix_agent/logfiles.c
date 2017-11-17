@@ -1473,14 +1473,10 @@ static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, cha
 
 		p->md5size = (zbx_uint64_t)MAX_LEN_MD5 > p->size ? (int)p->size : MAX_LEN_MD5;
 
-		if (SUCCEED != file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg))
-		{
-			ret = FAIL;
+		if (SUCCEED != (ret = file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg)))
 			goto clean;
-		}
 #ifdef _WINDOWS
-		if (SUCCEED != file_id(f, use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
-			ret = FAIL;
+		ret = file_id(f, use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg);
 #endif	/*_WINDOWS*/
 clean:
 		if (SUCCEED != close_file_helper(f, p->filename, err_msg) || FAIL == ret)
