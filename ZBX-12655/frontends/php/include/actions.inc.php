@@ -1240,7 +1240,7 @@ function makeEventsActions($eventids) {
 	}
 
 	$db_alerts = API::Alert()->get([
-		'output' => ['eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype', 'error'],
+		'output' => ['eventid', 'message', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype', 'error'],
 		'eventids' => $eventids,
 		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
 		'sortorder' => ['alertid' => ZBX_SORT_DOWN]
