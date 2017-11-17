@@ -66,8 +66,9 @@ static int	connect_to_proxy(const DC_PROXY *proxy, zbx_socket_t *sock, int timeo
 #else
 		case ZBX_TCP_SEC_TLS_CERT:
 		case ZBX_TCP_SEC_TLS_PSK:
-			zabbix_log(LOG_LEVEL_ERR, "cannot create encrypted connection to proxy \"%s\":"
-					" cryptographic libraries not compiled in", proxy->host);
+			zabbix_log(LOG_LEVEL_ERR, "TLS connection is configured to be used with passive proxy \"%s\""
+					" but support for TLS was not compiled into %s.", proxy->host,
+					get_program_type_string(program_type));
 			goto out;
 #endif
 		default:
