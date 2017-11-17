@@ -164,12 +164,13 @@ class CAlert extends CApiService {
 
 		// Allow user to get alerts sent only by users with same user group.
 		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
-			$sqlParts['where'][] = 'EXISTS ('.
+			// Filter by userid only if userid IS NOT NULL.
+			$sqlParts['where'][] = '(a.userid IS NULL OR EXISTS ('.
 				'SELECT NULL'.
 				' FROM users_groups ug'.
 				' WHERE ug.userid=a.userid'.
 					' AND '.dbConditionInt('ug.usrgrpid', getUserGroupsByUserId(self::$userData['userid'])).
-			')';
+			'))';
 		}
 
 		// groupids
