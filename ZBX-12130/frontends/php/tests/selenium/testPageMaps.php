@@ -64,7 +64,7 @@ class testPageMaps extends CWebTest {
 		$this->zbxTestClickWait('edit');
 		$this->zbxTestCheckHeader('Network maps');
 		$this->zbxTestClickWait('sysmap_update');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of network maps');
 		$this->zbxTestTextPresent($name);
@@ -109,19 +109,18 @@ class testPageMaps extends CWebTest {
 	}
 
 	/**
-	* @dataProvider allMaps
-	*/
+	 * @dataProvider allMaps
+	 * @backup sysmaps
+	 */
 	public function testPageMaps_MassDelete($map) {
 		$sysmapid = $map['sysmapid'];
-
-		DBsave_tables('sysmaps');
 
 		$this->zbxTestLogin('sysmaps.php');
 		$this->zbxTestCheckTitle('Configuration of network maps');
 		$this->zbxTestCheckboxSelect('maps_'.$sysmapid);
 		$this->zbxTestClickButton('map.massdelete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 		$this->zbxTestCheckTitle('Configuration of network maps');
 		$this->zbxTestTextPresent('Network map deleted');
 
@@ -135,8 +134,6 @@ class testPageMaps extends CWebTest {
 		$this->assertEquals(0, DBcount($sql), 'Data from sysmaps_link_triggers table was not deleted');
 		$sql = "select * from screens_items where resourcetype=".SCREEN_RESOURCE_MAP." and resourceid=$sysmapid;";
 		$this->assertEquals(0, DBcount($sql), 'Data from screens_items table was not deleted');
-
-		DBrestore_tables('sysmaps');
 	}
 
 	public function testPageMaps_Create() {
