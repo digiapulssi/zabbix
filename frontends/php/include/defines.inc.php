@@ -142,6 +142,7 @@ define('O_NO',		2);
 
 define('P_SYS',				1);
 define('P_UNSET_EMPTY',		2);
+define('P_CRLF',			4);
 define('P_ACT',				16);
 define('P_NZERO',			32);
 define('P_NO_TRIM',			64);
