@@ -719,89 +719,6 @@ static int	is_same_file_logcpt(const struct st_logfile *old, const struct st_log
 
 /******************************************************************************
  *                                                                            *
- * Function: setup_old2new_and_copy_of                                        *
- *                                                                            *
- * Purpose: fill an array of possible mappings from the old log files to the  *
- *          new log files.                                                    *
- *                                                                            *
- * Parameters:                                                                *
- *     rotation_type - [IN] file rotation type                                *
- *     old2new       - [IN] two dimensional array of possible mappings        *
- *     old           - [IN] old file list                                     *
- *     num_old       - [IN] number of elements in the old file list           *
- *     new           - [IN] new file list                                     *
- *     num_new       - [IN] number of elements in the new file list           *
- *     use_ino       - [IN] how to use inodes in is_same_file()               *
- *     err_msg       - [IN/OUT] error message why an item became NOTSUPPORTED *
- *                                                                            *
- * Return value: SUCCEED or FAIL                                              *
- *                                                                            *
- * Comments:                                                                  *
- *    The array is filled with '0', '1' and '2'  which mean:                  *
- *       old2new[i][j] = '0' - the i-th old file IS NOT the j-th new file     *
- *       old2new[i][j] = '1' - the i-th old file COULD BE the j-th new file   *
- *       old2new[i][j] = '2' - the j-th new file is a copy of the i-th old    *
- *                             file                                           *
- *                                                                            *
- ******************************************************************************/
-static int	setup_old2new_and_copy_of(int rotation_type, char *old2new, struct st_logfile *old,
-		int num_old, struct st_logfile *new, int num_new, int use_ino, char **err_msg)
-{
-	int	i, j;
-	char	*p = old2new;
-
-	for (i = 0; i < num_old; i++)
-	{
-		for (j = 0; j < num_new; j++)
-		{
-			int	rc;
-
-			if (ZBX_LOG_ROTATION_LOGRT == rotation_type)
-				rc = is_same_file_logrt(old + i, new + j, use_ino, err_msg);
-			else
-				rc = is_same_file_logcpt(old + i, new + j, use_ino, err_msg);
-
-			switch (rc)
-			{
-				case ZBX_SAME_FILE_NO:
-					p[j] = '0';
-					break;
-				case ZBX_SAME_FILE_YES:
-					if (1 == old[i].retry)
-					{
-						zabbix_log(LOG_LEVEL_DEBUG, "the size of log file \"%s\" has been"
-								" updated since modification time change, consider"
-								" it to be the same file", old->filename);
-						old[i].retry = 0;
-					}
-					p[j] = '1';
-					break;
-				case ZBX_SAME_FILE_COPY:
-					p[j] = '2';
-					new[j].copy_of = i;
-					break;
-				case ZBX_SAME_FILE_RETRY:
-					old[i].retry = 1;
-					return FAIL;
-				case ZBX_SAME_FILE_ERROR:
-					return FAIL;
-			}
-
-			if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
-			{
-				zabbix_log(LOG_LEVEL_DEBUG, "setup_old2new_and_copy_of: is_same_file(%s, %s) = %c",
-						old[i].filename, new[j].filename, p[j]);
-			}
-		}
-
-		p += (size_t)num_new;
-	}
-
-	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: cross_out                                                        *
  *                                                                            *
  * Purpose: fill the given row and column with '0' except the element at the  *
@@ -1122,6 +1039,97 @@ non_unique:
 
 	zbx_free(protected_cols);
 	zbx_free(protected_rows);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: create_old2new_and_copy_of                                       *
+ *                                                                            *
+ * Purpose: allocate and fill an array of possible mappings from the old log  *
+ *          files to the new log files                                        *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     rotation_type - [IN] file rotation type                                *
+ *     old           - [IN] old file list                                     *
+ *     num_old       - [IN] number of elements in the old file list           *
+ *     new           - [IN] new file list                                     *
+ *     num_new       - [IN] number of elements in the new file list           *
+ *     use_ino       - [IN] how to use inodes in is_same_file()               *
+ *     err_msg       - [IN/OUT] error message why an item became NOTSUPPORTED *
+ *                                                                            *
+ * Return value: pointer to allocated array or NULL                           *
+ *                                                                            *
+ * Comments:                                                                  *
+ *    The array is filled with '0', '1' and '2'  which mean:                  *
+ *       old2new[i][j] = '0' - the i-th old file IS NOT the j-th new file     *
+ *       old2new[i][j] = '1' - the i-th old file COULD BE the j-th new file   *
+ *       old2new[i][j] = '2' - the j-th new file is a copy of the i-th old    *
+ *                             file                                           *
+ *                                                                            *
+ ******************************************************************************/
+static char	*create_old2new_and_copy_of(int rotation_type, struct st_logfile *old, int num_old,
+		struct st_logfile *new, int num_new, int use_ino, char **err_msg)
+{
+	int	i, j;
+	char	*old2new, *p;
+
+	/* set up a two dimensional array of possible mappings from old files to new files */
+	old2new = zbx_malloc(NULL, (size_t)num_new * (size_t)num_old * sizeof(char));
+	p = old2new;
+
+	for (i = 0; i < num_old; i++)
+	{
+		for (j = 0; j < num_new; j++)
+		{
+			int	rc;
+
+			if (ZBX_LOG_ROTATION_LOGRT == rotation_type)
+				rc = is_same_file_logrt(old + i, new + j, use_ino, err_msg);
+			else
+				rc = is_same_file_logcpt(old + i, new + j, use_ino, err_msg);
+
+			switch (rc)
+			{
+				case ZBX_SAME_FILE_NO:
+					p[j] = '0';
+					break;
+				case ZBX_SAME_FILE_YES:
+					if (1 == old[i].retry)
+					{
+						zabbix_log(LOG_LEVEL_DEBUG, "the size of log file \"%s\" has been"
+								" updated since modification time change, consider"
+								" it to be the same file", old->filename);
+						old[i].retry = 0;
+					}
+					p[j] = '1';
+					break;
+				case ZBX_SAME_FILE_COPY:
+					p[j] = '2';
+					new[j].copy_of = i;
+					break;
+				case ZBX_SAME_FILE_RETRY:
+					old[i].retry = 1;
+					zbx_free(old2new);
+					return NULL;
+				case ZBX_SAME_FILE_ERROR:
+					zbx_free(old2new);
+					return NULL;
+			}
+
+			if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "setup_old2new_and_copy_of: is_same_file(%s, %s) = %c",
+						old[i].filename, new[j].filename, p[j]);
+			}
+		}
+
+		p += (size_t)num_new;
+	}
+
+	if (1 < num_old || 1 < num_new)
+		resolve_old2new(old2new, num_old, num_new);
+
+	return old2new;
 }
 
 /******************************************************************************
@@ -2525,18 +2533,11 @@ static int	update_new_list_from_old(int rotation_type, struct st_logfile *logfil
 	char	*old2new;
 	int	i, max_old_seq = 0, old_last;
 
-	/* set up a mapping array from old files to new files */
-	old2new = zbx_malloc(NULL, (size_t)logfiles_num * (size_t)logfiles_num_old * sizeof(char));
-
-	if (SUCCEED != setup_old2new_and_copy_of(rotation_type, old2new, logfiles_old, logfiles_num_old,
-			logfiles, logfiles_num, use_ino, err_msg))
+	if (NULL == (old2new = create_old2new_and_copy_of(rotation_type, logfiles_old, logfiles_num_old,
+			logfiles, logfiles_num, use_ino, err_msg)))
 	{
-		zbx_free(old2new);
 		return FAIL;
 	}
-
-	if (1 < logfiles_num_old || 1 < logfiles_num)
-		resolve_old2new(old2new, logfiles_num_old, logfiles_num);
 
 	/* transfer data about fully and partially processed files from the old file list to the new list */
 	for (i = 0; i < logfiles_num_old; i++)
