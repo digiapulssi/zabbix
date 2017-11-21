@@ -2181,7 +2181,7 @@ static void	handle_multiple_copies(struct st_logfile *logfiles, int logfiles_num
 {
 	/* There is a special case when the latest log file is copied to other file but not yet truncated. */
 	/* So there are two files and we don't know which one will stay as the copy and which one will be  */
-	/* truncated. Similar cases: the latest log file is copied but not truncated or is copied multiple */
+	/* truncated. Similar cases: the latest log file is copied but never truncated or is copied multiple */
 	/* times. */
 
 	int	j;
@@ -2526,6 +2526,54 @@ static int	jump_ahead(const char *key, struct st_logfile *logfiles, int logfiles
 	return adjust_position_after_jump(&logfiles[jumped_to], lastlogsize, min_size, encoding, err_msg);
 }
 
+static zbx_uint64_t	calculate_remaining_bytes(int rotation_type, struct st_logfile *logfiles, int logfiles_num)
+{
+	zbx_uint64_t	remaining_bytes = 0;
+	int		i;
+
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+	{
+		/* counting remaining bytes in case of 'copytruncate' rotation should detect */
+		/* if there are copies and count these files only once */
+
+		char	*counted;	/* array for marking counted elements */
+
+		counted = zbx_calloc(NULL, (size_t)logfiles_num, sizeof(char));
+
+		for (i = 0; i < logfiles_num; i++)
+		{
+			int	j;
+
+			if ('1' == counted[i])
+				continue;
+
+			counted[i] = '1';
+			remaining_bytes += logfiles[i].size - logfiles[i].processed_size;
+
+			for (j = i + 1; j < logfiles_num; j++)
+			{
+				if ('1' != counted[j] && -1 != logfiles[i].md5size && -1 != logfiles[j].md5size &&
+						logfiles[i].md5size == logfiles[j].md5size &&
+						0 == memcmp(logfiles[i].md5buf, logfiles[j].md5buf,
+						sizeof(logfiles[i].md5buf)))
+				{
+					/* logfiles[i] and logfiles[j] are original and copy (or vice versa) */
+					counted[j] = '1';
+				}
+			}
+		}
+
+		zbx_free(counted);
+	}
+	else
+	{
+		for (i = 0; i < logfiles_num; i++)
+			remaining_bytes += logfiles[i].size - logfiles[i].processed_size;
+	}
+
+	return remaining_bytes;
+}
+
 static int	update_new_list_from_old(int rotation_type, struct st_logfile *logfiles_old, int logfiles_num_old,
 		struct st_logfile *logfiles, int logfiles_num, int use_ino, int *seq, int *start_idx,
 		zbx_uint64_t *lastlogsize, char **err_msg)
@@ -2659,11 +2707,10 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		int rotation_type)
 {
 	const char		*__function_name = "process_logrt";
-	int			i, j, start_idx, ret = FAIL, logfiles_num = 0, logfiles_alloc = 0, seq = 1,
+	int			i, start_idx, ret = FAIL, logfiles_num = 0, logfiles_alloc = 0, seq = 1,
 				from_first_file = 1, last_processed, limit_reached = 0;
 	struct st_logfile	*logfiles = NULL;
 	zbx_uint64_t		processed_bytes_sum = 0;
-	double			delay;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:0x%02x filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
 			__function_name, (unsigned int)flags, filename, *lastlogsize, *mtime);
@@ -2743,23 +2790,23 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	{
 		if (0.0 != *start_time)
 		{
-			zbx_uint64_t	remaining_bytes = 0;
+			zbx_uint64_t	remaining_bytes;
 
-			/* calculate number of remaining bytes */
-
-			for (j = 0; j < logfiles_num; j++)
-				remaining_bytes += logfiles[j].size - logfiles[j].processed_size;
-
-			/* calculate delay and jump if necessary */
-
-			if (0 != remaining_bytes && (double)max_delay < (delay = calculate_delay(*processed_bytes,
-					remaining_bytes, zbx_time() - *start_time)))
+			if (0 != (remaining_bytes = calculate_remaining_bytes(rotation_type, logfiles, logfiles_num)))
 			{
-				if (SUCCEED == (ret = jump_ahead(key, logfiles, logfiles_num, &last_processed, &seq,
-						lastlogsize, mtime, encoding, err_msg, remaining_bytes, delay,
-						max_delay)))
+				/* calculate delay and jump if necessary */
+
+				double	delay;
+
+				if ((double)max_delay < (delay = calculate_delay(*processed_bytes, remaining_bytes,
+						zbx_time() - *start_time)))
 				{
-					*jumped = 1;
+					if (SUCCEED == (ret = jump_ahead(key, logfiles, logfiles_num, &last_processed,
+						&seq, lastlogsize, mtime, encoding, err_msg, remaining_bytes, delay,
+						max_delay)))
+					{
+						*jumped = 1;
+					}
 				}
 			}
 		}
