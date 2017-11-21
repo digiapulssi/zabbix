@@ -2662,7 +2662,7 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	int			i, j, start_idx, ret = FAIL, logfiles_num = 0, logfiles_alloc = 0, seq = 1,
 				from_first_file = 1, last_processed, limit_reached = 0;
 	struct st_logfile	*logfiles = NULL;
-	zbx_uint64_t		processed_bytes_sum = 0, processed_bytes_tmp = 0, remaining_bytes = 0;
+	zbx_uint64_t		processed_bytes_sum = 0;
 	double			delay;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:0x%02x filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
@@ -2743,6 +2743,8 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	{
 		if (0.0 != *start_time)
 		{
+			zbx_uint64_t	remaining_bytes = 0;
+
 			/* calculate number of remaining bytes */
 
 			for (j = 0; j < logfiles_num; j++)
@@ -2773,6 +2775,8 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		if (0 == logfiles[i].incomplete && (logfiles[i].size != logfiles[i].processed_size ||
 				0 == logfiles[i].seq))
 		{
+			zbx_uint64_t	processed_bytes_tmp = 0;
+
 			if (start_idx != i)
 				*lastlogsize = logfiles[i].processed_size;
 
