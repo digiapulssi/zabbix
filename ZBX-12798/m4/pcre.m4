@@ -48,6 +48,16 @@ AC_HELP_STRING([--with-libpcre=@<:@DIR@:>@], [use libpcre from given base instal
 		]
 	)
 
+	AC_ARG_WITH([libpcre-lib],
+		AC_HELP_STRING([--with-libpcre-lib@<:@=DIR@:>@],
+			[use libpcre libraries from given path.]
+		),
+		[
+			LIBPCRE_LDFLAGS="-L$withval"
+			_libpcre_dir_set="yes"
+		]
+	)
+
 	AC_MSG_CHECKING(for libpcre support)
 
 	LIBPCRE_LIBS="-lpcreposix -lpcre"
