@@ -1910,24 +1910,24 @@ int	DBindex_exists(const char *table_name, const char *index_name)
 	table_name_esc = DBdyn_escape_string(table_name);
 	index_name_esc = DBdyn_escape_string(index_name);
 
-#if defined(HAVE_POSTGRESQL)
-	result = DBselect(
-			"select 1"
-			" from pg_indexes"
-			" where tablename='%s' and indexname='%s'",
-			table_name_esc, index_name);
-#elif defined(HAVE_MYSQL)
+#if defined(HAVE_MYSQL)
 	result = DBselect(
 			"show index from %s"
 			" where key_name='%s'",
-			table_name_esc, index_name);
+			table_name_esc, index_name_esc);
 #elif defined(HAVE_ORACLE)
 	result = DBselect(
 			"select 1"
 			" from user_indexes"
 			" where lower(table_name)='%s'"
 				" and lower(index_name)='%s'",
-			table_name_esc, index_name);
+			table_name_esc, index_name_esc);
+#elif defined(HAVE_POSTGRESQL)
+	result = DBselect(
+			"select 1"
+			" from pg_indexes"
+			" where tablename='%s' and indexname='%s'",
+			table_name_esc, index_name_esc);
 #endif
 
 	ret = (NULL == DBfetch(result) ? FAIL : SUCCEED);
