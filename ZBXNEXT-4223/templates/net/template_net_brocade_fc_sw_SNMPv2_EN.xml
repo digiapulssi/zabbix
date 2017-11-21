@@ -11,7 +11,7 @@
       <template>
          <template>Template Net Brocade FC SNMPv2</template>
          <name>Template Net Brocade FC SNMPv2</name>
-         <description>Template Net Brocade FC version: 0.13
+         <description>Template Net Brocade FC version: 0.14
 Overview: https://community.brocade.com/dtscp75322/attachments/dtscp75322/fibre/25235/1/FOS_MIB_Reference_v740.pdf
 
 MIBs used:
@@ -703,9 +703,9 @@ Please check the power supply unit for errors</description>
                      <port/>
                      <description>MIB: SW-MIB
 
-		      The current value (reading) of the sensor.
-		      The value, -2147483648, represents an unknown quantity.
-			  The fan value will be in RPM(revolution per minute)</description>
+The current value (reading) of the sensor.
+The value, -2147483648, represents an unknown quantity.
+The fan value will be in RPM(revolution per minute)</description>
                      <inventory_link>0</inventory_link>
                      <applications>
                         <application>

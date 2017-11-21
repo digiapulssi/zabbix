@@ -11,7 +11,7 @@
       <template>
          <template>Template Net Netgear Fastpath SNMPv2</template>
          <name>Template Net Netgear Fastpath SNMPv2</name>
-         <description>Template Net Netgear Fastpath version: 0.13
+         <description>Template Net Netgear Fastpath version: 0.14
 Overview: https://kb.netgear.com/24352/MIBs-for-Smart-switches
 
 MIBs used:
@@ -162,7 +162,7 @@ The total memory freed for utilization.</description>
                <privatekey/>
                <port/>
                <description>MIB: FASTPATH-SWITCHING-MIB
- The total Memory allocated for the tasks</description>
+The total Memory allocated for the tasks</description>
                <inventory_link>0</inventory_link>
                <applications>
                   <application>
