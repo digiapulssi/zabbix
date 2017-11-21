@@ -3,6 +3,7 @@ Changes for 3.2.11rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
 ..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
 ........S. [ZBX-12975] fixed possibility of foreign key constraint failure due to events being removed before trigger data storage period expires (vso)
 ........S. [ZBX-11426] fixed potentially incorrect delete procedure for problems and events (abs)
@@ -562,6 +563,7 @@ Changes for 3.0.14rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
 ..F....... [ZBX-13016] fixed warning message shown by deprecated PHP 7.2 function create_function() (Sasha)
 ..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
 ........S. [ZBX-8049] fixed zabbix[java,,ping] to stay supported when java gateway is down (valdis)
