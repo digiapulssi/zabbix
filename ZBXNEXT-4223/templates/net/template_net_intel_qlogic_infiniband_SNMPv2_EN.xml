@@ -476,7 +476,7 @@ Device serial number has changed. Ack to close</description>
                      <history>14d</history>
                      <trends>0d</trends>
                      <status>0</status>
-                     <value_type>1</value_type>
+                     <value_type>3</value_type>
                      <allowed_hosts/>
                      <units/>
                      <snmpv3_contextname/>
@@ -522,7 +522,7 @@ Actual status of the power supply:
                </item_prototypes>
                <trigger_prototypes>
                   <trigger_prototype>
-                     <expression>{Template Net Intel_Qlogic Infiniband SNMPv2:sensor.psu.status[icsChassisPowerSupplyEntry.{#SNMPINDEX}].last(0)}={$PSU_CRIT_STATUS}</expression>
+                     <expression>{Template Net Intel_Qlogic Infiniband SNMPv2:sensor.psu.status[icsChassisPowerSupplyEntry.{#SNMPINDEX}].count(#1,{$PSU_CRIT_STATUS},eq)}=1</expression>
                      <recovery_mode>0</recovery_mode>
                      <recovery_expression/>
                      <name>{#SNMPVALUE}: Power supply is in critical state</name>
@@ -539,7 +539,7 @@ Please check the power supply unit for errors</description>
                      <tags/>
                   </trigger_prototype>
                   <trigger_prototype>
-                     <expression>{Template Net Intel_Qlogic Infiniband SNMPv2:sensor.psu.status[icsChassisPowerSupplyEntry.{#SNMPINDEX}].last(0)}={$PSU_WARN_STATUS}</expression>
+                     <expression>{Template Net Intel_Qlogic Infiniband SNMPv2:sensor.psu.status[icsChassisPowerSupplyEntry.{#SNMPINDEX}].count(#1,{$PSU_WARN_STATUS},eq)}=1</expression>
                      <recovery_mode>0</recovery_mode>
                      <recovery_expression/>
                      <name>{#SNMPVALUE}: Power supply is in warning state</name>
@@ -555,7 +555,7 @@ Please check the power supply unit for errors</description>
                      <dependencies>
                         <dependency>
                            <name>{#SNMPVALUE}: Power supply is in critical state</name>
-                           <expression>{Template Net Intel_Qlogic Infiniband SNMPv2:sensor.psu.status[icsChassisPowerSupplyEntry.{#SNMPINDEX}].last(0)}={$PSU_CRIT_STATUS}</expression>
+                           <expression>{Template Net Intel_Qlogic Infiniband SNMPv2:sensor.psu.status[icsChassisPowerSupplyEntry.{#SNMPINDEX}].count(#1,{$PSU_CRIT_STATUS},eq)}=1</expression>
                            <recovery_expression/>
                         </dependency>
                      </dependencies>
@@ -608,7 +608,7 @@ Please check the power supply unit for errors</description>
                      <history>14d</history>
                      <trends>0d</trends>
                      <status>0</status>
-                     <value_type>1</value_type>
+                     <value_type>3</value_type>
                      <allowed_hosts/>
                      <units/>
                      <snmpv3_contextname/>
@@ -646,7 +646,7 @@ The operational status of the fan unit.</description>
                </item_prototypes>
                <trigger_prototypes>
                   <trigger_prototype>
-                     <expression>{Template Net Intel_Qlogic Infiniband SNMPv2:sensor.fan.status[icsChassisFanOperStatus.{#SNMPINDEX}].last(0)}={$FAN_CRIT_STATUS}</expression>
+                     <expression>{Template Net Intel_Qlogic Infiniband SNMPv2:sensor.fan.status[icsChassisFanOperStatus.{#SNMPINDEX}].count(#1,{$FAN_CRIT_STATUS},eq)}=1</expression>
                      <recovery_mode>0</recovery_mode>
                      <recovery_expression/>
                      <name>{#SNMPVALUE}: Fan is in critical state</name>
@@ -689,14 +689,6 @@ Please check the fan unit</description>
             <macro>
                <macro>{$FAN_CRIT_STATUS}</macro>
                <value>3</value>
-            </macro>
-            <macro>
-               <macro>{$PSU_OK_STATUS}</macro>
-               <value>1</value>
-            </macro>
-            <macro>
-               <macro>{$FAN_OK_STATUS}</macro>
-               <value>1</value>
             </macro>
             <macro>
                <macro>{$TEMP_CRIT}</macro>
