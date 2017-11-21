@@ -1,3 +1,0 @@
-to compile		: make -s
-to run			: ./macros
-to run with debug	: ./macros -d
