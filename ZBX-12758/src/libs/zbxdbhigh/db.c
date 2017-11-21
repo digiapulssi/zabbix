@@ -1910,7 +1910,15 @@ int	DBindex_exists(const char *table_name, const char *index_name)
 	table_name_esc = DBdyn_escape_string(table_name);
 	index_name_esc = DBdyn_escape_string(index_name);
 
-#if defined(HAVE_MYSQL)
+#if defined(HAVE_IBM_DB2)
+	result = DBselect(
+			"select 1"
+			" from syscat.indexes"
+			" where tabschema=user"
+				" and lower(tabname)='%s'"
+				" and lower(indname)='%s'",
+			table_name_esc, index_name_esc);
+#elif defined(HAVE_MYSQL)
 	result = DBselect(
 			"show index from %s"
 			" where key_name='%s'",
