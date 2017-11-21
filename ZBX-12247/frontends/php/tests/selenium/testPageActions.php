@@ -263,7 +263,7 @@ class testPageActions extends CWebTest {
 		$this->zbxTestCheckboxSelect('g_actionid_'.$action['actionid']);
 		$this->zbxTestClickButton('action.massdisable');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of actions');
 		$this->zbxTestTextPresent('Action disabled');
@@ -292,7 +292,7 @@ class testPageActions extends CWebTest {
 		$this->zbxTestCheckboxSelect('g_actionid_'.$action['actionid']);
 		$this->zbxTestClickButton('action.massenable');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of actions');
 		$this->zbxTestTextPresent('Action enabled');
@@ -322,7 +322,7 @@ class testPageActions extends CWebTest {
 		$this->zbxTestCheckboxSelect('g_actionid_'.$action['actionid']);
 		$this->zbxTestClickButton('action.massdelete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of actions');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Selected actions deleted');
