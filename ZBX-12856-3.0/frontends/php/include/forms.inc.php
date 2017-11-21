@@ -1519,6 +1519,15 @@ function getTriggerFormData($exprAction) {
 			$host = reset($hosts);
 			$data['hostid'] = $host['hostid'];
 		}
+
+		$host_groups = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'hostids' => [$data['hostid']]
+		]);
+
+		if ($host_groups) {
+			$data['groupid'] = $host_groups[0]['groupid'];
+		}
 	}
 
 	if ((!empty($data['triggerid']) && !isset($_REQUEST['form_refresh'])) || $data['limited']) {
