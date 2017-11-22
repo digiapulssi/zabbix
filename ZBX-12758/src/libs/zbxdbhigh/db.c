@@ -1901,9 +1901,13 @@ int	DBfield_exists(const char *table_name, const char *field_name)
 	return ret;
 }
 
+#ifndef HAVE_SQLITE3
 int	DBindex_exists(const char *table_name, const char *index_name)
 {
 	char		*table_name_esc, *index_name_esc;
+#if defined(HAVE_POSTGRESQL)
+	char		*table_schema_esc;
+#endif
 	DB_RESULT	result;
 	int		ret;
 
@@ -1931,11 +1935,18 @@ int	DBindex_exists(const char *table_name, const char *index_name)
 				" and lower(index_name)='%s'",
 			table_name_esc, index_name_esc);
 #elif defined(HAVE_POSTGRESQL)
+	table_schema_esc = DBdyn_escape_string(NULL == CONFIG_DBSCHEMA || '\0' == *CONFIG_DBSCHEMA ?
+				"public" : CONFIG_DBSCHEMA);
+
 	result = DBselect(
 			"select 1"
 			" from pg_indexes"
-			" where tablename='%s' and indexname='%s'",
-			table_name_esc, index_name_esc);
+			" where tablename='%s'"
+				" and indexname='%s'"
+				" and schemaname='%s'",
+			table_name_esc, index_name_esc, table_schema_esc);
+
+	zbx_free(table_schema_esc);
 #endif
 
 	ret = (NULL == DBfetch(result) ? FAIL : SUCCEED);
@@ -1947,6 +1958,7 @@ int	DBindex_exists(const char *table_name, const char *index_name)
 
 	return ret;
 }
+#endif
 
 /******************************************************************************
  *                                                                            *
