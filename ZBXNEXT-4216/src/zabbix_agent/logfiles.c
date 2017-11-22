@@ -2628,8 +2628,10 @@ static zbx_uint64_t	calculate_remaining_bytes(int rotation_type, struct st_logfi
 
 	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
 	{
-		/* counting remaining bytes in case of 'copytruncate' rotation should detect */
-		/* if there are copies and count these files only once */
+		/* Counting remaining bytes in case of 'copytruncate' rotation should detect if there are */
+		/* copies and count these files only once. If copies happen to have different length */
+		/* (e.g. a log file has been copied but not truncated) then pick the copy with the largest */
+		/* number of not-yet-processed bytes. */
 
 		char	*counted;	/* array for marking counted elements */
 
@@ -2637,13 +2639,14 @@ static zbx_uint64_t	calculate_remaining_bytes(int rotation_type, struct st_logfi
 
 		for (i = 0; i < logfiles_num; i++)
 		{
-			int	j;
+			zbx_uint64_t	remaining_max;
+			int		j;
 
 			if ('1' == counted[i])
 				continue;
 
 			counted[i] = '1';
-			remaining_bytes += logfiles[i].size - logfiles[i].processed_size;
+			remaining_max = logfiles[i].size - logfiles[i].processed_size;
 
 			for (j = i + 1; j < logfiles_num; j++)
 			{
@@ -2651,8 +2654,12 @@ static zbx_uint64_t	calculate_remaining_bytes(int rotation_type, struct st_logfi
 				{
 					/* logfiles[i] and logfiles[j] are original and copy (or vice versa) */
 					counted[j] = '1';
+					remaining_max = MAX(remaining_max, logfiles[j].size -
+							logfiles[j].processed_size);
 				}
 			}
+
+			remaining_bytes += remaining_max;
 		}
 
 		zbx_free(counted);
