@@ -2550,7 +2550,7 @@ static int	jump_ahead(const char *key, struct st_logfile *logfiles, int logfiles
 		int *seq, zbx_uint64_t *lastlogsize, int *mtime, const char *encoding, zbx_uint64_t bytes_to_jump,
 		char **err_msg)
 {
-	zbx_uint64_t	bytes_jumped = 0, lastlogsize_org, min_size;
+	zbx_uint64_t	lastlogsize_org, min_size;
 	int		i, first_pass = 1,
 			jumped_to = -1;		/* number of file in 'logfiles' list we jumped to */
 
@@ -2563,7 +2563,7 @@ static int	jump_ahead(const char *key, struct st_logfile *logfiles, int logfiles
 	{
 		if (logfiles[i].size != logfiles[i].processed_size)
 		{
-			zbx_uint64_t	new_processed_size;
+			zbx_uint64_t	bytes_jumped, new_processed_size;
 
 			bytes_jumped = MIN(bytes_to_jump, logfiles[i].size - logfiles[i].processed_size);
 			new_processed_size = logfiles[i].processed_size + bytes_jumped;
