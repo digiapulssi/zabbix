@@ -2439,34 +2439,28 @@ out:
  * Purpose: move forward to a new position in the log file list               *
  *                                                                            *
  * Parameters:                                                                *
- *     key             - [IN] item key for logging                            *
- *     logfiles        - [IN/OUT] list of log files                           *
- *     logfiles_num    - [IN] number of elements in 'logfiles'                *
- *     jump_from_to    - [IN/OUT] on input - number of element where to start *
- *                       jump, on output - number of element we jumped into   *
- *     seq             - [IN/OUT] sequence number of last processed file      *
- *     lastlogsize     - [IN/OUT] offset from the beginning of the file       *
- *     mtime           - [IN/OUT] last modification time of the file          *
- *     encoding        - [IN] text string describing encoding                 *
- *     err_msg         - [IN/OUT] error message                               *
- *     remaining_bytes - [IN] number of remaining bytes in all logfiles       *
- *     delay           - [IN] calculated delay is seconds                     *
- *     max_delay       - [IN] "maxdelay" parameter in log[], logrt[],         *
- *                            log.count[] and logrt.count[] items             *
+ *     key            - [IN] item key for logging                             *
+ *     logfiles       - [IN/OUT] list of log files                            *
+ *     logfiles_num   - [IN] number of elements in 'logfiles'                 *
+ *     jump_from_to   - [IN/OUT] on input - number of element where to start  *
+ *                      jump, on output - number of element we jumped into    *
+ *     seq            - [IN/OUT] sequence number of last processed file       *
+ *     lastlogsize    - [IN/OUT] offset from the beginning of the file        *
+ *     mtime          - [IN/OUT] last modification time of the file           *
+ *     encoding       - [IN] text string describing encoding                  *
+ *     bytes_to_jump  - [IN] number of bytes to jump ahead                    *
+ *     err_msg        - [IN/OUT] error message                                *
  *                                                                            *
  * Return value: SUCCEED or FAIL (with error message allocated in 'err_msg')  *
  *                                                                            *
  ******************************************************************************/
 static int	jump_ahead(const char *key, struct st_logfile *logfiles, int logfiles_num, int *jump_from_to,
-		int *seq, zbx_uint64_t *lastlogsize, int *mtime, const char *encoding, char **err_msg,
-		zbx_uint64_t remaining_bytes, double delay, float max_delay)
+		int *seq, zbx_uint64_t *lastlogsize, int *mtime, const char *encoding, zbx_uint64_t bytes_to_jump,
+		char **err_msg)
 {
-	zbx_uint64_t	bytes_to_jump, bytes_jumped = 0, lastlogsize_org, min_size;
+	zbx_uint64_t	bytes_jumped = 0, lastlogsize_org, min_size;
 	int		i, first_pass = 1,
 			jumped_to = -1;		/* number of file in 'logfiles' list we jumped to */
-
-	/* calculate jump */
-	bytes_to_jump = (zbx_uint64_t)((double)remaining_bytes * (delay - (double)max_delay) / delay);
 
 	/* enter the loop with index of the last file processed, later continue the loop from the start */
 	i = *jump_from_to;
@@ -2807,9 +2801,13 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 				if ((double)max_delay < (delay = calculate_delay(*processed_bytes, remaining_bytes,
 						zbx_time() - *start_time)))
 				{
+					zbx_uint64_t	bytes_to_jump;
+
+					bytes_to_jump = (zbx_uint64_t)((double)remaining_bytes *
+							(delay - (double)max_delay) / delay);
+
 					if (SUCCEED == (ret = jump_ahead(key, logfiles, logfiles_num, &last_processed,
-						&seq, lastlogsize, mtime, encoding, err_msg, remaining_bytes, delay,
-						max_delay)))
+						&seq, lastlogsize, mtime, encoding, bytes_to_jump, err_msg)))
 					{
 						*jumped = 1;
 					}
