@@ -96,6 +96,16 @@ class CMap extends CMapElement {
 		];
 		$options = zbx_array_merge($defOptions, $options);
 
+		/*
+		 * If the 'permission' propery of elements is requested, API will calculate the level of access permissions to
+		 * each returned element on the map. If 'permission' property is not required, API will test accessibility of
+		 * submaps only (no access or >= PERM_READ).
+		 */
+		$extract_permissions = ($options['selectSelements'] === API_OUTPUT_EXTEND
+			|| $options['selectLinks'] === API_OUTPUT_EXTEND
+			|| (is_array($options['selectSelements']) && in_array('permission', $options['selectSelements']))
+			|| (is_array($options['selectLinks']) && in_array('permission', $options['selectLinks'])));
+
 		if ($options['countOutput']) {
 			$count_output = true;
 			$options['output'] = ['sysmapid'];
@@ -141,7 +151,7 @@ class CMap extends CMapElement {
 		}
 
 		// sysmapids
-		if (!is_null($options['sysmapids'])) {
+		if ($options['sysmapids'] !== null) {
 			zbx_value2array($options['sysmapids']);
 			$sql_parts['where']['sysmapid'] = dbConditionInt('s.sysmapid', $options['sysmapids']);
 		}
@@ -154,12 +164,12 @@ class CMap extends CMapElement {
 		}
 
 		// search
-		if (!is_null($options['search'])) {
+		if ($options['search'] !== null) {
 			zbx_db_search('sysmaps s', $options, $sql_parts);
 		}
 
 		// filter
-		if (!is_null($options['filter'])) {
+		if ($options['filter'] !== null) {
 			$this->dbFilter('sysmaps s', $options, $sql_parts);
 		}
 
@@ -219,7 +229,7 @@ class CMap extends CMapElement {
 			$db_sysmaps_r = [];
 			$db_sysmaps_rw = [];
 
-			foreach ($result as $sysmapid => &$sysmap) {
+			foreach ($result as &$sysmap) {
 				if ($sysmap['selements']) {
 					foreach ($sysmap['selements'] as &$selement) {
 						switch ($selement['elementtype']) {
@@ -227,14 +237,17 @@ class CMap extends CMapElement {
 								$selement['elmids'] = zbx_objectValues($selement['elements'], 'groupid');
 								$hostgroupids_to_check = array_merge($hostgroupids_to_check, $selement['elmids']);
 								break;
+
 							case SYSMAP_ELEMENT_TYPE_HOST:
 								$selement['elmids'] = zbx_objectValues($selement['elements'], 'hostid');
 								$hostids_to_check = array_merge($hostids_to_check, $selement['elmids']);
 								break;
+
 							case SYSMAP_ELEMENT_TYPE_TRIGGER:
 								$selement['elmids'] = zbx_objectValues($selement['elements'], 'triggerid');
 								$triggerids_to_check = array_merge($triggerids_to_check, $selement['elmids']);
 								break;
+
 							case SYSMAP_ELEMENT_TYPE_MAP:
 								$selement['elmids'] = zbx_objectValues($selement['elements'], 'sysmapid');
 								$sysmapids_to_check = array_merge($sysmapids_to_check, $selement['elmids']);
@@ -271,13 +284,20 @@ class CMap extends CMapElement {
 				]);
 				$db_hostgrps_r = array_keys($db_hostgrps_r);
 
-				$db_hostgrps_rw = API::HostGroup()->get([
-					'output' => [],
-					'groupids' => $hostgroupids_to_check,
-					'preservekeys' => true,
-					'editable' => true
-				]);
-				$db_hostgrps_rw = array_keys($db_hostgrps_rw);
+				/*
+				 * If permissions are not required, do not create an extra API call to check also rights to edit element
+				 * because permissions PERM_READ are sufficient to see either map is available. Also not necessery to
+				 * check PERM_WRITE if user even do not have a PERM_READ.
+				 */
+				if ($extract_permissions && count($db_hostgrps_r) > 0) {
+					$db_hostgrps_rw = API::HostGroup()->get([
+						'output' => [],
+						'groupids' => $db_hostgrps_r,
+						'preservekeys' => true,
+						'editable' => true
+					]);
+					$db_hostgrps_rw = array_keys($db_hostgrps_rw);
+				}
 			}
 
 			if ($hostids_to_check) {
@@ -290,13 +310,20 @@ class CMap extends CMapElement {
 				]);
 				$db_hosts_r = array_keys($db_hosts_r);
 
-				$db_hosts_rw = API::Host()->get([
-					'output' => [],
-					'hostids' => $hostids_to_check,
-					'preservekeys' => true,
-					'editable' => true
-				]);
-				$db_hosts_rw = array_keys($db_hosts_rw);
+				/*
+				 * If permissions are not required, do not create an extra API call to check also rights to edit element
+				 * because permissions PERM_READ are sufficient to see either map is available. Also not necessery to
+				 * check PERM_WRITE if user even do not have a PERM_READ.
+				 */
+				if ($extract_permissions && count($db_hosts_r) > 0) {
+					$db_hosts_rw = API::Host()->get([
+						'output' => [],
+						'hostids' => $db_hosts_r,
+						'preservekeys' => true,
+						'editable' => true
+					]);
+					$db_hosts_rw = array_keys($db_hosts_rw);
+				}
 			}
 
 			if ($triggerids_to_check) {
@@ -309,18 +336,24 @@ class CMap extends CMapElement {
 				]);
 				$db_triggers_r = array_keys($db_triggers_r);
 
-				$db_triggers_rw = API::Trigger()->get([
-					'output' => [],
-					'triggerids' => $triggerids_to_check,
-					'preservekeys' => true,
-					'editable' => true
-				]);
-				$db_triggers_rw = array_keys($db_triggers_rw);
+				/*
+				 * If permissions are not required, do not create an extra API call to check also rights to edit element
+				 * because permissions PERM_READ are sufficient to see either map is available. Also not necessery to
+				 * check PERM_WRITE if user even do not have a PERM_READ.
+				 */
+				if ($extract_permissions && count($db_triggers_r)) {
+					$db_triggers_rw = API::Trigger()->get([
+						'output' => [],
+						'triggerids' => $db_triggers_r,
+						'preservekeys' => true,
+						'editable' => true
+					]);
+					$db_triggers_rw = array_keys($db_triggers_rw);
+				}
 			}
 
 			if ($sysmapids_to_check) {
 				$sysmapids_to_check = array_keys(array_flip($sysmapids_to_check));
-
 				$db_sysmaps_r = $this->get([
 					'output' => [],
 					'sysmapids' => $sysmapids_to_check,
@@ -328,13 +361,20 @@ class CMap extends CMapElement {
 				]);
 				$db_sysmaps_r = array_keys($db_sysmaps_r);
 
-				$db_sysmaps_rw = $this->get([
-					'output' => [],
-					'sysmapids' => $sysmapids_to_check,
-					'preservekeys' => true,
-					'editable' => true
-				]);
-				$db_sysmaps_rw = array_keys($db_sysmaps_rw);
+				/*
+				 * If permissions are not required, do not create an extra API call to check also rights to edit element
+				 * because permissions PERM_READ are sufficient to see either map is available. Also not necessery to
+				 * check PERM_WRITE if user even do not have a PERM_READ.
+				 */
+				if ($extract_permissions && count($db_sysmaps_r)) {
+					$db_sysmaps_rw = $this->get([
+						'output' => ['permission'],
+						'sysmapids' => $db_sysmaps_r,
+						'preservekeys' => true,
+						'editable' => true
+					]);
+					$db_sysmaps_rw = array_keys($db_sysmaps_rw);
+				}
 			}
 
 			foreach ($result as $sysmapid => &$sysmap) {
@@ -351,6 +391,7 @@ class CMap extends CMapElement {
 									$permission = PERM_READ;
 								}
 								break;
+
 							case SYSMAP_ELEMENT_TYPE_HOST:
 								if (!array_diff($sel['elmids'], array_intersect($db_hosts_rw, $sel['elmids']))) {
 									$permission = PERM_READ_WRITE;
@@ -359,6 +400,7 @@ class CMap extends CMapElement {
 									$permission = PERM_READ;
 								}
 								break;
+
 							case SYSMAP_ELEMENT_TYPE_TRIGGER:
 								if (!array_diff($sel['elmids'], array_intersect($db_triggers_rw, $sel['elmids']))) {
 									$permission = PERM_READ_WRITE;
@@ -371,6 +413,7 @@ class CMap extends CMapElement {
 									$permission = PERM_READ;
 								}
 								break;
+
 							case SYSMAP_ELEMENT_TYPE_MAP:
 								if (!array_diff($sel['elmids'], array_intersect($db_sysmaps_rw, $sel['elmids']))) {
 									$permission = PERM_READ_WRITE;
@@ -379,6 +422,7 @@ class CMap extends CMapElement {
 									$permission = PERM_READ;
 								}
 								break;
+
 							case SYSMAP_ELEMENT_TYPE_IMAGE:
 								$permission = ($user_data['type'] == USER_TYPE_SUPER_ADMIN)
 									? PERM_READ_WRITE
