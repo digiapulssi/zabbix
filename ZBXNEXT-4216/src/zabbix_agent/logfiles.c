@@ -2177,6 +2177,17 @@ static void	ensure_order_if_mtimes_equal(const struct st_logfile *logfiles_old, 
 	}
 }
 
+static int	files_have_same_md5_sum(struct st_logfile *log1, struct st_logfile *log2)
+{
+	if (-1 != log1->md5size && -1 != log2->md5size && log1->md5size == log2->md5size &&
+			0 == memcmp(log1->md5buf, log2->md5buf, sizeof(log1->md5buf)))
+	{
+		return SUCCEED;
+	}
+
+	return FAIL;
+}
+
 static void	handle_multiple_copies(struct st_logfile *logfiles, int logfiles_num, int i)
 {
 	/* There is a special case when the latest log file is copied to other file but not yet truncated. */
@@ -2188,9 +2199,7 @@ static void	handle_multiple_copies(struct st_logfile *logfiles, int logfiles_num
 
 	for (j = i + 1; j < logfiles_num; j++)
 	{
-		if (-1 != logfiles[i].md5size && -1 != logfiles[j].md5size &&
-				logfiles[i].md5size == logfiles[j].md5size &&
-				0 == memcmp(logfiles[i].md5buf, logfiles[j].md5buf, sizeof(logfiles[i].md5buf)))
+		if (SUCCEED == files_have_same_md5_sum(logfiles + i, logfiles + j))
 		{
 			/* logfiles[i] and logfiles[j] are original and copy (or vice versa). */
 			/* If logfiles[i] has been at least partially processed then transfer its */
@@ -2552,10 +2561,7 @@ static zbx_uint64_t	calculate_remaining_bytes(int rotation_type, struct st_logfi
 
 			for (j = i + 1; j < logfiles_num; j++)
 			{
-				if ('1' != counted[j] && -1 != logfiles[i].md5size && -1 != logfiles[j].md5size &&
-						logfiles[i].md5size == logfiles[j].md5size &&
-						0 == memcmp(logfiles[i].md5buf, logfiles[j].md5buf,
-						sizeof(logfiles[i].md5buf)))
+				if ('1' != counted[j] && SUCCEED == files_have_same_md5_sum(logfiles + i, logfiles + j))
 				{
 					/* logfiles[i] and logfiles[j] are original and copy (or vice versa) */
 					counted[j] = '1';
