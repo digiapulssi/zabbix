@@ -462,6 +462,23 @@ static void	print_logfile_list(const struct st_logfile *logfiles, int logfiles_n
 	}
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: compare_file_places                                              *
+ *                                                                            *
+ * Purpose: compare device numbers and inode numbers of 2 files               *
+ *                                                                            *
+ * Parameters: old     - [IN] details of the 1st log file                     *
+ *             new     - [IN] details of the 2nd log file                     *
+ *             use_ino - [IN] 0 - do not use inodes in comparison,            *
+ *                            1 - use up to 64-bit inodes in comparison,      *
+ *                            2 - use 128-bit inodes in comparison.           *
+ *                                                                            *
+ * Return value: ZBX_FILE_PLACE_SAME - both files have the same place         *
+ *               ZBX_FILE_PLACE_OTHER - files reside in different places      *
+ *               ZBX_FILE_PLACE_UNKNOWN - cannot compare places (no inodes)   *
+ *                                                                            *
+ ******************************************************************************/
 static int	compare_file_places(const struct st_logfile *old, const struct st_logfile *new, int use_ino)
 {
 	if (1 == use_ino || 2 == use_ino)
@@ -475,6 +492,18 @@ static int	compare_file_places(const struct st_logfile *old, const struct st_log
 	return ZBX_FILE_PLACE_UNKNOWN;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: open_file_helper                                                 *
+ *                                                                            *
+ * Purpose: open specified file for reading                                   *
+ *                                                                            *
+ * Parameters: pathname - [IN] full pathname of file                          *
+ *             err_msg  - [IN/OUT] error message why file could not be opened *
+ *                                                                            *
+ * Return value: file descriptor on success or -1 on error                    *
+ *                                                                            *
+ ******************************************************************************/
 static int	open_file_helper(const char *pathname, char **err_msg)
 {
 	int	fd;
@@ -485,6 +514,19 @@ static int	open_file_helper(const char *pathname, char **err_msg)
 	return fd;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: close_file_helper                                                *
+ *                                                                            *
+ * Purpose: close specified file                                              *
+ *                                                                            *
+ * Parameters: fd       - [IN] file descriptor to close                       *
+ *             pathname - [IN] pathname of file, used for error reporting     *
+ *             err_msg  - [IN/OUT] error message why file could not be closed *
+ *                                                                            *
+ * Return value: SUCCEED or FAIL                                              *
+ *                                                                            *
+ ******************************************************************************/
 static int	close_file_helper(int fd, const char *pathname, char **err_msg)
 {
 	if (0 == close(fd))
@@ -619,6 +661,26 @@ static int	is_same_file_logrt(const struct st_logfile *old, const struct st_logf
 	return ZBX_SAME_FILE_YES;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: examine_md5_and_place                                            *
+ *                                                                            *
+ * Purpose: from MD5 sums of initial blocks and places of 2 files make        *
+ *          a conclusion is it the same file, a pair 'original/copy' or       *
+ *          2 different files                                                 *
+ *                                                                            *
+ * Parameters:  buf1          - [IN] MD5 sum of initial block of he 1st file  *
+ *              buf2          - [IN] MD5 sum of initial block of he 2nd file  *
+ *              is_same_place - [IN] equality of file places                  *
+ *                                                                            *
+ * Return value: ZBX_SAME_FILE_NO - they are 2 different files                *
+ *               ZBX_SAME_FILE_YES - 2 files are (assumed) to be the same     *
+ *               ZBX_SAME_FILE_COPY - one file is copy of the other           *
+ *                                                                            *
+ * Comments: in case files places are unknown but MD5 sums of initial blocks  *
+ *           match it is assumed to be the same file                          *
+ *                                                                            *
+ ******************************************************************************/
 static int	examine_md5_and_place(const md5_byte_t *buf1, const md5_byte_t *buf2, size_t size, int is_same_place)
 {
 	if (0 == memcmp(buf1, buf2, size))
@@ -1437,7 +1499,22 @@ clean:
 #endif
 }
 
-static int	compile_filename_regexp(regex_t *re, const char *filename_regexp, char **err_msg)
+/******************************************************************************
+ *                                                                            *
+ * Function: compile_filename_regexp                                          *
+ *                                                                            *
+ * Purpose: compile regular expression                                        *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     filename_regexp - [IN] regexp to be compiled                           *
+ *     re              - [IN/OUT] compiled regexp                             *
+ *     err_msg         - [IN/OUT] error message why regexp could not be       *
+ *                       compiled                                             *
+ *                                                                            *
+ * Return value: SUCCEED or FAIL                                              *
+ *                                                                            *
+ ******************************************************************************/
+static int	compile_filename_regexp(const char *filename_regexp, regex_t *re, char **err_msg)
 {
 	int	err_code;
 
@@ -1460,6 +1537,21 @@ static int	compile_filename_regexp(regex_t *re, const char *filename_regexp, cha
 	return SUCCEED;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: fill_file_details                                                *
+ *                                                                            *
+ * Purpose: fill-in MD5 sums, device and inode numbers for files in the list  *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     logfiles     - [IN/OUT] list of log files                              *
+ *     logfiles_num - [IN] number of elements in 'logfiles'                   *
+ *     use_ino      - [IN] how to get file IDs in file_id()                   *
+ *     err_msg      - [IN/OUT] error message why operation failed             *
+ *                                                                            *
+ * Return value: SUCCEED or FAIL                                              *
+ *                                                                            *
+ ******************************************************************************/
 #ifdef _WINDOWS
 static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, int use_ino, char **err_msg)
 #else
@@ -1558,7 +1650,7 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 		if (SUCCEED != (ret = split_filename(filename, &directory, &filename_regexp, err_msg)))
 			goto clean;
 
-		if (SUCCEED != (ret = compile_filename_regexp(&re, filename_regexp, err_msg)))
+		if (SUCCEED != (ret = compile_filename_regexp(filename_regexp, &re, err_msg)))
 			goto clean1;
 
 		if (SUCCEED != (ret = pick_logfiles(directory, *mtime, &re, use_ino, logfiles, logfiles_alloc,
