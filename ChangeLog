@@ -564,6 +564,7 @@ Changes for 3.0.14rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-12912] fixed error handling on graph form for preview image (gcalenko)
 ..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
 ..F....... [ZBX-13016] fixed warning message shown by deprecated PHP 7.2 function create_function() (Sasha)
 ..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
