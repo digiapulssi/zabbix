@@ -19,8 +19,8 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.0.13rc1');
-define('ZABBIX_API_VERSION',	'3.0.13');
+define('ZABBIX_VERSION',		'3.0.14rc1');
+define('ZABBIX_API_VERSION',	'3.0.14');
 define('ZABBIX_EXPORT_VERSION',	'3.0');
 define('ZABBIX_DB_VERSION',		3000000);
 
@@ -142,6 +142,7 @@ define('O_NO',		2);
 
 define('P_SYS',				1);
 define('P_UNSET_EMPTY',		2);
+define('P_CRLF',			4);
 define('P_ACT',				16);
 define('P_NZERO',			32);
 define('P_NO_TRIM',			64);

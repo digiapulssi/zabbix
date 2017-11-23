@@ -20,6 +20,9 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
+/**
+ * @backup scripts
+ */
 class testFormAdministrationScripts extends CWebTest {
 	// Data provider
 	public static function providerScripts() {
@@ -114,10 +117,6 @@ class testFormAdministrationScripts extends CWebTest {
 		$this->zbxTestAssertElementPresentId('confirmation');
 	}
 
-	public function testFormAdministrationScripts_backup() {
-		DBsave_tables('scripts');
-	}
-
 	/**
 	 * @dataProvider providerScripts
 	 */
@@ -169,9 +168,4 @@ class testFormAdministrationScripts extends CWebTest {
 			$this->assertEquals($DBhash, DBhash($sql));
 		}
 	}
-
-	public function testFormAdministrationScripts_restore() {
-		DBrestore_tables('scripts');
-	}
-
 }
