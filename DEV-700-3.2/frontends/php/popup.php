@@ -1088,6 +1088,7 @@ elseif ($srctbl === 'triggers' || $srctbl === 'trigger_prototypes') {
 		$trigger['hostname'] = $host['name'];
 
 		$description = new CLink($trigger['description'], 'javascript:void(0);');
+		$trigger['description'] = $trigger['hostname'].NAME_DELIMITER.$trigger['description'];
 		$js_object = [];
 
 		if ($multiselect) {
@@ -1108,7 +1109,6 @@ elseif ($srctbl === 'triggers' || $srctbl === 'trigger_prototypes') {
 		}
 		else {
 			$elements = [];
-			$trigger['description'] = $trigger['hostname'].NAME_DELIMITER.$trigger['description'];
 
 			if (array_key_exists($srcfld1, $trigger)) {
 				$elements[] = ['id' => $dstfld1, 'value' => $trigger[$srcfld1]];
