@@ -331,16 +331,17 @@ class testFormIconMapping extends CWebTest {
 
 		// Check the results in DB
 		if (array_key_exists('dbCheck', $data)) {
-			$result = DBselect("SELECT icon_map.name, icon_mapping.expression FROM icon_map LEFT JOIN icon_mapping "
-					. "ON icon_map.iconmapid = icon_mapping.iconmapid WHERE icon_map.name = '".$data['name']."'");
-			while ($row = DBfetch($result)) {
-				$this->assertEquals($row['name'], $data['name']);
-				$dbExpression[] = $row['expression'];
+			$expressions = [];
+
+			foreach ($data['mappings'] as $options) {
+				$expressions[] = $options['expression'];
 			}
 
-			foreach ($data['mappings'] as $key => $options) {
-				$this->assertEquals($dbExpression[$key], $options['expression']);
-			}
+			$sql = 'SELECT null FROM icon_map LEFT JOIN icon_mapping '
+					. 'ON icon_map.iconmapid = icon_mapping.iconmapid WHERE icon_map.name = \''.$data['name'].'\' AND '
+					. dbConditionString('icon_mapping.expression', $expressions);
+
+			$this->assertEquals(count($expressions), DBcount($sql));
 		}
 
 		// Check the results in form
@@ -429,7 +430,7 @@ class testFormIconMapping extends CWebTest {
 			[
 				[
 					'name' => 'Icon mapping two for testPage',
-					'new_name' => ' ',
+					'new_name' => '',
 					'expression' => 'Update with empty name',
 					'error' => 'Invalid parameter "/1/name": cannot be empty.'
 				]
@@ -470,10 +471,10 @@ class testFormIconMapping extends CWebTest {
 				[
 					'comment' => 'Update with empty expression',
 					'name' => 'Icon mapping two for testPage',
-					'expression' => ' ',
+					'expression' => '',
 					'error' => 'Invalid parameter "/1/mappings/1/expression": cannot be empty.'
 				]
-			],
+			]
 		];
 	}
 
@@ -492,12 +493,12 @@ class testFormIconMapping extends CWebTest {
 
 		// Update Icon mapping name
 		if (array_key_exists('new_name', $data)) {
-			$this->zbxTestInputTypeOverwrite('iconmap_name', $data['new_name']);
+			$this->zbxTestInputType('iconmap_name', $data['new_name']);
 		}
 
 		// Update Icon mapping expression
 		if (array_key_exists('expression', $data)) {
-			$this->zbxTestInputTypeOverwrite('iconmap_mappings_0_expression', $data['expression']);
+			$this->zbxTestInputType('iconmap_mappings_0_expression', $data['expression']);
 		}
 
 		// Update Icon mapping name
@@ -637,11 +638,11 @@ class testFormIconMapping extends CWebTest {
 		// Check the results in form
 		if (array_key_exists('formCheck', $data)) {
 			if (array_key_exists('new_name', $data)) {
-				$this->zbxTestDoubleClickLinkText($data['new_name'], 'iconmap_name');
+				$this->zbxTestClickLinkText($data['new_name'], 'iconmap_name');
 				$this->zbxTestAssertElementValue('iconmap_name', $data['new_name']);
 			}
 			else {
-				$this->zbxTestDoubleClickLinkText($data['name'], 'iconmap_name');
+				$this->zbxTestClickLinkText($data['name'], 'iconmap_name');
 				$this->zbxTestAssertElementValue('iconmap_name', $data['name']);
 			}
 
@@ -699,7 +700,7 @@ class testFormIconMapping extends CWebTest {
 			[
 				[
 					'name' => 'Icon mapping one for testPage',
-					'new_name' => ' ',
+					'new_name' => '',
 					'expression' => 'Clone with empty name',
 					'error' => 'Invalid parameter "/1/name": cannot be empty.'
 				]
@@ -735,7 +736,7 @@ class testFormIconMapping extends CWebTest {
 					'comment' => 'Update with empty expression',
 					'name' => 'Icon mapping one for testPage',
 					'new_name' => 'CLONE: Icon mapping one for testPage',
-					'expression' => ' ',
+					'expression' => '',
 					'error' => 'Invalid parameter "/1/mappings/1/expression": cannot be empty.'
 				]
 			],
@@ -760,12 +761,12 @@ class testFormIconMapping extends CWebTest {
 
 		// Clone Icon mapping with name changing
 		if (array_key_exists('new_name', $data)) {
-			$this->zbxTestInputTypeOverwrite('iconmap_name', $data['new_name']);
+			$this->zbxTestInputType('iconmap_name', $data['new_name']);
 		}
 
 		// Clone Icon mapping with expression changing
 		if (array_key_exists('expression', $data)) {
-			$this->zbxTestInputTypeOverwrite('iconmap_mappings_0_expression', $data['expression']);
+			$this->zbxTestInputType('iconmap_mappings_0_expression', $data['expression']);
 		}
 
 		// Clone Icon mapping with inventory changing
@@ -807,7 +808,6 @@ class testFormIconMapping extends CWebTest {
 				[
 					'name' => 'Икона карты обновленна утф-8',
 					'new_name' => 'CLONE: Икона карты обновленна утф-8',
-					'expression' => 'Make Clone of existing icon mapping',
 					'dbCheck' => true,
 				]
 			],
@@ -918,9 +918,9 @@ class testFormIconMapping extends CWebTest {
 		}
 	}
 
-		/**
-		 * Test cancel creation of icon mapping.
-		*/
+	/**
+	 * Test cancel creation of icon mapping.
+	 */
 	public function testFormIconMapping_CancelCloning(){
 		// Select Icon mapping, open a form
 		$this->zbxTestLogin('adm.iconmapping.php');
@@ -928,18 +928,14 @@ class testFormIconMapping extends CWebTest {
 		// Variables to define icon mapping
 		$name='Icon mapping one for testPage';
 		$new_name='CANCEL CLONING: Icon mapping one for testPage';
-		$expression='Cancel cloning Icon mapping';
 
 		$this->zbxTestClickLinkTextWait($name, 'iconmap_name');
 
 		// Clone Icon mapping
-		$this->zbxTestClick('clone');
+		$this->zbxTestClickWait('clone');
 
 		// Clone Icon mapping with name changing
 		$this->zbxTestInputTypeOverwrite('iconmap_name', $new_name);
-
-		// Clone Icon mapping with expression changing
-		$this->zbxTestInputTypeOverwrite('iconmap_mappings_0_expression', $expression);
 
 		// Cancel Icon mapping creation
 		$this->zbxTestClick('cancel');
@@ -967,7 +963,7 @@ class testFormIconMapping extends CWebTest {
 		$this->zbxTestClickLinkTextWait($name, 'iconmap_name');
 
 		// Delete Icon mapping
-		$this->zbxTestClick('delete');
+		$this->zbxTestClickWait('delete');
 		$this->webDriver->switchTo()->alert()->accept();
 
 		// Check the results in frontend.
