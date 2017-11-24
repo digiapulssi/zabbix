@@ -55,10 +55,16 @@ class CPageHeader {
 	protected $js = array();
 
 	/**
+	 * @var {string} sid
+	 */
+	protected $sid;
+
+	/**
 	 * @param string $title
 	 */
 	public function __construct($title = '') {
 		$this->title = $title;
+		$this->sid = substr(get_cookie('zbx_sessionid'), 16, 16);
 	}
 
 	/**
@@ -130,6 +136,7 @@ class CPageHeader {
 		<meta name="Author" content="Zabbix SIA" />
 		<meta charset="utf-8" />
 		<meta name="msapplication-config" content="none"/>
+		<meta name="csrf-token" content="$this->sid"/>
 		<link rel="shortcut icon" href="images/general/zabbix.ico" />
 
 HTML;

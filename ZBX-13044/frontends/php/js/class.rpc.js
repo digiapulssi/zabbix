@@ -20,20 +20,6 @@
 var RPC = {
 	'_rpcurl': 'jsrpc.php?output=json-rpc', // rpc url
 	'_callid': 0, // rpc request id
-	'_auth': null, // authentication hash
-
-	auth: function(auth_) {
-		if (is_null(this._auth)) {
-			this._auth = cookie.read('zbx_sessionid');
-		}
-
-		if ('undefined' == typeof(url_)) {
-			return this._auth;
-		}
-		else {
-			this._auth = auth_;
-		}
-	},
 
 	callid: function() {
 		this._callid++;
@@ -52,7 +38,6 @@ var RPC = {
 
 RPC.Base = Class.create({
 	'userParams':	{},		// user OPtions
-	'auth':			null,	// authentication hash
 	'callid':		0,		// rpc request id
 	'debug_status':	0,		// debug status: 0 - off, 1 - on, 2 - SDI;
 	'debug_info':	'',		// debug string
@@ -71,7 +56,6 @@ RPC.Base = Class.create({
 		Object.extend(this.userParams, userParams || {});
 
 		this.callid = RPC.callid();
-		this.auth = RPC.auth();
 	},
 
 	debug: function(fnc_name, id) {
@@ -108,8 +92,7 @@ RPC.Call = Class.create(RPC.Base, {
 		var body = {
 			'jsonrpc': '2.0',
 			'method': this.userParams.method,
-			'params': this.userParams.params,
-			'auth': this.auth
+			'params': this.userParams.params
 		};
 
 		var request = {
