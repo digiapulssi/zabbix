@@ -43,7 +43,7 @@ class CHtmlUrlValidator {
 		$allowed_schemes = explode(',', strtolower(ZBX_URI_VALID_SCHEMES));
 
 		return ($url && ((array_key_exists('scheme', $url) && in_array(strtolower($url['scheme']), $allowed_schemes))
-					|| (array_key_exists('path', $url) && preg_match('/^\/?[a-z_\.]+\.php/i', $url['path']) == 1)
+					|| (array_key_exists('path', $url) && preg_match('/^[a-z_\.]+\.php/i', $url['path']) == 1)
 				));
 	}
 }
