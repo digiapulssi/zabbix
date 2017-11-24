@@ -2299,10 +2299,7 @@ static void	handle_multiple_copies(struct st_logfile *logfiles, int logfiles_num
 
 			if (0 < logfiles[i].processed_size)
 			{
-				if (logfiles[i].processed_size <= logfiles[j].size)
-					logfiles[j].processed_size = logfiles[i].processed_size;
-				else
-					logfiles[j].processed_size = logfiles[j].size;
+				logfiles[j].processed_size = MIN(logfiles[i].processed_size, logfiles[j].size);
 
 				zabbix_log(LOG_LEVEL_DEBUG, "handle_multiple_copies() file '%s' processed_size:"
 						ZBX_FS_UI64 " transferred to" " file '%s' processed_size:" ZBX_FS_UI64,
