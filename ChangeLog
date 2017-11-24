@@ -4,7 +4,6 @@ New features:
 
 Bug fixes:
 ..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
-..F....... [ZBXNEXT-1421] added sortorder parameter for service dependencies for sorting purposes (miks)
 ..F....... [ZBX-12897] fixed error causing empty list in popup window when opened from page having host group filter (gcalenko)
 A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
 ..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
@@ -568,7 +567,6 @@ New features:
 
 Bug fixes:
 ..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
-..F....... [ZBXNEXT-1421] added sortorder parameter for service dependencies for sorting purposes (miks)
 ..F....... [ZBX-12897] fixed error causing empty list in popup window when opened from page having host group filter (gcalenko)
 ....I..... [ZBX-12232] fixed mysql m4 configuration script for mariadb C connector (abs)
 ..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
