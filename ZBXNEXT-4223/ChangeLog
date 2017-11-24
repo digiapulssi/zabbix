@@ -4,6 +4,7 @@ New features:
 ..F....... [ZBX-12809] implemented overlay dialog centering using javascript (miks)
 
 Bug fixes:
+.........T [ZBXNEXT-4223] performed network templates cleanup (vitaly)
 ..F....... [ZBX-12663] fixed retaining the scrollbar position on page reload (Ivo)
 ..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
 ..F....... [ZBX-13016] fixed warning message shown by deprecated PHP 7.2 function create_function() (Sasha)
@@ -27,7 +28,6 @@ A......... [ZBX-10754] fixed inheritance of template properties in web scenarios
 .....J.... [ZBX-12705] added check for collisions and unsupported characters in macro names in jmx.discovery (vjaceslavs)
 ........S. [ZBX-12970] fixed processing of alerts when related event is removed (vso)
 ...G...... [ZBX-12544] fixed compilation warnings (valdis)
-.........T [ZBXNEXT-4223] performed network templates cleanup (vitaly)
 
 --------------------------------------------------------------------------------
 Changes for 3.4.4
