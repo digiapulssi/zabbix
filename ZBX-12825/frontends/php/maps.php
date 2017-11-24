@@ -134,6 +134,17 @@ $data['map'] = API::Map()->get(array(
 ));
 $data['map'] = reset($data['map']);
 
+// Replace invalid URL values by javascript warning alert.
+foreach ($data['map']['selements'] as &$selement) {
+	foreach ($selement['urls'] as &$url) {
+		if (!CHtmlUrlValidator::validate($url['url'], false)) {
+			$url['url'] = 'javascript: alert("'._('Wrong value for url field.').'");';
+		}
+	}
+	unset($url);
+}
+unset($selement);
+
 $data['pageFilter'] = new CPageFilter(array(
 	'severitiesMin' => array(
 		'default' => $data['map']['severity_min'],

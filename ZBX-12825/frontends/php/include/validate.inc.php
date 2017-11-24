@@ -586,8 +586,20 @@ function validateNumber($value, $min = null, $max = null) {
 	return true;
 }
 
-function validateUserMacro($value) {
-	return preg_match('/^'.ZBX_PREG_EXPRESSION_USER_MACROS.'$/', $value);
+/**
+ * Validate, if passed value contains or exactly matches user macro.
+ *
+ * @param string $value				Value that is validated against pattern.
+ * @param bool	 $exact_match		(optional) Either to test exact match or partial match of passed value.
+ *
+ * @return bool
+ */
+function validateUserMacro($value, $exact_match = true) {
+	$pattern = $exact_match
+		? '/^'.ZBX_PREG_EXPRESSION_USER_MACROS.'$/'
+		: '/'.ZBX_PREG_EXPRESSION_USER_MACROS.'/';
+
+	return preg_match($pattern, $value);
 }
 
 /**
