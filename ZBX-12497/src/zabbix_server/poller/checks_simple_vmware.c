@@ -595,14 +595,14 @@ out:
 	return ret;
 }
 
-static void	vmware_get_events(const zbx_vector_ptr_t *events, zbx_uint64_t last_key, const DC_ITEM *item,
+static void	vmware_get_events(const zbx_vector_ptr_t *events, zbx_uint64_t eventlog_last_key, const DC_ITEM *item,
 		zbx_vector_ptr_t *add_results)
 {
 	const char	*__function_name = "vmware_get_events";
 
 	int		i;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() last_key:" ZBX_FS_UI64, __function_name, last_key);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() eventlog_last_key:" ZBX_FS_UI64, __function_name, eventlog_last_key);
 
 	/* events were retrieved in reverse chronological order */
 	for (i = events->values_num - 1; i >= 0; i--)
@@ -610,7 +610,7 @@ static void	vmware_get_events(const zbx_vector_ptr_t *events, zbx_uint64_t last_
 		const zbx_vmware_event_t	*event = events->values[i];
 		AGENT_RESULT			*add_result = NULL;
 
-		if (event->key <= last_key)
+		if (event->key <= eventlog_last_key)
 			continue;
 
 		add_result = zbx_malloc(add_result, sizeof(AGENT_RESULT));
@@ -657,11 +657,11 @@ int	check_vcenter_eventlog(AGENT_REQUEST *request, const DC_ITEM *item, AGENT_RE
 	if (NULL == (service = get_vmware_service(url, item->username, item->password, result, &ret)))
 		goto unlock;
 
-	if (ZBX_VMWARE_EVENT_KEY_UNINITIALIZED == service->last_key)
+	if (ZBX_VMWARE_EVENT_KEY_UNINITIALIZED == service->eventlog_last_key)
 	{
-		service->last_key = request->lastlogsize;
+		service->eventlog_last_key = request->lastlogsize;
 	}
-	else if (request->lastlogsize < service->last_key)
+	else if (request->lastlogsize < service->eventlog_last_key)
 	{
 		/* this may happen if there are multiple vmware.eventlog items for the same service URL or item has  */
 		/* been polled, but values got stuck in history cache and item's lastlogsize hasn't been updated yet */
@@ -671,7 +671,7 @@ int	check_vcenter_eventlog(AGENT_REQUEST *request, const DC_ITEM *item, AGENT_RE
 	else if (0 < service->data->events.values_num)
 	{
 		vmware_get_events(&service->data->events, request->lastlogsize, item, add_results);
-		service->last_key = ((const zbx_vmware_event_t *)service->data->events.values[0])->key;
+		service->eventlog_last_key = ((const zbx_vmware_event_t *)service->data->events.values[0])->key;
 	}
 
 	ret = SYSINFO_RET_OK;

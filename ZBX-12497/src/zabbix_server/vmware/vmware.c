@@ -2917,6 +2917,8 @@ static int	vmware_service_read_previous_events(CURL *easyhandle, const char *eve
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
 		goto out;
 
+	zabbix_log(LOG_LEVEL_TRACE, "SOAP response: %s", page.data);
+
 	ret = SUCCEED;
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
@@ -2985,13 +2987,13 @@ out:
 	return ret;
 }
 
-void	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml)
+int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml)
 {
 	const char		*__function_name = "vmware_service_parse_event_data";
 
 	zbx_vector_str_t	keys;
 	zbx_vector_uint64_t	ids;
-	int			i;
+	int			i, parsed_num = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() last_key:" ZBX_FS_UI64, __function_name, last_key);
 
@@ -3081,6 +3083,7 @@ void	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last
 			event->message = message;
 			event->timestamp = timestamp;
 			zbx_vector_ptr_append(events, event);
+			parsed_num++;
 		}
 	}
 
@@ -3088,7 +3091,9 @@ void	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last
 out:
 	zbx_vector_str_destroy(&keys);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() events:%d", __function_name, events->values_num);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() parsed:%d", __function_name, parsed_num);
+
+	return parsed_num;
 }
 
 /******************************************************************************
@@ -3112,7 +3117,7 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 	const char	*__function_name = "vmware_service_get_event_data";
 
 	char		*event_session = NULL;
-	int		event_num, ret = FAIL;
+	int		ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -3124,15 +3129,10 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 
 	do
 	{
-		event_num = events->values_num;
-
 		if (SUCCEED != vmware_service_read_previous_events(easyhandle, event_session, error))
 			goto end_session;
-
-		zabbix_log(LOG_LEVEL_TRACE, "SOAP response: %s", page.data);
-		vmware_service_parse_event_data(events, service->last_key, page.data);
 	}
-	while (events->values_num > event_num);	/* keep looping while vmware_service_parse_event_data() appends events */
+	while (0 < vmware_service_parse_event_data(events, service->eventlog_last_key, page.data));
 
 	ret = SUCCEED;
 end_session:
@@ -3729,7 +3729,7 @@ static void	vmware_service_update(zbx_vmware_service_t *service)
 	}
 
 	/* skip collection of event data if we don't know where we stopped last time or item can't accept values */
-	if (ZBX_VMWARE_EVENT_KEY_UNINITIALIZED != service->last_key &&
+	if (ZBX_VMWARE_EVENT_KEY_UNINITIALIZED != service->eventlog_last_key &&
 			SUCCEED != vmware_service_get_event_data(service, easyhandle, &data->events, &data->error))
 	{
 		goto clean;
@@ -4259,7 +4259,7 @@ zbx_vmware_service_t	*zbx_vmware_get_service(const char* url, const char* userna
 	service->type = ZBX_VMWARE_TYPE_UNKNOWN;
 	service->state = ZBX_VMWARE_STATE_NEW;
 	service->lastaccess = now;
-	service->last_key = ZBX_VMWARE_EVENT_KEY_UNINITIALIZED;
+	service->eventlog_last_key = ZBX_VMWARE_EVENT_KEY_UNINITIALIZED;
 
 	zbx_hashset_create_ext(&service->entities, 100, vmware_perf_entity_hash_func,  vmware_perf_entity_compare_func,
 			NULL, __vm_mem_malloc_func, __vm_mem_realloc_func, __vm_mem_free_func);

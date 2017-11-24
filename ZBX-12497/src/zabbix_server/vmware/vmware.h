@@ -202,7 +202,7 @@ typedef struct
 	zbx_vmware_data_t	*data;
 
 	/* lastlogsize when vmware.eventlog[] item was polled last time */
-	zbx_uint64_t		last_key;
+	zbx_uint64_t		eventlog_last_key;
 }
 zbx_vmware_service_t;
 
