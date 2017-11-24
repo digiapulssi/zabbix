@@ -37,8 +37,7 @@ allowed_path_t;
 allowed_path_t *allowed_path_list = NULL;
 
 void add_allowed_path(char *config_value) {
-	allowed_path_t *allowed_path;
-	allowed_path = (allowed_path_t *)zbx_malloc(allowed_path, sizeof(allowed_path_t));
+	allowed_path_t *allowed_path = (allowed_path_t *)zbx_malloc(NULL, sizeof(allowed_path_t));
 	allowed_path->next = allowed_path_list;
 	allowed_path->path = strdup(config_value);
 	allowed_path_list = allowed_path;
