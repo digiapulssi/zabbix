@@ -2269,7 +2269,7 @@ static void	ensure_order_if_mtimes_equal(const struct st_logfile *logfiles_old, 
 	}
 }
 
-static int	files_have_same_md5_sum(struct st_logfile *log1, struct st_logfile *log2)
+static int	files_have_same_md5_sum(const struct st_logfile *log1, const struct st_logfile *log2)
 {
 	if (-1 != log1->md5size && -1 != log2->md5size && log1->md5size == log2->md5size &&
 			0 == memcmp(log1->md5buf, log2->md5buf, sizeof(log1->md5buf)))
@@ -2353,8 +2353,150 @@ static double	calculate_delay(zbx_uint64_t processed_bytes, zbx_uint64_t remaini
 	return delay;
 }
 
-static void	jump_remaining_bytes_logcpt()
+static int	*create_marks_array(const struct st_logfile *logfiles, int logfiles_num)
 {
+	int	i, *marks;
+
+	marks = zbx_malloc(NULL, (size_t)logfiles_num * sizeof(int));
+
+	for (i = 0; i < logfiles_num; i++)	/* -1 (default) means that this log file is unique (has no copies) */
+		marks[i] = -1;
+
+	/* Preparation: find all copies and mark in the 'marks' array which one has the largest size. */
+	/* For example if there are 5 log files and the 0th, the 2nd and the 4th are copies (have the same MD5 sum */
+	/* of initial block) and the 4th log file continues to grow (so it is larger than the 0th and the 2nd) then */
+	/* we want to set up 'mark' array as */
+	/*                                   */
+	/*   Index:  0   1   2   3   4       */
+	/*   -----------------------------   */
+	/*   Value:  4  -1   4  -1   4       */
+
+	for (i = 0; i < logfiles_num; i++)
+	{
+		int	j;
+
+		if (-1 == marks[i])
+		{
+			for (j = i + 1; j < logfiles_num; j++)		/* search if the i-th file has copies */
+			{
+				if (SUCCEED == files_have_same_md5_sum(logfiles + i, logfiles + j))
+				{
+					/* logfiles[i] and logfiles[j] are original and copy (or vice versa) */
+
+					if (logfiles[i].size < logfiles[j].size)	/* new max size found */
+					{
+						marks[i] = j;
+						marks[j] = j;
+					}
+					else
+					{
+						marks[i] = i;
+						marks[j] = i;
+					}
+				}
+			}
+		}
+	}
+
+	return marks;
+}
+
+static void	jump_remaining_bytes_logcpt(struct st_logfile *logfiles, int logfiles_num, const char *key,
+		int start_from, zbx_uint64_t bytes_to_jump, int *seq, zbx_uint64_t *lastlogsize, int *mtime,
+		int *jumped_to)
+{
+	int	first_pass = 1, i, *marks = NULL;
+
+	/* Jumping over bytes in fast growing log files in case of 'copytruncate' rotation should detect if there are */
+	/* copies and skip them. If copies happen to have different length (e.g. a log file has been copied but not */
+	/* truncated) then pick the copy with the largest size for jumping required amount of bytes. */
+
+	/* create array for tracking unique logfiles, copies of logfiles, their length and status of counting */
+	marks = create_marks_array(logfiles, logfiles_num);
+
+	i = start_from;			/* enter the loop with index of the last file processed, */
+					/* later continue the loop from the start */
+	while (i < logfiles_num)
+	{
+		if (-2 != marks[i] && logfiles[i].size != logfiles[i].processed_size)	/* -2 means that this log */
+											/* file has been processed */
+		{
+			zbx_uint64_t	bytes_jumped, new_processed_size;
+
+			if (0 <= marks[i])	/* this log file is a copy or has copies */
+			{
+				/* theoretically we could jump based on the largest copy */
+				bytes_jumped = MIN(bytes_to_jump,
+						logfiles[marks[i]].size - logfiles[marks[i]].processed_size);
+
+				/* practically we are limited with the size of current log file */
+				bytes_jumped = MIN(bytes_jumped, logfiles[i].size - logfiles[i].processed_size);
+			}
+			else	/* unique log file */
+				bytes_jumped = MIN(bytes_to_jump, logfiles[i].size - logfiles[i].processed_size);
+
+			new_processed_size = logfiles[i].processed_size + bytes_jumped;
+
+			zabbix_log(LOG_LEVEL_WARNING, "item:\"%s\" logfile:\"%s\" skipping " ZBX_FS_UI64 " bytes (from"
+					" byte " ZBX_FS_UI64 " to byte " ZBX_FS_UI64 ") to meet maxdelay", key,
+					logfiles[i].filename, bytes_jumped, logfiles[i].processed_size,
+					new_processed_size);
+
+			if (0 <= marks[i])	/* this log file is a copy or has copies */
+			{
+				/* apply this jump to the current file and all copies as well */
+				int	j;
+
+				for (j = 0; j < logfiles_num; j++)
+				{
+					if (marks[i] == marks[j])	/* current file or its copy */
+					{
+						if (logfiles[j].processed_size < new_processed_size)
+						{
+							logfiles[j].processed_size =
+									MIN(logfiles[j].size, new_processed_size);
+						}
+
+						if (*mtime < logfiles[j].mtime)
+							*mtime = logfiles[j].mtime;
+
+						logfiles[j].seq = (*seq)++;
+
+						marks[j] = -2;	/* mark as processed */
+					}
+				}
+			}
+			else	/* unique log file */
+			{
+				logfiles[i].processed_size = new_processed_size;
+				*lastlogsize = new_processed_size;
+				*mtime = logfiles[i].mtime;
+
+				logfiles[i].seq = (*seq)++;
+
+				marks[i] = -2;	/* mark as processed */
+			}
+
+			bytes_to_jump -= bytes_jumped;
+
+			*jumped_to = i;
+		}
+
+		if (0 == bytes_to_jump)
+			break;
+
+		if (0 != first_pass)
+		{
+			/* 'start_from' element was processed, now proceed from the beginning of file list */
+			first_pass = 0;
+			i = 0;
+			continue;
+		}
+
+		i++;
+	}
+
+	zbx_free(marks);
 }
 
 static void	jump_remaining_bytes_logrt(struct st_logfile *logfiles, int logfiles_num, const char *key,
@@ -2395,9 +2537,8 @@ static void	jump_remaining_bytes_logrt(struct st_logfile *logfiles, int logfiles
 
 		if (0 != first_pass)
 		{
+			/* 'start_from' element was processed, now proceed from the beginning of file list */
 			first_pass = 0;
-
-			/* now proceed from the beginning of the file list */
 			i = 0;
 			continue;
 		}
@@ -2611,7 +2752,8 @@ static int	jump_ahead(int rotation_type, const char *key, struct st_logfile *log
 
 	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
 	{
-		jump_remaining_bytes_logcpt();
+		jump_remaining_bytes_logcpt(logfiles, logfiles_num, key, *jump_from_to, bytes_to_jump, seq, lastlogsize,
+				mtime, &jumped_to);
 	}
 	else
 	{
