@@ -101,7 +101,7 @@ function get_cookie($name, $default_value = null) {
 }
 
 function zbx_setcookie($name, $value, $time = null) {
-	setcookie($name, $value, isset($time) ? $time : 0, null, null, HTTPS);
+	setcookie($name, $value, isset($time) ? $time : 0, null, null, HTTPS, true);
 	$_COOKIE[$name] = $value;
 }
 
@@ -331,6 +331,17 @@ function zbxAddSecondsToUnixtime($sec, $unixtime) {
 }
 
 /*************** CONVERTING ******************/
+/**
+ * Convert the Windows new line (CR+LF) to Linux style line feed (LF).
+ *
+ * @param string $string  Input string that will be converted.
+ *
+ * @return string
+ */
+function CRLFtoLF($string) {
+	return str_replace("\r\n", "\n", $string);
+}
+
 function rgb2hex($color) {
 	$HEX = [
 		dechex($color[0]),
@@ -620,10 +631,12 @@ function convert_units($options = []) {
 
 	if (in_array($options['units'], $blackList) || (zbx_empty($options['units'])
 			&& ($options['convert'] == ITEM_CONVERT_WITH_UNITS))) {
-		if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD) {
-			$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
+		if (preg_match('/^\-?\d+\.\d+$/', $options['value'])) {
+			if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD) {
+				$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
+			}
+			$options['value'] = sprintf('%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f', $options['value']);
 		}
-		$options['value'] = sprintf('%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f', $options['value']);
 		$options['value'] = preg_replace('/^([\-0-9]+)(\.)([0-9]*)[0]+$/U', '$1$2$3', $options['value']);
 		$options['value'] = rtrim($options['value'], '.');
 
@@ -1050,17 +1063,6 @@ function natksort(&$array) {
 	$array = $new_array;
 
 	return true;
-}
-
-function asort_by_key(&$array, $key) {
-	if (!is_array($array)) {
-		error(_('Incorrect type of asort_by_key.'));
-		return [];
-	}
-	$key = htmlspecialchars($key);
-	uasort($array, create_function('$a,$b', 'return $a[\''.$key.'\'] - $b[\''.$key.'\'];'));
-
-	return $array;
 }
 
 // recursively sort an array by key
@@ -1861,14 +1863,14 @@ function show_messages($good = false, $okmsg = null, $errmsg = null) {
 	$messages = isset($ZBX_MESSAGES) ? $ZBX_MESSAGES : [];
 	$ZBX_MESSAGES = [];
 
-	if (!ZBX_SHOW_SQL_ERRORS && CWebUser::getType() != USER_TYPE_SUPER_ADMIN && !CWebUser::getDebugMode()) {
+	if (!ZBX_SHOW_TECHNICAL_ERRORS && CWebUser::getType() != USER_TYPE_SUPER_ADMIN && !CWebUser::getDebugMode()) {
 		$filtered_messages = [];
 		$generic_exists = false;
 
 		foreach ($messages as $message) {
-			if (array_key_exists('sql_error', $message) && $message['sql_error'] === true) {
+			if (array_key_exists('src', $message) && ($message['src'] === 'sql' || $message['src'] === 'php')) {
 				if (!$generic_exists) {
-					$message['message'] = _('SQL error. Please contact Zabbix administrator.');
+					$message['message'] = _('System error occurred. Please contact Zabbix administrator.');
 					$filtered_messages[] = $message;
 					$generic_exists = true;
 				}
@@ -1976,7 +1978,13 @@ function info($msgs) {
 	}
 }
 
-function error($msgs) {
+/*
+ * Add an error to global message array.
+ *
+ * @param string | array $msg	Error message text.
+ * @param string		 $src	The source of error message.
+ */
+function error($msgs, $src = '') {
 	global $ZBX_MESSAGES;
 
 	if (!isset($ZBX_MESSAGES)) {
@@ -1986,7 +1994,11 @@ function error($msgs) {
 	$msgs = zbx_toArray($msgs);
 
 	foreach ($msgs as $msg) {
-		$ZBX_MESSAGES[] = ['type' => 'error', 'message' => $msg];
+		$ZBX_MESSAGES[] = [
+			'type' => 'error',
+			'message' => $msg,
+			'src' => $src
+		];
 	}
 }
 
@@ -2001,21 +2013,6 @@ function error_group($data) {
 	foreach (zbx_toArray($data['msgs']) as $msg) {
 		error($data['header'] . ' ' . $msg);
 	}
-}
-
-/**
- * Add SQL error message to global messages array.
- *
- * @param string $msg		Error message text.
- */
-function sqlError($msg) {
-	global $ZBX_MESSAGES;
-
-	if (!isset($ZBX_MESSAGES)) {
-		$ZBX_MESSAGES = [];
-	}
-
-	$ZBX_MESSAGES[] = ['type' => 'error', 'message' => $msg, 'sql_error' => true];
 }
 
 function clear_messages($count = null) {
@@ -2074,14 +2071,28 @@ function parse_period($str) {
 function get_status() {
 	global $ZBX_SERVER, $ZBX_SERVER_PORT;
 
-	$server = new CZabbixServer($ZBX_SERVER, $ZBX_SERVER_PORT, ZBX_SOCKET_TIMEOUT, ZBX_SOCKET_BYTES_LIMIT);
-	$server_status = $server->getStatus(get_cookie('zbx_sessionid'));
+	$status = [
+		'is_running' => false,
+		'has_status' => false
+	];
 
-	if ($server_status === false) {
-		return false;
+	$server = new CZabbixServer($ZBX_SERVER, $ZBX_SERVER_PORT, ZBX_SOCKET_TIMEOUT, ZBX_SOCKET_BYTES_LIMIT);
+	$status['is_running'] = $server->isRunning(get_cookie('zbx_sessionid'));
+
+	if ($status['is_running'] === false) {
+		return $status;
 	}
 
-	$status = [
+	$server = new CZabbixServer($ZBX_SERVER, $ZBX_SERVER_PORT, 15, ZBX_SOCKET_BYTES_LIMIT);
+	$server_status = $server->getStatus(get_cookie('zbx_sessionid'));
+	$status['has_status'] = (bool) $server_status;
+
+	if ($server_status === false) {
+		error($server->getError());
+		return $status;
+	}
+
+	$status += [
 		'triggers_count_disabled' => 0,
 		'triggers_count_off' => 0,
 		'triggers_count_on' => 0,
@@ -2414,7 +2425,7 @@ function zbx_err_handler($errno, $errstr, $errfile, $errline) {
 	}
 
 	// Don't show the call to this handler function.
-	error($errstr.' ['.CProfiler::getInstance()->formatCallStack().']');
+	error($errstr.' ['.CProfiler::getInstance()->formatCallStack().']', 'php');
 }
 
 /**
@@ -2503,26 +2514,38 @@ function makeUpdateIntervalFilter($field_name, $values) {
  * @param boolean	$options['updateProfile']
  * @param int		$options['period']
  * @param string	$options['stime']
+ * @param int		$options['isNow']
  *
  * @return array
  */
 function calculateTime(array $options = []) {
-	if (!array_key_exists('updateProfile', $options)) {
-		$options['updateProfile'] = true;
+	$defOptions = [
+		'updateProfile' => false,
+		'profileIdx' => null,
+		'profileIdx2' => 0,
+		'period' => null,
+		'stime' => null,
+		'isNow' => null
+	];
+	$options = zbx_array_merge($defOptions, $options);
+
+	if ($options['profileIdx'] === '') {
+		$options['profileIdx'] = $defOptions['profileIdx'];
 	}
-	if (empty($options['profileIdx2'])) {
-		$options['profileIdx2'] = 0;
+	if ($options['profileIdx2'] === null || $options['profileIdx2'] === '') {
+		$options['profileIdx2'] = $defOptions['profileIdx2'];
+	}
+	if ($options['stime'] === '') {
+		$options['stime'] = $defOptions['stime'];
 	}
 
-	// Show only latest data without update is set only period.
-	if (!empty($options['period']) && empty($options['stime'])) {
+	if ($options['profileIdx'] === null) {
 		$options['updateProfile'] = false;
-		$options['profileIdx'] = '';
 	}
 
 	// period
-	if (empty($options['period'])) {
-		$options['period'] = !empty($options['profileIdx'])
+	if ($options['period'] === null) {
+		$options['period'] = ($options['profileIdx'] !== null)
 			? CProfile::get($options['profileIdx'].'.period', ZBX_PERIOD_DEFAULT, $options['profileIdx2'])
 			: ZBX_PERIOD_DEFAULT;
 	}
@@ -2542,74 +2565,59 @@ function calculateTime(array $options = []) {
 			$options['period'] = ZBX_MAX_PERIOD;
 		}
 	}
-	if ($options['updateProfile'] && !empty($options['profileIdx'])) {
-		CProfile::update($options['profileIdx'].'.period', $options['period'], PROFILE_TYPE_INT, $options['profileIdx2']);
+
+	$time = time();
+	$usertime = null;
+
+	// isNow
+	if ($options['isNow'] === null) {
+		$options['isNow'] = ($options['stime'] !== null)
+			? 0
+			: ($options['profileIdx'] !== null)
+				? CProfile::get($options['profileIdx'].'.isnow', 1, $options['profileIdx2'])
+				: 1;
 	}
 
 	// stime
-	$time = time();
-	$usertime = null;
-	$stimeNow = null;
-	$isNow = 0;
+	if ($options['isNow'] == 1) {
+		$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
+		$usertime = date(TIMESTAMP_FORMAT, $time);
+	}
+	else {
+		if ($options['stime'] === null) {
+			$options['stime'] = CProfile::get($options['profileIdx'].'.stime', null, $options['profileIdx2']);
 
-	if (!empty($options['stime'])) {
+			if ($options['stime'] === null) {
+				$options['isNow'] = 1;
+				$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
+			}
+		}
+
 		$stimeUnix = zbxDateToTime($options['stime']);
 
-		if ($stimeUnix > $time || zbxAddSecondsToUnixtime($options['period'], $stimeUnix) > $time) {
-			$stimeNow = zbxAddSecondsToUnixtime(SEC_PER_YEAR, $options['stime']);
+		if (zbxAddSecondsToUnixtime($options['period'], $stimeUnix) >= $time) {
+			$options['isNow'] = 1;
 			$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
 			$usertime = date(TIMESTAMP_FORMAT, $time);
-			$isNow = 1;
 		}
 		else {
 			$usertime = date(TIMESTAMP_FORMAT, zbxAddSecondsToUnixtime($options['period'], $stimeUnix));
-			$isNow = 0;
-		}
-
-		if ($options['updateProfile'] && !empty($options['profileIdx'])) {
-			CProfile::update($options['profileIdx'].'.stime', $options['stime'], PROFILE_TYPE_STR, $options['profileIdx2']);
-			CProfile::update($options['profileIdx'].'.isnow', $isNow, PROFILE_TYPE_INT, $options['profileIdx2']);
 		}
 	}
-	else {
-		if (!empty($options['profileIdx'])) {
-			$isNow = CProfile::get($options['profileIdx'].'.isnow', null, $options['profileIdx2']);
-			if ($isNow) {
-				$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
-				$usertime = date(TIMESTAMP_FORMAT, $time);
-				$stimeNow = date(TIMESTAMP_FORMAT, zbxAddSecondsToUnixtime(SEC_PER_YEAR, $options['stime']));
 
-				if ($options['updateProfile']) {
-					CProfile::update($options['profileIdx'].'.stime', $options['stime'], PROFILE_TYPE_STR, $options['profileIdx2']);
-				}
-			}
-			else {
-				$options['stime'] = CProfile::get($options['profileIdx'].'.stime', null, $options['profileIdx2']);
-				$usertime = date(TIMESTAMP_FORMAT, zbxAddSecondsToUnixtime($options['period'], $options['stime']));
-			}
-		}
-
-		if (empty($options['stime'])) {
-			$options['stime'] = date(TIMESTAMP_FORMAT, $time - $options['period']);
-			$usertime = date(TIMESTAMP_FORMAT, $time);
-			$stimeNow = date(TIMESTAMP_FORMAT, zbxAddSecondsToUnixtime(SEC_PER_YEAR, $options['stime']));
-			$isNow = 1;
-
-			if ($options['updateProfile'] && !empty($options['profileIdx'])) {
-				CProfile::update($options['profileIdx'].'.stime', $options['stime'], PROFILE_TYPE_STR, $options['profileIdx2']);
-				CProfile::update($options['profileIdx'].'.isnow', $isNow, PROFILE_TYPE_INT, $options['profileIdx2']);
-			}
-		}
+	if ($options['updateProfile']) {
+		CProfile::update($options['profileIdx'].'.period', $options['period'], PROFILE_TYPE_INT,
+			$options['profileIdx2']
+		);
+		CProfile::update($options['profileIdx'].'.stime', $options['stime'], PROFILE_TYPE_STR, $options['profileIdx2']);
+		CProfile::update($options['profileIdx'].'.isnow', $options['isNow'], PROFILE_TYPE_INT, $options['profileIdx2']);
 	}
 
 	return [
 		'period' => $options['period'],
 		'stime' => date(TIMESTAMP_FORMAT, zbxDateToTime($options['stime'])),
-		'stimeNow' => ($stimeNow === null)
-			? date(TIMESTAMP_FORMAT, zbxAddSecondsToUnixtime(SEC_PER_YEAR, $options['stime']))
-			: $stimeNow,
 		'starttime' => date(TIMESTAMP_FORMAT, $time - ZBX_MAX_PERIOD),
 		'usertime' => $usertime,
-		'isNow' => $isNow
+		'isNow' => $options['isNow']
 	];
 }

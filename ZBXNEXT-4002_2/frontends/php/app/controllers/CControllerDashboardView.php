@@ -38,7 +38,8 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			'hostid' =>				'db hosts.hostid',
 			'new' =>				'in 1',
 			'period' =>				'int32',
-			'stime' =>				'time'
+			'stime' =>				'time',
+			'isNow' =>				'in 0,1'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -51,7 +52,33 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	}
 
 	protected function checkPermissions() {
-		return  !($this->getUserType() < USER_TYPE_ZABBIX_USER);
+		if ($this->getUserType() < USER_TYPE_ZABBIX_USER) {
+			return false;
+		}
+
+		if ($this->hasInput('groupid') && $this->getInput('groupid') != 0) {
+			$groups = API::HostGroup()->get([
+				'output' => [],
+				'groupids' => [$this->getInput('groupid')]
+			]);
+
+			if (!$groups) {
+				return false;
+			}
+		}
+
+		if ($this->hasInput('hostid') && $this->getInput('hostid') != 0) {
+			$hosts = API::Host()->get([
+				'output' => [],
+				'hostids' => [$this->getInput('hostid')]
+			]);
+
+			if (!$hosts) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	protected function doAction() {
@@ -90,9 +117,10 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			$data['timeline'] = calculateTime([
 				'profileIdx' => $options['profileIdx'],
 				'profileIdx2' => $options['profileIdx2'],
-				'updateProfile' => 1,
+				'updateProfile' => true,
 				'period' => $this->hasInput('period') ? $this->getInput('period') : null,
-				'stime' => $this->hasInput('stime') ? $this->getInput('stime') : null
+				'stime' => $this->hasInput('stime') ? $this->getInput('stime') : null,
+				'isNow' => $this->hasInput('isNow') ? $this->getInput('isNow') : null
 			]);
 
 			$data['timeControlData'] = [
@@ -183,7 +211,16 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			$dashboardid = $this->getInput('dashboardid', CProfile::get('web.dashbrd.dashboardid', 0));
 
 			if ($dashboardid == 0 && CProfile::get('web.dashbrd.list_was_opened') != 1) {
-				$dashboardid = DASHBOARD_DEFAULT_ID;
+				// Get first available dashboard that user has read permissions.
+				$dashboards = API::Dashboard()->get([
+					'output' => ['dashboardid'],
+					'sortfield' => 'name',
+					'limit' => 1
+				]);
+
+				if ($dashboards) {
+					$dashboardid = $dashboards[0]['dashboardid'];
+				}
 			}
 
 			if ($dashboardid != 0) {
@@ -353,8 +390,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getNewDashboard()
-	{
+	private function getNewDashboard() {
 		return [
 			'dashboardid' => 0,
 			'name' => _('New dashboard'),
@@ -371,8 +407,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 	 *
 	 * @return array
 	 */
-	private function getOwnerData($userid)
-	{
+	private function getOwnerData($userid) {
 		$owner = ['id' => $userid, 'name' => _('Inaccessible user')];
 
 		$users = API::User()->get([
@@ -402,7 +437,18 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 			}
 
 			$widgetid = $widget['widgetid'];
-			$default_rf_rate = CWidgetConfig::getDefaultRfRate($widget['type']);
+			$fields = self::convertWidgetFields($widget['fields']);
+
+			$rf_rate = (array_key_exists('rf_rate', $fields))
+				? ($fields['rf_rate'] == -1)
+					? CWidgetConfig::getDefaultRfRate($widget['type'])
+					: $fields['rf_rate']
+				: CWidgetConfig::getDefaultRfRate($widget['type']);
+
+			$widget_form = CWidgetConfig::getForm($widget['type'], CJs::encodeJson($fields));
+			if ($widget_form->validate()) {
+				$fields = $widget_form->getFieldsData();
+			}
 
 			$grid_widgets[$widgetid] = [
 				'widgetid' => $widgetid,
@@ -414,8 +460,8 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 					'width' => (int) $widget['width'],
 					'height' => (int) $widget['height']
 				],
-				'rf_rate' => (int) CProfile::get('web.dashbrd.widget.rf_rate', $default_rf_rate, $widgetid),
-				'fields' => self::convertWidgetFields($widget['fields'])
+				'rf_rate' => (int) CProfile::get('web.dashbrd.widget.rf_rate', $rf_rate, $widgetid),
+				'fields' => $fields
 			];
 		}
 

@@ -638,6 +638,7 @@ jQuery(function($) {
 												add_submaps: $('[name="add_submaps"]', form).is(':checked') ? 1 : 0,
 												map_name: $('[name="map.name.' + id + '"]', form).val(),
 												map_mapid: +$('[name="linked_map_id"]', form).val(),
+												depth: depth || 1,
 												mapid: id
 											};
 
@@ -672,7 +673,7 @@ jQuery(function($) {
 													else {
 														root = $('.tree-item[data-id=' + parent + ']>ul.tree-list',
 																$obj
-															),
+															).get(0),
 														id = +resp['map_id'];
 														new_item = {
 															name: resp['map_name'],
@@ -681,7 +682,7 @@ jQuery(function($) {
 															parent: parent
 														};
 
-														root.append(createTreeItem($obj, new_item, 1, true, true));
+														root.appendChild(createTreeItem($obj, new_item, 1, true, true));
 
 														$(root).closest('.tree-item')
 															.removeClass('closed')
@@ -693,7 +694,7 @@ jQuery(function($) {
 															if (typeof resp.hierarchy[mapid] !== 'undefined') {
 																var root = $('.tree-item[data-id=' + itemid +
 																		']>ul.tree-list', $obj
-																	);
+																	).get(0);
 
 																$.each(resp.hierarchy[mapid], function(i, submapid) {
 																	if (typeof resp.submaps[submapid] !== 'undefined') {
@@ -706,8 +707,8 @@ jQuery(function($) {
 																				parent: +itemid
 																			};
 
-																		root.append(createTreeItem($obj, new_item, 1,
-																			true, true
+																		root.appendChild(createTreeItem($obj, new_item,
+																			1, true, true
 																		));
 																		add_child_levels($obj, +submapid,
 																			submap_itemid
@@ -781,7 +782,7 @@ jQuery(function($) {
 
 					$.each(item.children, function(i, item) {
 						if (typeof item === 'object') {
-							ul.append(createTreeItem($obj, item, depth+1, true, isEditMode));
+							ul.appendChild(createTreeItem($obj, item, depth + 1, true, isEditMode));
 
 							if (item.id > widget_data.lastId) {
 								widget_data.lastId = item.id;
@@ -894,7 +895,7 @@ jQuery(function($) {
 						}
 
 						if (widget_data.max_depth > +depth) {
-							itemEditDialog($obj, 0, parentId, +depth);
+							itemEditDialog($obj, 0, parentId, +depth + 1);
 						}
 					});
 					tools.appendChild(btn1);
@@ -919,7 +920,7 @@ jQuery(function($) {
 						}
 
 						addPopupValues = function(data) {
-							var root = $('.tree-item[data-id=' + id + ']>ul.tree-list', $obj),
+							var root = $('.tree-item[data-id=' + id + ']>ul.tree-list', $obj).get(0),
 								new_item;
 
 							$.each(data.values, function() {
@@ -930,7 +931,7 @@ jQuery(function($) {
 									parent: id
 								};
 
-								root.append(createTreeItem($obj, new_item, 1, true, isEditMode));
+								root.appendChild(createTreeItem($obj, new_item, 1, true, isEditMode));
 							});
 
 							$(root)
@@ -1004,6 +1005,7 @@ jQuery(function($) {
 					arrow.appendChild(arrow_btn);
 					arrow_btn.addEventListener('click', function(event) {
 						var widget_data = getWidgetData($obj),
+							widget_options = $obj.data('widgetData'),
 							branch = $(this).closest('[data-id]'),
 							button = $(this),
 							closed_state = '1';
@@ -1029,6 +1031,19 @@ jQuery(function($) {
 								'web.dashbrd.navtree-' + branch.data('id') + '.toggle',
 								closed_state, [widget_data['widgetid']]
 							);
+
+							var index = widget_options['navtree_items_opened'].indexOf(branch.data('id').toString());
+							if (index > -1) {
+								if (closed_state === '1') {
+									widget_options['navtree_items_opened'].splice(index, 1);
+								}
+								else {
+									widget_options['navtree_items_opened'].push(branch.data('id').toString());
+								}
+							}
+							else if (closed_state === '0' && index == -1) {
+								widget_options['navtree_items_opened'].push(branch.data('id').toString());
+							}
 						}
 					});
 				}
@@ -1340,8 +1355,7 @@ jQuery(function($) {
 				 * linked widgets, but avoid real data sharing.
 				 */
 				if (item_id && $('.dashbrd-grid-widget-container').dashboardGrid('widgetDataShare', widget,
-						send_data ? 'selected_mapid' : '', {mapid: $(selected_item).data('mapid')})
-				) {
+						send_data ? 'selected_mapid' : '', {mapid: $(selected_item).data('mapid')})) {
 					$('.selected', $obj).removeClass('selected');
 
 					while ($(step_in_path).length) {

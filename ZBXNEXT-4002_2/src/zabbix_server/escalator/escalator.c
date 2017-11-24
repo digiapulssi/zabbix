@@ -30,7 +30,6 @@
 #include "../actions.h"
 #include "../events.h"
 #include "../scripts/scripts.h"
-#include "../events.h"
 #include "../../libs/zbxcrypto/tls.h"
 #include "comms.h"
 
@@ -321,6 +320,10 @@ static void	add_object_msg(zbx_uint64_t actionid, zbx_uint64_t operationid, zbx_
 	{
 		ZBX_STR2UINT64(userid, row[0]);
 
+		/* exclude acknowledgment author from the recipient list */
+		if (NULL != ack && ack->userid == userid)
+			continue;
+
 		if (SUCCEED != check_perm2system(userid))
 			continue;
 
@@ -372,52 +375,60 @@ static void	add_object_msg(zbx_uint64_t actionid, zbx_uint64_t operationid, zbx_
  *                                                                            *
  ******************************************************************************/
 static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, const DB_EVENT *event,
-		const DB_EVENT *r_event, const char *subject, const char *message)
+		const DB_EVENT *r_event, const char *subject, const char *message, const DB_ACKNOWLEDGE *ack)
 {
 	const char	*__function_name = "add_sentusers_msg";
-	char		*subject_dyn, *message_dyn, *event_filter = NULL;
+	char		*subject_dyn, *message_dyn, *sql = NULL;
 	DB_RESULT	result;
 	DB_ROW		row;
 	zbx_uint64_t	userid, mediatypeid;
 	const DB_EVENT	*c_event;
 	int		message_type;
-	size_t		event_filter_alloc = 0, event_filter_offset = 0;
+	size_t		sql_alloc = 0, sql_offset = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+			"select distinct userid,mediatypeid"
+			" from alerts"
+			" where actionid=" ZBX_FS_UI64
+				" and mediatypeid is not null"
+				" and alerttype=%d"
+				" and acknowledgeid is null"
+				" and (eventid=" ZBX_FS_UI64,
+				actionid, ALERT_TYPE_MESSAGE, event->eventid);
 
 	if (NULL != r_event)
 	{
 		c_event = r_event;
 		message_type = MACRO_TYPE_MESSAGE_RECOVERY;
-		zbx_snprintf_alloc(&event_filter, &event_filter_alloc, &event_filter_offset,
-				"(eventid=" ZBX_FS_UI64 " or eventid=" ZBX_FS_UI64 ")", event->eventid,
-				r_event->eventid);
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " or eventid=" ZBX_FS_UI64, r_event->eventid);
 	}
 	else
 	{
 		c_event = event;
 		message_type = MACRO_TYPE_MESSAGE_NORMAL;
-		zbx_snprintf_alloc(&event_filter, &event_filter_alloc, &event_filter_offset,
-				"eventid=" ZBX_FS_UI64, event->eventid);
 	}
 
-	result = DBselect(
-			"select distinct userid,mediatypeid"
-			" from alerts"
-			" where actionid=" ZBX_FS_UI64
-				" and %s"
-				" and mediatypeid is not null"
-				" and alerttype=%d"
-				" and acknowledgeid is null",
-				actionid, event_filter, ALERT_TYPE_MESSAGE);
+	zbx_chrcpy_alloc(&sql, &sql_alloc, &sql_offset, ')');
+
+	if (NULL != ack)
+		message_type = MACRO_TYPE_MESSAGE_ACK;
+
+	result = DBselect("%s", sql);
 
 	while (NULL != (row = DBfetch(result)))
 	{
 		ZBX_DBROW2UINT64(userid, row[0]);
-		ZBX_STR2UINT64(mediatypeid, row[1]);
+
+		/* exclude acknowledgment author from the recipient list */
+		if (NULL != ack && ack->userid == userid)
+			continue;
 
 		if (SUCCEED != check_perm2system(userid))
 			continue;
+
+		ZBX_STR2UINT64(mediatypeid, row[1]);
 
 		switch (c_event->object)
 		{
@@ -436,18 +447,19 @@ static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, co
 		message_dyn = zbx_strdup(NULL, message);
 
 		substitute_simple_macros(&actionid, event, r_event, &userid, NULL, NULL, NULL, NULL,
-				NULL, &subject_dyn, message_type, NULL, 0);
+				ack, &subject_dyn, message_type, NULL, 0);
 		substitute_simple_macros(&actionid, event, r_event, &userid, NULL, NULL, NULL, NULL,
-				NULL, &message_dyn, message_type, NULL, 0);
+				ack, &message_dyn, message_type, NULL, 0);
 
-		add_user_msg(userid, mediatypeid, user_msg, subject_dyn, message_dyn, 0);
+		add_user_msg(userid, mediatypeid, user_msg, subject_dyn, message_dyn,
+				(NULL != ack ? ack->acknowledgeid : 0));
 
 		zbx_free(subject_dyn);
 		zbx_free(message_dyn);
 	}
 	DBfree_result(result);
 
-	zbx_free(event_filter);
+	zbx_free(sql);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -482,11 +494,17 @@ static void	add_sentusers_ack_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid
 
 	result = DBselect(
 			"select distinct userid"
-			" from acknowledges where eventid=" ZBX_FS_UI64, event->eventid);
+			" from acknowledges"
+			" where eventid=" ZBX_FS_UI64,
+			event->eventid);
 
 	while (NULL != (row = DBfetch(result)))
 	{
 		ZBX_DBROW2UINT64(userid, row[0]);
+
+		/* exclude acknowledgment author from the recipient list */
+		if (ack->userid == userid)
+			continue;
 
 		if (SUCCEED != check_perm2system(userid) || PERM_READ > get_trigger_permission(userid, event->objectid))
 			continue;
@@ -499,8 +517,7 @@ static void	add_sentusers_ack_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid
 		substitute_simple_macros(&actionid, event, r_event, &userid, NULL, NULL, NULL,
 				NULL, ack, &message_dyn, MACRO_TYPE_MESSAGE_ACK, NULL, 0);
 
-		add_user_msg(userid, mediatypeid, user_msg, subject_dyn, message_dyn,
-				(NULL != ack ? ack->acknowledgeid : 0));
+		add_user_msg(userid, mediatypeid, user_msg, subject_dyn, message_dyn, ack->acknowledgeid);
 
 		zbx_free(subject_dyn);
 		zbx_free(message_dyn);
@@ -735,7 +752,7 @@ static void	execute_commands(const DB_EVENT *event, const DB_EVENT *r_event, con
 	const char		*__function_name = "execute_commands";
 	DB_RESULT		result;
 	DB_ROW			row;
-	zbx_db_insert_t         db_insert;
+	zbx_db_insert_t		db_insert;
 	int			alerts_num = 0;
 	char			*buffer = NULL;
 	size_t			buffer_alloc = 2 * ZBX_KIBIBYTE, buffer_offset = 0;
@@ -851,19 +868,18 @@ static void	execute_commands(const DB_EVENT *event, const DB_EVENT *r_event, con
 		ZBX_STR2UINT64(host.hostid, row[0]);
 		ZBX_DBROW2UINT64(host.proxy_hostid, row[1]);
 
-		if (0 != host.hostid)
+		if (ZBX_SCRIPT_EXECUTE_ON_SERVER != script.execute_on)
 		{
-			if (FAIL != zbx_vector_uint64_search(&executed_on_hosts, host.hostid,
-					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+			if (0 != host.hostid)
 			{
-				goto skip;
-			}
+				if (FAIL != zbx_vector_uint64_search(&executed_on_hosts, host.hostid,
+						ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+				{
+					goto skip;
+				}
 
-			zbx_vector_uint64_append(&executed_on_hosts, host.hostid);
-			strscpy(host.host, row[2]);
-
-			if (ZBX_SCRIPT_EXECUTE_ON_SERVER != script.execute_on)
-			{
+				zbx_vector_uint64_append(&executed_on_hosts, host.hostid);
+				strscpy(host.host, row[2]);
 				host.tls_connect = (unsigned char)atoi(row[13]);
 #ifdef HAVE_OPENIPMI
 				host.ipmi_authtype = (signed char)atoi(row[14]);
@@ -878,17 +894,17 @@ static void	execute_commands(const DB_EVENT *event, const DB_EVENT *r_event, con
 				strscpy(host.tls_psk, row[17 + ZBX_IPMI_FIELDS_NUM]);
 #endif
 			}
-		}
-		else if (SUCCEED == (rc = get_dynamic_hostid((NULL != r_event ? r_event : event), &host, error,
-					sizeof(error))))
-		{
-			if (FAIL != zbx_vector_uint64_search(&executed_on_hosts, host.hostid,
-					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+			else if (SUCCEED == (rc = get_dynamic_hostid((NULL != r_event ? r_event : event), &host, error,
+						sizeof(error))))
 			{
-				goto skip;
-			}
+				if (FAIL != zbx_vector_uint64_search(&executed_on_hosts, host.hostid,
+						ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+				{
+					goto skip;
+				}
 
-			zbx_vector_uint64_append(&executed_on_hosts, host.hostid);
+				zbx_vector_uint64_append(&executed_on_hosts, host.hostid);
+			}
 		}
 
 		alertid = DBget_maxid("alerts");
@@ -1057,7 +1073,7 @@ static void	add_message_alert(const DB_EVENT *event, const DB_EVENT *r_event, zb
 	{
 		medias_num++;
 
-		zbx_snprintf(error, sizeof(error), "No media defined for user \"%s\"", zbx_user_string(userid));
+		zbx_snprintf(error, sizeof(error), "No media defined for user.");
 
 		zbx_db_insert_prepare(&db_insert, "alerts", "alertid", "actionid", "eventid", "userid", "clock",
 				"subject", "message", "status", "retries", "error", "esc_step", "alerttype",
@@ -1431,8 +1447,7 @@ static void	escalation_execute_recovery_operations(const DB_EVENT *event, const 
 					message = action->r_longdata;
 				}
 
-				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject,
-						message);
+				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject, message, NULL);
 				break;
 			case OPERATION_TYPE_COMMAND:
 				execute_commands(event, r_event, NULL, action->actionid, operationid, 1,
@@ -1534,6 +1549,7 @@ static void	escalation_execute_acknowledge_operations(const DB_EVENT *event, con
 					message = action->ack_longdata;
 				}
 
+				add_sentusers_msg(&user_msg, action->actionid, event, r_event, subject, message, ack);
 				add_sentusers_ack_msg(&user_msg, action->actionid, mediatypeid, event, r_event, ack,
 						subject, message);
 				break;
@@ -1628,8 +1644,7 @@ static int	check_escalation_trigger(zbx_uint64_t triggerid, unsigned char source
 	items = zbx_malloc(items, sizeof(DC_ITEM) * itemids.values_num);
 	errcodes = zbx_realloc(errcodes, sizeof(int) * itemids.values_num);
 
-	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, itemids.values_num,
-			ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, itemids.values_num);
 
 	*maintenance = HOST_MAINTENANCE_STATUS_OFF;
 
@@ -1734,8 +1749,7 @@ static int	check_escalation(const DB_ESCALATION *escalation, const DB_ACTION *ac
 		if (EVENT_OBJECT_ITEM == event->object || EVENT_OBJECT_LLDRULE == event->object)
 		{
 			/* item disabled or deleted? */
-			DCconfig_get_items_by_itemids(&item, &escalation->itemid, &errcode, 1,
-					ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+			DCconfig_get_items_by_itemids(&item, &escalation->itemid, &errcode, 1);
 
 			if (SUCCEED != errcode)
 			{
@@ -1783,7 +1797,7 @@ static int	check_escalation(const DB_ESCALATION *escalation, const DB_ACTION *ac
 
 	if (0 != skip)
 	{
-		/* dependable trigger in PROBLEM state, process escalation later */
+		/* one of trigger dependencies is in PROBLEM state, process escalation later */
 		ret = ZBX_ESCALATION_SKIP;
 		goto out;
 	}
@@ -1840,7 +1854,7 @@ static void	escalation_cancel(DB_ESCALATION *escalation, const DB_ACTION *action
 		char	*message;
 
 		message = zbx_dsprintf(NULL, "NOTE: Escalation cancelled: %s\n%s", error, action->longdata);
-		add_sentusers_msg(&user_msg, action->actionid, event, NULL, action->shortdata, message);
+		add_sentusers_msg(&user_msg, action->actionid, event, NULL, action->shortdata, message, NULL);
 		flush_user_msg(&user_msg, escalation->esc_step, event, NULL, action->actionid);
 
 		zbx_free(message);
@@ -2044,7 +2058,7 @@ static void	add_ack_escalation_r_eventids(zbx_vector_ptr_t *escalations, zbx_vec
 
 	if (0 < ack_eventids.values_num)
 	{
-		get_db_eventid_r_eventid_pairs(&ack_eventids, event_pairs, &r_eventids);
+		zbx_db_get_eventid_r_eventid_pairs(&ack_eventids, event_pairs, &r_eventids);
 
 		zbx_vector_uint64_append_array(eventids, r_eventids.values, r_eventids.values_num);
 	}
@@ -2071,7 +2085,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 	add_ack_escalation_r_eventids(escalations, eventids, &event_pairs);
 
 	get_db_actions_info(actionids, &actions);
-	get_db_events_info(eventids, &events);
+	zbx_db_get_events_by_eventids(eventids, &events);
 
 	for (i = 0; i < escalations->values_num; i++)
 	{
@@ -2302,7 +2316,7 @@ out:
 	zbx_vector_ptr_clear_ext(&actions, (zbx_clean_func_t)free_db_action);
 	zbx_vector_ptr_destroy(&actions);
 
-	zbx_vector_ptr_clear_ext(&events, (zbx_clean_func_t)free_db_event);
+	zbx_vector_ptr_clear_ext(&events, (zbx_clean_func_t)zbx_db_free_event);
 	zbx_vector_ptr_destroy(&events);
 
 	zbx_vector_uint64_pair_destroy(&event_pairs);
@@ -2555,5 +2569,9 @@ ZBX_THREAD_ENTRY(escalator_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 }

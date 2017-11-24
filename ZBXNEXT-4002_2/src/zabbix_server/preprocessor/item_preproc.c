@@ -157,11 +157,6 @@ static int	item_preproc_multiplier_variant(unsigned char value_type, zbx_variant
 	{
 		case ZBX_VARIANT_DBL:
 			value_dbl = value_num.data.dbl * atof(params);
-			if (FAIL == zbx_validate_value_dbl(value_dbl))
-			{
-				*errmsg = zbx_strdup(*errmsg, "value is too small or too large");
-				return FAIL;
-			}
 			zbx_variant_clear(value);
 			zbx_variant_set_dbl(value, value_dbl);
 			break;
@@ -748,7 +743,10 @@ static int	item_preproc_regsub_op(zbx_variant_t *value, const char *params, char
 	}
 
 	if (NULL == new_value)
-		new_value = zbx_strdup(NULL, "");
+	{
+		*errmsg = zbx_dsprintf(*errmsg, "pattern does not match", pattern);
+		return FAIL;
+	}
 
 	zbx_variant_clear(value);
 	zbx_variant_set_str(value, new_value);
@@ -1006,7 +1004,7 @@ static int	item_preproc_xpath(zbx_variant_t *value, const char *params, char **e
  *                                                                            *
  ******************************************************************************/
 int	zbx_item_preproc(unsigned char value_type, zbx_variant_t *value, const zbx_timespec_t *ts,
-		const zbx_item_preproc_t *op, zbx_item_history_value_t *history_value, char **errmsg)
+		const zbx_preproc_op_t *op, zbx_item_history_value_t *history_value, char **errmsg)
 {
 	switch (op->type)
 	{

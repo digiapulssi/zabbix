@@ -812,13 +812,8 @@ function getActionOperationDescriptions(array $actions, $type) {
 						break;
 
 					case OPERATION_TYPE_RECOVERY_MESSAGE:
-						$result[$i][$j][] = bold(
-							_('Notify all who received any messages regarding the problem before')
-						);
-						break;
-
 					case OPERATION_TYPE_ACK_MESSAGE:
-						$result[$i][$j][] = bold(_('Notify all who left acknowledgement and comments'));
+						$result[$i][$j][] = bold(_('Notify all involved'));
 						break;
 				}
 			}
@@ -950,30 +945,19 @@ function getActionOperationHints(array $operations, array $defaultMessage) {
 				break;
 
 			case OPERATION_TYPE_ACK_MESSAGE:
-				$opmessage = array_key_exists('opmessage', $operation) ? $operation['opmessage'] : [];
-
-				if (array_key_exists('default_msg', $opmessage) && $opmessage['default_msg']) {
-					$subject = $defaultMessage['subject'];
-					$message = $defaultMessage['message'];
-				}
-				else {
-					$opmessage += [
-						'subject'	=> ACTION_DEFAULT_SUBJ_ACKNOWLEDGE,
-						'message'	=> ACTION_DEFAULT_MSG_ACKNOWLEDGE
-					];
-
-					$subject = $opmessage['subject'];
-					$message = $opmessage['message'];
-				}
-
+			case OPERATION_TYPE_RECOVERY_MESSAGE:
 				$result_hint = [];
+				$message = (array_key_exists('default_msg', $operation['opmessage'])
+					&& $operation['opmessage']['default_msg'])
+					? $defaultMessage
+					: $operation['opmessage'];
 
-				if (trim($subject)) {
-					$result_hint = [bold($subject), BR(), BR()];
+				if (trim($message['subject'])) {
+					$result_hint = [bold($message['subject']), BR(), BR()];
 				}
 
-				if (trim($message)) {
-					$result_hint[] = zbx_nl2br($message);
+				if (trim($message['message'])) {
+					$result_hint[] = zbx_nl2br($message['message']);
 				}
 
 				if ($result_hint) {
@@ -1118,7 +1102,15 @@ function getAllowedOperations($eventsource) {
 	return $operations;
 }
 
-function operation_type2str($type = null) {
+/**
+ * Get operation type text label according $type value. If $type is equal null array of all available operation types
+ * will be returned.
+ *
+ * @param int|null $type  Operation type, one of OPERATION_TYPE_* constant or null.
+ *
+ * @return string|array
+ */
+function operation_type2str($type) {
 	$types = [
 		OPERATION_TYPE_MESSAGE => _('Send message'),
 		OPERATION_TYPE_COMMAND => _('Remote command'),
@@ -1131,8 +1123,8 @@ function operation_type2str($type = null) {
 		OPERATION_TYPE_TEMPLATE_ADD => _('Link to template'),
 		OPERATION_TYPE_TEMPLATE_REMOVE => _('Unlink from template'),
 		OPERATION_TYPE_HOST_INVENTORY => _('Set host inventory mode'),
-		OPERATION_TYPE_RECOVERY_MESSAGE => _('Send recovery message'),
-		OPERATION_TYPE_ACK_MESSAGE => _('Notify all who left acknowledgement and comments')
+		OPERATION_TYPE_RECOVERY_MESSAGE => _('Notify all involved'),
+		OPERATION_TYPE_ACK_MESSAGE => _('Notify all involved')
 	];
 
 	if (is_null($type)) {
@@ -1401,7 +1393,6 @@ function getActionMessages(array $alerts, array $r_alerts) {
 					break;
 
 				case ALERT_STATUS_NEW:
-					// falls through
 				case ALERT_STATUS_NOT_SENT:
 					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
 					$retries = (new CSpan($mediaType['maxattempts'] - $alert['retries']))->addClass(ZBX_STYLE_YELLOW);
@@ -1494,7 +1485,6 @@ function getActionCommands(array $alerts, array $r_alerts) {
 					$status = (new CSpan(_('Executed')))->addClass(ZBX_STYLE_GREEN);
 					break;
 				case ALERT_STATUS_NEW:
-					// falls through
 				case ALERT_STATUS_NOT_SENT:
 					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
 					break;
@@ -1552,7 +1542,6 @@ function makeActionHints($alerts, $r_alerts, $mediatypes, $users, $display_recov
 						->addClass(ZBX_STYLE_GREEN);
 					break;
 				case ALERT_STATUS_NEW:
-					// falls through
 				case ALERT_STATUS_NOT_SENT:
 					$status = (new CSpan(_('In progress')))->addClass(ZBX_STYLE_YELLOW);
 					break;
@@ -1653,14 +1642,14 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 		}
 	}
 
-	$result = DBselect(
-		'SELECT a.eventid,a.p_eventid,a.mediatypeid,a.userid,a.esc_step,a.clock,a.status,a.alerttype,a.error'.
-		' FROM alerts a'.
-		' WHERE '.dbConditionInt('a.eventid', array_keys($eventids)).
-			' AND a.alerttype IN ('.ALERT_TYPE_MESSAGE.','.ALERT_TYPE_COMMAND.')'.
-			' AND a.acknowledgeid IS NULL'.
-		' ORDER BY a.alertid DESC'
-	);
+	$db_alerts = API::Alert()->get([
+		'output' => ['eventid', 'p_eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype',
+			'error'
+		],
+		'eventids' => array_keys($eventids),
+		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
+		'sortorder' => ['alertid' => ZBX_SORT_DOWN]
+	]);
 
 	$alerts = [];
 	$userids = [];
@@ -1668,30 +1657,30 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 	$mediatypeids = [];
 	$mediatypes = [];
 
-	while ($row = DBfetch($result)) {
+	foreach ($db_alerts as $db_alert) {
 		$alert = [
-			'esc_step' => $row['esc_step'],
-			'clock' => $row['clock'],
-			'status' => $row['status'],
-			'alerttype' => $row['alerttype'],
-			'error' => $row['error'],
-			'p_eventid' => $row['p_eventid']
+			'esc_step' => $db_alert['esc_step'],
+			'clock' => $db_alert['clock'],
+			'status' => $db_alert['status'],
+			'alerttype' => $db_alert['alerttype'],
+			'error' => $db_alert['error'],
+			'p_eventid' => $db_alert['p_eventid']
 		];
 
 		if ($alert['alerttype'] == ALERT_TYPE_MESSAGE) {
-			$alert['mediatypeid'] = $row['mediatypeid'];
-			$alert['userid'] = $row['userid'];
+			$alert['mediatypeid'] = $db_alert['mediatypeid'];
+			$alert['userid'] = $db_alert['userid'];
 
 			if ($alert['mediatypeid'] != 0) {
-				$mediatypeids[$row['mediatypeid']] = true;
+				$mediatypeids[$db_alert['mediatypeid']] = true;
 			}
 
 			if ($alert['userid'] != 0) {
-				$userids[$row['userid']] = true;
+				$userids[$db_alert['userid']] = true;
 			}
 		}
 
-		$alerts[$row['eventid']][$row['p_eventid']][] = $alert;
+		$alerts[$db_alert['eventid']][$db_alert['p_eventid']][] = $alert;
 	}
 
 	if ($mediatypeids) {

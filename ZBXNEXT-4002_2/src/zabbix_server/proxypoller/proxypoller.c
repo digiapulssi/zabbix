@@ -697,6 +697,8 @@ static int	proxy_get_data(DC_PROXY *proxy, int *more, time_t *last_access)
 		goto out;
 	}
 
+	*last_access = time(NULL);
+
 	ret = proxy_process_proxy_data(proxy, answer, &ts, more);
 
 	zbx_free(answer);
@@ -828,11 +830,7 @@ static int	process_proxy(void)
 		}
 network_error:
 		if (0 != last_access)
-		{
-			DBbegin();
 			update_proxy_lastaccess(proxy.hostid, last_access);
-			DBcommit();
-		}
 
 		DCrequeue_proxy(proxy.hostid, update_nextcheck);
 	}
@@ -908,6 +906,10 @@ ZBX_THREAD_ENTRY(proxypoller_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 #undef STAT_INTERVAL
 }

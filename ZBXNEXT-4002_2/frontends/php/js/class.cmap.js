@@ -245,8 +245,17 @@ ZABBIX.apps.map = (function($) {
 			});
 		};
 
+		CMap.LABEL_TYPE_LABEL	= 0; // MAP_LABEL_TYPE_LABEL
+		CMap.LABEL_TYPE_IP		= 1; // MAP_LABEL_TYPE_IP
+		CMap.LABEL_TYPE_NAME	= 2; // MAP_LABEL_TYPE_NAME
+		CMap.LABEL_TYPE_STATUS	= 3; // MAP_LABEL_TYPE_STATUS
+		CMap.LABEL_TYPE_NOTHING	= 4; // MAP_LABEL_TYPE_NOTHING
+		CMap.LABEL_TYPE_CUSTOM	= 5; // MAP_LABEL_TYPE_CUSTOM
+
 		CMap.prototype = {
 			copypaste_buffer: [],
+			buffered_expand: false,
+			expand_sources: [],
 
 			save: function() {
 				var url = new Curl(location.href);
@@ -266,6 +275,76 @@ ZABBIX.apps.map = (function($) {
 				});
 			},
 
+			setExpandedLabels: function (elements, labels) {
+				for (var i = 0, ln = elements.length; i < ln; i++) {
+					if (labels !== null) {
+						elements[i].expanded = labels[i];
+					}
+					else {
+						elements[i].expanded = null;
+					}
+				}
+
+				this.updateImage();
+
+				if (labels === null) {
+					alert(locale['S_MACRO_EXPAND_ERROR']);
+				}
+			},
+
+			expandMacros: function(source) {
+				var url = new Curl(location.href);
+
+				if (source !== null) {
+					if (/\{.+\}/.test(source.getLabel(false))) {
+						this.expand_sources.push(source);
+					}
+					else {
+						source.expanded = null;
+					}
+				}
+
+				if (this.buffered_expand === false && this.expand_sources.length > 0) {
+					var sources = this.expand_sources,
+						post = [],
+						map = this;
+
+					this.expand_sources = [];
+
+					for (var i = 0, ln = sources.length; i < ln; i++) {
+						post.push(sources[i].data);
+					}
+
+					$.ajax({
+						url: url.getPath() + '?output=ajax&sid=' + url.getArgument('sid'),
+						type: 'post',
+						dataType: 'html',
+						data: {
+							favobj: 'sysmap',
+							action: 'expand',
+							sysmapid: this.sysmapid,
+							source: Object.toJSON(post)
+						},
+						success: function(data) {
+							try {
+								data = JSON.parse(data);
+							}
+							catch (e) {
+								data = null;
+							}
+
+							map.setExpandedLabels(sources, data);
+						},
+						error: function() {
+							map.setExpandedLabels(sources, null);
+						}
+					});
+				}
+				else if (this.buffered_expand === false) {
+					this.updateImage();
+				}
+			},
+
 			updateImage: function() {
 				var shapes = [],
 					links = [],
@@ -280,9 +359,11 @@ ZABBIX.apps.map = (function($) {
 				Object.keys(this.selements).forEach(function(key) {
 					var element = {};
 
-					['selementid', 'x', 'y', 'label', 'label_location'].forEach(function (name) {
+					['selementid', 'x', 'y', 'label_location'].forEach(function (name) {
 						element[name] = this.selements[key].data[name];
 					}, this);
+
+					element['label'] = this.selements[key].getLabel();
 
 					// host group elements
 					if (this.selements[key].data.elementtype == '3' && this.selements[key].data.elementsubtype == '1') {
@@ -302,10 +383,11 @@ ZABBIX.apps.map = (function($) {
 
 				Object.keys(this.links).forEach(function(key) {
 					var link = {};
-					['linkid', 'selementid1', 'selementid2', 'drawtype', 'color', 'label'].forEach(function (name) {
+					['linkid', 'selementid1', 'selementid2', 'drawtype', 'color'].forEach(function (name) {
 						link[name] = this.links[key].data[name];
 					}, this);
 
+					link['label'] = this.links[key].getLabel();
 					links.push(link);
 				}, this);
 
@@ -314,6 +396,14 @@ ZABBIX.apps.map = (function($) {
 					Object.keys(this.shapes[key].data).forEach(function (name) {
 						shape[name] = this.shapes[key].data[name];
 					}, this);
+
+					shape['text'] = this.shapes[key].getLabel();
+
+					if (this.data.expand_macros === '1' && typeof(shape['text']) === 'string' && shape['text'] !== '') {
+						// Additional macro that is supported in shapes is {MAP.NAME}
+						shape['text'] = shape['text'].replace(/\{MAP\.NAME\}/g, this.data.name);
+					}
+
 					shapes.push(shape);
 				}, this);
 
@@ -399,6 +489,13 @@ ZABBIX.apps.map = (function($) {
 				/*
 				 * Map panel events
 				 */
+				// toggle expand macros
+				$('#expand_macros').click(function() {
+					that.data.expand_macros = (that.data.expand_macros === '1') ? '0' : '1';
+					$(this).html((that.data.expand_macros === '1') ? locale['S_ON'] : locale['S_OFF']);
+					that.updateImage();
+				});
+
 				// change grid size
 				$('#gridsize').change(function() {
 					var value = $(this).val();
@@ -736,9 +833,14 @@ ZABBIX.apps.map = (function($) {
 					var values = this.massShapeForm.getValues();
 
 					if (values) {
+						this.buffered_expand = true;
+
 						for (var shapeid in this.selection.shapes) {
 							this.shapes[shapeid].update(values);
 						}
+
+						this.buffered_expand = false;
+						this.expandMacros(null);
 					}
 				}, this));
 
@@ -784,9 +886,14 @@ ZABBIX.apps.map = (function($) {
 					var values = this.massForm.getValues();
 
 					if (values) {
+						this.buffered_expand = true;
+
 						for (var selementid in this.selection.selements) {
 							this.selements[selementid].update(values);
 						}
+
+						this.buffered_expand = false;
+						this.expandMacros(null);
 					}
 				}, this));
 
@@ -1081,6 +1188,7 @@ ZABBIX.apps.map = (function($) {
 					if (element) {
 						data.x = parseInt(data.x, 10) + delta_x;
 						data.y = parseInt(data.y, 10) + delta_y;
+						element.expanded = element_data.expanded;
 
 						if (type === 'shapes' && data.type == SVGMapShape.TYPE_LINE) {
 							// Additional shift for line shape.
@@ -1497,6 +1605,8 @@ ZABBIX.apps.map = (function($) {
 
 			this.data = linkData;
 			this.id = this.data.linkid;
+			this.expanded = this.data.expanded;
+			delete this.data.expanded;
 
 			for (var linktrigger in this.data.linktriggers) {
 				this.sysmap.allLinkTriggerIds[linktrigger.triggerid] = true;
@@ -1508,18 +1618,45 @@ ZABBIX.apps.map = (function($) {
 
 		Link.prototype = {
 			/**
+			 * Return label based on map constructor configuration.
+			 *
+			 * @param {boolean} return label with expanded macros.
+			 *
+			 * @returns {string}
+			 */
+			getLabel: function (expand) {
+				var label = this.data.label;
+
+				if (typeof(expand) === 'undefined') {
+					expand = true;
+				}
+
+				if (expand && typeof(this.expanded) === 'string' && this.sysmap.data.expand_macros === '1') {
+					label = this.expanded;
+				}
+
+				return label;
+			},
+
+			/**
 			 * Updades values in property data.
 			 *
 			 * @param {object} data
 			 */
 			update: function(data) {
-				var key;
+				var key,
+					invalidate = (this.data.label !== data.label);
 
 				for (key in data) {
 					this.data[key] = data[key];
 				}
 
-				sysmap.updateImage();
+				if (invalidate) {
+					sysmap.expandMacros(this);
+				}
+				else {
+					sysmap.updateImage();
+				}
 			},
 
 			/**
@@ -1598,6 +1735,8 @@ ZABBIX.apps.map = (function($) {
 
 			this.data = shape_data;
 			this.id = this.data.sysmap_shapeid;
+			this.expanded = this.data.expanded;
+			delete this.data.expanded;
 
 			// assign by reference
 			this.sysmap.data.shapes[this.id] = this.data;
@@ -1632,7 +1771,9 @@ ZABBIX.apps.map = (function($) {
 			 */
 			update: function(data) {
 				var key,
-					dimensions;
+					dimensions,
+					invalidate = (data.type != SVGMapShape.TYPE_LINE && typeof(data.text) !== 'undefined'
+							&& this.data.text !== data.text);
 
 				if (typeof data['type'] !== 'undefined' && /^[0-9]+$/.test(this.data.sysmap_shapeid) === true
 						&& (data['type'] == SVGMapShape.TYPE_LINE) != (this.data.type == SVGMapShape.TYPE_LINE)) {
@@ -1662,7 +1803,37 @@ ZABBIX.apps.map = (function($) {
 				this.align(false);
 				this.trigger('afterMove', this);
 
-				sysmap.updateImage();
+				for (key in data) {
+					this.data[key] = data[key];
+				}
+
+				if (invalidate) {
+					sysmap.expandMacros(this);
+				}
+				else {
+					sysmap.updateImage();
+				}
+			},
+
+			/**
+			 * Return label based on map constructor configuration.
+			 *
+			 * @param {boolean} return label with expanded macros.
+			 *
+			 * @returns {string}
+			 */
+			getLabel: function (expand) {
+				var label = this.data.text;
+
+				if (typeof(expand) === 'undefined') {
+					expand = true;
+				}
+
+				if (expand && typeof(this.expanded) === 'string' && this.sysmap.data.expand_macros === '1') {
+					label = this.expanded;
+				}
+
+				return label;
 			},
 
 			/**
@@ -2050,7 +2221,8 @@ ZABBIX.apps.map = (function($) {
 					urls: {},
 					elementName: this.sysmap.defaultIconName, // first image name
 					use_iconmap: '1',
-					application: ''
+					application: '',
+					inherited_label: null
 				};
 			}
 			else {
@@ -2060,7 +2232,10 @@ ZABBIX.apps.map = (function($) {
 			}
 
 			this.data = selementData;
+			this.updateLabel();
 			this.id = this.data.selementid;
+			this.expanded = this.data.expanded;
+			delete this.data.expanded;
 
 			// assign by reference
 			this.sysmap.data.selements[this.id] = this.data;
@@ -2083,6 +2258,12 @@ ZABBIX.apps.map = (function($) {
 			});
 		}
 
+		Selement.TYPE_HOST			= 0; // SYSMAP_ELEMENT_TYPE_HOST
+		Selement.TYPE_MAP			= 1; // SYSMAP_ELEMENT_TYPE_MAP
+		Selement.TYPE_TRIGGER		= 2; // SYSMAP_ELEMENT_TYPE_TRIGGER
+		Selement.TYPE_HOST_GROUP	= 3; // SYSMAP_ELEMENT_TYPE_HOST_GROUP
+		Selement.TYPE_IMAGE			= 4; // SYSMAP_ELEMENT_TYPE_IMAGE
+
 		Selement.prototype = {
 			/**
 			 * Returns element data.
@@ -2100,6 +2281,102 @@ ZABBIX.apps.map = (function($) {
 			makeResizable: Shape.prototype.makeResizable,
 
 			/**
+			 * Update label data inherited from map configuration.
+			 */
+			updateLabel: function () {
+				if (this.sysmap.data.label_format != 0) {
+					switch (parseInt(this.data.elementtype, 10)) {
+						case Selement.TYPE_HOST_GROUP:
+							this.data.label_type = this.sysmap.data.label_type_hostgroup;
+							if (this.data.label_type == CMap.LABEL_TYPE_CUSTOM) {
+								this.data.inherited_label = this.sysmap.data.label_string_hostgroup;
+							}
+							break;
+
+						case Selement.TYPE_HOST:
+							this.data.label_type = this.sysmap.data.label_type_host;
+							if (this.data.label_type == CMap.LABEL_TYPE_CUSTOM) {
+								this.data.inherited_label = this.sysmap.data.label_string_host;
+							}
+							break;
+
+						case Selement.TYPE_TRIGGER:
+							this.data.label_type = this.sysmap.data.label_type_trigger;
+							if (this.data.label_type == CMap.LABEL_TYPE_CUSTOM) {
+								this.data.inherited_label = this.sysmap.data.label_string_trigger;
+							}
+							break;
+
+						case Selement.TYPE_MAP:
+							this.data.label_type = this.sysmap.data.label_type_map;
+							if (this.data.label_type == CMap.LABEL_TYPE_CUSTOM) {
+								this.data.inherited_label = this.sysmap.data.label_string_map;
+							}
+							break;
+
+						case Selement.TYPE_IMAGE:
+							this.data.label_type = this.sysmap.data.label_type_image;
+							if (this.data.label_type == CMap.LABEL_TYPE_CUSTOM) {
+								this.data.inherited_label = this.sysmap.data.label_string_image;
+							}
+							break;
+					}
+				}
+				else {
+					this.data.label_type = this.sysmap.data.label_type;
+					this.data.inherited_label = null;
+				}
+
+				if (this.data.label_type == CMap.LABEL_TYPE_NAME) {
+					if (this.data.elementtype != Selement.TYPE_IMAGE) {
+						this.data.inherited_label = this.data.elements[0].elementName;
+					}
+					else {
+						this.data.inherited_label = locale['S_IMAGE'];
+					}
+				}
+
+				if (this.data.label_type != CMap.LABEL_TYPE_CUSTOM && this.data.label_type != CMap.LABEL_TYPE_LABEL
+						&& this.data.label_type != CMap.LABEL_TYPE_IP) {
+					this.data.expanded = null;
+				}
+				else if (this.data.label_type == CMap.LABEL_TYPE_IP && this.data.elementtype == Selement.TYPE_HOST) {
+					this.data.inherited_label = '{HOST.IP}';
+				}
+			},
+
+			/**
+			 * Return label based on map constructor configuration.
+			 *
+			 * @param {boolean} return label with expanded macros.
+			 *
+			 * @returns {string} or null
+			 */
+			getLabel: function (expand) {
+				var label = this.data.label;
+
+				if (typeof(expand) === 'undefined') {
+					expand = true;
+				}
+
+				if (this.data.label_type != CMap.LABEL_TYPE_NOTHING && this.data.label_type != CMap.LABEL_TYPE_STATUS) {
+					if (expand && typeof(this.expanded) === 'string' && (this.sysmap.data.expand_macros === '1'
+							|| (this.data.label_type == CMap.LABEL_TYPE_IP
+							&& this.data.elementtype == Selement.TYPE_HOST))) {
+						label = this.expanded;
+					}
+					else if (typeof this.data.inherited_label === 'string') {
+						label = this.data.inherited_label;
+					}
+				}
+				else {
+					label = null;
+				}
+
+				return label;
+			},
+
+			/**
 			 * Updates element fields.
 			 *
 			 * @param {object} data
@@ -2115,9 +2392,35 @@ ZABBIX.apps.map = (function($) {
 					],
 					fieldsUnsettable = ['iconid_off', 'iconid_on', 'iconid_maintenance', 'iconid_disabled'],
 					i,
-					ln;
+					ln,
+					invalidate = ((typeof(data.label) !== 'undefined' && this.data.label !== data.label)
+							|| (typeof(data.elementtype) !== 'undefined' && this.data.elementtype !== data.elementtype)
+							|| (typeof(data.elements) !== 'undefined'
+							&& Object.keys(this.data.elements).length !== Object.keys(data.elements).length));
 
 				unsetUndefined = unsetUndefined || false;
+
+				if (!invalidate && typeof(data.elements) !== 'undefined') {
+					var k,
+						id,
+						key,
+						kln,
+						keys,
+						ids = Object.keys(this.data.elements);
+
+					for (i = 0, ln = ids.length; i < ln && !invalidate; i++) {
+						id = ids[i];
+						keys = Object.keys(this.data.elements[id]);
+
+						for (k = 0, kln = keys.length; k < kln; k++) {
+							key = keys[k];
+							if (this.data.elements[id][key] !== data.elements[id][key]) {
+								invalidate = true;
+								break;
+							}
+						}
+					}
+				}
 
 				// update elements fields, if not massupdate, remove fields that are not in new values
 				for (i = 0, ln = dataFelds.length; i < ln; i++) {
@@ -2165,9 +2468,14 @@ ZABBIX.apps.map = (function($) {
 					this.data.elementName = this.data.elements[0].elementName;
 				}
 
+				this.updateLabel();
 				this.updateIcon();
 				this.align(false);
 				this.trigger('afterMove', this);
+
+				if (invalidate) {
+					this.sysmap.expandMacros(this);
+				}
 			},
 
 			/**
@@ -2696,7 +3004,9 @@ ZABBIX.apps.map = (function($) {
 							data.elements[i] = {
 								triggerid: $(this).val(),
 								elementName: $('input[name^="element_name[' + $(this).val() + ']"]').val(),
-								priority: $('input[name^="element_priority[' + $(this).val() + ']"]').val()
+								priority: $('input[name^="element_priority[' + $(this).val() + ']"]').val(),
+								elementExpressionTrigger: $('input[name^="element_expression[' + $(this).val()
+									+ ']"]').val()
 							};
 							i++;
 						});
