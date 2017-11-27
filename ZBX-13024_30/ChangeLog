@@ -3,6 +3,9 @@ Changes for 3.0.14rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
+..F....... [ZBX-12897] fixed error causing empty list in popup window when opened from page having host group filter (gcalenko)
+....I..... [ZBX-12232] fixed mysql m4 configuration script for mariadb C connector (abs)
 ..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
 ..F....... [ZBX-13016] fixed warning message shown by deprecated PHP 7.2 function create_function() (Sasha)
 ..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
@@ -1815,6 +1818,7 @@ Changes for 2.2.21rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
 ..F....... [DEV-593] fixed multiple security issues (miks)
 .......PS. [ZBX-12854] fixed crash of VMware collector with DebugLevel=4 (gleb)
 
