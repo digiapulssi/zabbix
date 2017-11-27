@@ -1886,15 +1886,15 @@ static int	process_log(unsigned char flags, const char *filename, zbx_uint64_t *
 
 	if (ZBX_METRIC_FLAG_LOG_LOG & flags) {
 		if (ZBX_METRIC_FLAG_LOG_COUNT & flags) {
-			op = CPA_OP_LOG;
-		} else {
 			op = CPA_OP_LOG_COUNT;
+		} else {
+			op = CPA_OP_LOG;
 		}
 	} else if (ZBX_METRIC_FLAG_LOG_LOGRT & flags) {
 		if (ZBX_METRIC_FLAG_LOG_COUNT & flags) {
-			op = CPA_OP_LOGRT;
-		} else {
 			op = CPA_OP_LOGRT_COUNT;
+		} else {
+			op = CPA_OP_LOGRT;
 		}
 	} else {
 		op = CPA_OP_NONE;
