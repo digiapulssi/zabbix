@@ -317,6 +317,7 @@ elseif (isset($_REQUEST['edit_operationid'])) {
 elseif (str_in_array(getRequest('go'), array('activate', 'disable')) && hasRequest('g_actionid')) {
 	$status = (getRequest('go') == 'activate') ? ACTION_STATUS_ENABLED : ACTION_STATUS_DISABLED;
 	$actionids = (array) getRequest('g_actionid', []);
+	$actions_count = count($actionids);
 	$actions = [];
 
 	foreach ($actionids as $actionid) {
@@ -325,12 +326,12 @@ elseif (str_in_array(getRequest('go'), array('activate', 'disable')) && hasReque
 
 	$response = API::Action()->update($actions);
 
-	if ($response && array_key_exists('actionids', $response) && count($response['actionids']) == count($actionids)) {
+	if ($response && array_key_exists('actionids', $response)) {
 		$message = $status == ACTION_STATUS_ENABLED
-			? _n('Action enabled', 'Actions enabled', count($actionids))
-			: _n('Action disabled', 'Actions disabled', count($actionids));
+			? _n('Action enabled', 'Actions enabled', $actions_count)
+			: _n('Action disabled', 'Actions disabled', $actions_count);
 
-		add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_ACTION, ' Actions ['.implode(',', $actionids).'] '.
+		add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_ACTION, ' Actions ['.implode(',', $response['actionids']).'] '.
 			($status == ACTION_STATUS_ENABLED ? 'enabled' : 'disabled')
 		);
 		show_messages(true, $message);
@@ -338,8 +339,8 @@ elseif (str_in_array(getRequest('go'), array('activate', 'disable')) && hasReque
 	}
 	else {
 		$message = $status == ACTION_STATUS_ENABLED
-			? _n('Cannot enable action', 'Cannot enable actions', count($actionids))
-			: _n('Cannot disable action', 'Cannot disable actions', count($actionids));
+			? _n('Cannot enable action', 'Cannot enable actions', $actions_count)
+			: _n('Cannot disable action', 'Cannot disable actions', $actions_count);
 
 		show_messages(false, null, $message);
 	}
