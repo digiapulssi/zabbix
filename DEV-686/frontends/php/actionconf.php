@@ -330,6 +330,9 @@ elseif (str_in_array(getRequest('go'), array('activate', 'disable')) && hasReque
 			? _n('Action enabled', 'Actions enabled', count($actionids))
 			: _n('Action disabled', 'Actions disabled', count($actionids));
 
+		add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_ACTION, ' Actions ['.implode(',', $actionids).'] '.
+			($status == ACTION_STATUS_ENABLED ? 'enabled' : 'disabled')
+		);
 		show_messages(true, $message);
 		clearCookies(true);
 	}
