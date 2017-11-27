@@ -170,7 +170,7 @@ function getUserFormData($userId, array $config, $isProfile = false) {
 					? PERM_DENY
 					: max($tmp_permissions[$db_right['id']], $db_right['permission']);
 			}
-			else {
+			elseif (!array_key_exists($db_right['id'], $tmp_permissions)) {
 				$tmp_permissions[$db_right['id']] = $db_right['permission'];
 			}
 		}
