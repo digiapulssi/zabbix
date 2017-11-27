@@ -511,8 +511,8 @@ class CPageFilter {
 				}
 			}
 
-			// select remembered selection
-			if ($hostId === null) {
+			// Select stored hostid, ignore zero value ('All hosts').
+			if ($hostId === null && $this->_profileIds['hostid'] > 0) {
 				$hostId = $this->_profileIds['hostid'];
 			}
 
