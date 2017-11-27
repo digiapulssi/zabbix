@@ -43,6 +43,17 @@ class CScreenMap extends CScreenBase {
 			]);
 			$sysmap = reset($sysmap);
 
+			// Replace invalid URL values by javascript warning alert.
+			foreach ($sysmap['selements'] as &$selement) {
+				foreach ($selement['urls'] as &$url) {
+					if (!CHtmlUrlValidator::validate($url['url'], false)) {
+						$url['url'] = 'javascript: alert("'._('Wrong value for url field.').'");';
+					}
+				}
+				unset($url);
+			}
+			unset($selement);
+
 			if (array_key_exists('severity_min', $this->screenitem)) {
 				$sysmap['severity_min'] = $this->screenitem['severity_min'];
 			}
