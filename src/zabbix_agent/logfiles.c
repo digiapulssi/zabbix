@@ -21,6 +21,7 @@
 #include "logfiles.h"
 #include "log.h"
 #include "active.h"
+#include "sysinfo.h"
 
 #if defined(_WINDOWS)
 #	include "symbols.h"
@@ -1871,7 +1872,25 @@ static int	process_log(unsigned char flags, const char *filename, zbx_uint64_t *
 	zbx_stat_t	buf;
 	zbx_uint64_t	l_size;
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	unsigned char op;
+
+	if (ZBX_METRIC_FLAG_LOG_LOG & flags) {
+		if (ZBX_METRIC_FLAG_LOG_COUNT & flags) {
+			op = CPA_OP_LOG;
+		} else {
+			op = CPA_OP_LOG_COUNT;
+		}
+	} else if (ZBX_METRIC_FLAG_LOG_LOGRT & flags) {
+		if (ZBX_METRIC_FLAG_LOG_COUNT & flags) {
+			op = CPA_OP_LOGRT;
+		} else {
+			op = CPA_OP_LOGRT_COUNT;
+		}
+	} else {
+		op = CPA_OP_NONE;
+	}
+
+	if (0 != CHECK_PATH_ALLOWED(filename, op))
 	{
 		*err_msg = zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename);
 		goto out;
