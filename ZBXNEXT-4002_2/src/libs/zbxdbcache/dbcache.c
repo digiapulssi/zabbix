@@ -1304,6 +1304,8 @@ static int	dc_item_compare(const void *d1, const void *d2)
  *                                                                            *
  * Return value: The update data. This data must be freed by the caller.      *
  *                                                                            *
+ * Comments: Will generate internal events when item state switches.          *
+ *                                                                            *
  ******************************************************************************/
 static zbx_item_diff_t	*calculate_item_update(const DC_ITEM *item, const ZBX_DC_HISTORY *h)
 {
@@ -1685,32 +1687,29 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
  ******************************************************************************/
 static void	DCmass_add_history(DC_ITEM *items, ZBX_DC_HISTORY *history, int history_num)
 {
-	const char	*__function_name = "DCmass_add_history";
-	int		i;
+	const char		*__function_name = "DCmass_add_history";
+	int			i;
+	zbx_vector_ptr_t	history_values;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
+	zbx_vector_ptr_create(&history_values);
+	zbx_vector_ptr_reserve(&history_values, history_num);
+
 	for (i = 0; i < history_num; i++)
 	{
-		zbx_vector_ptr_t	history_values;
+		ZBX_DC_HISTORY	*h = &history[i];
 
-		zbx_vector_ptr_create(&history_values);
+		if (0 != (ZBX_DC_FLAGS_NOT_FOR_HISTORY & h->flags))
+			continue;
 
-		for (i = 0; i < history_num; i++)
-		{
-			ZBX_DC_HISTORY	*h = &history[i];
-
-			if (0 != (ZBX_DC_FLAGS_NOT_FOR_HISTORY & h->flags))
-				continue;
-
-			zbx_vector_ptr_append(&history_values, h);
-		}
-
-		if (0 != history_values.values_num)
-			zbx_vc_add_values(&history_values);
-
-		zbx_vector_ptr_destroy(&history_values);
+		zbx_vector_ptr_append(&history_values, h);
 	}
+
+	if (0 != history_values.values_num)
+		zbx_vc_add_values(&history_values);
+
+	zbx_vector_ptr_destroy(&history_values);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
