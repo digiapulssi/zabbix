@@ -48,7 +48,7 @@ int	VFS_FILE_SIZE(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	if (0 != CHECK_PATH_ALLOWED(filename, CPA_OP_VFS_FILE_SIZE))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
@@ -88,7 +88,7 @@ int	VFS_FILE_TIME(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	if (0 != CHECK_PATH_ALLOWED(filename, CPA_OP_VFS_FILE_TIME))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
@@ -137,7 +137,7 @@ int	VFS_FILE_EXISTS(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	if (0 != CHECK_PATH_ALLOWED(filename, CPA_OP_VFS_FILE_EXISTS))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
@@ -194,7 +194,7 @@ int	VFS_FILE_CONTENTS(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	if (0 != CHECK_PATH_ALLOWED(filename, CPA_OP_VFS_FILE_CONTENTS))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
@@ -312,7 +312,7 @@ int	VFS_FILE_REGEXP(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	if (0 != CHECK_PATH_ALLOWED(filename, CPA_OP_VFS_FILE_REGEXP))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
@@ -438,7 +438,7 @@ int	VFS_FILE_REGMATCH(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	if (0 != CHECK_PATH_ALLOWED(filename, CPA_OP_VFS_FILE_REGMATCH))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
@@ -549,7 +549,7 @@ int	VFS_FILE_MD5SUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	if (0 != CHECK_PATH_ALLOWED(filename, CPA_OP_VFS_FILE_MD5SUM))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;
@@ -694,7 +694,7 @@ int	VFS_FILE_CKSUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto err;
 	}
 
-	if (0 != CHECK_PATH_ALLOWED(filename))
+	if (0 != CHECK_PATH_ALLOWED(filename, CPA_OP_VFS_FILE_CKSUM))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Access to path \"%s\" is denied", filename));
 		goto err;

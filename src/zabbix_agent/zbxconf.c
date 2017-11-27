@@ -90,12 +90,17 @@ char  **CONFIG_ALLOWED_PATHS = NULL;
  ******************************************************************************/
 void load_allowed_paths(char **lines)
 {
-	char **pline;
+	char *p, **pline;
 
 	for (pline = lines; NULL != *pline; pline++)
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "Adding allowed path (%s)", pline);
-		add_allowed_path(*pline);
+		if (NULL == (p = strchr(*pline, ','))) {
+			add_allowed_path(*pline, NULL);
+		} else {
+			*p = '\0';
+			add_allowed_path(p + 1, *pline);
+		}
 	}
 }
 

@@ -31,15 +31,47 @@
 typedef struct allowed_path {
 	struct allowed_path *next;
 	char *path;
+	unsigned char op;
 }
 allowed_path_t;
 
 allowed_path_t *allowed_path_list = NULL;
 
-void add_allowed_path(char *config_value) {
+void add_allowed_path(char *config_value, char *item_type) {
 	allowed_path_t *allowed_path = (allowed_path_t *)zbx_malloc(NULL, sizeof(allowed_path_t));
 	allowed_path->next = allowed_path_list;
 	allowed_path->path = strdup(config_value);
+	if (item_type == NULL) {
+		allowed_path->op = CPA_OP_ANY;
+	} else if (0 == strcmp("vfs.file.size", item_type)) {
+		allowed_path->op = CPA_OP_VFS_FILE_SIZE;
+	} else if (0 == strcmp("vfs.file.time", item_type)) {
+		allowed_path->op = CPA_OP_VFS_FILE_TIME;
+	} else if (0 == strcmp("vfs.file.exists", item_type)) {
+		allowed_path->op = CPA_OP_VFS_FILE_EXISTS;
+	} else if (0 == strcmp("vfs.file.contents", item_type)) {
+		allowed_path->op = CPA_OP_VFS_FILE_CONTENTS;
+	} else if (0 == strcmp("vfs.file.regexp", item_type)) {
+		allowed_path->op = CPA_OP_VFS_FILE_REGEXP;
+	} else if (0 == strcmp("vfs.file.regmatch", item_type)) {
+		allowed_path->op = CPA_OP_VFS_FILE_REGMATCH;
+	} else if (0 == strcmp("vfs.file.md5sum", item_type)) {
+		allowed_path->op = CPA_OP_VFS_FILE_MD5SUM;
+	} else if (0 == strcmp("vfs.file.cksum", item_type)) {
+		allowed_path->op = CPA_OP_VFS_FILE_CKSUM;
+	} else if (0 == strcmp("log", item_type)) {
+		allowed_path->op = CPA_OP_LOG;
+	} else if (0 == strcmp("log.count", item_type)) {
+		allowed_path->op = CPA_OP_LOG_COUNT;
+	} else if (0 == strcmp("logrt", item_type)) {
+		allowed_path->op = CPA_OP_LOGRT;
+	} else if (0 == strcmp("logrt.count", item_type)) {
+		allowed_path->op = CPA_OP_LOGRT_COUNT;
+	} else if (0 == strcmp("any", item_type)) {
+		allowed_path->op = CPA_OP_ANY;
+	} else {
+		allowed_path->op = CPA_OP_NONE;
+	}
 	allowed_path_list = allowed_path;
 }
 
@@ -226,7 +258,7 @@ static int	SYSTEM_RUN(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return SYSINFO_RET_OK;
 }
 
-int CHECK_PATH_ALLOWED(const char *filename)
+int CHECK_PATH_ALLOWED(const char *filename, unsigned char op)
 {
 	allowed_path_t *allowed_path;
 	regex_t path_re;
@@ -243,6 +275,10 @@ int CHECK_PATH_ALLOWED(const char *filename)
 
 	while (NULL != allowed_path)
 	{
+		if (allowed_path->op != CPA_OP_ANY && allowed_path->op != op) {
+			allowed_path = allowed_path->next;
+			continue;
+		}
 		zabbix_log(LOG_LEVEL_TRACE, "checking path against '%s'", allowed_path->path);
 		if (0 == (reg_error = regcomp(&path_re, allowed_path->path, 0)))
 		{

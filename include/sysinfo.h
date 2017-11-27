@@ -189,6 +189,29 @@ int	get_diskstat(const char *devname, zbx_uint64_t *dstat);
 #define PROCESS_MODULE_COMMAND	0x2
 #define PROCESS_WITH_ALIAS	0x4
 
+/* item type constants for CHECK_PATH_ALLOWED */
+// unidentifiable/unsupported item
+#define CPA_OP_NONE 0x00
+
+// supported vfs items
+#define CPA_OP_VFS_FILE_SIZE 0x01
+#define CPA_OP_VFS_FILE_TIME 0x02
+#define CPA_OP_VFS_FILE_EXISTS 0x03
+#define CPA_OP_VFS_FILE_CONTENTS 0x04
+#define CPA_OP_VFS_FILE_REGEXP 0x05
+#define CPA_OP_VFS_FILE_REGMATCH 0x06
+#define CPA_OP_VFS_FILE_MD5SUM 0x07
+#define CPA_OP_VFS_FILE_CKSUM 0x08
+
+// supported log items
+#define CPA_OP_LOG 0x10
+#define CPA_OP_LOG_COUNT 0x11
+#define CPA_OP_LOGRT 0x12
+#define CPA_OP_LOGRT_COUNT 0x13
+
+// any supported item
+#define CPA_OP_ANY 0xFF
+
 void	init_metrics();
 int	add_metric(ZBX_METRIC *metric, char *error, size_t max_error_len);
 void	free_metrics();

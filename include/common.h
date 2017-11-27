@@ -1216,7 +1216,7 @@ int	zbx_function_find(const char *expr, size_t *func_pos, size_t *par_l, size_t 
 void	zbx_alarm_flag_set(void);
 void	zbx_alarm_flag_clear(void);
 
-void add_allowed_path(char *config_value);
+void add_allowed_path(char *config_value, char *item_type);
 
 #ifndef _WINDOWS
 unsigned int	zbx_alarm_on(unsigned int seconds);
