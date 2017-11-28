@@ -575,7 +575,7 @@ if ($srctbl == 'usrgrp') {
 
 	$options = array(
 		'nodeids' => $nodeId,
-		'output' => [$srcfld1, $srcfld2, 'usrgrpid', 'name'],
+		'output' => array($srcfld1, $srcfld2, 'usrgrpid', 'name'),
 		'preservekeys' => true
 	);
 	if (!is_null($writeonly)) {
@@ -668,7 +668,7 @@ elseif ($srctbl == 'users') {
 		));
 
 		if (!$multiselect) {
-			$user_data = [$dstfld1 => $user[$srcfld1]];
+			$user_data = array($dstfld1 => $user[$srcfld1]);
 
 			if (array_key_exists($srcfld2, $user)) {
 				$user_data[$dstfld2] = $user[$srcfld2];
@@ -1002,9 +1002,9 @@ elseif ($srctbl == 'help_items') {
 	$table->setHeader(array(_('Key'), _('Name')));
 
 	$helpItems = new CHelpItems();
-	$data = [];
+	$data = array();
 	foreach ($helpItems->getByType($itemtype) as $index => $helpItem) {
-		$data[$index] = [$dstfld1 => $helpItem[$srcfld1]];
+		$data[$index] = array($dstfld1 => $helpItem[$srcfld1]);
 
 		if (array_key_exists($srcfld2, $helpItem)) {
 			$data[$index][$dstfld2] = $helpItem[$srcfld2];
@@ -1058,7 +1058,7 @@ elseif ($srctbl == 'triggers') {
 	$triggers = API::Trigger()->get($options);
 	order_result($triggers, 'description');
 
-	$js_triggers = [];
+	$js_triggers = array();
 	$parentId = $dstfld1 ? zbx_jsvalue($dstfld1) : 'null';
 
 	foreach ($triggers as $trigger) {
@@ -1184,7 +1184,7 @@ elseif ($srctbl == 'items') {
 
 	order_result($items, 'name_expanded');
 
-	$js_items = [];
+	$js_items = array();
 
 	foreach ($items as $item) {
 		$host = reset($item['hosts']);
@@ -1431,11 +1431,11 @@ elseif ($srctbl == 'nodes') {
 	$table->setHeader(_('Name'));
 
 	$result = DBselect('SELECT DISTINCT n.* FROM nodes n WHERE '.dbConditionInt('n.nodeid', get_accessible_nodes_by_user(CWebUser::$data, PERM_READ)));
-	$data = [];
+	$data = array();
 	$index = 0;
 
 	while ($row = DBfetch($result)) {
-		$data[$index] = [$dstfld1 => $row[$srcfld1]];
+		$data[$index] = array($dstfld1 => $row[$srcfld1]);
 
 		if (array_key_exists($srcfld2, $row)) {
 			$data[$index][$dstfld2] = $row[$srcfld2];
@@ -1497,7 +1497,7 @@ elseif ($srctbl == 'graphs') {
 		$graphs = array();
 	}
 
-	$js_graphs = [];
+	$js_graphs = array();
 
 	foreach ($graphs as $graph) {
 		$host = reset($graph['hosts']);
@@ -1674,10 +1674,10 @@ elseif ($srctbl == 'slides') {
 			$slideshows[$dbSlideshow['slideshowid']] = $dbSlideshow;
 		}
 		else {
-			$slideshows[$dbSlideshow['slideshowid']] = [
+			$slideshows[$dbSlideshow['slideshowid']] = array(
 				$dstfld1 => $dbSlideshow[$srcfld1],
 				$dstfld2 => $dbSlideshow[$srcfld2]
-			];
+			);
 			$js_action = 'javascript: addValues('.zbx_jsvalue($dbSlideshow['slideshowid']).'); close_window(); return false;';
 		}
 		$name->setAttribute('onclick', $js_action.' jQuery(this).removeAttr("onclick");');
@@ -1780,7 +1780,7 @@ elseif ($srctbl == 'screens2') {
 		'editable' => ($writeonly === null) ? null: true
 	));
 	order_result($screens, 'name');
-	$data = [];
+	$data = array();
 
 	foreach ($screens as $index => $screen) {
 		if (check_screen_recursion($_REQUEST['screenid'], $screen['screenid'])) {
@@ -1788,7 +1788,7 @@ elseif ($srctbl == 'screens2') {
 		}
 
 		$name = new CLink($screen['name'], '#');
-		$data[$index] = [$dstfld1 => $screen[$srcfld1]];
+		$data[$index] = array($dstfld1 => $screen[$srcfld1]);
 
 		if (array_key_exists($srcfld2, $screen)) {
 			$data[$index][$dstfld2] = $screen[$srcfld2];
@@ -1814,11 +1814,11 @@ elseif ($srctbl == 'drules') {
 			' FROM drules d'.
 			whereDbNode('d.druleid', $nodeId)
 	);
-	$data = [];
+	$data = array();
 	$index = 0;
 
 	while ($row = DBfetch($result)) {
-		$data[$index] = [$dstfld1 => $row[$srcfld1]];
+		$data[$index] = array($dstfld1 => $row[$srcfld1]);
 
 		if (array_key_exists($srcfld2, $row)) {
 			$data[$index][$dstfld2] = $row[$srcfld2];
@@ -1845,14 +1845,14 @@ elseif ($srctbl == 'dchecks') {
 		'output' => array('name'),
 		'nodeids' => $nodeId
 	));
-	$data = [];
+	$data = array();
 	$index = 0;
 
 	foreach ($dRules as $dRule) {
 		foreach ($dRule['dchecks'] as $dCheck) {
 			$name = $dRule['name'].NAME_DELIMITER.discovery_check2str($dCheck['type'], $dCheck['key_'], $dCheck['ports']);
 
-			$data[$index] = [$dstfld1 => $dCheck[$srcfld1]];
+			$data[$index] = array($dstfld1 => $dCheck[$srcfld1]);
 
 			if ($srcfld2 !== null) {
 				$data[$index][$dstfld2] = $name;
@@ -1882,11 +1882,11 @@ elseif ($srctbl == 'proxies') {
 				andDbNode('h.hostid', $nodeId).
 			' ORDER BY h.host,h.hostid'
 	);
-	$data = [];
+	$data = array();
 	$index = 0;
 
 	while ($row = DBfetch($result)) {
-		$data[$index] = [$dstfld1 => $row[$srcfld1]];
+		$data[$index] = array($dstfld1 => $row[$srcfld1]);
 
 		if (array_key_exists($srcfld2, $row)) {
 			$data[$index][$dstfld2] = $row[$srcfld2];
