@@ -3,6 +3,16 @@ Changes for 3.2.11rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-12497] improved VMware event log data collection and processing (gleb)
+..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
+..F....... [ZBX-12897] fixed error causing empty list in popup window when opened from page having host group filter (gcalenko)
+A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
+..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
+..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
+........S. [ZBX-12975] fixed possibility of foreign key constraint failure due to events being removed before trigger data storage period expires (vso)
+........S. [ZBX-11426] fixed potentially incorrect delete procedure for problems and events (abs)
+........S. [ZBX-12800] fixed incorrect trigger dependency calculation when processing dependent triggers in the same history syncer batch (wiper)
 .......P.. [ZBX-12117] fixed proxy passing zeros to history export modules instead of actual numeric values (gleb)
 ..F....... [ZBX-12856] fixed wrong default value for host filter when adding dependent trigger in trigger edit form (gcalenko)
 ..F....... [ZBX-12082] fixed possibility to select triggers with same name in multiselect (Ivo)
@@ -558,6 +568,17 @@ Changes for 3.0.14rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-12497] improved VMware event log data collection and processing (gleb)
+...G...... [ZBX-8054] relieved windows agent of dependency on MFC (valdis)
+..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
+..F....... [ZBX-12897] fixed error causing empty list in popup window when opened from page having host group filter (gcalenko)
+....I..... [ZBX-12232] fixed mysql m4 configuration script for mariadb C connector (abs)
+..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
+..F....... [ZBX-13016] fixed warning message shown by deprecated PHP 7.2 function create_function() (Sasha)
+..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
+........S. [ZBX-8049] fixed zabbix[java,,ping] to stay supported when java gateway is down (valdis)
+........S. [ZBX-12971] fixed possibility of host availability being stuck in unknown state when monitoring though proxy (vso)
 A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
 ..F....... [ZBX-12856] fixed wrong default value for host filter when adding dependent trigger in trigger edit form (gcalenko)
 ........S. [ZBX-9567] added missing fields to webscenario data handling (valdis)
@@ -2365,6 +2386,8 @@ Changes for 2.2.21rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
 ..F....... [DEV-593] fixed multiple security issues (miks)
 .......PS. [ZBX-12854] fixed crash of VMware collector with DebugLevel=4 (gleb)
 
