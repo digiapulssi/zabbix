@@ -165,12 +165,14 @@ function getUserFormData($userId, array $config, $isProfile = false) {
 		// deny beat all, read-write beat read
 		$tmp_permissions = [];
 		while ($db_right = DBfetch($db_rights)) {
-			if (isset($tmp_permissions[$db_right['id']]) && $tmp_permissions[$db_right['id']] != PERM_DENY) {
-				$tmp_permissions[$db_right['id']] = ($db_right['permission'] == PERM_DENY)
-					? PERM_DENY
-					: max($tmp_permissions[$db_right['id']], $db_right['permission']);
+			if (array_key_exists($db_right['id'], $tmp_permissions)) {
+				if ($tmp_permissions[$db_right['id']] != PERM_DENY) {
+					$tmp_permissions[$db_right['id']] = ($db_right['permission'] == PERM_DENY)
+						? PERM_DENY
+						: max($tmp_permissions[$db_right['id']], $db_right['permission']);
+				}
 			}
-			elseif (!array_key_exists($db_right['id'], $tmp_permissions)) {
+			else {
 				$tmp_permissions[$db_right['id']] = $db_right['permission'];
 			}
 		}
