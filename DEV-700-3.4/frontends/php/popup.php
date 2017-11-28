@@ -1267,12 +1267,8 @@ elseif ($srctbl === 'items' || $srctbl === 'item_prototypes') {
 
 		$description = new CLink($item['name_expanded'], 'javascript:void(0);');
 		$item['name'] = $item['hostname'].NAME_DELIMITER.$item['name_expanded'];
-<<<<<<< .working
 		$item['master_itemname'] = $item['name_expanded'].NAME_DELIMITER.$item['key_'];
-||||||| .merge-left.r75109
-=======
 		$js_object = [];
->>>>>>> .merge-right.r75110
 
 		if ($multiselect) {
 			$js_object = [
