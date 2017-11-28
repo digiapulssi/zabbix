@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
 /**
  * Test the creation of inheritance of new objects on a previously linked template.
+ *
+ * @backup graphs
  */
 class testFormGraphPrototype extends CWebTest {
 
@@ -115,14 +117,6 @@ class testFormGraphPrototype extends CWebTest {
 	 * @var int
 	 */
 	protected $yaxismax = 500;
-
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testFormGraphPrototype_Setup() {
-		DBsave_tables('graphs');
-	}
 
 	// Returns layout data
 	public static function layout() {
@@ -1094,8 +1088,7 @@ class testFormGraphPrototype extends CWebTest {
 			$this->zbxTestWaitUntilElementPresent(webDriverBy::id('groupid'));
 			$this->zbxTestDropdownSelect('groupid', 'Zabbix servers');
 			$this->zbxTestDropdownSelectWait('hostid', $this->host);
-			$this->zbxTestClickLinkTextWait($this->itemSimple);
-			$this->zbxTestWaitWindowClose();
+			$this->zbxTestClickLinkAndWaitWindowClose($this->itemSimple);
 
 			if (isset($data['removeItem'])) {
 				$this->zbxTestClickWait('items_0_remove');
@@ -1229,12 +1222,5 @@ class testFormGraphPrototype extends CWebTest {
 			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Graph prototypes deleted');
 			$this->zbxTestTextNotPresent($this->template.": $graphName");
 		}
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testFormGraphPrototype_Teardown() {
-		DBrestore_tables('graphs');
 	}
 }

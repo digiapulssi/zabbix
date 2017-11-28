@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,16 +30,15 @@ abstract class ItemChecker
 {
 	private static final Logger logger = LoggerFactory.getLogger(ItemChecker.class);
 
-	static final String JSON_TAG_CONN = "conn";
 	static final String JSON_TAG_DATA = "data";
 	static final String JSON_TAG_ERROR = "error";
 	static final String JSON_TAG_KEYS = "keys";
 	static final String JSON_TAG_PASSWORD = "password";
-	static final String JSON_TAG_PORT = "port";
 	static final String JSON_TAG_REQUEST = "request";
 	static final String JSON_TAG_RESPONSE = "response";
 	static final String JSON_TAG_USERNAME = "username";
 	static final String JSON_TAG_VALUE = "value";
+	static final String JSON_TAG_JMX_ENDPOINT = "jmx_endpoint";
 
 	static final String JSON_REQUEST_INTERNAL = "java gateway internal";
 	static final String JSON_REQUEST_JMX = "java gateway jmx";

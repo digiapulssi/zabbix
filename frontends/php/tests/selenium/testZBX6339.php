@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,14 +20,10 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
+/**
+ * @backup screens
+ */
 class testZBX6339 extends CWebTest {
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testZBX6339_Setup() {
-		DBsave_tables('screens');
-	}
 
 	// Returns all screens
 	public static function allScreens() {
@@ -68,12 +64,5 @@ class testZBX6339 extends CWebTest {
 		$this->zbxTestCheckTitle('Configuration of screens');
 		$this->zbxTestCheckHeader('Screens');
 		$this->zbxTestTextPresent(['Screen deleted', $host]);
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testZBX6339_Teardown() {
-		DBrestore_tables('screens');
 	}
 }

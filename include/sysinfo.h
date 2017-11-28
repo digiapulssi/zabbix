@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -86,6 +86,7 @@ do									\
 	if ((res)->type & AR_LOG)					\
 	{								\
 		zbx_log_free((res)->log);				\
+		(res)->log = NULL;					\
 		(res)->type &= ~AR_LOG;					\
 	}								\
 }									\
@@ -160,6 +161,8 @@ extern int	CONFIG_UNSAFE_USER_PARAMETERS;
 #define ZBX_PROC_STAT_RUN	1
 #define ZBX_PROC_STAT_SLEEP	2
 #define ZBX_PROC_STAT_ZOMB	3
+#define ZBX_PROC_STAT_DISK	4
+#define ZBX_PROC_STAT_TRACE	5
 
 #define ZBX_DO_SUM		0
 #define ZBX_DO_MAX		1

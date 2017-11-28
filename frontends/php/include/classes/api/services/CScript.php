@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,8 +48,6 @@ class CScript extends CApiService {
 	 */
 	public function get(array $options) {
 		$result = [];
-		$userType = self::$userData['type'];
-		$userid = self::$userData['userid'];
 
 		$sqlParts = [
 			'select'	=> ['scripts' => 's.scriptid'],
@@ -64,21 +62,21 @@ class CScript extends CApiService {
 			'hostids'				=> null,
 			'scriptids'				=> null,
 			'usrgrpids'				=> null,
-			'editable'				=> null,
+			'editable'				=> false,
 			'nopermissions'			=> null,
 			// filter
 			'filter'				=> null,
 			'search'				=> null,
 			'searchByAny'			=> null,
-			'startSearch'			=> null,
-			'excludeSearch'			=> null,
+			'startSearch'			=> false,
+			'excludeSearch'			=> false,
 			'searchWildcardsEnabled'=> null,
 			// output
 			'output'				=> API_OUTPUT_EXTEND,
 			'selectGroups'			=> null,
 			'selectHosts'			=> null,
-			'countOutput'			=> null,
-			'preservekeys'			=> null,
+			'countOutput'			=> false,
+			'preservekeys'			=> false,
 			'sortfield'				=> '',
 			'sortorder'				=> '',
 			'limit'					=> null
@@ -86,12 +84,12 @@ class CScript extends CApiService {
 		$options = zbx_array_merge($defOptions, $options);
 
 		// editable + permission check
-		if ($userType != USER_TYPE_SUPER_ADMIN) {
-			if (!is_null($options['editable'])) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
+			if ($options['editable']) {
 				return $result;
 			}
 
-			$userGroups = getUserGroupsByUserId($userid);
+			$userGroups = getUserGroupsByUserId(self::$userData['userid']);
 
 			$sqlParts['where'][] = '(s.usrgrpid IS NULL OR '.dbConditionInt('s.usrgrpid', $userGroups).')';
 			$sqlParts['where'][] = '(s.groupid IS NULL OR EXISTS ('.
@@ -166,7 +164,7 @@ class CScript extends CApiService {
 			}
 		}
 
-		if (!is_null($options['countOutput'])) {
+		if ($options['countOutput']) {
 			return $result;
 		}
 
@@ -176,7 +174,7 @@ class CScript extends CApiService {
 		}
 
 		// removing keys (hash -> array)
-		if (is_null($options['preservekeys'])) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 
@@ -184,8 +182,6 @@ class CScript extends CApiService {
 	}
 
 	/**
-	 * Add scripts.
-	 *
 	 * @param array $scripts
 	 *
 	 * @return array
@@ -206,8 +202,6 @@ class CScript extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the create() method.
-	 *
 	 * @param array $scripts
 	 *
 	 * @throws APIException if the input is invalid
@@ -220,7 +214,7 @@ class CScript extends CApiService {
 		$api_input_rules = ['type' => API_OBJECTS, 'flags' => API_NOT_EMPTY | API_NORMALIZE, 'uniq' => [['name']], 'fields' => [
 			'name' =>			['type' => API_SCRIPT_NAME, 'flags' => API_REQUIRED, 'length' => DB::getFieldLength('scripts', 'name')],
 			'type' =>			['type' => API_INT32, 'in' => implode(',', [ZBX_SCRIPT_TYPE_CUSTOM_SCRIPT, ZBX_SCRIPT_TYPE_IPMI])],
-			'execute_on' =>		['type' => API_INT32, 'in' => implode(',', [ZBX_SCRIPT_EXECUTE_ON_AGENT, ZBX_SCRIPT_EXECUTE_ON_SERVER])],
+			'execute_on' =>		['type' => API_INT32, 'in' => implode(',', [ZBX_SCRIPT_EXECUTE_ON_AGENT, ZBX_SCRIPT_EXECUTE_ON_SERVER, ZBX_SCRIPT_EXECUTE_ON_PROXY])],
 			'command' =>		['type' => API_STRING_UTF8, 'flags' => API_REQUIRED | API_NOT_EMPTY, 'length' => DB::getFieldLength('scripts', 'command')],
 			'description' =>	['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('scripts', 'description')],
 			'usrgrpid' =>		['type' => API_ID],
@@ -239,8 +233,6 @@ class CScript extends CApiService {
 	}
 
 	/**
-	 * Update scripts.
-	 *
 	 * @param array $scripts
 	 *
 	 * @return array
@@ -286,8 +278,6 @@ class CScript extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the update() method.
-	 *
 	 * @param array $scripts
 	 * @param array $db_scripts
 	 *
@@ -302,7 +292,7 @@ class CScript extends CApiService {
 			'scriptid' =>		['type' => API_ID, 'flags' => API_REQUIRED],
 			'name' =>			['type' => API_SCRIPT_NAME, 'length' => DB::getFieldLength('scripts', 'name')],
 			'type' =>			['type' => API_INT32, 'in' => implode(',', [ZBX_SCRIPT_TYPE_CUSTOM_SCRIPT, ZBX_SCRIPT_TYPE_IPMI])],
-			'execute_on' =>		['type' => API_INT32, 'in' => implode(',', [ZBX_SCRIPT_EXECUTE_ON_AGENT, ZBX_SCRIPT_EXECUTE_ON_SERVER])],
+			'execute_on' =>		['type' => API_INT32, 'in' => implode(',', [ZBX_SCRIPT_EXECUTE_ON_AGENT, ZBX_SCRIPT_EXECUTE_ON_SERVER, ZBX_SCRIPT_EXECUTE_ON_PROXY])],
 			'command' =>		['type' => API_STRING_UTF8, 'flags' => API_NOT_EMPTY, 'length' => DB::getFieldLength('scripts', 'command')],
 			'description' =>	['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('scripts', 'description')],
 			'usrgrpid' =>		['type' => API_ID],
@@ -314,7 +304,7 @@ class CScript extends CApiService {
 			self::exception(ZBX_API_ERROR_PARAMETERS, $error);
 		}
 
-		$db_scripts = API::getApiService()->select('scripts', [
+		$db_scripts = DB::select('scripts', [
 			'output' => ['scriptid', 'name', 'type', 'execute_on', 'command', 'description', 'usrgrpid', 'groupid',
 				'host_access', 'confirmation'
 			],
@@ -359,7 +349,7 @@ class CScript extends CApiService {
 				if (!array_key_exists('execute_on', $script)) {
 					$script['execute_on'] = ZBX_SCRIPT_EXECUTE_ON_SERVER;
 				}
-				elseif ($script['execute_on'] != ZBX_SCRIPT_EXECUTE_ON_SERVER) {
+				elseif ($script['execute_on'] == ZBX_SCRIPT_EXECUTE_ON_AGENT) {
 					self::exception(ZBX_API_ERROR_PARAMETERS, _('IPMI scripts can be executed only by server.'));
 				}
 			}
@@ -392,7 +382,7 @@ class CScript extends CApiService {
 
 		$usrgrpids = array_keys($usrgrpids);
 
-		$db_usrgrps = API::getApiService()->select('usrgrp', [
+		$db_usrgrps = DB::select('usrgrp', [
 			'output' => [],
 			'usrgrpids' => $usrgrpids,
 			'preservekeys' => true
@@ -428,7 +418,7 @@ class CScript extends CApiService {
 
 		$groupids = array_keys($groupids);
 
-		$db_groups = API::getApiService()->select('groups', [
+		$db_groups = DB::select('groups', [
 			'output' => [],
 			'groupids' => $groupids,
 			'preservekeys' => true
@@ -442,6 +432,30 @@ class CScript extends CApiService {
 	}
 
 	/**
+	 * Auxiliary function for checkDuplicates().
+	 *
+	 * @param array  $folders
+	 * @param string $name
+	 * @param array  $db_folders
+	 * @param string $db_name
+	 *
+	 * @throws APIException
+	 */
+	private static function checkScriptNames(array $folders, $name, array $db_folders, $db_name) {
+		if (array_slice($folders, 0, count($db_folders)) === $db_folders) {
+			self::exception(ZBX_API_ERROR_PARAMETERS,
+				_s('Script menu path "%1$s" already used in script name "%2$s".', $name, $db_name)
+			);
+		}
+
+		if (array_slice($db_folders, 0, count($folders)) === $folders) {
+			self::exception(ZBX_API_ERROR_PARAMETERS,
+				_s('Script name "%1$s" already used in menu path for script "%2$s".', $name, $db_name)
+			);
+		}
+	}
+
+	/**
 	 * Check for duplicated scripts.
 	 *
 	 * @param array  $scripts
@@ -451,7 +465,7 @@ class CScript extends CApiService {
 	 * @throws APIException  if global script already exists.
 	 */
 	private function checkDuplicates(array $scripts) {
-		$db_scripts = API::getApiService()->select('scripts', [
+		$db_scripts = DB::select('scripts', [
 			'output' => ['scriptid', 'name']
 		]);
 
@@ -463,42 +477,34 @@ class CScript extends CApiService {
 		}
 		unset($db_script);
 
+		$ok_scripts = [];
+
 		foreach ($scripts as $script) {
-			$folders = array_map('trim', splitPath($script['name']));
-			$uniq_name = implode('/', $folders);
+			$script['folders'] = array_map('trim', splitPath($script['name']));
+			$uniq_name = implode('/', $script['folders']);
 
 			if (array_key_exists($uniq_name, $uniq_names)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Script "%1$s" already exists.', $script['name']));
 			}
 			$uniq_names[$uniq_name] = true;
 
+			foreach ($ok_scripts as $ok_script) {
+				self::checkScriptNames($script['folders'], $script['name'], $ok_script['folders'], $ok_script['name']);
+			}
+
 			foreach ($db_scripts as $db_script) {
 				if (array_key_exists('scriptid', $script) && bccomp($script['scriptid'], $db_script['scriptid']) == 0) {
 					continue;
 				}
 
-				if (array_slice($folders, 0, count($db_script['folders'])) === $db_script['folders']) {
-					self::exception(ZBX_API_ERROR_PARAMETERS,
-						_s('Script menu path "%1$s" already used in script name "%2$s".', $script['name'],
-							$db_script['name']
-						)
-					);
-				}
-
-				if (array_slice($db_script['folders'], 0, count($folders)) === $folders) {
-					self::exception(ZBX_API_ERROR_PARAMETERS,
-						_s('Script name "%1$s" already used in menu path for script "%2$s".', $script['name'],
-							$db_script['name']
-						)
-					);
-				}
+				self::checkScriptNames($script['folders'], $script['name'], $db_script['folders'], $db_script['name']);
 			}
+
+			$ok_scripts[] = $script;
 		}
 	}
 
 	/**
-	 * Delete scripts.
-	 *
 	 * @param array $scriptids
 	 *
 	 * @return array
@@ -514,8 +520,6 @@ class CScript extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the delete() method.
-	 *
 	 * @param array $scriptids
 	 * @param array $db_scripts
 	 *
@@ -531,7 +535,7 @@ class CScript extends CApiService {
 			self::exception(ZBX_API_ERROR_PARAMETERS, $error);
 		}
 
-		$db_scripts = API::getApiService()->select('scripts', [
+		$db_scripts = DB::select('scripts', [
 			'output' => ['scriptid', 'name'],
 			'scriptids' => $scriptids,
 			'preservekeys' => true
@@ -565,8 +569,6 @@ class CScript extends CApiService {
 	}
 
 	/**
-	 * Execute script.
-	 *
 	 * @param array $data
 	 *
 	 * @return array
@@ -707,7 +709,7 @@ class CScript extends CApiService {
 				$result[$scriptId]['groups'] = API::HostGroup()->get([
 					'output' => $options['selectGroups'],
 					'groupids' => $script['groupid'] ? $script['groupid'] : null,
-					'editable' => ($script['host_access'] == PERM_READ_WRITE) ? true : null
+					'editable' => ($script['host_access'] == PERM_READ_WRITE)
 				]);
 			}
 		}
@@ -725,7 +727,7 @@ class CScript extends CApiService {
 						'output' => $options['selectHosts'],
 						'groupids' => $script['groupid'] ? $script['groupid'] : null,
 						'hostids' => $options['hostids'] ? $options['hostids'] : null,
-						'editable' => ($script['host_access'] == PERM_READ_WRITE) ? true : null
+						'editable' => ($script['host_access'] == PERM_READ_WRITE)
 					]);
 
 					$processedGroups[$script['groupid'].'_'.$script['host_access']] = $scriptId;

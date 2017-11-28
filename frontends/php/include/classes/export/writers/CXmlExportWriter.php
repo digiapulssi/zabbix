@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,7 +69,13 @@ class CXmlExportWriter extends CExportWriter {
 				$this->fromArray($value, $name);
 			}
 			elseif (!zbx_empty($value)) {
-				$this->xmlWriter->text($value);
+				// Value containing only whitespace characters should be saved as CDATA.
+				if (trim($value) === '') {
+					$this->xmlWriter->writeCData($value);
+				}
+				else {
+					$this->xmlWriter->text($value);
+				}
 			}
 
 			$this->xmlWriter->endElement();
@@ -111,6 +117,7 @@ class CXmlExportWriter extends CExportWriter {
 			'maps' => 'map',
 			'urls' => 'url',
 			'selements' => 'selement',
+			'elements' => 'element',
 			'links' => 'link',
 			'linktriggers' => 'linktrigger',
 			'value_maps' => 'value_map',
@@ -118,7 +125,13 @@ class CXmlExportWriter extends CExportWriter {
 			'httptests' => 'httptest',
 			'steps' => 'step',
 			'tags' => 'tag',
-			'preprocessing' => 'step'
+			'preprocessing' => 'step',
+			'headers' => 'header',
+			'variables' => 'variable',
+			'query_fields' => 'query_field',
+			'posts' => 'post_field',
+			'shapes' => 'shape',
+			'lines' => 'line'
 		];
 
 		return isset($map[$name]) ? $map[$name] : false;

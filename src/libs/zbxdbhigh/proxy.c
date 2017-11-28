@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,13 @@
 #include "log.h"
 #include "sysinfo.h"
 #include "zbxserver.h"
+#include "zbxtasks.h"
 
 #include "proxy.h"
 #include "dbcache.h"
 #include "discovery.h"
 #include "zbxalgo.h"
+#include "preproc.h"
 #include "../zbxcrypto/tls_tcp_active.h"
 
 /* the space reserved in json buffer to hold at least one record plus service data */
@@ -285,7 +287,6 @@ int	zbx_host_check_permissions(const DC_HOST *host, const zbx_socket_t *sock, ch
  *                                                                            *
  * Parameters:                                                                *
  *     jp      - [IN] JSON with the proxy name                                *
- *     sock    - [IN] connection socket context                               *
  *     proxy   - [OUT] the proxy data                                         *
  *     error   - [OUT] error message                                          *
  *                                                                            *
@@ -295,8 +296,7 @@ int	zbx_host_check_permissions(const DC_HOST *host, const zbx_socket_t *sock, ch
  *               configured in passive mode or access denied)                 *
  *                                                                            *
  ******************************************************************************/
-int	get_active_proxy_from_request(struct zbx_json_parse *jp, const zbx_socket_t *sock, DC_PROXY *proxy,
-		char **error)
+int	get_active_proxy_from_request(struct zbx_json_parse *jp, DC_PROXY *proxy, char **error)
 {
 	char	*ch_error, host[HOST_HOST_LEN_MAX];
 
@@ -377,9 +377,10 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
  * Function: update_proxy_lastaccess                                          *
  *                                                                            *
  ******************************************************************************/
-void	update_proxy_lastaccess(const zbx_uint64_t hostid)
+void	update_proxy_lastaccess(const zbx_uint64_t hostid, time_t last_access)
 {
-	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, time(NULL), hostid);
+	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, last_access, hostid);
+	zbx_dc_update_proxy_lastaccess(hostid, last_access);
 }
 
 /******************************************************************************
@@ -490,7 +491,7 @@ static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, 
 	{
 		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, ",config r where t.groupid=r.discovery_groupid");
 	}
-	else if (SUCCEED == str_in_list("httptest,httptestitem,httpstep", table->table, ','))
+	else if (SUCCEED == str_in_list("httptest,httptest_field,httptestitem,httpstep", table->table, ','))
 	{
 		if (0 == httptests->values_num)
 			goto skip_data;
@@ -499,7 +500,7 @@ static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, 
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.httptestid",
 				httptests->values, httptests->values_num);
 	}
-	else if (0 == strcmp(table->table, "httpstepitem"))
+	else if (SUCCEED == str_in_list("httpstepitem,httpstep_field", table->table, ','))
 	{
 		if (0 == httptests->values_num)
 			goto skip_data;
@@ -680,8 +681,10 @@ int	get_proxyconfig_data(zbx_uint64_t proxy_hostid, struct zbx_json *j, char **e
 		"config",
 		"httptest",
 		"httptestitem",
+		"httptest_field",
 		"httpstep",
 		"httpstepitem",
+		"httpstep_field",
 		NULL
 	};
 
@@ -899,7 +902,7 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 {
 	const char		*__function_name = "process_proxyconfig_table";
 
-	int			f, fields_count = 0, insert, is_null, i, ret = FAIL, id_field_nr = 0, move_out = 0,
+	int			f, fields_count, insert, is_null, i, ret = FAIL, id_field_nr = 0, move_out = 0,
 				move_field_nr = 0;
 	const ZBX_FIELD		*fields[ZBX_MAX_FIELDS];
 	struct zbx_json_parse	jp_data, jp_row;
@@ -975,11 +978,18 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 
 	p = NULL;
 	/* iterate column names (lines 4-6 in T1) */
-	while (NULL != (p = zbx_json_next_value_dyn(&jp_data, p, &buf, &buf_alloc, NULL)))
+	for (fields_count = 0; NULL != (p = zbx_json_next_value_dyn(&jp_data, p, &buf, &buf_alloc, NULL)); fields_count++)
 	{
-		if (NULL == (fields[fields_count++] = DBget_field(table, buf)))
+		if (NULL == (fields[fields_count] = DBget_field(table, buf)))
 		{
 			*error = zbx_dsprintf(*error, "invalid field name \"%s.%s\"", table->table, buf);
+			goto out;
+		}
+
+		if (0 == (fields[fields_count]->flags & ZBX_PROXY) &&
+				(0 != strcmp(table->recid, buf) || ZBX_TYPE_ID != fields[fields_count]->type))
+		{
+			*error = zbx_dsprintf(*error, "unexpected field \"%s.%s\"", table->table, buf);
 			goto out;
 		}
 	}
@@ -1510,7 +1520,7 @@ void	process_proxyconfig(struct zbx_json_parse *jp_data)
 
 	if (SUCCEED == ret)
 	{
-		char 	*sql = NULL;
+		char	*sql = NULL;
 		size_t	sql_alloc = 512, sql_offset = 0;
 
 		sql = zbx_malloc(sql, sql_alloc * sizeof(char));
@@ -1560,7 +1570,7 @@ void	process_proxyconfig(struct zbx_json_parse *jp_data)
 	}
 	else
 	{
-		DCsync_configuration();
+		DCsync_configuration(ZBX_DBSYNC_UPDATE);
 		DCupdate_hosts_availability();
 	}
 
@@ -2076,7 +2086,7 @@ try_again:
 	dc_items = zbx_malloc(NULL, (sizeof(DC_ITEM) + sizeof(int)) * data_num);
 	errcodes = (int *)(dc_items + data_num);
 
-	DCconfig_get_items_by_itemids(dc_items, itemids, errcodes, data_num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+	DCconfig_get_items_by_itemids(dc_items, itemids, errcodes, data_num);
 
 	for (i = 0; i < data_num; i++)
 	{
@@ -2337,9 +2347,10 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 	if (ITEM_STATE_NOTSUPPORTED == value->state ||
 			(NULL != value->value && 0 == strcmp(value->value, ZBX_NOTSUPPORTED)))
 	{
+		zabbix_log(LOG_LEVEL_DEBUG, "item [%s:%s] error: %s", item->host.host, item->key_orig, value->value);
+
 		item->state = ITEM_STATE_NOTSUPPORTED;
-		dc_add_history(item->itemid, item->value_type, item->flags, NULL, &value->ts,
-				item->state, value->value);
+		zbx_preprocess_item_value(item->itemid, item->flags, NULL, &value->ts, item->state, value->value);
 	}
 	else
 	{
@@ -2379,25 +2390,13 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 			}
 			else
 				SET_TEXT_RESULT(&result, zbx_strdup(NULL, value->value));
-
-			if (0 != value->meta)
-				set_result_meta(&result, value->lastlogsize, value->mtime);
-
-			item->state = ITEM_STATE_NORMAL;
-			dc_add_history(item->itemid, item->value_type, item->flags, &result, &value->ts,
-					item->state, NULL);
 		}
-		else if (ISSET_MSG(&result))
-		{
-			zabbix_log(LOG_LEVEL_DEBUG, "item [%s:%s] error: %s", item->host.host, item->key_orig,
-					result.msg);
 
-			item->state = ITEM_STATE_NOTSUPPORTED;
-			dc_add_history(item->itemid, item->value_type, item->flags, NULL, &value->ts, item->state,
-					result.msg);
-		}
-		else
-			THIS_SHOULD_NEVER_HAPPEN;	/* set_result_type() always sets MSG result if not SUCCEED */
+		if (0 != value->meta)
+			set_result_meta(&result, value->lastlogsize, value->mtime);
+
+		item->state = ITEM_STATE_NORMAL;
+		zbx_preprocess_item_value(item->itemid, item->flags, &result, &value->ts, item->state, NULL);
 
 		free_result(&result);
 	}
@@ -2447,10 +2446,9 @@ int	process_history_data(DC_ITEM *items, zbx_agent_value_t *values, int *errcode
 	}
 
 	if (0 < processed_num)
-	{
-		zbx_dc_items_update_runtime_data(items, values, errcodes, values_num);
-		dc_flush_history();
-	}
+		zbx_dc_items_update_nextcheck(items, values, errcodes, values_num);
+
+	zbx_preprocessor_flush();
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() processed:%d", __function_name, processed_num);
 
@@ -2588,11 +2586,20 @@ static int	parse_history_data_row_value(const struct zbx_json_parse *jp_row, zbx
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_STATE, &tmp, &tmp_alloc))
 		av->state = (unsigned char)atoi(tmp);
 
-	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_LASTLOGSIZE, &tmp, &tmp_alloc))
-	{
-		av->meta = 1;	/* contains meta information */
 
-		is_uint64(tmp, &av->lastlogsize);
+	/* Unsupported item meta information must be ignored for backwards compatibility. */
+	/* New agents will not send meta information for items in unsupported state.      */
+	if (ITEM_STATE_NOTSUPPORTED != av->state)
+	{
+		if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_LASTLOGSIZE, &tmp, &tmp_alloc))
+		{
+			av->meta = 1;	/* contains meta information */
+
+			is_uint64(tmp, &av->lastlogsize);
+
+			if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_MTIME, &tmp, &tmp_alloc))
+				av->mtime = atoi(tmp);
+		}
 	}
 
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_VALUE, &tmp, &tmp_alloc))
@@ -2601,21 +2608,12 @@ static int	parse_history_data_row_value(const struct zbx_json_parse *jp_row, zbx
 	}
 	else
 	{
-		if (ITEM_STATE_NOTSUPPORTED == av->state)
-		{
-			/* unsupported items cannot have empty error message */
-			goto out;
-		}
-
 		if (0 == av->meta)
 		{
 			/* only meta information update packets can have empty value */
 			goto out;
 		}
 	}
-
-	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_MTIME, &tmp, &tmp_alloc))
-		av->mtime = atoi(tmp);
 
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_LOGTIMESTAMP, &tmp, &tmp_alloc))
 		av->timestamp = atoi(tmp);
@@ -2871,6 +2869,9 @@ static int	proxy_item_validator(DC_ITEM *item, zbx_socket_t *sock, void *args, c
 {
 	zbx_uint64_t	*proxyid = (zbx_uint64_t *)args;
 
+	ZBX_UNUSED(sock);
+	ZBX_UNUSED(error);
+
 	/* don't process item if its host was assigned to another proxy */
 	if (item->host.proxy_hostid != *proxyid)
 		return FAIL;
@@ -2933,8 +2934,6 @@ static int	agent_item_validator(DC_ITEM *item, zbx_socket_t *sock, void *args, c
  ******************************************************************************/
 static int	sender_item_validator(DC_ITEM *item, zbx_socket_t *sock, void *args, char **error)
 {
-	char			*allowed_hosts;
-	int			ret;
 	zbx_host_rights_t	*rights;
 
 	if (0 != item->host.proxy_hostid)
@@ -2943,17 +2942,23 @@ static int	sender_item_validator(DC_ITEM *item, zbx_socket_t *sock, void *args, 
 	if (ITEM_TYPE_TRAPPER != item->type)
 		return FAIL;
 
-	allowed_hosts = zbx_strdup(NULL, item->trapper_hosts);
-	substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, item, NULL, &allowed_hosts,
-			MACRO_TYPE_PARAMS_FIELD, NULL, 0);
-	ret = zbx_tcp_check_security(sock, allowed_hosts, 1);
-	zbx_free(allowed_hosts);
-
-	if (FAIL == ret)
+	if ('\0' != *item->trapper_hosts)	/* list of allowed hosts not empty */
 	{
-		*error = zbx_dsprintf(*error,  "cannot process trapper item \"%s\": %s", item->key_orig,
-				zbx_socket_strerror());
-		return FAIL;
+		char	*allowed_peers;
+		int	ret;
+
+		allowed_peers = zbx_strdup(NULL, item->trapper_hosts);
+		substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, item, NULL, NULL, &allowed_peers,
+				MACRO_TYPE_PARAMS_FIELD, NULL, 0);
+		ret = zbx_tcp_check_allowed_peers(sock, allowed_peers);
+		zbx_free(allowed_peers);
+
+		if (FAIL == ret)
+		{
+			*error = zbx_dsprintf(*error,  "cannot process trapper item \"%s\": %s", item->key_orig,
+					zbx_socket_strerror());
+			return FAIL;
+		}
 	}
 
 	rights = (zbx_host_rights_t *)args;
@@ -3085,7 +3090,7 @@ out:
  *                                                                            *
  * Function: process_proxy_history_data                                       *
  *                                                                            *
- * Purpose: process history data received form Zabbix proxy                   *
+ * Purpose: process history data received from Zabbix proxy                   *
  *                                                                            *
  * Parameters: proxy        - [IN] the source proxy                           *
  *             jp           - [IN] the JSON with history data                 *
@@ -3214,16 +3219,31 @@ static int	process_discovery_data_contents(struct zbx_json_parse *jp_data, const
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
 			goto json_parse_error;
 
-		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-			port = atoi(tmp);
-		else
+		if (SUCCEED != is_ip(ip))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid IP address", __function_name, ip);
+			continue;
+		}
+
+		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
+		{
 			port = 0;
+		}
+		else if (FAIL == is_ushort(tmp, &port))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
+			continue;
+		}
 
 		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_VALUE, &value, &value_alloc))
 			*value = '\0';
 
-		if (SUCCEED != zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)))
-			*dns = '\0';
+		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)) && '\0' != *dns &&
+				FAIL == zbx_validate_hostname(dns))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
+			continue;
+		}
 
 		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_STATUS, tmp, sizeof(tmp)))
 			status = atoi(tmp);
@@ -3358,7 +3378,7 @@ out:
  *             proxy_hostid    - [IN] proxy identifier from database          *
  *             client_timediff - [IN] time difference between sending and     *
  *                                    receiving parties                       *
- *             info            - [OUT] address of a pointer to the info       *
+ *             error           - [OUT] address of a pointer to the info       *
  *                                     string (should be freed by the caller) *
  *                                                                            *
  * Return value:  SUCCEED - processed successfully                            *
@@ -3398,23 +3418,47 @@ static int	process_auto_registration_contents(struct zbx_json_parse *jp_data, zb
 		if (FAIL == (ret = zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_HOST, host, sizeof(host))))
 			break;
 
+		if (FAIL == zbx_check_hostname(host, NULL))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid Zabbix host name", __function_name,
+					host);
+			continue;
+		}
+
 		if (FAIL == zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_HOST_METADATA,
 				&host_metadata, &host_metadata_alloc))
 		{
 			*host_metadata = '\0';
 		}
 
-		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_IP, ip, sizeof(ip)))
-			*ip = '\0';
+		if (FAIL == (ret = zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_IP, ip, sizeof(ip))))
+			break;
+
+		if (SUCCEED != is_ip(ip))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid IP address", __function_name, ip);
+			continue;
+		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)))
+		{
 			*dns = '\0';
+		}
+		else if ('\0' != *dns && FAIL == zbx_validate_hostname(dns))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
+			continue;
+		}
 
 		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_PORT, tmp, sizeof(tmp)))
-			*tmp = '\0';
-
-		if (FAIL == is_ushort(tmp, &port))
+		{
 			port = ZBX_DEFAULT_AGENT_PORT;
+		}
+		else if (FAIL == is_ushort(tmp, &port))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid port", __function_name, tmp);
+			continue;
+		}
 
 		DBregister_host_prepare(&autoreg_hosts, host, ip, dns, port, host_metadata, itemtime);
 	}
@@ -3499,7 +3543,7 @@ int	proxy_get_history_count(void)
 	DB_RESULT	result;
 	DB_ROW		row;
 	zbx_uint64_t	id;
-	int 		count = 0;
+	int		count = 0;
 
 	proxy_get_lastid("proxy_history", "history_lastid", &id);
 
@@ -3532,7 +3576,7 @@ int	proxy_get_history_count(void)
  *     FAIL    - otherwise                                                    *
  *                                                                            *
  ******************************************************************************/
-int	zbx_proxy_update_version(const DC_PROXY *proxy, struct zbx_json_parse *jp)
+int	zbx_proxy_update_version(DC_PROXY *proxy, struct zbx_json_parse *jp)
 {
 	char	value[MAX_STRING_LEN], *pminor, *ptr;
 	int	version;
@@ -3560,6 +3604,7 @@ int	zbx_proxy_update_version(const DC_PROXY *proxy, struct zbx_json_parse *jp)
 				ZBX_COMPONENT_VERSION_MINOR(version));
 
 		zbx_dc_update_proxy_version(proxy->hostid, version);
+		proxy->version = version;
 	}
 
 	return SUCCEED;
@@ -3609,7 +3654,7 @@ static int	process_proxy_history_data_33(const DC_PROXY *proxy, struct zbx_json_
 	while (SUCCEED == parse_history_data_33(jp_data, &pnext, values, itemids, &values_num, &read_num,
 			client_timediff, &error) && 0 != values_num)
 	{
-		DCconfig_get_items_by_itemids(items, itemids, errcodes, values_num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+		DCconfig_get_items_by_itemids(items, itemids, errcodes, values_num);
 
 		for (i = 0; i < values_num; i++)
 		{
@@ -3659,6 +3704,31 @@ static int	process_proxy_history_data_33(const DC_PROXY *proxy, struct zbx_json_
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: process_tasks_contents                                           *
+ *                                                                            *
+ * Purpose: parse tasks contents and saves the received tasks                 *
+ *                                                                            *
+ * Parameters: jp_tasks - [IN] JSON with tasks data                           *
+ *                                                                            *
+ ******************************************************************************/
+static void	process_tasks_contents(struct zbx_json_parse *jp_tasks)
+{
+	zbx_vector_ptr_t	tasks;
+
+	zbx_vector_ptr_create(&tasks);
+
+	zbx_tm_json_deserialize_tasks(jp_tasks, &tasks);
+
+	DBbegin();
+	zbx_tm_save_tasks(&tasks);
+	DBcommit();
+
+	zbx_vector_ptr_clear_ext(&tasks, (zbx_clean_func_t)zbx_tm_task_free);
+	zbx_vector_ptr_destroy(&tasks);
 }
 
 /******************************************************************************
@@ -3743,6 +3813,9 @@ int	process_proxy_data(const DC_PROXY *proxy, struct zbx_json_parse *jp, zbx_tim
 			zbx_strcatnl_alloc(error, &error_alloc, &error_offset, error_step);
 		}
 	}
+
+	if (SUCCEED == zbx_json_brackets_by_name(jp, ZBX_PROTO_TAG_TASKS, &jp_data))
+		process_tasks_contents(&jp_data);
 
 	zbx_free(error_step);
 	ret = SUCCEED;

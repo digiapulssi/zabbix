@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@
 include('include/views/js/administration.users.edit.js.php');
 
 if ($this->data['is_profile']) {
-	$userWidget = (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['name'].' '.$this->data['surname']);
+	$userWidget = ($this->data['name'] !== '' || $this->data['surname'] !== '')
+		? (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['name'].' '.$this->data['surname'])
+		: (new CWidget())->setTitle(_('User profile').NAME_DELIMITER.$this->data['alias']);
 }
 else {
 	$userWidget = (new CWidget())->setTitle(_('Users'));
@@ -57,28 +59,23 @@ if (!$data['is_profile']) {
 
 // append user groups to form list
 if (!$this->data['is_profile']) {
-	$userForm->addVar('user_groups', $this->data['user_groups']);
+	$user_groups = [];
 
-	$lstGroups = new CListBox('user_groups_to_del[]', null, 10);
-	$lstGroups->attributes['style'] = 'width: 320px';
 	foreach ($this->data['groups'] as $group) {
-		$lstGroups->addItem($group['usrgrpid'], $group['name']);
+		$user_groups[] = CArrayHelper::renameKeys($group, ['usrgrpid' => 'id']);
 	}
 
-	$userFormList->addRow(_('Groups'),
-		[
-			$lstGroups,
-			(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-			(new CButton('add_group', _('Add')))
-				->addClass(ZBX_STYLE_BTN_GREY)
-				->onClick('return PopUp("popup_usrgrp.php?dstfrm='.$userForm->getName().'&list_name=user_groups_to_del[]&var_name=user_groups");'),
-			BR(),
-			(count($this->data['user_groups']) > 0)
-				? (new CSimpleButton(_('Delete selected')))
-					->onClick('javascript: submitFormWithParam("'.$userForm->getName().'", "del_user_group", "1");')
-					->addClass(ZBX_STYLE_BTN_GREY)
-				: null
-		]
+	$userFormList->addRow(
+		_('Groups'),
+		(new CMultiSelect([
+			'name' => 'user_groups[]',
+			'objectName' => 'usersGroups',
+			'data' => $user_groups,
+			'popup' => [
+				'parameters' => 'srctbl=usrgrp&dstfrm='.$userForm->getName().'&dstfld1=user_groups_&srcfld1=usrgrpid'.
+					'&multiselect=1'
+			]
+		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	);
 }
 
@@ -160,20 +157,19 @@ $themes = array_merge([THEME_DEFAULT => _('System default')], Z::getThemes());
 $userFormList->addRow(_('Theme'), new CComboBox('theme', $this->data['theme'], null, $themes));
 
 // append auto-login & auto-logout to form list
-$autologoutCheckBox = (new CCheckBox('autologout_visible'))->setChecked(isset($this->data['autologout']));
-if (isset($this->data['autologout'])) {
-	$autologoutTextBox = (new CNumericBox('autologout', $this->data['autologout'], 4))
-		->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH);
+$autologoutCheckBox = (new CCheckBox('autologout_visible'))->setChecked($data['autologout_visible']);
+if ($data['autologout_visible']) {
+	$autologoutTextBox = (new CTextBox('autologout', $data['autologout']))->setWidth(ZBX_TEXTAREA_TINY_WIDTH);
 }
 else {
-	$autologoutTextBox = (new CNumericBox('autologout', 900, 4))
-		->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+	$autologoutTextBox = (new CTextBox('autologout', DB::getDefault('users', 'autologout')))
+		->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
 		->setAttribute('disabled', 'disabled');
 }
 
 if ($this->data['alias'] != ZBX_GUEST_USER) {
 	$userFormList->addRow(_('Auto-login'), (new CCheckBox('autologin'))->setChecked($this->data['autologin']));
-	$userFormList->addRow(_('Auto-logout (min 90 seconds)'), [
+	$userFormList->addRow(_('Auto-logout'), [
 		$autologoutCheckBox,
 		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
 		$autologoutTextBox
@@ -181,8 +177,8 @@ if ($this->data['alias'] != ZBX_GUEST_USER) {
 }
 
 $userFormList
-	->addRow(_('Refresh (in seconds)'),
-		(new CNumericBox('refresh', $this->data['refresh'], 4))->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+	->addRow(_('Refresh'),
+		(new CTextBox('refresh', $data['refresh']))->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
 	)
 	->addRow(_('Rows per page'),
 		(new CNumericBox('rows_per_page', $this->data['rows_per_page'], 6))
@@ -283,9 +279,9 @@ if ($this->data['is_profile']) {
 	$userMessagingFormList->addRow(_('Frontend messaging'),
 		(new CCheckBox('messages[enabled]'))->setChecked($this->data['messages']['enabled'] == 1)
 	);
-	$userMessagingFormList->addRow(_('Message timeout (seconds)'),
-		(new CNumericBox('messages[timeout]', $this->data['messages']['timeout'], 5))
-			->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH),
+	$userMessagingFormList->addRow(_('Message timeout'),
+		(new CTextBox('messages[timeout]', $this->data['messages']['timeout']))
+			->setWidth(ZBX_TEXTAREA_TINY_WIDTH),
 		'timeout_row'
 	);
 

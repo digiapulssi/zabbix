@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,12 +79,11 @@ class testPageMaintenance extends CWebTest {
 	}
 
 	/**
-	* @dataProvider allMaintenances
-	*/
+	 * @dataProvider allMaintenances
+	 * @backup maintenances
+	 */
 	public function testPageMaintenance_MassDelete($maintenance) {
 		$maintenanceid = $maintenance['maintenanceid'];
-
-		DBsave_tables('maintenances');
 
 		$this->zbxTestLogin('maintenance.php');
 		$this->zbxTestDropdownSelectWait('groupid', 'all');
@@ -106,8 +105,5 @@ class testPageMaintenance extends CWebTest {
 		$this->assertEquals(0, DBcount($sql));
 		$sql = "select * from timeperiods where timeperiodid in (select timeperiodid from maintenances_windows where maintenanceid=$maintenanceid)";
 		$this->assertEquals(0, DBcount($sql));
-
-		DBrestore_tables('maintenances');
 	}
-
 }

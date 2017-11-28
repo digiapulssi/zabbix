@@ -1,7 +1,7 @@
 ﻿<?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ class CDnsParserTest extends PHPUnit_Framework_TestCase {
 			[
 				'www.zabbix.com-', 0,
 				[
-					'rc' => CParser::PARSE_SUCCESS_CONT,
-					'match' => 'www.zabbix.com'
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'www.zabbix.com-'
 				]
 			],
 			[
@@ -62,17 +62,52 @@ class CDnsParserTest extends PHPUnit_Framework_TestCase {
 				]
 			],
 			[
-				'a', 0,
+				'_a', 0,
 				[
 					'rc' => CParser::PARSE_FAIL,
 					'match' => ''
 				]
 			],
 			[
-				'abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ-1234567890', 0,
+				'a', 0,
 				[
 					'rc' => CParser::PARSE_SUCCESS,
-					'match' => 'abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ-1234567890'
+					'match' => 'a'
+				]
+			],
+			[
+				'com.', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'com.'
+				]
+			],
+			[
+				'com..', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS_CONT,
+					'match' => 'com.'
+				]
+			],
+			[
+				'a.root-servers.net', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'a.root-servers.net'
+				]
+			],
+			[
+				'x--ample.example.net', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'x--ample.example.net'
+				]
+			],
+			[
+				'abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ-1234567890_', 0,
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => 'abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ-1234567890_'
 				]
 			],
 			[

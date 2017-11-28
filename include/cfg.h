@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ extern char	*CONFIG_FILE;
 extern char	*CONFIG_LOG_TYPE_STR;
 extern int	CONFIG_LOG_TYPE;
 extern char	*CONFIG_LOG_FILE;
+extern int	CONFIG_LOG_FILE_SIZE;
 extern int	CONFIG_ALLOW_ROOT;
 extern int	CONFIG_TIMEOUT;
 

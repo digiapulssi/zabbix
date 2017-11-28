@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ $sysmapTable = (new CTableInfo())
 
 foreach ($this->data['maps'] as $map) {
 	$user_type = CWebUser::getType();
-	if ($user_type == USER_TYPE_SUPER_ADMIN || $user_type == USER_TYPE_ZABBIX_ADMIN || $map['editable']) {
+	if ($user_type == USER_TYPE_SUPER_ADMIN || $map['editable']) {
 		$checkbox = new CCheckBox('maps['.$map['sysmapid'].']', $map['sysmapid']);
 		$action = new CLink(_('Properties'), 'sysmaps.php?form=update&sysmapid='.$map['sysmapid']);
 		$constructor = new CLink(_('Constructor'), 'sysmap.php?sysmapid='.$map['sysmapid']);

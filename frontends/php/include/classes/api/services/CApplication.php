@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,8 +48,6 @@ class CApplication extends CApiService {
 	 */
 	public function get($options = []) {
 		$result = [];
-		$userType = self::$userData['type'];
-		$userid = self::$userData['userid'];
 
 		$sqlParts = [
 			'select'	=> ['apps' => 'a.applicationid'],
@@ -67,15 +65,15 @@ class CApplication extends CApiService {
 			'itemids'						=> null,
 			'applicationids'				=> null,
 			'templated'						=> null,
-			'editable'						=> null,
+			'editable'						=> false,
 			'inherited'						=> null,
 			'nopermissions'					=> null,
 			// filter
 			'filter'						=> null,
 			'search'						=> null,
 			'searchByAny'					=> null,
-			'startSearch'					=> null,
-			'excludeSearch'					=> null,
+			'startSearch'					=> false,
+			'excludeSearch'					=> false,
 			'searchWildcardsEnabled'		=> null,
 			// output
 			'output'						=> API_OUTPUT_EXTEND,
@@ -83,9 +81,9 @@ class CApplication extends CApiService {
 			'selectItems'					=> null,
 			'selectDiscoveryRule'			=> null,
 			'selectApplicationDiscovery'	=> null,
-			'countOutput'					=> null,
-			'groupCount'					=> null,
-			'preservekeys'					=> null,
+			'countOutput'					=> false,
+			'groupCount'					=> false,
+			'preservekeys'					=> false,
 			'sortfield'						=> '',
 			'sortorder'						=> '',
 			'limit'							=> null
@@ -93,10 +91,9 @@ class CApplication extends CApiService {
 		$options = zbx_array_merge($defOptions, $options);
 
 		// editable + PERMISSION CHECK
-		if ($userType != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
 			$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
-
-			$userGroups = getUserGroupsByUserId($userid);
+			$userGroups = getUserGroupsByUserId(self::$userData['userid']);
 
 			$sqlParts['where'][] = 'EXISTS ('.
 					'SELECT NULL'.
@@ -119,7 +116,7 @@ class CApplication extends CApiService {
 			$sqlParts['where']['ahg'] = 'a.hostid=hg.hostid';
 			$sqlParts['where'][] = dbConditionInt('hg.groupid', $options['groupids']);
 
-			if (!is_null($options['groupCount'])) {
+			if ($options['groupCount']) {
 				$sqlParts['group']['hg'] = 'hg.groupid';
 			}
 		}
@@ -143,7 +140,7 @@ class CApplication extends CApiService {
 
 			$sqlParts['where']['hostid'] = dbConditionInt('a.hostid', $options['hostids']);
 
-			if (!is_null($options['groupCount'])) {
+			if ($options['groupCount']) {
 				$sqlParts['group']['hostid'] = 'a.hostid';
 			}
 		}
@@ -206,8 +203,8 @@ class CApplication extends CApiService {
 		$sqlParts = $this->applyQuerySortOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
 		$res = DBselect($this->createSelectQueryFromParts($sqlParts), $sqlParts['limit']);
 		while ($application = DBfetch($res)) {
-			if (!is_null($options['countOutput'])) {
-				if (!is_null($options['groupCount'])) {
+			if ($options['countOutput']) {
+				if ($options['groupCount']) {
 					$result[] = $application;
 				}
 				else {
@@ -219,7 +216,7 @@ class CApplication extends CApiService {
 			}
 		}
 
-		if (!is_null($options['countOutput'])) {
+		if ($options['countOutput']) {
 			return $result;
 		}
 
@@ -229,7 +226,7 @@ class CApplication extends CApiService {
 		}
 
 		// removing keys (hash -> array)
-		if (is_null($options['preservekeys'])) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 
@@ -272,8 +269,6 @@ class CApplication extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the create() method.
-	 *
 	 * @param array $applications
 	 *
 	 * @throws APIException if the input is invalid.
@@ -317,8 +312,6 @@ class CApplication extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the update() method.
-	 *
 	 * @param array $applications
 	 * @param array $db_applications
 	 *
@@ -382,10 +375,8 @@ class CApplication extends CApiService {
 	}
 
 	/**
-	 * Create new applications.
-	 *
 	 * @param array $applications
-
+	 *
 	 * @return array
 	 */
 	public function create(array $applications) {
@@ -406,8 +397,6 @@ class CApplication extends CApiService {
 	}
 
 	/**
-	 * Update applications.
-	 *
 	 * @param array $applications
 	 *
 	 * @return array
@@ -438,8 +427,6 @@ class CApplication extends CApiService {
 	}
 
 	/**
-	 * Delete Applications.
-	 *
 	 * @param array $applicationids
 	 * @param bool  $nopermissions
 	 *
@@ -454,7 +441,7 @@ class CApplication extends CApiService {
 		}
 
 		$db_applications = $this->get([
-			'output' => ['name', 'flags'],
+			'output' => ['applicationid', 'name', 'flags'],
 			'applicationids' => $applicationids,
 			'editable' => true,
 			'preservekeys' => true

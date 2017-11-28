@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,33 +57,33 @@ class CScreen extends CApiService {
 			'screenids'					=> null,
 			'userids'					=> null,
 			'screenitemids'				=> null,
-			'editable'					=> null,
+			'editable'					=> false,
 			'nopermissions'				=> null,
 			// filter
 			'filter'					=> null,
 			'search'					=> null,
 			'searchByAny'				=> null,
-			'startSearch'				=> null,
-			'excludeSearch'				=> null,
+			'startSearch'				=> false,
+			'excludeSearch'				=> false,
 			'searchWildcardsEnabled'	=> null,
 			// output
 			'output'					=> API_OUTPUT_EXTEND,
 			'selectScreenItems'			=> null,
 			'selectUsers'				=> null,
 			'selectUserGroups'			=> null,
-			'countOutput'				=> null,
-			'groupCount'				=> null,
-			'preservekeys'				=> null,
+			'countOutput'				=> false,
+			'groupCount'				=> false,
+			'preservekeys'				=> false,
 			'sortfield'					=> '',
 			'sortorder'					=> '',
 			'limit'						=> null
 		];
 		$options = zbx_array_merge($defOptions, $options);
 
-		if ($options['countOutput'] !== null) {
+		if ($options['countOutput']) {
 			$count_output = true;
 			$options['output'] = ['screenid'];
-			$options['countOutput'] = null;
+			$options['countOutput'] = false;
 			$options['limit'] = null;
 		}
 		else {
@@ -385,7 +385,7 @@ class CScreen extends CApiService {
 		}
 
 		if ($count_output) {
-			if ($options['groupCount'] !== null) {
+			if ($options['groupCount']) {
 				return [['rowscount' => count($result)]];
 			}
 			else {
@@ -398,7 +398,7 @@ class CScreen extends CApiService {
 		}
 
 		// removing keys (hash -> array)
-		if ($options['preservekeys'] === null) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ $scriptFormList = (new CFormList())
 	->addRow(_('Execute on'),
 		(new CRadioButtonList('execute_on', (int) $data['execute_on']))
 			->addValue(_('Zabbix agent'), ZBX_SCRIPT_EXECUTE_ON_AGENT)
+			->addValue(_('Zabbix server (proxy)'), ZBX_SCRIPT_EXECUTE_ON_PROXY)
 			->addValue(_('Zabbix server'), ZBX_SCRIPT_EXECUTE_ON_SERVER)
 			->setModern(true)
 	)

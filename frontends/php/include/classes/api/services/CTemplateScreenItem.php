@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,11 +39,11 @@ class CTemplateScreenItem extends CApiService {
 			'screenitemids'	=> null,
 			'screenids'		=> null,
 			'hostids'		=> null,
-			'editable'		=> null,
+			'editable'		=> false,
 			'sortfield'		=> '',
 			'sortorder'		=> '',
-			'preservekeys'	=> null,
-			'countOutput'	=> null
+			'preservekeys'	=> false,
+			'countOutput'	=> false
 		]);
 	}
 
@@ -70,12 +70,12 @@ class CTemplateScreenItem extends CApiService {
 		$result = [];
 		while ($row = DBfetch($res)) {
 			// count query, return a single result
-			if ($options['countOutput'] !== null) {
+			if ($options['countOutput']) {
 				$result = $row['rowscount'];
 			}
 			// normal select query
 			else {
-				if ($options['preservekeys'] !== null) {
+				if ($options['preservekeys']) {
 					$result[$row['screenitemid']] = $row;
 				}
 				else {

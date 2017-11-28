@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 require_once dirname(__FILE__).'/../../include/items.inc.php';
 
+/**
+ * @backup graphs
+ */
 class testFormGraph extends CWebTest {
 
 	/**
@@ -43,14 +46,6 @@ class testFormGraph extends CWebTest {
 	 * @var string
 	 */
 	protected $itemInheritance = 'itemInheritance';
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testFormGraph_Setup() {
-		DBsave_tables('graphs');
-	}
-
 
 	// Returns layout data
 	public static function layout() {
@@ -933,9 +928,8 @@ class testFormGraph extends CWebTest {
 			$this->zbxTestDropdownSelectWait('hostid', $this->host);
 
 			$this->zbxTestAssertElementPresentXpath("//a[text()='".$this->itemSimple."']");
-			$this->zbxTestClickLinkTextWait($this->itemSimple);
+			$this->zbxTestClickLinkAndWaitWindowClose($this->itemSimple);
 
-			$this->zbxTestWaitWindowClose();
 			$ymin_name = $data['ymin_name'];
 			$ymin_nameValue = $this->zbxTestGetValue("//input[@id='ymin_name']");
 			$this->assertEquals($ymin_nameValue, $this->host.": $ymin_name");
@@ -993,12 +987,5 @@ class testFormGraph extends CWebTest {
 			$this->zbxTestAssertElementValue('width', $width);
 			$this->zbxTestAssertElementValue('height', $height);
 		}
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testFormGraph_Teardown() {
-		DBrestore_tables('graphs');
 	}
 }

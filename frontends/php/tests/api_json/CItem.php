@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ class API_JSON_Item extends CZabbixTest {
 				'hostid' => 10053,
 				'type' => 0,
 				'value_type' => 3,
-				'delay' => 30,
+				'delay' => '30s',
 				'interfaceid' => 10021,
 				'inventory_link' => $inventoryFieldNr
 			],

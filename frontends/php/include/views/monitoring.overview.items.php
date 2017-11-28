@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,14 +92,13 @@ $widget->addItem($filter);
 
 // data table
 if ($data['pageFilter']->groupsSelected) {
-	$dataTable = getItemsDataOverview(array_keys($this->data['pageFilter']->hosts), $this->data['applicationIds'],
-		$this->data['view_style']
-	);
+	$groupids = ($this->data['pageFilter']->groupids !== null) ? $this->data['pageFilter']->groupids : [];
+	$table = getItemsDataOverview($groupids, $this->data['filter']['application'], $this->data['view_style']);
 }
 else {
-	$dataTable = new CTableInfo();
+	$table = new CTableInfo();
 }
 
-$widget->addItem($dataTable);
+$widget->addItem($table);
 
 return $widget;

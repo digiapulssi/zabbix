@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@ class CUserGroup extends CApiService {
 	 */
 	public function get($options = []) {
 		$result = [];
-		$userType = self::$userData['type'];
 
 		$sqlParts = [
 			'select'	=> ['usrgrp' => 'g.usrgrpid'],
@@ -65,16 +64,16 @@ class CUserGroup extends CApiService {
 			'filter'					=> null,
 			'search'					=> null,
 			'searchByAny'				=> null,
-			'startSearch'				=> null,
-			'excludeSearch'				=> null,
+			'startSearch'				=> false,
+			'excludeSearch'				=> false,
 			'searchWildcardsEnabled'	=> null,
 			// output
-			'editable'					=> null,
+			'editable'					=> false,
 			'output'					=> API_OUTPUT_EXTEND,
 			'selectUsers'				=> null,
 			'selectRights'				=> null,
-			'countOutput'				=> null,
-			'preservekeys'				=> null,
+			'countOutput'				=> false,
+			'preservekeys'				=> false,
 			'sortfield'					=> '',
 			'sortorder'					=> '',
 			'limit'						=> null
@@ -83,7 +82,7 @@ class CUserGroup extends CApiService {
 		$options = zbx_array_merge($defOptions, $options);
 
 		// permissions
-		if ($userType != USER_TYPE_SUPER_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			if (!$options['editable']) {
 				$sqlParts['where'][] = 'g.usrgrpid IN ('.
 					'SELECT uug.usrgrpid'.
@@ -149,7 +148,7 @@ class CUserGroup extends CApiService {
 			}
 		}
 
-		if (!is_null($options['countOutput'])) {
+		if ($options['countOutput']) {
 			return $result;
 		}
 
@@ -158,7 +157,7 @@ class CUserGroup extends CApiService {
 		}
 
 		// removing keys (hash -> array)
-		if (is_null($options['preservekeys'])) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 
@@ -195,8 +194,6 @@ class CUserGroup extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the create() method.
-	 *
 	 * @param array $usrgrps
 	 *
 	 * @throws APIException if the input is invalid.
@@ -276,8 +273,6 @@ class CUserGroup extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the update() method.
-	 *
 	 * @param array $usrgrps
 	 * @param array $db_usrgrps
 	 *
@@ -305,7 +300,7 @@ class CUserGroup extends CApiService {
 		}
 
 		// Check user group names.
-		$db_usrgrps = API::getApiService()->select('usrgrp', [
+		$db_usrgrps = DB::select('usrgrp', [
 			'output' => ['usrgrpid', 'name', 'debug_mode', 'gui_access', 'users_status'],
 			'usrgrpids' => zbx_objectValues($usrgrps, 'usrgrpid'),
 			'preservekeys' => true
@@ -345,7 +340,7 @@ class CUserGroup extends CApiService {
 	 * @throws APIException  if user group already exists.
 	 */
 	private function checkDuplicates(array $names) {
-		$db_usrgrps = API::getApiService()->select('usrgrp', [
+		$db_usrgrps = DB::select('usrgrp', [
 			'output' => ['name'],
 			'filter' => ['name' => $names],
 			'limit' => 1
@@ -381,7 +376,7 @@ class CUserGroup extends CApiService {
 
 		$userids = array_keys($userids);
 
-		$db_users = API::getApiService()->select('users', [
+		$db_users = DB::select('users', [
 			'output' => [],
 			'userids' => $userids,
 			'preservekeys' => true
@@ -419,7 +414,7 @@ class CUserGroup extends CApiService {
 
 		$groupids = array_keys($groupids);
 
-		$db_groups = API::getApiService()->select('groups', [
+		$db_groups = DB::select('groups', [
 			'output' => [],
 			'groupids' => $groupids,
 			'preservekeys' => true
@@ -473,7 +468,7 @@ class CUserGroup extends CApiService {
 			}
 
 			if ($groups_users) {
-				$db_users_groups = API::getApiService()->select('users_groups', [
+				$db_users_groups = DB::select('users_groups', [
 					'output' => ['usrgrpid', 'userid'],
 					'filter' => ['usrgrpid' => array_keys($groups_users)]
 				]);
@@ -528,7 +523,7 @@ class CUserGroup extends CApiService {
 			return;
 		}
 
-		$db_users_groups = API::getApiService()->select('users_groups', [
+		$db_users_groups = DB::select('users_groups', [
 			'output' => ['usrgrpid', 'userid'],
 			'filter' => ['usrgrpid' => array_keys($users_groups)]
 		]);
@@ -601,7 +596,7 @@ class CUserGroup extends CApiService {
 		}
 
 		$db_rights = ($method === 'update')
-			? API::getApiService()->select('rights', [
+			? DB::select('rights', [
 				'output' => ['rightid', 'groupid', 'id', 'permission'],
 				'filter' => ['groupid' => array_keys($rights)]
 			])
@@ -674,7 +669,7 @@ class CUserGroup extends CApiService {
 		}
 
 		$db_users_groups = ($method === 'update')
-			? API::getApiService()->select('users_groups', [
+			? DB::select('users_groups', [
 				'output' => ['id', 'usrgrpid', 'userid'],
 				'filter' => ['usrgrpid' => array_keys($users_groups)]
 			])
@@ -1009,8 +1004,6 @@ class CUserGroup extends CApiService {
 	}
 
 	/**
-	 * Delete user groups.
-	 *
 	 * @param array $usrgrpids
 	 *
 	 * @return array
@@ -1028,8 +1021,6 @@ class CUserGroup extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the delete() method.
-	 *
 	 * @throws APIException
 	 *
 	 * @param array $usrgrpids
@@ -1045,7 +1036,7 @@ class CUserGroup extends CApiService {
 			self::exception(ZBX_API_ERROR_PARAMETERS, $error);
 		}
 
-		$db_usrgrps = API::getApiService()->select('usrgrp', [
+		$db_usrgrps = DB::select('usrgrp', [
 			'output' => ['usrgrpid', 'name'],
 			'usrgrpids' => $usrgrpids,
 			'preservekeys' => true
@@ -1084,7 +1075,7 @@ class CUserGroup extends CApiService {
 		}
 
 		// Check if user groups are used in scripts.
-		$db_scripts = API::getApiService()->select('scripts', [
+		$db_scripts = DB::select('scripts', [
 			'output' => ['name', 'usrgrpid'],
 			'filter' => ['usrgrpid' => $usrgrpids],
 			'limit' => 1

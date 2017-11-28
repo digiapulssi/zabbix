@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -373,6 +373,43 @@ class CPageFilter {
 	}
 
 	/**
+	 * Enriches host groups array by parent groups.
+	 *
+	 * @param array  $groups
+	 * @param string $groups[<groupid>]['groupid']
+	 * @param string $groups[<groupid>]['name']
+	 *
+	 * @return array
+	 */
+	public static function enrichParentGroups(array $groups) {
+		$parents = [];
+		foreach ($groups as $group) {
+			$parent = explode('/', $group['name']);
+			for (array_pop($parent); $parent; array_pop($parent)) {
+				$parents[implode('/', $parent)] = true;
+			}
+		}
+
+		if ($parents) {
+			foreach ($groups as $group) {
+				if (array_key_exists($group['name'], $parents)) {
+					unset($parents[$group['name']]);
+				}
+			}
+		}
+
+		if ($parents) {
+			$groups += API::HostGroup()->get([
+				'output' => ['groupid', 'name'],
+				'filter' => ['name' => array_keys($parents)],
+				'preservekeys' => true
+			]);
+		}
+
+		return $groups;
+	}
+
+	/**
 	 * Load available host groups, choose the selected host group and remember the selection.
 	 * If the host given in the 'hostid' option does not belong to the selected host group, the selected host group
 	 * will be reset to 0.
@@ -384,41 +421,13 @@ class CPageFilter {
 	private function _initGroups($groupId, array $options, $hostId) {
 		$defaultOptions = [
 			'output' => ['groupid', 'name'],
-			'preservekeys' => true,
-			'sortfield' => ['name']
+			'preservekeys' => true
 		];
 		$options = zbx_array_merge($defaultOptions, $options);
 		$this->data['groups'] = API::HostGroup()->get($options);
+		$this->data['groups'] = self::enrichParentGroups($this->data['groups']);
 
-		$parents = [];
-		$parent_name = '';
-		foreach ($this->data['groups'] as $group) {
-			$parent = explode('/', $group['name']);
-			if (count($parent) > 1) {
-				array_pop($parent);
-				foreach ($parent as $sub_parent) {
-					if ($parent_name === '') {
-						$parent_name = $sub_parent;
-					}
-					else {
-						$parent_name .= '/'.$sub_parent;
-					}
-					$parents[] = $parent_name;
-				}
-			}
-		}
-
-		if ($parents) {
-			$parent_groups = API::HostGroup()->get([
-				'output' => ['groupid', 'name'],
-				'filter' => ['name' => $parents],
-				'preservekeys' => true
-			]);
-
-			$this->data['groups'] = array_replace($this->data['groups'], $parent_groups);
-
-			CArrayHelper::sort($this->data['groups'], ['name']);
-		}
+		CArrayHelper::sort($this->data['groups'], ['name']);
 
 		// select remembered selection
 		if ($groupId === null && $this->_profileIds['groupid'] > 0) {

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -190,7 +190,10 @@ static int	check_https(const char *host, unsigned short port, int timeout, int *
 		goto clean;
 	}
 
-	zbx_snprintf(https_host, sizeof(https_host), "%s%s", (0 == strncmp(host, "https://", 8) ? "" : "https://"), host);
+	if (SUCCEED == is_ip6(host))
+		zbx_snprintf(https_host, sizeof(https_host), "%s[%s]", (0 == strncmp(host, "https://", 8) ? "" : "https://"), host);
+	else
+		zbx_snprintf(https_host, sizeof(https_host), "%s%s", (0 == strncmp(host, "https://", 8) ? "" : "https://"), host);
 
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_USERAGENT, "Zabbix " ZABBIX_VERSION)) ||
 		CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_URL, https_host)) ||
@@ -305,7 +308,7 @@ static int	validate_imap(const char *line)
 int	check_service(AGENT_REQUEST *request, const char *default_addr, AGENT_RESULT *result, int perf)
 {
 	unsigned short	port = 0;
-	char		*service, *ip_str, ip[64], *port_str;
+	char		*service, *ip_str, ip[MAX_ZBX_DNSNAME_LEN + 1], *port_str;
 	int		value_int, ret = SYSINFO_RET_FAIL;
 	double		check_time;
 

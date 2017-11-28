@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -340,7 +340,9 @@ static int	aggregate_get_items(zbx_vector_uint64_t *itemids, const char *groups,
 
 	if (0 == groupids.values_num)
 	{
-		zbx_strcpy_alloc(error, &error_alloc, &error_offset, "No groups in list ");
+		zbx_strcpy_alloc(error, &error_alloc, &error_offset, "None of the groups in list ");
+		aggregate_quote_groups(error, &error_alloc, &error_offset, groups);
+		zbx_strcpy_alloc(error, &error_alloc, &error_offset, " is correct.");
 		goto out;
 	}
 
@@ -374,7 +376,9 @@ static int	aggregate_get_items(zbx_vector_uint64_t *itemids, const char *groups,
 
 	if (0 == itemids->values_num)
 	{
-		zbx_strcpy_alloc(error, &error_alloc, &error_offset, "No items for key \"%s\" in group(s) ");
+		zbx_snprintf_alloc(error, &error_alloc, &error_offset, "No items for key \"%s\" in group(s) ", itemkey);
+		aggregate_quote_groups(error, &error_alloc, &error_offset, groups);
+		zbx_chrcpy_alloc(error, &error_alloc, &error_offset, '.');
 		goto out;
 	}
 
@@ -383,12 +387,6 @@ static int	aggregate_get_items(zbx_vector_uint64_t *itemids, const char *groups,
 	ret = SUCCEED;
 
 out:
-	if (FAIL == ret)
-	{
-		aggregate_quote_groups(error, &error_alloc, &error_offset, groups);
-		zbx_chrcpy_alloc(error, &error_alloc, &error_offset, '.');
-	}
-
 	zbx_vector_uint64_destroy(&groupids);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -441,8 +439,7 @@ static int	evaluate_aggregate(DC_ITEM *item, AGENT_RESULT *res, int grp_func, co
 	items = zbx_malloc(items, sizeof(DC_ITEM) * itemids.values_num);
 	errcodes = zbx_malloc(errcodes, sizeof(int) * itemids.values_num);
 
-	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, itemids.values_num,
-			ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, itemids.values_num);
 
 	if (ZBX_VALUE_FUNC_LAST == item_func)
 	{
@@ -451,7 +448,7 @@ static int	evaluate_aggregate(DC_ITEM *item, AGENT_RESULT *res, int grp_func, co
 	}
 	else
 	{
-		if (FAIL == is_time_suffix(param, &seconds))
+		if (FAIL == is_time_suffix(param, &seconds, ZBX_LENGTH_UNLIMITED))
 		{
 			SET_MSG_RESULT(res, zbx_strdup(NULL, "Invalid fourth parameter."));
 			goto clean2;
@@ -502,7 +499,7 @@ static int	evaluate_aggregate(DC_ITEM *item, AGENT_RESULT *res, int grp_func, co
 		size_t	tmp_alloc = 0, tmp_offset = 0;
 
 		aggregate_quote_groups(&tmp, &tmp_alloc, &tmp_offset, groups);
-		SET_MSG_RESULT(res, zbx_dsprintf(NULL, "No values for key \"%s\" in group(s) %s", itemkey, tmp));
+		SET_MSG_RESULT(res, zbx_dsprintf(NULL, "No values for key \"%s\" in group(s) %s.", itemkey, tmp));
 		zbx_free(tmp);
 
 		goto clean2;

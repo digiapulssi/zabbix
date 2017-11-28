@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,15 +31,15 @@ typedef struct
 }
 zbx_strpool_t;
 
-void		zbx_strpool_create(size_t size);
-void		zbx_strpool_destroy();
+int		zbx_strpool_create(size_t size, char **error);
+void		zbx_strpool_destroy(void);
 
 const char	*zbx_strpool_intern(const char *str);
 const char	*zbx_strpool_acquire(const char *str);
 void		zbx_strpool_release(const char *str);
 
-void		zbx_strpool_clear();
+void		zbx_strpool_clear(void);
 
-const zbx_strpool_t	*zbx_strpool_info();
+const zbx_strpool_t	*zbx_strpool_info(void);
 
 #endif

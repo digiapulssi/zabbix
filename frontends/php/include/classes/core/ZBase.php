@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -243,6 +243,8 @@ class ZBase {
 			$this->rootDir.'/include/classes/regexp',
 			$this->rootDir.'/include/classes/ldap',
 			$this->rootDir.'/include/classes/pagefilter',
+			$this->rootDir.'/include/classes/widgetfields',
+			$this->rootDir.'/include/classes/widgets',
 			$this->rootDir.'/local/app/controllers',
 			$this->rootDir.'/app/controllers'
 		];
@@ -373,6 +375,7 @@ class ZBase {
 	private function processRequest(CRouter $router) {
 		$controller = $router->getController();
 
+		/** @var \CController $controller */
 		$controller = new $controller();
 		$controller->setAction($router->getAction());
 		$response = $controller->run();
@@ -380,7 +383,7 @@ class ZBase {
 		// Controller returned data
 		if ($response instanceof CControllerResponseData) {
 			// if no view defined we pass data directly to layout
-			if ($router->getView() === null) {
+			if ($router->getView() === null || !$response->isViewEnabled()) {
 				$layout = new CView($router->getLayout(), $response->getData());
 				echo $layout->getOutput();
 			}

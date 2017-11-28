@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -88,8 +88,7 @@ int	SYSTEM_STAT(AGENT_REQUEST *request, AGENT_RESULT *result)
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter."));
 		return SYSINFO_RET_FAIL;
 	}
-
-	if (0 == strcmp(section, "kthr"))
+	else if (0 == strcmp(section, "kthr"))
 	{
 		if (0 == strcmp(type, "r"))
 			SET_DBL_RESULT(result, collector->vmstat.kthr_r);

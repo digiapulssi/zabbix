@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,21 +92,6 @@ class zbx_dbcast_2bigintTest extends PHPUnit_Framework_TestCase {
 		$oldDB = $DB;
 
 		$DB['TYPE'] = ZBX_DB_POSTGRESQL;
-
-		$this->assertEquals('CAST('.$field.' AS BIGINT)', zbx_dbcast_2bigint($field));
-
-		$DB = $oldDB;
-	}
-
-	/**
-	 * @dataProvider provider
-	 */
-	public function test_sqlite($field) {
-		global $DB;
-
-		$oldDB = $DB;
-
-		$DB['TYPE'] = ZBX_DB_SQLITE3;
 
 		$this->assertEquals('CAST('.$field.' AS BIGINT)', zbx_dbcast_2bigint($field));
 

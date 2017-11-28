@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
 /**
  * Test the creation of inheritance of new objects on a previously linked template.
+ *
+ * @backup items
  */
 class testInheritanceItemPrototype extends CWebTest {
 	private $templateid = 15000;	// 'Inheritance test template'
@@ -32,10 +34,6 @@ class testInheritanceItemPrototype extends CWebTest {
 
 	private $discoveryRuleId = 15011;	// 'testInheritanceDiscoveryRule'
 	private $discoveryRule = 'testInheritanceDiscoveryRule';
-
-	public function testInheritanceItemPrototype_backup() {
-		DBsave_tables('items');
-	}
 
 	// returns list of item prototypes from a template
 	public static function update() {
@@ -93,15 +91,16 @@ class testInheritanceItemPrototype extends CWebTest {
 		$this->zbxTestLogin('disc_prototypes.php?form=Create+item+prototype&parent_discoveryid='.$this->discoveryRuleId);
 
 		$this->zbxTestInputType('name', $data['name']);
+		$this->assertEquals($data['name'], $this->zbxTestGetValue("//input[@id='name']"));
 		$this->zbxTestInputType('key', $data['key']);
+		$this->assertEquals($data['key'], $this->zbxTestGetValue("//input[@id='key']"));
 
 		$this->zbxTestClickWait('add');
 		switch ($data['expected']) {
 			case TEST_GOOD:
-				$this->zbxTestCheckTitle('Configuration of item prototypes');
-				$this->zbxTestCheckHeader('Item prototypes');
-				$this->zbxTestTextPresent('Item prototype added');
+				$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Item prototype added');
 				$this->zbxTestTextPresent($data['name']);
+				$this->zbxTestCheckFatalErrors();
 
 				$itemId = 0;
 
@@ -136,18 +135,10 @@ class testInheritanceItemPrototype extends CWebTest {
 				break;
 
 			case TEST_BAD:
-				$this->zbxTestCheckTitle('Configuration of item prototypes');
-				$this->zbxTestCheckHeader('Item prototypes');
-				$this->zbxTestTextPresent('Cannot add item');
+				$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot add item');
 				$this->zbxTestTextPresent($data['errors']);
+				$this->zbxTestCheckFatalErrors();
 				break;
 		}
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testInheritanceItemPrototype_restore() {
-		DBrestore_tables('items');
 	}
 }
