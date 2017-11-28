@@ -188,9 +188,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	char			*ip, zone[MAX_STRING_LEN], buffer[MAX_STRING_LEN], *zone_str, *param;
 	struct in_addr		inaddr;
 #ifndef _WINDOWS
-	int			saved_nscount = 0, saved_retrans, saved_retry;
-	unsigned long		saved_options;
-	struct sockaddr_in	saved_ns;
+	struct __res_state	res_state;
 #endif
 	typedef struct
 	{
@@ -465,13 +463,14 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		pDnsRecord = pDnsRecord->pNext;
 	}
 #else	/* not _WINDOWS */
-	if (-1 == res_init())	/* initialize always, settings might have changed */
+	memset(&res_state, 0, sizeof(res_state));
+	if (-1 == res_ninit(&res_state))	/* initialize always, settings might have changed */
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot initialize DNS subsystem: %s", zbx_strerror(errno)));
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (-1 == (res = res_mkquery(QUERY, zone, C_IN, type, NULL, 0, NULL, buf, sizeof(buf))))
+	if (-1 == (res = res_nmkquery(&res_state, QUERY, zone, C_IN, type, NULL, 0, NULL, buf, sizeof(buf))))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot create DNS query: %s", zbx_strerror(errno)));
 		return SYSINFO_RET_FAIL;
@@ -485,36 +484,20 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 			return SYSINFO_RET_FAIL;
 		}
 
-		memcpy(&saved_ns, &(_res.nsaddr_list[0]), sizeof(struct sockaddr_in));
-		saved_nscount = _res.nscount;
-
-		_res.nsaddr_list[0].sin_addr = inaddr;
-		_res.nsaddr_list[0].sin_family = AF_INET;
-		_res.nsaddr_list[0].sin_port = htons(ZBX_DEFAULT_DNS_PORT);
-		_res.nscount = 1;
+		res_state.nsaddr_list[0].sin_addr = inaddr;
+		res_state.nsaddr_list[0].sin_family = AF_INET;
+		res_state.nsaddr_list[0].sin_port = htons(ZBX_DEFAULT_DNS_PORT);
+		res_state.nscount = 1;
 	}
-
-	saved_options = _res.options;
-	saved_retrans = _res.retrans;
-	saved_retry = _res.retry;
 
 	if (0 != use_tcp)
-		_res.options |= RES_USEVC;
+		res_state.options |= RES_USEVC;
 
-	_res.retrans = retrans;
-	_res.retry = retry;
+	res_state.retrans = retrans;
+	res_state.retry = retry;
 
-	res = res_send(buf, res, answer.buffer, sizeof(answer.buffer));
-
-	_res.options = saved_options;
-	_res.retrans = saved_retrans;
-	_res.retry = saved_retry;
-
-	if (NULL != ip && '\0' != *ip)
-	{
-		memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
-		_res.nscount = saved_nscount;
-	}
+	res = res_nsend(&res_state, buf, res, answer.buffer, sizeof(answer.buffer));
+	res_ndestroy(&res_state);
 
 	hp = (HEADER *)answer.buffer;
 
