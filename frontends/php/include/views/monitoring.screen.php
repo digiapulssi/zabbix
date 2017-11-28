@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -107,7 +107,9 @@ $screenBuilder = new CScreenBuilder([
 	'groupid' => getRequest('groupid'),
 	'hostid' => getRequest('hostid'),
 	'period' => $data['period'],
-	'stime' => $data['stime']
+	'stime' => $data['stime'],
+	'isNow' => $data['isNow'],
+	'updateProfile' => ($data['period'] !== null || $data['stime'] !== null || $data['isNow'] !== null)
 ]);
 $widget->addItem(
 	(new CDiv($screenBuilder->show()))->addClass(ZBX_STYLE_TABLE_FORMS_CONTAINER)
@@ -115,7 +117,8 @@ $widget->addItem(
 
 CScreenBuilder::insertScreenStandardJs([
 	'timeline' => $screenBuilder->timeline,
-	'profileIdx' => $screenBuilder->profileIdx
+	'profileIdx' => $screenBuilder->profileIdx,
+	'profileIdx2' => $screenBuilder->profileIdx2
 ]);
 
 return $widget;

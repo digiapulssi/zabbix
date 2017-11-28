@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ require_once dirname(__FILE__).'/../../include/items.inc.php';
 
 /**
  * Test the creation of inheritance of new objects on a previously linked template.
+ *
+ * @backup items
  */
 class testFormItemPrototype extends CWebTest {
 
@@ -54,14 +56,6 @@ class testFormItemPrototype extends CWebTest {
 	 * @var string
 	 */
 	protected $discoveryRuleTemplate = 'testInheritanceDiscoveryRule';
-
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testFormItemPrototype_backup() {
-		DBsave_tables('items');
-	}
 
 	// Returns layout data
 	public static function layout() {
@@ -611,6 +605,14 @@ class testFormItemPrototype extends CWebTest {
 					'host' => 'Inheritance test template',
 					'type' => 'Calculated'
 				]
+			],
+			[
+				[
+					'host' => 'Template inheritance test host',
+					'hostTemplate' => 'Inheritance test template',
+					'key' => 'item-prototype-preprocessing',
+					'preprocessing' => true
+				]
 			]
 		];
 	}
@@ -755,7 +757,8 @@ class testFormItemPrototype extends CWebTest {
 		}
 
 		if ($type == 'JMX agent' && !isset($itemid)) {
-			$this->zbxTestAssertElementValue('key', 'jmx[<object name>,<attribute name>]');
+			$this->zbxTestAssertElementValue('key', '');
+			$this->zbxTestAssertElementNotPresentXpath("//button[@id='keyButton'][@disabled]");
 		}
 
 		if ($type == 'SNMPv3 agent') {
@@ -780,13 +783,16 @@ class testFormItemPrototype extends CWebTest {
 				case INTERFACE_TYPE_ANY :
 				case INTERFACE_TYPE_JMX :
 					$this->zbxTestTextPresent('Host interface');
-					$dbInterfaces = DBdata(
+					$dbInterfaces = DBselect(
 						'SELECT type,ip,port'.
 						' FROM interface'.
 						' WHERE hostid='.$hostid.
 							($interfaceType == INTERFACE_TYPE_ANY ? '' : ' AND type='.$interfaceType)
 					);
-					$dbInterfaces = reset($dbInterfaces);
+					while ($row = DBfetch($dbInterfaces)) {
+						$data[] = [$row];
+					}
+					$dbInterfaces = $data[0];
 					if ($dbInterfaces != null) {
 						foreach ($dbInterfaces as $host_interface) {
 							$this->zbxTestAssertElementPresentXpath('//select[@id="interfaceid"]/optgroup/option[text()="'.
@@ -1035,16 +1041,16 @@ class testFormItemPrototype extends CWebTest {
 			case 'TELNET agent':
 			case 'JMX agent':
 			case 'Calculated':
-				$this->zbxTestTextPresent('Update interval (in sec)');
+				$this->zbxTestTextPresent('Update interval');
 				$this->zbxTestAssertVisibleId('delay');
-				$this->zbxTestAssertAttribute("//input[@id='delay']", 'maxlength', 5);
+				$this->zbxTestAssertAttribute("//input[@id='delay']", 'maxlength', 255);
 				$this->zbxTestAssertAttribute("//input[@id='delay']", 'size', 20);
 				if (!isset($itemid)) {
-					$this->zbxTestAssertElementValue('delay', 30);
+					$this->zbxTestAssertElementValue('delay', '30s');
 				}
 				break;
 			default:
-				$this->zbxTestTextNotVisibleOnPage('Update interval (in sec)');
+				$this->zbxTestTextNotVisibleOnPage('Update interval');
 				$this->zbxTestAssertNotVisibleId('delay');
 		}
 
@@ -1109,11 +1115,11 @@ class testFormItemPrototype extends CWebTest {
 				$this->zbxTestTextPresent(['Custom intervals', 'Interval',  'Period', 'Action']);
 				$this->zbxTestAssertVisibleId('delayFlexTable');
 
-				$this->zbxTestTextPresent(['Flexible', 'Scheduling', 'Update interval (in sec)']);
+				$this->zbxTestTextPresent(['Flexible', 'Scheduling', 'Update interval']);
 				$this->zbxTestAssertVisibleId('delay_flex_0_delay');
-				$this->zbxTestAssertAttribute("//input[@id='delay_flex_0_delay']", 'maxlength', 5);
+				$this->zbxTestAssertAttribute("//input[@id='delay_flex_0_delay']", 'maxlength', 255);
 				$this->zbxTestAssertAttribute("//input[@id='delay_flex_0_delay']", 'size', 20);
-				$this->zbxTestAssertAttribute("//input[@id='delay_flex_0_delay']", 'placeholder', 50);
+				$this->zbxTestAssertAttribute("//input[@id='delay_flex_0_delay']", 'placeholder', '50s');
 
 				$this->zbxTestAssertVisibleId('delay_flex_0_period');
 				$this->zbxTestAssertAttribute("//input[@id='delay_flex_0_period']", 'maxlength', 255);
@@ -1131,26 +1137,26 @@ class testFormItemPrototype extends CWebTest {
 				$this->zbxTestAssertNotVisibleId('interval_add');
 		}
 
-		$this->zbxTestTextPresent('History storage period (in days)');
+		$this->zbxTestTextPresent('History storage period');
 		$this->zbxTestAssertVisibleId('history');
-		$this->zbxTestAssertAttribute("//input[@id='history']", 'maxlength', 8);
+		$this->zbxTestAssertAttribute("//input[@id='history']", 'maxlength', 255);
 		$this->zbxTestAssertAttribute("//input[@id='history']", 'size', 20);
-		$this->zbxTestAssertElementValue('history', 90);
+		$this->zbxTestAssertElementValue('history', '90d');
 		if (!isset($itemid)) {
-			$this->zbxTestAssertElementValue('history', 90);
+			$this->zbxTestAssertElementValue('history', '90d');
 		}
 
 		if ($value_type == 'Numeric (unsigned)' || $value_type == 'Numeric (float)') {
-			$this->zbxTestTextPresent('Trend storage period (in days)');
+			$this->zbxTestTextPresent('Trend storage period');
 			$this->zbxTestAssertVisibleId('trends');
-			$this->zbxTestAssertAttribute("//input[@id='trends']", 'maxlength', 8);
+			$this->zbxTestAssertAttribute("//input[@id='trends']", 'maxlength', 255);
 			if (!isset($itemid)) {
-				$this->zbxTestAssertElementValue('trends', 365);
+				$this->zbxTestAssertElementValue('trends', '365d');
 			}
 			$this->zbxTestAssertAttribute("//input[@id='trends']", 'size', 20);
 		}
 		else {
-			$this->zbxTestTextNotVisibleOnPage('Trend storage period (in days)');
+			$this->zbxTestTextNotVisibleOnPage('Trend storage period');
 			$this->zbxTestAssertNotVisibleId('trends');
 		}
 
@@ -1241,6 +1247,28 @@ class testFormItemPrototype extends CWebTest {
 		}
 		else {
 			$this->zbxTestAssertElementNotPresentId('delete');
+		}
+
+		if (isset($templateid) && array_key_exists('preprocessing', $data)) {
+			$this->zbxTestTabSwitch('Preprocessing');
+			$dbResult = DBselect('SELECT * FROM item_preproc WHERE itemid='.$itemid);
+			$itemsPreproc = DBfetchArray($dbResult);
+			foreach ($itemsPreproc as $itemPreproc) {
+				$preprocessing_type = get_preprocessing_types($itemPreproc['type']);
+				$this->zbxTestAssertAttribute("//input[@id='preprocessing_".($itemPreproc['step']-1)."_type_name']", 'readonly');
+				$this->zbxTestAssertElementValue("preprocessing_".($itemPreproc['step']-1)."_type_name", $preprocessing_type);
+				if ((1 <= $itemPreproc['type']) && ($itemPreproc['type'] <= 4)) {
+					$this->zbxTestAssertAttribute("//input[@id='preprocessing_".($itemPreproc['step']-1)."_params_0']", 'readonly');
+					$this->zbxTestAssertElementValue("preprocessing_".($itemPreproc['step']-1)."_params_0", $itemPreproc['params']);
+				}
+				elseif ($itemPreproc['type'] == 5) {
+					$reg_exp = preg_split("/\n/", $itemPreproc['params']);
+					$this->zbxTestAssertAttribute("//input[@id='preprocessing_".($itemPreproc['step']-1)."_params_0']", 'readonly');
+					$this->zbxTestAssertAttribute("//input[@id='preprocessing_".($itemPreproc['step']-1)."_params_1']", 'readonly');
+					$this->zbxTestAssertElementValue("preprocessing_".($itemPreproc['step']-1)."_params_0", $reg_exp[0]);
+					$this->zbxTestAssertElementValue("preprocessing_".($itemPreproc['step']-1)."_params_1", $reg_exp[1]);
+				}
+			}
 		}
 	}
 
@@ -1335,7 +1363,7 @@ class testFormItemPrototype extends CWebTest {
 					'delay' => '-30',
 					'error_msg' => 'Page received incorrect data',
 					'errors' => [
-						'Incorrect value "-30" for "Update interval (in sec)" field: must be between 0 and 86400.'
+						'Field "Update interval" is not correct: a time unit is expected'
 					]
 				]
 			],
@@ -1346,9 +1374,9 @@ class testFormItemPrototype extends CWebTest {
 					'name' => 'Item delay',
 					'key' => 'item-delay-test',
 					'delay' => 86401,
-					'error_msg' => 'Page received incorrect data',
+					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-						'Incorrect value "86401" for "Update interval (in sec)" field: must be between 0 and 86400.'
+						'Item will not be refreshed. Please enter a correct update interval.'
 					]
 				]
 			],
@@ -1363,7 +1391,7 @@ class testFormItemPrototype extends CWebTest {
 					],
 					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-						'Invalid interval "50/": unexpected end of interval.'
+						'Incorrect value for field "delay": invalid delay'
 					]
 				]
 			],
@@ -1378,7 +1406,7 @@ class testFormItemPrototype extends CWebTest {
 					],
 					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-						'Invalid interval "50/1-11,00:00-24:00": incorrect syntax near "1,00:00-24:00".'
+						'Incorrect value for field "delay": invalid delay'
 					]
 				]
 			],
@@ -1393,7 +1421,7 @@ class testFormItemPrototype extends CWebTest {
 					],
 					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-						'Incorrect time period "1-7,00:00-25:00".'
+						'Incorrect value for field "delay": invalid delay'
 					]
 				]
 			],
@@ -1408,7 +1436,7 @@ class testFormItemPrototype extends CWebTest {
 					],
 					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-						'Incorrect time period "1-7,24:00-00:00" start time must be less than end time.'
+						'Incorrect value for field "delay": invalid delay'
 					]
 				]
 			],
@@ -1724,10 +1752,14 @@ class testFormItemPrototype extends CWebTest {
 			// History
 			[
 				[
-					'expected' => TEST_GOOD,
+					'expected' => TEST_BAD,
 					'name' => 'Item history',
 					'key' => 'item-history-empty',
-					'history' => ''
+					'history' => ' ',
+					'error_msg' => 'Cannot add item prototype',
+					'errors' => [
+							'Incorrect value for field "history": a time unit is expected.'
+					]
 				]
 			],
 			// History
@@ -1736,10 +1768,23 @@ class testFormItemPrototype extends CWebTest {
 					'expected' => TEST_BAD,
 					'name' => 'Item history',
 					'key' => 'item-history-test',
-					'history' => 65536,
-					'error_msg' => 'Page received incorrect data',
+					'history' => 3599,
+					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-						'Incorrect value "65536" for "History storage period" field: must be between 0 and 65535.'
+						'Incorrect value for field "history": must be between "3600" and "788400000".'
+					]
+				]
+			],
+			// History
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item history',
+					'key' => 'item-history-test',
+					'history' => 788400001,
+					'error_msg' => 'Cannot add item prototype',
+					'errors' => [
+						'Incorrect value for field "history": must be between "3600" and "788400000".'
 					]
 				]
 			],
@@ -1750,21 +1795,23 @@ class testFormItemPrototype extends CWebTest {
 					'name' => 'Item history',
 					'key' => 'item-history-test',
 					'history' => '-1',
-					'error_msg' => 'Page received incorrect data',
+					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-							'Incorrect value "-1" for "History storage period" field: must be between 0 and 65535.'
+							'Incorrect value for field "history": a time unit is expected.'
 					]
 				]
 			],
 			// Trends
 			[
 				[
-					'expected' => TEST_GOOD,
+					'expected' => TEST_BAD,
 					'name' => 'Item trends',
 					'key' => 'item-trends-empty',
-					'trends' => '',
-					'dbCheck' => true,
-					'formCheck' => true
+					'trends' => ' ',
+					'error_msg' => 'Cannot add item prototype',
+					'errors' => [
+							'Incorrect value for field "trends": a time unit is expected.'
+					]
 				]
 			],
 			// Trends
@@ -1774,9 +1821,9 @@ class testFormItemPrototype extends CWebTest {
 					'name' => 'Item trends',
 					'key' => 'item-trends-test',
 					'trends' => '-1',
-					'error_msg' => 'Page received incorrect data',
+					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-							'Incorrect value "-1" for "Trend storage period" field: must be between 0 and 65535.'
+							'Incorrect value for field "trends": a time unit is expected.'
 					]
 				]
 			],
@@ -1786,10 +1833,23 @@ class testFormItemPrototype extends CWebTest {
 					'expected' => TEST_BAD,
 					'name' => 'Item trends',
 					'key' => 'item-trends-test',
-					'trends' => 65536,
-					'error_msg' => 'Page received incorrect data',
+					'trends' => 3599,
+					'error_msg' => 'Cannot add item prototype',
 					'errors' => [
-							'Incorrect value "65536" for "Trend storage period" field: must be between 0 and 65535.'
+							'Incorrect value for field "trends": must be between "86400" and "788400000".'
+					]
+				]
+			],
+			// Trends
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item trends',
+					'key' => 'item-trends-test',
+					'trends' => 788400001,
+					'error_msg' => 'Cannot add item prototype',
+					'errors' => [
+							'Incorrect value for field "trends": must be between "86400" and "788400000".'
 					]
 				]
 			],
@@ -1936,6 +1996,28 @@ class testFormItemPrototype extends CWebTest {
 					'type' => 'Zabbix trapper',
 					'name' => 'Zabbix trapper',
 					'key' => 'item-zabbix-trapper',
+					'dbCheck' => true,
+					'formCheck' => true
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'type' => 'Zabbix trapper',
+					'name' => 'Zabbix trapper with macro in allowed hosts field',
+					'key' => 'item-zabbix-trapper-macro',
+					'allowed_hosts' => '{$TEST}',
+					'dbCheck' => true,
+					'formCheck' => true
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'type' => 'Zabbix trapper',
+					'name' => 'Zabbix trapper with macro and ip in allowed hosts field',
+					'key' => 'item-zabbix-trapper-macro-ip',
+					'allowed_hosts' => '{$MACRO},127.0.0.1',
 					'dbCheck' => true,
 					'formCheck' => true
 				]
@@ -2162,9 +2244,9 @@ class testFormItemPrototype extends CWebTest {
 					'type' => 'JMX agent',
 					'name' => 'JMX agent',
 					'username' => 'zabbix',
-					'error_msg' => 'Cannot add item prototype',
+					'error_msg' => 'Page received incorrect data',
 					'errors' => [
-							'Check the key, please. Default example was passed.'
+							'Incorrect value for field "Key": cannot be empty.'
 					]
 				]
 			]
@@ -2207,6 +2289,9 @@ class testFormItemPrototype extends CWebTest {
 
 		if (isset($data['key'])) {
 			$this->zbxTestInputTypeOverwrite('key', $data['key']);
+			if ($data['key'] != $this->zbxTestGetValue("//input[@id='key']")) {
+				$this->zbxTestInputTypeOverwrite('key', $data['key']);
+			}
 			$this->zbxTestAssertElementValue('key', $data['key']);
 		}
 		$key = $this->zbxTestGetValue("//input[@id='key']");
@@ -2218,6 +2303,10 @@ class testFormItemPrototype extends CWebTest {
 		if (isset($data['ipmi_sensor'])) {
 				$this->zbxTestInputType('ipmi_sensor', $data['ipmi_sensor']);
 				$ipmi_sensor = $this->zbxTestGetValue("//input[@id='ipmi_sensor']");
+		}
+
+		if (isset($data['allowed_hosts'])) {
+			$this->zbxTestInputType('trapper_hosts', $data['allowed_hosts']);
 		}
 
 		if (isset($data['params_ap'])) {
@@ -2386,10 +2475,323 @@ class testFormItemPrototype extends CWebTest {
 		}
 	}
 
+	public static function preprocessing() {
+		return [
+			// Custom multiplier
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype empty multiplier',
+					'key' => 'item-prototype-empty-multiplier',
+					'preprocessing' => [
+						['type' => 'Custom multiplier', 'params' => ''],
+					],
+					'error' => 'Incorrect value for field "params": cannot be empty.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype string multiplier',
+					'key' => 'item-prototype-string-multiplier',
+					'preprocessing' => [
+						['type' => 'Custom multiplier', 'params' => 'abc'],
+					],
+					'error' => 'Incorrect value for field "params": a numeric value is expected.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype multiplier symbol',
+					'key' => 'item-prototype-symbol-multiplier',
+					'preprocessing' => [
+						['type' => 'Custom multiplier', 'params' => '0,0'],
+					],
+					'error' => 'Incorrect value for field "params": a numeric value is expected.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype multiplier symbol',
+					'key' => 'item-prototype-symbol-multiplier',
+					'preprocessing' => [
+						['type' => 'Custom multiplier', 'params' => '1a!@#$%^&*()-='],
+					],
+					'error' => 'Incorrect value for field "params": a numeric value is expected.'
+				]
+			],
+			// Empty trim
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype right trim',
+					'key' => 'item-prototype-empty-right-trim',
+					'preprocessing' => [
+						['type' => 'Right trim', 'params' => ''],
+					],
+					'error' => 'Incorrect value for field "params": cannot be empty.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype left trim',
+					'key' => 'item-prototype-empty-left-trim',
+					'preprocessing' => [
+						['type' => 'Left trim', 'params' => ''],
+					],
+					'error' => 'Incorrect value for field "params": cannot be empty.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype trim',
+					'key' => 'item-prototype-empty-trim',
+					'preprocessing' => [
+						['type' => 'Trim', 'params' => ''],
+					],
+					'error' => 'Incorrect value for field "params": cannot be empty.'
+				]
+			],
+			// Structured data
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item XML XPath',
+					'key' => 'item-empty-xpath',
+					'preprocessing' => [
+						['type' => 'XML XPath', 'params' => ''],
+					],
+					'error' => 'Incorrect value for field "params": cannot be empty.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item JSON Path',
+					'key' => 'item-empty-jsonpath',
+					'preprocessing' => [
+						['type' => 'JSON Path', 'params' => ''],
+					],
+					'error' => 'Incorrect value for field "params": cannot be empty.'
+				]
+			],
+			// Regular expression
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype empty regular expression',
+					'key' => 'item-prototype-empty-first-parameter',
+					'preprocessing' => [
+						['type' => 'Regular expression', 'params' => '', 'output' => ''],
+					],
+					'error' => 'Incorrect value for field "params": first parameter is expected.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype empty regular expression',
+					'key' => 'item-prototype-empty-first-parameter',
+					'preprocessing' => [
+						['type' => 'Regular expression', 'params' => '', 'output' => 'test output'],
+					],
+					'error' => 'Incorrect value for field "params": first parameter is expected.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype empty regular expression',
+					'key' => 'item-prototype-empty-second-parameter',
+					'preprocessing' => [
+						['type' => 'Regular expression', 'params' => 'expression', 'output' => ''],
+					],
+					'error' => 'Incorrect value for field "params": second parameter is expected.'
+				]
+			],
+			// Delta
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype two delta',
+					'key' => 'item-prototype-two-delta',
+					'preprocessing' => [
+						['type' => 'Simple change'],
+						['type' => 'Simple change']
+					],
+					'error' => 'Only one change step is allowed.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype two delta per second',
+					'key' => 'item-prototype-two-delta-per-second',
+					'preprocessing' => [
+						['type' => 'Change per second'],
+						['type' => 'Change per second']
+					],
+					'error' => 'Only one change step is allowed.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Item prototype two different delta',
+					'key' => 'item-prototype-two-different-delta',
+					'preprocessing' => [
+						['type' => 'Simple change'],
+						['type' => 'Change per second']
+					],
+					'error' => 'Only one change step is allowed.'
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'name' => 'Add item prototype wiht all preprocessing',
+					'key' => 'item.prototype.preprocessing',
+					'preprocessing' => [
+						['type' => 'Right trim', 'params' => 'abc'],
+						['type' => 'Left trim', 'params' => 'def'],
+						['type' => 'Trim', 'params' => '1a2b3c'],
+						['type' => 'Custom multiplier', 'params' => '123'],
+						['type' => 'Regular expression', 'params' => 'expression', 'output' => 'test output'],
+						['type' => 'Boolean to decimal'],
+						['type' => 'Octal to decimal'],
+						['type' => 'Hexadecimal to decimal'],
+						['type' => 'Simple change']
+					]
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'name' => 'Add symblos preprocessing',
+					'key' => 'item.prototype.symbols.preprocessing',
+					'preprocessing' => [
+						['type' => 'Right trim', 'params' => '1a!@#$%^&*()-='],
+						['type' => 'Left trim', 'params' => '2b!@#$%^&*()-='],
+						['type' => 'Trim', 'params' => '3c!@#$%^&*()-='],
+						['type' => 'XML XPath', 'params' => '3c!@#$%^&*()-='],
+						['type' => 'JSON Path', 'params' => '3c!@#$%^&*()-='],
+						['type' => 'Custom multiplier', 'params' => '4e+10'],
+						['type' => 'Regular expression', 'params' => '5d!@#$%^&*()-=', 'output' => '6e!@#$%^&*()-=']
+					]
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'name' => 'Add the same preprocessing',
+					'key' => 'item.prototype.theSamePpreprocessing',
+					'preprocessing' => [
+						['type' => 'Right trim', 'params' => 'abc'],
+						['type' => 'Right trim', 'params' => 'abc'],
+						['type' => 'Left trim', 'params' => 'def'],
+						['type' => 'Left trim', 'params' => 'def'],
+						['type' => 'Trim', 'params' => '1a2b3c'],
+						['type' => 'Trim', 'params' => '1a2b3c'],
+						['type' => 'XML XPath', 'params' => '1a2b3c'],
+						['type' => 'XML XPath', 'params' => '1a2b3c'],
+						['type' => 'JSON Path', 'params' => '1a2b3c'],
+						['type' => 'JSON Path', 'params' => '1a2b3c'],
+						['type' => 'Custom multiplier', 'params' => '123'],
+						['type' => 'Custom multiplier', 'params' => '123'],
+						['type' => 'Regular expression', 'params' => 'expression', 'output' => 'test output'],
+						['type' => 'Regular expression', 'params' => 'expression', 'output' => 'test output'],
+						['type' => 'Boolean to decimal'],
+						['type' => 'Boolean to decimal'],
+						['type' => 'Octal to decimal'],
+						['type' => 'Octal to decimal'],
+						['type' => 'Hexadecimal to decimal'],
+						['type' => 'Hexadecimal to decimal'],
+						['type' => 'Change per second']
+					]
+				]
+			]
+		];
+	}
+
 	/**
-	 * Restore the original tables.
+	 * @dataProvider preprocessing
 	 */
-	public function testFormItemPrototype_Teardown() {
-		DBrestore_tables('items');
+	public function testFormItemPrototype_CreatePreprocessing($data) {
+		$this->zbxTestLogin('disc_prototypes.php?parent_discoveryid=33800&form=Create+item+prototype');
+		$this->zbxTestCheckTitle('Configuration of item prototypes');
+		$this->zbxTestCheckHeader('Item prototypes');
+
+		$this->zbxTestInputType('name', $data['name']);
+		$this->zbxTestInputType('key', $data['key']);
+		$this->zbxTestTabSwitch('Preprocessing');
+
+		$stepCount = 0;
+		foreach ($data['preprocessing'] as $options) {
+			$this->zbxTestClickWait('param_add');
+			$this->zbxTestDropdownSelect('preprocessing_'.$stepCount.'_type', $options['type']);
+
+			if (array_key_exists('params', $options) && $options['type'] !== 'Regular expression') {
+				$this->zbxTestInputType('preprocessing_'.$stepCount.'_params_0', $options['params']);
+			}
+			elseif (array_key_exists('params', $options) && $options['type'] === 'Regular expression') {
+				$this->zbxTestInputType('preprocessing_'.$stepCount.'_params_0', $options['params']);
+				$this->zbxTestInputType('preprocessing_'.$stepCount.'_params_1', $options['output']);
+			}
+			$stepCount ++;
+		}
+
+		$this->zbxTestClickWait('add');
+
+		switch ($data['expected']) {
+			case TEST_GOOD:
+				$this->zbxTestCheckTitle('Configuration of item prototypes');
+				$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Item prototype added');
+				$this->zbxTestCheckFatalErrors();
+
+				$dbResultItem = DBselect("SELECT name,key_,itemid FROM items where key_ = '".$data['key']."'");
+				$rowItem = DBfetch($dbResultItem);
+				$this->assertEquals($rowItem['name'], $data['name']);
+				$this->assertEquals($rowItem['key_'], $data['key']);
+
+				$dbResultPreprocessing = DBselect("SELECT * FROM item_preproc where itemid ='".$rowItem['itemid']."'  ORDER BY step ASC");
+				while ($row = DBfetch($dbResultPreprocessing)) {
+					$type[] = $row['type'];
+					$dbParams[] = $row['params'];
+				}
+
+				foreach ($data['preprocessing'] as $key => $options) {
+					$dbType = get_preprocessing_types($type[$key]);
+					$this->assertEquals($options['type'], $dbType);
+
+					switch ($options['type']) {
+						case 'Custom multiplier':
+						case 'Right trim':
+						case 'Left trim ':
+						case 'Trim':
+						case 'XML XPath':
+						case 'JSON Path':
+							$this->assertEquals($options['params'], $dbParams[$key]);
+							break;
+						case 'Regular expression':
+							$reg_exp = $options['params']."\n".$options['output'];
+							$this->assertEquals($reg_exp, $dbParams[$key]);
+							break;
+					}
+				}
+				break;
+
+			case TEST_BAD:
+				$this->zbxTestCheckTitle('Configuration of item prototypes');
+				$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot add item prototype');
+				$this->zbxTestTextPresent($data['error']);
+
+				$sqlItem = "SELECT * FROM items where key_ = '".$data['key']."'";
+				$this->assertEquals(0, DBcount($sqlItem));
+				break;
+		}
 	}
 }

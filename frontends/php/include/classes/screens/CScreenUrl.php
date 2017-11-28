@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,8 +39,8 @@ class CScreenUrl extends CScreenBase {
 
 		$resolveHostMacros = ($this->screenitem['dynamic'] == SCREEN_DYNAMIC_ITEM || $this->isTemplatedScreen);
 
-		$url = CMacrosResolverHelper::resolveScreenElementURL([
-			'config' => $resolveHostMacros ? 'screenElementURL' : 'screenElementURLUser',
+		$url = CMacrosResolverHelper::resolveWidgetURL([
+			'config' => $resolveHostMacros ? 'widgetURL' : 'widgetURLUser',
 			'url' => $this->screenitem['url'],
 			'hostid' => $resolveHostMacros ? $this->hostid : 0
 		]);

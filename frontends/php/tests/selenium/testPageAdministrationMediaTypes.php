@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,22 +66,6 @@ class testPageAdministrationMediaTypes extends CWebTest {
 	/**
 	 * @dataProvider allMediaTypes
 	 */
-	public function testPageAdministrationMediaTypes_SimpleUpdate($mediatype) {
-		$this->calculateHash($mediatype['mediatypeid']);
-
-		$this->zbxTestLogin('zabbix.php?action=mediatype.list');
-		$this->zbxTestClickLinkText($mediatype['description']);
-		$this->zbxTestClickWait('update');
-		$this->zbxTestCheckTitle('Configuration of media types');
-		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Media type updated');
-		$this->zbxTestTextPresent($mediatype['description']);
-
-		$this->verifyHash();
-	}
-
-	/**
-	 * @dataProvider allMediaTypes
-	 */
 	public function testPageAdministrationMediaTypes_Disable($mediatype) {
 		DBexecute(
 			'UPDATE media_type'.
@@ -129,12 +113,9 @@ class testPageAdministrationMediaTypes extends CWebTest {
 		));
 	}
 
-	public function testPageAdministrationMediaTypes_backup() {
-		DBsave_tables('media_type');
-	}
-
 	/**
 	 * @dataProvider allMediaTypes
+	 * @backup media_type
 	 */
 	public function testPageAdministrationMediaTypes_Delete($mediatype) {
 		$dbRow = DBfetch(DBselect(
@@ -162,9 +143,4 @@ class testPageAdministrationMediaTypes extends CWebTest {
 				$this->assertEquals(0, DBcount($sql));
 		}
 	}
-
-	public function testPageAdministrationMediaTypes_restore() {
-		DBrestore_tables('media_type');
-	}
-
 }

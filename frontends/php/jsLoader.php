@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ require_once dirname(__FILE__).'/include/translateDefines.inc.php';
 // available scripts 'scriptFileName' => 'path relative to js/'
 $availableJScripts = [
 	'common.js' => '',
+	'dashboard.grid.js' => '',
 	'menupopup.js' => '',
 	'gtlc.js' => '',
 	'functions.js' => '',
@@ -77,6 +78,8 @@ $availableJScripts = [
 	'class.ctree.js' => '',
 	'class.curl.js' => '',
 	'class.rpc.js' => '',
+	'class.svg.canvas.js' => 'vector/',
+	'class.svg.map.js' => 'vector/',
 	'class.pmaster.js' => '',
 	'class.cviewswitcher.js' => '',
 	'init.js' => '',
@@ -100,6 +103,18 @@ $tranStrings = [
 		'S_HOUR_SHORT' => _x('h', 'hour short'),
 		'S_MINUTE_SHORT' => _x('m', 'minute short'),
 		'S_DATE_FORMAT' => DATE_TIME_FORMAT
+	],
+	'dashboard.grid.js' => [
+		'Edit widget' => _('Edit widget'),
+		'Add widget' => _('Add widget'),
+		'Apply' => _('Apply'),
+		'Add' => _('Add'),
+		'Edit' => _('Edit'),
+		'Cancel' => _('Cancel'),
+		'Delete' => _('Delete'),
+		'You have unsaved changes.' => _('You have unsaved changes.'),
+		'Are you sure, you want to leave this page?' => _('Are you sure, you want to leave this page?'),
+		'Add a new widget' => _('Add a new widget')
 	],
 	'functions.js' => [
 		'Cancel' => _('Cancel'),
@@ -148,10 +163,20 @@ $tranStrings = [
 		'S_DOT' => _('Dot'),
 		'S_TWO_ELEMENTS_SHOULD_BE_SELECTED' => _('Two elements should be selected'),
 		'S_DELETE_SELECTED_ELEMENTS_Q' => _('Delete selected elements?'),
+		'S_DELETE_SELECTED_SHAPES_Q' => _('Delete selected shapes?'),
+		'S_BRING_TO_FRONT' => _('Bring to front'),
+		'S_BRING_FORWARD' => _('Bring forward'),
+		'S_SEND_BACKWARD' => _('Send backward'),
+		'S_SEND_TO_BACK' => _('Send to back'),
+		'S_REMOVE' => _('Remove'),
 		'S_NEW_ELEMENT' => _('New element'),
+		'S_COPY' => _('Copy'),
+		'S_PASTE' => _('Paste'),
+		'S_PASTE_SIMPLE' => _('Paste without external links'),
 		'S_INCORRECT_ELEMENT_MAP_LINK' => _('All links should have "Name" and "URL" specified'),
 		'S_EACH_URL_SHOULD_HAVE_UNIQUE' => _('Each URL should have a unique name. Please make sure there is only one URL named'),
 		'S_DELETE_LINKS_BETWEEN_SELECTED_ELEMENTS_Q' => _('Delete links between selected elements?'),
+		'S_MACRO_EXPAND_ERROR' => _('Cannot expand macros.'),
 		'S_NO_IMAGES' => 'You need to have at least one image uploaded to create map element. Images can be uploaded in Administration->General->Images section.',
 		'Colour "%1$s" is not correct: expecting hexadecimal colour code (6 symbols).' => _('Colour "%1$s" is not correct: expecting hexadecimal colour code (6 symbols).')
 	],
@@ -178,17 +203,14 @@ $tranStrings = [
 	],
 	'menupopup.js' => [
 		'Acknowledge' => _('Acknowledge'),
-		'Add' => _('Add'),
+		'Access denied' => _('Access denied'),
+		'Cancel' => _('Cancel'),
 		'Configuration' => _('Configuration'),
 		'Create trigger' => _('Create trigger'),
+		'Dashboard sharing' => _('Dashboard sharing'),
 		'Delete service "%1$s"?' => _('Delete service "%1$s"?'),
 		'Do you wish to replace the conditional expression?' => _('Do you wish to replace the conditional expression?'),
 		'Edit trigger' => _('Edit trigger'),
-		'Favourite graphs' => _('Favourite graphs'),
-		'Favourite maps' => _('Favourite maps'),
-		'Favourite screens' => _('Favourite screens'),
-		'Favourite simple graphs' => _('Favourite simple graphs'),
-		'Favourite slide shows' => _('Favourite slide shows'),
 		'Insert expression' => _('Insert expression'),
 		'Trigger status "OK"' => _('Trigger status "OK"'),
 		'Trigger status "Problem"' => _('Trigger status "Problem"'),
@@ -204,16 +226,18 @@ $tranStrings = [
 		'Last month graph' => _('Last month graph'),
 		'Last week graph' => _('Last week graph'),
 		'Problems' => _('Problems'),
-		'Refresh time' => _('Refresh time'),
-		'Refresh time multiplier' => _('Refresh time multiplier'),
-		'Remove' => _('Remove'),
-		'Remove all' => _('Remove all'),
+		'Refresh interval' => _('Refresh interval'),
+		'Refresh interval multiplier' => _('Refresh interval multiplier'),
 		'Scripts' => _('Scripts'),
+		'Something went wrong. Please try again later!' => _('Something went wrong. Please try again later!'),
 		'Submap' => _('Submap'),
 		'Trigger' => _('Trigger'),
 		'Triggers' => _('Triggers'),
+		'Update' => _('Update'),
 		'URL' => _('URL'),
 		'URLs' => _('URLs'),
+		'No refresh' => _('No refresh'),
+		'You need permission to perform this action!' => _('You need permission to perform this action!'),
 		'10 seconds' => _n('%1$s second', '%1$s seconds', 10),
 		'30 seconds' => _n('%1$s second', '%1$s seconds', 30),
 		'1 minute' => _n('%1$s minute', '%1$s minutes', 1),
@@ -224,6 +248,17 @@ $tranStrings = [
 	'items.js' => [
 		'To set a host interface select a single item type for all items' => _('To set a host interface select a single item type for all items'),
 		'No interface found' => _('No interface found')
+	],
+	'class.cnavtree.js' => [
+		'Edit' => _('Edit'),
+		'Remove' => _('Remove'),
+		'root' => _('root'),
+		'Edit tree element' => _('Edit tree element'),
+		'Apply' => _('Apply'),
+		'Add' => _('Add'),
+		'Cancel' => _('Cancel'),
+		'Add child element' => _('Add child element'),
+		'Add multiple maps' => _('Add multiple maps')
 	]
 ];
 
@@ -271,18 +306,39 @@ foreach ($files as $file) {
 	}
 }
 
-$jsLength = strlen($js);
-$etag = md5($jsLength);
-if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag) {
+$etag = md5($js);
+/**
+ * strpos function allow to check ETag value to fix cases when web server compression is used:
+ * - For case when apache server appends "-gzip" suffix to ETag.
+ *   https://bz.apache.org/bugzilla/show_bug.cgi?id=39727
+ *   https://bz.apache.org/bugzilla/show_bug.cgi?id=45023
+ * - For case when nginx v1.7.3+ server mark ETag as weak adding "W/" prefix
+ *   http://nginx.org/en/CHANGES
+ */
+if (array_key_exists('HTTP_IF_NONE_MATCH', $_SERVER) && strpos($_SERVER['HTTP_IF_NONE_MATCH'], $etag) !== false) {
 	header('HTTP/1.1 304 Not Modified');
-	header('ETag: '.$etag);
+	header('ETag: "'.$etag.'"');
 	exit;
 }
 
-header('Content-type: text/javascript; charset=UTF-8');
+if (in_array('prototype.js', $files)) {
+	// This takes care of the Array toJSON incompatibility with JSON.stringify.
+	$js .=
+		'var _json_stringify = JSON.stringify;'.
+		'JSON.stringify = function(value) {'.
+			'var _array_tojson = Array.prototype.toJSON,'.
+				'ret;'.
+			'delete Array.prototype.toJSON;'.
+			'ret = _json_stringify(value);'.
+			'Array.prototype.toJSON = _array_tojson;'.
+			'return ret;'.
+		'};';
+}
+
+header('Content-Type: application/javascript; charset=UTF-8');
 // breaks if "zlib.output_compression = On"
 // header('Content-length: '.$jsLength);
 header('Cache-Control: public, must-revalidate');
-header('ETag: '.$etag);
+header('ETag: "'.$etag.'"');
 
 echo $js;

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ require_once __DIR__.'/../../include/discovery.inc.php';
 require_once __DIR__.'/../../include/actions.inc.php';
 require_once __DIR__.'/../../include/validate.inc.php';
 require_once __DIR__.'/../../include/services.inc.php';
+require_once __DIR__.'/../../include/db.inc.php';
 
 // register autoloader
 require_once __DIR__.'/../../include/classes/core/CAutoloader.php';
@@ -52,6 +53,8 @@ $autoloader = new CAutoloader([
 	__DIR__.'/../../include/classes/import/validators',
 	__DIR__.'/../../include/classes/import/readers',
 	__DIR__.'/../../include/classes/import/converters',
+	__DIR__.'/../../include/classes/export',
+	__DIR__.'/../../include/classes/export/writers',
 	__DIR__.'/../../include/classes/services',
 	__DIR__.'/../../include/classes/helpers',
 	__DIR__.'/../../include/classes/regexp',
@@ -59,6 +62,7 @@ $autoloader = new CAutoloader([
 	__DIR__.'/../../include/classes/api/managers',
 	__DIR__.'/../../include/classes/html',
 	__DIR__.'/../../include/classes/html/interfaces',
+	__DIR__.'/include/classes/db',
 	__DIR__.'/include/classes/html',
 	__DIR__.'/include/classes/validators',
 	__DIR__.'/include/classes/parsers',

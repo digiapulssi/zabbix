@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ $params = [
 		'dns' => $search,
 		'ip' => $search
 	],
-	'countOutput' => 1,
+	'countOutput' => true,
 	'searchByAny' => true
 ];
 
@@ -278,7 +278,7 @@ $rw_hostGroups = zbx_toHash($rw_hostGroups, 'groupid');
 
 $params = [
 	'search' => ['name' => $search],
-	'countOutput' => 1
+	'countOutput' => true
 ];
 $overalCount = API::HostGroup()->get($params);
 $viewCount = count($hostGroups);
@@ -396,7 +396,7 @@ if ($admin) {
 			'host' => $search,
 			'name' => $search
 		],
-		'countOutput' => 1,
+		'countOutput' => true,
 		'searchByAny' => true
 	];
 

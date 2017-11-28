@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,8 +37,6 @@ class CHostGroup extends CApiService {
 	 */
 	public function get($params) {
 		$result = [];
-		$userType = self::$userData['type'];
-		$userid = self::$userData['userid'];
 
 		$sqlParts = [
 			'select'	=> ['groups' => 'g.groupid'],
@@ -68,14 +66,14 @@ class CHostGroup extends CApiService {
 			'with_monitored_httptests'	=> null,
 			'with_graphs'				=> null,
 			'with_applications'			=> null,
-			'editable'					=> null,
+			'editable'					=> false,
 			'nopermissions'				=> null,
 			// filter
 			'filter'					=> null,
 			'search'					=> null,
 			'searchByAny'				=> null,
-			'startSearch'				=> null,
-			'excludeSearch'				=> null,
+			'startSearch'				=> false,
+			'excludeSearch'				=> false,
 			'searchWildcardsEnabled'	=> null,
 			// output
 			'output'					=> API_OUTPUT_EXTEND,
@@ -83,9 +81,9 @@ class CHostGroup extends CApiService {
 			'selectTemplates'			=> null,
 			'selectGroupDiscovery'		=> null,
 			'selectDiscoveryRule'		=> null,
-			'countOutput'				=> null,
-			'groupCount'				=> null,
-			'preservekeys'				=> null,
+			'countOutput'				=> false,
+			'groupCount'				=> false,
+			'preservekeys'				=> false,
 			'sortfield'					=> '',
 			'sortorder'					=> '',
 			'limit'						=> null,
@@ -94,10 +92,9 @@ class CHostGroup extends CApiService {
 		$options = zbx_array_merge($defOptions, $params);
 
 		// editable + PERMISSION CHECK
-		if ($userType != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
 			$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
-
-			$userGroups = getUserGroupsByUserId($userid);
+			$userGroups = getUserGroupsByUserId(self::$userData['userid']);
 
 			$sqlParts['where'][] = 'EXISTS ('.
 				'SELECT NULL'.
@@ -317,8 +314,8 @@ class CHostGroup extends CApiService {
 		$sqlParts = $this->applyQuerySortOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
 		$res = DBselect($this->createSelectQueryFromParts($sqlParts), $sqlParts['limit']);
 		while ($group = DBfetch($res)) {
-			if (!is_null($options['countOutput'])) {
-				if (!is_null($options['groupCount'])) {
+			if ($options['countOutput']) {
+				if ($options['groupCount']) {
 					$result[] = $group;
 				}
 				else {
@@ -330,7 +327,7 @@ class CHostGroup extends CApiService {
 			}
 		}
 
-		if (!is_null($options['countOutput'])) {
+		if ($options['countOutput']) {
 			return $result;
 		}
 
@@ -339,7 +336,7 @@ class CHostGroup extends CApiService {
 		}
 
 		// removing keys (hash -> array)
-		if (is_null($options['preservekeys'])) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 		return $result;
@@ -366,7 +363,7 @@ class CHostGroup extends CApiService {
 		}
 
 		if ($parent_names) {
-			$db_parent_groups = API::getApiService()->select('groups', [
+			$db_parent_groups = DB::select('groups', [
 				'output' => ['groupid', 'name'],
 				'filter' => ['name' => array_keys($parent_names)]
 			]);
@@ -378,7 +375,7 @@ class CHostGroup extends CApiService {
 			}
 
 			if ($parent_groupids) {
-				$db_rights = API::getApiService()->select('rights', [
+				$db_rights = DB::select('rights', [
 					'output' => ['groupid', 'id', 'permission'],
 					'filter' => ['id' => array_keys($parent_groupids)]
 				]);
@@ -401,8 +398,6 @@ class CHostGroup extends CApiService {
 	}
 
 	/**
-	 * Create host groups.
-	 *
 	 * @param array  $groups
 	 *
 	 * @return array
@@ -425,8 +420,6 @@ class CHostGroup extends CApiService {
 	}
 
 	/**
-	 * Update host groups.
-	 *
 	 * @param array  $groups
 	 *
 	 * @return array
@@ -455,8 +448,6 @@ class CHostGroup extends CApiService {
 	}
 
 	/**
-	 * Delete host groups.
-	 *
 	 * @param array $groupids
 	 * @param bool 	$nopermissions
 	 *
@@ -659,11 +650,6 @@ class CHostGroup extends CApiService {
 
 		DB::delete('groups', ['groupid' => $groupids]);
 
-		DB::delete('profiles', [
-			'idx' => ['web.dashconf.groups.groupids', 'web.dashconf.groups.hide.groupids'],
-			'value_id' => $groupids
-		]);
-
 		$this->addAuditBulk(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_HOST_GROUP, $db_groups);
 
 		return ['groupids' => $groupids];
@@ -677,7 +663,7 @@ class CHostGroup extends CApiService {
 	 * @throws APIException  if host group already exists.
 	 */
 	private function checkDuplicates(array $names) {
-		$db_groups = API::getApiService()->select('groups', [
+		$db_groups = DB::select('groups', [
 			'output' => ['name'],
 			'filter' => ['name' => $names],
 			'limit' => 1
@@ -691,8 +677,6 @@ class CHostGroup extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the create() method.
-	 *
 	 * @param array $groups
 	 *
 	 * @throws APIException if the input is invalid.
@@ -713,8 +697,6 @@ class CHostGroup extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the update() method.
-	 *
 	 * @param array $groups
 	 * @param array $db_groups
 	 *

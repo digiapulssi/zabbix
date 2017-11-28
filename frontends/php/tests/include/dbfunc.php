@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,8 +35,10 @@ require_once dirname(__FILE__).'/../../include/classes/db/PostgresqlDbBackend.ph
 /**
  * Returns database data suitable for PHPUnit data provider functions
  */
-function DBdata($sql) {
-	DBconnect($error);
+function DBdata($sql, $make_connection = true) {
+	if ($make_connection) {
+		DBconnect($error);
+	}
 
 	$data = [];
 
@@ -44,7 +46,10 @@ function DBdata($sql) {
 	while ($row = DBfetch($result)) {
 		$data[] = [$row];
 	}
-	DBclose();
+
+	if ($make_connection) {
+		DBclose();
+	}
 
 	return $data;
 }
@@ -105,10 +110,6 @@ function DBsave_tables($topTable) {
 			DBexecute("drop table if exists ${table}_tmp");
 			DBexecute("create table ${table}_tmp like $table");
 			DBexecute("insert into ${table}_tmp select * from $table");
-			break;
-		case ZBX_DB_SQLITE3:
-			DBexecute("drop table if exists ${table}_tmp");
-			DBexecute("create table if not exists ${table}_tmp as select * from ${table}");
 			break;
 		default:
 			DBexecute("drop table if exists ${table}_tmp");
@@ -182,6 +183,10 @@ function DBcount($sql, $limit = null, $offset = null) {
 	}
 	else {
 		$result = DBselect($sql);
+	}
+
+	if ($result === false) {
+		return -1;
 	}
 
 	while (DBfetch($result)) {

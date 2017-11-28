@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -63,6 +63,15 @@ class CImportReferencer {
 	protected $hostPrototypesRefs;
 	protected $httptestsRefs;
 	protected $httpstepsRefs;
+
+	/**
+	 * Initializes references for items.
+	 */
+	public function initItemsReferences() {
+		if ($this->itemsRefs === null) {
+			$this->selectItems();
+		}
+	}
 
 	/**
 	 * Get group id by name.
@@ -1068,8 +1077,7 @@ class CImportReferencer {
 			$dbProxy = API::Proxy()->get([
 				'filter' => ['host' => $this->proxies],
 				'output' => ['hostid', 'host'],
-				'preservekeys' => true,
-				'editable' => true
+				'preservekeys' => true
 			]);
 			foreach ($dbProxy as $proxy) {
 				$this->proxiesRefs[$proxy['host']] = $proxy['proxyid'];

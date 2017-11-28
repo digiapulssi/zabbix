@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -63,16 +63,28 @@ class CAudit {
 				$table_name = 'applications';
 				break;
 
-			case AUDIT_RESOURCE_MACRO:
-				$field_name_resourceid = 'globalmacroid';
-				$field_name_resourcename = 'macro';
-				$table_name = 'globalmacro';
+			case AUDIT_RESOURCE_DASHBOARD:
+				$field_name_resourceid = 'dashboardid';
+				$field_name_resourcename = 'name';
+				$table_name = 'dashboard';
+				break;
+
+			case AUDIT_RESOURCE_ICON_MAP:
+				$field_name_resourceid = 'iconmapid';
+				$field_name_resourcename = 'name';
+				$table_name = 'icon_map';
 				break;
 
 			case AUDIT_RESOURCE_HOST_GROUP:
 				$field_name_resourceid = 'groupid';
 				$field_name_resourcename = 'name';
 				$table_name = 'groups';
+				break;
+
+			case AUDIT_RESOURCE_MACRO:
+				$field_name_resourceid = 'globalmacroid';
+				$field_name_resourcename = 'macro';
+				$table_name = 'globalmacro';
 				break;
 
 			case AUDIT_RESOURCE_SCRIPT:
@@ -97,6 +109,12 @@ class CAudit {
 				$field_name_resourceid = 'valuemapid';
 				$field_name_resourcename = 'name';
 				$table_name = 'valuemaps';
+				break;
+
+			case AUDIT_RESOURCE_SCENARIO:
+				$field_name_resourceid = 'httptestid';
+				$field_name_resourcename = 'name';
+				$table_name = 'httptest';
 				break;
 
 			default:

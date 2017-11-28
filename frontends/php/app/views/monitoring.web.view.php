@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,8 +25,9 @@ $this->addJsFile('flickerfreescreen.js');
 (new CWidget())
 	->setTitle(_('Web monitoring'))
 	->setControls((new CForm('get'))
-		->addVar('fullscreen', $data['fullscreen'])
+		->cleanItems()
 		->addVar('action', 'web.view')
+		->addVar('fullscreen', $data['fullscreen'] ? '1' : null)
 		->addItem((new CList())
 			->addItem([
 				new CLabel(_('Group'), 'groupid'),

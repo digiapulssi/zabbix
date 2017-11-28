@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -181,21 +181,15 @@ function get_icon($type, $params = []) {
 
 			return $icon;
 
-		case 'dashconf':
-			$icon = (new CRedirectButton(SPACE, 'dashconf.php'))
-				->addClass(ZBX_STYLE_BTN_CONF)
-				->setTitle(_('Configure'));
-
-			if ($params['enabled']) {
-				$icon = [$icon, (new CDiv())->addClass(ZBX_STYLE_ACTIVE_INDIC)];
-			}
-
-			return $icon;
+		case 'action':
+			return (new CRedirectButton(SPACE, null))
+				->addClass(ZBX_STYLE_BTN_ACTION)
+				->setTitle(_('Actions'));
 
 		case 'screenconf':
 			return (new CRedirectButton(SPACE, null))
 				->addClass(ZBX_STYLE_BTN_CONF)
-				->setTitle(_('Refresh time'));
+				->setTitle(_('Refresh interval'));
 
 		case 'overviewhelp':
 			return (new CRedirectButton(SPACE, null))

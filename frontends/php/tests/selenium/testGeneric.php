@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,8 +27,6 @@ class testGeneric extends CWebTest {
 			// monitoring
 			['zabbix.php?action=dashboard.view',					'Dashboard'],
 
-			['dashconf.php',					'Dashboard configuration'],
-
 			['overview.php',												'Overview [refreshed every 30 sec.]'],
 			['overview.php?form_refresh=1&groupid=0&type=0&view_style=0',	'Overview [refreshed every 30 sec.]'],
 
@@ -47,7 +45,7 @@ class testGeneric extends CWebTest {
 			['slides.php',						'Configuration of slide shows'],
 			['zabbix.php?action=map.view',							'Configuration of network maps'],
 			['zabbix.php?action=discovery.view',					'Status of discovery'],
-			['srv_status.php',					'IT services [refreshed every 30 sec.]'],
+			['srv_status.php',					'Services [refreshed every 30 sec.]'],
 
 			// inventory
 			['hostinventoriesoverview.php',	'Host inventory overview'],
@@ -81,7 +79,7 @@ class testGeneric extends CWebTest {
 			['slideconf.php',					'Configuration of slide shows'],
 			['sysmaps.php',					'Configuration of network maps'],
 			['discoveryconf.php',				'Configuration of discovery rules'],
-			['services.php',					'Configuration of IT services'],
+			['services.php',					'Configuration of services'],
 
 			// Administration
 			['adm.gui.php',					'Configuration of GUI'],

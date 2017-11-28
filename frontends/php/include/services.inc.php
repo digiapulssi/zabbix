@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -112,7 +112,7 @@ function createServiceConfigurationTree(array $services, &$tree, array $parentSe
 			'caption' => new CLink($service['name'], 'services.php?form=1&serviceid='.$service['serviceid']),
 			'action' => new CHorList([
 				(new CLink(_('Add child'),
-					'services.php?form=1&parentid='.$service['serviceid'].'&parentname='.$service['name']
+					'services.php?form=1&parentid='.$service['serviceid'].'&parentname='.urlencode($service['name'])
 				))->addClass(ZBX_STYLE_LINK_ACTION),
 				$deletable
 					? (new CLink(_('Delete'), 'services.php?delete=1&serviceid='.$service['serviceid']))
@@ -310,7 +310,7 @@ function createServiceMonitoringTree(array $services, array $slaData, $period, &
 }
 
 /**
- * Calculates the current IT service status based on it's child services.
+ * Calculates the current service status based on it's child services.
  *
  * The new statuses are written to the $services array in the "newStatus" property.
  *
@@ -380,7 +380,7 @@ function calculateItServiceStatusByTrigger($triggerStatus, $triggerValue, $trigg
 }
 
 /**
- * Updates the status of all IT services
+ * Updates the status of all services
  */
 function updateItServices() {
 	$servicesLinks = [];
@@ -508,4 +508,45 @@ function checkServiceTime(array $serviceTime) {
 	if ($serviceTime['ts_from'] >= $serviceTime['ts_to']) {
 		throw new APIException(ZBX_API_ERROR_PARAMETERS, _('Service start time must be less than end time.'));
 	}
+}
+
+/**
+ * Method to sort list of Services by 'sortorder' field and then by 'name' field if more entries has same 'sortorder'
+ * value. Separate method is needed because entries make multilevel hierarchy and branches also must be sorted according
+ * fields 'sortorder' and 'name'.
+ *
+ * @param array $services
+ *
+ * @return void
+ */
+function sortServices(array &$services) {
+	$sort_options = [
+		['field' => 'sortorder', 'order' => ZBX_SORT_UP],
+		['field' => 'name', 'order' => ZBX_SORT_UP]
+	];
+
+	// Put dependent services in separate array just to avoid them to be sorted before right time.
+	$dependent_services = [];
+	foreach ($services as $serviceid => $service) {
+		if ($service['parent']) {
+			$dependent_services[$serviceid] = $service;
+			unset($services[$serviceid]);
+		}
+	}
+
+	// Sort first level entries.
+	CArrayHelper::sort($services, $sort_options);
+	$services += $dependent_services;
+
+	// Sort dependencies.
+	foreach ($services as &$service) {
+		if ($service['dependencies']) {
+			$service['dependencies'] = array_map(function($dependent_item) use($services) {
+				return $dependent_item + ['name' => $services[$dependent_item['serviceid']]['name']];
+			}, $service['dependencies']);
+
+			CArrayHelper::sort($service['dependencies'], $sort_options);
+		}
+	}
+	unset($service);
 }

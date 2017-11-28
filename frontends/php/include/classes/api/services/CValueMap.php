@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class CValueMap extends CApiService {
 
 		$this->getOptions = array_merge($this->getOptions, [
 			'valuemapids'		=> null,
-			'editable'			=> null,
+			'editable'			=> false,
 			'selectMappings'	=> null,
 			'sortfield'			=> '',
 			'sortorder'			=> ''
@@ -53,28 +53,28 @@ class CValueMap extends CApiService {
 	public function get($options = []) {
 		$options = zbx_array_merge($this->getOptions, $options);
 
-		if ($options['editable'] !== null && self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
-			return ($options['countOutput'] !== null && $options['groupCount'] === null) ? 0 : [];
+		if ($options['editable'] && self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
+			return ($options['countOutput'] && !$options['groupCount']) ? 0 : [];
 		}
 
 		$res = DBselect($this->createSelectQuery($this->tableName(), $options), $options['limit']);
 
 		$result = [];
 		while ($row = DBfetch($res)) {
-			if ($options['countOutput'] === null) {
-				$result[$row[$this->pk()]] = $row;
-			}
-			else {
-				if ($options['groupCount'] === null) {
-					$result = $row['rowscount'];
-				}
-				else {
+			if ($options['countOutput']) {
+				if ($options['groupCount']) {
 					$result[] = $row;
 				}
+				else {
+					$result = $row['rowscount'];
+				}
+			}
+			else {
+				$result[$row[$this->pk()]] = $row;
 			}
 		}
 
-		if ($options['countOutput'] !== null) {
+		if ($options['countOutput']) {
 			return $result;
 		}
 
@@ -83,7 +83,7 @@ class CValueMap extends CApiService {
 		}
 
 		// removing keys (hash -> array)
-		if ($options['preservekeys'] === null) {
+		if (!$options['preservekeys']) {
 			$result = zbx_cleanHashes($result);
 		}
 
@@ -91,8 +91,6 @@ class CValueMap extends CApiService {
 	}
 
 	/**
-	 * Add value maps.
-	 *
 	 * @param array  $valuemaps
 	 *
 	 * @return array
@@ -125,8 +123,6 @@ class CValueMap extends CApiService {
 	}
 
 	/**
-	 * Update value maps.
-	 *
 	 * @param array $valuemap
 	 *
 	 * @return array
@@ -162,7 +158,7 @@ class CValueMap extends CApiService {
 		}
 
 		if ($mappings) {
-			$db_mappings = API::getApiService()->select('mappings', [
+			$db_mappings = DB::select('mappings', [
 				'output' => ['mappingid', 'valuemapid', 'value', 'newvalue'],
 				'filter' => ['valuemapid' => array_keys($mappings)]
 			]);
@@ -214,8 +210,6 @@ class CValueMap extends CApiService {
 	}
 
 	/**
-	 * Delete value maps.
-	 *
 	 * @param array $valuemapids
 	 *
 	 * @return array
@@ -230,7 +224,7 @@ class CValueMap extends CApiService {
 			self::exception(ZBX_API_ERROR_PARAMETERS, $error);
 		}
 
-		$db_valuemaps = API::getApiService()->select('valuemaps', [
+		$db_valuemaps = DB::select('valuemaps', [
 			'output' => ['valuemapid', 'name'],
 			'valuemapids' => $valuemapids,
 			'preservekeys' => true
@@ -266,7 +260,7 @@ class CValueMap extends CApiService {
 	 * @throws APIException  if value map already exists.
 	 */
 	private function checkDuplicates(array $names) {
-		$db_valuemaps = API::getApiService()->select('valuemaps', [
+		$db_valuemaps = DB::select('valuemaps', [
 			'output' => ['name'],
 			'filter' => ['name' => $names],
 			'limit' => 1
@@ -280,8 +274,6 @@ class CValueMap extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the create() method.
-	 *
 	 * @param array $valuemaps
 	 *
 	 * @throws APIException if the input is invalid.
@@ -306,8 +298,6 @@ class CValueMap extends CApiService {
 	}
 
 	/**
-	 * Validates the input parameters for the update() method.
-	 *
 	 * @param array $valuemaps
 	 * @param array $db_valuemaps
 	 *
@@ -331,7 +321,7 @@ class CValueMap extends CApiService {
 		}
 
 		// Check value map names.
-		$db_valuemaps = API::getApiService()->select('valuemaps', [
+		$db_valuemaps = DB::select('valuemaps', [
 			'output' => ['valuemapid', 'name'],
 			'valuemapids' => zbx_objectValues($valuemaps, 'valuemapid'),
 			'preservekeys' => true

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 #include "active.h"
 
 #if defined(_WINDOWS)
-#	include "gnuregex.h"
 #	include "symbols.h"
 #	include "comms.h"	/* ssize_t */
 #endif /* _WINDOWS */
@@ -1834,19 +1833,10 @@ out:
  *     err_msg         - [IN/OUT] error message why an item became            *
  *                       NOTSUPPORTED                                         *
  *     encoding        - [IN] text string describing encoding.                *
- *                         The following encodings are recognized:            *
- *                           "UNICODE"                                        *
- *                           "UNICODEBIG"                                     *
- *                           "UNICODEFFFE"                                    *
- *                           "UNICODELITTLE"                                  *
- *                           "UTF-16"   "UTF16"                               *
- *                           "UTF-16BE" "UTF16BE"                             *
- *                           "UTF-16LE" "UTF16LE"                             *
- *                           "UTF-32"   "UTF32"                               *
- *                           "UTF-32BE" "UTF32BE"                             *
- *                           "UTF-32LE" "UTF32LE".                            *
- *                           "" (empty string) means a single-byte character  *
- *                           set (e.g. ASCII).                                *
+ *                       See function find_cr_lf_szbyte() for supported       *
+ *                       encodings.                                           *
+ *                       "" (empty string) means a single-byte character set  *
+ *                       (e.g. ASCII).                                        *
  *     regexps         - [IN] array of regexps                                *
  *     pattern         - [IN] pattern to match                                *
  *     output_template - [IN] output formatting template                      *
@@ -2303,19 +2293,10 @@ static int	jump_ahead(const char *key, struct st_logfile *logfiles, int logfiles
  *     logfiles_new     - [OUT] new array of logfiles                         *
  *     logfiles_num_new - [OUT] number of elements in "logfiles_new"          *
  *     encoding         - [IN] text string describing encoding.               *
- *                          The following encodings are recognized:           *
- *                            "UNICODE"                                       *
- *                            "UNICODEBIG"                                    *
- *                            "UNICODEFFFE"                                   *
- *                            "UNICODELITTLE"                                 *
- *                            "UTF-16"   "UTF16"                              *
- *                            "UTF-16BE" "UTF16BE"                            *
- *                            "UTF-16LE" "UTF16LE"                            *
- *                            "UTF-32"   "UTF32"                              *
- *                            "UTF-32BE" "UTF32BE"                            *
- *                            "UTF-32LE" "UTF32LE".                           *
- *                          "" (empty string) means a single-byte character   *
- *                             set.                                           *
+ *                        See function find_cr_lf_szbyte() for supported      *
+ *                        encodings.                                          *
+ *                        "" (empty string) means a single-byte character set *
+ *                        (e.g. ASCII).                                       *
  *     regexps          - [IN] array of regexps                               *
  *     pattern          - [IN] pattern to match                               *
  *     output_template  - [IN] output formatting template                     *

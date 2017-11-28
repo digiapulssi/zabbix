@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -169,7 +169,7 @@ function getUserFullname($userData) {
 /**
  * Returns the list of permissions to the host groups for selected user groups.
  *
- * @param string $usrgrpid
+ * @param array $usrgrpids		An array of user group IDs.
  *
  * @return array
  */

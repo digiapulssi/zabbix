@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ require_once dirname(__FILE__).'/include/js.inc.php';
 
 $page['title'] = _('Configuration of users');
 $page['file'] = 'users.php';
+$page['scripts'] = ['multiselect.js'];
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
@@ -47,20 +48,18 @@ $fields = [
 	'password2' =>			[T_ZBX_STR, O_OPT, null,	null,		'(isset({add}) || isset({update})) && isset({form}) && {form} != "update" && isset({change_password})'],
 	'user_type' =>			[T_ZBX_INT, O_OPT, null,	IN('1,2,3'),'isset({add}) || isset({update})'],
 	'user_groups' =>		[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	null],
-	'user_groups_to_del' =>	[T_ZBX_INT, O_OPT, null,	DB_ID,		null],
 	'user_medias' =>		[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	null],
 	'user_medias_to_del' =>	[T_ZBX_INT, O_OPT, null,	DB_ID,		null],
-	'new_groups' =>			[T_ZBX_STR, O_OPT, null,	null,		null],
 	'new_media' =>			[T_ZBX_STR, O_OPT, null,	null,		null],
 	'enable_media' =>		[T_ZBX_INT, O_OPT, null,	null,		null],
 	'disable_media' =>		[T_ZBX_INT, O_OPT, null,	null,		null],
 	'lang' =>				[T_ZBX_STR, O_OPT, null,	null,		null],
 	'theme' =>				[T_ZBX_STR, O_OPT, null,	IN('"'.implode('","', $themes).'"'), 'isset({add}) || isset({update})'],
 	'autologin' =>			[T_ZBX_INT, O_OPT, null,	IN('1'),	null],
-	'autologout' => 		[T_ZBX_INT, O_OPT, null,	BETWEEN(90, 10000), null, _('Auto-logout (min 90 seconds)')],
+	'autologout' => 		[T_ZBX_STR, O_OPT, null,	null,		null, _('Auto-logout')],
 	'autologout_visible' =>	[T_ZBX_STR, O_OPT, null,	IN('1'),	null],
 	'url' =>				[T_ZBX_STR, O_OPT, null,	null,		'isset({add}) || isset({update})'],
-	'refresh' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(0, SEC_PER_HOUR), 'isset({add}) || isset({update})', _('Refresh (in seconds)')],
+	'refresh' =>			[T_ZBX_STR, O_OPT, null,	null, 'isset({add}) || isset({update})', _('Refresh')],
 	'rows_per_page' =>		[T_ZBX_INT, O_OPT, null,	BETWEEN(1, 999999),'isset({add}) || isset({update})', _('Rows per page')],
 	// actions
 	'action' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	IN('"user.massdelete","user.massunblock"'),	null],
@@ -68,10 +67,7 @@ $fields = [
 	'add' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'update' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'delete' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
-	'delete_selected' =>	[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
-	'del_user_group' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'del_user_media' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
-	'del_group_user' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'change_password' =>	[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'cancel' =>				[T_ZBX_STR, O_OPT, P_SYS,			null,	null],
 	// form
@@ -137,14 +133,7 @@ if (hasRequest('action')) {
  */
 $config = select_config();
 
-if (isset($_REQUEST['new_groups'])) {
-	$_REQUEST['new_groups'] = getRequest('new_groups', []);
-	$_REQUEST['user_groups'] = getRequest('user_groups', []);
-	$_REQUEST['user_groups'] += $_REQUEST['new_groups'];
-
-	unset($_REQUEST['new_groups']);
-}
-elseif (isset($_REQUEST['new_media'])) {
+if (isset($_REQUEST['new_media'])) {
 	$_REQUEST['user_medias'] = getRequest('user_medias', []);
 
 	array_push($_REQUEST['user_medias'], $_REQUEST['new_media']);
@@ -220,7 +209,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			'surname' => getRequest('surname'),
 			'url' => getRequest('url'),
 			'autologin' => getRequest('autologin', 0),
-			'autologout' => hasRequest('autologout_visible') ? getRequest('autologout') : 0,
+			'autologout' => hasRequest('autologout_visible') ? getRequest('autologout') : '0',
 			'theme' => getRequest('theme'),
 			'refresh' => getRequest('refresh'),
 			'rows_per_page' => getRequest('rows_per_page'),
@@ -273,13 +262,6 @@ elseif (isset($_REQUEST['del_user_media'])) {
 	foreach (getRequest('user_medias_to_del', []) as $mediaId) {
 		if (isset($_REQUEST['user_medias'][$mediaId])) {
 			unset($_REQUEST['user_medias'][$mediaId]);
-		}
-	}
-}
-elseif (isset($_REQUEST['del_user_group'])) {
-	foreach (getRequest('user_groups_to_del', []) as $groupId) {
-		if (isset($_REQUEST['user_groups'][$groupId])) {
-			unset($_REQUEST['user_groups'][$groupId]);
 		}
 	}
 }
@@ -343,7 +325,6 @@ if (!empty($_REQUEST['form'])) {
 	$data['userid'] = $userId;
 	$data['form'] = getRequest('form');
 	$data['form_refresh'] = getRequest('form_refresh', 0);
-	$data['autologout'] = getRequest('autologout');
 
 	// render view
 	$usersView = new CView('administration.users.edit', $data);

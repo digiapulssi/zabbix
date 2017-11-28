@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ class CActionCondValidatorTest extends CValidatorTest {
 			]],
 			[[], [
 				'conditiontype' => CONDITION_TYPE_TIME_PERIOD,
-				'value' => '5-7,00:00-09:00;1,10:00-20:00;',
+				'value' => '5-7,00:00-09:00;1,10:00-20:00',
 			]],
 			[[], [
 				'conditiontype' => CONDITION_TYPE_DHOST_IP,
@@ -241,14 +241,14 @@ class CActionCondValidatorTest extends CValidatorTest {
 					'conditiontype' => CONDITION_TYPE_TIME_PERIOD,
 					'value' => '',
 				],
-				'Empty time period.'
+				'Invalid time period.'
 			],
 			[[],
 				[
 					'conditiontype' => CONDITION_TYPE_TIME_PERIOD,
 					'value' => 'QQQQQQ',
 				],
-				'Incorrect time period "QQQQQQ".'
+				'Invalid time period.'
 			],
 			[[],
 				[

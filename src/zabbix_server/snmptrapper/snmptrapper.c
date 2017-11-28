@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "snmptrapper.h"
 #include "zbxserver.h"
 #include "zbxregexp.h"
+#include "preproc.h"
 
 static int	trap_fd = -1;
 static off_t	trap_lastsize;
@@ -84,7 +85,7 @@ static int	process_trap_for_interface(zbx_uint64_t interfaceid, char *trap, zbx_
 	const char		*regex;
 	char			error[ITEM_ERROR_LEN_MAX];
 	size_t			num, i;
-	int			ret = FAIL, fb = -1, *lastclocks = NULL, *errcodes = NULL;
+	int			ret = FAIL, fb = -1, *lastclocks = NULL, *errcodes = NULL, value_type;
 	zbx_uint64_t		*itemids = NULL;
 	unsigned char		*states = NULL;
 	AGENT_RESULT		*results = NULL;
@@ -151,7 +152,8 @@ static int	process_trap_for_interface(zbx_uint64_t interfaceid, char *trap, zbx_
 				goto next;
 		}
 
-		set_result_type(&results[i], ITEM_VALUE_TYPE_TEXT, trap);
+		value_type = (ITEM_VALUE_TYPE_LOG == items[i].value_type ? ITEM_VALUE_TYPE_LOG : ITEM_VALUE_TYPE_TEXT);
+		set_result_type(&results[i], value_type, trap);
 		errcodes[i] = SUCCEED;
 		ret = SUCCEED;
 next:
@@ -160,7 +162,8 @@ next:
 
 	if (FAIL == ret && -1 != fb)
 	{
-		set_result_type(&results[fb], ITEM_VALUE_TYPE_TEXT, trap);
+		value_type = (ITEM_VALUE_TYPE_LOG == items[fb].value_type ? ITEM_VALUE_TYPE_LOG : ITEM_VALUE_TYPE_TEXT);
+		set_result_type(&results[fb], value_type, trap);
 		errcodes[fb] = SUCCEED;
 		ret = SUCCEED;
 	}
@@ -177,8 +180,8 @@ next:
 				}
 
 				items[i].state = ITEM_STATE_NORMAL;
-				dc_add_history(items[i].itemid, items[i].value_type, items[i].flags, &results[i],
-						ts, items[i].state, NULL);
+				zbx_preprocess_item_value(items[i].itemid, items[i].flags, &results[i], ts,
+						items[i].state, NULL);
 
 				itemids[i] = items[i].itemid;
 				states[i] = items[i].state;
@@ -186,8 +189,8 @@ next:
 				break;
 			case NOTSUPPORTED:
 				items[i].state = ITEM_STATE_NOTSUPPORTED;
-				dc_add_history(items[i].itemid, items[i].value_type, items[i].flags, NULL,
-						ts, items[i].state, results[i].msg);
+				zbx_preprocess_item_value(items[i].itemid, items[i].flags, NULL, ts, items[i].state,
+						results[i].msg);
 
 				itemids[i] = items[i].itemid;
 				states[i] = items[i].state;
@@ -201,7 +204,7 @@ next:
 
 	zbx_free(results);
 
-	DCrequeue_items(itemids, states, lastclocks, NULL, NULL, errcodes, num);
+	DCrequeue_items(itemids, states, lastclocks, errcodes, num);
 
 	zbx_free(errcodes);
 	zbx_free(lastclocks);
@@ -214,7 +217,7 @@ next:
 	zbx_regexp_clean_expressions(&regexps);
 	zbx_vector_ptr_destroy(&regexps);
 
-	dc_flush_history();
+	zbx_preprocessor_flush();
 
 	return ret;
 }
@@ -642,6 +645,10 @@ ZBX_THREAD_ENTRY(snmptrapper_thread, args)
 				get_process_type_string(process_type), sec);
 
 		zbx_sleep_loop(1);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 
 	zbx_free(buffer);

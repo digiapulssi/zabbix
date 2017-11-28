@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2016 Zabbix SIA
+** Copyright (C) 2001-2017 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ typedef struct
 }
 zbx_vc_stats_t;
 
-void	zbx_vc_init(void);
+int	zbx_vc_init(char **error);
 
 void	zbx_vc_destroy(void);
 
