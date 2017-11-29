@@ -1441,19 +1441,6 @@ function getTriggerFormData($exprAction) {
 		'groupid' => getRequest('groupid', 0)
 	];
 
-	// Read groupid for selected host or template if groupid filter is set to 'All' (is equal 0).
-	if ($data['hostid'] && !$data['groupid']) {
-		$db_hostgroup = API::HostGroup()->get([
-			'output' => ['groupid'],
-			'hostids' => $data['hostid'],
-			'templateids' => $data['hostid']
-		]);
-
-		if ($db_hostgroup) {
-			$data['groupid'] = $db_hostgroup[0]['groupid'];
-		}
-	}
-
 	if (!empty($data['triggerid'])) {
 		// get trigger
 		$options = [
@@ -1519,14 +1506,17 @@ function getTriggerFormData($exprAction) {
 			$host = reset($hosts);
 			$data['hostid'] = $host['hostid'];
 		}
+	}
 
-		$host_groups = API::HostGroup()->get([
+	if ($data['hostid'] && !$data['groupid']) {
+		$db_hostgroups = API::HostGroup()->get([
 			'output' => ['groupid'],
-			'hostids' => [$data['hostid']]
+			'hostids' => $data['hostid'],
+			'templateids' => $data['hostid']
 		]);
 
-		if ($host_groups) {
-			$data['groupid'] = $host_groups[0]['groupid'];
+		if ($db_hostgroups) {
+			$data['groupid'] = $db_hostgroups[0]['groupid'];
 		}
 	}
 
