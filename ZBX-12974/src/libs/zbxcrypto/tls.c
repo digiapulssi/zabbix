@@ -219,7 +219,7 @@ ZBX_THREAD_LOCAL static SSL_CTX			*ctx_cert		= NULL;
 ZBX_THREAD_LOCAL static SSL_CTX			*ctx_psk		= NULL;
 ZBX_THREAD_LOCAL static SSL_CTX			*ctx_all		= NULL;
 /* variables for passing required PSK identity and PSK info to client callback function */
-ZBX_THREAD_LOCAL static char			*psk_identity_for_cb	= NULL;
+ZBX_THREAD_LOCAL static const char		*psk_identity_for_cb	= NULL;
 ZBX_THREAD_LOCAL static size_t			psk_identity_len_for_cb	= 0;
 ZBX_THREAD_LOCAL static char			*psk_for_cb		= NULL;
 ZBX_THREAD_LOCAL static size_t			psk_len_for_cb		= 0;
@@ -3626,7 +3626,8 @@ void	zbx_tls_free(void)
  *                                                                            *
  ******************************************************************************/
 #if defined(HAVE_POLARSSL)
-int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, char *tls_arg2, char **error)
+int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, const char *tls_arg1, const char *tls_arg2,
+		char **error)
 {
 	const char	*__function_name = "zbx_tls_connect";
 	int		ret = FAIL, res;
@@ -3840,7 +3841,8 @@ out1:
 	return ret;
 }
 #elif defined(HAVE_GNUTLS)
-int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, char *tls_arg2, char **error)
+int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, const char *tls_arg1, const char *tls_arg2,
+		char **error)
 {
 	const char		*__function_name = "zbx_tls_connect";
 	int			ret = FAIL, res;
@@ -4113,7 +4115,8 @@ out1:
 	return ret;
 }
 #elif defined(HAVE_OPENSSL)
-int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, char *tls_arg2, char **error)
+int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, const char *tls_arg1, const char *tls_arg2,
+		char **error)
 {
 	const char	*__function_name = "zbx_tls_connect";
 	int		ret = FAIL, res;

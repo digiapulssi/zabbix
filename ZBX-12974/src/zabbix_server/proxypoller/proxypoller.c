@@ -43,7 +43,7 @@ static int	connect_to_proxy(const DC_PROXY *proxy, zbx_socket_t *sock, int timeo
 	const char	*__function_name = "connect_to_proxy";
 
 	int		ret = FAIL;
-	char		*tls_arg1, *tls_arg2;
+	const char	*tls_arg1, *tls_arg2;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() address:%s port:%hu timeout:%d conn:%u", __function_name, proxy->addr,
 			proxy->port, timeout, (unsigned int)proxy->tls_connect);
