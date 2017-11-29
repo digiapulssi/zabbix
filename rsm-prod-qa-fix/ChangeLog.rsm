@@ -3,6 +3,7 @@ Changes for rsm1.0.1rc1
 New features:
 
 Bug fixes:
+..F....... [309] improved performance for non-super admin users (dotneft, gleb, Oleg)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.0
