@@ -2859,7 +2859,7 @@ static int	update_new_list_from_old(int rotation_type, struct st_logfile *logfil
 				/* the file was fully processed during the previous check and must be ignored */
 				/* during this check */
 				logfiles[j].processed_size = logfiles[j].size;
-				logfiles[j].seq = *seq++;
+				logfiles[j].seq = (*seq)++;
 			}
 			else
 			{
