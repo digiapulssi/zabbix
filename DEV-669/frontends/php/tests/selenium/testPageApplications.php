@@ -83,7 +83,10 @@ class testPageApplications extends CWebTest {
 					'groupname' => 'Zabbix servers',
 					'hostid' => 10084,
 					'hostname' => 'ЗАББИКС Сервер',
-					'applications' => [349,350,352,354]
+					'appiddelete'=>550,
+					'itemdelete'=>45000,
+					'applications' => [349,350,352,354],
+
 				]
 			]
 		];
@@ -110,11 +113,13 @@ class testPageApplications extends CWebTest {
 
 		$this->zbxTestWaitForPageToLoad();
 		$this->zbxTestDropdownAssertSelected('hostid', $data['hostname']);
+		$this->zbxTestCheckFatalErrors();
 
 		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
 
 		$this->zbxTestDropdownAssertSelected('groupid', $data['groupname']);
 		$this->zbxTestDropdownAssertSelected('hostid', $data['hostname']);
+		$this->zbxTestCheckFatalErrors();
 
 	}
 
@@ -130,6 +135,7 @@ class testPageApplications extends CWebTest {
 		while ($row = DBfetch($result)) {
 			$this->zbxTestTextPresent($row['name']);
 		}
+		$this->zbxTestCheckFatalErrors();
 	}
 
 	/**
@@ -140,6 +146,7 @@ class testPageApplications extends CWebTest {
 
 		$this->zbxTestTextPresent('Create application (select host first)');
 		$this->zbxTestAssertAttribute("//button[@id='form']",'disabled','true');
+		$this->zbxTestCheckFatalErrors();
 	}
 
 	/**
@@ -155,6 +162,7 @@ class testPageApplications extends CWebTest {
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
+		$this->zbxTestCheckFatalErrors();
 
 		$applications = implode(", ", $data['applications']);
 		$hostid= $data['hostid'];
@@ -177,6 +185,7 @@ class testPageApplications extends CWebTest {
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items disabled');
+		$this->zbxTestCheckFatalErrors();
 
 		$applications = implode(", ", $data['applications']);
 		$hostid= $data['hostid'];
@@ -199,6 +208,7 @@ class testPageApplications extends CWebTest {
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot delete applications');
+		$this->zbxTestCheckFatalErrors();
 	}
 
 	/**
@@ -214,6 +224,7 @@ class testPageApplications extends CWebTest {
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
+		$this->zbxTestCheckFatalErrors();
 
 		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
 		WHERE IA.applicationid>0 && I.flags<>2 && I.hostid='.$data['hostid'].' && I.status='.ITEM_STATUS_DISABLED;
@@ -234,6 +245,7 @@ class testPageApplications extends CWebTest {
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items disabled');
+		$this->zbxTestCheckFatalErrors();
 
 		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
 		WHERE IA.applicationid>0 && I.flags<>2 && I.hostid='.$data['hostid'].' && I.status='.ITEM_STATUS_ACTIVE;
@@ -242,7 +254,7 @@ class testPageApplications extends CWebTest {
 	}
 
 	/**
-	* Test check for attempt of delete all Applications for selected Host and  HostGroup.
+	* Test check for attempt of delete all Applications for selected Host and HostGroup.
 	* @dataProvider data
 	*/
 	public function testPageApplications_AttempDeleteAllApp($data) {
@@ -254,5 +266,30 @@ class testPageApplications extends CWebTest {
 
 		$this->zbxTestCheckTitle('Configuration of applications');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot delete applications');
+		$this->zbxTestCheckFatalErrors();
+	}
+
+	/**
+	* Test check of delete selected Application.
+	* @dataProvider data
+	*/
+	public function testPageApplications_DeleteSelectApp($data) {
+		$this->zbxTestLogin('applications.php?groupid='.$data['groupid'].'&hostid='.$data['hostid']);
+
+		$this->zbxTestCheckboxSelect('applications_'.$data['appiddelete']);
+		$this->zbxTestClickButton('application.massdelete');
+		$this->zbxTestAlertAcceptWait();
+
+		$this->zbxTestCheckTitle('Configuration of applications');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Application deleted');
+		$this->zbxTestCheckFatalErrors();
+
+		//check application existence after deleted
+		$sql = 'SELECT NULL FROM applications WHERE applicationid='.$data['appiddelete'];
+		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Application existence in DataBase after deleted');
+
+		//check item existence after deleted application
+		$sql = 'SELECT NULL FROM items WHERE itemid='.$data['itemdelete'];
+		$this->assertEquals(1, DBcount($sql), 'Chuck Norris: Item not existence after deleted application');
 	}
 }
