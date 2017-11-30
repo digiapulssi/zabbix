@@ -470,7 +470,7 @@ class testIconMap extends CZabbixTest {
 			],
 			[
 				'iconmap' => [
-					'name' => 'empty global expression',
+					'name' => 'Global regular expression does not exist',
 					'default_iconid' => '2',
 					'mappings' =>[
 						[
@@ -480,9 +480,8 @@ class testIconMap extends CZabbixTest {
 						]
 					]
 				],
-				// TODO: different error message on jenkins
-				// 'expected_error' => 'Global regular expression "" does not exist.'
-				'expected_error' => 'Global regular expression "0" does not exist.'
+				// can be different error message text
+				'expected_error' => '/Global regular expression ".*" does not exist\./'
 			],
 			[
 				'iconmap' => [
@@ -633,7 +632,15 @@ class testIconMap extends CZabbixTest {
 
 			$this->assertFalse(array_key_exists('result', $result));
 			$this->assertTrue(array_key_exists('error', $result));
-			$this->assertSame($expected_error, $result['error']['data']);
+
+			// condition for one test case, because of the different error message text
+			if (strpos($iconmap['name'], "Global regular expression does not exist") !== false) {
+				$this->assertRegExp($expected_error, $result['error']['data']);
+			}
+			else {
+				$this->assertSame($expected_error, $result['error']['data']);
+			}
+
 			$dbResult = "select * from icon_map where name='".$iconmap['name']."'";
 			$this->assertEquals(0, DBcount($dbResult));
 		}
