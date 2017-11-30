@@ -256,7 +256,7 @@ function insert_js_function($fnct_name) {
 					});
 
 				function addSelectedFormValuesHandler(formid) {
-					var checked = jQuery("#"+formid).find("input[type=checkbox]:checked").not("[name*=all_]"),
+					var checked = jQuery("#"+formid).find("input[type=checkbox]:checked").not("[name*=all_],:disabled"),
 						reference = jQuery("[name=reference]").val(),
 						values = [],
 						parentid = null;
