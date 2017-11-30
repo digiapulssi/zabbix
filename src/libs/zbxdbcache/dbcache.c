@@ -1685,7 +1685,7 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_add_history(DC_ITEM *items, ZBX_DC_HISTORY *history, int history_num)
+static void	DCmass_add_history(ZBX_DC_HISTORY *history, int history_num)
 {
 	const char		*__function_name = "DCmass_add_history";
 	int			i;
@@ -2263,7 +2263,7 @@ int	DCsync_history(int sync_type, int *total_num)
 			zbx_vector_uint64_destroy(&itemids);
 
 			DCmass_update_history(history, items, errcodes, history_num);
-			DCmass_add_history(items, history, history_num);
+			DCmass_add_history(history, history_num);
 
 			DBbegin();
 

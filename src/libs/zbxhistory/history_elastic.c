@@ -833,6 +833,9 @@ int	zbx_history_elastic_init(zbx_history_iface_t *hist, unsigned char value_type
 #else
 int	zbx_history_elastic_init(zbx_history_iface_t *hist, unsigned char value_type, char **error)
 {
+	ZBX_UNUSED(hist);
+	ZBX_UNUSED(value_type);
+
 	*error = zbx_strdup(*error, "cURL library support is required for ElasticSearch history hist");
 	return FAIL;
 }
