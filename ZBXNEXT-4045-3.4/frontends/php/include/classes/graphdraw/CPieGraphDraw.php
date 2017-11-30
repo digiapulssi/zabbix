@@ -756,16 +756,14 @@ class CPieGraphDraw extends CGraphDraw {
 
 		if ($debug_mode) {
 			$str = sprintf('%0.2f', microtime(true) - $start_time);
-			$str = _s('Data from %1$s. Generated in %2$s sec.', $this->dataFrom, $str);
-			$str_size = imageTextSize(6, 0, $str);
 			imageText(
 				$this->im,
 				6,
-				0,
-				$this->fullSizeX - $str_size['width'] - 5,
+				90,
+				$this->fullSizeX - 1,
 				$this->fullSizeY - 5,
 				$this->getColor('Gray'),
-				$str
+				_s('Data from %1$s. Generated in %2$s sec.', $this->dataFrom, $str)
 			);
 		}
 
