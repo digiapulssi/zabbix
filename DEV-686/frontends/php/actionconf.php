@@ -316,12 +316,12 @@ elseif (isset($_REQUEST['edit_operationid'])) {
 }
 elseif (str_in_array(getRequest('go'), array('activate', 'disable')) && hasRequest('g_actionid')) {
 	$status = (getRequest('go') == 'activate') ? ACTION_STATUS_ENABLED : ACTION_STATUS_DISABLED;
-	$actionids = (array) getRequest('g_actionid', []);
+	$actionids = (array) getRequest('g_actionid', array());
 	$actions_count = count($actionids);
-	$actions = [];
+	$actions = array();
 
 	foreach ($actionids as $actionid) {
-		$actions[] = ['actionid' => $actionid, 'status' => $status];
+		$actions[] = array('actionid' => $actionid, 'status' => $status);
 	}
 
 	$response = API::Action()->update($actions);
