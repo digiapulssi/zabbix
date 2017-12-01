@@ -92,9 +92,12 @@ static void	zbx_openssl_thread_setup(void)
 
 	for (i = 0; i < num_locks; i++)
 	{
-		if (SUCCEED != zbx_mutex_create(crypto_mutexes + i, NULL))
+		char	*error = NULL;
+
+		if (SUCCEED != zbx_mutex_create(crypto_mutexes + i, NULL, &error))
 		{
-			zabbix_log(LOG_LEVEL_CRIT, "cannot create mutex #%d for OpenSSL library", i);
+			zabbix_log(LOG_LEVEL_CRIT, "cannot create mutex #%d for OpenSSL library: %s", i, error);
+			zbx_free(error);
 			exit(EXIT_FAILURE);
 		}
 	}
