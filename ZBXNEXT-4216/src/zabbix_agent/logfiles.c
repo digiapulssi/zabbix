@@ -2198,17 +2198,11 @@ static int	is_swap_required(const struct st_logfile *old, struct st_logfile *new
 	/* if the 1st file is not processed at all while the 2nd file was processed (at least partially) */
 	/* then swap them */
 	if (0 == new[idx].seq && 0 < new[idx + 1].seq)
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "is_swap_required() idx:%d rule 1 applied", idx);
 		return SUCCEED;
-	}
 
 	/* if the 2nd file is not a copy of some other file then no need to swap */
 	if (-1 == new[idx + 1].copy_of)
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "is_swap_required() idx:%d rule 2 applied", idx);
 		return FAIL;
-	}
 
 	/* The 2nd file is a copy. But is it a copy of the 1st file ? */
 
@@ -2221,19 +2215,13 @@ static int	is_swap_required(const struct st_logfile *old, struct st_logfile *new
 	is_same_place = compare_file_places(old + new[idx + 1].copy_of, new + idx, use_ino);
 
 	if (ZBX_FILE_PLACE_SAME == is_same_place && new[idx].seq >= new[idx + 1].seq)
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "is_swap_required() idx:%d rule 3 applied", idx);
 		return SUCCEED;
-	}
 
 	/* The last attempt - compare file names. It is less reliable as file rotation can change file names. */
 	if (ZBX_FILE_PLACE_OTHER == is_same_place || ZBX_FILE_PLACE_UNKNOWN == is_same_place)
 	{
 		if (0 == strcmp((old + new[idx + 1].copy_of)->filename, (new + idx)->filename))
-		{
-			zabbix_log(LOG_LEVEL_DEBUG, "is_swap_required() idx:%d rule 4 applied", idx);
 			return SUCCEED;
-		}
 	}
 
 	return FAIL;
