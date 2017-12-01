@@ -484,6 +484,11 @@
 				stopPreloader(widget);
 
 				$('h4', widget['content_header']).text(resp.header);
+				if ('period_string' in resp) {
+					$('h4', widget['content_header']).append(
+						$('<span class="dashbrd-grid-widget-head-period-string">').text(resp.period_string)
+					);
+				}
 
 				widget['content_body'].empty();
 				if (typeof(resp.messages) !== 'undefined') {

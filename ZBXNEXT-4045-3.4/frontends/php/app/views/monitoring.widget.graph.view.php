@@ -21,7 +21,8 @@
 
 if ($data['only_footer']) {
 	$output = [
-		'footer' => (new CList([_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString()
+		'footer' => (new CList([_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString(),
+		'period_string' => $data['period_string']
 	];
 }
 elseif ($data['graph']['unavailable_object']) {
@@ -93,6 +94,7 @@ if ($data['widget']['initial_load'] == 1) {
 		'header' => $data['name'],
 		'body' => $flickerfree_item->toString(),
 		'footer' => (new CList([_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString(),
+		'period_string' => $data['period_string'],
 		'script_inline' => $script
 	];
 }

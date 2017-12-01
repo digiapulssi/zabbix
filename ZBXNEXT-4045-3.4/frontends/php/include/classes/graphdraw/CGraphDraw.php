@@ -51,6 +51,7 @@ abstract class CGraphDraw {
 		$this->type = $type; // graph type
 		$this->drawLegend = 1;
 		$this->graphtheme = getUserGraphTheme();
+		$this->drawHeader = true;
 	}
 
 	public function initColors() {
@@ -176,6 +177,10 @@ abstract class CGraphDraw {
 	}
 
 	public function drawHeader() {
+		if (!$this->drawHeader) {
+			return;
+		}
+
 		if (!isset($this->header)) {
 			$str = $this->items[0]['hostname'].NAME_DELIMITER.$this->items[0]['name'];
 		}
