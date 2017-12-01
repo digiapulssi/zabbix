@@ -1442,3 +1442,7 @@ INSERT INTO events (eventid,source,object,objectid,clock,ns,value,name) VALUES (
 INSERT INTO event_tag (eventtagid,eventid,tag,value) VALUES (93,93,'Service','abc');
 INSERT INTO problem (eventid,source,object,objectid,clock,ns,name) VALUES (93,0,0,99251,1508761528,128786843,'Test trigger with tag');
 INSERT INTO problem_tag (problemtagid,eventid,tag,value) VALUES (93,93,'Service','abc');
+
+-- Create problem for check filtering by problem name
+INSERT INTO events (eventid,source,object,objectid,clock,ns,value,name) VALUES (94,0,0,99251,1508761530,128786843,1,'ЗАББИКС Сервер Test trigger with tag');
+INSERT INTO problem (eventid,source,object,objectid,clock,ns,name) VALUES (94,0,0,99251,1508761530,128786843,'ЗАББИКС Сервер Test trigger with tag');

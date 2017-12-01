@@ -189,4 +189,19 @@ class testPageProblems extends CWebTest {
 		$this->zbxTestAssertElementText('//div[@class="table-stats"]', 'Displaying 1 of 1 found');
 		$this->zbxTestClickButtonText('Reset');
 	}
+
+	public function testPageProblems_FilterByProblemName() {
+		$this->zbxTestLogin('zabbix.php?action=problem.view');
+		$this->zbxTestCheckHeader('Problems');
+		$this->zbxTestClickButtonText('Reset');
+
+		// Type problem name
+		$this->zbxTestInputType('filter_name', 'ЗАББИКС Сервер');
+
+		// Apply filter and check result
+		$this->zbxTestClickButtonText('Apply');
+		$this->zbxTestAssertElementText('//tbody/tr/td[10]/span', 'ЗАББИКС Сервер Test trigger with tag');
+		$this->zbxTestAssertElementText('//div[@class="table-stats"]', 'Displaying 1 of 1 found');
+		$this->zbxTestClickButtonText('Reset');
+	}
 }
