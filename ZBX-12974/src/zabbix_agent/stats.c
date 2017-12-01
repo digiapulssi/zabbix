@@ -187,6 +187,8 @@ int	init_collector_data(char **error)
 
 	collector->cpus.cpu_counter = (PERF_COUNTER_DATA **)((char *)collector + sz);
 	collector->cpus.count = cpu_count;
+
+	ret = SUCCEED;
 #else
 	sz_cpu = sizeof(ZBX_SINGLE_CPU_STAT_DATA) * (cpu_count + 1);
 
@@ -219,14 +221,14 @@ int	init_collector_data(char **error)
 
 	if (SUCCEED != zbx_mutex_create(&diskstats_lock, ZBX_MUTEX_DISKSTATS, error))
 		goto out;
-#endif
 
 #ifdef _AIX
 	memset(&collector->vmstat, 0, sizeof(collector->vmstat));
 #endif
 	ret = SUCCEED;
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+#endif
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
 }
