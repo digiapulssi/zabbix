@@ -315,35 +315,45 @@ elseif (isset($_REQUEST['edit_operationid'])) {
 	}
 }
 elseif (str_in_array(getRequest('go'), array('activate', 'disable')) && hasRequest('g_actionid')) {
-	$status = (getRequest('go') == 'activate') ? ACTION_STATUS_ENABLED : ACTION_STATUS_DISABLED;
-	$actionids = (array) getRequest('g_actionid', []);
-	$actions_count = count($actionids);
-	$actions = [];
+	$result = true;
+	$enable = (getRequest('go') == 'activate');
+	$status = $enable ? ACTION_STATUS_ENABLED : ACTION_STATUS_DISABLED;
+	$statusName = $enable ? 'enabled' : 'disabled';
+	$actionIds = array();
+	$updated = 0;
 
-	foreach ($actionids as $actionid) {
-		$actions[] = ['actionid' => $actionid, 'status' => $status];
-	}
-
-	$response = API::Action()->update($actions);
-
-	if ($response && array_key_exists('actionids', $response)) {
-		$message = $status == ACTION_STATUS_ENABLED
-			? _n('Action enabled', 'Actions enabled', $actions_count)
-			: _n('Action disabled', 'Actions disabled', $actions_count);
-
-		add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_ACTION, ' Actions ['.implode(',', $response['actionids']).'] '.
-			($status == ACTION_STATUS_ENABLED ? 'enabled' : 'disabled')
+	DBstart();
+	$dbActions = DBselect(
+		'SELECT a.actionid'.
+		' FROM actions a'.
+		' WHERE '.dbConditionInt('a.actionid', $_REQUEST['g_actionid'])
+	);
+	while ($row = DBfetch($dbActions)) {
+		$result &= DBexecute(
+			'UPDATE actions'.
+			' SET status='.zbx_dbstr($status).
+			' WHERE actionid='.zbx_dbstr($row['actionid'])
 		);
-		show_messages(true, $message);
-		clearCookies(true);
+		if ($result) {
+			$actionIds[] = $row['actionid'];
+		}
+		$updated++;
 	}
-	else {
-		$message = $status == ACTION_STATUS_ENABLED
-			? _n('Cannot enable action', 'Cannot enable actions', $actions_count)
-			: _n('Cannot disable action', 'Cannot disable actions', $actions_count);
+	$result = DBend($result);
 
-		show_messages(false, null, $message);
+	if ($result) {
+		add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_ACTION, ' Actions ['.implode(',', $actionIds).'] '.$statusName);
 	}
+
+	$messageSuccess = $enable
+		? _n('Action enabled', 'Actions enabled', $updated)
+		: _n('Action disabled', 'Actions disabled', $updated);
+	$messageFailed = $enable
+		? _n('Cannot enable action', 'Cannot enable actions', $updated)
+		: _n('Cannot disable action', 'Cannot disable actions', $updated);
+
+	show_messages($result, $messageSuccess, $messageFailed);
+	clearCookies($result);
 }
 elseif ($_REQUEST['go'] == 'delete' && isset($_REQUEST['g_actionid'])) {
 	$goResult = API::Action()->delete($_REQUEST['g_actionid']);
