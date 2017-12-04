@@ -5,7 +5,7 @@ New features:
 Bug fixes:
 ..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
 ..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
-..F....... [DEV-593] fixed multiple security issues (miks)
+..F....... [ZBX-13133] fixed multiple security issues (miks)
 .......PS. [ZBX-12854] fixed crash of VMware collector with DebugLevel=4 (gleb)
 
 --------------------------------------------------------------------------------
