@@ -164,12 +164,13 @@ class testPageApplications extends CWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
 		$this->zbxTestCheckFatalErrors();
 
+		// check of enable selected Application in DataBase
 		$applications = implode(", ", $data['applications']);
 		$hostid= $data['hostid'];
 		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
 		WHERE IA.applicationid IN ('.$applications.') && I.hostid='.$hostid.' && I.status='.ITEM_STATUS_DISABLED;
 
-		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Not all Items for ApplicationsID: '.$applications.' have the status ITEM_STATUS_ACTIVE');
+		$this->assertEquals(0, DBcount($sql));
 	}
 
 	/**
@@ -187,12 +188,13 @@ class testPageApplications extends CWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items disabled');
 		$this->zbxTestCheckFatalErrors();
 
+		// check of desabled selected Application in DataBase
 		$applications = implode(", ", $data['applications']);
 		$hostid= $data['hostid'];
 		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
 		WHERE IA.applicationid IN ('.$applications.') && I.flags<>2 && I.hostid='.$hostid.' && I.status='.ITEM_STATUS_ACTIVE;
 
-		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Not all Items for ApplicationsID: '.$applications.' have the status ITEM_STATUS_DISABLED');
+		$this->assertEquals(0, DBcount($sql));
 	}
 
 	/**
@@ -226,10 +228,11 @@ class testPageApplications extends CWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
 		$this->zbxTestCheckFatalErrors();
 
+		// check of enable all Application in DataBase
 		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
 		WHERE IA.applicationid>0 && I.flags<>2 && I.hostid='.$data['hostid'].' && I.status='.ITEM_STATUS_DISABLED;
 
-		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Not all Items for Applications have the status ITEM_STATUS_ACTIVE');
+		$this->assertEquals(0, DBcount($sql));
 	}
 
 	/**
@@ -247,10 +250,11 @@ class testPageApplications extends CWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items disabled');
 		$this->zbxTestCheckFatalErrors();
 
+		// check of desable all Application in DataBase
 		$sql = 'SELECT NULL FROM items I LEFT JOIN items_applications IA USING (itemid)
 		WHERE IA.applicationid>0 && I.flags<>2 && I.hostid='.$data['hostid'].' && I.status='.ITEM_STATUS_ACTIVE;
 
-		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Not all Items for Applications have the status ITEM_STATUS_DISABLED');
+		$this->assertEquals(0, DBcount($sql));
 	}
 
 	/**
@@ -284,12 +288,12 @@ class testPageApplications extends CWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Application deleted');
 		$this->zbxTestCheckFatalErrors();
 
-		//check application existence after deleted
+		// check application existence after deleted
 		$sql = 'SELECT NULL FROM applications WHERE applicationid='.$data['appiddelete'];
-		$this->assertEquals(0, DBcount($sql), 'Chuck Norris: Application existence in DataBase after deleted');
+		$this->assertEquals(0, DBcount($sql));
 
-		//check item existence after deleted application
+		// check item existence after deleted application
 		$sql = 'SELECT NULL FROM items WHERE itemid='.$data['itemdelete'];
-		$this->assertEquals(1, DBcount($sql), 'Chuck Norris: Item not existence after deleted application');
+		$this->assertEquals(1, DBcount($sql));
 	}
 }
