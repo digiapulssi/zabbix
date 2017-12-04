@@ -173,7 +173,11 @@ void	DBbegin(void)
  ******************************************************************************/
 void	DBcommit(void)
 {
-	DBtxn_operation(zbx_db_commit);
+	if (ZBX_DB_OK > zbx_db_commit())
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "commit called on failed transaction, doing a rollback instead");
+		DBrollback();
+	}
 }
 
 /******************************************************************************
@@ -189,7 +193,13 @@ void	DBcommit(void)
  ******************************************************************************/
 void	DBrollback(void)
 {
-	DBtxn_operation(zbx_db_rollback);
+	if (ZBX_DB_OK > zbx_db_rollback())
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "cannot perform transaction rollback, connection will be reset");
+
+		DBclose();
+		DBconnect(ZBX_DB_CONNECT_NORMAL);
+	}
 }
 
 /******************************************************************************
@@ -204,9 +214,9 @@ void	DBrollback(void)
 void	DBend(int ret)
 {
 	if (SUCCEED == ret)
-		DBtxn_operation(zbx_db_commit);
+		DBcommit();
 	else
-		DBtxn_operation(zbx_db_rollback);
+		DBrollback();
 }
 
 #ifdef HAVE_ORACLE

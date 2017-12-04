@@ -1,10 +1,25 @@
 Changes for 3.4.5rc1
 
 New features:
+..F.....S. [ZBXNEXT-4002] implemented support for elasticsearch as history storage (abs, vjaceslavs, wiper)
 ..F....... [ZBX-12809] implemented overlay dialog centering using javascript (miks)
 
 Bug fixes:
-.........T [ZBXNEXT-4223] performed network templates cleanup (vitaly)
+........S. [ZBX-12974] fixed TLS connection to passive proxy error handling (gleb, valdis)
+..F....... [ZBX-12714] fixed overflow property of svg (vjaceslavs)
+.......PS. [ZBX-12925] fixed logic of commit/rollback operations (vjaceslavs)
+..F....... [ZBX-13088] fixed incomplete data in notification reports for yearly report types (gcalenko)
+........S. [ZBX-12887] fixed alert error message visibility to unrelated users (valdis)
+.......PS. [ZBX-12497] improved VMware event log data collection and processing (gleb)
+...G...... [ZBX-8054] relieved windows agent of dependency on MFC (valdis)
+..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
+....I..... [ZBX-12798] added --with-libpcre-lib configure option (valdis)
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
+..F....... [ZBX-12897] fixed error causing empty list in popup window when opened from page having host group filter (gcalenko)
+..F....... [ZBX-12948] fixed percentile visibility in dashboard graph widgets (gcalenko)
+A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
+........S. [ZBX-13061] fixed memory leak in preprocessing manager (wiper)
+....I..... [ZBX-12232] fixed mysql m4 configuration script for mariadb C connector (abs)
 ..F....... [ZBX-12663] fixed retaining the scrollbar position on page reload (Ivo)
 ..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
 ..F....... [ZBX-13016] fixed warning message shown by deprecated PHP 7.2 function create_function() (Sasha)
@@ -12,6 +27,7 @@ Bug fixes:
 ........S. [ZBX-13027] fixed floating range validation during conversion from uint64 to float (wiper)
 ........S. [ZBX-12975] fixed possibility of foreign key constraint failure due to events being removed before trigger data storage period expires (vso)
 ........S. [ZBX-11426] fixed potentially incorrect delete procedure for problems and events (abs)
+........S. [ZBX-8049] fixed zabbix[java,,ping] to stay supported when java gateway is down (valdis)
 ....I..... [ZBX-12895] improved performance of DB patch for updating data in the alerts table (Sergejs)
 ........S. [ZBX-12971] fixed possibility of host availability being stuck in unknown state when monitoring though proxy (vso)
 .......P.. [ZBX-12971] fixed Zabbix proxy not to send same host availability more than once (vso)
@@ -23,6 +39,7 @@ A......... [ZBX-10754] fixed inheritance of template properties in web scenarios
 ..F....... [ZBX-12082] fixed possibility to select triggers with same name in multiselect (Ivo)
 ........S. [ZBX-9567] added missing fields to webscenario data handling (valdis)
 ..F....... [ZBX-11051] fixed displaying highest severity when dashboard filter options contain unacknowledged only (Ivo)
+...G...... [ZBX-10710] fixed CPU guest time utilization accounting in Linux (valdis)
 ........S. [ZBX-12978] improved performance of preprocessor manager, alert manager/worker, IPMI manager/poller by reducing frequency of log rotation checks that handle stdout/stderr (vso)
 ........S. [ZBX-12936] improved SQL performance by updating proxy last access in bulks (vso)
 .....J.... [ZBX-12705] added check for collisions and unsupported characters in macro names in jmx.discovery (vjaceslavs)
@@ -406,6 +423,12 @@ Changes for 3.2.11rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-12925] fixed logic of commit/rollback operations (vjaceslavs)
+.......PS. [ZBX-12497] improved VMware event log data collection and processing (gleb)
+..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
+..F....... [ZBX-12897] fixed error causing empty list in popup window when opened from page having host group filter (gcalenko)
+A.F....... [ZBX-12655] added filter on event details page to show messages sent to users only from same groups (gcalenko)
 ..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
 ..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
 ........S. [ZBX-12975] fixed possibility of foreign key constraint failure due to events being removed before trigger data storage period expires (vso)
@@ -966,6 +989,17 @@ Changes for 3.0.14rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-13042] fixed unclickable template link on host items list page (gcalenko)
+.......PS. [ZBX-12925] fixed logic of commit/rollback operations (vjaceslavs)
+..F....... [ZBX-13088] fixed incomplete data in notification reports for yearly report types (gcalenko)
+..F....... [ZBX-12884] fixed misleading permissions visualization in user form for host groups and hosts lists (gcalenko)
+........S. [ZBX-12887] fixed alert error message visibility to unrelated users (valdis)
+.......PS. [ZBX-12497] improved VMware event log data collection and processing (gleb)
+...G...... [ZBX-8054] relieved windows agent of dependency on MFC (valdis)
+..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
+..F....... [ZBX-12897] fixed error causing empty list in popup window when opened from page having host group filter (gcalenko)
+....I..... [ZBX-12232] fixed mysql m4 configuration script for mariadb C connector (abs)
 ..F....... [ZBX-12247] fixed multiselect not showing results for read-only objects in screen configuration (Ivo)
 ..F....... [ZBX-13016] fixed warning message shown by deprecated PHP 7.2 function create_function() (Sasha)
 ..F....... [ZBX-12130] fixed max length validation in textarea fields (Ivo)
@@ -2778,6 +2812,8 @@ Changes for 2.2.21rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
+..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
 ..F....... [DEV-593] fixed multiple security issues (miks)
 .......PS. [ZBX-12854] fixed crash of VMware collector with DebugLevel=4 (gleb)
 
