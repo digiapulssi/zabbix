@@ -976,8 +976,10 @@ static void	resolve_old2new(char *old2new, int num_old, int num_new)
 
 	return;
 non_unique:
-	/* This is expected on MS Windows using FAT32 and other file systems where inodes or file indexes */
-	/* are either not preserved if a file is renamed or are not applicable. */
+	/* This is expected: */
+	/*   - on MS Windows using FAT32 and other file systems where inodes or file indexes are either not */
+	/*     preserved if a file is renamed or are not applicable, */
+	/*   - in 'copytruncate' rotation mode if multiple copies of log file are present. */
 
 	zabbix_log(LOG_LEVEL_DEBUG, "resolve_old2new(): non-unique mapping");
 
@@ -1132,8 +1134,9 @@ non_unique:
 static char	*create_old2new_and_copy_of(int rotation_type, struct st_logfile *old, int num_old,
 		struct st_logfile *new, int num_new, int use_ino, char **err_msg)
 {
-	int	i, j;
-	char	*old2new, *p;
+	const char	*__function_name = "create_old2new_and_copy_of";
+	int		i, j;
+	char		*old2new, *p;
 
 	/* set up a two dimensional array of possible mappings from old files to new files */
 	old2new = zbx_malloc(NULL, (size_t)num_new * (size_t)num_old * sizeof(char));
@@ -1158,9 +1161,10 @@ static char	*create_old2new_and_copy_of(int rotation_type, struct st_logfile *ol
 				case ZBX_SAME_FILE_YES:
 					if (1 == old[i].retry)
 					{
-						zabbix_log(LOG_LEVEL_DEBUG, "the size of log file \"%s\" has been"
+						zabbix_log(LOG_LEVEL_DEBUG, "%s(): the size of log file \"%s\" has been"
 								" updated since modification time change, consider"
-								" it to be the same file", old->filename);
+								" it to be the same file", __function_name,
+								old->filename);
 						old[i].retry = 0;
 					}
 					p[j] = '1';
@@ -1180,7 +1184,7 @@ static char	*create_old2new_and_copy_of(int rotation_type, struct st_logfile *ol
 
 			if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 			{
-				zabbix_log(LOG_LEVEL_DEBUG, "setup_old2new_and_copy_of: is_same_file(%s, %s) = %c",
+				zabbix_log(LOG_LEVEL_DEBUG, "%s(): is_same_file(%s, %s) = %c", __function_name,
 						old[i].filename, new[j].filename, p[j]);
 			}
 		}
