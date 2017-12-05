@@ -2712,6 +2712,7 @@ class CLineGraphDraw extends CGraphDraw {
 		}
 
 		set_image_header();
+		$this->calculateTopPadding();
 
 		// $this->sizeX is required for selectData() method
 		$this->expandItems();

@@ -664,6 +664,7 @@ class CPieGraphDraw extends CGraphDraw {
 			$start_time = microtime(true);
 		}
 		set_image_header();
+		$this->calculateTopPadding();
 
 		$this->selectData();
 

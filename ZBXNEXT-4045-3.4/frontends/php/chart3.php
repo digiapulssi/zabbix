@@ -168,9 +168,7 @@ $graph->setLeftPercentage(getRequest('percent_left', 0));
 $graph->setRightPercentage(getRequest('percent_right', 0));
 $graph->setOuter(getRequest('outer', 0));
 
-if (getRequest('show_header') === '0') {
-	$graph->setDrawHeader(false);
-}
+$graph->draw_header = getRequest('show_header') !== '0';
 
 foreach ($graph_items as $graph_item) {
 	$graph->addItem($graph_item);

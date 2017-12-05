@@ -107,9 +107,7 @@ if (!empty($_REQUEST['graph3d'])) {
 	$graph->switchPie3D();
 }
 
-if (getRequest('show_header') === '0') {
-	$graph->setDrawHeader(false);
-}
+$graph->draw_header = getRequest('show_header') !== '0';
 
 $graph->showLegend(getRequest('legend', 0));
 $graph->setWidth(getRequest('width', 400));

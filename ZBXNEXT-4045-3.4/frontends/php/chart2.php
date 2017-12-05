@@ -82,9 +82,7 @@ CProfile::update('web.screens.graphid', $_REQUEST['graphid'], PROFILE_TYPE_ID);
 
 $graph = new CLineGraphDraw($dbGraph['graphtype']);
 
-if (getRequest('show_header') === '0') {
-	$graph->setDrawHeader(false);
-}
+$graph->draw_header = getRequest('show_header') !== '0';
 
 // array sorting
 CArrayHelper::sort($dbGraph['gitems'], [

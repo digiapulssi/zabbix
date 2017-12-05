@@ -89,9 +89,7 @@ if ($height <= 0) {
 	$height = $dbGraph['height'];
 }
 
-if (getRequest('show_header') === '0') {
-	$graph->setDrawHeader(false);
-}
+$graph->draw_header = getRequest('show_header') !== '0';
 
 $graph->setWidth($width);
 $graph->setHeight($height);

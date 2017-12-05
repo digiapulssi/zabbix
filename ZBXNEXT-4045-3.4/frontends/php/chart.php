@@ -119,9 +119,7 @@ if (hasRequest('outer')) {
 	$graph->setOuter(getRequest('outer'));
 }
 
-if (getRequest('show_header') === '0') {
-	$graph->setDrawHeader(false);
-}
+$graph->draw_header = getRequest('show_header') !== '0';
 
 foreach ($items as $item) {
 	$graph->addItem($item + [
