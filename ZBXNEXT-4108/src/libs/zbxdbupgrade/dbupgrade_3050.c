@@ -142,6 +142,8 @@ static int	DBpatch_3050006(void)
 	if (ZBX_DB_OK > DBexecute("%s", sql))
 		return FAIL;
 
+	DBfree_result(result);
+
 	zbx_free(sql);
 
 	return SUCCEED;
@@ -175,6 +177,8 @@ static int	DBpatch_3050007(void)
 
 	if (ZBX_DB_OK > DBexecute("%s", sql))
 		return FAIL;
+
+	DBfree_result(result);
 
 	zbx_free(sql);
 
