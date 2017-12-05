@@ -999,6 +999,15 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_init_parent();
 #endif
+
+#ifdef _AIX
+	/* Initialize collecting of vmstat data early. This helps getting the real values on the */
+	/* first request. Also on the first request collector is starting to update vmstat data. */
+	collect_vmstat_data(&collector->vmstat);
+#endif
+	if (SUCCEED != init_cpu_collector(&(collector->cpus)))
+		free_cpu_collector(&(collector->cpus));
+
 	/* --- START THREADS ---*/
 
 	/* allocate memory for a collector, all listeners and active checks */
