@@ -21,6 +21,8 @@
 
 class CPieGraphDraw extends CGraphDraw {
 
+	const DEFAULT_HEADER_PADDING_TOP = 30;
+
 	public function __construct($type = GRAPH_TYPE_PIE) {
 		parent::__construct($type);
 		$this->background = false;
@@ -668,7 +670,6 @@ class CPieGraphDraw extends CGraphDraw {
 
 		$this->selectData();
 
-		$this->shiftY = 30;
 		$this->shiftYLegend = 20;
 		$this->shiftXleft = 10;
 		$this->shiftXright = 0;
