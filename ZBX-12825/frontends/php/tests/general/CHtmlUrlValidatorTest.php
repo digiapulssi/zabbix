@@ -19,6 +19,7 @@
 **/
 
 require_once dirname(__FILE__).'/../../include/defines.inc.php';
+require_once dirname(__FILE__).'/../../include/validate.inc.php';
 require_once dirname(__FILE__).'/../../include/classes/validators/CHtmlUrlValidator.php';
 
 class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
@@ -32,12 +33,13 @@ class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
 			array('chart_bar.php?a=1&b=2',			true),
 			array('mailto:example@example.com',		true),
 			array('file://localhost/path',			true),
-			array('ftp://user@host:port',			true),
+			array('ftp://user@host:21',				true),
 			array('tel:1-111-111-1111',				true),
 			array('ssh://username@hostname:/path ',	true),
 			array('',								false),
 			array('javascript:alert()',				false),
 			array('/chart_bar.php?a=1&b=2',			false),
+			array('ftp://user@host:port',			false),
 			array('vbscript:msgbox()',				false),
 			array('../././not_so_zabbix',			false),
 			array('jav&#x09;ascript:alert(1);', 	false)
