@@ -566,8 +566,6 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 --------------------------------------------------------------------------------
 Changes for 3.0.14rc1
 
-New features:
-
 Bug fixes:
 .......PS. [ZBX-12925] fixed logic of commit/rollback operations (vjaceslavs)
 ..F....... [ZBX-13088] fixed incomplete data in notification reports for yearly report types (gcalenko)
