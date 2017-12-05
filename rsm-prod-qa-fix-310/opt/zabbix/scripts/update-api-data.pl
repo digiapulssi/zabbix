@@ -171,8 +171,6 @@ if (opt('continue'))
 {
 	$continue_file = ah_get_continue_file();
 
-	my $handle;
-
 	if (! -e $continue_file)
 	{
 		if (!defined($check_from = __get_config_minclock()))
@@ -183,6 +181,8 @@ if (opt('continue'))
 	}
 	else
 	{
+		my $handle;
+
 		fail("cannot open continue file $continue_file\": $!") unless (open($handle, '<', $continue_file));
 
 		chomp(my @lines = <$handle>);
@@ -199,14 +199,12 @@ if (opt('continue'))
 		}
 
 		my $next_ts = $ts + 1;	# continue with the next minute
-		my $truncated_ts = truncate_from($next_ts);
+		$check_from = truncate_from($next_ts);
 
-		if ($truncated_ts != $next_ts)
+		if ($check_from != $next_ts)
 		{
-			wrn(sprintf("truncating last update value (%s) to %s", ts_str($ts), ts_str($truncated_ts)));
+			wrn(sprintf("truncating last update value (%s) to %s", ts_str($ts), ts_str($check_from)));
 		}
-
-		$check_from = $truncated_ts;
 
 		dbg("last update time: ", ts_full($check_from));
 	}
@@ -216,35 +214,15 @@ if (opt('continue'))
 		fail("no data from probes in the database yet");
 	}
 
-	my $period;
-	if (opt('period'))
-	{
-		$period = getopt('period');
-	}
-	else
-	{
-		$period = MAX_CONTINUE_PERIOD;
-	}
+	my $period = (opt('period') ? getopt('period') : MAX_CONTINUE_PERIOD);
 
 	$check_till = $check_from + $period * 60 - 1;
-
-	if ($check_till > $max_till)
-	{
-		$check_till = $max_till;
-	}
+	$check_till = $max_till if ($check_till > $max_till);
 }
 elsif (opt('from'))
 {
 	$check_from = $opt_from;
-
-	if (opt('period'))
-	{
-		$check_till = $check_from + getopt('period') * 60 - 1;
-	}
-	else
-	{
-		$check_till = $max_till;
-	}
+	$check_till = (opt('period') ? $check_from + getopt('period') * 60 - 1 : $max_till);
 }
 elsif (opt('period'))
 {
