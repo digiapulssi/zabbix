@@ -135,6 +135,9 @@ static int	DBpatch_3050006(void)
 				" and objectid=%d and source=%d;\n", description, EVENT_OBJECT_TRIGGER,
 				triggerid, EVENT_SOURCE_TRIGGERS);
 		zbx_free(description);
+
+		if (SUCCEED != DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset))
+			return FAIL;
 	}
 
 	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
@@ -174,6 +177,9 @@ static int	DBpatch_3050007(void)
 				" and objectid=%d and source=%d;\n", description, EVENT_OBJECT_TRIGGER,
 				triggerid, EVENT_SOURCE_TRIGGERS);
 		zbx_free(description);
+
+		if (SUCCEED != DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset))
+			return FAIL;
 	}
 
 	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
