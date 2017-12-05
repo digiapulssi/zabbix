@@ -46,7 +46,6 @@ sub get_historical_value_by_time($$);
 sub fill_test_data_dns($$$);
 sub fill_test_data_rdds($$);
 sub match_clocks_with_results($$);
-sub __check_from();
 
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'maxproc=n');
 
@@ -176,7 +175,11 @@ if (opt('continue'))
 
 	if (! -e $continue_file)
 	{
-		$check_from = __check_from();
+		if (!defined($check_from = __get_config_minclock()))
+		{
+			info("no data from Probe nodes yet");
+			slv_exit(SUCCESS);
+		}
 	}
 	else
 	{
@@ -190,24 +193,22 @@ if (opt('continue'))
 
 		if (!$ts)
 		{
-			# last_update file exists but is empty, this should not happen
-			# but let's treat it as missing file
-			$check_from = __check_from();
+			# last_update file exists but is empty, this means something went wrong
+			fail("The last update file \"$continue_file\" exists but is empty.".
+				" Please set the timestamp of the last update in it and run the script again.");
 		}
-		else
+
+		my $next_ts = $ts + 1;	# continue with the next minute
+		my $truncated_ts = truncate_from($next_ts);
+
+		if ($truncated_ts != $next_ts)
 		{
-			my $next_ts = $ts + 1;	# continue with the next minute
-			my $truncated_ts = truncate_from($next_ts);
-
-			if ($truncated_ts != $next_ts)
-			{
-				wrn(sprintf("truncating last update value (%s) to %s", ts_str($ts), ts_str($truncated_ts)));
-			}
-
-			$check_from = $truncated_ts;
-
-			dbg("last update time: ", ts_full($check_from));
+			wrn(sprintf("truncating last update value (%s) to %s", ts_str($ts), ts_str($truncated_ts)));
 		}
+
+		$check_from = $truncated_ts;
+
+		dbg("last update time: ", ts_full($check_from));
 	}
 
 	if ($check_from == 0)
@@ -1345,22 +1346,6 @@ sub match_clocks_with_results($$)
 	return $matches;
 }
 
-# NB! __get_config_minclock() goes through all the databases and closes the connection
-sub __check_from()
-{
-	my $config_minclock = __get_config_minclock();
-
-	if (!defined($config_minclock))
-	{
-		info("no data from Probe nodes yet");
-		slv_exit(SUCCESS);
-	}
-
-	dbg("oldest data found: ", ts_full($config_minclock));
-
-	return truncate_from($config_minclock);
-}
-
 # values are organized like this:
 # {
 #           'WashingtonDC' => {
@@ -2211,33 +2196,37 @@ sub __get_config_minclock
 
 	foreach (@server_keys)
 	{
-	$server_key = $_;
-	db_connect($server_key);
+		$server_key = $_;
+		db_connect($server_key);
 
-	my $rows_ref = db_select(
-			"select min(clock)".
-			" from history_uint".
-			" where itemid in".
-				" (select itemid".
-				" from items".
-				" where key_='" . PROBE_KEY_ONLINE.
-					"' and templateid is not null)");
+		my $rows_ref = db_select(
+				"select min(clock)".
+				" from history_uint".
+				" where itemid in".
+					" (select itemid".
+					" from items".
+					" where key_='" . PROBE_KEY_ONLINE.
+						"' and templateid is not null)");
 
-	next unless (defined($rows_ref->[0]->[0]));
+		next unless (defined($rows_ref->[0]->[0]));
 
-	my $newclock = int($rows_ref->[0]->[0]);
-	dbg("min(clock): $newclock");
+		my $newclock = int($rows_ref->[0]->[0]);
+		dbg("min(clock): $newclock");
 
-	$minclock = $newclock if (!defined($minclock) || $newclock < $minclock);
-	db_disconnect();
+		$minclock = $newclock if (!defined($minclock) || $newclock < $minclock);
+		db_disconnect();
 	}
 	undef($server_key);
+
+	return undef if (!defined($minclock));
+
+	dbg("oldest data found: ", ts_full($minclock));
 
 	# todo phase 1: remove moving 1 day back, this was needed for Data Export, not SLA API!
 	# move a day back since this is collected once a day
 	#$minclock -= 86400;
 
-	return $minclock;
+	return truncate_from($minclock);
 }
 
 __END__
