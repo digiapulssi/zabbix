@@ -39,7 +39,8 @@ $fields = [
 	'width' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(CLineGraphDraw::GRAPH_WIDTH_MIN, 65535),	null],
 	'height' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(CLineGraphDraw::GRAPH_HEIGHT_MIN, 65535),	null],
 	'outer' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
-	'onlyHeight' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
+	'onlyHeight' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
+	'show_header' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
 	exit();
@@ -80,6 +81,10 @@ $timeline = calculateTime([
 CProfile::update('web.screens.graphid', $_REQUEST['graphid'], PROFILE_TYPE_ID);
 
 $graph = new CLineGraphDraw($dbGraph['graphtype']);
+
+if (getRequest('show_header') === '0') {
+	$graph->setDrawHeader(false);
+}
 
 // array sorting
 CArrayHelper::sort($dbGraph['gitems'], [

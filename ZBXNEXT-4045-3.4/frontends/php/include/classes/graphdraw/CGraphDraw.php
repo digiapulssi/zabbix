@@ -21,6 +21,11 @@
 
 abstract class CGraphDraw {
 
+	/**
+	 * Header label visibility. Public setter setDrawHeader method.
+	 */
+	protected $draw_header = true;
+
 	public function __construct($type = GRAPH_TYPE_NORMAL) {
 		$this->stime = null;
 		$this->fullSizeX = null;
@@ -51,7 +56,21 @@ abstract class CGraphDraw {
 		$this->type = $type; // graph type
 		$this->drawLegend = 1;
 		$this->graphtheme = getUserGraphTheme();
-		$this->drawHeader = true;
+		$this->setDrawHeader(true);
+	}
+
+	/**
+	 * Set visibility of graph header label.
+	 *
+	 * @param bool $visible     True if graph header label is visible.
+	 */
+	public function setDrawHeader($visible) {
+		$this->draw_header = $visible;
+		/**
+		 * If header label is hidden substract 11 from top padding.
+		 * 11px is maximum height of header label font and is used in drawHeader method.
+		 */
+		$this->shiftY = $visible ? 36 : 36 - 11;
 	}
 
 	public function initColors() {
@@ -177,7 +196,7 @@ abstract class CGraphDraw {
 	}
 
 	public function drawHeader() {
-		if (!$this->drawHeader) {
+		if (!$this->draw_header) {
 			return;
 		}
 

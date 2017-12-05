@@ -40,7 +40,8 @@ $fields = [
 	'height' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(CLineGraphDraw::GRAPH_HEIGHT_MIN, 65535),	null],
 	'outer' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'batch' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
-	'onlyHeight' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
+	'onlyHeight' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
+	'show_header' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
 	exit();
@@ -116,6 +117,10 @@ if (hasRequest('height')) {
 }
 if (hasRequest('outer')) {
 	$graph->setOuter(getRequest('outer'));
+}
+
+if (getRequest('show_header') === '0') {
+	$graph->setDrawHeader(false);
 }
 
 foreach ($items as $item) {
