@@ -31,7 +31,9 @@ zbx_history_record_t;
 ZBX_VECTOR_DECL(history_record, zbx_history_record_t);
 
 void	zbx_history_record_vector_clean(zbx_vector_history_record_t *vector, int value_type);
+
 void	zbx_history_record_vector_destroy(zbx_vector_history_record_t *vector, int value_type);
+
 void	zbx_history_record_clear(zbx_history_record_t *value, int value_type);
 
 void	zbx_history_value2str(char *buffer, size_t size, history_value_t *value, int value_type);
