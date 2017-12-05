@@ -1,7 +1,5 @@
 Changes for 3.2.11rc1
 
-New features:
-
 Bug fixes:
 .......PS. [ZBX-12925] fixed logic of commit/rollback operations (vjaceslavs)
 .......PS. [ZBX-12497] improved VMware event log data collection and processing (gleb)
