@@ -197,6 +197,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 
 		$selectedGroups = [];
 		$included_groupids = [];
+		$excluded_groupids = [];
 
 		foreach ($tldGroups as $tldGroup) {
 			switch ($tldGroup['name']) {
@@ -209,12 +210,18 @@ foreach ($DB['SERVERS'] as $key => $value) {
 					if ($data['filter_cctld_group']) {
 						$included_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
 					}
+					else {
+						$excluded_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
+					}
 					break;
 				case RSM_G_TLD_GROUP:
 					$data['allowedGroups'][RSM_G_TLD_GROUP] = true;
 
 					if ($data['filter_gtld_group']) {
 						$included_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
+					}
+					else {
+						$excluded_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
 					}
 					break;
 				case RSM_OTHER_TLD_GROUP:
@@ -223,12 +230,18 @@ foreach ($DB['SERVERS'] as $key => $value) {
 					if ($data['filter_othertld_group']) {
 						$included_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
 					}
+					else {
+						$excluded_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
+					}
 					break;
 				case RSM_TEST_GROUP:
 					$data['allowedGroups'][RSM_TEST_GROUP] = true;
 
 					if ($data['filter_test_group']) {
 						$included_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
+					}
+					else {
+						$excluded_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
 					}
 					break;
 			}
@@ -240,48 +253,51 @@ foreach ($DB['SERVERS'] as $key => $value) {
 			exit;
 		}
 
-		$where_host = '';
-		if (CUser::$userData['type'] == USER_TYPE_SUPER_ADMIN) {
-			$where_condition[] = dbConditionInt('hg.groupid', $selectedGroups);
-			$host_count = (count($selectedGroups) >= 2) ? 2 : 1;
-			if ($data['filter_search']) {
-				$where_host = ' AND h.name LIKE ('.zbx_dbstr('%'.$data['filter_search'].'%').')';
-			}
+		// get TLDs
+		$where_condition[] = dbConditionInt('hg.groupid', $selectedGroups);
 
-			$db_tlds = DBselect(
-				'SELECT h.hostid,h.host,h.name'.
-				' FROM hosts h'.
-				' WHERE hostid IN ('.
-					'SELECT hg.hostid from hosts_groups hg'.
-					' WHERE '.dbConditionInt('hg.groupid', $selectedGroups).
-					' GROUP BY hg.hostid HAVING COUNT(hg.hostid)>='.$host_count.')'.
-					$where_host
-			);
-		}
-		else {
+		if (CUser::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			$userid = CWebUser::$data['userid'];
 			$userGroups = getUserGroupsByUserId($userid);
-			if ($data['filter_search']) {
-				$where_host = ' AND hh.name LIKE ('.zbx_dbstr('%'.$data['filter_search'].'%').')';
-			}
-
-			$db_tlds = DBselect(
-				'SELECT h.hostid,h.host,h.name'.
-				' FROM hosts h'.
-				' WHERE hostid IN ('.
-					'SELECT hgg.hostid'.
-					' FROM hosts_groups hgg'.
-					' JOIN rights r ON r.id=hgg.groupid AND '.dbConditionInt('r.groupid', $userGroups).
-					' WHERE hgg.hostid IN ('.
-						'SELECT hh.hostid'.
-						' FROM hosts hh,hosts_groups hg'.
-						' WHERE '.dbConditionInt('hg.groupid', $selectedGroups).
-							' AND hh.hostid=hg.hostid'.
-							$where_host.
-					')'.
-					'GROUP BY hgg.hostid HAVING MIN(r.permission)>=2)'
-			);
+			$where_condition[] = 'EXISTS ('.
+				'SELECT NULL'.
+				' FROM hosts_groups hgg'.
+					' JOIN rights r'.
+						' ON r.id=hgg.groupid'.
+							' AND '.dbConditionInt('r.groupid', $userGroups).
+				' WHERE h.hostid=hgg.hostid'.
+				' GROUP BY hgg.hostid'.
+				' HAVING MIN(r.permission)>='.PERM_READ.
+			')';
 		}
+
+		$where_host_group = ' WHERE '.implode(' AND ', $where_condition);
+
+		$where_host = '';
+		if ($data['filter_search']) {
+			$where_host = ' AND h.name LIKE ('.zbx_dbstr('%'.$data['filter_search'].'%').')';
+		}
+
+		$where_in = '';
+		if ($included_groupids) {
+			$where_in = ' AND '.dbConditionInt('hg.groupid', $included_groupids);
+		}
+
+		$where_not_in = '';
+		if ($excluded_groupids) {
+			$where_not_in = ' AND '.dbConditionInt('hg2.groupid', $excluded_groupids, true);
+		}
+
+		$host_count = (count($selectedGroups) >= 2) ? 2 : 1;
+
+		$db_tlds = DBselect(
+			'SELECT h.hostid, h.host, h.name'.
+			' FROM hosts h'.
+			' WHERE hostid IN ('.
+				'SELECT hg.hostid from hosts_groups hg'.$where_host_group.
+				' GROUP BY hg.hostid HAVING COUNT(hg.hostid)>='.$host_count.')'.
+				$where_host
+		);
 
 		if ($db_tlds) {
 			$hostids = [];
