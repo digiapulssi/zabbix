@@ -31,7 +31,7 @@ class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
 			['chart_bar.php?a=1&b=2',			true, true],
 			['mailto:example@example.com',		true, true],
 			['file://localhost/path',			true, true],
-			['ftp://user@host:port',			true, false],
+			['ftp://user@host:21',				true, true],
 			['tel:1-111-111-1111',				true, true],
 			['ssh://username@hostname:/path ',	true, true],
 			['{$USER_URL_MACRO}',				true, true],
@@ -41,6 +41,7 @@ class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
 			['',								true, false],
 			['javascript:alert(]',				true, false],
 			['/chart_bar.php?a=1&b=2',			true, false],
+			['ftp://user@host:port',			true, false],
 			['vbscript:msgbox(]',				true, false],
 			['../././not_so_zabbix',			true, false],
 			['jav&#x09;ascript:alert(1];', 		true, false]
