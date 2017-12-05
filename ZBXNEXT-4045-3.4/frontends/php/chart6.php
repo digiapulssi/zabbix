@@ -40,7 +40,7 @@ $fields = [
 	'height' =>			[T_ZBX_INT, O_OPT, P_NZERO,	'{} > 0',	null],
 	'graph3d' =>		[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),	null],
 	'legend' =>			[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),	null],
-	'show_header' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
+	'widget_view' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
 	exit();
@@ -89,7 +89,10 @@ if ($height <= 0) {
 	$height = $dbGraph['height'];
 }
 
-$graph->draw_header = getRequest('show_header') !== '0';
+if (getRequest('widget_view') === '1') {
+	$graph->draw_header = false;
+	$graph->with_vertical_padding = false;
+}
 
 $graph->setWidth($width);
 $graph->setHeight($height);

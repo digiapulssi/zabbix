@@ -41,7 +41,7 @@ $fields = [
 	'outer' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'batch' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'onlyHeight' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
-	'show_header' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
+	'widget_view' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
 	exit();
@@ -119,7 +119,10 @@ if (hasRequest('outer')) {
 	$graph->setOuter(getRequest('outer'));
 }
 
-$graph->draw_header = getRequest('show_header') !== '0';
+if (getRequest('widget_view') === '1') {
+	$graph->draw_header = false;
+	$graph->with_vertical_padding = false;
+}
 
 foreach ($items as $item) {
 	$graph->addItem($item + [

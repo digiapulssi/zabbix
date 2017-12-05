@@ -310,6 +310,7 @@ class CPieGraphDraw extends CGraphDraw {
 
 		// display items
 		$i = 0;
+		$top_padding = $this->with_vertical_padding ? 10 : -(static::DEFAULT_TOP_BOTTOM_PADDING / 2);
 
 		foreach ($this->items as $item) {
 			$color = $this->getColor($item['color'], 0);
@@ -403,9 +404,9 @@ class CPieGraphDraw extends CGraphDraw {
 			imagefilledrectangle(
 				$this->im,
 				$shiftX - 10,
-				$this->shiftY + 10 + 14 * $i,
+				$this->shiftY + $top_padding + 14 * $i,
 				$shiftX,
-				$this->shiftY + 10 + 10 + 14 * $i,
+				$this->shiftY + $top_padding + 10 + 14 * $i,
 				$color
 			);
 
@@ -413,9 +414,9 @@ class CPieGraphDraw extends CGraphDraw {
 			imagerectangle(
 				$this->im,
 				$shiftX - 10,
-				$this->shiftY + 10 + 14 * $i,
+				$this->shiftY + $top_padding + 14 * $i,
 				$shiftX,
-				$this->shiftY + 10 + 10 + 14 * $i,
+				$this->shiftY + $top_padding + 10 + 14 * $i,
 				$this->GetColor('Black No Alpha')
 			);
 
@@ -425,7 +426,7 @@ class CPieGraphDraw extends CGraphDraw {
 				$fontSize,
 				0,
 				$shiftX + 5,
-				$this->shiftY + 10 + 14 * $i + 10,
+				$this->shiftY + $top_padding + 14 * $i + 10,
 				$this->getColor($this->graphtheme['textcolor'], 0),
 				$strValue
 			);
@@ -687,6 +688,10 @@ class CPieGraphDraw extends CGraphDraw {
 		else {
 			$this->sizeX -= $this->shiftXleft * 2;
 			$this->sizeY -= $this->shiftY * 2;
+		}
+
+		if (!$this->with_vertical_padding) {
+			$this->sizeY += static::DEFAULT_TOP_BOTTOM_PADDING;
 		}
 
 		$this->sizeX = min($this->sizeX, $this->sizeY);

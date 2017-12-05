@@ -42,7 +42,7 @@ $fields = [
 	'graph3d' =>		[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),			null],
 	'legend' =>			[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),			null],
 	'items' =>			[T_ZBX_STR, O_OPT, null,	null,				null],
-	'show_header' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),			null]
+	'widget_view' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),			null]
 ];
 if (!check_fields($fields)) {
 	exit();
@@ -107,7 +107,10 @@ if (!empty($_REQUEST['graph3d'])) {
 	$graph->switchPie3D();
 }
 
-$graph->draw_header = getRequest('show_header') !== '0';
+if (getRequest('widget_view') === '1') {
+	$graph->draw_header = false;
+	$graph->with_vertical_padding = false;
+}
 
 $graph->showLegend(getRequest('legend', 0));
 $graph->setWidth(getRequest('width', 400));

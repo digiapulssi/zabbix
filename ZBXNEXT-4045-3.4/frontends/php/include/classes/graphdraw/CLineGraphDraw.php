@@ -2558,6 +2558,13 @@ class CLineGraphDraw extends CGraphDraw {
 
 		$x_offsets = $this->shiftXleft + $this->shiftXright + 1;
 		$y_offsets = $this->shiftY + self::legendOffsetY;
+
+		if (!$this->with_vertical_padding) {
+			$y_offsets -= $this->m_showTriggers
+				? static::DEFAULT_TOP_BOTTOM_PADDING / 2
+				: static::DEFAULT_TOP_BOTTOM_PADDING;
+		}
+
 		$this->fullSizeX = $this->sizeX;
 		$this->fullSizeY = $this->sizeY;
 

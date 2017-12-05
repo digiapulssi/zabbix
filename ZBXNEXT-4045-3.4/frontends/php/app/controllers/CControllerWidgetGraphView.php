@@ -338,7 +338,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				$graph_src->setArgument('outer', '1');
 			}
 
-			$graph_src->setArgument('show_header', '0');
+			$graph_src->setArgument('widget_view', '1');
 			$time_control_data['src'] = $graph_src->getUrl();
 		}
 
