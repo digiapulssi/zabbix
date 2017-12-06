@@ -54,7 +54,8 @@ class CScreenMap extends CScreenBase {
 			foreach ($sysmap['selements'] as &$selement) {
 				foreach ($selement['urls'] as &$url) {
 					if (!CHtmlUrlValidator::validate($url['url'])) {
-						$url['url'] = 'javascript: alert("'._('Wrong value for url field.').'");';
+						$msg = _s('Provided URL "%1$s" is invalid.', zbx_jsvalue($url['url'], false, false));
+						$url['url'] = 'javascript: alert(\''.$msg.'\');';
 					}
 				}
 				unset($url);
