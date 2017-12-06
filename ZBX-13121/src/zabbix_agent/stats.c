@@ -43,7 +43,6 @@ extern ZBX_THREAD_LOCAL unsigned char	process_type;
 extern ZBX_THREAD_LOCAL int		server_num, process_num;
 
 #ifndef _WINDOWS
-static int		shm_id;
 static int		my_diskstat_shmid = ZBX_NONEXISTENT_SHMID;
 ZBX_DISKDEVICES_DATA	*diskdevices = NULL;
 ZBX_MUTEX		diskstats_lock = ZBX_MUTEX_NULL;
@@ -173,6 +172,9 @@ int	init_collector_data(char **error)
 	const char	*__function_name = "init_collector_data";
 	int		cpu_count, ret = FAIL;
 	size_t		sz, sz_cpu;
+#ifndef _WINDOWS
+	int		shm_id;
+#endif
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -264,9 +266,6 @@ void	free_collector_data(void)
 		diskdevices = NULL;
 		collector->diskstat_shmid = ZBX_NONEXISTENT_SHMID;
 	}
-
-	if (-1 == shmctl(shm_id, IPC_RMID, 0))
-		zabbix_log(LOG_LEVEL_WARNING, "cannot remove shared memory for collector: %s", zbx_strerror(errno));
 
 	zbx_mutex_destroy(&diskstats_lock);
 #endif
