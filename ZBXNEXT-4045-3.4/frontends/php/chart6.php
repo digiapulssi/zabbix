@@ -39,7 +39,7 @@ $fields = [
 	'width' =>			[T_ZBX_INT, O_OPT, P_NZERO,	BETWEEN(20, 65535),	null],
 	'height' =>			[T_ZBX_INT, O_OPT, P_NZERO,	'{} > 0',	null],
 	'graph3d' =>		[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),	null],
-	'legend' =>			[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),	null],
+	'legend' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'widget_view' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
@@ -129,7 +129,7 @@ $graph->setHeader(($hostName === '') ? $dbGraph['name'] : $hostName.NAME_DELIMIT
 if ($dbGraph['show_3d']) {
 	$graph->switchPie3D();
 }
-$graph->showLegend($dbGraph['show_legend']);
+$graph->showLegend(getRequest('legend', $dbGraph['show_legend']));
 $graph->draw();
 
 require_once dirname(__FILE__).'/include/page_footer.php';

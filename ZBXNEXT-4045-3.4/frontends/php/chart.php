@@ -41,6 +41,7 @@ $fields = [
 	'outer' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'batch' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'onlyHeight' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
+	'legend' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'widget_view' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
@@ -94,6 +95,7 @@ $timeline = calculateTime([
 $graph = new CLineGraphDraw(getRequest('type'));
 $graph->setPeriod($timeline['period']);
 $graph->setSTime($timeline['stime']);
+$graph->showLegend(getRequest('legend', 1));
 
 // change how the graph will be displayed if more than one item is selected
 if (getRequest('batch')) {

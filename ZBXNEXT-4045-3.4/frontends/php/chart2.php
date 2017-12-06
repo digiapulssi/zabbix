@@ -40,6 +40,7 @@ $fields = [
 	'height' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(CLineGraphDraw::GRAPH_HEIGHT_MIN, 65535),	null],
 	'outer' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'onlyHeight' =>		[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
+	'legend' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'widget_view' =>	[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
@@ -136,7 +137,7 @@ if ($height <= 0) {
 	$height = $dbGraph['height'];
 }
 
-$graph->showLegend($dbGraph['show_legend']);
+$graph->showLegend(getRequest('legend', $dbGraph['show_legend']));
 $graph->showWorkPeriod($dbGraph['show_work_period']);
 $graph->showTriggers($dbGraph['show_triggers']);
 $graph->setWidth($width);
