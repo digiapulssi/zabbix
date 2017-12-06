@@ -134,18 +134,6 @@ $data['map'] = API::Map()->get(array(
 ));
 $data['map'] = reset($data['map']);
 
-// Replace invalid URL values by javascript warning alert.
-foreach ($data['map']['selements'] as &$selement) {
-	foreach ($selement['urls'] as &$url) {
-		if (!CHtmlUrlValidator::validate($url['url'])) {
-			$msg = _s('Provided URL "%1$s" is invalid.', zbx_jsvalue($url['url'], false, false));
-			$url['url'] = 'javascript: alert(\''.$msg.'\');';
-		}
-	}
-	unset($url);
-}
-unset($selement);
-
 $data['pageFilter'] = new CPageFilter(array(
 	'severitiesMin' => array(
 		'default' => $data['map']['severity_min'],
