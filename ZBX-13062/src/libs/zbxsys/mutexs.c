@@ -187,13 +187,15 @@ void	__zbx_mutex_lock(const char *filename, int line, ZBX_MUTEX *mutex)
 #ifndef _WINDOWS
 	struct sembuf	sem_lock;
 #else
-	DWORD   dwWaitResult;
+	DWORD	dwWaitResult;
+	int	pass = 0;
 #endif
 
 	if (ZBX_MUTEX_NULL == *mutex)
 		return;
 
 #ifdef _WINDOWS
+retry:
 	dwWaitResult = WaitForSingleObject(*mutex, INFINITE);
 
 	switch (dwWaitResult)
@@ -201,8 +203,14 @@ void	__zbx_mutex_lock(const char *filename, int line, ZBX_MUTEX *mutex)
 		case WAIT_OBJECT_0:
 			break;
 		case WAIT_ABANDONED:
-			THIS_SHOULD_NEVER_HAPPEN;
-			exit(EXIT_FAILURE);
+			zabbix_log(LOG_LEVEL_WARNING, "Mutex was not released by a terminated thread");
+
+			if (0 < pass)
+				exit(EXIT_FAILURE);
+
+			/* Windows supposedly granted us ownership of the mutex and it is now nonsignaled */
+			++pass;
+			goto retry;
 		default:
 			zbx_error("[file:'%s',line:%d] lock failed: %s",
 				filename, line, strerror_from_system(GetLastError()));
