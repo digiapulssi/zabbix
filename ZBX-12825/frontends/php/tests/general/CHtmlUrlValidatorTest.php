@@ -19,7 +19,6 @@
 **/
 
 require_once dirname(__FILE__).'/../../include/defines.inc.php';
-require_once dirname(__FILE__).'/../../include/validate.inc.php';
 require_once dirname(__FILE__).'/../../include/classes/validators/CHtmlUrlValidator.php';
 
 class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {

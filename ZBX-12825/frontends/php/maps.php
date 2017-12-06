@@ -137,7 +137,7 @@ $data['map'] = reset($data['map']);
 // Replace invalid URL values by javascript warning alert.
 foreach ($data['map']['selements'] as &$selement) {
 	foreach ($selement['urls'] as &$url) {
-		if (!CHtmlUrlValidator::validate($url['url'], false)) {
+		if (!CHtmlUrlValidator::validate($url['url'])) {
 			$url['url'] = 'javascript: alert("'._('Wrong value for url field.').'");';
 		}
 	}

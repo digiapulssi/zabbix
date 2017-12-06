@@ -53,7 +53,7 @@ class CScreenMap extends CScreenBase {
 			// Replace invalid URL values by javascript warning alert.
 			foreach ($sysmap['selements'] as &$selement) {
 				foreach ($selement['urls'] as &$url) {
-					if (!CHtmlUrlValidator::validate($url['url'], false)) {
+					if (!CHtmlUrlValidator::validate($url['url'])) {
 						$url['url'] = 'javascript: alert("'._('Wrong value for url field.').'");';
 					}
 				}

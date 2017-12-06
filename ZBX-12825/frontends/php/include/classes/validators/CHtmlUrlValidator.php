@@ -29,13 +29,12 @@ class CHtmlUrlValidator {
 	 *
 	 * @static
 	 *
-	 * @param string $url				URL string to validate.
-	 * @param bool	 $allow_user_macro	If set to be true, URLs containing user macros will be considered as valid.
+	 * @param string $url	URL string to validate.
 	 *
 	 * @return bool
 	 */
-	public static function validate($url, $allow_user_macro = true) {
-		if (VALIDATE_URI_SCHEMES === false || ($allow_user_macro && validateUserMacro($url, false))) {
+	public static function validate($url) {
+		if (VALIDATE_URI_SCHEMES === false) {
 			return true;
 		}
 
