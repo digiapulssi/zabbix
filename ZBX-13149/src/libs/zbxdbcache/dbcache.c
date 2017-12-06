@@ -1463,13 +1463,14 @@ static void	DCmass_update_history(ZBX_DC_HISTORY *history, const zbx_vector_uint
 
 		if (FAIL == (index = zbx_vector_uint64_bsearch(itemids, h->itemid, ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
 		{
+			THIS_SHOULD_NEVER_HAPPEN;
 			h->flags |= ZBX_DC_FLAG_UNDEF;
 			continue;
 		}
 
 		item = &items[index];
 
-		if (SUCCEED != errcodes[item - items])
+		if (SUCCEED != errcodes[index])
 		{
 			h->flags |= ZBX_DC_FLAG_UNDEF;
 			continue;
