@@ -56,7 +56,6 @@ ZBX_COLLECTOR_DATA;
 extern ZBX_COLLECTOR_DATA	*collector;
 #ifndef _WINDOWS
 extern ZBX_DISKDEVICES_DATA	*diskdevices;
-extern int			my_diskstat_shmid;
 #endif
 
 ZBX_THREAD_ENTRY(collector_thread, pSemColectorStarted);
