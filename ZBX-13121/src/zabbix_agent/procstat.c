@@ -360,7 +360,7 @@ static size_t	procstat_strdup(void *base, const char *str)
  *          other process.                                                    *
  *                                                                            *
  * Comments: This function logs critical error and exits in the case of       *
- *           shared memory segement operation failure.                        *
+ *           shared memory segment operation failure.                         *
  *                                                                            *
  ******************************************************************************/
 static void	procstat_reattach(void)
@@ -431,7 +431,7 @@ static void	procstat_copy_data(void *dst, size_t size_dst, const void *src)
  * Function: procstat_running                                                 *
  *                                                                            *
  * Purpose: checks if processor statistics collector is running (at least one *
- *          one process statistics query has been made).                      *
+ *          process statistics query has been made).                          *
  *                                                                            *
  ******************************************************************************/
 static int	procstat_running(void)
