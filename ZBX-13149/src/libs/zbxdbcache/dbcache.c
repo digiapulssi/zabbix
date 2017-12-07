@@ -1468,13 +1468,13 @@ static void	DCmass_update_history(ZBX_DC_HISTORY *history, const zbx_vector_uint
 			continue;
 		}
 
-		item = &items[index];
-
 		if (SUCCEED != errcodes[index])
 		{
 			h->flags |= ZBX_DC_FLAG_UNDEF;
 			continue;
 		}
+
+		item = &items[index];
 
 		if (ITEM_STATUS_ACTIVE != item->status || HOST_STATUS_MONITORED != item->host.status)
 		{
