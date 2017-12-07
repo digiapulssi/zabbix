@@ -333,8 +333,6 @@ void	diskstat_shm_reattach(void)
 						" memory: %s", zbx_strerror(errno));
 				exit(EXIT_FAILURE);
 			}
-			diskdevices = NULL;
-			my_diskstat_shmid = ZBX_NONEXISTENT_SHMID;
 		}
 
 		if ((void *)(-1) == (diskdevices = shmat(collector->diskstat_shmid, NULL, 0)))
