@@ -38,9 +38,24 @@ class CHtmlUrlValidator {
 	 * @return bool
 	 */
 	public static function validate($url, $allow_user_macro = true, $use_url_validation_switch = true) {
-		if (($use_url_validation_switch === true && VALIDATE_URI_SCHEMES === false)
-				|| ($allow_user_macro && (new CUserMacroParser())->parse($url) != CParser::PARSE_FAIL)) {
+		if ($use_url_validation_switch === true && VALIDATE_URI_SCHEMES === false) {
 			return true;
+		}
+		elseif ($allow_user_macro) {
+			$contains_user_macro = false;
+			$user_macro_parser = new CUserMacroParser();
+			$strlen = strlen($url);
+
+			for ($pos = 0; $strlen > $pos; $pos++) {
+				if ($user_macro_parser->parse($url, $pos) != CParser::PARSE_FAIL) {
+					$contains_user_macro = true;
+					break;
+				}
+			}
+
+			if ($contains_user_macro) {
+				return true;
+			}
 		}
 
 		$url = parse_url($url);
