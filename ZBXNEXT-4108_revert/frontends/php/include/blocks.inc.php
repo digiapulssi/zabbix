@@ -121,7 +121,7 @@ function getSystemStatusData(array $filter, array $config) {
 	unset($group);
 
 	$options = [
-		'output' => ['eventid', 'objectid', 'clock', 'ns', 'name'],
+		'output' => ['eventid', 'objectid', 'clock', 'ns'],
 		'groupids' => array_keys($data['groups']),
 		'hostids' => $filter_hostids,
 		'source' => EVENT_SOURCE_TRIGGERS,
@@ -153,7 +153,7 @@ function getSystemStatusData(array $filter, array $config) {
 		}
 
 		$options = [
-			'output' => ['priority'],
+			'output' => ['description', 'expression', 'priority'],
 			'selectGroups' => ['groupid'],
 			'selectHosts' => ['name'],
 			'triggerids' => array_keys($triggerids),
@@ -790,6 +790,10 @@ function makeProblemsPopup(array $problems, array $triggers, $backurl, array $ac
 
 		$hosts = zbx_objectValues($trigger['hosts'], 'name');
 
+		$description = CMacrosResolverHelper::resolveEventDescription(
+			$trigger + ['clock' => $problem['clock'], 'ns' => $problem['ns']]
+		);
+
 		// ack
 		if ($config['event_ack_enable']) {
 			$problem['acknowledged'] = $problem['acknowledges'] ? EVENT_ACKNOWLEDGED : EVENT_NOT_ACKNOWLEDGED;
@@ -801,7 +805,7 @@ function makeProblemsPopup(array $problems, array $triggers, $backurl, array $ac
 
 		$table->addRow([
 			implode(', ', $hosts),
-			getSeverityCell($trigger['priority'], null, $problem['name']),
+			getSeverityCell($trigger['priority'], null, $description),
 			zbx_date2age($problem['clock']),
 			$ack,
 			array_key_exists($problem['eventid'], $actions)

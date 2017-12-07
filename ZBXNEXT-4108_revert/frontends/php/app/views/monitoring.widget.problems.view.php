@@ -153,7 +153,9 @@ foreach ($data['data']['problems'] as $eventid => $problem) {
 
 	$description_style = getSeverityStyle($trigger['priority'], $value == TRIGGER_VALUE_TRUE);
 	$description = (new CCol([
-		(new CSpan($problem['name']))
+		(new CSpan(CMacrosResolverHelper::resolveEventDescription(
+			$trigger + ['clock' => $problem['clock'], 'ns' => $problem['ns']]
+		)))
 			->setHint(
 				make_popup_eventlist($trigger, $eventid, $backurl->getUrl(), $data['config'], $data['fullscreen']), '',
 				true

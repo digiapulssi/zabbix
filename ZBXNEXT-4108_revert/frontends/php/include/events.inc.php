@@ -171,18 +171,18 @@ function get_next_event($currentEvent, array $eventList = []) {
  * @param string $event['eventid']					Event ID.
  * @param string $event['correlationid']			OK Event correlation ID.
  * @param string $event['userid]					User ID who gerenerated the OK event.
- * @param string $event['name']						Event name.
+ * @param array  $trigger							An array of trigger data.
  * @param string $backurl							A link back after acknowledgement has been clicked.
  *
  * @return CTableInfo
  */
-function make_event_details($event, $backurl) {
+function make_event_details($event, $trigger, $backurl) {
 	$config = select_config();
 
 	$table = (new CTableInfo())
 		->addRow([
 			_('Event'),
-			$event['name']
+			CMacrosResolverHelper::resolveEventDescription(array_merge($trigger, $event))
 		])
 		->addRow([
 			_('Time'),
@@ -812,10 +812,10 @@ function getLastEvents($options) {
 	}
 
 	$triggerOptions = [
-		'output' => ['triggerid', 'priority'],
 		'filter' => [],
 		'skipDependent' => 1,
 		'selectHosts' => ['hostid', 'name'],
+		'output' => API_OUTPUT_EXTEND,
 		'sortfield' => 'lastchange',
 		'sortorder' => ZBX_SORT_DOWN,
 		'limit' => $options['triggerLimit']
@@ -867,7 +867,10 @@ function getLastEvents($options) {
 		$events[$enum]['host'] = reset($events[$enum]['trigger']['hosts']);
 		$sortClock[$enum] = $event['clock'];
 		$sortEvent[$enum] = $event['eventid'];
-		$events[$enum]['trigger']['description'] = $event['name'];
+
+		// expanding description for the state where event was
+		$merged_event = array_merge($event, $triggers[$event['objectid']]);
+		$events[$enum]['trigger']['description'] = CMacrosResolverHelper::resolveEventDescription($merged_event);
 	}
 	array_multisort($sortClock, SORT_DESC, $sortEvent, SORT_DESC, $events);
 
