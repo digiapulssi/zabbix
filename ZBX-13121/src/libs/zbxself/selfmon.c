@@ -78,7 +78,6 @@ typedef struct
 zbx_selfmon_collector_t;
 
 static zbx_selfmon_collector_t	*collector = NULL;
-static int			shm_id;
 
 #	define LOCK_SM		zbx_mutex_lock(&sm_lock)
 #	define UNLOCK_SM	zbx_mutex_unlock(&sm_lock)
@@ -86,7 +85,6 @@ static int			shm_id;
 static ZBX_MUTEX	sm_lock = ZBX_MUTEX_NULL;
 #endif
 
-extern char	*CONFIG_FILE;
 extern int	CONFIG_POLLER_FORKS;
 extern int	CONFIG_UNREACHABLE_POLLER_FORKS;
 extern int	CONFIG_IPMIPOLLER_FORKS;
@@ -125,7 +123,7 @@ extern int		process_num;
  *                                                                            *
  * Purpose: Returns number of processes depending on process type             *
  *                                                                            *
- * Parameters: process_type - [IN] process type; ZBX_PROCESS_TYPE_*           *
+ * Parameters: proc_type - [IN] process type; ZBX_PROCESS_TYPE_*              *
  *                                                                            *
  * Return value: number of processes                                          *
  *                                                                            *
@@ -309,7 +307,7 @@ int	init_selfmon_collector(char **error)
 	char		*p;
 	struct tms	buf;
 	unsigned char	proc_type;
-	int		proc_num, process_forks, ret = FAIL;
+	int		proc_num, process_forks, shm_id, ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -390,12 +388,6 @@ void	free_selfmon_collector(void)
 	LOCK_SM;
 
 	collector = NULL;
-
-	if (-1 == shmctl(shm_id, IPC_RMID, 0))
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot remove shared memory for self-monitoring collector: %s",
-				zbx_strerror(errno));
-	}
 
 	UNLOCK_SM;
 
