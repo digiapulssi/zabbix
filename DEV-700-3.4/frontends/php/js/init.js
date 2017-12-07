@@ -108,6 +108,7 @@ jQuery(function($) {
 	 * @param object data
 	 * @param string data.object   object name
 	 * @param array  data.values   values
+	 * @param array  data.elements values for multiple input elements
 	 * @param string data.parentId parent id
 	 */
 	$(document).on('add.popup', function(e, data) {
