@@ -580,8 +580,8 @@ function overlayDialogue(params) {
 
 	var center_overlay_dialog = function() {
 			overlay_dialogue.css({
-				'left': Math.round((jQuery(window).width() - jQuery(overlay_dialogue).width()) / 2) + 'px',
-				'top': Math.round((jQuery(window).height() - jQuery(overlay_dialogue).height()) / 2) + 'px'
+				'left': Math.round((jQuery(window).width() - jQuery(overlay_dialogue).outerWidth()) / 2) + 'px',
+				'top': Math.round((jQuery(window).height() - jQuery(overlay_dialogue).outerHeight()) / 2) + 'px'
 			});
 		},
 		body_mutation_observer = window.MutationObserver || window.WebKitMutationObserver,
@@ -638,8 +638,6 @@ function overlayDialogue(params) {
 		})
 		.appendTo('body');
 
-	center_overlay_dialog();
-
 	jQuery(window).resize(function() {
 		if (jQuery('#overlay_dialogue').length) {
 			center_overlay_dialog();
@@ -671,7 +669,9 @@ function overlayDialogue(params) {
 		});
 	}
 
+	// To center overlay dialogue properly, first the scrollbar must be removed and then position can be calculated.
 	jQuery('body').css({'overflow': 'hidden'});
+	center_overlay_dialog();
 
 	if (button_focused !== null) {
 		button_focused.focus();
