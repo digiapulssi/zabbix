@@ -345,9 +345,8 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			$time_control_data['src'] = $graph_src->getUrl();
 		}
 
-		$this->setResponse(new CControllerResponseData([
-			'name' => ($header_label === '') ? $this->getDefaultHeader() : $header_label,
-			'period_string' => ' ('.zbx_date2age(0, $timeline['period']).')',
+		$response = [
+			'name' => $this->getInput('name', ''),
 			'graph' => [
 				'dataid' => $dataid,
 				'containerid' => $containerid,
@@ -366,6 +365,13 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
 			]
-		]));
+		];
+
+		if ($response['name'] === '') {
+			$response['name'] = $header_label;
+			$response['period_string'] = ' ('.zbx_date2age(0, $timeline['period']).')';
+		}
+
+		$this->setResponse(new CControllerResponseData($response));
 	}
 }

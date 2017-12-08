@@ -94,9 +94,12 @@ if ($data['widget']['initial_load'] == 1) {
 		'header' => $data['name'],
 		'body' => $flickerfree_item->toString(),
 		'footer' => (new CList([_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString(),
-		'period_string' => $data['period_string'],
 		'script_inline' => $script
 	];
+
+	if (array_key_exists('period_string', $data)) {
+		$output['period_string'] = $data['period_string'];
+	}
 }
 
 if (($messages = getMessages()) !== null) {
