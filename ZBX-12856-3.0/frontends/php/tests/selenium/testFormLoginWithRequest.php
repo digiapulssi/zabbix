@@ -1,3 +1,4 @@
+<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2017 Zabbix SIA
@@ -9,7 +10,7 @@
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
@@ -17,21 +18,30 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_VERSION_H
-#define ZABBIX_VERSION_H
 
-#define ZBX_STR2(str)	#str
-#define ZBX_STR(str)	ZBX_STR2(str)
+require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
-#define APPLICATION_NAME	"Zabbix Agent"
-#define ZABBIX_REVDATE		"5 December 2017"
-#define ZABBIX_VERSION_MAJOR	3
-#define ZABBIX_VERSION_MINOR	0
-#define ZABBIX_VERSION_PATCH	14
-#define ZABBIX_VERSION_REVISION	{ZABBIX_REVISION}
-#define ZABBIX_VERSION_RC	"rc1"
-#define ZABBIX_VERSION		ZBX_STR(ZABBIX_VERSION_MAJOR) "." ZBX_STR(ZABBIX_VERSION_MINOR) "." \
-				ZBX_STR(ZABBIX_VERSION_PATCH) ZABBIX_VERSION_RC
-#define ZABBIX_REVISION		ZBX_STR(ZABBIX_VERSION_REVISION)
+class testFormLoginWithRequest extends CWebTest {
+	// Returns layout data
+	public static function provider() {
+		return [
+			[
+				[
+					'request' => 'zabbix.php?action=proxy.list&ddreset=1',
+					'header' => 'Proxies'
+				]
+			]
+		];
+	}
 
-#endif
+	/**
+	 * @dataProvider provider
+	 */
+	public function testFormLoginWithRequest_test($data) {
+		// Log in.
+		$this->zbxTestLogin($data['request']);
+
+		// Test page title.
+		$this->zbxTestCheckHeader($data['header']);
+	}
+}
