@@ -8,6 +8,9 @@ endif
 
 noinst_PROGRAMS = $(SERVER_tests) $(AGENT_tests)
 
+SUBDIRS = \
+	linux
+
 if SERVER
 parse_item_key_SOURCES = \
 	parse_item_key.c \
