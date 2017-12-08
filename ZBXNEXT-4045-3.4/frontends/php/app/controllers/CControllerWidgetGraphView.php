@@ -321,7 +321,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 
 				$graph_src->setArgument('width', $width);
 				$graph_src->setArgument('height', $height);
-				$show_legend = ($fields['show_legend'] === '1' && $fields['show_legend'] === $graph['show_legend'])
+				$show_legend = ($fields['show_legend'] == 1 && $graph['show_legend'] == 1)
 					? '1' : '0';
 				$graph_src->setArgument('legend', $show_legend);
 				$graph_src->setArgument('period', $timeline['period']);
