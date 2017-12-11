@@ -467,10 +467,6 @@ class CPieGraphDraw extends CGraphDraw {
 		if ($this->type == GRAPH_TYPE_EXPLODED) {
 			list($sizeX, $sizeY) = $this->calcExplodedRadius($sizeX, $sizeY, count($values));
 		}
-		else {
-			$sizeX = (int) $sizeX * 0.95;
-			$sizeY = (int) $sizeY * 0.95;
-		}
 
 		$xc = $x = (int) $this->sizeX / 2 + $this->shiftXleft;
 		$yc = $y = (int) $this->sizeY / 2 + $this->shiftY;
