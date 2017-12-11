@@ -35,8 +35,7 @@ class CScreenUrl extends CScreenBase {
 							'auto')
 					: makeMessageBox(false, [[
 								'type' => 'error',
-								'message' => _s('Provided URL "%1$s" is invalid.', zbx_jsvalue($this->screenitem['url'],
-										false, false))
+								'message' => _s('Provided URL "%1$s" is invalid.', $this->screenitem['url'])
 							]]
 						)
 			);
@@ -60,8 +59,7 @@ class CScreenUrl extends CScreenBase {
 				? new CIFrame($this->screenitem['url'], $this->screenitem['width'], $this->screenitem['height'], 'auto')
 				: makeMessageBox(false, [[
 							'type' => 'error',
-							'message' => _s('Provided URL "%1$s" is invalid.', zbx_jsvalue($this->screenitem['url'],
-									false, false))
+							'message' => _s('Provided URL "%1$s" is invalid.', $this->screenitem['url'])
 						]]
 					)
 		);
