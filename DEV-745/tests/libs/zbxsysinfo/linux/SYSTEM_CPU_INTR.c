@@ -6,36 +6,31 @@
 void	zbx_mock_test_entry(void **state)
 {
 	zbx_mock_error_t	error;
-	zbx_mock_handle_t	values, value;
+	zbx_mock_handle_t	handle;
+	AGENT_RESULT		result;
+	const char		*str;
 
 	ZBX_UNUSED(state);
 
-	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_in_parameter("expected", &values)))
+	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_in_parameter("expected", &handle)))
 		fail_msg("Cannot zbx_mock_in_parameter: %s", zbx_mock_error_string(error));
 
-	while (ZBX_MOCK_SUCCESS == (error = zbx_mock_vector_element(values, &value)))
+	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(handle, &str)))
+		fail_msg("Cannot zbx_mock_string: %s", zbx_mock_error_string(error));
+
+	init_result(&result);
+
+	if (SYSINFO_RET_OK == SYSTEM_CPU_INTR(NULL, &result))
 	{
-		AGENT_RESULT	result;
-		const char	*str;
+		zbx_uint64_t	total_interr;
 
-		if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(value, &str)))
-			fail_msg("Cannot zbx_mock_string: %s", zbx_mock_error_string(error));
+		ZBX_STR2UINT64(total_interr, str);
 
-		init_result(&result);
-
-		if (SYSINFO_RET_OK == SYSTEM_CPU_INTR(NULL, &result))
-		{
-			zbx_uint64_t	total_interr;
-
-			ZBX_STR2UINT64(total_interr, str);
-
-			if (total_interr != result.ui64)
-				fail_msg("expected:" ZBX_FS_UI64 " actual:" ZBX_FS_UI64, total_interr, result.ui64);
-		}
-		else
-			fail_msg("test failed '%s'", result.msg);
-
-		free_result(&result);
+		if (total_interr != result.ui64)
+			fail_msg("expected:" ZBX_FS_UI64 " actual:" ZBX_FS_UI64, total_interr, result.ui64);
 	}
+	else
+		fail_msg("test failed '%s'", result.msg);
 
+	free_result(&result);
 }
