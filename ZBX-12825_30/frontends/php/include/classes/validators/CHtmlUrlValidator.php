@@ -29,16 +29,15 @@ class CHtmlUrlValidator {
 	 *
 	 * @static
 	 *
-	 * @param string $url							URL string to validate.
-	 * @param bool	 $allow_user_macro				If set to be true, URLs containing user macros will be considered as
-	 *												valid.
-	 * @param bool	 $use_url_validation_switch		Parameter allows to disable global switch VALIDATE_URI_SCHEMES for
-	 *												specific uses.
+	 * @param string $url                   URL string to validate.
+	 * @param bool   $allow_user_macro      If set to be true, URLs containing user macros will be considered as valid.
+	 * @param bool   $validate_uri_schemes  Parameter allows to overwrite global switch VALIDATE_URI_SCHEMES for
+	 *                                      specific uses.
 	 *
 	 * @return bool
 	 */
-	public static function validate($url, $allow_user_macro = true, $use_url_validation_switch = true) {
-		if ($use_url_validation_switch === true && VALIDATE_URI_SCHEMES === false) {
+	public static function validate($url, $allow_user_macro = true, $validate_uri_schemes = VALIDATE_URI_SCHEMES) {
+		if ($validate_uri_schemes === false) {
 			return true;
 		}
 		elseif ($allow_user_macro) {
