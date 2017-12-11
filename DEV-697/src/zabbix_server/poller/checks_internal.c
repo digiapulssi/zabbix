@@ -283,7 +283,7 @@ int	get_value_internal(DC_ITEM *item, AGENT_RESULT *result)
 	else if (0 == strcmp(tmp, "proxy"))			/* zabbix["proxy",<hostname>,"lastaccess"] */
 	{
 		int	lastaccess;
-		char	*error = NULL;
+		char	*error;
 
 		/* this item is always processed by server */
 
