@@ -23,17 +23,19 @@
 #include "common.h"
 #include "sysinfo.h"
 
-static zbx_mock_error_t	get_out_parameter(const char *name, const char **value)
+#define GET_TEST_PARAM_FAIL(NAME, MOCK_ERR)	fail_msg("Cannot get \"%s\": %s", NAME, zbx_mock_error_string(MOCK_ERR))
+
+static void	get_test_param(const char *name, const char **value)
 {
 	zbx_mock_handle_t	handle;
 	zbx_mock_error_t	error;
 
-	if (ZBX_MOCK_NO_PARAMETER != (error = zbx_mock_out_parameter(name, &handle)) && ZBX_MOCK_SUCCESS != error)
-		fail_msg("Cannot get \"%s\": %s", name, zbx_mock_error_string(error));
-	else if (ZBX_MOCK_SUCCESS == error && ZBX_MOCK_SUCCESS != (error = zbx_mock_string(handle, value)))
-		fail_msg("Cannot get \"%s\": %s", name, zbx_mock_error_string(error));
+	*value = NULL;
 
-	return error;
+	if (ZBX_MOCK_NO_PARAMETER != (error = zbx_mock_out_parameter(name, &handle)) && ZBX_MOCK_SUCCESS != error)
+		GET_TEST_PARAM_FAIL(name, error);
+	else if (ZBX_MOCK_SUCCESS == error && ZBX_MOCK_SUCCESS != (error = zbx_mock_string(handle, value)))
+		GET_TEST_PARAM_FAIL(name, error);
 }
 
 void	zbx_mock_test_entry(void **state)
@@ -41,36 +43,47 @@ void	zbx_mock_test_entry(void **state)
 	zbx_mock_error_t	error;
 	AGENT_REQUEST		request;
 	AGENT_RESULT		result;
-	const char		*expected_string, *actual_string;
+	const char		*expected_json, *expected_error, *expected_string, *actual_string;
+	char			**p_result;
 	int			expected_result, actual_result;
 
 	ZBX_UNUSED(state);
 
-	if (ZBX_MOCK_NO_PARAMETER == (error = get_out_parameter("json", &expected_string)))
+	get_test_param("json", &expected_json);
+	get_test_param("error", &expected_error);
+
+	if (NULL == expected_json)
 	{
-		if (ZBX_MOCK_NO_PARAMETER == (error = get_out_parameter("error", &expected_string)))
-			fail_msg("Invalid test case data: expected \"json\" or \"error\" out parameter");
+		if (NULL == expected_error)
+			fail_msg("Invalid test case data: must have one - \"json\" or \"error\" parameter");
 
 		expected_result = SYSINFO_RET_FAIL;
+		expected_string = expected_error;
 	}
 	else
-		expected_result = SYSINFO_RET_OK;
-
-	/* VFS_FS_DISCOVERY() does not use request */
-	actual_result = VFS_FS_DISCOVERY(&request, &result);
-
-	if (actual_result != expected_result)
 	{
-		fail_msg("Unexpected return code from VFS_FS_DISCOVERY(): expected %d, got %d", expected_result,
-				actual_result);
+		if (NULL != expected_error)
+			fail_msg("Invalid test case data: only one parameter \"json\" or \"error\" must exist");
+
+		expected_result = SYSINFO_RET_OK;
+		expected_string = expected_json;
+	}
+
+	if (expected_result != (actual_result = VFS_FS_DISCOVERY(&request, &result)))
+	{
+		fail_msg("Unexpected return code from VFS_FS_DISCOVERY(): expected %s, got %s",
+				zbx_sysinfo_ret_string(expected_result), zbx_sysinfo_ret_string(actual_result));
 	}
 
 	if (SYSINFO_RET_OK == actual_result)
-	actual_string = *GET_STR_RESULT(&result);
-	else if (SYSINFO_RET_FAIL == actual_result)
-		actual_string = *GET_MSG_RESULT(&result);
+		p_result = GET_STR_RESULT(&result);
 	else
-		fail_msg("Unsupported  return code from VFS_FS_DISCOVERY(): %d", actual_result);
+		p_result = GET_MSG_RESULT(&result);
+
+	if (NULL == p_result)
+		fail_msg("NULL result in AGENT_RESULT while expected \"%s\"", expected_string);
+
+	actual_string = *p_result;
 
 	if (0 != strcmp(expected_string, actual_string))
 		fail_msg("Unexpected result string: expected \"%s\", got \"%s\"", expected_string, actual_string);
