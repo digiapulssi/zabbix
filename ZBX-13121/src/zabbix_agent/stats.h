@@ -54,16 +54,10 @@ typedef struct
 ZBX_COLLECTOR_DATA;
 
 extern ZBX_COLLECTOR_DATA	*collector;
-#ifndef _WINDOWS
-extern ZBX_DISKDEVICES_DATA	*diskdevices;
-#endif
 
 ZBX_THREAD_ENTRY(collector_thread, pSemColectorStarted);
 
 int	init_collector_data(char **error);
 void	free_collector_data(void);
-void	diskstat_shm_init(void);
-void	diskstat_shm_reattach(void);
-void	diskstat_shm_extend(void);
 
 #endif	/* ZABBIX_STATS_H */

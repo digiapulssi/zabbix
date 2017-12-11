@@ -21,8 +21,6 @@
 #include "ipc.h"
 #include "log.h"
 
-extern char	*CONFIG_FILE;
-
 /******************************************************************************
  *                                                                            *
  * Function: zbx_dshm_create                                                  *
