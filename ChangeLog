@@ -1,6 +1,7 @@
 Changes for 3.2.11rc2
 
 Bug fixes:
+..F....... [ZBX-13024] fixed parsing "request" parameter for URLs without input parameters (Sasha)
 
 --------------------------------------------------------------------------------
 Changes for 3.2.11rc1
