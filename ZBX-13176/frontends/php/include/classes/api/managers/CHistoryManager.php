@@ -273,11 +273,7 @@ class CHistoryManager {
 			), 1);
 		}
 
-		if (is_array($value) && array_key_exists('value', $value)) {
-			return $value['value'];
-		}
-
-		return null;
+		return (is_array($value) && array_key_exists('value', $value)) ? $value['value'] : null;
 	}
 
 	/**
