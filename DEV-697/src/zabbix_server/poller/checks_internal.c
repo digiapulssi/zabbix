@@ -301,8 +301,7 @@ int	get_value_internal(DC_ITEM *item, AGENT_RESULT *result)
 
 		if (FAIL == DBget_proxy_lastaccess(get_rparam(&request, 1), &lastaccess, &error))
 		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, error));
-			zbx_free(error);
+			SET_MSG_RESULT(result, error);
 			goto out;
 		}
 
