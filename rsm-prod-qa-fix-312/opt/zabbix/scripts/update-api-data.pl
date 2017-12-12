@@ -413,8 +413,6 @@ TRYFORK:
 
 			my $ah_tld = ah_get_api_tld($tld);
 
-			my $lastclocks = {};
-
 			my $json_state_ref;
 
 			$json_state_ref->{'tld'} = $tld;
