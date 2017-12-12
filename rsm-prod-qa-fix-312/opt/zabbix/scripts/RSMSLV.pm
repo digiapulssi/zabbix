@@ -2367,6 +2367,7 @@ sub get_real_services_period
 	my $services = shift;
 	my $check_from = shift;
 	my $check_till = shift;
+	my $consider_last = shift;	# consider last cycle if there is none within given period
 
 	my ($from, $till);
 
@@ -2378,7 +2379,9 @@ sub get_real_services_period
 		my ($loop_from, $loop_till);
 
 		# go through the check period minute by minute selecting test cycles
-		for ($loop_from = $check_from, $loop_till = $loop_from + 59; $loop_from < $check_till; $loop_from += 60, $loop_till += 60)
+		for ($loop_from = $check_from, $loop_till = $loop_from + 59;
+				(!$services->{$service}{'from'} || $services->{$service}{'till'}) && $loop_from < $check_till;
+				$loop_from += 60, $loop_till += 60)
 		{
 			my $test_from = get_test_start_time($loop_till, $delay);
 
@@ -2404,6 +2407,14 @@ sub get_real_services_period
 					$services->{$service}{'till'} = $loop_till;
 				}
 			}
+		}
+
+		if ($consider_last && !$services->{$service}{'from'})
+		{
+			my $last_cycle = $check_till - $delay + 1;
+
+			$services->{$service}{'till'} = truncate_till($last_cycle, $delay);
+			$services->{$service}{'from'} = truncate_from($last_cycle, $delay);
 		}
 	}
 
