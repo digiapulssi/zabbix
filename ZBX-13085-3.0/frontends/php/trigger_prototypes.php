@@ -326,8 +326,10 @@ elseif (hasRequest('action') && getRequest('action') == 'triggerprototype.massde
 /*
  * Display
  */
-if ((getRequest('action') === 'triggerprototype.massupdateform' || hasRequest('massupdate'))
-		&& hasRequest('g_triggerid')) {
+$action = getRequest('action', null);
+
+if (($action === 'triggerprototype.massupdateform' || $action === 'triggerprototype.massupdate'
+		|| hasRequest('massupdate')) && hasRequest('g_triggerid')) {
 	$data = getTriggerMassupdateFormData();
 	$data['action'] = 'triggerprototype.massupdate';
 	$data['hostid'] = $discoveryRule['hostid'];
