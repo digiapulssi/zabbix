@@ -1,8 +1,7 @@
 Changes for rsm1.0.2rc1
 
-New features:
-
 Bug fixes:
+....I..... [312] fixed RDDS service state for some runs of update-api-data.pl (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.1
