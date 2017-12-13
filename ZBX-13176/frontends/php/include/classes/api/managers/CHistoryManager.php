@@ -263,7 +263,7 @@ class CHistoryManager {
 			' ORDER BY h.ns DESC'
 		), 1);
 
-		if ($value === null) {
+		if (!$value) {
 			$value = DBfetch(DBselect(
 				'SELECT h.value'.
 				' FROM '.self::getTableName($item['value_type']).' h'.
@@ -623,7 +623,7 @@ class CHistoryManager {
 			' HAVING COUNT(*)>0' // Necessary because DBselect() return 0 if empty data set, for graph templates.
 		);
 
-		if (null != ($row = DBfetch($result))) {
+		if (($row = DBfetch($result)) !== false) {
 			return $row['value'];
 		}
 
