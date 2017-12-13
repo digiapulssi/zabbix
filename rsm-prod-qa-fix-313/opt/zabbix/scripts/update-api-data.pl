@@ -24,10 +24,6 @@ use constant JSON_VALUE_ALARMED_YES => 'Yes';
 use constant JSON_VALUE_ALARMED_NO => 'No';
 use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
 
-use constant JSON_OBJECT_DISABLED_SERVICE => {
-	'status'	=> 'Disabled'
-};
-
 use constant JSON_OBJECT_NORESULT_PROBE => {
 	'status'	=> 'No result'
 };

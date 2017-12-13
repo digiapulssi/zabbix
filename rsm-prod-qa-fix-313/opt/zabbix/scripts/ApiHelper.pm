@@ -32,10 +32,14 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 use constant JSON_VALUE_INCIDENT_ACTIVE => 'Active';
 use constant JSON_VALUE_INCIDENT_RESOLVED => 'Resolved';
 
+use constant JSON_OBJECT_DISABLED_SERVICE => {
+	'status'	=> 'Disabled'
+};
+
 our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_BASE_DIR AH_TMP_DIR ah_get_error ah_state_file_json ah_save_state
 		ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
 		ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
-		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
+		ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE);
 
 use constant AH_JSON_FILE_VERSION => 1;
 
