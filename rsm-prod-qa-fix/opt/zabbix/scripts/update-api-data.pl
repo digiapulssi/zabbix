@@ -24,10 +24,6 @@ use constant JSON_VALUE_ALARMED_YES => 'Yes';
 use constant JSON_VALUE_ALARMED_NO => 'No';
 use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
 
-use constant JSON_OBJECT_DISABLED_SERVICE => {
-	'status'	=> 'Disabled'
-};
-
 use constant JSON_OBJECT_NORESULT_PROBE => {
 	'status'	=> 'No result'
 };
@@ -37,9 +33,6 @@ use constant CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.conf
 use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
-
-use constant TARGETS_TMP_DIR => '/opt/zabbix/sla-tmp';
-use constant TARGETS_TARGET_DIR => '/opt/zabbix/sla';
 
 sub get_history_by_itemid($$$);
 sub get_historical_value_by_time($$);
@@ -62,7 +55,7 @@ if (opt('debug'))
 
 __validate_input();	# needs to be connected to db
 
-if (!opt('dry-run') && (my $error = rsm_targets_prepare(TARGETS_TMP_DIR, TARGETS_TARGET_DIR)))
+if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_TMP_DIR, AH_BASE_DIR)))
 {
 	fail($error);
 }
