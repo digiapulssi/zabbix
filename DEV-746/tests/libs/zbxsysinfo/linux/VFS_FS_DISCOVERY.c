@@ -40,7 +40,6 @@ static void	get_test_param(const char *name, const char **value)
 
 void	zbx_mock_test_entry(void **state)
 {
-	zbx_mock_error_t	error;
 	AGENT_REQUEST		request;
 	AGENT_RESULT		result;
 	const char		*expected_json, *expected_error, *expected_string, *actual_string;
@@ -69,6 +68,9 @@ void	zbx_mock_test_entry(void **state)
 		expected_string = expected_json;
 	}
 
+	init_request(&request);
+	init_result(&result);
+
 	if (expected_result != (actual_result = VFS_FS_DISCOVERY(&request, &result)))
 	{
 		fail_msg("Unexpected return code from VFS_FS_DISCOVERY(): expected %s, got %s",
@@ -87,4 +89,7 @@ void	zbx_mock_test_entry(void **state)
 
 	if (0 != strcmp(expected_string, actual_string))
 		fail_msg("Unexpected result string: expected \"%s\", got \"%s\"", expected_string, actual_string);
+
+	free_request(&request);
+	free_result(&result);
 }
