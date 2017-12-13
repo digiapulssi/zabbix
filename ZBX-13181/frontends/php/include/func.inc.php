@@ -2431,7 +2431,8 @@ function clear_messages($count = null) {
 		$result = $ZBX_MESSAGES;
 		$ZBX_MESSAGES = null;
 	}
-	return $result;
+
+	return $result ? filter_messages($result) : $result;
 }
 
 function fatal_error($msg) {
