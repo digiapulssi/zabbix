@@ -1,6 +1,7 @@
 Changes for 2.2.21rc2
 
 Bug fixes:
+..F....... [ZBX-12825] implemented URL validation as optional; improved URL validation (miks)
 ..F....... [ZBX-13024] fixed parsing "request" parameter for URLs without input parameters (Sasha)
 
 --------------------------------------------------------------------------------
