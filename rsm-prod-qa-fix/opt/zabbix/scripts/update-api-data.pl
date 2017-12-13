@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 BEGIN
 {
@@ -210,6 +210,7 @@ if (opt('continue'))
 
 		$check_from = $truncated_ts;
 
+		# TODO: print real update time that was read from file
 		dbg("last update time: ", ts_full($check_from));
 	}
 
@@ -285,7 +286,7 @@ if ($check_till > $max_till)
 	slv_exit(SUCCESS);
 }
 
-my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till);
+my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 1);	# consider last cycle
 
 if (opt('print-period'))
 {
@@ -412,8 +413,13 @@ TRYFORK:
 
 			my $ah_tld = ah_get_api_tld($tld);
 
-			my $tld_data = {};
+			my $json_state_ref;
 
+			$json_state_ref->{'tld'} = $tld;
+			$json_state_ref->{'status'} = JSON_VALUE_UP;
+			$json_state_ref->{'testedServices'} = {};
+
+			# find out which services are disabled, for others get lastclock
 			foreach my $service (keys(%services))
 			{
 				if (tld_service_enabled($tld, $service) != SUCCESS)
@@ -428,6 +434,10 @@ TRYFORK:
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
+
+						$json_state_ref->{'testedServices'}->{uc($service)} = {
+							'status' => JSON_OBJECT_DISABLED_SERVICE,
+						};
 					}
 
 					next;
@@ -442,6 +452,26 @@ TRYFORK:
 				if ($lastclock == E_FAIL)
 				{
 					wrn(uc($service), ": configuration error, item $lastclock_key not found");
+
+					if (opt('dry-run'))
+					{
+						__prnt(uc($service), " UP (configuration error)");
+					}
+					else
+					{
+						# TODO phase1: UP (inconclusive)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						{
+							fail("cannot save alarmed: ", ah_get_error());
+						}
+
+						$json_state_ref->{'testedServices'}->{uc($service)} = {
+							'status' => JSON_VALUE_UP,
+							'emergencyThreshold' => 0,
+							'incidents' => []
+						};
+					}
+
 					next;
 				}
 
@@ -449,28 +479,29 @@ TRYFORK:
 				{
 					wrn(uc($service), ": no rolling week data in the database yet");
 
-					if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_DISABLED) != AH_SUCCESS)
+					if (opt('dry-run'))
 					{
-						fail("cannot save alarmed: ", ah_get_error());
+						__prnt(uc($service), " UP (no rolling week data in the database)");
+					}
+					else
+					{
+						# TODO phase1: UP (inconclusive)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						{
+							fail("cannot save alarmed: ", ah_get_error());
+						}
+
+						$json_state_ref->{'testedServices'}->{uc($service)} = {
+							'status' => JSON_VALUE_UP,
+							'emergencyThreshold' => 0,
+							'incidents' => []
+						};
 					}
 
 					next;
 				}
 
 				dbg("lastclock:$lastclock");
-
-				$tld_data->{$service}->{'lastclock'} = $lastclock;
-			}
-
-			my $json_state_ref;
-
-			$json_state_ref->{'tld'} = $tld;
-			$json_state_ref->{'status'} = JSON_VALUE_UP;
-			$json_state_ref->{'testedServices'} = {};
-
-			foreach my $service (keys(%{$tld_data}))
-			{
-				my $lastclock = $tld_data->{$service}->{'lastclock'};
 
 				my $delay = $services{$service}{'delay'};
 				my $service_from = $services{$service}{'from'};
@@ -480,9 +511,7 @@ TRYFORK:
 
 				if (!$service_from || !$service_till)
 				{
-					# this is not the time to calculate the service yet,
-					# it will be done in a later runs
-					next;
+					fail("INTERNAL ERROR, CANNOT CONTINUE WITHOUT DEFINED SERVICE CYCLE PERIOD");
 				}
 
 				my $hostid = get_hostid($tld);
@@ -503,6 +532,25 @@ TRYFORK:
 						wrn("cannot get ID of $service item ($avail_key): unknown error");
 					}
 
+					if (opt('dry-run'))
+					{
+						__prnt(uc($service), " UP (configuration error)");
+					}
+					else
+					{
+						# TODO phase1: UP (inconclusive)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						{
+							fail("cannot save alarmed: ", ah_get_error());
+						}
+
+						$json_state_ref->{'testedServices'}->{uc($service)} = {
+							'status' => JSON_VALUE_UP,
+							'emergencyThreshold' => 0,
+							'incidents' => []
+						};
+					}
+
 					next;
 				}
 
@@ -521,6 +569,25 @@ TRYFORK:
 					else
 					{
 						wrn("cannot get ID of $service item ($rollweek_key): unknown error");
+					}
+
+					if (opt('dry-run'))
+					{
+						__prnt(uc($service), " UP (configuration error)");
+					}
+					else
+					{
+						# TODO phase1: UP (inconclusive)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						{
+							fail("cannot save alarmed: ", ah_get_error());
+						}
+
+						$json_state_ref->{'testedServices'}->{uc($service)} = {
+							'status' => JSON_VALUE_UP,
+							'emergencyThreshold' => 0,
+							'incidents' => []
+						};
 					}
 
 					next;
@@ -593,6 +660,26 @@ TRYFORK:
 				if (get_current_value($rollweek_itemid, ITEM_VALUE_TYPE_FLOAT, \$rollweek) != SUCCESS)
 				{
 					wrn(uc($service), ": no rolling week data in the database yet");
+
+					if (opt('dry-run'))
+					{
+						__prnt(uc($service), " UP (no rolling week data in the database)");
+					}
+					else
+					{
+						# TODO phase1: UP (inconclusive)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						{
+							fail("cannot save alarmed: ", ah_get_error());
+						}
+
+						$json_state_ref->{'testedServices'}->{uc($service)} = {
+							'status' => JSON_VALUE_UP,
+							'emergencyThreshold' => 0,
+							'incidents' => []
+						};
+					}
+
 					next;
 				}
 
@@ -1085,13 +1172,6 @@ TRYFORK:
 						ah_create_incident_json($eventid, $event_start, $event_end, $false_positive));
 				}
 			} # foreach my $service
-
-			foreach my $service (('DNS', 'DNSSEC', 'EPP', 'RDDS'))
-			{
-				next if (exists($json_state_ref->{'testedServices'}->{$service}));
-
-				$json_state_ref->{'testedServices'}->{$service} = JSON_OBJECT_DISABLED_SERVICE;
-			}
 
 			if (ah_save_state($ah_tld, $json_state_ref) != AH_SUCCESS)
 			{
