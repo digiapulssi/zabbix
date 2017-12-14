@@ -148,6 +148,9 @@ define('P_NZERO',			32);
 define('P_NO_TRIM',			64);
 define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
 
+// Validate URI against schemes whitelist defined in ZBX_URI_VALID_SCHEMES.
+define('VALIDATE_URI_SCHEMES', true);
+
 //	misc parameters
 define('IMAGE_FORMAT_PNG',	'PNG');
 define('IMAGE_FORMAT_JPEG',	'JPEG');
