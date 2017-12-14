@@ -1,3 +1,6 @@
+SUBDIRS = \
+	linux
+
 if SERVER
 SERVER_tests = parse_item_key
 endif
