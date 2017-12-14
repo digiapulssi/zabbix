@@ -164,27 +164,18 @@ if (opt('continue'))
 {
 	$continue_file = ah_get_continue_file();
 
-	my $handle;
-
 	if (! -e $continue_file)
 	{
-		my $config_minclock = __get_config_minclock();
-
-		# __get_config_minclock() goes through all the databases
-		db_connect();
-
-		if (!defined($config_minclock))
+		if (!defined($check_from = __get_config_minclock()))
 		{
 			info("no data from Probe nodes yet");
 			slv_exit(SUCCESS);
 		}
-
-		dbg("oldest data found: ", ts_full($config_minclock));
-
-		$check_from = truncate_from($config_minclock);
 	}
 	else
 	{
+		my $handle;
+
 		fail("cannot open continue file $continue_file\": $!") unless (open($handle, '<', $continue_file));
 
 		chomp(my @lines = <$handle>);
@@ -193,18 +184,22 @@ if (opt('continue'))
 
 		my $ts = $lines[0];
 
-		my $next_ts = $ts + 1;	# continue with the next minute
-		my $truncated_ts = truncate_from($next_ts);
-
-		if ($truncated_ts != $next_ts)
+		if (!$ts)
 		{
-			wrn(sprintf("truncating last update value (%s) to %s", ts_str($ts), ts_str($truncated_ts)));
+			# last_update file exists but is empty, this means something went wrong
+			fail("The last update file \"$continue_file\" exists but is empty.".
+				" Please set the timestamp of the last update in it and run the script again.");
 		}
 
-		$check_from = $truncated_ts;
+		dbg("last update time: ", ts_full($ts));
 
-		# TODO: print real update time that was read from file
-		dbg("last update time: ", ts_full($check_from));
+		my $next_ts = $ts + 1;	# continue with the next minute
+		$check_from = truncate_from($next_ts);
+
+		if ($check_from != $next_ts)
+		{
+			wrn(sprintf("truncating last update value (%s) to %s", ts_str($ts), ts_str($check_from)));
+		}
 	}
 
 	if ($check_from == 0)
@@ -212,35 +207,15 @@ if (opt('continue'))
 		fail("no data from probes in the database yet");
 	}
 
-	my $period;
-	if (opt('period'))
-	{
-		$period = getopt('period');
-	}
-	else
-	{
-		$period = MAX_CONTINUE_PERIOD;
-	}
+	my $period = (opt('period') ? getopt('period') : MAX_CONTINUE_PERIOD);
 
 	$check_till = $check_from + $period * 60 - 1;
-
-	if ($check_till > $max_till)
-	{
-		$check_till = $max_till;
-	}
+	$check_till = $max_till if ($check_till > $max_till);
 }
 elsif (opt('from'))
 {
 	$check_from = $opt_from;
-
-	if (opt('period'))
-	{
-		$check_till = $check_from + getopt('period') * 60 - 1;
-	}
-	else
-	{
-		$check_till = $max_till;
-	}
+	$check_till = (opt('period') ? $check_from + getopt('period') * 60 - 1 : $max_till);
 }
 elsif (opt('period'))
 {
@@ -428,9 +403,7 @@ TRYFORK:
 							fail("cannot save alarmed: ", ah_get_error());
 						}
 
-						$json_state_ref->{'testedServices'}->{uc($service)} = {
-							'status' => JSON_OBJECT_DISABLED_SERVICE,
-						};
+						$json_state_ref->{'testedServices'}->{uc($service)} = JSON_OBJECT_DISABLED_SERVICE;
 					}
 
 					next;
@@ -2269,33 +2242,37 @@ sub __get_config_minclock
 
 	foreach (@server_keys)
 	{
-	$server_key = $_;
-	db_connect($server_key);
+		$server_key = $_;
+		db_connect($server_key);
 
-	my $rows_ref = db_select(
-			"select min(clock)".
-			" from history_uint".
-			" where itemid in".
-				" (select itemid".
-				" from items".
-				" where key_='" . PROBE_KEY_ONLINE.
-					"' and templateid is not null)");
+		my $rows_ref = db_select(
+				"select min(clock)".
+				" from history_uint".
+				" where itemid in".
+					" (select itemid".
+					" from items".
+					" where key_='" . PROBE_KEY_ONLINE.
+						"' and templateid is not null)");
 
-	next unless (defined($rows_ref->[0]->[0]));
+		next unless (defined($rows_ref->[0]->[0]));
 
-	my $newclock = int($rows_ref->[0]->[0]);
-	dbg("min(clock): $newclock");
+		my $newclock = int($rows_ref->[0]->[0]);
+		dbg("min(clock): $newclock");
 
-	$minclock = $newclock if (!defined($minclock) || $newclock < $minclock);
-	db_disconnect();
+		$minclock = $newclock if (!defined($minclock) || $newclock < $minclock);
+		db_disconnect();
 	}
 	undef($server_key);
+
+	return undef if (!defined($minclock));
+
+	dbg("oldest data found: ", ts_full($minclock));
 
 	# todo phase 1: remove moving 1 day back, this was needed for Data Export, not SLA API!
 	# move a day back since this is collected once a day
 	#$minclock -= 86400;
 
-	return $minclock;
+	return truncate_from($minclock);
 }
 
 __END__
