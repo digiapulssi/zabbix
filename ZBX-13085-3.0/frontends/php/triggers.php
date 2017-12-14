@@ -377,7 +377,7 @@ elseif (hasRequest('action') && getRequest('action') == 'trigger.massdelete' && 
 /*
  * Display
  */
-$action = getRequest('action', null);
+$action = getRequest('action');
 
 if (($action === 'trigger.massupdateform' || $action === 'trigger.massupdate' || hasRequest('massupdate'))
 		&& hasRequest('g_triggerid')) {

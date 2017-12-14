@@ -326,7 +326,7 @@ elseif (hasRequest('action') && getRequest('action') == 'triggerprototype.massde
 /*
  * Display
  */
-$action = getRequest('action', null);
+$action = getRequest('action');
 
 if (($action === 'triggerprototype.massupdateform' || $action === 'triggerprototype.massupdate'
 		|| hasRequest('massupdate')) && hasRequest('g_triggerid')) {
