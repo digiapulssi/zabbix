@@ -1,6 +1,7 @@
 Changes for rsm1.0.2rc2
 
 Bug fixes:
+....I..... [310] fixed error when last_update.txt file is empty (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.2rc1
