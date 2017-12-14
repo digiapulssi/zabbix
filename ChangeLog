@@ -1,7 +1,9 @@
 Changes for 3.2.11rc2
 
-Bug fixes:
+New features:
 A.F....... [ZBX-12825] implemented delayed URL validation; enabled user macros containing URLs as valid; made URL validation as optional; improved URL validation (miks)
+
+Bug fixes:
 ..F....... [ZBX-12856] fixed empty host filter when adding dependent trigger in trigger edit form (gcalenko)
 ..F....... [ZBX-13024] fixed parsing "request" parameter for URLs without input parameters (Sasha)
 
@@ -2392,8 +2394,10 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 --------------------------------------------------------------------------------
 Changes for 2.2.21rc2
 
-Bug fixes:
+New features:
 ..F....... [ZBX-12825] implemented URL validation as optional; improved URL validation (miks)
+
+Bug fixes:
 ..F....... [ZBX-13024] fixed parsing "request" parameter for URLs without input parameters (Sasha)
 
 --------------------------------------------------------------------------------
