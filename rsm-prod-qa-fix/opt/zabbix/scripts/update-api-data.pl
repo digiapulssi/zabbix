@@ -404,9 +404,7 @@ TRYFORK:
 							fail("cannot save alarmed: ", ah_get_error());
 						}
 
-						$json_state_ref->{'testedServices'}->{uc($service)} = {
-							'status' => JSON_OBJECT_DISABLED_SERVICE,
-						};
+						$json_state_ref->{'testedServices'}->{uc($service)} = JSON_OBJECT_DISABLED_SERVICE;
 					}
 
 					next;
