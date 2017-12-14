@@ -2167,7 +2167,7 @@ function detect_page_type($default = PAGE_TYPE_HTML) {
  *
  * @return array
  */
-function filter_messages(array $messages = []) {
+function filter_messages(array $messages = array()) {
 	if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN && CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_DISABLED
 			&& !ZBX_SHOW_TECHNICAL_ERRORS) {
 		$filtered_messages = array();
