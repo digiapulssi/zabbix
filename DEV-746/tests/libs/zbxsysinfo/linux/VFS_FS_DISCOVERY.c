@@ -40,11 +40,11 @@ static void	get_test_param(const char *name, const char **value)
 
 void	zbx_mock_test_entry(void **state)
 {
-	AGENT_REQUEST		request;
-	AGENT_RESULT		result;
-	const char		*expected_json, *expected_error, *expected_string, *actual_string;
-	char			**p_result;
-	int			expected_result, actual_result;
+	AGENT_REQUEST	request;
+	AGENT_RESULT	result;
+	const char	*expected_json, *expected_error, *expected_string, *actual_string;
+	char		**p_result;
+	int		expected_result, actual_result;
 
 	ZBX_UNUSED(state);
 
