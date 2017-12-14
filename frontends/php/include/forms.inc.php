@@ -1449,7 +1449,7 @@ function getTriggerFormData(array $data) {
 		}
 	}
 
-	if ($data['hostid'] && !$data['groupid']) {
+	if ($data['hostid'] && (!array_key_exists('groupid', $data) || !$data['groupid'])) {
 		$db_hostgroups = API::HostGroup()->get([
 			'output' => ['groupid'],
 			'hostids' => $data['hostid'],
