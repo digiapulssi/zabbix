@@ -573,9 +573,22 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 ..F....... [ZBX-9989] optimized SQL queries for graphs building (Gunars, Sasha)
 
 --------------------------------------------------------------------------------
+Changes for 3.0.14rc2
+
+New features:
+A.F....... [ZBX-12825] implemented delayed URL validation; enabled user macros containing URLs as valid; made URL validation as optional; improved URL validation (miks)
+
+Bug fixes:
+..F....... [ZBX-13181] fixed database configuration error reporting and message filtering when messages are received from clear_messages function (miks)
+..F....... [ZBX-13024] fixed parsing "request" parameter for URLs without input parameters (Sasha)
+..F....... [ZBX-12856] fixed empty host filter when adding dependent trigger in trigger edit form (gcalenko)
+
+--------------------------------------------------------------------------------
 Changes for 3.0.14rc1
 
 Bug fixes:
+..F....... [ZBX-13190] fixed check for permissions to enable/disable actions (gcalenko)
+..F....... [ZBX-13042] fixed unclickable template link on host items list page (gcalenko)
 .......PS. [ZBX-12925] fixed logic of commit/rollback operations (vjaceslavs)
 ..F....... [ZBX-13088] fixed incomplete data in notification reports for yearly report types (gcalenko)
 ..F....... [ZBX-12884] fixed misleading permissions visualization in user form for host groups and hosts lists (gcalenko)
@@ -2406,6 +2419,7 @@ Bug fixes:
 Changes for 2.2.21rc1
 
 Bug fixes:
+..F....... [ZBX-13190] fixed check for permissions to enable/disable actions (gcalenko)
 ..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
 ..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
 ..F....... [ZBX-13133] fixed multiple security issues (miks)
