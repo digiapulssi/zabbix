@@ -1211,8 +1211,8 @@ function make_trigger_details($trigger) {
 		])
 		->addRow([_('Event generation'), _('Normal').((TRIGGER_MULT_EVENT_ENABLED == $trigger['type'])
 			? SPACE.'+'.SPACE._('Multiple PROBLEM events') : '')])
-		->addRow([_('Disabled'), ((TRIGGER_STATUS_ENABLED == $trigger['status'])
-			? (new CCol(_('No')))->addClass(ZBX_STYLE_GREEN) : (new CCol(_('Yes')))->addClass(ZBX_STYLE_RED))
+		->addRow([_('Enabled'), ((TRIGGER_STATUS_ENABLED == $trigger['status'])
+			? (new CCol(_('Yes')))->addClass(ZBX_STYLE_GREEN) : (new CCol(_('No')))->addClass(ZBX_STYLE_RED))
 		]);
 
 	return $table;
