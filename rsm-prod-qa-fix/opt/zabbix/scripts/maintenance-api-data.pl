@@ -27,7 +27,7 @@ foreach my $tld_dir (path(AH_BASE_DIR)->children)
 
 	die("cannot read \"$tld\" state: ", ah_get_error()) unless (ah_state_file_json($tld, \$json) == AH_SUCCESS);
 
-	$json->{'status'} = 'Up (inconclusive)';
+	$json->{'status'} = 'Up-inconclusive';
 	$json->{'testedServices'} = {
 		'DNS'		=> JSON_OBJECT_DISABLED_SERVICE,
 		'DNSSEC'	=> JSON_OBJECT_DISABLED_SERVICE,
