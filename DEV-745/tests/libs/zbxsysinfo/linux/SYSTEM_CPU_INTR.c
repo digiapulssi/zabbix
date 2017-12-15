@@ -4,20 +4,27 @@
 #include "module.h"
 #include "sysinfo.h"
 
-static void	read_yaml_data(zbx_uint64_t *interr, int *ret)
+static void	read_yaml_uint64(zbx_uint64_t *value, char *out)
 {
 	zbx_mock_handle_t	handle;
 	zbx_mock_error_t	error;
 	const char		*str;
 
-	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter("interrupts_since_boot", &handle)))
+	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter(out, &handle)))
 		fail_msg("Cannot get interruptions since boot: %s", zbx_mock_error_string(error));
 
 	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(handle, &str)))
 		fail_msg("Cannot read interruptions since boot: %s", zbx_mock_error_string(error));
 
-	if (FAIL == is_uint64(str, interr))
+	if (FAIL == is_uint64(str, value))
 		fail_msg("\"%s\" is not a valid numeric unsigned value", str);
+}
+
+static void	read_yaml_ret(int *ret)
+{
+	zbx_mock_handle_t	handle;
+	zbx_mock_error_t	error;
+	const char		*str;
 
 	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter("ret", &handle)))
 		fail_msg("Cannot get return code: %s", zbx_mock_error_string(error));
@@ -39,7 +46,8 @@ void	zbx_mock_test_entry(void **state)
 
 	ZBX_UNUSED(state);
 
-	read_yaml_data(&interr, &ret);
+	read_yaml_ret(&ret);
+	read_yaml_uint64(&interr, "interrupts_since_boot");
 
 	init_result(&result);
 	init_request(&request);
