@@ -4,24 +4,25 @@
 #include "module.h"
 #include "sysinfo.h"
 
-static void	read_yaml_data(zbx_mock_handle_t *handle, zbx_uint64_t *interr, int *ret)
+static void	read_yaml_data(zbx_uint64_t *interr, int *ret)
 {
+	zbx_mock_handle_t	handle;
 	zbx_mock_error_t	error;
 	const char		*str;
 
-	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter("interrupts_since_boot", handle)))
+	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter("interrupts_since_boot", &handle)))
 		fail_msg("Cannot get interruptions since boot: %s", zbx_mock_error_string(error));
 
-	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(*handle, &str)))
+	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(handle, &str)))
 		fail_msg("Cannot read interruptions since boot: %s", zbx_mock_error_string(error));
 
 	if (FAIL == is_uint64(str, interr))
 		fail_msg("\"%s\" is not a valid numeric unsigned value", str);
 
-	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter("ret", handle)))
+	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter("ret", &handle)))
 		fail_msg("Cannot get return code: %s", zbx_mock_error_string(error));
 
-	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(*handle, &str)))
+	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(handle, &str)))
 		fail_msg("Cannot read return code: %s", zbx_mock_error_string(error));
 
 	if (SYSINFO_RET_OK != (*ret = atoi(str)) && *ret != SYSINFO_RET_FAIL)
@@ -30,16 +31,15 @@ static void	read_yaml_data(zbx_mock_handle_t *handle, zbx_uint64_t *interr, int 
 
 void	zbx_mock_test_entry(void **state)
 {
-	zbx_mock_handle_t	handle;
-	AGENT_RESULT		result;
-	AGENT_REQUEST		request;
-	zbx_uint64_t		interr;
-	const char		*itemkey = "system.cpu.intr";
-	int			ret, ret_actual;
+	const char	*itemkey = "system.cpu.intr";
+	AGENT_RESULT	result;
+	AGENT_REQUEST	request;
+	zbx_uint64_t	interr;
+	int		ret, ret_actual;
 
 	ZBX_UNUSED(state);
 
-	read_yaml_data(&handle, &interr, &ret);
+	read_yaml_data(&interr, &ret);
 
 	init_result(&result);
 	init_request(&request);
