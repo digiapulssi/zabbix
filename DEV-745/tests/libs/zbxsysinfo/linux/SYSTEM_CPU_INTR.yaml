@@ -1,7 +1,7 @@
 ---
 test case: system cpu interruptions
-in:
-      expected: '308874139'
+out:
+      interrupts_since_boot: '308874139'
 files:
   /proc/stat: |
     cpu  6834887 14572 1282582 290126897 172774 279140 218973 0 0 0
@@ -22,8 +22,8 @@ files:
     softirq 268158714 18474107 124646202 68120 9044282 6086868 0 143543 60880180 0 48815412
 ---
 test case: system cpu interruptions 2
-in:
-      expected: '9223372036854775807'
+out:
+      interrupts_since_boot: '9223372036854775807'
 files:
   /proc/stat: |
     cpu  6834887 14572 1282582 290126897 172774 279140 218973 0 0 0
