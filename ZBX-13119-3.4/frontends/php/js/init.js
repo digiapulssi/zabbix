@@ -148,7 +148,7 @@ jQuery(function($) {
 	/**
 	 * Event handler allow to clear fields from popup.
 	 *
-	 * @param array data.elements   Array of strings of field ids to clear.
+	 * @param array data.elements   Array of objects with fields to be cleared.
 	 */
 	$(document).on('clean.popup', function(e, data) {
 		if (data.elements) {
