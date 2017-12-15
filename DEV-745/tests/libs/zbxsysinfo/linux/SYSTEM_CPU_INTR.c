@@ -41,7 +41,6 @@ void	zbx_mock_test_entry(void **state)
 	const char	*itemkey = "system.cpu.intr";
 	AGENT_RESULT	result;
 	AGENT_REQUEST	request;
-	zbx_uint64_t	interr;
 	int		ret, ret_actual;
 
 	ZBX_UNUSED(state);
@@ -59,6 +58,8 @@ void	zbx_mock_test_entry(void **state)
 
 	if (ret == SYSINFO_RET_OK)
 	{
+		zbx_uint64_t	interr;
+
 		read_yaml_uint64(&interr, "interrupts_since_boot");
 
 		if (NULL == GET_UI64_RESULT(&result))
