@@ -2297,8 +2297,6 @@ int	DCsync_history(int sync_type, int *total_num)
 			DBcommit();
 		}
 
-
-
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 			DCconfig_unlock_triggers(&triggerids);
 
