@@ -75,6 +75,35 @@ char	*CONFIG_TLS_KEY_FILE		= NULL;
 char	*CONFIG_TLS_PSK_IDENTITY	= NULL;
 char	*CONFIG_TLS_PSK_FILE		= NULL;
 
+char  **CONFIG_ALLOWED_PATHS = NULL;
+
+/******************************************************************************
+ *                                                                            *
+ * Function: load_allowed_paths                                               *
+ *                                                                            *
+ * Purpose: load allowed paths from configuration                             *
+ *                                                                            *
+ * Parameters: lines - path regex entries from configuration file             *
+ *                                                                            *
+ * Comments: calls add_allowed_path() for each entry                          *
+ *                                                                            *
+ ******************************************************************************/
+void load_allowed_paths(char **lines)
+{
+	char *p, **pline;
+
+	for (pline = lines; NULL != *pline; pline++)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Adding allowed path (%s)", pline);
+		if (NULL == (p = strchr(*pline, ','))) {
+			add_allowed_path(*pline, NULL);
+		} else {
+			*p = '\0';
+			add_allowed_path(p + 1, *pline);
+		}
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: load_aliases                                                     *

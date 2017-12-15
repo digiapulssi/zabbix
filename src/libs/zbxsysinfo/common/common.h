@@ -29,4 +29,6 @@ int	EXECUTE_STR(const char *command, AGENT_RESULT *result);
 int	EXECUTE_DBL(const char *command, AGENT_RESULT *result);
 int	EXECUTE_INT(const char *command, AGENT_RESULT *result);
 
+int CHECK_PATH_ALLOWED(const char *filename, unsigned char item);
+
 #endif
