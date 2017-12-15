@@ -32,10 +32,14 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 use constant JSON_VALUE_INCIDENT_ACTIVE => 'Active';
 use constant JSON_VALUE_INCIDENT_RESOLVED => 'Resolved';
 
-our @EXPORT = qw(AH_SUCCESS AH_FAIL ah_get_error ah_save_state
+use constant JSON_OBJECT_DISABLED_SERVICE => {
+	'status'	=> 'Disabled'
+};
+
+our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_BASE_DIR AH_TMP_DIR ah_get_error ah_state_file_json ah_save_state
 		ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
 		ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
-		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
+		ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE);
 
 use constant AH_JSON_FILE_VERSION => 1;
 
@@ -209,7 +213,22 @@ sub __save_inc_false_positive($$$)
 	return __write_file($false_positive_path, __encode_json($json));
 }
 
-sub ah_save_state
+sub ah_state_file_json($$)
+{
+	my $ah_tld = shift;
+	my $json_ref = shift;
+
+	my $state_path = AH_BASE_DIR . '/' . __gen_base_path($ah_tld, undef, undef) . '/' . AH_STATE_FILE;
+	my $buf;
+
+	return AH_FAIL unless (__read_file($state_path, \$buf) == AH_SUCCESS);
+
+	$$json_ref = decode_json($buf);
+
+	return AH_SUCCESS;
+}
+
+sub ah_save_state($$)
 {
 	my $ah_tld = shift;
 	my $state_ref = shift;
@@ -220,9 +239,7 @@ sub ah_save_state
 
 	my $state_path = "$base_path/" . AH_STATE_FILE;
 
-	my $json = $state_ref;
-
-	return __write_file($state_path, __encode_json($json));
+	return __write_file($state_path, __encode_json($state_ref));
 }
 
 sub ah_save_alarmed
@@ -320,19 +337,10 @@ sub ah_save_incident
 	}
 }
 
-# read an old file from incident directory
-sub __read_inc_file($$$$$$)
+sub __read_file($$)
 {
-	my $tld = shift;
-	my $service = shift;
-	my $eventid = shift;
-	my $start = shift;
 	my $file = shift;
 	my $buf_ref = shift;
-
-	$file = AH_BASE_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
-
-	dbg("file: $file");
 
 	$$buf_ref = do
 	{
@@ -347,9 +355,24 @@ sub __read_inc_file($$$$$$)
 		<$fh>;
 	};
 
-	dbg("buf: ", $$buf_ref);
-
 	return AH_SUCCESS;
+}
+
+# read an old file from incident directory
+sub __read_inc_file($$$$$$)
+{
+	my $tld = shift;
+	my $service = shift;
+	my $eventid = shift;
+	my $start = shift;
+	my $file = shift;
+	my $buf_ref = shift;
+
+	$file = AH_BASE_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
+
+	dbg("file: $file");
+
+	return __read_file($file, $buf_ref);
 }
 
 # When saving false positiveness, read from AH_BASE_DIR, write to AH_TMP_DIR.
