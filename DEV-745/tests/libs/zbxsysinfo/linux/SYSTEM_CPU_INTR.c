@@ -9,7 +9,9 @@ void	zbx_mock_test_entry(void **state)
 	zbx_mock_error_t	error;
 	zbx_mock_handle_t	handle;
 	AGENT_RESULT		result;
+	AGENT_REQUEST		request;
 	const char		*str;
+	const char		*itemkey = "system.cpu.intr";
 
 	ZBX_UNUSED(state);
 
@@ -20,8 +22,12 @@ void	zbx_mock_test_entry(void **state)
 		fail_msg("Cannot read interruptions since boot: %s", zbx_mock_error_string(error));
 
 	init_result(&result);
+	init_request(&request);
 
-	if (SYSINFO_RET_OK == SYSTEM_CPU_INTR(NULL, &result))
+	if (SUCCEED != parse_item_key(itemkey, &request))
+		fail_msg("Invalid item key format '%s'", itemkey);
+
+	if (SYSINFO_RET_OK == SYSTEM_CPU_INTR(&request, &result))
 	{
 		zbx_uint64_t	total_interr;
 
@@ -37,5 +43,6 @@ void	zbx_mock_test_entry(void **state)
 	else
 		fail_msg("test failed '%s'", result.msg);
 
+	free_request(&request);
 	free_result(&result);
 }
