@@ -528,7 +528,7 @@ if (str_in_array($srctbl, ['applications', 'triggers'])) {
 			}
 		}
 
-		$controls[] = [(new CButton('empty', _('Empty')))->setAttribute('data-object', ['elements' => $elements])];
+		$controls[] = [(new CButton('empty', _('Empty')))->setAttribute('data-clean', ['elements' => $elements])];
 	}
 }
 

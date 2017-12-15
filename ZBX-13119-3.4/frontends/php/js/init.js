@@ -145,6 +145,26 @@ jQuery(function($) {
 		}
 	});
 
+	/**
+	 * Event handler allow to clear fields from popup.
+	 *
+	 * @param array data.elements   Array of strings of field ids to clear.
+	 */
+	$(document).on('clean.popup', function(e, data) {
+		if (data.elements) {
+			jQuery.each(data.elements, function(index, elm) {
+				var is_multiselect = typeof jQuery('#' + elm.id).data('multiSelect') === 'object';
+
+				if (is_multiselect) {
+					jQuery('#' + elm.id).multiSelect('clean');
+				}
+				else {
+					jQuery('#' + elm.id).val(elm.value);
+				}
+			})
+		}
+	})
+
 	// redirect buttons
 	$('button[data-url]').click(function() {
 		var button = $(this);

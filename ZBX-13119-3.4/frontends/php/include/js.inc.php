@@ -246,6 +246,14 @@ function insert_js_function($fnct_name) {
 				var processing = false;
 
 				jQuery(document)
+					.on("click", "[data-clean]", function() {
+						if (!processing && window.opener) {
+							processing = true;
+							window.opener.jQuery(window.opener.document)
+								.trigger("clean.popup", jQuery(this).data("clean"));
+						}
+						window.close();
+					})
 					.on("click", "[data-object]", function() {
 						if (!processing && window.opener) {
 							processing = true;
