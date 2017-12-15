@@ -1,5 +1,5 @@
 ---
-test case: system cpu interruptions
+test case: system cpu interruptions correct read
 out:
       interrupts_since_boot: '308874139'
       ret: '0'
@@ -22,7 +22,7 @@ files:
     procs_blocked 1
     softirq 268158714 18474107 124646202 68120 9044282 6086868 0 143543 60880180 0 48815412
 ---
-test case: system cpu interruptions 2
+test case: system cpu interruptions correct read of max value
 out:
       interrupts_since_boot: '9223372036854775807'
       ret: '0'
