@@ -44,7 +44,7 @@ void	zbx_mock_test_entry(void **state)
 	const char	*itemkey = "system.cpu.intr";
 	AGENT_RESULT	result;
 	AGENT_REQUEST	request;
-	int		ret;
+	int		ret, test;
 
 	ZBX_UNUSED(state);
 
@@ -57,7 +57,7 @@ void	zbx_mock_test_entry(void **state)
 	if (read_yaml_ret() != (ret = SYSTEM_CPU_INTR(&request, &result)))
 		fail_msg("unexpected return code:%d", ret);
 
-	if (ret == SYSINFO_RET_OK)
+	if (SYSINFO_RET_OK == ret)
 	{
 		zbx_uint64_t	interr;
 
