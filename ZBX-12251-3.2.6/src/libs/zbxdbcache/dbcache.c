@@ -2283,10 +2283,10 @@ int	DCsync_history(int sync_type, int *total_num)
 			/*   DCmass_update_items() */
 			/*   DCmass_update_triggers() */
 			if (0 != process_trigger_events(&trigger_diff, &triggerids, ZBX_EVENTS_PROCESS_CORRELATION))
-			{
-				DCconfig_triggers_apply_changes(&trigger_diff);
 				zbx_save_trigger_changes(&trigger_diff);
-			}
+
+			if (ZBX_DB_OK == DBcommit())
+				DCconfig_triggers_apply_changes(&trigger_diff);
 
 			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
 		}
@@ -2294,9 +2294,10 @@ int	DCsync_history(int sync_type, int *total_num)
 		{
 			DCmass_proxy_add_history(history, history_num);
 			DCmass_proxy_update_items(history, history_num);
+			DBcommit();
 		}
 
-		DBcommit();
+
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 			DCconfig_unlock_triggers(&triggerids);
