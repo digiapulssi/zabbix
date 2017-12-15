@@ -14,10 +14,10 @@ void	zbx_mock_test_entry(void **state)
 	ZBX_UNUSED(state);
 
 	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter("interrupts_since_boot", &handle)))
-		fail_msg("Cannot zbx_mock_in_parameter: %s", zbx_mock_error_string(error));
+		fail_msg("Cannot get interruptions since boot: %s", zbx_mock_error_string(error));
 
 	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(handle, &str)))
-		fail_msg("Cannot zbx_mock_string: %s", zbx_mock_error_string(error));
+		fail_msg("Cannot read interruptions since boot: %s", zbx_mock_error_string(error));
 
 	init_result(&result);
 
