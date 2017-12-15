@@ -480,6 +480,23 @@ function reloadPopup(form, action) {
 }
 
 /**
+ * Clear field, envoked by modal overlay dialogue 'Empty' button.
+ *
+ * @param {string} field    Field id to be cleared.
+ * @param {string} value	Value to set for non multiselect fields.
+ */
+function cleanField(field, value) {
+	var is_multiselect = typeof jQuery('#'+field).data('multiSelect') === 'object';
+
+	if (is_multiselect) {
+		jQuery('#'+field).multiSelect('clean');
+	}
+	else {
+		jQuery('#'+field).val(value);
+	}
+}
+
+/**
  * Pass value to add.popup trigger.
  *
  * @param {string} object			refers to destination object

@@ -103,13 +103,16 @@ else {
 
 if (in_array($data['popup_type'], ['applications', 'triggers'])) {
 	if (!array_key_exists('noempty', $options)) {
-		$value1 = strpos($options['dstfld1'], 'id') !== false ? 0 : '';
-		$value2 = strpos($options['dstfld2'], 'id') !== false ? 0 : '';
-		$value3 = strpos($options['dstfld3'], 'id') !== false ? 0 : '';
+		$empty_script = '';
 
-		$empty_script = get_window_opener($options['dstfrm'], $options['dstfld1'], $value1);
-		$empty_script .= get_window_opener($options['dstfrm'], $options['dstfld2'], $value2);
-		$empty_script .= get_window_opener($options['dstfrm'], $options['dstfld3'], $value3);
+		foreach (['dstfld1', 'dstfld2', 'dstfld3'] as $name) {
+			if ($options[$name]) {
+				$empty_script .= sprintf(' cleanField(%s, %s);',
+					CJs::encodeJson($options[$name]),
+					strpos($options[$name], 'id') !== false ? '0' : '\'\''
+				);
+			}
+		}
 		$empty_script .= ' overlayDialogueDestroy(jQuery(this).closest("[data-dialogueid]").attr("data-dialogueid"));';
 		$empty_script .= ' return false;';
 
