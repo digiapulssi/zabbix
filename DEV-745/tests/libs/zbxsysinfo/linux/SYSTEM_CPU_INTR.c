@@ -25,7 +25,11 @@ void	zbx_mock_test_entry(void **state)
 	{
 		zbx_uint64_t	total_interr;
 
-		ZBX_STR2UINT64(total_interr, str);
+		if (FAIL == is_uint64(str, &total_interr))
+			fail_msg("\"%s\" is not a valid numeric unsigned value", str);
+
+		if (NULL == GET_UI64_RESULT(&result))
+			fail_msg("result does not contain numeric unsigned value");
 
 		if (total_interr != result.ui64)
 			fail_msg("expected:" ZBX_FS_UI64 " actual:" ZBX_FS_UI64, total_interr, result.ui64);
