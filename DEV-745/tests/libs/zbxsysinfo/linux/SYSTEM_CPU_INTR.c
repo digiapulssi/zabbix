@@ -47,7 +47,6 @@ void	zbx_mock_test_entry(void **state)
 	ZBX_UNUSED(state);
 
 	read_yaml_ret(&ret);
-	read_yaml_uint64(&interr, "interrupts_since_boot");
 
 	init_result(&result);
 	init_request(&request);
@@ -60,6 +59,8 @@ void	zbx_mock_test_entry(void **state)
 
 	if (ret == SYSINFO_RET_OK)
 	{
+		read_yaml_uint64(&interr, "interrupts_since_boot");
+
 		if (NULL == GET_UI64_RESULT(&result))
 			fail_msg("result does not contain numeric unsigned value");
 		if (interr != result.ui64)

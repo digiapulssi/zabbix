@@ -47,7 +47,6 @@ files:
 ---
 test case: system cpu interruptions missing
 out:
-      interrupts_since_boot: '9223372036854775807'
       ret: '1'
 files:
   /proc/stat: |
