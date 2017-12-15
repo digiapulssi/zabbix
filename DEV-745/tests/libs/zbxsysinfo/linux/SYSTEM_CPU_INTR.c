@@ -20,11 +20,12 @@ static void	read_yaml_uint64(zbx_uint64_t *value, char *out)
 		fail_msg("\"%s\" is not a valid numeric unsigned value", str);
 }
 
-static void	read_yaml_ret(int *ret)
+static int	read_yaml_ret(void)
 {
 	zbx_mock_handle_t	handle;
 	zbx_mock_error_t	error;
 	const char		*str;
+	int			ret;
 
 	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_out_parameter("ret", &handle)))
 		fail_msg("Cannot get return code: %s", zbx_mock_error_string(error));
@@ -32,8 +33,10 @@ static void	read_yaml_ret(int *ret)
 	if (ZBX_MOCK_SUCCESS != (error = zbx_mock_string(handle, &str)))
 		fail_msg("Cannot read return code: %s", zbx_mock_error_string(error));
 
-	if (SYSINFO_RET_OK != (*ret = atoi(str)) && *ret != SYSINFO_RET_FAIL)
+	if (SYSINFO_RET_OK != (ret = atoi(str)) && ret != SYSINFO_RET_FAIL)
 		fail_msg("Incorrect return code '%s'", str);
+
+	return ret;
 }
 
 void	zbx_mock_test_entry(void **state)
@@ -41,11 +44,9 @@ void	zbx_mock_test_entry(void **state)
 	const char	*itemkey = "system.cpu.intr";
 	AGENT_RESULT	result;
 	AGENT_REQUEST	request;
-	int		ret, ret_actual;
+	int		ret;
 
 	ZBX_UNUSED(state);
-
-	read_yaml_ret(&ret);
 
 	init_result(&result);
 	init_request(&request);
@@ -53,8 +54,8 @@ void	zbx_mock_test_entry(void **state)
 	if (SUCCEED != parse_item_key(itemkey, &request))
 		fail_msg("Invalid item key format '%s'", itemkey);
 
-	if (ret != (ret_actual = SYSTEM_CPU_INTR(&request, &result)))
-		fail_msg("unexpected return code:%d", ret_actual);
+	if (read_yaml_ret() != (ret = SYSTEM_CPU_INTR(&request, &result)))
+		fail_msg("unexpected return code:%d", ret);
 
 	if (ret == SYSINFO_RET_OK)
 	{
