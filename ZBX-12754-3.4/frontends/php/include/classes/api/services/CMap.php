@@ -1779,6 +1779,11 @@ class CMap extends CMapElement {
 					$selements_to_add[] = $new_selement;
 				}
 
+				foreach ($selement_diff['both'] as &$selement) {
+					$selement['sysmapid'] = $map['sysmapid'];
+				}
+				unset($selement);
+
 				$selements_to_update = array_merge($selements_to_update, $selement_diff['both']);
 				$selements_to_delete = array_merge($selements_to_delete, $selement_diff['second']);
 			}
