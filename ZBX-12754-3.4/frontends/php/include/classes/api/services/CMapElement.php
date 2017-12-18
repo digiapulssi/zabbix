@@ -203,7 +203,7 @@ abstract class CMapElement extends CApiService {
 			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP) {
 				$label = array_key_exists('label', $selement) ? $selement['label'] : '';
 				foreach ($selement['elements'] as $element) {
-					if ($this->checkCircleSelementsLink($selement['sysmapid'], $element['sysmapid'])) {
+					if ($this->checkCircleSelementsLink($selement['selementid'], $element['sysmapid'])) {
 						self::exception(ZBX_API_ERROR_PARAMETERS,
 							_s('Circular link cannot be created for map element "%s".', $label)
 						);
