@@ -311,6 +311,7 @@ static void	elastic_writer_release(void)
 static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
 {
 	zbx_elastic_data_t	*data = hist->data;
+	CURLcode		code;
 
 	elastic_writer_init();
 
@@ -320,11 +321,40 @@ static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
 		return;
 	}
 
-	(void)curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
-	(void)curl_easy_setopt(data->handle, CURLOPT_POST, 1);
-	(void)curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, data->buf);
-	(void)curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_send_cb);
-	(void)curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
+	code = curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
+	if (CURLE_UNKNOWN_OPTION == code || CURLE_NOT_BUILT_IN == code)
+	{
+		zabbix_log(LOG_LEVEL_ERR, "%s", curl_easy_strerror(code));
+		exit(EXIT_FAILURE);
+	}
+
+	code = curl_easy_setopt(data->handle, CURLOPT_POST, 1L);
+	if (CURLE_UNKNOWN_OPTION == code || CURLE_NOT_BUILT_IN == code)
+	{
+		zabbix_log(LOG_LEVEL_ERR, "%s", curl_easy_strerror(code));
+		exit(EXIT_FAILURE);
+	}
+
+	code = curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, data->buf);
+	if (CURLE_UNKNOWN_OPTION == code || CURLE_NOT_BUILT_IN == code)
+	{
+		zabbix_log(LOG_LEVEL_ERR, "%s", curl_easy_strerror(code));
+		exit(EXIT_FAILURE);
+	}
+
+	code = curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_send_cb);
+	if (CURLE_UNKNOWN_OPTION == code || CURLE_NOT_BUILT_IN == code)
+	{
+		zabbix_log(LOG_LEVEL_ERR, "%s", curl_easy_strerror(code));
+		exit(EXIT_FAILURE);
+	}
+
+	code = curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
+	if (CURLE_UNKNOWN_OPTION == code || CURLE_NOT_BUILT_IN == code)
+	{
+		zabbix_log(LOG_LEVEL_ERR, "%s", curl_easy_strerror(code));
+		exit(EXIT_FAILURE);
+	}
 
 	curl_multi_add_handle(writer.handle, data->handle);
 
@@ -360,10 +390,16 @@ static int	elastic_writer_flush(void)
 
 	for (i = 0; i < writer.ifaces.values_num; i++)
 	{
+		CURLcode			code;
 		zbx_history_iface_t		*hist = (zbx_history_iface_t *)writer.ifaces.values[i];
 		zbx_elastic_data_t	*data = hist->data;
 
-		(void)curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
+		code = curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
+		if (CURLE_UNKNOWN_OPTION == code || CURLE_NOT_BUILT_IN == code)
+		{
+			zabbix_log(LOG_LEVEL_ERR, "%s", curl_easy_strerror(code));
+			exit(EXIT_FAILURE);
+		}
 
 		zabbix_log(LOG_LEVEL_DEBUG, "sending %s", data->buf);
 	}
