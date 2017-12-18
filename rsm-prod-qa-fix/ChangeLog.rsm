@@ -1,9 +1,8 @@
 --------------------------------------------------------------------------------
 Changes for rsm1.0.3rc1
 
-New features:
-
 Bug fixes:
+....I..... [315] fixed database connection error when running update-api-data.pl (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.2
