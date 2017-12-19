@@ -9,7 +9,7 @@ endif
 noinst_PROGRAMS = $(SERVER_tests) $(AGENT_tests)
 
 SUBDIRS = \
-	linux
+	@ARCH@
 
 if SERVER
 parse_item_key_SOURCES = \
