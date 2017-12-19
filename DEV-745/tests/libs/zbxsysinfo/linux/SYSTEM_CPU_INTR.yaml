@@ -2,7 +2,7 @@
 test case: system cpu interruptions correct read
 out:
       interrupts_since_boot: '308874139'
-      ret: '0'
+      ret: 'succeed'
 files:
   /proc/stat: |
     cpu  6834887 14572 1282582 290126897 172774 279140 218973 0 0 0
@@ -25,7 +25,7 @@ files:
 test case: system cpu interruptions correct read of max value
 out:
       interrupts_since_boot: '9223372036854775807'
-      ret: '0'
+      ret: 'succeed'
 files:
   /proc/stat: |
     cpu  6834887 14572 1282582 290126897 172774 279140 218973 0 0 0
@@ -47,7 +47,7 @@ files:
 ---
 test case: system cpu interruptions missing
 out:
-      ret: '1'
+      ret: 'fail'
 files:
   /proc/stat: |
     cpu  6834887 14572 1282582 290126897 172774 279140 218973 0 0 0
