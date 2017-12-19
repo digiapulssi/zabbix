@@ -1175,7 +1175,7 @@ function make_trigger_details($trigger) {
 		]);
 	}
 
-	$table->addRow([_('Enabled'), (TRIGGER_STATUS_ENABLED == $trigger['status'])
+	$table->addRow([_('Enabled'), ($trigger['status'] == TRIGGER_STATUS_ENABLED)
 		? (new CCol(_('Yes')))->addClass(ZBX_STYLE_GREEN)
 		: (new CCol(_('No')))->addClass(ZBX_STYLE_RED)
 	]);
