@@ -59,7 +59,7 @@ void	zbx_mock_test_entry(void **state)
 		fail_msg("Invalid item key format '%s'", itemkey);
 
 	if (read_yaml_ret() != (ret = SYSTEM_CPU_INTR(&request, &result)))
-		fail_msg("unexpected return code:%d", ret);
+		fail_msg("unexpected return code '%s'", zbx_sysinfo_ret_string(ret));
 
 	if (SYSINFO_RET_OK == ret)
 	{
