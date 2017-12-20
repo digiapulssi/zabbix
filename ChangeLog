@@ -3,6 +3,7 @@ Changes for 3.4.5rc3
 New features:
 
 Bug fixes:
+........S. [ZBX-13208] fixed problem when items might be synced without preprocessing steps if they were created during configuration cache synchronization (wiper)
 
 --------------------------------------------------------------------------------
 Changes for 3.4.5rc2
