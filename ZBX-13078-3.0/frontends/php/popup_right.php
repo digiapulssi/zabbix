@@ -59,14 +59,16 @@ $hostGroups = API::HostGroup()->get([
 
 order_result($hostGroups, 'name');
 
+$row_index = 1;
 foreach ($hostGroups as $hostGroup) {
 	$hostGroupTable->addRow([
-		(new CCheckBox())
+		(new CCheckBox('groups['.$row_index.']', $hostGroup['groupid']))
 			->setAttribute('data-id', $hostGroup['groupid'])
 			->setAttribute('data-name', $hostGroup['name'])
 			->setAttribute('data-permission', $permission),
 		$hostGroup['name']
 	]);
+	$row_index++;
 }
 
 $hostGroupTable->setFooter(
