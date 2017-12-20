@@ -26,7 +26,7 @@
 #include "zbxself.h"
 #include "history.h"
 
-#if defined(HAVE_LIBCURL) && LIBCURL_VERSION_NUM >= 0x072800
+#if defined(HAVE_LIBCURL) && LIBCURL_VERSION_NUM >= 0x071c00
 
 #define		ZBX_HISTORY_STORAGE_DOWN	10000 /* Timeout in milliseconds */
 
