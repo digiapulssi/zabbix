@@ -688,7 +688,7 @@ class CPieGraphDraw extends CGraphDraw {
 		if (!$this->with_vertical_padding) {
 			if ($this->drawLegend == 1) {
 				// Increase size of graph by half height of font used in legend.
-				$this->sizeY += 8 / 2;
+				$this->sizeY += 4;
 			}
 			else {
 				// Remove y shift if only graph is rendered (no labels, header, vertical paddings).
