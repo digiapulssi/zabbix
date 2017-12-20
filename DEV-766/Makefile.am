@@ -129,11 +129,20 @@ WRAP_FS_FUNCS = \
 
 WRAP_EXIT = \
 	-Wl,--wrap=exit
+	
+WRAP_MEM_FUNCS = \
+	-Wl,--wrap=malloc \
+	-Wl,--wrap=realloc \
+	-Wl,--wrap=free \
+	-Wl,--wrap=strdup \
+	-Wl,--wrap=zbx_malloc2 \
+	-Wl,--wrap=zbx_realloc2
 
 COMMON_WRAP_FUNCS = \
 	$(WRAP_DB_FUNCS) \
 	$(WRAP_IO_FUNCS) \
 	$(WRAP_FS_FUNCS) \
+	$(WRAP_MEM_FUNCS) \
 	$(WRAP_EXIT)
 
 tests:

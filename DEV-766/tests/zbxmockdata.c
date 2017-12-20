@@ -21,6 +21,7 @@
 
 #include "zbxmocktest.h"
 #include "zbxmockdata.h"
+#include "zbxmockmem.h"
 
 #include "common.h"
 #include "zbxalgo.h"
@@ -202,8 +203,10 @@ int	zbx_mock_data_init(void **state)
 						if (pair >= root->data.mapping.pairs.top)
 						{
 							yaml_parser_delete(&parser);
-							zbx_vector_ptr_create(&handle_pool);
-							zbx_vector_str_create(&string_pool);
+							zbx_vector_ptr_create_ext(&handle_pool, zbx_mock_malloc,
+									zbx_mock_realloc, zbx_mock_free);
+							zbx_vector_str_create_ext(&string_pool, zbx_mock_malloc,
+									zbx_mock_realloc, zbx_mock_free);
 							return 0;
 						}
 					}
@@ -238,7 +241,7 @@ static zbx_mock_handle_t	zbx_mock_handle_alloc(const yaml_node_t *node)
 	zbx_mock_pool_handle_t	*handle = NULL;
 
 	handleid = (zbx_mock_handle_t)handle_pool.values_num;
-	handle = zbx_malloc(handle, sizeof(zbx_mock_pool_handle_t));
+	handle = zbx_mock_malloc(handle, sizeof(zbx_mock_pool_handle_t));
 	handle->node = node;
 	handle->item = (YAML_SEQUENCE_NODE == node->type ? node->data.sequence.items.start : NULL);
 	zbx_vector_ptr_append(&handle_pool, handle);
@@ -250,8 +253,10 @@ int	zbx_mock_data_free(void **state)
 {
 	ZBX_UNUSED(state);
 
-	zbx_vector_str_clear_ext(&string_pool, zbx_ptr_free);
-	zbx_vector_ptr_clear_ext(&handle_pool, zbx_ptr_free);
+	zbx_mock_memtrack_disable();
+
+	zbx_vector_str_clear_ext(&string_pool, zbx_mock_free);
+	zbx_vector_ptr_clear_ext(&handle_pool, zbx_mock_free);
 	zbx_vector_str_destroy(&string_pool);
 	zbx_vector_ptr_destroy(&handle_pool);
 	yaml_document_delete(&test_case);
@@ -438,7 +443,7 @@ zbx_mock_error_t	zbx_mock_string(zbx_mock_handle_t string, const char **value)
 		return ZBX_MOCK_NOT_A_STRING;
 	}
 
-	tmp = zbx_malloc(tmp, handle->node->data.scalar.length + 1);
+	tmp = zbx_mock_malloc(tmp, handle->node->data.scalar.length + 1);
 	memcpy(tmp, handle->node->data.scalar.value, handle->node->data.scalar.length);
 	tmp[handle->node->data.scalar.length] = '\0';
 	*value = tmp;
