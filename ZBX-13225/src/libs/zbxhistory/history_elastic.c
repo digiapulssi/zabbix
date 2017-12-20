@@ -26,7 +26,7 @@
 #include "zbxself.h"
 #include "history.h"
 
-#ifdef HAVE_LIBCURL
+#if defined(HAVE_LIBCURL) && LIBCURL_VERSION_NUM >= 0x072800
 
 #define		ZBX_HISTORY_STORAGE_DOWN	10000 /* Timeout in milliseconds */
 
@@ -831,13 +831,14 @@ int	zbx_history_elastic_init(zbx_history_iface_t *hist, unsigned char value_type
 }
 
 #else
+
 int	zbx_history_elastic_init(zbx_history_iface_t *hist, unsigned char value_type, char **error)
 {
 	ZBX_UNUSED(hist);
 	ZBX_UNUSED(value_type);
 
-	*error = zbx_strdup(*error, "cURL library support is required for ElasticSearch history hist");
+	*error = zbx_strdup(*error, "cURL library support >= 7.28.0 is required for ElasticSearch history hist");
 	return FAIL;
 }
-#endif
 
+#endif
