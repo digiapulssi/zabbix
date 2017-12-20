@@ -1383,15 +1383,14 @@ if test "x$have_ipcservice" = "xyes"; then
 	fi
 fi
 
-need_pcre=no
-if test "x$server" != "xno"; then need_pcre=yes; fi
-if test "x$proxy"  != "xno"; then need_pcre=yes; fi
-if test "x$agent"  != "xno"; then need_pcre=yes; fi
-dnl Check for libpcre, used by Zabbix for regular expressions
-LIBPCRE_CHECK_CONFIG([no])
-if test "x$found_libpcre" != "xyes" && test "x$need_pcre" != "xno"; then
-	AC_MSG_ERROR([Unable to use libpcre (libpcre check failed)])
+if test "x$server" = "xyes" || test "x$proxy" = "xyes" || test "x$agent" = "xyes"; then
+	dnl Check for libpcre, used by Zabbix for regular expressions
+	LIBPCRE_CHECK_CONFIG([no])
+	if test "x$found_libpcre" != "xyes"; then
+		AC_MSG_ERROR([Unable to use libpcre (libpcre check failed)])
+	fi
 fi
+
 CFLAGS="$CFLAGS $LIBPCRE_CFLAGS"
 LDFLAGS="$LDFLAGS $LIBPCRE_LDFLAGS"
 LIBS="$LIBS $LIBPCRE_LIBS"
