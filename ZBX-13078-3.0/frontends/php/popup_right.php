@@ -43,12 +43,12 @@ $permission = getRequest('permission', PERM_DENY);
  */
 
 // host groups
-$hostGroupForm = (new CForm())->setId('groups');
+$hostGroupForm = (new CForm())->setId('groups_form');
 
 $hostGroupTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
-			(new CCheckBox('all_groups'))->onClick('checkAll(this.checked)')
+			(new CCheckBox('all_groups'))->onClick("checkAll('groups_form', 'all_groups', 'groups');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		_('Name')
 	]);
@@ -93,7 +93,7 @@ $hostGroupForm->addItem($hostGroupTable);
 			return close_window();
 		}
 
-		jQuery('#groups input[type=checkbox]').each(function() {
+		jQuery('#groups_form input[type=checkbox]').each(function() {
 			var obj = jQuery(this);
 
 			if (obj.attr('name') !== 'all_groups' && obj.prop('checked')) {
@@ -108,12 +108,6 @@ $hostGroupForm->addItem($hostGroupTable);
 		parentDocument.forms[formName].submit();
 
 		close_window();
-	}
-
-	function checkAll(value) {
-		jQuery('#groups input[type=checkbox]').each(function() {
-			jQuery(this).prop('checked', value);
-		});
 	}
 </script>
 <?php
