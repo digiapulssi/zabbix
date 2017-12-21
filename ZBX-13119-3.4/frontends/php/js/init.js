@@ -153,13 +153,13 @@ jQuery(function($) {
 	$(document).on('clean.popup', function(e, data) {
 		if (data.elements) {
 			jQuery.each(data.elements, function(index, elm) {
-				var is_multiselect = typeof jQuery('#' + elm.id).data('multiSelect') === 'object';
+				var obj = jQuery('#' + elm.id);
 
-				if (is_multiselect) {
-					jQuery('#' + elm.id).multiSelect('clean');
+				if (typeof obj.data('multiSelect') === 'object') {
+					obj.multiSelect('clean');
 				}
 				else {
-					jQuery('#' + elm.id).val(elm.value);
+					obj.val(elm.value);
 				}
 			})
 		}
