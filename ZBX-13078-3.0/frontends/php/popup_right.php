@@ -59,7 +59,7 @@ $hostGroups = API::HostGroup()->get([
 
 order_result($hostGroups, 'name');
 
-$row_index = 1;
+$row_index = 0;
 foreach ($hostGroups as $hostGroup) {
 	$hostGroupTable->addRow([
 		(new CCheckBox('groups['.$row_index.']', $hostGroup['groupid']))
