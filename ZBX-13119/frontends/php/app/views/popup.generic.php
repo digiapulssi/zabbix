@@ -109,10 +109,11 @@ if (in_array($data['popup_type'], ['applications', 'triggers'])) {
 			if ($options[$name]) {
 				$empty_script .= sprintf(' cleanField(%s, %s);',
 					CJs::encodeJson($options[$name]),
-					strpos($options[$name], 'id') !== false ? '0' : '\'\''
+					(strpos($options[$name], 'id') !== false) ? '0' : '\'\''
 				);
 			}
 		}
+
 		$empty_script .= ' overlayDialogueDestroy(jQuery(this).closest("[data-dialogueid]").attr("data-dialogueid"));';
 		$empty_script .= ' return false;';
 

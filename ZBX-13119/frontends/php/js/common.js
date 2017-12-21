@@ -480,19 +480,19 @@ function reloadPopup(form, action) {
 }
 
 /**
- * Clear field, envoked by modal overlay dialogue 'Empty' button.
+ * Clear field envoked by modal overlay dialogue 'Empty' button.
  *
- * @param {string} field    Field id to be cleared.
- * @param {string} value    Value to set for non multiselect fields.
+ * @param {string} field  Field id to be cleared.
+ * @param {string} value  Value to set for non-multiselect fields.
  */
 function cleanField(field, value) {
-	var is_multiselect = typeof jQuery('#'+field).data('multiSelect') === 'object';
+	var obj = jQuery('#' + field);
 
-	if (is_multiselect) {
-		jQuery('#'+field).multiSelect('clean');
+	if (typeof obj.data('multiSelect') === 'object') {
+		obj.multiSelect('clean');
 	}
 	else {
-		jQuery('#'+field).val(value);
+		obj.val(value);
 	}
 }
 
