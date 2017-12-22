@@ -200,19 +200,6 @@ abstract class CMapElement extends CApiService {
 				);
 			}
 
-			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP) {
-				$label = array_key_exists('label', $selement) ? $selement['label'] : '';
-				foreach ($selement['elements'] as $element) {
-					$circular_path = [$label];
-
-					if ($this->checkCircleSelementsLink($selement['sysmapid'], $element['sysmapid'], $circular_path)) {
-						self::exception(ZBX_API_ERROR_PARAMETERS,
-							_s('*API*Circular reference in maps: %1$s.', implode(' - ', $circular_path))
-						);
-					}
-				}
-			}
-
 			if ($create) {
 				$selement['urls'] = array_key_exists('urls', $selement) ? $selement['urls'] : [];
 			}
@@ -359,37 +346,6 @@ abstract class CMapElement extends CApiService {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Recursive function for searching for circular map references.
-	 *
-	 * @param int    $sysmapid      Map id to check for having circular reference.
-	 * @param int    $elementid     Map id of elements to check against sysmapid for circular reference.
-	 * @param array  $circular_path Reference to array of found circular referenced map labels.
-	 *
-	 * @return bool
-	 */
-	public function checkCircleSelementsLink($sysmapid, $elementid, &$circular_path) {
-		if (bccomp($sysmapid, $elementid) == 0) {
-			return true;
-		}
-
-		$dbElements = DBselect(
-			'SELECT se.elementid,se.elementtype,se.label'.
-			' FROM sysmaps_elements se'.
-			' WHERE se.sysmapid='.zbx_dbstr($elementid).
-				' AND se.elementtype='.SYSMAP_ELEMENT_TYPE_MAP
-		);
-		while ($element = DBfetch($dbElements)) {
-			// get data from sysmap_element_trigger if type trigger
-			if ($this->checkCircleSelementsLink($sysmapid, $element['elementid'], $circular_path)) {
-				$circular_path[] = $element['label'];
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**

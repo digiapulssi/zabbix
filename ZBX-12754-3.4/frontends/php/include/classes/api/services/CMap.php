@@ -951,6 +951,13 @@ class CMap extends CMapElement {
 				}
 			}
 		}
+
+		// Maps circular recursion validation.
+		$cref_validator = new CCircularReferenceMapValidator(['mapsProvider' => API::Map()]);
+
+		if (!$cref_validator->validate($maps)) {
+			throw new Exception(_s('Circular reference in maps: %1$s.', $cref_validator->getCircularMapsString()));
+		}
 	}
 
 	/**
@@ -1392,6 +1399,64 @@ class CMap extends CMapElement {
 					}
 				}
 			}
+		}
+
+		// Maps circular recursion validation.
+		$check_maps = [];
+		$selement_sysmapids = [];
+
+		foreach ($maps as $map) {
+			$db_map = $db_maps[$map['sysmapid']];
+			$map_name = array_key_exists('name', $map) ? $map['name'] : $db_map['name'];
+			$selements = (array_key_exists('selements', $map) && is_array($map['selements'])) ? $map['selements'] : [];
+			if (is_array($db_map['selements'])) {
+				$selements += $db_map['selements'];
+			}
+
+			foreach ($selements as $i => &$selement) {
+				if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP) {
+					if (!array_key_exists('name', $selement['elements'][0])) {
+						$selement_sysmapids[$selement['elements'][0]['sysmapid']] = 1;
+					}
+
+					$selement = [
+						'elementtype' => SYSMAP_ELEMENT_TYPE_MAP,
+						'elements' => $selement['elements']
+					];
+				}
+				else {
+					unset($selements[$i]);
+				}
+			}
+			unset($selement);
+
+			$check_maps[$map_name] = array_merge($db_map, $map);
+			$check_maps[$map_name]['selements'] = $selements;
+		}
+
+		$selement_sysmapids = array_diff_key($selement_sysmapids, $db_maps);
+		if ($selement_sysmapids) {
+			$db_maps += $this->get([
+				'output' => ['name'],
+				'sysmapids' => array_keys($selement_sysmapids),
+				'preservekeys' => true
+			]);
+		}
+
+		// Add map name to every selement.
+		foreach ($check_maps as &$map) {
+			foreach ($map['selements'] as &$selement) {
+				$mapid = $selement['elements'][0]['sysmapid'];
+				$selement['elements'][0]['name'] = $db_maps[$mapid]['name'];
+			}
+			unset($selement);
+		}
+		unset($map);
+
+		$cref_validator = new CCircularReferenceMapValidator(['mapsProvider' => API::Map()]);
+
+		if (!$cref_validator->validate($check_maps)) {
+			throw new Exception(_s('Circular reference in maps: %1$s.', $cref_validator->getCircularMapsString()));
 		}
 	}
 
