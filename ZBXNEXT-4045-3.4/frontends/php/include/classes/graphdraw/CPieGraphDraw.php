@@ -773,7 +773,7 @@ class CPieGraphDraw extends CGraphDraw {
 				$this->im,
 				6,
 				90,
-				$this->fullSizeX - 1,
+				$this->fullSizeX - 2,
 				$this->fullSizeY - 5,
 				$this->getColor('Gray'),
 				_s('Data from %1$s. Generated in %2$s sec.', $this->dataFrom, $str)

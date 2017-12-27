@@ -2848,7 +2848,7 @@ class CLineGraphDraw extends CGraphDraw {
 
 		if ($debug_mode) {
 			$str = sprintf('%0.2f', microtime(true) - $start_time);
-			imageText($this->im, 6, 90, $this->fullSizeX - 1, $this->fullSizeY - 5, $this->getColor('Gray'),
+			imageText($this->im, 6, 90, $this->fullSizeX - 2, $this->fullSizeY - 5, $this->getColor('Gray'),
 				_s('Data from %1$s. Generated in %2$s sec.', $this->dataFrom, $str)
 			);
 		}
