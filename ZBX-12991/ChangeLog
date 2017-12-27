@@ -1,12 +1,26 @@
+Changes for 3.0.14
+
+3.0.14rc2 was released as 3.0.14 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.14rc2
 
+New features:
+A.F....... [ZBX-12825] implemented delayed URL validation; enabled user macros containing URLs as valid; made URL validation as optional; improved URL validation (miks)
+
 Bug fixes:
+..F....... [ZBX-13181] fixed database configuration error reporting and message filtering when messages are received from clear_messages function (miks)
+..F....... [ZBX-13024] fixed parsing "request" parameter for URLs without input parameters (Sasha)
 ..F....... [ZBX-12856] fixed empty host filter when adding dependent trigger in trigger edit form (gcalenko)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.14rc1
 
 Bug fixes:
+..F....... [ZBX-13262] fixed cookie http-only attribute to prevent XSS attacks (miks)
+..F....... [ZBX-13261] fixed reflected XSS vulnerability in popup forms (gcalenko)
+..F....... [ZBX-13260] fixed permissions check in script execution form (miks)
+..F....... [ZBX-13190] fixed check for permissions to enable/disable actions (gcalenko)
 ..F....... [ZBX-13042] fixed unclickable template link on host items list page (gcalenko)
 .......PS. [ZBX-12925] fixed logic of commit/rollback operations (vjaceslavs)
 ..F....... [ZBX-13088] fixed incomplete data in notification reports for yearly report types (gcalenko)
@@ -1825,14 +1839,27 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
 
 --------------------------------------------------------------------------------
+Changes for 2.2.21
+
+2.2.21rc2 was released as 2.2.21 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 2.2.21rc2
 
+New features:
+..F....... [ZBX-12825] implemented URL validation as optional; improved URL validation (miks)
+
 Bug fixes:
+..F....... [ZBX-13181] fixed database configuration error reporting and message filtering when messages are received from clear_messages function (miks)
+..F....... [ZBX-13024] fixed parsing "request" parameter for URLs without input parameters (Sasha)
 
 --------------------------------------------------------------------------------
 Changes for 2.2.21rc1
 
 Bug fixes:
+..F....... [ZBX-13262] fixed cookie http-only attribute to prevent XSS attacks (miks)
+..F....... [ZBX-13261] fixed reflected XSS vulnerability in popup forms (gcalenko)
+..F....... [ZBX-13190] fixed check for permissions to enable/disable actions (gcalenko)
 ..F....... [ZBX-13024] fixed missed url search part in request login parameter (miks)
 ..F....... [ZBX-13044] fixed undefined index when setting strict-transport-security http header (miks)
 ..F....... [ZBX-13133] fixed multiple security issues (miks)
