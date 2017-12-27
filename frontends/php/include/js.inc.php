@@ -404,70 +404,51 @@ function insert_js_function($fnct_name) {
 					return true;
 				}');
 			break;
+
 		case 'addSelectedValues':
 			insert_js('
-				function addSelectedValues(form, object, parentId) {
-					form = $(form);
-					if (is_null(form)) {
-						return close_window()
-					};
-					var parent = window.opener;
-					if (!parent) {
-						return close_window();
-					}
+				function addSelectedValues(formid, parentid) {
+					var values = [];
 
-					if (typeof parentId === "undefined") {
-						var parentId = null;
-					}
-
-					var data = { object: object, values: [], parentId: parentId };
-					var chkBoxes = form.getInputs("checkbox");
-					for (var i = 0; i < chkBoxes.length; i++) {
-						if (chkBoxes[i].checked && (chkBoxes[i].name.indexOf("all_") < 0)) {
-							var value = {};
-							if (isset(chkBoxes[i].value, popupReference)) {
-								value = popupReference[chkBoxes[i].value];
-							}
-							else {
-								value[object] = chkBoxes[i].value;
-							}
-							data["values"].push(value);
-						}
-					}
+					jQuery("form#"+formid+" input:checked").not("[name*=all_],:disabled").each(function() {
+						values.push(popupReference[jQuery(this).val()]);
+					});
 					close_window();
 
-					parent.jQuery(parent.document).trigger("add.popup", data);
+					if (window.opener && values.length > 0) {
+						window.opener.jQuery(window.opener.document).trigger("add.popup", {
+							object: jQuery("[name=reference]").val(),
+							values: values,
+							parentId: (typeof parentid === "undefined") ? null : parentid
+						});
+					}
 				}');
 			break;
+
 		case 'addValue':
 			insert_js('
-				function addValue(object, singleValue, parentId) {
-					var parent = window.opener;
-					if (!parent) {
-						return close_window();
-					}
-					var value = {};
-					if (isset(singleValue, popupReference)) {
-						value = popupReference[singleValue];
-					}
-					else {
-						value[object] = singleValue;
-					}
-
-					if (typeof parentId === "undefined") {
-						var parentId = null;
-					}
-					var data = { object: object, values: [value], parentId: parentId };
-
+				function addValue(index, parentid) {
 					close_window();
 
-					parent.jQuery(parent.document).trigger("add.popup", data);
+					if (window.opener) {
+						window.opener.jQuery(window.opener.document).trigger("add.popup", {
+							object: jQuery("[name=reference]").val(),
+							values: [popupReference[index]],
+							parentId: (typeof parentid === "undefined") ? null : parentid
+						});
+					}
+
+					return false;
 				}');
 			break;
+
 		case 'addValues':
 			insert_js('
-				function addValues(frame, values, submitParent) {
-					var parentDocument = window.opener.document;
+				function addValues(index, submitParent) {
+					var frame = jQuery("[name=dstfrm]").val(),
+						values = popupReference[index],
+						parentDocument = window.opener.document;
+
 					if (!parentDocument) {
 						return close_window();
 					}

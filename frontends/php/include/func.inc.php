@@ -114,7 +114,7 @@ function get_cookie($name, $default_value = null) {
 }
 
 function zbx_setcookie($name, $value, $time = null) {
-	setcookie($name, $value, isset($time) ? $time : 0, null, null, HTTPS);
+	setcookie($name, $value, isset($time) ? $time : 0, null, null, HTTPS, true);
 	$_COOKIE[$name] = $value;
 }
 
@@ -2160,6 +2160,38 @@ function detect_page_type($default = PAGE_TYPE_HTML) {
 	return $default;
 }
 
+/**
+ * Filters messages that can be displayed to user based on defines (see ZBX_SHOW_TECHNICAL_ERRORS) and user settings.
+ *
+ * @param array $messages	List of messages to filter.
+ *
+ * @return array
+ */
+function filter_messages(array $messages = array()) {
+	if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN && CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_DISABLED
+			&& !ZBX_SHOW_TECHNICAL_ERRORS) {
+		$filtered_messages = array();
+		$generic_exists = false;
+
+		foreach ($messages as $message) {
+			if ((array_key_exists('sql_error', $message) && $message['sql_error'] === true)
+					|| (array_key_exists('php_error', $message) && $message['php_error'] === true)) {
+				if (!$generic_exists) {
+					$message['message'] = _('System error occurred. Please contact Zabbix administrator.');
+					$filtered_messages[] = $message;
+					$generic_exists = true;
+				}
+			}
+			else {
+				$filtered_messages[] = $message;
+			}
+		}
+		$messages = $filtered_messages;
+	}
+
+	return $messages;
+}
+
 function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 	global $page, $ZBX_MESSAGES;
 
@@ -2184,30 +2216,9 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 
 	$messages = array();
 	if (isset($ZBX_MESSAGES) && is_array($ZBX_MESSAGES)) {
-		$messages = $ZBX_MESSAGES;
+		$messages = filter_messages($ZBX_MESSAGES);
 	}
 	$ZBX_MESSAGES = array();
-
-	if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN && CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_DISABLED
-			&& !ZBX_SHOW_TECHNICAL_ERRORS) {
-		$filtered_messages = array();
-		$generic_exists = false;
-
-		foreach ($messages as $message) {
-			if ((array_key_exists('sql_error', $message) && $message['sql_error'] === true)
-					|| (array_key_exists('php_error', $message) && $message['php_error'] === true)) {
-				if (!$generic_exists) {
-					$message['message'] = _('System error occurred. Please contact Zabbix administrator.');
-					$filtered_messages[] = $message;
-					$generic_exists = true;
-				}
-			}
-			else {
-				$filtered_messages[] = $message;
-			}
-		}
-		$messages = $filtered_messages;
-	}
 
 	if (isset($msg)) {
 		switch ($page['type']) {
@@ -2233,7 +2244,7 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 				$msg_col->setAttribute('id', 'page_msg');
 				$row[] = $msg_col;
 
-				if (isset($ZBX_MESSAGES) && !empty($ZBX_MESSAGES)) {
+				if (isset($messages) && !empty($messages)) {
 					$msg_details = new CDiv(_('Details'), 'blacklink');
 					$msg_details->setAttribute('onclick', 'javascript: showHide("msg_messages", IE ? "block" : "table");');
 					$msg_details->setAttribute('title', _('Maximize').'/'._('Minimize'));
@@ -2245,9 +2256,9 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 		}
 	}
 
-	if (isset($ZBX_MESSAGES) && !empty($ZBX_MESSAGES)) {
+	if (isset($messages) && !empty($messages)) {
 		if ($page['type'] == PAGE_TYPE_IMAGE) {
-			foreach ($ZBX_MESSAGES as $msg) {
+			foreach ($messages as $msg) {
 				// save all of the messages in an array to display them later in an image
 				if ($msg['type'] == 'error') {
 					$imageMessages[] = array(
@@ -2264,18 +2275,18 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 			}
 		}
 		elseif ($page['type'] == PAGE_TYPE_XML) {
-			foreach ($ZBX_MESSAGES as $msg) {
+			foreach ($messages as $msg) {
 				echo '['.$msg['type'].'] '.$msg['message']."\n";
 			}
 		}
 		else {
 			$lst_error = new CList(null,'messages');
-			foreach ($ZBX_MESSAGES as $msg) {
+			foreach ($messages as $msg) {
 				$lst_error->addItem($msg['message'], $msg['type']);
 				$bool = ($bool && 'error' != zbx_strtolower($msg['type']));
 			}
 			$msg_show = 6;
-			$msg_count = count($ZBX_MESSAGES);
+			$msg_count = count($messages);
 			if ($msg_count > $msg_show) {
 				$msg_count = $msg_show * 16;
 				$lst_error->setAttribute('style', 'height: '.$msg_count.'px;');
@@ -2291,7 +2302,7 @@ function show_messages($bool = true, $okmsg = null, $errmsg = null) {
 			$tab->addRow(new CCol($lst_error, 'msg'));
 			$tab->show();
 		}
-		$ZBX_MESSAGES = null;
+		$messages = null;
 	}
 
 	// draw an image with the messages
@@ -2420,7 +2431,8 @@ function clear_messages($count = null) {
 		$result = $ZBX_MESSAGES;
 		$ZBX_MESSAGES = null;
 	}
-	return $result;
+
+	return $result ? filter_messages($result) : $result;
 }
 
 function fatal_error($msg) {
