@@ -678,7 +678,7 @@ class CPieGraphDraw extends CGraphDraw {
 
 		if ($this->drawLegend == 1) {
 			$this->sizeX -= $this->shiftXleft + $this->shiftXright + $this->shiftlegendright;
-			$this->sizeY -= $this->shiftY + $this->shiftYLegend + 12 * $this->num + 8;
+			$this->sizeY -= $this->shiftY + $this->shiftYLegend + 14 * $this->num + 8;
 		}
 		elseif ($this->with_vertical_padding) {
 			$this->sizeX -= $this->shiftXleft * 2;
@@ -687,8 +687,8 @@ class CPieGraphDraw extends CGraphDraw {
 
 		if (!$this->with_vertical_padding) {
 			if ($this->drawLegend == 1) {
-				// Increase size of graph by half height of font used in legend.
-				$this->sizeY += 4;
+				// Increase size of graph by sum of: 8px legend font size and 5px legend item bottom shift.
+				$this->sizeY += 13;
 			}
 			else {
 				// Remove y shift if only graph is rendered (no labels, header, vertical paddings).
