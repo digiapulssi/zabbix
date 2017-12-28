@@ -3,6 +3,7 @@ Changes for 3.4.6rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-13178] fixed ipc_path value in error message (MVekslers)
 
 --------------------------------------------------------------------------------
 Changes for 3.4.5
