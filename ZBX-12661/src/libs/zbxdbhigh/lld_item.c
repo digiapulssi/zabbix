@@ -646,6 +646,12 @@ static void	lld_items_get(const zbx_vector_ptr_t *item_prototypes, zbx_vector_pt
 
 		ZBX_DBROW2UINT64(item->master_itemid, row[36]);
 
+		if (0 == item->master_itemid && 0 != item_prototype->master_itemid)
+		{
+			item->master_itemid = item_prototype->master_itemid;
+			item->flags |= ZBX_FLAG_LLD_ITEM_UPDATE_MASTER_ITEM;
+		}
+
 		item->lld_row = NULL;
 
 		zbx_vector_ptr_create(&item->preproc_ops);
@@ -664,7 +670,7 @@ static void	lld_items_get(const zbx_vector_ptr_t *item_prototypes, zbx_vector_pt
 	{
 		item = items->values[i];
 
-		if (0 == item->master_itemid)
+		if (0 == item->master_itemid || 0 != (item->flags & ZBX_FLAG_LLD_ITEM_UPDATE_MASTER_ITEM))
 			continue;
 
 		if (FAIL == (index = zbx_vector_ptr_bsearch(items, &item->master_itemid,
