@@ -1,3 +1,13 @@
+Changes for 3.0.15rc1
+
+New features:
+
+Bug fixes:
+..F....... [ZBX-11305] fixed color and label for event status on event details page (gcalenko)
+..F....... [ZBX-13085] fixed trigger mass update form redirect to trigger list on attempt to attach dependent trigger if there was errors in previous submit attempts (gcalenko)
+..F....... [ZBX-13078] fixed javascript error in user group permission granting popup (gcalenko)
+
+--------------------------------------------------------------------------------
 Changes for 3.0.14
 
 3.0.14rc2 was released as 3.0.14 without any changes
@@ -1837,6 +1847,13 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ...G...... [ZBX-7413] fixed inconsistency of config file handling for loading and checking userparameters and aliases before starting the daemon (igors)
 ...G...... [ZBX-7412] fixed alias parsing; colon symbols are now supported in alias parameters (Juris)
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
+
+--------------------------------------------------------------------------------
+Changes for 2.2.22rc1
+
+New features:
+
+Bug fixes:
 
 --------------------------------------------------------------------------------
 Changes for 2.2.21
