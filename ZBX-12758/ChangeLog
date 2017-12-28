@@ -3,6 +3,8 @@ Changes for 3.4.6rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-11305] fixed color and label for event status on event details page (gcalenko)
+..F.....S. [ZBX-13238] fixed spelling of Elasticsearch (abs, vjaceslavs)
 ........S. [ZBX-13241] fixed memory leak on Zabbix server when executing remote commands through proxy (vso)
 .......PS. [ZBX-13178] fixed ipc_path value in error message (MVekslers)
 
@@ -15,7 +17,7 @@ Changes for 3.4.5
 Changes for 3.4.5rc3
 
 Bug fixes:
-.......PS. [ZBX-13225] fixed compilation problem with old curl version for elasticsearch support (abs, wiper)
+.......PS. [ZBX-13225] fixed compilation problem with old curl version for Elasticsearch support (abs, wiper)
 ........S. [ZBX-13208] fixed problem when items might be synced without preprocessing steps if they were created during configuration cache synchronization (wiper)
 
 --------------------------------------------------------------------------------
@@ -38,7 +40,7 @@ A......... [ZBX-13210] fixed sort param logic for elasticseach (vjaceslavs)
 Changes for 3.4.5rc1
 
 New features:
-..F.....S. [ZBXNEXT-4002] implemented support for elasticsearch as history storage (abs, vjaceslavs, wiper)
+..F.....S. [ZBXNEXT-4002] implemented support for Elasticsearch as history storage (abs, vjaceslavs, wiper)
 ..F....... [ZBX-12809] implemented overlay dialog centering using javascript (miks)
 
 Bug fixes:
@@ -1047,6 +1049,9 @@ Changes for 3.0.15rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-11305] fixed color and label for event status on event details page (gcalenko)
+..F....... [ZBX-13085] fixed trigger mass update form redirect to trigger list on attempt to attach dependent trigger if there was errors in previous submit attempts (gcalenko)
+..F....... [ZBX-13078] fixed javascript error in user group permission granting popup (gcalenko)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.14
