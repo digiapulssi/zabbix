@@ -1025,10 +1025,10 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 
 		zbx_setproctitle("%s [removing old problems]", get_process_type_string(process_type));
 		d_problems = housekeeping_problems(now);
-		zabbix_increase_log_level();
+
 		zbx_setproctitle("%s [removing old events]", get_process_type_string(process_type));
 		d_events = housekeeping_events(now);
-		zabbix_decrease_log_level();
+
 		zbx_setproctitle("%s [removing old sessions]", get_process_type_string(process_type));
 		d_sessions = housekeeping_sessions(now);
 
