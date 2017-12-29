@@ -3,6 +3,7 @@ Changes for 3.4.6rc1
 New features:
 
 Bug fixes:
+....I..... [ZBX-13031] fixed Java gateway compilation without libpcre (Sergejs)
 A......... [ZBX-12991] removed default values for "active_since" and "active_till" fields in maintenance.create API method (Ivo)
 ..F....... [ZBX-13270] fixed default selection of the required host permissions radio in the global gcripts form (sasha)
 .......PS. [ZBX-12758] fixed slow housekeeping of events due to missing index on foreign key (vso)
