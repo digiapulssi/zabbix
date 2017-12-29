@@ -900,23 +900,22 @@ static int	housekeeping_audit(int now)
 
 static int	housekeeping_events(int now)
 {
+#define ZBX_HK_EVENT_RULE	" and not exists (select null from problem where events.eventid=problem.eventid)" \
+				" and not exists (select null from problem where events.eventid=problem.r_eventid)"
+
 	static zbx_hk_rule_t 	rules[] = {
 		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_TRIGGERS)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_TRIGGER)
-			" and not exists (select null from problem where events.eventid=problem.eventid"
-			" or events.eventid=problem.r_eventid)", 0, &cfg.hk.events_trigger},
+			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_trigger},
 		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_TRIGGER)
-			" and not exists (select null from problem where events.eventid=problem.eventid"
-			" or events.eventid=problem.r_eventid)", 0, &cfg.hk.events_internal},
+			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_internal},
 		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_ITEM)
-			" and not exists (select null from problem where events.eventid=problem.eventid"
-			" or events.eventid=problem.r_eventid)", 0, &cfg.hk.events_internal},
+			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_internal},
 		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_LLDRULE)
-			" and not exists (select null from problem where events.eventid=problem.eventid"
-			" or events.eventid=problem.r_eventid)", 0, &cfg.hk.events_internal},
+			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_internal},
 		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_DISCOVERY)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_DHOST), 0, &cfg.hk.events_discovery},
 		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_DISCOVERY)
@@ -936,6 +935,7 @@ static int	housekeeping_events(int now)
 		deleted += housekeeping_process_rule(now, rule);
 
 	return deleted;
+#undef ZBX_HK_EVENT_RULE
 }
 
 static int	housekeeping_problems(int now)
@@ -1025,10 +1025,10 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 
 		zbx_setproctitle("%s [removing old problems]", get_process_type_string(process_type));
 		d_problems = housekeeping_problems(now);
-
+		zabbix_increase_log_level();
 		zbx_setproctitle("%s [removing old events]", get_process_type_string(process_type));
 		d_events = housekeeping_events(now);
-
+		zabbix_decrease_log_level();
 		zbx_setproctitle("%s [removing old sessions]", get_process_type_string(process_type));
 		d_sessions = housekeeping_sessions(now);
 
