@@ -4485,6 +4485,11 @@ void	DCsync_configuration(unsigned char mode)
 		goto out;
 	isec = zbx_time() - sec;
 
+	sec = zbx_time();
+	if (FAIL == zbx_dbsync_compare_item_preprocs(&itempp_sync))
+		goto out;
+	itempp_sec = zbx_time() - sec;
+
 	START_SYNC;
 	sec = zbx_time();
 	/* resolves macros for interface_snmpaddrs, must be after DCsync_hmacros() */
@@ -4495,6 +4500,11 @@ void	DCsync_configuration(unsigned char mode)
 	/* relies on hosts, proxies and interfaces, must be after DCsync_{hosts,interfaces}() */
 	DCsync_items(&items_sync, flags);
 	isec2 = zbx_time() - sec;
+
+	sec = zbx_time();
+	/* relies on items, must be after DCsync_items() */
+	DCsync_item_preproc(&itempp_sync);
+	itempp_sec2 = zbx_time() - sec;
 	FINISH_SYNC;
 
 	/* sync function data to support function lookups when resolving macros during configuration sync */
@@ -4567,11 +4577,6 @@ void	DCsync_configuration(unsigned char mode)
 		goto out;
 	hgroups_sec = zbx_time() - sec;
 
-	sec = zbx_time();
-	if (FAIL == zbx_dbsync_compare_item_preprocs(&itempp_sync))
-		goto out;
-	itempp_sec = zbx_time() - sec;
-
 	START_SYNC;
 
 	sec = zbx_time();
@@ -4620,11 +4625,6 @@ void	DCsync_configuration(unsigned char mode)
 	sec = zbx_time();
 	DCsync_hostgroups(&hgroups_sync);
 	hgroups_sec2 = zbx_time() - sec;
-
-	sec = zbx_time();
-	/* relies on items, must be after DCsync_items() */
-	DCsync_item_preproc(&itempp_sync);
-	itempp_sec2 = zbx_time() - sec;
 
 	sec = zbx_time();
 
@@ -4871,7 +4871,6 @@ void	DCsync_configuration(unsigned char mode)
 
 	config->status->last_update = 0;
 	config->sync_ts = time(NULL);
-	config->proxy_lastaccess_ts = time(NULL);
 
 	FINISH_SYNC;
 out:
@@ -5341,6 +5340,7 @@ int	init_configuration_cache(char **error)
 
 	config->availability_diff_ts = 0;
 	config->sync_ts = 0;
+	config->proxy_lastaccess_ts = time(NULL);
 
 #undef CREATE_HASHSET
 #undef CREATE_HASHSET_EXT

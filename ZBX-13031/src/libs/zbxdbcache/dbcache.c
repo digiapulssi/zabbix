@@ -1284,15 +1284,6 @@ out:
 	return ret;
 }
 
-static int	dc_item_compare(const void *d1, const void *d2)
-{
-	const DC_ITEM	*i1 = (const DC_ITEM *)d1;
-	const DC_ITEM	*i2 = (const DC_ITEM *)d2;
-
-	ZBX_RETURN_IF_NOT_EQUAL(i1->itemid, i2->itemid);
-	return 0;
-}
-
 /******************************************************************************
  *                                                                            *
  * Function: calculate_item_update                                            *
@@ -1449,13 +1440,14 @@ static void	db_save_item_changes(size_t *sql_offset, const zbx_vector_ptr_t *ite
  * Purpose: prepare history data using items from configuration cache         *
  *                                                                            *
  * Parameters: history     - [IN/OUT] array of history data                   *
+ *             itemids     - [IN] the item identifiers (used for item lookup) *
  *             items       - [IN] the items                                   *
  *             errcodes    - [IN] item error codes                            *
  *             history_num - [IN] number of history structures                *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_update_history(ZBX_DC_HISTORY *history, const DC_ITEM *items, const int *errcodes,
-		int history_num)
+static void	DCmass_update_history(ZBX_DC_HISTORY *history, const zbx_vector_uint64_t *itemids, const DC_ITEM *items,
+		const int *errcodes, int history_num)
 {
 	const char		*__function_name = "DCmass_update_history";
 
@@ -1467,21 +1459,22 @@ static void	DCmass_update_history(ZBX_DC_HISTORY *history, const DC_ITEM *items,
 	{
 		ZBX_DC_HISTORY	*h = &history[i];
 		const DC_ITEM	*item;
-		DC_ITEM		item_local;
+		int		index;
 
-		item_local.itemid = h->itemid;
+		if (FAIL == (index = zbx_vector_uint64_bsearch(itemids, h->itemid, ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+		{
+			THIS_SHOULD_NEVER_HAPPEN;
+			h->flags |= ZBX_DC_FLAG_UNDEF;
+			continue;
+		}
 
-		if (NULL == (item = bsearch(&item_local, items, history_num, sizeof(DC_ITEM), dc_item_compare)))
+		if (SUCCEED != errcodes[index])
 		{
 			h->flags |= ZBX_DC_FLAG_UNDEF;
 			continue;
 		}
 
-		if (SUCCEED != errcodes[item - items])
-		{
-			h->flags |= ZBX_DC_FLAG_UNDEF;
-			continue;
-		}
+		item = &items[index];
 
 		if (ITEM_STATUS_ACTIVE != item->status || HOST_STATUS_MONITORED != item->host.status)
 		{
@@ -2260,10 +2253,10 @@ int	DCsync_history(int sync_type, int *total_num)
 
 			DCconfig_get_items_by_itemids(items, itemids.values, errcodes, history_num);
 
-			zbx_vector_uint64_destroy(&itemids);
-
-			DCmass_update_history(history, items, errcodes, history_num);
+			DCmass_update_history(history, &itemids, items, errcodes, history_num);
 			DCmass_add_history(history, history_num);
+
+			zbx_vector_uint64_destroy(&itemids);
 
 			DBbegin();
 

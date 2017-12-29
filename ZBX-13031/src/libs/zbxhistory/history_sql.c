@@ -158,31 +158,22 @@ static void	sql_writer_add_dbinsert(zbx_db_insert_t *db_insert)
  * Purpose: flushes bulk insert data into database                                  *
  *                                                                                  *
  ************************************************************************************/
-static void	sql_writer_flush()
+static void	sql_writer_flush(void)
 {
 	int	i;
 
 	if (0 == writer.initialized)
 		return;
 
-	while (1)
+	DBbegin();
+
+	for (i = 0; i < writer.dbinserts.values_num; i++)
 	{
-		DBbegin();
-
-		for (i = 0; i < writer.dbinserts.values_num; i++)
-		{
-			zbx_db_insert_t	*db_insert = (zbx_db_insert_t *)writer.dbinserts.values[i];
-			zbx_db_insert_execute(db_insert);
-		}
-
-		if (0 == zbx_db_txn_error())
-		{
-			DBcommit();
-			break;
-		}
-
-		DBrollback();
+		zbx_db_insert_t	*db_insert = (zbx_db_insert_t *)writer.dbinserts.values[i];
+		zbx_db_insert_execute(db_insert);
 	}
+
+	DBcommit();
 
 	sql_writer_release();
 }
