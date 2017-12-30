@@ -423,7 +423,8 @@ static int	parse_list_of_checks(char *str, const char *host, unsigned short port
 
 		if (0 != ((ZBX_METRIC_FLAG_LOG_LOG | ZBX_METRIC_FLAG_LOG_LOGRT) & metric->flags) &&
 				SUCCEED == mode_parameter_is_skip(metric->key) &&
-				ITEM_STATE_NOTSUPPORTED == metric->state)
+				ITEM_STATE_NOTSUPPORTED == metric->state &&
+				0 == metric->skip_old_data)
 		{
 			continue;
 		}
