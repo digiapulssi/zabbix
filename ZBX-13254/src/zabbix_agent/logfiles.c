@@ -1438,7 +1438,7 @@ clean1:
 		{
 			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", p->filename,
 					zbx_strerror(errno));
-			ret = ZBX_NO_FILE_ERROR;
+			ret = FAIL;
 			break;
 		}
 
@@ -1446,19 +1446,19 @@ clean1:
 
 		if (SUCCEED != file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg))
 		{
-			ret = ZBX_NO_FILE_ERROR;
+			ret = FAIL;
 			goto clean3;
 		}
 #ifdef _WINDOWS
 		if (SUCCEED != file_id(f, *use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
-			ret = ZBX_NO_FILE_ERROR;
+			ret = FAIL;
 #endif	/*_WINDOWS*/
 clean3:
 		if (0 != close(f))
 		{
 			*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", p->filename,
 					zbx_strerror(errno));
-			ret = ZBX_NO_FILE_ERROR;
+			ret = FAIL;
 			break;
 		}
 	}
@@ -1980,8 +1980,12 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 			zabbix_log(LOG_LEVEL_DEBUG, "%s(): no files, setting skip_old_data to 0", __function_name);
 		}
 
-		/* an error occurred or a file was not accessible for a log[] item */
-		goto out;
+		if (0 != (ZBX_METRIC_FLAG_LOG_LOG & flags) ||
+				(0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) && FAIL == res))
+		{
+			/* an error occurred or a file was not accessible for a log[] item */
+			goto out;
+		}
 	}
 
 	if (0 == logfiles_num)
