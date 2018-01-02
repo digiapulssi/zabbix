@@ -4,7 +4,7 @@
 #include "module.h"
 #include "sysinfo.h"
 
-static zbx_uint64_t	read_yaml_uint64(char *out)
+static zbx_uint64_t	read_yaml_uint64(const char *out)
 {
 	zbx_mock_handle_t	handle;
 	zbx_mock_error_t	error;
@@ -37,6 +37,7 @@ static int	read_yaml_ret(void)
 
 	if (0 == strcasecmp(str, "succeed"))
 		return SYSINFO_RET_OK;
+
 	if (0 != strcasecmp(str, "fail"))
 		fail_msg("Incorrect return code '%s'", str);
 
@@ -67,6 +68,7 @@ void	zbx_mock_test_entry(void **state)
 
 		if (NULL == GET_UI64_RESULT(&result))
 			fail_msg("result does not contain numeric unsigned value");
+
 		if ((interr = read_yaml_uint64("interrupts_since_boot")) != result.ui64)
 			fail_msg("expected:" ZBX_FS_UI64 " actual:" ZBX_FS_UI64, interr, result.ui64);
 	}
