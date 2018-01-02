@@ -197,7 +197,9 @@
 						return ui;
 					},
 					start: function(e, ui) {
-						$(ui.placeholder).height($(ui.helper).height());
+						$(ui.placeholder)
+							.height($(ui.helper).height())
+							.width($(ui.helper).width());
 					}
 				});
 

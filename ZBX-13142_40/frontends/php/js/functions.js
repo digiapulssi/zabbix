@@ -607,7 +607,7 @@ function overlayDialogue(params) {
 			});
 		},
 		body_mutation_observer = window.MutationObserver || window.WebKitMutationObserver,
-		body_mutation_observer = new body_mutation_observer(function(mutation) {
+		body_mutation_observer = new body_mutation_observer(function() {
 			center_overlay_dialog();
 		});
 
@@ -677,7 +677,12 @@ function overlayDialogue(params) {
 			})
 				.append(params.content)
 				.each(function() {
-					body_mutation_observer.observe(this, {childList: true, subtree: true});
+					body_mutation_observer.observe(this, {
+						childList: true,
+						attributes: true,
+						attributeFilter: ['style'],
+						subtree: true
+					});
 				})
 		)
 		.append(overlay_dialogue_footer)
