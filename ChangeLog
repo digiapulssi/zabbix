@@ -3,6 +3,7 @@ Changes for 3.4.6rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-13275] fixed slow housekeeping of events on MySQL (vso)
 .......PS. [ZBX-13245] fixed IP fragmentation handling in Zabbix server response to Zabbix proxy (vso)
 ....I..... [ZBX-13031] fixed Java gateway compilation without libpcre (Sergejs)
 A......... [ZBX-12991] removed default values for "active_since" and "active_till" fields in maintenance.create API method (Ivo)
