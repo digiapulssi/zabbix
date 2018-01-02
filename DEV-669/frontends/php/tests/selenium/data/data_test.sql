@@ -1195,7 +1195,6 @@ INSERT INTO applications (applicationid,hostid,name) VALUES (362,50000,'App ZBX6
 INSERT INTO applications (applicationid,hostid,name) VALUES (360,50001,'App ZBX6663');
 INSERT INTO applications (applicationid,hostid,name) VALUES (365,50001,'App ZBX6663 Second');
 INSERT INTO applications (applicationid,hostid,name) VALUES (361,50002,'App ZBX6663 Second');
-INSERT INTO applications (applicationid,hostid,name) VALUES (550,10084,'App ZBX669');
 INSERT INTO application_template (application_templateid,applicationid,templateid) VALUES (50,365,361);
 INSERT INTO application_template (application_templateid,applicationid,templateid) VALUES (51,362,361);
 INSERT INTO items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,status,value_type,trapper_hosts,units,snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,error,lastlogsize,logtimefmt,templateid,valuemapid,params,ipmi_sensor,authtype,username,password,publickey,privatekey,mtime,flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,state,snmpv3_contextname) VALUES (40008,9,'','',50000,'Download speed for scenario "$1".','web.test.in[Web ZBX6663 First,,bps]','60s','30d','90d',0,0,'','Bps','',0,'','','',0,'',NULL,NULL,'','',0,'','','','',0,0,NULL,'','',0,'30',0,0,0,'');
@@ -1243,8 +1242,6 @@ INSERT INTO items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,hi
 INSERT INTO items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,status,value_type,trapper_hosts,units,snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,error,lastlogsize,logtimefmt,templateid,valuemapid,params,ipmi_sensor,authtype,username,password,publickey,privatekey,mtime,flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,state,snmpv3_contextname) VALUES (40051,0,'','',50000,'DiscoveryRule ZBX6663 First','drule-zbx6663-first','30s','90d','365d',0,4,'','','',0,'','','',0,'',NULL,NULL,'','',0,'','','','',0,1,NULL,'','',0,'30',0,0,0,'');
 INSERT INTO items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,status,value_type,trapper_hosts,units,snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,error,lastlogsize,logtimefmt,templateid,valuemapid,params,ipmi_sensor,authtype,username,password,publickey,privatekey,mtime,flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,state,snmpv3_contextname) VALUES (40052,0,'','',50001,'ItemProto ZBX6663 HSecond','item-proto-zbx6663-hsecond','30s','90d','365d',0,3,'','','',0,'','','',0,'',NULL,NULL,'','',0,'','','','',0,2,50015,'','',0,'30',0,0,0,'');
 INSERT INTO items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,status,value_type,trapper_hosts,units,snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,error,lastlogsize,logtimefmt,templateid,valuemapid,params,ipmi_sensor,authtype,username,password,publickey,privatekey,mtime,flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,state,snmpv3_contextname) VALUES (40054,0,'','',50000,'ItemProto ZBX6663 TSecond','item-proto-zbx6663-tsecond','30s','90d','365d',0,3,'','','',0,'','','',0,'',NULL,NULL,'','',0,'','','','',0,2,NULL,'','',0,'30',0,0,0,'');
-INSERT INTO items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,status,value_type,trapper_hosts,units,snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,error,lastlogsize,logtimefmt,templateid,valuemapid,params,ipmi_sensor,authtype,username,password,publickey,privatekey,mtime,flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,state,snmpv3_contextname) VALUES (45000,0,'','',10084,'Item ZBX669','item-669','30s','90d','365d',0,3,'','','',0,'','','',0,'',NULL,NULL,'','',0,'','','','',0,2,NULL,'','',0,'30',0,0,0,'');
-INSERT INTO items_applications (itemappid,applicationid,itemid) VALUES (16000,550,45000);
 INSERT INTO item_discovery (itemdiscoveryid,itemid,parent_itemid,key_,lastcheck,ts_delete) VALUES (507,40048,40045,'',0,0);
 INSERT INTO item_discovery (itemdiscoveryid,itemid,parent_itemid,key_,lastcheck,ts_delete) VALUES (508,40049,40046,'',0,0);
 INSERT INTO item_discovery (itemdiscoveryid,itemid,parent_itemid,key_,lastcheck,ts_delete) VALUES (509,40050,40047,'',0,0);
@@ -1421,6 +1418,11 @@ INSERT INTO usrgrp (usrgrpid, name) VALUES (14, 'Selenium user group in scripts'
 INSERT INTO usrgrp (usrgrpid, name) VALUES (15, 'Selenium user group in configuration');
 INSERT INTO scripts (scriptid, name, command, host_access, usrgrpid, groupid, description) VALUES (5,'Selenium script','test',2,14,NULL,'selenium script description');
 UPDATE config SET alert_usrgrpid = 15 WHERE configid = 1;
+
+-- testPageApplication
+INSERT INTO applications (applicationid,hostid,name) VALUES (99000,10084,'Selenium test application');
+INSERT INTO items (itemid, hostid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags) VALUES (99000, 10084, 1, 0, 2, 'Selenium item for testPageApplication','item-with-app', '30s', '90d', 0, '', '', 0);
+INSERT INTO items_applications (itemappid,applicationid,itemid) VALUES (99000,99000,99000);
 
 -- Disable warning if Zabbix server is down
 UPDATE config SET server_check_interval = 0 WHERE configid = 1;
