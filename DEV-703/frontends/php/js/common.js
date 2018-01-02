@@ -391,7 +391,7 @@ function PopUp(url, width, height, form_name) {
 
 function redirect(uri, method, needle, invert_needle) {
 	method = method || 'get';
-	var url = new Curl(uri);
+	var url = new Curl(uri, false);
 
 	if (method.toLowerCase() == 'get') {
 		window.location = url.getUrl();
