@@ -1408,10 +1408,7 @@ class CMap extends CMapElement {
 		foreach ($maps as $map) {
 			$db_map = $db_maps[$map['sysmapid']];
 			$map_name = array_key_exists('name', $map) ? $map['name'] : $db_map['name'];
-			$selements = (array_key_exists('selements', $map) && is_array($map['selements'])) ? $map['selements'] : [];
-			if (is_array($db_map['selements'])) {
-				$selements += $db_map['selements'];
-			}
+			$selements = (array_key_exists('selements', $map) && is_array($map['selements'])) ? array_values($map['selements']) : [];
 
 			foreach ($selements as $i => &$selement) {
 				if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP) {
