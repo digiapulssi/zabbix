@@ -1548,7 +1548,6 @@ static void	lld_item_prepare_insert(zbx_uint64_t hostid, const zbx_vector_ptr_t 
 {
 	const zbx_lld_item_prototype_t	*item_prototype;
 	int				i, index;
-	zbx_lld_item_t			*dependent;
 
 	if (0 == (item->flags & ZBX_FLAG_LLD_ITEM_DISCOVERED))
 		return;
@@ -1587,8 +1586,9 @@ static void	lld_item_prepare_insert(zbx_uint64_t hostid, const zbx_vector_ptr_t 
 
 	for (i = 0; i < item->dependent_items.values_num; i++)
 	{
+		zbx_lld_item_t	*dependent;
+
 		dependent = item->dependent_items.values[i];
-		dependent->master_itemid = item->itemid;
 		lld_item_prepare_insert(hostid, item_prototypes, dependent, itemid, itemdiscoveryid, db_insert,
 				db_insert_idiscovery);
 	}
@@ -3792,6 +3792,24 @@ static void	lld_link_dependent_items(zbx_vector_ptr_t *items, zbx_hashset_t *ite
 		{
 			master = item_index->item;
 			zbx_vector_ptr_append(&master->dependent_items, item);
+		}
+	}
+
+	for (i = 0; i < items->values_num; i++)
+	{
+		int	j;
+
+		item = (zbx_lld_item_t *)items->values[i];
+
+		if (0 == (item->flags & ZBX_FLAG_LLD_ITEM_DISCOVERED))
+			continue;
+
+		for (j = 0; j < item->dependent_items.values_num; j++)
+		{
+			zbx_lld_item_t	*dependent;
+
+			dependent = (zbx_lld_item_t*)item->dependent_items.values[j];
+			dependent->master_itemid = item->itemid;
 		}
 	}
 
