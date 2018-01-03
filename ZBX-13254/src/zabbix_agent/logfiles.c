@@ -1980,12 +1980,9 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 			zabbix_log(LOG_LEVEL_DEBUG, "%s(): no files, setting skip_old_data to 0", __function_name);
 		}
 
-		if (0 != (ZBX_METRIC_FLAG_LOG_LOG & flags) ||
-				(0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) && FAIL == res))
-		{
-			/* an error occurred or a file was not accessible for a log[] item */
+		/* file was not accessible for a log[] item or an error occurred */
+		if (0 != (ZBX_METRIC_FLAG_LOG_LOG & flags) || (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) && FAIL == res))
 			goto out;
-		}
 	}
 
 	if (0 == logfiles_num)
