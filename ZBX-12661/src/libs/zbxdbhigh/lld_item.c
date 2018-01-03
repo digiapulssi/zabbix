@@ -1526,13 +1526,13 @@ static void	lld_items_preproc_make(const zbx_vector_ptr_t *item_prototypes, zbx_
 
 /******************************************************************************
  *                                                                            *
- * Function: lld_item_save                                                    *
+ * Function: lld_item_prepare_insert                                          *
  *                                                                            *
- * Purpose: save (insert or update) LLD item                                  *
+ * Purpose: recursively prepare LLD item bulk insert                          *
  *                                                                            *
  * Parameters: hostid               - [IN] parent host id                     *
  *             item_prototypes      - [IN] item prototypes                    *
- *             item                 - [IN] item to be saved                   *
+ *             item                 - [IN] item to be inserted                *
  *             itemid               - [IN/OUT] item id used for insert        *
  *                                             operations                     *
  *             itemdiscoveryid      - [IN/OUT] item discovery id used for     *
@@ -1540,16 +1540,10 @@ static void	lld_items_preproc_make(const zbx_vector_ptr_t *item_prototypes, zbx_
  *             db_insert            - [IN] prepared item bulk insert          *
  *             db_insert_idiscovery - [IN] prepared item discovery bulk       *
  *                                         insert                             *
- *             sql                  - [IN/OUT] sql buffer pointer used for    *
- *                                             update operations              *
- *             sql_alloc            - [IN/OUT] sql buffer already allocated   *
- *                                             memory                         *
- *             sql_offset           - [IN/OUT] offset for writing within sql  *
- *                                             buffer                         *
  *                                                                            *
  ******************************************************************************/
-static void	lld_item_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prototypes, zbx_lld_item_t *item,
-		zbx_uint64_t *itemid, zbx_uint64_t *itemdiscoveryid, zbx_db_insert_t *db_insert,
+static void	lld_item_prepare_insert(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prototypes,
+		zbx_lld_item_t *item, zbx_uint64_t *itemid, zbx_uint64_t *itemdiscoveryid, zbx_db_insert_t *db_insert,
 		zbx_db_insert_t *db_insert_idiscovery)
 {
 	const zbx_lld_item_prototype_t	*item_prototype;
@@ -1595,27 +1589,20 @@ static void	lld_item_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
 	{
 		dependent = item->dependent_items.values[i];
 		dependent->master_itemid = item->itemid;
-		lld_item_save(hostid, item_prototypes, dependent, itemid, itemdiscoveryid, db_insert,
+		lld_item_prepare_insert(hostid, item_prototypes, dependent, itemid, itemdiscoveryid, db_insert,
 				db_insert_idiscovery);
 	}
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: lld_item_save                                                    *
+ * Function: lld_item_prepare_update                                          *
  *                                                                            *
- * Purpose: save (insert or update) LLD item                                  *
+ * Purpose: prepare sql to update LLD item                                    *
  *                                                                            *
  * Parameters: hostid               - [IN] parent host id                     *
  *             item_prototypes      - [IN] item prototypes                    *
- *             item                 - [IN] item to be saved                   *
- *             itemid               - [IN/OUT] item id used for insert        *
- *                                             operations                     *
- *             itemdiscoveryid      - [IN/OUT] item discovery id used for     *
- *                                             insert operations              *
- *             db_insert            - [IN] prepared item bulk insert          *
- *             db_insert_idiscovery - [IN] prepared item discovery bulk       *
- *                                         insert                             *
+ *             item                 - [IN] item to be updated                 *
  *             sql                  - [IN/OUT] sql buffer pointer used for    *
  *                                             update operations              *
  *             sql_alloc            - [IN/OUT] sql buffer already allocated   *
@@ -1624,7 +1611,7 @@ static void	lld_item_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
  *                                             buffer                         *
  *                                                                            *
  ******************************************************************************/
-static void	lld_item_prepare_update(const zbx_vector_ptr_t *item_prototypes, zbx_lld_item_t *item, char **sql,
+static void	lld_item_prepare_update(const zbx_vector_ptr_t *item_prototypes, const zbx_lld_item_t *item, char **sql,
 		size_t *sql_alloc, size_t *sql_offset)
 {
 	const zbx_lld_item_prototype_t	*item_prototype;
@@ -1994,8 +1981,8 @@ static int	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
 			/* dependent items are saved within recursive lld_item_save calls while saving master */
 			if (0 == item->master_itemid)
 			{
-				lld_item_save(hostid, item_prototypes, item, &itemid, &itemdiscoveryid, &db_insert,
-						&db_insert_idiscovery);
+				lld_item_prepare_insert(hostid, item_prototypes, item, &itemid, &itemdiscoveryid,
+						&db_insert, &db_insert_idiscovery);
 			}
 		}
 
