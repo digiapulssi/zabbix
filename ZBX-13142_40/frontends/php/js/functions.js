@@ -601,6 +601,11 @@ function overlayDialogue(params) {
 	}
 
 	var center_overlay_dialog = function() {
+			// Workaround to force Chrome to give correct element width after appearing/disappearing scrollbar.
+			if (CR) {
+				overlay_dialogue.width(overlay_dialogue.width());
+			}
+
 			overlay_dialogue.css({
 				'left': Math.round((jQuery(window).width() - jQuery(overlay_dialogue).outerWidth()) / 2) + 'px',
 				'top': Math.round((jQuery(window).height() - jQuery(overlay_dialogue).outerHeight()) / 2) + 'px'
