@@ -263,8 +263,7 @@ out:
  *                                                                            *
  * Function: mode_parameter_is_skip                                           *
  *                                                                            *
- * Purpose: test log[] or logrt[] item key if <mode> parameter is set to      *
- *          'skip'                                                            *
+ * Purpose: test log[] item key if <mode> parameter is set to 'skip'          *
  *                                                                            *
  * Return value: SUCCEED - <mode> parameter is set to 'skip'                  *
  *               FAIL - <mode> is not 'skip' or error                         *
