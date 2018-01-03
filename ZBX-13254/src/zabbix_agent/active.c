@@ -278,10 +278,8 @@ static int	mode_parameter_is_skip(const char *itemkey)
 
 	init_request(&request);
 
-	if (SUCCEED == parse_item_key(itemkey, &request) &&
-			0 < get_rparams_num(&request) &&
-			7 > get_rparams_num(&request) &&
-			NULL != (skip = get_rparam(&request, 4)) &&
+	if (SUCCEED == parse_item_key(itemkey, &request) && 0 < get_rparams_num(&request) &&
+			7 > get_rparams_num(&request) && NULL != (skip = get_rparam(&request, 4)) &&
 			0 == strcmp(skip, "skip"))
 	{
 		ret = SUCCEED;
