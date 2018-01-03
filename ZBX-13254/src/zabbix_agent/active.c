@@ -415,9 +415,9 @@ static int	parse_list_of_checks(char *str, const char *host, unsigned short port
 
 		metric = (ZBX_ACTIVE_METRIC *)active_metrics.values[i];
 
-		/* Exception for log[] item with <mode> parameter set to 'skip'. We need to keep its state, namely */
-		/* 'skip_old_data', in case the item becomes NOTSUPPORTED as server might not send them in a new */
-		/* active check list. */
+		/* 'Do-not-delete' exception for log[] item with <mode> parameter set to 'skip'. We need to keep its */
+		/* state, namely 'skip_old_data', in case the item becomes NOTSUPPORTED as server might not send it */
+		/* in a new active check list. */
 
 		if (0 != (ZBX_METRIC_FLAG_LOG_LOG & metric->flags) && ITEM_STATE_NOTSUPPORTED == metric->state &&
 				0 == metric->skip_old_data && SUCCEED == mode_parameter_is_skip(metric->key))
