@@ -1589,9 +1589,11 @@ static void	lld_item_prepare_insert(zbx_uint64_t hostid, const zbx_vector_ptr_t 
 		zbx_lld_item_t	*dependent;
 
 		dependent = item->dependent_items.values[i];
+		dependent->master_itemid = item->itemid;
 		lld_item_prepare_insert(hostid, item_prototypes, dependent, itemid, itemdiscoveryid, db_insert,
 				db_insert_idiscovery);
 	}
+
 }
 
 /******************************************************************************
@@ -1920,6 +1922,8 @@ static int	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
 
 	int		ret = SUCCEED, i, new_items = 0, upd_items = 0;
 	zbx_lld_item_t	*item;
+	zbx_uint64_t	itemid, itemdiscoveryid;
+	zbx_db_insert_t	db_insert, db_insert_idiscovery;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1956,9 +1960,6 @@ static int	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
 
 	if (0 != new_items)
 	{
-		zbx_uint64_t	itemid, itemdiscoveryid;
-		zbx_db_insert_t	db_insert, db_insert_idiscovery;
-
 		itemid = DBget_maxid_num("items", new_items);
 		itemdiscoveryid = DBget_maxid_num("item_discovery", new_items);
 
@@ -1973,19 +1974,22 @@ static int	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
 
 		zbx_db_insert_prepare(&db_insert_idiscovery, "item_discovery", "itemdiscoveryid", "itemid",
 				"parent_itemid", "key_", NULL);
+	}
 
-		for (i = 0; i < items->values_num; i++)
+	for (i = 0; i < items->values_num; i++)
+	{
+		item = (zbx_lld_item_t *)items->values[i];
+
+		/* dependent items are saved within recursive lld_item_save calls while saving master */
+		if (0 == item->master_itemid)
 		{
-			item = (zbx_lld_item_t *)items->values[i];
-
-			/* dependent items are saved within recursive lld_item_save calls while saving master */
-			if (0 == item->master_itemid)
-			{
-				lld_item_prepare_insert(hostid, item_prototypes, item, &itemid, &itemdiscoveryid,
-						&db_insert, &db_insert_idiscovery);
-			}
+			lld_item_prepare_insert(hostid, item_prototypes, item, &itemid, &itemdiscoveryid,
+					&db_insert, &db_insert_idiscovery);
 		}
+	}
 
+	if (0 != new_items)
+	{
 		zbx_db_insert_execute(&db_insert);
 		zbx_db_insert_clean(&db_insert);
 
@@ -1994,6 +1998,7 @@ static int	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
 
 		zbx_vector_ptr_sort(items, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 	}
+
 
 	if (0 != upd_items)
 	{
@@ -3792,24 +3797,6 @@ static void	lld_link_dependent_items(zbx_vector_ptr_t *items, zbx_hashset_t *ite
 		{
 			master = item_index->item;
 			zbx_vector_ptr_append(&master->dependent_items, item);
-		}
-	}
-
-	for (i = 0; i < items->values_num; i++)
-	{
-		int	j;
-
-		item = (zbx_lld_item_t *)items->values[i];
-
-		if (0 == (item->flags & ZBX_FLAG_LLD_ITEM_DISCOVERED))
-			continue;
-
-		for (j = 0; j < item->dependent_items.values_num; j++)
-		{
-			zbx_lld_item_t	*dependent;
-
-			dependent = (zbx_lld_item_t*)item->dependent_items.values[j];
-			dependent->master_itemid = item->itemid;
 		}
 	}
 
