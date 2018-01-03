@@ -1968,13 +1968,6 @@ static int	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
 		}
 	}
 
-	if (0 != upd_items)
-	{
-		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
-		DBexecute("%s", sql);
-		zbx_free(sql);
-	}
-
 	if (0 != new_items)
 	{
 		zbx_db_insert_execute(&db_insert);
@@ -1984,6 +1977,14 @@ static int	lld_items_save(zbx_uint64_t hostid, const zbx_vector_ptr_t *item_prot
 		zbx_db_insert_clean(&db_insert_idiscovery);
 
 		zbx_vector_ptr_sort(items, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
+	}
+
+	if (0 != upd_items)
+	{
+
+		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+		DBexecute("%s", sql);
+		zbx_free(sql);
 	}
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
