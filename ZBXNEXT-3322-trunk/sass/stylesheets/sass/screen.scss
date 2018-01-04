@@ -571,22 +571,23 @@ ul.top-nav-icons {
 	}
 
 	.header-dropdown {
-		margin-right: 20px;
+		padding-right: 20px;
 		color: $font-color;
 		cursor: pointer;
 		display: inline-block;
+		position: relative;
+		max-width: calc(100% - 20px);
 
 		&::after {
 			content: '';
-			vertical-align: middle;
 			display: inline-block;
 			width: 7px;
 			height: 7px;
-			margin-left: 0.5em;
-			margin-right: 0.5em;
-			margin-top: -7px;
 			border-left: 2px solid $font-color;
 			border-bottom: 2px solid $font-color;
+			position: absolute;
+			right: .2rem;
+			top: calc(50% - .4rem);
 			@include rotate(-45);
 		}
 
