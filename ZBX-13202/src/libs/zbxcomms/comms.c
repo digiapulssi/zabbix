@@ -1641,7 +1641,7 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, unsigned char flags, int timeout)
 
 			s->buffer[buf_stat_bytes + buf_dyn_bytes] = '\0';
 			ptr = s->buffer;
-			if (FAIL == parse_key(&ptr))
+			if (FAIL == parse_key(&ptr) && ptr != s->buffer)
 				continue;
 
 			break;
