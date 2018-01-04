@@ -140,7 +140,8 @@ int	zbx_tcp_listen(zbx_socket_t *s, const char *listen_ip, unsigned short listen
 int	zbx_tcp_accept(zbx_socket_t *s, unsigned int tls_accept);
 void	zbx_tcp_unaccept(zbx_socket_t *s);
 
-#define ZBX_TCP_READ_UNTIL_CLOSE 0x01
+#define ZBX_TCP_READ_UNTIL_CLOSE	0x01
+#define ZBX_TCP_READ_KEY		0x02
 
 #define	zbx_tcp_recv(s) 		SUCCEED_OR_FAIL(zbx_tcp_recv_ext(s, 0, 0))
 #define	zbx_tcp_recv_to(s, timeout) 	SUCCEED_OR_FAIL(zbx_tcp_recv_ext(s, 0, timeout))

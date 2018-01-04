@@ -1527,7 +1527,7 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, unsigned char flags, int timeout)
 #define ZBX_TCP_EXPECT_SIZE	4
 #define ZBX_TCP_EXPECT_CLOSE	5
 #define ZBX_TCP_EXPECT_XML_END	6
-
+#define ZBX_TCP_EXPECT_KEY	7
 	ssize_t		nbytes;
 	size_t		allocated = 8 * ZBX_STAT_BUF_LEN, buf_dyn_bytes = 0, buf_stat_bytes = 0, header_bytes = 0;
 	zbx_uint64_t	expected_len = 16 * ZBX_MEBIBYTE;
@@ -1565,14 +1565,14 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, unsigned char flags, int timeout)
 				if (0 == strncmp(s->buf_stat, ZBX_TCP_HEADER, buf_stat_bytes))
 					continue;
 
-				expect = ZBX_TCP_EXPECT_TEXT_XML;
+				expect = flags & ZBX_TCP_READ_KEY ? ZBX_TCP_EXPECT_KEY : ZBX_TCP_EXPECT_TEXT_XML;
 			}
 			else
 			{
 				if (0 == strncmp(s->buf_stat, ZBX_TCP_HEADER, ZBX_TCP_HEADER_LEN))
 					expect = ZBX_TCP_EXPECT_LENGTH;
 				else
-					expect = ZBX_TCP_EXPECT_TEXT_XML;
+					expect = flags & ZBX_TCP_READ_KEY ? ZBX_TCP_EXPECT_KEY : ZBX_TCP_EXPECT_TEXT_XML;
 			}
 		}
 
@@ -1630,6 +1630,21 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, unsigned char flags, int timeout)
 
 		if (sizeof(s->buf_stat) == nbytes)
 			continue;
+
+		if (ZBX_TCP_EXPECT_KEY == expect)
+		{
+			char	*ptr;
+
+			if ('\n' != s->buffer[buf_stat_bytes + buf_dyn_bytes - 1])
+				continue;
+
+			s->buffer[buf_stat_bytes + buf_dyn_bytes] = '\0';
+			ptr = s->buffer;
+			if (FAIL == parse_key(&ptr))
+				continue;
+
+			break;
+		}
 
 		if (ZBX_TCP_EXPECT_TEXT_XML == expect)
 		{
@@ -1708,6 +1723,7 @@ out:
 #undef ZBX_TCP_EXPECT_SIZE
 #undef ZBX_TCP_EXPECT_CLOSE
 #undef ZBX_TCP_EXPECT_XML_END
+#undef ZBX_TCP_EXPECT_KEY
 }
 
 #if defined(HAVE_IPV6)

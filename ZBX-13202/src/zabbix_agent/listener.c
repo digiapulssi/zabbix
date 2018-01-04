@@ -47,7 +47,7 @@ static void	process_listener(zbx_socket_t *s)
 	char		**value = NULL;
 	int		ret;
 
-	if (SUCCEED == (ret = zbx_tcp_recv_to(s, CONFIG_TIMEOUT)))
+	if (SUCCEED == (ret = SUCCEED_OR_FAIL(zbx_tcp_recv_ext(s, ZBX_TCP_READ_KEY, CONFIG_TIMEOUT))))
 	{
 		zbx_rtrim(s->buffer, "\r\n");
 
