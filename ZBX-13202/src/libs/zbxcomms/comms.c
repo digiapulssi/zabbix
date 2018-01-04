@@ -1528,6 +1528,7 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, unsigned char flags, int timeout)
 #define ZBX_TCP_EXPECT_CLOSE	5
 #define ZBX_TCP_EXPECT_XML_END	6
 #define ZBX_TCP_EXPECT_KEY	7
+
 	ssize_t		nbytes;
 	size_t		allocated = 8 * ZBX_STAT_BUF_LEN, buf_dyn_bytes = 0, buf_stat_bytes = 0, header_bytes = 0;
 	zbx_uint64_t	expected_len = 16 * ZBX_MEBIBYTE;
