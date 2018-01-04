@@ -487,7 +487,7 @@ static void	lld_items_get(const zbx_vector_ptr_t *item_prototypes, zbx_vector_pt
 	zbx_lld_item_t			*item, *master;
 	zbx_lld_item_preproc_t		*preproc_op;
 	zbx_lld_item_prototype_t	*item_prototype;
-	zbx_uint64_t			db_valuemapid, db_interfaceid, itemid;
+	zbx_uint64_t			db_valuemapid, db_interfaceid, itemid, master_itemid;
 	zbx_vector_uint64_t		parent_itemids;
 	int				i, index;
 	char				*sql = NULL;
@@ -646,12 +646,6 @@ static void	lld_items_get(const zbx_vector_ptr_t *item_prototypes, zbx_vector_pt
 
 		ZBX_DBROW2UINT64(item->master_itemid, row[36]);
 
-		if (0 == item->master_itemid && 0 != item_prototype->master_itemid)
-		{
-			item->master_itemid = item_prototype->master_itemid;
-			item->flags |= ZBX_FLAG_LLD_ITEM_UPDATE_MASTER_ITEM;
-		}
-
 		item->lld_row = NULL;
 
 		zbx_vector_ptr_create(&item->preproc_ops);
@@ -670,20 +664,23 @@ static void	lld_items_get(const zbx_vector_ptr_t *item_prototypes, zbx_vector_pt
 	{
 		item = items->values[i];
 
-		if (0 == item->master_itemid || 0 != (item->flags & ZBX_FLAG_LLD_ITEM_UPDATE_MASTER_ITEM))
-			continue;
-
-		if (FAIL == (index = zbx_vector_ptr_bsearch(items, &item->master_itemid,
-				ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
+		if (0 != item->master_itemid)
 		{
-			/* dependent item without master item should be removed */
-			THIS_SHOULD_NEVER_HAPPEN;
-			lld_item_free(item);
-			zbx_vector_ptr_remove(items, i);
-			continue;
-		}
+			if (FAIL == (index = zbx_vector_ptr_bsearch(items, &item->master_itemid,
+					ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
+			{
+				/* dependent item without master item should be removed */
+				THIS_SHOULD_NEVER_HAPPEN;
+				lld_item_free(item);
+				zbx_vector_ptr_remove(items, i);
+				continue;
+			}
 
-		master = (zbx_lld_item_t *)items->values[index];
+			master = (zbx_lld_item_t *)items->values[index];
+			master_itemid = master->parent_itemid;
+		}
+		else
+			master_itemid = 0;
 
 		if (FAIL == (index = zbx_vector_ptr_bsearch(item_prototypes, &item->parent_itemid,
 				ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
@@ -694,7 +691,7 @@ static void	lld_items_get(const zbx_vector_ptr_t *item_prototypes, zbx_vector_pt
 
 		item_prototype = (zbx_lld_item_prototype_t *)item_prototypes->values[index];
 
-		if (master->parent_itemid != item_prototype->master_itemid)
+		if (master_itemid != item_prototype->master_itemid)
 			item->flags |= ZBX_FLAG_LLD_ITEM_UPDATE_MASTER_ITEM;
 
 		item->master_itemid = item_prototype->master_itemid;
