@@ -284,7 +284,7 @@ out:
  *               FAIL - <mode> is not 'skip' or error                         *
  *                                                                            *
  ******************************************************************************/
-static int     mode_parameter_is_skip(unsigned char flags, const char *itemkey)
+static int	mode_parameter_is_skip(unsigned char flags, const char *itemkey)
 {
 	AGENT_REQUEST	request;
 	const char	*skip;
