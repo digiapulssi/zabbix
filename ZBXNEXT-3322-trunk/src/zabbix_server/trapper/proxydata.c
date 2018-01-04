@@ -53,13 +53,13 @@ int	zbx_send_proxy_data_respose(const DC_PROXY *proxy, zbx_socket_t *sock, const
 	if (0 != tasks.values_num)
 		zbx_tm_json_serialize_tasks(&json, &tasks);
 
-	if (SUCCEED == (ret = zbx_tcp_send_raw(sock, json.buffer)))
+	if (SUCCEED == (ret = zbx_tcp_send(sock, json.buffer)))
 	{
 		if (0 != tasks.values_num)
 			zbx_tm_update_task_status(&tasks, ZBX_TM_STATUS_INPROGRESS);
 	}
 
-	zbx_json_clean(&json);
+	zbx_json_free(&json);
 
 	zbx_vector_ptr_clear_ext(&tasks, (zbx_clean_func_t)zbx_tm_task_free);
 	zbx_vector_ptr_destroy(&tasks);
@@ -103,6 +103,8 @@ void	zbx_recv_proxy_data(zbx_socket_t *sock, struct zbx_json_parse *jp, zbx_time
 	}
 
 	zbx_proxy_update_version(&proxy, jp);
+
+	update_proxy_lastaccess(proxy.hostid, time(NULL));
 
 	if (SUCCEED != (ret = process_proxy_data(&proxy, jp, ts, &error)))
 	{
@@ -321,14 +323,12 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-void	init_proxy_history_lock(void)
+int	init_proxy_history_lock(char **error)
 {
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE) &&
-			FAIL == zbx_mutex_create(&proxy_lock, ZBX_MUTEX_PROXY_HISTORY, NULL))
-	{
-		zbx_error("Unable to create mutex for passive proxy history");
-		exit(EXIT_FAILURE);
-	}
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE))
+		return zbx_mutex_create(&proxy_lock, ZBX_MUTEX_PROXY_HISTORY, error);
+
+	return SUCCEED;
 }
 
 void	free_proxy_history_lock(void)

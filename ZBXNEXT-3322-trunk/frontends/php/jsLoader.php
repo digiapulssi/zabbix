@@ -87,7 +87,6 @@ $availableJScripts = [
 	'sysmap.tpl.js' => 'templates/',
 	// page-specific scripts
 	'items.js' => 'pages/',
-	'tr_logform.js' => 'pages/',
 ];
 
 $tranStrings = [
@@ -120,9 +119,6 @@ $tranStrings = [
 		'Cancel' => _('Cancel'),
 		'Execute' => _('Execute'),
 		'Execution confirmation' => _('Execution confirmation')
-	],
-	'tr_logform.js' => [
-		'S_REMOVE' => _('Remove')
 	],
 	'class.calendar.js' => [
 		'S_JANUARY' => _('January'),
@@ -226,8 +222,8 @@ $tranStrings = [
 		'Last month graph' => _('Last month graph'),
 		'Last week graph' => _('Last week graph'),
 		'Problems' => _('Problems'),
-		'Refresh time' => _('Refresh time'),
-		'Refresh time multiplier' => _('Refresh time multiplier'),
+		'Refresh interval' => _('Refresh interval'),
+		'Refresh interval multiplier' => _('Refresh interval multiplier'),
 		'Scripts' => _('Scripts'),
 		'Something went wrong. Please try again later!' => _('Something went wrong. Please try again later!'),
 		'Submap' => _('Submap'),

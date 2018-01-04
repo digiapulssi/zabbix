@@ -19,7 +19,7 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([Zabbix],[4.0.0alpha1])
+AC_INIT([Zabbix],[4.0.0alpha2])
 AC_CONFIG_SRCDIR(src/zabbix_server/server.c)
 AM_INIT_AUTOMAKE([subdir-objects])
 
@@ -1089,7 +1089,11 @@ AC_ARG_ENABLE(ipv6,[  --enable-ipv6           Turn on support of IPv6],
 esac],
 [ipv6=no])
 
+AM_CONDITIONAL([DBSCHEMA], [test -d create])
+
 AM_CONDITIONAL([ZBXCUNIT], [test -f src/libs/zbxcunit/zbxcunit.c])
+
+AM_CONDITIONAL([ZBXCMOCKA], [test -d tests/])
 
 have_db="no"
 have_unixodbc="no"
@@ -1373,7 +1377,7 @@ if test "x$have_ipcservice" = "xyes"; then
 	if test "x$found_libevent" != "xyes"; then
 		AC_MSG_ERROR([Unable to use libevent (libevent check failed)])
 	fi
-	
+
 	SERVER_LDFLAGS="$SERVER_LDFLAGS $LIBEVENT_LDFLAGS"
 	SERVER_LIBS="$SERVER_LIBS $LIBEVENT_LIBS"
 
@@ -1383,11 +1387,14 @@ if test "x$have_ipcservice" = "xyes"; then
 	fi
 fi
 
-dnl Check for libpcre, used by Zabbix for regular expressions
-LIBPCRE_CHECK_CONFIG([no])
-if test "x$found_libpcre" != "xyes"; then
-	AC_MSG_ERROR([Unable to use libpcre (libpcre check failed)])
+if test "x$server" = "xyes" || test "x$proxy" = "xyes" || test "x$agent" = "xyes"; then
+	dnl Check for libpcre, used by Zabbix for regular expressions
+	LIBPCRE_CHECK_CONFIG([no])
+	if test "x$found_libpcre" != "xyes"; then
+		AC_MSG_ERROR([Unable to use libpcre (libpcre check failed)])
+	fi
 fi
+
 CFLAGS="$CFLAGS $LIBPCRE_CFLAGS"
 LDFLAGS="$LDFLAGS $LIBPCRE_LDFLAGS"
 LIBS="$LIBS $LIBPCRE_LIBS"
@@ -1579,9 +1586,25 @@ dnl *                 Output configuration results                  *
 dnl *                                                               *
 dnl *****************************************************************
 
+AC_CHECK_FILE(tests, [AC_CONFIG_FILES(
+	tests/Makefile
+	tests/libs/Makefile
+	tests/libs/zbxconf/Makefile
+	tests/libs/zbxdbhigh/Makefile
+	tests/libs/zbxjson/Makefile
+	tests/libs/zbxsysinfo/Makefile
+	tests/libs/zbxsysinfo/linux/Makefile
+	tests/libs/zbxsysinfo/common/Makefile
+)])
+
 AC_OUTPUT([
 	Makefile
 	database/Makefile
+	database/ibm_db2/Makefile
+	database/mysql/Makefile
+	database/oracle/Makefile
+	database/postgresql/Makefile
+	database/sqlite3/Makefile
 	misc/Makefile
 	src/Makefile
 	src/libs/Makefile
@@ -1624,6 +1647,7 @@ AC_OUTPUT([
 	src/libs/zbxregexp/Makefile
 	src/libs/zbxtasks/Makefile
 	src/libs/zbxipcservice/Makefile
+	src/libs/zbxhistory/Makefile
 	src/zabbix_agent/Makefile
 	src/zabbix_get/Makefile
 	src/zabbix_sender/Makefile

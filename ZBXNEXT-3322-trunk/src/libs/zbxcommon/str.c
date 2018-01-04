@@ -227,7 +227,7 @@ retry:
 		*alloc_len = vsnprintf(NULL, 0, fmt, args) + 2;	/* '\0' + one byte to prevent the operation retry */
 		va_end(args);
 		*offset = 0;
-		*str = zbx_malloc(*str, *alloc_len);
+		*str = (char *)zbx_malloc(*str, *alloc_len);
 	}
 
 	avail_len = *alloc_len - *offset;
@@ -238,7 +238,7 @@ retry:
 	if (written_len == avail_len - 1)
 	{
 		*alloc_len *= 2;
-		*str = zbx_realloc(*str, *alloc_len);
+		*str = (char *)zbx_realloc(*str, *alloc_len);
 
 		goto retry;
 	}
@@ -304,13 +304,13 @@ void	zbx_strncpy_alloc(char **str, size_t *alloc_len, size_t *offset, const char
 	{
 		*alloc_len = n + 1;
 		*offset = 0;
-		*str = zbx_malloc(*str, *alloc_len);
+		*str = (char *)zbx_malloc(*str, *alloc_len);
 	}
 	else if (*offset + n >= *alloc_len)
 	{
 		while (*offset + n >= *alloc_len)
 			*alloc_len *= 2;
-		*str = zbx_realloc(*str, *alloc_len);
+		*str = (char *)zbx_realloc(*str, *alloc_len);
 	}
 
 	while (0 != n && '\0' != *src)
@@ -359,7 +359,7 @@ char	*string_replace(const char *str, const char *sub_str1, const char *sub_str2
 	diff = (long)strlen(sub_str2) - len;
 
         /* allocate new memory */
-        new_str = zbx_malloc(new_str, (size_t)(strlen(str) + count*diff + 1)*sizeof(char));
+	new_str = (char *)zbx_malloc(new_str, (size_t)(strlen(str) + count*diff + 1)*sizeof(char));
 
         for (q=str,t=new_str,p=str; (p = strstr(p, sub_str1)); )
         {
@@ -621,7 +621,7 @@ char	*zbx_dvsprintf(char *dest, const char *f, va_list args)
 
 	while (1)
 	{
-		string = zbx_malloc(string, size);
+		string = (char *)zbx_malloc(string, size);
 
 		va_copy(curr, args);
 		n = vsnprintf(string, size, f, curr);
@@ -698,7 +698,7 @@ char	*zbx_strdcat(char *dest, const char *src)
 	len_dest = strlen(dest);
 	len_src = strlen(src);
 
-	dest = zbx_realloc(dest, len_dest + len_src + 1);
+	dest = (char *)zbx_realloc(dest, len_dest + len_src + 1);
 
 	zbx_strlcpy(dest + len_dest, src, len_src + 1);
 
@@ -1360,7 +1360,7 @@ char	*get_param_dyn(const char *p, int num)
 	if (0 != get_param_len(p, num, &sz))
 		return buf;
 
-	buf = zbx_malloc(buf, sz + 1);
+	buf = (char *)zbx_malloc(buf, sz + 1);
 
 	if (0 != get_param(p, num, buf, sz + 1))
 		zbx_free(buf);
@@ -1811,7 +1811,7 @@ char	*zbx_dyn_escape_string(const char *src, const char *charlist)
 
 	sz = zbx_get_escape_string_len(src, charlist) + 1;
 
-	dst = zbx_malloc(dst, sz);
+	dst = (char *)zbx_malloc(dst, sz);
 
 	for (d = dst; '\0' != *src; src++)
 	{
@@ -2510,7 +2510,7 @@ char	*convert_to_utf8(char *in, size_t in_size, const char *encoding)
 	char		*out = NULL, *p;
 
 	out_alloc = in_size + 1;
-	p = out = zbx_malloc(out, out_alloc);
+	p = out = (char *)zbx_malloc(out, out_alloc);
 
 	if ('\0' == *encoding || (iconv_t)-1 == (cd = iconv_open(to_code, encoding)))
 	{
@@ -2530,7 +2530,7 @@ char	*convert_to_utf8(char *in, size_t in_size, const char *encoding)
 		sz = (size_t)(p - out);
 		out_alloc += in_size;
 		out_size_left += in_size;
-		p = out = zbx_realloc(out, out_alloc);
+		p = out = (char *)zbx_realloc(out, out_alloc);
 		p += sz;
 	}
 
@@ -2647,7 +2647,7 @@ char	*zbx_replace_utf8(const char *text)
 	int	n;
 	char	*out, *p;
 
-	out = p = zbx_malloc(NULL, strlen(text) + 1);
+	out = p = (char *)zbx_malloc(NULL, strlen(text) + 1);
 
 	while ('\0' != *text)
 	{
@@ -2956,7 +2956,7 @@ char	*str_linefeed(const char *src, size_t maxline, const char *delim)
 	dst_size = src_size + feeds * delim_size + 1;
 
 	/* allocate memory for output */
-	dst = zbx_malloc(dst, dst_size);
+	dst = (char *)zbx_malloc(dst, dst_size);
 
 	p_src = src;
 	p_dst = dst;
@@ -3001,7 +3001,7 @@ char	*str_linefeed(const char *src, size_t maxline, const char *delim)
  ******************************************************************************/
 void	zbx_strarr_init(char ***arr)
 {
-	*arr = zbx_malloc(*arr, sizeof(char *));
+	*arr = (char **)zbx_malloc(*arr, sizeof(char *));
 	**arr = NULL;
 }
 
@@ -3030,7 +3030,7 @@ void	zbx_strarr_add(char ***arr, const char *entry)
 	for (i = 0; NULL != (*arr)[i]; i++)
 		;
 
-	*arr = zbx_realloc(*arr, sizeof(char *) * (i + 2));
+	*arr = (char **)zbx_realloc(*arr, sizeof(char *) * (i + 2));
 
 	(*arr)[i] = zbx_strdup((*arr)[i], entry);
 	(*arr)[++i] = NULL;
@@ -3086,7 +3086,7 @@ void	zbx_replace_string(char **data, size_t l, size_t *r, const char *value)
 		sz_data += sz_value - sz_block;
 
 		if (sz_value > sz_block)
-			*data = zbx_realloc(*data, sz_data + 1);
+			*data = (char *)zbx_realloc(*data, sz_data + 1);
 
 		src = *data + l + sz_block;
 		dst = *data + l + sz_value;
@@ -3286,7 +3286,8 @@ int	zbx_user_macro_parse(const char *macro, int *macro_r, int *context_l, int *c
 int	zbx_user_macro_parse_dyn(const char *macro, char **name, char **context, int *length)
 {
 	const char	*ptr;
-	int		macro_r, context_l, context_r, len;
+	int		macro_r, context_l, context_r;
+	size_t		len;
 
 	if (SUCCEED != zbx_user_macro_parse(macro, &macro_r, &context_l, &context_r))
 		return FAIL;
@@ -3303,7 +3304,7 @@ int	zbx_user_macro_parse_dyn(const char *macro, char **name, char **context, int
 
 		/* extract the macro name and close with '}' character */
 		len = ptr - macro + 1;
-		*name = zbx_realloc(*name, len + 1);
+		*name = (char *)zbx_realloc(*name, len + 1);
 		memcpy(*name, macro, len - 1);
 		(*name)[len - 1] = '}';
 		(*name)[len] = '\0';
@@ -3312,7 +3313,7 @@ int	zbx_user_macro_parse_dyn(const char *macro, char **name, char **context, int
 	}
 	else
 	{
-		*name = zbx_realloc(*name, macro_r + 2);
+		*name = (char *)zbx_realloc(*name, macro_r + 2);
 		zbx_strlcpy(*name, macro, macro_r + 2);
 	}
 
@@ -3344,7 +3345,7 @@ char	*zbx_user_macro_unquote_context_dyn(const char *context, int len)
 	int	quoted = 0;
 	char	*buffer, *ptr;
 
-	ptr = buffer = zbx_malloc(NULL, len + 1);
+	ptr = buffer = (char *)zbx_malloc(NULL, len + 1);
 
 	if ('"' == *context)
 	{
@@ -3410,8 +3411,8 @@ char	*zbx_user_macro_quote_context_dyn(const char *context, int force_quote)
 	if (0 == force_quote)
 		return zbx_strdup(NULL, context);
 
-	len = strlen(context) + 2 + quotes;
-	ptr_buffer = buffer = zbx_malloc(NULL, len + 1);
+	len = (int)strlen(context) + 2 + quotes;
+	ptr_buffer = buffer = (char *)zbx_malloc(NULL, len + 1);
 
 	*ptr_buffer++ = '"';
 
@@ -3453,7 +3454,7 @@ char	*zbx_dyn_escape_shell_single_quote(const char *arg)
 		len++;
 	}
 
-	pout = arg_esc = zbx_malloc(NULL, len);
+	pout = arg_esc = (char *)zbx_malloc(NULL, len);
 
 	for (pin = arg; '\0' != *pin; pin++)
 	{
@@ -3626,7 +3627,7 @@ int	zbx_function_param_quote(char **param, int forced)
 
 	sz_dst = zbx_get_escape_string_len(*param, "\"") + 3;
 
-	*param = zbx_realloc(*param, sz_dst);
+	*param = (char *)zbx_realloc(*param, sz_dst);
 
 	(*param)[--sz_dst] = '\0';
 	(*param)[--sz_dst] = '"';
@@ -3933,7 +3934,8 @@ int	zbx_strcmp_natural(const char *s1, const char *s2)
  ******************************************************************************/
 static int	zbx_token_parse_user_macro(const char *expression, const char *macro, zbx_token_t *token)
 {
-	int			macro_r, context_l, context_r, offset;
+	size_t			offset;
+	int			macro_r, context_l, context_r;
 	zbx_token_user_macro_t	*data;
 
 	if (SUCCEED != zbx_user_macro_parse(macro, &macro_r, &context_l, &context_r))
@@ -3994,7 +3996,7 @@ static int	zbx_token_parse_user_macro(const char *expression, const char *macro,
 static int	zbx_token_parse_lld_macro(const char *expression, const char *macro, zbx_token_t *token)
 {
 	const char		*ptr;
-	int			offset;
+	size_t			offset;
 	zbx_token_macro_t	*data;
 
 	/* find the end of lld macro by validating its name until the closing bracket } */
@@ -4047,7 +4049,7 @@ static int	zbx_token_parse_lld_macro(const char *expression, const char *macro, 
 static int	zbx_token_parse_objectid(const char *expression, const char *macro, zbx_token_t *token)
 {
 	const char		*ptr;
-	int			offset;
+	size_t			offset;
 	zbx_token_macro_t	*data;
 
 	/* find the end of object id by checking if it contains digits until the closing bracket } */
@@ -4101,7 +4103,7 @@ static int	zbx_token_parse_objectid(const char *expression, const char *macro, z
 static int	zbx_token_parse_macro(const char *expression, const char *macro, zbx_token_t *token)
 {
 	const char		*ptr;
-	int			offset;
+	size_t			offset;
 	zbx_token_macro_t	*data;
 
 	/* find the end of simple macro by validating its name until the closing bracket } */
@@ -4192,7 +4194,7 @@ static int	zbx_token_parse_func_macro(const char *expression, const char *macro,
 	zbx_strloc_t		func_loc, func_param;
 	zbx_token_func_macro_t	*data;
 	const char		*ptr;
-	int			offset;
+	size_t			offset;
 
 	if ('\0' == *func)
 		return FAIL;
@@ -4255,7 +4257,7 @@ static int	zbx_token_parse_func_macro(const char *expression, const char *macro,
 static int	zbx_token_parse_simple_macro_key(const char *expression, const char *macro, const char *key,
 		zbx_token_t *token)
 {
-	int				offset;
+	size_t				offset;
 	zbx_token_simple_macro_t	*data;
 	const char			*ptr;
 	zbx_strloc_t			key_loc, func_loc, func_param;
@@ -4706,7 +4708,7 @@ int	zbx_number_find(const char *str, size_t pos, zbx_strloc_t *number_loc)
 int	zbx_replace_mem_dyn(char **data, size_t *data_alloc, size_t *data_len, size_t offset, size_t sz_to,
 		const char *from, size_t sz_from)
 {
-	int	sz_changed = sz_from - sz_to;
+	size_t	sz_changed = sz_from - sz_to;
 
 	if (0 != sz_changed)
 	{
@@ -4719,7 +4721,7 @@ int	zbx_replace_mem_dyn(char **data, size_t *data_alloc, size_t *data_len, size_
 			while (*data_len > *data_alloc)
 				*data_alloc *= 2;
 
-			*data = zbx_realloc(*data, *data_alloc);
+			*data = (char *)zbx_realloc(*data, *data_alloc);
 		}
 
 		to = *data + offset;
@@ -4728,5 +4730,5 @@ int	zbx_replace_mem_dyn(char **data, size_t *data_alloc, size_t *data_len, size_
 
 	memcpy(*data + offset, from, sz_from);
 
-	return sz_changed;
+	return (int)sz_changed;
 }
