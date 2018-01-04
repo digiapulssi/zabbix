@@ -41,7 +41,7 @@ class CReplacementParser extends CParser {
 		}
 		$p++;
 
-		if (!isset($source[$p]) || $source[$p] < '0' || $source[$p] > '9') {
+		if (!isset($source[$p]) || !ctype_digit($source[$p])) {
 			return CParser::PARSE_FAIL;
 		}
 		$p++;
