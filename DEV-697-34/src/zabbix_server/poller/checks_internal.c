@@ -400,16 +400,20 @@ int	get_value_internal(DC_ITEM *item, AGENT_RESULT *result)
 		else if (0 == strcmp(tmp, "interfaces"))	/* zabbix["host","discovery","interfaces"] */
 		{
 			struct zbx_json	j;
+			char		*error = NULL;
 
 			/* this item is always processed by server */
 			if (NULL == (tmp = get_rparam(&request, 1)) || 0 != strcmp(tmp, "discovery"))
 			{
-				error = zbx_strdup(error, "Invalid second parameter.");
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter."));
 				goto out;
 			}
 
 			if (SUCCEED != zbx_host_interfaces_discovery(item->host.hostid, &j, &error))
+			{
+				SET_MSG_RESULT(result, error);
 				goto out;
+			}
 
 			SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
 
@@ -831,7 +835,7 @@ int	get_value_internal(DC_ITEM *item, AGENT_RESULT *result)
 
 		if (1 != nparams)
 		{
-			error = zbx_strdup(error, "Invalid number of parameters.");
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid number of parameters."));
 			goto out;
 		}
 
