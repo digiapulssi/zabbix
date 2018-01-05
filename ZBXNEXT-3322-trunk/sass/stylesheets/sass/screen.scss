@@ -508,12 +508,10 @@ ul.top-nav-icons {
 	width: 100%;
 	padding: 0 0 6px 0;
 	margin: 0 0 10px 0;
-	text-align: right;
 	border-bottom: 1px solid $ui-border-color;
 
 	.cell:first-child {
 		max-width: calc(100vw - 370px);
-		text-align: left;
 	}
 
 	h1 {
