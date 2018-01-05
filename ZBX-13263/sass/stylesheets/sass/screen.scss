@@ -1827,6 +1827,10 @@ select {
 		}
 	}
 
+	optgroup {
+		background-color: $body-bg-color;
+	}
+
 	&[multiple] {
 		padding: 4px 5px;
 		width: 300px;
