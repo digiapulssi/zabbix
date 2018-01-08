@@ -1418,7 +1418,7 @@ class CMap extends CMapElement {
 	 *
 	 * @param array $maps   Array of maps to be validated for circular reference.
 	 *
-	 * @throws APIException
+	 * @throws APIException if input is invalid.
 	 */
 	protected function validateCircularReference(array $maps) {
 		$this->cref_maps = zbx_toHash($maps, 'sysmapid');
@@ -1469,6 +1469,9 @@ class CMap extends CMapElement {
 
 			if ($db_maps) {
 				$this->cref_maps[$sysmapid] = $db_maps[0];
+			}
+			else {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('No permissions to referred object or it does not exist!'));
 			}
 		}
 
