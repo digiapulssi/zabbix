@@ -3892,7 +3892,9 @@ ZABBIX.apps.map = (function($) {
 				}
 			}
 
-			sysmap.updateImage();
+			if (sysmap.buffered_expand === false) {
+				sysmap.updateImage();
+			}
 		});
 
 		return sysmap;
