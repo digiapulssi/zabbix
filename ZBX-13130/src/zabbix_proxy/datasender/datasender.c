@@ -136,6 +136,7 @@ static int	proxy_data_sender(int *more, int now)
 
 		if (SUCCEED != (ret = put_data_to_server(&sock, &j, &error)))
 		{
+			*more = ZBX_PROXY_DATA_DONE;
 			zabbix_log(LOG_LEVEL_WARNING, "cannot send proxy data to server at \"%s\": %s",
 					sock.peer, error);
 			zbx_free(error);
