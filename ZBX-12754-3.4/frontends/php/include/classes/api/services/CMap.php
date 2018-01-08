@@ -1407,45 +1407,38 @@ class CMap extends CMapElement {
 	}
 
 	/**
-	 * Hash of maps data for circular reference validation. Map name is used as key.
+	 * Hash of maps data for circular reference validation. Map id is used as key.
 	 *
 	 * @var array
 	 */
 	protected $cref_maps;
 
 	/**
-	 * Hash of map names with mapid as key.
-	 *
-	 * @var array
-	 */
-	protected $cref_maps_nameids;
-
-	/**
 	 * Validate maps for circular reference.
 	 *
-	 * @param array     Array of maps to be validated for circular reference.
+	 * @param array $maps   Array of maps to be validated for circular reference.
 	 *
 	 * @throws APIException
 	 */
 	protected function validateCircularReference(array $maps) {
-		$this->cref_maps = zbx_toHash($maps, 'name');
-
-		foreach ($maps as $map) {
-			if (array_key_exists('sysmapid', $map)) {
-				$this->cref_maps_nameids[$map['sysmapid']] = $map['name'];
-			}
-		}
+		$this->cref_maps = zbx_toHash($maps, 'sysmapid');
 
 		foreach ($maps as $map) {
 			if (!array_key_exists('selements', $map) || !$map['selements']) {
 				continue;
 			}
-			$cref_map_names = [$map['name']];
+			$cref_mapids = [$map['sysmapid']];
 
 			foreach ($map['selements'] as $selement) {
-				if (!$this->validateCircularReferenceRecursive($selement, $cref_map_names)) {
+				if (!$this->validateCircularReferenceRecursive($selement, $cref_mapids)) {
+					$map_names = [];
+
+					foreach($cref_mapids as $mapid) {
+						$map_names[] = $this->cref_maps[$mapid]['name'];
+					}
+
 					self::exception(ZBX_API_ERROR_PARAMETERS, _s('Circular reference in maps: %1$s.',
-						implode(' - ', $cref_map_names)
+						implode(' - ', $map_names)
 					));
 				}
 			}
@@ -1455,56 +1448,47 @@ class CMap extends CMapElement {
 	/**
 	 * Recursive map element circular reference validation.
 	 *
-	 * @param array     Map selement data array.
-	 * @param array     Array of map names for current recursion step.
+	 * @param array $selement       Map selement data array.
+	 * @param array $cref_mapids    Array of map ids for current recursion step.
 	 *
 	 * @return bool
 	 */
-	protected function validateCircularReferenceRecursive(array $selement, &$cref_map_names) {
+	protected function validateCircularReferenceRecursive(array $selement, &$cref_mapids) {
 		if ($selement['elementtype'] != SYSMAP_ELEMENT_TYPE_MAP) {
 			return true;
 		}
 
-		$map_name = array_key_exists('name', $selement['elements'][0]) ? $selement['elements'][0]['name'] : null;
+		$sysmapid = $selement['elements'][0]['sysmapid'];
 
-		if ($map_name === null && array_key_exists('sysmapid', $selement['elements'][0])
-				&& array_key_exists($selement['elements'][0]['sysmapid'], $this->cref_maps_nameids)) {
-			$map_name = $this->cref_maps_nameids[$selement['elements'][0]['sysmapid']];
-		}
-
-		if ($map_name === null || !array_key_exists($map_name, $this->cref_maps)) {
+		if (!array_key_exists($sysmapid, $this->cref_maps)) {
 			$db_maps = API::Map()->get([
 				'output' => ['name'],
-				'sysmapids' => $selement['elements'][0]['sysmapid'],
+				'sysmapids' => $sysmapid,
 				'selectSelements' => ['elementtype', 'name', 'sysmapid', 'elements']
 			]);
 
 			if ($db_maps) {
-				$map_name = ($map_name === null) ? $db_maps[0]['name'] : $map_name;
-				$this->cref_maps_nameids[$selement['elements'][0]['sysmapid']] = $map_name;
-				$this->cref_maps[$map_name] = $db_maps[0];
+				$this->cref_maps[$sysmapid] = $db_maps[0];
 			}
 		}
 
-		// If current element map name is already in list of checked map names, circular reference exists.
-		if (in_array($map_name, $cref_map_names)) {
-			$cref_map_names[] = $map_name;
+		if (in_array($sysmapid, $cref_mapids)) {
+			$cref_mapids[] = $sysmapid;
 			return false;
 		}
 
 		// Find maps that reference the current element, and if one has selements, check all of them recursively.
-		if (array_key_exists('selements', $this->cref_maps[$map_name])
-				&& is_array($this->cref_maps[$map_name]['selements'])) {
-			$cref_map_names[] = $map_name;
+		if (array_key_exists('selements', $this->cref_maps[$sysmapid])
+				&& is_array($this->cref_maps[$sysmapid]['selements'])) {
+			$cref_mapids[] = $sysmapid;
 
-			foreach ($this->cref_maps[$map_name]['selements'] as $selement) {
-
-				if (!$this->validateCircularReferenceRecursive($selement, $cref_map_names)) {
+			foreach ($this->cref_maps[$sysmapid]['selements'] as $selement) {
+				if (!$this->validateCircularReferenceRecursive($selement, $cref_mapids)) {
 					return false;
 				}
 			}
 
-			array_pop($cref_map_names);
+			array_pop($cref_mapids);
 		}
 
 		return true;
