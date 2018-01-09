@@ -188,6 +188,15 @@ $fields = [
 	'sortorder' =>				[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null]
 ];
 
+if (hasRequest('massupdate') && hasRequest('group_itemid')) {
+	/**
+	 * Validation will reset P_ACT fields if there will be errors and this is not desired behavior because for mass
+	 * update request there will be rendered list of items instead of mass update form. Validation for this field is
+	 * done with separate code on API side.
+	 */
+	unset($fields['delay']);
+}
+
 check_fields($fields);
 
 $_REQUEST['params'] = getRequest($paramsFieldName, '');
