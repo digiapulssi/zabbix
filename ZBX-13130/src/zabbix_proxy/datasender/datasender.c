@@ -35,13 +35,14 @@
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 
-#define ZBX_DATASENDER_AVAILABILITY		0x0001
-#define ZBX_DATASENDER_HISTORY			0x0002
-#define ZBX_DATASENDER_DISCOVERY		0x0004
-#define ZBX_DATASENDER_AUTOREGISTRATION		0x0008
-#define ZBX_DATASENDER_TASKS			0x0010
-#define ZBX_DATASENDER_TASKS_RECV		0x0020
-#define ZBX_DATASENDER_TASKS_REQUEST		0x8000
+#define ZBX_DATASENDER_AVAILABILITY		0x00001
+#define ZBX_DATASENDER_HISTORY			0x00002
+#define ZBX_DATASENDER_DISCOVERY		0x00004
+#define ZBX_DATASENDER_AUTOREGISTRATION		0x00008
+#define ZBX_DATASENDER_TASKS			0x00010
+#define ZBX_DATASENDER_TASKS_RECV		0x00020
+#define ZBX_DATASENDER_TASKS_REQUEST		0x08000
+#define ZBX_DATASENDER_DATA_REQUEST		0x10000
 
 #define ZBX_DATASENDER_DB_UPDATE	(ZBX_DATASENDER_HISTORY | ZBX_DATASENDER_DISCOVERY |		\
 					ZBX_DATASENDER_AUTOREGISTRATION | ZBX_DATASENDER_TASKS |	\
@@ -55,7 +56,7 @@ extern int		server_num, process_num;
  *          data and sends 'proxy data' request                               *
  *                                                                            *
  ******************************************************************************/
-static int	proxy_data_sender(int *more, int now)
+static int	proxy_data_sender(int *more, int now, zbx_uint64_t *datasender_flags)
 {
 	const char		*__function_name = "proxy_data_sender";
 
@@ -66,7 +67,7 @@ static int	proxy_data_sender(int *more, int now)
 	struct zbx_json_parse	jp, jp_tasks;
 	int			ret = FAIL, availability_ts, history_records = 0, discovery_records = 0,
 				areg_records = 0, more_history = 0, more_discovery = 0, more_areg = 0;
-	zbx_uint64_t		history_lastid = 0, discovery_lastid = 0, areg_lastid = 0, flags = 0;
+	zbx_uint64_t		history_lastid = 0, discovery_lastid = 0, areg_lastid = 0, flags = *datasender_flags;
 	zbx_timespec_t		ts;
 	char			*error = NULL;
 	zbx_vector_ptr_t	tasks;
@@ -79,7 +80,7 @@ static int	proxy_data_sender(int *more, int now)
 	zbx_json_addstring(&j, ZBX_PROTO_TAG_REQUEST, ZBX_PROTO_VALUE_PROXY_DATA, ZBX_JSON_TYPE_STRING);
 	zbx_json_addstring(&j, ZBX_PROTO_TAG_HOST, CONFIG_HOSTNAME, ZBX_JSON_TYPE_STRING);
 
-	if (CONFIG_PROXYDATA_FREQUENCY <= now - data_timestamp)
+	if (0 == (ZBX_DATASENDER_DATA_REQUEST & flags) && CONFIG_PROXYDATA_FREQUENCY <= now - data_timestamp)
 	{
 		if (SUCCEED == get_host_availability_data(&j, &availability_ts))
 			flags |= ZBX_DATASENDER_AVAILABILITY;
@@ -102,7 +103,7 @@ static int	proxy_data_sender(int *more, int now)
 
 	zbx_vector_ptr_create(&tasks);
 
-	if (ZBX_TASK_UPDATE_FREQUENCY <= now - task_timestamp)
+	if (0 == (ZBX_DATASENDER_DATA_REQUEST & flags) && ZBX_TASK_UPDATE_FREQUENCY <= now - task_timestamp)
 	{
 		task_timestamp = now;
 
@@ -136,6 +137,7 @@ static int	proxy_data_sender(int *more, int now)
 
 		if (SUCCEED != (ret = put_data_to_server(&sock, &j, &error)))
 		{
+			*datasender_flags |= ZBX_DATASENDER_DATA_REQUEST;
 			*more = ZBX_PROXY_DATA_DONE;
 			zabbix_log(LOG_LEVEL_WARNING, "cannot send proxy data to server at \"%s\": %s",
 					sock.peer, error);
@@ -143,6 +145,7 @@ static int	proxy_data_sender(int *more, int now)
 		}
 		else
 		{
+			*datasender_flags &= ~ZBX_DATASENDER_DATA_REQUEST;
 			if (0 != (flags & ZBX_DATASENDER_AVAILABILITY))
 				zbx_set_availability_diff_ts(availability_ts);
 
@@ -205,6 +208,7 @@ ZBX_THREAD_ENTRY(datasender_thread, args)
 {
 	int		records = 0, more;
 	double		time_start, time_diff = 0.0, time_now;
+	zbx_uint64_t	datasender_flags = 0;
 
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
@@ -233,7 +237,7 @@ ZBX_THREAD_ENTRY(datasender_thread, args)
 
 		do
 		{
-			records += proxy_data_sender(&more, (int)time_now);
+			records += proxy_data_sender(&more, (int)time_now, &datasender_flags);
 
 			time_now = zbx_time();
 			time_diff = time_now - time_start;
