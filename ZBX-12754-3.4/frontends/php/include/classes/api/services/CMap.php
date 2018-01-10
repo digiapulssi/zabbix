@@ -1398,6 +1398,7 @@ class CMap extends CMapElement {
 		}
 
 		// Validate circular reference.
+		$maps = zbx_toHash($maps, 'sysmapid');
 		foreach ($maps as &$map) {
 			$map = array_merge($db_maps[$map['sysmapid']], $map);
 		}
@@ -1421,7 +1422,7 @@ class CMap extends CMapElement {
 	 * @throws APIException if input is invalid.
 	 */
 	protected function validateCircularReference(array $maps) {
-		$this->cref_maps = zbx_toHash($maps, 'sysmapid');
+		$this->cref_maps = $maps;
 
 		foreach ($maps as $map) {
 			if (!array_key_exists('selements', $map) || !$map['selements']) {
@@ -1460,15 +1461,33 @@ class CMap extends CMapElement {
 
 		$sysmapid = $selement['elements'][0]['sysmapid'];
 
-		if (!array_key_exists($sysmapid, $this->cref_maps)) {
-			$db_maps = API::Map()->get([
+		if ($sysmapid !== null && !array_key_exists($sysmapid, $this->cref_maps)) {
+			$db_maps = DB::select($this->tableName, [
 				'output' => ['name'],
-				'sysmapids' => $sysmapid,
-				'selectSelements' => ['elementtype', 'name', 'sysmapid', 'elements']
+				'filter' => ['sysmapid' => $sysmapid]
 			]);
 
 			if ($db_maps) {
-				$this->cref_maps[$sysmapid] = $db_maps[0];
+				$db_map = $db_maps[0];
+				$db_map['selements'] = [];
+				$selements = DB::select('sysmaps_elements', [
+					'output' => ['elementid'],
+					'filter' => [
+						'sysmapid' => $sysmapid,
+						'elementtype' => SYSMAP_ELEMENT_TYPE_MAP
+					]
+				]);
+
+				foreach ($selements as $selement) {
+					$db_map['selements'][] = [
+						'elementtype' => SYSMAP_ELEMENT_TYPE_MAP,
+						'elements' => [
+							['sysmapid' => $selement['elementid']]
+						]
+					];
+				}
+
+				$this->cref_maps[$sysmapid] = $db_map;
 			}
 			else {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('No permissions to referred object or it does not exist!'));
@@ -1481,7 +1500,7 @@ class CMap extends CMapElement {
 		}
 
 		// Find maps that reference the current element, and if one has selements, check all of them recursively.
-		if (array_key_exists('selements', $this->cref_maps[$sysmapid])
+		if ($sysmapid !== null && array_key_exists('selements', $this->cref_maps[$sysmapid])
 				&& is_array($this->cref_maps[$sysmapid]['selements'])) {
 			$cref_mapids[] = $sysmapid;
 
