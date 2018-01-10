@@ -1488,6 +1488,7 @@ class CMap extends CMapElement {
 				}
 
 				$this->cref_maps[$sysmapid] = $db_map;
+				unset($selements);
 			}
 			else {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('No permissions to referred object or it does not exist!'));
