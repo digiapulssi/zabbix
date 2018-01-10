@@ -1427,7 +1427,7 @@ class CMap extends CMapElement {
 			if (!array_key_exists('selements', $map) || !$map['selements']) {
 				continue;
 			}
-			$cref_mapids = [$map['sysmapid']];
+			$cref_mapids = array_key_exists('sysmapid', $map) ? [$map['sysmapid']] : [];
 
 			foreach ($map['selements'] as $selement) {
 				if (!$this->validateCircularReferenceRecursive($selement, $cref_mapids)) {
