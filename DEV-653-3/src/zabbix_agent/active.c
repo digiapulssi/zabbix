@@ -1153,7 +1153,7 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 			goto out;
 		}
 
-		if (NULL != (options = get_rparam(&request, 7)))
+		if (NULL != (options = get_rparam(&request, 7)) && '\0' != *options)
 		{
 			if (0 == strcmp(options, "copytruncate"))
 				rotation_type = ZBX_LOG_ROTATION_LOGCPT;
