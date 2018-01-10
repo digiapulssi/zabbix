@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1240,7 +1240,7 @@ function makeEventsActions($eventids) {
 	}
 
 	$db_alerts = API::Alert()->get([
-		'output' => ['eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype', 'error'],
+		'output' => ['eventid', 'message', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype', 'error'],
 		'eventids' => $eventids,
 		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
 		'sortorder' => ['alertid' => ZBX_SORT_DOWN]
