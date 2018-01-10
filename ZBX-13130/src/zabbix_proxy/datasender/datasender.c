@@ -59,7 +59,7 @@ static int	proxy_data_sender(int *more, int now)
 {
 	const char		*__function_name = "proxy_data_sender";
 
-	static int		data_timestamp = 0, task_timestamp = 0;
+	static int		data_timestamp = 0, task_timestamp = 0, upload_state = SUCCEED;
 
 	zbx_socket_t		sock;
 	struct zbx_json		j;
@@ -70,7 +70,6 @@ static int	proxy_data_sender(int *more, int now)
 	zbx_timespec_t		ts;
 	char			*error = NULL;
 	zbx_vector_ptr_t	tasks;
-	static int		upload_state = SUCCEED;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
