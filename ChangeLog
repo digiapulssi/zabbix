@@ -3164,7 +3164,7 @@ Bug fixes:
  - [ZBX-3493] fixed warnings when removing and clearing a template (Alexei)
  - [ZBX-4143] fixed cases with upgrade patch sometimes attempting to reference tables that were not created yet (Richlv, Sasha)
  - [ZBX-3618] extended allowed syntax for host interface DNS names (Vedmak)
- - [ZBX-3999] fixed map border (Alex, Sasha, Eduard)
+ - [ZBX-3999] fixed map border (Alexei, Sasha, Eduard)
  - [ZBX-3946] fixed errors when create trigger with dependencies (Vedmak)
  - [ZBX-3921] fixed change link shown for maps in slide show (Vedmak)
  - [ZBX-4082] fixed error in Monitoring->Triggers when acknowledges are disabled (Vedmak)
