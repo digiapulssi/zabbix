@@ -396,12 +396,32 @@ elseif (isset($_REQUEST['filter_hostid'])) {
 			getRequest('filter_timetill')
 		);
 
+		if ($availability['true'] == 0) {
+			$true_state = '';
+		}
+		else {
+			$true_state = ($availability['true'] < 0.0001)
+				? '< 0.0001%'
+				: sprintf('%.4f%%', $availability['true']);
+			$true_state = (new CSpan($true_state))->addClass(ZBX_STYLE_RED);
+		}
+
+		if ($availability['false'] == 0) {
+			$false_state = '';
+		}
+		else {
+			$false_state = ($availability['false'] < 0.0001)
+				? '< 0.0001%'
+				: sprintf('%.4f%%', $availability['false']);
+			$false_state = (new CSpan($false_state))->addClass(ZBX_STYLE_GREEN);
+		}
+
 		$triggerTable->addRow([
 			($_REQUEST['filter_hostid'] == 0 || $availabilityReportMode == AVAILABILITY_REPORT_BY_TEMPLATE)
 				? $trigger['host_name'] : null,
 			new CLink($trigger['description'], 'events.php?filter_set=1&triggerid='.$trigger['triggerid']),
-			$availability['true'] == 0 ? '' : (new CSpan(sprintf('%.4f%%', $availability['true'])))->addClass(ZBX_STYLE_RED),
-			$availability['false'] == 0 ? '' : (new CSpan(sprintf('%.4f%%', $availability['false'])))->addClass(ZBX_STYLE_GREEN),
+			$true_state,
+			$false_state,
 			new CLink(_('Show'), 'report2.php?filter_groupid='.$_REQUEST['filter_groupid'].
 				'&filter_hostid='.$_REQUEST['filter_hostid'].'&triggerid='.$trigger['triggerid'])
 		]);
