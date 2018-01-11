@@ -25,10 +25,42 @@ require_once dirname(__FILE__) . '/../include/class.cwebtest.php';
  */
 class testPageApplications extends CWebTest {
 
+	public static function select_host_group() {
+		return [
+			[
+				[
+					'host' => 'Test host',
+					'group' => 'all',
+					'visible_name' => 'ЗАББИКС Сервер'
+				]
+			],
+			[
+				[
+					'host' => 'Template App Apache Tomcat JMX',
+					'group' => 'all'
+				]
+			],
+			[
+				[
+					'host' => 'all',
+					'group' => 'Templates/Applications'
+				]
+			],
+			[
+				[
+					'host' => 'all',
+					'group' => 'all'
+				]
+			]
+		];
+	}
+
 	/**
-	 * Test application list when select hosts and groups.
+	 * @dataProvider select_host_group
+	 *
+	 * Test application list when select host and/or host group.
 	 */
-	public function testPageApplications_CheckApplicationList() {
+	public function testPageApplications_CheckApplicationList($data) {
 		// Open hosts page.
 		$this->zbxTestLogin('hosts.php');
 		$this->zbxTestClickLinkTextWait('ЗАББИКС Сервер');
@@ -42,62 +74,104 @@ class testPageApplications extends CWebTest {
 		$this->zbxTestDropdownAssertSelected('hostid', 'ЗАББИКС Сервер');
 		$this->zbxTestDropdownAssertSelected('groupid', 'all');
 
-		// Check the application list in frontend for 'ЗАББИКС Сервер' host.
-		$sqlAllApplications = 'SELECT name FROM applications WHERE hostid=10084';
-		$result = DBselect($sqlAllApplications);
-		while ($row = DBfetch($result)) {
-			$hosAllApp[] = $row['name'];
+		// Select host and/or host group
+		if (array_key_exists('visible_name', $data)) {
+			$this->zbxTestDropdownSelectWait('hostid', $data['visible_name']);
 		}
-		$this->zbxTestTextPresent($hosAllApp);
-
-		// Select another host 'Template App Apache Tomcat JMX'.
-		$this->zbxTestDropdownSelectWait('hostid', 'Template App Apache Tomcat JMX');
-
-		// Check the application list in frontend
-		$sqlAllApplications = 'SELECT name FROM applications WHERE hostid=10168';
-		$result = DBselect($sqlAllApplications);
-		while ($row = DBfetch($result)) {
-			$templateAllApp[] = $row['name'];
+		else {
+			$this->zbxTestDropdownSelectWait('hostid', $data['host']);
 		}
-		$this->zbxTestTextPresent($templateAllApp);
+		$this->zbxTestDropdownSelectWait('groupid', $data['group']);
 
-		// Select all hosts and 'Templates/Applications' group.
-		$this->zbxTestDropdownSelectWait('hostid', 'all');
-		$this->zbxTestDropdownSelectWait('groupid', 'Templates/Applications');
+		if ($data['host'] != 'all') {
+			// Get host id
+			$sql_host_id = DBfetch(DBselect("SELECT hostid FROM hosts WHERE host='".$data['host']."'"));
+			$host_id= $sql_host_id['hostid'];
 
-		// Check the application list in frontend
-		$sqlAllApplications = 'SELECT a.name FROM hosts_groups hg LEFT JOIN applications a ON hg.hostid=a.hostid WHERE hg.groupid=12';
-		$result = DBselect($sqlAllApplications);
-		while ($row = DBfetch($result)) {
-			$groupAllApp[] = $row['name'];
+			// Check the application names in frontend
+			$host_app = [];
+			$sql_all_applications = "SELECT applicationid, name FROM applications WHERE hostid=".$host_id;
+			$result = DBselect($sql_all_applications);
+			while ($row = DBfetch($result)) {
+				$host_app[$row['applicationid']] = $row['name'];
+			}
+			$this->zbxTestTextPresent($host_app);
+
+			// Check items number in frontend
+			foreach ($host_app as $appid => $app_name) {
+				$sql_count_item = DBcount('SELECT NULL FROM items WHERE flags<>2 AND itemid IN'
+						.'(SELECT itemid FROM items_applications WHERE applicationid='.$appid.')');
+				$xpath = '//input[@id="applications_'.$appid.'"]/../..//sup';
+
+				if ($sql_count_item === 0) {
+					$this->zbxTestAssertElementNotPresentXpath($xpath);
+				}
+				else {
+					$items = $this->zbxTestGetText($xpath);
+					$this->assertEquals($sql_count_item, $items);
+				}
+			}
 		}
-		$this->zbxTestTextPresent($groupAllApp);
+		else {
+			// Check disabled creation button of application
+			$this->zbxTestAssertElementText("//button[@id='form']", 'Create application (select host first)');
+			$this->zbxTestAssertAttribute("//button[@id='form']",'disabled','true');
+			$this->zbxTestAssertElementNotPresentXpath("//ul[@class='object-group']");
+		}
+
+		if ($data['group'] != 'all') {
+			$group_app= [];
+			$sql_all_applications = "SELECT a.name FROM hosts_groups hg LEFT JOIN applications a ON hg.hostid=a.hostid"
+					. " WHERE hg.groupid=(SELECT groupid FROM groups WHERE name='".$data['group']."')";
+			$result = DBselect($sql_all_applications);
+			while ($row = DBfetch($result)) {
+				$group_app[] = $row['name'];
+			}
+			$this->zbxTestTextPresent($group_app);
+		}
+
 		$this->zbxTestCheckFatalErrors();
 	}
 
-	/**
-	 * Test disabled creation button of application, if selected all hosts and all groups.
-	 */
-	public function testPageApplications_CheckDisabledButton() {
+	public function selectApplications($app_names, $host) {
 		$this->zbxTestLogin('applications.php?groupid=0&hostid=0');
-		$this->zbxTestDropdownAssertSelected('groupid', 'all');
-		$this->zbxTestDropdownAssertSelected('hostid', 'all');
+		$this->zbxTestWaitForPageToLoad();
+		$this->zbxTestDropdownSelectWait('hostid', $host);
+		$result = [];
+		$hosts = DBfetch(DBselect('SELECT hostid FROM hosts WHERE name=' . zbx_dbstr($host)));
+		$this->assertFalse(empty($hosts));
 
-		$this->zbxTestAssertElementText("//button[@id='form']", 'Create application (select host first)');
-		$this->zbxTestAssertAttribute("//button[@id='form']",'disabled','true');
-		$this->zbxTestAssertElementNotPresentXpath("//ul[@class='object-group']");
+		$result['hostid'] = $hosts['hostid'];
+		$result['apps'] = [];
+
+		// Select applications
+		if ($app_names === 'all') {
+			$this->zbxTestCheckboxSelect('all_applications');
+		}
+		else {
+			$sql = 'SELECT applicationid, name FROM applications WHERE '.dbConditionString('name', $app_names)
+					. ' AND hostid=' . $result['hostid'];
+			$cursor = DBselect($sql);
+			while ($row = DBfetch($cursor)) {
+				$result['apps'][$row['applicationid']] = $row['name'];
+			}
+
+			$this->assertEquals([], array_diff($result['apps'], $app_names));
+
+			foreach (array_keys($result['apps']) as $appid) {
+				$this->zbxTestCheckboxSelect('applications_'.$appid);
+			}
+		}
+
+		return $result;
 	}
 
 	/**
 	 * Test deactivation of selected applications.
 	 */
 	public function testPageApplications_DisableSelected() {
-		$this->zbxTestLogin('applications.php?groupid=4&hostid=10084');
-		$this->zbxTestWaitForPageToLoad();
+		$result = $this->selectApplications(['General','OS'], 'ЗАББИКС Сервер');
 
-		// Select two applications and press disable button.
-		$this->zbxTestCheckboxSelect('applications_348');
-		$this->zbxTestCheckboxSelect('applications_351');
 		$this->zbxTestClickButtonText('Disable');
 		$this->zbxTestAlertAcceptWait();
 
@@ -106,31 +180,9 @@ class testPageApplications extends CWebTest {
 		$this->zbxTestCheckFatalErrors();
 
 		// Check the results in DB, that selected application items disabled.
-		$sql='SELECT NULL FROM items i LEFT JOIN items_applications ia ON ia.itemid=i.itemid '
-				. 'WHERE (ia.applicationid=348 OR ia.applicationid=351) AND i.status='.ITEM_STATUS_ACTIVE;
-		$this->assertEquals(0, DBcount($sql));
-	}
-
-	/**
-	 * Test activation of selected applications.
-	 */
-	public function testPageApplications_EnableSelected() {
-		$this->zbxTestLogin('applications.php?groupid=4&hostid=10084');
-		$this->zbxTestWaitForPageToLoad();
-
-		// Select two applications and press enable button.
-		$this->zbxTestCheckboxSelect('applications_348');
-		$this->zbxTestCheckboxSelect('applications_351');
-		$this->zbxTestClickButtonText('Enable');
-		$this->zbxTestAlertAcceptWait();
-
-		// Check the result in frontend.
-		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
-		$this->zbxTestCheckFatalErrors();
-
-		// Check the results in DB, that selected application items enabled.
-		$sql='SELECT NULL FROM items i LEFT JOIN items_applications ia ON ia.itemid=i.itemid '
-				. 'WHERE (ia.applicationid=348 OR ia.applicationid=351) AND i.status='.ITEM_STATUS_DISABLED;
+		$sql='SELECT NULL FROM items i INNER JOIN items_applications ia ON ia.itemid=i.itemid WHERE '
+				. dbConditionInt('ia.applicationid', array_keys($result['apps'])) . ' AND i.flags<>2 AND i.status='
+				. ITEM_STATUS_ACTIVE;
 		$this->assertEquals(0, DBcount($sql));
 	}
 
@@ -138,11 +190,8 @@ class testPageApplications extends CWebTest {
 	 * Test deactivation of all applications in host.
 	 */
 	public function testPageApplications_DisableAll() {
-		$this->zbxTestLogin('applications.php?groupid=4&hostid=10084');
-		$this->zbxTestWaitForPageToLoad();
+		$result = $this->selectApplications('all', 'ЗАББИКС Сервер');
 
-		// Select all applications and press disable button.
-		$this->zbxTestCheckboxSelect('all_applications');
 		$this->zbxTestClickButtonText('Disable');
 		$this->zbxTestAlertAcceptWait();
 
@@ -152,7 +201,27 @@ class testPageApplications extends CWebTest {
 
 		// Check the results in DB, that all application items disabled.
 		$sql = 'SELECT NULL FROM items i LEFT JOIN items_applications ia ON ia.itemid=i.itemid '
-				. 'WHERE i.hostid=10084 AND i.flags=0 AND i.status='.ITEM_STATUS_ACTIVE;
+				. 'WHERE i.hostid=' . $result['hostid'] . ' AND i.flags=0 AND i.status='.ITEM_STATUS_ACTIVE;
+		$this->assertEquals(0, DBcount($sql));
+	}
+
+	/**
+	 * Test activation of selected applications.
+	 */
+	public function testPageApplications_EnableSelected() {
+		$result = $this->selectApplications(['General','OS'], 'ЗАББИКС Сервер');
+
+		$this->zbxTestClickButtonText('Enable');
+		$this->zbxTestAlertAcceptWait();
+
+		// Check the result in frontend.
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Items enabled');
+		$this->zbxTestCheckFatalErrors();
+
+		// Check the results in DB, that selected application items enabled.
+		$sql='SELECT NULL FROM items i INNER JOIN items_applications ia ON ia.itemid=i.itemid WHERE '
+				. dbConditionInt('ia.applicationid', array_keys($result['apps'])) . ' AND i.flags<>2 AND i.status='
+				. ITEM_STATUS_DISABLED;
 		$this->assertEquals(0, DBcount($sql));
 	}
 
@@ -160,10 +229,8 @@ class testPageApplications extends CWebTest {
 	 * Test activation of all applications in host.
 	 */
 	public function testPageApplications_EnableAll() {
-		$this->zbxTestLogin('applications.php?groupid=4&hostid=10084');
-		$this->zbxTestCheckboxSelect('all_applications');
+		$result = $this->selectApplications('all', 'ЗАББИКС Сервер');
 
-		// Select all applications and press disable button.
 		$this->zbxTestClickButtonText('Enable');
 		$this->zbxTestAlertAcceptWait();
 
@@ -173,40 +240,17 @@ class testPageApplications extends CWebTest {
 
 		// Check the results in DB, that all application items enabled.
 		$sql = 'SELECT NULL FROM items i LEFT JOIN items_applications ia ON ia.itemid=i.itemid '
-				. 'WHERE i.hostid=10084 AND i.flags=0 AND i.status='.ITEM_STATUS_DISABLED;
+				. 'WHERE i.hostid=' . $result['hostid'] . ' AND i.flags=0 AND i.status='.ITEM_STATUS_DISABLED;
 		$this->assertEquals(0, DBcount($sql));
-	}
-
-	/**
-	 * Test impossible deleting of templated application.
-	 */
-	public function testPageApplications_CannotDdelete() {
-		$sql_hash = 'SELECT * FROM applications ORDER BY applicationid';
-		$old_hash = DBhash($sql_hash);
-
-		$this->zbxTestLogin('applications.php?groupid=4&hostid=10084');
-		$this->zbxTestWaitForPageToLoad();
-
-		$this->zbxTestCheckboxSelect('all_applications');
-		$this->zbxTestClickButtonText('Delete');
-		$this->zbxTestAlertAcceptWait();
-
-		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot delete applications');
-		$this->zbxTestTextPresent('Cannot delete templated application.');
-		$this->zbxTestCheckFatalErrors();
-
-		$this->assertEquals($old_hash, DBhash($sql_hash));
 	}
 
 	/**
 	 * Test deleting of application.
 	 */
 	public function testPageApplications_DeleteSelected() {
-		$this->zbxTestLogin('applications.php?groupid=4&hostid=10084');
-		$this->zbxTestWaitForPageToLoad();
+		$result = $this->selectApplications(['Selenium test application'], 'ЗАББИКС Сервер');
+		$items = DBcount('SELECT NULL FROM items');
 
-		// Delete an application.
-		$this->zbxTestCheckboxSelect('applications_99000');
 		$this->zbxTestClickButtonText('Delete');
 		$this->zbxTestAlertAcceptWait();
 
@@ -215,8 +259,27 @@ class testPageApplications extends CWebTest {
 		$this->zbxTestCheckFatalErrors();
 
 		// Check the result in DB.
-		$this->assertEquals(0, DBcount('SELECT NULL FROM applications WHERE applicationid=99000'));
-		$this->assertEquals(0, DBcount('SELECT NULL FROM items_applications WHERE itemappid=99000'));
-		$this->assertEquals(1, DBcount('SELECT NULL FROM items WHERE itemid=99000'));
+		$this->assertEquals(0, DBcount('SELECT NULL FROM applications WHERE ' . dbConditionInt('applicationid', array_keys($result['apps']))));
+		$this->assertEquals(0, DBcount('SELECT NULL FROM items_applications WHERE ' . dbConditionInt('applicationid', array_keys($result['apps']))));
+		$this->assertEquals($items, DBcount('SELECT NULL FROM items'));
+	}
+
+	/**
+	 * Test impossible deleting of templated application.
+	 */
+	public function testPageApplications_CannotDelete() {
+		$sql_hash = 'SELECT * FROM applications ORDER BY applicationid';
+		$old_hash = DBhash($sql_hash);
+
+		$result = $this->selectApplications('all', 'ЗАББИКС Сервер');
+
+		$this->zbxTestClickButtonText('Delete');
+		$this->zbxTestAlertAcceptWait();
+
+		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', 'Cannot delete applications');
+		$this->zbxTestTextPresent('Cannot delete templated application.');
+		$this->zbxTestCheckFatalErrors();
+
+		$this->assertEquals($old_hash, DBhash($sql_hash));
 	}
 }
