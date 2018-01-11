@@ -717,7 +717,7 @@ static int	zbx_snmp_set_result(const struct variable_list *var, AGENT_RESULT *re
 		}
 		else
 		{
-			set_result_type(result, ITEM_VALUE_TYPE_STR, strval_dyn);
+			set_result_type(result, ITEM_VALUE_TYPE_TEXT, strval_dyn);
 			zbx_free(strval_dyn);
 		}
 	}
