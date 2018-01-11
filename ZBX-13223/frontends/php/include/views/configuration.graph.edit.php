@@ -372,7 +372,7 @@ $graphPreviewTable = (new CTable())
 	->addStyle('width: 100%;')
 	->addRow(
 		(new CRow(
-			(new CDiv())->setId('previewChar')
+			(new CDiv())->setId('previewChart')
 		))->addClass(ZBX_STYLE_CENTER)
 	);
 $graphTab->addTab('previewTab', _('Preview'), $graphPreviewTable);
