@@ -182,15 +182,20 @@ void	update_proxy_lastaccess(const zbx_uint64_t hostid)
 static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, const ZBX_TABLE *table,
 		zbx_vector_uint64_t *hosts, zbx_vector_uint64_t *httptests)
 {
-	const char	*__function_name = "get_proxyconfig_table";
-	char		*sql = NULL;
-	size_t		sql_alloc = 4 * ZBX_KIBIBYTE, sql_offset = 0;
-	int		f, fld, ret = SUCCEED;
-	DB_RESULT	result;
-	DB_ROW		row;
+	const char		*__function_name = "get_proxyconfig_table";
+
+	char			*sql = NULL;
+	size_t			sql_alloc = 4 * ZBX_KIBIBYTE, sql_offset = 0;
+	int			f, fld, fld_type = -1, fld_key = -1, ret = SUCCEED;
+	DB_RESULT		result;
+	DB_ROW			row;
+	static const ZBX_TABLE	*table_items = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() proxy_hostid:" ZBX_FS_UI64 " table:'%s'",
 			__function_name, proxy_hostid, table->table);
+
+	if (NULL == table_items)
+		table_items = DBget_table("items");
 
 	zbx_json_addobject(j, table->table);
 	zbx_json_addarray(j, "fields");
@@ -201,14 +206,31 @@ static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, 
 
 	zbx_json_addstring(j, NULL, table->recid, ZBX_JSON_TYPE_STRING);
 
-	for (f = 0; 0 != table->fields[f].name; f++)
+	for (f = 0, fld = 1; 0 != table->fields[f].name; f++)
 	{
 		if (0 == (table->fields[f].flags & ZBX_PROXY))
 			continue;
 
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, ",t.%s", table->fields[f].name);
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, ",t.");
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, table->fields[f].name);
 
 		zbx_json_addstring(j, NULL, table->fields[f].name, ZBX_JSON_TYPE_STRING);
+
+		if (table == table_items)
+		{
+			if (0 == strcmp(table->fields[f].name, "type"))
+				fld_type = fld;
+			else if (0 == strcmp(table->fields[f].name, "key_"))
+				fld_key = fld;
+
+			fld++;
+		}
+	}
+
+	if (table == table_items && (-1 == fld_type || -1 == fld_key))
+	{
+		THIS_SHOULD_NEVER_HAPPEN;
+		exit(EXIT_FAILURE);
 	}
 
 	zbx_json_close(j);	/* fields */
@@ -217,14 +239,7 @@ static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, 
 
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " from %s t", table->table);
 
-	if (SUCCEED == str_in_list("globalmacro,regexps,expressions,config", table->table, ','))
-	{
-		char	field_name[ZBX_FIELDNAME_LEN + 3];
-
-		zbx_snprintf(field_name, sizeof(field_name), "t.%s", table->recid);
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, ZBX_SQL_NODE, DBwhere_node_local(field_name));
-	}
-	else if (SUCCEED == str_in_list("hosts,interface,hosts_templates,hostmacro", table->table, ','))
+	if (SUCCEED == str_in_list("hosts,interface,hosts_templates,hostmacro", table->table, ','))
 	{
 		if (0 == hosts->values_num)
 			goto skip_data;
@@ -232,7 +247,7 @@ static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, 
 		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " where");
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.hostid", hosts->values, hosts->values_num);
 	}
-	else if (0 == strcmp(table->table, "items"))
+	else if (table == table_items)
 	{
 		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 				",hosts r where t.hostid=r.hostid"
@@ -263,9 +278,7 @@ static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, 
 	}
 	else if (0 == strcmp(table->table, "groups"))
 	{
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-				",config r where t.groupid=r.discovery_groupid" ZBX_SQL_NODE,
-				DBand_node_local("r.configid"));
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, ",config r where t.groupid=r.discovery_groupid");
 	}
 	else if (SUCCEED == str_in_list("httptest,httptestitem,httpstep", table->table, ','))
 	{
@@ -281,14 +294,15 @@ static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, 
 		if (0 == httptests->values_num)
 			goto skip_data;
 
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
 				",httpstep r where t.httpstepid=r.httpstepid"
 					" and");
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "r.httptestid",
 				httptests->values, httptests->values_num);
 	}
 
-	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " order by t.%s", table->recid);
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by t.");
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, table->recid);
 
 	if (NULL == (result = DBselect("%s", sql)))
 	{
@@ -298,6 +312,16 @@ static int	get_proxyconfig_table(zbx_uint64_t proxy_hostid, struct zbx_json *j, 
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		if (table == table_items)
+		{
+			unsigned char	type;
+
+			ZBX_STR2UCHAR(type, row[fld_type]);
+
+			if (SUCCEED == is_item_processed_by_server(type, row[fld_key]))
+				continue;
+		}
+
 		fld = 0;
 		zbx_json_addarray(j, NULL);
 		zbx_json_addstring(j, NULL, row[fld++], ZBX_JSON_TYPE_INT);
