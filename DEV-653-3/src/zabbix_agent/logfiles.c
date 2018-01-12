@@ -882,7 +882,7 @@ static int	setup_old2new_and_copy_of(int rotation_type, char *old2new, struct st
  *          cross point and protected columns and protected rows              *
  *                                                                            *
  * Parameters:                                                                *
- *          arr    - [IN] two dimensional array                               *
+ *          arr    - [IN/OUT] two dimensional array                           *
  *          n_rows - [IN] number of rows in the array                         *
  *          n_cols - [IN] number of columns in the array                      *
  *          row    - [IN] number of cross point row                           *
@@ -907,7 +907,7 @@ static int	setup_old2new_and_copy_of(int rotation_type, char *old2new, struct st
  *         1 1 0 1                                                            *
  *                                                                            *
  ******************************************************************************/
-static void	cross_out(char *arr, int n_rows, int n_cols, int row, int col, char *p_rows, char *p_cols)
+static void	cross_out(char *arr, int n_rows, int n_cols, int row, int col, const char *p_rows, const char *p_cols)
 {
 	int	i;
 	char	*p;
@@ -945,7 +945,7 @@ static void	cross_out(char *arr, int n_rows, int n_cols, int row, int col, char 
  *               row                                                          *
  *                                                                            *
  ******************************************************************************/
-static int	is_uniq_row(const char *arr, int n_cols, int row)
+static int	is_uniq_row(const char * const arr, int n_cols, int row)
 {
 	int		i, mappings = 0, ret = -1;
 	const char	*p;
@@ -983,12 +983,12 @@ static int	is_uniq_row(const char *arr, int n_cols, int row)
  *          n_cols - [IN] number of columns in the array                      *
  *          col    - [IN] number of column to search                          *
  *                                                                            *
- * Return value: number of column where the element '1' or '2 ' was found or  *
+ * Return value: number of row where the element '1' or '2 ' was found or     *
  *               -1 if there are zero or multiple elements '1' or '2' in the  *
- *               row                                                          *
+ *               column                                                       *
  *                                                                            *
  ******************************************************************************/
-static int	is_uniq_col(const char *arr, int n_rows, int n_cols, int col)
+static int	is_uniq_col(const char * const arr, int n_rows, int n_cols, int col)
 {
 	int		i, mappings = 0, ret = -1;
 	const char	*p;
@@ -1213,10 +1213,10 @@ non_unique:
  *               -1 if no mapping was found                                   *
  *                                                                            *
  ******************************************************************************/
-static int	find_old2new(char *old2new, int num_new, int i_old)
+static int	find_old2new(const char * const old2new, int num_new, int i_old)
 {
-	int	i;
-	char	*p = old2new + i_old * num_new;
+	int		i;
+	const char	*p = old2new + i_old * num_new;
 
 	for (i = 0; i < num_new; i++)		/* loop over columns (new files) on i_old-th row */
 	{
@@ -1499,7 +1499,22 @@ clean:
 #endif
 }
 
-static int	compile_filename_regexp(regex_t *re, const char *filename_regexp, char **err_msg)
+/******************************************************************************
+ *                                                                            *
+ * Function: compile_filename_regexp                                          *
+ *                                                                            *
+ * Purpose: compile regular expression                                        *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     filename_regexp - [IN] regexp to be compiled                           *
+ *     re              - [IN/OUT] compiled regexp                             *
+ *     err_msg         - [IN/OUT] error message why regexp could not be       *
+ *                       compiled                                             *
+ *                                                                            *
+ * Return value: SUCCEED or FAIL                                              *
+ *                                                                            *
+ ******************************************************************************/
+static int	compile_filename_regexp(const char *filename_regexp, regex_t *re, char **err_msg)
 {
 	int	err_code;
 
@@ -1642,7 +1657,7 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 			goto clean;
 		}
 
-		if (SUCCEED != compile_filename_regexp(&re, filename_regexp, err_msg))
+		if (SUCCEED != compile_filename_regexp(filename_regexp, &re, err_msg))
 		{
 			ret = FAIL;
 			goto clean1;
