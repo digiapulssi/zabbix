@@ -81,10 +81,10 @@ static int	split_string(const char *str, const char *del, char **part1, char **p
 	part1_length = (size_t)(del - str + 1);
 	part2_length = str_length - part1_length;
 
-	*part1 = zbx_malloc(*part1, part1_length + 1);
+	*part1 = (char *)zbx_malloc(*part1, part1_length + 1);
 	zbx_strlcpy(*part1, str, part1_length + 1);
 
-	*part2 = zbx_malloc(*part2, part2_length + 1);
+	*part2 = (char *)zbx_malloc(*part2, part2_length + 1);
 	zbx_strlcpy(*part2, str + part1_length, part2_length + 1);
 
 	ret = SUCCEED;
@@ -1337,9 +1337,10 @@ out:
  * Purpose: release resources allocated to a logfile list                     *
  *                                                                            *
  * Parameters:                                                                *
- *     logfiles       - [IN/OUT] pointer to the list of logfiles              *
- *     logfiles_alloc - [IN/OUT] number of logfiles memory was allocated for  *
- *     logfiles_num   - [IN/OUT] number of already inserted logfiles          *
+ *     logfiles       - [IN/OUT] pointer to the list of logfiles, can be NULL *
+ *     logfiles_alloc - [IN/OUT] pointer to number of logfiles memory was     *
+ *                               allocated for, can be NULL.                  *
+ *     logfiles_num   - [IN/OUT] valid pointer to number of inserted logfiles *
  *                                                                            *
  ******************************************************************************/
 static void	destroy_logfile_list(struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num)
@@ -1350,7 +1351,10 @@ static void	destroy_logfile_list(struct st_logfile **logfiles, int *logfiles_all
 		zbx_free((*logfiles)[i].filename);
 
 	*logfiles_num = 0;
-	*logfiles_alloc = 0;
+
+	if (NULL != logfiles_alloc)
+		*logfiles_alloc = 0;
+
 	zbx_free(*logfiles);
 }
 
