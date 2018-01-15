@@ -1811,7 +1811,7 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 						/* required. */
 
 	if (NULL == buf)
-		buf = zbx_malloc(buf, (size_t)(BUF_SIZE + 1));
+		buf = (char *)zbx_malloc(buf, (size_t)(BUF_SIZE + 1));
 
 	find_cr_lf_szbyte(encoding, &cr, &lf, &szbyte);
 
@@ -2042,7 +2042,8 @@ out:
  *     flags           - [IN] bit flags with item type: log or logrt          *
  *     filename        - [IN] logfile name                                    *
  *     lastlogsize     - [IN/OUT] offset from the beginning of the file       *
- *     mtime           - [IN] file modification time for reporting to server  *
+ *     mtime           - [IN/OUT] file modification time for reporting to     *
+ *                       server                                               *
  *     skip_old_data   - [IN/OUT] start from the beginning of the file or     *
  *                       jump to the end                                      *
  *     big_rec         - [IN/OUT] state variable to remember whether a long   *
@@ -2178,17 +2179,17 @@ static void	adjust_mtime_to_clock(int *mtime)
 	}
 }
 
-static int	is_swap_required(const struct st_logfile *old, struct st_logfile *new, int use_ino, int idx)
+static int	is_swap_required(const struct st_logfile *old_files, struct st_logfile *new_files, int use_ino, int idx)
 {
 	int	is_same_place;
 
 	/* if the 1st file is not processed at all while the 2nd file was processed (at least partially) */
 	/* then swap them */
-	if (0 == new[idx].seq && 0 < new[idx + 1].seq)
+	if (0 == new_files[idx].seq && 0 < new_files[idx + 1].seq)
 		return SUCCEED;
 
 	/* if the 2nd file is not a copy of some other file then no need to swap */
-	if (-1 == new[idx + 1].copy_of)
+	if (-1 == new_files[idx + 1].copy_of)
 		return FAIL;
 
 	/* The 2nd file is a copy. But is it a copy of the 1st file ? */
@@ -2196,18 +2197,18 @@ static int	is_swap_required(const struct st_logfile *old, struct st_logfile *new
 	/* On file systems with inodes or file indices if a file is copied and truncated, we assume that */
 	/* there is a high possibility that the truncated file has the same inode (index) as before. */
 
-	if (NULL == old)	/* cannot consult the old file list */
+	if (NULL == old_files)	/* cannot consult the old file list */
 		return FAIL;
 
-	is_same_place = compare_file_places(old + new[idx + 1].copy_of, new + idx, use_ino);
+	is_same_place = compare_file_places(old_files + new_files[idx + 1].copy_of, new_files + idx, use_ino);
 
-	if (ZBX_FILE_PLACE_SAME == is_same_place && new[idx].seq <= new[idx + 1].seq)
+	if (ZBX_FILE_PLACE_SAME == is_same_place && new_files[idx].seq >= new_files[idx + 1].seq)
 		return SUCCEED;
 
 	/* The last attempt - compare file names. It is less reliable as file rotation can change file names. */
 	if (ZBX_FILE_PLACE_OTHER == is_same_place || ZBX_FILE_PLACE_UNKNOWN == is_same_place)
 	{
-		if (0 == strcmp((old + new[idx + 1].copy_of)->filename, (new + idx)->filename))
+		if (0 == strcmp((old_files + new_files[idx + 1].copy_of)->filename, (new_files + idx)->filename))
 			return SUCCEED;
 	}
 
@@ -2256,39 +2257,307 @@ static void	ensure_order_if_mtimes_equal(const struct st_logfile *logfiles_old, 
 	}
 }
 
+static int	files_start_with_same_md5(const struct st_logfile *log1, const struct st_logfile *log2)
+{
+	if (-1 == log1->md5size || -1 == log2->md5size)
+		return FAIL;
+
+	if (log1->md5size == log2->md5size)	/* this works for empty files, too */
+	{
+		if (0 == memcmp(log1->md5buf, log2->md5buf, sizeof(log1->md5buf)))
+			return SUCCEED;
+		else
+			return FAIL;
+	}
+
+	/* we have MD5 sums, but they are calculated from blocks of different sizes */
+
+	if (0 < log1->md5size && 0 < log2->md5size)
+	{
+		const struct st_logfile	*file_smaller, *file_larger;
+		int			fd, ret = FAIL;
+		char			*err_msg = NULL;		/* required, but not used */
+		md5_byte_t		md5tmp[MD5_DIGEST_SIZE];
+
+		if (log1->md5size < log2->md5size)
+		{
+			file_smaller = log1;
+			file_larger = log2;
+		}
+		else
+		{
+			file_smaller = log2;
+			file_larger = log1;
+		}
+
+		if (-1 == (fd = zbx_open(file_larger->filename, O_RDONLY)))
+			return FAIL;
+
+		if (SUCCEED == file_start_md5(fd, file_smaller->md5size, md5tmp, "", &err_msg))
+		{
+			if (0 == memcmp(file_smaller->md5buf, md5tmp, sizeof(md5tmp)))
+				ret = SUCCEED;
+		}
+
+		zbx_free(err_msg);
+		close(fd);
+
+		return ret;
+	}
+
+	return FAIL;
+}
+
 static void	handle_multiple_copies(struct st_logfile *logfiles, int logfiles_num, int i)
 {
 	/* There is a special case when the latest log file is copied to other file but not yet truncated. */
 	/* So there are two files and we don't know which one will stay as the copy and which one will be  */
-	/* truncated. Similar cases: the latest log file is copied but not truncated or is copied multiple */
+	/* truncated. Similar cases: the latest log file is copied but never truncated or is copied multiple */
 	/* times. */
 
 	int	j;
 
 	for (j = i + 1; j < logfiles_num; j++)
 	{
-		if (-1 != logfiles[i].md5size && -1 != logfiles[j].md5size &&
-				logfiles[i].md5size == logfiles[j].md5size &&
-				0 == memcmp(logfiles[i].md5buf, logfiles[j].md5buf, sizeof(logfiles[i].md5buf)))
+		if (SUCCEED == files_start_with_same_md5(logfiles + i, logfiles + j))
 		{
 			/* logfiles[i] and logfiles[j] are original and copy (or vice versa). */
 			/* If logfiles[i] has been at least partially processed then transfer its */
 			/* processed size to logfiles[j], too. */
 
-			if (0 < logfiles[i].processed_size)
+			if (logfiles[j].processed_size < logfiles[i].processed_size)
 			{
-				if (logfiles[i].processed_size <= logfiles[j].size)
-					logfiles[j].processed_size = logfiles[i].processed_size;
-				else
-					logfiles[j].processed_size = logfiles[j].size;
+				logfiles[j].processed_size = MIN(logfiles[i].processed_size, logfiles[j].size);
 
 				zabbix_log(LOG_LEVEL_DEBUG, "handle_multiple_copies() file '%s' processed_size:"
 						ZBX_FS_UI64 " transferred to" " file '%s' processed_size:" ZBX_FS_UI64,
 						logfiles[i].filename, logfiles[i].processed_size,
 						logfiles[j].filename, logfiles[j].processed_size);
 			}
+			else if (logfiles[i].processed_size < logfiles[j].processed_size)
+			{
+				logfiles[i].processed_size = MIN(logfiles[j].processed_size, logfiles[i].size);
+
+				zabbix_log(LOG_LEVEL_DEBUG, "handle_multiple_copies() file '%s' processed_size:"
+						ZBX_FS_UI64 " transferred to" " file '%s' processed_size:" ZBX_FS_UI64,
+						logfiles[j].filename, logfiles[j].processed_size,
+						logfiles[i].filename, logfiles[i].processed_size);
+			}
 		}
 	}
+}
+
+static void	delay_update_if_copies(struct st_logfile *logfiles, int logfiles_num, int *mtime,
+		zbx_uint64_t *lastlogsize)
+{
+	int	i, idx_to_keep = logfiles_num - 1;
+
+	/* If there are copies in 'logfiles' list then find the element with the smallest index which must be */
+	/* preserved in the list to keep information about copies. */
+
+	for (i = 0; i < logfiles_num - 1; i++)
+	{
+		int	j, largest_for_i = -1;
+
+		if (0 == logfiles[i].size)
+			continue;
+
+		for (j = i + 1; j < logfiles_num; j++)
+		{
+			if (0 == logfiles[j].size)
+				continue;
+
+			if (SUCCEED == files_start_with_same_md5(logfiles + i, logfiles + j))
+			{
+				int	more_processed;
+
+				/* logfiles[i] and logfiles[j] are original and copy (or vice versa) */
+
+				more_processed = (logfiles[i].processed_size > logfiles[j].processed_size) ? i : j;
+
+				if (largest_for_i < more_processed)
+					largest_for_i = more_processed;
+			}
+		}
+
+		if (-1 != largest_for_i && idx_to_keep > largest_for_i)
+			idx_to_keep = largest_for_i;
+	}
+
+	if (logfiles[idx_to_keep].mtime < *mtime)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "delay_update_if_copies(): setting mtime back from %d to %d,"
+				" lastlogsize from " ZBX_FS_UI64 " to " ZBX_FS_UI64, *mtime,
+				logfiles[idx_to_keep].mtime, *lastlogsize, logfiles[idx_to_keep].processed_size);
+
+		/* ensure that next time element 'idx_to_keep' is included in file list with the right 'lastlogsize' */
+		*mtime = logfiles[idx_to_keep].mtime;
+		*lastlogsize = logfiles[idx_to_keep].processed_size;
+
+		if (logfiles_num - 1 > idx_to_keep)
+		{
+			/* ensure that next time processing starts from element'idx_to_keep' */
+			for (i = idx_to_keep + 1; i < logfiles_num; i++)
+				logfiles[i].seq = 0;
+		}
+	}
+}
+
+static zbx_uint64_t	max_processed_size_in_copies(const struct st_logfile *logfiles, int logfiles_num, int i)
+{
+	zbx_uint64_t	max_processed = 0;
+	int		j;
+
+	for (j = 0; j < logfiles_num; j++)
+	{
+		if (i != j && SUCCEED == files_start_with_same_md5(logfiles + i, logfiles + j))
+		{
+			/* logfiles[i] and logfiles[j] are original and copy (or vice versa). */
+			if (max_processed < logfiles[j].processed_size)
+				max_processed = logfiles[j].processed_size;
+		}
+	}
+
+	return max_processed;
+}
+
+static void	transfer_for_rotate(const struct st_logfile *logfiles_old, int idx, struct st_logfile *logfiles,
+		int logfiles_num, const char *old2new, int *seq)
+{
+	int	j;
+
+	if (0 < logfiles_old[idx].processed_size && 0 == logfiles_old[idx].incomplete &&
+			-1 != (j = find_old2new(old2new, logfiles_num, idx)))
+	{
+		if (logfiles_old[idx].size == logfiles_old[idx].processed_size &&
+				logfiles_old[idx].size == logfiles[j].size)
+		{
+			/* the file was fully processed during the previous check and must be ignored during this */
+			/* check */
+			logfiles[j].processed_size = logfiles[j].size;
+			logfiles[j].seq = (*seq)++;
+		}
+		else
+		{
+			/* the file was not fully processed during the previous check or has grown */
+			if (logfiles[j].processed_size < logfiles_old[idx].processed_size)
+				logfiles[j].processed_size = MIN(logfiles[j].size, logfiles_old[idx].processed_size);
+		}
+	}
+	else if (1 == logfiles_old[idx].incomplete && -1 != (j = find_old2new(old2new, logfiles_num, idx)))
+	{
+		if (logfiles_old[idx].size < logfiles[j].size)
+		{
+			/* The file was not fully processed because of incomplete last record but it has grown. */
+			/* Try to process it further. */
+			logfiles[j].incomplete = 0;
+		}
+		else
+			logfiles[j].incomplete = 1;
+
+		if (logfiles[j].processed_size < logfiles_old[idx].processed_size)
+			logfiles[j].processed_size = MIN(logfiles[j].size, logfiles_old[idx].processed_size);
+	}
+}
+
+static void	transfer_for_copytruncate(const struct st_logfile *logfiles_old, int idx, struct st_logfile *logfiles,
+		int logfiles_num, const char *old2new, int *seq)
+{
+	const char	*p = old2new + idx * logfiles_num;	/* start of idx-th row in 'old2new' array */
+	int		j;
+
+	if (0 < logfiles_old[idx].processed_size && 0 == logfiles_old[idx].incomplete)
+	{
+		for (j = 0; j < logfiles_num; j++, p++)		/* loop over columns (new files) on idx-th row */
+		{
+			if ('1' == *p || '2' == *p)
+			{
+				if (logfiles_old[idx].size == logfiles_old[idx].processed_size &&
+						logfiles_old[idx].size == logfiles[j].size)
+				{
+					/* the file was fully processed during the previous check and must be ignored */
+					/* during this check */
+					logfiles[j].processed_size = logfiles[j].size;
+					logfiles[j].seq = (*seq)++;
+				}
+				else
+				{
+					/* the file was not fully processed during the previous check or has grown */
+					if (logfiles[j].processed_size < logfiles_old[idx].processed_size)
+					{
+						logfiles[j].processed_size = MIN(logfiles[j].size,
+								logfiles_old[idx].processed_size);
+					}
+				}
+			}
+		}
+	}
+	else if (1 == logfiles_old[idx].incomplete)
+	{
+		for (j = 0; j < logfiles_num; j++, p++)		/* loop over columns (new files) on idx-th row */
+		{
+			if ('1' == *p || '2' == *p)
+			{
+				if (logfiles_old[idx].size < logfiles[j].size)
+				{
+					/* The file was not fully processed because of incomplete last record but it */
+					/* has grown. Try to process it further. */
+					logfiles[j].incomplete = 0;
+				}
+				else
+					logfiles[j].incomplete = 1;
+
+				if (logfiles[j].processed_size < logfiles_old[idx].processed_size)
+				{
+					logfiles[j].processed_size = MIN(logfiles[j].size,
+							logfiles_old[idx].processed_size);
+				}
+			}
+		}
+	}
+}
+
+static int	update_new_list_from_old(int rotation_type, struct st_logfile *logfiles_old, int logfiles_num_old,
+		struct st_logfile *logfiles, int logfiles_num, int use_ino, int *seq, int *start_idx,
+		zbx_uint64_t *lastlogsize, char **err_msg)
+{
+	char	*old2new;
+	int	i, max_old_seq = 0, old_last;
+
+	if (NULL == (old2new = create_old2new_and_copy_of(rotation_type, logfiles_old, logfiles_num_old,
+			logfiles, logfiles_num, use_ino, err_msg)))
+	{
+		return FAIL;
+	}
+
+	/* transfer data about fully and partially processed files from the old file list to the new list */
+	for (i = 0; i < logfiles_num_old; i++)
+	{
+		if (ZBX_LOG_ROTATION_LOGCPT == rotation_type)
+			transfer_for_copytruncate(logfiles_old, i, logfiles, logfiles_num, old2new, seq);
+		else
+			transfer_for_rotate(logfiles_old, i, logfiles, logfiles_num, old2new, seq);
+
+		/* find the last file processed (fully or partially) in the previous check */
+		if (max_old_seq < logfiles_old[i].seq)
+		{
+			max_old_seq = logfiles_old[i].seq;
+			old_last = i;
+		}
+	}
+
+	/* find the first file to continue from in the new file list */
+	if (0 < max_old_seq && -1 == (*start_idx = find_old2new(old2new, logfiles_num, old_last)))
+	{
+		/* Cannot find the successor of the last processed file from the previous check. */
+		/* Adjust 'lastlogsize' for this case. */
+		*start_idx = 0;
+		*lastlogsize = MAX(0, logfiles[*start_idx].processed_size);
+	}
+
+	zbx_free(old2new);
+
+	return SUCCEED;
 }
 
 /******************************************************************************
@@ -2354,7 +2623,7 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 
 	adjust_mtime_to_clock(mtime);
 
-	if (SUCCEED != (res = make_logfile_list(flags, filename, mtime, &logfiles, &logfiles_alloc, &logfiles_num,
+	if (SUCCEED != (res = make_logfile_list(flags, filename, *mtime, &logfiles, &logfiles_alloc, &logfiles_num,
 			use_ino, err_msg)))
 	{
 		if (ZBX_NO_FILE_ERROR == res && 1 == *skip_old_data)
