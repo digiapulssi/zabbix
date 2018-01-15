@@ -949,42 +949,40 @@ abstract class CItemGeneral extends CApiService {
 
 				$chd_item = null;
 
-				if (array_key_exists($chd_host['hostid'], $chd_items_tpl)) {
-					// Update by templateid.
-					if (array_key_exists($tpl_item['itemid'], $chd_items_tpl[$chd_host['hostid']])) {
-						$chd_item = $chd_items_tpl[$chd_host['hostid']][$tpl_item['itemid']];
+				// Update by templateid.
+				if (array_key_exists($chd_host['hostid'], $chd_items_tpl)
+						&& array_key_exists($tpl_item['itemid'], $chd_items_tpl[$chd_host['hostid']])) {
+					$chd_item = $chd_items_tpl[$chd_host['hostid']][$tpl_item['itemid']];
 
-						if ($tpl_item['key_'] !== $chd_item['key_']) {
-							$upd_keys_by_hostid[$chd_host['hostid']][] = $tpl_item['key_'];
-						}
+					if ($tpl_item['key_'] !== $chd_item['key_']) {
+						$upd_keys_by_hostid[$chd_host['hostid']][] = $tpl_item['key_'];
 					}
-					// Update by key.
-					elseif (array_key_exists($tpl_item['key_'], $chd_items_key[$chd_host['hostid']])) {
-						$chd_item = $chd_items_key[$chd_host['hostid']][$tpl_item['key_']];
+				}
+				// Update by key.
+				elseif (array_key_exists($chd_host['hostid'], $chd_items_key)
+						&& array_key_exists($tpl_item['key_'], $chd_items_key[$chd_host['hostid']])) {
+					$chd_item = $chd_items_key[$chd_host['hostid']][$tpl_item['key_']];
 
-						// Check if an item of a different type with the same key exists.
-						if ($chd_item['flags'] != $tpl_item['flags']) {
-							$this->errorInheritFlags($chd_item['flags'], $chd_item['key_'], $chd_host['host']);
-						}
+					// Check if an item of a different type with the same key exists.
+					if ($tpl_item['flags'] != $chd_item['flags']) {
+						$this->errorInheritFlags($chd_item['flags'], $chd_item['key_'], $chd_host['host']);
+					}
 
-						// Check if item already linked to another template.
-						if ($chd_item['templateid'] != 0
-								&& bccomp($chd_item['templateid'], $tpl_item['itemid']) != 0) {
+					// Check if item already linked to another template.
+					if ($chd_item['templateid'] != 0 && bccomp($chd_item['templateid'], $tpl_item['itemid']) != 0) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _params(
+							$this->getErrorMsg(self::ERROR_EXISTS_TEMPLATE), [$tpl_item['key_'], $chd_host['host']]
+						));
+					}
 
-							self::exception(ZBX_API_ERROR_PARAMETERS, _params(
-								$this->getErrorMsg(self::ERROR_EXISTS_TEMPLATE), [$tpl_item['key_'], $chd_host['host']]
-							));
-						}
-
-						if ($class === 'CItemPrototype') {
-							$chd_ruleid = $chd_ruleids[$chd_host['hostid']][$tpl_item['ruleid']];
-							if (bccomp($chd_item['ruleid'], $chd_ruleid) != 0) {
-								self::exception(ZBX_API_ERROR_PARAMETERS,
-									_s('Item prototype "%1$s" already exists on "%2$s", linked to another rule.',
-										$chd_item['key_'], $chd_host['host']
-									)
-								);
-							}
+					if ($class === 'CItemPrototype') {
+						$chd_ruleid = $chd_ruleids[$chd_host['hostid']][$tpl_item['ruleid']];
+						if (bccomp($chd_item['ruleid'], $chd_ruleid) != 0) {
+							self::exception(ZBX_API_ERROR_PARAMETERS,
+								_s('Item prototype "%1$s" already exists on "%2$s", linked to another rule.',
+									$chd_item['key_'], $chd_host['host']
+								)
+							);
 						}
 					}
 				}
