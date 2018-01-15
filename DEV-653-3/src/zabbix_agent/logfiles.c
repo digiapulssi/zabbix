@@ -933,70 +933,74 @@ static int	is_uniq_col(const char * const arr, int n_rows, int n_cols, int col)
 
 /******************************************************************************
  *                                                                            *
- * Function: resolve_old2new                                                  *
+ * Function: is_old2new_unique_mapping                                        *
  *                                                                            *
- * Purpose: resolve non-unique mappings                                       *
+ * Purpose: check if 'old2new' array has only unique mappings                 *
  *                                                                            *
  * Parameters:                                                                *
  *          old2new - [IN] two dimensional array of possible mappings         *
  *          num_old - [IN] number of elements in the old file list            *
  *          num_new - [IN] number of elements in the new file list            *
  *                                                                            *
+ * Return value: SUCCEED - all mappings are unique,                           *
+ *               FAIL - there are non-unique mappings                         *
+ *                                                                            *
  ******************************************************************************/
-static void	resolve_old2new(char *old2new, int num_old, int num_new)
+static int	is_old2new_unique_mapping(const char * const old2new, int num_old, int num_new)
 {
-	int	i, j, mappings;
-	char	*p, *protected_rows = NULL, *protected_cols = NULL;
+	int	i;
 
 	/* Is there 1:1 mapping in both directions between files in the old and the new list ? */
 	/* In this case every row and column has not more than one element '1' or '2', others are '0'. */
 	/* This is expected on UNIX (using inode numbers) and MS Windows (using FileID on NTFS, ReFS) */
-
-	p = old2new;
+	/* unless 'copytruncate' rotation type is combined with multiple log file copies. */
 
 	for (i = 0; i < num_old; i++)		/* loop over rows (old files) */
 	{
-		mappings = 0;
-
-		for (j = 0; j < num_new; j++)	/* loop over columns (new files) */
-		{
-			if ('1' == *p || '2' == *p)
-			{
-				if (2 == ++mappings)
-					goto non_unique;
-			}
-
-			p++;
-		}
+		if (-1 == is_uniq_row(old2new, num_new, i))
+			return FAIL;
 	}
 
-	for (i = 0; i < num_new; i++)		/* loop over columns */
+	for (i = 0; i < num_new; i++)		/* loop over columns (new files) */
 	{
-		p = old2new + i;
-		mappings = 0;
-
-		for (j = 0; j < num_old; j++)	/* loop over rows */
-		{
-			if ('1' == *p || '2' == *p)
-			{
-				if (2 == ++mappings)
-					goto non_unique;
-			}
-			p += num_new;
-		}
+		if (-1 == is_uniq_col(old2new, num_old, num_new, i))
+			return FAIL;
 	}
 
-	return;
-non_unique:
-	/* This is expected on MS Windows using FAT32 and other file systems where inodes or file indexes */
-	/* are either not preserved if a file is renamed or are not applicable. */
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: resolve_old2new                                                  *
+ *                                                                            *
+ * Purpose: resolve non-unique mappings                                       *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     old2new - [IN] two dimensional array of possible mappings              *
+ *     num_old - [IN] number of elements in the old file list                 *
+ *     num_new - [IN] number of elements in the new file list                 *
+ *                                                                            *
+ ******************************************************************************/
+static void	resolve_old2new(char *old2new, int num_old, int num_new)
+{
+	int	i;
+	char	*protected_rows = NULL, *protected_cols = NULL;
+
+	if (SUCCEED == is_old2new_unique_mapping(old2new, num_old, num_new))
+		return;
+
+	/* Non-unique mapping is expected: */
+	/*   - on MS Windows using FAT32 and other file systems where inodes or file indexes are either not */
+	/*     preserved if a file is renamed or are not applicable, */
+	/*   - in 'copytruncate' rotation mode if multiple copies of log files are present. */
 
 	zabbix_log(LOG_LEVEL_DEBUG, "resolve_old2new(): non-unique mapping");
 
 	/* protect unique mappings from further modifications */
 
-	protected_rows = zbx_calloc(protected_rows, (size_t)num_old, sizeof(char));
-	protected_cols = zbx_calloc(protected_cols, (size_t)num_new, sizeof(char));
+	protected_rows = (char *)zbx_calloc(protected_rows, (size_t)num_old, sizeof(char));
+	protected_cols = (char *)zbx_calloc(protected_cols, (size_t)num_new, sizeof(char));
 
 	for (i = 0; i < num_old; i++)
 	{
@@ -1043,6 +1047,9 @@ non_unique:
 
 		for (i = 0; i < num_old; i++)		/* loop over rows from top-left corner */
 		{
+			char	*p;
+			int	j;
+
 			if ('1' == protected_rows[i])
 				continue;
 
@@ -1095,6 +1102,9 @@ non_unique:
 
 		for (i = num_old - 1; i >= 0; i--)	/* loop over rows from bottom-right corner */
 		{
+			char	*p;
+			int	j;
+
 			if ('1' == protected_rows[i])
 				continue;
 
@@ -1266,7 +1276,8 @@ static void	add_logfile(struct st_logfile **logfiles, int *logfiles_alloc, int *
 	if (*logfiles_alloc == *logfiles_num)
 	{
 		*logfiles_alloc += 64;
-		*logfiles = zbx_realloc(*logfiles, (size_t)*logfiles_alloc * sizeof(struct st_logfile));
+		*logfiles = (struct st_logfile *)zbx_realloc(*logfiles,
+				(size_t)*logfiles_alloc * sizeof(struct st_logfile));
 
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() logfiles:%p logfiles_alloc:%d",
 				__function_name, *logfiles, *logfiles_alloc);
@@ -1321,7 +1332,7 @@ static void	add_logfile(struct st_logfile **logfiles, int *logfiles_alloc, int *
 	}
 
 	(*logfiles)[i].filename = zbx_strdup(NULL, filename);
-	(*logfiles)[i].mtime = st->st_mtime;
+	(*logfiles)[i].mtime = (int)st->st_mtime;
 	(*logfiles)[i].md5size = -1;
 	(*logfiles)[i].seq = 0;
 	(*logfiles)[i].incomplete = 0;
@@ -1551,6 +1562,21 @@ static int	compile_filename_regexp(const char *filename_regexp, regex_t *re, cha
 	return SUCCEED;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: fill_file_details                                                *
+ *                                                                            *
+ * Purpose: fill-in MD5 sums, device and inode numbers for files in the list  *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     logfiles     - [IN/OUT] list of log files                              *
+ *     logfiles_num - [IN] number of elements in 'logfiles'                   *
+ *     use_ino      - [IN] how to get file IDs in file_id()                   *
+ *     err_msg      - [IN/OUT] error message why operation failed             *
+ *                                                                            *
+ * Return value: SUCCEED or FAIL                                              *
+ *                                                                            *
+ ******************************************************************************/
 #ifdef _WINDOWS
 static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, int use_ino, char **err_msg)
 #else
@@ -1567,33 +1593,18 @@ static int	fill_file_details(struct st_logfile **logfiles, int logfiles_num, cha
 		int			f;
 		struct st_logfile	*p = *logfiles + i;
 
-		if (-1 == (f = zbx_open(p->filename, O_RDONLY)))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", p->filename,
-					zbx_strerror(errno));
+		if (-1 == (f = open_file_helper(p->filename, err_msg)))
 			return FAIL;
-		}
 
 		p->md5size = (zbx_uint64_t)MAX_LEN_MD5 > p->size ? (int)p->size : MAX_LEN_MD5;
 
-		if (SUCCEED != file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg))
-		{
-			ret = FAIL;
+		if (SUCCEED != (ret = file_start_md5(f, p->md5size, p->md5buf, p->filename, err_msg)))
 			goto clean;
-		}
 #ifdef _WINDOWS
-		if (SUCCEED != file_id(f, use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg))
-			ret = FAIL;
+		ret = file_id(f, use_ino, &p->dev, &p->ino_lo, &p->ino_hi, p->filename, err_msg);
 #endif	/*_WINDOWS*/
 clean:
-		if (0 != close(f))
-		{
-			*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", p->filename,
-					zbx_strerror(errno));
-			return FAIL;
-		}
-
-		if (FAIL == ret)
+		if (SUCCEED != close_file_helper(f, p->filename, err_msg) || FAIL == ret)
 			return FAIL;
 	}
 
@@ -1623,7 +1634,7 @@ clean:
  *               FAIL - other errors                                          *
  *                                                                            *
  ******************************************************************************/
-static int	make_logfile_list(unsigned char flags, const char *filename, const int *mtime,
+static int	make_logfile_list(unsigned char flags, const char *filename, int mtime,
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num, int *use_ino, char **err_msg)
 {
 	int	ret = SUCCEED;
@@ -1649,11 +1660,8 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 
 		add_logfile(logfiles, logfiles_alloc, logfiles_num, filename, &file_buf);
 #ifdef _WINDOWS
-		if (SUCCEED != set_use_ino_by_fs_type(filename, use_ino, err_msg))
-		{
-			ret = FAIL;
+		if (SUCCEED != (ret = set_use_ino_by_fs_type(filename, use_ino, err_msg)))
 			goto clean;
-		}
 #else
 		/* on UNIX file systems we always assume that inodes can be used to identify files */
 		*use_ino = 1;
@@ -1665,22 +1673,15 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 		regex_t	re;
 
 		/* split a filename into directory and file name regular expression parts */
-		if (SUCCEED != split_filename(filename, &directory, &filename_regexp, err_msg))
-		{
-			ret = FAIL;
+		if (SUCCEED != (ret = split_filename(filename, &directory, &filename_regexp, err_msg)))
 			goto clean;
-		}
 
-		if (SUCCEED != compile_filename_regexp(filename_regexp, &re, err_msg))
-		{
-			ret = FAIL;
+		if (SUCCEED != (ret = compile_filename_regexp(filename_regexp, &re, err_msg)))
 			goto clean1;
-		}
 
-		if (SUCCEED != pick_logfiles(directory, *mtime, &re, use_ino, logfiles, logfiles_alloc, logfiles_num,
-				err_msg))
+		if (SUCCEED != (ret = pick_logfiles(directory, mtime, &re, use_ino, logfiles, logfiles_alloc,
+				logfiles_num, err_msg)))
 		{
-			ret = FAIL;
 			goto clean2;
 		}
 
