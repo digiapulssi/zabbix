@@ -569,23 +569,22 @@ ul.top-nav-icons {
 	}
 
 	.header-dropdown {
-		padding-right: 20px;
 		color: $font-color;
 		cursor: pointer;
-		display: inline-block;
-		position: relative;
+		float: left;
 		max-width: calc(100% - 20px);
+		padding-right: 20px;
+		position: relative;
 
 		&::after {
 			content: '';
-			display: inline-block;
-			width: 7px;
-			height: 7px;
 			border-left: 2px solid $font-color;
 			border-bottom: 2px solid $font-color;
 			position: absolute;
 			right: .2rem;
-			top: calc(50% - .4rem);
+			top: calc(50% - .35rem);
+			width: 7px;
+			height: 7px;
 			@include rotate(-45);
 		}
 
