@@ -402,7 +402,7 @@ if ($host || $data['filter_search']) {
 						'SELECT e.eventid,e.value'.
 						' FROM events e'.
 						' WHERE e.objectid='.$triggerId.
-							' AND e.clock>'.$filterTimeFrom.
+							' AND e.clock<'.$filterTimeFrom.
 							' AND e.object='.EVENT_OBJECT_TRIGGER.
 							' AND source='.EVENT_SOURCE_TRIGGERS.
 						' ORDER BY e.clock DESC',
