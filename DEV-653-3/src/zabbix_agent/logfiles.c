@@ -2044,6 +2044,8 @@ out:
  *     lastlogsize     - [IN/OUT] offset from the beginning of the file       *
  *     mtime           - [IN/OUT] file modification time for reporting to     *
  *                       server                                               *
+ *     lastlogsize_sent - [OUT] lastlogsize value that was last sent          *
+ *     mtime_sent      - [OUT] mtime value that was last sent                 *
  *     skip_old_data   - [IN/OUT] start from the beginning of the file or     *
  *                       jump to the end                                      *
  *     big_rec         - [IN/OUT] state variable to remember whether a long   *
@@ -2068,6 +2070,7 @@ out:
  *     port            - [IN] port to send data to                            *
  *     hostname        - [IN] hostname the data comes from                    *
  *     key             - [IN] item key the data belongs to                    *
+ *     seek_offset     - [IN] position to seek in file                        *
  *                                                                            *
  * Return value: returns SUCCEED on successful reading,                       *
  *               FAIL on other cases                                          *
@@ -2082,60 +2085,21 @@ static int	process_log(unsigned char flags, const char *filename, zbx_uint64_t *
 		zbx_uint64_t *lastlogsize_sent, int *mtime_sent, unsigned char *skip_old_data, int *big_rec,
 		int *incomplete, char **err_msg, const char *encoding, zbx_vector_ptr_t *regexps, const char *pattern,
 		const char *output_template, int *p_count, int *s_count, zbx_process_value_func_t process_value,
-		const char *server, unsigned short port, const char *hostname, const char *key)
+		const char *server, unsigned short port, const char *hostname, const char *key,
+		zbx_uint64_t seek_offset)
 {
 	const char	*__function_name = "process_log";
-
 	int		f, ret = FAIL;
-	zbx_stat_t	buf;
-	zbx_uint64_t	l_size;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
 			__function_name, filename, *lastlogsize, NULL != mtime ? *mtime : 0);
 
-	if (0 != zbx_stat(filename, &buf))
-	{
-		*err_msg = zbx_dsprintf(*err_msg, "Cannot obtain information for file \"%s\": %s", filename,
-				zbx_strerror(errno));
+	if (-1 == (f = open_file_helper(filename, err_msg)))
 		goto out;
-	}
 
-	if (NULL != mtime)
-		*mtime = (int)buf.st_mtime;
-
-	if ((zbx_uint64_t)buf.st_size == *lastlogsize)
+	if ((zbx_offset_t)-1 != zbx_lseek(f, seek_offset, SEEK_SET))
 	{
-		/* The file size has not changed, no new lines. Here we do not deal with a case of changing */
-		/* a logfile's content while keeping the same length. */
-
-		if (1 == *skip_old_data)
-			*skip_old_data = 0;
-
-		ret = SUCCEED;
-		goto out;
-	}
-
-	if (-1 == (f = zbx_open(filename, O_RDONLY)))
-	{
-		*err_msg = zbx_dsprintf(*err_msg, "Cannot open file \"%s\": %s", filename, zbx_strerror(errno));
-		goto out;
-	}
-
-	l_size = *lastlogsize;
-
-	if (1 == *skip_old_data)
-	{
-		l_size = (zbx_uint64_t)buf.st_size;
-		zabbix_log(LOG_LEVEL_DEBUG, "skipping old data in filename:'%s' to lastlogsize:" ZBX_FS_UI64,
-				filename, l_size);
-	}
-
-	if ((zbx_uint64_t)buf.st_size < l_size)	/* handle file truncation */
-		l_size = 0;
-
-	if ((zbx_offset_t)-1 != zbx_lseek(f, l_size, SEEK_SET))
-	{
-		*lastlogsize = l_size;
+		*lastlogsize = seek_offset;
 		*skip_old_data = 0;
 
 		ret = zbx_read2(f, flags, lastlogsize, mtime, big_rec, incomplete, err_msg, encoding, regexps, pattern,
@@ -2145,17 +2109,18 @@ static int	process_log(unsigned char flags, const char *filename, zbx_uint64_t *
 	else
 	{
 		*err_msg = zbx_dsprintf(*err_msg, "Cannot set position to " ZBX_FS_UI64 " in file \"%s\": %s",
-				l_size, filename, zbx_strerror(errno));
+				seek_offset, filename, zbx_strerror(errno));
 	}
 
-	if (0 != close(f))
-	{
-		*err_msg = zbx_dsprintf(*err_msg, "Cannot close file \"%s\": %s", filename, zbx_strerror(errno));
+	if (SUCCEED != close_file_helper(f, filename, err_msg))
 		ret = FAIL;
-	}
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d ret:%s",
-			__function_name, filename, *lastlogsize, NULL != mtime ? *mtime : 0, zbx_result_string(ret));
+	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "End of %s() filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d ret:%s",
+				__function_name, filename, *lastlogsize, NULL != mtime ? *mtime : 0,
+				zbx_result_string(ret));
+	}
 
 	return ret;
 }
@@ -2613,9 +2578,8 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		unsigned short port, const char *hostname, const char *key, int rotation_type)
 {
 	const char		*__function_name = "process_logrt";
-	int			i, j, start_idx, ret = FAIL, logfiles_num = 0, logfiles_alloc = 0, seq = 1,
-				max_old_seq = 0, old_last, from_first_file = 1, res;
-	char			*old2new = NULL;
+	int			i, start_idx, ret = FAIL, logfiles_num = 0, logfiles_alloc = 0, seq = 1,
+				from_first_file = 1, res;
 	struct st_logfile	*logfiles = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flags:0x%02x filename:'%s' lastlogsize:" ZBX_FS_UI64 " mtime:%d",
@@ -2658,79 +2622,16 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	else
 		start_idx = 0;
 
-	if (0 < *logfiles_num_old && 0 < logfiles_num)
+	if (0 < *logfiles_num_old && 0 < logfiles_num && SUCCEED != update_new_list_from_old(rotation_type,
+			*logfiles_old, *logfiles_num_old, logfiles, logfiles_num, *use_ino, &seq, &start_idx,
+			lastlogsize, err_msg))
 	{
-		/* set up a mapping array from old files to new files */
-		old2new = zbx_malloc(old2new, (size_t)logfiles_num * (size_t)(*logfiles_num_old) * sizeof(char));
-
-		if (SUCCEED != setup_old2new_and_copy_of(rotation_type, old2new, *logfiles_old, *logfiles_num_old,
-				logfiles, logfiles_num, *use_ino, err_msg))
-		{
-			destroy_logfile_list(&logfiles, &logfiles_alloc, &logfiles_num);
-			zbx_free(old2new);
-			goto out;
-		}
-
-		if (1 < *logfiles_num_old || 1 < logfiles_num)
-			resolve_old2new(old2new, *logfiles_num_old, logfiles_num);
-
-		/* Transfer data about fully and partially processed files from the old file list to the new list. */
-		for (i = 0; i < *logfiles_num_old; i++)
-		{
-			if (0 < (*logfiles_old)[i].processed_size && 0 == (*logfiles_old)[i].incomplete &&
-					-1 != (j = find_old2new(old2new, logfiles_num, i)))
-			{
-				if ((*logfiles_old)[i].size == (*logfiles_old)[i].processed_size
-						&& (*logfiles_old)[i].size == logfiles[j].size)
-				{
-					/* the file was fully processed during the previous check and must be ignored */
-					/* during this check */
-					logfiles[j].processed_size = logfiles[j].size;
-					logfiles[j].seq = seq++;
-				}
-				else
-				{
-					/* the file was not fully processed during the previous check or has grown */
-					logfiles[j].processed_size = (*logfiles_old)[i].processed_size;
-				}
-			}
-			else if (1 == (*logfiles_old)[i].incomplete &&
-					-1 != (j = find_old2new(old2new, logfiles_num, i)))
-			{
-				if ((*logfiles_old)[i].size < logfiles[j].size)
-				{
-					/* The file was not fully processed because of incomplete last record */
-					/* but it has grown. Try to process it further. */
-					logfiles[j].incomplete = 0;
-				}
-				else
-					logfiles[j].incomplete = 1;
-
-				logfiles[j].processed_size = (*logfiles_old)[i].processed_size;
-			}
-
-			/* find the last file processed (fully or partially) in the previous check */
-			if (max_old_seq < (*logfiles_old)[i].seq)
-			{
-				max_old_seq = (*logfiles_old)[i].seq;
-				old_last = i;
-			}
-		}
-
-		/* find the first file to continue from in the new file list */
-		if (0 < max_old_seq && -1 == (start_idx = find_old2new(old2new, logfiles_num, old_last)))
-		{
-			/* Cannot find the successor of the last processed file from the previous check. */
-			/* 'lastlogsize' does not apply in this case. */
-			*lastlogsize = 0;
-			start_idx = 0;
-		}
+		destroy_logfile_list(&logfiles, &logfiles_alloc, &logfiles_num);
+		goto out;
 	}
 
 	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
 		ensure_order_if_mtimes_equal(*logfiles_old, logfiles, logfiles_num, *use_ino, &start_idx);
-
-	zbx_free(old2new);
 
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 	{
@@ -2758,37 +2659,72 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		zbx_free(*logfiles_old);
 	}
 
-	/* enter the loop with index of the first file to be processed, later continue the loop from the start */
-	i = start_idx;
-
 	/* from now assume success - it could be that there is nothing to do */
 	ret = SUCCEED;
 
-	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
-	{
-		int	k;
-
-		for (k = 0; k < logfiles_num - 1; k++)
-			handle_multiple_copies(logfiles, logfiles_num, k);
-	}
+	/* enter the loop with index of the first file to be processed, later continue the loop from the start */
+	i = start_idx;
 
 	while (i < logfiles_num)
 	{
 		if (0 == logfiles[i].incomplete && (logfiles[i].size != logfiles[i].processed_size ||
 				0 == logfiles[i].seq))
 		{
+			zbx_uint64_t	seek_offset;
+			int		process_this_file = 1;
+
+			if (NULL != mtime)			/* for logrt[] items */
+				*mtime = logfiles[i].mtime;
+
 			if (start_idx != i)
 				*lastlogsize = logfiles[i].processed_size;
 
-			ret = process_log(flags, logfiles[i].filename, lastlogsize,
-					(0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) ? mtime : NULL), lastlogsize_sent,
-					(0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) ? mtime_sent : NULL), skip_old_data,
-					big_rec, &logfiles[i].incomplete, err_msg, encoding, regexps, pattern,
-					output_template, p_count, s_count, process_value, server, port, hostname, key);
+			if (0 == *skip_old_data)
+			{
+				seek_offset = *lastlogsize;
+			}
+			else
+			{
+				seek_offset = logfiles[i].size;
 
-			/* process_log() advances 'lastlogsize' only on success therefore */
-			/* we do not check for errors here */
-			logfiles[i].processed_size = *lastlogsize;
+				zabbix_log(LOG_LEVEL_DEBUG, "skipping old data in filename:'%s' to seek_offset:"
+						ZBX_FS_UI64, logfiles[i].filename, seek_offset);
+			}
+
+			if (ZBX_LOG_ROTATION_LOGCPT == rotation_type)
+			{
+				zbx_uint64_t	max_processed;
+
+				if (seek_offset < (max_processed = max_processed_size_in_copies(logfiles, logfiles_num,
+						i)))
+				{
+					logfiles[i].processed_size = MIN(logfiles[i].size, max_processed);
+
+					if (logfiles[i].size == logfiles[i].processed_size)
+						process_this_file = 0;
+
+					*lastlogsize = max_processed;
+				}
+			}
+
+			if (0 != process_this_file)
+			{
+				ret = process_log(flags, logfiles[i].filename, lastlogsize,
+						(0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) ? mtime : NULL),
+						lastlogsize_sent,
+						(0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) ? mtime_sent : NULL),
+						skip_old_data, big_rec, &logfiles[i].incomplete, err_msg, encoding,
+						regexps, pattern, output_template, p_count, s_count, process_value,
+						server, port, hostname, key, seek_offset);
+
+				/* process_log() advances 'lastlogsize' only on success therefore */
+				/* we do not check for errors here */
+				logfiles[i].processed_size = *lastlogsize;
+
+				/* log file could grow during processing, update size in our list */
+				if (*lastlogsize > logfiles[i].size)
+					logfiles[i].size = *lastlogsize;
+			}
 
 			/* Mark file as processed (at least partially). In case if process_log() failed we will stop */
 			/* the current checking. In the next check the file will be marked in the list of old files */
@@ -2796,7 +2732,12 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 			logfiles[i].seq = seq++;
 
 			if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
-				handle_multiple_copies(logfiles, logfiles_num, i);
+			{
+				int	k;
+
+				for (k = 0; k < logfiles_num - 1; k++)
+					handle_multiple_copies(logfiles, logfiles_num, k);
+			}
 
 			if (SUCCEED != ret)
 				break;
@@ -2821,7 +2762,19 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 		i++;
 	}
 
-	/* remember the current logfile list */
+	if (ZBX_LOG_ROTATION_LOGCPT == rotation_type && 1 < logfiles_num)
+	{
+		/* If logrt[] or logrt.count[] item is checked often but rotation by copying is slow it could happen */
+		/* that the original file is completely processed but the copy with a newer timestamp is still in */
+		/* progress. The original file goes out of the list of files and the copy is analyzed as new file, */
+		/* so the matching lines are reported twice. To prevent this we manipulate our stored 'mtime' */
+		/* and 'lastlogsize' to keep information about copies in the list as long as necessary to prevent */
+		/* reporting twice. */
+
+		delay_update_if_copies(logfiles, logfiles_num, mtime, lastlogsize);
+	}
+
+	/* store the new log file list for using in the next check */
 	*logfiles_num_old = logfiles_num;
 
 	if (0 < logfiles_num)
