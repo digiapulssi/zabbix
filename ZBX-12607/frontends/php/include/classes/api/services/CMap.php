@@ -32,26 +32,38 @@ class CMap extends CMapElement {
 	 * Get map data.
 	 *
 	 * @param array  $options
-	 * @param array  $options['userids']					User IDs
-	 * @param array  $options['groupids']					HostGroup IDs
-	 * @param array  $options['hostids']					Host IDs
-	 * @param bool   $options['monitored_hosts']			only monitored Hosts
-	 * @param bool   $options['templated_hosts']			include templates in result
-	 * @param bool   $options['with_items']					only with items
-	 * @param bool   $options['with_monitored_items']		only with monitored items
-	 * @param bool   $options['with_triggers'] only with	triggers
-	 * @param bool   $options['with_monitored_triggers']	only with monitored triggers
-	 * @param bool   $options['with_httptests'] only with	http tests
-	 * @param bool   $options['with_monitored_httptests']	only with monitored http tests
-	 * @param bool   $options['with_graphs']				only with graphs
-	 * @param bool   $options['editable']					only with read-write permission. Ignored for SuperAdmins
-	 * @param int    $options['count']						count Hosts, returned column name is rowscount
-	 * @param string $options['pattern']					search hosts by pattern in host names
-	 * @param int    $options['limit']						limit selection
+	 * @param array  $options['sysmapids']					Map IDs.
+	 * @param bool	 $options['output']						List of map parameters to return.
+	 * @param array  $options['selectSelements']			List of map element properties to return.
+	 * @param array  $options['selectShapes']				List of map shape properties to return.
+	 * @param array  $options['selectLines']				List of map line properties to return.
+	 * @param array  $options['selectLinks']				List of map link properties to return.
+	 * @param array  $options['selectIconMap']				List of map icon map properties to return.
+	 * @param array  $options['selectUrls']					List of map URL properties to return.
+	 * @param array  $options['selectUsers']				List of users that the map is shared with.
+	 * @param array  $options['selectUserGroups']			List of user groups that the map is shared with.
+	 * @param bool	 $options['countOutput']				Return the count of records, instead of actual results.
+	 * @param array  $options['userids']					Map owner user IDs.
+	 * @param bool   $options['editable']					Return with read-write permission only. Ignored for
+	 *														SuperAdmins.
+	 * @param bool	 $options['nopermissions']				Return requested maps even if user has no permissions to
+	 *														them.
+	 * @param array  $options['filter']						List of field and exactly matched value pairs by which maps
+	 *														need to be filtered.
+	 * @param array  $options['search']						List of field-value pairs by which maps need to be searched.
+	 * @param array  $options['expandUrls']					Adds global map URLs to the corresponding map elements and
+	 *														expands macros in all map element URLs.
+	 * @param bool	 $options['searchByAny']
+	 * @param bool	 $options['startSearch']
+	 * @param bool	 $options['excludeSearch']
+	 * @param bool	 $options['searchWildcardsEnabled']
+	 * @param array  $options['preservekeys']				Use IDs as keys in the resulting array.
+	 * @param int    $options['limit']						Limit selection.
 	 * @param string $options['sortorder']
 	 * @param string $options['sortfield']
 	 *
-	 * @return array|boolean Host data as array or false if error
+	 * @return array|integer Requested map data as array or the count of retrieved objects, if the countOutput
+	 *						 parameter has been used.
 	 */
 	public function get(array $options = []) {
 		$result = [];
