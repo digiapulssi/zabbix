@@ -837,7 +837,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 					$subSysmaps = API::Map()->get([
 						'sysmapids' => $sysmapIds,
 						'output' => ['sysmapid'],
-						'selectSelements' => ['elementtype', 'elements', 'application'],
+						'selectSelements' => ['elementtype', 'elements', 'application', 'permission'],
 						'nopermissions' => true,
 						'preservekeys' => true
 					]);
@@ -852,7 +852,9 @@ function getSelementsInfo($sysmap, array $options = []) {
 						foreach ($subSysmap['selements'] as $subSysmapSelement) {
 							switch ($subSysmapSelement['elementtype']) {
 								case SYSMAP_ELEMENT_TYPE_MAP:
-									$sysmapIds[] = $subSysmapSelement['elements'][0]['sysmapid'];
+									if (PERM_READ > $subSysmapSelement['permission']) {
+										$sysmapIds[] = $subSysmapSelement['elements'][0]['sysmapid'];
+									}
 									break;
 								case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
 									$hostGroupIdToSelementIds[$subSysmapSelement['elements'][0]['groupid']][$selementId]
