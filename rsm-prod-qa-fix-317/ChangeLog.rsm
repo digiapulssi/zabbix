@@ -2,6 +2,8 @@
 Changes for rsm1.0.3rc1
 
 Bug fixes:
+..F....... [317] fixed records filtering in rolling week status page; improved coding style (miks, Oleg)
+..F....... [316] fixed incorrect time interval selection in incidents screen (miks, Oleg)
 ....I..... [315] fixed database connection error when running update-api-data.pl (gleb)
 
 --------------------------------------------------------------------------------
