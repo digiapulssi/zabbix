@@ -837,7 +837,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 					$subSysmaps = API::Map()->get([
 						'sysmapids' => $sysmapIds,
 						'output' => ['sysmapid'],
-						'selectSelements' => API_OUTPUT_EXTEND,
+						'selectSelements' => ['elementtype', 'elements', 'application'],
 						'nopermissions' => true,
 						'preservekeys' => true
 					]);
