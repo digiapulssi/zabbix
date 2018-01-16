@@ -323,7 +323,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 		$tldGroups = API::HostGroup()->get(array(
 			'output' => array('groupid', 'name'),
 			'filter' => array(
-				'name' => array(RSM_TLDS_GROUP, RSM_CC_TLD_GROUP, RSM_G_TLD_GROUP, RSM_OTHER_TLD_GROUP, RSM_TEST_GROUP)
+				'name' => array(RSM_CC_TLD_GROUP, RSM_G_TLD_GROUP, RSM_OTHER_TLD_GROUP, RSM_TEST_GROUP)
 			)
 		));
 
@@ -385,7 +385,6 @@ foreach ($tlds_by_server as $key => $hosts) {
 				' AND '.dbConditionInt('i.hostid', array_keys($hosts))
 		);
 
-		$i = 0;
 		$rsm_itemids = [];
 		while ($item = DBfetch($db_items)) {
 			$items[$item['itemid']] = [
@@ -424,12 +423,14 @@ foreach ($tlds_by_server as $key => $hosts) {
 		if ($items) {
 			foreach ($items as $item) {
 				// service type filter
-				if ($data['filter_slv'] !== '' && (($data['filter_dns'] && $item['key_'] == RSM_SLV_DNS_ROLLWEEK)
-						|| ($data['filter_dnssec'] && $item['key_'] == RSM_SLV_DNSSEC_ROLLWEEK)
-						|| ($data['filter_rdds'] && $item['key_'] == RSM_SLV_RDDS_ROLLWEEK)
-						|| ($data['filter_epp'] && $item['key_'] == RSM_SLV_EPP_ROLLWEEK))) {
-					if (($data['filter_slv'] != SLA_MONITORING_SLV_FILTER_NON_ZERO
-							&& $data['filter_slv'] > $item['lastvalue'])) {
+				if ($data['filter_slv'] !== ''
+						&& (!array_key_exists($item['hostid'], $filter_slv) || $filter_slv[$item['hostid']] == false)
+						&& (($data['filter_dns'] && $item['key_'] == RSM_SLV_DNS_ROLLWEEK)
+							|| ($data['filter_dnssec'] && $item['key_'] == RSM_SLV_DNSSEC_ROLLWEEK)
+							|| ($data['filter_rdds'] && $item['key_'] == RSM_SLV_RDDS_ROLLWEEK)
+							|| ($data['filter_epp'] && $item['key_'] == RSM_SLV_EPP_ROLLWEEK))) {
+					if ($data['filter_slv'] != SLA_MONITORING_SLV_FILTER_NON_ZERO
+							&& $data['filter_slv'] > $item['lastvalue']) {
 						$filter_slv[$item['hostid']] = false;
 					}
 					elseif ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO && $item['lastvalue'] == 0) {
@@ -472,27 +473,27 @@ foreach ($tlds_by_server as $key => $hosts) {
 			}
 
 			foreach ($avail_items as $item) {
-					if ($item['key_'] == RSM_SLV_DNS_AVAIL) {
-						$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['availItemId'] = $item['itemid'];
-						$itemIds[$item['itemid']] = true;
-					}
-					elseif ($item['key_'] == RSM_SLV_DNSSEC_AVAIL) {
-						$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNSSEC]['availItemId'] = $item['itemid'];
-						$itemIds[$item['itemid']] = true;
-					}
-					elseif ($item['key_'] == RSM_SLV_RDDS_AVAIL) {
-						$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_RDDS]['availItemId'] = $item['itemid'];
-						$itemIds[$item['itemid']] = true;
-					}
-					elseif ($item['key_'] == RSM_SLV_EPP_AVAIL) {
-						$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['availItemId'] = $item['itemid'];
-						$itemIds[$item['itemid']] = true;
-					}
+				if ($item['key_'] == RSM_SLV_DNS_AVAIL) {
+					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNS]['availItemId'] = $item['itemid'];
+					$itemIds[$item['itemid']] = true;
 				}
+				elseif ($item['key_'] == RSM_SLV_DNSSEC_AVAIL) {
+					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_DNSSEC]['availItemId'] = $item['itemid'];
+					$itemIds[$item['itemid']] = true;
+				}
+				elseif ($item['key_'] == RSM_SLV_RDDS_AVAIL) {
+					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_RDDS]['availItemId'] = $item['itemid'];
+					$itemIds[$item['itemid']] = true;
+				}
+				elseif ($item['key_'] == RSM_SLV_EPP_AVAIL) {
+					$data['tld'][$DB['SERVERS'][$key]['NR'].$item['hostid']][RSM_EPP]['availItemId'] = $item['itemid'];
+					$itemIds[$item['itemid']] = true;
+				}
+			}
 
 			$items += $avail_items;
 
-			if ($data['filter_slv']) {
+			if ($data['filter_slv'] !== '') {
 				foreach ($filter_slv as $filtred_hostid => $value) {
 					if ($value === false) {
 						unset($data['tld'][$DB['SERVERS'][$key]['NR'].$filtred_hostid], $hosts[$filtred_hostid]);
