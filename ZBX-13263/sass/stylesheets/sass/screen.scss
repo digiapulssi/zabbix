@@ -1815,7 +1815,6 @@ select {
 
 	height: 24px;
 	padding: 3px 3px 3px 0;
-	background-color: $form-bg-color;
 	@extend %form-input-style;
 	@extend %webkit-scrollbar;
 
