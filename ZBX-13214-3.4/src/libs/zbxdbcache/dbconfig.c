@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -4505,6 +4505,7 @@ void	DCsync_configuration(unsigned char mode)
 	/* relies on items, must be after DCsync_items() */
 	DCsync_item_preproc(&itempp_sync);
 	itempp_sec2 = zbx_time() - sec;
+	config->item_sync_ts = time(NULL);
 	FINISH_SYNC;
 
 	/* sync function data to support function lookups when resolving macros during configuration sync */
@@ -5340,6 +5341,7 @@ int	init_configuration_cache(char **error)
 
 	config->availability_diff_ts = 0;
 	config->sync_ts = 0;
+	config->item_sync_ts = 0;
 	config->proxy_lastaccess_ts = time(NULL);
 
 #undef CREATE_HASHSET
@@ -6171,11 +6173,11 @@ void	DCconfig_get_preprocessable_items(zbx_hashset_t *items, int *timestamp)
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	/* no changes */
-	if (0 != *timestamp && *timestamp == config->sync_ts)
+	if (0 != *timestamp && *timestamp == config->item_sync_ts)
 		goto out;
 
 	zbx_hashset_clear(items);
-	*timestamp = config->sync_ts;
+	*timestamp = config->item_sync_ts;
 
 	LOCK_CACHE;
 

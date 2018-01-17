@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -770,6 +770,19 @@ class testFormWebStep extends CWebTest {
 		];
 	}
 
+	/*
+	 * Type text into input field and fire onchange event.
+	 */
+	protected function typeAndEscalateChangeEvent($id, $text) {
+		$this->zbxTestInputType($id, $text);
+
+		$this->webDriver->executeScript('var event = document.createEvent("HTMLEvents");'.
+				'event.initEvent("change", false, true);'.
+				'arguments[0].dispatchEvent(event);',
+				[$this->webDriver->findElement(WebDriverBy::id($id))]
+		);
+	}
+
 	/**
 	 * @dataProvider steps
 	 */
@@ -795,10 +808,10 @@ class testFormWebStep extends CWebTest {
 			$i = 1;
 			foreach($data['query'] as $item) {
 				if (array_key_exists('name', $item)) {
-					$this->zbxTestInputType('pairs_'.$i.'_name', $item['name']);
+					$this->typeAndEscalateChangeEvent('pairs_'.$i.'_name', $item['name']);
 				}
 				if (array_key_exists('value', $item)) {
-					$this->zbxTestInputType('pair_value_'.$i, $item['value']);
+					$this->typeAndEscalateChangeEvent('pair_value_'.$i, $item['value']);
 				}
 				$this->zbxTestClickXpath("//tr[@id='query_fields_footer']//button");
 				$i = 5;
@@ -813,10 +826,10 @@ class testFormWebStep extends CWebTest {
 			$i = 2;
 			foreach($data['post'] as $item) {
 				if (array_key_exists('name', $item)) {
-					$this->zbxTestInputType('pairs_'.$i.'_name', $item['name']);
+					$this->typeAndEscalateChangeEvent('pairs_'.$i.'_name', $item['name']);
 				}
 				if (array_key_exists('value', $item)) {
-					$this->zbxTestInputType('pair_value_'.$i, $item['value']);
+					$this->typeAndEscalateChangeEvent('pair_value_'.$i, $item['value']);
 				}
 				$this->zbxTestClickXpath("//tr[@id='post_fields_footer']//button");
 				$i = 5;
@@ -827,10 +840,10 @@ class testFormWebStep extends CWebTest {
 			$i = 3;
 			foreach($data['variables'] as $item) {
 				if (array_key_exists('name', $item)) {
-					$this->zbxTestInputType('pairs_'.$i.'_name', $item['name']);
+					$this->typeAndEscalateChangeEvent('pairs_'.$i.'_name', $item['name']);
 				}
 				if (array_key_exists('value', $item)) {
-					$this->zbxTestInputType('pair_value_'.$i, $item['value']);
+					$this->typeAndEscalateChangeEvent('pair_value_'.$i, $item['value']);
 				}
 				$this->zbxTestClickXpath("//tr[@id='variables_footer']//button");
 				$i = 5;
@@ -841,10 +854,10 @@ class testFormWebStep extends CWebTest {
 			$i = 4;
 			foreach($data['headers'] as $item) {
 				if (array_key_exists('name', $item)) {
-					$this->zbxTestInputType('pairs_'.$i.'_name', $item['name']);
+					$this->typeAndEscalateChangeEvent('pairs_'.$i.'_name', $item['name']);
 				}
 				if (array_key_exists('value', $item)) {
-					$this->zbxTestInputType('pair_value_'.$i, $item['value']);
+					$this->typeAndEscalateChangeEvent('pair_value_'.$i, $item['value']);
 				}
 				$this->zbxTestClickXpath("//tr[@id='headers_footer']//button");
 				$i = 5;
