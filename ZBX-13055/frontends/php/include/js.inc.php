@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -256,7 +256,7 @@ function insert_js_function($fnct_name) {
 					});
 
 				function addSelectedFormValuesHandler(formid) {
-					var checked = jQuery("#"+formid).find("input[type=checkbox]:checked").not("[name*=all_]"),
+					var checked = jQuery("#"+formid).find("input[type=checkbox]:checked").not("[name*=all_],:disabled"),
 						reference = jQuery("[name=reference]").val(),
 						values = [],
 						parentid = null;

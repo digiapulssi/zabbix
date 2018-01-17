@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -326,8 +326,10 @@ elseif (hasRequest('action') && getRequest('action') == 'triggerprototype.massde
 /*
  * Display
  */
-if ((getRequest('action') === 'triggerprototype.massupdateform' || hasRequest('massupdate'))
-		&& hasRequest('g_triggerid')) {
+$action = getRequest('action');
+
+if (($action === 'triggerprototype.massupdateform' || $action === 'triggerprototype.massupdate'
+		|| hasRequest('massupdate')) && hasRequest('g_triggerid')) {
 	$data = getTriggerMassupdateFormData();
 	$data['action'] = 'triggerprototype.massupdate';
 	$data['hostid'] = $discoveryRule['hostid'];

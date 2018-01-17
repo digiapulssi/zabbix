@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1404,7 +1404,7 @@ else {
 
 	foreach ($data['items'] as $item) {
 		if (array_key_exists('template_host', $item)) {
-			$hostids = array_merge($hostids, zbx_objectValues($item['template_host'], 'itemid'));
+			$hostids = array_merge($hostids, zbx_objectValues($item['template_host'], 'hostid'));
 		}
 	}
 

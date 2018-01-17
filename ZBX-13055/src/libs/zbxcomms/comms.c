@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1963,22 +1963,14 @@ void	zbx_update_resolver_conf(void)
 {
 #define ZBX_RESOLV_CONF_FILE	"/etc/resolv.conf"
 
-	static time_t		mtime = 0;
-	zbx_stat_t		buf;
-#if __RES>=19991006
-	struct __res_state	res_state;
-#endif
+	static time_t	mtime = 0;
+	zbx_stat_t	buf;
 
 	if (0 == zbx_stat(ZBX_RESOLV_CONF_FILE, &buf) && mtime != buf.st_mtime)
 	{
 		mtime = buf.st_mtime;
 
-#if __RES>=19991006
-		memset(&res_state, 0, sizeof(res_state));
-		if (0 != res_ninit(&res_state))
-#else
 		if (0 != res_init())
-#endif
 			zabbix_log(LOG_LEVEL_WARNING, "zbx_update_resolver_conf(): res_init() failed");
 	}
 

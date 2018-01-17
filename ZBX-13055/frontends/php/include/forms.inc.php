@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,10 +165,12 @@ function getUserFormData($userId, array $config, $isProfile = false) {
 		// deny beat all, read-write beat read
 		$tmp_permissions = [];
 		while ($db_right = DBfetch($db_rights)) {
-			if (isset($tmp_permissions[$db_right['id']]) && $tmp_permissions[$db_right['id']] != PERM_DENY) {
-				$tmp_permissions[$db_right['id']] = ($db_right['permission'] == PERM_DENY)
-					? PERM_DENY
-					: max($tmp_permissions[$db_right['id']], $db_right['permission']);
+			if (array_key_exists($db_right['id'], $tmp_permissions)) {
+				if ($tmp_permissions[$db_right['id']] != PERM_DENY) {
+					$tmp_permissions[$db_right['id']] = ($db_right['permission'] == PERM_DENY)
+						? PERM_DENY
+						: max($tmp_permissions[$db_right['id']], $db_right['permission']);
+				}
 			}
 			else {
 				$tmp_permissions[$db_right['id']] = $db_right['permission'];
@@ -1441,19 +1443,6 @@ function getTriggerFormData($exprAction) {
 		'groupid' => getRequest('groupid', 0)
 	];
 
-	// Read groupid for selected host or template if groupid filter is set to 'All' (is equal 0).
-	if ($data['hostid'] && !$data['groupid']) {
-		$db_hostgroup = API::HostGroup()->get([
-			'output' => ['groupid'],
-			'hostids' => $data['hostid'],
-			'templateids' => $data['hostid']
-		]);
-
-		if ($db_hostgroup) {
-			$data['groupid'] = $db_hostgroup[0]['groupid'];
-		}
-	}
-
 	if (!empty($data['triggerid'])) {
 		// get trigger
 		$options = [
@@ -1518,6 +1507,18 @@ function getTriggerFormData($exprAction) {
 		if (count($hosts) > 0 && !in_array(['hostid' => $data['hostid']], $hosts)) {
 			$host = reset($hosts);
 			$data['hostid'] = $host['hostid'];
+		}
+	}
+
+	if ($data['hostid'] && !$data['groupid']) {
+		$db_hostgroups = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'hostids' => $data['hostid'],
+			'templateids' => $data['hostid']
+		]);
+
+		if ($db_hostgroups) {
+			$data['groupid'] = $db_hostgroups[0]['groupid'];
 		}
 	}
 

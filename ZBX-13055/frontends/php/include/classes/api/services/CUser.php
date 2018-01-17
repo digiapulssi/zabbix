@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -266,7 +266,7 @@ class CUser extends CApiService {
 				$dbUser = $dbUsers[$user['userid']];
 			}
 
-			if (array_key_exists('url', $user) && $user['url'] && !CHtmlUrlValidator::validate($user['url'])) {
+			if (array_key_exists('url', $user) && $user['url'] && !CHtmlUrlValidator::validate($user['url'], false)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
