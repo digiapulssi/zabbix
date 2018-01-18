@@ -39,11 +39,71 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 	}
 
 	protected function getNumberOfProblemsBySysmap(array $navtree_items = []) {
+		/**
+		 * In this function two types of submaps are possible:
+		 *  - First, each navigation tree item could have sub-items with it's own maps linked to it. This type of
+		 *	  submaps are stored as an array in $navtree_items[][children_mapids];
+		 *  - Each map that is linked to navigation tree item could have its own sub-maps (like for any map in Zabbix).
+		 *	  This type of submaps are stored in $map_submaps.
+		 */
 		$response = [];
-		$sysmapids = array_keys(array_flip(zbx_objectValues($navtree_items, 'mapid')));
+		$map_submaps = [];
+		$sysmapids = [];
 
+		// Collect all sysmap IDs that are added as map navigation tree child items in any depth.
+		foreach ($navtree_items as $navtree_item) {
+			$sysmapids[$navtree_item['mapid']] = true;
+			foreach ($navtree_item['children_mapids'] as $submapid) {
+				$sysmapids[$submapid] = true;
+			}
+		}
+
+		// Collect all sysmap IDs that are added as submaps to $navtree_items maps in any depth.
+		$navtree_item_sysmaps = API::Map()->get([
+			'output' => [],
+			'sysmapids' => array_keys($sysmapids),
+			'selectSelements' => ['elements', 'elementtype', 'permission'],
+			'preservekeys' => true,
+		]);
+
+		$submaps_found = [];
+		foreach ($navtree_item_sysmaps as $map) {
+			foreach ($map['selements'] as $selement) {
+				if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP && $selement['permission'] >= PERM_READ) {
+					$map_submaps[$map['sysmapid']][] = $selement['elements'][0]['sysmapid'];
+					$sysmapids[$selement['elements'][0]['sysmapid']] = true;
+					$submaps_found[] = $selement['elements'][0]['sysmapid'];
+				}
+			}
+		}
+
+		$sysmaps_resolved = array_keys($navtree_item_sysmaps);
+		while ($diff = array_diff($submaps_found, $sysmaps_resolved)) {
+			$diff_submaps = API::Map()->get([
+				'output' => [],
+				'sysmapids' => $diff,
+				'selectSelements' => ['elements', 'elementtype', 'permission'],
+				'preservekeys' => true
+			]);
+
+			$sysmaps_resolved = array_merge($sysmaps_resolved, $diff);
+
+			foreach ($diff_submaps as $submap) {
+				$sysmaps[$submap['sysmapid']] = $submap;
+
+				foreach ($submap['selements'] as $selement) {
+					if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP && $selement['permission'] >= PERM_READ) {
+						$map_submaps[$map['sysmapid']][] = $selement['elements'][0]['sysmapid'];
+						$sysmapids[$selement['elements'][0]['sysmapid']] = true;
+						$submaps_found[] = $selement['elements'][0]['sysmapid'];
+					}
+				}
+			}
+		}
+
+		// Select all sysmaps that are linked to any navigation tree item in any depth.
 		$sysmaps = API::Map()->get([
-			'sysmapids' => $sysmapids,
+			'sysmapids' => array_keys($sysmapids),
 			'preservekeys' => true,
 			'output' => ['sysmapid', 'severity_min'],
 			'selectLinks' => ['linktriggers', 'permission'],
@@ -53,89 +113,28 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 		if ($sysmaps) {
 			$triggers_per_hosts = [];
 			$triggers_per_host_groups = [];
+
+			/**
+			 * $problems_per_trigger holds a list of triggers and severity of which problem caused by particular trigger
+			 * is detected. If problem is not detected, triggerid is still appended to array, but -1 is used for
+			 * severity.
+			 */
 			$problems_per_trigger = [];
-			$submaps_relations = [];
-			$submaps_found = [];
 			$host_groups = [];
 			$hosts = [];
-			$all_triggers = [];
-
-			// Gather submaps from all selected maps.
-			foreach ($sysmaps as $map) {
-				foreach ($map['selements'] as $selement) {
-					if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP) {
-						if (($element = reset($selement['elements'])) !== false) {
-							$submaps_relations[$map['sysmapid']][] = $element['sysmapid'];
-							$submaps_found[] = $element['sysmapid'];
-						}
-					}
-				}
-			}
-
-			// Gather maps added as submaps for each of map in any depth.
-			$sysmaps_resolved = array_keys($sysmaps);
-			while ($diff = array_diff($submaps_found, $sysmaps_resolved)) {
-				$submaps = API::Map()->get([
-					'sysmapids' => $diff,
-					'preservekeys' => true,
-					'output' => ['sysmapid', 'severity_min'],
-					'selectLinks' => ['linktriggers', 'permission'],
-					'selectSelements' => ['elements', 'elementtype', 'permission']
-				]);
-
-				$sysmaps_resolved = array_merge($sysmaps_resolved, $diff);
-
-				foreach ($submaps as $submap) {
-					$sysmaps[$submap['sysmapid']] = $submap;
-
-					foreach ($submap['selements'] as $selement) {
-						if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_MAP) {
-							$element = reset($selement['elements']);
-							if ($element) {
-								$submaps_relations[$submap['sysmapid']][] = $element['sysmapid'];
-								$submaps_found[] = $element['sysmapid'];
-							}
-						}
-					}
-				}
-			}
 
 			// Gather elements from all maps selected.
 			foreach ($sysmaps as &$sysmap) {
-				$sysmap['submaps'] = [];
-
 				// Collect triggers from map links.
 				foreach ($sysmap['links'] as $link) {
 					foreach ($link['linktriggers'] as $linktrigger) {
-						$problems_per_trigger[$linktrigger['triggerid']] = $this->problems_per_severity_tpl;
-						$all_triggers[$linktrigger['triggerid']] = false;
+						$problems_per_trigger[$linktrigger['triggerid']] = -1;
 					}
 				}
 
 				// Collect map elements.
 				foreach ($sysmap['selements'] as $selement) {
 					switch ($selement['elementtype']) {
-						case SYSMAP_ELEMENT_TYPE_MAP:
-							// Recursively find all submaps in any depth and put them into $sysmaps[][submaps] array.
-							$sysmap['submaps'][$selement['elements'][0]['sysmapid']] = false;
-
-							while (array_filter($sysmap['submaps'], function($item) {return !$item;})) {
-								foreach ($sysmap['submaps'] as $linked_map => $val) {
-									if (!$val) {
-										$sysmap['submaps'][$linked_map] = true;
-
-										if (array_key_exists($linked_map, $submaps_relations)) {
-											foreach ($submaps_relations[$linked_map] as $submap) {
-												if (!array_key_exists($submap, $sysmap['submaps'])) {
-													$sysmap['submaps'][$submap] = false;
-												}
-											}
-										}
-									}
-								}
-							}
-							break;
-
 						case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
 							if (($element = reset($selement['elements'])) !== false) {
 								$host_groups[$element['groupid']] = true;
@@ -144,8 +143,7 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 
 						case SYSMAP_ELEMENT_TYPE_TRIGGER:
 							foreach (zbx_objectValues($selement['elements'], 'triggerid') as $triggerid) {
-								$problems_per_trigger[$triggerid] = $this->problems_per_severity_tpl;
-								$all_triggers[$triggerid] = false;
+								$problems_per_trigger[$triggerid] = -1;
 							}
 							break;
 
@@ -177,8 +175,7 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 					foreach ($trigger['groups'] as $host_group) {
 						$triggers_per_host_groups[$host_group['groupid']][$trigger['triggerid']] = true;
 					}
-					$problems_per_trigger[$trigger['triggerid']] = $this->problems_per_severity_tpl;
-					$all_triggers[$trigger['triggerid']] = false;
+					$problems_per_trigger[$trigger['triggerid']] = -1;
 				}
 
 				unset($host_groups);
@@ -198,8 +195,7 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 				foreach ($triggers as $trigger) {
 					if (($host = reset($trigger['hosts'])) !== false) {
 						$triggers_per_hosts[$host['hostid']][$trigger['triggerid']] = true;
-						$problems_per_trigger[$trigger['triggerid']] = $this->problems_per_severity_tpl;
-						$all_triggers[$trigger['triggerid']] = false;
+						$problems_per_trigger[$trigger['triggerid']] = -1;
 					}
 				}
 
@@ -229,57 +225,121 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 				if ($problems) {
 					foreach ($problems as $problem) {
 						$trigger = $triggers[$problem['objectid']];
-						$problems_per_trigger[$problem['objectid']][$trigger['priority']]++;
-						$all_triggers[$problem['objectid']] = false;
+						$problems_per_trigger[$problem['objectid']] = $trigger['priority'];
 					}
 				}
 			}
 
-			// Count problems in each submap included in navigation tree:
+			// Count problems related to each item in navigation tree:
 			foreach ($navtree_items as $itemid => $item_details) {
-				$maps_need_to_count_in = $item_details['children_mapids'];
+				/**
+				 * Aggregated problem number should contain following problems:
+				 *  - map's own problems;
+				 *  - problems from map submaps in any depth;
+				 *  - problems from map that is linked to navigation tree item or their submaps in any depth.
+				 */
+				$maps_need_to_count_in = [];
+
+				// Add linked map and its submaps.
 				if ($item_details['mapid']) {
-					$maps_need_to_count_in[] = $item_details['mapid'];
+					if (array_key_exists($item_details['mapid'], $sysmaps)) {
+						// Use map's original min severity.
+						$maps_need_to_count_in[$item_details['mapid']]
+							= $sysmaps[$item_details['mapid']]['severity_min'];
+					}
+					$maps_to_resolve = [$item_details['mapid']];
+					$maps_resolved = [];
+
+					while ($diff = array_diff($maps_to_resolve, $maps_resolved)) {
+						foreach ($diff as $mapid) {
+							$maps_resolved[] = $mapid;
+
+							if (array_key_exists($mapid, $map_submaps)) {
+								foreach ($map_submaps[$mapid] as $submapid) {
+									if (array_key_exists($submapid, $sysmaps)) {
+										// Use highest severity.
+										$maps_need_to_count_in[$submapid] = max([
+											$sysmaps[$item_details['mapid']]['severity_min'],
+											$sysmaps[$submapid]['severity_min']
+										]);
+									}
+									$maps_to_resolve[] = $submapid;
+								}
+							}
+						}
+					}
 				}
 
-				$maps_need_to_count_in = array_keys(array_flip($maps_need_to_count_in));
+				// Add map that are linked to navtree child items. Submaps are expected to be already included.
+				foreach ($item_details['children_mapids'] as $mapid) {
+					if (array_key_exists($mapid, $sysmaps)) {
+						// Use each map's min severity.
+						$maps_need_to_count_in[$mapid] = $sysmaps[$mapid]['severity_min'];
+					}
+				}
 
 				$response[$itemid] = $this->problems_per_severity_tpl;
-				$problems_counted = $all_triggers;
 
-				foreach ($maps_need_to_count_in as $mapid) {
+				/**
+				 * $problems_per_trigger_clone is a clone of $problems_per_trigger which holds severity of detected
+				 * problems. Since each problem in each navtree item must be counted only once, number of problems in
+				 * $problems_per_trigger_clone are reset to -1 to control that same problem is not counted multiple
+				 * times just because same trigger is reused.
+				 */
+				$problems_per_trigger_clone = $problems_per_trigger;
+
+				foreach ($maps_need_to_count_in as $mapid => $severity_min) {
 					if (array_key_exists($mapid, $sysmaps)) {
-						$map = $sysmaps[$mapid];
-
 						// Count problems occurred in linked elements.
-						foreach ($map['selements'] as $selement) {
-							if ($selement['permission'] >= PERM_READ) {
-								$problems = $this->getElementProblems($selement, $problems_per_trigger, $sysmaps,
-									$problems_counted, $triggers_per_hosts, $triggers_per_host_groups
-								);
+						foreach ($sysmaps[$mapid]['selements'] as $sel) {
+							// If no permission to see element related info, jump to next element.
+							if ($sel['permission'] < PERM_READ) {
+								continue;
+							}
 
-								// Sum problems.
-								foreach ($problems as $sev => $probl) {
-									if ($probl != 0 && $sev >= $map['severity_min']) {
-										$response[$itemid][$sev] += $probl;
+							switch ($sel['elementtype']) {
+								case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
+									$groupid = $sel['elements'][0]['groupid'];
+									if (array_key_exists($groupid, $triggers_per_host_groups)) {
+										foreach ($triggers_per_host_groups[$groupid] as $triggerid => $val) {
+											if ($problems_per_trigger_clone[$triggerid] >= $severity_min) {
+												$response[$itemid][$problems_per_trigger_clone[$triggerid]]++;
+												$problems_per_trigger_clone[$triggerid] = -1;
+											}
+										}
 									}
-								}
+									break;
+
+								case SYSMAP_ELEMENT_TYPE_TRIGGER:
+									foreach (zbx_objectValues($sel['elements'], 'triggerid') as $triggerid) {
+										if ($problems_per_trigger_clone[$triggerid] >= $severity_min) {
+											$response[$itemid][$problems_per_trigger_clone[$triggerid]]++;
+											$problems_per_trigger_clone[$triggerid] = -1;
+										}
+									}
+									break;
+
+								case SYSMAP_ELEMENT_TYPE_HOST:
+									if (($element = reset($sel['elements'])) !== false) {
+										if (array_key_exists($element['hostid'], $triggers_per_hosts)) {
+											foreach ($triggers_per_hosts[$element['hostid']] as $triggerid => $val) {
+												if ($problems_per_trigger_clone[$triggerid] >= $severity_min) {
+													$response[$itemid][$problems_per_trigger_clone[$triggerid]]++;
+													$problems_per_trigger_clone[$triggerid] = -1;
+												}
+											}
+										}
+									}
+									break;
 							}
 						}
 
 						// Count problems occurred in triggers which are related to links.
-						foreach ($map['links'] as $link) {
+						foreach ($sysmaps[$mapid]['links'] as $link) {
 							foreach ($link['linktriggers'] as $lt) {
-								if (!$problems_counted[$lt['triggerid']]) {
-									$problems_to_add = $problems_per_trigger[$lt['triggerid']];
-									$problems_counted[$lt['triggerid']] = true;
-
-									// Sum problems.
-									foreach ($problems_to_add as $sev => $probl) {
-										if ($probl != 0 && $sev >= $map['severity_min']) {
-											$response[$itemid][$sev] += $probl;
-										}
-									}
+								if ($problems_per_trigger_clone[$lt['triggerid']] >= $severity_min) {
+									$response[$itemid][$problems_per_trigger_clone[$lt['triggerid']]]++;
+									$problems_per_trigger_clone[$lt['triggerid']] = -1;
 								}
 							}
 						}
@@ -297,107 +357,6 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 		unset($row);
 
 		return $response;
-	}
-
-	protected function getElementProblems(array $selement, array $problems_per_trigger, array $sysmaps,
-			array &$problems_counted = [], array $triggers_per_hosts = [], array $triggers_per_host_groups = []) {
-		$problems = $this->problems_per_severity_tpl;
-
-		switch ($selement['elementtype']) {
-			case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
-				if (($element = reset($selement['elements'])) !== false) {
-					if (array_key_exists($element['groupid'], $triggers_per_host_groups)) {
-						foreach ($triggers_per_host_groups[$element['groupid']] as $triggerid => $val) {
-							if (!$problems_counted[$triggerid]) {
-								$problems_counted[$triggerid] = true;
-
-								foreach ($problems_per_trigger[$triggerid] as $sev => $probl) {
-									if ($probl != 0) {
-										$problems[$sev] += $probl;
-									}
-								}
-							}
-						}
-					}
-				}
-				break;
-
-			case SYSMAP_ELEMENT_TYPE_TRIGGER:
-				foreach (zbx_objectValues($selement['elements'], 'triggerid') as $triggerid) {
-					if (!$problems_counted[$triggerid]) {
-						$problems_counted[$triggerid] = true;
-
-						foreach ($problems_per_trigger[$triggerid] as $sev => $probl) {
-							if ($probl != 0) {
-								$problems[$sev] += $probl;
-							}
-						}
-					}
-				}
-				break;
-
-			case SYSMAP_ELEMENT_TYPE_HOST:
-				if (($element = reset($selement['elements'])) !== false) {
-					if (array_key_exists($element['hostid'], $triggers_per_hosts)) {
-						foreach ($triggers_per_hosts[$element['hostid']] as $triggerid => $val) {
-							if (!$problems_counted[$triggerid]) {
-								$problems_counted[$triggerid] = true;
-
-								foreach ($problems_per_trigger[$triggerid] as $sev => $probl) {
-									if ($probl != 0) {
-										$problems[$sev] += $probl;
-									}
-								}
-							}
-						}
-					}
-				}
-				break;
-
-			case SYSMAP_ELEMENT_TYPE_MAP:
-				$maps_to_process = $sysmaps[$selement['elements'][0]['sysmapid']]['submaps'];
-				$maps_to_process[$selement['elements'][0]['sysmapid']] = true;
-
-				// Count problems in each of selected submap.
-				foreach ($maps_to_process as $sysmapid => $val) {
-					// Count problems in elements assigned to selements.
-					foreach ($sysmaps[$sysmapid]['selements'] as $submap_selement) {
-						if ($submap_selement['permission'] >= PERM_READ) {
-							$problems_in_submap = $this->getElementProblems($submap_selement,
-								$problems_per_trigger, $sysmaps, $problems_counted, $triggers_per_hosts,
-								$triggers_per_host_groups
-							);
-
-							foreach ($problems_in_submap as $sev => $probl) {
-								if ($probl != 0) {
-									$problems[$sev] += $probl;
-								}
-							}
-						}
-					}
-
-					// Count problems in triggers assigned to linked.
-					foreach ($sysmaps[$sysmapid]['links'] as $link) {
-						if ($link['permission'] >= PERM_READ) {
-							foreach ($link['linktriggers'] as $lt) {
-								if (!$problems_counted[$lt['triggerid']]) {
-									$problems_counted[$lt['triggerid']] = true;
-
-									// Sum problems.
-									foreach ($problems_per_trigger[$lt['triggerid']] as $sev => $probl) {
-										if ($probl != 0) {
-											$problems[$sev] += $probl;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				break;
-		}
-
-		return $problems;
 	}
 
 	protected function doAction() {
@@ -459,7 +418,7 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 
 		$sysmapids = array_keys(array_flip(zbx_objectValues($navtree_items, 'mapid')));
 		$maps_accessible = API::Map()->get([
-			'output' => ['sysmapid'],
+			'output' => [],
 			'sysmapids' => $sysmapids,
 			'preservekeys' => true
 		]);
