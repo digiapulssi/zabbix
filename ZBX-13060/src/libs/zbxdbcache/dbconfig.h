@@ -332,6 +332,7 @@ typedef struct
 	int		nextcheck;
 	int		timediff;
 	int		lastaccess;
+	int		last_cfg_error;		/* passive proxy misconfiguration error timestamp */
 	int		version;
 	unsigned char	location;
 }

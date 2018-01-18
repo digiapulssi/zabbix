@@ -69,6 +69,7 @@ static int	connect_to_proxy(const DC_PROXY *proxy, zbx_socket_t *sock, int timeo
 			zabbix_log(LOG_LEVEL_ERR, "TLS connection is configured to be used with passive proxy \"%s\""
 					" but support for TLS was not compiled into %s.", proxy->host,
 					get_program_type_string(program_type));
+			ret = CONFIG_ERROR;
 			goto out;
 #endif
 		default:
@@ -324,8 +325,11 @@ static int	proxy_get_host_availability(DC_PROXY *proxy, time_t *last_access)
 	struct zbx_json_parse	jp;
 	int			ret = FAIL;
 
-	if (SUCCEED != get_data_from_proxy(proxy, ZBX_PROTO_VALUE_HOST_AVAILABILITY, &answer, NULL, ZBX_TASKS_IGNORE))
+	if (SUCCEED != (ret = get_data_from_proxy(proxy, ZBX_PROTO_VALUE_HOST_AVAILABILITY, &answer, NULL,
+			ZBX_TASKS_IGNORE)))
+	{
 		goto out;
+	}
 
 	if ('\0' == *answer)
 	{
@@ -387,7 +391,8 @@ static int	proxy_get_history_data(DC_PROXY *proxy, time_t *last_access)
 	int			ret = FAIL;
 	zbx_timespec_t		ts;
 
-	while (SUCCEED == get_data_from_proxy(proxy, ZBX_PROTO_VALUE_HISTORY_DATA, &answer, &ts, ZBX_TASKS_IGNORE))
+	while (SUCCEED == (ret = get_data_from_proxy(proxy, ZBX_PROTO_VALUE_HISTORY_DATA, &answer, &ts,
+			ZBX_TASKS_IGNORE)))
 	{
 		if ('\0' == *answer)
 		{
@@ -458,7 +463,8 @@ static int	proxy_get_discovery_data(DC_PROXY *proxy, time_t *last_access)
 	int			ret = FAIL;
 	zbx_timespec_t		ts;
 
-	while (SUCCEED == get_data_from_proxy(proxy, ZBX_PROTO_VALUE_DISCOVERY_DATA, &answer, &ts, ZBX_TASKS_IGNORE))
+	while (SUCCEED == (ret = get_data_from_proxy(proxy, ZBX_PROTO_VALUE_DISCOVERY_DATA, &answer, &ts,
+			ZBX_TASKS_IGNORE)))
 	{
 		if ('\0' == *answer)
 		{
@@ -530,8 +536,8 @@ static int	proxy_get_auto_registration(DC_PROXY *proxy, time_t *last_access)
 	int			ret = FAIL;
 	zbx_timespec_t		ts;
 
-	while (SUCCEED == get_data_from_proxy(proxy, ZBX_PROTO_VALUE_AUTO_REGISTRATION_DATA, &answer, &ts,
-			ZBX_TASKS_IGNORE))
+	while (SUCCEED == (ret = get_data_from_proxy(proxy, ZBX_PROTO_VALUE_AUTO_REGISTRATION_DATA, &answer, &ts,
+			ZBX_TASKS_IGNORE)))
 	{
 		if ('\0' == *answer)
 		{
@@ -665,15 +671,18 @@ static int	proxy_get_data(DC_PROXY *proxy, int *more, time_t *last_access)
 	const char	*__function_name = "proxy_get_data";
 
 	char		*answer = NULL;
-	int		ret = FAIL, version;
+	int		ret, version;
 	zbx_timespec_t	ts;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (0 == (version = proxy->version))
 	{
-		if (SUCCEED != get_data_from_proxy(proxy, ZBX_PROTO_VALUE_PROXY_DATA, &answer, &ts, ZBX_TASKS_IGNORE))
+		if (SUCCEED != (ret = get_data_from_proxy(proxy, ZBX_PROTO_VALUE_PROXY_DATA, &answer, &ts,
+				ZBX_TASKS_IGNORE)))
+		{
 			goto out;
+		}
 
 		if ('\0' == *answer)
 			zbx_proxy_update_version(proxy, NULL);
@@ -681,26 +690,25 @@ static int	proxy_get_data(DC_PROXY *proxy, int *more, time_t *last_access)
 
 	if (ZBX_COMPONENT_VERSION(3, 2) == version)
 	{
-		if (SUCCEED != proxy_get_host_availability(proxy, last_access))
+		if (SUCCEED != (ret = proxy_get_host_availability(proxy, last_access)))
 			goto out;
 
-		if (SUCCEED != proxy_get_history_data(proxy, last_access))
+		if (SUCCEED != (ret = proxy_get_history_data(proxy, last_access)))
 			goto out;
 
-		if (SUCCEED != proxy_get_discovery_data(proxy, last_access))
+		if (SUCCEED != (ret = proxy_get_discovery_data(proxy, last_access)))
 			goto out;
 
-		if (SUCCEED != proxy_get_auto_registration(proxy, last_access))
+		if (SUCCEED != (ret = proxy_get_auto_registration(proxy, last_access)))
 			goto out;
 
 		/* the above functions will retrieve all available data for 3.2 and older proxies */
 		*more = ZBX_PROXY_DATA_DONE;
-		ret = SUCCEED;
 		goto out;
 	}
 
-	if (NULL == answer && SUCCEED != get_data_from_proxy(proxy, ZBX_PROTO_VALUE_PROXY_DATA, &answer, &ts,
-			ZBX_TASKS_SEND))
+	if (NULL == answer && SUCCEED != (ret = get_data_from_proxy(proxy, ZBX_PROTO_VALUE_PROXY_DATA, &answer, &ts,
+			ZBX_TASKS_SEND)))
 	{
 		goto out;
 	}
@@ -745,7 +753,7 @@ static int	proxy_get_tasks(DC_PROXY *proxy, time_t *last_access)
 	if (ZBX_COMPONENT_VERSION(3, 2) >= proxy->version)
 		goto out;
 
-	if (SUCCEED != get_data_from_proxy(proxy, ZBX_PROTO_VALUE_PROXY_TASKS, &answer, &ts, ZBX_TASKS_SEND))
+	if (SUCCEED != (ret = get_data_from_proxy(proxy, ZBX_PROTO_VALUE_PROXY_TASKS, &answer, &ts, ZBX_TASKS_SEND)))
 		goto out;
 
 	*last_access = time(NULL);
@@ -779,7 +787,7 @@ static int	process_proxy(void)
 	const char	*__function_name = "process_proxy";
 
 	DC_PROXY	proxy;
-	int		num, i, more;
+	int		num, i, more, ret = FAIL;
 	char		*port = NULL;
 	time_t		now, last_access;
 	unsigned char	update_nextcheck;
@@ -803,44 +811,51 @@ static int	process_proxy(void)
 		if (proxy.proxy_tasks_nextcheck <= now)
 			update_nextcheck |= ZBX_PROXY_TASKS_NEXTCHECK;
 
-		proxy.addr = proxy.addr_orig;
-
-		port = zbx_strdup(port, proxy.port_orig);
-		substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-				&port, MACRO_TYPE_COMMON, NULL, 0);
-		if (FAIL == is_ushort(port, &proxy.port))
+		/* Check if passive proxy has been misconfigured on the server side. If it has happened more */
+		/* recently than last synchronisation of cache then there is no point to retry connecting to */
+		/* proxy again. The next reconnection attempt will happen after cache synchronisation. */
+		if (proxy.last_cfg_error < DCconfig_get_last_sync())
 		{
-			zabbix_log(LOG_LEVEL_ERR, "invalid proxy \"%s\" port: \"%s\"", proxy.host, port);
-			goto network_error;
-		}
+			proxy.addr = proxy.addr_orig;
 
-		if (proxy.proxy_config_nextcheck <= now)
-		{
-			if (SUCCEED != proxy_send_configuration(&proxy))
-				goto network_error;
-
-			last_access = time(NULL);
-		}
-
-		if (proxy.proxy_data_nextcheck <= now)
-		{
-			do
+			port = zbx_strdup(port, proxy.port_orig);
+			substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+					&port, MACRO_TYPE_COMMON, NULL, 0);
+			if (FAIL == is_ushort(port, &proxy.port))
 			{
-				if (SUCCEED != proxy_get_data(&proxy, &more, &last_access))
-					goto network_error;
+				zabbix_log(LOG_LEVEL_ERR, "invalid proxy \"%s\" port: \"%s\"", proxy.host, port);
+				ret = CONFIG_ERROR;
+				goto error;
 			}
-			while (ZBX_PROXY_DATA_MORE == more);
+
+			if (proxy.proxy_config_nextcheck <= now)
+			{
+				if (SUCCEED != (ret = proxy_send_configuration(&proxy)))
+					goto error;
+
+				last_access = time(NULL);
+			}
+
+			if (proxy.proxy_data_nextcheck <= now)
+			{
+				do
+				{
+					if (SUCCEED != (ret = proxy_get_data(&proxy, &more, &last_access)))
+						goto error;
+				}
+				while (ZBX_PROXY_DATA_MORE == more);
+			}
+			else if (proxy.proxy_tasks_nextcheck <= now)
+			{
+				if (SUCCEED != (ret = proxy_get_tasks(&proxy, &last_access)))
+					goto error;
+			}
 		}
-		else if (proxy.proxy_tasks_nextcheck <= now)
-		{
-			if (SUCCEED != proxy_get_tasks(&proxy, &last_access))
-				goto network_error;
-		}
-network_error:
+error:
 		if (0 != last_access)
 			update_proxy_lastaccess(proxy.hostid, last_access);
 
-		DCrequeue_proxy(proxy.hostid, update_nextcheck);
+		DCrequeue_proxy(proxy.hostid, update_nextcheck, ret);
 	}
 
 	zbx_free(port);

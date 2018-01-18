@@ -237,10 +237,11 @@ DC_TRIGGER;
 typedef struct
 {
 	zbx_uint64_t	hostid;
-	char            host[HOST_HOST_LEN_MAX];
+	char		host[HOST_HOST_LEN_MAX];
 	int		proxy_config_nextcheck;
 	int		proxy_data_nextcheck;
 	int		proxy_tasks_nextcheck;
+	int		last_cfg_error;			/* passive proxy misconfiguration error timestamp */
 	int		version;
 	char		addr_orig[INTERFACE_ADDR_LEN_MAX];
 	char		port_orig[INTERFACE_PORT_LEN_MAX];
@@ -611,13 +612,14 @@ void	DCconfig_set_maintenance(const zbx_uint64_t *hostids, int hostids_num, int 
 #define ZBX_CONFSTATS_BUFFER_PFREE	4
 void	*DCconfig_get_stats(int request);
 
+int	DCconfig_get_last_sync(void);
 int	DCconfig_get_proxypoller_hosts(DC_PROXY *proxies, int max_hosts);
 int	DCconfig_get_proxypoller_nextcheck(void);
 
 #define ZBX_PROXY_CONFIG_NEXTCHECK	0x01
 #define ZBX_PROXY_DATA_NEXTCHECK	0x02
 #define ZBX_PROXY_TASKS_NEXTCHECK	0x04
-void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck);
+void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck, int proxy_conn_err);
 void	DCconfig_set_proxy_timediff(zbx_uint64_t hostid, const zbx_timespec_t *timediff);
 int	DCcheck_proxy_permissions(const char *host, const zbx_socket_t *sock, zbx_uint64_t *hostid, char **error);
 
