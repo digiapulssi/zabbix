@@ -137,7 +137,7 @@ $fields = [
 	'clone' =>					[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'copy' =>					[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'delete' =>					[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
-	'massupdate' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
+	'massupdate' =>				[T_ZBX_STR, O_OPT, P_SYS, null,	null],
 	'cancel' =>					[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'form' =>					[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'form_refresh' =>			[T_ZBX_INT, O_OPT, null,	null,		null],
@@ -188,16 +188,7 @@ $fields = [
 	'sortorder' =>				[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null]
 ];
 
-if (hasRequest('massupdate') && hasRequest('group_itemid')) {
-	/**
-	 * Validation will reset P_ACT fields if there will be errors and this is not desired behavior because for mass
-	 * update request there will be rendered list of items instead of mass update form. Validation for this field is
-	 * done with separate code on API side.
-	 */
-	unset($fields['delay']);
-}
-
-check_fields($fields);
+$valid_input = check_fields($fields);
 
 $_REQUEST['params'] = getRequest($paramsFieldName, '');
 unset($_REQUEST[$paramsFieldName]);
@@ -774,7 +765,7 @@ elseif (hasRequest('del_history') && hasRequest('itemid')) {
 	show_messages($result, _('History cleared'), _('Cannot clear history'));
 }
 // mass update
-elseif (hasRequest('massupdate') && hasRequest('group_itemid')) {
+elseif ($valid_input && hasRequest('massupdate') && hasRequest('group_itemid')) {
 	$visible = getRequest('visible', []);
 	$itemids = getRequest('group_itemid');
 
