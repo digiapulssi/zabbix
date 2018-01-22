@@ -690,12 +690,12 @@ static void	DCflush_trends(ZBX_DC_TREND *trends, int *trends_num, int update_cac
 
 	zbx_free(itemids);
 
-	if (0 != inserts_num)
-		dc_insert_trends_in_db(trends, trends_to, value_type, table_name, clock);
-
 	/* if 'trends' is not a primary trends buffer */
 	if (0 != update_cache)
 		dc_set_cache_disable_from(trends, value_type, trends_to, clock);
+
+	if (0 != inserts_num)
+		dc_insert_trends_in_db(trends, trends_to, value_type, table_name, clock);
 
 	/* clean trends */
 	for (i = 0, num = 0; i < *trends_num; i++)
