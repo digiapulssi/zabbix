@@ -1,8 +1,7 @@
 Changes for rsm1.0.3rc2
 
-New features:
-
 Bug fixes:
+..F....... [317] fixed disabled services filtering in rolling week status page; improved coding style (miks, Oleg)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.3rc1
