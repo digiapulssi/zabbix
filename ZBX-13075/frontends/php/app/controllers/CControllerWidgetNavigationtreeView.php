@@ -105,7 +105,7 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 		$sysmaps = API::Map()->get([
 			'sysmapids' => array_keys($sysmapids),
 			'preservekeys' => true,
-			'output' => ['sysmapid', 'severity_min'],
+			'output' => ['sysmapid', 'severity_min', 'show_unack'],
 			'selectLinks' => ['linktriggers', 'permission'],
 			'selectSelements' => ['elements', 'elementtype', 'permission']
 		]);
@@ -219,13 +219,17 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 					'object' => EVENT_OBJECT_TRIGGER,
 					'objectids' => zbx_objectValues($triggers, 'triggerid'),
 					'severities' => range($severity_min, TRIGGER_SEVERITY_COUNT - 1),
+					'selectAcknowledges' => API_OUTPUT_COUNT,
 					'preservekeys' => true
 				]);
 
 				if ($problems) {
 					foreach ($problems as $problem) {
 						$trigger = $triggers[$problem['objectid']];
-						$problems_per_trigger[$problem['objectid']] = $trigger['priority'];
+						$problems_per_trigger[$problem['objectid']] = [
+							'unack' => !$problem['acknowledges'],
+							'sev' => $trigger['priority']
+						];
 					}
 				}
 			}
@@ -302,9 +306,12 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 									$groupid = $sel['elements'][0]['groupid'];
 									if (array_key_exists($groupid, $triggers_per_host_groups)) {
 										foreach ($triggers_per_host_groups[$groupid] as $triggerid => $val) {
-											if ($problems_per_trigger_clone[$triggerid] >= $severity_min) {
-												$response[$itemid][$problems_per_trigger_clone[$triggerid]]++;
-												$problems_per_trigger_clone[$triggerid] = -1;
+											if ($problems_per_trigger_clone[$triggerid]['sev'] >= $severity_min
+													&& ($sysmaps[$mapid]['show_unack'] != EXTACK_OPTION_UNACK
+														|| $problems_per_trigger_clone[$triggerid]['unack']
+													)) {
+												$response[$itemid][$problems_per_trigger_clone[$triggerid]['sev']]++;
+												$problems_per_trigger_clone[$triggerid]['sev'] = -1;
 											}
 										}
 									}
@@ -312,9 +319,12 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 
 								case SYSMAP_ELEMENT_TYPE_TRIGGER:
 									foreach (zbx_objectValues($sel['elements'], 'triggerid') as $triggerid) {
-										if ($problems_per_trigger_clone[$triggerid] >= $severity_min) {
-											$response[$itemid][$problems_per_trigger_clone[$triggerid]]++;
-											$problems_per_trigger_clone[$triggerid] = -1;
+										if ($problems_per_trigger_clone[$triggerid]['sev'] >= $severity_min
+												&& ($sysmaps[$mapid]['show_unack'] != EXTACK_OPTION_UNACK
+													|| $problems_per_trigger_clone[$triggerid]['unack']
+												)) {
+											$response[$itemid][$problems_per_trigger_clone[$triggerid]['sev']]++;
+											$problems_per_trigger_clone[$triggerid]['sev'] = -1;
 										}
 									}
 									break;
@@ -323,9 +333,12 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 									if (($element = reset($sel['elements'])) !== false) {
 										if (array_key_exists($element['hostid'], $triggers_per_hosts)) {
 											foreach ($triggers_per_hosts[$element['hostid']] as $triggerid => $val) {
-												if ($problems_per_trigger_clone[$triggerid] >= $severity_min) {
-													$response[$itemid][$problems_per_trigger_clone[$triggerid]]++;
-													$problems_per_trigger_clone[$triggerid] = -1;
+												if ($problems_per_trigger_clone[$triggerid]['sev'] >= $severity_min
+														&& ($sysmaps[$mapid]['show_unack'] != EXTACK_OPTION_UNACK
+															|| $problems_per_trigger_clone[$triggerid]['unack']
+														)) {
+													$response[$itemid][$problems_per_trigger_clone[$triggerid]['sev']]++;
+													$problems_per_trigger_clone[$triggerid]['sev'] = -1;
 												}
 											}
 										}
@@ -337,9 +350,12 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 						// Count problems occurred in triggers which are related to links.
 						foreach ($sysmaps[$mapid]['links'] as $link) {
 							foreach ($link['linktriggers'] as $lt) {
-								if ($problems_per_trigger_clone[$lt['triggerid']] >= $severity_min) {
-									$response[$itemid][$problems_per_trigger_clone[$lt['triggerid']]]++;
-									$problems_per_trigger_clone[$lt['triggerid']] = -1;
+								if ($problems_per_trigger_clone[$lt['triggerid']]['sev'] >= $severity_min
+										&& ($sysmaps[$mapid]['show_unack'] != EXTACK_OPTION_UNACK
+											|| $problems_per_trigger_clone[$triggerid]['unack']
+										)) {
+									$response[$itemid][$problems_per_trigger_clone[$lt['triggerid']]['sev']]++;
+									$problems_per_trigger_clone[$lt['triggerid']]['sev'] = -1;
 								}
 							}
 						}
