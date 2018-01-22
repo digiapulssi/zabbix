@@ -423,7 +423,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 		if ($items) {
 			foreach ($items as $item) {
 				// service type filter
-				if (!isset($filter_slv[$item['hostid']])) {
+				if (!array_key_exists($item['hostid'], $filter_slv)) {
 					if ($data['filter_slv'] === '') {
 						$filter_slv[$item['hostid']] = true;
 					}
