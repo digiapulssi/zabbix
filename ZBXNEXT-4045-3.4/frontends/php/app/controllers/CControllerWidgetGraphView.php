@@ -91,6 +91,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			$resource_type = null;
 			$graph_dims = getGraphDims();
 		}
+		$graph_dims['shiftYtop'] = 0;
 
 		// Prepare timeline details
 		$timeline = calculateTime([
