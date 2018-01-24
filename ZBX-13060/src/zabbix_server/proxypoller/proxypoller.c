@@ -154,7 +154,7 @@ static void	disconnect_proxy(zbx_socket_t *sock)
  *             tasks   - [IN] proxy task response flag                        *
  *                                                                            *
  * Return value: SUCCESS - processed successfully                             *
- *               FAIL - an error occurred                                     *
+ *               other code - an error occurred                               *
  *                                                                            *
  * Author: Alexander Vladishev                                                *
  *                                                                            *
@@ -212,7 +212,7 @@ static int	get_data_from_proxy(const DC_PROXY *proxy, const char *request, char 
  * Parameters: proxy - [IN] proxy data                                        *
  *                                                                            *
  * Return value: SUCCEED - processed successfully                             *
- *               FAIL - an error occurred                                     *
+ *               other code - an error occurred                               *
  *                                                                            *
  ******************************************************************************/
 static int	proxy_send_configuration(DC_PROXY *proxy)
@@ -316,7 +316,7 @@ static int	proxy_check_error_response(const struct zbx_json_parse *jp, char **er
  *             last_access - [OUT] proxy last access timestamp                *
  *                                                                            *
  * Return value: SUCCEED - data were received and processed successfully      *
- *               FAIL - otherwise                                             *
+ *               other code - an error occurred                               *
  *                                                                            *
  ******************************************************************************/
 static int	proxy_get_host_availability(DC_PROXY *proxy, time_t *last_access)
@@ -381,7 +381,7 @@ out:
  *             last_access - [OUT] proxy last access timestamp                *
  *                                                                            *
  * Return value: SUCCEED - data were received and processed successfully      *
- *               FAIL - otherwise                                             *
+ *               other code - an error occurred                               *
  *                                                                            *
  ******************************************************************************/
 static int	proxy_get_history_data(DC_PROXY *proxy, time_t *last_access)
@@ -453,7 +453,7 @@ static int	proxy_get_history_data(DC_PROXY *proxy, time_t *last_access)
  *             last_access - [OUT] proxy last access timestamp                *
  *                                                                            *
  * Return value: SUCCEED - data were received and processed successfully      *
- *               FAIL - otherwise                                             *
+ *               other code - an error occurred                               *
  *                                                                            *
  ******************************************************************************/
 static int	proxy_get_discovery_data(DC_PROXY *proxy, time_t *last_access)
@@ -526,7 +526,7 @@ static int	proxy_get_discovery_data(DC_PROXY *proxy, time_t *last_access)
  *             last_access - [OUT] proxy last access timestamp                *
  *                                                                            *
  * Return value: SUCCEED - data were received and processed successfully      *
- *               FAIL - otherwise                                             *
+ *               other code - an error occurred                               *
  *                                                                            *
  ******************************************************************************/
 static int	proxy_get_auto_registration(DC_PROXY *proxy, time_t *last_access)
@@ -663,7 +663,7 @@ out:
  *             last_access - [OUT] proxy last access timestamp                *
  *                                                                            *
  * Return value: SUCCEED - data were received and processed successfully      *
- *               FAIL - otherwise                                             *
+ *               other code - an error occurred                               *
  *                                                                            *
  ******************************************************************************/
 static int	proxy_get_data(DC_PROXY *proxy, int *more, time_t *last_access)
@@ -737,7 +737,7 @@ out:
  *             last_access - [OUT] proxy last access timestamp                *
  *                                                                            *
  * Return value: SUCCEED - data were received and processed successfully      *
- *               FAIL - otherwise                                             *
+ *               other code - an error occurred                               *
  *                                                                            *
  ******************************************************************************/
 static int	proxy_get_tasks(DC_PROXY *proxy, time_t *last_access)
