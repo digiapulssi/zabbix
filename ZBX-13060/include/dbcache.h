@@ -613,7 +613,7 @@ void	DCconfig_set_maintenance(const zbx_uint64_t *hostids, int hostids_num, int 
 #define ZBX_CONFSTATS_BUFFER_PFREE	4
 void	*DCconfig_get_stats(int request);
 
-int	DCconfig_get_last_sync(void);
+int	DCconfig_get_last_sync_time(void);
 int	DCconfig_get_proxypoller_hosts(DC_PROXY *proxies, int max_hosts);
 int	DCconfig_get_proxypoller_nextcheck(void);
 

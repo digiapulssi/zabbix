@@ -814,7 +814,7 @@ static int	process_proxy(void)
 		/* Check if passive proxy has been misconfigured on the server side. If it has happened more */
 		/* recently than last synchronisation of cache then there is no point to retry connecting to */
 		/* proxy again. The next reconnection attempt will happen after cache synchronisation. */
-		if (proxy.last_cfg_error_time < DCconfig_get_last_sync())
+		if (proxy.last_cfg_error_time < DCconfig_get_last_sync_time())
 		{
 			proxy.addr = proxy.addr_orig;
 
