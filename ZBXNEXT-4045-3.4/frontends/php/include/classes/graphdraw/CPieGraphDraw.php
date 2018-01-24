@@ -699,6 +699,11 @@ class CPieGraphDraw extends CGraphDraw {
 		$this->sizeX = min($this->sizeX, $this->sizeY);
 		$this->sizeY = min($this->sizeX, $this->sizeY);
 
+		if ($this->sizeX + $this->shiftXleft > $this->fullSizeX) {
+			$this->sizeX = $this->fullSizeX - $this->shiftXleft - $this->shiftXleft;
+			$this->sizeY = min($this->sizeX, $this->sizeY);
+		}
+
 		$this->calc3dheight($this->sizeY);
 
 		$this->exploderad = (int) $this->sizeX / 100;
@@ -743,10 +748,6 @@ class CPieGraphDraw extends CGraphDraw {
 			$values[$i] = empty($this->data[$this->items[$i]['itemid']][$type][$fncName])
 				? 0
 				: abs($this->data[$this->items[$i]['itemid']][$type][$fncName]);
-		}
-
-		if ($this->sizeX + $this->shiftXleft > $this->fullSizeX) {
-			$this->shiftXleft = $this->fullSizeX - $this->sizeX;
 		}
 
 		switch ($this->type) {
