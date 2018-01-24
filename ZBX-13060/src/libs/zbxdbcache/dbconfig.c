@@ -8494,10 +8494,10 @@ void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck, int pr
 			dc_proxy->location = ZBX_LOC_NOWHERE;
 
 		/* set or clear passive proxy misconfiguration error timestamp */
-		if (CONFIG_ERROR == proxy_conn_err)
-			dc_proxy->last_cfg_error_time = (int)now;
-		else if (SUCCEED == proxy_conn_err)
+		if (SUCCEED == proxy_conn_err)
 			dc_proxy->last_cfg_error_time = 0;
+		else if (CONFIG_ERROR == proxy_conn_err)
+			dc_proxy->last_cfg_error_time = (int)now;
 
 		if (HOST_STATUS_PROXY_PASSIVE == dc_host->status)
 		{
