@@ -241,7 +241,8 @@ typedef struct
 	int		proxy_config_nextcheck;
 	int		proxy_data_nextcheck;
 	int		proxy_tasks_nextcheck;
-	int		last_cfg_error;			/* passive proxy misconfiguration error timestamp */
+	int		last_cfg_error_time;	/* time when passive proxy misconfiguration error was seen */
+						/* or 0 if no error */
 	int		version;
 	char		addr_orig[INTERFACE_ADDR_LEN_MAX];
 	char		port_orig[INTERFACE_PORT_LEN_MAX];

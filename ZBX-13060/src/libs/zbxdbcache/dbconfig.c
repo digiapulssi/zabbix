@@ -1315,7 +1315,7 @@ done:
 				proxy->location = ZBX_LOC_NOWHERE;
 				proxy->version = 0;
 				proxy->lastaccess = atoi(row[24]);
-				proxy->last_cfg_error = 0;
+				proxy->last_cfg_error_time = 0;
 			}
 
 			if (HOST_STATUS_PROXY_PASSIVE == status && (0 == found || status != host->status))
@@ -8310,7 +8310,7 @@ static void	DCget_proxy(DC_PROXY *dst_proxy, ZBX_DC_PROXY *src_proxy)
 	dst_proxy->proxy_config_nextcheck = src_proxy->proxy_config_nextcheck;
 	dst_proxy->proxy_data_nextcheck = src_proxy->proxy_data_nextcheck;
 	dst_proxy->proxy_tasks_nextcheck = src_proxy->proxy_tasks_nextcheck;
-	dst_proxy->last_cfg_error = src_proxy->last_cfg_error;
+	dst_proxy->last_cfg_error_time = src_proxy->last_cfg_error_time;
 	dst_proxy->version = src_proxy->version;
 
 	if (NULL != (host = zbx_hashset_search(&config->hosts, &src_proxy->hostid)))
@@ -8495,9 +8495,9 @@ void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck, int pr
 
 		/* set or clear passive proxy misconfiguration error timestamp */
 		if (CONFIG_ERROR == proxy_conn_err)
-			dc_proxy->last_cfg_error = (int)now;
+			dc_proxy->last_cfg_error_time = (int)now;
 		else if (SUCCEED == proxy_conn_err)
-			dc_proxy->last_cfg_error = 0;
+			dc_proxy->last_cfg_error_time = 0;
 
 		if (HOST_STATUS_PROXY_PASSIVE == dc_host->status)
 		{
