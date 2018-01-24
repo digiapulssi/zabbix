@@ -422,8 +422,9 @@ foreach ($tlds_by_server as $key => $hosts) {
 
 		if ($items) {
 			foreach ($items as $item) {
-				// service type filter
-				if (!array_key_exists($item['hostid'], $filter_slv)) {
+				if (!array_key_exists($item['hostid'], $filter_slv) || $filter_slv[$item['hostid']] === false) {
+					$filter_slv[$item['hostid']] = false;
+
 					if ($data['filter_slv'] === '') {
 						$filter_slv[$item['hostid']] = true;
 					}
@@ -495,14 +496,13 @@ foreach ($tlds_by_server as $key => $hosts) {
 
 			$items += $avail_items;
 
-			$filtered_hosts = [];
-			$filtered_tlds = [];
-			foreach ($filter_slv as $filtred_hostid => $foo) {
-				$filtered_tlds[$DB['SERVERS'][$key]['NR'].$filtred_hostid] = $data['tld'][$DB['SERVERS'][$key]['NR'].$filtred_hostid];
-				$filtered_hosts[$filtred_hostid] = $hosts[$filtred_hostid];
+			if ($data['filter_slv'] !== '') {
+				foreach ($filter_slv as $filtred_hostid => $value) {
+					if ($value === false) {
+						unset($data['tld'][$DB['SERVERS'][$key]['NR'].$filtred_hostid], $hosts[$filtred_hostid]);
+					}
+				}
 			}
-			$data['tld'] = $filtered_tlds;
-			$hosts = $filtered_hosts;
 
 			if ($hosts) {
 				// disabled services check
