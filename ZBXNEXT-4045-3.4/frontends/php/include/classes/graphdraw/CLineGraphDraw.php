@@ -1988,7 +1988,7 @@ class CLineGraphDraw extends CGraphDraw {
 			return true;
 		}
 
-		$leftXShift = 20;
+		$leftXShift = 15;
 		$units = [GRAPH_YAXIS_SIDE_LEFT => 0, GRAPH_YAXIS_SIDE_RIGHT => 0];
 
 		// draw item legend
