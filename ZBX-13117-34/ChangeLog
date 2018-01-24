@@ -3,6 +3,7 @@ Changes for 3.4.7rc1
 New features:
 
 Bug fixes:
+...G...... [ZBX-13117] fixed vfs.dir.size with symbol links on Windows (MVekslers)
 ........S. [ZBX-13343] fixed last trends update clock caching (wiper)
 A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
 ..F....... [ZBX-13223] fixed graphs duplication in graph preview (ashubin)
