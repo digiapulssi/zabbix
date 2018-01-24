@@ -3,6 +3,7 @@ Changes for rsm1.0.3rc3
 New features:
 
 Bug fixes:
+..F....... [317] fixed SLA filtering in TLD rolling week status (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.3rc2
