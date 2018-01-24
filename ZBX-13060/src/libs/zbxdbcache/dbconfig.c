@@ -10267,7 +10267,8 @@ static char	*dc_correlation_formula_dup(const zbx_dc_correlation_t *dc_correlati
 #define ZBX_OPERATION_TYPE_OR		1
 #define ZBX_OPERATION_TYPE_AND		2
 
-	char				*formula = NULL, *op = NULL;
+	char				*formula = NULL;
+	const char			*op = NULL;
 	size_t				formula_alloc = 0, formula_offset = 0;
 	int				i, last_type = -1, last_op = ZBX_OPERATION_TYPE_UNKNOWN;
 	const zbx_dc_corr_condition_t	*dc_condition;
