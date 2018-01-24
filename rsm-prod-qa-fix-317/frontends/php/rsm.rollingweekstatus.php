@@ -422,6 +422,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 
 		if ($items) {
 			foreach ($items as $item) {
+				// service type filter
 				if (!array_key_exists($item['hostid'], $filter_slv) || $filter_slv[$item['hostid']] === false) {
 					$filter_slv[$item['hostid']] = false;
 
