@@ -787,10 +787,8 @@ static int	process_proxy(void)
 	const char	*__function_name = "process_proxy";
 
 	DC_PROXY	proxy;
-	int		num, i, more, ret = FAIL;
-	char		*port = NULL;
-	time_t		now, last_access;
-	unsigned char	update_nextcheck;
+	int		num, i;
+	time_t		now;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -801,8 +799,9 @@ static int	process_proxy(void)
 
 	for (i = 0; i < num; i++)
 	{
-		update_nextcheck = 0;
-		last_access = 0;
+		time_t		last_access = 0;
+		int		ret = FAIL;
+		unsigned char	update_nextcheck = 0;
 
 		if (proxy.proxy_config_nextcheck <= now)
 			update_nextcheck |= ZBX_PROXY_CONFIG_NEXTCHECK;
@@ -816,6 +815,8 @@ static int	process_proxy(void)
 		/* proxy again. The next reconnection attempt will happen after cache synchronisation. */
 		if (proxy.last_cfg_error_time < DCconfig_get_last_sync_time())
 		{
+			char	*port = NULL;
+
 			proxy.addr = proxy.addr_orig;
 
 			port = zbx_strdup(port, proxy.port_orig);
@@ -825,8 +826,10 @@ static int	process_proxy(void)
 			{
 				zabbix_log(LOG_LEVEL_ERR, "invalid proxy \"%s\" port: \"%s\"", proxy.host, port);
 				ret = CONFIG_ERROR;
+				zbx_free(port);
 				goto error;
 			}
+			zbx_free(port);
 
 			if (proxy.proxy_config_nextcheck <= now)
 			{
@@ -838,6 +841,8 @@ static int	process_proxy(void)
 
 			if (proxy.proxy_data_nextcheck <= now)
 			{
+				int	more;
+
 				do
 				{
 					if (SUCCEED != (ret = proxy_get_data(&proxy, &more, &last_access)))
@@ -857,8 +862,6 @@ error:
 
 		DCrequeue_proxy(proxy.hostid, update_nextcheck, ret);
 	}
-
-	zbx_free(port);
 exit:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 
