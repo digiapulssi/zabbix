@@ -1315,6 +1315,7 @@ done:
 				proxy->location = ZBX_LOC_NOWHERE;
 				proxy->version = 0;
 				proxy->lastaccess = atoi(row[24]);
+				proxy->last_cfg_error_time = 0;
 			}
 
 			if (HOST_STATUS_PROXY_PASSIVE == status && (0 == found || status != host->status))
@@ -4196,7 +4197,7 @@ static void	DCsync_item_preproc(zbx_dbsync_t *sync)
  * Purpose: updates trigger topology after trigger dependency changes         *
  *                                                                            *
  ******************************************************************************/
-static void	dc_trigger_update_topology()
+static void	dc_trigger_update_topology(void)
 {
 	zbx_hashset_iter_t	iter;
 	ZBX_DC_TRIGGER		*trigger;
@@ -4230,7 +4231,7 @@ static int	zbx_default_ptr_pair_ptr_compare_func(const void *d1, const void *d2)
  *              3) list of triggers each item is used by                      *
  *                                                                            *
  ******************************************************************************/
-static void	dc_trigger_update_cache()
+static void	dc_trigger_update_cache(void)
 {
 	zbx_hashset_iter_t	iter;
 	ZBX_DC_TRIGGER		*trigger;
@@ -4328,7 +4329,7 @@ static void	dc_trigger_update_cache()
  * Purpose: updates hostgroup name index and resets nested group lists        *
  *                                                                            *
  ******************************************************************************/
-static void	dc_hostgroups_update_cache()
+static void	dc_hostgroups_update_cache(void)
 {
 	zbx_hashset_iter_t	iter;
 	zbx_dc_hostgroup_t	*group;
@@ -8311,6 +8312,7 @@ static void	DCget_proxy(DC_PROXY *dst_proxy, ZBX_DC_PROXY *src_proxy)
 	dst_proxy->proxy_config_nextcheck = src_proxy->proxy_config_nextcheck;
 	dst_proxy->proxy_data_nextcheck = src_proxy->proxy_data_nextcheck;
 	dst_proxy->proxy_tasks_nextcheck = src_proxy->proxy_tasks_nextcheck;
+	dst_proxy->last_cfg_error_time = src_proxy->last_cfg_error_time;
 	dst_proxy->version = src_proxy->version;
 
 	if (NULL != (host = zbx_hashset_search(&config->hosts, &src_proxy->hostid)))
@@ -8366,6 +8368,11 @@ static void	DCget_proxy(DC_PROXY *dst_proxy, ZBX_DC_PROXY *src_proxy)
 
 	dst_proxy->addr = NULL;
 	dst_proxy->port = 0;
+}
+
+int	DCconfig_get_last_sync_time(void)
+{
+	return config->sync_ts;
 }
 
 /******************************************************************************
@@ -8468,7 +8475,7 @@ int	DCconfig_get_proxypoller_nextcheck(void)
 	return nextcheck;
 }
 
-void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck)
+void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck, int proxy_conn_err)
 {
 	const char	*__function_name = "DCrequeue_proxy";
 
@@ -8488,6 +8495,12 @@ void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck)
 		if (ZBX_LOC_POLLER == dc_proxy->location)
 			dc_proxy->location = ZBX_LOC_NOWHERE;
 
+		/* set or clear passive proxy misconfiguration error timestamp */
+		if (SUCCEED == proxy_conn_err)
+			dc_proxy->last_cfg_error_time = 0;
+		else if (CONFIG_ERROR == proxy_conn_err)
+			dc_proxy->last_cfg_error_time = (int)now;
+
 		if (HOST_STATUS_PROXY_PASSIVE == dc_host->status)
 		{
 			if (0 != (update_nextcheck & ZBX_PROXY_CONFIG_NEXTCHECK))
@@ -8495,6 +8508,7 @@ void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck)
 				dc_proxy->proxy_config_nextcheck = (int)calculate_proxy_nextcheck(
 						hostid, CONFIG_PROXYCONFIG_FREQUENCY, now);
 			}
+
 			if (0 != (update_nextcheck & ZBX_PROXY_DATA_NEXTCHECK))
 			{
 				dc_proxy->proxy_data_nextcheck = (int)calculate_proxy_nextcheck(
@@ -8676,7 +8690,7 @@ static void	dc_get_global_macro(const char *macro, const char *context, char **v
 	}
 }
 
-void	dc_get_user_macro(const zbx_uint64_t *hostids, int hostids_num, const char *macro, const char *context,
+static void	dc_get_user_macro(const zbx_uint64_t *hostids, int hostids_num, const char *macro, const char *context,
 		char **replace_to)
 {
 	char	*value = NULL, *value_default = NULL;
@@ -10255,7 +10269,8 @@ static char	*dc_correlation_formula_dup(const zbx_dc_correlation_t *dc_correlati
 #define ZBX_OPERATION_TYPE_OR		1
 #define ZBX_OPERATION_TYPE_AND		2
 
-	char				*formula = NULL, *op = NULL;
+	char				*formula = NULL;
+	const char			*op = NULL;
 	size_t				formula_alloc = 0, formula_offset = 0;
 	int				i, last_type = -1, last_op = ZBX_OPERATION_TYPE_UNKNOWN;
 	const zbx_dc_corr_condition_t	*dc_condition;
