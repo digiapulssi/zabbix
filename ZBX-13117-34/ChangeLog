@@ -4,6 +4,8 @@ New features:
 
 Bug fixes:
 ...G...... [ZBX-13117] fixed vfs.dir.size with symbol links on Windows (MVekslers)
+...G...... [ZBX-11720] fixed memory leak which breaks vfs.fs.size, vfs.fs.inode and vfs.dir.size items if compiled with LeakSanitizer (Andris)
+........S. [ZBX-13131] fixed truncated multiline text values from network discovery SNMP checks (viktors)
 ........S. [ZBX-13343] fixed last trends update clock caching (wiper)
 A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
 ..F....... [ZBX-13223] fixed graphs duplication in graph preview (ashubin)
