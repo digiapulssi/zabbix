@@ -537,11 +537,14 @@ foreach ($tlds_by_server as $key => $hosts) {
 					)
 				));
 
+				// Holds hostids with at least one disabled item detected.
+				$hosts_with_disabled_items = [];
+
 				foreach ($templateMacros as $templateMacro) {
 					$current_hostid = $hostIdByTemplateName[$templates[$templateMacro['hostid']]['host']];
-					if ($templateMacro['macro'] == RSM_TLD_DNSSEC_ENABLED || $templateMacro['macro'] == RSM_TLD_EPP_ENABLED) {
+					if ($templateMacro['macro'] === RSM_TLD_DNSSEC_ENABLED || $templateMacro['macro'] === RSM_TLD_EPP_ENABLED) {
 						if ($templateMacro['value'] == 0) {
-							if ($templateMacro['macro'] == RSM_TLD_DNSSEC_ENABLED) {
+							if ($templateMacro['macro'] === RSM_TLD_DNSSEC_ENABLED) {
 								$service_type = RSM_DNSSEC;
 							}
 							else {
@@ -550,7 +553,11 @@ foreach ($tlds_by_server as $key => $hosts) {
 
 							// Unset disabled services
 							if (isset($data['tld'][$DB['SERVERS'][$key]['NR'].$current_hostid][$service_type])) {
-								unset($itemIds[$data['tld'][$DB['SERVERS'][$key]['NR'].$current_hostid][$service_type]['availItemId']]);
+								$hosts_with_disabled_items[$current_hostid] = true;
+
+								if (array_key_exists('availItemId', $data['tld'][$DB['SERVERS'][$key]['NR'].$current_hostid][$service_type])) {
+									unset($itemIds[$data['tld'][$DB['SERVERS'][$key]['NR'].$current_hostid][$service_type]['availItemId']]);
+								}
 								unset($data['tld'][$DB['SERVERS'][$key]['NR'].$current_hostid][$service_type]);
 							}
 						}
@@ -569,9 +576,81 @@ foreach ($tlds_by_server as $key => $hosts) {
 						if (!array_key_exists('subservices', $tld[RSM_RDDS]) || !array_sum($tld[RSM_RDDS]['subservices'])) {
 							unset($itemIds[$tld[RSM_RDDS]['availItemId']]);
 							unset($data['tld'][$tld_key][RSM_RDDS]);
+							$hosts_with_disabled_items[$hostid] = true;
 						}
 					}
 				}
+
+				/**
+				 * Even if previously in service type filter particular service matched filter (see $filter_slv), now it
+				 * could be necessary to remove TLD row from result set, just because discovering user macros we have
+				 * figured out that one or more services are disabled.
+				 *
+				 * It is better to make redundant check here (instead of checking enabled/disabled status before
+				 * service filter) because it reduces amount of records in $templates and $templateMacros selected by
+				 * API::Template() and API::UserMacro() and gives better performance.
+				 *
+				 * Only hosts with disabled items are re-tested.
+				 * Only if filter 'Exceeding or equal to' is not set to 'any'.
+				 */
+
+				if ($hosts_with_disabled_items && $data['filter_slv'] !== '') {
+					foreach ($hosts_with_disabled_items as $hostid => $value) {
+						$host = $data['tld'][$DB['SERVERS'][$key]['NR'].$hostid];
+						$available = false;
+
+						// Test each previously matched item's lastvalue separately.
+						if ($data['filter_dns'] && array_key_exists(RSM_DNS, $host)) {
+							if ($data['filter_slv'] != SLA_MONITORING_SLV_FILTER_NON_ZERO
+									&& $host[RSM_DNS]['lastvalue'] >= $data['filter_slv']) {
+								$available = true;
+							}
+							elseif ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO
+									&& $host[RSM_DNS]['lastvalue'] != 0) {
+								$available = true;
+							}
+						}
+
+						if (!$available && $data['filter_dnssec'] && array_key_exists(RSM_DNSSEC, $host)) {
+							if ($data['filter_slv'] != SLA_MONITORING_SLV_FILTER_NON_ZERO
+									&& $host[RSM_DNSSEC]['lastvalue'] >= $data['filter_slv']) {
+								$available = true;
+							}
+							elseif ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO
+									&& $host[RSM_DNSSEC]['lastvalue'] != 0) {
+								$available = true;
+							}
+						}
+
+						if (!$available && $data['filter_rdds'] && array_key_exists(RSM_RDDS, $host)) {
+							if ($data['filter_slv'] != SLA_MONITORING_SLV_FILTER_NON_ZERO
+									&& $host[RSM_RDDS]['lastvalue'] >= $data['filter_slv']) {
+								$available = true;
+							}
+							elseif ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO
+									&& $host[RSM_RDDS]['lastvalue'] != 0) {
+								$available = true;
+							}
+						}
+
+						if (!$available && $data['filter_epp'] && array_key_exists(RSM_EPP, $host)) {
+							if ($data['filter_slv'] != SLA_MONITORING_SLV_FILTER_NON_ZERO
+									&& $host[RSM_EPP]['lastvalue'] >= $data['filter_slv']) {
+								$available = true;
+							}
+							elseif ($data['filter_slv'] == SLA_MONITORING_SLV_FILTER_NON_ZERO
+									&& $host[RSM_EPP]['lastvalue'] != 0) {
+								$available = true;
+							}
+						}
+
+						// Unset if no displayable services found.
+						if (!$available) {
+							unset($data['tld'][$DB['SERVERS'][$key]['NR'].$hostid], $hosts[$hostid]);
+						}
+					}
+				}
+				unset($hosts_with_disabled_items);
 
 				// get triggers
 				$triggers = API::Trigger()->get(array(

@@ -3,6 +3,7 @@ Changes for rsm1.0.3rc4
 New features:
 
 Bug fixes:
+..F....... [317] fixed result filtering if TLD services are represented by disabled items (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.3rc3
