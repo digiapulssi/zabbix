@@ -1398,7 +1398,6 @@ class CMap extends CMapElement {
 		}
 
 		// Validate circular reference.
-		$maps = zbx_toHash($maps, 'sysmapid');
 		foreach ($maps as &$map) {
 			$map = array_merge($db_maps[$map['sysmapid']], $map);
 		}
@@ -1422,7 +1421,11 @@ class CMap extends CMapElement {
 	 * @throws APIException if input is invalid.
 	 */
 	protected function validateCircularReference(array $maps) {
-		$this->cref_maps = $maps;
+		foreach ($maps as $map) {
+			if (array_key_exists('sysmapid', $map)) {
+				$this->cref_maps[$map['sysmapid']] = $map;
+			}
+		}
 
 		foreach ($maps as $map) {
 			if (!array_key_exists('selements', $map) || !$map['selements']) {
@@ -1432,15 +1435,10 @@ class CMap extends CMapElement {
 
 			foreach ($map['selements'] as $selement) {
 				if (!$this->validateCircularReferenceRecursive($selement, $cref_mapids)) {
-					$map_names = [];
-
-					foreach($cref_mapids as $mapid) {
-						$map_names[] = $this->cref_maps[$mapid]['name'];
-					}
-
-					self::exception(ZBX_API_ERROR_PARAMETERS, _s('Circular reference in maps: %1$s.',
-						implode(' - ', $map_names)
-					));
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('Cannot add "%1$s" element of the map "%2$s" due to circular reference.',
+							$this->cref_maps[$cref_mapids[1]]['name'], $map['name'])
+					);
 				}
 			}
 		}
