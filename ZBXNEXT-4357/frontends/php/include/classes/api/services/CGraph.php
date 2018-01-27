@@ -53,7 +53,7 @@ class CGraph extends CGraphGeneral {
 
 		$sqlParts = [
 			'select'	=> ['graphs' => 'g.graphid'],
-			'from'		=> ['graphs' => 'graphs g'],
+			'from'		=> ['g' => 'graphs g'],
 			'where'		=> [],
 			'group'		=> [],
 			'order'		=> [],
@@ -745,5 +745,19 @@ class CGraph extends CGraphGeneral {
 				}
 			}
 		}
+	}
+
+	protected function applyQueryOutputOptions($tableName, $tableAlias, array $options, array $sqlParts) {
+		$sqlParts = parent::applyQueryOutputOptions($tableName, $tableAlias, $options, $sqlParts);
+
+		if (!$options['countOutput']) {
+			if ($this->outputIsRequested('prototypeid', $options['output'])) {
+				$sqlParts['select']['prototypeid'] = 'gd.parent_graphid AS prototypeid';
+				$sqlParts['left_join'][] = ['from' => 'graph_discovery gd', 'on' => 'g.graphid=gd.graphid'];
+				$sqlParts['left_table'] = 'g';
+			}
+		}
+
+		return $sqlParts;
 	}
 }

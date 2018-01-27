@@ -64,7 +64,7 @@ class CHost extends CHostGeneral {
 
 		$sqlParts = [
 			'select'	=> ['hosts' => 'h.hostid'],
-			'from'		=> ['hosts' => 'hosts h'],
+			'from'		=> ['h' => 'hosts h'],
 			'where'		=> ['flags' => 'h.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'],
 			'group'		=> [],
 			'order'		=> [],
@@ -1295,6 +1295,20 @@ class CHost extends CHostGeneral {
 		DB::delete('profiles', ['idx' => 'web.latest.toggle_other', 'idx2' => $hostIds]);
 
 		return ['hostids' => $hostIds];
+	}
+
+	protected function applyQueryOutputOptions($tableName, $tableAlias, array $options, array $sqlParts) {
+		$sqlParts = parent::applyQueryOutputOptions($tableName, $tableAlias, $options, $sqlParts);
+
+		if (!$options['countOutput']) {
+			if ($this->outputIsRequested('prototypeid', $options['output'])) {
+				$sqlParts['select']['prototypeid'] = 'hd.parent_hostid AS prototypeid';
+				$sqlParts['left_join'][] = ['from' => 'host_discovery hd', 'on' => 'h.hostid=hd.hostid'];
+				$sqlParts['left_table'] = 'h';
+			}
+		}
+
+		return $sqlParts;
 	}
 
 	protected function addRelatedObjects(array $options, array $result) {

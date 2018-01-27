@@ -1196,8 +1196,16 @@ class CTrigger extends CTriggerGeneral {
 	protected function applyQueryOutputOptions($tableName, $tableAlias, array $options, array $sqlParts) {
 		$sqlParts = parent::applyQueryOutputOptions($tableName, $tableAlias, $options, $sqlParts);
 
-		if (!$options['countOutput'] && $options['expandDescription'] !== null) {
-			$sqlParts = $this->addQuerySelect($this->fieldId('expression'), $sqlParts);
+		if (!$options['countOutput']) {
+			if ($options['expandDescription'] !== null) {
+				$sqlParts = $this->addQuerySelect($this->fieldId('expression'), $sqlParts);
+			}
+
+			if ($this->outputIsRequested('prototypeid', $options['output'])) {
+				$sqlParts['select']['prototypeid'] = 'td.parent_triggerid AS prototypeid';
+				$sqlParts['left_join'][] = ['from' => 'trigger_discovery td', 'on' => 't.triggerid=td.triggerid'];
+				$sqlParts['left_table'] = 't';
+			}
 		}
 
 		return $sqlParts;

@@ -62,7 +62,7 @@ class CItem extends CItemGeneral {
 
 		$sqlParts = [
 			'select'	=> ['items' => 'i.itemid'],
-			'from'		=> ['items' => 'items i'],
+			'from'		=> ['i' => 'items i'],
 			'where'		=> ['webtype' => 'i.type<>'.ITEM_TYPE_HTTPTEST, 'flags' => 'i.flags IN ('.ZBX_FLAG_DISCOVERY_NORMAL.','.ZBX_FLAG_DISCOVERY_CREATED.')'],
 			'group'		=> [],
 			'order'		=> [],
@@ -1223,6 +1223,12 @@ class CItem extends CItemGeneral {
 					|| $this->outputIsRequested('prevvalue', $options['output'])) {
 
 				$sqlParts = $this->addQuerySelect('i.value_type', $sqlParts);
+			}
+
+			if ($this->outputIsRequested('prototypeid', $options['output'])) {
+				$sqlParts['select']['prototypeid'] = 'id.parent_itemid AS prototypeid';
+				$sqlParts['left_join'][] = ['from' => 'item_discovery id', 'on' => 'i.itemid=id.itemid'];
+				$sqlParts['left_table'] = 'i';
 			}
 		}
 
