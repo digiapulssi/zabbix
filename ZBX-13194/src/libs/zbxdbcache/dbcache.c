@@ -167,6 +167,7 @@ typedef struct
 	int		severity;	/* for log items only */
 	int		logeventid;	/* for log items only */
 	int		mtime;
+	unsigned char	item_value_type;
 	unsigned char	value_type;
 	unsigned char	state;
 	unsigned char	flags;		/* see ZBX_DC_FLAG_* above */
@@ -2484,7 +2485,8 @@ static void	dc_local_add_history_dbl(zbx_uint64_t itemid, unsigned char item_val
 
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
-	item_value->value_type = item_value_type;
+	item_value->item_value_type = item_value_type;
+	item_value->value_type = ITEM_VALUE_TYPE_FLOAT;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = flags;
 
@@ -2507,7 +2509,8 @@ static void	dc_local_add_history_uint(zbx_uint64_t itemid, unsigned char item_va
 
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
-	item_value->value_type = item_value_type;
+	item_value->item_value_type = item_value_type;
+	item_value->value_type = ITEM_VALUE_TYPE_UINT64;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = flags;
 
@@ -2530,7 +2533,8 @@ static void	dc_local_add_history_text(zbx_uint64_t itemid, unsigned char item_va
 
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
-	item_value->value_type = item_value_type;
+	item_value->item_value_type = item_value_type;
+	item_value->value_type = ITEM_VALUE_TYPE_TEXT;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = flags;
 
@@ -2562,7 +2566,8 @@ static void	dc_local_add_history_log(zbx_uint64_t itemid, unsigned char item_val
 
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
-	item_value->value_type = item_value_type;
+	item_value->item_value_type = item_value_type;
+	item_value->value_type = ITEM_VALUE_TYPE_LOG;
 	item_value->state = ITEM_STATE_NORMAL;
 
 	item_value->flags = flags;
@@ -3081,11 +3086,9 @@ static int	hc_clone_history_data(zbx_hc_data_t **data, const dc_item_value_t *it
 		{
 			case ITEM_VALUE_TYPE_FLOAT:
 				(*data)->value.dbl = item_value->value.value_dbl;
-				cache->stats.history_float_counter++;
 				break;
 			case ITEM_VALUE_TYPE_UINT64:
 				(*data)->value.ui64 = item_value->value.value_uint;
-				cache->stats.history_uint_counter++;
 				break;
 			case ITEM_VALUE_TYPE_STR:
 				if (SUCCEED != hc_clone_history_str_data(&(*data)->value.str,
@@ -3093,7 +3096,6 @@ static int	hc_clone_history_data(zbx_hc_data_t **data, const dc_item_value_t *it
 				{
 					return FAIL;
 				}
-				cache->stats.history_str_counter++;
 				break;
 			case ITEM_VALUE_TYPE_TEXT:
 				if (SUCCEED != hc_clone_history_str_data(&(*data)->value.str,
@@ -3101,12 +3103,28 @@ static int	hc_clone_history_data(zbx_hc_data_t **data, const dc_item_value_t *it
 				{
 					return FAIL;
 				}
-				cache->stats.history_text_counter++;
 				break;
 			case ITEM_VALUE_TYPE_LOG:
 				if (SUCCEED != hc_clone_history_log_data(&(*data)->value.log, item_value))
 					return FAIL;
+				break;
+		}
 
+		switch (item_value->item_value_type)
+		{
+			case ITEM_VALUE_TYPE_FLOAT:
+				cache->stats.history_float_counter++;
+				break;
+			case ITEM_VALUE_TYPE_UINT64:
+				cache->stats.history_uint_counter++;
+				break;
+			case ITEM_VALUE_TYPE_STR:
+				cache->stats.history_str_counter++;
+				break;
+			case ITEM_VALUE_TYPE_TEXT:
+				cache->stats.history_text_counter++;
+				break;
+			case ITEM_VALUE_TYPE_LOG:
 				cache->stats.history_log_counter++;
 				break;
 		}
