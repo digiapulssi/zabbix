@@ -1,3 +1,33 @@
+Changes for rsm1.0.3
+
+rsm1.0.3rc4 was released as rsm1.0.3 without any changes
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.3rc4
+
+Bug fixes:
+..F....... [317] fixed result filtering if TLD services are represented by disabled items (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.3rc3
+
+Bug fixes:
+..F....... [317] fixed SLA filtering in TLD rolling week status (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.3rc2
+
+Bug fixes:
+..F....... [317] fixed disabled services filtering in rolling week status page; improved coding style (miks, Oleg)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.3rc1
+
+Bug fixes:
+..F....... [317] fixed records filtering in rolling week status page; improved coding style (miks, Oleg)
+..F....... [316] fixed incorrect time interval selection in incidents screen (miks, Oleg)
+....I..... [315] fixed database connection error when running update-api-data.pl (gleb)
+
 --------------------------------------------------------------------------------
 Changes for rsm1.0.2
 

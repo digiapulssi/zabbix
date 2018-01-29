@@ -274,8 +274,6 @@ if (!$from)
 
 set_max_children(getopt('maxproc')) if (opt('maxproc'));
 
-my $dns_udp_rtt_high_history = get_history_by_itemid(CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
-
 # go through all the databases
 foreach (@server_keys)
 {
@@ -284,6 +282,8 @@ foreach (@server_keys)
 	dbg("getting probe statuses for period:", selected_period($from, $till));
 
 	db_connect($server_key);
+
+	my $dns_udp_rtt_high_history = get_history_by_itemid(CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
 
 	my $all_probes_ref = get_probes();
 
