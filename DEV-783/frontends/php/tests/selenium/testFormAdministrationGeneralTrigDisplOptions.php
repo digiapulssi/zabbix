@@ -57,6 +57,11 @@ class testFormAdministrationGeneralTrigDisplOptions extends CWebTest {
 		$this->zbxTestAssertElementValue('ok_period', $allValues['ok_period']);
 		$this->zbxTestAssertElementValue('blink_period', $allValues['blink_period']);
 
+		$this->zbxTestAssertElementPresentXpath("//input[@id='problem_unack_color'][@disabled]");
+		$this->zbxTestAssertElementPresentXpath("//input[@id='problem_ack_color'][@disabled]");
+		$this->zbxTestAssertElementPresentXpath("//input[@id='ok_unack_color'][@disabled]");
+		$this->zbxTestAssertElementPresentXpath("//input[@id='ok_ack_color'][@disabled]");
+
 		if ($allValues['problem_unack_style']==1) {
 			$this->assertTrue($this->zbxTestCheckboxSelected('problem_unack_style'));
 		}
@@ -105,7 +110,7 @@ class testFormAdministrationGeneralTrigDisplOptions extends CWebTest {
 
 		$oldHash = DBhash($sqlHash);
 
-		$this->zbxTestCheckboxSelect('custom_color', true);
+		$this->zbxTestCheckboxSelect('custom_color');
 
 		$this->zbxTestInputType('problem_unack_color', 'BB0000');
 		$this->zbxTestInputType('problem_ack_color', 'BB0000');
