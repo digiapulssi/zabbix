@@ -383,9 +383,12 @@ function PopUp(url, width, height, form_name) {
 	return false;
 }
 
-function redirect(uri, method, needle, invert_needle) {
+function redirect(uri, method, needle, invert_needle, add_sid) {
+	if (typeof add_sid === 'undefined') {
+		add_sid = true;
+	}
 	method = method || 'get';
-	var url = new Curl(uri);
+	var url = new Curl(uri, add_sid);
 
 	if (method.toLowerCase() == 'get') {
 		window.location = url.getUrl();
