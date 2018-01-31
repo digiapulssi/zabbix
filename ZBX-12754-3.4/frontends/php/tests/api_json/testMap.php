@@ -28,6 +28,11 @@ class testMap extends CZabbixTest {
 	 */
 	public $debug = '';
 
+	public function testMap_backup() {
+		DBsave_tables('sysmaps');
+		DBsave_tables('sysmaps_elements');
+	}
+
 	/**
 	 * Create map tests data provider.
 	 *
@@ -361,5 +366,10 @@ class testMap extends CZabbixTest {
 		else {
 			$this->assertArrayNotHasKey('error', $response, $error_json);
 		}
+	}
+
+	public function testMap_restore() {
+		DBrestore_tables('sysmaps');
+		DBrestore_tables('sysmaps_elements');
 	}
 }
