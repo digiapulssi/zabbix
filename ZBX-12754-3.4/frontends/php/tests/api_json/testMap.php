@@ -240,7 +240,6 @@ class testMap extends CZabbixTest {
 			[
 				'request_data' => [
 					[
-						'sysmapid' => '200',
 						'name' => 'A4',
 						'width' => '800',
 						'height' => '600',
@@ -290,7 +289,7 @@ class testMap extends CZabbixTest {
 								'application' => '',
 								'urls' => [],
 								'elements' => [
-									['sysmapid' => '200']
+									['sysmapid' => '10008']
 								],
 								'permission' => 3
 							]
