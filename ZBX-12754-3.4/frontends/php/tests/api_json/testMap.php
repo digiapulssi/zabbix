@@ -30,7 +30,6 @@ class testMap extends CZabbixTest {
 
 	public function testMap_backup() {
 		DBsave_tables('sysmaps');
-		DBsave_tables('sysmaps_elements');
 	}
 
 	/**
@@ -40,7 +39,7 @@ class testMap extends CZabbixTest {
 	 */
 	public static function createMapDataProvider() {
 		return [
-			// Success. Map A1, map B1 with submap having sysmapid=1 be created. Map with sysmapid=1 should exist.
+			// Success. Map A1, map B1 with submap having sysmapid=1 created. Map with sysmapid=1 should exist.
 			[
 				'request_data' => [
 					[
@@ -134,6 +133,69 @@ class testMap extends CZabbixTest {
 				],
 				'error' => null
 			],
+			// Success. Property itemid is not validated by circular reference when map is created.
+			[
+				'request_data' => [
+					[
+						'sysmapid' => '1',
+						'name' => 'A3',
+						'width' => '800',
+						'height' => '600',
+						'backgroundid' => '0',
+						'label_type' => '0',
+						'label_location' => '0',
+						'highlight' => '0',
+						'expandproblem' => '1',
+						'markelements' => '0',
+						'show_unack' => '0',
+						'grid_size' => '50',
+						'grid_show' => '1',
+						'grid_align' => '1',
+						'label_format' => '0',
+						'label_type_host' => '2',
+						'label_type_hostgroup' => '2',
+						'label_type_trigger' => '2',
+						'label_type_map' => '2',
+						'label_type_image' => '2',
+						'label_string_host' => '',
+						'label_string_hostgroup' => '',
+						'label_string_trigger' => '',
+						'label_string_map' => '',
+						'label_string_image' => '',
+						'iconmapid' => '0',
+						'expand_macros' => '0',
+						'severity_min' => '0',
+						'userid' => '1',
+						'private' => '1',
+						'selements' => [
+							[
+								'elementtype' => '1',
+								'iconid_off' => '151',
+								'iconid_on' => '0',
+								'label' => 'Test',
+								'label_location' => '-1',
+								'x' => '339',
+								'y' => '227',
+								'iconid_disabled' => '0',
+								'iconid_maintenance' => '0',
+								'elementsubtype' => '0',
+								'areatype' => '0',
+								'width' => '200',
+								'height' => '200',
+								'viewtype' => '0',
+								'use_iconmap' => '1',
+								'application' => '',
+								'urls' => [],
+								'elements' => [
+									['sysmapid' => '1']
+								],
+								'permission' => 3
+							]
+						]
+					]
+				],
+				'error' => null
+			],
 			// Fail. Map name is unique.
 			[
 				'request_data' => [
@@ -172,6 +234,71 @@ class testMap extends CZabbixTest {
 				],
 				'error' => [
 					'data' => 'Map "A1" already exists.'
+				]
+			],
+			// Fail. Cannot create map with submap with non existing sysmapid.
+			[
+				'request_data' => [
+					[
+						'sysmapid' => '200',
+						'name' => 'A4',
+						'width' => '800',
+						'height' => '600',
+						'backgroundid' => '0',
+						'label_type' => '0',
+						'label_location' => '0',
+						'highlight' => '0',
+						'expandproblem' => '1',
+						'markelements' => '0',
+						'show_unack' => '0',
+						'grid_size' => '50',
+						'grid_show' => '1',
+						'grid_align' => '1',
+						'label_format' => '0',
+						'label_type_host' => '2',
+						'label_type_hostgroup' => '2',
+						'label_type_trigger' => '2',
+						'label_type_map' => '2',
+						'label_type_image' => '2',
+						'label_string_host' => '',
+						'label_string_hostgroup' => '',
+						'label_string_trigger' => '',
+						'label_string_map' => '',
+						'label_string_image' => '',
+						'iconmapid' => '0',
+						'expand_macros' => '0',
+						'severity_min' => '0',
+						'userid' => '1',
+						'private' => '1',
+						'selements' => [
+							[
+								'elementtype' => '1',
+								'iconid_off' => '151',
+								'iconid_on' => '0',
+								'label' => 'Test',
+								'label_location' => '-1',
+								'x' => '339',
+								'y' => '227',
+								'iconid_disabled' => '0',
+								'iconid_maintenance' => '0',
+								'elementsubtype' => '0',
+								'areatype' => '0',
+								'width' => '200',
+								'height' => '200',
+								'viewtype' => '0',
+								'use_iconmap' => '1',
+								'application' => '',
+								'urls' => [],
+								'elements' => [
+									['sysmapid' => '200']
+								],
+								'permission' => 3
+							]
+						]
+					]
+				],
+				'error' => [
+					'data' => 'No permissions to referred object or it does not exist!'
 				]
 			]
 		];
@@ -370,6 +497,5 @@ class testMap extends CZabbixTest {
 
 	public function testMap_restore() {
 		DBrestore_tables('sysmaps');
-		DBrestore_tables('sysmaps_elements');
 	}
 }

@@ -924,8 +924,15 @@ class CMap extends CMapElement {
 				}
 			}
 
-			if (array_key_exists('selements', $map) && !is_array($map['selements'])) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+			if (array_key_exists('selements', $map)) {
+				if (!is_array($map['selements'])) {
+					self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
+				}
+				elseif (!CMapHelper::checkSelementPermissions($map['selements'])) {
+					self::exception(ZBX_API_ERROR_PERMISSIONS,
+						_('No permissions to referred object or it does not exist!')
+					);
+				}
 			}
 
 			// Map selement links.
@@ -951,9 +958,6 @@ class CMap extends CMapElement {
 				}
 			}
 		}
-
-		// Validate circular reference.
-		$this->validateCircularReference($maps);
 	}
 
 	/**
@@ -1400,6 +1404,7 @@ class CMap extends CMapElement {
 		// Validate circular reference.
 		foreach ($maps as &$map) {
 			$map = array_merge($db_maps[$map['sysmapid']], $map);
+			$this->cref_maps[$map['sysmapid']] = $map;
 		}
 		unset($map);
 
@@ -1421,12 +1426,6 @@ class CMap extends CMapElement {
 	 * @throws APIException if input is invalid.
 	 */
 	protected function validateCircularReference(array $maps) {
-		foreach ($maps as $map) {
-			if (array_key_exists('sysmapid', $map)) {
-				$this->cref_maps[$map['sysmapid']] = $map;
-			}
-		}
-
 		foreach ($maps as $map) {
 			if (!array_key_exists('selements', $map) || !$map['selements']) {
 				continue;
