@@ -1436,7 +1436,7 @@ class CMap extends CMapElement {
 				if (!$this->validateCircularReferenceRecursive($selement, $cref_mapids)) {
 					self::exception(ZBX_API_ERROR_PARAMETERS,
 						_s('Cannot add "%1$s" element of the map "%2$s" due to circular reference.',
-							$this->cref_maps[$cref_mapids[1]]['name'], $map['name'])
+							$selement['label'], $map['name'])
 					);
 				}
 			}

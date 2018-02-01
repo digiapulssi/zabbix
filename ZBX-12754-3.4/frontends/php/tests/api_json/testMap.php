@@ -28,6 +28,13 @@ class testMap extends CZabbixTest {
 	 */
 	public $debug = '';
 
+	/**
+	 * Users credentials used by test scenarios.
+	 */
+	public static $testUsers = [
+		'zabbix-user' => ['user' => 'zabbix-user', 'password' => 'zabbix']
+	];
+
 	public function testMap_backup() {
 		DBsave_tables('sysmaps');
 	}
@@ -306,14 +313,15 @@ class testMap extends CZabbixTest {
 	/**
 	 * @dataProvider createMapDataProvider
 	 */
-	public function testMapCreate($request_data, $error_expected = null) {
-		$response = $this->api_acall('map.create', $request_data, $this->debug);
+	public function testMapCreate($request_data, $error_expected = null, $user = []) {
+		$user += ['user' => 'Admin', 'password' => 'zabbix'];
+		$response = $this->api_call_with_user('map.create', $user, $request_data, $this->debug);
 		// Remove debug information.
 		unset($response['error']['debug']);
 		$error_json = array_key_exists('error', $response) ? json_encode($response['error'], JSON_PRETTY_PRINT) : null;
 
 		if ($error_expected != null) {
-			$this->assertArrayHasKey('error', $response, $error_json);
+			$this->assertArrayHasKey('error', $response, json_encode($response, JSON_PRETTY_PRINT));
 			$same_key_values = array_merge($response['error'], $error_expected);
 			$this->assertSame($response['error'], $same_key_values);
 		}
@@ -345,10 +353,10 @@ class testMap extends CZabbixTest {
 					]
 				],
 				'error' => [
-					'data' => 'Cannot add "A" element of the map "A" due to circular reference.'
+					'data' => 'Cannot add "" element of the map "A" due to circular reference.'
 				]
 			],
-			// Fail. Can not add map with sub maps having virvular reference.
+			// Fail. Can not add map with sub maps having circular reference.
 			[
 				'request_data' => [
 					[
@@ -357,6 +365,7 @@ class testMap extends CZabbixTest {
 						'selements' => [
 							[
 								'elementtype' => '1',
+								'label' => 'B map element',
 								'elements' => [
 									[
 										'sysmapid' => '10002'
@@ -395,10 +404,10 @@ class testMap extends CZabbixTest {
 					]
 				],
 				'error' => [
-					'data' => 'Cannot add "B" element of the map "A" due to circular reference.'
+					'data' => 'Cannot add "B map element" element of the map "A" due to circular reference.'
 				]
 			],
-			// Success. Can add existing map as sub map.
+			// Success. Can add existing map as sub map. A > B > C.
 			[
 				'request_data' => [
 					[
@@ -411,6 +420,21 @@ class testMap extends CZabbixTest {
 								'elements' => [
 									[
 										'sysmapid' => '10002'
+									]
+								]
+							]
+						]
+					],
+					[
+						'sysmapid' => '10002',
+						'name' => 'B',
+						'selements' => [
+							[
+								'elementtype' => '1',
+								'iconid_off' => '154',
+								'elements' => [
+									[
+										'sysmapid' => '10003'
 									]
 								]
 							]
@@ -444,6 +468,7 @@ class testMap extends CZabbixTest {
 							[
 								'elementtype' => '1',
 								'iconid_off' => '154',
+								'label' => 'New element',
 								'elements' => [
 									[
 										'sysmapid' => '10001'
@@ -469,8 +494,33 @@ class testMap extends CZabbixTest {
 					]
 				],
 				'error' => [
-					'data' => 'Cannot add "A" element of the map "D" due to circular reference.'
+					'data' => 'Cannot add "New element" element of the map "D" due to circular reference.'
 				]
+			],
+			// Fail. Circular validation message do not show private maps name.
+			[
+				'request_data' => [
+					[
+						'sysmapid' => '10003',
+						'name' => 'C',
+						'selements' => [
+							[
+								'elementtype' => '1',
+								'iconid_off' => '154',
+								'label' => 'ups!',
+								'elements' => [
+									[
+										'sysmapid' => '10001'
+									]
+								]
+							]
+						]
+					]
+				],
+				'error' => [
+					'data' => 'Cannot add "ups!" element of the map "C" due to circular reference.'
+				],
+				'user' => static::$testUsers['zabbix-user']
 			]
 		];
 	}
@@ -478,14 +528,15 @@ class testMap extends CZabbixTest {
 	/**
 	 * @dataProvider updateMapDataProvider
 	 */
-	public function testMapUpdate($request_data, $error_expected = null) {
-		$response = $this->api_acall('map.update', $request_data, $this->debug);
+	public function testMapUpdate($request_data, $error_expected = null, $user = []) {
+		$user += ['user' => 'Admin', 'password' => 'zabbix'];
+		$response = $this->api_call_with_user('map.update', $user, $request_data, $this->debug);
 		// Remove debug information.
 		unset($response['error']['debug']);
 		$error_json = array_key_exists('error', $response) ? json_encode($response['error'], JSON_PRETTY_PRINT) : null;
 
 		if ($error_expected != null) {
-			$this->assertArrayHasKey('error', $response, $error_json);
+			$this->assertArrayHasKey('error', $response, json_encode($response, JSON_PRETTY_PRINT));
 			$same_key_values = array_merge($response['error'], $error_expected);
 			$this->assertSame($response['error'], $same_key_values);
 		}
