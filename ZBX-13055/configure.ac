@@ -268,9 +268,9 @@ AC_TRY_LINK(
 #endif	/* T_SOA */
 ],
 [
-	struct __res_state	res_state;
+	struct __res_state	res_state_local;
 
-	res_ninit(&res_state);
+	res_ninit(&res_state_local);
 ],
 AC_DEFINE(HAVE_RES_NINIT,1,[Define to 1 if 'res_ninit' exists.])
 AC_MSG_RESULT(yes),
@@ -299,10 +299,10 @@ AC_TRY_LINK(
 #endif	/* T_SOA */
 ],
 [
-	struct __res_state	res_state;
+	struct __res_state	res_state_local;
 
-	res_ninit(&res_state);
-	res_ndestroy(&res_state);
+	res_ninit(&res_state_local);
+	res_ndestroy(&res_state_local);
 ],
 AC_DEFINE(HAVE_RES_NDESTROY,1,[Define to 1 if 'res_ndestroy' exists.])
 AC_MSG_RESULT(yes),
