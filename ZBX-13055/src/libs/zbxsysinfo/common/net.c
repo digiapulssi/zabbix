@@ -188,7 +188,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	char			*ip, zone[MAX_STRING_LEN], buffer[MAX_STRING_LEN], *zone_str, *param;
 	struct in_addr		inaddr;
 #ifndef _WINDOWS
-#if __RES>=19991006
+#ifdef HAVE_RES_NINIT
 	struct __res_state	res_state;
 #else	/* thread-unsafe resolver API */
 	int			saved_nscount = 0, saved_retrans, saved_retry;
@@ -469,7 +469,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		pDnsRecord = pDnsRecord->pNext;
 	}
 #else	/* not _WINDOWS */
-#if __RES>=19991006
+#ifdef HAVE_RES_NINIT
 	memset(&res_state, 0, sizeof(res_state));
 	if (-1 == res_ninit(&res_state))	/* initialize always, settings might have changed */
 #else
@@ -480,7 +480,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		return SYSINFO_RET_FAIL;
 	}
 
-#if __RES>=19991006
+#ifdef HAVE_RES_NINIT
 	if (-1 == (res = res_nmkquery(&res_state, QUERY, zone, C_IN, type, NULL, 0, NULL, buf, sizeof(buf))))
 #else
 	if (-1 == (res = res_mkquery(QUERY, zone, C_IN, type, NULL, 0, NULL, buf, sizeof(buf))))
@@ -498,7 +498,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 			return SYSINFO_RET_FAIL;
 		}
 
-#if __RES>=19991006
+#ifdef HAVE_RES_NINIT
 		res_state.nsaddr_list[0].sin_addr = inaddr;
 		res_state.nsaddr_list[0].sin_family = AF_INET;
 		res_state.nsaddr_list[0].sin_port = htons(ZBX_DEFAULT_DNS_PORT);
@@ -514,7 +514,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #endif
 	}
 
-#if __RES>=19991006
+#ifdef HAVE_RES_NINIT
 	if (0 != use_tcp)
 		res_state.options |= RES_USEVC;
 
@@ -522,7 +522,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	res_state.retry = retry;
 
 	res = res_nsend(&res_state, buf, res, answer.buffer, sizeof(answer.buffer));
-#	if __RES>=20090302
+#	if HAVE_RES_NDESTROY
 	res_ndestroy(&res_state);
 #	else
 	res_nclose(&res_state);
