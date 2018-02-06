@@ -383,9 +383,9 @@ class CMap extends CMapElement {
 				break;
 
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
-				$sql = 'SELECT se.selementid,se.sysmapid,set.triggerid AS elementid'.
-					' FROM sysmaps_elements se,sysmap_element_trigger set'.
-					' WHERE se.selementid=set.selementid'.
+				$sql = 'SELECT se.selementid,se.sysmapid,st.triggerid AS elementid'.
+					' FROM sysmaps_elements se,sysmap_element_trigger st'.
+					' WHERE se.selementid=st.selementid'.
 						' AND '.dbConditionInt('se.sysmapid', $sysmapids).
 						' AND '.dbConditionInt('se.elementtype', [$elementtype]);
 				break;
@@ -2293,9 +2293,9 @@ class CMap extends CMapElement {
 
 					if ($trigger_selementids) {
 						$db_selement_triggers = DBselect(
-							'SELECT set.selementid,set.triggerid'.
-							' FROM sysmap_element_trigger set'.
-							' WHERE '.dbConditionInt('set.selementid', array_keys($trigger_selementids))
+							'SELECT st.selementid,st.triggerid'.
+							' FROM sysmap_element_trigger st'.
+							' WHERE '.dbConditionInt('st.selementid', array_keys($trigger_selementids))
 						);
 
 						while ($db_selement_trigger = DBfetch($db_selement_triggers)) {
