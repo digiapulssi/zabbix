@@ -1239,6 +1239,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 			}
 		}
 	}
+
 	if ($elems['hostgroups'] && $hglabel) {
 		$groupids = [];
 
@@ -1264,6 +1265,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 			}
 		}
 	}
+
 	if ($elems['triggers'] && $tlabel) {
 		$selements = zbx_toHash($selements, 'selementid');
 		foreach ($elems['triggers'] as $selementid => $elem) {
@@ -1273,13 +1275,13 @@ function getSelementsInfo($sysmap, array $options = []) {
 			}
 		}
 	}
+
 	if ($elems['hosts'] && $hlabel) {
 		foreach ($elems['hosts'] as $elem) {
-			if (array_key_exists($elem['elements'][0]['hostid'], $allHosts)) {
-				$info[$elem['selementid']]['name'] = $allHosts[$elem['elements'][0]['hostid']]['name'];
-			}
-			else {
-				$info[$elem['selementid']]['name'] = '';
+			if ($sysmap_elem['permission'] >= PERM_READ) {
+				$info[$elem['selementid']]['name'] = array_key_exists($elem['elements'][0]['hostid'], $allHosts)
+					? $allHosts[$elem['elements'][0]['hostid']]['name']
+					: [];
 			}
 		}
 	}
