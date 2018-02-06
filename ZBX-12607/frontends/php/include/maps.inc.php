@@ -825,7 +825,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 		$selement['hosts'] = [];
 		$selement['triggers'] = [];
 
-		if (PERM_READ > $selement['permission']) {
+		if ($selement['permission'] < PERM_READ) {
 			continue;
 		}
 
@@ -1219,9 +1219,9 @@ function getSelementsInfo($sysmap, array $options = []) {
 	if ($elems['sysmaps'] && $mlabel) {
 		$sysmapids = [];
 
-		foreach ($elems['sysmaps'] as $sysmap_elem) {
-			if ($sysmap_elem['permission'] >= PERM_READ) {
-				$sysmapids[$sysmap_elem['elements'][0]['sysmapid']] = true;
+		foreach ($elems['sysmaps'] as $selement) {
+			if ($selement['permission'] >= PERM_READ) {
+				$sysmapids[$selement['elements'][0]['sysmapid']] = true;
 			}
 		}
 
@@ -1231,11 +1231,12 @@ function getSelementsInfo($sysmap, array $options = []) {
 			'preservekeys' => true
 		]);
 
-		foreach ($elems['sysmaps'] as $elem) {
-			if ($sysmap_elem['permission'] >= PERM_READ) {
-				$info[$elem['selementid']]['name'] = array_key_exists($elem['elements'][0]['sysmapid'], $db_sysmaps)
-					? $db_sysmaps[$elem['elements'][0]['sysmapid']]['name']
-					: '';
+		foreach ($elems['sysmaps'] as $selement) {
+			if ($selement['permission'] >= PERM_READ) {
+				$info[$selement['selementid']]['name'] =
+					array_key_exists($selement['elements'][0]['sysmapid'], $db_sysmaps)
+						? $db_sysmaps[$selement['elements'][0]['sysmapid']]['name']
+						: '';
 			}
 		}
 	}
@@ -1243,9 +1244,9 @@ function getSelementsInfo($sysmap, array $options = []) {
 	if ($elems['hostgroups'] && $hglabel) {
 		$groupids = [];
 
-		foreach ($elems['hostgroups'] as $sysmap_elem) {
-			if ($sysmap_elem['permission'] >= PERM_READ) {
-				$groupids[$sysmap_elem['elements'][0]['groupid']] = true;
+		foreach ($elems['hostgroups'] as $selement) {
+			if ($selement['permission'] >= PERM_READ) {
+				$groupids[$selement['elements'][0]['groupid']] = true;
 			}
 		}
 
@@ -1257,30 +1258,37 @@ function getSelementsInfo($sysmap, array $options = []) {
 			])
 			: [];
 
-		foreach ($elems['hostgroups'] as $elem) {
-			if ($sysmap_elem['permission'] >= PERM_READ) {
-				$info[$elem['selementid']]['name'] = array_key_exists($elem['elements'][0]['groupid'], $db_groups)
-					? $db_groups[$elem['elements'][0]['groupid']]['name']
-					: '';
+		foreach ($elems['hostgroups'] as $selement) {
+			if ($selement['permission'] >= PERM_READ) {
+				$info[$selement['selementid']]['name'] =
+					array_key_exists($selement['elements'][0]['groupid'], $db_groups)
+						? $db_groups[$selement['elements'][0]['groupid']]['name']
+						: '';
 			}
 		}
 	}
 
 	if ($elems['triggers'] && $tlabel) {
 		$selements = zbx_toHash($selements, 'selementid');
-		foreach ($elems['triggers'] as $selementid => $elem) {
-			foreach ($elem['elements'] as $element) {
-				$trigger = $selements[$selementid]['triggers'][$element['triggerid']];
-				$info[$elem['selementid']]['name'] = CMacrosResolverHelper::resolveTriggerName($trigger);
+		foreach ($elems['triggers'] as $selementid => $selement) {
+			foreach ($selement['elements'] as $element) {
+				if ($selement['permission'] >= PERM_READ) {
+					$trigger = array_key_exists($element['triggerid'], $selements[$selementid]['triggers'])
+						? $selements[$selementid]['triggers'][$element['triggerid']]
+						: null;
+					$info[$selement['selementid']]['name'] = ($trigger != null)
+						? CMacrosResolverHelper::resolveTriggerName($trigger)
+						: '';
+				}
 			}
 		}
 	}
 
 	if ($elems['hosts'] && $hlabel) {
-		foreach ($elems['hosts'] as $elem) {
-			if ($sysmap_elem['permission'] >= PERM_READ) {
-				$info[$elem['selementid']]['name'] = array_key_exists($elem['elements'][0]['hostid'], $allHosts)
-					? $allHosts[$elem['elements'][0]['hostid']]['name']
+		foreach ($elems['hosts'] as $selement) {
+			if ($selement['permission'] >= PERM_READ) {
+				$info[$selement['selementid']]['name'] = array_key_exists($selement['elements'][0]['hostid'], $allHosts)
+					? $allHosts[$selement['elements'][0]['hostid']]['name']
 					: [];
 			}
 		}
