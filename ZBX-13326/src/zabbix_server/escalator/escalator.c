@@ -320,7 +320,7 @@ static void	add_object_msg(zbx_uint64_t actionid, zbx_uint64_t operationid, zbx_
 	{
 		ZBX_STR2UINT64(userid, row[0]);
 
-		/* exclude acknowledgment author from the recipient list */
+		/* exclude acknowledgement author from the recipient list */
 		if (NULL != ack && ack->userid == userid)
 			continue;
 
@@ -423,7 +423,7 @@ static void	add_sentusers_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid, co
 	{
 		ZBX_DBROW2UINT64(userid, row[0]);
 
-		/* exclude acknowledgment author from the recipient list */
+		/* exclude acknowledgement author from the recipient list */
 		if (NULL != ack && ack->userid == userid)
 			continue;
 
@@ -504,7 +504,7 @@ static void	add_sentusers_ack_msg(ZBX_USER_MSG **user_msg, zbx_uint64_t actionid
 	{
 		ZBX_DBROW2UINT64(userid, row[0]);
 
-		/* exclude acknowledgment author from the recipient list */
+		/* exclude acknowledgement author from the recipient list */
 		if (ack->userid == userid)
 			continue;
 
@@ -2026,7 +2026,7 @@ static void	escalation_update_diff(const DB_ESCALATION *escalation, zbx_escalati
  *                                                                            *
  * Function: add_ack_escalation_r_eventids                                    *
  *                                                                            *
- * Purpose: check if acknowledgment events of current escalation has related  *
+ * Purpose: check if acknowledgement events of current escalation has related *
  *          recovery events and add those recovery event IDs to array of      *
  *          event IDs if this escalation                                      *
  *                                                                            *
@@ -2035,7 +2035,7 @@ static void	escalation_update_diff(const DB_ESCALATION *escalation, zbx_escalati
  *             event_pairs - [OUT] the array of event ID and recovery event   *
  *                                 pairs                                      *
  *                                                                            *
- * Comments: additionally acknowledgment event IDs are mapped with related    *
+ * Comments: additionally acknowledgement event IDs are mapped with related   *
  *           recovery event IDs in get_db_eventid_r_eventid_pairs()           *
  *                                                                            *
  ******************************************************************************/
