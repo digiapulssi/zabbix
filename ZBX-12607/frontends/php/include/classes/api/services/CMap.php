@@ -2324,7 +2324,12 @@ class CMap extends CMapElement {
 				}
 			}
 
-			$selements = $this->unsetExtraFields($selements, ['sysmapid', 'selementid', 'elementid', 'elementtype'],
+			foreach ($selements as &$selement) {
+				unset($selement['elementid']);
+			}
+			unset($selement);
+
+			$selements = $this->unsetExtraFields($selements, ['sysmapid', 'selementid', 'elementtype'],
 				$options['selectSelements']
 			);
 			$result = $relation_map->mapMany($result, $selements, 'selements');
