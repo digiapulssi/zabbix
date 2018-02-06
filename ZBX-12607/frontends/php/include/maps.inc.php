@@ -1220,22 +1220,22 @@ function getSelementsInfo($sysmap, array $options = []) {
 		$sysmapids = [];
 
 		foreach ($elems['sysmaps'] as $sysmap_elem) {
-			$sysmapids[$sysmap_elem['elements'][0]['sysmapid']] = true;
+			if ($sysmap_elem['permission'] >= PERM_READ) {
+				$sysmapids[$sysmap_elem['elements'][0]['sysmapid']] = true;
+			}
 		}
 
-		$subSysmaps = API::Map()->get([
+		$db_sysmaps = API::Map()->get([
+			'output' => ['name'],
 			'sysmapids' => array_keys($sysmapids),
-			'nopermissions' => true,
-			'output' => ['name']
+			'preservekeys' => true
 		]);
-		$subSysmaps = zbx_toHash($subSysmaps, 'sysmapid');
 
 		foreach ($elems['sysmaps'] as $elem) {
-			if (array_key_exists($elem['elements'][0]['sysmapid'], $subSysmaps)) {
-				$info[$elem['selementid']]['name'] = $subSysmaps[$elem['elements'][0]['sysmapid']]['name'];
-			}
-			else {
-				$info[$elem['selementid']]['name'] = '';
+			if ($sysmap_elem['permission'] >= PERM_READ) {
+				$info[$elem['selementid']]['name'] = array_key_exists($elem['elements'][0]['sysmapid'], $db_sysmaps)
+					? $db_sysmaps[$elem['elements'][0]['sysmapid']]['name']
+					: '';
 			}
 		}
 	}
@@ -1243,18 +1243,25 @@ function getSelementsInfo($sysmap, array $options = []) {
 		$groupids = [];
 
 		foreach ($elems['hostgroups'] as $sysmap_elem) {
-			$groupids[$sysmap_elem['elements'][0]['groupid']] = true;
+			if ($sysmap_elem['permission'] >= PERM_READ) {
+				$groupids[$sysmap_elem['elements'][0]['groupid']] = true;
+			}
 		}
 
-		$hostgroups = API::HostGroup()->get([
-			'groupids' => array_keys($groupids),
-			'nopermissions' => true,
-			'output' => ['name']
-		]);
-		$hostgroups = zbx_toHash($hostgroups, 'groupid');
+		$db_groups = $groupids
+			? API::HostGroup()->get([
+				'output' => ['name'],
+				'groupids' => array_keys($groupids),
+				'preservekeys' => true
+			])
+			: [];
 
 		foreach ($elems['hostgroups'] as $elem) {
-			$info[$elem['selementid']]['name'] = $hostgroups[$elem['elements'][0]['groupid']]['name'];
+			if ($sysmap_elem['permission'] >= PERM_READ) {
+				$info[$elem['selementid']]['name'] = array_key_exists($elem['elements'][0]['groupid'], $db_groups)
+					? $db_groups[$elem['elements'][0]['groupid']]['name']
+					: '';
+			}
 		}
 	}
 	if ($elems['triggers'] && $tlabel) {
