@@ -220,8 +220,6 @@ class CMap extends CMapElement {
 
 		while ($sysmap = DBfetch($sysmaps)) {
 			$result[$sysmap['sysmapid']] = $sysmap;
-//			$result[$sysmap['sysmapid']]['permission'] = PERM_READ_WRITE;
-//			$result[$sysmap['sysmapid']]['accessible_elements'] = 0;
 		}
 
 		return $result;
