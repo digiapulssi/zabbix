@@ -125,47 +125,38 @@ class CMapHelper {
 	 * @param int   $theme				Theme used to create missing elements (like hostgroup frame).
 	 */
 	protected static function resolveMapState(&$sysmap, $options, $theme) {
+		// Adding element names and removing inaccessible triggers from readable elements.
+		add_elementNames($sysmap['selements']);
+
 		$map_info_options = [
 			'severity_min' => array_key_exists('severity_min', $options) ? $options['severity_min'] : null
 		];
 
-		if ($sysmap['selements']) {
-			foreach ($sysmap['selements'] as &$selement) {
-				// If user has no access to whole host group, always show it as a SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP.
-				if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST_GROUP && $selement['permission'] < PERM_READ
-						&& $selement['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS) {
-					$selement['elementsubtype'] = SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP;
-				}
+		foreach ($sysmap['selements'] as &$selement) {
+			// If user has no access to whole host group, always show it as a SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP.
+			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST_GROUP && $selement['permission'] < PERM_READ
+					&& $selement['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS) {
+				$selement['elementsubtype'] = SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP;
 			}
-			unset($selement);
 		}
+		unset($selement);
 
 		$areas = populateFromMapAreas($sysmap, $theme);
 		$map_info = getSelementsInfo($sysmap, $map_info_options);
 		processAreasCoordinates($sysmap, $areas, $map_info);
-		add_elementNames($sysmap['selements']);
 
 		foreach ($sysmap['selements'] as $id => $element) {
+			if ($element['permission'] < PERM_READ) {
+				continue;
+			}
+
 			switch ($element['elementtype']) {
 				case SYSMAP_ELEMENT_TYPE_IMAGE:
 					$map_info[$id]['name'] = _('Image');
 					break;
 
-				case SYSMAP_ELEMENT_TYPE_TRIGGER:
-					// Skip inaccessible elements.
-					$selements_accessible = array_filter($element['elements'], function($elmn) {
-						return array_key_exists('elementName', $elmn);
-					});
-					if (($selements_accessible = reset($selements_accessible)) !== false) {
-						$map_info[$id]['name'] = $selements_accessible['elementName'];
-					} else {
-						$map_info[$id]['name'] = '';
-					}
-					break;
-
 				default:
 					$map_info[$id]['name'] = $element['elements'][0]['elementName'];
-					break;
 			}
 		}
 
