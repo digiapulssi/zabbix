@@ -130,7 +130,7 @@ class CMap extends CMapElement {
 		}
 
 		if ($limit !== null) {
-			$result = array_slice($result, 0, $limit);
+			$result = array_slice($result, 0, $limit, true);
 		}
 
 		if ($result) {
