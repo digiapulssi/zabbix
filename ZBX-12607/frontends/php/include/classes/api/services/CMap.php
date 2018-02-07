@@ -101,11 +101,13 @@ class CMap extends CMapElement {
 
 		$options = zbx_array_merge($this->defOptions, $options);
 
+		$limit = $options['limit'];
+		$options['limit'] = null;
+
 		if ($options['countOutput']) {
 			$count_output = true;
 			$options['output'] = ['sysmapid'];
 			$options['countOutput'] = false;
-			$options['limit'] = null;
 		}
 		else {
 			$count_output = false;
@@ -123,12 +125,16 @@ class CMap extends CMapElement {
 			}
 		}
 
-		if ($result) {
-			$result = $this->addRelatedObjects($options, $result);
-		}
-
 		if ($count_output) {
 			return count($result);
+		}
+
+		if ($limit !== null) {
+			$result = array_slice($result, 0, $limit);
+		}
+
+		if ($result) {
+			$result = $this->addRelatedObjects($options, $result);
 		}
 
 		// removing keys (hash -> array)
