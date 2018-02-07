@@ -1854,7 +1854,7 @@ function get_parent_sysmaps($sysmapid) {
  *
  * @return array
  */
-function getMapLabels($map, $map_info, $resolveMacros) {
+function getMapLabels($map, $map_info) {
 	if ($map['label_type'] == MAP_LABEL_TYPE_NOTHING && $map['label_format'] == SYSMAP_LABEL_ADVANCED_OFF) {
 		return;
 	}
@@ -1917,8 +1917,7 @@ function getMapLabels($map, $map_info, $resolveMacros) {
 			$statusLines[$selementId] = [];
 		}
 
-		$msg = $resolveMacros ? CMacrosResolverHelper::resolveMapLabelMacrosAll($selement) : $selement['label'];
-		$msgs = explode("\n", $msg);
+		$msgs = explode("\n", CMacrosResolverHelper::resolveMapLabelMacrosAll($selement));
 		foreach ($msgs as $msg) {
 			$labelLines[$selementId][] = ['content' => $msg];
 		}

@@ -169,7 +169,7 @@ class CMapHelper {
 			}
 		}
 
-		$labels = getMapLabels($sysmap, $map_info, true);
+		$labels = getMapLabels($sysmap, $map_info);
 		$highlights = getMapHighligts($sysmap, $map_info);
 		$actions = getActionsBySysmap($sysmap, $options);
 		$linktrigger_info = getMapLinktriggerInfo($sysmap, $options);
