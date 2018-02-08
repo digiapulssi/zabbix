@@ -240,21 +240,21 @@ class CMap extends CMapElement {
 	 * @return array
 	 */
 	private function checkPermissions(array $sysmapids, $editable) {
-		$sysmaps = [];
+		$sysmaps_r = [];
 		foreach ($sysmapids as $sysmapid) {
-			$sysmaps[$sysmapid] = ['permission' => PERM_NONE];
+			$sysmaps_r[$sysmapid] = true;
 		}
 
 		$selement_maps = [];
 
-		// Populating the map tree $selement_maps and list of shared maps $sysmaps.
+		// Populating the map tree $selement_maps and list of shared maps $sysmaps_r.
 		do {
 			$selements = self::get_selements($sysmapids, SYSMAP_ELEMENT_TYPE_MAP);
 
 			$sysmapids = [];
 
 			foreach ($selements as $sysmapid => $selement) {
-				if (!array_key_exists($sysmapid, $sysmaps)) {
+				if (!array_key_exists($sysmapid, $sysmaps_r)) {
 					$sysmapids[$sysmapid] = true;
 				}
 			}
@@ -271,7 +271,7 @@ class CMap extends CMapElement {
 
 				foreach ($sysmapids as $i => $sysmapid) {
 					if (array_key_exists($sysmapid, $db_sysmaps)) {
-						$sysmaps[$sysmapid] = ['permission' => PERM_NONE];
+						$sysmaps_r[$sysmapid] = true;
 					}
 					else {
 						unset($sysmapids[$i]);
@@ -281,15 +281,18 @@ class CMap extends CMapElement {
 		}
 		while ($sysmapids);
 
-		if ($editable) {
-			self::unsetMapsByTree($sysmaps, $selement_maps);
-		}
-		else {
-			$selement_images = self::get_selements(array_keys($sysmaps), SYSMAP_ELEMENT_TYPE_IMAGE);
+		$sysmaps_rw = $editable ? $sysmaps_r : [];
 
-			self::setMapPermissions($sysmaps, $selement_images, [0 => []], $selement_maps);
+		foreach ($sysmaps_r as &$sysmap_r) {
+			$sysmap_r = ['permission' => PERM_NONE];
 		}
-		$sysmapids = self::getSysmapIds($sysmaps, $editable);
+		unset($sysmap_r);
+
+		// Setting PERM_READ permission for maps with at least one image.
+		$selement_images = self::get_selements(array_keys($sysmaps_r), SYSMAP_ELEMENT_TYPE_IMAGE);
+		self::setMapPermissions($sysmaps_r, $selement_images, [0 => []], $selement_maps);
+
+		$sysmapids = self::getSysmapIds($sysmaps_r, $sysmaps_rw);
 
 		// Check permissions to the host groups.
 		if ($sysmapids) {
@@ -302,13 +305,11 @@ class CMap extends CMapElement {
 			]);
 
 			if ($editable) {
-				self::unsetMapsByElements($sysmaps, $selement_groups, $db_groups);
-				self::unsetMapsByTree($sysmaps, $selement_maps);
+				self::unsetMapsByElements($sysmaps_rw, $selement_groups, $db_groups);
 			}
-			else {
-				self::setMapPermissions($sysmaps, $selement_groups, $db_groups, $selement_maps);
-			}
-			$sysmapids = self::getSysmapIds($sysmaps, $editable);
+			self::setMapPermissions($sysmaps_r, $selement_groups, $db_groups, $selement_maps);
+
+			$sysmapids = self::getSysmapIds($sysmaps_r, $sysmaps_rw);
 		}
 
 		// Check permissions to the hosts.
@@ -322,19 +323,17 @@ class CMap extends CMapElement {
 			]);
 
 			if ($editable) {
-				self::unsetMapsByElements($sysmaps, $selement_hosts, $db_hosts);
-				self::unsetMapsByTree($sysmaps, $selement_maps);
+				self::unsetMapsByElements($sysmaps_rw, $selement_hosts, $db_hosts);
 			}
-			else {
-				self::setMapPermissions($sysmaps, $selement_hosts, $db_hosts, $selement_maps);
-			}
-			$sysmapids = self::getSysmapIds($sysmaps, $editable);
+			self::setMapPermissions($sysmaps_r, $selement_hosts, $db_hosts, $selement_maps);
+
+			$sysmapids = self::getSysmapIds($sysmaps_r, $sysmaps_rw);
 		}
 
 		// Check permissions to the triggers.
 		if ($sysmapids) {
 			$selement_triggers = self::get_selements($sysmapids, SYSMAP_ELEMENT_TYPE_TRIGGER);
-			$links = $editable ? self::get_links(array_keys($sysmaps)) : [];
+			$links = ($editable && $sysmaps_rw) ? self::get_links(array_keys($sysmaps_rw)) : [];
 
 			$db_triggers = API::Trigger()->get([
 				'output' => [],
@@ -343,24 +342,23 @@ class CMap extends CMapElement {
 			]);
 
 			if ($editable) {
-				self::unsetMapsByElements($sysmaps, $selement_triggers, $db_triggers);
-				self::unsetMapsByElements($sysmaps, $links, $db_triggers);
-				self::unsetMapsByTree($sysmaps, $selement_maps);
+				self::unsetMapsByElements($sysmaps_rw, $selement_triggers, $db_triggers);
+				self::unsetMapsByElements($sysmaps_rw, $links, $db_triggers);
 			}
-			else {
-				self::setMapPermissions($sysmaps, $selement_triggers, $db_triggers, $selement_maps);
+			self::setMapPermissions($sysmaps_r, $selement_triggers, $db_triggers, $selement_maps);
+		}
+
+		foreach ($sysmaps_r as $sysmapid => $sysmap_r) {
+			if ($sysmap_r['permission'] == PERM_NONE) {
+				unset($sysmaps_r[$sysmapid]);
 			}
 		}
 
-		if (!$editable) {
-			foreach ($sysmaps as $sysmapid => $sysmap) {
-				if ($sysmap['permission'] == PERM_NONE) {
-					unset($sysmaps[$sysmapid]);
-				}
-			}
+		if ($editable) {
+			self::unsetMapsByTree($sysmaps_rw, $sysmaps_r, $selement_maps);
 		}
 
-		return array_keys($sysmaps);
+		return array_keys($editable ? $sysmaps_rw : $sysmaps_r);
 	}
 
 	/**
@@ -430,28 +428,19 @@ class CMap extends CMapElement {
 	}
 
 	/**
-	 * Auxiliary function for unsetMapsByTree(). Removes branch of maps with inaccessible submaps.
-	 */
-	private static function unsetParentMap(array &$sysmaps, array $selement_maps, $sysmapid) {
-		foreach ($selement_maps[$sysmapid] as $selement) {
-			if (array_key_exists($selement['sysmapid'], $selement_maps)) {
-				self::unsetParentMap($sysmaps, $selement_maps, $selement['sysmapid']);
-			}
-			unset($sysmaps[$selement['sysmapid']]);
-		}
-	}
-
-	/**
 	 * Removes all inaccessible maps by map tree.
 	 *
-	 * @param array $sysmaps[<sysmapids>]                     The list of accessible sysmaps.
+	 * @param array $sysmaps_rw[<sysmapids>]                  The list of writable maps.
+	 * @param array $sysmaps_r[<sysmapids>]                   The list of readable maps.
 	 * @param array $selement_maps                            The map tree.
 	 * @param array $selement_maps[<sysmapid>][]['sysmapid']  Parent map ID.
 	 */
-	private static function unsetMapsByTree(array &$sysmaps, array $selement_maps) {
-		foreach (array_keys($selement_maps) as $sysmapid) {
-			if (!array_key_exists($sysmapid, $sysmaps)) {
-				self::unsetParentMap($sysmaps, $selement_maps, $sysmapid);
+	private static function unsetMapsByTree(array &$sysmaps_rw, array $sysmaps_r, array $selement_maps) {
+		foreach ($selement_maps as $child_sysmapid => $selements) {
+			if (!array_key_exists($child_sysmapid, $sysmaps_r)) {
+				foreach ($selements as $selement) {
+					unset($sysmaps_rw[$selement['sysmapid']]);
+				}
 			}
 		}
 	}
@@ -459,17 +448,17 @@ class CMap extends CMapElement {
 	/**
 	 * Removes all inaccessible maps by inacessible elements.
 	 *
-	 * @param array $sysmaps[<sysmapids>]                 The list of accessible sysmaps.
+	 * @param array $sysmaps_rw[<sysmapids>]              The list of writable maps.
 	 * @param array $elements                             The map elements.
 	 * @param array $elements[<elementid>][]['sysmapid']  Map ID.
-	 * @param array $db_elements                          The list of accessible elements.
+	 * @param array $db_elements                          The list of readable elements.
 	 * @param array $db_elements[<elementid>]
 	 */
-	private static function unsetMapsByElements(array &$sysmaps, array $elements, array $db_elements) {
+	private static function unsetMapsByElements(array &$sysmaps_rw, array $elements, array $db_elements) {
 		foreach ($elements as $elementid => $selements) {
 			if (!array_key_exists($elementid, $db_elements)) {
 				foreach ($selements as $selement) {
-					unset($sysmaps[$selement['sysmapid']]);
+					unset($sysmaps_rw[$selement['sysmapid']]);
 				}
 			}
 		}
@@ -478,11 +467,11 @@ class CMap extends CMapElement {
 	/**
 	 * Auxiliary function for setMapPermissions(). Set PERM_READ permission for all parent maps.
 	 */
-	private static function setParentMapPermissions(array &$sysmaps, array $selement_maps, $sysmapid) {
+	private static function setParentMapPermissions(array &$sysmaps_r, array $selement_maps, $sysmapid) {
 		if (array_key_exists($sysmapid, $selement_maps)) {
 			foreach ($selement_maps[$sysmapid] as $selement) {
-				self::setParentMapPermissions($sysmaps, $selement_maps, $selement['sysmapid']);
-				$sysmaps[$selement['sysmapid']]['permission'] = PERM_READ;
+				self::setParentMapPermissions($sysmaps_r, $selement_maps, $selement['sysmapid']);
+				$sysmaps_r[$selement['sysmapid']]['permission'] = PERM_READ;
 			}
 		}
 	}
@@ -490,21 +479,21 @@ class CMap extends CMapElement {
 	/**
 	 * Seting PERM_READ permissions for maps with at least one available element.
 	 *
-	 * @param array $sysmaps[<sysmapids>]                    The list of accessible sysmaps.
-	 * @param array $elements                                The map elements.
-	 * @param array $elements[<elementid>][]['sysmapid']     Map ID.
-	 * @param array $db_elements                             The list of accessible elements.
+	 * @param array $sysmaps_r[<sysmapids>]                   The list of readable maps.
+	 * @param array $elements                                 The map elements.
+	 * @param array $elements[<elementid>][]['sysmapid']      Map ID.
+	 * @param array $db_elements                              The list of readable elements.
 	 * @param array $db_elements[<elementid>]
 	 * @param array $selement_maps                            The map elements.
 	 * @param array $selement_maps[<sysmapid>][]['sysmapid']  Map ID.
 	 */
-	private static function setMapPermissions(array &$sysmaps, array $elements, array $db_elements,
+	private static function setMapPermissions(array &$sysmaps_r, array $elements, array $db_elements,
 			array $selement_maps) {
 		foreach ($elements as $elementid => $selements) {
 			if (array_key_exists($elementid, $db_elements)) {
 				foreach ($selements as $selement) {
-					self::setParentMapPermissions($sysmaps, $selement_maps, $selement['sysmapid']);
-					$sysmaps[$selement['sysmapid']]['permission'] = PERM_READ;
+					self::setParentMapPermissions($sysmaps_r, $selement_maps, $selement['sysmapid']);
+					$sysmaps_r[$selement['sysmapid']]['permission'] = PERM_READ;
 				}
 			}
 		}
@@ -513,24 +502,21 @@ class CMap extends CMapElement {
 	/**
 	 * Returns map ids which will be checked for permissions.
 	 *
-	 * @param array $sysmaps
-	 * @param array $sysmaps[<sysmapid>]['permission']
-	 * @param bool  $editable
+	 * @param array $sysmaps_r
+	 * @param array $sysmaps_r[<sysmapid>]['permission']
+	 * @param array $sysmaps_rw
+	 * @param array $sysmaps_rw[<sysmapid>]
 	 */
-	private static function getSysmapIds(array $sysmaps, $editable) {
-		if ($editable) {
-			return array_keys($sysmaps);
-		}
+	private static function getSysmapIds(array $sysmaps_r, array $sysmaps_rw) {
+		$sysmapids = $sysmaps_rw;
 
-		$sysmapids = [];
-
-		foreach ($sysmaps as $sysmapid => $sysmap) {
+		foreach ($sysmaps_r as $sysmapid => $sysmap) {
 			if ($sysmap['permission'] == PERM_NONE) {
-				$sysmapids[] = $sysmapid;
+				$sysmapids[$sysmapid] = true;
 			}
 		}
 
-		return $sysmapids;
+		return array_keys($sysmapids);
 	}
 
 	/**
