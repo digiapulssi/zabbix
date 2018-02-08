@@ -113,7 +113,7 @@ class CMap extends CMapElement {
 			$count_output = false;
 		}
 
-		$result = $this->get_maps($options);
+		$result = $this->getMaps($options);
 
 		if ($result && self::$userData['type'] != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
 			$sysmapids = array_flip($this->checkPermissions(array_keys($result), (bool) $options['editable']));
@@ -148,7 +148,7 @@ class CMap extends CMapElement {
 	/**
 	 * Returns maps without checking permissions to the elements.
 	 */
-	private function get_maps(array $options) {
+	private function getMaps(array $options) {
 		$sql_parts = [
 			'select'	=> ['sysmaps' => 's.sysmapid'],
 			'from'		=> ['sysmaps' => 'sysmaps s'],
@@ -249,7 +249,7 @@ class CMap extends CMapElement {
 
 		// Populating the map tree $selement_maps and list of shared maps $sysmaps_r.
 		do {
-			$selements = self::get_selements($sysmapids, SYSMAP_ELEMENT_TYPE_MAP);
+			$selements = self::getSelements($sysmapids, SYSMAP_ELEMENT_TYPE_MAP);
 
 			$sysmapids = [];
 
@@ -263,7 +263,7 @@ class CMap extends CMapElement {
 			$selement_maps += $selements;
 
 			if ($sysmapids) {
-				$db_sysmaps = $this->get_maps([
+				$db_sysmaps = $this->getMaps([
 					'output' => [],
 					'sysmapids' => $sysmapids,
 					'preservekeys' => true
@@ -289,14 +289,14 @@ class CMap extends CMapElement {
 		unset($sysmap_r);
 
 		// Setting PERM_READ permission for maps with at least one image.
-		$selement_images = self::get_selements(array_keys($sysmaps_r), SYSMAP_ELEMENT_TYPE_IMAGE);
+		$selement_images = self::getSelements(array_keys($sysmaps_r), SYSMAP_ELEMENT_TYPE_IMAGE);
 		self::setMapPermissions($sysmaps_r, $selement_images, [0 => []], $selement_maps);
 
 		$sysmapids = self::getSysmapIds($sysmaps_r, $sysmaps_rw);
 
 		// Check permissions to the host groups.
 		if ($sysmapids) {
-			$selement_groups = self::get_selements($sysmapids, SYSMAP_ELEMENT_TYPE_HOST_GROUP);
+			$selement_groups = self::getSelements($sysmapids, SYSMAP_ELEMENT_TYPE_HOST_GROUP);
 
 			$db_groups = API::HostGroup()->get([
 				'output' => [],
@@ -314,7 +314,7 @@ class CMap extends CMapElement {
 
 		// Check permissions to the hosts.
 		if ($sysmapids) {
-			$selement_hosts = self::get_selements($sysmapids, SYSMAP_ELEMENT_TYPE_HOST);
+			$selement_hosts = self::getSelements($sysmapids, SYSMAP_ELEMENT_TYPE_HOST);
 
 			$db_hosts = API::Host()->get([
 				'output' => [],
@@ -332,8 +332,8 @@ class CMap extends CMapElement {
 
 		// Check permissions to the triggers.
 		if ($sysmapids) {
-			$selement_triggers = self::get_selements($sysmapids, SYSMAP_ELEMENT_TYPE_TRIGGER);
-			$links = ($editable && $sysmaps_rw) ? self::get_links(array_keys($sysmaps_rw)) : [];
+			$selement_triggers = self::getSelements($sysmapids, SYSMAP_ELEMENT_TYPE_TRIGGER);
+			$links = ($editable && $sysmaps_rw) ? self::getLinks(array_keys($sysmaps_rw)) : [];
 
 			$db_triggers = API::Trigger()->get([
 				'output' => [],
@@ -364,7 +364,7 @@ class CMap extends CMapElement {
 	/**
 	 * Returns map elements for selected maps.
 	 */
-	private static function get_selements(array $sysmapids, $elementtype) {
+	private static function getSelements(array $sysmapids, $elementtype) {
 		$selements = [];
 
 		switch ($elementtype) {
@@ -398,7 +398,7 @@ class CMap extends CMapElement {
 			$selements[$db_selement['elementid']][] = [
 				'sysmapid' => $db_selement['sysmapid'],
 				'selementid' => $db_selement['selementid']
-			];;
+			];
 		}
 
 		return $selements;
@@ -407,7 +407,7 @@ class CMap extends CMapElement {
 	/**
 	 * Returns map links for selected maps.
 	 */
-	private static function get_links(array $sysmapids) {
+	private static function getLinks(array $sysmapids) {
 		$links = [];
 
 		$db_links = DBSelect(
@@ -477,7 +477,7 @@ class CMap extends CMapElement {
 	}
 
 	/**
-	 * Seting PERM_READ permissions for maps with at least one available element.
+	 * Setting PERM_READ permissions for maps with at least one available element.
 	 *
 	 * @param array $sysmaps_r[<sysmapids>]                   The list of readable maps.
 	 * @param array $elements                                 The map elements.
