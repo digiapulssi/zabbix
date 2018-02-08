@@ -427,19 +427,20 @@ class CMaintenance extends CApiService {
 	 *
 	 * @param array $maintenances
 	 *
-	 * @return boolean
+	 * @throws APIException if no permissions to object, it does no exists or validation errors
+	 *
+	 * @return array
 	 */
 	public function update(array $maintenances) {
-		$maintenances = zbx_toArray($maintenances);
-		$maintenanceids = zbx_objectValues($maintenances, 'maintenanceid');
-
 		// validate maintenance permissions
 		if (self::$userData['type'] == USER_TYPE_ZABBIX_USER) {
 			self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
 		}
 
+		$maintenances = zbx_toArray($maintenances);
+		$maintenanceids = zbx_objectValues($maintenances, 'maintenanceid');
 		$updMaintenances = $this->get([
-			'maintenanceids' => zbx_objectValues($maintenances, 'maintenanceid'),
+			'maintenanceids' => $maintenanceids,
 			'editable' => true,
 			'output' => API_OUTPUT_EXTEND,
 			'selectGroups' => ['groupid'],
@@ -490,70 +491,101 @@ class CMaintenance extends CApiService {
 		$groupids = [];
 
 		foreach ($maintenances as $maintenance) {
+
 			// validate maintenance active since
-			if (!validateUnixTime($maintenance['active_since'])) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _s('"%s" must be between 1970.01.01 and 2038.01.18.', _('Active since')));
+			if (array_key_exists('active_since', $maintenance)) {
+				$active_since = $maintenance['active_since'];
+
+				if (!validateUnixTime($active_since)) {
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('"%s" must be between 1970.01.01 and 2038.01.18.', _('Active since'))
+					);
+				}
+			}
+			else {
+				$active_since = $updMaintenances[$maintenance['maintenanceid']]['active_since'];
 			}
 
 			// validate maintenance active till
-			if (!validateUnixTime($maintenance['active_till'])) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _s('"%s" must be between 1970.01.01 and 2038.01.18.', _('Active till')));
+			if (array_key_exists('active_till', $maintenance)) {
+				$active_till = $maintenance['active_till'];
+
+				if (!validateUnixTime($active_till)) {
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('"%s" must be between 1970.01.01 and 2038.01.18.', _('Active till'))
+					);
+				}
+			}
+			else {
+				$active_till = $updMaintenances[$maintenance['maintenanceid']]['active_till'];
 			}
 
-			// validate maintenance active interval
-			if ($maintenance['active_since'] > $maintenance['active_till']) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _('Maintenance "Active since" value cannot be bigger than "Active till".'));
+			// validate maintenance active interval.
+			if ($active_since > $active_till) {
+				self::exception(ZBX_API_ERROR_PARAMETERS,
+					_('Maintenance "Active since" value cannot be bigger than "Active till".')
+				);
 			}
 
 			// validate timeperiods
-			if (!array_key_exists('timeperiods', $maintenance) || !is_array($maintenance['timeperiods'])
-					|| !$maintenance['timeperiods']) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _('At least one maintenance period must be created.'));
-			}
-
-			foreach ($maintenance['timeperiods'] as $timeperiod) {
-				if (!is_array($timeperiod)) {
+			if (array_key_exists('timeperiods', $maintenance)) {
+				if (!is_array($maintenance['timeperiods']) || !$maintenance['timeperiods']) {
 					self::exception(ZBX_API_ERROR_PARAMETERS, _('At least one maintenance period must be created.'));
+				}
+
+				foreach ($maintenance['timeperiods'] as $timeperiod) {
+					if (!is_array($timeperiod)) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _('At least one maintenance period must be created.'));
+					}
 				}
 			}
 
-			$hostids = array_merge($hostids, $maintenance['hostids']);
-			$groupids = array_merge($groupids, $maintenance['groupids']);
-		}
-
-		// validate hosts & groups
-		if (empty($hostids) && empty($groupids)) {
-			self::exception(ZBX_API_ERROR_PARAMETERS, _('At least one host or group should be selected.'));
-		}
-
-		// validate hosts permissions
-		$options = [
-			'hostids' => $hostids,
-			'editable' => true,
-			'output' => ['hostid'],
-			'preservekeys' => true
-		];
-		$updHosts = API::Host()->get($options);
-		foreach ($hostids as $hostid) {
-			if (!isset($updHosts[$hostid])) {
-				self::exception(ZBX_API_ERROR_PERMISSIONS, _('You do not have permission to perform this operation.'));
+			if (array_key_exists('hostids', $maintenance)) {
+				$hostids = array_merge($hostids, $maintenance['hostids']);
 			}
-		}
-		// validate groups permissions
-		$options = [
-			'groupids' => $groupids,
-			'editable' => true,
-			'output' => ['groupid'],
-			'preservekeys' => true
-		];
-		$updGroups = API::HostGroup()->get($options);
-		foreach ($groupids as $groupid) {
-			if (!isset($updGroups[$groupid])) {
-				self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
+
+			if (array_key_exists('groupids', $maintenance)) {
+				$groupids = array_merge($groupids, $maintenance['groupids']);
 			}
 		}
 
 		$this->removeSecondsFromTimes($maintenances);
+
+		// validate hosts permissions
+		if ($hostids) {
+			$options = [
+				'hostids' => $hostids,
+				'editable' => true,
+				'output' => ['hostid'],
+				'preservekeys' => true
+			];
+			$updHosts = API::Host()->get($options);
+			foreach ($hostids as $hostid) {
+				if (!isset($updHosts[$hostid])) {
+					self::exception(ZBX_API_ERROR_PERMISSIONS,
+						_('You do not have permission to perform this operation.')
+					);
+				}
+			}
+		}
+
+		// validate groups permissions
+		if ($groupids) {
+			$options = [
+				'groupids' => $groupids,
+				'editable' => true,
+				'output' => ['groupid'],
+				'preservekeys' => true
+			];
+			$updGroups = API::HostGroup()->get($options);
+			foreach ($groupids as $groupid) {
+				if (!isset($updGroups[$groupid])) {
+					self::exception(ZBX_API_ERROR_PERMISSIONS,
+						_('No permissions to referred object or it does not exist!')
+					);
+				}
+			}
+		}
 
 		$update = [];
 		foreach ($maintenances as $mnum => $maintenance) {
@@ -572,7 +604,9 @@ class CMaintenance extends CApiService {
 			];
 
 			// update time periods
-			$this->replaceTimePeriods($updMaintenances[$maintenance['maintenanceid']], $maintenance);
+			if (array_key_exists('timeperiods', $maintenance)) {
+				$this->replaceTimePeriods($updMaintenances[$maintenance['maintenanceid']], $maintenance);
+			}
 		}
 		DB::update('maintenances', $update);
 
@@ -581,49 +615,53 @@ class CMaintenance extends CApiService {
 		$insertGroups = [];
 
 		foreach ($maintenances as $maintenance) {
-			// putting apart those host<->maintenance connections that should be inserted, deleted and not changed
-			// $hostDiff['first'] - new hosts, that should be inserted
-			// $hostDiff['second'] - hosts, that should be deleted
-			// $hostDiff['both'] - hosts, that should not be touched
-			$hostDiff = zbx_array_diff(
-				zbx_toObject($maintenance['hostids'], 'hostid'),
-				$updMaintenances[$maintenance['maintenanceid']]['hosts'],
-				'hostid'
-			);
+			if ($hostids) {
+				// putting apart those host<->maintenance connections that should be inserted, deleted and not changed
+				// $hostDiff['first'] - new hosts, that should be inserted
+				// $hostDiff['second'] - hosts, that should be deleted
+				// $hostDiff['both'] - hosts, that should not be touched
+				$hostDiff = zbx_array_diff(
+					zbx_toObject($maintenance['hostids'], 'hostid'),
+					$updMaintenances[$maintenance['maintenanceid']]['hosts'],
+					'hostid'
+				);
 
-			foreach ($hostDiff['first'] as $host) {
-				$insertHosts[] = [
-					'hostid' => $host['hostid'],
-					'maintenanceid' => $maintenance['maintenanceid']
-				];
-			}
-			foreach ($hostDiff['second'] as $host) {
-				$deleteHosts = [
-					'hostid' => $host['hostid'],
-					'maintenanceid' => $maintenance['maintenanceid']
-				];
-				DB::delete('maintenances_hosts', $deleteHosts);
+				foreach ($hostDiff['first'] as $host) {
+					$insertHosts[] = [
+						'hostid' => $host['hostid'],
+						'maintenanceid' => $maintenance['maintenanceid']
+					];
+				}
+				foreach ($hostDiff['second'] as $host) {
+					$deleteHosts = [
+						'hostid' => $host['hostid'],
+						'maintenanceid' => $maintenance['maintenanceid']
+					];
+					DB::delete('maintenances_hosts', $deleteHosts);
+				}
 			}
 
-			// now the same with the groups
-			$groupDiff = zbx_array_diff(
-				zbx_toObject($maintenance['groupids'], 'groupid'),
-				$updMaintenances[$maintenance['maintenanceid']]['groups'],
-				'groupid'
-			);
+			if ($groupids) {
+				// now the same with the groups
+				$groupDiff = zbx_array_diff(
+					zbx_toObject($maintenance['groupids'], 'groupid'),
+					$updMaintenances[$maintenance['maintenanceid']]['groups'],
+					'groupid'
+				);
 
-			foreach ($groupDiff['first'] as $group) {
-				$insertGroups[] = [
-					'groupid' => $group['groupid'],
-					'maintenanceid' => $maintenance['maintenanceid']
-				];
-			}
-			foreach ($groupDiff['second'] as $group) {
-				$deleteGroups = [
-					'groupid' => $group['groupid'],
-					'maintenanceid' => $maintenance['maintenanceid']
-				];
-				DB::delete('maintenances_groups', $deleteGroups);
+				foreach ($groupDiff['first'] as $group) {
+					$insertGroups[] = [
+						'groupid' => $group['groupid'],
+						'maintenanceid' => $maintenance['maintenanceid']
+					];
+				}
+				foreach ($groupDiff['second'] as $group) {
+					$deleteGroups = [
+						'groupid' => $group['groupid'],
+						'maintenanceid' => $maintenance['maintenanceid']
+					];
+					DB::delete('maintenances_groups', $deleteGroups);
+				}
 			}
 
 			add_audit_ext(
@@ -639,8 +677,13 @@ class CMaintenance extends CApiService {
 			);
 		}
 
-		DB::insert('maintenances_hosts', $insertHosts);
-		DB::insert('maintenances_groups', $insertGroups);
+		if ($insertHosts) {
+			DB::insert('maintenances_hosts', $insertHosts);
+		}
+
+		if ($insertGroups) {
+			DB::insert('maintenances_groups', $insertGroups);
+		}
 
 		return ['maintenanceids' => $maintenanceids];
 	}
