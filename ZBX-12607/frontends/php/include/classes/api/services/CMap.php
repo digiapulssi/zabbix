@@ -333,19 +333,20 @@ class CMap extends CMapElement {
 		// Check permissions to the triggers.
 		if ($sysmapids) {
 			$selement_triggers = self::getSelements($sysmapids, SYSMAP_ELEMENT_TYPE_TRIGGER);
-			$links = ($editable && $sysmaps_rw) ? self::getLinks(array_keys($sysmaps_rw)) : [];
+			$link_triggers = self::getLinkTriggers($sysmapids);
 
 			$db_triggers = API::Trigger()->get([
 				'output' => [],
-				'triggerids' => array_keys($selement_triggers + $links),
+				'triggerids' => array_keys($selement_triggers + $link_triggers),
 				'preservekeys' => true
 			]);
 
 			if ($editable) {
 				self::unsetMapsByElements($sysmaps_rw, $selement_triggers, $db_triggers);
-				self::unsetMapsByElements($sysmaps_rw, $links, $db_triggers);
+				self::unsetMapsByElements($sysmaps_rw, $link_triggers, $db_triggers);
 			}
 			self::setMapPermissions($sysmaps_r, $selement_triggers, $db_triggers, $selement_maps);
+			self::setMapPermissions($sysmaps_r, $link_triggers, $db_triggers, $selement_maps);
 		}
 
 		foreach ($sysmaps_r as $sysmapid => $sysmap_r) {
@@ -385,7 +386,7 @@ class CMap extends CMapElement {
 				break;
 
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
-				$sql = 'SELECT se.selementid,se.sysmapid,st.triggerid AS elementid'.
+				$sql = 'SELECT se.sysmapid,st.triggerid AS elementid'.
 					' FROM sysmaps_elements se,sysmap_element_trigger st'.
 					' WHERE se.selementid=st.selementid'.
 						' AND '.dbConditionInt('se.sysmapid', $sysmapids).
@@ -395,10 +396,7 @@ class CMap extends CMapElement {
 		$db_selements = DBSelect($sql);
 
 		while ($db_selement = DBfetch($db_selements)) {
-			$selements[$db_selement['elementid']][] = [
-				'sysmapid' => $db_selement['sysmapid'],
-				'selementid' => $db_selement['selementid']
-			];
+			$selements[$db_selement['elementid']][] = ['sysmapid' => $db_selement['sysmapid']];
 		}
 
 		return $selements;
@@ -407,24 +405,21 @@ class CMap extends CMapElement {
 	/**
 	 * Returns map links for selected maps.
 	 */
-	private static function getLinks(array $sysmapids) {
-		$links = [];
+	private static function getLinkTriggers(array $sysmapids) {
+		$link_triggers = [];
 
 		$db_links = DBSelect(
-			'SELECT sl.linkid,sl.sysmapid,slt.triggerid'.
+			'SELECT sl.sysmapid,slt.triggerid'.
 			' FROM sysmaps_links sl,sysmaps_link_triggers slt'.
 			' WHERE sl.linkid=slt.linkid'.
 				' AND '.dbConditionInt('sl.sysmapid', $sysmapids)
 		);
 
 		while ($db_link = DBfetch($db_links)) {
-			$links[$db_link['triggerid']][] = [
-				'sysmapid' => $db_link['sysmapid'],
-				'linkid' => $db_link['linkid']
-			];;
+			$link_triggers[$db_link['triggerid']][] = ['sysmapid' => $db_link['sysmapid']];
 		}
 
-		return $links;
+		return $link_triggers;
 	}
 
 	/**
