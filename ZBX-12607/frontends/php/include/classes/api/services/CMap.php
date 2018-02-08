@@ -370,7 +370,7 @@ class CMap extends CMapElement {
 
 		switch ($elementtype) {
 			case SYSMAP_ELEMENT_TYPE_IMAGE:
-				$sql = 'SELECT se.selementid,se.sysmapid,0 AS elementid'.
+				$sql = 'SELECT se.sysmapid,0 AS elementid'.
 					' FROM sysmaps_elements se'.
 					' WHERE '.dbConditionInt('se.sysmapid', $sysmapids).
 						' AND '.dbConditionInt('se.elementtype', [$elementtype]);
@@ -379,7 +379,7 @@ class CMap extends CMapElement {
 			case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
 			case SYSMAP_ELEMENT_TYPE_HOST:
 			case SYSMAP_ELEMENT_TYPE_MAP:
-				$sql = 'SELECT se.selementid,se.sysmapid,se.elementid'.
+				$sql = 'SELECT se.sysmapid,se.elementid'.
 					' FROM sysmaps_elements se'.
 					' WHERE '.dbConditionInt('se.sysmapid', $sysmapids).
 						' AND '.dbConditionInt('se.elementtype', [$elementtype]);
