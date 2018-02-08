@@ -1,8 +1,18 @@
-Changes for 3.4.7rc1
-
-New features:
+Changes for 3.4.7rc2
 
 Bug fixes:
+....I..... [ZBX-13055] fixed compilation failure in Alpine Linux due to missing res_ninit() function (vso)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.7rc1
+
+Bug fixes:
+........S. [ZBX-13194] fixed incorrect processing of zabbix[wcache,value,*] internal check (Sergejs)
+.......PS. [ZBX-13060] added limitation for meaningless server reconnection attempts to incorrectly configured passive proxy (viktors)
+...G...... [ZBX-13117] fixed vfs.dir.size with symbol links on Windows (MVekslers)
+........S. [ZBX-12643] improved error log message in case Zabbix server database cannot be used due to empty "users" table (vso)
+...G...... [ZBX-11720] fixed memory leak which breaks vfs.fs.size, vfs.fs.inode and vfs.dir.size items if compiled with LeakSanitizer (Andris)
+........S. [ZBX-13131] fixed truncated multiline text values from network discovery SNMP checks (viktors)
 ........S. [ZBX-13343] fixed last trends update clock caching (wiper)
 A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
 ..F....... [ZBX-13223] fixed graphs duplication in graph preview (ashubin)
@@ -1078,9 +1088,8 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 --------------------------------------------------------------------------------
 Changes for 3.0.15rc1
 
-New features:
-
 Bug fixes:
+........S. [ZBX-12643] improved error log message in case Zabbix server database cannot be used due to empty "users" table (vso)
 A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
 ...G...... [ZBX-13055] fixed problems with DNS resolver interface on NetBSD (valdis)
 ..F....... [ZBX-13345] removed SID from URL in screen edit mode (miks)
