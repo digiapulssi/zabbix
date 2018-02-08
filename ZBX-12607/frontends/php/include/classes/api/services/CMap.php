@@ -284,7 +284,7 @@ class CMap extends CMapElement {
 		$sysmaps_rw = $editable ? $sysmaps_r : [];
 
 		foreach ($sysmaps_r as &$sysmap_r) {
-			$sysmap_r = ['permission' => PERM_NONE];
+			$sysmap_r = ['permission' => PERM_NONE, 'has_elements' => false];
 		}
 		unset($sysmap_r);
 
@@ -349,7 +349,7 @@ class CMap extends CMapElement {
 		}
 
 		foreach ($sysmaps_r as $sysmapid => $sysmap_r) {
-			if ($sysmap_r['permission'] == PERM_NONE) {
+			if ($sysmap_r['permission'] == PERM_NONE && $sysmap_r['has_elements']) {
 				unset($sysmaps_r[$sysmapid]);
 			}
 		}
@@ -495,6 +495,9 @@ class CMap extends CMapElement {
 					self::setParentMapPermissions($sysmaps_r, $selement_maps, $selement['sysmapid']);
 					$sysmaps_r[$selement['sysmapid']]['permission'] = PERM_READ;
 				}
+			}
+			foreach ($selements as $selement) {
+				$sysmaps_r[$selement['sysmapid']]['has_elements'] = true;
 			}
 		}
 	}
