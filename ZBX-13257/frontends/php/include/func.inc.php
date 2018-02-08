@@ -1486,7 +1486,7 @@ function getPagingLine(&$items, $sortorder, CUrl $url) {
 
 	if ($limit_exceeded) {
 		if ($sortorder == ZBX_SORT_DOWN) {
-			$offset = $itemsCount - $config['search_limit'];
+			$offset = $itemsCount - 1 - $config['search_limit'];
 		}
 		$itemsCount = $config['search_limit'];
 	}
