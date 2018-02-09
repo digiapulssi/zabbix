@@ -357,7 +357,13 @@ class CMap extends CMapElement {
 		}
 
 		foreach ($sysmaps_r as $sysmapid => $sysmap_r) {
-			if ($sysmap_r['permission'] == PERM_NONE && $sysmap_r['has_elements']) {
+			if (!$sysmap_r['has_elements']) {
+				self::setMapPermission($sysmaps_r, $selement_maps, $sysmapid);
+			}
+		}
+
+		foreach ($sysmaps_r as $sysmapid => $sysmap_r) {
+			if ($sysmap_r['permission'] == PERM_NONE) {
 				unset($sysmaps_r[$sysmapid]);
 			}
 		}
@@ -467,15 +473,20 @@ class CMap extends CMapElement {
 	}
 
 	/**
-	 * Auxiliary function for setMapPermissions(). Set PERM_READ permission for all parent maps.
+	 * Set PERM_READ permission for map and all parent maps.
+	 *
+	 * @param array  $sysmaps_r[<sysmapids>]                   The list of readable maps.
+	 * @param array  $selement_maps                            The map elements.
+	 * @param array  $selement_maps[<sysmapid>][]['sysmapid']  Map ID.
+	 * @param string $sysmapid
 	 */
-	private static function setParentMapPermissions(array &$sysmaps_r, array $selement_maps, $sysmapid) {
+	private static function setMapPermission(array &$sysmaps_r, array $selement_maps, $sysmapid) {
 		if (array_key_exists($sysmapid, $selement_maps)) {
 			foreach ($selement_maps[$sysmapid] as $selement) {
-				self::setParentMapPermissions($sysmaps_r, $selement_maps, $selement['sysmapid']);
-				$sysmaps_r[$selement['sysmapid']]['permission'] = PERM_READ;
+				self::setMapPermission($sysmaps_r, $selement_maps, $selement['sysmapid']);
 			}
 		}
+		$sysmaps_r[$sysmapid]['permission'] = PERM_READ;
 	}
 
 	/**
@@ -494,8 +505,7 @@ class CMap extends CMapElement {
 		foreach ($elements as $elementid => $selements) {
 			if (array_key_exists($elementid, $db_elements)) {
 				foreach ($selements as $selement) {
-					self::setParentMapPermissions($sysmaps_r, $selement_maps, $selement['sysmapid']);
-					$sysmaps_r[$selement['sysmapid']]['permission'] = PERM_READ;
+					self::setMapPermission($sysmaps_r, $selement_maps, $selement['sysmapid']);
 				}
 			}
 		}
