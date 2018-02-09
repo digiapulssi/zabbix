@@ -1,6 +1,7 @@
 Changes for 3.4.7rc2
 
 Bug fixes:
+.......P.. [ZBX-13403] allowed proxy to execute remote commands on agents using encrypted connection (gleb)
 .......PS. [ZBX-13441] fixed crashes in case of failures (e.g. timeouts) during VMware hypervisor discovery (gleb)
 A.F....... [ZBX-12607] fixed performance of map.get API method and map-related views (miks, Sasha)
 ....I..... [ZBX-13055] fixed compilation failure in Alpine Linux due to missing res_ninit() function (vso)
