@@ -1263,7 +1263,8 @@
 					body = data.dialogue['body'],
 					footer = $('.overlay-dialogue-footer', data.dialogue['div']),
 					form = $('form', body),
-					widget = data.dialogue['widget'], // widget currently beeing edited
+					widget = data.dialogue['widget'], 			// widget currently beeing edited
+					widget_type = data.dialogue['widget_type'],	// last widget type
 					url = new Curl('zabbix.php'),
 					ajax_data = {},
 					fields;
@@ -1277,9 +1278,16 @@
 					// Take values from form.
 					fields = form.serializeJSON();
 					ajax_data['type'] = fields['type'];
-					ajax_data['name'] = fields['name'];
 					delete fields['type'];
-					delete fields['name'];
+
+					if (widget_type == ajax_data['type']) {
+						ajax_data['name'] = fields['name'];
+						delete fields['name'];
+					}
+					else {
+						// Get default config if widget type changed.
+						fields = {};
+					}
 				}
 				else if (widget !== null) {
 					// Open form with current config.
@@ -1291,6 +1299,9 @@
 					// Get default config for new widget.
 					fields = {};
 				}
+
+				data.dialogue['widget_type'] = ajax_data['type'];
+
 				if (Object.keys(fields).length != 0) {
 					ajax_data['fields'] = JSON.stringify(fields);
 				}
