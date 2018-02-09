@@ -288,9 +288,12 @@ class CMap extends CMapElement {
 		}
 		unset($sysmap_r);
 
+		self::setHasElements($sysmaps_r, $selement_maps);
+
 		// Setting PERM_READ permission for maps with at least one image.
 		$selement_images = self::getSelements(array_keys($sysmaps_r), SYSMAP_ELEMENT_TYPE_IMAGE);
 		self::setMapPermissions($sysmaps_r, $selement_images, [0 => []], $selement_maps);
+		self::setHasElements($sysmaps_r, $selement_images);
 
 		$sysmapids = self::getSysmapIds($sysmaps_r, $sysmaps_rw);
 
@@ -308,6 +311,7 @@ class CMap extends CMapElement {
 				self::unsetMapsByElements($sysmaps_rw, $selement_groups, $db_groups);
 			}
 			self::setMapPermissions($sysmaps_r, $selement_groups, $db_groups, $selement_maps);
+			self::setHasElements($sysmaps_r, $selement_groups);
 
 			$sysmapids = self::getSysmapIds($sysmaps_r, $sysmaps_rw);
 		}
@@ -326,6 +330,7 @@ class CMap extends CMapElement {
 				self::unsetMapsByElements($sysmaps_rw, $selement_hosts, $db_hosts);
 			}
 			self::setMapPermissions($sysmaps_r, $selement_hosts, $db_hosts, $selement_maps);
+			self::setHasElements($sysmaps_r, $selement_hosts);
 
 			$sysmapids = self::getSysmapIds($sysmaps_r, $sysmaps_rw);
 		}
@@ -347,6 +352,8 @@ class CMap extends CMapElement {
 			}
 			self::setMapPermissions($sysmaps_r, $selement_triggers, $db_triggers, $selement_maps);
 			self::setMapPermissions($sysmaps_r, $link_triggers, $db_triggers, $selement_maps);
+			self::setHasElements($sysmaps_r, $selement_triggers);
+			self::setHasElements($sysmaps_r, $link_triggers);
 		}
 
 		foreach ($sysmaps_r as $sysmapid => $sysmap_r) {
@@ -491,6 +498,18 @@ class CMap extends CMapElement {
 					$sysmaps_r[$selement['sysmapid']]['permission'] = PERM_READ;
 				}
 			}
+		}
+	}
+
+	/**
+	 * Setting "has_elements" flag for maps.
+	 *
+	 * @param array $sysmaps_r[<sysmapids>]                   The list of readable maps.
+	 * @param array $elements                                 The map elements.
+	 * @param array $elements[<elementid>]
+	 */
+	private static function setHasElements(array &$sysmaps_r, array $elements) {
+		foreach ($elements as $elementid => $selements) {
 			foreach ($selements as $selement) {
 				$sysmaps_r[$selement['sysmapid']]['has_elements'] = true;
 			}
