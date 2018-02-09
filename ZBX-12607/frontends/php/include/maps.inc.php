@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1142,6 +1142,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 		elseif ($sysmap['expandproblem'] == SYSMAP_SINGLE_PROBLEM && $i['problem']) {
 			$i['problem_title'] = CMacrosResolverHelper::resolveTriggerName($selement['triggers'][$lastProblemId]);
 			$i['expandproblem'] = SYSMAP_SINGLE_PROBLEM;
+			$critical_triggerid = $lastProblemId;
 		}
 		// Number of problems and expand most critical one.
 		elseif ($sysmap['expandproblem'] == SYSMAP_PROBLEMS_NUMBER_CRITICAL && $i['problem']) {
@@ -1195,6 +1196,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 				}
 
 				$info[$selementId] = getTriggersInfo($selement, $i, $showUnacknowledged);
+				$info[$selementId]['triggerid'] = $critical_triggerid;
 				break;
 
 			case SYSMAP_ELEMENT_TYPE_IMAGE:

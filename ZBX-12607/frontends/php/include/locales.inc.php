@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ function getLocales() {
  * @return array a list of possible locale names
  */
 function zbx_locale_variants($language) {
-	if ((stristr($_SERVER['SERVER_SOFTWARE'], 'win32') !== false) || (stristr($_SERVER['SERVER_SOFTWARE'], 'win64') !== false)) {
+	if (strtolower(substr(PHP_OS, 0, 3)) === 'win') {
 		return zbx_locale_variants_win($language);
 	}
 	else {

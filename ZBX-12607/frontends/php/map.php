@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,7 +69,6 @@ if (getRequest('used_in_widget', 0)) {
 
 if ($map_data['id'] == -1) {
 	$options['timestamp'] = null;
-	$options['homepage'] = null;
 }
 
 echo CJs::encodeJson($options);

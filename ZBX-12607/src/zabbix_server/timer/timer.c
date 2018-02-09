@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,8 +79,7 @@ static void	process_time_functions(int *triggers_count, int *events_count)
 
 		zbx_process_triggers(&trigger_order, &trigger_diff);
 
-		if (0 != (events_num = process_trigger_events(&trigger_diff, &triggerids,
-				ZBX_EVENTS_PROCESS_CORRELATION)))
+		if (0 != (events_num = zbx_process_events(&trigger_diff, &triggerids)))
 		{
 			*events_count += events_num;
 
@@ -89,6 +88,8 @@ static void	process_time_functions(int *triggers_count, int *events_count)
 		}
 
 		DBcommit();
+
+		DBupdate_itservices(&trigger_diff);
 
 		DCconfig_unlock_triggers(&triggerids);
 		zbx_vector_uint64_clear(&triggerids);
@@ -653,9 +654,13 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 		nextcheck = now + TIMER_DELAY - (now % TIMER_DELAY);
 		sleeptime = nextcheck - now;
 
-		/* flush correlated event queue and set minimal sleep time if queue is not empty */
-		if (0 != flush_correlated_events() && 1 < sleeptime)
-			sleeptime = 1;
+		/* try flushing correlated event queue */
+		if (0 != zbx_flush_correlated_events())
+		{
+			/* force minimal sleep period if there are still some events left in queue */
+			if (1 < sleeptime)
+				sleeptime = 1;
+		}
 
 		if (0 != sleeptime || STAT_INTERVAL <= time(NULL) - last_stat_time)
 		{
@@ -744,7 +749,7 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 
 		/* only the "timer #1" process evaluates the maintenance periods */
 		if (1 != process_num)
-			continue;
+			goto next;
 
 		/* we process maintenance at every 00 sec */
 		/* process time functions can take long time */
@@ -760,6 +765,12 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 			hm_count += process_maintenance();
 			total_sec_maint += zbx_time() - sec_maint;
 		}
+next:
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#else
+		;
+#endif
 	}
 
 #undef STAT_INTERVAL

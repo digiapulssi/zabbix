@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,7 +55,6 @@ $fields = [
 	'add' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'update' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'delete' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
-	'delete_selected' =>	[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'add_permission' =>		[T_ZBX_STR, O_OPT, null,		 null,	null],
 	'new_permission' =>		[T_ZBX_STR, O_OPT, null,		 null,	null],
 	'groupids' =>			[T_ZBX_STR, O_OPT, null,		 null,	null],

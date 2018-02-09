@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -173,14 +173,14 @@ if ($this->data['action'] == HISTORY_VALUES || $this->data['action'] == HISTORY_
 
 // for batch graphs don't remember the time selection in the profiles
 if ($this->data['action'] == HISTORY_BATCH_GRAPH) {
-	$profileIdx = false;
-	$profileIdx2 = false;
+	$profileIdx = null;
+	$profileIdx2 = null;
 	$updateProfile = false;
 }
 else {
 	$profileIdx = 'web.item.graph';
 	$profileIdx2 = reset($this->data['itemids']);
-	$updateProfile = ($this->data['action'] != HISTORY_BATCH_GRAPH);
+	$updateProfile = ($this->data['period'] !== null || $this->data['stime'] !== null || $this->data['isNow'] !== null);
 }
 
 // create history screen
@@ -193,6 +193,7 @@ $screen = CScreenBuilder::getScreen([
 	'updateProfile' => $updateProfile,
 	'period' => $this->data['period'],
 	'stime' => $this->data['stime'],
+	'isNow' => $this->data['isNow'],
 	'filter' => getRequest('filter'),
 	'filter_task' => getRequest('filter_task'),
 	'mark_color' => getRequest('mark_color'),
@@ -249,10 +250,13 @@ else {
 
 	$historyWidget->addItem($screen->get());
 
-	CScreenBuilder::insertScreenStandardJs([
-		'timeline' => $screen->timeline,
-		'profileIdx' => $screen->profileIdx
-	]);
+	if ($data['action'] !== HISTORY_LATEST) {
+		CScreenBuilder::insertScreenStandardJs([
+			'timeline' => $screen->timeline,
+			'profileIdx' => $screen->profileIdx,
+			'profileIdx2' => $screen->profileIdx2
+		]);
+	}
 }
 
 return $historyWidget;

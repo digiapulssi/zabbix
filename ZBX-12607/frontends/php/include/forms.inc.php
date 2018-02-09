@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1515,6 +1515,18 @@ function getTriggerFormData(array $data) {
 		if (count($hosts) > 0 && !in_array(['hostid' => $data['hostid']], $hosts)) {
 			$host = reset($hosts);
 			$data['hostid'] = $host['hostid'];
+		}
+	}
+
+	if ($data['hostid'] && (!array_key_exists('groupid', $data) || !$data['groupid'])) {
+		$db_hostgroups = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'hostids' => $data['hostid'],
+			'templateids' => $data['hostid']
+		]);
+
+		if ($db_hostgroups) {
+			$data['groupid'] = $db_hostgroups[0]['groupid'];
 		}
 	}
 

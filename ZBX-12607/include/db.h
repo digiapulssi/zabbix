@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -209,8 +209,6 @@ struct	_DC_TRIGGER;
 					else					\
 						is_uint64(row, &uint)
 
-#define ZBX_MAX_SQL_LEN		65535
-
 #define ZBX_DB_MAX_ID	(zbx_uint64_t)__UINT64_C(0x7fffffffffffffff)
 
 typedef struct
@@ -292,7 +290,6 @@ typedef struct
 #define ZBX_FLAGS_DB_EVENT_UNSET		0x0000
 #define ZBX_FLAGS_DB_EVENT_CREATE		0x0001
 #define ZBX_FLAGS_DB_EVENT_NO_ACTION		0x0002
-#define ZBX_FLAGS_DB_EVENT_LINKED		0x0004
 	zbx_uint64_t		flags;
 }
 DB_EVENT;
@@ -555,7 +552,7 @@ void	DBdelete_graphs(zbx_vector_uint64_t *graphids);
 void	DBdelete_hosts(zbx_vector_uint64_t *hostids);
 void	DBdelete_hosts_with_prototypes(zbx_vector_uint64_t *hostids);
 
-int	DBupdate_itservices(zbx_vector_ptr_t *trigger_diff);
+int	DBupdate_itservices(const zbx_vector_ptr_t *trigger_diff);
 int	DBremove_triggers_from_itservices(zbx_uint64_t *triggerids, int triggerids_num);
 
 int	zbx_create_itservices_lock(char **error);
@@ -565,6 +562,8 @@ void	DBadd_condition_alloc(char **sql, size_t *sql_alloc, size_t *sql_offset, co
 		const zbx_uint64_t *values, const int num);
 void	DBadd_str_condition_alloc(char **sql, size_t *sql_alloc, size_t *sql_offset, const char *fieldname,
 		const char **values, const int num);
+
+int	zbx_check_user_permissions(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid);
 
 const char	*zbx_host_string(zbx_uint64_t hostid);
 const char	*zbx_host_key_string(zbx_uint64_t itemid);
@@ -598,6 +597,9 @@ int	DBtxn_ongoing(void);
 
 int	DBtable_exists(const char *table_name);
 int	DBfield_exists(const char *table_name, const char *field_name);
+#ifndef HAVE_SQLITE3
+int	DBindex_exists(const char *table_name, const char *index_name);
+#endif
 
 int	DBexecute_multiple_query(const char *query, const char *field_name, zbx_vector_uint64_t *ids);
 int	DBlock_record(const char *table, zbx_uint64_t id, const char *add_field, zbx_uint64_t add_id);
@@ -682,5 +684,35 @@ zbx_host_availability_t;
 int	zbx_sql_add_host_availability(char **sql, size_t *sql_alloc, size_t *sql_offset,
 		const zbx_host_availability_t *ha);
 int	DBget_user_by_active_session(const char *sessionid, zbx_user_t *user);
+
+typedef struct
+{
+	zbx_uint64_t	itemid;
+	zbx_uint64_t	lastlogsize;
+	unsigned char	state;
+	int		mtime;
+	int		lastclock;
+	const char	*error;
+
+	zbx_uint64_t	flags;
+#define ZBX_FLAGS_ITEM_DIFF_UNSET			0x0000
+#define ZBX_FLAGS_ITEM_DIFF_UPDATE_STATE		0x0001
+#define ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR		0x0002
+#define ZBX_FLAGS_ITEM_DIFF_UPDATE_MTIME		0x0004
+#define ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE		0x0008
+#define ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTCLOCK		0x1000
+#define ZBX_FLAGS_ITEM_DIFF_UPDATE_DB			\
+	(ZBX_FLAGS_ITEM_DIFF_UPDATE_STATE | ZBX_FLAGS_ITEM_DIFF_UPDATE_ERROR |\
+	ZBX_FLAGS_ITEM_DIFF_UPDATE_MTIME | ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTLOGSIZE)
+#define ZBX_FLAGS_ITEM_DIFF_UPDATE	(ZBX_FLAGS_ITEM_DIFF_UPDATE_DB | ZBX_FLAGS_ITEM_DIFF_UPDATE_LASTCLOCK)
+}
+zbx_item_diff_t;
+
+/* event support */
+void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events);
+void	zbx_db_free_event(DB_EVENT *event);
+void	zbx_db_get_eventid_r_eventid_pairs(zbx_vector_uint64_t *eventids, zbx_vector_uint64_pair_t *event_pairs,
+		zbx_vector_uint64_t *r_eventids);
+
 
 #endif

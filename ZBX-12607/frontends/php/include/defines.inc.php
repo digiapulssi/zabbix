@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,13 +19,13 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.4.2rc2');
-define('ZABBIX_API_VERSION',	'3.4.2');
+define('ZABBIX_VERSION',		'3.4.7rc2');
+define('ZABBIX_API_VERSION',	'3.4.7');
 define('ZABBIX_EXPORT_VERSION',	'3.4');
 define('ZABBIX_DB_VERSION',		3040000);
 
 define('ZABBIX_COPYRIGHT_FROM',	'2001');
-define('ZABBIX_COPYRIGHT_TO',	'2017');
+define('ZABBIX_COPYRIGHT_TO',	'2018');
 
 define('ZBX_LOGIN_ATTEMPTS',	5);
 define('ZBX_LOGIN_BLOCK',		30); // sec
@@ -40,6 +40,13 @@ define('ZBX_PERIOD_DEFAULT',	3600); // 1 hour
 // the maximum period to display history data for the latest data and item overview pages in seconds
 // by default set to 86400 seconds (24 hours)
 define('ZBX_HISTORY_PERIOD', 86400);
+
+define('ZBX_HISTORY_SOURCE_ELASTIC',	'elastic');
+define('ZBX_HISTORY_SOURCE_SQL',		'sql');
+
+define('ELASTICSEARCH_RESPONSE_PLAIN',			0);
+define('ELASTICSEARCH_RESPONSE_AGGREGATION',	1);
+define('ELASTICSEARCH_RESPONSE_DOCUMENTS',		2);
 
 define('ZBX_WIDGET_ROWS', 20);
 
@@ -106,10 +113,10 @@ define('ZBX_DB_POSTGRESQL',	'POSTGRESQL');
 
 define('ZBX_DB_MAX_ID', '9223372036854775807');
 
-define('ZBX_SHOW_SQL_ERRORS',	true);
-
 // maximum number of records for create() or update() API calls
 define('ZBX_DB_MAX_INSERTS', 10000);
+
+define('ZBX_SHOW_TECHNICAL_ERRORS', false);
 
 define('PAGE_TYPE_HTML',				0);
 define('PAGE_TYPE_IMAGE',				1);
@@ -145,12 +152,16 @@ define('O_NO',		2);
 
 define('P_SYS',					0x0001);
 define('P_UNSET_EMPTY',			0x0002);
+define('P_CRLF',				0x0004);
 define('P_ACT',					0x0010);
 define('P_NZERO',				0x0020);
 define('P_NO_TRIM',				0x0040);
 define('P_ALLOW_USER_MACRO',	0x0080);
 define('P_ALLOW_LLD_MACRO',		0x0100);
 define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
+
+// Validate URI against schemes whitelist defined in ZBX_URI_VALID_SCHEMES.
+define('VALIDATE_URI_SCHEMES', true);
 
 //	misc parameters
 define('IMAGE_FORMAT_PNG',	'PNG');
@@ -1221,9 +1232,6 @@ define('ZBX_WIDGET_FIELD_TYPE_MAP',				8);
 define('ZBX_WIDGET_FIELD_RESOURCE_GRAPH',				0);
 define('ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH',		1);
 
-define('UPDATE_PROFILE_OFF',	0);
-define('UPDATE_PROFILE_ON',		1);
-
 // validation
 define('DB_ID',		"({}>=0&&bccomp({},\"9223372036854775807\")<=0)&&");
 define('NOT_EMPTY',	"({}!='')&&");
@@ -1239,7 +1247,6 @@ define('THEME_DEFAULT', 'default');
 // the default theme
 define('ZBX_DEFAULT_THEME', 'blue-theme');
 
-define('ZABBIX_HOMEPAGE', 'http://www.zabbix.com');
 define('ZBX_DEFAULT_URL', 'zabbix.php?action=dashboard.view');
 
 // non translatable date formats
@@ -1503,3 +1510,15 @@ if (function_exists('bcscale')) {
 
 // Maximum number of tags to display in events list.
 define('EVENTS_LIST_TAGS_COUNT', 3);
+
+// HTTP headers
+/*
+ * Value of HTTP X-Frame-options header.
+ *
+ * Supported options:
+ *  - SAMEORIGIN (string) - compatible with rfc7034.
+ *  - DENY (string) - compatible with rfc7034.
+ *  - a list (string) of comma-separated hostnames. If hostname is not between allowed, the SAMEORIGIN option is used.
+ *  - null - disable X-Frame-options header.
+ */
+define('X_FRAME_OPTIONS', 'SAMEORIGIN');

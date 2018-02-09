@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -151,7 +151,7 @@ ZBX_THREAD_ENTRY(listener_thread, args)
 		}
 
 		if (SUCCEED == ret || EINTR == zbx_socket_last_error())
-			continue;
+			goto next;
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 		if (NULL != msg)
@@ -168,6 +168,12 @@ ZBX_THREAD_ENTRY(listener_thread, args)
 
 		if (ZBX_IS_RUNNING())
 			zbx_sleep(1);
+next:
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#else
+		;
+#endif
 	}
 
 #ifdef _WINDOWS

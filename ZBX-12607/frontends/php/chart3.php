@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = [
 	'period' =>			[T_ZBX_INT, O_OPT, P_NZERO,	BETWEEN(ZBX_MIN_PERIOD, ZBX_MAX_PERIOD), null],
 	'stime' =>			[T_ZBX_INT, O_OPT, P_NZERO,	null,				null],
+	'isNow' =>			[T_ZBX_INT, O_OPT, null,		IN('0,1'),			null],
 	'profileIdx' =>		[T_ZBX_STR, O_OPT, null,		null,				null],
 	'profileIdx2' =>	[T_ZBX_STR, O_OPT, null,		null,				null],
 	'httptestid' =>		[T_ZBX_INT, O_OPT, P_NZERO,	null,				null],
@@ -97,7 +98,7 @@ if ($httptestid = getRequest('httptestid', false)) {
 	$name = getRequest('name', '');
 }
 elseif ($items = getRequest('items', [])) {
-	asort_by_key($items, 'sortorder');
+	CArrayHelper::sort($items, ['sortorder']);
 
 	$dbItems = API::Item()->get([
 		'itemids' => zbx_objectValues($items, 'itemid'),
@@ -136,11 +137,13 @@ else {
 $profileIdx = getRequest('profileIdx', 'web.httptest');
 $profileIdx2 = getRequest('httptestid', getRequest('profileIdx2'));
 
-$timeline = CScreenBase::calculateTime([
+$timeline = calculateTime([
 	'profileIdx' => $profileIdx,
 	'profileIdx2' => $profileIdx2,
+	'updateProfile' => false,
 	'period' => getRequest('period'),
-	'stime' => getRequest('stime')
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow')
 ]);
 
 CProfile::update($profileIdx.'.httptestid', $profileIdx2, PROFILE_TYPE_ID);

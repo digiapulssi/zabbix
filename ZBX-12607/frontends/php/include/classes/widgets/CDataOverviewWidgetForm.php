@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 class CDataOverviewWidgetForm extends CWidgetForm {
 
 	public function __construct($data) {
-		parent::__construct($data);
+		parent::__construct($data, WIDGET_DATA_OVERVIEW);
 
 		$field_groups = new CWidgetFieldGroup('groupids', _('Host groups'));
 
@@ -41,12 +41,10 @@ class CDataOverviewWidgetForm extends CWidgetForm {
 		}
 		$this->fields[] = $field_application;
 
-		$styles = [
+		$field_style = (new CWidgetFieldRadioButtonList('style', _('Hosts location'), [
 			STYLE_LEFT => _('Left'),
 			STYLE_TOP => _('Top')
-		];
-
-		$field_style = (new CWidgetFieldRadioButtonList('style', _('Hosts location'), $styles))
+		]))
 			->setDefault(STYLE_LEFT)
 			->setModern(true);
 

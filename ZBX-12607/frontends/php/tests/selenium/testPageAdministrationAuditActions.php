@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ class testPageAdministrationAuditActions extends CWebTest {
 	*/
 	public function testPageAdministrationAuditActions_CheckValues($auditactions) {
 
-		$this->zbxTestLogin('auditacts.php?stime=20120220090000&period=63072000');
+		$this->zbxTestLogin('auditacts.php?stime=20120220090000&period=63072000&isNow=0');
 		$this->zbxTestCheckTitle('Action log');
 		$this->zbxTestAssertElementPresentId('config');
 		$this->zbxTestCheckHeader('Action log');

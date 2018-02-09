@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ if (!empty($this->data['graphid'])) {
 	$screen = CScreenBuilder::getScreen([
 		'resourcetype' => SCREEN_RESOURCE_CHART,
 		'graphid' => $this->data['graphid'],
-		'profileIdx' => 'web.screens',
+		'profileIdx' => 'web.graphs',
 		'profileIdx2' => $this->data['graphid']
 	]);
 
@@ -70,7 +70,8 @@ if (!empty($this->data['graphid'])) {
 
 	CScreenBuilder::insertScreenStandardJs([
 		'timeline' => $screen->timeline,
-		'profileIdx' => $screen->profileIdx
+		'profileIdx' => $screen->profileIdx,
+		'profileIdx2' => $screen->profileIdx2
 	]);
 }
 else {

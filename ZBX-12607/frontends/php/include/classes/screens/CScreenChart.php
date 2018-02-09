@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,7 +60,8 @@ class CScreenChart extends CScreenBase {
 			$loadSBox = 1;
 			$src = 'chart2.php';
 		}
-		$src .= '?graphid='.$this->graphid.'&period='.$this->timeline['period'].'&stime='.$this->timeline['stimeNow'].$this->getProfileUrlParams();
+		$src .= '?graphid='.$this->graphid.'&period='.$this->timeline['period'].'&stime='.$this->timeline['stime'].
+			'&isNow='.$this->timeline['isNow'].$this->getProfileUrlParams();
 
 		$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_graphid($this->graphid));
 

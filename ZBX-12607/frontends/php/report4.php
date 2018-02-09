@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,7 +199,7 @@ else {
 	}
 
 	// time till
-	$maxTime = ($year == $currentYear) ? time() : mktime(0, 0, 0, 1, 1, $year + 1);
+	$maxTime = ($year == $currentYear || $period === 'yearly') ? time() : mktime(0, 0, 0, 1, 1, $year + 1);
 
 	// fetch alerts
 	$alerts = [];

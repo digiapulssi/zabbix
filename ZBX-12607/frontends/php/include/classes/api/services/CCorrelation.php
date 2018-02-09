@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ class CCorrelation extends CApiService {
 			'selectFilter'		=> null,
 			'selectOperations'	=> null,
 			'correlationids'	=> null,
-			'editable'			=> null,
+			'editable'			=> false,
 			'sortfield'			=> '',
 			'sortorder'			=> ''
 		]);
@@ -54,7 +54,7 @@ class CCorrelation extends CApiService {
 	public function get($options = []) {
 		$options = zbx_array_merge($this->getOptions, $options);
 
-		if ($options['editable'] !== null && self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
+		if ($options['editable'] && self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			return ($options['countOutput'] && !$options['groupCount']) ? 0 : [];
 		}
 

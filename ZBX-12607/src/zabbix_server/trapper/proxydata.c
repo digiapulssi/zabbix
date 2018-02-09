@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,13 @@
 #include "proxydata.h"
 #include "../../libs/zbxcrypto/tls_tcp_active.h"
 #include "zbxtasks.h"
+#include "mutexs.h"
+
+extern unsigned char	program_type;
+static ZBX_MUTEX	proxy_lock = ZBX_MUTEX_NULL;
+
+#define	LOCK_PROXY_HISTORY	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE)) zbx_mutex_lock(&proxy_lock)
+#define	UNLOCK_PROXY_HISTORY	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE)) zbx_mutex_unlock(&proxy_lock)
 
 int	zbx_send_proxy_data_respose(const DC_PROXY *proxy, zbx_socket_t *sock, const char *info)
 {
@@ -46,13 +53,13 @@ int	zbx_send_proxy_data_respose(const DC_PROXY *proxy, zbx_socket_t *sock, const
 	if (0 != tasks.values_num)
 		zbx_tm_json_serialize_tasks(&json, &tasks);
 
-	if (SUCCEED == (ret = zbx_tcp_send_raw(sock, json.buffer)))
+	if (SUCCEED == (ret = zbx_tcp_send(sock, json.buffer)))
 	{
 		if (0 != tasks.values_num)
 			zbx_tm_update_task_status(&tasks, ZBX_TM_STATUS_INPROGRESS);
 	}
 
-	zbx_json_clean(&json);
+	zbx_json_free(&json);
 
 	zbx_vector_ptr_clear_ext(&tasks, (zbx_clean_func_t)zbx_tm_task_free);
 	zbx_vector_ptr_destroy(&tasks);
@@ -96,6 +103,8 @@ void	zbx_recv_proxy_data(zbx_socket_t *sock, struct zbx_json_parse *jp, zbx_time
 	}
 
 	zbx_proxy_update_version(&proxy, jp);
+
+	update_proxy_lastaccess(proxy.hostid, time(NULL));
 
 	if (SUCCEED != (ret = process_proxy_data(&proxy, jp, ts, &error)))
 	{
@@ -168,6 +177,7 @@ void	zbx_send_proxy_data(zbx_socket_t *sock, zbx_timespec_t *ts)
 		goto out;
 	}
 
+	LOCK_PROXY_HISTORY;
 	zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
 
 	get_host_availability_data(&j, &availability_ts);
@@ -233,6 +243,7 @@ void	zbx_send_proxy_data(zbx_socket_t *sock, zbx_timespec_t *ts)
 	zbx_vector_ptr_destroy(&tasks);
 
 	zbx_json_free(&j);
+	UNLOCK_PROXY_HISTORY;
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -310,5 +321,19 @@ void	zbx_send_task_data(zbx_socket_t *sock, zbx_timespec_t *ts)
 	zbx_json_free(&j);
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+}
+
+int	init_proxy_history_lock(char **error)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE))
+		return zbx_mutex_create(&proxy_lock, ZBX_MUTEX_PROXY_HISTORY, error);
+
+	return SUCCEED;
+}
+
+void	free_proxy_history_lock(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE))
+		zbx_mutex_destroy(&proxy_lock);
 }
 

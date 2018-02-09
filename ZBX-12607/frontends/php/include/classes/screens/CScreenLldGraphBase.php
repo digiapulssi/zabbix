@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -120,8 +120,10 @@ abstract class CScreenLldGraphBase extends CScreenBase {
 			'timestamp' => $this->timestamp,
 			'screen' => $this->surrogateScreen,
 			'period' => $this->timeline['period'],
-			'stime' => $this->timeline['stimeNow'],
+			'stime' => $this->timeline['stime'],
+			'isNow' => $this->timeline['isNow'],
 			'profileIdx' => $this->profileIdx,
+			'profileIdx2' => $this->profileIdx2,
 			'hostid' => $this->hostid,
 			'updateProfile' => false
 		]);

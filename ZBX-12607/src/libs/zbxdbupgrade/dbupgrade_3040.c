@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,6 +39,36 @@ static int	DBpatch_3040001(void)
 	return DBpatch_3020001();
 }
 
+static int	DBpatch_3040002(void)
+{
+	return DBdrop_foreign_key("sessions", 1);
+}
+
+static int	DBpatch_3040003(void)
+{
+	return DBdrop_index("sessions", "sessions_1");
+}
+
+static int	DBpatch_3040004(void)
+{
+	return DBcreate_index("sessions", "sessions_1", "userid,status,lastaccess", 0);
+}
+
+static int	DBpatch_3040005(void)
+{
+	const ZBX_FIELD	field = {"userid", NULL, "users", "userid", 0, 0, 0, ZBX_FK_CASCADE_DELETE};
+
+	return DBadd_foreign_key("sessions", 1, &field);
+}
+
+static int	DBpatch_3040006(void)
+{
+	if (FAIL == DBindex_exists("problem", "problem_3"))
+		return DBcreate_index("problem", "problem_3", "r_eventid", 0);
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3040)
@@ -47,5 +77,10 @@ DBPATCH_START(3040)
 
 DBPATCH_ADD(3040000, 0, 1)
 DBPATCH_ADD(3040001, 0, 0)
+DBPATCH_ADD(3040002, 0, 0)
+DBPATCH_ADD(3040003, 0, 0)
+DBPATCH_ADD(3040004, 0, 0)
+DBPATCH_ADD(3040005, 0, 0)
+DBPATCH_ADD(3040006, 0, 0)
 
 DBPATCH_END()

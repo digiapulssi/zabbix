@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -278,10 +278,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 				],
 				[
 					'url' => 'users.php',
-					'label' => _('Users'),
-					'sub_pages' => [
-						'popup_usrgrp.php'
-					]
+					'label' => _('Users')
 				],
 				[
 					'url' => 'zabbix.php',

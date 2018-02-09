@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,9 +135,9 @@ foreach ($data['data']['problems'] as $eventid => $problem) {
 	if ($problem['r_eventid'] != 0) {
 		if ($problem['correlationid'] != 0) {
 			$info_icons[] = makeInformationIcon(
-				array_key_exists($problem['correlationid'], $data['correlations'])
+				array_key_exists($problem['correlationid'], $data['data']['correlations'])
 					? _s('Resolved by correlation rule "%1$s".',
-						$data['correlations'][$problem['correlationid']]['name']
+						$data['data']['correlations'][$problem['correlationid']]['name']
 					)
 					: _('Resolved by correlation rule.')
 			);

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -176,7 +176,13 @@ class CControllerWidgetHostsView extends CControllerWidget {
 							$highest_severity2[$group['groupid']] = 0;
 						}
 
-						if ($trigger['priority'] > $highest_severity2[$group['groupid']]) {
+						if ($filter_ext_ack == EXTACK_OPTION_UNACK) {
+							if ($trigger['priority'] > $highest_severity2[$group['groupid']]
+									&& array_key_exists($trigger['triggerid'], $triggers_unack)) {
+								$highest_severity2[$group['groupid']] = $trigger['priority'];
+							}
+						}
+						elseif ($trigger['priority'] > $highest_severity2[$group['groupid']]) {
 							$highest_severity2[$group['groupid']] = $trigger['priority'];
 						}
 

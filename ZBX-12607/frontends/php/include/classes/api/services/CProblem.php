@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ class CProblem extends CApiService {
 			'applicationids'			=> null,
 			'objectids'					=> null,
 
-			'editable'					=> null,
+			'editable'					=> false,
 			'source'					=> EVENT_SOURCE_TRIGGERS,
 			'object'					=> EVENT_OBJECT_TRIGGER,
 			'severities'				=> null,
@@ -431,6 +431,10 @@ class CProblem extends CApiService {
 
 		// Adding event tags.
 		if ($options['selectTags'] !== null && $options['selectTags'] != API_OUTPUT_COUNT) {
+			if ($options['selectTags'] === API_OUTPUT_EXTEND) {
+				$options['selectTags'] = ['tag', 'value'];
+			}
+
 			$tags_options = [
 				'output' => $this->outputExtend($options['selectTags'], ['eventid']),
 				'filter' => ['eventid' => $eventids]

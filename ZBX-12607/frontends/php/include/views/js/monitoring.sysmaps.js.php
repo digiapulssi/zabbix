@@ -160,7 +160,7 @@ function getFontComboBox($name) {
 								],
 								'popup' => [
 									'parameters' => 'dstfrm=selementForm&dstfld1=elementNameTriggers&srctbl=triggers'.
-										'&srcfld1=triggerid&with_triggers=1&real_hosts=1&multiselect=1'
+										'&srcfld1=triggerid&with_triggers=1&real_hosts=1&multiselect=1&noempty=1'
 								]
 							]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH),
 							new CDiv(
@@ -808,6 +808,7 @@ function getFontComboBox($name) {
 				(new CVar('element_id[#{triggerid}]', '#{triggerid}')),
 				(new CVar('element_name[#{triggerid}]', '#{name}')),
 				(new CVar('element_priority[#{triggerid}]', '#{priority}')),
+				(new CVar('element_expression[#{triggerid}]', '#{expression}')),
 				(new CButton(null, _('Remove')))
 					->addClass(ZBX_STYLE_BTN_LINK)
 					->addStyle('margin: 0 5px;')

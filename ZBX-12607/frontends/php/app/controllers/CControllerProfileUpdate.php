@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,6 +72,14 @@ class CControllerProfileUpdate extends CController {
 				case 'web.latest.toggle':
 				case 'web.latest.toggle_other':
 				case 'web.dashbrd.timelinefixed':
+				case 'web.screens.timelinefixed':
+				case 'web.graphs.timelinefixed':
+				case 'web.httptest.timelinefixed':
+				case 'web.problem.timeline':
+				case 'web.auditacts.timelinefixed':
+				case 'web.auditlogs.timelinefixed':
+				case 'web.item.graph.timelinefixed':
+				case 'web.slides.timelinefixed':
 				case 'web.dashbrd.navtree.item.selected':
 				case !!preg_match('/web.dashbrd.navtree-\d+.toggle/', $this->getInput('idx')):
 					$ret = $this->hasInput('idx2');

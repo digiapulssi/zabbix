@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,7 +115,8 @@ int	EXECUTE_STR(const char *command, AGENT_RESULT *result)
 
 	init_result(result);
 
-	if (SUCCEED != zbx_execute(command, &cmd_result, error, sizeof(error), CONFIG_TIMEOUT))
+	if (SUCCEED != zbx_execute(command, &cmd_result, error, sizeof(error), CONFIG_TIMEOUT,
+			ZBX_EXIT_CODE_CHECKS_DISABLED))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, error));
 		goto out;

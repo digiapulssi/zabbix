@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -139,12 +139,15 @@ static int	zbx_get_cpu_num(void)
 	return ncpu;
 #elif defined(HAVE_LIBPERFSTAT)
 	/* AIX 6.1 */
-	perfstat_cpu_total_t	ps_cpu_total;
+	perfstat_partition_config_t	part_cfg;
+	int				rc;
 
-	if (-1 == perfstat_cpu_total(NULL, &ps_cpu_total, sizeof(ps_cpu_total), 1))
+	rc = perfstat_partition_config(NULL, &part_cfg, sizeof(perfstat_partition_config_t), 1);
+
+	if (1 != rc)
 		goto return_one;
 
-	return (int)ps_cpu_total.ncpus;
+	return (int)part_cfg.lcpus;
 #endif
 
 #ifndef _WINDOWS
@@ -474,6 +477,10 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 #endif
 		zbx_setproctitle("collector [idle 1 sec]");
 		zbx_sleep(1);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 
 #ifdef _WINDOWS

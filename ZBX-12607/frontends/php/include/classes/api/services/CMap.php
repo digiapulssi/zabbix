@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ class CMap extends CMapElement {
 	private $defOptions = [
 		'sysmapids'					=> null,
 		'userids'					=> null,
-		'editable'					=> null,
+		'editable'					=> false,
 		'nopermissions'				=> null,
 		// filter
 		'filter'					=> null,
@@ -946,7 +946,7 @@ class CMap extends CMapElement {
 						);
 					}
 
-					if (!CHtmlUrlValidator::validate($url['url'])) {
+					if (!CHtmlUrlValidator::validate($url['url'], false)) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 					}
 
@@ -1388,7 +1388,7 @@ class CMap extends CMapElement {
 						);
 					}
 
-					if (!CHtmlUrlValidator::validate($url['url'])) {
+					if (!CHtmlUrlValidator::validate($url['url'], false)) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 					}
 

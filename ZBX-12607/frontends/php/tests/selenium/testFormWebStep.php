@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,11 +20,10 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
+/**
+ * @backup httptest
+ */
 class testFormWebStep extends CWebTest {
-
-	public function testFormWebStep_backup() {
-		DBsave_tables('httptest');
-	}
 
 	public static function steps() {
 		return [
@@ -669,7 +668,7 @@ class testFormWebStep extends CWebTest {
 					'timeout' => '-1',
 					'error_msg' => 'Page received incorrect data',
 					'errors' => [
-						'Incorrect value "-1" for "Timeout" field: must be between 0 and 65535.'
+						'Field "Timeout" is not correct: a time unit is expected'
 					]
 				]
 			],
@@ -679,10 +678,24 @@ class testFormWebStep extends CWebTest {
 					'name' => 'Timeout 65536',
 					'step_name' => 'Step timeout 65536',
 					'url' => 'http://www.zabbix.com',
-					'timeout' => 65536,
+					'timeout' => 3601,
+					'error_webform' => true,
+					'error_msg' => 'Cannot add web scenario',
+					'errors' => [
+						'Invalid parameter "/1/steps/1/timeout": value must be one of 0-3600'
+					]
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'name' => 'Timeout string',
+					'step_name' => 'Step timeout string',
+					'url' => 'http://www.zabbix.com',
+					'timeout' => 'abc',
 					'error_msg' => 'Page received incorrect data',
 					'errors' => [
-						'Incorrect value "65536" for "Timeout" field: must be between 0 and 65535.'
+						'Field "Timeout" is not correct: a time unit is expected'
 					]
 				]
 			],
@@ -721,7 +734,7 @@ class testFormWebStep extends CWebTest {
 					'headers' => [
 						['name' => 'header', 'value' => 'test_header'],
 					],
-					'timeout' => 65535,
+					'timeout' => 3600,
 					'string' => 'Zabbix',
 					'code' => 200,
 					'dbCheck' => true
@@ -757,6 +770,19 @@ class testFormWebStep extends CWebTest {
 		];
 	}
 
+	/*
+	 * Type text into input field and fire onchange event.
+	 */
+	protected function typeAndEscalateChangeEvent($id, $text) {
+		$this->zbxTestInputType($id, $text);
+
+		$this->webDriver->executeScript('var event = document.createEvent("HTMLEvents");'.
+				'event.initEvent("change", false, true);'.
+				'arguments[0].dispatchEvent(event);',
+				[$this->webDriver->findElement(WebDriverBy::id($id))]
+		);
+	}
+
 	/**
 	 * @dataProvider steps
 	 */
@@ -768,7 +794,7 @@ class testFormWebStep extends CWebTest {
 		$this->zbxTestInputTypeWait('name', $data['name']);
 		$this->zbxTestTabSwitchById('tab_stepTab' ,'Steps');
 		$this->zbxTestClickWait('add_step');
-		$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
+		$this->zbxTestSwitchToWindow('zbx_popup');
 
 		if (array_key_exists('step_name', $data)) {
 			$this->zbxTestInputTypeWait('name',$data['step_name']);
@@ -782,10 +808,10 @@ class testFormWebStep extends CWebTest {
 			$i = 1;
 			foreach($data['query'] as $item) {
 				if (array_key_exists('name', $item)) {
-					$this->zbxTestInputType('pairs_'.$i.'_name', $item['name']);
+					$this->typeAndEscalateChangeEvent('pairs_'.$i.'_name', $item['name']);
 				}
 				if (array_key_exists('value', $item)) {
-					$this->zbxTestInputType('pair_value_'.$i, $item['value']);
+					$this->typeAndEscalateChangeEvent('pair_value_'.$i, $item['value']);
 				}
 				$this->zbxTestClickXpath("//tr[@id='query_fields_footer']//button");
 				$i = 5;
@@ -800,10 +826,10 @@ class testFormWebStep extends CWebTest {
 			$i = 2;
 			foreach($data['post'] as $item) {
 				if (array_key_exists('name', $item)) {
-					$this->zbxTestInputType('pairs_'.$i.'_name', $item['name']);
+					$this->typeAndEscalateChangeEvent('pairs_'.$i.'_name', $item['name']);
 				}
 				if (array_key_exists('value', $item)) {
-					$this->zbxTestInputType('pair_value_'.$i, $item['value']);
+					$this->typeAndEscalateChangeEvent('pair_value_'.$i, $item['value']);
 				}
 				$this->zbxTestClickXpath("//tr[@id='post_fields_footer']//button");
 				$i = 5;
@@ -814,10 +840,10 @@ class testFormWebStep extends CWebTest {
 			$i = 3;
 			foreach($data['variables'] as $item) {
 				if (array_key_exists('name', $item)) {
-					$this->zbxTestInputType('pairs_'.$i.'_name', $item['name']);
+					$this->typeAndEscalateChangeEvent('pairs_'.$i.'_name', $item['name']);
 				}
 				if (array_key_exists('value', $item)) {
-					$this->zbxTestInputType('pair_value_'.$i, $item['value']);
+					$this->typeAndEscalateChangeEvent('pair_value_'.$i, $item['value']);
 				}
 				$this->zbxTestClickXpath("//tr[@id='variables_footer']//button");
 				$i = 5;
@@ -828,10 +854,10 @@ class testFormWebStep extends CWebTest {
 			$i = 4;
 			foreach($data['headers'] as $item) {
 				if (array_key_exists('name', $item)) {
-					$this->zbxTestInputType('pairs_'.$i.'_name', $item['name']);
+					$this->typeAndEscalateChangeEvent('pairs_'.$i.'_name', $item['name']);
 				}
 				if (array_key_exists('value', $item)) {
-					$this->zbxTestInputType('pair_value_'.$i, $item['value']);
+					$this->typeAndEscalateChangeEvent('pair_value_'.$i, $item['value']);
 				}
 				$this->zbxTestClickXpath("//tr[@id='headers_footer']//button");
 				$i = 5;
@@ -875,32 +901,32 @@ class testFormWebStep extends CWebTest {
 		if (array_key_exists('check_raw', $data)) {
 			$this->zbxTestWaitWindowClose();
 			$this->zbxTestClickLinkText($data['step_name']);
-			$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
+			$this->zbxTestSwitchToWindow('zbx_popup');
 			$this->zbxTestWaitUntilElementPresent(webDriverBy::id('posts'));
 			$raw = $this->zbxTestGetText("//textarea[@id='posts']");
-			$this->assertEquals($raw, $data['check_raw']);
+			$this->assertEquals($data['check_raw'], $raw);
 			$this->zbxTestClick('cancel');
 		}
 
 		if (array_key_exists('parse_query', $data)) {
 			$this->zbxTestWaitWindowClose();
 			$this->zbxTestClickLinkText($data['step_name']);
-			$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
+			$this->zbxTestSwitchToWindow('zbx_popup');
 			$this->zbxTestWaitUntilElementPresent(webDriverBy::id('posts'));
 			$i = 1;
 			foreach($data['parse_query'] as $item) {
 				$name = $this->zbxTestGetValue("//input[@id='pairs_".$i."_name']");
-				$this->assertEquals($name, $item['name']);
+				$this->assertEquals($item['name'], $name);
 				if (array_key_exists('value', $item)) {
 					$value = $this->zbxTestGetValue("//input[@id='pair_value_".$i."']");
-					$this->assertEquals($value, $item['value']);
+					$this->assertEquals($item['value'], $value);
 				}
 				$i = 5;
 			}
 
 			if (array_key_exists('check_url', $data)) {
 				$url = $this->zbxTestGetValue("//input[@id='url']");
-				$this->assertEquals($url, $data['check_url']);
+				$this->assertEquals($data['check_url'], $url);
 			}
 			$this->zbxTestClick('cancel');
 		}
@@ -908,22 +934,22 @@ class testFormWebStep extends CWebTest {
 		if (array_key_exists('check_post', $data)) {
 			$this->zbxTestWaitWindowClose();
 			$this->zbxTestClickLinkText($data['step_name']);
-			$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
+			$this->zbxTestSwitchToWindow('zbx_popup');
 			$this->zbxTestWaitUntilElementPresent(webDriverBy::id('posts'));
 			$i = 2;
 			foreach($data['check_post'] as $item) {
 				$name = $this->zbxTestGetValue("//input[@id='pairs_".$i."_name']");
-				$this->assertEquals($name, $item['name']);
+				$this->assertEquals($item['name'], $name);
 				if (array_key_exists('value', $item)) {
 					$value = $this->zbxTestGetValue("//input[@id='pair_value_".$i."']");
-					$this->assertEquals($value, $item['value']);
+					$this->assertEquals($item['value'], $value);
 				}
 				$i = 5;
 			}
 
 			if (array_key_exists('check_url', $data)) {
 				$url = $this->zbxTestGetValue("//input[@id='url']");
-				$this->assertEquals($url, $data['check_url']);
+				$this->assertEquals($data['check_url'], $url);
 			}
 			$this->zbxTestClick('cancel');
 		}
@@ -950,7 +976,7 @@ class testFormWebStep extends CWebTest {
 			case TEST_ERROR:
 				$get_text = $this->zbxTestGetText("//div[@class='overlay-dialogue-body']/span");
 				$result = trim(preg_replace('/\s\s+/', ' ', $get_text));
-				$this->assertEquals($result, $data['errors']);
+				$this->assertEquals($data['errors'], $result);
 				break;
 		}
 
@@ -987,9 +1013,5 @@ class testFormWebStep extends CWebTest {
 				}
 			}
 		}
-	}
-
-	public function testFormWebStep_restore() {
-		DBrestore_tables('httptest');
 	}
 }

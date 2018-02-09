@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "snmptrapper.h"
 #include "zbxserver.h"
 #include "zbxregexp.h"
+#include "preproc.h"
 
 static int	trap_fd = -1;
 static off_t	trap_lastsize;
@@ -179,8 +180,8 @@ next:
 				}
 
 				items[i].state = ITEM_STATE_NORMAL;
-				zbx_preprocess_item_value(items[i].itemid, items[i].flags, &results[i], ts,
-						items[i].state, NULL);
+				zbx_preprocess_item_value(items[i].itemid, items[i].value_type, items[i].flags,
+						&results[i], ts, items[i].state, NULL);
 
 				itemids[i] = items[i].itemid;
 				states[i] = items[i].state;
@@ -188,8 +189,8 @@ next:
 				break;
 			case NOTSUPPORTED:
 				items[i].state = ITEM_STATE_NOTSUPPORTED;
-				zbx_preprocess_item_value(items[i].itemid, items[i].flags, NULL, ts, items[i].state,
-						results[i].msg);
+				zbx_preprocess_item_value(items[i].itemid, items[i].value_type, items[i].flags, NULL,
+						ts, items[i].state, results[i].msg);
 
 				itemids[i] = items[i].itemid;
 				states[i] = items[i].state;
@@ -203,7 +204,7 @@ next:
 
 	zbx_free(results);
 
-	DCrequeue_items(itemids, states, lastclocks, NULL, NULL, errcodes, num);
+	DCrequeue_items(itemids, states, lastclocks, errcodes, num);
 
 	zbx_free(errcodes);
 	zbx_free(lastclocks);
@@ -644,6 +645,10 @@ ZBX_THREAD_ENTRY(snmptrapper_thread, args)
 				get_process_type_string(process_type), sec);
 
 		zbx_sleep_loop(1);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 
 	zbx_free(buffer);

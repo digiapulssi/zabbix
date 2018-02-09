@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include "zbxicmpping.h"
 #include "daemon.h"
 #include "zbxself.h"
+#include "preproc.h"
 
 #include "pinger.h"
 
@@ -64,7 +65,7 @@ static void	process_value(zbx_uint64_t itemid, zbx_uint64_t *value_ui64, double 
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	DCconfig_get_items_by_itemids(&item, &itemid, &errcode, 1, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+	DCconfig_get_items_by_itemids(&item, &itemid, &errcode, 1);
 
 	if (SUCCEED != errcode)
 		goto clean;
@@ -78,7 +79,7 @@ static void	process_value(zbx_uint64_t itemid, zbx_uint64_t *value_ui64, double 
 	if (NOTSUPPORTED == ping_result)
 	{
 		item.state = ITEM_STATE_NOTSUPPORTED;
-		zbx_preprocess_item_value(item.itemid, item.flags, NULL, ts, item.state, error);
+		zbx_preprocess_item_value(item.itemid, item.value_type, item.flags, NULL, ts, item.state, error);
 	}
 	else
 	{
@@ -90,12 +91,12 @@ static void	process_value(zbx_uint64_t itemid, zbx_uint64_t *value_ui64, double 
 			SET_DBL_RESULT(&value, *value_dbl);
 
 		item.state = ITEM_STATE_NORMAL;
-		zbx_preprocess_item_value(item.itemid, item.flags, &value, ts, item.state, NULL);
+		zbx_preprocess_item_value(item.itemid, item.value_type, item.flags, &value, ts, item.state, NULL);
 
 		free_result(&value);
 	}
 clean:
-	DCrequeue_items(&item.itemid, &item.state, &ts->sec, NULL, NULL, &errcode, 1);
+	DCrequeue_items(&item.itemid, &item.state, &ts->sec, &errcode, 1);
 
 	DCconfig_clean_items(&item, &errcode, 1);
 
@@ -444,9 +445,10 @@ static void	get_pinger_hosts(icmpitem_t **icmp_items, int *icmp_items_alloc, int
 			zbx_timespec(&ts);
 
 			items[i].state = ITEM_STATE_NOTSUPPORTED;
-			zbx_preprocess_item_value(items[i].itemid, items[i].flags, NULL, &ts, items[i].state, error);
+			zbx_preprocess_item_value(items[i].itemid, items[i].value_type, items[i].flags, NULL, &ts,
+					items[i].state, error);
 
-			DCrequeue_items(&items[i].itemid, &items[i].state, &ts.sec, NULL, NULL, &errcode, 1);
+			DCrequeue_items(&items[i].itemid, &items[i].state, &ts.sec, &errcode, 1);
 		}
 
 		zbx_free(items[i].key);
@@ -609,5 +611,9 @@ ZBX_THREAD_ENTRY(pinger_thread, args)
 				get_process_type_string(process_type), process_num, itc, sec, sleeptime);
 
 		zbx_sleep_loop(sleeptime);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 }

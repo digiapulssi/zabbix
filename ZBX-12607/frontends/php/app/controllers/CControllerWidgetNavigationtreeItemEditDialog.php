@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,7 +100,7 @@ class CControllerWidgetNavigationtreeItemEditDialog extends CController {
 				)
 		]);
 
-		if ($depth >= WIDGET_NAVIGATION_TREE_MAX_DEPTH - 1) {
+		if ($depth >= WIDGET_NAVIGATION_TREE_MAX_DEPTH) {
 			$formList->addRow(null, _('Cannot add submaps. Max depth reached.'));
 		}
 		else {

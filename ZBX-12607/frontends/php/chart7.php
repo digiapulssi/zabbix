@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,23 +29,26 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
 $fields = [
-	'period' =>		[T_ZBX_INT, O_OPT, P_NZERO,	BETWEEN(ZBX_MIN_PERIOD, ZBX_MAX_PERIOD), null],
-	'from' =>		[T_ZBX_INT, O_OPT, P_NZERO,	null,				null],
-	'stime' =>		[T_ZBX_INT, O_OPT, P_NZERO,	null,				null],
-	'name' =>		[T_ZBX_STR, O_OPT, null,		null,				null],
-	'width' =>		[T_ZBX_INT, O_OPT, null,		BETWEEN(20, 65535),	null],
-	'height' =>		[T_ZBX_INT, O_OPT, null,		BETWEEN(0, 65535),	null],
-	'graphtype' =>	[T_ZBX_INT, O_OPT, null,		IN('2,3'),			null],
-	'graph3d' =>	[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),			null],
-	'legend' =>		[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),			null],
-	'items' =>		[T_ZBX_STR, O_OPT, null,		null,				null]
+	'period' =>			[T_ZBX_INT, O_OPT, P_NZERO,	BETWEEN(ZBX_MIN_PERIOD, ZBX_MAX_PERIOD), null],
+	'stime' =>			[T_ZBX_INT, O_OPT, P_NZERO,	null,				null],
+	'isNow' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),			null],
+	'profileIdx' =>		[T_ZBX_STR, O_OPT, null,	null,				null],
+	'profileIdx2' =>	[T_ZBX_STR, O_OPT, null,	null,				null],
+	'updateProfile' =>	[T_ZBX_STR, O_OPT, null,	null,				null],
+	'name' =>			[T_ZBX_STR, O_OPT, null,	null,				null],
+	'width' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(20, 65535),	null],
+	'height' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(0, 65535),	null],
+	'graphtype' =>		[T_ZBX_INT, O_OPT, null,	IN('2,3'),			null],
+	'graph3d' =>		[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),			null],
+	'legend' =>			[T_ZBX_INT, O_OPT, P_NZERO,	IN('0,1'),			null],
+	'items' =>			[T_ZBX_STR, O_OPT, null,	null,				null]
 ];
 if (!check_fields($fields)) {
 	exit();
 }
 
 $items = getRequest('items', []);
-asort_by_key($items, 'sortorder');
+CArrayHelper::sort($items, ['sortorder']);
 
 /*
  * Permissions
@@ -85,25 +88,24 @@ foreach ($items as $item) {
 /*
  * Display
  */
-navigation_bar_calc();
+$timeline = calculateTime([
+	'profileIdx' => getRequest('profileIdx', 'web.screens'),
+	'profileIdx2' => getRequest('profileIdx2'),
+	'updateProfile' => (getRequest('updateProfile', '0') === '1'),
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow')
+]);
 
 $graph = new CPieGraphDraw(getRequest('graphtype', GRAPH_TYPE_NORMAL));
 $graph->setHeader(getRequest('name', ''));
+$graph->setPeriod($timeline['period']);
+$graph->setSTime($timeline['stime']);
 
 if (!empty($_REQUEST['graph3d'])) {
 	$graph->switchPie3D();
 }
 $graph->showLegend(getRequest('legend', 0));
-
-if (isset($_REQUEST['period'])) {
-	$graph->setPeriod($_REQUEST['period']);
-}
-if (isset($_REQUEST['from'])) {
-	$graph->setFrom($_REQUEST['from']);
-}
-if (isset($_REQUEST['stime'])) {
-	$graph->setSTime($_REQUEST['stime']);
-}
 $graph->setWidth(getRequest('width', 400));
 $graph->setHeight(getRequest('height', 300));
 

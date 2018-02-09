@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,9 +38,7 @@ class CScreenMap extends CScreenBase {
 		$this->insertFlickerfreeJs($map_data);
 
 		$output = [
-			(new CDiv())
-				->setId('map_'.$this->screenitem['screenitemid'])
-				->addStyle('overflow: hidden;')
+			(new CDiv())->setId('map_'.$this->screenitem['screenitemid'])
 		];
 
 		if ($this->mode == SCREEN_MODE_EDIT) {
@@ -53,6 +51,9 @@ class CScreenMap extends CScreenBase {
 			->setId($this->getScreenId())
 			->setAttribute('data-timestamp', $this->timestamp)
 			->addStyle('position: relative;');
+
+		// Add map to additional wrapper to enable horizontal scrolling.
+		$div = (new CDiv($div))->addClass('sysmap-scroll-container');
 
 		return $div;
 	}

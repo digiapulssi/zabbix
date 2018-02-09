@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -538,6 +538,10 @@ if (isset($_REQUEST['form'])) {
 			$step['params'] = explode("\n", $step['params']);
 		}
 		unset($step);
+
+		if ($itemPrototype['type'] != ITEM_TYPE_JMX) {
+			$itemPrototype['jmx_endpoint'] = ZBX_DEFAULT_JMX_ENDPOINT;
+		}
 
 		if ($itemPrototype['type'] == ITEM_TYPE_DEPENDENT) {
 			$master_prototype_options = [

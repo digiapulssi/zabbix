@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -439,8 +439,7 @@ static int	evaluate_aggregate(DC_ITEM *item, AGENT_RESULT *res, int grp_func, co
 	items = zbx_malloc(items, sizeof(DC_ITEM) * itemids.values_num);
 	errcodes = zbx_malloc(errcodes, sizeof(int) * itemids.values_num);
 
-	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, itemids.values_num,
-			ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+	DCconfig_get_items_by_itemids(items, itemids.values, errcodes, itemids.values_num);
 
 	if (ZBX_VALUE_FUNC_LAST == item_func)
 	{
@@ -500,7 +499,7 @@ static int	evaluate_aggregate(DC_ITEM *item, AGENT_RESULT *res, int grp_func, co
 		size_t	tmp_alloc = 0, tmp_offset = 0;
 
 		aggregate_quote_groups(&tmp, &tmp_alloc, &tmp_offset, groups);
-		SET_MSG_RESULT(res, zbx_dsprintf(NULL, "No values for key \"%s\" in group(s) %s", itemkey, tmp));
+		SET_MSG_RESULT(res, zbx_dsprintf(NULL, "No values for key \"%s\" in group(s) %s.", itemkey, tmp));
 		zbx_free(tmp);
 
 		goto clean2;

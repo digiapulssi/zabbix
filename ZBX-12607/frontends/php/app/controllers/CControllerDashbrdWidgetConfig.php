@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -101,7 +101,6 @@ class CControllerDashbrdWidgetConfig extends CController {
 				if ($id != 0) {
 					switch ($resource_type) {
 						case WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH:
-							// falls through
 						case WIDGET_FIELD_SELECT_RES_ITEM:
 							$captions['simple'][$resource_type][$id] = _('Inaccessible item');
 							break;
@@ -125,7 +124,6 @@ class CControllerDashbrdWidgetConfig extends CController {
 
 			switch ($resource_type) {
 				case WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH:
-					// falls through
 				case WIDGET_FIELD_SELECT_RES_ITEM:
 					$items = API::Item()->get([
 						'output' => ['itemid', 'hostid', 'key_', 'name'],

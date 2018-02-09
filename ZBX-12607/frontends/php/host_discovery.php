@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -406,6 +406,10 @@ if (isset($_REQUEST['form'])) {
 	CArrayHelper::sort($data['interfaces'], [
 		['field' => 'main', 'order' => ZBX_SORT_DOWN]
 	]);
+
+	if ($data['type'] != ITEM_TYPE_JMX) {
+		$data['jmx_endpoint'] = ZBX_DEFAULT_JMX_ENDPOINT;
+	}
 
 	// render view
 	$itemView = new CView('configuration.host.discovery.edit', $data);

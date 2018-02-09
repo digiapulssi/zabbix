@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1248,6 +1248,9 @@ void	zbx_alarm_flag_clear(void);
 #ifndef _WINDOWS
 unsigned int	zbx_alarm_on(unsigned int seconds);
 unsigned int	zbx_alarm_off(void);
+#if defined(HAVE_RESOLV_H)
+void	zbx_update_resolver_conf(void);		/* handle /etc/resolv.conf update */
+#endif
 #endif
 
 int	zbx_alarm_timed_out(void);

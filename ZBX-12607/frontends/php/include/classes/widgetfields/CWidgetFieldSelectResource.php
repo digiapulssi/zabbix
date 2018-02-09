@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,7 +50,6 @@ class CWidgetFieldSelectResource extends CWidgetField {
 				break;
 
 			case WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH:
-				// falls through
 			case WIDGET_FIELD_SELECT_RES_ITEM:
 				$this->setSaveType(ZBX_WIDGET_FIELD_TYPE_ITEM);
 				$this->srctbl = 'items';
@@ -95,6 +94,8 @@ class CWidgetFieldSelectResource extends CWidgetField {
 
 			case WIDGET_FIELD_SELECT_RES_SIMPLE_GRAPH:
 				$url->setArgument('numeric', '1');
+				$url->setArgument('real_hosts', '1');
+				$url->setArgument('with_simple_graph_items', 1);
 				break;
 		}
 

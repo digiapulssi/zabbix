@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include "dbcache.h"
 #include "discovery.h"
 #include "zbxalgo.h"
+#include "preproc.h"
 #include "../zbxcrypto/tls_tcp_active.h"
 
 /* the space reserved in json buffer to hold at least one record plus service data */
@@ -312,10 +313,7 @@ int	get_active_proxy_from_request(struct zbx_json_parse *jp, DC_PROXY *proxy, ch
 		return FAIL;
 	}
 
-	if (SUCCEED != zbx_dc_get_active_proxy_by_name(host, proxy, error))
-		return FAIL;
-
-	return SUCCEED;
+	return zbx_dc_get_active_proxy_by_name(host, proxy, error);
 }
 
 /******************************************************************************
@@ -373,13 +371,63 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
 
 /******************************************************************************
  *                                                                            *
+ * Function: db_update_proxies_lastaccess                                     *
+ *                                                                            *
+ * Purpose: updates proxy last access timestamp in database                   *
+ *                                                                            *
+ * Parameter: proxy_diff - [IN] last access updates for proxies               *
+ *                                                                            *
+ ******************************************************************************/
+static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxy_diff)
+{
+	char	*sql;
+	size_t	sql_alloc = 256, sql_offset = 0;
+	int	i;
+
+	sql = zbx_malloc(NULL, sql_alloc);
+
+	DBbegin();
+	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	for (i = 0; i < proxy_diff->values_num; i++)
+	{
+		zbx_uint64_pair_t	pair = proxy_diff->values[i];
+
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update hosts"
+				" set lastaccess=%d"
+				" where hostid=" ZBX_FS_UI64 ";\n",
+				pair.second, pair.first);
+
+		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
+	}
+
+	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	if (16 < sql_offset)	/* in ORACLE always present begin..end; */
+		DBexecute("%s", sql);
+
+	DBcommit();
+
+	zbx_free(sql);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: update_proxy_lastaccess                                          *
  *                                                                            *
  ******************************************************************************/
 void	update_proxy_lastaccess(const zbx_uint64_t hostid, time_t last_access)
 {
-	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, last_access, hostid);
-	zbx_dc_update_proxy_lastaccess(hostid, last_access);
+	zbx_vector_uint64_pair_t	proxy_diff;
+
+	zbx_vector_uint64_pair_create(&proxy_diff);
+
+	zbx_dc_update_proxy_lastaccess(hostid, last_access, &proxy_diff);
+
+	if (0 != proxy_diff.values_num)
+		db_update_proxies_lastaccess(&proxy_diff);
+
+	zbx_vector_uint64_pair_destroy(&proxy_diff);
 }
 
 /******************************************************************************
@@ -2085,7 +2133,7 @@ try_again:
 	dc_items = zbx_malloc(NULL, (sizeof(DC_ITEM) + sizeof(int)) * data_num);
 	errcodes = (int *)(dc_items + data_num);
 
-	DCconfig_get_items_by_itemids(dc_items, itemids, errcodes, data_num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+	DCconfig_get_items_by_itemids(dc_items, itemids, errcodes, data_num);
 
 	for (i = 0; i < data_num; i++)
 	{
@@ -2349,7 +2397,8 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 		zabbix_log(LOG_LEVEL_DEBUG, "item [%s:%s] error: %s", item->host.host, item->key_orig, value->value);
 
 		item->state = ITEM_STATE_NOTSUPPORTED;
-		zbx_preprocess_item_value(item->itemid, item->flags, NULL, &value->ts, item->state, value->value);
+		zbx_preprocess_item_value(item->itemid, item->value_type, item->flags, NULL, &value->ts, item->state,
+				value->value);
 	}
 	else
 	{
@@ -2395,7 +2444,8 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 			set_result_meta(&result, value->lastlogsize, value->mtime);
 
 		item->state = ITEM_STATE_NORMAL;
-		zbx_preprocess_item_value(item->itemid, item->flags, &result, &value->ts, item->state, NULL);
+		zbx_preprocess_item_value(item->itemid, item->value_type, item->flags, &result, &value->ts, item->state,
+				NULL);
 
 		free_result(&result);
 	}
@@ -2445,7 +2495,7 @@ int	process_history_data(DC_ITEM *items, zbx_agent_value_t *values, int *errcode
 	}
 
 	if (0 < processed_num)
-		zbx_dc_items_update_runtime_data(items, values, errcodes, values_num);
+		zbx_dc_items_update_nextcheck(items, values, errcodes, values_num);
 
 	zbx_preprocessor_flush();
 
@@ -2585,11 +2635,20 @@ static int	parse_history_data_row_value(const struct zbx_json_parse *jp_row, zbx
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_STATE, &tmp, &tmp_alloc))
 		av->state = (unsigned char)atoi(tmp);
 
-	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_LASTLOGSIZE, &tmp, &tmp_alloc))
-	{
-		av->meta = 1;	/* contains meta information */
 
-		is_uint64(tmp, &av->lastlogsize);
+	/* Unsupported item meta information must be ignored for backwards compatibility. */
+	/* New agents will not send meta information for items in unsupported state.      */
+	if (ITEM_STATE_NOTSUPPORTED != av->state)
+	{
+		if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_LASTLOGSIZE, &tmp, &tmp_alloc))
+		{
+			av->meta = 1;	/* contains meta information */
+
+			is_uint64(tmp, &av->lastlogsize);
+
+			if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_MTIME, &tmp, &tmp_alloc))
+				av->mtime = atoi(tmp);
+		}
 	}
 
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_VALUE, &tmp, &tmp_alloc))
@@ -2598,21 +2657,12 @@ static int	parse_history_data_row_value(const struct zbx_json_parse *jp_row, zbx
 	}
 	else
 	{
-		if (ITEM_STATE_NOTSUPPORTED == av->state)
-		{
-			/* unsupported items cannot have empty error message */
-			goto out;
-		}
-
 		if (0 == av->meta)
 		{
 			/* only meta information update packets can have empty value */
 			goto out;
 		}
 	}
-
-	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_MTIME, &tmp, &tmp_alloc))
-		av->mtime = atoi(tmp);
 
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_LOGTIMESTAMP, &tmp, &tmp_alloc))
 		av->timestamp = atoi(tmp);
@@ -3653,7 +3703,7 @@ static int	process_proxy_history_data_33(const DC_PROXY *proxy, struct zbx_json_
 	while (SUCCEED == parse_history_data_33(jp_data, &pnext, values, itemids, &values_num, &read_num,
 			client_timediff, &error) && 0 != values_num)
 	{
-		DCconfig_get_items_by_itemids(items, itemids, errcodes, values_num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+		DCconfig_get_items_by_itemids(items, itemids, errcodes, values_num);
 
 		for (i = 0; i < values_num; i++)
 		{
@@ -3722,7 +3772,9 @@ static void	process_tasks_contents(struct zbx_json_parse *jp_tasks)
 
 	zbx_tm_json_deserialize_tasks(jp_tasks, &tasks);
 
+	DBbegin();
 	zbx_tm_save_tasks(&tasks);
+	DBcommit();
 
 	zbx_vector_ptr_clear_ext(&tasks, (zbx_clean_func_t)zbx_tm_task_free);
 	zbx_vector_ptr_destroy(&tasks);

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ $fields = [
 	'graphid' =>		[T_ZBX_INT, O_MAND, P_SYS,		DB_ID,		null],
 	'period' =>			[T_ZBX_INT, O_OPT, P_NZERO,	BETWEEN(ZBX_MIN_PERIOD, ZBX_MAX_PERIOD), null],
 	'stime' =>			[T_ZBX_STR, O_OPT, P_SYS,		null,		null],
+	'isNow' =>			[T_ZBX_INT, O_OPT, null,		IN('0,1'),	null],
 	'profileIdx' =>		[T_ZBX_STR, O_OPT, null,		null,		null],
 	'profileIdx2' =>	[T_ZBX_STR, O_OPT, null,		null,		null],
 	'updateProfile' =>	[T_ZBX_STR, O_OPT, null,		null,		null],
@@ -64,12 +65,13 @@ else {
 /*
  * Display
  */
-$timeline = CScreenBase::calculateTime([
+$timeline = calculateTime([
 	'profileIdx' => getRequest('profileIdx', 'web.screens'),
 	'profileIdx2' => getRequest('profileIdx2'),
-	'updateProfile' => getRequest('updateProfile', true),
+	'updateProfile' => (getRequest('updateProfile', '0') === '1'),
 	'period' => getRequest('period'),
-	'stime' => getRequest('stime')
+	'stime' => getRequest('stime'),
+	'isNow' => getRequest('isNow')
 ]);
 
 $graph = new CPieGraphDraw($dbGraph['graphtype']);

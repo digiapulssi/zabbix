@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@
 #include "../zabbix_server/pinger/pinger.h"
 #include "../zabbix_server/poller/poller.h"
 #include "../zabbix_server/trapper/trapper.h"
+#include "../zabbix_server/trapper/proxydata.h"
 #include "../zabbix_server/snmptrapper/snmptrapper.h"
 #include "proxyconfig/proxyconfig.h"
 #include "datasender/datasender.h"
@@ -249,6 +250,9 @@ char	*CONFIG_TLS_PSK_IDENTITY	= NULL;
 char	*CONFIG_TLS_PSK_FILE		= NULL;
 
 char	*CONFIG_SOCKET_PATH		= NULL;
+
+char	*CONFIG_HISTORY_STORAGE_URL	= NULL;
+char	*CONFIG_HISTORY_STORAGE_OPTS	= NULL;
 
 int	get_process_info_by_thread(int local_server_num, unsigned char *local_process_type, int *local_process_num);
 
@@ -947,6 +951,13 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 		exit(EXIT_FAILURE);
 	}
 
+	if (SUCCEED != init_proxy_history_lock(&error))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "cannot initialize lock for passive proxy history: %s", error);
+		zbx_free(error);
+		exit(EXIT_FAILURE);
+	}
+
 	if (SUCCEED != init_configuration_cache(&error))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "cannot initialize configuration cache: %s", error);
@@ -1166,6 +1177,7 @@ void	zbx_on_exit(void)
 		zbx_vmware_destroy();
 
 	free_selfmon_collector();
+	free_proxy_history_lock();
 
 	zbx_unload_modules();
 

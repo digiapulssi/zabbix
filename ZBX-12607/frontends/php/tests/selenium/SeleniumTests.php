@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,6 +83,7 @@ require_once dirname(__FILE__).'/testFormHostGroup.php';
 require_once dirname(__FILE__).'/testFormItem.php';
 require_once dirname(__FILE__).'/testFormItemPrototype.php';
 require_once dirname(__FILE__).'/testFormLogin.php';
+require_once dirname(__FILE__).'/testFormMaintenance.php';
 require_once dirname(__FILE__).'/testFormMap.php';
 require_once dirname(__FILE__).'/testFormScreen.php';
 require_once dirname(__FILE__).'/testFormSysmap.php';
@@ -91,6 +92,8 @@ require_once dirname(__FILE__).'/testFormTemplate.php';
 require_once dirname(__FILE__).'/testFormTriggerPrototype.php';
 require_once dirname(__FILE__).'/testFormUserProfile.php';
 require_once dirname(__FILE__).'/testFormWeb.php';
+require_once dirname(__FILE__).'/testFormWebStep.php';
+require_once dirname(__FILE__).'/testFormApplication.php';
 require_once dirname(__FILE__).'/testPageApplications.php';
 require_once dirname(__FILE__).'/testPageBrowserWarning.php';
 require_once dirname(__FILE__).'/testInheritanceItem.php';
@@ -179,6 +182,7 @@ class SeleniumTests {
 		$suite->addTestSuite('testFormItem');
 		$suite->addTestSuite('testFormItemPrototype');
 		$suite->addTestSuite('testFormLogin');
+		$suite->addTestSuite('testFormMaintenance');
 		$suite->addTestSuite('testFormMap');
 		$suite->addTestSuite('testFormScreen');
 		$suite->addTestSuite('testFormSysmap');
@@ -187,6 +191,8 @@ class SeleniumTests {
 		$suite->addTestSuite('testFormTriggerPrototype');
 		$suite->addTestSuite('testFormUserProfile');
 		$suite->addTestSuite('testFormWeb');
+		$suite->addTestSuite('testFormWebStep');
+		$suite->addTestSuite('testFormApplication');
 		$suite->addTestSuite('testPageApplications');
 		$suite->addTestSuite('testPageBrowserWarning');
 		$suite->addTestSuite('testInheritanceItem');

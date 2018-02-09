@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ class CMediatype extends CApiService {
 			'mediatypeids'				=> null,
 			'mediaids'					=> null,
 			'userids'					=> null,
-			'editable'					=> null,
+			'editable'					=> false,
 			// filter
 			'filter'					=> null,
 			'search'					=> null,
@@ -81,9 +81,9 @@ class CMediatype extends CApiService {
 		// permission check
 		if (self::$userData['type'] == USER_TYPE_SUPER_ADMIN) {
 		}
-		elseif (is_null($options['editable']) && self::$userData['type'] == USER_TYPE_ZABBIX_ADMIN) {
+		elseif (!$options['editable'] && self::$userData['type'] == USER_TYPE_ZABBIX_ADMIN) {
 		}
-		elseif (!is_null($options['editable']) || self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
+		elseif ($options['editable'] || self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			return [];
 		}
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
+/**
+ * @backup triggers
+ */
 class testFormTrigger extends CWebTest {
 
 	/**
@@ -164,13 +167,6 @@ class testFormTrigger extends CWebTest {
 				]
 			]
 		];
-	}
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testFormTrigger_Setup() {
-		DBsave_tables('triggers');
 	}
 
 	/**
@@ -948,12 +944,5 @@ class testFormTrigger extends CWebTest {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testFormTrigger_Teardown() {
-		DBrestore_tables('triggers');
 	}
 }

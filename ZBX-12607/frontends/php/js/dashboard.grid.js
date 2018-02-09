@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -455,7 +455,7 @@
 			'edit_mode': data['options']['edit_mode'] ? 1 : 0,
 			'storage': widget['storage'],
 			'content_width': widget['content_body'].width(),
-			'content_height': widget['content_body'].height() - 10 // -10 is added to avoid scrollbar
+			'content_height': widget['content_body'].height() - 4 // -4 is added to avoid scrollbar
 		};
 
 		if (widget['widgetid'] !== '') {
@@ -831,7 +831,7 @@
 				}
 				else if ('errors' in resp) {
 					// Error returned.
-					dashbaordAddMessages(resp.errors);
+					dashboardAddMessages(resp.errors);
 				}
 			},
 			complete: function() {

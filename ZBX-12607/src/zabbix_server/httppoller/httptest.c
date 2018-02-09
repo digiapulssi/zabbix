@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include "db.h"
 #include "log.h"
 #include "dbcache.h"
+#include "preproc.h"
 
 #include "zbxserver.h"
 #include "zbxregexp.h"
@@ -164,7 +165,7 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 
 	if (0 < num)
 	{
-		DCconfig_get_items_by_itemids(items, itemids, errcodes, num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+		DCconfig_get_items_by_itemids(items, itemids, errcodes, num);
 
 		for (i = 0; i < num; i++)
 		{
@@ -199,7 +200,8 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 			}
 
 			items[i].state = ITEM_STATE_NORMAL;
-			zbx_preprocess_item_value(items[i].itemid, 0, &value, ts, items[i].state, NULL);
+			zbx_preprocess_item_value(items[i].itemid, items[i].value_type, 0, &value, ts, items[i].state,
+					NULL);
 
 			free_result(&value);
 		}
@@ -308,7 +310,7 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 
 	if (0 < num)
 	{
-		DCconfig_get_items_by_itemids(items, itemids, errcodes, num, ZBX_FLAG_ITEM_FIELDS_DEFAULT);
+		DCconfig_get_items_by_itemids(items, itemids, errcodes, num);
 
 		for (i = 0; i < num; i++)
 		{
@@ -343,7 +345,8 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 			}
 
 			items[i].state = ITEM_STATE_NORMAL;
-			zbx_preprocess_item_value(items[i].itemid, 0, &value, ts, items[i].state, NULL);
+			zbx_preprocess_item_value(items[i].itemid, items[i].value_type, 0, &value, ts, items[i].state,
+					NULL);
 
 			free_result(&value);
 		}

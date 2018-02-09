@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -77,13 +77,14 @@ typedef struct
 	zbx_uint64_t		valuemapid;
 	const char		*key;
 	const char		*port;
-	const char		*db_error;
+	const char		*error;
 	const char		*delay;
 	ZBX_DC_TRIGGER		**triggers;
 	int			nextcheck;
 	int			lastclock;
 	int			mtime;
 	int			data_expected_from;
+	int			history_sec;
 	unsigned char		history;
 	unsigned char		type;
 	unsigned char		value_type;
@@ -97,9 +98,6 @@ typedef struct
 	unsigned char		unreachable;
 	unsigned char		schedulable;
 	unsigned char		update_triggers;
-
-	zbx_vector_ptr_t	preproc_ops;
-	zbx_vector_uint64_t	dep_itemids;
 }
 ZBX_DC_ITEM;
 
@@ -218,6 +216,20 @@ typedef struct
 }
 ZBX_DC_CALCITEM;
 
+typedef struct
+{
+	zbx_uint64_t		itemid;
+	zbx_vector_uint64_t	dep_itemids;
+}
+ZBX_DC_MASTERITEM;
+
+typedef struct
+{
+	zbx_uint64_t		itemid;
+	zbx_vector_ptr_t	preproc_ops;
+}
+ZBX_DC_PREPROCITEM;
+
 typedef zbx_item_history_value_t	ZBX_DC_DELTAITEM;
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
@@ -320,6 +332,8 @@ typedef struct
 	int		nextcheck;
 	int		timediff;
 	int		lastaccess;
+	int		last_cfg_error_time;	/* time when passive proxy misconfiguration error was seen */
+						/* or 0 if no error */
 	int		version;
 	unsigned char	location;
 }
@@ -581,13 +595,15 @@ typedef struct
 	unsigned char	type;
 	const char	*params;
 }
-zbx_dc_item_preproc_t;
+zbx_dc_preproc_op_t;
 
 typedef struct
 {
 	/* timestamp of the last host availability diff sent to sever, used only by proxies */
 	int			availability_diff_ts;
+	int			proxy_lastaccess_ts;
 	int			sync_ts;
+	int			item_sync_ts;
 
 	zbx_hashset_t		items;
 	zbx_hashset_t		items_hk;		/* hostid, key */
@@ -603,6 +619,8 @@ typedef struct
 	zbx_hashset_t		simpleitems;
 	zbx_hashset_t		jmxitems;
 	zbx_hashset_t		calcitems;
+	zbx_hashset_t		masteritems;
+	zbx_hashset_t		preprocitems;
 	zbx_hashset_t		functions;
 	zbx_hashset_t		triggers;
 	zbx_hashset_t		trigdeps;
@@ -632,7 +650,7 @@ typedef struct
 	zbx_hashset_t		corr_operations;
 	zbx_hashset_t		hostgroups;
 	zbx_vector_ptr_t	hostgroups_name; 	/* host groups sorted by name */
-	zbx_hashset_t		item_preproc;
+	zbx_hashset_t		preprocops;
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_hashset_t		psks;			/* for keeping PSK-identity and PSK pairs and for searching */
 							/* by PSK identity */
