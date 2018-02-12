@@ -927,7 +927,7 @@ class CItemPrototype extends CItemGeneral {
 			'preservekeys' => true
 		]);
 
-		foreach ($tpl_items as $inum => $tpl_item) {
+		foreach ($tpl_items as &$tpl_item) {
 			$tpl_item['applications'] = zbx_objectValues($tpl_item['applications'], 'applicationid');
 		}
 		unset($tpl_item);
