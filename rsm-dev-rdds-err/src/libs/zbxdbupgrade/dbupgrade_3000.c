@@ -1006,6 +1006,143 @@ static int	DBpatch_3000139(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000140(void)
+{
+	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
+	static const char	*const data[] = {
+		"ROW   |13009    |130       |-222 |RDDS43 - No reply from local resolver                                                                           |",
+		"ROW   |13010    |130       |-223 |RDDS43 - No AD bit from local resolver                                                                          |",
+		"ROW   |13011    |130       |-224 |RDDS43 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |",
+		"ROW   |13012    |130       |-225 |RDDS43 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                       |",
+		"ROW   |13013    |130       |-226 |RDDS43 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |",
+		"ROW   |13014    |130       |-227 |RDDS43 - Timeout                                                                                                |",
+		"ROW   |13015    |130       |-228 |RDDS43 - Error opening connection to server                                                                     |",
+		"ROW   |13016    |130       |-229 |RDDS43 - Empty response                                                                                         |",
+		"ROW   |13017    |130       |-250 |RDDS80 - No reply from local resolver                                                                           |",
+		"ROW   |13018    |130       |-251 |RDDS80 - No AD bit from local resolver                                                                          |",
+		"ROW   |13019    |130       |-252 |RDDS80 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |",
+		"ROW   |13020    |130       |-253 |RDDS80 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                       |",
+		"ROW   |13021    |130       |-254 |RDDS80 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |",
+		"ROW   |13022    |130       |-255 |RDDS80 - Timeout                                                                                                |",
+		"ROW   |13023    |130       |-256 |RDDS80 - Error opening connection to server                                                                     |",
+		"ROW   |13024    |130       |-257 |RDDS80 - Error in HTTP protocol                                                                                 |",
+		"ROW   |13025    |130       |-258 |RDDS80 - Error in HTTPS protocol                                                                                |",
+		"-- Error code for every assigned HTTP status code as per: http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml                ",
+		"ROW   |13026    |130       |-300 |RDDS80 - Expecting HTTP status code 200 but got 100                                                             |",
+		"ROW   |13027    |130       |-301 |RDDS80 - Expecting HTTP status code 200 but got 101                                                             |",
+		"ROW   |13028    |130       |-302 |RDDS80 - Expecting HTTP status code 200 but got 102                                                             |",
+		"ROW   |13029    |130       |-303 |RDDS80 - Expecting HTTP status code 200 but got 103                                                             |",
+		"ROW   |13030    |130       |-304 |RDDS80 - Expecting HTTP status code 200 but got 200                                                             |",
+		"ROW   |13031    |130       |-305 |RDDS80 - Expecting HTTP status code 200 but got 201                                                             |",
+		"ROW   |13032    |130       |-306 |RDDS80 - Expecting HTTP status code 200 but got 202                                                             |",
+		"ROW   |13033    |130       |-307 |RDDS80 - Expecting HTTP status code 200 but got 203                                                             |",
+		"ROW   |13034    |130       |-308 |RDDS80 - Expecting HTTP status code 200 but got 204                                                             |",
+		"ROW   |13035    |130       |-309 |RDDS80 - Expecting HTTP status code 200 but got 205                                                             |",
+		"ROW   |13036    |130       |-310 |RDDS80 - Expecting HTTP status code 200 but got 206                                                             |",
+		"ROW   |13037    |130       |-311 |RDDS80 - Expecting HTTP status code 200 but got 207                                                             |",
+		"ROW   |13038    |130       |-312 |RDDS80 - Expecting HTTP status code 200 but got 208                                                             |",
+		"ROW   |13039    |130       |-313 |RDDS80 - Expecting HTTP status code 200 but got 226                                                             |",
+		"ROW   |13040    |130       |-314 |RDDS80 - Expecting HTTP status code 200 but got 300                                                             |",
+		"ROW   |13041    |130       |-315 |RDDS80 - Expecting HTTP status code 200 but got 301                                                             |",
+		"ROW   |13042    |130       |-316 |RDDS80 - Expecting HTTP status code 200 but got 302                                                             |",
+		"ROW   |13043    |130       |-317 |RDDS80 - Expecting HTTP status code 200 but got 303                                                             |",
+		"ROW   |13044    |130       |-318 |RDDS80 - Expecting HTTP status code 200 but got 304                                                             |",
+		"ROW   |13045    |130       |-319 |RDDS80 - Expecting HTTP status code 200 but got 305                                                             |",
+		"ROW   |13046    |130       |-320 |RDDS80 - Expecting HTTP status code 200 but got 306                                                             |",
+		"ROW   |13047    |130       |-321 |RDDS80 - Expecting HTTP status code 200 but got 307                                                             |",
+		"ROW   |13048    |130       |-322 |RDDS80 - Expecting HTTP status code 200 but got 308                                                             |",
+		"ROW   |13049    |130       |-323 |RDDS80 - Expecting HTTP status code 200 but got 400                                                             |",
+		"ROW   |13050    |130       |-324 |RDDS80 - Expecting HTTP status code 200 but got 401                                                             |",
+		"ROW   |13051    |130       |-325 |RDDS80 - Expecting HTTP status code 200 but got 402                                                             |",
+		"ROW   |13052    |130       |-326 |RDDS80 - Expecting HTTP status code 200 but got 403                                                             |",
+		"ROW   |13053    |130       |-327 |RDDS80 - Expecting HTTP status code 200 but got 404                                                             |",
+		"ROW   |13054    |130       |-328 |RDDS80 - Expecting HTTP status code 200 but got 405                                                             |",
+		"ROW   |13055    |130       |-329 |RDDS80 - Expecting HTTP status code 200 but got 406                                                             |",
+		"ROW   |13056    |130       |-330 |RDDS80 - Expecting HTTP status code 200 but got 407                                                             |",
+		"ROW   |13057    |130       |-331 |RDDS80 - Expecting HTTP status code 200 but got 408                                                             |",
+		"ROW   |13058    |130       |-332 |RDDS80 - Expecting HTTP status code 200 but got 409                                                             |",
+		"ROW   |13059    |130       |-333 |RDDS80 - Expecting HTTP status code 200 but got 410                                                             |",
+		"ROW   |13060    |130       |-334 |RDDS80 - Expecting HTTP status code 200 but got 411                                                             |",
+		"ROW   |13061    |130       |-335 |RDDS80 - Expecting HTTP status code 200 but got 412                                                             |",
+		"ROW   |13062    |130       |-336 |RDDS80 - Expecting HTTP status code 200 but got 413                                                             |",
+		"ROW   |13063    |130       |-337 |RDDS80 - Expecting HTTP status code 200 but got 414                                                             |",
+		"ROW   |13064    |130       |-338 |RDDS80 - Expecting HTTP status code 200 but got 415                                                             |",
+		"ROW   |13065    |130       |-339 |RDDS80 - Expecting HTTP status code 200 but got 416                                                             |",
+		"ROW   |13066    |130       |-340 |RDDS80 - Expecting HTTP status code 200 but got 417                                                             |",
+		"ROW   |13067    |130       |-341 |RDDS80 - Expecting HTTP status code 200 but got 421                                                             |",
+		"ROW   |13068    |130       |-342 |RDDS80 - Expecting HTTP status code 200 but got 422                                                             |",
+		"ROW   |13069    |130       |-343 |RDDS80 - Expecting HTTP status code 200 but got 423                                                             |",
+		"ROW   |13070    |130       |-344 |RDDS80 - Expecting HTTP status code 200 but got 424                                                             |",
+		"ROW   |13071    |130       |-345 |RDDS80 - Expecting HTTP status code 200 but got 426                                                             |",
+		"ROW   |13072    |130       |-346 |RDDS80 - Expecting HTTP status code 200 but got 428                                                             |",
+		"ROW   |13073    |130       |-347 |RDDS80 - Expecting HTTP status code 200 but got 429                                                             |",
+		"ROW   |13074    |130       |-348 |RDDS80 - Expecting HTTP status code 200 but got 431                                                             |",
+		"ROW   |13075    |130       |-349 |RDDS80 - Expecting HTTP status code 200 but got 451                                                             |",
+		"ROW   |13076    |130       |-350 |RDDS80 - Expecting HTTP status code 200 but got 500                                                             |",
+		"ROW   |13077    |130       |-351 |RDDS80 - Expecting HTTP status code 200 but got 501                                                             |",
+		"ROW   |13078    |130       |-352 |RDDS80 - Expecting HTTP status code 200 but got 502                                                             |",
+		"ROW   |13079    |130       |-353 |RDDS80 - Expecting HTTP status code 200 but got 503                                                             |",
+		"ROW   |13080    |130       |-354 |RDDS80 - Expecting HTTP status code 200 but got 504                                                             |",
+		"ROW   |13081    |130       |-355 |RDDS80 - Expecting HTTP status code 200 but got 505                                                             |",
+		"ROW   |13082    |130       |-356 |RDDS80 - Expecting HTTP status code 200 but got 506                                                             |",
+		"ROW   |13083    |130       |-357 |RDDS80 - Expecting HTTP status code 200 but got 507                                                             |",
+		"ROW   |13084    |130       |-358 |RDDS80 - Expecting HTTP status code 200 but got 508                                                             |",
+		"ROW   |13085    |130       |-359 |RDDS80 - Expecting HTTP status code 200 but got 510                                                             |",
+		"ROW   |13086    |130       |-360 |RDDS80 - Expecting HTTP status code 200 but got 511                                                             |",
+		"ROW   |13087    |130       |-361 |RDDS80 - Expecting HTTP status code 200 but got unexpected status code                                          |",
+		NULL
+	};
+	int			i;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("delete from mappings where valuemapid=130"))	/* valuemapid of "RSM RDDS rtt" */
+		return FAIL;
+
+	for (i = 0; NULL != data[i]; i++)
+	{
+		zbx_uint64_t	mappingid, valuemapid;
+		char		*value = NULL, *newvalue = NULL, *value_esc, *newvalue_esc;
+
+		if (0 == strncmp(data[i], "--", ZBX_CONST_STRLEN("--")))
+			continue;
+
+		if (4 != sscanf(data[i], "ROW |" ZBX_FS_UI64 " |" ZBX_FS_UI64 " |%m[^|]|%m[^|]|",
+				&mappingid, &valuemapid, &value, &newvalue))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "failed to parse the following line:\n%s", data[i]);
+			zbx_free(value);
+			zbx_free(newvalue);
+			return FAIL;
+		}
+
+		zbx_rtrim(value, ZBX_WHITESPACE);
+		zbx_rtrim(newvalue, ZBX_WHITESPACE);
+
+		/* NOTE: to keep it simple assume that data does not contain sequences "&pipe;", "&eol;" or "&bsn;" */
+
+		value_esc = zbx_db_dyn_escape_string(value);
+		newvalue_esc = zbx_db_dyn_escape_string(newvalue);
+		zbx_free(value);
+		zbx_free(newvalue);
+
+		if (ZBX_DB_OK > DBexecute("insert into mappings (mappingid,valuemapid,value,newvalue)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",'%s','%s')",
+				mappingid, valuemapid, value_esc, newvalue_esc))
+		{
+			zbx_free(value_esc);
+			zbx_free(newvalue_esc);
+			return FAIL;
+		}
+
+		zbx_free(value_esc);
+		zbx_free(newvalue_esc);
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1053,5 +1190,6 @@ DBPATCH_ADD(3000136, 0, 0)	/* add "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" m
 DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
+DBPATCH_ADD(3000140, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
 
 DBPATCH_END()
