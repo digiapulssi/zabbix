@@ -752,15 +752,6 @@ class CItemPrototype extends CItemGeneral {
 		$dependent_itemprototypeids = array_keys($dependent_itemprototypes);
 		$childPrototypeids += array_combine($dependent_itemprototypeids, $dependent_itemprototypeids);
 
-		$options = [
-			'output' => API_OUTPUT_EXTEND,
-			'itemids' => $childPrototypeids,
-			'nopermissions' => true,
-			'preservekeys' => true
-		];
-		$delItemPrototypesChildren = $this->get($options);
-
-		$delItemPrototypes = array_merge($delItemPrototypes, $delItemPrototypesChildren);
 		$prototypeids = array_merge($prototypeids, $childPrototypeids);
 
 		// Delete graphs or leave them if graphs still have at least one item prototype.
