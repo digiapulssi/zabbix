@@ -1006,6 +1006,37 @@ static int	DBpatch_3000139(void)
 	return SUCCEED;
 }
 
+static const action_t	one_more_action[] = {
+	{115,	"Probes",		3600,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
+		1,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC",
+		{
+			{115,	OP_MESSAGE,	{.opmessage = {1,	"",	"",	10,	{
+					{115,	OP_MESSAGE_USR,	{.userid = 100}},
+					{0}
+			}}}},
+			{0}
+		},
+		{
+			{115,	16,	7,	""},
+			{116,	5,	0,	"1"},
+			{117,	4,	5,	"2"},
+			{118,	0,	0,	"120"},
+			{0}
+		}
+	},
+	{0}
+};
+
+static int	DBpatch_3000140(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	return add_actions(one_more_action);
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1053,5 +1084,6 @@ DBPATCH_ADD(3000136, 0, 0)	/* add "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" m
 DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
+DBPATCH_ADD(3000140, 0, 0)	/* new action: "Probes" */
 
 DBPATCH_END()

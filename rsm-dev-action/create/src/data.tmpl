@@ -374,6 +374,7 @@ TABLE |actions
 FIELDS|actionid|name           |esc_period|def_shortdata                                                           |def_longdata                 |recovery_msg|r_shortdata                                                             |r_longdata                                     |
 ROW   |100     |Probes-Critical|3600      |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.DATE} {EVENT.TIME} UTC|1           |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |110     |Probes-Mon     |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
+ROW   |115     |Probes         |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |120     |Central-Server |3600      |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |130     |TLDs           |3600      |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.DATE} {EVENT.TIME} UTC|1           |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 
@@ -381,6 +382,7 @@ TABLE |operations
 FIELDS|operationid|actionid|
 ROW   |100        |100     |
 ROW   |110        |110     |
+ROW   |115        |115     |
 ROW   |120        |120     |
 ROW   |130        |130     |
 
@@ -388,6 +390,7 @@ TABLE |opmessage
 FIELDS|operationid|default_msg|subject|message|mediatypeid|
 ROW   |100        |1          |       |       |10         |
 ROW   |110        |1          |       |       |10         |
+ROW   |115        |1          |       |       |10         |
 ROW   |120        |1          |       |       |10         |
 ROW   |130        |1          |       |       |10         |
 
@@ -395,6 +398,7 @@ TABLE |opmessage_usr
 FIELDS|opmessage_usrid|operationid|userid|
 ROW   |100            |100        |100   |
 ROW   |110            |110        |100   |
+ROW   |115            |115        |100   |
 ROW   |120            |120        |100   |
 ROW   |130            |130        |100   |
 
@@ -408,6 +412,10 @@ ROW   |110        |110     |16           |7       |      |
 ROW   |111        |110     |5            |0       |1     |
 ROW   |112        |110     |4            |5       |2     |
 ROW   |113        |110     |0            |0       |130   |
+ROW   |115        |115     |16           |7       |      |
+ROW   |116        |115     |5            |0       |1     |
+ROW   |117        |115     |4            |5       |2     |
+ROW   |118        |115     |0            |0       |120   |
 ROW   |120        |120     |16           |7       |      |
 ROW   |121        |120     |5            |0       |1     |
 ROW   |122        |120     |4            |5       |2     |
