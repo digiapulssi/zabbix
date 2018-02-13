@@ -1429,5 +1429,9 @@ const char	*zbx_variant_type_desc(const zbx_variant_t *value);
 
 int	zbx_validate_value_dbl(double value);
 
+#ifdef ZBX_UNIQ_VAR_NAME
+int ZBX_UNIQ_VAR_NAME(Sun10_bugfix, __FILENAME__, __COUNTER__) = 0;
+#endif
+
 #endif
 
