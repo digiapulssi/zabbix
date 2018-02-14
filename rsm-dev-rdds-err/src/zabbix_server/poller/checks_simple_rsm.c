@@ -2100,8 +2100,8 @@ static int	zbx_rdds43_test(const char *request, const char *ip, short port, int 
 
 	if (SUCCEED != zbx_tcp_connect(&s, NULL, ip, port, timeout, ZBX_TCP_SEC_UNENCRYPTED, NULL, NULL))
 	{
-		*rtt = ZBX_EC_RDDS43_ECON;
-		zbx_strlcpy(err, zbx_socket_strerror(), err_size);
+		*rtt = (SUCCEED == zbx_alarm_timed_out() ? ZBX_EC_RDDS43_TO : ZBX_EC_RDDS43_ECON);
+		zbx_snprintf(err, err_size, "cannot connect: %s", zbx_socket_strerror());
 		goto out;
 	}
 
@@ -2109,31 +2109,22 @@ static int	zbx_rdds43_test(const char *request, const char *ip, short port, int 
 
 	if (SUCCEED != zbx_tcp_send_raw(&s, send_buf))
 	{
-		*rtt = ZBX_EC_RDDS43_ECON;
+		*rtt = (SUCCEED == zbx_alarm_timed_out() ? ZBX_EC_RDDS43_TO : ZBX_EC_RDDS43_ECON);
 		zbx_snprintf(err, err_size, "cannot send data: %s", zbx_socket_strerror());
 		goto out;
 	}
 
-	timeout -= time(NULL) - start.sec;
+	if (FAIL == (nbytes = zbx_tcp_recv_ext(&s, ZBX_TCP_READ_UNTIL_CLOSE, 0)))	/* timeout is still "active" here */
+	{
+		*rtt = (SUCCEED == zbx_alarm_timed_out() ? ZBX_EC_RDDS43_TO : ZBX_EC_RDDS43_ECON);
+		zbx_snprintf(err, err_size, "cannot receive data: %s", zbx_socket_strerror());
+		goto out;
+	}
 
-	if (0 == (nbytes = zbx_tcp_recv_ext(&s, ZBX_TCP_READ_UNTIL_CLOSE, timeout)))
+	if (0 == nbytes)
 	{
 		*rtt = ZBX_EC_RDDS43_EMPTY;
 		zbx_strlcpy(err, "empty response received", err_size);
-	}
-	else if (0 > nbytes)
-	{
-		if (EINTR == errno)
-		{
-			*rtt = ZBX_EC_RDDS43_TO;
-			zbx_strlcpy(err, "timeout occurred", err_size);
-		}
-		else
-		{
-			*rtt = ZBX_EC_RDDS43_ECON;
-			zbx_snprintf(err, err_size, "cannot receive data: %s", zbx_socket_strerror());
-		}
-
 		goto out;
 	}
 
