@@ -36,7 +36,7 @@
 #define ZBX_SEND_BUF_SIZE	128
 #define ZBX_RDDS_PREVIEW_SIZE	100
 
-#define ZBX_HTTP_RESPONSE_OK	200
+#define ZBX_HTTP_RESPONSE_OK	200L
 
 #define XML_PATH_SERVER_ID	0
 #define XML_PATH_RESULT_CODE	1
@@ -54,6 +54,35 @@
 
 extern const char	*CONFIG_LOG_FILE;
 extern const char	epp_passphrase[128];
+
+#define ZBX_FLAG_IPV4_ENABLED	0x1
+#define ZBX_FLAG_IPV6_ENABLED	0x2
+
+typedef struct
+{
+	const char	*name;
+	int		flag;
+	ldns_rr_type	rr_type;
+}
+zbx_ipv_t;
+
+static const zbx_ipv_t	ipvs[] =
+{
+	{"IPv4",	ZBX_FLAG_IPV4_ENABLED,	LDNS_RR_TYPE_A},
+	{"IPv6",	ZBX_FLAG_IPV6_ENABLED,	LDNS_RR_TYPE_AAAA},
+	{NULL}
+};
+
+typedef enum
+{
+	ZBX_EC_RES_INTERNAL,
+	ZBX_EC_RES_NOREPLY,
+	ZBX_EC_RES_NOADBIT,
+	ZBX_EC_RES_SERVFAIL,
+	ZBX_EC_RES_NXDOMAIN,
+	ZBX_EC_RES_CATCHALL
+}
+zbx_resolver_error_t;
 
 typedef struct
 {
@@ -1343,8 +1372,7 @@ static int	is_dns_service_err(int ec)
 /* todo phase 1: added this one for rdds internal error exceptions */
 static int	is_rdds_service_err(int ec)
 {
-	/* is rdds service error */
-	return SUCCEED;
+	return ZBX_EC_RDDS43_RES_NOREPLY != ec && ZBX_EC_RDDS80_RES_NOREPLY != ec ? SUCCEED : FAIL;
 }
 
 /* todo phase 1: added this one for epp internal error exceptions */
@@ -2065,12 +2093,14 @@ static int	zbx_rdds43_test(const char *request, const char *ip, short port, int 
 	zbx_socket_t	s;
 	char		send_buf[ZBX_SEND_BUF_SIZE];
 	zbx_timespec_t	start, now;
+	ssize_t		nbytes;
 	int		ret = FAIL;
 
 	zbx_timespec(&start);
 
 	if (SUCCEED != zbx_tcp_connect(&s, NULL, ip, port, timeout, ZBX_TCP_SEC_UNENCRYPTED, NULL, NULL))
 	{
+		*rtt = ZBX_EC_RDDS43_ECON;
 		zbx_strlcpy(err, zbx_socket_strerror(), err_size);
 		goto out;
 	}
@@ -2079,18 +2109,31 @@ static int	zbx_rdds43_test(const char *request, const char *ip, short port, int 
 
 	if (SUCCEED != zbx_tcp_send_raw(&s, send_buf))
 	{
+		*rtt = ZBX_EC_RDDS43_ECON;
 		zbx_snprintf(err, err_size, "cannot send data: %s", zbx_socket_strerror());
 		goto out;
 	}
 
 	timeout -= time(NULL) - start.sec;
 
-	if (SUCCEED != SUCCEED_OR_FAIL(zbx_tcp_recv_ext(&s, ZBX_TCP_READ_UNTIL_CLOSE, timeout)))
+	if (0 == (nbytes = zbx_tcp_recv_ext(&s, ZBX_TCP_READ_UNTIL_CLOSE, timeout)))
+	{
+		*rtt = ZBX_EC_RDDS43_EMPTY;
+		zbx_strlcpy(err, "empty response received", err_size);
+	}
+	else if (0 > nbytes)
 	{
 		if (EINTR == errno)
-			zbx_strlcpy(err, "timeout occured", err_size);
+		{
+			*rtt = ZBX_EC_RDDS43_TO;
+			zbx_strlcpy(err, "timeout occurred", err_size);
+		}
 		else
+		{
+			*rtt = ZBX_EC_RDDS43_ECON;
 			zbx_snprintf(err, err_size, "cannot receive data: %s", zbx_socket_strerror());
+		}
+
 		goto out;
 	}
 
@@ -2115,12 +2158,10 @@ out:
  * Parameters: res          - [IN]  resolver object to use for resolving      *
  *             host         - [IN]  host name to resolve                      *
  *             ips          - [OUT] IPs resolved from specified host          *
- *             ipv4_enabled - [IN]  use IPv4 protocol to resolve              *
- *             ipv6_enabled - [IN]  use IPv6 protocol to resolve              *
+ *             ipv_flags    - [IN]  mask of supported and enabled IP versions *
  *             log_fd       - [IN]  print resolved packets to specified file  *
  *                                  descriptor, cannot be NULL                *
- *             internal     - [OUT] in case of error, if it's internal (1) or *
- *                                  not (0), cannot be NULL                   *
+ *             ec           - [OUT] resolver error code                       *
  *             err          - [OUT] in case of error, write the error string  *
  *                                  to specified buffer                       *
  *             err_size     - [IN]  error buffer size                         *
@@ -2129,100 +2170,92 @@ out:
  *               FAIL - otherwise                                             *
  *                                                                            *
  ******************************************************************************/
-static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vector_str_t *ips,
-		int ipv4_enabled, int ipv6_enabled, FILE *log_fd, char *internal, char *err, size_t err_size)
+static int	zbx_resolve_host(const ldns_resolver *res, const char *host, zbx_vector_str_t *ips, int ipv_flags,
+		FILE *log_fd, zbx_resolver_error_t *ec_res, char *err, size_t err_size)
 {
-	ldns_pkt	*pkt = NULL;
-	ldns_rdf	*host_rdf = NULL;
-	ldns_rr_list	*rrset = NULL;
-	size_t		i, rr_count;
-	char		*ip;
+	const zbx_ipv_t	*ipv;
+	ldns_rdf	*rdf;
 	int		ret = FAIL;
 
-	if (0 != ipv4_enabled)
+	if (NULL == (rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, host)))
 	{
-		if (NULL == (host_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, host)))
-		{
-			*internal = 1;
-			zbx_snprintf(err, err_size, "invalid host name \"%s\"", host);
-			goto out;
-		}
+		zbx_snprintf(err, err_size, "invalid host name \"%s\"", host);
+		*ec_res = ZBX_EC_RES_INTERNAL;
+		return ret;
+	}
 
-		if (NULL == (pkt = ldns_resolver_query(res, host_rdf, LDNS_RR_TYPE_A, LDNS_RR_CLASS_IN, LDNS_RD)))
+	for (ipv = ipvs; NULL != ipv->name; ipv++)
+	{
+		ldns_pkt	*pkt;
+		ldns_rr_list	*rr_list;
+		ldns_pkt_rcode	rcode;
+
+		if (NULL == (pkt = ldns_resolver_query(res, rdf, ipv->rr_type, LDNS_RR_CLASS_IN, LDNS_RD)))
 		{
-			*internal = 1;
-			zbx_snprintf(err, err_size, "cannot resolve host \"%s\" to IPv4 address", host);
+			zbx_snprintf(err, err_size, "cannot resolve host \"%s\" to %s address", host, ipv->name);
+			*ec_res = ZBX_EC_RES_NOREPLY;
 			goto out;
 		}
 
 		ldns_pkt_print(log_fd, pkt);
 
-		if (NULL != (rrset = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_A, LDNS_SECTION_ANSWER)))
+		if (0 == ldns_pkt_ad(pkt))
 		{
-			rr_count = ldns_rr_list_rr_count(rrset);
-			for (i = 0; i < rr_count; i++)
-			{
-				ip = ldns_rdf2str(ldns_rr_a_address(ldns_rr_list_rr(rrset, i)));
-				zbx_vector_str_append(ips, ip);
-			}
-		}
-	}
-
-	if (0 != ipv6_enabled)
-	{
-		if (NULL == host_rdf && NULL == (host_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, host)))
-		{
-			*internal = 1;
-			zbx_snprintf(err, err_size, "invalid host name \"%s\"", host);
+			zbx_snprintf(err, err_size, "AD bit is not set in the answer for host \"%s\"", host);
+			*ec_res = ZBX_EC_RES_NOADBIT;
 			goto out;
 		}
 
-		if (NULL != pkt)
-			ldns_pkt_free(pkt);
-
-		if (NULL == (pkt = ldns_resolver_query(res, host_rdf, LDNS_RR_TYPE_AAAA, LDNS_RR_CLASS_IN, LDNS_RD)))
+		if (LDNS_RCODE_NOERROR != (rcode = ldns_pkt_get_rcode(pkt)))
 		{
-			*internal = 1;
-			zbx_snprintf(err, err_size, "cannot resolve host \"%s\" to IPv6 address", host);
+			char	*rcode_str;
+
+			rcode_str = ldns_pkt_rcode2str(rcode);
+			zbx_snprintf(err, err_size, "got error while resolving host \"%s\": %s", host, rcode_str);
+			zbx_free(rcode_str);
+
+			switch (rcode)
+			{
+				case LDNS_RCODE_SERVFAIL:
+					*ec_res = ZBX_EC_RES_SERVFAIL;
+					break;
+				case LDNS_RCODE_NXDOMAIN:
+					*ec_res = ZBX_EC_RES_NXDOMAIN;
+					break;
+				default:
+					*ec_res = ZBX_EC_RES_CATCHALL;
+			}
+
 			goto out;
 		}
 
-		ldns_pkt_print(log_fd, pkt);
-
-		if (NULL != rrset)
-			ldns_rr_list_deep_free(rrset);
-
-		if (NULL != (rrset = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_AAAA, LDNS_SECTION_ANSWER)))
+		if (0 != (ipv_flags & ipv->flag) &&
+				NULL != (rr_list = ldns_pkt_rr_list_by_type(pkt, ipv->rr_type, LDNS_SECTION_ANSWER)))
 		{
-			rr_count = ldns_rr_list_rr_count(rrset);
+			size_t	rr_count, i;
+
+			rr_count = ldns_rr_list_rr_count(rr_list);
+
 			for (i = 0; i < rr_count; i++)
-			{
-				ip = ldns_rdf2str(ldns_rr_a_address(ldns_rr_list_rr(rrset, i)));
-				zbx_vector_str_append(ips, ip);
-			}
+				zbx_vector_str_append(ips, ldns_rdf2str(ldns_rr_a_address(ldns_rr_list_rr(rr_list, i))));
+
+			ldns_rr_list_deep_free(rr_list);
 		}
+
+		ldns_pkt_free(pkt);
 	}
 
-	if (0 == ips->values_num)
+	if (0 != ips->values_num)
 	{
-		*internal = 0;
+		zbx_vector_str_sort(ips, ZBX_DEFAULT_STR_COMPARE_FUNC);
+		zbx_vector_str_uniq(ips, ZBX_DEFAULT_STR_COMPARE_FUNC);
+	}
+	else
 		zbx_snprintf(err, err_size, "no IPs of host \"%s\" returned from resolver", host);
-		goto out;
-	}
-
-	zbx_vector_str_sort(ips, ZBX_DEFAULT_STR_COMPARE_FUNC);
-	zbx_vector_str_uniq(ips, ZBX_DEFAULT_STR_COMPARE_FUNC);
 
 	ret = SUCCEED;
 out:
-	if (NULL != host_rdf)
-		ldns_rdf_deep_free(host_rdf);
-
-	if (NULL != rrset)
-		ldns_rr_list_deep_free(rrset);
-
-	if (NULL != pkt)
-		ldns_pkt_free(pkt);
+	ldns_rdf_deep_free(rdf);
 
 	return ret;
 }
@@ -2328,29 +2361,167 @@ static void	zbx_set_rdds_values(const char *ip43, int rtt43, int upd43, const ch
 	}
 }
 
+/* maps HTTP status codes ommitting unassigned according to                  */
+/* http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml */
+static int	zbx_map_http_code(long http_code)
+{
+	switch (http_code)
+	{
+		case 100L:	/* Continue */
+			return 0;
+		case 101L:	/* Switching Protocols */
+			return 1;
+		case 102L:	/* Processing */
+			return 2;
+		case 103L:	/* Early Hints */
+			return 3;
+		case 200L:	/* OK */
+			return 4;
+		case 201L:	/* Created */
+			return 5;
+		case 202L:	/* Accepted */
+			return 6;
+		case 203L:	/* Non-Authoritative Information */
+			return 7;
+		case 204L:	/* No Content */
+			return 8;
+		case 205L:	/* Reset Content */
+			return 9;
+		case 206L:	/* Partial Content */
+			return 10;
+		case 207L:	/* Multi-Status */
+			return 11;
+		case 208L:	/* Already Reported */
+			return 12;
+		case 226L:	/* IM Used */
+			return 13;
+		case 300L:	/* Multiple Choices */
+			return 14;
+		case 301L:	/* Moved Permanently */
+			return 15;
+		case 302L:	/* Found */
+			return 16;
+		case 303L:	/* See Other */
+			return 17;
+		case 304L:	/* Not Modified */
+			return 18;
+		case 305L:	/* Use Proxy */
+			return 19;
+		case 306L:	/* (Unused) */
+			return 20;
+		case 307L:	/* Temporary Redirect */
+			return 21;
+		case 308L:	/* Permanent Redirect */
+			return 22;
+		case 400L:	/* Bad Request */
+			return 23;
+		case 401L:	/* Unauthorized */
+			return 24;
+		case 402L:	/* Payment Required */
+			return 25;
+		case 403L:	/* Forbidden */
+			return 26;
+		case 404L:	/* Not Found */
+			return 27;
+		case 405L:	/* Method Not Allowed */
+			return 28;
+		case 406L:	/* Not Acceptable */
+			return 29;
+		case 407L:	/* Proxy Authentication Required */
+			return 30;
+		case 408L:	/* Request Timeout */
+			return 31;
+		case 409L:	/* Conflict */
+			return 32;
+		case 410L:	/* Gone */
+			return 33;
+		case 411L:	/* Length Required */
+			return 34;
+		case 412L:	/* Precondition Failed */
+			return 35;
+		case 413L:	/* Payload Too Large */
+			return 36;
+		case 414L:	/* URI Too Long */
+			return 37;
+		case 415L:	/* Unsupported Media Type */
+			return 38;
+		case 416L:	/* Range Not Satisfiable */
+			return 39;
+		case 417L:	/* Expectation Failed */
+			return 40;
+		case 421L:	/* Misdirected Request */
+			return 41;
+		case 422L:	/* Unprocessable Entity */
+			return 42;
+		case 423L:	/* Locked */
+			return 43;
+		case 424L:	/* Failed Dependency */
+			return 44;
+		case 426L:	/* Upgrade Required */
+			return 45;
+		case 428L:	/* Precondition Required */
+			return 46;
+		case 429L:	/* Too Many Requests */
+			return 47;
+		case 431L:	/* Request Header Fields Too Large */
+			return 48;
+		case 451L:	/* Unavailable For Legal Reasons */
+			return 49;
+		case 500L:	/* Internal Server Error */
+			return 50;
+		case 501L:	/* Not Implemented */
+			return 51;
+		case 502L:	/* Bad Gateway */
+			return 52;
+		case 503L:	/* Service Unavailable */
+			return 53;
+		case 504L:	/* Gateway Timeout */
+			return 54;
+		case 505L:	/* HTTP Version Not Supported */
+			return 55;
+		case 506L:	/* Variant Also Negotiates */
+			return 56;
+		case 507L:	/* Insufficient Storage */
+			return 57;
+		case 508L:	/* Loop Detected */
+			return 58;
+		case 510L:	/* Not Extended */
+			return 59;
+		case 511L:	/* Network Authentication Required */
+			return 60;
+		default:	/* catch-all for newly assigned HTTP status codes that may not have an association */
+			return 61;
+	}
+}
+
 /* discard the curl output (using inline to hide "unused" compiler warning when -Wunused) */
 static inline size_t	curl_devnull(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	return size * nmemb;
 }
 
-static int	zbx_rdds80_test(const char *host, const char *url, short port, int timeout, int maxredirs, int *rtt80,
-		char *err, size_t err_size)
+/* Helper function for Web-based RDDS80 (and RDAP) checks. Adds host to header, connects to URL obeying timeout and  */
+/* max redirect settings, stores contents in provided using provided callback, checks for OK response and calculates */
+/* round-trip time. When function succeeds it returns RTT in milliseconds. When function fails it returns source of  */
+/* error in provided RTT parameter. Does not verify certificates.                                                    */
+static int	zbx_http_test(const char *host, const char *url, long timeout, long maxredirs, int *rtt,
+		void *writedata, size_t (*writefunction)(char *, size_t, size_t, void *), char *err, size_t err_size)
 {
 #ifdef HAVE_LIBCURL
-	int			curl_err, opt;
-	CURL			*easyhandle = NULL;
+	CURL			*easyhandle;
+	CURLcode		curl_err;
+	CURLoption		opt;
 	char			host_buf[ZBX_HOST_BUF_SIZE];
 	double			total_time;
 	long			response_code;
 	struct curl_slist	*slist = NULL;
 #endif
-	int	ret = FAIL;
+	int			ret = FAIL;
 
 #ifdef HAVE_LIBCURL
 	if (NULL == (easyhandle = curl_easy_init()))
 	{
-		*rtt80 = ZBX_EC_INTERNAL;
+		*rtt = ZBX_EC_INTERNAL;
 		zbx_strlcpy(err, "cannot init cURL library", err_size);
 		goto out;
 	}
@@ -2358,55 +2529,69 @@ static int	zbx_rdds80_test(const char *host, const char *url, short port, int ti
 	zbx_snprintf(host_buf, sizeof(host_buf), "Host: %s", host);
 	if (NULL == (slist = curl_slist_append(slist, host_buf)))
 	{
-		*rtt80 = ZBX_EC_INTERNAL;
+		*rtt = ZBX_EC_INTERNAL;
 		zbx_strlcpy(err, "cannot generate cURL list of HTTP headers", err_size);
 		goto out;
 	}
 
 	if (CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_FOLLOWLOCATION, 1L)) ||
-			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_MAXREDIRS, (long)maxredirs)) ||
+			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_MAXREDIRS, maxredirs)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_URL, url)) ||
-			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_TIMEOUT, (long)timeout)) ||
+			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_TIMEOUT, timeout)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_HTTPHEADER, slist)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_SSL_VERIFYPEER, 0L)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_SSL_VERIFYHOST, 0L)) ||
-			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_WRITEFUNCTION, curl_devnull)))
+			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_WRITEDATA, writedata)) ||
+			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_WRITEFUNCTION, writefunction)))
 	{
-		*rtt80 = ZBX_EC_INTERNAL;
-		zbx_snprintf(err, err_size, "cannot set cURL option [%d] (%s)", opt, curl_easy_strerror(curl_err));
+		*rtt = ZBX_EC_INTERNAL;
+		zbx_snprintf(err, err_size, "cannot set cURL option [%d] (%s)", (int)opt, curl_easy_strerror(curl_err));
 		goto out;
 	}
 
 	if (CURLE_OK != (curl_err = curl_easy_perform(easyhandle)))
 	{
-		*rtt80 = ZBX_EC_RDDS80_NOREPLY;
+		switch (curl_err)
+		{
+			case CURLE_OPERATION_TIMEDOUT:
+				*rtt = ZBX_EC_HTTP_TO;
+				break;
+			case CURLE_COULDNT_CONNECT:
+				*rtt = ZBX_EC_HTTP_ECON;
+				break;
+			default:
+				if (0 == strncmp(url, "http://", ZBX_CONST_STRLEN("http://")))
+					*rtt = ZBX_EC_HTTP_EHTTP;
+				else	/* if (0 == strncmp(url, "https://", ZBX_CONST_STRLEN("https://"))) */
+					*rtt = ZBX_EC_HTTP_EHTTPS;
+		}
 		zbx_strlcpy(err, curl_easy_strerror(curl_err), err_size);
 		goto out;
 	}
 
 	if (CURLE_OK != (curl_err = curl_easy_getinfo(easyhandle, CURLINFO_RESPONSE_CODE, &response_code)))
 	{
-		*rtt80 = ZBX_EC_RDDS80_NOHTTPCODE;
+		*rtt = ZBX_EC_HTTP_NOCODE;
 		zbx_snprintf(err, err_size, "cannot get HTTP response code (%s)", curl_easy_strerror(curl_err));
 		goto out;
 	}
 
-	if (ZBX_HTTP_RESPONSE_OK != (int)response_code)
+	if (ZBX_HTTP_RESPONSE_OK != response_code)
 	{
-		*rtt80 = ZBX_EC_RDDS80_EHTTPCODE;
-		zbx_snprintf(err, err_size, "invalid HTTP response code (%d), expected %d", (int)response_code,
+		*rtt = ZBX_EC_HTTP_BASE - zbx_map_http_code(response_code);
+		zbx_snprintf(err, err_size, "invalid HTTP response code (%ld), expected %ld", response_code,
 				ZBX_HTTP_RESPONSE_OK);
 		goto out;
 	}
 
 	if (CURLE_OK != (curl_err = curl_easy_getinfo(easyhandle, CURLINFO_TOTAL_TIME, &total_time)))
 	{
-		*rtt80 = ZBX_EC_INTERNAL;
+		*rtt = ZBX_EC_INTERNAL;
 		zbx_snprintf(err, err_size, "cannot get HTTP request time (%s)", curl_easy_strerror(curl_err));
 		goto out;
 	}
 
-	*rtt80 = total_time * 1000;	/* expected in ms */
+	*rtt = total_time * 1000;	/* expected in ms */
 
 	ret = SUCCEED;
 out:
@@ -2416,7 +2601,7 @@ out:
 	if (NULL != easyhandle)
 		curl_easy_cleanup(easyhandle);
 #else
-	*rtt80 = ZBX_EC_INTERNAL;
+	*rtt = ZBX_EC_INTERNAL;
 	zbx_strlcpy(err, "zabbix is not compiled with libcurl support (--with-libcurl)", err_size);
 #endif
 	return ret;
@@ -2445,19 +2630,81 @@ static void	zbx_vector_str_clean_and_destroy(zbx_vector_str_t *v)
 	zbx_vector_str_destroy(v);
 }
 
+/* map generic resolver errors to RDDS interface specific ones */
+
+#define ZBX_DEFINE_RESOLVER_ERROR_TO(__rdds_interface)						\
+static int	zbx_resolver_error_to_ ## __rdds_interface (zbx_resolver_error_t ec_res)	\
+{												\
+	switch (ec_res)										\
+	{											\
+		case ZBX_EC_RES_INTERNAL:							\
+			return ZBX_EC_INTERNAL;							\
+		case ZBX_EC_RES_NOREPLY:							\
+			return ZBX_EC_ ## __rdds_interface ## _RES_NOREPLY;			\
+		case ZBX_EC_RES_NOADBIT:							\
+			return ZBX_EC_ ## __rdds_interface ## _RES_NOADBIT;			\
+		case ZBX_EC_RES_SERVFAIL:							\
+			return ZBX_EC_ ## __rdds_interface ## _RES_SERVFAIL;			\
+		case ZBX_EC_RES_NXDOMAIN:							\
+			return ZBX_EC_ ## __rdds_interface ## _RES_NXDOMAIN;			\
+		case ZBX_EC_RES_CATCHALL:							\
+			return ZBX_EC_ ## __rdds_interface ## _RES_CATCHALL;			\
+		default:									\
+			THIS_SHOULD_NEVER_HAPPEN;						\
+			return ZBX_EC_INTERNAL;							\
+	}											\
+}
+
+ZBX_DEFINE_RESOLVER_ERROR_TO(RDDS43);
+ZBX_DEFINE_RESOLVER_ERROR_TO(RDDS80);
+/* anticipating RDAP */
+
+#undef ZBX_DEFINE_RESOLVER_ERROR_TO
+
+/* maps generic HTTP errors to RDDS interface specific ones */
+
+#define ZBX_DEFINE_HTTP_ERROR_TO(__rdds_interface)								\
+static int	zbx_http_error_to_ ## __rdds_interface (int ec_http)						\
+{														\
+	switch (ec_http)											\
+	{													\
+		case ZBX_EC_INTERNAL:										\
+			return ZBX_EC_INTERNAL;									\
+		case ZBX_EC_HTTP_TO:										\
+			return ZBX_EC_ ## __rdds_interface ## _TO;						\
+		case ZBX_EC_HTTP_ECON:										\
+			return ZBX_EC_ ## __rdds_interface ## _ECON;						\
+		case ZBX_EC_HTTP_EHTTP:										\
+			return ZBX_EC_ ## __rdds_interface ## _EHTTP;						\
+		case ZBX_EC_HTTP_EHTTPS:									\
+			return ZBX_EC_ ## __rdds_interface ## _EHTTPS;						\
+		case ZBX_EC_HTTP_NOCODE:									\
+			return ZBX_EC_ ## __rdds_interface ## _NOCODE;						\
+		default:											\
+			return ZBX_EC_ ## __rdds_interface ## _HTTP_BASE + (ec_http - ZBX_EC_HTTP_BASE);	\
+	}													\
+}
+
+ZBX_DEFINE_HTTP_ERROR_TO(RDDS80);
+/* anticipating RDAP */
+
+#undef ZBX_DEFINE_HTTP_ERROR_TO
+
 int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	char			*domain, *value_str = NULL, *res_ip = NULL, *testprefix = NULL, *rdds_ns_string = NULL,
-				*answer = NULL, testname[ZBX_HOST_BUF_SIZE], is_ipv4, err[ZBX_ERR_BUF_SIZE], internal;
+				*answer = NULL, testname[ZBX_HOST_BUF_SIZE], is_ipv4, err[ZBX_ERR_BUF_SIZE];
 	const char		*random_host, *ip43 = NULL, *ip80 = NULL;
 	zbx_vector_str_t	hosts43, hosts80, ips43, ips80, nss;
 	FILE			*log_fd = NULL;
 	ldns_resolver		*res = NULL;
+	zbx_resolver_error_t	ec_res;
 	DC_ITEM			*items = NULL;
 	size_t			i, items_num = 0;
 	time_t			ts, now;
 	int			rtt43 = ZBX_NO_VALUE, upd43 = ZBX_NO_VALUE, rtt80 = ZBX_NO_VALUE, rtt_limit,
-				ipv4_enabled, ipv6_enabled, rdds_enabled, epp_enabled, ret = SYSINFO_RET_FAIL, maxredirs;
+				ipv4_enabled, ipv6_enabled, ipv_flags = 0, rdds_enabled, epp_enabled,
+				ret = SYSINFO_RET_FAIL, maxredirs, ec_http;
 
 	if (3 != request->nparam)
 	{
@@ -2604,6 +2851,11 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		goto out;
 	}
 
+	if (0 != ipv4_enabled)
+		ipv_flags |= ZBX_FLAG_IPV4_ENABLED;
+	if (0 != ipv6_enabled)
+		ipv_flags |= ZBX_FLAG_IPV6_ENABLED;
+
 	if (SUCCEED != zbx_conf_int(&item->host.hostid, ZBX_MACRO_RDDS_MAXREDIRS, &maxredirs, 1, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
@@ -2633,9 +2885,9 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	random_host = hosts43.values[i];
 
 	/* start RDDS43 test, resolve host to ips */
-	if (SUCCEED != zbx_resolve_host(res, random_host, &ips43, 1, 1, log_fd, &internal, err, sizeof(err)))
+	if (SUCCEED != zbx_resolve_host(res, random_host, &ips43, ipv_flags, log_fd, &ec_res, err, sizeof(err)))
 	{
-		rtt43 = (0 == internal ? ZBX_EC_RDDS_ERES : ZBX_EC_INTERNAL);
+		rtt43 = zbx_resolver_error_to_RDDS43(ec_res);
 		zbx_rsm_errf(log_fd, "RDDS43 \"%s\": %s", random_host, err);
 	}
 
@@ -2643,8 +2895,6 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 	if (SUCCEED == zbx_ec_noerror(rtt43))
 	{
-		zbx_delete_unsupported_ips(&ips43, ipv4_enabled, ipv6_enabled);
-
 		if (0 == ips43.values_num)
 		{
 			rtt43 = ZBX_EC_INTERNAL_IP_UNSUP;
@@ -2670,7 +2920,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		if (SUCCEED != zbx_rdds43_test(testname, ip43, 43, ZBX_RSM_TCP_TIMEOUT, &answer, &rtt43,
 				err, sizeof(err)))
 		{
-			rtt43 = ZBX_EC_RDDS43_NOREPLY;
+			rtt43 = ZBX_EC_RDDS43_EMPTY;
 			zbx_rsm_errf(log_fd, "RDDS43 of \"%s\" (%s) failed: %s", random_host, ip43, err);
 		}
 	}
@@ -2703,7 +2953,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 			if (SUCCEED != zbx_get_ts_from_host(random_ns, &ts))
 			{
-				upd43 = ZBX_EC_RDDS43_NOTS;
+				upd43 = ZBX_EC_INTERNAL;
 				zbx_rsm_errf(log_fd, "cannot extract Unix timestamp from Name Server \"%s\"", random_ns);
 			}
 
@@ -2715,7 +2965,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 				{
 					zbx_rsm_errf(log_fd, "Unix timestamp of Name Server \"%s\" is in the future"
 							" (current: %lu)", random_ns, now);
-					upd43 = ZBX_EC_RDDS43_ETS;
+					upd43 = ZBX_EC_INTERNAL;
 				}
 			}
 
@@ -2735,22 +2985,19 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		}
 	}
 
-	zbx_rsm_infof(log_fd, "start RDDS80 test (host %s)", random_host);
-
 	/* choose random host */
 	i = zbx_random(hosts80.values_num);
 	random_host = hosts80.values[i];
 
+	zbx_rsm_infof(log_fd, "start RDDS80 test (host %s)", random_host);
+
 	/* start RDDS80 test, resolve host to ips */
-	if (SUCCEED != zbx_resolve_host(res, random_host, &ips80, ipv4_enabled, ipv6_enabled, log_fd, &internal,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_resolve_host(res, random_host, &ips80, ipv_flags, log_fd, &ec_res, err, sizeof(err)))
 	{
-		rtt80 = (0 == internal ? ZBX_EC_RDDS_ERES : ZBX_EC_INTERNAL);
+		rtt80 = zbx_resolver_error_to_RDDS80(ec_res);
 		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": %s", random_host, err);
 		goto out;
 	}
-
-	zbx_delete_unsupported_ips(&ips80, ipv4_enabled, ipv6_enabled);
 
 	if (0 == ips80.values_num)
 	{
@@ -2775,11 +3022,11 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	else
 		zbx_snprintf(testname, sizeof(testname), "http://[%s]", ip80);
 
-	if (SUCCEED != zbx_rdds80_test(random_host, testname, 80, ZBX_RSM_TCP_TIMEOUT, maxredirs, &rtt80,
+	if (SUCCEED != zbx_http_test(random_host, testname, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, NULL, curl_devnull,
 			err, sizeof(err)))
 	{
+		rtt80 = zbx_http_error_to_RDDS80(ec_http);
 		zbx_rsm_errf(log_fd, "RDDS80 of \"%s\" (%s) failed: %s", random_host, ip80, err);
-		goto out;
 	}
 
 	zbx_rsm_infof(log_fd, "end RDDS80 test (rtt:%d)", rtt80);
@@ -3733,12 +3980,13 @@ out:
 int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	ldns_resolver		*res = NULL;
+	zbx_resolver_error_t	ec_res;
 	char			*domain, err[ZBX_ERR_BUF_SIZE], *value_str = NULL, *res_ip = NULL,
 				*secretkey_enc_b64 = NULL, *secretkey_salt_b64 = NULL, *epp_passwd_enc_b64 = NULL,
 				*epp_passwd_salt_b64 = NULL, *epp_privkey_enc_b64 = NULL, *epp_privkey_salt_b64 = NULL,
 				*epp_user = NULL, *epp_passwd = NULL, *epp_privkey = NULL, *epp_cert_b64 = NULL,
 				*epp_cert = NULL, *epp_commands = NULL, *epp_serverid = NULL, *epp_testprefix = NULL,
-				*epp_servercertmd5 = NULL, *tmp, internal;
+				*epp_servercertmd5 = NULL, *tmp;
 	short			epp_port = 700;
 	X509			*epp_server_x509 = NULL;
 	const SSL_METHOD	*method;
@@ -4013,10 +4261,11 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	random_host = epp_hosts.values[i];
 
 	/* resolve host to ips */
-	if (SUCCEED != zbx_resolve_host(res, random_host, &epp_ips, ipv4_enabled, ipv6_enabled, log_fd, &internal,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_resolve_host(res, random_host, &epp_ips,
+			(0 != ipv4_enabled ? ZBX_FLAG_IPV4_ENABLED : 0) | (0 != ipv6_enabled ? ZBX_FLAG_IPV6_ENABLED : 0),
+			log_fd, &ec_res, err, sizeof(err)))
 	{
-		rtt1 = rtt2 = rtt3 = (0 == internal ? ZBX_EC_EPP_NO_IP : ZBX_EC_INTERNAL);
+		rtt1 = rtt2 = rtt3 = (ZBX_EC_RES_INTERNAL != ec_res ? ZBX_EC_EPP_NO_IP : ZBX_EC_INTERNAL);
 		zbx_rsm_errf(log_fd, "\"%s\": %s", random_host, err);
 		goto out;
 	}

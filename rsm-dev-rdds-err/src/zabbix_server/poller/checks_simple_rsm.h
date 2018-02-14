@@ -31,6 +31,14 @@
 /* internal */
 #define ZBX_EC_INTERNAL			-1	/* general internal error */
 #define ZBX_EC_INTERNAL_IP_UNSUP	-2	/* IP version not supported by Probe */
+/* auxiliary generic HTTP error codes */
+#define ZBX_EC_HTTP_TO			-3
+#define ZBX_EC_HTTP_ECON		-4
+#define ZBX_EC_HTTP_EHTTP		-5
+#define ZBX_EC_HTTP_EHTTPS		-6
+#define ZBX_EC_HTTP_NOCODE		-7
+#define ZBX_EC_HTTP_BASE		-8
+/* Code ZBX_EC_HTTP_BASE - zbx_map_http_code(xxx) means we got HTTP status code xxx */
 /* DNS */
 #define ZBX_EC_DNS_NS_NOREPLY		-200	/* no reply from Name Server */
 #define ZBX_EC_DNS_NS_EREPLY		-201	/* invalid reply from Name Server */
@@ -40,14 +48,28 @@
 #define ZBX_EC_DNS_RES_NOREPLY		-205	/* no reply from resolver */
 #define ZBX_EC_DNS_RES_NOADBIT		-206	/* no AD bit in the answer from resolver */
 /* RDDS */
-#define ZBX_EC_RDDS43_NOREPLY		-200	/* no reply from RDDS43 server */
 #define ZBX_EC_RDDS43_NONS		-201	/* Whois server returned no NS */
-#define ZBX_EC_RDDS43_NOTS		-202	/* no Unix timestamp */
-#define ZBX_EC_RDDS43_ETS		-203	/* invalid Unix timestamp */
-#define ZBX_EC_RDDS80_NOREPLY		-204	/* no reply from RDDS80 server */
-#define ZBX_EC_RDDS_ERES		-205	/* cannot resolve a Whois server name */
-#define ZBX_EC_RDDS80_NOHTTPCODE	-206	/* no HTTP response code in response from RDDS80 server */
-#define ZBX_EC_RDDS80_EHTTPCODE		-207	/* invalid HTTP response code in response from RDDS80 server */
+#define ZBX_EC_RDDS80_NOCODE		-206	/* no HTTP status code */
+#define ZBX_EC_RDDS43_RES_NOREPLY	-222	/* RDDS43 - No reply from local resolver */
+#define ZBX_EC_RDDS43_RES_NOADBIT	-223	/* RDDS43 - No AD bit from local resolver */
+#define ZBX_EC_RDDS43_RES_SERVFAIL	-224	/* RDDS43 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
+#define ZBX_EC_RDDS43_RES_NXDOMAIN	-225	/* RDDS43 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
+#define ZBX_EC_RDDS43_RES_CATCHALL	-226	/* RDDS43 - Expecting NOERROR RCODE but got unexpected when resolving hostname */
+#define ZBX_EC_RDDS43_TO		-227	/* RDDS43 - Timeout */
+#define ZBX_EC_RDDS43_ECON		-228	/* RDDS43 - Error opening connection to server */
+#define ZBX_EC_RDDS43_EMPTY		-229	/* RDDS43 - Empty response */
+#define ZBX_EC_RDDS80_RES_NOREPLY	-250	/* RDDS80 - No reply from local resolver */
+#define ZBX_EC_RDDS80_RES_NOADBIT	-251	/* RDDS80 - No AD bit from local resolver */
+#define ZBX_EC_RDDS80_RES_SERVFAIL	-252	/* RDDS80 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
+#define ZBX_EC_RDDS80_RES_NXDOMAIN	-253	/* RDDS80 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
+#define ZBX_EC_RDDS80_RES_CATCHALL	-254	/* RDDS80 - Expecting NOERROR RCODE but got unexpected when resolving hostname */
+#define ZBX_EC_RDDS80_TO		-255	/* RDDS80 - Timeout */
+#define ZBX_EC_RDDS80_ECON		-256	/* RDDS80 - Error opening connection to server */
+#define ZBX_EC_RDDS80_EHTTP		-257	/* RDDS80 - Error in HTTP protocol */
+#define ZBX_EC_RDDS80_EHTTPS		-258	/* RDDS80 - Error in HTTPS protocol */
+#define ZBX_EC_RDDS80_HTTP_BASE		-300
+/* Code ZBX_EC_RDDS80_HTTP_BASE - zbx_map_http_code(xxx) means */
+						/* RDDS80 - Expecting HTTP status code 200 but got xxx */
 /* EPP */
 #define ZBX_EC_EPP_NO_IP		-200	/* IP is missing for EPP server */
 #define ZBX_EC_EPP_CONNECT		-201	/* cannot connect to EPP server */
