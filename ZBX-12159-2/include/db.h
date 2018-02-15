@@ -439,9 +439,6 @@ void	DBdeinit(void);
 int	DBconnect(int flag);
 void	DBclose(void);
 
-#ifdef HAVE_ORACLE
-void	DBstatement_prepare(const char *sql);
-#endif
 #ifdef HAVE___VA_ARGS__
 #	define DBexecute(fmt, ...) __zbx_DBexecute(ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
 #	define DBexecute_once(fmt, ...) __zbx_DBexecute_once(ZBX_CONST_STRING(fmt), ##__VA_ARGS__)

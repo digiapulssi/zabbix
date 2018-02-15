@@ -231,7 +231,7 @@ void	DBend(int ret)
  * Comments: retry until DB is up                                             *
  *                                                                            *
  ******************************************************************************/
-void	DBstatement_prepare(const char *sql)
+static void	DBstatement_prepare(const char *sql)
 {
 	int	rc;
 
