@@ -56,12 +56,6 @@ zbx_db_value_t;
 #	define ZBX_FOR_UPDATE	" for update"
 #endif
 
-#ifdef HAVE_MULTIROW_INSERT
-#	define ZBX_ROW_DL	","
-#else
-#	define ZBX_ROW_DL	";\n"
-#endif
-
 int	zbx_db_init(const char *dbname, const char *const db_schema, char **error);
 void	zbx_db_deinit(void);
 

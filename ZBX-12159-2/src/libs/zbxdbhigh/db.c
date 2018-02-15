@@ -26,6 +26,12 @@
 #include "dbcache.h"
 #include "zbxalgo.h"
 
+#ifdef HAVE_MULTIROW_INSERT
+#	define ZBX_ROW_DL	","
+#else
+#	define ZBX_ROW_DL	";\n"
+#endif
+
 typedef struct
 {
 	zbx_uint64_t	autoreg_hostid;
