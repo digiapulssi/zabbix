@@ -50,12 +50,6 @@ zbx_db_value_t;
 #	define ZBX_SQL_MOD(x, y) "mod(" #x "," #y ")"
 #endif
 
-#ifdef HAVE_SQLITE3
-#	define ZBX_FOR_UPDATE	""	/* SQLite3 does not support "select ... for update" */
-#else
-#	define ZBX_FOR_UPDATE	" for update"
-#endif
-
 int	zbx_db_init(const char *dbname, const char *const db_schema, char **error);
 void	zbx_db_deinit(void);
 

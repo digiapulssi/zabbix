@@ -32,6 +32,12 @@
 #	define ZBX_ROW_DL	";\n"
 #endif
 
+#ifdef HAVE_SQLITE3
+#	define ZBX_FOR_UPDATE	""	/* SQLite3 does not support "select ... for update" */
+#else
+#	define ZBX_FOR_UPDATE	" for update"
+#endif
+
 typedef struct
 {
 	zbx_uint64_t	autoreg_hostid;
