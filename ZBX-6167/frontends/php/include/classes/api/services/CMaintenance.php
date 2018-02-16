@@ -443,6 +443,17 @@ class CMaintenance extends CApiService {
 			self::exception(ZBX_API_ERROR_PARAMETERS, _('Empty input parameter.'));
 		}
 
+		$db_fields = [
+			'maintenanceid' => null
+		];
+
+		foreach ($maintenances as $maintenance) {
+			// Validate fields.
+			if (!check_db_fields($db_fields, $maintenance)) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect parameters for maintenance.'));
+			}
+		}
+
 		$db_maintenances = $this->get([
 			'output' => API_OUTPUT_EXTEND,
 			'maintenanceids' => $maintenanceids,
@@ -458,7 +469,7 @@ class CMaintenance extends CApiService {
 		$groupids = [];
 
 		foreach ($maintenances as $maintenance) {
-			if (!isset($db_maintenances[$maintenance['maintenanceid']])) {
+			if (!array_key_exists($maintenance['maintenanceid'], $db_maintenances)) {
 				self::exception(ZBX_API_ERROR_PERMISSIONS,
 					_('No permissions to referred object or it does not exist!')
 				);
@@ -467,14 +478,13 @@ class CMaintenance extends CApiService {
 			// Check maintenances names and collect for unique checking.
 			if (array_key_exists('name', $maintenance) && $maintenance['name'] !== ''
 					&& $db_maintenances[$maintenance['maintenanceid']]['name'] !== $maintenance['name']) {
-				if (isset($changed_names[$maintenance['name']])) {
+				if (array_key_exists($maintenance['name'], $changed_names)) {
 					self::exception(ZBX_API_ERROR_PARAMETERS,
 						_s('Maintenance "%1$s" already exists.', $maintenance['name'])
 					);
 				}
-				else {
-					$changed_names[$maintenance['name']] = $maintenance['name'];
-				}
+
+				$changed_names[$maintenance['name']] = $maintenance['name'];
 			}
 
 			// Validate maintenance active since.
@@ -514,7 +524,6 @@ class CMaintenance extends CApiService {
 
 			// Validate timeperiods.
 			if (array_key_exists('timeperiods', $maintenance)) {
-
 				if (!is_array($maintenance['timeperiods']) || !$maintenance['timeperiods']) {
 					self::exception(ZBX_API_ERROR_PARAMETERS, _('At least one maintenance period must be created.'));
 				}
@@ -571,16 +580,16 @@ class CMaintenance extends CApiService {
 		// Check hosts permission and availability.
 		if ($hostids) {
 			$db_hosts = API::Host()->get([
-				'output' => ['hostid'],
+				'output' => [],
 				'hostids' => $hostids,
 				'editable' => true,
 				'preservekeys' => true
 			]);
 
 			foreach ($hostids as $hostid) {
-				if (!isset($db_hosts[$hostid])) {
+				if (!array_key_exists($hostid, $db_hosts)) {
 					self::exception(ZBX_API_ERROR_PERMISSIONS,
-						_('You do not have permission to perform this operation.')
+						_('No permissions to referred object or it does not exist!')
 					);
 				}
 			}
@@ -589,14 +598,14 @@ class CMaintenance extends CApiService {
 		// Check host groups permission and availability.
 		if ($groupids) {
 			$db_groups = API::HostGroup()->get([
-				'output' => ['groupid'],
+				'output' => [],
 				'groupids' => $groupids,
 				'editable' => true,
 				'preservekeys' => true
 			]);
 
 			foreach ($groupids as $groupid) {
-				if (!isset($db_groups[$groupid])) {
+				if (!array_key_exists($groupid, $db_groups)) {
 					self::exception(ZBX_API_ERROR_PERMISSIONS,
 						_('No permissions to referred object or it does not exist!')
 					);
@@ -608,15 +617,6 @@ class CMaintenance extends CApiService {
 
 		$update_maintenances = [];
 		foreach ($maintenances as $mnum => $maintenance) {
-			$db_fields = [
-				'maintenanceid' => null
-			];
-
-			// Validate fields.
-			if (!check_db_fields($db_fields, $maintenance)) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect parameters for maintenance.'));
-			}
-
 			$update_maintenances[$mnum] = [
 				'values' => $maintenance,
 				'where' => ['maintenanceid' => $maintenance['maintenanceid']]
