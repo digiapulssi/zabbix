@@ -139,6 +139,14 @@ class CControllerWidgetGraphView extends CControllerWidget {
 					$unavailable_object = true;
 					$resourceid = null;
 				}
+				else {
+					$db_item = API::Item()->get([
+						'output' => [],
+						'selectHosts' => ['name'],
+						'itemids' => $item['itemid']
+					]);
+					$item['hosts'] = $db_item[0]['hosts'];
+				}
 			}
 			// Find requested host and change graph details.
 			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH) {
