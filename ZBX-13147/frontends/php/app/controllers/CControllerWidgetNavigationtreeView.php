@@ -162,7 +162,9 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 					'hostids' => array_keys($hosts),
 					'min_severity' => $severity_min,
 					'skipDependent' => true,
-					'preservekeys' => true
+					'preservekeys' => true,
+					'filter' => ['status' => TRIGGER_STATUS_ENABLED],
+					'monitored' => true
 				]);
 
 				foreach ($triggers as $trigger) {
@@ -183,7 +185,9 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 					'min_severity' => $severity_min,
 					'skipDependent' => true,
 					'selectGroups' => ['groupid'],
-					'preservekeys' => true
+					'preservekeys' => true,
+					'filter' => ['status' => TRIGGER_STATUS_ENABLED],
+					'monitored' => true
 				]);
 
 				$problems = API::Problem()->get([
