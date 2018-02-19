@@ -1010,6 +1010,14 @@ static int	DBpatch_3000140(void)
 {
 	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
 	static const char	*const data[] = {
+		"ROW   |13001    |130       |-200 |No reply from RDDS43 server (obsolete)                                                                          |",
+		"ROW   |13002    |130       |-201 |Whois server returned no NS                                                                                     |",
+		"ROW   |13003    |130       |-202 |No Unix timestamp (obsolete)                                                                                    |",
+		"ROW   |13004    |130       |-203 |Invalid Unix timestamp (obsolete)                                                                               |",
+		"ROW   |13005    |130       |-204 |No reply from RDDS80 server (obsolete)                                                                          |",
+		"ROW   |13006    |130       |-205 |Cannot resolve a Whois host name (obsolete)                                                                     |",
+		"ROW   |13007    |130       |-206 |no HTTP status code                                                                                             |",
+		"ROW   |13008    |130       |-207 |invalid HTTP status code (obsolete)                                                                             |",
 		"ROW   |13009    |130       |-222 |RDDS43 - No reply from local resolver                                                                           |",
 		"ROW   |13010    |130       |-223 |RDDS43 - No AD bit from local resolver                                                                          |",
 		"ROW   |13011    |130       |-224 |RDDS43 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |",
