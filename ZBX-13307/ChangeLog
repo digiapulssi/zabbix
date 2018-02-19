@@ -1,3 +1,47 @@
+Changes for 3.4.8rc1
+
+New features:
+
+Bug fixes:
+A......... [ZBX-6118] fixed poor performance of changing an item on the template which linked with many hosts (Sasha)
+..F....... [ZBX-13141] fixed invalid value for "Update interval" field in mass update form on submit was redirecting to items list (gcalenko)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.7
+
+3.4.7rc2 was released as 3.4.7 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.4.7rc2
+
+Bug fixes:
+.......P.. [ZBX-13403] allowed proxy to execute remote commands on agents using encrypted connection (gleb)
+.......PS. [ZBX-13441] fixed crashes in case of failures (e.g. timeouts) during VMware hypervisor discovery (gleb)
+A.F....... [ZBX-12607] fixed performance of map.get API method and map-related views (miks, Sasha)
+....I..... [ZBX-13055] fixed compilation failure in Alpine Linux due to missing res_ninit() function (vso)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.7rc1
+
+Bug fixes:
+........S. [ZBX-13194] fixed incorrect processing of zabbix[wcache,value,*] internal check (Sergejs)
+.......PS. [ZBX-13060] added limitation for meaningless server reconnection attempts to incorrectly configured passive proxy (viktors)
+...G...... [ZBX-13117] fixed vfs.dir.size with symbol links on Windows (MVekslers)
+........S. [ZBX-12643] improved error log message in case Zabbix server database cannot be used due to empty "users" table (vso)
+...G...... [ZBX-11720] fixed memory leak which breaks vfs.fs.size, vfs.fs.inode and vfs.dir.size items if compiled with LeakSanitizer (Andris)
+........S. [ZBX-13131] fixed truncated multiline text values from network discovery SNMP checks (viktors)
+........S. [ZBX-13343] fixed last trends update clock caching (wiper)
+A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
+..F....... [ZBX-13223] fixed graphs duplication in graph preview (ashubin)
+...G...... [ZBX-13055] fixed problems with DNS resolver interface on NetBSD (valdis)
+..F....... [ZBX-13345] removed SID from URL in screen edit mode (miks)
+..F....... [ZBX-13214] added support of \0 matching group for regsub and iregsub methods (gcalenko, Sasha)
+........S. [ZBX-13208] eliminated race condition that caused history collection for newly created items to start before preprocecessing steps finished syncing (vso)
+.......P.. [ZBX-13130] fixed Zabbix proxy not to generate high network traffic when server does not accept data (vso)
+..F....... [ZBX-13288] fixed image ghosting for mass update of map elements (vjaceslavs)
+...G...... [ZBX-13246] fixed processing of command line arguments which are longer than 2KB for proc.num and proc.mem items on AIX (viktors)
+
+--------------------------------------------------------------------------------
 Changes for 3.4.6
 
 3.4.6rc1 was released as 3.4.6 without any changes
@@ -16,7 +60,7 @@ Bug fixes:
 .......PS. [ZBX-13245] fixed IP fragmentation handling in Zabbix server response to Zabbix proxy (vso)
 ....I..... [ZBX-13031] fixed Java gateway compilation without libpcre (Sergejs)
 A......... [ZBX-12991] removed default values for "active_since" and "active_till" fields in maintenance.create API method (Ivo)
-..F....... [ZBX-13270] fixed default selection of the required host permissions radio in the global gcripts form (Sasha)
+..F....... [ZBX-13270] fixed default selection of the required host permissions radio in the global scripts form (Sasha)
 .......PS. [ZBX-12758] fixed slow housekeeping of events due to missing index on foreign key (vso)
 ..F....... [ZBX-11305] fixed color and label for event status on event details page (gcalenko)
 ..F.....S. [ZBX-13238] fixed spelling of Elasticsearch (abs, vjaceslavs)
@@ -1061,9 +1105,13 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 --------------------------------------------------------------------------------
 Changes for 3.0.15rc1
 
-New features:
-
 Bug fixes:
+.......PS. [ZBX-13441] fixed crashes in case of failures (e.g. timeouts) during VMware hypervisor discovery (gleb)
+........S. [ZBX-12643] improved error log message in case Zabbix server database cannot be used due to empty "users" table (vso)
+A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
+...G...... [ZBX-13055] fixed problems with DNS resolver interface on NetBSD (valdis)
+..F....... [ZBX-13345] removed SID from URL in screen edit mode (miks)
+...G...... [ZBX-13246] fixed processing of command line arguments which are longer than 2KB for proc.num and proc.mem items on AIX (viktors)
 ...G...... [ZBX-13254] fixed 'skip' parameter behaviour for log[], log.count[], logrt[], logrt.count[] items in case log files initially do not exist (Andris)
 ...G...... [ZBX-13253] fixed losing the 1st record by log[] and logrt[] items if 'skip' parameter is used and log file initially is empty (Andris)
 A......... [ZBX-12991] removed default values for "active_since" and "active_till" fields in maintenance.create API method (Ivo)
