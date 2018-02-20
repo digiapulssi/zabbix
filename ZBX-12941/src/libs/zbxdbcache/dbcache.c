@@ -167,6 +167,7 @@ typedef struct
 	int		severity;	/* for log items only */
 	int		logeventid;	/* for log items only */
 	int		mtime;
+	unsigned char	item_value_type;
 	unsigned char	value_type;
 	unsigned char	state;
 	unsigned char	flags;		/* see ZBX_DC_FLAG_* above */
@@ -690,12 +691,12 @@ static void	DCflush_trends(ZBX_DC_TREND *trends, int *trends_num, int update_cac
 
 	zbx_free(itemids);
 
-	if (0 != inserts_num)
-		dc_insert_trends_in_db(trends, trends_to, value_type, table_name, clock);
-
 	/* if 'trends' is not a primary trends buffer */
 	if (0 != update_cache)
 		dc_set_cache_disable_from(trends, value_type, trends_to, clock);
+
+	if (0 != inserts_num)
+		dc_insert_trends_in_db(trends, trends_to, value_type, table_name, clock);
 
 	/* clean trends */
 	for (i = 0, num = 0; i < *trends_num; i++)
@@ -2475,8 +2476,8 @@ static dc_item_value_t	*dc_local_get_history_slot(void)
 	return &item_values[item_values_num++];
 }
 
-static void	dc_local_add_history_dbl(zbx_uint64_t itemid, const zbx_timespec_t *ts, double value_orig,
-		zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
+static void	dc_local_add_history_dbl(zbx_uint64_t itemid, unsigned char item_value_type, const zbx_timespec_t *ts,
+		double value_orig, zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
 {
 	dc_item_value_t	*item_value;
 
@@ -2484,6 +2485,7 @@ static void	dc_local_add_history_dbl(zbx_uint64_t itemid, const zbx_timespec_t *
 
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
+	item_value->item_value_type = item_value_type;
 	item_value->value_type = ITEM_VALUE_TYPE_FLOAT;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = flags;
@@ -2498,8 +2500,8 @@ static void	dc_local_add_history_dbl(zbx_uint64_t itemid, const zbx_timespec_t *
 		item_value->value.value_dbl = value_orig;
 }
 
-static void	dc_local_add_history_uint(zbx_uint64_t itemid, const zbx_timespec_t *ts, zbx_uint64_t value_orig,
-		zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
+static void	dc_local_add_history_uint(zbx_uint64_t itemid, unsigned char item_value_type, const zbx_timespec_t *ts,
+		zbx_uint64_t value_orig, zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
 {
 	dc_item_value_t	*item_value;
 
@@ -2507,6 +2509,7 @@ static void	dc_local_add_history_uint(zbx_uint64_t itemid, const zbx_timespec_t 
 
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
+	item_value->item_value_type = item_value_type;
 	item_value->value_type = ITEM_VALUE_TYPE_UINT64;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = flags;
@@ -2521,8 +2524,8 @@ static void	dc_local_add_history_uint(zbx_uint64_t itemid, const zbx_timespec_t 
 		item_value->value.value_uint = value_orig;
 }
 
-static void	dc_local_add_history_text(zbx_uint64_t itemid, const zbx_timespec_t *ts, const char *value_orig,
-		zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
+static void	dc_local_add_history_text(zbx_uint64_t itemid, unsigned char item_value_type, const zbx_timespec_t *ts,
+		const char *value_orig, zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
 {
 	dc_item_value_t	*item_value;
 
@@ -2530,6 +2533,7 @@ static void	dc_local_add_history_text(zbx_uint64_t itemid, const zbx_timespec_t 
 
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
+	item_value->item_value_type = item_value_type;
 	item_value->value_type = ITEM_VALUE_TYPE_TEXT;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = flags;
@@ -2553,8 +2557,8 @@ static void	dc_local_add_history_text(zbx_uint64_t itemid, const zbx_timespec_t 
 		item_value->value.value_str.len = 0;
 }
 
-static void	dc_local_add_history_log(zbx_uint64_t itemid, const zbx_timespec_t *ts, const zbx_log_t *log,
-		zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
+static void	dc_local_add_history_log(zbx_uint64_t itemid, unsigned char item_value_type, const zbx_timespec_t *ts,
+		const zbx_log_t *log, zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
 {
 	dc_item_value_t	*item_value;
 
@@ -2562,6 +2566,7 @@ static void	dc_local_add_history_log(zbx_uint64_t itemid, const zbx_timespec_t *
 
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
+	item_value->item_value_type = item_value_type;
 	item_value->value_type = ITEM_VALUE_TYPE_LOG;
 	item_value->state = ITEM_STATE_NORMAL;
 
@@ -2661,17 +2666,19 @@ static void	dc_local_add_history_lld(zbx_uint64_t itemid, const zbx_timespec_t *
  *                                                                            *
  * Purpose: add new value to the cache                                        *
  *                                                                            *
- * Parameters:  itemid     - [IN] the itemid                                  *
- *              item_flags - [IN] the item flags (e. g. lld rule)             *
- *              result     - [IN] agent result containing the value to add    *
- *              ts         - [IN] the value timestamp                         *
- *              state      - [IN] the item state                              *
- *              error      - [IN] the error message in case item state is     *
- *                                ITEM_STATE_NOTSUPPORTED                     *
+ * Parameters:  itemid          - [IN] the itemid                             *
+ *              item_value_type - [IN] the item value type                    *
+ *              item_flags      - [IN] the item flags (e. g. lld rule)        *
+ *              result          - [IN] agent result containing the value      *
+ *                                to add                                      *
+ *              ts              - [IN] the value timestamp                    *
+ *              state           - [IN] the item state                         *
+ *              error           - [IN] the error message in case item state   *
+ *                                is ITEM_STATE_NOTSUPPORTED                  *
  *                                                                            *
  ******************************************************************************/
-void	dc_add_history(zbx_uint64_t itemid, unsigned char item_flags, AGENT_RESULT *result, const zbx_timespec_t *ts,
-		unsigned char state, const char *error)
+void	dc_add_history(zbx_uint64_t itemid, unsigned char item_value_type, unsigned char item_flags,
+		AGENT_RESULT *result, const zbx_timespec_t *ts, unsigned char state, const char *error)
 {
 	unsigned char	value_flags;
 
@@ -2727,28 +2734,28 @@ void	dc_add_history(zbx_uint64_t itemid, unsigned char item_flags, AGENT_RESULT 
 	{
 		if (ISSET_LOG(result))
 		{
-			dc_local_add_history_log(itemid, ts, result->log, result->lastlogsize, result->mtime,
-					value_flags);
+			dc_local_add_history_log(itemid, item_value_type, ts, result->log, result->lastlogsize,
+					result->mtime, value_flags);
 		}
 		else if (ISSET_UI64(result))
 		{
-			dc_local_add_history_uint(itemid, ts, result->ui64, result->lastlogsize, result->mtime,
-					value_flags);
+			dc_local_add_history_uint(itemid, item_value_type, ts, result->ui64, result->lastlogsize,
+					result->mtime, value_flags);
 		}
 		else if (ISSET_DBL(result))
 		{
-			dc_local_add_history_dbl(itemid, ts, result->dbl, result->lastlogsize, result->mtime,
-					value_flags);
+			dc_local_add_history_dbl(itemid, item_value_type, ts, result->dbl, result->lastlogsize,
+					result->mtime, value_flags);
 		}
 		else if (ISSET_STR(result))
 		{
-			dc_local_add_history_text(itemid, ts, result->str, result->lastlogsize, result->mtime,
-					value_flags);
+			dc_local_add_history_text(itemid, item_value_type, ts, result->str, result->lastlogsize,
+					result->mtime, value_flags);
 		}
 		else if (ISSET_TEXT(result))
 		{
-			dc_local_add_history_text(itemid, ts, result->text, result->lastlogsize, result->mtime,
-					value_flags);
+			dc_local_add_history_text(itemid, item_value_type, ts, result->text, result->lastlogsize,
+					result->mtime, value_flags);
 		}
 		else
 		{
@@ -2758,7 +2765,10 @@ void	dc_add_history(zbx_uint64_t itemid, unsigned char item_flags, AGENT_RESULT 
 	else
 	{
 		if (0 != (value_flags & ZBX_DC_FLAG_META))
-			dc_local_add_history_log(itemid, ts, NULL, result->lastlogsize, result->mtime, value_flags);
+		{
+			dc_local_add_history_log(itemid, item_value_type, ts, NULL, result->lastlogsize, result->mtime,
+					value_flags);
+		}
 		else
 			THIS_SHOULD_NEVER_HAPPEN;
 
@@ -3076,11 +3086,9 @@ static int	hc_clone_history_data(zbx_hc_data_t **data, const dc_item_value_t *it
 		{
 			case ITEM_VALUE_TYPE_FLOAT:
 				(*data)->value.dbl = item_value->value.value_dbl;
-				cache->stats.history_float_counter++;
 				break;
 			case ITEM_VALUE_TYPE_UINT64:
 				(*data)->value.ui64 = item_value->value.value_uint;
-				cache->stats.history_uint_counter++;
 				break;
 			case ITEM_VALUE_TYPE_STR:
 				if (SUCCEED != hc_clone_history_str_data(&(*data)->value.str,
@@ -3088,7 +3096,6 @@ static int	hc_clone_history_data(zbx_hc_data_t **data, const dc_item_value_t *it
 				{
 					return FAIL;
 				}
-				cache->stats.history_str_counter++;
 				break;
 			case ITEM_VALUE_TYPE_TEXT:
 				if (SUCCEED != hc_clone_history_str_data(&(*data)->value.str,
@@ -3096,12 +3103,28 @@ static int	hc_clone_history_data(zbx_hc_data_t **data, const dc_item_value_t *it
 				{
 					return FAIL;
 				}
-				cache->stats.history_text_counter++;
 				break;
 			case ITEM_VALUE_TYPE_LOG:
 				if (SUCCEED != hc_clone_history_log_data(&(*data)->value.log, item_value))
 					return FAIL;
+				break;
+		}
 
+		switch (item_value->item_value_type)
+		{
+			case ITEM_VALUE_TYPE_FLOAT:
+				cache->stats.history_float_counter++;
+				break;
+			case ITEM_VALUE_TYPE_UINT64:
+				cache->stats.history_uint_counter++;
+				break;
+			case ITEM_VALUE_TYPE_STR:
+				cache->stats.history_str_counter++;
+				break;
+			case ITEM_VALUE_TYPE_TEXT:
+				cache->stats.history_text_counter++;
+				break;
+			case ITEM_VALUE_TYPE_LOG:
 				cache->stats.history_log_counter++;
 				break;
 		}

@@ -2737,7 +2737,7 @@ ZABBIX.apps.map = (function($) {
 				},
 				popup: {
 					parameters: 'dstfrm=selementForm&dstfld1=elementNameTriggers&srctbl=triggers' +
-						'&srcfld1=triggerid&with_triggers=1&real_hosts=1&multiselect=1'
+						'&srcfld1=triggerid&with_triggers=1&real_hosts=1&multiselect=1&noempty=1'
 				}
 			});
 
@@ -3892,7 +3892,9 @@ ZABBIX.apps.map = (function($) {
 				}
 			}
 
-			sysmap.updateImage();
+			if (sysmap.buffered_expand === false) {
+				sysmap.updateImage();
+			}
 		});
 
 		return sysmap;
