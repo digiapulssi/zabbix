@@ -71,7 +71,7 @@ static int	DBpatch_3040006(void)
 
 static int	DBpatch_3040007(void)
 {
-#ifdef HAVE_MYSQL	/* MySQL automatically create index and might not remove it on some conditions */
+#ifdef HAVE_MYSQL	/* MySQL automatically creates index and might not remove it on some conditions */
 	if (SUCCEED == DBindex_exists("problem", "c_problem_2"))
 		return DBdrop_index("problem", "c_problem_2");
 #endif
