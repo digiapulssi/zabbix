@@ -1174,6 +1174,13 @@ if test "x$ipv6" = "xyes"; then
 	have_ipv6="yes"
 fi
 
+dnl Checking pakage manager support for *BSD
+AC_CHECK_PROG(is_pkg_cfg,pkg-config,yes)
+AS_CASE([$ARCH],[*bsd],
+    AS_IF([test "xyes" != "x$is_pkg_cfg"],[
+	AC_MSG_ERROR([pkg-config not found])
+]))
+
 if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 
 	have_multirow_insert="no"
