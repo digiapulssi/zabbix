@@ -65,7 +65,7 @@ use constant rsm_rdds_probe_result => [
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
 
-use constant EXPORT_MAX_CHILDREN_DEFAULT => 16;
+use constant EXPORT_MAX_CHILDREN_DEFAULT => 24;
 use constant EXPORT_MAX_CHILDREN_FLOOR => 1;
 use constant EXPORT_MAX_CHILDREN_CEIL => 128;
 
