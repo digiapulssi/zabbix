@@ -69,6 +69,8 @@ use constant EXPORT_MAX_CHILDREN_DEFAULT => 24;
 use constant EXPORT_MAX_CHILDREN_FLOOR => 1;
 use constant EXPORT_MAX_CHILDREN_CEIL => 128;
 
+use constant EXPORT_LOOP_SLEEP => 2;
+
 parse_opts('probe=s', 'service=s', 'tld=s', 'date=s', 'day=n', 'shift=n', 'force!', 'max-children=n');
 setopt('nolog');
 
@@ -280,6 +282,8 @@ while ($tld_index < $tld_count)
 	}
 
 	handle_children();
+
+	sleep(EXPORT_LOOP_SLEEP);
 }
 
 # wait till children finish
