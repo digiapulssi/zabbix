@@ -174,7 +174,7 @@ else {
 			$dateFormat = DATE_FORMAT;
 			array_unshift($header, _('Day'));
 
-			$max = ($year == $currentYear) ? date('z') : DAY_IN_YEAR;
+			$max = ($year == $currentYear) ? date('z') + 1 : DAY_IN_YEAR;
 			for ($i = 1; $i <= $max; $i++) {
 				$intervals[mktime(0, 0, 0, 1, $i, $year)] = mktime(0, 0, 0, 1, $i + 1, $year);
 			}
