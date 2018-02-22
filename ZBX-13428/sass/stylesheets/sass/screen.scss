@@ -3320,6 +3320,7 @@ $form-icon-btn: (
 		.btn-back-map-icon {
 			margin-left: 5px;
 			display: inline-block;
+			flex: 1 0 auto;
 			width: 28px;
 			height: 24px;
 			vertical-align: middle;
@@ -3334,7 +3335,7 @@ $form-icon-btn: (
 				display: inline-block;
 				line-height: 24px;
 				padding: 0px 6px 0px 0px;
-				flex: 1;
+				flex: 1 1 auto;
 				@extend %overflow-ellipsis;
 			}
 		}
