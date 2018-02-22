@@ -1,3 +1,9 @@
+Changes for rsm1.0.4rc1
+
+Bug fixes:
+....I..... [307] improved Data Export script performance by lowering number of syscalls (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.3
 
 rsm1.0.3rc4 was released as rsm1.0.3 without any changes
