@@ -2207,7 +2207,7 @@ class CMap extends CMapElement {
 				unset($selement);
 
 				$selement_triggers = DBselect(
-					'SELECT st.selement_triggerid,st.selementid,st.triggerid'.
+					'SELECT st.selementid,st.triggerid'.
 					' FROM sysmap_element_trigger st'.
 					' WHERE '.dbConditionInt('st.selementid', array_keys($selements)).
 					' ORDER BY st.selement_triggerid'
