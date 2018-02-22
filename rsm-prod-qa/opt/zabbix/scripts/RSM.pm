@@ -132,6 +132,17 @@ sub rsm_targets_apply()
 			}
 		}
 	}
+
+	my $err;
+
+	remove_tree($_TMP_DIR, {error => \$err});
+
+	if (@$err)
+	{
+		return "cannot delete temporary directory " . __get_file_error($err);
+	}
+
+	return undef;
 }
 
 # todo phase 1: this was made based on ApiHelper:ah_end, which must be removed in phase 2
