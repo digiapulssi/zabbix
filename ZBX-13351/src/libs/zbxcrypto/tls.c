@@ -5319,7 +5319,7 @@ void	zbx_tls_close(zbx_socket_t *s)
 
 			error_code = SSL_get_error(s->tls_ctx->ctx, res);
 			zbx_tls_error_msg(&error, &error_alloc, &error_offset);
-			zabbix_log(LOG_LEVEL_WARNING, "SSL_shutdown() with %s returned error code %d%s: %s",
+			zabbix_log(LOG_LEVEL_WARNING, "SSL_shutdown() with %s returned error code %d:%s: %s",
 					s->peer, error_code, ZBX_NULL2EMPTY_STR(error), info_buf);
 			zbx_free(error);
 		}
