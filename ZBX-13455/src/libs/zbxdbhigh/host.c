@@ -917,7 +917,7 @@ static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
 	zbx_free(gitems);
 	zbx_free(chd_gitems);
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s():%s", __function_name, zbx_result_string(ret));
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
 }
