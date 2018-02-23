@@ -209,10 +209,6 @@ pre {
 	word-wrap: break-word;
 }
 
-:-ms-input-placeholder {
-	color: #6d6d6d !important;
-}
-
 // Main Navigation
 nav {
 	background-color: $main-subnav-bg-color;
@@ -4871,8 +4867,29 @@ svg {
 	}
 }
 
-::-webkit-input-placeholder { /* Chrome/Opera/Safari */
-	color: #d0d0d0;
+::-webkit-input-placeholder {
+	color: $input-placeholder-color;
+}
+
+:-ms-input-placeholder {
+	color: $input-placeholder-color;
+}
+
+::-ms-input-placeholder {
+	color: $input-placeholder-color;
+}
+
+::-moz-placeholder {
+	color: $input-placeholder-color;
+	opacity: 1;
+}
+
+:-moz-placeholder {
+	color: $input-placeholder-color;
+}
+
+:placeholder-shown {
+	color: $input-placeholder-color;
 }
 
 /*doc
