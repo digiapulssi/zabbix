@@ -1410,8 +1410,8 @@ abstract class CItemGeneral extends CApiService {
 	/**
 	 * Validate items with type ITEM_TYPE_DEPENDENT for create or update operation.
 	 *
-	 * @param array                 $items          Array of items.
-	 * @param CItem|CItemPrototype  $data_provider  Item data provider.
+	 * @param array                $items          Array of items.
+	 * @param CItem|CItemPrototype $data_provider  Item data provider.
 	 *
 	 * @throws APIException for invalid data.
 	 */
@@ -1441,10 +1441,16 @@ abstract class CItemGeneral extends CApiService {
 
 		do {
 			if ($has_unresolved_masters) {
-				$db_masters = $data_provider->get([
+				$options = [
 					'output' => ['type', 'name', 'hostid', 'master_itemid'],
 					'itemids' => array_keys($unresolved_master_itemids)
-				]);
+				];
+
+				if ($data_provider instanceof CItem) {
+					$options['webitems'] = true;
+				}
+
+				$db_masters = $data_provider->get($options);
 
 				foreach ($db_masters as $db_master) {
 					$items_cache[$db_master['itemid']] = $db_master;
@@ -1536,7 +1542,6 @@ abstract class CItemGeneral extends CApiService {
 							$item['master_itemid'] != $db_items[$item['itemid']]['master_itemid']) {
 						$itemid = $item['itemid'];
 						$old_master_itemid = $db_items[$itemid]['master_itemid'];
-						$dependency_level;
 
 						if (!array_key_exists($master_itemid, $items_added)) {
 							$items_added[$master_itemid] = [$dependency_level => []];

@@ -1633,14 +1633,14 @@ function quoteItemKeyParam($param, $forced = false) {
 }
 
 /**
- * Expands items name and for dependent items master item name.
+ * Expands item name and for dependent item master item name.
  *
- * @param array                 Array of items.
- * @param CItem|CItemPrototype  Object capable to provide data for master items.
+ * @param array  $items        Array of items.
+ * @param string $data_source  'items' or 'itemprototypes'
  *
  * @return array
  */
-function expandItemNamesWithMasterItems($items, $data_provider) {
+function expandItemNamesWithMasterItems($items, $data_source) {
 	$items = CMacrosResolverHelper::resolveItemNames($items);
 	$itemids = [];
 	$master_itemids = [];
@@ -1654,12 +1654,24 @@ function expandItemNamesWithMasterItems($items, $data_provider) {
 	$master_itemids = array_diff(array_keys($master_itemids), $itemids);
 
 	if ($master_itemids) {
-		$master_items = $data_provider->get([
-			'output'		=> ['itemid', 'type', 'hostid', 'name', 'key_'],
-			'itemids'		=> $master_itemids,
-			'editable'		=> true,
-			'preservekeys'	=> true
-		]);
+		if ($data_source === 'items') {
+			$master_items = API::Item()->get([
+				'output' => ['itemid', 'type', 'hostid', 'name', 'key_'],
+				'itemids' => $master_itemids,
+				'webitems' => true,
+				'editable' => true,
+				'preservekeys' => true
+			]);
+		}
+		elseif ($data_source === 'itemprototypes') {
+			$master_items = API::ItemPrototype()->get([
+				'output' => ['itemid', 'type', 'hostid', 'name', 'key_'],
+				'itemids' => $master_itemids,
+				'editable' => true,
+				'preservekeys' => true
+			]);
+		}
+
 		$master_items = CMacrosResolverHelper::resolveItemNames($master_items);
 	}
 
@@ -1667,11 +1679,15 @@ function expandItemNamesWithMasterItems($items, $data_provider) {
 		if ($item['type'] == ITEM_TYPE_DEPENDENT) {
 			$master_itemid = $item['master_itemid'];
 			$items_index = array_search($master_itemid, $itemids);
+
 			$item['master_item'] = [
 				'itemid'		=> $master_itemid,
 				'name_expanded'	=> ($items_index === false)
-									? $master_items[$master_itemid]['name_expanded']
-									: $items[$items_index]['name_expanded']
+					? $master_items[$master_itemid]['name_expanded']
+					: $items[$items_index]['name_expanded'],
+				'type' => ($items_index === false)
+					? $master_items[$master_itemid]['type']
+					: $items[$items_index]['type'],
 			];
 		}
 	}

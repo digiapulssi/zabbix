@@ -1185,8 +1185,9 @@ if (isset($_REQUEST['form']) && str_in_array($_REQUEST['form'], [_('Create item'
 
 		if ($item['type'] == ITEM_TYPE_DEPENDENT) {
 			$master_item_options = [
+				'output'	=> ['itemid', 'type', 'hostid', 'name', 'key_'],
 				'itemids'	=> $item['master_itemid'],
-				'output'	=> ['itemid', 'type', 'hostid', 'name', 'key_']
+				'webitems' => true
 			];
 		}
 	}
@@ -1201,8 +1202,9 @@ if (isset($_REQUEST['form']) && str_in_array($_REQUEST['form'], [_('Create item'
 
 		if ($host && getRequest('master_itemid')) {
 			$master_item_options = [
-				'itemids' => getRequest('master_itemid'),
 				'output' => ['itemid', 'type', 'hostid', 'name', 'key_'],
+				'itemids' => getRequest('master_itemid'),
+				'webitems' => true,
 				'filter' => ['hostid' => $host['hostid']]
 			];
 		}
@@ -1579,7 +1581,7 @@ else {
 		}
 
 		// resolve name macros
-		$data['items'] = expandItemNamesWithMasterItems($data['items'], API::Item());
+		$data['items'] = expandItemNamesWithMasterItems($data['items'], 'items');
 
 		$update_interval_parser = new CUpdateIntervalParser(['usermacros' => true]);
 
