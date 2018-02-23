@@ -176,7 +176,8 @@ static void	DBget_sysmapelements_by_element_type_ids(zbx_vector_uint64_t *seleme
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-static int	validate_linked_templates(const zbx_vector_uint64_t *templateids, char *error, size_t max_error_len)
+static int	validate_linked_templates(const zbx_vector_uint64_t *templateids, char **error, size_t *error_alloc,
+			size_t *error_offset)
 {
 	const char	*__function_name = "validate_linked_templates";
 
@@ -212,7 +213,8 @@ static int	validate_linked_templates(const zbx_vector_uint64_t *templateids, cha
 		if (NULL != (row = DBfetch(result)))
 		{
 			ret = FAIL;
-			zbx_snprintf(error, max_error_len, "conflicting item key \"%s\" found", row[0]);
+			zbx_snprintf_alloc(error, error_alloc, error_offset,
+					"conflicting item key \"%s\" found", row[0]);
 		}
 		DBfree_result(result);
 	}
@@ -243,9 +245,8 @@ static int	validate_linked_templates(const zbx_vector_uint64_t *templateids, cha
 		if (NULL != (row = DBfetch(result)))
 		{
 			ret = FAIL;
-			zbx_snprintf(error, max_error_len,
-					"trigger \"%s\" has items from template \"%s\"",
-					row[0], row[1]);
+			zbx_snprintf_alloc(error, error_alloc, error_offset,
+					"trigger \"%s\" has items from template \"%s\"", row[0], row[1]);
 		}
 		DBfree_result(result);
 	}
@@ -280,7 +281,7 @@ static int	validate_linked_templates(const zbx_vector_uint64_t *templateids, cha
 		if (NULL != (row = DBfetch(result)))
 		{
 			ret = FAIL;
-			zbx_snprintf(error, max_error_len,
+			zbx_snprintf_alloc(error, error_alloc, error_offset,
 					"trigger \"%s\" in template \"%s\""
 					" has dependency from trigger \"%s\" in template \"%s\"",
 					row[0], row[1], row[2], row[3]);
@@ -326,7 +327,7 @@ static int	validate_linked_templates(const zbx_vector_uint64_t *templateids, cha
 			if (NULL != (row = DBfetch(result)))
 			{
 				ret = FAIL;
-				zbx_snprintf(error, max_error_len,
+				zbx_snprintf_alloc(error, error_alloc, error_offset,
 						"template with graph \"%s\" already linked to the host", row[0]);
 			}
 			DBfree_result(result);
@@ -354,7 +355,7 @@ static int	validate_linked_templates(const zbx_vector_uint64_t *templateids, cha
 		if (NULL != (row = DBfetch(result)))
 		{
 			ret = FAIL;
-			zbx_snprintf(error, max_error_len,
+			zbx_snprintf_alloc(error, error_alloc, error_offset,
 					"template with web scenario \"%s\" already linked to the host", row[0]);
 		}
 		DBfree_result(result);
@@ -446,8 +447,8 @@ static int	DBcmp_triggers(zbx_uint64_t triggerid1, const char *expression1,
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-static int	validate_inventory_links(zbx_uint64_t hostid, const zbx_vector_uint64_t *templateids,
-		char *error, size_t max_error_len)
+static int	validate_inventory_links(zbx_uint64_t hostid, const zbx_vector_uint64_t *templateids, char **error,
+			size_t *error_alloc, size_t *error_offset)
 {
 	const char	*__function_name = "validate_inventory_links";
 	DB_RESULT	result;
@@ -477,7 +478,8 @@ static int	validate_inventory_links(zbx_uint64_t hostid, const zbx_vector_uint64
 	if (NULL != (row = DBfetch(result)))
 	{
 		ret = FAIL;
-		zbx_strlcpy(error, "two items cannot populate one host inventory field", max_error_len);
+		zbx_strcpy_alloc(error, error_alloc, error_offset,
+				"two items cannot populate one host inventory field");
 	}
 	DBfree_result(result);
 
@@ -512,7 +514,8 @@ static int	validate_inventory_links(zbx_uint64_t hostid, const zbx_vector_uint64
 	if (NULL != (row = DBfetch(result)))
 	{
 		ret = FAIL;
-		zbx_strlcpy(error, "two items cannot populate one host inventory field", max_error_len);
+		zbx_strcpy_alloc(error, error_alloc, error_offset,
+				"two items cannot populate one host inventory field");
 	}
 	DBfree_result(result);
 out:
@@ -539,8 +542,8 @@ out:
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-static int	validate_httptests(zbx_uint64_t hostid, const zbx_vector_uint64_t *templateids,
-		char *error, size_t max_error_len)
+static int	validate_httptests(zbx_uint64_t hostid, const zbx_vector_uint64_t *templateids, char **error,
+			size_t *error_alloc, size_t *error_offset)
 {
 	const char	*__function_name = "validate_httptests";
 	DB_RESULT	tresult;
@@ -599,7 +602,7 @@ static int	validate_httptests(zbx_uint64_t hostid, const zbx_vector_uint64_t *te
 		if (NULL != DBfetch(sresult))
 		{
 			ret = FAIL;
-			zbx_snprintf(error, max_error_len,
+			zbx_snprintf_alloc(error, error_alloc, error_offset,
 					"web scenario \"%s\" already exists on the host (steps are not identical)",
 					trow[1]);
 		}
@@ -717,8 +720,8 @@ clean:
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
-		char *error, size_t max_error_len)
+static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids, char **error, size_t *error_alloc,
+			size_t *error_offset)
 {
 	const char	*__function_name = "validate_host";
 	DB_RESULT	tresult;
@@ -736,10 +739,10 @@ static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (SUCCEED != (ret = validate_inventory_links(hostid, templateids, error, max_error_len)))
+	if (SUCCEED != (ret = validate_inventory_links(hostid, templateids, error, error_alloc, error_offset)))
 		goto out;
 
-	if (SUCCEED != (ret = validate_httptests(hostid, templateids, error, max_error_len)))
+	if (SUCCEED != (ret = validate_httptests(hostid, templateids, error, error_alloc, error_offset)))
 		goto out;
 
 	sql = zbx_malloc(sql, sql_alloc);
@@ -795,7 +798,7 @@ static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
 			if (t_flags != h_flags)
 			{
 				ret = FAIL;
-				zbx_snprintf(error, max_error_len,
+				zbx_snprintf_alloc(error, error_alloc, error_offset,
 						"graph prototype and real graph \"%s\" have the same name", trow[1]);
 				break;
 			}
@@ -815,7 +818,7 @@ static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
 			if (SUCCEED != DBcmp_graphitems(gitems, gitems_num, chd_gitems, chd_gitems_num))
 			{
 				ret = FAIL;
-				zbx_snprintf(error, max_error_len,
+				zbx_snprintf_alloc(error, error_alloc, error_offset,
 						"graph \"%s\" already exists on the host (items are not identical)",
 						trow[1]);
 				break;
@@ -844,7 +847,7 @@ static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
 		if (NULL != (trow = DBfetch(tresult)))
 		{
 			ret = FAIL;
-			zbx_snprintf(error, max_error_len,
+			zbx_snprintf_alloc(error, error_alloc, error_offset,
 					"item prototype and real item \"%s\" have the same key", trow[0]);
 		}
 		DBfree_result(tresult);
@@ -899,13 +902,15 @@ static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
 
 				if (INTERFACE_TYPE_COUNT == i)
 				{
-					zbx_strlcpy(error, "cannot find any interfaces on host", max_error_len);
+					zbx_strcpy_alloc(error, error_alloc, error_offset,
+							"cannot find any interfaces on host");
 					ret = FAIL;
 				}
 			}
 			else if (0 == interfaceids[type - 1])
 			{
-				zbx_snprintf(error, max_error_len, "cannot find \"%s\" host interface",
+				zbx_snprintf_alloc(error, error_alloc, error_offset,
+						"cannot find \"%s\" host interface",
 						zbx_interface_type_string((zbx_interface_type_t)type));
 				ret = FAIL;
 			}
@@ -2457,15 +2462,15 @@ static void	get_templates_by_hostid(zbx_uint64_t hostid, zbx_vector_uint64_t *te
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-int	DBdelete_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *del_templateids)
+int	DBdelete_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *del_templateids, char **error)
 {
 	const char		*__function_name = "DBdelete_template_elements";
 
-	char			*sql = NULL;
+	char			*sql = NULL, *err = NULL;
 	size_t			sql_alloc = 128, sql_offset = 0;
 	zbx_vector_uint64_t	templateids;
 	int			i, index, res = SUCCEED;
-	char			error[MAX_STRING_LEN];
+	size_t			err_alloc = MAX_STRING_LEN, err_offset = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -2489,9 +2494,10 @@ int	DBdelete_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *del_tem
 	if (0 == del_templateids->values_num)
 		goto clean;
 
-	if (SUCCEED != (res = validate_linked_templates(&templateids, error, sizeof(error))))
+	if (SUCCEED != (res = validate_linked_templates(&templateids, &err, &err_alloc, &err_offset)))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot unlink template: %s", error);
+		*error = zbx_strdup(NULL, err);
+		zbx_free(err);
 		goto clean;
 	}
 
@@ -4550,13 +4556,14 @@ static void	DBcopy_template_httptests(zbx_uint64_t hostid, const zbx_vector_uint
  * Return value: upon successful completion return SUCCEED                    *
  *                                                                            *
  ******************************************************************************/
-int	DBcopy_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *lnk_templateids)
+int	DBcopy_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *lnk_templateids, char **error)
 {
 	const char		*__function_name = "DBcopy_template_elements";
 	zbx_vector_uint64_t	templateids;
 	zbx_uint64_t		hosttemplateid;
 	int			i, res = SUCCEED;
-	char			error[MAX_STRING_LEN], *template_names;
+	char			*template_names, *err = NULL;
+	size_t			err_alloc = MAX_STRING_LEN, err_offset = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -4582,25 +4589,27 @@ int	DBcopy_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *lnk_templ
 
 	zbx_vector_uint64_sort(&templateids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
-	if (SUCCEED != (res = validate_linked_templates(&templateids, error, sizeof(error))))
+	if (SUCCEED != (res = validate_linked_templates(&templateids, &err, &err_alloc, &err_offset)))
 	{
 		template_names = get_template_names(lnk_templateids);
 
-		zabbix_log(LOG_LEVEL_WARNING, "cannot link template(s) %s to host \"%s\": %s",
-				template_names, zbx_host_string(hostid), error);
+		zbx_snprintf_alloc(error, &err_alloc, &err_offset, "%s to host \"%s\": %s",
+				template_names, zbx_host_string(hostid), err);
 
 		zbx_free(template_names);
+		zbx_free(err);
 		goto clean;
 	}
 
-	if (SUCCEED != (res = validate_host(hostid, lnk_templateids, error, sizeof(error))))
+	if (SUCCEED != (res = validate_host(hostid, lnk_templateids, &err, &err_alloc, &err_offset)))
 	{
 		template_names = get_template_names(lnk_templateids);
 
-		zabbix_log(LOG_LEVEL_WARNING, "cannot link template(s) %s to host \"%s\": %s",
-				template_names, zbx_host_string(hostid), error);
+		zbx_snprintf_alloc(error, &err_alloc, &err_offset, "%s to host \"%s\": %s",
+				template_names, zbx_host_string(hostid), err);
 
 		zbx_free(template_names);
+		zbx_free(err);
 		goto clean;
 	}
 
