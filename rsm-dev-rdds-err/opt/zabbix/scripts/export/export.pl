@@ -1414,6 +1414,15 @@ sub __check_test
 
 		return SUCCESS;
 	}
+	elsif ($interface eq JSON_INTERFACE_RDDS43 || $interface eq JSON_INTERFACE_RDDS80)
+	{
+		if (substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+				substr($description, 0, length(ZBX_EC_RDDS43_RES_NOREPLY)) eq ZBX_EC_RDDS43_RES_NOREPLY ||
+				substr($description, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY)
+		{
+			return SUCCESS;
+		}
+	}
 
 	return E_FAIL unless ($value);
 

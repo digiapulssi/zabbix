@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:api :items);
+use TLD_constants qw(:ec :api :items);
 use ApiHelper;
 use Parallel;
 
@@ -1347,6 +1347,15 @@ sub fill_test_data_rdds($$)
 		{
 			$metric->{'rtt'} = undef;
 			$metric->{'result'} = 'no data';
+		}
+		elsif (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS43_RES_NOREPLY)) eq ZBX_EC_RDDS43_RES_NOREPLY ||
+				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY)
+		{
+			$test_data_ref->{'status'} = "Up";
+
+			$metric->{'rtt'} = undef;
+			$metric->{'result'} = $test->{'rtt'};
 		}
 		elsif (substr($test->{'rtt'}, 0, 1) eq "-")
 		{
