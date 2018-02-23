@@ -5309,6 +5309,8 @@ void	zbx_tls_close(zbx_socket_t *s)
 #elif defined(HAVE_OPENSSL)
 	if (NULL != s->tls_ctx->ctx)
 	{
+		info_buf[0] = '\0';     /* empty buffer for zbx_openssl_info_cb() messages */
+
 		/* After TLS shutdown the TCP conection will be closed. So, there is no need to do a bidirectional */
 		/* TLS shutdown - unidirectional shutdown is ok. */
 		if (0 > (res = SSL_shutdown(s->tls_ctx->ctx)))
