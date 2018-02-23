@@ -5076,6 +5076,9 @@ ssize_t	zbx_tls_write(zbx_socket_t *s, const char *buf, size_t len, char **error
 	zbx_alarm_flag_clear();
 	sec = zbx_time();
 #endif
+#if defined(HAVE_OPENSSL)
+	info_buf[0] = '\0';	/* empty buffer for zbx_openssl_info_cb() messages */
+#endif
 	do
 	{
 		res = ZBX_TLS_WRITE(s->tls_ctx->ctx, buf, len);
@@ -5125,7 +5128,6 @@ ssize_t	zbx_tls_write(zbx_socket_t *s, const char *buf, size_t len, char **error
 			char	*err = NULL;
 			size_t	error_alloc = 0, error_offset = 0;
 
-			info_buf[0] = '\0';	/* empty buffer for zbx_openssl_info_cb() messages */
 			zbx_snprintf_alloc(&err, &error_alloc, &error_offset, "TLS write returned error code"
 					" %d:", error_code);
 			zbx_tls_error_msg(&err, &error_alloc, &error_offset);
@@ -5156,6 +5158,9 @@ ssize_t	zbx_tls_read(zbx_socket_t *s, char *buf, size_t len, char **error)
 #if defined(_WINDOWS)
 	zbx_alarm_flag_clear();
 	sec = zbx_time();
+#endif
+#if defined(HAVE_OPENSSL)
+	info_buf[0] = '\0';	/* empty buffer for zbx_openssl_info_cb() messages */
 #endif
 	do
 	{
@@ -5207,7 +5212,6 @@ ssize_t	zbx_tls_read(zbx_socket_t *s, char *buf, size_t len, char **error)
 			char	*err = NULL;
 			size_t	error_alloc = 0, error_offset = 0;
 
-			info_buf[0] = '\0';	/* empty buffer for zbx_openssl_info_cb() messages */
 			zbx_snprintf_alloc(&err, &error_alloc, &error_offset, "TLS read returned error code"
 					" %d:", error_code);
 			zbx_tls_error_msg(&err, &error_alloc, &error_offset);
