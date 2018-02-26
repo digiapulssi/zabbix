@@ -1096,7 +1096,6 @@ else {
 			'groupids' => ($pageFilter->groupid > 0) ? $pageFilter->groupid : null,
 			'editable' => true,
 			'sortfield' => $sortField,
-			'sortorder'=>$sortOrder,
 			'limit' => $config['search_limit'] + 1,
 			'search' => [
 				'name' => ($filter['host'] === '') ? null : $filter['host'],
