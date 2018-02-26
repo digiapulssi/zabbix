@@ -4201,7 +4201,7 @@ int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, c
 #endif
 	if (1 != (res = SSL_connect(s->tls_ctx->ctx)))
 	{
-		int	error_code;
+		int	result_code;
 
 #if defined(_WINDOWS)
 		if (s->timeout < zbx_time() - sec)
@@ -4226,9 +4226,9 @@ int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, c
 			}
 		}
 
-		error_code = SSL_get_error(s->tls_ctx->ctx, res);
+		result_code = SSL_get_error(s->tls_ctx->ctx, res);
 
-		switch (error_code)
+		switch (result_code)
 		{
 			case SSL_ERROR_NONE:		/* handshake successful */
 				break;
@@ -4260,21 +4260,21 @@ int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, c
 				}
 				else
 				{
-					zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() returned"
-							" SSL_ERROR_SYSCALL:");
+					zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() set"
+							" result code to SSL_ERROR_SYSCALL:");
 					zbx_tls_error_msg(error, &error_alloc, &error_offset);
 					zbx_snprintf_alloc(error, &error_alloc, &error_offset, ": %s", info_buf);
 				}
 				goto out;
 			case SSL_ERROR_SSL:
-				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() returned"
-						" SSL_ERROR_SSL:");
+				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() set"
+						" result code to SSL_ERROR_SSL:");
 				zbx_tls_error_msg(error, &error_alloc, &error_offset);
 				zbx_snprintf_alloc(error, &error_alloc, &error_offset, ": %s", info_buf);
 				goto out;
 			default:
-				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() returned error"
-						" code %d", error_code);
+				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() set result code"
+						" to %d", result_code);
 				zbx_tls_error_msg(error, &error_alloc, &error_offset);
 				zbx_snprintf_alloc(error, &error_alloc, &error_offset, ": %s", info_buf);
 				goto out;
@@ -4936,7 +4936,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 #endif
 	if (1 != (res = SSL_accept(s->tls_ctx->ctx)))
 	{
-		int	error_code;
+		int	result_code;
 
 #if defined(_WINDOWS)
 		if (s->timeout < zbx_time() - sec)
@@ -4958,7 +4958,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 					X509_verify_cert_error_string(verify_result));
 		}
 
-		error_code = SSL_get_error(s->tls_ctx->ctx, res);
+		result_code = SSL_get_error(s->tls_ctx->ctx, res);
 
 		if (0 == res)
 		{
@@ -4967,8 +4967,8 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 		}
 		else
 		{
-			zbx_snprintf_alloc(error, &error_alloc, &error_offset, "TLS handshake returned error code %d:",
-					error_code);
+			zbx_snprintf_alloc(error, &error_alloc, &error_offset, "TLS handshake set result code to %d:",
+					result_code);
 		}
 
 		zbx_tls_error_msg(error, &error_alloc, &error_offset);
@@ -5115,11 +5115,11 @@ ssize_t	zbx_tls_write(zbx_socket_t *s, const char *buf, size_t len, char **error
 #elif defined(HAVE_OPENSSL)
 	if (0 >= res)
 	{
-		int	error_code;
+		int	result_code;
 
-		error_code = SSL_get_error(s->tls_ctx->ctx, res);
+		result_code = SSL_get_error(s->tls_ctx->ctx, res);
 
-		if (0 == res && SSL_ERROR_ZERO_RETURN == error_code)
+		if (0 == res && SSL_ERROR_ZERO_RETURN == result_code)
 		{
 			*error = zbx_strdup(*error, "connection closed during write");
 		}
@@ -5128,8 +5128,8 @@ ssize_t	zbx_tls_write(zbx_socket_t *s, const char *buf, size_t len, char **error
 			char	*err = NULL;
 			size_t	error_alloc = 0, error_offset = 0;
 
-			zbx_snprintf_alloc(&err, &error_alloc, &error_offset, "TLS write returned error code"
-					" %d:", error_code);
+			zbx_snprintf_alloc(&err, &error_alloc, &error_offset, "TLS write set result code to"
+					" %d:", result_code);
 			zbx_tls_error_msg(&err, &error_alloc, &error_offset);
 			*error = zbx_dsprintf(*error, "%s: %s", err, info_buf);
 			zbx_free(err);
@@ -5199,11 +5199,11 @@ ssize_t	zbx_tls_read(zbx_socket_t *s, char *buf, size_t len, char **error)
 #elif defined(HAVE_OPENSSL)
 	if (0 >= res)
 	{
-		int	error_code;
+		int	result_code;
 
-		error_code = SSL_get_error(s->tls_ctx->ctx, res);
+		result_code = SSL_get_error(s->tls_ctx->ctx, res);
 
-		if (0 == res && SSL_ERROR_ZERO_RETURN == error_code)
+		if (0 == res && SSL_ERROR_ZERO_RETURN == result_code)
 		{
 			*error = zbx_strdup(*error, "connection closed during read");
 		}
@@ -5212,8 +5212,8 @@ ssize_t	zbx_tls_read(zbx_socket_t *s, char *buf, size_t len, char **error)
 			char	*err = NULL;
 			size_t	error_alloc = 0, error_offset = 0;
 
-			zbx_snprintf_alloc(&err, &error_alloc, &error_offset, "TLS read returned error code"
-					" %d:", error_code);
+			zbx_snprintf_alloc(&err, &error_alloc, &error_offset, "TLS read set result code to"
+					" %d:", result_code);
 			zbx_tls_error_msg(&err, &error_alloc, &error_offset);
 			*error = zbx_dsprintf(*error, "%s: %s", err, info_buf);
 			zbx_free(err);
@@ -5315,14 +5315,14 @@ void	zbx_tls_close(zbx_socket_t *s)
 		/* TLS shutdown - unidirectional shutdown is ok. */
 		if (0 > (res = SSL_shutdown(s->tls_ctx->ctx)))
 		{
-			int	error_code;
+			int	result_code;
 			char	*error = NULL;
 			size_t	error_alloc = 0, error_offset = 0;
 
-			error_code = SSL_get_error(s->tls_ctx->ctx, res);
+			result_code = SSL_get_error(s->tls_ctx->ctx, res);
 			zbx_tls_error_msg(&error, &error_alloc, &error_offset);
-			zabbix_log(LOG_LEVEL_WARNING, "SSL_shutdown() with %s returned error code %d:%s: %s",
-					s->peer, error_code, ZBX_NULL2EMPTY_STR(error), info_buf);
+			zabbix_log(LOG_LEVEL_WARNING, "SSL_shutdown() with %s set result code to %d:%s: %s",
+					s->peer, result_code, ZBX_NULL2EMPTY_STR(error), info_buf);
 			zbx_free(error);
 		}
 
