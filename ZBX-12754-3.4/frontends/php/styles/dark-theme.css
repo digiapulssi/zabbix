@@ -1082,6 +1082,8 @@ footer, .footer {
         vertical-align: middle; }
         .table-forms .table-forms-td-right td.center .btn-grey {
           margin: 3px 0; }
+  .table-forms .table-forms-td-right {
+    position: relative; }
   .table-forms h4 {
     margin-bottom: -5px; }
   .table-forms .hor-list li {
@@ -3181,9 +3183,7 @@ svg {
   width: 100%;
   max-height: 100%;
   max-width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center; }
+  display: flex; }
 
 @supports (-ms-ime-align: auto) {
   .navtree .problems {
