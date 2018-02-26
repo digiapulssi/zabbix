@@ -3,6 +3,7 @@ Changes for 3.0.16rc1
 New features:
 
 Bug fixes:
+...G...... [ZBX-13062] banned using of mutex in threads of metrics collection (MVekslers)
 ........S. [ZBX-13236] fixed error message of function parameters parse (MVekslers)
 
 --------------------------------------------------------------------------------
