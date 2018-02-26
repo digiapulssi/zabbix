@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -853,7 +853,7 @@ static int	substitute_formula_macros(char **data, const struct zbx_json_parse *j
 	exp = zbx_malloc(NULL, exp_alloc);
 	tmp = zbx_malloc(NULL, tmp_alloc);
 
-	for (e = *data; SUCCEED == zbx_function_find(e, &f_pos, &par_l, &par_r); e += par_r + 1)
+	for (e = *data; SUCCEED == zbx_function_find(e, &f_pos, &par_l, &par_r, error, max_error_len); e += par_r + 1)
 	{
 		/* substitute LLD macros in the part of the string preceding function parameters */
 
@@ -929,6 +929,9 @@ static int	substitute_formula_macros(char **data, const struct zbx_json_parse *j
 					sep_pos - param_pos - param_len + 1);
 		}
 	}
+
+	if (par_l > par_r)
+		goto out;
 
 	/* substitute LLD macros in the remaining part */
 

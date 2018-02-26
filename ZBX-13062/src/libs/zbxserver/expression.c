@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2205,7 +2205,7 @@ static void	get_trigger_function_value(const char *expression, char **replace_to
 	if (SUCCEED != ret || '.' != *p++)
 		goto fail;
 
-	if (SUCCEED != zbx_function_validate(p, &par_l, &par_r) || '}' != p[par_r + 1])
+	if (SUCCEED != zbx_function_validate(p, &par_l, &par_r, NULL, 0) || '}' != p[par_r + 1])
 		goto fail;
 
 	p[par_l] = '\0';
@@ -4181,7 +4181,7 @@ static int	substitute_discovery_macros_simple(char *data, char **replace_to, siz
 		return FAIL;
 
 	/* a trigger function with parameters */
-	if (SUCCEED != zbx_function_validate(pr, &par_l, &par_r))
+	if (SUCCEED != zbx_function_validate(pr, &par_l, &par_r, NULL, 0))
 		return FAIL;
 
 	pr += par_r + 1;
