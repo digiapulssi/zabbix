@@ -2122,14 +2122,12 @@ static void	lld_templates_link(const zbx_vector_ptr_t *hosts, char **error)
 
 	int		i;
 	zbx_lld_host_t	*host;
-
+	char		*err;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	for (i = 0; i < hosts->values_num; i++)
 	{
-		char		*err = NULL;
-
 		host = (zbx_lld_host_t *)hosts->values[i];
 
 		if (0 == (host->flags & ZBX_FLAG_LLD_HOST_DISCOVERED))
@@ -2138,16 +2136,20 @@ static void	lld_templates_link(const zbx_vector_ptr_t *hosts, char **error)
 		if (0 != host->del_templateids.values_num)
 		{
 			if (SUCCEED != DBdelete_template_elements(host->hostid, &host->del_templateids, &err))
+			{
 				*error = zbx_strdcatf(*error, "Cannot unlink template: %s.\n", err);
+				zbx_free(err);
+			}
 		}
 
 		if (0 != host->lnk_templateids.values_num)
 		{
 			if (SUCCEED != DBcopy_template_elements(host->hostid, &host->lnk_templateids, &err))
+			{
 				*error = zbx_strdcatf(*error, "Cannot link template(s) %s.\n", err);
+				zbx_free(err);
+			}
 		}
-
-		zbx_free(err);
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
