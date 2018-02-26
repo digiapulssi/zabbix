@@ -3,6 +3,7 @@ Changes for 3.0.16rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-13236] fixed error message of function parameters parse (MVekslers)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.15
