@@ -1,9 +1,40 @@
-Changes for 3.4.7rc1
+Changes for 3.4.8rc1
 
 New features:
 
 Bug fixes:
 ........S. [ZBX-13236] fixed error message of function parameters parse (MVekslers)
+....I..... [ZBX-13398] fixed configure script for Debian GNU/Linux "buster" and "sid" to work with PostgreSQL (viktors)
+..F....... [ZBX-13428] fixed long name of map outside go back button in map widget (agriscenko, Sasha)
+A.F....... [ZBX-12754] fixed undefined index error in map import (gcalenko)
+..F....... [ZBX-13166] fixed daily and yearly notification reports not including current day/last day of leap-year (nikita)
+.......PS. [ZBX-13498] added optional MySQL upgrade patch for "problem" table to drop redundant index after another index that can be used to enforce the foreign key constraint has been created (vso)
+........S. [ZBX-13452] fixed Elasticsearch history storage default value types (viktors)
+..F....... [ZBX-12941] fixed checkbox overlay's position over the checkbox (miks)
+..F....... [ZBX-13334] fixed translations of Widget parameters window (agriscenko)
+A......... [ZBX-13248] changed field trapper_hosts to optional for trapper item.create (ashubin)
+..F....... [ZBX-13307] fixed map scaling and position to the widget left side (ashubin)
+A......... [ZBX-6118] fixed poor performance of changing an item on the template which linked with many hosts (Sasha)
+..F....... [ZBX-13141] fixed invalid value for "Update interval" field in mass update form on submit was redirecting to items list (gcalenko)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.7
+
+3.4.7rc2 was released as 3.4.7 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.4.7rc2
+
+Bug fixes:
+.......P.. [ZBX-13403] allowed proxy to execute remote commands on agents using encrypted connection (gleb)
+.......PS. [ZBX-13441] fixed crashes in case of failures (e.g. timeouts) during VMware hypervisor discovery (gleb)
+A.F....... [ZBX-12607] fixed performance of map.get API method and map-related views (miks, Sasha)
+....I..... [ZBX-13055] fixed compilation failure in Alpine Linux due to missing res_ninit() function (vso)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.7rc1
+
+Bug fixes:
 ........S. [ZBX-13194] fixed incorrect processing of zabbix[wcache,value,*] internal check (Sergejs)
 .......PS. [ZBX-13060] added limitation for meaningless server reconnection attempts to incorrectly configured passive proxy (viktors)
 ...G...... [ZBX-13117] fixed vfs.dir.size with symbol links on Windows (MVekslers)
@@ -1083,11 +1114,23 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 ..F....... [ZBX-9989] optimized SQL queries for graphs building (Gunars, Sasha)
 
 --------------------------------------------------------------------------------
-Changes for 3.0.15rc1
+Changes for 3.0.16rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 3.0.15
+
+3.0.15rc1 was released as 3.0.15 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.15rc1
+
+Bug fixes:
+....I..... [ZBX-13398] fixed configure script for Debian GNU/Linux "buster" and "sid" to work with PostgreSQL (viktors)
+.......PS. [ZBX-13441] fixed crashes in case of failures (e.g. timeouts) during VMware hypervisor discovery (gleb)
 ........S. [ZBX-12643] improved error log message in case Zabbix server database cannot be used due to empty "users" table (vso)
 A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
 ...G...... [ZBX-13055] fixed problems with DNS resolver interface on NetBSD (valdis)

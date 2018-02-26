@@ -1082,6 +1082,8 @@ footer, .footer {
         vertical-align: middle; }
         .table-forms .table-forms-td-right td.center .btn-grey {
           margin: 3px 0; }
+  .table-forms .table-forms-td-right {
+    position: relative; }
   .table-forms h4 {
     margin-bottom: -5px; }
   .table-forms .hor-list li {
@@ -2321,13 +2323,14 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
 .btn-back-map-container {
   text-align: left;
   position: absolute;
-  left: -1px; }
+  left: -1px;
+  max-width: 100%; }
   .btn-back-map-container .btn-back-map {
     margin-top: 10px;
     border-radius: 0px 2px 2px 0px;
     background-color: rgba(0, 0, 0, 0.8);
     padding: 0px 0px 0px 0px;
-    display: inline-block;
+    display: flex;
     height: 24px;
     line-height: 24px;
     vertical-align: middle;
@@ -2339,6 +2342,7 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
     .btn-back-map-container .btn-back-map .btn-back-map-icon {
       margin-left: 5px;
       display: inline-block;
+      flex: 1 0 auto;
       width: 28px;
       height: 24px;
       vertical-align: middle;
@@ -2349,7 +2353,8 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
       .btn-back-map-container .btn-back-map:hover .btn-back-map-content {
         display: inline-block;
         line-height: 24px;
-        padding: 0px 6px 0px 0px; }
+        padding: 0px 6px 0px 0px;
+        flex: auto; }
 
 .overlay-dialogue-body {
   margin: 0 0 25px 0;
@@ -3089,7 +3094,7 @@ tr.cursor-move td * {
 .cursor-pointer {
   cursor: pointer; }
 
-.dashbrd-grid-widget-head h4, .dashbrd-grid-widget-foot ul li, .action-menu .action-menu-item, .action-menu h3, .notif-body h4, .tag, .overflow-ellipsis, .overflow-ellipsis td, .overflow-ellipsis th, .overflow-ellipsis th a, .server-name {
+.dashbrd-grid-widget-head h4, .dashbrd-grid-widget-foot ul li, .action-menu .action-menu-item, .action-menu h3, .btn-back-map-container .btn-back-map:hover .btn-back-map-content, .notif-body h4, .tag, .overflow-ellipsis, .overflow-ellipsis td, .overflow-ellipsis th, .overflow-ellipsis th a, .server-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap; }
@@ -3181,9 +3186,7 @@ svg {
   width: 100%;
   max-height: 100%;
   max-width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center; }
+  display: flex; }
 
 @supports (-ms-ime-align: auto) {
   .navtree .problems {
