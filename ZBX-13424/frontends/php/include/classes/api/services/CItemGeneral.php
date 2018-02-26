@@ -584,11 +584,17 @@ abstract class CItemGeneral extends CApiService {
 			$hostids = array_keys(array_flip($hostids));
 			$all_hostids = array_merge($hostids, [$template['templateid']]);
 
-			$host_items = $this->get([
+			$options = [
 				'output' => ['itemid', 'type', 'key_', 'master_itemid', 'hostid'],
-				'filter' => ['hostid' => $all_hostids],
+				'hostids' => $all_hostids,
 				'preservekeys' => true
-			]);
+			];
+
+			if ($this instanceof CItem) {
+				$options['webitems'] = true;
+			}
+
+			$host_items = $this->get($options);
 
 			foreach ($items as $item) {
 				if ($update) {
