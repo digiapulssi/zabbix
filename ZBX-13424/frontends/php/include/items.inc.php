@@ -1681,8 +1681,8 @@ function expandItemNamesWithMasterItems($items, $data_source) {
 			$items_index = array_search($master_itemid, $itemids);
 
 			$item['master_item'] = [
-				'itemid'		=> $master_itemid,
-				'name_expanded'	=> ($items_index === false)
+				'itemid' => $master_itemid,
+				'name_expanded' => ($items_index === false)
 					? $master_items[$master_itemid]['name_expanded']
 					: $items[$items_index]['name_expanded'],
 				'type' => ($items_index === false)
