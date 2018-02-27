@@ -1,6 +1,7 @@
 Changes for rsm1.0.4rc1
 
 Bug fixes:
+....I..... [322] added removal of temporary files on successful run to the end of Data Export script (dimir)
 ....I..... [307] improved Data Export script performance by lowering number of syscalls (dimir)
 
 --------------------------------------------------------------------------------
