@@ -25,6 +25,7 @@
 #ifdef _WINDOWS
 #	include "messages.h"
 #	include "service.h"
+#	include "sysinfo.h"
 static HANDLE		system_log_handle = INVALID_HANDLE_VALUE;
 #endif
 
@@ -248,12 +249,14 @@ static void	unlock_log(void)
 #else
 static void	lock_log(void)
 {
-	LOCK_LOG;
+	if (0 == (ZBX_MUTEX_LOGGING_DENIED & get_thread_global_mutex_flag()))
+		LOCK_LOG;
 }
 
 static void	unlock_log(void)
 {
-	UNLOCK_LOG;
+	if (0 == (ZBX_MUTEX_LOGGING_DENIED & get_thread_global_mutex_flag()))
+		UNLOCK_LOG;
 }
 #endif
 
