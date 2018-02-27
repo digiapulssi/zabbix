@@ -1,6 +1,22 @@
+Changes for 3.0.16rc1
+
+New features:
+
+Bug fixes:
+...G...... [ZBX-13062] banned using of mutex in threads of metrics collection (MVekslers)
+........S. [ZBX-13236] fixed error message of function parameters parse (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.15
+
+3.0.15rc1 was released as 3.0.15 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.15rc1
 
 Bug fixes:
+....I..... [ZBX-13398] fixed configure script for Debian GNU/Linux "buster" and "sid" to work with PostgreSQL (viktors)
+.......PS. [ZBX-13441] fixed crashes in case of failures (e.g. timeouts) during VMware hypervisor discovery (gleb)
 ........S. [ZBX-12643] improved error log message in case Zabbix server database cannot be used due to empty "users" table (vso)
 A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
 ...G...... [ZBX-13055] fixed problems with DNS resolver interface on NetBSD (valdis)
