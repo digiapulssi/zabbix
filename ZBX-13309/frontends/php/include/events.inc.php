@@ -606,7 +606,9 @@ function make_popup_eventlist($trigger, $eventid_till, $backurl, array $config, 
 				$cell_status,
 				(new CCol(
 					($problem['r_eventid'] != 0)
-						? zbx_date2age($problem['clock'], $problem['r_clock'])
+						? ($problem['clock'] <= $problem['r_clock'])
+							? zbx_date2age($problem['clock'], $problem['r_clock'])
+							: "-".zbx_date2age($problem['clock'], $problem['r_clock'])
 						: zbx_date2age($problem['clock'])
 				))
 					->addClass(ZBX_STYLE_NOWRAP),
