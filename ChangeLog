@@ -1123,6 +1123,7 @@ New features:
 Bug fixes:
 A......... [ZBX-6167] fixed partial updating in maintenance.update (ashubin)
 ...G...... [ZBX-13062] banned using of mutex in threads of metrics collection (MVekslers)
+........S. [ZBX-13236] fixed error message of function parameters parse (MVekslers)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.15
