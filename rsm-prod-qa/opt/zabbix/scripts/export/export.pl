@@ -2354,7 +2354,7 @@ sub __no_cycle_result
 	wrn(uc($service), " service availability result is missing for timestamp ", ts_str($clock), " ($clock).",
 		" This means that either script was not executed or Zabbix server was",
 		" not running at that time. In order to fix this problem please connect",
-		" to appropreate server (check @<server_key> in the beginning of this message)",
+		" to appropriate server (check @<server_key> in the beginning of this message)",
 		" and run the following script:");
 	wrn("  /opt/zabbix/scripts/slv/$avail_key.pl --from $clock");
 }
