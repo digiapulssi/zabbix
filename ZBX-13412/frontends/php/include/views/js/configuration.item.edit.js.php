@@ -91,12 +91,24 @@ zbx_subarray_push($this->data['dataTypeVisibility'], ITEM_DATA_TYPE_HEXADECIMAL,
 			multpStat.onclick();
 		}
 
+		var old_value;
+
 		jQuery('#type').change(function() {
 				displayKeyButton();
+
+				var type = jQuery(this).val(),
+					value_type = jQuery('#value_type'),
+					data_type = jQuery('#data_type');
+				old_value = value_type.val();
+
+				if (!(old_value == <?= ITEM_VALUE_TYPE_UINT64 ?> || old_value == <?= ITEM_VALUE_TYPE_FLOAT ?>)
+						&& (type == <?= ITEM_TYPE_AGGREGATE ?> || type == <?= ITEM_TYPE_CALCULATED ?>)) {
+					value_type.val(<?= ITEM_VALUE_TYPE_UINT64 ?>);
+					data_type.val(<?= ITEM_DATA_TYPE_DECIMAL ?>);
+					value_type.trigger('change');
+				}
 			})
 			.trigger('change');
-
-		var old_value;
 
 		// Whenever non-numeric type is changed back to numeric type, set the default value in "trends" field.
 		jQuery('#value_type').on('focus', function () {
