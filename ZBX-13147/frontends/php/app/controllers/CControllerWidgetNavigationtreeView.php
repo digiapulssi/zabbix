@@ -163,7 +163,6 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 					'min_severity' => $severity_min,
 					'skipDependent' => true,
 					'preservekeys' => true,
-					'filter' => ['status' => TRIGGER_STATUS_ENABLED],
 					'monitored' => true
 				]);
 
@@ -186,7 +185,6 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 					'skipDependent' => true,
 					'selectGroups' => ['groupid'],
 					'preservekeys' => true,
-					'filter' => ['status' => TRIGGER_STATUS_ENABLED],
 					'monitored' => true
 				]);
 
