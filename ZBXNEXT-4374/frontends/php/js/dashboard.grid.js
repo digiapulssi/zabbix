@@ -1263,7 +1263,7 @@
 					body = data.dialogue['body'],
 					footer = $('.overlay-dialogue-footer', data.dialogue['div']),
 					form = $('form', body),
-					widget = data.dialogue['widget'], 			// widget currently beeing edited
+					widget = data.dialogue['widget'], // widget currently beeing edited
 					url = new Curl('zabbix.php'),
 					ajax_data = {},
 					fields;
