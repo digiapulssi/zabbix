@@ -1264,7 +1264,6 @@
 					footer = $('.overlay-dialogue-footer', data.dialogue['div']),
 					form = $('form', body),
 					widget = data.dialogue['widget'], 			// widget currently beeing edited
-					widget_type = data.dialogue['widget_type'],	// last widget type
 					url = new Curl('zabbix.php'),
 					ajax_data = {},
 					fields;
@@ -1280,7 +1279,7 @@
 					ajax_data['type'] = fields['type'];
 					delete fields['type'];
 
-					if (widget_type == ajax_data['type']) {
+					if (data.dialogue['widget_type'] === ajax_data['type']) {
 						ajax_data['name'] = fields['name'];
 						delete fields['name'];
 					}
