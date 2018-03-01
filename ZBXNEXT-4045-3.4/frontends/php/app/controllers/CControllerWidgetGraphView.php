@@ -91,7 +91,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			$resource_type = null;
 			$graph_dims = getGraphDims();
 		}
-		$graph_dims['shiftYtop'] = 0;
+		$graph_dims['shiftYtop'] = CLineGraphDraw::DEFAULT_TOP_BOTTOM_PADDING;
 
 		// Prepare timeline details
 		$timeline = calculateTime([

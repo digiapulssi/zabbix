@@ -144,7 +144,12 @@ if ($min_dimentions['height'] > $graph->getHeight()) {
 
 if (getRequest('onlyHeight', '0') === '1') {
 	$graph->drawDimensions();
-	header('X-ZBX-SBOX-HEIGHT: '.$graph->getHeight());
+	$height = $graph->getHeight();
+
+	if (getRequest('widget_view') === '1') {
+		$height = $height - CLineGraphDraw::DEFAULT_TOP_BOTTOM_PADDING;
+	}
+	header('X-ZBX-SBOX-HEIGHT: '.$height);
 }
 else {
 	$graph->draw();
