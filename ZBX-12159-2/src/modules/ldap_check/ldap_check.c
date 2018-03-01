@@ -21,6 +21,7 @@
 #include "module.h"
 #include "log.h"
 
+#define LDAP_DEPRECATED 1
 #include <ldap.h>
 
 static const char	*module_name = "module ldap_check";
@@ -153,6 +154,8 @@ ZBX_METRIC	*zbx_module_item_list(void)
  ******************************************************************************/
 int	zbx_module_init(void)
 {
+	zabbix_log(LOG_LEVEL_INFORMATION, "%s initialized", module_name);
+
 	return ZBX_MODULE_OK;
 }
 
@@ -169,5 +172,7 @@ int	zbx_module_init(void)
  ******************************************************************************/
 int	zbx_module_uninit(void)
 {
+	zabbix_log(LOG_LEVEL_INFORMATION, "%s uninitialized", module_name);
+
 	return ZBX_MODULE_OK;
 }
