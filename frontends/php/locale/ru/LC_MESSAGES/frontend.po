@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-08-23 12:17+0300\n"
+"PO-Revision-Date: 2018-02-13 15:53+0300\n"
 "Last-Translator: Alexey <dotneft@gmail.com>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: ru\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1503483431.000000\n"
+"X-POOTLE-MTIME: 1518529980.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -1170,7 +1170,7 @@ msgstr "Информация о ЦПУ. Возвращает строку или
 #: include/classes/items/CHelpItems.php:181
 #: include/classes/items/CHelpItems.php:467
 msgid "CPU load. Returns float"
-msgstr "Загрузка ЦПУ. Возвращает дробное значение"
+msgstr "Загрузка ЦПУ. Возвращает число с плавающей точкой"
 
 #: include/classes/items/CHelpItems.php:193
 #: include/classes/items/CHelpItems.php:479
@@ -7661,7 +7661,7 @@ msgstr "Указан некорректный ID прототипа элемен
 
 #: include/triggers.inc.php:1349 tr_testexpr.php:37
 msgid "Incorrect item value type"
-msgstr ""
+msgstr "Некорректный тип значений элемента данных"
 
 #: include/classes/validators/CFunctionValidator.php:282
 #, c-format
@@ -10915,7 +10915,7 @@ msgstr "Числовой (с плавающей точкой)"
 
 #: include/triggers.inc.php:1795
 msgid "Numeric (integer)"
-msgstr ""
+msgstr "Числовой (целочисленный)"
 
 #: include/forms.inc.php:453 include/items.inc.php:125
 #: include/views/configuration.item.edit.php:218
@@ -11926,7 +11926,7 @@ msgstr "Свойства"
 #: include/classes/screens/CScreenUrl.php:62 include/events.inc.php:290
 #, c-format
 msgid "Provided URL \"%1$s\" is invalid."
-msgstr ""
+msgstr "Указанный URL \"%1$s\" ошибочен."
 
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:266
@@ -12923,7 +12923,7 @@ msgstr "Лимит элементов в поиске/фильтре"
 #: include/forms.inc.php:1889 include/maintenances.inc.php:112
 msgctxt "adjective"
 msgid "Second"
-msgstr ""
+msgstr "Второй"
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -13782,7 +13782,7 @@ msgstr "Системная по умолчанию"
 
 #: include/func.inc.php:1802
 msgid "System error occurred. Please contact Zabbix administrator."
-msgstr ""
+msgstr "Произошла системная ошибка. Пожалуйста, свяжитесь с администратором Zabbix."
 
 #: include/classes/core/CJsonRpc.php:213
 msgid "System error."
@@ -15469,7 +15469,7 @@ msgstr "Имя пользователя"
 
 #: app/views/administration.mediatype.edit.php:76
 msgid "Username and password"
-msgstr ""
+msgstr "Имя пользователя и пароль"
 
 #: include/menu.inc.php:278
 #: include/views/administration.usergroups.edit.php:55
@@ -16163,7 +16163,7 @@ msgstr "Ошибочные поля для пользователя \"%s\"."
 #: include/classes/api/services/CTriggerPrototype.php:1458
 #: include/classes/api/services/CUser.php:270
 msgid "Wrong value for url field."
-msgstr ""
+msgstr "Ошибочное значение для поля url."
 
 #: include/views/js/monitoring.sysmaps.js.php:154
 msgid "X"
@@ -16314,7 +16314,7 @@ msgstr "Для просмотра этой страницы вы должны в
 
 #: include/classes/db/DB.php:143
 msgid "Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system."
-msgstr ""
+msgstr "Ваша база данных работает некорректно. Пожалуйста, подождите пару минут и попробуйте повторить это действие. Если проблема сохраняется, пожалуйста, обратитесь к системному администратору. Эта проблема может быть вызвана долго выполняющейся транзакцией или блокировкой ну уровне строк в вашей системе управления базой данных."
 
 #: index.php:28
 msgid "ZABBIX"

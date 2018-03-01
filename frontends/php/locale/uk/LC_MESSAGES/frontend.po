@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-07-06 22:40+0300\n"
+"PO-Revision-Date: 2018-01-16 20:45+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: uk\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1499373647.000000\n"
+"X-POOTLE-MTIME: 1516128305.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -7661,7 +7661,7 @@ msgstr "Некоректний ID прототипу елемента даних
 
 #: include/triggers.inc.php:1349 tr_testexpr.php:37
 msgid "Incorrect item value type"
-msgstr ""
+msgstr "Некоректний тип значення елемента даних"
 
 #: include/classes/validators/CFunctionValidator.php:282
 #, c-format
@@ -10915,7 +10915,7 @@ msgstr "Числовий (дробове)"
 
 #: include/triggers.inc.php:1795
 msgid "Numeric (integer)"
-msgstr ""
+msgstr "Числовий (ціле)"
 
 #: include/forms.inc.php:453 include/items.inc.php:125
 #: include/views/configuration.item.edit.php:218
@@ -11926,7 +11926,7 @@ msgstr "Властивості"
 #: include/classes/screens/CScreenUrl.php:62 include/events.inc.php:290
 #, c-format
 msgid "Provided URL \"%1$s\" is invalid."
-msgstr ""
+msgstr "Наданий URL \"%1$s\" є некоректним."
 
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:266
@@ -12922,7 +12922,7 @@ msgstr "Ліміт елементів в пошуку/фільтрі"
 #: include/forms.inc.php:1889 include/maintenances.inc.php:112
 msgctxt "adjective"
 msgid "Second"
-msgstr ""
+msgstr "Другий"
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -13781,7 +13781,7 @@ msgstr "Системна по замовчуванню"
 
 #: include/func.inc.php:1802
 msgid "System error occurred. Please contact Zabbix administrator."
-msgstr ""
+msgstr "Трапилась системна помилка. Зв'яжіться з адміністратором Zabbix."
 
 #: include/classes/core/CJsonRpc.php:213
 msgid "System error."
@@ -15468,7 +15468,7 @@ msgstr "Ім'я користувача"
 
 #: app/views/administration.mediatype.edit.php:76
 msgid "Username and password"
-msgstr ""
+msgstr "Ім'я користувача та пароль"
 
 #: include/menu.inc.php:278
 #: include/views/administration.usergroups.edit.php:55
@@ -16162,7 +16162,7 @@ msgstr "Помилкові поля для користувача \"%s\"."
 #: include/classes/api/services/CTriggerPrototype.php:1458
 #: include/classes/api/services/CUser.php:270
 msgid "Wrong value for url field."
-msgstr ""
+msgstr "Помилкове значення для поля url."
 
 #: include/views/js/monitoring.sysmaps.js.php:154
 msgid "X"
@@ -16313,7 +16313,7 @@ msgstr "Ви маєте увійти в систему для перегляду
 
 #: include/classes/db/DB.php:143
 msgid "Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system."
-msgstr ""
+msgstr "Ваша база даних не працює коректно. Зачекайте будь-ласка декілька хвилин та спробуйте повторити цю дію. Якщо проблема досі присутня, зв'яжіться з адміністратором. Проблема може бути викликана довгою запущеною транзакцією або блокуванням на рівні стовпчика, яку виконує ваша система управління базою даних."
 
 #: index.php:28
 msgid "ZABBIX"

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-09-11 20:41+0300\n"
+"PO-Revision-Date: 2018-01-16 20:59+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
-"X-POOTLE-MTIME: 1505155304.000000\n"
+"X-POOTLE-MTIME: 1516129153.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -11850,7 +11850,7 @@ msgstr "Properties"
 #: include/classes/screens/CScreenUrl.php:62 include/events.inc.php:290
 #, c-format
 msgid "Provided URL \"%1$s\" is invalid."
-msgstr ""
+msgstr "Provided URL \"%1$s\" is invalid."
 
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:266
@@ -13700,7 +13700,7 @@ msgstr "System default"
 
 #: include/func.inc.php:1802
 msgid "System error occurred. Please contact Zabbix administrator."
-msgstr ""
+msgstr "System error occurred. Please contact Zabbix administrator."
 
 #: include/classes/core/CJsonRpc.php:213
 msgid "System error."

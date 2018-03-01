@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-08-16 11:14+0300\n"
+"PO-Revision-Date: 2017-10-18 08:08+0300\n"
 "Last-Translator: Lukáš <iam@lukasmaly.net>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: cs\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1502874897.000000\n"
+"X-POOTLE-MTIME: 1508306889.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -7661,7 +7661,7 @@ msgstr "Neplatné ID prototypu položky \"%1$s\" v prvku obrazovky."
 
 #: include/triggers.inc.php:1349 tr_testexpr.php:37
 msgid "Incorrect item value type"
-msgstr ""
+msgstr "Nesprávný typ hodnoty položky"
 
 #: include/classes/validators/CFunctionValidator.php:282
 #, c-format
@@ -10915,7 +10915,7 @@ msgstr "Číslo (float)"
 
 #: include/triggers.inc.php:1795
 msgid "Numeric (integer)"
-msgstr ""
+msgstr "Číslo (integer)"
 
 #: include/forms.inc.php:453 include/items.inc.php:125
 #: include/views/configuration.item.edit.php:218
@@ -12922,7 +12922,7 @@ msgstr "Omezení počtu položek pro vyhledávání/filtr"
 #: include/forms.inc.php:1889 include/maintenances.inc.php:112
 msgctxt "adjective"
 msgid "Second"
-msgstr ""
+msgstr "Druhý"
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -15468,7 +15468,7 @@ msgstr "Uživatelské jméno"
 
 #: app/views/administration.mediatype.edit.php:76
 msgid "Username and password"
-msgstr ""
+msgstr "Uživatelské jméno a heslo"
 
 #: include/menu.inc.php:278
 #: include/views/administration.usergroups.edit.php:55
@@ -16162,7 +16162,7 @@ msgstr "Nesprávné pole pro uživatele \"%s\"."
 #: include/classes/api/services/CTriggerPrototype.php:1458
 #: include/classes/api/services/CUser.php:270
 msgid "Wrong value for url field."
-msgstr ""
+msgstr "Špatná hodnota pro pole url."
 
 #: include/views/js/monitoring.sysmaps.js.php:154
 msgid "X"
@@ -16313,7 +16313,7 @@ msgstr "Pro zobrazení této stránky musíte být přihlášen(a)."
 
 #: include/classes/db/DB.php:143
 msgid "Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system."
-msgstr ""
+msgstr "Databáze nefunguje správně. Počkejte prosím několik minut a pokuste se opakovat tuto akci. Pokud problém stále přetrvává, obraťte se na správce systému. Problém může být způsoben dlouhým spuštěním transakce nebo zámku na úrovni řádku, který provedl váš systém správy databáze."
 
 #: index.php:28
 msgid "ZABBIX"

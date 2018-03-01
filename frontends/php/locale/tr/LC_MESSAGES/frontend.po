@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-09-11 11:23+0300\n"
-"Last-Translator: Anıl <anil.ozbek@ozguryazilim.com.tr>\n"
+"PO-Revision-Date: 2018-02-04 15:19+0300\n"
+"Last-Translator: Anıl <ozbekanil@gmail.com>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1505121795.000000\n"
+"X-POOTLE-MTIME: 1517750395.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -593,16 +593,16 @@ msgstr "Gelişmiş etiket"
 #: include/events.inc.php:197 include/events.inc.php:307
 #: include/events.inc.php:310 tr_status.php:279
 msgid "Age"
-msgstr "Yaş"
+msgstr "Aktif olduğu süre"
 
 #: include/views/common.filter.trigger.php:83
 msgid "Age less than"
-msgstr "Şu yaştan küçük"
+msgstr "Şu süreden daha küçük"
 
 #: include/views/monitoring.overview.triggers.php:63
 #, c-format
 msgid "Age less than %s"
-msgstr "%s yaşından küçük"
+msgstr "%s süresinden daha küçük"
 
 #: app/views/administration.script.list.php:64 include/items.inc.php:286
 #: include/views/configuration.httpconf.edit.php:93 popup.php:1928
@@ -1023,7 +1023,7 @@ msgstr "Erişilebilirlilik"
 
 #: include/menu.inc.php:155 report2.php:25 report2.php:147
 msgid "Availability report"
-msgstr "Kullanılırlık raporu"
+msgstr "Kullanılabilirlik raporu"
 
 #: include/classes/screens/CScreenHostsInfo.php:87
 msgid "Available"
@@ -3561,7 +3561,7 @@ msgstr "DNS"
 
 #: include/views/configuration.host.list.php:42
 msgid "DNS like"
-msgstr "DNS benzeri"
+msgstr "DNS"
 
 #: app/views/administration.proxy.edit.php:44
 #: include/views/configuration.host.edit.php:130
@@ -5752,7 +5752,7 @@ msgstr "Cuma"
 #: include/views/reports.toptriggers.php:33 report2.php:358 report4.php:191
 #: services.php:187 services.php:193
 msgid "From"
-msgstr "Kimden"
+msgstr "Şu zamandan"
 
 #: include/views/administration.usergroups.edit.php:60
 #: include/views/administration.usergroups.edit.php:74
@@ -6762,7 +6762,7 @@ msgstr "Ana makine arabirimi için IP ve DNS boş olamaz."
 
 #: include/views/configuration.host.list.php:45
 msgid "IP like"
-msgstr "IP gibi"
+msgstr "IP"
 
 #: include/views/configuration.discovery.edit.php:51
 #: include/views/configuration.discovery.list.php:38
@@ -6789,7 +6789,7 @@ msgstr "IPMI"
 
 #: include/items.inc.php:97
 msgid "IPMI agent"
-msgstr "IPMI aracısı"
+msgstr "IPMI ajanı"
 
 #: include/views/configuration.host.massupdate.php:241
 msgid "IPMI authentication algorithm"
@@ -6853,7 +6853,7 @@ msgstr "BT servisleri"
 #: app/controllers/CControllerReportServices.php:146
 #: app/views/report.services.php:21
 msgid "IT services availability report"
-msgstr "BT servisleri kullanılırlık raporu"
+msgstr "BT servisleri kullanılabilirlik raporu"
 
 #: include/views/administration.general.iconmap.edit.php:48
 #: include/views/administration.general.image.edit.php:55
@@ -7602,7 +7602,7 @@ msgstr "Ekran öğesi için yanlış öğe prototip ID'si \"%1$s\" sağlandı."
 
 #: include/triggers.inc.php:1349 tr_testexpr.php:37
 msgid "Incorrect item value type"
-msgstr ""
+msgstr "Yanlış öğe değeri türü"
 
 #: include/classes/validators/CFunctionValidator.php:282
 #, c-format
@@ -8710,7 +8710,7 @@ msgstr "JMX"
 
 #: include/items.inc.php:100
 msgid "JMX agent"
-msgstr "JMX aracısı"
+msgstr "JMX ajanı"
 
 #: include/views/configuration.host.edit.php:173
 #: include/views/configuration.host.edit.php:260
@@ -8945,7 +8945,7 @@ msgstr "Sonuncu"
 
 #: app/views/administration.proxy.list.php:46
 msgid "Last seen (age)"
-msgstr "En son görüldüğü (dönem)"
+msgstr "Son görülme (dönemi)"
 
 #: latest.php:405 latest.php:421
 msgid "Last value"
@@ -9969,7 +9969,7 @@ msgstr "\"%1$s\" grup prototipi adı makro içermelidir."
 #: include/views/monitoring.slideconf.list.php:39
 #: include/views/monitoring.sysmap.list.php:32
 msgid "Name like"
-msgstr "Şunun gibi ad"
+msgstr "Ad"
 
 #: include/views/administration.general.housekeeper.edit.php:50
 msgid "Network discovery data storage period (in days)"
@@ -10845,7 +10845,7 @@ msgstr "Sayısal (kayan noktalı)"
 
 #: include/triggers.inc.php:1795
 msgid "Numeric (integer)"
-msgstr ""
+msgstr "Sayısal (tam sayı)"
 
 #: include/forms.inc.php:453 include/items.inc.php:125
 #: include/views/configuration.item.edit.php:218
@@ -11009,7 +11009,7 @@ msgstr "Yalnızca Zabbix Yöneticileri kullanıcının medya türünü kaldırab
 
 #: include/classes/api/services/CDRule.php:232
 msgid "Only Zabbix agent, SNMPv1, SNMPv2 and SNMPv3 checks can be made unique."
-msgstr "Yalnızca Zabbix aracısı, SNMPv1, SNMPv2 ve SNMPv3 kontrolleri benzersiz yapılabilir."
+msgstr "Yalnızca Zabbix ajanı, SNMPv1, SNMPv2 ve SNMPv3 kontrolleri benzersiz yapılabilir."
 
 #: include/classes/api/services/CMap.php:447
 #: include/classes/api/services/CMap.php:859
@@ -11855,7 +11855,7 @@ msgstr "Özellikler"
 #: include/classes/screens/CScreenUrl.php:62 include/events.inc.php:290
 #, c-format
 msgid "Provided URL \"%1$s\" is invalid."
-msgstr ""
+msgstr "Sağlanan URL \"%1$s\" geçersiz."
 
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:266
@@ -12420,7 +12420,7 @@ msgstr "Komutları çalıştır"
 
 #: include/actions.inc.php:744
 msgid "Run custom commands on Zabbix agent"
-msgstr "Zabbix aracısında özel komutları çalıştır"
+msgstr "Zabbix ajanında özel komutları çalıştır"
 
 #: include/actions.inc.php:749
 msgid "Run custom commands on Zabbix server"
@@ -12546,17 +12546,17 @@ msgstr "SNMP trap anahtarı geçersiz."
 #: include/discovery.inc.php:66 include/items.inc.php:88
 #: include/views/js/configuration.discovery.edit.js.php:175
 msgid "SNMPv1 agent"
-msgstr "SNMPv1 aracısı"
+msgstr "SNMPv1 ajanı"
 
 #: include/discovery.inc.php:67 include/items.inc.php:89
 #: include/views/js/configuration.discovery.edit.js.php:176
 msgid "SNMPv2 agent"
-msgstr "SNMPv2 aracısı"
+msgstr "SNMPv2 ajanı"
 
 #: include/discovery.inc.php:68 include/items.inc.php:90
 #: include/views/js/configuration.discovery.edit.js.php:177
 msgid "SNMPv3 agent"
-msgstr "SNMPv3 aracısı"
+msgstr "SNMPv3 ajanı"
 
 #: include/classes/debug/CProfiler.php:132
 #, c-format
@@ -12589,7 +12589,7 @@ msgstr "SSH"
 
 #: include/items.inc.php:98
 msgid "SSH agent"
-msgstr "SSH aracısı"
+msgstr "SSH ajanı"
 
 #: include/views/configuration.httpconf.edit.php:140
 msgid "SSL certificate file"
@@ -12848,7 +12848,7 @@ msgstr "Ara/Filtrele elemanları limiti"
 #: include/forms.inc.php:1889 include/maintenances.inc.php:112
 msgctxt "adjective"
 msgid "Second"
-msgstr ""
+msgstr "İkinci"
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -13552,7 +13552,7 @@ msgstr "Keşif durumu"
 
 #: tr_status.php:25 tr_status.php:191
 msgid "Status of triggers"
-msgstr "Tetiklerin Durumu"
+msgstr "Tetikleyicilerin Durumu"
 
 #: include/maps.inc.php:48
 msgid "Status only"
@@ -13702,11 +13702,11 @@ msgstr "Sistem önyükleme zamanı. Tam sayı döndürür (Unix zaman damgası)"
 
 #: include/users.inc.php:83 include/views/administration.users.edit.php:156
 msgid "System default"
-msgstr "Sistem öntanımlısı"
+msgstr "Sistem öntanımlı"
 
 #: include/func.inc.php:1802
 msgid "System error occurred. Please contact Zabbix administrator."
-msgstr ""
+msgstr "Sistem hatası oluştu. Lütfen Zabbix yöneticisine başvurun."
 
 #: include/classes/core/CJsonRpc.php:213
 msgid "System error."
@@ -13754,7 +13754,7 @@ msgstr "TCP"
 
 #: include/items.inc.php:99
 msgid "TELNET agent"
-msgstr "TELNET aracısı"
+msgstr "TELNET ajanı"
 
 #: include/classes/screens/CScreenHttpTestDetails.php:191
 msgid "TOTAL"
@@ -14115,7 +14115,7 @@ msgstr "Perşembe"
 #: include/views/reports.toptriggers.php:34 report4.php:191 services.php:201
 #: services.php:207
 msgid "Till"
-msgstr "Kadar"
+msgstr "Şu zamana kadar"
 
 #: app/views/monitoring.acknowledge.edit.php:35 events.php:389 events.php:405
 #: include/acknow.inc.php:49 include/actions.inc.php:1092
@@ -14198,7 +14198,7 @@ msgstr "Zaman damgası"
 
 #: include/views/js/monitoring.sysmaps.js.php:318 report2.php:359
 msgid "To"
-msgstr "Kime"
+msgstr "Şu zamana kadar"
 
 #: jsLoader.php:225
 msgid "To set a host interface select a single item type for all items"
@@ -14540,7 +14540,7 @@ msgstr "Tetiklere genel bakış"
 
 #: include/views/common.filter.trigger.php:33
 msgid "Triggers status"
-msgstr "Tetiklerin durumu"
+msgstr "Tetikleyicilerin durumu"
 
 #: include/menu.inc.php:159
 msgid "Triggers top 100"
@@ -15194,7 +15194,7 @@ msgstr "Kullanıcı eklendi"
 
 #: include/views/configuration.httpconf.edit.php:95
 msgid "User agent string"
-msgstr "Kullanıcı aracısı stringi"
+msgstr "Kullanıcı ajanı stringi"
 
 #: include/views/administration.users.edit.php:389
 msgid "User can't change type for himself"
@@ -15385,7 +15385,7 @@ msgstr "Kullanıcı adı"
 
 #: app/views/administration.mediatype.edit.php:76
 msgid "Username and password"
-msgstr ""
+msgstr "Kullanıcı adı ve parola"
 
 #: include/menu.inc.php:278
 #: include/views/administration.usergroups.edit.php:55
@@ -15746,7 +15746,7 @@ msgstr "Ayrıntılı"
 #: include/classes/items/CHelpItems.php:73
 #: include/classes/items/CHelpItems.php:347
 msgid "Version of Zabbix agent. Returns string"
-msgstr "Zabbix aracısının sürümü. String döndürür"
+msgstr "Zabbix ajanının sürümü. String döndürür"
 
 #: include/views/monitoring.screen.constructor.edit.php:647
 msgid "Vertical"
@@ -16076,7 +16076,7 @@ msgstr "\"%s\" kullanıcısı için yanlış alanlar."
 #: include/classes/api/services/CTriggerPrototype.php:1458
 #: include/classes/api/services/CUser.php:270
 msgid "Wrong value for url field."
-msgstr ""
+msgstr "Url alanı için yanlış değer."
 
 #: include/views/js/monitoring.sysmaps.js.php:154
 msgid "X"
@@ -16227,7 +16227,7 @@ msgstr "Bu sayfayı görmek için oturup açmak zorundasınız."
 
 #: include/classes/db/DB.php:143
 msgid "Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system."
-msgstr ""
+msgstr "Veritabanınız düzgün çalışmıyor. Lütfen birkaç dakika bekleyin ve bu işlemi tekrarlamayı deneyin. Sorun devam ederse, lütfen sistem yöneticisine başvurun. Soruna, veritabanı yönetim sisteminiz tarafından gerçekleştirilen uzun süren bir işlem veya satır düzeyi kilidi neden olabilir."
 
 #: index.php:28
 msgid "ZABBIX"
@@ -16257,11 +16257,11 @@ msgstr "Zabbix Kullanıcısı"
 #: include/items.inc.php:85 include/views/configuration.action.edit.php:826
 #: include/views/js/configuration.discovery.edit.js.php:181
 msgid "Zabbix agent"
-msgstr "Zabbix aracısı"
+msgstr "Zabbix ajanı"
 
 #: include/items.inc.php:86
 msgid "Zabbix agent (active)"
-msgstr "Zabbix aracısı (aktif)"
+msgstr "Zabbix ajanı (aktif)"
 
 #: include/items.inc.php:94
 msgid "Zabbix aggregate"
