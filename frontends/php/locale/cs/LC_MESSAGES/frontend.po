@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-08-23 16:19+0300\n"
-"Last-Translator: Anonymous Pootle User\n"
+"PO-Revision-Date: 2017-12-05 08:10+0300\n"
+"Last-Translator: Lukáš <iam@lukasmaly.net>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1503497984.000000\n"
+"X-POOTLE-MTIME: 1512454222.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -620,7 +620,7 @@ msgstr "Přidat potomka"
 
 #: jsLoader.php:260
 msgid "Add child element"
-msgstr ""
+msgstr "Přidat podřízený prvek"
 
 #: include/actions.inc.php:652 include/actions.inc.php:1117
 msgid "Add host"
@@ -628,7 +628,7 @@ msgstr "Přidat hostitele"
 
 #: jsLoader.php:261
 msgid "Add multiple maps"
-msgstr ""
+msgstr "Přidat více map"
 
 #: include/views/configuration.item.massupdate.php:575
 msgid "Add new or existing applications"
@@ -1161,7 +1161,7 @@ msgstr "Perioda uložení auto-registračních údajů, událostí a poplachů"
 #: include/profiles.inc.php:227
 #, c-format
 msgid "Auto-registration event and alert data storage period \"%1$s\"."
-msgstr ""
+msgstr "Událost automatické registrace a doba ukládání výstrah \"%1$s\"."
 
 #: include/hosts.inc.php:1061
 #: include/views/administration.general.other.edit.php:52
@@ -1227,7 +1227,7 @@ msgstr "Pozadí"
 
 #: include/views/js/monitoring.sysmaps.js.php:485
 msgid "Background colour"
-msgstr ""
+msgstr "Barva pozadí"
 
 #: include/views/monitoring.sysmap.edit.php:120
 msgid "Background image"
@@ -1280,23 +1280,23 @@ msgstr "Tučná čára"
 
 #: include/items.inc.php:1587
 msgid "Boolean to decimal"
-msgstr ""
+msgstr "Boolean až decimal"
 
 #: include/views/js/monitoring.sysmaps.js.php:336
 msgid "Border"
-msgstr ""
+msgstr "Rámeček"
 
 #: include/views/js/monitoring.sysmaps.js.php:514
 msgid "Border colour"
-msgstr ""
+msgstr "Barva ohraničení"
 
 #: include/views/js/monitoring.sysmaps.js.php:494
 msgid "Border type"
-msgstr ""
+msgstr "Styl ohraničení"
 
 #: include/views/js/monitoring.sysmaps.js.php:504
 msgid "Border width"
-msgstr ""
+msgstr "Šířka okraje"
 
 #: include/views/js/monitoring.sysmaps.js.php:18
 #: include/views/js/monitoring.sysmaps.js.php:120
@@ -1308,11 +1308,11 @@ msgstr "Dole"
 
 #: jsLoader.php:168
 msgid "Bring forward"
-msgstr ""
+msgstr "Předložit"
 
 #: jsLoader.php:167
 msgid "Bring to front"
-msgstr ""
+msgstr "Přenést dopředu"
 
 #: include/locales.inc.php:54
 msgid "Bulgarian (bg_BG)"

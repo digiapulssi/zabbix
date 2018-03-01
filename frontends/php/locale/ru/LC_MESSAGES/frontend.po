@@ -3,17 +3,18 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-08-23 13:24+0300\n"
+"PO-Revision-Date: 2018-03-01 17:20+0300\n"
 "Last-Translator: Alexey <dotneft@gmail.com>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1503487446.000000\n"
+"X-POOTLE-MTIME: 1519917638.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -1427,6 +1428,8 @@ msgstr "Не удалось подтвердить проблему: %1$s."
 #, c-format
 msgid "Cannot add \"%1$s\" element of the map \"%2$s\" due to circular reference."
 msgstr ""
+"Не удалось добавить \"%1$s\" элемент на карту сети \"%2$s\" из-за "
+"закольцованности ссылки."
 
 #: include/classes/api/services/CHttpTest.php:710
 #, c-format
@@ -2138,7 +2141,7 @@ msgstr "Не удалось выполнить скрипт"
 
 #: jsLoader.php:179
 msgid "Cannot expand macros."
-msgstr ""
+msgstr "Не удалось раскрыть макросы."
 
 #: include/classes/import/importers/CMapImporter.php:262
 #, c-format
@@ -4177,7 +4180,7 @@ msgstr "Режим инвентаризации узлов сети по умо�
 
 #: include/views/configuration.action.edit.php:2112
 msgid "Default media type"
-msgstr ""
+msgstr "Тип способа оповещения по умолчанию"
 
 #: include/views/configuration.action.edit.php:385
 #: include/views/configuration.action.edit.php:728
@@ -4731,7 +4734,7 @@ msgstr "Размер (столбцов x строк)"
 #: include/classes/items/CHelpItems.php:273
 #: include/classes/items/CHelpItems.php:571
 msgid "Directory size (in bytes). Returns integer"
-msgstr ""
+msgstr "Размер директории (в байтах). Возвращается целое число"
 
 #: app/views/administration.mediatype.list.php:146
 #: include/views/administration.auditlogs.list.php:45
@@ -5262,13 +5265,13 @@ msgstr "Эффективное значение"
 #: include/classes/helpers/CElasticsearchHelper.php:194
 #, c-format
 msgid "Elasticsearch error: %1$s."
-msgstr ""
+msgstr "Ошибка Elasticsearch: %1$s."
 
 #: include/classes/api/managers/CHistoryManager.php:995
 #: include/classes/api/managers/CHistoryManager.php:1004
 #, c-format
 msgid "Elasticsearch url is not set for type: %1$s."
-msgstr ""
+msgstr "Elasticsearch url не указан для типа: %1$s."
 
 #: include/views/monitoring.sysmap.edit.php:235
 msgid "Element"
@@ -5768,7 +5771,7 @@ msgstr "Раскрыть"
 
 #: include/views/monitoring.sysmap.constructor.php:46
 msgid "Expand macros"
-msgstr ""
+msgstr "Раскрывать макросы"
 
 #: include/views/monitoring.sysmap.edit.php:142
 msgid "Expand single problem"
@@ -8057,7 +8060,7 @@ msgstr "Указан некорректный ID прототипа элемен
 
 #: include/triggers.inc.php:1325 tr_testexpr.php:37
 msgid "Incorrect item value type"
-msgstr ""
+msgstr "Некорректный тип значений элемента данных"
 
 #: include/classes/validators/CFunctionValidator.php:299
 #, c-format
@@ -8779,7 +8782,7 @@ msgstr "Ошибочное мигание триггеров при измене
 #: include/profiles.inc.php:109
 #, c-format
 msgid "Invalid data storage period for services: %1$s."
-msgstr ""
+msgstr "Ошибочный период хранения данных услуг IT: %1$s."
 
 #: maintenance.php:146 maintenance.php:160 services.php:188 services.php:202
 #, c-format
@@ -9186,6 +9189,8 @@ msgstr "Прототип элемента данных \"%1$s\" уже суще�
 #, c-format
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", linked to another rule."
 msgstr ""
+"Прототип элемента данных \"%1$s\" уже существует у \"%2$s\", присоединен к "
+"другому правилу."
 
 #: include/classes/api/services/CItemPrototype.php:36
 #, c-format
@@ -11465,7 +11470,7 @@ msgstr "Оповещения"
 #: include/actions.inc.php:816 include/actions.inc.php:1126
 #: include/actions.inc.php:1127
 msgid "Notify all involved"
-msgstr ""
+msgstr "Оповещать всех участников"
 
 #: include/func.inc.php:246
 msgid "Nov"
@@ -11658,7 +11663,7 @@ msgstr "Числовой (с плавающей точкой)"
 
 #: include/triggers.inc.php:1771
 msgid "Numeric (integer)"
-msgstr ""
+msgstr "Числовой (целочисленный)"
 
 #: include/forms.inc.php:353 include/items.inc.php:126
 #: include/views/configuration.item.edit.php:321
@@ -11890,7 +11895,7 @@ msgstr "Только супер администраторы могут удал
 
 #: include/classes/api/services/CDashboard.php:459
 msgid "Only super admins can set dashboard owner."
-msgstr ""
+msgstr "Только супер администраторы могут задавать владельца ПАНЕЛИ."
 
 #: include/classes/api/services/CCorrelation.php:689
 msgid "Only super admins can update correlations."
@@ -12826,7 +12831,7 @@ msgstr "Свойства"
 #: include/classes/screens/CScreenUrl.php:62 include/events.inc.php:427
 #, c-format
 msgid "Provided URL \"%1$s\" is invalid."
-msgstr ""
+msgstr "Указанный URL \"%1$s\" ошибочен."
 
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:269
@@ -13065,11 +13070,11 @@ msgstr "Обновить"
 #: include/classes/widgets/CWidgetForm.php:53 include/html.inc.php:192
 #: jsLoader.php:229
 msgid "Refresh interval"
-msgstr ""
+msgstr "Интервал обновления"
 
 #: jsLoader.php:230
 msgid "Refresh interval multiplier"
-msgstr ""
+msgstr "Множитель интервала обновления"
 
 #: adm.other.php:30 include/views/administration.general.other.edit.php:43
 msgid "Refresh unsupported items"
@@ -13939,7 +13944,7 @@ msgstr "Шаблон поиска пустой"
 #: include/forms.inc.php:1947 include/maintenances.inc.php:112
 msgctxt "adjective"
 msgid "Second"
-msgstr ""
+msgstr "Второй"
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -14919,6 +14924,7 @@ msgstr "Системная по умолчанию"
 #: include/func.inc.php:1844
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr ""
+"Произошла системная ошибка. Пожалуйста, свяжитесь с администратором Zabbix."
 
 #: include/classes/core/CJsonRpc.php:213
 msgid "System error."
@@ -15495,7 +15501,7 @@ msgstr "Всего"
 #: include/classes/debug/CProfiler.php:153
 #, c-format
 msgid "Total Elasticsearch time: %1$s"
-msgstr ""
+msgstr "Всего затрачено времени на Elasticsearch: %1$s"
 
 #: include/classes/debug/CProfiler.php:149
 #, c-format
@@ -16651,7 +16657,7 @@ msgstr "Имя пользователя"
 
 #: app/views/administration.mediatype.edit.php:81
 msgid "Username and password"
-msgstr ""
+msgstr "Имя пользователя и пароль"
 
 #: app/views/monitoring.dashboard.sharing_form.php:48 include/menu.inc.php:281
 #: include/views/administration.usergroups.edit.php:54
@@ -16999,6 +17005,8 @@ msgstr "Переменные"
 #: include/classes/items/CHelpItems.php:455
 msgid "Various information about specific process(es). Returns float"
 msgstr ""
+"Различная информация о указанном процессе(ах). Возвращает число с плавающей "
+"точкой"
 
 #: include/hosts.inc.php:249
 msgid "Vendor"
@@ -17303,7 +17311,7 @@ msgstr "Ошибочные поля для триггера."
 #: include/classes/api/services/CTriggerGeneral.php:515
 #: include/classes/api/services/CTriggerGeneral.php:668
 msgid "Wrong value for url field."
-msgstr ""
+msgstr "Ошибочное значение для поля url."
 
 #: include/views/js/monitoring.sysmaps.js.php:228
 #: include/views/js/monitoring.sysmaps.js.php:361
@@ -17485,6 +17493,11 @@ msgstr "Для выполнения этого действия вам необ�
 #: include/classes/db/DB.php:136
 msgid "Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system."
 msgstr ""
+"Ваша база данных работает некорректно. Пожалуйста, подождите пару минут и "
+"попробуйте повторить это действие. Если проблема сохраняется, пожалуйста, "
+"обратитесь к системному администратору. Эта проблема может быть вызвана "
+"долго выполняющейся транзакцией или блокировкой ну уровне строк в вашей "
+"системе управления базой данных."
 
 #: index.php:28
 msgid "ZABBIX"
@@ -17820,7 +17833,7 @@ msgstr "не может быть пустым"
 
 #: include/classes/helpers/CElasticsearchHelper.php:86
 msgid "cannot perform Scroll API request, data could be truncated"
-msgstr ""
+msgstr "не удалось выполнить Scroll API запрос, данные могут быть обрезаны"
 
 #: include/classes/parsers/CConditionFormula.php:188
 #, c-format
@@ -17915,7 +17928,7 @@ msgstr "пустое выражение"
 
 #: include/classes/helpers/CElasticsearchHelper.php:184
 msgid "failed to parse JSON"
-msgstr ""
+msgstr "ошибка при разборе JSON"
 
 #: include/classes/api/services/CItemGeneral.php:1232
 msgid "first parameter is expected"
@@ -18447,7 +18460,7 @@ msgstr "начните печатать для поиска"
 
 #: include/classes/validators/CApiInputValidator.php:1178
 msgid "unacceptible URL"
-msgstr ""
+msgstr "неприемлемый URL"
 
 #: include/classes/parsers/CItemKey.php:178
 msgid "unexpected end of key"
