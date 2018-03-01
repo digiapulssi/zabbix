@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -462,8 +462,8 @@ function copyTriggersToHosts($src_triggerids, $dst_hostids, $src_hostid = null) 
 								 * Dependency is within same host according to $src_hostid parameter or dep trigger has
 								 * single host.
 								 */
-								if ($dst_trigger['srcTriggerContextHostId'] ==
-										$dst_dep_trigger['srcTriggerContextHostId']) {
+								if ($dst_trigger['srcTriggerContextHostId'] == $dst_dep_trigger['srcTriggerContextHostId']
+										&& $dst_dep_trigger['newTriggerHostId'] == $dst_trigger['newTriggerHostId']) {
 									$depTriggerId = $dst_dep_trigger['newTriggerId'];
 									break;
 								}
@@ -1175,9 +1175,9 @@ function make_trigger_details($trigger) {
 		]);
 	}
 
-	$table->addRow([_('Disabled'), (TRIGGER_STATUS_ENABLED == $trigger['status'])
-		? (new CCol(_('No')))->addClass(ZBX_STYLE_GREEN)
-		: (new CCol(_('Yes')))->addClass(ZBX_STYLE_RED)
+	$table->addRow([_('Enabled'), ($trigger['status'] == TRIGGER_STATUS_ENABLED)
+		? (new CCol(_('Yes')))->addClass(ZBX_STYLE_GREEN)
+		: (new CCol(_('No')))->addClass(ZBX_STYLE_RED)
 	]);
 
 	return $table;

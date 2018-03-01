@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -372,7 +372,7 @@ $graphPreviewTable = (new CTable())
 	->addStyle('width: 100%;')
 	->addRow(
 		(new CRow(
-			(new CDiv())->setId('previewChar')
+			(new CDiv())->setId('previewChart')
 		))->addClass(ZBX_STYLE_CENTER)
 	);
 $graphTab->addTab('previewTab', _('Preview'), $graphPreviewTable);
