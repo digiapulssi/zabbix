@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-09-05 16:35+0300\n"
-"Last-Translator: Kodai <kodai74@gmail.com>\n"
+"PO-Revision-Date: 2018-02-15 05:51+0300\n"
+"Last-Translator: Atsushi <a.tanaka77@gmail.com>\n"
 "Language-Team: Zabbix\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1504622147.000000\n"
+"X-POOTLE-MTIME: 1518666681.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -2044,7 +2044,7 @@ msgstr "スクリプトを実行できません"
 
 #: jsLoader.php:179
 msgid "Cannot expand macros."
-msgstr ""
+msgstr "マクロを展開できません。"
 
 #: include/classes/import/importers/CMapImporter.php:262
 #, c-format
@@ -4065,7 +4065,7 @@ msgstr "デフォルトのホストインベントリモード"
 
 #: include/views/configuration.action.edit.php:2112
 msgid "Default media type"
-msgstr ""
+msgstr "デフォルトのメディア"
 
 #: include/views/configuration.action.edit.php:385
 #: include/views/configuration.action.edit.php:728
@@ -4617,7 +4617,7 @@ msgstr "大きさ (列 x 行)"
 #: include/classes/items/CHelpItems.php:273
 #: include/classes/items/CHelpItems.php:571
 msgid "Directory size (in bytes). Returns integer"
-msgstr ""
+msgstr "ディレクトリのサイズ(バイト単位)。整数値を返す"
 
 #: app/views/administration.mediatype.list.php:146
 #: include/views/administration.auditlogs.list.php:45
@@ -4845,7 +4845,7 @@ msgstr[0] "ディスカバリルールを無効にしました"
 #: discoveryconf.php:209 host_discovery.php:362
 msgid "Discovery rule enabled"
 msgid_plural "Discovery rules enabled"
-msgstr[0] "ディスカバリツールを有効にしました"
+msgstr[0] "ディスカバリルールを有効にしました"
 
 #: discoveryconf.php:154 host_discovery.php:336
 msgid "Discovery rule updated"
@@ -5144,13 +5144,13 @@ msgstr "実効値"
 #: include/classes/helpers/CElasticsearchHelper.php:194
 #, c-format
 msgid "Elasticsearch error: %1$s."
-msgstr ""
+msgstr "Elasticsearchエラー: %1$s。"
 
 #: include/classes/api/managers/CHistoryManager.php:995
 #: include/classes/api/managers/CHistoryManager.php:1004
 #, c-format
 msgid "Elasticsearch url is not set for type: %1$s."
-msgstr ""
+msgstr "次の型のためのElasticsearchのURLが設定されていません: %1$s。"
 
 #: include/views/monitoring.sysmap.edit.php:235
 msgid "Element"
@@ -5648,7 +5648,7 @@ msgstr "展開"
 
 #: include/views/monitoring.sysmap.constructor.php:46
 msgid "Expand macros"
-msgstr ""
+msgstr "マクロの展開"
 
 #: include/views/monitoring.sysmap.edit.php:142
 msgid "Expand single problem"
@@ -7925,7 +7925,7 @@ msgstr "スクリーンの要素のアイテムのプロトタイプID\"%1$s\"�
 
 #: include/triggers.inc.php:1325 tr_testexpr.php:37
 msgid "Incorrect item value type"
-msgstr ""
+msgstr "アイテムのデータ型が正しくありません"
 
 #: include/classes/validators/CFunctionValidator.php:299
 #, c-format
@@ -8647,7 +8647,7 @@ msgstr "ステータスが変化したトリガーの点滅期間が正しくあ
 #: include/profiles.inc.php:109
 #, c-format
 msgid "Invalid data storage period for services: %1$s."
-msgstr ""
+msgstr "サービスのデータ保存期間が正しくありません：%1$s。"
 
 #: maintenance.php:146 maintenance.php:160 services.php:188 services.php:202
 #, c-format
@@ -11315,7 +11315,7 @@ msgstr "通知レポート"
 #: include/actions.inc.php:816 include/actions.inc.php:1126
 #: include/actions.inc.php:1127
 msgid "Notify all involved"
-msgstr ""
+msgstr "関係者全員に通知"
 
 #: include/func.inc.php:246
 msgid "Nov"
@@ -11508,7 +11508,7 @@ msgstr "数値 (浮動小数)"
 
 #: include/triggers.inc.php:1771
 msgid "Numeric (integer)"
-msgstr ""
+msgstr "数値 (整数)"
 
 #: include/forms.inc.php:353 include/items.inc.php:126
 #: include/views/configuration.item.edit.php:321
@@ -11738,7 +11738,7 @@ msgstr "特権管理者のみが値のマッピングを削除できます。"
 
 #: include/classes/api/services/CDashboard.php:459
 msgid "Only super admins can set dashboard owner."
-msgstr ""
+msgstr "特権管理者のみがダッシュボードのオーナーを設定できます。"
 
 #: include/classes/api/services/CCorrelation.php:689
 msgid "Only super admins can update correlations."
@@ -12674,7 +12674,7 @@ msgstr "プロパティ"
 #: include/classes/screens/CScreenUrl.php:62 include/events.inc.php:427
 #, c-format
 msgid "Provided URL \"%1$s\" is invalid."
-msgstr ""
+msgstr "指定されたURL \"%1$s\"は正しくありません。"
 
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:269
@@ -12911,11 +12911,11 @@ msgstr "リフレッシュ"
 #: include/classes/widgets/CWidgetForm.php:53 include/html.inc.php:192
 #: jsLoader.php:229
 msgid "Refresh interval"
-msgstr ""
+msgstr "リフレッシュ間隔"
 
 #: jsLoader.php:230
 msgid "Refresh interval multiplier"
-msgstr ""
+msgstr "リフレッシュ間隔の乗数"
 
 #: adm.other.php:30 include/views/administration.general.other.edit.php:43
 msgid "Refresh unsupported items"
@@ -13781,7 +13781,7 @@ msgstr "検索パターンが空白です"
 #: include/forms.inc.php:1947 include/maintenances.inc.php:112
 msgctxt "adjective"
 msgid "Second"
-msgstr ""
+msgstr "第2週"
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -14760,7 +14760,7 @@ msgstr "システムデフォルト"
 
 #: include/func.inc.php:1844
 msgid "System error occurred. Please contact Zabbix administrator."
-msgstr ""
+msgstr "システムエラーが発生しました。Zabbix管理者に連絡してください。"
 
 #: include/classes/core/CJsonRpc.php:213
 msgid "System error."
@@ -15331,7 +15331,7 @@ msgstr "合計"
 #: include/classes/debug/CProfiler.php:153
 #, c-format
 msgid "Total Elasticsearch time: %1$s"
-msgstr ""
+msgstr "トータルElasticsearch時間: %1$s"
 
 #: include/classes/debug/CProfiler.php:149
 #, c-format
@@ -15855,7 +15855,7 @@ msgstr "障害対応コメント未入力のみ"
 #: include/views/administration.users.edit.php:111
 #, c-format
 msgid "Unavailable for users with %1$s."
-msgstr "ユーザーに%1$sは使用できません。"
+msgstr "%1$sのユーザーでは変更できません。"
 
 #: include/views/administration.users.list.php:179
 msgid "Unblock"
@@ -16475,7 +16475,7 @@ msgstr "ユーザー名"
 
 #: app/views/administration.mediatype.edit.php:81
 msgid "Username and password"
-msgstr ""
+msgstr "ユーザー名とパスワード"
 
 #: app/views/monitoring.dashboard.sharing_form.php:48 include/menu.inc.php:281
 #: include/views/administration.usergroups.edit.php:54
@@ -16820,7 +16820,7 @@ msgstr "変数"
 #: include/classes/items/CHelpItems.php:157
 #: include/classes/items/CHelpItems.php:455
 msgid "Various information about specific process(es). Returns float"
-msgstr ""
+msgstr "特定のプロセスに関する様々な情報。浮動小数点値を返す"
 
 #: include/hosts.inc.php:249
 msgid "Vendor"
@@ -17121,7 +17121,7 @@ msgstr "トリガーの設定が正しくありません。"
 #: include/classes/api/services/CTriggerGeneral.php:515
 #: include/classes/api/services/CTriggerGeneral.php:668
 msgid "Wrong value for url field."
-msgstr ""
+msgstr "URLフィールドの値が正しくありません。"
 
 #: include/views/js/monitoring.sysmaps.js.php:228
 #: include/views/js/monitoring.sysmaps.js.php:361
@@ -17303,6 +17303,8 @@ msgstr "このアクションを実行する権限が必要です！"
 #: include/classes/db/DB.php:136
 msgid "Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system."
 msgstr ""
+"データベースが正常に動作していません。数分待ってからリトライを行ってください。それでも問題が解決しない場合は、システム管理者に連絡してください。この問題は"
+"、長時間かかっているトランザクションやDBMSによる行レベルロックによって発生する可能性があります。"
 
 #: index.php:28
 msgid "ZABBIX"
@@ -17638,7 +17640,7 @@ msgstr "空白は指定できません"
 
 #: include/classes/helpers/CElasticsearchHelper.php:86
 msgid "cannot perform Scroll API request, data could be truncated"
-msgstr ""
+msgstr "スクロールAPIリクエストを実行できません。データは切り捨てられます"
 
 #: include/classes/parsers/CConditionFormula.php:188
 #, c-format
@@ -17733,7 +17735,7 @@ msgstr "条件式が指定されていません"
 
 #: include/classes/helpers/CElasticsearchHelper.php:184
 msgid "failed to parse JSON"
-msgstr ""
+msgstr "JSONの解析に失敗しました"
 
 #: include/classes/api/services/CItemGeneral.php:1232
 msgid "first parameter is expected"
@@ -18265,7 +18267,7 @@ msgstr "検索文字列を入力"
 
 #: include/classes/validators/CApiInputValidator.php:1178
 msgid "unacceptible URL"
-msgstr ""
+msgstr "認められないURL"
 
 #: include/classes/parsers/CItemKey.php:178
 msgid "unexpected end of key"

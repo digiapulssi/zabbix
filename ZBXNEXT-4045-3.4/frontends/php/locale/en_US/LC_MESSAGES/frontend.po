@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-09-11 21:05+0300\n"
+"PO-Revision-Date: 2018-03-01 21:25+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
-"X-POOTLE-MTIME: 1505156742.000000\n"
+"X-POOTLE-MTIME: 1519932320.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -1408,6 +1408,7 @@ msgstr "Cannot acknowledge problem: %1$s."
 #, c-format
 msgid "Cannot add \"%1$s\" element of the map \"%2$s\" due to circular reference."
 msgstr ""
+"Cannot add \"%1$s\" element of the map \"%2$s\" due to circular reference."
 
 #: include/classes/api/services/CHttpTest.php:710
 #, c-format
@@ -4120,7 +4121,7 @@ msgstr "Default host inventory mode"
 
 #: include/views/configuration.action.edit.php:2112
 msgid "Default media type"
-msgstr ""
+msgstr "Default media type"
 
 #: include/views/configuration.action.edit.php:385
 #: include/views/configuration.action.edit.php:728
@@ -4673,7 +4674,7 @@ msgstr "Dimension (cols x rows)"
 #: include/classes/items/CHelpItems.php:273
 #: include/classes/items/CHelpItems.php:571
 msgid "Directory size (in bytes). Returns integer"
-msgstr ""
+msgstr "Directory size (in bytes). Returns integer"
 
 #: app/views/administration.mediatype.list.php:146
 #: include/views/administration.auditlogs.list.php:45
@@ -5202,13 +5203,13 @@ msgstr "Effective value"
 #: include/classes/helpers/CElasticsearchHelper.php:194
 #, c-format
 msgid "Elasticsearch error: %1$s."
-msgstr ""
+msgstr "Elasticsearch error: %1$s."
 
 #: include/classes/api/managers/CHistoryManager.php:995
 #: include/classes/api/managers/CHistoryManager.php:1004
 #, c-format
 msgid "Elasticsearch url is not set for type: %1$s."
-msgstr ""
+msgstr "Elasticsearch url is not set for type: %1$s."
 
 #: include/views/monitoring.sysmap.edit.php:235
 msgid "Element"
@@ -8712,7 +8713,7 @@ msgstr "Invalid blinking on trigger status change: %1$s."
 #: include/profiles.inc.php:109
 #, c-format
 msgid "Invalid data storage period for services: %1$s."
-msgstr ""
+msgstr "Invalid data storage period for services: %1$s."
 
 #: maintenance.php:146 maintenance.php:160 services.php:188 services.php:202
 #, c-format
@@ -9116,6 +9117,7 @@ msgstr "Item prototype \"%1$s\" already exists on \"%2$s\", inherited from anoth
 #, c-format
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", linked to another rule."
 msgstr ""
+"Item prototype \"%1$s\" already exists on \"%2$s\", linked to another rule."
 
 #: include/classes/api/services/CItemPrototype.php:36
 #, c-format
@@ -11389,7 +11391,7 @@ msgstr "Notifications"
 #: include/actions.inc.php:816 include/actions.inc.php:1126
 #: include/actions.inc.php:1127
 msgid "Notify all involved"
-msgstr ""
+msgstr "Notify all involved"
 
 #: include/func.inc.php:246
 msgid "Nov"
@@ -11813,7 +11815,7 @@ msgstr "Only super admins can delete value maps."
 
 #: include/classes/api/services/CDashboard.php:459
 msgid "Only super admins can set dashboard owner."
-msgstr ""
+msgstr "Only super admins can set dashboard owner."
 
 #: include/classes/api/services/CCorrelation.php:689
 msgid "Only super admins can update correlations."
@@ -12749,7 +12751,7 @@ msgstr "Properties"
 #: include/classes/screens/CScreenUrl.php:62 include/events.inc.php:427
 #, c-format
 msgid "Provided URL \"%1$s\" is invalid."
-msgstr ""
+msgstr "Provided URL \"%1$s\" is invalid."
 
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:269
@@ -12987,11 +12989,11 @@ msgstr "Refresh"
 #: include/classes/widgets/CWidgetForm.php:53 include/html.inc.php:192
 #: jsLoader.php:229
 msgid "Refresh interval"
-msgstr ""
+msgstr "Refresh interval"
 
 #: jsLoader.php:230
 msgid "Refresh interval multiplier"
-msgstr ""
+msgstr "Refresh interval multiplier"
 
 #: adm.other.php:30 include/views/administration.general.other.edit.php:43
 msgid "Refresh unsupported items"
@@ -14838,7 +14840,7 @@ msgstr "System default"
 
 #: include/func.inc.php:1844
 msgid "System error occurred. Please contact Zabbix administrator."
-msgstr ""
+msgstr "System error occurred. Please contact Zabbix administrator."
 
 #: include/classes/core/CJsonRpc.php:213
 msgid "System error."
@@ -15412,7 +15414,7 @@ msgstr "Total"
 #: include/classes/debug/CProfiler.php:153
 #, c-format
 msgid "Total Elasticsearch time: %1$s"
-msgstr ""
+msgstr "Total Elasticsearch time: %1$s"
 
 #: include/classes/debug/CProfiler.php:149
 #, c-format
@@ -17728,7 +17730,7 @@ msgstr "cannot be empty"
 
 #: include/classes/helpers/CElasticsearchHelper.php:86
 msgid "cannot perform Scroll API request, data could be truncated"
-msgstr ""
+msgstr "cannot perform Scroll API request, data could be truncated"
 
 #: include/classes/parsers/CConditionFormula.php:188
 #, c-format
@@ -17823,7 +17825,7 @@ msgstr "expression is empty"
 
 #: include/classes/helpers/CElasticsearchHelper.php:184
 msgid "failed to parse JSON"
-msgstr ""
+msgstr "failed to parse JSON"
 
 #: include/classes/api/services/CItemGeneral.php:1232
 msgid "first parameter is expected"

@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-03-01 16:56+0200\n"
-"PO-Revision-Date: 2017-09-11 09:22+0300\n"
-"Last-Translator: Anıl <anil.ozbek@ozguryazilim.com.tr>\n"
+"PO-Revision-Date: 2018-02-04 15:22+0300\n"
+"Last-Translator: Anıl <ozbekanil@gmail.com>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1505114531.000000\n"
+"X-POOTLE-MTIME: 1517750550.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -2094,7 +2094,7 @@ msgstr "Betik çalıştırılamıyor"
 
 #: jsLoader.php:179
 msgid "Cannot expand macros."
-msgstr ""
+msgstr "Makrolar genişletilemiyor."
 
 #: include/classes/import/importers/CMapImporter.php:262
 #, c-format
@@ -4124,7 +4124,7 @@ msgstr "Öntanımlı ana makine envanter kipi"
 
 #: include/views/configuration.action.edit.php:2112
 msgid "Default media type"
-msgstr ""
+msgstr "Öntanımlı medya türü"
 
 #: include/views/configuration.action.edit.php:385
 #: include/views/configuration.action.edit.php:728
@@ -5206,7 +5206,7 @@ msgstr "Etkin değer"
 #: include/classes/helpers/CElasticsearchHelper.php:194
 #, c-format
 msgid "Elasticsearch error: %1$s."
-msgstr ""
+msgstr "Elasticsearch hatası: %1$s."
 
 #: include/classes/api/managers/CHistoryManager.php:995
 #: include/classes/api/managers/CHistoryManager.php:1004
@@ -5711,7 +5711,7 @@ msgstr "Genişlet"
 
 #: include/views/monitoring.sysmap.constructor.php:46
 msgid "Expand macros"
-msgstr ""
+msgstr "Makroları genişlet"
 
 #: include/views/monitoring.sysmap.edit.php:142
 msgid "Expand single problem"
@@ -7995,7 +7995,7 @@ msgstr "Ekran öğesi için yanlış öğe prototip ID'si \"%1$s\" sağlandı."
 
 #: include/triggers.inc.php:1325 tr_testexpr.php:37
 msgid "Incorrect item value type"
-msgstr ""
+msgstr "Yanlış öğe değeri türü"
 
 #: include/classes/validators/CFunctionValidator.php:299
 #, c-format
@@ -11587,7 +11587,7 @@ msgstr "Sayısal (kayan noktalı)"
 
 #: include/triggers.inc.php:1771
 msgid "Numeric (integer)"
-msgstr ""
+msgstr "Sayısal (tam sayısal)"
 
 #: include/forms.inc.php:353 include/items.inc.php:126
 #: include/views/configuration.item.edit.php:321
@@ -13864,7 +13864,7 @@ msgstr "Arama şekil düzeni boş"
 #: include/forms.inc.php:1947 include/maintenances.inc.php:112
 msgctxt "adjective"
 msgid "Second"
-msgstr ""
+msgstr "İkinci"
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -16569,7 +16569,7 @@ msgstr "Kullanıcı adı"
 
 #: app/views/administration.mediatype.edit.php:81
 msgid "Username and password"
-msgstr ""
+msgstr "Kullanıcı adı ve parola"
 
 #: app/views/monitoring.dashboard.sharing_form.php:48 include/menu.inc.php:281
 #: include/views/administration.usergroups.edit.php:54
@@ -16915,7 +16915,7 @@ msgstr "Değişkenler"
 #: include/classes/items/CHelpItems.php:157
 #: include/classes/items/CHelpItems.php:455
 msgid "Various information about specific process(es). Returns float"
-msgstr ""
+msgstr "Belirli işlem(ler) hakkında çeşitli bilgiler. Float döndürür"
 
 #: include/hosts.inc.php:249
 msgid "Vendor"
@@ -17218,7 +17218,7 @@ msgstr "Tetikleyici için yanlış alanlar."
 #: include/classes/api/services/CTriggerGeneral.php:515
 #: include/classes/api/services/CTriggerGeneral.php:668
 msgid "Wrong value for url field."
-msgstr ""
+msgstr "Url alanı için yanlış değer."
 
 #: include/views/js/monitoring.sysmaps.js.php:228
 #: include/views/js/monitoring.sysmaps.js.php:361
@@ -17400,6 +17400,10 @@ msgstr "Bu işlemi gerçekleştirmek için yetkiniz olması gerekiyor!"
 #: include/classes/db/DB.php:136
 msgid "Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system."
 msgstr ""
+"Veritabanınız düzgün çalışmıyor. Lütfen birkaç dakika bekleyin ve bu işlemi "
+"tekrarlamayı deneyin. Sorun devam ederse, lütfen sistem yöneticisine "
+"başvurun. Soruna, veritabanı yönetim sisteminiz tarafından gerçekleştirilen "
+"uzun süren bir işlem veya satır düzeyi kilidi neden olabilir."
 
 #: index.php:28
 msgid "ZABBIX"
@@ -18362,7 +18366,7 @@ msgstr "aramak için buraya yazın"
 
 #: include/classes/validators/CApiInputValidator.php:1178
 msgid "unacceptible URL"
-msgstr ""
+msgstr "kabul edilemez URL"
 
 #: include/classes/parsers/CItemKey.php:178
 msgid "unexpected end of key"
