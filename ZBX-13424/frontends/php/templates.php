@@ -273,7 +273,10 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				throw new Exception();
 			}
 
-			// First copy web scenarios with web items, so that later regular items can use web item as their master item.
+			/*
+			 * First copy web scenarios with web items, so that later regular items can use web item as their master
+			 * item.
+			 */
 			if (!copyHttpTests($cloneTemplateId, $templateId)) {
 				throw new Exception();
 			}

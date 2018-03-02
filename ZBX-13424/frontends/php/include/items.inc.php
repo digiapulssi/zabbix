@@ -401,27 +401,23 @@ function copyItemsToHosts($src_itemids, $dst_hostids) {
 		'preservekeys' => true
 	]);
 
+	// Check if dependent items have master items in same selection. If not, those could be web items.
 	$master_itemids = [];
 
 	foreach ($items as $itemid => $item) {
-		if ($item['type'] == ITEM_TYPE_DEPENDENT) {
+		if ($item['type'] == ITEM_TYPE_DEPENDENT && !array_key_exists($item['master_itemid'], $items)) {
 			$master_itemids[$item['master_itemid']] = true;
 		}
 	}
 
-	// Check if dependent items have master items in same selection. If not, those could be web items.
-	$not_selected = array_diff_key($master_itemids, $items);
-
 	// Find same master items (that includes web items) on destination host.
 	$dst_master_items = [];
-	$item = [];
 
-	foreach (array_keys($not_selected) as $itemid) {
-		$item['itemid'] = $itemid;
-		$same_item = get_same_item_for_host($item, $dst_hostids);
+	foreach (array_keys($master_itemids) as $master_itemid) {
+		$same_master_item = get_same_item_for_host(['itemid' => $master_itemid], $dst_hostids);
 
-		if ($same_item) {
-			$dst_master_items[$itemid] = $same_item;
+		if ($same_master_item) {
+			$dst_master_items[$master_itemid] = $same_master_item;
 		}
 	}
 
@@ -435,21 +431,12 @@ function copyItemsToHosts($src_itemids, $dst_hostids) {
 		$src_itemid_to_key[$itemid] = $item['key_'];
 
 		while ($master_item['type'] == ITEM_TYPE_DEPENDENT) {
-			if (array_key_exists($master_item['master_itemid'], $items)) {
-				$master_item = $items[$master_item['master_itemid']];
-				++$dependency_level;
+			if (!array_key_exists($master_item['master_itemid'], $items)) {
+				break;
 			}
-			elseif (array_key_exists($master_item['master_itemid'], $dst_master_items)) {
-				// There is a matching item on one of the destination hosts. Type on destination host doesn't matter.
-				$master_item['type'] = null;
-			}
-			else {
-				// Master item does not exist on any of the destination hosts or has not been selected for copying.
 
-				error(_s('Item "%1$s" has master item and cannot be copied.', $item['name']));
-
-				return false;
-			}
+			$master_item = $items[$master_item['master_itemid']];
+			++$dependency_level;
 		}
 
 		$create_order[$itemid] = $dependency_level;
@@ -531,16 +518,17 @@ function copyItemsToHosts($src_itemids, $dst_hostids) {
 					$src_item_key = $src_itemid_to_key[$item['master_itemid']];
 					$item['master_itemid'] = $itemkey_to_id[$src_item_key];
 				}
-				elseif (array_key_exists($item['master_itemid'], $dst_master_items)) {
-					$dst_master_items_ = $dst_master_items[$item['master_itemid']];
+				else {
 					$item_found = false;
 
-					foreach ($dst_master_items_ as $dst_master_item) {
-						if ($dst_master_item['hostid'] == $dstHost['hostid']) {
-							// A matching item on destination host has been found.
+					if (array_key_exists($item['master_itemid'], $dst_master_items)) {
+						foreach ($dst_master_items[$item['master_itemid']] as $dst_master_item) {
+							if ($dst_master_item['hostid'] == $dstHost['hostid']) {
+								// A matching item on destination host has been found.
 
-							$item['master_itemid'] = $dst_master_item['itemid'];
-							$item_found = true;
+								$item['master_itemid'] = $dst_master_item['itemid'];
+								$item_found = true;
+							}
 						}
 					}
 
@@ -614,6 +602,13 @@ function copyItems($srcHostId, $dstHostId) {
 	$current_dependency = reset($create_order);
 
 	foreach ($create_order as $itemid => $dependency_level) {
+		$srcItem = $srcItems[$itemid];
+
+		// Skip creating web items. Those were created before.
+		if ($srcItem['type'] == ITEM_TYPE_HTTPTEST) {
+			continue;
+		}
+
 		if ($current_dependency != $dependency_level && $create_items) {
 			$current_dependency = $dependency_level;
 			$created_itemids = API::Item()->create($create_items);
@@ -629,8 +624,6 @@ function copyItems($srcHostId, $dstHostId) {
 
 			$create_items = [];
 		}
-
-		$srcItem = $srcItems[$itemid];
 
 		if ($srcItem['templateid']) {
 			$srcItem = get_same_item_for_host($srcItem, $dstHost['hostid']);
@@ -675,11 +668,6 @@ function copyItems($srcHostId, $dstHostId) {
 		}
 		else {
 			unset($srcItem['master_itemid']);
-		}
-
-		// Skip creating web items. Those were created before.
-		if ($srcItem['type'] == ITEM_TYPE_HTTPTEST) {
-			continue;
 		}
 
 		$create_items[] = $srcItem;
