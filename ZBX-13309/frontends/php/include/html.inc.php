@@ -625,7 +625,7 @@ function getHostGroupLifetimeIndicator($current_time, $ts_delete) {
 	else {
 		$warning = _s(
 			'The host group is not discovered anymore and will be deleted in %1$s (on %2$s at %3$s).',
-			zbx_date2age($ts_delete),
+			zbx_date2age($ts_delete, 0, true),
 			zbx_date2str(DATE_FORMAT, $ts_delete),
 			zbx_date2str(TIME_FORMAT, $ts_delete)
 		);

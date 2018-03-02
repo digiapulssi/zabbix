@@ -293,14 +293,24 @@ function zbx_date2str($format, $value = null) {
 	return $prefix.$output;
 }
 
-// calculate and convert timestamp to string representation
-function zbx_date2age($startDate, $endDate = 0, $utime = false) {
-	if (!$utime) {
-		$startDate = date('U', $startDate);
-		$endDate = $endDate ? date('U', $endDate) : time();
+/**
+ * Calculates and converts timestamp to string represenation.
+ *
+ * @param int|string $start_date Start date timestamp.
+ * @param int|string $end_date   End date timestamp.
+ * @param boolean    $absolute   Indicates if return value is absolute.
+ *
+ * @return string
+ */
+function zbx_date2age($start_date, $end_date = 0, $absolute = false) {
+	$start_date = date('U', $start_date);
+	$end_date = $end_date ? date('U', $end_date) : time();
+
+	if ($absolute) {
+		return convertUnitsS(abs($end_date - $start_date));
 	}
 
-	return convertUnitsS(abs($endDate - $startDate));
+	return convertUnitsS($end_date - $start_date);
 }
 
 function zbxDateToTime($strdate) {
