@@ -4872,7 +4872,7 @@ svg {
 }
 
 :-ms-input-placeholder {
-	color: $input-placeholder-color;
+	color: $input-placeholder-color !important;
 }
 
 ::-ms-input-placeholder {
