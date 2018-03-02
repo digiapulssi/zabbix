@@ -371,7 +371,7 @@ static void	zbx_openssl_info_cb(const SSL *ssl, int where, int ret)
 		else
 			rw = "";
 
-		zbx_snprintf(info_buf, sizeof(info_buf), "TLS%s%s%s %s alert \"%s\"", handshake, direction, rw,
+		zbx_snprintf(info_buf, sizeof(info_buf), ": TLS%s%s%s %s alert \"%s\"", handshake, direction, rw,
 				SSL_alert_type_string_long(ret), SSL_alert_desc_string_long(ret));
 	}
 }
@@ -4263,20 +4263,20 @@ int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, c
 					zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() set"
 							" result code to SSL_ERROR_SYSCALL:");
 					zbx_tls_error_msg(error, &error_alloc, &error_offset);
-					zbx_snprintf_alloc(error, &error_alloc, &error_offset, ": %s", info_buf);
+					zbx_snprintf_alloc(error, &error_alloc, &error_offset, "%s", info_buf);
 				}
 				goto out;
 			case SSL_ERROR_SSL:
 				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() set"
 						" result code to SSL_ERROR_SSL:");
 				zbx_tls_error_msg(error, &error_alloc, &error_offset);
-				zbx_snprintf_alloc(error, &error_alloc, &error_offset, ": %s", info_buf);
+				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "%s", info_buf);
 				goto out;
 			default:
 				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "SSL_connect() set result code"
 						" to %d", result_code);
 				zbx_tls_error_msg(error, &error_alloc, &error_offset);
-				zbx_snprintf_alloc(error, &error_alloc, &error_offset, ": %s", info_buf);
+				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "%s", info_buf);
 				goto out;
 		}
 	}
@@ -4972,7 +4972,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 		}
 
 		zbx_tls_error_msg(error, &error_alloc, &error_offset);
-		zbx_snprintf_alloc(error, &error_alloc, &error_offset, ": %s", info_buf);
+		zbx_snprintf_alloc(error, &error_alloc, &error_offset, "%s", info_buf);
 		goto out;
 	}
 
@@ -5131,7 +5131,7 @@ ssize_t	zbx_tls_write(zbx_socket_t *s, const char *buf, size_t len, char **error
 			zbx_snprintf_alloc(&err, &error_alloc, &error_offset, "TLS write set result code to"
 					" %d:", result_code);
 			zbx_tls_error_msg(&err, &error_alloc, &error_offset);
-			*error = zbx_dsprintf(*error, "%s: %s", err, info_buf);
+			*error = zbx_dsprintf(*error, "%s%s", err, info_buf);
 			zbx_free(err);
 		}
 
@@ -5215,7 +5215,7 @@ ssize_t	zbx_tls_read(zbx_socket_t *s, char *buf, size_t len, char **error)
 			zbx_snprintf_alloc(&err, &error_alloc, &error_offset, "TLS read set result code to"
 					" %d:", result_code);
 			zbx_tls_error_msg(&err, &error_alloc, &error_offset);
-			*error = zbx_dsprintf(*error, "%s: %s", err, info_buf);
+			*error = zbx_dsprintf(*error, "%s%s", err, info_buf);
 			zbx_free(err);
 		}
 
@@ -5321,7 +5321,7 @@ void	zbx_tls_close(zbx_socket_t *s)
 
 			result_code = SSL_get_error(s->tls_ctx->ctx, res);
 			zbx_tls_error_msg(&error, &error_alloc, &error_offset);
-			zabbix_log(LOG_LEVEL_WARNING, "SSL_shutdown() with %s set result code to %d:%s: %s",
+			zabbix_log(LOG_LEVEL_WARNING, "SSL_shutdown() with %s set result code to %d:%s%s",
 					s->peer, result_code, ZBX_NULL2EMPTY_STR(error), info_buf);
 			zbx_free(error);
 		}
