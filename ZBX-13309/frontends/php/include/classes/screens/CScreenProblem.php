@@ -907,9 +907,7 @@ class CScreenProblem extends CScreenBase {
 					$triggers_hosts[$trigger['triggerid']],
 					$description,
 					($problem['r_eventid'] != 0)
-						? ($problem['clock'] <= $problem['r_clock'])
-							? zbx_date2age($problem['clock'], $problem['r_clock'])
-							: "-".zbx_date2age($problem['clock'], $problem['r_clock'])
+						? zbx_date2age($problem['clock'], $problem['r_clock'])
 						: zbx_date2age($problem['clock']),
 					$this->config['event_ack_enable'] ? $acknowledges[$problem['eventid']] : null,
 					array_key_exists($eventid, $actions)
@@ -985,9 +983,7 @@ class CScreenProblem extends CScreenBase {
 						$trigger + ['clock' => $problem['clock'], 'ns' => $problem['ns']]
 					),
 					($problem['r_eventid'] != 0)
-						? ($problem['clock'] <= $problem['r_clock'])
-							? zbx_date2age($problem['clock'], $problem['r_clock'])
-							: "-".zbx_date2age($problem['clock'], $problem['r_clock'])
+						? zbx_date2age($problem['clock'], $problem['r_clock'])
 						: zbx_date2age($problem['clock']),
 					$this->config['event_ack_enable'] ? ($problem['acknowledges'] ? _('Yes') : _('No')) : null,
 					array_key_exists($problem['eventid'], $actions) ? $actions[$problem['eventid']] : '',

@@ -205,9 +205,7 @@ foreach ($data['data']['problems'] as $eventid => $problem) {
 		$description,
 		(new CCol(
 			($problem['r_eventid'] != 0)
-				? ($problem['clock'] <= $problem['r_clock'])
-					? zbx_date2age($problem['clock'], $problem['r_clock'])
-					: "-".zbx_date2age($problem['clock'], $problem['r_clock'])
+				? zbx_date2age($problem['clock'], $problem['r_clock'])
 				: zbx_date2age($problem['clock'])
 		))
 			->addClass(ZBX_STYLE_NOWRAP),
