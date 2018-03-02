@@ -2294,6 +2294,8 @@ class CAction extends CApiService {
 			$op_recovery_message = [];
 
 			foreach ($recovery_operations as $recovery_operationid => $recovery_operation) {
+				unset($recovery_operations[$recovery_operationid]['recovery']);
+
 				switch ($recovery_operation['operationtype']) {
 					case OPERATION_TYPE_MESSAGE:
 						$opmessage[] = $recovery_operationid;
