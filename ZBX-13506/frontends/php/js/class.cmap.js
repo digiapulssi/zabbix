@@ -770,6 +770,7 @@ ZABBIX.apps.map = (function($) {
 						// host
 						case '0':
 							jQuery('#elementNameHost').multiSelect('clean');
+							$('#triggerContainer tbody').html('');
 							break;
 
 						// triggers
