@@ -2041,6 +2041,7 @@ class CAction extends CApiService {
 			foreach ($ack_operations as $ack_operation) {
 				$actionid = $ack_operation['actionid'];
 				unset($ack_operation['actionid']);
+				unset($ack_operation['recovery']);
 				$result[$actionid]['acknowledgeOperations'][] = $ack_operation;
 			}
 		}
@@ -2076,6 +2077,8 @@ class CAction extends CApiService {
 			$opinventory = [];
 
 			foreach ($operations as $operationid => $operation) {
+				unset($operations[$operationid]['recovery']);
+
 				switch ($operation['operationtype']) {
 					case OPERATION_TYPE_MESSAGE:
 						$opmessage[] = $operationid;
