@@ -675,9 +675,12 @@ static int	housekeeping_cleanup()
 #elif defined(HAVE_POSTGRESQL)
 			d = DBexecute(
 					"delete from %s"
-					" where ctid = any(array(select ctid from %s"
+					" where %s=" ZBX_FS_UI64 " and"
+						" ctid = any(array(select ctid from %s"
 						" where %s=" ZBX_FS_UI64 " limit %d))",
 					housekeeper.tablename,
+					housekeeper.field,
+					housekeeper.value,
 					housekeeper.tablename,
 					housekeeper.field,
 					housekeeper.value,
