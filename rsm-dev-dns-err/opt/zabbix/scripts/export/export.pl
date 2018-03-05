@@ -1405,7 +1405,7 @@ sub __check_test
 				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
 				substr($description, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY ||
 				substr($description, 0, length(ZBX_EC_DNS_TCP_RES_NOREPLY)) eq ZBX_EC_DNS_TCP_RES_NOREPLY ||
-				substr($description, 0, length(ZBX_EC_DNS_RES_NOREPLY)) eq ZBX_EC_DNS_RES_NOREPLY)
+				substr($description, 0, length(ZBX_EC_DNS_RES_NOREPLY)) eq ZBX_EC_DNS_RES_NOREPLY))
 		{
 			return SUCCESS;
 		}
