@@ -101,9 +101,11 @@ zbx_subarray_push($this->data['dataTypeVisibility'], ITEM_DATA_TYPE_HEXADECIMAL,
 					data_type = jQuery('#data_type');
 				old_value = value_type.val();
 
-				if (!(old_value == <?= ITEM_VALUE_TYPE_UINT64 ?> || old_value == <?= ITEM_VALUE_TYPE_FLOAT ?>)
-						&& (type == <?= ITEM_TYPE_AGGREGATE ?> || type == <?= ITEM_TYPE_CALCULATED ?>)) {
-					value_type.val(<?= ITEM_VALUE_TYPE_UINT64 ?>);
+				if (type == <?= ITEM_TYPE_AGGREGATE ?> || type == <?= ITEM_TYPE_CALCULATED ?>) {
+					if (!(old_value == <?= ITEM_VALUE_TYPE_UINT64 ?> || old_value == <?= ITEM_VALUE_TYPE_FLOAT ?>)) {
+						value_type.val(<?= ITEM_VALUE_TYPE_UINT64 ?>);
+					}
+
 					data_type.val(<?= ITEM_DATA_TYPE_DECIMAL ?>);
 					value_type.trigger('change');
 				}
