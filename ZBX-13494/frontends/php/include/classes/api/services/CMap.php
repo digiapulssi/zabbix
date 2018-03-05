@@ -2609,11 +2609,8 @@ class CMap extends CMapElement {
 					unset($link);
 				}
 				else {
-					$has_triggers = [];
-
 					foreach ($links as &$link) {
 						$link['permission'] = PERM_NONE;
-						$has_triggers[$link['linkid']] = false;
 					}
 					unset($link);
 
@@ -2624,6 +2621,7 @@ class CMap extends CMapElement {
 					);
 
 					$triggerids = [];
+					$has_triggers = [];
 
 					while ($db_link_trigger = DBfetch($db_link_triggers)) {
 						$triggerids[$db_link_trigger['triggerid']][] = $db_link_trigger['linkid'];
@@ -2647,7 +2645,7 @@ class CMap extends CMapElement {
 					}
 
 					foreach ($links as &$link) {
-						if ($has_triggers[$link['linkid']] === false) {
+						if (!array_key_exists($link['linkid'], $has_triggers)) {
 							$link['permission'] = PERM_READ;
 						}
 					}
