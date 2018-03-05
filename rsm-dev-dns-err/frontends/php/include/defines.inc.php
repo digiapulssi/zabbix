@@ -1390,9 +1390,9 @@ define('ZBX_EC_DNS_UDP_NS_NOREPLY',	-200);
 define('ZBX_EC_DNS_NS_ERRSIG',		-204);	// obsolete
 define('ZBX_EC_DNS_RES_NOREPLY',	-205);	// obsolete
 define('ZBX_EC_DNS_RES_NOADBIT',	-206);	// obsolete
-define('ZBX_EC_DNS_UDP_NOREPLY',	-400);
-define('ZBX_EC_DNS_UDP_NOADBIT',	-401);
-define('ZBX_EC_DNS_UDP_MALFORMED',	-427);
+define('ZBX_EC_DNS_UDP_RES_NOREPLY',		-400);
+define('ZBX_EC_DNS_UDP_RES_NOADBIT',		-401);
+define('ZBX_EC_DNS_UDP_MALFORMED_DNSSEC',	-427);
 
 define('MIN_PROBE_OK_RESULT_PERCENTAGE',	49);
 
