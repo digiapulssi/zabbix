@@ -105,7 +105,11 @@ sub check_item_values
 
 	foreach my $value (@{$values_ref})
 	{
-		return SUCCESS unless (ZBX_EC_DNS_NS_ERRSIG == $value || ZBX_EC_DNS_RES_NOADBIT == $value);
+		unless (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC <= $value && $value <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
+				$value == ZBX_EC_DNS_NS_ERRSIG || $value == ZBX_EC_DNS_RES_NOADBIT)
+		{
+			return SUCCESS;
+		}
 	}
 
 	return E_FAIL;

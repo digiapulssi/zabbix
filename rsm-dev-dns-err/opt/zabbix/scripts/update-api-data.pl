@@ -37,6 +37,7 @@ use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this 
 sub get_history_by_itemid($$$);
 sub get_historical_value_by_time($$);
 sub fill_test_data_dns($$$);
+sub fill_test_data_dnssec($$);
 sub fill_test_data_rdds($$);
 sub match_clocks_with_results($$);
 
@@ -865,9 +866,27 @@ TRYFORK:
 
 								if (exists($probes_ref->{$probe}->{'details'}))
 								{
-									fill_test_data_dns($probes_ref->{$probe}->{'details'},
-										$probe_ref->{'testData'},
-										$dns_udp_rtt_high_history);
+									if ($service eq 'dns')
+									{
+										fill_test_data_dns(
+											$probes_ref->{$probe}->{'details'},
+											$probe_ref->{'testData'},
+											$dns_udp_rtt_high_history
+										);
+									}
+									elsif ($service eq 'dnssec')
+									{
+										fill_test_data_dnssec(
+											$probes_ref->{$probe}->{'details'},
+											$probe_ref->{'testData'},
+										);
+									}
+									else
+									{
+										fail("Encountered \"$service\" where" .
+												" \"dns\" or \"dnssec\"" .
+												" were expected.");
+									}
 								}
 
 								push(@{$tr_ref->{'testedInterface'}->[0]->{'probes'}}, $probe_ref);
@@ -1274,6 +1293,19 @@ sub fill_test_data_dns($$$)
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = 'no data';
 			}
+			elsif (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+					substr($test->{'rtt'}, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY ||
+					substr($test->{'rtt'}, 0, length(ZBX_EC_DNS_RES_NOREPLY)) eq ZBX_EC_DNS_RES_NOREPLY)
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $test->{'rtt'};
+
+				# don't override NS status with "Up" if NS is already known to be down
+				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+				{
+					$test_data_ref->{'status'} = "Up";
+				}
+			}
 			elsif (substr($test->{'rtt'}, 0, 1) eq "-")
 			{
 				$metric->{'rtt'} = undef;
@@ -1292,6 +1324,82 @@ sub fill_test_data_dns($$$)
 					$test_data_ref->{'status'} =
 							($test->{'rtt'} > get_historical_value_by_time($hist,
 									$metric->{'testDateTime'}) ? "Down" : "Up");
+				}
+			}
+
+			push(@{$test_data_ref->{'metrics'}}, $metric);
+		}
+
+		$test_data_ref->{'status'} //= "No result";
+
+		push(@{$dst}, $test_data_ref);
+	}
+}
+
+sub fill_test_data_dnssec($$)
+{
+	my $src = shift;
+	my $dst = shift;
+
+	foreach my $ns (keys(%{$src}))
+	{
+		my $test_data_ref = {
+			'target'	=> $ns,
+			'status'	=> undef,
+			'metrics'	=> []
+		};
+
+		foreach my $test (@{$src->{$ns}})
+		{
+			dbg("ns:$ns ip:$test->{'ip'} clock:", $test->{'clock'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
+
+			# if Name Server has no data yet clock and rtt should be both undefined
+			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
+					defined($test->{'clock'}) && !defined($test->{'rtt'}))
+			{
+				fail("Gleb/dimir were wrong, DNS test clock and rtt can be undefined independently");
+			}
+
+			my $metric = {
+				'testDateTime'	=> $test->{'clock'},
+				'targetIP'	=> $test->{'ip'}
+			};
+
+			if (!defined($test->{'rtt'}))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = 'no data';
+			}
+			elsif (substr($test->{'rtt'}, 0, 1) eq "-")
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $test->{'rtt'};
+
+				# skip check for errors if NS is already known to be down
+				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+				{
+					my $value = substr($test->{'rtt'}, 0, index($test->{'rtt'}, ","));
+
+					if (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC <= $value && $value <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
+							$value == ZBX_EC_DNS_NS_ERRSIG || $value == ZBX_EC_DNS_RES_NOADBIT)
+					{
+						$test_data_ref->{'status'} = "Down";
+					}
+					else
+					{
+						$test_data_ref->{'status'} = "Up";
+					}
+				}
+			}
+			else
+			{
+				$metric->{'rtt'} = $test->{'rtt'};
+				$metric->{'result'} = "ok";
+
+				# don't override NS status with "Up" if NS is already known to be down
+				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+				{
+					$test_data_ref->{'status'} = "Up";
 				}
 			}
 
