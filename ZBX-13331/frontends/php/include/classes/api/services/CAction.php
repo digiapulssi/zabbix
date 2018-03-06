@@ -2040,8 +2040,7 @@ class CAction extends CApiService {
 
 			foreach ($ack_operations as $ack_operation) {
 				$actionid = $ack_operation['actionid'];
-				unset($ack_operation['actionid']);
-				unset($ack_operation['recovery']);
+				unset($ack_operation['actionid'], $ack_operation['recovery']);
 				$result[$actionid]['acknowledgeOperations'][] = $ack_operation;
 			}
 		}
