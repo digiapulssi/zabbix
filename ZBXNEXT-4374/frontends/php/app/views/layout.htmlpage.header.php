@@ -52,7 +52,7 @@ $path = 'jsLoader.php?ver='.ZABBIX_VERSION.'&amp;lang='.$data['user']['lang'].'&
 $pageHeader->addJsFile($path);
 
 if ($scripts) {
-	$pageHeader->addJsFile('jsLoader.php?'.'files[]='.implode('&amp;files[]=', $scripts));
+	$pageHeader->addJsFile('jsLoader.php?'.'files[]='.implode('&amp;files[]=', $scripts).'&amp;lang='.$data['user']['lang']);
 }
 $pageHeader->display();
 
