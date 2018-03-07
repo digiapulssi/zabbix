@@ -408,32 +408,43 @@ jQuery(function($) {
 
 						case KEY.ARROW_LEFT:
 							if (empty(input.val())) {
+								var selected;
 								if ($('.selected li.selected', obj).length > 0) {
 									var prev = $('.selected li.selected', obj).removeClass('selected').prev();
 
 									if (prev.length > 0) {
-										prev.addClass('selected');
+										// prev.addClass('selected');
+										selected = prev;
 									}
 									else {
-										$('.selected li:first-child', obj).addClass('selected');
+										// $('.selected li:first-child', obj).addClass('selected');
+										selected = $('.selected li:first-child', obj);
 									}
 								}
 								else if ($('.selected li', obj).length > 0) {
-									$('.selected li:last-child', obj).addClass('selected');
+									// $('.selected li:last-child', obj).addClass('selected');
+									selected = $('.selected li:last-child', obj);
 								}
+								selected.addClass('selected');
+								$('#aria-live-content').text($('.subfilter-enabled>span:first-child', selected).text());
 							}
 							break;
 
 						case KEY.ARROW_RIGHT:
+							var selected;
 							if ($('.selected li.selected', obj).length > 0) {
 								var next = $('.selected li.selected', obj).removeClass('selected').next('li');
 
 								if (next.length > 0) {
-									next.addClass('selected');
+									// next.addClass('selected');
+									selected = next;
 								}
 								else if (getSearchFieldVisibility(obj) == false) {
-									$('.selected li:first-child', obj).addClass('selected');
+									// $('.selected li:first-child', obj).addClass('selected');
+									selected = $('.selected li:first-child', obj);
 								}
+								selected.addClass('selected');
+								$('#aria-live-content').text($('.subfilter-enabled>span:first-child', selected).text());
 							}
 							break;
 

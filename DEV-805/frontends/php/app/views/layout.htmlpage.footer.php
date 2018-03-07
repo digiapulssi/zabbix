@@ -36,20 +36,20 @@ if ($data['user']['debug_mode'] == GROUP_DEBUG_MODE_ENABLED) {
 
 echo <<<HTML
 	<script>
-		(function($) {
-			$('label, a, button').each(function() {
-				var control = $(this),
-					target = $('#' + control.attr('for'));
+		// (function($) {
+		// 	$('label, a, button').each(function() {
+		// 		var control = $(this),
+		// 			target = $('#' + control.attr('for'));
 
-				if (!target.length) {
-					target = control;
-				}
+		// 		if (!target.length) {
+		// 			target = control;
+		// 		}
 
-				target.on('mouseenter', function() {
-					$('#aria-live-content').text('Mouse cursor on ' + control.text() + ' control');
-				});
-			});
-		})(jQuery);
+		// 		target.on('mouseenter', function() {
+		// 			$('#aria-live-content').text('Mouse cursor on ' + control.text() + ' control');
+		// 		});
+		// 	});
+		// })(jQuery);
 	</script>
 HTML;
 

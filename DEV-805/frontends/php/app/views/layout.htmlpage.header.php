@@ -64,16 +64,10 @@ echo <<<HTML
 
 	<style type="text/css">
 		#aria-live-content {
-			background: rgba(212, 0, 0, .2);
-			border: 1px solid #000;
-			padding: 5px 10px;
 			position: fixed;
-			left: 10px;
-			right: 10px;
-			bottom: 36px;
-			z-index: 10000;
+			top: -100px;
 		}
 	</style>
 
-	<div id="aria-live-content" aria-live="polite" aria-atomic="true"></div>
+	<div id="aria-live-content" aria-live="assertive" aria-atomic="true"></div>
 HTML;

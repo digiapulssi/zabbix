@@ -208,6 +208,19 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 <body lang="<?= CWebUser::getLang() ?>">
 <div class="<?= ZBX_STYLE_MSG_BAD_GLOBAL ?>" id="msg-bad-global"></div>
 <?php
+
+	echo <<<HTML
+
+	<style type="text/css">
+		#aria-live-content {
+			position: fixed;
+			top: -100px;
+		}
+	</style>
+
+	<div id="aria-live-content" aria-live="assertive" aria-atomic="true"></div>
+HTML;
+
 }
 
 define('PAGE_HEADER_LOADED', 1);
