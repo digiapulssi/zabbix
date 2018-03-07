@@ -1,6 +1,30 @@
+Changes for 3.0.16rc1
+
+New features:
+A.F....... [ZBX-1357] updated Chinese (China), Czech, English (United States), Japanese, Korean, Russian, Turkish, Ukrainian translations; thanks to Zabbix translators (zalex_ua)
+
+Bug fixes:
+..F....... [ZBX-13257] fixed display of the latest item in Audit log (agriscenko)
+...G...PS. [ZBX-13351] improved OpenSSL error messages (viktors)
+.......PS. [ZBX-13362] fixed potentially wrong rows deleting by housekeeper in PostgreSQL (Sergejs)
+....I..... [ZBX-13472] fixed description of "Server" and "ServerActive" configuration options (Sasha)
+........S. [ZBX-13455] added frontend error message when templates cannot be linked to LLD host (viktors)
+..F....... [ZBX-13434] fixed incorrect trigger dependencies being set after copying triggers to multiple hosts; thanks to Kotaro Miyashita for the patch (Ivo)
+..F....... [ZBX-13342] fixed order by query in frontend Maintenance tab (agriscenko)
+A......... [ZBX-6167] fixed partial updating in maintenance.update (ashubin)
+...G...... [ZBX-13062] banned using of mutex in threads of metrics collection (MVekslers)
+........S. [ZBX-13236] fixed error message of function parameters parse (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.15
+
+3.0.15rc1 was released as 3.0.15 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.15rc1
 
 Bug fixes:
+....I..... [ZBX-13398] fixed configure script for Debian GNU/Linux "buster" and "sid" to work with PostgreSQL (viktors)
 .......PS. [ZBX-13441] fixed crashes in case of failures (e.g. timeouts) during VMware hypervisor discovery (gleb)
 ........S. [ZBX-12643] improved error log message in case Zabbix server database cannot be used due to empty "users" table (vso)
 A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
