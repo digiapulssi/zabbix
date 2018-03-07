@@ -82,7 +82,7 @@ void	zbx_history_export_init(const char *process_name, int process_num)
 
 	if (NULL == (history_file = fopen(history_file_name, "a")))
 	{
-		zabbix_log(LOG_LEVEL_CRIT, "failed to open export file '%s': %s", history_file_name,
+		zabbix_log(LOG_LEVEL_CRIT, "cannot open export file '%s': %s", history_file_name,
 				zbx_strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -91,7 +91,7 @@ void	zbx_history_export_init(const char *process_name, int process_num)
 
 	if (NULL == (trends_file = fopen(trends_file_name, "a")))
 	{
-		zabbix_log(LOG_LEVEL_CRIT, "failed to open export file '%s': %s", trends_file_name,
+		zabbix_log(LOG_LEVEL_CRIT, "cannot open export file '%s': %s", trends_file_name,
 				zbx_strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -103,7 +103,7 @@ void	zbx_problems_export_init(const char *process_name, int process_num)
 
 	if (NULL == (problems_file = fopen(problems_file_name, "a")))
 	{
-		zabbix_log(LOG_LEVEL_CRIT, "failed to open export file '%s': %s", problems_file_name,
+		zabbix_log(LOG_LEVEL_CRIT, "cannot open export file '%s': %s", problems_file_name,
 				zbx_strerror(errno));
 		exit(EXIT_FAILURE);
 	}
@@ -111,11 +111,7 @@ void	zbx_problems_export_init(const char *process_name, int process_num)
 
 static	int	file_write(const char *buf, size_t count, FILE **file, const char *name)
 {
-	if ((int)count > ZBX_GIBIBYTE)
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "maximum file size is too small");
-		return FAIL;
-	}
+	size_t	ret;
 
 	if (ZBX_GIBIBYTE <= (long)count + ftell(*file) + 1)
 	{
@@ -126,21 +122,39 @@ static	int	file_write(const char *buf, size_t count, FILE **file, const char *na
 		remove(filename_old);
 		zbx_fclose(*file);
 
-		if (0 != rename(name, filename_old))
-			zabbix_log(LOG_LEVEL_WARNING, "cannot rename export file '%s': %s", name, zbx_strerror(errno));
+		while (0 != rename(name, filename_old))
+		{
+			zabbix_log(LOG_LEVEL_ERR, "cannot rename export file '%s': %s: retrying in %d seconds",
+					name, zbx_strerror(errno), ZBX_EXPORT_WAIT_FAIL);
+			sleep(ZBX_EXPORT_WAIT_FAIL);
+		}
 
 		while (NULL == (*file = fopen(name, "a")))
 		{
-			zabbix_log(LOG_LEVEL_CRIT, "failed to open export file '%s': %s: retrying in %d seconds",
+			zabbix_log(LOG_LEVEL_ERR, "cannot open export file '%s': %s: retrying in %d seconds",
 					name, zbx_strerror(errno), ZBX_EXPORT_WAIT_FAIL);
 			sleep(ZBX_EXPORT_WAIT_FAIL);
 		}
 	}
 
-	if (count != fwrite(buf, 1, count, *file) || '\n' != fputc('\n', *file))
+	while (0 < count)
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "failed to write '%s': %s", buf, zbx_strerror(errno));
-		return FAIL;
+		if (count != (ret = (fwrite(buf, 1, count, *file))))
+		{
+			zabbix_log(LOG_LEVEL_ERR, "cannot write to export file '%s': %s: retrying in %d seconds",
+					name, zbx_strerror(errno), ZBX_EXPORT_WAIT_FAIL);
+			sleep(ZBX_EXPORT_WAIT_FAIL);
+		}
+
+		buf += ret;
+		count -= ret;
+	}
+
+	while ('\n' != fputc('\n', *file))
+	{
+		zabbix_log(LOG_LEVEL_ERR, "cannot write to export file '%s': %s: retrying in %d seconds",
+				name, zbx_strerror(errno), ZBX_EXPORT_WAIT_FAIL);
+		sleep(ZBX_EXPORT_WAIT_FAIL);
 	}
 
 	return SUCCEED;
@@ -164,17 +178,26 @@ int	zbx_trends_export_write(const char *buf, size_t count)
 void	zbx_problems_export_flush(void)
 {
 	if (0 != fflush(problems_file))
-		zabbix_log(LOG_LEVEL_WARNING, "failed to flush into '%s': %s", problems_file_name, zbx_strerror(errno));
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "cannot flush export file '%s': %s", problems_file_name,
+				zbx_strerror(errno));
+	}
 }
 
 void	zbx_history_export_flush(void)
 {
 	if (0 != fflush(history_file))
-		zabbix_log(LOG_LEVEL_WARNING, "failed to flush into '%s': %s", history_file_name, zbx_strerror(errno));
+	{
+		zabbix_log(LOG_LEVEL_ERR, "cannot flush export file '%s': %s", history_file_name,
+				zbx_strerror(errno));
+	}
 }
 
 void	zbx_trends_export_flush(void)
 {
 	if (0 != fflush(trends_file))
-		zabbix_log(LOG_LEVEL_WARNING, "failed to flush into '%s': %s", trends_file_name, zbx_strerror(errno));
+	{
+		zabbix_log(LOG_LEVEL_ERR, "cannot flush export file '%s': %s", trends_file_name,
+				zbx_strerror(errno));
+	}
 }
