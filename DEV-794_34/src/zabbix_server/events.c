@@ -1616,8 +1616,13 @@ void	zbx_export_events(void)
 			DC_HOST			*host;
 			zbx_hashset_iter_t	iter;
 			int			j;
+			char			*replace_to;
 
-			/*zbx_json_addstring(&json, "name", events[i].name, ZBX_JSON_TYPE_STRING);*/
+			replace_to = zbx_strdup(NULL, events[i].trigger.description);
+			substitute_simple_macros(NULL, &events[i], NULL, NULL, NULL, NULL, NULL, NULL,
+					NULL, &replace_to, MACRO_TYPE_TRIGGER_DESCRIPTION, NULL, 0);
+			zbx_json_addstring(&json, "name", replace_to, ZBX_JSON_TYPE_STRING);
+			zbx_free(replace_to);
 
 			get_hosts_by_expression(&hosts, events[i].trigger.expression,
 					events[i].trigger.recovery_expression);
