@@ -114,7 +114,7 @@ static	int	file_write(const char *buf, size_t count, FILE **file, const char *na
 {
 	size_t	ret;
 
-	if (CONFIG_EXPORT_FILE_SIZE <= (long)count + ftell(*file) + 1)
+	if (CONFIG_EXPORT_FILE_SIZE <= count + ftell(*file) + 1)
 	{
 		char	filename_old[MAX_STRING_LEN];
 
