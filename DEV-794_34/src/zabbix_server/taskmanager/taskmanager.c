@@ -333,6 +333,117 @@ static int	tm_process_acknowledgements(zbx_vector_uint64_t *ack_taskids)
 
 /******************************************************************************
  *                                                                            *
+ * Function: tm_process_check_now                                             *
+ *                                                                            *
+ * Purpose: process check now tasks for item rescheduling                     *
+ *                                                                            *
+ * Return value: The number of successfully processed tasks                   *
+ *                                                                            *
+ ******************************************************************************/
+static int	tm_process_check_now(zbx_vector_uint64_t *taskids)
+{
+	const char			*__function_name = "tm_process_check_now";
+
+	DB_ROW				row;
+	DB_RESULT			result;
+	int				i, processed_num = 0;
+	char				*sql = NULL;
+	size_t				sql_alloc = 0, sql_offset = 0;
+	zbx_vector_ptr_t		tasks;
+	zbx_uint64_t			taskid, itemid;
+	zbx_tm_task_t			*task;
+	zbx_vector_uint64_t		broken_taskids;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() tasks_num:%d", __function_name, taskids->values_num);
+
+	zbx_vector_uint64_sort(taskids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	zbx_vector_ptr_create(&tasks);
+	zbx_vector_uint64_create(&broken_taskids);
+
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
+			"select t.taskid,t.status,td.itemid"
+			" from task t"
+			" left join task_check_now td"
+				" on t.taskid=td.taskid"
+			" where");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.taskid", taskids->values, taskids->values_num);
+	result = DBselect("%s", sql);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(taskid, row[0]);
+
+		if (SUCCEED == DBis_null(row[2]))
+		{
+			zbx_vector_uint64_append(&broken_taskids, taskid);
+			continue;
+		}
+
+		ZBX_STR2UINT64(itemid, row[2]);
+
+		task = zbx_tm_task_create(taskid, ZBX_TM_TASK_CHECK_NOW, atoi(row[1]), 0, 0, 0);
+		task->data = (void *)zbx_tm_check_now_create(itemid);
+		zbx_vector_ptr_append(&tasks, task);
+	}
+	DBfree_result(result);
+
+	if (0 != tasks.values_num)
+	{
+		zbx_dc_process_check_now_tasks(&tasks);
+
+		sql_offset = 0;
+		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+		for (i = 0; i < tasks.values_num; i++)
+		{
+			task = (zbx_tm_task_t *)tasks.values[i];
+
+			zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset , "update task set");
+
+			/* close server tasks (processed) and in progress proxy tasks (sent) */
+			if (ZBX_TM_STATUS_INPROGRESS == task->status || 0 == task->proxy_hostid)
+			{
+				zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset , " status=%d", ZBX_TM_STATUS_DONE);
+			}
+			else
+			{
+				zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset , " proxy_hostid=" ZBX_FS_UI64,
+						task->proxy_hostid);
+			}
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset , " where taskid=" ZBX_FS_UI64 ";\n", task->taskid);
+
+			DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
+		}
+
+		if (16 < sql_offset)	/* in ORACLE always present begin..end; */
+			DBexecute("%s", sql);
+
+		zbx_vector_ptr_clear_ext(&tasks, (zbx_clean_func_t)zbx_tm_task_free);
+	}
+
+	if (0 != broken_taskids.values_num)
+	{
+		sql_offset = 0;
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset ,"update task set status=%d where",
+				ZBX_TM_STATUS_DONE);
+		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "taskid", broken_taskids.values,
+				broken_taskids.values_num);
+		DBexecute("%s", sql);
+	}
+
+	zbx_free(sql);
+
+	zbx_vector_uint64_destroy(&broken_taskids);
+	zbx_vector_ptr_destroy(&tasks);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() processed:%d", __function_name, processed_num);
+
+	return processed_num;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: tm_process_tasks                                                 *
  *                                                                            *
  * Purpose: process task manager tasks depending on task type                 *
@@ -345,12 +456,13 @@ static int	tm_process_tasks(int now)
 	DB_ROW			row;
 	DB_RESULT		result;
 	int			type, processed_num = 0, clock, ttl;
-	zbx_uint64_t		taskid;
-	zbx_vector_uint64_t	ack_taskids;
+	zbx_uint64_t		taskid, proxy_hostid;
+	zbx_vector_uint64_t	ack_taskids, check_now_taskids;
 
 	zbx_vector_uint64_create(&ack_taskids);
+	zbx_vector_uint64_create(&check_now_taskids);
 
-	result = DBselect("select taskid,type,clock,ttl"
+	result = DBselect("select taskid,type,clock,ttl,proxy_hostid"
 				" from task"
 				" where status in (%d,%d)"
 				" order by taskid",
@@ -362,6 +474,7 @@ static int	tm_process_tasks(int now)
 		ZBX_STR2UCHAR(type, row[1]);
 		clock = atoi(row[2]);
 		ttl = atoi(row[3]);
+		ZBX_DBROW2UINT64(proxy_hostid, row[4]);
 
 		switch (type)
 		{
@@ -384,6 +497,9 @@ static int	tm_process_tasks(int now)
 			case ZBX_TM_TASK_ACKNOWLEDGE:
 				zbx_vector_uint64_append(&ack_taskids, taskid);
 				break;
+			case ZBX_TM_TASK_CHECK_NOW:
+				zbx_vector_uint64_append(&check_now_taskids, taskid);
+				break;
 			default:
 				THIS_SHOULD_NEVER_HAPPEN;
 				break;
@@ -395,6 +511,10 @@ static int	tm_process_tasks(int now)
 	if (0 < ack_taskids.values_num)
 		processed_num += tm_process_acknowledgements(&ack_taskids);
 
+	if (0 < check_now_taskids.values_num)
+		processed_num += tm_process_check_now(&check_now_taskids);
+
+	zbx_vector_uint64_destroy(&check_now_taskids);
 	zbx_vector_uint64_destroy(&ack_taskids);
 
 	return processed_num;
