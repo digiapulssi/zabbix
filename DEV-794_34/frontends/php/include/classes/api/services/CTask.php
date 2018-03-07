@@ -40,7 +40,7 @@ class CTask extends CApiService {
 			' WHERE t.taskid=tcn.taskid'.
 				' AND t.type='.ZBX_TM_TASK_CHECK_NOW.
 				' AND t.status='.ZBX_TM_STATUS_NEW.
-				' AND '.dbConditionId('tcn.itemid', $task['itemids'])
+				' AND '.dbConditionInt('tcn.itemid', $task['itemids'])
 		);
 
 		$item_tasks = [];
