@@ -33,6 +33,7 @@
 #include "valuecache.h"
 #include "zbxmodules.h"
 #include "module.h"
+#include "export.h"
 
 #include "zbxhistory.h"
 
@@ -77,6 +78,7 @@ extern unsigned char	program_type;
 #define ZBX_DC_FLAGS_NOT_FOR_HISTORY	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOHISTORY)
 #define ZBX_DC_FLAGS_NOT_FOR_TRENDS	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOTRENDS)
 #define ZBX_DC_FLAGS_NOT_FOR_MODULES	(ZBX_DC_FLAGS_NOT_FOR_HISTORY | ZBX_DC_FLAG_LLD)
+#define ZBX_DC_FLAGS_NOT_FOR_EXPORT	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF)
 
 typedef struct
 {
@@ -787,18 +789,23 @@ static void	DCadd_trend(const ZBX_DC_HISTORY *history, ZBX_DC_TREND **trends, in
  *                                                                            *
  * Function: DCmass_update_trends                                             *
  *                                                                            *
+ * Purpose: update trends cache and get list of trends to flush into database *
+ *                                                                            *
  * Parameters: history     - array of history data                            *
  *             history_num - number of history structures                     *
+ *             trends      - list of trends to flush into database            *
+ *             trends_num  - number of trends                                 *
  *                                                                            *
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
+static void	DCmass_update_trends(const ZBX_DC_HISTORY *history, int history_num, ZBX_DC_TREND **trends,
+		int *trends_num)
 {
 	const char	*__function_name = "DCmass_update_trends";
-	ZBX_DC_TREND	*trends = NULL;
+
 	zbx_timespec_t	ts;
-	int		trends_alloc = 0, trends_num = 0, i, hour, seconds;
+	int		trends_alloc = 0, i, hour, seconds;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -816,7 +823,7 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 			continue;
 
 		if (SUCCEED == zbx_history_requires_trends(h->value_type))
-			DCadd_trend(h, &trends, &trends_alloc, &trends_num);
+			DCadd_trend(h, trends, &trends_alloc, trends_num);
 	}
 
 	if (cache->trends_last_cleanup_hour < hour && ZBX_TRENDS_CLEANUP_TIME < seconds)
@@ -832,7 +839,7 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 				continue;
 
 			if (SUCCEED == zbx_history_requires_trends(trend->value_type))
-				DCflush_trend(trend, &trends, &trends_alloc, &trends_num);
+				DCflush_trend(trend, trends, &trends_alloc, trends_num);
 
 			zbx_hashset_iter_remove(&iter);
 		}
@@ -842,10 +849,449 @@ static void	DCmass_update_trends(ZBX_DC_HISTORY *history, int history_num)
 
 	UNLOCK_TRENDS;
 
-	while (0 < trends_num)
-		DCflush_trends(trends, &trends_num, 1);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+}
 
-	zbx_free(trends);
+/******************************************************************************
+ *                                                                            *
+ * Function: DBmass_update_trends                                             *
+ *                                                                            *
+ * Purpose: prepare history data using items from configuration cache         *
+ *                                                                            *
+ * Parameters: trends      - [IN] trends from cache to be added to database   *
+ *             trends_num  - [IN] number of trends to add to database         *
+ *             trends_diff - [OUT] disable_from updates                       *
+ *                                                                            *
+ ******************************************************************************/
+static void	DBmass_update_trends(const ZBX_DC_TREND *trends, int trends_num)
+{
+	ZBX_DC_TREND	*trends_tmp;
+
+	if (0 != trends_num)
+	{
+		trends_tmp = (ZBX_DC_TREND *)zbx_malloc(NULL, trends_num * sizeof(ZBX_DC_TREND));
+		memcpy(trends_tmp, trends, trends_num * sizeof(ZBX_DC_TREND));
+
+		while (0 < trends_num)
+			DCflush_trends(trends_tmp, &trends_num, 1);
+
+		zbx_free(trends_tmp);
+	}
+}
+
+typedef struct
+{
+	zbx_uint64_t		hostid;
+	zbx_vector_ptr_t	groups;
+}
+zbx_host_info_t;
+
+static void	zbx_host_info_clean(zbx_host_info_t *host_info)
+{
+	zbx_vector_ptr_clear_ext(&host_info->groups, zbx_ptr_free);
+	zbx_vector_ptr_destroy(&host_info->groups);
+}
+
+static void	db_get_hosts_by_hostid(zbx_hashset_t *hosts_info, const zbx_vector_uint64_t *hostids)
+{
+	int		i;
+	size_t		sql_offset;
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	for (i = 0; i < hostids->values_num; i++)
+	{
+		zbx_host_info_t	host_info = {.hostid = hostids->values[i]};
+
+		zbx_vector_ptr_create(&host_info.groups);
+		zbx_hashset_insert(hosts_info, &host_info, sizeof(host_info));
+	}
+
+	sql_offset = 0;
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+				"select distinct hg.hostid, g.name"
+				" from groups g, hosts_groups hg"
+				" where g.groupid=hg.groupid"
+					" and");
+
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "hg.hostid", hostids->values, hostids->values_num);
+
+	result = DBselect("%s", sql);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	hostid;
+		zbx_host_info_t	*host_info;
+
+		ZBX_DBROW2UINT64(hostid, row[0]);
+
+		if (NULL == (host_info = (zbx_host_info_t *)zbx_hashset_search(hosts_info, &hostid)))
+		{
+			THIS_SHOULD_NEVER_HAPPEN;
+			continue;
+		}
+
+		zbx_vector_ptr_append(&host_info->groups, zbx_strdup(NULL, row[1]));
+	}
+	DBfree_result(result);
+}
+
+typedef struct
+{
+	zbx_uint64_t		itemid;
+	char			*name;
+	DC_ITEM			*item;
+	zbx_vector_ptr_t	applications;
+}
+zbx_item_info_t;
+
+static void	db_get_items_info_by_itemid(zbx_hashset_t *items_info, const zbx_vector_uint64_t *itemids)
+{
+	size_t		sql_offset = 0;
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "select itemid,name from items where");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "itemid", itemids->values, itemids->values_num);
+
+	result = DBselect("%s", sql);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	itemid;
+		zbx_item_info_t	*item_info;
+
+		ZBX_DBROW2UINT64(itemid, row[0]);
+
+		if (NULL == (item_info = (zbx_item_info_t *)zbx_hashset_search(items_info, &itemid)))
+		{
+			THIS_SHOULD_NEVER_HAPPEN;
+			continue;
+		}
+
+		zbx_substitute_item_name_macros(item_info->item, row[1], &item_info->name);
+	}
+	DBfree_result(result);
+
+	sql_offset = 0;
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+			"select i.itemid,a.name"
+			" from applications a,items_applications i"
+			" where a.applicationid=i.applicationid"
+				" and");
+
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "i.itemid", itemids->values, itemids->values_num);
+
+	result = DBselect("%s", sql);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	itemid;
+		zbx_item_info_t	*item_info;
+
+		ZBX_DBROW2UINT64(itemid, row[0]);
+
+		if (NULL == (item_info = (zbx_item_info_t *)zbx_hashset_search(items_info, &itemid)))
+		{
+			THIS_SHOULD_NEVER_HAPPEN;
+			continue;
+		}
+
+		zbx_vector_ptr_append(&item_info->applications, zbx_strdup(NULL, row[1]));
+	}
+	DBfree_result(result);
+}
+
+static void	zbx_item_info_clean(zbx_item_info_t *item_info)
+{
+	zbx_vector_ptr_clear_ext(&item_info->applications, zbx_ptr_free);
+	zbx_vector_ptr_destroy(&item_info->applications);
+	zbx_free(item_info->name);
+}
+
+static void	DCexport_trends(const ZBX_DC_TREND *trends, int trends_num, zbx_hashset_t *hosts,
+		zbx_hashset_t *items_info)
+{
+	struct zbx_json		json;
+	const ZBX_DC_TREND	*trend = NULL;
+	int			i, j;
+	const DC_ITEM		*item;
+	zbx_host_info_t		*host_info;
+	zbx_item_info_t		*item_info;
+	zbx_uint128_t		avg;	/* calculate the trend average value */
+
+	zbx_json_init(&json, ZBX_JSON_STAT_BUF_LEN);
+
+	for (i = 0; i < trends_num; i++)
+	{
+		trend = &trends[i];
+
+		if (NULL == (item_info = (zbx_item_info_t *)zbx_hashset_search(items_info, &trend->itemid)))
+			continue;
+
+		item = item_info->item;
+
+		if (NULL == item_info->name)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "item was deleted during export");
+			continue;
+		}
+
+		if (NULL == (host_info = (zbx_host_info_t *)zbx_hashset_search(hosts, &item->host.hostid)))
+		{
+			THIS_SHOULD_NEVER_HAPPEN;
+			continue;
+		}
+
+		if (0 == host_info->groups.values_num)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "host group was deleted during export '%s'", item->host.name);
+			continue;
+		}
+
+		zbx_json_clean(&json);
+		zbx_json_addstring(&json, "host", item->host.name, ZBX_JSON_TYPE_STRING);
+		zbx_json_addarray(&json, "groups");
+
+		for (j = 0; j < host_info->groups.values_num; j++)
+			zbx_json_addstring(&json, NULL, host_info->groups.values[j], ZBX_JSON_TYPE_STRING);
+
+		zbx_json_close(&json);
+
+		if (NULL != trend)
+			zbx_json_addarray(&json, "applications");
+
+		for (j = 0; j < item_info->applications.values_num; j++)
+			zbx_json_addstring(&json, NULL, item_info->applications.values[j], ZBX_JSON_TYPE_STRING);
+
+		zbx_json_close(&json);
+		zbx_json_adduint64(&json, "itemid", item->itemid);
+		zbx_json_addstring(&json, "name", item_info->name, ZBX_JSON_TYPE_STRING);
+		zbx_json_addint64(&json, "time", trend->clock);
+		zbx_json_addint64(&json, "count", trend->num);
+
+		switch (trend->value_type)
+		{
+			case ITEM_VALUE_TYPE_FLOAT:
+				zbx_json_addfloat(&json, "min", trend->value_min.dbl);
+				zbx_json_addfloat(&json, "avg", trend->value_avg.dbl);
+				zbx_json_addfloat(&json, "max", trend->value_max.dbl);
+				break;
+			case ITEM_VALUE_TYPE_UINT64:
+				zbx_json_adduint64(&json, "min", trend->value_min.ui64);
+				udiv128_64(&avg, &trend->value_avg.ui64, trend->num);
+				zbx_json_adduint64(&json, "avg", avg.lo);
+				zbx_json_adduint64(&json, "max", trend->value_max.ui64);
+				break;
+			default:
+				THIS_SHOULD_NEVER_HAPPEN;
+		}
+
+		zbx_trends_export_write(json.buffer, json.buffer_size);
+	}
+
+	zbx_trends_export_flush();
+	zbx_json_free(&json);
+}
+
+static void	DCexport_history(const ZBX_DC_HISTORY *history, int history_num, zbx_hashset_t *hosts,
+		zbx_hashset_t *items_info)
+{
+	const ZBX_DC_HISTORY	*h;
+	const DC_ITEM		*item;
+	int			i, j;
+	zbx_host_info_t		*host_info;
+	zbx_item_info_t		*item_info;
+	struct zbx_json		json;
+
+	zbx_json_init(&json, ZBX_JSON_STAT_BUF_LEN);
+
+	for (i = 0; i < history_num; i++)
+	{
+		h = &history[i];
+
+		if (0 != (ZBX_DC_FLAGS_NOT_FOR_MODULES & h->flags))
+			continue;
+
+		if (NULL == (item_info = (zbx_item_info_t *)zbx_hashset_search(items_info, &h->itemid)))
+			continue;
+
+		item = item_info->item;
+
+		if (NULL == item_info->name)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "item was deleted during export");
+			continue;
+		}
+
+		if (NULL == (host_info = (zbx_host_info_t *)zbx_hashset_search(hosts, &item->host.hostid)))
+		{
+			THIS_SHOULD_NEVER_HAPPEN;
+			continue;
+		}
+
+		if (0 == host_info->groups.values_num)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "host group was deleted during export '%s'", item->host.name);
+			continue;
+		}
+
+		zbx_json_clean(&json);
+		zbx_json_addstring(&json, "host", item->host.name, ZBX_JSON_TYPE_STRING);
+		zbx_json_addarray(&json, "groups");
+
+		for (j = 0; j < host_info->groups.values_num; j++)
+			zbx_json_addstring(&json, NULL, host_info->groups.values[j], ZBX_JSON_TYPE_STRING);
+
+		zbx_json_close(&json);
+
+		zbx_json_addarray(&json, "applications");
+
+		for (j = 0; j < item_info->applications.values_num; j++)
+			zbx_json_addstring(&json, NULL, item_info->applications.values[j], ZBX_JSON_TYPE_STRING);
+
+		zbx_json_close(&json);
+		zbx_json_adduint64(&json, "itemid", item->itemid);
+		zbx_json_addstring(&json, "name", item_info->name, ZBX_JSON_TYPE_STRING);
+
+		zbx_json_addint64(&json, "clock", h->ts.sec);
+		zbx_json_addint64(&json, "ns", h->ts.ns);
+
+		switch (h->value_type)
+		{
+			case ITEM_VALUE_TYPE_FLOAT:
+				zbx_json_addfloat(&json, "value", h->value.dbl);
+				break;
+			case ITEM_VALUE_TYPE_UINT64:
+				zbx_json_adduint64(&json, "value", h->value.ui64);
+				break;
+			case ITEM_VALUE_TYPE_STR:
+				zbx_json_addstring(&json, "value", h->value.str, ZBX_JSON_TYPE_STRING);
+				break;
+			case ITEM_VALUE_TYPE_TEXT:
+				zbx_json_addstring(&json, "value", h->value.str, ZBX_JSON_TYPE_STRING);
+				break;
+			case ITEM_VALUE_TYPE_LOG:
+				zbx_json_addint64(&json, "timestamp", h->value.log->timestamp);
+				zbx_json_addstring(&json, "source", ZBX_NULL2EMPTY_STR(h->value.log->source),
+						ZBX_JSON_TYPE_STRING);
+				zbx_json_addint64(&json, "severity", h->value.log->severity);
+				zbx_json_addint64(&json, "logeventid", h->value.log->logeventid);
+				zbx_json_addstring(&json, "value", h->value.log->value, ZBX_JSON_TYPE_STRING);
+				break;
+			default:
+				THIS_SHOULD_NEVER_HAPPEN;
+		}
+
+		zbx_history_export_write(json.buffer, json.buffer_size);
+	}
+
+	zbx_history_export_flush();
+	zbx_json_free(&json);
+}
+
+static void	DCexport_history_and_trends(const ZBX_DC_HISTORY *history, int history_num,
+		const zbx_vector_uint64_t *itemids, DC_ITEM *items, const int *errcodes,
+		const ZBX_DC_TREND *trends, int trends_num)
+{
+	const char		*__function_name = "DCexport_history_and_trends";
+	int			i, index;
+	zbx_vector_uint64_t	hostids, item_info_ids;
+	zbx_hashset_t		hosts_info, items_info;
+	DC_ITEM		*item;
+	zbx_item_info_t		item_info;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() history_num:%d trends_num:%d", __function_name, history_num, trends_num);
+
+	zbx_vector_uint64_create(&hostids);
+	zbx_vector_uint64_create(&item_info_ids);
+	zbx_hashset_create_ext(&items_info, itemids->values_num, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC, (zbx_clean_func_t)zbx_item_info_clean,
+			ZBX_DEFAULT_MEM_MALLOC_FUNC, ZBX_DEFAULT_MEM_REALLOC_FUNC, ZBX_DEFAULT_MEM_FREE_FUNC);
+
+	for (i = 0; i < history_num; i++)
+	{
+		const ZBX_DC_HISTORY	*h = &history[i];
+
+		if (0 != (ZBX_DC_FLAGS_NOT_FOR_EXPORT & h->flags))
+			continue;
+
+		if (FAIL == (index = zbx_vector_uint64_bsearch(itemids, h->itemid, ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+		{
+			THIS_SHOULD_NEVER_HAPPEN;
+			continue;
+		}
+
+		if (SUCCEED != errcodes[index])
+			continue;
+
+		item = &items[index];
+
+		zbx_vector_uint64_append(&hostids, item->host.hostid);
+		zbx_vector_uint64_append(&item_info_ids, item->itemid);
+
+		item_info.itemid = item->itemid;
+		item_info.name = NULL;
+		item_info.item = item;
+		zbx_vector_ptr_create(&item_info.applications);
+		zbx_hashset_insert(&items_info, &item_info, sizeof(item_info));
+	}
+
+	if (0 == history_num)
+	{
+		for (i = 0; i < trends_num; i++)
+		{
+			const ZBX_DC_TREND	*trend = &trends[i];
+
+			if (FAIL == (index = zbx_vector_uint64_bsearch(itemids, trend->itemid,
+					ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+			{
+				THIS_SHOULD_NEVER_HAPPEN;
+				continue;
+			}
+
+			if (SUCCEED != errcodes[index])
+				continue;
+
+			item = &items[index];
+
+			zbx_vector_uint64_append(&hostids, item->host.hostid);
+			zbx_vector_uint64_append(&item_info_ids, item->itemid);
+
+			item_info.itemid = item->itemid;
+			item_info.name = NULL;
+			item_info.item = item;
+			zbx_vector_ptr_create(&item_info.applications);
+			zbx_hashset_insert(&items_info, &item_info, sizeof(item_info));
+		}
+	}
+
+	if (0 == item_info_ids.values_num)
+		goto clean;
+
+	zbx_vector_uint64_sort(&item_info_ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_sort(&hostids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(&hostids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	zbx_hashset_create_ext(&hosts_info, hostids.values_num, ZBX_DEFAULT_UINT64_HASH_FUNC,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC, (zbx_clean_func_t)zbx_host_info_clean,
+			ZBX_DEFAULT_MEM_MALLOC_FUNC, ZBX_DEFAULT_MEM_REALLOC_FUNC, ZBX_DEFAULT_MEM_FREE_FUNC);
+
+	db_get_hosts_by_hostid(&hosts_info, &hostids);
+
+	db_get_items_info_by_itemid(&items_info, &item_info_ids);
+
+	if (0 != history_num)
+		DCexport_history(history, history_num, &hosts_info, &items_info);
+
+	if (0 != trends_num)
+		DCexport_trends(trends, trends_num, &hosts_info, &items_info);
+
+	zbx_hashset_destroy(&hosts_info);
+clean:
+	zbx_hashset_destroy(&items_info);
+	zbx_vector_uint64_destroy(&item_info_ids);
+	zbx_vector_uint64_destroy(&hostids);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -881,6 +1327,33 @@ static void	DCsync_trends(void)
 	}
 
 	UNLOCK_TRENDS;
+
+	if (SUCCEED == zbx_is_export_enabled() && 0 != trends_num)
+	{
+		DC_ITEM			*items;
+		zbx_vector_uint64_t	itemids;
+		int			*errcodes, i;
+
+		items = (DC_ITEM *)zbx_malloc(NULL, sizeof(DC_ITEM) * (size_t)trends_num);
+		errcodes = (int *)zbx_malloc(NULL, sizeof(int) * (size_t)trends_num);
+
+		zbx_vector_uint64_create(&itemids);
+		zbx_vector_uint64_reserve(&itemids, trends_num);
+
+		for (i = 0; i < trends_num; i++)
+			zbx_vector_uint64_append(&itemids, trends[i].itemid);
+
+		zbx_vector_uint64_sort(&itemids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+		DCconfig_get_items_by_itemids(items, itemids.values, errcodes, trends_num);
+
+		DCexport_history_and_trends(NULL, 0, &itemids, items, errcodes, trends, trends_num);
+
+		DCconfig_clean_items(items, errcodes, trends_num);
+		zbx_vector_uint64_destroy(&itemids);
+		zbx_free(items);
+		zbx_free(errcodes);
+	}
 
 	if (0 < trends_num)
 	{
@@ -2098,6 +2571,8 @@ static void	DCmodule_prepare_history(ZBX_DC_HISTORY *history, int history_num, Z
 	}
 }
 
+
+
 /******************************************************************************
  *                                                                            *
  * Function: DCsync_history                                                   *
@@ -2210,6 +2685,11 @@ int	DCsync_history(int sync_type, int *total_num)
 
 	do
 	{
+		DC_ITEM			*items;
+		int			*errcodes, trends_num = 0;
+		zbx_vector_uint64_t	itemids;
+		ZBX_DC_TREND		*trends = NULL;
+
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 			zbx_vector_uint64_clear(&triggerids);
 
@@ -2237,12 +2717,10 @@ int	DCsync_history(int sync_type, int *total_num)
 
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		{
-			zbx_vector_uint64_t	itemids;
-			DC_ITEM			*items = NULL;
-			int			*errcodes = NULL, i;
+			int	i;
 
-			items = zbx_malloc(items, sizeof(DC_ITEM) * (size_t)history_num);
-			errcodes = zbx_malloc(errcodes, sizeof(int) * (size_t)history_num);
+			items = (DC_ITEM *)zbx_malloc(NULL, sizeof(DC_ITEM) * (size_t)history_num);
+			errcodes = (int *)zbx_malloc(NULL, sizeof(int) * (size_t)history_num);
 
 			zbx_vector_uint64_create(&itemids);
 			zbx_vector_uint64_reserve(&itemids, history_num);
@@ -2257,14 +2735,13 @@ int	DCsync_history(int sync_type, int *total_num)
 			DCmass_update_history(history, &itemids, items, errcodes, history_num);
 			DCmass_add_history(history, history_num);
 
-			zbx_vector_uint64_destroy(&itemids);
-
 			DBbegin();
 
 			DCmass_update_items(history, history_num, items, errcodes);
 
 			DCmass_update_triggers(history, history_num, &trigger_diff);
-			DCmass_update_trends(history, history_num);
+			DCmass_update_trends(history, history_num, &trends, &trends_num);
+			DBmass_update_trends(trends, trends_num);
 
 			/* processing of events, generated in functions: */
 			/*   DCmass_update_items() */
@@ -2276,10 +2753,6 @@ int	DCsync_history(int sync_type, int *total_num)
 			}
 
 			DBcommit();
-
-			DCconfig_clean_items(items, errcodes, history_num);
-			zbx_free(errcodes);
-			zbx_free(items);
 		}
 		else
 		{
@@ -2305,6 +2778,16 @@ int	DCsync_history(int sync_type, int *total_num)
 
 		*total_num += history_num;
 		candidate_num = history_items.values_num;
+
+		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		{
+			if (SUCCEED == zbx_is_export_enabled())
+			{
+				DCexport_history_and_trends(history, history_num, &itemids, items, errcodes, trends,
+						trends_num);
+				zbx_export_events();
+			}
+		}
 
 		DCmodule_prepare_history(history, history_num, history_float, &history_float_num, history_integer,
 				&history_integer_num, history_string, &history_string_num, history_text,
@@ -2392,6 +2875,16 @@ int	DCsync_history(int sync_type, int *total_num)
 			zabbix_log(LOG_LEVEL_WARNING, "syncing history data... " ZBX_FS_DBL "%%",
 					(double)*total_num / (cache->history_num + *total_num) * 100);
 			sync_start = now;
+		}
+
+		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		{
+			zbx_clean_events();
+			zbx_free(trends);
+			zbx_vector_uint64_destroy(&itemids);
+			DCconfig_clean_items(items, errcodes, history_num);
+			zbx_free(errcodes);
+			zbx_free(items);
 		}
 
 		zbx_vector_ptr_clear(&history_items);

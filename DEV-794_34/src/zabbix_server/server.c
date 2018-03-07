@@ -66,6 +66,7 @@
 #include "../libs/zbxcrypto/tls.h"
 #include "zbxipcservice.h"
 #include "zbxhistory.h"
+#include "export.h"
 
 #ifdef ZBX_CUNIT
 #include "../libs/zbxcunit/zbxcunit.h"
@@ -206,6 +207,7 @@ char	*CONFIG_DBSCHEMA		= NULL;
 char	*CONFIG_DBUSER			= NULL;
 char	*CONFIG_DBPASSWORD		= NULL;
 char	*CONFIG_DBSOCKET		= NULL;
+char	*CONFIG_EXPORT_DIR		= NULL;
 int	CONFIG_DBPORT			= 0;
 int	CONFIG_ENABLE_REMOTE_COMMANDS	= 0;
 int	CONFIG_LOG_REMOTE_COMMANDS	= 0;
@@ -696,6 +698,8 @@ static void	zbx_load_config(ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 		{"HistoryStorageTypes",		&CONFIG_HISTORY_STORAGE_OPTS,		TYPE_STRING_LIST,
 			PARM_OPT,	0,			0},
+		{"ExportDir",			&CONFIG_EXPORT_DIR,			TYPE_STRING,
+			PARM_OPT,	0,			0},
 		{NULL}
 	};
 
@@ -985,6 +989,13 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 		exit(EXIT_FAILURE);
 	}
 
+	if (FAIL == zbx_export_init(&error))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "cannot initialize export: %s", error);
+		zbx_free(error);
+		exit(EXIT_FAILURE);
+	}
+
 	if (ZBX_DB_UNKNOWN == (db_type = zbx_db_get_database_type()))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "cannot use database \"%s\": database is not a Zabbix database",
@@ -1185,6 +1196,12 @@ void	zbx_on_exit(void)
 	zbx_ipc_service_free_env();
 
 	DBconnect(ZBX_DB_CONNECT_EXIT);
+
+	if (SUCCEED == zbx_is_export_enabled())
+	{
+		zbx_history_export_init("main-process", 0);
+		zbx_problems_export_init("main-process", 0);
+	}
 
 	free_database_cache();
 
