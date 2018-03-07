@@ -20,7 +20,8 @@
 #include "common.h"
 #include "log.h"
 
-extern char	*CONFIG_EXPORT_DIR;
+extern char		*CONFIG_EXPORT_DIR;
+extern zbx_uint64_t	CONFIG_EXPORT_FILE_SIZE;
 
 static char	*history_file_name;
 static FILE	*history_file;
@@ -113,7 +114,7 @@ static	int	file_write(const char *buf, size_t count, FILE **file, const char *na
 {
 	size_t	ret;
 
-	if (ZBX_GIBIBYTE <= (long)count + ftell(*file) + 1)
+	if (CONFIG_EXPORT_FILE_SIZE <= (long)count + ftell(*file) + 1)
 	{
 		char	filename_old[MAX_STRING_LEN];
 
