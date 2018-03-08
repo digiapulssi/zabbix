@@ -43,7 +43,6 @@ zabbix_proxy_LDADD = \
 	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
 	$(top_srcdir)/src/libs/zbxself/libzbxself.a \
 	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
-	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
@@ -59,16 +58,17 @@ zabbix_proxy_LDADD = \
 	$(top_srcdir)/src/libs/zbxdb/libzbxdb.a \
 	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a \
 	$(top_srcdir)/src/libs/zbxtasks/libzbxtasks.a 
-	
+
 if PROXY_IPCSERVICE
 zabbix_proxy_LDADD += $(top_srcdir)/src/libs/zbxipcservice/libzbxipcservice.a
 endif
-	
+
+zabbix_proxy_LDADD += $(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a
+
 if HAVE_IPMI
 zabbix_proxy_LDADD += $(top_srcdir)/src/zabbix_server/ipmi/libipmi.a
 endif
 	
-
 zabbix_proxy_LDADD += @PROXY_LIBS@
 
 zabbix_proxy_LDFLAGS = @PROXY_LDFLAGS@
