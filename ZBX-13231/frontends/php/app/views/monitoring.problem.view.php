@@ -289,7 +289,7 @@ if ($data['action'] == 'problem.view') {
 			'periodFixed' => CProfile::get('web.problem.timelinefixed', 1),
 			'sliderMaximumTimePeriod' => ZBX_MAX_PERIOD,
 			'profile' => [
-				'idx' => 'web.problem.timeline',
+				'idx' => 'web.problem',
 				'idx2' => 0,
 			]
 		];

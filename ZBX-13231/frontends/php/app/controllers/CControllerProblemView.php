@@ -274,7 +274,7 @@ class CControllerProblemView extends CController {
 		];
 
 		if ($data['filter']['show'] == TRIGGERS_OPTION_ALL) {
-			$data['profileIdx'] = 'web.problem.timeline';
+			$data['profileIdx'] = 'web.problem.timelinefixed';
 			$data['profileIdx2'] = 0;
 			$data['period'] = $this->hasInput('period') ? $this->getInput('period') : null;
 			$data['stime'] = $this->hasInput('stime') ? $this->getInput('stime') : null;

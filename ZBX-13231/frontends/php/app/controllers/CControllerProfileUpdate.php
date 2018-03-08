@@ -75,7 +75,7 @@ class CControllerProfileUpdate extends CController {
 				case 'web.screens.timelinefixed':
 				case 'web.graphs.timelinefixed':
 				case 'web.httptest.timelinefixed':
-				case 'web.problem.timeline':
+				case 'web.problem.timelinefixed':
 				case 'web.auditacts.timelinefixed':
 				case 'web.auditlogs.timelinefixed':
 				case 'web.item.graph.timelinefixed':
