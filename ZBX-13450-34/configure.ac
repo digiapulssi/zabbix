@@ -1414,6 +1414,7 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	PROXY_LIBS="$PROXY_LIBS $OPENIPMI_LIBS"
 
 	AC_SUBST(OPENIPMI_CFLAGS)
+	AM_CONDITIONAL(HAVE_IPMI, [test "x$have_ipmi" = "xyes"])
 fi
 
 dnl Check if Zabbix internal IPC services are used
@@ -1638,13 +1639,6 @@ case "x$ARCH" in
 		;;
 esac
 
-dnl ZBX-13450
-AS_IF([test "x$ARCH" = "xsolaris" -a "s$(uname -r)" = "s5.10"],[
-AC_DEFINE_UNQUOTED([ZBX_VAR_NAME_CONCAT(x,y,z)],[x##y##z],[Concatenating all parts of variable name for ZBX-13450])
-AC_DEFINE_UNQUOTED([ZBX_UNIQ_VAR_NAME(x,y,z)],[ZBX_VAR_NAME_CONCAT(x,y,z)],[Create unique variable name for ZBX-13450])
-AM_CPPFLAGS=${AM_CPPFLAGS}' '-D__FILENAME__='$(subst /,,$(subst .,,$(subst $(abs_top_builddir)/,,$(abspath $<))))'
-AC_SUBST(AM_CPPFLAGS)
-])
 
 dnl *****************************************************************
 dnl *                                                               *
