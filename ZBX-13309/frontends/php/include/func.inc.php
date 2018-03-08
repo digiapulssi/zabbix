@@ -298,17 +298,11 @@ function zbx_date2str($format, $value = null) {
  *
  * @param int|string $start_date Start date timestamp.
  * @param int|string $end_date   End date timestamp.
- * @param boolean    $absolute   Indicates if return value is absolute.
  *
  * @return string
  */
-function zbx_date2age($start_date, $end_date = 0, $absolute = false) {
-	$start_date = date('U', $start_date);
-	$end_date = $end_date ? date('U', $end_date) : time();
-
-	if ($absolute) {
-		return convertUnitsS(abs($end_date - $start_date));
-	}
+function zbx_date2age($start_date, $end_date = 0) {
+	$end_date = ($end_date != 0) ? $end_date : time();
 
 	return convertUnitsS($end_date - $start_date);
 }
