@@ -690,7 +690,7 @@ static int	DBdelete_from_table(const char *tablename, const char *filter, int li
 
 /******************************************************************************
  *                                                                            *
- * Function: hk_problem_cleanup                                              *
+ * Function: hk_problem_cleanup                                               *
  *                                                                            *
  * Purpose: perform problem table cleanup                                     *
  *                                                                            *
