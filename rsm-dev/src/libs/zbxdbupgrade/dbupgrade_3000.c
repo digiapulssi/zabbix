@@ -1010,6 +1010,7 @@ static int	DBpatch_3000140(void)
 {
 	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
 	static const char	*const data[] = {
+		"ROW   |13000    |130       |-1   |Internal error                                                                                                  |",
 		"ROW   |13001    |130       |-200 |No reply from RDDS43 server (obsolete)                                                                          |",
 		"ROW   |13002    |130       |-201 |Whois server returned no NS                                                                                     |",
 		"ROW   |13003    |130       |-202 |No Unix timestamp (obsolete)                                                                                    |",
