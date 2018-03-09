@@ -641,6 +641,22 @@ elseif (hasRequest('add') || hasRequest('update')) {
 						unset($dbTriggers[$key]);
 						continue 2;
 					}
+					$dependent_triggers = API::Trigger()->get([
+						'output' => ['triggerid'],
+						'selectItems' => ['flags'],
+						'hostids' => $srcHostId,
+						'inherited' => false,
+						'filter' => ['flags' => [ZBX_FLAG_DISCOVERY_NORMAL]],
+						'selectDependencies' => ['triggerid', 'flags']
+					]);
+					foreach ($dependent_triggers as $dt) {
+						foreach ($dt['items'] as $item) {
+							if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
+								unset($dbTriggers[$key]);
+								continue 4;
+							}
+						}
+					}
 				}
 			}
 
