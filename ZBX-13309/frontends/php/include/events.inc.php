@@ -300,10 +300,6 @@ function make_small_eventlist($startEvent, $backurl) {
 			? zbx_date2age($event['clock'], $event['r_clock'])
 			: zbx_date2age($event['clock']);
 
-		if (bccomp($startEvent['eventid'], $event['eventid']) == 0) {
-			$duration = zbx_date2age($clock);
-		}
-
 		if ($event['r_eventid'] == 0) {
 			$in_closing = false;
 
