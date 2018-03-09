@@ -351,10 +351,11 @@ if ($data['clone_hostid'] != 0) {
 	// host triggers
 	$hostTriggers = API::Trigger()->get([
 		'output' => ['triggerid', 'description'],
-		'selectItems' => ['type'],
+		'selectItems' => ['type', 'flags'],
 		'hostids' => [$data['clone_hostid']],
 		'inherited' => false,
-		'filter' => ['flags' => [ZBX_FLAG_DISCOVERY_NORMAL]]
+		'filter' => ['flags' => [ZBX_FLAG_DISCOVERY_NORMAL]],
+		'selectDependencies' => ['triggerid', 'flags']
 	]);
 
 	if ($hostTriggers) {
@@ -363,6 +364,16 @@ if ($data['clone_hostid'] != 0) {
 		foreach ($hostTriggers as $hostTrigger) {
 			if (httpItemExists($hostTrigger['items'])) {
 				continue;
+			}
+			foreach ($hostTrigger['items'] as $item) {
+				if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
+					continue 2;
+				}
+			}
+			foreach ($hostTrigger['dependencies'] as $dependency) {
+				if ($dependency['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
+					continue 2;
+				}
 			}
 			$triggersList[$hostTrigger['triggerid']] = $hostTrigger['description'];
 		}
@@ -381,7 +392,7 @@ if ($data['clone_hostid'] != 0) {
 	$hostGraphs = API::Graph()->get([
 		'output' => ['graphid', 'name'],
 		'selectHosts' => ['hostid'],
-		'selectItems' => ['type'],
+		'selectItems' => ['type', 'flags'],
 		'hostids' => [$data['clone_hostid']],
 		'inherited' => false,
 		'filter' => ['flags' => [ZBX_FLAG_DISCOVERY_NORMAL]]
@@ -395,6 +406,11 @@ if ($data['clone_hostid'] != 0) {
 			}
 			if (httpItemExists($hostGraph['items'])) {
 				continue;
+			}
+			foreach ($hostGraph['items'] as $item) {
+				if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
+					continue 2;
+				}
 			}
 			$graphsList[$hostGraph['graphid']] = $hostGraph['name'];
 		}

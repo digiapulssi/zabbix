@@ -624,8 +624,25 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$dbTriggers = API::Trigger()->get([
 				'output' => ['triggerid'],
 				'hostids' => $srcHostId,
-				'inherited' => false
+				'inherited' => false,
+				'selectItems' => ['type', 'flags'],
+				'selectDependencies' => ['triggerid', 'flags']
 			]);
+
+			foreach ($dbTriggers as $key => $dbTrigger) {
+				foreach ($dbTrigger['items'] as $item) {
+					if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
+						unset($dbTriggers[$key]);
+						continue 2;
+					}
+				}
+				foreach ($dbTrigger['dependencies'] as $dependency) {
+					if ($dependency['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
+						unset($dbTriggers[$key]);
+						continue 2;
+					}
+				}
+			}
 
 			if ($dbTriggers) {
 				if (!copyTriggersToHosts(zbx_objectValues($dbTriggers, 'triggerid'), $hostId, $srcHostId)) {
@@ -655,7 +672,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$dbGraphs = API::Graph()->get([
 				'output' => API_OUTPUT_EXTEND,
 				'selectHosts' => ['hostid'],
-				'selectItems' => ['type'],
+				'selectItems' => ['type', 'flags'],
 				'hostids' => $srcHostId,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'inherited' => false
@@ -669,7 +686,11 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				if (httpItemExists($dbGraph['items'])) {
 					continue;
 				}
-
+				foreach ($dbGraph['items'] as $item) {
+					if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
+						continue 2;
+					}
+				}
 				if (!copyGraphToHost($dbGraph['graphid'], $hostId)) {
 					throw new Exception();
 				}

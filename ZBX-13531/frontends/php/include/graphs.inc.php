@@ -361,7 +361,7 @@ function copyGraphToHost($graphId, $hostId) {
 	$graph['gitems'] = getSameGraphItemsForHost(
 		$graph['gitems'],
 		$hostId,
-		false,
+		true,
 		[ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED]
 	);
 
