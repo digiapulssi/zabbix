@@ -1194,6 +1194,8 @@ ROW   |10000    |100       |1    |Online                                        
 ROW   |10001    |100       |0    |Offline                                                                                                         |
 ROW   |11000    |110       |0    |Down                                                                                                            |
 ROW   |11001    |110       |1    |Up                                                                                                              |
+ROW   |11002    |110       |2    |Up-inconclusive-no-data                                                                                         |
+ROW   |11003    |110       |3    |Up-inconclusive-no-probes                                                                                       |
 ROW   |12000    |120       |-1   |Internal error                                                                                                  |
 ROW   |12001    |120       |-205 |No reply from resolver                                                                                          |
 ROW   |12002    |120       |-206 |No AD bit in the answer from resolver                                                                           |
@@ -1418,6 +1420,8 @@ ROW   |3 |Down     |
 ROW   |4 |No result|
 ROW   |5 |Online   |
 ROW   |6 |Offline  |
+ROW   |7 |Up-inconclusive-no-data  |
+ROW   |8 |Up-inconclusive-no-probes|
 
 TABLE |rsm_test_type
 FIELDS|id|name        |

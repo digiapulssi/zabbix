@@ -1151,6 +1151,36 @@ static int	DBpatch_3000140(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000141(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into mappings (mappingid,valuemapid,value,newvalue) values"
+			" (11002,110,'2','Up-inconclusive-no-data'),"
+			" (11003,110,'3','Up-inconclusive-no-probes')"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000142(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into rsm_status_map (id,name) values"
+			" (7,'Up-inconclusive-no-data'),"
+			" (8,'Up-inconclusive-no-probes')"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1199,5 +1229,7 @@ DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}"
 DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
 DBPATCH_ADD(3000140, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
+DBPATCH_ADD(3000141, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to "RSM Service Availability" value mapping */
+DBPATCH_ADD(3000142, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to data export "statusMaps" catalog */
 
 DBPATCH_END()
