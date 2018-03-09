@@ -1,3 +1,12 @@
+Changes for rsm1.0.5rc1
+
+New features:
+
+Bug fixes:
+....I..... [327] fixed flapping of "Probe {$RSM.PROXY_NAME} is unavailable" trigger (gleb)
+....I..... [318] lowered "Refresh unsupported items" interval to allow online.nodes.pl come back faster in case of timeout (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.4
 
 rsm1.0.4rc2 was released as rsm1.0.4 without any changes

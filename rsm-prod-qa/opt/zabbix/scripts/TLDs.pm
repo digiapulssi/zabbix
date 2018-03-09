@@ -889,7 +889,13 @@ sub create_probe_health_tmpl()
 	create_trigger(
 		{
 			'description'	=> 'Probe {$RSM.PROXY_NAME} is unavailable',
-			'expression'	=> '{' . $host_name . ':' . $item_key . '.fuzzytime(2m)}=0',
+			'expression'	=>
+					"{TRIGGER.VALUE}=0 and {$host_name:$item_key.fuzzytime(2m)}=0 or\r\n" .
+					"{TRIGGER.VALUE}=1 and (\r\n" .
+					"\t{$host_name:$item_key.now()}-{$host_name:$item_key.last(#1)}>1m or\r\n" .
+					"\t{$host_name:$item_key.now()}-{$host_name:$item_key.last(#2)}>2m or\r\n" .
+					"\t{$host_name:$item_key.now()}-{$host_name:$item_key.last(#3)}>3m\r\n" .
+					")",
 			'priority'	=> 4
 		},
 		$host_name
@@ -901,7 +907,9 @@ sub create_probe_health_tmpl()
 		'key_'		=> PROBE_KEY_ONLINE,
 		'status'	=> ITEM_STATUS_ACTIVE,
 		'hostid'	=> $templateid,
-		'applications'	=> [get_application_id('Probe Availability', $templateid)],
+		'applications'	=> [
+			get_application_id('Probe Availability', $templateid)
+		],
 		'type'		=> 2,
 		'value_type'	=> 3,
 		'valuemapid'	=> rsm_value_mappings->{'rsm_probe'}
