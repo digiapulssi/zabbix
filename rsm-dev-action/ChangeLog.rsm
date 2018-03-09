@@ -1,8 +1,27 @@
 Changes for rsm1.1.0rc1
 
 New features:
+....I..PS. [320] added new error codes for RDDS43 and RDDS80 tests, made some of old codes obsolete, stopped treating no reply from local resolver as service error (gleb)
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.4
+
+rsm1.0.4rc2 was released as rsm1.0.4 without any changes
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.4rc2
+
+Bug fixes:
+....I..... [325] fixed a typo in one of the informational messages (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.4rc1
+
+Bug fixes:
+....I..... [322] added removal of temporary files on successful run to the end of Data Export script (dimir)
+....I..... [307] improved Data Export script performance by lowering number of syscalls (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.3
