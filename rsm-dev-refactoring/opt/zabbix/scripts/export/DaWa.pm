@@ -84,14 +84,10 @@ my ($_year, $_month, $_day);
 
 my $_dw_error = "";
 
-my $_catalogs_loaded = 1;
-
 sub dw_csv_init
 {
 	$_csv = Text::CSV_XS->new({binary => 1, auto_diag => 1});
 	$_csv->eol("\n");
-
-	$_catalogs_loaded = 0;
 }
 
 # only works with data files
@@ -135,8 +131,6 @@ sub dw_load_ids_from_db
 			$_csv_catalogs{$id_type}{$row_ref->[0]} = $row_ref->[1];
 		}
 	}
-
-	$_catalogs_loaded = 1;
 }
 
 # only works with catalogs
