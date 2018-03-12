@@ -209,10 +209,6 @@ pre {
 	word-wrap: break-word;
 }
 
-:-ms-input-placeholder {
-	color: #6d6d6d !important;
-}
-
 // Main Navigation
 nav {
 	background-color: $main-subnav-bg-color;
@@ -1541,6 +1537,10 @@ footer {
 				}
 			}
 		}
+	}
+
+	.table-forms-td-right {
+		position: relative;
 	}
 
 	h4 {
@@ -3232,6 +3232,7 @@ $form-icon-btn: (
 		.overlay-dialogue-body {
 			overflow: auto;
 			overflow-x: hidden;
+			width: 100%;
 			max-height: calc(100vh - 190px);
 			max-width: inherit;
 			margin: 0 0 10px 0;
@@ -3294,13 +3295,14 @@ $form-icon-btn: (
 	text-align: left;
 	position: absolute;
 	left: -1px;
+	max-width: 100%;
 
 	.btn-back-map {
 		margin-top: 10px;
 		border-radius: 0px 2px 2px 0px;
 		background-color: $btn-back-map-background-color;
 		padding: 0px 0px 0px 0px;
-		display: inline-block;
+		display: flex;
 		height: 24px;
 		line-height: 24px;
 		vertical-align: middle;
@@ -3315,6 +3317,7 @@ $form-icon-btn: (
 		.btn-back-map-icon {
 			margin-left: 5px;
 			display: inline-block;
+			flex: 1 0 auto;
 			width: 28px;
 			height: 24px;
 			vertical-align: middle;
@@ -3329,6 +3332,8 @@ $form-icon-btn: (
 				display: inline-block;
 				line-height: 24px;
 				padding: 0px 6px 0px 0px;
+				flex: auto;
+				@extend %overflow-ellipsis;
 			}
 		}
 	}
@@ -4596,8 +4601,6 @@ svg {
 	max-height: 100%;
 	max-width: 100%;
 	display: flex;
-	align-items: center;
-	justify-content: center;
 }
 
 @supports (-ms-ime-align:auto) {
@@ -4871,6 +4874,31 @@ svg {
 			background: #faebd7;
 		}
 	}
+}
+
+::-webkit-input-placeholder {
+	color: $input-placeholder-color;
+}
+
+:-ms-input-placeholder {
+	color: $input-placeholder-color !important;
+}
+
+::-ms-input-placeholder {
+	color: $input-placeholder-color;
+}
+
+::-moz-placeholder {
+	color: $input-placeholder-color;
+	opacity: 1;
+}
+
+:-moz-placeholder {
+	color: $input-placeholder-color;
+}
+
+:placeholder-shown {
+	color: $input-placeholder-color;
 }
 
 /*doc
