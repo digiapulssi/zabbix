@@ -15,7 +15,8 @@ use Sys::Syslog;
 use Data::Dumper;
 use Time::HiRes qw(time);
 use Fcntl qw(:flock);
-use TLD_constants1 qw(:api :items);	# todo phase 1
+use TLD_constants qw(:items);
+use TLD_constants1 qw(:api);		# todo phase 1
 use ApiHelper1;				# todo phase 1
 use RSM;				# get_rsm_local_key()
 use Pusher qw(push_to_trapper);
