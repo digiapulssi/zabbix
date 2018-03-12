@@ -2845,9 +2845,6 @@ sub __get_probestatus_times
 
 	my ($rows_ref, @times, $last_status);
 
-	my $key_match = "i.key_";
-	$key_match .= ($key =~ m/%/) ? " like '$key'" : "='$key'";
-
 	my $itemid;
 	if ($key =~ m/%/)
 	{
