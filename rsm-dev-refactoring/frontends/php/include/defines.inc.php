@@ -1391,8 +1391,6 @@ define('ZBX_EC_DNS_NS_ERRSIG',		-204);
 define('ZBX_EC_DNS_RES_NOREPLY',	-205);
 define('ZBX_EC_DNS_RES_NOADBIT',	-206);
 
-define('MIN_PROBE_OK_RESULT_PERCENTAGE',	49);
-
 // SLA monitoring calculated items keys
 define('CALCULATED_ITEM_DNS_FAIL',				'rsm.configvalue[RSM.INCIDENT.DNS.FAIL]');
 define('CALCULATED_ITEM_DNS_RECOVERY',			'rsm.configvalue[RSM.INCIDENT.DNS.RECOVER]');
