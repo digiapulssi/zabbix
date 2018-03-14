@@ -37,6 +37,8 @@
 #include "dbconfig.h"
 #include "dbsync.h"
 
+ZBX_THREAD_LOCAL ZBX_DC_TRIGGER fatal_dbg_trigger = {0}; /* ZBX-13347 */
+
 static int	sync_in_progress = 0;
 
 #define	LOCK_CACHE	if (0 == sync_in_progress) zbx_mutex_lock(&config_lock)
@@ -4849,6 +4851,8 @@ static void	DCget_function(DC_FUNCTION *dst_function, const ZBX_DC_FUNCTION *src
 
 static void	DCget_trigger(DC_TRIGGER *dst_trigger, ZBX_DC_TRIGGER *src_trigger, unsigned char expand)
 {
+	fatal_dbg_trigger = *src_trigger; /* ZBX-13347 */
+
 	dst_trigger->triggerid = src_trigger->triggerid;
 	dst_trigger->description = zbx_strdup(NULL, src_trigger->description);
 	dst_trigger->expression_orig = zbx_strdup(NULL, src_trigger->expression);
