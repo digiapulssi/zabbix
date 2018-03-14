@@ -8,6 +8,8 @@ A.F....... [ZBX-1357] updated Chinese (China), Czech, English (United States), F
 
 Bug fixes:
 .......PS. [ZBX-13450] fixed server and proxy compilation problem for Solaris 10 (MVekslers)
+A.F....... [ZBX-13458,ZBX-13494] fixed resolving of the macros in map labels for non-superadmin users (Sasha)
+..F....... [ZBX-13526] fixed widget placeholder jumping instead of resizing while dashboard edit (ashubin)
 .......PS. [ZBX-13362] fixed potentially wrong rows deleting by housekeeper in PostgreSQL (Sergejs)
 ..F....... [ZBX-13506] fixed linked trigger is moved to sibling map element (agriscenko)
 ........S. [ZBX-13586] fixed trigger-based event correlation - suspend creation of event if no problems are recovered by it (viktors, wiper)
