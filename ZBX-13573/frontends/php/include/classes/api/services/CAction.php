@@ -850,7 +850,7 @@ class CAction extends CApiService {
 							$db_opmessage = array_key_exists('opmessage', $db_ack_operations[$ack_operation['operationid']])
 								? $db_ack_operations[$ack_operation['operationid']]['opmessage']
 								: [
-									'default_msg'	=> 1,
+									'default_msg'	=> 0,
 									'mediatypeid'	=> 0,
 									'subject'		=> ACTION_DEFAULT_SUBJ_ACKNOWLEDGE,
 									'message'		=> ACTION_DEFAULT_MSG_ACKNOWLEDGE
