@@ -23,8 +23,12 @@ use constant E_FAIL => -1;
 use constant E_ID_NONEXIST => -2;
 use constant E_ID_MULTIPLE => -3;
 
-use constant UP => 1;
-use constant DOWN => 0;
+						# "RSM Service Availability" value mapping:
+use constant DOWN			=> 0;	# Down
+use constant UP				=> 1;	# Up
+use constant UP_INCONCLUSIVE_NO_DATA	=> 2;	# Up-inconclusive-no-data
+use constant UP_INCONCLUSIVE_NO_PROBES	=> 3;	# Up-inconclusive-no-probes
+
 use constant ONLINE => 1;	# todo phase 1: check where these are used
 use constant OFFLINE => 0;	# todo phase 1: check where these are used
 use constant SLV_UNAVAILABILITY_LIMIT => 49; # NB! must be in sync with frontend
@@ -1423,8 +1427,15 @@ sub process_slv_avail($$$$$$$$$$)
 
 	if ($online_probe_count < $cfg_minonline)
 	{
-		push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes online, $online_probe_count while $cfg_minonline required)");
-		add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes online, $online_probe_count while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
+		push_value($tld, $cfg_key_out, $value_ts, UP_INCONCLUSIVE_NO_PROBES,
+				"Up (not enough probes online, $online_probe_count while $cfg_minonline required)");
+
+		if (alerts_enabled() == SUCCESS)
+		{
+			add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes" .
+					" online, $online_probe_count while $cfg_minonline required)");
+		}
+
 		return;
 	}
 
@@ -1448,8 +1459,15 @@ sub process_slv_avail($$$$$$$$$$)
 	my $probes_with_results = scalar(keys(%{$values_ref}));
 	if ($probes_with_results < $cfg_minonline)
 	{
-		push_value($tld, $cfg_key_out, $value_ts, UP, "Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
-		add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes with results, $probes_with_results while $cfg_minonline required)") if (alerts_enabled() == SUCCESS);
+		push_value($tld, $cfg_key_out, $value_ts, UP_INCONCLUSIVE_NO_DATA,
+				"Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
+
+		if (alerts_enabled() == SUCCESS)
+		{
+			add_alert(ts_str($value_ts) . "#system#zabbix#$cfg_key_out#PROBLEM#$tld (not enough probes" .
+					" with results, $probes_with_results while $cfg_minonline required)");
+		}
+
 		return;
 	}
 
@@ -1466,12 +1484,17 @@ sub process_slv_avail($$$$$$$$$$)
 		dbg("i:$itemid (h:$items_ref->{$itemid}): ", (SUCCESS == $result ? "up" : "down"), " (values: ", join(', ', @{$values}), ")");
 	}
 
-	my $result = DOWN;
 	my $perc = $probes_with_positive * 100 / $probes_with_results;
-	$result = UP if ($perc > SLV_UNAVAILABILITY_LIMIT);
+	my $detailed_info = sprintf("%d/%d positive, %.3f%%", $probes_with_positive, $probes_with_results, $perc);
 
-	push_value($tld, $cfg_key_out, $value_ts, $result,
-			__avail_result_msg($result, $probes_with_positive, $probes_with_results, $perc));
+	if ($perc > SLV_UNAVAILABILITY_LIMIT)
+	{
+		push_value($tld, $cfg_key_out, $value_ts, UP, "Up ($detailed_info)");
+	}
+	else
+	{
+		push_value($tld, $cfg_key_out, $value_ts, DOWN, "Down ($detailed_info)");
+	}
 }
 
 # organize values from all hosts grouped by itemid and return itemid->values hash
@@ -1813,7 +1836,8 @@ sub get_downtime
 				" and clock between $period_from and $period_till".
 			" order by clock");
 
-		my $prevvalue = UP;
+		my $is_down = 0;	# 1 if service is "Down"
+					# 0 if it is "Up", "Up-inconclusive-no-data" or "Up-inconclusive-no-probes"
 		my $prevclock = 0;
 
 		foreach my $row_ref (@$rows_ref)
@@ -1823,31 +1847,23 @@ sub get_downtime
 			my $value = $row_ref->[0];
 			my $clock = $row_ref->[1];
 
-			# In case of multiple values per second treat them as one. Up value prioritized.
-			if ($prevclock == $clock)
-			{
-				# more than one value per second
-				$prevvalue = UP if ($prevvalue == DOWN and $value == UP);
-				next;
-			}
-
 			# todo phase 1: do not ignore the first downtime minute
 			if ($value == DOWN && $prevclock == 0)
 			{
 				# first run
 				$downtime += 60;
 			}
-			elsif ($prevvalue == DOWN)
+			elsif ($is_down != 0)
 			{
 				$downtime += $clock - $prevclock;
 			}
 
-			$prevvalue = $value;
+			$is_down = ($value == DOWN ? 1 : 0);
 			$prevclock = $clock;
 		}
 
 		# leftover of downtime
-		$downtime += $period_till - $prevclock if ($prevvalue == DOWN);
+		$downtime += $period_till - $prevclock if ($is_down != 0);
 	}
 
 	$downtime = int($downtime / 60);	# minutes;
@@ -1949,29 +1965,30 @@ sub get_downtime_execute
 		my ($value, $clock);
 		$sth->bind_columns(\$value, \$clock);
 
-		my $prevvalue = UP;
+		my $is_down = 0;	# 1 if service is "Down"
+					# 0 if it is "Up", "Up-inconclusive-no-data" or "Up-inconclusive-no-probes"
 		my $prevclock = 0;
 
 		while ($sth->fetch)
 		{
 			$fetches++;
 
-			# In case of multiple values per second treat them as one. Up value prioritized.
-			if ($prevclock == $clock)
+			if ($value == DOWN && $prevclock == 0)
 			{
-				# more than one value per second
-				$prevvalue = UP if ($prevvalue == DOWN and $value == UP);
-				next;
+				# first run
+				$downtime += 60;
+			}
+			elsif ($is_down != 0)
+			{
+				$downtime += $clock - $prevclock;
 			}
 
-			$downtime += $clock - $prevclock if ($prevvalue == DOWN);
-
-			$prevvalue = $value;
+			$is_down = ($value == DOWN ? 1 : 0);
 			$prevclock = $clock;
 		}
 
 		# leftover of downtime
-		$downtime += $period_till - $prevclock if ($prevvalue == DOWN);
+		$downtime += $period_till - $prevclock if ($is_down != 0);
 
 		$sth->finish();
 		$sql_count++;
@@ -1988,18 +2005,6 @@ sub get_downtime_execute
 	}
 
 	return $downtime;
-}
-
-sub __avail_result_msg($$$$)
-{
-	my $test_result = shift;
-	my $success_values = shift;
-	my $total_results = shift;
-	my $perc = shift;
-
-	my $result_str = ($test_result == UP ? "Up" : "Down");
-
-	return sprintf("$result_str (%d/%d positive, %.3f%%)", $success_values, $total_results, $perc);
 }
 
 sub __get_history_table_by_value_type
