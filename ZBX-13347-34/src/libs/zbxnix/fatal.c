@@ -39,6 +39,7 @@
 
 #include "common.h"
 #include "log.h"
+#include "zbxalgo.h"
 
 #include "fatal.h"
 
@@ -207,6 +208,57 @@ static const char	*get_register_name(int reg)
 
 #endif	/* defined(HAVE_SYS_UCONTEXT_H) && (defined(REG_EIP) || defined(REG_RIP)) */
 
+/* copied from dbconfig.h */
+typedef struct
+{
+	zbx_uint64_t		triggerid;
+	const char		*description;
+	const char		*expression;
+	const char		*recovery_expression;
+	const char		*error;
+	const char		*correlation_tag;
+	int			lastchange;
+	unsigned char		topoindex;
+	unsigned char		priority;
+	unsigned char		type;
+	unsigned char		value;
+	unsigned char		state;
+	unsigned char		locked;
+	unsigned char		status;
+	unsigned char		functional;		/* see TRIGGER_FUNCTIONAL_* defines */
+	unsigned char		recovery_mode;		/* TRIGGER_RECOVERY_MODE_* defines  */
+	unsigned char		correlation_mode;	/* ZBX_TRIGGER_CORRELATION_* defines */
+
+	zbx_vector_ptr_t	tags;
+}
+ZBX_DC_TRIGGER;
+
+extern ZBX_DC_TRIGGER fatal_dbg_trigger; /* ZBX-13347 */
+extern unsigned char	program_type;
+
+static void dump_trigger(ZBX_DC_TRIGGER *trigger)
+{
+	char buff[sizeof(ZBX_DC_TRIGGER) * 3 + 1];
+	int i;
+
+	zabbix_log(LOG_LEVEL_CRIT, "=== Trigger dump: ===");
+
+	for (i = 0; i < sizeof(ZBX_DC_TRIGGER); i++)
+		zbx_snprintf(&buff[i * 3], 4, "%02x ", 0xFF & ((unsigned char *)trigger)[i]);
+
+	zabbix_log(LOG_LEVEL_CRIT, "trigger dump(%dB): %s", sizeof(ZBX_DC_TRIGGER), buff);
+
+	zabbix_log(LOG_LEVEL_CRIT, "triggerid:" ZBX_FS_UI64 " description:'%p' type:%u status:%u priority:%u",
+				trigger->triggerid, trigger->description, trigger->type, trigger->status,
+				trigger->priority);
+	zabbix_log(LOG_LEVEL_CRIT, "  expression:'%p' cached:'%p'", trigger->expression,
+			ZBX_NULL2EMPTY_STR(trigger->recovery_expression));
+	zabbix_log(LOG_LEVEL_CRIT, "  value:%u state:%u error:'%p' lastchange:%d", trigger->value,
+			trigger->state, ZBX_NULL2EMPTY_STR(trigger->error), trigger->lastchange);
+	zabbix_log(LOG_LEVEL_CRIT, "  topoindex:%u functional:%u locked:%u", trigger->topoindex,
+			trigger->functional, trigger->locked);
+}
+
 void	zbx_log_fatal_info(void *context, unsigned int flags)
 {
 #ifdef	HAVE_SYS_UCONTEXT_H
@@ -242,7 +294,7 @@ void	zbx_log_fatal_info(void *context, unsigned int flags)
 
 #endif	/* HAVE_EXECINFO_H */
 
-	int	i;
+	int	i, is_tr_dump = 0;
 	FILE	*fd;
 
 	zabbix_log(LOG_LEVEL_CRIT, "====== Fatal information: ======");
@@ -314,7 +366,14 @@ void	zbx_log_fatal_info(void *context, unsigned int flags)
 		else
 		{
 			for (i = 0; i < bcktrc_sz; i++)
+			{
 				zabbix_log(LOG_LEVEL_CRIT, "%d: %s", bcktrc_sz - i - 1, bcktrc_syms[i]);
+				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER) &&
+					NULL != strstr(bcktrc_syms[i], "zbx_strdup"))
+				{
+					is_tr_dump = 1;
+				}
+			}
 
 			zbx_free(bcktrc_syms);
 		}
@@ -323,6 +382,9 @@ void	zbx_log_fatal_info(void *context, unsigned int flags)
 
 #endif	/* HAVE_EXECINFO_H */
 	}
+
+	if (0 != is_tr_dump)
+		dump_trigger(&fatal_dbg_trigger);
 
 	if (0 != (flags & ZBX_FATAL_LOG_MEM_MAP))
 	{
