@@ -59,6 +59,8 @@ $up = (new CSpan(_('Up')))->addClass('green');
 
 $offlineProbes = 0;
 $noResultProbes = 0;
+$rdds80_above_max_rtt = 0;
+$rdds43_above_max_rtt = 0;
 
 if ($this->data['type'] == RSM_DNSSEC) {
 	$testTotal = 0;
@@ -249,12 +251,24 @@ foreach ($this->data['probes'] as $probe) {
 			(new CSpan($probe['name']))->addClass($rdds),
 			$rdds43,
 			(isset($probe['rdds43']['ip']) && $probe['rdds43']['ip']) ? $probe['rdds43']['ip'] : '-',
-			(isset($probe['rdds43']['rtt'])) ? $probe['rdds43']['rtt'] : '-',
+			(isset($probe['rdds43']['rtt']))
+				? (new CSpan($probe['rdds43']['rtt']['value']))->setHint($probe['rdds43']['rtt']['description'])
+				: '-',
 			(isset($probe['rdds43']['upd'])) ? $probe['rdds43']['upd'] : '-',
 			$rdds80,
 			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip']) ? $probe['rdds80']['ip'] : '-',
-			(isset($probe['rdds80']['rtt'])) ? $probe['rdds80']['rtt'] : '-'
+			(isset($probe['rdds80']['rtt']))
+				? (new CSpan($probe['rdds80']['rtt']['value']))->setHint($probe['rdds80']['rtt']['description'])
+				: '-'
 		];
+
+		// If probe is down and RTT is non-negative, it is considered as above max RTT.
+		if ($rdds80 === $down && $probe['rdds80']['rtt']['value'] > 0) {
+			$rdds80_above_max_rtt++;
+		}
+		if ($rdds43 === $down && $probe['rdds43']['rtt']['value'] > 0) {
+			$rdds43_above_max_rtt++;
+		}
 	}
 	else {
 		$row = [
@@ -269,6 +283,34 @@ foreach ($this->data['probes'] as $probe) {
 
 	$table->addRow($row);
 }
+
+// Add table footer rows:
+if ($data['type'] == RSM_RDDS) {
+	foreach ($data['errors'] as $error_code => $error) {
+		$table->addRow([
+			(new CSpan(_('Total ') . $error_code))->setHint($error['description']),
+			'',
+			'',
+			$error['rdds80'],
+			'',
+			'',
+			'',
+			$error['rdds43']
+		]);
+	}
+
+	$table->addRow([
+		_('Total above max. RTT'),
+		'',
+		'',
+		$rdds80_above_max_rtt,
+		'',
+		'',
+		'',
+		$rdds43_above_max_rtt
+	]);
+}
+
 if ($this->data['type'] == RSM_DNS || $this->data['type'] == RSM_RDDS || $this->data['type'] == RSM_EPP) {
 	$downProbes = $this->data['type'] == RSM_DNS ? $this->data['downProbes'] : $downProbes;
 

@@ -1445,6 +1445,7 @@ define('NS_DOWN',		1);
 define('NS_UP',			2);
 
 // SLA monitoring probe status
+define('PROBE_OFFLINE',	-1);
 define('PROBE_DOWN',	0);
 define('PROBE_UP',		1);
 
@@ -1476,6 +1477,8 @@ define('RSM_OTHER_TLD_GROUP',	'otherTLD');
 define('RSM_TEST_GROUP',		'testTLD');
 
 define('PROBES_MON_GROUPID',	130);
+define('RSM_SERVICE_AVAIL_VALUE_MAP', 110);
+define('RSM_DNS_RTT_ERRORS_VALUE_MAP', 120);
 
 // if magic quotes on, then get rid of them
 if (get_magic_quotes_gpc()) {

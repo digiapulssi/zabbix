@@ -413,6 +413,22 @@ if ($mainEvent) {
 	}
 
 	$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl());
+
+	if ($data['tests']) {
+		$data['test_value_mapping'] = [];
+
+		$test_value_mapping = API::ValueMap()->get([
+			'output' => [],
+			'selectMappings' => ['value', 'newvalue'],
+			'valuemapids' => [RSM_SERVICE_AVAIL_VALUE_MAP]
+		]);
+
+		if ($test_value_mapping) {
+			foreach ($test_value_mapping[0]['mappings'] as $val) {
+				$data['test_value_mapping'][$val['value']] = $val['newvalue'];
+			}
+		}
+	}
 }
 
 $rsmView = new CView('rsm.incidentdetails.list', $data);

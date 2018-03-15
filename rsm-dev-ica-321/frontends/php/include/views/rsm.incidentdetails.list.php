@@ -70,6 +70,7 @@ $table = (new CTableInfo())
 	_('Time'),
 	_('Result'),
 	_('Historical rolling week value'),
+	SPACE,
 	SPACE
 ]);
 
@@ -89,7 +90,20 @@ foreach ($data['tests'] as $test) {
 		$startEndIncident = SPACE;
 	}
 
-	$value = $test['value'] ? _('Up') : _('Down');
+	$value = array_key_exists($test['value'], $data['test_value_mapping'])
+		? $data['test_value_mapping'][$test['value']]
+		: '';
+
+	if ($data['type'] == RSM_DNS || $data['type'] == RSM_DNSSEC) {
+		$details_link = new CLink(
+			_('aggregate details'),
+			'rsm.aggregatedetails.php?slvItemId='.$data['slvItemId'].'&host='.$data['tld']['host'].
+				'&time='.$test['clock'].'&type='.$data['type']
+		);
+	}
+	else {
+		$details_link = null;
+	}
 
 	$row = [
 		$startEndIncident,
@@ -100,7 +114,8 @@ foreach ($data['tests'] as $test) {
 			_('details'),
 			'rsm.particulartests.php?slvItemId='.$data['slvItemId'].'&host='.$data['tld']['host'].
 				'&time='.$test['clock'].'&type='.$data['type']
-		)
+		),
+		$details_link
 	];
 
 	$table->addRow($row);

@@ -42,6 +42,7 @@ $data['host'] = null;
 $data['time'] = null;
 $data['slvItemId'] = null;
 $data['type'] = null;
+$data['errors'] = [];
 
 if (getRequest('host') && getRequest('time') && getRequest('slvItemId') && getRequest('type') !== null) {
 	$data['host'] = getRequest('host');
@@ -382,9 +383,11 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$hosts[$item['hostid']]['rdds43']['ip'] = $itemValue['value'];
 			}
 			elseif ($item['key_'] == PROBE_RDDS43_RTT) {
-				$hosts[$item['hostid']]['rdds43']['rtt'] = $itemValue['value']
-					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
-					: null;
+				$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+				$hosts[$item['hostid']]['rdds43']['rtt'] = [
+					'description' => $itemValue['value'] ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+					'value' => $rtt_value
+				];
 			}
 			elseif ($item['key_'] == PROBE_RDDS43_UPD) {
 				$hosts[$item['hostid']]['rdds43']['upd'] = $itemValue['value']
@@ -395,12 +398,34 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$hosts[$item['hostid']]['rdds80']['ip'] = $itemValue['value'];
 			}
 			elseif ($item['key_'] == PROBE_RDDS80_RTT) {
-				$hosts[$item['hostid']]['rdds80']['rtt'] = $itemValue['value']
-					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
-					: null;
+				$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+				$hosts[$item['hostid']]['rdds80']['rtt'] = [
+					'description' => $itemValue['value'] ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+					'value' => $rtt_value
+				];
 			}
 			else {
 				$hosts[$item['hostid']]['value'] = $itemValue['value'];
+			}
+
+			// Count result for table bottom summary rows.
+			if ($item['key_'] == PROBE_RDDS43_RTT || $item['key_'] == PROBE_RDDS80_RTT) {
+				$column = $item['key_'] == PROBE_RDDS43_RTT ? 'rdds43' : 'rdds80';
+
+				if (0 > $itemValue['value']) {
+					$error_code = (int)$itemValue['value'];
+
+					if (!array_key_exists($error_code, $data['errors'])) {
+						$data['errors'][$error_code] = [
+							'description' => applyValueMap($error_code, $item['valuemapid'])
+						];
+					}
+					if (!array_key_exists($column, $data['errors'][$error_code])) {
+						$data['errors'][$error_code][$column] = 0;
+					}
+
+					$data['errors'][$error_code][$column]++;
+				}
 			}
 		}
 		elseif ($data['type'] == RSM_EPP) {
@@ -456,6 +481,21 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$data['probes'][$hostId] = $host;
 				$data['probes'][$hostId]['name'] = $probe['host'];
 				break;
+			}
+		}
+	}
+
+	// Get value maps for error messages.
+	if ($data['type'] == RSM_RDDS) {
+		$error_msg_value_map = API::ValueMap()->get([
+			'output' => [],
+			'selectMappings' => ['value', 'newvalue'],
+			'valuemapids' => [RSM_DNS_RTT_ERRORS_VALUE_MAP]
+		]);
+
+		if ($error_msg_value_map) {
+			foreach ($error_msg_value_map[0]['mappings'] as $val) {
+				$data['error_msgs'][$val['value']] = $val['newvalue'];
 			}
 		}
 	}
