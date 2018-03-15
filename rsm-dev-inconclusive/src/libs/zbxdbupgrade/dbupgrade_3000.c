@@ -1008,8 +1008,25 @@ static int	DBpatch_3000139(void)
 
 static int	DBpatch_3000140(void)
 {
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update config set refresh_unsupported=60"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000200(void)
+{
+	return SUCCEED;
+}
+
+static int	DBpatch_3000201(void)
+{
 	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
 	static const char	*const data[] = {
+		"ROW   |13000    |130       |-1   |Internal error                                                                                                  |",
 		"ROW   |13001    |130       |-200 |No reply from RDDS43 server (obsolete)                                                                          |",
 		"ROW   |13002    |130       |-201 |Whois server returned no NS                                                                                     |",
 		"ROW   |13003    |130       |-202 |No Unix timestamp (obsolete)                                                                                    |",
@@ -1151,7 +1168,7 @@ static int	DBpatch_3000140(void)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000141(void)
+static int	DBpatch_3000202(void)
 {
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
@@ -1166,7 +1183,7 @@ static int	DBpatch_3000141(void)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000142(void)
+static int	DBpatch_3000203(void)
 {
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
@@ -1228,8 +1245,10 @@ DBPATCH_ADD(3000136, 0, 0)	/* add "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" m
 DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
-DBPATCH_ADD(3000140, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
-DBPATCH_ADD(3000141, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to "RSM Service Availability" value mapping */
-DBPATCH_ADD(3000142, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to data export "statusMaps" catalog */
+DBPATCH_ADD(3000140, 0, 0)	/* lowered "Refresh unsupported items" interval to 60 seconds */
+DBPATCH_ADD(3000200, 0, 0)	/* Phase 2 */
+DBPATCH_ADD(3000201, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
+DBPATCH_ADD(3000202, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to "RSM Service Availability" value mapping */
+DBPATCH_ADD(3000203, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to data export "statusMaps" catalog */
 
 DBPATCH_END()
