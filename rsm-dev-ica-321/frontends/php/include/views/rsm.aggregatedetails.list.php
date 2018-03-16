@@ -100,18 +100,20 @@ foreach ($data['errors'] as $error_code => $errors) {
 	$table->addRow($row);
 }
 
-// Add 'Total above max rtt' row:
-$row = [
-	_('Total above max. RTT'),
-	''
-];
-foreach ($data['dns_udp_nameservers'] as $ns_name => $ns_ips) {
-	foreach ($ns_ips as $ipv => $ip) {
-		$error_key = 'udp_'.$ns_name.'_'.$ipv.'_'.$ip;
-		$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $errors[$error_key] : 0;
+if ($data['type'] === RSM_DNS) {
+	// Add 'Total above max rtt' row:
+	$row = [
+		_('Total above max. RTT'),
+		''
+	];
+	foreach ($data['dns_udp_nameservers'] as $ns_name => $ns_ips) {
+		foreach ($ns_ips as $ipv => $ip) {
+			$error_key = 'udp_'.$ns_name.'_'.$ipv.'_'.$ip;
+			$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $errors[$error_key] : 0;
+		}
 	}
+	$table->addRow($row);
 }
-$table->addRow($row);
 
 // Construct summary.
 $addition_info = [

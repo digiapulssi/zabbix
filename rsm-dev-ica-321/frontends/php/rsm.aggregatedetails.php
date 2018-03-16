@@ -43,7 +43,6 @@ $data['time'] = null;
 $data['slvItemId'] = null;
 $data['type'] = null;
 $data['errors'] = [];
-$data['probes_above_max_rtt'] = [];
 
 if (getRequest('tld_host') && getRequest('time') && getRequest('slvItemId') && getRequest('type') !== null) {
 	$data['tld_host'] = getRequest('tld_host');
@@ -60,6 +59,10 @@ elseif (!getRequest('tld_host') && !getRequest('time') && !getRequest('slvItemId
 	$data['time'] = CProfile::get('web.rsm.aggregatedresults.time');
 	$data['slvItemId'] = CProfile::get('web.rsm.aggregatedresults.slvItemId');
 	$data['type'] = CProfile::get('web.rsm.aggregatedresults.type');
+}
+
+if ($data['type'] === RSM_DNS) {
+	$data['probes_above_max_rtt'] = [];
 }
 
 // check
@@ -313,7 +316,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 
 				$data['errors'][$item_value][$error_key]++;
 			}
-			elseif ($item_value > $udp_rtt) {
+			elseif ($item_value > $udp_rtt && $data['type'] === RSM_DNS) {
 				if (!array_key_exists($error_key, $data['probes_above_max_rtt'])) {
 					$data['probes_above_max_rtt'][$error_key] = 0;
 				}
