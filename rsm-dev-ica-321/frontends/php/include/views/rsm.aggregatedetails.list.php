@@ -132,16 +132,6 @@ $addition_info = [
 	new CSpan([bold(_('Probes Down')), ':', SPACE, $down_probes])
 ];
 
-if ($data['testResult'] === null) {
-	$test_result = $no_result;
-}
-elseif ($data['testResult'] == PROBE_UP) {
-	$test_result = $up;
-}
-else {
-	$test_result = $down;
-}
-
 $particular_test = [
 	new CSpan([bold(_('TLD')), ':', SPACE, $data['tld']['name']]),
 	BR(),
@@ -149,7 +139,7 @@ $particular_test = [
 	BR(),
 	new CSpan([bold(_('Test time')), ':', SPACE, date(DATE_TIME_FORMAT_SECONDS, $data['time'])]),
 	BR(),
-	new CSpan([bold(_('Test result')), ':', SPACE, $test_result, SPACE,
+	new CSpan([bold(_('Test result')), ':', SPACE, $data['testResult'], SPACE,
 		_s('(calculated at %1$s)', date(DATE_TIME_FORMAT_SECONDS, $data['time'] + RSM_ROLLWEEK_SHIFT_BACK))
 	]),
 	BR(),

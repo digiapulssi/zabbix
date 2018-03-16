@@ -97,7 +97,7 @@ foreach ($data['tests'] as $test) {
 	if ($data['type'] == RSM_DNS || $data['type'] == RSM_DNSSEC) {
 		$details_link = new CLink(
 			_('aggregate details'),
-			'rsm.aggregatedetails.php?slvItemId='.$data['slvItemId'].'&host='.$data['tld']['host'].
+			'rsm.aggregatedetails.php?slvItemId='.$data['slvItemId'].'&tld_host='.$data['tld']['host'].
 				'&time='.$test['clock'].'&type='.$data['type']
 		);
 	}

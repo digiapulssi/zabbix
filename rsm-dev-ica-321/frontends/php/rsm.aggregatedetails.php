@@ -30,7 +30,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
 $fields = [
-	'host' =>		[T_ZBX_STR, O_OPT,	P_SYS,	null,			null],
+	'tld_host' =>	[T_ZBX_STR, O_OPT,	P_SYS,	null,			null],
 	'type' =>		[T_ZBX_INT, O_OPT,	null,	IN('0,1'),		null],
 	'time' =>		[T_ZBX_INT, O_OPT,	null,	null,			null],
 	'slvItemId' =>	[T_ZBX_INT, O_OPT,	P_SYS,	DB_ID,			null]
@@ -38,32 +38,32 @@ $fields = [
 check_fields($fields);
 
 $data['probes'] = [];
-$data['host'] = null;
+$data['tld_host'] = null;
 $data['time'] = null;
 $data['slvItemId'] = null;
 $data['type'] = null;
 $data['errors'] = [];
 $data['probes_above_max_rtt'] = [];
 
-if (getRequest('host') && getRequest('time') && getRequest('slvItemId') && getRequest('type') !== null) {
-	$data['host'] = getRequest('host');
+if (getRequest('tld_host') && getRequest('time') && getRequest('slvItemId') && getRequest('type') !== null) {
+	$data['tld_host'] = getRequest('tld_host');
 	$data['time'] = getRequest('time');
 	$data['slvItemId'] = getRequest('slvItemId');
 	$data['type'] = getRequest('type');
-	CProfile::update('web.rsm.aggregatedresults.host', $data['host'], PROFILE_TYPE_STR);
+	CProfile::update('web.rsm.aggregatedresults.tld_host', $data['tld_host'], PROFILE_TYPE_STR);
 	CProfile::update('web.rsm.aggregatedresults.time', $data['time'], PROFILE_TYPE_ID);
 	CProfile::update('web.rsm.aggregatedresults.slvItemId', $data['slvItemId'], PROFILE_TYPE_ID);
 	CProfile::update('web.rsm.aggregatedresults.type', $data['type'], PROFILE_TYPE_ID);
 }
-elseif (!getRequest('host') && !getRequest('time') && !getRequest('slvItemId') && getRequest('type') === null) {
-	$data['host'] = CProfile::get('web.rsm.aggregatedresults.host');
+elseif (!getRequest('tld_host') && !getRequest('time') && !getRequest('slvItemId') && getRequest('type') === null) {
+	$data['tld_host'] = CProfile::get('web.rsm.aggregatedresults.tld_host');
 	$data['time'] = CProfile::get('web.rsm.aggregatedresults.time');
 	$data['slvItemId'] = CProfile::get('web.rsm.aggregatedresults.slvItemId');
 	$data['type'] = CProfile::get('web.rsm.aggregatedresults.type');
 }
 
 // check
-if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== null) {
+if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== null) {
 	$test_time_from = mktime(
 		date('H', $data['time']),
 		date('i', $data['time']),
@@ -73,7 +73,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		date('Y', $data['time'])
 	);
 
-	$data['testResult'] = 0;
+	$data['testResult'] = null;
 	$data['totalProbes'] = 0;
 
 	// Get host with calculated items.
@@ -107,11 +107,20 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	]);
 
 	foreach ($macro_items as $macro_item) {
+		/**
+		 * To get value that actually was current at the time when data was collected, we need to get history record
+		 * that was newest at the moment of requested time.
+		 *
+		 * In other words:
+		 * SELECT * FROM history_uint WHERE itemid=<itemid> AND <test_time_from> >= clock ORDER BY clock DESC LIMIT 1
+		 */
 		$macro_item_value = API::History()->get([
 			'itemids' => $macro_item['itemid'],
-			'time_from' => $test_time_from,
+			'time_till' => $test_time_from,
 			'history' => $macro_item['value_type'],
 			'output' => API_OUTPUT_EXTEND,
+			'sortfield' => 'clock',
+			'sortorder' => 'DESC',
 			'limit' => 1
 		]);
 
@@ -126,7 +135,6 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		else {
 			$macro_time = $macro_item_value['value'] - 1;
 		}
-
 	}
 
 	// Time calculation.
@@ -139,7 +147,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		'tlds' => true,
 		'output' => ['hostid', 'host', 'name'],
 		'filter' => [
-			'host' => $data['host']
+			'host' => $data['tld_host']
 		]
 	]);
 
@@ -395,6 +403,24 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			$data['error_msgs'][$val['value']] = $val['newvalue'];
 		}
 	}
+
+	// Get mapped value for test result.
+	$test_result_label = getMappedValue($data['testResult'], RSM_SERVICE_AVAIL_VALUE_MAP);
+	if (!$test_result_label) {
+		$test_result_label = _('No result');
+	}
+
+	if ($data['testResult'] === null) {
+		$test_result_color = 'grey';
+	}
+	elseif ($data['testResult'] === PROBE_UP) {
+		$test_result_color = 'green';
+	}
+	else {
+		$test_result_color = 'red';
+	}
+
+	$data['testResult'] = (new CSpan($test_result_label))->addClass($test_result_color);
 
 	CArrayHelper::sort($data['probes'], ['name']);
 }
