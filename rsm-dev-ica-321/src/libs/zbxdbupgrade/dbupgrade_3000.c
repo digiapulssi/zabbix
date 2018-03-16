@@ -1008,8 +1008,25 @@ static int	DBpatch_3000139(void)
 
 static int	DBpatch_3000140(void)
 {
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update config set refresh_unsupported=60"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000200(void)
+{
+	return SUCCEED;
+}
+
+static int	DBpatch_3000201(void)
+{
 	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
 	static const char	*const data[] = {
+		"ROW   |13000    |130       |-1   |Internal error                                                                                                  |",
 		"ROW   |13001    |130       |-200 |No reply from RDDS43 server (obsolete)                                                                          |",
 		"ROW   |13002    |130       |-201 |Whois server returned no NS                                                                                     |",
 		"ROW   |13003    |130       |-202 |No Unix timestamp (obsolete)                                                                                    |",
@@ -1151,6 +1168,177 @@ static int	DBpatch_3000140(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000202(void)
+{
+	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
+	static const char	*const data[] = {
+		"ROW   |12000    |120       |-1   |Internal error                                                                                                  |",
+		"ROW   |12001    |120       |-200 |DNS UDP - No reply from name server                                                                             |",
+		"ROW   |12002    |120       |-201 |Invalid reply from Name Server (obsolete)                                                                       |",
+		"ROW   |12003    |120       |-202 |No UNIX timestamp (obsolete)                                                                                    |",
+		"ROW   |12004    |120       |-203 |Invalid UNIX timestamp (obsolete)                                                                               |",
+		"ROW   |12005    |120       |-204 |DNSSEC error (obsolete)                                                                                         |",
+		"ROW   |12006    |120       |-205 |No reply from resolver (obsolete)                                                                               |",
+		"ROW   |12007    |120       |-206 |Keyset is not valid (obsolete)                                                                                  |",
+		"ROW   |12008    |120       |-207 |DNS UDP - Expecting DNS CLASS IN but got CHAOS                                                                  |",
+		"ROW   |12009    |120       |-208 |DNS UDP - Expecting DNS CLASS IN but got HESIOD                                                                 |",
+		"ROW   |12010    |120       |-209 |DNS UDP - Expecting DNS CLASS IN but got something different than IN, CHAOS or HESIOD                           |",
+		"ROW   |12011    |120       |-210 |DNS UDP - Header section incomplete                                                                             |",
+		"ROW   |12012    |120       |-211 |DNS UDP - Question section incomplete                                                                           |",
+		"ROW   |12013    |120       |-212 |DNS UDP - Answer section incomplete                                                                             |",
+		"ROW   |12014    |120       |-213 |DNS UDP - Authority section incomplete                                                                          |",
+		"ROW   |12015    |120       |-214 |DNS UDP - Additional section incomplete                                                                         |",
+		"ROW   |12016    |120       |-215 |DNS UDP - Malformed DNS response                                                                                |",
+		"ROW   |12017    |120       |-250 |DNS UDP - Querying for a non existent domain - AA flag not present in response                                  |",
+		"ROW   |12018    |120       |-251 |DNS UDP - Querying for a non existent domain - Domain name being queried not present in question section        |",
+		"-- Error code for every assigned, non private DNS RCODE as per: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml               ",
+		"ROW   |12019    |120       |-252 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR                         |",
+		"ROW   |12020    |120       |-253 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got FORMERR                         |",
+		"ROW   |12021    |120       |-254 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got SERVFAIL                        |",
+		"ROW   |12022    |120       |-255 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTIMP                          |",
+		"ROW   |12023    |120       |-256 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got REFUSED                         |",
+		"ROW   |12024    |120       |-257 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXDOMAIN                        |",
+		"ROW   |12025    |120       |-258 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXRRSET                         |",
+		"ROW   |12026    |120       |-259 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NXRRSET                         |",
+		"ROW   |12027    |120       |-260 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTAUTH                         |",
+		"ROW   |12028    |120       |-261 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTZONE                         |",
+		"ROW   |12029    |120       |-262 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADVERS or BADSIG               |",
+		"ROW   |12030    |120       |-263 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADKEY                          |",
+		"ROW   |12031    |120       |-264 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTIME                         |",
+		"ROW   |12032    |120       |-265 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADMODE                         |",
+		"ROW   |12033    |120       |-266 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADNAME                         |",
+		"ROW   |12034    |120       |-267 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADALG                          |",
+		"ROW   |12035    |120       |-268 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC                        |",
+		"ROW   |12036    |120       |-269 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |",
+		"ROW   |12037    |120       |-270 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |",
+		"ROW   |12038    |120       |-400 |DNS UDP - No reply from local resolver                                                                          |",
+		"ROW   |12039    |120       |-401 |DNS UDP - No AD bit from local resolver                                                                         |",
+		"ROW   |12040    |120       |-402 |DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver                                          |",
+		"ROW   |12041    |120       |-403 |DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |",
+		"ROW   |12042    |120       |-404 |DNS UDP - Expecting NOERROR RCODE but got unexpecting from local resolver                                       |",
+		"ROW   |12043    |120       |-405 |DNS UDP - Unknown cryptographic algorithm                                                                       |",
+		"ROW   |12044    |120       |-406 |DNS UDP - Cryptographic algorithm not implemented                                                               |",
+		"ROW   |12045    |120       |-407 |DNS UDP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled                         |",
+		"ROW   |12046    |120       |-410 |DNS UDP - The signature does not cover this RRset                                                               |",
+		"ROW   |12047    |120       |-414 |DNS UDP - The RRSIG found is not signed by a DNSKEY from the KEYSET of the TLD                                  |",
+		"ROW   |12048    |120       |-415 |DNS UDP - Bogus DNSSEC signature                                                                                |",
+		"ROW   |12049    |120       |-416 |DNS UDP - DNSSEC signature has expired                                                                          |",
+		"ROW   |12050    |120       |-417 |DNS UDP - DNSSEC signature not incepted yet                                                                     |",
+		"ROW   |12051    |120       |-418 |DNS UDP - DNSSEC signature has expiration date earlier than inception date                                      |",
+		"ROW   |12052    |120       |-419 |DNS UDP - Error in NSEC3 denial of existence proof                                                              |",
+		"ROW   |12053    |120       |-421 |DNS UDP - Iterations count for NSEC3 record higher than maximum                                                 |",
+		"ROW   |12054    |120       |-422 |DNS UDP - RR not covered by the given NSEC RRs                                                                  |",
+		"ROW   |12055    |120       |-423 |DNS UDP - Wildcard not covered by the given NSEC RRs                                                            |",
+		"ROW   |12056    |120       |-425 |DNS UDP - The RRSIG has too few RDATA fields                                                                    |",
+		"ROW   |12057    |120       |-426 |DNS UDP - The DNSKEY has too few RDATA fields                                                                   |",
+		"ROW   |12058    |120       |-427 |DNS UDP - Malformed DNSSEC response                                                                             |",
+		"ROW   |12059    |120       |-600 |DNS TCP - Timeout reply from name server                                                                        |",
+		"ROW   |12060    |120       |-601 |DNS TCP - Error opening connection to name server                                                               |",
+		"ROW   |12061    |120       |-607 |DNS TCP - Expecting DNS CLASS IN but got CHAOS                                                                  |",
+		"ROW   |12062    |120       |-608 |DNS TCP - Expecting DNS CLASS IN but got HESIOD                                                                 |",
+		"ROW   |12063    |120       |-609 |DNS TCP - Expecting DNS CLASS IN but got something different than IN, CHAOS or HESIOD                           |",
+		"ROW   |12064    |120       |-610 |DNS TCP - Header section incomplete                                                                             |",
+		"ROW   |12065    |120       |-611 |DNS TCP - Question section incomplete                                                                           |",
+		"ROW   |12066    |120       |-612 |DNS TCP - Answer section incomplete                                                                             |",
+		"ROW   |12067    |120       |-613 |DNS TCP - Authority section incomplete                                                                          |",
+		"ROW   |12068    |120       |-614 |DNS TCP - Additional section incomplete                                                                         |",
+		"ROW   |12069    |120       |-615 |DNS TCP - Malformed DNS response                                                                                |",
+		"ROW   |12070    |120       |-650 |DNS TCP - Querying for a non existent domain - AA flag not present in response                                  |",
+		"ROW   |12071    |120       |-651 |DNS TCP - Querying for a non existent domain - Domain name being queried not present in question section        |",
+		"-- Error code for every assigned, non private DNS RCODE as per: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml               ",
+		"ROW   |12072    |120       |-652 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR                         |",
+		"ROW   |12073    |120       |-653 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got FORMERR                         |",
+		"ROW   |12074    |120       |-654 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got SERVFAIL                        |",
+		"ROW   |12075    |120       |-655 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTIMP                          |",
+		"ROW   |12076    |120       |-656 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got REFUSED                         |",
+		"ROW   |12077    |120       |-657 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXDOMAIN                        |",
+		"ROW   |12078    |120       |-658 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXRRSET                         |",
+		"ROW   |12079    |120       |-659 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NXRRSET                         |",
+		"ROW   |12080    |120       |-660 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTAUTH                         |",
+		"ROW   |12081    |120       |-661 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTZONE                         |",
+		"ROW   |12082    |120       |-662 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADVERS or BADSIG               |",
+		"ROW   |12083    |120       |-663 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADKEY                          |",
+		"ROW   |12084    |120       |-664 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTIME                         |",
+		"ROW   |12085    |120       |-665 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADMODE                         |",
+		"ROW   |12086    |120       |-666 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADNAME                         |",
+		"ROW   |12087    |120       |-667 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADALG                          |",
+		"ROW   |12088    |120       |-668 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC                        |",
+		"ROW   |12089    |120       |-669 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |",
+		"ROW   |12090    |120       |-670 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |",
+		"ROW   |12091    |120       |-800 |DNS TCP - No reply from local resolver                                                                          |",
+		"ROW   |12092    |120       |-801 |DNS TCP - No AD bit from local resolver                                                                         |",
+		"ROW   |12093    |120       |-802 |DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver                                          |",
+		"ROW   |12094    |120       |-803 |DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |",
+		"ROW   |12095    |120       |-804 |DNS TCP - Expecting NOERROR RCODE but got unexpecting from local resolver                                       |",
+		"ROW   |12096    |120       |-805 |DNS TCP - Unknown cryptographic algorithm                                                                       |",
+		"ROW   |12097    |120       |-806 |DNS TCP - Cryptographic algorithm not implemented                                                               |",
+		"ROW   |12098    |120       |-807 |DNS TCP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled                         |",
+		"ROW   |12099    |120       |-810 |DNS TCP - The signature does not cover this RRset                                                               |",
+		"ROW   |12100    |120       |-814 |DNS TCP - The RRSIG found is not signed by a DNSKEY from the KEYSET of the TLD                                  |",
+		"ROW   |12101    |120       |-815 |DNS TCP - Bogus DNSSEC signature                                                                                |",
+		"ROW   |12102    |120       |-816 |DNS TCP - DNSSEC signature has expired                                                                          |",
+		"ROW   |12103    |120       |-817 |DNS TCP - DNSSEC signature not incepted yet                                                                     |",
+		"ROW   |12104    |120       |-818 |DNS TCP - DNSSEC signature has expiration date earlier than inception date                                      |",
+		"ROW   |12105    |120       |-819 |DNS TCP - Error in NSEC3 denial of existence proof                                                              |",
+		"ROW   |12106    |120       |-821 |DNS TCP - Iterations count for NSEC3 record higher than maximum                                                 |",
+		"ROW   |12107    |120       |-822 |DNS TCP - RR not covered by the given NSEC RRs                                                                  |",
+		"ROW   |12108    |120       |-823 |DNS TCP - Wildcard not covered by the given NSEC RRs                                                            |",
+		"ROW   |12109    |120       |-825 |DNS TCP - The RRSIG has too few RDATA fields                                                                    |",
+		"ROW   |12110    |120       |-826 |DNS TCP - The DNSKEY has too few RDATA fields                                                                   |",
+		"ROW   |12111    |120       |-827 |DNS TCP - Malformed DNSSEC response                                                                             |",
+		NULL
+	};
+	int			i;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("delete from mappings where valuemapid=120"))	/* valuemapid of "RSM DNS rtt" */
+		return FAIL;
+
+	for (i = 0; NULL != data[i]; i++)
+	{
+		zbx_uint64_t	mappingid, valuemapid;
+		char		*value = NULL, *newvalue = NULL, *value_esc, *newvalue_esc;
+
+		if (0 == strncmp(data[i], "--", ZBX_CONST_STRLEN("--")))
+			continue;
+
+		if (4 != sscanf(data[i], "ROW |" ZBX_FS_UI64 " |" ZBX_FS_UI64 " |%m[^|]|%m[^|]|",
+				&mappingid, &valuemapid, &value, &newvalue))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "failed to parse the following line:\n%s", data[i]);
+			zbx_free(value);
+			zbx_free(newvalue);
+			return FAIL;
+		}
+
+		zbx_rtrim(value, ZBX_WHITESPACE);
+		zbx_rtrim(newvalue, ZBX_WHITESPACE);
+
+		/* NOTE: to keep it simple assume that data does not contain sequences "&pipe;", "&eol;" or "&bsn;" */
+
+		value_esc = zbx_db_dyn_escape_string(value);
+		newvalue_esc = zbx_db_dyn_escape_string(newvalue);
+		zbx_free(value);
+		zbx_free(newvalue);
+
+		if (ZBX_DB_OK > DBexecute("insert into mappings (mappingid,valuemapid,value,newvalue)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",'%s','%s')",
+				mappingid, valuemapid, value_esc, newvalue_esc))
+		{
+			zbx_free(value_esc);
+			zbx_free(newvalue_esc);
+			return FAIL;
+		}
+
+		zbx_free(value_esc);
+		zbx_free(newvalue_esc);
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1198,6 +1386,9 @@ DBPATCH_ADD(3000136, 0, 0)	/* add "{$MAX_CPU_LOAD}" and "{$MAX_RUN_PROCESSES}" m
 DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
-DBPATCH_ADD(3000140, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
+DBPATCH_ADD(3000140, 0, 0)	/* lowered "Refresh unsupported items" interval to 60 seconds */
+DBPATCH_ADD(3000200, 0, 0)	/* Phase 2 */
+DBPATCH_ADD(3000201, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
+DBPATCH_ADD(3000202, 0, 0)	/* update "RSM DNS rtt" value mapping with new DNS test error codes */
 
 DBPATCH_END()

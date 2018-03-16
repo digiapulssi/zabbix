@@ -65,9 +65,11 @@ use constant rsm_rdds_probe_result => [
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
 
-use constant EXPORT_MAX_CHILDREN_DEFAULT => 16;
+use constant EXPORT_MAX_CHILDREN_DEFAULT => 24;
 use constant EXPORT_MAX_CHILDREN_FLOOR => 1;
 use constant EXPORT_MAX_CHILDREN_CEIL => 128;
+
+use constant EXPORT_LOOP_SLEEP => 2;
 
 parse_opts('probe=s', 'service=s', 'tld=s', 'date=s', 'day=n', 'shift=n', 'force!', 'max-children=n');
 setopt('nolog');
@@ -280,17 +282,21 @@ while ($tld_index < $tld_count)
 	}
 
 	handle_children();
-}
 
-# wait till children finish
-while (children_running() > 0)
-{
-	handle_children();
+	sleep(EXPORT_LOOP_SLEEP);
 }
 
 last if (opt('tld'));
 }	# foreach (@server_keys)
 undef($server_key) unless (opt('tld'));	# keep $server_key if --tld was specified (for __get_false_positives())
+
+# wait till children finish
+while (children_running() > 0)
+{
+	handle_children();
+
+	sleep(EXPORT_LOOP_SLEEP);
+}
 
 # at this point there should be no child processes so we do not care about locking
 
@@ -1399,14 +1405,27 @@ sub __check_test
 	my $description = shift;
 	my $max_value = shift;
 
-	if ($interface eq JSON_INTERFACE_DNSSEC)
+	if ($interface eq JSON_INTERFACE_DNS)
+	{
+		if (defined($description) &&
+				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+				substr($description, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY ||
+				substr($description, 0, length(ZBX_EC_DNS_TCP_RES_NOREPLY)) eq ZBX_EC_DNS_TCP_RES_NOREPLY ||
+				substr($description, 0, length(ZBX_EC_DNS_RES_NOREPLY)) eq ZBX_EC_DNS_RES_NOREPLY))
+		{
+			return SUCCESS;
+		}
+	}
+	elsif ($interface eq JSON_INTERFACE_DNSSEC)
 	{
 		if (defined($description))
 		{
 			my $error_code_len = length(ZBX_EC_DNS_NS_ERRSIG);
 			my $error_code = substr($description, 0, $error_code_len);
 
-			if ($error_code eq ZBX_EC_DNS_NS_ERRSIG || $error_code eq ZBX_EC_DNS_RES_NOADBIT)
+			if (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC <= $error_code && $error_code <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
+					ZBX_EC_DNS_TCP_MALFORMED_DNSSEC <= $error_code && $error_code <= ZBX_EC_DNS_TCP_RES_NOADBIT ||
+					$error_code == ZBX_EC_DNS_NS_ERRSIG || $error_code == ZBX_EC_DNS_RES_NOADBIT)
 			{
 				return E_FAIL;
 			}
@@ -1416,9 +1435,10 @@ sub __check_test
 	}
 	elsif ($interface eq JSON_INTERFACE_RDDS43 || $interface eq JSON_INTERFACE_RDDS80)
 	{
-		if (substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+		if (defined($description) &&
+				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
 				substr($description, 0, length(ZBX_EC_RDDS43_RES_NOREPLY)) eq ZBX_EC_RDDS43_RES_NOREPLY ||
-				substr($description, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY)
+				substr($description, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY))
 		{
 			return SUCCESS;
 		}
@@ -2357,7 +2377,7 @@ sub __no_cycle_result
 	wrn(uc($service), " service availability result is missing for timestamp ", ts_str($clock), " ($clock).",
 		" This means that either script was not executed or Zabbix server was",
 		" not running at that time. In order to fix this problem please connect",
-		" to appropreate server (check @<server_key> in the beginning of this message)",
+		" to appropriate server (check @<server_key> in the beginning of this message)",
 		" and run the following script:");
 	wrn("  /opt/zabbix/scripts/slv/$avail_key.pl --from $clock");
 }

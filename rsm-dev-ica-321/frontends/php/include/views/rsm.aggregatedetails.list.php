@@ -100,7 +100,7 @@ foreach ($data['errors'] as $error_code => $errors) {
 	$table->addRow($row);
 }
 
-if ($data['type'] === RSM_DNS) {
+if ($data['type'] == RSM_DNS) {
 	// Add 'Total above max rtt' row:
 	$row = [
 		_('Total above max. RTT'),

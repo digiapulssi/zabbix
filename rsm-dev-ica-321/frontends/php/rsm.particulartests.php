@@ -349,7 +349,8 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_NO_RESULT;
 			}
 			elseif ($itemValue['value'] < $udpRtt
-					&& ($itemValue['value'] > ZBX_EC_DNS_NS_NOREPLY	|| $itemValue['value'] == ZBX_EC_DNS_RES_NOREPLY)) {
+					&& ($itemValue['value'] > ZBX_EC_DNS_UDP_NS_NOREPLY
+					|| $itemValue['value'] == ZBX_EC_DNS_UDP_RES_NOREPLY || $itemValue['value'] == ZBX_EC_DNS_RES_NOREPLY)) {
 				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_UP;
 			}
 			else {
@@ -365,11 +366,12 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 
 			if ($itemValue) {
-				if ($itemValue['value'] != ZBX_EC_DNS_NS_ERRSIG && $itemValue['value'] != ZBX_EC_DNS_RES_NOADBIT) {
-					$hosts[$item['hostid']]['value']['ok']++;
+				if (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
+						|| $itemValue['value'] == ZBX_EC_DNS_NS_ERRSIG || $itemValue['value'] == ZBX_EC_DNS_RES_NOADBIT) {
+					$hosts[$item['hostid']]['value']['fail']++;
 				}
 				else {
-					$hosts[$item['hostid']]['value']['fail']++;
+					$hosts[$item['hostid']]['value']['ok']++;
 				}
 			}
 			else {
