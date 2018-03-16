@@ -307,10 +307,15 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				// Holds the number of NameServers with errors for particular probe.
 				if (!array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probeid])) {
 					$data['probes'][$probeid]['probe_nameservers_with_no_errors'] = 0;
+					$data['probes'][$probeid]['probe_nameservers_with_data'] = 0;
+				}
+
+				if (array_key_exists($probes_item['itemid'], $item_values)) {
+					$data['probes'][$probeid]['probe_nameservers_with_data']++;
 				}
 
 				/**
-				 * DNSSEC is considered to be DOWN if selected value is one of following:
+				 * NS in case of DNSSEC is considered to be DOWN if selected value is one of the following:
 				 * 1) -204 (ZBX_EC_DNS_NS_ERRSIG);
 				 * 2) -206 (ZBX_EC_DNS_RES_NOADBIT);
 				 * 3) in rage -427 and -401 (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC & ZBX_EC_DNS_UDP_RES_NOADBIT).
@@ -352,7 +357,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 	// Get status (displayed in columns 'DNS UDP') for each TLD probe.
 	$probe_items = API::Item()->get([
 		'output' => ['key_', 'hostid'],
-		'hostids' => array_keys($tld_probes),
+		'hostids' => array_keys($data['probes']),
 		'filter' => [
 			'key_' => PROBE_KEY_ONLINE
 		],
@@ -364,7 +369,9 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 		$item_values = API::History()->get([
 			'output' => API_OUTPUT_EXTEND,
 			'itemids' => array_keys($probe_items),
-			'time_from' => $test_time_from
+			'filter' => [
+				'clock' => $test_time_from
+			]
 		]);
 
 		$probes_not_offline = [];
@@ -381,19 +388,19 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			}
 			elseif ($data['type'] == RSM_DNSSEC) {
 				/**
-				 * For DNSSEC, if at least one NameServer for particular probe is UP (do not have an errors), the whole
+				 * For DNSSEC, if at least one NameServer for particular probe is UP (do not have errors), the whole
 				 * probe is UP.
 				 */
-				if (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])
-					&& $data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0
-				) {
+				if (!array_key_exists('probe_nameservers_with_data', $data['probes'][$probe_hostid])
+					|| !$data['probes'][$probe_hostid]['probe_nameservers_with_data']) {
+					unset($data['probes'][$probe_hostid]['status_udp']);
+				}
+				elseif ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] == 0) {
 					$data['probes'][$probe_hostid]['status_udp'] = PROBE_UP;
 				}
 				else {
 					$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
 				}
-
-				unset($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors']);
 			}
 			else {
 				$probes_not_offline[$probe_hostid] = true;
@@ -419,27 +426,21 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				$item_values = API::History()->get([
 					'output' => API_OUTPUT_EXTEND,
 					'itemids' => array_keys($probe_items),
-					'time_from' => $test_time_from
+					'filter' => [
+						'clock' => $test_time_from
+					]
 				]);
 
 				foreach ($item_values as $item_value) {
 					$probe_item = $probe_items[$item_value['itemid']];
 
 					/**
-					 * DNS is considered to be UP in following cases:
-					 * 1) if selected value is greater than rsm.configvalue[RSM.DNS.AVAIL.MINNS] for <RSM_HOST> at given time;
-					 * 2) if selected value is -205 (ZBX_EC_DNS_RES_NOREPLY);
-					 * 3) if selected value is -400 (ZBX_EC_DNS_UDP_RES_NOREPLY).
+					 * DNS is considered to be UP if selected value is greater than rsm.configvalue[RSM.DNS.AVAIL.MINNS]
+					 * for <RSM_HOST> at given time;
 					 */
-					if ($item_value['value'] >= $min_dns_count
-						|| $item_value['value'] == ZBX_EC_DNS_UDP_RES_NOREPLY
-						|| $item_value['value'] == ZBX_EC_DNS_RES_NOREPLY
-					) {
-						$data['probes'][$probe_item['hostid']]['status_udp'] = PROBE_UP;
-					}
-					else {
-						$data['probes'][$probe_item['hostid']]['status_udp'] = PROBE_DOWN;
-					}
+					$data['probes'][$probe_item['hostid']]['status_udp'] = $item_value['value'] >= $min_dns_count
+						? PROBE_UP
+						: PROBE_DOWN;
 				}
 			}
 		}
