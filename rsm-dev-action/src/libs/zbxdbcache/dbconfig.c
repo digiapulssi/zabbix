@@ -4229,6 +4229,8 @@ void	init_configuration_cache(void)
 	config->probe_last_status = 0;
 	config->probe_online_since = 0;
 
+	config->rsm_errors = 0;
+
 #undef CREATE_HASHSET
 #undef CREATE_HASHSET_EXT
 
@@ -8550,6 +8552,28 @@ char	DCget_probe_last_status(void)
 	UNLOCK_CACHE;
 
 	return status;
+}
+
+void	zbx_dc_rsm_errors_inc(void)
+{
+	LOCK_CACHE;
+
+	config->rsm_errors++;
+
+	UNLOCK_CACHE;
+}
+
+zbx_uint64_t	zbx_dc_rsm_errors_get(void)
+{
+	zbx_uint64_t	errors;
+
+	LOCK_CACHE;
+
+	errors = config->rsm_errors;
+
+	UNLOCK_CACHE;
+
+	return errors;
 }
 
 /******************************************************************************
