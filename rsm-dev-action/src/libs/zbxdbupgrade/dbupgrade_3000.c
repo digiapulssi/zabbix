@@ -325,7 +325,8 @@ static int	DBpatch_3000120(void)
 
 typedef enum
 {
-	OP_MESSAGE
+	OP_MESSAGE,
+	OP_COMMAND
 }
 operation_type_t;
 
@@ -363,9 +364,42 @@ typedef struct
 }
 opmessage_t;
 
+typedef enum
+{
+	OP_COMMAND_CURRENT_HOST
+}
+opcommand_type_t;
+
+typedef struct
+{
+	zbx_uint64_t		id;
+	opcommand_type_t	type;
+}
+target_t;
+
+typedef struct
+{
+#define MAX_TARGETS	1
+
+	int		type;
+	int		execute_on;
+	const char	*port;
+	int		authtype;
+	const char	*username;
+	const char	*password;
+	const char	*publickey;
+	const char	*privatekey;
+	const char	*command;
+	target_t	targets[MAX_TARGETS + 1];
+
+#undef MAX_TARGETS
+}
+opcommand_t;
+
 typedef union
 {
 	opmessage_t	opmessage;
+	opcommand_t	opcommand;
 }
 operation_data_t;
 
@@ -389,7 +423,7 @@ condition_t;
 typedef struct
 {
 #define MAX_OPERATIONS	1
-#define MAX_CONDITIONS	4
+#define MAX_CONDITIONS	5
 
 	zbx_uint64_t	id;
 	const char	*name;
@@ -477,6 +511,66 @@ static int	db_insert_opmessage(zbx_uint64_t operationid, const opmessage_t *opme
 	return SUCCEED;
 }
 
+static int	db_insert_opcommand(zbx_uint64_t operationid, const opcommand_t *opcommand)
+{
+	const target_t	*target;
+	char		*port_esc = NULL, *username_esc = NULL, *password_esc = NULL, *publickey_esc = NULL,
+			*privatekey_esc = NULL, *command_esc = NULL;
+	int		ret;
+
+	if (0 != opcommand->type)	/* ZBX_SCRIPT_TYPE_CUSTOM_SCRIPT */
+	{
+		THIS_SHOULD_NEVER_HAPPEN;
+		return FAIL;
+	}
+
+	port_esc = zbx_db_dyn_escape_string(opcommand->port);
+	username_esc = zbx_db_dyn_escape_string(opcommand->username);
+	password_esc = zbx_db_dyn_escape_string(opcommand->password);
+	publickey_esc = zbx_db_dyn_escape_string(opcommand->publickey);
+	privatekey_esc = zbx_db_dyn_escape_string(opcommand->privatekey);
+	command_esc = zbx_db_dyn_escape_string(opcommand->command);
+
+	ret = DBexecute(
+			"insert into opcommand (operationid,type,scriptid,execute_on,port,authtype,"
+				"username,password,publickey,privatekey,command)"
+			" values (" ZBX_FS_UI64 ",%d,null,%d,'%s',"
+				"%d,'%s','%s','%s','%s','%s')",
+			operationid, opcommand->type, opcommand->execute_on, port_esc, opcommand->authtype,
+				username_esc, password_esc, publickey_esc, privatekey_esc, command_esc);
+
+	zbx_free(port_esc);
+	zbx_free(username_esc);
+	zbx_free(password_esc);
+	zbx_free(publickey_esc);
+	zbx_free(privatekey_esc);
+	zbx_free(command_esc);
+
+	if (ZBX_DB_OK > ret)
+		return FAIL;
+
+	for (target = opcommand->targets; 0 != target->id; target++)
+	{
+		switch (target->type)
+		{
+			case OP_COMMAND_CURRENT_HOST:
+				if (ZBX_DB_OK > DBexecute(
+						"insert into opcommand_hst (opcommand_hstid,operationid,hostid)"
+						" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",null)",
+						target->id, operationid))
+				{
+					return FAIL;
+				}
+				break;
+			default:
+				THIS_SHOULD_NEVER_HAPPEN;
+				return FAIL;
+		}
+	}
+
+	return SUCCEED;
+}
+
 static int	db_insert_condition(zbx_uint64_t actionid, const condition_t *condition)
 {
 	char	*value_esc = NULL;
@@ -507,10 +601,25 @@ static int	add_actions(const action_t *actions)
 
 		for (operation = action->operations; 0 != operation->id; operation++)
 		{
+			int	operationtype;
+
+			switch (operation->type)
+			{
+				case OP_MESSAGE:
+					operationtype = 0;	/* OPERATION_TYPE_MESSAGE */
+					break;
+				case OP_COMMAND:
+					operationtype = 1;	/* OPERATION_TYPE_COMMAND */
+					break;
+				default:
+					THIS_SHOULD_NEVER_HAPPEN;
+					return FAIL;
+			}
+
 			if (ZBX_DB_OK > DBexecute(
-					"insert into operations (operationid,actionid)"
-					" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ")",
-					operation->id, action->id))
+					"insert into operations (operationid,actionid,operationtype)"
+					" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",%d)",
+					operation->id, action->id, operationtype))
 			{
 				return FAIL;
 			}
@@ -519,6 +628,10 @@ static int	add_actions(const action_t *actions)
 			{
 				case OP_MESSAGE:
 					if (SUCCEED != db_insert_opmessage(operation->id, &operation->data.opmessage))
+						return FAIL;
+					break;
+				case OP_COMMAND:
+					if (SUCCEED != db_insert_opcommand(operation->id, &operation->data.opcommand))
 						return FAIL;
 					break;
 				default:
@@ -1168,16 +1281,182 @@ static int	DBpatch_3000201(void)
 	return SUCCEED;
 }
 
-static const action_t	one_more_action[] = {
+static int	DBpatch_3000202(void)
+{
+#define RESERVE_GLOBALMACROID									\
+		"update globalmacro"								\
+		" set globalmacroid=(select nextid from ("					\
+			"select max(globalmacroid)+1 as nextid from globalmacro) as tmp)"	\
+		" where globalmacroid=" ZBX_FS_UI64
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(RESERVE_GLOBALMACROID, 66))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into globalmacro (globalmacroid,macro,value)"
+			" values (66,'{$PROBE.INTERNAL.ERROR.INTERVAL}','5m')"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='globalmacro'"))
+		return FAIL;
+
+	return SUCCEED;
+
+#undef RESERVE_GLOBALMACROID
+}
+
+static int	DBpatch_3000203(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* create "Template Probe Errors" */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into hosts (hostid,proxy_hostid,host,status,"
+				"ipmi_authtype,ipmi_privilege,ipmi_username,ipmi_password,name,flags,templateid,"
+				"description,tls_connect,tls_accept,tls_issuer,tls_subject,tls_psk_identity,tls_psk)"
+			" values ('99990',NULL,'Template Probe Errors','3',"
+				"'0','2','','','Template Probe Errors','0',NULL,"
+				"'','1','1','','','','')"))
+	{
+		return FAIL;
+	}
+
+	/* add it to "Templates" host group */
+	if (ZBX_DB_OK > DBexecute("insert into hosts_groups (hostgroupid,hostid,groupid) values ('999','99990','1')"))
+		return FAIL;
+
+	/* add "Internal errors" application */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into applications (applicationid,hostid,name,flags)"
+			" values ('999','99990','Internal errors','0')"))
+	{
+		return FAIL;
+	}
+
+	/* add "Internal error rate" item */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,"
+				"status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
+			" values ('99990','3','','','99990','Internal error rate','rsm.errors','60','90','365',"
+				"'0','0','','','0','1',"
+				"'','0','','',"
+				"'1','',NULL,NULL,'','','','0',"
+				"'0','','','','','0',NULL,'','',"
+				"'0','30','0','0','','0')"))
+	{
+		return FAIL;
+	}
+
+	/* put item into application */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items_applications (itemappid,applicationid,itemid)"
+			" values ('99990','999','99990')"))
+	{
+		return FAIL;
+	}
+
+	/* add triggers... */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into triggers (triggerid,expression,description,url,status,priority,comments,templateid,type,flags)"
+			" values"
+				" ('99990','{99990}>0','Internal errors happening for {$PROBE.INTERNAL.ERROR.INTERVAL}','','0','4','',NULL,'0','0'),"
+				" ('99991','{99991}>0','Internal errors happening','','0','2','',NULL,'0','0')"))
+	{
+		return FAIL;
+	}
+
+	/* ...and trigger functions */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into functions (functionid,itemid,triggerid,function,parameter)"
+			" values"
+				" ('99990','99990','99990','min','{$PROBE.INTERNAL.ERROR.INTERVAL}'),"
+				" ('99991','99990','99991','last','')"))
+	{
+		return FAIL;
+	}
+
+	/* add dependency */
+
+#define RESERVE_TRIGGERDEPID									\
+		"update trigger_depends"							\
+		" set triggerdepid=(select nextid from ("					\
+			"select max(triggerdepid)+1 as nextid from trigger_depends) as tmp)"	\
+		" where triggerdepid=" ZBX_FS_UI64
+
+	if (ZBX_DB_OK > DBexecute(RESERVE_TRIGGERDEPID, 1))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into trigger_depends (triggerdepid,triggerid_down,triggerid_up)"
+			" values ('1','99991','99990')"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='trigger_depends'"))
+		return FAIL;
+
+#undef RESERVE_TRIGGERDEPID
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000204(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	int		ret = SUCCEED;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	result = DBselect("select h.hostid from hosts h,hosts_groups hg where h.hostid=hg.hostid and hg.groupid=120");
+
+	if (NULL == result)
+		return FAIL;
+
+	while (NULL != (row = DBfetch(result)) && SUCCEED == ret)
+	{
+		zbx_uint64_t		hostid;
+		zbx_vector_uint64_t	templateids;
+
+		ZBX_STR2UINT64(hostid, row[0]);			/* hostid of probe host */
+		zbx_vector_uint64_create(&templateids);
+		zbx_vector_uint64_reserve(&templateids, 1);
+		zbx_vector_uint64_append(&templateids, 99990);	/* hostid of "Template Probe Errors" */
+
+		ret = DBcopy_template_elements(hostid, &templateids);
+
+		zbx_vector_uint64_destroy(&templateids);
+	}
+
+	DBfree_result(result);
+
+	return ret;
+}
+
+static const action_t	two_more_actions[] = {
 	{115,	"Probes",		3600,
 		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
 		1,
 		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC",
 		{
-			{115,	OP_MESSAGE,	{.opmessage = {1,	"",	"",	10,	{
+			{115,	OP_MESSAGE,	{.opmessage = {1,	"",	"",	10,
+				{
 					{115,	OP_MESSAGE_USR,	{.userid = 100}},
 					{0}
-			}}}},
+				}
+			}}},
 			{0}
 		},
 		{
@@ -1188,15 +1467,38 @@ static const action_t	one_more_action[] = {
 			{0}
 		}
 	},
+	{140,	"Probes-Knockout",	3600,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
+		1,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC",
+		{
+			{140,	OP_COMMAND,	{.opcommand = {0,	1,	"",	0,	"",	"",	"",	"",
+				"/opt/zabbix/scripts/probe-manual.pl --probe \'{HOST.HOST}\' --set 0",
+				{
+					{140,	OP_COMMAND_CURRENT_HOST},
+					{0}
+				}
+			}}},
+			{0}
+		},
+		{
+			{140,	16,	7,	""},
+			{141,	5,	0,	"1"},
+			{142,	4,	5,	"2"},
+			{143,	0,	0,	"120"},
+			{144,	2,	0,	"99990"},
+			{0}
+		}
+	},
 	{0}
 };
 
-static int	DBpatch_3000202(void)
+static int	DBpatch_3000205(void)
 {
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	return add_actions(one_more_action);
+	return add_actions(two_more_actions);
 }
 
 #endif
@@ -1249,6 +1551,9 @@ DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "T
 DBPATCH_ADD(3000140, 0, 0)	/* lowered "Refresh unsupported items" interval to 60 seconds */
 DBPATCH_ADD(3000200, 0, 0)	/* Phase 2 */
 DBPATCH_ADD(3000201, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
-DBPATCH_ADD(3000202, 0, 0)	/* new action: "Probes" */
+DBPATCH_ADD(3000202, 0, 0)	/* add {$PROBE.INTERNAL.ERROR.INTERVAL} global macro */
+DBPATCH_ADD(3000203, 0, 0)	/* create "Template Probe Errors" template with "Internal error rate" item and triggers */
+DBPATCH_ADD(3000204, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
+DBPATCH_ADD(3000205, 0, 0)	/* new actions: "Probes", "Probes-Knockout" */
 
 DBPATCH_END()
