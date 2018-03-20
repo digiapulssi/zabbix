@@ -573,12 +573,9 @@ void	lld_process_discovery_rule(zbx_uint64_t lld_ruleid, const char *value, cons
 	const char		*sql_start = "update items set ", *sql_continue = ",";
 	lld_filter_t		filter;
 	time_t			now;
-	zbx_item_diff_t		lld_rule_diff;
+	zbx_item_diff_t		lld_rule_diff = {.itemid = lld_ruleid, .flags = ZBX_FLAGS_ITEM_DIFF_UNSET};
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid:" ZBX_FS_UI64, __function_name, lld_ruleid);
-
-	lld_rule_diff.itemid = lld_ruleid;
-	lld_rule_diff.flags = ZBX_FLAGS_ITEM_DIFF_UNSET;
 
 	if (FAIL == DCconfig_lock_lld_rule(lld_ruleid))
 	{
@@ -714,8 +711,6 @@ error:
 		DCconfig_items_apply_changes(&diffs);
 		zbx_vector_ptr_destroy(&diffs);
 	}
-
-
 clean:
 	DCconfig_unlock_lld_rule(lld_ruleid);
 
@@ -729,7 +724,6 @@ clean:
 
 	zbx_vector_ptr_clear_ext(&lld_rows, (zbx_clean_func_t)lld_row_free);
 	zbx_vector_ptr_destroy(&lld_rows);
-
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
