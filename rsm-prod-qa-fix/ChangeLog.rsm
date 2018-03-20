@@ -3,6 +3,7 @@ Changes for rsm1.0.6rc1
 New features:
 
 Bug fixes:
+....I..... [329] made incidentStatus from falsePositiveChanges.csv reference statusMaps.csv catalog (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.5
