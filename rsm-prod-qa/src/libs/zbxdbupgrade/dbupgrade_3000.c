@@ -1017,6 +1017,17 @@ static int	DBpatch_3000140(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000141(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into rsm_status_map (id,name) values ('7','Activated'),('8','Deactivated')"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1065,5 +1076,6 @@ DBPATCH_ADD(3000137, 0, 0)	/* update "Processor load is too high on {HOST.NAME}"
 DBPATCH_ADD(3000138, 0, 0)	/* update "Too many processes running on {HOST.NAME}" trigger in "Template OS Linux" template and "Zabbix Server" host */
 DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "Template OS Linux" template to all hosts it is currently linked to (except "Zabbix Server") */
 DBPATCH_ADD(3000140, 0, 0)	/* lowered "Refresh unsupported items" interval to 60 seconds */
+DBPATCH_ADD(3000141, 0, 0)	/* added "Activated" and "Deactivated" false positive statuses to "statusMaps.csv" */
 
 DBPATCH_END()
