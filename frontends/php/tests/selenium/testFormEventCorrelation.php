@@ -319,9 +319,10 @@ class testFormEventCorrelation extends CWebTest {
 		$this->zbxTestDropdownSelectWait('new_condition_operator', $data['operator']);
 
 		if ($data['select_tag'] === 'New event host group') {
-			$this->zbxTestClickButtonMultiselect('new_condition_groupids_');
-			$this->zbxTestLaunchOverlayDialog('Host groups');
-			$this->zbxTestClickLinkText($host_group);
+			$this->zbxTestClickButtonText('Select');
+			$this->zbxTestSwitchToNewWindow();
+			$this->zbxTestClickLinkTextWait($host_group);
+			$this->zbxTestWaitWindowClose();
 		}
 
 		if ($data['select_tag'] === 'Event tag pair') {
