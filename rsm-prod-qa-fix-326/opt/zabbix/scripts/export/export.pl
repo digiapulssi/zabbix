@@ -1834,15 +1834,12 @@ sub __get_incidents2
 			my $inc_till = $_->{'end'};
 			my $false_positive = $_->{'false_positive'};
 
-			if (opt('debug'))
-			{
-				my $str = "$eventid";
-				$str .= " (false positive)" if ($false_positive != 0);
-				$str .= ": " . ts_str($inc_from) . " ($inc_from) -> ";
-				$str .= $inc_till ? ts_str($inc_till) . " ($inc_till)" : "null";
+			my $str = "$eventid";
+			$str .= " (false positive)" if ($false_positive != 0);
+			$str .= ": " . ts_str($inc_from) . " ($inc_from) -> ";
+			$str .= $inc_till ? ts_str($inc_till) . " ($inc_till)" : "null";
 
-				dbg($str);
-			}
+			dbg($str);
 		}
 	}
 
