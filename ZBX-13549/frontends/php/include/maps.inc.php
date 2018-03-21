@@ -946,10 +946,11 @@ function getSelementsInfo($sysmap, array $options = []) {
 		]);
 
 		foreach ($triggers as &$trigger) {
-			$trigger_host = reset($trigger['hosts']);
-
-			if ($trigger_host['status'] == HOST_STATUS_NOT_MONITORED) {
-				$trigger['status'] = $trigger_host['status'];
+			foreach ($trigger['hosts'] as $trigger_host) {
+				if ($trigger_host['status'] == HOST_STATUS_NOT_MONITORED) {
+					$trigger['status'] = TRIGGER_STATUS_DISABLED;
+					break;
+				}
 			}
 
 			foreach ($triggerIdToSelementIds[$trigger['triggerid']] as $belongs_to_sel) {
