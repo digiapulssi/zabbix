@@ -938,18 +938,25 @@ function getSelementsInfo($sysmap, array $options = []) {
 	if (!empty($triggerIdToSelementIds)) {
 		$triggers = API::Trigger()->get([
 			'output' => ['triggerid', 'status', 'value', 'priority', 'lastchange', 'description', 'expression'],
-			'selectHosts' => ['maintenance_status', 'maintenanceid'],
+			'selectHosts' => ['maintenance_status', 'status', 'maintenanceid'],
 			'selectLastEvent' => ['acknowledged'],
 			'triggerids' => array_keys($triggerIdToSelementIds),
 			'filter' => ['state' => null],
 			'nopermissions' => true
 		]);
 
-		foreach ($triggers as $trigger) {
+		foreach ($triggers as &$trigger) {
+			$trigger_host = reset($trigger['hosts']);
+
+			if ($trigger_host['status'] == HOST_STATUS_NOT_MONITORED) {
+				$trigger['status'] = $trigger_host['status'];
+			}
+
 			foreach ($triggerIdToSelementIds[$trigger['triggerid']] as $belongs_to_sel) {
 				$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger;
 			}
 		}
+		unset($trigger);
 	}
 
 	// triggers from submaps, skip dependent
