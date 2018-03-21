@@ -582,7 +582,7 @@ sub __get_test_data
 			$epp_str_items_ref = get_epp_str_itemids($tld, getopt('probe'), $services->{$service}->{'key_ip'});
 		}
 
-		my (@empty_arr, $rows_ref, $incidents, $incidents_count);
+		my (@empty_arr, $rows_ref, $incidents);
 
 		if ($itemid_avail)
 		{
@@ -601,8 +601,6 @@ sub __get_test_data
 			$incidents = \@empty_arr;
 			$rows_ref = \@empty_arr;
 		}
-
-		$incidents_count = scalar(@$incidents);
 
 		my $cycles;
 		my $last_avail_clock;
@@ -1105,7 +1103,12 @@ sub __save_csv_data
 				my $failed_tests = $_->{'failed_tests'};
 				my $false_positive = $_->{'false_positive'};
 
-				dbg("incident id:$eventid start:", ts_full($event_start), " end:", ts_full($event_end), " fp:$false_positive failed_tests:", (defined($failed_tests) ? $failed_tests : "(null)")) if (opt('debug'));
+				if (opt('debug'))
+				{
+					dbg("incident id:$eventid start:" . ts_full($event_start) .
+							" end:" . ts_full($event_end) . " fp:$false_positive" .
+							" failed_tests:" . ($failed_tests // "(null)"));
+				}
 
 				# write event that resolves incident
 				if ($event_end)
@@ -1861,7 +1864,7 @@ sub __cycle_end
 	my $now = shift;
 	my $delay = shift;
 
-	return $now + $delay - ($now % $delay) - 1;
+	return __cycle_start($now, $delay) + $delay - 1;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
