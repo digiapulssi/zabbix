@@ -497,6 +497,7 @@ typedef struct
 
 	time_t			probe_online_since;
 	char			probe_last_status;
+	zbx_uint64_t		rsm_errors;		/* counter of internal and local resolver errors during tests */
 }
 ZBX_DC_CONFIG;
 

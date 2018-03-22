@@ -29,6 +29,21 @@
 #include "log.h"
 #include "rsm.h"
 
+/* TODO remove after merge with rsm-dev-dns-err */
+#ifndef ZBX_EC_DNS_UDP_RES_NOREPLY
+#	define ZBX_EC_DNS_UDP_RES_NOREPLY	ZBX_EC_DNS_RES_NOREPLY
+#endif
+
+/* TODO remove after merge with rsm-dev-dns-err */
+#ifndef ZBX_EC_DNS_TCP_RES_NOREPLY
+#	define ZBX_EC_DNS_TCP_RES_NOREPLY	ZBX_EC_DNS_RES_NOREPLY
+#endif
+
+/* TODO revisit during EPP release */
+#ifndef ZBX_EC_EPP_RES_NOREPLY
+#	define ZBX_EC_EPP_RES_NOREPLY	ZBX_EC_EPP_NO_IP
+#endif
+
 #define ZBX_HOST_BUF_SIZE	128
 #define ZBX_IP_BUF_SIZE		64
 #define ZBX_ERR_BUF_SIZE	8192
@@ -83,6 +98,13 @@ typedef enum
 	ZBX_EC_RES_CATCHALL
 }
 zbx_resolver_error_t;
+
+typedef enum
+{
+	ZBX_SUBTEST_SUCCESS,
+	ZBX_SUBTEST_FAIL
+}
+zbx_subtest_result_t;
 
 typedef struct
 {
@@ -1354,76 +1376,31 @@ static void	zbx_clean_nss(zbx_ns_t *nss, size_t nss_num)
 	}
 }
 
-/* todo phase 1: added these defines */
-#define RSM_SERVICE_DNS		1
-#define RSM_SERVICE_RDDS	2
-#define RSM_SERVICE_EPP		3
-
-/* todo phase 1: added this one for dns internal error exceptions */
-static int	is_dns_service_err(int ec)
-{
-	if (ZBX_EC_DNS_RES_NOREPLY == ec)
-		return FAIL;
-
-	/* is dns service error */
-	return SUCCEED;
+#define ZBX_SUBTEST_RESULT(__interface)									\
+static zbx_subtest_result_t	zbx_ ## __interface ## _result(int rtt, int rtt_limit)			\
+{													\
+	switch (rtt)											\
+	{												\
+		case ZBX_EC_INTERNAL:									\
+		case ZBX_EC_INTERNAL_IP_UNSUP:								\
+		case ZBX_EC_ ## __interface ## _RES_NOREPLY:						\
+			zbx_dc_rsm_errors_inc();							\
+			/* break; is not missing here */						\
+		case ZBX_NO_VALUE:									\
+			return ZBX_SUBTEST_SUCCESS;							\
+		default:										\
+			return (0 > rtt || rtt > rtt_limit ? ZBX_SUBTEST_FAIL : ZBX_SUBTEST_SUCCESS);	\
+	}												\
 }
 
-/* todo phase 1: added this one for rdds internal error exceptions */
-static int	is_rdds_service_err(int ec)
-{
-	return ZBX_EC_RDDS43_RES_NOREPLY != ec && ZBX_EC_RDDS80_RES_NOREPLY != ec ? SUCCEED : FAIL;
-}
+ZBX_SUBTEST_RESULT(DNS_UDP);
+ZBX_SUBTEST_RESULT(DNS_TCP);
+ZBX_SUBTEST_RESULT(RDDS43);
+ZBX_SUBTEST_RESULT(RDDS80);
+/* anticipating RDAP */
+ZBX_SUBTEST_RESULT(EPP);
 
-/* todo phase 1: added this one for epp internal error exceptions */
-static int	is_epp_service_err(int ec)
-{
-	if (ZBX_EC_EPP_NO_IP == ec || ZBX_EC_INTERNAL_IP_UNSUP == ec)
-		return FAIL;
-
-	/* is epp service error */
-	return SUCCEED;
-}
-
-/* todo phase 1: this function was completely rewritten */
-static int	is_service_err(int service, int ec)
-{
-	int	ret = FAIL;	/* not a service error */
-
-	if (-200 >= ec && ec > ZBX_NO_VALUE)
-	{
-		switch (service)
-		{
-			case RSM_SERVICE_DNS:
-				ret = is_dns_service_err(ec);
-				break;
-			case RSM_SERVICE_RDDS:
-				ret = is_rdds_service_err(ec);
-				break;
-			case RSM_SERVICE_EPP:
-				ret = is_epp_service_err(ec);
-				break;
-			default:
-				THIS_SHOULD_NEVER_HAPPEN;
-				exit(EXIT_FAILURE);
-				break;
-		}
-	}
-
-	return ret;
-}
-
-/* The ns is considered non-working only in case it was the one to blame. Resolver */
-/* and internal errors do not count. Another case of ns fail is slow response.     */
-/* todo phase 1: added first argument because of exceptional RTT errors treated as internal */
-static int	rtt_result(int service, int rtt, int rtt_limit)
-{
-
-	if (SUCCEED == is_service_err(service, rtt) || rtt > rtt_limit)
-		return FAIL;
-
-	return SUCCEED;
-}
+#undef ZBX_SUBTEST_RESULT
 
 static int	zbx_conf_str(zbx_uint64_t *hostid, const char *macro, char **value, char *err, size_t err_size)
 {
@@ -1631,8 +1608,8 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	DC_ITEM		*items = NULL;
 	zbx_ns_t	*nss = NULL;
 	size_t		i, j, items_num = 0, nss_num = 0;
-	int		ipv4_enabled, ipv6_enabled, dnssec_enabled, epp_enabled, rdds_enabled, res_ec = ZBX_EC_NOERROR,
-			rtt_limit, ret = SYSINFO_RET_FAIL;
+	int		ipv4_enabled, ipv6_enabled, dnssec_enabled, epp_enabled, rdds_enabled, res_ec, rtt_limit,
+			ret = SYSINFO_RET_FAIL;
 
 	if (1 != request->nparam)
 	{
@@ -1733,19 +1710,17 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	/* from this point item will not become NOTSUPPORTED */
 	ret = SYSINFO_RET_OK;
 
-	/* get DNSKEY records */
-	if (0 != dnssec_enabled && SUCCEED != zbx_get_dnskeys(res, domain, res_ip, &keys, log_fd, &res_ec,
-			err, sizeof(err)))
-	{
-		zbx_rsm_err(log_fd, err);
-	}
-
 	/* get list of Name Servers and IPs, by default it will set every Name Server */
 	/* as working so if we have no IPs the result of Name Server will be SUCCEED  */
 	nss_num = zbx_get_nameservers(items, items_num, &nss, ipv4_enabled, ipv6_enabled, log_fd);
 
-	if (ZBX_EC_NOERROR != res_ec)
+	if (0 != dnssec_enabled && SUCCEED != zbx_get_dnskeys(res, domain, res_ip, &keys, log_fd, &res_ec,
+			err, sizeof(err)))
 	{
+		/* failed to get DNSKEY records */
+
+		zbx_rsm_err(log_fd, err);
+
 		for (i = 0; i < nss_num; i++)
 		{
 			for (j = 0; j < nss[i].ips_num; j++)
@@ -1922,8 +1897,12 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 					item->nextcheck, strlen(request->key) + 1, items, items_num);
 
 			/* if a single IP of the Name Server fails, consider the whole Name Server down */
-			if (SUCCEED != rtt_result(RSM_SERVICE_DNS, nss[i].ips[j].rtt, rtt_limit))
+			if (ZBX_SUBTEST_SUCCESS != (ZBX_RSM_UDP == proto ?
+					zbx_DNS_UDP_result(nss[i].ips[j].rtt, rtt_limit) :
+					zbx_DNS_TCP_result(nss[i].ips[j].rtt, rtt_limit)))
+			{
 				nss[i].result = FAIL;
+			}
 		}
 	}
 
@@ -3034,22 +3013,30 @@ out:
 		zbx_set_rdds_values(ip43, rtt43, upd43, ip80, rtt80, item->nextcheck, strlen(request->key), items,
 				items_num);
 
-		rdds43 = rtt_result(RSM_SERVICE_RDDS, rtt43, rtt_limit);
-		rdds80 = rtt_result(RSM_SERVICE_RDDS, rtt80, rtt_limit);
+		rdds43 = zbx_RDDS43_result(rtt43, rtt_limit);
+		rdds80 = zbx_RDDS80_result(rtt80, rtt_limit);
 
-		if (SUCCEED == rdds43)
+		switch (rdds43)
 		{
-			if (SUCCEED == rdds80)
-				rdds_result = RDDS_UP;
-			else
-				rdds_result = RDDS_ONLY43;
-		}
-		else
-		{
-			if (SUCCEED == rdds80)
-				rdds_result = RDDS_ONLY80;
-			else
-				rdds_result = RDDS_DOWN;
+			case ZBX_SUBTEST_SUCCESS:
+				switch (rdds80)
+				{
+					case ZBX_SUBTEST_SUCCESS:
+						rdds_result = RDDS_UP;
+						break;
+					case ZBX_SUBTEST_FAIL:
+						rdds_result = RDDS_ONLY43;
+				}
+				break;
+			case ZBX_SUBTEST_FAIL:
+				switch (rdds80)
+				{
+					case ZBX_SUBTEST_SUCCESS:
+						rdds_result = RDDS_ONLY80;
+						break;
+					case ZBX_SUBTEST_FAIL:
+						rdds_result = RDDS_DOWN;
+				}
 		}
 
 		/* set the value of our item itself */
@@ -4414,9 +4401,9 @@ out:
 		}
 
 		/* set availability of EPP (up/down) */
-		if (SUCCEED != rtt_result(RSM_SERVICE_EPP, rtt1, rtt1_limit) ||
-				SUCCEED != rtt_result(RSM_SERVICE_EPP, rtt2, rtt2_limit) ||
-				SUCCEED != rtt_result(RSM_SERVICE_EPP, rtt3, rtt3_limit))
+		if (ZBX_SUBTEST_SUCCESS != zbx_EPP_result(rtt1, rtt1_limit) ||
+				ZBX_SUBTEST_SUCCESS != zbx_EPP_result(rtt2, rtt2_limit) ||
+				ZBX_SUBTEST_SUCCESS != zbx_EPP_result(rtt3, rtt3_limit))
 		{
 			/* down */
 			zbx_add_value_uint(item, item->nextcheck, 0);
