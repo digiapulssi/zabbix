@@ -51,7 +51,6 @@ zabbix_server_LDADD = \
 	selfmon/libzbxselfmon.a \
 	vmware/libzbxvmware.a \
 	taskmanager/libzbxtaskmanager.a \
-	ipmi/libipmi.a \
 	scripts/libzbxscripts.a \
 	preprocessor/libpreprocessor.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxserversysinfo.a \
@@ -83,6 +82,10 @@ zabbix_server_LDADD = \
 	$(top_srcdir)/src/libs/zbxdb/libzbxdb.a \
 	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a \
 	$(top_srcdir)/src/libs/zbxtasks/libzbxtasks.a
+
+if HAVE_IPMI
+zabbix_server_LDADD += ipmi/libipmi.a
+endif
 
 zabbix_server_LDADD += @SERVER_LIBS@ $(CUNIT_LDADD)
 
