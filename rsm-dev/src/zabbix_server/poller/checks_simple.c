@@ -186,6 +186,11 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 		if (SYSINFO_RET_OK == check_rsm_probe_status(item, &request, result))
 			ret = SUCCEED;
 	}
+	else if (0 == strcmp(request.key, "rsm.errors"))
+	{
+		SET_UI64_RESULT(result, zbx_dc_rsm_errors_get());
+		ret = SUCCEED;
+	}
 	else if (0 == strcmp(request.key, "net.tcp.service") || 0 == strcmp(request.key, "net.udp.service"))
 	{
 		if (SYSINFO_RET_OK == check_service(&request, item->interface.addr, result, 0))
