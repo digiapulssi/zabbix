@@ -426,7 +426,7 @@ try_again:
 
 		zbx_vector_ptr_clear(&retries);
 
-		sleep(ZBX_HISTORY_STORAGE_DOWN / 1000);
+		zbx_sleep(ZBX_HISTORY_STORAGE_DOWN / 1000);
 		goto try_again;
 	}
 
