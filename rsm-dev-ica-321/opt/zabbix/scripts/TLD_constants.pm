@@ -64,15 +64,15 @@ use constant ITEM_TYPE_EXTERNAL =>           10;
 use constant ITEM_TYPE_CALCULATED =>         15;
 
 use constant ZBX_EC_INTERNAL          => -1;   # internal error (general)
-use constant ZBX_EC_DNS_NS_ERRSIG		=> -204;	# DNSSEC error (obsolete)
-use constant ZBX_EC_DNS_RES_NOREPLY		=> -205;	# No reply from resolver (obsolete)
-use constant ZBX_EC_DNS_RES_NOADBIT		=> -206;	# Keyset is not valid (obsolete)
-use constant ZBX_EC_DNS_UDP_RES_NOREPLY		=> -400;	# DNS UDP - No reply from local resolver
-use constant ZBX_EC_DNS_UDP_RES_NOADBIT		=> -401;	# DNS UDP - No AD bit from local resolver
-use constant ZBX_EC_DNS_UDP_MALFORMED_DNSSEC	=> -427;	# DNS UDP - Malformed DNSSEC response
-use constant ZBX_EC_DNS_TCP_RES_NOREPLY		=> -800;	# DNS TCP - No reply from local resolver
-use constant ZBX_EC_DNS_TCP_RES_NOADBIT		=> -801;	# DNS TCP - No AD bit from local resolver
-use constant ZBX_EC_DNS_TCP_MALFORMED_DNSSEC	=> -827;	# DNS TCP - Malformed DNSSEC response
+use constant ZBX_EC_DNS_NS_ERRSIG	=> -204;	# DNSSEC error (obsolete)
+use constant ZBX_EC_DNS_RES_NOREPLY	=> -205;	# No reply from resolver (obsolete)
+use constant ZBX_EC_DNS_RES_NOADBIT	=> -206;	# Keyset is not valid (obsolete)
+use constant ZBX_EC_DNS_UDP_RES_NOREPLY	=> -400;	# DNS UDP - No reply from local resolver
+use constant ZBX_EC_DNS_UDP_RES_NOADBIT	=> -401;	# DNS UDP - No AD bit from local resolver
+use constant ZBX_EC_DNS_UDP_NO_DNSKEY	=> -428;	# DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
+use constant ZBX_EC_DNS_TCP_RES_NOREPLY	=> -800;	# DNS TCP - No reply from local resolver
+use constant ZBX_EC_DNS_TCP_RES_NOADBIT	=> -801;	# DNS TCP - No AD bit from local resolver
+use constant ZBX_EC_DNS_TCP_NO_DNSKEY	=> -828;	# DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
 use constant ZBX_EC_RDDS43_RES_NOREPLY	=> -222; # RDDS43 - No reply from local resolver
 use constant ZBX_EC_RDDS80_RES_NOREPLY	=> -250; # RDDS80 - No reply from local resolver
 use constant ZBX_EC_EPP_NO_IP         => -200; # IP is missing for EPP server
@@ -143,10 +143,10 @@ our @EXPORT_OK = qw(true false LINUX_TEMPLATEID APP_ZABBIX_PROXY_TEMPLATEID TEMP
                     ZBX_EC_DNS_NS_ERRSIG ZBX_EC_DNS_RES_NOREPLY ZBX_EC_DNS_RES_NOADBIT
 			ZBX_EC_DNS_UDP_RES_NOREPLY
 			ZBX_EC_DNS_UDP_RES_NOADBIT
-			ZBX_EC_DNS_UDP_MALFORMED_DNSSEC
+			ZBX_EC_DNS_UDP_NO_DNSKEY
 			ZBX_EC_DNS_TCP_RES_NOREPLY
 			ZBX_EC_DNS_TCP_RES_NOADBIT
-			ZBX_EC_DNS_TCP_MALFORMED_DNSSEC
+			ZBX_EC_DNS_TCP_NO_DNSKEY
 			ZBX_EC_RDDS43_RES_NOREPLY
 			ZBX_EC_RDDS80_RES_NOREPLY
                     ZBX_EC_EPP_NO_IP
@@ -171,10 +171,10 @@ our %EXPORT_TAGS = ( general => [ qw(true false) ],
 				ZBX_EC_DNS_NS_ERRSIG ZBX_EC_DNS_RES_NOREPLY ZBX_EC_DNS_RES_NOADBIT
 				ZBX_EC_DNS_UDP_RES_NOREPLY
 				ZBX_EC_DNS_UDP_RES_NOADBIT
-				ZBX_EC_DNS_UDP_MALFORMED_DNSSEC
+				ZBX_EC_DNS_UDP_NO_DNSKEY
 				ZBX_EC_DNS_TCP_RES_NOREPLY
 				ZBX_EC_DNS_TCP_RES_NOADBIT
-				ZBX_EC_DNS_TCP_MALFORMED_DNSSEC
+				ZBX_EC_DNS_TCP_NO_DNSKEY
 				ZBX_EC_RDDS43_RES_NOREPLY
 				ZBX_EC_RDDS80_RES_NOREPLY
 				ZBX_EC_EPP_NO_IP
