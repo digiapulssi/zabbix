@@ -1341,6 +1341,36 @@ static int	DBpatch_3000202(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000203(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into mappings (mappingid,valuemapid,value,newvalue) values"
+			" (11002,110,'2','Up-inconclusive-no-data'),"
+			" (11003,110,'3','Up-inconclusive-no-probes')"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000204(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into rsm_status_map (id,name) values"
+			" (7,'Up-inconclusive-no-data'),"
+			" (8,'Up-inconclusive-no-probes')"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1392,5 +1422,7 @@ DBPATCH_ADD(3000140, 0, 0)	/* lowered "Refresh unsupported items" interval to 60
 DBPATCH_ADD(3000200, 0, 0)	/* Phase 2 */
 DBPATCH_ADD(3000201, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
 DBPATCH_ADD(3000202, 0, 0)	/* update "RSM DNS rtt" value mapping with new DNS test error codes */
+DBPATCH_ADD(3000203, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to "RSM Service Availability" value mapping */
+DBPATCH_ADD(3000204, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to data export "statusMaps" catalog */
 
 DBPATCH_END()

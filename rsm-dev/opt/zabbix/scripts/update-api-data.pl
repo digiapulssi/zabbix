@@ -426,8 +426,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -452,8 +451,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -505,8 +503,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -544,8 +541,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -583,14 +579,17 @@ TRYFORK:
 				# get alarmed
 				my $incidents = get_incidents($avail_itemid, $now);
 
-				my $alarmed_status = JSON_VALUE_ALARMED_NO;
-				if (scalar(@$incidents) != 0)
+				my $alarmed_status;
+
+				if (scalar(@$incidents) != 0 && $incidents->[0]->{'false_positive'} == 0 &&
+						!defined($incidents->[0]->{'end'}))
 				{
-					if ($incidents->[0]->{'false_positive'} == 0 and not defined($incidents->[0]->{'end'}))
-					{
-						$alarmed_status = JSON_VALUE_ALARMED_YES;
-						$json_state_ref->{'status'} = JSON_VALUE_DOWN;
-					}
+					$alarmed_status = JSON_VALUE_ALARMED_YES;
+					$json_state_ref->{'status'} = JSON_VALUE_DOWN;
+				}
+				else
+				{
+					$alarmed_status = JSON_VALUE_ALARMED_NO;
 				}
 
 				if (opt('dry-run'))
@@ -634,8 +633,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -650,8 +648,41 @@ TRYFORK:
 					next;
 				}
 
+				my $latest_avail_select = db_select(
+						"select value from history_uint" .
+							" where itemid=$avail_itemid" .
+							" and clock<$service_till" .
+						" order by clock desc limit 1");
+
+				my $latest_avail_value = scalar(@{$latest_avail_select}) == 0 ?
+						UP_INCONCLUSIVE_NO_DATA : $latest_avail_select->[0]->[0];
+
+				if (opt('dry-run'))
+				{
+					unless (exists($cfg_avail_valuemaps->{int($latest_avail_value)}))
+					{
+						my $expected_list;
+
+						while (my ($status, $description) = each(%{$cfg_avail_valuemaps}))
+						{
+							if (defined($expected_list))
+							{
+								$expected_list .= ", ";
+							}
+							else
+							{
+								$expected_list = "";
+							}
+
+							$expected_list .= "$status ($description)";
+						}
+
+						wrn("unknown availability result: $latest_avail_value (expected $expected_list)");
+					}
+				}
+
 				$json_state_ref->{'testedServices'}->{uc($service)} = {
-					'status' => ($alarmed_status eq JSON_VALUE_ALARMED_YES ? JSON_VALUE_DOWN : JSON_VALUE_UP),
+					'status' => get_result_string($cfg_avail_valuemaps, $latest_avail_value),
 					'emergencyThreshold' => $rollweek,
 					'incidents' => []
 				};
@@ -722,17 +753,25 @@ TRYFORK:
 
 						if (opt('dry-run'))
 						{
-							if ($value == UP)
+							unless (exists($cfg_avail_valuemaps->{int($value)}))
 							{
-								$status_up++;
-							}
-							elsif ($value == DOWN)
-							{
-								$status_down++;
-							}
-							else
-							{
-								wrn("unknown status: $value (expected UP (0) or DOWN (1))");
+								my $expected_list;
+
+								while (my ($status, $description) = each(%{$cfg_avail_valuemaps}))
+								{
+									if (defined($expected_list))
+									{
+										$expected_list .= ", ";
+									}
+									else
+									{
+										$expected_list = "";
+									}
+
+									$expected_list .= "$status ($description)";
+								}
+
+								wrn("unknown availability result: $value (expected $expected_list)");
 							}
 						}
 
