@@ -325,7 +325,8 @@ static int	DBpatch_3000120(void)
 
 typedef enum
 {
-	OP_MESSAGE
+	OP_MESSAGE,
+	OP_COMMAND
 }
 operation_type_t;
 
@@ -363,9 +364,42 @@ typedef struct
 }
 opmessage_t;
 
+typedef enum
+{
+	OP_COMMAND_CURRENT_HOST
+}
+opcommand_type_t;
+
+typedef struct
+{
+	zbx_uint64_t		id;
+	opcommand_type_t	type;
+}
+target_t;
+
+typedef struct
+{
+#define MAX_TARGETS	1
+
+	int		type;
+	int		execute_on;
+	const char	*port;
+	int		authtype;
+	const char	*username;
+	const char	*password;
+	const char	*publickey;
+	const char	*privatekey;
+	const char	*command;
+	target_t	targets[MAX_TARGETS + 1];
+
+#undef MAX_TARGETS
+}
+opcommand_t;
+
 typedef union
 {
 	opmessage_t	opmessage;
+	opcommand_t	opcommand;
 }
 operation_data_t;
 
@@ -389,7 +423,7 @@ condition_t;
 typedef struct
 {
 #define MAX_OPERATIONS	1
-#define MAX_CONDITIONS	4
+#define MAX_CONDITIONS	5
 
 	zbx_uint64_t	id;
 	const char	*name;
@@ -477,6 +511,66 @@ static int	db_insert_opmessage(zbx_uint64_t operationid, const opmessage_t *opme
 	return SUCCEED;
 }
 
+static int	db_insert_opcommand(zbx_uint64_t operationid, const opcommand_t *opcommand)
+{
+	const target_t	*target;
+	char		*port_esc = NULL, *username_esc = NULL, *password_esc = NULL, *publickey_esc = NULL,
+			*privatekey_esc = NULL, *command_esc = NULL;
+	int		ret;
+
+	if (0 != opcommand->type)	/* ZBX_SCRIPT_TYPE_CUSTOM_SCRIPT */
+	{
+		THIS_SHOULD_NEVER_HAPPEN;
+		return FAIL;
+	}
+
+	port_esc = zbx_db_dyn_escape_string(opcommand->port);
+	username_esc = zbx_db_dyn_escape_string(opcommand->username);
+	password_esc = zbx_db_dyn_escape_string(opcommand->password);
+	publickey_esc = zbx_db_dyn_escape_string(opcommand->publickey);
+	privatekey_esc = zbx_db_dyn_escape_string(opcommand->privatekey);
+	command_esc = zbx_db_dyn_escape_string(opcommand->command);
+
+	ret = DBexecute(
+			"insert into opcommand (operationid,type,scriptid,execute_on,port,authtype,"
+				"username,password,publickey,privatekey,command)"
+			" values (" ZBX_FS_UI64 ",%d,null,%d,'%s',"
+				"%d,'%s','%s','%s','%s','%s')",
+			operationid, opcommand->type, opcommand->execute_on, port_esc, opcommand->authtype,
+				username_esc, password_esc, publickey_esc, privatekey_esc, command_esc);
+
+	zbx_free(port_esc);
+	zbx_free(username_esc);
+	zbx_free(password_esc);
+	zbx_free(publickey_esc);
+	zbx_free(privatekey_esc);
+	zbx_free(command_esc);
+
+	if (ZBX_DB_OK > ret)
+		return FAIL;
+
+	for (target = opcommand->targets; 0 != target->id; target++)
+	{
+		switch (target->type)
+		{
+			case OP_COMMAND_CURRENT_HOST:
+				if (ZBX_DB_OK > DBexecute(
+						"insert into opcommand_hst (opcommand_hstid,operationid,hostid)"
+						" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",null)",
+						target->id, operationid))
+				{
+					return FAIL;
+				}
+				break;
+			default:
+				THIS_SHOULD_NEVER_HAPPEN;
+				return FAIL;
+		}
+	}
+
+	return SUCCEED;
+}
+
 static int	db_insert_condition(zbx_uint64_t actionid, const condition_t *condition)
 {
 	char	*value_esc = NULL;
@@ -507,10 +601,25 @@ static int	add_actions(const action_t *actions)
 
 		for (operation = action->operations; 0 != operation->id; operation++)
 		{
+			int	operationtype;
+
+			switch (operation->type)
+			{
+				case OP_MESSAGE:
+					operationtype = 0;	/* OPERATION_TYPE_MESSAGE */
+					break;
+				case OP_COMMAND:
+					operationtype = 1;	/* OPERATION_TYPE_COMMAND */
+					break;
+				default:
+					THIS_SHOULD_NEVER_HAPPEN;
+					return FAIL;
+			}
+
 			if (ZBX_DB_OK > DBexecute(
-					"insert into operations (operationid,actionid)"
-					" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ")",
-					operation->id, action->id))
+					"insert into operations (operationid,actionid,operationtype)"
+					" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",%d)",
+					operation->id, action->id, operationtype))
 			{
 				return FAIL;
 			}
@@ -519,6 +628,10 @@ static int	add_actions(const action_t *actions)
 			{
 				case OP_MESSAGE:
 					if (SUCCEED != db_insert_opmessage(operation->id, &operation->data.opmessage))
+						return FAIL;
+					break;
+				case OP_COMMAND:
+					if (SUCCEED != db_insert_opcommand(operation->id, &operation->data.opcommand))
 						return FAIL;
 					break;
 				default:
@@ -1168,6 +1281,429 @@ static int	DBpatch_3000201(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000202(void)
+{
+	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
+	static const char	*const data[] = {
+		"ROW   |12000    |120       |-1   |Internal error                                                                                                  |",
+		"ROW   |12001    |120       |-200 |DNS UDP - No reply from name server                                                                             |",
+		"ROW   |12002    |120       |-201 |Invalid reply from Name Server (obsolete)                                                                       |",
+		"ROW   |12003    |120       |-202 |No UNIX timestamp (obsolete)                                                                                    |",
+		"ROW   |12004    |120       |-203 |Invalid UNIX timestamp (obsolete)                                                                               |",
+		"ROW   |12005    |120       |-204 |DNSSEC error (obsolete)                                                                                         |",
+		"ROW   |12006    |120       |-205 |No reply from resolver (obsolete)                                                                               |",
+		"ROW   |12007    |120       |-206 |Keyset is not valid (obsolete)                                                                                  |",
+		"ROW   |12008    |120       |-207 |DNS UDP - Expecting DNS CLASS IN but got CHAOS                                                                  |",
+		"ROW   |12009    |120       |-208 |DNS UDP - Expecting DNS CLASS IN but got HESIOD                                                                 |",
+		"ROW   |12010    |120       |-209 |DNS UDP - Expecting DNS CLASS IN but got something different than IN, CHAOS or HESIOD                           |",
+		"ROW   |12011    |120       |-210 |DNS UDP - Header section incomplete                                                                             |",
+		"ROW   |12012    |120       |-211 |DNS UDP - Question section incomplete                                                                           |",
+		"ROW   |12013    |120       |-212 |DNS UDP - Answer section incomplete                                                                             |",
+		"ROW   |12014    |120       |-213 |DNS UDP - Authority section incomplete                                                                          |",
+		"ROW   |12015    |120       |-214 |DNS UDP - Additional section incomplete                                                                         |",
+		"ROW   |12016    |120       |-215 |DNS UDP - Malformed DNS response                                                                                |",
+		"ROW   |12017    |120       |-250 |DNS UDP - Querying for a non existent domain - AA flag not present in response                                  |",
+		"ROW   |12018    |120       |-251 |DNS UDP - Querying for a non existent domain - Domain name being queried not present in question section        |",
+		"-- Error code for every assigned, non private DNS RCODE as per: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml               ",
+		"ROW   |12019    |120       |-252 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR                         |",
+		"ROW   |12020    |120       |-253 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got FORMERR                         |",
+		"ROW   |12021    |120       |-254 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got SERVFAIL                        |",
+		"ROW   |12022    |120       |-255 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTIMP                          |",
+		"ROW   |12023    |120       |-256 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got REFUSED                         |",
+		"ROW   |12024    |120       |-257 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXDOMAIN                        |",
+		"ROW   |12025    |120       |-258 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXRRSET                         |",
+		"ROW   |12026    |120       |-259 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NXRRSET                         |",
+		"ROW   |12027    |120       |-260 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTAUTH                         |",
+		"ROW   |12028    |120       |-261 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTZONE                         |",
+		"ROW   |12029    |120       |-262 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADVERS or BADSIG               |",
+		"ROW   |12030    |120       |-263 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADKEY                          |",
+		"ROW   |12031    |120       |-264 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTIME                         |",
+		"ROW   |12032    |120       |-265 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADMODE                         |",
+		"ROW   |12033    |120       |-266 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADNAME                         |",
+		"ROW   |12034    |120       |-267 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADALG                          |",
+		"ROW   |12035    |120       |-268 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC                        |",
+		"ROW   |12036    |120       |-269 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |",
+		"ROW   |12037    |120       |-270 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |",
+		"ROW   |12038    |120       |-400 |DNS UDP - No reply from local resolver                                                                          |",
+		"ROW   |12039    |120       |-401 |DNS UDP - No AD bit from local resolver                                                                         |",
+		"ROW   |12040    |120       |-402 |DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver                                          |",
+		"ROW   |12041    |120       |-403 |DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |",
+		"ROW   |12042    |120       |-404 |DNS UDP - Expecting NOERROR RCODE but got unexpecting from local resolver                                       |",
+		"ROW   |12043    |120       |-405 |DNS UDP - Unknown cryptographic algorithm                                                                       |",
+		"ROW   |12044    |120       |-406 |DNS UDP - Cryptographic algorithm not implemented                                                               |",
+		"ROW   |12045    |120       |-407 |DNS UDP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled                         |",
+		"ROW   |12046    |120       |-410 |DNS UDP - The signature does not cover this RRset                                                               |",
+		"ROW   |12047    |120       |-414 |DNS UDP - The RRSIG found is not signed by a DNSKEY from the KEYSET of the TLD                                  |",
+		"ROW   |12048    |120       |-415 |DNS UDP - Bogus DNSSEC signature                                                                                |",
+		"ROW   |12049    |120       |-416 |DNS UDP - DNSSEC signature has expired                                                                          |",
+		"ROW   |12050    |120       |-417 |DNS UDP - DNSSEC signature not incepted yet                                                                     |",
+		"ROW   |12051    |120       |-418 |DNS UDP - DNSSEC signature has expiration date earlier than inception date                                      |",
+		"ROW   |12052    |120       |-419 |DNS UDP - Error in NSEC3 denial of existence proof                                                              |",
+		"ROW   |12053    |120       |-421 |DNS UDP - Iterations count for NSEC3 record higher than maximum                                                 |",
+		"ROW   |12054    |120       |-422 |DNS UDP - RR not covered by the given NSEC RRs                                                                  |",
+		"ROW   |12055    |120       |-423 |DNS UDP - Wildcard not covered by the given NSEC RRs                                                            |",
+		"ROW   |12056    |120       |-425 |DNS UDP - The RRSIG has too few RDATA fields                                                                    |",
+		"ROW   |12057    |120       |-426 |DNS UDP - The DNSKEY has too few RDATA fields                                                                   |",
+		"ROW   |12058    |120       |-427 |DNS UDP - Malformed DNSSEC response                                                                             |",
+		"ROW   |12059    |120       |-428 |DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |",
+		"ROW   |12060    |120       |-600 |DNS TCP - Timeout reply from name server                                                                        |",
+		"ROW   |12061    |120       |-601 |DNS TCP - Error opening connection to name server                                                               |",
+		"ROW   |12062    |120       |-607 |DNS TCP - Expecting DNS CLASS IN but got CHAOS                                                                  |",
+		"ROW   |12063    |120       |-608 |DNS TCP - Expecting DNS CLASS IN but got HESIOD                                                                 |",
+		"ROW   |12064    |120       |-609 |DNS TCP - Expecting DNS CLASS IN but got something different than IN, CHAOS or HESIOD                           |",
+		"ROW   |12065    |120       |-610 |DNS TCP - Header section incomplete                                                                             |",
+		"ROW   |12066    |120       |-611 |DNS TCP - Question section incomplete                                                                           |",
+		"ROW   |12067    |120       |-612 |DNS TCP - Answer section incomplete                                                                             |",
+		"ROW   |12068    |120       |-613 |DNS TCP - Authority section incomplete                                                                          |",
+		"ROW   |12069    |120       |-614 |DNS TCP - Additional section incomplete                                                                         |",
+		"ROW   |12070    |120       |-615 |DNS TCP - Malformed DNS response                                                                                |",
+		"ROW   |12071    |120       |-650 |DNS TCP - Querying for a non existent domain - AA flag not present in response                                  |",
+		"ROW   |12072    |120       |-651 |DNS TCP - Querying for a non existent domain - Domain name being queried not present in question section        |",
+		"-- Error code for every assigned, non private DNS RCODE as per: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml               ",
+		"ROW   |12073    |120       |-652 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR                         |",
+		"ROW   |12074    |120       |-653 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got FORMERR                         |",
+		"ROW   |12075    |120       |-654 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got SERVFAIL                        |",
+		"ROW   |12076    |120       |-655 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTIMP                          |",
+		"ROW   |12077    |120       |-656 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got REFUSED                         |",
+		"ROW   |12078    |120       |-657 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXDOMAIN                        |",
+		"ROW   |12079    |120       |-658 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXRRSET                         |",
+		"ROW   |12080    |120       |-659 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NXRRSET                         |",
+		"ROW   |12081    |120       |-660 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTAUTH                         |",
+		"ROW   |12082    |120       |-661 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTZONE                         |",
+		"ROW   |12083    |120       |-662 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADVERS or BADSIG               |",
+		"ROW   |12084    |120       |-663 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADKEY                          |",
+		"ROW   |12085    |120       |-664 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTIME                         |",
+		"ROW   |12086    |120       |-665 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADMODE                         |",
+		"ROW   |12087    |120       |-666 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADNAME                         |",
+		"ROW   |12088    |120       |-667 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADALG                          |",
+		"ROW   |12089    |120       |-668 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC                        |",
+		"ROW   |12090    |120       |-669 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |",
+		"ROW   |12091    |120       |-670 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |",
+		"ROW   |12092    |120       |-800 |DNS TCP - No reply from local resolver                                                                          |",
+		"ROW   |12093    |120       |-801 |DNS TCP - No AD bit from local resolver                                                                         |",
+		"ROW   |12094    |120       |-802 |DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver                                          |",
+		"ROW   |12095    |120       |-803 |DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |",
+		"ROW   |12096    |120       |-804 |DNS TCP - Expecting NOERROR RCODE but got unexpecting from local resolver                                       |",
+		"ROW   |12097    |120       |-805 |DNS TCP - Unknown cryptographic algorithm                                                                       |",
+		"ROW   |12098    |120       |-806 |DNS TCP - Cryptographic algorithm not implemented                                                               |",
+		"ROW   |12099    |120       |-807 |DNS TCP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled                         |",
+		"ROW   |12100    |120       |-810 |DNS TCP - The signature does not cover this RRset                                                               |",
+		"ROW   |12101    |120       |-814 |DNS TCP - The RRSIG found is not signed by a DNSKEY from the KEYSET of the TLD                                  |",
+		"ROW   |12102    |120       |-815 |DNS TCP - Bogus DNSSEC signature                                                                                |",
+		"ROW   |12103    |120       |-816 |DNS TCP - DNSSEC signature has expired                                                                          |",
+		"ROW   |12104    |120       |-817 |DNS TCP - DNSSEC signature not incepted yet                                                                     |",
+		"ROW   |12105    |120       |-818 |DNS TCP - DNSSEC signature has expiration date earlier than inception date                                      |",
+		"ROW   |12106    |120       |-819 |DNS TCP - Error in NSEC3 denial of existence proof                                                              |",
+		"ROW   |12107    |120       |-821 |DNS TCP - Iterations count for NSEC3 record higher than maximum                                                 |",
+		"ROW   |12108    |120       |-822 |DNS TCP - RR not covered by the given NSEC RRs                                                                  |",
+		"ROW   |12109    |120       |-823 |DNS TCP - Wildcard not covered by the given NSEC RRs                                                            |",
+		"ROW   |12110    |120       |-825 |DNS TCP - The RRSIG has too few RDATA fields                                                                    |",
+		"ROW   |12111    |120       |-826 |DNS TCP - The DNSKEY has too few RDATA fields                                                                   |",
+		"ROW   |12112    |120       |-827 |DNS TCP - Malformed DNSSEC response                                                                             |",
+		"ROW   |12113    |120       |-828 |DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |",
+		NULL
+	};
+	int			i;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("delete from mappings where valuemapid=120"))	/* valuemapid of "RSM DNS rtt" */
+		return FAIL;
+
+	for (i = 0; NULL != data[i]; i++)
+	{
+		zbx_uint64_t	mappingid, valuemapid;
+		char		*value = NULL, *newvalue = NULL, *value_esc, *newvalue_esc;
+
+		if (0 == strncmp(data[i], "--", ZBX_CONST_STRLEN("--")))
+			continue;
+
+		if (4 != sscanf(data[i], "ROW |" ZBX_FS_UI64 " |" ZBX_FS_UI64 " |%m[^|]|%m[^|]|",
+				&mappingid, &valuemapid, &value, &newvalue))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "failed to parse the following line:\n%s", data[i]);
+			zbx_free(value);
+			zbx_free(newvalue);
+			return FAIL;
+		}
+
+		zbx_rtrim(value, ZBX_WHITESPACE);
+		zbx_rtrim(newvalue, ZBX_WHITESPACE);
+
+		/* NOTE: to keep it simple assume that data does not contain sequences "&pipe;", "&eol;" or "&bsn;" */
+
+		value_esc = zbx_db_dyn_escape_string(value);
+		newvalue_esc = zbx_db_dyn_escape_string(newvalue);
+		zbx_free(value);
+		zbx_free(newvalue);
+
+		if (ZBX_DB_OK > DBexecute("insert into mappings (mappingid,valuemapid,value,newvalue)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",'%s','%s')",
+				mappingid, valuemapid, value_esc, newvalue_esc))
+		{
+			zbx_free(value_esc);
+			zbx_free(newvalue_esc);
+			return FAIL;
+		}
+
+		zbx_free(value_esc);
+		zbx_free(newvalue_esc);
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000203(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into mappings (mappingid,valuemapid,value,newvalue) values"
+			" (11002,110,'2','Up-inconclusive-no-data'),"
+			" (11003,110,'3','Up-inconclusive-no-probes')"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000204(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into rsm_status_map (id,name) values"
+			" (7,'Up-inconclusive-no-data'),"
+			" (8,'Up-inconclusive-no-probes')"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000205(void)
+{
+#define RESERVE_GLOBALMACROID									\
+		"update globalmacro"								\
+		" set globalmacroid=(select nextid from ("					\
+			"select max(globalmacroid)+1 as nextid from globalmacro) as tmp)"	\
+		" where globalmacroid=" ZBX_FS_UI64
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(RESERVE_GLOBALMACROID, 66))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into globalmacro (globalmacroid,macro,value)"
+			" values (66,'{$PROBE.INTERNAL.ERROR.INTERVAL}','5m')"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='globalmacro'"))
+		return FAIL;
+
+	return SUCCEED;
+
+#undef RESERVE_GLOBALMACROID
+}
+
+static int	DBpatch_3000206(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* create "Template Probe Errors" */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into hosts (hostid,proxy_hostid,host,status,"
+				"ipmi_authtype,ipmi_privilege,ipmi_username,ipmi_password,name,flags,templateid,"
+				"description,tls_connect,tls_accept,tls_issuer,tls_subject,tls_psk_identity,tls_psk)"
+			" values ('99990',NULL,'Template Probe Errors','3',"
+				"'0','2','','','Template Probe Errors','0',NULL,"
+				"'','1','1','','','','')"))
+	{
+		return FAIL;
+	}
+
+	/* add it to "Templates" host group */
+	if (ZBX_DB_OK > DBexecute("insert into hosts_groups (hostgroupid,hostid,groupid) values ('999','99990','1')"))
+		return FAIL;
+
+	/* add "Internal errors" application */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into applications (applicationid,hostid,name,flags)"
+			" values ('999','99990','Internal errors','0')"))
+	{
+		return FAIL;
+	}
+
+	/* add "Internal error rate" item */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,"
+				"status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
+			" values ('99990','3','','','99990','Internal error rate','rsm.errors','60','90','365',"
+				"'0','0','','','0','1',"
+				"'','0','','',"
+				"'1','',NULL,NULL,'','','','0',"
+				"'0','','','','','0',NULL,'','',"
+				"'0','30','0','0','','0')"))
+	{
+		return FAIL;
+	}
+
+	/* put item into application */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items_applications (itemappid,applicationid,itemid)"
+			" values ('99990','999','99990')"))
+	{
+		return FAIL;
+	}
+
+	/* add triggers... */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into triggers (triggerid,expression,description,url,status,priority,comments,templateid,type,flags)"
+			" values"
+				" ('99990','{99990}>0','Internal errors happening for {$PROBE.INTERNAL.ERROR.INTERVAL}','','0','4','',NULL,'0','0'),"
+				" ('99991','{99991}>0','Internal errors happening','','0','2','',NULL,'0','0')"))
+	{
+		return FAIL;
+	}
+
+	/* ...and trigger functions */
+	if (ZBX_DB_OK > DBexecute(
+			"insert into functions (functionid,itemid,triggerid,function,parameter)"
+			" values"
+				" ('99990','99990','99990','min','{$PROBE.INTERNAL.ERROR.INTERVAL}'),"
+				" ('99991','99990','99991','last','')"))
+	{
+		return FAIL;
+	}
+
+	/* add dependency */
+
+#define RESERVE_TRIGGERDEPID									\
+		"update trigger_depends"							\
+		" set triggerdepid=(select nextid from ("					\
+			"select max(triggerdepid)+1 as nextid from trigger_depends) as tmp)"	\
+		" where triggerdepid=" ZBX_FS_UI64
+
+	if (ZBX_DB_OK > DBexecute(RESERVE_TRIGGERDEPID, 1))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into trigger_depends (triggerdepid,triggerid_down,triggerid_up)"
+			" values ('1','99991','99990')"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='trigger_depends'"))
+		return FAIL;
+
+#undef RESERVE_TRIGGERDEPID
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000207(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	int		ret = SUCCEED;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	result = DBselect("select h.hostid from hosts h,hosts_groups hg where h.hostid=hg.hostid and hg.groupid=120");
+
+	if (NULL == result)
+		return FAIL;
+
+	while (NULL != (row = DBfetch(result)) && SUCCEED == ret)
+	{
+		zbx_uint64_t		hostid;
+		zbx_vector_uint64_t	templateids;
+
+		ZBX_STR2UINT64(hostid, row[0]);			/* hostid of probe host */
+		zbx_vector_uint64_create(&templateids);
+		zbx_vector_uint64_reserve(&templateids, 1);
+		zbx_vector_uint64_append(&templateids, 99990);	/* hostid of "Template Probe Errors" */
+
+		ret = DBcopy_template_elements(hostid, &templateids);
+
+		zbx_vector_uint64_destroy(&templateids);
+	}
+
+	DBfree_result(result);
+
+	return ret;
+}
+
+static const action_t	two_more_actions[] = {
+	{115,	"Probes",		3600,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
+		1,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC",
+		{
+			{115,	OP_MESSAGE,	{.opmessage = {1,	"",	"",	10,
+				{
+					{115,	OP_MESSAGE_USR,	{.userid = 100}},
+					{0}
+				}
+			}}},
+			{0}
+		},
+		{
+			{115,	16,	7,	""},
+			{116,	5,	0,	"1"},
+			{117,	4,	5,	"2"},
+			{118,	0,	0,	"120"},
+			{0}
+		}
+	},
+	{140,	"Probes-Knockout",	3600,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.DATE} {EVENT.TIME} UTC",
+		1,
+		"probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}",	"{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC",
+		{
+			{140,	OP_COMMAND,	{.opcommand = {0,	1,	"",	0,	"",	"",	"",	"",
+				"/opt/zabbix/scripts/probe-manual.pl --probe \'{HOST.HOST}\' --set 0",
+				{
+					{140,	OP_COMMAND_CURRENT_HOST},
+					{0}
+				}
+			}}},
+			{0}
+		},
+		{
+			{140,	16,	7,	""},
+			{141,	5,	0,	"1"},
+			{142,	4,	5,	"2"},
+			{143,	0,	0,	"120"},
+			{144,	2,	0,	"99990"},
+			{0}
+		}
+	},
+	{0}
+};
+
+static int	DBpatch_3000208(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	return add_actions(two_more_actions);
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1218,5 +1754,12 @@ DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "T
 DBPATCH_ADD(3000140, 0, 0)	/* lowered "Refresh unsupported items" interval to 60 seconds */
 DBPATCH_ADD(3000200, 0, 0)	/* Phase 2 */
 DBPATCH_ADD(3000201, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
+DBPATCH_ADD(3000202, 0, 0)	/* update "RSM DNS rtt" value mapping with new DNS test error codes */
+DBPATCH_ADD(3000203, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to "RSM Service Availability" value mapping */
+DBPATCH_ADD(3000204, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to data export "statusMaps" catalog */
+DBPATCH_ADD(3000205, 0, 0)	/* add {$PROBE.INTERNAL.ERROR.INTERVAL} global macro */
+DBPATCH_ADD(3000206, 0, 0)	/* create "Template Probe Errors" template with "Internal error rate" item and triggers */
+DBPATCH_ADD(3000207, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
+DBPATCH_ADD(3000208, 0, 0)	/* new actions: "Probes", "Probes-Knockout" */
 
 DBPATCH_END()

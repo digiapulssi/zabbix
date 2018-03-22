@@ -1386,10 +1386,13 @@ define('INCIDENT_FLAG_NORMAL',			0);
 define('INCIDENT_FLAG_FALSE_POSITIVE',	1);
 
 // SLA monitoring incident status
-define('ZBX_EC_DNS_NS_NOREPLY',		-200);
-define('ZBX_EC_DNS_NS_ERRSIG',		-204);
-define('ZBX_EC_DNS_RES_NOREPLY',	-205);
-define('ZBX_EC_DNS_RES_NOADBIT',	-206);
+define('ZBX_EC_DNS_UDP_NS_NOREPLY',	-200);
+define('ZBX_EC_DNS_NS_ERRSIG',		-204);	// obsolete
+define('ZBX_EC_DNS_RES_NOREPLY',	-205);	// obsolete
+define('ZBX_EC_DNS_RES_NOADBIT',	-206);	// obsolete
+define('ZBX_EC_DNS_UDP_RES_NOREPLY',	-400);
+define('ZBX_EC_DNS_UDP_RES_NOADBIT',	-401);
+define('ZBX_EC_DNS_UDP_NO_DNSKEY',		-427);
 
 // SLA monitoring calculated items keys
 define('CALCULATED_ITEM_DNS_FAIL',				'rsm.configvalue[RSM.INCIDENT.DNS.FAIL]');
@@ -1443,6 +1446,7 @@ define('NS_DOWN',		1);
 define('NS_UP',			2);
 
 // SLA monitoring probe status
+define('PROBE_OFFLINE',	-1);
 define('PROBE_DOWN',	0);
 define('PROBE_UP',		1);
 
@@ -1474,6 +1478,8 @@ define('RSM_OTHER_TLD_GROUP',	'otherTLD');
 define('RSM_TEST_GROUP',		'testTLD');
 
 define('PROBES_MON_GROUPID',	130);
+define('RSM_SERVICE_AVAIL_VALUE_MAP', 110);
+define('RSM_DNS_RTT_ERRORS_VALUE_MAP', 120);
 
 // if magic quotes on, then get rid of them
 if (get_magic_quotes_gpc()) {

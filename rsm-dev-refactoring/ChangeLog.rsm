@@ -1,6 +1,11 @@
 Changes for rsm1.1.0rc1
 
 New features:
+..F....... [321] implemented "Aggregate details" screen for DNS and DNSSEC; added hintbox containing DNS and DSNSEC error descriptions (miks)
+..F....... [321] added "Total above max RTT" stats in "Details of particular test" page for RDDS (miks)
+....I..PST [188,320] added monitoring of the local resolver of each probe node (gleb)
+....I..PS. [271] differentiated between scenarios when service is considered available (gleb)
+....I..PS. [320] added new error codes for DNS and DNSSEC tests, made some of old codes obsolete (dimir, gleb)
 ....I..PS. [320] added new error codes for RDDS43 and RDDS80 tests, made some of old codes obsolete, stopped treating no reply from local resolver as service error (gleb)
 
 Bug fixes:

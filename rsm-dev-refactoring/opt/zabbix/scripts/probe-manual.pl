@@ -36,7 +36,7 @@ set_slv_config($config);
 
 my $server_id = getopt('server-id');
 
-$server_key = get_rsm_server_key($server_id);
+$server_key = defined($server_id) ? get_rsm_server_key($server_id) : get_rsm_local_key($config);
 
 my $section = $config->{$server_key};
 
@@ -112,7 +112,7 @@ db_disconnect();
 
 sub __validate_input
 {
-	if (!opt('server-id') || !opt('probe'))
+	if (!opt('probe'))
 	{
 		usage();
 	}
@@ -155,7 +155,7 @@ probe-manual.pl - set Probe status to Online/Offline
 
 =head1 SYNOPSIS
 
-probe-manual.pl --server-id <num> --probe <name> [--set <0/1>] [--debug] [--help]
+probe-manual.pl [--server-id <num>] --probe <name> [--set <0/1>] [--debug] [--help]
 
 =head1 OPTIONS
 

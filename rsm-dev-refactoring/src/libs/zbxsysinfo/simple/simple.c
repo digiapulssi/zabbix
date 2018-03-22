@@ -35,6 +35,17 @@
 #	include <lber.h>
 #endif
 
+#include "dbcache.h"
+
+static int	CHECK_RSM_ERRORS(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	(void)request;
+
+	SET_UI64_RESULT(result, zbx_dc_rsm_errors_get());
+
+	return SYSINFO_RET_OK;
+}
+
 ZBX_METRIC	parameters_simple[] =
 /*      KEY                     FLAG		FUNCTION        	TEST PARAMETERS */
 {
@@ -42,6 +53,7 @@ ZBX_METRIC	parameters_simple[] =
 	{"net.tcp.service.perf",CF_HAVEPARAMS,	CHECK_SERVICE_PERF, 	"ssh,127.0.0.1,22"},
 	{"net.udp.service",	CF_HAVEPARAMS,	CHECK_SERVICE, 		"ntp,127.0.0.1,123"},
 	{"net.udp.service.perf",CF_HAVEPARAMS,	CHECK_SERVICE_PERF, 	"ntp,127.0.0.1,123"},
+	{"rsm.errors",		0,		CHECK_RSM_ERRORS,	NULL},
 	{NULL}
 };
 
