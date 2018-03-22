@@ -1200,7 +1200,7 @@ class CCorrelation extends CApiService {
 
 		if (!$parser->parse($correlation['filter']['formula'])) {
 			self::exception(ZBX_API_ERROR_PARAMETERS,
-				_s('Incorrect custom expression "%2$s" for correlation "%1$s": %3$s.',
+				_s('Incorrect custom expression "%1$s" for correlation "%2$s": %3$s.',
 					$correlation['filter']['formula'], $correlation['name'], $parser->error
 				)
 			);
