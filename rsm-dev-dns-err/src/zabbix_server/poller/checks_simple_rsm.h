@@ -22,12 +22,6 @@
 
 #include "dbcache.h"
 
-#define ZBX_EC_NOERROR	0
-
-/* item values indicating an error code: */
-/* -1   .. -199    internal monitoring software errors */
-/* -200 .. -999    service errors (registry operator fault) */
-
 /* internal */
 #define ZBX_EC_INTERNAL			-1	/* general internal error */
 #define ZBX_EC_INTERNAL_IP_UNSUP	-2	/* IP version not supported by Probe */
