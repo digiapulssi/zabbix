@@ -58,6 +58,7 @@ use Digest::MD5 qw(md5_hex);
 use Expect;
 use Data::Dumper;
 use RSM;
+use RSMSLV;
 use TLD_constants qw(:general :templates :groups :value_types :ec :slv :config :api);
 use TLDs;
 
@@ -1780,17 +1781,20 @@ sub create_avail_trigger($$) {
 	my $host_name = shift;
 
 	my $service_lc = lc($service);
+	my $expression = '';
+
+	$expression .= "({TRIGGER.VALUE}=0 and ";
+	$expression .= "{$host_name:rsm.slv.$service_lc.avail.max(#{\$RSM.INCIDENT.$service.FAIL})}=" . DOWN . ") or ";
+	$expression .= "({TRIGGER.VALUE}=1 and ";
+	$expression .= "{$host_name:rsm.slv.$service_lc.avail.count(#{\$RSM.INCIDENT.$service.RECOVER}," . DOWN . ",\"eq\")}>0)";
 
 	# NB! Configuration trigger that is used in PHP and C code to detect incident!
 	# priority must be set to 0!
 	my $options =
 	{
-		'description' => $service.' service is down',
-		'expression' => '({TRIGGER.VALUE}=0 and '.
-			'{'.$host_name.':rsm.slv.'.$service_lc.'.avail.max(#{$RSM.INCIDENT.'.$service.'.FAIL})}=0) or '.
-			'({TRIGGER.VALUE}=1 and '.
-			'{'.$host_name.':rsm.slv.'.$service_lc.'.avail.count(#{$RSM.INCIDENT.'.$service.'.RECOVER},0,"eq")}>0)',
-		'priority' => '0'
+		'description'	=> "$service service is down",
+		'expression'	=> $expression,
+		'priority'	=> 0
 	};
 
 	really(create_trigger($options, $host_name));

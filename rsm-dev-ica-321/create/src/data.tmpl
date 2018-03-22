@@ -25,6 +25,7 @@ ROW   |10050 |NULL        |Template App Zabbix Agent |3     |0            |2    
 ROW   |10056 |NULL        |Template App Agentless    |3     |0            |2             |             |             |Template App Agentless    |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |10057 |NULL        |Zabbix Server             |0     |-1           |2             |             |             |Zabbix Server             |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |10058 |NULL        |Template App Zabbix Proxy |3     |0            |2             |             |             |Template App Zabbix Proxy |0    |NULL      |           |1          |1         |          |           |                |       |
+ROW   |99990 |NULL        |Template Probe Errors     |3     |0            |2             |             |             |Template Probe Errors     |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |100000|NULL        |Global macro history      |0     |-1           |2             |             |             |Global macro history      |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |100001|NULL        |Probe statuses            |0     |-1           |2             |             |             |Probe statuses            |0    |NULL      |           |1          |1         |          |           |                |       |
 
@@ -97,6 +98,7 @@ ROW   |223          |10057 |Processes         |0    |
 ROW   |224          |10057 |Security          |0    |
 ROW   |225          |10057 |Zabbix agent      |0    |
 ROW   |226          |10058 |Zabbix proxy      |0    |
+ROW   |999          |99990 |Internal errors   |0    |
 ROW   |1000         |100000|Configuration     |0    |
 ROW   |1001         |100001|Probe availability|0    |
 
@@ -303,6 +305,7 @@ ROW   |23397 |5   |              |        |10057 |Zabbix value cache misses     
 ROW   |23398 |5   |              |        |10057 |Zabbix value cache operating mode           |zabbix[vcache,cache,mode]                    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |23391     |15        |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23399 |5   |              |        |10057 |Zabbix vmware cache, % free                 |zabbix[vmware,buffer,pfree]                  |60   |7      |365   |1     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23392     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23400 |5   |              |        |10057 |Zabbix history index cache, % free          |zabbix[wcache,index,pfree]                   |60   |7      |365   |0     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23393     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
+ROW   |99990 |3   |              |        |99990 |Internal error rate                         |rsm.errors                                   |60   |90     |365   |0     |0         |             |        |0         |1    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |100000|15  |              |        |100000|$1 value                                    |rsm.configvalue[RSM.INCIDENT.DNS.FAIL]       |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RSM.INCIDENT.DNS.FAIL}      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
 ROW   |100001|15  |              |        |100000|$1 value                                    |rsm.configvalue[RSM.INCIDENT.DNS.RECOVER]    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RSM.INCIDENT.DNS.RECOVER}   |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
 ROW   |100002|15  |              |        |100000|$1 value                                    |rsm.configvalue[RSM.INCIDENT.DNSSEC.FAIL]    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RSM.INCIDENT.DNSSEC.FAIL}   |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
@@ -374,20 +377,25 @@ TABLE |actions
 FIELDS|actionid|name           |esc_period|def_shortdata                                                           |def_longdata                 |recovery_msg|r_shortdata                                                             |r_longdata                                     |
 ROW   |100     |Probes-Critical|3600      |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.DATE} {EVENT.TIME} UTC|1           |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |110     |Probes-Mon     |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
+ROW   |115     |Probes         |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |120     |Central-Server |3600      |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |130     |TLDs           |3600      |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.DATE} {EVENT.TIME} UTC|1           |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
+ROW   |140     |Probes-Knockout|3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 
 TABLE |operations
-FIELDS|operationid|actionid|
-ROW   |100        |100     |
-ROW   |110        |110     |
-ROW   |120        |120     |
-ROW   |130        |130     |
+FIELDS|operationid|actionid|operationtype|
+ROW   |100        |100     |0            |
+ROW   |110        |110     |0            |
+ROW   |115        |115     |0            |
+ROW   |120        |120     |0            |
+ROW   |130        |130     |0            |
+ROW   |140        |140     |1            |
 
 TABLE |opmessage
 FIELDS|operationid|default_msg|subject|message|mediatypeid|
 ROW   |100        |1          |       |       |10         |
 ROW   |110        |1          |       |       |10         |
+ROW   |115        |1          |       |       |10         |
 ROW   |120        |1          |       |       |10         |
 ROW   |130        |1          |       |       |10         |
 
@@ -395,8 +403,17 @@ TABLE |opmessage_usr
 FIELDS|opmessage_usrid|operationid|userid|
 ROW   |100            |100        |100   |
 ROW   |110            |110        |100   |
+ROW   |115            |115        |100   |
 ROW   |120            |120        |100   |
 ROW   |130            |130        |100   |
+
+TABLE |opcommand
+FIELDS|operationid|type|scriptid|execute_on|port|authtype|username|password|publickey|privatekey|command                                                          |
+ROW   |140        |0   |NULL    |1         |    |0       |        |        |         |          |/opt/zabbix/scripts/probe-manual.pl --probe '{HOST.HOST}' --set 0|
+
+TABLE |opcommand_hst
+FIELDS|opcommand_hstid|operationid|hostid|
+ROW   |140            |140        |NULL  |
 
 TABLE |conditions
 FIELDS|conditionid|actionid|conditiontype|operator|value |
@@ -408,6 +425,10 @@ ROW   |110        |110     |16           |7       |      |
 ROW   |111        |110     |5            |0       |1     |
 ROW   |112        |110     |4            |5       |2     |
 ROW   |113        |110     |0            |0       |130   |
+ROW   |115        |115     |16           |7       |      |
+ROW   |116        |115     |5            |0       |1     |
+ROW   |117        |115     |4            |5       |2     |
+ROW   |118        |115     |0            |0       |120   |
 ROW   |120        |120     |16           |7       |      |
 ROW   |121        |120     |5            |0       |1     |
 ROW   |122        |120     |4            |5       |2     |
@@ -415,6 +436,11 @@ ROW   |123        |120     |0            |0       |110   |
 ROW   |130        |130     |16           |7       |      |
 ROW   |131        |130     |5            |0       |1     |
 ROW   |132        |130     |0            |0       |140   |
+ROW   |140        |140     |16           |7       |      |
+ROW   |141        |140     |5            |0       |1     |
+ROW   |142        |140     |4            |5       |2     |
+ROW   |143        |140     |0            |0       |120   |
+ROW   |144        |140     |2            |0       |99990 |
 
 TABLE |config
 FIELDS|configid|refresh_unsupported|work_period     |alert_usrgrpid|discovery_groupid|hk_history_mode|hk_trends_mode|
@@ -546,11 +572,17 @@ ROW   |13602    |({TRIGGER.VALUE}=0 and {13031}>75) or ({TRIGGER.VALUE}=1 and {1
 ROW   |13603    |({TRIGGER.VALUE}=0 and {13032}>75) or ({TRIGGER.VALUE}=1 and {13032}>65)|Zabbix unreachable poller processes more than 75% busy          |   |0     |3       |                                                                                                                                      |13576     |0   |0    |
 ROW   |13604    |{13033}=1                                                               |Zabbix value cache working in low memory mode                   |   |0     |4       |                                                                                                                                      |13577     |0   |0    |
 ROW   |13605    |({TRIGGER.VALUE}=0 and {13034}>75) or ({TRIGGER.VALUE}=1 and {13034}>65)|Zabbix vmware collector processes more than 75% busy            |   |0     |3       |                                                                                                                                      |13578     |0   |0    |
+ROW   |99990    |{99990}>0                                                               |Internal errors happening for {$PROBE.INTERNAL.ERROR.INTERVAL}  |   |0     |4       |                                                                                                                                      |NULL      |0   |0    |
+ROW   |99991    |{99991}>0                                                               |Internal errors happening                                       |   |0     |2       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100100   |{100100}<{$RSM.DNS.PROBE.ONLINE}                                        |Number of DNS-enabled online probes is less than $1             |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100101   |{100101}<{$RSM.EPP.PROBE.ONLINE}                                        |Number of EPP-enabled online probes is less than $1             |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100102   |{100102}<{$RSM.IP4.MIN.PROBE.ONLINE}                                    |Number of IP4-enabled online probes is less than $1             |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100103   |{100103}<{$RSM.IP6.MIN.PROBE.ONLINE}                                    |Number of IP6-enabled online probes is less than $1             |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100104   |{100104}<{$RSM.RDDS.PROBE.ONLINE}                                       |Number of RDDS-enabled online probes is less than $1            |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
+
+TABLE |trigger_depends
+FIELDS|triggerdepid|triggerid_down|triggerid_up|
+ROW   |1           |99991         |99990       |
 
 TABLE |functions
 FIELDS|functionid|itemid|triggerid|function |parameter|
@@ -678,6 +710,8 @@ ROW   |13050     |23412 |13621    |avg      |10m      |
 ROW   |13051     |23413 |13622    |avg      |10m      |
 ROW   |13052     |23414 |13623    |avg      |10m      |
 ROW   |13053     |23415 |13624    |avg      |10m      |
+ROW   |99990     |99990 |99990    |min      |{$PROBE.INTERNAL.ERROR.INTERVAL}|
+ROW   |99991     |99990 |99991    |last     |                                |
 ROW   |100100    |100100|100100   |last     |         |
 ROW   |100101    |100101|100101   |last     |         |
 ROW   |100102    |100102|100102   |last     |         |
@@ -904,6 +938,7 @@ ROW   |62           |{$MIN_FREE_MEMORY}            |20                 |
 ROW   |63           |{$MAX_CPU_IOWAIT}             |20                 |
 ROW   |64           |{$FREE_DISK_SPACE}            |20                 |
 ROW   |65           |{$FREE_DISK_INODES}           |20                 |
+ROW   |66           |{$PROBE.INTERNAL.ERROR.INTERVAL}|5m               |
 
 TABLE |hostmacro
 FIELDS|hostmacroid|hostid|macro               |value|
@@ -919,6 +954,7 @@ ROW   |50         |10050 |1      |
 ROW   |56         |10056 |1      |
 ROW   |57         |10057 |110    |
 ROW   |58         |10058 |1      |
+ROW   |999        |99990 |1      |
 ROW   |1000       |100000|100    |
 ROW   |1001       |100001|110    |
 
@@ -1146,6 +1182,7 @@ ROW   |5680     |226          |23419 |
 ROW   |5681     |226          |23420 |
 ROW   |5682     |226          |23421 |
 ROW   |5683     |219          |23331 |
+ROW   |99990    |999          |99990 |
 ROW   |100000   |1000         |100000|
 ROW   |100001   |1000         |100001|
 ROW   |100002   |1000         |100002|
@@ -1194,6 +1231,8 @@ ROW   |10000    |100       |1    |Online                                        
 ROW   |10001    |100       |0    |Offline                                                                                                         |
 ROW   |11000    |110       |0    |Down                                                                                                            |
 ROW   |11001    |110       |1    |Up                                                                                                              |
+ROW   |11002    |110       |2    |Up-inconclusive-no-data                                                                                         |
+ROW   |11003    |110       |3    |Up-inconclusive-no-probes                                                                                       |
 ROW   |12000    |120       |-1   |Internal error                                                                                                  |
 ROW   |12001    |120       |-200 |DNS UDP - No reply from name server                                                                             |
 ROW   |12002    |120       |-201 |Invalid reply from Name Server (obsolete)                                                                       |
@@ -1526,6 +1565,8 @@ ROW   |3 |Down     |
 ROW   |4 |No result|
 ROW   |5 |Online   |
 ROW   |6 |Offline  |
+ROW   |7 |Up-inconclusive-no-data  |
+ROW   |8 |Up-inconclusive-no-probes|
 
 TABLE |rsm_test_type
 FIELDS|id|name        |

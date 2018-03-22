@@ -622,9 +622,26 @@ sub __get_test_data
 			# NB! REMOVED CODE HERE
 			# todo phase 1: calculating number of failed incidents can be added as an option to get_incidents() of phase 2
 
-			# todo phase 1: make sure UP_INCONCLUSIVE is added in phase 2
-			wrn("unknown availability result: $value (expected ", DOWN, " (Down), ", UP, " (Up))")
-				if ($value != UP && $value != DOWN);
+			unless (exists($cfg_avail_valuemaps->{int($value)}))
+			{
+				my $expected_list;
+
+				while (my ($status, $description) = each(%{$cfg_avail_valuemaps}))
+				{
+					if (defined($expected_list))
+					{
+						$expected_list .= ", ";
+					}
+					else
+					{
+						$expected_list = "";
+					}
+
+					$expected_list .= "$status ($description)";
+				}
+
+				wrn("unknown availability result: $value (expected $expected_list)");
+			}
 
 			# We have the test resulting value (Up or Down) at "clock". Now we need to select the
 			# time bounds (start/end) of all data points from all proxies.
