@@ -712,8 +712,16 @@ if ($data['filter_status']) {
 			}
 		}
 		elseif ($data['filter_status'] == 2) { // Current status == disabled
-			if (array_key_exists(RSM_DNS, $tld) && array_key_exists(RSM_DNSSEC, $tld)
-					&& array_key_exists(RSM_RDDS, $tld) && array_key_exists(RSM_EPP, $tld)) {
+			if (($data['filter_dnssec']
+					&& (!array_key_exists(RSM_DNSSEC, $tld) || !array_key_exists('trigger', $tld[RSM_DNSSEC])))
+				|| ($data['filter_rdds']
+					&& (!array_key_exists(RSM_RDDS, $tld) || !array_key_exists('trigger', $tld[RSM_RDDS])))
+				|| ($data['filter_epp']
+					&& (!array_key_exists(RSM_EPP, $tld) || !array_key_exists('trigger', $tld[RSM_EPP])))
+			) {
+				continue;
+			}
+			else {
 				unset($data['tld'][$key]);
 			}
 		}
