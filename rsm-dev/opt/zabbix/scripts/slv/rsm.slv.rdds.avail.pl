@@ -99,13 +99,15 @@ slv_exit(SUCCESS);
 # E_FAIL  - all values unsuccessful
 sub check_item_values
 {
+	use constant RDDS_UP	=> 1;	# "Up" from "RSM RDDS result" value mapping
+
 	my $values_ref = shift;
 
 	return SUCCESS if (scalar(@$values_ref) == 0);
 
 	foreach (@$values_ref)
 	{
-		return SUCCESS if ($_ == UP);
+		return SUCCESS if ($_ == RDDS_UP);
 	}
 
 	return E_FAIL;

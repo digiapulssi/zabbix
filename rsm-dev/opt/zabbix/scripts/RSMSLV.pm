@@ -34,7 +34,6 @@ use constant OFFLINE => 0;	# todo phase 1: check where these are used
 use constant SLV_UNAVAILABILITY_LIMIT => 49; # NB! must be in sync with frontend
 
 use constant MAX_SERVICE_ERROR => -200; # -200, -201 ...
-use constant RDDS_UP => 2; # results of input items: 0 - RDDS down, 1 - only RDDS43 up, 2 - both RDDS43 and RDDS80 up
 use constant MIN_LOGIN_ERROR => -205;
 use constant MAX_LOGIN_ERROR => -203;
 use constant MIN_INFO_ERROR => -211;
@@ -75,7 +74,7 @@ our ($result, $dbh, $tld, $server_key);
 our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
-		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		UP_INCONCLUSIVE_NO_DATA
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR RESULT_TIMESTAMP_SHIFT PROBE_ONLINE_STR PROBE_OFFLINE_STR
 		PROBE_NORESULT_STR AVAIL_SHIFT_BACK PROBE_ONLINE_SHIFT
@@ -2850,9 +2849,6 @@ sub __get_probestatus_times
 	my $key = shift;
 
 	my ($rows_ref, @times, $last_status);
-
-	my $key_match = "i.key_";
-	$key_match .= ($key =~ m/%/) ? " like '$key'" : "='$key'";
 
 	my $itemid;
 	if ($key =~ m/%/)

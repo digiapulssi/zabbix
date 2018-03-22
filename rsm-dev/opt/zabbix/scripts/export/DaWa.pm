@@ -84,14 +84,10 @@ my ($_year, $_month, $_day);
 
 my $_dw_error = "";
 
-my $_catalogs_loaded = 1;
-
 sub dw_csv_init
 {
 	$_csv = Text::CSV_XS->new({binary => 1, auto_diag => 1});
 	$_csv->eol("\n");
-
-	$_catalogs_loaded = 0;
 }
 
 # only works with data files
@@ -135,8 +131,6 @@ sub dw_load_ids_from_db
 			$_csv_catalogs{$id_type}{$row_ref->[0]} = $row_ref->[1];
 		}
 	}
-
-	$_catalogs_loaded = 1;
 }
 
 # only works with catalogs
@@ -159,7 +153,7 @@ sub dw_get_id
 	return $_csv_catalogs{$id_type}{$name} if ($_csv_catalogs{$id_type}{$name});
 
 	# LOCK
-	__slv_lock() unless (opt('dry-run'));
+	__slv_lock();
 
 	# search for ID in the database, it might have been added by other process
 	my $rows_ref = db_select("select id from rsm_$id_type where name='$name'");
@@ -167,7 +161,7 @@ sub dw_get_id
 	if (scalar(@{$rows_ref}) > 1)
 	{
 		# UNLOCK
-		__slv_unlock() unless (opt('dry-run'));
+		__slv_unlock();
 		fail("THIS_SHOULD_NEVER_HAPPEN: more than one \"$name\" record in table \"rsm_$id_type\"");
 	}
 
@@ -182,7 +176,7 @@ sub dw_get_id
 	}
 
 	# UNLOCK
-	__slv_unlock() unless (opt('dry-run'));
+	__slv_unlock();
 
 	fail("ID overflow of catalog \"$id_type\": $id") unless (__dw_check_id($id_type, $id) == SUCCESS);
 
