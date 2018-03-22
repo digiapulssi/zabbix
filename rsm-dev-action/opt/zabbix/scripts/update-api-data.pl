@@ -37,6 +37,7 @@ use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this 
 sub get_history_by_itemid($$$);
 sub get_historical_value_by_time($$);
 sub fill_test_data_dns($$$);
+sub fill_test_data_dnssec($$);
 sub fill_test_data_rdds($$);
 sub match_clocks_with_results($$);
 
@@ -425,8 +426,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -451,8 +451,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -504,8 +503,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -543,8 +541,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -582,14 +579,17 @@ TRYFORK:
 				# get alarmed
 				my $incidents = get_incidents($avail_itemid, $now);
 
-				my $alarmed_status = JSON_VALUE_ALARMED_NO;
-				if (scalar(@$incidents) != 0)
+				my $alarmed_status;
+
+				if (scalar(@$incidents) != 0 && $incidents->[0]->{'false_positive'} == 0 &&
+						!defined($incidents->[0]->{'end'}))
 				{
-					if ($incidents->[0]->{'false_positive'} == 0 and not defined($incidents->[0]->{'end'}))
-					{
-						$alarmed_status = JSON_VALUE_ALARMED_YES;
-						$json_state_ref->{'status'} = JSON_VALUE_DOWN;
-					}
+					$alarmed_status = JSON_VALUE_ALARMED_YES;
+					$json_state_ref->{'status'} = JSON_VALUE_DOWN;
+				}
+				else
+				{
+					$alarmed_status = JSON_VALUE_ALARMED_NO;
 				}
 
 				if (opt('dry-run'))
@@ -633,8 +633,7 @@ TRYFORK:
 					}
 					else
 					{
-						# TODO phase1: UP (inconclusive)
-						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_UP) != AH_SUCCESS)
+						if (ah_save_alarmed($ah_tld, $service, JSON_VALUE_ALARMED_NO) != AH_SUCCESS)
 						{
 							fail("cannot save alarmed: ", ah_get_error());
 						}
@@ -649,8 +648,41 @@ TRYFORK:
 					next;
 				}
 
+				my $latest_avail_select = db_select(
+						"select value from history_uint" .
+							" where itemid=$avail_itemid" .
+							" and clock<$service_till" .
+						" order by clock desc limit 1");
+
+				my $latest_avail_value = scalar(@{$latest_avail_select}) == 0 ?
+						UP_INCONCLUSIVE_NO_DATA : $latest_avail_select->[0]->[0];
+
+				if (opt('dry-run'))
+				{
+					unless (exists($cfg_avail_valuemaps->{int($latest_avail_value)}))
+					{
+						my $expected_list;
+
+						while (my ($status, $description) = each(%{$cfg_avail_valuemaps}))
+						{
+							if (defined($expected_list))
+							{
+								$expected_list .= ", ";
+							}
+							else
+							{
+								$expected_list = "";
+							}
+
+							$expected_list .= "$status ($description)";
+						}
+
+						wrn("unknown availability result: $latest_avail_value (expected $expected_list)");
+					}
+				}
+
 				$json_state_ref->{'testedServices'}->{uc($service)} = {
-					'status' => ($alarmed_status eq JSON_VALUE_ALARMED_YES ? JSON_VALUE_DOWN : JSON_VALUE_UP),
+					'status' => get_result_string($cfg_avail_valuemaps, $latest_avail_value),
 					'emergencyThreshold' => $rollweek,
 					'incidents' => []
 				};
@@ -721,17 +753,25 @@ TRYFORK:
 
 						if (opt('dry-run'))
 						{
-							if ($value == UP)
+							unless (exists($cfg_avail_valuemaps->{int($value)}))
 							{
-								$status_up++;
-							}
-							elsif ($value == DOWN)
-							{
-								$status_down++;
-							}
-							else
-							{
-								wrn("unknown status: $value (expected UP (0) or DOWN (1))");
+								my $expected_list;
+
+								while (my ($status, $description) = each(%{$cfg_avail_valuemaps}))
+								{
+									if (defined($expected_list))
+									{
+										$expected_list .= ", ";
+									}
+									else
+									{
+										$expected_list = "";
+									}
+
+									$expected_list .= "$status ($description)";
+								}
+
+								wrn("unknown availability result: $value (expected $expected_list)");
 							}
 						}
 
@@ -865,9 +905,27 @@ TRYFORK:
 
 								if (exists($probes_ref->{$probe}->{'details'}))
 								{
-									fill_test_data_dns($probes_ref->{$probe}->{'details'},
-										$probe_ref->{'testData'},
-										$dns_udp_rtt_high_history);
+									if ($service eq 'dns')
+									{
+										fill_test_data_dns(
+											$probes_ref->{$probe}->{'details'},
+											$probe_ref->{'testData'},
+											$dns_udp_rtt_high_history
+										);
+									}
+									elsif ($service eq 'dnssec')
+									{
+										fill_test_data_dnssec(
+											$probes_ref->{$probe}->{'details'},
+											$probe_ref->{'testData'},
+										);
+									}
+									else
+									{
+										fail("Encountered \"$service\" where" .
+												" \"dns\" or \"dnssec\"" .
+												" were expected.");
+									}
 								}
 
 								push(@{$tr_ref->{'testedInterface'}->[0]->{'probes'}}, $probe_ref);
@@ -1274,6 +1332,19 @@ sub fill_test_data_dns($$$)
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = 'no data';
 			}
+			elsif (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+					substr($test->{'rtt'}, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY ||
+					substr($test->{'rtt'}, 0, length(ZBX_EC_DNS_RES_NOREPLY)) eq ZBX_EC_DNS_RES_NOREPLY)
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $test->{'rtt'};
+
+				# don't override NS status with "Up" if NS is already known to be down
+				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+				{
+					$test_data_ref->{'status'} = "Up";
+				}
+			}
 			elsif (substr($test->{'rtt'}, 0, 1) eq "-")
 			{
 				$metric->{'rtt'} = undef;
@@ -1292,6 +1363,82 @@ sub fill_test_data_dns($$$)
 					$test_data_ref->{'status'} =
 							($test->{'rtt'} > get_historical_value_by_time($hist,
 									$metric->{'testDateTime'}) ? "Down" : "Up");
+				}
+			}
+
+			push(@{$test_data_ref->{'metrics'}}, $metric);
+		}
+
+		$test_data_ref->{'status'} //= "No result";
+
+		push(@{$dst}, $test_data_ref);
+	}
+}
+
+sub fill_test_data_dnssec($$)
+{
+	my $src = shift;
+	my $dst = shift;
+
+	foreach my $ns (keys(%{$src}))
+	{
+		my $test_data_ref = {
+			'target'	=> $ns,
+			'status'	=> undef,
+			'metrics'	=> []
+		};
+
+		foreach my $test (@{$src->{$ns}})
+		{
+			dbg("ns:$ns ip:$test->{'ip'} clock:", $test->{'clock'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
+
+			# if Name Server has no data yet clock and rtt should be both undefined
+			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
+					defined($test->{'clock'}) && !defined($test->{'rtt'}))
+			{
+				fail("Gleb/dimir were wrong, DNS test clock and rtt can be undefined independently");
+			}
+
+			my $metric = {
+				'testDateTime'	=> $test->{'clock'},
+				'targetIP'	=> $test->{'ip'}
+			};
+
+			if (!defined($test->{'rtt'}))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = 'no data';
+			}
+			elsif (substr($test->{'rtt'}, 0, 1) eq "-")
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $test->{'rtt'};
+
+				# skip check for errors if NS is already known to be down
+				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+				{
+					my $value = substr($test->{'rtt'}, 0, index($test->{'rtt'}, ","));
+
+					if (ZBX_EC_DNS_UDP_NO_DNSKEY <= $value && $value <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
+							$value == ZBX_EC_DNS_NS_ERRSIG || $value == ZBX_EC_DNS_RES_NOADBIT)
+					{
+						$test_data_ref->{'status'} = "Down";
+					}
+					else
+					{
+						$test_data_ref->{'status'} = "Up";
+					}
+				}
+			}
+			else
+			{
+				$metric->{'rtt'} = $test->{'rtt'};
+				$metric->{'result'} = "ok";
+
+				# don't override NS status with "Up" if NS is already known to be down
+				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
+				{
+					$test_data_ref->{'status'} = "Up";
 				}
 			}
 

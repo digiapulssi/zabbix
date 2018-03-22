@@ -1,6 +1,8 @@
 Changes for rsm1.1.0rc1
 
 New features:
+....I..PS. [271] differentiated between scenarios when service is considered available (gleb)
+....I..PS. [320] added new error codes for DNS and DNSSEC tests, made some of old codes obsolete (dimir, gleb)
 ....I..PS. [320] added new error codes for RDDS43 and RDDS80 tests, made some of old codes obsolete, stopped treating no reply from local resolver as service error (gleb)
 
 Bug fixes:

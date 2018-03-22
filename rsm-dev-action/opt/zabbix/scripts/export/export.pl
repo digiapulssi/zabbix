@@ -622,9 +622,26 @@ sub __get_test_data
 			# NB! REMOVED CODE HERE
 			# todo phase 1: calculating number of failed incidents can be added as an option to get_incidents() of phase 2
 
-			# todo phase 1: make sure UP_INCONCLUSIVE is added in phase 2
-			wrn("unknown availability result: $value (expected ", DOWN, " (Down), ", UP, " (Up))")
-				if ($value != UP && $value != DOWN);
+			unless (exists($cfg_avail_valuemaps->{int($value)}))
+			{
+				my $expected_list;
+
+				while (my ($status, $description) = each(%{$cfg_avail_valuemaps}))
+				{
+					if (defined($expected_list))
+					{
+						$expected_list .= ", ";
+					}
+					else
+					{
+						$expected_list = "";
+					}
+
+					$expected_list .= "$status ($description)";
+				}
+
+				wrn("unknown availability result: $value (expected $expected_list)");
+			}
 
 			# We have the test resulting value (Up or Down) at "clock". Now we need to select the
 			# time bounds (start/end) of all data points from all proxies.
@@ -1405,14 +1422,27 @@ sub __check_test
 	my $description = shift;
 	my $max_value = shift;
 
-	if ($interface eq JSON_INTERFACE_DNSSEC)
+	if ($interface eq JSON_INTERFACE_DNS)
+	{
+		if (defined($description) &&
+				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+				substr($description, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY ||
+				substr($description, 0, length(ZBX_EC_DNS_TCP_RES_NOREPLY)) eq ZBX_EC_DNS_TCP_RES_NOREPLY ||
+				substr($description, 0, length(ZBX_EC_DNS_RES_NOREPLY)) eq ZBX_EC_DNS_RES_NOREPLY))
+		{
+			return SUCCESS;
+		}
+	}
+	elsif ($interface eq JSON_INTERFACE_DNSSEC)
 	{
 		if (defined($description))
 		{
 			my $error_code_len = length(ZBX_EC_DNS_NS_ERRSIG);
 			my $error_code = substr($description, 0, $error_code_len);
 
-			if ($error_code eq ZBX_EC_DNS_NS_ERRSIG || $error_code eq ZBX_EC_DNS_RES_NOADBIT)
+			if (ZBX_EC_DNS_UDP_NO_DNSKEY <= $error_code && $error_code <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
+					ZBX_EC_DNS_TCP_NO_DNSKEY <= $error_code && $error_code <= ZBX_EC_DNS_TCP_RES_NOADBIT ||
+					$error_code == ZBX_EC_DNS_NS_ERRSIG || $error_code == ZBX_EC_DNS_RES_NOADBIT)
 			{
 				return E_FAIL;
 			}
@@ -1422,9 +1452,10 @@ sub __check_test
 	}
 	elsif ($interface eq JSON_INTERFACE_RDDS43 || $interface eq JSON_INTERFACE_RDDS80)
 	{
-		if (substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+		if (defined($description) &&
+				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
 				substr($description, 0, length(ZBX_EC_RDDS43_RES_NOREPLY)) eq ZBX_EC_RDDS43_RES_NOREPLY ||
-				substr($description, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY)
+				substr($description, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY))
 		{
 			return SUCCESS;
 		}
