@@ -1142,7 +1142,7 @@ static int	zbx_jsonpath_next(const char *path, const char **pnext, zbx_strloc_t 
  ******************************************************************************/
 int	zbx_json_path_open(const struct zbx_json_parse *jp, const char *path, struct zbx_json_parse *out)
 {
-	const char		*p, *next = 0;
+	const char		*p, *next = NULL;
 	char			buffer[MAX_STRING_LEN];
 	zbx_strloc_t		loc;
 	int			type, index;
