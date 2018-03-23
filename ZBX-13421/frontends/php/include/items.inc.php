@@ -555,8 +555,8 @@ function copyItemsToHosts($src_itemids, $dst_hostids) {
 	return true;
 }
 
-function copyItems($srcHostId, $dstHostId) {
-	$srcItems = API::Item()->get([
+function copyItems($src_hostid, $dst_hostid) {
+	$src_items = API::Item()->get([
 		'output' => ['type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history', 'trends', 'status',
 			'value_type', 'trapper_hosts', 'units', 'snmpv3_contextname', 'snmpv3_securityname', 'snmpv3_securitylevel',
 			'snmpv3_authprotocol', 'snmpv3_authpassphrase', 'snmpv3_privprotocol', 'snmpv3_privpassphrase',
@@ -566,30 +566,48 @@ function copyItems($srcHostId, $dstHostId) {
 		],
 		'selectApplications' => ['applicationid'],
 		'selectPreprocessing' => ['type', 'params'],
-		'hostids' => $srcHostId,
+		'hostids' => $src_hostid,
 		'webitems' => true,
 		'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 		'preservekeys' => true
 	]);
-	$dstHosts = API::Host()->get([
+	$dst_hosts = API::Host()->get([
 		'output' => ['hostid', 'host', 'status'],
 		'selectInterfaces' => ['interfaceid', 'type', 'main'],
-		'hostids' => $dstHostId,
+		'selectParentTemplates' => ['hostid'],
+		'hostids' => $dst_hostid,
 		'preservekeys' => true,
 		'nopermissions' => true,
 		'templated_hosts' => true
 	]);
-	$dstHost = reset($dstHosts);
+	$dst_host = reset($dst_hosts);
+
+	$src_templates = API::Item()->get([
+		'output' => ['hostid'],
+		'itemids' => zbx_objectValues($src_items, 'templateid')
+	]);
+	$dst_parent_templates = zbx_objectValues($dst_host['parentTemplates'], 'templateid');
+
+	$unlinked_items = [];
+	foreach ($src_templates as $template) {
+		if (!in_array($template['hostid'], $dst_parent_templates)) {
+			$unlinked_items[] = $template['itemid'];
+		}
+	}
 
 	$create_order = [];
 	$src_itemid_to_key = [];
-	foreach ($srcItems as $itemid => $item) {
+	foreach ($src_items as $itemid => $item) {
+		if (in_array($item['templateid'], $unlinked_items)) {
+			continue;
+		}
+
 		$dependency_level = 0;
 		$master_item = $item;
 		$src_itemid_to_key[$itemid] = $item['key_'];
 
 		while ($master_item['type'] == ITEM_TYPE_DEPENDENT) {
-			$master_item = $srcItems[$master_item['master_itemid']];
+			$master_item = $src_items[$master_item['master_itemid']];
 			++$dependency_level;
 		}
 
@@ -602,10 +620,10 @@ function copyItems($srcHostId, $dstHostId) {
 	$current_dependency = reset($create_order);
 
 	foreach ($create_order as $itemid => $dependency_level) {
-		$srcItem = $srcItems[$itemid];
+		$src_item = $src_items[$itemid];
 
 		// Skip creating web items. Those were created before.
-		if ($srcItem['type'] == ITEM_TYPE_HTTPTEST) {
+		if ($src_item['type'] == ITEM_TYPE_HTTPTEST) {
 			continue;
 		}
 
@@ -616,6 +634,7 @@ function copyItems($srcHostId, $dstHostId) {
 			if (!$created_itemids) {
 				return false;
 			}
+
 			$created_itemids = $created_itemids['itemids'];
 
 			foreach ($create_items as $index => $created_item) {
@@ -625,52 +644,56 @@ function copyItems($srcHostId, $dstHostId) {
 			$create_items = [];
 		}
 
-		if ($srcItem['templateid']) {
-			$srcItem = get_same_item_for_host($srcItem, $dstHost['hostid']);
+		if ($src_item['templateid']) {
+			$src_item = get_same_item_for_host($src_item, $dst_host['hostid']);
 
-			if (!$srcItem) {
+			if (!$src_item) {
 				return false;
 			}
-			$itemkey_to_id[$srcItem['key_']] = $srcItem['itemid'];
+
+			$itemkey_to_id[$src_item['key_']] = $src_item['itemid'];
+
 			continue;
 		}
 
-		if ($dstHost['status'] != HOST_STATUS_TEMPLATE) {
+		if ($dst_host['status'] != HOST_STATUS_TEMPLATE) {
 			// find a matching interface
-			$interface = CItem::findInterfaceForItem($srcItem['type'], $dstHost['interfaces']);
+			$interface = CItem::findInterfaceForItem($src_item['type'], $dst_host['interfaces']);
 			if ($interface) {
-				$srcItem['interfaceid'] = $interface['interfaceid'];
+				$src_item['interfaceid'] = $interface['interfaceid'];
 			}
 			// no matching interface found, throw an error
 			elseif ($interface !== false) {
-				error(_s('Cannot find host interface on "%1$s" for item key "%2$s".', $dstHost['host'], $srcItem['key_']));
+				error(_s('Cannot find host interface on "%1$s" for item key "%2$s".', $dst_host['host'], $src_item['key_']));
 			}
 		}
-		unset($srcItem['itemid']);
-		unset($srcItem['templateid']);
-		$srcItem['hostid'] = $dstHostId;
-		$srcItem['applications'] = get_same_applications_for_host(zbx_objectValues($srcItem['applications'], 'applicationid'), $dstHostId);
+		unset($src_item['itemid']);
+		unset($src_item['templateid']);
+		$src_item['hostid'] = $dst_hostid;
+		$src_item['applications'] = get_same_applications_for_host(
+			zbx_objectValues($src_item['applications'], 'applicationid'),$dst_hostid
+		);
 
-		if (!$srcItem['preprocessing']) {
-			unset($srcItem['preprocessing']);
+		if (!$src_item['preprocessing']) {
+			unset($src_item['preprocessing']);
 		}
 
-		if ($srcItem['type'] == ITEM_TYPE_DEPENDENT) {
-			if ($srcItems[$srcItem['master_itemid']]['type'] == ITEM_TYPE_HTTPTEST) {
+		if ($src_item['type'] == ITEM_TYPE_DEPENDENT) {
+			if ($src_items[$src_item['master_itemid']]['type'] == ITEM_TYPE_HTTPTEST) {
 				// Web items are outside the scope and are created before regular items.
-				$web_item = get_same_item_for_host($srcItems[$srcItem['master_itemid']], $dstHost['hostid']);
-				$srcItem['master_itemid'] = $web_item['itemid'];
+				$web_item = get_same_item_for_host($src_items[$src_item['master_itemid']], $dst_host['hostid']);
+				$src_item['master_itemid'] = $web_item['itemid'];
 			}
 			else {
-				$src_item_key = $src_itemid_to_key[$srcItem['master_itemid']];
-				$srcItem['master_itemid'] = $itemkey_to_id[$src_item_key];
+				$src_item_key = $src_itemid_to_key[$src_item['master_itemid']];
+				$src_item['master_itemid'] = $itemkey_to_id[$src_item_key];
 			}
 		}
 		else {
-			unset($srcItem['master_itemid']);
+			unset($src_item['master_itemid']);
 		}
 
-		$create_items[] = $srcItem;
+		$create_items[] = $src_item;
 	}
 
 	if ($create_items && !API::Item()->create($create_items)) {
