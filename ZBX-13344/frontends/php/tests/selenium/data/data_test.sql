@@ -1425,3 +1425,24 @@ INSERT INTO items_applications (itemappid,applicationid,itemid) VALUES (99000,99
 UPDATE config SET server_check_interval = 0 WHERE configid = 1;
 -- Super admin rows per page
 UPDATE users SET rows_per_page = 100 WHERE userid = 1;
+
+-- event correlation
+INSERT INTO correlation (correlationid, name, description, evaltype, status, formula) VALUES (99000, 'Event correlation for delete', 'Test description delete', 0, 0, '');
+INSERT INTO corr_condition (corr_conditionid, correlationid, type) VALUES (99000, 99000, 0);
+INSERT INTO corr_condition_tag (corr_conditionid, tag) VALUES (99000, 'delete tag');
+INSERT INTO corr_operation (corr_operationid, correlationid, type) VALUES (99000, 99000, 0);
+
+INSERT INTO correlation (correlationid, name, description, evaltype, status, formula) VALUES (99001, 'Event correlation for update', 'Test description update', 0, 0, '');
+INSERT INTO corr_condition (corr_conditionid, correlationid, type) VALUES (99001, 99001, 0);
+INSERT INTO corr_condition_tag (corr_conditionid, tag) VALUES (99001, 'update tag');
+INSERT INTO corr_operation (corr_operationid, correlationid, type) VALUES (99001, 99001, 0);
+
+INSERT INTO correlation (correlationid, name, description, evaltype, status, formula) VALUES (99002, 'Event correlation for cancel', 'Test description cancel', 0, 0, '');
+INSERT INTO corr_condition (corr_conditionid, correlationid, type) VALUES (99002, 99002, 0);
+INSERT INTO corr_condition_tag (corr_conditionid, tag) VALUES (99002, 'cancel tag');
+INSERT INTO corr_operation (corr_operationid, correlationid, type) VALUES (99002, 99002, 0);
+
+INSERT INTO correlation (correlationid, name, description, evaltype, status, formula) VALUES (99003, 'Event correlation for clone', 'Test description clone', 0, 0, '');
+INSERT INTO corr_condition (corr_conditionid, correlationid, type) VALUES (99003, 99003, 0);
+INSERT INTO corr_condition_tag (corr_conditionid, tag) VALUES (99003, 'clone tag');
+INSERT INTO corr_operation (corr_operationid, correlationid, type) VALUES (99003, 99003, 0);
