@@ -1475,8 +1475,8 @@ static int	DBpatch_3000204(void)
 		return SUCCEED;
 
 	if (ZBX_DB_OK > DBexecute("insert into rsm_status_map (id,name) values"
-			" (7,'Up-inconclusive-no-data'),"
-			" (8,'Up-inconclusive-no-probes')"))
+			" (9,'Up-inconclusive-no-data'),"
+			" (10,'Up-inconclusive-no-probes')"))
 	{
 		return FAIL;
 	}
