@@ -1644,28 +1644,12 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 
 	$db_alerts = API::Alert()->get([
 		'output' => ['eventid', 'p_eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype',
-			'error'
+			'error', 'acknowledgeid'
 		],
 		'eventids' => array_keys($eventids),
 		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
 		'sortorder' => ['alertid' => ZBX_SORT_DOWN]
 	]);
-
-	$ack_events = API::Event()->get([
-		'output' => ['eventid'],
-		'select_alerts' => ['acknowledgeid'],
-		'eventids' => array_keys($eventids)
-	]);
-
-	$problems_alerts = [];
-
-	foreach ($ack_events as $ack_event) {
-		foreach ($ack_event['alerts'] as $ack_alert) {
-			if ($ack_alert['acknowledgeid'] == 0) {
-				$problems_alerts[] = $ack_alert['alertid'];
-			}
-		}
-	}
 
 	$alerts = [];
 	$userids = [];
@@ -1674,7 +1658,7 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 	$mediatypes = [];
 
 	foreach ($db_alerts as $db_alert) {
-		if (!in_array($db_alert['alertid'], $problems_alerts)) {
+		if ($db_alert['acknowledgeid'] != 0) {
 			continue;
 		}
 
