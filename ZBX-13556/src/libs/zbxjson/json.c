@@ -1000,6 +1000,8 @@ int	zbx_json_count(const struct zbx_json_parse *jp)
 #define ZBX_JSONPATH_COMPONENT_BRACKET	1
 #define ZBX_JSONPATH_ARRAY_INDEX	2
 
+#define ZBX_JSONPATH_INVALID_CHARS	"$@.[],:?()"
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_jsonpath_error                                               *
@@ -1055,7 +1057,7 @@ static int	zbx_jsonpath_next(const char *path, const char **pnext, zbx_strloc_t 
 
 		loc->l = next - path;
 
-		while (0 != isalnum(*next) || '_' == *next)
+		while (NULL == strchr(ZBX_JSONPATH_INVALID_CHARS, *next))
 			next++;
 
 		if ((pos = next - path) == loc->l)
