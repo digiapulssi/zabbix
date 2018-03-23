@@ -117,10 +117,11 @@ $mediaTypeFormList->addRow(_('GSM modem'),
 if ($data['passwd'] != '') {
 	$passwdField = [
 		(new CButton('chPass_btn', _('Change password')))
-			->onClick('this.style.display="none"; $("passwd").show().focus();'),
-		(new CPassBox('passwd', $data['passwd']))
+			->onClick('this.style.display="none"; $("passwd").disabled=false; $("passwd").show().focus();'),
+		(new CPassBox('passwd'))
 			->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			->addStyle('display: none;')
+			->setAttribute('disabled', 'disabled') // Prevent stored passwords autofill by browser
 	];
 }
 else {
