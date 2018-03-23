@@ -164,8 +164,10 @@ foreach ($data['data']['problems'] as $eventid => $problem) {
 	]))
 		->addClass($description_style);
 
-	if (!$show_recovery_data) {
-		// blinking
+	// Add blinking depending on configuration and acknowledgements existence.
+	if (!$show_recovery_data
+			&& (($data['config']['problem_unack_style'] != 0 && !$problem['acknowledges'])
+				|| ($data['config']['problem_ack_style'] != 0 && $problem['acknowledges']))) {
 		$duration = time() - $problem['clock'];
 
 		if ($data['config']['blink_period'] != 0 && $duration < $data['config']['blink_period']) {
