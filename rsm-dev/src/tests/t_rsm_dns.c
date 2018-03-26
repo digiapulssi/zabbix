@@ -16,6 +16,7 @@ void	exit_usage(const char *progname)
 	fprintf(stderr, "       -r <res_ip>       IP address of resolver to use (default: %s)\n", DEFAULT_RES_IP);
 	fprintf(stderr, "       -p <testprefix>   domain testprefix to use (default: %s)\n", DEFAULT_TESTPREFIX);
 	fprintf(stderr, "       -d                enable DNSSEC\n");
+	fprintf(stderr, "       -c                use TCP instead of UDP\n");
 	fprintf(stderr, "       -g                ignore errors, try to finish the test\n");
 	fprintf(stderr, "       -f                log packets to files (%s, %s) instead of stdout\n", LOG_FILE1, LOG_FILE2);
 	fprintf(stderr, "       -h                show this message and quit\n");
@@ -34,7 +35,7 @@ int	main(int argc, char *argv[])
 
 	opterr = 0;
 
-	while ((c = getopt (argc, argv, "t:n:i:r:p:dgfh")) != -1)
+	while ((c = getopt (argc, argv, "t:n:i:r:p:dcgfh")) != -1)
 	{
 		switch (c)
 		{
@@ -55,6 +56,9 @@ int	main(int argc, char *argv[])
 				break;
 			case 'd':
 				dnssec_enabled = 1;
+				break;
+			case 'c':
+				proto = ZBX_RSM_TCP;
 				break;
 			case 'g':
 				ignore_err = 1;
