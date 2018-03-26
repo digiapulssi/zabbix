@@ -1067,7 +1067,7 @@ static void	DCexport_trends(const ZBX_DC_TREND *trends, int trends_num, zbx_hash
 		zbx_json_close(&json);
 		zbx_json_adduint64(&json, "itemid", item->itemid);
 		zbx_json_addstring(&json, "name", item_info->name, ZBX_JSON_TYPE_STRING);
-		zbx_json_addint64(&json, "time", trend->clock);
+		zbx_json_addint64(&json, "clock", trend->clock);
 		zbx_json_addint64(&json, "count", trend->num);
 
 		switch (trend->value_type)
