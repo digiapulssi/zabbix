@@ -249,7 +249,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 			}
 
 			$db_tlds = DBselect(
-				'SELECT h.hostid,h.host,h.name'.
+				'SELECT h.hostid,h.host,h.name,h.status'.
 				' FROM hosts h'.
 				' WHERE hostid IN ('.
 					'SELECT hg.hostid from hosts_groups hg'.
@@ -266,7 +266,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 			}
 
 			$db_tlds = DBselect(
-				'SELECT h.hostid,h.host,h.name'.
+				'SELECT h.hostid,h.host,h.name,h.status'.
 				' FROM hosts h'.
 				' WHERE hostid IN ('.
 					'SELECT hgg.hostid'.
@@ -292,6 +292,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 					'hostid' => $db_tld['hostid'],
 					'host' => $db_tld['host'],
 					'name' => $db_tld['name'],
+					'status' => $db_tld['status'],
 					'dns_lastvalue' => 0,
 					'dnssec_lastvalue' => 0,
 					'rdds_lastvalue' => 0,
@@ -711,19 +712,8 @@ if ($data['filter_status']) {
 				unset($data['tld'][$key]);
 			}
 		}
-		elseif ($data['filter_status'] == 2) { // Current status == disabled
-			if (($data['filter_dnssec']
-					&& (!array_key_exists(RSM_DNSSEC, $tld) || !array_key_exists('trigger', $tld[RSM_DNSSEC])))
-				|| ($data['filter_rdds']
-					&& (!array_key_exists(RSM_RDDS, $tld) || !array_key_exists('trigger', $tld[RSM_RDDS])))
-				|| ($data['filter_epp']
-					&& (!array_key_exists(RSM_EPP, $tld) || !array_key_exists('trigger', $tld[RSM_EPP])))
-			) {
-				continue;
-			}
-			else {
-				unset($data['tld'][$key]);
-			}
+		elseif ($data['filter_status'] == 2 && $tld['status'] == HOST_STATUS_MONITORED ) {  // Current status == disabled
+			unset($data['tld'][$key]);
 		}
 	}
 }
