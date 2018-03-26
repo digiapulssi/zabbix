@@ -3,6 +3,7 @@ Changes for rsm1.0.6rc2
 New features:
 
 Bug fixes:
+..F....... [319] fixed filtering TLDs by disabled service in "Rolling week status" page (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.6rc1
