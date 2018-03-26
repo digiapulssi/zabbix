@@ -205,14 +205,11 @@ static void	elastic_log_error(CURL *handle, CURLcode error)
 
 		if (0 != page.offset)
 		{
-			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch, HTTP error: %d,",
+			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch, HTTP error: %ld,",
 					" message: %s", http_code, page.data);
 		}
 		else
-		{
-			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch, HTTP error: %d",
-					http_code);
-		}
+			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch, HTTP error: %ld", http_code);
 	}
 	else
 	{
@@ -346,7 +343,7 @@ static void	elastic_writer_flush()
 	struct curl_slist	*curl_headers = NULL;
 	int			i, running, previous, msgnum;
 	CURLMsg			*msg;
-	zbx_vector_ptr_t		retries;
+	zbx_vector_ptr_t	retries;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -359,7 +356,7 @@ static void	elastic_writer_flush()
 
 	for (i = 0; i < writer.ifaces.values_num; i++)
 	{
-		zbx_history_iface_t		*hist = (zbx_history_iface_t *)writer.ifaces.values[i];
+		zbx_history_iface_t	*hist = (zbx_history_iface_t *)writer.ifaces.values[i];
 		zbx_elastic_data_t	*data = hist->data;
 
 		curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
@@ -429,7 +426,7 @@ try_again:
 
 		zbx_vector_ptr_clear(&retries);
 
-		zbx_sleep_loop(ZBX_HISTORY_STORAGE_DOWN / 1000);
+		sleep(ZBX_HISTORY_STORAGE_DOWN / 1000);
 		goto try_again;
 	}
 
@@ -495,7 +492,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	zbx_elastic_data_t	*data = hist->data;
 	size_t			url_alloc = 0, url_offset = 0, id_alloc = 0, scroll_alloc = 0, scroll_offset = 0;
 	int			total, empty, ret;
-	CURLcode			err;
+	CURLcode		err;
 	struct zbx_json		query;
 	struct curl_slist	*curl_headers = NULL;
 	char			*scroll_id = NULL, *scroll_query = NULL;
@@ -639,8 +636,8 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 		/* scroll to the next page */
 		scroll_offset = 0;
-		zbx_snprintf_alloc(&scroll_query, &scroll_alloc, &scroll_offset, "{\"scroll\":\"10s\",\"scroll_id\":\"%s\"}\n",
-				scroll_id);
+		zbx_snprintf_alloc(&scroll_query, &scroll_alloc, &scroll_offset,
+				"{\"scroll\":\"10s\",\"scroll_id\":\"%s\"}\n", scroll_id);
 
 		curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, scroll_query);
 
@@ -702,10 +699,10 @@ static int	elastic_add_values(zbx_history_iface_t *hist, const zbx_vector_ptr_t 
 	const char	*__function_name = "elastic_add_values";
 
 	zbx_elastic_data_t	*data = hist->data;
-	int				i, num = 0;
-	ZBX_DC_HISTORY			*h;
-	struct zbx_json			json_idx, json;
-	size_t				buf_alloc = 0, buf_offset = 0;
+	int			i, num = 0;
+	ZBX_DC_HISTORY		*h;
+	struct zbx_json		json_idx, json;
+	size_t			buf_alloc = 0, buf_offset = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
