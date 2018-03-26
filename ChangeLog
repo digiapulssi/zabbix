@@ -4,6 +4,7 @@ New features:
 A.F....... [ZBX-1357] updated Chinese (China), Czech, English (United States), Japanese, Korean, Russian, Turkish, Ukrainian translations; thanks to Zabbix translators (zalex_ua)
 
 Bug fixes:
+..F....... [ZBX-13542] fixed http steps on template not inheriting hosts application setting (nikita)
 ........S. [ZBX-13339] improved deallocation of memory (MVekslers)
 ..F....... [ZBX-13412] fixed JS error and wrong form behaviour when changing item type, type of information, data type (agriscenko)
 ..F....... [ZBX-13257] fixed display of the latest item in Audit log (agriscenko)
