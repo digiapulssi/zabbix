@@ -2577,10 +2577,11 @@ out:
 	return ret;
 }
 
-#define RDDS_DOWN	0
-#define RDDS_UP		1
-#define RDDS_ONLY43	2
-#define RDDS_ONLY80	3
+				/* "RSM RDDS result" value mapping: */
+#define RDDS_DOWN	0	/* Down */
+#define RDDS_UP		1	/* Up */
+#define RDDS_ONLY43	2	/* RDDS43 only */
+#define RDDS_ONLY80	3	/* RDDS80 only */
 
 static int	zbx_ec_noerror(int ec)
 {

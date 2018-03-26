@@ -52,8 +52,6 @@ foreach (@$tlds_ref)
 			my $end = $_->{'end'};
 			my $false_positive = $_->{'false_positive'};
 
-			my $time_condition = defined($end) ? "clock between $start and $end" : "clock>=$start";
-
 			my $rows_ref = db_select(
 				"select count(*)".
 				" from history_uint".

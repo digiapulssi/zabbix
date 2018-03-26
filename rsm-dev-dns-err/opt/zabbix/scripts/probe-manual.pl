@@ -15,8 +15,6 @@ use Pusher qw(push_to_trapper);
 use RSMSLV;
 
 # todo phase 1: use these 3 from RSMSLV.pm, e. g. create function there that will do what's done in this script
-use constant ONLINE => 1;
-use constant OFFLINE => 0;
 use constant PROBE_KEY_MANUAL => 'rsm.probe.status[manual]';
 
 parse_opts('server-id=s', 'probe=s', 'set=n');
