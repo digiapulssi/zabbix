@@ -60,9 +60,9 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		DB_EVENT	*event = NULL;
+		DB_EVENT	*event;
 
-		event = zbx_malloc(event, sizeof(DB_EVENT));
+		event = (DB_EVENT *)zbx_calloc(NULL, 1, sizeof(DB_EVENT));
 		ZBX_STR2UINT64(event->eventid, row[0]);
 		event->source = atoi(row[1]);
 		event->object = atoi(row[2]);
@@ -71,6 +71,7 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 		event->value = atoi(row[5]);
 		event->acknowledged = atoi(row[6]);
 		event->ns = atoi(row[7]);
+		event->trigger.priority = TRIGGER_SEVERITY_NOT_CLASSIFIED;
 
 		event->trigger.triggerid = 0;
 
