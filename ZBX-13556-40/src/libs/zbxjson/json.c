@@ -1008,6 +1008,9 @@ int	zbx_json_count(const struct zbx_json_parse *jp)
 #define ZBX_JSONPATH_COMPONENT_BRACKET	1
 #define ZBX_JSONPATH_ARRAY_INDEX	2
 
+/* full set of operators that can be used in JSONPath expressions */
+#define ZBX_JSONPATH_OPERATOR_CHARS	"$@.[],:?()"
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_jsonpath_error                                               *
@@ -1063,7 +1066,8 @@ int	zbx_jsonpath_next(const char *path, const char **pnext, zbx_strloc_t *loc, i
 
 		loc->l = next - path;
 
-		while (0 != isalnum(*next) || '_' == *next)
+		/* do not allow operator character in member names */
+		while (NULL == strchr(ZBX_JSONPATH_OPERATOR_CHARS, *next))
 			next++;
 
 		if ((pos = next - path) == loc->l)
@@ -1148,7 +1152,7 @@ int	zbx_jsonpath_next(const char *path, const char **pnext, zbx_strloc_t *loc, i
  ******************************************************************************/
 int	zbx_json_path_open(const struct zbx_json_parse *jp, const char *path, struct zbx_json_parse *out)
 {
-	const char		*p, *next = 0;
+	const char		*p, *next = NULL;
 	char			buffer[MAX_STRING_LEN];
 	zbx_strloc_t		loc;
 	int			type, index;
