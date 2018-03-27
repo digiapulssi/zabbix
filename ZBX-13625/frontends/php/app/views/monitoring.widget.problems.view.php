@@ -164,16 +164,24 @@ foreach ($data['data']['problems'] as $eventid => $problem) {
 	]))
 		->addClass($description_style);
 
-	// Add blinking depending on configuration and acknowledgements existence.
-	if (!$show_recovery_data
-			&& (($data['config']['problem_unack_style'] != 0 && !$problem['acknowledges'])
-				|| ($data['config']['problem_ack_style'] != 0 && $problem['acknowledges']))) {
-		$duration = time() - $problem['clock'];
+	if (!$show_recovery_data) {
+		$is_acknowledged = $data['config']['event_ack_enable'] && (bool) $problem['acknowledges'];
 
-		if ($data['config']['blink_period'] != 0 && $duration < $data['config']['blink_period']) {
-			$description->addClass('blink');
-			$description->setAttribute('data-time-to-blink', $data['config']['blink_period'] - $duration);
-			$description->setAttribute('data-toggle-class', $description_style);
+		if ($value == TRIGGER_VALUE_TRUE && !$is_acknowledged) {
+			$blinks = $data['config']['problem_unack_style'];
+		}
+		elseif ($value == TRIGGER_VALUE_TRUE && $is_acknowledged) {
+			$blinks = $data['config']['problem_ack_style'];
+		}
+
+		if (isset($blinks) && $blinks) {
+			$duration = time() - $problem['clock'];
+
+			if ($data['config']['blink_period'] != 0 && $duration < $data['config']['blink_period']) {
+				$description->addClass('blink');
+				$description->setAttribute('data-time-to-blink', $data['config']['blink_period'] - $duration);
+				$description->setAttribute('data-toggle-class', $description_style);
+			}
 		}
 	}
 
