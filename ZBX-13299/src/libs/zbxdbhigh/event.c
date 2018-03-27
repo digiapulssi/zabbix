@@ -71,7 +71,7 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 		event->value = atoi(row[5]);
 		event->acknowledged = atoi(row[6]);
 		event->ns = atoi(row[7]);
-		event->trigger.priority = TRIGGER_SEVERITY_NOT_CLASSIFIED;
+
 
 		event->trigger.triggerid = 0;
 
@@ -83,6 +83,8 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 
 		if (EVENT_OBJECT_TRIGGER == event->object)
 			zbx_vector_uint64_append(&triggerids, event->objectid);
+		else
+			event->trigger.priority = TRIGGER_SEVERITY_NOT_CLASSIFIED;
 
 		zbx_vector_ptr_append(events, event);
 	}
