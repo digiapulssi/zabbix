@@ -635,16 +635,34 @@ function convert_units($options = []) {
 
 	if (in_array($options['units'], $blackList) || (zbx_empty($options['units'])
 			&& ($options['convert'] == ITEM_CONVERT_WITH_UNITS))) {
-		if (preg_match('/^\-?\d+\.\d+$/', $options['value'])) {
-			if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD) {
-				$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
-			}
-			$options['value'] = sprintf('%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f', $options['value']);
-		}
-		$options['value'] = preg_replace('/^([\-0-9]+)(\.)([0-9]*)[0]+$/U', '$1$2$3', $options['value']);
-		$options['value'] = rtrim($options['value'], '.');
 
-		return trim($options['value'].' '.$options['units']);
+		if (stristr($options['value'], '.') === false) {
+			return trim($options['value'] . ' ' . $options['units']);
+		}
+
+		if (abs($options['value']) < ZBX_UNITS_ROUNDOFF_THRESHOLD) {
+			return trim('0 ' . $options['units']);
+		}
+
+		$number_parts = explode('.', $options['value'], 2);
+		$decimal_part = '0.' . substr($number_parts[1], 0, ZBX_PRECISION_10);
+		$decimal_part = round($decimal_part, ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
+
+		if ($decimal_part >= 1) {
+			$number_parts[0] = bcadd($number_parts[0], 1, 0);
+
+			if (stristr($decimal_part, '.') === false) {
+				$options['value'] = $number_parts[0];
+			}
+			else {
+				$options['value'] = $number_parts[0] . '.' . explode('.', $decimal_part - 1, 2)[1];
+			}
+		}
+		else {
+			$options['value'] = $number_parts[0] . ltrim($decimal_part, '0');
+		}
+
+		return trim($options['value'] . ' ' . $options['units']);
 	}
 
 	// if one or more items is B or Bps, then Y-scale use base 8 and calculated in bytes
