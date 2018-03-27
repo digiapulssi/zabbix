@@ -60,9 +60,9 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		DB_EVENT	*event;
+		DB_EVENT	*event = NULL;
 
-		event = (DB_EVENT *)zbx_calloc(NULL, 1, sizeof(DB_EVENT));
+		event = zbx_malloc(event, sizeof(DB_EVENT));
 		ZBX_STR2UINT64(event->eventid, row[0]);
 		event->source = atoi(row[1]);
 		event->object = atoi(row[2]);
