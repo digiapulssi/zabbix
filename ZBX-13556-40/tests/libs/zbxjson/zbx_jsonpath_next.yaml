@@ -343,4 +343,15 @@ out:
   components:
     - class: dot
       value: -*!%^&_=+~`;/'<>{}#
+---
+test case: Valid path "$.жук.飞虫" - use of UTF-8 characters is allowed in member name
+in:
+  path: $.жук.飞虫
+out:
+  result: succeed
+  components:
+    - class: dot
+      value: жук
+    - class: dot
+      value: 飞虫
 ...
