@@ -631,15 +631,35 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				throw new Exception();
 			}
 
+			$host_templates = zbx_objectValues($host['templates'], 'templateid');
+
 			// copy triggers
 			$dbTriggers = API::Trigger()->get([
 				'output' => ['triggerid'],
 				'hostids' => $srcHostId,
+				'selectItems' => ['type', 'master_itemid'],
 				'inherited' => false,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
 			]);
 
 			if ($dbTriggers) {
+				foreach ($dbTriggers as $index => $trigger) {
+					foreach ($trigger['items'] as $item) {
+						if ($item['type'] == ITEM_TYPE_DEPENDENT) {
+							$dependent_items = API::Item()->get([
+								'output' => ['templateid'],
+								'itemids' => $item['master_itemid']
+							]);
+							$dependent_item = reset($dependent_items);
+
+							if (!in_array($dependent_item['templateid'], $host_templates)) {
+								unset($dbTriggers[$index]);
+								break;
+							}
+						}
+					}
+				}
+
 				if (!copyTriggersToHosts(zbx_objectValues($dbTriggers, 'triggerid'), $hostId, $srcHostId)) {
 					throw new Exception();
 				}
@@ -667,7 +687,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$dbGraphs = API::Graph()->get([
 				'output' => API_OUTPUT_EXTEND,
 				'selectHosts' => ['hostid'],
-				'selectItems' => ['type'],
+				'selectItems' => ['type', 'master_itemid'],
 				'hostids' => $srcHostId,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'inherited' => false
@@ -680,6 +700,20 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 				if (httpItemExists($dbGraph['items'])) {
 					continue;
+				}
+
+				foreach ($dbGraph['items'] as $item) {
+					if ($item['type'] == ITEM_TYPE_DEPENDENT) {
+						$dependent_items = API::Item()->get([
+							'output' => ['templateid'],
+							'itemids' => $item['master_itemid']
+						]);
+						$dependent_item = reset($dependent_items);
+
+						if (!in_array($dependent_item['templateid'], $host_templates)) {
+							continue 2;
+						}
+					}
 				}
 
 				if (!copyGraphToHost($dbGraph['graphid'], $hostId)) {

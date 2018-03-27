@@ -586,6 +586,7 @@ function copyItems($src_hostid, $dst_hostid) {
 		'output' => ['hostid'],
 		'itemids' => zbx_objectValues($src_items, 'templateid')
 	]);
+
 	$dst_parent_templates = zbx_objectValues($dst_host['parentTemplates'], 'templateid');
 
 	$unlinked_items = [];
@@ -671,7 +672,7 @@ function copyItems($src_hostid, $dst_hostid) {
 		unset($src_item['templateid']);
 		$src_item['hostid'] = $dst_hostid;
 		$src_item['applications'] = get_same_applications_for_host(
-			zbx_objectValues($src_item['applications'], 'applicationid'),$dst_hostid
+			zbx_objectValues($src_item['applications'], 'applicationid'), $dst_hostid
 		);
 
 		if (!$src_item['preprocessing']) {
@@ -684,9 +685,11 @@ function copyItems($src_hostid, $dst_hostid) {
 				$web_item = get_same_item_for_host($src_items[$src_item['master_itemid']], $dst_host['hostid']);
 				$src_item['master_itemid'] = $web_item['itemid'];
 			}
-			else {
+			elseif (array_key_exists($src_item['master_itemid'], $src_itemid_to_key)) {
 				$src_item_key = $src_itemid_to_key[$src_item['master_itemid']];
 				$src_item['master_itemid'] = $itemkey_to_id[$src_item_key];
+			} else {
+				continue;
 			}
 		}
 		else {
