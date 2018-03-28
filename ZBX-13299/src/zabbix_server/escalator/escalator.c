@@ -1016,8 +1016,7 @@ static void	add_message_alert(const DB_EVENT *event, const DB_EVENT *r_event, zb
 		substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &period,
 				MACRO_TYPE_COMMON, NULL, 0);
 
-		zabbix_log(LOG_LEVEL_DEBUG, "trigger severity:%d, media severity:%d, period:'%s'", priority, severity,
-				period);
+		zabbix_log(LOG_LEVEL_DEBUG, "severity:%d, media severity:%d, period:'%s'", priority, severity, period);
 
 		if (((1 << priority) & severity) == 0)
 		{
