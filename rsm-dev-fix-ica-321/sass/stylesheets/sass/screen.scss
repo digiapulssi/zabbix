@@ -600,6 +600,10 @@ footer {
 	border-collapse: separate;
 	border: 1px solid $ui-border-color;
 
+	&.table-bordered-head thead th {
+		border-left: 2px solid darken($table-border-color, 5%);
+	}
+
 	thead th {
 		color: $font-alt-color;
 		height: 100%;
@@ -609,6 +613,10 @@ footer {
 		vertical-align: bottom;
 		border-bottom: 2px solid darken($table-border-color, 5%);
 		text-align: left;
+
+		&.center {
+			text-align: center;
+		}
 
 		.arrow-up {
 			margin: 0 0 0 3px;
@@ -3720,6 +3728,47 @@ tr.cursor-move {
 
 .clock-lines {
 	fill: $clock-lines-color;
+}
+
+.service-icon {
+	display: inline-block;
+	vertical-align: middle;
+	height: 14px;
+	width: 14px;
+	background-repeat:no-repeat;
+	margin: 0 1px 3px 1px;
+}
+
+.iconrollingweekok {
+	background-image: url('../images/general/rolling_week_ok.png');
+}
+.iconrollingweekfail {
+	background-image: url('../images/general/rolling_week_fail.png');
+}
+.iconrollingweekdisabled {
+	background-image: url('../images/general/rolling_week_disabled.png');
+}
+.incidents-info {
+	width: 100%;
+}
+.rolling-week-status {
+	font-size: 16px;
+	font-weight: bold;
+	float: right;
+}
+.rsm-date-time {
+	float: right;
+}
+.first-row-element {
+	width: 300px;
+	display: inline-block;
+}
+.first-cell-value {
+	width: 65px;
+	display: inline-block;
+}
+.disabled-service {
+	margin-left: 66px;
 }
 
 /*doc
