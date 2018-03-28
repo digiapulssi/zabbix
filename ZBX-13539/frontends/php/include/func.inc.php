@@ -648,6 +648,10 @@ function convert_units($options = []) {
 		$decimal_part = '0.' . substr($number_parts[1], 0, ZBX_PRECISION_10);
 		$decimal_part = round($decimal_part, ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
 
+		if ($number_parts[0] === '' || $number_parts[0] === '-') {
+			$number_parts[0] .= '0';
+		}
+
 		if ($decimal_part >= 1) {
 			$number_parts[0] = bcadd($number_parts[0], 1, 0);
 
