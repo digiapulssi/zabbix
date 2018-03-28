@@ -2566,6 +2566,7 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_v
 		{
 			zbx_snprintf(err, err_size, "AD bit is not set in the answer for host \"%s\"", host);
 			*ec_res = ZBX_RESOLVER_NOADBIT;
+			ldns_pkt_free(pkt);
 			goto out;
 		}
 
@@ -2589,6 +2590,7 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_v
 					*ec_res = ZBX_RESOLVER_CATCHALL;
 			}
 
+			ldns_pkt_free(pkt);
 			goto out;
 		}
 
@@ -4608,7 +4610,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 			(0 != ipv4_enabled ? ZBX_FLAG_IPV4_ENABLED : 0) | (0 != ipv6_enabled ? ZBX_FLAG_IPV6_ENABLED : 0),
 			log_fd, &ec_res, err, sizeof(err)))
 	{
-		rtt1 = rtt2 = rtt3 = (ZBX_EC_EPP_NOT_IMPLEMENTED != ec_res ? ZBX_EC_EPP_NO_IP : ZBX_EC_INTERNAL);
+		rtt1 = rtt2 = rtt3 = (ZBX_RESOLVER_NOREPLY != ec_res ? ZBX_EC_EPP_NO_IP : ZBX_EC_INTERNAL);
 		zbx_rsm_errf(log_fd, "\"%s\": %s", random_host, err);
 		goto out;
 	}
