@@ -319,7 +319,7 @@ foreach my $fp_ref (@$false_positives)
 	dw_append_csv(DATA_FALSE_POSITIVE, [
 			      $fp_ref->{'eventid'},
 			      $fp_ref->{'clock'},
-			      $fp_ref->{'status'},
+			      dw_get_id(ID_STATUS_MAP, $fp_ref->{'status'}),
 			      ''	# reason is not implemented in front-end
 		]);
 }
@@ -1350,15 +1350,8 @@ sub __get_false_positives
 	{
 		my $details = $row_ref->[0];
 		my $clock = $row_ref->[1];
-
-		my $eventid = $details;
-		$eventid =~ s/^([0-9]+): .*/$1/;
-
-		my $status = 'activated';
-		if ($details =~ m/unmark/i)
-		{
-			$status = 'deactivated';
-		}
+		my ($eventid) = ($details =~ /^([0-9]+): /);
+		my $status = ($details =~ m/unmark/i ? 'Activated' : 'Deactivated');
 
 		push(@result, {'clock' => $clock, 'eventid' => $eventid, 'status' => $status});
 	}
