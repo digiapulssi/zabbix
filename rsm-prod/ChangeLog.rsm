@@ -1,3 +1,26 @@
+Changes for rsm1.0.6
+
+rsm1.0.6rc3 was released as rsm1.0.6 without any changes
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.6rc3
+
+Bug fixes:
+..F....... [319] fixed disabled TLD filtering in "Rolling week status" page (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.6rc2
+
+Bug fixes:
+..F....... [319] fixed filtering TLDs by disabled service in "Rolling week status" page (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.6rc1
+
+Bug fixes:
+....I..... [329] made incidentStatus from falsePositiveChanges.csv reference statusMaps.csv catalog (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.5
 
 rsm1.0.5rc1 was released as rsm1.0.5 without any changes
