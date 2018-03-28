@@ -1,5 +1,0 @@
-You need configuration file /opt/zabbix/scripts/rsm.conf to be set up correctly.
-
-In order to run tests execute:
-
-./run.sh <TLD>
