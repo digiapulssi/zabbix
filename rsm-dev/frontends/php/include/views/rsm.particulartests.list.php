@@ -262,7 +262,16 @@ foreach ($this->data['probes'] as $probe) {
 				: '-'
 		];
 
-		// If probe is down and RTT is non-negative, it is considered as above max RTT.
+		/**
+		 * If $rddsNN is DOWN and RTT is non-negative, it is considered as above max RTT.
+		 *
+		 * Following scenarios are possible:
+		 * - If RTT is negative, it is an error and is considered as DOWN.
+		 * - If RTT is positive but $rddsNN is still DOWN, it indicates that at the time of calculation, RTT was greater
+		 *	 than max allowed RTT.
+		 * - If RTT is positive but $rddsNN is UP, it indicates that at the time of calculation, RTT was in the range of
+		 *	 allowed values - greater than 0 (was not an error) and smaller than max allowed RTT.
+		 */
 		if ($rdds80 === $down && $probe['rdds80']['rtt']['value'] > 0) {
 			$rdds80_above_max_rtt++;
 		}
@@ -291,11 +300,11 @@ if ($data['type'] == RSM_RDDS) {
 			(new CSpan(_('Total ') . $error_code))->setHint($error['description']),
 			'',
 			'',
-			$error['rdds80'],
+			array_key_exists('rdds43', $error) ? $error['rdds43'] : '',
 			'',
 			'',
 			'',
-			$error['rdds43']
+			array_key_exists('rdds80', $error) ? $error['rdds80'] : ''
 		]);
 	}
 
@@ -352,6 +361,10 @@ elseif ($this->data['type'] == RSM_DNSSEC) {
 	];
 }
 
+if (in_array($this->data['type'], [RSM_DNS, RSM_DNSSEC, RSM_RDDS])) {
+	$testResult = $this->data['testResult'];
+}
+else {
 if ($this->data['testResult'] === null) {
 	$testResult = $noResult;
 }
@@ -360,6 +373,7 @@ elseif ($this->data['testResult'] == PROBE_UP) {
 }
 else {
 	$testResult = $down;
+}
 }
 
 $particularTests = [

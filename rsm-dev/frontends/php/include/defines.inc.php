@@ -1392,7 +1392,7 @@ define('ZBX_EC_DNS_RES_NOREPLY',	-205);	// obsolete
 define('ZBX_EC_DNS_RES_NOADBIT',	-206);	// obsolete
 define('ZBX_EC_DNS_UDP_RES_NOREPLY',	-400);
 define('ZBX_EC_DNS_UDP_RES_NOADBIT',	-401);
-define('ZBX_EC_DNS_UDP_NO_DNSKEY',		-427);
+define('ZBX_EC_DNS_UDP_DNSKEY_NONE',	-428);
 
 // SLA monitoring calculated items keys
 define('CALCULATED_ITEM_DNS_FAIL',				'rsm.configvalue[RSM.INCIDENT.DNS.FAIL]');
@@ -1449,6 +1449,10 @@ define('NS_UP',			2);
 define('PROBE_OFFLINE',	-1);
 define('PROBE_DOWN',	0);
 define('PROBE_UP',		1);
+
+// NameServer status
+define('NAMESERVER_DOWN',	0);
+define('NAMESERVER_UP',		1);
 
 // SLA monitoring monthly reports item
 define('MONTHLY_REPORTS_APPLICATION',	'SLV monthly');

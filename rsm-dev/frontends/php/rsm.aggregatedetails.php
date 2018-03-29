@@ -133,7 +133,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			$min_dns_count = $macro_item_value['value'];
 		}
 		elseif ($macro_item['key_'] === CALCULATED_ITEM_DNS_UDP_RTT_HIGH) {
-			$udp_rtt = $macro_item_value['value'];
+			$data['udp_rtt'] = $macro_item_value['value'];
 		}
 		else {
 			$macro_time = $macro_item_value['value'] - 1;
@@ -300,51 +300,46 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			$matches = explode(',', $matches[1]);
 			$ipv = filter_var($matches[2], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? 'ipv4' : 'ipv6';
 
-			$data['dns_udp_nameservers'][$matches[1]][$ipv] = $matches[2];
-			$data['probes'][$probeid]['results_udp'][$matches[1]][$ipv] = $item_value;
+			$data['dns_udp_nameservers'][$matches[1]][$ipv][$matches[2]] = true;
+			$data['probes'][$probeid]['results_udp'][$matches[1]][$ipv][$matches[2]] = $item_value;
 
 			if ($data['type'] == RSM_DNSSEC) {
 				// Holds the number of NameServers with errors for particular probe.
 				if (!array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probeid])) {
 					$data['probes'][$probeid]['probe_nameservers_with_no_errors'] = 0;
-					$data['probes'][$probeid]['probe_nameservers_with_data'] = 0;
-				}
-
-				if (array_key_exists($probes_item['itemid'], $item_values)) {
-					$data['probes'][$probeid]['probe_nameservers_with_data']++;
 				}
 
 				/**
 				 * NS in case of DNSSEC is considered to be DOWN if selected value is one of the following:
 				 * 1) -204 (ZBX_EC_DNS_NS_ERRSIG);
 				 * 2) -206 (ZBX_EC_DNS_RES_NOADBIT);
-				 * 3) in rage -427 and -401 (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC & ZBX_EC_DNS_UDP_RES_NOADBIT).
+				 * 3) in range between -428 and -401 (ZBX_EC_DNS_UDP_DNSKEY_NONE & ZBX_EC_DNS_UDP_RES_NOADBIT).
 				 */
-				if (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT
+				if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT
 					|| $item_value == ZBX_EC_DNS_NS_ERRSIG
 					|| $item_value == ZBX_EC_DNS_RES_NOADBIT
 				) {
 					// Error detected.
 				}
-				else {
+				elseif ($item_value != 0) {
 					$data['probes'][$probeid]['probe_nameservers_with_no_errors']++;
 				}
 			}
 
-			if (0 > $item_value) {
-				$error_key = 'udp_'.$matches[1].'_'.$ipv.'_'.$matches[2];
+			$error_key = 'udp_'.$matches[1].'_'.$ipv.'_'.$matches[2];
 
+			if (0 > $item_value) {
 				if (!array_key_exists($item_value, $data['errors'])) {
 					$data['errors'][$item_value] = [];
 				}
 
-				if (!array_key_exists($error_key, $data['errors'])) {
+				if (!array_key_exists($error_key, $data['errors'][$item_value])) {
 					$data['errors'][$item_value][$error_key] = 0;
 				}
 
 				$data['errors'][$item_value][$error_key]++;
 			}
-			elseif ($item_value > $udp_rtt && $data['type'] == RSM_DNS) {
+			elseif ($item_value > $data['udp_rtt'] && $data['type'] == RSM_DNS) {
 				if (!array_key_exists($error_key, $data['probes_above_max_rtt'])) {
 					$data['probes_above_max_rtt'][$error_key] = 0;
 				}
@@ -354,9 +349,56 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 		}
 	}
 
-	// Get status (displayed in columns 'DNS UDP') for each TLD probe.
+	// Sort errors.
+	krsort($data['errors']);
+
+	foreach ($data['probes'] as &$probe) {
+		$probe['udp_ns_down'] = 0;
+		$probe['udp_ns_up'] = 0;
+
+		if (array_key_exists('results_udp', $probe)) {
+			$nameservers_up = [];
+
+			/**
+			 * NameServer is considered as Down once at least one of its IP addresses is either negative value (error
+			 * code) or its RTT is higher then CALCULATED_ITEM_DNS_UDP_RTT_HIGH.
+			 */
+			foreach ($probe['results_udp'] as $ns => &$ipvs) {
+				foreach (['ipv4', 'ipv6'] as $ipv) {
+					foreach ($ipvs[$ipv] as $item_value) {
+						if ($item_value !== null && ($item_value > $data['udp_rtt'] || isDNSErrorCode($item_value, $data['type']))) {
+							$ipvs['status'] = NAMESERVER_DOWN;
+							$probe['udp_ns_down']++;
+							unset($nameservers_up[$ns]);
+							break(2);
+						}
+						elseif ($item_value !== null) {
+							$nameservers_up[$ns] = true;
+							$ipvs['status'] = NAMESERVER_UP;
+							/**
+							 * Break is no missed here. If value is positive, we still continue to search for negative
+							 * values to change the status to NAMESERVER_DOWN once found.
+							 *
+							 * It is opposite with negative values. Once negative value is found, NameServer is marked
+							 * as NAMESERVER_DOWN and cannot be turned back to NAMESERVER_UP.
+							 *
+							 * In fact, NAMESERVER_UP means that there are some items with values for particular
+							 * NameServer and non of them is in the range of error codes.
+							 */
+						}
+					}
+				}
+			}
+			unset($ipvs);
+
+			$probe['udp_ns_up'] = count($nameservers_up);
+		}
+	}
+	unset($probe);
+
+	// Get status for each TLD probe (displayed in column 'DNS UDP' -> 'Status').
 	$probe_items = API::Item()->get([
-		'output' => ['key_', 'hostid'],
+		'output' => ['itemid', 'key_', 'hostid'],
 		'hostids' => array_keys($data['probes']),
 		'filter' => [
 			'key_' => PROBE_KEY_ONLINE
@@ -369,21 +411,26 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 		$item_values = API::History()->get([
 			'output' => API_OUTPUT_EXTEND,
 			'itemids' => array_keys($probe_items),
-			'filter' => [
-				'clock' => $test_time_from
-			]
+			'time_from' => $test_time_from,
+			'time_till' => $test_time_till
 		]);
 
 		$probes_not_offline = [];
+		$items_utilized = [];
 
 		foreach ($item_values as $item_value) {
+			if (array_key_exists($item_value['itemid'], $items_utilized)) {
+				continue;
+			}
+
 			$probe_hostid = $probe_items[$item_value['itemid']]['hostid'];
+			$items_utilized[$item_value['itemid']] = true;
 
 			/**
 			 * Value of probe item PROBE_KEY_ONLINE == PROBE_DOWN means that both DNS UDP and DNS TCP are offline.
 			 * Support for TCP will be added in phase 3.
 			 */
-			if ($item_value['value'] == PROBE_DOWN) {
+			if ($data['type'] == RSM_DNS && $item_value['value'] == PROBE_DOWN) {
 				$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
 			}
 			elseif ($data['type'] == RSM_DNSSEC) {
@@ -391,21 +438,17 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				 * For DNSSEC, if at least one NameServer for particular probe is UP (do not have errors), the whole
 				 * probe is UP.
 				 */
-				if (!array_key_exists('probe_nameservers_with_data', $data['probes'][$probe_hostid])
-					|| !$data['probes'][$probe_hostid]['probe_nameservers_with_data']) {
-					unset($data['probes'][$probe_hostid]['status_udp']);
-				}
-				elseif ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] == 0) {
-					$data['probes'][$probe_hostid]['status_udp'] = PROBE_UP;
-				}
-				else {
-					$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
+				if (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
+					$data['probes'][$probe_hostid]['status_udp'] = ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0)
+						? PROBE_UP
+						: PROBE_DOWN;
 				}
 			}
 			else {
 				$probes_not_offline[$probe_hostid] = true;
 			}
 		}
+		unset($items_utilized);
 
 		/**
 		 * If probe is not offline we should check values of additional item PROBE_DNS_UDP_ITEM and compare selected
@@ -414,7 +457,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 		if ($probes_not_offline && $data['type'] == RSM_DNS) {
 			$probe_items = API::Item()->get([
 				'output' => ['hostid', 'key_'],
-				'hostids' => array_keys($probes_not_offline),
+				'hostids' => array_keys($tld_probes),
 				'filter' => [
 					'key_' => PROBE_DNS_UDP_ITEM
 				],
@@ -426,22 +469,34 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				$item_values = API::History()->get([
 					'output' => API_OUTPUT_EXTEND,
 					'itemids' => array_keys($probe_items),
-					'filter' => [
-						'clock' => $test_time_from
-					]
+					'time_from' => $test_time_from,
+					'time_till' => $test_time_till,
+					'history' => 3
 				]);
+				$items_utilized = [];
 
 				foreach ($item_values as $item_value) {
+					if (array_key_exists($item_value['itemid'], $items_utilized)) {
+						continue;
+					}
+
 					$probe_item = $probe_items[$item_value['itemid']];
+					$probe_hostid = $tld_probe_names[$tld_probes[$probe_item['hostid']]['name']];
+					$items_utilized[$item_value['itemid']] = true;
+
+					if (!array_key_exists($probe_hostid, $probes_not_offline)) {
+						continue;
+					}
 
 					/**
 					 * DNS is considered to be UP if selected value is greater than rsm.configvalue[RSM.DNS.AVAIL.MINNS]
 					 * for <RSM_HOST> at given time;
 					 */
-					$data['probes'][$probe_item['hostid']]['status_udp'] = $item_value['value'] >= $min_dns_count
+					$data['probes'][$probe_hostid]['status_udp'] = ($item_value['value'] >= $min_dns_count)
 						? PROBE_UP
 						: PROBE_DOWN;
 				}
+				unset($items_utilized);
 			}
 		}
 	}
@@ -468,11 +523,11 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 	if ($data['testResult'] === null) {
 		$test_result_color = 'grey';
 	}
-	elseif ($data['testResult'] === PROBE_UP) {
-		$test_result_color = 'green';
+	elseif ($data['testResult'] == PROBE_DOWN) {
+		$test_result_color = 'red';
 	}
 	else {
-		$test_result_color = 'red';
+		$test_result_color = 'green';
 	}
 
 	$data['testResult'] = (new CSpan($test_result_label))->addClass($test_result_color);

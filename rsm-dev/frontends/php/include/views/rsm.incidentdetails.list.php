@@ -70,7 +70,6 @@ $table = (new CTableInfo())
 	_('Time'),
 	_('Result'),
 	_('Historical rolling week value'),
-	SPACE,
 	SPACE
 ]);
 
@@ -91,7 +90,7 @@ foreach ($data['tests'] as $test) {
 	}
 
 	$value = array_key_exists($test['value'], $data['test_value_mapping'])
-		? $data['test_value_mapping'][$test['value']]
+		? (new CSpan($data['test_value_mapping'][$test['value']]))->setAttribute('class', $test['value'] == PROBE_DOWN ? 'red' : 'green')
 		: '';
 
 	if ($data['type'] == RSM_DNS || $data['type'] == RSM_DNSSEC) {
@@ -102,7 +101,11 @@ foreach ($data['tests'] as $test) {
 		);
 	}
 	else {
-		$details_link = null;
+		$details_link = new CLink(
+			_('details'),
+			'rsm.particulartests.php?slvItemId='.$data['slvItemId'].'&host='.$data['tld']['host'].
+				'&time='.$test['clock'].'&type='.$data['type']
+		);
 	}
 
 	$row = [
@@ -110,11 +113,6 @@ foreach ($data['tests'] as $test) {
 		date(DATE_TIME_FORMAT_SECONDS, $test['clock']),
 		$value,
 		isset($test['slv']) ? $test['slv'].'%' : '-',
-		new CLink(
-			_('details'),
-			'rsm.particulartests.php?slvItemId='.$data['slvItemId'].'&host='.$data['tld']['host'].
-				'&time='.$test['clock'].'&type='.$data['type']
-		),
 		$details_link
 	];
 

@@ -204,11 +204,11 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	// get items
 	$availItems = API::Item()->get([
+		'output' => ['itemid', 'value_type'],
 		'hostids' => $data['tld']['hostid'],
 		'filter' => [
 			'key_' => $key
 		],
-		'output' => ['itemid', 'value_type'],
 		'preservekeys' => true
 	]);
 
@@ -222,8 +222,31 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			'history' => $availItem['value_type'],
 			'limit' => 1
 		]);
-		$testResult = reset($testResults);
-		$data['testResult'] = $testResult['value'];
+
+		$test_result = reset($testResults);
+		if ($test_result === false) {
+			$test_result['value'] = null;
+	}
+
+		// Get mapped value for test result.
+		if (in_array($data['type'], [RSM_DNS, RSM_DNSSEC, RSM_RDDS])) {
+			$test_result_label = $test_result['value']
+				? getMappedValue($test_result['value'], RSM_SERVICE_AVAIL_VALUE_MAP)
+				: false;
+
+			if (!$test_result_label) {
+				$test_result_label = _('No result');
+				$test_result_color = 'grey';
+			}
+	else {
+				$test_result_color = ($test_result['value'] == PROBE_DOWN) ? 'red' : 'green';
+			}
+
+			$data['testResult'] = (new CSpan($test_result_label))->addClass($test_result_color);
+		}
+		else {
+			$data['testResult'] = $test_result['value'];
+		}
 	}
 	else {
 		show_error_message(_s('Item with key "%1$s" not exist on TLD!', $key));
@@ -366,7 +389,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 
 			if ($itemValue) {
-				if (ZBX_EC_DNS_UDP_NO_DNSKEY <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
+				if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
 						|| $itemValue['value'] == ZBX_EC_DNS_NS_ERRSIG || $itemValue['value'] == ZBX_EC_DNS_RES_NOADBIT) {
 					$hosts[$item['hostid']]['value']['fail']++;
 				}
@@ -454,6 +477,9 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 		}
 	}
+
+	// Sort errors.
+	krsort($data['errors']);
 
 	if ($data['type'] == RSM_DNS) {
 		foreach ($nsArray as $hostId => $nss) {
