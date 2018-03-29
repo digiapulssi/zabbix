@@ -53,8 +53,9 @@ function isDNSErrorCode($item_value, $type) {
 			|| $item_value == ZBX_EC_DNS_NS_ERRSIG || $item_value == ZBX_EC_DNS_RES_NOADBIT);
 	}
 	elseif ($type == RSM_DNS) {
-		return !($item_value > ZBX_EC_DNS_UDP_NS_NOREPLY
-			|| $item_value == ZBX_EC_DNS_UDP_RES_NOREPLY || $item_value == ZBX_EC_DNS_RES_NOREPLY);
+		return (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_NS_NOREPLY
+			&& $item_value != ZBX_EC_DNS_UDP_RES_NOREPLY
+			&& $item_value != ZBX_EC_DNS_RES_NOREPLY);
 	}
 	else {
 		throw new Exception(_s('Unsupported DNS servcice.'));
