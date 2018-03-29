@@ -331,14 +331,14 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				}
 			}
 
-				$error_key = 'udp_'.$matches[1].'_'.$ipv.'_'.$matches[2];
+			$error_key = 'udp_'.$matches[1].'_'.$ipv.'_'.$matches[2];
 
 			if (0 > $item_value) {
 				if (!array_key_exists($item_value, $data['errors'])) {
 					$data['errors'][$item_value] = [];
 				}
 
-				if (!array_key_exists($error_key, $data['errors'])) {
+				if (!array_key_exists($error_key, $data['errors'][$item_value])) {
 					$data['errors'][$item_value][$error_key] = 0;
 				}
 
@@ -353,6 +353,9 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			}
 		}
 	}
+
+	// Sort errors.
+	krsort($data['errors']);
 
 	foreach ($data['probes'] as &$probe) {
 		$probe['udp_ns_down'] = 0;
@@ -413,15 +416,20 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 		$item_values = API::History()->get([
 			'output' => API_OUTPUT_EXTEND,
 			'itemids' => array_keys($probe_items),
-			'filter' => [
-				'clock' => $test_time_from
-			]
+			'time_from' => $test_time_from,
+			'time_till' => $test_time_till
 		]);
 
 		$probes_not_offline = [];
+		$items_utilized = [];
 
 		foreach ($item_values as $item_value) {
+			if (array_key_exists($item_value['itemid'], $items_utilized)) {
+				continue;
+			}
+
 			$probe_hostid = $probe_items[$item_value['itemid']]['hostid'];
+			$items_utilized[$item_value['itemid']] = true;
 
 			/**
 			 * Value of probe item PROBE_KEY_ONLINE == PROBE_DOWN means that both DNS UDP and DNS TCP are offline.
@@ -450,6 +458,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				$probes_not_offline[$probe_hostid] = true;
 			}
 		}
+		unset($items_utilized);
 
 		/**
 		 * If probe is not offline we should check values of additional item PROBE_DNS_UDP_ITEM and compare selected
@@ -472,14 +481,20 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 					'itemids' => array_keys($probe_items),
 					'time_from' => $test_time_from,
 					'time_till' => $test_time_till,
-					'history' => 3,
-					'limit' => 1
+					'history' => 3
 				]);
+				$items_utilized = [];
 
 				foreach ($item_values as $item_value) {
-					$probe_item = $probe_items[$item_value['itemid']];
+					if (array_key_exists($item_value['itemid'], $items_utilized)) {
+						continue;
+					}
 
-					if(!$probes_not_offline[$tld_probe_names[$tld_probes[$probe_item['hostid']]['name']]]) {
+					$probe_item = $probe_items[$item_value['itemid']];
+					$probe_hostid = $tld_probe_names[$tld_probes[$probe_item['hostid']]['name']];
+					$items_utilized[$item_value['itemid']] = true;
+
+					if (!array_key_exists($probe_hostid, $probes_not_offline)) {
 						continue;
 					}
 
@@ -487,10 +502,11 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 					 * DNS is considered to be UP if selected value is greater than rsm.configvalue[RSM.DNS.AVAIL.MINNS]
 					 * for <RSM_HOST> at given time;
 					 */
-					$data['probes'][$tld_probe_names[$tld_probes[$probe_item['hostid']]['name']]]['status_udp'] = $item_value['value'] >= $min_dns_count
+					$data['probes'][$probe_hostid]['status_udp'] = ($item_value['value'] >= $min_dns_count)
 						? PROBE_UP
 						: PROBE_DOWN;
 				}
+				unset($items_utilized);
 			}
 		}
 	}
