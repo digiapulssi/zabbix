@@ -130,8 +130,19 @@ class CControllerWidgetGraphView extends CControllerWidget {
 		if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid && $resourceid) {
 			// Find same simple-graph item in selected $dynamic_hostid host.
 			if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH) {
-				$items = get_same_item_for_host(['itemid' => $resourceid], [$dynamic_hostid]);
+				$src_items = API::Item()->get([
+					'output' => ['key_'],
+					'itemids' => $resourceid
+				]);
+				$src_item = reset($src_items);
+
+				$items = API::Item()->get([
+					'output' => ['itemid', 'name', 'value_type'],
+					'hostids' => $dynamic_hostid,
+					'filter' => ['key_' => $src_item['key_']]
+				]);
 				$item = reset($items);
+
 				$resourceid = ($item && array_key_exists('itemid', $item)) ? $item['itemid'] : null;
 
 				if ($resourceid === null
