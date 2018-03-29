@@ -102,7 +102,7 @@ foreach ($data['probes'] as $probe) {
 			}
 			else {
 				$row[] = '-';
-		}
+			}
 
 			foreach (['ipv4', 'ipv6'] as $ipv) {
 				if (array_key_exists($ipv, $probe['results_udp'][$dns_udp_ns])) {
@@ -116,6 +116,10 @@ foreach ($data['probes'] as $probe) {
 							elseif (0 > $result) {
 								$row[] = (new CSpan($result))
 									->setHint($data['error_msgs'][$result])
+									->setAttribute('class', 'red');
+							}
+							elseif ($data['type'] == RSM_DNS && $result > $data['udp_rtt']) {
+								$row[] = (new CSpan($result))
 									->setAttribute('class', 'red');
 							}
 							else {
@@ -134,7 +138,7 @@ foreach ($data['probes'] as $probe) {
 			$cell_cnt = 1;
 			$cell_cnt += array_key_exists('ipv4', $ipv) ? count($ipv['ipv4']) : 0;
 			$cell_cnt += array_key_exists('ipv6', $ipv) ? count($ipv['ipv6']) : 0;
-			$row[] = (new CTag('td', true, '###'))->setAttribute('colspan', $cell_cnt);
+			$row[] = (new CTag('td', true, '-'))->setAttribute('colspan', $cell_cnt);
 		}
 	}
 

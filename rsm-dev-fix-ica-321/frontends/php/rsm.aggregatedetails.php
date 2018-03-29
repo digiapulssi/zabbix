@@ -133,7 +133,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			$min_dns_count = $macro_item_value['value'];
 		}
 		elseif ($macro_item['key_'] === CALCULATED_ITEM_DNS_UDP_RTT_HIGH) {
-			$udp_rtt = $macro_item_value['value'];
+			$data['udp_rtt'] = $macro_item_value['value'];
 		}
 		else {
 			$macro_time = $macro_item_value['value'] - 1;
@@ -344,7 +344,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 
 				$data['errors'][$item_value][$error_key]++;
 			}
-			elseif ($item_value > $udp_rtt && $data['type'] == RSM_DNS) {
+			elseif ($item_value > $data['udp_rtt'] && $data['type'] == RSM_DNS) {
 				if (!array_key_exists($error_key, $data['probes_above_max_rtt'])) {
 					$data['probes_above_max_rtt'][$error_key] = 0;
 				}
@@ -371,7 +371,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			foreach ($probe['results_udp'] as $ns => &$ipvs) {
 				foreach (['ipv4', 'ipv6'] as $ipv) {
 					foreach ($ipvs[$ipv] as $item_value) {
-						if ($item_value !== null && ($item_value > $udp_rtt || 0 > $item_value)) {
+						if ($item_value !== null && ($item_value > $data['udp_rtt'] || 0 > $item_value)) {
 							$ipvs['status'] = NAMESERVER_DOWN;
 							$probe['udp_ns_down']++;
 							unset($nameservers_up[$ns]);
