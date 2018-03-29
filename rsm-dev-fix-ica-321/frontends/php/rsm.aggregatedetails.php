@@ -366,13 +366,15 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			foreach ($probe['results_udp'] as $ns => &$ipvs) {
 				foreach (['ipv4', 'ipv6'] as $ipv) {
 					foreach ($ipvs[$ipv] as $item_value) {
-						if ($item_value !== null && ($item_value > $data['udp_rtt'] || 0 > $item_value)) {
+						$is_dns_error = isDNSErrorCode($item_value, $data['type']);
+
+						if ($item_value !== null && ($item_value > $data['udp_rtt'] || 0 > $item_value) && $is_dns_error) {
 							$ipvs['status'] = NAMESERVER_DOWN;
 							$probe['udp_ns_down']++;
 							unset($nameservers_up[$ns]);
 							break(2);
 						}
-						elseif ($item_value !== null && $item_value > 0) {
+						elseif ($item_value !== null && $item_value > 0 && !$is_dns_error) {
 							$nameservers_up[$ns] = true;
 							$ipvs['status'] = NAMESERVER_UP;
 							/**

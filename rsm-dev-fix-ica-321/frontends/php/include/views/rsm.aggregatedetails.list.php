@@ -109,6 +109,7 @@ foreach ($data['probes'] as $probe) {
 					foreach (array_keys($ipvs[$ipv]) as $ip) {
 						if (array_key_exists($ip, $probe['results_udp'][$dns_udp_ns][$ipv])) {
 							$result = $probe['results_udp'][$dns_udp_ns][$ipv][$ip];
+							$is_dns_error = isDNSErrorCode($result, $data['type']);
 
 							if ($result == 0) {
 								$row[] = '-';
@@ -116,7 +117,7 @@ foreach ($data['probes'] as $probe) {
 							elseif (0 > $result) {
 								$row[] = (new CSpan($result))
 									->setHint($data['error_msgs'][$result])
-									->setAttribute('class', 'red');
+									->setAttribute('class', $is_dns_error ? 'red' : 'green');
 							}
 							elseif ($data['type'] == RSM_DNS && $result > $data['udp_rtt']) {
 								$row[] = (new CSpan($result))
