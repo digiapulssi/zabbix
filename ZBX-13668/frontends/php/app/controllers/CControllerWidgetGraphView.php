@@ -139,24 +139,16 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				$items = API::Item()->get([
 					'output' => ['itemid', 'name', 'value_type'],
 					'hostids' => $dynamic_hostid,
-					'filter' => ['key_' => $src_item['key_']]
+					'selectHosts' => ['name'],
+					'filter' => ['key_' => $src_item['key_'], 'value_type' => [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64]],
+					'webitems' => true
 				]);
 				$item = reset($items);
 
 				$resourceid = ($item && array_key_exists('itemid', $item)) ? $item['itemid'] : null;
 
-				if ($resourceid === null
-						|| !in_array($item['value_type'], [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64])) {
+				if ($resourceid === null) {
 					$unavailable_object = true;
-					$resourceid = null;
-				}
-				else {
-					$db_item = API::Item()->get([
-						'output' => [],
-						'selectHosts' => ['name'],
-						'itemids' => $item['itemid']
-					]);
-					$item['hosts'] = $db_item[0]['hosts'];
 				}
 			}
 			// Find requested host and change graph details.
