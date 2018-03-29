@@ -150,7 +150,6 @@
 #define ZBX_EC_RDDS43_NONS		-201	/* Whois server returned no NS */
 #define ZBX_EC_RDDS80_NOCODE		-206	/* no HTTP status code */
 #define ZBX_EC_RDDS43_RES_NOREPLY	-222	/* RDDS43 - No reply from local resolver */
-#define ZBX_EC_RDDS43_RES_NOADBIT	-223	/* RDDS43 - No AD bit from local resolver */
 #define ZBX_EC_RDDS43_RES_SERVFAIL	-224	/* RDDS43 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
 #define ZBX_EC_RDDS43_RES_NXDOMAIN	-225	/* RDDS43 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
 #define ZBX_EC_RDDS43_RES_CATCHALL	-226	/* RDDS43 - Expecting NOERROR RCODE but got unexpected when resolving hostname */
@@ -158,7 +157,6 @@
 #define ZBX_EC_RDDS43_ECON		-228	/* RDDS43 - Error opening connection to server */
 #define ZBX_EC_RDDS43_EMPTY		-229	/* RDDS43 - Empty response */
 #define ZBX_EC_RDDS80_RES_NOREPLY	-250	/* RDDS80 - No reply from local resolver */
-#define ZBX_EC_RDDS80_RES_NOADBIT	-251	/* RDDS80 - No AD bit from local resolver */
 #define ZBX_EC_RDDS80_RES_SERVFAIL	-252	/* RDDS80 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
 #define ZBX_EC_RDDS80_RES_NXDOMAIN	-253	/* RDDS80 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
 #define ZBX_EC_RDDS80_RES_CATCHALL	-254	/* RDDS80 - Expecting NOERROR RCODE but got unexpected when resolving hostname */

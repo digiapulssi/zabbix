@@ -58,6 +58,12 @@ EOF
 
 set_slv_config(get_rsm_config());
 db_connect();
+
+my %valuemaps;
+
+$valuemaps{'dns'} = get_valuemaps('dns');
+$valuemaps{'rdds'} = get_valuemaps('rdds');
+
 dw_csv_init();
 dw_load_ids_from_db();
 
@@ -158,6 +164,17 @@ sub __translate_tests_line
 	my $test_type = dw_get_name(ID_TEST_TYPE, $columns[9]);
 	my $test_nsfqdn = dw_get_name(ID_NS_NAME, $columns[10]) || '';
 	my $tld_type = dw_get_name(ID_TLD_TYPE, $columns[11]);
+
+	my $service_str = $test_type;
+	$service_str =~ s/[0-9]+.*//;
+	if ($valuemaps{$service_str}->{$test_rtt})
+	{
+		$test_rtt .= " (" . $valuemaps{$service_str}->{$test_rtt} . ")";
+	}
+	elsif ($test_rtt >= 0)
+	{
+		$test_rtt .= " ms";
+	}
 
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeName', $probe_name);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
