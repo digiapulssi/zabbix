@@ -318,9 +318,9 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				 * NS in case of DNSSEC is considered to be DOWN if selected value is one of the following:
 				 * 1) -204 (ZBX_EC_DNS_NS_ERRSIG);
 				 * 2) -206 (ZBX_EC_DNS_RES_NOADBIT);
-				 * 3) in rage -427 and -401 (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC & ZBX_EC_DNS_UDP_RES_NOADBIT).
+				 * 3) in range between -428 and -401 (ZBX_EC_DNS_UDP_DNSKEY_NONE & ZBX_EC_DNS_UDP_RES_NOADBIT).
 				 */
-				if (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT
+				if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT
 					|| $item_value == ZBX_EC_DNS_NS_ERRSIG
 					|| $item_value == ZBX_EC_DNS_RES_NOADBIT
 				) {

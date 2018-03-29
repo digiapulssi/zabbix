@@ -389,7 +389,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 
 			if ($itemValue) {
-				if (ZBX_EC_DNS_UDP_MALFORMED_DNSSEC <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
+				if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
 						|| $itemValue['value'] == ZBX_EC_DNS_NS_ERRSIG || $itemValue['value'] == ZBX_EC_DNS_RES_NOADBIT) {
 					$hosts[$item['hostid']]['value']['fail']++;
 				}
