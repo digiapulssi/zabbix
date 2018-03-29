@@ -300,11 +300,11 @@ if ($data['type'] == RSM_RDDS) {
 			(new CSpan(_('Total ') . $error_code))->setHint($error['description']),
 			'',
 			'',
-			array_key_exists('rdds80', $error) ? $error['rdds80'] : '',
+			array_key_exists('rdds43', $error) ? $error['rdds43'] : '',
 			'',
 			'',
 			'',
-			array_key_exists('rdds43', $error) ? $error['rdds43'] : ''
+			array_key_exists('rdds80', $error) ? $error['rdds80'] : ''
 		]);
 	}
 

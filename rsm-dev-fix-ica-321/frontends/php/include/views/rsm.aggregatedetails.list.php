@@ -112,7 +112,7 @@ foreach ($data['probes'] as $probe) {
 
 							if ($result == 0) {
 								$row[] = '-';
-	}
+							}
 							elseif (0 > $result) {
 								$row[] = (new CSpan($result))
 									->setHint($data['error_msgs'][$result])
@@ -159,8 +159,8 @@ foreach ($data['errors'] as $error_code => $errors) {
 			foreach (array_keys($ns_ips['ipv4']) as $ip) {
 				$error_key = 'udp_'.$ns_name.'_ipv4_'.$ip;
 				$row[] = array_key_exists($error_key, $errors) ? $errors[$error_key] : '';
+			}
 		}
-	}
 
 		if (array_key_exists('ipv6', $ns_ips)) {
 			foreach (array_keys($ns_ips['ipv6']) as $ip) {
