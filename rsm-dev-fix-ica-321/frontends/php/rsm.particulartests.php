@@ -478,6 +478,9 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		}
 	}
 
+	// Sort errors.
+	krsort($data['errors']);
+
 	if ($data['type'] == RSM_DNS) {
 		foreach ($nsArray as $hostId => $nss) {
 			$hosts[$hostId]['value']['fail'] = 0;

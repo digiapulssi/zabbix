@@ -307,11 +307,6 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				// Holds the number of NameServers with errors for particular probe.
 				if (!array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probeid])) {
 					$data['probes'][$probeid]['probe_nameservers_with_no_errors'] = 0;
-					$data['probes'][$probeid]['probe_nameservers_with_data'] = 0;
-				}
-
-				if (array_key_exists($probes_item['itemid'], $item_values)) {
-					$data['probes'][$probeid]['probe_nameservers_with_data']++;
 				}
 
 				/**
@@ -326,7 +321,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				) {
 					// Error detected.
 				}
-				else {
+				elseif ($item_value != 0) {
 					$data['probes'][$probeid]['probe_nameservers_with_no_errors']++;
 				}
 			}
@@ -435,7 +430,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			 * Value of probe item PROBE_KEY_ONLINE == PROBE_DOWN means that both DNS UDP and DNS TCP are offline.
 			 * Support for TCP will be added in phase 3.
 			 */
-			if ($item_value['value'] == PROBE_DOWN) {
+			if ($data['type'] == RSM_DNS && $item_value['value'] == PROBE_DOWN) {
 				$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
 			}
 			elseif ($data['type'] == RSM_DNSSEC) {
@@ -443,15 +438,10 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				 * For DNSSEC, if at least one NameServer for particular probe is UP (do not have errors), the whole
 				 * probe is UP.
 				 */
-				if (!array_key_exists('probe_nameservers_with_data', $data['probes'][$probe_hostid])
-					|| !$data['probes'][$probe_hostid]['probe_nameservers_with_data']) {
-					unset($data['probes'][$probe_hostid]['status_udp']);
-				}
-				elseif ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] == 0) {
-					$data['probes'][$probe_hostid]['status_udp'] = PROBE_UP;
-				}
-				else {
-					$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
+				if (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
+					$data['probes'][$probe_hostid]['status_udp'] = ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0)
+						? PROBE_UP
+						: PROBE_DOWN;
 				}
 			}
 			else {
