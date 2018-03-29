@@ -1146,7 +1146,7 @@ static int	DBpatch_3000200(void)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000201(void)
+static int	DBpatch_3000209(void)
 {
 	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
 	static const char	*const data[] = {
@@ -1160,7 +1160,6 @@ static int	DBpatch_3000201(void)
 		"ROW   |13007    |130       |-206 |no HTTP status code                                                                                             |",
 		"ROW   |13008    |130       |-207 |invalid HTTP status code (obsolete)                                                                             |",
 		"ROW   |13009    |130       |-222 |RDDS43 - No reply from local resolver                                                                           |",
-		"ROW   |13010    |130       |-223 |RDDS43 - No AD bit from local resolver                                                                          |",
 		"ROW   |13011    |130       |-224 |RDDS43 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |",
 		"ROW   |13012    |130       |-225 |RDDS43 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                       |",
 		"ROW   |13013    |130       |-226 |RDDS43 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |",
@@ -1168,7 +1167,6 @@ static int	DBpatch_3000201(void)
 		"ROW   |13015    |130       |-228 |RDDS43 - Error opening connection to server                                                                     |",
 		"ROW   |13016    |130       |-229 |RDDS43 - Empty response                                                                                         |",
 		"ROW   |13017    |130       |-250 |RDDS80 - No reply from local resolver                                                                           |",
-		"ROW   |13018    |130       |-251 |RDDS80 - No AD bit from local resolver                                                                          |",
 		"ROW   |13019    |130       |-252 |RDDS80 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |",
 		"ROW   |13020    |130       |-253 |RDDS80 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                       |",
 		"ROW   |13021    |130       |-254 |RDDS80 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |",
@@ -1765,7 +1763,6 @@ DBPATCH_ADD(3000139, 0, 0)	/* unsuccessful attempt to unlink and link updated "T
 DBPATCH_ADD(3000140, 0, 0)	/* lowered "Refresh unsupported items" interval to 60 seconds */
 DBPATCH_ADD(3000141, 0, 0)	/* added "Activated" and "Deactivated" false positive statuses to "statusMaps.csv" */
 DBPATCH_ADD(3000200, 0, 0)	/* Phase 2 */
-DBPATCH_ADD(3000201, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
 DBPATCH_ADD(3000202, 0, 0)	/* update "RSM DNS rtt" value mapping with new DNS test error codes */
 DBPATCH_ADD(3000203, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to "RSM Service Availability" value mapping */
 DBPATCH_ADD(3000204, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to data export "statusMaps" catalog */
@@ -1773,5 +1770,6 @@ DBPATCH_ADD(3000205, 0, 0)	/* add {$PROBE.INTERNAL.ERROR.INTERVAL} global macro 
 DBPATCH_ADD(3000206, 0, 0)	/* create "Template Probe Errors" template with "Internal error rate" item and triggers */
 DBPATCH_ADD(3000207, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
 DBPATCH_ADD(3000208, 0, 0)	/* new actions: "Probes", "Probes-Knockout" */
+DBPATCH_ADD(3000209, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
 
 DBPATCH_END()
