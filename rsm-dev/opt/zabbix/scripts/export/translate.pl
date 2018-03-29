@@ -171,6 +171,10 @@ sub __translate_tests_line
 	{
 		$test_rtt .= " (" . $valuemaps{$service_str}->{$test_rtt} . ")";
 	}
+	elsif ($test_rtt >= 0)
+	{
+		$test_rtt .= " ms";
+	}
 
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeName', $probe_name);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
