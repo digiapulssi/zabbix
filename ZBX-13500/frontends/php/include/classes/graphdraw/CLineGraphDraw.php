@@ -476,7 +476,7 @@ class CLineGraphDraw extends CGraphDraw {
 				$trigger['expression'] = CMacrosResolverHelper::resolveTriggerExpressionUserMacro($trigger);
 
 				if (!preg_match(
-					'/^\{([0-9]+)\}\s*?([<>]|[<>][=])\s*?([\-0-9\.]+)(['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)$/',
+					'/^\{([0-9]+)\}\s*?([<>=]|[<>][=])\s*?([\-0-9\.]+)(['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)$/',
 						$trigger['expression'], $arr)) {
 					continue;
 				}
