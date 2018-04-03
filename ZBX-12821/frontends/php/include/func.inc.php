@@ -331,6 +331,17 @@ function zbxAddSecondsToUnixtime($sec, $unixtime) {
 }
 
 /*************** CONVERTING ******************/
+/**
+ * Convert the Windows new line (CR+LF) to Linux style line feed (LF).
+ *
+ * @param string $string  Input string that will be converted.
+ *
+ * @return string
+ */
+function CRLFtoLF($string) {
+	return str_replace("\r\n", "\n", $string);
+}
+
 function rgb2hex($color) {
 	$HEX = [
 		dechex($color[0]),
@@ -1785,6 +1796,36 @@ function makeMessageBox($good, array $messages, $title = null, $show_close_box =
 }
 
 /**
+ * Filters messages that can be displayed to user based on defines (see ZBX_SHOW_TECHNICAL_ERRORS) and user settings.
+ *
+ * @param array $messages	List of messages to filter.
+ *
+ * @return array
+ */
+function filter_messages(array $messages = []) {
+	if (!ZBX_SHOW_TECHNICAL_ERRORS && CWebUser::getType() != USER_TYPE_SUPER_ADMIN && !CWebUser::getDebugMode()) {
+		$filtered_messages = [];
+		$generic_exists = false;
+
+		foreach ($messages as $message) {
+			if (array_key_exists('src', $message) && ($message['src'] === 'sql' || $message['src'] === 'php')) {
+				if (!$generic_exists) {
+					$message['message'] = _('System error occurred. Please contact Zabbix administrator.');
+					$filtered_messages[] = $message;
+					$generic_exists = true;
+				}
+			}
+			else {
+				$filtered_messages[] = $message;
+			}
+		}
+		$messages = $filtered_messages;
+	}
+
+	return $messages;
+}
+
+/**
  * Returns the message box when messages are present; null otherwise
  *
  * @global array $ZBX_MESSAGES
@@ -1795,7 +1836,9 @@ function getMessages()
 {
 	global $ZBX_MESSAGES;
 
-	$message_box = isset($ZBX_MESSAGES) && $ZBX_MESSAGES ? makeMessageBox(false, $ZBX_MESSAGES) : null;
+	$message_box = (isset($ZBX_MESSAGES) && $ZBX_MESSAGES)
+		? makeMessageBox(false, filter_messages($ZBX_MESSAGES))
+		: null;
 
 	$ZBX_MESSAGES = [];
 
@@ -1818,28 +1861,9 @@ function show_messages($good = false, $okmsg = null, $errmsg = null) {
 	$imageMessages = [];
 
 	$title = $good ? $okmsg : $errmsg;
-	$messages = isset($ZBX_MESSAGES) ? $ZBX_MESSAGES : [];
+	$messages = isset($ZBX_MESSAGES) ? filter_messages($ZBX_MESSAGES) : [];
 
 	$ZBX_MESSAGES = [];
-
-	if (!ZBX_SHOW_TECHNICAL_ERRORS && CWebUser::getType() != USER_TYPE_SUPER_ADMIN && !CWebUser::getDebugMode()) {
-		$filtered_messages = [];
-		$generic_exists = false;
-
-		foreach ($messages as $message) {
-			if (array_key_exists('src', $message) && ($message['src'] === 'sql' || $message['src'] === 'php')) {
-				if (!$generic_exists) {
-					$message['message'] = _('System error occurred. Please contact Zabbix administrator.');
-					$filtered_messages[] = $message;
-					$generic_exists = true;
-				}
-			}
-			else {
-				$filtered_messages[] = $message;
-			}
-		}
-		$messages = $filtered_messages;
-	}
 
 	switch ($page['type']) {
 		case PAGE_TYPE_IMAGE:
@@ -1976,7 +2000,7 @@ function clear_messages($count = null) {
 		$ZBX_MESSAGES = [];
 	}
 
-	return $result;
+	return $result ? filter_messages($result) : $result;
 }
 
 function fatal_error($msg) {

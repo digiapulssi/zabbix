@@ -107,6 +107,10 @@
 			container,
 			inlineContainers;
 
+		if (!('values' in list)) {
+			return;
+		}
+
 		for (i = 0; i < list.values.length; i++) {
 			if (empty(list.values[i])) {
 				continue;

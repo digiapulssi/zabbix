@@ -19,7 +19,7 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.2.11rc1');
+define('ZABBIX_VERSION',		'3.2.11');
 define('ZABBIX_API_VERSION',	'3.2.11');
 define('ZABBIX_EXPORT_VERSION',	'3.2');
 define('ZABBIX_DB_VERSION',		3020000);
@@ -142,10 +142,14 @@ define('O_NO',		2);
 
 define('P_SYS',				1);
 define('P_UNSET_EMPTY',		2);
+define('P_CRLF',			4);
 define('P_ACT',				16);
 define('P_NZERO',			32);
 define('P_NO_TRIM',			64);
 define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
+
+// Validate URI against schemes whitelist defined in ZBX_URI_VALID_SCHEMES.
+define('VALIDATE_URI_SCHEMES', true);
 
 //	misc parameters
 define('IMAGE_FORMAT_PNG',	'PNG');

@@ -1544,7 +1544,7 @@ static int	check_escalation(const DB_ESCALATION *escalation, const DB_ACTION *ac
 
 	if (0 != skip)
 	{
-		/* dependable trigger in PROBLEM state, process escalation later */
+		/* one of trigger dependencies is in PROBLEM state, process escalation later */
 		ret = ZBX_ESCALATION_SKIP;
 		goto out;
 	}
@@ -1730,7 +1730,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 	zbx_vector_ptr_create(&events);
 
 	get_db_actions_info(actionids, &actions);
-	get_db_events_info(eventids, &events);
+	zbx_db_get_events_by_eventids(eventids, &events);
 
 	for (i = 0; i < escalations->values_num; i++)
 	{
@@ -1938,10 +1938,10 @@ out:
 	zbx_vector_ptr_clear_ext(&actions, (zbx_clean_func_t)free_db_action);
 	zbx_vector_ptr_destroy(&actions);
 
-	zbx_vector_ptr_clear_ext(&events, (zbx_clean_func_t)free_db_event);
+	zbx_vector_ptr_clear_ext(&events, (zbx_clean_func_t)zbx_db_free_event);
 	zbx_vector_ptr_destroy(&events);
 
-	ret = escalationids.values_num; /* performance metric */
+	ret = escalationids.values_num;	/* performance metric */
 
 	zbx_vector_uint64_destroy(&escalationids);
 

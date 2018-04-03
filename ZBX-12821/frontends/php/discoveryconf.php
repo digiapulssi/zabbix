@@ -34,7 +34,7 @@ $fields = [
 	'druleid' =>		[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		'isset({form}) && {form} == "update"'],
 	'name' =>			[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({add}) || isset({update})'],
 	'proxy_hostid' =>	[T_ZBX_INT, O_OPT, null,	DB_ID,		'isset({add}) || isset({update})'],
-	'iprange' =>		[T_ZBX_STR, O_OPT, null,	null,		'isset({add}) || isset({update})'],
+	'iprange' =>		[T_ZBX_STR, O_OPT, P_CRLF,	null,		'isset({add}) || isset({update})'],
 	'delay' =>			[T_ZBX_INT, O_OPT, null,	BETWEEN(1, SEC_PER_WEEK), 'isset({add}) || isset({update})'],
 	'status' =>			[T_ZBX_INT, O_OPT, null,	IN('0,1'),	null],
 	'uniqueness_criteria' => [T_ZBX_STR, O_OPT, null, null,	'isset({add}) || isset({update})', _('Device uniqueness criteria')],
