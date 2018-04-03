@@ -196,13 +196,16 @@ function getActionMapBySysmap($sysmap, array $options = []) {
 				break;
 
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
-				$gotos['showEvents'] = true;
+				$gotos['showEvents'] = false;
 
 				if (isset($triggers[$elem['elementid']])) {
 					$trigger = $triggers[$elem['elementid']];
 
 					foreach ($trigger['hosts'] as $host) {
-						if ($host['status'] == HOST_STATUS_NOT_MONITORED) {
+						if ($host['status'] == HOST_STATUS_MONITORED) {
+							$gotos['showEvents'] = true;
+						}
+						elseif ($host['status'] == HOST_STATUS_NOT_MONITORED) {
 							$gotos['showEvents'] = false;
 
 							break;
