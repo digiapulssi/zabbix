@@ -546,13 +546,6 @@ else {
 
 	$data['maintenances'] = API::Maintenance()->get($options);
 
-	order_result($data['maintenances'], $sortField, $sortOrder);
-
-	$url = (new CUrl('maintenance.php'))
-		->setArgument('groupid', $pageFilter->groupid);
-
-	$data['paging'] = getPagingLine($data['maintenances'], $sortOrder, $url);
-
 	// get list of maintenances
 	$data['maintenances'] = API::Maintenance()->get([
 		'output' => ['maintenanceid', 'name', 'maintenance_type', 'active_since', 'active_till', 'description'],
@@ -581,6 +574,11 @@ else {
 	}
 
 	order_result($data['maintenances'], $sortField, $sortOrder);
+
+	$url = (new CUrl('maintenance.php'))
+		->setArgument('groupid', $pageFilter->groupid);
+
+	$data['paging'] = getPagingLine($data['maintenances'], $sortOrder, $url);
 
 	$data['pageFilter'] = $pageFilter;
 
