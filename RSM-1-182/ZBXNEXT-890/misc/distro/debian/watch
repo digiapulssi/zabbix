@@ -1,3 +1,0 @@
-version=3
-opts="uversionmangle=s/rc/~/" \
-http://sf.net/zabbix/zabbix-([0-9.]*)\.tar\.gz
