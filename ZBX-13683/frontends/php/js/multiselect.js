@@ -673,12 +673,10 @@ jQuery(function($) {
 			$('.available', obj).append(div);
 		}
 		else {
-			var list = $('<ul>', {
-				'class': 'multiselect-suggest'
-			});
-
 			$('.available', obj)
-				.append(list)
+				.append($('<ul>', {
+					'class': 'multiselect-suggest'
+				}))
 				.mouseenter(function() {
 					values.isAvailableOpened = true;
 				})
@@ -686,13 +684,11 @@ jQuery(function($) {
 					values.isAvailableOpened = false;
 				});
 
-			$.each(values.available, function(i, item) {
-				addAvailable(item, obj, values, options);
+			$.each(data, function (i, item) {
+				if (typeof values.available[item.id] !== 'undefined') {
+					addAvailable(item, obj, values, options);
+				}
 			});
-
-			list.children().detach().sort(function(a, b) {
-				return $(a).text().localeCompare($(b).text());
-			}).appendTo(list);
 		}
 
 		// write more matches found label
