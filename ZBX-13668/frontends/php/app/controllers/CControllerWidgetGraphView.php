@@ -134,18 +134,20 @@ class CControllerWidgetGraphView extends CControllerWidget {
 					'output' => ['key_'],
 					'itemids' => $resourceid
 				]);
-				$src_item = reset($src_items);
 
 				$items = API::Item()->get([
-					'output' => ['itemid', 'name', 'value_type'],
-					'hostids' => $dynamic_hostid,
+					'output' => ['itemid', 'hostid', 'name'],
 					'selectHosts' => ['name'],
-					'filter' => ['key_' => $src_item['key_'], 'value_type' => [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64]],
+					'hostids' => $dynamic_hostid,
+					'filter' => [
+						'key_' => $src_items[0]['key_'],
+						'value_type' => [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64]
+					],
 					'webitems' => true
 				]);
-				$item = reset($items);
 
-				$resourceid = ($item && array_key_exists('itemid', $item)) ? $item['itemid'] : null;
+				$item = reset($items);
+				$resourceid = $items ? $item['itemid'] : null;
 
 				if ($resourceid === null) {
 					$unavailable_object = true;
