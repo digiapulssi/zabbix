@@ -673,10 +673,12 @@ jQuery(function($) {
 			$('.available', obj).append(div);
 		}
 		else {
+			var list = $('<ul>', {
+				'class': 'multiselect-suggest'
+			});
+
 			$('.available', obj)
-				.append($('<ul>', {
-					'class': 'multiselect-suggest'
-				}))
+				.append(list)
 				.mouseenter(function() {
 					values.isAvailableOpened = true;
 				})
@@ -687,6 +689,10 @@ jQuery(function($) {
 			$.each(values.available, function(i, item) {
 				addAvailable(item, obj, values, options);
 			});
+
+			list.children().detach().sort(function(a, b) {
+				return $(a).text().localeCompare($(b).text());
+			}).appendTo(list);
 		}
 
 		// write more matches found label
