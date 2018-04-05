@@ -4,6 +4,7 @@ New features:
 ....I..... [342] added automatic rsyslog restart, ldns-1.6.17 dependency, removed zabbix-proxy-sqlite, automatic root servers update from tld.pl (dimir)
 
 Bug fixes:
+..F....... [345] fixed order of "Total above max RTT" values for RDDS43 and RDDS80 tests in "Details of particular test" page (gleb)
 .......PS. [343] fixed handling RTT value in RDDS80 test (dimir)
 
 --------------------------------------------------------------------------------

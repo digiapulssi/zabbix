@@ -312,11 +312,11 @@ if ($data['type'] == RSM_RDDS) {
 		_('Total above max. RTT'),
 		'',
 		'',
-		$rdds80_above_max_rtt,
+		$rdds43_above_max_rtt,
 		'',
 		'',
 		'',
-		$rdds43_above_max_rtt
+		$rdds80_above_max_rtt
 	]);
 }
 
