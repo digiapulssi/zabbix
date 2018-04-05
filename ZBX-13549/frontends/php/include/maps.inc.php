@@ -131,8 +131,15 @@ function getActionMapBySysmap($sysmap, array $options = []) {
 		'output' => ['triggerid'],
 		'selectHosts' => ['hostid', 'status'],
 		'triggerids' => $triggerIds,
-		'preservekeys' => true,
-		'nopermissions' => true
+		'preservekeys' => true
+	]);
+
+	$moniored_triggers = API::Trigger()->get([
+		'output' => [],
+		'triggerids' => array_keys($triggers),
+		'monitored' => true,
+		'nopermissions' => true,
+		'preservekeys' => true
 	]);
 
 	$host_groups = API::HostGroup()->get([
@@ -198,18 +205,9 @@ function getActionMapBySysmap($sysmap, array $options = []) {
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
 				$gotos['showEvents'] = false;
 
-				if (isset($triggers[$elem['elementid']])) {
-					$trigger = $triggers[$elem['elementid']];
-
-					foreach ($trigger['hosts'] as $host) {
-						if ($host['status'] == HOST_STATUS_MONITORED) {
-							$gotos['showEvents'] = true;
-						}
-						elseif ($host['status'] == HOST_STATUS_NOT_MONITORED) {
-							$gotos['showEvents'] = false;
-
-							break;
-						}
+				if (array_key_exists($elem['elementid'], $triggers)) {
+					if (array_key_exists($elem['elementid'], $moniored_triggers)) {
+						$gotos['showEvents'] = true;
 					}
 
 					$gotos['events']['triggerid'] = $elem['elementid'];
@@ -941,19 +939,25 @@ function getSelementsInfo($sysmap, array $options = []) {
 	if (!empty($triggerIdToSelementIds)) {
 		$triggers = API::Trigger()->get([
 			'output' => ['triggerid', 'status', 'value', 'priority', 'lastchange', 'description', 'expression'],
-			'selectHosts' => ['maintenance_status', 'status', 'maintenanceid'],
+			'selectHosts' => ['maintenance_status', 'maintenanceid'],
 			'selectLastEvent' => ['acknowledged'],
 			'triggerids' => array_keys($triggerIdToSelementIds),
 			'filter' => ['state' => null],
-			'nopermissions' => true
+			'nopermissions' => true,
+			'preservekeys' => true
+		]);
+
+		$monitored_triggers = API::Trigger()->get([
+			'output' => [],
+			'triggerids' => array_keys($triggers),
+			'monitored' => true,
+			'nopermissions' => true,
+			'preservekeys' => true
 		]);
 
 		foreach ($triggers as &$trigger) {
-			foreach ($trigger['hosts'] as $trigger_host) {
-				if ($trigger_host['status'] == HOST_STATUS_NOT_MONITORED) {
-					$trigger['status'] = TRIGGER_STATUS_DISABLED;
-					break;
-				}
+			if (!array_key_exists($trigger['triggerid'], $monitored_triggers)) {
+				$trigger['status'] = TRIGGER_STATUS_DISABLED;
 			}
 
 			foreach ($triggerIdToSelementIds[$trigger['triggerid']] as $belongs_to_sel) {
