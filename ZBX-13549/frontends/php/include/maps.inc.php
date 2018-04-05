@@ -128,10 +128,10 @@ function getActionMapBySysmap($sysmap, array $options = []) {
 	]);
 
 	$triggers = API::Trigger()->get([
-		'output' => ['triggerid'],
-		'selectHosts' => ['hostid', 'status'],
+		'output' => [],
 		'triggerids' => $triggerIds,
-		'preservekeys' => true
+		'preservekeys' => true,
+		'nopermissions' => true
 	]);
 
 	$moniored_triggers = API::Trigger()->get([
