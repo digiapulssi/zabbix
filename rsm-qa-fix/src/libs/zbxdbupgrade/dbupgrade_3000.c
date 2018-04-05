@@ -1623,7 +1623,7 @@ static int	DBpatch_3000206(void)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000207(void)
+static int	DBpatch_3000210(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -1768,8 +1768,8 @@ DBPATCH_ADD(3000203, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive
 DBPATCH_ADD(3000204, 0, 0)	/* add "Up-inconclusive-no-data" and "Up-inconclusive-no-probes" to data export "statusMaps" catalog */
 DBPATCH_ADD(3000205, 0, 0)	/* add {$PROBE.INTERNAL.ERROR.INTERVAL} global macro */
 DBPATCH_ADD(3000206, 0, 0)	/* create "Template Probe Errors" template with "Internal error rate" item and triggers */
-DBPATCH_ADD(3000207, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
 DBPATCH_ADD(3000208, 0, 0)	/* new actions: "Probes", "Probes-Knockout" */
 DBPATCH_ADD(3000209, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
+DBPATCH_ADD(3000210, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
 
 DBPATCH_END()

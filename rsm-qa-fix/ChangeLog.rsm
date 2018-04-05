@@ -4,6 +4,7 @@ New features:
 .......PS. [339] added printing DNS packet before RCODE check (dimir)
 
 Bug fixes:
+....I..PS. [340] fixed probes.pl and tld.pl unlinking "Template Probe Errors" leading to malfunction of "Probes-Knockout" action (gleb)
 ....I..... [341] added force update of root server IPs when tld.pl is run (dimir)
 
 --------------------------------------------------------------------------------
