@@ -67,31 +67,18 @@ typedef struct
 }
 zbx_httppage_t;
 
-static zbx_httppage_t	page;
+static zbx_httppage_t	page_r;
+static zbx_httppage_t	page_w[sizeof(value_type_str)/sizeof(char *)];
 
 static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	size_t	r_size = size * nmemb;
 
-	ZBX_UNUSED(userdata);
+	zbx_httppage_t	*page = (zbx_httppage_t	*)userdata;
 
-	zbx_strncpy_alloc(&page.data, &page.alloc, &page.offset, ptr, r_size);
+	zbx_strncpy_alloc(&page->data, &page->alloc, &page->offset, ptr, r_size);
 
 	return r_size;
-}
-
-/************************************************************************************
- *                                                                                  *
- * Comments: stub function for avoiding LibCURL to print on the standard output.    *
- *           In case of success, elasticsearch return a JSON, but the HTTP error    *
- *           code is enough                                                         *
- *                                                                                  *
- ************************************************************************************/
-static size_t	curl_write_send_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
-{
-	ZBX_UNUSED(ptr);
-	ZBX_UNUSED(userdata);
-	return size * nmemb;
 }
 
 static history_value_t	history_str2value(char *str, unsigned char value_type)
@@ -203,10 +190,10 @@ static void	elastic_log_error(CURL *handle, CURLcode error)
 	{
 		curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &http_code);
 
-		if (0 != page.offset)
+		if (0 != page_r.offset)
 		{
 			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch, HTTP error: %ld,",
-					" message: %s", http_code, page.data);
+					" message: %s", http_code, page_r.data);
 		}
 		else
 			zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch, HTTP error: %ld", http_code);
@@ -241,6 +228,74 @@ static void	elastic_close(zbx_history_iface_t *hist)
 		curl_easy_cleanup(data->handle);
 		data->handle = NULL;
 	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: elastic_check_responce                                           *
+ *                                                                            *
+ * Purpose: check a error from Elastic json response                          *
+ *                                                                            *
+ * Parameters: page - [IN]  the buffer with json response                     *
+ *             err  - [OUT] the parse error message. If the error value is    *
+ *                           set it must be freed by caller after it has      *
+ *                           been used.                                       *
+ *                                                                            *
+ * Return value: The status code which responsible for the write request      *
+ *                                                                            *
+ ******************************************************************************/
+static int	elastic_check_responce(zbx_httppage_t *page, char **err)
+{
+	const char		*__function_name = "elastic_check_responce";
+
+	struct zbx_json_parse	jp, jp_values, jp_index, jp_error, jp_items, jp_item;
+	const char		*errors, *p = NULL;
+	char			*index = NULL, *status = NULL, *type = NULL, *reason = NULL;
+	size_t			index_alloc = 0, status_alloc = 0, type_alloc = 0, reason_alloc = 0;
+	int			ret_code = SUCCEED;
+
+	zabbix_log(LOG_LEVEL_TRACE, "%s() raw json: %.*s", __function_name, page->offset, page->data);
+
+	if (SUCCEED != zbx_json_open(page->data, &jp) || SUCCEED != zbx_json_brackets_open(jp.start, &jp_values))
+		return ret_code;
+
+	errors = zbx_json_pair_by_name(&jp_values, "errors");
+
+	if (NULL != errors && 0 == strncmp("true", errors, 4))
+	{
+		ret_code = FAIL;
+		if (SUCCEED == zbx_json_brackets_by_name(&jp, "items", &jp_items))
+		{
+			while (NULL != (p = zbx_json_next(&jp_items, p)))
+			{
+				if (SUCCEED == zbx_json_brackets_open(p, &jp_item) &&
+						SUCCEED == zbx_json_brackets_by_name(&jp_item, "index", &jp_index) &&
+						SUCCEED == zbx_json_brackets_by_name(&jp_index, "error", &jp_error))
+				{
+					zbx_json_value_by_name_dyn(&jp_error, "type", &type, &type_alloc);
+					zbx_json_value_by_name_dyn(&jp_error, "reason", &reason, &reason_alloc);
+				}
+				else
+					continue;
+
+				if (SUCCEED == zbx_json_value_by_name_dyn(&jp_index, "status", &status, &status_alloc))
+					ret_code = atoi(status);
+
+				zbx_json_value_by_name_dyn(&jp_index, "_index", &index, &index_alloc);
+				break;
+			}
+		}
+
+		*err = zbx_dsprintf(NULL,"index:%.*s / status:%.*s / type:%.*s / reason:%.*s", index_alloc, index,
+				status_alloc, status, type_alloc, type, reason_alloc, reason);
+
+		zbx_free(status);
+		zbx_free(type);
+		zbx_free(reason);
+		zbx_free(index);
+	}
+
+	return ret_code;
 }
 
 /******************************************************************************************************************
@@ -321,8 +376,13 @@ static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
 	curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
 	curl_easy_setopt(data->handle, CURLOPT_POST, 1);
 	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, data->buf);
-	curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_send_cb);
+	curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_cb);
+	curl_easy_setopt(data->handle, CURLOPT_WRITEDATA, &page_w[hist->value_type]);
 	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
+	curl_easy_setopt(data->handle, CURLOPT_PRIVATE, &page_w[hist->value_type]);
+	page_w[hist->value_type].offset = 0;
+	if (0 < page_w[hist->value_type].alloc)
+		*page_w[hist->value_type].data = '\0';
 
 	curl_multi_add_handle(writer.handle, data->handle);
 
@@ -371,6 +431,8 @@ try_again:
 	{
 		int		fds;
 		CURLMcode	code;
+		char 		*err;
+		zbx_httppage_t	*page_msg;
 
 		if (CURLM_OK != (code = curl_multi_perform(writer.handle, &running)))
 		{
@@ -406,6 +468,19 @@ try_again:
 
 				/* If the error is due to curl internal problems or unrelated */
 				/* problems with HTTP, we put the handle in a retry list and */
+				/* remove it from the current execution loop */
+				zbx_vector_ptr_append(&retries, msg->easy_handle);
+				curl_multi_remove_handle(writer.handle, msg->easy_handle);
+			}
+			else if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &page_msg) &&
+					SUCCEED != elastic_check_responce(page_msg, &err))
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "%s() %s: %s", __function_name,
+						"cannot send to elasticsearch", err);
+				zbx_free(err);
+
+				/* If the error is due to elastic internal problems (for example an index */
+				/* became read-only), we put the handle in a retry list and */
 				/* remove it from the current execution loop */
 				zbx_vector_ptr_append(&retries, msg->easy_handle);
 				curl_multi_remove_handle(writer.handle, msg->easy_handle);
@@ -559,12 +634,13 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
 	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, query.buffer);
 	curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_cb);
+	curl_easy_setopt(data->handle, CURLOPT_WRITEDATA, &page_r);
 	curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
 	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "sending query to %s; post data: %s", data->post_url, query.buffer);
 
-	page.offset = 0;
+	page_r.offset = 0;
 	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 	{
 		elastic_log_error(data->handle, err);
@@ -590,9 +666,9 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 		empty = 1;
 
-		zabbix_log(LOG_LEVEL_DEBUG, "received from elasticsearch: %s", page.data);
+		zabbix_log(LOG_LEVEL_DEBUG, "received from elasticsearch: %s", page_r.data);
 
-		zbx_json_open(page.data, &jp);
+		zbx_json_open(page_r.data, &jp);
 		zbx_json_brackets_open(jp.start, &jp_values);
 
 		/* get the scroll id immediately, for being used in subsequent queries */
@@ -641,7 +717,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 		curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, scroll_query);
 
-		page.offset = 0;
+		page_r.offset = 0;
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 		{
 			elastic_log_error(data->handle, err);
@@ -664,7 +740,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 
 		zabbix_log(LOG_LEVEL_DEBUG, "elasticsearch closing scroll %s", data->post_url);
 
-		page.offset = 0;
+		page_r.offset = 0;
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 			elastic_log_error(data->handle, err);
 	}
