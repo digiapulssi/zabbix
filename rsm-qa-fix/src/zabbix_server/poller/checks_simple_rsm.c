@@ -3417,6 +3417,8 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		rtt80 = zbx_http_error_to_RDDS80(ec_http);
 		zbx_rsm_errf(log_fd, "RDDS80 of \"%s\" (%s) failed: %s", random_host, ip80, err);
 	}
+	else
+		rtt80 = ec_http;
 
 	zbx_rsm_infof(log_fd, "end RDDS80 test (rtt:%d)", rtt80);
 out:
