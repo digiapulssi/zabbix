@@ -3,6 +3,7 @@ Changes for 3.4.9rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-13517] fixed undefined index in pie charts (Ivo)
 ..F....... [ZBX-13499] fixed checkbox selector in problems table (ashubin, miks)
 ..F....... [ZBX-13625] fixed blinking configuration for problem widget (agriscenko)
 ..F....... [ZBX-13560] fixed acknowledge notifications are visible in popup (agriscenko)
