@@ -1181,6 +1181,8 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		goto out;
 	}
 
+	ldns_pkt_print(log_fd, pkt);
+
 	rcode = pkt->_header->_rcode;
 
 	/* verify RCODE */
@@ -1198,8 +1200,6 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		*rtt = DNS[DNS_PROTO(res)].rcode_not_nxdomain(rcode);
 		goto out;
 	}
-
-	ldns_pkt_print(log_fd, pkt);
 
 	if (0 != epp_enabled)
 	{
