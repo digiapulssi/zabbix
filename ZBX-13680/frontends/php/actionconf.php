@@ -119,6 +119,10 @@ elseif (hasRequest('add') || hasRequest('update')) {
 	];
 
 	foreach ($action['operations'] as &$operation) {
+		if (hasRequest('add') && array_key_exists('operationid', $operation)) {
+			unset($operation['operationid']);
+		}
+
 		if (isset($operation['opmessage']) && !isset($operation['opmessage']['default_msg'])) {
 			$operation['opmessage']['default_msg'] = 0;
 		}

@@ -513,10 +513,21 @@ class CAction extends CApiService {
 
 		$this->validateCreate($actions);
 
-		// Set "evaltype" if specified in "filter" section of action.
 		foreach ($actions as &$action) {
+			// Set "evaltype" if specified in "filter" section of action.
 			if (isset($action['filter'])) {
 				$action['evaltype'] = $action['filter']['evaltype'];
+			}
+
+			if (array_key_exists('operations', $action)) {
+				foreach ($action['operations'] as &$operation) {
+					if (array_key_exists('operationid', $operation)) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value "%1$s" for "%2$s" field.',
+							$operation['operationid'], 'operationid'
+						));
+					}
+				}
+				unset($operation);
 			}
 		}
 		unset($action);
