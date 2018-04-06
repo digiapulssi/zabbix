@@ -247,19 +247,33 @@ foreach ($this->data['probes'] as $probe) {
 		];
 	}
 	elseif ($this->data['type'] == RSM_RDDS) {
+		if (isset($probe['rdds43']['rtt'])) {
+			$rdds43_rtt = $probe['rdds43']['rtt']['description']
+				? (new CSpan($probe['rdds43']['rtt']['value']))->setHint($probe['rdds43']['rtt']['description'])
+				: $probe['rdds43']['rtt']['value'];
+		}
+		else {
+			$rdds43_rtt = '-';
+		}
+
+		if (isset($probe['rdds80']['rtt'])) {
+			$rdds80_rtt = $probe['rdds80']['rtt']['description']
+				? (new CSpan($probe['rdds80']['rtt']['value']))->setHint($probe['rdds80']['rtt']['description'])
+				: $probe['rdds80']['rtt']['value'];
+		}
+		else {
+			$rdds80_rtt = '-';
+		}
+
 		$row = [
 			(new CSpan($probe['name']))->addClass($rdds),
 			$rdds43,
 			(isset($probe['rdds43']['ip']) && $probe['rdds43']['ip']) ? $probe['rdds43']['ip'] : '-',
-			(isset($probe['rdds43']['rtt']))
-				? (new CSpan($probe['rdds43']['rtt']['value']))->setHint($probe['rdds43']['rtt']['description'])
-				: '-',
+			$rdds43_rtt,
 			(isset($probe['rdds43']['upd'])) ? $probe['rdds43']['upd'] : '-',
 			$rdds80,
 			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip']) ? $probe['rdds80']['ip'] : '-',
-			(isset($probe['rdds80']['rtt']))
-				? (new CSpan($probe['rdds80']['rtt']['value']))->setHint($probe['rdds80']['rtt']['description'])
-				: '-'
+			$rdds80_rtt
 		];
 
 		/**
@@ -272,10 +286,10 @@ foreach ($this->data['probes'] as $probe) {
 		 * - If RTT is positive but $rddsNN is UP, it indicates that at the time of calculation, RTT was in the range of
 		 *	 allowed values - greater than 0 (was not an error) and smaller than max allowed RTT.
 		 */
-		if ($rdds80 === $down && $probe['rdds80']['rtt']['value'] > 0) {
+		if ($rdds80 === $down && array_key_exists('rtt', $probe['rdds80']) && $probe['rdds80']['rtt']['value'] > 0) {
 			$rdds80_above_max_rtt++;
 		}
-		if ($rdds43 === $down && $probe['rdds43']['rtt']['value'] > 0) {
+		if ($rdds43 === $down && array_key_exists('rtt', $probe['rdds43']) && $probe['rdds43']['rtt']['value'] > 0) {
 			$rdds43_above_max_rtt++;
 		}
 	}
@@ -362,18 +376,18 @@ elseif ($this->data['type'] == RSM_DNSSEC) {
 }
 
 if (in_array($this->data['type'], [RSM_DNS, RSM_DNSSEC, RSM_RDDS])) {
-	$testResult = $this->data['testResult'];
+	$test_result = $this->data['testResult'];
 }
 else {
-if ($this->data['testResult'] === null) {
-	$testResult = $noResult;
-}
-elseif ($this->data['testResult'] == PROBE_UP) {
-	$testResult = $up;
-}
-else {
-	$testResult = $down;
-}
+	if ($this->data['testResult'] === null) {
+		$test_result = $noResult;
+	}
+	elseif ($this->data['testResult'] == PROBE_UP) {
+		$test_result = $up;
+	}
+	else {
+		$test_result = $down;
+	}
 }
 
 $particularTests = [
@@ -383,7 +397,7 @@ $particularTests = [
 	BR(),
 	new CSpan([bold(_('Test time')), ':', SPACE, date(DATE_TIME_FORMAT_SECONDS, $this->data['time'])]),
 	BR(),
-	new CSpan([bold(_('Test result')), ':', SPACE, $testResult, SPACE,
+	new CSpan([bold(_('Test result')), ':', SPACE, $test_result, SPACE,
 		_s('(calculated at %1$s)', date(DATE_TIME_FORMAT_SECONDS, $this->data['time'] + RSM_ROLLWEEK_SHIFT_BACK))
 	]),
 	BR(),
