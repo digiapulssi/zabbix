@@ -68,7 +68,7 @@ typedef struct
 zbx_httppage_t;
 
 static zbx_httppage_t	page_r;
-static zbx_httppage_t	page_w[sizeof(value_type_str)/sizeof(char *)];
+static zbx_httppage_t	page_w[ITEM_VALUE_TYPE_MAX];
 
 static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
