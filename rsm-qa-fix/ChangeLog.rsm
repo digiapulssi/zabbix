@@ -5,6 +5,7 @@ New features:
 .......PS. [344] changed TCP timeout in RSM tests from 20 to 11 (dimir)
 
 Bug fixes:
+..F....... [346] fixed incorrect test cycle result, fixed missing data handling and removed tooltips for valid RTT values in "Details of particular test" page for RDDS service (miks)
 ..F....... [345] fixed order of "Total above max RTT" values for RDDS43 and RDDS80 tests in "Details of particular test" page (gleb)
 .......PS. [343] fixed handling RTT value in RDDS80 test (dimir)
 
