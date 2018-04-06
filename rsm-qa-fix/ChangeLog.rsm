@@ -1,7 +1,8 @@
 Changes for rsm1.1.0rc3
 
 New features:
-....I..... [342] added automatic rsyslog restart, ldns-1.6.17 dependency, removed zabbix-proxy-sqlite, removed automatic root servers update functionality from tld.pl (dimir)
+....I..... [342] added automatic rsyslog restart, ldns-1.6.17 dependency, removed zabbix-proxy-sqlite (dimir)
+....I..... [sub-341] removed automatic root servers update functionality from tld.pl (dimir)
 .......PS. [344] changed TCP timeout in RSM tests from 20 to 11 (dimir)
 
 Bug fixes:
