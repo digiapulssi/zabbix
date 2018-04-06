@@ -35,9 +35,15 @@ AC_DEFUN([LIBICONV_CHECK_CONFIG],
 If you want to specify iconv installation directories:
 AC_HELP_STRING([--with-iconv@<:@=DIR@:>@], [use iconv from given base install directory (DIR), default is to search through a number of common places for the iconv files.])],
 		[
-			ICONV_CFLAGS="-I/$withval/include"
-			ICONV_LDFLAGS="-L/$withval/lib"
-			_iconv_dir_set="yes"
+			if test "$withval" = "yes"; then
+				ICONV_CFLAGS="-I/usr/include"
+				ICONV_LDFLAGS="-L/usr/lib"
+				_iconv_dir_set=$withval
+			elif test "$withval" != "no"; then
+				ICONV_CFLAGS="-I/$withval/include"
+				ICONV_LDFLAGS="-L/$withval/lib"
+				_iconv_dir_set="yes"
+			fi
 		]
 	)
 
