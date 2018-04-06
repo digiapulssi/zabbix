@@ -68,7 +68,15 @@ typedef struct
 zbx_httppage_t;
 
 static zbx_httppage_t	page_r;
-static zbx_httppage_t	page_w[ITEM_VALUE_TYPE_MAX];
+
+typedef struct
+{
+	zbx_httppage_t	page;
+	char		errbuf[CURL_ERROR_SIZE];
+}
+zbx_curlpage_t;
+
+static zbx_curlpage_t	page_w[ITEM_VALUE_TYPE_MAX];
 
 static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
@@ -182,7 +190,7 @@ out:
 	return ret;
 }
 
-static void	elastic_log_error(CURL *handle, CURLcode error)
+static void	elastic_log_error(CURL *handle, CURLcode error, const char *errbuff)
 {
 	long	http_code;
 
@@ -200,7 +208,8 @@ static void	elastic_log_error(CURL *handle, CURLcode error)
 	}
 	else
 	{
-		zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s", curl_easy_strerror(error));
+		zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s",
+				'\0' != *errbuff ? errbuff : curl_easy_strerror(error));
 	}
 }
 
@@ -377,12 +386,14 @@ static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
 	curl_easy_setopt(data->handle, CURLOPT_POST, 1);
 	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, data->buf);
 	curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_cb);
-	curl_easy_setopt(data->handle, CURLOPT_WRITEDATA, &page_w[hist->value_type]);
+	curl_easy_setopt(data->handle, CURLOPT_WRITEDATA, &page_w[hist->value_type].page);
 	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
+	curl_easy_setopt(data->handle, CURLOPT_ERRORBUFFER, &page_w[hist->value_type].errbuf);
+	*page_w[hist->value_type].errbuf = '\0';
 	curl_easy_setopt(data->handle, CURLOPT_PRIVATE, &page_w[hist->value_type]);
-	page_w[hist->value_type].offset = 0;
-	if (0 < page_w[hist->value_type].alloc)
-		*page_w[hist->value_type].data = '\0';
+	page_w[hist->value_type].page.offset = 0;
+	if (0 < page_w[hist->value_type].page.alloc)
+		*page_w[hist->value_type].page.data = '\0';
 
 	curl_multi_add_handle(writer.handle, data->handle);
 
@@ -432,7 +443,7 @@ try_again:
 		int		fds;
 		CURLMcode	code;
 		char 		*error;
-		zbx_httppage_t	*page_msg;
+		zbx_curlpage_t	*curl_page;
 
 		if (CURLM_OK != (code = curl_multi_perform(writer.handle, &running)))
 		{
@@ -455,16 +466,35 @@ try_again:
 			/* That's why we actually check for transport and curl errors separately */
 			if (CURLE_HTTP_RETURNED_ERROR == msg->data.result)
 			{
-				long int	err;
+				if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &curl_page) &&
+						'\0' != *curl_page->errbuf)
+				{
+					zabbix_log(LOG_LEVEL_ERR, "%s: %s",
+							"cannot send data to elasticsearch, HTTP error message",
+							curl_page->errbuf);
+				}
+				else
+				{
+					long int	err;
 
-				curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &err);
-
-				zabbix_log(LOG_LEVEL_ERR, "%s: %d", "cannot data to elasticsearch, HTTP error",  err);
+					curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &err);
+					zabbix_log(LOG_LEVEL_ERR, "%s: %d",
+							"cannot send data to elasticsearch, HTTP error code", err);
+				}
 			}
 			else if (CURLE_OK != msg->data.result)
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send to elasticsearch",
-						curl_easy_strerror(msg->data.result));
+				if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &curl_page) &&
+						'\0' != *curl_page->errbuf)
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send to elasticsearch",
+							curl_page->errbuf);
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send to elasticsearch",
+							curl_easy_strerror(msg->data.result));
+				}
 
 				/* If the error is due to curl internal problems or unrelated */
 				/* problems with HTTP, we put the handle in a retry list and */
@@ -472,8 +502,8 @@ try_again:
 				zbx_vector_ptr_append(&retries, msg->easy_handle);
 				curl_multi_remove_handle(writer.handle, msg->easy_handle);
 			}
-			else if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &page_msg) &&
-					SUCCEED != elastic_check_responce(page_msg, &error))
+			else if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &curl_page) &&
+					SUCCEED != elastic_check_responce(&curl_page->page, &error))
 			{
 				zabbix_log(LOG_LEVEL_WARNING, "%s() %s: %s", __function_name,
 						"cannot send to elasticsearch", error);
@@ -570,7 +600,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	CURLcode		err;
 	struct zbx_json		query;
 	struct curl_slist	*curl_headers = NULL;
-	char			*scroll_id = NULL, *scroll_query = NULL;
+	char			*scroll_id = NULL, *scroll_query = NULL, errbuf[CURL_ERROR_SIZE];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -637,13 +667,15 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	curl_easy_setopt(data->handle, CURLOPT_WRITEDATA, &page_r);
 	curl_easy_setopt(data->handle, CURLOPT_HTTPHEADER, curl_headers);
 	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
+	curl_easy_setopt(data->handle, CURLOPT_ERRORBUFFER, errbuf);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "sending query to %s; post data: %s", data->post_url, query.buffer);
 
 	page_r.offset = 0;
+	*errbuf = '\0';
 	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 	{
-		elastic_log_error(data->handle, err);
+		elastic_log_error(data->handle, err, errbuf);
 
 		goto out;
 	}
@@ -718,9 +750,10 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, scroll_query);
 
 		page_r.offset = 0;
+		*errbuf = '\0';
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 		{
-			elastic_log_error(data->handle, err);
+			elastic_log_error(data->handle, err, errbuf);
 
 			break;
 		}
@@ -741,8 +774,9 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		zabbix_log(LOG_LEVEL_DEBUG, "elasticsearch closing scroll %s", data->post_url);
 
 		page_r.offset = 0;
+		*errbuf = '\0';
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
-			elastic_log_error(data->handle, err);
+			elastic_log_error(data->handle, err, errbuf);
 	}
 
 out:
