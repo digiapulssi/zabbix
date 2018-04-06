@@ -226,7 +226,7 @@
 
 #define ZBX_RSM_UDP_TIMEOUT	3	/* seconds */
 #define ZBX_RSM_UDP_RETRY	1
-#define ZBX_RSM_TCP_TIMEOUT	20	/* seconds */
+#define ZBX_RSM_TCP_TIMEOUT	11	/* seconds (SLA: 5 times higher than max (2)) */
 #define ZBX_RSM_TCP_RETRY	1
 
 #define ZBX_RSM_DEFAULT_LOGDIR		"/var/log"	/* if Zabbix log dir is undefined */

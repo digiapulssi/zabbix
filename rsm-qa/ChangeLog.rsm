@@ -1,3 +1,16 @@
+Changes for rsm1.1.0rc3
+
+New features:
+....I..... [342] added automatic rsyslog restart, ldns-1.6.17 dependency, removed zabbix-proxy-sqlite (dimir)
+....I..... [sub-341] removed automatic root servers update functionality from tld.pl (dimir)
+.......PS. [344] changed TCP timeout in RSM tests from 20 to 11 (dimir)
+
+Bug fixes:
+..F....... [346] fixed incorrect test cycle result, fixed missing data handling and removed tooltips for valid RTT values in "Details of particular test" page for RDDS service (miks)
+..F....... [345] fixed order of "Total above max RTT" values for RDDS43 and RDDS80 tests in "Details of particular test" page (gleb)
+.......PS. [343] fixed handling RTT value in RDDS80 test (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc2
 
 New features:
@@ -5,7 +18,7 @@ New features:
 
 Bug fixes:
 ....I..PS. [340] fixed probes.pl and tld.pl unlinking "Template Probe Errors" leading to malfunction of "Probes-Knockout" action (gleb)
-....I..... [341] added force update of root server IPs when tld.pl is run (dimir)
+....I..... [341] added force update of root server IPs when tld.pl is run (enabled automatic root servers update functionality) (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc1

@@ -226,11 +226,11 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		$test_result = reset($testResults);
 		if ($test_result === false) {
 			$test_result['value'] = null;
-	}
+		}
 
 		// Get mapped value for test result.
 		if (in_array($data['type'], [RSM_DNS, RSM_DNSSEC, RSM_RDDS])) {
-			$test_result_label = $test_result['value']
+			$test_result_label = ($test_result['value'] !== null)
 				? getMappedValue($test_result['value'], RSM_SERVICE_AVAIL_VALUE_MAP)
 				: false;
 
@@ -238,7 +238,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$test_result_label = _('No result');
 				$test_result_color = 'grey';
 			}
-	else {
+			else {
 				$test_result_color = ($test_result['value'] == PROBE_DOWN) ? 'red' : 'green';
 			}
 
@@ -408,11 +408,13 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$hosts[$item['hostid']]['rdds43']['ip'] = $itemValue['value'];
 			}
 			elseif ($item['key_'] == PROBE_RDDS43_RTT) {
-				$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
-				$hosts[$item['hostid']]['rdds43']['rtt'] = [
-					'description' => $itemValue['value'] ? applyValueMap($rtt_value, $item['valuemapid']) : null,
-					'value' => $rtt_value
-				];
+				if ($itemValue['value']) {
+					$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+					$hosts[$item['hostid']]['rdds43']['rtt'] = [
+						'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+						'value' => $rtt_value
+					];
+				}
 			}
 			elseif ($item['key_'] == PROBE_RDDS43_UPD) {
 				$hosts[$item['hostid']]['rdds43']['upd'] = $itemValue['value']
@@ -423,11 +425,13 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$hosts[$item['hostid']]['rdds80']['ip'] = $itemValue['value'];
 			}
 			elseif ($item['key_'] == PROBE_RDDS80_RTT) {
-				$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
-				$hosts[$item['hostid']]['rdds80']['rtt'] = [
-					'description' => $itemValue['value'] ? applyValueMap($rtt_value, $item['valuemapid']) : null,
-					'value' => $rtt_value
-				];
+				if ($itemValue['value']) {
+					$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+					$hosts[$item['hostid']]['rdds80']['rtt'] = [
+						'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+						'value' => $rtt_value
+					];
+				}
 			}
 			else {
 				$hosts[$item['hostid']]['value'] = $itemValue['value'];

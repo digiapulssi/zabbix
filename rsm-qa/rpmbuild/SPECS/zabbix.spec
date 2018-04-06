@@ -46,8 +46,7 @@ Buildroot:	%{_tmppath}/zabbix-%{version}-%{release}-root-%(%{__id_u} -n)
 %global relabel_files() \ # ADD files in *.fc file
 
 BuildRequires:	mysql-devel
-BuildRequires:	sqlite-devel
-BuildRequires:	ldns-devel
+BuildRequires:	ldns-devel >= 1.6.17
 BuildRequires:	curl-devel >= 7.13.1
 %if 0%{?rhel} >= 6
 BuildRequires:	openssl-devel >= 1.0.1
@@ -75,10 +74,11 @@ Requires(preun):	/sbin/chkconfig
 Requires(preun):	/sbin/service
 Requires(postun):	/sbin/service
 %endif
-Provides:			zabbix-proxy = %{version}-%{release}
-Provides:			zabbix-proxy-implementation = %{version}-%{release}
-Obsoletes:			zabbix
-Obsoletes:			zabbix-proxy
+Requires:		ldns >= 1.6.17
+Provides:		zabbix-proxy = %{version}-%{release}
+Provides:		zabbix-proxy-implementation = %{version}-%{release}
+Obsoletes:		zabbix
+Obsoletes:		zabbix-proxy
 
 %description proxy-mysql
 Zabbix proxy with MySQL or MariaDB database support.
@@ -91,37 +91,6 @@ Requires:		zabbix-proxy = %{version}-%{release}
 
 %description proxy-mysql-selinux
 SELinux policy modules for use with Zabbix proxy
-
-%package proxy-sqlite3
-Summary:			Zabbix proxy for SQLite3 database
-Group:				Applications/Internet
-%if 0%{?rhel} >= 7
-Requires(post):		systemd
-Requires(preun):	systemd
-Requires(postun):	systemd
-%else
-Requires(post):		/sbin/chkconfig
-Requires(preun):	/sbin/chkconfig
-Requires(preun):	/sbin/service
-Requires(postun):	/sbin/service
-%endif
-Provides:			zabbix-proxy = %{version}-%{release}
-Provides:			zabbix-proxy-implementation = %{version}-%{release}
-Obsoletes:			zabbix
-Obsoletes:			zabbix-proxy
-
-%description proxy-sqlite3
-Zabbix proxy with SQLite3 database support.
-
-%package proxy-sqlite3-selinux
-Summary:		SELinux Policies for Zabbix proxy
-Group:			System Environment/Base
-Requires(post):		selinux-policy-base >= %{selinux_policyver}, selinux-policy-targeted >= %{selinux_policyver}, policycoreutils, policycoreutils-python libselinux-utils
-Requires:		zabbix-proxy = %{version}-%{release}
-
-%description proxy-sqlite3-selinux
-SELinux policy modules for use with Zabbix proxy
-
 
 %if 0%{?build_server}
 %package server-mysql
@@ -138,10 +107,11 @@ Requires(preun):	/sbin/chkconfig
 Requires(preun):	/sbin/service
 Requires(postun):	/sbin/service
 %endif
-Provides:			zabbix-server = %{version}-%{release}
-Provides:			zabbix-server-implementation = %{version}-%{release}
-Obsoletes:			zabbix
-Obsoletes:			zabbix-server
+Requires:		ldns >= 1.6.17
+Provides:		zabbix-server = %{version}-%{release}
+Provides:		zabbix-server-implementation = %{version}-%{release}
+Obsoletes:		zabbix
+Obsoletes:		zabbix-server
 
 %description server-mysql
 Zabbix server with MySQL or MariaDB database support.
@@ -241,7 +211,6 @@ cp -r %{SOURCE25}/ ./
 
 # traceroute command path for global script
 sed -i -e 's|/usr/bin/traceroute|/bin/traceroute|' database/mysql/data.sql
-sed -i -e 's|/usr/bin/traceroute|/bin/traceroute|' database/sqlite3/data.sql
 
 %if 0%{?build_server}
 # copy sql files for servers
@@ -256,7 +225,6 @@ cp %{SOURCE19} frontends/nginx.conf
 
 # sql files for proxyes
 gzip database/mysql/schema.sql
-gzip database/sqlite3/schema.sql
 
 %build
 build_flags="
@@ -289,10 +257,6 @@ make -s %{?_smp_mflags}
 mv src/zabbix_server/zabbix_server src/zabbix_server/zabbix_server_mysql
 %endif
 mv src/zabbix_proxy/zabbix_proxy src/zabbix_proxy/zabbix_proxy_mysql
-
-%configure $build_flags --with-sqlite3
-make -s %{?_smp_mflags}
-mv src/zabbix_proxy/zabbix_proxy src/zabbix_proxy/zabbix_proxy_sqlite3
 
 %if 0%{?build_server}
 touch src/zabbix_server/zabbix_server
@@ -423,13 +387,6 @@ getent passwd zabbix > /dev/null || \
 	-c "Zabbix Monitoring System" zabbix
 :
 
-%pre proxy-sqlite3
-getent group zabbix > /dev/null || groupadd -r zabbix
-getent passwd zabbix > /dev/null || \
-	useradd -r -g zabbix -d %{_localstatedir}/lib/zabbix -s /sbin/nologin \
-	-c "Zabbix Monitoring System" zabbix
-:
-
 %if 0%{?build_server}
 %pre server-mysql
 getent group zabbix > /dev/null || groupadd -r zabbix
@@ -465,25 +422,6 @@ if %{_sbindir}/selinuxenabled ; then
     %{_sbindir}/load_policy
     %relabel_files
 fi
-
-%post proxy-sqlite3
-%if 0%{?rhel} >= 7
-%systemd_post zabbix-proxy.service
-%else
-/sbin/chkconfig --add zabbix-proxy
-%endif
-/usr/sbin/update-alternatives --install %{_sbindir}/zabbix_proxy \
-	zabbix-proxy %{_sbindir}/zabbix_proxy_sqlite3 10
-:
-
-%post proxy-sqlite3-selinux
-%{_sbindir}/semodule -n -s %{selinuxtype} -i %{_datadir}/selinux/packages/zabbix_agent.pp.bz2
-%{_sbindir}/semodule -n -s %{selinuxtype} -i %{_datadir}/selinux/packages/zabbix_proxy.pp.bz2
-if %{_sbindir}/selinuxenabled ; then
-    %{_sbindir}/load_policy
-    %relabel_files
-fi
-
 
 %if 0%{?build_server}
 %post server-mysql
@@ -528,6 +466,9 @@ if %{_sbindir}/selinuxenabled ; then
     %relabel_files
 fi
 
+%post scripts
+systemctl restart rsyslog
+
 %preun proxy-mysql
 if [ "$1" = 0 ]; then
 %if 0%{?rhel} >= 7
@@ -538,19 +479,6 @@ if [ "$1" = 0 ]; then
 %endif
 /usr/sbin/update-alternatives --remove zabbix-proxy \
 %{_sbindir}/zabbix_proxy_mysql
-fi
-:
-
-%preun proxy-sqlite3
-if [ "$1" = 0 ]; then
-%if 0%{?rhel} >= 7
-%systemd_preun zabbix-proxy.service
-%else
-/sbin/service zabbix-proxy stop >/dev/null 2>&1
-/sbin/chkconfig --del zabbix-proxy
-%endif
-/usr/sbin/update-alternatives --remove zabbix-proxy \
-	%{_sbindir}/zabbix_proxy_sqlite3
 fi
 :
 
@@ -595,27 +523,6 @@ if [ $1 -eq 0 ]; then
     fi
 fi
 
-
-%postun proxy-sqlite3
-%if 0%{?rhel} >= 7
-%systemd_postun_with_restart zabbix-proxy.service
-%else
-if [ $1 -ge 1 ]; then
-/sbin/service zabbix-proxy try-restart >/dev/null 2>&1 || :
-fi
-%endif
-
-%postun proxy-sqlite3-selinux
-if [ $1 -eq 0 ]; then
-    %{_sbindir}/semodule -n -r zabbix-proxy &> /dev/null || :
-    %{_sbindir}/semodule -n -r zabbix-agent &> /dev/null || :
-    if %{_sbindir}/selinuxenabled ; then
-	%{_sbindir}/load_policy
-	%relabel_files
-    fi
-fi
-
-
 %if 0%{?build_server}
 %postun server-mysql
 %if 0%{?rhel} >= 7
@@ -657,6 +564,9 @@ if [ $1 -eq 0 ]; then
     fi
 fi
 
+%postun scripts
+systemctl restart rsyslog
+
 %files proxy-mysql
 %defattr(-,root,root,-)
 %doc AUTHORS ChangeLog COPYING NEWS README
@@ -681,31 +591,6 @@ fi
 %attr(0644,root,root) %{_datadir}/selinux/packages/zabbix_proxy.pp.bz2
 %attr(0644,root,root) %{_datadir}/selinux/packages/zabbix_agent.pp.bz2
 
-%files proxy-sqlite3
-%defattr(-,root,root,-)
-%doc AUTHORS ChangeLog COPYING NEWS README
-%doc database/sqlite3/schema.sql.gz
-%attr(0640,root,zabbix) %config(noreplace) %{_sysconfdir}/zabbix/zabbix_proxy_common.conf
-%attr(0640,root,zabbix) %config(noreplace) %{_sysconfdir}/zabbix/zabbix_proxy_N.conf
-%dir /usr/lib/zabbix/externalscripts
-%config(noreplace) %{_sysconfdir}/logrotate.d/zabbix-proxy
-%attr(0755,zabbix,zabbix) %dir %{_localstatedir}/log/zabbix
-%attr(0755,zabbix,zabbix) %dir %{_localstatedir}/run/zabbix
-%{_mandir}/man8/zabbix_proxy.8*
-%if 0%{?rhel} >= 7
-%{_unitdir}/zabbix-proxy.service
-%{_prefix}/lib/tmpfiles.d/zabbix-proxy.conf
-%else
-%{_sysconfdir}/init.d/zabbix-proxy
-%endif
-%{_sbindir}/zabbix_proxy_sqlite3
-
-%files proxy-sqlite3-selinux
-%defattr(-,root,root,0755)
-%attr(0644,root,root) %{_datadir}/selinux/packages/zabbix_proxy.pp.bz2
-%attr(0644,root,root) %{_datadir}/selinux/packages/zabbix_agent.pp.bz2
-
-
 %if 0%{?build_server}
 %files server-mysql
 %defattr(-,root,root,-)
@@ -714,7 +599,7 @@ fi
 %attr(0640,root,zabbix) %config(noreplace) %{_sysconfdir}/zabbix/zabbix_server.conf
 %dir /usr/lib/zabbix/alertscripts
 %dir /usr/lib/zabbix/externalscripts
-%config(noreplace) %{_sysconfdir}/logrotate.d/zabbix-server
+%config %{_sysconfdir}/logrotate.d/zabbix-server
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/log/zabbix
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/log/zabbix/slv
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/run/zabbix
@@ -769,8 +654,8 @@ fi
 /opt/zabbix/*
 %defattr(-,root,root,0755)
 /etc/cron.d/*
-%config(noreplace) %{_sysconfdir}/logrotate.d/zabbix-slv
-%config(noreplace) %{_sysconfdir}/rsyslog.d/rsm.slv.conf
+%config %{_sysconfdir}/logrotate.d/zabbix-slv
+%config %{_sysconfdir}/rsyslog.d/rsm.slv.conf
 
 %endif
 
