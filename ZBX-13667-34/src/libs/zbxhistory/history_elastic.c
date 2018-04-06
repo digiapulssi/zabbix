@@ -431,7 +431,7 @@ try_again:
 	{
 		int		fds;
 		CURLMcode	code;
-		char 		*err;
+		char 		*error;
 		zbx_httppage_t	*page_msg;
 
 		if (CURLM_OK != (code = curl_multi_perform(writer.handle, &running)))
@@ -473,11 +473,11 @@ try_again:
 				curl_multi_remove_handle(writer.handle, msg->easy_handle);
 			}
 			else if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &page_msg) &&
-					SUCCEED != elastic_check_responce(page_msg, &err))
+					SUCCEED != elastic_check_responce(page_msg, &error))
 			{
 				zabbix_log(LOG_LEVEL_WARNING, "%s() %s: %s", __function_name,
-						"cannot send to elasticsearch", err);
-				zbx_free(err);
+						"cannot send to elasticsearch", error);
+				zbx_free(error);
 
 				/* If the error is due to elastic internal problems (for example an index */
 				/* became read-only), we put the handle in a retry list and */
