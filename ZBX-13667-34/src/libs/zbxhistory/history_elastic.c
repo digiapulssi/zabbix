@@ -241,7 +241,7 @@ static void	elastic_close(zbx_history_iface_t *hist)
 
 /******************************************************************************
  *                                                                            *
- * Function: elastic_check_responce                                           *
+ * Function: elastic_check_response                                           *
  *                                                                            *
  * Purpose: check a error from Elastic json response                          *
  *                                                                            *
@@ -254,9 +254,9 @@ static void	elastic_close(zbx_history_iface_t *hist)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	elastic_check_responce(zbx_httppage_t *page, char **err)
+static int	elastic_check_response(zbx_httppage_t *page, char **err)
 {
-	const char		*__function_name = "elastic_check_responce";
+	const char		*__function_name = "elastic_check_response";
 
 	struct zbx_json_parse	jp, jp_values, jp_index, jp_error, jp_items, jp_item;
 	const char		*errors, *p = NULL;
@@ -272,27 +272,30 @@ static int	elastic_check_responce(zbx_httppage_t *page, char **err)
 		return FAIL;
 
 	/* find error reason from response */
-	if (0 == strncmp("true", errors, 4) && SUCCEED == zbx_json_brackets_by_name(&jp, "items", &jp_items))
+	if (0 == strncmp("true", errors, 4))
 	{
-		while (NULL != (p = zbx_json_next(&jp_items, p)))
+		if (SUCCEED == zbx_json_brackets_by_name(&jp, "items", &jp_items))
 		{
-			if (SUCCEED == zbx_json_brackets_open(p, &jp_item) &&
-					SUCCEED == zbx_json_brackets_by_name(&jp_item, "index", &jp_index) &&
-					SUCCEED == zbx_json_brackets_by_name(&jp_index, "error", &jp_error))
+			while (NULL != (p = zbx_json_next(&jp_items, p)))
 			{
-				zbx_json_value_by_name_dyn(&jp_error, "type", &type, &type_alloc);
-				zbx_json_value_by_name_dyn(&jp_error, "reason", &reason, &reason_alloc);
-			}
-			else
-				continue;
+				if (SUCCEED == zbx_json_brackets_open(p, &jp_item) &&
+						SUCCEED == zbx_json_brackets_by_name(&jp_item, "index", &jp_index) &&
+						SUCCEED == zbx_json_brackets_by_name(&jp_index, "error", &jp_error))
+				{
+					zbx_json_value_by_name_dyn(&jp_error, "type", &type, &type_alloc);
+					zbx_json_value_by_name_dyn(&jp_error, "reason", &reason, &reason_alloc);
+				}
+				else
+					continue;
 
-			zbx_json_value_by_name_dyn(&jp_index, "status", &status, &status_alloc);
-			zbx_json_value_by_name_dyn(&jp_index, "_index", &index, &index_alloc);
-			break;
+				zbx_json_value_by_name_dyn(&jp_index, "status", &status, &status_alloc);
+				zbx_json_value_by_name_dyn(&jp_index, "_index", &index, &index_alloc);
+				break;
+			}
 		}
+		*err = zbx_dsprintf(NULL, "index:%s status:%s type:%s reason:%s",
+				ZBX_NULL2STR(index), ZBX_NULL2STR(status), ZBX_NULL2STR(type), ZBX_NULL2STR(reason));
 	}
-	*err = zbx_dsprintf(NULL, "index:%s status:%s type:%s reason:%s", ZBX_NULL2STR(index), ZBX_NULL2STR(status),
-			ZBX_NULL2STR(type), ZBX_NULL2STR(reason));
 
 	zbx_free(status);
 	zbx_free(type);
@@ -498,18 +501,17 @@ try_again:
 				curl_multi_remove_handle(writer.handle, msg->easy_handle);
 			}
 			else if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &curl_page) &&
-					SUCCEED == elastic_check_responce(&curl_page->page, &error) && error != NULL)
+					SUCCEED == elastic_check_response(&curl_page->page, &error) && error != NULL)
 			{
-					zabbix_log(LOG_LEVEL_WARNING, "%s() %s: %s", __function_name,
-							"cannot send to elasticsearch", error);
-					zbx_free(error);
+				zabbix_log(LOG_LEVEL_WARNING, "%s() cannot send to elasticsearch: %s",
+						__function_name, error);
+				zbx_free(error);
 
-					/* If the error is due to elastic internal problems (for example an index */
-					/* became read-only), we put the handle in a retry list and */
-					/* remove it from the current execution loop */
-					zbx_vector_ptr_append(&retries, msg->easy_handle);
-					curl_multi_remove_handle(writer.handle, msg->easy_handle);
-				}
+				/* If the error is due to elastic internal problems (for example an index */
+				/* became read-only), we put the handle in a retry list and */
+				/* remove it from the current execution loop */
+				zbx_vector_ptr_append(&retries, msg->easy_handle);
+				curl_multi_remove_handle(writer.handle, msg->easy_handle);
 			}
 		}
 
