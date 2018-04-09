@@ -56,6 +56,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	struct passwd		*usrinfo;
 	int			proccount = 0, invalid_user = 0, zbx_proc_stat, i, count, idx = 0;
 	struct pst_status	pst[ZBX_BURST];
+	char			cmdline[1024];
 
 	if (4 < request->nparam)
 	{
@@ -121,8 +122,14 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 			if (NULL != usrinfo && usrinfo->pw_uid != pst[i].pst_uid)
 				continue;
 
-			if (NULL != proccomm && NULL == zbx_regexp_match(pst[i].pst_cmd, proccomm, NULL))
-				continue;
+			if (NULL != proccomm)
+			{
+				if (-1 == pstat_getcommandline(cmdline, sizeof(cmdline), 1, pst[i].pst_pid))
+					continue;
+
+				if (NULL == zbx_regexp_match(cmdline, proccomm, NULL))
+					continue;
+			}
 
 			if (FAIL == check_procstate(pst[i], zbx_proc_stat))
 				continue;
