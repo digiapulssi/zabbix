@@ -241,22 +241,22 @@ static void	elastic_close(zbx_history_iface_t *hist)
 
 /******************************************************************************
  *                                                                            *
- * Function: elastic_check_response                                           *
+ * Function: elastic_is_error_present                                         *
  *                                                                            *
  * Purpose: check a error from Elastic json response                          *
  *                                                                            *
  * Parameters: page - [IN]  the buffer with json response                     *
  *             err  - [OUT] the parse error message. If the error value is    *
- *                          set it must be freed by caller after it has been  *
- *                          used                                              *
+ *                           set it must be freed by caller after it has      *
+ *                           been used.                                       *
  *                                                                            *
- * Return value: SUCCEED - the response successfully checked                  *
+ * Return value: SUCCEED - the response contains an error                     *
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	elastic_check_response(zbx_httppage_t *page, char **err)
+static int	elastic_is_error_present(zbx_httppage_t *page, char **err)
 {
-	const char		*__function_name = "elastic_check_response";
+	const char		*__function_name = "elastic_is_error_present";
 
 	struct zbx_json_parse	jp, jp_values, jp_index, jp_error, jp_items, jp_item;
 	const char		*errors, *p = NULL;
@@ -271,7 +271,6 @@ static int	elastic_check_response(zbx_httppage_t *page, char **err)
 	if (NULL == (errors = zbx_json_pair_by_name(&jp_values, "errors")))
 		return FAIL;
 
-	/* find error reason from response */
 	if (0 == strncmp("true", errors, 4))
 	{
 		if (SUCCEED == zbx_json_brackets_by_name(&jp, "items", &jp_items))
@@ -293,16 +292,19 @@ static int	elastic_check_response(zbx_httppage_t *page, char **err)
 				break;
 			}
 		}
-		*err = zbx_dsprintf(NULL, "index:%s status:%s type:%s reason:%s",
-				ZBX_NULL2STR(index), ZBX_NULL2STR(status), ZBX_NULL2STR(type), ZBX_NULL2STR(reason));
+
+		*err = zbx_dsprintf(NULL,"index:%.*s / status:%.*s / type:%.*s / reason:%.*s", index_alloc, index,
+				status_alloc, status, type_alloc, type, reason_alloc, reason);
+
+		zbx_free(status);
+		zbx_free(type);
+		zbx_free(reason);
+		zbx_free(index);
+
+		return SUCCEED;
 	}
 
-	zbx_free(status);
-	zbx_free(type);
-	zbx_free(reason);
-	zbx_free(index);
-
-	return SUCCEED;
+	return FAIL;
 }
 
 /******************************************************************************************************************
@@ -320,7 +322,7 @@ static int	elastic_check_response(zbx_httppage_t *page, char **err)
  * Purpose: initializes elastic writer for a new batch of history values            *
  *                                                                                  *
  ************************************************************************************/
-static void	elastic_writer_init()
+static void	elastic_writer_init(void)
 {
 	if (0 != writer.initialized)
 		return;
@@ -344,7 +346,7 @@ static void	elastic_writer_init()
  *          setting its state to uninitialized.                                     *
  *                                                                                  *
  ************************************************************************************/
-static void	elastic_writer_release()
+static void	elastic_writer_release(void)
 {
 	int	i;
 
@@ -379,14 +381,13 @@ static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
 		zabbix_log(LOG_LEVEL_ERR, "cannot initialize cURL session");
 		return;
 	}
-
 	curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
 	curl_easy_setopt(data->handle, CURLOPT_POST, 1);
 	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, data->buf);
 	curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_cb);
 	curl_easy_setopt(data->handle, CURLOPT_WRITEDATA, &page_w[hist->value_type].page);
 	curl_easy_setopt(data->handle, CURLOPT_FAILONERROR, 1L);
-	curl_easy_setopt(data->handle, CURLOPT_ERRORBUFFER, &page_w[hist->value_type].errbuf);
+	curl_easy_setopt(data->handle, CURLOPT_ERRORBUFFER, page_w[hist->value_type].errbuf);
 	*page_w[hist->value_type].errbuf = '\0';
 	curl_easy_setopt(data->handle, CURLOPT_PRIVATE, &page_w[hist->value_type]);
 	page_w[hist->value_type].page.offset = 0;
@@ -405,7 +406,7 @@ static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
  * Purpose: posts historical data to elastic storage                                *
  *                                                                                  *
  ************************************************************************************/
-static void	elastic_writer_flush()
+static void	elastic_writer_flush(void)
 {
 	const char		*__function_name = "elastic_writer_flush";
 
@@ -440,7 +441,7 @@ try_again:
 	{
 		int		fds;
 		CURLMcode	code;
-		char 		*error = NULL;
+		char 		*error;
 		zbx_curlpage_t	*curl_page;
 
 		if (CURLM_OK != (code = curl_multi_perform(writer.handle, &running)))
@@ -464,8 +465,8 @@ try_again:
 			/* That's why we actually check for transport and curl errors separately */
 			if (CURLE_HTTP_RETURNED_ERROR == msg->data.result)
 			{
-				if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &curl_page) &&
-						'\0' != *curl_page->errbuf)
+				if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE,
+						(char **)&curl_page) && '\0' != *curl_page->errbuf)
 				{
 					zabbix_log(LOG_LEVEL_ERR, "%s: %s",
 							"cannot send data to elasticsearch, HTTP error message",
@@ -482,8 +483,8 @@ try_again:
 			}
 			else if (CURLE_OK != msg->data.result)
 			{
-				if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &curl_page) &&
-						'\0' != *curl_page->errbuf)
+				if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE,
+						(char **)&curl_page) && '\0' != *curl_page->errbuf)
 				{
 					zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send to elasticsearch",
 							curl_page->errbuf);
@@ -500,11 +501,11 @@ try_again:
 				zbx_vector_ptr_append(&retries, msg->easy_handle);
 				curl_multi_remove_handle(writer.handle, msg->easy_handle);
 			}
-			else if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &curl_page) &&
-					SUCCEED == elastic_check_response(&curl_page->page, &error) && error != NULL)
+			else if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, (char **)&curl_page)
+					&& SUCCEED == elastic_is_error_present(&curl_page->page, &error))
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "%s() cannot send to elasticsearch: %s",
-						__function_name, error);
+				zabbix_log(LOG_LEVEL_WARNING, "%s() %s: %s", __function_name,
+						"cannot send to elasticsearch", error);
 				zbx_free(error);
 
 				/* If the error is due to elastic internal problems (for example an index */
