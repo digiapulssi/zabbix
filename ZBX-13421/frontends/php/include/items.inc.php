@@ -665,11 +665,12 @@ function copyItems($src_hostid, $dst_hostid) {
 			}
 			// no matching interface found, throw an error
 			elseif ($interface !== false) {
-				error(_s('Cannot find host interface on "%1$s" for item key "%2$s".', $dst_host['host'], $src_item['key_']));
+				error(_s('Cannot find host interface on "%1$s" for item key "%2$s".',
+					$dst_host['host'], $src_item['key_']
+				));
 			}
 		}
-		unset($src_item['itemid']);
-		unset($src_item['templateid']);
+		unset($src_item['itemid'], $src_item['templateid']);
 		$src_item['hostid'] = $dst_hostid;
 		$src_item['applications'] = get_same_applications_for_host(
 			zbx_objectValues($src_item['applications'], 'applicationid'), $dst_hostid
@@ -688,7 +689,8 @@ function copyItems($src_hostid, $dst_hostid) {
 			elseif (array_key_exists($src_item['master_itemid'], $src_itemid_to_key)) {
 				$src_item_key = $src_itemid_to_key[$src_item['master_itemid']];
 				$src_item['master_itemid'] = $itemkey_to_id[$src_item_key];
-			} else {
+			}
+			else {
 				continue;
 			}
 		}
