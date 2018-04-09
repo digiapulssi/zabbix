@@ -512,20 +512,22 @@
 
 		jQuery('#recovery_msg').trigger('change');
 
+		jQuery('#add, #clone').click(function() {
+			var operationIdNameRegex = /operations\[\d+\]\[operationid\]/;
+
+			jQuery('input[name^=operations]').each(function() {
+				if ($(this).getAttribute('name').match(operationIdNameRegex)) {
+					$(this).remove();
+				}
+			});
+		});
+
 		// clone button
 		jQuery('#clone').click(function() {
 			jQuery('#actionid, #delete, #clone').remove();
 			jQuery('#update')
 				.text(<?= CJs::encodeJson(_('Add')) ?>)
 				.attr({id: 'add', name: 'add'});
-
-			var operationIdNameRegex = /operations\[\d+\]\[operationid\]/;
-			jQuery('input[name^=operations]').each(function() {
-				if ($(this).getAttribute('name').match(operationIdNameRegex)) {
-					$(this).remove();
-				}
-			});
-
 			jQuery('#form').val('clone');
 			jQuery('#name').focus();
 		});
