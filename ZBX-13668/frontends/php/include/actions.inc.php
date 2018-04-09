@@ -1644,7 +1644,7 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 
 	$db_alerts = API::Alert()->get([
 		'output' => ['eventid', 'p_eventid', 'mediatypeid', 'userid', 'esc_step', 'clock', 'status', 'alerttype',
-			'error'
+			'error', 'acknowledgeid'
 		],
 		'eventids' => array_keys($eventids),
 		'filter' => ['alerttype' => [ALERT_TYPE_MESSAGE, ALERT_TYPE_COMMAND]],
@@ -1658,6 +1658,10 @@ function makeEventsActions(array $problems, $display_recovery_alerts = false, $h
 	$mediatypes = [];
 
 	foreach ($db_alerts as $db_alert) {
+		if ($db_alert['acknowledgeid'] != 0) {
+			continue;
+		}
+
 		$alert = [
 			'esc_step' => $db_alert['esc_step'],
 			'clock' => $db_alert['clock'],
