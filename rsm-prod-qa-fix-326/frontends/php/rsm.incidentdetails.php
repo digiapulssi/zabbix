@@ -284,7 +284,7 @@ if ($mainEvent) {
 	));
 
 	if ($endEvent) {
-		$endEventToTime = $endEvent['clock'] - $endEventToTime % $delayTime + $delayTime;
+		$endEventToTime = $endEvent['clock'] - $endEvent['clock'] % $delayTime + $delayTime;
 		if (getRequest('filter_set')) {
 			$toTime = ($endEventToTime >= zbxDateToTime($data['filter_to']))
 				? zbxDateToTime($data['filter_to'])
