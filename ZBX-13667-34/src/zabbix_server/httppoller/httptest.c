@@ -50,9 +50,9 @@ typedef struct
 zbx_httpstat_t;
 
 extern int	CONFIG_HTTPPOLLER_FORKS;
-extern char	*CONFIG_SOURCE_IP;
 
 #ifdef HAVE_LIBCURL
+extern char	*CONFIG_SOURCE_IP;
 
 extern char	*CONFIG_SSL_CA_LOCATION;
 extern char	*CONFIG_SSL_CERT_LOCATION;
