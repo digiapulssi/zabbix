@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -22,9 +22,9 @@ sub escape_xml_entity($)
 {
 	my $entity = shift;
 
+	$entity =~ s/&/&amp;/g;
 	$entity =~ s/</&lt;/g;
 	$entity =~ s/>/&gt;/g;
-	$entity =~ s/&/&amp;/g;
 
 	return $entity;
 }
@@ -53,6 +53,8 @@ sub launch($$$)
 		'name'		=> $test_data->{'test case'} // "N/A",
 		'assertions'	=> 0
 	};
+
+	utf8::encode($test_case->{'name'});
 
 	if (path($test_exec)->is_file)
 	{

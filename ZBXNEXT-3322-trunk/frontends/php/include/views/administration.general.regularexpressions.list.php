@@ -22,7 +22,9 @@
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.regexps.php', 'administration.general')))
 	->setControls((new CForm())
 		->cleanItems()
-		->addItem((new CList())->addItem(new CSubmit('form', _('New regular expression'))))
+		->addItem((new CList())
+			->addItem(new CSubmit('form', _('New regular expression')))
+		)
 	);
 
 $form = (new CForm())->setName('regularExpressionsForm');

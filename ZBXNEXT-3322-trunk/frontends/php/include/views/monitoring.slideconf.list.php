@@ -22,7 +22,9 @@
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('slides.php', 'monitoring.screens')))
 	->setControls((new CForm('get'))
 		->cleanItems()
-		->addItem(new CSubmit('form', _('Create slide show')))
+		->addItem((new CList())
+			->addItem(new CSubmit('form', _('Create slide show')))
+		)
 	);
 
 // filter

@@ -20,12 +20,17 @@
 
 
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.valuemapping.php', 'administration.general')))
-	->setControls((new CForm())
-		->cleanItems()
-		->addItem((new CList())
-			->addItem(new CSubmit('form', _('Create value map')))
-			->addItem((new CButton('form', _('Import')))->onClick('redirect("conf.import.php?rules_preset=valuemap")'))
-		)
+	->setControls((new CTag('nav', true,
+		(new CForm())
+			->cleanItems()
+			->addItem((new CList())
+				->addItem(new CSubmit('form', _('Create value map')))
+				->addItem((new CButton('form', _('Import')))
+					->onClick('redirect("conf.import.php?rules_preset=valuemap")')
+				)
+			)
+		))
+			->setAttribute('aria-label', _('Content controls'))
 	);
 
 $form = (new CForm())

@@ -28,6 +28,7 @@ if (!empty($this->data['hostid'])) {
 // create form
 $itemForm = (new CForm())
 	->setName('itemForm')
+	->setAttribute('aria-labeledby', ZBX_STYLE_PAGE_TITLE)
 	->addVar('form', $this->data['form'])
 	->addVar('parent_discoveryid', $this->data['parent_discoveryid']);
 
@@ -84,7 +85,7 @@ if (!$readonly) {
 				'dstfrm' => $itemForm->getName(),
 				'dstfld1' => 'key'
 			]).
-				',{itemtype: jQuery("#type option:selected").val()}));'
+				',{itemtype: jQuery("#type option:selected").val()}), null, this);'
 		);
 
 }
@@ -112,7 +113,7 @@ if (!$readonly) {
 				'dstfld2' => 'master_itemname',
 				'parent_discoveryid' => $data['parent_discoveryid'],
 				'excludeids' => [$data['itemid']]
-			]).');'
+			]).', null, this);'
 		);
 }
 

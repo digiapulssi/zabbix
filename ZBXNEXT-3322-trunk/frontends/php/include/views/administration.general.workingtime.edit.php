@@ -34,6 +34,7 @@ $workingTimeView = (new CTabView())
 	->setFooter(makeFormFooter(new CSubmit('update', _('Update'))));
 
 $workingTimeForm = (new CForm())
+	->setAttribute('aria-labeledby', ZBX_STYLE_PAGE_TITLE)
 	->addItem($workingTimeView);
 
 $widget->addItem($workingTimeForm);

@@ -28,7 +28,8 @@ $severityTab = (new CFormList())
 		(new CTextBox('severity_name_0', $data['severity_name_0']))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 			->setAriaRequired()
-			->setAttribute('maxlength', 32),
+			->setAttribute('maxlength', 32)
+			->setAttribute('autofocus', 'autofocus'),
 		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
 		new CColor('severity_color_0', $data['severity_color_0'])
 	])
@@ -76,6 +77,7 @@ $severityTab = (new CFormList())
 	->addInfo(_('Custom severity names affect all locales and require manual translation!'));
 
 $severityForm = (new CForm())
+	->setAttribute('aria-labeledby', ZBX_STYLE_PAGE_TITLE)
 	->addItem(
 		(new CTabView())
 			->addTab('severities', _('Trigger severities'), $severityTab)

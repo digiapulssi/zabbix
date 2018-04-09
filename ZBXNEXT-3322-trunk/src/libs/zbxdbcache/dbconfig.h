@@ -95,7 +95,7 @@ typedef struct
 	unsigned char		location;
 	unsigned char		flags;
 	unsigned char		status;
-	unsigned char		unreachable;
+	unsigned char		queue_priority;
 	unsigned char		schedulable;
 	unsigned char		update_triggers;
 }
@@ -334,6 +334,8 @@ typedef struct
 	int		nextcheck;
 	int		timediff;
 	int		lastaccess;
+	int		last_cfg_error_time;	/* time when passive proxy misconfiguration error was seen */
+						/* or 0 if no error */
 	int		version;
 	unsigned char	location;
 }

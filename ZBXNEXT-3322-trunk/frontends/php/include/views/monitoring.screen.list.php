@@ -19,12 +19,12 @@
 **/
 
 
-$controls = (new CList())->addItem(new CSubmit('form', _('Create screen')));
-
-$createForm = (new CForm('get'))->cleanItems();
+$form = (new CForm('get'))->cleanItems();
+$controls = (new CList())
+	->addItem(new CSubmit('form', _('Create screen')));
 
 if ($data['templateid']) {
-	$createForm->addVar('templateid', $data['templateid']);
+	$form->addVar('templateid', $data['templateid']);
 	$widget = (new CWidget())
 		->setTitle(_('Screens'))
 		->addItem(get_header_host_table('screens', $data['templateid']));
@@ -34,8 +34,11 @@ else {
 	$controls->addItem((new CButton('form', _('Import')))->onClick('redirect("screen.import.php?rules_preset=screen")'));
 }
 
-$createForm->addItem($controls);
-$widget->setControls($createForm);
+$form->addItem($controls);
+
+$widget->setControls((new CTag('nav', true, $form))
+	->setAttribute('aria-label', _('Content controls'))
+);
 
 // filter
 if (!$data['templateid']) {

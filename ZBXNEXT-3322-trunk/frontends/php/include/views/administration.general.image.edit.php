@@ -22,6 +22,7 @@
 $widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php', 'administration.general'));
 
 $imageForm = (new CForm('post', null, 'multipart/form-data'))
+	->setAttribute('aria-labeledby', ZBX_STYLE_PAGE_TITLE)
 	->addVar('form', $this->data['form']);
 if (isset($this->data['imageid'])) {
 	$imageForm->addVar('imageid', $this->data['imageid']);

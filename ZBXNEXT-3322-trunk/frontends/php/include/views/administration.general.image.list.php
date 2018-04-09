@@ -20,10 +20,10 @@
 
 
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php', 'administration.general')))
-	->setControls((new CForm())
-		->cleanItems()
-		->addItem(
-			(new CList())
+	->setControls((new CTag('nav', true,
+		(new CForm())
+			->cleanItems()
+			->addItem((new CList())
 				->addItem([
 					new CLabel(_('Type'), 'imagetype'),
 					(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
@@ -37,7 +37,9 @@ $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.images.php'
 						? _('Create icon')
 						: _('Create background'))
 				)
-		)
+			)
+		))
+			->setAttribute('aria-label', _('Content controls'))
 	);
 
 if (!$data['images']) {

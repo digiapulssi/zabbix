@@ -20,11 +20,14 @@
 
 
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.iconmapping.php', 'administration.general')))
-	->setControls((new CForm())
-		->cleanItems()
-		->addItem((new CList())
-			->addItem(new CSubmit('form', _('Create icon map')))
-		)
+	->setControls((new CTag('nav', true,
+		(new CForm())
+			->cleanItems()
+			->addItem((new CList())
+				->addItem(new CSubmit('form', _('Create icon map')))
+			)
+		))
+			->setAttribute('aria-label', _('Content controls'))
 	);
 
 $iconMapTable = (new CTableInfo())

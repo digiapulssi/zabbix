@@ -33,6 +33,7 @@ $name = (new CTextBox('iconmap[name]', $this->data['iconmap']['name']))
 $iconMapTab->addRow((new CLabel(_('Name'), 'iconmap[name]'))->setAsteriskMark(), $name);
 
 $iconMapForm = (new CForm())
+	->setAttribute('aria-labeledby', ZBX_STYLE_PAGE_TITLE)
 	->addVar('form', 1);
 if (isset($this->data['iconmapid'])) {
 	$iconMapForm->addVar('iconmapid', $this->data['iconmap']['iconmapid']);

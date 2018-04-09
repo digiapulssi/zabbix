@@ -23,10 +23,14 @@ $page_url = CUrlFactory::getContextUrl()->clearArguments()->setArgument('eventso
 	->getUrl();
 
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url, 'configuration.action')))
-	->setControls((new CForm('get'))
-		->cleanItems()
-		->addVar('eventsource', $data['eventsource'])
-		->addItem(new CSubmit('form', _('Create action')))
+	->setControls((new CTag('nav', true,
+		(new CForm('get'))
+			->cleanItems()
+			->addItem((new CList())
+				->addItem(new CSubmit('form', _('Create action')))
+			)
+		))
+			->setAttribute('aria-label', _('Content controls'))
 	)
 	->addItem((new CFilter('web.actionconf.filter.state'))
 		->addColumn((new CFormList())->addRow(_('Name'),

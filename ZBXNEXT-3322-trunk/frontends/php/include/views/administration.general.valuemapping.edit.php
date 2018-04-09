@@ -23,7 +23,9 @@ include('include/views/js/administration.general.valuemapping.edit.js.php');
 
 $widget = new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.valuemapping.php', 'administration.general'));
 
-$form = (new CForm())->addVar('form', $data['form']);
+$form = (new CForm())
+	->setAttribute('aria-labeledby', ZBX_STYLE_PAGE_TITLE)
+	->addVar('form', $data['form']);
 
 if ($data['valuemapid'] != 0) {
 	$form->addVar('valuemapid', $data['valuemapid']);

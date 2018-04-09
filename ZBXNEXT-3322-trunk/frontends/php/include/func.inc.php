@@ -293,14 +293,18 @@ function zbx_date2str($format, $value = null) {
 	return $prefix.$output;
 }
 
-// calculate and convert timestamp to string representation
-function zbx_date2age($startDate, $endDate = 0, $utime = false) {
-	if (!$utime) {
-		$startDate = date('U', $startDate);
-		$endDate = $endDate ? date('U', $endDate) : time();
-	}
+/**
+ * Calculates and converts timestamp to string represenation.
+ *
+ * @param int|string $start_date Start date timestamp.
+ * @param int|string $end_date   End date timestamp.
+ *
+ * @return string
+ */
+function zbx_date2age($start_date, $end_date = 0) {
+	$end_date = ($end_date != 0) ? $end_date : time();
 
-	return convertUnitsS(abs($endDate - $startDate));
+	return convertUnitsS($end_date - $start_date);
 }
 
 function zbxDateToTime($strdate) {
@@ -1797,8 +1801,7 @@ function makeMessageBox($good, array $messages, $title = null, $show_close_box =
 
 	if ($messages) {
 		if ($title !== null) {
-			$link_details = (new CSpan())
-				->addClass(ZBX_STYLE_LINK_ACTION)
+			$link_details = (new CLinkAction())
 				->addItem(_('Details'))
 				->addItem(' ') // space
 				->addItem((new CSpan())
@@ -1828,10 +1831,8 @@ function makeMessageBox($good, array $messages, $title = null, $show_close_box =
 		$msg_details = (new CDiv())->addClass(ZBX_STYLE_MSG_DETAILS)->addItem($list);
 	}
 
-	$msg_box = (new CDiv())->addClass($class)
-		->addItem($link_details) // Details link should be in front of title
-		->addItem($title)
-		->addItem($msg_details);
+	// Details link should be in front of title.
+	$msg_box = (new CTag('output', true, [$link_details, $title, $msg_details]))->addClass($class);
 
 	if ($show_close_box) {
 		$msg_box->addItem((new CSimpleButton())

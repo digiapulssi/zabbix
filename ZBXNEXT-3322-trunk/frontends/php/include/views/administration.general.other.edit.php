@@ -39,6 +39,7 @@ $otherTab
 		(new CTextBox('refresh_unsupported', $data['refresh_unsupported']))
 			->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
 			->setAriaRequired()
+			->setAttribute('autofocus', 'autofocus')
 	)
 	->addRow(_('Group for discovered hosts'), $discoveryGroup)
 	->addRow(_('Default host inventory mode'),
@@ -55,6 +56,7 @@ $otherTab
 
 $otherForm = (new CForm())
 	->setName('otherForm')
+	->setAttribute('aria-labeledby', ZBX_STYLE_PAGE_TITLE)
 	->addItem(
 		(new CTabView())
 			->addTab('other', _('Other parameters'), $otherTab)

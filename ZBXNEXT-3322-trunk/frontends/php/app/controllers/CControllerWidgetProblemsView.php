@@ -30,11 +30,15 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 		$this->setValidationRules([
 			'name' => 'string',
 			'fullscreen' => 'in 0,1',
+			'kioskmode' => 'in 0,1',
 			'fields' => 'json'
 		]);
 	}
 
 	protected function doAction() {
+		$fullscreen = (bool) $this->getInput('fullscreen', false);
+		$kioskmode = $fullscreen && (bool) $this->getInput('kioskmode', false);
+
 		$fields = $this->getForm()->getFieldsData();
 
 		$config = select_config();
@@ -67,8 +71,9 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 		], $config, true);
 
 		if ($fields['show_tags']) {
-			$data['tags'] = makeEventsTags($data['problems']);
+			$data['tags'] = makeEventsTags($data['problems'], true, $fields['show_tags'], $fields['tags']);
 		}
+
 		if ($data['problems']) {
 			$data['triggers_hosts'] = getTriggersHostsList($data['triggers']);
 		}
@@ -81,13 +86,16 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 			],
 			'config' => [
 				'event_ack_enable' => $config['event_ack_enable'],
+				'problem_unack_style' => $config['problem_unack_style'],
+				'problem_ack_style' => $config['problem_ack_style'],
 				'blink_period' => timeUnitToSeconds($config['blink_period'])
 			],
 			'data' => $data,
 			'info' => $info,
 			'sortfield' => $sortfield,
 			'sortorder' => $sortorder,
-			'fullscreen' => $this->getInput('fullscreen', 0),
+			'fullscreen' => $fullscreen,
+			'kioskmode' => $kioskmode,
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
 			]
