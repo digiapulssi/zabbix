@@ -23,9 +23,7 @@ $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.iconmapping
 	->setControls((new CTag('nav', true,
 		(new CForm())
 			->cleanItems()
-			->addItem((new CList())
-				->addItem(new CSubmit('form', _('Create icon map')))
-			)
+			->addItem(new CSubmit('form', _('Create icon map')))
 		))
 			->setAttribute('aria-label', _('Content controls'))
 	);

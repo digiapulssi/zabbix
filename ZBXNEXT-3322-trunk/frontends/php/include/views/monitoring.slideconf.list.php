@@ -20,11 +20,12 @@
 
 
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('slides.php', 'monitoring.screens')))
-	->setControls((new CForm('get'))
-		->cleanItems()
-		->addItem((new CList())
+	->setControls((new CTag('nav', true,
+		(new CForm('get'))
+			->cleanItems()
 			->addItem(new CSubmit('form', _('Create slide show')))
-		)
+		))
+			->setAttribute('aria-label', _('Content controls'))
 	);
 
 // filter

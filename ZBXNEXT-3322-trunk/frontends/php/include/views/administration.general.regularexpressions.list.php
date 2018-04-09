@@ -20,11 +20,12 @@
 
 
 $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems('adm.regexps.php', 'administration.general')))
-	->setControls((new CForm())
-		->cleanItems()
-		->addItem((new CList())
+	->setControls((new CTag('nav', true,
+		(new CForm())
+			->cleanItems()
 			->addItem(new CSubmit('form', _('New regular expression')))
-		)
+		))
+			->setAttribute('aria-label', _('Content controls'))
 	);
 
 $form = (new CForm())->setName('regularExpressionsForm');
