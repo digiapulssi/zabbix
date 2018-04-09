@@ -527,10 +527,10 @@ ul.top-nav-icons {
 		overflow: hidden;
 	}
 
-	button,
-	button:active,
-	button:focus,
-	button:hover {
+	button.header-dropdown,
+	button.header-dropdown:active,
+	button.header-dropdown:focus,
+	button.header-dropdown:hover {
 		background: transparent;
 		font-size: $font-h1-size;
 		line-height: $h1-line-height;
