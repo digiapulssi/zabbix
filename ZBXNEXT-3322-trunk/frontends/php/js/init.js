@@ -50,21 +50,98 @@ jQuery(function($) {
 	});
 
 	$('[data-dropdown-list]').click(function () {
-		var menu = $($(this).data('dropdown-list')),
-			handler = function () {
-				$(document).off('click', handler);
+		var button = $(this),
+			menu = $(button.data('dropdown-list')),
+			closeMenu = function() {
+				$(document).off('click', closeMenu);
+				$(document).off('keydown', keydownHandler);
+				button.attr('aria-expanded', 'false');
+				$('.highlighted', menu).removeClass('highlighted');
 				menu.hide();
+			},
+			keydownHandler = function(event) {
+				// Select menu items.
+				var items = $('>li', menu).filter(function() {
+						return $(this).has('.action-menu-item').length;
+					});
+
+				// Find active menu item.
+				if ($('.action-menu-item.highlighted', menu).length) {
+					var selected = $('.action-menu-item.highlighted', menu).parent();
+				}
+				else if ($('.action-menu-item', menu).filter(function() {
+					return this == document.activeElement;
+				}).length) {
+					var selected = $(document.activeElement).parent();
+				}
+
+				// Perform action based on keydown event.
+				switch (event.which) {
+					case 38: // arrow up
+						if (typeof selected === 'undefined') {
+							$('.action-menu-item:last', menu).addClass('highlighted').focus();
+						}
+						else {
+							var prev = items[items.index(selected) - 1];
+							if (typeof prev === 'undefined') {
+								prev = items[items.length - 1];
+							}
+
+							$('.action-menu-item', selected).removeClass('highlighted');
+							$('.action-menu-item:first', prev).addClass('highlighted').focus();
+						}
+
+						// Prevent page scrolling.
+						event.preventDefault();
+						break;
+
+					case 40: // arrow down
+						if (typeof selected === 'undefined') {
+							$('.action-menu-item:first', items[0]).addClass('highlighted').focus();
+						}
+						else {
+							var next = items[items.index(selected) + 1];
+							if (typeof next === 'undefined') {
+								next = items[0];
+							}
+
+							$('.action-menu-item', selected).removeClass('highlighted');
+							$('.action-menu-item:first', next).addClass('highlighted').focus();
+						}
+
+						// Prevent page scrolling.
+						event.preventDefault();
+						break;
+
+					case 27: // ESC
+						closeMenu();
+						break;
+
+					case 13: // Enter
+						if (typeof selected !== 'undefined') {
+							$('> .action-menu-item', selected)[0].click();
+						}
+						else {
+							closeMenu();
+						}
+						break;
+
+					case 9: // Tab
+						event.preventDefault();
+						break;
+				}
+
+				return false;
 			};
 
-		menu.toggle();
-
-		if (menu.is(':visible')) {
-			$(document).on('click', handler);
-			$(this).attr('aria-expanded', 'true');
+		if (menu.not(':visible')) {
+			$(document).on('click', closeMenu);
+			$(document).on('keydown', keydownHandler);
+			button.attr('aria-expanded', 'true');
+			menu.show();
 		}
 		else {
-			$(document).off('click', handler);
-			$(this).attr('aria-expanded', 'false');
+			closeMenu();
 		}
 
 		return false;

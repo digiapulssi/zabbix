@@ -88,13 +88,15 @@ class CHeaderMenuWidget extends CWidget
 	private function createTitle() {
 		$list = (new CList())
 			->addClass(ZBX_STYLE_HEADER_DROPDOWN_LIST)
+			->setAttribute('tabindex', '0')
+			->setAttribute('role', 'menu')
 			->setId($this->header_menuid);
 
-		$header = null;
+		$header_button = null;
 
 		foreach ($this->menu_map as $item) {
 			if ($item['selected']) {
-				$header = (new CButton('content-header', $item['title']))
+				$header_button = (new CButton('content-header', $item['title']))
 					->addClass(ZBX_STYLE_HEADER_DROPDOWN)
 					->setAttribute('data-dropdown-list', '#'.$this->header_menuid)
 					->setAttribute('aria-haspopup', 'true')
@@ -102,11 +104,16 @@ class CHeaderMenuWidget extends CWidget
 			}
 			$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
 
-			$list->addItem((new CLink($title, $item['url']))->addClass(ZBX_STYLE_ACTION_MENU_ITEM));
+			$list->addItem((new CLink($title, $item['url']))
+				->addClass(ZBX_STYLE_ACTION_MENU_ITEM)
+				->setAttribute('role', 'menuitem')
+				->setAttribute('tabindex', '-1')
+				->setAttribute('aria-label', $title)
+			);
 		}
 
 		return (new CTag('nav', true))
-			->addItem($header)
+			->addItem($header_button)
 			->addItem($list)
 			->setAttribute('aria-label', _('Content controls: header'));
 	}
