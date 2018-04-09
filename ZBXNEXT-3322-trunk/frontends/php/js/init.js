@@ -60,9 +60,11 @@ jQuery(function($) {
 
 		if (menu.is(':visible')) {
 			$(document).on('click', handler);
+			$(this).attr('aria-expanded', 'true');
 		}
 		else {
 			$(document).off('click', handler);
+			$(this).attr('aria-expanded', 'false');
 		}
 
 		return false;

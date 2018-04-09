@@ -527,6 +527,19 @@ ul.top-nav-icons {
 		overflow: hidden;
 	}
 
+	button,
+	button:active,
+	button:focus,
+	button:hover {
+		background: transparent;
+		font-size: $font-h1-size;
+		line-height: $h1-line-height;
+		outline: 0px none;
+		box-shadow: none;
+		border: none;
+		padding-left: 0px;
+	}
+
 	form {
 		display: flex;
 		justify-content: flex-end;
@@ -598,6 +611,7 @@ ul.top-nav-icons {
 			@include rotate(-45);
 		}
 
+		&:focus,
 		&:hover {
 			text-decoration: underline;
 		}

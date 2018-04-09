@@ -94,15 +94,20 @@ class CHeaderMenuWidget extends CWidget
 
 		foreach ($this->menu_map as $item) {
 			if ($item['selected']) {
-				$header = (new CTag('h1', true, $item['title']))
+				$header = (new CButton('content-header', $item['title']))
 					->addClass(ZBX_STYLE_HEADER_DROPDOWN)
-					->setAttribute('data-dropdown-list', '#'.$this->header_menuid);
+					->setAttribute('data-dropdown-list', '#'.$this->header_menuid)
+					->setAttribute('aria-haspopup', 'true')
+					->setAttribute('aria-expanded', 'false');
 			}
 			$title = array_key_exists('menu_name', $item) ? $item['menu_name'] : $item['title'];
 
 			$list->addItem((new CLink($title, $item['url']))->addClass(ZBX_STYLE_ACTION_MENU_ITEM));
 		}
 
-		return [$header, $list];
+		return (new CTag('nav', true))
+			->addItem($header)
+			->addItem($list)
+			->setAttribute('aria-label', _('Content controls: header'));
 	}
 }
