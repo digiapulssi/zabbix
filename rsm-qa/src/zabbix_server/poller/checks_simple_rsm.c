@@ -2775,10 +2775,14 @@ static void	zbx_set_rdds_values(const char *ip43, int rtt43, int upd43, const ch
 	}
 }
 
-/* maps HTTP status codes ommitting unassigned according to                  */
+/* maps HTTP status codes ommitting status 200 and unassigned according to   */
 /* http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml */
 static int	zbx_map_http_code(long http_code)
 {
+#if ZBX_HTTP_RESPONSE_OK != 200L
+#	error "Mapping of HTTP statuses to error codes is based on assumption that status 200 is not an error."
+#endif
+
 	switch (http_code)
 	{
 		case 100L:	/* Continue */
@@ -2790,121 +2794,122 @@ static int	zbx_map_http_code(long http_code)
 		case 103L:	/* Early Hints */
 			return 3;
 		case 200L:	/* OK */
-			return 4;
+			THIS_SHOULD_NEVER_HAPPEN;
+			exit(EXIT_FAILURE);
 		case 201L:	/* Created */
-			return 5;
+			return 4;
 		case 202L:	/* Accepted */
-			return 6;
+			return 5;
 		case 203L:	/* Non-Authoritative Information */
-			return 7;
+			return 6;
 		case 204L:	/* No Content */
-			return 8;
+			return 7;
 		case 205L:	/* Reset Content */
-			return 9;
+			return 8;
 		case 206L:	/* Partial Content */
-			return 10;
+			return 9;
 		case 207L:	/* Multi-Status */
-			return 11;
+			return 10;
 		case 208L:	/* Already Reported */
-			return 12;
+			return 11;
 		case 226L:	/* IM Used */
-			return 13;
+			return 12;
 		case 300L:	/* Multiple Choices */
-			return 14;
+			return 13;
 		case 301L:	/* Moved Permanently */
-			return 15;
+			return 14;
 		case 302L:	/* Found */
-			return 16;
+			return 15;
 		case 303L:	/* See Other */
-			return 17;
+			return 16;
 		case 304L:	/* Not Modified */
-			return 18;
+			return 17;
 		case 305L:	/* Use Proxy */
-			return 19;
+			return 18;
 		case 306L:	/* (Unused) */
-			return 20;
+			return 19;
 		case 307L:	/* Temporary Redirect */
-			return 21;
+			return 20;
 		case 308L:	/* Permanent Redirect */
-			return 22;
+			return 21;
 		case 400L:	/* Bad Request */
-			return 23;
+			return 22;
 		case 401L:	/* Unauthorized */
-			return 24;
+			return 23;
 		case 402L:	/* Payment Required */
-			return 25;
+			return 24;
 		case 403L:	/* Forbidden */
-			return 26;
+			return 25;
 		case 404L:	/* Not Found */
-			return 27;
+			return 26;
 		case 405L:	/* Method Not Allowed */
-			return 28;
+			return 27;
 		case 406L:	/* Not Acceptable */
-			return 29;
+			return 28;
 		case 407L:	/* Proxy Authentication Required */
-			return 30;
+			return 29;
 		case 408L:	/* Request Timeout */
-			return 31;
+			return 30;
 		case 409L:	/* Conflict */
-			return 32;
+			return 31;
 		case 410L:	/* Gone */
-			return 33;
+			return 32;
 		case 411L:	/* Length Required */
-			return 34;
+			return 33;
 		case 412L:	/* Precondition Failed */
-			return 35;
+			return 34;
 		case 413L:	/* Payload Too Large */
-			return 36;
+			return 35;
 		case 414L:	/* URI Too Long */
-			return 37;
+			return 36;
 		case 415L:	/* Unsupported Media Type */
-			return 38;
+			return 37;
 		case 416L:	/* Range Not Satisfiable */
-			return 39;
+			return 38;
 		case 417L:	/* Expectation Failed */
-			return 40;
+			return 39;
 		case 421L:	/* Misdirected Request */
-			return 41;
+			return 40;
 		case 422L:	/* Unprocessable Entity */
-			return 42;
+			return 41;
 		case 423L:	/* Locked */
-			return 43;
+			return 42;
 		case 424L:	/* Failed Dependency */
-			return 44;
+			return 43;
 		case 426L:	/* Upgrade Required */
-			return 45;
+			return 44;
 		case 428L:	/* Precondition Required */
-			return 46;
+			return 45;
 		case 429L:	/* Too Many Requests */
-			return 47;
+			return 46;
 		case 431L:	/* Request Header Fields Too Large */
-			return 48;
+			return 47;
 		case 451L:	/* Unavailable For Legal Reasons */
-			return 49;
+			return 48;
 		case 500L:	/* Internal Server Error */
-			return 50;
+			return 49;
 		case 501L:	/* Not Implemented */
-			return 51;
+			return 50;
 		case 502L:	/* Bad Gateway */
-			return 52;
+			return 51;
 		case 503L:	/* Service Unavailable */
-			return 53;
+			return 52;
 		case 504L:	/* Gateway Timeout */
-			return 54;
+			return 53;
 		case 505L:	/* HTTP Version Not Supported */
-			return 55;
+			return 54;
 		case 506L:	/* Variant Also Negotiates */
-			return 56;
+			return 55;
 		case 507L:	/* Insufficient Storage */
-			return 57;
+			return 56;
 		case 508L:	/* Loop Detected */
-			return 58;
+			return 57;
 		case 510L:	/* Not Extended */
-			return 59;
+			return 58;
 		case 511L:	/* Network Authentication Required */
-			return 60;
+			return 59;
 		default:	/* catch-all for newly assigned HTTP status codes that may not have an association */
-			return 61;
+			return 60;
 	}
 }
 
