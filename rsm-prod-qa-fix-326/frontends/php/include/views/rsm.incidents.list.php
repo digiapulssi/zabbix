@@ -81,7 +81,7 @@ $headers = [
 	_('Incident ID'),
 	_('Status'),
 	_('Start time'),
-	_('End Time'),
+	_('End time'),
 	_('Failed tests within incident'),
 	_('Total number of tests')
 ];
@@ -140,6 +140,7 @@ if (isset($this->data['tld'])) {
 			$testsDown,
 			SPACE,
 			_n('test', 'tests', $this->data['dns']['totalTests']),
+			SPACE,
 			'('._s(
 				'%1$s in incidents, %2$s outside incidents',
 				$this->data['dns']['inIncident'],
@@ -216,6 +217,7 @@ if (isset($this->data['tld'])) {
 			$testsDown,
 			SPACE,
 			_n('test', 'tests', $this->data['dnssec']['totalTests']),
+			SPACE,
 			'('._s(
 				'%1$s in incidents, %2$s outside incidents',
 				$this->data['dnssec']['inIncident'],
@@ -292,6 +294,7 @@ if (isset($this->data['tld'])) {
 			$testsDown,
 			SPACE,
 			_n('test', 'tests', $this->data['rdds']['totalTests']),
+			SPACE,
 			'('._s(
 				'%1$s in incidents, %2$s outside incidents',
 				$this->data['rdds']['inIncident'],
@@ -368,6 +371,7 @@ if (isset($this->data['tld'])) {
 			$testsDown,
 			SPACE,
 			_n('test', 'tests', $this->data['epp']['totalTests']),
+			SPACE,
 			'('._s(
 				'%1$s in incidents, %2$s outside incidents',
 				$this->data['epp']['inIncident'],
