@@ -2796,12 +2796,10 @@ class CAction extends CApiService {
 			if ((!array_key_exists('operations', $action) || !$action['operations'])
 					&& (!array_key_exists('recovery_operations', $action) || !$action['recovery_operations'])
 					&& (!array_key_exists('acknowledge_operations', $action) || !$action['acknowledge_operations'])) {
-				self::exception(
-					ZBX_API_ERROR_PARAMETERS,
-					_s('Action "%1$s" no operations defined.', $action['name'])
-				);
+				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Action "%1$s" no operations defined.', $action['name']));
 			}
-			elseif (array_key_exists('operations', $action) && $action['operations']) {
+
+			if (array_key_exists('operations', $action)) {
 				foreach ($action['operations'] as $operation) {
 					if (array_key_exists('operationid', $operation)) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect input parameters.'));
@@ -2813,7 +2811,7 @@ class CAction extends CApiService {
 				}
 			}
 
-			if (array_key_exists('recovery_operations', $action) && $action['recovery_operations']) {
+			if (array_key_exists('recovery_operations', $action)) {
 				foreach ($action['recovery_operations'] as $operation) {
 					if (array_key_exists('operationid', $operation)) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect input parameters.'));
@@ -2825,7 +2823,7 @@ class CAction extends CApiService {
 				}
 			}
 
-			if (array_key_exists('acknowledge_operations', $action) && $action['acknowledge_operations']) {
+			if (array_key_exists('acknowledge_operations', $action)) {
 				foreach ($action['acknowledge_operations'] as $operation) {
 					if (array_key_exists('operationid', $operation)) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect input parameters.'));
