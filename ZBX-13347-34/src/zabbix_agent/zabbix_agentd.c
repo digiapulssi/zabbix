@@ -230,6 +230,8 @@ void	zbx_co_uninitialize();
 #endif
 
 int fatal_dbg_trigger; /* ZBX-13347 */
+int fatal_dbg_item; /* ZBX-13347 */
+
 
 int	get_process_info_by_thread(int local_server_num, unsigned char *local_process_type, int *local_process_num);
 

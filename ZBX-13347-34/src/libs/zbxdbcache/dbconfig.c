@@ -40,7 +40,8 @@
 #include "dbconfig.h"
 #include "dbsync.h"
 
-ZBX_DC_TRIGGER fatal_dbg_trigger = {0}; /* ZBX-13347 */
+ZBX_DC_TRIGGER	fatal_dbg_trigger = {0}; /* ZBX-13347 */
+ZBX_DC_ITEM	fatal_dbg_item = {0}; /* ZBX-13347 */
 
 static int	sync_in_progress = 0;
 
@@ -6611,10 +6612,13 @@ void	DCconfig_get_triggers_by_itemids(zbx_hashset_t *trigger_info, zbx_vector_pt
 		if (NULL == (dc_item = zbx_hashset_search(&config->items, &itemids[i])) || NULL == dc_item->triggers)
 			continue;
 
+		fatal_dbg_item = *dc_item;
+
 		/* process all triggers for the specified item */
 
 		for (j = 0; NULL != (dc_trigger = dc_item->triggers[j]); j++)
 		{
+
 			if (TRIGGER_STATUS_ENABLED != dc_trigger->status)
 				continue;
 

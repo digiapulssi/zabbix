@@ -233,15 +233,47 @@ typedef struct
 }
 ZBX_DC_TRIGGER;
 
-extern ZBX_DC_TRIGGER fatal_dbg_trigger; /* ZBX-13347 */
+typedef struct
+{
+	zbx_uint64_t		itemid;
+	zbx_uint64_t		hostid;
+	zbx_uint64_t		interfaceid;
+	zbx_uint64_t		lastlogsize;
+	zbx_uint64_t		valuemapid;
+	const char		*key;
+	const char		*port;
+	const char		*error;
+	const char		*delay;
+	ZBX_DC_TRIGGER		**triggers;
+	int			nextcheck;
+	int			lastclock;
+	int			mtime;
+	int			data_expected_from;
+	int			history_sec;
+	unsigned char		history;
+	unsigned char		type;
+	unsigned char		value_type;
+	unsigned char		poller_type;
+	unsigned char		state;
+	unsigned char		db_state;
+	unsigned char		inventory_link;
+	unsigned char		location;
+	unsigned char		flags;
+	unsigned char		status;
+	unsigned char		unreachable;
+	unsigned char		schedulable;
+	unsigned char		update_triggers;
+}
+ZBX_DC_ITEM;
+
+extern ZBX_DC_TRIGGER	fatal_dbg_trigger;	/* ZBX-13347 */
+extern ZBX_DC_ITEM	fatal_dbg_item;		/* ZBX-13347 */
 extern unsigned char	program_type;
 
 static void dump_trigger(ZBX_DC_TRIGGER *trigger)
 {
 	char buff[sizeof(ZBX_DC_TRIGGER) * 3 + 1];
 	int i;
-
-	zabbix_log(LOG_LEVEL_CRIT, "=== Trigger dump: ===");
 
 	for (i = 0; i < sizeof(ZBX_DC_TRIGGER); i++)
 		zbx_snprintf(&buff[i * 3], 4, "%02x ", 0xFF & ((unsigned char *)trigger)[i]);
@@ -252,11 +284,53 @@ static void dump_trigger(ZBX_DC_TRIGGER *trigger)
 				trigger->triggerid, trigger->description, trigger->type, trigger->status,
 				trigger->priority);
 	zabbix_log(LOG_LEVEL_CRIT, "  expression:'%p' cached:'%p'", trigger->expression,
-			ZBX_NULL2EMPTY_STR(trigger->recovery_expression));
+			trigger->recovery_expression);
 	zabbix_log(LOG_LEVEL_CRIT, "  value:%u state:%u error:'%p' lastchange:%d", trigger->value,
-			trigger->state, ZBX_NULL2EMPTY_STR(trigger->error), trigger->lastchange);
+			trigger->state, trigger->error, trigger->lastchange);
 	zabbix_log(LOG_LEVEL_CRIT, "  topoindex:%u functional:%u locked:%u", trigger->topoindex,
 			trigger->functional, trigger->locked);
+}
+
+static void dump_item(ZBX_DC_ITEM *item)
+{
+	char buff[sizeof(ZBX_DC_ITEM) * 3 + 1];
+	int i, j;
+
+	zabbix_log(LOG_LEVEL_CRIT, "--- Item dump: ---");
+
+	for (i = 0; i < sizeof(ZBX_DC_ITEM); i++)
+		zbx_snprintf(&buff[i * 3], 4, "%02x ", 0xFF & ((unsigned char *)item)[i]);
+
+	zabbix_log(LOG_LEVEL_CRIT, "item dump(%dB): %s", sizeof(ZBX_DC_ITEM), buff);
+
+	zabbix_log(LOG_LEVEL_CRIT, "itemid:" ZBX_FS_UI64 " hostid:" ZBX_FS_UI64 " key:'%s'",
+					item->itemid, item->hostid, item->key);
+	zabbix_log(LOG_LEVEL_CRIT, "  type:%u value_type:%u", item->type, item->value_type);
+	zabbix_log(LOG_LEVEL_CRIT, "  interfaceid:" ZBX_FS_UI64 " port:'%s'", item->interfaceid, item->port);
+	zabbix_log(LOG_LEVEL_CRIT, "  state:%u error:'%s'", item->state, item->error);
+	zabbix_log(LOG_LEVEL_CRIT, "  flags:%u status:%u", item->flags, item->status);
+	zabbix_log(LOG_LEVEL_CRIT, "  valuemapid:" ZBX_FS_UI64, item->valuemapid);
+	zabbix_log(LOG_LEVEL_CRIT, "  lastlogsize:" ZBX_FS_UI64 " mtime:%d", item->lastlogsize, item->mtime);
+	zabbix_log(LOG_LEVEL_CRIT, "  delay:'%s' nextcheck:%d lastclock:%d", item->delay, item->nextcheck,
+			item->lastclock);
+	zabbix_log(LOG_LEVEL_CRIT, "  data_expected_from:%d", item->data_expected_from);
+	zabbix_log(LOG_LEVEL_CRIT, "  triggers:%p history:%d", item->triggers, item->history);
+	zabbix_log(LOG_LEVEL_CRIT, "  poller_type:%u location:%u", item->poller_type, item->location);
+	zabbix_log(LOG_LEVEL_CRIT, "  inventory_link:%u", item->inventory_link);
+	zabbix_log(LOG_LEVEL_CRIT, "  unreachable:%u schedulable:%u", item->unreachable, item->schedulable);
+
+	if (NULL != item->triggers)
+	{
+		ZBX_DC_TRIGGER	*trigger;
+
+		zabbix_log(LOG_LEVEL_CRIT, "  triggers:");
+
+		for (j = 0; NULL != (trigger = item->triggers[j]); j++)
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "--- Trigger dump: ---");
+			dump_trigger(trigger);
+		}
+	}
 }
 
 void	zbx_log_fatal_info(void *context, unsigned int flags)
@@ -384,7 +458,12 @@ void	zbx_log_fatal_info(void *context, unsigned int flags)
 	}
 
 	if (0 != is_tr_dump)
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "=== ZBX-13347 dump: ===");
+		zabbix_log(LOG_LEVEL_CRIT, "--- Last trigger: ---");
 		dump_trigger(&fatal_dbg_trigger);
+		dump_item(&fatal_dbg_item);
+	}
 
 	if (0 != (flags & ZBX_FATAL_LOG_MEM_MAP))
 	{
