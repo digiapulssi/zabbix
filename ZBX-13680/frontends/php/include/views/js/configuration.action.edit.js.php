@@ -512,7 +512,7 @@
 
 		jQuery('#recovery_msg').trigger('change');
 
-		jQuery('#add, #clone').click(function() {
+		jQuery('#add').click(function() {
 			var operationIdNameRegex = /operations\[\d+\]\[operationid\]/;
 
 			jQuery('input[name^=operations]').each(function() {
