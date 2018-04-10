@@ -256,7 +256,7 @@ if ($mainEvent) {
 		}
 	}
 
-	$mainEventFromTime = $mainEvent['clock'] - $mainEvent['clock'] % $delayTime - $failCount * $delayTime;
+	$mainEventFromTime = $mainEvent['clock'] - $mainEvent['clock'] % $delayTime - ($failCount - 1) * $delayTime;
 
 	if (getRequest('filter_set')) {
 		$fromTime = ($mainEventFromTime >= zbxDateToTime($data['filter_from']))
