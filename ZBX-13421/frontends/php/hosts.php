@@ -627,17 +627,17 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				throw new Exception();
 			}
 
-			if (!copyItems($srcHostId, $hostId)) {
+			// Copy items.
+			$unlinked_items = copyItems($srcHostId, $hostId);
+			if ($unlinked_items === false) {
 				throw new Exception();
 			}
-
-			$host_templates = zbx_objectValues($host['templates'], 'templateid');
 
 			// copy triggers
 			$dbTriggers = API::Trigger()->get([
 				'output' => ['triggerid'],
 				'hostids' => $srcHostId,
-				'selectItems' => ['type', 'master_itemid'],
+				'selectItems' => ['type'],
 				'inherited' => false,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
 			]);
@@ -645,17 +645,9 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			if ($dbTriggers) {
 				foreach ($dbTriggers as $index => $trigger) {
 					foreach ($trigger['items'] as $item) {
-						if ($item['type'] == ITEM_TYPE_DEPENDENT) {
-							$dependent_items = API::Item()->get([
-								'output' => ['templateid'],
-								'itemids' => $item['master_itemid']
-							]);
-							$dependent_item = reset($dependent_items);
-
-							if (!in_array($dependent_item['templateid'], $host_templates)) {
-								unset($dbTriggers[$index]);
-								break;
-							}
+						if (in_array($item['itemid'], $unlinked_items)) {
+							unset($dbTriggers[$index]);
+							break;
 						}
 					}
 				}
@@ -687,7 +679,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$dbGraphs = API::Graph()->get([
 				'output' => API_OUTPUT_EXTEND,
 				'selectHosts' => ['hostid'],
-				'selectItems' => ['type', 'master_itemid'],
+				'selectItems' => ['type'],
 				'hostids' => $srcHostId,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'inherited' => false
@@ -703,16 +695,8 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				}
 
 				foreach ($dbGraph['items'] as $item) {
-					if ($item['type'] == ITEM_TYPE_DEPENDENT) {
-						$dependent_items = API::Item()->get([
-							'output' => ['templateid'],
-							'itemids' => $item['master_itemid']
-						]);
-						$dependent_item = reset($dependent_items);
-
-						if (!in_array($dependent_item['templateid'], $host_templates)) {
-							continue 2;
-						}
+					if (in_array($item['itemid'], $unlinked_items)) {
+						continue 2;
 					}
 				}
 

@@ -691,6 +691,8 @@ function copyItems($src_hostid, $dst_hostid) {
 				$src_item['master_itemid'] = $itemkey_to_id[$src_item_key];
 			}
 			else {
+				$unlinked_items[] = $itemid;
+
 				continue;
 			}
 		}
@@ -705,7 +707,7 @@ function copyItems($src_hostid, $dst_hostid) {
 		return false;
 	}
 
-	return true;
+	return $unlinked_items;
 }
 
 /**
