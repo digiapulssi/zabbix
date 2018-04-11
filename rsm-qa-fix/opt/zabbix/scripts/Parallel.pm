@@ -9,17 +9,31 @@ use Exporter qw(import);
 use Time::HiRes qw(time);
 use Data::Dumper;
 
-our @EXPORT = qw(fork_without_pipe fork_with_pipe handle_children print_children children_running set_max_children);
+use POSIX;
+require "syscall.ph";
+
+syscall(&SYS_prctl, 36, 1) >= 0 or die("cannot set subreaper: $!");
+
+my $_CHILD_FAILED = 0;
+
+our @EXPORT = qw(fork_without_pipe fork_with_pipe handle_children print_children children_running set_max_children
+		child_failed kill_processes);
 
 my $MAX_CHILDREN = 64;
 my %PIDS;
+
+my $signal = 'KILL';
 
 # SIGCHLD handler
 $SIG{CHLD} = sub
 {
         while ((my $pid = waitpid(-1, WNOHANG)) > 0)
 	{
+		my $child_exit_status = WEXITSTATUS($?);
+
 		$PIDS{$pid}{'alive'} = 0 if ($PIDS{$pid});
+
+		$_CHILD_FAILED = 1 if ($child_exit_status != 0);
         }
 };
 
@@ -143,6 +157,21 @@ sub set_max_children
 	}
 
 	$MAX_CHILDREN = $value;
+}
+
+sub child_failed()
+{
+	return $_CHILD_FAILED;
+}
+
+sub kill_processes()
+{
+	foreach my $running_pid (keys(%PIDS))
+	{
+		next unless ($PIDS{$running_pid}{'alive'});
+
+		kill($signal, $running_pid);
+	}
 }
 
 1;

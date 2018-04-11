@@ -189,6 +189,8 @@ else
 
 my ($time_start, $time_get_test_data, $time_load_ids, $time_process_records, $time_write_csv);
 
+my $child_failed = 0;
+
 # go through all the databases
 my @server_keys = get_rsm_server_keys($config);
 foreach (@server_keys)
@@ -283,6 +285,15 @@ while ($tld_index < $tld_count)
 
 	handle_children();
 
+	if (child_failed())
+	{
+		$child_failed = 1;
+
+		info("one of the child processes failed, terminating others...");
+		kill_processes();
+		goto WAIT_CHILDREN;
+	}
+
 	sleep(EXPORT_LOOP_SLEEP);
 }
 
@@ -290,13 +301,25 @@ last if (opt('tld'));
 }	# foreach (@server_keys)
 undef($server_key) unless (opt('tld'));	# keep $server_key if --tld was specified (for __get_false_positives())
 
+WAIT_CHILDREN:
 # wait till children finish
 while (children_running() > 0)
 {
 	handle_children();
 
+	# check again if one of remaining children failed
+	if ($child_failed == 0 && child_failed())
+	{
+		$child_failed = 1;
+
+		info("one of the child processes failed, terminating others...");
+		kill_processes();
+	}
+
 	sleep(EXPORT_LOOP_SLEEP);
 }
+
+slv_exit(E_FAIL) unless ($child_failed == 0);
 
 # at this point there should be no child processes so we do not care about locking
 
@@ -803,6 +826,8 @@ sub __save_csv_data
 {
 	my $result = shift;
 
+	my $cur_tld = $tld;	# save to restore at the end
+
 	# push data to CSV files
 	foreach (sort(keys(%{$result})))
 	{
@@ -1157,7 +1182,8 @@ sub __save_csv_data
 
 		$time_write_csv = time();
 	}
-	$tld = undef;
+
+	$tld = $cur_tld;	# restore
 }
 
 sub __add_csv_test
