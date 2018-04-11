@@ -634,7 +634,7 @@ sub __get_test_data
 			#   0 seconds <--zero or more minutes--> 30                                  59
 			#
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			# todo phase 1: make sure this uses avail valuemaps in phase1
 			# todo: later rewrite to use valuemap ID from item
@@ -649,7 +649,7 @@ sub __get_test_data
 				" from history".
 				" where itemid=$itemid_rollweek".
 					" and " . sql_time_condition($service_from, $service_till).
-				" order by itemid,clock");	# NB! order is important, see how the result is used below
+				" order by clock");	# NB! order is important, see how the result is used below
 		}
 		else
 		{
@@ -663,7 +663,7 @@ sub __get_test_data
 
 			#dbg("$service rolling week at ", ts_full($clock), ": $value");
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			$cycles->{$cycleclock}->{'rollweek'} = $value;
 		}
@@ -1580,7 +1580,7 @@ sub __get_dns_test_values
 				undef($new_value);
 			}
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			# TODO: rename (in all functions):
 			#
@@ -1755,7 +1755,7 @@ sub __get_incidents2
 			# do not add 'value=TRIGGER_VALUE_TRUE' to SQL above just for corner case of 2 events at the same second
 			if ($value == TRIGGER_VALUE_TRUE)
 			{
-				push(@incidents, __make_incident($eventid, $false_positive, __cycle_start($clock, $delay)));
+				push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 
 				$last_trigger_value = TRIGGER_VALUE_TRUE;
 			}
@@ -1791,7 +1791,7 @@ sub __get_incidents2
 				# replace with current
 				$incidents[$idx]->{'eventid'} = $eventid;
 				$incidents[$idx]->{'false_positive'} = $false_positive;
-				$incidents[$idx]->{'start'} = __cycle_start($clock, $delay);
+				$incidents[$idx]->{'start'} = cycle_start($clock, $delay);
 			}
 		}
 
@@ -1818,7 +1818,7 @@ sub __get_incidents2
 		else
 		{
 			# event that starts an incident
-			push(@incidents, __make_incident($eventid, $false_positive, __cycle_start($clock, $delay)));
+			push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 		}
 
 		$last_trigger_value = $value;
@@ -1844,24 +1844,6 @@ sub __get_incidents2
 	}
 
 	return \@incidents;
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __cycle_start
-{
-	my $now = shift;
-	my $delay = shift;
-
-	return $now - ($now % $delay);
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __cycle_end
-{
-	my $now = shift;
-	my $delay = shift;
-
-	return __cycle_start($now, $delay) + $delay - 1;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -2036,7 +2018,7 @@ sub __get_rdds_test_values
 			undef($value);
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
@@ -2066,7 +2048,7 @@ sub __get_rdds_test_values
 			fail("internal error: unknown item key (itemid:$itemid), expected item key representing the IP involved in $interface test");
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
@@ -2124,7 +2106,7 @@ sub __get_epp_test_values
 			unless (defined($probe) and defined($key));
 
 		my $command = __get_epp_dbl_type($key);
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# TODO: EPP: it's not yet decided if 3 EPP RTTs
 		# (login, info, update) are coming in one metric or 3
@@ -2159,7 +2141,7 @@ sub __get_epp_test_values
 			fail("internal error: unknown item key \"$key\", expected item key representing the IP involved in EPP test");
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_TARGET_IP()} = $ip;

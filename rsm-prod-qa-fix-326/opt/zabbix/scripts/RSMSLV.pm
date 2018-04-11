@@ -97,7 +97,10 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		uint_value_exists
 		get_real_services_period dbg info wrn fail format_stats_time slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
-		write_file usage);
+		write_file
+		cycle_start
+		cycle_end
+		usage);
 
 # configuration, set in set_slv_config()
 my $config = undef;
@@ -2631,6 +2634,22 @@ sub write_file
 	return E_FAIL unless ($rv);
 
 	return SUCCESS;
+}
+
+sub cycle_start
+{
+	my $now = shift;
+	my $delay = shift;
+
+	return $now - ($now % $delay);
+}
+
+sub cycle_end
+{
+	my $now = shift;
+	my $delay = shift;
+
+	return cycle_start($now, $delay) + $delay - 1;
 }
 
 sub usage
