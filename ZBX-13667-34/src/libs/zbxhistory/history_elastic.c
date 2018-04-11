@@ -190,7 +190,7 @@ out:
 	return ret;
 }
 
-static void	elastic_log_error(CURL *handle, CURLcode error, const char *errbuff)
+static void	elastic_log_error(CURL *handle, CURLcode error, const char *errbuf)
 {
 	long	http_code;
 
@@ -209,7 +209,7 @@ static void	elastic_log_error(CURL *handle, CURLcode error, const char *errbuff)
 	else
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot get values from elasticsearch: %s",
-				'\0' != *errbuff ? errbuff : curl_easy_strerror(error));
+				'\0' != *errbuf ? errbuf : curl_easy_strerror(error));
 	}
 }
 
@@ -675,7 +675,6 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 	if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 	{
 		elastic_log_error(data->handle, err, errbuf);
-
 		goto out;
 	}
 
@@ -729,7 +728,6 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 			if (0 == total)
 			{
 				empty = 1;
-
 				break;
 			}
 		}
@@ -737,7 +735,6 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		if (1 == empty)
 		{
 			ret = SUCCEED;
-
 			break;
 		}
 
@@ -753,7 +750,6 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		if (CURLE_OK != (err = curl_easy_perform(data->handle)))
 		{
 			elastic_log_error(data->handle, err, errbuf);
-
 			break;
 		}
 	}
