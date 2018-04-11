@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc5
 
 New features:
+....I..... [347] added code to print a warning in case of ignored tld.pl command-line parameters (dimir)
 
 Bug fixes:
 
