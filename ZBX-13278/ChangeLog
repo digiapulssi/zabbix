@@ -3,6 +3,7 @@ Changes for 3.4.9rc1
 New features:
 
 Bug fixes:
+.........T [ZBX-13278] fixed trigger expression for 'Link down' trigger (vitaly)
 ..F....... [ZBX-13683] fixed multiselect items not being sorted by name (agriscenko)
 ........S. [ZBX-13299] fixed autoregistration, discovery and internal notifications not being sent due to uninitialized severity (vso)
 ....I..... [ZBX-13607] changed ping script to return success also for timeouts (wiper)
