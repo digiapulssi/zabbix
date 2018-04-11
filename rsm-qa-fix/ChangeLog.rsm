@@ -1,7 +1,5 @@
 Changes for rsm1.1.0rc4
 
-New features:
-
 Bug fixes:
 ....I..PS. [334] removed unused error code from "RSM RDDS rtt" value mapping (gleb)
 
