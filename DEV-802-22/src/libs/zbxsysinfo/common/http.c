@@ -28,26 +28,33 @@
 #include "http.h"
 
 #define ZBX_MAX_WEBPAGE_SIZE	(1 * 1024 * 1024)
+static const char URI_PROHIBIT_CHARS[] = {0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE,0xF,0x10,0x11,0x12,\
+	0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1A,0x1B,0x1C,0x1D,0x1E,0x1F,0x7F,'"','<','>','\\','^','`','{','|','}'};
 
-static int	get_http_page(const char *host, const char *path, unsigned short port, char *buffer, size_t max_buffer_len)
+static int	get_http_page(const char *host, char *path, unsigned short port, char *buffer, size_t max_buffer_len)
 {
 	int		ret;
 	char		*recv_buffer;
-	char		request[MAX_STRING_LEN];
+	char		hostname[MAX_STRING_LEN], request[MAX_STRING_LEN];
 	zbx_sock_t	s;
 
-	if (SUCCEED == (ret = zbx_tcp_connect(&s, CONFIG_SOURCE_IP, host, port, CONFIG_TIMEOUT)))
+	strscpy(hostname, host);
+	zbx_remove_chars(hostname, URI_PROHIBIT_CHARS);
+
+	if (SUCCEED == (ret = zbx_tcp_connect(&s, CONFIG_SOURCE_IP, hostname, port, CONFIG_TIMEOUT)))
 	{
+		zbx_remove_chars(path, URI_PROHIBIT_CHARS);
 		zbx_snprintf(request, sizeof(request),
 				"GET /%s HTTP/1.1\r\n"
 				"Host: %s\r\n"
 				"Connection: close\r\n"
 				"\r\n",
-				path, host);
+				path, hostname);
 
 		if (SUCCEED == (ret = zbx_tcp_send_raw(&s, request)))
 		{
-			if (SUCCEED == (ret = SUCCEED_OR_FAIL(zbx_tcp_recv_ext(&s, &recv_buffer, ZBX_TCP_READ_UNTIL_CLOSE, 0))))
+			if (SUCCEED == (ret = SUCCEED_OR_FAIL(zbx_tcp_recv_ext(&s, &recv_buffer,
+					ZBX_TCP_READ_UNTIL_CLOSE, 0))))
 			{
 				if (NULL != buffer)
 					zbx_strlcpy(buffer, recv_buffer, max_buffer_len);
@@ -79,7 +86,7 @@ int	WEB_PAGE_GET(AGENT_REQUEST *request, AGENT_RESULT *result)
 	port_str = get_rparam(request, 2);
 
 	if (NULL == hostname || '\0' == *hostname)
-                return SYSINFO_RET_FAIL;
+		return SYSINFO_RET_FAIL;
 
 	if (NULL == path_str)
 		*path = '\0';
@@ -116,7 +123,7 @@ int	WEB_PAGE_PERF(AGENT_REQUEST *request, AGENT_RESULT *result)
 	port_str = get_rparam(request, 2);
 
 	if (NULL == hostname || '\0' == *hostname)
-                return SYSINFO_RET_FAIL;
+		return SYSINFO_RET_FAIL;
 
 	if (NULL == path_str || '\0' == *path_str)
 		*path = '\0';
@@ -157,7 +164,7 @@ int	WEB_PAGE_REGEXP(AGENT_REQUEST *request, AGENT_RESULT *result)
 	output = get_rparam(request, 5);
 
 	if (NULL == hostname || '\0' == *hostname)
-                return SYSINFO_RET_FAIL;
+		return SYSINFO_RET_FAIL;
 
 	if (NULL == path_str || '\0' == *path_str)
 		*path = '\0';
@@ -170,7 +177,7 @@ int	WEB_PAGE_REGEXP(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 
 	if (NULL == regexp)
-                return SYSINFO_RET_FAIL;
+		return SYSINFO_RET_FAIL;
 
 	/* by default return the matched part of web page */
 	if (NULL == output || '\0' == *output)
