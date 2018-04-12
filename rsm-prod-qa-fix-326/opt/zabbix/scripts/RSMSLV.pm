@@ -1605,6 +1605,7 @@ sub sql_time_condition
 sub get_incidents
 {
 	my $itemid = shift;
+	my $delay = shift;
 	my $from = shift;
 	my $till = shift;
 
@@ -1672,7 +1673,7 @@ sub get_incidents
 			# do not add 'value=TRIGGER_VALUE_TRUE' to SQL above just for corner case of 2 events at the same second
 			if ($value == TRIGGER_VALUE_TRUE)
 			{
-				push(@incidents, __make_incident($eventid, $false_positive, $clock));
+				push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 
 				$last_trigger_value = TRIGGER_VALUE_TRUE;
 			}
@@ -1716,7 +1717,7 @@ sub get_incidents
 				# replace with current
 				$incidents[$idx]->{'eventid'} = $eventid;
 				$incidents[$idx]->{'false_positive'} = $false_positive;
-				$incidents[$idx]->{'start'} = $clock;
+				$incidents[$idx]->{'start'} = cycle_start($clock, $delay);
 			}
 		}
 
@@ -1727,12 +1728,12 @@ sub get_incidents
 			# event that closes the incident
 			my $idx = scalar(@incidents) - 1;
 
-			$incidents[$idx]->{'end'} = $clock;
+			$incidents[$idx]->{'end'} = cycle_end($clock, $delay);
 		}
 		else
 		{
 			# event that starts an incident
-			push(@incidents, __make_incident($eventid, $false_positive, $clock));
+			push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 		}
 
 		$last_trigger_value = $value;
@@ -1767,6 +1768,7 @@ sub get_downtime
 	my $till = shift;
 	my $ignore_incidents = shift;	# if set check the whole period
 	my $incidents_ref = shift;	# optional reference to array of incidents, ignored if $ignore_incidents is true
+	my $delay = shift;		# only needed if incidents are not ignored and are not supplied by caller
 
 	my $incidents;
 	if ($ignore_incidents)
@@ -1779,7 +1781,7 @@ sub get_downtime
 	}
 	else
 	{
-		$incidents = get_incidents($itemid, $from, $till);
+		$incidents = get_incidents($itemid, $delay, $from, $till);
 	}
 
 	my $count = 0;
@@ -1900,7 +1902,8 @@ sub get_downtime_execute
 	my $itemid = shift;
 	my $from = shift;
 	my $till = shift;
-	my $ignore_incidents = shift; # if set check the whole period
+	my $ignore_incidents = shift;	# if set check the whole period
+	my $delay = shift;		# only needed if incidents are not ignored
 
 	my $incidents;
 	if ($ignore_incidents)
@@ -1915,7 +1918,7 @@ sub get_downtime_execute
 	}
 	else
 	{
-		$incidents = get_incidents($itemid, $from, $till);
+		$incidents = get_incidents($itemid, $delay, $from, $till);
 	}
 
 	my $count = 0;

@@ -562,7 +562,7 @@ TRYFORK:
 				# we need down time in minutes, not percent, that's why we can't use "rsm.slv.$service.rollweek" value
 				my ($rollweek_from, $rollweek_till) = get_rollweek_bounds();
 
-				my $rollweek_incidents = get_incidents($avail_itemid, $rollweek_from, $rollweek_till);
+				my $rollweek_incidents = get_incidents($avail_itemid, $delay, $rollweek_from, $rollweek_till);
 
 				my $downtime = get_downtime($avail_itemid, $rollweek_from, $rollweek_till, 0, $rollweek_incidents);
 
@@ -580,7 +580,7 @@ TRYFORK:
 				dbg("getting current $service service availability (delay:$delay)");
 
 				# get alarmed
-				my $incidents = get_incidents($avail_itemid, $now);
+				my $incidents = get_incidents($avail_itemid, $delay, $now);
 
 				my $alarmed_status = JSON_VALUE_ALARMED_NO;
 				if (scalar(@$incidents) != 0)
@@ -655,7 +655,7 @@ TRYFORK:
 					'incidents' => []
 				};
 
-				foreach my $incident (@{get_incidents($avail_itemid, $service_from, $service_till)})
+				foreach my $incident (@{get_incidents($avail_itemid, $delay, $service_from, $service_till)})
 				{
 					my $eventid = $incident->{'eventid'};
 					my $event_start = $incident->{'start'};
@@ -689,7 +689,7 @@ TRYFORK:
 						my $result;
 
 						$result->{'tld'} = $tld;
-						$result->{'cycleCalculationDateTime'} = cycle_start($clock, $delay);
+						$result->{'cycleCalculationDateTime'} = cycle_end($clock, $delay);
 
 						# todo phase 1: make sure this uses avail valuemaps in phase1
 						# todo: later rewrite to use valuemap ID from item
