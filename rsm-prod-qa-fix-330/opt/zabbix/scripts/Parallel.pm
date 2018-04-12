@@ -21,7 +21,7 @@ my $CHILD_FAILED = 0;
 my $MAX_CHILDREN = 64;
 my %PIDS;
 
-my $signal = 'KILL';
+my $signal = 'TERM';
 
 # SIGCHLD handler
 $SIG{CHLD} = sub
