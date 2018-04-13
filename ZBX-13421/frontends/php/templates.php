@@ -281,7 +281,9 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				throw new Exception();
 			}
 
-			if (!copyItems($cloneTemplateId, $templateId)) {
+			// Copy templates.
+			$unlinked_templates = copyItems($cloneTemplateId, $templateId);
+			if ($unlinked_templates === false) {
 				throw new Exception();
 			}
 

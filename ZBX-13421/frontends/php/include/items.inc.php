@@ -582,18 +582,30 @@ function copyItems($src_hostid, $dst_hostid) {
 	]);
 	$dst_host = reset($dst_hosts);
 
-	$src_templates = API::Item()->get([
-		'output' => ['hostid'],
-		'itemids' => zbx_objectValues($src_items, 'templateid')
+	$src_hosts = API::Host()->get([
+		'output' => [],
+		'selectParentTemplates' => ['hostid'],
+		'hostids' => $src_hostid
 	]);
+	$src_host = reset($src_hosts);
 
+	$src_parent_templates = zbx_objectValues($src_host['parentTemplates'], 'templateid');
 	$dst_parent_templates = zbx_objectValues($dst_host['parentTemplates'], 'templateid');
 
-	$unlinked_items = [];
-	foreach ($src_templates as $template) {
-		if (!in_array($template['hostid'], $dst_parent_templates)) {
-			$unlinked_items[] = $template['itemid'];
+	$unlinked_parent_templates = [];
+	foreach ($src_parent_templates as $templateid) {
+		if (!in_array($templateid, $dst_parent_templates)) {
+			$unlinked_parent_templates[] = $templateid;
 		}
+	}
+
+	$unlinked_items = [];
+	if ($unlinked_parent_templates) {
+		$unlinked_parent_templates_items = API::Item()->get([
+			'output' => [],
+			'hostids' => $unlinked_parent_templates
+		]);
+		$unlinked_items = zbx_objectValues($unlinked_parent_templates_items, 'itemid');
 	}
 
 	$create_order = [];
