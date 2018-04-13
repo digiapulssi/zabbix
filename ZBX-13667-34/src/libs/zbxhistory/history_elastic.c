@@ -78,11 +78,6 @@ zbx_curlpage_t;
 
 static zbx_curlpage_t	page_w[ITEM_VALUE_TYPE_MAX];
 
-static int size_t2int(size_t val)
-{
-	return (val <= INT_MAX) ? (int)((ssize_t)val) : -1;
-}
-
 static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	size_t	r_size = size * nmemb;
@@ -267,8 +262,9 @@ static int	elastic_is_error_present(zbx_httppage_t *page, char **err)
 	const char		*errors, *p = NULL;
 	char			*index = NULL, *status = NULL, *type = NULL, *reason = NULL;
 	size_t			index_alloc = 0, status_alloc = 0, type_alloc = 0, reason_alloc = 0;
+	int			rc_js = SUCCEED;
 
-	zabbix_log(LOG_LEVEL_TRACE, "%s() raw json: %.*s", __function_name, size_t2int(page->offset), page->data);
+	zabbix_log(LOG_LEVEL_TRACE, "%s() raw json: %s", __function_name, ZBX_NULL2EMPTY_STR(page->data));
 
 	if (SUCCEED != zbx_json_open(page->data, &jp) || SUCCEED != zbx_json_brackets_open(jp.start, &jp_values))
 		return FAIL;
@@ -286,21 +282,23 @@ static int	elastic_is_error_present(zbx_httppage_t *page, char **err)
 						SUCCEED == zbx_json_brackets_by_name(&jp_item, "index", &jp_index) &&
 						SUCCEED == zbx_json_brackets_by_name(&jp_index, "error", &jp_error))
 				{
-					zbx_json_value_by_name_dyn(&jp_error, "type", &type, &type_alloc);
-					zbx_json_value_by_name_dyn(&jp_error, "reason", &reason, &reason_alloc);
+					rc_js |= zbx_json_value_by_name_dyn(&jp_error, "type", &type, &type_alloc);
+					rc_js |= zbx_json_value_by_name_dyn(&jp_error, "reason", &reason,
+							&reason_alloc);
 				}
 				else
 					continue;
 
-				zbx_json_value_by_name_dyn(&jp_index, "status", &status, &status_alloc);
-				zbx_json_value_by_name_dyn(&jp_index, "_index", &index, &index_alloc);
+				rc_js |= zbx_json_value_by_name_dyn(&jp_index, "status", &status, &status_alloc);
+				rc_js |= zbx_json_value_by_name_dyn(&jp_index, "_index", &index, &index_alloc);
 				break;
 			}
 		}
 
-		*err = zbx_dsprintf(NULL,"index:%.*s / status:%.*s / type:%.*s / reason:%.*s", size_t2int(index_alloc),
-				index, size_t2int(status_alloc), status, size_t2int(type_alloc), type,
-				size_t2int(reason_alloc), reason);
+		*err = zbx_dsprintf(NULL,"index:%s / status:%s / type:%s / reason:%s%s", ZBX_NULL2EMPTY_STR(index),
+				ZBX_NULL2EMPTY_STR(status), ZBX_NULL2EMPTY_STR(type), ZBX_NULL2EMPTY_STR(reason),
+				SUCCEED != rc_js ? " / elasticsearch version is not fully compatible with zabbix "
+				"server" : "");
 
 		zbx_free(status);
 		zbx_free(type);
@@ -708,7 +706,11 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		zbx_json_brackets_open(jp.start, &jp_values);
 
 		/* get the scroll id immediately, for being used in subsequent queries */
-		zbx_json_value_by_name_dyn(&jp_values, "_scroll_id", &scroll_id, &id_alloc);
+		if (SUCCEED != zbx_json_value_by_name_dyn(&jp_values, "_scroll_id", &scroll_id, &id_alloc))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "elasticsearch version is not compatible with zabbix server. "
+					"_scroll_id tag is absent");
+		}
 
 		zbx_json_brackets_by_name(&jp_values, "hits", &jp_sub);
 		zbx_json_brackets_by_name(&jp_sub, "hits", &jp_hits);
