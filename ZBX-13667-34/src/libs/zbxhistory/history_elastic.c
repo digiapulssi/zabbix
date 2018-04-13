@@ -78,6 +78,11 @@ zbx_curlpage_t;
 
 static zbx_curlpage_t	page_w[ITEM_VALUE_TYPE_MAX];
 
+static int size_t2int(size_t val)
+{
+	return (val <= INT_MAX) ? (int)((ssize_t)val) : -1;
+}
+
 static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	size_t	r_size = size * nmemb;
@@ -263,7 +268,7 @@ static int	elastic_is_error_present(zbx_httppage_t *page, char **err)
 	char			*index = NULL, *status = NULL, *type = NULL, *reason = NULL;
 	size_t			index_alloc = 0, status_alloc = 0, type_alloc = 0, reason_alloc = 0;
 
-	zabbix_log(LOG_LEVEL_TRACE, "%s() raw json: %.*s", __function_name, page->offset, page->data);
+	zabbix_log(LOG_LEVEL_TRACE, "%s() raw json: %.*s", __function_name, size_t2int(page->offset), page->data);
 
 	if (SUCCEED != zbx_json_open(page->data, &jp) || SUCCEED != zbx_json_brackets_open(jp.start, &jp_values))
 		return FAIL;
@@ -293,8 +298,9 @@ static int	elastic_is_error_present(zbx_httppage_t *page, char **err)
 			}
 		}
 
-		*err = zbx_dsprintf(NULL,"index:%.*s / status:%.*s / type:%.*s / reason:%.*s", index_alloc, index,
-				status_alloc, status, type_alloc, type, reason_alloc, reason);
+		*err = zbx_dsprintf(NULL,"index:%.*s / status:%.*s / type:%.*s / reason:%.*s", size_t2int(index_alloc),
+				index, size_t2int(status_alloc), status, size_t2int(type_alloc), type,
+				size_t2int(reason_alloc), reason);
 
 		zbx_free(status);
 		zbx_free(type);
@@ -382,7 +388,7 @@ static void	elastic_writer_add_iface(zbx_history_iface_t *hist)
 		return;
 	}
 	curl_easy_setopt(data->handle, CURLOPT_URL, data->post_url);
-	curl_easy_setopt(data->handle, CURLOPT_POST, 1);
+	curl_easy_setopt(data->handle, CURLOPT_POST, 1L);
 	curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, data->buf);
 	curl_easy_setopt(data->handle, CURLOPT_WRITEFUNCTION, curl_write_cb);
 	curl_easy_setopt(data->handle, CURLOPT_WRITEDATA, &page_w[hist->value_type].page);
@@ -486,12 +492,12 @@ try_again:
 				if (CURLE_OK == curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE,
 						(char **)&curl_page) && '\0' != *curl_page->errbuf)
 				{
-					zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send to elasticsearch",
+					zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send data to elasticsearch",
 							curl_page->errbuf);
 				}
 				else
 				{
-					zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send to elasticsearch",
+					zabbix_log(LOG_LEVEL_WARNING, "%s: %s", "cannot send data to elasticsearch",
 							curl_easy_strerror(msg->data.result));
 				}
 
@@ -505,7 +511,7 @@ try_again:
 					&& SUCCEED == elastic_is_error_present(&curl_page->page, &error))
 			{
 				zabbix_log(LOG_LEVEL_WARNING, "%s() %s: %s", __function_name,
-						"cannot send to elasticsearch", error);
+						"cannot send data to elasticsearch", error);
 				zbx_free(error);
 
 				/* If the error is due to elastic internal problems (for example an index */
