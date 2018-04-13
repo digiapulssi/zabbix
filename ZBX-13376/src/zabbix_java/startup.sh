@@ -38,8 +38,11 @@ if [ -n "$START_POLLERS" ]; then
 	ZABBIX_OPTIONS="$ZABBIX_OPTIONS -Dzabbix.startPollers=$START_POLLERS"
 fi
 if [ -n "$TIMEOUT" ]; then
-	ZABBIX_OPTIONS="$ZABBIX_OPTIONS -Dzabbix.timeout=$TIMEOUT -Dsun.rmi.transport.tcp.responseTimeout=${TIMEOUT}000"
+	ZABBIX_OPTIONS="$ZABBIX_OPTIONS -Dzabbix.timeout=$TIMEOUT"
 fi
+
+java_timeout=${TIMEOUT:=3}000
+ZABBIX_OPTIONS="$ZABBIX_OPTIONS -Dsun.rmi.transport.tcp.responseTimeout=$java_timeout"
 
 COMMAND_LINE="$JAVA $JAVA_OPTIONS -classpath $CLASSPATH $ZABBIX_OPTIONS com.zabbix.gateway.JavaGateway"
 
