@@ -600,18 +600,20 @@ function copyItems($src_hostid, $dst_hostid) {
 	}
 
 	$unlinked_items = [];
+	$unlinked_templates = [];
 	if ($unlinked_parent_templates) {
 		$unlinked_parent_templates_items = API::Item()->get([
 			'output' => [],
 			'hostids' => $unlinked_parent_templates
 		]);
-		$unlinked_items = zbx_objectValues($unlinked_parent_templates_items, 'itemid');
+		$unlinked_templates = zbx_objectValues($unlinked_parent_templates_items, 'itemid');
 	}
 
 	$create_order = [];
 	$src_itemid_to_key = [];
 	foreach ($src_items as $itemid => $item) {
-		if (in_array($item['templateid'], $unlinked_items)) {
+		if (in_array($item['templateid'], $unlinked_templates)) {
+			$unlinked_items[] = $itemid;
 			continue;
 		}
 
