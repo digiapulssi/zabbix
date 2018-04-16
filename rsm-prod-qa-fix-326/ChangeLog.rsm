@@ -1,6 +1,7 @@
 Changes for rsm1.0.7rc1
 
 New features:
+....I..... [330] added functionality to exit with non-zero code if child fails to Data Export script (dimir)
 
 Bug fixes:
 ....I...S. [337, sub-329] fixed server trying to apply database upgrade patch it was not supposed to apply and failing when started with a new database (gleb)
