@@ -295,7 +295,7 @@ static int	elastic_is_error_present(zbx_httppage_t *page, char **err)
 			}
 		}
 
-		*err = zbx_dsprintf(NULL,"index:%s / status:%s / type:%s / reason:%s%s", ZBX_NULL2EMPTY_STR(index),
+		*err = zbx_dsprintf(NULL,"index:%s status:%s type:%s reason:%s%s", ZBX_NULL2EMPTY_STR(index),
 				ZBX_NULL2EMPTY_STR(status), ZBX_NULL2EMPTY_STR(type), ZBX_NULL2EMPTY_STR(reason),
 				SUCCEED != rc_js ? " / elasticsearch version is not fully compatible with zabbix "
 				"server" : "");
