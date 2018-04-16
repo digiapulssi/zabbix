@@ -749,7 +749,7 @@ static int	elastic_get_values(zbx_history_iface_t *hist, zbx_uint64_t itemid, in
 		/* scroll to the next page */
 		scroll_offset = 0;
 		zbx_snprintf_alloc(&scroll_query, &scroll_alloc, &scroll_offset,
-				"{\"scroll\":\"10s\",\"scroll_id\":\"%s\"}\n", scroll_id);
+				"{\"scroll\":\"10s\",\"scroll_id\":\"%s\"}\n", ZBX_NULL2EMPTY_STR(scroll_id));
 
 		curl_easy_setopt(data->handle, CURLOPT_POSTFIELDS, scroll_query);
 
