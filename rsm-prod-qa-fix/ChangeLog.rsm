@@ -4,6 +4,7 @@ New features:
 ....I..... [330] added functionality to exit with non-zero code if child fails to Data Export script (dimir)
 
 Bug fixes:
+..F.I..... [326] fixed representation of incident start and end times in the frontend and SLA API (gleb)
 ....I...S. [337, sub-329] fixed server trying to apply database upgrade patch it was not supposed to apply and failing when started with a new database (gleb)
 
 --------------------------------------------------------------------------------

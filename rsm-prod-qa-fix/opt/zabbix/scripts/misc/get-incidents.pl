@@ -32,6 +32,12 @@ my $till = getopt('till');
 
 my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds();
 
+my $delays = {
+	'dns'	=> get_macro_dns_udp_delay(),
+	'rdds'	=> get_macro_rdds_delay(),
+	'epp'	=> get_macro_epp_delay()
+};
+
 foreach (@$tlds_ref)
 {
 	$tld = $_;
@@ -43,7 +49,7 @@ foreach (@$tlds_ref)
 		my $key = "rsm.slv.$service.avail";
 
 		my $itemid = get_itemid_by_host($tld, $key);
-		my $incidents = get_incidents($itemid, $from, $till);
+		my $incidents = get_incidents($itemid, $delays->{$service}, $from, $till);
 
 		foreach (@$incidents)
 		{
