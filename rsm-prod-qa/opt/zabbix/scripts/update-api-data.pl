@@ -562,7 +562,7 @@ TRYFORK:
 				# we need down time in minutes, not percent, that's why we can't use "rsm.slv.$service.rollweek" value
 				my ($rollweek_from, $rollweek_till) = get_rollweek_bounds();
 
-				my $rollweek_incidents = get_incidents($avail_itemid, $rollweek_from, $rollweek_till);
+				my $rollweek_incidents = get_incidents($avail_itemid, $delay, $rollweek_from, $rollweek_till);
 
 				my $downtime = get_downtime($avail_itemid, $rollweek_from, $rollweek_till, 0, $rollweek_incidents);
 
@@ -580,7 +580,7 @@ TRYFORK:
 				dbg("getting current $service service availability (delay:$delay)");
 
 				# get alarmed
-				my $incidents = get_incidents($avail_itemid, $now);
+				my $incidents = get_incidents($avail_itemid, $delay, $now);
 
 				my $alarmed_status = JSON_VALUE_ALARMED_NO;
 				if (scalar(@$incidents) != 0)
@@ -655,30 +655,18 @@ TRYFORK:
 					'incidents' => []
 				};
 
-				$incidents = get_incidents($avail_itemid, $service_from, $service_till);
-
-				foreach (@$incidents)
+				foreach my $incident (@{get_incidents($avail_itemid, $delay, $service_from, $service_till)})
 				{
-					my $eventid = $_->{'eventid'};
-					my $event_start = $_->{'start'};
-					my $event_end = $_->{'end'};
-					my $false_positive = $_->{'false_positive'};
+					my $eventid = $incident->{'eventid'};
+					my $event_start = $incident->{'start'};
+					my $event_end = $incident->{'end'};
+					my $false_positive = $incident->{'false_positive'};
 
-					my $start = $event_start;
-					my $end = $event_end;
+					my $start = defined($service_from) && $service_from > $event_start ?
+							$service_from : $event_start;
 
-					if (defined($service_from) and $service_from > $event_start)
-					{
-						$start = $service_from;
-					}
-
-					if (defined($service_till))
-					{
-						if (not defined($event_end) or (defined($event_end) and $service_till < $event_end))
-						{
-							$end = $service_till;
-						}
-					}
+					my $end = defined($event_end) && defined($service_till) && $service_till < $event_end ?
+							$service_till : $event_end;
 
 					# get results within incidents
 					my $rows_ref = db_select(
@@ -701,7 +689,7 @@ TRYFORK:
 						my $result;
 
 						$result->{'tld'} = $tld;
-						$result->{'cycleCalculationDateTime'} = $clock;
+						$result->{'cycleCalculationDateTime'} = cycle_end($clock, $delay);
 
 						# todo phase 1: make sure this uses avail valuemaps in phase1
 						# todo: later rewrite to use valuemap ID from item
@@ -738,12 +726,10 @@ TRYFORK:
 						push(@test_results, $result);
 					}
 
-					my $test_results_count = scalar(@test_results);
-
-					if ($test_results_count == 0)
+					if (scalar(@test_results) == 0)
 					{
 						wrn("$service: no results within incident (id:$eventid clock:$event_start)");
-						last;
+						next;
 					}
 
 					if (opt('dry-run'))
@@ -760,7 +746,7 @@ TRYFORK:
 					}
 
 					my $values_from = $test_results[0]->{'start'};
-					my $values_till = $test_results[$test_results_count - 1]->{'end'};
+					my $values_till = $test_results[-1]->{'end'};
 
 					if ($service eq 'dns' or $service eq 'dnssec')
 					{
@@ -1125,17 +1111,19 @@ TRYFORK:
 					{
 						fail("THIS SHOULD NEVER HAPPEN (unknown service \"$service\")");
 					}
-				} # foreach (@$incidents)
+				} # foreach my $incident (...)
 
-				foreach (@{$rollweek_incidents})
+				foreach my $rolling_week_incident (@{$rollweek_incidents})
 				{
-					my $eventid = $_->{'eventid'};
-					my $event_start = $_->{'start'};
-					my $event_end = $_->{'end'};
-					my $false_positive = $_->{'false_positive'};
-
-					push(@{$json_state_ref->{'testedServices'}->{uc($service)}->{'incidents'}},
-						ah_create_incident_json($eventid, $event_start, $event_end, $false_positive));
+					push(
+						@{$json_state_ref->{'testedServices'}->{uc($service)}->{'incidents'}},
+						ah_create_incident_json(
+							$rolling_week_incident->{'eventid'},
+							$rolling_week_incident->{'start'},
+							$rolling_week_incident->{'end'},
+							$rolling_week_incident->{'false_positive'}
+						)
+					);
 				}
 			} # foreach my $service
 

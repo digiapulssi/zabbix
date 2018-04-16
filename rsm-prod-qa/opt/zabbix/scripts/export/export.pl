@@ -189,6 +189,8 @@ else
 
 my ($time_start, $time_get_test_data, $time_load_ids, $time_process_records, $time_write_csv);
 
+my $child_failed = 0;
+
 # go through all the databases
 my @server_keys = get_rsm_server_keys($config);
 foreach (@server_keys)
@@ -283,6 +285,15 @@ while ($tld_index < $tld_count)
 
 	handle_children();
 
+	if (child_failed())
+	{
+		$child_failed = 1;
+
+		info("one of the child processes failed, terminating others...");
+		kill_processes();
+		goto WAIT_CHILDREN;
+	}
+
 	sleep(EXPORT_LOOP_SLEEP);
 }
 
@@ -290,13 +301,25 @@ last if (opt('tld'));
 }	# foreach (@server_keys)
 undef($server_key) unless (opt('tld'));	# keep $server_key if --tld was specified (for __get_false_positives())
 
+WAIT_CHILDREN:
 # wait till children finish
 while (children_running() > 0)
 {
 	handle_children();
 
+	# check again if one of remaining children failed
+	if ($child_failed == 0 && child_failed())
+	{
+		$child_failed = 1;
+
+		info("one of the child processes failed, terminating others...");
+		kill_processes();
+	}
+
 	sleep(EXPORT_LOOP_SLEEP);
 }
+
+slv_exit(E_FAIL) unless ($child_failed == 0);
 
 # at this point there should be no child processes so we do not care about locking
 
@@ -582,7 +605,7 @@ sub __get_test_data
 			$epp_str_items_ref = get_epp_str_itemids($tld, getopt('probe'), $services->{$service}->{'key_ip'});
 		}
 
-		my (@empty_arr, $rows_ref, $incidents, $incidents_count);
+		my (@empty_arr, $rows_ref, $incidents);
 
 		if ($itemid_avail)
 		{
@@ -601,8 +624,6 @@ sub __get_test_data
 			$incidents = \@empty_arr;
 			$rows_ref = \@empty_arr;
 		}
-
-		$incidents_count = scalar(@$incidents);
 
 		my $cycles;
 		my $last_avail_clock;
@@ -636,7 +657,7 @@ sub __get_test_data
 			#   0 seconds <--zero or more minutes--> 30                                  59
 			#
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			# todo phase 1: make sure this uses avail valuemaps in phase1
 			# todo: later rewrite to use valuemap ID from item
@@ -651,7 +672,7 @@ sub __get_test_data
 				" from history".
 				" where itemid=$itemid_rollweek".
 					" and " . sql_time_condition($service_from, $service_till).
-				" order by itemid,clock");	# NB! order is important, see how the result is used below
+				" order by clock");	# NB! order is important, see how the result is used below
 		}
 		else
 		{
@@ -665,7 +686,7 @@ sub __get_test_data
 
 			#dbg("$service rolling week at ", ts_full($clock), ": $value");
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			$cycles->{$cycleclock}->{'rollweek'} = $value;
 		}
@@ -785,6 +806,8 @@ sub __get_test_data
 sub __save_csv_data
 {
 	my $result = shift;
+
+	my $cur_tld = $tld;	# save to restore at the end
 
 	# push data to CSV files
 	foreach (sort(keys(%{$result})))
@@ -1105,7 +1128,12 @@ sub __save_csv_data
 				my $failed_tests = $_->{'failed_tests'};
 				my $false_positive = $_->{'false_positive'};
 
-				dbg("incident id:$eventid start:", ts_full($event_start), " end:", ts_full($event_end), " fp:$false_positive failed_tests:", (defined($failed_tests) ? $failed_tests : "(null)")) if (opt('debug'));
+				if (opt('debug'))
+				{
+					dbg("incident id:$eventid start:" . ts_full($event_start) .
+							" end:" . ts_full($event_end) . " fp:$false_positive" .
+							" failed_tests:" . ($failed_tests // "(null)"));
+				}
 
 				# write event that resolves incident
 				if ($event_end)
@@ -1140,7 +1168,8 @@ sub __save_csv_data
 
 		$time_write_csv = time();
 	}
-	$tld = undef;
+
+	$tld = $cur_tld;	# restore
 }
 
 sub __add_csv_test
@@ -1577,7 +1606,7 @@ sub __get_dns_test_values
 				undef($new_value);
 			}
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			# TODO: rename (in all functions):
 			#
@@ -1752,7 +1781,7 @@ sub __get_incidents2
 			# do not add 'value=TRIGGER_VALUE_TRUE' to SQL above just for corner case of 2 events at the same second
 			if ($value == TRIGGER_VALUE_TRUE)
 			{
-				push(@incidents, __make_incident($eventid, $false_positive, __cycle_start($clock, $delay)));
+				push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 
 				$last_trigger_value = TRIGGER_VALUE_TRUE;
 			}
@@ -1788,7 +1817,7 @@ sub __get_incidents2
 				# replace with current
 				$incidents[$idx]->{'eventid'} = $eventid;
 				$incidents[$idx]->{'false_positive'} = $false_positive;
-				$incidents[$idx]->{'start'} = __cycle_start($clock, $delay);
+				$incidents[$idx]->{'start'} = cycle_start($clock, $delay);
 			}
 		}
 
@@ -1815,7 +1844,7 @@ sub __get_incidents2
 		else
 		{
 			# event that starts an incident
-			push(@incidents, __make_incident($eventid, $false_positive, __cycle_start($clock, $delay)));
+			push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 		}
 
 		$last_trigger_value = $value;
@@ -1831,37 +1860,16 @@ sub __get_incidents2
 			my $inc_till = $_->{'end'};
 			my $false_positive = $_->{'false_positive'};
 
-			if (opt('debug'))
-			{
-				my $str = "$eventid";
-				$str .= " (false positive)" if ($false_positive != 0);
-				$str .= ": " . ts_str($inc_from) . " ($inc_from) -> ";
-				$str .= $inc_till ? ts_str($inc_till) . " ($inc_till)" : "null";
+			my $str = "$eventid";
+			$str .= " (false positive)" if ($false_positive != 0);
+			$str .= ": " . ts_str($inc_from) . " ($inc_from) -> ";
+			$str .= $inc_till ? ts_str($inc_till) . " ($inc_till)" : "null";
 
-				dbg($str);
-			}
+			dbg($str);
 		}
 	}
 
 	return \@incidents;
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __cycle_start
-{
-	my $now = shift;
-	my $delay = shift;
-
-	return $now - ($now % $delay);
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __cycle_end
-{
-	my $now = shift;
-	my $delay = shift;
-
-	return $now + $delay - ($now % $delay) - 1;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -2036,7 +2044,7 @@ sub __get_rdds_test_values
 			undef($value);
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
@@ -2066,7 +2074,7 @@ sub __get_rdds_test_values
 			fail("internal error: unknown item key (itemid:$itemid), expected item key representing the IP involved in $interface test");
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
@@ -2124,7 +2132,7 @@ sub __get_epp_test_values
 			unless (defined($probe) and defined($key));
 
 		my $command = __get_epp_dbl_type($key);
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# TODO: EPP: it's not yet decided if 3 EPP RTTs
 		# (login, info, update) are coming in one metric or 3
@@ -2159,7 +2167,7 @@ sub __get_epp_test_values
 			fail("internal error: unknown item key \"$key\", expected item key representing the IP involved in EPP test");
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_TARGET_IP()} = $ip;
