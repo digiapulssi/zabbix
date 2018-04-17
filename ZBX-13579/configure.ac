@@ -19,7 +19,7 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([Zabbix],[3.4.8rc1])
+AC_INIT([Zabbix],[3.4.9rc1])
 AC_CONFIG_SRCDIR(src/zabbix_server/server.c)
 AM_INIT_AUTOMAKE([subdir-objects])
 
@@ -1574,17 +1574,6 @@ dnl Starting from 2.0 agent can do web monitoring
 AGENT_LDFLAGS="$AGENT_LDFLAGS $LIBCURL_LDFLAGS"
 AGENT_LIBS="$AGENT_LIBS $LIBCURL_LIBS"
 
-found_iconv="no"
-dnl Check for libiconv [by default - skip]
-LIBICONV_CHECK_CONFIG([no])
-if test "x$found_iconv" != "xyes"; then
-	AC_MSG_ERROR([Unable to use iconv (libiconv check failed)])
-fi
-LDFLAGS="$LDFLAGS $ICONV_LDFLAGS"
-LIBS="$LIBS $ICONV_LIBS"
-
-AC_SUBST(ICONV_CFLAGS)
-
 dnl Check for libpcre, used by Zabbix for regular expressions
 if test "x$server" = "xyes" || test "x$proxy" = "xyes" || test "x$agent" = "xyes"; then
 	LIBPCRE_CHECK_CONFIG([no])
@@ -1602,6 +1591,17 @@ else
 fi
 
 AC_SUBST(LIBPCRE_CFLAGS)
+
+found_iconv="no"
+dnl Check for libiconv [by default - skip]
+LIBICONV_CHECK_CONFIG([no])
+if test "x$found_iconv" != "xyes"; then
+	AC_MSG_ERROR([Unable to use iconv (libiconv check failed)])
+fi
+LDFLAGS="$LDFLAGS $ICONV_LDFLAGS"
+LIBS="$LIBS $ICONV_LIBS"
+
+AC_SUBST(ICONV_CFLAGS)
 
 RANLIB="ranlib"
 AC_SUBST(RANLIB)
