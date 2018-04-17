@@ -95,6 +95,9 @@ typedef enum
 	ZBX_DNSKEYS_INTERNAL,
 	ZBX_DNSKEYS_NOREPLY,
 	ZBX_DNSKEYS_NOADBIT,
+	ZBX_DNSKEYS_SERVFAIL,
+	ZBX_DNSKEYS_NXDOMAIN,
+	ZBX_DNSKEYS_CATCHALL,
 	ZBX_DNSKEYS_NONE
 }
 zbx_dnskeys_error_t;
@@ -821,6 +824,12 @@ static int	zbx_dnskeys_error_to_ ## __protocol (zbx_dnskeys_error_t err)	\
 			return ZBX_EC_DNS_ ## __protocol ## _RES_NOREPLY;	\
 		case ZBX_DNSKEYS_NOADBIT:					\
 			return ZBX_EC_DNS_ ## __protocol ## _RES_NOADBIT;	\
+		case ZBX_DNSKEYS_SERVFAIL:					\
+			return ZBX_EC_DNS_ ## __protocol ## _RES_SERVFAIL;	\
+		case ZBX_DNSKEYS_NXDOMAIN:					\
+			return ZBX_EC_DNS_ ## __protocol ## _RES_NXDOMAIN;	\
+		case ZBX_DNSKEYS_CATCHALL:					\
+			return ZBX_EC_DNS_ ## __protocol ## _RES_CATCHALL;	\
 		case ZBX_DNSKEYS_NONE:						\
 			return ZBX_EC_DNS_ ## __protocol ## _DNSKEY_NONE;	\
 		default:							\
@@ -1183,6 +1192,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 
 	ldns_pkt_print(log_fd, pkt);
 
+	/* ldns supports limited number of rcodes, use ldns_pkt_get_rcode() when it is fixed */
 	rcode = pkt->_header->_rcode;
 
 	/* verify RCODE */
@@ -1190,11 +1200,8 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	{
 		char	*rcode_str;
 
-		/* ldns supports limited number of rcodes */
 		rcode_str = ldns_pkt_rcode2str(ldns_pkt_get_rcode(pkt));
-		zbx_snprintf(err, err_size,
-				"unexpected RCODE in reply to \"IN A %s\" from nameserver \"%s\" (%s),"
-				" (expected NXDOMAIN, got:%s)", testname, ns, ip, rcode_str);
+		zbx_snprintf(err, err_size, "expected NXDOMAIN got %s", rcode_str);
 		zbx_free(rcode_str);
 
 		*rtt = DNS[DNS_PROTO(res)].rcode_not_nxdomain(rcode);
@@ -1438,6 +1445,7 @@ static int	zbx_get_dnskeys(ldns_resolver *res, const char *domain, const char *r
 	ldns_pkt	*pkt = NULL;
 	ldns_rdf	*domain_rdf = NULL;
 	ldns_status	status;
+	ldns_pkt_rcode	rcode;
 	int		ret = FAIL;
 
 	if (NULL == (domain_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, domain)))
@@ -1461,12 +1469,35 @@ static int	zbx_get_dnskeys(ldns_resolver *res, const char *domain, const char *r
 	/* log the packet */
 	ldns_pkt_print(pkt_file, pkt);
 
-	/* check the ad flag */
+	/* check the AD bit */
 	if (0 == ldns_pkt_ad(pkt))
 	{
-		zbx_snprintf(err, err_size, "AD flag not set in the answer of \"%s\" from resolver \"%s\"",
+		zbx_snprintf(err, err_size, "AD bit not present in the answer of \"%s\" from resolver \"%s\"",
 				domain, resolver);
 		*ec = ZBX_DNSKEYS_NOADBIT;
+		goto out;
+	}
+
+	if (LDNS_RCODE_NOERROR != (rcode = ldns_pkt_get_rcode(pkt)))
+	{
+		char    *rcode_str;
+
+		rcode_str = ldns_pkt_rcode2str(rcode);
+		zbx_snprintf(err, err_size, "expected NOERROR got %s", rcode_str);
+		zbx_free(rcode_str);
+
+		switch (rcode)
+		{
+			case LDNS_RCODE_SERVFAIL:
+				*ec = ZBX_DNSKEYS_SERVFAIL;
+				break;
+			case LDNS_RCODE_NXDOMAIN:
+				*ec = ZBX_DNSKEYS_NXDOMAIN;
+				break;
+			default:
+				*ec = ZBX_DNSKEYS_CATCHALL;
+		}
+
 		goto out;
 	}
 
@@ -2165,6 +2196,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		int	res_ec;
 
 		zbx_rsm_err(log_fd, err);
+
 		res_ec = DNS[DNS_PROTO(res)].dnskeys_error(ec_dnskeys);
 
 		for (i = 0; i < nss_num; i++)
@@ -2624,7 +2656,7 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_v
 			char	*rcode_str;
 
 			rcode_str = ldns_pkt_rcode2str(rcode);
-			zbx_snprintf(err, err_size, "got error while resolving host \"%s\": %s", host, rcode_str);
+			zbx_snprintf(err, err_size, "expected NOERROR got %s", rcode_str);
 			zbx_free(rcode_str);
 
 			switch (rcode)
