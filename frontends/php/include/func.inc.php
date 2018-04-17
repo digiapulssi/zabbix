@@ -635,11 +635,11 @@ function convert_units($options = []) {
 
 	if (in_array($options['units'], $blackList) || (zbx_empty($options['units'])
 			&& ($options['convert'] == ITEM_CONVERT_WITH_UNITS))) {
-		if (preg_match('/^\-?\d+\.\d+$/', $options['value'])) {
-			if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD) {
-				$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
-			}
-			$options['value'] = sprintf('%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f', $options['value']);
+		if (preg_match('/\.\d+$/', $options['value'])) {
+			$format = (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD)
+				? '%.'.ZBX_UNITS_ROUNDOFF_UPPER_LIMIT.'f'
+				: '%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f';
+			$options['value'] = sprintf($format, $options['value']);
 		}
 		$options['value'] = preg_replace('/^([\-0-9]+)(\.)([0-9]*)[0]+$/U', '$1$2$3', $options['value']);
 		$options['value'] = rtrim($options['value'], '.');
