@@ -102,7 +102,25 @@ sub handle_children
 			}
 		}
 
-		delete($PIDS{$pid}) unless ($PIDS{$pid}{'alive'});
+		unless ($PIDS{$pid}{'alive'})
+		{
+			delete($PIDS{$pid});
+			next;
+		}
+
+		unless ((my $res = waitpid($pid, WNOHANG)) == 0)
+		{
+			if ($res > 0)
+			{
+				info("waitpid($pid, WNOHANG) returned $res which makes no sense") unless ($res == $pid);
+				info("for some reason we consider $pid alive but it has apaarently exited, reap it now");
+				delete($PIDS{$pid});
+			}
+			else
+			{
+				info("waitpid($pid, WNOHANG) returned $res which must be some kind of error");
+			}
+		}
 	}
 }
 
