@@ -42,11 +42,11 @@ if (array_key_exists('dns_udp_nameservers', $data)) {
 		if (array_key_exists('ipv4', $ns_ips)) {
 			$cols_cnt += count($ns_ips['ipv4']);
 			$row_3 = array_merge($row_3, array_keys($ns_ips['ipv4']));
-	}
+		}
 		if (array_key_exists('ipv6', $ns_ips)) {
 			$cols_cnt += count($ns_ips['ipv6']);
 			$row_3 = array_merge($row_3, array_keys($ns_ips['ipv6']));
-}
+		}
 
 		$row_2->addItem((new CTag('th', true, $ns_name))
 			->setAttribute('colspan', $cols_cnt)
@@ -188,8 +188,8 @@ if ($data['type'] == RSM_DNS) {
 			foreach (array_keys($ns_ips['ipv4']) as $ipv => $ip) {
 				$error_key = 'udp_'.$ns_name.'_ipv4_'.$ip;
 				$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '';
+			}
 		}
-	}
 
 		if (array_key_exists('ipv6', $ns_ips)) {
 			foreach (array_keys($ns_ips['ipv6']) as $ipv => $ip) {
