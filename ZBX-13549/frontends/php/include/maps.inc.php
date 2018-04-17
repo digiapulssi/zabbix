@@ -955,7 +955,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 			'preservekeys' => true
 		]);
 
-		foreach ($triggers as &$trigger) {
+		foreach ($triggers as $trigger) {
 			if (!array_key_exists($trigger['triggerid'], $monitored_triggers)) {
 				$trigger['status'] = TRIGGER_STATUS_DISABLED;
 			}
@@ -964,7 +964,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 				$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger;
 			}
 		}
-		unset($trigger, $monitored_triggers);
+		unset($monitored_triggers);
 	}
 
 	// triggers from submaps, skip dependent
