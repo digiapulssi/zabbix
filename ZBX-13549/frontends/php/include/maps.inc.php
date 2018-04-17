@@ -964,7 +964,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 				$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger;
 			}
 		}
-		unset($monitored_triggers);
+		unset($triggers, $monitored_triggers);
 	}
 
 	// triggers from submaps, skip dependent
@@ -997,7 +997,7 @@ function getSelementsInfo($sysmap, array $options = []) {
 				$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger;
 			}
 		}
-		unset($monitored_triggers);
+		unset($triggers, $monitored_triggers);
 	}
 
 	$monitored_hostids = [];
