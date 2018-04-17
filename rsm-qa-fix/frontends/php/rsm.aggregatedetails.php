@@ -365,26 +365,29 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			 */
 			foreach ($probe['results_udp'] as $ns => &$ipvs) {
 				foreach (['ipv4', 'ipv6'] as $ipv) {
-					foreach ($ipvs[$ipv] as $item_value) {
-						if ($item_value !== null && ($item_value > $data['udp_rtt'] || isDNSErrorCode($item_value, $data['type']))) {
-							$ipvs['status'] = NAMESERVER_DOWN;
-							$probe['udp_ns_down']++;
-							unset($nameservers_up[$ns]);
-							break(2);
-						}
-						elseif ($item_value !== null) {
-							$nameservers_up[$ns] = true;
-							$ipvs['status'] = NAMESERVER_UP;
-							/**
-							 * Break is no missed here. If value is positive, we still continue to search for negative
-							 * values to change the status to NAMESERVER_DOWN once found.
-							 *
-							 * It is opposite with negative values. Once negative value is found, NameServer is marked
-							 * as NAMESERVER_DOWN and cannot be turned back to NAMESERVER_UP.
-							 *
-							 * In fact, NAMESERVER_UP means that there are some items with values for particular
-							 * NameServer and non of them is in the range of error codes.
-							 */
+					if (array_key_exists($ipv, $ipvs)) {
+						foreach ($ipvs[$ipv] as $item_value) {
+							if ($item_value !== null
+									&& ($item_value > $data['udp_rtt'] || isDNSErrorCode($item_value, $data['type']))) {
+								$ipvs['status'] = NAMESERVER_DOWN;
+								$probe['udp_ns_down']++;
+								unset($nameservers_up[$ns]);
+								break(2);
+							}
+							elseif ($item_value !== null) {
+								$nameservers_up[$ns] = true;
+								$ipvs['status'] = NAMESERVER_UP;
+								/**
+								 * Break is no missed here. If value is positive, we still continue to search for negative
+								 * values to change the status to NAMESERVER_DOWN once found.
+								 *
+								 * It is opposite with negative values. Once negative value is found, NameServer is marked
+								 * as NAMESERVER_DOWN and cannot be turned back to NAMESERVER_UP.
+								 *
+								 * In fact, NAMESERVER_UP means that there are some items with values for particular
+								 * NameServer and non of them is in the range of error codes.
+								 */
+							}
 						}
 					}
 				}
