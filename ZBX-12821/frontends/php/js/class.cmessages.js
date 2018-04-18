@@ -300,7 +300,7 @@ var CMessageList = Class.create({
 
 		new RPC.Call(rpcRequest);
 
-		jQuery(this.dom.container).slideUp(this.effectTimeout);
+		jQuery(this.dom.container).hide();
 
 		for (var messageid in this.messageList) {
 			if (!empty(this.messageList[messageid])) {
