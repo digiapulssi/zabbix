@@ -608,7 +608,7 @@ if ($this->data['displayApplications']) {
 					'srcfld1' => 'applicationid',
 					'multiselect' => '1',
 					'noempty' => '1',
-					'hostid' => $this->data['hostid']
+					'only_hostid' => $this->data['hostid']
 				]
 			]
 		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
@@ -666,7 +666,7 @@ if ($this->data['displayApplications']) {
 					'srcfld1' => 'applicationid',
 					'multiselect' => '1',
 					'noempty' => '1',
-					'hostid' => $this->data['hostid']
+					'only_hostid' => $this->data['hostid']
 				]
 			]
 		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
