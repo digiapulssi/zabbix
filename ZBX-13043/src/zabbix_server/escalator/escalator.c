@@ -761,7 +761,7 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 		else
 		{
 			status = ALERT_STATUS_FAILED;
-			perror = "Media type disabled";
+			perror = "Media type disabled.";
 		}
 
 		if (0 == medias_num++)
@@ -782,7 +782,7 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 	{
 		medias_num++;
 
-		zbx_snprintf(error, sizeof(error), "No media defined for user.");
+		zbx_snprintf(error, sizeof(error), "No enabled media defined for user.");
 
 		zbx_db_insert_prepare(&db_insert, "alerts", "alertid", "actionid", "eventid", "userid", "clock",
 				"subject", "message", "status", "retries", "error", "esc_step", "alerttype", NULL);
