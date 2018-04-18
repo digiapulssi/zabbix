@@ -42,7 +42,7 @@ static int	get_http_page(const char *host, const char *path, unsigned short port
 	if (NULL != (wrong_chr = strpbrk(host, URI_PROHIBIT_CHARS)))
 	{
 		*error = zbx_dsprintf(NULL, "Invalid characters are present after first part of hostname:%.*s",
-				(int)(wrong_chr - path), host);
+				(int)(wrong_chr - host), host);
 		return SYSINFO_RET_FAIL;
 	}
 
