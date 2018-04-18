@@ -52,10 +52,10 @@ else {
 
 $table = (new CTableInfo())->setHeader($headers);
 
-$down = (new CSpan(_('Down')))->addClass('red');
-$offline = (new CSpan(_('Offline')))->addClass('grey');
-$noResult = (new CSpan(_('No result')))->addClass('grey');
-$up = (new CSpan(_('Up')))->addClass('green');
+$down = (new CSpan(_('Down')))->addClass(ZBX_STYLE_RED);
+$offline = (new CSpan(_('Offline')))->addClass(ZBX_STYLE_GREY);
+$noResult = (new CSpan(_('No result')))->addClass(ZBX_STYLE_GREY);
+$up = (new CSpan(_('Up')))->addClass(ZBX_STYLE_GREEN);
 
 $offlineProbes = 0;
 $noResultProbes = 0;
@@ -78,7 +78,7 @@ foreach ($this->data['probes'] as $probe) {
 			$link = $offline;
 		}
 		elseif ($this->data['type'] == RSM_RDDS) {
-			$rdds = 'grey';
+			$rdds = ZBX_STYLE_GREY;
 			$rdds43 = $offline;
 			$rdds80 = $offline;
 		}
@@ -95,7 +95,7 @@ foreach ($this->data['probes'] as $probe) {
 
 				if ($probe['result'] === null) {
 					$noResultProbes++;
-					$link = (new CSpan(_('No result')))->addClass('grey');
+					$link = (new CSpan(_('No result')))->addClass(ZBX_STYLE_GREY);
 				}
 				else {
 					if ($probe['result'] !== null && $probe['result'] != 0) {
@@ -114,7 +114,7 @@ foreach ($this->data['probes'] as $probe) {
 				}
 			}
 			else {
-				$link = (new CSpan(_('Not monitored')))->addClass('red');
+				$link = (new CSpan(_('Not monitored')))->addClass(ZBX_STYLE_RED);
 			}
 		}
 		elseif ($this->data['type'] == RSM_DNSSEC) {
@@ -144,13 +144,13 @@ foreach ($this->data['probes'] as $probe) {
 
 				// get test results color
 				if ($okResults && !$failResults && !$noResults) {
-					$class = 'green';
+					$class = ZBX_STYLE_GREEN;
 				}
 				elseif ($failResults && !$okResults && !$noResults) {
-					$class = 'red';
+					$class = ZBX_STYLE_RED;
 				}
 				elseif ($noResults && !$okResults && !$failResults) {
-					$class = 'grey';
+					$class = ZBX_STYLE_GREY;
 					$noResultProbes++;
 				}
 				else {
@@ -165,7 +165,7 @@ foreach ($this->data['probes'] as $probe) {
 					->addClass($class);
 			}
 			else {
-				$link = (new CSpan(_('Not monitored')))->addClass('red');
+				$link = (new CSpan(_('Not monitored')))->addClass(ZBX_STYLE_RED);
 			}
 		}
 		elseif ($this->data['type'] == RSM_RDDS) {
@@ -173,54 +173,54 @@ foreach ($this->data['probes'] as $probe) {
 			if (!isset($probe['value']) || $probe['value'] === null) {
 				$rdds43 = $noResult;
 				$rdds80 = $noResult;
-				$rdds = 'grey';
+				$rdds = ZBX_STYLE_GREY;
 				$noResultProbes++;
 			}
 			elseif ($probe['value'] == 0) {
 				$rdds43 = $down;
 				$rdds80 = $down;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 1) {
 				$rdds43 = $up;
 				$rdds80 = $up;
-				$rdds = 'green';
+				$rdds = ZBX_STYLE_GREEN;
 			}
 			elseif ($probe['value'] == 2) {
 				$rdds43 = $up;
 				$rdds80 = $down;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 3) {
 				$rdds43 = $down;
 				$rdds80 = $up;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 4) {
 				$rdds43 = $down;
 				$rdds80 = $down;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 5) {
 				$rdds43 = $noResult;
 				$rdds80 = $up;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 6) {
 				$rdds43 = $up;
 				$rdds80 = $noResult;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 7) {
 				$rdds43 = $up;
 				$rdds80 = $up;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 		}
