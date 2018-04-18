@@ -3,8 +3,15 @@ Changes for 3.4.9rc1
 New features:
 
 Bug fixes:
-.........T [ZBX-13535] fixed trigger recovery expression for 'High error rate' trigger (vitaly)
 .........T [ZBX-13278] fixed trigger expression for 'Link down' trigger (vitaly)
+...G...... [ZBX-12805] increased command line limit for proc.num checks on hp-ux systems (Andris, wiper)
+..F....... [ZBX-13728] fixed problem duration on trigger page being calculated incorrectly (agriscenko)
+...G...PS. [ZBX-13660] fixed data types passed to is_ushort() for converting PID, port and process number (Andris)
+..F....... [ZBX-12935,ZBX-13539] fixed displaying of floating point values under the "Latest data" page (Sasha)
+...G...PS. [ZBX-13579] fixed unnecessary data getting when agent becomes available in the non-collection data period (Sergejs)
+..F....... [ZBX-13685] fixed maintenance entries displayed in list when filter is applied (agriscenko)
+....I..... [ZBX-12756] improved configure script to check iconv library (MVekslers)
+........S. [ZBX-13667] added notification in zabbix server log about 'error' in elasticsearch json response (MVekslers)
 ..F....... [ZBX-13683] fixed multiselect items not being sorted by name (agriscenko)
 ........S. [ZBX-13299] fixed autoregistration, discovery and internal notifications not being sent due to uninitialized severity (vso)
 ....I..... [ZBX-13607] changed ping script to return success also for timeouts (wiper)
@@ -1188,6 +1195,9 @@ Changes for 3.0.17rc1
 New features:
 
 Bug fixes:
+A.F....... [ZBX-13680] fixed action not being cloned due to existing operation id being submitted (agriscenko)
+...G...PS. [ZBX-13660] fixed data types passed to is_ushort() for converting PID, port and process number (Andris)
+..F....... [ZBX-12935,ZBX-13539] fixed displaying of floating point values under the "Latest data" page (Sasha)
 ..F....... [ZBX-13500] fixed fractional values in triggers being misinterpreted without a leading 0 (agriscenko)
 ..F....... [ZBX-13561] fixed incorrectly displayed pie graph when first item has no data (Ivo)
 
