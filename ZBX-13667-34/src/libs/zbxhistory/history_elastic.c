@@ -262,7 +262,7 @@ static int	elastic_is_error_present(zbx_httppage_t *page, char **err)
 	const char		*errors, *p = NULL;
 	char			*index = NULL, *status = NULL, *type = NULL, *reason = NULL;
 	size_t			index_alloc = 0, status_alloc = 0, type_alloc = 0, reason_alloc = 0;
-	int			rc_js = FAIL;
+	int			rc_js = SUCCEED;
 
 	zabbix_log(LOG_LEVEL_TRACE, "%s() raw json: %s", __function_name, ZBX_NULL2EMPTY_STR(page->data));
 
@@ -297,11 +297,11 @@ static int	elastic_is_error_present(zbx_httppage_t *page, char **err)
 		}
 	}
 	else
-		rc_js = SUCCEED;
+		rc_js = FAIL;
 
 	*err = zbx_dsprintf(NULL,"index:%s status:%s type:%s reason:%s%s", ZBX_NULL2EMPTY_STR(index),
 			ZBX_NULL2EMPTY_STR(status), ZBX_NULL2EMPTY_STR(type), ZBX_NULL2EMPTY_STR(reason),
-			SUCCEED != rc_js ? " / elasticsearch version is not fully compatible with zabbix server" : "");
+			FAIL == rc_js ? " / elasticsearch version is not fully compatible with zabbix server" : "");
 
 	zbx_free(status);
 	zbx_free(type);
