@@ -340,7 +340,12 @@ int	VFS_FILE_REGEXP(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 		utf8 = convert_to_utf8(buf, nbytes, encoding);
 		zbx_rtrim(utf8, "\r\n");
-		zbx_regexp_sub(utf8, regexp, output, &ptr);
+		int sr = zbx_regexp_sub(utf8, regexp, output, &ptr);
+		if (RUNAWAY_ALGORITHM == sr)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Runaway expression."));
+			goto err;
+		}
 		zbx_free(utf8);
 
 		if (NULL != ptr)

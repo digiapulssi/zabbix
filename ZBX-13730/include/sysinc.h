@@ -349,7 +349,8 @@
 #endif
 
 #ifdef HAVE_PCREPOSIX_H
-#	include <pcreposix.h>
+// #	include <pcreposix.h>
+#	include <pcre.h>
 #endif
 
 #ifdef HAVE_VM_VM_PARAM_H

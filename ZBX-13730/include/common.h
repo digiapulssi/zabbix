@@ -78,14 +78,15 @@ extern char ZABBIX_EVENT_SOURCE[ZBX_SERVICE_NAME_LEN];
 #	pragma warning (disable: 4996)	/* warning C4996: <function> was declared deprecated */
 #endif
 
-#define	SUCCEED		0
-#define	FAIL		-1
-#define	NOTSUPPORTED	-2
-#define	NETWORK_ERROR	-3
-#define	TIMEOUT_ERROR	-4
-#define	AGENT_ERROR	-5
-#define	GATEWAY_ERROR	-6
-#define	CONFIG_ERROR	-7
+#define	SUCCEED			 0
+#define	FAIL			-1
+#define	NOTSUPPORTED		-2
+#define	NETWORK_ERROR		-3
+#define	TIMEOUT_ERROR		-4
+#define	AGENT_ERROR		-5
+#define	GATEWAY_ERROR		-6
+#define	CONFIG_ERROR		-7
+#define RUNAWAY_ALGORITHM	-8
 
 #define SUCCEED_OR_FAIL(result) (FAIL != (result) ? SUCCEED : FAIL)
 const char	*zbx_sysinfo_ret_string(int ret);
@@ -1431,4 +1432,3 @@ const char	*zbx_variant_type_desc(const zbx_variant_t *value);
 int	zbx_validate_value_dbl(double value);
 
 #endif
-

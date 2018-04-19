@@ -44,7 +44,7 @@
  *               If filename fails to pass, 0 is returned.                    *
  *                                                                            *
  ******************************************************************************/
-static int	filename_matches(const char *fname, const regex_t *regex_incl, const regex_t *regex_excl)
+static int	filename_matches(const char *fname, const pcre *regex_incl, const pcre *regex_excl)
 {
 	return ((NULL == regex_incl || 0 == zbx_regexp_match_precompiled(fname, regex_incl)) &&
 			(NULL == regex_excl || 0 != zbx_regexp_match_precompiled(fname, regex_excl)));
@@ -110,10 +110,11 @@ static int	compare_descriptors(const void *file_a, const void *file_b)
 	return (fa->st_ino != fb->st_ino || fa->st_dev != fb->st_dev);
 }
 
-static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, regex_t **regex_incl,
-		regex_t **regex_excl, int *mode, int *max_depth, char **dir, zbx_stat_t *status)
+static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, pcre **regex_incl,
+		pcre **regex_excl, int *mode, int *max_depth, char **dir, zbx_stat_t *status)
 {
-	char	*dir_param, *regex_incl_str, *regex_excl_str, *mode_str, *max_depth_str, *error = NULL;
+	char *dir_param, *regex_incl_str, *regex_excl_str, *mode_str, *max_depth_str;
+	const char *error = NULL;
 
 	if (5 < request->nparam)
 	{
@@ -135,14 +136,13 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, rege
 
 	if (NULL != regex_incl_str && '\0' != *regex_incl_str)
 	{
-		*regex_incl = (regex_t*)zbx_malloc(*regex_incl, sizeof(regex_t));
+		*regex_incl = zbx_regexp_compile(
+			regex_incl_str, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
 
-		if (SUCCEED != zbx_regexp_compile(regex_incl_str, REG_EXTENDED | REG_NEWLINE | REG_NOSUB, *regex_incl,
-				&error))
+		if (NULL != *regex_incl)
 		{
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL,
 					"Invalid regular expression in second parameter: %s", error));
-			zbx_free(error);
 			zbx_free(*regex_incl);
 			return FAIL;
 		}
@@ -150,14 +150,13 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, rege
 
 	if (NULL != regex_excl_str && '\0' != *regex_excl_str)
 	{
-		*regex_excl = (regex_t*)zbx_malloc(*regex_excl, sizeof(regex_t));
+		*regex_excl = zbx_regexp_compile(
+			regex_excl_str, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
 
-		if (SUCCEED != zbx_regexp_compile(regex_excl_str, REG_EXTENDED | REG_NEWLINE | REG_NOSUB, *regex_excl,
-				&error))
+		if (NULL != *regex_excl)
 		{
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL,
 					"Invalid regular expression in third parameter: %s", error));
-			zbx_free(error);
 			zbx_free(*regex_excl);
 			return FAIL;
 		}
@@ -216,18 +215,16 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, rege
 	return SUCCEED;
 }
 
-static void	regex_incl_excl_free(regex_t *regex_incl, regex_t *regex_excl)
+static void	regex_incl_excl_free(pcre *regex_incl, pcre *regex_excl)
 {
 	if (NULL != regex_incl)
 	{
 		zbx_regexp_free(regex_incl);
-		zbx_free(regex_incl);
 	}
 
 	if (NULL != regex_excl)
 	{
 		zbx_regexp_free(regex_excl);
-		zbx_free(regex_excl);
 	}
 }
 
@@ -344,7 +341,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_uint64_t		size = 0;
 	zbx_vector_ptr_t	list;
 	zbx_stat_t		status;
-	regex_t			*regex_incl = NULL, *regex_excl = NULL;
+	pcre			*regex_incl = NULL, *regex_excl = NULL;
 	zbx_directory_item_t	*item;
 	zbx_vector_ptr_t	descriptors;
 
@@ -497,7 +494,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_vector_ptr_t	list, descriptors;
 	zbx_directory_item_t	*item;
 	zbx_stat_t		status;
-	regex_t			*regex_incl = NULL, *regex_excl = NULL;
+	pcre			*regex_incl = NULL, *regex_excl = NULL;
 	DIR 			*directory;
 	struct dirent 		*entry;
 	zbx_file_descriptor_t	*file;

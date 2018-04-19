@@ -105,6 +105,8 @@ int	zabbix_decrease_log_level(void)
 
 void	zbx_redirect_stdio(const char *filename)
 {
+	return;
+
 	int		fd;
 	const char	default_file[] = ZBX_DEV_NULL;
 	int		open_flags = O_WRONLY;
