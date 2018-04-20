@@ -321,7 +321,7 @@ static char	ip_support(char ipv4_enabled, char ipv6_enabled)
 }
 
 static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char *ip, char proto,
-		char ipv4_enabled, char ipv6_enabled, FILE *log_fd, char *err, size_t err_size)
+		char ipv4_enabled, char ipv6_enabled, char dnssec_enabled, FILE *log_fd, char *err, size_t err_size)
 {
 	struct timeval	timeout = {.tv_usec = 0};
 
@@ -349,8 +349,8 @@ static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char
 	/* set number of tries */
 	ldns_resolver_set_retry(*res, (ZBX_RSM_UDP == proto ? ZBX_RSM_UDP_RETRY : ZBX_RSM_TCP_RETRY));
 
-	/* set DNSSEC */
-	ldns_resolver_set_dnssec(*res, true);
+	/* set DNSSEC if needed */
+	ldns_resolver_set_dnssec(*res, dnssec_enabled);
 
 	/* unset the CD flag */
 	ldns_resolver_set_dnssec_cd(*res, false);
@@ -2168,8 +2168,8 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	}
 
 	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, log_fd,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, dnssec_enabled,
+			log_fd, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "cannot create resolver: %s", err));
 		goto out;
@@ -3288,8 +3288,8 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	}
 
 	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, ZBX_RSM_TCP, ipv4_enabled, ipv6_enabled, log_fd,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, ZBX_RSM_TCP, ipv4_enabled, ipv6_enabled, 0,
+			log_fd, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "cannot create resolver: %s", err));
 		goto out;
@@ -4653,9 +4653,9 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		goto out;
 	}
 
-	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, ZBX_RSM_TCP, ipv4_enabled, ipv6_enabled, log_fd,
-			err, sizeof(err)))
+	/* create resolver (TODO ensure dnssec_enabled parameter) */
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, ZBX_RSM_TCP, ipv4_enabled, ipv6_enabled, 1,
+			log_fd, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "cannot create resolver: %s", err));
 		goto out;
@@ -4928,7 +4928,7 @@ static int	zbx_check_dns_connection(ldns_resolver **res, const char *ip, ldns_rd
 	if (NULL == *res)
 	{
 		if (SUCCEED != zbx_create_resolver(res, "root server", ip, ZBX_RSM_UDP, ipv4_enabled, ipv6_enabled,
-				log_fd, err, err_size))
+				0, log_fd, err, err_size))
 		{
 			goto out;
 		}
