@@ -1456,7 +1456,8 @@ static int	zbx_get_dnskeys(ldns_resolver *res, const char *domain, const char *r
 	}
 
 	/* query domain records */
-	status = ldns_resolver_query_status(&pkt, res, domain_rdf, LDNS_RR_TYPE_DNSKEY, LDNS_RR_CLASS_IN, LDNS_RD);
+	status = ldns_resolver_query_status(&pkt, res, domain_rdf, LDNS_RR_TYPE_DNSKEY, LDNS_RR_CLASS_IN,
+			LDNS_RD | LDNS_AD);
 
 	if (LDNS_STATUS_OK != status)
 	{
