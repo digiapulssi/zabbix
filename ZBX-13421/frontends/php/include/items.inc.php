@@ -574,7 +574,6 @@ function copyItems($src_hostid, $dst_hostid) {
 	$dst_hosts = API::Host()->get([
 		'output' => ['hostid', 'host', 'status'],
 		'selectInterfaces' => ['interfaceid', 'type', 'main'],
-		'selectParentTemplates' => ['hostid'],
 		'hostids' => $dst_hostid,
 		'preservekeys' => true,
 		'nopermissions' => true,
@@ -582,41 +581,9 @@ function copyItems($src_hostid, $dst_hostid) {
 	]);
 	$dst_host = reset($dst_hosts);
 
-	$src_hosts = API::Host()->get([
-		'output' => [],
-		'selectParentTemplates' => ['hostid'],
-		'hostids' => $src_hostid
-	]);
-	$src_host = reset($src_hosts);
-
-	$src_parent_templates = zbx_objectValues($src_host['parentTemplates'], 'templateid');
-	$dst_parent_templates = zbx_objectValues($dst_host['parentTemplates'], 'templateid');
-
-	$unlinked_parent_templates = [];
-	foreach ($src_parent_templates as $templateid) {
-		if (!in_array($templateid, $dst_parent_templates)) {
-			$unlinked_parent_templates[] = $templateid;
-		}
-	}
-
-	$unlinked_items = [];
-	$unlinked_templates = [];
-	if ($unlinked_parent_templates) {
-		$unlinked_parent_templates_items = API::Item()->get([
-			'output' => [],
-			'hostids' => $unlinked_parent_templates
-		]);
-		$unlinked_templates = zbx_objectValues($unlinked_parent_templates_items, 'itemid');
-	}
-
 	$create_order = [];
 	$src_itemid_to_key = [];
 	foreach ($src_items as $itemid => $item) {
-		if (in_array($item['templateid'], $unlinked_templates)) {
-			$unlinked_items[] = $itemid;
-			continue;
-		}
-
 		$dependency_level = 0;
 		$master_item = $item;
 		$src_itemid_to_key[$itemid] = $item['key_'];
@@ -649,7 +616,6 @@ function copyItems($src_hostid, $dst_hostid) {
 			if (!$created_itemids) {
 				return false;
 			}
-
 			$created_itemids = $created_itemids['itemids'];
 
 			foreach ($create_items as $index => $created_item) {
@@ -660,13 +626,11 @@ function copyItems($src_hostid, $dst_hostid) {
 		}
 
 		if ($src_item['templateid']) {
-			$src_item = get_same_item_for_host($src_item, $dst_host['hostid']);
+			$same_item = get_same_item_for_host($src_item, $dst_host['hostid']);
 
-			if (!$src_item) {
-				return false;
+			if ($same_item) {
+				$itemkey_to_id[$srcItem['key_']] = $same_item['itemid'];
 			}
-
-			$itemkey_to_id[$src_item['key_']] = $src_item['itemid'];
 
 			continue;
 		}
@@ -700,13 +664,11 @@ function copyItems($src_hostid, $dst_hostid) {
 				$web_item = get_same_item_for_host($src_items[$src_item['master_itemid']], $dst_host['hostid']);
 				$src_item['master_itemid'] = $web_item['itemid'];
 			}
-			elseif (array_key_exists($src_item['master_itemid'], $src_itemid_to_key)) {
+			elseif (array_key_exists($src_itemid_to_key[$srcItem['master_itemid']], $itemkey_to_id)) {
 				$src_item_key = $src_itemid_to_key[$src_item['master_itemid']];
 				$src_item['master_itemid'] = $itemkey_to_id[$src_item_key];
 			}
 			else {
-				$unlinked_items[] = $itemid;
-
 				continue;
 			}
 		}
@@ -721,7 +683,7 @@ function copyItems($src_hostid, $dst_hostid) {
 		return false;
 	}
 
-	return $unlinked_items;
+	return true;
 }
 
 /**

@@ -208,7 +208,7 @@ if ($data['form'] === 'full_clone') {
 		$templateList->addRow(_('Items'), $listBox);
 	}
 
-// Triggers
+	// Triggers
 	$hostTriggers = API::Trigger()->get([
 		'inherited' => false,
 		'hostids' => $data['templateid'],
@@ -229,7 +229,7 @@ if ($data['form'] === 'full_clone') {
 		$templateList->addRow(_('Triggers'), $listBox);
 	}
 
-// Graphs
+	// Graphs
 	$hostGraphs = API::Graph()->get([
 		'inherited' => false,
 		'hostids' => $data['templateid'],
@@ -297,7 +297,7 @@ if ($data['form'] === 'full_clone') {
 			$templateList->addRow(_('Item prototypes'), $listBox);
 		}
 
-// Trigger prototypes
+		// Trigger prototypes
 		$hostTriggerPrototypes = API::TriggerPrototype()->get([
 			'hostids' => $data['templateid'],
 			'discoveryids' => $hostDiscoveryRuleids,
@@ -318,7 +318,7 @@ if ($data['form'] === 'full_clone') {
 			$templateList->addRow(_('Trigger prototypes'), $listBox);
 		}
 
-// Graph prototypes
+		// Graph prototypes
 		$hostGraphPrototypes = API::GraphPrototype()->get([
 			'hostids' => $data['templateid'],
 			'discoveryids' => $hostDiscoveryRuleids,
@@ -342,9 +342,9 @@ if ($data['form'] === 'full_clone') {
 
 	// screens
 	$screens = API::TemplateScreen()->get([
-		'inherited' => false,
-		'templateids' => $data['templateid'],
 		'output' => ['screenid', 'name'],
+		'templateids' => $data['templateid'],
+		'noInheritance' => true
 	]);
 	if (!empty($screens)) {
 		$screensList = [];

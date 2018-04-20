@@ -282,8 +282,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			}
 
 			// Copy templates.
-			$unlinked_templates = copyItems($cloneTemplateId, $templateId);
-			if ($unlinked_templates === false) {
+			if (!copyItems($cloneTemplateId, $templateId)) {
 				throw new Exception();
 			}
 
@@ -337,7 +336,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				'output' => ['screenid'],
 				'templateids' => $cloneTemplateId,
 				'preservekeys' => true,
-				'inherited' => false
+				'noInheritance' => true
 			]);
 
 			if ($dbTemplateScreens) {

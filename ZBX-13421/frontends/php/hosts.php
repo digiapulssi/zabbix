@@ -628,16 +628,24 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			}
 
 			// Copy items.
-			$unlinked_items = copyItems($srcHostId, $hostId);
-			if ($unlinked_items === false) {
+			if (!copyItems($srcHostId, $hostId)) {
 				throw new Exception();
 			}
+
+			$host_items = API::Item()->get([
+				'output' => ['key_'],
+				'hostids' => $hostId,
+				'webitems' => true,
+				'inherited' => false,
+				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
+			]);
+			$host_items = zbx_objectValues($host_items, 'key_');
 
 			// copy triggers
 			$dbTriggers = API::Trigger()->get([
 				'output' => ['triggerid'],
 				'hostids' => $srcHostId,
-				'selectItems' => ['type'],
+				'selectItems' => ['key_'],
 				'inherited' => false,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
 			]);
@@ -645,7 +653,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			if ($dbTriggers) {
 				foreach ($dbTriggers as $index => $trigger) {
 					foreach ($trigger['items'] as $item) {
-						if (in_array($item['itemid'], $unlinked_items)) {
+						if (!in_array($item['key_'], $host_items)) {
 							unset($dbTriggers[$index]);
 							break;
 						}
@@ -679,7 +687,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$dbGraphs = API::Graph()->get([
 				'output' => API_OUTPUT_EXTEND,
 				'selectHosts' => ['hostid'],
-				'selectItems' => ['type'],
+				'selectItems' => ['key_'],
 				'hostids' => $srcHostId,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'inherited' => false
@@ -695,7 +703,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				}
 
 				foreach ($dbGraph['items'] as $item) {
-					if (in_array($item['itemid'], $unlinked_items)) {
+					if (!in_array($item['key_'], $host_items)) {
 						continue 2;
 					}
 				}
