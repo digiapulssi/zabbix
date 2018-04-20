@@ -90,8 +90,8 @@ int	main(int argc, char *argv[])
 	zbx_rsm_infof(log_fd, "tld:%s, ns:%s, ip:%s, res:%s, testprefix:%s", tld, ns, ns_ip, res_ip, testprefix);
 
 	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, log_fd,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, dnssec_enabled,
+			log_fd, err, sizeof(err)))
 	{
 		zbx_rsm_errf(stderr, "cannot create resolver: %s", err);
 		goto out;
