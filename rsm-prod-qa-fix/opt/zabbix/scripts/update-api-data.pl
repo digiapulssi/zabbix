@@ -1148,26 +1148,18 @@ TRYFORK:
 	# unset TLD (for the logs)
 	undef($tld);
 
-	info("wait till children finish");
-
 	# wait till children finish
 	while (children_running() > 0)
 	{
 		handle_children();
 	}
 
-	info("children finished");
-
 	db_connect($server_key);
-
-	info("updating false positives");
 
 	if (!opt('dry-run') && !opt('tld'))
 	{
 		__update_false_positives();
 	}
-
-	info("false positives updated");
 
 	db_disconnect();
 } # foreach (@server_keys)

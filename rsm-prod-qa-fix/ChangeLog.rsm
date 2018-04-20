@@ -3,7 +3,6 @@ Changes for rsm1.0.7rc2
 New features:
 
 Bug fixes:
-....I..... [354] added logging to facilitate investigation of occasional SLA API script hanging, added redundancy in child reaping (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.7rc1
