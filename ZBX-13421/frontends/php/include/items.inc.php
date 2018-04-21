@@ -626,10 +626,10 @@ function copyItems($src_hostid, $dst_hostid) {
 		}
 
 		if ($src_item['templateid']) {
-			$same_item = get_same_item_for_host($src_item, $dst_host['hostid']);
+			$src_item = get_same_item_for_host($src_item, $dst_host['hostid']);
 
-			if ($same_item) {
-				$itemkey_to_id[$srcItem['key_']] = $same_item['itemid'];
+			if ($src_item) {
+				$itemkey_to_id[$src_item['key_']] = $src_item['itemid'];
 			}
 
 			continue;
@@ -664,7 +664,7 @@ function copyItems($src_hostid, $dst_hostid) {
 				$web_item = get_same_item_for_host($src_items[$src_item['master_itemid']], $dst_host['hostid']);
 				$src_item['master_itemid'] = $web_item['itemid'];
 			}
-			elseif (array_key_exists($src_itemid_to_key[$srcItem['master_itemid']], $itemkey_to_id)) {
+			elseif (array_key_exists($src_itemid_to_key[$src_item['master_itemid']], $itemkey_to_id)) {
 				$src_item_key = $src_itemid_to_key[$src_item['master_itemid']];
 				$src_item['master_itemid'] = $itemkey_to_id[$src_item_key];
 			}

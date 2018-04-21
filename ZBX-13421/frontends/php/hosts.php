@@ -636,7 +636,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				'output' => ['key_'],
 				'hostids' => $hostId,
 				'webitems' => true,
-				'inherited' => false,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
 			]);
 			$host_items = zbx_objectValues($host_items, 'key_');
