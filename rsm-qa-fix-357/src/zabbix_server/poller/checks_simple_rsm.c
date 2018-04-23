@@ -1180,10 +1180,11 @@ static int	zbx_dns_in_a_query(ldns_pkt **pkt, ldns_resolver *res, const ldns_rdf
 /* FAIL    - otherwise               */
 static int	zbx_verify_rr_class(const ldns_rr_list *rr_list, zbx_rr_class_error_t *ec, char *err, size_t err_size)
 {
-	size_t	i;
-	int	ret = FAIL;
+	size_t	i, rr_count;
 
-	for (i = 0; i < ldns_rr_list_rr_count(rr_list); i++)
+	rr_count = ldns_rr_list_rr_count(rr_list);
+
+	for (i = 0; i < rr_count; i++)
 	{
 		ldns_rr		*rr;
 		ldns_rr_class	class;
@@ -1192,7 +1193,7 @@ static int	zbx_verify_rr_class(const ldns_rr_list *rr_list, zbx_rr_class_error_t
 		{
 			zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
 			*ec = ZBX_EC_RR_CLASS_INTERNAL;
-			goto out;
+			return FAIL;
 		}
 
 		if (LDNS_RR_CLASS_IN != (class = ldns_rr_get_class(rr)))
@@ -1218,13 +1219,11 @@ static int	zbx_verify_rr_class(const ldns_rr_list *rr_list, zbx_rr_class_error_t
 					break;
 			}
 
-			goto out;
+			return FAIL;
 		}
 	}
 
-	ret = SUCCEED;
-out:
-	return ret;
+	return SUCCEED;
 }
 
 static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *ip, const ldns_rr_list *keys,
