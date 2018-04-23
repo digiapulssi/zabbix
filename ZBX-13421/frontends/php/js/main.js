@@ -319,15 +319,14 @@ var jqBlink = {
 		objects = this.filterOutNonBlinking(objects);
 
 		// changing visibility state
-		fun = this.shown ? 'removeClass' : 'addClass';
 		jQuery.each(objects, function() {
 			if (typeof jQuery(this).data('toggleClass') !== 'undefined') {
-				jQuery(this)[fun](jQuery(this).data('toggleClass'));
+				jQuery(this)[jqBlink.shown ? 'removeClass' : 'addClass'](jQuery(this).data('toggleClass'));
 			}
 			else {
 				jQuery(this).css('visibility', jqBlink.shown ? 'hidden' : 'visible');
 			}
-		})
+		});
 
 		// reversing the value of indicator attribute
 		this.shown = !this.shown;
@@ -350,7 +349,13 @@ var jqBlink = {
 			if (typeof obj.data('timeToBlink') !== 'undefined') {
 				var shouldBlink = parseInt(obj.data('timeToBlink'), 10) > that.secondsSinceInit;
 
-				return shouldBlink || !that.shown;
+				if (shouldBlink || !that.shown) {
+					return true;
+				}
+				else {
+					obj.removeClass('blink');
+					return false;
+				}
 			}
 			else {
 				// no time-to-blink attribute, should blink forever
