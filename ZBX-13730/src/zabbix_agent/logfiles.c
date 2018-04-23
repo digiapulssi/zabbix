@@ -1364,7 +1364,6 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 	else if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags))	/* logrt[] or logrt.count[] item */
 	{
 		char	*directory = NULL, *format = NULL;
-		int	reg_error;
 		pcre	*regexp = NULL;
 		const char *error = NULL;
 
@@ -1668,13 +1667,18 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 					if ('\0' != *encoding)
 						zbx_free(value);
 
-					if (FAIL == regexp_ret)
+					if (ZBX_REGEXP_ERROR == regexp_ret)
 					{
 						*err_msg = zbx_dsprintf(*err_msg, "cannot compile regular expression");
 						ret = FAIL;
 						goto out;
 					}
-
+					else if (ZBX_REGEXP_RUNAWAY == regexp_ret)
+					{
+						*err_msg = zbx_dsprintf(*err_msg, "runaway expression");
+						ret = FAIL;
+						goto out;
+					}
 					(*p_count)--;
 
 					if (0 != (ZBX_METRIC_FLAG_LOG_COUNT & flags) ||
@@ -1754,9 +1758,15 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 					if ('\0' != *encoding)
 						zbx_free(value);
 
-					if (FAIL == regexp_ret)
+					if (ZBX_REGEXP_ERROR == regexp_ret)
 					{
 						*err_msg = zbx_dsprintf(*err_msg, "cannot compile regular expression");
+						ret = FAIL;
+						goto out;
+					}
+					else if(ZBX_REGEXP_RUNAWAY == regexp_ret)
+					{
+						*err_msg = zbx_dsprintf(*err_msg, "runaway expression");
 						ret = FAIL;
 						goto out;
 					}

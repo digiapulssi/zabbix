@@ -23,6 +23,8 @@
 
 #define ZBX_REGEXP_NO_MATCH	0
 #define ZBX_REGEXP_MATCH	1
+#define ZBX_REGEXP_ERROR        -1
+#define ZBX_REGEXP_RUNAWAY	-8
 
 typedef struct
 {

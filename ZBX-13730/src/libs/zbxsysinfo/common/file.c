@@ -341,14 +341,19 @@ int	VFS_FILE_REGEXP(AGENT_REQUEST *request, AGENT_RESULT *result)
 		utf8 = convert_to_utf8(buf, nbytes, encoding);
 		zbx_rtrim(utf8, "\r\n");
 		int sr = zbx_regexp_sub(utf8, regexp, output, &ptr);
-		if (RUNAWAY_ALGORITHM == sr)
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Runaway expression."));
-			goto err;
-		}
 		zbx_free(utf8);
 
-		if (NULL != ptr)
+		if (ZBX_REGEXP_RUNAWAY == sr)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Runaway expression."));
+			break;
+		}
+		else if (ZBX_REGEXP_ERROR == sr)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error processing regular expression."));
+			break;
+		}
+		else if (ZBX_REGEXP_MATCH == sr && NULL != ptr)
 		{
 			SET_STR_RESULT(result, ptr);
 			break;
