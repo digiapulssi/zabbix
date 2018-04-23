@@ -126,6 +126,8 @@ my $rv = GetOptions(\%OPTS,
 
 usage() if ($OPTS{'help'} or not $rv);
 
+print("\nIgnoring unknown command-line options:\n  ", join("\n  ", @ARGV), "\n\n") if (scalar(@ARGV));
+
 validate_input();
 lc_options();
 

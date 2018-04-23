@@ -236,10 +236,10 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 			if (!$test_result_label) {
 				$test_result_label = _('No result');
-				$test_result_color = 'grey';
+				$test_result_color = ZBX_STYLE_GREY;
 			}
 			else {
-				$test_result_color = ($test_result['value'] == PROBE_DOWN) ? 'red' : 'green';
+				$test_result_color = ($test_result['value'] == PROBE_DOWN) ? ZBX_STYLE_RED : ZBX_STYLE_GREEN;
 			}
 
 			$data['testResult'] = (new CSpan($test_result_label))->addClass($test_result_color);
@@ -498,10 +498,10 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			// calculate Down probes
 			if (count($nss) - $hosts[$hostId]['value']['fail'] < $minDnsCount) {
 				$data['downProbes']++;
-				$hosts[$hostId]['class'] = 'red';
+				$hosts[$hostId]['class'] = ZBX_STYLE_RED;
 			}
 			else {
-				$hosts[$hostId]['class'] = 'green';
+				$hosts[$hostId]['class'] = ZBX_STYLE_GREEN;
 			}
 		}
 	}

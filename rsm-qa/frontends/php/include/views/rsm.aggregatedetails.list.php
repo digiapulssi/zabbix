@@ -42,11 +42,11 @@ if (array_key_exists('dns_udp_nameservers', $data)) {
 		if (array_key_exists('ipv4', $ns_ips)) {
 			$cols_cnt += count($ns_ips['ipv4']);
 			$row_3 = array_merge($row_3, array_keys($ns_ips['ipv4']));
-	}
+		}
 		if (array_key_exists('ipv6', $ns_ips)) {
 			$cols_cnt += count($ns_ips['ipv6']);
 			$row_3 = array_merge($row_3, array_keys($ns_ips['ipv6']));
-}
+		}
 
 		$row_2->addItem((new CTag('th', true, $ns_name))
 			->setAttribute('colspan', $cols_cnt)
@@ -62,11 +62,10 @@ $table = (new CTableInfo())
 	->setMultirowHeader([$row_1, $row_2, new CRowHeader($row_3)], count($row_3) + 4)
 	->setAttribute('class', 'list-table table-bordered-head');
 
-
-$down = (new CSpan(_('Down')))->addClass('red');
-$offline = (new CSpan(_('Offline')))->addClass('grey');
-$no_result = (new CSpan(_('-')))->addClass('grey');
-$up = (new CSpan(_('Up')))->addClass('green');
+$down = (new CSpan(_('Down')))->addClass(ZBX_STYLE_RED);
+$offline = (new CSpan(_('Offline')))->addClass(ZBX_STYLE_GREY);
+$no_result = (new CSpan(_('No result')))->addClass(ZBX_STYLE_GREY);
+$up = (new CSpan(_('Up')))->addClass(ZBX_STYLE_GREEN);
 
 // Results summary.
 $offline_probes = 0;
@@ -77,23 +76,32 @@ $down_probes = 0;
 foreach ($data['probes'] as $probe) {
 	if (array_key_exists('status_udp', $probe)) {
 		if ($probe['status_udp'] == PROBE_OFFLINE) {
+			$probe_status_color = ZBX_STYLE_GREY;
 			$udp_status = $offline;
 			$offline_probes++;
 		}
 		elseif ($probe['status_udp'] == PROBE_DOWN) {
+			$probe_status_color = ZBX_STYLE_RED;
 			$udp_status = $down;
 			$down_probes++;
 		}
 		elseif ($probe['status_udp'] == PROBE_UP) {
+			$probe_status_color = ZBX_STYLE_GREEN;
 			$udp_status = $up;
 		}
 	}
 	else {
 		$udp_status = $no_result;
+		$probe_status_color = ZBX_STYLE_GREY;
 		$no_result_probes++;
 	}
 
-	$row = [$probe['name'], $udp_status, $probe['udp_ns_up'], $probe['udp_ns_down']];
+	$row = [
+		(new CSpan($probe['name']))->addClass($probe_status_color),
+		$udp_status,
+		$probe['udp_ns_up'],
+		$probe['udp_ns_down']
+	];
 
 	foreach ($data['dns_udp_nameservers'] as $dns_udp_ns => $ipvs) {
 		if (array_key_exists($dns_udp_ns, $probe['results_udp'])) {
@@ -117,15 +125,15 @@ foreach ($data['probes'] as $probe) {
 							elseif (0 > $result) {
 								$row[] = (new CSpan($result))
 									->setHint($data['error_msgs'][$result])
-									->setAttribute('class', $is_dns_error ? 'red' : 'green');
+									->setAttribute('class', $is_dns_error ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
 							}
 							elseif ($data['type'] == RSM_DNS && $result > $data['udp_rtt']) {
 								$row[] = (new CSpan($result))
-									->setAttribute('class', 'red');
+									->setAttribute('class', ZBX_STYLE_RED);
 							}
 							else {
 								$row[] = (new CSpan($result))
-									->setAttribute('class', 'green');
+									->setAttribute('class', ZBX_STYLE_GREEN);
 							}
 						}
 						else {
@@ -187,14 +195,14 @@ if ($data['type'] == RSM_DNS) {
 		if (array_key_exists('ipv4', $ns_ips)) {
 			foreach (array_keys($ns_ips['ipv4']) as $ipv => $ip) {
 				$error_key = 'udp_'.$ns_name.'_ipv4_'.$ip;
-				$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '';
+				$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '0';
+			}
 		}
-	}
 
 		if (array_key_exists('ipv6', $ns_ips)) {
 			foreach (array_keys($ns_ips['ipv6']) as $ipv => $ip) {
 				$error_key = 'udp_'.$ns_name.'_ipv6_'.$ip;
-				$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '';
+				$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '0';
 			}
 		}
 	}
