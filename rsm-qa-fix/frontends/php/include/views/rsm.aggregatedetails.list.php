@@ -64,7 +64,7 @@ $table = (new CTableInfo())
 
 $down = (new CSpan(_('Down')))->addClass(ZBX_STYLE_RED);
 $offline = (new CSpan(_('Offline')))->addClass(ZBX_STYLE_GREY);
-$no_result = (new CSpan(_('	No result')))->addClass(ZBX_STYLE_GREY);
+$no_result = (new CSpan(_('No result')))->addClass(ZBX_STYLE_GREY);
 $up = (new CSpan(_('Up')))->addClass(ZBX_STYLE_GREEN);
 
 // Results summary.
