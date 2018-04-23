@@ -3,6 +3,7 @@ Changes for 3.4.9rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-13755] fixed proxy lastaccess update on 32-bit Zabbix server (vso)
 ..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
 ...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)
 ........S. [ZBX-13766] fixed comparison of two large float numbers in expressions (Sergejs)
