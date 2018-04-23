@@ -4,6 +4,7 @@ New features:
 ....I..... [347] added code to print a warning in case of ignored tld.pl command-line parameters (dimir)
 
 Bug fixes:
+.......PS. [357] added verification of each RR CLASS in response to IN A name server query (DNS errors -207,-208,-209) (dimir)
 ..F....... [356] fixed empty cell filling by zeros for DNS servers with no results above max RTT (miks)
 ..F....... [355] fixed status dependant coloring for probe names listed in aggregate results page; fixed label; improved coding style (miks)
 ..F....... [353] fixed undefined index error in aggregate results; improved coding style (miks)

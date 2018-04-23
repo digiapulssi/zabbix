@@ -152,6 +152,15 @@ zbx_dnssec_error_t;
 
 typedef enum
 {
+	ZBX_EC_RR_CLASS_INTERNAL,
+	ZBX_EC_RR_CLASS_CHAOS,
+	ZBX_EC_RR_CLASS_HESIOD,
+	ZBX_EC_RR_CLASS_CATCHALL
+}
+zbx_rr_class_error_t;
+
+typedef enum
+{
 	ZBX_SUBTEST_SUCCESS,
 	ZBX_SUBTEST_FAIL
 }
@@ -608,7 +617,7 @@ static int	zbx_get_covered_rrsigs(const ldns_pkt *pkt, const ldns_rdf *owner, ld
 
 		if (NULL == (rr = ldns_rr_list_rr(rrsigs, i)))
 		{
-			zbx_snprintf(err, err_size, UNKNOWN_LDNS_ERROR);
+			zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
 			*dnssec_ec = ZBX_EC_DNSSEC_INTERNAL;
 			goto out;
 		}
@@ -780,6 +789,31 @@ ZBX_DEFINE_ZBX_DNSSEC_ERROR_TO(DNS_TCP)
 
 #undef ZBX_DEFINE_ZBX_DNSSEC_ERROR_TO
 
+typedef int	(*zbx_rr_class_error_func_t)(zbx_rr_class_error_t);
+#define ZBX_DEFINE_ZBX_RR_CLASS_ERROR_TO(__interface)				\
+static int	zbx_rr_class_error_to_ ## __interface (zbx_rr_class_error_t err)\
+{										\
+	switch (err)								\
+	{									\
+		case ZBX_EC_RR_CLASS_INTERNAL:					\
+			return ZBX_EC_INTERNAL;					\
+		case ZBX_EC_RR_CLASS_CHAOS:					\
+			return ZBX_EC_ ## __interface ## _CLASS_CHAOS;		\
+		case ZBX_EC_RR_CLASS_HESIOD:					\
+			return ZBX_EC_ ## __interface ## _CLASS_HESIOD;		\
+		case ZBX_EC_RR_CLASS_CATCHALL:					\
+			return ZBX_EC_ ## __interface ## _CLASS_CATCHALL;	\
+		default:							\
+			THIS_SHOULD_NEVER_HAPPEN;				\
+			return ZBX_EC_INTERNAL;					\
+	}									\
+}
+
+ZBX_DEFINE_ZBX_RR_CLASS_ERROR_TO(DNS_UDP)
+ZBX_DEFINE_ZBX_RR_CLASS_ERROR_TO(DNS_TCP)
+
+#undef ZBX_DEFINE_ZBX_RR_CLASS_ERROR_TO
+
 /* map generic local resolver errors to interface specific ones */
 
 #define ZBX_DEFINE_RESOLVER_ERROR_TO(__interface)					\
@@ -917,6 +951,7 @@ typedef struct
 	zbx_dnskeys_error_func_t	dnskeys_error;
 	zbx_referral_error_func_t	referral_error;
 	zbx_dnssec_error_func_t		dnssec_error;
+	zbx_rr_class_error_func_t	rr_class_error;
 	zbx_ns_query_error_func_t	ns_query_error;
 	zbx_rcode_not_nxdomain_func_t	rcode_not_nxdomain;
 }
@@ -927,6 +962,7 @@ const zbx_error_functions_t DNS[] = {
 		zbx_dnskeys_error_to_UDP,
 		zbx_referral_error_to_DNS_UDP,
 		zbx_dnssec_error_to_DNS_UDP,
+		zbx_rr_class_error_to_DNS_UDP,
 		zbx_ns_query_error_to_DNS_UDP,
 		zbx_rcode_not_nxdomain_to_DNS_UDP
 	},
@@ -934,6 +970,7 @@ const zbx_error_functions_t DNS[] = {
 		zbx_dnskeys_error_to_TCP,
 		zbx_referral_error_to_DNS_TCP,
 		zbx_dnssec_error_to_DNS_TCP,
+		zbx_rr_class_error_to_DNS_TCP,
 		zbx_ns_query_error_to_DNS_TCP,
 		zbx_rcode_not_nxdomain_to_DNS_TCP
 	}
@@ -1138,6 +1175,57 @@ static int	zbx_dns_in_a_query(ldns_pkt **pkt, ldns_resolver *res, const ldns_rdf
 	return FAIL;
 }
 
+/* Check every RR in rr_set, return  */
+/* SUCCEED - all have expected class */
+/* FAIL    - otherwise               */
+static int	zbx_verify_rr_class(const ldns_rr_list *rr_list, zbx_rr_class_error_t *ec, char *err, size_t err_size)
+{
+	size_t	i, rr_count;
+
+	rr_count = ldns_rr_list_rr_count(rr_list);
+
+	for (i = 0; i < rr_count; i++)
+	{
+		ldns_rr		*rr;
+		ldns_rr_class	class;
+
+		if (NULL == (rr = ldns_rr_list_rr(rr_list, i)))
+		{
+			zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
+			*ec = ZBX_EC_RR_CLASS_INTERNAL;
+			return FAIL;
+		}
+
+		if (LDNS_RR_CLASS_IN != (class = ldns_rr_get_class(rr)))
+		{
+			char	*class_str;
+
+			class_str = ldns_rr_class2str(class);
+
+			zbx_snprintf(err, err_size, "unexpected RR class, expected IN got %s", class_str);
+
+			zbx_free(class_str);
+
+			switch (class)
+			{
+				case LDNS_RR_CLASS_CH:
+					*ec = ZBX_EC_RR_CLASS_CHAOS;
+					break;
+				case LDNS_RR_CLASS_HS:
+					*ec = ZBX_EC_RR_CLASS_HESIOD;
+					break;
+				default:
+					*ec = ZBX_EC_RR_CLASS_CATCHALL;
+					break;
+			}
+
+			return FAIL;
+		}
+	}
+
+	return SUCCEED;
+}
+
 static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *ip, const ldns_rr_list *keys,
 		const char *testprefix, const char *domain, FILE *log_fd, int *rtt, int *upd, char ipv4_enabled,
 		char ipv6_enabled, char epp_enabled,
@@ -1146,12 +1234,13 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	char			testname[ZBX_HOST_BUF_SIZE], *host, *last_label = NULL;
 	ldns_rdf		*testname_rdf = NULL, *last_label_rdf = NULL;
 	ldns_pkt		*pkt = NULL;
-	ldns_rr_list		*nsset = NULL;
-	ldns_rr			*rr = NULL;
+	ldns_rr_list		*nsset = NULL, *all_rr_list = NULL;
+	ldns_rr			*rr;
 	time_t			now, ts;
 	ldns_pkt_rcode		rcode;
 	zbx_ns_query_error_t	query_ec;
 	zbx_dnssec_error_t	dnssec_ec;
+	zbx_rr_class_error_t	rr_class_ec;
 	int			ret = FAIL;
 
 	/* change the resolver */
@@ -1169,7 +1258,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 
 	if (NULL == (testname_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, testname)))
 	{
-		zbx_snprintf(err, err_size, UNKNOWN_LDNS_ERROR);
+		zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
 		*rtt = ZBX_EC_INTERNAL;
 		goto out;
 	}
@@ -1182,6 +1271,14 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	}
 
 	ldns_pkt_print(log_fd, pkt);
+
+	all_rr_list = ldns_pkt_all(pkt);
+
+	if (SUCCEED != zbx_verify_rr_class(all_rr_list, &rr_class_ec, err, err_size))
+	{
+		*rtt = DNS[DNS_PROTO(res)].rr_class_error(rr_class_ec);
+		goto out;
+	}
 
 	rcode = pkt->_header->_rcode;
 
@@ -1306,6 +1403,9 @@ out:
 
 	if (NULL != nsset)
 		ldns_rr_list_deep_free(nsset);
+
+	if (NULL != all_rr_list)
+		ldns_rr_list_deep_free(all_rr_list);
 
 	if (NULL != pkt)
 		ldns_pkt_free(pkt);
@@ -1442,7 +1542,7 @@ static int	zbx_get_dnskeys(ldns_resolver *res, const char *domain, const char *r
 
 	if (NULL == (domain_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, domain)))
 	{
-		zbx_snprintf(err, err_size, UNKNOWN_LDNS_ERROR);
+		zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
 		*ec = ZBX_DNSKEYS_INTERNAL;
 		goto out;
 	}
@@ -2595,7 +2695,7 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_v
 
 	if (NULL == (rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, host)))
 	{
-		zbx_snprintf(err, err_size, UNKNOWN_LDNS_ERROR);
+		zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
 		*ec_res = ZBX_RESOLVER_INTERNAL;
 		return ret;
 	}
