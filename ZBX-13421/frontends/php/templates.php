@@ -286,12 +286,34 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				throw new Exception();
 			}
 
-			$template_items = API::Item()->get([
-				'output' => ['key_'],
-				'hostids' => $templateId,
+			$all_items = API::Item()->get([
+				'output' => ['itemid', 'hostid', 'templateid', 'key_'],
+				'hostids' => [$cloneTemplateId, $templateId],
 				'webitems' => true
 			]);
-			$template_items = zbx_objectValues($template_items, 'key_');
+
+			$all_src_items = [];
+			$all_dst_items = [];
+			foreach ($all_items as $item) {
+				if ($item['hostid'] == $cloneTemplateId) {
+					$all_src_items[] = $item;
+				}
+				elseif ($item['hostid'] == $templateId) {
+					$all_dst_items[] = $item;
+				}
+			}
+
+			$src_items = [];
+			foreach ($all_src_items as $src_item) {
+				foreach ($all_dst_items as $dst_item) {
+					if ($src_item['key_'] == $dst_item['key_']) {
+						$src_items[] = $src_item;
+					}
+				}
+			}
+
+			$src_items_keys = zbx_objectValues($src_items, 'key_');
+			$src_itemids = zbx_objectValues($src_items, 'itemid');
 
 			// copy triggers
 			$dbTriggers = API::Trigger()->get([
@@ -304,7 +326,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			if ($dbTriggers) {
 				foreach ($dbTriggers as $index => $trigger) {
 					foreach ($trigger['items'] as $item) {
-						if (!in_array($item['key_'], $template_items)) {
+						if (!in_array($item['key_'], $src_items_keys)) {
 							unset($dbTriggers[$index]);
 							break;
 						}
@@ -321,17 +343,25 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 			// copy graphs
 			$dbGraphs = API::Graph()->get([
-				'output' => ['graphid'],
+				'output' => ['graphid', 'templateid'],
 				'hostids' => $cloneTemplateId,
 				'selectItems' => ['key_']
 			]);
 
+			$src_graphids = [];
 			foreach ($dbGraphs as $index => $dbGraph) {
 				foreach ($dbGraph['items'] as $item) {
-					if (!in_array($item['key_'], $template_items)) {
+					if (!in_array($item['key_'], $src_items_keys)) {
 						unset($dbGraphs[$index]);
 						continue 2;
 					}
+				}
+
+				$src_graphids[] = $dbGraph['graphid'];
+
+				if ($dbGraph['templateid']) {
+					unset($dbGraphs[$index]);
+					continue;
 				}
 
 				copyGraphToHost($dbGraph['graphid'], $templateId);
@@ -357,13 +387,26 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 			// copy template screens
 			$dbTemplateScreens = API::TemplateScreen()->get([
-				'output' => ['screenid'],
+				'output' => ['screenid', 'name'],
 				'templateids' => $cloneTemplateId,
-				'preservekeys' => true,
+				'selectScreenItems' => ['resourceid', 'resourcetype'],
 				'noInheritance' => true
 			]);
 
 			if ($dbTemplateScreens) {
+				foreach ($dbTemplateScreens as $index => $screen) {
+					foreach ($screen['screenitems'] as $item) {
+						if (($item['resourcetype'] == SCREEN_RESOURCE_GRAPH
+								&& !in_array($item['resourceid'], $src_graphids))
+							|| (in_array($item['resourcetype'], [SCREEN_RESOURCE_SIMPLE_GRAPH,
+									SCREEN_RESOURCE_PLAIN_TEXT])
+								&& !in_array($item['resourceid'], $src_itemids))) {
+							unset($dbTemplateScreens[$index]);
+							continue;
+						}
+					}
+				}
+
 				$result &= API::TemplateScreen()->copy([
 					'screenIds' => zbx_objectValues($dbTemplateScreens, 'screenid'),
 					'templateIds' => $templateId
