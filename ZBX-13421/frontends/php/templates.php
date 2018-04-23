@@ -303,17 +303,16 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				}
 			}
 
-			$src_items = [];
+			$src_items_keys = [];
+			$src_itemids = [];
 			foreach ($all_src_items as $src_item) {
 				foreach ($all_dst_items as $dst_item) {
 					if ($src_item['key_'] == $dst_item['key_']) {
-						$src_items[] = $src_item;
+						$src_items_keys[] = $src_item['key_'];
+						$src_itemids[] = $src_item['itemid'];
 					}
 				}
 			}
-
-			$src_items_keys = zbx_objectValues($src_items, 'key_');
-			$src_itemids = zbx_objectValues($src_items, 'itemid');
 
 			// copy triggers
 			$dbTriggers = API::Trigger()->get([
