@@ -309,9 +309,6 @@ static void	DCitem_nextcheck_update(ZBX_DC_ITEM *item, const ZBX_DC_HOST *host, 
 		return;	/* avoid unnecessary nextcheck updates when syncing items in cache */
 	}
 
-	if (0 != (flags & ZBX_HOST_UNREACHABLE) && 0 != (item->nextcheck = DCget_disable_until(item, host)))
-		return;
-
 	if (0 != host->proxy_hostid && NULL != (proxy = zbx_hashset_search(&config->proxies, &host->proxy_hostid)))
 		now -= proxy->timediff;
 
@@ -2817,6 +2814,7 @@ static void	DCsync_items(zbx_dbsync_t *sync, int flags)
 		zbx_strpool_release(item->key);
 		zbx_strpool_release(item->port);
 		zbx_strpool_release(item->error);
+		zbx_strpool_release(item->delay);
 
 		if (NULL != item->triggers)
 			config->items.mem_free_func(item->triggers);

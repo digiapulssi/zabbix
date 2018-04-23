@@ -661,9 +661,7 @@ foreach ($triggers as $trigger) {
 	]);
 
 	if ($showEvents == EVENTS_OPTION_ALL || $showEvents == EVENTS_OPTION_NOT_ACK) {
-		$next_event_clock = time();
-
-		foreach (array_slice($trigger['events'], 0, $config['event_show_max']) as $enum => $event) {
+		foreach (array_slice($trigger['events'], 0, $config['event_show_max']) as $event) {
 			if ($showEvents == EVENTS_OPTION_NOT_ACK && $event['acknowledged']) {
 				continue;
 			}
@@ -706,10 +704,6 @@ foreach ($triggers as $trigger) {
 					'tr_events.php?triggerid='.$trigger['triggerid'].'&eventid='.$event['eventid']
 				);
 
-			if ($enum != 0) {
-				$next_event_clock = $trigger['events'][$enum - 1]['clock'];
-			}
-
 			$triggerTable->addRow(
 				(new CRow([
 					(new CCol())->setColSpan($config['event_ack_enable'] ? 3 : 2),
@@ -717,7 +711,7 @@ foreach ($triggers as $trigger) {
 					$clock,
 					$r_clock,
 					zbx_date2age($event['clock']),
-					zbx_date2age($next_event_clock, $event['clock']),
+					zbx_date2age($event['clock'], $event['r_clock']),
 					$config['event_ack_enable']
 						? ($event['value'] == TRIGGER_VALUE_TRUE)
 							? getEventAckState($event, $page['file'])
