@@ -524,13 +524,13 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 	}
 
 	if ($data['testResult'] === null) {
-		$test_result_color = 'grey';
+		$test_result_color = ZBX_STYLE_GREY;
 	}
 	elseif ($data['testResult'] == PROBE_DOWN) {
-		$test_result_color = 'red';
+		$test_result_color = ZBX_STYLE_RED;
 	}
 	else {
-		$test_result_color = 'green';
+		$test_result_color = ZBX_STYLE_GREEN;
 	}
 
 	$data['testResult'] = (new CSpan($test_result_label))->addClass($test_result_color);
