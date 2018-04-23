@@ -686,7 +686,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$dbGraphs = API::Graph()->get([
 				'output' => API_OUTPUT_EXTEND,
 				'selectHosts' => ['hostid'],
-				'selectItems' => ['key_'],
+				'selectItems' => ['key_', 'type'],
 				'hostids' => $srcHostId,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'inherited' => false
