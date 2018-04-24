@@ -391,6 +391,17 @@ ul.top-nav-icons {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden; }
+  .header-title button.header-dropdown,
+  .header-title button.header-dropdown:active,
+  .header-title button.header-dropdown:focus,
+  .header-title button.header-dropdown:hover {
+    background: transparent;
+    font-size: 1.75em;
+    line-height: 1.2em;
+    outline: 0px none;
+    box-shadow: none;
+    border: none;
+    padding-left: 0px; }
   .header-title form {
     display: flex;
     justify-content: flex-end; }
@@ -444,7 +455,7 @@ ul.top-nav-icons {
       -moz-transform: rotate(-45deg);
       -ms-transform: rotate(-45deg);
       transform: rotate(-45deg); }
-    .header-title .header-dropdown:hover {
+    .header-title .header-dropdown:focus, .header-title .header-dropdown:hover {
       text-decoration: underline; }
   .header-title .header-dropdown-list {
     display: none;

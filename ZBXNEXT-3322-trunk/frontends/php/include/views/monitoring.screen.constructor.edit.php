@@ -426,9 +426,10 @@ elseif ($resourceType == SCREEN_RESOURCE_PLAIN_TEXT) {
 	$id = 0;
 
 	$items = API::Item()->get([
-		'itemids' => $resourceId,
+		'output' => ['itemid', 'hostid', 'key_', 'name'],
 		'selectHosts' => ['name'],
-		'output' => ['itemid', 'hostid', 'key_', 'name']
+		'itemids' => $resourceId,
+		'webitems' => true
 	]);
 
 	if ($items) {
@@ -489,7 +490,11 @@ elseif ($resourceType == SCREEN_RESOURCE_PLAIN_TEXT) {
 				->setAriaRequired()
 				->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
 		)
-		->addRow(_('Show text as HTML'), (new CCheckBox('style'))->setChecked($style == 1));
+		->addRow(_('Show text as HTML'),
+			(new CCheckBox('style'))
+				->setChecked($style == 1)
+				->removeId()
+		);
 }
 elseif (in_array($resourceType, [SCREEN_RESOURCE_HOSTGROUP_TRIGGERS, SCREEN_RESOURCE_HOST_TRIGGERS])) {
 	// Screen item: Triggers

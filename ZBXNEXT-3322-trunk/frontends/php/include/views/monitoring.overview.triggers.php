@@ -103,7 +103,6 @@ $widget = (new CHeaderMenuWidget(getHeaderWidgetHeaderMenuItems($page_url, 'moni
 // filter
 $filter = $data['filter'];
 $filterFormView = new CView('common.filter.trigger', [
-	'overview' => true,
 	'filter' => [
 		'filterid' => 'web.overview.filter.state',
 		'showTriggers' => $filter['showTriggers'],
