@@ -589,33 +589,37 @@ class CScreenProblem extends CScreenBase {
 		$correlationids = [];
 		$userids = [];
 
-		foreach ($data['problems'] as &$problem) {
-			foreach ($problems_data as $problem_data) {
-				if ($problem['eventid'] != $problem_data['eventid']) {
-					continue;
-				}
-
-				$problem['r_eventid'] = $problem_data['r_eventid'];
-				$problem['r_clock'] = $problem_data['r_clock'];
-
-				if ($config['event_ack_enable']) {
-					$problem['acknowledges'] = $problem_data['acknowledges'];
-				}
-
-				$problem['tags'] = $problem_data['tags'];
-				$problem['correlationid'] = $problem_data['correlationid'];
-				$problem['userid'] = $problem_data['userid'];
-
-				if ($problem['correlationid'] != 0) {
-					$correlationids[$problem['correlationid']] = true;
-				}
-
-				if ($problem['userid'] != 0) {
-					$userids[$problem['userid']] = true;
-				}
+		$problems_eventids = zbx_objectValues($problems_data, 'eventid');
+		foreach ($data['problems'] as $eventid => $problem) {
+			if (!in_array($eventid, $problems_eventids)) {
+				unset($data['problems'][$eventid]);
 			}
 		}
-		unset($problem);
+
+		foreach ($problems_data as $problem_data) {
+			$problem = &$data['problems'][$problem_data['eventid']];
+
+			$problem['r_eventid'] = $problem_data['r_eventid'];
+			$problem['r_clock'] = $problem_data['r_clock'];
+
+			if ($config['event_ack_enable']) {
+				$problem['acknowledges'] = $problem_data['acknowledges'];
+			}
+
+			$problem['tags'] = $problem_data['tags'];
+			$problem['correlationid'] = $problem_data['correlationid'];
+			$problem['userid'] = $problem_data['userid'];
+
+			if ($problem['correlationid'] != 0) {
+				$correlationids[$problem['correlationid']] = true;
+			}
+
+			if ($problem['userid'] != 0) {
+				$userids[$problem['userid']] = true;
+			}
+
+			unset($problem);
+		}
 
 		$data['correlations'] = $correlationids
 			? API::Correlation()->get([
