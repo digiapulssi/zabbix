@@ -11020,6 +11020,13 @@ void	zbx_dc_process_check_now_tasks(zbx_vector_ptr_t *tasks)
 			continue;
 		}
 
+		if (0 == dc_item->schedulable)
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "cannot perform check now for item \"%s\" on host \"%s\""
+					": item configuration error", dc_item->key, dc_host->host);
+			continue;
+		}
+
 		if (0 == dc_host->proxy_hostid)
 			dc_requeue_item_at(dc_item, dc_host, now);
 		else
