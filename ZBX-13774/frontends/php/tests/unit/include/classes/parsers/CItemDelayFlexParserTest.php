@@ -3107,7 +3107,41 @@ class CItemDelayFlexParserTest extends PHPUnit_Framework_TestCase {
 					]
 				]],
 				['wd/6,1-5/4,2-7/5h/02', 'h1-5,7-10/03m1-1,58-59/1,/1,/59s/30,1-4,05-09,58-59/1,/1,/59']
-			]
+			],
+			[
+				'wd1-6h3m55',
+				[[
+					'type' => ITEM_DELAY_FLEX_TYPE_SCHEDULING,
+					'interval' => 'wd1-6h3m55',
+					'wd' => [
+						['from' => '1', 'till' => '6', 'step' => '']
+					],
+					'h' => [
+						['from' => '3', 'till' => '', 'step' => '']
+					],
+					'm' => [
+						['from' => '55', 'till' => '', 'step' => '']
+					]
+				]],
+				['wd1-6h3m55']
+			],
+			[
+				'wd7h1m55',
+				[[
+					'type' => ITEM_DELAY_FLEX_TYPE_SCHEDULING,
+					'interval' => 'wd7h1m55',
+					'wd' => [
+						['from' => '7', 'till' => '', 'step' => '']
+					],
+					'h' => [
+						['from' => '1', 'till' => '', 'step' => '']
+					],
+					'm' => [
+						['from' => '55', 'till' => '', 'step' => '']
+					]
+				]],
+				['wd7h1m55']
+			],
 		];
 	}
 
