@@ -2521,7 +2521,8 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 	DB_DHOST		dhost;
 	zbx_uint64_t		last_druleid = 0;
 	struct zbx_json_parse	jp_data, jp_row;
-	int			port, status, ret;
+	int			status, ret;
+	unsigned short		port;
 	const char		*p = NULL;
 	char			last_ip[INTERFACE_IP_LEN_MAX], ip[INTERFACE_IP_LEN_MAX], key_[ITEM_KEY_LEN * 4 + 1],
 				tmp[MAX_STRING_LEN], *value = NULL, dns[INTERFACE_DNS_LEN_MAX];
@@ -2630,7 +2631,7 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 		}
 
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() druleid:" ZBX_FS_UI64 " dcheckid:" ZBX_FS_UI64 " unique_dcheckid:"
-				ZBX_FS_UI64 " type:%d time:'%s %s' ip:'%s' dns:'%s' port:%d key:'%s' value:'%s'",
+				ZBX_FS_UI64 " type:%d time:'%s %s' ip:'%s' dns:'%s' port:%hu key:'%s' value:'%s'",
 				__function_name, drule.druleid, dcheck.dcheckid, drule.unique_dcheckid, dcheck.type,
 				zbx_date2str(itemtime), zbx_time2str(itemtime), ip, dns, port, dcheck.key_, value);
 
