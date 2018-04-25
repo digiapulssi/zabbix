@@ -733,13 +733,13 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 				buf_alloc = 0;
 	DB_RESULT		result;
 	DB_ROW			row;
-	zbx_hashset_t           h_id_offsets, h_del;
+	zbx_hashset_t		h_id_offsets, h_del;
 	zbx_hashset_iter_t	iter;
 	zbx_id_offset_t		id_offset, *p_id_offset = NULL;
 	zbx_db_insert_t		db_insert;
 	zbx_vector_ptr_t	values;
 	static zbx_vector_ptr_t	skip_fields, availability_fields;
-	static const ZBX_TABLE	*table_items = NULL, *table_hosts;
+	static const ZBX_TABLE	*table_items, *table_hosts;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() table:'%s'", __function_name, table->table);
 
@@ -1283,7 +1283,6 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 
 	if (0 != availability_hostids.values_num)
 		DCtouch_hosts_availability(&availability_hostids);
-
 clean:
 	if (0 != ins.values_num)
 	{

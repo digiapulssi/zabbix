@@ -8351,9 +8351,9 @@ int	DCget_hosts_availability(zbx_vector_ptr_t *hosts, int *ts)
  ******************************************************************************/
 void	DCtouch_hosts_availability(const zbx_vector_uint64_t *hostids)
 {
-	const char		*__function_name = "DCtouch_hosts_availability";
-	ZBX_DC_HOST		*dc_host;
-	int			i, now;
+	const char	*__function_name = "DCtouch_hosts_availability";
+	ZBX_DC_HOST	*dc_host;
+	int		i, now;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() hostids:%d", __function_name, hostids->values_num);
 
