@@ -1191,7 +1191,7 @@ static void	pick_logfile(const char *directory, const char *filename, int mtime,
 	{
 		if (S_ISREG(file_buf.st_mode) &&
 				mtime <= file_buf.st_mtime &&
-				0 == zbx_regexp_match_precompiled(filename, regexp))
+				ZBX_REGEXP_MATCH == zbx_regexp_match_precompiled(filename, regexp))
 		{
 			add_logfile(logfiles, logfiles_alloc, logfiles_num, logfile_candidate, &file_buf);
 		}
@@ -1764,7 +1764,7 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 						ret = FAIL;
 						goto out;
 					}
-					else if(ZBX_REGEXP_RUNAWAY == regexp_ret)
+					else if (ZBX_REGEXP_RUNAWAY == regexp_ret)
 					{
 						*err_msg = zbx_dsprintf(*err_msg, "runaway expression");
 						ret = FAIL;
