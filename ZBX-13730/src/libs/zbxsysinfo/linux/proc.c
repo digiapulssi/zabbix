@@ -187,7 +187,7 @@ static int	check_proccomm(FILE *f_cmd, const char *proccomm)
 			if ('\0' == tmp[i])
 				tmp[i] = ' ';
 
-		if (NULL != zbx_regexp_match(tmp, proccomm, NULL))
+		if (NULL != zbx_regexp_match(tmp, proccomm, NULL, NULL))
 			goto clean;
 	}
 
@@ -1127,7 +1127,7 @@ static int	proc_match_cmdline(const zbx_sysinfo_proc_t *proc, const char *cmdlin
 	if (NULL == cmdline)
 		return SUCCEED;
 
-	if (NULL != proc->cmdline && NULL != zbx_regexp_match(proc->cmdline, cmdline, NULL))
+	if (NULL != proc->cmdline && NULL != zbx_regexp_match(proc->cmdline, cmdline, NULL, NULL))
 		return SUCCEED;
 
 	return FAIL;

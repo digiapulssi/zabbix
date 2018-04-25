@@ -264,7 +264,7 @@ int     PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 			if (NULL == (args = get_commandline(&proc[i])))
 				continue;
 
-			if (NULL == zbx_regexp_match(args, proccomm, NULL))
+			if (NULL == zbx_regexp_match(args, proccomm, NULL, NULL))
 				continue;
 		}
 
@@ -499,7 +499,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		if (NULL != proccomm && '\0' != *proccomm)
 		{
 			if (NULL != (args = get_commandline(&proc[i])))
-				if (NULL != zbx_regexp_match(args, proccomm, NULL))
+				if (NULL != zbx_regexp_match(args, proccomm, NULL, NULL))
 					comm_ok = 1;
 		}
 		else

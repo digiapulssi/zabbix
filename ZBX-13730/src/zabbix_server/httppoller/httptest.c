@@ -1053,7 +1053,7 @@ static void	process_httptest(DC_HOST *host, zbx_httptest_t *httptest)
 
 				/* required pattern */
 				if (NULL == err_str && '\0' != *db_httpstep.required &&
-						NULL == zbx_regexp_match(page.data, db_httpstep.required, NULL))
+						NULL == zbx_regexp_match(page.data, db_httpstep.required, NULL, NULL))
 				{
 					err_str = zbx_dsprintf(err_str, "required pattern \"%s\" was not found on %s",
 							db_httpstep.required, httpstep.url);

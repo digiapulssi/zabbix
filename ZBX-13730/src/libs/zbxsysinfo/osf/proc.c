@@ -108,7 +108,7 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 					goto lbl_skip_procces;
 
 			if (NULL != proccomm && '\0' != *proccomm)
-				if (NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL))
+				if (NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL, NULL))
 					goto lbl_skip_procces;
 
 			proccount++;
@@ -236,7 +236,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 					goto lbl_skip_procces;
 
 			if (NULL != proccomm && '\0' != *proccomm)
-				if (NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL))
+				if (NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL, NULL))
 					goto lbl_skip_procces;
 
 			proccount++;

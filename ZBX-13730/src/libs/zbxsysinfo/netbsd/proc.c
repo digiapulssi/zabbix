@@ -157,7 +157,7 @@ int     PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		{
 			if (NULL != (args = proc_argv(pproc->p_pid)))
 			{
-				if (NULL != zbx_regexp_match(args, proccomm, NULL))
+				if (NULL != zbx_regexp_match(args, proccomm, NULL, NULL))
 					comm_ok = 1;
 			}
 		}
@@ -318,7 +318,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		{
 			if (NULL != (args = proc_argv(pproc->p_pid)))
 			{
-				if (NULL != zbx_regexp_match(args, proccomm, NULL))
+				if (NULL != zbx_regexp_match(args, proccomm, NULL, NULL))
 					comm_ok = 1;
 			}
 		}

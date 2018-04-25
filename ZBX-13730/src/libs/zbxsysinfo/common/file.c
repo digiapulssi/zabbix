@@ -472,9 +472,25 @@ int	VFS_FILE_REGMATCH(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 		utf8 = convert_to_utf8(buf, nbytes, encoding);
 		zbx_rtrim(utf8, "\r\n");
-		if (NULL != zbx_regexp_match(utf8, regexp, NULL))
-			res = 1;
+
+		int regexp_result = ZBX_REGEXP_ERROR;
+		zbx_regexp_match(utf8, regexp, NULL, &regexp_result);
 		zbx_free(utf8);
+
+		if (ZBX_REGEXP_MATCH == regexp_result)
+		{
+			res = 1;
+		}
+		else if (ZBX_REGEXP_RUNAWAY == regexp_result)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "runaway expression"));
+			goto err;
+		}
+		else if (ZBX_REGEXP_ERROR == regexp_result)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error processing regular expression."));
+			goto err;
+		}
 
 		if (current_line >= end_line)
 			break;

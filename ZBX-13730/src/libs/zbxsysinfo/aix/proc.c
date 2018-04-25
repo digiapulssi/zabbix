@@ -61,7 +61,7 @@ static int	check_procargs(struct procentry64 *procentry, const char *proccomm)
 	if (i == sizeof(procargs) - 1)
 		procargs[i] = '\0';
 
-	return NULL != zbx_regexp_match(procargs, proccomm, NULL) ? SUCCEED : FAIL;
+	return NULL != zbx_regexp_match(procargs, proccomm, NULL, NULL) ? SUCCEED : FAIL;
 }
 
 int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)

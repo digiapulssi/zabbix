@@ -278,7 +278,7 @@ static void	get_device_sensors(int do_task, const char *device, const char *name
 			if (0 == strcmp(deviceent->d_name, ".") || 0 == strcmp(deviceent->d_name, ".."))
 				continue;
 
-			if (NULL == zbx_regexp_match(deviceent->d_name, device, NULL))
+			if (NULL == zbx_regexp_match(deviceent->d_name, device, NULL, NULL))
 				continue;
 
 			zbx_snprintf(devicename, sizeof(devicename), "%s/%s", DEVICE_DIR, deviceent->d_name);
@@ -291,7 +291,7 @@ static void	get_device_sensors(int do_task, const char *device, const char *name
 				if (0 == strcmp(sensorent->d_name, ".") || 0 == strcmp(sensorent->d_name, ".."))
 					continue;
 
-				if (NULL == zbx_regexp_match(sensorent->d_name, name, NULL))
+				if (NULL == zbx_regexp_match(sensorent->d_name, name, NULL, NULL))
 					continue;
 
 				zbx_snprintf(sensorname, sizeof(sensorname), "%s/%s", devicename, sensorent->d_name);
@@ -365,7 +365,7 @@ static void	get_device_sensors(int do_task, const char *device, const char *name
 							0 == strcmp(sensorent->d_name, ".."))
 						continue;
 
-					if (NULL == zbx_regexp_match(sensorent->d_name, regex, NULL))
+					if (NULL == zbx_regexp_match(sensorent->d_name, regex, NULL, NULL))
 						continue;
 
 					zbx_snprintf(sensorname, sizeof(sensorname), "%s/%s", devicepath,

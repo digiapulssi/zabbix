@@ -213,14 +213,14 @@ static char	*zbx_regexp(const char *string, const char *pattern, int *len, int f
 	return c;
 }
 
-char	*zbx_regexp_match(const char *string, const char *pattern, int *len)
+char	*zbx_regexp_match(const char *string, const char *pattern, int *len, int *result)
 {
-	return zbx_regexp(string, pattern, len, PCRE_MULTILINE, NULL);
+	return zbx_regexp(string, pattern, len, PCRE_MULTILINE, result);
 }
 
-char	*zbx_iregexp_match(const char *string, const char *pattern, int *len)
+char	*zbx_iregexp_match(const char *string, const char *pattern, int *len, int *result)
 {
-	return zbx_regexp(string, pattern, len, PCRE_CASELESS | PCRE_MULTILINE, NULL);
+	return zbx_regexp(string, pattern, len, PCRE_CASELESS | PCRE_MULTILINE, result);
 }
 
 /*********************************************************************************
