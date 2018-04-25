@@ -139,7 +139,7 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, pcre
 		*regex_incl = zbx_regexp_compile(
 			regex_incl_str, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
 
-		if (NULL != *regex_incl)
+		if (NULL == *regex_incl)
 		{
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL,
 					"Invalid regular expression in second parameter: %s", error));
@@ -153,7 +153,7 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, pcre
 		*regex_excl = zbx_regexp_compile(
 			regex_excl_str, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
 
-		if (NULL != *regex_excl)
+		if (NULL == *regex_excl)
 		{
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL,
 					"Invalid regular expression in third parameter: %s", error));
