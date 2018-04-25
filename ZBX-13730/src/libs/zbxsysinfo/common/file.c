@@ -346,12 +346,12 @@ int	VFS_FILE_REGEXP(AGENT_REQUEST *request, AGENT_RESULT *result)
 		if (ZBX_REGEXP_RUNAWAY == sr)
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Runaway expression."));
-			break;
+			goto err;
 		}
 		else if (ZBX_REGEXP_ERROR == sr)
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error processing regular expression."));
-			break;
+			goto err;
 		}
 		else if (ZBX_REGEXP_MATCH == sr && NULL != ptr)
 		{
