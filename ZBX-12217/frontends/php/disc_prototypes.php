@@ -764,6 +764,27 @@ else {
 
 	$data['paging'] = getPagingLine($data['items'], $sortOrder, $url);
 
+	// Get real hosts and select writable templates IDs.
+	$data['writable_templates'] = [];
+	$item_hostids = [];
+
+	foreach ($data['items'] as &$item) {
+		if ($item['templateid']) {
+			$item['template_host'] = get_realhost_by_itemid($item['templateid']);
+			$item_hostids[] = $item['template_host']['hostid'];
+		}
+	}
+	unset($item);
+
+	if ($item_hostids) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $item_hostids,
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
+
 	// render view
 	$itemView = new CView('configuration.item.prototype.list', $data);
 	$itemView->render();

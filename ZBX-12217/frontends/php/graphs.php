@@ -480,19 +480,43 @@ elseif (isset($_REQUEST['form'])) {
 						$parentGraphPrototype = reset($parentGraphPrototype);
 						$parentTemplate = reset($parentGraphPrototype['templates']);
 
-						$link = new CLink($parentTemplate['name'],
-							'graphs.php?form=update&graphid='.$parentGraphPrototype['graphid'].'&hostid='.$parentTemplate['templateid'].'&parent_discoveryid='.$parentGraphPrototype['discoveryRule']['itemid']
-						);
+						$writable = API::Template()->get([
+							'output' => ['templateid'],
+							'templateids' => $parentTemplate['templateid'],
+							'editable' => true,
+							'preservekeys' => true
+						]);
+
+						if (array_key_exists($parentTemplate['templateid'], $writable)) {
+							$link = new CLink($parentTemplate['name'], 'graphs.php?form=update&graphid='.
+								$parentGraphPrototype['graphid'].'&hostid='.$parentTemplate['templateid'].
+								'&parent_discoveryid='.$parentGraphPrototype['discoveryRule']['itemid']
+							);
+						}
+						else {
+							$link = new CSpan($parentTemplate['name']);
+						}
 					}
 				}
 				// parent graph link
 				else {
-					$parentTemplate = get_hosts_by_graphid($parentGraph['graphid']);
-					$parentTemplate = DBfetch($parentTemplate);
+					$parentTemplate = DBfetch(get_hosts_by_graphid($parentGraph['graphid']));
 
-					$link = new CLink($parentTemplate['name'],
-						'graphs.php?form=update&graphid='.$parentGraph['graphid'].'&hostid='.$parentTemplate['hostid']
-					);
+					$writable = API::Template()->get([
+						'output' => ['templateid'],
+						'templateids' => $parentTemplate['hostid'],
+						'editable' => true,
+						'preservekeys' => true
+					]);
+
+					if (array_key_exists($parentTemplate['hostid'], $writable)) {
+						$link = new CLink($parentTemplate['name'],
+							'graphs.php?form=update&graphid='.$parentGraph['graphid'].'&hostid='.$parentTemplate['hostid']
+						);
+					}
+					else {
+						$link = new CSpan($parentTemplate['name']);
+					}
 				}
 				if (isset($link)) {
 					$data['templates'][] = $link;
@@ -687,8 +711,27 @@ else {
 		? API::Graph()->get($options)
 		: API::GraphPrototype()->get($options);
 
-	foreach ($data['graphs'] as $gnum => $graph) {
-		$data['graphs'][$gnum]['graphtype'] = graphType($graph['graphtype']);
+	// Get real hosts and select writable templates IDs.
+	$data['writable_templates'] = [];
+	$graph_hostids = [];
+
+	foreach ($data['graphs'] as &$graph) {
+		$graph['graphtype'] = graphType($graph['graphtype']);
+
+		if ($graph['templateid']) {
+			$graph['template_host'] = DBfetch(get_realhosts_by_graphid($graph['templateid']));
+			$graph_hostids[] = $graph['template_host']['hostid'];
+		}
+	}
+	unset($graph);
+
+	if ($graph_hostids) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $graph_hostids,
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	order_result($data['graphs'], $sortField, $sortOrder);

@@ -60,16 +60,27 @@ $update_interval_parser = new CUpdateIntervalParser(['usermacros' => true, 'lldm
 foreach ($this->data['items'] as $item) {
 	$description = [];
 	if (!empty($item['templateid'])) {
-		$template_host = get_realhost_by_itemid($item['templateid']);
-		$templateDiscoveryRuleId = get_realrule_by_itemid_and_hostid($this->data['parent_discoveryid'], $template_host['hostid']);
+		$template_disc_ruleid = get_realrule_by_itemid_and_hostid($this->data['parent_discoveryid'],
+			$item['template_host']['hostid']
+		);
 
-		$description[] = (new CLink($template_host['name'], '?parent_discoveryid='.$templateDiscoveryRuleId))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass(ZBX_STYLE_GREY);
+		if (array_key_exists($item['template_host']['hostid'], $this->data['writable_templates'])) {
+			$description[] = (new CLink(
+				$item['template_host']['name'],
+				'?parent_discoveryid='.$template_disc_ruleid
+			))
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->addClass(ZBX_STYLE_GREY);
+		}
+		else {
+			$description[] = (new CSpan(CHtml::encode($item['template_host']['name'])))->addClass(ZBX_STYLE_GREY);
+		}
+
 		$description[] = NAME_DELIMITER;
 	}
 	if ($item['type'] == ITEM_TYPE_DEPENDENT) {
-		$description[] = (new CLink(CHtml::encode($item['master_item']['name_expanded']),
+		$description[] = (new CLink(
+			CHtml::encode($item['master_item']['name_expanded']),
 			'?form=update&parent_discoveryid='.$data['parent_discoveryid'].'&itemid='.$item['master_item']['itemid']
 		))
 			->addClass(ZBX_STYLE_LINK_ALT)

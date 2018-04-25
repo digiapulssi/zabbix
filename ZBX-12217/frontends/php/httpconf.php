@@ -551,9 +551,23 @@ if (isset($_REQUEST['form'])) {
 
 			if (!empty($dbTest)) {
 				if (!idcmp($data['httptestid'], $dbTest['httptestid'])) {
-					$data['templates'][] = new CLink($dbTest['name'],
-						'httpconf.php?form=update&httptestid='.$dbTest['httptestid'].'&hostid='.$dbTest['hostid']
-					);
+					$writable = API::Template()->get([
+						'output' => ['templateid'],
+						'templateids' => $dbTest['hostid'],
+						'editable' => true,
+						'preservekeys' => true
+					]);
+
+					if (array_key_exists($dbTest['hostid'], $writable)) {
+						$data['templates'][] = new CLink(
+							$dbTest['name'],
+							'httpconf.php?form=update&httptestid='.$dbTest['httptestid'].'&hostid='.$dbTest['hostid']
+						);
+					}
+					else {
+						$data['templates'][] = new CSpan($dbTest['name']);
+					}
+
 					$data['templates'][] = SPACE.'&rArr;'.SPACE;
 				}
 				$httpTestId = $dbTest['templateid'];
@@ -843,6 +857,27 @@ else {
 
 		$data['httpTests'] = $httpTests;
 		$data['httpTestsLastData'] = $httpTestsLastData;
+	}
+
+	// Get real hosts and select writable templates IDs.
+	$data['writable_templates'] = [];
+	$http_test_hostids = [];
+
+	foreach ($data['httpTests'] as &$http_test) {
+		if ($http_test['templateid']) {
+			$http_test['template_host'] = get_httptest_by_httptestid($http_test['templateid']);
+			$http_test_hostids[] = $http_test['template_host']['hostid'];
+		}
+	}
+	unset($http_test);
+
+	if ($http_test_hostids) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $http_test_hostids,
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	// render view

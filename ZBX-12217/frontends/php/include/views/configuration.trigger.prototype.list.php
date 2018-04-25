@@ -73,11 +73,18 @@ foreach ($this->data['triggers'] as $trigger) {
 			$tpl_disc_ruleid = get_realrule_by_itemid_and_hostid($this->data['parent_discoveryid'],
 				$real_host['hostid']
 			);
-			$description[] = (new CLink(
-				CHtml::encode($real_host['name']),
-				'trigger_prototypes.php?parent_discoveryid='.$tpl_disc_ruleid))
+
+			if (array_key_exists($real_host['hostid'], $this->data['writable_templates'])) {
+				$description[] = (new CLink(
+					CHtml::encode($real_host['name']),
+					'trigger_prototypes.php?parent_discoveryid='.$tpl_disc_ruleid
+				))
 					->addClass(ZBX_STYLE_LINK_ALT)
 					->addClass(ZBX_STYLE_GREY);
+			}
+			else {
+				$description[] = (new CSpan(CHtml::encode($real_host['name'])))->addClass(ZBX_STYLE_GREY);
+			}
 
 			$description[] = NAME_DELIMITER;
 		}

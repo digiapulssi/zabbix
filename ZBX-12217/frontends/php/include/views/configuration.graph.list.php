@@ -103,11 +103,18 @@ foreach ($data['graphs'] as $graph) {
 
 	$name = [];
 	if (!empty($graph['templateid'])) {
-		$realHosts = get_realhosts_by_graphid($graph['templateid']);
-		$realHosts = DBfetch($realHosts);
-		$name[] = (new CLink($realHosts['name'], 'graphs.php?hostid='.$realHosts['hostid']))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass(ZBX_STYLE_GREY);
+		if (array_key_exists($graph['template_host']['hostid'], $data['writable_templates'])) {
+			$name[] = (new CLink(
+				$graph['template_host']['name'],
+				'graphs.php?hostid='.$graph['template_host']['hostid']
+			))
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->addClass(ZBX_STYLE_GREY);
+		}
+		else {
+			$name[] = (new CSpan(CHtml::encode($graph['template_host']['name'])))->addClass(ZBX_STYLE_GREY);
+		}
+
 		$name[] = NAME_DELIMITER;
 	}
 	elseif (!empty($graph['discoveryRule']) && empty($this->data['parent_discoveryid'])) {

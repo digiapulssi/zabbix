@@ -99,16 +99,24 @@ foreach ($httpTests as $httpTestId => $httpTest) {
 	$name = [];
 	if (isset($this->data['parentTemplates'][$httpTestId])) {
 		$template = $this->data['parentTemplates'][$httpTestId];
-		$name[] = (new CLink($template['name'], '?groupid=0&hostid='.$template['id']))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass(ZBX_STYLE_GREY);
+
+		if (array_key_exists($template['id'], $this->data['writable_templates'])) {
+			$name[] = (new CLink($template['name'], '?groupid=0&hostid='.$template['id']))
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->addClass(ZBX_STYLE_GREY);
+		}
+		else {
+			$name[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
+		}
+
 		$name[] = NAME_DELIMITER;
 	}
 	$name[] = new CLink($httpTest['name'], '?form=update'.'&httptestid='.$httpTestId.'&hostid='.$httpTest['hostid']);
 
 	if ($this->data['showInfoColumn']) {
 		$info_icons = [];
-		if($httpTest['status'] == HTTPTEST_STATUS_ACTIVE && isset($httpTestsLastData[$httpTestId]) && $httpTestsLastData[$httpTestId]['lastfailedstep']) {
+		if ($httpTest['status'] == HTTPTEST_STATUS_ACTIVE && isset($httpTestsLastData[$httpTestId])
+				&& $httpTestsLastData[$httpTestId]['lastfailedstep']) {
 			$lastData = $httpTestsLastData[$httpTestId];
 
 			$failedStep = $lastData['failedstep'];

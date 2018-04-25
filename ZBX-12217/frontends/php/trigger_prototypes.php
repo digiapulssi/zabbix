@@ -609,6 +609,30 @@ else {
 	// get real hosts
 	$data['realHosts'] = getParentHostsByTriggers($data['triggers']);
 
+	// Select writable templates IDs.
+	$hostids = [];
+
+	foreach ($data['realHosts'] as $real_host) {
+		$hostids = array_merge($hostids, zbx_objectValues($real_host, 'hostid'));
+	}
+
+	foreach ($data['triggers'] as $trigger) {
+		if (array_key_exists('template_host', $trigger)) {
+			$hostids = array_merge($hostids, zbx_objectValues($trigger['template_host'], 'hostid'));
+		}
+	}
+
+	$data['writable_templates'] = [];
+
+	if ($hostids) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => array_keys(array_flip($hostids)),
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
+
 	// render view
 	$triggersView = new CView('configuration.trigger.prototype.list', $data);
 	$triggersView->render();
