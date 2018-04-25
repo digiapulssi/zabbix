@@ -87,7 +87,7 @@ foreach ($config as $field => $value) {
  * Select users with exclusive GUI access of internal authentication.
  * Sessions created by these users will be excluded from the list of sessions updated as ZBX_SESSION_PASSIVE.
  */
-if ($isAuthenticationTypeChanged && $config['authentication_type'] != ZBX_AUTH_INTERNAL) {
+if ($isAuthenticationTypeChanged) {
 	$internal_auth_user_groups = API::UserGroup()->get([
 		'output' => [],
 		'filter' => [
@@ -118,10 +118,13 @@ if ($config['authentication_type'] == ZBX_AUTH_INTERNAL) {
 		if ($result) {
 			// reset all sessions
 			if ($isAuthenticationTypeChanged) {
-				$result &= DBexecute(
+				$query =
 					'UPDATE sessions SET status='.ZBX_SESSION_PASSIVE.
-					' WHERE sessionid<>'.zbx_dbstr(CWebUser::$data['sessionid'])
-				);
+					' WHERE sessionid<>'.zbx_dbstr(CWebUser::$data['sessionid']);
+				if ($internal_auth_users) {
+					$query .= ' AND '.dbConditionInt('userid', array_keys($internal_auth_users), true);
+				}
+				$result &= DBexecute($query);
 			}
 
 			$isAuthenticationTypeChanged = false;
