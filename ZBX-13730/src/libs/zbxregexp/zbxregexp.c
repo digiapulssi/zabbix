@@ -178,12 +178,13 @@ int     zbx_regexp_match_precompiled(const char *string, const pcre *regexp)
 	return zbx_regexp_exec(string, regexp, 0, (size_t)0, NULL);
 }
 
-static char	*zbx_regexp(const char *string, const char *pattern, int *len, int flags)
+static char	*zbx_regexp(const char *string, const char *pattern, int *len, int flags, int *result)
 {
 	char		*c = NULL;
 	zbx_regmatch_t	match;
 	pcre* 		regexp = NULL;
 	const char*	error = NULL;
+	int 		r = ZBX_REGEXP_ERROR;
 
 	if (NULL != len)
 		*len = FAIL;
@@ -192,7 +193,8 @@ static char	*zbx_regexp(const char *string, const char *pattern, int *len, int f
 
 	if (NULL != regexp && NULL != string)
 	{
-		if (ZBX_REGEXP_MATCH == zbx_regexp_exec(string, regexp, 0, 1, &match))
+		r = zbx_regexp_exec(string, regexp, 0, 1, &match);
+		if (ZBX_REGEXP_MATCH == r)
 		{
 			c = (char *)string + match.rm_so;
 
@@ -204,17 +206,21 @@ static char	*zbx_regexp(const char *string, const char *pattern, int *len, int f
 			*len = SUCCEED;
 		}
 	}
+
+	if(NULL != result)
+		*result = r;
+
 	return c;
 }
 
 char	*zbx_regexp_match(const char *string, const char *pattern, int *len)
 {
-	return zbx_regexp(string, pattern, len, PCRE_MULTILINE);
+	return zbx_regexp(string, pattern, len, PCRE_MULTILINE, NULL);
 }
 
 char	*zbx_iregexp_match(const char *string, const char *pattern, int *len)
 {
-	return zbx_regexp(string, pattern, len, PCRE_CASELESS | PCRE_MULTILINE);
+	return zbx_regexp(string, pattern, len, PCRE_CASELESS | PCRE_MULTILINE, NULL);
 }
 
 /*********************************************************************************
@@ -503,16 +509,7 @@ static int	regexp_match_ex_regsub(const char *string, const char *pattern, int c
 
 	if (NULL == output)
 	{
-		/* FIXME: not checking for runaway expression with zbx_regexp */
-		if (NULL == zbx_regexp(string, pattern, &ret, regexp_flags))
-		{
-			if (FAIL != ret)
-				ret = ZBX_REGEXP_NO_MATCH;
-		}
-		else
-		{
-			ret = ZBX_REGEXP_MATCH;
-		}
+		zbx_regexp(string, pattern, NULL, regexp_flags, &ret);
 	}
 	else
 	{
