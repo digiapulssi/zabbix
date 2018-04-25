@@ -319,7 +319,8 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				'output' => ['triggerid'],
 				'hostids' => $cloneTemplateId,
 				'selectItems' => ['key_'],
-				'inherited' => false
+				'inherited' => false,
+				'preservekeys' => true
 			]);
 
 			if ($dbTriggers) {
@@ -332,8 +333,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 					}
 				}
 
-				$result &= copyTriggersToHosts(zbx_objectValues($dbTriggers, 'triggerid'),
-						$templateId, $cloneTemplateId);
+				$result &= copyTriggersToHosts(array_keys($dbTriggers), $templateId, $cloneTemplateId);
 
 				if (!$result) {
 					throw new Exception();
@@ -386,7 +386,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 			// copy template screens
 			$dbTemplateScreens = API::TemplateScreen()->get([
-				'output' => ['screenid', 'name'],
+				'output' => ['screenid'],
 				'templateids' => $cloneTemplateId,
 				'selectScreenItems' => ['resourceid', 'resourcetype'],
 				'noInheritance' => true
@@ -401,7 +401,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 									SCREEN_RESOURCE_PLAIN_TEXT])
 								&& !in_array($item['resourceid'], $src_itemids))) {
 							unset($dbTemplateScreens[$index]);
-							continue;
+							continue 2;
 						}
 					}
 				}
