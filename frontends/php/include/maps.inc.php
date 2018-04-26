@@ -124,18 +124,11 @@ function getActionsBySysmap($sysmap, array $options = []) {
 	]);
 
 	$triggers = API::Trigger()->get([
-		'output' => [],
+		'output' => ['triggerid'],
+		'selectHosts' => ['hostid', 'status'],
 		'triggerids' => $triggerIds,
 		'preservekeys' => true,
 		'nopermissions' => true
-	]);
-
-	$moniored_triggers = API::Trigger()->get([
-		'output' => [],
-		'triggerids' => array_keys($triggers),
-		'monitored' => true,
-		'nopermissions' => true,
-		'preservekeys' => true
 	]);
 
 	$host_groups = API::HostGroup()->get([
@@ -194,8 +187,14 @@ function getActionsBySysmap($sysmap, array $options = []) {
 				$gotos['showEvents'] = false;
 				foreach ($elem['elements'] as $element) {
 					if (array_key_exists($element['triggerid'], $triggers)) {
-						if (array_key_exists($element['triggerid'], $moniored_triggers)) {
-							$gotos['showEvents'] = true;
+						$trigger = $triggers[$element['triggerid']];
+
+						foreach ($trigger['hosts'] as $host) {
+							if ($host['status'] == HOST_STATUS_MONITORED) {
+								$gotos['showEvents'] = true;
+
+								break;
+							}
 						}
 
 						$gotos['events']['triggerids'][] = $element['triggerid'];
@@ -973,28 +972,14 @@ function getSelementsInfo($sysmap, array $options = []) {
 			'selectLastEvent' => ['acknowledged'],
 			'triggerids' => array_keys($triggerIdToSelementIds),
 			'filter' => ['state' => null],
-			'nopermissions' => true,
-			'preservekeys' => true
-		]);
-
-		$monitored_triggers = API::Trigger()->get([
-			'output' => [],
-			'triggerids' => array_keys($triggers),
-			'monitored' => true,
-			'nopermissions' => true,
-			'preservekeys' => true
+			'nopermissions' => true
 		]);
 
 		foreach ($triggers as $trigger) {
-			if (!array_key_exists($trigger['triggerid'], $monitored_triggers)) {
-				$trigger['status'] = TRIGGER_STATUS_DISABLED;
-			}
-
 			foreach ($triggerIdToSelementIds[$trigger['triggerid']] as $belongs_to_sel) {
 				$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger;
 			}
 		}
-		unset($triggers, $monitored_triggers);
 	}
 
 	// triggers from submaps, skip dependent
@@ -1010,24 +995,11 @@ function getSelementsInfo($sysmap, array $options = []) {
 			'only_true' => true
 		]);
 
-		$monitored_triggers = API::Trigger()->get([
-			'output' => [],
-			'triggerids' => array_keys($triggers),
-			'monitored' => true,
-			'nopermissions' => true,
-			'preservekeys' => true
-		]);
-
 		foreach ($triggers as $trigger) {
-			if (!array_key_exists($trigger['triggerid'], $monitored_triggers)) {
-				$trigger['status'] = TRIGGER_STATUS_DISABLED;
-			}
-
 			foreach ($subSysmapTriggerIdToSelementIds[$trigger['triggerid']] as $belongs_to_sel) {
 				$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger;
 			}
 		}
-		unset($triggers, $monitored_triggers);
 	}
 
 	$monitored_hostids = [];
