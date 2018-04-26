@@ -1,6 +1,7 @@
 Changes for 3.4.9rc2
 
 Bug fixes:
+..F....... [ZBX-13549] fixed problem counting in map for disabled hosts and triggers (miks)
 ...G...... [ZBX-13781] fixed possible crash due to uninitialised error string in Zabbix Agentd (MVekslers)
 
 --------------------------------------------------------------------------------
@@ -1206,6 +1207,7 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 Changes for 3.0.17rc2
 
 Bug fixes:
+..F....... [ZBX-13549] fixed problem counting in map for disabled hosts and triggers (miks)
 ...G...... [ZBX-13781] fixed possible crash due to uninitialised error string in Zabbix Agentd (MVekslers)
 
 --------------------------------------------------------------------------------
