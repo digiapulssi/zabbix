@@ -290,18 +290,8 @@ foreach (@server_keys)
 	if (opt('probe'))
 	{
 		my $probe = getopt('probe');
-		my $valid = 0;
 
-		foreach my $name (keys(%$all_probes_ref))
-		{
-			if ($name eq $probe)
-			{
-				$valid = 1;
-				last;
-			}
-		}
-
-		if ($valid == 0)
+		unless (exists($all_probes_ref->{$probe}))
 		{
 			my $msg = "unknown probe \"$probe\"\n\nAvailable probes:\n";
 
@@ -313,11 +303,9 @@ foreach (@server_keys)
 			fail($msg);
 		}
 
-		my $temp = $all_probes_ref;
-
-		undef($all_probes_ref);
-
-		$all_probes_ref->{getopt('probe')} = $temp->{getopt('probe')};
+		$all_probes_ref = {
+			$probe	=> $all_probes_ref->{$probe}
+		};
 	}
 
 	my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
