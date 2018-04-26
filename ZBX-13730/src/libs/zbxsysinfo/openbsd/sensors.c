@@ -108,7 +108,7 @@ static int	get_device_sensors(int do_task, int *mib, const struct sensordev *sen
 
 				zbx_snprintf(human, sizeof(human), "%s%d", sensor_type_s[i], j);
 
-				if (NULL == zbx_regexp_match(human, name, NULL, NULL))
+				if (NULL == zbx_regexp_match(human, name, NULL))
 					continue;
 
 				mib[3] = i;
@@ -190,7 +190,7 @@ int	GET_SENSOR(AGENT_REQUEST *request, AGENT_RESULT *result)
 		}
 
 		if ((ZBX_DO_ONE == do_task && 0 == strcmp(sensordev.xname, device)) ||
-				(ZBX_DO_ONE != do_task && NULL != zbx_regexp_match(sensordev.xname, device, NULL, NULL)))
+				(ZBX_DO_ONE != do_task && NULL != zbx_regexp_match(sensordev.xname, device, NULL)))
 		{
 			if (SUCCEED != get_device_sensors(do_task, mib, &sensordev, name, &aggr, &cnt))
 			{

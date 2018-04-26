@@ -340,20 +340,10 @@ int	VFS_FILE_REGEXP(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 		utf8 = convert_to_utf8(buf, nbytes, encoding);
 		zbx_rtrim(utf8, "\r\n");
-		int sr = zbx_regexp_sub(utf8, regexp, output, &ptr);
+		zbx_regexp_sub(utf8, regexp, output, &ptr);
 		zbx_free(utf8);
 
-		if (ZBX_REGEXP_RUNAWAY == sr)
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Runaway expression."));
-			goto err;
-		}
-		else if (ZBX_REGEXP_ERROR == sr)
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error processing regular expression."));
-			goto err;
-		}
-		else if (ZBX_REGEXP_MATCH == sr && NULL != ptr)
+		if (NULL != ptr)
 		{
 			SET_STR_RESULT(result, ptr);
 			break;
@@ -472,25 +462,9 @@ int	VFS_FILE_REGMATCH(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 		utf8 = convert_to_utf8(buf, nbytes, encoding);
 		zbx_rtrim(utf8, "\r\n");
-
-		int regexp_result = ZBX_REGEXP_ERROR;
-		zbx_regexp_match(utf8, regexp, NULL, &regexp_result);
-		zbx_free(utf8);
-
-		if (ZBX_REGEXP_MATCH == regexp_result)
-		{
+		if (NULL != zbx_regexp_match(utf8, regexp, NULL))
 			res = 1;
-		}
-		else if (ZBX_REGEXP_RUNAWAY == regexp_result)
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "runaway expression"));
-			goto err;
-		}
-		else if (ZBX_REGEXP_ERROR == regexp_result)
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error processing regular expression."));
-			goto err;
-		}
+		zbx_free(utf8);
 
 		if (current_line >= end_line)
 			break;

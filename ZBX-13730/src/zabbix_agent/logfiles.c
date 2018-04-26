@@ -1179,7 +1179,7 @@ void	destroy_logfile_list(struct st_logfile **logfiles, int *logfiles_alloc, int
  * Comments: This is a helper function for pick_logfiles()                    *
  *                                                                            *
  ******************************************************************************/
-static void	pick_logfile(const char *directory, const char *filename, int mtime, const pcre *regexp,
+static void	pick_logfile(const char *directory, const char *filename, int mtime, const pcre *re,
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num)
 {
 	char		*logfile_candidate = NULL;
@@ -1191,7 +1191,7 @@ static void	pick_logfile(const char *directory, const char *filename, int mtime,
 	{
 		if (S_ISREG(file_buf.st_mode) &&
 				mtime <= file_buf.st_mtime &&
-				ZBX_REGEXP_MATCH == zbx_regexp_match_precompiled(filename, regexp))
+				0 == zbx_regexp_exec(filename, re, 0, 0, NULL))
 		{
 			add_logfile(logfiles, logfiles_alloc, logfiles_num, logfile_candidate, &file_buf);
 		}
@@ -1597,6 +1597,7 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 		{
 			if (p_end > p)
 				*incomplete = 1;
+
 			if (BUF_SIZE > nbytes)
 			{
 				/* Buffer is not full (no more data available) and there is no "newline" in it. */
@@ -1667,18 +1668,13 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 					if ('\0' != *encoding)
 						zbx_free(value);
 
-					if (ZBX_REGEXP_ERROR == regexp_ret)
+					if (FAIL == regexp_ret)
 					{
 						*err_msg = zbx_dsprintf(*err_msg, "cannot compile regular expression");
 						ret = FAIL;
 						goto out;
 					}
-					else if (ZBX_REGEXP_RUNAWAY == regexp_ret)
-					{
-						*err_msg = zbx_dsprintf(*err_msg, "runaway expression");
-						ret = FAIL;
-						goto out;
-					}
+
 					(*p_count)--;
 
 					if (0 != (ZBX_METRIC_FLAG_LOG_COUNT & flags) ||
@@ -1742,9 +1738,9 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 
 								(*s_count)--;
 							}
+
 							zbx_free(item_value);
 						}
-
 					}
 					else	/* log.count[] or logrt.count[] */
 					{
@@ -1758,15 +1754,9 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 					if ('\0' != *encoding)
 						zbx_free(value);
 
-					if (ZBX_REGEXP_ERROR == regexp_ret)
+					if (FAIL == regexp_ret)
 					{
 						*err_msg = zbx_dsprintf(*err_msg, "cannot compile regular expression");
-						ret = FAIL;
-						goto out;
-					}
-					else if (ZBX_REGEXP_RUNAWAY == regexp_ret)
-					{
-						*err_msg = zbx_dsprintf(*err_msg, "runaway expression");
 						ret = FAIL;
 						goto out;
 					}

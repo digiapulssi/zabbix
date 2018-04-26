@@ -241,7 +241,7 @@ int	SYSTEM_SW_PACKAGES(AGENT_REQUEST *request, AGENT_RESULT *result)
 						goto next;
 				}
 
-				if (1 == check_regex && NULL == zbx_regexp_match(package, regex, NULL, NULL))
+				if (1 == check_regex && NULL == zbx_regexp_match(package, regex, NULL))
 					goto next;
 
 				zbx_vector_str_append(&packages, zbx_strdup(NULL, package));

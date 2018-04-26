@@ -187,7 +187,7 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		if (NULL != usrinfo && usrinfo->pw_uid != psinfo.pr_uid)
 			continue;
 
-		if (NULL != proccomm && '\0' != *proccomm && NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL, NULL))
+		if (NULL != proccomm && '\0' != *proccomm && NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL))
 			continue;
 
 		if (NULL != p_value)
@@ -342,7 +342,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		if (FAIL == check_procstate(&psinfo, zbx_proc_stat))
 			continue;
 
-		if (NULL != proccomm && '\0' != *proccomm && NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL, NULL))
+		if (NULL != proccomm && '\0' != *proccomm && NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL))
 			continue;
 
 		proccount++;
@@ -405,7 +405,7 @@ static int	proc_match_cmdline(const zbx_sysinfo_proc_t *proc, const char *cmdlin
 	if (NULL == cmdline)
 		return SUCCEED;
 
-	if (NULL != proc->cmdline && NULL != zbx_regexp_match(proc->cmdline, cmdline, NULL, NULL))
+	if (NULL != proc->cmdline && NULL != zbx_regexp_match(proc->cmdline, cmdline, NULL))
 		return SUCCEED;
 
 	return FAIL;

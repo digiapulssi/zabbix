@@ -121,7 +121,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 			if (NULL != usrinfo && usrinfo->pw_uid != pst[i].pst_uid)
 				continue;
 
-			if (NULL != proccomm && NULL == zbx_regexp_match(pst[i].pst_cmd, proccomm, NULL, NULL))
+			if (NULL != proccomm && NULL == zbx_regexp_match(pst[i].pst_cmd, proccomm, NULL))
 				continue;
 
 			if (FAIL == check_procstate(pst[i], zbx_proc_stat))
