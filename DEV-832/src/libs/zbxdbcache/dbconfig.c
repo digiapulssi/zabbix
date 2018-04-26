@@ -8307,6 +8307,39 @@ void	DCconfig_set_maintenance(const zbx_uint64_t *hostids, int hostids_num, int 
 
 /******************************************************************************
  *                                                                            *
+ * Function: DCtouch_hosts_availability                                       *
+ *                                                                            *
+ * Purpose: sets availability timestamp to current time for the specified     *
+ *          hosts                                                             *
+ *                                                                            *
+ * Parameters: hostids - [IN] the host identifiers                            *
+ *                                                                            *
+ ******************************************************************************/
+void	DCtouch_hosts_availability(const zbx_vector_uint64_t *hostids)
+{
+	const char	*__function_name = "DCtouch_hosts_availability";
+	ZBX_DC_HOST	*dc_host;
+	int		i, now;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() hostids:%d", __function_name, hostids->values_num);
+
+	now = time(NULL);
+
+	LOCK_CACHE;
+
+	for (i = 0; i < hostids->values_num; i++)
+	{
+		if (NULL != (dc_host = zbx_hashset_search(&config->hosts, &hostids->values[i])))
+			dc_host->availability_ts = now;
+	}
+
+	UNLOCK_CACHE;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: DCconfig_get_stats                                               *
  *                                                                            *
  * Purpose: get statistics of the database cache                              *
