@@ -1282,7 +1282,11 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 	ret = (0 == ins.values_num ? SUCCEED : zbx_db_insert_execute(&db_insert));
 
 	if (0 != availability_hostids.values_num)
+	{
+		zbx_vector_uint64_sort(&availability_hostids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+		zbx_vector_uint64_uniq(&availability_hostids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		DCtouch_hosts_availability(&availability_hostids);
+	}
 clean:
 	if (0 != ins.values_num)
 	{
