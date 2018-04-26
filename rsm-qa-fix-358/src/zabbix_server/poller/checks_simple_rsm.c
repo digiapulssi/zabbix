@@ -1298,9 +1298,9 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 
 	/* prepare test name */
 	if (0 != strcmp(".", domain))
-		zbx_snprintf(testname, sizeof(testname), "%s.%s", testprefix, domain);
+		zbx_snprintf(testname, sizeof(testname), "%s.%s.", testprefix, domain);
 	else
-		zbx_strlcpy(testname, testprefix, sizeof(testname));
+		zbx_snprintf(testname, sizeof(testname), "%s.", testprefix);
 
 	if (NULL == (testname_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, testname)))
 	{
