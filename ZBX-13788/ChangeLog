@@ -1,3 +1,9 @@
+Changes for 3.0.17rc2
+
+Bug fixes:
+...G...... [ZBX-13781] fixed possible crash in the function "web.page.get" of Zabbix Agentd (MVekslers)
+
+--------------------------------------------------------------------------------
 Changes for 3.0.17rc1
 
 Bug fixes:
