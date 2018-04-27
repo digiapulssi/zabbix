@@ -258,6 +258,7 @@
 				var ajaxRequest = $.ajax({
 					url: ajaxUrl.getUrl(),
 					type: 'post',
+					cache: false,
 					data: {},
 					dataType: 'html',
 					success: function(html) {
