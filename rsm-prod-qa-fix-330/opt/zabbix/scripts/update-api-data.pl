@@ -1111,6 +1111,12 @@ foreach (@server_keys)
 
 		slv_finalize();
 
+		# When we fork for real it makes no difference for Parallel::ForkManager whether child calls exit() or
+		# calls $fm->finish(), therefore we do not need to introduce $fm->finish() in all our low-level error
+		# handling routines, but having $fm->finish() here leaves a possibility to debug a happy path scenario
+		# without the complications of actual forking by using:
+		# my $fm = new Parallel::ForkManager(0);
+
 		$fm->finish(SUCCESS);
 	} # for each TLD
 
