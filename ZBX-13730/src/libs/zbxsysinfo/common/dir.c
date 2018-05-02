@@ -214,14 +214,10 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, pcre
 static void	regex_incl_excl_free(pcre *regex_incl, pcre *regex_excl)
 {
 	if (NULL != regex_incl)
-	{
 		zbx_regexp_free(regex_incl);
-	}
 
 	if (NULL != regex_excl)
-	{
 		zbx_regexp_free(regex_excl);
-	}
 }
 
 static void	list_vector_destroy(zbx_vector_ptr_t *list)
