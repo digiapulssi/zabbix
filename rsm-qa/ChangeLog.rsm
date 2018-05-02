@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc6
+
+Bug fixes:
+..F....... [361] fixed probe status detection for DNSSEC when there are no data per NS IP (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc5
 
 New features:
