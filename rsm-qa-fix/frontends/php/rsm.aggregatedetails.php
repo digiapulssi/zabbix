@@ -289,7 +289,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			$probeid = $tld_probe_names[reset($probes_item['hosts'])['host']];
 			$item_value = array_key_exists($probes_item['itemid'], $item_values)
 				? (int) $item_values[$probes_item['itemid']]
-				: 0;
+				: null;
 
 			preg_match('/^[^\[]+\[([^\]]+)]$/', $probes_item['key_'], $matches);
 			if (!$matches) {
@@ -322,7 +322,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 					$data['probes'][$probeid]['probe_nameservers_with_no_values'] = 0;
 				}
 
-				if ($item_value == 0) {
+				if ($item_value === null) {
 					$data['probes'][$probeid]['probe_nameservers_with_no_values']++;
 				}
 				/**
@@ -337,7 +337,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				) {
 					// Error detected.
 				}
-				elseif ($item_value != 0) {
+				else {
 					$data['probes'][$probeid]['probe_nameservers_with_no_errors']++;
 				}
 			}
