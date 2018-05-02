@@ -113,7 +113,7 @@ static int	compare_descriptors(const void *file_a, const void *file_b)
 static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, pcre **regex_incl,
 		pcre **regex_excl, int *mode, int *max_depth, char **dir, zbx_stat_t *status)
 {
-	char	*dir_param, *regex_incl_str, *regex_excl_str, *mode_str, *max_depth_str;
+	char		*dir_param, *regex_incl_str, *regex_excl_str, *mode_str, *max_depth_str;
 	const char	*error = NULL;
 
 	if (5 < request->nparam)
@@ -136,28 +136,24 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, pcre
 
 	if (NULL != regex_incl_str && '\0' != *regex_incl_str)
 	{
-		*regex_incl = zbx_regexp_compile(
-			regex_incl_str, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
+		*regex_incl = zbx_regexp_compile(regex_incl_str, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
 
 		if (NULL == *regex_incl)
 		{
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL,
 					"Invalid regular expression in second parameter: %s", error));
-			zbx_free(*regex_incl);
 			return FAIL;
 		}
 	}
 
 	if (NULL != regex_excl_str && '\0' != *regex_excl_str)
 	{
-		*regex_excl = zbx_regexp_compile(
-			regex_excl_str, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
+		*regex_excl = zbx_regexp_compile(regex_excl_str, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
 
 		if (NULL == *regex_excl)
 		{
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL,
 					"Invalid regular expression in third parameter: %s", error));
-			zbx_free(*regex_excl);
 			return FAIL;
 		}
 	}
