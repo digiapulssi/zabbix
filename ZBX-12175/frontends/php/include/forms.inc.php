@@ -289,9 +289,11 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 		else {
 			// subfilter has 0 items
 			if ($element['count'] == 0) {
-				$output[] = (new CSpan($element['name']))->addClass(ZBX_STYLE_GREY);
-				$output[] = SPACE;
-				$output[] = new CSup($element['count']);
+				$output[] = (new CSpan([
+					(new CSpan($element['name']))->addClass(ZBX_STYLE_GREY),
+					SPACE,
+					new CSup($element['count'])
+				]))->addClass(ZBX_STYLE_SUBFILTER_NOT_ENABLED);
 			}
 			else {
 				// this level has no active subfilters
@@ -310,9 +312,11 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 						');'
 					));
 
-				$output[] = $link;
-				$output[] = SPACE;
-				$output[] = $nspan;
+				$output[] = (new CSpan([
+					$link,
+					SPACE,
+					$nspan
+				]))->addClass(ZBX_STYLE_SUBFILTER_NOT_ENABLED);
 			}
 		}
 
