@@ -1342,7 +1342,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		goto out;
 	}
 
-	if (0 == epp_enabled && 0 == ldns_pkt_aa(pkt))
+	if (0 == ldns_pkt_aa(pkt))
 	{
 		zbx_strlcpy(err, "AA flag is not set in the answer from nameserver", err_size);
 		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(ZBX_NS_ANSWER_ERROR_NOAAFLAG);
@@ -1359,15 +1359,6 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	if (0 != epp_enabled)
 	{
 		/* start referral validation */
-
-		/* no AA flag */
-		if (0 != ldns_pkt_aa(pkt))
-		{
-			zbx_snprintf(err, err_size, "AA flag is set in the answer of \"%s\" from nameserver \"%s\" (%s)",
-					testname, ns, ip);
-			*rtt = ZBX_EC_EPP_NOT_IMPLEMENTED;
-			goto out;
-		}
 
 		/* the AUTHORITY section should contain at least one NS RR for the last label in  */
 		/* PREFIX, e.g. "somedomain" when querying for "blahblah.somedomain.example." */
