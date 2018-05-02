@@ -700,9 +700,10 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 	DB_RESULT	result;
 	DB_ROW		row;
 	int		now, severity, medias_num = 0, status;
-	char		error[MAX_STRING_LEN], *perror;
+	const char	*perror;
 	DB_EVENT	*c_event;
 	zbx_db_insert_t	db_insert;
+	char		error[MAX_STRING_LEN];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
