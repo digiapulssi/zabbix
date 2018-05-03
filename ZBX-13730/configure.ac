@@ -1784,6 +1784,10 @@ if test "x$ICONV_CFLAGS" != "x"; then
 	echo "    iconv:                 ${ICONV_CFLAGS}"
 fi
 
+if test "x$LIBEVENT_CFLAGS" != "x"; then
+	echo "    libevent:              ${LIBEVENT_CFLAGS}"
+fi
+
 echo "
   Enable server:         ${server}"
 
