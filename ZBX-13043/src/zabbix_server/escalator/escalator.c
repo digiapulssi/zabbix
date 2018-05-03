@@ -738,8 +738,8 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 		ZBX_STR2UINT64(mediatypeid, row[0]);
 		severity = atoi(row[2]);
 
-		zabbix_log(LOG_LEVEL_DEBUG, "trigger severity:%d, media severity:%d, period:'%s'",
-				(int)c_event->trigger.priority, severity, row[3]);
+		zabbix_log(LOG_LEVEL_DEBUG, "trigger severity:%d, media severity:%d, period:'%s', userid:" ZBX_FS_UI64,
+				(int)c_event->trigger.priority, severity, row[3], userid);
 
 		if (MEDIA_STATUS_DISABLED == atoi(row[5]))
 		{
