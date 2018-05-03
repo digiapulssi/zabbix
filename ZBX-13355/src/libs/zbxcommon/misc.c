@@ -2072,7 +2072,7 @@ int	int_in_list(char *list, int value)
 
 int	zbx_double_compare(double a, double b)
 {
-	return fabs(a - b) < ZBX_DOUBLE_EPSILON ? SUCCEED : FAIL;
+	return fabs(a - b) <= ZBX_DOUBLE_EPSILON ? SUCCEED : FAIL;
 }
 
 /******************************************************************************

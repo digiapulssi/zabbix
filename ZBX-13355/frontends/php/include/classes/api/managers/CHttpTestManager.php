@@ -283,31 +283,6 @@ class CHttpTestManager {
 			info(_s('Updated: Web scenario "%1$s" on "%2$s".', $httpTest['name'], $httpTest['hostname']));
 		}
 
-		/*
-		 * Unset unchanged properties, otherwise, host web scenarios will inherit them and their custom applications
-		 * will be overwritten.
-		 */
-		$properties_to_compare = ['applicationid', 'ssl_cert_file', 'ssl_key_password', 'ssl_key_file', 'verify_peer',
-			'verify_host'
-		];
-
-		foreach ($httpTests as &$httpTest) {
-			foreach ($properties_to_compare as $property) {
-				// Do not compare unexisting properties.
-				if (!array_key_exists($property, $httpTest)) {
-					continue;
-				}
-
-				// Unset unchanged properties.
-				if (($property === 'applicationid'
-						&& bccomp($httpTest[$property], $dbHttpTest[$httpTest['httptestid']][$property]) == 0)
-						|| $httpTest[$property] === $dbHttpTest[$httpTest['httptestid']][$property]) {
-					unset($httpTest[$property]);
-				}
-			}
-		}
-		unset($httpTest);
-
 		return $httpTests;
 	}
 
