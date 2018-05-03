@@ -699,11 +699,9 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	int		now, severity, medias_num = 0, status;
-	const char	*perror;
+	int		now, medias_num = 0;
 	DB_EVENT	*c_event;
 	zbx_db_insert_t	db_insert;
-	char		error[MAX_STRING_LEN];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -734,6 +732,9 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		int		severity, status;
+		const char	*perror;
+
 		ZBX_STR2UINT64(mediatypeid, row[0]);
 		severity = atoi(row[2]);
 
@@ -785,6 +786,8 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 
 	if (0 == mediatypeid)
 	{
+		char	error[MAX_STRING_LEN];
+
 		medias_num++;
 
 		zbx_snprintf(error, sizeof(error), "No media defined for user.");
