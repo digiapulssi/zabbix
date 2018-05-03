@@ -118,10 +118,11 @@ if ($data['passwd'] != '') {
 	$passwdField = [
 		(new CButton('chPass_btn', _('Change password')))
 			->onClick('this.style.display="none"; $("passwd").disabled=false; $("passwd").show().focus();'),
-		(new CPassBox('passwd'))
+		(new CPassBox('passwd', $data['passwd']))
 			->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			->addStyle('display: none;')
-			->setAttribute('disabled', 'disabled') // Prevent stored passwords autofill by browser
+			->setAttribute('disabled', 'disabled')
+			// Disabling field prevents stored passwords autofill by browser.
 	];
 }
 else {

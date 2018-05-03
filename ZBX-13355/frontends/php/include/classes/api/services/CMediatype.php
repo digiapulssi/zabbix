@@ -176,29 +176,15 @@ class CMediatype extends CApiService {
 			self::exception(ZBX_API_ERROR_PARAMETERS, _('Empty input parameter.'));
 		}
 
-		// Media-type specific requirements behave as addition towards requirements listed in 'all_types'
-		$required_fields = [
-			'all_types' => ['type', 'description'],
-			MEDIA_TYPE_JABBER => ['passwd'],
-			MEDIA_TYPE_EZ_TEXTING => ['passwd']
-		];
+		$required_fields = ['type', 'description'];
 
 		foreach ($mediatypes as $mediatype) {
 			if (!is_array($mediatype)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
 			}
 
-			$type_required_fields = $required_fields['all_types'];
-
-			if (array_key_exists($mediatype['type'], $required_fields)) {
-				$type_required_fields = array_merge(
-					$type_required_fields,
-					$required_fields[$mediatype['type']]
-				);
-			}
-
 			// Check required parameters.
-			$missing_keys = array_diff($type_required_fields, array_keys($mediatype));
+			$missing_keys = array_diff($required_fields, array_keys($mediatype));
 
 			if ($missing_keys) {
 				self::exception(ZBX_API_ERROR_PARAMETERS,
@@ -206,7 +192,7 @@ class CMediatype extends CApiService {
 				);
 			}
 			else {
-				foreach ($type_required_fields as $field) {
+				foreach ($required_fields as $field) {
 					if ($mediatype[$field] === '' || $mediatype[$field] === null) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s(
 							'Field "%1$s" is missing a value for media type "%2$s".',
@@ -436,12 +422,6 @@ class CMediatype extends CApiService {
 
 				$check_names[$mediatype['description']] = true;
 			}
-
-			if (array_key_exists('passwd', $mediatype) && $mediatype['passwd'] === '') {
-				self::exception(ZBX_API_ERROR_PARAMETERS,
-					_s('Incorrect value for field "%1$s": %2$s.', 'passwd', _('cannot be empty'))
-				);
-			}
 		}
 
 		if ($check_names) {
@@ -485,8 +465,8 @@ class CMediatype extends CApiService {
 					MEDIA_TYPE_EMAIL => ['smtp_server', 'smtp_helo', 'smtp_email'],
 					MEDIA_TYPE_EXEC => ['exec_path'],
 					MEDIA_TYPE_SMS => ['gsm_modem'],
-					MEDIA_TYPE_JABBER => ['username'],
-					MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username']
+					MEDIA_TYPE_JABBER => ['username', 'passwd'],
+					MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username', 'passwd']
 				];
 
 				foreach ($optional_fields_by_type[$db_mediatype['type']] as $field) {
@@ -812,8 +792,8 @@ class CMediatype extends CApiService {
 			MEDIA_TYPE_EMAIL => ['smtp_server', 'smtp_helo', 'smtp_email'],
 			MEDIA_TYPE_EXEC => ['exec_path'],
 			MEDIA_TYPE_SMS => ['gsm_modem'],
-			MEDIA_TYPE_JABBER => ['username'],
-			MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username']
+			MEDIA_TYPE_JABBER => ['username', 'passwd'],
+			MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username', 'passwd']
 		];
 
 		foreach ($required_fields_by_type[$mediatype['type']] as $field) {
