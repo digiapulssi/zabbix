@@ -699,7 +699,7 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	int		now, medias_num = 0;
+	int		now, have_alerts = 0;
 	DB_EVENT	*c_event;
 	zbx_db_insert_t	db_insert;
 
@@ -770,8 +770,9 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 			perror = "Media type disabled.";
 		}
 
-		if (0 == medias_num++)
+		if (0 == have_alerts)
 		{
+			have_alerts = 1;
 			zbx_db_insert_prepare(&db_insert, "alerts", "alertid", "actionid", "eventid", "userid", "clock",
 					"mediatypeid", "sendto", "subject", "message", "status", "error", "esc_step",
 					"alerttype", NULL);
@@ -788,7 +789,7 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 	{
 		char	error[MAX_STRING_LEN];
 
-		medias_num++;
+		have_alerts = 1;
 
 		zbx_snprintf(error, sizeof(error), "No media defined for user.");
 
@@ -800,7 +801,7 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 				escalation->esc_step, (int)ALERT_TYPE_MESSAGE);
 	}
 
-	if (0 != medias_num)
+	if (0 != have_alerts)
 	{
 		zbx_db_insert_autoincrement(&db_insert, "alertid");
 		zbx_db_insert_execute(&db_insert);
