@@ -401,6 +401,33 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 		return $problems;
 	}
 
+	static public function fixCircularDependencies(array $navtree_items) {
+		// Find and fix incorrect parent IDs.
+		foreach ($navtree_items as $fieldid => &$navtree_item) {
+			if (!array_key_exists($navtree_item['parent'], $navtree_items)) {
+				$navtree_item['parent'] = 0;
+			}
+		}
+		unset($navtree_item);
+
+		// Find and fix circular dependencies.
+		foreach ($navtree_items as $fieldid => &$navtree_item) {
+			$parentid = $navtree_item['parent'];
+
+			while ($parentid != 0) {
+				if ($parentid == $fieldid) {
+					$navtree_item['parent'] = 0;
+					break;
+				}
+
+				$parentid = $navtree_items[$parentid]['parent'];
+			}
+		}
+		unset($navtree_item);
+
+		return $navtree_items;
+	}
+
 	protected function doAction() {
 		$fields = $this->getForm()->getFieldsData();
 		$error = null;
@@ -421,45 +448,7 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 			}
 		}
 
-		// Find and fix circular dependencies.
-		foreach ($navtree_items as $fieldid => &$navtree_item) {
-			if ($navtree_item['parent'] == $fieldid || !array_key_exists($navtree_item['parent'], $navtree_items)) {
-				$navtree_item['parent'] = 0;
-			}
-
-			if ($navtree_item['parent'] != 0) {
-				$parentid = $navtree_item['parent'];
-				$navtree_item_parent = $navtree_items[$parentid];
-
-				// Check if none of parent items does not make circular dependency to itself or $navtree_item.
-				while ($navtree_item_parent['parent'] != 0) {
-					// Check if item doesn't point to itself as a parent.
-					if ($navtree_item_parent['parent'] == $parentid) {
-						$navtree_item_parent['parent'] = 0;
-					}
-
-					/*
-					 * Check if child parent item doesn't point to its child as a parent. Then, check if item which is
-					 * specified as parent of $navtree_item_parent exists. If one of conditions fails, move item to
-					 * root level.
-					 */
-					if ($navtree_item_parent['parent'] == $fieldid
-							|| !array_key_exists($navtree_item_parent['parent'], $navtree_items)) {
-						$navtree_item['parent'] = 0;
-						break;
-					}
-					// Find next parent item in this branch.
-					elseif (array_key_exists($navtree_item_parent['parent'], $navtree_items)) {
-						$parentid = $navtree_item_parent['parent'];
-						$navtree_item_parent = $navtree_items[$parentid];
-					}
-					else {
-						break;
-					}
-				}
-			}
-		}
-		unset($navtree_item);
+		$navtree_items = self::fixCircularDependencies($navtree_items);
 
 		// Propagate item mapids to all its parent items.
 		foreach ($navtree_items as $navtree_item) {
