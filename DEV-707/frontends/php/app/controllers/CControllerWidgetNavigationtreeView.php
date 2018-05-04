@@ -401,6 +401,14 @@ class CControllerWidgetNavigationtreeView extends CControllerWidget {
 		return $problems;
 	}
 
+	/**
+	 * Validate and fix the tree of the maps.
+	 *
+	 * @param array  $navtree_items
+	 * @param string $navtree_items[<id>]['parent']
+	 *
+	 * @return array
+	 */
 	static public function fixCircularDependencies(array $navtree_items) {
 		// Find and fix incorrect parent IDs.
 		foreach ($navtree_items as $fieldid => &$navtree_item) {
