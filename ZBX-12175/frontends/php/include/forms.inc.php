@@ -281,9 +281,11 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 						'javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
 						'create_var("zbx_filter", '.CJs::encodeJson($subfilterName.'['.$id.']').', null, true);'
 					)),
-				SPACE,
+				' ',
 				new CSup($element['count'])
-			]))->addClass(ZBX_STYLE_SUBFILTER_ENABLED);
+			]))
+				->addClass(ZBX_STYLE_SUBFILTER)
+				->addClass(ZBX_STYLE_SUBFILTER_ENABLED);
 		}
 		// isn't activated
 		else {
@@ -291,16 +293,11 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 			if ($element['count'] == 0) {
 				$output[] = (new CSpan([
 					(new CSpan($element['name']))->addClass(ZBX_STYLE_GREY),
-					SPACE,
+					' ',
 					new CSup($element['count'])
-				]))->addClass(ZBX_STYLE_SUBFILTER_NOT_ENABLED);
+				]))->addClass(ZBX_STYLE_SUBFILTER);
 			}
 			else {
-				// this level has no active subfilters
-				$nspan = $subfilter
-					? new CSup('+'.$element['count'])
-					: new CSup($element['count']);
-
 				$link = (new CSpan($element['name']))
 					->addClass(ZBX_STYLE_LINK_ACTION)
 					->onClick(CHtml::encode(
@@ -314,16 +311,12 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 
 				$output[] = (new CSpan([
 					$link,
-					SPACE,
-					$nspan
-				]))->addClass(ZBX_STYLE_SUBFILTER_NOT_ENABLED);
+					' ',
+					new CSup(($subfilter ? '+' : '').$element['count'])
+				]))->addClass(ZBX_STYLE_SUBFILTER);
 			}
 		}
-
-		$output[] = '&nbsp;&nbsp;&nbsp;';
 	}
-
-	array_pop($output);
 
 	return $output;
 }
