@@ -728,22 +728,7 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 				userid, mediatypeid);
 	}
 
-	if (NULL == result)
-	{
-		char	error[MAX_STRING_LEN];
-
-		have_alerts = 1;
-
-		zbx_snprintf(error, sizeof(error), "No media defined for user.");
-
-		zbx_db_insert_prepare(&db_insert, "alerts", "alertid", "actionid", "eventid", "userid", "clock",
-				"subject", "message", "status", "retries", "error", "esc_step", "alerttype", NULL);
-
-		zbx_db_insert_add_values(&db_insert, __UINT64_C(0), action->actionid, c_event->eventid, userid, now,
-				subject, message, (int)ALERT_STATUS_FAILED, (int)ALERT_MAX_RETRIES, error,
-				escalation->esc_step, (int)ALERT_TYPE_MESSAGE);
-		goto no_records;
-	}
+	mediatypeid = 0;
 
 	while (NULL != (row = DBfetch(result)))
 	{
@@ -799,7 +784,23 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 	}
 
 	DBfree_result(result);
-no_records:
+
+	if (0 == mediatypeid)
+	{
+		char	error[MAX_STRING_LEN];
+
+		have_alerts = 1;
+
+		zbx_snprintf(error, sizeof(error), "No media defined for user.");
+
+		zbx_db_insert_prepare(&db_insert, "alerts", "alertid", "actionid", "eventid", "userid", "clock",
+				"subject", "message", "status", "retries", "error", "esc_step", "alerttype", NULL);
+
+		zbx_db_insert_add_values(&db_insert, __UINT64_C(0), action->actionid, c_event->eventid, userid, now,
+				subject, message, (int)ALERT_STATUS_FAILED, (int)ALERT_MAX_RETRIES, error,
+				escalation->esc_step, (int)ALERT_TYPE_MESSAGE);
+	}
+
 	if (0 != have_alerts)
 	{
 		zbx_db_insert_autoincrement(&db_insert, "alertid");
