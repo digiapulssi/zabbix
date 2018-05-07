@@ -1,8 +1,16 @@
-Changes for rsm1.1.0rc6
+Changes for rsm1.1.0rc7
 
 New features:
 
 Bug fixes:
+..F....... [364] fixed result coloring in particular test page for RDDS service (miks)
+.......PS. [365] fixed RDDS errors -227 and -228 being overwritten with -229 (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc6
+
+Bug fixes:
+..F....... [361] fixed probe status detection for DNSSEC when there are no data per NS IP (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc5

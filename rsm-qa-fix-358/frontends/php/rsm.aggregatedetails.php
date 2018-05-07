@@ -289,7 +289,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			$probeid = $tld_probe_names[reset($probes_item['hosts'])['host']];
 			$item_value = array_key_exists($probes_item['itemid'], $item_values)
 				? (int) $item_values[$probes_item['itemid']]
-				: 0;
+				: null;
 
 			preg_match('/^[^\[]+\[([^\]]+)]$/', $probes_item['key_'], $matches);
 			if (!$matches) {
@@ -304,24 +304,40 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			$data['probes'][$probeid]['results_udp'][$matches[1]][$ipv][$matches[2]] = $item_value;
 
 			if ($data['type'] == RSM_DNSSEC) {
+				// Holds the number of NameServer IPs, used for particular Probe.
+				if (!array_key_exists('probe_number_of_nameserver_ips', $data['probes'][$probeid])) {
+					$data['probes'][$probeid]['probe_number_of_nameserver_ips'] = 0;
+				}
+				$data['probes'][$probeid]['probe_number_of_nameserver_ips']++;
+
 				// Holds the number of NameServers with errors for particular probe.
 				if (!array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probeid])) {
 					$data['probes'][$probeid]['probe_nameservers_with_no_errors'] = 0;
 				}
+				/*
+				 * Holds the number of nameservers with no values.
+				 * This is just to help distinguish when probe's NameServer has no errors and when it has no values.
+				 */
+				if (!array_key_exists('probe_nameservers_with_no_values', $data['probes'][$probeid])) {
+					$data['probes'][$probeid]['probe_nameservers_with_no_values'] = 0;
+				}
 
+				if ($item_value === null) {
+					$data['probes'][$probeid]['probe_nameservers_with_no_values']++;
+				}
 				/**
 				 * NS in case of DNSSEC is considered to be DOWN if selected value is one of the following:
 				 * 1) -204 (ZBX_EC_DNS_NS_ERRSIG);
 				 * 2) -206 (ZBX_EC_DNS_RES_NOADBIT);
 				 * 3) in range between -428 and -401 (ZBX_EC_DNS_UDP_DNSKEY_NONE & ZBX_EC_DNS_UDP_RES_NOADBIT).
 				 */
-				if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT
+				elseif (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT
 					|| $item_value == ZBX_EC_DNS_NS_ERRSIG
 					|| $item_value == ZBX_EC_DNS_RES_NOADBIT
 				) {
 					// Error detected.
 				}
-				elseif ($item_value != 0) {
+				else {
 					$data['probes'][$probeid]['probe_nameservers_with_no_errors']++;
 				}
 			}
@@ -438,10 +454,14 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			}
 			elseif ($data['type'] == RSM_DNSSEC) {
 				/**
-				 * For DNSSEC, if at least one NameServer for particular probe is UP (do not have errors), the whole
-				 * probe is UP.
+				 * For DNSSEC, if at least one NameServer for particular probe is UP (have data but do not have errors),
+				 * the whole probe is UP. If there are no NameServer IP with data, whole probe is offline.
 				 */
-				if (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
+				if (array_key_exists('probe_nameservers_with_no_values', $data['probes'][$probe_hostid])
+						&& $data['probes'][$probe_hostid]['probe_nameservers_with_no_values'] == $data['probes'][$probe_hostid]['probe_number_of_nameserver_ips']) {
+					$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
+				}
+				elseif (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
 					$data['probes'][$probe_hostid]['status_udp'] = ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0)
 						? PROBE_UP
 						: PROBE_DOWN;

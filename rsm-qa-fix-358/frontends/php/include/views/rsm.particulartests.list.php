@@ -248,18 +248,24 @@ foreach ($this->data['probes'] as $probe) {
 	}
 	elseif ($this->data['type'] == RSM_RDDS) {
 		if (isset($probe['rdds43']['rtt'])) {
-			$rdds43_rtt = $probe['rdds43']['rtt']['description']
-				? (new CSpan($probe['rdds43']['rtt']['value']))->setHint($probe['rdds43']['rtt']['description'])
-				: $probe['rdds43']['rtt']['value'];
+			$rdds43_rtt = (new CSpan($probe['rdds43']['rtt']['value']))
+				->setAttribute('class', $rdds43 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
+
+			if ($probe['rdds43']['rtt']['description']) {
+				$rdds43_rtt->setHint($probe['rdds43']['rtt']['description']);
+			}
 		}
 		else {
 			$rdds43_rtt = '-';
 		}
 
 		if (isset($probe['rdds80']['rtt'])) {
-			$rdds80_rtt = $probe['rdds80']['rtt']['description']
-				? (new CSpan($probe['rdds80']['rtt']['value']))->setHint($probe['rdds80']['rtt']['description'])
-				: $probe['rdds80']['rtt']['value'];
+			$rdds80_rtt = (new CSpan($probe['rdds80']['rtt']['value']))
+				->setAttribute('class', $rdds80 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
+
+			if ($probe['rdds80']['rtt']['description']) {
+				$rdds80_rtt->setHint($probe['rdds80']['rtt']['description']);
+			}
 		}
 		else {
 			$rdds80_rtt = '-';
@@ -268,11 +274,15 @@ foreach ($this->data['probes'] as $probe) {
 		$row = [
 			(new CSpan($probe['name']))->addClass($rdds),
 			$rdds43,
-			(isset($probe['rdds43']['ip']) && $probe['rdds43']['ip']) ? $probe['rdds43']['ip'] : '-',
+			(isset($probe['rdds43']['ip']) && $probe['rdds43']['ip'])
+				? (new CSpan($probe['rdds43']['ip']))->setAttribute('class', $rdds43 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN)
+				: '-',
 			$rdds43_rtt,
 			(isset($probe['rdds43']['upd'])) ? $probe['rdds43']['upd'] : '-',
 			$rdds80,
-			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip']) ? $probe['rdds80']['ip'] : '-',
+			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip'])
+				? (new CSpan($probe['rdds80']['ip']))->setAttribute('class', $rdds80 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN)
+				: '-',
 			$rdds80_rtt
 		];
 
