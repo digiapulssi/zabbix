@@ -9497,7 +9497,6 @@ void	DCget_status(zbx_vector_ptr_t *hosts_monitored, zbx_vector_ptr_t *hosts_not
 void	DCget_expressions_by_names(zbx_vector_ptr_t *expressions, const char * const *names, int names_num)
 {
 	int			i, iname;
-	ZBX_DC_EXPRESSION	*expression;
 	ZBX_DC_REGEXP		*regexp, search_regexp;
 
 	LOCK_CACHE;
@@ -9511,6 +9510,7 @@ void	DCget_expressions_by_names(zbx_vector_ptr_t *expressions, const char * cons
 			for (i = 0; i < regexp->expressionids.values_num; i++)
 			{
 				zbx_uint64_t		expressionid = regexp->expressionids.values[i];
+				ZBX_DC_EXPRESSION	*expression;
 
 				if (NULL == (expression = zbx_hashset_search(&config->expressions, &expressionid)))
 					continue;
