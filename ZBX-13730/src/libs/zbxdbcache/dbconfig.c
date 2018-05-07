@@ -9511,19 +9511,12 @@ void	DCget_expressions_by_names(zbx_vector_ptr_t *expressions, const char * cons
 			for (i = 0; i < regexp->expressionids.values_num; i++)
 			{
 				zbx_uint64_t		expressionid = regexp->expressionids.values[i];
-				zbx_expression_t	*rxp;
 
 				if (NULL == (expression = zbx_hashset_search(&config->expressions, &expressionid)))
 					continue;
 
-				rxp = zbx_malloc(NULL, sizeof(zbx_expression_t));
-				rxp->name = zbx_strdup(NULL, regexp->name);
-				rxp->expression = zbx_strdup(NULL, expression->expression);
-				rxp->exp_delimiter = expression->delimiter;
-				rxp->case_sensitive = expression->case_sensitive;
-				rxp->expression_type = expression->type;
-
-				zbx_vector_ptr_append(expressions, rxp);
+				add_regexp_ex(expressions, regexp->name, expression->expression, expression->type,
+						expression->delimiter, expression->case_sensitive);
 			}
 		}
 	}
