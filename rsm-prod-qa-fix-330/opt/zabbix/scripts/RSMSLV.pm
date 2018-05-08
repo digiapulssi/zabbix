@@ -2441,7 +2441,7 @@ sub format_stats_time
 
 sub slv_finalize
 {
-	my $rv = shift;
+	my $rv = shift // SUCCESS;
 
 	db_disconnect();
 
