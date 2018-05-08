@@ -51,6 +51,8 @@ typedef struct
 	/* target table name */
 	char	*table;
 
+	char	*field_name;
+
 	/* Optional filter, must be empty string if not used. Only the records matching */
 	/* filter are subject to housekeeping procedures.                               */
 	char	*filter;
@@ -593,10 +595,9 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 	DB_RESULT	result;
 	DB_ROW		row;
 	int		keep_from, deleted = 0;
-	int		rc;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() table:'%s' filter:'%s' min_clock:%d now:%d",
-			__function_name, rule->table, rule->filter, rule->min_clock, now);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() table:'%s' field_name:'%s' filter:'%s' min_clock:%d now:%d",
+			__function_name, rule->table, rule->field_name, rule->filter, rule->min_clock, now);
 
 	/* initialize min_clock with the oldest record timestamp from database */
 	if (0 == rule->min_clock)
@@ -616,13 +617,48 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 	keep_from = now - *rule->phistory;
 	if (keep_from > rule->min_clock)
 	{
+		char			query_select[MAX_STRING_LEN], query_delete[MAX_STRING_LEN];
+		zbx_vector_uint64_t	ids;
+		int			ret;
+
+		zbx_vector_uint64_create(&ids);
+
 		rule->min_clock = MIN(keep_from, rule->min_clock + HK_MAX_DELETE_PERIODS * hk_period);
 
-		rc = DBexecute("delete from %s where clock<%d%s%s", rule->table, rule->min_clock,
-				('\0' != *rule->filter ? " and " : ""), rule->filter);
+		zbx_snprintf(query_select, sizeof(query_select),
+			"select %s"
+			" from %s"
+			" where clock<%d%s%s"
+			" order by %s",
+			rule->field_name, rule->table, rule->min_clock, '\0' != *rule->filter ? " and " : "",
+			rule->filter, rule->field_name);
 
-		if (ZBX_DB_OK <= rc)
-			deleted = rc;
+		zbx_snprintf(query_delete, sizeof(query_delete), "delete from %s where", rule->table);
+
+		while (NULL != (result = DBselectN(query_select, CONFIG_MAX_HOUSEKEEPER_DELETE)))
+		{
+			while (NULL != (row = DBfetch(result)))
+			{
+				zbx_uint64_t	id;
+
+				ZBX_STR2UINT64(id, row[0]);
+				zbx_vector_uint64_append(&ids, id);
+			}
+			DBfree_result(result);
+
+			if (0 == ids.values_num)
+				break;
+
+			ret = DBexecute_multiple_query(query_delete, rule->field_name, &ids);
+
+			if (ZBX_DB_OK > ret)
+				break;
+
+			deleted += ret;
+			zbx_vector_uint64_clear(&ids);
+		}
+
+		zbx_vector_uint64_destroy(&ids);
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%d", __function_name, deleted);
@@ -886,7 +922,7 @@ static int	housekeeping_sessions(int now)
 
 static int	housekeeping_services(int now)
 {
-	static zbx_hk_rule_t	rule = {"service_alarms", "", 0, &cfg.hk.services};
+	static zbx_hk_rule_t	rule = {"service_alarms", "servicealarmid", "", 0, &cfg.hk.services};
 
 	if (ZBX_HK_OPTION_ENABLED == cfg.hk.services_mode)
 		return housekeeping_process_rule(now, &rule);
@@ -896,7 +932,7 @@ static int	housekeeping_services(int now)
 
 static int	housekeeping_audit(int now)
 {
-	static zbx_hk_rule_t	rule = {"auditlog", "", 0, &cfg.hk.audit};
+	static zbx_hk_rule_t	rule = {"auditlog", "auditid", "", 0, &cfg.hk.audit};
 
 	if (ZBX_HK_OPTION_ENABLED == cfg.hk.audit_mode)
 		return housekeeping_process_rule(now, &rule);
@@ -910,23 +946,23 @@ static int	housekeeping_events(int now)
 				" and not exists (select null from problem where events.eventid=problem.r_eventid)"
 
 	static zbx_hk_rule_t 	rules[] = {
-		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_TRIGGERS)
+		{"events", "eventid", "events.source=" ZBX_STR(EVENT_SOURCE_TRIGGERS)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_TRIGGER)
 			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_trigger},
-		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
+		{"events", "eventid", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_TRIGGER)
 			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_internal},
-		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
+		{"events", "eventid", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_ITEM)
 			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_internal},
-		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
+		{"events", "eventid", "events.source=" ZBX_STR(EVENT_SOURCE_INTERNAL)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_LLDRULE)
 			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_internal},
-		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_DISCOVERY)
+		{"events", "eventid", "events.source=" ZBX_STR(EVENT_SOURCE_DISCOVERY)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_DHOST), 0, &cfg.hk.events_discovery},
-		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_DISCOVERY)
+		{"events", "eventid", "events.source=" ZBX_STR(EVENT_SOURCE_DISCOVERY)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_DSERVICE), 0, &cfg.hk.events_discovery},
-		{"events", "events.source=" ZBX_STR(EVENT_SOURCE_AUTO_REGISTRATION)
+		{"events", "eventid", "events.source=" ZBX_STR(EVENT_SOURCE_AUTO_REGISTRATION)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_ZABBIX_ACTIVE), 0, &cfg.hk.events_autoreg},
 		{NULL}
 	};
