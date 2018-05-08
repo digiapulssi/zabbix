@@ -131,7 +131,7 @@ if (opt('debug'))
 }
 
 # todo phase 1: make sure this check exists in phase 2
-my $max = __cycle_end(time() - 240, 60);
+my $max = cycle_end(time() - 240, 60);
 fail("cannot export data: selected time period is in the future") if ($till > $max);
 
 # consider only tests that started within given period
@@ -1835,7 +1835,7 @@ sub __get_incidents2
 			# event that closes the incident
 			my $idx = scalar(@incidents) - 1;
 
-			$incidents[$idx]->{'end'} = __cycle_end($clock, $delay);
+			$incidents[$idx]->{'end'} = cycle_end($clock, $delay);
 
 			# start FIX-PH1
 			# count failed tests within resolved incident
