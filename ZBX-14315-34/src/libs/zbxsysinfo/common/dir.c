@@ -28,7 +28,7 @@
 #endif
 
 #define SKIP_WHITESPACE(src)	\
-	while ('\0' != *src && NULL != strchr(ZBX_WHITESPACE, *src)) src++
+	while ('\0' != *(src) && NULL != strchr(ZBX_WHITESPACE, *(src))) (src)++
 
 /******************************************************************************
  *                                                                            *
