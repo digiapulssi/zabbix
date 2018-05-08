@@ -377,7 +377,16 @@ ZABBIX.apps.map = (function($) {
 						}
 					}
 
-					element.icon = this.selements[key].data.iconid_off;
+					if ((this.selements[key].data.use_iconmap === '1' && this.data.iconmapid !== '0')
+							&& (this.selements[key].data.elementtype === '0'
+								|| (this.selements[key].data.elementtype === '3'
+									&& this.selements[key].data.elementsubtype === '1'))) {
+						element.icon = this.defaultAutoIconId;
+					}
+					else {
+						element.icon = this.selements[key].data.iconid_off;
+					}
+
 					elements.push(element);
 				}, this);
 
@@ -808,7 +817,7 @@ ZABBIX.apps.map = (function($) {
 
 					if (values) {
 						for (var selementid in this.selection.selements) {
-							this.selements[selementid].update(values);
+							this.selements[selementid].update(values, true);
 						}
 					}
 				}, this));
