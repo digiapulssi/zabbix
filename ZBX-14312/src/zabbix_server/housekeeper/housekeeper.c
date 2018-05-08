@@ -618,6 +618,8 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 	if (keep_from > rule->min_clock)
 	{
 		char			query_select[MAX_STRING_LEN], query_delete[MAX_STRING_LEN];
+		char			*sql = NULL;
+		size_t			sql_alloc = 0, sql_offset = 0;
 		zbx_vector_uint64_t	ids;
 		int			ret;
 
@@ -649,15 +651,19 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 			if (0 == ids.values_num)
 				break;
 
-			ret = DBexecute_multiple_query(query_delete, rule->field_name, &ids);
+			sql_offset = 0;
+			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "delete from %s where", rule->table);
+			DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, rule->field_name, ids.values,
+					ids.values_num);
 
-			if (ZBX_DB_OK > ret)
+			if (ZBX_DB_OK > (ret = DBexecute("%s", sql)))
 				break;
 
 			deleted += ret;
 			zbx_vector_uint64_clear(&ids);
 		}
 
+		zbx_free(sql);
 		zbx_vector_uint64_destroy(&ids);
 	}
 
