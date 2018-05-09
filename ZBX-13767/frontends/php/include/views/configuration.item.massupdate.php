@@ -514,7 +514,7 @@ if ($this->data['displayApplications']) {
 			'data' => $appToReplace,
 			'popup' => [
 				'parameters' => 'srctbl=applications&dstfrm='.$itemForm->getName().'&dstfld1=applications_'.
-					'&srcfld1=applicationid&multiselect=1&noempty=1&hostid='.$this->data['hostid']
+					'&srcfld1=applicationid&multiselect=1&noempty=1&only_hostid='.$this->data['hostid']
 			]
 		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	))->setId('replaceApp');
@@ -565,7 +565,7 @@ if ($this->data['displayApplications']) {
 			'addNew' => true,
 			'popup' => [
 				'parameters' => 'srctbl=applications&dstfrm='.$itemForm->getName().'&dstfld1=new_applications_'.
-					'&srcfld1=applicationid&multiselect=1&noempty=1&hostid='.$this->data['hostid']
+					'&srcfld1=applicationid&multiselect=1&noempty=1&only_hostid='.$this->data['hostid']
 			]
 		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	))->setId('newApp');
