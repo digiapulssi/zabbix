@@ -617,7 +617,7 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 	keep_from = now - *rule->phistory;
 	if (keep_from > rule->min_clock)
 	{
-		char			query_select[MAX_STRING_LEN], query_delete[MAX_STRING_LEN];
+		char			buffer[MAX_STRING_LEN];
 		char			*sql = NULL;
 		size_t			sql_alloc = 0, sql_offset = 0;
 		zbx_vector_uint64_t	ids;
@@ -627,7 +627,7 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 
 		rule->min_clock = MIN(keep_from, rule->min_clock + HK_MAX_DELETE_PERIODS * hk_period);
 
-		zbx_snprintf(query_select, sizeof(query_select),
+		zbx_snprintf(buffer, sizeof(buffer),
 			"select %s"
 			" from %s"
 			" where clock<%d%s%s"
@@ -635,14 +635,12 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 			rule->field_name, rule->table, rule->min_clock, '\0' != *rule->filter ? " and " : "",
 			rule->filter, rule->field_name);
 
-		zbx_snprintf(query_delete, sizeof(query_delete), "delete from %s where", rule->table);
-
 		while (1)
 		{
 			if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
-				result = DBselect("%s", query_select);
+				result = DBselect("%s", buffer);
 			else
-				result = DBselectN(query_select, CONFIG_MAX_HOUSEKEEPER_DELETE);
+				result = DBselectN(buffer, CONFIG_MAX_HOUSEKEEPER_DELETE);
 
 			while (NULL != (row = DBfetch(result)))
 			{
