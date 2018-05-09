@@ -3,6 +3,7 @@ Changes for 3.0.18rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-13788] fixed host availability stuck in unknown state after proxy changes (wiper)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.17
