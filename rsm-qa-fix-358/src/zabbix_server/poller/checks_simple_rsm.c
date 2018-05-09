@@ -1243,7 +1243,8 @@ static int	zbx_verify_rr_class(const ldns_rr_list *rr_list, zbx_rr_class_error_t
 	return SUCCEED;
 }
 
-static int	zbx_name_is_in_answer(const ldns_pkt *pkt, const char *name)
+static int	zbx_name_is_in_answer(const ldns_pkt *pkt, const char *name, zbx_ns_query_error_t *ec,
+		char *err, size_t err_size)
 {
 	ldns_rr_list	*rr_list = NULL;
 	const ldns_rdf	*owner_rdf;
@@ -1251,16 +1252,32 @@ static int	zbx_name_is_in_answer(const ldns_pkt *pkt, const char *name)
 	int		ret = FAIL;
 
 	if (NULL == (rr_list = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_A, LDNS_SECTION_QUESTION)))
+	{
+		zbx_strlcpy(err, "no A record in QUESTION section", err_size);
+		*ec = ZBX_NS_ANSWER_ERROR_NODOMAIN;
 		goto out;
+	}
 
 	if (NULL == (owner_rdf = ldns_rr_list_owner(rr_list)))
+	{
+		zbx_strlcpy(err, "no A RR owner in QUESTION section", err_size);
+		*ec = ZBX_NS_ANSWER_ERROR_NODOMAIN;
 		goto out;
+	}
 
 	if (NULL == (owner = ldns_rdf2str(owner_rdf)))
+	{
+		zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
+		*ec = ZBX_NS_QUERY_INTERNAL;
 		goto out;
+	}
 
 	if (0 != strcasecmp(name, owner))
+	{
+		zbx_snprintf(err, err_size, "A RR owner \"%s\" does not match expected \"%s\"", owner, name);
+		*ec = ZBX_NS_ANSWER_ERROR_NODOMAIN;
 		goto out;
+	}
 
 	ret = SUCCEED;
 out:
@@ -1346,10 +1363,9 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		goto out;
 	}
 
-	if (SUCCEED != zbx_name_is_in_answer(pkt, testname))
+	if (SUCCEED != zbx_name_is_in_answer(pkt, testname, &query_ec, err, err_size))
 	{
-		zbx_snprintf(err, err_size, "domain name queried (%s) not in QUESTION section", testname);
-		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(ZBX_NS_ANSWER_ERROR_NODOMAIN);
+		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(query_ec);
 		goto out;
 	}
 
