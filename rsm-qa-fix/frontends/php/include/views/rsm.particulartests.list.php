@@ -33,7 +33,6 @@ elseif ($this->data['type'] == RSM_RDDS) {
 		_('RDDS43'),
 		_('IP'),
 		_('RTT'),
-		_('UPD'),
 		_('RDDS80'),
 		_('IP'),
 		_('RTT')
@@ -278,7 +277,6 @@ foreach ($this->data['probes'] as $probe) {
 				? (new CSpan($probe['rdds43']['ip']))->setAttribute('class', $rdds43 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN)
 				: '-',
 			$rdds43_rtt,
-			(isset($probe['rdds43']['upd'])) ? $probe['rdds43']['upd'] : '-',
 			$rdds80,
 			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip'])
 				? (new CSpan($probe['rdds80']['ip']))->setAttribute('class', $rdds80 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN)
@@ -327,7 +325,6 @@ if ($data['type'] == RSM_RDDS) {
 			array_key_exists('rdds43', $error) ? $error['rdds43'] : '',
 			'',
 			'',
-			'',
 			array_key_exists('rdds80', $error) ? $error['rdds80'] : ''
 		]);
 	}
@@ -337,7 +334,6 @@ if ($data['type'] == RSM_RDDS) {
 		'',
 		'',
 		$rdds43_above_max_rtt,
-		'',
 		'',
 		'',
 		$rdds80_above_max_rtt

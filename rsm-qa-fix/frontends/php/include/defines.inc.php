@@ -1434,7 +1434,6 @@ define('PROBE_EPP_INFO',			'rsm.epp.rtt[{$RSM.TLD},info]');
 define('PROBE_EPP_LOGIN',			'rsm.epp.rtt[{$RSM.TLD},login]');
 define('PROBE_RDDS43_IP',			'rsm.rdds.43.ip[{$RSM.TLD}]');
 define('PROBE_RDDS43_RTT',			'rsm.rdds.43.rtt[{$RSM.TLD}]');
-define('PROBE_RDDS43_UPD',			'rsm.rdds.43.upd[{$RSM.TLD}]');
 define('PROBE_RDDS80_IP',			'rsm.rdds.80.ip[{$RSM.TLD}]');
 define('PROBE_RDDS80_RTT',			'rsm.rdds.80.rtt[{$RSM.TLD}]');
 define('PROBE_RDAP_IP',				'rsm.rdds.rdap.ip[{$RSM.TLD}]');
