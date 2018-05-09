@@ -1243,7 +1243,7 @@ static int	zbx_verify_rr_class(const ldns_rr_list *rr_list, zbx_rr_class_error_t
 	return SUCCEED;
 }
 
-static int	zbx_name_is_in_answer(const ldns_pkt *pkt, const char *name, zbx_ns_query_error_t *ec,
+static int	zbx_domain_in_question(const ldns_pkt *pkt, const char *domain, zbx_ns_query_error_t *ec,
 		char *err, size_t err_size)
 {
 	ldns_rr_list	*rr_list = NULL;
@@ -1272,9 +1272,9 @@ static int	zbx_name_is_in_answer(const ldns_pkt *pkt, const char *name, zbx_ns_q
 		goto out;
 	}
 
-	if (0 != strcasecmp(name, owner))
+	if (0 != strcasecmp(domain, owner))
 	{
-		zbx_snprintf(err, err_size, "A RR owner \"%s\" does not match expected \"%s\"", owner, name);
+		zbx_snprintf(err, err_size, "A RR owner \"%s\" does not match expected \"%s\"", owner, domain);
 		*ec = ZBX_NS_ANSWER_ERROR_NODOMAIN;
 		goto out;
 	}
@@ -1363,7 +1363,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		goto out;
 	}
 
-	if (SUCCEED != zbx_name_is_in_answer(pkt, testname, &query_ec, err, err_size))
+	if (SUCCEED != zbx_domain_in_question(pkt, testname, &query_ec, err, err_size))
 	{
 		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(query_ec);
 		goto out;
