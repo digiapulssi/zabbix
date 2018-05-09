@@ -12,7 +12,7 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api :items);
 use ApiHelper;
-use Parallel;
+use Parallel::ForkManager;
 
 use constant JSON_RDDS_SUBSERVICE => 'subService';
 use constant JSON_RDDS_43 => 'RDDS43';
@@ -272,7 +272,7 @@ if (!$from)
 	slv_exit(SUCCESS);
 }
 
-set_max_children(getopt('maxproc')) if (opt('maxproc'));
+my $fm = new Parallel::ForkManager(opt('maxproc') ? getopt('maxproc') : 64);
 
 # go through all the databases
 foreach (@server_keys)
@@ -290,18 +290,8 @@ foreach (@server_keys)
 	if (opt('probe'))
 	{
 		my $probe = getopt('probe');
-		my $valid = 0;
 
-		foreach my $name (keys(%$all_probes_ref))
-		{
-			if ($name eq $probe)
-			{
-				$valid = 1;
-				last;
-			}
-		}
-
-		if ($valid == 0)
+		unless (exists($all_probes_ref->{$probe}))
 		{
 			my $msg = "unknown probe \"$probe\"\n\nAvailable probes:\n";
 
@@ -313,11 +303,9 @@ foreach (@server_keys)
 			fail($msg);
 		}
 
-		my $temp = $all_probes_ref;
-
-		undef($all_probes_ref);
-
-		$all_probes_ref->{getopt('probe')} = $temp->{getopt('probe')};
+		$all_probes_ref = {
+			$probe	=> $all_probes_ref->{$probe}
+		};
 	}
 
 	my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
@@ -341,6 +329,13 @@ foreach (@server_keys)
 
 	db_disconnect();
 
+	$fm->run_on_wait(
+		sub ()
+		{
+			dbg("max children reached, please wait...");
+		}
+	);
+
 	foreach (@$tlds_ref)
 	{
 		# NB! This is needed in order to set the value globally.
@@ -348,35 +343,16 @@ foreach (@server_keys)
 
 		last if (opt('limit') && $tlds_processed == getopt('limit'));
 
-		my $fork_successful = 0;
-TRYFORK:
-		my $pid = fork_without_pipe();
+		$tlds_processed++;
 
-		if (!defined($pid))
+		$fm->start() and next;	# start a new child and send parent to the next iteration
+
+		if (__tld_ignored($tld) == SUCCESS)
 		{
-			# max children reached, make sure to handle_children()
-			dbg("max children reached, please wait...");
-
-			# sleep for 100 milliseconds
-			select(undef, undef, undef, 0.1);
-		}
-		elsif ($pid)
-		{
-			# parent
-			$fork_successful = 1;
-
-			$tlds_processed++;
+			dbg("tld \"$tld\" found in IGNORE list");
 		}
 		else
 		{
-			# child
-
-			if (__tld_ignored($tld) == SUCCESS)
-			{
-				dbg("tld \"$tld\" found in IGNORE list");
-				slv_exit(SUCCESS);
-			}
-
 			db_connect($server_key);
 
 			my $ah_tld = ah_get_api_tld($tld);
@@ -1131,28 +1107,25 @@ TRYFORK:
 			{
 				fail("cannot save TLD state: ", ah_get_error());
 			}
-
-			# child exit
-			slv_exit(SUCCESS);
 		}
 
-		# parent process, fork() either successful or failed
-		handle_children();
+		slv_finalize();
 
-		goto TRYFORK if ($fork_successful == 0);
+		# When we fork for real it makes no difference for Parallel::ForkManager whether child calls exit() or
+		# calls $fm->finish(), therefore we do not need to introduce $fm->finish() in all our low-level error
+		# handling routines, but having $fm->finish() here leaves a possibility to debug a happy path scenario
+		# without the complications of actual forking by using:
+		# my $fm = new Parallel::ForkManager(0);
 
-		last if (opt('tld'));
-
+		$fm->finish(SUCCESS);
 	} # for each TLD
 
 	# unset TLD (for the logs)
 	undef($tld);
 
-	# wait till children finish
-	while (children_running() > 0)
-	{
-		handle_children();
-	}
+	$fm->run_on_wait(undef);	# unset the callback which prints debug message about reached children limit
+
+	$fm->wait_all_children();
 
 	db_connect($server_key);
 
@@ -2136,7 +2109,7 @@ sub __update_false_positives
 			next;
 		}
 
-		dbg("auditlog: service:$service evnetid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
+		dbg("auditlog: service:$service eventid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
 
 		unless (ah_save_false_positive($tld, $service, $eventid, $event_clock,
 				$false_positive, $clock, \$later) == AH_SUCCESS)

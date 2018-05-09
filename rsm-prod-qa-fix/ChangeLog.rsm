@@ -1,8 +1,11 @@
 Changes for rsm1.0.7rc2
 
 New features:
+....I..... [354] implemented better solution for parallel execution of SLA API script to help with hanging (gleb)
+....I..... [sub-330] implemented better solution for parallel execution of Data Export script (gleb)
 
 Bug fixes:
+....I..... [sub-326] fixed undefined subroutine call in Data Export script (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.7rc1
