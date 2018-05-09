@@ -16,8 +16,6 @@ Changes for 3.4.9
 Changes for 3.4.9rc3
 
 Bug fixes:
-..F....... [ZBX-14337] fixed persistent xss in map navigation tree widget (vjaceslavs)
-..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ........S. [ZBX-14313] fixed trigger level correlation when multiple tags are set (wiper)
 
 --------------------------------------------------------------------------------
@@ -30,6 +28,8 @@ Bug fixes:
 Changes for 3.4.9rc1
 
 Bug fixes:
+..F....... [ZBX-14337] fixed persistent xss in map navigation tree widget (vjaceslavs)
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ..F....... [ZBX-12821] fixed multiple javascript memory leaks (miks)
 ........S. [ZBX-13755] fixed proxy lastaccess update on 32-bit Zabbix server (vso)
 ..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
@@ -1244,13 +1244,13 @@ Changes for 3.0.17
 Changes for 3.0.17rc2
 
 Bug fixes:
-..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ...G...... [ZBX-13781] fixed possible crash in the function "web.page.get" of Zabbix Agentd (MVekslers)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.17rc1
 
 Bug fixes:
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
 ...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)
 ........S. [ZBX-13766] fixed comparison of two large float numbers in expressions (Sergejs)
