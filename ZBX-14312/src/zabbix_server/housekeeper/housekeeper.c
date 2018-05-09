@@ -637,8 +637,13 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 
 		zbx_snprintf(query_delete, sizeof(query_delete), "delete from %s where", rule->table);
 
-		while (NULL != (result = DBselectN(query_select, CONFIG_MAX_HOUSEKEEPER_DELETE)))
+		while (1)
 		{
+			if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
+				result = DBselect("%s", query_select);
+			else
+				result = DBselectN(query_select, CONFIG_MAX_HOUSEKEEPER_DELETE);
+
 			while (NULL != (row = DBfetch(result)))
 			{
 				zbx_uint64_t	id;
@@ -951,7 +956,7 @@ static int	housekeeping_events(int now)
 #define ZBX_HK_EVENT_RULE	" and not exists (select null from problem where events.eventid=problem.eventid)" \
 				" and not exists (select null from problem where events.eventid=problem.r_eventid)"
 
-	static zbx_hk_rule_t 	rules[] = {
+	static zbx_hk_rule_t	rules[] = {
 		{"events", "eventid", "events.source=" ZBX_STR(EVENT_SOURCE_TRIGGERS)
 			" and events.object=" ZBX_STR(EVENT_OBJECT_TRIGGER)
 			ZBX_HK_EVENT_RULE, 0, &cfg.hk.events_trigger},
@@ -973,8 +978,8 @@ static int	housekeeping_events(int now)
 		{NULL}
 	};
 
-	int			deleted = 0;
-	zbx_hk_rule_t		*rule;
+	int		deleted = 0;
+	zbx_hk_rule_t	*rule;
 
 	if (ZBX_HK_OPTION_ENABLED != cfg.hk.events_mode)
 		return 0;
