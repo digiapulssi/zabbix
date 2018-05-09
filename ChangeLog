@@ -1,6 +1,7 @@
 Changes for 3.0.17rc2
 
 Bug fixes:
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ...G...... [ZBX-13781] fixed possible crash in the function "web.page.get" of Zabbix Agentd (MVekslers)
 
 --------------------------------------------------------------------------------
