@@ -16,13 +16,13 @@ Changes for 3.0.17
 Changes for 3.0.17rc2
 
 Bug fixes:
-..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ...G...... [ZBX-13781] fixed possible crash in the function "web.page.get" of Zabbix Agentd (MVekslers)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.17rc1
 
 Bug fixes:
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
 ...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)
 ........S. [ZBX-13766] fixed comparison of two large float numbers in expressions (Sergejs)
