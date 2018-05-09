@@ -1326,11 +1326,8 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		goto out;
 	}
 
-	/* ldns supports limited number of rcodes, use ldns_pkt_get_rcode() when it is fixed */
-	rcode = pkt->_header->_rcode;
-
 	/* verify RCODE */
-	if (LDNS_RCODE_NXDOMAIN != rcode)
+	if (LDNS_RCODE_NXDOMAIN != (rcode = ldns_pkt_get_rcode(pkt)))
 	{
 		char	*rcode_str;
 
@@ -1351,7 +1348,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 
 	if (SUCCEED != zbx_name_is_in_answer(pkt, testname))
 	{
-		zbx_snprintf(err, err_size, "domain name queried (%s) not in question section", testname);
+		zbx_snprintf(err, err_size, "domain name queried (%s) not in QUESTION section", testname);
 		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(ZBX_NS_ANSWER_ERROR_NODOMAIN);
 		goto out;
 	}
