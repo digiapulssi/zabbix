@@ -51,6 +51,7 @@ typedef struct
 	/* target table name */
 	char	*table;
 
+	/* ID field name, required to select IDs of records that must be deleted */
 	char	*field_name;
 
 	/* Optional filter, must be empty string if not used. Only the records matching */
@@ -637,6 +638,8 @@ static int	housekeeping_process_rule(int now, zbx_hk_rule_t *rule)
 
 		while (1)
 		{
+			/* Select IDs of records that must be deleted, this allows to avoid locking for every   */
+			/* record the search encounters when using delete statement, thus eliminates deadlocks. */
 			if (0 == CONFIG_MAX_HOUSEKEEPER_DELETE)
 				result = DBselect("%s", buffer);
 			else
