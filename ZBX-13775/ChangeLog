@@ -1,3 +1,23 @@
+Changes for 3.4.10rc1
+
+New features:
+
+Bug fixes:
+...G...PS. [ZBX-13782] fixed decoding of Unicode characters in JSON (Andris)
+..F....... [ZBX-13767] fixed "undefined index: acknowledges" error on problems page (agriscenko)
+..F....... [ZBX-12175] fixed subfilter entries with long names going off the screen (agriscenko, Andzs)
+..F....... [ZBX-12644] fixed filter being partially reset when using pagination in availability report page (Ivo)
+..F....... [ZBX-12882] fixed in popup window being allowed to select applications from different hosts when editing item mass update form (agriscenko)
+.......PS. [ZBX-13788] fixed host availability stuck in unknown state after proxy changes (wiper)
+........S. [ZBX-12372] fixed duplication of prefix "/" for second parameter "path" in items "web.page.*" (MVekslers)
+...G...... [ZBX-14315] fixed validation of "max_depth" in "vfs.dir.size" for agent (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.9
+
+3.4.9rc3 was released as 3.4.9 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.4.9rc3
 
 Bug fixes:
@@ -13,6 +33,8 @@ Bug fixes:
 Changes for 3.4.9rc1
 
 Bug fixes:
+..F....... [ZBX-14337] fixed persistent xss in map navigation tree widget (vjaceslavs)
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ..F....... [ZBX-12821] fixed multiple javascript memory leaks (miks)
 ........S. [ZBX-13755] fixed proxy lastaccess update on 32-bit Zabbix server (vso)
 ..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
@@ -1209,6 +1231,24 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 ..F....... [ZBX-9989] optimized SQL queries for graphs building (Gunars, Sasha)
 
 --------------------------------------------------------------------------------
+Changes for 3.0.18rc1
+
+New features:
+
+Bug fixes:
+A.F....... [ZBX-13774] fixed creating and updating items with multiple specific scheduling intervals (Ivo)
+..F....... [ZBX-12175] fixed subfilter entries with long names going off the screen (agriscenko, Andzs)
+..F....... [ZBX-12644] fixed filter being partially reset when using pagination in availability report page (Ivo)
+..F....... [ZBX-12882] fixed in popup window being allowed to select applications from different hosts when editing item mass update form (agriscenko)
+.......PS. [ZBX-13788] fixed host availability stuck in unknown state after proxy changes (wiper)
+........S. [ZBX-12372] fixed duplication of prefix "/" for second parameter "path" in items "web.page.*" (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.17
+
+3.0.17rc2 was released as 3.0.17 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.17rc2
 
 Bug fixes:
@@ -1218,6 +1258,7 @@ Bug fixes:
 Changes for 3.0.17rc1
 
 Bug fixes:
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
 ...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)
 ........S. [ZBX-13766] fixed comparison of two large float numbers in expressions (Sergejs)
