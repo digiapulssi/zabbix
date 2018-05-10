@@ -467,6 +467,7 @@ void	zbx_dc_get_actions_eval(zbx_vector_ptr_t *actions);
 void	zbx_action_eval_free(zbx_action_eval_t *action);
 
 int	DCget_hosts_availability(zbx_vector_ptr_t *hosts, int *ts);
+void	DCtouch_hosts_availability(const zbx_vector_uint64_t *hostids);
 
 void	zbx_host_availability_init(zbx_host_availability_t *availability, zbx_uint64_t hostid);
 void	zbx_host_availability_clean(zbx_host_availability_t *availability);

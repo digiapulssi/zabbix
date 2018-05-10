@@ -1,12 +1,30 @@
+Changes for 3.0.18rc1
+
+New features:
+
+Bug fixes:
+A.F....... [ZBX-13774] fixed creating and updating items with multiple specific scheduling intervals (Ivo)
+..F....... [ZBX-12175] fixed subfilter entries with long names going off the screen (agriscenko, Andzs)
+..F....... [ZBX-12644] fixed filter being partially reset when using pagination in availability report page (Ivo)
+..F....... [ZBX-12882] fixed in popup window being allowed to select applications from different hosts when editing item mass update form (agriscenko)
+.......PS. [ZBX-13788] fixed host availability stuck in unknown state after proxy changes (wiper)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.17
+
+3.0.17rc2 was released as 3.0.17 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.17rc2
 
 Bug fixes:
-...G...... [ZBX-13781] fixed possible crash due to uninitialised error string in Zabbix Agentd (MVekslers)
+...G...... [ZBX-13781] fixed possible crash in the function "web.page.get" of Zabbix Agentd (MVekslers)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.17rc1
 
 Bug fixes:
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
 ...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)
 ........S. [ZBX-13766] fixed comparison of two large float numbers in expressions (Sergejs)
