@@ -1179,7 +1179,7 @@ void	destroy_logfile_list(struct st_logfile **logfiles, int *logfiles_alloc, int
  * Comments: This is a helper function for pick_logfiles()                    *
  *                                                                            *
  ******************************************************************************/
-static void	pick_logfile(const char *directory, const char *filename, int mtime, const pcre *re,
+static void	pick_logfile(const char *directory, const char *filename, int mtime, const zbx_regexp_t *re,
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num)
 {
 	char		*logfile_candidate = NULL;
@@ -1191,7 +1191,7 @@ static void	pick_logfile(const char *directory, const char *filename, int mtime,
 	{
 		if (S_ISREG(file_buf.st_mode) &&
 				mtime <= file_buf.st_mtime &&
-				0 == zbx_regexp_exec(filename, re, 0, 0, NULL))
+				0 == zbx_regexp_match_precompiled(filename, re))
 		{
 			add_logfile(logfiles, logfiles_alloc, logfiles_num, logfile_candidate, &file_buf);
 		}
@@ -1227,7 +1227,7 @@ static void	pick_logfile(const char *directory, const char *filename, int mtime,
  * Comments: This is a helper function for make_logfile_list()                *
  *                                                                            *
  ******************************************************************************/
-static int	pick_logfiles(const char *directory, int mtime, const pcre *re, int *use_ino,
+static int	pick_logfiles(const char *directory, int mtime, const zbx_regexp_t *re, int *use_ino,
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num, char **err_msg)
 {
 #ifdef _WINDOWS
@@ -1363,9 +1363,9 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 	}
 	else if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags))	/* logrt[] or logrt.count[] item */
 	{
-		char	*directory = NULL, *format = NULL;
-		pcre	*regexp = NULL;
-		const char *error = NULL;
+		char		*directory = NULL, *format = NULL;
+		zbx_regexp_t	*regexp = NULL;
+		const char 	*error = NULL;
 
 		/* split a filename into directory and file mask (regular expression) parts */
 		if (SUCCEED != split_filename(filename, &directory, &format, err_msg))
@@ -1374,9 +1374,7 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 			goto clean;
 		}
 
-		regexp = zbx_regexp_compile(format, PCRE_MULTILINE | PCRE_NO_AUTO_CAPTURE, &error);
-
-		if (NULL == regexp)
+		if (SUCCEED != zbx_regexp_compile(format, &regexp, &error))
 		{
 			*err_msg = zbx_dsprintf(*err_msg, "Cannot compile a regular expression describing filename"
 					" pattern: %s", error);
