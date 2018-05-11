@@ -683,8 +683,8 @@ INSERT INTO hosts (hostid, host, name, status, description) VALUES (20006, 'Host
 INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (90279, 20006, 4);
 INSERT INTO interface (type, ip, dns, useip, port, main, hostid, interfaceid) VALUES (1, '127.0.0.1', '', '1', '10050', '1', 20006, 10025);
 INSERT INTO items (itemid, name, key_, hostid, interfaceid, delay, value_type, params, description) VALUES (24338, 'item1', 'key1', 20006, 10025, '30s', 3, '', '');
-INSERT INTO triggers (triggerid, description, value, state, lastchange, comments) VALUES (15517, 'trigger host.host:{HOST.HOST} | host.host2:{HOST.HOST2} | host.name:{HOST.NAME} | item.value:{ITEM.VALUE} | item.value1:{ITEM.VALUE1} | item.lastvalue:{ITEM.LASTVALUE} | host.ip:{HOST.IP} | host.dns:{HOST.DNS} | host.conn:{HOST.CONN}', 0, 1, '1339761311', '');
-INSERT INTO functions (functionid, itemid, triggerid, function, parameter) VALUES (99946, 24338, 15517, 'last', '0');
+INSERT INTO triggers (triggerid, description, value, state, lastchange, comments) VALUES (100028, 'trigger host.host:{HOST.HOST} | host.host2:{HOST.HOST2} | host.name:{HOST.NAME} | item.value:{ITEM.VALUE} | item.value1:{ITEM.VALUE1} | item.lastvalue:{ITEM.LASTVALUE} | host.ip:{HOST.IP} | host.dns:{HOST.DNS} | host.conn:{HOST.CONN}', 0, 1, '1339761311', '');
+INSERT INTO functions (functionid, itemid, triggerid, function, parameter) VALUES (99946, 24338, 100028, 'last', '0');
 
 -- inheritance testing
 INSERT INTO hosts (hostid, host, name, status, description) VALUES (15000, 'Inheritance test template', 'Inheritance test template', 3, '');
@@ -1425,3 +1425,24 @@ INSERT INTO items_applications (itemappid,applicationid,itemid) VALUES (99000,99
 UPDATE config SET server_check_interval = 0 WHERE configid = 1;
 -- Super admin rows per page
 UPDATE users SET rows_per_page = 100 WHERE userid = 1;
+
+-- event correlation
+INSERT INTO correlation (correlationid, name, description, evaltype, status, formula) VALUES (99000, 'Event correlation for delete', 'Test description delete', 0, 0, '');
+INSERT INTO corr_condition (corr_conditionid, correlationid, type) VALUES (99000, 99000, 0);
+INSERT INTO corr_condition_tag (corr_conditionid, tag) VALUES (99000, 'delete tag');
+INSERT INTO corr_operation (corr_operationid, correlationid, type) VALUES (99000, 99000, 0);
+
+INSERT INTO correlation (correlationid, name, description, evaltype, status, formula) VALUES (99001, 'Event correlation for update', 'Test description update', 0, 0, '');
+INSERT INTO corr_condition (corr_conditionid, correlationid, type) VALUES (99001, 99001, 0);
+INSERT INTO corr_condition_tag (corr_conditionid, tag) VALUES (99001, 'update tag');
+INSERT INTO corr_operation (corr_operationid, correlationid, type) VALUES (99001, 99001, 0);
+
+INSERT INTO correlation (correlationid, name, description, evaltype, status, formula) VALUES (99002, 'Event correlation for cancel', 'Test description cancel', 0, 0, '');
+INSERT INTO corr_condition (corr_conditionid, correlationid, type) VALUES (99002, 99002, 0);
+INSERT INTO corr_condition_tag (corr_conditionid, tag) VALUES (99002, 'cancel tag');
+INSERT INTO corr_operation (corr_operationid, correlationid, type) VALUES (99002, 99002, 0);
+
+INSERT INTO correlation (correlationid, name, description, evaltype, status, formula) VALUES (99003, 'Event correlation for clone', 'Test description clone', 0, 0, '');
+INSERT INTO corr_condition (corr_conditionid, correlationid, type) VALUES (99003, 99003, 0);
+INSERT INTO corr_condition_tag (corr_conditionid, tag) VALUES (99003, 'clone tag');
+INSERT INTO corr_operation (corr_operationid, correlationid, type) VALUES (99003, 99003, 0);

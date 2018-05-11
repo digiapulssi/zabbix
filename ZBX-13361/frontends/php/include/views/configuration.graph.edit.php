@@ -357,13 +357,9 @@ foreach ($this->data['items'] as $n => $item) {
 $graphFormList->addRow(_('Items'), (new CDiv($itemsTable))->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR));
 
 // Append tabs to form.
-$graphTab = new CTabView();
-if (!$data['form_refresh']) {
-	$graphTab->setSelected(0);
-}
-$graphTab->addTab('graphTab', ($data['parent_discoveryid'] === null) ? _('Graph') : _('Graph prototype'),
-	$graphFormList
-);
+$graphTab = (new CTabView())
+	->setSelected(0)
+	->addTab('graphTab', ($data['parent_discoveryid'] === null) ? _('Graph') : _('Graph prototype'), $graphFormList);
 
 /*
  * Preview tab
