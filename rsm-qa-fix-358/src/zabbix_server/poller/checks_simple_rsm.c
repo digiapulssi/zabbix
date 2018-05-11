@@ -911,9 +911,9 @@ ZBX_DEFINE_NS_ANSWER_ERROR_TO(DNS_TCP)
 /* definitions of RCODE 16-23 are missing from ldns library */
 /* https://open.nlnetlabs.nl/pipermail/ldns-users/2018-March/000912.html */
 
-typedef int	(*zbx_rcode_not_nxdomain_func_t)(uint8_t);
+typedef int	(*zbx_rcode_not_nxdomain_func_t)(ldns_pkt_rcode);
 #define ZBX_DEFINE_ZBX_RCODE_NOT_NXDOMAIN_TO(__interface)			\
-static int	zbx_rcode_not_nxdomain_to_ ## __interface (uint8_t rcode)	\
+static int	zbx_rcode_not_nxdomain_to_ ## __interface (ldns_pkt_rcode rcode)\
 {										\
 	switch (rcode)								\
 	{									\
@@ -937,22 +937,6 @@ static int	zbx_rcode_not_nxdomain_to_ ## __interface (uint8_t rcode)	\
 			return ZBX_EC_ ## __interface ## _RCODE_NOTAUTH;	\
 		case LDNS_RCODE_NOTZONE:					\
 			return ZBX_EC_ ## __interface ## _RCODE_NOTZONE;	\
-		case 16:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADVERS_OR;	\
-		case 17:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADKEY;		\
-		case 18:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADTIME;	\
-		case 19:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADMODE;	\
-		case 20:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADNAME;	\
-		case 21:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADALG;		\
-		case 22:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADTRUNC;	\
-		case 23:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADCOOKIE;	\
 		default:							\
 			return ZBX_EC_ ## __interface ## _RCODE_CATCHALL;	\
 	}									\
