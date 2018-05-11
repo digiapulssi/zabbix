@@ -180,6 +180,9 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, rege
 		return FAIL;
 	}
 
+	if (NULL != max_depth_str)
+		SKIP_WHITESPACE(max_depth_str);
+
 	if (NULL == max_depth_str || '\0' == *max_depth_str)	/* <max_depth> default value */
 	{
 		*max_depth = TRAVERSAL_DEPTH_UNLIMITED;
