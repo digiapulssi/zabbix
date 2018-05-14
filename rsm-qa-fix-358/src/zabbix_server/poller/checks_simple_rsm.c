@@ -106,6 +106,7 @@ zbx_dnskeys_error_t;
 
 typedef enum
 {
+	ZBX_NS_ANSWER_INTERNAL,
 	ZBX_NS_ANSWER_ERROR_NOAAFLAG,
 	ZBX_NS_ANSWER_ERROR_NODOMAIN
 }
@@ -893,6 +894,8 @@ static int	zbx_ns_answer_error_to_ ## __interface (zbx_ns_answer_error_t err)	\
 {											\
 	switch (err)									\
 	{										\
+		case ZBX_NS_ANSWER_INTERNAL:						\
+			return ZBX_EC_INTERNAL;						\
 		case ZBX_NS_ANSWER_ERROR_NOAAFLAG:					\
 			return ZBX_EC_ ## __interface ## _NOAAFLAG;			\
 		case ZBX_NS_ANSWER_ERROR_NODOMAIN:					\
@@ -1227,7 +1230,7 @@ static int	zbx_verify_rr_class(const ldns_rr_list *rr_list, zbx_rr_class_error_t
 	return SUCCEED;
 }
 
-static int	zbx_domain_in_question(const ldns_pkt *pkt, const char *domain, zbx_ns_query_error_t *ec,
+static int	zbx_domain_in_question_section(const ldns_pkt *pkt, const char *domain, zbx_ns_answer_error_t *ec,
 		char *err, size_t err_size)
 {
 	ldns_rr_list	*rr_list = NULL;
@@ -1252,7 +1255,7 @@ static int	zbx_domain_in_question(const ldns_pkt *pkt, const char *domain, zbx_n
 	if (NULL == (owner = ldns_rdf2str(owner_rdf)))
 	{
 		zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
-		*ec = ZBX_NS_QUERY_INTERNAL;
+		*ec = ZBX_NS_ANSWER_INTERNAL;
 		goto out;
 	}
 
@@ -1286,6 +1289,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	time_t			now, ts;
 	ldns_pkt_rcode		rcode;
 	zbx_ns_query_error_t	query_ec;
+	zbx_ns_answer_error_t	answer_ec;
 	zbx_dnssec_error_t	dnssec_ec;
 	zbx_rr_class_error_t	rr_class_ec;
 	int			ret = FAIL;
@@ -1347,9 +1351,9 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		goto out;
 	}
 
-	if (SUCCEED != zbx_domain_in_question(pkt, testname, &query_ec, err, err_size))
+	if (SUCCEED != zbx_domain_in_question_section(pkt, testname, &answer_ec, err, err_size))
 	{
-		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(query_ec);
+		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(answer_ec);
 		goto out;
 	}
 
