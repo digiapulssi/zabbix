@@ -3,6 +3,7 @@ Changes for rsm1.1.0rc7
 New features:
 
 Bug fixes:
+..F....... [367] fixed displaying results in "Details of particular test" for RDDS when all probes are offline (gleb)
 .......PS. [358] added support for DNS error codes -250 and -650 (dimir)
 .......PS. [359] added support for DNS error codes -251 and -651 (dimir)
 .......PS. [369] fixed detection of "DNS UDP - Bogus DNSSEC signature" and "DNS TCP - Bogus DNSSEC signature" (gleb)
