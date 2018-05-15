@@ -569,29 +569,21 @@ abstract class CItemGeneral extends CApiService {
 
 		foreach ($dbHosts as $db_host) {
 			if ($db_host['status'] == HOST_STATUS_TEMPLATE) {
-				$templateids[] = $db_host['hostid'];
+				$templateids[$db_host['hostid']] = 1;
 			}
 		}
 
-		$templateids = array_keys(array_flip($templateids));
-		$templates = API::Template()->get([
-			'output' => ['templateid'],
-			'templateids' => $templateids,
-			'selectHosts' => ['hostid']
-		]);
+		$templateids = array_keys($templateids);
 
-		foreach ($templates as $template) {
-			if (!$template['hosts']) {
-				continue;
-			}
-
-			$hostids = zbx_objectValues($template['hosts'], 'hostid');
-			$hostids = array_keys(array_flip($hostids));
-			$all_hostids = array_merge($hostids, [$template['templateid']]);
+		if ($templateids && ($this instanceof CItem || $this instanceof CItemPrototype)) {
+			$templates = API::Template()->get([
+				'output' => ['templateid'],
+				'templateids' => $templateids,
+				'selectHosts' => ['hostid']
+			]);
 
 			$options = [
 				'output' => ['itemid', 'type', 'key_', 'master_itemid', 'hostid'],
-				'hostids' => $all_hostids,
 				'preservekeys' => true
 			];
 
@@ -599,22 +591,32 @@ abstract class CItemGeneral extends CApiService {
 				$options['webitems'] = true;
 			}
 
-			$host_items = $this->get($options);
-
-			foreach ($items as $item) {
-				if ($update) {
-					$item += $dbItems[$item['itemid']];
+			foreach ($templates as $template) {
+				if (!$template['hosts']) {
+					continue;
 				}
 
-				if ($item['hostid'] == $template['templateid']
-						|| ($item['type'] == ITEM_TYPE_DEPENDENT
-						&& array_key_exists($item['master_itemid'], $host_items))) {
-					$item_index = array_key_exists('itemid', $item) ? $item['itemid'] : $item['key_'];
-					$host_items[$item_index] = $item;
+				$hostids = zbx_objectValues($template['hosts'], 'hostid');
+				$hostids = array_keys(array_flip($hostids));
+				$host_items = $this->get($options + [
+					'hostids' => array_merge($hostids, [$template['templateid']])
+				]);
+
+				foreach ($items as $item) {
+					if ($update) {
+						$item += $dbItems[$item['itemid']];
+					}
+
+					if ($item['hostid'] == $template['templateid']
+							|| ($item['type'] == ITEM_TYPE_DEPENDENT
+							&& array_key_exists($item['master_itemid'], $host_items))) {
+						$item_index = array_key_exists('itemid', $item) ? $item['itemid'] : $item['key_'];
+						$host_items[$item_index] = $item;
+					}
 				}
+
+				$this->validateDependentItemsIntersection($host_items, $hostids);
 			}
-
-			$this->validateDependentItemsIntersection($host_items, $hostids);
 		}
 	}
 
@@ -1691,7 +1693,7 @@ abstract class CItemGeneral extends CApiService {
 	 * @throws APIException if intersection of template items and host items creates dependent items tree with
 	 *                      dependent item level more than ZBX_DEPENDENT_ITEM_MAX_LEVELS or master item recursion.
 	 */
-	protected function validateDependentItemsIntersection($db_items, $hostids, $errorService = null) {
+	protected function validateDependentItemsIntersection($db_items, $hostids) {
 		$hosts_items = [];
 		$tmpl_items = [];
 

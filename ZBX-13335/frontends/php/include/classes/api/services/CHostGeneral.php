@@ -997,7 +997,7 @@ abstract class CHostGeneral extends CHostBase {
 	 * @throws APIException if intersection of template items and host items creates dependent items tree with
 	 *                      dependent item level more than ZBX_DEPENDENT_ITEM_MAX_LEVELS or master item recursion.
 	 */
-	protected function validateDependentItemsIntersection($db_items, $hostids, $errorService = null) {
+	protected function validateDependentItemsIntersection($db_items, $hostids) {
 		$hosts_items = [];
 		$tmpl_items = [];
 
