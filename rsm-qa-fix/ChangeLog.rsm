@@ -3,6 +3,8 @@ Changes for rsm1.1.0rc7
 New features:
 
 Bug fixes:
+.......PS. [358] added support for DNS error codes -250 and -650 (dimir)
+.......PS. [359] added support for DNS error codes -251 and -651 (dimir)
 .......PS. [369] fixed detection of "DNS UDP - Bogus DNSSEC signature" and "DNS TCP - Bogus DNSSEC signature" (gleb)
 ..F....... [366] removed column 'UPD' from details of particular RDDS test result page (miks)
 ..F....... [364] fixed result coloring in particular test page for RDDS service (miks)

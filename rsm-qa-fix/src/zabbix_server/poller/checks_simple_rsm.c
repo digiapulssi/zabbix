@@ -65,6 +65,8 @@ extern const char	epp_passphrase[128];
 #define ZBX_FLAG_IPV4_ENABLED	0x1
 #define ZBX_FLAG_IPV6_ENABLED	0x2
 
+#define ZBX_EC_EPP_NOT_IMPLEMENTED	ZBX_EC_INTERNAL
+
 typedef struct
 {
 	const char	*name;
@@ -104,10 +106,11 @@ zbx_dnskeys_error_t;
 
 typedef enum
 {
-	ZBX_REFERRAL_ERROR_NOAAFLAG,
-	ZBX_REFERRAL_ERROR_NODOMAIN
+	ZBX_NS_ANSWER_INTERNAL,
+	ZBX_NS_ANSWER_ERROR_NOAAFLAG,
+	ZBX_NS_ANSWER_ERROR_NODOMAIN
 }
-zbx_referral_error_t;
+zbx_ns_answer_error_t;
 
 typedef enum
 {
@@ -444,6 +447,15 @@ static int	zbx_random(int max)
 	return rand() % max;
 }
 
+/***************************************/
+/* Return last label of @name. E. g.:  */
+/*                                     */
+/* [IN] name        | [OUT] last_label */
+/* -----------------+----------------- */
+/* www.foo.bar.com  | bar.com          */
+/* www.foo.bar.com. | com.             */
+/*                                     */
+/***************************************/
 static int	zbx_get_last_label(const char *name, char **last_label, char *err, size_t err_size)
 {
 	const char	*last_label_start;
@@ -879,15 +891,17 @@ ZBX_DEFINE_DNSKEYS_ERROR_TO(TCP)
 
 /* map generic name server errors to interface specific ones */
 
-typedef int	(*zbx_referral_error_func_t)(zbx_referral_error_t);
-#define ZBX_DEFINE_REFERRAL_ERROR_TO(__interface)					\
-static int	zbx_referral_error_to_ ## __interface (zbx_referral_error_t err)	\
+typedef int	(*zbx_ns_answer_error_func_t)(zbx_ns_answer_error_t);
+#define ZBX_DEFINE_NS_ANSWER_ERROR_TO(__interface)					\
+static int	zbx_ns_answer_error_to_ ## __interface (zbx_ns_answer_error_t err)	\
 {											\
 	switch (err)									\
 	{										\
-		case ZBX_REFERRAL_ERROR_NOAAFLAG:					\
+		case ZBX_NS_ANSWER_INTERNAL:						\
+			return ZBX_EC_INTERNAL;						\
+		case ZBX_NS_ANSWER_ERROR_NOAAFLAG:					\
 			return ZBX_EC_ ## __interface ## _NOAAFLAG;			\
-		case ZBX_REFERRAL_ERROR_NODOMAIN:					\
+		case ZBX_NS_ANSWER_ERROR_NODOMAIN:					\
 			return ZBX_EC_ ## __interface ## _NODOMAIN;			\
 		default:								\
 			THIS_SHOULD_NEVER_HAPPEN;					\
@@ -895,17 +909,17 @@ static int	zbx_referral_error_to_ ## __interface (zbx_referral_error_t err)	\
 	}										\
 }
 
-ZBX_DEFINE_REFERRAL_ERROR_TO(DNS_UDP)
-ZBX_DEFINE_REFERRAL_ERROR_TO(DNS_TCP)
+ZBX_DEFINE_NS_ANSWER_ERROR_TO(DNS_UDP)
+ZBX_DEFINE_NS_ANSWER_ERROR_TO(DNS_TCP)
 
-#undef ZBX_DEFINE_REFERRAL_ERROR_TO
+#undef ZBX_DEFINE_NS_ANSWER_ERROR_TO
 
 /* definitions of RCODE 16-23 are missing from ldns library */
 /* https://open.nlnetlabs.nl/pipermail/ldns-users/2018-March/000912.html */
 
-typedef int	(*zbx_rcode_not_nxdomain_func_t)(uint8_t);
+typedef int	(*zbx_rcode_not_nxdomain_func_t)(ldns_pkt_rcode);
 #define ZBX_DEFINE_ZBX_RCODE_NOT_NXDOMAIN_TO(__interface)			\
-static int	zbx_rcode_not_nxdomain_to_ ## __interface (uint8_t rcode)	\
+static int	zbx_rcode_not_nxdomain_to_ ## __interface (ldns_pkt_rcode rcode)\
 {										\
 	switch (rcode)								\
 	{									\
@@ -929,22 +943,6 @@ static int	zbx_rcode_not_nxdomain_to_ ## __interface (uint8_t rcode)	\
 			return ZBX_EC_ ## __interface ## _RCODE_NOTAUTH;	\
 		case LDNS_RCODE_NOTZONE:					\
 			return ZBX_EC_ ## __interface ## _RCODE_NOTZONE;	\
-		case 16:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADVERS_OR;	\
-		case 17:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADKEY;		\
-		case 18:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADTIME;	\
-		case 19:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADMODE;	\
-		case 20:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADNAME;	\
-		case 21:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADALG;		\
-		case 22:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADTRUNC;	\
-		case 23:							\
-			return ZBX_EC_ ## __interface ## _RCODE_BADCOOKIE;	\
 		default:							\
 			return ZBX_EC_ ## __interface ## _RCODE_CATCHALL;	\
 	}									\
@@ -958,7 +956,7 @@ ZBX_DEFINE_ZBX_RCODE_NOT_NXDOMAIN_TO(DNS_TCP)
 typedef struct
 {
 	zbx_dnskeys_error_func_t	dnskeys_error;
-	zbx_referral_error_func_t	referral_error;
+	zbx_ns_answer_error_func_t	ns_answer_error;
 	zbx_dnssec_error_func_t		dnssec_error;
 	zbx_rr_class_error_func_t	rr_class_error;
 	zbx_ns_query_error_func_t	ns_query_error;
@@ -969,7 +967,7 @@ zbx_error_functions_t;
 const zbx_error_functions_t DNS[] = {
 	{
 		zbx_dnskeys_error_to_UDP,
-		zbx_referral_error_to_DNS_UDP,
+		zbx_ns_answer_error_to_DNS_UDP,
 		zbx_dnssec_error_to_DNS_UDP,
 		zbx_rr_class_error_to_DNS_UDP,
 		zbx_ns_query_error_to_DNS_UDP,
@@ -977,7 +975,7 @@ const zbx_error_functions_t DNS[] = {
 	},
 	{
 		zbx_dnskeys_error_to_TCP,
-		zbx_referral_error_to_DNS_TCP,
+		zbx_ns_answer_error_to_DNS_TCP,
 		zbx_dnssec_error_to_DNS_TCP,
 		zbx_rr_class_error_to_DNS_TCP,
 		zbx_ns_query_error_to_DNS_TCP,
@@ -1235,6 +1233,52 @@ static int	zbx_verify_rr_class(const ldns_rr_list *rr_list, zbx_rr_class_error_t
 	return SUCCEED;
 }
 
+static int	zbx_domain_in_question_section(const ldns_pkt *pkt, const char *domain, zbx_ns_answer_error_t *ec,
+		char *err, size_t err_size)
+{
+	ldns_rr_list	*rr_list = NULL;
+	const ldns_rdf	*owner_rdf;
+	char		*owner = NULL;
+	int		ret = FAIL;
+
+	if (NULL == (rr_list = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_A, LDNS_SECTION_QUESTION)))
+	{
+		zbx_strlcpy(err, "no A record in QUESTION section", err_size);
+		*ec = ZBX_NS_ANSWER_ERROR_NODOMAIN;
+		goto out;
+	}
+
+	if (NULL == (owner_rdf = ldns_rr_list_owner(rr_list)))
+	{
+		zbx_strlcpy(err, "no A RR owner in QUESTION section", err_size);
+		*ec = ZBX_NS_ANSWER_ERROR_NODOMAIN;
+		goto out;
+	}
+
+	if (NULL == (owner = ldns_rdf2str(owner_rdf)))
+	{
+		zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
+		*ec = ZBX_NS_ANSWER_INTERNAL;
+		goto out;
+	}
+
+	if (0 != strcasecmp(domain, owner))
+	{
+		zbx_snprintf(err, err_size, "A RR owner \"%s\" does not match expected \"%s\"", owner, domain);
+		*ec = ZBX_NS_ANSWER_ERROR_NODOMAIN;
+		goto out;
+	}
+
+	ret = SUCCEED;
+out:
+	zbx_free(owner);
+
+	if (NULL != rr_list)
+		ldns_rr_list_deep_free(rr_list);
+
+	return ret;
+}
+
 static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *ip, const ldns_rr_list *keys,
 		const char *testprefix, const char *domain, FILE *log_fd, int *rtt, int *upd, char ipv4_enabled,
 		char ipv6_enabled, char epp_enabled,
@@ -1248,6 +1292,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	time_t			now, ts;
 	ldns_pkt_rcode		rcode;
 	zbx_ns_query_error_t	query_ec;
+	zbx_ns_answer_error_t	answer_ec;
 	zbx_dnssec_error_t	dnssec_ec;
 	zbx_rr_class_error_t	rr_class_ec;
 	int			ret = FAIL;
@@ -1261,9 +1306,9 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 
 	/* prepare test name */
 	if (0 != strcmp(".", domain))
-		zbx_snprintf(testname, sizeof(testname), "%s.%s", testprefix, domain);
+		zbx_snprintf(testname, sizeof(testname), "%s.%s.", testprefix, domain);
 	else
-		zbx_strlcpy(testname, testprefix, sizeof(testname));
+		zbx_snprintf(testname, sizeof(testname), "%s.", testprefix);
 
 	if (NULL == (testname_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, testname)))
 	{
@@ -1289,11 +1334,8 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		goto out;
 	}
 
-	/* ldns supports limited number of rcodes, use ldns_pkt_get_rcode() when it is fixed */
-	rcode = pkt->_header->_rcode;
-
 	/* verify RCODE */
-	if (LDNS_RCODE_NXDOMAIN != rcode)
+	if (LDNS_RCODE_NXDOMAIN != (rcode = ldns_pkt_get_rcode(pkt)))
 	{
 		char	*rcode_str;
 
@@ -1305,32 +1347,35 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		goto out;
 	}
 
+	if (0 == ldns_pkt_aa(pkt))
+	{
+		zbx_strlcpy(err, "AA flag is not set in the answer from nameserver", err_size);
+		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(ZBX_NS_ANSWER_ERROR_NOAAFLAG);
+		goto out;
+	}
+
+	if (SUCCEED != zbx_domain_in_question_section(pkt, testname, &answer_ec, err, err_size))
+	{
+		*rtt = DNS[DNS_PROTO(res)].ns_answer_error(answer_ec);
+		goto out;
+	}
+
 	if (0 != epp_enabled)
 	{
 		/* start referral validation */
-
-		/* no AA flag */
-		if (0 != ldns_pkt_aa(pkt))
-		{
-			zbx_snprintf(err, err_size, "AA flag is set in the answer of \"%s\" from nameserver \"%s\" (%s)",
-					testname, ns, ip);
-			*rtt = DNS[DNS_PROTO(res)].referral_error(ZBX_REFERRAL_ERROR_NOAAFLAG);
-			goto out;
-		}
 
 		/* the AUTHORITY section should contain at least one NS RR for the last label in  */
 		/* PREFIX, e.g. "somedomain" when querying for "blahblah.somedomain.example." */
 		if (SUCCEED != zbx_get_last_label(testname, &last_label, err, err_size))
 		{
-			*rtt = DNS[DNS_PROTO(res)].referral_error(ZBX_REFERRAL_ERROR_NODOMAIN);
+			*rtt = ZBX_EC_EPP_NOT_IMPLEMENTED;
 			goto out;
 		}
 
 		if (NULL == (last_label_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, last_label)))
 		{
-			zbx_snprintf(err, err_size, "invalid last label \"%s\" generated from testname \"%s\"",
-					last_label, testname);
-			*rtt = DNS[DNS_PROTO(res)].referral_error(ZBX_REFERRAL_ERROR_NODOMAIN);
+			zbx_strlcpy(err, UNKNOWN_LDNS_ERROR, err_size);
+			*rtt = ZBX_EC_EPP_NOT_IMPLEMENTED;
 			goto out;
 		}
 
@@ -1339,7 +1384,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 		{
 			zbx_snprintf(err, err_size, "no NS records of \"%s\" at nameserver \"%s\" (%s)", last_label,
 					ns, ip);
-			*rtt = DNS[DNS_PROTO(res)].referral_error(ZBX_REFERRAL_ERROR_NODOMAIN);
+			*rtt = ZBX_EC_EPP_NOT_IMPLEMENTED;
 			goto out;
 		}
 

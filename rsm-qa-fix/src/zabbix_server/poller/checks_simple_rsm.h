@@ -22,8 +22,6 @@
 
 #include "dbcache.h"
 
-#define ZBX_EC_EPP_NOT_IMPLEMENTED	ZBX_EC_INTERNAL
-
 /* internal */
 #define ZBX_EC_INTERNAL			-1	/* general internal error */
 #define ZBX_EC_INTERNAL_IP_UNSUP	-2	/* IP version not supported by Probe */
