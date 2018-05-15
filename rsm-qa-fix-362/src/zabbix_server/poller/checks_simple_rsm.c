@@ -1006,6 +1006,14 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, zbx_covered_type_t covered_typ
 
 	zbx_get_owners(rrsigs, &owners);
 
+	if (0 == owners.values_num)
+	{
+		zbx_snprintf(err, err_size, "no RRSIG records covering %s found at nameserver \"%s\" (%s)",
+				zbx_covered_to_str(covered_type), ns, ip);
+		*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NOTCOVERED;
+		goto out;
+	}
+
 	for (i = 0; i < owners.values_num; i++)
 	{
 		ldns_rdf	*owner_rdf = (ldns_rdf *)owners.values[i];
@@ -1036,8 +1044,8 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, zbx_covered_type_t covered_typ
 
 		if (NULL == rrset)
 		{
-			zbx_snprintf(err, err_size, "no %s records of \"%s\" found at nameserver \"%s\" (%s)",
-					zbx_covered_to_str(covered_type), owner_buf, ns, ip);
+			zbx_snprintf(err, err_size, "no RRSIG records covering %s of \"%s\" found at nameserver"
+					" \"%s\" (%s)", zbx_covered_to_str(covered_type), owner_buf, ns, ip);
 			*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NOTCOVERED;
 			goto out;
 		}
