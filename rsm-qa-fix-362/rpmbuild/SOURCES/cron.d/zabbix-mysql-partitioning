@@ -1,0 +1,6 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+
+0 23 *  *  *  root    perl    /opt/zabbix/scripts/MySQL_part_management.pl 1>2 2>/dev/null
+0 2  *  *  *  root    perl    /opt/zabbix/scripts/MySQL_part_management.pl 1>2 2>/dev/null
