@@ -1,3 +1,16 @@
+Changes for rsm1.1.0rc7
+
+Bug fixes:
+.......PS. [362] added support for DNS error code -410 (dimir)
+..F....... [367] fixed displaying results in "Details of particular test" for RDDS when all probes are offline (gleb)
+.......PS. [358] added support for DNS error codes -250 and -650 (dimir)
+.......PS. [359] added support for DNS error codes -251 and -651 (dimir)
+.......PS. [369] fixed detection of "DNS UDP - Bogus DNSSEC signature" and "DNS TCP - Bogus DNSSEC signature" (gleb)
+..F....... [366] removed column 'UPD' from details of particular RDDS test result page (miks)
+..F....... [364] fixed result coloring in particular test page for RDDS service (miks)
+.......PS. [365] fixed RDDS errors -227 and -228 being overwritten with -229 (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc6
 
 Bug fixes:
