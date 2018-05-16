@@ -309,7 +309,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		}
 	}
 
-	$hosts = API::Host()->get([
+	$hosts = empty($hostNames) ? [] : API::Host()->get([
 		'output' => ['hostid', 'host', 'name'],
 		'filter' => [
 			'host' => $hostNames
