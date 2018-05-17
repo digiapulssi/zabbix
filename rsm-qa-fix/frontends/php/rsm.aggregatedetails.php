@@ -455,11 +455,11 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			elseif ($data['type'] == RSM_DNSSEC) {
 				/**
 				 * For DNSSEC, if at least one NameServer for particular probe is UP (have data but do not have errors),
-				 * the whole probe is UP. If there are no NameServer IP with data, whole probe is offline.
+				 * the whole probe is UP. If there are no NameServer IP with data, probe status should say "No results".
 				 */
 				if (array_key_exists('probe_nameservers_with_no_values', $data['probes'][$probe_hostid])
 						&& $data['probes'][$probe_hostid]['probe_nameservers_with_no_values'] == $data['probes'][$probe_hostid]['probe_number_of_nameserver_ips']) {
-					$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
+					// Probe is considered to be online, but has no results and hence no Up or Down status.
 				}
 				elseif (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
 					$data['probes'][$probe_hostid]['status_udp'] = ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0)
