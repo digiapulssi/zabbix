@@ -97,21 +97,17 @@ static void	proxy_update_host(DB_DRULE *drule, const char *ip, const char *dns, 
  *                                                                            *
  * Function: discover_service                                                 *
  *                                                                            *
- * Purpose: check if service is available and update database                 *
+ * Purpose: check if service is available                                     *
  *                                                                            *
  * Parameters: service type, ip address, port number                          *
  *                                                                            *
  ******************************************************************************/
-static int	discover_service(DB_DCHECK *dcheck, char *ip, int port, char **value, size_t *value_alloc)
+static int	discover_service(const DB_DCHECK *dcheck, char *ip, int port, char **value, size_t *value_alloc)
 {
 	const char	*__function_name = "discover_service";
 	int		ret = SUCCEED;
-	char		key[MAX_STRING_LEN], error[ITEM_ERROR_LEN_MAX];
 	const char	*service = NULL;
 	AGENT_RESULT 	result;
-	DC_ITEM		item;
-	ZBX_FPING_HOST	host;
-	size_t		value_offset = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -167,6 +163,11 @@ static int	discover_service(DB_DCHECK *dcheck, char *ip, int port, char **value,
 
 	if (SUCCEED == ret)
 	{
+		size_t		value_offset = 0;
+		ZBX_FPING_HOST	host;
+		DC_ITEM		item;
+		char		key[MAX_STRING_LEN], error[ITEM_ERROR_LEN_MAX];
+
 		zbx_alarm_on(CONFIG_TIMEOUT);
 
 		switch (dcheck->type)
