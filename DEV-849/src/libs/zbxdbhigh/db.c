@@ -2900,7 +2900,7 @@ int	DBget_user_by_active_session(const char *sessionid, zbx_user_t *user)
 		goto out;
 
 	ZBX_STR2UINT64(user->userid, row[0]);
-	user->type = atoi(row[1]);
+	user->type = (zbx_user_type_t)atoi(row[1]);
 
 	ret = SUCCEED;
 out:

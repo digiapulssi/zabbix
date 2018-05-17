@@ -2935,7 +2935,8 @@ static void	lld_interfaces_validate(zbx_vector_ptr_t *hosts, char **error)
 						*error = zbx_strdcatf(*error,
 								"Cannot update \"%s\" interface on host \"%s\":"
 								" the interface is used by items.\n",
-								zbx_interface_type_string(interface->type_orig),
+								zbx_interface_type_string(
+								(zbx_interface_type_t)interface->type_orig),
 								host->host);
 
 						/* return an original interface type and drop the correspond flag */
@@ -2999,7 +3000,8 @@ static void	lld_interfaces_validate(zbx_vector_ptr_t *hosts, char **error)
 
 					*error = zbx_strdcatf(*error, "Cannot delete \"%s\" interface on host \"%s\":"
 							" the interface is used by items.\n",
-							zbx_interface_type_string(interface->type), host->host);
+							zbx_interface_type_string(
+							(zbx_interface_type_t)interface->type), host->host);
 
 					/* drop the correspond flag */
 					interface->flags &= ~ZBX_FLAG_LLD_INTERFACE_REMOVE;

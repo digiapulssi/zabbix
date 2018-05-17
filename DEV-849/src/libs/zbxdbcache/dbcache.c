@@ -1100,14 +1100,20 @@ static void	DCexport_trends(const ZBX_DC_TREND *trends, int trends_num, zbx_hash
 		zbx_json_addarray(&json, ZBX_PROTO_TAG_GROUPS);
 
 		for (j = 0; j < host_info->groups.values_num; j++)
-			zbx_json_addstring(&json, NULL, host_info->groups.values[j], ZBX_JSON_TYPE_STRING);
+		{
+			zbx_json_addstring(&json, NULL, (const char *)host_info->groups.values[j],
+					ZBX_JSON_TYPE_STRING);
+		}
 
 		zbx_json_close(&json);
 
 		zbx_json_addarray(&json, ZBX_PROTO_TAG_APPLICATIONS);
 
 		for (j = 0; j < item_info->applications.values_num; j++)
-			zbx_json_addstring(&json, NULL, item_info->applications.values[j], ZBX_JSON_TYPE_STRING);
+		{
+			zbx_json_addstring(&json, NULL, (const char *)item_info->applications.values[j],
+					ZBX_JSON_TYPE_STRING);
+		}
 
 		zbx_json_close(&json);
 		zbx_json_adduint64(&json, ZBX_PROTO_TAG_ITEMID, item->itemid);
@@ -1192,14 +1198,20 @@ static void	DCexport_history(const ZBX_DC_HISTORY *history, int history_num, zbx
 		zbx_json_addarray(&json, ZBX_PROTO_TAG_GROUPS);
 
 		for (j = 0; j < host_info->groups.values_num; j++)
-			zbx_json_addstring(&json, NULL, host_info->groups.values[j], ZBX_JSON_TYPE_STRING);
+		{
+			zbx_json_addstring(&json, NULL, (const char *)host_info->groups.values[j],
+					ZBX_JSON_TYPE_STRING);
+		}
 
 		zbx_json_close(&json);
 
 		zbx_json_addarray(&json, ZBX_PROTO_TAG_APPLICATIONS);
 
 		for (j = 0; j < item_info->applications.values_num; j++)
-			zbx_json_addstring(&json, NULL, item_info->applications.values[j], ZBX_JSON_TYPE_STRING);
+		{
+			zbx_json_addstring(&json, NULL, (const char *)item_info->applications.values[j],
+					ZBX_JSON_TYPE_STRING);
+		}
 
 		zbx_json_close(&json);
 		zbx_json_adduint64(&json, ZBX_PROTO_TAG_ITEMID, item->itemid);
@@ -1730,7 +1742,8 @@ static int	dc_history_set_value(ZBX_DC_HISTORY *hdata, unsigned char value_type,
 		{
 			errmsg = zbx_dsprintf(NULL, "Value \"%s\" of type \"%s\" is not suitable for"
 				" value type \"%s\"", zbx_variant_value_desc(value),
-				zbx_variant_type_desc(value), zbx_item_value_type_string(value_type));
+				zbx_variant_type_desc(value),
+				zbx_item_value_type_string((zbx_item_value_type_t)value_type));
 		}
 
 		dc_history_set_error(hdata, errmsg);

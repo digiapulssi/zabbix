@@ -224,7 +224,7 @@ void xml_escape_xpath(char **data)
 	if (0 == (size = xml_escape_xpath_stringsize(*data)))
 		return;
 
-	buffer = zbx_malloc(NULL, size + 1);
+	buffer = (char *)zbx_malloc(NULL, size + 1);
 	buffer[size] = '\0';
 	xml_escape_xpath_string(buffer, *data);
 	zbx_free(*data);

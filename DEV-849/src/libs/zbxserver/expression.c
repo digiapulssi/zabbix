@@ -3238,7 +3238,8 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, cons
 							"c.type")))
 					{
 						replace_to = zbx_strdup(replace_to,
-								zbx_dservice_type_string(atoi(replace_to)));
+								zbx_dservice_type_string(
+								(zbx_dservice_type_t)atoi(replace_to)));
 					}
 				}
 				else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_PORT))
@@ -5628,7 +5629,7 @@ int	substitute_macros_xml(char **data, const DC_ITEM *item, const struct zbx_jso
 	}
 
 	zbx_free(*data);
-	*data = zbx_malloc(NULL, size + 1);
+	*data = (char *)zbx_malloc(NULL, size + 1);
 	memcpy(*data, (const char *)mem, size + 1);
 	xmlFree(mem);
 	ret = SUCCEED;

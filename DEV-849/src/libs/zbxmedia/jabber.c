@@ -447,7 +447,7 @@ static int	connect_jabber(const char *jabber_id, const char *password, int use_s
 
 	if (NULL == jsess)
 	{
-		jsess = zbx_malloc(jsess, sizeof(jabber_session_t));
+		jsess = (jabber_session_p)zbx_malloc(jsess, sizeof(jabber_session_t));
 		memset(jsess, 0, sizeof(jabber_session_t));
 	}
 	else if (JABBER_DISCONNECTED != jsess->status)

@@ -84,7 +84,7 @@ static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata
 
 	zbx_httppage_t	*page = (zbx_httppage_t	*)userdata;
 
-	zbx_strncpy_alloc(&page->data, &page->alloc, &page->offset, ptr, r_size);
+	zbx_strncpy_alloc(&page->data, &page->alloc, &page->offset, (const char *)ptr, r_size);
 
 	return r_size;
 }

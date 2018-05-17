@@ -283,7 +283,7 @@ void	zbx_json_escape(char **string)
 	if (0 == (size = __zbx_json_stringsize(*string, ZBX_JSON_TYPE_UNKNOWN)))
 		return;
 
-	buffer = zbx_malloc(NULL, size + 1);
+	buffer = (char *)zbx_malloc(NULL, size + 1);
 	buffer[size] = '\0';
 	__zbx_json_insstring(buffer, *string, ZBX_JSON_TYPE_UNKNOWN);
 	zbx_free(*string);

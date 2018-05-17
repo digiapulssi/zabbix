@@ -1803,7 +1803,7 @@ error:
 		result = (ZBX_DB_DOWN == server_status ? (DB_RESULT)(intptr_t)server_status : NULL);
 	}
 #elif defined(HAVE_POSTGRESQL)
-	result = zbx_malloc(NULL, sizeof(struct zbx_db_result));
+	result = (DB_RESULT)zbx_malloc(NULL, sizeof(struct zbx_db_result));
 	result->pg_result = PQexec(conn, sql);
 	result->values = NULL;
 	result->cursor = 0;
@@ -2072,7 +2072,7 @@ DB_ROW	zbx_db_fetch(DB_RESULT result)
 	{
 		int	i;
 
-		result->values = zbx_malloc(result->values, sizeof(char *) * result->fld_num);
+		result->values = (DB_ROW)zbx_malloc(result->values, sizeof(char *) * result->fld_num);
 
 		for (i = 0; i < result->fld_num; i++)
 		{

@@ -864,7 +864,7 @@ void zbx_regexp_escape(char **string)
 	if (0 == (size = zbx_regexp_escape_stringsize(*string)))
 		return;
 
-	buffer = zbx_malloc(NULL, size + 1);
+	buffer = (char *)zbx_malloc(NULL, size + 1);
 	buffer[size] = '\0';
 	zbx_regexp_escape_string(buffer, *string);
 	zbx_free(*string);

@@ -31,7 +31,7 @@ int	zbx_vc_get_cached_values(zbx_uint64_t itemid, unsigned char value_type, zbx_
 
 	vc_try_lock();
 
-	if (NULL == (item = zbx_hashset_search(&vc_cache->items, &itemid)))
+	if (NULL == (item = (zbx_vc_item_t *)zbx_hashset_search(&vc_cache->items, &itemid)))
 		return FAIL;
 
 	if (NULL == item->head)
@@ -60,7 +60,7 @@ int	zbx_vc_precache_values(zbx_uint64_t itemid, int value_type, int seconds, int
 	if (NULL == (item = (zbx_vc_item_t *)zbx_hashset_search(&vc_cache->items, &itemid)))
 	{
 		zbx_vc_item_t   new_item = {.itemid = itemid, .value_type = value_type};
-		item = zbx_hashset_insert(&vc_cache->items, &new_item, sizeof(zbx_vc_item_t));
+		item = (zbx_vc_item_t *)zbx_hashset_insert(&vc_cache->items, &new_item, sizeof(zbx_vc_item_t));
 	}
 
 	/* perform request to cache values */

@@ -1125,7 +1125,8 @@ static void	lld_items_validate(zbx_uint64_t hostid, zbx_vector_ptr_t *items, cha
 
 		for (j = 0; j < item->preproc_ops.values_num; j++)
 		{
-			if (SUCCEED != lld_items_preproc_step_validate(item->preproc_ops.values[j], item->key, error))
+			if (SUCCEED != lld_items_preproc_step_validate(
+					(const zbx_lld_item_preproc_t *)item->preproc_ops.values[j], item->key, error))
 			{
 				item->flags &= ~ZBX_FLAG_LLD_ITEM_DISCOVERED;
 				break;
@@ -2177,7 +2178,7 @@ static void	lld_item_prepare_update(const zbx_vector_ptr_t *item_prototypes, con
 		return;
 	}
 
-	item_prototype = item_prototypes->values[index];
+	item_prototype = (const zbx_lld_item_prototype_t *)item_prototypes->values[index];
 
 	zbx_strcpy_alloc(sql, sql_alloc, sql_offset, "update items set ");
 	if (0 != (item->flags & ZBX_FLAG_LLD_ITEM_UPDATE_NAME))

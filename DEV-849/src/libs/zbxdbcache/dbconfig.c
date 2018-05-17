@@ -1248,7 +1248,7 @@ static void	DCsync_hosts(zbx_dbsync_t *sync)
 		DCstrpool_replace(0, &psk_i_local.tls_psk_identity, row[33]);
 		DCstrpool_replace(0, &psk_i_local.tls_psk, row[34]);
 		psk_i_local.refcount = 1;
-		host->tls_dc_psk = zbx_hashset_insert(&config->psks, &psk_i_local, sizeof(ZBX_DC_PSK));
+		host->tls_dc_psk = (ZBX_DC_PSK *)zbx_hashset_insert(&config->psks, &psk_i_local, sizeof(ZBX_DC_PSK));
 done:
 		if (NULL != host->tls_dc_psk && NULL == psk_owner)
 		{
@@ -10234,7 +10234,7 @@ void	DCtouch_hosts_availability(const zbx_vector_uint64_t *hostids)
 
 	for (i = 0; i < hostids->values_num; i++)
 	{
-		if (NULL != (dc_host = zbx_hashset_search(&config->hosts, &hostids->values[i])))
+		if (NULL != (dc_host = (ZBX_DC_HOST *)zbx_hashset_search(&config->hosts, &hostids->values[i])))
 			dc_host->availability_ts = now;
 	}
 
