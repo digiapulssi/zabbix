@@ -101,6 +101,8 @@ static void	proxy_update_host(DB_DRULE *drule, const char *ip, const char *dns, 
  *                                                                            *
  * Parameters: service type, ip address, port number                          *
  *                                                                            *
+ * Return value: SUCCEED - service is UP, FAIL - service not discovered       *
+ *                                                                            *
  ******************************************************************************/
 static int	discover_service(const DB_DCHECK *dcheck, char *ip, int port, char **value, size_t *value_alloc)
 {
@@ -332,10 +334,7 @@ static void	process_check(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhost, i
 		const char *dns, int now)
 {
 	const char	*__function_name = "process_check";
-	int		port, first, last;
-	char		*start, *comma, *last_port;
-	int		status;
-	char		*value = NULL;
+	char		*value = NULL, *start;
 	size_t		value_alloc = 128;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -344,6 +343,9 @@ static void	process_check(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhost, i
 
 	for (start = dcheck->ports; '\0' != *start;)
 	{
+		char	*comma, *last_port;
+		int	port, first, last;
+
 		if (NULL != (comma = strchr(start, ',')))
 			*comma = '\0';
 
@@ -359,14 +361,16 @@ static void	process_check(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhost, i
 
 		for (port = first; port <= last; port++)
 		{
+			int	service_status;
+
 			zabbix_log(LOG_LEVEL_DEBUG, "%s() port:%d", __function_name, port);
 
-			status = (SUCCEED == discover_service(dcheck, ip, port, &value, &value_alloc) ?
+			service_status = (SUCCEED == discover_service(dcheck, ip, port, &value, &value_alloc) ?
 					DOBJECT_STATUS_UP : DOBJECT_STATUS_DOWN);
 
 			/* update host status */
-			if (-1 == *host_status || DOBJECT_STATUS_UP == status)
-				*host_status = status;
+			if (-1 == *host_status || DOBJECT_STATUS_UP == service_status)
+				*host_status = service_status;
 
 			DBbegin();
 
@@ -380,9 +384,12 @@ static void	process_check(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhost, i
 			}
 
 			if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-				discovery_update_service(drule, dcheck, dhost, ip, dns, port, status, value, now);
+			{
+				discovery_update_service(drule, dcheck, dhost, ip, dns, port, service_status, value,
+						now);
+			}
 			else if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-				proxy_update_service(drule, dcheck, ip, dns, port, status, value, now);
+				proxy_update_service(drule, dcheck, ip, dns, port, service_status, value, now);
 
 			DBcommit();
 		}
