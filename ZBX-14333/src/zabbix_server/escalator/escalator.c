@@ -647,6 +647,8 @@ static void	execute_commands(DB_EVENT *event, zbx_uint64_t actionid, zbx_uint64_
 				zbx_vector_uint64_append(&executed_on_hosts, host.hostid);
 			}
 		}
+		else
+			zbx_strlcpy(host.host, "Zabbix server", sizeof(host.host));
 
 		if (SUCCEED == rc)
 		{
