@@ -364,7 +364,7 @@ static void	add_command_alert(zbx_db_insert_t *db_insert, int alerts_num, const 
 	}
 
 	now = (int)time(NULL);
-	tmp = zbx_dsprintf(tmp, "%s:%s", host->host, NULL == command ? "" : command);
+	tmp = zbx_dsprintf(tmp, "%s:%s", host->host, ZBX_NULL2EMPTY_STR(command));
 
 	zbx_db_insert_add_values(db_insert, __UINT64_C(0), actionid, eventid, now, tmp, alert_status, error, esc_step,
 			(int)alerttype);
@@ -647,6 +647,8 @@ static void	execute_commands(DB_EVENT *event, zbx_uint64_t actionid, zbx_uint64_
 				zbx_vector_uint64_append(&executed_on_hosts, host.hostid);
 			}
 		}
+		else
+			zbx_strlcpy(host.host, "Zabbix server", sizeof(host.host));
 
 		if (SUCCEED == rc)
 		{
