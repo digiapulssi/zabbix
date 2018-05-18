@@ -2140,12 +2140,7 @@ static FILE	*open_item_log(const char *host, const char *tld, const char *name, 
 		return NULL;
 	}
 
-	p = CONFIG_LOG_FILE + strlen(CONFIG_LOG_FILE) - 1;
-
-	while (CONFIG_LOG_FILE != p && '/' != *p)
-		p--;
-
-	if (CONFIG_LOG_FILE == p)
+	if (NULL == (p = strrchr(CONFIG_LOG_FILE, '/')))
 		file_name = zbx_strdup(NULL, ZBX_RSM_DEFAULT_LOGDIR);
 	else
 		file_name = zbx_dsprintf(NULL, "%.*s", p - CONFIG_LOG_FILE, CONFIG_LOG_FILE);
