@@ -12,6 +12,7 @@ use constant false => 0;
 
 use constant LINUX_TEMPLATEID			=> 10001;	# Template "Template OS Linux"
 use constant APP_ZABBIX_PROXY_TEMPLATEID	=> 10058;	# Template "Template App Zabbix Proxy"
+use constant PROBE_ERRORS_TEMPLATEID		=> 99990;	# Template "Template Probe Errors"
 
 use constant TEMPLATES_TLD_GROUPID		=> 240;		# Host group "Templates - TLD"
 use constant PROBES_GROUPID			=> 120;		# Host group "Probes"
@@ -69,10 +70,10 @@ use constant ZBX_EC_DNS_RES_NOREPLY	=> -205;	# No reply from resolver (obsolete)
 use constant ZBX_EC_DNS_RES_NOADBIT	=> -206;	# Keyset is not valid (obsolete)
 use constant ZBX_EC_DNS_UDP_RES_NOREPLY	=> -400;	# DNS UDP - No reply from local resolver
 use constant ZBX_EC_DNS_UDP_RES_NOADBIT	=> -401;	# DNS UDP - No AD bit from local resolver
-use constant ZBX_EC_DNS_UDP_NO_DNSKEY	=> -428;	# DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
+use constant ZBX_EC_DNS_UDP_DNSKEY_NONE	=> -428;	# DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
 use constant ZBX_EC_DNS_TCP_RES_NOREPLY	=> -800;	# DNS TCP - No reply from local resolver
 use constant ZBX_EC_DNS_TCP_RES_NOADBIT	=> -801;	# DNS TCP - No AD bit from local resolver
-use constant ZBX_EC_DNS_TCP_NO_DNSKEY	=> -828;	# DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
+use constant ZBX_EC_DNS_TCP_DNSKEY_NONE	=> -828;	# DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
 use constant ZBX_EC_RDDS43_RES_NOREPLY	=> -222; # RDDS43 - No reply from local resolver
 use constant ZBX_EC_RDDS80_RES_NOREPLY	=> -250; # RDDS80 - No reply from local resolver
 use constant ZBX_EC_EPP_NO_IP         => -200; # IP is missing for EPP server
@@ -138,15 +139,30 @@ use constant TLD_TYPE_PROBE_RESULTS_GROUPIDS	=> {
 	TLD_TYPE_OTHER,	230	# Host group "otherTLD Probe results"
 };
 
-our @EXPORT_OK = qw(true false LINUX_TEMPLATEID APP_ZABBIX_PROXY_TEMPLATEID TEMPLATES_TLD_GROUPID PROBES_GROUPID PROBES_MON_GROUPID TLDS_GROUPID TLD_PROBE_RESULTS_GROUPID TLD_TYPE_GROUPIDS TLD_TYPE_PROBE_RESULTS_GROUPIDS VALUE_TYPE_AVAIL VALUE_TYPE_PERC VALUE_TYPE_NUM
+our @EXPORT_OK = qw(
+			true
+			false
+			LINUX_TEMPLATEID
+			APP_ZABBIX_PROXY_TEMPLATEID
+			PROBE_ERRORS_TEMPLATEID
+			TEMPLATES_TLD_GROUPID
+			PROBES_GROUPID
+			PROBES_MON_GROUPID
+			TLDS_GROUPID
+			TLD_PROBE_RESULTS_GROUPID
+			TLD_TYPE_GROUPIDS
+			TLD_TYPE_PROBE_RESULTS_GROUPIDS
+			VALUE_TYPE_AVAIL
+			VALUE_TYPE_PERC
+			VALUE_TYPE_NUM
 			ZBX_EC_INTERNAL
                     ZBX_EC_DNS_NS_ERRSIG ZBX_EC_DNS_RES_NOREPLY ZBX_EC_DNS_RES_NOADBIT
 			ZBX_EC_DNS_UDP_RES_NOREPLY
 			ZBX_EC_DNS_UDP_RES_NOADBIT
-			ZBX_EC_DNS_UDP_NO_DNSKEY
+			ZBX_EC_DNS_UDP_DNSKEY_NONE
 			ZBX_EC_DNS_TCP_RES_NOREPLY
 			ZBX_EC_DNS_TCP_RES_NOADBIT
-			ZBX_EC_DNS_TCP_NO_DNSKEY
+			ZBX_EC_DNS_TCP_DNSKEY_NONE
 			ZBX_EC_RDDS43_RES_NOREPLY
 			ZBX_EC_RDDS80_RES_NOREPLY
                     ZBX_EC_EPP_NO_IP
@@ -162,8 +178,18 @@ our @EXPORT_OK = qw(true false LINUX_TEMPLATEID APP_ZABBIX_PROXY_TEMPLATEID TEMP
 		    APP_SLV_MONTHLY APP_SLV_ROLLWEEK APP_SLV_PARTTEST APP_SLV_CURMON TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST);
 
 our %EXPORT_TAGS = ( general => [ qw(true false) ],
-		     templates => [ qw(LINUX_TEMPLATEID APP_ZABBIX_PROXY_TEMPLATEID) ],
-		     groups => [ qw(TEMPLATES_TLD_GROUPID PROBES_GROUPID PROBES_MON_GROUPID TLDS_GROUPID TLD_PROBE_RESULTS_GROUPID TLD_TYPE_GROUPIDS TLD_TYPE_PROBE_RESULTS_GROUPIDS) ],
+		     templates => [ qw(
+				LINUX_TEMPLATEID
+				APP_ZABBIX_PROXY_TEMPLATEID
+				PROBE_ERRORS_TEMPLATEID) ],
+		     groups => [ qw(
+				TEMPLATES_TLD_GROUPID
+				PROBES_GROUPID
+				PROBES_MON_GROUPID
+				TLDS_GROUPID
+				TLD_PROBE_RESULTS_GROUPID
+				TLD_TYPE_GROUPIDS
+				TLD_TYPE_PROBE_RESULTS_GROUPIDS) ],
 		     items => [ qw(PROBE_KEY_ONLINE) ],
 		     value_types => [ qw(VALUE_TYPE_AVAIL VALUE_TYPE_PERC VALUE_TYPE_NUM) ],
 		     ec => [ qw(
@@ -171,10 +197,10 @@ our %EXPORT_TAGS = ( general => [ qw(true false) ],
 				ZBX_EC_DNS_NS_ERRSIG ZBX_EC_DNS_RES_NOREPLY ZBX_EC_DNS_RES_NOADBIT
 				ZBX_EC_DNS_UDP_RES_NOREPLY
 				ZBX_EC_DNS_UDP_RES_NOADBIT
-				ZBX_EC_DNS_UDP_NO_DNSKEY
+				ZBX_EC_DNS_UDP_DNSKEY_NONE
 				ZBX_EC_DNS_TCP_RES_NOREPLY
 				ZBX_EC_DNS_TCP_RES_NOADBIT
-				ZBX_EC_DNS_TCP_NO_DNSKEY
+				ZBX_EC_DNS_TCP_DNSKEY_NONE
 				ZBX_EC_RDDS43_RES_NOREPLY
 				ZBX_EC_RDDS80_RES_NOREPLY
 				ZBX_EC_EPP_NO_IP

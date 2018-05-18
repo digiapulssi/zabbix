@@ -1419,7 +1419,7 @@ sub fill_test_data_dnssec($$)
 				{
 					my $value = substr($test->{'rtt'}, 0, index($test->{'rtt'}, ","));
 
-					if (ZBX_EC_DNS_UDP_NO_DNSKEY <= $value && $value <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
+					if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $value && $value <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
 							$value == ZBX_EC_DNS_NS_ERRSIG || $value == ZBX_EC_DNS_RES_NOADBIT)
 					{
 						$test_data_ref->{'status'} = "Down";

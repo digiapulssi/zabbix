@@ -1,3 +1,72 @@
+Changes for rsm1.1.0rc8
+
+New features:
+
+Bug fixes:
+..F....... [371] fixed displaying and counting of probes with no results as offline in aggregated details of DNSSEC (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc7
+
+Bug fixes:
+.......PS. [362] added support for DNS error code -410 (dimir)
+..F....... [367] fixed displaying results in "Details of particular test" for RDDS when all probes are offline (gleb)
+.......PS. [358] added support for DNS error codes -250 and -650 (dimir)
+.......PS. [359] added support for DNS error codes -251 and -651 (dimir)
+.......PS. [369] fixed detection of "DNS UDP - Bogus DNSSEC signature" and "DNS TCP - Bogus DNSSEC signature" (gleb)
+..F....... [366] removed column 'UPD' from details of particular RDDS test result page (miks)
+..F....... [364] fixed result coloring in particular test page for RDDS service (miks)
+.......PS. [365] fixed RDDS errors -227 and -228 being overwritten with -229 (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc6
+
+Bug fixes:
+..F....... [361] fixed probe status detection for DNSSEC when there are no data per NS IP (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc5
+
+New features:
+....I..... [347] added code to print a warning in case of ignored tld.pl command-line parameters (dimir)
+
+Bug fixes:
+.......PS. [350] added RCODE validation when querying local resolver for DNSKEY records; set DNSSEC flag only if enabled; set "AD bit" in request to get correct response (dimir)
+.......PS. [357] added verification of each RR CLASS in response to IN A name server query (DNS errors -207,-208,-209) (dimir)
+..F....... [356] fixed empty cell filling by zeros for DNS servers with no results above max RTT (miks)
+..F....... [355] fixed status dependant coloring for probe names listed in aggregate results page; fixed label; improved coding style (miks)
+..F....... [353] fixed undefined index error in aggregate results; improved coding style (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc4
+
+Bug fixes:
+....I..PS. [334] removed unused error code from "RSM RDDS rtt" value mapping (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc3
+
+New features:
+....I..... [342] added automatic rsyslog restart, ldns-1.6.17 dependency, removed zabbix-proxy-sqlite (dimir)
+....I..... [sub-341] removed automatic root servers update functionality from tld.pl (dimir)
+.......PS. [344] changed TCP timeout in RSM tests from 20 to 11 (dimir)
+
+Bug fixes:
+..F....... [346] fixed incorrect test cycle result, fixed missing data handling and removed tooltips for valid RTT values in "Details of particular test" page for RDDS service (miks)
+..F....... [345] fixed order of "Total above max RTT" values for RDDS43 and RDDS80 tests in "Details of particular test" page (gleb)
+.......PS. [343] fixed handling RTT value in RDDS80 test (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc2
+
+New features:
+.......PS. [339] added printing DNS packet before RCODE check (dimir)
+
+Bug fixes:
+....I..PS. [340] fixed probes.pl and tld.pl unlinking "Template Probe Errors" leading to malfunction of "Probes-Knockout" action (gleb)
+....I..... [341] added force update of root server IPs when tld.pl is run (enabled automatic root servers update functionality) (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc1
 
 New features:
@@ -8,7 +77,28 @@ New features:
 ....I..PS. [320] added new error codes for DNS and DNSSEC tests, made some of old codes obsolete (dimir, gleb)
 ....I..PS. [320] added new error codes for RDDS43 and RDDS80 tests, made some of old codes obsolete, stopped treating no reply from local resolver as service error (gleb)
 
+--------------------------------------------------------------------------------
+Changes for rsm1.0.6
+
+rsm1.0.6rc3 was released as rsm1.0.6 without any changes
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.6rc3
+
 Bug fixes:
+..F....... [319] fixed disabled TLD filtering in "Rolling week status" page (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.6rc2
+
+Bug fixes:
+..F....... [319] fixed filtering TLDs by disabled service in "Rolling week status" page (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.6rc1
+
+Bug fixes:
+....I..... [329] made incidentStatus from falsePositiveChanges.csv reference statusMaps.csv catalog (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.5

@@ -204,11 +204,11 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	// get items
 	$availItems = API::Item()->get([
+		'output' => ['itemid', 'value_type'],
 		'hostids' => $data['tld']['hostid'],
 		'filter' => [
 			'key_' => $key
 		],
-		'output' => ['itemid', 'value_type'],
 		'preservekeys' => true
 	]);
 
@@ -222,8 +222,31 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			'history' => $availItem['value_type'],
 			'limit' => 1
 		]);
-		$testResult = reset($testResults);
-		$data['testResult'] = $testResult['value'];
+
+		$test_result = reset($testResults);
+		if ($test_result === false) {
+			$test_result['value'] = null;
+		}
+
+		// Get mapped value for test result.
+		if (in_array($data['type'], [RSM_DNS, RSM_DNSSEC, RSM_RDDS])) {
+			$test_result_label = ($test_result['value'] !== null)
+				? getMappedValue($test_result['value'], RSM_SERVICE_AVAIL_VALUE_MAP)
+				: false;
+
+			if (!$test_result_label) {
+				$test_result_label = _('No result');
+				$test_result_color = ZBX_STYLE_GREY;
+			}
+			else {
+				$test_result_color = ($test_result['value'] == PROBE_DOWN) ? ZBX_STYLE_RED : ZBX_STYLE_GREEN;
+			}
+
+			$data['testResult'] = (new CSpan($test_result_label))->addClass($test_result_color);
+		}
+		else {
+			$data['testResult'] = $test_result['value'];
+		}
 	}
 	else {
 		show_error_message(_s('Item with key "%1$s" not exist on TLD!', $key));
@@ -286,7 +309,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		}
 	}
 
-	$hosts = API::Host()->get([
+	$hosts = empty($hostNames) ? [] : API::Host()->get([
 		'output' => ['hostid', 'host', 'name'],
 		'filter' => [
 			'host' => $hostNames
@@ -306,7 +329,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	elseif ($data['type'] == RSM_RDDS) {
 		$probeItemKey = ' AND (i.key_ LIKE ('.zbx_dbstr(PROBE_RDDS_ITEM.'%').')'.
 			' OR '.dbConditionString('i.key_',
-				[PROBE_RDDS43_IP, PROBE_RDDS43_RTT, PROBE_RDDS43_UPD, PROBE_RDDS80_IP, PROBE_RDDS80_RTT]
+				[PROBE_RDDS43_IP, PROBE_RDDS43_RTT, PROBE_RDDS80_IP, PROBE_RDDS80_RTT]
 			).
 		')';
 	}
@@ -366,7 +389,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			}
 
 			if ($itemValue) {
-				if (ZBX_EC_DNS_UDP_NO_DNSKEY <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
+				if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
 						|| $itemValue['value'] == ZBX_EC_DNS_NS_ERRSIG || $itemValue['value'] == ZBX_EC_DNS_RES_NOADBIT) {
 					$hosts[$item['hostid']]['value']['fail']++;
 				}
@@ -385,26 +408,25 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				$hosts[$item['hostid']]['rdds43']['ip'] = $itemValue['value'];
 			}
 			elseif ($item['key_'] == PROBE_RDDS43_RTT) {
-				$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
-				$hosts[$item['hostid']]['rdds43']['rtt'] = [
-					'description' => $itemValue['value'] ? applyValueMap($rtt_value, $item['valuemapid']) : null,
-					'value' => $rtt_value
-				];
-			}
-			elseif ($item['key_'] == PROBE_RDDS43_UPD) {
-				$hosts[$item['hostid']]['rdds43']['upd'] = $itemValue['value']
-					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
-					: null;
+				if ($itemValue['value']) {
+					$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+					$hosts[$item['hostid']]['rdds43']['rtt'] = [
+						'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+						'value' => $rtt_value
+					];
+				}
 			}
 			elseif ($item['key_'] == PROBE_RDDS80_IP) {
 				$hosts[$item['hostid']]['rdds80']['ip'] = $itemValue['value'];
 			}
 			elseif ($item['key_'] == PROBE_RDDS80_RTT) {
-				$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
-				$hosts[$item['hostid']]['rdds80']['rtt'] = [
-					'description' => $itemValue['value'] ? applyValueMap($rtt_value, $item['valuemapid']) : null,
-					'value' => $rtt_value
-				];
+				if ($itemValue['value']) {
+					$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+					$hosts[$item['hostid']]['rdds80']['rtt'] = [
+						'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+						'value' => $rtt_value
+					];
+				}
 			}
 			else {
 				$hosts[$item['hostid']]['value'] = $itemValue['value'];
@@ -455,6 +477,9 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		}
 	}
 
+	// Sort errors.
+	krsort($data['errors']);
+
 	if ($data['type'] == RSM_DNS) {
 		foreach ($nsArray as $hostId => $nss) {
 			$hosts[$hostId]['value']['fail'] = 0;
@@ -468,10 +493,10 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			// calculate Down probes
 			if (count($nss) - $hosts[$hostId]['value']['fail'] < $minDnsCount) {
 				$data['downProbes']++;
-				$hosts[$hostId]['class'] = 'red';
+				$hosts[$hostId]['class'] = ZBX_STYLE_RED;
 			}
 			else {
-				$hosts[$hostId]['class'] = 'green';
+				$hosts[$hostId]['class'] = ZBX_STYLE_GREEN;
 			}
 		}
 	}

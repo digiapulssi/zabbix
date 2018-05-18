@@ -319,7 +319,7 @@ foreach my $fp_ref (@$false_positives)
 	dw_append_csv(DATA_FALSE_POSITIVE, [
 			      $fp_ref->{'eventid'},
 			      $fp_ref->{'clock'},
-			      $fp_ref->{'status'},
+			      dw_get_id(ID_STATUS_MAP, $fp_ref->{'status'}),
 			      ''	# reason is not implemented in front-end
 		]);
 }
@@ -1350,15 +1350,8 @@ sub __get_false_positives
 	{
 		my $details = $row_ref->[0];
 		my $clock = $row_ref->[1];
-
-		my $eventid = $details;
-		$eventid =~ s/^([0-9]+): .*/$1/;
-
-		my $status = 'activated';
-		if ($details =~ m/unmark/i)
-		{
-			$status = 'deactivated';
-		}
+		my ($eventid) = ($details =~ /^([0-9]+): /);
+		my $status = ($details =~ m/unmark/i ? 'Activated' : 'Deactivated');
 
 		push(@result, {'clock' => $clock, 'eventid' => $eventid, 'status' => $status});
 	}
@@ -1440,8 +1433,8 @@ sub __check_test
 			my $error_code_len = length(ZBX_EC_DNS_NS_ERRSIG);
 			my $error_code = substr($description, 0, $error_code_len);
 
-			if (ZBX_EC_DNS_UDP_NO_DNSKEY <= $error_code && $error_code <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
-					ZBX_EC_DNS_TCP_NO_DNSKEY <= $error_code && $error_code <= ZBX_EC_DNS_TCP_RES_NOADBIT ||
+			if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $error_code && $error_code <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
+					ZBX_EC_DNS_TCP_DNSKEY_NONE <= $error_code && $error_code <= ZBX_EC_DNS_TCP_RES_NOADBIT ||
 					$error_code == ZBX_EC_DNS_NS_ERRSIG || $error_code == ZBX_EC_DNS_RES_NOADBIT)
 			{
 				return E_FAIL;

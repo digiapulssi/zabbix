@@ -33,7 +33,6 @@ elseif ($this->data['type'] == RSM_RDDS) {
 		_('RDDS43'),
 		_('IP'),
 		_('RTT'),
-		_('UPD'),
 		_('RDDS80'),
 		_('IP'),
 		_('RTT')
@@ -52,10 +51,10 @@ else {
 
 $table = (new CTableInfo())->setHeader($headers);
 
-$down = (new CSpan(_('Down')))->addClass('red');
-$offline = (new CSpan(_('Offline')))->addClass('grey');
-$noResult = (new CSpan(_('No result')))->addClass('grey');
-$up = (new CSpan(_('Up')))->addClass('green');
+$down = (new CSpan(_('Down')))->addClass(ZBX_STYLE_RED);
+$offline = (new CSpan(_('Offline')))->addClass(ZBX_STYLE_GREY);
+$noResult = (new CSpan(_('No result')))->addClass(ZBX_STYLE_GREY);
+$up = (new CSpan(_('Up')))->addClass(ZBX_STYLE_GREEN);
 
 $offlineProbes = 0;
 $noResultProbes = 0;
@@ -78,7 +77,7 @@ foreach ($this->data['probes'] as $probe) {
 			$link = $offline;
 		}
 		elseif ($this->data['type'] == RSM_RDDS) {
-			$rdds = 'grey';
+			$rdds = ZBX_STYLE_GREY;
 			$rdds43 = $offline;
 			$rdds80 = $offline;
 		}
@@ -95,7 +94,7 @@ foreach ($this->data['probes'] as $probe) {
 
 				if ($probe['result'] === null) {
 					$noResultProbes++;
-					$link = (new CSpan(_('No result')))->addClass('grey');
+					$link = (new CSpan(_('No result')))->addClass(ZBX_STYLE_GREY);
 				}
 				else {
 					if ($probe['result'] !== null && $probe['result'] != 0) {
@@ -114,7 +113,7 @@ foreach ($this->data['probes'] as $probe) {
 				}
 			}
 			else {
-				$link = (new CSpan(_('Not monitored')))->addClass('red');
+				$link = (new CSpan(_('Not monitored')))->addClass(ZBX_STYLE_RED);
 			}
 		}
 		elseif ($this->data['type'] == RSM_DNSSEC) {
@@ -144,13 +143,13 @@ foreach ($this->data['probes'] as $probe) {
 
 				// get test results color
 				if ($okResults && !$failResults && !$noResults) {
-					$class = 'green';
+					$class = ZBX_STYLE_GREEN;
 				}
 				elseif ($failResults && !$okResults && !$noResults) {
-					$class = 'red';
+					$class = ZBX_STYLE_RED;
 				}
 				elseif ($noResults && !$okResults && !$failResults) {
-					$class = 'grey';
+					$class = ZBX_STYLE_GREY;
 					$noResultProbes++;
 				}
 				else {
@@ -165,7 +164,7 @@ foreach ($this->data['probes'] as $probe) {
 					->addClass($class);
 			}
 			else {
-				$link = (new CSpan(_('Not monitored')))->addClass('red');
+				$link = (new CSpan(_('Not monitored')))->addClass(ZBX_STYLE_RED);
 			}
 		}
 		elseif ($this->data['type'] == RSM_RDDS) {
@@ -173,54 +172,54 @@ foreach ($this->data['probes'] as $probe) {
 			if (!isset($probe['value']) || $probe['value'] === null) {
 				$rdds43 = $noResult;
 				$rdds80 = $noResult;
-				$rdds = 'grey';
+				$rdds = ZBX_STYLE_GREY;
 				$noResultProbes++;
 			}
 			elseif ($probe['value'] == 0) {
 				$rdds43 = $down;
 				$rdds80 = $down;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 1) {
 				$rdds43 = $up;
 				$rdds80 = $up;
-				$rdds = 'green';
+				$rdds = ZBX_STYLE_GREEN;
 			}
 			elseif ($probe['value'] == 2) {
 				$rdds43 = $up;
 				$rdds80 = $down;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 3) {
 				$rdds43 = $down;
 				$rdds80 = $up;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 4) {
 				$rdds43 = $down;
 				$rdds80 = $down;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 5) {
 				$rdds43 = $noResult;
 				$rdds80 = $up;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 6) {
 				$rdds43 = $up;
 				$rdds80 = $noResult;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 			elseif ($probe['value'] == 7) {
 				$rdds43 = $up;
 				$rdds80 = $up;
-				$rdds = 'red';
+				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
 		}
@@ -247,26 +246,58 @@ foreach ($this->data['probes'] as $probe) {
 		];
 	}
 	elseif ($this->data['type'] == RSM_RDDS) {
+		if (isset($probe['rdds43']['rtt'])) {
+			$rdds43_rtt = (new CSpan($probe['rdds43']['rtt']['value']))
+				->setAttribute('class', $rdds43 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
+
+			if ($probe['rdds43']['rtt']['description']) {
+				$rdds43_rtt->setHint($probe['rdds43']['rtt']['description']);
+			}
+		}
+		else {
+			$rdds43_rtt = '-';
+		}
+
+		if (isset($probe['rdds80']['rtt'])) {
+			$rdds80_rtt = (new CSpan($probe['rdds80']['rtt']['value']))
+				->setAttribute('class', $rdds80 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
+
+			if ($probe['rdds80']['rtt']['description']) {
+				$rdds80_rtt->setHint($probe['rdds80']['rtt']['description']);
+			}
+		}
+		else {
+			$rdds80_rtt = '-';
+		}
+
 		$row = [
 			(new CSpan($probe['name']))->addClass($rdds),
 			$rdds43,
-			(isset($probe['rdds43']['ip']) && $probe['rdds43']['ip']) ? $probe['rdds43']['ip'] : '-',
-			(isset($probe['rdds43']['rtt']))
-				? (new CSpan($probe['rdds43']['rtt']['value']))->setHint($probe['rdds43']['rtt']['description'])
+			(isset($probe['rdds43']['ip']) && $probe['rdds43']['ip'])
+				? (new CSpan($probe['rdds43']['ip']))->setAttribute('class', $rdds43 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN)
 				: '-',
-			(isset($probe['rdds43']['upd'])) ? $probe['rdds43']['upd'] : '-',
+			$rdds43_rtt,
 			$rdds80,
-			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip']) ? $probe['rdds80']['ip'] : '-',
-			(isset($probe['rdds80']['rtt']))
-				? (new CSpan($probe['rdds80']['rtt']['value']))->setHint($probe['rdds80']['rtt']['description'])
-				: '-'
+			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip'])
+				? (new CSpan($probe['rdds80']['ip']))->setAttribute('class', $rdds80 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN)
+				: '-',
+			$rdds80_rtt
 		];
 
-		// If probe is down and RTT is non-negative, it is considered as above max RTT.
-		if ($rdds80 === $down && $probe['rdds80']['rtt']['value'] > 0) {
+		/**
+		 * If $rddsNN is DOWN and RTT is non-negative, it is considered as above max RTT.
+		 *
+		 * Following scenarios are possible:
+		 * - If RTT is negative, it is an error and is considered as DOWN.
+		 * - If RTT is positive but $rddsNN is still DOWN, it indicates that at the time of calculation, RTT was greater
+		 *	 than max allowed RTT.
+		 * - If RTT is positive but $rddsNN is UP, it indicates that at the time of calculation, RTT was in the range of
+		 *	 allowed values - greater than 0 (was not an error) and smaller than max allowed RTT.
+		 */
+		if ($rdds80 === $down && array_key_exists('rtt', $probe['rdds80']) && $probe['rdds80']['rtt']['value'] > 0) {
 			$rdds80_above_max_rtt++;
 		}
-		if ($rdds43 === $down && $probe['rdds43']['rtt']['value'] > 0) {
+		if ($rdds43 === $down && array_key_exists('rtt', $probe['rdds43']) && $probe['rdds43']['rtt']['value'] > 0) {
 			$rdds43_above_max_rtt++;
 		}
 	}
@@ -291,11 +322,10 @@ if ($data['type'] == RSM_RDDS) {
 			(new CSpan(_('Total ') . $error_code))->setHint($error['description']),
 			'',
 			'',
-			$error['rdds80'],
+			array_key_exists('rdds43', $error) ? $error['rdds43'] : '',
 			'',
 			'',
-			'',
-			$error['rdds43']
+			array_key_exists('rdds80', $error) ? $error['rdds80'] : ''
 		]);
 	}
 
@@ -303,11 +333,10 @@ if ($data['type'] == RSM_RDDS) {
 		_('Total above max. RTT'),
 		'',
 		'',
-		$rdds80_above_max_rtt,
+		$rdds43_above_max_rtt,
 		'',
 		'',
-		'',
-		$rdds43_above_max_rtt
+		$rdds80_above_max_rtt
 	]);
 }
 
@@ -352,14 +381,19 @@ elseif ($this->data['type'] == RSM_DNSSEC) {
 	];
 }
 
-if ($this->data['testResult'] === null) {
-	$testResult = $noResult;
-}
-elseif ($this->data['testResult'] == PROBE_UP) {
-	$testResult = $up;
+if (in_array($this->data['type'], [RSM_DNS, RSM_DNSSEC, RSM_RDDS])) {
+	$test_result = $this->data['testResult'];
 }
 else {
-	$testResult = $down;
+	if ($this->data['testResult'] === null) {
+		$test_result = $noResult;
+	}
+	elseif ($this->data['testResult'] == PROBE_UP) {
+		$test_result = $up;
+	}
+	else {
+		$test_result = $down;
+	}
 }
 
 $particularTests = [
@@ -369,7 +403,7 @@ $particularTests = [
 	BR(),
 	new CSpan([bold(_('Test time')), ':', SPACE, date(DATE_TIME_FORMAT_SECONDS, $this->data['time'])]),
 	BR(),
-	new CSpan([bold(_('Test result')), ':', SPACE, $testResult, SPACE,
+	new CSpan([bold(_('Test result')), ':', SPACE, $test_result, SPACE,
 		_s('(calculated at %1$s)', date(DATE_TIME_FORMAT_SECONDS, $this->data['time'] + RSM_ROLLWEEK_SHIFT_BACK))
 	]),
 	BR(),

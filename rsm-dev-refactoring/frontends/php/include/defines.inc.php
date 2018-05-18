@@ -1392,7 +1392,7 @@ define('ZBX_EC_DNS_RES_NOREPLY',	-205);	// obsolete
 define('ZBX_EC_DNS_RES_NOADBIT',	-206);	// obsolete
 define('ZBX_EC_DNS_UDP_RES_NOREPLY',	-400);
 define('ZBX_EC_DNS_UDP_RES_NOADBIT',	-401);
-define('ZBX_EC_DNS_UDP_NO_DNSKEY',		-427);
+define('ZBX_EC_DNS_UDP_DNSKEY_NONE',	-428);
 
 // SLA monitoring calculated items keys
 define('CALCULATED_ITEM_DNS_FAIL',				'rsm.configvalue[RSM.INCIDENT.DNS.FAIL]');
@@ -1434,7 +1434,6 @@ define('PROBE_EPP_INFO',			'rsm.epp.rtt[{$RSM.TLD},info]');
 define('PROBE_EPP_LOGIN',			'rsm.epp.rtt[{$RSM.TLD},login]');
 define('PROBE_RDDS43_IP',			'rsm.rdds.43.ip[{$RSM.TLD}]');
 define('PROBE_RDDS43_RTT',			'rsm.rdds.43.rtt[{$RSM.TLD}]');
-define('PROBE_RDDS43_UPD',			'rsm.rdds.43.upd[{$RSM.TLD}]');
 define('PROBE_RDDS80_IP',			'rsm.rdds.80.ip[{$RSM.TLD}]');
 define('PROBE_RDDS80_RTT',			'rsm.rdds.80.rtt[{$RSM.TLD}]');
 define('PROBE_RDAP_IP',				'rsm.rdds.rdap.ip[{$RSM.TLD}]');
@@ -1449,6 +1448,10 @@ define('NS_UP',			2);
 define('PROBE_OFFLINE',	-1);
 define('PROBE_DOWN',	0);
 define('PROBE_UP',		1);
+
+// NameServer status
+define('NAMESERVER_DOWN',	0);
+define('NAMESERVER_UP',		1);
 
 // SLA monitoring monthly reports item
 define('MONTHLY_REPORTS_APPLICATION',	'SLV monthly');

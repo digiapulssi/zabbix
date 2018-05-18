@@ -348,30 +348,6 @@ sub update_root_servers(;$) {
 	create_macro('{$RSM.IP4.ROOTSERVERS1}', $macro_value_v4, undef, 1);	# global, force
 	create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6, undef, 1);	# global, force
     }
-    else
-    {
-    my $content = LWP::UserAgent->new->get('http://www.internic.net/zones/named.root')->{'_content'};
-
-    return unless defined $content;
-
-    for my $str (split("\n", $content)) {
-	if ($str=~/.+ROOT\-SERVERS.+\sA\s+(.+)$/) {
-	    $macro_value_v4 .= ',' if ($macro_value_v4 ne "");
-	    $macro_value_v4 .= $1;
-	}
-
-	if ($str=~/.+ROOT\-SERVERS.+AAAA\s+(.+)$/) {
-	    $macro_value_v6 .= ',' if ($macro_value_v6 ne "");
-	    $macro_value_v6 .= $1;
-        }
-    }
-
-# Temporary disable the check
-#    return unless create_macro('{$RSM.IP4.ROOTSERVERS1}', $macro_value_v4) eq true;
-#    return unless create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6) eq true;
-    create_macro('{$RSM.IP4.ROOTSERVERS1}', $macro_value_v4);
-    create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6);
-    }
 
     return '"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"';
 }
@@ -506,13 +482,15 @@ sub create_macro {
 	return $result->{'hostmacroids'}[0];
     }
     else {
-	$result = $zabbix->get('usermacro',{'countOutput' => 1, 'globalmacro' => 1, 'filter' => {'macro' => $name}});
+	    $result = $zabbix->get('usermacro',{'countOutput' => 1, 'globalmacro' => 1, 'filter' => {'macro' => $name}});
+
 	return $result if (check_api_error($result) eq true);
 
 	if ($result) {
-            $result = $zabbix->get('usermacro',{'output' => 'globalmacroid', 'globalmacro' => 1, 'filter' => {'macro' => $name}} );
-            $zabbix->macro_global_update({'globalmacroid' => $result->{'globalmacroid'}, 'value' => $value}) if defined $result->{'globalmacroid'}
-															and defined($force_update);
+            $result = $zabbix->get('usermacro',{'output' => ['globalmacroid','value'], 'globalmacro' => 1, 'filter' => {'macro' => $name}} );
+
+            $zabbix->macro_global_update({'globalmacroid' => $result->{'globalmacroid'}, 'value' => $value})
+		    if (defined($force_update) && defined($result->{'globalmacroid'}) && ($value ne $result->{'value'}));
         }
         else {
             $result = $zabbix->macro_global_create({'macro' => $name, 'value' => $value});

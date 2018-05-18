@@ -126,6 +126,8 @@ my $rv = GetOptions(\%OPTS,
 
 usage() if ($OPTS{'help'} or not $rv);
 
+print("\nIgnoring unknown command-line options:\n  ", join("\n  ", @ARGV), "\n\n") if (scalar(@ARGV));
+
 validate_input();
 lc_options();
 
@@ -307,6 +309,9 @@ my $proxy_mon_templateid = create_probe_health_tmpl();
 
 foreach my $proxyid (sort(keys(%{$proxies})))
 {
+	# TODO Revise this part because it is creating entities (e.g. "<Probe>", "<Probe> - mon" hosts) which should
+	# have been created already by preceeding probes.pl execution. At least move the code to one place and reuse it.
+
 	my $probe_name = $proxies->{$proxyid}->{'host'};
 
 	print("$proxyid\n$probe_name\n");
@@ -340,6 +345,9 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 			},
 			{
 				'templateid'	=> APP_ZABBIX_PROXY_TEMPLATEID
+			},
+			{
+				'templateid'	=> PROBE_ERRORS_TEMPLATEID
 			}
 		],
 		'host'		=> $probe_name,
