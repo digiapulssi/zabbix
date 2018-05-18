@@ -82,10 +82,23 @@ static const zbx_ipv_t	ipvs[] =
 	{NULL}
 };
 
+/* used in libcurl callback function to store webpage contents in memory */
+typedef struct
+{
+	char	*buf;
+	size_t	alloc;
+	size_t	offset;
+}
+curl_data_t;
+
+#define ZBX_RESOLVER_CHECK_BASIC	0x0u
+#define ZBX_RESOLVER_CHECK_ADBIT	0x1u
+
 typedef enum
 {
 	ZBX_RESOLVER_INTERNAL,
 	ZBX_RESOLVER_NOREPLY,
+	ZBX_RESOLVER_NOADBIT,
 	ZBX_RESOLVER_SERVFAIL,
 	ZBX_RESOLVER_NXDOMAIN,
 	ZBX_RESOLVER_CATCHALL
@@ -829,6 +842,10 @@ ZBX_DEFINE_ZBX_RR_CLASS_ERROR_TO(DNS_TCP)
 
 #undef ZBX_DEFINE_ZBX_RR_CLASS_ERROR_TO
 
+/* AD bit check is mandatory for RDAP, but not required for RDDS43 and RDDS80 */
+#define ZBX_EC_RDDS43_RES_NOADBIT	ZBX_EC_INTERNAL
+#define ZBX_EC_RDDS80_RES_NOADBIT	ZBX_EC_INTERNAL
+
 /* map generic local resolver errors to interface specific ones */
 
 #define ZBX_DEFINE_RESOLVER_ERROR_TO(__interface)					\
@@ -840,6 +857,8 @@ static int	zbx_resolver_error_to_ ## __interface (zbx_resolver_error_t err)	\
 			return ZBX_EC_INTERNAL;						\
 		case ZBX_RESOLVER_NOREPLY:						\
 			return ZBX_EC_ ## __interface ## _RES_NOREPLY;			\
+		case ZBX_RESOLVER_NOADBIT:						\
+			return ZBX_EC_ ## __interface ## _RES_NOADBIT;			\
 		case ZBX_RESOLVER_SERVFAIL:						\
 			return ZBX_EC_ ## __interface ## _RES_SERVFAIL;			\
 		case ZBX_RESOLVER_NXDOMAIN:						\
@@ -854,7 +873,10 @@ static int	zbx_resolver_error_to_ ## __interface (zbx_resolver_error_t err)	\
 
 ZBX_DEFINE_RESOLVER_ERROR_TO(RDDS43)
 ZBX_DEFINE_RESOLVER_ERROR_TO(RDDS80)
-/* anticipating RDAP */
+ZBX_DEFINE_RESOLVER_ERROR_TO(RDAP)
+
+#undef ZBX_EC_RDDS43_RES_NOADBIT
+#undef ZBX_EC_RDDS80_RES_NOADBIT
 
 #undef ZBX_DEFINE_RESOLVER_ERROR_TO
 
@@ -2024,7 +2046,7 @@ ZBX_SUBTEST_RESULT(DNS_UDP);
 ZBX_SUBTEST_RESULT(DNS_TCP);
 ZBX_SUBTEST_RESULT(RDDS43);
 ZBX_SUBTEST_RESULT(RDDS80);
-/* anticipating RDAP */
+ZBX_SUBTEST_RESULT(RDAP);
 ZBX_SUBTEST_RESULT(EPP);
 
 #undef ZBX_SUBTEST_RESULT
@@ -2758,6 +2780,8 @@ out:
  * Purpose: resolve specified host to IPs                                     *
  *                                                                            *
  * Parameters: res          - [IN]  resolver object to use for resolving      *
+ *             extras       - [IN]  bitmask of optional checks (a combination *
+ *                                  of ZBX_RESOLVER_CHECK_* defines)          *
  *             host         - [IN]  host name to resolve                      *
  *             ips          - [OUT] IPs resolved from specified host          *
  *             ipv_flags    - [IN]  mask of supported and enabled IP versions *
@@ -2772,8 +2796,9 @@ out:
  *               FAIL - otherwise                                             *
  *                                                                            *
  ******************************************************************************/
-static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_vector_str_t *ips,
-		int ipv_flags, FILE *log_fd, zbx_resolver_error_t *ec_res, char *err, size_t err_size)
+static int	zbx_resolver_resolve_host(ldns_resolver *res, unsigned int extras, const char *host,
+		zbx_vector_str_t *ips, int ipv_flags, FILE *log_fd, zbx_resolver_error_t *ec_res, char *err,
+		size_t err_size)
 {
 	const zbx_ipv_t	*ipv;
 	ldns_rdf	*rdf;
@@ -2804,6 +2829,14 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_v
 		}
 
 		ldns_pkt_print(log_fd, pkt);
+
+		if (0 != (ZBX_RESOLVER_CHECK_ADBIT & extras) && 0 == ldns_pkt_ad(pkt))
+		{
+			zbx_snprintf(err, err_size, "AD bit is not set in the answer for host \"%s\"", host);
+			*ec_res = ZBX_RESOLVER_NOADBIT;
+			ldns_pkt_free(pkt);
+			goto out;
+		}
 
 		if (LDNS_RCODE_NOERROR != (rcode = ldns_pkt_get_rcode(pkt)))
 		{
@@ -3099,6 +3132,17 @@ static int	zbx_map_http_code(long http_code)
 	}
 }
 
+/* store the curl output in memory */
+static size_t	curl_memory(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	curl_data_t	*data = (curl_data_t *)userdata;
+	size_t		r_size = size * nmemb;
+
+	zbx_strncpy_alloc(&data->buf, &data->alloc, &data->offset, (const char *)ptr, r_size);
+
+	return r_size;
+}
+
 /* discard the curl output (using inline to hide "unused" compiler warning when -Wunused) */
 static inline size_t	curl_devnull(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
@@ -3108,10 +3152,10 @@ static inline size_t	curl_devnull(char *ptr, size_t size, size_t nmemb, void *us
 	return size * nmemb;
 }
 
-/* Helper function for Web-based RDDS80 (and RDAP) checks. Adds host to header, connects to URL obeying timeout and  */
-/* max redirect settings, stores contents in provided using provided callback, checks for OK response and calculates */
-/* round-trip time. When function succeeds it returns RTT in milliseconds. When function fails it returns source of  */
-/* error in provided RTT parameter. Does not verify certificates.                                                    */
+/* Helper function for Web-based RDDS80 and RDAP checks. Adds host to header, connects to URL obeying timeout and */
+/* max redirect settings, stores web page contents using provided callback, checks for OK response and calculates */
+/* round-trip time. When function succeeds it returns RTT in milliseconds. When function fails it returns source  */
+/* of error in provided RTT parameter. Does not verify certificates.                                              */
 static int	zbx_http_test(const char *host, const char *url, long timeout, long maxredirs, int *rtt,
 		void *writedata, size_t (*writefunction)(char *, size_t, size_t, void *), char *err, size_t err_size)
 {
@@ -3239,6 +3283,13 @@ static void	zbx_vector_str_clean_and_destroy(zbx_vector_str_t *v)
 	zbx_vector_str_destroy(v);
 }
 
+/* FIXME Currently this error code is missing in specification for RDAP. Hopefully, it will be introduced later. */
+#ifdef ZBX_EC_RDAP_NOCODE
+#	error "please remove temporary definition of ZBX_EC_RDAP_NOCODE, seems like it was added to the header file"
+#else
+#	define ZBX_EC_RDAP_NOCODE	ZBX_EC_INTERNAL
+#endif
+
 /* maps generic HTTP errors to RDDS interface specific ones */
 
 #define ZBX_DEFINE_HTTP_ERROR_TO(__rdds_interface)								\
@@ -3264,9 +3315,50 @@ static int	zbx_http_error_to_ ## __rdds_interface (int ec_http)						\
 }
 
 ZBX_DEFINE_HTTP_ERROR_TO(RDDS80)
-/* anticipating RDAP */
+ZBX_DEFINE_HTTP_ERROR_TO(RDAP)
 
 #undef ZBX_DEFINE_HTTP_ERROR_TO
+
+/* Splits provided URL into preceding "https://" or "http://", domain name and the rest, frees memory pointed by      */
+/* prefix, domain and postfix pointers and allocates new storage. It is caller responsibility to free them after use. */
+static int	zbx_split_url(const char *url, char **prefix, char **domain, char **postfix, char *err, size_t err_size)
+{
+	const char	*tmp;
+
+	if (0 == strncmp(url, "https://", ZBX_CONST_STRLEN("https://")))
+	{
+		*prefix = zbx_strdup(*prefix, "https://");
+		url += ZBX_CONST_STRLEN("https://");
+	}
+	else if (0 == strncmp(url, "http://", ZBX_CONST_STRLEN("http://")))
+	{
+		*prefix = zbx_strdup(*prefix, "http://");
+		url += ZBX_CONST_STRLEN("http://");
+	}
+	else
+	{
+		zbx_strlcpy(err, "unrecognized prefix in URL", err_size);
+		return FAIL;
+	}
+
+	if (NULL != (tmp = strchr(url, '/')))
+	{
+		size_t	len = tmp - url;
+
+		zbx_free(*domain);
+		*domain = zbx_malloc(*domain, len + 1);
+		memcpy(*domain, url, len);
+		(*domain)[len] = '\0';
+		*postfix = zbx_strdup(*postfix, tmp);
+	}
+	else
+	{
+		*domain = zbx_strdup(*domain, url);
+		*postfix = zbx_strdup(*postfix, "");
+	}
+
+	return SUCCEED;
+}
 
 int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
 {
@@ -3463,7 +3555,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	random_host = hosts43.values[i];
 
 	/* start RDDS43 test, resolve host to ips */
-	if (SUCCEED != zbx_resolver_resolve_host(res, random_host, &ips43, ipv_flags, log_fd,
+	if (SUCCEED != zbx_resolver_resolve_host(res, ZBX_RESOLVER_CHECK_BASIC, random_host, &ips43, ipv_flags, log_fd,
 			&ec_res, err, sizeof(err)))
 	{
 		rtt43 = zbx_resolver_error_to_RDDS43(ec_res);
@@ -3570,7 +3662,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	zbx_rsm_infof(log_fd, "start RDDS80 test (host %s)", random_host);
 
 	/* start RDDS80 test, resolve host to ips */
-	if (SUCCEED != zbx_resolver_resolve_host(res, random_host, &ips80, ipv_flags, log_fd,
+	if (SUCCEED != zbx_resolver_resolve_host(res, ZBX_RESOLVER_CHECK_BASIC, random_host, &ips80, ipv_flags, log_fd,
 			&ec_res, err, sizeof(err)))
 	{
 		rtt80 = zbx_resolver_error_to_RDDS80(ec_res);
@@ -3678,6 +3770,299 @@ out:
 
 	if (NULL != log_fd)
 		fclose(log_fd);
+
+	return ret;
+}
+
+static int	zbx_get_rdap_items(const char *host, DC_ITEM *ip_item, DC_ITEM *rtt_item)
+{
+#define ZBX_RDAP_ITEM_COUNT	2
+#define ZBX_RDAP_ITEM_KEY_IP	"rdap.ip"
+#define ZBX_RDAP_ITEM_KEY_RTT	"rdap.rtt"
+
+	zbx_host_key_t		hosts_keys[ZBX_RDAP_ITEM_COUNT] = {
+					{host, ZBX_RDAP_ITEM_KEY_IP},
+					{host, ZBX_RDAP_ITEM_KEY_RTT}
+				};
+	zbx_item_value_type_t	types[ZBX_RDAP_ITEM_COUNT] = {
+					ITEM_VALUE_TYPE_STR,
+					ITEM_VALUE_TYPE_FLOAT
+				};
+	DC_ITEM			*destinations[ZBX_RDAP_ITEM_COUNT] = {
+					ip_item,
+					rtt_item
+				};
+	DC_ITEM			items[ZBX_RDAP_ITEM_COUNT];
+	int			errcodes[ZBX_RDAP_ITEM_COUNT], i;
+
+	DCconfig_get_items_by_keys(items, hosts_keys, errcodes, ZBX_RDAP_ITEM_COUNT);
+
+	for (i = 0; ZBX_RDAP_ITEM_COUNT > i; i++)
+	{
+		if (SUCCEED != errcodes[i] || ITEM_TYPE_TRAPPER != items[i].type || types[i] != items[i].value_type)
+		{
+			DCconfig_clean_items(items, errcodes, ZBX_RDAP_ITEM_COUNT);
+			return FAIL;
+		}
+
+		memcpy(destinations[i], &items[i], sizeof(DC_ITEM));
+	}
+
+	return SUCCEED;
+
+#undef ZBX_RDAP_ITEM_COUNT
+#undef ZBX_RDAP_ITEM_KEY_IP
+#undef ZBX_RDAP_ITEM_KEY_RTT
+}
+
+int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	ldns_resolver		*res = NULL;
+	zbx_resolver_error_t	ec_res;
+	curl_data_t		data = {NULL, 0, 0};
+	zbx_vector_str_t	ips;
+	struct zbx_json_parse	jp;
+	FILE			*log_fd;
+	DC_ITEM			ip_item, rtt_item;
+	char			*domain, *test_domain, *base_url, *maxredirs_str, *rtt_limit_str, *tld_enabled_str,
+				*probe_enabled_str, *ipv4_enabled_str, *ipv6_enabled_str, *res_ip, *prefix = NULL,
+				*domain_part = NULL, *postfix = NULL, *full_url = NULL, *value_str = NULL,
+				err[ZBX_ERR_BUF_SIZE], is_ipv4;
+	const char		*ip;
+	size_t			value_alloc = 0;
+	int			maxredirs, rtt_limit, tld_enabled, probe_enabled, ipv4_enabled, ipv6_enabled,
+				ipv_flags = 0, ec_http, rtt = ZBX_NO_VALUE, ret = SYSINFO_RET_FAIL;
+
+	if (10 != request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid number of parameters."));
+		return ret;
+	}
+
+	/* TLD goes first, then RDAP specific parameters, then TLD options, probe options and global settings */
+	domain = get_rparam(request, 0);		/* TLD for log file name, e.g. ".cz" */
+	test_domain = get_rparam(request, 1);		/* testing domain to make RDAP query for, e.g. "nic.cz" */
+	base_url = get_rparam(request, 2);		/* RDAP service endpoint, e.g. "http://rdap.nic.cz" */
+	maxredirs_str = get_rparam(request, 3);		/* maximal number of redirections allowed */
+	rtt_limit_str = get_rparam(request, 4);		/* maximum allowed RTT in milliseconds */
+	tld_enabled_str = get_rparam(request, 5);	/* flag which defines whether RDAP is enabled for TLD */
+	probe_enabled_str = get_rparam(request, 6);	/* flag which defines whether RDAP is enabled for probe */
+	ipv4_enabled_str = get_rparam(request, 7);	/* IPv4 enabled */
+	ipv6_enabled_str = get_rparam(request, 8);	/* IPv6 enabled */
+	res_ip = get_rparam(request, 9);		/* local resolver IP, e.g. "127.0.0.1" */
+
+	if ('\0' == *domain)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "TLD cannot be empty."));
+		return ret;
+	}
+
+	if ('\0' == *test_domain)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Test domain cannot be empty."));
+		return ret;
+	}
+
+	if ('\0' == *base_url)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "RDAP service endpoint cannot be empty."));
+		return ret;
+	}
+
+	if (SUCCEED != is_uint31(maxredirs_str, &maxredirs))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter."));
+		return ret;
+	}
+
+	if (SUCCEED != is_uint31(rtt_limit_str, &rtt_limit))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter."));
+		return ret;
+	}
+
+	if (SUCCEED != is_uint31(tld_enabled_str, &tld_enabled))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid sixth parameter."));
+		return ret;
+	}
+
+	if (SUCCEED != is_uint31(probe_enabled_str, &probe_enabled))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid seventh parameter."));
+		return ret;
+	}
+
+	if (SUCCEED != is_uint31(ipv4_enabled_str, &ipv4_enabled))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid eighth parameter."));
+		return ret;
+	}
+
+	if (SUCCEED != is_uint31(ipv6_enabled_str, &ipv6_enabled))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid ninth parameter."));
+		return ret;
+	}
+
+	/* open log file */
+	if (NULL == (log_fd = open_item_log(item->host.host, domain, ZBX_RDAP_LOG_PREFIX, NULL, err, sizeof(err))))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
+		return ret;
+	}
+
+	if ('\0' == *res_ip)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "IP address of local resolver cannot be empty."));
+		return ret;
+	}
+
+	zbx_rsm_info(log_fd, "START TEST");
+
+	zbx_vector_str_create(&ips);
+
+	/* create resolver */
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, ZBX_RSM_TCP, ipv4_enabled, ipv6_enabled, 0, log_fd,
+			err, sizeof(err)))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot create resolver: %s.", err));
+		goto out;
+	}
+
+	/* get items */
+	if (SUCCEED != zbx_get_rdap_items(item->host.host, &ip_item, &rtt_item))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find items to store IP and RTT."));
+		goto out;
+	}
+
+	/* from this point item will not become NOTSUPPORTED */
+	ret = SYSINFO_RET_OK;
+
+	if (0 != ipv4_enabled)
+		ipv_flags |= ZBX_FLAG_IPV4_ENABLED;
+	if (0 != ipv6_enabled)
+		ipv_flags |= ZBX_FLAG_IPV6_ENABLED;
+
+	if (SUCCEED != zbx_split_url(base_url, &prefix, &domain_part, &postfix, err, sizeof(err)))
+	{
+		rtt = ZBX_EC_INTERNAL;
+		zbx_rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
+		goto out;
+	}
+
+	/* resolve host to IPs */
+	if (SUCCEED != zbx_resolver_resolve_host(res, ZBX_RESOLVER_CHECK_ADBIT, domain_part, &ips, ipv_flags, log_fd,
+			&ec_res, err, sizeof(err)))
+	{
+		rtt = zbx_resolver_error_to_RDAP(ec_res);
+		zbx_rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
+		goto out;
+	}
+
+	if (0 == ips.values_num)
+	{
+		rtt = ZBX_EC_INTERNAL_IP_UNSUP;
+		zbx_rsm_errf(log_fd, "RDAP \"%s\": IP address(es) of host \"%s\" are not supported by this probe",
+				base_url, domain_part);
+		goto out;
+	}
+
+	/* choose random IP */
+	ip = ips.values[zbx_random(ips.values_num)];
+
+	if (SUCCEED != zbx_validate_ip(ip, ipv4_enabled, ipv6_enabled, NULL, &is_ipv4))
+	{
+		rtt = ZBX_EC_INTERNAL;
+		zbx_rsm_errf(log_fd, "internal error, selected unsupported IP of \"%s\": \"%s\"", domain_part, ip);
+		goto out;
+	}
+
+	if (0 != is_ipv4)
+		full_url = zbx_dsprintf(full_url, "%s%s%sdomain/%s", prefix, ip, postfix, test_domain);
+	else
+		full_url = zbx_dsprintf(full_url, "%s[%s]%sdomain/%s", prefix, ip, postfix, test_domain);
+
+	zbx_rsm_infof(log_fd, "Testing \"%s\" (%s) using URL \"%s\".", base_url, ip, full_url);
+
+	if (SUCCEED != zbx_http_test(domain_part, full_url, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, &data, curl_memory,
+			err, sizeof(err)))
+	{
+		rtt = zbx_http_error_to_RDAP(ec_http);
+		zbx_rsm_errf(log_fd, "test of \"%s\" (%s) failed: %s", base_url, ip, err);
+		goto out;
+	}
+
+	zbx_rsm_infof(log_fd, "got response ===>\n%.*s\n<===", ZBX_RDDS_PREVIEW_SIZE, ZBX_NULL2STR(data.buf));
+
+	if (NULL == data.buf || '\0' == *data.buf || SUCCEED != zbx_json_open(data.buf, &jp))
+	{
+		rtt = ZBX_EC_RDAP_EJSON;
+		zbx_rsm_errf(log_fd, "Invalid JSON format in response of \"%s\" (%s)", base_url, ip);
+		goto out;
+	}
+
+	if (SUCCEED != zbx_json_value_by_name_dyn(&jp, "ldhName", &value_str, &value_alloc))
+	{
+		rtt = ZBX_EC_RDAP_NONAME;
+		zbx_rsm_errf(log_fd, "ldhName member not found in response of \"%s\" (%s)", base_url, ip);
+		goto out;
+	}
+
+	if (NULL == value_str || 0 != strcmp(value_str, test_domain))
+	{
+		rtt = ZBX_EC_RDAP_ENAME;
+		zbx_rsm_errf(log_fd, "ldhName member doesn't match query in response of \"%s\" (%s)", base_url, ip);
+		goto out;
+	}
+
+	rtt = ec_http;
+out:
+	zbx_rsm_infof(log_fd, "RDAP \"%s\" (%s) RTT:%d", base_url, ip, rtt);
+
+	if (0 != ISSET_MSG(result))
+		zbx_rsm_err(log_fd, result->msg);
+
+	if (SYSINFO_RET_OK == ret)
+	{
+		/* set values for RTT and IP */
+		zbx_add_value_str(&ip_item, item->nextcheck, ip);
+		zbx_add_value_dbl(&rtt_item, item->nextcheck, rtt);
+
+		/* set the value of our item itself */
+		switch (zbx_RDAP_result(rtt, rtt_limit))
+		{
+			case ZBX_SUBTEST_SUCCESS:
+				zbx_add_value_uint(item, item->nextcheck, 1);	/* Up */
+				break;
+			case ZBX_SUBTEST_FAIL:
+				zbx_add_value_uint(item, item->nextcheck, 0);	/* Down */
+		}
+	}
+
+	DCconfig_clean_items(&ip_item, NULL, 1);
+	DCconfig_clean_items(&rtt_item, NULL, 1);
+
+	if (NULL != res)
+	{
+		if (0 != ldns_resolver_nameserver_count(res))
+			ldns_resolver_deep_free(res);
+		else
+			ldns_resolver_free(res);
+	}
+
+	zbx_free(prefix);
+	zbx_free(domain_part);
+	zbx_free(postfix);
+	zbx_free(full_url);
+	zbx_free(value_str);
+	zbx_free(data.buf);
+
+	zbx_vector_str_clean_and_destroy(&ips);
+
+	zbx_rsm_info(log_fd, "END TEST");
+	fclose(log_fd);
 
 	return ret;
 }
@@ -4850,7 +5235,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	random_host = epp_hosts.values[i];
 
 	/* resolve host to ips: TODO! error handler functions not implemented (see NULLs below) */
-	if (SUCCEED != zbx_resolver_resolve_host(res, random_host, &epp_ips,
+	if (SUCCEED != zbx_resolver_resolve_host(res, ZBX_RESOLVER_CHECK_BASIC, random_host, &epp_ips,
 			(0 != ipv4_enabled ? ZBX_FLAG_IPV4_ENABLED : 0) | (0 != ipv6_enabled ? ZBX_FLAG_IPV6_ENABLED : 0),
 			log_fd, &ec_res, err, sizeof(err)))
 	{

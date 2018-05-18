@@ -167,6 +167,22 @@
 #define ZBX_EC_RDDS80_HTTP_BASE		-300
 /* Code ZBX_EC_RDDS80_HTTP_BASE - zbx_map_http_code(xxx) means */
 						/* RDDS80 - Expecting HTTP status code 200 but got xxx */
+/* RDAP */
+#define ZBX_EC_RDAP_RES_NOREPLY		-200	/* RDAP - No reply from local resolver */
+#define ZBX_EC_RDAP_RES_NOADBIT		-201	/* RDAP - No AD bit from local resolver */
+#define ZBX_EC_RDAP_RES_SERVFAIL	-202	/* RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
+#define ZBX_EC_RDAP_RES_NXDOMAIN	-203	/* RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
+#define ZBX_EC_RDAP_RES_CATCHALL	-204	/* RDAP - Expecting NOERROR RCODE but got unexpected error when resolving hostname */
+#define ZBX_EC_RDAP_TO			-205	/* RDAP - Timeout */
+#define ZBX_EC_RDAP_ECON		-206	/* RDAP - Error opening connection to server */
+#define ZBX_EC_RDAP_EJSON		-207	/* RDAP - Invalid JSON format in response */
+#define ZBX_EC_RDAP_NONAME		-208	/* RDAP - ldhName member not found in response */
+#define ZBX_EC_RDAP_ENAME		-209	/* RDAP - ldhName member doesn't match query in response */
+#define ZBX_EC_RDAP_EHTTP		-213	/* RDAP - Error in HTTP protocol */
+#define ZBX_EC_RDAP_EHTTPS		-214	/* RDAP - Error in HTTPS protocol */
+#define ZBX_EC_RDAP_HTTP_BASE		-250
+/* Code ZBX_EC_RDAP_HTTP_BASE - zbx_map_http_code(xxx) means */
+						/* RDAP - Expecting HTTP status code 200 but got xxx */
 /* EPP */
 #define ZBX_EC_EPP_NO_IP		-200	/* IP is missing for EPP server */
 #define ZBX_EC_EPP_CONNECT		-201	/* cannot connect to EPP server */
@@ -232,11 +248,13 @@
 #define ZBX_RSM_DEFAULT_LOGDIR		"/var/log"	/* if Zabbix log dir is undefined */
 #define ZBX_DNS_LOG_PREFIX		"dns"		/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_DNS_LOG_PREFIX-<udp|tcp>.log */
 #define ZBX_RDDS_LOG_PREFIX		"rdds"		/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_RDDS_LOG_PREFIX.log */
+#define ZBX_RDAP_LOG_PREFIX		"rdap"		/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_RDAP_LOG_PREFIX.log */
 #define ZBX_EPP_LOG_PREFIX		"epp"		/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_EPP_LOG_PREFIX.log */
 #define ZBX_PROBESTATUS_LOG_PREFIX	"probestatus"	/* file will be <LOGDIR>/<PROBE>-probestatus.log */
 
 int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result, char proto);
 int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
+int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
 int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
 int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
 

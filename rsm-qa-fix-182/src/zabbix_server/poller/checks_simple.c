@@ -176,6 +176,11 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 		if (SYSINFO_RET_OK == check_rsm_rdds(item, &request, result))
 			ret = SUCCEED;
 	}
+	else if (0 == strcmp(request.key, "rdap"))
+	{
+		if (SYSINFO_RET_OK == check_rsm_rdap(item, &request, result))
+			ret = SUCCEED;
+	}
 	else if (0 == strcmp(request.key, "rsm.epp"))
 	{
 		if (SYSINFO_RET_OK == check_rsm_epp(item, &request, result))
