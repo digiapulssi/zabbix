@@ -3828,7 +3828,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 				*probe_enabled_str, *ipv4_enabled_str, *ipv6_enabled_str, *res_ip, *prefix = NULL,
 				*domain_part = NULL, *postfix = NULL, *full_url = NULL, *value_str = NULL,
 				err[ZBX_ERR_BUF_SIZE], is_ipv4;
-	const char		*ip;
+	const char		*ip = NULL;
 	size_t			value_alloc = 0;
 	int			maxredirs, rtt_limit, tld_enabled, probe_enabled, ipv4_enabled, ipv6_enabled,
 				ipv_flags = 0, ec_http, rtt = ZBX_NO_VALUE, ret = SYSINFO_RET_FAIL;
@@ -3940,6 +3940,10 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	/* from this point item will not become NOTSUPPORTED */
 	ret = SYSINFO_RET_OK;
 
+	/* skip the test without producing any result if service is disabled either on TLD or probe */
+	if (0 == tld_enabled || 0 == probe_enabled)
+		goto out;
+
 	if (0 != ipv4_enabled)
 		ipv_flags |= ZBX_FLAG_IPV4_ENABLED;
 	if (0 != ipv6_enabled)
@@ -4019,7 +4023,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 	rtt = ec_http;
 out:
-	zbx_rsm_infof(log_fd, "RDAP \"%s\" (%s) RTT:%d", base_url, ip, rtt);
+	zbx_rsm_infof(log_fd, "RDAP \"%s\" (%s) RTT:%d", base_url, ZBX_NULL2STR(ip), rtt);
 
 	if (0 != ISSET_MSG(result))
 		zbx_rsm_err(log_fd, result->msg);
