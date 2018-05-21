@@ -361,8 +361,6 @@ static void	discovery_update_service_status(const DB_DSERVICE *dservice, int ser
 			discovery_update_dservice(dservice->dserviceid, service_status, now, 0, value);
 			add_event(0, EVENT_SOURCE_DISCOVERY, EVENT_OBJECT_DSERVICE, dservice->dserviceid, &ts,
 					DOBJECT_STATUS_DISCOVER, NULL, NULL, 0, 0);
-
-			/* service went DOWN, no need to update host status here as other services may be UP */
 		}
 		else if (0 != strcmp(dservice->value, value))
 		{
@@ -376,8 +374,6 @@ static void	discovery_update_service_status(const DB_DSERVICE *dservice, int ser
 			discovery_update_dservice(dservice->dserviceid, service_status, 0, now, dservice->value);
 			add_event(0, EVENT_SOURCE_DISCOVERY, EVENT_OBJECT_DSERVICE, dservice->dserviceid, &ts,
 					DOBJECT_STATUS_LOST, NULL, NULL, 0, 0);
-
-			/* service went UP, update host status if necessary */
 		}
 	}
 	add_event(0, EVENT_SOURCE_DISCOVERY, EVENT_OBJECT_DSERVICE, dservice->dserviceid, &ts, service_status,
