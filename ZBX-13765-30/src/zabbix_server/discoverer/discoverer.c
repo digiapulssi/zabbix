@@ -334,7 +334,8 @@ static void	process_check(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhost, i
 		const char *dns, int now)
 {
 	const char	*__function_name = "process_check";
-	char		*value = NULL, *start;
+	const char	*start;
+	char		*value = NULL;
 	size_t		value_alloc = 128;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
