@@ -168,6 +168,8 @@
 /* Code ZBX_EC_RDDS80_HTTP_BASE - zbx_map_http_code(xxx) means */
 						/* RDDS80 - Expecting HTTP status code 200 but got xxx */
 /* RDAP */
+#define ZBX_EC_RDAP_NOTLISTED		-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
+#define ZBX_EC_RDAP_NOHTTPS		-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
 #define ZBX_EC_RDAP_RES_NOREPLY		-200	/* RDAP - No reply from local resolver */
 #define ZBX_EC_RDAP_RES_NOADBIT		-201	/* RDAP - No AD bit from local resolver */
 #define ZBX_EC_RDAP_RES_SERVFAIL	-202	/* RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */

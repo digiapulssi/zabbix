@@ -3944,6 +3944,23 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (0 == tld_enabled || 0 == probe_enabled)
 		goto out;
 
+	/* skip the test itself in case of two special values in RDAP base URL parameter */
+
+	if (0 == strcmp(base_url, "not listed"))
+	{
+		zbx_rsm_err(log_fd, "The TLD is not listed in the Bootstrap Service Registry for Domain Name Space");
+		rtt = ZBX_EC_RDAP_NOTLISTED;
+		goto out;
+	}
+
+	if (0 == strcmp(base_url, "no https"))
+	{
+		zbx_rsm_err(log_fd, "The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space"
+				" does not use HTTPS");
+		rtt = ZBX_EC_RDAP_NOHTTPS;
+		goto out;
+	}
+
 	if (0 != ipv4_enabled)
 		ipv_flags |= ZBX_FLAG_IPV4_ENABLED;
 	if (0 != ipv6_enabled)
