@@ -1953,6 +1953,17 @@ static int	DBpatch_3000214(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000215(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into rsm_test_type (id,name) values ('7','rdap')"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2014,5 +2025,6 @@ DBPATCH_ADD(3000211, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS4
 DBPATCH_ADD(3000212, 0, 0)	/* add "RSM RDAP rtt" value mapping (without error codes) */
 DBPATCH_ADD(3000213, 0, 0)	/* create "Template RDAP" template with rdap[...], rdap.ip and rdap.rtt items, RDAP application; place template into "Templates" host group */
 DBPATCH_ADD(3000214, 0, 0)	/* add RDAP error codes into "RSM RDAP rtt" value mapping */
+DBPATCH_ADD(3000215, 0, 0)	/* add new test type to "testTypes" catalog */
 
 DBPATCH_END()
