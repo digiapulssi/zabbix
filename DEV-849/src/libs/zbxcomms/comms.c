@@ -228,7 +228,7 @@ static void	zbx_socket_clean(zbx_socket_t *s)
 {
 	memset(s, 0, sizeof(zbx_socket_t));
 
-	s->buf_type = ZBX_BUF_TYPE_STAT;
+	s->buf_type = zbx::Buf_type::stat;
 }
 
 /******************************************************************************
@@ -242,7 +242,7 @@ static void	zbx_socket_clean(zbx_socket_t *s)
  ******************************************************************************/
 static void	zbx_socket_free(zbx_socket_t *s)
 {
-	if (ZBX_BUF_TYPE_DYN == s->buf_type)
+	if (zbx::Buf_type::dyn == s->buf_type)
 		zbx_free(s->buffer);
 }
 
@@ -1413,7 +1413,7 @@ const char	*zbx_tcp_recv_line(zbx_socket_t *s)
 	s->next_line = s->buf_stat;
 
 	zbx_socket_free(s);
-	s->buf_type = ZBX_BUF_TYPE_STAT;
+	s->buf_type = zbx::Buf_type::stat;
 	s->buffer = s->buf_stat;
 
 	/* read more data into static buffer */
@@ -1439,7 +1439,7 @@ const char	*zbx_tcp_recv_line(zbx_socket_t *s)
 		goto out;
 
 	/* copy the static buffer data into dynamic buffer */
-	s->buf_type = ZBX_BUF_TYPE_DYN;
+	s->buf_type = zbx::Buf_type::dyn;
 	s->buffer = NULL;
 	zbx_strncpy_alloc(&s->buffer, &alloc, &offset, s->buf_stat, s->read_bytes);
 	line_length = s->read_bytes;
@@ -1575,7 +1575,7 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, int timeout)
 
 	zbx_socket_free(s);
 
-	s->buf_type = ZBX_BUF_TYPE_STAT;
+	s->buf_type = zbx::Buf_type::stat;
 	s->buffer = s->buf_stat;
 
 	while (0 != (nbytes = zbx_tcp_read(s, s->buf_stat + buf_stat_bytes, sizeof(s->buf_stat) - buf_stat_bytes)))
@@ -1583,7 +1583,7 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, int timeout)
 		if (ZBX_PROTO_ERROR == nbytes)
 			goto out;
 
-		if (ZBX_BUF_TYPE_STAT == s->buf_type)
+		if (zbx::Buf_type::stat == s->buf_type)
 			buf_stat_bytes += nbytes;
 		else
 		{
@@ -1676,7 +1676,7 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, int timeout)
 			}
 			else
 			{
-				s->buf_type = ZBX_BUF_TYPE_DYN;
+				s->buf_type = zbx::Buf_type::dyn;
 				s->buffer = (char *)zbx_malloc(NULL, expected_len + 1);
 				buf_dyn_bytes = buf_stat_bytes - offset;
 				buf_stat_bytes = 0;
@@ -1717,10 +1717,10 @@ ssize_t	zbx_tcp_recv_ext(zbx_socket_t *s, int timeout)
 					goto out;
 				}
 
-				if (ZBX_BUF_TYPE_DYN == s->buf_type)
+				if (zbx::Buf_type::dyn == s->buf_type)
 					zbx_free(s->buffer);
 
-				s->buf_type = ZBX_BUF_TYPE_DYN;
+				s->buf_type = zbx::Buf_type::dyn;
 				s->buffer = out;
 				s->read_bytes = reserved;
 
@@ -1804,7 +1804,7 @@ ssize_t	zbx_tcp_recv_raw_ext(zbx_socket_t *s, int timeout)
 
 	zbx_socket_free(s);
 
-	s->buf_type = ZBX_BUF_TYPE_STAT;
+	s->buf_type = zbx::Buf_type::stat;
 	s->buffer = s->buf_stat;
 
 	while (0 != (nbytes = zbx_tcp_read(s, s->buf_stat + buf_stat_bytes, sizeof(s->buf_stat) - buf_stat_bytes)))
@@ -1812,7 +1812,7 @@ ssize_t	zbx_tcp_recv_raw_ext(zbx_socket_t *s, int timeout)
 		if (ZBX_PROTO_ERROR == nbytes)
 			goto out;
 
-		if (ZBX_BUF_TYPE_STAT == s->buf_type)
+		if (zbx::Buf_type::stat == s->buf_type)
 			buf_stat_bytes += nbytes;
 		else
 		{
@@ -1832,7 +1832,7 @@ ssize_t	zbx_tcp_recv_raw_ext(zbx_socket_t *s, int timeout)
 
 		if (sizeof(s->buf_stat) == buf_stat_bytes)
 		{
-			s->buf_type = ZBX_BUF_TYPE_DYN;
+			s->buf_type = zbx::Buf_type::dyn;
 			s->buffer = (char *)zbx_malloc(NULL, allocated);
 			buf_dyn_bytes = sizeof(s->buf_stat);
 			buf_stat_bytes = 0;
@@ -2190,12 +2190,12 @@ int	zbx_udp_recv(zbx_socket_t *s, int timeout)
 
 	if (sizeof(s->buf_stat) > (size_t)read_bytes)
 	{
-		s->buf_type = ZBX_BUF_TYPE_STAT;
+		s->buf_type = zbx::Buf_type::stat;
 		s->buffer = s->buf_stat;
 	}
 	else
 	{
-		s->buf_type = ZBX_BUF_TYPE_DYN;
+		s->buf_type = zbx::Buf_type::dyn;
 		s->buffer = (char *)zbx_malloc(s->buffer, read_bytes + 1);
 	}
 

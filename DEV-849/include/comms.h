@@ -66,12 +66,10 @@ typedef int	ZBX_SOCKET;
 #	define ZBX_SOCKADDR struct sockaddr_in
 #endif
 
-typedef enum
+namespace zbx
 {
-	ZBX_BUF_TYPE_STAT = 0,
-	ZBX_BUF_TYPE_DYN
+	enum class Buf_type : signed char { stat, dyn };	// buffer with static or dynamic size
 }
-zbx_buf_type_t;
 
 #define ZBX_SOCKET_COUNT	256
 #define ZBX_STAT_BUF_LEN	2048
@@ -94,7 +92,7 @@ typedef struct
 								/* ZBX_TCP_SEC_UNENCRYPTED, ZBX_TCP_SEC_TLS_PSK or */
 								/* ZBX_TCP_SEC_TLS_CERT */
 	int				timeout;
-	zbx_buf_type_t			buf_type;
+	zbx::Buf_type			buf_type;
 	unsigned char			accepted;
 	int				num_socks;
 	ZBX_SOCKET			sockets[ZBX_SOCKET_COUNT];
