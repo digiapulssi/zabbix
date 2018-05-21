@@ -732,7 +732,27 @@ void	zbx_dc_get_nested_hostgroupids_by_names(char **names, int names_num,
 #define ZBX_HC_ITEM_STATUS_NORMAL	0
 #define ZBX_HC_ITEM_STATUS_BUSY		1
 
-typedef struct zbx_hc_data	zbx_hc_data_t;
+#define ZBX_DC_FLAG_META	0x01	/* contains meta information (lastlogsize and mtime) */
+#define ZBX_DC_FLAG_NOVALUE	0x02	/* entry contains no value */
+#define ZBX_DC_FLAG_LLD		0x04	/* low-level discovery value */
+#define ZBX_DC_FLAG_UNDEF	0x08	/* unsupported or undefined (delta calculation failed) value */
+#define ZBX_DC_FLAG_NOHISTORY	0x10	/* values should not be kept in history */
+#define ZBX_DC_FLAG_NOTRENDS	0x20	/* values should not be kept in trends */
+#define ZBX_DC_FLAG_TIMER	0x40	/* used to force trigger recalculation, no real value attached */
+
+typedef struct zbx_hc_data
+{
+	history_value_t	value;
+	zbx_uint64_t	lastlogsize;
+	zbx_timespec_t	ts;
+	int		mtime;
+	unsigned char	value_type;
+	unsigned char	flags;
+	unsigned char	state;
+
+	struct zbx_hc_data	*next;
+}
+zbx_hc_data_t;
 
 typedef struct
 {
@@ -743,6 +763,8 @@ typedef struct
 	zbx_hc_data_t	*head;
 }
 zbx_hc_item_t;
+
+void	zbx_hc_add_timer_items(const zbx_vector_uint64_t *itemids, const zbx_timespec_t *ts);
 
 void	zbx_free_tag(zbx_tag_t *tag);
 
@@ -781,5 +803,7 @@ zbx_trigger_dep_t;
 void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_vector_ptr_t *deps);
 
 void	zbx_dc_reschedule_items(const zbx_vector_uint64_t *itemids, int now, zbx_uint64_t *proxy_hostids);
+
+int	zbx_dc_get_timer_itemids(time_t now, zbx_vector_uint64_t *itemids);
 
 #endif

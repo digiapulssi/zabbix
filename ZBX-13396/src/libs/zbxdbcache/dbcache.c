@@ -95,13 +95,6 @@ ZBX_DC_IDS;
 
 static ZBX_DC_IDS	*ids = NULL;
 
-#define ZBX_DC_FLAG_META	0x01	/* contains meta information (lastlogsize and mtime) */
-#define ZBX_DC_FLAG_NOVALUE	0x02	/* entry contains no value */
-#define ZBX_DC_FLAG_LLD		0x04	/* low-level discovery value */
-#define ZBX_DC_FLAG_UNDEF	0x08	/* unsupported or undefined (delta calculation failed) value */
-#define ZBX_DC_FLAG_NOHISTORY	0x10	/* values should not be kept in history */
-#define ZBX_DC_FLAG_NOTRENDS	0x20	/* values should not be kept in trends */
-
 typedef struct
 {
 	zbx_uint64_t	history_counter;	/* the total number of processed values */
@@ -1494,7 +1487,7 @@ static void	DBmass_update_triggers(const ZBX_DC_HISTORY *history, int history_nu
 	{
 		const ZBX_DC_HISTORY	*h = &history[i];
 
-		if (0 != (ZBX_DC_FLAG_NOVALUE & h->flags))
+		if (ZBX_DC_FLAG_NOVALUE == (h->flags & (ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_TIMER)))
 			continue;
 
 		itemids[item_num] = h->itemid;
@@ -2517,6 +2510,9 @@ static void	DCmass_prepare_history(ZBX_DC_HISTORY *history, const zbx_vector_uin
 			continue;
 		}
 
+		if (0 != (h->flags & ZBX_DC_FLAG_TIMER))
+			continue;
+
 		if (0 == item->history)
 			h->flags |= ZBX_DC_FLAG_NOHISTORY;
 
@@ -3423,19 +3419,6 @@ void	dc_flush_history(void)
 ZBX_MEM_FUNC_IMPL(__hc_index, hc_index_mem)
 ZBX_MEM_FUNC_IMPL(__hc, hc_mem)
 
-struct zbx_hc_data
-{
-	history_value_t	value;
-	zbx_uint64_t	lastlogsize;
-	zbx_timespec_t	ts;
-	int		mtime;
-	unsigned char	value_type;
-	unsigned char	flags;
-	unsigned char	state;
-
-	struct zbx_hc_data	*next;
-};
-
 /******************************************************************************
  *                                                                            *
  * Function: hc_queue_elem_compare_func                                       *
@@ -3811,6 +3794,60 @@ static void	hc_add_item_values(dc_item_value_t *values, int values_num)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_hc_add_timer_items                                           *
+ *                                                                            *
+ * Purpose: adds timer items to history cache                                 *
+ *                                                                            *
+ * Parameters: itemids - [IN] the timer item identifiers                      *
+ *                                                                            *
+ * Comments: Timer items contains no data and are used to force trigger       *
+ *           recalculation for time functions.                                *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_hc_add_timer_items(const zbx_vector_uint64_t *itemids, const zbx_timespec_t *ts)
+{
+	int		i, retry = 0;
+	zbx_hc_data_t	*data;
+	zbx_hc_item_t	*item;
+
+	LOCK_CACHE;
+
+	for (i = 0; i < itemids->values_num; i++)
+	{
+		if (NULL != (item = hc_get_item(itemids->values[i])) && 0 == (item->tail->flags & ZBX_DC_FLAG_NOVALUE))
+			continue;
+
+		while (NULL == (data = (zbx_hc_data_t *)__hc_mem_malloc_func(NULL, sizeof(zbx_hc_data_t))))
+		{
+			retry = 1;
+
+			UNLOCK_CACHE;
+			zabbix_log(LOG_LEVEL_DEBUG, "History buffer is full. Sleeping for 1 second.");
+			sleep(1);
+			LOCK_CACHE;
+		}
+
+		if (1 == retry && NULL != (item = hc_get_item(itemids->values[i])))
+		{
+			__hc_mem_free_func(data);
+			continue;
+		}
+
+		memset(data, 0, sizeof(zbx_hc_data_t));
+		data->ts = *ts;
+		data->flags = ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_TIMER;
+
+		item = hc_add_item(itemids->values[i], data);
+		hc_queue_item(item);
+
+		cache->history_num++;
+	}
+
+	UNLOCK_CACHE;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: hc_copy_history_data                                             *
  *                                                                            *
  * Purpose: copies item value from history cache into the specified history   *
@@ -3875,6 +3912,35 @@ static void	hc_copy_history_data(ZBX_DC_HISTORY *history, zbx_uint64_t itemid, z
 
 /******************************************************************************
  *                                                                            *
+ * Function: hc_remove_tail                                                   *
+ *                                                                            *
+ * Purpose: removes tail value                                                *
+ *                                                                            *
+ * Parameters: item - [IN] the history item                                   *
+ *                                                                            *
+ * Return value: SUCCEED - item has more data                                 *
+ *               FAIL - no more data left, item was removed too               *
+ *                                                                            *
+ ******************************************************************************/
+static int	hc_remove_tail(zbx_hc_item_t *item)
+{
+	zbx_hc_data_t	*data_free;
+
+	data_free = item->tail;
+	item->tail = item->tail->next;
+	hc_free_data(data_free);
+
+	if (NULL == item->tail)
+	{
+		zbx_hashset_remove(&cache->history_items, item);
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: hc_pop_items                                                     *
  *                                                                            *
  * Purpose: pops the next batch of history items from cache for processing    *
@@ -3894,6 +3960,14 @@ static void	hc_pop_items(zbx_vector_ptr_t *history_items)
 	{
 		elem = zbx_binary_heap_find_min(&cache->history_queue);
 		item = (zbx_hc_item_t *)elem->data;
+
+		/* timer items can be skipped if real values are cached */
+		if (0 != (item->tail->flags & ZBX_DC_FLAG_TIMER) && NULL != item->tail->next &&
+				0 == (item->tail->next->flags & ZBX_DC_FLAG_NOVALUE))
+		{
+			hc_remove_tail(item);
+		}
+
 		zbx_vector_ptr_append(history_items, item);
 
 		zbx_binary_heap_remove_min(&cache->history_queue);
@@ -3945,6 +4019,12 @@ static void	hc_push_busy_items(zbx_vector_ptr_t *history_items)
 	{
 		item = (zbx_hc_item_t *)history_items->values[i];
 
+		if (0 != (item->tail->flags & ZBX_DC_FLAG_TIMER))
+		{
+			hc_remove_tail(item);
+			continue;
+		}
+
 		if (ZBX_HC_ITEM_STATUS_NORMAL == item->status)
 			continue;
 
@@ -3978,7 +4058,6 @@ static int	hc_push_processed_items(zbx_vector_ptr_t *history_items)
 {
 	int		i;
 	zbx_hc_item_t	*item;
-	zbx_hc_data_t	*data_free;
 	int		next_sync;
 
 	for (i = 0; i < history_items->values_num; i++)
@@ -3987,15 +4066,8 @@ static int	hc_push_processed_items(zbx_vector_ptr_t *history_items)
 		if (NULL == (item = (zbx_hc_item_t *)history_items->values[i]))
 			continue;
 
-		data_free = item->tail;
-		item->tail = item->tail->next;
-		hc_free_data(data_free);
-
-		if (NULL == item->tail)
-		{
-			zbx_hashset_remove(&cache->history_items, item);
+		if (FAIL == hc_remove_tail(item))
 			continue;
-		}
 
 		hc_queue_item(item);
 	}

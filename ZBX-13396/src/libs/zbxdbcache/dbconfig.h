@@ -64,7 +64,6 @@ typedef struct
 	zbx_uint64_t	itemid;
 	const char	*function;
 	const char	*parameter;
-	unsigned char	timer;
 }
 ZBX_DC_FUNCTION;
 
@@ -630,6 +629,15 @@ zbx_dc_preproc_op_t;
 
 typedef struct
 {
+	zbx_uint64_t	itemid;
+	int		refcount;
+	int		nextcheck;
+	unsigned char	location;
+}
+zbx_dc_timer_item_t;
+
+typedef struct
+{
 	/* timestamp of the last host availability diff sent to sever, used only by proxies */
 	int			availability_diff_ts;
 	int			proxy_lastaccess_ts;
@@ -688,8 +696,12 @@ typedef struct
 	zbx_hashset_t		psks;			/* for keeping PSK-identity and PSK pairs and for searching */
 							/* by PSK identity */
 #endif
+	zbx_hashset_t		timer_items;	/* items used with timer functions */
+
 	zbx_binary_heap_t	queues[ZBX_POLLER_TYPE_COUNT];
 	zbx_binary_heap_t	pqueue;
+	zbx_binary_heap_t	timer_queue;	/* queue of reference counted items used with time functions */
+
 	zbx_vector_uint64_t	locked_lld_ruleids;	/* for keeping track of lld rules being processed */
 	ZBX_DC_CONFIG_TABLE	*config;
 	ZBX_DC_STATUS		*status;
