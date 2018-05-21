@@ -21,6 +21,7 @@
 #include "db.h"
 #include "log.h"
 #include "events.h"
+#include "discovery.h"
 
 static DB_RESULT	discovery_get_dhost_by_value(zbx_uint64_t dcheckid, const char *value)
 {
@@ -451,7 +452,7 @@ static void	discovery_update_host_status(DB_DHOST *dhost, int status, int now)
  * Parameters: host - host info                                               *
  *                                                                            *
  ******************************************************************************/
-void	discovery_update_host(DB_DHOST *dhost, const char *ip, int status, int now)
+void	discovery_update_host(DB_DHOST *dhost, int status, int now)
 {
 	const char	*__function_name = "discovery_update_host";
 

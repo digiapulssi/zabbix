@@ -556,7 +556,7 @@ static void	process_rule(DB_DRULE *drule)
 			}
 
 			if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-				discovery_update_host(&dhost, ip, host_status, now);
+				discovery_update_host(&dhost, host_status, now);
 			else if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 				proxy_update_host(drule, ip, dns, host_status, now);
 
