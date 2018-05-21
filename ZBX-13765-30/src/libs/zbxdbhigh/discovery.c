@@ -390,7 +390,7 @@ static void	discovery_update_service_status(const DB_DSERVICE *dservice, int sta
  * Purpose: update discovered host details                                    *
  *                                                                            *
  ******************************************************************************/
-static void	discovery_update_dhost(DB_DHOST *dhost)
+static void	discovery_update_dhost(const DB_DHOST *dhost)
 {
 	DBexecute("update dhosts set status=%d,lastup=%d,lastdown=%d where dhostid=" ZBX_FS_UI64,
 			dhost->status, dhost->lastup, dhost->lastdown, dhost->dhostid);
