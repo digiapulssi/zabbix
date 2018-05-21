@@ -1715,6 +1715,112 @@ static int	DBpatch_3000208(void)
 	return add_actions(two_more_actions);
 }
 
+static int	DBpatch_3000212(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into valuemaps (valuemapid,name) values ('135','RSM RDAP rtt')"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000213(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into hosts ("
+				"hostid,proxy_hostid,host,status,ipmi_authtype,ipmi_privilege,"
+				"ipmi_username,ipmi_password,name,flags,templateid,description,"
+				"tls_connect,tls_accept,tls_issuer,tls_subject,tls_psk_identity,tls_psk"
+			")"
+			" values ("
+				"'99980',NULL,'Template RDAP','3','0','2',"
+				"'','','Template RDAP','0',NULL,'',"
+				"'1','1','','','',''"
+			")"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into applications (applicationid,hostid,name,flags) values ('998','99980','RDAP','0')"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items ("
+				"itemid,type,snmp_community,snmp_oid,hostid,name,"
+				"key_,"
+				"delay,history,trends,status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,"
+				"description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype"
+			")"
+			" values ("
+				"'99980','3','','','99980','RDAP availability',"
+				"'rdap["
+					"{$RSM.TLD},"
+					"{$RDAP.TEST.DOMAIN},"
+					"{$RDAP.BASE.URL},"
+					"{$RSM.RDDS.MAXREDIRS},"
+					"{$RSM.RDDS.RTT.HIGH},"
+					"{$RSM.TLD.RDDS.ENABLED},"
+					"{$RSM.RDDS.ENABLED},"
+					"{$RSM.IP4.ENABLED},"
+					"{$RSM.IP6.ENABLED},"
+					"{$RSM.RESOLVER}"
+					"]',"
+				"'300','7','365','0','3','','','0','0',"
+				"'','0','','',"
+				"'1','',NULL,'1','','','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'Status of Registration Data Access Protocol service',"
+				"'0','0','0','0','','0'"
+			"),"
+			"("
+				"'99981','2','','','99980','RDAP IP',"
+				"'rdap.ip',"
+				"'0','7','365','0','1','','','0','0',"
+				"'','0','','',"
+				"'1','',NULL,NULL,'','','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'IP address of Registration Data Access Protocol service provider domain used to perform the test',"
+				"'0','0','0','0','','0'"
+			"),"
+			"("
+				"'99982','2','','','99980','RDAP RTT',"
+				"'rdap.rtt',"
+				"'0','7','365','0','0','','ms','0','0',"
+				"'','0','','',"
+				"'1','',NULL,'135','','','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'Round-Trip Time of Registration Data Access Protocol service test',"
+				"'0','0','0','0','','0'"
+			")"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("insert into hosts_groups (hostgroupid,hostid,groupid) values ('998','99980','1')"))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items_applications (itemappid,applicationid,itemid)"
+			" values ('99980','998','99980'),('99981','998','99981'),('99982','998','99982')"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1773,5 +1879,7 @@ DBPATCH_ADD(3000206, 0, 0)	/* create "Template Probe Errors" template with "Inte
 DBPATCH_ADD(3000208, 0, 0)	/* new actions: "Probes", "Probes-Knockout" */
 DBPATCH_ADD(3000210, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
 DBPATCH_ADD(3000211, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
+DBPATCH_ADD(3000212, 0, 0)	/* add "RSM RDAP rtt" value mapping (without error codes) */
+DBPATCH_ADD(3000213, 0, 0)	/* create "Template RDAP" template with rdap[...], rdap.ip and rdap.rtt items, RDAP application; place template into "Templates" host group */
 
 DBPATCH_END()

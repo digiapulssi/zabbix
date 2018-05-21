@@ -25,6 +25,7 @@ ROW   |10050 |NULL        |Template App Zabbix Agent |3     |0            |2    
 ROW   |10056 |NULL        |Template App Agentless    |3     |0            |2             |             |             |Template App Agentless    |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |10057 |NULL        |Zabbix Server             |0     |-1           |2             |             |             |Zabbix Server             |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |10058 |NULL        |Template App Zabbix Proxy |3     |0            |2             |             |             |Template App Zabbix Proxy |0    |NULL      |           |1          |1         |          |           |                |       |
+ROW   |99980 |NULL        |Template RDAP             |3     |0            |2             |             |             |Template RDAP             |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |99990 |NULL        |Template Probe Errors     |3     |0            |2             |             |             |Template Probe Errors     |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |100000|NULL        |Global macro history      |0     |-1           |2             |             |             |Global macro history      |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |100001|NULL        |Probe statuses            |0     |-1           |2             |             |             |Probe statuses            |0    |NULL      |           |1          |1         |          |           |                |       |
@@ -98,6 +99,7 @@ ROW   |223          |10057 |Processes         |0    |
 ROW   |224          |10057 |Security          |0    |
 ROW   |225          |10057 |Zabbix agent      |0    |
 ROW   |226          |10058 |Zabbix proxy      |0    |
+ROW   |998          |99980 |RDAP              |0    |
 ROW   |999          |99990 |Internal errors   |0    |
 ROW   |1000         |100000|Configuration     |0    |
 ROW   |1001         |100001|Probe availability|0    |
@@ -117,6 +119,7 @@ ROW   |100       |RSM Probe status          |
 ROW   |110       |RSM Service Availability  |
 ROW   |120       |RSM DNS rtt               |
 ROW   |130       |RSM RDDS rtt              |
+ROW   |135       |RSM RDAP rtt              |
 ROW   |140       |RSM RDDS result           |
 ROW   |150       |RSM EPP rtt               |
 ROW   |160       |RSM EPP result            |
@@ -305,6 +308,9 @@ ROW   |23397 |5   |              |        |10057 |Zabbix value cache misses     
 ROW   |23398 |5   |              |        |10057 |Zabbix value cache operating mode           |zabbix[vcache,cache,mode]                    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |23391     |15        |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23399 |5   |              |        |10057 |Zabbix vmware cache, % free                 |zabbix[vmware,buffer,pfree]                  |60   |7      |365   |1     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23392     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23400 |5   |              |        |10057 |Zabbix history index cache, % free          |zabbix[wcache,index,pfree]                   |60   |7      |365   |0     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23393     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
+ROW   |99980 |3   |              |        |99980 |RDAP availability                           |rdap[{$RSM.TLD},{$RDAP.TEST.DOMAIN},{$RDAP.BASE.URL},{$RSM.RDDS.MAXREDIRS},{$RSM.RDDS.RTT.HIGH},{$RSM.TLD.RDDS.ENABLED},{$RSM.RDDS.ENABLED},{$RSM.IP4.ENABLED},{$RSM.IP6.ENABLED},{$RSM.RESOLVER}]|300|7|365|0|3| | |0|0| |0| | |1| |NULL      |1         |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |Status of Registration Data Access Protocol service                                                                              |0             |0       |0                  |0                  |                  |0       |
+ROW   |99981 |2   |              |        |99980 |RDAP IP                                     |rdap.ip                                      |0    |7      |365   |0     |1         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |IP address of Registration Data Access Protocol service provider domain used to perform the test                                 |0             |0       |0                  |0                  |                  |0       |
+ROW   |99982 |2   |              |        |99980 |RDAP RTT                                    |rdap.rtt                                     |0    |7      |365   |0     |0         |             |ms      |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |135       |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |Round-Trip Time of Registration Data Access Protocol service test                                                                |0             |0       |0                  |0                  |                  |0       |
 ROW   |99990 |3   |              |        |99990 |Internal error rate                         |rsm.errors                                   |60   |90     |365   |0     |0         |             |        |0         |1    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |100000|15  |              |        |100000|$1 value                                    |rsm.configvalue[RSM.INCIDENT.DNS.FAIL]       |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RSM.INCIDENT.DNS.FAIL}      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
 ROW   |100001|15  |              |        |100000|$1 value                                    |rsm.configvalue[RSM.INCIDENT.DNS.RECOVER]    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RSM.INCIDENT.DNS.RECOVER}   |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
@@ -954,6 +960,7 @@ ROW   |50         |10050 |1      |
 ROW   |56         |10056 |1      |
 ROW   |57         |10057 |110    |
 ROW   |58         |10058 |1      |
+ROW   |998        |99980 |1      |
 ROW   |999        |99990 |1      |
 ROW   |1000       |100000|100    |
 ROW   |1001       |100001|110    |
@@ -1182,6 +1189,9 @@ ROW   |5680     |226          |23419 |
 ROW   |5681     |226          |23420 |
 ROW   |5682     |226          |23421 |
 ROW   |5683     |219          |23331 |
+ROW   |99980    |998          |99980 |
+ROW   |99981    |998          |99981 |
+ROW   |99982    |998          |99982 |
 ROW   |99990    |999          |99990 |
 ROW   |100000   |1000         |100000|
 ROW   |100001   |1000         |100001|
