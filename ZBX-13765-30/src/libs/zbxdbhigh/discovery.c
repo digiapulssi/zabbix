@@ -342,7 +342,8 @@ static void	discovery_update_dservice_value(zbx_uint64_t dserviceid, const char 
  * Purpose: process and update the new service status                         *
  *                                                                            *
  ******************************************************************************/
-static void	discovery_update_service_status(const DB_DSERVICE *dservice, int status, const char *value, int now)
+static void	discovery_update_service_status(const DB_DSERVICE *dservice, int service_status, const char *value,
+		int now)
 {
 	const char	*__function_name = "discovery_update_service_status";
 
@@ -353,13 +354,15 @@ static void	discovery_update_service_status(const DB_DSERVICE *dservice, int sta
 	ts.sec = now;
 	ts.ns = 0;
 
-	if (DOBJECT_STATUS_UP == status)
+	if (DOBJECT_STATUS_UP == service_status)
 	{
 		if (DOBJECT_STATUS_DOWN == dservice->status || 0 == dservice->lastup)
 		{
-			discovery_update_dservice(dservice->dserviceid, status, now, 0, value);
+			discovery_update_dservice(dservice->dserviceid, service_status, now, 0, value);
 			add_event(0, EVENT_SOURCE_DISCOVERY, EVENT_OBJECT_DSERVICE, dservice->dserviceid, &ts,
 					DOBJECT_STATUS_DISCOVER, NULL, NULL, 0, 0);
+
+			/* service went DOWN, no need to update host status here as other services may be UP */
 		}
 		else if (0 != strcmp(dservice->value, value))
 		{
@@ -370,12 +373,14 @@ static void	discovery_update_service_status(const DB_DSERVICE *dservice, int sta
 	{
 		if (DOBJECT_STATUS_UP == dservice->status || 0 == dservice->lastdown)
 		{
-			discovery_update_dservice(dservice->dserviceid, status, 0, now, dservice->value);
+			discovery_update_dservice(dservice->dserviceid, service_status, 0, now, dservice->value);
 			add_event(0, EVENT_SOURCE_DISCOVERY, EVENT_OBJECT_DSERVICE, dservice->dserviceid, &ts,
 					DOBJECT_STATUS_LOST, NULL, NULL, 0, 0);
+
+			/* service went UP, update host status if necessary */
 		}
 	}
-	add_event(0, EVENT_SOURCE_DISCOVERY, EVENT_OBJECT_DSERVICE, dservice->dserviceid, &ts, status,
+	add_event(0, EVENT_SOURCE_DISCOVERY, EVENT_OBJECT_DSERVICE, dservice->dserviceid, &ts, service_status,
 			NULL, NULL, 0, 0);
 
 	process_events(NULL);
