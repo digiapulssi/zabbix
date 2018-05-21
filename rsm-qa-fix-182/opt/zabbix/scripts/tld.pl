@@ -408,6 +408,9 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 				'templateid'	=> $main_templateid
 			},
 			{
+				'templateid'	=> RDAP_TEMPLATEID
+			},
+			{
 				'templateid'	=> $probe_templateid
 			}
 		],

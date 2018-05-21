@@ -234,6 +234,9 @@ sub add_probe($$$$$$$$$$)
 					'templateid'	=> $main_templateid
 				},
 				{
+					'templateid'	=> RDAP_TEMPLATEID
+				},
+				{
 					'templateid'	=> $probe_tmpl
 				}
 			],
