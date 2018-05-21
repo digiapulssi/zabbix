@@ -94,6 +94,8 @@ my $rv = GetOptions(\%OPTS,
 		    "set-type!",
 		    "rdds43-servers=s",
 		    "rdds80-servers=s",
+		    "rdap-base-url=s",
+		    "rdap-test-domain=s",
 		    "dns-test-prefix=s",
 		    "rdds-test-prefix=s",
 		    "ipv4!",
@@ -958,6 +960,12 @@ sub create_main_template {
     really(create_macro('{$RSM.TLD.RDDS.ENABLED}', defined($OPTS{'rdds43-servers'}) ? 1 : 0, $templateid, true));
     really(create_macro('{$RSM.TLD.EPP.ENABLED}', defined($OPTS{'epp-servers'}) ? 1 : 0, $templateid, true));
 
+	if (defined($OPTS{'rdap-base-url'}) && defined($OPTS{'rdap-test-domain'}))
+	{
+		really(create_macro('{$RDAP.BASE.URL}', $OPTS{'rdap-base-url'}, $templateid));
+		really(create_macro('{$RDAP.TEST.DOMAIN}', $OPTS{'rdap-test-domain'}, $templateid));
+	}
+
     if ($OPTS{'epp-servers'})
     {
 	my $m = '{$RSM.EPP.KEYSALT}';
@@ -1228,6 +1236,10 @@ Other options
                 list of RDDS43 servers separated by comma: "NAME1,NAME2,..."
         --rdds80-servers=STRING
                 list of RDDS80 servers separated by comma: "NAME1,NAME2,..."
+        --rdap-base-url=STRING
+                base URL for RDAP queries
+        --rdap-test-domain=STRING
+                test domain for RDAP queries
         --epp-servers=STRING
                 list of EPP servers separated by comma: "NAME1,NAME2,..."
         --epp-user
@@ -1309,8 +1321,14 @@ sub validate_input {
 									    and !defined($OPTS{'list-services'}));
     $msg .= "RDDS test prefix must be specified (--rdds-test-prefix)\n" if ((defined($OPTS{'rdds43-servers'}) and !defined($OPTS{'rdds-test-prefix'})) or
 									    (defined($OPTS{'rdds80-servers'}) and !defined($OPTS{'rdds-test-prefix'})));
-    $msg .= "none or both --rdds43-servers and --rdds80-servers must be specified\n" if ((defined($OPTS{'rdds43-servers'}) and !defined($OPTS{'rdds80-servers'})) or
-											 (defined($OPTS{'rdds80-servers'}) and !defined($OPTS{'rdds43-servers'})));
+
+	unless ((defined($OPTS{'rdds43-servers'}) && defined($OPTS{'rdds80-servers'}) &&
+			defined($OPTS{'rdap-base-url'} && defined($OPTS{'rdap-test-domain'}))) ||
+			(!defined($OPTS{'rdds43-servers'}) && !defined($OPTS{'rdds80-servers'}) &&
+			!defined($OPTS{'rdap-base-url'} && !defined($OPTS{'rdap-test-domain'}))))
+	{
+		$msg .= "none or all --rdds43-servers, --rdds80-servers, --rdap-base-url and --rdap-test-domain must be specified\n";
+	}
 
     if ($OPTS{'epp-servers'}) {
 	$msg .= "EPP user must be specified (--epp-user)\n" unless ($OPTS{'epp-user'});
