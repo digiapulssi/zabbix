@@ -21,12 +21,7 @@ use Time::HiRes qw(time);
 use TLD_constants qw(:ec :api);
 use Parallel;
 
-use constant RDDS_SUBSERVICE => 'sub';
 use constant AUDIT_RESOURCE_INCIDENT => 32;
-
-use constant PROBE_STATUS_UP => 'Up';
-use constant PROBE_STATUS_DOWN => 'Down';
-use constant PROBE_STATUS_UNKNOWN => 'Unknown';
 
 use constant PROTO_UDP	=> 0;				# todo phase 1: taken from phase 2
 use constant PROTO_TCP	=> 1;				# todo phase 1: taken from phase 2
