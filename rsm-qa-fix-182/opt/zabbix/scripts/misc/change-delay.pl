@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 BEGIN
 {
@@ -8,6 +8,8 @@ BEGIN
 use lib $MYDIR;
 use lib $MYDIR2;
 
+use strict;
+use warnings;
 use RSM;
 use RSMSLV;
 use Getopt::Long;
@@ -17,40 +19,45 @@ set_slv_config(get_rsm_config());
 parse_opts('type=n', 'delay=n');
 usage() unless (__validate_input() == SUCCESS);
 
-my ($key_part, $macro, $sql);
+my ($key_parts, $macro, $sql);
 if (getopt('type') == 1)
 {
-	$key_part = 'rsm.dns.udp[%';
+	$key_parts = ['rsm.dns.udp[%'];
 	$macro = '{$RSM.DNS.UDP.DELAY}';
 }
 elsif (getopt('type') == 2)
 {
-	$key_part = 'rsm.dns.tcp[%';
+	$key_parts = ['rsm.dns.tcp[%'];
 	$macro = '{$RSM.DNS.TCP.DELAY}';
 }
 elsif (getopt('type') == 3)
 {
-	$key_part = 'rsm.rdds[%';
+	$key_parts = ['rsm.rdds[%', 'rdap[%'];
 	$macro = '{$RSM.RDDS.DELAY}';
 }
 elsif (getopt('type') == 4)
 {
-	$key_part = 'rsm.epp[%';
+	$key_parts = ['rsm.epp[%'];
 	$macro = '{$RSM.EPP.DELAY}';
 }
 
 if (opt('dry-run'))
 {
-	print("would set delay ", getopt('delay'), " for keys like $key_part\n");
+	print("would set delay ", getopt('delay'), " for keys like ", join(" or like ", $key_parts), "\n");
 	print("would set macro $macro to ", getopt('delay'), "\n");
 	exit;
 }
 
+my $sth;
 db_connect();
 
 $sql = "update items set delay=? where type=3 and key_ like ?";
-$sth = $dbh->prepare($sql) or die $dbh->errstr;
-$sth->execute(getopt('delay'), $key_part) or die $dbh->errstr;
+
+foreach my $key_part (@{$key_parts})
+{
+	$sth = $dbh->prepare($sql) or die $dbh->errstr;
+	$sth->execute(getopt('delay'), $key_part) or die $dbh->errstr;
+}
 
 $sql = "update globalmacro set value=? where macro=?";
 $sth = $dbh->prepare($sql) or die $dbh->errstr;
