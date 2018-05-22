@@ -1634,7 +1634,7 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 		goto unlock;
 	}
 
-	if (mode == ZBX_VMWARE_DATASTORE_SIZE_FREE || mode == ZBX_VMWARE_DATASTORE_SIZE_PFREE)
+	if (ZBX_VMWARE_DATASTORE_SIZE_FREE == mode || ZBX_VMWARE_DATASTORE_SIZE_PFREE == mode)
 	{
 		AGENT_RESULT	perf_result;
 
