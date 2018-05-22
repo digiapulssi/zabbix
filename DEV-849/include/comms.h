@@ -93,7 +93,7 @@ typedef struct
 								/* ZBX_TCP_SEC_TLS_CERT */
 	int				timeout;
 	zbx::Buf_type			buf_type;
-	unsigned char			accepted;
+	bool				accepted;
 	int				num_socks;
 	ZBX_SOCKET			sockets[zbx_socket_count];
 	char				buf_stat[zbx_stat_buf_len];

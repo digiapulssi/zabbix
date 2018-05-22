@@ -1245,7 +1245,7 @@ int	zbx_tcp_accept(zbx_socket_t *s, unsigned int tls_accept)
 
 	s->socket_orig = s->socket;	/* remember main socket */
 	s->socket = accepted_socket;	/* replace socket to accepted */
-	s->accepted = 1;
+	s->accepted = true;
 
 	if (SUCCEED != zbx_socket_peer_ip_save(s))
 	{
@@ -1333,7 +1333,7 @@ void	zbx_tcp_unaccept(zbx_socket_t *s)
 
 	s->socket = s->socket_orig;	/* restore main socket */
 	s->socket_orig = ZBX_SOCKET_ERROR;
-	s->accepted = 0;
+	s->accepted = false;
 }
 
 /******************************************************************************
