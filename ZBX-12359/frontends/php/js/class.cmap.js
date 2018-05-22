@@ -357,34 +357,28 @@ ZABBIX.apps.map = (function($) {
 				}
 
 				Object.keys(this.selements).forEach(function(key) {
-					var element = {};
+					var element = {},
+						data = this.selements[key].data;
 
 					['selementid', 'x', 'y', 'label_location'].forEach(function (name) {
-						element[name] = this.selements[key].data[name];
+						element[name] = data[name];
 					}, this);
 
 					element['label'] = this.selements[key].getLabel();
 
 					// host group elements
-					if (this.selements[key].data.elementtype == '3' && this.selements[key].data.elementsubtype == '1') {
-						if (this.selements[key].data.areatype == '0') {
-							element.width = this.data.width;
-							element.height = this.data.height;
-						}
-						else {
-							element.width = this.selements[key].data.width;
-							element.height = this.selements[key].data.height;
-						}
+					if (data.elementtype === '3' && data.elementsubtype === '1') {
+						element.width = (data.areatype === '0') ? this.data.width : data.width;
+						element.height = (data.areatype === '0') ? this.data.height : data.height;
 					}
 
-					if ((this.selements[key].data.use_iconmap === '1' && this.data.iconmapid !== '0')
-							&& (this.selements[key].data.elementtype === '0'
-								|| (this.selements[key].data.elementtype === '3'
-									&& this.selements[key].data.elementsubtype === '1'))) {
+					if ((data.use_iconmap === '1' && this.data.iconmapid !== '0')
+							&& (data.elementtype === '0'
+								|| (data.elementtype === '3' && data.elementsubtype === '1'))) {
 						element.icon = this.defaultAutoIconId;
 					}
 					else {
-						element.icon = this.selements[key].data.iconid_off;
+						element.icon = data.iconid_off;
 					}
 
 					elements.push(element);
