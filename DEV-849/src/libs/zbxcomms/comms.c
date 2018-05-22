@@ -1388,7 +1388,7 @@ const char	*zbx_tcp_recv_line(zbx_socket_t *s)
 {
 #define ZBX_TCP_LINE_LEN	(64 * ZBX_KIBIBYTE)
 
-	char		buffer[ZBX_STAT_BUF_LEN], *ptr = NULL;
+	char		buffer[zbx_stat_buf_len], *ptr = NULL;
 	const char	*line;
 	ssize_t		nbytes;
 	size_t		alloc = 0, offset = 0, line_length, left;
@@ -1417,7 +1417,7 @@ const char	*zbx_tcp_recv_line(zbx_socket_t *s)
 	s->buffer = s->buf_stat;
 
 	/* read more data into static buffer */
-	if (ZBX_PROTO_ERROR == (nbytes = ZBX_TCP_READ(s->socket, s->buf_stat + left, ZBX_STAT_BUF_LEN - left - 1)))
+	if (ZBX_PROTO_ERROR == (nbytes = ZBX_TCP_READ(s->socket, s->buf_stat + left, zbx_stat_buf_len - left - 1)))
 		goto out;
 
 	s->buf_stat[left + nbytes] = '\0';
@@ -1448,7 +1448,7 @@ const char	*zbx_tcp_recv_line(zbx_socket_t *s)
 	/* Lines larger than ZBX_TCP_LINE_LEN bytes will be truncated. */
 	do
 	{
-		if (ZBX_PROTO_ERROR == (nbytes = ZBX_TCP_READ(s->socket, buffer, ZBX_STAT_BUF_LEN - 1)))
+		if (ZBX_PROTO_ERROR == (nbytes = ZBX_TCP_READ(s->socket, buffer, zbx_stat_buf_len - 1)))
 			goto out;
 
 		if (0 == nbytes)
@@ -1796,7 +1796,7 @@ out:
 ssize_t	zbx_tcp_recv_raw_ext(zbx_socket_t *s, int timeout)
 {
 	ssize_t		nbytes;
-	size_t		allocated = 8 * ZBX_STAT_BUF_LEN, buf_dyn_bytes = 0, buf_stat_bytes = 0;
+	size_t		allocated = 8 * zbx_stat_buf_len, buf_dyn_bytes = 0, buf_stat_bytes = 0;
 	zbx_uint64_t	expected_len = 16 * ZBX_MEBIBYTE;
 
 	if (0 != timeout)

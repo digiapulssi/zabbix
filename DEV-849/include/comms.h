@@ -71,8 +71,8 @@ namespace zbx
 	enum class Buf_type : signed char { stat, dyn };	// buffer with static or dynamic size
 }
 
-constexpr int	zbx_socket_count = 256;
-#define ZBX_STAT_BUF_LEN	2048
+constexpr int		zbx_socket_count = 256;
+constexpr size_t	zbx_stat_buf_len = 2048;
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 typedef struct zbx_tls_context	zbx_tls_context_t;
@@ -96,7 +96,7 @@ typedef struct
 	unsigned char			accepted;
 	int				num_socks;
 	ZBX_SOCKET			sockets[zbx_socket_count];
-	char				buf_stat[ZBX_STAT_BUF_LEN];
+	char				buf_stat[zbx_stat_buf_len];
 	ZBX_SOCKADDR			peer_info;		/* getpeername() result */
 	/* Peer host DNS name or IP address for diagnostics (after TCP connection is established). */
 	/* TLS connection may be shut down at any time and it will not be possible to get peer IP address anymore. */
