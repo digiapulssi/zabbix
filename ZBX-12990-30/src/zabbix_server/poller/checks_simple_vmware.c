@@ -1565,6 +1565,7 @@ out:
 int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username, const char *password,
 		AGENT_RESULT *result)
 {
+#	define	DATASTORE_TOTAL	""
 	const char		*__function_name = "check_vcenter_hv_datastore_size";
 
 	char			*url, *param, *uuid, *name;
@@ -1572,6 +1573,7 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 	zbx_vmware_hv_t		*hv;
 	int			i, ret = SYSINFO_RET_FAIL, mode;
 	zbx_vmware_datastore_t	*datastore;
+	zbx_uint64_t		disk_used = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1632,6 +1634,23 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 		goto unlock;
 	}
 
+	if (mode == ZBX_VMWARE_DATASTORE_SIZE_FREE || mode == ZBX_VMWARE_DATASTORE_SIZE_PFREE)
+	{
+		AGENT_RESULT	perf_result;
+
+		init_result(&perf_result);
+
+		if (SUCCEED == vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
+				"disk/used[latest]", DATASTORE_TOTAL, 1,
+				&perf_result) && NULL != GET_UI64_RESULT(&perf_result))
+		{
+			disk_used = *GET_UI64_RESULT(&perf_result) * ZBX_KIBIBYTE;
+		}
+
+		free_result(&perf_result);
+
+	}
+
 	switch (mode)
 	{
 		case ZBX_VMWARE_DATASTORE_SIZE_TOTAL:
@@ -1643,7 +1662,12 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 			SET_UI64_RESULT(result, datastore->capacity);
 			break;
 		case ZBX_VMWARE_DATASTORE_SIZE_FREE:
-			if (ZBX_MAX_UINT64 == datastore->free_space)
+			if (0 <  datastore->capacity && ZBX_MAX_UINT64 > datastore->capacity && 0 < disk_used)
+			{
+				SET_UI64_RESULT(result, datastore->capacity - disk_used);
+				break;
+			}
+			else if (ZBX_MAX_UINT64 == datastore->free_space)
 			{
 				SET_MSG_RESULT(result, zbx_strdup(NULL, "Datastore \"free space\" is not available."));
 				goto unlock;
@@ -1674,7 +1698,8 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 				SET_MSG_RESULT(result, zbx_strdup(NULL, "Datastore \"capacity\" is zero."));
 				goto unlock;
 			}
-			SET_DBL_RESULT(result, (double)datastore->free_space / datastore->capacity * 100);
+			SET_DBL_RESULT(result, (double) (0 == disk_used? datastore->free_space :
+					datastore->capacity - disk_used) / datastore->capacity * 100);
 			break;
 	}
 

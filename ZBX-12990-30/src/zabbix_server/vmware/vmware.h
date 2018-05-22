@@ -83,6 +83,7 @@ typedef struct
 {
 	char	*name;
 	char	*uuid;
+	char	*id;
 
 	zbx_uint64_t	capacity;
 	zbx_uint64_t	free_space;
@@ -203,8 +204,14 @@ typedef struct
 
 	/* lastlogsize when vmware.eventlog[] item was polled last time */
 	zbx_uint64_t		eventlog_last_key;
+
+	/* minimal interval which specify the period of time between collection  events of performance *
+	 * that was defined in vCenter */
+	int			hist_interval;
 }
 zbx_vmware_service_t;
+
+#define ZBX_VMWARE_PERF_INTERVAL_UNKNOWN	0
 
 /* the vmware collector data */
 typedef struct
