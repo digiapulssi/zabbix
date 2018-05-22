@@ -1641,8 +1641,8 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 		init_result(&perf_result);
 
 		if (SUCCEED == vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
-				"disk/used[latest]", DATASTORE_TOTAL, 1,
-				&perf_result) && NULL != GET_UI64_RESULT(&perf_result))
+				"disk/used[latest]", DATASTORE_TOTAL, 1, &perf_result)
+				&& NULL != GET_UI64_RESULT(&perf_result))
 		{
 			disk_used = *GET_UI64_RESULT(&perf_result) * ZBX_KIBIBYTE;
 		}
