@@ -71,7 +71,7 @@ namespace zbx
 	enum class Buf_type : signed char { stat, dyn };	// buffer with static or dynamic size
 }
 
-#define ZBX_SOCKET_COUNT	256
+constexpr int	zbx_socket_count = 256;
 #define ZBX_STAT_BUF_LEN	2048
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
@@ -95,7 +95,7 @@ typedef struct
 	zbx::Buf_type			buf_type;
 	unsigned char			accepted;
 	int				num_socks;
-	ZBX_SOCKET			sockets[ZBX_SOCKET_COUNT];
+	ZBX_SOCKET			sockets[zbx_socket_count];
 	char				buf_stat[ZBX_STAT_BUF_LEN];
 	ZBX_SOCKADDR			peer_info;		/* getpeername() result */
 	/* Peer host DNS name or IP address for diagnostics (after TCP connection is established). */
