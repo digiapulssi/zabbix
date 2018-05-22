@@ -2214,27 +2214,12 @@ sub __find_probe_key_by_itemid
 	my $itemid = shift;
 	my $items_ref = shift;
 
-	my ($probe, $key);
-	my $last = 0;
-
-	foreach my $pr (keys(%$items_ref))
+	while (my ($pr, $itemids_ref) = each(%{$items_ref}))
 	{
-		my $itemids_ref = $items_ref->{$pr};
-
-		foreach my $i (keys(%$itemids_ref))
-		{
-			if ($i == $itemid)
-			{
-				$probe = $pr;
-				$key = $items_ref->{$pr}->{$i};
-				$last = 1;
-				last;
-			}
-		}
-		last if ($last == 1);
+		return ($pr, $itemids_ref->{$itemid}) if (exists($itemids_ref->{$itemid}));
 	}
 
-	return ($probe, $key);
+	return (undef, undef);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
