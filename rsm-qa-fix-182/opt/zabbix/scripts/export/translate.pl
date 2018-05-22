@@ -63,6 +63,7 @@ my %valuemaps;
 
 $valuemaps{'dns'} = get_valuemaps('dns');
 $valuemaps{'rdds'} = get_valuemaps('rdds');
+$valuemaps{'rdap'} = get_valuemaps('rdap');
 
 dw_csv_init();
 dw_load_ids_from_db();

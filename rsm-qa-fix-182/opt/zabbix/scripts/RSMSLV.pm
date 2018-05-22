@@ -2182,6 +2182,10 @@ sub get_valuemaps
 	{
 		$vmname = 'RSM RDDS rtt';
 	}
+	elsif ($service = 'rdap')
+	{
+		$vmname = 'RSM RDAP rtt';
+	}
 	elsif ($service eq 'epp')
 	{
 		$vmname = 'RSM EPP rtt';
