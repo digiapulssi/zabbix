@@ -449,10 +449,14 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			 * Value of probe item PROBE_KEY_ONLINE == PROBE_DOWN means that both DNS UDP and DNS TCP are offline.
 			 * Support for TCP will be added in phase 3.
 			 */
-			if ($data['type'] == RSM_DNS && $item_value['value'] == PROBE_DOWN) {
+			if ($item_value['value'] == PROBE_DOWN) {
 				$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
+				continue;
 			}
-			elseif ($data['type'] == RSM_DNSSEC) {
+
+			$probes_not_offline[$probe_hostid] = true;
+
+			if ($data['type'] == RSM_DNSSEC) {
 				/**
 				 * For DNSSEC, if at least one NameServer for particular probe is UP (have data but do not have errors),
 				 * the whole probe is UP. If there are no NameServer IP with data, probe status should say "No results".
@@ -466,9 +470,6 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 						? PROBE_UP
 						: PROBE_DOWN;
 				}
-			}
-			else {
-				$probes_not_offline[$probe_hostid] = true;
 			}
 		}
 		unset($items_utilized);
