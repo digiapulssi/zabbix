@@ -326,7 +326,8 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 
 		foreach ($probes_udp_items as $probes_item) {
 			$probeid = $tld_probe_names[reset($probes_item['hosts'])['host']];
-			$item_value = array_key_exists($probes_item['itemid'], $item_values)
+			$item_value = !array_key_exists('status_udp', $data['probes'][$probeid])	// Skip offline probes
+				&& array_key_exists($probes_item['itemid'], $item_values)
 				? (int) $item_values[$probes_item['itemid']]
 				: null;
 
