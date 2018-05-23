@@ -186,7 +186,7 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, rege
 	}
 	else if (' ' == *max_depth_str || FAIL == is_int_prefix(max_depth_str))
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter. Contain non digital prefix."));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter."));
 		return FAIL;
 	}
 	else if (-1 > (*max_depth = (int)strtol(max_depth_str, &max_depth_ptr, 10)))
@@ -200,7 +200,7 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, rege
 
 		if ('\0' != *max_depth_ptr)
 		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter. Expected numeric value."));
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter."));
 			return FAIL;
 		}
 	}
