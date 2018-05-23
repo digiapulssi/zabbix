@@ -240,6 +240,45 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 	// Get total number of probes for summary block before results table.
 	$data['totalProbes'] = count($data['probes']);
 
+	$probe_items = API::Item()->get([
+		'output' => ['itemid', 'key_', 'hostid'],
+		'hostids' => array_keys($data['probes']),
+		'filter' => [
+			'key_' => PROBE_KEY_ONLINE
+		],
+		'monitored' => true,
+		'preservekeys' => true
+	]);
+
+	if ($probe_items) {
+		$item_values = API::History()->get([
+			'output' => API_OUTPUT_EXTEND,
+			'itemids' => array_keys($probe_items),
+			'time_from' => $test_time_from,
+			'time_till' => $test_time_till
+		]);
+
+		$items_utilized = [];
+
+		foreach ($item_values as $item_value) {
+			if (array_key_exists($item_value['itemid'], $items_utilized)) {
+				continue;
+			}
+
+			$probe_hostid = $probe_items[$item_value['itemid']]['hostid'];
+			$items_utilized[$item_value['itemid']] = true;
+
+			/**
+			 * Value of probe item PROBE_KEY_ONLINE == PROBE_DOWN means that both DNS UDP and DNS TCP are offline.
+			 * Support for TCP will be added in phase 3.
+			 */
+			if ($item_value['value'] == PROBE_DOWN) {
+				$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
+			}
+		}
+		unset($items_utilized);
+	}
+
 	// Get probes for specific TLD.
 	$tld_probes = API::Host()->get([
 		'output' => ['hostid', 'host', 'name'],
@@ -416,44 +455,8 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 	unset($probe);
 
 	// Get status for each TLD probe (displayed in column 'DNS UDP' -> 'Status').
-	$probe_items = API::Item()->get([
-		'output' => ['itemid', 'key_', 'hostid'],
-		'hostids' => array_keys($data['probes']),
-		'filter' => [
-			'key_' => PROBE_KEY_ONLINE
-		],
-		'monitored' => true,
-		'preservekeys' => true
-	]);
 
-	if ($probe_items) {
-		$item_values = API::History()->get([
-			'output' => API_OUTPUT_EXTEND,
-			'itemids' => array_keys($probe_items),
-			'time_from' => $test_time_from,
-			'time_till' => $test_time_till
-		]);
-
-		$items_utilized = [];
-
-		foreach ($item_values as $item_value) {
-			if (array_key_exists($item_value['itemid'], $items_utilized)) {
-				continue;
-			}
-
-			$probe_hostid = $probe_items[$item_value['itemid']]['hostid'];
-			$items_utilized[$item_value['itemid']] = true;
-
-			/**
-			 * Value of probe item PROBE_KEY_ONLINE == PROBE_DOWN means that both DNS UDP and DNS TCP are offline.
-			 * Support for TCP will be added in phase 3.
-			 */
-			if ($item_value['value'] == PROBE_DOWN) {
-				$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
-			}
-		}
-		unset($items_utilized);
-
+	{
 		/**
 		 * If probe is not offline we should check values of additional item PROBE_DNS_UDP_ITEM and compare selected
 		 * values with value stored in CALCULATED_ITEM_DNS_AVAIL_MINNS.
