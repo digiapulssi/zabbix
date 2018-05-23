@@ -434,7 +434,6 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 			'time_till' => $test_time_till
 		]);
 
-		$probes_not_offline = [];
 		$items_utilized = [];
 
 		foreach ($item_values as $item_value) {
@@ -453,8 +452,6 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 				$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
 				continue;
 			}
-
-			$probes_not_offline[$probe_hostid] = true;
 
 			if ($data['type'] == RSM_DNSSEC) {
 				/**
@@ -478,7 +475,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 		 * If probe is not offline we should check values of additional item PROBE_DNS_UDP_ITEM and compare selected
 		 * values with value stored in CALCULATED_ITEM_DNS_AVAIL_MINNS.
 		 */
-		if ($probes_not_offline && $data['type'] == RSM_DNS) {
+		if ($data['type'] == RSM_DNS) {
 			$probe_items = API::Item()->get([
 				'output' => ['hostid', 'key_'],
 				'hostids' => array_keys($tld_probes),
@@ -508,7 +505,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 					$probe_hostid = $tld_probe_names[$tld_probes[$probe_item['hostid']]['name']];
 					$items_utilized[$item_value['itemid']] = true;
 
-					if (!array_key_exists($probe_hostid, $probes_not_offline)) {
+					if (array_key_exists('status_udp', $data['probes'][$probe_hostid])) {
 						continue;
 					}
 
