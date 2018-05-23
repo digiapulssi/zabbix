@@ -456,75 +456,73 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 
 	// Get status for each TLD probe (displayed in column 'DNS UDP' -> 'Status').
 
-	{
-		/**
-		 * If probe is not offline we should check values of additional item PROBE_DNS_UDP_ITEM and compare selected
-		 * values with value stored in CALCULATED_ITEM_DNS_AVAIL_MINNS.
-		 */
-		if ($data['type'] == RSM_DNS) {
-			$probe_items = API::Item()->get([
-				'output' => ['hostid', 'key_'],
-				'hostids' => array_keys($tld_probes),
-				'filter' => [
-					'key_' => PROBE_DNS_UDP_ITEM
-				],
-				'monitored' => true,
-				'preservekeys' => true
+	/**
+	 * If probe is not offline we should check values of additional item PROBE_DNS_UDP_ITEM and compare selected
+	 * values with value stored in CALCULATED_ITEM_DNS_AVAIL_MINNS.
+	 */
+	if ($data['type'] == RSM_DNS) {
+		$probe_items = API::Item()->get([
+			'output' => ['hostid', 'key_'],
+			'hostids' => array_keys($tld_probes),
+			'filter' => [
+				'key_' => PROBE_DNS_UDP_ITEM
+			],
+			'monitored' => true,
+			'preservekeys' => true
+		]);
+
+		if ($probe_items) {
+			$item_values = API::History()->get([
+				'output' => API_OUTPUT_EXTEND,
+				'itemids' => array_keys($probe_items),
+				'time_from' => $test_time_from,
+				'time_till' => $test_time_till,
+				'history' => 3
 			]);
+			$items_utilized = [];
 
-			if ($probe_items) {
-				$item_values = API::History()->get([
-					'output' => API_OUTPUT_EXTEND,
-					'itemids' => array_keys($probe_items),
-					'time_from' => $test_time_from,
-					'time_till' => $test_time_till,
-					'history' => 3
-				]);
-				$items_utilized = [];
-
-				foreach ($item_values as $item_value) {
-					if (array_key_exists($item_value['itemid'], $items_utilized)) {
-						continue;
-					}
-
-					$probe_item = $probe_items[$item_value['itemid']];
-					$probe_hostid = $tld_probe_names[$tld_probes[$probe_item['hostid']]['name']];
-					$items_utilized[$item_value['itemid']] = true;
-
-					if (array_key_exists('status_udp', $data['probes'][$probe_hostid])) {
-						continue;
-					}
-
-					/**
-					 * DNS is considered to be UP if selected value is greater than rsm.configvalue[RSM.DNS.AVAIL.MINNS]
-					 * for <RSM_HOST> at given time;
-					 */
-					$data['probes'][$probe_hostid]['status_udp'] = ($item_value['value'] >= $min_dns_count)
-						? PROBE_UP
-						: PROBE_DOWN;
+			foreach ($item_values as $item_value) {
+				if (array_key_exists($item_value['itemid'], $items_utilized)) {
+					continue;
 				}
-				unset($items_utilized);
-			}
-		}
-		elseif ($data['type'] == RSM_DNSSEC) {
-			foreach (array_values($tld_probe_names) as $probe_hostid) {
+
+				$probe_item = $probe_items[$item_value['itemid']];
+				$probe_hostid = $tld_probe_names[$tld_probes[$probe_item['hostid']]['name']];
+				$items_utilized[$item_value['itemid']] = true;
+
 				if (array_key_exists('status_udp', $data['probes'][$probe_hostid])) {
 					continue;
 				}
 
 				/**
-				 * For DNSSEC, if at least one NameServer for particular probe is UP (have data but do not have errors),
-				 * the whole probe is UP. If there are no NameServer IP with data, probe status should say "No results".
+				 * DNS is considered to be UP if selected value is greater than rsm.configvalue[RSM.DNS.AVAIL.MINNS]
+				 * for <RSM_HOST> at given time;
 				 */
-				if (array_key_exists('probe_nameservers_with_no_values', $data['probes'][$probe_hostid])
-						&& $data['probes'][$probe_hostid]['probe_nameservers_with_no_values'] == $data['probes'][$probe_hostid]['probe_number_of_nameserver_ips']) {
-					// Probe is considered to be online, but has no results and hence no Up or Down status.
-				}
-				elseif (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
-					$data['probes'][$probe_hostid]['status_udp'] = ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0)
-						? PROBE_UP
-						: PROBE_DOWN;
-				}
+				$data['probes'][$probe_hostid]['status_udp'] = ($item_value['value'] >= $min_dns_count)
+					? PROBE_UP
+					: PROBE_DOWN;
+			}
+			unset($items_utilized);
+		}
+	}
+	elseif ($data['type'] == RSM_DNSSEC) {
+		foreach (array_values($tld_probe_names) as $probe_hostid) {
+			if (array_key_exists('status_udp', $data['probes'][$probe_hostid])) {
+				continue;
+			}
+
+			/**
+			 * For DNSSEC, if at least one NameServer for particular probe is UP (have data but do not have errors),
+			 * the whole probe is UP. If there are no NameServer IP with data, probe status should say "No results".
+			 */
+			if (array_key_exists('probe_nameservers_with_no_values', $data['probes'][$probe_hostid])
+					&& $data['probes'][$probe_hostid]['probe_nameservers_with_no_values'] == $data['probes'][$probe_hostid]['probe_number_of_nameserver_ips']) {
+				// Probe is considered to be online, but has no results and hence no Up or Down status.
+			}
+			elseif (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
+				$data['probes'][$probe_hostid]['status_udp'] = ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0)
+					? PROBE_UP
+					: PROBE_DOWN;
 			}
 		}
 	}
