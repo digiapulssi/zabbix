@@ -240,6 +240,45 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 	// Get total number of probes for summary block before results table.
 	$data['totalProbes'] = count($data['probes']);
 
+	$probe_items = API::Item()->get([
+		'output' => ['itemid', 'key_', 'hostid'],
+		'hostids' => array_keys($data['probes']),
+		'filter' => [
+			'key_' => PROBE_KEY_ONLINE
+		],
+		'monitored' => true,
+		'preservekeys' => true
+	]);
+
+	if ($probe_items) {
+		$item_values = API::History()->get([
+			'output' => API_OUTPUT_EXTEND,
+			'itemids' => array_keys($probe_items),
+			'time_from' => $test_time_from,
+			'time_till' => $test_time_till
+		]);
+
+		$items_utilized = [];
+
+		foreach ($item_values as $item_value) {
+			if (array_key_exists($item_value['itemid'], $items_utilized)) {
+				continue;
+			}
+
+			$probe_hostid = $probe_items[$item_value['itemid']]['hostid'];
+			$items_utilized[$item_value['itemid']] = true;
+
+			/**
+			 * Value of probe item PROBE_KEY_ONLINE == PROBE_DOWN means that both DNS UDP and DNS TCP are offline.
+			 * Support for TCP will be added in phase 3.
+			 */
+			if ($item_value['value'] == PROBE_DOWN) {
+				$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
+			}
+		}
+		unset($items_utilized);
+	}
+
 	// Get probes for specific TLD.
 	$tld_probes = API::Host()->get([
 		'output' => ['hostid', 'host', 'name'],
@@ -287,7 +326,8 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 
 		foreach ($probes_udp_items as $probes_item) {
 			$probeid = $tld_probe_names[reset($probes_item['hosts'])['host']];
-			$item_value = array_key_exists($probes_item['itemid'], $item_values)
+			$item_value = !array_key_exists('status_udp', $data['probes'][$probeid])	// Skip offline probes
+				&& array_key_exists($probes_item['itemid'], $item_values)
 				? (int) $item_values[$probes_item['itemid']]
 				: null;
 
@@ -416,110 +456,74 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 	unset($probe);
 
 	// Get status for each TLD probe (displayed in column 'DNS UDP' -> 'Status').
-	$probe_items = API::Item()->get([
-		'output' => ['itemid', 'key_', 'hostid'],
-		'hostids' => array_keys($data['probes']),
-		'filter' => [
-			'key_' => PROBE_KEY_ONLINE
-		],
-		'monitored' => true,
-		'preservekeys' => true
-	]);
 
-	if ($probe_items) {
-		$item_values = API::History()->get([
-			'output' => API_OUTPUT_EXTEND,
-			'itemids' => array_keys($probe_items),
-			'time_from' => $test_time_from,
-			'time_till' => $test_time_till
+	/**
+	 * If probe is not offline we should check values of additional item PROBE_DNS_UDP_ITEM and compare selected
+	 * values with value stored in CALCULATED_ITEM_DNS_AVAIL_MINNS.
+	 */
+	if ($data['type'] == RSM_DNS) {
+		$probe_items = API::Item()->get([
+			'output' => ['hostid', 'key_'],
+			'hostids' => array_keys($tld_probes),
+			'filter' => [
+				'key_' => PROBE_DNS_UDP_ITEM
+			],
+			'monitored' => true,
+			'preservekeys' => true
 		]);
 
-		$probes_not_offline = [];
-		$items_utilized = [];
+		if ($probe_items) {
+			$item_values = API::History()->get([
+				'output' => API_OUTPUT_EXTEND,
+				'itemids' => array_keys($probe_items),
+				'time_from' => $test_time_from,
+				'time_till' => $test_time_till,
+				'history' => 3
+			]);
+			$items_utilized = [];
 
-		foreach ($item_values as $item_value) {
-			if (array_key_exists($item_value['itemid'], $items_utilized)) {
+			foreach ($item_values as $item_value) {
+				if (array_key_exists($item_value['itemid'], $items_utilized)) {
+					continue;
+				}
+
+				$probe_item = $probe_items[$item_value['itemid']];
+				$probe_hostid = $tld_probe_names[$tld_probes[$probe_item['hostid']]['name']];
+				$items_utilized[$item_value['itemid']] = true;
+
+				if (array_key_exists('status_udp', $data['probes'][$probe_hostid])) {
+					continue;
+				}
+
+				/**
+				 * DNS is considered to be UP if selected value is greater than rsm.configvalue[RSM.DNS.AVAIL.MINNS]
+				 * for <RSM_HOST> at given time;
+				 */
+				$data['probes'][$probe_hostid]['status_udp'] = ($item_value['value'] >= $min_dns_count)
+					? PROBE_UP
+					: PROBE_DOWN;
+			}
+			unset($items_utilized);
+		}
+	}
+	elseif ($data['type'] == RSM_DNSSEC) {
+		foreach (array_values($tld_probe_names) as $probe_hostid) {
+			if (array_key_exists('status_udp', $data['probes'][$probe_hostid])) {
 				continue;
 			}
 
-			$probe_hostid = $probe_items[$item_value['itemid']]['hostid'];
-			$items_utilized[$item_value['itemid']] = true;
-
 			/**
-			 * Value of probe item PROBE_KEY_ONLINE == PROBE_DOWN means that both DNS UDP and DNS TCP are offline.
-			 * Support for TCP will be added in phase 3.
+			 * For DNSSEC, if at least one NameServer for particular probe is UP (have data but do not have errors),
+			 * the whole probe is UP. If there are no NameServer IP with data, probe status should say "No results".
 			 */
-			if ($data['type'] == RSM_DNS && $item_value['value'] == PROBE_DOWN) {
-				$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
+			if (array_key_exists('probe_nameservers_with_no_values', $data['probes'][$probe_hostid])
+					&& $data['probes'][$probe_hostid]['probe_nameservers_with_no_values'] == $data['probes'][$probe_hostid]['probe_number_of_nameserver_ips']) {
+				// Probe is considered to be online, but has no results and hence no Up or Down status.
 			}
-			elseif ($data['type'] == RSM_DNSSEC) {
-				/**
-				 * For DNSSEC, if at least one NameServer for particular probe is UP (have data but do not have errors),
-				 * the whole probe is UP. If there are no NameServer IP with data, whole probe is offline.
-				 */
-				if (array_key_exists('probe_nameservers_with_no_values', $data['probes'][$probe_hostid])
-						&& $data['probes'][$probe_hostid]['probe_nameservers_with_no_values'] == $data['probes'][$probe_hostid]['probe_number_of_nameserver_ips']) {
-					$data['probes'][$probe_hostid]['status_udp'] = PROBE_OFFLINE;
-				}
-				elseif (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
-					$data['probes'][$probe_hostid]['status_udp'] = ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0)
-						? PROBE_UP
-						: PROBE_DOWN;
-				}
-			}
-			else {
-				$probes_not_offline[$probe_hostid] = true;
-			}
-		}
-		unset($items_utilized);
-
-		/**
-		 * If probe is not offline we should check values of additional item PROBE_DNS_UDP_ITEM and compare selected
-		 * values with value stored in CALCULATED_ITEM_DNS_AVAIL_MINNS.
-		 */
-		if ($probes_not_offline && $data['type'] == RSM_DNS) {
-			$probe_items = API::Item()->get([
-				'output' => ['hostid', 'key_'],
-				'hostids' => array_keys($tld_probes),
-				'filter' => [
-					'key_' => PROBE_DNS_UDP_ITEM
-				],
-				'monitored' => true,
-				'preservekeys' => true
-			]);
-
-			if ($probe_items) {
-				$item_values = API::History()->get([
-					'output' => API_OUTPUT_EXTEND,
-					'itemids' => array_keys($probe_items),
-					'time_from' => $test_time_from,
-					'time_till' => $test_time_till,
-					'history' => 3
-				]);
-				$items_utilized = [];
-
-				foreach ($item_values as $item_value) {
-					if (array_key_exists($item_value['itemid'], $items_utilized)) {
-						continue;
-					}
-
-					$probe_item = $probe_items[$item_value['itemid']];
-					$probe_hostid = $tld_probe_names[$tld_probes[$probe_item['hostid']]['name']];
-					$items_utilized[$item_value['itemid']] = true;
-
-					if (!array_key_exists($probe_hostid, $probes_not_offline)) {
-						continue;
-					}
-
-					/**
-					 * DNS is considered to be UP if selected value is greater than rsm.configvalue[RSM.DNS.AVAIL.MINNS]
-					 * for <RSM_HOST> at given time;
-					 */
-					$data['probes'][$probe_hostid]['status_udp'] = ($item_value['value'] >= $min_dns_count)
-						? PROBE_UP
-						: PROBE_DOWN;
-				}
-				unset($items_utilized);
+			elseif (array_key_exists('probe_nameservers_with_no_errors', $data['probes'][$probe_hostid])) {
+				$data['probes'][$probe_hostid]['status_udp'] = ($data['probes'][$probe_hostid]['probe_nameservers_with_no_errors'] > 0)
+					? PROBE_UP
+					: PROBE_DOWN;
 			}
 		}
 	}

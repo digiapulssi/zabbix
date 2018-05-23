@@ -1,3 +1,10 @@
+Changes for rsm1.1.0rc8
+
+Bug fixes:
+..F....... [370] hid nameserver statuses and RTTs for offline probes in "Aggregated details" page (gleb)
+..F....... [371] fixed displaying and counting of probes with no results as offline in aggregated details of DNSSEC (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc7
 
 Bug fixes:
