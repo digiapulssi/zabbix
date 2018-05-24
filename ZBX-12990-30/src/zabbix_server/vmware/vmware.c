@@ -4271,7 +4271,7 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 			/* add startTime for entity performance counter request for decrease XML data load */
 			st_raw = zbx_time() - SEC_PER_HOUR;
 			st = *gmtime(&st_raw);
-			strftime(st_str,sizeof(st_str),"%Y-%m-%dT%XZ", &st);
+			strftime(st_str, sizeof(st_str), "%Y-%m-%dT%XZ", &st);
 			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:startTime>%s</ns0:startTime>",st_str);
 		}
 
@@ -4310,6 +4310,8 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 	if (CURLE_OK == (err = curl_easy_perform(easyhandle)))
 	{
+		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
+
 		/* parse performance data into local memory */
 		zbx_vector_ptr_create(&perfdata);
 		vmware_service_parse_perf_data(&perfdata, page.data);
