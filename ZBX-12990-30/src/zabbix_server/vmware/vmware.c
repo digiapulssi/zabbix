@@ -597,6 +597,7 @@ static void	vmware_entities_shared_clean_stats(zbx_hashset_t *entities)
 static void	vmware_datastore_shared_free(zbx_vmware_datastore_t *datastore)
 {
 	__vm_mem_free_func(datastore->name);
+	__vm_mem_free_func(datastore->id);
 
 	if (NULL != datastore->uuid)
 		__vm_mem_free_func(datastore->uuid);
