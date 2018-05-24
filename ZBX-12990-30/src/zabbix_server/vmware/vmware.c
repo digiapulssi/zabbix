@@ -80,7 +80,6 @@ extern char		*CONFIG_SOURCE_IP;
 #define ZBX_VMWARE_PERF_UPDATE_PERIOD	CONFIG_VMWARE_PERF_FREQUENCY
 #define ZBX_VMWARE_SERVICE_TTL		SEC_PER_DAY
 #define ZBX_XML_DATETIME		26
-#define ZBX_XML_TRIM_CHARS		"\t\r\n"
 
 static ZBX_MUTEX	vmware_lock = ZBX_MUTEX_NULL;
 
@@ -1439,9 +1438,6 @@ static int	vmware_service_authenticate(zbx_vmware_service_t *service, CURL *easy
 			goto out;
 		}
 
-		if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-			zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
-
 		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
 		if (NULL == (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
@@ -1484,9 +1480,6 @@ static int	vmware_service_authenticate(zbx_vmware_service_t *service, CURL *easy
 		*error = zbx_strdup(*error, curl_easy_strerror(err));
 		goto out;
 	}
-
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
 
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
@@ -1667,9 +1660,6 @@ static	int	vmware_service_get_contents(zbx_vmware_service_t *service, CURL *easy
 		goto out;
 	}
 
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
-
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
@@ -1742,9 +1732,6 @@ static int	vmware_service_get_perf_counter_hist_interval(const zbx_vmware_servic
 		*error = zbx_strdup(*error, curl_easy_strerror(err));
 		goto out;
 	}
-
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
 
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
@@ -1826,9 +1813,6 @@ static int	vmware_service_get_perf_counter_refreshrate(zbx_vmware_service_t *ser
 		*error = zbx_strdup(*error, curl_easy_strerror(err));
 		goto out;
 	}
-
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
 
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
@@ -2336,9 +2320,6 @@ static int	vmware_service_get_vm_data(zbx_vmware_service_t *service, CURL *easyh
 		goto out;
 	}
 
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
-
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
@@ -2472,9 +2453,6 @@ static zbx_vmware_datastore_t	*vmware_service_create_datastore(const zbx_vmware_
 	if (CURLE_OK != curl_easy_perform(easyhandle))
 		goto out;
 
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
-
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
 	name = zbx_xml_read_value(page.data, ZBX_XPATH_DATASTORE_SUMMARY("name"));
@@ -2601,9 +2579,6 @@ static int	vmware_service_get_hv_data(const zbx_vmware_service_t *service, CURL 
 		*error = zbx_strdup(*error, curl_easy_strerror(err));
 		goto out;
 	}
-
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
 
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
@@ -2929,9 +2904,6 @@ static int	vmware_service_get_event_session(const zbx_vmware_service_t *service,
 		goto out;
 	}
 
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
-
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
@@ -3066,9 +3038,6 @@ static int	vmware_service_read_previous_events(CURL *easyhandle, const char *eve
 
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
 		goto out;
-
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
 
 	zabbix_log(LOG_LEVEL_TRACE, "SOAP response: %s", page.data);
 
@@ -3459,9 +3428,6 @@ static int	vmware_service_get_clusters(const zbx_vmware_service_t *service, CURL
 		goto out;
 	}
 
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
-
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
@@ -3541,9 +3507,6 @@ static int	vmware_service_get_cluster_status(const zbx_vmware_service_t *service
 		*error = zbx_strdup(*error, curl_easy_strerror(err));
 		goto out;
 	}
-
-	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_TRACE))
-		zbx_remove_chars(page.data, ZBX_XML_TRIM_CHARS);
 
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
