@@ -256,7 +256,7 @@ int	vmware_vm_compare(const void *d1, const void *d2)
 #define ZBX_XPATH_REFRESHRATE()										\
 	"/*/*/*/*/*[local-name()='refreshRate' and ../*[local-name()='currentSupported']='true']"
 
-#define ZBX_XPATH_ISAGREGATE()										\
+#define ZBX_XPATH_ISAGGREGATE()										\
 	"/*/*/*/*/*[local-name()='entity'][../*[local-name()='summarySupported']='true' and "		\
 	"../*[local-name()='currentSupported']='false']"
 
@@ -282,10 +282,6 @@ int	vmware_vm_compare(const void *d1, const void *d2)
 #define ZBX_XPATH_DATASTORE_SUMMARY(property)								\
 	"/*/*/*/*/*[local-name()='propSet'][*[local-name()='name'][text()='summary']]"			\
 		"/*[local-name()='val']/*[local-name()='" property "']"
-
-#define ZBX_XPATH_MINHISTINTERVAL() 									\
-	"//*[local-name()='PerfInterval'][*[local-name()='enabled'] = 'true'][position() =1]"		\
-	"/*[local-name()='samplingPeriod']"
 
 typedef struct
 {
@@ -1674,90 +1670,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: vmware_service_get_perf_counter_hist_interval                    *
- *                                                                            *
- * Purpose: get the minimal value of global system defined historicalInterval *
- *          (refreshrate) of performance counters                             *
- *                                                                            *
- * Parameters: service       - [IN] the vmware service                        *
- *             easyhandle    - [IN] the CURL handle                           *
- *             hist_interval - [OUT] a pointer to variable to store the       *
- *                                   performance counter history interval     *
- *             error         - [OUT] the error message in the case of failure *
- *                                                                            *
- * Return value: SUCCEED - the authentication was completed successfully      *
- *               FAIL    - the authentication process has failed              *
- *                                                                            *
- ******************************************************************************/
-static int	vmware_service_get_perf_counter_hist_interval(const zbx_vmware_service_t *service,
-		CURL *easyhandle, int *hist_interval, char **error)
-{
-#	define ZBX_POST_VCENTER_PERF_COUNTERS_HIST_INTERVAL					\
-		ZBX_POST_VSPHERE_HEADER								\
-		"<ns0:RetrieveProperties>"							\
-			"<ns0:_this type=\"PropertyCollector\">%s</ns0:_this>"			\
-			"<ns0:specSet>"								\
-				"<ns0:propSet>"							\
-					"<ns0:type>PerformanceManager</ns0:type>"		\
-					"<ns0:pathSet>historicalInterval</ns0:pathSet>"		\
-				"</ns0:propSet>"						\
-				"<ns0:objectSet>"						\
-					"<ns0:obj type=\"PerformanceManager\">%s</ns0:obj>"	\
-				"</ns0:objectSet>"						\
-			"</ns0:specSet>"							\
-		"</ns0:RetrieveProperties>"							\
-		ZBX_POST_VSPHERE_FOOTER
-
-	const char	*__function_name = "vmware_service_get_perf_counter_hist_interval";
-
-	char		tmp[MAX_STRING_LEN], *value = NULL;
-	int		err, opt, ret = FAIL;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
-	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VCENTER_PERF_COUNTERS_HIST_INTERVAL,
-			vmware_service_objects[service->type].property_collector,
-			vmware_service_objects[service->type].performance_manager);
-
-	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
-	{
-		*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
-		goto out;
-	}
-
-	page.offset = 0;
-
-	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
-	{
-		*error = zbx_strdup(*error, curl_easy_strerror(err));
-		goto out;
-	}
-
-	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
-
-	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
-		goto out;
-
-	if (NULL == (value = zbx_xml_read_value(page.data, ZBX_XPATH_MINHISTINTERVAL())))
-	{
-		*error = zbx_strdup(*error, "Cannot find historical interval.");
-		goto out;
-	}
-
-	zabbix_log(LOG_LEVEL_DEBUG, "%s() minimal historical interval: %s", __function_name, value);
-
-	if (SUCCEED != (ret = is_uint31(value, hist_interval)))
-		*error = zbx_dsprintf(*error, "Cannot convert historical interval from %s.",  value);
-
-	zbx_free(value);
-out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return ret;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: vmware_service_get_perf_counter_refreshrate                      *
  *                                                                            *
  * Purpose: get the performance counter refreshrate for the specified entity  *
@@ -1819,19 +1731,13 @@ static int	vmware_service_get_perf_counter_refreshrate(zbx_vmware_service_t *ser
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
 		goto out;
 
-	if (NULL != (value = zbx_xml_read_value(page.data, ZBX_XPATH_ISAGREGATE())))
+	if (NULL != (value = zbx_xml_read_value(page.data, ZBX_XPATH_ISAGGREGATE())))
 	{
 		zbx_free(value);
-
-		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN == service->hist_interval &&
-				SUCCEED != vmware_service_get_perf_counter_hist_interval(service, easyhandle,
-				&service->hist_interval, error))
-		{
-			goto out;
-		}
-
-		*refresh_rate = service->hist_interval;
+		*refresh_rate = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
 		ret = SUCCEED;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "%s() refresh_rate: unused", __function_name);
 		goto out;
 	}
 	else if (NULL == (value = zbx_xml_read_value(page.data, ZBX_XPATH_REFRESHRATE())))
@@ -4225,7 +4131,7 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 		zbx_free(id_esc);
 
-		if (entity->refresh >= service->hist_interval)
+		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN == entity->refresh)
 		{
 			time_t st_raw;
 			struct tm st;
@@ -4246,13 +4152,19 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:metricId><ns0:counterId>" ZBX_FS_UI64
 					"</ns0:counterId><ns0:instance>%s</ns0:instance></ns0:metricId>",
-					counter->counterid, entity->refresh < service->hist_interval ? "*" : "");
+					counter->counterid, ZBX_VMWARE_PERF_INTERVAL_UNKNOWN == entity->refresh ?
+					"" : "*");
 
 			counter->state |= ZBX_VMWARE_COUNTER_UPDATING;
 		}
 
-		zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:intervalId>%d</ns0:intervalId></ns0:querySpec>",
+		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN != entity->refresh)
+		{
+			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:intervalId>%d</ns0:intervalId>",
 				entity->refresh);
+		}
+
+		zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "</ns0:querySpec>");
 	}
 
 	zbx_vmware_unlock();
@@ -4417,7 +4329,6 @@ zbx_vmware_service_t	*zbx_vmware_get_service(const char* url, const char* userna
 	service->state = ZBX_VMWARE_STATE_NEW;
 	service->lastaccess = now;
 	service->eventlog_last_key = ZBX_VMWARE_EVENT_KEY_UNINITIALIZED;
-	service->hist_interval = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
 
 	zbx_hashset_create_ext(&service->entities, 100, vmware_perf_entity_hash_func,  vmware_perf_entity_compare_func,
 			NULL, __vm_mem_malloc_func, __vm_mem_realloc_func, __vm_mem_free_func);
