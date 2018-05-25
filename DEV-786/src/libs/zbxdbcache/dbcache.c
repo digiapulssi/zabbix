@@ -2725,8 +2725,6 @@ static void	DCmodule_sync_history(int history_float_num, int history_integer_num
 	}
 }
 
-
-
 /******************************************************************************
  *                                                                            *
  * Function: DCsync_history                                                   *
@@ -2747,11 +2745,11 @@ int	DCsync_history(int sync_type, int *total_num)
 	static ZBX_DC_HISTORY		*history = NULL;	/* array of structures where item data from history  */
 								/* cache are copied into to process triggers, trends */
 								/* etc and finally write into db */
-	static ZBX_HISTORY_FLOAT	*history_float;
-	static ZBX_HISTORY_INTEGER	*history_integer;
-	static ZBX_HISTORY_STRING	*history_string;
-	static ZBX_HISTORY_TEXT		*history_text;
-	static ZBX_HISTORY_LOG		*history_log;
+	static ZBX_HISTORY_FLOAT	*history_float = NULL;
+	static ZBX_HISTORY_INTEGER	*history_integer = NULL;
+	static ZBX_HISTORY_STRING	*history_string = NULL;
+	static ZBX_HISTORY_TEXT		*history_text = NULL;
+	static ZBX_HISTORY_LOG		*history_log = NULL;
 	int				history_num, candidate_num, next_sync = 0, history_float_num,
 					history_integer_num, history_string_num, history_text_num, history_log_num, ret,
 					txn_error;
@@ -3059,6 +3057,11 @@ finish:
 			while (0 != zbx_flush_correlated_events())
 				;
 		}
+
+		zbx_free(history);
+		zbx_free(history_string);
+		zbx_free(history_text);
+		zbx_free(history_log);
 
 		zabbix_log(LOG_LEVEL_WARNING, "syncing history data done");
 	}
