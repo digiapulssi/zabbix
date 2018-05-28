@@ -203,7 +203,8 @@ typedef struct
 }
 zbx_vmware_service_t;
 
-#define ZBX_VMWARE_PERF_INTERVAL_UNKNOWN	-1
+#define ZBX_VMWARE_PERF_INTERVAL_UNKNOWN	0
+#define ZBX_VMWARE_PERF_INTERVAL_NONE		-1
 
 /* the vmware collector data */
 typedef struct

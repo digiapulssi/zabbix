@@ -1625,8 +1625,6 @@ static void	zbx_property_collection_free(zbx_property_collection_iter *iter)
 static	int	vmware_service_get_contents(zbx_vmware_service_t *service, CURL *easyhandle, char **contents,
 		char **error)
 {
-	ZBX_UNUSED(service);
-
 #	define ZBX_POST_VMWARE_CONTENTS 							\
 		ZBX_POST_VSPHERE_HEADER								\
 		"<ns0:RetrieveServiceContent>"							\
@@ -1637,6 +1635,8 @@ static	int	vmware_service_get_contents(zbx_vmware_service_t *service, CURL *easy
 	const char	*__function_name = "vmware_service_get_contents";
 
 	int		err, opt, ret = FAIL;
+
+	ZBX_UNUSED(service);
 
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, ZBX_POST_VMWARE_CONTENTS)))
 	{
@@ -1730,7 +1730,7 @@ static int	vmware_service_get_perf_counter_refreshrate(zbx_vmware_service_t *ser
 	if (NULL != (value = zbx_xml_read_value(page.data, ZBX_XPATH_ISAGGREGATE())))
 	{
 		zbx_free(value);
-		*refresh_rate = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
+		*refresh_rate = ZBX_VMWARE_PERF_INTERVAL_NONE;
 		ret = SUCCEED;
 
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() refresh_rate: unused", __function_name);
@@ -3166,8 +3166,6 @@ out:
 static int	vmware_service_get_clusters(const zbx_vmware_service_t *service, CURL *easyhandle, char **clusters,
 		char **error)
 {
-	ZBX_UNUSED(service);
-
 #	define ZBX_POST_VCENTER_CLUSTER								\
 		ZBX_POST_VSPHERE_HEADER								\
 		"<ns0:RetrievePropertiesEx xsi:type=\"ns0:RetrievePropertiesExRequestType\">"	\
@@ -3292,6 +3290,8 @@ static int	vmware_service_get_clusters(const zbx_vmware_service_t *service, CURL
 
 	int		err, o, ret = FAIL;
 
+	ZBX_UNUSED(service);
+
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, o = CURLOPT_POSTFIELDS, ZBX_POST_VCENTER_CLUSTER)))
@@ -3341,8 +3341,6 @@ out:
 static int	vmware_service_get_cluster_status(const zbx_vmware_service_t *service, CURL *easyhandle,
 		const char *clusterid, char **status, char **error)
 {
-	ZBX_UNUSED(service);
-
 #	define ZBX_POST_VMWARE_CLUSTER_STATUS 								\
 		ZBX_POST_VSPHERE_HEADER									\
 		"<ns0:RetrievePropertiesEx>"								\
@@ -3365,6 +3363,8 @@ static int	vmware_service_get_cluster_status(const zbx_vmware_service_t *service
 
 	char		tmp[MAX_STRING_LEN], *clusterid_esc;
 	int		err, o, ret = FAIL;
+
+	ZBX_UNUSED(service);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() clusterid:'%s'", __function_name, clusterid);
 
@@ -4042,13 +4042,13 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 	zbx_hashset_iter_reset(&service->entities, &iter);
 	while (NULL != (entity = zbx_hashset_iter_next(&iter)))
 	{
-		if (0 != entity->refresh)
+		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN != entity->refresh)
 			continue;
 
 		local_entity = zbx_malloc(NULL, sizeof(zbx_vmware_perf_entity_t));
 		local_entity->type = zbx_strdup(NULL, entity->type);
 		local_entity->id = zbx_strdup(NULL, entity->id);
-		local_entity->refresh = 0;
+		local_entity->refresh = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
 
 		zbx_vector_ptr_append(&entities, local_entity);
 	}
@@ -4090,7 +4090,7 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 	{
 		char	*id_esc;
 
-		if (0 == entity->refresh)
+		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN == entity->refresh)
 		{
 			zabbix_log(LOG_LEVEL_DEBUG, "skipping performance entity with zero refresh rate "
 					"type:%s id:%d", entity->type, entity->id);
@@ -4105,7 +4105,7 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 		zbx_free(id_esc);
 
-		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN == entity->refresh)
+		if (ZBX_VMWARE_PERF_INTERVAL_NONE == entity->refresh)
 		{
 			time_t st_raw;
 			struct tm st;
@@ -4126,13 +4126,13 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:metricId><ns0:counterId>" ZBX_FS_UI64
 					"</ns0:counterId><ns0:instance>%s</ns0:instance></ns0:metricId>",
-					counter->counterid, ZBX_VMWARE_PERF_INTERVAL_UNKNOWN == entity->refresh ?
+					counter->counterid, ZBX_VMWARE_PERF_INTERVAL_NONE == entity->refresh ?
 					"" : "*");
 
 			counter->state |= ZBX_VMWARE_COUNTER_UPDATING;
 		}
 
-		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN != entity->refresh)
+		if (ZBX_VMWARE_PERF_INTERVAL_NONE != entity->refresh)
 		{
 			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:intervalId>%d</ns0:intervalId>",
 				entity->refresh);
@@ -4392,7 +4392,7 @@ int	zbx_vmware_service_add_perf_counter(zbx_vmware_service_t *service, const cha
 
 	if (NULL == (pentity = zbx_vmware_service_get_perf_entity(service, type, id)))
 	{
-		entity.refresh = 0;
+		entity.refresh = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
 		entity.last_seen = 0;
 		entity.type = vmware_shared_strdup(type);
 		entity.id = vmware_shared_strdup(id);
