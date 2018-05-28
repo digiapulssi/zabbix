@@ -3669,7 +3669,6 @@ static void	vmware_service_update_perf_entities(zbx_vmware_service_t *service)
 					" %s ds name: %s ds uuid: %s", __function_name, hv->id, hv->uuid, ds->id,
 					ds->name, ds->uuid);
 		}
-
 	}
 
 	/* remove old entities */
