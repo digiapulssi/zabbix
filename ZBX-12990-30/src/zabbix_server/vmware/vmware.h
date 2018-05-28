@@ -84,10 +84,6 @@ typedef struct
 	char	*name;
 	char	*uuid;
 	char	*id;
-
-	zbx_uint64_t	capacity;
-	zbx_uint64_t	free_space;
-	zbx_uint64_t	uncommitted;
 }
 zbx_vmware_datastore_t;
 

@@ -940,10 +940,6 @@ static zbx_vmware_datastore_t	*vmware_datastore_shared_dup(const zbx_vmware_data
 	datastore->name = vmware_shared_strdup(src->name);
 	datastore->id = vmware_shared_strdup(src->id);
 
-	datastore->capacity = src->capacity;
-	datastore->free_space = src->free_space;
-	datastore->uncommitted = src->uncommitted;
-
 	return datastore;
 }
 
@@ -2383,31 +2379,10 @@ static zbx_vmware_datastore_t	*vmware_service_create_datastore(const zbx_vmware_
 		zbx_free(path);
 	}
 
-	if (NULL != (value = zbx_xml_read_value(page.data, ZBX_XPATH_DATASTORE_SUMMARY("capacity"))))
-	{
-		is_uint64(value, &capacity);
-		zbx_free(value);
-	}
-
-	if (NULL != (value = zbx_xml_read_value(page.data, ZBX_XPATH_DATASTORE_SUMMARY("freeSpace"))))
-	{
-		is_uint64(value, &free_space);
-		zbx_free(value);
-	}
-
-	if (NULL != (value = zbx_xml_read_value(page.data, ZBX_XPATH_DATASTORE_SUMMARY("uncommitted"))))
-	{
-		is_uint64(value, &uncommitted);
-		zbx_free(value);
-	}
-
 	datastore = zbx_malloc(NULL, sizeof(zbx_vmware_datastore_t));
 	datastore->name = (NULL != name) ? name : zbx_strdup(NULL, id);
 	datastore->uuid = uuid;
 	datastore->id = zbx_strdup(NULL, id);
-	datastore->capacity = capacity;
-	datastore->free_space = free_space;
-	datastore->uncommitted = uncommitted;
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 
@@ -3665,7 +3640,8 @@ static void	vmware_service_update_perf_entities(zbx_vmware_service_t *service)
 					};
 
 	const char			*ds_perfcounters[] = {
-						"disk/used[latest]", NULL
+						"disk/used[latest]", "disk/provisioned[latest]",
+						"disk/capacity[latest]", NULL
 					};
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);

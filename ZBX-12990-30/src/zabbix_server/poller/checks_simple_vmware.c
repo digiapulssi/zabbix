@@ -1573,7 +1573,8 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 	zbx_vmware_hv_t		*hv;
 	int			i, ret = SYSINFO_RET_FAIL, mode;
 	zbx_vmware_datastore_t	*datastore;
-	zbx_uint64_t		disk_used = 0;
+	zbx_uint64_t		disk_used, disk_provisioned, disk_capacity;
+	AGENT_RESULT		perf_result;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1634,72 +1635,70 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 		goto unlock;
 	}
 
-	if (ZBX_VMWARE_DATASTORE_SIZE_FREE == mode || ZBX_VMWARE_DATASTORE_SIZE_PFREE == mode)
+	switch (mode)
 	{
-		AGENT_RESULT	perf_result;
+		case ZBX_VMWARE_DATASTORE_SIZE_UNCOMMITTED:
+			init_result(&perf_result);
 
-		init_result(&perf_result);
+			if (SUCCEED != vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
+					"disk/provisioned[latest]", DATASTORE_TOTAL, ZBX_KIBIBYTE, &perf_result)
+					|| NULL == GET_UI64_RESULT(&perf_result))
+			{
+				free_result(&perf_result);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown value of disk/provisioned[latest]."));
+				goto unlock;
+			}
 
-		if (SUCCEED == vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
-				"disk/used[latest]", DATASTORE_TOTAL, 1, &perf_result)
-				&& NULL != GET_UI64_RESULT(&perf_result))
-		{
-			disk_used = *GET_UI64_RESULT(&perf_result) * ZBX_KIBIBYTE;
-		}
+			disk_provisioned = *GET_UI64_RESULT(&perf_result);
+			free_result(&perf_result);
+		case ZBX_VMWARE_DATASTORE_SIZE_FREE:
+		case ZBX_VMWARE_DATASTORE_SIZE_PFREE:
+			init_result(&perf_result);
 
-		free_result(&perf_result);
+			if (SUCCEED != vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
+					"disk/used[latest]", DATASTORE_TOTAL, ZBX_KIBIBYTE, &perf_result)
+					|| NULL == GET_UI64_RESULT(&perf_result))
+			{
+				free_result(&perf_result);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown value of disk/used[latest]."));
+				goto unlock;
+			}
 
+			disk_used = *GET_UI64_RESULT(&perf_result);
+			free_result(&perf_result);
+
+			if (ZBX_VMWARE_DATASTORE_SIZE_UNCOMMITTED == mode)
+				break;
+
+		case ZBX_VMWARE_DATASTORE_SIZE_TOTAL:
+			init_result(&perf_result);
+
+			if (SUCCEED != vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
+					"disk/capacity[latest]", DATASTORE_TOTAL, ZBX_KIBIBYTE, &perf_result)
+					|| NULL == GET_UI64_RESULT(&perf_result))
+			{
+				free_result(&perf_result);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown value of disk/capacity[latest]."));
+				goto unlock;
+			}
+
+			disk_capacity = *GET_UI64_RESULT(&perf_result);
+			free_result(&perf_result);
 	}
 
 	switch (mode)
 	{
 		case ZBX_VMWARE_DATASTORE_SIZE_TOTAL:
-			if (ZBX_MAX_UINT64 == datastore->capacity)
-			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Datastore \"capacity\" is not available."));
-				goto unlock;
-			}
-			SET_UI64_RESULT(result, datastore->capacity);
+			SET_UI64_RESULT(result, disk_capacity);
 			break;
 		case ZBX_VMWARE_DATASTORE_SIZE_FREE:
-			if (0 <  datastore->capacity && ZBX_MAX_UINT64 > datastore->capacity && 0 < disk_used)
-			{
-				SET_UI64_RESULT(result, datastore->capacity - disk_used);
-				break;
-			}
-			else if (ZBX_MAX_UINT64 == datastore->free_space)
-			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Datastore \"free space\" is not available."));
-				goto unlock;
-			}
-			SET_UI64_RESULT(result, datastore->free_space);
+			SET_UI64_RESULT(result, disk_capacity - disk_used);
 			break;
 		case ZBX_VMWARE_DATASTORE_SIZE_UNCOMMITTED:
-			if (ZBX_MAX_UINT64 == datastore->uncommitted)
-			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Datastore \"uncommitted\" is not available."));
-				goto unlock;
-			}
-			SET_UI64_RESULT(result, datastore->uncommitted);
+			SET_UI64_RESULT(result, disk_provisioned - disk_used);
 			break;
 		case ZBX_VMWARE_DATASTORE_SIZE_PFREE:
-			if (ZBX_MAX_UINT64 == datastore->capacity)
-			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Datastore \"capacity\" is not available."));
-				goto unlock;
-			}
-			if (ZBX_MAX_UINT64 == datastore->free_space)
-			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Datastore \"free space\" is not available."));
-				goto unlock;
-			}
-			if (0 == datastore->capacity)
-			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Datastore \"capacity\" is zero."));
-				goto unlock;
-			}
-			SET_DBL_RESULT(result, (double) (0 == disk_used? datastore->free_space :
-					datastore->capacity - disk_used) / datastore->capacity * 100);
+			SET_DBL_RESULT(result, (double) (disk_capacity - disk_used) / disk_capacity * 100);
 			break;
 	}
 
