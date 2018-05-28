@@ -632,19 +632,35 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				throw new Exception();
 			}
 
+			$src_host_items = API::Item()->get([
+				'output' => ['key_'],
+				'hostids' => $srcHostId,
+				'webitems' => true,
+				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
+				'preservekeys' => true
+			]);
+
 			$host_items = API::Item()->get([
 				'output' => ['key_'],
 				'hostids' => $hostId,
 				'webitems' => true,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
 			]);
-			$host_items = zbx_objectValues($host_items, 'key_');
+			$host_item_keys = zbx_objectValues($host_items, 'key_');
+
+			// Items skipped from copying.
+			$skipped_items = [];
+			foreach ($src_host_items as $src_host_itemid => $src_host_item) {
+				if (!in_array($src_host_item['key_'], $host_item_keys)) {
+					$skipped_items[$src_host_itemid] = $src_host_item;
+				}
+			}
 
 			// copy triggers
 			$dbTriggers = API::Trigger()->get([
 				'output' => ['triggerid'],
 				'hostids' => $srcHostId,
-				'selectItems' => ['key_'],
+				'selectItems' => ['itemid'],
 				'inherited' => false,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL]
 			]);
@@ -652,7 +668,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			if ($dbTriggers) {
 				foreach ($dbTriggers as $index => $trigger) {
 					foreach ($trigger['items'] as $item) {
-						if (!in_array($item['key_'], $host_items)) {
+						if (array_key_exists($item['itemid'], $skipped_items)) {
 							unset($dbTriggers[$index]);
 							break;
 						}
@@ -686,7 +702,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$dbGraphs = API::Graph()->get([
 				'output' => API_OUTPUT_EXTEND,
 				'selectHosts' => ['hostid'],
-				'selectItems' => ['key_', 'type'],
+				'selectItems' => ['itemid', 'type'],
 				'hostids' => $srcHostId,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'inherited' => false
@@ -702,7 +718,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				}
 
 				foreach ($dbGraph['items'] as $item) {
-					if (!in_array($item['key_'], $host_items)) {
+					if (array_key_exists($item['itemid'], $skipped_items)) {
 						continue 2;
 					}
 				}
