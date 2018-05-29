@@ -461,7 +461,7 @@ class CMediatype extends CApiService {
 				$this->checkRequiredFieldsByType($mediatype);
 			}
 			else {
-				$optional_fields_by_type = [
+				$required_fields_by_type = [
 					MEDIA_TYPE_EMAIL => ['smtp_server', 'smtp_helo', 'smtp_email'],
 					MEDIA_TYPE_EXEC => ['exec_path'],
 					MEDIA_TYPE_SMS => ['gsm_modem'],
@@ -469,7 +469,7 @@ class CMediatype extends CApiService {
 					MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username', 'passwd']
 				];
 
-				foreach ($optional_fields_by_type[$db_mediatype['type']] as $field) {
+				foreach ($required_fields_by_type[$db_mediatype['type']] as $field) {
 					if (array_key_exists($field, $mediatype)
 							&& ($mediatype[$field] === '' || $mediatype[$field] === null)) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _s(

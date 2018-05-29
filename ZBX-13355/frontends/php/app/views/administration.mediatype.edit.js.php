@@ -110,6 +110,11 @@
 			}
 		}
 
+		$('#chPass_btn').on('click', function() {
+			$(this).hide();
+			$('#passwd').show().removeAttr('disabled').focus();
+		});
+
 		// When adding and removing dynamic rows, store counter in hidden field.
 		$('#exec_params_table').dynamicRows({
 			template: '#exec_params_row',
