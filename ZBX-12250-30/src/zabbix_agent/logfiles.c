@@ -1391,8 +1391,9 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 			/* Do not make a logrt[] item NOTSUPPORTED if there are no matching log files or they are not */
 			/* accessible (can happen during a rotation), just log the problem. */
 #ifdef _WINDOWS
-			zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\" or insufficient "
-					"access rights", format, directory);
+			zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\"", format,
+					directory);
+
 			ret = ZBX_NO_FILE_ERROR;
 #else
 			if (0 != access(directory, X_OK))
