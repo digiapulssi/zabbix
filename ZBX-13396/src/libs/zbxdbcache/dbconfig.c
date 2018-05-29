@@ -11457,10 +11457,7 @@ int	zbx_dc_get_timer_itemids(time_t now, zbx_vector_uint64_t *itemids)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (SUCCEED == zbx_binary_heap_empty(&config->timer_queue))
-		goto out;
-
-	while (1)
+	while (SUCCEED != zbx_binary_heap_empty(&config->timer_queue))
 	{
 		zbx_binary_heap_elem_t	*elem;
 		zbx_dc_timer_item_t	*timer_item;
