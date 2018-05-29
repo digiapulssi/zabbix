@@ -1565,7 +1565,11 @@ out:
 int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username, const char *password,
 		AGENT_RESULT *result)
 {
-#	define	DATASTORE_TOTAL	""
+#define		ZBX_DATASTORE_TOTAL	""
+#define		ZBX_DATASTORE_COUNTER_CAPACITY		0x01
+#define		ZBX_DATASTORE_COUNTER_USED		0x02
+#define		ZBX_DATASTORE_COUNTER_PROVISIONED	0x04
+
 	const char		*__function_name = "check_vcenter_hv_datastore_size";
 
 	char			*url, *param, *uuid, *name;
@@ -1574,7 +1578,7 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 	int			i, ret = SYSINFO_RET_FAIL, mode;
 	zbx_vmware_datastore_t	*datastore;
 	zbx_uint64_t		disk_used, disk_provisioned, disk_capacity;
-	AGENT_RESULT		perf_result;
+	unsigned int		flags = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1592,10 +1596,12 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 	if (NULL == param || '\0' == *param || 0 == strcmp(param, "total"))
 	{
 		mode = ZBX_VMWARE_DATASTORE_SIZE_TOTAL;
+		flags = ZBX_DATASTORE_COUNTER_CAPACITY;
 	}
 	else if (0 == strcmp(param, "free"))
 	{
 		mode = ZBX_VMWARE_DATASTORE_SIZE_FREE;
+		flags = ZBX_DATASTORE_COUNTER_CAPACITY | ZBX_DATASTORE_COUNTER_USED;
 	}
 	else if (0 == strcmp(param, "pfree"))
 	{
@@ -1604,6 +1610,7 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 	else if (0 == strcmp(param, "uncommitted"))
 	{
 		mode = ZBX_VMWARE_DATASTORE_SIZE_UNCOMMITTED;
+		flags = ZBX_DATASTORE_COUNTER_PROVISIONED | ZBX_DATASTORE_COUNTER_USED;
 	}
 	else
 	{
@@ -1635,55 +1642,40 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 		goto unlock;
 	}
 
-	switch (mode)
+	if (0 != (flags & ZBX_DATASTORE_COUNTER_PROVISIONED))
 	{
-		case ZBX_VMWARE_DATASTORE_SIZE_UNCOMMITTED:
-			init_result(&perf_result);
+		ret = vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
+				"disk/provisioned[latest]", ZBX_DATASTORE_TOTAL, ZBX_KIBIBYTE, result);
 
-			if (SUCCEED != vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
-					"disk/provisioned[latest]", DATASTORE_TOTAL, ZBX_KIBIBYTE, &perf_result)
-					|| NULL == GET_UI64_RESULT(&perf_result))
-			{
-				free_result(&perf_result);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown value of disk/provisioned[latest]."));
-				goto unlock;
-			}
+		if (SYSINFO_RET_OK != ret || NULL == GET_UI64_RESULT(result))
+			goto unlock;
 
-			disk_provisioned = *GET_UI64_RESULT(&perf_result);
-			free_result(&perf_result);
-		case ZBX_VMWARE_DATASTORE_SIZE_FREE:
-		case ZBX_VMWARE_DATASTORE_SIZE_PFREE:
-			init_result(&perf_result);
+		disk_provisioned = *GET_UI64_RESULT(result);
+		UNSET_UI64_RESULT(result);
+	}
 
-			if (SUCCEED != vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
-					"disk/used[latest]", DATASTORE_TOTAL, ZBX_KIBIBYTE, &perf_result)
-					|| NULL == GET_UI64_RESULT(&perf_result))
-			{
-				free_result(&perf_result);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown value of disk/used[latest]."));
-				goto unlock;
-			}
+	if (0 != (flags & ZBX_DATASTORE_COUNTER_USED))
+	{
+		ret = vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id, "disk/used[latest]",
+				ZBX_DATASTORE_TOTAL, ZBX_KIBIBYTE, result);
 
-			disk_used = *GET_UI64_RESULT(&perf_result);
-			free_result(&perf_result);
+		if (SYSINFO_RET_OK != ret || NULL == GET_UI64_RESULT(result))
+			goto unlock;
 
-			if (ZBX_VMWARE_DATASTORE_SIZE_UNCOMMITTED == mode)
-				break;
+		disk_used = *GET_UI64_RESULT(result);
+		UNSET_UI64_RESULT(result);
+	}
 
-		case ZBX_VMWARE_DATASTORE_SIZE_TOTAL:
-			init_result(&perf_result);
+	if (0 != (flags & ZBX_DATASTORE_COUNTER_CAPACITY))
+	{
+		ret = vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
+				"disk/capacity[latest]", ZBX_DATASTORE_TOTAL, ZBX_KIBIBYTE, result);
 
-			if (SUCCEED != vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
-					"disk/capacity[latest]", DATASTORE_TOTAL, ZBX_KIBIBYTE, &perf_result)
-					|| NULL == GET_UI64_RESULT(&perf_result))
-			{
-				free_result(&perf_result);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown value of disk/capacity[latest]."));
-				goto unlock;
-			}
+		if (SYSINFO_RET_OK != ret || NULL == GET_UI64_RESULT(result))
+			goto unlock;
 
-			disk_capacity = *GET_UI64_RESULT(&perf_result);
-			free_result(&perf_result);
+		disk_capacity = *GET_UI64_RESULT(result);
+		UNSET_UI64_RESULT(result);
 	}
 
 	switch (mode)
@@ -1709,6 +1701,11 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, sysinfo_ret_string(ret));
 
 	return ret;
+
+#undef	ZBX_DATASTORE_COUNTER_PROVISIONED
+#undef	ZBX_DATASTORE_COUNTER_USED
+#undef	ZBX_DATASTORE_COUNTER_CAPACITY
+#undef	ZBX_DATASTORE_TOTAL
 }
 
 int	check_vcenter_hv_perfcounter(AGENT_REQUEST *request, const char *username, const char *password,
