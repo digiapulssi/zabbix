@@ -1970,10 +1970,25 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	if (SUCCEED != (res = make_logfile_list(flags, filename, mtime, &logfiles, &logfiles_alloc, &logfiles_num,
 			use_ino, err_msg)))
 	{
-		if (ZBX_NO_FILE_ERROR == res && 1 == *skip_old_data)
+		if (ZBX_NO_FILE_ERROR == res)
 		{
-			*skip_old_data = 0;
-			zabbix_log(LOG_LEVEL_DEBUG, "%s(): no files, setting skip_old_data to 0", __function_name);
+			if (1 == *skip_old_data)
+			{
+				*skip_old_data = 0;
+
+				zabbix_log(LOG_LEVEL_DEBUG, "%s(): no files, setting skip_old_data to 0",
+						__function_name);
+			}
+
+			if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) && 0 == *logfiles_num_old)
+			{
+				/* Both the old and the new log file lists are empty. That means the agent has not */
+				/* seen any log files for this logrt[] item since started. If log files appear later */
+				/* then analyze them from start, do not apply the 'lastlogsize' received from server */
+				/* anymore. */
+
+				*lastlogsize = 0;
+			}
 		}
 
 		/* file was not accessible for a log[] item or an error occurred */
