@@ -101,7 +101,7 @@ $filter = [
 ];
 
 // we'll need to hide the host column if only one host is selected
-$singleHostSelected = (count($filter['hostids']) == 1);
+$singleHostSelected = ($filter['hostids'] !== null && count($filter['hostids']) == 1);
 
 $sortField = getRequest('sort', CProfile::get('web.'.$page['file'].'.sort', 'name'));
 $sortOrder = getRequest('sortorder', CProfile::get('web.'.$page['file'].'.sortorder', ZBX_SORT_UP));
