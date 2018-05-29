@@ -169,6 +169,34 @@ out:
 	return cluster;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: vmware_service_get_counter_value_by_id                           *
+ *                                                                            *
+ * Purpose: gets vmware performance counter value by its identifier           *
+ *                                                                            *
+ * Parameters: service   - [IN] the vmware service                            *
+ *             type      - [IN] the performance entity type (HostSystem,      *
+ *                              VirtualMachine, Datastore)                    *
+ *             id        - [IN] the performance entity identifier             *
+ *             counterid - [IN] the performance counter identifier            *
+ *             instance  - [IN] the performance counter instance or "" for    *
+ *                              aggregate data                                *
+ *             coeff     - [IN] the coefficient to apply to the value         *
+ *             result    - [OUT] the output result                            *
+ *                                                                            *
+ * Return value: SYSINFO_RET_OK, result has value - performance counter value *
+ *                               was successfully retrieved                   *
+ *               SYSINFO_RET_OK, result has no value - performance counter    *
+ *                               was found without a value                    *
+ *               SYSINFO_RET_FAIL - otherwise, error message is set in result *
+ *                                                                            *
+ * Comments: There can be situation when performance counter is configured    *
+ *           to be read but the collector has not yet processed it. In this   *
+ *           case return SYSINFO_RET_OK with empty result so that it is       *
+ *           ignored by server rather than generating error.                  *
+ *                                                                            *
+ ******************************************************************************/
 static int	vmware_service_get_counter_value_by_id(zbx_vmware_service_t *service, const char *type, const char *id,
 		zbx_uint64_t counterid, const char *instance, int coeff, AGENT_RESULT *result)
 {
@@ -242,6 +270,35 @@ out:
 	return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: vmware_service_get_counter_value_by_path                         *
+ *                                                                            *
+ * Purpose: gets vmware performance counter value by the path                 *
+ *                                                                            *
+ * Parameters: service  - [IN] the vmware service                             *
+ *             type     - [IN] the performance entity type (HostSystem,       *
+ *                             VirtualMachine, Datastore)                     *
+ *             id       - [IN] the performance entity identifier              *
+ *             path     - [IN] the performance counter path                   *
+ *                             (<group>/<key>[<rollup type>])                 *
+ *             instance - [IN] the performance counter instance or "" for     *
+ *                             aggregate data                                 *
+ *             coeff    - [IN] the coefficient to apply to the value          *
+ *             result   - [OUT] the output result                             *
+ *                                                                            *
+ * Return value: SYSINFO_RET_OK, result has value - performance counter value *
+ *                               was successfully retrieved                   *
+ *               SYSINFO_RET_OK, result has no value - performance counter    *
+ *                               was found without a value                    *
+ *               SYSINFO_RET_FAIL - otherwise, error message is set in result *
+ *                                                                            *
+ * Comments: There can be situation when performance counter is configured    *
+ *           to be read but the collector has not yet processed it. In this   *
+ *           case return SYSINFO_RET_OK with empty result so that it is       *
+ *           ignored by server rather than generating error.                  *
+ *                                                                            *
+ ******************************************************************************/
 static int	vmware_service_get_counter_value_by_path(zbx_vmware_service_t *service, const char *type,
 		const char *id, const char *path, const char *instance, int coeff, AGENT_RESULT *result)
 {
