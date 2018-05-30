@@ -704,7 +704,7 @@ static int	dc_timer_calculate_nextcheck(time_t now, int seed)
  *                                                                            *
  * Function: dc_timer_queue_item                                              *
  *                                                                            *
- * Purpose: queues item to timer queue                                        *
+ * Purpose: adds item to timer queue                                          *
  *                                                                            *
  ******************************************************************************/
 static void	dc_timer_queue_item(zbx_uint64_t itemid)

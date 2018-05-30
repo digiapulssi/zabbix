@@ -696,11 +696,16 @@ typedef struct
 	zbx_hashset_t		psks;			/* for keeping PSK-identity and PSK pairs and for searching */
 							/* by PSK identity */
 #endif
-	zbx_hashset_t		timer_items;	/* items used with timer functions */
+	/* items used with time functions in trigger expressions */
+	zbx_hashset_t		timer_items;
 
 	zbx_binary_heap_t	queues[ZBX_POLLER_TYPE_COUNT];
 	zbx_binary_heap_t	pqueue;
-	zbx_binary_heap_t	timer_queue;	/* queue of reference counted items used with time functions */
+
+	/* Queue of reference counted items used with time functions. */
+	/* This queue is used to periodically recalculate triggers    */
+	/* having time functions in expressions.                      */
+	zbx_binary_heap_t	timer_queue;
 
 	zbx_vector_uint64_t	locked_lld_ruleids;	/* for keeping track of lld rules being processed */
 	ZBX_DC_CONFIG_TABLE	*config;
