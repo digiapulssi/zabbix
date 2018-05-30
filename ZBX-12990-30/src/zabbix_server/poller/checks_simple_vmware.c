@@ -1622,7 +1622,7 @@ out:
 int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username, const char *password,
 		AGENT_RESULT *result)
 {
-#define		ZBX_DATASTORE_TOTAL	""
+#define		ZBX_DATASTORE_TOTAL			""
 #define		ZBX_DATASTORE_COUNTER_CAPACITY		0x01
 #define		ZBX_DATASTORE_COUNTER_USED		0x02
 #define		ZBX_DATASTORE_COUNTER_PROVISIONED	0x04
@@ -1635,7 +1635,7 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 	int			i, ret = SYSINFO_RET_FAIL, mode;
 	zbx_vmware_datastore_t	*datastore;
 	zbx_uint64_t		disk_used, disk_provisioned, disk_capacity;
-	unsigned int		flags = 0;
+	unsigned int		flags;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1663,6 +1663,7 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 	else if (0 == strcmp(param, "pfree"))
 	{
 		mode = ZBX_VMWARE_DATASTORE_SIZE_PFREE;
+		flags = ZBX_DATASTORE_COUNTER_CAPACITY | ZBX_DATASTORE_COUNTER_USED;
 	}
 	else if (0 == strcmp(param, "uncommitted"))
 	{
@@ -1713,8 +1714,8 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 
 	if (0 != (flags & ZBX_DATASTORE_COUNTER_USED))
 	{
-		ret = vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id, "disk/used[latest]",
-				ZBX_DATASTORE_TOTAL, ZBX_KIBIBYTE, result);
+		ret = vmware_service_get_counter_value_by_path(service, "Datastore", datastore->id,
+				"disk/used[latest]", ZBX_DATASTORE_TOTAL, ZBX_KIBIBYTE, result);
 
 		if (SYSINFO_RET_OK != ret || NULL == GET_UI64_RESULT(result))
 			goto unlock;
