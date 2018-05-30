@@ -1159,7 +1159,7 @@ static int	process_log_check(char *server, unsigned short port, ZBX_ACTIVE_METRI
 		if (3 > metric->error_count)
 		{
 			zabbix_log(LOG_LEVEL_DEBUG, "suppressing log(rt) processing error #%d: %s",
-					metric->error_count, NULL != *error ? *error : "unknown error");
+					metric->error_count, NULL != *error ? *error : "(no error message)");
 
 			zbx_free(*error);
 			ret = SUCCEED;
