@@ -474,10 +474,11 @@ jQuery(function($) {
 			var fixCircularDependencies = function($obj, tree_items) {
 				var tree_items = tree_items || [],
 					item_to_test,
-					parents;
+					parents,
+					all_parents = tree_items.map(function(i) {return i.parent});
 
 				$.each(tree_items, function(i, item) {
-					if (item['parent'] == item['id'] || typeof tree_items[item['parent']] === 'undefined') {
+					if (item['parent'] == item['id'] || all_parents.indexOf(item['parent']) == -1) {
 						item['parent'] = 0;
 					}
 
