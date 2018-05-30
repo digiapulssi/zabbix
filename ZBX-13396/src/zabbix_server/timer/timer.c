@@ -543,15 +543,15 @@ static int	process_maintenance(void)
 
 /******************************************************************************
  *                                                                            *
- * Function: queue_timer_items                                                *
+ * Function: process_timer_queue                                              *
  *                                                                            *
- * Purpose: queue items used with time functions in history cache to          *
- *          recalculate trigger expressions                                   *
+ * Purpose: processes timer queue by pushing trigger recalculation requests   *
+ *          into history cache                                                *
  *                                                                            *
- * Return value: The number of queued timer items.                            *
+ * Return value: The number of trigger recalculation requests pushed.         *
  *                                                                            *
  ******************************************************************************/
-static int	queue_timer_items()
+static int	process_timer_queue()
 {
 	zbx_vector_uint64_t	itemids;
 	zbx_timespec_t		ts;
@@ -702,7 +702,7 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 		}
 
 		sec = zbx_time();
-		timer_item_count += queue_timer_items();
+		timer_item_count += process_timer_queue();
 		total_sec += zbx_time() - sec;
 
 		/* only the "timer #1" process evaluates the maintenance periods */

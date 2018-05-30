@@ -11482,7 +11482,7 @@ int	zbx_dc_get_timer_itemids(time_t now, zbx_vector_uint64_t *itemids)
 		zbx_binary_heap_update_direct(&config->timer_queue, elem);
 
 	}
-out:
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() itemids:%d", __function_name, itemids->values_num);
 
 	return 0 < itemids->values_num ? SUCCEED : FAIL;
