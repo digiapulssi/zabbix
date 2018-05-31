@@ -106,7 +106,7 @@ static int	regexp_prepare(const char *pattern, int flags, zbx_regexp_t **regexp,
 
 /***********************************************************************************
  *                                                                                 *
- * Function: regexp_exec                                                       *
+ * Function: regexp_exec                                                           *
  *                                                                                 *
  * Purpose: wrapper for pcre_exec(), searches for a given pattern, specified by    *
  *          regexp, in the string                                                  *
@@ -122,9 +122,9 @@ static int	regexp_prepare(const char *pattern, int flags, zbx_regexp_t **regexp,
  * Return value: 0 - successful match                                              *
  *               nonzero - no match                                                *
  *                                                                                 *
- *                                                                                 *
  ***********************************************************************************/
-int	regexp_exec(const char *string, const zbx_regexp_t *regexp, int flags, size_t count, zbx_regmatch_t *matches)
+static int	regexp_exec(const char *string, const zbx_regexp_t *regexp, int flags, size_t count,
+		zbx_regmatch_t *matches)
 {
 #define MAX_REQUESTED_MATCHES	10
 #define MATCHES_BUFF_SIZE	(MAX_REQUESTED_MATCHES * 3)
