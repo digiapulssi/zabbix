@@ -2366,7 +2366,7 @@ static const char	*zbx_dobject_status2str(int st)
 		case DOBJECT_STATUS_LOST:
 			return "LOST";
 		default:
-			return "UNKNOWN DOBJECT_STATUS CODE";
+			return "UNKNOWN";
 	}
 }
 
