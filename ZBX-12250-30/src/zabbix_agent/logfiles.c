@@ -1532,7 +1532,7 @@ static int	zbx_read2(int fd, unsigned char flags, zbx_uint64_t *lastlogsize, int
 {
 	ZBX_THREAD_LOCAL static char	*buf = NULL;
 
-	int				ret = FAIL, nbytes;
+	int				ret, nbytes;
 	const char			*cr, *lf, *p_end;
 	char				*p_start, *p, *p_nl, *p_next, *item_value = NULL;
 	size_t				szbyte;
