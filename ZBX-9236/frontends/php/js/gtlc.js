@@ -384,6 +384,10 @@ var CTimeLine = Class.create({
 
 	period: function(period) {
 		if (empty(period)) {
+			if (this.is_selectall_period) {
+				period = this.maxperiod;
+			}
+
 			return this._period;
 		}
 
@@ -572,7 +576,7 @@ var CScrollBar = Class.create({
 	},
 
 	navigateLeft: function(e, left) {
-		if (this.disabled) {
+		if (this.disabled || timeControl.timeline.is_selectall_period) {
 			return false;
 		}
 
@@ -609,7 +613,7 @@ var CScrollBar = Class.create({
 	},
 
 	navigateRight: function(e, right) {
-		if (this.disabled) {
+		if (this.disabled || timeControl.timeline.is_selectall_period) {
 			return false;
 		}
 
