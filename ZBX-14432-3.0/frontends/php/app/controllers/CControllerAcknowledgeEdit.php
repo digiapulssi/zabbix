@@ -96,7 +96,6 @@ class CControllerAcknowledgeEdit extends CController {
 				$data['event'] = [
 					'acknowledges' => $events[0]['acknowledges']
 				];
-				order_result($data['acknowledges'], 'clock', ZBX_SORT_DOWN);
 			}
 		}
 
