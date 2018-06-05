@@ -357,7 +357,7 @@ static void	add_command_alert(zbx_db_insert_t *db_insert, int alerts_num, const 
 	}
 
 	now = (int)time(NULL);
-	tmp = zbx_dsprintf(tmp, "%s:%s", host->host, NULL == command ? "" : command);
+	tmp = zbx_dsprintf(tmp, "%s:%s", host->host, ZBX_NULL2EMPTY_STR(command));
 
 	zbx_db_insert_add_values(db_insert, __UINT64_C(0), actionid, eventid, now, tmp, alert_status, error, esc_step,
 			(int)alerttype);
@@ -640,6 +640,8 @@ static void	execute_commands(DB_EVENT *event, zbx_uint64_t actionid, zbx_uint64_
 				zbx_vector_uint64_append(&executed_on_hosts, host.hostid);
 			}
 		}
+		else
+			zbx_strlcpy(host.host, "Zabbix server", sizeof(host.host));
 
 		if (SUCCEED == rc)
 		{
@@ -692,8 +694,7 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 
 	DB_RESULT	result;
 	DB_ROW		row;
-	int		now, severity, medias_num = 0, status;
-	char		error[MAX_STRING_LEN], *perror;
+	int		now, have_alerts = 0;
 	DB_EVENT	*c_event;
 	zbx_db_insert_t	db_insert;
 
@@ -705,34 +706,41 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 	if (0 == mediatypeid)
 	{
 		result = DBselect(
-				"select m.mediatypeid,m.sendto,m.severity,m.period,mt.status"
+				"select m.mediatypeid,m.sendto,m.severity,m.period,mt.status,m.active"
 				" from media m,media_type mt"
 				" where m.mediatypeid=mt.mediatypeid"
-					" and m.active=%d"
 					" and m.userid=" ZBX_FS_UI64,
-				MEDIA_STATUS_ACTIVE, userid);
+				userid);
 	}
 	else
 	{
 		result = DBselect(
-				"select m.mediatypeid,m.sendto,m.severity,m.period,mt.status"
+				"select m.mediatypeid,m.sendto,m.severity,m.period,mt.status,m.active"
 				" from media m,media_type mt"
 				" where m.mediatypeid=mt.mediatypeid"
-					" and m.active=%d"
 					" and m.userid=" ZBX_FS_UI64
 					" and m.mediatypeid=" ZBX_FS_UI64,
-				MEDIA_STATUS_ACTIVE, userid, mediatypeid);
+				userid, mediatypeid);
 	}
 
 	mediatypeid = 0;
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		int		severity, status;
+		const char	*perror;
+
 		ZBX_STR2UINT64(mediatypeid, row[0]);
 		severity = atoi(row[2]);
 
-		zabbix_log(LOG_LEVEL_DEBUG, "trigger severity:%d, media severity:%d, period:'%s'",
-				(int)c_event->trigger.priority, severity, row[3]);
+		zabbix_log(LOG_LEVEL_DEBUG, "trigger severity:%d, media severity:%d, period:'%s', userid:" ZBX_FS_UI64,
+				(int)c_event->trigger.priority, severity, row[3], userid);
+
+		if (MEDIA_STATUS_DISABLED == atoi(row[5]))
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "will not send message (user media disabled)");
+			continue;
+		}
 
 		if (((1 << c_event->trigger.priority) & severity) == 0)
 		{
@@ -754,11 +762,12 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 		else
 		{
 			status = ALERT_STATUS_FAILED;
-			perror = "Media type disabled";
+			perror = "Media type disabled.";
 		}
 
-		if (0 == medias_num++)
+		if (0 == have_alerts)
 		{
+			have_alerts = 1;
 			zbx_db_insert_prepare(&db_insert, "alerts", "alertid", "actionid", "eventid", "userid", "clock",
 					"mediatypeid", "sendto", "subject", "message", "status", "error", "esc_step",
 					"alerttype", NULL);
@@ -773,7 +782,9 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 
 	if (0 == mediatypeid)
 	{
-		medias_num++;
+		char	error[MAX_STRING_LEN];
+
+		have_alerts = 1;
 
 		zbx_snprintf(error, sizeof(error), "No media defined for user.");
 
@@ -785,7 +796,7 @@ static void	add_message_alert(DB_ESCALATION *escalation, DB_EVENT *event, DB_EVE
 				escalation->esc_step, (int)ALERT_TYPE_MESSAGE);
 	}
 
-	if (0 != medias_num)
+	if (0 != have_alerts)
 	{
 		zbx_db_insert_autoincrement(&db_insert, "alertid");
 		zbx_db_insert_execute(&db_insert);
