@@ -4,6 +4,7 @@ New features:
 
 Bug fixes:
 .......PS. [ZBX-13765] fixed discovered host status update if it was down and a service was discovered on that host (Andris)
+.......PS. [ZBX-12990] improved "vmware.hv.datastore.size" through usage the performance counters (MVekslers)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.18
