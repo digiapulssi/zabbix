@@ -1630,20 +1630,26 @@ class CLineGraphDraw extends CGraphDraw {
 
 			$i++;
 
+			$time_m = date('m', $new_time);
+			$time_N = date('N', $new_time);
+			$time_d = date('d', $new_time);
+			$time_H = date('H', $new_time);
+			$time_i = date('i', $new_time);
+			$time_s = date('s', $new_time);
+
 			// What time format to display.
-			if (date('d', $new_time) == 1 && date('m', $new_time) == 1 && date('H', $new_time) == 0
-					&& date('i', $new_time) == 0) {
+			if ($time_m == 1 && $time_d == 1 && $time_H == 0 && $time_i == 0) {
 				$format = _x('Y', DATE_FORMAT_CONTEXT);
 			}
-			elseif (date('d', $new_time) == 1 && date('H', $new_time) == 0 && date('i', $new_time) == 0
+			elseif ($time_d == 1 && $time_H == 0 && $time_i == 0
 					&& ($sub_interval == SEC_PER_MONTH || $sub_interval == SEC_PER_MONTH * 3
 						|| $sub_interval == SEC_PER_MONTH * 4 || $sub_interval == SEC_PER_MONTH * 6)) {
 				$format = _('M');
 			}
-			elseif ((date('H', $new_time) == 0 && date('i', $new_time) == 0) || $sub_interval > SEC_PER_HOUR * 12) {
+			elseif (($time_H == 0 && $time_i == 0) || $sub_interval > SEC_PER_HOUR * 12) {
 				$format = _('m-d');
 			}
-			elseif (date('s', $new_time) == 0 && $sub_interval >= 60) {
+			elseif ($time_s == 0 && $sub_interval >= 60) {
 				$format = TIME_FORMAT;
 			}
 			else {
@@ -1652,11 +1658,11 @@ class CLineGraphDraw extends CGraphDraw {
 
 			// Check if main or sub interval and then draw it.
 			if ((!($new_time % $main_interval) && $main_interval < SEC_PER_DAY)
-					|| ($sub_interval < SEC_PER_MIN && date('s', $new_time) == 0)
-					|| ($main_interval == SEC_PER_DAY && date('H', $new_time) == 0 && date('i', $new_time) == 0)
-					|| ($main_interval == SEC_PER_WEEK && date('N', $new_time) == 7)
-					|| ($main_interval == SEC_PER_MONTH && date('d', $new_time) == 1)
-					|| ($main_interval == SEC_PER_WEEK * 2 && date('m', $new_time) != date('m', $previous_time))
+					|| ($sub_interval < SEC_PER_MIN && $time_s == 0)
+					|| ($main_interval == SEC_PER_DAY && $time_H == 0 && $time_i == 0)
+					|| ($main_interval == SEC_PER_WEEK && $time_N == 7)
+					|| ($main_interval == SEC_PER_MONTH && $time_d == 1)
+					|| ($main_interval == SEC_PER_WEEK * 2 && $time_m != date('m', $previous_time))
 					|| $format == _x('Y', DATE_FORMAT_CONTEXT)) {
 				$this->drawMainPeriod($new_time, $format, $position);
 				continue;
