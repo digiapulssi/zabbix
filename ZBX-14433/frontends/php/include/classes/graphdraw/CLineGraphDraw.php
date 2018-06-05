@@ -1638,15 +1638,15 @@ class CLineGraphDraw extends CGraphDraw {
 			$time_s = date('s', $new_time);
 
 			// What time format to display.
-			if ($time_m == 1 && $time_d == 1 && $time_H == 0 && $time_i == 0) {
+			if ($time_m == 1 && $time_d == 1 && $time_H == 0 && $time_i == 0 && $time_s == 0) {
 				$format = _x('Y', DATE_FORMAT_CONTEXT);
 			}
-			elseif ($time_d == 1 && $time_H == 0 && $time_i == 0
+			elseif ($time_d == 1 && $time_H == 0 && $time_i == 0 && $time_s == 0
 					&& ($sub_interval == SEC_PER_MONTH || $sub_interval == SEC_PER_MONTH * 3
 						|| $sub_interval == SEC_PER_MONTH * 4 || $sub_interval == SEC_PER_MONTH * 6)) {
 				$format = _('M');
 			}
-			elseif (($time_H == 0 && $time_i == 0) || $sub_interval > SEC_PER_HOUR * 12) {
+			elseif ($time_H == 0 && $time_i == 0 && $time_s == 0 && $sub_interval >= SEC_PER_HOUR) {
 				$format = _('m-d');
 			}
 			elseif ($time_s == 0 && $sub_interval >= 60) {
