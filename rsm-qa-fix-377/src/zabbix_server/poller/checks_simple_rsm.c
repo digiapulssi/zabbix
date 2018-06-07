@@ -1152,7 +1152,7 @@ out:
 	return ret;
 }
 
-static int	zbx_obtain_question(const ldns_pkt *pkt, ldns_rr **question)
+static int	zbx_get_question_section(const ldns_pkt *pkt, ldns_rr **question)
 {
 	ldns_rr_list	*rr_list;
 	size_t		count;
@@ -1191,7 +1191,7 @@ static int	zbx_verify_denial_of_existence(const ldns_pkt *pkt, zbx_dnssec_error_
 	ldns_rr_list	*nsecs3 = NULL;
 	ldns_status	status;
 
-	if (SUCCEED != zbx_obtain_question(pkt, &question))
+	if (SUCCEED != zbx_get_question_section(pkt, &question))
 	{
 		zbx_snprintf(err, err_size, "cannot obtain query section\n");
 		return FAIL;
