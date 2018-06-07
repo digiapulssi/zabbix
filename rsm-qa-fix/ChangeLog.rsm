@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc9
 
 New features:
+.......PS. [376] improved DNSSEC error message in the log file (dimir)
 .......PS. [374] removed support for DNS errors -421,-426,-821,-826 (dimir)
 
 Bug fixes:
