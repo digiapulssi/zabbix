@@ -1058,54 +1058,69 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, zbx_covered_type_t covered_typ
 		/* verify RRSIGs */
 		if (LDNS_STATUS_OK != (status = ldns_verify(rrset, rrsigs, keys, NULL)))
 		{
-			zbx_snprintf(err, err_size, "cannot verify %s RRSIGs of \"%s\": %s"
-					" (used %u %s, %u RRSIG and %u DNSKEY RRs)",
-					zbx_covered_to_str(covered_type),
-					owner_buf,
-					ldns_get_errorstr_by_id(status),
-					ldns_rr_list_rr_count(rrset),
-					zbx_covered_to_str(covered_type),
-					ldns_rr_list_rr_count(rrsigs),
-					ldns_rr_list_rr_count(keys));
+			const char *error_description;
 
 			switch (status)
 			{
 				case LDNS_STATUS_CRYPTO_UNKNOWN_ALGO:
 					*dnssec_ec = ZBX_EC_DNSSEC_ALGO_UNKNOWN;
+					error_description = "unknown cryptographic algorithm";
 					break;
 				case LDNS_STATUS_CRYPTO_ALGO_NOT_IMPL:
 					*dnssec_ec = ZBX_EC_DNSSEC_ALGO_NOT_IMPL;
+					error_description = "cryptographic algorithm not implemented";
 					break;
 				case LDNS_STATUS_CRYPTO_NO_MATCHING_KEYTAG_DNSKEY:
 					*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED;
+					error_description = "no RRSIGs found";
 					break;
 				case LDNS_STATUS_CRYPTO_BOGUS:
 					*dnssec_ec = ZBX_EC_DNSSEC_SIG_BOGUS;
+					error_description = "bogus DNSSEC signature";
 					break;
 				case LDNS_STATUS_CRYPTO_SIG_EXPIRED:
 					*dnssec_ec = ZBX_EC_DNSSEC_SIG_EXPIRED;
+					error_description = "DNSSEC signature has expired";
 					break;
 				case LDNS_STATUS_CRYPTO_SIG_NOT_INCEPTED:
 					*dnssec_ec = ZBX_EC_DNSSEC_SIG_NOT_INCEPTED;
+					error_description = "DNSSEC signature not incepted yet";
 					break;
 				case LDNS_STATUS_CRYPTO_EXPIRATION_BEFORE_INCEPTION:
 					*dnssec_ec = ZBX_EC_DNSSEC_SIG_EX_BEFORE_IN;
+					error_description = "DNSSEC signature has expiration date earlier than inception date";
 					break;
 				case LDNS_STATUS_NSEC3_ERR:
 					*dnssec_ec = ZBX_EC_DNSSEC_NSEC3_ERROR;
+					error_description = "error in NSEC3 denial of existence";
 					break;
 				case LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED:
 					*dnssec_ec = ZBX_EC_DNSSEC_RR_NOTCOVERED;
+					error_description = "RR not covered by the given NSEC RRs";
 					break;
 				case LDNS_STATUS_DNSSEC_NSEC_WILDCARD_NOT_COVERED:
 					*dnssec_ec = ZBX_EC_DNSSEC_WILD_NOTCOVERED;
+					error_description = "wildcard not covered by the given NSEC RRs";
 					break;
 				case LDNS_STATUS_MISSING_RDATA_FIELDS_RRSIG:
 					*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_MISS_RDATA;
+					error_description = "RRSIG has too few RDATA fields";
 					break;
 				default:
 					*dnssec_ec = ZBX_EC_DNSSEC_CATCHALL;
+					error_description = "malformed DNSSEC response";
 			}
+
+			zbx_snprintf(err, err_size, "cannot verify %s RRSIGs of \"%s\": %s"
+					" (used %u %s, %u RRSIG and %u DNSKEY RRs). LDNS returned \"%s\"",
+					zbx_covered_to_str(covered_type),
+					owner_buf,
+					error_description,
+					ldns_rr_list_rr_count(rrset),
+					zbx_covered_to_str(covered_type),
+					ldns_rr_list_rr_count(rrsigs),
+					ldns_rr_list_rr_count(keys),
+					ldns_get_errorstr_by_id(status));
 
 			goto out;
 		}
