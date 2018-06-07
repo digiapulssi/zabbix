@@ -28,7 +28,8 @@ int	main(int argc, char *argv[])
 	char		err[256], *res_ip = DEFAULT_RES_IP, *tld = NULL, *ns = NULL, *ns_ip = NULL, proto = ZBX_RSM_UDP,
 			ipv4_enabled = 1, ipv6_enabled = 1, *testprefix = DEFAULT_TESTPREFIX, dnssec_enabled = 0, ignore_err = 0,
 			log_to_file = 0;
-	int		c, index, res_ec, rtt;
+	int		c, index, rtt;
+	zbx_dnskeys_error_t res_ec;
 	ldns_resolver	*res = NULL;
 	ldns_rr_list	*keys = NULL;
 	FILE		*log_fd = stdout;
