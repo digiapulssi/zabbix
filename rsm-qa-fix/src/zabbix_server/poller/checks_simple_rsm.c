@@ -147,11 +147,9 @@ typedef enum
 	ZBX_EC_DNSSEC_SIG_NOT_INCEPTED,	/* ldns status: LDNS_STATUS_CRYPTO_SIG_NOT_INCEPTED */
 	ZBX_EC_DNSSEC_SIG_EX_BEFORE_IN,	/* ldns status: LDNS_STATUS_CRYPTO_EXPIRATION_BEFORE_INCEPTION */
 	ZBX_EC_DNSSEC_NSEC3_ERROR,	/* ldns status: LDNS_STATUS_NSEC3_ERR */
-	ZBX_EC_DNSSEC_NSEC3_ITERATIONS,	/* ldns status: LDNS_STATUS_SYNTAX_ITERATIONS_OVERFLOW */
 	ZBX_EC_DNSSEC_RR_NOTCOVERED,	/* ldns status: LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED */
 	ZBX_EC_DNSSEC_WILD_NOTCOVERED,	/* ldns status: LDNS_STATUS_DNSSEC_NSEC_WILDCARD_NOT_COVERED */
 	ZBX_EC_DNSSEC_RRSIG_MISS_RDATA,	/* ldns status: LDNS_STATUS_MISSING_RDATA_FIELDS_RRSIG */
-	ZBX_EC_DNSSEC_KEY_MISS_RDATA,	/* ldns status: LDNS_STATUS_MISSING_RDATA_FIELDS_KEY */
 	ZBX_EC_DNSSEC_CATCHALL		/* ldns status: catch all */
 }
 zbx_dnssec_error_t;
@@ -784,16 +782,12 @@ static int	zbx_dnssec_error_to_ ## __interface (zbx_dnssec_error_t err)	\
 			return ZBX_EC_ ## __interface ## _SIG_EX_BEFORE_IN;	\
 		case ZBX_EC_DNSSEC_NSEC3_ERROR:					\
 			return ZBX_EC_ ## __interface ## _NSEC3_ERROR;		\
-		case ZBX_EC_DNSSEC_NSEC3_ITERATIONS:				\
-			return ZBX_EC_ ## __interface ## _NSEC3_ITERATIONS;	\
 		case ZBX_EC_DNSSEC_RR_NOTCOVERED:				\
 			return ZBX_EC_ ## __interface ## _RR_NOTCOVERED;	\
 		case ZBX_EC_DNSSEC_WILD_NOTCOVERED:				\
 			return ZBX_EC_ ## __interface ## _WILD_NOTCOVERED;	\
 		case ZBX_EC_DNSSEC_RRSIG_MISS_RDATA:				\
 			return ZBX_EC_ ## __interface ## _RRSIG_MISS_RDATA;	\
-		case ZBX_EC_DNSSEC_KEY_MISS_RDATA:				\
-			return ZBX_EC_ ## __interface ## _KEY_MISS_RDATA;	\
 		default:							\
 			return ZBX_EC_ ## __interface ## _DNSSEC_CATCHALL;	\
 	}									\
@@ -1100,9 +1094,6 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, zbx_covered_type_t covered_typ
 				case LDNS_STATUS_NSEC3_ERR:
 					*dnssec_ec = ZBX_EC_DNSSEC_NSEC3_ERROR;
 					break;
-				case LDNS_STATUS_SYNTAX_ITERATIONS_OVERFLOW:
-					*dnssec_ec = ZBX_EC_DNSSEC_NSEC3_ITERATIONS;
-					break;
 				case LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED:
 					*dnssec_ec = ZBX_EC_DNSSEC_RR_NOTCOVERED;
 					break;
@@ -1111,9 +1102,6 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, zbx_covered_type_t covered_typ
 					break;
 				case LDNS_STATUS_MISSING_RDATA_FIELDS_RRSIG:
 					*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_MISS_RDATA;
-					break;
-				case LDNS_STATUS_MISSING_RDATA_FIELDS_KEY:
-					*dnssec_ec = ZBX_EC_DNSSEC_KEY_MISS_RDATA;
 					break;
 				default:
 					*dnssec_ec = ZBX_EC_DNSSEC_CATCHALL;
