@@ -1,11 +1,11 @@
 Changes for rsm1.1.0rc9
 
 New features:
-.......PS. [377] denial of existence errors -419, -422, -423, -819, -822, -823 are no longer ignored
 .......PS. [376] improved DNSSEC error message in the log file (dimir)
 .......PS. [374] removed support for DNS errors -421,-426,-821,-826 (dimir)
 
 Bug fixes:
+.......PS. [377] added support for DNS "denial of existence" error codes -419, -422, -423, -819, -822, -823 (yurii)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc8
