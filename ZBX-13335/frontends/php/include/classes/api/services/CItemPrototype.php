@@ -991,10 +991,8 @@ class CItemPrototype extends CItemGeneral {
 			$this->updateReal($upd_items);
 		}
 
-		$new_items = array_merge($upd_items, $ins_items);
-
 		// Update master_itemid for inserted or updated inherited dependent items.
-		$this->inheritDependentItems($new_items);
+		$new_items = $this->inheritDependentItems(array_merge($upd_items, $ins_items));
 
 		// Inheriting items from the templates.
 		$tpl_items = DBselect(

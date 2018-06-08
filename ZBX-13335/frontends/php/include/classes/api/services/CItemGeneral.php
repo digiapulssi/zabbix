@@ -1626,8 +1626,8 @@ abstract class CItemGeneral extends CApiService {
 			if ($data) {
 				DB::update('items', $data);
 			}
-
-			return $items;
 		}
+
+		return $items;
 	}
 }
