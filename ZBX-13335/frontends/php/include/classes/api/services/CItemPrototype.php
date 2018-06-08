@@ -344,7 +344,8 @@ class CItemPrototype extends CItemGeneral {
 		$this->validateDependentItems($items, API::ItemPrototype());
 
 		$this->createReal($items);
-		$this->inherit($items);
+		$host_itemprototypes = $this->inherit($items);
+		$this->validateDependentItems($host_itemprototypes, $this);
 
 		return ['itemids' => zbx_objectValues($items, 'itemid')];
 	}
@@ -685,7 +686,8 @@ class CItemPrototype extends CItemGeneral {
 		$this->validateDependentItems($items, API::ItemPrototype());
 
 		$this->updateReal($items);
-		$this->inherit($items);
+		$host_itemprototypes = $this->inherit($items);
+		$this->validateDependentItems($host_itemprototypes, $this);
 
 		return ['itemids' => zbx_objectValues($items, 'itemid')];
 	}
@@ -923,7 +925,8 @@ class CItemPrototype extends CItemGeneral {
 		}
 		unset($tpl_item);
 
-		$this->inherit($tpl_items, $data['hostids']);
+		$host_itemprototypes = $this->inherit($tpl_items, $data['hostids']);
+		$this->validateDependentItems($host_itemprototypes, $this);
 
 		return true;
 	}
@@ -956,78 +959,6 @@ class CItemPrototype extends CItemGeneral {
 		}
 
 		$this->validateItemPreprocessing($item, $method);
-	}
-
-	protected function inherit(array $items, array $hostids = null) {
-		if (!$items) {
-			return;
-		}
-
-		// prepare the child items
-		$new_items = $this->prepareInheritedItems($items, $hostids);
-		if (!$new_items) {
-			return;
-		}
-
-		$ins_items = [];
-		$upd_items = [];
-		foreach ($new_items as $new_item) {
-			if (array_key_exists('itemid', $new_item)) {
-				unset($new_item['ruleid']);
-				$upd_items[] = $new_item;
-			}
-			else {
-				// set the corresponding discovery rule id for the new items
-				$ins_items[] = $new_item;
-			}
-		}
-
-		// save the new items
-		if ($ins_items) {
-			$this->createReal($ins_items);
-		}
-
-		if ($upd_items) {
-			$this->updateReal($upd_items);
-		}
-
-		// Update master_itemid for inserted or updated inherited dependent items.
-		$new_items = $this->inheritDependentItems(array_merge($upd_items, $ins_items));
-
-		// Validate inherited dependent items.
-		reset($new_items);
-
-		do {
-			$item = current($new_items);
-			$should_validate = ($item['type'] == ITEM_TYPE_DEPENDENT);
-		} while (!$should_validate && next($new_items));
-
-		if ($should_validate) {
-			$this->validateDependentItems($new_items, $this);
-		}
-
-		// Inheriting items from the templates.
-		$tpl_items = DBselect(
-			'SELECT i.itemid'.
-			' FROM items i,hosts h'.
-			' WHERE i.hostid=h.hostid'.
-				' AND '.dbConditionInt('i.itemid', zbx_objectValues($new_items, 'itemid')).
-				' AND '.dbConditionInt('h.status', [HOST_STATUS_TEMPLATE])
-		);
-
-		$tpl_itemids = [];
-		while ($tpl_item = DBfetch($tpl_items)) {
-			$tpl_itemids[$tpl_item['itemid']] = true;
-		}
-
-		foreach ($new_items as $index => $new_item) {
-			if (!array_key_exists($new_item['itemid'], $tpl_itemids)) {
-				unset($new_items[$index]);
-			}
-		}
-
-		// Inheriting items from the templates.
-		$this->inherit($new_items);
 	}
 
 	protected function applyQueryOutputOptions($tableName, $tableAlias, array $options, array $sqlParts) {

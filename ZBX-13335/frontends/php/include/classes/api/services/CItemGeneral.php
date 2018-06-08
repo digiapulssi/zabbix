@@ -721,15 +721,84 @@ abstract class CItemGeneral extends CApiService {
 	/**
 	 * Updates the children of the item on the given hosts and propagates the inheritance to the child hosts.
 	 *
-	 * @abstract
-	 *
 	 * @param array $items          an array of items to inherit
 	 * @param array|null $hostids   an array of hosts to inherit to; if set to null, the children will be updated on all
 	 *                              child hosts
 	 *
-	 * @return bool
+	 * @return array
 	 */
-	abstract protected function inherit(array $items, array $hostids = null);
+	protected function inherit(array $items, array $hostids = null) {
+		// Store current level of inherited items data to be able to return last level for dependet item validation.
+		static $host_items = [];
+
+		if (!$items) {
+			return $host_items;
+		}
+
+		// Prepare the child items.
+		$new_items = $this->prepareInheritedItems($items, $hostids);
+		if (!$new_items) {
+			return $host_items;
+		}
+
+		$ins_items = [];
+		$upd_items = [];
+		foreach ($new_items as $new_item) {
+			if (array_key_exists('itemid', $new_item)) {
+				if ($this instanceof CItemPrototype) {
+					unset($new_item['ruleid']);
+				}
+				$upd_items[] = $new_item;
+			}
+			else {
+				$ins_items[] = $new_item;
+			}
+		}
+
+		if ($this instanceof CItem) {
+			if ($ins_items) {
+				static::validateInventoryLinks($ins_items, false); // false means 'create'
+			}
+			if ($upd_items) {
+				static::validateInventoryLinks($upd_items, true); // true means 'update'
+			}
+		}
+
+		// Save the new items.
+		if ($ins_items) {
+			$this->createReal($ins_items);
+		}
+
+		if ($upd_items) {
+			$this->updateReal($upd_items);
+		}
+
+		$new_items = $this->inheritDependentItems(array_merge($upd_items, $ins_items));
+		$host_items = $new_items;
+
+		// Inheriting items from the templates.
+		$tpl_items = DBselect(
+			'SELECT i.itemid'.
+			' FROM items i,hosts h'.
+			' WHERE i.hostid=h.hostid'.
+				' AND '.dbConditionInt('i.itemid', zbx_objectValues($new_items, 'itemid')).
+				' AND '.dbConditionInt('h.status', [HOST_STATUS_TEMPLATE])
+		);
+
+		$tpl_itemids = [];
+		while ($tpl_item = DBfetch($tpl_items)) {
+			$tpl_itemids[$tpl_item['itemid']] = true;
+		}
+
+		foreach ($new_items as $index => $new_item) {
+			if (!array_key_exists($new_item['itemid'], $tpl_itemids)) {
+				unset($new_items[$index]);
+			}
+		}
+
+		// Inheriting items from the templates.
+		return $this->inherit($new_items);
+	}
 
 	/**
 	 * Prepares and returns an array of child items, inherited from items $tpl_items on the given hosts.
@@ -1374,6 +1443,17 @@ abstract class CItemGeneral extends CApiService {
 	 * @throws APIException for invalid data.
 	 */
 	protected function validateDependentItems($items, $data_provider) {
+		reset($items);
+
+		do {
+			$item = current($items);
+			$has_dependent = ($item['type'] == ITEM_TYPE_DEPENDENT);
+		} while (!$has_dependent && next($items));
+
+		if (!$has_dependent) {
+			return;
+		}
+
 		$items_cache = zbx_toHash($items, 'itemid');
 		$root_items = [];
 		$items_added = [];
