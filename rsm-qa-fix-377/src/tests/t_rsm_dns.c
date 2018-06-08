@@ -26,10 +26,9 @@ void	exit_usage(const char *progname)
 int	main(int argc, char *argv[])
 {
 	char		err[256], *res_ip = DEFAULT_RES_IP, *tld = NULL, *ns = NULL, *ns_ip = NULL, proto = ZBX_RSM_UDP,
-			ipv4_enabled = 1, ipv6_enabled = 1, *testprefix = DEFAULT_TESTPREFIX, dnssec_enabled = 0, ignore_err = 0,
-			log_to_file = 0;
+			ipv4_enabled = 1, ipv6_enabled = 1, *testprefix = DEFAULT_TESTPREFIX, dnssec_enabled = 0,
+			ignore_err = 0, log_to_file = 0;
 	int		c, index, rtt;
-	zbx_dnskeys_error_t res_ec;
 	ldns_resolver	*res = NULL;
 	ldns_rr_list	*keys = NULL;
 	FILE		*log_fd = stdout;
@@ -100,6 +99,8 @@ int	main(int argc, char *argv[])
 
 	if (0 != dnssec_enabled)
 	{
+		zbx_dnskeys_error_t	dnskeys_ec;
+
 		if (log_to_file != 0)
 		{
 			if (NULL == (log_fd = fopen(LOG_FILE1, "w")))
@@ -109,9 +110,9 @@ int	main(int argc, char *argv[])
 			}
 		}
 
-		if (SUCCEED != zbx_get_dnskeys(res, tld, res_ip, &keys, log_fd, &res_ec, err, sizeof(err)))
+		if (SUCCEED != zbx_get_dnskeys(res, tld, res_ip, &keys, log_fd, &dnskeys_ec, err, sizeof(err)))
 		{
-			zbx_rsm_err(stderr, err);
+			zbx_rsm_errf(stderr, "%s (error=%d)", err, DNS[DNS_PROTO(res)].dnskeys_error(dnskeys_ec));
 			if (0 == ignore_err)
 				goto out;
 		}
