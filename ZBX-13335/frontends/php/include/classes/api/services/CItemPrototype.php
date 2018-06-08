@@ -994,6 +994,18 @@ class CItemPrototype extends CItemGeneral {
 		// Update master_itemid for inserted or updated inherited dependent items.
 		$new_items = $this->inheritDependentItems(array_merge($upd_items, $ins_items));
 
+		// Validate inherited dependent items.
+		reset($new_items);
+
+		do {
+			$item = current($new_items);
+			$should_validate = ($item['type'] == ITEM_TYPE_DEPENDENT);
+		} while (!$should_validate && next($new_items));
+
+		if ($should_validate) {
+			$this->validateDependentItems($new_items, $this);
+		}
+
 		// Inheriting items from the templates.
 		$tpl_items = DBselect(
 			'SELECT i.itemid'.
