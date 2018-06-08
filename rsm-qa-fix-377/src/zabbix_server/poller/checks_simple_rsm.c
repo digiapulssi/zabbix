@@ -1037,7 +1037,6 @@ out:
 
 static int	zbx_pkt_section_has_rr_type(const ldns_pkt *pkt, ldns_rr_type t, ldns_pkt_section s)
 {
-	int		res;
 	ldns_rr_list	*rrlist;
 
 	if (NULL == (rrlist = ldns_pkt_rr_list_by_type(pkt, t, s)))
