@@ -1056,12 +1056,14 @@ static int	zbx_verify_denial_of_existence(const ldns_pkt *pkt, zbx_dnssec_error_
 	if (NULL == (question = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_A, LDNS_SECTION_QUESTION)))
 	{
 		zbx_snprintf(err, err_size, "cannot obtain query section");
+		*dnssec_ec = ZBX_EC_DNSSEC_INTERNAL;
 		goto out;
 	}
 
 	if (0 == ldns_rr_list_rr_count(question))
 	{
 		zbx_snprintf(err, err_size, "question section is empty");
+		*dnssec_ec = ZBX_EC_DNSSEC_INTERNAL;
 		goto out;
 	}
 
@@ -1074,6 +1076,7 @@ static int	zbx_verify_denial_of_existence(const ldns_pkt *pkt, zbx_dnssec_error_
 		if (NULL == rrsigs)
 		{
 			zbx_snprintf(err, err_size, "missing rrsigs");
+			*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NONE;
 			goto out;
 		}
 
@@ -1104,6 +1107,7 @@ static int	zbx_verify_denial_of_existence(const ldns_pkt *pkt, zbx_dnssec_error_
 		if (NULL == rrsigs)
 		{
 			zbx_snprintf(err, err_size, "missing rrsigs");
+			*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NONE;
 			goto out;
 		}
 
