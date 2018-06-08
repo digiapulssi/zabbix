@@ -129,14 +129,6 @@ zbx_ns_query_error_t;
 
 typedef enum
 {
-	ZBX_COVERED_TYPE_NSEC,
-	ZBX_COVERED_TYPE_NSEC3,
-	ZBX_COVERED_TYPE_DS
-}
-zbx_covered_type_t;
-
-typedef enum
-{
 	ZBX_EC_DNSSEC_INTERNAL,
 	ZBX_EC_DNSSEC_ALGO_UNKNOWN,	/* ldns status: LDNS_STATUS_CRYPTO_UNKNOWN_ALGO */
 	ZBX_EC_DNSSEC_ALGO_NOT_IMPL,	/* ldns status: LDNS_STATUS_CRYPTO_ALGO_NOT_IMPL */
@@ -496,88 +488,15 @@ static int	zbx_get_last_label(const char *name, char **last_label, char *err, si
 	return SUCCEED;
 }
 
-static int	zbx_get_rrset_to_verify(const ldns_pkt *pkt, const ldns_rdf *owner, ldns_pkt_section section,
-		zbx_covered_type_t covered_type, ldns_rr_list **result)
-{
-	ldns_rr_list	*rrset = NULL;
-	int		ret = FAIL;
-
-	switch (covered_type)
-	{
-		case ZBX_COVERED_TYPE_NSEC:
-			rrset = ldns_pkt_rr_list_by_name_and_type(pkt, owner, LDNS_RR_TYPE_NSEC, section);
-
-			if (NULL == (*result = ldns_rr_list_new()))
-				goto out;
-
-			if (NULL != rrset && 0 != ldns_rr_list_rr_count(rrset))
-			{
-				int		rv;
-				ldns_rr_list	*cloned_rrset;
-
-				if (NULL == (cloned_rrset = ldns_rr_list_clone(rrset)))
-					goto out;
-
-				rv = ldns_rr_list_push_rr_list(*result, cloned_rrset);
-				ldns_rr_list_free(cloned_rrset);
-
-				if (false == rv)
-					goto out;
-			}
-			break;
-		case ZBX_COVERED_TYPE_NSEC3:
-			rrset = ldns_pkt_rr_list_by_name_and_type(pkt, owner, LDNS_RR_TYPE_NSEC3, section);
-
-			if (NULL == (*result = ldns_rr_list_new()))
-				goto out;
-
-			if (NULL != rrset && 0 != ldns_rr_list_rr_count(rrset))
-			{
-				int		rv;
-				ldns_rr_list	*cloned_rrset;
-
-				if (NULL == (cloned_rrset = ldns_rr_list_clone(rrset)))
-					goto out;
-
-				rv = ldns_rr_list_push_rr_list(*result, cloned_rrset);
-				ldns_rr_list_free(cloned_rrset);
-
-				if (false == rv)
-					goto out;
-			}
-
-			break;
-		case ZBX_COVERED_TYPE_DS:
-			*result = ldns_pkt_rr_list_by_name_and_type(pkt, owner, LDNS_RR_TYPE_DS, section);
-			break;
-		default:
-			THIS_SHOULD_NEVER_HAPPEN;
-			goto out;
-	}
-
-	ret = SUCCEED;
-out:
-	if (SUCCEED != ret || 0 == ldns_rr_list_rr_count(*result))
-	{
-		ldns_rr_list_deep_free(*result);
-		*result = NULL;
-	}
-
-	if (NULL != rrset)
-		ldns_rr_list_deep_free(rrset);
-
-	return ret;
-}
-
-static const char	*zbx_covered_to_str(zbx_covered_type_t covered_type)
+static const char	*zbx_covered_to_str(ldns_rr_type covered_type)
 {
 	switch (covered_type)
 	{
-		case ZBX_COVERED_TYPE_DS:
+		case LDNS_RR_TYPE_DS:
 			return "DS";
-		case ZBX_COVERED_TYPE_NSEC:
+		case LDNS_RR_TYPE_NSEC:
 			return "NSEC*";
-		case ZBX_COVERED_TYPE_NSEC3:
+		case LDNS_RR_TYPE_NSEC3:
 			return "NSEC3*";
 		default:
 			return "*UNKNOWN*";
@@ -585,7 +504,7 @@ static const char	*zbx_covered_to_str(zbx_covered_type_t covered_type)
 }
 
 static int	zbx_get_covered_rrsigs(const ldns_pkt *pkt, const ldns_rdf *owner, ldns_pkt_section s,
-		zbx_covered_type_t covered_type, ldns_rr_list **result, zbx_dnssec_error_t *dnssec_ec,
+		ldns_rr_type covered_type, ldns_rr_list **result, zbx_dnssec_error_t *dnssec_ec,
 		char *err, size_t err_size)
 {
 	ldns_rr_list	*rrsigs;
@@ -649,44 +568,11 @@ static int	zbx_get_covered_rrsigs(const ldns_pkt *pkt, const ldns_rdf *owner, ld
 
 		covered_rr_type = ldns_rdf2rr_type(covered_type_rdf);
 
-		switch (covered_type)
+		if (covered_type == covered_rr_type && 0 == ldns_rr_list_push_rr(*result, ldns_rr_clone(rr)))
 		{
-			case ZBX_COVERED_TYPE_NSEC:
-				if (LDNS_RR_TYPE_NSEC == covered_rr_type)
-				{
-					if (0 == ldns_rr_list_push_rr(*result, ldns_rr_clone(rr)))
-					{
-						zbx_snprintf(err, err_size, "ldns_rr_list_push_rr() returned 0");
-						*dnssec_ec = ZBX_EC_DNSSEC_INTERNAL;
-						goto out;
-					}
-				}
-				break;
-			case ZBX_COVERED_TYPE_NSEC3:
-				if (LDNS_RR_TYPE_NSEC3 == covered_rr_type)
-				{
-					if (0 == ldns_rr_list_push_rr(*result, ldns_rr_clone(rr)))
-					{
-						zbx_snprintf(err, err_size, "ldns_rr_list_push_rr() returned 0");
-						*dnssec_ec = ZBX_EC_DNSSEC_INTERNAL;
-						goto out;
-					}
-				}
-				break;
-			case ZBX_COVERED_TYPE_DS:
-				if (LDNS_RR_TYPE_DS == covered_rr_type)
-				{
-					if (0 == ldns_rr_list_push_rr(*result, ldns_rr_clone(rr)))
-					{
-						zbx_snprintf(err, err_size, "ldns_rr_list_push_rr() returned 0");
-						*dnssec_ec = ZBX_EC_DNSSEC_INTERNAL;
-						goto out;
-					}
-				}
-				break;
-			default:
-				THIS_SHOULD_NEVER_HAPPEN;
-				goto out;
+			zbx_snprintf(err, err_size, "ldns_rr_list_push_rr() returned 0");
+			*dnssec_ec = ZBX_EC_DNSSEC_INTERNAL;
+			goto out;
 		}
 	}
 
@@ -995,7 +881,7 @@ const zbx_error_functions_t DNS[] = {
 
 #define DNS_PROTO(RES)	ldns_resolver_usevc(RES) ? ZBX_RSM_TCP : ZBX_RSM_UDP
 
-static int	zbx_verify_rrsigs(const ldns_pkt *pkt, zbx_covered_type_t covered_type, const ldns_rr_list *keys,
+static int	zbx_verify_rrsigs(const ldns_pkt *pkt, ldns_rr_type covered_type, const ldns_rr_list *keys,
 		const char *ns, const char *ip, zbx_dnssec_error_t *dnssec_ec, char *err, size_t err_size)
 {
 	zbx_vector_ptr_t	owners;
@@ -1043,12 +929,7 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, zbx_covered_type_t covered_typ
 		}
 
 		/* collect RRs to verify */
-		if (SUCCEED != zbx_get_rrset_to_verify(pkt, owner_rdf, LDNS_SECTION_AUTHORITY, covered_type, &rrset))
-		{
-			zbx_snprintf(err, err_size, "internal error: cannot generate RR list");
-			*dnssec_ec = ZBX_EC_DNSSEC_INTERNAL;
-			goto out;
-		}
+		rrset = ldns_pkt_rr_list_by_name_and_type(pkt, owner_rdf, covered_type, LDNS_SECTION_AUTHORITY);
 
 		if (NULL == rrset)
 		{
@@ -1155,110 +1036,118 @@ out:
 	return ret;
 }
 
-static int	zbx_get_question_section(const ldns_pkt *pkt, ldns_rr **question)
-{
-	ldns_rr_list	*rr_list;
-	size_t		count;
-
-	rr_list = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_A, LDNS_SECTION_QUESTION);
-	count = ldns_rr_list_rr_count(rr_list);
-
-	if (0 >= count)
-		return FAIL;
-
-	*question = ldns_rr_list_rr(rr_list, 0);
-	if (NULL == *question)
-		return FAIL;
-
-	return SUCCEED;
-}
-
 static int	zbx_pkt_section_has_rr_type(const ldns_pkt *pkt, ldns_rr_type t, ldns_pkt_section s)
 {
+	int		res;
 	ldns_rr_list	*rrlist = ldns_pkt_rr_list_by_type(pkt, t, s);
 
 	if (NULL == rrlist)
 		return 0;
 
-	if (0 == ldns_rr_list_rr_count(rrlist))
-		return 0;
+	res = (0 == ldns_rr_list_rr_count(rrlist) ? 0 : 1);
 
-	return 1;
+	ldns_rr_list_deep_free(rrlist);
+
+	return res;
 }
 
 static int	zbx_verify_denial_of_existence(const ldns_pkt *pkt, zbx_dnssec_error_t *dnssec_ec, char *err, size_t err_size)
 {
-	ldns_rr		*question = NULL;
+	ldns_rr_list	*question = NULL;
 	ldns_rr_list	*rrsigs = NULL;
 	ldns_rr_list	*nsecs = NULL;
 	ldns_rr_list	*nsecs3 = NULL;
+	int		ret = FAIL;
 	ldns_status	status;
 
-	if (SUCCEED != zbx_get_question_section(pkt, &question))
+	question = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_A, LDNS_SECTION_QUESTION);
+
+	if (NULL == question)
 	{
 		zbx_snprintf(err, err_size, "cannot obtain query section\n");
 		return FAIL;
+	}
+
+	if (0 >= ldns_rr_list_rr_count(question))
+	{
+		zbx_snprintf(err, err_size, "question section is empty\n");
+		goto out;
 	}
 
 	rrsigs  = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_AUTHORITY);
 	nsecs   = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_NSEC,  LDNS_SECTION_AUTHORITY);
 	nsecs3  = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_NSEC3, LDNS_SECTION_AUTHORITY);
 
-	if (nsecs)
+	if (NULL != nsecs)
 	{
 		if (NULL == rrsigs)
 		{
 			zbx_snprintf(err, err_size, "missing rrsigs\n");
-			return FAIL;
+			goto out;
 		}
 
-		status = ldns_dnssec_verify_denial(question, nsecs, rrsigs);
+		status = ldns_dnssec_verify_denial(ldns_rr_list_rr(question, 0), nsecs, rrsigs);
 
 		if (status == LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED)
 		{
 			zbx_snprintf(err, err_size, "RR not covered by the given NSEC RRs");
 			*dnssec_ec = ZBX_EC_DNSSEC_RR_NOTCOVERED;
-			return FAIL;
+			goto out;
 		}
 		else if (status == LDNS_STATUS_DNSSEC_NSEC_WILDCARD_NOT_COVERED)
 		{
-			zbx_snprintf(err, err_size, "Wildcard not covered by the given NSEC RRs");
+			zbx_snprintf(err, err_size, "wildcard not covered by the given NSEC RRs");
 			*dnssec_ec = ZBX_EC_DNSSEC_WILD_NOTCOVERED;
-			return FAIL;
+			goto out;
 		}
 	}
 
-	if (nsecs3)
+	if (NULL != nsecs3)
 	{
 		if (NULL == rrsigs)
 		{
 			zbx_snprintf(err, err_size, "missing rrsigs\n");
-			return FAIL;
+			goto out;
 		}
 
-		status = ldns_dnssec_verify_denial_nsec3(question, nsecs3, rrsigs, ldns_pkt_get_rcode(pkt), LDNS_RR_TYPE_A, 1);
+		status = ldns_dnssec_verify_denial_nsec3(ldns_rr_list_rr(question, 0), nsecs3, rrsigs, ldns_pkt_get_rcode(pkt), LDNS_RR_TYPE_A, 1);
 
 		if (status == LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED)
 		{
 			zbx_snprintf(err, err_size, "RR not covered by the given NSEC RRs");
 			*dnssec_ec = ZBX_EC_DNSSEC_RR_NOTCOVERED;
-			return FAIL;
+			goto out;
 		}
 		else if (status == LDNS_STATUS_DNSSEC_NSEC_WILDCARD_NOT_COVERED)
 		{
-			zbx_snprintf(err, err_size, "Wildcard not covered by the given NSEC RRs");
+			zbx_snprintf(err, err_size, "wildcard not covered by the given NSEC RRs");
 			*dnssec_ec = ZBX_EC_DNSSEC_WILD_NOTCOVERED;
-			return FAIL;
+			goto out;
 		}
 		else if (status == LDNS_STATUS_NSEC3_ERR)
 		{
-			zbx_snprintf(err, err_size, "Error in NSEC3 denial of existence proof");
+			zbx_snprintf(err, err_size, "error in NSEC3 denial of existence proof");
 			*dnssec_ec = ZBX_EC_DNSSEC_NSEC3_ERROR;
-			return FAIL;
+			goto out;
 		}
 	}
 
-	return SUCCEED;
+	ret = SUCCEED;
+
+out:
+	if (NULL != question)
+		ldns_rr_list_deep_free(question);
+
+	if (NULL != rrsigs)
+		ldns_rr_list_deep_free(rrsigs);
+
+	if (NULL != nsecs)
+		ldns_rr_list_deep_free(nsecs);
+
+	if (NULL != nsecs3)
+		ldns_rr_list_deep_free(nsecs3);
+
+	return ret;
 }
 
 static int	zbx_dns_in_a_query(ldns_pkt **pkt, ldns_resolver *res, const ldns_rdf *testname_rdf,
@@ -1558,7 +1447,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 
 		if (NULL != keys)	/* EPP enabled, DNSSEC enabled */
 		{
-			if (SUCCEED != zbx_verify_rrsigs(pkt, ZBX_COVERED_TYPE_DS, keys, ns, ip, &dnssec_ec,
+			if (SUCCEED != zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_DS, keys, ns, ip, &dnssec_ec,
 					err, err_size))
 			{
 				*rtt = DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec);
@@ -1570,9 +1459,9 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	{
 		if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dnssec_ec, err, err_size)
 		|| (zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC, LDNS_SECTION_AUTHORITY)
-		&& SUCCEED != zbx_verify_rrsigs(pkt, ZBX_COVERED_TYPE_NSEC, keys, ns, ip, &dnssec_ec, err, err_size))
+		&& SUCCEED != zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC, keys, ns, ip, &dnssec_ec, err, err_size))
 		|| (zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC3, LDNS_SECTION_AUTHORITY)
-		&& SUCCEED != zbx_verify_rrsigs(pkt, ZBX_COVERED_TYPE_NSEC3, keys, ns, ip, &dnssec_ec, err, err_size)))
+		&& SUCCEED != zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC3, keys, ns, ip, &dnssec_ec, err, err_size)))
 		{
 			*rtt = DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec);
 			goto out;
