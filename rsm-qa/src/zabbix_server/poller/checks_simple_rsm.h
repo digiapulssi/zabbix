@@ -82,11 +82,11 @@
 #define ZBX_EC_DNS_UDP_SIG_NOT_INCEPTED	-417	/* DNS UDP - DNSSEC signature not incepted yet */
 #define ZBX_EC_DNS_UDP_SIG_EX_BEFORE_IN	-418	/* DNS UDP - DNSSEC signature has expiration date earlier than inception date */
 #define ZBX_EC_DNS_UDP_NSEC3_ERROR	-419	/* DNS UDP - Error in NSEC3 denial of existence proof */
-#define ZBX_EC_DNS_UDP_NSEC3_ITERATIONS	-421	/* DNS UDP - Iterations count for NSEC3 record higher than maximum */
+/* obsoleted #define ZBX_EC_DNS_UDP_NSEC3_ITERATIONS	-421	/\* DNS UDP - Iterations count for NSEC3 record higher than maximum *\/ */
 #define ZBX_EC_DNS_UDP_RR_NOTCOVERED	-422	/* DNS UDP - RR not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_UDP_WILD_NOTCOVERED	-423	/* DNS UDP - Wildcard not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_UDP_RRSIG_MISS_RDATA	-425	/* DNS UDP - The RRSIG has too few RDATA fields */
-#define ZBX_EC_DNS_UDP_KEY_MISS_RDATA	-426	/* DNS UDP - The DNSKEY has too few RDATA fields */
+/* obsoleted #define ZBX_EC_DNS_UDP_KEY_MISS_RDATA	-426	/\* DNS UDP - The DNSKEY has too few RDATA fields *\/ */
 #define ZBX_EC_DNS_UDP_DNSSEC_CATCHALL	-427	/* DNS UDP - Malformed DNSSEC response */
 #define ZBX_EC_DNS_UDP_DNSKEY_NONE	-428	/* DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
 /* DNS TCP */
@@ -139,11 +139,11 @@
 #define ZBX_EC_DNS_TCP_SIG_NOT_INCEPTED	-817	/* DNS TCP - DNSSEC signature not incepted yet */
 #define ZBX_EC_DNS_TCP_SIG_EX_BEFORE_IN	-818	/* DNS TCP - DNSSEC signature has expiration date earlier than inception date */
 #define ZBX_EC_DNS_TCP_NSEC3_ERROR	-819	/* DNS TCP - Error in NSEC3 denial of existence proof */
-#define ZBX_EC_DNS_TCP_NSEC3_ITERATIONS	-821	/* DNS TCP - Iterations count for NSEC3 record higher than maximum */
+/* obsoleted #define ZBX_EC_DNS_TCP_NSEC3_ITERATIONS	-821	/\* DNS TCP - Iterations count for NSEC3 record higher than maximum *\/ */
 #define ZBX_EC_DNS_TCP_RR_NOTCOVERED	-822	/* DNS TCP - RR not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_TCP_WILD_NOTCOVERED	-823	/* DNS TCP - Wildcard not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_TCP_RRSIG_MISS_RDATA	-825	/* DNS TCP - The RRSIG has too few RDATA fields */
-#define ZBX_EC_DNS_TCP_KEY_MISS_RDATA	-826	/* DNS TCP - The DNSKEY has too few RDATA fields */
+/* obsoleted #define ZBX_EC_DNS_TCP_KEY_MISS_RDATA	-826	/\* DNS TCP - The DNSKEY has too few RDATA fields *\/ */
 #define ZBX_EC_DNS_TCP_DNSSEC_CATCHALL	-827	/* DNS TCP - Malformed DNSSEC response */
 #define ZBX_EC_DNS_TCP_DNSKEY_NONE	-828	/* DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
 /* RDDS */
