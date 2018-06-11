@@ -415,7 +415,7 @@ int	NET_IF_OUT(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (NULL == mode || '\0' == *mode || 0 ==strcmp(mode, "bytes"))
+	if (NULL == mode || '\0' == *mode || 0 == strcmp(mode, "bytes"))
 		ret = NET_IF_OUT_BYTES(if_name, result);
 	else if (0 == strcmp(mode, "packets"))
 		ret = NET_IF_OUT_PACKETS(if_name, result);
@@ -450,7 +450,7 @@ int	NET_IF_TOTAL(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (NULL == mode || '\0' == *mode || 0 ==strcmp(mode, "bytes"))
+	if (NULL == mode || '\0' == *mode || 0 == strcmp(mode, "bytes"))
 		ret = NET_IF_TOTAL_BYTES(if_name, result);
 	else if (0 == strcmp(mode, "packets"))
 		ret = NET_IF_TOTAL_PACKETS(if_name, result);
