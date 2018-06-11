@@ -238,8 +238,7 @@ static int	NET_IF_TOTAL_PACKETS(const char *if_name, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 	else if ((0 == value_in && SUCCEED != get_kstat_named_field(if_name, "ipackets", &value_in, &error)) ||
-			(0 == value_out && && SUCCEED != get_kstat_named_field(if_name, "opackets", &value_out,
-			&error)))
+			(0 == value_out && SUCCEED != get_kstat_named_field(if_name, "opackets", &value_out, &error)))
 	{
 		SET_MSG_RESULT(result, error);
 		return SYSINFO_RET_FAIL;
