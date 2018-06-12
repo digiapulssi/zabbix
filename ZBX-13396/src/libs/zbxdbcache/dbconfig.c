@@ -688,7 +688,7 @@ static void	DCupdate_proxy_queue(ZBX_DC_PROXY *proxy)
  * Purpose: calculates next check for timer queue item                        *
  *                                                                            *
  ******************************************************************************/
-static int	dc_timer_calculate_nextcheck(time_t now, int seed)
+static int	dc_timer_calculate_nextcheck(time_t now, zbx_uint64_t seed)
 {
 	int	nextcheck;
 
