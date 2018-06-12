@@ -768,7 +768,7 @@ static void	dc_timer_add_item(zbx_uint64_t itemid)
 		timer_item_local.itemid = itemid;
 		timer_item_local.refcount = 1;
 		timer_item_local.location = ZBX_TIMER_ITEM_LOCATION_NOWHERE;
-		timer_item_local.nextcheck = dc_timer_calculate_nextcheck(time(NULL), itemid);
+		timer_item_local.nextcheck = 0;
 
 		timer_item = zbx_hashset_insert(&config->timer_items, &timer_item_local, sizeof(timer_item_local));
 		return;
