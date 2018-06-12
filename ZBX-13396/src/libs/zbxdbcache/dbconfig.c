@@ -3438,12 +3438,8 @@ static void	DCsync_functions(zbx_dbsync_t *sync)
 			{
 				dc_timer_add_item(itemid);
 
-				if (NULL != (host = zbx_hashset_search(&config->hosts, &item->hostid)) &&
-						ITEM_STATUS_ACTIVE == item->status &&
-						HOST_STATUS_MONITORED == host->status)
-				{
+				if (ITEM_STATUS_ACTIVE == item->status && HOST_STATUS_MONITORED == host->status)
 					dc_timer_queue_item(itemid);
-				}
 			}
 		}
 
