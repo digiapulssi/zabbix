@@ -3814,8 +3814,11 @@ void	zbx_hc_add_timer_items(const zbx_vector_uint64_t *itemids, const zbx_timesp
 
 	for (i = 0; i < itemids->values_num; i++)
 	{
-		if (NULL != (item = hc_get_item(itemids->values[i])) && 0 == (item->tail->flags & ZBX_DC_FLAG_NOVALUE))
+		if (NULL != (item = hc_get_item(itemids->values[i])) &&
+				ZBX_DC_FLAG_NOVALUE != (item->tail->flags & (ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_TIMER)))
+		{
 			continue;
+		}
 
 		while (NULL == (data = (zbx_hc_data_t *)__hc_mem_malloc_func(NULL, sizeof(zbx_hc_data_t))))
 		{
@@ -3827,7 +3830,8 @@ void	zbx_hc_add_timer_items(const zbx_vector_uint64_t *itemids, const zbx_timesp
 			LOCK_CACHE;
 		}
 
-		if (1 == retry && NULL != (item = hc_get_item(itemids->values[i])))
+		if (1 == retry && NULL != (item = hc_get_item(itemids->values[i])) &&
+				ZBX_DC_FLAG_NOVALUE != (item->tail->flags & (ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_TIMER)))
 		{
 			__hc_mem_free_func(data);
 			continue;
@@ -3837,8 +3841,16 @@ void	zbx_hc_add_timer_items(const zbx_vector_uint64_t *itemids, const zbx_timesp
 		data->ts = *ts;
 		data->flags = ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_TIMER;
 
-		item = hc_add_item(itemids->values[i], data);
-		hc_queue_item(item);
+		if (NULL == item)
+		{
+			item = hc_add_item(itemids->values[i], data);
+			hc_queue_item(item);
+		}
+		else
+		{
+			item->head->next = data;
+			item->head = data;
+		}
 
 		cache->history_num++;
 	}
