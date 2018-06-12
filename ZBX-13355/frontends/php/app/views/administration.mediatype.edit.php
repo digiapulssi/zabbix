@@ -38,19 +38,21 @@ $mediaTypeFormList = (new CFormList())
 	->addRow(_('Name'), $nameTextBox);
 
 // append type to form list
-$cmb_type = (new CComboBox('type', $data['type'], null, [
+$cmbType = new CComboBox('type', $data['type'], null, [
 	MEDIA_TYPE_EMAIL => _('Email'),
 	MEDIA_TYPE_EXEC => _('Script'),
 	MEDIA_TYPE_SMS => _('SMS'),
 	MEDIA_TYPE_JABBER => _('Jabber')
-]))->addItemsInGroup(_('Commercial'), [MEDIA_TYPE_EZ_TEXTING => _('Ez Texting')]);
-
+]);
+$cmbType->addItemsInGroup(_('Commercial'), [MEDIA_TYPE_EZ_TEXTING => _('Ez Texting')]);
+$cmbTypeRow = [$cmbType];
 $ez_texting_link = (new CLink('https://app.eztexting.com', 'https://app.eztexting.com/'))
 	->setId('eztext_link')
 	->setTarget('_blank');
+$cmbTypeRow[] = $ez_texting_link;
 
 $mediaTypeFormList
-	->addRow(_('Type'), [$cmb_type, ' ', $ez_texting_link])
+	->addRow(_('Type'), $cmbTypeRow)
 	->addRow(_('SMTP server'),
 		(new CTextBox('smtp_server', $data['smtp_server']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
@@ -112,16 +114,18 @@ $mediaTypeFormList->addRow(_('GSM modem'),
 );
 
 // create password field
-$passwd_field = (new CPassBox('passwd', $data['passwd']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
-
 if ($data['passwd'] != '') {
-	$passwd_field = [
+	// Disabling 'passwd' field prevents stored passwords autofill by browser.
+	$passwdField = [
 		(new CButton('chPass_btn', _('Change password'))),
-		$passwd_field
+		(new CPassBox('passwd', $data['passwd']))
+			->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			->addStyle('display: none;')
 			->setAttribute('disabled', 'disabled')
-		// Disabling field prevents stored passwords autofill by browser.
 	];
+}
+else {
+	$passwdField = (new CPassBox('passwd'))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
 }
 
 // append password field to form list
@@ -132,7 +136,7 @@ $mediaTypeFormList
 	->addRow(_('Username'),
 		(new CTextBox('eztext_username', $data['eztext_username']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 	)
-	->addRow(_('Password'), $passwd_field)
+	->addRow(_('Password'), $passwdField)
 	->addRow(_('Message text limit'), new CComboBox('eztext_limit', $data['eztext_limit'], null, [
 		EZ_TEXTING_LIMIT_USA => _('USA (160 characters)'),
 		EZ_TEXTING_LIMIT_CANADA => _('Canada (136 characters)')

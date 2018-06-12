@@ -112,7 +112,10 @@
 
 		$('#chPass_btn').on('click', function() {
 			$(this).hide();
-			$('#passwd').show().removeAttr('disabled').focus();
+			$('#passwd')
+				.show()
+				.removeAttr('disabled')
+				.focus();
 		});
 
 		// When adding and removing dynamic rows, store counter in hidden field.
