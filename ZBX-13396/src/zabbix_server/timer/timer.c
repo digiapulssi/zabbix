@@ -551,7 +551,7 @@ static int	process_maintenance(void)
  * Return value: The number of trigger recalculation requests pushed.         *
  *                                                                            *
  ******************************************************************************/
-static int	process_timer_queue()
+static int	process_timer_queue(void)
 {
 	zbx_vector_uint64_t	itemids;
 	zbx_timespec_t		ts;

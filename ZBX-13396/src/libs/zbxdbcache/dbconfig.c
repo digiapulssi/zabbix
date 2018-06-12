@@ -11451,9 +11451,9 @@ void	zbx_dc_get_proxy_lastaccess(zbx_vector_uint64_pair_t *lastaccess)
  ******************************************************************************/
 int	zbx_dc_get_timer_itemids(time_t now, zbx_vector_uint64_t *itemids)
 {
-	const char	*__function_name = "zbx_dc_get_timer_itemids";
-	ZBX_DC_ITEM	*item;
-	ZBX_DC_HOST	*host;
+	const char		*__function_name = "zbx_dc_get_timer_itemids";
+	const ZBX_DC_ITEM	*item;
+	const ZBX_DC_HOST	*host;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -11468,8 +11468,8 @@ int	zbx_dc_get_timer_itemids(time_t now, zbx_vector_uint64_t *itemids)
 		if (timer_item->nextcheck > now)
 			break;
 
-		if (NULL == (item = (ZBX_DC_ITEM *)zbx_hashset_search(&config->items, &elem->key)) ||
-				NULL == (host = (ZBX_DC_HOST *)zbx_hashset_search(&config->hosts, &item->hostid)))
+		if (NULL == (item = (const ZBX_DC_ITEM *)zbx_hashset_search(&config->items, &elem->key)) ||
+				NULL == (host = (const ZBX_DC_HOST *)zbx_hashset_search(&config->hosts, &item->hostid)))
 		{
 			dc_timer_dequeue_item(elem->key);
 			continue;
@@ -11480,7 +11480,6 @@ int	zbx_dc_get_timer_itemids(time_t now, zbx_vector_uint64_t *itemids)
 
 		timer_item->nextcheck = dc_timer_calculate_nextcheck(now, elem->key);
 		zbx_binary_heap_update_direct(&config->timer_queue, elem);
-
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() itemids:%d", __function_name, itemids->values_num);
