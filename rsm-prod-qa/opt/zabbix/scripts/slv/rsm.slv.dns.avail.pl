@@ -14,7 +14,7 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);
 
-my $cfg_key_in = 'rsm.dns.udp[{$RSM.TLD}]';
+my $cfg_keys_in = ['rsm.dns.udp[{$RSM.TLD}]'];
 my $cfg_key_out = 'rsm.slv.dns.avail';
 my $cfg_value_type = ITEM_VALUE_TYPE_UINT64;
 
@@ -85,8 +85,8 @@ while ($period > 0)
 			next unless (opt('dry-run'));
 		}
 
-		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			\@online_probe_names, \&check_item_values, $cfg_value_type);
+		process_slv_avail($tld, $cfg_keys_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
+			\@online_probe_names, \&check_probe_values, $cfg_value_type);
 	}
 
 	# unset TLD (for the logs)
@@ -97,17 +97,36 @@ while ($period > 0)
 
 slv_exit(SUCCESS);
 
-# SUCCESS - no values or at least one successful value
-# E_FAIL  - all values unsuccessful
-sub check_item_values
+# SUCCESS - more than or equal to $cfg_minns Name Servers were tested successfully
+# E_FAIL  - otherwise
+sub check_probe_values
 {
 	my $values_ref = shift;
 
-	return SUCCESS if (scalar(@$values_ref) == 0);
+	# E. g.:
+	#
+	# {
+	#	'rsm.dns.udp[{$RSM.TLD}]' => [3]
+	# }
 
-	foreach (@$values_ref)
+	if (scalar(keys(%{$values_ref})) == 0)
 	{
-		return SUCCESS if ($_ >= $cfg_minns);
+		fail("THIS SHOULD NEVER HAPPEN rsm.slv.dns.avail.pl:check_probe_values()");
+	}
+
+	if (1 > $cfg_minns)
+	{
+		wrn("number of required working Name Servers is configured as $cfg_minns");
+		return SUCCESS;
+	}
+
+	# stay on the safe side: if more than one value in cycle, use the positive one
+	foreach my $rtts (values(%{$values_ref}))
+	{
+		foreach (@{$rtts})
+		{
+			return SUCCESS if ($_ >= $cfg_minns);
+		}
 	}
 
 	return E_FAIL;
