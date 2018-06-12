@@ -11466,6 +11466,8 @@ int	zbx_dc_get_timer_itemids(time_t now, zbx_vector_uint64_t *itemids)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
+	WRLOCK_CACHE;
+
 	while (SUCCEED != zbx_binary_heap_empty(&config->timer_queue))
 	{
 		zbx_binary_heap_elem_t	*elem;
@@ -11490,6 +11492,8 @@ int	zbx_dc_get_timer_itemids(time_t now, zbx_vector_uint64_t *itemids)
 		timer_item->nextcheck = dc_timer_calculate_nextcheck(now, elem->key);
 		zbx_binary_heap_update_direct(&config->timer_queue, elem);
 	}
+
+	UNLOCK_CACHE;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() itemids:%d", __function_name, itemids->values_num);
 
