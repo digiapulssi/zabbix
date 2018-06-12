@@ -83,8 +83,11 @@ while ($period > 0)
 			next unless (opt('dry-run'));
 		}
 
-		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			\@online_probe_names, \&check_item_values, $cfg_value_type);
+		# get all rtt items
+		my $rdds_key_in = get_templated_items_like($tld, $cfg_key_in);
+
+		process_slv_avail($tld, $rdds_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
+			\@online_probe_names, \&check_probe_values, $cfg_value_type);
 	}
 
 	# unset TLD (for the logs)
@@ -97,15 +100,27 @@ slv_exit(SUCCESS);
 
 # SUCCESS - no values or at least one successful value
 # E_FAIL  - all values unsuccessful
-sub check_item_values
+sub check_probe_values
 {
 	my $values_ref = shift;
 
-	return SUCCESS if (scalar(@$values_ref) == 0);
+	# E. g.:
+	#
+	# {
+	#       rsm.rdds[{$RSM.TLD},"rdds43.example.com","web.whois.example.com"] => [1],
+	# }
 
-	foreach (@$values_ref)
+	if (scalar(keys(%{$values_ref})) == 0)
 	{
-		return SUCCESS if ($_ == UP);
+		fail("THIS SHOULD NEVER HAPPEN rsm.slv.rdds.avail.pl:check_probe_values()");
+	}
+
+	foreach my $statuses (values(%{$values_ref}))
+	{
+		foreach (@{$statuses})
+		{
+			return SUCCESS if ($_ == UP);
+		}
 	}
 
 	return E_FAIL;

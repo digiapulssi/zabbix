@@ -25,7 +25,7 @@ set_slv_config(get_rsm_config());
 db_connect();
 
 my ($from, $till, $value_ts) = get_rollweek_bounds(getopt('from'));
-my $interval = get_macro_dns_udp_delay($from);
+my $delay = get_macro_dns_udp_delay($from);
 my $cfg_sla = get_macro_dns_rollweek_sla();
 
 dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
@@ -57,7 +57,7 @@ foreach (@$tlds_ref)
                 next unless (opt('dry-run'));
         }
 
-	my $downtime = get_downtime($itemid_in, $from, $till);
+	my $downtime = get_downtime($itemid_in, $from, $till, undef, undef, $delay);
 	my $perc = sprintf("%.3f", $downtime * 100 / $cfg_sla);
 
 	push_value($tld, $cfg_key_out, $value_ts, $perc, "result: $perc% (down: $downtime minutes, sla: $cfg_sla, ", ts_str($value_ts), ")");
