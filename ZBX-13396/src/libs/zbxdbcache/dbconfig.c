@@ -3379,16 +3379,16 @@ static void	DCsync_trigdeps(zbx_dbsync_t *sync)
 
 static void	DCsync_functions(zbx_dbsync_t *sync)
 {
-	const char	*__function_name = "DCsync_functions";
+	const char		*__function_name = "DCsync_functions";
 
-	char		**row;
-	zbx_uint64_t	rowid;
-	unsigned char	tag;
-	int		old_timer, new_timer;
+	char			**row;
+	zbx_uint64_t		rowid;
+	unsigned char		tag;
+	int			old_timer, new_timer;
 
-	ZBX_DC_ITEM	*item;
-	ZBX_DC_HOST	*host;
-	ZBX_DC_FUNCTION	*function;
+	ZBX_DC_ITEM		*item;
+	const ZBX_DC_HOST	*host;
+	ZBX_DC_FUNCTION		*function;
 
 	int		found, ret;
 	zbx_uint64_t	itemid, functionid, triggerid;
@@ -3406,7 +3406,7 @@ static void	DCsync_functions(zbx_dbsync_t *sync)
 		ZBX_STR2UINT64(triggerid, row[4]);
 
 		if (NULL == (item = (ZBX_DC_ITEM *)zbx_hashset_search(&config->items, &itemid)) ||
-				NULL == (host = (ZBX_DC_HOST *)zbx_hashset_search(&config->hosts, &item->hostid)))
+				NULL == (host = (const ZBX_DC_HOST *)zbx_hashset_search(&config->hosts, &item->hostid)))
 		{
 			/* Item could have been created after we have selected them in the             */
 			/* previous queries. However, we shall avoid the check for functions being the */
