@@ -5,6 +5,7 @@ New features:
 ....I..... [sub-330] implemented better solution for parallel execution of Data Export script (gleb)
 
 Bug fixes:
+....I..... [363] fixed DNSSEC availability calculation to follow DNS logic, required successful number of Name Servers (dimir)
 ....I..... [sub-326] fixed undefined subroutine call in Data Export script (gleb)
 
 --------------------------------------------------------------------------------

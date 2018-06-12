@@ -25,36 +25,6 @@ unless (opt('service'))
 	usage(2);
 }
 
-my ($key, $service_type);
-
-if (getopt('service') eq 'dns')
-{
-	$key = 'rsm.slv.dns.avail';
-}
-elsif (getopt('service') eq 'dns-ns')
-{
-	$key = 'rsm.slv.dns.ns.avail[';
-}
-elsif (getopt('service') eq 'rdds')
-{
-	$service_type = 'rdds';
-	$key = 'rsm.slv.rdds.avail';
-}
-elsif (getopt('service') eq 'epp')
-{
-	$service_type = 'epp';
-	$key = 'rsm.slv.epp.avail';
-}
-else
-{
-	print("Invalid service specified \"", getopt('service'), "\"\n");
-	usage(2);
-}
-
-set_slv_config(get_rsm_config());
-
-db_connect();
-
 my $from = getopt('from');
 my $till = getopt('till');
 
@@ -65,6 +35,40 @@ unless (defined($from) && defined($till))
 
 	$from //= $downtime_from;
 	$till //= $downtime_till;
+}
+
+my ($key, $service_type, $delay);
+
+set_slv_config(get_rsm_config());
+
+db_connect();
+
+if (getopt('service') eq 'dns')
+{
+	$key = 'rsm.slv.dns.avail';
+	$delay = get_macro_dns_udp_delay($from);
+}
+elsif (getopt('service') eq 'dns-ns')
+{
+	$key = 'rsm.slv.dns.ns.avail[';
+	$delay = get_macro_dns_udp_delay($from);
+}
+elsif (getopt('service') eq 'rdds')
+{
+	$service_type = 'rdds';
+	$key = 'rsm.slv.rdds.avail';
+	$delay = get_macro_rdds_delay($from);
+}
+elsif (getopt('service') eq 'epp')
+{
+	$service_type = 'epp';
+	$key = 'rsm.slv.epp.avail';
+	$delay = get_macro_epp_delay($from);
+}
+else
+{
+	print("Invalid service specified \"", getopt('service'), "\"\n");
+	usage(2);
 }
 
 my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($service_type);
@@ -79,7 +83,7 @@ foreach (@$tlds_ref)
 		foreach my $nsip (keys(%$itemids_ref))
 		{
 			my $itemid = $itemids_ref->{$nsip};
-			my $downtime = get_downtime($itemid, $from, $till, 1); # no incidents check
+			my $downtime = get_downtime($itemid, $from, $till, 1, undef, $delay); # no incidents check
 
 			info("$nsip: $downtime minutes of downtime from ", ts_str($from), " ($from) till ", ts_str($till), " ($till)");
 		}
@@ -87,7 +91,7 @@ foreach (@$tlds_ref)
 	else
 	{
 		my $itemid = get_itemid_by_host($tld, $key);
-		my $downtime = get_downtime($itemid, $from, $till);
+		my $downtime = get_downtime($itemid, $from, $till, undef, undef, $delay);
 
 		info("$downtime minutes of downtime from ", ts_str($from), " ($from) till ", ts_str($till), " ($till)");
 	}
