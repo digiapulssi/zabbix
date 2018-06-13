@@ -4048,7 +4048,7 @@ out:
 	if (SYSINFO_RET_OK == ret)
 	{
 		/* set values for RTT and IP */
-		zbx_add_value_str(&ip_item, item->nextcheck, ip);
+		zbx_add_value_str(&ip_item, item->nextcheck, ZBX_NULL2EMPTY_STR(ip));
 		zbx_add_value_dbl(&rtt_item, item->nextcheck, rtt);
 
 		/* set the value of our item itself */
