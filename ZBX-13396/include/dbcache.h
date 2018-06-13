@@ -737,6 +737,7 @@ void	zbx_dc_get_nested_hostgroupids_by_names(char **names, int names_num,
 #define ZBX_DC_FLAG_NOHISTORY	0x10	/* values should not be kept in history */
 #define ZBX_DC_FLAG_NOTRENDS	0x20	/* values should not be kept in trends */
 #define ZBX_DC_FLAG_TIMER	0x40	/* used to force trigger recalculation, no real value attached */
+#define ZBX_DC_FLAG_DISABLED	0x80	/* item is disabled or host not monitored */
 
 typedef struct zbx_hc_data
 {

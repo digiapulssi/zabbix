@@ -75,10 +75,12 @@ extern unsigned char	program_type;
 /* the maximum number of characters for history cache values */
 #define ZBX_HISTORY_VALUE_LEN	(1024 * 64)
 
-#define ZBX_DC_FLAGS_NOT_FOR_HISTORY	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOHISTORY)
-#define ZBX_DC_FLAGS_NOT_FOR_TRENDS	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOTRENDS)
+#define ZBX_DC_FLAGS_NOT_FOR_HISTORY	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOHISTORY |	\
+		ZBX_DC_FLAG_DISABLED)
+#define ZBX_DC_FLAGS_NOT_FOR_TRENDS	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOTRENDS | 	\
+		ZBX_DC_FLAG_DISABLED)
 #define ZBX_DC_FLAGS_NOT_FOR_MODULES	(ZBX_DC_FLAGS_NOT_FOR_HISTORY | ZBX_DC_FLAG_LLD)
-#define ZBX_DC_FLAGS_NOT_FOR_EXPORT	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF)
+#define ZBX_DC_FLAGS_NOT_FOR_EXPORT	(ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_DISABLED)
 
 typedef struct
 {
@@ -1489,6 +1491,9 @@ static void	DBmass_update_triggers(const ZBX_DC_HISTORY *history, int history_nu
 	{
 		const ZBX_DC_HISTORY	*h = &history[i];
 
+		if (0 != (h->flags & ZBX_DC_FLAG_DISABLED))
+			continue;
+
 		if (ZBX_DC_FLAG_NOVALUE == (h->flags & (ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_TIMER)))
 			continue;
 
@@ -1542,7 +1547,7 @@ static void	DCinventory_value_add(zbx_vector_ptr_t *inventory_values, const DC_I
 	if (HOST_INVENTORY_AUTOMATIC != item->host.inventory_mode)
 		return;
 
-	if (0 != (ZBX_DC_FLAG_UNDEF & h->flags) || 0 != (ZBX_DC_FLAG_NOVALUE & h->flags) ||
+	if (0 != (h->flags & (ZBX_DC_FLAG_UNDEF | ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_DISABLED)) ||
 			NULL == (inventory_field = DBget_inventory_field(item->inventory_link)))
 	{
 		return;
@@ -2203,6 +2208,9 @@ static void	dc_add_proxy_history(ZBX_DC_HISTORY *history, int history_num)
 		if (0 != (h->flags & ZBX_DC_FLAG_META))
 			continue;
 
+		if (0 != (h->flags & ZBX_DC_FLAG_DISABLED))
+			continue;
+
 		if (ITEM_STATE_NOTSUPPORTED == h->state)
 			continue;
 
@@ -2260,6 +2268,9 @@ static void	dc_add_proxy_history_meta(ZBX_DC_HISTORY *history, int history_num)
 			continue;
 
 		if (0 == (h->flags & ZBX_DC_FLAG_META))
+			continue;
+
+		if (0 != (h->flags & ZBX_DC_FLAG_DISABLED))
 			continue;
 
 		if (ITEM_VALUE_TYPE_LOG == h->value_type)
@@ -2510,7 +2521,7 @@ static void	DCmass_prepare_history(ZBX_DC_HISTORY *history, const zbx_vector_uin
 
 		if (ITEM_STATUS_ACTIVE != item->status || HOST_STATUS_MONITORED != item->host.status)
 		{
-			h->flags |= ZBX_DC_FLAG_UNDEF;
+			h->flags |= ZBX_DC_FLAG_DISABLED;
 			continue;
 		}
 
