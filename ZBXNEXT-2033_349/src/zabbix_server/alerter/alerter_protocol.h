@@ -35,6 +35,7 @@
 #define ZBX_IPC_ALERTER_SMS		1102
 #define ZBX_IPC_ALERTER_EZTEXTING	1103
 #define ZBX_IPC_ALERTER_EXEC		1104
+#define ZBX_IPC_ALERTER_REMEDY		1105
 
 
 zbx_uint32_t	zbx_alerter_serialize_result(unsigned char **data, int errcode, const char *errmsg);
@@ -72,5 +73,14 @@ void	zbx_alerter_deserialize_eztexting(const unsigned char *data, zbx_uint64_t *
 zbx_uint32_t	zbx_alerter_serialize_exec(unsigned char **data, zbx_uint64_t alertid, const char *command);
 
 void	zbx_alerter_deserialize_exec(const unsigned char *data, zbx_uint64_t *alertid, char **command);
+
+zbx_uint32_t	zbx_alerter_serialize_remedy(unsigned char **data, zbx_uint64_t eventid, zbx_uint64_t userid,
+		const char *sendto, const char *subject, const char *message, const char *smtp_server,
+		const char *smtp_helo, const char *smtp_email, const char *username, const char *password,
+		const char *exec_path);
+
+void	zbx_alerter_deserialize_remedy(const unsigned char *data, zbx_uint64_t *eventid, zbx_uint64_t *userid,
+		char **sendto, char **subject, char **message, char **smtp_server, char **smtp_helo, char **smtp_email,
+		char **username, char **password, char **exec_path);
 
 #endif

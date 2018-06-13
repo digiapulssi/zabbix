@@ -104,6 +104,8 @@
 #define ZBX_PROTO_VALUE_GET_STATUS		"status.get"
 #define ZBX_PROTO_VALUE_PROXY_DATA		"proxy data"
 #define ZBX_PROTO_VALUE_PROXY_TASKS		"proxy tasks"
+#define ZBX_PROTO_VALUE_MEDIA_QUERY		"media.query"
+#define ZBX_PROTO_VALUE_MEDIA_ACKNOWLEDGE	"media.acknowledge"
 
 #define ZBX_PROTO_VALUE_GET_QUEUE_OVERVIEW	"overview"
 #define ZBX_PROTO_VALUE_GET_QUEUE_PROXY		"overview by proxy"
