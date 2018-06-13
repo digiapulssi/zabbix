@@ -1037,6 +1037,7 @@ TRYFORK:
 
 							my $subservices_ref = $tr_ref->{+JSON_RDDS_SUBSERVICE};
 
+							# set test status on the Probe level
 							foreach my $subservice (keys(%$subservices_ref))
 							{
 								my $probes_ref = $subservices_ref->{$subservice};

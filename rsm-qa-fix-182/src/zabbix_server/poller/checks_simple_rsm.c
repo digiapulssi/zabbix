@@ -4045,10 +4045,11 @@ out:
 	if (0 != ISSET_MSG(result))
 		zbx_rsm_err(log_fd, result->msg);
 
-	if (SYSINFO_RET_OK == ret)
+	if (SYSINFO_RET_OK == ret && ZBX_NO_VALUE != rtt)
 	{
 		/* set values for RTT and IP */
-		zbx_add_value_str(&ip_item, item->nextcheck, ZBX_NULL2EMPTY_STR(ip));
+		if (NULL != ip)
+			zbx_add_value_str(&ip_item, item->nextcheck, ip);
 		zbx_add_value_dbl(&rtt_item, item->nextcheck, rtt);
 
 		/* set the value of our item itself */
