@@ -1489,9 +1489,6 @@ static void	DBmass_update_triggers(const ZBX_DC_HISTORY *history, int history_nu
 	{
 		const ZBX_DC_HISTORY	*h = &history[i];
 
-		if (0 != (h->flags & ZBX_DC_FLAG_UNDEF))
-			continue;
-
 		if (ZBX_DC_FLAG_NOVALUE == (h->flags & (ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_TIMER)))
 			continue;
 
