@@ -1715,6 +1715,17 @@ static int	DBpatch_3000208(void)
 	return add_actions(two_more_actions);
 }
 
+static int	DBpatch_3000212(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("delete from mappings where mappingid in (12053,12057,12107,12111)"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1773,5 +1784,6 @@ DBPATCH_ADD(3000206, 0, 0)	/* create "Template Probe Errors" template with "Inte
 DBPATCH_ADD(3000208, 0, 0)	/* new actions: "Probes", "Probes-Knockout" */
 DBPATCH_ADD(3000210, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
 DBPATCH_ADD(3000211, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
+DBPATCH_ADD(3000212, 0, 0)	/* remove obsoleted DNS error codes: -421,-426,-821,-826 */
 
 DBPATCH_END()
