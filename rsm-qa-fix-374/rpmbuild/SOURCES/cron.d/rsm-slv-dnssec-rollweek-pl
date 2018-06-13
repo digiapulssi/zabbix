@@ -1,0 +1,1 @@
+* * * * * root sleep 3; /opt/zabbix/scripts/slv/rsm.slv.dnssec.rollweek.pl >> /var/log/zabbix/rsm.slv.err 2>&1
