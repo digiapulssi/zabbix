@@ -1,3 +1,11 @@
+Changes for rsm1.1.0rc10
+
+New features:
+
+Bug fixes:
+.......PS. [sub-374] removed value mappings for DNS error codes -421,-426,-821,-826 from the database (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc9
 
 New features:
