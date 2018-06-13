@@ -4354,19 +4354,31 @@ static void	zbx_link_triggers_with_functions(zbx_vector_ptr_t *triggers_func_pos
  *                                                                            *
  * Parameters: trigger_order - [IN/OUT] pointer to the list of triggers       *
  *             itemids       - [IN] array of item IDs                         *
+ *             flags         - [IN] array of item value flags                 *
  *             item_num      - [IN] number of items                           *
  *                                                                            *
  ******************************************************************************/
-void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const zbx_uint64_t *itemids, int item_num)
+void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const zbx_uint64_t *itemids,
+		const unsigned char *flags, int item_num)
 {
 	zbx_vector_ptr_t	triggers_func_pos;
-	zbx_vector_uint64_t	functionids, itemids_sorted;
+	zbx_vector_uint64_t	functionids, itemids_sorted, timer_itemids_sorted;
 	DC_FUNCTION		*functions = NULL;
-	int			*errcodes = NULL, t, f;
+	int			i, *errcodes = NULL, t, f, index;
 
 	zbx_vector_uint64_create(&itemids_sorted);
-	zbx_vector_uint64_append_array(&itemids_sorted, itemids, item_num);
+	zbx_vector_uint64_create(&timer_itemids_sorted);
+
+	for (i = 0; i < item_num; i++)
+	{
+		if (0 != (flags[i] & ZBX_DC_FLAG_TIMER))
+			zbx_vector_uint64_append(&timer_itemids_sorted, itemids[i]);
+		else
+			zbx_vector_uint64_append(&itemids_sorted, itemids[i]);
+	}
+
 	zbx_vector_uint64_sort(&itemids_sorted, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_sort(&timer_itemids_sorted, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
 	zbx_vector_ptr_create(&triggers_func_pos);
 	zbx_vector_ptr_reserve(&triggers_func_pos, trigger_order->values_num);
@@ -4387,8 +4399,18 @@ void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const z
 
 		for (f = func_pos->start_index; f < func_pos->start_index + func_pos->count; f++)
 		{
-			if (FAIL != zbx_vector_uint64_bsearch(&itemids_sorted, functions[f].itemid,
-					ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+			if (SUCCEED != is_time_function(functions[f].function))
+			{
+				index = zbx_vector_uint64_bsearch(&itemids_sorted, functions[f].itemid,
+						ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+			}
+			else
+			{
+				index = zbx_vector_uint64_bsearch(&timer_itemids_sorted, functions[f].itemid,
+						ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+			}
+
+			if (FAIL != index)
 			{
 				func_pos->trigger->flags |= ZBX_DC_TRIGGER_PROBLEM_EXPRESSION;
 				break;
@@ -4403,10 +4425,8 @@ void	zbx_determine_items_in_expressions(zbx_vector_ptr_t *trigger_order, const z
 	zbx_vector_ptr_clear_ext(&triggers_func_pos, zbx_ptr_free);
 	zbx_vector_ptr_destroy(&triggers_func_pos);
 
-	zbx_vector_uint64_clear(&functionids);
 	zbx_vector_uint64_destroy(&functionids);
-
-	zbx_vector_uint64_clear(&itemids_sorted);
+	zbx_vector_uint64_destroy(&timer_itemids_sorted);
 	zbx_vector_uint64_destroy(&itemids_sorted);
 }
 

@@ -1473,15 +1473,17 @@ static void	DBmass_update_triggers(const ZBX_DC_HISTORY *history, int history_nu
 {
 	const char		*__function_name = "DBmass_update_triggers";
 	int			i, item_num = 0;
-	zbx_uint64_t		*itemids = NULL;
-	zbx_timespec_t		*timespecs = NULL;
+	zbx_uint64_t		*itemids;
+	zbx_timespec_t		*timespecs;
 	zbx_hashset_t		trigger_info;
 	zbx_vector_ptr_t	trigger_order;
+	unsigned char		*flags;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	itemids = (zbx_uint64_t *)zbx_malloc(itemids, sizeof(zbx_uint64_t) * (size_t)history_num);
-	timespecs = (zbx_timespec_t *)zbx_malloc(timespecs, sizeof(zbx_timespec_t) * (size_t)history_num);
+	itemids = (zbx_uint64_t *)zbx_malloc(NULL, sizeof(zbx_uint64_t) * (size_t)history_num);
+	timespecs = (zbx_timespec_t *)zbx_malloc(NULL, sizeof(zbx_timespec_t) * (size_t)history_num);
+	flags = (unsigned char *)zbx_malloc(NULL, history_num);
 
 	for (i = 0; i < history_num; i++)
 	{
@@ -1490,6 +1492,7 @@ static void	DBmass_update_triggers(const ZBX_DC_HISTORY *history, int history_nu
 		if (ZBX_DC_FLAG_NOVALUE == (h->flags & (ZBX_DC_FLAG_NOVALUE | ZBX_DC_FLAG_TIMER)))
 			continue;
 
+		flags[item_num] = h->flags;
 		itemids[item_num] = h->itemid;
 		timespecs[item_num] = h->ts;
 		item_num++;
@@ -1506,7 +1509,7 @@ static void	DBmass_update_triggers(const ZBX_DC_HISTORY *history, int history_nu
 
 	DCconfig_get_triggers_by_itemids(&trigger_info, &trigger_order, itemids, timespecs, item_num);
 
-	zbx_determine_items_in_expressions(&trigger_order, itemids, item_num);
+	zbx_determine_items_in_expressions(&trigger_order, itemids, flags, item_num);
 
 	if (0 == trigger_order.values_num)
 		goto clean_triggers;
@@ -1520,6 +1523,7 @@ clean_triggers:
 	zbx_hashset_destroy(&trigger_info);
 	zbx_vector_ptr_destroy(&trigger_order);
 clean_items:
+	zbx_free(flags);
 	zbx_free(timespecs);
 	zbx_free(itemids);
 
