@@ -1782,7 +1782,7 @@ static int	DBpatch_3000214(void)
 					"{$RDAP.BASE.URL},"
 					"{$RSM.RDDS.MAXREDIRS},"
 					"{$RSM.RDDS.RTT.HIGH},"
-					"{$RSM.TLD.RDDS.ENABLED},"
+					"{$RDAP.TLD.ENABLED},"
 					"{$RSM.RDDS.ENABLED},"
 					"{$RSM.IP4.ENABLED},"
 					"{$RSM.IP6.ENABLED},"
