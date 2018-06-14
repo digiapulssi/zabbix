@@ -4001,9 +4001,9 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	}
 
 	if (0 != is_ipv4)
-		full_url = zbx_dsprintf(full_url, "%s%s%sdomain/%s", prefix, ip, postfix, test_domain);
+		full_url = zbx_dsprintf(full_url, "%s%s%s/domain/%s", prefix, ip, postfix, test_domain);
 	else
-		full_url = zbx_dsprintf(full_url, "%s[%s]%sdomain/%s", prefix, ip, postfix, test_domain);
+		full_url = zbx_dsprintf(full_url, "%s[%s]%/sdomain/%s", prefix, ip, postfix, test_domain);
 
 	zbx_rsm_infof(log_fd, "Testing \"%s\" (%s) using URL \"%s\".", base_url, ip, full_url);
 
