@@ -2648,7 +2648,7 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 				goto next;
 			}
 
-			discovery_update_host(&dhost, ip, status, itemtime);
+			discovery_update_host(&dhost, status, itemtime);
 		}
 		else
 		{

@@ -1462,7 +1462,7 @@ class CItemDelayFlexParser {
 							}
 
 							$this->intervals[$i]['interval'] .= $minutes_from;
-							$this->intervals[$i]['h'][$minutes]['from'] .= $minutes_from;
+							$this->intervals[$i]['m'][$minutes]['from'] .= $minutes_from;
 
 							$state = self::STATE_NEW;
 
