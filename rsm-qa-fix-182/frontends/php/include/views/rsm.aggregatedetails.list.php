@@ -151,12 +151,6 @@ foreach ($data['probes'] as $probe) {
 		}
 	}
 
-	foreach ($probe['results_udp'] as $ns => $result_udp) {
-		foreach ($result_udp as $result) {
-
-		}
-	}
-
 	$table->addRow($row);
 }
 

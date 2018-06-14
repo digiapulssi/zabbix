@@ -1720,13 +1720,24 @@ static int	DBpatch_3000212(void)
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	if (ZBX_DB_OK > DBexecute("insert into valuemaps (valuemapid,name) values ('135','RSM RDAP rtt')"))
+	if (ZBX_DB_OK > DBexecute("delete from mappings where mappingid in (12053,12057,12107,12111)"))
 		return FAIL;
 
 	return SUCCEED;
 }
 
 static int	DBpatch_3000213(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into valuemaps (valuemapid,name) values ('135','RSM RDAP rtt')"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000214(void)
 {
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
@@ -1821,7 +1832,7 @@ static int	DBpatch_3000213(void)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000214(void)
+static int	DBpatch_3000215(void)
 {
 	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
 	static const char	*const data[] = {
@@ -1953,7 +1964,7 @@ static int	DBpatch_3000214(void)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000215(void)
+static int	DBpatch_3000216(void)
 {
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
@@ -2022,9 +2033,10 @@ DBPATCH_ADD(3000206, 0, 0)	/* create "Template Probe Errors" template with "Inte
 DBPATCH_ADD(3000208, 0, 0)	/* new actions: "Probes", "Probes-Knockout" */
 DBPATCH_ADD(3000210, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
 DBPATCH_ADD(3000211, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
-DBPATCH_ADD(3000212, 0, 0)	/* add "RSM RDAP rtt" value mapping (without error codes) */
-DBPATCH_ADD(3000213, 0, 0)	/* create "Template RDAP" template with rdap[...], rdap.ip and rdap.rtt items, RDAP application; place template into "Templates" host group */
-DBPATCH_ADD(3000214, 0, 0)	/* add RDAP error codes into "RSM RDAP rtt" value mapping */
-DBPATCH_ADD(3000215, 0, 0)	/* add new test type to "testTypes" catalog */
+DBPATCH_ADD(3000212, 0, 0)	/* remove obsoleted DNS error codes: -421,-426,-821,-826 */
+DBPATCH_ADD(3000213, 0, 0)	/* add "RSM RDAP rtt" value mapping (without error codes) */
+DBPATCH_ADD(3000214, 0, 0)	/* create "Template RDAP" template with rdap[...], rdap.ip and rdap.rtt items, RDAP application; place template into "Templates" host group */
+DBPATCH_ADD(3000215, 0, 0)	/* add RDAP error codes into "RSM RDAP rtt" value mapping */
+DBPATCH_ADD(3000216, 0, 0)	/* add new test type to "testTypes" catalog */
 
 DBPATCH_END()
