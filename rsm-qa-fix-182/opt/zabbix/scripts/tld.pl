@@ -962,8 +962,13 @@ sub create_main_template {
 
 	if (defined($OPTS{'rdap-base-url'}) && defined($OPTS{'rdap-test-domain'}))
 	{
-		really(create_macro('{$RDAP.BASE.URL}', $OPTS{'rdap-base-url'}, $templateid));
-		really(create_macro('{$RDAP.TEST.DOMAIN}', $OPTS{'rdap-test-domain'}, $templateid));
+		really(create_macro('{$RDAP.BASE.URL}', $OPTS{'rdap-base-url'}, $templateid, 1));
+		really(create_macro('{$RDAP.TEST.DOMAIN}', $OPTS{'rdap-test-domain'}, $templateid, 1));
+		really(create_macro('{$RDAP.TLD.ENABLED}', 1, $templateid, 1));
+	}
+	else
+	{
+		really(create_macro('{$RDAP.TLD.ENABLED}', 0, $templateid, 1));
 	}
 
     if ($OPTS{'epp-servers'})
