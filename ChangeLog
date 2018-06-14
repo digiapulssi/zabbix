@@ -3,6 +3,7 @@ Changes for 3.0.19rc1
 New features:
 
 Bug fixes:
+A.F....... [ZBX-13355] fixed media type a required password field successfully passing validation while being empty and prevented auto-filling stored passwords by browser (Ivo)
 .D........ [ZBX-14398] improved "Server" parameter description in Zabbix agent configuration file (vso)
 .......PS. [ZBX-14447] reverted ZBX-13788 fix because of broken server-proxy compatibility between minor versions (wiper)
 ...G...... [ZBX-12250] fixed logrt[] item to analyze log file from start if no log files match and no log files were seen before (Andris)
