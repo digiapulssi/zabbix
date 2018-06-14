@@ -1324,16 +1324,17 @@ sub validate_input {
     $msg .= "DNS test prefix must be specified (--dns-test-prefix)\n" if (!defined($OPTS{'delete'}) and !defined($OPTS{'disable'}) and !defined($OPTS{'dns-test-prefix'})
 									    and !defined($OPTS{'get-nsservers-list'}) and !defined($OPTS{'update-nsservers'})
 									    and !defined($OPTS{'list-services'}));
-    $msg .= "RDDS test prefix must be specified (--rdds-test-prefix)\n" if ((defined($OPTS{'rdds43-servers'}) and !defined($OPTS{'rdds-test-prefix'})) or
-									    (defined($OPTS{'rdds80-servers'}) and !defined($OPTS{'rdds-test-prefix'})));
 
-	unless ((defined($OPTS{'rdds43-servers'}) && defined($OPTS{'rdds80-servers'}) &&
-			defined($OPTS{'rdap-base-url'} && defined($OPTS{'rdap-test-domain'}))) ||
-			(!defined($OPTS{'rdds43-servers'}) && !defined($OPTS{'rdds80-servers'}) &&
-			!defined($OPTS{'rdap-base-url'} && !defined($OPTS{'rdap-test-domain'}))))
-	{
-		$msg .= "none or all --rdds43-servers, --rdds80-servers, --rdap-base-url and --rdap-test-domain must be specified\n";
-	}
+	$msg .= "none or both --rdds43-servers and --rdds80-servers must be specified\n"
+		if ((defined($OPTS{'rdds43-servers'}) && !defined($OPTS{'rdds80-servers'})) ||
+			(defined($OPTS{'rdds80-servers'}) && !defined($OPTS{'rdds43-servers'})));
+
+	$msg .= "--rdds-test-prefix must be specified\n"
+		if (defined($OPTS{'rdds43-servers'}) && !defined($OPTS{'rdds-test-prefix'}));
+
+	$msg .= "none or both --rdap-base-url and --rdap-test-domain must be specified\n"
+		if ((defined($OPTS{'rdap-base-url'}) && !defined($OPTS{'rdap-test-domain'})) ||
+			(defined($OPTS{'rdap-test-domain'}) && !defined($OPTS{'rdap-base-url'})));
 
     if ($OPTS{'epp-servers'}) {
 	$msg .= "EPP user must be specified (--epp-user)\n" unless ($OPTS{'epp-user'});
