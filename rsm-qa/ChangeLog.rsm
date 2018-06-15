@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc11
+
+Bug fixes:
+.......PS. [378] fixed error checking when making rrsig verification and denial of existence checks (yurii)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc10
 
 Bug fixes:
