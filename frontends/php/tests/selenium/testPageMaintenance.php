@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ class testPageMaintenance extends CWebTest {
 		$this->zbxTestCheckboxSelect('maintenanceids_'.$maintenanceid);
 		$this->zbxTestClickButton('maintenance.massdelete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 		$this->zbxTestCheckTitle('Configuration of maintenance periods');
 		$this->zbxTestTextPresent('Maintenance deleted');
 

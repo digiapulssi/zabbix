@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -575,7 +575,9 @@ $dependenciesFormList->addRow(_('Dependencies'),
 		new CHorList([
 			(new CButton('add_dep_trigger', _('Add')))
 				->onClick('return PopUp("popup.php?srctbl=triggers&srcfld1=triggerid&reference=deptrigger'.
-					'&multiselect=1&with_triggers=1&normal_only=1&noempty=1");')
+					'&hostid='.$data['hostid'].'&groupid='.$data['groupid'].'&multiselect=1&with_triggers=1'.
+					'&normal_only=1&noempty=1");'
+				)
 				->addClass(ZBX_STYLE_BTN_LINK),
 			(new CButton('add_dep_trigger_prototype', _('Add prototype')))
 				->onClick('return PopUp("popup.php?srctbl=trigger_prototypes&srcfld1=triggerid&reference=deptrigger'.

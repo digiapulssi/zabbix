@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -328,9 +328,10 @@ elseif ($resourceType == SCREEN_RESOURCE_PLAIN_TEXT) {
 	$id = 0;
 
 	$items = API::Item()->get([
-		'itemids' => $resourceId,
+		'output' => ['itemid', 'hostid', 'key_', 'name'],
 		'selectHosts' => ['name'],
-		'output' => ['itemid', 'hostid', 'key_', 'name']
+		'itemids' => $resourceId,
+		'webitems' => true
 	]);
 
 	if ($items) {
@@ -380,8 +381,7 @@ elseif (in_array($resourceType, [SCREEN_RESOURCE_HOSTGROUP_TRIGGERS, SCREEN_RESO
 		if ($resourceId > 0) {
 			$data = API::HostGroup()->get([
 				'groupids' => $resourceId,
-				'output' => ['groupid', 'name'],
-				'editable' => true
+				'output' => ['groupid', 'name']
 			]);
 
 			if ($data) {
@@ -393,7 +393,6 @@ elseif (in_array($resourceType, [SCREEN_RESOURCE_HOSTGROUP_TRIGGERS, SCREEN_RESO
 			(new CMultiSelect([
 				'name' => 'resourceid',
 				'objectName' => 'hostGroup',
-				'objectOptions' => ['editable' => true],
 				'data' => $data ? [['id' => $data['groupid'], 'name' => $data['name']]] : null,
 				'defaultValue' => 0,
 				'selectedLimit' => 1,
@@ -408,8 +407,7 @@ elseif (in_array($resourceType, [SCREEN_RESOURCE_HOSTGROUP_TRIGGERS, SCREEN_RESO
 		if ($resourceId > 0) {
 			$data = API::Host()->get([
 				'hostids' => $resourceId,
-				'output' => ['hostid', 'name'],
-				'editable' => true
+				'output' => ['hostid', 'name']
 			]);
 
 			if ($data) {
@@ -421,7 +419,6 @@ elseif (in_array($resourceType, [SCREEN_RESOURCE_HOSTGROUP_TRIGGERS, SCREEN_RESO
 			(new CMultiSelect([
 				'name' => 'resourceid',
 				'objectName' => 'hosts',
-				'objectOptions' => ['editable' => true],
 				'data' => $data ? [['id' => $data['hostid'], 'name' => $data['name']]] : null,
 				'defaultValue' => 0,
 				'selectedLimit' => 1,
@@ -487,8 +484,7 @@ elseif (in_array($resourceType, [SCREEN_RESOURCE_TRIGGER_OVERVIEW, SCREEN_RESOUR
 	if ($resourceId > 0) {
 		$data = API::HostGroup()->get([
 			'groupids' => $resourceId,
-			'output' => ['groupid', 'name'],
-			'editable' => true
+			'output' => ['groupid', 'name']
 		]);
 
 		if ($data) {
@@ -500,7 +496,6 @@ elseif (in_array($resourceType, [SCREEN_RESOURCE_TRIGGER_OVERVIEW, SCREEN_RESOUR
 		(new CMultiSelect([
 			'name' => 'resourceid',
 			'objectName' => 'hostGroup',
-			'objectOptions' => ['editable' => true],
 			'data' => $data ? [['id' => $data['groupid'], 'name' => $data['name']]] : null,
 			'selectedLimit' => 1,
 			'popup' => [
@@ -560,8 +555,7 @@ elseif ($resourceType == SCREEN_RESOURCE_HOST_INFO || $resourceType == SCREEN_RE
 	if ($resourceId > 0) {
 		$data = API::HostGroup()->get([
 			'groupids' => $resourceId,
-			'output' => ['groupid', 'name'],
-			'editable' => true
+			'output' => ['groupid', 'name']
 		]);
 
 		if ($data) {
@@ -573,7 +567,6 @@ elseif ($resourceType == SCREEN_RESOURCE_HOST_INFO || $resourceType == SCREEN_RE
 		(new CMultiSelect([
 			'name' => 'resourceid',
 			'objectName' => 'hostGroup',
-			'objectOptions' => ['editable' => true],
 			'data' => $data ? [['id' => $data['groupid'], 'name' => $data['name']]] : null,
 			'defaultValue' => 0,
 			'selectedLimit' => 1,

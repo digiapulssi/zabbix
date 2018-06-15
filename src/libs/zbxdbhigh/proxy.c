@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -313,10 +313,7 @@ int	get_active_proxy_from_request(struct zbx_json_parse *jp, DC_PROXY *proxy, ch
 		return FAIL;
 	}
 
-	if (SUCCEED != zbx_dc_get_active_proxy_by_name(host, proxy, error))
-		return FAIL;
-
-	return SUCCEED;
+	return zbx_dc_get_active_proxy_by_name(host, proxy, error);
 }
 
 /******************************************************************************
@@ -374,13 +371,63 @@ int	check_access_passive_proxy(zbx_socket_t *sock, int send_response, const char
 
 /******************************************************************************
  *                                                                            *
+ * Function: db_update_proxies_lastaccess                                     *
+ *                                                                            *
+ * Purpose: updates proxy last access timestamp in database                   *
+ *                                                                            *
+ * Parameter: proxy_diff - [IN] last access updates for proxies               *
+ *                                                                            *
+ ******************************************************************************/
+static void	db_update_proxies_lastaccess(const zbx_vector_uint64_pair_t *proxy_diff)
+{
+	char	*sql;
+	size_t	sql_alloc = 256, sql_offset = 0;
+	int	i;
+
+	sql = zbx_malloc(NULL, sql_alloc);
+
+	DBbegin();
+	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	for (i = 0; i < proxy_diff->values_num; i++)
+	{
+		zbx_uint64_pair_t	pair = proxy_diff->values[i];
+
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update hosts"
+				" set lastaccess=%d"
+				" where hostid=" ZBX_FS_UI64 ";\n",
+				(int)pair.second, pair.first);
+
+		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
+	}
+
+	DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	if (16 < sql_offset)	/* in ORACLE always present begin..end; */
+		DBexecute("%s", sql);
+
+	DBcommit();
+
+	zbx_free(sql);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: update_proxy_lastaccess                                          *
  *                                                                            *
  ******************************************************************************/
 void	update_proxy_lastaccess(const zbx_uint64_t hostid, time_t last_access)
 {
-	DBexecute("update hosts set lastaccess=%d where hostid=" ZBX_FS_UI64, last_access, hostid);
-	zbx_dc_update_proxy_lastaccess(hostid, last_access);
+	zbx_vector_uint64_pair_t	proxy_diff;
+
+	zbx_vector_uint64_pair_create(&proxy_diff);
+
+	zbx_dc_update_proxy_lastaccess(hostid, last_access, &proxy_diff);
+
+	if (0 != proxy_diff.values_num)
+		db_update_proxies_lastaccess(&proxy_diff);
+
+	zbx_vector_uint64_pair_destroy(&proxy_diff);
 }
 
 /******************************************************************************
@@ -908,20 +955,20 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 	struct zbx_json_parse	jp_data, jp_row;
 	const char		*p, *pf;
 	zbx_uint64_t		recid, *p_recid = NULL;
-	zbx_vector_uint64_t	ins, moves;
+	zbx_vector_uint64_t	ins, moves, availability_hostids;
 	char			*buf = NULL, *esc, *sql = NULL, *recs = NULL;
 	size_t			sql_alloc = 4 * ZBX_KIBIBYTE, sql_offset,
 				recs_alloc = 20 * ZBX_KIBIBYTE, recs_offset = 0,
 				buf_alloc = 0;
 	DB_RESULT		result;
 	DB_ROW			row;
-	zbx_hashset_t           h_id_offsets, h_del;
+	zbx_hashset_t		h_id_offsets, h_del;
 	zbx_hashset_iter_t	iter;
 	zbx_id_offset_t		id_offset, *p_id_offset = NULL;
 	zbx_db_insert_t		db_insert;
 	zbx_vector_ptr_t	values;
-	static zbx_vector_ptr_t	skip_fields;
-	static const ZBX_TABLE	*table_items = NULL;
+	static zbx_vector_ptr_t	skip_fields, availability_fields;
+	static const ZBX_TABLE	*table_items, *table_hosts;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() table:'%s'", __function_name, table->table);
 
@@ -967,6 +1014,19 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 		zbx_vector_ptr_append(&skip_fields, (void *)DBget_field(table_items, "lastlogsize"));
 		zbx_vector_ptr_append(&skip_fields, (void *)DBget_field(table_items, "mtime"));
 		zbx_vector_ptr_sort(&skip_fields, ZBX_DEFAULT_PTR_COMPARE_FUNC);
+	}
+
+	if (NULL == table_hosts)
+	{
+		table_hosts = DBget_table("hosts");
+
+		/* do not update existing lastlogsize and mtime fields */
+		zbx_vector_ptr_create(&availability_fields);
+		zbx_vector_ptr_append(&availability_fields, (void *)DBget_field(table_hosts, "available"));
+		zbx_vector_ptr_append(&availability_fields, (void *)DBget_field(table_hosts, "snmp_available"));
+		zbx_vector_ptr_append(&availability_fields, (void *)DBget_field(table_hosts, "ipmi_available"));
+		zbx_vector_ptr_append(&availability_fields, (void *)DBget_field(table_hosts, "jmx_available"));
+		zbx_vector_ptr_sort(&availability_fields, ZBX_DEFAULT_PTR_COMPARE_FUNC);
 	}
 
 	/* get table columns (line 3 in T1) */
@@ -1087,6 +1147,8 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 
 	if (1 == move_out)
 		zbx_vector_uint64_create(&moves);
+
+	zbx_vector_uint64_create(&availability_hostids);
 
 	p = NULL;
 	/* iterate the entries (lines 9, 14 and 19 in T1) */
@@ -1380,6 +1442,15 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 					continue;
 				}
 
+				if (table == table_hosts && FAIL != zbx_vector_ptr_bsearch(&availability_fields,
+						fields[f], ZBX_DEFAULT_PTR_COMPARE_FUNC))
+				{
+					/* host availability on server differs from local (proxy) availability - */
+					/* reset availability timestamp to re-send availability data to server   */
+					zbx_vector_uint64_append(&availability_hostids, recid);
+					continue;
+				}
+
 				zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%s=", fields[f]->name);
 				rec_differ++;
 
@@ -1438,6 +1509,13 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 	}
 
 	ret = (0 == ins.values_num ? SUCCEED : zbx_db_insert_execute(&db_insert));
+
+	if (0 != availability_hostids.values_num)
+	{
+		zbx_vector_uint64_sort(&availability_hostids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+		zbx_vector_uint64_uniq(&availability_hostids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+		DCtouch_hosts_availability(&availability_hostids);
+	}
 clean:
 	if (0 != ins.values_num)
 	{
@@ -1447,6 +1525,7 @@ clean:
 clean2:
 	zbx_hashset_destroy(&h_id_offsets);
 	zbx_hashset_destroy(&h_del);
+	zbx_vector_uint64_destroy(&availability_hostids);
 	zbx_vector_uint64_destroy(&ins);
 	if (1 == move_out)
 		zbx_vector_uint64_destroy(&moves);
@@ -2350,7 +2429,8 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 		zabbix_log(LOG_LEVEL_DEBUG, "item [%s:%s] error: %s", item->host.host, item->key_orig, value->value);
 
 		item->state = ITEM_STATE_NOTSUPPORTED;
-		zbx_preprocess_item_value(item->itemid, item->flags, NULL, &value->ts, item->state, value->value);
+		zbx_preprocess_item_value(item->itemid, item->value_type, item->flags, NULL, &value->ts, item->state,
+				value->value);
 	}
 	else
 	{
@@ -2396,7 +2476,8 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 			set_result_meta(&result, value->lastlogsize, value->mtime);
 
 		item->state = ITEM_STATE_NORMAL;
-		zbx_preprocess_item_value(item->itemid, item->flags, &result, &value->ts, item->state, NULL);
+		zbx_preprocess_item_value(item->itemid, item->value_type, item->flags, &result, &value->ts, item->state,
+				NULL);
 
 		free_result(&result);
 	}
@@ -3179,7 +3260,8 @@ static int	process_discovery_data_contents(struct zbx_json_parse *jp_data, const
 	DB_DHOST		dhost;
 	zbx_uint64_t		last_druleid = 0, dcheckid;
 	struct zbx_json_parse	jp_row;
-	int			port, status, ret = SUCCEED;
+	int			status, ret = SUCCEED;
+	unsigned short		port;
 	const char		*p = NULL;
 	char			last_ip[INTERFACE_IP_LEN_MAX], ip[INTERFACE_IP_LEN_MAX],
 				tmp[MAX_STRING_LEN], *value = NULL, dns[INTERFACE_DNS_LEN_MAX];
@@ -3274,7 +3356,7 @@ static int	process_discovery_data_contents(struct zbx_json_parse *jp_data, const
 		}
 
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() druleid:" ZBX_FS_UI64 " dcheckid:" ZBX_FS_UI64 " unique_dcheckid:"
-				ZBX_FS_UI64 " time:'%s %s' ip:'%s' dns:'%s' port:%d value:'%s'",
+				ZBX_FS_UI64 " time:'%s %s' ip:'%s' dns:'%s' port:%hu value:'%s'",
 				__function_name, drule.druleid, dcheckid, drule.unique_dcheckid, zbx_date2str(itemtime),
 				zbx_time2str(itemtime), ip, dns, port, value);
 

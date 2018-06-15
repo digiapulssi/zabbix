@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,7 +72,11 @@ var PageRefresh = {
 
 		this.delayLeft -= 1000;
 		if (this.delayLeft < 0) {
-			location.replace(location.href);
+			if (IE || ED) {
+				sessionStorage.scrollTop = jQuery(window).scrollTop();
+			}
+
+			location.reload();
 		}
 		else {
 			this.timeout = setTimeout('PageRefresh.check()', 1000);
@@ -315,15 +319,14 @@ var jqBlink = {
 		objects = this.filterOutNonBlinking(objects);
 
 		// changing visibility state
-		fun = this.shown ? 'removeClass' : 'addClass';
 		jQuery.each(objects, function() {
 			if (typeof jQuery(this).data('toggleClass') !== 'undefined') {
-				jQuery(this)[fun](jQuery(this).data('toggleClass'));
+				jQuery(this)[jqBlink.shown ? 'removeClass' : 'addClass'](jQuery(this).data('toggleClass'));
 			}
 			else {
 				jQuery(this).css('visibility', jqBlink.shown ? 'hidden' : 'visible');
 			}
-		})
+		});
 
 		// reversing the value of indicator attribute
 		this.shown = !this.shown;
@@ -346,7 +349,13 @@ var jqBlink = {
 			if (typeof obj.data('timeToBlink') !== 'undefined') {
 				var shouldBlink = parseInt(obj.data('timeToBlink'), 10) > that.secondsSinceInit;
 
-				return shouldBlink || !that.shown;
+				if (shouldBlink || !that.shown) {
+					return true;
+				}
+				else {
+					obj.removeClass('blink');
+					return false;
+				}
 			}
 			else {
 				// no time-to-blink attribute, should blink forever
@@ -968,4 +977,8 @@ jQuery(function ($) {
 			verticalHeaderTables[table.attr('id')] = table;
 		});
 	};
+
+	if ((IE || ED) && typeof sessionStorage.scrollTop !== 'undefined') {
+		$(window).scrollTop(sessionStorage.scrollTop);
+	}
 });

@@ -336,12 +336,17 @@
 
 	jQuery(function($) {
 		$('#tab_previewTab').click(function() {
-			var name = 'chart3.php';
-			var src = '&name=' + encodeURIComponent($('#name').val())
-						+ '&width=' + $('#width').val()
-						+ '&height=' + $('#height').val()
-						+ '&graphtype=' + $('#graphtype').val()
-						+ '&legend=' + ($('#show_legend').is(':checked') ? 1 : 0);
+			var preview_chart = $('#previewChart'),
+				name = 'chart3.php',
+				src = '&name=' + encodeURIComponent($('#name').val()) +
+					'&width=' + $('#width').val() +
+					'&height=' + $('#height').val() +
+					'&graphtype=' + $('#graphtype').val() +
+					'&legend=' + ($('#show_legend').is(':checked') ? 1 : 0);
+
+			if (preview_chart.hasClass('preloader')) {
+				return false;
+			}
 
 			<?php if ($this->data['graphtype'] == GRAPH_TYPE_PIE || $this->data['graphtype'] == GRAPH_TYPE_EXPLODED): ?>
 				name = 'chart7.php';
@@ -350,17 +355,17 @@
 			<?php else: ?>
 				<?php if ($this->data['graphtype'] == GRAPH_TYPE_NORMAL): ?>
 					src += '&percent_left=' + $('#percent_left').val()
-							+ '&percent_right=' + $('#percent_right').val();
+						+ '&percent_right=' + $('#percent_right').val();
 				<?php endif ?>
 
-				src += '&ymin_type=' + $('#ymin_type').val()
-							+ '&ymax_type=' + $('#ymax_type').val()
-							+ '&yaxismin=' + $('#yaxismin').val()
-							+ '&yaxismax=' + $('#yaxismax').val()
-							+ '&ymin_itemid=' + $('#ymin_itemid').val()
-							+ '&ymax_itemid=' + $('#ymax_itemid').val()
-							+ '&showworkperiod=' + ($('#show_work_period').is(':checked') ? 1 : 0)
-							+ '&showtriggers=' + ($('#show_triggers').is(':checked') ? 1 : 0);
+				src += '&ymin_type=' + $('#ymin_type').val() +
+					'&ymax_type=' + $('#ymax_type').val() +
+					'&yaxismin=' + $('#yaxismin').val() +
+					'&yaxismax=' + $('#yaxismax').val() +
+					'&ymin_itemid=' + $('#ymin_itemid').val() +
+					'&ymax_itemid=' + $('#ymax_itemid').val() +
+					'&showworkperiod=' + ($('#show_work_period').is(':checked') ? 1 : 0) +
+					'&showtriggers=' + ($('#show_triggers').is(':checked') ? 1 : 0);
 			<?php endif ?>
 
 			$('#itemsTable tr.sortable').find('*[name]').each(function(index, value) {
@@ -369,17 +374,16 @@
 				}
 			});
 
-			var image = $('#previewChar img');
+			var image = $('img', preview_chart);
 
 			if (image.length != 0) {
 				image.remove();
 			}
 
-			$('#previewChar')
-				.attr('class', 'preloader');
+			preview_chart.attr('class', 'preloader');
 
 			$('<img />').attr('src', name + '?period=3600' + src).load(function() {
-				$('#previewChar')
+				preview_chart
 					.removeAttr('class')
 					.append($(this));
 			});

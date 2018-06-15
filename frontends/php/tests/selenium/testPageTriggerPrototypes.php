@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ class testPageTriggerPrototypes extends CWebTest {
 
 	/**
 	 * @dataProvider data
-	 * @backup triggers
+	 * @backup-once triggers
 	 */
 	public function testPageTriggerPrototypes_SimpleDelete($data) {
 		$triggerid = $data['triggerid'];
@@ -81,7 +81,7 @@ class testPageTriggerPrototypes extends CWebTest {
 		$this->zbxTestCheckboxSelect('g_triggerid_'.$triggerid);
 		$this->zbxTestClickButton('triggerprototype.massdelete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of trigger prototypes');
 		$this->zbxTestCheckHeader('Trigger prototypes');
@@ -108,7 +108,7 @@ class testPageTriggerPrototypes extends CWebTest {
 
 	/**
 	 * @dataProvider rule
-	 * @backup triggers
+	 * @backup-once triggers
 	 */
 	public function testPageTriggerPrototypes_MassDelete($rule) {
 		$druleid = $rule['parent_itemid'];
@@ -124,7 +124,7 @@ class testPageTriggerPrototypes extends CWebTest {
 		$this->zbxTestCheckboxSelect('all_triggers');
 		$this->zbxTestClickButton('triggerprototype.massdelete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of trigger prototypes');
 		$this->zbxTestCheckHeader('Trigger prototypes');

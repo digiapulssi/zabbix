@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ class testPageDiscoveryRules extends CWebTest {
 
 	/**
 	 * @dataProvider data
-	 * @backup triggers
+	 * @backup-once triggers
 	 */
 	public function testPageDiscoveryRules_SimpleDelete($data) {
 		$itemid = $data['itemid'];
@@ -91,7 +91,7 @@ class testPageDiscoveryRules extends CWebTest {
 		$this->zbxTestCheckboxSelect('g_hostdruleid_'.$itemid);
 		$this->zbxTestClickButton('discoveryrule.massdelete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of discovery rules');
 		$this->zbxTestTextPresent('Discovery rules deleted');
@@ -114,7 +114,7 @@ class testPageDiscoveryRules extends CWebTest {
 
 	/**
 	 * @dataProvider rule
-	 * @backup triggers
+	 * @backup-once triggers
 	 */
 	public function testPageDiscoveryRules_MassDelete($rule) {
 		$hostids = DBdata(
@@ -130,7 +130,7 @@ class testPageDiscoveryRules extends CWebTest {
 		$this->zbxTestCheckboxSelect('all_items');
 		$this->zbxTestClickButton('discoveryrule.massdelete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of discovery rules');
 		$this->zbxTestTextPresent('Discovery rules deleted');
