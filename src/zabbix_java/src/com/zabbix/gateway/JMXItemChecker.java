@@ -196,10 +196,8 @@ class JMXItemChecker extends ItemChecker
 
 		if (fieldNames.equals(""))
 		{
-			if (isPrimitiveAttributeType(dataObject.getClass()))
-				return dataObject.toString();
-			else
-				throw new ZabbixException("data object type is not primitive: %s", dataObject.getClass());
+			// Use toString() method of any mbean to print out its contents
+			return dataObject.toString();
 		}
 
 		if (dataObject instanceof CompositeData)
