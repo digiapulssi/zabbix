@@ -1467,15 +1467,38 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	}
 	else if (NULL != keys)		/* EPP disabled, DNSSEC enabled */
 	{
-		if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dnssec_ec, err, err_size)
-				|| (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC,
-						LDNS_SECTION_AUTHORITY)
-					&& SUCCEED != zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC, keys, ns, ip,
-							&dnssec_ec, err, err_size))
-				|| (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC3,
-						LDNS_SECTION_AUTHORITY)
-					&& SUCCEED != zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC3, keys, ns, ip,
-							&dnssec_ec, err, err_size)))
+		int	code = SUCCEED;
+
+		if (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC, LDNS_SECTION_AUTHORITY))
+		{
+			code = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC, keys, ns, ip,
+							&dnssec_ec, err, err_size);
+		}
+
+		if (SUCCEED == code && SUCCEED == zbx_pkt_section_has_rr_type(pkt,
+							LDNS_RR_TYPE_NSEC3, LDNS_SECTION_AUTHORITY))
+		{
+			code = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC3, keys, ns, ip,
+							&dnssec_ec, err, err_size);
+		}
+
+		if (SUCCEED != code && (
+			ZBX_EC_DNS_UDP_RRSIG_NOT_SIGNED == DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec) ||
+			ZBX_EC_DNS_TCP_RRSIG_NOT_SIGNED == DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec) ))
+		{
+			char			*e = NULL;
+			size_t			es = 0;
+			zbx_dnssec_error_t	dec;
+
+			if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dec, err, es))
+			{
+				err = e;
+				err_size = es;
+				dnssec_ec = dec;
+			}
+		}
+
+		if (SUCCEED != code)
 		{
 			*rtt = DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec);
 			goto out;
