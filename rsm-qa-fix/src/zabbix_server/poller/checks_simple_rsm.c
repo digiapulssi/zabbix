@@ -956,6 +956,9 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, ldns_rr_type covered_type, con
 		{
 			const char *error_description;
 
+			/* TODO: these mappings should be checked, some of them */
+			/* are never returned by ldns_verify as to ldns 1.7.0   */
+
 			switch (status)
 			{
 				case LDNS_STATUS_CRYPTO_UNKNOWN_ALGO:
@@ -968,7 +971,7 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, ldns_rr_type covered_type, con
 					break;
 				case LDNS_STATUS_CRYPTO_NO_MATCHING_KEYTAG_DNSKEY:
 					*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED;
-					error_description = "no RRSIGs found";
+					error_description = "the RRSIG found is not signed by a DNSKEY";
 					break;
 				case LDNS_STATUS_CRYPTO_BOGUS:
 					*dnssec_ec = ZBX_EC_DNSSEC_SIG_BOGUS;
@@ -986,15 +989,15 @@ static int	zbx_verify_rrsigs(const ldns_pkt *pkt, ldns_rr_type covered_type, con
 					*dnssec_ec = ZBX_EC_DNSSEC_SIG_EX_BEFORE_IN;
 					error_description = "DNSSEC signature has expiration date earlier than inception date";
 					break;
-				case LDNS_STATUS_NSEC3_ERR:
+				case LDNS_STATUS_NSEC3_ERR:				/* TODO: candidate for removal */
 					*dnssec_ec = ZBX_EC_DNSSEC_NSEC3_ERROR;
 					error_description = "error in NSEC3 denial of existence";
 					break;
-				case LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED:
+				case LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED:		/* TODO: candidate for removal */
 					*dnssec_ec = ZBX_EC_DNSSEC_RR_NOTCOVERED;
 					error_description = "RR not covered by the given NSEC RRs";
 					break;
-				case LDNS_STATUS_DNSSEC_NSEC_WILDCARD_NOT_COVERED:
+				case LDNS_STATUS_DNSSEC_NSEC_WILDCARD_NOT_COVERED:	/* TODO: candidate for removal */
 					*dnssec_ec = ZBX_EC_DNSSEC_WILD_NOTCOVERED;
 					error_description = "wildcard not covered by the given NSEC RRs";
 					break;
@@ -1464,15 +1467,36 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	}
 	else if (NULL != keys)		/* EPP disabled, DNSSEC enabled */
 	{
-		if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dnssec_ec, err, err_size)
-				|| (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC,
-						LDNS_SECTION_AUTHORITY)
-					&& SUCCEED != zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC, keys, ns, ip,
-							&dnssec_ec, err, err_size))
-				|| (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC3,
-						LDNS_SECTION_AUTHORITY)
-					&& SUCCEED != zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC3, keys, ns, ip,
-							&dnssec_ec, err, err_size)))
+		int	ret = SUCCEED;
+
+		if (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC, LDNS_SECTION_AUTHORITY))
+		{
+			ret = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC, keys, ns, ip,
+							&dnssec_ec, err, err_size);
+		}
+
+		if (SUCCEED == ret && SUCCEED == zbx_pkt_section_has_rr_type(pkt,
+							LDNS_RR_TYPE_NSEC3, LDNS_SECTION_AUTHORITY))
+		{
+			ret = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC3, keys, ns, ip,
+							&dnssec_ec, err, err_size);
+		}
+
+		if (SUCCEED != ret && (
+			ZBX_EC_DNS_UDP_RRSIG_NOT_SIGNED == DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec) ||
+			ZBX_EC_DNS_TCP_RRSIG_NOT_SIGNED == DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec) ))
+		{
+			char			err2[ZBX_ERR_BUF_SIZE];
+			zbx_dnssec_error_t	dnssec_ec2;
+
+			if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dnssec_ec2, err2, sizeof(err2)))
+			{
+				zbx_strlcpy(err, err2, err_size);
+				dnssec_ec = dnssec_ec2;
+			}
+		}
+
+		if (SUCCEED != ret)
 		{
 			*rtt = DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec);
 			goto out;
