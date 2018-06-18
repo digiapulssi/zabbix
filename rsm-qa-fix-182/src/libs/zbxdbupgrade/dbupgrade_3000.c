@@ -1792,7 +1792,7 @@ static int	DBpatch_3000214(void)
 				"'','0','','',"
 				"'1','',NULL,'1','','','','0',"
 				"'0','','','','','0',NULL,'',"
-				"'Status of Registration Data Access Protocol service',"
+				"'Status of Registration Data Access Protocol service.',"
 				"'0','0','0','0','','0'"
 			"),"
 			"("
@@ -1802,7 +1802,7 @@ static int	DBpatch_3000214(void)
 				"'','0','','',"
 				"'1','',NULL,NULL,'','','','0',"
 				"'0','','','','','0',NULL,'',"
-				"'IP address of Registration Data Access Protocol service provider domain used to perform the test',"
+				"'IP address of Registration Data Access Protocol service provider domain used to perform the test.',"
 				"'0','0','0','0','','0'"
 			"),"
 			"("
@@ -1812,19 +1812,25 @@ static int	DBpatch_3000214(void)
 				"'','0','','',"
 				"'1','',NULL,'135','','','','0',"
 				"'0','','','','','0',NULL,'',"
-				"'Round-Trip Time of Registration Data Access Protocol service test',"
+				"'Round-Trip Time of Registration Data Access Protocol service test.',"
+				"'0','0','0','0','','0'"
+			"),"
+			"("
+				"'99983','15','','','99980','RDAP enabled/disabled','rdap.enabled','60','7','365',"
+				"'0','3','','','0','0',"
+				"'','0','','',"
+				"'1','',NULL,NULL,'','{$RDAP.TLD.ENABLED}','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'History of Registration Data Access Protocol being enabled or disabled.',"
 				"'0','0','0','0','','0'"
 			")"))
 	{
 		return FAIL;
 	}
 
-	if (ZBX_DB_OK > DBexecute("insert into hosts_groups (hostgroupid,hostid,groupid) values ('998','99980','1')"))
-		return FAIL;
-
 	if (ZBX_DB_OK > DBexecute(
 			"insert into items_applications (itemappid,applicationid,itemid)"
-			" values ('99980','998','99980'),('99981','998','99981'),('99982','998','99982')"))
+			" values ('99980','998','99980'),('99981','998','99981'),('99982','998','99982'),(99983,998,99983)"))
 	{
 		return FAIL;
 	}
@@ -1984,11 +1990,11 @@ static int	DBpatch_3000217(void)
 	size_t			i;
 	int			ret = FAIL;
 
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
 	zbx_vector_uint64_create(&templateids);
 	zbx_vector_uint64_reserve(&templateids, 1);
-
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		goto out;
 
 	result = DBselect("select max(hostmacroid)+1 from hostmacro");
 
@@ -2062,32 +2068,6 @@ out:
 	return ret;
 }
 
-static int	DBpatch_3000218(void)
-{
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK > DBexecute(
-		"insert into items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,"
-			"status,value_type,trapper_hosts,units,multiplier,delta,"
-			"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
-			"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
-			"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
-			"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
-		" values ('99983','15','','','99980','RDAP enabled/disabled','rdap.enabled','60','7','365',"
-			"'0','3','','','0','0',"
-			"'','0','','',"
-			"'1','',NULL,NULL,'','{$RDAP.TLD.ENABLED}','','0',"
-			"'0','','','','','0',NULL,'','History of Registration Data Access Protocol being enabled or disabled',"
-			"'0','0','0','0','','0');"
-		"insert into items_applications (itemappid,applicationid,itemid) values (99983,998,99983);"))
-	{
-		return FAIL;
-	}
-
-	return SUCCEED;
-}
-
 #endif
 
 DBPATCH_START(3000)
@@ -2152,6 +2132,5 @@ DBPATCH_ADD(3000214, 0, 0)	/* create "Template RDAP" template with rdap[...], rd
 DBPATCH_ADD(3000215, 0, 0)	/* add RDAP error codes into "RSM RDAP rtt" value mapping */
 DBPATCH_ADD(3000216, 0, 0)	/* add new test type to "testTypes" catalog */
 DBPATCH_ADD(3000217, 0, 0)	/* add macro {$RDAP.TLD.ENABLED}=0 to all "Template <TLD>" */
-DBPATCH_ADD(3000218, 0, 0)	/* add rdap.enabled item to Template RDAP */
 
 DBPATCH_END()
