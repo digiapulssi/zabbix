@@ -223,7 +223,8 @@ class CHistoryManager {
 				[
 					'range' => [
 						'clock' => [
-							'lt' => $clock
+							'lt' => $clock,
+							'gte' => $clock - ZBX_HISTORY_PERIOD
 						]
 					]
 				]
@@ -263,60 +264,32 @@ class CHistoryManager {
 					' AND clock='.zbx_dbstr($clock).
 					' AND ns='.zbx_dbstr($ns);
 
-		if (($row = DBfetch(DBselect($sql, 1))) !== false) {
-			$value = $row['value'];
+		$row = DBfetch(DBselect($sql, 1));
+
+		if ($row !== null) {
+			return $row['value'];
 		}
 
-		if ($value !== null) {
-			return $value;
-		}
-
-		$max_clock = 0;
-		$sql = 'SELECT DISTINCT clock'.
+		$sql = 'SELECT value'.
 				' FROM '.$table.
 				' WHERE itemid='.zbx_dbstr($item['itemid']).
 					' AND clock='.zbx_dbstr($clock).
-					' AND ns<'.zbx_dbstr($ns);
+					' AND ns<'.zbx_dbstr($ns).
+				' ORDER BY ns DESC';
 
-		if (($row = DBfetch(DBselect($sql))) !== false) {
-			$max_clock = $row['clock'];
-		}
+		$row = DBfetch(DBselect($sql, 1));
 
-		if ($max_clock == 0) {
-			$sql = 'SELECT MAX(clock) AS clock'.
-					' FROM '.$table.
-					' WHERE itemid='.zbx_dbstr($item['itemid']).
-						' AND clock<'.zbx_dbstr($clock);
-
-			if (($row = DBfetch(DBselect($sql))) !== false) {
-				$max_clock = $row['clock'];
-			}
-		}
-
-		if ($max_clock == 0) {
-			return $value;
-		}
-
-		if ($clock == $max_clock) {
+		if ($row === null) {
 			$sql = 'SELECT value'.
 					' FROM '.$table.
 					' WHERE itemid='.zbx_dbstr($item['itemid']).
-						' AND clock='.zbx_dbstr($clock).
-						' AND ns<'.zbx_dbstr($ns);
-		}
-		else {
-			$sql = 'SELECT value'.
-					' FROM '.$table.
-					' WHERE itemid='.zbx_dbstr($item['itemid']).
-						' AND clock='.zbx_dbstr($max_clock).
-					' ORDER BY itemid,clock desc,ns desc';
+						' AND clock BETWEEN '.zbx_dbstr($clock).' AND '.zbx_dbstr($clock - ZBX_HISTORY_PERIOD).
+					' ORDER BY clock DESC, ns DESC';
+
+			$row = DBfetch(DBselect($sql, 1));
 		}
 
-		if (($row = DBfetch(DBselect($sql, 1))) !== false) {
-			$value = $row['value'];
-		}
-
-		return $value;
+		return ($row === null) ? $value : $row['value'];
 	}
 
 	/**
