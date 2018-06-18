@@ -1975,6 +1975,93 @@ static int	DBpatch_3000216(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000217(void)
+{
+	DB_RESULT		result;
+	DB_ROW			row;
+	zbx_vector_uint64_t	templateids;
+	zbx_uint64_t		hostmacroid;
+	size_t			i;
+	int			ret = FAIL;
+
+	zbx_vector_uint64_create(&templateids);
+	zbx_vector_uint64_reserve(&templateids, 1);
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		goto out;
+
+	result = DBselect("select max(hostmacroid)+1 from hostmacro");
+
+	if (NULL == result)
+		goto out;
+
+	if (NULL == (row = DBfetch(result)))
+	{
+		DBfree_result(result);
+		goto out;
+	}
+
+	ZBX_STR2UINT64(hostmacroid, row[0]);
+
+	DBfree_result(result);
+
+	result = DBselect(
+			"select templateid"
+			" from hosts_templates"
+			" where hostid in ("
+					"select hostid"
+					" from hosts_groups"
+					" where groupid=190"	/* "TLD Probe results" */
+				")"
+				" and templateid not in ("
+						"select templateid"
+						" from hosts_templates"
+						" where hostid in ("
+								"select templateid"
+								" from hosts_templates"
+								" where hostid in ("
+										"select hostid"
+										" from hosts_groups"
+										" where groupid=120)"	/* exclude "Probes" */
+							")"
+					")"
+				" and templateid not in (99980)");	/* exclude "Template RDAP" */
+
+	if (NULL == result)
+		goto out;
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	templateid;
+
+		ZBX_STR2UINT64(templateid, row[0]);	/* hostid of "Template <TLD>" */
+
+		zbx_vector_uint64_append(&templateids, templateid);
+	}
+
+	DBfree_result(result);
+
+	for (i = 0; i < templateids.values_num; i++)
+	{
+		if (ZBX_DB_OK > DBexecute(
+				"insert into hostmacro (hostmacroid,hostid,macro,value)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",'{$RDAP.TLD.ENABLED}','0')",
+				hostmacroid++, templateids.values[i]))
+		{
+			goto out;
+		}
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='hostmacro'"))
+		goto out;
+
+	ret = SUCCEED;
+out:
+	zbx_vector_uint64_destroy(&templateids);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2038,5 +2125,6 @@ DBPATCH_ADD(3000213, 0, 0)	/* add "RSM RDAP rtt" value mapping (without error co
 DBPATCH_ADD(3000214, 0, 0)	/* create "Template RDAP" template with rdap[...], rdap.ip and rdap.rtt items, RDAP application; place template into "Templates" host group */
 DBPATCH_ADD(3000215, 0, 0)	/* add RDAP error codes into "RSM RDAP rtt" value mapping */
 DBPATCH_ADD(3000216, 0, 0)	/* add new test type to "testTypes" catalog */
+DBPATCH_ADD(3000217, 0, 0)	/* add macro {$RDAP.TLD.ENABLED}=0 to all "Template <TLD>" */
 
 DBPATCH_END()
