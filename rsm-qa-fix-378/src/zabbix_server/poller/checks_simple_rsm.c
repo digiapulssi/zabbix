@@ -1352,6 +1352,7 @@ static int	zbx_check_dnssec_no_epp(const ldns_pkt *pkt, const ldns_rr_list *keys
 		char			err2[ZBX_ERR_BUF_SIZE];
 		zbx_dnssec_error_t	dnssec_ec2;
 
+		/* we do not set ret here because we already failed in one of previous function calls */
 		if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dnssec_ec2, err2, sizeof(err2)))
 		{
 			zbx_strlcpy(err, err2, err_size);
