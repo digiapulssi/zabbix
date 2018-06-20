@@ -1319,9 +1319,9 @@ static int	zbx_check_dnssec_no_epp(const ldns_pkt *pkt, const ldns_rr_list *keys
 {
 	int	ret = SUCCEED, auth_has_nsec = 0, auth_has_nsec3 = 0;
 
-	if (	SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ANSWER) &&
-		SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_AUTHORITY) &&
-		SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ADDITIONAL))
+	if (SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ANSWER)
+	&&  SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_AUTHORITY)
+	&&  SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ADDITIONAL))
 	{
 		*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NONE;
 		return FAIL;
