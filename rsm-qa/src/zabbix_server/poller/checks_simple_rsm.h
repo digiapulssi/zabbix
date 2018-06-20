@@ -75,6 +75,7 @@
 #define ZBX_EC_DNS_UDP_ALGO_UNKNOWN	-405	/* DNS UDP - Unknown cryptographic algorithm */
 #define ZBX_EC_DNS_UDP_ALGO_NOT_IMPL	-406	/* DNS UDP - Cryptographic algorithm not implemented */
 #define ZBX_EC_DNS_UDP_RRSIG_NONE	-407	/* DNS UDP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled */
+#define ZBX_EC_DNS_UDP_NO_NSEC_IN_AUTH	-408	/* DNS UDP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section */
 #define ZBX_EC_DNS_UDP_RRSIG_NOTCOVERED	-410	/* DNS UDP - The signature does not cover this RRset */
 #define ZBX_EC_DNS_UDP_RRSIG_NOT_SIGNED	-414	/* DNS UDP - The RRSIG found is not signed by a DNSKEY from the KEYSET of the TLD */
 #define ZBX_EC_DNS_UDP_SIG_BOGUS	-415	/* DNS UDP - Bogus DNSSEC signature */
@@ -132,6 +133,7 @@
 #define ZBX_EC_DNS_TCP_ALGO_UNKNOWN	-805	/* DNS TCP - Unknown cryptographic algorithm */
 #define ZBX_EC_DNS_TCP_ALGO_NOT_IMPL	-806	/* DNS TCP - Cryptographic algorithm not implemented */
 #define ZBX_EC_DNS_TCP_RRSIG_NONE	-807	/* DNS TCP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled */
+#define ZBX_EC_DNS_TCP_NO_NSEC_IN_AUTH	-808	/* DNS TCP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section */
 #define ZBX_EC_DNS_TCP_RRSIG_NOTCOVERED	-810	/* DNS TCP - The signature does not cover this RRset */
 #define ZBX_EC_DNS_TCP_RRSIG_NOT_SIGNED	-814	/* DNS TCP - The RRSIG found is not signed by a DNSKEY from the KEYSET of the TLD */
 #define ZBX_EC_DNS_TCP_SIG_BOGUS	-815	/* DNS TCP - Bogus DNSSEC signature */
