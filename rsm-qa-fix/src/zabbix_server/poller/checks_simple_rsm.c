@@ -134,6 +134,7 @@ typedef enum
 	ZBX_EC_DNSSEC_ALGO_UNKNOWN,	/* ldns status: LDNS_STATUS_CRYPTO_UNKNOWN_ALGO */
 	ZBX_EC_DNSSEC_ALGO_NOT_IMPL,	/* ldns status: LDNS_STATUS_CRYPTO_ALGO_NOT_IMPL */
 	ZBX_EC_DNSSEC_RRSIG_NONE,
+	ZBX_EC_DNSSEC_NO_NSEC_IN_AUTH,
 	ZBX_EC_DNSSEC_RRSIG_NOTCOVERED,
 	ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED,	/* ldns status: LDNS_STATUS_CRYPTO_NO_MATCHING_KEYTAG_DNSKEY */
 	ZBX_EC_DNSSEC_SIG_BOGUS,	/* ldns status: LDNS_STATUS_CRYPTO_BOGUS */
@@ -668,6 +669,8 @@ static int	zbx_dnssec_error_to_ ## __interface (zbx_dnssec_error_t err)	\
 			return ZBX_EC_ ## __interface ## _ALGO_NOT_IMPL;	\
 		case ZBX_EC_DNSSEC_RRSIG_NONE:					\
 			return ZBX_EC_ ## __interface ## _RRSIG_NONE;		\
+		case ZBX_EC_DNSSEC_NO_NSEC_IN_AUTH:				\
+			return ZBX_EC_ ## __interface ## _NO_NSEC_IN_AUTH;	\
 		case ZBX_EC_DNSSEC_RRSIG_NOTCOVERED:				\
 			return ZBX_EC_ ## __interface ## _RRSIG_NOTCOVERED;	\
 		case ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED:				\
@@ -1311,6 +1314,55 @@ out:
 	return ret;
 }
 
+static int	zbx_check_dnssec_no_epp(const ldns_pkt *pkt, const ldns_rr_list *keys, const char *ns, const char *ip,
+		zbx_dnssec_error_t *dnssec_ec, char *err, size_t err_size)
+{
+	int	ret = SUCCEED, auth_has_nsec = 0, auth_has_nsec3 = 0;
+
+	if (SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ANSWER)
+			&&  SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_AUTHORITY)
+			&&  SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ADDITIONAL))
+	{
+		zbx_strlcpy(err, "no RRSIGs where found in any section", err_size);
+		*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NONE;
+		return FAIL;
+	}
+
+	if (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC, LDNS_SECTION_AUTHORITY))
+		auth_has_nsec = 1;
+
+	if (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC3, LDNS_SECTION_AUTHORITY))
+		auth_has_nsec3 = 1;
+
+	if (0 == auth_has_nsec && 0 == auth_has_nsec3)
+	{
+		zbx_strlcpy(err, "no NSEC/NSEC3 RRs were found in the authority section", err_size);
+		*dnssec_ec = ZBX_EC_DNSSEC_NO_NSEC_IN_AUTH;
+		return FAIL;
+	}
+
+	if (1 == auth_has_nsec)
+		ret = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC, keys, ns, ip, dnssec_ec, err, err_size);
+
+	if (SUCCEED == ret && 1 == auth_has_nsec3)
+		ret = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC3, keys, ns, ip, dnssec_ec, err, err_size);
+
+	if (SUCCEED != ret && ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED == *dnssec_ec)
+	{
+		char			err2[ZBX_ERR_BUF_SIZE];
+		zbx_dnssec_error_t	dnssec_ec2;
+
+		/* we do not set ret here because we already failed in one of previous function calls */
+		if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dnssec_ec2, err2, sizeof(err2)))
+		{
+			zbx_strlcpy(err, err2, err_size);
+			*dnssec_ec = dnssec_ec2;
+		}
+	}
+
+	return ret;
+}
+
 static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *ip, const ldns_rr_list *keys,
 		const char *testprefix, const char *domain, FILE *log_fd, int *rtt, int *upd, char ipv4_enabled,
 		char ipv6_enabled, char epp_enabled,
@@ -1467,36 +1519,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	}
 	else if (NULL != keys)		/* EPP disabled, DNSSEC enabled */
 	{
-		int	ret = SUCCEED;
-
-		if (SUCCEED == zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_NSEC, LDNS_SECTION_AUTHORITY))
-		{
-			ret = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC, keys, ns, ip,
-							&dnssec_ec, err, err_size);
-		}
-
-		if (SUCCEED == ret && SUCCEED == zbx_pkt_section_has_rr_type(pkt,
-							LDNS_RR_TYPE_NSEC3, LDNS_SECTION_AUTHORITY))
-		{
-			ret = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC3, keys, ns, ip,
-							&dnssec_ec, err, err_size);
-		}
-
-		if (SUCCEED != ret && (
-			ZBX_EC_DNS_UDP_RRSIG_NOT_SIGNED == DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec) ||
-			ZBX_EC_DNS_TCP_RRSIG_NOT_SIGNED == DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec) ))
-		{
-			char			err2[ZBX_ERR_BUF_SIZE];
-			zbx_dnssec_error_t	dnssec_ec2;
-
-			if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dnssec_ec2, err2, sizeof(err2)))
-			{
-				zbx_strlcpy(err, err2, err_size);
-				dnssec_ec = dnssec_ec2;
-			}
-		}
-
-		if (SUCCEED != ret)
+		if (SUCCEED != zbx_check_dnssec_no_epp(pkt, keys, ns, ip, &dnssec_ec, err, err_size))
 		{
 			*rtt = DNS[DNS_PROTO(res)].dnssec_error(dnssec_ec);
 			goto out;
