@@ -1320,9 +1320,10 @@ static int	zbx_check_dnssec_no_epp(const ldns_pkt *pkt, const ldns_rr_list *keys
 	int	ret = SUCCEED, auth_has_nsec = 0, auth_has_nsec3 = 0;
 
 	if (SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ANSWER)
-	&&  SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_AUTHORITY)
-	&&  SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ADDITIONAL))
+			&&  SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_AUTHORITY)
+			&&  SUCCEED != zbx_pkt_section_has_rr_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ADDITIONAL))
 	{
+		zbx_strlcpy(err, "no RRSIGs where found in any section", err_size);
 		*dnssec_ec = ZBX_EC_DNSSEC_RRSIG_NONE;
 		return FAIL;
 	}
@@ -1335,6 +1336,7 @@ static int	zbx_check_dnssec_no_epp(const ldns_pkt *pkt, const ldns_rr_list *keys
 
 	if (0 == auth_has_nsec && 0 == auth_has_nsec3)
 	{
+		zbx_strlcpy(err, "no NSEC/NSEC3 RRs were found in the authority section", err_size);
 		*dnssec_ec = ZBX_EC_DNSSEC_NO_NSEC_IN_AUTH;
 		return FAIL;
 	}
