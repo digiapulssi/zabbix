@@ -1315,7 +1315,7 @@ out:
 }
 
 static int	zbx_check_dnssec_no_epp(const ldns_pkt *pkt, const ldns_rr_list *keys, const char *ns, const char *ip,
-					zbx_dnssec_error_t *dnssec_ec, char *err, size_t err_size)
+		zbx_dnssec_error_t *dnssec_ec, char *err, size_t err_size)
 {
 	int	ret = SUCCEED, auth_has_nsec = 0, auth_has_nsec3 = 0;
 
