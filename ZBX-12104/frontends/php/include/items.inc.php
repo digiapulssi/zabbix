@@ -1019,7 +1019,7 @@ function item_get_history($db_item, $clock, $ns) {
 
 	$row = DBfetch(DBselect($sql, 1));
 
-	if ($row !== null) {
+	if ($row) {
 		return $row['value'];
 	}
 
@@ -1032,7 +1032,7 @@ function item_get_history($db_item, $clock, $ns) {
 
 	$row = DBfetch(DBselect($sql, 1));
 
-	if ($row === null) {
+	if (!$row) {
 		$sql = 'SELECT value'.
 				' FROM '.$table.
 				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
@@ -1042,7 +1042,7 @@ function item_get_history($db_item, $clock, $ns) {
 		$row = DBfetch(DBselect($sql, 1));
 	}
 
-	return ($row === null) ? $value : $row['value'];
+	return $row ? $row['value'] : $value;
 }
 
 /**
