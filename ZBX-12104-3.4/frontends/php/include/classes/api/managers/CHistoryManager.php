@@ -266,7 +266,7 @@ class CHistoryManager {
 
 		$row = DBfetch(DBselect($sql, 1));
 
-		if ($row !== null) {
+		if ($row) {
 			return $row['value'];
 		}
 
@@ -279,7 +279,7 @@ class CHistoryManager {
 
 		$row = DBfetch(DBselect($sql, 1));
 
-		if ($row === null) {
+		if (!$row) {
 			$sql = 'SELECT value'.
 					' FROM '.$table.
 					' WHERE itemid='.zbx_dbstr($item['itemid']).
@@ -289,7 +289,7 @@ class CHistoryManager {
 			$row = DBfetch(DBselect($sql, 1));
 		}
 
-		return ($row === null) ? $value : $row['value'];
+		return $row ? $row['value'] : $value;
 	}
 
 	/**
