@@ -283,7 +283,7 @@ class CHistoryManager {
 			$sql = 'SELECT value'.
 					' FROM '.$table.
 					' WHERE itemid='.zbx_dbstr($item['itemid']).
-						' AND clock BETWEEN '.zbx_dbstr($clock).' AND '.zbx_dbstr($clock - ZBX_HISTORY_PERIOD).
+						' AND clock BETWEEN '.zbx_dbstr($clock - ZBX_HISTORY_PERIOD).' AND '.zbx_dbstr($clock).
 					' ORDER BY clock DESC, ns DESC';
 
 			$row = DBfetch(DBselect($sql, 1));
