@@ -134,6 +134,7 @@ typedef enum
 	ZBX_EC_DNSSEC_ALGO_UNKNOWN,	/* ldns status: LDNS_STATUS_CRYPTO_UNKNOWN_ALGO */
 	ZBX_EC_DNSSEC_ALGO_NOT_IMPL,	/* ldns status: LDNS_STATUS_CRYPTO_ALGO_NOT_IMPL */
 	ZBX_EC_DNSSEC_RRSIG_NONE,
+	ZBX_EC_DNSSEC_NO_NSEC_IN_AUTH,
 	ZBX_EC_DNSSEC_RRSIG_NOTCOVERED,
 	ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED,	/* ldns status: LDNS_STATUS_CRYPTO_NO_MATCHING_KEYTAG_DNSKEY */
 	ZBX_EC_DNSSEC_SIG_BOGUS,	/* ldns status: LDNS_STATUS_CRYPTO_BOGUS */
@@ -668,6 +669,8 @@ static int	zbx_dnssec_error_to_ ## __interface (zbx_dnssec_error_t err)	\
 			return ZBX_EC_ ## __interface ## _ALGO_NOT_IMPL;	\
 		case ZBX_EC_DNSSEC_RRSIG_NONE:					\
 			return ZBX_EC_ ## __interface ## _RRSIG_NONE;		\
+		case ZBX_EC_DNSSEC_NO_NSEC_IN_AUTH:				\
+			return ZBX_EC_ ## __interface ## _NO_NSEC_IN_AUTH;	\
 		case ZBX_EC_DNSSEC_RRSIG_NOTCOVERED:				\
 			return ZBX_EC_ ## __interface ## _RRSIG_NOTCOVERED;	\
 		case ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED:				\
