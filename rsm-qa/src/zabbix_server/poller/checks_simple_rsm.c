@@ -1347,13 +1347,13 @@ static int	zbx_check_dnssec_no_epp(const ldns_pkt *pkt, const ldns_rr_list *keys
 	if (SUCCEED == ret && 1 == auth_has_nsec3)
 		ret = zbx_verify_rrsigs(pkt, LDNS_RR_TYPE_NSEC3, keys, ns, ip, dnssec_ec, err, err_size);
 
-	if (SUCCEED != ret && ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED == *dnssec_ec)
+	if (SUCCEED == ret || ZBX_EC_DNSSEC_RRSIG_NOT_SIGNED == *dnssec_ec)
 	{
 		char			err2[ZBX_ERR_BUF_SIZE];
 		zbx_dnssec_error_t	dnssec_ec2;
 
 		/* we do not set ret here because we already failed in one of previous function calls */
-		if (SUCCEED != zbx_verify_denial_of_existence(pkt, &dnssec_ec2, err2, sizeof(err2)))
+		if (SUCCEED != (ret = zbx_verify_denial_of_existence(pkt, &dnssec_ec2, err2, sizeof(err2))))
 		{
 			zbx_strlcpy(err, err2, err_size);
 			*dnssec_ec = dnssec_ec2;

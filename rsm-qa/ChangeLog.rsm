@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc13
+
+Bug fixes:
+.......PS. [378] fixed -422, -822 error detection (yurii)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc12
 
 Bug fixes:
