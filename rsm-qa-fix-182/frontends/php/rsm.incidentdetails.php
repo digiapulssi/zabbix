@@ -62,8 +62,6 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
-$data['tests'] = [];
-
 $macro = API::UserMacro()->get(array(
 	'globalmacro' => true,
 	'output' => API_OUTPUT_EXTEND,
@@ -73,7 +71,7 @@ $macro = API::UserMacro()->get(array(
 ));
 
 if (!$macro) {
-	show_error_message(_s('Macro "%1$s" doesn\'t not exist.', RSM_ROLLWEEK_SECONDS));
+	show_error_message(_s('Macro "%1$s" does not exist.', RSM_ROLLWEEK_SECONDS));
 	require_once dirname(__FILE__).'/include/page_footer.php';
 	exit;
 }
@@ -176,8 +174,6 @@ $mainEvent = API::Event()->get(array(
 if ($mainEvent) {
 	$mainEvent = reset($mainEvent);
 
-	$mainEventFromTime = $mainEvent['clock'];
-
 	// get host with calculated items
 	$rsm = API::Host()->get(array(
 		'output' => array('hostid'),
@@ -197,15 +193,15 @@ if ($mainEvent) {
 
 	switch ($data['slvItem']['key_']) {
 		case RSM_SLV_DNS_ROLLWEEK:
-			$keys = array(CALCULATED_ITEM_DNS_FAIL, CALCULATED_ITEM_DNS_RECOVERY, CALCULATED_ITEM_DNS_DELAY);
+			$keys = array(CALCULATED_ITEM_DNS_FAIL, CALCULATED_ITEM_DNS_DELAY);
 			$data['type'] = RSM_DNS;
 			break;
 		case RSM_SLV_DNSSEC_ROLLWEEK:
-			$keys = array(CALCULATED_ITEM_DNSSEC_FAIL, CALCULATED_ITEM_DNSSEC_RECOVERY, CALCULATED_ITEM_DNS_DELAY);
+			$keys = array(CALCULATED_ITEM_DNSSEC_FAIL, CALCULATED_ITEM_DNS_DELAY);
 			$data['type'] = RSM_DNSSEC;
 			break;
 		case RSM_SLV_RDDS_ROLLWEEK:
-			$keys = array(CALCULATED_ITEM_RDDS_FAIL, CALCULATED_ITEM_RDDS_RECOVERY, CALCULATED_ITEM_RDDS_DELAY);
+			$keys = array(CALCULATED_ITEM_RDDS_FAIL, CALCULATED_ITEM_RDDS_DELAY);
 			$data['type'] = RSM_RDDS;
 
 			$templates = API::Template()->get(array(
@@ -231,7 +227,7 @@ if ($mainEvent) {
 				}
 			break;
 		case RSM_SLV_EPP_ROLLWEEK:
-			$keys = array(CALCULATED_ITEM_EPP_FAIL, CALCULATED_ITEM_EPP_RECOVERY, CALCULATED_ITEM_EPP_DELAY);
+			$keys = array(CALCULATED_ITEM_EPP_FAIL, CALCULATED_ITEM_EPP_DELAY);
 			$data['type'] = RSM_EPP;
 			break;
 	}
@@ -244,7 +240,7 @@ if ($mainEvent) {
 		)
 	));
 
-	if (count($items) != 3) {
+	if (count($items) != 2) {
 		show_error_message(_s('Missing items at host "%1$s"!', RSM_HOST));
 		require_once dirname(__FILE__).'/include/page_footer.php';
 		exit;
@@ -253,18 +249,14 @@ if ($mainEvent) {
 	foreach ($items as $item) {
 		if ($item['key_'] == CALCULATED_ITEM_DNS_FAIL || $item['key_'] == CALCULATED_ITEM_DNSSEC_FAIL
 				|| $item['key_'] == CALCULATED_ITEM_RDDS_FAIL || $item['key_'] == CALCULATED_ITEM_EPP_FAIL) {
-			$failCount = getFirstUintValue($item['itemid'], $mainEventFromTime);
-		}
-		elseif ($item['key_'] == CALCULATED_ITEM_DNS_RECOVERY || $item['key_'] == CALCULATED_ITEM_DNSSEC_RECOVERY
-				|| $item['key_'] == CALCULATED_ITEM_RDDS_RECOVERY|| $item['key_'] == CALCULATED_ITEM_EPP_RECOVERY) {
-			$recoveryCount = getFirstUintValue($item['itemid'], $mainEventFromTime);
+			$failCount = getFirstUintValue($item['itemid'], $mainEvent['clock']);
 		}
 		else {
-			$delayTime = getFirstUintValue($item['itemid'], $mainEventFromTime);
+			$delayTime = getFirstUintValue($item['itemid'], $mainEvent['clock']);
 		}
 	}
 
-	$mainEventFromTime -= $failCount * $delayTime;
+	$mainEventFromTime = $mainEvent['clock'] - $mainEvent['clock'] % $delayTime - ($failCount - 1) * $delayTime;
 
 	if (getRequest('filter_set')) {
 		$fromTime = ($mainEventFromTime >= zbxDateToTime($data['filter_from']))
@@ -287,12 +279,12 @@ if ($mainEvent) {
 			' AND e.object='.EVENT_OBJECT_TRIGGER.
 			' AND e.source='.EVENT_SOURCE_TRIGGERS.
 			' AND e.value='.TRIGGER_VALUE_FALSE.
-		' ORDER BY e.clock,e.ns',
+		' ORDER BY e.clock',
 		1
 	));
 
 	if ($endEvent) {
-		$endEventToTime = $endEvent['clock'] + ($recoveryCount * $delayTime);
+		$endEventToTime = $endEvent['clock'] - $endEvent['clock'] % $delayTime + $delayTime;
 		if (getRequest('filter_set')) {
 			$toTime = ($endEventToTime >= zbxDateToTime($data['filter_to']))
 				? zbxDateToTime($data['filter_to'])
@@ -321,7 +313,7 @@ if ($mainEvent) {
 
 	$data['active'] = $endEvent ? true : false;
 
-	$failingTests = $data['filter_failing_tests'] ? ' AND h.value=0' : null;
+	$failingTests = $data['filter_failing_tests'] ? ' AND h.value='.DOWN : null;
 
 	$tests = DBselect(
 		'SELECT h.value, h.clock'.
@@ -329,84 +321,37 @@ if ($mainEvent) {
 		' WHERE h.itemid='.zbx_dbstr($data['availItemId']).
 			' AND h.clock>='.$fromTime.
 			' AND h.clock<='.$toTime.
-			$failingTests
+			$failingTests.
+		' ORDER BY h.clock asc'
 	);
-
-	$mainEventClock = $mainEvent['clock'] - $mainEvent['clock'] % 60;
-
-	if ($endEvent) {
-		$endEventClock = $endEvent['clock'] - $endEvent['clock'] % 60;
-	}
 
 	$data['tests'] = [];
 	while ($test = DBfetch($tests)) {
 		$data['tests'][] = array(
-			'clock' => $test['clock'],
-			'value' => $test['value']
+			'clock' => $test['clock'] - $test['clock'] % $delayTime,
+			'value' => $test['value'],
+			'startEvent' => $mainEvent['clock'] == $test['clock'] ? true : false,
+			'endEvent' => $endEvent && $endEvent['clock'] == $test['clock'] ? $endEvent['value'] : TRIGGER_VALUE_TRUE
 		);
 	}
-	CArrayHelper::sort($data['tests'], ['clock']);
-
-	// time correction after pagination
-	$firstElement = reset($data['tests']);
-	$lastElement = end($data['tests']);
-	$fromTime = $firstElement['clock'] - $failCount * $delayTime;
-	$toTime = $lastElement['clock'] + $recoveryCount * $delayTime + SEC_PER_MIN;
-
-	$tempTests = $data['tests'];
-	$startEventExist = false;
-	$endEventExist = false;
-
-	foreach ($data['tests'] as &$test) {
-		$newClock = $test['clock'] - $test['clock'] % 60;
-
-		if (!$startEventExist && $mainEventClock == $newClock) {
-			$test['startEvent'] = true;
-			$startEventExist = true;
-		}
-		else {
-			$test['startEvent'] = false;
-		}
-
-		if ($endEvent && !$endEventExist && $endEventClock == $newClock) {
-			$test['endEvent'] = $endEvent['value'];
-			$endEventExist = true;
-		}
-		else {
-			$test['endEvent'] = TRIGGER_VALUE_TRUE;
-		}
-	}
-	unset($test);
 
 	$slvs = DBselect(
 		'SELECT h.value,h.clock'.
 		' FROM history h'.
 		' WHERE h.itemid='.zbx_dbstr($data['slvItemId']).
 			' AND h.clock>='.$fromTime.
-			' AND h.clock<='.$toTime
+			' AND h.clock<='.$toTime.
+		' ORDER BY h.clock asc'
 	);
 
-	$old = false;
+	$slv = DBfetch($slvs);
 
-	while ($slv = DBfetch($slvs)) {
-		$slvValue = sprintf('%.3f', $slv['value']);
+	foreach ($data['tests'] as &$test) {
+		while ($slv) {
+			$latest = $slv;
 
-		foreach ($tempTests as $key => $test) {
-			if ($slv['clock'] == $test['clock']) {
-				$data['tests'][$key]['slv'] = $slvValue;
-				unset($tempTests[$key]);
-				continue;
-			}
-
-			if ($old && $slv['clock'] > $test['clock']) {
-				$data['tests'][$key]['slv'] = $slvValue;
-				unset($tempTests[$key]);
-				continue;
-			}
-
-			$old = true;
-
-			if ($slv['clock'] < $test['clock']) {
+			if (!($slv = DBfetch($slvs)) || $slv['clock'] > $test['clock'] + $delayTime) {
+				$test['slv'] = sprintf('%.3f', $latest['value']);
 				break;
 			}
 		}

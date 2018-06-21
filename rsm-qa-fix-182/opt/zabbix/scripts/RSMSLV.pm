@@ -91,7 +91,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_downtime_bounds
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
-		init_values push_value send_values get_nsip_from_key is_service_error
+		init_values push_value send_values get_nsip_from_key is_service_error get_templated_items_like
 		process_slv_avail avail_value_exists
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
@@ -99,9 +99,13 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_avail_valuemaps slv_stats_reset
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled get_test_start_time
 		uint_value_exists
-		get_real_services_period dbg info wrn fail format_stats_time slv_exit exit_if_running trim parse_opts
+		get_real_services_period dbg info wrn fail
+		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
-		write_file usage);
+		write_file
+		cycle_start
+		cycle_end
+		usage);
 
 # configuration, set in set_slv_config()
 my $config = undef;
@@ -607,30 +611,30 @@ sub get_nsip_items
 	return $result;
 }
 
-# returns a reference to a hash of itemid => hostid pairs
-sub get_items_by_hostids
+# returns a reference to a hash:
+# {
+#     hostid => {
+#         itemid => 'key_',
+#         ...
+#     },
+#     ...
+# }
+sub __get_host_items
 {
 	my $hostids_ref = shift;
-	my $cfg_key = shift;
-	my $complete = shift;
+	my $keys_ref = shift;
 
-	my $hostids_str = join(',', @$hostids_ref);
-
-	my $rows_ref;
-	if ($complete)
-	{
-		$rows_ref = db_select("select itemid,hostid from items where hostid in ($hostids_str) and key_='$cfg_key'");
-	}
-	else
-	{
-		$rows_ref = db_select("select itemid,hostid from items where hostid in ($hostids_str) and key_ like '$cfg_key%'");
-	}
+	my $rows_ref = db_select(
+		"select hostid,itemid,key_".
+		" from items".
+		" where hostid in (" . join(',', @{$hostids_ref}) . ")".
+			" and key_ in (" . join(',', map {"'$_'"} (@{$keys_ref})) . ")");
 
 	my $result = {};
 
 	foreach my $row_ref (@$rows_ref)
 	{
-		$result->{$row_ref->[0]} = $row_ref->[1];
+		$result->{$row_ref->[0]}->{$row_ref->[1]} = $row_ref->[2];
 	}
 
 	return $result;
@@ -1408,17 +1412,40 @@ sub is_service_error
 	return E_FAIL;
 }
 
+sub get_templated_items_like
+{
+	my $tld = shift;
+	my $key_in = shift;
+
+	my $hostid = get_hostid("Template $tld");
+
+	my $items_ref = db_select(
+		"select key_".
+		" from items".
+		" where hostid=$hostid".
+			" and key_ like '$key_in%'".
+			" and status<>".ITEM_STATUS_DISABLED);
+
+	my @result;
+	foreach my $item_ref (@{$items_ref})
+	{
+		push(@result, $item_ref->[0]);
+	}
+
+	return \@result;
+}
+
 sub process_slv_avail($$$$$$$$$$)
 {
 	my $tld = shift;
-	my $cfg_key_in = shift;
+	my $cfg_keys_in = shift;	# array reference, e. g. ['rsm.dns.udp.rtt[...]', ...] or ['rsm.dns.udp[...]']
 	my $cfg_key_out = shift;
 	my $from = shift;
 	my $till = shift;
 	my $value_ts = shift;
 	my $cfg_minonline = shift;
 	my $online_probe_names = shift;
-	my $check_value_ref = shift;
+	my $check_probe_values_ref = shift;
 	my $value_type = shift;
 
 	croak("Internal error: invalid argument to process_slv_avail()") unless (ref($online_probe_names) eq 'ARRAY');
@@ -1446,17 +1473,16 @@ sub process_slv_avail($$$$$$$$$$)
 		return;
 	}
 
-	my $complete_key = ("]" eq substr($cfg_key_in, -1)) ? 1 : 0;
-	my $items_ref = get_items_by_hostids($hostids_ref, $cfg_key_in, $complete_key);
-	if (scalar(keys(%{$items_ref})) == 0)
+	my $host_items_ref = __get_host_items($hostids_ref, $cfg_keys_in);
+	if (scalar(keys(%{$host_items_ref})) == 0)
 	{
-		wrn("no items ($cfg_key_in) found");
+		wrn("no items (".join(',',@{$cfg_keys_in}).") found");
 		return;
 	}
 
-	my @itemids = keys(%{$items_ref});
-	my $values_ref = __get_item_values(\@itemids, $from, $till, $value_type);
-	my $probes_with_results = scalar(keys(%{$values_ref}));
+	my $values_ref = __get_item_values($host_items_ref, $from, $till, $value_type);
+
+	my $probes_with_results = scalar(@{$values_ref});
 	if ($probes_with_results < $cfg_minonline)
 	{
 		push_value($tld, $cfg_key_out, $value_ts, UP_INCONCLUSIVE_NO_DATA,
@@ -1473,15 +1499,15 @@ sub process_slv_avail($$$$$$$$$$)
 
 	my $probes_with_positive = 0;
 
-	while (my ($itemid, $values) = each(%{$values_ref}))
+	foreach my $probe_values (@{$values_ref})
 	{
-		my $result = $check_value_ref->($values);
+		my $result = $check_probe_values_ref->($probe_values);
 
 		$probes_with_positive++ if (SUCCESS == $result);
 
 		next unless (opt('debug'));
 
-		dbg("i:$itemid (h:$items_ref->{$itemid}): ", (SUCCESS == $result ? "up" : "down"), " (values: ", join(', ', @{$values}), ")");
+		dbg("probe result: ", (SUCCESS == $result ? "up" : "down"));
 	}
 
 	my $perc = $probes_with_positive * 100 / $probes_with_results;
@@ -1497,44 +1523,61 @@ sub process_slv_avail($$$$$$$$$$)
 	}
 }
 
-# organize values from all hosts grouped by itemid and return itemid->values hash
+# organize values grouped by hosts:
 #
-# E. g.:
-#
-# '10010' => [1],
-# '10011' => [2, 0]
-# ...
+# [
+#     {
+#         'foo[a,b]' => [1],
+#         'bar[c,d]' => [-201]
+#     },
+#     {
+#         'foo[a,b]' => [34],
+#         'bar[c,d]' => [27, 14]
+#     },
+#     ...
+# ]
+
 sub __get_item_values($$$$)
 {
-	my $itemids = shift;
+	my $host_items_ref = shift;
 	my $from = shift;
 	my $till = shift;
 	my $value_type = shift;
 
-	my $result = {};
+	return [] if (scalar(keys(%{$host_items_ref})) == 0);
 
-	return $result if (0 == scalar(@{$itemids}));
+	my %item_host_ids_map = map {
+		my $hostid = $_;
+		map { $_ => $hostid } (keys(%{$host_items_ref->{$hostid}}))
+	} (keys(%{$host_items_ref}));
 
-	my $itemids_str = join(',', @{$itemids});
+	my @itemids = map { keys(%{$_}) } (values(%{$host_items_ref}));
+
+	return [] if (scalar(@itemids) == 0);
 
 	my $rows_ref = db_select(
 		"select itemid,value".
 		" from " . __get_history_table_by_value_type($value_type).
-		" where itemid in ($itemids_str)".
+		" where itemid in (" . join(',', @itemids) . ")".
 			" and clock between $from and $till".
 		" order by clock");
+
+	my %result;
 
 	foreach my $row_ref (@$rows_ref)
 	{
 		my $itemid = $row_ref->[0];
 		my $value = $row_ref->[1];
 
-		$result->{$itemid} = [] unless (exists($result->{$itemid}));
+		my $hostid = $item_host_ids_map{$itemid};
+		my $key = $host_items_ref->{$hostid}->{$itemid};
 
-		push(@{$result->{$itemid}}, $value);
+		push(@{$result{$hostid}->{$key}}, $value);
+
+		dbg("  h:$hostid $key=$value");
 	}
 
-	return $result;
+	return [values(%result)];
 }
 
 sub avail_value_exists
@@ -1625,6 +1668,7 @@ sub sql_time_condition
 sub get_incidents
 {
 	my $itemid = shift;
+	my $delay = shift;
 	my $from = shift;
 	my $till = shift;
 
@@ -1692,7 +1736,7 @@ sub get_incidents
 			# do not add 'value=TRIGGER_VALUE_TRUE' to SQL above just for corner case of 2 events at the same second
 			if ($value == TRIGGER_VALUE_TRUE)
 			{
-				push(@incidents, __make_incident($eventid, $false_positive, $clock));
+				push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 
 				$last_trigger_value = TRIGGER_VALUE_TRUE;
 			}
@@ -1736,7 +1780,7 @@ sub get_incidents
 				# replace with current
 				$incidents[$idx]->{'eventid'} = $eventid;
 				$incidents[$idx]->{'false_positive'} = $false_positive;
-				$incidents[$idx]->{'start'} = $clock;
+				$incidents[$idx]->{'start'} = cycle_start($clock, $delay);
 			}
 		}
 
@@ -1747,12 +1791,12 @@ sub get_incidents
 			# event that closes the incident
 			my $idx = scalar(@incidents) - 1;
 
-			$incidents[$idx]->{'end'} = $clock;
+			$incidents[$idx]->{'end'} = cycle_end($clock, $delay);
 		}
 		else
 		{
 			# event that starts an incident
-			push(@incidents, __make_incident($eventid, $false_positive, $clock));
+			push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 		}
 
 		$last_trigger_value = $value;
@@ -1787,6 +1831,7 @@ sub get_downtime
 	my $till = shift;
 	my $ignore_incidents = shift;	# if set check the whole period
 	my $incidents_ref = shift;	# optional reference to array of incidents, ignored if $ignore_incidents is true
+	my $delay = shift;		# only needed if incidents are not ignored and are not supplied by caller
 
 	my $incidents;
 	if ($ignore_incidents)
@@ -1799,7 +1844,7 @@ sub get_downtime
 	}
 	else
 	{
-		$incidents = get_incidents($itemid, $from, $till);
+		$incidents = get_incidents($itemid, $delay, $from, $till);
 	}
 
 	my $count = 0;
@@ -1913,7 +1958,8 @@ sub get_downtime_execute
 	my $itemid = shift;
 	my $from = shift;
 	my $till = shift;
-	my $ignore_incidents = shift; # if set check the whole period
+	my $ignore_incidents = shift;	# if set check the whole period
+	my $delay = shift;		# only needed if incidents are not ignored
 
 	my $incidents;
 	if ($ignore_incidents)
@@ -1928,7 +1974,7 @@ sub get_downtime_execute
 	}
 	else
 	{
-		$incidents = get_incidents($itemid, $from, $till);
+		$incidents = get_incidents($itemid, $delay, $from, $till);
 	}
 
 	my $count = 0;
@@ -2441,9 +2487,9 @@ sub format_stats_time
 	return sprintf("%.3lfs", $s);
 }
 
-sub slv_exit
+sub slv_finalize
 {
-	my $rv = shift;
+	my $rv = shift // SUCCESS;
 
 	db_disconnect();
 
@@ -2462,6 +2508,13 @@ sub slv_exit
 	}
 
 	closelog();
+}
+
+sub slv_exit
+{
+	my $rv = shift;
+
+	slv_finalize($rv);
 
 	exit($rv);
 }
@@ -2640,6 +2693,22 @@ sub write_file
 	return E_FAIL unless ($rv);
 
 	return SUCCESS;
+}
+
+sub cycle_start
+{
+	my $now = shift;
+	my $delay = shift;
+
+	return $now - ($now % $delay);
+}
+
+sub cycle_end
+{
+	my $now = shift;
+	my $delay = shift;
+
+	return cycle_start($now, $delay) + $delay - 1;
 }
 
 sub usage
