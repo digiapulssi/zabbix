@@ -1,8 +1,26 @@
-Changes for rsm1.1.0rc11
+Changes for rsm1.1.0rc14
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc13
+
+Bug fixes:
+.......PS. [sub-378] fixed -422, -822 error detection (yurii)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc12
+
+Bug fixes:
+.......PS. [sub-378] fixed error codes -407,-807,-408,-808,-415,-815 (yurii)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc11
+
+Bug fixes:
+.......PS. [378] fixed error checking when making rrsig verification and denial of existence checks (yurii)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc10
