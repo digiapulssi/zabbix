@@ -1726,6 +1726,461 @@ static int	DBpatch_3000212(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000213(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into valuemaps (valuemapid,name) values ('135','RSM RDAP rtt')"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000214(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into hosts ("
+				"hostid,proxy_hostid,host,status,ipmi_authtype,ipmi_privilege,"
+				"ipmi_username,ipmi_password,name,flags,templateid,description,"
+				"tls_connect,tls_accept,tls_issuer,tls_subject,tls_psk_identity,tls_psk"
+			")"
+			" values ("
+				"'99980',NULL,'Template RDAP','3','0','2',"
+				"'','','Template RDAP','0',NULL,'',"
+				"'1','1','','','',''"
+			")"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into applications (applicationid,hostid,name,flags) values ('998','99980','RDAP','0')"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items ("
+				"itemid,type,snmp_community,snmp_oid,hostid,name,"
+				"key_,"
+				"delay,history,trends,status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,"
+				"description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype"
+			")"
+			" values ("
+				"'99980','3','','','99980','RDAP availability',"
+				"'rdap["
+					"{$RSM.TLD},"
+					"{$RDAP.TEST.DOMAIN},"
+					"{$RDAP.BASE.URL},"
+					"{$RSM.RDDS.MAXREDIRS},"
+					"{$RSM.RDDS.RTT.HIGH},"
+					"{$RDAP.TLD.ENABLED},"
+					"{$RSM.RDDS.ENABLED},"
+					"{$RSM.IP4.ENABLED},"
+					"{$RSM.IP6.ENABLED},"
+					"{$RSM.RESOLVER}"
+					"]',"
+				"'300','7','365','0','3','','','0','0',"
+				"'','0','','',"
+				"'1','',NULL,'1','','','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'Status of Registration Data Access Protocol service.',"
+				"'0','0','0','0','','0'"
+			"),"
+			"("
+				"'99981','2','','','99980','RDAP IP',"
+				"'rdap.ip',"
+				"'0','7','365','0','1','','','0','0',"
+				"'','0','','',"
+				"'1','',NULL,NULL,'','','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'IP address of Registration Data Access Protocol service provider domain used to perform the test.',"
+				"'0','0','0','0','','0'"
+			"),"
+			"("
+				"'99982','2','','','99980','RDAP RTT',"
+				"'rdap.rtt',"
+				"'0','7','365','0','0','','ms','0','0',"
+				"'','0','','',"
+				"'1','',NULL,'135','','','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'Round-Trip Time of Registration Data Access Protocol service test.',"
+				"'0','0','0','0','','0'"
+			"),"
+			"("
+				"'99983','15','','','99980','RDAP enabled/disabled','rdap.enabled','60','7','365',"
+				"'0','3','','','0','0',"
+				"'','0','','',"
+				"'1','',NULL,NULL,'','{$RDAP.TLD.ENABLED}','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'History of Registration Data Access Protocol being enabled or disabled.',"
+				"'0','0','0','0','','0'"
+			")"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items_applications (itemappid,applicationid,itemid)"
+			" values ('99980','998','99980'),('99981','998','99981'),('99982','998','99982'),(99983,998,99983)"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000215(void)
+{
+	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
+	static const char	*const data[] = {
+		"ROW   |13500    |135       |-1   |Internal error                                                                                                  |",
+		"ROW   |13501    |135       |-100 |The TLD is not listed in the Bootstrap Service Registry for Domain Name Space                                   |",
+		"ROW   |13502    |135       |-101 |The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS             |",
+		"ROW   |13503    |135       |-200 |RDAP - No reply from local resolver                                                                             |",
+		"ROW   |13504    |135       |-201 |RDAP - No AD bit from local resolver                                                                            |",
+		"ROW   |13505    |135       |-202 |RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                         |",
+		"ROW   |13506    |135       |-203 |RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                         |",
+		"ROW   |13507    |135       |-204 |RDAP - Expecting NOERROR RCODE but got unexpected error when resolving hostname                                 |",
+		"ROW   |13508    |135       |-205 |RDAP - Timeout                                                                                                  |",
+		"ROW   |13509    |135       |-206 |RDAP - Error opening connection to server                                                                       |",
+		"ROW   |13510    |135       |-207 |RDAP - Invalid JSON format in response                                                                          |",
+		"ROW   |13511    |135       |-208 |RDAP - ldhName member not found in response                                                                     |",
+		"ROW   |13512    |135       |-209 |RDAP - ldhName member doesn't match query in response                                                           |",
+		"ROW   |13513    |135       |-213 |RDAP - Error in HTTP protocol                                                                                   |",
+		"ROW   |13514    |135       |-214 |RDAP - Error in HTTPS protocol                                                                                  |",
+		"-- Error code for every assigned HTTP status code (with the exception of HTTP/200)                                                                 ",
+		"-- as per: http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml                                                               ",
+		"ROW   |13515    |135       |-250 |RDAP - Expecting HTTP status code 200 but got 100                                                               |",
+		"ROW   |13516    |135       |-251 |RDAP - Expecting HTTP status code 200 but got 101                                                               |",
+		"ROW   |13517    |135       |-252 |RDAP - Expecting HTTP status code 200 but got 102                                                               |",
+		"ROW   |13518    |135       |-253 |RDAP - Expecting HTTP status code 200 but got 103                                                               |",
+		"ROW   |13519    |135       |-254 |RDAP - Expecting HTTP status code 200 but got 201                                                               |",
+		"ROW   |13520    |135       |-255 |RDAP - Expecting HTTP status code 200 but got 202                                                               |",
+		"ROW   |13521    |135       |-256 |RDAP - Expecting HTTP status code 200 but got 203                                                               |",
+		"ROW   |13522    |135       |-257 |RDAP - Expecting HTTP status code 200 but got 204                                                               |",
+		"ROW   |13523    |135       |-258 |RDAP - Expecting HTTP status code 200 but got 205                                                               |",
+		"ROW   |13524    |135       |-259 |RDAP - Expecting HTTP status code 200 but got 206                                                               |",
+		"ROW   |13525    |135       |-260 |RDAP - Expecting HTTP status code 200 but got 207                                                               |",
+		"ROW   |13526    |135       |-261 |RDAP - Expecting HTTP status code 200 but got 208                                                               |",
+		"ROW   |13527    |135       |-262 |RDAP - Expecting HTTP status code 200 but got 226                                                               |",
+		"ROW   |13528    |135       |-263 |RDAP - Expecting HTTP status code 200 but got 300                                                               |",
+		"ROW   |13529    |135       |-264 |RDAP - Expecting HTTP status code 200 but got 301                                                               |",
+		"ROW   |13530    |135       |-265 |RDAP - Expecting HTTP status code 200 but got 302                                                               |",
+		"ROW   |13531    |135       |-266 |RDAP - Expecting HTTP status code 200 but got 303                                                               |",
+		"ROW   |13532    |135       |-267 |RDAP - Expecting HTTP status code 200 but got 304                                                               |",
+		"ROW   |13533    |135       |-268 |RDAP - Expecting HTTP status code 200 but got 305                                                               |",
+		"ROW   |13534    |135       |-269 |RDAP - Expecting HTTP status code 200 but got 306                                                               |",
+		"ROW   |13535    |135       |-270 |RDAP - Expecting HTTP status code 200 but got 307                                                               |",
+		"ROW   |13536    |135       |-271 |RDAP - Expecting HTTP status code 200 but got 308                                                               |",
+		"ROW   |13537    |135       |-272 |RDAP - Expecting HTTP status code 200 but got 400                                                               |",
+		"ROW   |13538    |135       |-273 |RDAP - Expecting HTTP status code 200 but got 401                                                               |",
+		"ROW   |13539    |135       |-274 |RDAP - Expecting HTTP status code 200 but got 402                                                               |",
+		"ROW   |13540    |135       |-275 |RDAP - Expecting HTTP status code 200 but got 403                                                               |",
+		"ROW   |13541    |135       |-276 |RDAP - Expecting HTTP status code 200 but got 404                                                               |",
+		"ROW   |13542    |135       |-277 |RDAP - Expecting HTTP status code 200 but got 405                                                               |",
+		"ROW   |13543    |135       |-278 |RDAP - Expecting HTTP status code 200 but got 406                                                               |",
+		"ROW   |13544    |135       |-279 |RDAP - Expecting HTTP status code 200 but got 407                                                               |",
+		"ROW   |13545    |135       |-280 |RDAP - Expecting HTTP status code 200 but got 408                                                               |",
+		"ROW   |13546    |135       |-281 |RDAP - Expecting HTTP status code 200 but got 409                                                               |",
+		"ROW   |13547    |135       |-282 |RDAP - Expecting HTTP status code 200 but got 410                                                               |",
+		"ROW   |13548    |135       |-283 |RDAP - Expecting HTTP status code 200 but got 411                                                               |",
+		"ROW   |13549    |135       |-284 |RDAP - Expecting HTTP status code 200 but got 412                                                               |",
+		"ROW   |13550    |135       |-285 |RDAP - Expecting HTTP status code 200 but got 413                                                               |",
+		"ROW   |13551    |135       |-286 |RDAP - Expecting HTTP status code 200 but got 414                                                               |",
+		"ROW   |13552    |135       |-287 |RDAP - Expecting HTTP status code 200 but got 415                                                               |",
+		"ROW   |13553    |135       |-288 |RDAP - Expecting HTTP status code 200 but got 416                                                               |",
+		"ROW   |13554    |135       |-289 |RDAP - Expecting HTTP status code 200 but got 417                                                               |",
+		"ROW   |13555    |135       |-290 |RDAP - Expecting HTTP status code 200 but got 421                                                               |",
+		"ROW   |13556    |135       |-291 |RDAP - Expecting HTTP status code 200 but got 422                                                               |",
+		"ROW   |13557    |135       |-292 |RDAP - Expecting HTTP status code 200 but got 423                                                               |",
+		"ROW   |13558    |135       |-293 |RDAP - Expecting HTTP status code 200 but got 424                                                               |",
+		"ROW   |13559    |135       |-294 |RDAP - Expecting HTTP status code 200 but got 426                                                               |",
+		"ROW   |13560    |135       |-295 |RDAP - Expecting HTTP status code 200 but got 428                                                               |",
+		"ROW   |13561    |135       |-296 |RDAP - Expecting HTTP status code 200 but got 429                                                               |",
+		"ROW   |13562    |135       |-297 |RDAP - Expecting HTTP status code 200 but got 431                                                               |",
+		"ROW   |13563    |135       |-298 |RDAP - Expecting HTTP status code 200 but got 451                                                               |",
+		"ROW   |13564    |135       |-299 |RDAP - Expecting HTTP status code 200 but got 500                                                               |",
+		"ROW   |13565    |135       |-300 |RDAP - Expecting HTTP status code 200 but got 501                                                               |",
+		"ROW   |13566    |135       |-301 |RDAP - Expecting HTTP status code 200 but got 502                                                               |",
+		"ROW   |13567    |135       |-302 |RDAP - Expecting HTTP status code 200 but got 503                                                               |",
+		"ROW   |13568    |135       |-303 |RDAP - Expecting HTTP status code 200 but got 504                                                               |",
+		"ROW   |13569    |135       |-304 |RDAP - Expecting HTTP status code 200 but got 505                                                               |",
+		"ROW   |13570    |135       |-305 |RDAP - Expecting HTTP status code 200 but got 506                                                               |",
+		"ROW   |13571    |135       |-306 |RDAP - Expecting HTTP status code 200 but got 507                                                               |",
+		"ROW   |13572    |135       |-307 |RDAP - Expecting HTTP status code 200 but got 508                                                               |",
+		"ROW   |13573    |135       |-308 |RDAP - Expecting HTTP status code 200 but got 510                                                               |",
+		"ROW   |13574    |135       |-309 |RDAP - Expecting HTTP status code 200 but got 511                                                               |",
+		"ROW   |13575    |135       |-310 |RDAP - Expecting HTTP status code 200 but got unexpected status code                                            |",
+		NULL
+	};
+	int			i;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	for (i = 0; NULL != data[i]; i++)
+	{
+		zbx_uint64_t	mappingid, valuemapid;
+		char		*value = NULL, *newvalue = NULL, *value_esc, *newvalue_esc;
+
+		if (0 == strncmp(data[i], "--", ZBX_CONST_STRLEN("--")))
+			continue;
+
+		if (4 != sscanf(data[i], "ROW |" ZBX_FS_UI64 " |" ZBX_FS_UI64 " |%m[^|]|%m[^|]|",
+				&mappingid, &valuemapid, &value, &newvalue))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "failed to parse the following line:\n%s", data[i]);
+			zbx_free(value);
+			zbx_free(newvalue);
+			return FAIL;
+		}
+
+		zbx_rtrim(value, ZBX_WHITESPACE);
+		zbx_rtrim(newvalue, ZBX_WHITESPACE);
+
+		/* NOTE: to keep it simple assume that data does not contain sequences "&pipe;", "&eol;" or "&bsn;" */
+
+		value_esc = zbx_db_dyn_escape_string(value);
+		newvalue_esc = zbx_db_dyn_escape_string(newvalue);
+		zbx_free(value);
+		zbx_free(newvalue);
+
+		if (ZBX_DB_OK > DBexecute("insert into mappings (mappingid,valuemapid,value,newvalue)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",'%s','%s')",
+				mappingid, valuemapid, value_esc, newvalue_esc))
+		{
+			zbx_free(value_esc);
+			zbx_free(newvalue_esc);
+			return FAIL;
+		}
+
+		zbx_free(value_esc);
+		zbx_free(newvalue_esc);
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000216(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("insert into rsm_test_type (id,name) values ('7','rdap')"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000217(void)
+{
+	DB_RESULT		result;
+	DB_ROW			row;
+	zbx_vector_uint64_t	templateids;
+	zbx_uint64_t		hostmacroid, itemid;
+	size_t			i;
+	int			ret = FAIL;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	zbx_vector_uint64_create(&templateids);
+	zbx_vector_uint64_reserve(&templateids, 1);
+
+	result = DBselect("select max(hostmacroid)+1 from hostmacro");
+
+	if (NULL == result)
+		goto out;
+
+	if (NULL == (row = DBfetch(result)))
+	{
+		DBfree_result(result);
+		goto out;
+	}
+
+	ZBX_STR2UINT64(hostmacroid, row[0]);
+
+	DBfree_result(result);
+
+	result = DBselect("select max(itemid)+1 from items");
+
+	if (NULL == result)
+		goto out;
+
+	if (NULL == (row = DBfetch(result)))
+	{
+		DBfree_result(result);
+		goto out;
+	}
+
+	ZBX_STR2UINT64(itemid, row[0]);
+
+	DBfree_result(result);
+
+	/* select templates "Template <TLD>" */
+	result = DBselect(
+			"select distinct templateid"
+			" from hosts_templates"
+			" where hostid in ("
+					"select hostid"
+					" from hosts_groups"
+					" where groupid=190"	/* "TLD Probe results" */
+				")"
+				" and templateid not in ("
+						"select templateid"
+						" from hosts_templates"
+						" where hostid in ("
+								"select templateid"
+								" from hosts_templates"
+								" where hostid in ("
+										"select hostid"
+										" from hosts_groups"
+										" where groupid=120)"	/* exclude "Probes" */
+							")"
+					")"
+				" and templateid not in (99980)");	/* exclude "Template RDAP" */
+
+	if (NULL == result)
+	{
+		ret = SUCCEED;
+		goto out;
+	}
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	templateid;
+
+		ZBX_STR2UINT64(templateid, row[0]);	/* hostid of "Template <TLD>" */
+
+		zbx_vector_uint64_append(&templateids, templateid);
+	}
+
+	DBfree_result(result);
+
+	for (i = 0; i < templateids.values_num; i++)
+	{
+		zbx_vector_uint64_t	hostids;
+		zbx_uint64_t		templated_itemid;
+		size_t			j;
+
+		templated_itemid = itemid;
+
+		if (ZBX_DB_OK > DBexecute(
+				"insert into hostmacro (hostmacroid,hostid,macro,value)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",'{$RDAP.TLD.ENABLED}','0')",
+				hostmacroid++, templateids.values[i]))
+		{
+			goto out;
+		}
+
+		if (ZBX_DB_OK > DBexecute(
+				"insert into items ("
+					"itemid,type,snmp_community,snmp_oid,hostid,name,key_,"
+					"delay,history,trends,status,value_type,trapper_hosts,units,multiplier,delta,"
+					"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,"
+					"snmpv3_privpassphrase,formula,logtimefmt,templateid,valuemapid,delay_flex,"
+					"params,ipmi_sensor,data_type,authtype,username,password,publickey,privatekey,"
+					"flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,"
+					"snmpv3_privprotocol,snmpv3_contextname,evaltype"
+				")"
+				" values ("
+					ZBX_FS_UI64 ",'15','',''," ZBX_FS_UI64 ",'RDDS enabled/disabled',"
+					"'rdds.enabled','60','7','365',"
+					"'0','3','','','0','0',"
+					"'','0','','',"
+					"'1','',NULL,NULL,'','{$RSM.TLD.RDDS.ENABLED}','','0',"
+					"'0','','','','','0',NULL,'',"
+					"'History of Registration Data Directory Service being enabled or disabled.',"
+					"'0','0','0','0','','0'"
+				")",
+				itemid++, templateids.values[i]))
+		{
+			goto out;
+		}
+
+		zbx_vector_uint64_create(&hostids);
+		zbx_vector_uint64_reserve(&hostids, 1);
+
+		/* select templates "<TLD> <Probe>" hosts, for this particular TLD */
+		result = DBselect(
+				"select h.hostid"
+				" from hosts_templates ht, hosts h"
+				" where h.hostid=ht.hostid"
+					" and ht.templateid=" ZBX_FS_UI64,
+				templateids.values[i]);
+
+		if (NULL == result)
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "no \"<TLD> <Probe>\" hosts found");
+			zbx_vector_uint64_destroy(&hostids);
+			goto out;
+		}
+
+		while (NULL != (row = DBfetch(result)))
+		{
+			zbx_uint64_t	hostid;
+
+			ZBX_STR2UINT64(hostid, row[0]);     /* hostid of "<TLD> <Probe>" */
+
+			zbx_vector_uint64_append(&hostids, hostid);
+		}
+
+		DBfree_result(result);
+
+		for (j = 0; j < hostids.values_num; j++)
+		{
+			if (ZBX_DB_OK > DBexecute(
+					"insert into items ("
+						"itemid,type,snmp_community,snmp_oid,hostid,name,key_,"
+						"delay,history,trends,status,value_type,trapper_hosts,units,multiplier,delta,"
+						"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,"
+						"snmpv3_privpassphrase,formula,logtimefmt,templateid,valuemapid,delay_flex,"
+						"params,ipmi_sensor,data_type,authtype,username,password,publickey,privatekey,"
+						"flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,"
+						"snmpv3_privprotocol,snmpv3_contextname,evaltype"
+					")"
+					" values ("
+						ZBX_FS_UI64 ",'15','',''," ZBX_FS_UI64 ",'RDDS enabled/disabled',"
+						"'rdds.enabled','60','7','365',"
+						"'0','3','','','0','0',"
+						"'','0','','',"
+						"'1',''," ZBX_FS_UI64 ",NULL,'','{$RSM.TLD.RDDS.ENABLED}','','0',"
+						"'0','','','','','0',NULL,'',"
+						"'History of Registration Data Directory Service being enabled or disabled.',"
+						"'0','0','0','0','','0'"
+					")",
+					itemid++, hostids.values[j], templated_itemid))
+			{
+				zbx_vector_uint64_destroy(&hostids);
+				goto out;
+			}
+		}
+
+		zbx_vector_uint64_destroy(&hostids);
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='hostmacro'"))
+		goto out;
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='items'"))
+		goto out;
+
+	ret = SUCCEED;
+out:
+	zbx_vector_uint64_destroy(&templateids);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -1785,5 +2240,10 @@ DBPATCH_ADD(3000208, 0, 0)	/* new actions: "Probes", "Probes-Knockout" */
 DBPATCH_ADD(3000210, 0, 0)	/* link "Template Probe Errors" template to all probe hosts */
 DBPATCH_ADD(3000211, 0, 0)	/* update "RSM RDDS rtt" value mapping with new RDDS43 and RDDS80 test error codes */
 DBPATCH_ADD(3000212, 0, 0)	/* remove obsoleted DNS error codes: -421,-426,-821,-826 */
+DBPATCH_ADD(3000213, 0, 0)	/* add "RSM RDAP rtt" value mapping (without error codes) */
+DBPATCH_ADD(3000214, 0, 0)	/* create "Template RDAP" template with rdap[...], rdap.ip and rdap.rtt items, RDAP application; place template into "Templates" host group */
+DBPATCH_ADD(3000215, 0, 0)	/* add RDAP error codes into "RSM RDAP rtt" value mapping */
+DBPATCH_ADD(3000216, 0, 0)	/* add new test type to "testTypes" catalog */
+DBPATCH_ADD(3000217, 0, 0)	/* add macro {$RDAP.TLD.ENABLED}=0 and item rdds.enabled to all "Template <TLD>" */
 
 DBPATCH_END()

@@ -27,7 +27,9 @@ $widget = (new CWidget())->setTitle(_('TLD Rolling week status'));
 $filter = (new CFilter('web.rsm.rollingweekstatus.filter.state'))
 	->addVar('filter_set', 1)
 	->addVar('checkAllServicesValue', 0)
+	->addVar('checkAllSubservicesValue', 0)
 	->addVar('checkAllGroupsValue', 0);
+
 $filterColumn1 = new CFormList();
 $filterColumn2 = new CFormList();
 $filterColumn3 = new CFormList();
@@ -126,7 +128,23 @@ $filterColumn2
 		], 'checkbox-block'),
 		SPACE,
 		(new CButton('checkAllGroups', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
+	])
+	->addRow((new CSpan(_('Enabled subservices')))->addStyle('padding: 0 25px;'), [
+		new CSpan([
+			(new CCheckBox('filter_rdds_subgroup'))->setChecked($this->data['filter_rdds_subgroup']),
+			SPACE,
+			_(RSM_RDDS_SUBSERVICE_RDDS)
+		], 'checkbox-block'),
+		SPACE,
+		new CSpan([
+			(new CCheckBox('filter_rdap_subgroup'))->setChecked($this->data['filter_rdap_subgroup']),
+			SPACE,
+			_(RSM_RDDS_SUBSERVICE_RDAP)
+		], 'checkbox-block'),
+		SPACE,
+		(new CButton('checkAllSubservices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
 	]);
+
 $filterColumn3
 	->addRow(_('Exceeding or equal to'), $filter_value)
 	->addRow(_('Current status'),
@@ -288,21 +306,17 @@ if ($this->data['tld']) {
 				: null;
 
 			$ok_rdds_services = [];
-			if (array_key_exists(RSM_TLD_RDDS43_ENABLED, ($tld[RSM_RDDS]['subservices']))
-					&& $tld[RSM_RDDS]['subservices'][RSM_TLD_RDDS43_ENABLED] == 1) {
-				$ok_rdds_services[] = 'RDDS43';
+			if (array_key_exists(RSM_TLD_RDDS_ENABLED, ($tld[RSM_RDDS]['subservices']))
+					&& $tld[RSM_RDDS]['subservices'][RSM_TLD_RDDS_ENABLED] == 1) {
+				$ok_rdds_services[] = 'RDDS';
 			}
-			if (array_key_exists(RSM_TLD_RDDS80_ENABLED, ($tld[RSM_RDDS]['subservices']))
-					&& $tld[RSM_RDDS]['subservices'][RSM_TLD_RDDS80_ENABLED] == 1) {
-				$ok_rdds_services[] = 'RDDS80';
-			}
-			if (array_key_exists(RSM_TLD_RDAP_ENABLED, ($tld[RSM_RDDS]['subservices']))
-					&& $tld[RSM_RDDS]['subservices'][RSM_TLD_RDAP_ENABLED] == 1) {
+			if (array_key_exists(RSM_RDAP_TLD_ENABLED, ($tld[RSM_RDDS]['subservices']))
+					&& $tld[RSM_RDDS]['subservices'][RSM_RDAP_TLD_ENABLED] == 1) {
 				$ok_rdds_services[] = 'RDAP';
 			}
 
-			$rdds_services = implode('/', $ok_rdds_services);
-			$rdds = [(new CSpan($rddsValue))->addClass('right'), $rddsStatus, SPACE, $rddsGraph, SPACE,
+			$rdds_services = implode(' / ', $ok_rdds_services);
+			$rdds = [(new CSpan($rddsValue))->addClass('right'), $rddsStatus, SPACE, $rddsGraph, [SPACE,SPACE,SPACE],
 				new CSpan($rdds_services, 'bold')
 			];
 		}
@@ -354,6 +368,7 @@ if ($this->data['tld']) {
 				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
 				->setHint('EPP is disabled.', '', 'on');
 		}
+
 		$row = [
 			$tld['name'],
 			$tld['type'],

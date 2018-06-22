@@ -62,7 +62,8 @@ db_connect();
 my %valuemaps;
 
 $valuemaps{'dns'} = get_valuemaps('dns');
-$valuemaps{'rdds'} = get_valuemaps('rdds');
+$valuemaps{'rdds43'} = $valuemaps{'rdds80'} = get_valuemaps('rdds');
+$valuemaps{'rdap'} = get_valuemaps('rdap');
 
 dw_csv_init();
 dw_load_ids_from_db();
@@ -165,9 +166,8 @@ sub __translate_tests_line
 	my $test_nsfqdn = dw_get_name(ID_NS_NAME, $columns[10]) || '';
 	my $tld_type = dw_get_name(ID_TLD_TYPE, $columns[11]);
 
-	my $service_str = $test_type;
-	$service_str =~ s/[0-9]+.*//;
-	if ($valuemaps{$service_str}->{$test_rtt})
+	# $test_type is service interface, e. g.: dns, rdds43, rdds80
+	if ($valuemaps{$test_type}->{$test_rtt})
 	{
 		$test_rtt .= " (" . $valuemaps{$service_str}->{$test_rtt} . ")";
 	}

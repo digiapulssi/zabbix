@@ -12,7 +12,7 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:ec :api :items);
 use ApiHelper;
-use Parallel;
+use Parallel::ForkManager;
 
 use constant JSON_RDDS_SUBSERVICE => 'subService';
 use constant JSON_RDDS_43 => 'RDDS43';
@@ -273,7 +273,7 @@ if (!$from)
 	slv_exit(SUCCESS);
 }
 
-set_max_children(getopt('maxproc')) if (opt('maxproc'));
+my $fm = new Parallel::ForkManager(opt('maxproc') ? getopt('maxproc') : 64);
 
 # go through all the databases
 foreach (@server_keys)
@@ -291,18 +291,8 @@ foreach (@server_keys)
 	if (opt('probe'))
 	{
 		my $probe = getopt('probe');
-		my $valid = 0;
 
-		foreach my $name (keys(%$all_probes_ref))
-		{
-			if ($name eq $probe)
-			{
-				$valid = 1;
-				last;
-			}
-		}
-
-		if ($valid == 0)
+		unless (exists($all_probes_ref->{$probe}))
 		{
 			my $msg = "unknown probe \"$probe\"\n\nAvailable probes:\n";
 
@@ -314,11 +304,9 @@ foreach (@server_keys)
 			fail($msg);
 		}
 
-		my $temp = $all_probes_ref;
-
-		undef($all_probes_ref);
-
-		$all_probes_ref->{getopt('probe')} = $temp->{getopt('probe')};
+		$all_probes_ref = {
+			$probe	=> $all_probes_ref->{$probe}
+		};
 	}
 
 	my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
@@ -342,6 +330,13 @@ foreach (@server_keys)
 
 	db_disconnect();
 
+	$fm->run_on_wait(
+		sub ()
+		{
+			dbg("max children reached, please wait...");
+		}
+	);
+
 	foreach (@$tlds_ref)
 	{
 		# NB! This is needed in order to set the value globally.
@@ -349,35 +344,16 @@ foreach (@server_keys)
 
 		last if (opt('limit') && $tlds_processed == getopt('limit'));
 
-		my $fork_successful = 0;
-TRYFORK:
-		my $pid = fork_without_pipe();
+		$tlds_processed++;
 
-		if (!defined($pid))
+		$fm->start() and next;	# start a new child and send parent to the next iteration
+
+		if (__tld_ignored($tld) == SUCCESS)
 		{
-			# max children reached, make sure to handle_children()
-			dbg("max children reached, please wait...");
-
-			# sleep for 100 milliseconds
-			select(undef, undef, undef, 0.1);
-		}
-		elsif ($pid)
-		{
-			# parent
-			$fork_successful = 1;
-
-			$tlds_processed++;
+			dbg("tld \"$tld\" found in IGNORE list");
 		}
 		else
 		{
-			# child
-
-			if (__tld_ignored($tld) == SUCCESS)
-			{
-				dbg("tld \"$tld\" found in IGNORE list");
-				slv_exit(SUCCESS);
-			}
-
 			db_connect($server_key);
 
 			my $ah_tld = ah_get_api_tld($tld);
@@ -559,9 +535,9 @@ TRYFORK:
 				# we need down time in minutes, not percent, that's why we can't use "rsm.slv.$service.rollweek" value
 				my ($rollweek_from, $rollweek_till) = get_rollweek_bounds();
 
-				my $rollweek_incidents = get_incidents($avail_itemid, $rollweek_from, $rollweek_till);
+				my $rollweek_incidents = get_incidents($avail_itemid, $delay, $rollweek_from, $rollweek_till);
 
-				my $downtime = get_downtime($avail_itemid, $rollweek_from, $rollweek_till, 0, $rollweek_incidents);
+				my $downtime = get_downtime($avail_itemid, $rollweek_from, $rollweek_till, 0, $rollweek_incidents, $delay);
 
 				__prnt(uc($service), " period: ", selected_period($service_from, $service_till)) if (opt('dry-run') or opt('debug'));
 
@@ -577,7 +553,7 @@ TRYFORK:
 				dbg("getting current $service service availability (delay:$delay)");
 
 				# get alarmed
-				my $incidents = get_incidents($avail_itemid, $now);
+				my $incidents = get_incidents($avail_itemid, $delay, $now);
 
 				my $alarmed_status;
 
@@ -687,30 +663,18 @@ TRYFORK:
 					'incidents' => []
 				};
 
-				$incidents = get_incidents($avail_itemid, $service_from, $service_till);
-
-				foreach (@$incidents)
+				foreach my $incident (@{get_incidents($avail_itemid, $delay, $service_from, $service_till)})
 				{
-					my $eventid = $_->{'eventid'};
-					my $event_start = $_->{'start'};
-					my $event_end = $_->{'end'};
-					my $false_positive = $_->{'false_positive'};
+					my $eventid = $incident->{'eventid'};
+					my $event_start = $incident->{'start'};
+					my $event_end = $incident->{'end'};
+					my $false_positive = $incident->{'false_positive'};
 
-					my $start = $event_start;
-					my $end = $event_end;
+					my $start = defined($service_from) && $service_from > $event_start ?
+							$service_from : $event_start;
 
-					if (defined($service_from) and $service_from > $event_start)
-					{
-						$start = $service_from;
-					}
-
-					if (defined($service_till))
-					{
-						if (not defined($event_end) or (defined($event_end) and $service_till < $event_end))
-						{
-							$end = $service_till;
-						}
-					}
+					my $end = defined($event_end) && defined($service_till) && $service_till < $event_end ?
+							$service_till : $event_end;
 
 					# get results within incidents
 					my $rows_ref = db_select(
@@ -733,7 +697,7 @@ TRYFORK:
 						my $result;
 
 						$result->{'tld'} = $tld;
-						$result->{'cycleCalculationDateTime'} = $clock;
+						$result->{'cycleCalculationDateTime'} = cycle_end($clock, $delay);
 
 						# todo phase 1: make sure this uses avail valuemaps in phase1
 						# todo: later rewrite to use valuemap ID from item
@@ -778,12 +742,10 @@ TRYFORK:
 						push(@test_results, $result);
 					}
 
-					my $test_results_count = scalar(@test_results);
-
-					if ($test_results_count == 0)
+					if (scalar(@test_results) == 0)
 					{
 						wrn("$service: no results within incident (id:$eventid clock:$event_start)");
-						last;
+						next;
 					}
 
 					if (opt('dry-run'))
@@ -800,7 +762,7 @@ TRYFORK:
 					}
 
 					my $values_from = $test_results[0]->{'start'};
-					my $values_till = $test_results[$test_results_count - 1]->{'end'};
+					my $values_till = $test_results[-1]->{'end'};
 
 					if ($service eq 'dns' or $service eq 'dnssec')
 					{
@@ -1037,6 +999,7 @@ TRYFORK:
 
 							my $subservices_ref = $tr_ref->{+JSON_RDDS_SUBSERVICE};
 
+							# set test status on the Probe level
 							foreach my $subservice (keys(%$subservices_ref))
 							{
 								my $probes_ref = $subservices_ref->{$subservice};
@@ -1183,17 +1146,19 @@ TRYFORK:
 					{
 						fail("THIS SHOULD NEVER HAPPEN (unknown service \"$service\")");
 					}
-				} # foreach (@$incidents)
+				} # foreach my $incident (...)
 
-				foreach (@{$rollweek_incidents})
+				foreach my $rolling_week_incident (@{$rollweek_incidents})
 				{
-					my $eventid = $_->{'eventid'};
-					my $event_start = $_->{'start'};
-					my $event_end = $_->{'end'};
-					my $false_positive = $_->{'false_positive'};
-
-					push(@{$json_state_ref->{'testedServices'}->{uc($service)}->{'incidents'}},
-						ah_create_incident_json($eventid, $event_start, $event_end, $false_positive));
+					push(
+						@{$json_state_ref->{'testedServices'}->{uc($service)}->{'incidents'}},
+						ah_create_incident_json(
+							$rolling_week_incident->{'eventid'},
+							$rolling_week_incident->{'start'},
+							$rolling_week_incident->{'end'},
+							$rolling_week_incident->{'false_positive'}
+						)
+					);
 				}
 			} # foreach my $service
 
@@ -1201,28 +1166,25 @@ TRYFORK:
 			{
 				fail("cannot save TLD state: ", ah_get_error());
 			}
-
-			# child exit
-			slv_exit(SUCCESS);
 		}
 
-		# parent process, fork() either successful or failed
-		handle_children();
+		slv_finalize();
 
-		goto TRYFORK if ($fork_successful == 0);
+		# When we fork for real it makes no difference for Parallel::ForkManager whether child calls exit() or
+		# calls $fm->finish(), therefore we do not need to introduce $fm->finish() in all our low-level error
+		# handling routines, but having $fm->finish() here leaves a possibility to debug a happy path scenario
+		# without the complications of actual forking by using:
+		# my $fm = new Parallel::ForkManager(0);
 
-		last if (opt('tld'));
-
+		$fm->finish(SUCCESS);
 	} # for each TLD
 
 	# unset TLD (for the logs)
 	undef($tld);
 
-	# wait till children finish
-	while (children_running() > 0)
-	{
-		handle_children();
-	}
+	$fm->run_on_wait(undef);	# unset the callback which prints debug message about reached children limit
+
+	$fm->wait_all_children();
 
 	db_connect($server_key);
 
@@ -2304,7 +2266,7 @@ sub __update_false_positives
 			next;
 		}
 
-		dbg("auditlog: service:$service evnetid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
+		dbg("auditlog: service:$service eventid:$eventid start:[".ts_str($event_clock)."] changed:[".ts_str($clock)."] false_positive:$false_positive");
 
 		unless (ah_save_false_positive($tld, $service, $eventid, $event_clock,
 				$false_positive, $clock, \$later) == AH_SUCCESS)

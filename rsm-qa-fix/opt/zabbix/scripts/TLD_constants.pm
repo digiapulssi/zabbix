@@ -13,6 +13,7 @@ use constant false => 0;
 use constant LINUX_TEMPLATEID			=> 10001;	# Template "Template OS Linux"
 use constant APP_ZABBIX_PROXY_TEMPLATEID	=> 10058;	# Template "Template App Zabbix Proxy"
 use constant PROBE_ERRORS_TEMPLATEID		=> 99990;	# Template "Template Probe Errors"
+use constant RDAP_TEMPLATEID			=> 99980;	# Template "Template RDAP"
 
 use constant TEMPLATES_TLD_GROUPID		=> 240;		# Host group "Templates - TLD"
 use constant PROBES_GROUPID			=> 120;		# Host group "Probes"
@@ -145,6 +146,7 @@ our @EXPORT_OK = qw(
 			LINUX_TEMPLATEID
 			APP_ZABBIX_PROXY_TEMPLATEID
 			PROBE_ERRORS_TEMPLATEID
+			RDAP_TEMPLATEID
 			TEMPLATES_TLD_GROUPID
 			PROBES_GROUPID
 			PROBES_MON_GROUPID
@@ -181,7 +183,8 @@ our %EXPORT_TAGS = ( general => [ qw(true false) ],
 		     templates => [ qw(
 				LINUX_TEMPLATEID
 				APP_ZABBIX_PROXY_TEMPLATEID
-				PROBE_ERRORS_TEMPLATEID) ],
+				PROBE_ERRORS_TEMPLATEID
+				RDAP_TEMPLATEID) ],
 		     groups => [ qw(
 				TEMPLATES_TLD_GROUPID
 				PROBES_GROUPID

@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc14
+
+New features:
+..F.I..PS. [182] added initial implementation of RDAP (excludes SLA API and Data Export) (yurii, miks, dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc13
 
 Bug fixes:
@@ -109,6 +115,27 @@ New features:
 ....I..PS. [271] differentiated between scenarios when service is considered available (gleb)
 ....I..PS. [320] added new error codes for DNS and DNSSEC tests, made some of old codes obsolete (dimir, gleb)
 ....I..PS. [320] added new error codes for RDDS43 and RDDS80 tests, made some of old codes obsolete, stopped treating no reply from local resolver as service error (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc2
+
+New features:
+....I..... [354] implemented better solution for parallel execution of SLA API script to help with hanging (gleb)
+....I..... [sub-330] implemented better solution for parallel execution of Data Export script (gleb)
+
+Bug fixes:
+....I..... [363] fixed DNSSEC availability calculation to follow DNS logic, required successful number of Name Servers (dimir)
+....I..... [sub-326] fixed undefined subroutine call in Data Export script (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc1
+
+New features:
+....I..... [330] added functionality to exit with non-zero code if child fails to Data Export script (dimir)
+
+Bug fixes:
+..F.I..... [326] fixed representation of incident start and end times in the frontend and SLA API (gleb)
+....I...S. [337, sub-329] fixed server trying to apply database upgrade patch it was not supposed to apply and failing when started with a new database (gleb)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.6

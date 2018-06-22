@@ -142,13 +142,21 @@ else {
 
 $testsInfoTable = (new CTable(null))->addClass('incidents-info');
 
+if ($data['type'] == RSM_RDDS) {
+	$incidentTestingInterface = [BR(), new CSpan([bold(_('Current testing interface')), ':', SPACE, $data['testing_interfaces']])];
+}
+else {
+	$incidentTestingInterface = null;
+}
+
 $testsInfoTable->addRow([
 	[
 		new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
 		BR(),
 		new CSpan([bold(_('Service')), ':', SPACE, $data['slvItem']['name']]),
 		BR(),
-		new CSpan([bold(_('Incident type')), ':', SPACE, $incidentType])
+		new CSpan([bold(_('Incident type')), ':', SPACE, $incidentType]),
+		$incidentTestingInterface
 	],
 	[
 		(new CSpan(_s('%1$s Rolling week status', $this->data['slv'].'%')))->addClass('rolling-week-status'),
