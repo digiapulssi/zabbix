@@ -3417,7 +3417,24 @@ static int	zbx_split_url(const char *url, char **prefix, char **domain, char **p
 		return FAIL;
 	}
 
-	if (NULL != (tmp = strchr(url, '/')))
+	if (NULL != (tmp = strchr(url, ':')))
+	{
+		size_t	len = tmp - url;
+
+		zbx_free(*domain);
+		*domain = zbx_malloc(*domain, len + 1);
+		memcpy(*domain, url, len);
+		(*domain)[len] = '\0';
+
+		url = tmp + 1;
+
+		/* ignore port */
+		while (*url != '\0' && (0 != isdigit(*url) || *url == '/'))
+			url++;
+
+		*postfix = zbx_strdup(*postfix, url);
+	}
+	else if (NULL != (tmp = strchr(url, '/')))
 	{
 		size_t	len = tmp - url;
 
@@ -4048,6 +4065,8 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		zbx_rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
 		goto out;
 	}
+
+	zbx_rsm_infof(log_fd, "*** DIMIR RDAP splitted URL into: \"%s\", \"%s\", \"%s\"", prefix, domain_part, postfix);
 
 	/* resolve host to IPs */
 	if (SUCCEED != zbx_resolver_resolve_host(res, ZBX_RESOLVER_CHECK_ADBIT, domain_part, &ips, ipv_flags, log_fd,
