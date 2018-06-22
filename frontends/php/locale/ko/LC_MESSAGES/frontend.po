@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2017-11-17 05:00+0300\n"
+"PO-Revision-Date: 2018-04-10 07:07+0300\n"
 "Last-Translator: JONGKWON <jkkim.photo@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: ko\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1510887642.000000\n"
+"X-POOTLE-MTIME: 1523336874.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -4384,7 +4384,7 @@ msgstr "선택한 아이템을 비활성으로 하시겠습니까?"
 
 #: app/views/administration.mediatype.list.php:131
 msgid "Disable selected media types?"
-msgstr "선택한 연락 방법을 삭제하시겠습니까?"
+msgstr "선택한 연락 방법을 비활성으로 하시겠습니까?"
 
 #: include/views/configuration.trigger.prototype.list.php:158
 msgid "Disable selected trigger prototypes?"
