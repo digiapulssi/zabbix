@@ -1283,11 +1283,13 @@ define('RSM_ROLLWEEK_SECONDS',		'{$RSM.ROLLWEEK.SECONDS}');
 define('RSM_MIN_DNS_COUNT',			'{$RSM.DNS.AVAIL.MINNS}');
 define('RSM_DNS_UDP_DELAY',			'{$RSM.DNS.UDP.DELAY}');
 define('RSM_RDDS_DELAY',			'{$RSM.RDDS.DELAY}');
+define('RSM_RDDS_ENABLED',			'{$RSM.RDDS.ENABLED}');
 define('RSM_TLD_DNSSEC_ENABLED',	'{$RSM.TLD.DNSSEC.ENABLED}');
 define('RSM_TLD_EPP_ENABLED',		'{$RSM.TLD.EPP.ENABLED}');
 define('RSM_TLD_RDDS_ENABLED',		'{$RSM.TLD.RDDS.ENABLED}');
 define('RSM_TLD_RDDS43_ENABLED',	'{$RSM.TLD.RDDS43.ENABLED}');
 define('RSM_TLD_RDDS80_ENABLED',	'{$RSM.TLD.RDDS80.ENABLED}');
+define('RSM_RDAP_TLD_ENABLED',		'{$RDAP.TLD.ENABLED}');
 define('RSM_TLD_RDAP_ENABLED',		'{$RSM.TLD.RDAP.ENABLED}');
 define('RSM_SLV_NS_AVAIL',			'{$RSM.SLV.NS.AVAIL}');
 define('RSM_SLV_DNS_TCP_RTT',		'{$RSM.SLV.DNS.TCP.RTT}');
@@ -1304,6 +1306,7 @@ define('RSM_SLV_EPP_INFO',			'{$RSM.SLV.EPP.INFO}');
 define('RSM_EPP_INFO_RTT_LOW',		'{$RSM.EPP.INFO.RTT.LOW}');
 define('RSM_SLV_EPP_UPDATE',		'{$RSM.SLV.EPP.UPDATE}');
 define('RSM_EPP_UPDATE_RTT_LOW',	'{$RSM.EPP.UPDATE.RTT.LOW}');
+define('RDAP_BASE_URL',				'{$RDAP.BASE.URL}');
 
 // SLA monitoring rolling week items keys
 define('RSM_SLV_DNS_ROLLWEEK',		'rsm.slv.dns.rollweek');
@@ -1435,8 +1438,11 @@ define('PROBE_RDDS43_IP',			'rsm.rdds.43.ip[{$RSM.TLD}]');
 define('PROBE_RDDS43_RTT',			'rsm.rdds.43.rtt[{$RSM.TLD}]');
 define('PROBE_RDDS80_IP',			'rsm.rdds.80.ip[{$RSM.TLD}]');
 define('PROBE_RDDS80_RTT',			'rsm.rdds.80.rtt[{$RSM.TLD}]');
-define('PROBE_RDAP_IP',				'rsm.rdds.rdap.ip[{$RSM.TLD}]');
-define('PROBE_RDAP_RTT',			'rsm.rdds.rdap.rtt[{$RSM.TLD}]');
+//define('PROBE_RDAP_IP',			'rsm.rdds.rdap.ip[{$RSM.TLD}]');  // deprecated
+//define('PROBE_RDAP_RTT',			'rsm.rdds.rdap.rtt[{$RSM.TLD}]'); // deprecated
+define('PROBE_RDAP_ITEM',			'rdap[');
+define('PROBE_RDAP_IP',				'rdap.ip');
+define('PROBE_RDAP_RTT',			'rdap.rtt');
 
 // SLA monitoring NS names
 define('NS_NO_RESULT',	0);
@@ -1479,9 +1485,13 @@ define('RSM_G_TLD_GROUP',		'gTLD');
 define('RSM_OTHER_TLD_GROUP',	'otherTLD');
 define('RSM_TEST_GROUP',		'testTLD');
 
+define('RSM_RDDS_SUBSERVICE_RDDS', 'RDDS43/80');
+define('RSM_RDDS_SUBSERVICE_RDAP', 'RDAP');
+
 define('PROBES_MON_GROUPID',	130);
 define('RSM_SERVICE_AVAIL_VALUE_MAP', 110);
 define('RSM_DNS_RTT_ERRORS_VALUE_MAP', 120);
+define('RSM_RDDS_RTT_ERRORS_VALUE_MAP', 130);
 
 // if magic quotes on, then get rid of them
 if (get_magic_quotes_gpc()) {

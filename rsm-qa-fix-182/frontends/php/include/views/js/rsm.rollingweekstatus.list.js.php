@@ -17,6 +17,19 @@
 			}
 		});
 
+		jQuery('#checkAllSubservices').on('click', function() {
+			if (jQuery('#checkAllSubservicesValue').val() == 0) {
+				jQuery('#filter_rdap_subgroup').prop('checked', true);
+				jQuery('#filter_rdds_subgroup').prop('checked', true);
+				jQuery('#checkAllSubservicesValue').val(1);
+			}
+			else {
+				jQuery('#filter_rdap_subgroup').prop('checked', false);
+				jQuery('#filter_rdds_subgroup').prop('checked', false);
+				jQuery('#checkAllSubservicesValue').val(0);
+			}
+		});
+
 		jQuery('#checkAllGroups').on('click', function() {
 			if (jQuery('#checkAllGroupsValue').val() == 0) {
 				if (!jQuery('#filter_cctld_group').prop('disabled')) {

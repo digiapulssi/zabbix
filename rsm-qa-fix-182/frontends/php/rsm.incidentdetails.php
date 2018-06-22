@@ -218,13 +218,25 @@ if ($mainEvent) {
 				'output' => API_OUTPUT_EXTEND,
 				'hostids' => $template['templateid'],
 				'filter' => array(
-					'macro' => array(RSM_TLD_RDDS43_ENABLED, RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED)
+					'macro' => array(RSM_TLD_RDDS43_ENABLED, RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED,
+						RSM_RDAP_TLD_ENABLED, RSM_TLD_RDDS_ENABLED
+					)
 				)));
 
 				$data['tld']['subservices'] = [];
+				$ok_rdds_services = [];
 				foreach ($template_macros as $template_macro) {
 					$data['tld']['subservices'][$template_macro['macro']] = $template_macro['value'];
+
+					if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED && $template_macro['value'] == 1) {
+						$ok_rdds_services[] = 'RDDS';
+					}
+					elseif ($template_macro['macro'] === RSM_RDAP_TLD_ENABLED && $template_macro['value'] == 1) {
+						$ok_rdds_services[] = 'RDAP';
+					}
 				}
+
+				$data['testing_interfaces'] = implode(' / ', $ok_rdds_services);
 			break;
 		case RSM_SLV_EPP_ROLLWEEK:
 			$keys = array(CALCULATED_ITEM_EPP_FAIL, CALCULATED_ITEM_EPP_DELAY);

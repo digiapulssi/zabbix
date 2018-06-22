@@ -49,6 +49,8 @@ $fields = [
 	'filter_cctld_group' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
 	'filter_othertld_group' =>	[T_ZBX_STR, O_OPT,  null,	null,		null],
 	'filter_test_group' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_rdap_subgroup' =>	[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_rdds_subgroup' =>	[T_ZBX_STR, O_OPT,  null,	null,		null],
 	// ajax
 	'favobj' =>					[T_ZBX_STR, O_OPT, P_ACT,	null,		null],
 	'favref' =>					[T_ZBX_STR, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})'],
@@ -88,6 +90,8 @@ if (hasRequest('filter_set')) {
 	CProfile::update('web.rsm.rollingweekstatus.filter_cctld_group', getRequest('filter_cctld_group', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_othertld_group', getRequest('filter_othertld_group', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_test_group', getRequest('filter_test_group', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_rdap_subgroup', getRequest('filter_rdap_subgroup', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_rdds_subgroup', getRequest('filter_rdds_subgroup', 0), PROFILE_TYPE_INT);
 }
 elseif (hasRequest('filter_rst')) {
 	DBStart();
@@ -102,6 +106,8 @@ elseif (hasRequest('filter_rst')) {
 	CProfile::delete('web.rsm.rollingweekstatus.filter_cctld_group');
 	CProfile::delete('web.rsm.rollingweekstatus.filter_othertld_group');
 	CProfile::delete('web.rsm.rollingweekstatus.filter_test_group');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_rdap_subgroup');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_rdds_subgroup');
 	DBend();
 }
 
@@ -116,6 +122,8 @@ $data['filter_gtld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_gtl
 $data['filter_cctld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_cctld_group');
 $data['filter_othertld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_othertld_group');
 $data['filter_test_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_test_group');
+$data['filter_rdap_subgroup'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdap_subgroup');
+$data['filter_rdds_subgroup'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdds_subgroup');
 
 $sort_field = getRequest('sort', CProfile::get('web.rsm.rollingweekstatus.sort', 'name'));
 $sort_order = getRequest('sortorder', CProfile::get('web.rsm.rollingweekstatus.sortorder', ZBX_SORT_UP));
@@ -533,7 +541,7 @@ foreach ($tlds_by_server as $key => $hosts) {
 					'hostids' => $templateIds,
 					'filter' => array(
 						'macro' => array(RSM_TLD_DNSSEC_ENABLED, RSM_TLD_EPP_ENABLED, RSM_TLD_RDDS43_ENABLED,
-							RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED, RSM_TLD_RDDS_ENABLED
+							RSM_TLD_RDDS80_ENABLED, RSM_RDAP_TLD_ENABLED, RSM_TLD_RDDS_ENABLED
 						)
 					)
 				));
@@ -715,6 +723,32 @@ if ($data['filter_status']) {
 		elseif ($data['filter_status'] == 2 && $tld['status'] == HOST_STATUS_MONITORED ) {  // Current status == disabled
 			unset($data['tld'][$key]);
 		}
+	}
+}
+
+// Filter RDDS subservices.
+if ($data['filter_rdap_subgroup'] || $data['filter_rdds_subgroup']) {
+	foreach ($data['tld'] as $key => $tld) {
+		if (!array_key_exists(RSM_RDDS, $tld) || !array_key_exists('subservices', $tld[RSM_RDDS])) {
+			unset($data['tld'][$key]);
+			continue;
+		}
+
+		$subservices = $tld[RSM_RDDS]['subservices'];
+		$available = false;
+
+		if ($data['filter_rdap_subgroup'] && array_key_exists(RSM_RDAP_TLD_ENABLED, $subservices) && $subservices[RSM_RDAP_TLD_ENABLED]) {
+			$available = true;
+		}
+		elseif ($data['filter_rdds_subgroup'] && array_key_exists(RSM_TLD_RDDS_ENABLED, $subservices) && $subservices[RSM_TLD_RDDS_ENABLED]) {
+			$available = true;
+		}
+
+		if (!$available) {
+			unset($data['tld'][$key]);
+			continue;
+		}
+
 	}
 }
 
