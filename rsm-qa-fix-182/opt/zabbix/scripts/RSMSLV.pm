@@ -448,23 +448,35 @@ sub get_tlds
 
 	$service = defined($service) ? uc($service) : 'DNS';
 
-	my $sql;
+	my $sql = "select distinct h.host";
+
 
 	if ($service eq 'DNS')
 	{
-		$sql =
-			"select h.host".
-			" from hosts h,hosts_groups hg,groups g".
+		$sql .=	" from hosts h,hosts_groups hg,groups g".
 			" where h.hostid=hg.hostid".
 				" and hg.groupid=g.groupid".
 				" and g.name='TLDs'".
 				" and h.status=0";
 	}
+	elsif ($service eq 'RDDS')
+	{
+		$sql .= " from hosts h,hosts_groups hg,groups g,hosts h2,hostmacro hm".
+			" where h.hostid=hg.hostid".
+				" and hg.groupid=g.groupid".
+				" and h2.name=concat('Template ', h.host)".
+				" and g.name='TLDs'".
+				" and h2.hostid=hm.hostid".
+				" and (".
+					"hm.macro='{\$RSM.TLD.$service.ENABLED}' and hm.value!=0".
+						" or ".
+					"hm.macro='{\$RDAP.TLD.ENABLED}' and hm.value!=0".
+				")".
+				" and h.status=0";
+	}
 	else
 	{
-		$sql =
-			"select h.host".
-			" from hosts h,hosts_groups hg,groups g,hosts h2,hostmacro hm".
+		$sql .= " from hosts h,hosts_groups hg,groups g,hosts h2,hostmacro hm".
 			" where h.hostid=hg.hostid".
 				" and hg.groupid=g.groupid".
 				" and h2.name=concat('Template ', h.host)".
