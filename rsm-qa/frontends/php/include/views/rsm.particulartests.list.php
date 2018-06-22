@@ -26,17 +26,34 @@ if ($this->data['type'] == RSM_DNS || $this->data['type'] == RSM_DNSSEC) {
 		_('Probe ID'),
 		_('Row result')
 	];
+
+	$table = (new CTableInfo())->setHeader($headers);
 }
 elseif ($this->data['type'] == RSM_RDDS) {
-	$headers = [
-		_('Probe ID'),
-		_('RDDS43'),
-		_('IP'),
-		_('RTT'),
-		_('RDDS80'),
-		_('IP'),
-		_('RTT')
-	];
+	$rdds_43_base_url = array_key_exists('rdds_43_base_url', $data) ? $data['rdds_43_base_url'] : _('disabled');
+	$rdds_80_base_url = array_key_exists('rdds_80_base_url', $data) ? $data['rdds_80_base_url'] : _('disabled');
+	$rdap_base_url = array_key_exists('rdap_base_url', $data) ? $data['rdap_base_url'] : _('disabled');
+
+	$row_1 = (new CTag('tr', true))
+		->addItem((new CTag('th', true, _('Probe ID')))->setAttribute('rowspan', 2)->setAttribute('style', 'border-left: 0px;'))
+		->addItem((new CTag('th', true, [_('RDDS43'), ' ('.$rdds_43_base_url.')']))->setAttribute('colspan', 3)->setAttribute('class', 'center'))
+		->addItem((new CTag('th', true, [_('RDDS80'), ' ('.$rdds_80_base_url.')']))->setAttribute('colspan', 3)->setAttribute('class', 'center'))
+		->addItem((new CTag('th', true, [_('RDAP'), ' ('.$rdap_base_url.')']))->setAttribute('colspan', 3)->setAttribute('class', 'center'));
+
+	$row_2 = (new CTag('tr', true))
+		->addItem((new CTag('th', true, _('Status'))))
+		->addItem((new CTag('th', true, _('IP'))))
+		->addItem((new CTag('th', true, _('RTT'))))
+		->addItem((new CTag('th', true, _('Status'))))
+		->addItem((new CTag('th', true, _('IP'))))
+		->addItem((new CTag('th', true, _('RTT'))))
+		->addItem((new CTag('th', true, _('Status'))))
+		->addItem((new CTag('th', true, _('IP'))))
+		->addItem((new CTag('th', true, _('RTT'))));
+
+	$table = (new CTableInfo())
+		->setMultirowHeader([$row_1, $row_2], 10)
+		->setAttribute('class', 'list-table table-bordered-head');
 }
 else {
 	$headers = [
@@ -47,19 +64,21 @@ else {
 		_('Update'),
 		_('Info')
 	];
-}
 
-$table = (new CTableInfo())->setHeader($headers);
+	$table = (new CTableInfo())->setHeader($headers);
+}
 
 $down = (new CSpan(_('Down')))->addClass(ZBX_STYLE_RED);
 $offline = (new CSpan(_('Offline')))->addClass(ZBX_STYLE_GREY);
 $noResult = (new CSpan(_('No result')))->addClass(ZBX_STYLE_GREY);
+$disabled = (new CSpan(_('Disabled')))->addClass(ZBX_STYLE_GREY);
 $up = (new CSpan(_('Up')))->addClass(ZBX_STYLE_GREEN);
 
 $offlineProbes = 0;
 $noResultProbes = 0;
 $rdds80_above_max_rtt = 0;
 $rdds43_above_max_rtt = 0;
+$rdap_above_max_rtt = 0;
 
 if ($this->data['type'] == RSM_DNSSEC) {
 	$testTotal = 0;
@@ -169,7 +188,14 @@ foreach ($this->data['probes'] as $probe) {
 		}
 		elseif ($this->data['type'] == RSM_RDDS) {
 			// RDDS
-			if (!isset($probe['value']) || $probe['value'] === null) {
+			if (isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
+					&& $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
+				$rdds43 = $disabled;
+				$rdds80 = $disabled;
+				$rdds = ZBX_STYLE_GREY;
+				$noResultProbes++;
+			}
+			elseif (!isset($probe['value']) || $probe['value'] === null) {
 				$rdds43 = $noResult;
 				$rdds80 = $noResult;
 				$rdds = ZBX_STYLE_GREY;
@@ -222,6 +248,19 @@ foreach ($this->data['probes'] as $probe) {
 				$rdds = ZBX_STYLE_RED;
 				$downProbes++;
 			}
+
+			if (isset($this->data['tld']['macros'][RSM_RDDS_ENABLED]) && $this->data['tld']['macros'][RSM_RDDS_ENABLED] == 0) {
+				$rdap = $disabled;
+			}
+			elseif (!isset($probe['value_rdap']) || $probe['value_rdap'] === null) {
+				$rdap = $noResult;
+			}
+			elseif ($probe['value_rdap'] == 0) {
+				$rdap = $down;
+			}
+			elseif ($probe['value_rdap'] == 1) {
+				$rdap = $up;
+			}
 		}
 		else {
 			// EPP
@@ -270,6 +309,18 @@ foreach ($this->data['probes'] as $probe) {
 			$rdds80_rtt = '-';
 		}
 
+		if (isset($probe['rdap']['rtt'])) {
+			$rdap_rtt = (new CSpan($probe['rdap']['rtt']['value']))
+				->setAttribute('class', $rdap === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
+
+			if ($probe['rdap']['rtt']['description']) {
+				$rdap_rtt->setHint($probe['rdap']['rtt']['description']);
+			}
+		}
+		else {
+			$rdap_rtt = '-';
+		}
+
 		$row = [
 			(new CSpan($probe['name']))->addClass($rdds),
 			$rdds43,
@@ -281,7 +332,12 @@ foreach ($this->data['probes'] as $probe) {
 			(isset($probe['rdds80']['ip']) && $probe['rdds80']['ip'])
 				? (new CSpan($probe['rdds80']['ip']))->setAttribute('class', $rdds80 === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN)
 				: '-',
-			$rdds80_rtt
+			$rdds80_rtt,
+			$rdap,
+			(isset($probe['rdap']['ip']) && $probe['rdap']['ip'])
+				? (new CSpan($probe['rdap']['ip']))->setAttribute('class', $rdap === $down ? ZBX_STYLE_RED : ZBX_STYLE_GREEN)
+				: '-',
+			$rdap_rtt
 		];
 
 		/**
@@ -294,11 +350,14 @@ foreach ($this->data['probes'] as $probe) {
 		 * - If RTT is positive but $rddsNN is UP, it indicates that at the time of calculation, RTT was in the range of
 		 *	 allowed values - greater than 0 (was not an error) and smaller than max allowed RTT.
 		 */
-		if ($rdds80 === $down && array_key_exists('rtt', $probe['rdds80']) && $probe['rdds80']['rtt']['value'] > 0) {
+		if ($rdds80 === $down && isset($probe['rdds80']['rtt']) && $probe['rdds80']['rtt']['value'] > 0) {
 			$rdds80_above_max_rtt++;
 		}
-		if ($rdds43 === $down && array_key_exists('rtt', $probe['rdds43']) && $probe['rdds43']['rtt']['value'] > 0) {
+		if ($rdds43 === $down && isset($probe['rdds43']['rtt']) && $probe['rdds43']['rtt']['value'] > 0) {
 			$rdds43_above_max_rtt++;
+		}
+		if ($rdap === $down && isset($probe['rdap']['rtt']) && $probe['rdap']['rtt']['value'] > 0) {
+			$rdap_above_max_rtt++;
 		}
 	}
 	else {
@@ -325,7 +384,10 @@ if ($data['type'] == RSM_RDDS) {
 			array_key_exists('rdds43', $error) ? $error['rdds43'] : '',
 			'',
 			'',
-			array_key_exists('rdds80', $error) ? $error['rdds80'] : ''
+			array_key_exists('rdds80', $error) ? $error['rdds80'] : '',
+			'',
+			'',
+			array_key_exists('rdap', $error) ? $error['rdap'] : ''
 		]);
 	}
 
@@ -336,7 +398,10 @@ if ($data['type'] == RSM_RDDS) {
 		$rdds43_above_max_rtt,
 		'',
 		'',
-		$rdds80_above_max_rtt
+		$rdds80_above_max_rtt,
+		'',
+		'',
+		$rdap_above_max_rtt
 	]);
 }
 

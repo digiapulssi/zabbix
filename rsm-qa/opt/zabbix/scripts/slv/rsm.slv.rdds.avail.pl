@@ -15,6 +15,7 @@ use RSMSLV;
 use TLD_constants qw(:api);
 
 my $cfg_key_in = 'rsm.rdds[{$RSM.TLD}';
+my $cfg_rdap_key_in = 'rdap[';
 my $cfg_key_out = 'rsm.slv.rdds.avail';
 my $cfg_value_type = ITEM_VALUE_TYPE_UINT64;
 
@@ -58,6 +59,8 @@ else
 	$tlds_ref = get_tlds('RDDS');	# todo phase 1: change to ENABLED_RDDS
 }
 
+my $rdap_items = get_templated_items_like("RDAP", $cfg_rdap_key_in);;
+
 while ($period > 0)
 {
 	my ($from, $till, $value_ts) = get_interval_bounds($interval, $clock);
@@ -83,8 +86,12 @@ while ($period > 0)
 			next unless (opt('dry-run'));
 		}
 
-		process_slv_avail($tld, $cfg_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			\@online_probe_names, \&check_item_values, $cfg_value_type);
+		# get all rtt items
+		my $rdds_key_in = get_templated_items_like($tld, $cfg_key_in);
+		push(@{$rdds_key_in}, $_) foreach (@{$rdap_items});
+
+		process_slv_avail($tld, $rdds_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
+			\@online_probe_names, \&check_probe_values, $cfg_value_type);
 	}
 
 	# unset TLD (for the logs)
@@ -97,18 +104,30 @@ slv_exit(SUCCESS);
 
 # SUCCESS - no values or at least one successful value
 # E_FAIL  - all values unsuccessful
-sub check_item_values
+sub check_probe_values
 {
-	use constant RDDS_UP	=> 1;	# "Up" from "RSM RDDS result" value mapping
-
 	my $values_ref = shift;
 
-	return SUCCESS if (scalar(@$values_ref) == 0);
+	# E. g.:
+	#
+	# {
+	#       rsm.rdds[{$RSM.TLD},"rdds43.example.com","web.whois.example.com"] => [1],
+	#       rdap[...] => [0, 0],
+	# }
 
-	foreach (@$values_ref)
+	if (scalar(keys(%{$values_ref})) == 0)
 	{
-		return SUCCESS if ($_ == RDDS_UP);
+		fail("THIS SHOULD NEVER HAPPEN rsm.slv.rdds.avail.pl:check_probe_values()");
 	}
 
-	return E_FAIL;
+	# all of received items (rsm.rdds, rdap) must have status UP in order for RDDS to be considered UP
+	foreach my $statuses (values(%{$values_ref}))
+	{
+		foreach (@{$statuses})
+		{
+			return E_FAIL if ($_ != UP);
+		}
+	}
+
+	return SUCCESS;
 }

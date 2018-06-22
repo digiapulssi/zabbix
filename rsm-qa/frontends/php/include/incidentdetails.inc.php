@@ -31,7 +31,7 @@ function getFirstUintValue($itemId, $startTime) {
 		'SELECT h.value'.
 		' FROM history_uint h'.
 		' WHERE h.itemid='.$itemId.
-			' AND h.clock<='.$startTime.
+			' AND h.clock>='.$startTime.
 		' ORDER BY h.clock ASC',
 		1
 	)));

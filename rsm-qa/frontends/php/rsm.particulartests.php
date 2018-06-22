@@ -173,6 +173,58 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		exit;
 	}
 
+	// Get TLD level macros.
+	if ($data['type'] == RSM_RDDS) {
+		$tld_templates = API::Template()->get(array(
+			'output' => [],
+			'filter' => array(
+				'host' => ['Template '.$data['tld']['host']]
+			),
+			'preservekeys' => true
+		));
+
+		$template_macros = API::UserMacro()->get(array(
+			'output' => ['macro', 'value'],
+			'hostids' => array_keys($tld_templates),
+			'filter' => array(
+				'macro' => array(RSM_TLD_RDDS_ENABLED, RDAP_BASE_URL, RSM_RDAP_TLD_ENABLED)
+			)
+		));
+
+		$data['tld']['macros'] = [];
+		foreach ($template_macros as $template_macro) {
+			if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED) {
+				$hist_value = API::History()->get([
+					'output' => API_OUTPUT_EXTEND,
+					'time_from' => $testTimeFrom,
+					'time_till' => $testTimeTill,
+					'filter' => RDDS_ENABLED,
+					'limit' => 1
+				]);
+
+				$template_macro['value'] = $hist_value ? $hist_value[0]['value'] : $template_macro['value'];
+			}
+			elseif ($template_macro['macro'] === RSM_RDAP_TLD_ENABLED) {
+				$hist_value = API::History()->get([
+					'output' => API_OUTPUT_EXTEND,
+					'time_from' => $testTimeFrom,
+					'time_till' => $testTimeTill,
+					'filter' => RDAP_ENABLED,
+					'limit' => 1
+				]);
+
+				$template_macro['value'] = $hist_value ? $hist_value[0]['value'] : $template_macro['value'];
+			}
+
+			$data['tld']['macros'][$template_macro['macro']] = $template_macro['value'];
+		}
+
+		if (!array_key_exists(RSM_RDAP_TLD_ENABLED, $data['tld']['macros'])
+				|| $data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 1) {
+			$data['rdap_base_url'] = $data['tld']['macros'][RDAP_BASE_URL];
+		}
+	}
+
 	// get slv item
 	$slvItems = API::Item()->get([
 		'itemids' => $data['slvItemId'],
@@ -263,7 +315,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	$hostIds = [];
 	foreach ($hosts as $host) {
-		$pos = strrpos($host['host'], " - mon");
+		$pos = strrpos($host['host'], ' - mon');
 		if ($pos === false) {
 			show_error_message(_s('Unexpected host name "%1$s" among probe hosts.', $host['host']));
 			continue;
@@ -311,27 +363,87 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	$hosts = empty($hostNames) ? [] : API::Host()->get([
 		'output' => ['hostid', 'host', 'name'],
+		'selectParentTemplates' => ['templateid'],
 		'filter' => [
 			'host' => $hostNames
 		],
 		'preservekeys' => true
 	]);
 
+	// Get hostids; Find probe level macros.
 	$hostIds = [];
-	foreach ($hosts as $host) {
-		$hostIds[] = $host['hostid'];
+	$hosted_templates = [];
+	$hosts_templates = [];
+	foreach ($hosts as &$host) {
+		$hostIds[$host['hostid']] = $host['hostid'];
+
+		$host['macros'] = [];
+		foreach ($host['parentTemplates'] as $parent_template) {
+			$hosts_templates[$host['hostid']][$parent_template['templateid']] = true;
+			$hosted_templates[$parent_template['templateid']] = true;
+		}
+		unset($host['parentTemplates']);
 	}
+	unset($host);
+
+	$probe_macros = API::UserMacro()->get(array(
+		'output' => ['hostid', 'macro', 'value'],
+		'hostids' => array_merge(array_keys($hosted_templates), $hostIds),
+		'filter' => array(
+			'macro' => RSM_RDDS_ENABLED
+		)
+	));
+
+	foreach ($probe_macros as $probe_macro) {
+		$hostid = null;
+
+		if (array_key_exists($probe_macro['hostid'], $hosts_templates)) {
+			$hostid = $probe_macro['hostid'];
+		}
+		else {
+			foreach ($hosts_templates as $host => $templates) {
+				if (array_key_exists($probe_macro['hostid'], $templates)) {
+					$hostid = $host;
+				}
+			}
+		}
+
+		if ($hostid && array_key_exists($hostid, $hosts)) {
+			$hosts[$hostid]['macros'][$probe_macro['macro']] = $probe_macro['value'];
+
+			// No need to select items for disabled probes.
+			if ($probe_macro['macro'] === RSM_RDDS_ENABLED && $probe_macro['value'] == 0) {
+				unset($hostIds[$hostid]);
+			}
+		}
+	}
+	unset($hosts_templates, $hosted_templates);
 
 	// get only used items
 	if ($data['type'] == RSM_DNS || $data['type'] == RSM_DNSSEC) {
 		$probeItemKey = ' AND (i.key_ LIKE ('.zbx_dbstr(PROBE_DNS_UDP_ITEM_RTT.'%').') OR i.key_='.zbx_dbstr(PROBE_DNS_UDP_ITEM).')';
 	}
 	elseif ($data['type'] == RSM_RDDS) {
-		$probeItemKey = ' AND (i.key_ LIKE ('.zbx_dbstr(PROBE_RDDS_ITEM.'%').')'.
-			' OR '.dbConditionString('i.key_',
-				[PROBE_RDDS43_IP, PROBE_RDDS43_RTT, PROBE_RDDS80_IP, PROBE_RDDS80_RTT]
-			).
-		')';
+		$items_to_check = [];
+		$probeItemKey = [];
+
+		if (!isset($data['tld']['macros'][RSM_RDAP_TLD_ENABLED]) || $data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 1) {
+			$items_to_check[] = PROBE_RDAP_IP;
+			$items_to_check[] = PROBE_RDAP_RTT;
+			$probeItemKey[] = 'i.key_ LIKE ('.zbx_dbstr(PROBE_RDAP_ITEM.'%').')';
+		}
+		if (!isset($data['tld']['macros'][RSM_TLD_RDDS_ENABLED]) || $data['tld']['macros'][RSM_TLD_RDDS_ENABLED] == 1) {
+			$items_to_check[] = PROBE_RDDS43_IP;
+			$items_to_check[] = PROBE_RDDS43_RTT;
+			$items_to_check[] = PROBE_RDDS80_IP;
+			$items_to_check[] = PROBE_RDDS80_RTT;
+			$probeItemKey[] = 'i.key_ LIKE ('.zbx_dbstr(PROBE_RDDS_ITEM.'%').')';
+		}
+
+		if ($items_to_check) {
+			$probeItemKey[] = dbConditionString('i.key_', $items_to_check);
+		}
+		$probeItemKey = $probeItemKey ? ' AND ('.implode(' OR ', $probeItemKey).')' : '';
 	}
 	else {
 		$probeItemKey = ' AND (i.key_ LIKE ('.zbx_dbstr(PROBE_EPP_RESULT.'%').')'.
@@ -339,104 +451,129 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 
 	// get items
-	$items = DBselect(
+	$items = ($probeItemKey !== '') ? DBselect(
 		'SELECT i.itemid,i.key_,i.hostid,i.value_type,i.valuemapid,i.units'.
 		' FROM items i'.
 		' WHERE '.dbConditionInt('i.hostid', $hostIds).
 			' AND i.status='.ITEM_STATUS_ACTIVE.
 			$probeItemKey
-	);
+	) : null;
 
 	$nsArray = [];
 
 	// get items value
-	while ($item = DBfetch($items)) {
-		$itemValue = API::History()->get([
-			'itemids' => $item['itemid'],
-			'time_from' => $testTimeFrom,
-			'time_till' => $testTimeTill,
-			'history' => $item['value_type'],
-			'output' => API_OUTPUT_EXTEND
-		]);
+	if ($items) {
+		while ($item = DBfetch($items)) {
+			$itemValue = API::History()->get([
+				'itemids' => $item['itemid'],
+				'time_from' => $testTimeFrom,
+				'time_till' => $testTimeTill,
+				'history' => $item['value_type'],
+				'output' => API_OUTPUT_EXTEND
+			]);
 
-		$itemValue = reset($itemValue);
+			$itemValue = reset($itemValue);
 
-		if ($data['type'] == RSM_DNS && $item['key_'] === PROBE_DNS_UDP_ITEM) {
-			$hosts[$item['hostid']]['result'] = $itemValue ? $itemValue['value'] : null;
-		}
-		elseif ($data['type'] == RSM_DNS && mb_substr($item['key_'], 0, 16) == PROBE_DNS_UDP_ITEM_RTT) {
-			preg_match('/^[^\[]+\[([^\]]+)]$/', $item['key_'], $matches);
-			$nsValues = explode(',', $matches[1]);
+			if ($data['type'] == RSM_DNS && $item['key_'] === PROBE_DNS_UDP_ITEM) {
+				$hosts[$item['hostid']]['result'] = $itemValue ? $itemValue['value'] : null;
+			}
+			elseif ($data['type'] == RSM_DNS && mb_substr($item['key_'], 0, 16) == PROBE_DNS_UDP_ITEM_RTT) {
+				preg_match('/^[^\[]+\[([^\]]+)]$/', $item['key_'], $matches);
+				$nsValues = explode(',', $matches[1]);
 
-			if (!$itemValue) {
-				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_NO_RESULT;
-			}
-			elseif ($itemValue['value'] < $udpRtt
-					&& ($itemValue['value'] > ZBX_EC_DNS_UDP_NS_NOREPLY
-					|| $itemValue['value'] == ZBX_EC_DNS_UDP_RES_NOREPLY || $itemValue['value'] == ZBX_EC_DNS_RES_NOREPLY)) {
-				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_UP;
-			}
-			else {
-				$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_DOWN;
-			}
-		}
-		elseif ($data['type'] == RSM_DNSSEC && mb_substr($item['key_'], 0, 16) == PROBE_DNS_UDP_ITEM_RTT) {
-			if (!isset($hosts[$item['hostid']]['value'])) {
-				$hosts[$item['hostid']]['value']['ok'] = 0;
-				$hosts[$item['hostid']]['value']['fail'] = 0;
-				$hosts[$item['hostid']]['value']['total'] = 0;
-				$hosts[$item['hostid']]['value']['noResult'] = 0;
-			}
-
-			if ($itemValue) {
-				if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
-						|| $itemValue['value'] == ZBX_EC_DNS_NS_ERRSIG || $itemValue['value'] == ZBX_EC_DNS_RES_NOADBIT) {
-					$hosts[$item['hostid']]['value']['fail']++;
+				if (!$itemValue) {
+					$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_NO_RESULT;
+				}
+				elseif ($itemValue['value'] < $udpRtt
+						&& ($itemValue['value'] > ZBX_EC_DNS_UDP_NS_NOREPLY
+						|| $itemValue['value'] == ZBX_EC_DNS_UDP_RES_NOREPLY || $itemValue['value'] == ZBX_EC_DNS_RES_NOREPLY)) {
+					$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_UP;
 				}
 				else {
-					$hosts[$item['hostid']]['value']['ok']++;
+					$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_DOWN;
 				}
 			}
-			else {
-				$hosts[$item['hostid']]['value']['noResult']++;
-			}
-
-			$hosts[$item['hostid']]['value']['total']++;
-		}
-		elseif ($data['type'] == RSM_RDDS) {
-			if ($item['key_'] == PROBE_RDDS43_IP) {
-				$hosts[$item['hostid']]['rdds43']['ip'] = $itemValue['value'];
-			}
-			elseif ($item['key_'] == PROBE_RDDS43_RTT) {
-				if ($itemValue['value']) {
-					$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
-					$hosts[$item['hostid']]['rdds43']['rtt'] = [
-						'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
-						'value' => $rtt_value
-					];
+			elseif ($data['type'] == RSM_DNSSEC && mb_substr($item['key_'], 0, 16) == PROBE_DNS_UDP_ITEM_RTT) {
+				if (!isset($hosts[$item['hostid']]['value'])) {
+					$hosts[$item['hostid']]['value']['ok'] = 0;
+					$hosts[$item['hostid']]['value']['fail'] = 0;
+					$hosts[$item['hostid']]['value']['total'] = 0;
+					$hosts[$item['hostid']]['value']['noResult'] = 0;
 				}
-			}
-			elseif ($item['key_'] == PROBE_RDDS80_IP) {
-				$hosts[$item['hostid']]['rdds80']['ip'] = $itemValue['value'];
-			}
-			elseif ($item['key_'] == PROBE_RDDS80_RTT) {
-				if ($itemValue['value']) {
-					$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
-					$hosts[$item['hostid']]['rdds80']['rtt'] = [
-						'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
-						'value' => $rtt_value
-					];
+
+				if ($itemValue) {
+					if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
+							|| $itemValue['value'] == ZBX_EC_DNS_NS_ERRSIG || $itemValue['value'] == ZBX_EC_DNS_RES_NOADBIT) {
+						$hosts[$item['hostid']]['value']['fail']++;
+					}
+					else {
+						$hosts[$item['hostid']]['value']['ok']++;
+					}
 				}
-			}
-			else {
-				$hosts[$item['hostid']]['value'] = $itemValue['value'];
-			}
+				else {
+					$hosts[$item['hostid']]['value']['noResult']++;
+				}
 
-			// Count result for table bottom summary rows.
-			if ($item['key_'] == PROBE_RDDS43_RTT || $item['key_'] == PROBE_RDDS80_RTT) {
-				$column = $item['key_'] == PROBE_RDDS43_RTT ? 'rdds43' : 'rdds80';
+				$hosts[$item['hostid']]['value']['total']++;
+			}
+			elseif ($data['type'] == RSM_RDDS) {
+				if ($item['key_'] == PROBE_RDDS43_IP) {
+					$hosts[$item['hostid']]['rdds43']['ip'] = $itemValue['value'];
+				}
+				elseif ($item['key_'] == PROBE_RDDS43_RTT) {
+					if ($itemValue['value']) {
+						//$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+						$rtt_value = convert_units(['value' => $itemValue['value']]);
+						$hosts[$item['hostid']]['rdds43']['rtt'] = [
+							'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+							'value' => $rtt_value
+						];
+					}
+				}
+				elseif ($item['key_'] == PROBE_RDDS80_IP) {
+					$hosts[$item['hostid']]['rdds80']['ip'] = $itemValue['value'];
+				}
+				elseif ($item['key_'] == PROBE_RDDS80_RTT) {
+					if ($itemValue['value']) {
+						//$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+						$rtt_value = convert_units(['value' => $itemValue['value']]);
+						$hosts[$item['hostid']]['rdds80']['rtt'] = [
+							'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+							'value' => $rtt_value
+						];
+					}
+				}
+				elseif ($item['key_'] == PROBE_RDAP_IP) {
+					$hosts[$item['hostid']]['rdap']['ip'] = $itemValue['value'];
+				}
+				elseif ($item['key_'] == PROBE_RDAP_RTT) {
+					if ($itemValue['value']) {
+						//$rtt_value = convert_units(['value' => $itemValue['value'], 'units' => $item['units']]);
+						$rtt_value = convert_units(['value' => $itemValue['value']]);
+						$hosts[$item['hostid']]['rdap']['rtt'] = [
+							'description' => $rtt_value < 0 ? applyValueMap($rtt_value, $item['valuemapid']) : null,
+							'value' => $rtt_value
+						];
+					}
+				}
+				elseif (substr($item['key_'], 0, strlen(PROBE_RDAP_ITEM)) === PROBE_RDAP_ITEM) {
+					$hosts[$item['hostid']]['value_rdap'] = $itemValue['value'];
+				}
+				elseif (substr($item['key_'], 0, strlen(PROBE_RDDS_ITEM)) === PROBE_RDDS_ITEM) {
+					if (!array_key_exists(RSM_TLD_RDDS_ENABLED, $data['tld']['macros'])
+							|| $data['tld']['macros'][RSM_TLD_RDDS_ENABLED] == 1) {
+						preg_match('/^[^\[]+\[([^\]]+)]$/', $item['key_'], $matches);
+						list($tld_macros, $rdds_43, $rdds_80) = explode(',', $matches[1]);
 
-				if (0 > $itemValue['value']) {
+						$data['rdds_43_base_url'] = trim($rdds_43, '"');
+						$data['rdds_80_base_url'] = trim($rdds_80, '"');
+					}
+
+					$hosts[$item['hostid']]['value'] = $itemValue['value'];
+				}
+
+				// Count result for table bottom summary rows.
+				if ($item['key_'] == PROBE_RDAP_RTT && 0 > $itemValue['value']) {
 					$error_code = (int)$itemValue['value'];
 
 					if (!array_key_exists($error_code, $data['errors'])) {
@@ -444,35 +581,53 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 							'description' => applyValueMap($error_code, $item['valuemapid'])
 						];
 					}
-					if (!array_key_exists($column, $data['errors'][$error_code])) {
-						$data['errors'][$error_code][$column] = 0;
+					if (!array_key_exists('rdap', $data['errors'][$error_code])) {
+						$data['errors'][$error_code]['rdap'] = 0;
 					}
 
-					$data['errors'][$error_code][$column]++;
+					$data['errors'][$error_code]['rdap']++;
+				}
+				elseif ($item['key_'] == PROBE_RDDS43_RTT || $item['key_'] == PROBE_RDDS80_RTT) {
+					$column = $item['key_'] == PROBE_RDDS43_RTT ? 'rdds43' : 'rdds80';
+
+					if (0 > $itemValue['value']) {
+						$error_code = (int)$itemValue['value'];
+
+						if (!array_key_exists($error_code, $data['errors'])) {
+							$data['errors'][$error_code] = [
+								'description' => applyValueMap($error_code, $item['valuemapid'])
+							];
+						}
+						if (!array_key_exists($column, $data['errors'][$error_code])) {
+							$data['errors'][$error_code][$column] = 0;
+						}
+
+						$data['errors'][$error_code][$column]++;
+					}
 				}
 			}
-		}
-		elseif ($data['type'] == RSM_EPP) {
-			if ($item['key_'] == PROBE_EPP_IP) {
-				$hosts[$item['hostid']]['ip'] = $itemValue['value'];
-			}
-			elseif ($item['key_'] == PROBE_EPP_UPDATE) {
-				$hosts[$item['hostid']]['update'] = $itemValue['value']
-					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
-					: null;
-			}
-			elseif ($item['key_'] == PROBE_EPP_INFO) {
-				$hosts[$item['hostid']]['info'] = $itemValue['value']
-					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
-					: null;
-			}
-			elseif ($item['key_'] == PROBE_EPP_LOGIN) {
-				$hosts[$item['hostid']]['login'] = $itemValue['value']
-					? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
-					: null;
-			}
-			else {
-				$hosts[$item['hostid']]['value'] = $itemValue['value'];
+			elseif ($data['type'] == RSM_EPP) {
+				if ($item['key_'] == PROBE_EPP_IP) {
+					$hosts[$item['hostid']]['ip'] = $itemValue['value'];
+				}
+				elseif ($item['key_'] == PROBE_EPP_UPDATE) {
+					$hosts[$item['hostid']]['update'] = $itemValue['value']
+						? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+						: null;
+				}
+				elseif ($item['key_'] == PROBE_EPP_INFO) {
+					$hosts[$item['hostid']]['info'] = $itemValue['value']
+						? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+						: null;
+				}
+				elseif ($item['key_'] == PROBE_EPP_LOGIN) {
+					$hosts[$item['hostid']]['login'] = $itemValue['value']
+						? applyValueMap(convert_units(['value' => $itemValue['value'], 'units' => $item['units']]), $item['valuemapid'])
+						: null;
+				}
+				else {
+					$hosts[$item['hostid']]['value'] = $itemValue['value'];
+				}
 			}
 		}
 	}
