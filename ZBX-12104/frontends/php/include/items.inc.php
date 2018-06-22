@@ -1016,33 +1016,56 @@ function item_get_history($db_item, $clock, $ns) {
 			' WHERE itemid='.zbx_dbstr($db_item['itemid']).
 				' AND clock='.zbx_dbstr($clock).
 				' AND ns='.zbx_dbstr($ns);
-
-	$row = DBfetch(DBselect($sql, 1));
-
-	if ($row) {
-		return $row['value'];
+	if (null != ($row = DBfetch(DBselect($sql, 1)))) {
+		$value = $row['value'];
+	}
+	if ($value != null) {
+		return $value;
 	}
 
-	$sql = 'SELECT value'.
+	$max_clock = 0;
+
+	$sql = 'SELECT DISTINCT clock'.
 			' FROM '.$table.
 			' WHERE itemid='.zbx_dbstr($db_item['itemid']).
 				' AND clock='.zbx_dbstr($clock).
-				' AND ns<'.zbx_dbstr($ns).
-			' ORDER BY ns DESC';
+				' AND ns<'.zbx_dbstr($ns);
+	if (null != ($row = DBfetch(DBselect($sql)))) {
+		$max_clock = $row['clock'];
+	}
+	if ($max_clock == 0) {
+		$sql = 'SELECT MAX(clock) AS clock'.
+				' FROM '.$table.
+				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
+					' AND clock<'.zbx_dbstr($clock);
+		if (null != ($row = DBfetch(DBselect($sql)))) {
+			$max_clock = $row['clock'];
+		}
+	}
+	if ($max_clock == 0) {
+		return $value;
+	}
 
-	$row = DBfetch(DBselect($sql, 1));
-
-	if (!$row) {
+	if ($clock == $max_clock) {
 		$sql = 'SELECT value'.
 				' FROM '.$table.
 				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-					' AND clock BETWEEN '.zbx_dbstr($clock - ZBX_HISTORY_PERIOD).' AND '.zbx_dbstr($clock).
-				' ORDER BY clock DESC, ns DESC';
-
-		$row = DBfetch(DBselect($sql, 1));
+					' AND clock='.zbx_dbstr($clock).
+					' AND ns<'.zbx_dbstr($ns);
+	}
+	else {
+		$sql = 'SELECT value'.
+				' FROM '.$table.
+				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
+					' AND clock='.zbx_dbstr($max_clock).
+				' ORDER BY itemid,clock desc,ns desc';
 	}
 
-	return $row ? $row['value'] : $value;
+	if (null != ($row = DBfetch(DBselect($sql, 1)))) {
+		$value = $row['value'];
+	}
+
+	return $value;
 }
 
 /**
