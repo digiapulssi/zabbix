@@ -223,7 +223,8 @@ class CHistoryManager {
 				[
 					'range' => [
 						'clock' => [
-							'lt' => $clock
+							'lt' => $clock,
+							'gte' => $clock - ZBX_HISTORY_PERIOD
 						]
 					]
 				]
@@ -286,7 +287,8 @@ class CHistoryManager {
 			$sql = 'SELECT MAX(clock) AS clock'.
 					' FROM '.$table.
 					' WHERE itemid='.zbx_dbstr($item['itemid']).
-						' AND clock<'.zbx_dbstr($clock);
+						' AND clock<'.zbx_dbstr($clock).
+						' AND clock>='.zbx_dbstr($clock - ZBX_HISTORY_PERIOD);
 
 			if (($row = DBfetch(DBselect($sql))) !== false) {
 				$max_clock = $row['clock'];
