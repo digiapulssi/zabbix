@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2018-03-01 21:24+0300\n"
+"PO-Revision-Date: 2018-06-22 18:13+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: uk\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1519932294.000000\n"
+"X-POOTLE-MTIME: 1529684019.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -9111,7 +9111,7 @@ msgstr "Елемент даних \"%1$s\" не існує або у вас не
 #: include/items.inc.php:537
 #, c-format
 msgid "Item \"%1$s\" has master item and cannot be copied."
-msgstr ""
+msgstr "Елемент даних \"%1$s\" має мастер-елемент та не може бути скопійовано."
 
 #: include/classes/import/CConfigurationImport.php:699
 #, c-format
@@ -9248,11 +9248,11 @@ msgstr "Елемент не було оновлено. Будь ласка вв�
 
 #: include/classes/api/services/CItemGeneral.php:303
 msgid "Item will not be refreshed. Specified update interval requires having at least one either flexible or scheduling interval."
-msgstr ""
+msgstr "Елемент даних не може бути оновлено. Вказаний інтервал оновлення повинен мати принаймні один гнучкий або запланований інтервал."
 
 #: include/classes/api/services/CItemGeneral.php:308
 msgid "Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used."
-msgstr ""
+msgstr "Елемент даних не буде оновлено. Інтервал оновлення повинен бути між 1s та 1d. Також може використовуватись запланований/гнучкий інтервал."
 
 #: include/classes/api/services/CDashboard.php:727
 #, c-format

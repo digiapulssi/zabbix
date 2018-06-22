@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2018-01-24 09:13+0300\n"
+"PO-Revision-Date: 2018-04-08 12:28+0300\n"
 "Last-Translator: Yaron <sh.yaron@gmail.com>\n"
 "Language-Team: none\n"
 "Language: he\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
-"X-POOTLE-MTIME: 1516777991.000000\n"
+"X-POOTLE-MTIME: 1523183327.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -1407,7 +1407,7 @@ msgstr "לא ניתן להכיר בתקלה: %1$s."
 #: include/classes/api/services/CMap.php:1468
 #, c-format
 msgid "Cannot add \"%1$s\" element of the map \"%2$s\" due to circular reference."
-msgstr ""
+msgstr "לא ניתן להוסיף את הפריט „%1$s” מהמפה „%2$s” עקב הפניה מעגלית."
 
 #: include/classes/api/services/CHttpTest.php:710
 #, c-format
@@ -9116,7 +9116,7 @@ msgstr "אבטיפוס הפריט „%1$s” כבר קיים תחת „%2$s”, 
 #: include/classes/api/services/CItemGeneral.php:1006
 #, c-format
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", linked to another rule."
-msgstr ""
+msgstr "אבטיפוס הפריט „%1$s” כבר קיים על „%2$s”, עם קישור לכלל אחר."
 
 #: include/classes/api/services/CItemPrototype.php:36
 #, c-format

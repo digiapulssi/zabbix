@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2018-03-01 17:20+0300\n"
+"PO-Revision-Date: 2018-06-15 02:59+0300\n"
 "Last-Translator: Alexey <dotneft@gmail.com>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: ru\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1519917638.000000\n"
+"X-POOTLE-MTIME: 1529024392.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -11532,7 +11532,7 @@ msgstr "Количество проблем"
 
 #: include/views/monitoring.sysmap.edit.php:144
 msgid "Number of problems and expand most critical one"
-msgstr "Количество проблем и раскрывать наиболее критическую"
+msgstr "Количество проблем и раскрывать наиболее критичную"
 
 #: include/classes/items/CHelpItems.php:719
 msgid "Number of processor cores on VMware hypervisor, <url> - VMware service URL, <uuid> - VMware hypervisor host name"

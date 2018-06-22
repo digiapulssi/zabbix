@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2018-03-01 21:25+0300\n"
+"PO-Revision-Date: 2018-06-22 17:53+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
-"X-POOTLE-MTIME: 1519932320.000000\n"
+"X-POOTLE-MTIME: 1529682828.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -3063,7 +3063,7 @@ msgstr "Color"
 #: include/validate.inc.php:208 jsLoader.php:181
 #, c-format
 msgid "Colour \"%1$s\" is not correct: expecting hexadecimal colour code (6 symbols)."
-msgstr "Colour \"%1$s\" is not correct: expecting hexadecimal colour code (6 symbols)."
+msgstr "Color \"%1$s\" is not correct: expecting hexadecimal color code (6 symbols)."
 
 #: include/views/js/monitoring.sysmaps.js.php:689
 msgid "Colour (OK)"
@@ -9044,7 +9044,7 @@ msgstr "Item \"%1$s\" does not exist or you have no access to this item"
 #: include/items.inc.php:537
 #, c-format
 msgid "Item \"%1$s\" has master item and cannot be copied."
-msgstr ""
+msgstr "Item \"%1$s\" has master item and cannot be copied."
 
 #: include/classes/import/CConfigurationImport.php:699
 #, c-format
@@ -9177,11 +9177,11 @@ msgstr "Item will not be refreshed. Please enter a correct update interval."
 
 #: include/classes/api/services/CItemGeneral.php:303
 msgid "Item will not be refreshed. Specified update interval requires having at least one either flexible or scheduling interval."
-msgstr ""
+msgstr "Item will not be refreshed. Specified update interval requires having at least one either flexible or scheduling interval."
 
 #: include/classes/api/services/CItemGeneral.php:308
 msgid "Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used."
-msgstr ""
+msgstr "Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used."
 
 #: include/classes/api/services/CDashboard.php:727
 #, c-format
@@ -9573,7 +9573,7 @@ msgstr "Line"
 
 #: include/views/js/monitoring.sysmaps.js.php:515
 msgid "Line colour"
-msgstr "Line colour"
+msgstr "Line color"
 
 #: include/views/js/monitoring.sysmaps.js.php:495
 msgid "Line type"
