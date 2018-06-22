@@ -2012,7 +2012,7 @@ static int	DBpatch_3000217(void)
 	DBfree_result(result);
 
 	result = DBselect(
-			"select templateid"
+			"select distinct templateid"
 			" from hosts_templates"
 			" where hostid in ("
 					"select hostid"
