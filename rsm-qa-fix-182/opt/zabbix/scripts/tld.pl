@@ -700,6 +700,20 @@ sub create_items_rdds {
 					      'delay' => $cfg_global_macros->{'{$RSM.RDDS.DELAY}'},
                                               'valuemapid' => rsm_value_mappings->{'rsm_rdds_result'}};
     really(create_item($options));
+
+    $item_key = 'rdds.enabled';
+
+    $options = {
+	    'name' => 'RDDS enabled/disabled',
+	    'key_'=> $item_key,
+	    'status' => ITEM_STATUS_ACTIVE,
+	    'hostid' => $templateid,
+	    'params' => '{$RSM.TLD.RDDS.ENABLED}',
+	    'delay' => 60,
+	    'type' => ITEM_TYPE_CALCULATED,
+	    'value_type' => ITEM_VALUE_TYPE_UINT64};
+
+    really(create_item($options));
 }
 
 sub create_items_epp {
