@@ -1429,6 +1429,70 @@ out:
 	return ret;
 }
 
+static void	DBpatch_3050121_name_update(char **name, char *params)
+{
+	int i;
+	char *str, param[ITEM_KEY_LEN + 1], key[3]= {'$','1','\0'};
+	size_t l, r;
+
+	for (i = 1; 9 >= i && SUCCEED == get_key_param(params, i, param, sizeof(param)); i++)
+	{
+		r = 0;
+
+		while ('\0' != param[0] && NULL != (str = strstr(*name + r, key)))
+		{
+			l = str - *name;
+			r = l + 1;
+			zbx_replace_string(name, l, &r, param);
+		}
+
+		key[1]++;
+	}
+
+	if (ITEM_NAME_LEN < strlen(*name))
+		*name[ITEM_NAME_LEN] = '\0';
+}
+
+static int	DBpatch_3050121(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	char		*sql = NULL;
+	size_t		sql_alloc = 0, sql_offset = 0;
+	char		*item_name = NULL;
+	int		ret = SUCCEED;
+
+	result = DBselect("select itemid,name,key_ from items i where i.name like '%%$1%%';\n");
+
+	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		item_name = zbx_strdup(item_name, row[1]);
+		DBpatch_3050121_name_update(&item_name, row[2]);
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "update items i set i.name='");
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%s' where i.itemid=%s;\n", item_name, row[0]);
+
+		if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
+			break;
+	}
+
+	if (SUCCEED == ret)
+	{
+		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+		if (16 < sql_offset && ZBX_DB_OK > DBexecute("%s", sql)) /* in ORACLE always present begin..end; */
+			ret = FAIL;
+	}
+
+	zbx_free(item_name);
+	DBfree_result(result);
+	zbx_free(sql);
+
+	return ret;
+}
+
+
 #endif
 
 DBPATCH_START(3050)
@@ -1552,5 +1616,6 @@ DBPATCH_ADD(3050117, 0, 1)
 DBPATCH_ADD(3050118, 0, 1)
 DBPATCH_ADD(3050119, 0, 1)
 DBPATCH_ADD(3050120, 0, 1)
+DBPATCH_ADD(3050121, 0, 1)
 
 DBPATCH_END()
