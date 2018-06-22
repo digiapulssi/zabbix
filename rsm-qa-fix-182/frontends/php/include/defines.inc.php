@@ -1307,6 +1307,8 @@ define('RSM_EPP_INFO_RTT_LOW',		'{$RSM.EPP.INFO.RTT.LOW}');
 define('RSM_SLV_EPP_UPDATE',		'{$RSM.SLV.EPP.UPDATE}');
 define('RSM_EPP_UPDATE_RTT_LOW',	'{$RSM.EPP.UPDATE.RTT.LOW}');
 define('RDAP_BASE_URL',				'{$RDAP.BASE.URL}');
+define('RDDS_ENABLED',				'rdds.enabled');
+define('RDAP_ENABLED',				'rdap.enabled');
 
 // SLA monitoring rolling week items keys
 define('RSM_SLV_DNS_ROLLWEEK',		'rsm.slv.dns.rollweek');

@@ -193,6 +193,29 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 		$data['tld']['macros'] = [];
 		foreach ($template_macros as $template_macro) {
+			if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED) {
+				$hist_value = API::History()->get([
+					'output' => API_OUTPUT_EXTEND,
+					'time_from' => $testTimeFrom,
+					'time_till' => $testTimeTill,
+					'filter' => RDDS_ENABLED,
+					'limit' => 1
+				]);
+
+				$template_macro['value'] = $hist_value ? $hist_value[0]['value'] : $template_macro['value'];
+			}
+			elseif ($template_macro['macro'] === RSM_RDAP_TLD_ENABLED) {
+				$hist_value = API::History()->get([
+					'output' => API_OUTPUT_EXTEND,
+					'time_from' => $testTimeFrom,
+					'time_till' => $testTimeTill,
+					'filter' => RDAP_ENABLED,
+					'limit' => 1
+				]);
+
+				$template_macro['value'] = $hist_value ? $hist_value[0]['value'] : $template_macro['value'];
+			}
+
 			$data['tld']['macros'][$template_macro['macro']] = $template_macro['value'];
 		}
 
