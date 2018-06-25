@@ -3402,24 +3402,24 @@ ZBX_DEFINE_HTTP_ERROR_TO(RDAP)
 #undef ZBX_DEFINE_HTTP_ERROR_TO
 
 /* Splits provided URL into preceding "https://" or "http://", domain name and the rest, frees memory pointed by      */
-/* prefix, domain and postfix pointers and allocates new storage. It is caller responsibility to free them after use. */
-static int	zbx_split_url(const char *url, char **prefix, char **domain, char **postfix, char *err, size_t err_size)
+/* proto, domain and prefix pointers and allocates new storage. It is caller responsibility to free them after use. */
+static int	zbx_split_url(const char *url, char **proto, char **domain, char **prefix, char *err, size_t err_size)
 {
 	const char	*tmp;
 
 	if (0 == strncmp(url, "https://", ZBX_CONST_STRLEN("https://")))
 	{
-		*prefix = zbx_strdup(*prefix, "https://");
+		*proto = zbx_strdup(*proto, "https://");
 		url += ZBX_CONST_STRLEN("https://");
 	}
 	else if (0 == strncmp(url, "http://", ZBX_CONST_STRLEN("http://")))
 	{
-		*prefix = zbx_strdup(*prefix, "http://");
+		*proto = zbx_strdup(*proto, "http://");
 		url += ZBX_CONST_STRLEN("http://");
 	}
 	else
 	{
-		zbx_strlcpy(err, "unrecognized prefix in URL", err_size);
+		zbx_snprintf(err, err_size, "unrecognized protocol in URL \"url\"", url);
 		return FAIL;
 	}
 
@@ -3438,7 +3438,7 @@ static int	zbx_split_url(const char *url, char **prefix, char **domain, char **p
 		while (*url != '\0' && (0 != isdigit(*url) || *url == '/'))
 			url++;
 
-		*postfix = zbx_strdup(*postfix, url);
+		*prefix = zbx_strdup(*prefix, url);
 	}
 	else if (NULL != (tmp = strchr(url, '/')))
 	{
@@ -3448,12 +3448,12 @@ static int	zbx_split_url(const char *url, char **prefix, char **domain, char **p
 		*domain = zbx_malloc(*domain, len + 1);
 		memcpy(*domain, url, len);
 		(*domain)[len] = '\0';
-		*postfix = zbx_strdup(*postfix, tmp);
+		*prefix = zbx_strdup(*prefix, tmp);
 	}
 	else
 	{
 		*domain = zbx_strdup(*domain, url);
-		*postfix = zbx_strdup(*postfix, "");
+		*prefix = zbx_strdup(*prefix, "");
 	}
 
 	return SUCCEED;
@@ -3927,9 +3927,9 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	FILE			*log_fd;
 	DC_ITEM			ip_item, rtt_item;
 	char			*domain, *test_domain, *base_url, *maxredirs_str, *rtt_limit_str, *tld_enabled_str,
-				*probe_enabled_str, *ipv4_enabled_str, *ipv6_enabled_str, *res_ip, *prefix = NULL,
-				*domain_part = NULL, *postfix = NULL, *full_url = NULL, *value_str = NULL,
-				err[ZBX_ERR_BUF_SIZE], is_ipv4;
+				*probe_enabled_str, *ipv4_enabled_str, *ipv6_enabled_str, *res_ip, *proto = NULL,
+				*domain_part = NULL, *prefix = NULL, *full_url = NULL, *value_str = NULL,
+				err[ZBX_ERR_BUF_SIZE], is_ipv4, rdap_prefix[64];
 	const char		*ip = NULL;
 	size_t			value_alloc = 0;
 	unsigned int		extras;
@@ -4071,7 +4071,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (0 != ipv6_enabled)
 		ipv_flags |= ZBX_FLAG_IPV6_ENABLED;
 
-	if (SUCCEED != zbx_split_url(base_url, &prefix, &domain_part, &postfix, err, sizeof(err)))
+	if (SUCCEED != zbx_split_url(base_url, &proto, &domain_part, &prefix, err, sizeof(err)))
 	{
 		rtt = ZBX_EC_INTERNAL;
 		zbx_rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
@@ -4105,10 +4105,15 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		goto out;
 	}
 
-	if (0 != is_ipv4)
-		full_url = zbx_dsprintf(full_url, "%s%s%s/domain/%s", prefix, ip, postfix, test_domain);
+	if (prefix[strlen(prefix) - 1] == '/')
+		zbx_strlcpy(rdap_prefix, "domain", sizeof(rdap_prefix));
 	else
-		full_url = zbx_dsprintf(full_url, "%s[%s]%s/domain/%s", prefix, ip, postfix, test_domain);
+		zbx_strlcpy(rdap_prefix, "/domain", sizeof(rdap_prefix));
+
+	if (0 != is_ipv4)
+		full_url = zbx_dsprintf(full_url, "%s%s%s%s/%s", proto, ip, prefix, rdap_prefix, test_domain);
+	else
+		full_url = zbx_dsprintf(full_url, "%s[%s]%s%s/%s", proto, ip, prefix, rdap_prefix, test_domain);
 
 	zbx_rsm_infof(log_fd, "Testing \"%s\" (%s) using URL \"%s\".", base_url, ip, full_url);
 
@@ -4179,9 +4184,9 @@ out:
 			ldns_resolver_free(res);
 	}
 
-	zbx_free(prefix);
+	zbx_free(proto);
 	zbx_free(domain_part);
-	zbx_free(postfix);
+	zbx_free(prefix);
 	zbx_free(full_url);
 	zbx_free(value_str);
 	zbx_free(data.buf);
