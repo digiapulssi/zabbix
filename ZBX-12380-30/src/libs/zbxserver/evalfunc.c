@@ -55,6 +55,45 @@ static const char	*zbx_type_string(zbx_value_type_t type)
 
 /******************************************************************************
  *                                                                            *
+ * Function: regexp_pattern_as_array_validate                                 *
+ *                                                                            *
+ * Purpose: check that regexp 'pattern' does not start from '['.              *
+ *          Regexp function can accept pattern like "[abc]" in quotes only.   *
+ *                                                                            *
+ * Parameters: params - [IN] all function parameters                          *
+ *             num    - [IN] position of regexp 'pattern' in params           *
+ *             error  - [OUT] the error message                               *
+ *                                                                            *
+ * Return value: SUCCEED - regexp pattern is acceptable                       *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ * Comments: The num = 2 is acceptable when first parameter is numeric        *
+ *                                                                            *
+ ******************************************************************************/
+static int	regexp_pattern_as_array_validate(const char * params, int num, char **error)
+{
+	const char *s = params;
+
+	if (2 == num)
+	{
+		s = strchr(params, ',');
+		s++;
+	}
+
+	while(' ' == *s)
+		s++;
+
+	if ('[' == *s)
+	{
+		*error = zbx_dsprintf(*error, "%s parameter is not supported", 1 == num ? "first" : "second");
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: get_function_parameter_int                                       *
  *                                                                            *
  * Purpose: get the value of sec|#num trigger function parameter              *
@@ -250,7 +289,7 @@ static int	evaluate_LOGEVENTID(char *value, DC_ITEM *item, const char *function,
 	if (ITEM_VALUE_TYPE_LOG != item->value_type)
 		goto out;
 
-	if (1 < num_param(parameters))
+	if (1 < num_param(parameters) || SUCCEED != regexp_pattern_as_array_validate(parameters, 1, error))
 		goto out;
 
 	if (SUCCEED != get_function_parameter_str(item->host.hostid, parameters, 1, &arg1))
@@ -1737,6 +1776,12 @@ static int	evaluate_STR(char *value, DC_ITEM *item, const char *function, const 
 
 	if (2 < (nparams = num_param(parameters)))
 		goto out;
+
+	if ((ZBX_FUNC_IREGEXP == func || ZBX_FUNC_REGEXP == func)
+			&& SUCCEED != regexp_pattern_as_array_validate(parameters, 1 , error))
+	{
+		goto out;
+	}
 
 	if (SUCCEED != get_function_parameter_str(item->host.hostid, parameters, 1, &arg1))
 		goto out;
