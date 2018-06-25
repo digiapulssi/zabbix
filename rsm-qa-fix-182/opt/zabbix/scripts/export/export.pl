@@ -2229,8 +2229,9 @@ sub __find_probe_key_by_itemid
 	my $itemid = shift;
 	my $items_ref = shift;
 
-	while (my ($pr, $itemids_ref) = each(%{$items_ref}))
+	foreach my $pr (keys %{$items_ref})
 	{
+		my $itemids_ref = %{$items_ref}{$pr};
 		return ($pr, $itemids_ref->{$itemid}) if (exists($itemids_ref->{$itemid}));
 	}
 
