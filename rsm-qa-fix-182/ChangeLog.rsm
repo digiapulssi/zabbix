@@ -1,8 +1,14 @@
-Changes for rsm1.1.0rc14
+Changes for rsm1.1.0rc15
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for rsm1.1.0rc14
+
+New features:
+..F.I..PS. [182] added initial implementation of RDAP (excludes SLA API and Data Export) (yurii, miks, dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc13
