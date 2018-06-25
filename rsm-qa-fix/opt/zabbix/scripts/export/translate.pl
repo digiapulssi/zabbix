@@ -169,7 +169,7 @@ sub __translate_tests_line
 	# $test_type is service interface, e. g.: dns, rdds43, rdds80
 	if ($valuemaps{$test_type}->{$test_rtt})
 	{
-		$test_rtt .= " (" . $valuemaps{$service_str}->{$test_rtt} . ")";
+		$test_rtt .= " (" . $valuemaps{$test_type}->{$test_rtt} . ")";
 	}
 	elsif ($test_rtt >= 0)
 	{

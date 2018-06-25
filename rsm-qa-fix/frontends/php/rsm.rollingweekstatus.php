@@ -713,10 +713,10 @@ foreach ($tlds_by_server as $key => $hosts) {
 if ($data['filter_status']) {
 	foreach ($data['tld'] as $key => $tld) {
 		if ($data['filter_status'] == 1) { // Current status == fail
-			if ((!array_key_exists(RSM_DNS, $tld) || !$tld[RSM_DNS]['trigger'])
-					&& (!array_key_exists(RSM_DNSSEC, $tld) || !$tld[RSM_DNSSEC]['trigger'])
-					&& (!array_key_exists(RSM_RDDS, $tld) || !$tld[RSM_RDDS]['trigger'])
-					&& (!array_key_exists(RSM_EPP, $tld) || !$tld[RSM_EPP]['trigger'])) {
+			if ((!$data['filter_dns'] || (!array_key_exists(RSM_DNS, $tld) || !$tld[RSM_DNS]['trigger']))
+					&& (!$data['filter_dnssec'] || (!array_key_exists(RSM_DNSSEC, $tld) || !$tld[RSM_DNSSEC]['trigger']))
+					&& (!$data['filter_rdds'] || (!array_key_exists(RSM_RDDS, $tld) || !$tld[RSM_RDDS]['trigger']))
+					&& (!$data['filter_epp'] || (!array_key_exists(RSM_EPP, $tld) || !$tld[RSM_EPP]['trigger']))) {
 				unset($data['tld'][$key]);
 			}
 		}
@@ -748,7 +748,6 @@ if ($data['filter_rdap_subgroup'] || $data['filter_rdds_subgroup']) {
 			unset($data['tld'][$key]);
 			continue;
 		}
-
 	}
 }
 

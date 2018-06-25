@@ -14,9 +14,9 @@ use TLD_constants qw(:ec :api :items);
 use ApiHelper;
 use Parallel::ForkManager;
 
-use constant JSON_RDDS_SUBSERVICE => 'subService';
 use constant JSON_RDDS_43 => 'RDDS43';
 use constant JSON_RDDS_80 => 'RDDS80';
+use constant JSON_RDDS_RDAP => 'RDAP';
 
 use constant JSON_VALUE_UP => 'Up';
 use constant JSON_VALUE_DOWN => 'Down';
@@ -943,15 +943,15 @@ foreach (@server_keys)
 									}
 
 									my $tr_ref = $matches->{$clock};
-									$tr_ref->{+JSON_RDDS_SUBSERVICE}->{$subservice}->{$probe}->{'status'} = undef;	# the status is set later
+									$tr_ref->{'subservices'}->{$subservice}->{$probe}->{'status'} = undef;	# the status is set later
 
 									if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
 									{
-										$tr_ref->{+JSON_RDDS_SUBSERVICE}->{$subservice}->{$probe}->{'status'} = PROBE_OFFLINE_STR;
+										$tr_ref->{'subservices'}->{$subservice}->{$probe}->{'status'} = PROBE_OFFLINE_STR;
 									}
 									else
 									{
-										push(@{$tr_ref->{+JSON_RDDS_SUBSERVICE}->{$subservice}->{$probe}->{'details'}}, $endvalues_ref);
+										push(@{$tr_ref->{'subservices'}->{$subservice}->{$probe}->{'details'}}, $endvalues_ref);
 									}
 								}
 							}
@@ -962,7 +962,7 @@ foreach (@server_keys)
 						{
 							foreach my $tr_ref (@test_results)
 							{
-								my $subservices_ref = $tr_ref->{+JSON_RDDS_SUBSERVICE};
+								my $subservices_ref = $tr_ref->{'subservices'};
 
 								foreach my $subservice (keys(%$subservices_ref))
 								{
@@ -972,7 +972,7 @@ foreach (@server_keys)
 							}
 						}
 
-						# get results from probes: working services (rdds43, rdds80)
+						# get results from probes: # 0 - down, 1 - up, 2 - rdds43 only, 3 - rdds80 only
 						my $itemids_ref = __get_status_itemids($tld, $services{$service}{'key_status'});
 						my $statuses_ref = __get_probe_statuses($itemids_ref, $values_from, $values_till);
 
@@ -997,7 +997,12 @@ foreach (@server_keys)
 								'probes'	=> []
 							};
 
-							my $subservices_ref = $tr_ref->{+JSON_RDDS_SUBSERVICE};
+							my $rdap_ref = {
+								'interface'	=> JSON_RDDS_RDAP,
+								'probes'	=> []
+							};
+
+							my $subservices_ref = $tr_ref->{'subservices'};
 
 							# set test status on the Probe level
 							foreach my $subservice (keys(%$subservices_ref))
@@ -1031,7 +1036,22 @@ foreach (@server_keys)
 											$probe_ref->{'testData'});
 									}
 
-									push(@{($subservice eq JSON_RDDS_43 ? $rdds43_ref : $rdds80_ref)->{'probes'}}, $probe_ref);
+									if ($subservice eq JSON_RDDS_43)
+									{
+										push(@{$rdds43_ref->{'probes'}}, $probe_ref);
+									}
+									elsif ($subservice eq JSON_RDDS_80)
+									{
+										push(@{$rdds80_ref->{'probes'}}, $probe_ref);
+									}
+									elsif ($subservice eq JSON_RDDS_RDAP)
+									{
+										push(@{$rdap_ref->{'probes'}}, $probe_ref);
+									}
+									else
+									{
+										fail("unknown $service subservice: \"$subservice\"");
+									}
 								}
 							}
 
@@ -1040,7 +1060,7 @@ foreach (@server_keys)
 								$rdds80_ref
 							];
 
-							delete($tr_ref->{+JSON_RDDS_SUBSERVICE});
+							delete($tr_ref->{'subservices'});
 
 							if (opt('dry-run'))
 							{
