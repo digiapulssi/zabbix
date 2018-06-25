@@ -324,7 +324,6 @@ typedef struct
 	const char	*tls_subject;
 	ZBX_DC_PSK	*tls_dc_psk;
 #endif
-	const char	*proxy_address;
 	const char	*error;
 	const char	*snmp_error;
 	const char	*ipmi_error;
@@ -360,12 +359,13 @@ typedef struct
 	int		proxy_data_nextcheck;
 	int		proxy_tasks_nextcheck;
 	int		nextcheck;
-	int		timediff;
 	int		lastaccess;
 	int		last_cfg_error_time;	/* time when passive proxy misconfiguration error was seen */
 						/* or 0 if no error */
 	int		version;
 	unsigned char	location;
+	unsigned char	auto_compress;
+	const char	*proxy_address;
 }
 ZBX_DC_PROXY;
 

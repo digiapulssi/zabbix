@@ -21,13 +21,15 @@
 
 $widget = (new CWidget())
 	->setTitle(_('Host prototypes'))
-	->setControls((new CTag('nav', true,
-		(new CList())
-			->addItem(new CRedirectButton(_('Create host prototype'), (new CUrl())->setArgument('form', 'create')
-				->getUrl()
+	->setControls(
+		(new CTag('nav', true,
+			(new CList())->addItem(new CRedirectButton(_('Create host prototype'),
+				(new CUrl('host_prototypes.php'))
+					->setArgument('form', 'create')
+					->setArgument('parent_discoveryid', $data['parent_discoveryid'])
+					->getUrl()
 			))
-		))
-			->setAttribute('aria-label', _('Content controls'))
+		))->setAttribute('aria-label', _('Content controls'))
 	)
 	->addItem(
 		get_header_host_table('hosts', $this->data['discovery_rule']['hostid'], $this->data['parent_discoveryid'])
@@ -156,10 +158,10 @@ $itemForm->addItem([
 	new CActionButtonList('action', 'group_hostid',
 		[
 			'hostprototype.massenable' => ['name' => _('Create enabled'),
-				'confirm' => _('Enable selected host prototypes?')
+				'confirm' => _('Create hosts from selected prototypes as enabled?')
 			],
 			'hostprototype.massdisable' => ['name' => _('Create disabled'),
-				'confirm' => _('Disable selected host prototypes?')
+				'confirm' => _('Create hosts from selected prototypes as disabled?')
 			],
 			'hostprototype.massdelete' => ['name' => _('Delete'),
 				'confirm' => _('Delete selected host prototypes?')

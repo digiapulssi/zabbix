@@ -22,23 +22,26 @@
 $widget = (new CWidget())->setTitle(_('Screens'));
 $form = (new CForm('get'))->cleanItems();
 
-$content_control = (new CList())
-	->addItem(new CSubmit('form', _('Create screen')));
+$content_control = (new CList())->addItem(new CSubmit('form', _('Create screen')));
 
 if ($data['templateid']) {
-	$form->addVar('templateid', $data['templateid']);
+	$form->addItem((new CVar('templateid', $data['templateid']))->removeId());
 	$widget->addItem(get_header_host_table('screens', $data['templateid']));
 }
 else {
 	$form->addItem((new CList())
 		->addItem(
-			new CComboBox('config', 'screens.php', 'redirect(this.options[this.selectedIndex].value);', [
+			(new CComboBox('config', 'screens.php', 'redirect(this.options[this.selectedIndex].value);', [
 				'screens.php' => _('Screens'),
 				'slides.php' => _('Slide shows')
-			])
+			]))->removeId()
 		)
 	);
-	$content_control->addItem((new CButton('form', _('Import')))->onClick('redirect("screen.import.php?rules_preset=screen")'));
+	$content_control->addItem(
+		(new CButton('form', _('Import')))
+			->onClick('redirect("screen.import.php?rules_preset=screen")')
+			->removeId()
+	);
 }
 
 $form->addItem($content_control);
@@ -49,12 +52,16 @@ $widget->setControls((new CTag('nav', true, $form))
 // filter
 if (!$data['templateid']) {
 	$widget->addItem(
-		(new CFilter('web.screenconf.filter.state'))
-			->addColumn((new CFormList())->addRow(_('Name'),
-				(new CTextBox('filter_name', $data['filter']['name']))
-					->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
-					->setAttribute('autofocus', 'autofocus')
-			))
+		(new CFilter())
+			->setProfile($data['profileIdx'])
+			->setActiveTab($data['active_tab'])
+			->addFilterTab(_('Filter'), [
+				(new CFormList())->addRow(_('Name'),
+					(new CTextBox('filter_name', $data['filter']['name']))
+						->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
+						->setAttribute('autofocus', 'autofocus')
+				)
+			])
 	);
 }
 

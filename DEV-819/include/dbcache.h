@@ -262,11 +262,13 @@ typedef struct
 	int		last_cfg_error_time;	/* time when passive proxy misconfiguration error was seen */
 						/* or 0 if no error */
 	int		version;
+	int		lastaccess;
 	char		addr_orig[INTERFACE_ADDR_LEN_MAX];
 	char		port_orig[INTERFACE_PORT_LEN_MAX];
 	char		*addr;
 	unsigned short	port;
 
+	unsigned char	auto_compress;
 	unsigned char	tls_connect;
 	unsigned char	tls_accept;
 
@@ -652,7 +654,6 @@ int	DCconfig_get_proxypoller_nextcheck(void);
 #define ZBX_PROXY_DATA_NEXTCHECK	0x02
 #define ZBX_PROXY_TASKS_NEXTCHECK	0x04
 void	DCrequeue_proxy(zbx_uint64_t hostid, unsigned char update_nextcheck, int proxy_conn_err);
-void	DCconfig_set_proxy_timediff(zbx_uint64_t hostid, const zbx_timespec_t *timediff);
 int	DCcheck_proxy_permissions(const char *host, const zbx_socket_t *sock, zbx_uint64_t *hostid, char **error);
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
@@ -709,6 +710,7 @@ void	zbx_db_condition_clean(DB_CONDITION *condition);
 void	zbx_conditions_eval_clean(zbx_hashset_t *uniq_conditions);
 
 int	DCget_hosts_availability(zbx_vector_ptr_t *hosts, int *ts);
+void	DCtouch_hosts_availability(const zbx_vector_uint64_t *hostids);
 
 void	zbx_host_availability_init(zbx_host_availability_t *availability, zbx_uint64_t hostid);
 void	zbx_host_availability_clean(zbx_host_availability_t *availability);
@@ -762,8 +764,10 @@ typedef struct
 zbx_agent_value_t;
 
 void	zbx_dc_items_update_nextcheck(DC_ITEM *items, zbx_agent_value_t *values, int *errcodes, size_t values_num);
-void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess, zbx_vector_uint64_pair_t *proxy_diff);
 int	zbx_dc_get_host_interfaces(zbx_uint64_t hostid, DC_INTERFACE2 **interfaces, int *n);
+
+void	zbx_dc_update_proxy(zbx_proxy_diff_t *diff);
+void	zbx_dc_get_proxy_lastaccess(zbx_vector_uint64_pair_t *lastaccess);
 
 typedef struct
 {

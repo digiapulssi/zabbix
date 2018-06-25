@@ -52,7 +52,7 @@ $queueRequests = [
 	QUEUE_OVERVIEW_BY_PROXY => CZabbixServer::QUEUE_OVERVIEW_BY_PROXY,
 	QUEUE_DETAILS => CZabbixServer::QUEUE_DETAILS
 ];
-$queueData = $zabbixServer->getQueue($queueRequests[$config], get_cookie('zbx_sessionid'), QUEUE_DETAIL_ITEM_COUNT);
+$queueData = $zabbixServer->getQueue($queueRequests[$config], get_cookie(ZBX_SESSION_NAME), QUEUE_DETAIL_ITEM_COUNT);
 
 // check for errors error
 if ($zabbixServer->getError()) {
@@ -68,11 +68,13 @@ $widget = (new CWidget())
 		(new CForm('get'))
 			->cleanItems()
 			->addItem((new CList())
-				->addItem((new CComboBox('config', $config, 'submit();', [
-					QUEUE_OVERVIEW => _('Overview'),
-					QUEUE_OVERVIEW_BY_PROXY => _('Overview by proxy'),
-					QUEUE_DETAILS => _('Details')
-				])))
+				->addItem(
+					(new CComboBox('config', $config, 'submit();', [
+						QUEUE_OVERVIEW => _('Overview'),
+						QUEUE_OVERVIEW_BY_PROXY => _('Overview by proxy'),
+						QUEUE_DETAILS => _('Details')
+					]))->removeId()
+				)
 			)
 		]))
 			->setAttribute('aria-label', _('Content controls'))

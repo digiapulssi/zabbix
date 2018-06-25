@@ -35,28 +35,31 @@ $widget = (new CWidget())
 				])
 			),
 		(new CTag('nav', true, (new CList())
-			->addItem(new CRedirectButton(_('Create host'), (new CUrl())
-				->removeArgument('hostid')
+			->addItem(new CRedirectButton(_('Create host'), (new CUrl('hosts.php'))
 				->setArgument('form', 'create')
 				->getUrl()
 			))
-			->addItem((new CButton('form', _('Import')))->onClick('redirect("conf.import.php?rules_preset=host")'))
+			->addItem(
+				(new CButton('form', _('Import')))
+					->onClick('redirect("conf.import.php?rules_preset=host")')
+					->removeId()
+			)
 		))
 			->setAttribute('aria-label', _('Content controls'))
 	]));
 
 // filter
-$filter = (new CFilter('web.hosts.filter.state'))
-	->addColumn(
+$filter = (new CFilter())
+	->setProfile($data['profileIdx'])
+	->setActiveTab($data['active_tab'])
+	->addFilterTab(_('Filter'), [
 		(new CFormList())
-			->addRow(
-				_('Name'),
+			->addRow(_('Name'),
 				(new CTextBox('filter_host', $data['filter']['host']))
 					->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
 					->setAttribute('autofocus', 'autofocus')
 			)
-			->addRow(
-				_('Monitored by'),
+			->addRow(_('Monitored by'),
 				(new CRadioButtonList('filter_monitored_by', (int) $data['filter']['monitored_by']))
 					->addValue(_('Any'), ZBX_MONITORED_BY_ANY)
 					->addValue(_('Server'), ZBX_MONITORED_BY_SERVER)
@@ -64,10 +67,10 @@ $filter = (new CFilter('web.hosts.filter.state'))
 					->setModern(true)
 			)
 			->addRow(
-				_('Proxy'),
+				(new CLabel(_('Proxy'), 'filter_proxyids__ms')),
 				(new CMultiSelect([
 					'name' => 'filter_proxyids[]',
-					'objectName' => 'proxies',
+					'object_name' => 'proxies',
 					'data' => $data['proxies_ms'],
 					'popup' => [
 						'parameters' => [
@@ -75,29 +78,23 @@ $filter = (new CFilter('web.hosts.filter.state'))
 							'srcfld1' => 'proxyid',
 							'srcfld2' => 'host',
 							'dstfrm' => 'zbx_filter',
-							'dstfld1' => 'filter_proxyids_',
-							'multiselect' => '1'
+							'dstfld1' => 'filter_proxyids_'
 						]
 					]
 				]))->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH),
 				'filter_proxyids_row'
-			)
-	)
-	->addColumn(
+			),
 		(new CFormList())
-			->addRow(
-				_('DNS'),
+			->addRow(_('DNS'),
 				(new CTextBox('filter_dns', $data['filter']['dns']))->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
 			)
-			->addRow(
-				_('IP'),
+			->addRow(_('IP'),
 				(new CTextBox('filter_ip', $data['filter']['ip']))->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
 			)
-			->addRow(
-				_('Port'),
+			->addRow(_('Port'),
 				(new CTextBox('filter_port', $data['filter']['port']))->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
 			)
-	);
+	]);
 
 $widget->addItem($filter);
 

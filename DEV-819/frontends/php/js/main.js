@@ -403,12 +403,12 @@ var jqBlink = {
 			// changing visibility state
 			jQuery.each(objects, function() {
 				if (typeof jQuery(this).data('toggleClass') !== 'undefined') {
-					jQuery(this).toggleClass(jQuery(this).data('toggleClass'));
+					jQuery(this)[jqBlink.shown ? 'removeClass' : 'addClass'](jQuery(this).data('toggleClass'));
 				}
 				else {
 					jQuery(this).css('visibility', jqBlink.shown ? 'hidden' : 'visible');
 				}
-			})
+			});
 
 			// reversing the value of indicator attribute
 			this.shown = !this.shown;
@@ -455,28 +455,32 @@ var hintBox = {
 
 	/**
 	 * Initialize hint box event handlers.
-	 * Event 'remove' is triggered on widget update by updateWidgetContent() and widget remove by deleteWidget().
+	 *
+	 * Event 'remove' is triggered on:
+	 * - content update using flickerfreeScreen.refreshHtml()
+	 * - widget update by updateWidgetContent()
+	 * - widget remove by deleteWidget().
 	 */
 	bindEvents: function () {
 		jQuery(document).on('keydown click mouseenter mouseleave remove', '[data-hintbox=1]', function (e) {
 			var target = jQuery(this);
 
 			switch (e.type) {
-				case 'mouseenter' :
+				case 'mouseenter':
 					hintBox.showHint(e, this, target.next('.hint-box').html(), target.data('hintbox-class'), false,
 						target.data('hintbox-style')
 					);
 					break;
 
-				case 'mouseleave' :
+				case 'mouseleave':
 					hintBox.hideHint(e, this);
 					break;
 
-				case 'remove' :
+				case 'remove':
 					hintBox.deleteHint(this);
 					break;
 
-				case 'keydown' :
+				case 'keydown':
 					if (e.which == 13 && target.data('hintbox-static') == 1) {
 						var offset = target.offset(),
 							w = jQuery(window);
@@ -492,7 +496,7 @@ var hintBox = {
 
 					break;
 
-				case 'click' :
+				case 'click':
 					if (target.data('hintbox-static') == 1) {
 						hintBox.showStaticHint(e, this, target.data('hintbox-class'), false,
 							target.data('hintbox-style')
@@ -907,14 +911,14 @@ function getConditionFormula(conditions, evalType) {
 		case 1:
 			conditionOperator = 'and';
 			groupOperator = conditionOperator;
-
 			break;
+
 		// or
 		case 2:
 			conditionOperator = 'or';
 			groupOperator = conditionOperator;
-
 			break;
+
 		// and/or
 		default:
 			conditionOperator = 'or';
@@ -922,15 +926,17 @@ function getConditionFormula(conditions, evalType) {
 	}
 
 	var groupedFormulas = [];
+
 	for (var i = 0; i < conditions.length; i++) {
 		if (typeof conditions[i] === 'undefined') {
 			continue;
 		}
 
 		var groupedConditions = [];
+
 		groupedConditions.push(conditions[i].id);
 
-		// search for other conditions of the same type
+		// Search for other conditions of the same type.
 		for (var n = i + 1; n < conditions.length; n++) {
 			if (typeof conditions[n] !== 'undefined' && conditions[i].type == conditions[n].type) {
 				groupedConditions.push(conditions[n].id);
@@ -938,7 +944,7 @@ function getConditionFormula(conditions, evalType) {
 			}
 		}
 
-		// join conditions of the same type
+		// Join conditions of the same type.
 		if (groupedConditions.length > 1) {
 			groupedFormulas.push('(' + groupedConditions.join(' ' + conditionOperator + ' ') + ')');
 		}
@@ -949,7 +955,7 @@ function getConditionFormula(conditions, evalType) {
 
 	var formula = groupedFormulas.join(' ' + groupOperator + ' ');
 
-	// strip parentheses if there's only one condition group
+	// Strip parentheses if there's only one condition group.
 	if (groupedFormulas.length == 1) {
 		formula = formula.substr(1, formula.length - 2);
 	}
@@ -970,7 +976,6 @@ function getConditionFormula(conditions, evalType) {
 	 * - dataCallback	- function to generate the data passed to the template
 	 *
 	 * Triggered events:
-	 * - rowremove.dynamicRows 	- after removing a row (triggered before tableupdate.dynamicRows)
 	 * - tableupdate.dynamicRows 	- after adding or removing a row
 	 *
 	 * @param options
@@ -1038,7 +1043,6 @@ function getConditionFormula(conditions, evalType) {
 	function removeRow(table, row, options) {
 		row.remove();
 
-		table.trigger('rowremove.dynamicRows', options);
 		table.trigger('tableupdate.dynamicRows', options);
 	}
 }(jQuery));

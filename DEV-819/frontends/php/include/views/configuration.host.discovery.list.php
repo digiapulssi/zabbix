@@ -18,15 +18,18 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 $widget = (new CWidget())
 	->setTitle(_('Discovery rules'))
-	->setControls((new CTag('nav', true,
-		(new CList())
-			->addItem(new CRedirectButton(_('Create discovery rule'), (new CUrl())->setArgument('form', 'create')
-				->getUrl()
+	->setControls(
+		(new CTag('nav', true,
+			(new CList())->addItem(new CRedirectButton(_('Create discovery rule'),
+				(new CUrl('host_discovery.php'))
+					->setArgument('form', 'create')
+					->setArgument('hostid', $data['hostid'])
+					->getUrl()
 			))
-		))
-			->setAttribute('aria-label', _('Content controls'))
+		))->setAttribute('aria-label', _('Content controls'))
 	)
 	->addItem(get_header_host_table('discoveries', $this->data['hostid']));
 

@@ -18,6 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 $widget = (new CWidget())
 	->setTitle(_('Templates'))
 	->addItem(get_header_host_table('', $data['templateid']));
@@ -83,21 +84,19 @@ $templateList = (new CFormList('hostlist'))
 	->addRow(_('Visible name'), (new CTextBox('visiblename', $visiblename, false, 128))
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
-	->addRow((new CLabel(_('Groups'), 'groups[]'))->setAsteriskMark(),
+	->addRow((new CLabel(_('Groups'), 'groups__ms'))->setAsteriskMark(),
 		(new CMultiSelect([
 			'name' => 'groups[]',
-			'objectName' => 'hostGroup',
-			'objectOptions' => ['editable' => true],
+			'object_name' => 'hostGroup',
+			'add_new' => (CWebUser::$data['type'] == USER_TYPE_SUPER_ADMIN),
 			'data' => $data['groups_ms'],
-			'addNew' => (CWebUser::$data['type'] == USER_TYPE_SUPER_ADMIN),
 			'popup' => [
 				'parameters' => [
 					'srctbl' => 'host_groups',
+					'srcfld1' => 'groupid',
 					'dstfrm' => $frmHost->getName(),
 					'dstfld1' => 'groups_',
-					'srcfld1' => 'groupid',
-					'writeonly' => '1',
-					'multiselect' => '1'
+					'editable' => true
 				]
 			]
 		]))
@@ -338,18 +337,14 @@ $divTabs->addTab('templateTab', _('Template'), $templateList);
 // TEMPLATES{
 $tmplList = new CFormList();
 
-$ignoredTemplates = [];
-
-if ($data['templateid'] != 0) {
-	$ignoredTemplates[$data['templateid']] = $data['dbTemplate']['host'];
-}
+$disableids = [];
 
 $linkedTemplateTable = (new CTable())
 	->setAttribute('style', 'width: 100%;')
 	->setHeader([_('Name'), _('Action')]);
 
 foreach ($data['linkedTemplates'] as $template) {
-	$tmplList->addVar('templates[]', $template['templateid']);
+	$tmplList->addItem((new CVar('templates[]', $template['templateid']))->removeId());
 
 	if (array_key_exists($template['templateid'], $data['writable_templates'])) {
 		$template_link = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
@@ -379,7 +374,7 @@ foreach ($data['linkedTemplates'] as $template) {
 		))->addClass(ZBX_STYLE_NOWRAP)
 	], null, 'conditions_'.$template['templateid']);
 
-	$ignoredTemplates[$template['templateid']] = $template['name'];
+	$disableids[] = $template['templateid'];
 }
 
 $tmplList->addRow(_('Linked templates'),
@@ -393,8 +388,7 @@ $newTemplateTable = (new CTable())
 	->addRow([
 		(new CMultiSelect([
 			'name' => 'add_templates[]',
-			'objectName' => 'templates',
-			'ignored' => $ignoredTemplates,
+			'object_name' => 'templates',
 			'popup' => [
 				'parameters' => [
 					'srctbl' => 'templates',
@@ -402,9 +396,8 @@ $newTemplateTable = (new CTable())
 					'srcfld2' => 'host',
 					'dstfrm' => $frmHost->getName(),
 					'dstfld1' => 'add_templates_',
-					'templated_hosts' => '1',
-					'multiselect' => '1',
-					'templateid' => $data['templateid']
+					'excludeids' => $data['templateid'] != 0 ? [$data['templateid']] : [],
+					'disableids' => $disableids
 				]
 			]
 		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
@@ -415,7 +408,7 @@ $newTemplateTable = (new CTable())
 			->addClass(ZBX_STYLE_BTN_LINK)
 	]);
 
-$tmplList->addRow(_('Link new templates'),
+$tmplList->addRow((new CLabel(_('Link new templates'), 'add_templates__ms')),
 	(new CDiv($newTemplateTable))
 		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
 		->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_BIG_WIDTH.'px;')

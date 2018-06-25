@@ -107,7 +107,7 @@ class CMenuPopupHelper {
 	 * @param array  $gotos                      Enable goto links.
 	 * @param array  $gotos['graphs']            Link to host graphs page with url parameters ("name" => "value") (optional).
 	 * @param array  $gotos['screens']           Link to host screen page with url parameters ("name" => "value") (optional).
-	 * @param array  $gotos['triggerStatus']     Link to trigger status page with url parameters ("name" => "value") (optional).
+	 * @param array  $gotos['triggerStatus']     Link to "Problems" page with url parameters ("name" => "value") (optional).
 	 * @param array  $gotos['submap']            Link to submap page with url parameters ("name" => "value") (optional).
 	 * @param array  $gotos['events']            Link to events page with url parameters ("name" => "value") (optional).
 	 * @param array  $urls                       Local and global map links (optional).
@@ -313,16 +313,20 @@ class CMenuPopupHelper {
 	}
 
 	/**
-	 * Prepare data for dependent item popup menu.
+	 * Prepare data for dependent item (or item prototype) popup menu.
 	 *
-	 * @param string $itemid    Item id.
-	 * @param string $hostid    Host id.
-	 * @param string $name      Item name.
+	 * @param string $page        Page name.
+	 * @param string $itemid      Item id.
+	 * @param string $parent      Name of parent object argument (hostid or parent_discoveryid).
+	 * @param string $parentid    Parent object id (host id for hosts or discoveryid for discovery rules)
+	 * @param string $name        Item name.
+	 *
+	 * @return array
 	 */
-	public static function getDependentItem($itemid, $hostid, $name) {
-		$url = (new CUrl('items.php'))
-					->setArgument('form', _('Create item'))->setArgument('type', ITEM_TYPE_DEPENDENT)
-					->setArgument('hostid', $hostid)->setArgument('master_itemid', $itemid)
+	protected static function getDependent($page, $itemid, $parent, $parentid, $name) {
+		$url = (new CUrl($page))
+					->setArgument('form', 'create')->setArgument('type', ITEM_TYPE_DEPENDENT)
+					->setArgument($parent, $parentid)->setArgument('master_itemid', $itemid)
 					->getUrl();
 
 		return [
@@ -335,24 +339,24 @@ class CMenuPopupHelper {
 	}
 
 	/**
+	 * Prepare data for dependent item popup menu.
+	 *
+	 * @param string $itemid    Item id.
+	 * @param string $hostid    Host id.
+	 * @param string $name      Item name.
+	 */
+	public static function getDependentItem($itemid, $hostid, $name) {
+		return self::getDependent('items.php', $itemid, 'hostid', $hostid, $name);
+	}
+
+	/**
 	 * Prepare data for dependent item prototype popup menu.
 	 *
 	 * @param string $itemid                Item id.
-	 * @param string $parent_discoveryid    Prent discovery rule id.
+	 * @param string $parent_discoveryid    Parent discovery rule id.
 	 * @param string $name                  Item name.
 	 */
 	public static function getDependentItemPrototype($itemid, $parent_discoveryid, $name) {
-		$url = (new CUrl('disc_prototypes.php'))
-					->setArgument('form', _('Create item'))->setArgument('type', ITEM_TYPE_DEPENDENT)
-					->setArgument('parent_discoveryid', $parent_discoveryid)->setArgument('master_itemid', $itemid)
-					->getUrl();
-
-		return [
-			'type' => 'dependent_items',
-			'itemid' => $itemid,
-			'item_name' => $name,
-			'add_label' => _('Create dependent item'),
-			'add_url' => $url
-		];
+		return self::getDependent('disc_prototypes.php', $itemid, 'parent_discoveryid', $parent_discoveryid, $name);
 	}
 }

@@ -505,11 +505,14 @@ else {
 	$data = [
 		'sort' => $sortField,
 		'sortorder' => $sortOrder,
-		'filter' => $filter
+		'filter' => $filter,
+		'profileIdx' => 'web.maintenance.filter',
+		'active_tab' => CProfile::get('web.maintenance.filter.active', 1)
 	];
 
+	// Get list of maintenances.
 	$options = [
-		'output' => ['maintenanceid', $sortField],
+		'output' => ['maintenanceid', 'name', 'maintenance_type', 'active_since', 'active_till', 'description'],
 		'search' => [
 			'name' => ($filter['name'] === '') ? null : $filter['name']
 		],
@@ -527,19 +530,6 @@ else {
 	}
 
 	$data['maintenances'] = API::Maintenance()->get($options);
-
-	order_result($data['maintenances'], $sortField, $sortOrder);
-
-	$url = (new CUrl('maintenance.php'))
-		->setArgument('groupid', $pageFilter->groupid);
-
-	$data['paging'] = getPagingLine($data['maintenances'], $sortOrder, $url);
-
-	// get list of maintenances
-	$data['maintenances'] = API::Maintenance()->get([
-		'output' => ['maintenanceid', 'name', 'maintenance_type', 'active_since', 'active_till', 'description'],
-		'maintenanceids' => zbx_objectValues($data['maintenances'], 'maintenanceid')
-	]);
 
 	foreach ($data['maintenances'] as $key => $maintenance) {
 		if ($maintenance['active_till'] < time()) {
@@ -563,6 +553,11 @@ else {
 	}
 
 	order_result($data['maintenances'], $sortField, $sortOrder);
+
+	$url = (new CUrl('maintenance.php'))
+		->setArgument('groupid', $pageFilter->groupid);
+
+	$data['paging'] = getPagingLine($data['maintenances'], $sortOrder, $url);
 
 	$data['pageFilter'] = $pageFilter;
 

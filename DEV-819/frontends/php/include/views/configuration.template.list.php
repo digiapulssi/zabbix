@@ -32,25 +32,29 @@ $widget = (new CWidget())
 					$data['pageFilter']->getGroupsCB()
 				])
 			),
-		(new CTag('nav', true, (new CList())
-			->addItem(new CRedirectButton(_('Create template'), (new CUrl())
-				->removeArgument('templateid')
-				->setArgument('groupid', $data['pageFilter']->groupid)
-				->setArgument('form', 'create')
-				->getUrl()
-			))
-			->addItem((new CButton('form', _('Import')))
-				->onClick('redirect("conf.import.php?rules_preset=template")')
-			)
-		))
-			->setAttribute('aria-label', _('Content controls'))
+		(new CTag('nav', true,
+			(new CList())
+				->addItem(new CRedirectButton(_('Create template'),
+				(new CUrl('templates.php'))
+					->setArgument('groupid', $data['pageFilter']->groupid)
+					->setArgument('form', 'create')
+					->getUrl()
+				))
+				->addItem(
+					(new CButton('form', _('Import')))->onClick('redirect("conf.import.php?rules_preset=template")')
+				)
+		))->setAttribute('aria-label', _('Content controls'))
 	]))
-	->addItem((new CFilter('web.templates.filter.state'))
-		->addColumn((new CFormList())->addRow(_('Name'),
-			(new CTextBox('filter_name', $data['filter']['name']))
-				->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
-				->setAttribute('autofocus', 'autofocus')
-		))
+	->addItem((new CFilter())
+		->setProfile($data['profileIdx'])
+		->setActiveTab($data['active_tab'])
+		->addFilterTab(_('Filter'), [
+			(new CFormList())->addRow(_('Name'),
+				(new CTextBox('filter_name', $data['filter']['name']))
+					->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
+					->setAttribute('autofocus', 'autofocus')
+			)
+		])
 	);
 
 $form = (new CForm())->setName('templates');

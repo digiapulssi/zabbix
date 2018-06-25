@@ -522,18 +522,14 @@ class testFormAction extends CWebTest {
 		if ($eventsource == 'Triggers' && array_key_exists('evaltype', $data)) {
 			$this->zbxTestAssertElementText('//tr[@id="conditions_0"]/td[2]', 'Trigger name like TEST1');
 			$this->zbxTestAssertElementText('//tr[@id="conditions_1"]/td[2]', 'Trigger name like TEST2');
-			$this->zbxTestAssertElementPresentXpath('//button[@id="remove" and @name="remove" and @onclick="javascript:'.
-				' removeCondition(0);"]');
-			$this->zbxTestAssertElementPresentXpath('//button[@id="remove" and @name="remove" and @onclick="javascript:'.
-				' removeCondition(1);"]');
+			$this->zbxTestAssertElementPresentXpath('//button[@name="remove" and @onclick="javascript: removeCondition(0);"]');
+			$this->zbxTestAssertElementPresentXpath('//button[@name="remove" and @onclick="javascript: removeCondition(1);"]');
 		}
 		else {
 			$this->zbxTestTextNotVisibleOnPage(['A', 'B']);
 			$this->zbxTestAssertElementNotPresentXpath('//tr[@id="conditions_0"]/td[2]');
-			$this->zbxTestAssertElementNotPresentXpath('//button[@id="remove" and @name="remove" and @onclick="javascript:'.
-				' removeCondition(0);"]');
-			$this->zbxTestAssertElementNotPresentXpath('//button[@id="remove" and @name="remove" and @onclick="javascript:'.
-				' removeCondition(1);"]');
+			$this->zbxTestAssertElementNotPresentXpath('//button[@name="remove" and @onclick="javascript: removeCondition(0);"]');
+			$this->zbxTestAssertElementNotPresentXpath('//button[@name="remove" and @onclick="javascript: removeCondition(1);"]');
 		}
 
 		if (isset($data['new_condition_conditiontype'])) {
@@ -918,7 +914,7 @@ class testFormAction extends CWebTest {
 				$def_longdata_val = 'Problem started at {EVENT.TIME} on {EVENT.DATE}'.
 					' Problem name: {TRIGGER.NAME}'.
 					' Host: {HOST.NAME}'.
-					' Severity: {TRIGGER.SEVERITY}'.
+					' Severity: {EVENT.SEVERITY}'.
 					' Original problem ID: {EVENT.ID}'.
 					' {TRIGGER.URL}';
 					break;
@@ -946,7 +942,7 @@ class testFormAction extends CWebTest {
 
 		if (isset($data['new_operation_operationtype'])) {
 			$new_operation_operationtype = $data['new_operation_operationtype'];
-			$this->zbxTestClickXpathWait("//ul[@id='operationlist']//button[text()='New' and contains(@onclick,'new_operation')]");
+			$this->zbxTestClickXpathWait("//div[@id='operationTab']//button[text()='New' and contains(@onclick,'new_operation')]");
 			switch ($eventsource) {
 				case 'Triggers':
 				case 'Discovery':
@@ -1221,7 +1217,7 @@ class testFormAction extends CWebTest {
 						$new_operation_opmessage_message_val = 'Problem started at {EVENT.TIME} on {EVENT.DATE}'.
 							' Problem name: {TRIGGER.NAME}'.
 							' Host: {HOST.NAME}'.
-							' Severity: {TRIGGER.SEVERITY}'.
+							' Severity: {EVENT.SEVERITY}'.
 							' Original problem ID: {EVENT.ID}'.
 							' {TRIGGER.URL}';
 							break;
@@ -1263,11 +1259,11 @@ class testFormAction extends CWebTest {
 			]);
 
 			if ($add_opcondition == null) {
-				$this->zbxTestAssertVisibleXpath("//ul[@id='operationlist']//button[text()='New' and contains(@onclick,'new_opcondition')]");
+				$this->zbxTestAssertVisibleXpath("//div[@id='operationTab']//button[text()='New' and contains(@onclick,'new_opcondition')]");
 			}
 			else {
 				$this->zbxTestTextPresent ('Operation condition');
-				$this->zbxTestAssertVisibleXpath("//ul[@id='operationlist']//button[text()='Cancel' and contains(@onclick,'cancel_new_opcondition')]");
+				$this->zbxTestAssertVisibleXpath("//div[@id='operationTab']//button[text()='Cancel' and contains(@onclick,'cancel_new_opcondition')]");
 
 				$this->zbxTestAssertVisibleXpath('//select[@id=\'new_opcondition_conditiontype\']');
 				$this->zbxTestDropdownAssertSelected('new_opcondition[conditiontype]', 'Event acknowledged');
@@ -1289,8 +1285,8 @@ class testFormAction extends CWebTest {
 			}
 		}
 		else {
-			$this->zbxTestAssertElementNotPresentXpath("//ul[@id='operationlist']//button[contains(@onclick,'new_opcondition')]");
-			$this->zbxTestAssertElementNotPresentXpath("//ul[@id='operationlist']//button[contains(@onclick,'cancel_new_opcondition')]");
+			$this->zbxTestAssertElementNotPresentXpath("//div[@id='operationTab']//button[contains(@onclick,'new_opcondition')]");
+			$this->zbxTestAssertElementNotPresentXpath("//div[@id='operationTab']//button[contains(@onclick,'cancel_new_opcondition')]");
 
 			$this->zbxTestAssertElementNotPresentXpath('//select[@id=\'new_opcondition_conditiontype\']');
 			$this->zbxTestAssertElementNotPresentXpath('//select[@id=\'new_opcondition_operator\']');
@@ -1517,12 +1513,12 @@ class testFormAction extends CWebTest {
 		}
 
 		if ($new_operation_operationtype != null) {
-			$this->zbxTestAssertVisibleXpath("//ul[@id='operationlist']//button[text()='Add' and contains(@onclick,'add_operation')]");
-			$this->zbxTestAssertVisibleXpath("//ul[@id='operationlist']//button[text()='Cancel' and contains(@onclick,'cancel_new_operation')]");
+			$this->zbxTestAssertVisibleXpath("//div[@id='operationTab']//button[text()='Add' and contains(@onclick,'add_operation')]");
+			$this->zbxTestAssertVisibleXpath("//div[@id='operationTab']//button[text()='Cancel' and contains(@onclick,'cancel_new_operation')]");
 		}
 		else {
-			$this->zbxTestAssertElementNotPresentXpath("//ul[@id='operationlist']//button[contains(@onclick,'add_operation')]");
-			$this->zbxTestAssertElementNotPresentXpath("//ul[@id='operationlist']//button[contains(@onclick,'cancel_new_operation')]");
+			$this->zbxTestAssertElementNotPresentXpath("//div[@id='operationTab']//button[contains(@onclick,'add_operation')]");
+			$this->zbxTestAssertElementNotPresentXpath("//div[@id='operationTab']//button[contains(@onclick,'cancel_new_operation')]");
 		}
 
 		if (array_key_exists('recovery_msg', $data)) {
@@ -1564,7 +1560,7 @@ class testFormAction extends CWebTest {
 					$r_longdata_val = 'Problem has been resolved at {EVENT.RECOVERY.TIME} on {EVENT.RECOVERY.DATE}'.
 						' Problem name: {TRIGGER.NAME}'.
 						' Host: {HOST.NAME}'.
-						' Severity: {TRIGGER.SEVERITY}'.
+						' Severity: {EVENT.SEVERITY}'.
 						' Original problem ID: {EVENT.ID}'.
 						' {TRIGGER.URL}';
 						break;
@@ -1584,7 +1580,7 @@ class testFormAction extends CWebTest {
 		}
 
 		if (array_key_exists('acknowledge_msg', $data)) {
-			$this->zbxTestTabSwitch('Acknowledgement operations');
+			$this->zbxTestTabSwitch('Update operations');
 			$this->zbxTestWaitUntilElementVisible(WebDriverBy::id('ack_shortdata'));
 			$acknowledge_msg = $data['acknowledge_msg'];
 		}
@@ -1596,7 +1592,7 @@ class testFormAction extends CWebTest {
 			$this->zbxTestAssertElementPresentId('tab_acknowledgeTab');
 		}
 		else {
-			$this->zbxTestTextNotPresent('Acknowledgement operations');
+			$this->zbxTestTextNotPresent('Update operations');
 			$this->zbxTestAssertElementNotPresentId('tab_acknowledgeTab');
 		}
 
@@ -1605,15 +1601,14 @@ class testFormAction extends CWebTest {
 			$this->zbxTestAssertVisibleId('ack_shortdata');
 			$this->zbxTestAssertAttribute("//input[@id='ack_shortdata']", 'maxlength', 255);
 			$this->zbxTestAssertAttribute("//input[@id='ack_shortdata']", 'size', 20);
-			$this->zbxTestAssertElementValue('ack_shortdata', 'Acknowledged: {TRIGGER.NAME}');
+			$this->zbxTestAssertElementValue('ack_shortdata', 'Updated problem: {EVENT.NAME}');
 
 			$this->zbxTestTextPresent('Default message');
 			$this->zbxTestAssertVisibleId('ack_longdata');
 			$this->zbxTestAssertAttribute("//textarea[@id='ack_longdata']", 'rows', 7);
-			$ack_longdata_val = '{USER.FULLNAME} acknowledged problem at {ACK.DATE} {ACK.TIME}'.
-						' with the following message:'.
-						' {ACK.MESSAGE}'.
-						' Current problem status is {EVENT.STATUS}';
+			$ack_longdata_val = '{USER.FULLNAME} {EVENT.UPDATE.ACTION} problem at {EVENT.UPDATE.DATE} {EVENT.UPDATE.TIME}.'.
+						' {EVENT.UPDATE.MESSAGE}'.
+						' Current problem status is {EVENT.STATUS}, acknowledged: {EVENT.ACK.STATUS}.';
 			$this->zbxTestAssertElementText('//textarea[@id="ack_longdata"]', $ack_longdata_val);
 		}
 		elseif ($eventsource == 'Triggers') {
