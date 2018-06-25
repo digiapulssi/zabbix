@@ -45,6 +45,7 @@ use constant JSON_TAG_DESCRIPTION	=> 'description';# todo phase 1: taken from ph
 use constant JSON_TAG_UPD		=> 'upd';	# todo phase 1: taken from phase 2
 use constant JSON_INTERFACE_RDDS43	=> 'RDDS43';	# todo phase 1: taken from phase 2
 use constant JSON_INTERFACE_RDDS80	=> 'RDDS80';	# todo phase 1: taken from phase 2
+use constant JSON_INTERFACE_RDAP	=> 'RDAP';
 use constant ROOT_ZONE_READABLE		=> 'zz--root';	# todo phase 1: taken from phase 2
 
 use constant SERVICE_DNS_TCP	=> 'dns-tcp';	# todo phase 1: Export DNS-TCP tests, not a real service
@@ -132,7 +133,7 @@ if (opt('debug'))
 
 # todo phase 1: make sure this check exists in phase 2
 my $max = cycle_end(time() - 240, 60);
-fail("cannot export data: selected time period is in the future") if ($till > $max);
+fail("cannot export data: selected time period is in the future") if (!opt('force') && $till > $max);
 
 # consider only tests that started within given period
 my $cfg_dns_minns;
@@ -474,6 +475,9 @@ sub __get_keys
 			$services->{$service}->{'key_43_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
 			$services->{$service}->{'key_80_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
 			$services->{$service}->{'key_80_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+
+			$services->{$service}->{'key_rdap_rtt'} = 'rdap.rtt';
+			$services->{$service}->{'key_rdap_ip'} = 'rdap.ip';
 		}
 		elsif ($service eq 'epp')
 		{
@@ -601,10 +605,14 @@ sub __get_test_data
 		elsif ($service eq 'rdds')
 		{
 			$rdds_dbl_items_ref = __get_rdds_dbl_itemids($tld, getopt('probe'),
-				$services->{$service}->{'key_43_rtt'}, $services->{$service}->{'key_80_rtt'},
-				$services->{$service}->{'key_43_upd'});
+				$services->{$service}->{'key_43_rtt'},
+				$services->{$service}->{'key_80_rtt'},
+				$services->{$service}->{'key_43_upd'},
+				$services->{$service}->{'key_rdap_rtt'});
 			$rdds_str_items_ref = __get_rdds_str_itemids($tld, getopt('probe'),
-				$services->{$service}{'key_43_ip'}, $services->{$service}->{'key_80_ip'});
+				$services->{$service}->{'key_43_ip'},
+				$services->{$service}->{'key_80_ip'},
+				$services->{$service}->{'key_rdap_ip'});
 		}
 		elsif ($service eq 'epp')
 		{
@@ -771,50 +779,6 @@ sub __get_test_data
 					}
 
 					$cycles->{$cycleclock}->{'interfaces'}->{$interface}->{'probes'}->{$probe}->{'targets'} = $tests_ref->{$cycleclock}->{$interface}->{$probe};
-				}
-			}
-		}
-
-		my $probe_results_ref;
-
-		# add availability results from probes, working services: (dns: number of NS, rdds: 43, 80)
-		if ($service eq 'dns' || $service eq 'dnssec')
-		{
-			if (!$probe_dns_results_ref)
-			{
-				my $itemids_ref = __get_service_status_itemids($tld, $services->{$service}->{'key_status'});
-				$probe_dns_results_ref = __get_probe_results($itemids_ref, $service_from, $service_till);
-			}
-
-			$probe_results_ref = $probe_dns_results_ref;
-		}
-		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
-		{
-			$probe_results_ref = undef;
-		}
-		else
-		{
-			my $itemids_ref = __get_service_status_itemids($tld, $services->{$service}->{'key_status'});
-			$probe_results_ref = __get_probe_results($itemids_ref, $service_from, $service_till);
-		}
-
-		if ($probe_results_ref)
-		{
-			foreach my $cycle (values(%{$cycles}))
-			{
-				# set status on particular probe
-				while (my ($interface, $cycle_interface) = each(%{$cycle->{'interfaces'}}))
-				{
-					while (my ($probe, $cycle_interface_probe) = each(%{$cycle_interface->{'probes'}}))
-					{
-						next if (defined($cycle_interface_probe->{'status'}));
-
-						foreach my $probe_result_ref (@{$probe_results_ref->{$probe}})
-						{
-							$cycle_interface_probe->{'status'} =
-								__interface_status($interface, $probe_result_ref->{'value'}, $services->{$service});
-						}
-					}
 				}
 			}
 		}
@@ -1489,6 +1453,15 @@ sub __check_test
 			return SUCCESS;
 		}
 	}
+	elsif ($interface eq JSON_INTERFACE_RDAP)
+	{
+		if (defined($description) &&
+				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+				substr($description, 0, length(ZBX_EC_RDAP_RES_NOREPLY)) eq ZBX_EC_RDAP_RES_NOREPLY))
+		{
+			return SUCCESS;
+		}
+	}
 
 	return E_FAIL unless ($value);
 
@@ -2011,8 +1984,9 @@ sub __get_rdds_dbl_itemids
 	my $key_43_rtt = shift;
 	my $key_80_rtt = shift;
 	my $key_43_upd = shift;
+	my $key_rdap_rtt = shift;
 
-	return __get_itemids_by_complete_key($tld, $probe, $key_43_rtt, $key_80_rtt, $key_43_upd);
+	return __get_itemids_by_complete_key($tld, $probe, $key_43_rtt, $key_80_rtt, $key_43_upd, $key_rdap_rtt);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -2022,8 +1996,9 @@ sub __get_rdds_str_itemids
 	my $probe = shift;
 	my $key_43_ip = shift;
 	my $key_80_ip = shift;
+	my $key_rdap_ip = shift;
 
-	return __get_itemids_by_complete_key($tld, $probe, $key_43_ip, $key_80_ip);
+	return __get_itemids_by_complete_key($tld, $probe, $key_43_ip, $key_80_ip, $key_rdap_ip);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -2229,8 +2204,9 @@ sub __find_probe_key_by_itemid
 	my $itemid = shift;
 	my $items_ref = shift;
 
-	while (my ($pr, $itemids_ref) = each(%{$items_ref}))
+	foreach my $pr (keys %{$items_ref})
 	{
+		my $itemids_ref = %{$items_ref}{$pr};
 		return ($pr, $itemids_ref->{$itemid}) if (exists($itemids_ref->{$itemid}));
 	}
 
@@ -2240,42 +2216,57 @@ sub __find_probe_key_by_itemid
 # todo phase 1: taken from RSMSLV.pm phase 2
 sub __get_rdds_item_details
 {
-	my $key = shift;
-
-	my @keyparts = split(/\./, substr($key, 0, index($key, '[')));
-
 	my $interface;
 	my $type;
+	my @parts = split(/\./, shift());
 
-	if (defined($keyparts[2]))
+	return ($interface, $type) if (!defined(@parts[0]) && !defined(@parts[1]));
+
+	shift(@parts) if(@parts[0] eq 'rsm');
+
+	if (@parts[0] eq 'rdap')
 	{
-		if ($keyparts[2] eq '43')
+		$interface = JSON_INTERFACE_RDAP;
+		$type = pick_rdds_item_type(@parts[1]);
+	}
+	elsif (@parts[0] eq 'rdds')
+	{
+		if(@parts[1] eq '43')
 		{
 			$interface = JSON_INTERFACE_RDDS43;
 		}
-		elsif ($keyparts[2] eq '80')
+		elsif (@parts[1] eq '80')
 		{
 			$interface = JSON_INTERFACE_RDDS80;
 		}
-	}
 
-	if (defined($keyparts[3]))
-	{
-		if ($keyparts[3] eq 'rtt')
+		if (defined(@parts[2]))
 		{
-			$type = JSON_TAG_RTT;
-		}
-		elsif ($keyparts[3] eq 'upd')
-		{
-			$type = JSON_TAG_UPD;
-		}
-		elsif ($keyparts[3] eq 'ip')
-		{
-			$type = JSON_TAG_TARGET_IP;
+			$type = pick_rdds_item_type(@parts[2]);
 		}
 	}
 
 	return ($interface, $type);
+}
+
+sub pick_rdds_item_type
+{
+	my @parts = split(/\[/, shift());
+
+	if ($parts[0] eq 'rtt')
+	{
+		return JSON_TAG_RTT;
+	}
+	elsif ($parts[0] eq 'ip')
+	{
+		return JSON_TAG_TARGET_IP;
+	}
+	elsif ($parts[0] eq 'upd')
+	{
+		return JSON_TAG_UPD;
+	}
+
+	return undef;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -2294,38 +2285,6 @@ sub __get_epp_str_type
 {
 	# NB! This is done for consistency, perhaps in the future there will be more string items, not just "ip".
 	return 'ip';
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __interface_status
-{
-	my $interface = shift;
-	my $value = shift;
-	my $service_ref = shift;
-
-	my $status;
-
-	if ($interface eq JSON_INTERFACE_DNS)
-	{
-		$status = ($value >= $service_ref->{'minns'} ? AH_STATUS_UP : AH_STATUS_DOWN);
-	}
-	elsif ($interface eq JSON_INTERFACE_DNSSEC)
-	{
-		# TODO: dnssec status on a particular probe is not supported currently,
-		# make this calculation in function __create_cycle_hash() for now.
-	}
-	elsif ($interface eq JSON_INTERFACE_RDDS43 || $interface eq JSON_INTERFACE_RDDS80)
-	{
-		my $rsm_rdds_probe_result = rsm_rdds_probe_result;
-
-		$status = (exists($rsm_rdds_probe_result->[$value]->{$interface}) ? AH_STATUS_UP : AH_STATUS_DOWN);
-	}
-	else
-	{
-		fail("$interface: unsupported interface");
-	}
-
-	return $status;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2

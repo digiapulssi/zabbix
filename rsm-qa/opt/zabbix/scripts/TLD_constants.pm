@@ -77,6 +77,8 @@ use constant ZBX_EC_DNS_TCP_RES_NOADBIT	=> -801;	# DNS TCP - No AD bit from loca
 use constant ZBX_EC_DNS_TCP_DNSKEY_NONE	=> -828;	# DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
 use constant ZBX_EC_RDDS43_RES_NOREPLY	=> -222; # RDDS43 - No reply from local resolver
 use constant ZBX_EC_RDDS80_RES_NOREPLY	=> -250; # RDDS80 - No reply from local resolver
+use constant ZBX_EC_RDAP_RES_NOREPLY	=> -200; # RDAP   - No reply from local resolver
+
 use constant ZBX_EC_EPP_NO_IP         => -200; # IP is missing for EPP server
 use constant ZBX_EC_EPP_CONNECT       => -201; # cannot connect to EPP server
 use constant ZBX_EC_EPP_CRYPT         => -202; # invalid certificate or private key
@@ -167,6 +169,7 @@ our @EXPORT_OK = qw(
 			ZBX_EC_DNS_TCP_DNSKEY_NONE
 			ZBX_EC_RDDS43_RES_NOREPLY
 			ZBX_EC_RDDS80_RES_NOREPLY
+			ZBX_EC_RDAP_RES_NOREPLY
                     ZBX_EC_EPP_NO_IP
                     ZBX_EC_EPP_CONNECT ZBX_EC_EPP_CRYPT ZBX_EC_EPP_FIRSTTO ZBX_EC_EPP_FIRSTINVAL ZBX_EC_EPP_LOGINTO ZBX_EC_EPP_LOGININVAL
                     ZBX_EC_EPP_UPDATETO ZBX_EC_EPP_UPDATETO ZBX_EC_EPP_UPDATEINVAL ZBX_EC_EPP_INFOTO ZBX_EC_EPP_INFOINVAL
@@ -206,6 +209,7 @@ our %EXPORT_TAGS = ( general => [ qw(true false) ],
 				ZBX_EC_DNS_TCP_DNSKEY_NONE
 				ZBX_EC_RDDS43_RES_NOREPLY
 				ZBX_EC_RDDS80_RES_NOREPLY
+				ZBX_EC_RDAP_RES_NOREPLY
 				ZBX_EC_EPP_NO_IP
 				ZBX_EC_EPP_CONNECT ZBX_EC_EPP_CRYPT ZBX_EC_EPP_FIRSTTO ZBX_EC_EPP_FIRSTINVAL ZBX_EC_EPP_LOGINTO ZBX_EC_EPP_LOGININVAL
 				ZBX_EC_EPP_UPDATETO ZBX_EC_EPP_UPDATETO ZBX_EC_EPP_UPDATEINVAL ZBX_EC_EPP_INFOTO ZBX_EC_EPP_INFOINVAL) ],

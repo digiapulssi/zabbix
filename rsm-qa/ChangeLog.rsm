@@ -1,3 +1,13 @@
+Changes for rsm1.1.0rc15
+
+Bug fixes:
+..F....... [384] fixed rolling week status page filter (miks)
+....I..... [383] added helper messages about rdap errors -100 and -101 to tld.pl (dimir)
+.......PS. [382] added support for slash (/) at the end of --rdap-base-url when using tld.pl (dimir)
+.......PS. [380] enabled dnssec flag when resolving host during RDAP test (dimir)
+....I..... [sub-182] added support for RDAP test results in Data Export (yurii)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc14
 
 New features:
