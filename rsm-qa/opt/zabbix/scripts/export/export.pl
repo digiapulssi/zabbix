@@ -55,12 +55,6 @@ use constant AH_STATUS_DOWN	=> 'Down';	# todo phase 1: taken from ApiHelper.pm p
 
 use constant true => 1;	# todo phase 1: taken from TLD_constants.pm phase 2
 			# todo phase 1: taken from TLD_constants.pm phase 2
-use constant rsm_rdds_probe_result => [
-	{},								# 0 - down
-	{JSON_INTERFACE_RDDS43 => true, JSON_INTERFACE_RDDS80 => true},	# 1 - up
-	{JSON_INTERFACE_RDDS43 => true},				# 2 - only 43
-	{JSON_INTERFACE_RDDS80 => true}					# 3 - only 80
-];
 
 # todo phase 1: this must be available in phase 2
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
@@ -2220,29 +2214,29 @@ sub __get_rdds_item_details
 	my $type;
 	my @parts = split(/\./, shift());
 
-	return ($interface, $type) if (!defined(@parts[0]) && !defined(@parts[1]));
+	return ($interface, $type) if (!defined($parts[0]) && !defined($parts[1]));
 
-	shift(@parts) if(@parts[0] eq 'rsm');
+	shift(@parts) if($parts[0] eq 'rsm');
 
-	if (@parts[0] eq 'rdap')
+	if ($parts[0] eq 'rdap')
 	{
 		$interface = JSON_INTERFACE_RDAP;
-		$type = pick_rdds_item_type(@parts[1]);
+		$type = pick_rdds_item_type($parts[1]);
 	}
-	elsif (@parts[0] eq 'rdds')
+	elsif ($parts[0] eq 'rdds')
 	{
-		if(@parts[1] eq '43')
+		if($parts[1] eq '43')
 		{
 			$interface = JSON_INTERFACE_RDDS43;
 		}
-		elsif (@parts[1] eq '80')
+		elsif ($parts[1] eq '80')
 		{
 			$interface = JSON_INTERFACE_RDDS80;
 		}
 
-		if (defined(@parts[2]))
+		if (defined($parts[2]))
 		{
-			$type = pick_rdds_item_type(@parts[2]);
+			$type = pick_rdds_item_type($parts[2]);
 		}
 	}
 

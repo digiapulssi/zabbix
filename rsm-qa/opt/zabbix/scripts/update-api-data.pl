@@ -38,7 +38,7 @@ sub get_history_by_itemid($$$);
 sub get_historical_value_by_time($$);
 sub fill_test_data_dns($$$);
 sub fill_test_data_dnssec($$);
-sub fill_test_data_rdds($$);
+sub fill_test_data_rdds($$$);
 sub match_clocks_with_results($$);
 
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'maxproc=n');
@@ -132,14 +132,19 @@ foreach my $service (keys(%services))
 	elsif ($service eq 'rdds')
 	{
 		$services{$service}{'delay'} = get_macro_rdds_delay();
-		$services{$service}{'valuemaps'} = get_valuemaps($service);
-		$services{$service}{'key_status'} = 'rsm.rdds[{$RSM.TLD}'; # 0 - down, 1 - up, 2 - only 43, 3 - only 80
-		$services{$service}{'key_43_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
-		$services{$service}{'key_43_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
-		$services{$service}{'key_43_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
-		$services{$service}{'key_80_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
-		$services{$service}{'key_80_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
 
+		$services{$service}{'rdds'}{'valuemaps'} = get_valuemaps($service);
+		$services{$service}{'rdds'}{'key_status'} = 'rsm.rdds[{$RSM.TLD}'; # 0 - down, 1 - up, 2 - only 43, 3 - only 80
+		$services{$service}{'rdds'}{'key_43_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
+		$services{$service}{'rdds'}{'key_43_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
+		$services{$service}{'rdds'}{'key_43_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
+		$services{$service}{'rdds'}{'key_80_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
+		$services{$service}{'rdds'}{'key_80_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+
+		$services{$service}{'rdap'}{'valuemaps'} = get_valuemaps('rdap');
+		$services{$service}{'rdap'}{'key_status'} = 'rdap['; # 0 - down, 1 - up
+		$services{$service}{'rdap'}{'key_rtt'} = 'rdap.rtt';
+		$services{$service}{'rdap'}{'key_ip'} = 'rdap.ip';
 	}
 	elsif ($service eq 'epp')
 	{
@@ -367,7 +372,21 @@ foreach (@server_keys)
 			# find out which services are disabled, for others get lastclock
 			foreach my $service (keys(%services))
 			{
-				if (tld_service_enabled($tld, $service) != SUCCESS)
+				my ($tld_service_enabled, $rdds_enabled, $rdap_enabled);
+
+				if (uc($service) eq 'RDDS')
+				{
+					$rdds_enabled = tld_rdds_enabled_at($tld, $from, $till);
+					$rdap_enabled = tld_rdap_enabled_at($tld, $from, $till);
+
+					$tld_service_enabled = (($rdds_enabled == SUCCESS || $rdap_enabled == SUCCESS) ? SUCCESS : E_FAIL);
+				}
+				else
+				{
+					$tld_service_enabled = tld_service_enabled($tld, $service);
+				}
+
+				if ($tld_service_enabled != SUCCESS)
 				{
 					if (opt('dry-run'))
 					{
@@ -972,105 +991,200 @@ foreach (@server_keys)
 							}
 						}
 
-						# get results from probes: # 0 - down, 1 - up, 2 - rdds43 only, 3 - rdds80 only
-						my $itemids_ref = __get_status_itemids($tld, $services{$service}{'key_status'});
-						my $statuses_ref = __get_probe_statuses($itemids_ref, $values_from, $values_till);
-
-						foreach my $tr_ref (@test_results)
+						if (SUCCESS == $rdds_enabled)
 						{
-							# set status
-							my $tr_start = $tr_ref->{'start'};
-							my $tr_end = $tr_ref->{'end'};
+							# get results from probes: # 0 - down, 1 - up, 2 - rdds43 only, 3 - rdds80 only
+							my $itemids_ref = __get_status_itemids($tld, $services{$service}{'rdds'}{'key_status'});
+							my $statuses_ref = __get_probe_statuses($itemids_ref, $values_from, $values_till);
 
-							delete($tr_ref->{'start'});
-							delete($tr_ref->{'end'});
-
-							$tr_ref->{'service'} = uc($service);
-
-							my $rdds43_ref = {
-								'interface'	=> JSON_RDDS_43,
-								'probes'	=> []
-							};
-
-							my $rdds80_ref = {
-								'interface'	=> JSON_RDDS_80,
-								'probes'	=> []
-							};
-
-							my $rdap_ref = {
-								'interface'	=> JSON_RDDS_RDAP,
-								'probes'	=> []
-							};
-
-							my $subservices_ref = $tr_ref->{'subservices'};
-
-							# set test status on the Probe level
-							foreach my $subservice (keys(%$subservices_ref))
+							foreach my $tr_ref (@test_results)
 							{
-								my $probes_ref = $subservices_ref->{$subservice};
+								# set status
+								my $tr_start = $tr_ref->{'start'};
+								my $tr_end = $tr_ref->{'end'};
 
-								foreach my $probe (keys(%$probes_ref))
+								$tr_ref->{'service'} = uc($service);
+
+								my $rdds43_ref = {
+									'interface'	=> JSON_RDDS_43,
+									'probes'	=> []
+								};
+
+								my $rdds80_ref = {
+									'interface'	=> JSON_RDDS_80,
+									'probes'	=> []
+								};
+
+								my $subservices_ref = $tr_ref->{'subservices'};
+
+								# set test status on the Probe level
+								foreach my $subservice (keys(%$subservices_ref))
 								{
-									foreach my $status_ref (@{$statuses_ref->{$probe}})
+									next if (lc($subservice) eq 'rdap');
+
+									my $probes_ref = $subservices_ref->{$subservice};
+
+									foreach my $probe (keys(%$probes_ref))
 									{
-										next if ($status_ref->{'clock'} < $tr_start);
-										last if ($status_ref->{'clock'} > $tr_end);
-
-										if (not defined($probes_ref->{$probe}->{'status'}))
+										foreach my $status_ref (@{$statuses_ref->{$probe}})
 										{
-											my $service_only = ($subservice eq JSON_RDDS_43 ? 2 : 3); # 0 - down, 1 - up, 2 - only 43, 3 - only 80
+											next if ($status_ref->{'clock'} < $tr_start);
+											last if ($status_ref->{'clock'} > $tr_end);
 
-											$probes_ref->{$probe}->{'status'} = (($status_ref->{'value'} == 1 or $status_ref->{'value'} == $service_only) ? "Up" : "Down");
+											if (not defined($probes_ref->{$probe}->{'status'}))
+											{
+												my $service_only = ($subservice eq JSON_RDDS_43 ? 2 : 3); # 0 - down, 1 - up, 2 - only 43, 3 - only 80
+
+												$probes_ref->{$probe}->{'status'} = (($status_ref->{'value'} == 1 or $status_ref->{'value'} == $service_only) ? "Up" : "Down");
+											}
+										}
+
+										my $probe_ref = {
+											'city'		=> $probe,
+											'status'	=> $probes_ref->{$probe}->{'status'},
+											'testData'	=> []
+										};
+
+										if (exists($probes_ref->{$probe}->{'details'}))
+										{
+											fill_test_data_rdds('rdds', $probes_ref->{$probe}->{'details'},
+												$probe_ref->{'testData'});
+										}
+
+										if ($subservice eq JSON_RDDS_43)
+										{
+											push(@{$rdds43_ref->{'probes'}}, $probe_ref);
+										}
+										elsif ($subservice eq JSON_RDDS_80)
+										{
+											push(@{$rdds80_ref->{'probes'}}, $probe_ref);
 										}
 									}
+								}
 
-									my $probe_ref = {
-										'city'		=> $probe,
-										'status'	=> $probes_ref->{$probe}->{'status'},
-										'testData'	=> []
-									};
+								$tr_ref->{'testedInterface'} = [
+									$rdds43_ref,
+									$rdds80_ref
+								];
 
-									if (exists($probes_ref->{$probe}->{'details'}))
+								if (opt('dry-run'))
+								{
+									__prnt_json($tr_ref);
+								}
+								else
+								{
+									delete($tr_ref->{'start'});
+									delete($tr_ref->{'end'});
+									delete($tr_ref->{'subservices'});
+
+									if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
 									{
-										fill_test_data_rdds($probes_ref->{$probe}->{'details'},
-											$probe_ref->{'testData'});
+										fail("cannot save incident: ", ah_get_error());
 									}
 
-									if ($subservice eq JSON_RDDS_43)
-									{
-										push(@{$rdds43_ref->{'probes'}}, $probe_ref);
-									}
-									elsif ($subservice eq JSON_RDDS_80)
-									{
-										push(@{$rdds80_ref->{'probes'}}, $probe_ref);
-									}
-									elsif ($subservice eq JSON_RDDS_RDAP)
-									{
-										push(@{$rdap_ref->{'probes'}}, $probe_ref);
-									}
-									else
-									{
-										fail("unknown $service subservice: \"$subservice\"");
-									}
+									$tr_ref->{'start'} = $tr_start;
+									$tr_ref->{'end'} = $tr_start;
+									$tr_ref->{'subservices'} = $subservices_ref;
 								}
 							}
+						}
 
-							$tr_ref->{'testedInterface'} = [
-								$rdds43_ref,
-								$rdds80_ref
-							];
+						# Unlike DNS, in order to calculate RDDS status on probe we have to
+						# consider 2 items:
+						#
+						# 1) rsm.rdds[...
+						# 2) rdap[...
+						#
+						# The first one covers RDDS43 and RDDS80, the second one RDAP. Hopefully
+						# in the future we will have single item for RDDS status on probe, for
+						# now we'll perform another cycle to collect RDAP data + adjust the RDDS
+						# probe status considering rdap item.
+						#
+						# TODO: in the future, when we'll have single item for RDDS probe status
+						#       the following code should be removed
+						if (SUCCESS == $rdap_enabled)
+						{
+							# get results from probes: # 0 - down, 1 - up
+							my $itemids_ref = __get_status_itemids($tld, $services{$service}{'rdap'}{'key_status'});
+							my $statuses_ref = __get_probe_statuses($itemids_ref, $values_from, $values_till);
 
-							delete($tr_ref->{'subservices'});
-
-							if (opt('dry-run'))
+							foreach my $tr_ref (@test_results)
 							{
-								__prnt_json($tr_ref);
-							}
-							else
-							{
-								if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+								# set status
+								my $tr_start = $tr_ref->{'start'};
+								my $tr_end = $tr_ref->{'end'};
+
+								$tr_ref->{'service'} = uc($service);
+
+								my $rdap_ref = {
+									'interface'	=> JSON_RDDS_RDAP,
+									'probes'	=> []
+								};
+
+								my $subservices_ref = $tr_ref->{'subservices'};
+
+								# set test status on the Probe level
+								foreach my $subservice (keys(%$subservices_ref))
 								{
-									fail("cannot save incident: ", ah_get_error());
+									my $probes_ref = $subservices_ref->{$subservice};
+
+									foreach my $probe (keys(%$probes_ref))
+									{
+										foreach my $status_ref (@{$statuses_ref->{$probe}})
+										{
+											next if ($status_ref->{'clock'} < $tr_start);
+											last if ($status_ref->{'clock'} > $tr_end);
+
+											if (!defined($probes_ref->{$probe}->{'status'}) || $probes_ref->{$probe}->{'status'} eq "Up")
+											{
+												$probes_ref->{$probe}->{'status'} = ($status_ref->{'value'} == 1 ? "Up" : "Down");
+											}
+										}
+
+										my $probe_ref = {
+											'city'		=> $probe,
+											'status'	=> $probes_ref->{$probe}->{'status'},
+											'testData'	=> []
+										};
+
+										if (exists($probes_ref->{$probe}->{'details'}))
+										{
+											fill_test_data_rdds('rdap', $probes_ref->{$probe}->{'details'},
+												$probe_ref->{'testData'});
+										}
+
+										if ($subservice eq JSON_RDDS_RDAP)
+										{
+											push(@{$rdap_ref->{'probes'}}, $probe_ref);
+										}
+									}
+								}
+
+								if (defined($tr_ref->{'testedInterface'}))
+								{
+									push(@{$tr_ref->{'testedInterface'}}, $rdap_ref);
+								}
+								else
+								{
+									$tr_ref->{'testedInterface'} = [
+										$rdap_ref
+									];
+								}
+
+								if (opt('dry-run'))
+								{
+									__prnt_json($tr_ref);
+								}
+								else
+								{
+									delete($tr_ref->{'start'});
+									delete($tr_ref->{'end'});
+									delete($tr_ref->{'subservices'});
+
+									if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+									{
+										fail("cannot save incident: ", ah_get_error());
+									}
 								}
 							}
 						}
@@ -1301,7 +1415,7 @@ sub fill_test_data_dns($$$)
 			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
 					defined($test->{'clock'}) && !defined($test->{'rtt'}))
 			{
-				fail("Gleb/dimir were wrong, DNS test clock and rtt can be undefined independently");
+				fail("dimir was wrong, DNS test clock and rtt can be undefined independently");
 			}
 
 			my $metric = {
@@ -1378,7 +1492,7 @@ sub fill_test_data_dnssec($$)
 			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
 					defined($test->{'clock'}) && !defined($test->{'rtt'}))
 			{
-				fail("Gleb/dimir were wrong, DNS test clock and rtt can be undefined independently");
+				fail("dimir was wrong, DNS test clock and rtt can be undefined independently");
 			}
 
 			my $metric = {
@@ -1433,8 +1547,9 @@ sub fill_test_data_dnssec($$)
 	}
 }
 
-sub fill_test_data_rdds($$)
+sub fill_test_data_rdds($$$)
 {
+	my $subservice = shift;	# rdds(=rdds43 and rdds80) or rdap
 	my $src = shift;
 	my $dst = shift;
 
@@ -1477,9 +1592,17 @@ sub fill_test_data_rdds($$)
 			$metric->{'rtt'} = undef;
 			$metric->{'result'} = 'no data';
 		}
-		elsif (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+		elsif ($subservice eq 'rdds' && (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
 				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS43_RES_NOREPLY)) eq ZBX_EC_RDDS43_RES_NOREPLY ||
-				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY)
+				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY))
+		{
+			$test_data_ref->{'status'} = "Up";
+
+			$metric->{'rtt'} = undef;
+			$metric->{'result'} = $test->{'rtt'};
+		}
+		elsif ($subservice eq 'rdap' && (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+				substr($test->{'rtt'}, 0, length(ZBX_EC_RDAP_RES_NOREPLY)) eq ZBX_EC_RDAP_RES_NOREPLY))
 		{
 			$test_data_ref->{'status'} = "Up";
 
@@ -1711,6 +1834,10 @@ sub __get_rdds_test_values
 		{
 			$subservice = JSON_RDDS_80;
 		}
+		elsif ($port eq 'rdap')
+		{
+			$subservice = JSON_RDDS_RDAP;
+		}
 		else
 		{
 			fail("unknown RDDS port in item (id:$itemid)");
@@ -1742,6 +1869,10 @@ sub __get_rdds_test_values
                 elsif ($port eq '80')
                 {
                         $subservice = JSON_RDDS_80;
+                }
+                elsif ($port eq 'rdap')
+                {
+                        $subservice = JSON_RDDS_RDAP;
                 }
                 else
                 {
@@ -1920,6 +2051,8 @@ sub __get_rdds_port
 {
 	my $key = shift;
 
+	return 'rdap' if (substr($key, 0, 4) eq 'rdap');
+
 	# rsm.rdds.43... <-- returns 43 or 80
 	return substr($key, 9, 2);
 }
@@ -1927,6 +2060,8 @@ sub __get_rdds_port
 sub __get_rdds_dbl_type
 {
 	my $key = shift;
+
+	return 'rtt' if (substr($key, 0, 4) eq 'rdap');
 
 	# rsm.rdds.43.rtt... rsm.rdds.43.upd[... <-- returns "rtt" or "upd"
 	return substr($key, 12, 3);
@@ -1973,7 +2108,13 @@ sub __get_rdds_dbl_itemids
 	my $tld = shift;
 	my $probe = shift;
 
-	return __get_itemids_by_complete_key($tld, $probe, $services{'rdds'}{'key_43_rtt'}, $services{'rdds'}{'key_80_rtt'}, $services{'rdds'}{'key_43_upd'});
+	return __get_itemids_by_complete_key(
+		$tld,
+		$probe,
+		$services{'rdds'}{'rdds'}{'key_43_rtt'},
+		$services{'rdds'}{'rdds'}{'key_80_rtt'},
+		$services{'rdds'}{'rdds'}{'key_43_upd'},
+		$services{'rdds'}{'rdap'}{'key_rtt'});
 }
 
 # return itemids of string items grouped by Probes:
@@ -1993,7 +2134,12 @@ sub __get_rdds_str_itemids
 	my $tld = shift;
 	my $probe = shift;
 
-	return __get_itemids_by_complete_key($tld, $probe, $services{'rdds'}{'key_43_ip'}, $services{'rdds'}{'key_80_ip'});
+	return __get_itemids_by_complete_key(
+		$tld,
+		$probe,
+		$services{'rdds'}{'rdds'}{'key_43_ip'},
+		$services{'rdds'}{'rdds'}{'key_80_ip'},
+		$services{'rdds'}{'rdap'}{'key_ip'});
 }
 
 sub __get_epp_dbl_itemids
@@ -2001,7 +2147,13 @@ sub __get_epp_dbl_itemids
 	my $tld = shift;
 	my $probe = shift;
 
-	return __get_itemids_by_incomplete_key($tld, $probe, $services{'epp'}{'key_rtt'});
+	my $result = __get_itemids_by_incomplete_key($tld, $probe, $services{'epp'}{'key_rtt'});
+
+	my $host = ($probe ? "$tld $probe" : "$tld %");
+
+	fail("cannot find epp rtt items at host \"$host\"") if (scalar(keys(%{$result})) == 0);
+
+	return $result;
 }
 
 sub __get_epp_str_itemids
@@ -2009,7 +2161,13 @@ sub __get_epp_str_itemids
 	my $tld = shift;
 	my $probe = shift;
 
-	return __get_itemids_by_complete_key($tld, $probe, $services{'epp'}{'key_ip'});
+	my $result = __get_itemids_by_complete_key($tld, $probe, $services{'epp'}{'key_ip'});
+
+	my $host = ($probe ? "$tld $probe" : "$tld %");
+
+	fail("cannot find epp ip items at host \"$host\"") if (scalar(keys(%{$result})) == 0);
+
+	return $result;
 }
 
 # $keys_str - list of complete keys
@@ -2044,8 +2202,6 @@ sub __get_itemids_by_complete_key
 
 		$result{$_probe}->{$itemid} = $key;
 	}
-
-	fail("cannot find items ($keys_str) at host ($tld *)") if (scalar(keys(%result)) == 0);
 
 	return \%result;
 }
@@ -2114,9 +2270,9 @@ sub __get_status_itemids
 
 	my $rows_ref = db_select($sql);
 
-	fail("no items matching '$key' found at host '$tld %'") if (scalar(@$rows_ref) == 0);
-
 	my %result;
+
+	return \%result if (scalar(@$rows_ref) == 0);
 
 	my $tld_length = length($tld) + 1; # white space
 	foreach my $row_ref (@$rows_ref)

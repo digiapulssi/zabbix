@@ -1,3 +1,12 @@
+Changes for rsm1.1.0rc16
+
+Bug fixes:
+....I..... [sub-182] added support for RDAP in SLA API (dimir)
+..F....... [sub-381] fixed probe coloring and summary calculation based on RDDS and RDAP values (miks)
+.......PS. [sub-378] fixed -414,-814 error detection (yurii)
+....I..... [sub-379] added upgrade patch that adds value mappings for new DNS error codes: -408, -808 (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc15
 
 Bug fixes:

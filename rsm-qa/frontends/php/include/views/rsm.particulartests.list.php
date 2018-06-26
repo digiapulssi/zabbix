@@ -99,6 +99,7 @@ foreach ($this->data['probes'] as $probe) {
 			$rdds = ZBX_STYLE_GREY;
 			$rdds43 = $offline;
 			$rdds80 = $offline;
+			$rdap = $offline;
 		}
 		else {
 			$epp = $offline;
@@ -187,25 +188,28 @@ foreach ($this->data['probes'] as $probe) {
 			}
 		}
 		elseif ($this->data['type'] == RSM_RDDS) {
+			$probe_down = false;
+			$probe_no_result = false;
+
 			// RDDS
-			if (isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
-					&& $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
+			if (!isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
+					|| $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
 				$rdds43 = $disabled;
 				$rdds80 = $disabled;
 				$rdds = ZBX_STYLE_GREY;
-				$noResultProbes++;
+				$probe_no_result = true;
 			}
 			elseif (!isset($probe['value']) || $probe['value'] === null) {
 				$rdds43 = $noResult;
 				$rdds80 = $noResult;
 				$rdds = ZBX_STYLE_GREY;
-				$noResultProbes++;
+				$probe_no_result = true;
 			}
 			elseif ($probe['value'] == 0) {
 				$rdds43 = $down;
 				$rdds80 = $down;
 				$rdds = ZBX_STYLE_RED;
-				$downProbes++;
+				$probe_down = true;
 			}
 			elseif ($probe['value'] == 1) {
 				$rdds43 = $up;
@@ -216,37 +220,40 @@ foreach ($this->data['probes'] as $probe) {
 				$rdds43 = $up;
 				$rdds80 = $down;
 				$rdds = ZBX_STYLE_RED;
-				$downProbes++;
+				$probe_down = true;
 			}
 			elseif ($probe['value'] == 3) {
 				$rdds43 = $down;
 				$rdds80 = $up;
 				$rdds = ZBX_STYLE_RED;
-				$downProbes++;
+				$probe_down = true;
 			}
 			elseif ($probe['value'] == 4) {
 				$rdds43 = $down;
 				$rdds80 = $down;
 				$rdds = ZBX_STYLE_RED;
-				$downProbes++;
+				$probe_down = true;
 			}
 			elseif ($probe['value'] == 5) {
 				$rdds43 = $noResult;
 				$rdds80 = $up;
 				$rdds = ZBX_STYLE_RED;
-				$downProbes++;
+				$probe_down = true;
 			}
 			elseif ($probe['value'] == 6) {
 				$rdds43 = $up;
 				$rdds80 = $noResult;
 				$rdds = ZBX_STYLE_RED;
-				$downProbes++;
+				$probe_down = true;
 			}
 			elseif ($probe['value'] == 7) {
 				$rdds43 = $up;
 				$rdds80 = $up;
 				$rdds = ZBX_STYLE_RED;
-				$downProbes++;
+				$probe_down = true;
+			}
+			else {
+				$rdds = ZBX_STYLE_GREY;
 			}
 
 			if (isset($this->data['tld']['macros'][RSM_RDDS_ENABLED]) && $this->data['tld']['macros'][RSM_RDDS_ENABLED] == 0) {
@@ -256,10 +263,23 @@ foreach ($this->data['probes'] as $probe) {
 				$rdap = $noResult;
 			}
 			elseif ($probe['value_rdap'] == 0) {
+				$rdds = ZBX_STYLE_RED;
+				$probe_down = true;
 				$rdap = $down;
 			}
 			elseif ($probe['value_rdap'] == 1) {
+				if ($rdds !== ZBX_STYLE_RED) {
+					$rdds = ZBX_STYLE_GREEN;
+				}
+
 				$rdap = $up;
+			}
+
+			if ($probe_down) {
+				$downProbes++;
+			}
+			elseif ($probe_no_result) {
+				$noResultProbes++;
 			}
 		}
 		else {
