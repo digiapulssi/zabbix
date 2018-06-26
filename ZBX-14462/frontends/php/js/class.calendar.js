@@ -456,7 +456,10 @@ calendar.prototype = {
 						var date = datetime[0].split('.');
 						var time = new Array();
 
-						if (datetime.length > 1) {
+						if (datetime.length == 1) {
+							this.sdt = new CDate();
+						}
+						else if (datetime.length > 1) {
 							var time = datetime[1].split(':');
 						}
 						if (date.length == 3) {
