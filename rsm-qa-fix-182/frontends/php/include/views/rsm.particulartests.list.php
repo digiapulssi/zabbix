@@ -188,8 +188,8 @@ foreach ($this->data['probes'] as $probe) {
 		}
 		elseif ($this->data['type'] == RSM_RDDS) {
 			// RDDS
-			if (isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
-					&& $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
+			if (!isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
+					|| $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
 				$rdds43 = $disabled;
 				$rdds80 = $disabled;
 				$rdds = ZBX_STYLE_GREY;
