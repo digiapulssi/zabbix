@@ -55,12 +55,6 @@ use constant AH_STATUS_DOWN	=> 'Down';	# todo phase 1: taken from ApiHelper.pm p
 
 use constant true => 1;	# todo phase 1: taken from TLD_constants.pm phase 2
 			# todo phase 1: taken from TLD_constants.pm phase 2
-use constant rsm_rdds_probe_result => [
-	{},								# 0 - down
-	{JSON_INTERFACE_RDDS43 => true, JSON_INTERFACE_RDDS80 => true},	# 1 - up
-	{JSON_INTERFACE_RDDS43 => true},				# 2 - only 43
-	{JSON_INTERFACE_RDDS80 => true}					# 3 - only 80
-];
 
 # todo phase 1: this must be available in phase 2
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
