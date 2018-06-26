@@ -191,25 +191,32 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			)
 		));
 
+		// Find macros history items.
+		$rdds_enabled_itemid = API::Item()->get([
+			'output' => [],
+			'hostids' => array_keys($tld_templates),
+			'filter' => [
+				'key_' => RDDS_ENABLED
+			],
+			'limit' => 1,
+			'preservekeys' => true
+		]);
+		$rdds_enabled_itemid = array_keys($rdds_enabled_itemid);
+
 		$data['tld']['macros'] = [];
 		foreach ($template_macros as $template_macro) {
-			if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED) {
+			/**
+			 * We have to check what historical value of RSM_TLD_RDDS_ENABLED was set at the time of test. It is value
+			 * per TLD and is stored in item RDDS_ENABLED.
+			 *
+			 * Historical values of RSM_RDAP_TLD_ENABLED will overwritten later, using the first tld-probe value.
+			 */
+			if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED && $rdds_enabled_itemid) {
 				$hist_value = API::History()->get([
 					'output' => API_OUTPUT_EXTEND,
 					'time_from' => $testTimeFrom,
 					'time_till' => $testTimeTill,
-					'filter' => RDDS_ENABLED,
-					'limit' => 1
-				]);
-
-				$template_macro['value'] = $hist_value ? $hist_value[0]['value'] : $template_macro['value'];
-			}
-			elseif ($template_macro['macro'] === RSM_RDAP_TLD_ENABLED) {
-				$hist_value = API::History()->get([
-					'output' => API_OUTPUT_EXTEND,
-					'time_from' => $testTimeFrom,
-					'time_till' => $testTimeTill,
-					'filter' => RDAP_ENABLED,
+					'itemids' => $rdds_enabled_itemid,
 					'limit' => 1
 				]);
 
@@ -218,12 +225,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 			$data['tld']['macros'][$template_macro['macro']] = $template_macro['value'];
 		}
-
-		if (!array_key_exists(RSM_RDAP_TLD_ENABLED, $data['tld']['macros'])
-				|| $data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 1) {
-			$data['rdap_base_url'] = $data['tld']['macros'][RDAP_BASE_URL];
 		}
-	}
 
 	// get slv item
 	$slvItems = API::Item()->get([
@@ -314,6 +316,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	]);
 
 	$hostIds = [];
+	$tlds_probes = [];
 	foreach ($hosts as $host) {
 		$pos = strrpos($host['host'], ' - mon');
 		if ($pos === false) {
@@ -324,10 +327,58 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			'host' => substr($host['host'], 0, $pos),
 			'name' => substr($host['host'], 0, $pos)
 		];
+
+		$tlds_probes[] = $data['tld']['host'].' '.$data['probes'][$host['hostid']]['host'];
 		$hostIds[] = $host['hostid'];
 	}
 
 	$data['totalProbes'] = count($hostIds);
+
+	if ($tlds_probes) {
+		$tlds_probes = API::Host()->get([
+			'output' => [],
+			'filter' => [
+				'host' => $tlds_probes
+			],
+			'monitored_hosts' => true,
+			'preservekeys' => true
+		]);
+
+		/**
+		 * If there are multiple TLD probes, each with different historical value for RDAP_ENABLED, we still take only
+		 * the first one, because others will be synchronized in less then minute.
+		 */
+		$rdap_enabled_itemid = $tlds_probes ? API::Item()->get([
+			'output' => ['itemid', 'key_'],
+			'hostids' => array_keys($tlds_probes),
+			'filter' => [
+				'key_' => RDAP_ENABLED
+			],
+			'preservekeys' => true,
+			'limit' => 1
+		]) : null;
+
+		$history_value = $rdap_enabled_itemid ? API::History()->get([
+			'output' => API_OUTPUT_EXTEND,
+			'itemids' => array_keys($rdap_enabled_itemid),
+			'time_from' => $testTimeFrom,
+			'time_till' => $testTimeTill,
+			'limit' => 1
+		]) : null;
+
+		if ($history_value !== null) {
+			$data['tld']['macros'][RSM_RDAP_TLD_ENABLED] = $history_value[0]['value'];
+		}
+	}
+
+	/**
+	 * Since here we have obtained a final RSM_RDAP_TLD_ENABLED historical value, we can also check if there should be
+	 * RDAP base url be displayed.
+	 */
+	if (!array_key_exists(RSM_RDAP_TLD_ENABLED, $data['tld']['macros'])
+			|| $data['tld']['macros'][RSM_RDAP_TLD_ENABLED] != 0) {
+		$data['rdap_base_url'] = $data['tld']['macros'][RDAP_BASE_URL];
+	}
 
 	// Get probe status.
 	$probeItems = API::Item()->get([
@@ -427,12 +478,12 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		$items_to_check = [];
 		$probeItemKey = [];
 
-		if (!isset($data['tld']['macros'][RSM_RDAP_TLD_ENABLED]) || $data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 1) {
+		if (!isset($data['tld']['macros'][RSM_RDAP_TLD_ENABLED]) || $data['tld']['macros'][RSM_RDAP_TLD_ENABLED] != 0) {
 			$items_to_check[] = PROBE_RDAP_IP;
 			$items_to_check[] = PROBE_RDAP_RTT;
 			$probeItemKey[] = 'i.key_ LIKE ('.zbx_dbstr(PROBE_RDAP_ITEM.'%').')';
 		}
-		if (!isset($data['tld']['macros'][RSM_TLD_RDDS_ENABLED]) || $data['tld']['macros'][RSM_TLD_RDDS_ENABLED] == 1) {
+		if (!isset($data['tld']['macros'][RSM_TLD_RDDS_ENABLED]) || $data['tld']['macros'][RSM_TLD_RDDS_ENABLED] != 0) {
 			$items_to_check[] = PROBE_RDDS43_IP;
 			$items_to_check[] = PROBE_RDDS43_RTT;
 			$items_to_check[] = PROBE_RDDS80_IP;

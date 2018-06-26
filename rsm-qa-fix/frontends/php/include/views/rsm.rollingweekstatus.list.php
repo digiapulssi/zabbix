@@ -307,11 +307,11 @@ if ($this->data['tld']) {
 
 			$ok_rdds_services = [];
 			if (array_key_exists(RSM_TLD_RDDS_ENABLED, ($tld[RSM_RDDS]['subservices']))
-					&& $tld[RSM_RDDS]['subservices'][RSM_TLD_RDDS_ENABLED] == 1) {
+					&& $tld[RSM_RDDS]['subservices'][RSM_TLD_RDDS_ENABLED] != 0) {
 				$ok_rdds_services[] = 'RDDS';
 			}
 			if (array_key_exists(RSM_RDAP_TLD_ENABLED, ($tld[RSM_RDDS]['subservices']))
-					&& $tld[RSM_RDDS]['subservices'][RSM_RDAP_TLD_ENABLED] == 1) {
+					&& $tld[RSM_RDDS]['subservices'][RSM_RDAP_TLD_ENABLED] != 0) {
 				$ok_rdds_services[] = 'RDAP';
 			}
 

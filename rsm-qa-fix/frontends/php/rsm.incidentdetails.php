@@ -228,10 +228,10 @@ if ($mainEvent) {
 				foreach ($template_macros as $template_macro) {
 					$data['tld']['subservices'][$template_macro['macro']] = $template_macro['value'];
 
-					if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED && $template_macro['value'] == 1) {
+					if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED && $template_macro['value'] != 0) {
 						$ok_rdds_services[] = 'RDDS';
 					}
-					elseif ($template_macro['macro'] === RSM_RDAP_TLD_ENABLED && $template_macro['value'] == 1) {
+					elseif ($template_macro['macro'] === RSM_RDAP_TLD_ENABLED && $template_macro['value'] != 0) {
 						$ok_rdds_services[] = 'RDAP';
 					}
 				}

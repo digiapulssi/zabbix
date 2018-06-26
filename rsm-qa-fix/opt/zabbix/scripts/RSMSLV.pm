@@ -87,7 +87,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_item_data get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
-		get_templated_nsips db_exec
+		get_templated_nsips db_exec tld_rdap_enabled_at tld_rdds_enabled_at
 		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_downtime_bounds
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
@@ -450,7 +450,6 @@ sub get_tlds
 
 	my $sql = "select distinct h.host";
 
-
 	if ($service eq 'DNS')
 	{
 		$sql .=	" from hosts h,hosts_groups hg,groups g".
@@ -468,7 +467,7 @@ sub get_tlds
 				" and g.name='TLDs'".
 				" and h2.hostid=hm.hostid".
 				" and (".
-					"hm.macro='{\$RSM.TLD.$service.ENABLED}' and hm.value!=0".
+					"hm.macro='{\$RSM.TLD.RDDS.ENABLED}' and hm.value!=0".
 						" or ".
 					"hm.macro='{\$RDAP.TLD.ENABLED}' and hm.value!=0".
 				")".
@@ -708,29 +707,94 @@ sub tld_exists
 sub tld_service_enabled
 {
 	my $tld = shift;
-	my $service_type = shift;
+	my $service = shift;
 
-	$service_type = uc($service_type) if (defined($service_type));
+	$service = uc($service) if (defined($service));
 
-	return SUCCESS if (not defined($service_type) or $service_type eq 'DNS');
+	return SUCCESS if (not defined($service) or $service eq 'DNS');
 
 	my $host = "Template $tld";
-	my $macro = "{\$RSM.TLD.$service_type.ENABLED}";
 
-	my $rows_ref = db_select(
-		"select hm.value".
-		" from hosts h,hostmacro hm".
-		" where h.hostid=hm.hostid".
-			" and h.host='$host'".
-			" and hm.macro='$macro'");
+	my $rows_ref;
+
+	if ($service eq 'RDDS')
+	{
+		$rows_ref = db_select(
+			"select hm.value".
+			" from hosts h,hostmacro hm".
+			" where h.hostid=hm.hostid".
+				" and h.host='$host'".
+				" and (".
+					"hm.macro='{\$RSM.TLD.RDDS.ENABLED}' and hm.value!=0".
+						" or ".
+					"hm.macro='{\$RDAP.TLD.ENABLED}' and hm.value!=0".
+				")");
+	}
+	else
+	{
+		$rows_ref = db_select(
+			"select hm.value".
+			" from hosts h,hostmacro hm".
+			" where h.hostid=hm.hostid".
+				" and h.host='$host'".
+				" and hm.macro='{\$RSM.TLD.$service.ENABLED}'");
+	}
 
 	if (scalar(@$rows_ref) == 0)
 	{
-		wrn("macro \"$macro\" does not exist at host \"$host\", assuming feature disabled");
+		wrn("service macro does not exist at \"$host\", assuming feature disabled");
 		return E_FAIL;
 	}
 
+	dbg("$tld: $service ", ($rows_ref->[0]->[0] == 0 ? "DISABLED" : "ENABLED"));
+
 	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS);
+}
+
+# wether RDAP was enabled at particular time
+sub tld_rdap_enabled_at
+{
+	my $tld = shift;
+	my $from = shift;
+	my $till = shift;
+
+	my $rows_ref = db_select(
+		"select hi.value".
+		" from hosts h,items i,history_uint hi".
+		" where h.hostid=i.hostid".
+			" and i.itemid=hi.itemid".
+			" and h.status=0".
+			" and h.host like '$tld %'".
+			" and i.key_='rdap.enabled'".
+			" and ".sql_time_condition($from, $till, "hi.clock").
+		" order by hi.clock asc".
+		" limit 1");
+
+	fail("dimir was wrong, 'rdap.enabled' is not on every \"<TLD> <Probe>\" host") unless (scalar(@$rows_ref) != 0);
+
+	return (defined($rows_ref->[0]->[0]) && $rows_ref->[0]->[0] != 0 ? SUCCESS : E_FAIL);
+}
+
+# wether RDDS43 and RDDS80 were enabled at particular time
+sub tld_rdds_enabled_at
+{
+	my $tld = shift;
+	my $from = shift;
+	my $till = shift;
+
+	my $rows_ref = db_select(
+		"select hi.value".
+		" from hosts h,items i,history_uint hi".
+		" where h.hostid=i.hostid".
+			" and i.itemid=hi.itemid".
+			" and h.status=0".
+			" and h.host like '$tld %'".
+			" and i.key_='rdds.enabled'".
+			" and ".sql_time_condition($from, $till, "hi.clock").
+		" order by hi.clock asc".
+		" limit 1");
+
+	return (defined($rows_ref->[0]->[0]) && $rows_ref->[0]->[0] != 0 ? SUCCESS : E_FAIL);
 }
 
 sub handle_db_error
@@ -1632,22 +1696,25 @@ sub sql_time_condition
 {
 	my $from = shift;
 	my $till = shift;
+	my $clock_field = shift;
+
+	$clock_field = "clock" unless(defined($clock_field));
 
 	if (defined($from) and not defined($till))
 	{
-		return "clock>=$from";
+		return "$clock_field>=$from";
 	}
 
 	if (not defined($from) and defined($till))
 	{
-		return "clock<=$till";
+		return "$clock_field<=$till";
 	}
 
 	if (defined($from) and defined($till))
 	{
-		return "clock=$from" if ($from == $till);
+		return "$clock_field=$from" if ($from == $till);
 		fail("invalid time conditions: from=$from till=$till") if ($from > $till);
-		return "clock between $from and $till";
+		return "$clock_field between $from and $till";
 	}
 
 	return "1=1";
