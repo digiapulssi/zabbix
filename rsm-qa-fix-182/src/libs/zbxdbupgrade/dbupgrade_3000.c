@@ -2181,6 +2181,59 @@ out:
 	return ret;
 }
 
+static int	DBpatch_3000218(void)
+{
+	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
+	static const char	*const data[] = {
+		"ROW   |12053    |120       |-408 |DNS UDP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section            |",
+		"ROW   |12107    |120       |-808 |DNS TCP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section            |",
+		NULL
+	};
+	int			i;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	for (i = 0; NULL != data[i]; i++)
+	{
+		zbx_uint64_t	mappingid, valuemapid;
+		char		*value = NULL, *newvalue = NULL, *value_esc, *newvalue_esc;
+
+		if (0 == strncmp(data[i], "--", ZBX_CONST_STRLEN("--")))
+			continue;
+
+		if (4 != sscanf(data[i], "ROW |" ZBX_FS_UI64 " |" ZBX_FS_UI64 " |%m[^|]|%m[^|]|",
+				&mappingid, &valuemapid, &value, &newvalue))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "failed to parse the following line:\n%s", data[i]);
+			zbx_free(value);
+			zbx_free(newvalue);
+			return FAIL;
+		}
+
+		zbx_rtrim(value, ZBX_WHITESPACE);
+		zbx_rtrim(newvalue, ZBX_WHITESPACE);
+
+		/* NOTE: to keep it simple assume that data does not contain sequences "&pipe;", "&eol;" or "&bsn;" */
+
+		value_esc = zbx_db_dyn_escape_string(value);
+		newvalue_esc = zbx_db_dyn_escape_string(newvalue);
+		zbx_free(value);
+		zbx_free(newvalue);
+
+		if (ZBX_DB_OK > DBexecute("insert into mappings (mappingid,valuemapid,value,newvalue)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 ",'%s','%s')",
+				mappingid, valuemapid, value_esc, newvalue_esc))
+		{
+			zbx_free(value_esc);
+			zbx_free(newvalue_esc);
+			return FAIL;
+		}
+
+		zbx_free(value_esc);
+		zbx_free(newvalue_esc);
+	}
+}
 #endif
 
 DBPATCH_START(3000)
@@ -2245,5 +2298,6 @@ DBPATCH_ADD(3000214, 0, 0)	/* create "Template RDAP" template with rdap[...], rd
 DBPATCH_ADD(3000215, 0, 0)	/* add RDAP error codes into "RSM RDAP rtt" value mapping */
 DBPATCH_ADD(3000216, 0, 0)	/* add new test type to "testTypes" catalog */
 DBPATCH_ADD(3000217, 0, 0)	/* add macro {$RDAP.TLD.ENABLED}=0 and item rdds.enabled to all "Template <TLD>" */
+DBPATCH_ADD(3000218, 0, 0)	/* add value mappings for new DNS error codes: -408, -808 */
 
 DBPATCH_END()
