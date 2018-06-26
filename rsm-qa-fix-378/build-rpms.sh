@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RSM_VERSION="rsm1.1.0rc14"	# MAJOR.PROD.QA
+RSM_VERSION="rsm1.1.0rc15"	# MAJOR.PROD.QA
 RPMDIR="rpmbuild"
 SRV_VERSION_FILE="include/version.h"
 FE_VERSION_FILE="frontends/php/include/defines.inc.php"

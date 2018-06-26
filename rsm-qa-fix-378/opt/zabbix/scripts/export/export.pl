@@ -19,7 +19,7 @@ use Time::Local;
 use POSIX qw(floor);
 use Time::HiRes qw(time);
 use TLD_constants qw(:ec :api);
-use Parallel;
+use Parallel::ForkManager;
 
 use constant RDDS_SUBSERVICE => 'sub';
 use constant AUDIT_RESOURCE_INCIDENT => 32;
@@ -45,6 +45,7 @@ use constant JSON_TAG_DESCRIPTION	=> 'description';# todo phase 1: taken from ph
 use constant JSON_TAG_UPD		=> 'upd';	# todo phase 1: taken from phase 2
 use constant JSON_INTERFACE_RDDS43	=> 'RDDS43';	# todo phase 1: taken from phase 2
 use constant JSON_INTERFACE_RDDS80	=> 'RDDS80';	# todo phase 1: taken from phase 2
+use constant JSON_INTERFACE_RDAP	=> 'RDAP';
 use constant ROOT_ZONE_READABLE		=> 'zz--root';	# todo phase 1: taken from phase 2
 
 use constant SERVICE_DNS_TCP	=> 'dns-tcp';	# todo phase 1: Export DNS-TCP tests, not a real service
@@ -68,8 +69,6 @@ use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
 use constant EXPORT_MAX_CHILDREN_DEFAULT => 24;
 use constant EXPORT_MAX_CHILDREN_FLOOR => 1;
 use constant EXPORT_MAX_CHILDREN_CEIL => 128;
-
-use constant EXPORT_LOOP_SLEEP => 2;
 
 parse_opts('probe=s', 'service=s', 'tld=s', 'date=s', 'day=n', 'shift=n', 'force!', 'max-children=n');
 setopt('nolog');
@@ -133,8 +132,8 @@ if (opt('debug'))
 }
 
 # todo phase 1: make sure this check exists in phase 2
-my $max = __cycle_end(time() - 240, 60);
-fail("cannot export data: selected time period is in the future") if ($till > $max);
+my $max = cycle_end(time() - 240, 60);
+fail("cannot export data: selected time period is in the future") if (!opt('force') && $till > $max);
 
 # consider only tests that started within given period
 my $cfg_dns_minns;
@@ -178,16 +177,40 @@ foreach my $service (sort(keys(%{$services})))
 
 my $probes_data;
 
-if (opt('max-children'))
-{
-	set_max_children(getopt('max-children'));
-}
-else
-{
-	set_max_children(EXPORT_MAX_CHILDREN_DEFAULT);
-}
-
 my ($time_start, $time_get_test_data, $time_load_ids, $time_process_records, $time_write_csv);
+
+my $child_failed = 0;
+my $signal_sent = 0;
+
+my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : EXPORT_MAX_CHILDREN_DEFAULT);
+
+$fm->run_on_finish(
+	sub ($$$$$)
+	{
+		my $pid = shift;
+		my $exit_code = shift;
+		my $id = shift;
+		my $exit_signal = shift;
+		my $core_dump = shift;
+
+		# We just raise a $child_failed flag here and send a SIGTERM signal later because we can be in a state
+		# when we have already requested Parallel::ForkManager to start another child, but it has already
+		# reached the limit and it is waiting for one of them to finish. If we send SIGTERM now, that child will
+		# not receive it since it starts after we send the signal.
+
+		if ($core_dump == 1)
+		{
+			$child_failed = 1;
+			info("child (PID:$pid) core dumped");
+		}
+		elsif ($exit_code != SUCCESS)
+		{
+			$child_failed = 1;
+			info("child (PID:$pid)" . ($exit_signal == 0 ? "" : " got signal $exit_signal and") .
+					" exited with code $exit_code");
+		}
+	}
+);
 
 # go through all the databases
 my @server_keys = get_rsm_server_keys($config);
@@ -235,26 +258,13 @@ db_disconnect();
 # unset TLD (for the logs)
 undef($tld);
 
-my $tld_index = 0;
-my $tld_count = scalar(@$tlds_ref);
-
-while ($tld_index < $tld_count)
+foreach my $tld_for_a_child_to_process (@{$tlds_ref})
 {
-	my $pid = fork_without_pipe();
+		goto WAIT_CHILDREN if ($child_failed);	# break from both server and TLD loops
 
-	if (!defined($pid))
-	{
-		# max children reached, make sure to handle_children()
-	}
-	elsif ($pid)
-	{
-		# parent
-		$tld_index++;
-	}
-	else
-	{
-		# child
-		$tld = $tlds_ref->[$tld_index];
+		$fm->start() and next;	# start a new child and send parent to the next iteration
+
+		$tld = $tld_for_a_child_to_process;
 
 		slv_stats_reset();	# todo phase 1: this is part of phase 2
 
@@ -278,25 +288,46 @@ while ($tld_index < $tld_count)
 				format_stats_time($time_process_records - $time_load_ids),
 				format_stats_time($time_write_csv - $time_process_records))) if (opt('stats'));
 
-		slv_exit(SUCCESS);
-	}
+		slv_finalize();
 
-	handle_children();
+		# When we fork for real it makes no difference for Parallel::ForkManager whether child calls exit() or
+		# calls $fm->finish(), therefore we do not need to introduce $fm->finish() in all our low-level error
+		# handling routines, but having $fm->finish() here leaves a possibility to debug a happy path scenario
+		# without the complications of actual forking by using:
+		# my $fm = new Parallel::ForkManager(0);
 
-	sleep(EXPORT_LOOP_SLEEP);
+		$fm->finish(SUCCESS);
 }
 
 last if (opt('tld'));
 }	# foreach (@server_keys)
 undef($server_key) unless (opt('tld'));	# keep $server_key if --tld was specified (for __get_false_positives())
 
-# wait till children finish
-while (children_running() > 0)
-{
-	handle_children();
+WAIT_CHILDREN:
 
-	sleep(EXPORT_LOOP_SLEEP);
-}
+$fm->run_on_wait(
+	sub ()
+	{
+		# This callback ensures that before waiting for the next child to terminate we check the $child_failed
+		# flag and send terminate all running children if needed. After sending SIGTERM we raise $signal_sent
+		# flag to make sure that we don't do it multiple times.
+
+		return unless ($child_failed);
+		return if ($signal_sent);
+
+		info("one of the child processes failed, terminating others...");
+
+		$SIG{'TERM'} = 'IGNORE';	# ignore signal we will send to ourselves in the next step
+		kill('TERM', 0);		# send signal to the entire process group
+		$SIG{'TERM'} = 'DEFAULT';	# restore default signal handler
+
+		$signal_sent = 1;
+	}
+);
+
+$fm->wait_all_children();
+
+slv_exit(E_FAIL) unless ($child_failed == 0);
 
 # at this point there should be no child processes so we do not care about locking
 
@@ -444,6 +475,9 @@ sub __get_keys
 			$services->{$service}->{'key_43_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
 			$services->{$service}->{'key_80_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
 			$services->{$service}->{'key_80_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+
+			$services->{$service}->{'key_rdap_rtt'} = 'rdap.rtt';
+			$services->{$service}->{'key_rdap_ip'} = 'rdap.ip';
 		}
 		elsif ($service eq 'epp')
 		{
@@ -571,10 +605,14 @@ sub __get_test_data
 		elsif ($service eq 'rdds')
 		{
 			$rdds_dbl_items_ref = __get_rdds_dbl_itemids($tld, getopt('probe'),
-				$services->{$service}->{'key_43_rtt'}, $services->{$service}->{'key_80_rtt'},
-				$services->{$service}->{'key_43_upd'});
+				$services->{$service}->{'key_43_rtt'},
+				$services->{$service}->{'key_80_rtt'},
+				$services->{$service}->{'key_43_upd'},
+				$services->{$service}->{'key_rdap_rtt'});
 			$rdds_str_items_ref = __get_rdds_str_itemids($tld, getopt('probe'),
-				$services->{$service}{'key_43_ip'}, $services->{$service}->{'key_80_ip'});
+				$services->{$service}->{'key_43_ip'},
+				$services->{$service}->{'key_80_ip'},
+				$services->{$service}->{'key_rdap_ip'});
 		}
 		elsif ($service eq 'epp')
 		{
@@ -582,7 +620,7 @@ sub __get_test_data
 			$epp_str_items_ref = get_epp_str_itemids($tld, getopt('probe'), $services->{$service}->{'key_ip'});
 		}
 
-		my (@empty_arr, $rows_ref, $incidents, $incidents_count);
+		my (@empty_arr, $rows_ref, $incidents);
 
 		if ($itemid_avail)
 		{
@@ -601,8 +639,6 @@ sub __get_test_data
 			$incidents = \@empty_arr;
 			$rows_ref = \@empty_arr;
 		}
-
-		$incidents_count = scalar(@$incidents);
 
 		my $cycles;
 		my $last_avail_clock;
@@ -653,7 +689,7 @@ sub __get_test_data
 			#   0 seconds <--zero or more minutes--> 30                                  59
 			#
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			# todo phase 1: make sure this uses avail valuemaps in phase1
 			# todo: later rewrite to use valuemap ID from item
@@ -668,7 +704,7 @@ sub __get_test_data
 				" from history".
 				" where itemid=$itemid_rollweek".
 					" and " . sql_time_condition($service_from, $service_till).
-				" order by itemid,clock");	# NB! order is important, see how the result is used below
+				" order by clock");	# NB! order is important, see how the result is used below
 		}
 		else
 		{
@@ -682,7 +718,7 @@ sub __get_test_data
 
 			#dbg("$service rolling week at ", ts_full($clock), ": $value");
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			$cycles->{$cycleclock}->{'rollweek'} = $value;
 		}
@@ -747,50 +783,6 @@ sub __get_test_data
 			}
 		}
 
-		my $probe_results_ref;
-
-		# add availability results from probes, working services: (dns: number of NS, rdds: 43, 80)
-		if ($service eq 'dns' || $service eq 'dnssec')
-		{
-			if (!$probe_dns_results_ref)
-			{
-				my $itemids_ref = __get_service_status_itemids($tld, $services->{$service}->{'key_status'});
-				$probe_dns_results_ref = __get_probe_results($itemids_ref, $service_from, $service_till);
-			}
-
-			$probe_results_ref = $probe_dns_results_ref;
-		}
-		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
-		{
-			$probe_results_ref = undef;
-		}
-		else
-		{
-			my $itemids_ref = __get_service_status_itemids($tld, $services->{$service}->{'key_status'});
-			$probe_results_ref = __get_probe_results($itemids_ref, $service_from, $service_till);
-		}
-
-		if ($probe_results_ref)
-		{
-			foreach my $cycle (values(%{$cycles}))
-			{
-				# set status on particular probe
-				while (my ($interface, $cycle_interface) = each(%{$cycle->{'interfaces'}}))
-				{
-					while (my ($probe, $cycle_interface_probe) = each(%{$cycle_interface->{'probes'}}))
-					{
-						next if (defined($cycle_interface_probe->{'status'}));
-
-						foreach my $probe_result_ref (@{$probe_results_ref->{$probe}})
-						{
-							$cycle_interface_probe->{'status'} =
-								__interface_status($interface, $probe_result_ref->{'value'}, $services->{$service});
-						}
-					}
-				}
-			}
-		}
-
 		$result->{$tld}->{'type'} = __get_tld_type($tld);
 		$result->{$tld}->{'services'}->{$service}->{'cycles'} = $cycles;
 		$result->{$tld}->{'services'}->{$service}->{'incidents'} = $incidents;
@@ -802,6 +794,8 @@ sub __get_test_data
 sub __save_csv_data
 {
 	my $result = shift;
+
+	my $cur_tld = $tld;	# save to restore at the end
 
 	# push data to CSV files
 	foreach (sort(keys(%{$result})))
@@ -1122,7 +1116,12 @@ sub __save_csv_data
 				my $failed_tests = $_->{'failed_tests'};
 				my $false_positive = $_->{'false_positive'};
 
-				dbg("incident id:$eventid start:", ts_full($event_start), " end:", ts_full($event_end), " fp:$false_positive failed_tests:", (defined($failed_tests) ? $failed_tests : "(null)")) if (opt('debug'));
+				if (opt('debug'))
+				{
+					dbg("incident id:$eventid start:" . ts_full($event_start) .
+							" end:" . ts_full($event_end) . " fp:$false_positive" .
+							" failed_tests:" . ($failed_tests // "(null)"));
+				}
 
 				# write event that resolves incident
 				if ($event_end)
@@ -1157,7 +1156,8 @@ sub __save_csv_data
 
 		$time_write_csv = time();
 	}
-	$tld = undef;
+
+	$tld = $cur_tld;	# restore
 }
 
 sub __add_csv_test
@@ -1453,6 +1453,15 @@ sub __check_test
 			return SUCCESS;
 		}
 	}
+	elsif ($interface eq JSON_INTERFACE_RDAP)
+	{
+		if (defined($description) &&
+				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+				substr($description, 0, length(ZBX_EC_RDAP_RES_NOREPLY)) eq ZBX_EC_RDAP_RES_NOREPLY))
+		{
+			return SUCCESS;
+		}
+	}
 
 	return E_FAIL unless ($value);
 
@@ -1617,7 +1626,7 @@ sub __get_dns_test_values
 				undef($new_value);
 			}
 
-			my $cycleclock = __cycle_start($clock, $delay);
+			my $cycleclock = cycle_start($clock, $delay);
 
 			# TODO: rename (in all functions):
 			#
@@ -1792,7 +1801,7 @@ sub __get_incidents2
 			# do not add 'value=TRIGGER_VALUE_TRUE' to SQL above just for corner case of 2 events at the same second
 			if ($value == TRIGGER_VALUE_TRUE)
 			{
-				push(@incidents, __make_incident($eventid, $false_positive, __cycle_start($clock, $delay)));
+				push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 
 				$last_trigger_value = TRIGGER_VALUE_TRUE;
 			}
@@ -1828,7 +1837,7 @@ sub __get_incidents2
 				# replace with current
 				$incidents[$idx]->{'eventid'} = $eventid;
 				$incidents[$idx]->{'false_positive'} = $false_positive;
-				$incidents[$idx]->{'start'} = __cycle_start($clock, $delay);
+				$incidents[$idx]->{'start'} = cycle_start($clock, $delay);
 			}
 		}
 
@@ -1839,7 +1848,7 @@ sub __get_incidents2
 			# event that closes the incident
 			my $idx = scalar(@incidents) - 1;
 
-			$incidents[$idx]->{'end'} = __cycle_end($clock, $delay);
+			$incidents[$idx]->{'end'} = cycle_end($clock, $delay);
 
 			# start FIX-PH1
 			# count failed tests within resolved incident
@@ -1855,7 +1864,7 @@ sub __get_incidents2
 		else
 		{
 			# event that starts an incident
-			push(@incidents, __make_incident($eventid, $false_positive, __cycle_start($clock, $delay)));
+			push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
 		}
 
 		$last_trigger_value = $value;
@@ -1871,37 +1880,16 @@ sub __get_incidents2
 			my $inc_till = $_->{'end'};
 			my $false_positive = $_->{'false_positive'};
 
-			if (opt('debug'))
-			{
-				my $str = "$eventid";
-				$str .= " (false positive)" if ($false_positive != 0);
-				$str .= ": " . ts_str($inc_from) . " ($inc_from) -> ";
-				$str .= $inc_till ? ts_str($inc_till) . " ($inc_till)" : "null";
+			my $str = "$eventid";
+			$str .= " (false positive)" if ($false_positive != 0);
+			$str .= ": " . ts_str($inc_from) . " ($inc_from) -> ";
+			$str .= $inc_till ? ts_str($inc_till) . " ($inc_till)" : "null";
 
-				dbg($str);
-			}
+			dbg($str);
 		}
 	}
 
 	return \@incidents;
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __cycle_start
-{
-	my $now = shift;
-	my $delay = shift;
-
-	return $now - ($now % $delay);
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __cycle_end
-{
-	my $now = shift;
-	my $delay = shift;
-
-	return $now + $delay - ($now % $delay) - 1;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -1996,8 +1984,9 @@ sub __get_rdds_dbl_itemids
 	my $key_43_rtt = shift;
 	my $key_80_rtt = shift;
 	my $key_43_upd = shift;
+	my $key_rdap_rtt = shift;
 
-	return __get_itemids_by_complete_key($tld, $probe, $key_43_rtt, $key_80_rtt, $key_43_upd);
+	return __get_itemids_by_complete_key($tld, $probe, $key_43_rtt, $key_80_rtt, $key_43_upd, $key_rdap_rtt);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -2007,8 +1996,9 @@ sub __get_rdds_str_itemids
 	my $probe = shift;
 	my $key_43_ip = shift;
 	my $key_80_ip = shift;
+	my $key_rdap_ip = shift;
 
-	return __get_itemids_by_complete_key($tld, $probe, $key_43_ip, $key_80_ip);
+	return __get_itemids_by_complete_key($tld, $probe, $key_43_ip, $key_80_ip, $key_rdap_ip);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -2076,7 +2066,7 @@ sub __get_rdds_test_values
 			undef($value);
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
@@ -2106,7 +2096,7 @@ sub __get_rdds_test_values
 			fail("internal error: unknown item key (itemid:$itemid), expected item key representing the IP involved in $interface test");
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
@@ -2164,7 +2154,7 @@ sub __get_epp_test_values
 			unless (defined($probe) and defined($key));
 
 		my $command = __get_epp_dbl_type($key);
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# TODO: EPP: it's not yet decided if 3 EPP RTTs
 		# (login, info, update) are coming in one metric or 3
@@ -2199,7 +2189,7 @@ sub __get_epp_test_values
 			fail("internal error: unknown item key \"$key\", expected item key representing the IP involved in EPP test");
 		}
 
-		my $cycleclock = __cycle_start($clock, $delay);
+		my $cycleclock = cycle_start($clock, $delay);
 
 		# todo phase 1: NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_TARGET_IP()} = $ip;
@@ -2214,68 +2204,69 @@ sub __find_probe_key_by_itemid
 	my $itemid = shift;
 	my $items_ref = shift;
 
-	my ($probe, $key);
-	my $last = 0;
-
-	foreach my $pr (keys(%$items_ref))
+	foreach my $pr (keys %{$items_ref})
 	{
-		my $itemids_ref = $items_ref->{$pr};
-
-		foreach my $i (keys(%$itemids_ref))
-		{
-			if ($i == $itemid)
-			{
-				$probe = $pr;
-				$key = $items_ref->{$pr}->{$i};
-				$last = 1;
-				last;
-			}
-		}
-		last if ($last == 1);
+		my $itemids_ref = %{$items_ref}{$pr};
+		return ($pr, $itemids_ref->{$itemid}) if (exists($itemids_ref->{$itemid}));
 	}
 
-	return ($probe, $key);
+	return (undef, undef);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
 sub __get_rdds_item_details
 {
-	my $key = shift;
-
-	my @keyparts = split(/\./, substr($key, 0, index($key, '[')));
-
 	my $interface;
 	my $type;
+	my @parts = split(/\./, shift());
 
-	if (defined($keyparts[2]))
+	return ($interface, $type) if (!defined(@parts[0]) && !defined(@parts[1]));
+
+	shift(@parts) if(@parts[0] eq 'rsm');
+
+	if (@parts[0] eq 'rdap')
 	{
-		if ($keyparts[2] eq '43')
+		$interface = JSON_INTERFACE_RDAP;
+		$type = pick_rdds_item_type(@parts[1]);
+	}
+	elsif (@parts[0] eq 'rdds')
+	{
+		if(@parts[1] eq '43')
 		{
 			$interface = JSON_INTERFACE_RDDS43;
 		}
-		elsif ($keyparts[2] eq '80')
+		elsif (@parts[1] eq '80')
 		{
 			$interface = JSON_INTERFACE_RDDS80;
 		}
-	}
 
-	if (defined($keyparts[3]))
-	{
-		if ($keyparts[3] eq 'rtt')
+		if (defined(@parts[2]))
 		{
-			$type = JSON_TAG_RTT;
-		}
-		elsif ($keyparts[3] eq 'upd')
-		{
-			$type = JSON_TAG_UPD;
-		}
-		elsif ($keyparts[3] eq 'ip')
-		{
-			$type = JSON_TAG_TARGET_IP;
+			$type = pick_rdds_item_type(@parts[2]);
 		}
 	}
 
 	return ($interface, $type);
+}
+
+sub pick_rdds_item_type
+{
+	my @parts = split(/\[/, shift());
+
+	if ($parts[0] eq 'rtt')
+	{
+		return JSON_TAG_RTT;
+	}
+	elsif ($parts[0] eq 'ip')
+	{
+		return JSON_TAG_TARGET_IP;
+	}
+	elsif ($parts[0] eq 'upd')
+	{
+		return JSON_TAG_UPD;
+	}
+
+	return undef;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -2294,38 +2285,6 @@ sub __get_epp_str_type
 {
 	# NB! This is done for consistency, perhaps in the future there will be more string items, not just "ip".
 	return 'ip';
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __interface_status
-{
-	my $interface = shift;
-	my $value = shift;
-	my $service_ref = shift;
-
-	my $status;
-
-	if ($interface eq JSON_INTERFACE_DNS)
-	{
-		$status = ($value >= $service_ref->{'minns'} ? AH_STATUS_UP : AH_STATUS_DOWN);
-	}
-	elsif ($interface eq JSON_INTERFACE_DNSSEC)
-	{
-		# TODO: dnssec status on a particular probe is not supported currently,
-		# make this calculation in function __create_cycle_hash() for now.
-	}
-	elsif ($interface eq JSON_INTERFACE_RDDS43 || $interface eq JSON_INTERFACE_RDDS80)
-	{
-		my $rsm_rdds_probe_result = rsm_rdds_probe_result;
-
-		$status = (exists($rsm_rdds_probe_result->[$value]->{$interface}) ? AH_STATUS_UP : AH_STATUS_DOWN);
-	}
-	else
-	{
-		fail("$interface: unsupported interface");
-	}
-
-	return $status;
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2

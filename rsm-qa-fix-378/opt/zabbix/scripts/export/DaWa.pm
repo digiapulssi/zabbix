@@ -58,7 +58,7 @@ our @EXPORT = qw(ID_PROBE ID_TLD ID_NS_NAME ID_NS_IP ID_TRANSPORT_PROTOCOL ID_TE
 		DATA_FALSE_POSITIVE DATA_PROBE_CHANGES
 		%CATALOGS %DATAFILES
 		dw_csv_init dw_append_csv dw_load_ids_from_db dw_get_id dw_get_name dw_write_csv_files
-		dw_write_csv_catalogs dw_delete_csvs dw_get_cycle_id dw_translate_cycle_id dw_error dw_set_date);
+		dw_write_csv_catalogs dw_delete_csvs dw_get_cycle_id dw_translate_cycle_id dw_set_date);
 
 my %_MAX_IDS = (
 	ID_PROBE() => 32767,
@@ -81,8 +81,6 @@ use constant _DIGITS_IP_ID			=> 5;
 my (%_csv_files, %_csv_catalogs, $_csv);
 
 my ($_year, $_month, $_day);
-
-my $_dw_error = "";
 
 sub dw_csv_init
 {
@@ -216,10 +214,7 @@ sub __csv_file_full_path
 
 	$path .= $tld  . '/' if ($tld);
 
-	if (!__make_path($path))
-	{
-		die(dw_error());
-	}
+	__make_path($path);
 
 	return $path . $DATAFILES{$id_type};
 }
@@ -232,10 +227,7 @@ sub __csv_catalog_full_path
 
 	my $path = CSV_FILES_DIR . '/';
 
-	if (!__make_path($path))
-	{
-		die(dw_error());
-	}
+	__make_path($path);
 
 	return $path . $CATALOGS{$id_type};
 }
@@ -339,11 +331,6 @@ sub dw_translate_cycle_id
 	my $ip = dw_get_name(ID_NS_IP, int(substr($cycle_id, $from, $len))) || '';
 
 	return "$clock-$service_category-$tld-$ns-$ip";
-}
-
-sub dw_error
-{
-	return $_dw_error;
 }
 
 sub dw_set_date
@@ -509,18 +496,7 @@ sub __make_path
 
 	make_path($path, {error => \my $err});
 
-	if (@$err)
-	{
-		__set_dw_error(__get_file_error($err));
-		return;
-	}
-
-	return 1;
-}
-
-sub __set_dw_error
-{
-	$_dw_error = join('', @_);
+	die(__get_file_error($err)) if (@$err);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
