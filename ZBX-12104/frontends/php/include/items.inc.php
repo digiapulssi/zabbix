@@ -1038,7 +1038,7 @@ function item_get_history($db_item, $clock, $ns) {
 				' FROM '.$table.
 				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
 					' AND clock<'.zbx_dbstr($clock).
-					' AND clock>='.zbx_dbstr($clock - ZBX_HISTORY_PERIOD);
+					(ZBX_HISTORY_PERIOD ? ' AND clock>='.zbx_dbstr($clock - ZBX_HISTORY_PERIOD) : '');
 		if (null != ($row = DBfetch(DBselect($sql)))) {
 			$max_clock = $row['clock'];
 		}
