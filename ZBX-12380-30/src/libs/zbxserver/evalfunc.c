@@ -85,7 +85,8 @@ static int	regexp_pattern_as_array_validate(const char * params, int num, char *
 
 	if ('[' == *s)
 	{
-		*error = zbx_dsprintf(*error, "%s parameter is not supported", 1 == num ? "first" : "second");
+		*error = zbx_dsprintf(*error, "%sparameter is not supported", 0 == num ? "" :
+				(1 == num ? "first " : "second "));
 		return FAIL;
 	}
 
@@ -289,7 +290,7 @@ static int	evaluate_LOGEVENTID(char *value, DC_ITEM *item, const char *function,
 	if (ITEM_VALUE_TYPE_LOG != item->value_type)
 		goto out;
 
-	if (1 < num_param(parameters) || SUCCEED != regexp_pattern_as_array_validate(parameters, 1, error))
+	if (1 < num_param(parameters) || SUCCEED != regexp_pattern_as_array_validate(parameters, 0, error))
 		goto out;
 
 	if (SUCCEED != get_function_parameter_str(item->host.hostid, parameters, 1, &arg1))
