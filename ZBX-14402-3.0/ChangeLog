@@ -3,6 +3,7 @@ Changes for 3.0.20rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.19
