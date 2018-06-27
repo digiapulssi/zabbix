@@ -246,7 +246,7 @@ abstract class CItemGeneral extends CApiService {
 				if (!isset($item['hostid'])) {
 					$item['hostid'] = $fullItem['hostid'];
 				}
-				if (!array_key_exists('type', $item)) {
+				if (!array_key_exists('type', $item) || $item['type'] === null) {
 					$item['type'] = $fullItem['type'];
 				}
 
