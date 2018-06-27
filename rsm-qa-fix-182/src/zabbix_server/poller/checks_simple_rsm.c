@@ -4009,6 +4009,12 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		return ret;
 	}
 
+	if ('\0' == *res_ip)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "IP address of local resolver cannot be empty."));
+		return ret;
+	}
+
 	/* open log file */
 	if (NULL == (log_fd = open_item_log(item->host.host, domain, ZBX_RDAP_LOG_PREFIX, NULL, err, sizeof(err))))
 	{
@@ -4016,11 +4022,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		return ret;
 	}
 
-	if ('\0' == *res_ip)
-	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "IP address of local resolver cannot be empty."));
-		return ret;
-	}
+	zbx_vector_str_create(&ips);
 
 	zbx_rsm_info(log_fd, "START TEST");
 
@@ -4035,17 +4037,15 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	{
 		zbx_rsm_info(log_fd, "RDAP disabled on this probe");
 		ret = SYSINFO_RET_OK;
-		goto out_nolog;
+		goto out;
 	}
 
 	if (0 == tld_enabled)
 	{
 		zbx_rsm_info(log_fd, "RDAP disabled on this TLD");
 		ret = SYSINFO_RET_OK;
-		goto out_nolog;
+		goto out;
 	}
-
-	zbx_vector_str_create(&ips);
 
 	extras = ZBX_RESOLVER_CHECK_ADBIT;
 
@@ -4160,9 +4160,10 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	}
 
 	rtt = ec_http;
+
+	zbx_rsm_infof(log_fd, "end test of \"%s\" (%s) (rtt:%d)", base_url, ZBX_NULL2STR(ip), rtt);
 out:
-	zbx_rsm_infof(log_fd, "RDAP \"%s\" (%s) RTT:%d", base_url, ZBX_NULL2STR(ip), rtt);
-out_nolog:
+	zbx_rsm_info(log_fd, "END TEST");
 
 	if (0 != ISSET_MSG(result))
 		zbx_rsm_err(log_fd, result->msg);
