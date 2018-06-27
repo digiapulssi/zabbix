@@ -251,15 +251,42 @@ out:
 
 int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	char		tmp[MAX_STRING_LEN], *procname, *proccomm, *param;
+	char		tmp[MAX_STRING_LEN], *procname, *proccomm, *param, *flags;
 	DIR		*dir;
 	struct dirent	*entries;
 	zbx_stat_t	buf;
 	struct passwd	*usrinfo;
 	psinfo_t	psinfo;	/* In the correct procfs.h, the structure name is psinfo_t */
 	int		fd = -1, proccount = 0, invalid_user = 0, zbx_proc_stat;
+	zbx_uint64_t	zoneflag;
 
-	if (4 < request->nparam)
+#ifndef HAVE_ZONE_H
+	/* this code is for case if agent has been compiled on Solaris 9 or earlier where zones are not supported */
+	/* but the agent is running on a newer Solaris where zones are supported */
+
+#	define ZBX_ZONE_SUPPORT_UNKNOWN	0
+#	define ZBX_ZONE_SUPPORT_YES	1
+#	define ZBX_ZONE_SUPPORT_NO	2
+
+	static int	zone_support = ZBX_ZONE_SUPPORT_UNKNOWN;
+
+	if (ZBX_ZONE_SUPPORT_UNKNOWN == zone_support)
+	{
+		unsigned int	major, minor;
+
+		/* zones are supported in Solaris 10 and later (minimum version is "5.10") */
+
+		if (SUCCEED == zbx_solaris_version_get(&major, &minor) && ((5 == major && 10 <= minor) || 5 < major))
+		{
+			zone_support = ZBX_ZONE_SUPPORT_YES;
+		}
+		else	/* failure to get Solaris version also results in "zones not supported" */
+		{
+			zone_support = ZBX_ZONE_SUPPORT_NO;
+		}
+	}
+#endif
+	if (5 < request->nparam)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
 		return SYSINFO_RET_FAIL;
@@ -305,6 +332,37 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	proccomm = get_rparam(request, 3);
 
+	if (NULL == (flags = get_rparam(request, 4)) || '\0' == *flags || 0 == strcmp(flags, "current"))
+	{
+#ifndef HAVE_ZONE_H
+		/* agent has been compiled on Solaris 9 or earlier where zones are not supported */
+
+		if (ZBX_ZONE_SUPPORT_YES == zone_support)
+		{
+			/* But now this agent is running on a system with zone support. This agent cannot limit */
+			/* results to only current zone. */
+
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "The fifth parameter value \"current\" cannot be used"
+					" with agent running on a Solaris version with zone support, but compiled on"
+					" a Solaris version without zone support. Consider using \"all\" or install"
+					" agent with Solaris zone support."));
+			return SYSINFO_RET_FAIL;
+		}
+
+		/* zones are not supported, the agent can accept 6th parameter with default value "current" */
+#endif
+		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_CURRENT;
+	}
+	else if (0 == strcmp(flags, "all"))
+	{
+		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_ALL;
+	}
+	else
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter."));
+		return SYSINFO_RET_FAIL;
+	}
+
 	if (1 == invalid_user)	/* handle 0 for non-existent user after all parameters have been parsed and validated */
 		goto out;
 
@@ -343,6 +401,9 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 			continue;
 
 		if (NULL != proccomm && '\0' != *proccomm && NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL))
+			continue;
+
+		if (ZBX_PROCSTAT_FLAGS_ZONE_CURRENT == zoneflag && zoneflag != psinfo.pr_zoneid)
 			continue;
 
 		proccount++;
