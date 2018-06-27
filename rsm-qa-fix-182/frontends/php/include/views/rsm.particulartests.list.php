@@ -192,12 +192,11 @@ foreach ($this->data['probes'] as $probe) {
 			$probe_no_result = false;
 
 			// RDDS
-			if (!isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
-					|| $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
+			if (isset($this->data['tld']['macros'][RSM_RDDS_ENABLED])
+					&& $this->data['tld']['macros'][RSM_RDDS_ENABLED] == 0) {
 				$rdds43 = $disabled;
 				$rdds80 = $disabled;
 				$rdds = ZBX_STYLE_GREY;
-				$probe_no_result = true;
 			}
 			elseif (!isset($probe['value']) || $probe['value'] === null) {
 				$rdds43 = $noResult;
@@ -256,7 +255,8 @@ foreach ($this->data['probes'] as $probe) {
 				$rdds = ZBX_STYLE_GREY;
 			}
 
-			if (isset($this->data['tld']['macros'][RSM_RDDS_ENABLED]) && $this->data['tld']['macros'][RSM_RDDS_ENABLED] == 0) {
+			if (isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
+					&& $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
 				$rdap = $disabled;
 			}
 			elseif (!isset($probe['value_rdap']) || $probe['value_rdap'] === null) {

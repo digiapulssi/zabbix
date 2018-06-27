@@ -225,7 +225,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 			$data['tld']['macros'][$template_macro['macro']] = $template_macro['value'];
 		}
-		}
+	}
 
 	// get slv item
 	$slvItems = API::Item()->get([
@@ -612,7 +612,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				}
 				elseif (substr($item['key_'], 0, strlen(PROBE_RDDS_ITEM)) === PROBE_RDDS_ITEM) {
 					if (!array_key_exists(RSM_TLD_RDDS_ENABLED, $data['tld']['macros'])
-							|| $data['tld']['macros'][RSM_TLD_RDDS_ENABLED] == 1) {
+							|| $data['tld']['macros'][RSM_TLD_RDDS_ENABLED] != 0) {
 						preg_match('/^[^\[]+\[([^\]]+)]$/', $item['key_'], $matches);
 						list($tld_macros, $rdds_43, $rdds_80) = explode(',', $matches[1]);
 
@@ -710,7 +710,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	foreach ($hosts as $host) {
 		foreach ($data['probes'] as $hostId => $probe) {
 			if (mb_strtoupper($host['host']) == mb_strtoupper($data['tld']['host'].' '.$probe['host'])
-					&& isset($host['value'])) {
+					&& (isset($host['value']) || isset($host['value_rdap']))) {
 				$data['probes'][$hostId] = $host;
 				$data['probes'][$hostId]['name'] = $probe['host'];
 				break;
