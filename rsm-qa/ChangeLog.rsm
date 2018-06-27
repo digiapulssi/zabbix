@@ -1,3 +1,14 @@
+Changes for rsm1.1.0rc17
+
+New features:
+
+Bug fixes:
+..F....... [sub-387] fixed URL label in result table header when all probes are offline (miks)
+..F....... [sub-386] fixed result interpretation based on macros values (miks)
+....I..... [sub-385] fixed export.pl script syntax errors (yurii)
+.......PS. [sub-389] made rdds and rdap logs consistent (yurii)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc16
 
 Bug fixes:

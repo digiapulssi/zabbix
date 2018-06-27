@@ -30,15 +30,33 @@ if ($this->data['type'] == RSM_DNS || $this->data['type'] == RSM_DNSSEC) {
 	$table = (new CTableInfo())->setHeader($headers);
 }
 elseif ($this->data['type'] == RSM_RDDS) {
-	$rdds_43_base_url = array_key_exists('rdds_43_base_url', $data) ? $data['rdds_43_base_url'] : _('disabled');
-	$rdds_80_base_url = array_key_exists('rdds_80_base_url', $data) ? $data['rdds_80_base_url'] : _('disabled');
-	$rdap_base_url = array_key_exists('rdap_base_url', $data) ? $data['rdap_base_url'] : _('disabled');
+	$probes_status = zbx_objectValues($this->data['probes'], 'status');
+
+	/**
+	 * If 'status' is not set, probe is UP. So, we need to check if all (length of $probes_status = 0) or
+	 * at least one (array_sum($probes_status) > 0) probe is UP.
+	 *
+	 * Do not show URL or 'disabled' label at header if probe 'status' == PROBE_DOWN.
+	 */
+	if (!$probes_status || array_sum($probes_status) > 0) {
+		$rdds_43_base_url = array_key_exists('rdds_43_base_url', $data) ? $data['rdds_43_base_url'] : _('disabled');
+		$rdds_80_base_url = array_key_exists('rdds_80_base_url', $data) ? $data['rdds_80_base_url'] : _('disabled');
+		$rdap_base_url = array_key_exists('rdap_base_url', $data) ? $data['rdap_base_url'] : _('disabled');
+		$rdds_43_base_url = ' ('.$rdds_43_base_url.')';
+		$rdds_80_base_url = ' ('.$rdds_80_base_url.')';
+		$rdap_base_url = ' ('.$rdap_base_url.')';
+	}
+	else {
+		$rdds_43_base_url = '';
+		$rdds_80_base_url = '';
+		$rdap_base_url = '';
+	}
 
 	$row_1 = (new CTag('tr', true))
 		->addItem((new CTag('th', true, _('Probe ID')))->setAttribute('rowspan', 2)->setAttribute('style', 'border-left: 0px;'))
-		->addItem((new CTag('th', true, [_('RDDS43'), ' ('.$rdds_43_base_url.')']))->setAttribute('colspan', 3)->setAttribute('class', 'center'))
-		->addItem((new CTag('th', true, [_('RDDS80'), ' ('.$rdds_80_base_url.')']))->setAttribute('colspan', 3)->setAttribute('class', 'center'))
-		->addItem((new CTag('th', true, [_('RDAP'), ' ('.$rdap_base_url.')']))->setAttribute('colspan', 3)->setAttribute('class', 'center'));
+		->addItem((new CTag('th', true, [_('RDDS43'), $rdds_43_base_url]))->setAttribute('colspan', 3)->setAttribute('class', 'center'))
+		->addItem((new CTag('th', true, [_('RDDS80'), $rdds_80_base_url]))->setAttribute('colspan', 3)->setAttribute('class', 'center'))
+		->addItem((new CTag('th', true, [_('RDAP'), $rdap_base_url]))->setAttribute('colspan', 3)->setAttribute('class', 'center'));
 
 	$row_2 = (new CTag('tr', true))
 		->addItem((new CTag('th', true, _('Status'))))
@@ -192,12 +210,11 @@ foreach ($this->data['probes'] as $probe) {
 			$probe_no_result = false;
 
 			// RDDS
-			if (!isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
-					|| $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
+			if (isset($this->data['tld']['macros'][RSM_RDDS_ENABLED])
+					&& $this->data['tld']['macros'][RSM_RDDS_ENABLED] == 0) {
 				$rdds43 = $disabled;
 				$rdds80 = $disabled;
 				$rdds = ZBX_STYLE_GREY;
-				$probe_no_result = true;
 			}
 			elseif (!isset($probe['value']) || $probe['value'] === null) {
 				$rdds43 = $noResult;
@@ -256,7 +273,8 @@ foreach ($this->data['probes'] as $probe) {
 				$rdds = ZBX_STYLE_GREY;
 			}
 
-			if (isset($this->data['tld']['macros'][RSM_RDDS_ENABLED]) && $this->data['tld']['macros'][RSM_RDDS_ENABLED] == 0) {
+			if (isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
+					&& $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
 				$rdap = $disabled;
 			}
 			elseif (!isset($probe['value_rdap']) || $probe['value_rdap'] === null) {
