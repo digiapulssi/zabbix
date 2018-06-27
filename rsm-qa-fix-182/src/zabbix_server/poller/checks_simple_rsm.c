@@ -4024,6 +4024,27 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 	zbx_rsm_info(log_fd, "START TEST");
 
+	/* get items */
+	if (SUCCEED != zbx_get_rdap_items(item->host.host, &ip_item, &rtt_item))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find items to store IP and RTT."));
+		goto out;
+	}
+
+	if (0 == probe_enabled)
+	{
+		zbx_rsm_info(log_fd, "RDAP disabled on this probe");
+		ret = SYSINFO_RET_OK;
+		goto out_nolog;
+	}
+
+	if (0 == tld_enabled)
+	{
+		zbx_rsm_info(log_fd, "RDAP disabled on this TLD");
+		ret = SYSINFO_RET_OK;
+		goto out_nolog;
+	}
+
 	zbx_vector_str_create(&ips);
 
 	extras = ZBX_RESOLVER_CHECK_ADBIT;
@@ -4036,19 +4057,8 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		goto out;
 	}
 
-	/* get items */
-	if (SUCCEED != zbx_get_rdap_items(item->host.host, &ip_item, &rtt_item))
-	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot find items to store IP and RTT."));
-		goto out;
-	}
-
 	/* from this point item will not become NOTSUPPORTED */
 	ret = SYSINFO_RET_OK;
-
-	/* skip the test without producing any result if service is disabled either on TLD or probe */
-	if (0 == tld_enabled || 0 == probe_enabled)
-		goto out;
 
 	/* skip the test itself in case of two special values in RDAP base URL parameter */
 
@@ -4152,6 +4162,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	rtt = ec_http;
 out:
 	zbx_rsm_infof(log_fd, "RDAP \"%s\" (%s) RTT:%d", base_url, ZBX_NULL2STR(ip), rtt);
+out_nolog:
 
 	if (0 != ISSET_MSG(result))
 		zbx_rsm_err(log_fd, result->msg);
