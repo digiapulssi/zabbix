@@ -8863,7 +8863,7 @@ static char	*dc_expression_expand_user_macros(const char *expression)
 
 	if (NULL != strstr(out, "{$"))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot evaluate expression: invalid macro value");
+		zabbix_log(LOG_LEVEL_DEBUG, "cannot evaluate expression: invalid macro value");
 		zbx_free(out);
 	}
 
