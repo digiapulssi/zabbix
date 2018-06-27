@@ -257,8 +257,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_stat_t	buf;
 	struct passwd	*usrinfo;
 	psinfo_t	psinfo;	/* In the correct procfs.h, the structure name is psinfo_t */
-	int		fd = -1, proccount = 0, invalid_user = 0, zbx_proc_stat;
-	zbx_uint64_t	zoneflag;
+	int		fd = -1, proccount = 0, invalid_user = 0, zbx_proc_stat, zoneflag;
 
 #ifndef HAVE_ZONE_H
 	/* this code is for case if agent has been compiled on Solaris 9 or earlier where zones are not supported */
