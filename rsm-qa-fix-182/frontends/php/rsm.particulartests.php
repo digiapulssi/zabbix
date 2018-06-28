@@ -366,7 +366,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			'limit' => 1
 		]) : null;
 
-		if ($history_value !== null) {
+		if ($history_value) {
 			$data['tld']['macros'][RSM_RDAP_TLD_ENABLED] = $history_value[0]['value'];
 		}
 	}
