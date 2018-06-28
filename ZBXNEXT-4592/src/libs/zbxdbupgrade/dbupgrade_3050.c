@@ -1469,7 +1469,7 @@ static int	DBpatch_3050121(void)
 	DB_ROW		row;
 	char		*sql = NULL;
 	size_t		sql_alloc = 0, sql_offset = 0;
-	char		*item_name = NULL;
+	char		*item_esc, *item_name = NULL;
 	int		ret = SUCCEED;
 
 	result = DBselect("select itemid,name,key_ from items i where i.name like '%%$1%%' or i.name like '%%$2%%'"
@@ -1482,8 +1482,10 @@ static int	DBpatch_3050121(void)
 	{
 		item_name = zbx_strdup(item_name, row[1]);
 		DBpatch_3050121_name_update(&item_name, row[2]);
+		item_esc = DBdyn_escape_string(item_name);
 		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "update items i set i.name='");
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%s' where i.itemid=%s;\n", item_name, row[0]);
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%s' where i.itemid=%s;\n", item_esc, row[0]);
+		zbx_free(item_esc);
 
 		if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
 			break;
