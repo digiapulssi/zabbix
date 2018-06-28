@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc19
+
+Bug fixes:
+....I..... [sub-390] fixed syntax error in Frontend and error in DNSSEC Availability calculation (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc18
 
 Bug fixes:

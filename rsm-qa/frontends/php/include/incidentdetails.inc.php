@@ -49,7 +49,7 @@ function getFirstUintValue($itemId, $startTime) {
  */
 function isDNSErrorCode($item_value, $type) {
 	if ($type == RSM_DNSSEC) {
-		return (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT)
+		return (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT);
 	}
 	elseif ($type == RSM_DNS) {
 		return (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_NS_NOREPLY
