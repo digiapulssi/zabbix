@@ -1,3 +1,18 @@
+Changes for 3.4.12rc1
+
+New features:
+
+Bug fixes:
+..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.11
+
+New features:
+A.F....... [ZBX-1357] added and enabled Norwegian translation to be displayed by default (zalex_ua)
+A.F....... [ZBX-1357] updated English (United States), French, Hebrew, Japanese, Portuguese (Brazil), Russian, Ukrainian translations; thanks to Zabbix translators (zalex_ua)
+
+--------------------------------------------------------------------------------
 Changes for 3.4.11rc1
 
 Bug fixes:
@@ -1257,6 +1272,20 @@ A......... [ZBX-10030] fixed API action update method request with only "actioni
 A......... [ZBX-10049] fixed optional field validation in drule.update API method (Gunars)
 ..F....PS. [ZBX-10076] fixed text information containing non-ASCII characters being saved incorrectly to IBM DB2 database in case of system locale misconfiguration (gleb, Oleg)
 ..F....... [ZBX-9989] optimized SQL queries for graphs building (Gunars, Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.20rc1
+
+New features:
+
+Bug fixes:
+..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.19
+
+New features:
+A.F....... [ZBX-1357] updated English (United States), Japanese, Korean translations; thanks to Zabbix translators (zalex_ua)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.19rc1
