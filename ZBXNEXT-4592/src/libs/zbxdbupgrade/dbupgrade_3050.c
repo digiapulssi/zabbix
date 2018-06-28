@@ -1486,6 +1486,9 @@ static int	DBpatch_3050121(void)
 	char		*item_esc, *item_name = NULL;
 	int		ret = SUCCEED;
 
+	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		return SUCCEED;
+
 	result = DBselect("select itemid,name,key_ from items i where i.name like '%%$1%%' or i.name like '%%$2%%'"
 			" or i.name like '%%$3%%' or i.name like '%%$4%%' or i.name like '%%$5%%' or i.name like"
 			" '%%$6%%' or i.name like '%%$7%%' or i.name like '%%$8%%' or i.name like '%%$9%%'");
