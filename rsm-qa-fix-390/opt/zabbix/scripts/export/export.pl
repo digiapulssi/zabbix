@@ -1414,8 +1414,7 @@ sub __check_test
 		if (defined($description) &&
 				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
 				substr($description, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY ||
-				substr($description, 0, length(ZBX_EC_DNS_TCP_RES_NOREPLY)) eq ZBX_EC_DNS_TCP_RES_NOREPLY ||
-				substr($description, 0, length(ZBX_EC_DNS_RES_NOREPLY)) eq ZBX_EC_DNS_RES_NOREPLY))
+				substr($description, 0, length(ZBX_EC_DNS_TCP_RES_NOREPLY)) eq ZBX_EC_DNS_TCP_RES_NOREPLY))
 		{
 			return SUCCESS;
 		}
@@ -1424,15 +1423,7 @@ sub __check_test
 	{
 		if (defined($description))
 		{
-			my $error_code_len = length(ZBX_EC_DNS_NS_ERRSIG);
-			my $error_code = substr($description, 0, $error_code_len);
-
-			if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $error_code && $error_code <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
-					ZBX_EC_DNS_TCP_DNSKEY_NONE <= $error_code && $error_code <= ZBX_EC_DNS_TCP_RES_NOADBIT ||
-					$error_code == ZBX_EC_DNS_NS_ERRSIG || $error_code == ZBX_EC_DNS_RES_NOADBIT)
-			{
-				return E_FAIL;
-			}
+			return E_FAIL if (is_dnssec_error_desc($description) == SUCCESS);
 		}
 
 		return SUCCESS;
