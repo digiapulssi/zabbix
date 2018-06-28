@@ -1438,7 +1438,9 @@ class CLineGraphDraw extends CGraphDraw {
 
 		$prev_time = $this->stime;
 		if ($interval['main'] == SEC_PER_MONTH) {
-			$prev_month = (int) $dt['sub']->format('m');
+			$dt_start = new DateTime();
+			$dt_start->setTimestamp($this->stime);
+			$prev_month = (int) $dt_start->format('m');
 		}
 
 		while (true) {
