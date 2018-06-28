@@ -1443,22 +1443,31 @@ out:
 static void	DBpatch_3050121_name_update(char **name, char *params)
 {
 	int	i;
-	char	*str, param[ITEM_KEY_LEN + 1], key[3]= {'$','1','\0'};
+	char	*str, param[ITEM_KEY_LEN + 1], key[3]= {'$','0','\0'};
 	size_t	l, r;
 
-	for (i = 1; 9 >= i && SUCCEED == get_key_param(params, i, param, sizeof(param)); i++)
+	for (i = 1; 9 >= i; i++)
 	{
+		key[1]++;
 		r = 0;
 
-		while ('\0' != param[0] && NULL != (str = strstr(*name + r, key)))
+		/* by performance reason we check the key before get_key_param() */
+		if (NULL == (str = strstr(*name + r, key)))
+			continue;
+
+		/* if there is no parameter, $N will delete */
+		get_key_param(params, i, param, sizeof(param));
+
+		while (NULL != str)
 		{
 			l = str - *name;
 			r = l + 1;
 			zbx_replace_string(name, l, &r, param);
+			str = strstr(*name + r, key);
 		}
-
-		key[1]++;
 	}
+
+	zbx_lrtrim(*name, ZBX_WHITESPACE);
 
 	if (ITEM_NAME_LEN < strlen(*name))
 	{
