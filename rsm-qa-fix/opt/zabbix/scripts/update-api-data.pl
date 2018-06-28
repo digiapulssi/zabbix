@@ -1366,8 +1366,7 @@ sub fill_test_data_dns($$$)
 				$metric->{'result'} = 'no data';
 			}
 			elsif (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
-					substr($test->{'rtt'}, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY ||
-					substr($test->{'rtt'}, 0, length(ZBX_EC_DNS_RES_NOREPLY)) eq ZBX_EC_DNS_RES_NOREPLY)
+					substr($test->{'rtt'}, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY)
 			{
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = $test->{'rtt'};
@@ -1452,8 +1451,7 @@ sub fill_test_data_dnssec($$)
 				{
 					my $value = substr($test->{'rtt'}, 0, index($test->{'rtt'}, ","));
 
-					if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $value && $value <= ZBX_EC_DNS_UDP_RES_NOADBIT ||
-							$value == ZBX_EC_DNS_NS_ERRSIG || $value == ZBX_EC_DNS_RES_NOADBIT)
+					if (is_dnssec_error($value) == SUCCESS)
 					{
 						$test_data_ref->{'status'} = "Down";
 					}
