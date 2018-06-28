@@ -21,6 +21,7 @@
 #include "db.h"
 #include "dbupgrade.h"
 #include "zbxtasks.h"
+#include "log.h"
 
 extern unsigned char	program_type;
 
@@ -1460,7 +1461,11 @@ static void	DBpatch_3050121_name_update(char **name, char *params)
 	}
 
 	if (ITEM_NAME_LEN < strlen(*name))
+	{
 		*name[ITEM_NAME_LEN] = '\0';
+		zabbix_log(LOG_LEVEL_WARNING, "In %s() truncated the name of item with the key: %s.",
+				"DBpatch_3050121", params);
+	}
 }
 
 static int	DBpatch_3050121(void)
