@@ -1,3 +1,10 @@
+Changes for rsm1.1.0rc18
+
+Bug fixes:
+..F....... [sub-386] fixed incorrect status interpreetation when RDDS is disabled in TLD level (miks)
+
+--------------------------------------------------------------------------------
+
 Changes for rsm1.1.0rc17
 
 New features:
