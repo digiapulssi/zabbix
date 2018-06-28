@@ -68,6 +68,7 @@
 #define ZBX_EC_DNS_UDP_RCODE_BADCOOKIE	-269	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE */
 #define ZBX_EC_DNS_UDP_RCODE_CATCHALL	-270	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected */
 #define ZBX_EC_DNS_UDP_RES_NOREPLY	-400	/* DNS UDP - No reply from local resolver */
+/* -401 to -428: DNSSEC errors */
 #define ZBX_EC_DNS_UDP_RES_NOADBIT	-401	/* DNS UDP - No AD bit from local resolver */
 #define ZBX_EC_DNS_UDP_RES_SERVFAIL	-402	/* DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
 #define ZBX_EC_DNS_UDP_RES_NXDOMAIN	-403	/* DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
@@ -126,6 +127,7 @@
 #define ZBX_EC_DNS_TCP_RCODE_BADCOOKIE	-669	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE */
 #define ZBX_EC_DNS_TCP_RCODE_CATCHALL	-670	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected */
 #define ZBX_EC_DNS_TCP_RES_NOREPLY	-800	/* DNS TCP - No reply from local resolver */
+/* -801 to -828: DNSSEC errors */
 #define ZBX_EC_DNS_TCP_RES_NOADBIT	-801	/* DNS TCP - No AD bit from local resolver */
 #define ZBX_EC_DNS_TCP_RES_SERVFAIL	-802	/* DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
 #define ZBX_EC_DNS_TCP_RES_NXDOMAIN	-803	/* DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */

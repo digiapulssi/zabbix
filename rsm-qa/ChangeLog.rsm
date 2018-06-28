@@ -1,10 +1,18 @@
+Changes for rsm1.1.0rc18
+
+Bug fixes:
+....I..... [390] fixed DNSSEC Availability calculation to support new DNS error codes (dimir)
+..F....... [388] fixed RDAP support in SLA API (dimir)
+..F....... [sub-386] fixed incorrect status interpreetation when RDDS is disabled in TLD level (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc17
 
 Bug fixes:
 ..F....... [sub-387] fixed URL label in result table header when all probes are offline (miks)
 ..F....... [sub-386] fixed result interpretation based on macros values (miks)
 ....I..... [sub-385] fixed export.pl script syntax errors (yurii)
-.......PS. [sub-389] made rdds and rdap logs consistent (yurii)
+.......PS. [sub-389] made rdds and rdap logs consistent (yurii, dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc16

@@ -139,8 +139,7 @@ sub check_probe_values
 
 		foreach my $rtt (@{$values_ref->{$key}})
 		{
-			$name_servers{$ns} = (ZBX_EC_DNS_NS_ERRSIG == $rtt || ZBX_EC_DNS_RES_NOADBIT == $rtt ?
-				DOWN : UP);
+			$name_servers{$ns} = (is_dnssec_error($rtt) ? DOWN : UP);
 		}
 	}
 

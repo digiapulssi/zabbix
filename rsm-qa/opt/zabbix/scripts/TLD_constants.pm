@@ -65,19 +65,18 @@ use constant ITEM_TYPE_AGGREGATE =>          8;
 use constant ITEM_TYPE_EXTERNAL =>           10;
 use constant ITEM_TYPE_CALCULATED =>         15;
 
-use constant ZBX_EC_INTERNAL          => -1;   # internal error (general)
-use constant ZBX_EC_DNS_NS_ERRSIG	=> -204;	# DNSSEC error (obsolete)
-use constant ZBX_EC_DNS_RES_NOREPLY	=> -205;	# No reply from resolver (obsolete)
-use constant ZBX_EC_DNS_RES_NOADBIT	=> -206;	# Keyset is not valid (obsolete)
+use constant ZBX_EC_INTERNAL		=> -1;		# internal error (general)
 use constant ZBX_EC_DNS_UDP_RES_NOREPLY	=> -400;	# DNS UDP - No reply from local resolver
-use constant ZBX_EC_DNS_UDP_RES_NOADBIT	=> -401;	# DNS UDP - No AD bit from local resolver
-use constant ZBX_EC_DNS_UDP_DNSKEY_NONE	=> -428;	# DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
+
+use constant ZBX_EC_DNS_UDP_RES_NOADBIT	=> -401;	# -401 to
+use constant ZBX_EC_DNS_UDP_DNSKEY_NONE	=> -428;	# -428: DNSSEC errors
+
 use constant ZBX_EC_DNS_TCP_RES_NOREPLY	=> -800;	# DNS TCP - No reply from local resolver
 use constant ZBX_EC_DNS_TCP_RES_NOADBIT	=> -801;	# DNS TCP - No AD bit from local resolver
 use constant ZBX_EC_DNS_TCP_DNSKEY_NONE	=> -828;	# DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
-use constant ZBX_EC_RDDS43_RES_NOREPLY	=> -222; # RDDS43 - No reply from local resolver
-use constant ZBX_EC_RDDS80_RES_NOREPLY	=> -250; # RDDS80 - No reply from local resolver
-use constant ZBX_EC_RDAP_RES_NOREPLY	=> -200; # RDAP   - No reply from local resolver
+use constant ZBX_EC_RDDS43_RES_NOREPLY	=> -222;	# RDDS43 - No reply from local resolver
+use constant ZBX_EC_RDDS80_RES_NOREPLY	=> -250;	# RDDS80 - No reply from local resolver
+use constant ZBX_EC_RDAP_RES_NOREPLY	=> -200;	# RDAP   - No reply from local resolver
 
 use constant ZBX_EC_EPP_NO_IP         => -200; # IP is missing for EPP server
 use constant ZBX_EC_EPP_CONNECT       => -201; # cannot connect to EPP server
@@ -160,7 +159,6 @@ our @EXPORT_OK = qw(
 			VALUE_TYPE_PERC
 			VALUE_TYPE_NUM
 			ZBX_EC_INTERNAL
-                    ZBX_EC_DNS_NS_ERRSIG ZBX_EC_DNS_RES_NOREPLY ZBX_EC_DNS_RES_NOADBIT
 			ZBX_EC_DNS_UDP_RES_NOREPLY
 			ZBX_EC_DNS_UDP_RES_NOADBIT
 			ZBX_EC_DNS_UDP_DNSKEY_NONE
@@ -200,7 +198,6 @@ our %EXPORT_TAGS = ( general => [ qw(true false) ],
 		     value_types => [ qw(VALUE_TYPE_AVAIL VALUE_TYPE_PERC VALUE_TYPE_NUM) ],
 		     ec => [ qw(
 				ZBX_EC_INTERNAL
-				ZBX_EC_DNS_NS_ERRSIG ZBX_EC_DNS_RES_NOREPLY ZBX_EC_DNS_RES_NOADBIT
 				ZBX_EC_DNS_UDP_RES_NOREPLY
 				ZBX_EC_DNS_UDP_RES_NOADBIT
 				ZBX_EC_DNS_UDP_DNSKEY_NONE

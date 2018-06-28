@@ -191,38 +191,8 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 			)
 		));
 
-		// Find macros history items.
-		$rdds_enabled_itemid = API::Item()->get([
-			'output' => [],
-			'hostids' => array_keys($tld_templates),
-			'filter' => [
-				'key_' => RDDS_ENABLED
-			],
-			'limit' => 1,
-			'preservekeys' => true
-		]);
-		$rdds_enabled_itemid = array_keys($rdds_enabled_itemid);
-
 		$data['tld']['macros'] = [];
 		foreach ($template_macros as $template_macro) {
-			/**
-			 * We have to check what historical value of RSM_TLD_RDDS_ENABLED was set at the time of test. It is value
-			 * per TLD and is stored in item RDDS_ENABLED.
-			 *
-			 * Historical values of RSM_RDAP_TLD_ENABLED will overwritten later, using the first tld-probe value.
-			 */
-			if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED && $rdds_enabled_itemid) {
-				$hist_value = API::History()->get([
-					'output' => API_OUTPUT_EXTEND,
-					'time_from' => $testTimeFrom,
-					'time_till' => $testTimeTill,
-					'itemids' => $rdds_enabled_itemid,
-					'limit' => 1
-				]);
-
-				$template_macro['value'] = $hist_value ? $hist_value[0]['value'] : $template_macro['value'];
-			}
-
 			$data['tld']['macros'][$template_macro['macro']] = $template_macro['value'];
 		}
 	}
@@ -348,31 +318,51 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		 * If there are multiple TLD probes, each with different historical value for RDAP_ENABLED, we still take only
 		 * the first one, because others will be synchronized in less then minute.
 		 */
-		$rdap_enabled_itemid = $tlds_probes ? API::Item()->get([
+		$_enabled_itemid = $tlds_probes ? API::Item()->get([
 			'output' => ['itemid', 'key_'],
 			'hostids' => array_keys($tlds_probes),
 			'filter' => [
-				'key_' => RDAP_ENABLED
-			],
-			'preservekeys' => true,
-			'limit' => 1
+				'key_' => [RDAP_ENABLED, RDDS_ENABLED]
+			]
 		]) : null;
 
-		$history_value = $rdap_enabled_itemid ? API::History()->get([
-			'output' => API_OUTPUT_EXTEND,
-			'itemids' => array_keys($rdap_enabled_itemid),
-			'time_from' => $testTimeFrom,
-			'time_till' => $testTimeTill,
-			'limit' => 1
-		]) : null;
+		if ($_enabled_itemid) {
+			$_enabled_item_map = [
+				RDAP_ENABLED => null,
+				RDDS_ENABLED => null
+			];
 
-		if ($history_value !== null) {
-			$data['tld']['macros'][RSM_RDAP_TLD_ENABLED] = $history_value[0]['value'];
+			foreach ($_enabled_itemid as $_enabled_itemid) {
+				// Only first item should be checked.
+				if ($_enabled_item_map[$_enabled_itemid['key_']] === null) {
+					$_enabled_item_map[$_enabled_itemid['key_']] = $_enabled_itemid['itemid'];
+				}
+			}
+
+			$history_values = API::History()->get([
+				'output' => API_OUTPUT_EXTEND,
+				'itemids' => array_values($_enabled_item_map),
+				'time_from' => $testTimeFrom,
+				'time_till' => $testTimeTill,
+				'limit' => 2
+			]);
+
+			// Overwrite selected historical values over macros values selected before.
+			foreach ($history_values as $history_value) {
+				switch ($history_value['itemid']) {
+					case $_enabled_item_map[RDDS_ENABLED]:
+						$data['tld']['macros'][RSM_TLD_RDDS_ENABLED] = $history_value['value'];
+						break;
+					case $_enabled_item_map[RDAP_ENABLED]:
+						$data['tld']['macros'][RSM_RDAP_TLD_ENABLED] = $history_value['value'];
+						break;
+				}
+			}
 		}
 	}
 
 	/**
-	 * Since here we have obtained a final RSM_RDAP_TLD_ENABLED historical value, we can also check if there should be
+	 * Since here we have obtained a final (historical) macros values, we can also check if there should be
 	 * RDAP base url be displayed.
 	 */
 	if (!array_key_exists(RSM_RDAP_TLD_ENABLED, $data['tld']['macros'])
@@ -537,7 +527,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				}
 				elseif ($itemValue['value'] < $udpRtt
 						&& ($itemValue['value'] > ZBX_EC_DNS_UDP_NS_NOREPLY
-						|| $itemValue['value'] == ZBX_EC_DNS_UDP_RES_NOREPLY || $itemValue['value'] == ZBX_EC_DNS_RES_NOREPLY)) {
+						|| $itemValue['value'] == ZBX_EC_DNS_UDP_RES_NOREPLY)) {
 					$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_UP;
 				}
 				else {
@@ -553,8 +543,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				}
 
 				if ($itemValue) {
-					if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT
-							|| $itemValue['value'] == ZBX_EC_DNS_NS_ERRSIG || $itemValue['value'] == ZBX_EC_DNS_RES_NOADBIT) {
+					if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT) {
 						$hosts[$item['hostid']]['value']['fail']++;
 					}
 					else {

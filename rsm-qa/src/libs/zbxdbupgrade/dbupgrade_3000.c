@@ -2110,7 +2110,7 @@ static int	DBpatch_3000217(void)
 		zbx_vector_uint64_create(&hostids);
 		zbx_vector_uint64_reserve(&hostids, 1);
 
-		/* select templates "<TLD> <Probe>" hosts, for this particular TLD */
+		/* select hosts "<TLD> <Probe>" hosts, for this particular TLD */
 		result = DBselect(
 				"select h.hostid"
 				" from hosts_templates ht, hosts h"

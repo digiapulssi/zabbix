@@ -9,7 +9,7 @@ use Pod::Usage;
 use Exporter qw(import);
 use Zabbix;
 use Alerts;
-use TLD_constants qw(:api :items);
+use TLD_constants qw(:api :items :ec);
 use File::Pid;
 use POSIX qw(floor);
 use Sys::Syslog;
@@ -92,7 +92,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error get_templated_items_like
-		process_slv_avail avail_value_exists
+		process_slv_avail avail_value_exists is_dnssec_error is_dnssec_error_desc
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
@@ -769,6 +769,21 @@ sub tld_rdap_enabled_at
 			" and ".sql_time_condition($from, $till, "hi.clock").
 		" order by hi.clock asc".
 		" limit 1");
+
+	if (scalar(@$rows_ref) == 0)
+	{
+		$rows_ref = db_select(
+			"select hi.value".
+			" from hosts h,items i,history_uint hi".
+			" where h.hostid=i.hostid".
+				" and i.itemid=hi.itemid".
+				" and h.status=0".
+				" and h.host like '$tld %'".
+				" and i.key_='rdap.enabled'".
+				" and hi.clock>$from".
+			" order by hi.clock asc".
+			" limit 1");
+	}
 
 	fail("dimir was wrong, 'rdap.enabled' is not on every \"<TLD> <Probe>\" host") unless (scalar(@$rows_ref) != 0);
 
@@ -1481,9 +1496,34 @@ sub get_nsip_from_key
 
 sub is_service_error
 {
-	my $error = shift;
+	my $ec = shift;
 
-	return SUCCESS if ($error <= MAX_SERVICE_ERROR);
+	return SUCCESS if ($ec <= MAX_SERVICE_ERROR);
+
+	return E_FAIL;
+}
+
+sub is_dnssec_error
+{
+	my $ec = shift;
+
+	return SUCCESS if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $ec && $ec <= ZBX_EC_DNS_UDP_RES_NOADBIT);
+	return SUCCESS if (ZBX_EC_DNS_TCP_DNSKEY_NONE <= $ec && $ec <= ZBX_EC_DNS_TCP_RES_NOADBIT);
+
+	return E_FAIL;
+}
+
+# DNSSEC error with description, e. g. "-401, DNS UDP - No AD bit from local resolver"
+sub is_dnssec_error_desc
+{
+	my $desc = shift;
+
+	my $ec = $desc;
+
+	if ($ec =~ m/^(-[0-9]+).*/)
+	{
+		return is_dnssec_error($1);
+	}
 
 	return E_FAIL;
 }

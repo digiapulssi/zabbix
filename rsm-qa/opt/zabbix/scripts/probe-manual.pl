@@ -40,7 +40,7 @@ $server_key = defined($server_id) ? get_rsm_server_key($server_id) : get_rsm_loc
 
 my $section = $config->{$server_key};
 
-fail("Error: server-id \"$server_id\" not found in configuration file") if (!defined($section));
+fail("server-id \"$server_id\" not found in configuration file") unless (defined($section));
 
 db_connect($server_key);
 
@@ -48,7 +48,7 @@ my $probe = getopt('probe');
 
 my $rows_ref = db_select("select hostid from hosts where host='$probe' and status=".HOST_STATUS_MONITORED);
 
-fail("Error: Probe \"$probe\" not found on Server with ID $server_id.") if (scalar(@{$rows_ref}) != 1);
+fail("Error: Probe \"$probe\" not found.") if (scalar(@{$rows_ref}) != 1);
 
 my $hostid = $rows_ref->[0]->[0];
 

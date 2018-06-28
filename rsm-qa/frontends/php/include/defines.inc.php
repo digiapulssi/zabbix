@@ -1395,9 +1395,6 @@ define('INCIDENT_FLAG_FALSE_POSITIVE',	1);
 
 // SLA monitoring incident status
 define('ZBX_EC_DNS_UDP_NS_NOREPLY',	-200);
-define('ZBX_EC_DNS_NS_ERRSIG',		-204);	// obsolete
-define('ZBX_EC_DNS_RES_NOREPLY',	-205);	// obsolete
-define('ZBX_EC_DNS_RES_NOADBIT',	-206);	// obsolete
 define('ZBX_EC_DNS_UDP_RES_NOREPLY',	-400);
 define('ZBX_EC_DNS_UDP_RES_NOADBIT',	-401);
 define('ZBX_EC_DNS_UDP_DNSKEY_NONE',	-428);

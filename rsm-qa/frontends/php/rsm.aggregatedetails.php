@@ -366,15 +366,11 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 					$data['probes'][$probeid]['probe_nameservers_with_no_values']++;
 				}
 				/**
-				 * NS in case of DNSSEC is considered to be DOWN if selected value is one of the following:
-				 * 1) -204 (ZBX_EC_DNS_NS_ERRSIG);
-				 * 2) -206 (ZBX_EC_DNS_RES_NOADBIT);
-				 * 3) in range between -428 and -401 (ZBX_EC_DNS_UDP_DNSKEY_NONE & ZBX_EC_DNS_UDP_RES_NOADBIT).
+				 * NS in case of DNSSEC is considered to be DOWN if selected value is in the range
+				 * between -428 and -401 (ZBX_EC_DNS_UDP_DNSKEY_NONE & ZBX_EC_DNS_UDP_RES_NOADBIT).
 				 */
-				elseif (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT
-					|| $item_value == ZBX_EC_DNS_NS_ERRSIG
-					|| $item_value == ZBX_EC_DNS_RES_NOADBIT
-				) {
+				elseif (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT)
+				{
 					// Error detected.
 				}
 				else {
