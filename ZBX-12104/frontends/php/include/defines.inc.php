@@ -19,8 +19,8 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.0.19rc1');
-define('ZABBIX_API_VERSION',	'3.0.19');
+define('ZABBIX_VERSION',		'3.0.20rc1');
+define('ZABBIX_API_VERSION',	'3.0.20');
 define('ZABBIX_EXPORT_VERSION',	'3.0');
 define('ZABBIX_DB_VERSION',		3000000);
 
@@ -37,7 +37,7 @@ define('ZBX_PERIOD_DEFAULT',	3600); // 1 hour
 
 // the maximum period to display history data for the latest data and item overview pages in seconds
 // by default set to 86400 seconds (24 hours)
-define('ZBX_HISTORY_PERIOD', 86400);
+define('ZBX_HISTORY_PERIOD', 0);
 
 define('ZBX_WIDGET_ROWS', 20);
 

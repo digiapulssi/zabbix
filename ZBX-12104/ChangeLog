@@ -1,3 +1,17 @@
+Changes for 3.0.20rc1
+
+New features:
+
+Bug fixes:
+..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.19
+
+New features:
+A.F....... [ZBX-1357] updated English (United States), Japanese, Korean translations; thanks to Zabbix translators (zalex_ua)
+
+--------------------------------------------------------------------------------
 Changes for 3.0.19rc1
 
 Bug fixes:
