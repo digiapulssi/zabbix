@@ -1462,7 +1462,9 @@ static int	DBpatch_3050121(void)
 	char		*item_name = NULL;
 	int		ret = SUCCEED;
 
-	result = DBselect("select itemid,name,key_ from items i where i.name like '%%$1%%';\n");
+	result = DBselect("select itemid,name,key_ from items i where i.name like '%%$1%%' or i.name like '%%$2%%'"
+			" or i.name like '%%$3%%' or i.name like '%%$4%%' or i.name like '%%$5%%' or i.name like"
+			" '%%$6%%' or i.name like '%%$7%%' or i.name like '%%$8%%' or i.name like '%%$9%%'");
 
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
