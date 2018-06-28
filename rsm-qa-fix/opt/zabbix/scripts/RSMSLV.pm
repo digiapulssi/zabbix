@@ -770,6 +770,21 @@ sub tld_rdap_enabled_at
 		" order by hi.clock asc".
 		" limit 1");
 
+	if (scalar(@$rows_ref) == 0)
+	{
+		$rows_ref = db_select(
+			"select hi.value".
+			" from hosts h,items i,history_uint hi".
+			" where h.hostid=i.hostid".
+				" and i.itemid=hi.itemid".
+				" and h.status=0".
+				" and h.host like '$tld %'".
+				" and i.key_='rdap.enabled'".
+				" and hi.clock>$from".
+			" order by hi.clock asc".
+			" limit 1");
+	}
+
 	fail("dimir was wrong, 'rdap.enabled' is not on every \"<TLD> <Probe>\" host") unless (scalar(@$rows_ref) != 0);
 
 	return (defined($rows_ref->[0]->[0]) && $rows_ref->[0]->[0] != 0 ? SUCCESS : E_FAIL);

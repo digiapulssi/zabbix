@@ -4206,7 +4206,6 @@ out:
 
 	zbx_vector_str_clean_and_destroy(&ips);
 
-	zbx_rsm_info(log_fd, "END TEST");
 	fclose(log_fd);
 
 	return ret;

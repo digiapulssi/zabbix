@@ -30,14 +30,14 @@ if ($this->data['type'] == RSM_DNS || $this->data['type'] == RSM_DNSSEC) {
 	$table = (new CTableInfo())->setHeader($headers);
 }
 elseif ($this->data['type'] == RSM_RDDS) {
-	$probes_status = zbx_objectValues($this->data['probes'], 'status');
-
 	/**
 	 * If 'status' is not set, probe is UP. So, we need to check if all (length of $probes_status = 0) or
 	 * at least one (array_sum($probes_status) > 0) probe is UP.
 	 *
 	 * Do not show URL or 'disabled' label at header if probe 'status' == PROBE_DOWN.
 	 */
+	$probes_status = zbx_objectValues($this->data['probes'], 'status');
+
 	if (!$probes_status || array_sum($probes_status) > 0) {
 		$rdds_43_base_url = array_key_exists('rdds_43_base_url', $data) ? $data['rdds_43_base_url'] : _('disabled');
 		$rdds_80_base_url = array_key_exists('rdds_80_base_url', $data) ? $data['rdds_80_base_url'] : _('disabled');
@@ -271,6 +271,20 @@ foreach ($this->data['probes'] as $probe) {
 			}
 			else {
 				$rdds = ZBX_STYLE_GREY;
+			}
+
+			/**
+			 * An exception: if sub-service is disabled at TLD level, sub-services should be disabled at probe level
+			 * too. This need to be added as exception because in case if sub-service is disabled at TLD level, we never
+			 * request values of related items. As the result, we cannot detect what is a reason why there are no
+			 * results for sub-service.
+			 *
+			 * See ICA-386 for more details.
+			 */
+			if (!array_key_exists('rdds_43_base_url', $data) && $rdds43 === $noResult) {
+				$rdds43 = $disabled;
+				$rdds80 = $disabled;
+				$probe_no_result = false;
 			}
 
 			if (isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
