@@ -1429,11 +1429,21 @@ out:
 	return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: DBpatch_3050121_name_update                                      *
+ *                                                                            *
+ * Purpose: replace in string $1-9 to value of parameter from key of Item     *
+ *                                                                            *
+ * Parameters: name   - [IN/OUT] string for replace                           *
+ *             params - [IN] Item key in format 'aaa[bbb,ccc,ddd]'            *
+ *                                                                            *
+ ******************************************************************************/
 static void	DBpatch_3050121_name_update(char **name, char *params)
 {
-	int i;
-	char *str, param[ITEM_KEY_LEN + 1], key[3]= {'$','1','\0'};
-	size_t l, r;
+	int	i;
+	char	*str, param[ITEM_KEY_LEN + 1], key[3]= {'$','1','\0'};
+	size_t	l, r;
 
 	for (i = 1; 9 >= i && SUCCEED == get_key_param(params, i, param, sizeof(param)); i++)
 	{
