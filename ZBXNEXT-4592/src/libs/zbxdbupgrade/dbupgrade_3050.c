@@ -1489,9 +1489,9 @@ static int	DBpatch_3050121(void)
 	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		return SUCCEED;
 
-	result = DBselect("select itemid,name,key_ from items i where i.name like '%%$1%%' or i.name like '%%$2%%'"
-			" or i.name like '%%$3%%' or i.name like '%%$4%%' or i.name like '%%$5%%' or i.name like"
-			" '%%$6%%' or i.name like '%%$7%%' or i.name like '%%$8%%' or i.name like '%%$9%%'");
+	result = DBselect("select itemid,name,key_ from items where name like '%%$1%%' or name like '%%$2%%'"
+			" or name like '%%$3%%' or name like '%%$4%%' or name like '%%$5%%' or name like"
+			" '%%$6%%' or name like '%%$7%%' or name like '%%$8%%' or name like '%%$9%%'");
 
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
@@ -1500,8 +1500,8 @@ static int	DBpatch_3050121(void)
 		item_name = zbx_strdup(item_name, row[1]);
 		DBpatch_3050121_name_update(&item_name, row[2]);
 		item_esc = DBdyn_escape_string(item_name);
-		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "update items i set i.name='");
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%s' where i.itemid=%s;\n", item_esc, row[0]);
+		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "update items set name='");
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%s' where itemid=%s;\n", item_esc, row[0]);
 		zbx_free(item_esc);
 
 		if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
