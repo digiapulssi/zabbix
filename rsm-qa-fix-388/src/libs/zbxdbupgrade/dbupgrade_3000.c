@@ -2234,6 +2234,181 @@ static int	DBpatch_3000218(void)
 		zbx_free(newvalue_esc);
 	}
 }
+
+static int	DBpatch_3000219(void)
+{
+	DB_RESULT		result;
+	DB_ROW			row;
+	zbx_vector_uint64_t	templateids;
+	zbx_uint64_t		itemid;
+	size_t			i;
+	int			ret = FAIL;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	zbx_vector_uint64_create(&templateids);
+	zbx_vector_uint64_reserve(&templateids, 1);
+
+	result = DBselect("select max(itemid)+1 from items");
+
+	if (NULL == result)
+		goto out;
+
+	if (NULL == (row = DBfetch(result)))
+	{
+		DBfree_result(result);
+		goto out;
+	}
+
+	ZBX_STR2UINT64(itemid, row[0]);
+
+	DBfree_result(result);
+
+	/* select templates "Template <TLD>" */
+	result = DBselect(
+			"select distinct templateid"
+			" from hosts_templates"
+			" where hostid in ("
+					"select hostid"
+					" from hosts_groups"
+					" where groupid=190"	/* "TLD Probe results" */
+				")"
+				" and templateid not in ("
+						"select templateid"
+						" from hosts_templates"
+						" where hostid in ("
+								"select templateid"
+								" from hosts_templates"
+								" where hostid in ("
+										"select hostid"
+										" from hosts_groups"
+										" where groupid=120)"	/* exclude "Probes" */
+							")"
+					")"
+				" and templateid not in (99980)");	/* exclude "Template RDAP" */
+
+	if (NULL == result)
+	{
+		ret = SUCCEED;
+		goto out;
+	}
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	templateid;
+
+		ZBX_STR2UINT64(templateid, row[0]);	/* hostid of "Template <TLD>" */
+
+		zbx_vector_uint64_append(&templateids, templateid);
+	}
+
+	DBfree_result(result);
+
+	for (i = 0; i < templateids.values_num; i++)
+	{
+		zbx_vector_uint64_t	hostids;
+		zbx_uint64_t		templated_itemid;
+		size_t			j;
+
+		templated_itemid = itemid;
+
+		if (ZBX_DB_OK > DBexecute(
+				"insert into items ("
+					"itemid,type,snmp_community,snmp_oid,hostid,name,key_,"
+					"delay,history,trends,status,value_type,trapper_hosts,units,multiplier,delta,"
+					"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,"
+					"snmpv3_privpassphrase,formula,logtimefmt,templateid,valuemapid,delay_flex,"
+					"params,ipmi_sensor,data_type,authtype,username,password,publickey,privatekey,"
+					"flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,"
+					"snmpv3_privprotocol,snmpv3_contextname,evaltype"
+				")"
+				" values ("
+					ZBX_FS_UI64 ",'15','',''," ZBX_FS_UI64 ",'DNSSEC enabled/disabled',"
+					"'dnssec.enabled','60','7','365',"
+					"'0','3','','','0','0',"
+					"'','0','','',"
+					"'1','',NULL,NULL,'','{$RSM.TLD.DNSSEC.ENABLED}','','0',"
+					"'0','','','','','0',NULL,'',"
+					"'History of Registration Data Directory Service being enabled or disabled.',"
+					"'0','0','0','0','','0'"
+				")",
+				itemid++, templateids.values[i]))
+		{
+			goto out;
+		}
+
+		zbx_vector_uint64_create(&hostids);
+		zbx_vector_uint64_reserve(&hostids, 1);
+
+		/* select hosts "<TLD> <Probe>" hosts, for this particular TLD */
+		result = DBselect(
+				"select h.hostid"
+				" from hosts_templates ht, hosts h"
+				" where h.hostid=ht.hostid"
+					" and ht.templateid=" ZBX_FS_UI64,
+				templateids.values[i]);
+
+		if (NULL == result)
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "no \"<TLD> <Probe>\" hosts found");
+			zbx_vector_uint64_destroy(&hostids);
+			goto out;
+		}
+
+		while (NULL != (row = DBfetch(result)))
+		{
+			zbx_uint64_t	hostid;
+
+			ZBX_STR2UINT64(hostid, row[0]);     /* hostid of "<TLD> <Probe>" */
+
+			zbx_vector_uint64_append(&hostids, hostid);
+		}
+
+		DBfree_result(result);
+
+		for (j = 0; j < hostids.values_num; j++)
+		{
+			if (ZBX_DB_OK > DBexecute(
+					"insert into items ("
+						"itemid,type,snmp_community,snmp_oid,hostid,name,key_,"
+						"delay,history,trends,status,value_type,trapper_hosts,units,multiplier,delta,"
+						"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,"
+						"snmpv3_privpassphrase,formula,logtimefmt,templateid,valuemapid,delay_flex,"
+						"params,ipmi_sensor,data_type,authtype,username,password,publickey,privatekey,"
+						"flags,interfaceid,port,description,inventory_link,lifetime,snmpv3_authprotocol,"
+						"snmpv3_privprotocol,snmpv3_contextname,evaltype"
+					")"
+					" values ("
+						ZBX_FS_UI64 ",'15','',''," ZBX_FS_UI64 ",'DNSSEC enabled/disabled',"
+						"'dnssec.enabled','60','7','365',"
+						"'0','3','','','0','0',"
+						"'','0','','',"
+						"'1',''," ZBX_FS_UI64 ",NULL,'','{$RSM.TLD.DNSSEC.ENABLED}','','0',"
+						"'0','','','','','0',NULL,'',"
+						"'History of Registration Data Directory Service being enabled or disabled.',"
+						"'0','0','0','0','','0'"
+					")",
+					itemid++, hostids.values[j], templated_itemid))
+			{
+				zbx_vector_uint64_destroy(&hostids);
+				goto out;
+			}
+		}
+
+		zbx_vector_uint64_destroy(&hostids);
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='items'"))
+		goto out;
+
+	ret = SUCCEED;
+out:
+	zbx_vector_uint64_destroy(&templateids);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2297,7 +2472,8 @@ DBPATCH_ADD(3000213, 0, 0)	/* add "RSM RDAP rtt" value mapping (without error co
 DBPATCH_ADD(3000214, 0, 0)	/* create "Template RDAP" template with rdap[...], rdap.ip and rdap.rtt items, RDAP application; place template into "Templates" host group */
 DBPATCH_ADD(3000215, 0, 0)	/* add RDAP error codes into "RSM RDAP rtt" value mapping */
 DBPATCH_ADD(3000216, 0, 0)	/* add new test type to "testTypes" catalog */
-DBPATCH_ADD(3000217, 0, 0)	/* add macro {$RDAP.TLD.ENABLED}=0 and item rdds.enabled to all "Template <TLD>" */
+DBPATCH_ADD(3000217, 0, 0)	/* add macro {$RDAP.TLD.ENABLED}=0 and item rdds.enabled to all "Template <TLD>" and hosts it is linked to */
 DBPATCH_ADD(3000218, 0, 0)	/* add value mappings for new DNS error codes: -408, -808 */
+DBPATCH_ADD(3000219, 0, 0)	/* add item dnssec.enabled to all "Template <TLD>" and hosts it is linked to */
 
 DBPATCH_END()

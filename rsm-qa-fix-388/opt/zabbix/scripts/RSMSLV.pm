@@ -23,6 +23,9 @@ use constant E_FAIL => -1;
 use constant E_ID_NONEXIST => -2;
 use constant E_ID_MULTIPLE => -3;
 
+use constant PROTO_UDP	=> 0;
+use constant PROTO_TCP	=> 1;
+
 						# "RSM Service Availability" value mapping:
 use constant DOWN			=> 0;	# Down
 use constant UP				=> 1;	# Up
@@ -75,7 +78,7 @@ our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
 		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
-		UP_INCONCLUSIVE_NO_DATA
+		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR RESULT_TIMESTAMP_SHIFT PROBE_ONLINE_STR PROBE_OFFLINE_STR
 		PROBE_NORESULT_STR AVAIL_SHIFT_BACK PROBE_ONLINE_SHIFT
 		ONLINE OFFLINE
@@ -87,7 +90,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_item_data get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
-		get_templated_nsips db_exec tld_rdap_enabled_at tld_rdds_enabled_at
+		get_templated_nsips db_exec tld_interface_enabled
 		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_downtime_bounds
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
@@ -445,55 +448,26 @@ sub get_lastclock
 sub get_tlds
 {
 	my $service = shift;
+	my $from = shift;
+	my $till = shift;
 
-	$service = defined($service) ? uc($service) : 'DNS';
-
-	my $sql = "select distinct h.host";
-
-	if ($service eq 'DNS')
-	{
-		$sql .=	" from hosts h,hosts_groups hg,groups g".
-			" where h.hostid=hg.hostid".
-				" and hg.groupid=g.groupid".
-				" and g.name='TLDs'".
-				" and h.status=0";
-	}
-	elsif ($service eq 'RDDS')
-	{
-		$sql .= " from hosts h,hosts_groups hg,groups g,hosts h2,hostmacro hm".
-			" where h.hostid=hg.hostid".
-				" and hg.groupid=g.groupid".
-				" and h2.name=concat('Template ', h.host)".
-				" and g.name='TLDs'".
-				" and h2.hostid=hm.hostid".
-				" and (".
-					"hm.macro='{\$RSM.TLD.RDDS.ENABLED}' and hm.value!=0".
-						" or ".
-					"hm.macro='{\$RDAP.TLD.ENABLED}' and hm.value!=0".
-				")".
-				" and h.status=0";
-	}
-	else
-	{
-		$sql .= " from hosts h,hosts_groups hg,groups g,hosts h2,hostmacro hm".
-			" where h.hostid=hg.hostid".
-				" and hg.groupid=g.groupid".
-				" and h2.name=concat('Template ', h.host)".
-				" and g.name='TLDs'".
-				" and h2.hostid=hm.hostid".
-				" and hm.macro='{\$RSM.TLD.$service.ENABLED}'".
-				" and hm.value!=0".
-				" and h.status=0";
-	}
-
-	$sql .= " order by h.host";
-
-	my $rows_ref = db_select($sql);
+	my $rows_ref = db_select(
+		"select distinct h.host".
+		" from hosts h,hosts_groups hg,groups g".
+		" where h.hostid=hg.hostid".
+			" and hg.groupid=g.groupid".
+			" and g.name='TLDs'".
+			" and h.status=0".
+		" order by h.host");
 
 	my @tlds;
 	foreach my $row_ref (@$rows_ref)
 	{
-		push(@tlds, $row_ref->[0]);
+		my $tld = $row_ref->[0];
+
+		next unless (tld_service_enabled($tld, $service, $from, $till) == SUCCESS);
+
+		push(@tlds, $tld);
 	}
 
 	return \@tlds;
@@ -708,55 +682,48 @@ sub tld_service_enabled
 {
 	my $tld = shift;
 	my $service = shift;
+	my $from = shift;
+	my $till = shift;
 
 	$service = uc($service) if (defined($service));
 
-	return SUCCESS if (not defined($service) or $service eq 'DNS');
+	return SUCCESS if (!defined($service) or $service eq 'DNS');
 
-	my $host = "Template $tld";
-
-	my $rows_ref;
+	$from = cycle_start(time(), 60) - 60 unless (defined($from));
 
 	if ($service eq 'RDDS')
 	{
-		$rows_ref = db_select(
-			"select hm.value".
-			" from hosts h,hostmacro hm".
-			" where h.hostid=hm.hostid".
-				" and h.host='$host'".
-				" and (".
-					"hm.macro='{\$RSM.TLD.RDDS.ENABLED}' and hm.value!=0".
-						" or ".
-					"hm.macro='{\$RDAP.TLD.ENABLED}' and hm.value!=0".
-				")");
+		my $rdds43_enabled = tld_interface_enabled($tld, 'rdds43', $from, $till);
+
+		return SUCCESS if ($rdds43_enabled == SUCCESS);
+
+		return tld_interface_enabled($tld, 'rdap', $from, $till);
+	}
+
+	return tld_interface_enabled($tld, $service, $from, $till);
+}
+
+sub tld_interface_enabled
+{
+	my $tld = shift;
+	my $interface = shift;
+	my $from = shift;
+	my $till = shift;
+
+	$interface = lc($interface);
+
+	return SUCCESS if ($interface eq 'dns');
+
+	my $item_key;
+
+	if ($interface eq 'rdds43' || $interface eq 'rdds80')
+	{
+		$item_key = 'rdds.enabled';
 	}
 	else
 	{
-		$rows_ref = db_select(
-			"select hm.value".
-			" from hosts h,hostmacro hm".
-			" where h.hostid=hm.hostid".
-				" and h.host='$host'".
-				" and hm.macro='{\$RSM.TLD.$service.ENABLED}'");
+		$item_key = lc($interface) . ".enabled";
 	}
-
-	if (scalar(@$rows_ref) == 0)
-	{
-		wrn("service macro does not exist at \"$host\", assuming feature disabled");
-		return E_FAIL;
-	}
-
-	dbg("$tld: $service ", ($rows_ref->[0]->[0] == 0 ? "DISABLED" : "ENABLED"));
-
-	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS);
-}
-
-# wether RDAP was enabled at particular time
-sub tld_rdap_enabled_at
-{
-	my $tld = shift;
-	my $from = shift;
-	my $till = shift;
 
 	my $rows_ref = db_select(
 		"select hi.value".
@@ -765,51 +732,57 @@ sub tld_rdap_enabled_at
 			" and i.itemid=hi.itemid".
 			" and h.status=0".
 			" and h.host like '$tld %'".
-			" and i.key_='rdap.enabled'".
+			" and i.key_='$item_key'".
 			" and ".sql_time_condition($from, $till, "hi.clock").
 		" order by hi.clock asc".
 		" limit 1");
 
-	if (scalar(@$rows_ref) == 0)
-	{
-		$rows_ref = db_select(
-			"select hi.value".
-			" from hosts h,items i,history_uint hi".
-			" where h.hostid=i.hostid".
-				" and i.itemid=hi.itemid".
-				" and h.status=0".
-				" and h.host like '$tld %'".
-				" and i.key_='rdap.enabled'".
-				" and hi.clock>$from".
-			" order by hi.clock asc".
-			" limit 1");
-	}
+	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS) if (scalar(@{$rows_ref}) != 0);
 
-	fail("dimir was wrong, 'rdap.enabled' is not on every \"<TLD> <Probe>\" host") unless (scalar(@$rows_ref) != 0);
-
-	return (defined($rows_ref->[0]->[0]) && $rows_ref->[0]->[0] != 0 ? SUCCESS : E_FAIL);
-}
-
-# wether RDDS43 and RDDS80 were enabled at particular time
-sub tld_rdds_enabled_at
-{
-	my $tld = shift;
-	my $from = shift;
-	my $till = shift;
-
-	my $rows_ref = db_select(
+	$rows_ref = db_select(
 		"select hi.value".
 		" from hosts h,items i,history_uint hi".
 		" where h.hostid=i.hostid".
 			" and i.itemid=hi.itemid".
 			" and h.status=0".
 			" and h.host like '$tld %'".
-			" and i.key_='rdds.enabled'".
-			" and ".sql_time_condition($from, $till, "hi.clock").
+			" and i.key_='$item_key'".
+			" and hi.clock>$from".
 		" order by hi.clock asc".
 		" limit 1");
 
-	return (defined($rows_ref->[0]->[0]) && $rows_ref->[0]->[0] != 0 ? SUCCESS : E_FAIL);
+	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS) if (scalar(@{$rows_ref}) != 0);
+
+	# no item values, look for current macro value
+	my $host = "Template $tld";
+
+	my $macro;
+
+	if ($interface eq 'rdap')
+	{
+		$macro = '{$RDAP.TLD.ENABLED}';
+	}
+	elsif ($interface eq 'rdds43' || $interface eq 'rdds80')
+	{
+		$macro = '{$RSM.TLD.RDDS.ENABLED}';
+	}
+	else
+	{
+		$macro = '{$RSM.TLD.' . uc($interface) . '.ENABLED}';
+	}
+
+	$rows_ref = db_select(
+		"select hm.value".
+		" from hosts h,hostmacro hm".
+		" where h.hostid=hm.hostid".
+			" and h.host='$host'".
+			" and hm.macro='$macro'");
+
+	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS) if (scalar(@{$rows_ref}) != 0);
+
+	wrn("macro \"$macro\" does not exist at \"$host\", assuming disabled");
+
+	return E_FAIL;
 }
 
 sub handle_db_error

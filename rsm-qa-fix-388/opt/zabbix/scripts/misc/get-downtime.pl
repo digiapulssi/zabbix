@@ -71,7 +71,7 @@ else
 	usage(2);
 }
 
-my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($service_type);
+my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($service_type, $from, $till);
 
 foreach (@$tlds_ref)
 {

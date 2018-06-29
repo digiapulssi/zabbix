@@ -28,8 +28,6 @@ use constant PROBE_STATUS_UP => 'Up';
 use constant PROBE_STATUS_DOWN => 'Down';
 use constant PROBE_STATUS_UNKNOWN => 'Unknown';
 
-use constant PROTO_UDP	=> 0;				# todo phase 1: taken from phase 2
-use constant PROTO_TCP	=> 1;				# todo phase 1: taken from phase 2
 use constant JSON_INTERFACE_DNS		=> 'DNS';	# todo phase 1: taken from phase 2
 use constant JSON_INTERFACE_DNSSEC	=> 'DNSSEC';	# todo phase 1: taken from phase 2
 use constant TRIGGER_SEVERITY_NOT_CLASSIFIED	=> 0;	# todo phase 1: taken from phase 2
@@ -244,7 +242,7 @@ if (opt('tld'))
 }
 else
 {
-	$tlds_ref = get_tlds();
+	$tlds_ref = get_tlds('DNS', $from, $till);
 }
 
 db_disconnect();
@@ -541,7 +539,7 @@ sub __get_test_data
 	{
 		if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
 		{
-			next if (tld_service_enabled($tld, $service) != SUCCESS);
+			next if (tld_service_enabled($tld, $service, $from, $till) != SUCCESS);
 		}
 
 		my $delay = $services->{$service}->{'delay'};
