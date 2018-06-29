@@ -1472,8 +1472,8 @@ static void	DBpatch_3050121_name_update(char **name, char *params)
 	if (ITEM_NAME_LEN < strlen(*name))
 	{
 		*name[ITEM_NAME_LEN] = '\0';
-		zabbix_log(LOG_LEVEL_WARNING, "In %s() truncated the name of item with the key: %s.",
-				"DBpatch_3050121", params);
+		zabbix_log(LOG_LEVEL_WARNING, "Cannot convert name for item with the key \"%s\":"
+				" value is too long and field was truncated.", params);
 	}
 }
 
