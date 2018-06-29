@@ -1500,8 +1500,8 @@ static int	DBpatch_3050121(void)
 		item_name = zbx_strdup(item_name, row[1]);
 		DBpatch_3050121_name_update(&item_name, row[2]);
 		item_esc = DBdyn_escape_string(item_name);
-		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "update items set name='");
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%s' where itemid=%s;\n", item_esc, row[0]);
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update items set name='%s' where itemid=%s;\n",
+				item_esc, row[0]);
 		zbx_free(item_esc);
 
 		if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
