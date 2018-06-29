@@ -398,12 +398,14 @@ else {
 		$valuemapComboBox->addItem($valuemap['valuemapid'], CHtml::encode($valuemap['name']));
 	}
 }
-$link = null;
+
 if (CWebUser::getType() == USER_TYPE_SUPER_ADMIN) {
-	$link = (new CLink(_('show value mappings'), 'adm.valuemapping.php'))
-		->setAttribute('target', '_blank');
+	$valuemapComboBox = [$valuemapComboBox, '&nbsp;',
+		(new CLink(_('show value mappings'), 'adm.valuemapping.php'))->setAttribute('target', '_blank')
+	];
 }
-$itemFormList->addRow(_('Show value'), [$valuemapComboBox, SPACE, $link], 'row_valuemap');
+$itemFormList->addRow(_('Show value'), $valuemapComboBox, 'row_valuemap');
+
 $itemFormList->addRow(_('Allowed hosts'),
 	(new CTextBox('trapper_hosts', $this->data['trapper_hosts']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH),
 	'row_trapper_hosts');
