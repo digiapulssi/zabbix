@@ -698,8 +698,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 
 	foreach ($hosts as $host) {
 		foreach ($data['probes'] as $hostId => $probe) {
-			if (mb_strtoupper($host['host']) == mb_strtoupper($data['tld']['host'].' '.$probe['host'])
-					&& (isset($host['value']) || isset($host['value_rdap']))) {
+			if (mb_strtoupper($host['host']) == mb_strtoupper($data['tld']['host'].' '.$probe['host'])) {
 				$data['probes'][$hostId] = $host;
 				$data['probes'][$hostId]['name'] = $probe['host'];
 				break;

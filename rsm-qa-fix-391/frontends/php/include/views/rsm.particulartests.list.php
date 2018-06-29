@@ -273,20 +273,6 @@ foreach ($this->data['probes'] as $probe) {
 				$rdds = ZBX_STYLE_GREY;
 			}
 
-			/**
-			 * An exception: if sub-service is disabled at TLD level, sub-services should be disabled at probe level
-			 * too. This need to be added as exception because in case if sub-service is disabled at TLD level, we never
-			 * request values of related items. As the result, we cannot detect what is a reason why there are no
-			 * results for sub-service.
-			 *
-			 * See ICA-386 for more details.
-			 */
-			if (!array_key_exists('rdds_43_base_url', $data) && $rdds43 === $noResult) {
-				$rdds43 = $disabled;
-				$rdds80 = $disabled;
-				$probe_no_result = false;
-			}
-
 			if (isset($this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED])
 					&& $this->data['tld']['macros'][RSM_RDAP_TLD_ENABLED] == 0) {
 				$rdap = $disabled;
@@ -305,6 +291,40 @@ foreach ($this->data['probes'] as $probe) {
 				}
 
 				$rdap = $up;
+			}
+
+			/**
+			 * An exception: if sub-service is disabled at TLD level, sub-services should be disabled at probe level
+			 * too. This need to be added as exception because in case if sub-service is disabled at TLD level, we never
+			 * request values of related items. As the result, we cannot detect what is a reason why there are no
+			 * results for sub-service.
+			 *
+			 * See ICA-386 for more details.
+			 */
+			if (!array_key_exists('rdds_43_base_url', $data) && $rdds43 === $noResult) {
+				$rdds43 = $disabled;
+				$rdds80 = $disabled;
+				$probe_no_result = false;
+			}
+			/**
+			 * Another exception: if RDDS is disabled at probe level, this is another case when we doesn't request data
+			 * and cannot distinguish when probe has no data and when it is disabled. So, ask help to macros.
+			 *
+			 * Macros {$RSM.RDDS.ENABLED} is used to disable all 3 sub-services, so, if its 0, all three are displayed
+			 * as disabled.
+			 */
+			elseif (isset($probe['macros'][RSM_RDDS_ENABLED]) && $probe['macros'][RSM_RDDS_ENABLED] == 0) {
+				$rdds43 = $disabled;
+				$rdds80 = $disabled;
+				$rdap = $disabled;
+			}
+
+			if (($rdds43 === $disabled || $rdds43 === $noResult)
+					&& ($rdds80 === $disabled || $rdds80 === $noResult)
+					&& ($rdap === $disabled || $rdap === $noResult)) {
+				$probe_no_result = true;
+				$probe_down = false;
+				$rdds = ZBX_STYLE_GREY;
 			}
 
 			if ($probe_down) {
