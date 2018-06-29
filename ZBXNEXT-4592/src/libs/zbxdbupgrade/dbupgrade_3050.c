@@ -1507,6 +1507,7 @@ static int	DBpatch_3050121(void)
 		if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
 			break;
 	}
+	DBfree_result(result);
 
 	if (SUCCEED == ret)
 	{
@@ -1517,7 +1518,6 @@ static int	DBpatch_3050121(void)
 	}
 
 	zbx_free(item_name);
-	DBfree_result(result);
 	zbx_free(sql);
 
 	return ret;
