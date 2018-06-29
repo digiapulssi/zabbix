@@ -63,6 +63,8 @@ if (opt('debug'))
 
 __validate_input();	# needs to be connected to db
 
+ah_set_debug(getopt('debug'));
+
 if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_TMP_DIR, AH_BASE_DIR)))
 {
 	fail($error);
@@ -329,14 +331,21 @@ foreach (@server_keys)
 	{
 		if (tld_exists(getopt('tld')) == 0)
 		{
-			fail("TLD ", getopt('tld'), " does not exist.") if ($server_keys[-1] eq $server_key);
+			if ($server_keys[-1] eq $server_key)
+			{
+				# last server in list
+				fail("TLD ", getopt('tld'), " does not exist.");
+			}
+
+			# try next server
+			next;
 		}
 
 		$tlds_ref = [ getopt('tld') ];
 	}
 	else
 	{
-		$tlds_ref = get_tlds();
+		$tlds_ref = get_tlds('DNS', $from, $till);
 	}
 
 	db_disconnect();
@@ -378,21 +387,7 @@ foreach (@server_keys)
 			# find out which services are disabled, for others get lastclock
 			foreach my $service (keys(%services))
 			{
-				my ($tld_service_enabled, $rdds_enabled, $rdap_enabled);
-
-				if (uc($service) eq 'RDDS')
-				{
-					$rdds_enabled = tld_rdds_enabled_at($tld, $from, $till);
-					$rdap_enabled = tld_rdap_enabled_at($tld, $from, $till);
-
-					$tld_service_enabled = (($rdds_enabled == SUCCESS || $rdap_enabled == SUCCESS) ? SUCCESS : E_FAIL);
-				}
-				else
-				{
-					$tld_service_enabled = tld_service_enabled($tld, $service);
-				}
-
-				if ($tld_service_enabled != SUCCESS)
+				if (tld_service_enabled($tld, $service, $from, $till) != SUCCESS)
 				{
 					if (opt('dry-run'))
 					{
@@ -409,6 +404,14 @@ foreach (@server_keys)
 					}
 
 					next;
+				}
+
+				my ($rdds_enabled, $rdap_enabled);
+
+				if (uc($service) eq 'RDDS')
+				{
+					$rdds_enabled = tld_interface_enabled($tld, 'rdds43', $from, $till);
+					$rdap_enabled = tld_interface_enabled($tld, 'rdap', $from, $till);
 				}
 
 				my $lastclock_key = $services{$service}{'rollweek_key'};
@@ -1109,16 +1112,16 @@ foreach (@server_keys)
 								push(@{$tr_ref->{'testedInterface'}}, $rdap_ref);
 							}
 
+							delete($tr_ref->{'start'});
+							delete($tr_ref->{'end'});
+							delete($tr_ref->{'subservices'});
+
 							if (opt('dry-run'))
 							{
 								__prnt_json($tr_ref);
 							}
 							else
 							{
-								delete($tr_ref->{'start'});
-								delete($tr_ref->{'end'});
-								delete($tr_ref->{'subservices'});
-
 								if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
 								{
 									fail("cannot save incident: ", ah_get_error());
@@ -1265,6 +1268,8 @@ foreach (@server_keys)
 	}
 
 	db_disconnect();
+
+	last if (opt('tld'));
 } # foreach (@server_keys)
 undef($server_key);
 

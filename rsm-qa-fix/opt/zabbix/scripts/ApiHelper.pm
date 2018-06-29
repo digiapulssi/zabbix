@@ -8,8 +8,6 @@ use base 'Exporter';
 use JSON::XS;
 use Types::Serialiser;
 
-use constant AH_DEBUG => 0;
-
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
 
@@ -36,18 +34,26 @@ use constant JSON_OBJECT_DISABLED_SERVICE => {
 	'status'	=> 'Disabled'
 };
 
-our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_BASE_DIR AH_TMP_DIR ah_get_error ah_state_file_json ah_save_state
+our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_BASE_DIR AH_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
 		ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
 		ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
 		ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE);
 
 use constant AH_JSON_FILE_VERSION => 1;
 
-my $error_string = "";
+my $_error_string = "";
+my $_debug = 0;
+
+sub ah_set_debug
+{
+	my $value = shift;
+
+	$_debug = (defined($value) && $value != 0 ? 1 : 0);
+}
 
 sub ah_get_error
 {
-	return $error_string;
+	return $_error_string;
 }
 
 sub __ts_str
@@ -138,7 +144,7 @@ sub __make_inc_path($$$$$)
 
 sub __set_error
 {
-	$error_string = join('', @_);
+	$_error_string = join('', @_);
 }
 
 # todo phase 1: this improved version was taken from the same file of phase 2
@@ -146,7 +152,7 @@ sub __set_file_error
 {
 	my $err = shift;
 
-	$error_string = "";
+	$_error_string = "";
 
 	if (ref($err) eq "ARRAY")
 	{
@@ -155,18 +161,18 @@ sub __set_file_error
 			my ($file, $message) = %$diag;
 			if ($file eq '')
 			{
-				$error_string .= "$message. ";
+				$_error_string .= "$message. ";
 			}
 			else
 			{
-				$error_string .= "$file: $message. ";
+				$_error_string .= "$file: $message. ";
 			}
 
 			return;
 		}
 	}
 
-	$error_string = join('', $err, @_);
+	$_error_string = join('', $err, @_);
 }
 
 sub __write_file
@@ -190,6 +196,8 @@ sub __write_file
 	}
 
 	close($OUTFILE);
+
+	dbg("wrote file \"$full_path\"");
 
 	utime($clock, $clock, $full_path) if (defined($clock));
 
@@ -453,7 +461,7 @@ sub ah_save_measurement
 
 sub dbg
 {
-	return if (AH_DEBUG == 0);
+	return if ($_debug == 0);
 
 	my @args = @_;
 

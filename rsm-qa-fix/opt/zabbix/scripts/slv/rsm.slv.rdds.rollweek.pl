@@ -39,7 +39,7 @@ if (opt('tld'))
 }
 else
 {
-	$tlds_ref = get_tlds('RDDS');
+	$tlds_ref = get_tlds('RDDS', $from, $till);
 }
 
 init_values();

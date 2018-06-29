@@ -625,6 +625,17 @@ sub create_items_dns {
                                               'delay' => $cfg_global_macros->{'{$RSM.DNS.UDP.DELAY}'}};
 
     really(create_item($options));
+
+    # this item is added in any case
+    really(create_item({
+	    'name' => 'DNSSEC enabled/disabled',
+	    'key_'=> 'dnssec.enabled',
+	    'status' => ITEM_STATUS_ACTIVE,
+	    'hostid' => $templateid,
+	    'params' => '{$RSM.TLD.DNSSEC.ENABLED}',
+	    'delay' => 60,
+	    'type' => ITEM_TYPE_CALCULATED,
+	    'value_type' => ITEM_VALUE_TYPE_UINT64}));
 }
 
 sub create_items_rdds {

@@ -39,7 +39,7 @@ if (opt('tld'))
 }
 else
 {
-        $tlds_ref = get_tlds();
+        $tlds_ref = get_tlds('DNS', $from, $till);
 }
 
 init_values();
