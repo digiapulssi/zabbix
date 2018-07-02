@@ -465,7 +465,7 @@ sub get_tlds
 	{
 		my $tld = $row_ref->[0];
 
-		next unless (tld_service_enabled($tld, $service, $from, $till) == SUCCESS);
+		next unless (tld_service_enabled($tld, $service, $from, $till));
 
 		push(@tlds, $tld);
 	}
@@ -685,17 +685,15 @@ sub tld_service_enabled
 	my $from = shift;
 	my $till = shift;
 
-	$service = uc($service) if (defined($service));
+	$service = uc($service);
 
-	return SUCCESS if (!defined($service) or $service eq 'DNS');
+	return 1 if ($service eq 'DNS');
 
 	$from = cycle_start(time(), 60) - 60 unless (defined($from));
 
 	if ($service eq 'RDDS')
 	{
-		my $rdds43_enabled = tld_interface_enabled($tld, 'rdds43', $from, $till);
-
-		return SUCCESS if ($rdds43_enabled == SUCCESS);
+		return 1 if tld_interface_enabled($tld, 'rdds43', $from, $till);
 
 		return tld_interface_enabled($tld, 'rdap', $from, $till);
 	}
@@ -712,7 +710,7 @@ sub tld_interface_enabled
 
 	$interface = lc($interface);
 
-	return SUCCESS if ($interface eq 'dns');
+	return 1 if ($interface eq 'dns');
 
 	my $item_key;
 
@@ -737,7 +735,7 @@ sub tld_interface_enabled
 		" order by hi.clock asc".
 		" limit 1");
 
-	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS) if (scalar(@{$rows_ref}) != 0);
+	return $rows_ref->[0]->[0] if (scalar(@{$rows_ref}) != 0);
 
 	$rows_ref = db_select(
 		"select hi.value".
@@ -751,7 +749,7 @@ sub tld_interface_enabled
 		" order by hi.clock asc".
 		" limit 1");
 
-	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS) if (scalar(@{$rows_ref}) != 0);
+	return $rows_ref->[0]->[0] if (scalar(@{$rows_ref}) != 0);
 
 	# no item values, look for current macro value
 	my $host = "Template $tld";
@@ -778,11 +776,11 @@ sub tld_interface_enabled
 			" and h.host='$host'".
 			" and hm.macro='$macro'");
 
-	return ($rows_ref->[0]->[0] == 0 ? E_FAIL : SUCCESS) if (scalar(@{$rows_ref}) != 0);
+	return $rows_ref->[0]->[0] if (scalar(@{$rows_ref}) != 0);
 
 	wrn("macro \"$macro\" does not exist at \"$host\", assuming disabled");
 
-	return E_FAIL;
+	return 0;
 }
 
 sub handle_db_error
@@ -2743,7 +2741,7 @@ sub ts_str
 	# sec, min, hour, mday, mon, year, wday, yday, isdst
 	my ($sec, $min, $hour, $mday, $mon, $year) = localtime($ts);
 
-	return sprintf("%.4d%.2d%.2d:%.2d%.2d%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+	return sprintf("%.4d-%.2d-%.2d %.2d:%.2d:%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
 sub ts_full
