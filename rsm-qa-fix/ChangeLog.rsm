@@ -1,8 +1,7 @@
 Changes for rsm1.1.0rc21
 
-New features:
-
 Bug fixes:
+....I..... [sub-388] fixed processing of RDAP test results in SLA API (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc20
