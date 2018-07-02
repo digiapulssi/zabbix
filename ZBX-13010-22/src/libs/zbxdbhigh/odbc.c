@@ -322,7 +322,7 @@ ZBX_ODBC_ROW	odbc_DBfetch(ZBX_ODBC_RESULT pdbh)
 			if (SQL_NULL_DATA == (int)len)
 				break;
 
-			buffer[(int)len] = '\0';
+			buffer[sizeof(buffer) - 1] = '\0';
 
 			zbx_strcpy_alloc(&pdbh->row_data[i], &alloc, &offset, buffer);
 		}
