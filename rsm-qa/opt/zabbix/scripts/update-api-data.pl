@@ -387,7 +387,7 @@ foreach (@server_keys)
 			# find out which services are disabled, for others get lastclock
 			foreach my $service (keys(%services))
 			{
-				if (tld_service_enabled($tld, $service, $from, $till) != SUCCESS)
+				if (!tld_service_enabled($tld, $service, $from, $till))
 				{
 					if (opt('dry-run'))
 					{
@@ -404,14 +404,6 @@ foreach (@server_keys)
 					}
 
 					next;
-				}
-
-				my ($rdds_enabled, $rdap_enabled);
-
-				if (uc($service) eq 'RDDS')
-				{
-					$rdds_enabled = tld_interface_enabled($tld, 'rdds43', $from, $till);
-					$rdap_enabled = tld_interface_enabled($tld, 'rdap', $from, $till);
 				}
 
 				my $lastclock_key = $services{$service}{'rollweek_key'};
@@ -1042,6 +1034,11 @@ foreach (@server_keys)
 
 							$tr_ref->{'service'} = uc($service);
 
+							my $rdds_enabled = tld_interface_enabled($tld, 'rdds43', $tr_start, $tr_end);
+							my $rdap_enabled = tld_interface_enabled($tld, 'rdap', $tr_start, $tr_end);
+
+							dbg("enabled at ", ts_str($tr_start), " RDDS:$rdds_enabled RDAP:$rdap_enabled");
+
 							my $rdds43_ref = {
 								'interface'	=> JSON_INTERFACE_RDDS43,
 								'probes'	=> []
@@ -1081,7 +1078,7 @@ foreach (@server_keys)
 
 									if (exists($subservices_ref->{$subservice}->{$probe}->{'details'}))
 									{
-										fill_test_data_rdds('rdds', $subservices_ref->{$subservice}->{$probe}->{'details'},
+										fill_test_data_rdds($subservice, $subservices_ref->{$subservice}->{$probe}->{'details'},
 											$probe_ref->{'testData'});
 									}
 
@@ -1102,12 +1099,12 @@ foreach (@server_keys)
 
 							$tr_ref->{'testedInterface'} = [];
 
-							if ($rdds_enabled == SUCCESS)
+							if ($rdds_enabled)
 							{
 								push(@{$tr_ref->{'testedInterface'}}, $rdds43_ref, $rdds80_ref);
 							}
 
-							if ($rdap_enabled == SUCCESS)
+							if ($rdap_enabled)
 							{
 								push(@{$tr_ref->{'testedInterface'}}, $rdap_ref);
 							}
@@ -1530,7 +1527,8 @@ sub fill_test_data_rdds($$$)
 			$metric->{'rtt'} = undef;
 			$metric->{'result'} = 'no data';
 		}
-		elsif ($subservice eq 'rdds' && (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+		elsif (($subservice eq JSON_INTERFACE_RDDS80 || $subservice eq JSON_INTERFACE_RDDS43) &&
+				(substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
 				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS43_RES_NOREPLY)) eq ZBX_EC_RDDS43_RES_NOREPLY ||
 				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY))
 		{
@@ -1539,7 +1537,8 @@ sub fill_test_data_rdds($$$)
 			$metric->{'rtt'} = undef;
 			$metric->{'result'} = $test->{'rtt'};
 		}
-		elsif ($subservice eq 'rdap' && (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
+		elsif ($subservice eq JSON_INTERFACE_RDAP &&
+				(substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
 				substr($test->{'rtt'}, 0, length(ZBX_EC_RDAP_RES_NOREPLY)) eq ZBX_EC_RDAP_RES_NOREPLY))
 		{
 			$test_data_ref->{'status'} = "Up";

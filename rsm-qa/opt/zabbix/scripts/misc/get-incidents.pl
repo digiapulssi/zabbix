@@ -44,7 +44,7 @@ foreach (@$tlds_ref)
 
 	foreach my $service ('dns', 'rdds', 'epp')
 	{
-		next unless (tld_service_enabled($tld, $service, $from, $till) == SUCCESS);
+		next unless (tld_service_enabled($tld, $service, $from, $till));
 
 		my $key = "rsm.slv.$service.avail";
 
