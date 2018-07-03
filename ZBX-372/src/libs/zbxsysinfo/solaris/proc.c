@@ -258,6 +258,9 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	struct passwd	*usrinfo;
 	psinfo_t	psinfo;	/* In the correct procfs.h, the structure name is psinfo_t */
 	int		fd = -1, proccount = 0, invalid_user = 0, zbx_proc_stat, zoneflag;
+#ifdef HAVE_ZONE_H
+	zoneid_t		zoneid;
+#endif
 
 #ifndef HAVE_ZONE_H
 	/* this code is for case if agent has been compiled on Solaris 9 or earlier where zones are not supported */
@@ -348,9 +351,11 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 			return SYSINFO_RET_FAIL;
 		}
 
-		/* zones are not supported, the agent can accept 6th parameter with default value "current" */
-#endif
+		/* zones are not supported, the agent can accept 5th parameter with default value "all" */
+		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_ALL;
+#else
 		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_CURRENT;
+#endif
 	}
 	else if (0 == strcmp(flags, "all"))
 	{
@@ -361,6 +366,9 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter."));
 		return SYSINFO_RET_FAIL;
 	}
+#ifdef HAVE_ZONE_H
+	zoneid = getzoneid();
+#endif
 
 	if (1 == invalid_user)	/* handle 0 for non-existent user after all parameters have been parsed and validated */
 		goto out;
@@ -402,8 +410,13 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		if (NULL != proccomm && '\0' != *proccomm && NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL))
 			continue;
 
-		if (ZBX_PROCSTAT_FLAGS_ZONE_CURRENT == zoneflag && zoneflag != psinfo.pr_zoneid)
-			continue;
+		if (ZBX_PROCSTAT_FLAGS_ZONE_ALL != zoneflag)
+		{
+#ifdef HAVE_ZONE_H
+			if (zoneid != psinfo.pr_zoneid)
+				continue;
+#endif
+		}
 
 		proccount++;
 	}
