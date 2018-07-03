@@ -21,7 +21,6 @@
 #include "db.h"
 #include "dbupgrade.h"
 #include "zbxtasks.h"
-#include "log.h"
 
 extern unsigned char	program_type;
 
@@ -1430,95 +1429,21 @@ out:
 	return ret;
 }
 
-/******************************************************************************
- *                                                                            *
- * Function: DBpatch_3050121_name_update                                      *
- *                                                                            *
- * Purpose: replace in string $1-9 to value of parameter from key of Item     *
- *                                                                            *
- * Parameters: name   - [IN/OUT] string for replace                           *
- *             params - [IN] Item key in format 'aaa[bbb,ccc,ddd]'            *
- *                                                                            *
- ******************************************************************************/
-static void	DBpatch_3050121_name_update(char **name, char *params)
-{
-	int	i;
-	char	*str, param[ITEM_KEY_LEN + 1], key[3]= {'$','0','\0'};
-	size_t	l, r;
-
-	for (i = 1; 9 >= i; i++)
-	{
-		key[1]++;
-		r = 0;
-
-		/* by performance reason we check the key before get_key_param() */
-		if (NULL == (str = strstr(*name + r, key)))
-			continue;
-
-		/* if there is no parameter, $N will delete */
-		get_key_param(params, i, param, sizeof(param));
-
-		while (NULL != str)
-		{
-			l = str - *name;
-			r = l + 1;
-			zbx_replace_string(name, l, &r, param);
-			str = strstr(*name + r, key);
-		}
-	}
-
-	zbx_lrtrim(*name, ZBX_WHITESPACE);
-
-	if (ITEM_NAME_LEN < strlen(*name))
-	{
-		*name[ITEM_NAME_LEN] = '\0';
-		zabbix_log(LOG_LEVEL_WARNING, "Cannot convert name for item with the key \"%s\":"
-				" value is too long and field was truncated.", params);
-	}
-}
-
 static int	DBpatch_3050121(void)
 {
-	DB_RESULT	result;
-	DB_ROW		row;
-	char		*sql = NULL;
-	size_t		sql_alloc = 0, sql_offset = 0;
-	char		*item_esc, *item_name = NULL;
-	int		ret = SUCCEED;
+
+	zbx_db_insert_t	db_insert;
+	int		ret;
 
 	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
 		return SUCCEED;
 
-	result = DBselect("select itemid,name,key_ from items where name like '%%$1%%' or name like '%%$2%%'"
-			" or name like '%%$3%%' or name like '%%$4%%' or name like '%%$5%%' or name like"
-			" '%%$6%%' or name like '%%$7%%' or name like '%%$8%%' or name like '%%$9%%'");
-
-	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
-
-	while (NULL != (row = DBfetch(result)))
-	{
-		item_name = zbx_strdup(item_name, row[1]);
-		DBpatch_3050121_name_update(&item_name, row[2]);
-		item_esc = DBdyn_escape_string(item_name);
-		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update items set name='%s' where itemid=%s;\n",
-				item_esc, row[0]);
-		zbx_free(item_esc);
-
-		if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
-			break;
-	}
-	DBfree_result(result);
-
-	if (SUCCEED == ret)
-	{
-		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
-
-		if (16 < sql_offset && ZBX_DB_OK > DBexecute("%s", sql)) /* in ORACLE always present begin..end; */
-			ret = FAIL;
-	}
-
-	zbx_free(item_name);
-	zbx_free(sql);
+	zbx_db_insert_prepare(&db_insert, "task", "taskid", "type", "status", "clock", NULL);
+	zbx_db_insert_add_values(&db_insert, __UINT64_C(0), ZBX_TM_TASK_UPDATE_ITEMNAMES, ZBX_TM_STATUS_NEW,
+			time(NULL));
+	zbx_db_insert_autoincrement(&db_insert, "taskid");
+	ret = zbx_db_insert_execute(&db_insert);
+	zbx_db_insert_clean(&db_insert);
 
 	return ret;
 }

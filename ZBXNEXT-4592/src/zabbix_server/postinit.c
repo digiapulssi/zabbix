@@ -415,6 +415,102 @@ out:
 
 /******************************************************************************
  *                                                                            *
+ * Function: substitute_item_name                                             *
+ *                                                                            *
+ * Purpose: macros substitution in name of the item with values               *
+ *                                                                            *
+ * Parameters: db_itemid  - [IN] item id in DB                                *
+ *             name       - [IN] string for replace                           *
+ *             key        - [IN] item key in format 'aaa[bbb,ccc,ddd]'        *
+ *             subst_name - [OUT] new name of item                            *
+ *                                                                            *
+ ******************************************************************************/
+static int	substitute_item_name(const DB_ROW db_itemid, const DB_ROW name, const DB_ROW key, char **subst_name)
+{
+	DC_ITEM dc_item;
+	int errcodes;
+	zbx_uint64_t itemid;
+
+	ZBX_STR2UINT64(itemid, *db_itemid);
+	DCconfig_get_items_by_itemids(&dc_item, &itemid, &errcodes, 1);
+
+	if (SUCCEED != zbx_substitute_item_name_macros(SUCCEED == errcodes ? &dc_item : NULL, *name, *key, subst_name))
+		return FAIL;
+
+	zbx_lrtrim(*subst_name, ZBX_WHITESPACE);
+
+	if ('\0' == **subst_name)
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "Cannot convert name for item with itemid \"%s\":"
+				" value is empty.", *db_itemid);
+		return FAIL;
+	}
+	else if (ITEM_NAME_LEN < strlen(*subst_name))
+	{
+		*name[ITEM_NAME_LEN] = '\0';
+		zabbix_log(LOG_LEVEL_WARNING, "Cannot convert name for item with itemid \"%s\":"
+				" value is too long and field was truncated.", *db_itemid);
+	}
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: update_item_names                                                *
+ *                                                                            *
+ * Purpose: update of item names in items table with macros substitution      *
+ *                                                                            *
+ * Return value: SUCCEED - the update was successful                          *
+ *               FAIL - otherwise                                             *
+ *                                                                            *
+ ******************************************************************************/
+static int	update_item_names(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	char		*sql = NULL;
+	size_t		sql_alloc = 0, sql_offset = 0;
+	char		*item_esc, *item_name = NULL;
+	int		ret = SUCCEED;
+
+	result = DBselect("select itemid,name,key_ from items where name like '%%$1%%' or name like '%%$2%%'"
+			" or name like '%%$3%%' or name like '%%$4%%' or name like '%%$5%%' or name like"
+			" '%%$6%%' or name like '%%$7%%' or name like '%%$8%%' or name like '%%$9%%'");
+
+	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		if (SUCCEED != (ret = substitute_item_name(&row[0], &row[1], &row[2], &item_name)))
+			break;
+
+		item_esc = DBdyn_escape_string(item_name);
+		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update items set name='%s' where itemid=%s;\n",
+				item_esc, row[0]);
+		zbx_free(item_esc);
+
+		if (SUCCEED != (ret = DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset)))
+			break;
+	}
+	DBfree_result(result);
+
+	if (SUCCEED == ret)
+	{
+		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
+
+		if (16 < sql_offset && ZBX_DB_OK > DBexecute("%s", sql)) /* in ORACLE always present begin..end; */
+			ret = FAIL;
+	}
+
+	zbx_free(item_name);
+	zbx_free(sql);
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_check_postinit_tasks                                         *
  *                                                                            *
  * Purpose: process post initialization tasks                                 *
@@ -427,28 +523,44 @@ int	zbx_check_postinit_tasks(char **error)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
-	int		ret = SUCCEED;
+	int		type, ret = SUCCEED;
 
-	result = DBselect("select taskid from task where type=%d and status=%d", ZBX_TM_TASK_UPDATE_EVENTNAMES,
-			ZBX_TM_STATUS_NEW);
+	result = DBselect("select taskid,type from task where type in (%d,%d) and status=%d",
+			ZBX_TM_TASK_UPDATE_EVENTNAMES, ZBX_TM_TASK_UPDATE_ITEMNAMES, ZBX_TM_STATUS_NEW);
 
-	if (NULL != (row = DBfetch(result)))
+	while (NULL != (row = DBfetch(result)))
 	{
+		ZBX_STR2UCHAR(type, row[1]);
 		DBbegin();
 
-		if (SUCCEED == (ret = update_event_names()))
+		switch(type)
+		{
+			case ZBX_TM_TASK_UPDATE_EVENTNAMES:
+				if (SUCCEED != (ret = update_event_names()))
+					*error = zbx_strdup(*error, "cannot update event names");
+				break;
+			case ZBX_TM_TASK_UPDATE_ITEMNAMES:
+				if (SUCCEED != (ret = update_item_names()))
+					*error = zbx_strdup(*error, "cannot update item names");
+				break;
+			default:
+				*error = zbx_strdup(*error, "unknown type of update");
+				ret = FAIL;
+		}
+
+		if (SUCCEED == ret)
 		{
 			DBexecute("delete from task where taskid=%s", row[0]);
 			DBcommit();
 		}
 		else
+		{
 			DBrollback();
+			break;
+		}
 	}
-
 	DBfree_result(result);
-
-	if (SUCCEED != ret)
-		*error = zbx_strdup(*error, "cannot update event names");
 
 	return ret;
 }
+
