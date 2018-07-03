@@ -3747,7 +3747,7 @@ char	*zbx_function_getparam_dyn(const char *params, int Nparam)
 	char		*out = NULL;
 	int		idx = 0;
 
-	params_len = strlen(params);
+	params_len = strlen(params) + 1;
 
 	for (ptr = params; ++idx <= Nparam && ptr < params + params_len; ptr += sep_pos + 1)
 	{
