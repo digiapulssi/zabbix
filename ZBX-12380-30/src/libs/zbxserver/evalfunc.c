@@ -55,46 +55,6 @@ static const char	*zbx_type_string(zbx_value_type_t type)
 
 /******************************************************************************
  *                                                                            *
- * Function: regexp_pattern_as_array_validate                                 *
- *                                                                            *
- * Purpose: check that regexp 'pattern' does not start from '['.              *
- *          Regexp function can accept pattern like "[abc]" in quotes only.   *
- *                                                                            *
- * Parameters: params - [IN] all function parameters                          *
- *             num    - [IN] position of regexp 'pattern' in params           *
- *             error  - [OUT] the error message                               *
- *                                                                            *
- * Return value: SUCCEED - regexp pattern is acceptable                       *
- *               FAIL    - otherwise                                          *
- *                                                                            *
- * Comments: The num = 2 is acceptable when first parameter is numeric        *
- *                                                                            *
- ******************************************************************************/
-static int	regexp_pattern_as_array_validate(const char * params, int num, char **error)
-{
-	const char *s = params;
-
-	if (2 == num)
-	{
-		s = strchr(params, ',');
-		s++;
-	}
-
-	while(' ' == *s)
-		s++;
-
-	if ('[' == *s)
-	{
-		*error = zbx_dsprintf(*error, "%sparameter is not supported", 0 == num ? "" :
-				(1 == num ? "first " : "second "));
-		return FAIL;
-	}
-
-	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: get_function_parameter_int                                       *
  *                                                                            *
  * Purpose: get the value of sec|#num trigger function parameter              *
@@ -123,7 +83,7 @@ static int	get_function_parameter_int(zbx_uint64_t hostid, const char *parameter
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_getparam_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL,
@@ -183,7 +143,7 @@ static int	get_function_parameter_uint64(zbx_uint64_t hostid, const char *parame
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_getparam_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL,
@@ -212,7 +172,7 @@ static int	get_function_parameter_float(zbx_uint64_t hostid, const char *paramet
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_getparam_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL,
@@ -243,7 +203,7 @@ static int	get_function_parameter_str(zbx_uint64_t hostid, const char *parameter
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (*value = get_param_dyn(parameters, Nparam)))
+	if (NULL == (*value = zbx_function_getparam_dyn(parameters, Nparam)))
 		goto out;
 
 	ret = substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL,
@@ -290,7 +250,7 @@ static int	evaluate_LOGEVENTID(char *value, DC_ITEM *item, const char *function,
 	if (ITEM_VALUE_TYPE_LOG != item->value_type)
 		goto out;
 
-	if (1 < num_param(parameters) || SUCCEED != regexp_pattern_as_array_validate(parameters, 0, error))
+	if (1 < num_param(parameters))
 		goto out;
 
 	if (SUCCEED != get_function_parameter_str(item->host.hostid, parameters, 1, &arg1))
@@ -1777,12 +1737,6 @@ static int	evaluate_STR(char *value, DC_ITEM *item, const char *function, const 
 
 	if (2 < (nparams = num_param(parameters)))
 		goto out;
-
-	if ((ZBX_FUNC_IREGEXP == func || ZBX_FUNC_REGEXP == func)
-			&& SUCCEED != regexp_pattern_as_array_validate(parameters, 1 , error))
-	{
-		goto out;
-	}
 
 	if (SUCCEED != get_function_parameter_str(item->host.hostid, parameters, 1, &arg1))
 		goto out;
