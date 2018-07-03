@@ -2394,15 +2394,14 @@ sub uint_value_exists
 # Input:
 #
 # [
-#   {'dns' => 60},
-#   {'rdds' => 300}
+#   {'dns' => {'delay' => 60}},
+#   {'rdds' => {'delay' => 300}}
 # ]
 #
 # Output:
 #
 # [
-#   {'dns' => 60, 'from' => 1234234200, 'till' => 1234234259},	# <- test period found
-#   {'rdds' => 300}						# <- test period not found
+#   {'dns' => {'delay' => 60, 'from' => 1234234200, 'till' => 1234234259}}	# <- test period found for 'dns' but not for 'rdds'
 # ]
 #
 # The return value is min($from), max($till) from all found periods

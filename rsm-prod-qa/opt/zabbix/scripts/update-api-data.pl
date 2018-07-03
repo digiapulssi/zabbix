@@ -40,7 +40,7 @@ sub fill_test_data_dns($$$);
 sub fill_test_data_rdds($$);
 sub match_clocks_with_results($$);
 
-parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'maxproc=n');
+parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'maxproc=n', 'server-key=s');
 
 # do not write any logs
 setopt('nolog');
@@ -63,7 +63,7 @@ if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_TMP_DIR, AH_BASE_DIR)
 my $config = get_rsm_config();
 set_slv_config($config);
 
-my @server_keys = get_rsm_server_keys($config);
+my @server_keys = (opt('server-key') ? getopt('server-key') : get_rsm_server_keys($config));
 
 db_connect();
 
@@ -254,11 +254,16 @@ if ($check_till > $max_till)
 	slv_exit(SUCCESS);
 }
 
-my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 1);	# consider last cycle
+my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 0);	# do not select previous if not time for current
 
 if (opt('print-period'))
 {
 	info("selected period: ", selected_period($from, $till));
+	foreach my $service (keys(%services))
+	{
+		next if (!defined($services{$service}{'from'}));
+		info("  $service\t: ", selected_period($services{$service}{'from'}, $services{$service}{'till'}));
+	}
 }
 else
 {
@@ -366,6 +371,12 @@ foreach (@server_keys)
 			# find out which services are disabled, for others get lastclock
 			foreach my $service (keys(%services))
 			{
+				my $service_from = $services{$service}{'from'};
+				my $service_till = $services{$service}{'till'};
+
+				# not the right time for this service/delay yet
+				next if (!$service_from || !$service_till);
+
 				if (tld_service_enabled($tld, $service) != SUCCESS)
 				{
 					if (opt('dry-run'))
@@ -446,15 +457,8 @@ foreach (@server_keys)
 				dbg("lastclock:$lastclock");
 
 				my $delay = $services{$service}{'delay'};
-				my $service_from = $services{$service}{'from'};
-				my $service_till = $services{$service}{'till'};
 				my $avail_key = $services{$service}{'avail_key'};
 				my $rollweek_key = $services{$service}{'rollweek_key'};
-
-				if (!$service_from || !$service_till)
-				{
-					fail("INTERNAL ERROR, CANNOT CONTINUE WITHOUT DEFINED SERVICE CYCLE PERIOD");
-				}
 
 				my $hostid = get_hostid($tld);
 				my $avail_itemid = get_itemid_by_hostid($hostid, $avail_key);
@@ -2308,6 +2312,10 @@ Print data to the screen, do not write anything to the filesystem.
 
 Issue a warning in case an SQL query takes more than specified number of seconds. A floating-point number
 is supported as seconds (i. e. 0.5, 1, 1.5 are valid).
+
+=item B<--server-key> key
+
+Specify the key of the server to handle (e. g. server_2). It must be listed in rsm.conf .
 
 =item B<--debug>
 

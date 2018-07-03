@@ -1,3 +1,9 @@
+Changes for rsm1.0.7rc3
+
+Bug fixes:
+....I..... [392] fixed incorrect data generated in RDDS measurements file (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.7rc2
 
 New features:
