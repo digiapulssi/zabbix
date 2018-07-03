@@ -364,9 +364,13 @@ foreach (@server_keys)
 
 			my $json_state_ref;
 
-			$json_state_ref->{'tld'} = $tld;
-			$json_state_ref->{'status'} = JSON_VALUE_UP;
-			$json_state_ref->{'testedServices'} = {};
+			# for services that we do not process at this time (e. g. RDDS)
+			# keep their data to correctly calculate TLD state later
+			if (ah_state_file_json($tld, \$json_state_ref) != AH_SUCCESS)
+			{
+				$json_state_ref->{'tld'} = $tld;
+				$json_state_ref->{'testedServices'} = {};
+			}
 
 			# find out which services are disabled, for others get lastclock
 			foreach my $service (keys(%services))
@@ -568,7 +572,6 @@ foreach (@server_keys)
 					if ($incidents->[0]->{'false_positive'} == 0 and not defined($incidents->[0]->{'end'}))
 					{
 						$alarmed_status = JSON_VALUE_ALARMED_YES;
-						$json_state_ref->{'status'} = JSON_VALUE_DOWN;
 					}
 				}
 
@@ -1106,6 +1109,17 @@ foreach (@server_keys)
 					);
 				}
 			} # foreach my $service
+
+			# finally, set TLD state
+			$json_state_ref->{'status'} = JSON_VALUE_UP;
+			foreach my $service (values(%{$json_state_ref->{'testedServices'}}))
+			{
+				if ($service->{'status'} eq JSON_VALUE_DOWN)
+				{
+					$json_state_ref->{'status'} = JSON_VALUE_DOWN;
+					last;
+				}
+			}
 
 			if (ah_save_state($ah_tld, $json_state_ref) != AH_SUCCESS)
 			{

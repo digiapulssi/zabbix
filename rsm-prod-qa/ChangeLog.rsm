@@ -1,3 +1,9 @@
+Changes for rsm1.0.7rc4
+
+Bug fixes:
+....I..... [sub-392] fixed incorrect data in SLA API state file when it is not yet time to process RDDS data (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.7rc3
 
 Bug fixes:
