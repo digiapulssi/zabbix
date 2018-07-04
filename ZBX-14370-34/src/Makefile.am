@@ -81,7 +81,7 @@ dist-hook:
 TEST_COMMENT = "embedded unit tests - remove before commit"
 TEST_LIBDIR = libs/zbxcunit
 TEST_SUITESFILE = $(TEST_LIBDIR)/cu_modules.h
-TEST_SRCFILES = `find . -name "*.c"|xargs grep -l $(TEST_COMMENT)`
+TEST_SRCFILES = `find . -name "*.c" | while read fn; do if grep -q $(TEST_COMMENT) $${fn}; then echo $${fn}; fi; done`
 TEST_TESTFILES = `find . -name "*_test.c"`
 TEST_DECLARE = "ZBX_CU_DECLARE" 
 
