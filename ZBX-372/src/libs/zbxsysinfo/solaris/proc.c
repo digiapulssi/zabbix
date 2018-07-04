@@ -257,9 +257,10 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_stat_t	buf;
 	struct passwd	*usrinfo;
 	psinfo_t	psinfo;	/* In the correct procfs.h, the structure name is psinfo_t */
-	int		fd = -1, proccount = 0, invalid_user = 0, zbx_proc_stat, zoneflag;
+	int		fd = -1, proccount = 0, invalid_user = 0, zbx_proc_stat;
 #ifdef HAVE_ZONE_H
-	zoneid_t		zoneid;
+	zoneid_t	zoneid;
+	int		zoneflag;
 #endif
 
 #ifndef HAVE_ZONE_H
@@ -336,7 +337,9 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (NULL == (flags = get_rparam(request, 4)) || '\0' == *flags || 0 == strcmp(flags, "current"))
 	{
-#ifndef HAVE_ZONE_H
+#ifdef HAVE_ZONE_H
+		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_CURRENT;
+#else
 		/* agent has been compiled on Solaris 9 or earlier where zones are not supported */
 
 		if (ZBX_ZONE_SUPPORT_YES == zone_support)
@@ -350,16 +353,13 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 					" agent with Solaris zone support."));
 			return SYSINFO_RET_FAIL;
 		}
-
-		/* zones are not supported, the agent can accept 5th parameter with default value "all" */
-		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_ALL;
-#else
-		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_CURRENT;
 #endif
 	}
 	else if (0 == strcmp(flags, "all"))
 	{
+#ifdef HAVE_ZONE_H
 		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_ALL;
+#endif
 	}
 	else
 	{
@@ -410,14 +410,10 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		if (NULL != proccomm && '\0' != *proccomm && NULL == zbx_regexp_match(psinfo.pr_psargs, proccomm, NULL))
 			continue;
 
-		if (ZBX_PROCSTAT_FLAGS_ZONE_ALL != zoneflag)
-		{
 #ifdef HAVE_ZONE_H
-			if (zoneid != psinfo.pr_zoneid)
-				continue;
+		if (ZBX_PROCSTAT_FLAGS_ZONE_CURRENT == zoneflag && zoneid != psinfo.pr_zoneid)
+			continue;
 #endif
-		}
-
 		proccount++;
 	}
 
