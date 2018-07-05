@@ -3727,7 +3727,7 @@ int	zbx_function_param_quote(char **param, int forced)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_function_getparam_dyn                                        *
+ * Function: zbx_function_get_param_dyn                                       *
  *                                                                            *
  * Purpose: return parameter by index (Nparam) from parameter list (params)   *
  *                                                                            *
