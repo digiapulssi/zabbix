@@ -1304,7 +1304,7 @@ class testFormItemPrototype extends CWebTest {
 			[
 				[
 					'expected' => TEST_GOOD,
-					'name' => 'Checksum of $1',
+					'name' => 'Checksum of /sbin/shutdown',
 					'key' => 'vfs.file.cksum[/sbin/shutdown]',
 					'dbName' => 'Checksum of /sbin/shutdown',
 					'dbCheck' => true,
@@ -1315,7 +1315,7 @@ class testFormItemPrototype extends CWebTest {
 			[
 				[
 					'expected' => TEST_BAD,
-					'name' => 'Checksum of $1',
+					'name' => 'Checksum of /sbin/shutdown',
 					'key' => 'vfs.file.cksum[/sbin/shutdown]',
 					'error_msg' => 'Cannot add item prototype',
 					'errors' => [

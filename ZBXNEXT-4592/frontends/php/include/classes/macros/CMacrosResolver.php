@@ -1265,7 +1265,7 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 		}
 		unset($item);
 
-		$types = ['usermacros' => true, 'references' => true];
+		$types = ['usermacros' => true];
 		$macro_values = [];
 		$usermacros = [];
 
@@ -1274,48 +1274,6 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 
 			if ($matched_macros['usermacros']) {
 				$usermacros[$key] = ['hostids' => [$item['hostid']], 'macros' => $matched_macros['usermacros']];
-			}
-
-			if ($matched_macros['references']) {
-				$macro_values[$key] = $matched_macros['references'];
-			}
-		}
-
-		if ($macro_values) {
-			$items_with_unresolved_keys = [];
-			$expanded_keys = [];
-
-			// Resolve macros in item key.
-			foreach ($macro_values as $key => $macros) {
-				if (!array_key_exists('key_expanded', $items[$key])) {
-					$items_with_unresolved_keys[$key] = [
-						'itemid' => $items[$key]['itemid'],
-						'hostid' => $items[$key]['hostid'],
-						'key_' => $items[$key]['key_']
-					];
-				}
-				else {
-					$expanded_keys[$key] = $items[$key]['key_expanded'];
-				}
-			}
-
-			if ($items_with_unresolved_keys) {
-				foreach ($this->resolveItemKeys($items_with_unresolved_keys) as $key => $item) {
-					$expanded_keys[$key] = $item['key_expanded'];
-				}
-			}
-
-			$item_key_parser = new CItemKey();
-
-			foreach ($expanded_keys as $key => $expanded_key) {
-				if ($item_key_parser->parse($expanded_key) == CParser::PARSE_SUCCESS) {
-					foreach ($macro_values[$key] as $macro => &$value) {
-						if (($param = $item_key_parser->getParam($macro[1] - 1)) !== null) {
-							$value = $param;
-						}
-					}
-					unset($value);
-				}
 			}
 		}
 
