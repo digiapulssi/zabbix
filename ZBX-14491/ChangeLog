@@ -3,6 +3,10 @@ Changes for 3.0.20rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-12380] improved function parameter parsing for trigger functions (MVekslers)
+..F....... [ZBX-14432] removed redundant code in event details screen (miks)
+........S. [ZBX-14410] improved error message handling in zbx_function_find() (MVekslers)
+..F....... [ZBX-12104] added limit ZBX_HISTORY_PERIOD for {ITEM.VALUE} macro resolving in trigger name (gcalenko)
 ..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
 
 --------------------------------------------------------------------------------
