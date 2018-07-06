@@ -693,14 +693,13 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				if ($db_item['description'] !== getRequest('description', '')) {
 					$item['description'] = getRequest('description', '');
 				}
+				if ($db_item['preprocessing'] !== $preprocessing) {
+					$item['preprocessing'] = $preprocessing;
+				}
 			}
 
 			if ($db_item['status'] != getRequest('status', ITEM_STATUS_DISABLED)) {
 				$item['status'] = getRequest('status', ITEM_STATUS_DISABLED);
-			}
-
-			if ($db_item['preprocessing'] !== $preprocessing) {
-				$item['preprocessing'] = $preprocessing;
 			}
 
 			if (getRequest('type') == ITEM_TYPE_DEPENDENT && hasRequest('master_itemid')
