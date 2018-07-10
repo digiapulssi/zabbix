@@ -63,7 +63,6 @@ function dateSelectorOnClick(event, elmnt, name) {
 calendar.prototype = {
 	id: null,					// personal ID
 	cdt: new CDate(),			// Date object of current(viewed) date
-	sdt: new CDate(),			// Date object of a selected date
 	month: 0,					// represents month number
 	year: 2008,					// represents year
 	day: 1,						// represents days
@@ -100,6 +99,7 @@ calendar.prototype = {
 		if (!(this.status = this.checkOuterObj(timeobjects))) {
 			throw 'Calendar: constructor expects second parameter to be list of DOM nodes [d,M,Y,H,i].';
 		}
+		this.sdt = new CDate();		// Date object of a selected date
 		this.calendarcreate(parentNodeid);
 
 		addListener(this.clndr_monthdown, 'click', this.monthdown.bindAsEventListener(this));
@@ -453,24 +453,29 @@ calendar.prototype = {
 				else {
 					if (is_string(val)) {
 						var datetime = val.split(' ');
-						var date = datetime[0].split('.');
+						var date = datetime[0].split('-');
 						var time = new Array();
 
-						if (datetime.length == 1) {
+						if (datetime.length === 1) {
 							this.sdt = new CDate();
+							this.setNow();
+							return false;
 						}
 						else if (datetime.length > 1) {
 							var time = datetime[1].split(':');
 						}
-						if (date.length == 3) {
-							result = this.setSDateDMY(date[0], date[1], date[2]);
-							if (time.length == 2) {
+						if (date.length === 3) {
+							result = this.setSDateDMY(date[2], date[1], date[0]);
+							if (time.length > 1) {
 								if (time[0] > -1 && time[0] < 24) {
 									this.sdt.setHours(time[0]);
 								}
 								if (time[1] > -1 && time[1] < 60) {
 									this.sdt.setMinutes(time[1]);
 								}
+							}
+							if (time.length === 3 && time[2] > -1 && time[2] < 60) {
+								this.sdt.setSeconds(time[2]);
 							}
 						}
 					}
@@ -479,6 +484,13 @@ calendar.prototype = {
 				if (!result) {
 					return false;
 				}
+				this.syncBSDateBySDT();
+				this.syncCDT();
+				this.setCDate();
+				this.hl_day = this.day;
+				this.hl_month = this.month;
+				this.hl_year = this.year;
+				this.status = false;
 				break;
 			case 3:
 			case 5:
