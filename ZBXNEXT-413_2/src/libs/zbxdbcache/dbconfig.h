@@ -761,6 +761,14 @@ typedef struct
 }
 ZBX_DC_CONFIG;
 
+extern int	sync_in_progress;
+extern ZBX_DC_CONFIG	*config;
+extern zbx_rwlock_t	config_lock;
+
+#define	RDLOCK_CACHE	if (0 == sync_in_progress) zbx_rwlock_rdlock(config_lock)
+#define	WRLOCK_CACHE	if (0 == sync_in_progress) zbx_rwlock_wrlock(config_lock)
+#define	UNLOCK_CACHE	if (0 == sync_in_progress) zbx_rwlock_unlock(config_lock)
+
 #define ZBX_IPMI_DEFAULT_AUTHTYPE	-1
 #define ZBX_IPMI_DEFAULT_PRIVILEGE	2
 
@@ -787,5 +795,24 @@ void	zbx_dc_get_hostids_by_functionids(const zbx_uint64_t *functionids, int func
 		zbx_vector_uint64_t *hostids);
 
 void	DCdump_configuration(ZBX_DC_CONFIG *config);
+
+void	dc_hostgroup_cache_nested_groupids(zbx_dc_hostgroup_t *parent_group);
+void	dc_get_nested_hostgroupids(zbx_uint64_t groupid, zbx_vector_uint64_t *nested_groupids);
+
+/* utility functions */
+void	*DCfind_id(zbx_hashset_t *hashset, zbx_uint64_t id, size_t size, int *found);
+
+/* string pool */
+void	zbx_strpool_release(const char *str);
+int	DCstrpool_replace(int found, const char **curr, const char *new_str);
+
+/* synchronization */
+typedef struct zbx_dbsync zbx_dbsync_t;
+
+void	DCsync_maintenances(zbx_dbsync_t *sync);
+void	DCsync_maintenance_tags(zbx_dbsync_t *sync);
+void	DCsync_maintenance_periods(zbx_dbsync_t *sync);
+void	DCsync_maintenance_groups(zbx_dbsync_t *sync);
+void	DCsync_maintenance_hosts(zbx_dbsync_t *sync);
 
 #endif
