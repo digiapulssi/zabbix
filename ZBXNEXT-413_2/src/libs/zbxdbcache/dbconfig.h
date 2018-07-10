@@ -798,6 +798,7 @@ void	DCdump_configuration(ZBX_DC_CONFIG *config);
 
 void	dc_hostgroup_cache_nested_groupids(zbx_dc_hostgroup_t *parent_group);
 void	dc_get_nested_hostgroupids(zbx_uint64_t groupid, zbx_vector_uint64_t *nested_groupids);
+int	dc_maintenance_match_tags(const zbx_dc_maintenance_t *maintenance, const zbx_vector_ptr_t *tags);
 
 /* utility functions */
 void	*DCfind_id(zbx_hashset_t *hashset, zbx_uint64_t id, size_t size, int *found);
