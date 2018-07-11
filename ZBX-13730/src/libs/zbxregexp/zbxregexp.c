@@ -102,7 +102,7 @@ static int	regexp_prepare(const char *pattern, int flags, zbx_regexp_t **regexp,
 		curr_pattern = NULL;
 		curr_flags = 0;
 
-		if (SUCCEED == zbx_regexp_compile(pattern, &curr_regexp, error))
+		if (SUCCEED == regexp_compile(pattern, flags, &curr_regexp, error))
 		{
 			curr_pattern = zbx_strdup(curr_pattern, pattern);
 			curr_flags = flags;
