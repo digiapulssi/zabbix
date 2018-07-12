@@ -126,7 +126,7 @@ class testFormItemHttpAgent extends CWebTest {
 	 * Test form validation.
 	 */
 	private function executeValidation($data, $action) {
-		$this->zbxTestLogin('items.php?hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
 
 		switch ($action) {
 			case 'create':
@@ -1178,7 +1178,7 @@ class testFormItemHttpAgent extends CWebTest {
 			$data['fields']['Name'] = $update_item;
 		}
 
-		$this->zbxTestLogin('items.php?hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
 		$this->zbxTestClickLinkTextWait($update_item);
 
 		$this->fillFields($data['fields']);
@@ -1216,7 +1216,7 @@ class testFormItemHttpAgent extends CWebTest {
 	public function testFormItemHttpAgent_SimpleUpdate() {
 		$sql_hash = 'SELECT * FROM items ORDER BY itemid';
 		$old_hash = DBhash($sql_hash);
-		$this->zbxTestLogin('items.php?&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
 
 		foreach (DBdata('SELECT * FROM items WHERE type=19 and hostid=50010 ORDER BY itemid LIMIT 3', false) as $item) {
 			$item = $item[0];
@@ -1251,7 +1251,7 @@ class testFormItemHttpAgent extends CWebTest {
 		$sql_hash = 'SELECT * FROM items WHERE name = '.zbx_dbstr($clone_item);
 		$old_hash = DBhash($sql_hash);
 
-		$this->zbxTestLogin('items.php?hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
 		$this->zbxTestClickLinkTextWait($clone_item);
 		$this->zbxTestClickWait('clone');
 
@@ -1292,7 +1292,7 @@ class testFormItemHttpAgent extends CWebTest {
 	public function testFormItemHttpAgent_Delete() {
 		$name = 'Http agent item for delete';
 
-		$this->zbxTestLogin('items.php?&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
 		$this->zbxTestClickLinkTextWait($name);
 		$this->zbxTestClickAndAcceptAlert('delete');
 
@@ -1318,7 +1318,7 @@ class testFormItemHttpAgent extends CWebTest {
 		$sql_hash = 'SELECT * FROM items WHERE type=19 ORDER BY itemid';
 		$old_hash = DBhash($sql_hash);
 
-		$this->zbxTestLogin('items.php?&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
 		$this->zbxTestContentControlButtonClickTextWait('Create item');
 
 		$this->fillFields($data);
@@ -1339,7 +1339,7 @@ class testFormItemHttpAgent extends CWebTest {
 	private function executeCancelAction($action) {
 		$sql_hash = 'SELECT * FROM items ORDER BY itemid';
 		$old_hash = DBhash($sql_hash);
-		$this->zbxTestLogin('items.php?&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
 
 		foreach (DBdata("SELECT name FROM items WHERE type=19 LIMIT 1", false) as $item) {
 			$item = $item[0];
