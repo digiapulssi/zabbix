@@ -444,7 +444,7 @@ typedef struct
 	char		*ack_longdata;
 	int		esc_period;
 	unsigned char	eventsource;
-	unsigned char	maintenance_mode;
+	unsigned char	pause_suppressed;
 	unsigned char	recovery;
 	unsigned char	status;
 }
@@ -768,6 +768,6 @@ typedef struct
 }
 zbx_proxy_diff_t;
 
-void	zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids);
+int	zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids);
 
 #endif

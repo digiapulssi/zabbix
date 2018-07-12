@@ -114,8 +114,9 @@ static void	DCdump_hosts(ZBX_DC_CONFIG *config)
 		/* timestamp of last availability status (available/error) field change on any interface */
 		zabbix_log(LOG_LEVEL_TRACE, "  availability_ts:%d", host->availability_ts);
 
-		zabbix_log(LOG_LEVEL_TRACE, "  maintenance_status:%u maintenance_type:%u maintenance_from:%d",
-				host->maintenance_status, host->maintenance_type, host->maintenance_from);
+		zabbix_log(LOG_LEVEL_TRACE, "  maintenanceid:" ZBX_FS_UI64 " maintenance_status:%u maintenance_type:%u"
+				" maintenance_from:%d", host->maintenanceid, host->maintenance_status,
+				host->maintenance_type, host->maintenance_from);
 
 		zabbix_log(LOG_LEVEL_TRACE, "  number of items: zabbix:%d snmp:%d ipmi:%d jmx:%d", host->items_num,
 				host->snmp_items_num, host->ipmi_items_num, host->jmx_items_num);
@@ -1010,8 +1011,11 @@ static void	DCdump_maintenance_groups(zbx_dc_maintenance_t *maintenance)
 
 	zbx_vector_uint64_create(&index);
 
-	zbx_vector_uint64_append_array(&index, maintenance->groupids.values, maintenance->groupids.values_num);
-	zbx_vector_uint64_sort(&index, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	if (0 != maintenance->groupids.values_num)
+	{
+		zbx_vector_uint64_append_array(&index, maintenance->groupids.values, maintenance->groupids.values_num);
+		zbx_vector_uint64_sort(&index, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	}
 
 	zabbix_log(LOG_LEVEL_TRACE, "  groups:");
 
@@ -1028,8 +1032,11 @@ static void	DCdump_maintenance_hosts(zbx_dc_maintenance_t *maintenance)
 
 	zbx_vector_uint64_create(&index);
 
-	zbx_vector_uint64_append_array(&index, maintenance->hostids.values, maintenance->hostids.values_num);
-	zbx_vector_uint64_sort(&index, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	if (0 != maintenance->hostids.values_num)
+	{
+		zbx_vector_uint64_append_array(&index, maintenance->hostids.values, maintenance->hostids.values_num);
+		zbx_vector_uint64_sort(&index, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	}
 
 	zabbix_log(LOG_LEVEL_TRACE, "  hosts:");
 
@@ -1063,8 +1070,11 @@ static void	DCdump_maintenance_tags(zbx_dc_maintenance_t *maintenance)
 
 	zbx_vector_ptr_create(&index);
 
-	zbx_vector_ptr_append_array(&index, maintenance->tags.values, maintenance->tags.values_num);
-	zbx_vector_ptr_sort(&index, maintenance_tag_compare);
+	if (0 != maintenance->tags.values)
+	{
+		zbx_vector_ptr_append_array(&index, maintenance->tags.values, maintenance->tags.values_num);
+		zbx_vector_ptr_sort(&index, maintenance_tag_compare);
+	}
 
 	zabbix_log(LOG_LEVEL_TRACE, "  tags:");
 

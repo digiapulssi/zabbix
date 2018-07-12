@@ -486,7 +486,9 @@ static void	db_update_event_suppress_data(int revision, int *suppressed_num)
 
 		DBbegin();
 
-		zbx_db_lock_maintenanceids(&maintenanceids);
+		if (FAIL == zbx_db_lock_maintenanceids(&maintenanceids))
+			goto cleanup;
+
 		zbx_dc_get_event_maintenances(&event_queries, &maintenanceids);
 
 		zbx_db_insert_prepare(&db_insert, "event_suppress", "event_suppressid", "eventid", "maintenanceid",
@@ -579,11 +581,11 @@ out:
  * Purpose: update host maintenance parameters in cache and database          *
  *                                                                            *
  ******************************************************************************/
-static int	update_host_maintenances()
+static int	update_host_maintenances(void)
 {
 	zbx_vector_uint64_t	maintenanceids;
 	zbx_vector_ptr_t	updates;
-	int			hosts_num;
+	int			hosts_num = 0;
 	int			tnx_error;
 
 	zbx_vector_uint64_create(&maintenanceids);
@@ -628,7 +630,8 @@ static int	update_host_maintenances()
 ZBX_THREAD_ENTRY(timer_thread, args)
 {
 	double		sec = 0.0;
-	int		maintenance_time, update_time = 0, idle = 1, events_num, hosts_num, modified_num, stopped_num;
+	int		maintenance_time = 0, update_time = 0, idle = 1, events_num, hosts_num, modified_num,
+			stopped_num;
 	char		*info = NULL;
 	size_t		info_alloc = 0, info_offset = 0;
 	zbx_uint64_t	update_revision, maintenance_revision = 0;
@@ -640,23 +643,10 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 	zabbix_log(LOG_LEVEL_INFORMATION, "%s #%d started [%s #%d]", get_program_type_string(program_type),
 			server_num, get_process_type_string(process_type), process_num);
 
-	/* temporary block other timer processes until trigger based maintenance is merged in */
-	if (1 != process_num)
-	{
-		zbx_setproctitle("%s #%d [idle]", get_process_type_string(process_type), process_num);
-
-		for (;;)
-			zbx_sleep_loop(SEC_PER_DAY);
-	}
-
-
 	zbx_setproctitle("%s #%d [connecting to the database]", get_process_type_string(process_type), process_num);
 	zbx_strcpy_alloc(&info, &info_alloc, &info_offset, "started");
 
-
 	DBconnect(ZBX_DB_CONNECT_NORMAL);
-
-	maintenance_time = 0;
 
 	for (;;)
 	{
@@ -666,7 +656,6 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 		{
 			if (sec - maintenance_time >= ZBX_TIMER_DELAY)
 			{
-
 				zbx_setproctitle("%s #%d [%s, processing maintenances]",
 						get_process_type_string(process_type), process_num, info);
 
@@ -674,6 +663,8 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 
 				if (0 != modified_num)
 					hosts_num = update_host_maintenances();
+				else
+					hosts_num = 0;
 
 				db_remove_expired_event_suppress_data((int)sec);
 
