@@ -3,6 +3,7 @@ Changes for 3.0.20rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
 ..F....... [ZBX-14491] fixed link "show value mappings", which leads to no permission page (vasilijs)
 ........S. [ZBX-12380] improved function parameter parsing for trigger functions (MVekslers)
 ..F....... [ZBX-14432] removed redundant code in event details screen (miks)
@@ -1973,6 +1974,7 @@ Changes for 2.2.23rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
 
 --------------------------------------------------------------------------------
 Changes for 2.2.22
