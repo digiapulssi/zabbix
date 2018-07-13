@@ -1431,25 +1431,6 @@ out:
 
 static int	DBpatch_3050121(void)
 {
-
-	zbx_db_insert_t	db_insert;
-	int		ret;
-
-	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
-		return SUCCEED;
-
-	zbx_db_insert_prepare(&db_insert, "task", "taskid", "type", "status", "clock", NULL);
-	zbx_db_insert_add_values(&db_insert, __UINT64_C(0), ZBX_TM_TASK_UPDATE_ITEMNAMES, ZBX_TM_STATUS_NEW,
-			time(NULL));
-	zbx_db_insert_autoincrement(&db_insert, "taskid");
-	ret = zbx_db_insert_execute(&db_insert);
-	zbx_db_insert_clean(&db_insert);
-
-	return ret;
-}
-
-static int	DBpatch_3050122(void)
-{
 	int	res;
 
 	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
@@ -1464,7 +1445,7 @@ static int	DBpatch_3050122(void)
 	return SUCCEED;
 }
 
-static void	DBpatch_3050123_add_anchors(const char *src, char *dst)
+static void	DBpatch_3050122_add_anchors(const char *src, char *dst)
 {
 	const char	*pin = src;
 	char		*pout = dst;
@@ -1507,7 +1488,7 @@ static void	DBpatch_3050123_add_anchors(const char *src, char *dst)
 	*pout = '\0';
 }
 
-static int	DBpatch_3050123(void)
+static int	DBpatch_3050122(void)
 {
 	DB_ROW			row;
 	DB_RESULT		result;
@@ -1543,7 +1524,7 @@ static int	DBpatch_3050123(void)
 		parameter_esc = DBdyn_escape_string_len(parameter, FUNCTION_PARAM_LEN);
 
 		parameter_esc_anchored = (char *)zbx_malloc(NULL, strlen(parameter_esc) + 3);	/* 3 for ^, $, '\0' */
-		DBpatch_3050123_add_anchors(parameter_esc, parameter_esc_anchored);
+		DBpatch_3050122_add_anchors(parameter_esc, parameter_esc_anchored);
 
 		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 				"update functions set parameter='%s' where functionid=%s;\n",
@@ -1569,6 +1550,25 @@ static int	DBpatch_3050123(void)
 out:
 	DBfree_result(result);
 	zbx_free(sql);
+
+	return ret;
+}
+
+static int	DBpatch_3050123(void)
+{
+
+	zbx_db_insert_t	db_insert;
+	int		ret;
+
+	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		return SUCCEED;
+
+	zbx_db_insert_prepare(&db_insert, "task", "taskid", "type", "status", "clock", NULL);
+	zbx_db_insert_add_values(&db_insert, __UINT64_C(0), ZBX_TM_TASK_UPDATE_ITEMNAMES, ZBX_TM_STATUS_NEW,
+			time(NULL));
+	zbx_db_insert_autoincrement(&db_insert, "taskid");
+	ret = zbx_db_insert_execute(&db_insert);
+	zbx_db_insert_clean(&db_insert);
 
 	return ret;
 }
