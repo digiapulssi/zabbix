@@ -447,9 +447,10 @@ static int	substitute_item_name(const DB_ROW db_itemid, const DB_ROW name, const
 	}
 	else if (ITEM_NAME_LEN < zbx_strlen_utf8(*subst_name))
 	{
-		*name[ITEM_NAME_LEN] = '\0';
 		zabbix_log(LOG_LEVEL_WARNING, "Cannot convert name for item with itemid \"%s\":"
-				" value is too long and field was truncated.", *db_itemid);
+				" value is too long and field was truncated from \"%s\".",
+				*db_itemid, &(*subst_name)[ITEM_NAME_LEN]);
+		*subst_name[ITEM_NAME_LEN] = '\0';
 	}
 
 	return SUCCEED;
