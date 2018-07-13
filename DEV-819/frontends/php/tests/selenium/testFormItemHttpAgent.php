@@ -26,11 +26,18 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 class testFormItemHttpAgent extends CWebTest {
 
 	/**
+	 * Host id used in test.
+	 */
+	const HOSTID = 50010;
+
+	/**
 	 * Fill in input, textarea, change checkbox state or choose option from select.
 	 */
 	private function fillFields($rows) {
 		foreach ($rows as $field_name => $value) {
-			$field_xpath = "//label[text()='$field_name']/../..//*[@name]";
+			$field_xpath = '//label[text()="'.$field_name.'"]/../..//*[@name]';
+			$this->zbxTestWaitUntilElementPresent(WebDriverBy::xpath($field_xpath));
+
 			$tag = $this->webDriver->findElement(WebDriverBy::xpath($field_xpath))->getTagName();
 
 			if ($tag === 'input') {
@@ -61,15 +68,13 @@ class testFormItemHttpAgent extends CWebTest {
 		$this->zbxTestClickLinkTextWait($rows['Name']);
 
 		foreach ($rows as $field_name => $value) {
-			$field_xpath = "//label[text()='$field_name']/../..//*[@name]";
+			$field_xpath = '//label[text()="'.$field_name.'"]/../..//*[@name]';
 			$tag = $this->webDriver->findElement(WebDriverBy::xpath($field_xpath))->getTagName();
 			$field_id = $this->zbxTestGetAttributeValue($field_xpath, 'id');
 
 			if ($tag === 'input' || $tag === 'textarea') {
-				$type = $this->zbxTestGetAttributeValue($field_xpath, 'type');
-
-				if ($type === 'checkbox') {
-					$value ? $this->assertTrue($this->zbxTestCheckboxSelected($field_id)) : $this->assertFalse($this->zbxTestCheckboxSelected($field_id));
+				if ($tag !== 'textarea' && $this->zbxTestGetAttributeValue($field_xpath, 'type') === 'checkbox') {
+					$this->assertEquals($value, $this->zbxTestCheckboxSelected($field_id));
 				}
 				else {
 					$this->zbxTestAssertElementValue($field_id, $value);
@@ -92,21 +97,11 @@ class testFormItemHttpAgent extends CWebTest {
 			switch ($action) {
 				case 'add':
 					if (!$this->zbxTestElementPresentId($id_part.'_name_'.$i)) {
-						$this->zbxTestClickXpathWait("//div[contains(@id, '$id_part')]//button[@data-row-action='add_row']");
-					}
-					if (array_key_exists('name', $field_pair)) {
-						$this->zbxTestInputType($id_part.'_name_'.$i, $field_pair['name']);
-					}
-					if (array_key_exists('value', $field_pair)) {
-						$this->zbxTestInputType($id_part.'_value_'.$i, $field_pair['value']);
-					}
-					break;
-
-				case 'update':
-					if (!$this->zbxTestElementPresentId($id_part.'_name_'.$i)) {
-						$this->zbxTestClickXpathWait("//div[contains(@id, '$id_part')]//button[@data-row-action='add_row']");
+						$this->zbxTestClickXpathWait('//div[contains(@id, "'.$id_part.'")]//button[@data-row-action="add_row"]');
 						$this->zbxTestWaitUntilElementVisible(WebDriverBy::id($id_part.'_name_'.$i));
 					}
+					// break is not missing here.
+				case 'update':
 					if (array_key_exists('name', $field_pair)) {
 						$this->zbxTestInputType($id_part.'_name_'.$i, $field_pair['name']);
 					}
@@ -122,11 +117,208 @@ class testFormItemHttpAgent extends CWebTest {
 		}
 	}
 
+	/**
+	 * Parse url and check result in query fields.
+	 */
+	private function parseUrlAndCheckQuery($rows, $parsed_url = false) {
+		$this->zbxTestClick('httpcheck_parseurl');
+
+		foreach ($rows as $i => $parsed_query) {
+			$i += (!$this->zbxTestElementPresentId('query_fields_name_1') ? 2 : 1);
+			$name = $this->zbxTestGetValue("//input[@id='query_fields_name_".$i."']");
+			$this->assertEquals($parsed_query['name'], $name);
+
+			if (array_key_exists('value', $parsed_query)) {
+				$value = $this->zbxTestGetValue("//input[@id='query_fields_value_".$i."']");
+				$this->assertEquals($value, $parsed_query['value']);
+			}
+		}
+
+		// Check url after parse.
+		if ($parsed_url) {
+			$url = $this->zbxTestGetValue("//input[@id='url']");
+			$this->assertEquals($parsed_url, $url);
+		}
+	}
+
+	public static function getUrlParseData() {
+		$url = 'https://intranet.zabbix.com/secure/admin.jspa';
+
+		return [
+			// Simple parse with name only.
+			[
+				[
+					'url' => $url.'?login',
+					'parsed_query' => [
+						['name' => 'login']
+					],
+					'parsed_url' => $url
+				]
+			],
+			[
+				[
+					'url' => $url.'?login',
+					'query' => [
+						['name' => 'login']
+					],
+					'parsed_query' => [
+						['name' => 'login'],
+						['name' => 'login']
+					],
+					'parsed_url' => $url
+				]
+			],
+			[
+				[
+					'url' => $url.'?login',
+					'query' => [
+						['name' => 'login', 'value' => 'admin']
+					],
+					'parsed_query' => [
+						['name' => 'login', 'value' => 'admin'],
+						['name' => 'login']
+					],
+					'parsed_url' => $url
+				]
+			],
+			// Simple parse with name and value.
+			[
+				[
+					'url' => $url.'?login=admin&password=s00p3r%24ecr3%26',
+					'parsed_query' => [
+						['name' => 'login', 'value' => 'admin'],
+						['name' => 'password', 'value' => 's00p3r$ecr3&']
+					],
+					'parsed_url' => $url
+				]
+			],
+			// After parse added new query fields.
+			[
+				[
+					'url' => $url.'?password=s00p3r%24ecr3%26',
+					'query' => [
+						['name' => 'login', 'value' => 'admin']
+					],
+					'parsed_query' => [
+						['name' => 'login', 'value' => 'admin'],
+						['name' => 'password', 'value' => 's00p3r$ecr3&']
+					],
+					'parsed_url' => $url
+				]
+			],
+			[
+				[
+					'url' => $url.'?login=admin&password=s00p3r%24ecr3%26',
+					'query' => [
+						['name' => 'login', 'value' => 'admin'],
+						['name' => 'password', 'value' => 's00p3r$ecr3&']
+					],
+					'parsed_query' => [
+						['name' => 'login', 'value' => 'admin'],
+						['name' => 'password', 'value' => 's00p3r$ecr3&'],
+						['name' => 'login', 'value' => 'admin'],
+						['name' => 'password', 'value' => 's00p3r$ecr3&']
+					],
+					'parsed_url' => $url
+				]
+			],
+			[
+				[
+					'url' => $url.'?login=user&password=a123%24bcd4%26',
+					'query' => [
+						['name' => 'login', 'value' => 'admin'],
+						['name' => 'password', 'value' => 'password']
+					],
+					'parsed_query' => [
+						['name' => 'login', 'value' => 'admin'],
+						['name' => 'password', 'value' => 'password'],
+						['name' => 'login', 'value' => 'user'],
+						['name' => 'password', 'value' => 'a123$bcd4&']
+					],
+					'parsed_url' => $url
+				]
+			],
+			// URL fragment part ignored.
+			[
+				[
+					'step_name' => 'Step URL fragment part ignored',
+					'url' => 'http://www.zabbix.com/enterprise_ready#test',
+					'parsed_query' => [
+						['name' => '', 'value' => '']
+					],
+					'parsed_url' => 'http://www.zabbix.com/enterprise_ready'
+				]
+			],
+			// User macro in url.
+			[
+				[
+					'step_name' => 'Step URL fragment part ignored',
+					'url' => $url.'?{$LOGIN}={$USER}&{$PASSWORD}={$MYPASSWORD}',
+					'parsed_query' => [
+						['name' => '{$LOGIN}', 'value' => '{$USER}'],
+						['name' => '{$PASSWORD}', 'value' => '{$MYPASSWORD}']
+					],
+					'parsed_url' => $url
+				]
+			],
+			// Host and item macro in url.
+			[
+				[
+					'step_name' => 'Step URL fragment part ignored',
+					'url' => $url.'?{HOST.HOST}={HOST.IP}&{ITEM.ID}={ITEM.KEY}',
+					'parsed_query' => [
+						['name' => '{HOST.HOST}', 'value' => '{HOST.IP}'],
+						['name' => '{ITEM.ID}', 'value' => '{ITEM.KEY}']
+					],
+					'parsed_url' => $url
+				]
+			],
+			// URL parse failed.
+			[
+				[
+					'url' => 'http://localhost/zabbix/index.php?test=%11',
+					'error' => 'Failed to parse URL. URL is not properly encoded.'
+				]
+			]
+		];
+	}
+
+	/**
+	 * Test URL parsing.
+	 *
+	 * @dataProvider getUrlParseData
+	 */
+	public function testFormItemHttpAgent_UrlParse($data) {
+		$this->zbxTestLogin('items.php?form=create&hostid='.self::HOSTID);
+		$this->zbxTestDropdownSelectWait('type', 'HTTP agent');
+
+		$this->zbxTestInputTypeWait('url', $data['url']);
+
+		// Type query fields.
+		if (array_key_exists('query', $data)) {
+			$this->processPairFields($data['query'], 'query_fields');
+		}
+
+		// Check query fields and new url after parse.
+		if (array_key_exists('parsed_query', $data)) {
+			$this->parseUrlAndCheckQuery($data['parsed_query'], $data['parsed_url']);
+		}
+
+		// Check that URL parse failed.
+		if (array_key_exists('error', $data)) {
+			$this->zbxTestClick('httpcheck_parseurl');
+
+			$get_text = $this->zbxTestGetText("//div[@class='overlay-dialogue-body']/span");
+			$result = trim(preg_replace('/\s\s+/', ' ', $get_text));
+			$this->assertEquals($result, $data['error']);
+		}
+	}
+
 	/*
 	 * Test form validation.
 	 */
 	private function executeValidation($data, $action) {
-		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid='.self::HOSTID);
 
 		switch ($action) {
 			case 'create':
@@ -194,201 +386,6 @@ class testFormItemHttpAgent extends CWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
 		$this->zbxTestTextPresentInMessageDetails($data['error_details']);
 		$this->zbxTestCheckFatalErrors();
-	}
-
-	/**
-	 * Parse url and check result in query fields.
-	 */
-	private function parseUrlAndCheckQuery($rows, $parsed_url = false) {
-		$this->zbxTestClick('httpcheck_parseurl');
-
-		foreach ($rows as $i => $parsed_query) {
-			$i += (!$this->zbxTestElementPresentId('query_fields_name_1') ? 2 : 1);
-			$name = $this->zbxTestGetValue("//input[@id='query_fields_name_".$i."']");
-			$this->assertEquals($parsed_query['name'], $name);
-
-			if (array_key_exists('value', $parsed_query)) {
-				$value = $this->zbxTestGetValue("//input[@id='query_fields_value_".$i."']");
-				$this->assertEquals($value, $parsed_query['value']);
-			}
-		}
-
-		// Check url after parse.
-		if ($parsed_url) {
-			$url = $this->zbxTestGetValue("//input[@id='url']");
-			$this->assertEquals($parsed_url, $url);
-		}
-	}
-
-	public static function getUrlParseData() {
-		return [
-			// Simple parse with name only.
-			[
-				[
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?login',
-					'parsed_query' => [
-						['name' => 'login']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			[
-				[
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?login',
-					'query' => [
-						['name' => 'login']
-					],
-					'parsed_query' => [
-						['name' => 'login'],
-						['name' => 'login']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			[
-				[
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?login',
-					'query' => [
-						['name' => 'login', 'value' => 'admin']
-					],
-					'parsed_query' => [
-						['name' => 'login', 'value' => 'admin'],
-						['name' => 'login']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			// Simple parse with name and value.
-			[
-				[
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?login=admin&password=s00p3r%24ecr3%26',
-					'parsed_query' => [
-						['name' => 'login', 'value' => 'admin'],
-						['name' => 'password', 'value' => 's00p3r$ecr3&']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			// After parse added new query fields.
-			[
-				[
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?password=s00p3r%24ecr3%26',
-					'query' => [
-						['name' => 'login', 'value' => 'admin']
-					],
-					'parsed_query' => [
-						['name' => 'login', 'value' => 'admin'],
-						['name' => 'password', 'value' => 's00p3r$ecr3&']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			[
-				[
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?login=admin&password=s00p3r%24ecr3%26',
-					'query' => [
-						['name' => 'login', 'value' => 'admin'],
-						['name' => 'password', 'value' => 's00p3r$ecr3&']
-					],
-					'parsed_query' => [
-						['name' => 'login', 'value' => 'admin'],
-						['name' => 'password', 'value' => 's00p3r$ecr3&'],
-						['name' => 'login', 'value' => 'admin'],
-						['name' => 'password', 'value' => 's00p3r$ecr3&']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			[
-				[
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?login=user&password=a123%24bcd4%26',
-					'query' => [
-						['name' => 'login', 'value' => 'admin'],
-						['name' => 'password', 'value' => 'password']
-					],
-					'parsed_query' => [
-						['name' => 'login', 'value' => 'admin'],
-						['name' => 'password', 'value' => 'password'],
-						['name' => 'login', 'value' => 'user'],
-						['name' => 'password', 'value' => 'a123$bcd4&']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			// URL fragment part ignored.
-			[
-				[
-					'step_name' => 'Step URL fragment part ignored',
-					'url' => 'http://www.zabbix.com/enterprise_ready#test',
-					'parsed_query' => [
-						['name' => '', 'value' => '']
-					],
-					'parsed_url' => 'http://www.zabbix.com/enterprise_ready'
-				]
-			],
-			// User macro in url.
-			[
-				[
-					'step_name' => 'Step URL fragment part ignored',
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?{$LOGIN}={$USER}&{$PASSWORD}={$MYPASSWORD}',
-					'parsed_query' => [
-						['name' => '{$LOGIN}', 'value' => '{$USER}'],
-						['name' => '{$PASSWORD}', 'value' => '{$MYPASSWORD}']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			// Host and item macro in url.
-			[
-				[
-					'step_name' => 'Step URL fragment part ignored',
-					'url' => 'https://intranet.zabbix.com/secure/admin.jspa?{HOST.HOST}={HOST.IP}&{ITEM.ID}={ITEM.KEY}',
-					'parsed_query' => [
-						['name' => '{HOST.HOST}', 'value' => '{HOST.IP}'],
-						['name' => '{ITEM.ID}', 'value' => '{ITEM.KEY}']
-					],
-					'parsed_url' => 'https://intranet.zabbix.com/secure/admin.jspa'
-				]
-			],
-			// URL parse failed.
-			[
-				[
-					'url' => 'http://localhost/zabbix/index.php?test=%11',
-					'error' => 'Failed to parse URL. URL is not properly encoded.'
-				]
-			]
-		];
-	}
-
-	/**
-	 * Test URL parsing.
-	 *
-	 * @dataProvider getUrlParseData
-	 */
-	public function testFormItemHttpAgent_UrlParse($data) {
-		$this->zbxTestLogin('items.php?form=create&hostid=50010');
-		$this->zbxTestDropdownSelectWait('type', 'HTTP agent');
-
-		$this->zbxTestInputTypeWait('url', $data['url']);
-
-		// Type query fields.
-		if (array_key_exists('query', $data)) {
-			$this->processPairFields($data['query'], 'query_fields');
-		}
-
-		// Check query fields and new url after parse.
-		if (array_key_exists('parsed_query', $data)) {
-			$this->parseUrlAndCheckQuery($data['parsed_query'], $data['parsed_url']);
-		}
-
-		// Check that URL parse failed.
-		if (array_key_exists('error', $data)) {
-			$this->zbxTestClick('httpcheck_parseurl');
-
-			$get_text = $this->zbxTestGetText("//div[@class='overlay-dialogue-body']/span");
-			$result = trim(preg_replace('/\s\s+/', ' ', $get_text));
-			$this->assertEquals($result, $data['error']);
-		}
 	}
 
 	public static function getCreateValidationData() {
@@ -602,7 +599,7 @@ class testFormItemHttpAgent extends CWebTest {
 					'request_body' => 'test',
 					'error' => 'Cannot add item',
 					'error_details' => [
-						'Cannot read XML: (4) Start tag expected, '<' not found'
+						'Cannot read XML: (4) Start tag expected, \'<\' not found'
 					]
 				]
 			],
@@ -617,7 +614,7 @@ class testFormItemHttpAgent extends CWebTest {
 					'request_body' => '<foo>bar</foo',
 					'error' => 'Cannot add item',
 					'error_details' => [
-						'Cannot read XML: (73) expected '>''
+						'Cannot read XML: (73) expected \'>\''
 					]
 				]
 			],
@@ -708,6 +705,182 @@ class testFormItemHttpAgent extends CWebTest {
 	 */
 	public function testFormItemHttpAgent_CreateValidation($data) {
 		$this->executeValidation($data, 'create');
+	}
+
+	public static function getValidationData() {
+		return [
+			// Check error message on posting the form with empty values.
+			[
+				[
+					'fields' => [
+						'Name' => '',
+						'Key' => '',
+						'URL' => ''
+					],
+					'error' => 'Page received incorrect data',
+					'error_details' => [
+						'Incorrect value for field "Name": cannot be empty.',
+						'Incorrect value for field "Key": cannot be empty.',
+						'Incorrect value for field "URL": cannot be empty.'
+					]
+				]
+			],
+			// Check query fields.
+			[
+				[
+					'query' => [
+						['name' => '', 'value' => 'admin', 'action' => 'update']
+					],
+					'error_details' => [
+						'Invalid parameter "query_fields": nonempty key and value pair expected.'
+					]
+				]
+			],
+			[
+				[
+					'query' => [
+						['name' => 'user update', 'value' => 'admin update', 'action' => 'update'],
+						['value' => 'admin']
+					],
+					'error_details' => [
+						'Invalid parameter "query_fields": nonempty key and value pair expected.'
+					]
+				]
+			],
+			// Check header fields.
+			[
+				[
+					'headers' => [
+						['name' => 'user update', 'value' => '', 'action' => 'update']
+					],
+					'error_details' => [
+						'Invalid parameter "headers": nonempty key and value pair expected.'
+					]
+				]
+			],
+			[
+				[
+					'headers' => [
+						['name' => '', 'value' => 'admin update', 'action' => 'update']
+					],
+					'error_details' => [
+						'Invalid parameter "headers": nonempty key and value pair expected.'
+					]
+				]
+			],
+			[
+				[
+					'headers' => [
+						['name' => 'user update', 'value' => 'admin update', 'action' => 'update'],
+						['value' => 'admin']
+					],
+					'error_details' => [
+						'Invalid parameter "headers": nonempty key and value pair expected.'
+					]
+				]
+			],
+			[
+				[
+					'headers' => [
+						['name' => 'user update', 'value' => 'admin update', 'action' => 'update'],
+						['name' => 'user']
+					],
+					'error_details' => [
+						'Invalid parameter "headers": nonempty key and value pair expected.'
+					]
+				]
+			],
+			// Check request body.
+			[
+				[
+					'request_type' => 'JSON data',
+					'error_details' => [
+						'Cannot read JSON.'
+					]
+				]
+			],
+			[
+				[
+					'request_type' => 'XML data',
+					'error_details' => [
+						'Cannot read XML: XML is empty.'
+					]
+				]
+			],
+			[
+				[
+					'request_type' => 'XML data',
+					'request_body' => 'test',
+					'error_details' => [
+						'Cannot read XML: (4) Start tag expected, \'<\' not found'
+					]
+				]
+			],
+			// Check required status codes.
+			[
+				[
+					'fields' => [
+						'Required status codes' => '*'
+					],
+					'error_details' => [
+						'Incorrect value "*" for "status_codes" field.'
+					]
+				]
+			],
+			[
+				[
+					'fields' => [
+						'Required status codes' => 'test'
+					],
+					'error_details' => [
+						'Incorrect value "test" for "status_codes" field.'
+					]
+				]
+			],
+			// Check HTTP authentication required fields.
+			[
+				[
+					'fields' => [
+						'HTTP authentication' => 'Basic'
+					],
+					'error' => 'Page received incorrect data',
+					'error_details' => [
+						'Incorrect value for field "Username": cannot be empty.',
+						'Incorrect value for field "Password": cannot be empty.'
+					]
+				]
+			],
+			[
+				[
+					'fields' => [
+						'HTTP authentication' => 'NTLM'
+					],
+					'error' => 'Page received incorrect data',
+					'error_details' => [
+						'Incorrect value for field "Username": cannot be empty.',
+						'Incorrect value for field "Password": cannot be empty.'
+					]
+				]
+			]
+		];
+	}
+
+	/**
+	 * Test item form validation when updating.
+	 *
+	 * @dataProvider getValidationData
+	 */
+	public function testFormItemHttpAgent_UpdateValidation($data) {
+		$this->executeValidation($data, 'update');
+	}
+
+	/**
+	 * Test item form validation when cloning.
+	 *
+	 * @dataProvider getValidationData
+	 */
+	public function testFormItemHttpAgent_CloneValidation($data) {
+		$this->executeValidation($data, 'clone');
 	}
 
 	public static function getCreataData() {
@@ -832,7 +1005,7 @@ class testFormItemHttpAgent extends CWebTest {
 	 * @dataProvider getCreataData
 	 */
 	public function testFormItemHttpAgent_Create($data) {
-		$this->zbxTestLogin('items.php?form=create&hostid=50010');
+		$this->zbxTestLogin('items.php?form=create&hostid='.self::HOSTID);
 		$this->zbxTestDropdownSelectWait('type', 'HTTP agent');
 
 		if (array_key_exists('request_type', $data)) {
@@ -841,7 +1014,7 @@ class testFormItemHttpAgent extends CWebTest {
 
 		$this->fillFields($data['fields']);
 
-		if (array_key_exists('HTTP authentication', $data['fields']) && $data['fields']['HTTP authentication']!='None') {
+		if (array_key_exists('HTTP authentication', $data['fields']) && $data['fields']['HTTP authentication'] != 'None') {
 			$this->zbxTestAssertVisibleId('http_username');
 			$this->zbxTestAssertVisibleId('http_password');
 		}
@@ -850,15 +1023,13 @@ class testFormItemHttpAgent extends CWebTest {
 			$this->zbxTestAssertNotVisibleId('http_password');
 		}
 
-		if (array_key_exists('Request type', $data['fields']) && $data['fields']['Request type'] === 'HEAD') {
-			for ($i = 0; $i<4; $i++) {
-				$this->zbxTestAssertElementPresentXpath("//input[@id='retrieve_mode_".$i."'][@disabled]");
-			}
-		}
-		else {
-			for ($i = 0; $i<4; $i++) {
-				$this->zbxTestAssertElementNotPresentXpath("//input[@id='retrieve_mode_".$i."'][@disabled]");
-			}
+		$check = (array_key_exists('Request type', $data['fields']) && $data['fields']['Request type'] === 'HEAD')
+				? 'zbxTestAssertElementPresentXpath'
+				: 'zbxTestAssertElementNotPresentXpath';
+
+		// 4 is retrieve mode count.
+		for ($i = 0; $i < 4; $i++) {
+			$this->$check("//input[@id='retrieve_mode_".$i."'][@disabled]");
 		}
 
 		if (array_key_exists('query', $data)) {
@@ -880,7 +1051,7 @@ class testFormItemHttpAgent extends CWebTest {
 
 		// Check the results in DB.
 		if (!array_key_exists('check_db', $data) || $data['check_db'] === true) {
-			$this->assertEquals(1, DBcount('SELECT NULL FROM items WHERE name = '.zbx_dbstr($data['fields']['Name'])));
+			$this->assertEquals(1, DBcount('SELECT NULL FROM items WHERE name='.zbx_dbstr($data['fields']['Name'])));
 		}
 
 		// Check the results in form after creation.
@@ -914,173 +1085,6 @@ class testFormItemHttpAgent extends CWebTest {
 		}
 	}
 
-	public static function getValidationData() {
-		return [
-			// Check error message on posting the form with empty values.
-			[
-				[
-					'fields' => [
-						'Name' => '',
-						'Key' => '',
-						'URL' => ''
-					],
-					'error' => 'Page received incorrect data',
-					'error_details' => [
-						'Incorrect value for field "Name": cannot be empty.',
-						'Incorrect value for field "Key": cannot be empty.',
-						'Incorrect value for field "URL": cannot be empty.'
-					]
-				]
-			],
-			// Check query fields.
-			[
-				[
-					'query' => [
-						['name' => '', 'value' => 'admin', 'action' => 'update']
-					],
-					'error_details' => [
-						'Invalid parameter "query_fields": nonempty key and value pair expected.'
-					]
-				]
-			],
-			[
-				[
-					'query' => [
-						['name' => 'user update', 'value' => 'admin update', 'action' => 'update'],
-						['value' => 'admin']
-					],
-					'error_details' => [
-						'Invalid parameter "query_fields": nonempty key and value pair expected.'
-					]
-				]
-			],
-			// Check header fields.
-			[
-				[
-					'headers' => [
-						['name' => 'user update', 'value' => '', 'action' => 'update']
-					],
-					'error_details' => [
-						'Invalid parameter "headers": nonempty key and value pair expected.'
-					]
-				]
-			],
-			[
-				[
-					'headers' => [
-						['name' => '', 'value' => 'admin update', 'action' => 'update']
-					],
-					'error_details' => [
-						'Invalid parameter "headers": nonempty key and value pair expected.'
-					]
-				]
-			],
-			[
-				[
-					'headers' => [
-						['name' => 'user update', 'value' => 'admin update', 'action' => 'update'],
-						['value' => 'admin']
-					],
-					'error_details' => [
-						'Invalid parameter "headers": nonempty key and value pair expected.'
-					]
-				]
-			],
-			[
-				[
-					'headers' => [
-						['name' => 'user update', 'value' => 'admin update', 'action' => 'update'],
-						['name' => 'user']
-					],
-					'error_details' => [
-						'Invalid parameter "headers": nonempty key and value pair expected.'
-					]
-				]
-			],
-			// Check request body.
-			[
-				[
-					'request_type' => 'JSON data',
-					'error_details' => [
-						'Cannot read JSON.'
-					]
-				]
-			],
-			[
-				[
-					'request_type' => 'XML data',
-					'error_details' => [
-						'Cannot read XML: XML is empty.'
-					]
-				]
-			],
-			[
-				[
-					'request_type' => 'XML data',
-					'request_body' => 'test',
-					'error_details' => [
-						'Cannot read XML: (4) Start tag expected, '<' not found'
-					]
-				]
-			],
-			// Check required status codes.
-			[
-				[
-					'fields' => [
-						'Required status codes' => '*'
-					],
-					'error_details' => [
-						'Incorrect value "*" for "status_codes" field.'
-					]
-				]
-			],
-			[
-				[
-					'fields' => [
-						'Required status codes' => 'test'
-					],
-					'error_details' => [
-						'Incorrect value "test" for "status_codes" field.'
-					]
-				]
-			],
-			// Check HTTP authentication required fields.
-			[
-				[
-					'fields' => [
-						'HTTP authentication' => 'Basic'
-					],
-					'error' => 'Page received incorrect data',
-					'error_details' => [
-						'Incorrect value for field "Username": cannot be empty.',
-						'Incorrect value for field "Password": cannot be empty.'
-					]
-				]
-			],
-			[
-				[
-					'fields' => [
-						'HTTP authentication' => 'NTLM'
-					],
-					'error' => 'Page received incorrect data',
-					'error_details' => [
-						'Incorrect value for field "Username": cannot be empty.',
-						'Incorrect value for field "Password": cannot be empty.'
-					]
-				]
-			]
-		];
-	}
-
-	/**
-	 * Test item form validation when updating.
-	 *
-	 * @dataProvider getValidationData
-	 */
-	public function testFormItemHttpAgent_UpdateValidation($data) {
-		$this->executeValidation($data, 'update');
-	}
-
 	public static function getUpdateData() {
 		return [
 			// Symbols and macro in fields.
@@ -1092,11 +1096,11 @@ class testFormItemHttpAgent extends CWebTest {
 					],
 					'query' => [
 						['action' => 'remove'],
-						['name' => '!\'(foo);:@&=+$,/?#[]', 'value' => '!\'(foo);:@&=+$,/?#[]', 'action' => 'update']
+						['name' => '!\'(foo);:@&=+$,/?#[]', 'value' => '!\'(foo);:@&=+$,/?#[]', 'action' => 'add']
 					],
 					'headers' => [
 						['action' => 'remove'],
-						['name' => '!\'(foo);:@&=+$,/?#[]', 'value' => '!\'(foo);:@&=+$,/?#[]', 'action' => 'update']
+						['name' => '!\'(foo);:@&=+$,/?#[]', 'value' => '!\'(foo);:@&=+$,/?#[]', 'action' => 'add']
 					],
 					'check_form' => true
 				]
@@ -1178,7 +1182,7 @@ class testFormItemHttpAgent extends CWebTest {
 			$data['fields']['Name'] = $update_item;
 		}
 
-		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid='.self::HOSTID);
 		$this->zbxTestClickLinkTextWait($update_item);
 
 		$this->fillFields($data['fields']);
@@ -1199,12 +1203,12 @@ class testFormItemHttpAgent extends CWebTest {
 		$this->zbxTestTextPresent($data['fields']['Name']);
 
 		// Check the results in DB.
-		if (!array_key_exists('check_db', $data)||$data['check_db']===true) {
-			$this->assertEquals(1, DBcount('SELECT NULL FROM items WHERE name = '.zbx_dbstr($data['fields']['Name'])));
+		if (!array_key_exists('check_db', $data) || $data['check_db'] === true) {
+			$this->assertEquals(1, DBcount('SELECT NULL FROM items WHERE name='.zbx_dbstr($data['fields']['Name'])));
 		}
 
 		// Check the results in form after update.
-		if (array_key_exists('check_form', $data)&&$data['check_form']===true) {
+		if (array_key_exists('check_form', $data) && $data['check_form'] === true) {
 			$this->zbxTestCheckFatalErrors();
 			$this->checkFormFields($data['fields']);
 		}
@@ -1216,9 +1220,15 @@ class testFormItemHttpAgent extends CWebTest {
 	public function testFormItemHttpAgent_SimpleUpdate() {
 		$sql_hash = 'SELECT * FROM items ORDER BY itemid';
 		$old_hash = DBhash($sql_hash);
-		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid='.self::HOSTID);
 
-		foreach (DBdata('SELECT * FROM items WHERE type=19 and hostid=50010 ORDER BY itemid LIMIT 3', false) as $item) {
+		$sql = 'SELECT name'.
+				' FROM items'.
+				' WHERE type='.ITEM_TYPE_HTTPAGENT.' AND hostid='.self::HOSTID.
+				' ORDER BY itemid'.
+				' LIMIT 3';
+
+		foreach (DBdata($sql, false) as $item) {
 			$item = $item[0];
 			$this->zbxTestClickLinkText($item['name']);
 			$this->zbxTestWaitForPageToLoad();
@@ -1227,15 +1237,6 @@ class testFormItemHttpAgent extends CWebTest {
 		}
 
 		$this->assertEquals($old_hash, DBhash($sql_hash));
-	}
-
-	/**
-	 * Test item form validation when cloning.
-	 *
-	 * @dataProvider getValidationData
-	 */
-	public function testFormItemHttpAgent_CloneValidation($data) {
-		$this->executeValidation($data, 'clone');
 	}
 
 	/**
@@ -1248,10 +1249,10 @@ class testFormItemHttpAgent extends CWebTest {
 		$data['fields']['Name'] = 'Test cloned HTTP agent item '.microtime(true);
 		$data['fields']['Key'] = 'http.cloned.item.'.microtime(true);
 
-		$sql_hash = 'SELECT * FROM items WHERE name = '.zbx_dbstr($clone_item);
+		$sql_hash = 'SELECT * FROM items WHERE name='.zbx_dbstr($clone_item);
 		$old_hash = DBhash($sql_hash);
 
-		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid='.self::HOSTID);
 		$this->zbxTestClickLinkTextWait($clone_item);
 		$this->zbxTestClickWait('clone');
 
@@ -1275,7 +1276,7 @@ class testFormItemHttpAgent extends CWebTest {
 
 		// Check the results in DB.
 		if (!array_key_exists('check_db', $data) || $data['check_db'] === true) {
-			$this->assertEquals(1, DBcount('SELECT NULL FROM items WHERE name = '.zbx_dbstr($data['fields']['Name'])));
+			$this->assertEquals(1, DBcount('SELECT NULL FROM items WHERE name='.zbx_dbstr($data['fields']['Name'])));
 			$this->assertEquals($old_hash, DBhash($sql_hash));
 		}
 
@@ -1292,7 +1293,7 @@ class testFormItemHttpAgent extends CWebTest {
 	public function testFormItemHttpAgent_Delete() {
 		$name = 'Http agent item for delete';
 
-		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid='.self::HOSTID);
 		$this->zbxTestClickLinkTextWait($name);
 		$this->zbxTestClickAndAcceptAlert('delete');
 
@@ -1315,10 +1316,10 @@ class testFormItemHttpAgent extends CWebTest {
 			'Key' => 'http.cancel',
 			'URL' => 'zabbix.com'
 		];
-		$sql_hash = 'SELECT * FROM items WHERE type=19 ORDER BY itemid';
+		$sql_hash = 'SELECT * FROM items WHERE type='.ITEM_TYPE_HTTPAGENT.' ORDER BY itemid';
 		$old_hash = DBhash($sql_hash);
 
-		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid='.self::HOSTID);
 		$this->zbxTestContentControlButtonClickTextWait('Create item');
 
 		$this->fillFields($data);
@@ -1339,9 +1340,9 @@ class testFormItemHttpAgent extends CWebTest {
 	private function executeCancelAction($action) {
 		$sql_hash = 'SELECT * FROM items ORDER BY itemid';
 		$old_hash = DBhash($sql_hash);
-		$this->zbxTestLogin('items.php?filter_set=1&hostid=50010');
+		$this->zbxTestLogin('items.php?filter_set=1&hostid='.self::HOSTID);
 
-		foreach (DBdata("SELECT name FROM items WHERE type=19 LIMIT 1", false) as $item) {
+		foreach (DBdata('SELECT name FROM items WHERE type='.ITEM_TYPE_HTTPAGENT.' LIMIT 1', false) as $item) {
 			$item = $item[0];
 			$name = $item['name'];
 			$this->zbxTestClickLinkText($name);
@@ -1401,5 +1402,4 @@ class testFormItemHttpAgent extends CWebTest {
 	public function testFormItemHttpAgent_CancelDelete() {
 		$this->executeCancelAction('delete');
 	}
-
 }
