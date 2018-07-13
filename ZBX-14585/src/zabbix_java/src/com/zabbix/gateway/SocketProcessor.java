@@ -20,6 +20,7 @@
 package com.zabbix.gateway;
 
 import java.net.Socket;
+import java.net.InetAddress;
 
 import org.json.*;
 
@@ -40,9 +41,10 @@ class SocketProcessor implements Runnable
 	@Override
 	public void run()
 	{
-		logger.debug("starting to process incoming connection");
-
 		BinaryProtocolSpeaker speaker = null;
+		InetAddress ipaddr = socket.getInetAddress();
+
+		logger.debug("starting to process incoming connection ({})", ipaddr);
 
 		try
 		{
@@ -71,7 +73,7 @@ class SocketProcessor implements Runnable
 		catch (Exception e1)
 		{
 			String error = ZabbixException.getRootCauseMessage(e1);
-			logger.warn("error processing request: {}", error);
+			logger.warn("error processing request: {} ({})", new Object[] {error, ipaddr});
 			logger.debug("error caused by", e1);
 
 			try
@@ -94,6 +96,6 @@ class SocketProcessor implements Runnable
 			try { if (null != socket) socket.close(); } catch (Exception e) { }
 		}
 
-		logger.debug("finished processing incoming connection");
+		logger.debug("finished processing incoming connection ({})", ipaddr);
 	}
 }

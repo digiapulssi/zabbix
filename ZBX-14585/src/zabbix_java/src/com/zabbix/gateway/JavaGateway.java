@@ -43,19 +43,6 @@ public class JavaGateway
 			System.exit(1);
 		}
 
-		logger.info("Zabbix Java Gateway {} (revision {}) has started", GeneralInformation.VERSION, GeneralInformation.REVISION);
-
-		Thread shutdownHook = new Thread()
-		{
-			@Override
-			public void run()
-			{
-				logger.info("Zabbix Java Gateway {} (revision {}) has stopped", GeneralInformation.VERSION, GeneralInformation.REVISION);
-			}
-		};
-
-		Runtime.getRuntime().addShutdownHook(shutdownHook);
-
 		try
 		{
 			ConfigurationManager.parseConfiguration();
@@ -65,6 +52,22 @@ public class JavaGateway
 
 			ServerSocket socket = new ServerSocket(listenPort, 0, listenIP);
 			socket.setReuseAddress(true);
+
+			logger.info("Zabbix Java Gateway {} (revision {}) has started on {}",
+				new Object[] {GeneralInformation.VERSION, GeneralInformation.REVISION, socket.getInetAddress()});
+
+			Thread shutdownHook = new Thread()
+			{
+				@Override
+				public void run()
+				{
+					logger.info("Zabbix Java Gateway {} (revision {}) has stopped on {}",
+						new Object[] {GeneralInformation.VERSION, GeneralInformation.REVISION, socket.getInetAddress()});
+				}
+			};
+
+			Runtime.getRuntime().addShutdownHook(shutdownHook);
+
 			logger.info("listening on {}:{}", socket.getInetAddress(), socket.getLocalPort());
 
 			int startPollers = ConfigurationManager.getIntegerParameterValue(ConfigurationManager.START_POLLERS);
