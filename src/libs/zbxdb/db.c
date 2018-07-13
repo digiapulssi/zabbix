@@ -258,6 +258,9 @@ static int	is_recoverable_mysql_error(void)
 		case ER_ILLEGAL_GRANT_FOR_TABLE:	/* user without any privileges */
 		case ER_TABLEACCESS_DENIED_ERROR:	/* user without some privilege */
 		case ER_UNKNOWN_ERROR:
+#ifdef ER_CONNECTION_KILLED
+		case ER_CONNECTION_KILLED:
+#endif
 			return SUCCEED;
 	}
 

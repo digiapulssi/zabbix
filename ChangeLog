@@ -3,6 +3,7 @@ Changes for 3.0.20rc1
 New features:
 
 Bug fixes:
+.......PS. [ZBX-14566] fixed possible data loss due to MariaDB server restart (vso)
 .......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
 ..F....... [ZBX-14491] fixed link "show value mappings", which leads to no permission page (vasilijs)
 ........S. [ZBX-12380] improved function parameter parsing for trigger functions (MVekslers)
