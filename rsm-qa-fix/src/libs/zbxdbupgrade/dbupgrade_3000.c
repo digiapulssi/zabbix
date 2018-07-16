@@ -2409,6 +2409,17 @@ out:
 	return ret;
 }
 
+static int	DBpatch_3000220(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update items set units='' where key_='rdap.rtt'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2475,5 +2486,6 @@ DBPATCH_ADD(3000216, 0, 0)	/* add new test type to "testTypes" catalog */
 DBPATCH_ADD(3000217, 0, 0)	/* add macro {$RDAP.TLD.ENABLED}=0 and item rdds.enabled to all "Template <TLD>" and hosts it is linked to */
 DBPATCH_ADD(3000218, 0, 0)	/* add value mappings for new DNS error codes: -408, -808 */
 DBPATCH_ADD(3000219, 0, 0)	/* add item dnssec.enabled to all "Template <TLD>" and hosts it is linked to */
+DBPATCH_ADD(3000220, 0, 0)	/* remove 'ms' units from item rdap.rtt */
 
 DBPATCH_END()
