@@ -254,7 +254,15 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		}
 
 		foreach ($strings as $string) {
-			$this->zbxTestAssertElementPresentXpath("//div[@class='msg-details']//li[contains(text(), '$string')]");
+			$quote = '"';
+			if (strpos($string, $quote) !== false) {
+				$quote = '\'';
+				if (strpos($string, $quote) !== false) {
+					$this->fail('Cannot assert message detail text containig both single and double quotes.');
+				}
+			}
+
+			$this->zbxTestAssertElementPresentXpath('//div[@class="msg-details"]//li[contains(text(), '.$quote.$string.$quote.')]');
 		}
 	}
 

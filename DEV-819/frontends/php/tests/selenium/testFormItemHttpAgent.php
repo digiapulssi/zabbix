@@ -564,10 +564,10 @@ class testFormItemHttpAgent extends CWebTest {
 					'fields' => [
 						'Name' => 'item with wrong JSON request body',
 						'Key' => 'check-json',
-						'URL' => 'zabbix.com'
+						'URL' => 'zabbix.com',
+						'Request body' => '{"<key>": "<value>"'
 					],
 					'request_type' => 'JSON data',
-					'request_body' => '{"<key>": "<value>"',
 					'error' => 'Cannot add item',
 					'error_details' => [
 						'Cannot read JSON.'
@@ -593,10 +593,10 @@ class testFormItemHttpAgent extends CWebTest {
 					'fields' => [
 						'Name' => 'item with wrong XML request body',
 						'Key' => 'check-wrong-xml',
-						'URL' => 'zabbix.com'
+						'URL' => 'zabbix.com',
+						'Request body' => 'test'
 					],
 					'request_type' => 'XML data',
-					'request_body' => 'test',
 					'error' => 'Cannot add item',
 					'error_details' => [
 						'Cannot read XML: (4) Start tag expected, \'<\' not found'
@@ -608,10 +608,10 @@ class testFormItemHttpAgent extends CWebTest {
 					'fields' => [
 						'Name' => 'item with wrong XML request body',
 						'Key' => 'check-xml',
-						'URL' => 'zabbix.com'
+						'URL' => 'zabbix.com',
+						'Request body' => '<foo>bar</foo'
 					],
 					'request_type' => 'XML data',
-					'request_body' => '<foo>bar</foo',
 					'error' => 'Cannot add item',
 					'error_details' => [
 						'Cannot read XML: (73) expected \'>\''
@@ -809,8 +809,10 @@ class testFormItemHttpAgent extends CWebTest {
 			],
 			[
 				[
+					'fields' => [
+						'Request body' => 'test',
+					],
 					'request_type' => 'XML data',
-					'request_body' => 'test',
 					'error_details' => [
 						'Cannot read XML: (4) Start tag expected, \'<\' not found'
 					]
