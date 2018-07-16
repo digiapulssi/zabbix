@@ -439,13 +439,7 @@ static int	substitute_item_name(const DB_ROW db_itemid, const DB_ROW name, const
 
 	zbx_lrtrim(*subst_name, ZBX_WHITESPACE);
 
-	if ('\0' == **subst_name)
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "Cannot convert name for item with itemid \"%s\":"
-				" value is empty.", *db_itemid);
-		return FAIL;
-	}
-	else if (ITEM_NAME_LEN < zbx_strlen_utf8(*subst_name))
+	if (ITEM_NAME_LEN < zbx_strlen_utf8(*subst_name))
 	{
 		size_t	sz;
 
@@ -488,6 +482,13 @@ static int	update_item_names(void)
 	{
 		if (SUCCEED != (ret = substitute_item_name(&row[0], &row[1], &row[2], &item_name)))
 			break;
+
+		if ('\0' == *item_name)
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "Cannot convert name for item with itemid \"%s\":"
+				" value is empty.", row[0]);
+			continue;
+		}
 
 		item_esc = DBdyn_escape_string(item_name);
 		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update items set name='%s' where itemid=%s;\n",
