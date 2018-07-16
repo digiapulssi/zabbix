@@ -3,6 +3,7 @@ Changes for 3.4.12rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-14575] fixed Norwegian locale key for windows (vmurzins)
 .......PS. [ZBX-14566] fixed possible data loss due to MariaDB server restart (vso)
 .......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
 ....I..... [ZBX-14370] fixed deleting of files after compiling a program (make clean) for Solaris (MVekslers)
