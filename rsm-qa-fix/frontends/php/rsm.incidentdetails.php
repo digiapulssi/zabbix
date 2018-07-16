@@ -296,7 +296,7 @@ if ($mainEvent) {
 	));
 
 	if ($endEvent) {
-		$endEventToTime = $endEvent['clock'] - $endEvent['clock'] % $delayTime + $delayTime;
+		$endEventToTime = $endEvent['clock'] - ($endEvent['clock'] % $delayTime) + (DISPLAY_CYCLES_AFTER_RECOVERY * $delayTime);
 		if (getRequest('filter_set')) {
 			$toTime = ($endEventToTime >= zbxDateToTime($data['filter_to']))
 				? zbxDateToTime($data['filter_to'])
