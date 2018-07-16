@@ -427,9 +427,9 @@ out:
  ******************************************************************************/
 static int	substitute_item_name(const DB_ROW db_itemid, const DB_ROW name, const DB_ROW key, char **subst_name)
 {
-	DC_ITEM dc_item;
-	int errcodes;
-	zbx_uint64_t itemid;
+	DC_ITEM		dc_item;
+	int 		errcodes;
+	zbx_uint64_t	itemid;
 
 	ZBX_STR2UINT64(itemid, *db_itemid);
 	DCconfig_get_items_by_itemids(&dc_item, &itemid, &errcodes, 1);
@@ -447,10 +447,13 @@ static int	substitute_item_name(const DB_ROW db_itemid, const DB_ROW name, const
 	}
 	else if (ITEM_NAME_LEN < zbx_strlen_utf8(*subst_name))
 	{
+		size_t	sz;
+
+		sz = zbx_strlen_utf8_nchars(*subst_name, ITEM_NAME_LEN);
 		zabbix_log(LOG_LEVEL_WARNING, "Cannot convert name for item with itemid \"%s\":"
 				" value is too long and field was truncated from \"%s\".",
-				*db_itemid, &(*subst_name)[ITEM_NAME_LEN]);
-		*subst_name[ITEM_NAME_LEN] = '\0';
+				*db_itemid, &(*subst_name)[sz]);
+		*subst_name[sz] = '\0';
 	}
 
 	return SUCCEED;
