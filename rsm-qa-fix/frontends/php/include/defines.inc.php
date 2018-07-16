@@ -1423,6 +1423,9 @@ define('CALCULATED_DNS_ROLLWEEK_SLA',			'rsm.configvalue[RSM.DNS.ROLLWEEK.SLA]')
 define('CALCULATED_RDDS_ROLLWEEK_SLA',			'rsm.configvalue[RSM.RDDS.ROLLWEEK.SLA]');
 define('CALCULATED_EPP_ROLLWEEK_SLA',			'rsm.configvalue[RSM.EPP.ROLLWEEK.SLA]');
 
+// Number of test cycles to show after incident recovery event (including recovery event).
+define('DISPLAY_CYCLES_AFTER_RECOVERY',		6);
+
 // SLA monitoring probe status items keys
 define('PROBE_KEY_ONLINE',			'rsm.probe.online');
 define('PROBE_DNS_UDP_ITEM',		'rsm.dns.udp[{$RSM.TLD}]');
