@@ -724,32 +724,28 @@ sub tld_interface_enabled
 	}
 
 	my $rows_ref = db_select(
-		"select hi.value".
+		"select max(hi.value)".
 		" from hosts h,items i,history_uint hi".
 		" where h.hostid=i.hostid".
 			" and i.itemid=hi.itemid".
 			" and h.status=0".
 			" and h.host like '$tld %'".
 			" and i.key_='$item_key'".
-			" and ".sql_time_condition($from, $till, "hi.clock").
-		" order by hi.clock asc".
-		" limit 1");
+			" and ".sql_time_condition($from, $till, "hi.clock"));
 
-	return $rows_ref->[0]->[0] if (scalar(@{$rows_ref}) != 0);
+	return $rows_ref->[0]->[0] if (defined($rows_ref->[0]->[0]));
 
 	$rows_ref = db_select(
-		"select hi.value".
+		"select max(hi.value)".
 		" from hosts h,items i,history_uint hi".
 		" where h.hostid=i.hostid".
 			" and i.itemid=hi.itemid".
 			" and h.status=0".
 			" and h.host like '$tld %'".
 			" and i.key_='$item_key'".
-			" and hi.clock>$from".
-		" order by hi.clock asc".
-		" limit 1");
+			" and hi.clock>$from");
 
-	return $rows_ref->[0]->[0] if (scalar(@{$rows_ref}) != 0);
+	return $rows_ref->[0]->[0] if (defined($rows_ref->[0]->[0]));
 
 	# no item values, look for current macro value
 	my $host = "Template $tld";
