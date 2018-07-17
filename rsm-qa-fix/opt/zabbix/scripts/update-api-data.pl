@@ -143,16 +143,18 @@ foreach my $service (keys(%services))
 		$services{$service}{'delay'} = get_macro_rdds_delay();
 		$services{$service}{'key_statuses'} = ['rsm.rdds[{$RSM.TLD}', 'rdap['];
 
-		$services{$service}{'rdds'}{'valuemaps'} = get_valuemaps($service);
-		$services{$service}{'rdds'}{'key_43_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
-		$services{$service}{'rdds'}{'key_43_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
-		$services{$service}{'rdds'}{'key_43_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
-		$services{$service}{'rdds'}{'key_80_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
-		$services{$service}{'rdds'}{'key_80_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'} = get_valuemaps('rdds');
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
 
-		$services{$service}{'rdap'}{'valuemaps'} = get_valuemaps('rdap');
-		$services{$service}{'rdap'}{'key_rtt'} = 'rdap.rtt';
-		$services{$service}{'rdap'}{'key_ip'} = 'rdap.ip';
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'valuemaps'} = $services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'};
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+
+		$services{$service}{+JSON_INTERFACE_RDAP}{'valuemaps'} = get_valuemaps('rdap');
+		$services{$service}{+JSON_INTERFACE_RDAP}{'key_rtt'} = 'rdap.rtt';
+		$services{$service}{+JSON_INTERFACE_RDAP}{'key_ip'} = 'rdap.ip';
 	}
 	elsif ($service eq 'epp')
 	{
@@ -1780,7 +1782,7 @@ sub __get_rdds_test_values
 			fail("unknown RDDS port in item (id:$itemid)");
 		}
 
-		$pre_result{$probe}->{$interface}->{$clock}->{$type} = ($type eq 'rtt') ? get_detailed_result($services{'rdds'}{'valuemaps'}, $value) : int($value);
+		$pre_result{$probe}->{$interface}->{$clock}->{$type} = ($type eq 'rtt') ? get_detailed_result($services{'rdds'}{$interface}{'valuemaps'}, $value) : int($value);
 	}
 
 	my $str_rows_ref = db_select("select itemid,value,clock from history_str where itemid in ($str_itemids_str) and " . sql_time_condition($start, $end). " order by clock");
@@ -2048,10 +2050,10 @@ sub __get_rdds_dbl_itemids
 	return __get_itemids_by_complete_key(
 		$tld,
 		$probe,
-		$services{'rdds'}{'rdds'}{'key_43_rtt'},
-		$services{'rdds'}{'rdds'}{'key_80_rtt'},
-		$services{'rdds'}{'rdds'}{'key_43_upd'},
-		$services{'rdds'}{'rdap'}{'key_rtt'});
+		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_rtt'},
+		$services{'rdds'}{+JSON_INTERFACE_RDDS80}{'key_rtt'},
+		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_upd'},
+		$services{'rdds'}{+JSON_INTERFACE_RDAP}{'key_rtt'});
 }
 
 # return itemids of string items grouped by Probes:
@@ -2074,9 +2076,9 @@ sub __get_rdds_str_itemids
 	return __get_itemids_by_complete_key(
 		$tld,
 		$probe,
-		$services{'rdds'}{'rdds'}{'key_43_ip'},
-		$services{'rdds'}{'rdds'}{'key_80_ip'},
-		$services{'rdds'}{'rdap'}{'key_ip'});
+		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_ip'},
+		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_ip'},
+		$services{'rdds'}{+JSON_INTERFACE_RDAP}{'key_ip'});
 }
 
 sub __get_epp_dbl_itemids
