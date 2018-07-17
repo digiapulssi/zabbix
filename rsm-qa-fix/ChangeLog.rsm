@@ -4,6 +4,7 @@ Bug fixes:
 .......PS. [392] fixed handling of port in RDAP base URL (dimir)
 ....I..... [395] removed "ms" units from items "rdap.rtt" (dimir)
 ..F....... [396] fixed test cycle displaying in incidents page (miks)
+....I..... [393] fixed tld.pl not disabling old RDDS availability items (yurii)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc21
