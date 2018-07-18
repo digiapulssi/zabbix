@@ -695,21 +695,21 @@ class CHttpTestManager {
 	protected function createHttpTestItems(array $httpTest) {
 		$checkitems = [
 			[
-				'name'				=> 'Download speed for scenario "$1".',
+				'name'				=> 'Download speed for scenario "'.$httpTest['name'].'".',
 				'key_'				=> $this->getTestKey(HTTPSTEP_ITEM_TYPE_IN, $httpTest['name']),
 				'value_type'		=> ITEM_VALUE_TYPE_FLOAT,
 				'units'				=> 'Bps',
 				'httptestitemtype'	=> HTTPSTEP_ITEM_TYPE_IN
 			],
 			[
-				'name'				=> 'Failed step of scenario "$1".',
+				'name'				=> 'Failed step of scenario "'.$httpTest['name'].'".',
 				'key_'				=> $this->getTestKey(HTTPSTEP_ITEM_TYPE_LASTSTEP, $httpTest['name']),
 				'value_type'		=> ITEM_VALUE_TYPE_UINT64,
 				'units'				=> '',
 				'httptestitemtype'	=> HTTPSTEP_ITEM_TYPE_LASTSTEP
 			],
 			[
-				'name'				=> 'Last error message of scenario "$1".',
+				'name'				=> 'Last error message of scenario "'.$httpTest['name'].'".',
 				'key_'				=> $this->getTestKey(HTTPSTEP_ITEM_TYPE_LASTERROR, $httpTest['name']),
 				'value_type'		=> ITEM_VALUE_TYPE_STR,
 				'units'				=> '',
@@ -1004,21 +1004,21 @@ class CHttpTestManager {
 
 			$stepitems = [
 				[
-					'name' => 'Download speed for step "$2" of scenario "$1".',
+					'name' => 'Download speed for step "'.$webstep['name'].'" of scenario "'.$httpTest['name'].'".',
 					'key_' => $this->getStepKey(HTTPSTEP_ITEM_TYPE_IN, $httpTest['name'], $webstep['name']),
 					'value_type' => ITEM_VALUE_TYPE_FLOAT,
 					'units' => 'Bps',
 					'httpstepitemtype' => HTTPSTEP_ITEM_TYPE_IN
 				],
 				[
-					'name' => 'Response time for step "$2" of scenario "$1".',
+					'name' => 'Response time for step "'.$webstep['name'].'" of scenario "'.$httpTest['name'].'".',
 					'key_' => $this->getStepKey(HTTPSTEP_ITEM_TYPE_TIME, $httpTest['name'], $webstep['name']),
 					'value_type' => ITEM_VALUE_TYPE_FLOAT,
 					'units' => 's',
 					'httpstepitemtype' => HTTPSTEP_ITEM_TYPE_TIME
 				],
 				[
-					'name' => 'Response code for step "$2" of scenario "$1".',
+					'name' => 'Response code for step "'.$webstep['name'].'" of scenario "'.$httpTest['name'].'".',
 					'key_' => $this->getStepKey(HTTPSTEP_ITEM_TYPE_RSPCODE, $httpTest['name'], $webstep['name']),
 					'value_type' => ITEM_VALUE_TYPE_UINT64,
 					'units' => '',
