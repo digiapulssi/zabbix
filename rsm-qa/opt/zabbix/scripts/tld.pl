@@ -704,6 +704,9 @@ sub create_items_rdds {
 
 	    $item_key = 'rsm.rdds[{$RSM.TLD},"'.$OPTS{'rdds43-servers'}.'","'.$OPTS{'rdds80-servers'}.'"]';
 
+	    my @old_rdds_availability_items = keys(%{get_items_like($templateid, 'rsm.rdds[', true)});
+	    disable_items(\@old_rdds_availability_items);
+
 	    $options = {'name' => 'RDDS availability',
 			'key_'=> $item_key,
 			'status' => ITEM_STATUS_ACTIVE,

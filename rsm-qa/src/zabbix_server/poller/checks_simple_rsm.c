@@ -3402,9 +3402,10 @@ ZBX_DEFINE_HTTP_ERROR_TO(RDAP)
 
 #undef ZBX_DEFINE_HTTP_ERROR_TO
 
-/* Splits provided URL into preceding "https://" or "http://", domain name and the rest, frees memory pointed by      */
+/* Splits provided URL into preceding "https://" or "http://", domain name and the rest, frees memory pointed by    */
 /* proto, domain and prefix pointers and allocates new storage. It is caller responsibility to free them after use. */
-static int	zbx_split_url(const char *url, char **proto, char **domain, char **prefix, char *err, size_t err_size)
+static int	zbx_split_url(const char *url, char **proto, char **domain, int *port, char **prefix,
+		char *err, size_t err_size)
 {
 	const char	*tmp;
 
@@ -3412,11 +3413,13 @@ static int	zbx_split_url(const char *url, char **proto, char **domain, char **pr
 	{
 		*proto = zbx_strdup(*proto, "https://");
 		url += ZBX_CONST_STRLEN("https://");
+		*port = 443;
 	}
 	else if (0 == strncmp(url, "http://", ZBX_CONST_STRLEN("http://")))
 	{
 		*proto = zbx_strdup(*proto, "http://");
 		url += ZBX_CONST_STRLEN("http://");
+		*port = 80;
 	}
 	else
 	{
@@ -3428,6 +3431,12 @@ static int	zbx_split_url(const char *url, char **proto, char **domain, char **pr
 	{
 		size_t	len = tmp - url;
 
+		if (0 == isdigit(*(tmp + 1)))
+		{
+			zbx_snprintf(err, err_size, "invalid port in URL \"url\"", url);
+			return FAIL;
+		}
+
 		zbx_free(*domain);
 		*domain = zbx_malloc(*domain, len + 1);
 		memcpy(*domain, url, len);
@@ -3435,8 +3444,11 @@ static int	zbx_split_url(const char *url, char **proto, char **domain, char **pr
 
 		url = tmp + 1;
 
-		/* ignore port */
-		while (*url != '\0' && (0 != isdigit(*url) || *url == '/'))
+		/* override port and move forward */
+		*port = atoi(url);
+
+		/* and move forward */
+		while (*url != '\0' && *url != '/')
 			url++;
 
 		*prefix = zbx_strdup(*prefix, url);
@@ -3935,7 +3947,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	size_t			value_alloc = 0;
 	unsigned int		extras;
 	int			maxredirs, rtt_limit, tld_enabled, probe_enabled, ipv4_enabled, ipv6_enabled,
-				ipv_flags = 0, ec_http, rtt = ZBX_NO_VALUE, ret = SYSINFO_RET_FAIL;
+				ipv_flags = 0, ec_http, port, rtt = ZBX_NO_VALUE, ret = SYSINFO_RET_FAIL;
 
 	if (10 != request->nparam)
 	{
@@ -4082,7 +4094,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (0 != ipv6_enabled)
 		ipv_flags |= ZBX_FLAG_IPV6_ENABLED;
 
-	if (SUCCEED != zbx_split_url(base_url, &proto, &domain_part, &prefix, err, sizeof(err)))
+	if (SUCCEED != zbx_split_url(base_url, &proto, &domain_part, &port, &prefix, err, sizeof(err)))
 	{
 		rtt = ZBX_EC_INTERNAL;
 		zbx_rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
@@ -4121,12 +4133,15 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	else
 		zbx_strlcpy(rdap_prefix, "/domain", sizeof(rdap_prefix));
 
-	if (0 != is_ipv4)
-		full_url = zbx_dsprintf(full_url, "%s%s%s%s/%s", proto, ip, prefix, rdap_prefix, test_domain);
+	if (0 == is_ipv4)
+	{
+		full_url = zbx_dsprintf(full_url, "%s[%s]:%d%s%s/%s", proto, ip, port, prefix, rdap_prefix,
+				test_domain);
+	}
 	else
-		full_url = zbx_dsprintf(full_url, "%s[%s]%s%s/%s", proto, ip, prefix, rdap_prefix, test_domain);
+		full_url = zbx_dsprintf(full_url, "%s%s:%d%s%s/%s", proto, ip, port, prefix, rdap_prefix, test_domain);
 
-	zbx_rsm_infof(log_fd, "Testing \"%s\" (%s) using URL \"%s\".", base_url, ip, full_url);
+	zbx_rsm_infof(log_fd, "the domain in base URL \"%s\" was resolved to %s, using full URL \"%s\".", base_url, ip, full_url);
 
 	if (SUCCEED != zbx_http_test(domain_part, full_url, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, &data, curl_memory,
 			err, sizeof(err)))

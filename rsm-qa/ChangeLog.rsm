@@ -1,3 +1,13 @@
+Changes for rsm1.1.0rc22
+
+Bug fixes:
+....I..... [399] fixed missing value mappings when adding errors to SLA API generated files (dimir)
+....I..... [393] fixed tld.pl not disabling old RDDS availability items (yurii)
+.......PS. [392] fixed handling of port in RDAP base URL (dimir)
+....I..... [395] removed "ms" units from items "rdap.rtt" (dimir)
+..F....... [396] fixed test cycle displaying in incidents page (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc21
 
 Bug fixes:

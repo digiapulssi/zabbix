@@ -724,32 +724,28 @@ sub tld_interface_enabled
 	}
 
 	my $rows_ref = db_select(
-		"select hi.value".
+		"select max(hi.value)".
 		" from hosts h,items i,history_uint hi".
 		" where h.hostid=i.hostid".
 			" and i.itemid=hi.itemid".
 			" and h.status=0".
 			" and h.host like '$tld %'".
 			" and i.key_='$item_key'".
-			" and ".sql_time_condition($from, $till, "hi.clock").
-		" order by hi.clock asc".
-		" limit 1");
+			" and ".sql_time_condition($from, $till, "hi.clock"));
 
-	return $rows_ref->[0]->[0] if (scalar(@{$rows_ref}) != 0);
+	return $rows_ref->[0]->[0] if (defined($rows_ref->[0]->[0]));
 
 	$rows_ref = db_select(
-		"select hi.value".
+		"select max(hi.value)".
 		" from hosts h,items i,history_uint hi".
 		" where h.hostid=i.hostid".
 			" and i.itemid=hi.itemid".
 			" and h.status=0".
 			" and h.host like '$tld %'".
 			" and i.key_='$item_key'".
-			" and hi.clock>$from".
-		" order by hi.clock asc".
-		" limit 1");
+			" and hi.clock>$from");
 
-	return $rows_ref->[0]->[0] if (scalar(@{$rows_ref}) != 0);
+	return $rows_ref->[0]->[0] if (defined($rows_ref->[0]->[0]));
 
 	# no item values, look for current macro value
 	my $host = "Template $tld";
@@ -1242,11 +1238,8 @@ sub probe_offline_at
 	my $probe = shift;
 	my $clock = shift;
 
-	# if a probe was down for the whole period it won't be in a hash
-	unless (exists($probe_times_ref->{$probe}))
-	{
-		return 1;	# offline
-	}
+	# offline: if a probe is not in a hash it was offline for the whole period
+	return 1 unless (exists($probe_times_ref->{$probe}));
 
 	my $times_ref = $probe_times_ref->{$probe};
 
@@ -1258,13 +1251,12 @@ sub probe_offline_at
 		my $from = $times_ref->[$clock_index++];
 		my $till = $times_ref->[$clock_index++];
 
-		if ($from < $clock && $clock < $till)
-		{
-			return 0;	# online
-		}
+		# online
+		return 0 if ($from < $clock && $clock < $till);
 	}
 
-	return 1;	# offline
+	# offline
+	return 1;
 }
 
 # Translate probe names to hostids of appropriate tld hosts.
