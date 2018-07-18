@@ -1238,11 +1238,8 @@ sub probe_offline_at
 	my $probe = shift;
 	my $clock = shift;
 
-	# if a probe was down for the whole period it won't be in a hash
-	unless (exists($probe_times_ref->{$probe}))
-	{
-		return 1;	# offline
-	}
+	# offline: if a probe is not in a hash it was offline for the whole period
+	return 1 unless (exists($probe_times_ref->{$probe}));
 
 	my $times_ref = $probe_times_ref->{$probe};
 
@@ -1254,13 +1251,12 @@ sub probe_offline_at
 		my $from = $times_ref->[$clock_index++];
 		my $till = $times_ref->[$clock_index++];
 
-		if ($from < $clock && $clock < $till)
-		{
-			return 0;	# online
-		}
+		# online
+		return 0 if ($from < $clock && $clock < $till);
 	}
 
-	return 1;	# offline
+	# offline
+	return 1;
 }
 
 # Translate probe names to hostids of appropriate tld hosts.
