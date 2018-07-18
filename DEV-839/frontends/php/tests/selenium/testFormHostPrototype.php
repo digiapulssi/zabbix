@@ -37,30 +37,82 @@ class testFormHostPrototype extends CWebTest {
 	 *
 	 * @var string
 	 */
-	protected $discoveryRule = 'Discovery rule 1';
+	protected $discovery_rule = 'Discovery rule 1';
+
+	/**
+	 * Discovery rule id used in test.
+	 */
+	const DISCRULEID = 90001;
+
 
 	public static function getCreateValidationData() {
 		return [
 			[
-				// Create hot prototype with empty name
+				// Create host prototype with empty name
 				[
 					'error' => 'Page received incorrect data',
 					'error_message' => 'Incorrect value for field "Host name": cannot be empty.',
+					'check_db' => false
 				]
 			],
-				// Create hot prototype with space in name field
+				// Create host prototype with space in name field
 			[
 				[
-					'error' => 'Page received incorrect data',
 					'name' => ' ',
+					'error' => 'Page received incorrect data',
 					'error_message' => 'Incorrect value for field "Host name": cannot be empty.',
 				]
 			],
 			[
 				[
+					'name' => 'Кириллица Прототип хоста {#FSNAME}',
 					'error' => 'Cannot add host prototype',
+					'error_message' => 'Incorrect characters used for host "Кириллица Прототип хоста {#FSNAME}".',
+				]
+			],
+			[
+				[
 					'name' => 'Host prototype {#GROUP_EMPTY}',
+					'error' => 'Cannot add host prototype',
 					'error_message' => 'Host prototype "Host prototype {#GROUP_EMPTY}" cannot be without host group',
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype without macro in name',
+					'error' => 'Cannot add host prototype',
+					'error_message' => 'Host name for host prototype "Host prototype without macro in name" must contain macros',
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype without macro in group prototype',
+					'hostgroup' => 'Linux servers',
+					'group_prototypes' => [
+						'Group prototype'
+					],
+					'error' => 'Cannot add host prototype',
+					'error_message' => 'Host name for host prototype "Host prototype without macro in group prototype" must contain macros',
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype with / in name',
+					'hostgroup' => 'Linux servers',
+					'error' => 'Cannot add host prototype',
+					'error_message' => 'Incorrect characters used for host "Host prototype with / in name".',
+				]
+			],
+			[
+				[
+					'name' => '{#HOST} prototype with duplicated Group prototypes',
+					'hostgroup' => 'Linux servers',
+					'group_prototypes' => [
+						'Group prototype',
+						'Group prototype'
+					],
+					'error' => 'Cannot add host prototype',
+					'error_message' => 'Duplicate group prototype name "Group prototype" for host prototype "{#HOST} prototype with duplicated Group prototypes".',
 				]
 			]
 		];
@@ -72,26 +124,39 @@ class testFormHostPrototype extends CWebTest {
 	 * @dataProvider getCreateValidationData
 	 */
 	public function testFormHostPrototype_CreateValidation($data) {
-		$this->zbxTestLogin('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->host);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
-		$this->zbxTestClickLinkTextWait($this->discoveryRule);
-		$this->zbxTestClickLinkTextWait('Host prototypes');
-		$this->zbxTestContentControlButtonClickTextWait('Create host prototype');
+		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID.'&form=create');
 		$this->zbxTestCheckHeader('Host prototypes');
-		$this->zbxTestCheckTitle('Configuration of host prototypes');
 
 		if (array_key_exists('name', $data)) {
 			$this->zbxTestInputType('host', $data['name']);
+		}
+
+		$this->zbxTestTabSwitch('Groups');
+
+		if (array_key_exists('hostgroup', $data)) {
+			$this->zbxTestClickButtonMultiselect('group_links_');
+			$this->zbxTestLaunchOverlayDialog('Host groups');
+			$this->zbxTestClickLinkText($data['hostgroup']);
+		}
+
+		if (array_key_exists('group_prototypes', $data)) {
+			foreach ($data['group_prototypes'] as $i => $group) {
+				$this->zbxTestInputTypeByXpath('//*[@name="group_prototypes['.$i.'][name]"]', $group);
+				$this->zbxTestClick('group_prototype_add');
+			}
 		}
 
 		$this->zbxTestClick('add');
 
 		// Check the results in frontend.
 		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
-		$error = $this->zbxTestGetText('//ul[@class=\'msg-details-border\']');
+		$error = $this->zbxTestGetText('//ul[@class="msg-details-border"]');
 		$this->assertContains($data['error_message'], $error);
 		$this->zbxTestCheckFatalErrors();
+
+		if (!array_key_exists('check_db', $data) || $data['check_db'] === true ) {
+			$this->assertEquals(0, DBcount('SELECT NULL FROM hosts WHERE flags=2 AND name='.zbx_dbstr($data['name'])));
+		}
 	}
 
 	public static function getCreateData() {
@@ -121,15 +186,8 @@ class testFormHostPrototype extends CWebTest {
 	 *
 	 * @dataProvider getCreateData
 	 */
-	public function testFormHostPrototype_Create($data) {
-
-//		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid=90001&form=create');
-		$this->zbxTestLogin('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->host);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
-		$this->zbxTestClickLinkTextWait($this->discoveryRule);
-		$this->zbxTestClickLinkTextWait('Host prototypes');
-		$this->zbxTestContentControlButtonClickTextWait('Create host prototype');
+	public function testFormHostPrototype_Create1($data) {
+		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID.'&form=create');
 		$this->zbxTestCheckHeader('Host prototypes');
 		$this->zbxTestCheckTitle('Configuration of host prototypes');
 		$this->zbxTestInputType('host', $data['name']);
@@ -156,12 +214,12 @@ class testFormHostPrototype extends CWebTest {
 			$this->zbxTestClickButtonMultiselect('add_templates_');
 			$this->zbxTestLaunchOverlayDialog('Templates');
 			$this->zbxTestClickLinkText($data['template']);
-			$this->zbxTestClickXpath('//button[contains(@onclick, \'add_template\')]');
+			$this->zbxTestClickXpath('//button[contains(@onclick, "add_template")]');
 		}
 
 		if (array_key_exists('inventory', $data)) {
 			$this->zbxTestTabSwitch('Host inventory');
-			$this->zbxTestClickXpath('//label[@for=\'inventory_mode_2\']');
+			$this->zbxTestClickXpath('//label[text()="'.$data['inventory'].'"]');
 		}
 
 		$this->zbxTestClick('add');
@@ -180,23 +238,20 @@ class testFormHostPrototype extends CWebTest {
 	/**
 	 * Test update without any modification of host prototype.
 	 */
-	public function testFormHostPrototype_SimpleUpade() {
+	public function testFormHostPrototype_SimpleUpdate() {
+		$prototype_name = 'Host prototype {#1}';
 		$sql_hash = 'SELECT * FROM hosts ORDER BY hostid';
 		$old_hash = DBhash($sql_hash);
 
-		$this->zbxTestLogin('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->host);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
-		$this->zbxTestClickLinkTextWait($this->discoveryRule);
-		$this->zbxTestClickLinkTextWait('Host prototypes');
-		$this->zbxTestClickLinkTextWait('Host prototype {#1}');
+		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
+		$this->zbxTestClickLinkTextWait($prototype_name);
 		$this->zbxTestCheckHeader('Host prototypes');
 		$this->zbxTestCheckTitle('Configuration of host prototypes');
 
 		$this->zbxTestClick('update');
 
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host prototype updated');
-		$this->zbxTestTextPresent('Host prototype {#1}');
+		$this->zbxTestTextPresent($prototype_name);
 		$this->zbxTestCheckFatalErrors();
 
 		$this->assertEquals($old_hash, DBhash($sql_hash));
@@ -232,11 +287,7 @@ class testFormHostPrototype extends CWebTest {
 	 * @dataProvider getUpdateData
 	 */
 	public function testFormHostPrototype_UpdateAll($data) {
-		$this->zbxTestLogin('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->host);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
-		$this->zbxTestClickLinkTextWait($this->discoveryRule);
-		$this->zbxTestClickLinkTextWait('Host prototypes');
+		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
 		$this->zbxTestClickLinkTextWait($data['old_name']);
 		$this->zbxTestCheckHeader('Host prototypes');
 		$this->zbxTestCheckTitle('Configuration of host prototypes');
@@ -257,10 +308,11 @@ class testFormHostPrototype extends CWebTest {
 		if (array_key_exists('hostgroup', $data)) {
 			$this->zbxTestTabSwitch('Groups');
 			$this->zbxTestClickXpath('//span[@class=\'subfilter-disable-btn\']');
+			// zbxTestMultiselectRemove
 			$this->zbxTestClickButtonMultiselect('group_links_');
 			$this->zbxTestLaunchOverlayDialog('Host groups');
 			$this->zbxTestClickLinkAndWaitWindowClose($data['hostgroup']);
-			$this->zbxTestClickXpath('//button[@class=\'btn-link group-prototype-remove\']');
+			$this->zbxTestClickXpathWait('//button[@class=\'btn-link group-prototype-remove\']');
 			$this->zbxTestClick('group_prototype_add');
 			$this->zbxTestInputTypeByXpath('//*[@name=\'group_prototypes[1][name]\']', $data['group_prototype']);
 		}
@@ -272,13 +324,13 @@ class testFormHostPrototype extends CWebTest {
 			$this->zbxTestClickButtonMultiselect('add_templates_');
 			$this->zbxTestLaunchOverlayDialog('Templates');
 			$this->zbxTestClickLinkAndWaitWindowClose($data['template']);
-			$this->zbxTestClickXpath('//button[contains(@onclick, \'add_template\')]');
+			$this->zbxTestClickXpath('//button[contains(@onclick, \'add_template\')]'); // div[@id='']//button[text()="Add"]
 		}
 
 		// Change inventory mode.
 		if (array_key_exists('inventory', $data)) {
 			$this->zbxTestTabSwitch('Host inventory');
-			$this->zbxTestClickXpath('//label[@for=\'inventory_mode_2\']');
+			$this->zbxTestClickXpath('//label[@for=\'inventory_mode_2\']'); // label text
 		}
 
 		$this->zbxTestClick('update');
@@ -331,23 +383,21 @@ class testFormHostPrototype extends CWebTest {
 
 		if (array_key_exists('template', $data)) {
 			$this->zbxTestTabSwitch('Templates');
-			$this->zbxTestTextPresent($data['template']);
+			$this->zbxTestAssertElementText('//div[@id="templateTab"]//a', $data['template']);
 		}
 
 		if (array_key_exists('inventory', $data)) {
 			$this->zbxTestTabSwitch('Host inventory');
-			$this->zbxTestAssertElementPresentXpath("//input[@id='inventory_mode_2' and @checked='checked']");
+			$this->zbxTestAssertElementPresentXpath("//input[@id='inventory_mode_2' and @checked='checked']"); // by text
 
 		}
 	}
 
 	public function testFormHostPrototype_Delete() {
-		$this->zbxTestLogin('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->host);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
-		$this->zbxTestClickLinkTextWait($this->discoveryRule);
-		$this->zbxTestClickLinkTextWait('Host prototypes');
-		$this->zbxTestClickLinkTextWait('Host prototype {#3}');
+		$prototype_name = 'Host prototype {#3}';
+
+		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
+		$this->zbxTestClickLinkTextWait($prototype_name);
 		$this->zbxTestCheckHeader('Host prototypes');
 		$this->zbxTestCheckTitle('Configuration of host prototypes');
 
@@ -356,7 +406,7 @@ class testFormHostPrototype extends CWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host prototype deleted');
 		$this->zbxTestCheckFatalErrors();
 
-		$this->assertEquals(0, DBcount("SELECT NULL FROM hosts WHERE host = 'Host prototype {#3}'"));
+		$this->assertEquals(0, DBcount("SELECT NULL FROM hosts WHERE host = 'Host prototype {#3}'")); // zbxsrt($prototype_name)
 	}
 
 	public function testFormHostPrototype_CancelUpdate() {
@@ -366,7 +416,7 @@ class testFormHostPrototype extends CWebTest {
 		$this->zbxTestLogin('hosts.php');
 		$this->zbxTestClickLinkTextWait($this->host);
 		$this->zbxTestClickLinkTextWait('Discovery rules');
-		$this->zbxTestClickLinkTextWait($this->discoveryRule);
+		$this->zbxTestClickLinkTextWait($this->discovery_rule);
 		$this->zbxTestClickLinkTextWait('Host prototypes');
 		$this->zbxTestClickLinkTextWait('Host prototype {#1}');
 		$this->zbxTestClick('cancel');
@@ -375,11 +425,7 @@ class testFormHostPrototype extends CWebTest {
 	}
 
 	public function testFormHostPrototype_Clone() {
-		$this->zbxTestLogin('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->host);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
-		$this->zbxTestClickLinkTextWait($this->discoveryRule);
-		$this->zbxTestClickLinkTextWait('Host prototypes');
+		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
 		$this->zbxTestClickLinkTextWait('Host prototype {#1}');
 		$this->zbxTestClick('clone');
 		$this->zbxTestInputTypeOverwrite('host', 'Clone of Host prototype {#1}');
