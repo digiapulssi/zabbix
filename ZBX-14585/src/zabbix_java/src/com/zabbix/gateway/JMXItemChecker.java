@@ -132,7 +132,7 @@ class JMXItemChecker extends ItemChecker
 
 			if (-1 != sep)
 			{
-				logger.trace("'{}' contains composite data", attributeName);
+				logger.trace("data object '{}' '{}' contains composite data", key, attributeName);
 
 				realAttributeName = attributeName.substring(0, sep);
 				fieldNames = attributeName.substring(sep + 1);

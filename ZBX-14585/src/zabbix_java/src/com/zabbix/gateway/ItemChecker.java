@@ -92,7 +92,7 @@ abstract class ItemChecker
 		{
 			try
 			{
-				logger.debug("caught exception for item '{}'", key, e1);
+				logger.debug("caught exception {} for item '{}'", new Object[] {e1, key});
 				value.put(JSON_TAG_ERROR, ZabbixException.getRootCauseMessage(e1));
 			}
 			catch (JSONException e2)
