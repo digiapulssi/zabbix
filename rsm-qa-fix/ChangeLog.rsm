@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc23
 
 Bug fixes:
+..F....... [402] fixed historical configuration value selection when time range is larger than 60 seconds (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc22
