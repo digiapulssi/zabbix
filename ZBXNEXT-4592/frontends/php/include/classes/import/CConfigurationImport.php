@@ -684,6 +684,8 @@ class CConfigurationImport {
 				continue;
 			}
 
+			$items = CMacrosResolverHelper::resolveItemNameReferences($items);
+
 			foreach ($order_tree[$host] as $index => $level) {
 				$item = $items[$index];
 				$item['hostid'] = $hostId;
@@ -986,6 +988,7 @@ class CConfigurationImport {
 
 				// prototypes
 				$item_prototypes = $item['item_prototypes'] ? $order_tree[$host][$item_key] : [];
+				$item['item_prototypes'] = CMacrosResolverHelper::resolveItemNameReferences($item['item_prototypes']);
 
 				foreach ($item_prototypes as $index => $level) {
 					$prototype = $item['item_prototypes'][$index];

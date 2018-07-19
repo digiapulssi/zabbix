@@ -430,6 +430,35 @@ class CMacrosResolverHelper {
 	}
 
 	/**
+	 * Resolve $1-$9 references in item name.
+	 *
+	 * @param array $items    Array of items.
+	 *
+	 * @return array
+	 */
+	public static function resolveItemNameReferences(array $items) {
+		self::init();
+		$item_key_parser = new CItemKey();
+
+		foreach($items as &$item) {
+			$references = self::$macrosResolver->getMacroPositions($item['name'], ['references' => true]);
+
+			if ($item_key_parser->parse($item['key_']) == CParser::PARSE_SUCCESS) {
+				$references = array_reverse($references, true);
+
+				foreach ($references as $pos => $key) {
+					$item['name'] = substr_replace($item['name'], $item_key_parser->getParam($key[1] - 1), $pos,
+						strlen($key)
+					);
+				}
+				unset($value);
+			}
+		}
+
+		return $items;
+	}
+
+	/**
 	 * Resolve item key macros to "key_expanded" field.
 	 *
 	 * @static
