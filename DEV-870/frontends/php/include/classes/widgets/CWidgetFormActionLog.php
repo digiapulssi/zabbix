@@ -54,5 +54,8 @@ class CWidgetFormActionLog extends CWidgetForm {
 			$field_lines->setValue($this->data['show_lines']);
 		}
 		$this->fields[] = $field_lines;
+
+
+		$this->fields[] = (new CWidgetFieldRangeControl('range_poc', _('Transparency'), 0, 100, 10))->setValue(20);
 	}
 }

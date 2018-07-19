@@ -298,6 +298,16 @@ foreach ($data['dialogue']['fields'] as $field) {
 			'tags_table.dynamicRows({template: "#tag-row"});'.
 			'tags_table.parent().addClass("has-before");';
 	}
+	elseif ($field instanceof CWidgetFieldrangeControl) {
+		$form_list->addRow((new CLabel($field->getLabel(), $field->getName()))->setAsteriskMark($aria_required),
+			(new CRangeControl($field->getName(), $field->getValue()))
+				->setMin($field->getMinValue())
+				->setMax($field->getMaxValue())
+				->setStep($field->getStepValue())
+				->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+				->setAriaRequired($aria_required)
+		);
+	}
 }
 
 $form->addItem($form_list);
