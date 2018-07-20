@@ -1,3 +1,63 @@
+Changes for 3.0.20rc1
+
+New features:
+
+Bug fixes:
+.......PS. [ZBX-14566] fixed possible data loss due to MariaDB server restart (vso)
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
+..F....... [ZBX-14491] fixed link "show value mappings", which leads to no permission page (vasilijs)
+........S. [ZBX-12380] improved function parameter parsing for trigger functions (MVekslers)
+..F....... [ZBX-14432] removed redundant code in event details screen (miks)
+........S. [ZBX-14410] improved error message handling in zbx_function_find() (MVekslers)
+..F....... [ZBX-12104] added limit ZBX_HISTORY_PERIOD for {ITEM.VALUE} macro resolving in trigger name (gcalenko)
+..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.19
+
+New features:
+A.F....... [ZBX-1357] updated English (United States), Japanese, Korean translations; thanks to Zabbix translators (zalex_ua)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.19rc1
+
+Bug fixes:
+..F....... [ZBX-11861] fixed filter by trigger not being reset when accessing Events from a global search result (agriscenko)
+...G...... [ZBX-6046] fixed the functions 'net.if.*' for Solaris with empty 64 bits counters (MVekslers)
+A.F....... [ZBX-13355] fixed media type a required password field successfully passing validation while being empty and prevented auto-filling stored passwords by browser (Ivo)
+.D........ [ZBX-14398] improved "Server" parameter description in Zabbix agent configuration file (vso)
+.......PS. [ZBX-14447] reverted ZBX-13788 fix because of broken server-proxy compatibility between minor versions (wiper)
+...G...... [ZBX-12250] fixed logrt[] item to analyze log file from start if no log files match and no log files were seen before (Andris)
+...G...... [ZBX-12070] fixed "proc.num" and "proc.mem" items calculation of values when zabbix_agentd called in test mode (Sergejs)
+........S. [ZBX-14423] fixed use of initialized variable during application discovery (vso)
+.......PS. [ZBX-12990] improved "vmware.hv.datastore.size" through usage the performance counters (MVekslers)
+.......PS. [ZBX-13765] fixed discovered host status update if it was down and a service was discovered on that host (Andris)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.18
+
+3.0.18rc1 was released as 3.0.18 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.18rc1
+
+Bug fixes:
+..F....... [ZBX-13549] fixed displaying of not monitored triggers in maps (miks)
+........S. [ZBX-14333] fixed {ESC.HISTORY} and action log not to display colon without target host when executed on Zabbix server (vso)
+........S. [ZBX-13043] removed error message for when user has defined media but all of them are disabled (viktors)
+A.F....... [ZBX-13774] fixed creating and updating items with multiple specific scheduling intervals (Ivo)
+..F....... [ZBX-12175] fixed subfilter entries with long names going off the screen (agriscenko, Andzs)
+..F....... [ZBX-12644] fixed filter being partially reset when using pagination in availability report page (Ivo)
+..F....... [ZBX-12882] fixed in popup window being allowed to select applications from different hosts when editing item mass update form (agriscenko)
+.......PS. [ZBX-13788] fixed host availability stuck in unknown state after proxy changes (wiper)
+........S. [ZBX-12372] fixed duplication of prefix "/" for second parameter "path" in items "web.page.*" (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.17
+
+3.0.17rc2 was released as 3.0.17 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.17rc2
 
 Bug fixes:
@@ -7,6 +67,7 @@ Bug fixes:
 Changes for 3.0.17rc1
 
 Bug fixes:
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
 ..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
 ...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)
 ........S. [ZBX-13766] fixed comparison of two large float numbers in expressions (Sergejs)
@@ -1909,9 +1970,20 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
 
 --------------------------------------------------------------------------------
-Changes for 2.2.22rc1
+Changes for 2.2.23rc1
 
 New features:
+
+Bug fixes:
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
+
+--------------------------------------------------------------------------------
+Changes for 2.2.22
+
+2.2.22rc1 was released as 2.2.22 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.22rc1
 
 Bug fixes:
 ...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)

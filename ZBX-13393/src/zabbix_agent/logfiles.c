@@ -60,11 +60,6 @@ static int	split_string(const char *str, const char *del, char **part1, char **p
 	size_t		str_length = 0, part1_length = 0, part2_length = 0;
 	int		ret = FAIL;
 
-	assert(NULL != str && '\0' != *str);
-	assert(NULL != del && '\0' != *del);
-	assert(NULL != part1 && '\0' == *part1);	/* target 1 must be empty */
-	assert(NULL != part2 && '\0' == *part2);	/* target 2 must be empty */
-
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() str:'%s' del:'%s'", __function_name, str, del);
 
 	str_length = strlen(str);
@@ -658,7 +653,7 @@ static int	setup_old2new(char *old2new, struct st_logfile *old, int num_old,
 					break;
 				case ZBX_SAME_FILE_RETRY:
 					old[i].retry = 1;
-					/* break; is not missing here */
+					return FAIL;
 				case ZBX_SAME_FILE_ERROR:
 					return FAIL;
 			}
@@ -1177,10 +1172,10 @@ static void	destroy_logfile_list(struct st_logfile **logfiles, int *logfiles_all
 static void	pick_logfile(const char *directory, const char *filename, int mtime, const regex_t *re,
 		struct st_logfile **logfiles, int *logfiles_alloc, int *logfiles_num)
 {
-	char		*logfile_candidate = NULL;
+	char		*logfile_candidate;
 	zbx_stat_t	file_buf;
 
-	logfile_candidate = zbx_dsprintf(logfile_candidate, "%s%s", directory, filename);
+	logfile_candidate = zbx_dsprintf(NULL, "%s%s", directory, filename);
 
 	if (0 == zbx_stat(logfile_candidate, &file_buf))
 	{
@@ -1396,8 +1391,9 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 			/* Do not make a logrt[] item NOTSUPPORTED if there are no matching log files or they are not */
 			/* accessible (can happen during a rotation), just log the problem. */
 #ifdef _WINDOWS
-			zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\" or insufficient "
-					"access rights", format, directory);
+			zabbix_log(LOG_LEVEL_WARNING, "there are no files matching \"%s\" in \"%s\"", format,
+					directory);
+
 			ret = ZBX_NO_FILE_ERROR;
 #else
 			if (0 != access(directory, X_OK))
@@ -1974,10 +1970,25 @@ int	process_logrt(unsigned char flags, const char *filename, zbx_uint64_t *lastl
 	if (SUCCEED != (res = make_logfile_list(flags, filename, mtime, &logfiles, &logfiles_alloc, &logfiles_num,
 			use_ino, err_msg)))
 	{
-		if (ZBX_NO_FILE_ERROR == res && 1 == *skip_old_data)
+		if (ZBX_NO_FILE_ERROR == res)
 		{
-			*skip_old_data = 0;
-			zabbix_log(LOG_LEVEL_DEBUG, "%s(): no files, setting skip_old_data to 0", __function_name);
+			if (1 == *skip_old_data)
+			{
+				*skip_old_data = 0;
+
+				zabbix_log(LOG_LEVEL_DEBUG, "%s(): no files, setting skip_old_data to 0",
+						__function_name);
+			}
+
+			if (0 != (ZBX_METRIC_FLAG_LOG_LOGRT & flags) && 0 == *logfiles_num_old)
+			{
+				/* Both the old and the new log file lists are empty. That means the agent has not */
+				/* seen any log files for this logrt[] item since started. If log files appear later */
+				/* then analyze them from start, do not apply the 'lastlogsize' received from server */
+				/* anymore. */
+
+				*lastlogsize = 0;
+			}
 		}
 
 		/* file was not accessible for a log[] item or an error occurred */
