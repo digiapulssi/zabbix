@@ -2312,7 +2312,8 @@ out:
  * Comments: This is required for ESX/ESXi hosts version < 6.0 only           *
  *                                                                            *
  ******************************************************************************/
-static void vmware_service_refresh_datastore_info(const zbx_vmware_service_t *service, CURL *easyhandle, const char *id)
+static void	vmware_service_refresh_datastore_info(const zbx_vmware_service_t *service, CURL *easyhandle,
+		const char *id)
 {
 #	define ZBX_POST_REFRESH_DATASTORE							\
 		ZBX_POST_VSPHERE_HEADER								\
