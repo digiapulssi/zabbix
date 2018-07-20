@@ -2305,15 +2305,13 @@ out:
  * Purpose: Refreshes all storage related information including free-space,   *
  *          capacity, and detailed usage of virtual machines.                 *
  *                                                                            *
- * Parameters: service      - [IN] the vmware service                         *
- *             easyhandle   - [IN] the CURL handle                            *
+ * Parameters: easyhandle   - [IN] the CURL handle                            *
  *             id           - [IN] the datastore id                           *
  *                                                                            *
  * Comments: This is required for ESX/ESXi hosts version < 6.0 only           *
  *                                                                            *
  ******************************************************************************/
-static void	vmware_service_refresh_datastore_info(const zbx_vmware_service_t *service, CURL *easyhandle,
-		const char *id)
+static int vmware_service_refresh_datastore_info(CURL *easyhandle, const char *id)
 {
 #	define ZBX_POST_REFRESH_DATASTORE							\
 		ZBX_POST_VSPHERE_HEADER								\
@@ -2325,19 +2323,18 @@ static void	vmware_service_refresh_datastore_info(const zbx_vmware_service_t *se
 	const char	*__function_name = "vmware_service_refresh_datastore_info";
 	char		tmp[MAX_STRING_LEN];
 
-	if (ZBX_VMWARE_TYPE_VSPHERE != service->type)
-		return;
-
 	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_REFRESH_DATASTORE, id);
 	if (CURLE_OK != curl_easy_setopt(easyhandle, CURLOPT_POSTFIELDS, tmp))
-		return;
+		return FAIL;
 
 	page.offset = 0;
 
 	if (CURLE_OK != curl_easy_perform(easyhandle))
-		return;
+		return FAIL;
 
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
+
+	return SUCCEED;
 }
 
 /******************************************************************************
@@ -2383,7 +2380,12 @@ static zbx_vmware_datastore_t	*vmware_service_create_datastore(const zbx_vmware_
 
 	id_esc = xml_escape_dyn(id);
 
-	vmware_service_refresh_datastore_info(service, easyhandle, id_esc);
+	if (ZBX_VMWARE_TYPE_VSPHERE != service->type
+			&& SUCCEED != vmware_service_refresh_datastore_info(easyhandle, id_esc))
+	{
+		zbx_free(id_esc);
+		goto out;
+	}
 
 	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_DATASTORE_GET,
 			vmware_service_objects[service->type].property_collector, id_esc);
