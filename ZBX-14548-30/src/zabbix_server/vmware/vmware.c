@@ -2380,7 +2380,7 @@ static zbx_vmware_datastore_t	*vmware_service_create_datastore(const zbx_vmware_
 
 	id_esc = xml_escape_dyn(id);
 
-	if (ZBX_VMWARE_TYPE_VSPHERE != service->type
+	if (ZBX_VMWARE_TYPE_VSPHERE == service->type
 			&& SUCCEED != vmware_service_refresh_datastore_info(easyhandle, id_esc))
 	{
 		zbx_free(id_esc);
