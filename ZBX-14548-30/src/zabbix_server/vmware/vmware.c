@@ -2311,7 +2311,7 @@ out:
  * Comments: This is required for ESX/ESXi hosts version < 6.0 only           *
  *                                                                            *
  ******************************************************************************/
-static int vmware_service_refresh_datastore_info(CURL *easyhandle, const char *id)
+static int	vmware_service_refresh_datastore_info(CURL *easyhandle, const char *id)
 {
 #	define ZBX_POST_REFRESH_DATASTORE							\
 		ZBX_POST_VSPHERE_HEADER								\
