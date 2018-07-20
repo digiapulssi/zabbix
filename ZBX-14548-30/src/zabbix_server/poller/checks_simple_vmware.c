@@ -1619,7 +1619,7 @@ out:
 	return ret;
 }
 
-static int	check_vcenter_hv_datastore_size_vsphera(int mode, const zbx_vmware_datastore_t *datastore,
+static int	check_vcenter_hv_datastore_size_vsphere(int mode, const zbx_vmware_datastore_t *datastore,
 		AGENT_RESULT *result)
 {
 	switch (mode)
@@ -1754,7 +1754,7 @@ int	check_vcenter_hv_datastore_size(AGENT_REQUEST *request, const char *username
 
 	if (ZBX_VMWARE_TYPE_VSPHERE == service->type)
 	{
-		ret = check_vcenter_hv_datastore_size_vsphera(mode, datastore, result);
+		ret = check_vcenter_hv_datastore_size_vsphere(mode, datastore, result);
 		goto unlock;
 	}
 
