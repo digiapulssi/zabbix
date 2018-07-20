@@ -3729,7 +3729,10 @@ static void	vmware_service_update_perf_entities(zbx_vmware_service_t *service)
 					" %s vm uuid: %s", __function_name, hv->id, hv->uuid, vm->id, vm->uuid);
 		}
 
-		for (i = 0; i < hv->datastores.values_num && ZBX_VMWARE_TYPE_VSPHERE != service->type; i++)
+		if (ZBX_VMWARE_TYPE_VSPHERE == service->type)
+			continue;
+
+		for (i = 0; i < hv->datastores.values_num; i++)
 		{
 			zbx_vmware_datastore_t	*ds = hv->datastores.values[i];
 			vmware_service_add_perf_entity(service, "Datastore", ds->id, ds_perfcounters, now);
