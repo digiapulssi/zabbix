@@ -151,9 +151,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 
 	// time calculation
-	$testTimeTill = $testTimeFrom + 59;
-	$timeFrom = $macroTime - 59;
-	$testTimeFrom -= $timeFrom;
+	$testTimeTill = $testTimeFrom + $macroTime;
 
 	// get TLD
 	$tld = API::Host()->get([

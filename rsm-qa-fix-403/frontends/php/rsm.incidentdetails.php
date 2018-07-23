@@ -342,11 +342,10 @@ if ($mainEvent) {
 	$data['tests'] = [];
 	$printed = []; // Prevent listing of repeated tests before incident start time. This can happen right after delay is changed.
 	while ($test = DBfetch($tests)) {
-		if ($test['clock'] - $test['clock'] % $delayTime > $original_main_event_from_time
-				|| !array_key_exists($test['clock'] - $test['clock'] % $delayTime, $printed)) {
-			$printed[$test['clock'] - $test['clock'] % $delayTime] = true;
+		if ($test['clock'] > $original_main_event_from_time || !array_key_exists($test['clock'], $printed)) {
+			$printed[$test['clock']] = true;
 			$data['tests'][] = array(
-				'clock' => $test['clock'] - $test['clock'] % $delayTime,
+				'clock' => $test['clock'],
 				'value' => $test['value'],
 				'startEvent' => $mainEvent['clock'] == $test['clock'] ? true : false,
 				'endEvent' => $endEvent && $endEvent['clock'] == $test['clock'] ? $endEvent['value'] : TRIGGER_VALUE_TRUE
