@@ -200,7 +200,7 @@ $functions = [
 		'operators' => ['<', '<=', '>', '>=', '=', '<>']
 	],
 	'change' => [
-		'description' =>  _('change() - Difference between last and previous value'),
+		'description' => _('change() - Difference between last and previous value'),
 		'allowed_types' => $allowedTypesAny,
 		'operators' => ['<', '<=', '>', '>=', '=', '<>']
 	],
