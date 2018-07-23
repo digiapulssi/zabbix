@@ -171,6 +171,7 @@ class CHttpTestManager {
 
 				if (isset($httptest['name'])) {
 					$updateFields['key_'] = $this->getTestKey($checkitem['type'], $httptest['name']);
+					$updateFields['name'] = $this->getTestName($checkitem['type'], $httptest['name']);
 				}
 
 				if (isset($httptest['status'])) {
@@ -695,21 +696,21 @@ class CHttpTestManager {
 	protected function createHttpTestItems(array $httpTest) {
 		$checkitems = [
 			[
-				'name'				=> 'Download speed for scenario "'.$httpTest['name'].'".',
+				'name'				=> $this->getTestName(HTTPSTEP_ITEM_TYPE_IN, $httpTest['name']),
 				'key_'				=> $this->getTestKey(HTTPSTEP_ITEM_TYPE_IN, $httpTest['name']),
 				'value_type'		=> ITEM_VALUE_TYPE_FLOAT,
 				'units'				=> 'Bps',
 				'httptestitemtype'	=> HTTPSTEP_ITEM_TYPE_IN
 			],
 			[
-				'name'				=> 'Failed step of scenario "'.$httpTest['name'].'".',
+				'name'				=> $this->getTestName(HTTPSTEP_ITEM_TYPE_LASTSTEP, $httpTest['name']),
 				'key_'				=> $this->getTestKey(HTTPSTEP_ITEM_TYPE_LASTSTEP, $httpTest['name']),
 				'value_type'		=> ITEM_VALUE_TYPE_UINT64,
 				'units'				=> '',
 				'httptestitemtype'	=> HTTPSTEP_ITEM_TYPE_LASTSTEP
 			],
 			[
-				'name'				=> 'Last error message of scenario "'.$httpTest['name'].'".',
+				'name'				=> $this->getTestName(HTTPSTEP_ITEM_TYPE_LASTERROR, $httpTest['name']),
 				'key_'				=> $this->getTestKey(HTTPSTEP_ITEM_TYPE_LASTERROR, $httpTest['name']),
 				'value_type'		=> ITEM_VALUE_TYPE_STR,
 				'units'				=> '',
@@ -1004,21 +1005,21 @@ class CHttpTestManager {
 
 			$stepitems = [
 				[
-					'name' => 'Download speed for step "'.$webstep['name'].'" of scenario "'.$httpTest['name'].'".',
+					'name' => $this->getStepName(HTTPSTEP_ITEM_TYPE_IN, $httpTest['name'], $webstep['name']),
 					'key_' => $this->getStepKey(HTTPSTEP_ITEM_TYPE_IN, $httpTest['name'], $webstep['name']),
 					'value_type' => ITEM_VALUE_TYPE_FLOAT,
 					'units' => 'Bps',
 					'httpstepitemtype' => HTTPSTEP_ITEM_TYPE_IN
 				],
 				[
-					'name' => 'Response time for step "'.$webstep['name'].'" of scenario "'.$httpTest['name'].'".',
+					'name' => $this->getStepName(HTTPSTEP_ITEM_TYPE_TIME, $httpTest['name'], $webstep['name']),
 					'key_' => $this->getStepKey(HTTPSTEP_ITEM_TYPE_TIME, $httpTest['name'], $webstep['name']),
 					'value_type' => ITEM_VALUE_TYPE_FLOAT,
 					'units' => 's',
 					'httpstepitemtype' => HTTPSTEP_ITEM_TYPE_TIME
 				],
 				[
-					'name' => 'Response code for step "'.$webstep['name'].'" of scenario "'.$httpTest['name'].'".',
+					'name' => $this->getStepName(HTTPSTEP_ITEM_TYPE_RSPCODE, $httpTest['name'], $webstep['name']),
 					'key_' => $this->getStepKey(HTTPSTEP_ITEM_TYPE_RSPCODE, $httpTest['name'], $webstep['name']),
 					'value_type' => ITEM_VALUE_TYPE_UINT64,
 					'units' => '',
@@ -1143,6 +1144,7 @@ class CHttpTestManager {
 					}
 
 					$updateFields['key_'] = $this->getStepKey($stepitem['type'], $httpTest['name'], $webstep['name']);
+					$updateFields['name'] = $this->getStepName($stepitem['type'], $httpTest['name'], $webstep['name']);
 				}
 				if (isset($dbKeys[$updateFields['key_']])) {
 					unset($updateFields['key_']);
@@ -1240,6 +1242,24 @@ class CHttpTestManager {
 	}
 
 	/**
+	 * Get item name for test item.
+	 *
+	 * @param int    $type        Test item type.
+	 * @param string $test_name   Test name.
+	 *
+	 * @return string
+	 */
+	protected function getTestName($type, $test_name) {
+		$names = [
+			HTTPSTEP_ITEM_TYPE_IN => 'Download speed for scenario "%1$s"',
+			HTTPSTEP_ITEM_TYPE_LASTSTEP => 'Failed step of scenario "%1$s".',
+			HTTPSTEP_ITEM_TYPE_LASTERROR => 'Last error message of scenario "%1$s".'
+		];
+
+		return array_key_exists($type, $names) ? sprintf($names[$type], $test_name) : '';
+	}
+
+	/**
 	 * Get item key for step item.
 	 *
 	 * @param int    $type
@@ -1259,6 +1279,25 @@ class CHttpTestManager {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get item name for step item.
+	 *
+	 * @param int    $type        Test item type.
+	 * @param string $test_name   Test name.
+	 * @param string $step_name   Step name.
+	 *
+	 * @return string
+	 */
+	protected function getStepName($type, $test_name, $step_name) {
+		$names = [
+			HTTPSTEP_ITEM_TYPE_RSPCODE => 'Download speed for step "%1$s" of scenario "%2$s".',
+			HTTPSTEP_ITEM_TYPE_TIME => 'Response time for step "%1$s" of scenario "%2$s".',
+			HTTPSTEP_ITEM_TYPE_IN => 'Download speed for step "%1$s" of scenario "%2$s".',
+		];
+
+		return array_key_exists($type, $names) ? sprintf($names[$type], $test_name, $step_name) : '';
 	}
 
 	/**
