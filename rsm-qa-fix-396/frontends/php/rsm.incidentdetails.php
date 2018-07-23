@@ -269,6 +269,8 @@ if ($mainEvent) {
 	}
 
 	$mainEventFromTime = $mainEvent['clock'] - $mainEvent['clock'] % $delayTime - ($failCount - 1) * $delayTime;
+	$original_main_event_from_time = $mainEventFromTime;
+	$mainEventFromTime -= (DISPLAY_CYCLES_BEFORE_RECOVERY * $delayTime);
 
 	if (getRequest('filter_set')) {
 		$fromTime = ($mainEventFromTime >= zbxDateToTime($data['filter_from']))
@@ -338,14 +340,20 @@ if ($mainEvent) {
 	);
 
 	$data['tests'] = [];
+	$printed = []; // Prevent listing of repeated tests before incident start time. This can happen right after delay is changed.
 	while ($test = DBfetch($tests)) {
-		$data['tests'][] = array(
-			'clock' => $test['clock'] - $test['clock'] % $delayTime,
-			'value' => $test['value'],
-			'startEvent' => $mainEvent['clock'] == $test['clock'] ? true : false,
-			'endEvent' => $endEvent && $endEvent['clock'] == $test['clock'] ? $endEvent['value'] : TRIGGER_VALUE_TRUE
-		);
+		if ($test['clock'] - $test['clock'] % $delayTime > $original_main_event_from_time
+				|| !array_key_exists($test['clock'] - $test['clock'] % $delayTime, $printed)) {
+			$printed[$test['clock'] - $test['clock'] % $delayTime] = true;
+			$data['tests'][] = array(
+				'clock' => $test['clock'] - $test['clock'] % $delayTime,
+				'value' => $test['value'],
+				'startEvent' => $mainEvent['clock'] == $test['clock'] ? true : false,
+				'endEvent' => $endEvent && $endEvent['clock'] == $test['clock'] ? $endEvent['value'] : TRIGGER_VALUE_TRUE
+			);
+		}
 	}
+	unset($printed);
 
 	$slvs = DBselect(
 		'SELECT h.value,h.clock'.
