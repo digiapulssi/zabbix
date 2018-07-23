@@ -1457,7 +1457,7 @@ class CLineGraphDraw extends CGraphDraw {
 			}
 			$time = $dt['sub']->format('U');
 
-			$delta_x = bcdiv(bcmul(bcsub($time, $prev_time), $this->sizeX), $this->period, 6);
+			$delta_x = bcsub($time, $prev_time) * $this->sizeX / $this->period;
 			$position += $delta_x;
 
 			// First element overlaping check.
