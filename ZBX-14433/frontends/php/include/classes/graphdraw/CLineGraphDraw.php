@@ -1250,13 +1250,11 @@ class CLineGraphDraw extends CGraphDraw {
 	 * Draw main period label in red color with 8px font size under X axis and a 2px dashed gray vertical line
 	 * according to that label.
 	 *
-	 * @param int $value		Unix time.
-	 * @param sring $format		Date time format.
-	 * @param int $position		Position on X axis.
+	 * @param string $value     Readable timestamp.
+	 * @param int    $position  Position on X axis.
 	 */
-	private function drawMainPeriod($value, $format, $position) {
-		$str = zbx_date2str($format, $value);
-		$dims = imageTextSize(8, 90, $str);
+	private function drawMainPeriod($value, $position) {
+		$dims = imageTextSize(8, 90, $value);
 
 		imageText(
 			$this->im,
@@ -1265,7 +1263,7 @@ class CLineGraphDraw extends CGraphDraw {
 			$this->shiftXleft + $position + round($dims['width'] / 2),
 			$this->sizeY + $this->shiftY + $dims['height'] + 6,
 			$this->getColor($this->graphtheme['highlightcolor'], 0),
-			$str
+			$value
 		);
 
 		dashedLine(
@@ -1282,13 +1280,11 @@ class CLineGraphDraw extends CGraphDraw {
 	 * Draw main period label in black color with 7px font size under X axis and a 1px dashed gray vertical line
 	 * according to that label.
 	 *
-	 * @param int $value		Unix time.
-	 * @param sring $format		Date time format.
-	 * @param int $position		Position on X axis.
+	 * @param strimg $value     Readable timestamp.
+	 * @param int    $position  Position on X axis.
 	 */
-	private function drawSubPeriod($value, $format, $position) {
-		$point = zbx_date2str($format, $value);
-		$element = imageTextSize(7, 90, $point);
+	private function drawSubPeriod($value, $position) {
+		$element = imageTextSize(7, 90, $value);
 
 		imageText(
 			$this->im,
@@ -1297,7 +1293,7 @@ class CLineGraphDraw extends CGraphDraw {
 			$this->shiftXleft + $position + round($element['width'] / 2),
 			$this->sizeY + $this->shiftY + $element['height'] + 6,
 			$this->getColor($this->graphtheme['textcolor'], 0),
-			$point
+			$value
 		);
 
 		dashedLine(
@@ -1454,15 +1450,14 @@ class CLineGraphDraw extends CGraphDraw {
 				$month = (int) $dt['sub']->format('m');
 
 				$draw_main = ($month != $prev_month);
-				$time =  $dt['sub']->getTimestamp();
 				$prev_month = $month;
 			}
 			else {
 				$draw_main = ($dt['main'] == $dt['sub']);
-				$time = $draw_main ? $dt['main']->getTimestamp() : $dt['sub']->getTimestamp();
 			}
+			$time = $dt['sub']->format('U');
 
-			$delta_x = ($time - $prev_time) * $this->sizeX / $this->period;
+			$delta_x = bcdiv(bcmul(bcsub($time, $prev_time), $this->sizeX), $this->period, 6);
 			$position += $delta_x;
 
 			// First element overlaping check.
@@ -1473,10 +1468,10 @@ class CLineGraphDraw extends CGraphDraw {
 				}
 
 				if ($draw_main) {
-					$this->drawMainPeriod($time, $format['main'], $position);
+					$this->drawMainPeriod($dt['sub']->format($format['main']), $position);
 				}
 				else {
-					$this->drawSubPeriod($time, $format['sub'], $position);
+					$this->drawSubPeriod($dt['sub']->format($format['sub']), $position);
 				}
 			}
 
