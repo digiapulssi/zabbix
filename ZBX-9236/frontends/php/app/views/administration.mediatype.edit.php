@@ -115,12 +115,13 @@ $mediaTypeFormList->addRow(_('GSM modem'),
 
 // create password field
 if ($data['passwd'] != '') {
+	// Disabling 'passwd' field prevents stored passwords autofill by browser.
 	$passwdField = [
-		(new CButton('chPass_btn', _('Change password')))
-			->onClick('this.style.display="none"; $("passwd").show().focus();'),
+		(new CButton('chPass_btn', _('Change password'))),
 		(new CPassBox('passwd', $data['passwd']))
 			->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			->addStyle('display: none;')
+			->setAttribute('disabled', 'disabled')
 	];
 }
 else {
