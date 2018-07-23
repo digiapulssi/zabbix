@@ -46,24 +46,24 @@ db_connect();
 if (getopt('service') eq 'dns')
 {
 	$key = 'rsm.slv.dns.avail';
-	$delay = get_macro_dns_udp_delay($from);
+	$delay = get_dns_udp_delay($from);
 }
 elsif (getopt('service') eq 'dns-ns')
 {
 	$key = 'rsm.slv.dns.ns.avail[';
-	$delay = get_macro_dns_udp_delay($from);
+	$delay = get_dns_udp_delay($from);
 }
 elsif (getopt('service') eq 'rdds')
 {
 	$service_type = 'rdds';
 	$key = 'rsm.slv.rdds.avail';
-	$delay = get_macro_rdds_delay($from);
+	$delay = get_rdds_delay($from);
 }
 elsif (getopt('service') eq 'epp')
 {
 	$service_type = 'epp';
 	$key = 'rsm.slv.epp.avail';
-	$delay = get_macro_epp_delay($from);
+	$delay = get_epp_delay($from);
 }
 else
 {

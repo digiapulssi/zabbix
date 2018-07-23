@@ -26,7 +26,7 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $delay = get_macro_rdds_delay();
+my $delay = get_rdds_delay();
 my $cfg_minonline = get_macro_rdds_probe_online();
 
 my $now = time();

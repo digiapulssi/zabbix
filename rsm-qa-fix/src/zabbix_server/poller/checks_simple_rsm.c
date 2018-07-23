@@ -5882,9 +5882,8 @@ out:
 	if (0 != ISSET_MSG(result))
 		zbx_rsm_err(log_fd, result->msg);
 
-	/* If tests are successful and we are ONLINE currently we continue being ONLINE. If     */
-	/* tests are successful and we are OFFLINE we can change to ONLINE only if successful   */
-	/* test results were received for PROBE_ONLINE_DELAY seconds. Otherwise we are OFFLINE. */
+	/* The value @online_delay controlls how many seconds must the check be successful in order */
+	/* to switch from OFFLINE to ONLINE. This is why we keep last online time in the cache.     */
 	if (ZBX_EC_PROBE_UNSUPPORTED != status)
 	{
 		ret = SYSINFO_RET_OK;

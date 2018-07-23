@@ -84,8 +84,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
-		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_macro_dns_udp_delay get_macro_dns_tcp_delay
-		get_macro_rdds_delay get_macro_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
+		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_dns_udp_delay get_dns_tcp_delay
+		get_rdds_delay get_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_item_data get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
@@ -172,7 +172,7 @@ sub get_macro_rdds_rtt_low
 	return __get_macro('{$RSM.RDDS.RTT.LOW}');
 }
 
-sub get_macro_dns_udp_delay
+sub get_dns_udp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
@@ -183,7 +183,7 @@ sub get_macro_dns_udp_delay
 	return __get_macro('{$RSM.DNS.UDP.DELAY}');
 }
 
-sub get_macro_dns_tcp_delay
+sub get_dns_tcp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
@@ -196,7 +196,7 @@ sub get_macro_dns_tcp_delay
 	return __get_macro('{$RSM.DNS.TCP.DELAY}');
 }
 
-sub get_macro_rdds_delay
+sub get_rdds_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
@@ -207,7 +207,7 @@ sub get_macro_rdds_delay
 	return __get_macro('{$RSM.RDDS.DELAY}');
 }
 
-sub get_macro_epp_delay
+sub get_epp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
@@ -1252,7 +1252,7 @@ sub probe_offline_at
 		my $till = $times_ref->[$clock_index++];
 
 		# online
-		return 0 if ($from < $clock && $clock < $till);
+		return 0 if ($from < $clock && $clock <= $till);
 	}
 
 	# offline
