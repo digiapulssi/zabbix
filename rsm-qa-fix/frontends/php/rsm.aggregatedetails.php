@@ -141,9 +141,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 	}
 
 	// Time calculation.
-	$test_time_till = $test_time_from + 59;
-	$time_from = $macro_time - 59;
-	$test_time_from -= $time_from;
+	$test_time_till = $test_time_from + $macro_time;
 
 	// Get TLD.
 	$tld = API::Host()->get([
