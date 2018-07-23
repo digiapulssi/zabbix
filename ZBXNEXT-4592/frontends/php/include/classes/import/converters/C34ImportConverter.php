@@ -68,6 +68,7 @@ class C34ImportConverter extends CConverter {
 	 */
 	protected function convertItems(array $items) {
 		$default = $this->getItemDefaultFields();
+		$items = CMacrosResolverHelper::resolveItemNameReferences($items);
 
 		foreach ($items as &$item) {
 			$item += $default;
@@ -86,6 +87,7 @@ class C34ImportConverter extends CConverter {
 	 */
 	protected function convertItemPrototypes(array $item_prototypes) {
 		$default = $this->getItemDefaultFields();
+		$item_prototypes = CMacrosResolverHelper::resolveItemNameReferences($item_prototypes);
 
 		foreach ($item_prototypes as &$item_prototype) {
 			$item_prototype['master_item'] = $item_prototype['master_item_prototype'];

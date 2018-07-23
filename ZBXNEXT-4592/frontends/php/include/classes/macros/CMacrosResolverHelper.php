@@ -443,7 +443,7 @@ class CMacrosResolverHelper {
 		foreach($items as &$item) {
 			$references = self::$macrosResolver->getMacroPositions($item['name'], ['references' => true]);
 
-			if ($item_key_parser->parse($item['key_']) == CParser::PARSE_SUCCESS) {
+			if ($item_key_parser->parse($item['key']) == CParser::PARSE_SUCCESS) {
 				$references = array_reverse($references, true);
 
 				foreach ($references as $pos => $key) {
