@@ -1292,9 +1292,9 @@ class CHttpTestManager {
 	 */
 	protected function getStepName($type, $test_name, $step_name) {
 		$names = [
-			HTTPSTEP_ITEM_TYPE_RSPCODE => 'Download speed for step "%1$s" of scenario "%2$s".',
-			HTTPSTEP_ITEM_TYPE_TIME => 'Response time for step "%1$s" of scenario "%2$s".',
-			HTTPSTEP_ITEM_TYPE_IN => 'Download speed for step "%1$s" of scenario "%2$s".',
+			HTTPSTEP_ITEM_TYPE_RSPCODE => 'Download speed for step "%2$s" of scenario "%1$s".',
+			HTTPSTEP_ITEM_TYPE_TIME => 'Response time for step "%2$s" of scenario "%1$s".',
+			HTTPSTEP_ITEM_TYPE_IN => 'Download speed for step "%2$s" of scenario "%1$s".',
 		];
 
 		return array_key_exists($type, $names) ? sprintf($names[$type], $test_name, $step_name) : '';
