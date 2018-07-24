@@ -1446,12 +1446,14 @@ abstract class CItemGeneral extends CApiService {
 	 * @throws APIException for invalid data.
 	 */
 	protected function validateDependentItems($items, $data_provider) {
-		reset($items);
+		$has_dependent = false;
 
-		do {
-			$item = current($items);
-			$has_dependent = ($item['type'] == ITEM_TYPE_DEPENDENT);
-		} while (!$has_dependent && next($items));
+		foreach($items as $item) {
+			if ($item['type'] == ITEM_TYPE_DEPENDENT) {
+				$has_dependent = true;
+				break;
+			};
+		}
 
 		if (!$has_dependent) {
 			return;
