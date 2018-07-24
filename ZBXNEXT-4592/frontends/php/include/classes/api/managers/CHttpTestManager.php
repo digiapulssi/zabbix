@@ -1244,8 +1244,8 @@ class CHttpTestManager {
 	/**
 	 * Get item name for test item.
 	 *
-	 * @param int    $type        Test item type.
-	 * @param string $test_name   Test name.
+	 * @param int    $type       HTTP test item type.
+	 * @param string $test_name  HTTP test name.
 	 *
 	 * @return string
 	 */
@@ -1284,9 +1284,9 @@ class CHttpTestManager {
 	/**
 	 * Get item name for step item.
 	 *
-	 * @param int    $type        Test item type.
-	 * @param string $test_name   Test name.
-	 * @param string $step_name   Step name.
+	 * @param int    $type       HTTP test item type.
+	 * @param string $test_name  HTTP test name.
+	 * @param string $step_name  HTTP step name.
 	 *
 	 * @return string
 	 */
@@ -1294,7 +1294,7 @@ class CHttpTestManager {
 		$names = [
 			HTTPSTEP_ITEM_TYPE_RSPCODE => 'Download speed for step "%2$s" of scenario "%1$s".',
 			HTTPSTEP_ITEM_TYPE_TIME => 'Response time for step "%2$s" of scenario "%1$s".',
-			HTTPSTEP_ITEM_TYPE_IN => 'Download speed for step "%2$s" of scenario "%1$s".',
+			HTTPSTEP_ITEM_TYPE_IN => 'Download speed for step "%2$s" of scenario "%1$s".'
 		];
 
 		return array_key_exists($type, $names) ? sprintf($names[$type], $test_name, $step_name) : '';
