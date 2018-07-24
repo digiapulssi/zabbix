@@ -50,72 +50,72 @@ if (opt('till'))
 if (getopt('service') eq 'tcp-dns-rtt')
 {
 	$key = 'rsm.dns.tcp.rtt[{$RSM.TLD},';
-	$delay = get_macro_dns_tcp_delay();
+	$delay = get_dns_tcp_delay();
 	$service = 'DNS';
 	$proto = PROTO_TCP;
 }
 elsif (getopt('service') eq 'udp-dns-rtt')
 {
 	$key = 'rsm.dns.udp.rtt[{$RSM.TLD},';
-	$delay = get_macro_dns_udp_delay();
+	$delay = get_dns_udp_delay();
 	$service = 'DNS';
 	$proto = PROTO_UDP;
 }
 elsif (getopt('service') eq 'dns-upd')
 {
 	$key = 'rsm.dns.udp.upd[{$RSM.TLD},';
-	$delay = get_macro_dns_udp_delay();
+	$delay = get_dns_udp_delay();
 	$service = 'EPP';
 }
 elsif (getopt('service') eq 'rdds43-rtt')
 {
 	$key = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
-	$delay = get_macro_rdds_delay();
+	$delay = get_rdds_delay();
 	$service = 'RDDS';
 }
 elsif (getopt('service') eq 'rdds80-rtt')
 {
 	$key = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
-	$delay = get_macro_rdds_delay();
+	$delay = get_rdds_delay();
 	$service = 'RDDS';
 }
 elsif (getopt('service') eq 'rdap-rtt')
 {
 	$key = 'rsm.rdds.rdap.rtt[{$RSM.TLD}]';
-	$delay = get_macro_rdds_delay();
+	$delay = get_rdds_delay();
 	$service = 'RDDS';
 }
 elsif (getopt('service') eq 'rdds43-upd')
 {
 	$key = 'rsm.rdds.43.upd[{$RSM.TLD}]';
-	$delay = get_macro_rdds_delay();
+	$delay = get_rdds_delay();
 	$service = 'RDDS';
 }
 elsif (getopt('service') eq 'rdap-upd')
 {
 	$key = 'rsm.rdds.rdap.upd[{$RSM.TLD}]';
-	$delay = get_macro_rdds_delay();
+	$delay = get_rdds_delay();
 	$service = 'RDDS';
 }
 elsif (getopt('service') eq 'epp-login-rtt')
 {
 	$command = 'login';
 	$key = 'rsm.epp.rtt[{$RSM.TLD},' . $command . ']';
-	$delay = get_macro_epp_delay();
+	$delay = get_epp_delay();
 	$service = 'EPP';
 }
 elsif (getopt('service') eq 'epp-info-rtt')
 {
 	$command = 'info';
 	$key = 'rsm.epp.rtt[{$RSM.TLD},' . $command . ']';
-	$delay = get_macro_epp_delay();
+	$delay = get_epp_delay();
 	$service = 'EPP';
 }
 elsif (getopt('service') eq 'epp-update-rtt')
 {
 	$command = 'update';
 	$key = 'rsm.epp.rtt[{$RSM.TLD},' . $command . ']';
-	$delay = get_macro_epp_delay();
+	$delay = get_epp_delay();
 	$service = 'EPP';
 }
 else

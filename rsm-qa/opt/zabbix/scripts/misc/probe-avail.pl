@@ -61,7 +61,7 @@ foreach my $service (keys(%services))
 	{
 		if (!$cfg_dns_delay)
 		{
-			$cfg_dns_delay = get_macro_dns_udp_delay();
+			$cfg_dns_delay = get_dns_udp_delay();
 			$cfg_dns_valuemaps = get_valuemaps('dns');
 		}
 
@@ -73,7 +73,7 @@ foreach my $service (keys(%services))
 
 	if ($service eq 'rdds')
 	{
-		$services{$service}{'delay'} = get_macro_rdds_delay();
+		$services{$service}{'delay'} = get_rdds_delay();
 		$services{$service}{'valuemaps'} = get_valuemaps($service);
 		$services{$service}{'key_status'} = 'rsm.rdds[{$RSM.TLD}'; # 0 - down, 1 - up, 2 - only 43, 3 - only 80
 		$services{$service}{'key_43_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
@@ -86,7 +86,7 @@ foreach my $service (keys(%services))
 
 	if ($service eq 'epp')
 	{
-		$services{$service}{'delay'} = get_macro_epp_delay();
+		$services{$service}{'delay'} = get_epp_delay();
 		$services{$service}{'valuemaps'} = get_valuemaps($service);
 		$services{$service}{'key_status'} = 'rsm.epp[{$RSM.TLD},'; # 0 - down, 1 - up
 		$services{$service}{'key_ip'} = 'rsm.epp.ip[{$RSM.TLD}]';

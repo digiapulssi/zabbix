@@ -422,22 +422,22 @@ sub __get_delays
 		{
 			if (!$cfg_dns_delay)
 			{
-				$cfg_dns_delay = get_macro_dns_udp_delay();
+				$cfg_dns_delay = get_dns_udp_delay();
 			}
 
 			$services->{$service}->{'delay'} = $cfg_dns_delay;
 		}
 		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
 		{
-			$services->{$service}->{'delay'} = get_macro_dns_tcp_delay();
+			$services->{$service}->{'delay'} = get_dns_tcp_delay();
 		}
 		elsif ($service eq 'rdds')
 		{
-			$services->{$service}->{'delay'} = get_macro_rdds_delay();
+			$services->{$service}->{'delay'} = get_rdds_delay();
 		}
 		elsif ($service eq 'epp')
 		{
-			$services->{$service}->{'delay'} = get_macro_epp_delay();
+			$services->{$service}->{'delay'} = get_epp_delay();
 		}
 
 		fail("$service delay (", $services->{$service}->{'delay'}, ") is not multiple of 60") unless ($services->{$service}->{'delay'} % 60 == 0);
@@ -539,7 +539,7 @@ sub __get_test_data
 	{
 		if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
 		{
-			next if (tld_service_enabled($tld, $service, $from, $till) != SUCCESS);
+			next if (!tld_service_enabled($tld, $service, $from, $till));
 		}
 
 		my $delay = $services->{$service}->{'delay'};

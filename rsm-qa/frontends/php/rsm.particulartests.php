@@ -151,9 +151,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	}
 
 	// time calculation
-	$testTimeTill = $testTimeFrom + 59;
-	$timeFrom = $macroTime - 59;
-	$testTimeFrom -= $timeFrom;
+	$testTimeTill = $testTimeFrom + $macroTime;
 
 	// get TLD
 	$tld = API::Host()->get([
@@ -339,23 +337,46 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				}
 			}
 
-			$history_values = API::History()->get([
-				'output' => API_OUTPUT_EXTEND,
-				'itemids' => array_values($_enabled_item_map),
-				'time_from' => $testTimeFrom,
-				'time_till' => $testTimeTill,
-				'limit' => 2
-			]);
+			foreach ($_enabled_item_map as $_enabled_item => $_enabled_itemid) {
+				if ($_enabled_itemid !== null) {
+					$history_value = API::History()->get([
+						'output' => API_OUTPUT_EXTEND,
+						'itemids' => $_enabled_itemid,
+						'time_from' => $testTimeFrom,
+						'time_till' => $testTimeTill
+					]);
 
-			// Overwrite selected historical values over macros values selected before.
-			foreach ($history_values as $history_value) {
-				switch ($history_value['itemid']) {
-					case $_enabled_item_map[RDDS_ENABLED]:
-						$data['tld']['macros'][RSM_TLD_RDDS_ENABLED] = $history_value['value'];
-						break;
-					case $_enabled_item_map[RDAP_ENABLED]:
-						$data['tld']['macros'][RSM_RDAP_TLD_ENABLED] = $history_value['value'];
-						break;
+					/**
+					 * This is workaround to find that at least one value in given period had value set to 1.
+					 *
+					 * This is needed because originally system was designed to store historical value each minute and
+					 * also test cycles matched to one per minute.
+					 *
+					 * Later, at some point it was changed and now, difference between $testTimeFrom and $testTimeTill
+					 * can be longer, although tests are still run each minute.
+					 *
+					 * Workaround looks at all historical values stored at period between $testTimeFrom and $testTimeTill
+					 * and assumes that service was enabled whole cycle if at least in one minute it was enabled.
+					 *
+					 * Example:
+					 * Historically RDDS_ENABLED is collected each minute. Historically test cycle was minute long.
+					 * Now test cycle is 5 minutes long during which RDDS_ENABLED can be both enabled and disabled. So,
+					 * with this workaround we consider it as enabled if at least one minute it was enabled or disabled
+					 * if all 5 minutes it was disabled.
+					 */
+					$history_value[0]['value'] = (array_sum(zbx_objectValues($history_value, 'value')) > 0) ? 1 : 0;
+					$history_value = $history_value[0];
+
+					if ($history_value) {
+						switch ($history_value['itemid']) {
+							case $_enabled_item_map[RDDS_ENABLED]:
+								$data['tld']['macros'][RSM_TLD_RDDS_ENABLED] = $history_value['value'];
+								break;
+							case $_enabled_item_map[RDAP_ENABLED]:
+								$data['tld']['macros'][RSM_RDAP_TLD_ENABLED] = $history_value['value'];
+								break;
+						}
+					}
 				}
 			}
 		}

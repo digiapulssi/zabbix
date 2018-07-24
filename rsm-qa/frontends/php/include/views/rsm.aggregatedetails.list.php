@@ -103,51 +103,53 @@ foreach ($data['probes'] as $probe) {
 		$probe['udp_ns_down']
 	];
 
-	foreach ($data['dns_udp_nameservers'] as $dns_udp_ns => $ipvs) {
-		if (array_key_exists($dns_udp_ns, $probe['results_udp'])) {
-			if (array_key_exists('status', $probe['results_udp'][$dns_udp_ns])) {
-				$row[] = ($probe['results_udp'][$dns_udp_ns]['status'] == NAMESERVER_DOWN) ? $down : $up;
-			}
-			else {
-				$row[] = '-';
-			}
+	if (array_key_exists('dns_udp_nameservers', $data)) {
+		foreach ($data['dns_udp_nameservers'] as $dns_udp_ns => $ipvs) {
+			if (array_key_exists($dns_udp_ns, $probe['results_udp'])) {
+				if (array_key_exists('status', $probe['results_udp'][$dns_udp_ns])) {
+					$row[] = ($probe['results_udp'][$dns_udp_ns]['status'] == NAMESERVER_DOWN) ? $down : $up;
+				}
+				else {
+					$row[] = '-';
+				}
 
-			foreach (['ipv4', 'ipv6'] as $ipv) {
-				if (array_key_exists($ipv, $probe['results_udp'][$dns_udp_ns])) {
-					foreach (array_keys($ipvs[$ipv]) as $ip) {
-						if (array_key_exists($ip, $probe['results_udp'][$dns_udp_ns][$ipv])) {
-							$result = $probe['results_udp'][$dns_udp_ns][$ipv][$ip];
-							$is_dns_error = isDNSErrorCode($result, $data['type']);
+				foreach (['ipv4', 'ipv6'] as $ipv) {
+					if (array_key_exists($ipv, $probe['results_udp'][$dns_udp_ns])) {
+						foreach (array_keys($ipvs[$ipv]) as $ip) {
+							if (array_key_exists($ip, $probe['results_udp'][$dns_udp_ns][$ipv])) {
+								$result = $probe['results_udp'][$dns_udp_ns][$ipv][$ip];
+								$is_dns_error = isDNSErrorCode($result, $data['type']);
 
-							if ($result == 0) {
-								$row[] = '-';
-							}
-							elseif (0 > $result) {
-								$row[] = (new CSpan($result))
-									->setHint($data['error_msgs'][$result])
-									->setAttribute('class', $is_dns_error ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
-							}
-							elseif ($data['type'] == RSM_DNS && $result > $data['udp_rtt']) {
-								$row[] = (new CSpan($result))
-									->setAttribute('class', ZBX_STYLE_RED);
+								if ($result == 0) {
+									$row[] = '-';
+								}
+								elseif (0 > $result) {
+									$row[] = (new CSpan($result))
+										->setHint($data['error_msgs'][$result])
+										->setAttribute('class', $is_dns_error ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
+								}
+								elseif ($data['type'] == RSM_DNS && $result > $data['udp_rtt']) {
+									$row[] = (new CSpan($result))
+										->setAttribute('class', ZBX_STYLE_RED);
+								}
+								else {
+									$row[] = (new CSpan($result))
+										->setAttribute('class', ZBX_STYLE_GREEN);
+								}
 							}
 							else {
-								$row[] = (new CSpan($result))
-									->setAttribute('class', ZBX_STYLE_GREEN);
+								$row[] = '-';
 							}
-						}
-						else {
-							$row[] = '-';
 						}
 					}
 				}
 			}
-		}
-		else {
-			$cell_cnt = 1;
-			$cell_cnt += array_key_exists('ipv4', $ipv) ? count($ipv['ipv4']) : 0;
-			$cell_cnt += array_key_exists('ipv6', $ipv) ? count($ipv['ipv6']) : 0;
-			$row[] = (new CTag('td', true, '-'))->setAttribute('colspan', $cell_cnt);
+			else {
+				$cell_cnt = 1;
+				$cell_cnt += array_key_exists('ipv4', $ipv) ? count($ipv['ipv4']) : 0;
+				$cell_cnt += array_key_exists('ipv6', $ipv) ? count($ipv['ipv6']) : 0;
+				$row[] = (new CTag('td', true, '-'))->setAttribute('colspan', $cell_cnt);
+			}
 		}
 	}
 
@@ -159,20 +161,22 @@ foreach ($data['errors'] as $error_code => $errors) {
 	$row = [(new CSpan(_('Total ') . $error_code))->setHint($data['error_msgs'][$error_code]), '', '', ''];
 
 	// Add number of error cells.
-	foreach ($data['dns_udp_nameservers'] as $ns_name => $ns_ips) {
-		$row[] = '';
+	if (array_key_exists('dns_udp_nameservers', $data)) {
+		foreach ($data['dns_udp_nameservers'] as $ns_name => $ns_ips) {
+			$row[] = '';
 
-		if (array_key_exists('ipv4', $ns_ips)) {
-			foreach (array_keys($ns_ips['ipv4']) as $ip) {
-				$error_key = 'udp_'.$ns_name.'_ipv4_'.$ip;
-				$row[] = array_key_exists($error_key, $errors) ? $errors[$error_key] : '';
+			if (array_key_exists('ipv4', $ns_ips)) {
+				foreach (array_keys($ns_ips['ipv4']) as $ip) {
+					$error_key = 'udp_'.$ns_name.'_ipv4_'.$ip;
+					$row[] = array_key_exists($error_key, $errors) ? $errors[$error_key] : '';
+				}
 			}
-		}
 
-		if (array_key_exists('ipv6', $ns_ips)) {
-			foreach (array_keys($ns_ips['ipv6']) as $ip) {
-				$error_key = 'udp_'.$ns_name.'_ipv6_'.$ip;
-				$row[] = array_key_exists($error_key, $errors) ? $errors[$error_key] : '';
+			if (array_key_exists('ipv6', $ns_ips)) {
+				foreach (array_keys($ns_ips['ipv6']) as $ip) {
+					$error_key = 'udp_'.$ns_name.'_ipv6_'.$ip;
+					$row[] = array_key_exists($error_key, $errors) ? $errors[$error_key] : '';
+				}
 			}
 		}
 	}
@@ -183,20 +187,22 @@ foreach ($data['errors'] as $error_code => $errors) {
 	// Add 'Total above max rtt' row:
 if ($data['type'] == RSM_DNS) {
 	$row = [_('Total above max. RTT'), '', '', ''];
-	foreach ($data['dns_udp_nameservers'] as $ns_name => $ns_ips) {
-		$row[] = '';
+	if (array_key_exists('dns_udp_nameservers', $data)) {
+		foreach ($data['dns_udp_nameservers'] as $ns_name => $ns_ips) {
+			$row[] = '';
 
-		if (array_key_exists('ipv4', $ns_ips)) {
-			foreach (array_keys($ns_ips['ipv4']) as $ipv => $ip) {
-				$error_key = 'udp_'.$ns_name.'_ipv4_'.$ip;
-				$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '0';
+			if (array_key_exists('ipv4', $ns_ips)) {
+				foreach (array_keys($ns_ips['ipv4']) as $ipv => $ip) {
+					$error_key = 'udp_'.$ns_name.'_ipv4_'.$ip;
+					$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '0';
+				}
 			}
-		}
 
-		if (array_key_exists('ipv6', $ns_ips)) {
-			foreach (array_keys($ns_ips['ipv6']) as $ipv => $ip) {
-				$error_key = 'udp_'.$ns_name.'_ipv6_'.$ip;
-				$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '0';
+			if (array_key_exists('ipv6', $ns_ips)) {
+				foreach (array_keys($ns_ips['ipv6']) as $ipv => $ip) {
+					$error_key = 'udp_'.$ns_name.'_ipv6_'.$ip;
+					$row[] = array_key_exists($error_key, $data['probes_above_max_rtt']) ? $data['probes_above_max_rtt'][$error_key] : '0';
+				}
 			}
 		}
 	}

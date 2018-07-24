@@ -121,54 +121,6 @@ my $cfg_dns_valuemaps;
 # todo phase 1: changed from get_statusmaps('dns')
 my $cfg_avail_valuemaps = get_avail_valuemaps();
 
-foreach my $service (keys(%services))
-{
-	if ($service eq 'dns' || $service eq 'dnssec')
-	{
-		if (!$cfg_dns_delay)
-		{
-			$cfg_dns_delay = get_macro_dns_udp_delay();
-			$cfg_dns_minns = get_macro_minns();
-			$cfg_dns_valuemaps = get_valuemaps('dns');
-		}
-
-		$services{$service}{'delay'} = $cfg_dns_delay;
-		$services{$service}{'minns'} = $cfg_dns_minns;
-		$services{$service}{'valuemaps'} = $cfg_dns_valuemaps;
-		$services{$service}{'key_statuses'} = ['rsm.dns.udp[{$RSM.TLD}]']; # 0 - down, 1 - up
-		$services{$service}{'key_rtt'} = 'rsm.dns.udp.rtt[{$RSM.TLD},';
-	}
-	elsif ($service eq 'rdds')
-	{
-		$services{$service}{'delay'} = get_macro_rdds_delay();
-		$services{$service}{'key_statuses'} = ['rsm.rdds[{$RSM.TLD}', 'rdap['];
-
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'} = get_valuemaps('rdds');
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
-
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'valuemaps'} = $services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'};
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
-
-		$services{$service}{+JSON_INTERFACE_RDAP}{'valuemaps'} = get_valuemaps('rdap');
-		$services{$service}{+JSON_INTERFACE_RDAP}{'key_rtt'} = 'rdap.rtt';
-		$services{$service}{+JSON_INTERFACE_RDAP}{'key_ip'} = 'rdap.ip';
-	}
-	elsif ($service eq 'epp')
-	{
-		$services{$service}{'delay'} = get_macro_epp_delay();
-		$services{$service}{'valuemaps'} = get_valuemaps($service);
-		$services{$service}{'key_statuses'} = ['rsm.epp[{$RSM.TLD},']; # 0 - down, 1 - up
-		$services{$service}{'key_ip'} = 'rsm.epp.ip[{$RSM.TLD}]';
-		$services{$service}{'key_rtt'} = 'rsm.epp.rtt[{$RSM.TLD},';
-	}
-
-	$services{$service}{'avail_key'} = "rsm.slv.$service.avail";
-	$services{$service}{'rollweek_key'} = "rsm.slv.$service.rollweek";
-}
-
 my $now = time();
 
 # in order to make sure all data is saved in Zabbix we move 1 minute back
@@ -268,6 +220,54 @@ if ($check_till > $max_till)
 	wrn(sprintf("the specified period (%s) is in the future, please wait for %s", selected_period($check_from, $check_till), $left_str));
 
 	slv_exit(SUCCESS);
+}
+
+foreach my $service (keys(%services))
+{
+	if ($service eq 'dns' || $service eq 'dnssec')
+	{
+		if (!$cfg_dns_delay)
+		{
+			$cfg_dns_delay = get_dns_udp_delay($check_from);
+			$cfg_dns_minns = get_macro_minns();
+			$cfg_dns_valuemaps = get_valuemaps('dns');
+		}
+
+		$services{$service}{'delay'} = $cfg_dns_delay;
+		$services{$service}{'minns'} = $cfg_dns_minns;
+		$services{$service}{'valuemaps'} = $cfg_dns_valuemaps;
+		$services{$service}{'key_statuses'} = ['rsm.dns.udp[{$RSM.TLD}]']; # 0 - down, 1 - up
+		$services{$service}{'key_rtt'} = 'rsm.dns.udp.rtt[{$RSM.TLD},';
+	}
+	elsif ($service eq 'rdds')
+	{
+		$services{$service}{'delay'} = get_rdds_delay($check_from);
+		$services{$service}{'key_statuses'} = ['rsm.rdds[{$RSM.TLD}', 'rdap['];
+
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'} = get_valuemaps('rdds');
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
+
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'valuemaps'} = $services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'};
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+
+		$services{$service}{+JSON_INTERFACE_RDAP}{'valuemaps'} = get_valuemaps('rdap');
+		$services{$service}{+JSON_INTERFACE_RDAP}{'key_rtt'} = 'rdap.rtt';
+		$services{$service}{+JSON_INTERFACE_RDAP}{'key_ip'} = 'rdap.ip';
+	}
+	elsif ($service eq 'epp')
+	{
+		$services{$service}{'delay'} = get_epp_delay($check_from);
+		$services{$service}{'valuemaps'} = get_valuemaps($service);
+		$services{$service}{'key_statuses'} = ['rsm.epp[{$RSM.TLD},']; # 0 - down, 1 - up
+		$services{$service}{'key_ip'} = 'rsm.epp.ip[{$RSM.TLD}]';
+		$services{$service}{'key_rtt'} = 'rsm.epp.rtt[{$RSM.TLD},';
+	}
+
+	$services{$service}{'avail_key'} = "rsm.slv.$service.avail";
+	$services{$service}{'rollweek_key'} = "rsm.slv.$service.rollweek";
 }
 
 my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 1);	# consider last cycle
@@ -691,6 +691,7 @@ foreach (@server_keys)
 					my $event_start = $incident->{'start'};
 					my $event_end = $incident->{'end'};
 					my $false_positive = $incident->{'false_positive'};
+					my $event_clock = $incident->{'event_clock'};
 
 					my $start = (defined($service_from) && ($service_from > $event_start) ?
 							$service_from : $event_start);
@@ -758,8 +759,8 @@ foreach (@server_keys)
 						#   |.....................................|...................................|
 						#   0 seconds <--zero or more minutes--> 30                                  59
 						#
-						$result->{'start'} = $clock - $delay + RESULT_TIMESTAMP_SHIFT + 1; # we need to start at 0
-						$result->{'end'} = $clock + RESULT_TIMESTAMP_SHIFT;
+						$result->{'start'} = cycle_start($clock, $delay);
+						$result->{'end'} = cycle_end($clock, $delay);
 
 						if (opt('dry-run'))
 						{
@@ -801,7 +802,7 @@ foreach (@server_keys)
 					}
 					else
 					{
-						if (ah_save_incident($ah_tld, $service, $eventid, $event_start, $event_end, $false_positive, $lastclock) != AH_SUCCESS)
+						if (ah_save_incident($ah_tld, $service, $eventid, $event_clock, $event_start, $event_end, $false_positive, $lastclock) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
@@ -949,7 +950,7 @@ foreach (@server_keys)
 							}
 							else
 							{
-								if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+								if (ah_save_measurement($ah_tld, $service, $eventid, $event_clock, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
 								{
 									fail("cannot save incident: ", ah_get_error());
 								}
@@ -1121,7 +1122,7 @@ foreach (@server_keys)
 							}
 							else
 							{
-								if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+								if (ah_save_measurement($ah_tld, $service, $eventid, $event_clock, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
 								{
 									fail("cannot save incident: ", ah_get_error());
 								}

@@ -33,9 +33,9 @@ my $till = getopt('till');
 my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($from, $till);
 
 my $delays = {
-	'dns'	=> get_macro_dns_udp_delay(),
-	'rdds'	=> get_macro_rdds_delay(),
-	'epp'	=> get_macro_epp_delay()
+	'dns'	=> get_dns_udp_delay(),
+	'rdds'	=> get_rdds_delay(),
+	'epp'	=> get_epp_delay()
 };
 
 foreach (@$tlds_ref)

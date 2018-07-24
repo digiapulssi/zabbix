@@ -25,7 +25,7 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $delay = get_macro_dns_udp_delay();
+my $delay = get_dns_udp_delay();
 my $cfg_minonline = get_macro_dns_probe_online();
 
 my $cfg_minns = get_macro_minns();

@@ -1,3 +1,15 @@
+Changes for rsm1.1.0rc23
+
+Bug fixes:
+....I..... [401] fixed falsePositive file generation for SLA API (yurii)
+....I..... [404] fixed undefined method error in Data Export script (dimir)
+..F....... [403] fixed time range calculation in incident and aggregate details pages (miks)
+....I..... [400] fixed probe ONLINE status calculation in SLA API (dimir)
+..F....... [396] added N tests to be listed before incident; prevented repeated test listing before incident start event (miks)
+..F....... [405] fixed error displaying when all TLDs are disabled for details of particular test (miks)
+..F....... [402] fixed historical configuration value selection when time range is larger than 60 seconds (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc22
 
 Bug fixes:
