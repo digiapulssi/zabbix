@@ -1689,6 +1689,7 @@ sub __make_incident
 
 	$h{'eventid'} = shift;
 	$h{'false_positive'} = shift;
+	$h{'event_clock'} = shift;
 	$h{'start'} = shift;
 	$h{'end'} = shift;
 
@@ -1818,7 +1819,7 @@ sub get_incidents
 			# do not add 'value=TRIGGER_VALUE_TRUE' to SQL above just for corner case of 2 events at the same second
 			if ($value == TRIGGER_VALUE_TRUE)
 			{
-				push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
+				push(@incidents, __make_incident($eventid, $false_positive, $clock, cycle_start($clock, $delay)));
 
 				$last_trigger_value = TRIGGER_VALUE_TRUE;
 			}
@@ -1863,6 +1864,7 @@ sub get_incidents
 				$incidents[$idx]->{'eventid'} = $eventid;
 				$incidents[$idx]->{'false_positive'} = $false_positive;
 				$incidents[$idx]->{'start'} = cycle_start($clock, $delay);
+				$incidents[$idx]->{'event_clock'} = $clock;
 			}
 		}
 
@@ -1878,7 +1880,7 @@ sub get_incidents
 		else
 		{
 			# event that starts an incident
-			push(@incidents, __make_incident($eventid, $false_positive, cycle_start($clock, $delay)));
+			push(@incidents, __make_incident($eventid, $false_positive, $clock, cycle_start($clock, $delay)));
 		}
 
 		$last_trigger_value = $value;
@@ -1918,7 +1920,7 @@ sub get_downtime
 	my $incidents;
 	if ($ignore_incidents)
 	{
-		push(@$incidents, __make_incident(0, 0, $from, $till));
+		push(@$incidents, __make_incident(0, 0, 0, $from, $till));
 	}
 	elsif ($incidents_ref)
 	{

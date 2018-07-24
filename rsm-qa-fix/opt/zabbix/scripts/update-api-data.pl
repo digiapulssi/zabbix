@@ -691,6 +691,7 @@ foreach (@server_keys)
 					my $event_start = $incident->{'start'};
 					my $event_end = $incident->{'end'};
 					my $false_positive = $incident->{'false_positive'};
+					my $event_clock = $incident->{'event_clock'};
 
 					my $start = (defined($service_from) && ($service_from > $event_start) ?
 							$service_from : $event_start);
@@ -801,7 +802,7 @@ foreach (@server_keys)
 					}
 					else
 					{
-						if (ah_save_incident($ah_tld, $service, $eventid, $event_start, $event_end, $false_positive, $lastclock) != AH_SUCCESS)
+						if (ah_save_incident($ah_tld, $service, $eventid, $event_clock, $event_start, $event_end, $false_positive, $lastclock) != AH_SUCCESS)
 						{
 							fail("cannot save incident: ", ah_get_error());
 						}
@@ -949,7 +950,7 @@ foreach (@server_keys)
 							}
 							else
 							{
-								if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+								if (ah_save_measurement($ah_tld, $service, $eventid, $event_clock, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
 								{
 									fail("cannot save incident: ", ah_get_error());
 								}
@@ -1121,7 +1122,7 @@ foreach (@server_keys)
 							}
 							else
 							{
-								if (ah_save_measurement($ah_tld, $service, $eventid, $event_start, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
+								if (ah_save_measurement($ah_tld, $service, $eventid, $event_clock, $tr_ref, $tr_ref->{'cycleCalculationDateTime'}) != AH_SUCCESS)
 								{
 									fail("cannot save incident: ", ah_get_error());
 								}

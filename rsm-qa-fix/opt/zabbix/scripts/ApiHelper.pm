@@ -321,6 +321,7 @@ sub ah_save_incident
 	my $tld = shift;
 	my $service = shift;
 	my $eventid = shift;	# incident is identified by event ID
+	my $event_clock = shift;
 	my $start = shift;
 	my $end = shift;
 	my $false_positive = shift;
@@ -328,7 +329,7 @@ sub ah_save_incident
 
 	my $inc_path;
 
-	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path) == AH_SUCCESS);
+	return AH_FAIL unless (__make_inc_path($tld, $service, $event_clock, $eventid, \$inc_path) == AH_SUCCESS);
 
 	my $json = {'incidents' => [ah_create_incident_json($eventid, $start, $end, $false_positive)]};
 
