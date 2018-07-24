@@ -1445,7 +1445,7 @@ abstract class CItemGeneral extends CApiService {
 	 *
 	 * @throws APIException for invalid data.
 	 */
-	protected function validateDependentItems($items, $data_provider) {
+	protected function validateDependentItems($items) {
 		$has_dependent = false;
 
 		foreach($items as $item) {
@@ -1471,7 +1471,7 @@ abstract class CItemGeneral extends CApiService {
 		$has_unresolved_masters = false;
 
 		if ($items_cache) {
-			$db_items = $data_provider->get([
+			$db_items = $this->get([
 				'output' => ['itemid', 'type', 'name', 'hostid', 'master_itemid'],
 				'itemids' => array_keys($items_cache),
 				'preservekeys' => true
@@ -1489,11 +1489,11 @@ abstract class CItemGeneral extends CApiService {
 					'itemids' => array_keys($unresolved_master_itemids)
 				];
 
-				if ($data_provider instanceof CItem) {
+				if ($this instanceof CItem) {
 					$options['webitems'] = true;
 				}
 
-				$db_masters = $data_provider->get($options);
+				$db_masters = $this->get($options);
 
 				foreach ($db_masters as $db_master) {
 					$items_cache[$db_master['itemid']] = $db_master;

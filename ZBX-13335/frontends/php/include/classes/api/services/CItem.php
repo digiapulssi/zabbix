@@ -412,11 +412,11 @@ class CItem extends CItemGeneral {
 			unset($item['itemid']);
 		}
 		unset($item);
-		$this->validateDependentItems($items, API::Item());
+		$this->validateDependentItems($items);
 
 		$this->createReal($items);
 		$host_items = $this->inherit($items);
-		$this->validateDependentItems($host_items, $this);
+		$this->validateDependentItems($host_items);
 
 		return ['itemids' => zbx_objectValues($items, 'itemid')];
 	}
@@ -516,11 +516,11 @@ class CItem extends CItemGeneral {
 
 		parent::checkInput($items, true);
 		self::validateInventoryLinks($items, true);
-		$this->validateDependentItems($items, API::Item());
+		$this->validateDependentItems($items);
 
 		$this->updateReal($items);
 		$host_items = $this->inherit($items);
-		$this->validateDependentItems($host_items, $this);
+		$this->validateDependentItems($host_items);
 
 		return ['itemids' => zbx_objectValues($items, 'itemid')];
 	}
@@ -696,7 +696,7 @@ class CItem extends CItemGeneral {
 		unset($tpl_item);
 
 		$host_items = $this->inherit($tpl_items, $data['hostids']);
-		$this->validateDependentItems($host_items, $this);
+		$this->validateDependentItems($host_items);
 
 		return true;
 	}

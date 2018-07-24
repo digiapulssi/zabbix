@@ -341,11 +341,11 @@ class CItemPrototype extends CItemGeneral {
 		foreach ($items as &$item) {
 			unset($item['itemid']);
 		}
-		$this->validateDependentItems($items, API::ItemPrototype());
+		$this->validateDependentItems($items);
 
 		$this->createReal($items);
 		$host_itemprototypes = $this->inherit($items);
-		$this->validateDependentItems($host_itemprototypes, $this);
+		$this->validateDependentItems($host_itemprototypes);
 
 		return ['itemids' => zbx_objectValues($items, 'itemid')];
 	}
@@ -683,11 +683,11 @@ class CItemPrototype extends CItemGeneral {
 		$items = zbx_toArray($items);
 
 		$this->checkInput($items, true);
-		$this->validateDependentItems($items, API::ItemPrototype());
+		$this->validateDependentItems($items);
 
 		$this->updateReal($items);
 		$host_itemprototypes = $this->inherit($items);
-		$this->validateDependentItems($host_itemprototypes, $this);
+		$this->validateDependentItems($host_itemprototypes);
 
 		return ['itemids' => zbx_objectValues($items, 'itemid')];
 	}
@@ -926,7 +926,7 @@ class CItemPrototype extends CItemGeneral {
 		unset($tpl_item);
 
 		$host_itemprototypes = $this->inherit($tpl_items, $data['hostids']);
-		$this->validateDependentItems($host_itemprototypes, $this);
+		$this->validateDependentItems($host_itemprototypes);
 
 		return true;
 	}
