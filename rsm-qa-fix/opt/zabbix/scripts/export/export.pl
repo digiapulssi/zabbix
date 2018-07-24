@@ -539,7 +539,7 @@ sub __get_test_data
 	{
 		if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
 		{
-			next if (tld_service_enabled($tld, $service, $from, $till) != SUCCESS);
+			next if (!tld_service_enabled($tld, $service, $from, $till));
 		}
 
 		my $delay = $services->{$service}->{'delay'};
