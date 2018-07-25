@@ -528,8 +528,9 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		while ($item = DBfetch($items)) {
 			$itemValue = API::History()->get([
 				'itemids' => $item['itemid'],
-				'time_from' => $testTimeFrom,
-				'time_till' => $testTimeTill,
+				// See ICA-403.
+				'time_from' => ($data['type'] == RSM_RDDS) ? $testTimeFrom - $macroTime + 59 : $testTimeFrom,
+				'time_till' => ($data['type'] == RSM_RDDS) ? $testTimeFrom + 59 : $testTimeTill,
 				'history' => $item['value_type'],
 				'output' => API_OUTPUT_EXTEND
 			]);

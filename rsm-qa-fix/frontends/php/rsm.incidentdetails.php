@@ -369,7 +369,9 @@ if ($mainEvent) {
 		while ($slv) {
 			$latest = $slv;
 
-			if (!($slv = DBfetch($slvs)) || $slv['clock'] > $test['clock'] + $delayTime) {
+			// See ICA-403.
+			if (($data['type'] == RSM_RDDS && (!($slv = DBfetch($slvs)) || $slv['clock'] > $test['clock']))
+					|| ($data['type'] != RSM_RDDS && (!($slv = DBfetch($slvs)) || $slv['clock'] > $test['clock'] + $delayTime))) {
 				$test['slv'] = sprintf('%.3f', $latest['value']);
 				break;
 			}
