@@ -109,6 +109,7 @@ class C34ImportConverter extends CConverter {
 	 */
 	protected function convertDiscoveryRules(array $discovery_rules) {
 		$default = $this->getDiscoveryRuleDefaultFields();
+		$discovery_rules = CMacrosResolverHelper::resolveItemNameReferences($discovery_rules);
 
 		foreach ($discovery_rules as &$discovery_rule) {
 			$discovery_rule['item_prototypes'] = $this->convertItemPrototypes($discovery_rule['item_prototypes']);
