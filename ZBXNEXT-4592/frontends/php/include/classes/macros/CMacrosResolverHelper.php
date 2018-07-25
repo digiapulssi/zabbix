@@ -441,9 +441,15 @@ class CMacrosResolverHelper {
 		$item_key_parser = new CItemKey();
 
 		foreach($items as &$item) {
-			$references = self::$macrosResolver->getMacroPositions($item['name'], ['references' => true]);
+			if (!array_key_exists('name', $item) || !array_key_exists('key', $item)) {
+				continue;
+			}
 
-			if ($item_key_parser->parse($item['key']) == CParser::PARSE_SUCCESS) {
+			$references = array_key_exists('name', $item)
+				? self::$macrosResolver->getMacroPositions($item['name'], ['references' => true])
+				: [];
+
+			if ($references && $item_key_parser->parse($item['key']) == CParser::PARSE_SUCCESS) {
 				$references = array_reverse($references, true);
 
 				foreach ($references as $pos => $key) {
