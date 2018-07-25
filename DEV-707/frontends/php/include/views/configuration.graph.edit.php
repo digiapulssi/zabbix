@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -315,6 +315,10 @@ $itemsTable->addRow(
 					(new CButton('add_item', _('Add')))
 						->onClick('return PopUp("popup.php?writeonly=1&multiselect=1&dstfrm='.$graphForm->getName().
 							($this->data['normal_only'] ? '&normal_only=1' : '').
+							(($data['groupid'] && $data['hostid'])
+								? '&groupid='.$data['groupid'].'&hostid='.$data['hostid']
+								: ''
+							).
 							'&srctbl=items&srcfld1=itemid&srcfld2=name&numeric=1" + getOnlyHostParam());'
 						)
 						->addClass(ZBX_STYLE_BTN_LINK),
@@ -353,13 +357,9 @@ foreach ($this->data['items'] as $n => $item) {
 $graphFormList->addRow(_('Items'), (new CDiv($itemsTable))->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR));
 
 // Append tabs to form.
-$graphTab = new CTabView();
-if (!$data['form_refresh']) {
-	$graphTab->setSelected(0);
-}
-$graphTab->addTab('graphTab', ($data['parent_discoveryid'] === null) ? _('Graph') : _('Graph prototype'),
-	$graphFormList
-);
+$graphTab = (new CTabView())
+	->setSelected(0)
+	->addTab('graphTab', ($data['parent_discoveryid'] === null) ? _('Graph') : _('Graph prototype'), $graphFormList);
 
 /*
  * Preview tab
@@ -368,7 +368,7 @@ $graphPreviewTable = (new CTable())
 	->addStyle('width: 100%;')
 	->addRow(
 		(new CRow(
-			(new CDiv())->setId('previewChar')
+			(new CDiv())->setId('previewChart')
 		))->addClass(ZBX_STYLE_CENTER)
 	);
 $graphTab->addTab('previewTab', _('Preview'), $graphPreviewTable);

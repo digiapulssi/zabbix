@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -189,7 +189,7 @@ function get_icon($type, $params = []) {
 		case 'screenconf':
 			return (new CRedirectButton(SPACE, null))
 				->addClass(ZBX_STYLE_BTN_CONF)
-				->setTitle(_('Refresh time'));
+				->setTitle(_('Refresh interval'));
 
 		case 'overviewhelp':
 			return (new CRedirectButton(SPACE, null))
@@ -625,7 +625,7 @@ function getHostGroupLifetimeIndicator($current_time, $ts_delete) {
 	else {
 		$warning = _s(
 			'The host group is not discovered anymore and will be deleted in %1$s (on %2$s at %3$s).',
-			zbx_date2age($ts_delete),
+			zbx_date2age($current_time, $ts_delete),
 			zbx_date2str(DATE_FORMAT, $ts_delete),
 			zbx_date2str(TIME_FORMAT, $ts_delete)
 		);
@@ -652,7 +652,7 @@ function getHostLifetimeIndicator($current_time, $ts_delete) {
 	else {
 		$warning = _s(
 			'The host is not discovered anymore and will be deleted in %1$s (on %2$s at %3$s).',
-			zbx_date2age($ts_delete),
+			zbx_date2age($current_time, $ts_delete),
 			zbx_date2str(DATE_FORMAT, $ts_delete),
 			zbx_date2str(TIME_FORMAT, $ts_delete)
 		);
@@ -679,7 +679,7 @@ function getApplicationLifetimeIndicator($current_time, $ts_delete) {
 	else {
 		$warning = _s(
 			'The application is not discovered anymore and will be deleted in %1$s (on %2$s at %3$s).',
-			zbx_date2age($ts_delete),
+			zbx_date2age($current_time, $ts_delete),
 			zbx_date2str(DATE_FORMAT, $ts_delete),
 			zbx_date2str(TIME_FORMAT, $ts_delete)
 		);
@@ -706,7 +706,7 @@ function getItemLifetimeIndicator($current_time, $ts_delete) {
 	else {
 		$warning = _s(
 			'The item is not discovered anymore and will be deleted in %1$s (on %2$s at %3$s).',
-			zbx_date2age($ts_delete),
+			zbx_date2age($current_time, $ts_delete),
 			zbx_date2str(DATE_FORMAT, $ts_delete),
 			zbx_date2str(TIME_FORMAT, $ts_delete)
 		);

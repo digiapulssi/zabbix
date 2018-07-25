@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,34 +135,6 @@ function get_events_unacknowledged($db_element, $value_trigger = null, $value_ev
 			'acknowledged' => $ack ? 1 : 0
 		]
 	]);
-}
-
-function get_next_event($currentEvent, array $eventList = []) {
-	$nextEvent = false;
-
-	foreach ($eventList as $event) {
-		// check only the events belonging to the same object
-		// find the event with the smallest eventid but greater than the current event id
-		if ($event['object'] == $currentEvent['object'] && bccomp($event['objectid'], $currentEvent['objectid']) == 0
-				&& (bccomp($event['eventid'], $currentEvent['eventid']) === 1
-				&& (!$nextEvent || bccomp($event['eventid'], $nextEvent['eventid']) === -1))) {
-			$nextEvent = $event;
-		}
-	}
-	if ($nextEvent) {
-		return $nextEvent;
-	}
-
-	$sql = 'SELECT e.*'.
-			' FROM events e'.
-			' WHERE e.source='.zbx_dbstr($currentEvent['source']).
-				' AND e.object='.zbx_dbstr($currentEvent['object']).
-				' AND e.objectid='.zbx_dbstr($currentEvent['objectid']).
-				' AND e.clock>='.zbx_dbstr($currentEvent['clock']).
-				' AND ((e.clock='.zbx_dbstr($currentEvent['clock']).' AND e.ns>'.$currentEvent['ns'].')'.
-					' OR e.clock>'.zbx_dbstr($currentEvent['clock']).')'.
-			' ORDER BY e.clock,e.eventid';
-	return DBfetch(DBselect($sql, 1));
 }
 
 /**
@@ -323,17 +295,14 @@ function make_small_eventlist($startEvent, $backurl) {
 
 	$actions = makeEventsActions($events, true);
 
-	foreach ($events as $index => $event) {
-		$duration = ($event['r_eventid'] == 0)
-			? zbx_date2age($event['clock'])
-			: zbx_date2age($event['clock'], $event['r_clock']);
+	if ($config['event_ack_enable']) {
+		$acknowledges = makeEventsAcknowledges($events, $backurl);
+	}
 
-		if (bccomp($startEvent['eventid'], $event['eventid']) == 0 && $nextevent = get_next_event($event, $events)) {
-			$duration = zbx_date2age($nextevent['clock'], $clock);
-		}
-		elseif (bccomp($startEvent['eventid'], $event['eventid']) == 0) {
-			$duration = zbx_date2age($clock);
-		}
+	foreach ($events as $index => $event) {
+		$duration = ($event['r_eventid'] != 0)
+			? zbx_date2age($event['clock'], $event['r_clock'])
+			: zbx_date2age($event['clock']);
 
 		if ($event['r_eventid'] == 0) {
 			$in_closing = false;
@@ -366,10 +335,6 @@ function make_small_eventlist($startEvent, $backurl) {
 		addTriggerValueStyle($cell_status, $value, $value_clock,
 			$config['event_ack_enable'] ? (bool) $event['acknowledges'] : false
 		);
-
-		if ($config['event_ack_enable']) {
-			$acknowledges = makeEventsAcknowledges($events, $backurl);
-		}
 
 		$table->addRow([
 			(new CLink(zbx_date2str(DATE_TIME_FORMAT_SECONDS, $event['clock']),
@@ -422,9 +387,14 @@ function make_popup_eventlist($trigger, $eventid_till, $backurl, array $config, 
 	}
 
 	if ($trigger['url'] !== '') {
+		$trigger_url = CHtmlUrlValidator::validate($trigger['url'])
+			? $trigger['url']
+			: 'javascript: alert(\''._s('Provided URL "%1$s" is invalid.', zbx_jsvalue($trigger['url'], false, false)).
+				'\');';
+
 		$div->addItem(
 			(new CDiv())
-				->addItem(new CLink($trigger['url'], $trigger['url']))
+				->addItem(new CLink($trigger['url'], $trigger_url))
 				->addClass(ZBX_STYLE_OVERLAY_DESCR_URL)
 				->addStyle('max-width: 500px')
 		);

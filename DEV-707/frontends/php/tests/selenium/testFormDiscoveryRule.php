@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -890,7 +890,7 @@ class testFormDiscoveryRule extends CWebTest {
 					'delay' => 0,
 					'error_msg' => 'Cannot add discovery rule',
 					'errors' => [
-						'Item will not be refreshed. Please enter a correct update interval.'
+						'Item will not be refreshed. Specified update interval requires having at least one either flexible or scheduling interval.'
 					]
 				]
 			],
@@ -916,7 +916,7 @@ class testFormDiscoveryRule extends CWebTest {
 					'delay' => 86401,
 					'error_msg' => 'Cannot add discovery rule',
 					'errors' => [
-						'Item will not be refreshed. Please enter a correct update interval.'
+						'Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used.'
 					]
 				]
 			],
@@ -929,7 +929,7 @@ class testFormDiscoveryRule extends CWebTest {
 					'delay' => '1w',
 					'error_msg' => 'Cannot add discovery rule',
 					'errors' => [
-						'Item will not be refreshed. Please enter a correct update interval.'
+						'Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used.'
 					]
 				]
 			],
@@ -942,7 +942,7 @@ class testFormDiscoveryRule extends CWebTest {
 					'delay' => '2d',
 					'error_msg' => 'Cannot add discovery rule',
 					'errors' => [
-						'Item will not be refreshed. Please enter a correct update interval.'
+						'Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used.'
 					]
 				]
 			],
@@ -955,7 +955,7 @@ class testFormDiscoveryRule extends CWebTest {
 					'delay' => '25h',
 					'error_msg' => 'Cannot add discovery rule',
 					'errors' => [
-						'Item will not be refreshed. Please enter a correct update interval.'
+						'Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used.'
 					]
 				]
 			],
@@ -968,7 +968,7 @@ class testFormDiscoveryRule extends CWebTest {
 					'delay' => '1441m',
 					'error_msg' => 'Cannot add discovery rule',
 					'errors' => [
-						'Item will not be refreshed. Please enter a correct update interval.'
+						'Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used.'
 					]
 				]
 			],
@@ -1758,7 +1758,7 @@ class testFormDiscoveryRule extends CWebTest {
 			$this->zbxTestCheckboxSelect("g_hostdruleid_$itemId");
 			$this->zbxTestClickButton('discoveryrule.massdelete');
 
-			$this->webDriver->switchTo()->alert()->accept();
+			$this->zbxTestAcceptAlert();
 			$this->zbxTestWaitUntilMessageTextPresent('msg-good' ,'Discovery rules deleted');
 
 			$sql = "SELECT itemid FROM items WHERE name = '".$name."' and hostid = ".$this->hostid;

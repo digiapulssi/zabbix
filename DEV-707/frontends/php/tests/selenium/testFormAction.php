@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -479,20 +479,17 @@ class testFormAction extends CWebTest {
 		$this->zbxTestAssertElementPresentXpath("//input[@type='checkbox' and @id='status']");
 		$this->assertTrue($this->zbxTestCheckboxSelected('status'));
 
-		if ($eventsource == 'Triggers') {
-			$this->zbxTestInputTypeWait('new_condition_value', 'TEST');
+		if (array_key_exists('evaltype', $data)) {
+			$this->zbxTestInputTypeWait('new_condition_value', 'TEST1');
 			$this->zbxTestClickXpathWait("//div[@id='actionTab']//button[text()='Add' and contains(@onclick, 'add_condition')]");
-			if (isset($data['evaltype'])) {
-				$this->zbxTestDropdownSelect('evaltype', $data['evaltype']);
-				$evaltype = $data['evaltype'];
-			}
-			else {
-				$select_options = $this->zbxTestGetDropDownElements('evaltype');
-				$evaltype = $select_options[0]['content'];
-			}
+			$this->zbxTestInputTypeWait('new_condition_value', 'TEST2');
+			$this->zbxTestClickXpathWait("//div[@id='actionTab']//button[text()='Add' and contains(@onclick, 'add_condition')]");
+
+			$this->zbxTestDropdownSelect('evaltype', $data['evaltype']);
+			$evaltype = $data['evaltype'];
 		}
 
-		if ($eventsource == 'Triggers') {
+		if ($eventsource == 'Triggers' && array_key_exists('evaltype', $data)) {
 			$this->zbxTestTextPresent('Type of calculation');
 			$this->zbxTestAssertElementPresentId('evaltype');
 			$this->zbxTestDropdownHasOptions('evaltype', [
@@ -522,12 +519,9 @@ class testFormAction extends CWebTest {
 				'Label', 'Name', 'Action'
 		]);
 
-		if ($eventsource == 'Triggers') {
-			$this->zbxTestAssertElementText('//tr[@id="conditions_0"]/td[2]', 'Maintenance status not in maintenance');
-			$this->zbxTestAssertElementText('//tr[@id="conditions_1"]/td[2]', 'Trigger name like TEST');
-			$this->zbxTestTextPresent([
-					'A', 'Maintenance status','B', 'Trigger name'
-			]);
+		if ($eventsource == 'Triggers' && array_key_exists('evaltype', $data)) {
+			$this->zbxTestAssertElementText('//tr[@id="conditions_0"]/td[2]', 'Trigger name like TEST1');
+			$this->zbxTestAssertElementText('//tr[@id="conditions_1"]/td[2]', 'Trigger name like TEST2');
 			$this->zbxTestAssertElementPresentXpath('//button[@id="remove" and @name="remove" and @onclick="javascript:'.
 				' removeCondition(0);"]');
 			$this->zbxTestAssertElementPresentXpath('//button[@id="remove" and @name="remove" and @onclick="javascript:'.
@@ -535,7 +529,7 @@ class testFormAction extends CWebTest {
 		}
 		else {
 			$this->zbxTestTextNotVisibleOnPage(['A', 'B']);
-			$this->zbxTestTextNotPresent(['Maintenance status', 'Trigger name']);
+			$this->zbxTestAssertElementNotPresentXpath('//tr[@id="conditions_0"]/td[2]');
 			$this->zbxTestAssertElementNotPresentXpath('//button[@id="remove" and @name="remove" and @onclick="javascript:'.
 				' removeCondition(0);"]');
 			$this->zbxTestAssertElementNotPresentXpath('//button[@id="remove" and @name="remove" and @onclick="javascript:'.
@@ -1324,7 +1318,7 @@ class testFormAction extends CWebTest {
 		if ($new_operation_opcommand_type != null) {
 			$this->zbxTestTextPresent ('Type');
 			$this->zbxTestAssertVisibleXpath('//select[@id=\'new_operation_opcommand_type\']');
-			$this->zbxTestDropdownAssertSelected('new_operation[opcommand][type]', 'Custom script');
+			$this->zbxTestDropdownAssertSelected('new_operation[opcommand][type]', $new_operation_opcommand_type);
 			$this->zbxTestDropdownHasOptions('new_operation_opcommand_type', [
 					'IPMI',
 					'Custom script',
@@ -1393,7 +1387,9 @@ class testFormAction extends CWebTest {
 						'Password',
 						'Public key'
 				]);
-				$this->zbxTestDropdownAssertSelected('new_operation[opcommand][authtype]', 'Password');
+				$this->zbxTestDropdownAssertSelected('new_operation[opcommand][authtype]',
+						$new_operation_opcommand_authtype
+				);
 				break;
 			case 'IPMI':
 			case 'Custom script':
@@ -1860,11 +1856,7 @@ class testFormAction extends CWebTest {
 			$this->zbxTestAssertElementValue('name', $data['name']);
 		}
 
-		if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS) {
-			$conditionCount = 1;
-		} else {
-			$conditionCount = 0;
-		}
+		$conditionCount = 0;
 
 		if (isset($data['conditions'])) {
 			foreach ($data['conditions'] as $condition) {
@@ -1941,7 +1933,7 @@ class testFormAction extends CWebTest {
 				switch ($operation['type']) {
 					case 'Send message':
 						$this->zbxTestClickXpathWait('//tr[@id="opmsgUsrgrpListFooter"]//button');
-						$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
+						$this->zbxTestSwitchToWindow('zbx_popup');
 						$this->zbxTestCheckboxSelect('all_usrgrps');
 						$this->zbxTestClick('select');
 						$this->zbxTestWaitWindowClose();
@@ -2001,21 +1993,19 @@ class testFormAction extends CWebTest {
 		$this->zbxTestInputTypeWait('name', 'action test');
 
 // adding conditions
-		$this->zbxTestAssertElementText("//tr[@id='conditions_0']/td[2]", 'Maintenance status not in maintenance');
-
 		$this->zbxTestInputTypeWait('new_condition_value', 'trigger');
 		$this->zbxTestClickXpathWait("//div[@id='actionTab']//button[contains(@onclick, 'add_condition')]");
-		$this->zbxTestAssertElementText("//tr[@id='conditions_1']/td[2]", 'Trigger name like trigger');
+		$this->zbxTestAssertElementText("//tr[@id='conditions_0']/td[2]", 'Trigger name like trigger');
 
 		$this->zbxTestDropdownSelectWait('new_condition_conditiontype', 'Trigger severity');
 		$this->zbxTestDropdownSelect('new_condition_value', 'Average');
 		$this->zbxTestClickXpathWait("//div[@id='actionTab']//button[contains(@onclick, 'add_condition')]");
-		$this->zbxTestAssertElementText("//tr[@id='conditions_2']/td[2]", 'Trigger severity = Average');
+		$this->zbxTestAssertElementText("//tr[@id='conditions_1']/td[2]", 'Trigger severity = Average');
 
 		$this->zbxTestDropdownSelectWait('new_condition_conditiontype', 'Application');
 		$this->zbxTestInputTypeWait('new_condition_value', 'app');
 		$this->zbxTestClickXpathWait("//div[@id='actionTab']//button[contains(@onclick, 'add_condition')]");
-		$this->zbxTestAssertElementText("//tr[@id='conditions_3']/td[2]", 'Application = app');
+		$this->zbxTestAssertElementText("//tr[@id='conditions_2']/td[2]", 'Application = app');
 
 // adding operations
 		$this->zbxTestTabSwitch('Operations');

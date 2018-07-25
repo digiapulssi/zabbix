@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -526,13 +526,15 @@ else {
 		'filter' => $filter
 	];
 
+	// Get list of maintenances.
 	$options = [
-		'output' => ['maintenanceid', $sortField],
+		'output' => ['maintenanceid', 'name', 'maintenance_type', 'active_since', 'active_till', 'description'],
 		'search' => [
 			'name' => ($filter['name'] === '') ? null : $filter['name']
 		],
 		'editable' => true,
 		'sortfield' => $sortField,
+		'sortorder' => $sortOrder,
 		'limit' => $config['search_limit'] + 1
 	];
 
@@ -544,19 +546,6 @@ else {
 	}
 
 	$data['maintenances'] = API::Maintenance()->get($options);
-
-	order_result($data['maintenances'], $sortField, $sortOrder);
-
-	$url = (new CUrl('maintenance.php'))
-		->setArgument('groupid', $pageFilter->groupid);
-
-	$data['paging'] = getPagingLine($data['maintenances'], $sortOrder, $url);
-
-	// get list of maintenances
-	$data['maintenances'] = API::Maintenance()->get([
-		'output' => ['maintenanceid', 'name', 'maintenance_type', 'active_since', 'active_till', 'description'],
-		'maintenanceids' => zbx_objectValues($data['maintenances'], 'maintenanceid')
-	]);
 
 	foreach ($data['maintenances'] as $key => $maintenance) {
 		if ($maintenance['active_till'] < time()) {
@@ -580,6 +569,11 @@ else {
 	}
 
 	order_result($data['maintenances'], $sortField, $sortOrder);
+
+	$url = (new CUrl('maintenance.php'))
+		->setArgument('groupid', $pageFilter->groupid);
+
+	$data['paging'] = getPagingLine($data['maintenances'], $sortOrder, $url);
 
 	$data['pageFilter'] = $pageFilter;
 

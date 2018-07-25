@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -181,9 +181,9 @@ function getSystemStatusData(array $filter, array $config) {
 		// Get acknowledges and tags.
 		$problems_data = ($config['event_ack_enable']
 				&& in_array($filter_ext_ack, [EXTACK_OPTION_ALL, EXTACK_OPTION_BOTH]))
-			? API::Problem()->get([
+			? API::Event()->get([
 				'output' => [],
-				'selectAcknowledges' => ['clock', 'message', 'action', 'alias', 'name', 'surname'],
+				'select_acknowledges' => ['clock', 'message', 'action', 'alias', 'name', 'surname'],
 				'eventids' => array_keys($problems),
 				'preservekeys' => true
 			])

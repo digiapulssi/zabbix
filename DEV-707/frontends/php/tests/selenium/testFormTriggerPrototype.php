@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -922,7 +922,7 @@ class testFormTriggerPrototype extends CWebTest {
 			$this->zbxTestCheckboxSelect("g_triggerid_$triggerId");
 			$this->zbxTestClickButton('triggerprototype.massdelete');
 
-			$this->webDriver->switchTo()->alert()->accept();
+			$this->zbxTestAcceptAlert();
 
 			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Trigger prototypes deleted');
 			$this->assertEquals(0, DBcount("SELECT triggerid FROM triggers where description = '".$description."'"));

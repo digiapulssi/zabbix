@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -173,7 +173,11 @@ void	DBbegin(void)
  ******************************************************************************/
 void	DBcommit(void)
 {
-	DBtxn_operation(zbx_db_commit);
+	if (ZBX_DB_OK > zbx_db_commit())
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "commit called on failed transaction, doing a rollback instead");
+		DBrollback();
+	}
 }
 
 /******************************************************************************
@@ -189,7 +193,13 @@ void	DBcommit(void)
  ******************************************************************************/
 void	DBrollback(void)
 {
-	DBtxn_operation(zbx_db_rollback);
+	if (ZBX_DB_OK > zbx_db_rollback())
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "cannot perform transaction rollback, connection will be reset");
+
+		DBclose();
+		DBconnect(ZBX_DB_CONNECT_NORMAL);
+	}
 }
 
 /******************************************************************************
@@ -204,9 +214,9 @@ void	DBrollback(void)
 void	DBend(int ret)
 {
 	if (SUCCEED == ret)
-		DBtxn_operation(zbx_db_commit);
+		DBcommit();
 	else
-		DBtxn_operation(zbx_db_rollback);
+		DBrollback();
 }
 
 #ifdef HAVE_ORACLE
@@ -1458,7 +1468,7 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 
 		ts.sec = autoreg_host->now;
 
-		add_event(EVENT_SOURCE_AUTO_REGISTRATION, EVENT_OBJECT_ZABBIX_ACTIVE, autoreg_host->autoreg_hostid,
+		zbx_add_event(EVENT_SOURCE_AUTO_REGISTRATION, EVENT_OBJECT_ZABBIX_ACTIVE, autoreg_host->autoreg_hostid,
 				&ts, TRIGGER_VALUE_PROBLEM, NULL, NULL, NULL, 0, 0, NULL, 0, NULL, 0);
 	}
 
@@ -1475,7 +1485,7 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 		zbx_free(sql);
 	}
 
-	process_events();
+	zbx_process_events(NULL, NULL);
 exit:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -1900,6 +1910,65 @@ int	DBfield_exists(const char *table_name, const char *field_name)
 
 	return ret;
 }
+
+#ifndef HAVE_SQLITE3
+int	DBindex_exists(const char *table_name, const char *index_name)
+{
+	char		*table_name_esc, *index_name_esc;
+#if defined(HAVE_POSTGRESQL)
+	char		*table_schema_esc;
+#endif
+	DB_RESULT	result;
+	int		ret;
+
+	table_name_esc = DBdyn_escape_string(table_name);
+	index_name_esc = DBdyn_escape_string(index_name);
+
+#if defined(HAVE_IBM_DB2)
+	result = DBselect(
+			"select 1"
+			" from syscat.indexes"
+			" where tabschema=user"
+				" and lower(tabname)='%s'"
+				" and lower(indname)='%s'",
+			table_name_esc, index_name_esc);
+#elif defined(HAVE_MYSQL)
+	result = DBselect(
+			"show index from %s"
+			" where key_name='%s'",
+			table_name_esc, index_name_esc);
+#elif defined(HAVE_ORACLE)
+	result = DBselect(
+			"select 1"
+			" from user_indexes"
+			" where lower(table_name)='%s'"
+				" and lower(index_name)='%s'",
+			table_name_esc, index_name_esc);
+#elif defined(HAVE_POSTGRESQL)
+	table_schema_esc = DBdyn_escape_string(NULL == CONFIG_DBSCHEMA || '\0' == *CONFIG_DBSCHEMA ?
+				"public" : CONFIG_DBSCHEMA);
+
+	result = DBselect(
+			"select 1"
+			" from pg_indexes"
+			" where tablename='%s'"
+				" and indexname='%s'"
+				" and schemaname='%s'",
+			table_name_esc, index_name_esc, table_schema_esc);
+
+	zbx_free(table_schema_esc);
+#endif
+
+	ret = (NULL == DBfetch(result) ? FAIL : SUCCEED);
+
+	DBfree_result(result);
+
+	zbx_free(table_name_esc);
+	zbx_free(index_name_esc);
+
+	return ret;
+}
+#endif
 
 /******************************************************************************
  *                                                                            *

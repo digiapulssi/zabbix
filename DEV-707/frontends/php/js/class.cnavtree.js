@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -716,8 +716,8 @@ jQuery(function($) {
 																				parent: +itemid
 																			};
 
-																		root.appendChild(createTreeItem($obj, new_item, 1,
-																			true, true
+																		root.appendChild(createTreeItem($obj, new_item,
+																			1, true, true
 																		));
 																		add_child_levels($obj, +submapid,
 																			submap_itemid
@@ -844,7 +844,7 @@ jQuery(function($) {
 
 				link.setAttribute('class', 'item-name');
 				link.setAttribute('title', item.name);
-				link.innerHTML = item.name;
+				link.innerText = item.name;
 
 				var li_item = document.createElement('LI');
 

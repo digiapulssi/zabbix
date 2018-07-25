@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ typedef struct
 	int			lastclock;
 	int			mtime;
 	int			data_expected_from;
+	int			history_sec;
 	unsigned char		history;
 	unsigned char		type;
 	unsigned char		value_type;
@@ -331,6 +332,8 @@ typedef struct
 	int		nextcheck;
 	int		timediff;
 	int		lastaccess;
+	int		last_cfg_error_time;	/* time when passive proxy misconfiguration error was seen */
+						/* or 0 if no error */
 	int		version;
 	unsigned char	location;
 }
@@ -598,7 +601,9 @@ typedef struct
 {
 	/* timestamp of the last host availability diff sent to sever, used only by proxies */
 	int			availability_diff_ts;
+	int			proxy_lastaccess_ts;
 	int			sync_ts;
+	int			item_sync_ts;
 
 	zbx_hashset_t		items;
 	zbx_hashset_t		items_hk;		/* hostid, key */

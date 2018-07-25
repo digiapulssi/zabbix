@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -380,97 +380,10 @@ function itemTypeInterface($type = null) {
 }
 
 /**
- * Finds master item in input array which dependent items not present in input array. If master is found it name
- * will be returned or false otherwise.
- *
- * @param array                $items            Associative array of item arrays to search, where itemid is array key.
- * @param string               $items[]['name']
- * @param string               $items[]['master_itemid']
- * @param CItem|CItemPrototype $data_provider    Service, is used to get dependent items.
- *
- * @return bool|string
- */
-function findMasterWithMissingDependentItem($items, $data_provider) {
-	$master_itemname = false;
-	$not_selected = [];
-	$db_dependent_items = $items;
-
-	while ($db_dependent_items) {
-		$db_dependent_items = $data_provider->get([
-			'output'		=> ['master_itemid', 'templateid'],
-			'filter'		=> ['type' => ITEM_TYPE_DEPENDENT, 'master_itemid' => array_keys($db_dependent_items)],
-			'preservekeys'	=> true
-		]);
-		$not_selected = array_diff_key($db_dependent_items, $items);
-
-		if ($not_selected) {
-			$dependent_item = reset($not_selected);
-			$master_item = array_key_exists($dependent_item['master_itemid'], $items)
-				? $items[$dependent_item['master_itemid']]
-				: $items[$dependent_item['templateid']];
-			$master_itemname = $master_item['name'];
-			break;
-		}
-	};
-
-	return $master_itemname;
-}
-
-/**
- * Finds dependent item in input array which master item not present in input array. If dependent is found it name
- * will be returned or false otherwise.
- *
- * @param array                $items            Associative array of item arrays to search, where itemid is array key.
- * @param string               $items[]['name']
- * @param string               $items[]['master_itemid']
- * @param string               $items[]['type']
- * @param CItem|CItemPrototype $data_provider    Service, is used to get dependent items.
- *
- * @return bool|string
- */
-function findDependentWithMissingMasterItem($items, $data_provider) {
-	$dependent_itemname = false;
-	$not_selected = [];
-	$db_master_items = $items;
-
-	do {
-		$db_master_itemids = [];
-
-		foreach ($db_master_items as $dm_master_itemid => $db_master_item) {
-			if ($db_master_item['type'] == ITEM_TYPE_DEPENDENT) {
-				$db_master_itemids[$dm_master_itemid] = $db_master_item['master_itemid'];
-			}
-		}
-
-		if ($db_master_itemids) {
-			$db_master_items = $data_provider->get([
-				'output'		=> ['master_itemid', 'templateid', 'type'],
-				'itemids'		=> array_keys(array_flip($db_master_itemids)),
-				'preservekeys'	=> true
-			]);
-		}
-		else {
-			$db_master_items = [];
-		}
-
-		$not_selected = array_diff_key($db_master_items, $items);
-
-		if ($not_selected) {
-			$master_item = reset($not_selected);
-			$dependent_itemid = array_search(key($not_selected), $db_master_itemids);
-			$dependent_itemname = $items[$dependent_itemid]['name'];
-			break;
-		}
-	} while ($db_master_items);
-
-	return $dependent_itemname;
-}
-
-/**
  * Copies the given items to the given hosts or templates.
  *
- * @param array $src_itemids		Items which will be copied to $dst_hostids
- * @param array $dst_hostids		Hosts and templates to whom add items.
+ * @param array $src_itemids  Items which will be copied to $dst_hostids.
+ * @param array $dst_hostids  Hosts and templates to whom add items.
  *
  * @return bool
  */
@@ -488,26 +401,47 @@ function copyItemsToHosts($src_itemids, $dst_hostids) {
 		'preservekeys' => true
 	]);
 
-	$master_name = findDependentWithMissingMasterItem($items, API::Item());
-	if ($master_name !== false) {
-		error(_s('Item "%1$s" have master item and cannot be copied.', $master_name));
-		return false;
+	// Check if dependent items have master items in same selection. If not, those could be web items.
+	$master_itemids = [];
+
+	foreach ($items as $itemid => $item) {
+		if ($item['type'] == ITEM_TYPE_DEPENDENT && !array_key_exists($item['master_itemid'], $items)) {
+			$master_itemids[$item['master_itemid']] = true;
+		}
+	}
+
+	// Find same master items (that includes web items) on destination host.
+	$dst_master_items = [];
+
+	foreach (array_keys($master_itemids) as $master_itemid) {
+		$same_master_item = get_same_item_for_host(['itemid' => $master_itemid], $dst_hostids);
+
+		if ($same_master_item) {
+			$dst_master_items[$master_itemid] = $same_master_item;
+		}
 	}
 
 	$create_order = [];
 	$src_itemid_to_key = [];
+
+	// Calculate dependency level between items so that master items are created before dependent items.
 	foreach ($items as $itemid => $item) {
 		$dependency_level = 0;
 		$master_item = $item;
 		$src_itemid_to_key[$itemid] = $item['key_'];
 
 		while ($master_item['type'] == ITEM_TYPE_DEPENDENT) {
+			if (!array_key_exists($master_item['master_itemid'], $items)) {
+				break;
+			}
+
 			$master_item = $items[$master_item['master_itemid']];
 			++$dependency_level;
 		}
 
 		$create_order[$itemid] = $dependency_level;
 	}
+
 	asort($create_order);
 
 	$dstHosts = API::Host()->get([
@@ -521,6 +455,7 @@ function copyItemsToHosts($src_itemids, $dst_hostids) {
 
 	foreach ($dstHosts as $dstHost) {
 		$interfaceids = [];
+
 		foreach ($dstHost['interfaces'] as $interface) {
 			if ($interface['main'] == 1) {
 				$interfaceids[$interface['type']] = $interface['interfaceid'];
@@ -579,12 +514,36 @@ function copyItemsToHosts($src_itemids, $dst_hostids) {
 			);
 
 			if ($item['type'] == ITEM_TYPE_DEPENDENT) {
-				$src_item_key = $src_itemid_to_key[$item['master_itemid']];
-				$item['master_itemid'] = $itemkey_to_id[$src_item_key];
+				if (array_key_exists($item['master_itemid'], $items)) {
+					$src_item_key = $src_itemid_to_key[$item['master_itemid']];
+					$item['master_itemid'] = $itemkey_to_id[$src_item_key];
+				}
+				else {
+					$item_found = false;
+
+					if (array_key_exists($item['master_itemid'], $dst_master_items)) {
+						foreach ($dst_master_items[$item['master_itemid']] as $dst_master_item) {
+							if ($dst_master_item['hostid'] == $dstHost['hostid']) {
+								// A matching item on destination host has been found.
+
+								$item['master_itemid'] = $dst_master_item['itemid'];
+								$item_found = true;
+							}
+						}
+					}
+
+					// Master item does not exist on destination host or has not been selected for copying.
+					if (!$item_found) {
+						error(_s('Item "%1$s" has master item and cannot be copied.', $item['name']));
+
+						return false;
+					}
+				}
 			}
 			else {
 				unset($item['master_itemid']);
 			}
+
 			$create_items[] = $item;
 		}
 
@@ -608,6 +567,7 @@ function copyItems($srcHostId, $dstHostId) {
 		'selectApplications' => ['applicationid'],
 		'selectPreprocessing' => ['type', 'params'],
 		'hostids' => $srcHostId,
+		'webitems' => true,
 		'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 		'preservekeys' => true
 	]);
@@ -642,6 +602,13 @@ function copyItems($srcHostId, $dstHostId) {
 	$current_dependency = reset($create_order);
 
 	foreach ($create_order as $itemid => $dependency_level) {
+		$srcItem = $srcItems[$itemid];
+
+		// Skip creating web items. Those were created before.
+		if ($srcItem['type'] == ITEM_TYPE_HTTPTEST) {
+			continue;
+		}
+
 		if ($current_dependency != $dependency_level && $create_items) {
 			$current_dependency = $dependency_level;
 			$created_itemids = API::Item()->create($create_items);
@@ -658,8 +625,6 @@ function copyItems($srcHostId, $dstHostId) {
 			$create_items = [];
 		}
 
-		$srcItem = $srcItems[$itemid];
-
 		if ($srcItem['templateid']) {
 			$srcItem = get_same_item_for_host($srcItem, $dstHost['hostid']);
 
@@ -672,7 +637,7 @@ function copyItems($srcHostId, $dstHostId) {
 
 		if ($dstHost['status'] != HOST_STATUS_TEMPLATE) {
 			// find a matching interface
-			$interface = CItem::findInterfaceForItem($srcItem, $dstHost['interfaces']);
+			$interface = CItem::findInterfaceForItem($srcItem['type'], $dstHost['interfaces']);
 			if ($interface) {
 				$srcItem['interfaceid'] = $interface['interfaceid'];
 			}
@@ -691,12 +656,20 @@ function copyItems($srcHostId, $dstHostId) {
 		}
 
 		if ($srcItem['type'] == ITEM_TYPE_DEPENDENT) {
-			$src_item_key = $src_itemid_to_key[$srcItem['master_itemid']];
-			$srcItem['master_itemid'] = $itemkey_to_id[$src_item_key];
+			if ($srcItems[$srcItem['master_itemid']]['type'] == ITEM_TYPE_HTTPTEST) {
+				// Web items are outside the scope and are created before regular items.
+				$web_item = get_same_item_for_host($srcItems[$srcItem['master_itemid']], $dstHost['hostid']);
+				$srcItem['master_itemid'] = $web_item['itemid'];
+			}
+			else {
+				$src_item_key = $src_itemid_to_key[$srcItem['master_itemid']];
+				$srcItem['master_itemid'] = $itemkey_to_id[$src_item_key];
+			}
 		}
 		else {
 			unset($srcItem['master_itemid']);
 		}
+
 		$create_items[] = $srcItem;
 	}
 
@@ -917,7 +890,7 @@ function getItemsDataOverview(array $groupids, $application, $viewMode) {
 	]);
 
 	// fetch latest values
-	$history = Manager::History()->getLast(zbx_toHash($db_items, 'itemid'), 1, ZBX_HISTORY_PERIOD);
+	$history = Manager::History()->getLastValues(zbx_toHash($db_items, 'itemid'), 1, ZBX_HISTORY_PERIOD);
 
 	// fetch data for the host JS menu
 	$hosts = API::Host()->get([
@@ -1145,25 +1118,6 @@ function get_applications_by_itemid($itemids, $field = 'applicationid') {
 }
 
 /**
- * Clear item history and trends by provided item IDs.
- *
- * @param array $itemIds
- *
- * @return bool
- */
-function deleteHistoryByItemIds(array $itemIds) {
-	$result = DBexecute('DELETE FROM trends WHERE '.dbConditionInt('itemid', $itemIds));
-	$result = ($result && DBexecute('DELETE FROM trends_uint WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history_text WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history_log WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history_uint WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history_str WHERE '.dbConditionInt('itemid', $itemIds)));
-	$result = ($result && DBexecute('DELETE FROM history WHERE '.dbConditionInt('itemid', $itemIds)));
-
-	return $result;
-}
-
-/**
  * Format history value.
  * First format the value according to the configuration of the item. Then apply the value mapping to the formatted (!)
  * value.
@@ -1242,103 +1196,22 @@ function getItemFunctionalValue($item, $function, $parameter) {
 	}
 
 	// allowed item types for min, max and avg function
-	$historyTables = [ITEM_VALUE_TYPE_FLOAT => 'history', ITEM_VALUE_TYPE_UINT64 => 'history_uint'];
+	$history_tables = [ITEM_VALUE_TYPE_FLOAT => 'history', ITEM_VALUE_TYPE_UINT64 => 'history_uint'];
 
-	if (!isset($historyTables[$item['value_type']])) {
+	if (!array_key_exists($item['value_type'], $history_tables)) {
 		return UNRESOLVED_MACRO_STRING;
 	}
 	else {
-		// search for item function data in DB corresponding history table
-		$result = DBselect(
-			'SELECT '.$function.'(value) AS value'.
-			' FROM '.$historyTables[$item['value_type']].
-			' WHERE clock>'.(time() - $parameter).
-			' AND itemid='.zbx_dbstr($item['itemid']).
-			' HAVING COUNT(*)>0' // necessary because DBselect() return 0 if empty data set, for graph templates
-		);
-		if ($row = DBfetch($result)) {
-			return convert_units(['value' => $row['value'], 'units' => $item['units']]);
+		$result = Manager::History()->getAggregatedValue($item, $function, (time() - $parameter));
+
+		if ($result !== null) {
+			return convert_units(['value' => $result, 'units' => $item['units']]);
 		}
 		// no data in history
 		else {
 			return UNRESOLVED_MACRO_STRING;
 		}
 	}
-}
-
-/**
- * Returns the history value of the item at the given time. If no value exists at the given time, the function
- * will return the previous value.
- *
- * The $db_item parameter must have the value_type and itemid properties set.
- *
- * @param array $db_item
- * @param int $clock
- * @param int $ns
- *
- * @return string
- */
-function item_get_history($db_item, $clock, $ns) {
-	$value = null;
-
-	$table = CHistoryManager::getTableName($db_item['value_type']);
-
-	$sql = 'SELECT value'.
-			' FROM '.$table.
-			' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-				' AND clock='.zbx_dbstr($clock).
-				' AND ns='.zbx_dbstr($ns);
-
-	if ($row = DBfetch(DBselect($sql, 1))) {
-		$value = $row['value'];
-	}
-	if ($value !== null) {
-		return $value;
-	}
-
-	$max_clock = 0;
-
-	$sql = 'SELECT DISTINCT clock'.
-			' FROM '.$table.
-			' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-				' AND clock='.zbx_dbstr($clock).
-				' AND ns<'.zbx_dbstr($ns);
-	if (null != ($row = DBfetch(DBselect($sql)))) {
-		$max_clock = $row['clock'];
-	}
-	if ($max_clock == 0) {
-		$sql = 'SELECT MAX(clock) AS clock'.
-				' FROM '.$table.
-				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-					' AND clock<'.zbx_dbstr($clock);
-		if (null != ($row = DBfetch(DBselect($sql)))) {
-			$max_clock = $row['clock'];
-		}
-	}
-	if ($max_clock == 0) {
-		return $value;
-	}
-
-	if ($clock == $max_clock) {
-		$sql = 'SELECT value'.
-				' FROM '.$table.
-				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-					' AND clock='.zbx_dbstr($clock).
-					' AND ns<'.zbx_dbstr($ns);
-	}
-	else {
-		$sql = 'SELECT value'.
-				' FROM '.$table.
-				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-					' AND clock='.zbx_dbstr($max_clock).
-				' ORDER BY itemid,clock desc,ns desc';
-	}
-
-	if (null != ($row = DBfetch(DBselect($sql, 1)))) {
-		$value = $row['value'];
-	}
-
-	return $value;
 }
 
 /**
@@ -1733,14 +1606,14 @@ function quoteItemKeyParam($param, $forced = false) {
 }
 
 /**
- * Expands items name and for dependent items master item name.
+ * Expands item name and for dependent item master item name.
  *
- * @param array                 Array of items.
- * @param CItem|CItemPrototype  Object capable to provide data for master items.
+ * @param array  $items        Array of items.
+ * @param string $data_source  'items' or 'itemprototypes'.
  *
  * @return array
  */
-function expandItemNamesWithMasterItems($items, $data_provider) {
+function expandItemNamesWithMasterItems($items, $data_source) {
 	$items = CMacrosResolverHelper::resolveItemNames($items);
 	$itemids = [];
 	$master_itemids = [];
@@ -1754,12 +1627,24 @@ function expandItemNamesWithMasterItems($items, $data_provider) {
 	$master_itemids = array_diff(array_keys($master_itemids), $itemids);
 
 	if ($master_itemids) {
-		$master_items = $data_provider->get([
-			'output'		=> ['itemid', 'type', 'hostid', 'name', 'key_'],
-			'itemids'		=> $master_itemids,
-			'editable'		=> true,
-			'preservekeys'	=> true
-		]);
+		if ($data_source === 'items') {
+			$master_items = API::Item()->get([
+				'output' => ['itemid', 'type', 'hostid', 'name', 'key_'],
+				'itemids' => $master_itemids,
+				'webitems' => true,
+				'editable' => true,
+				'preservekeys' => true
+			]);
+		}
+		elseif ($data_source === 'itemprototypes') {
+			$master_items = API::ItemPrototype()->get([
+				'output' => ['itemid', 'type', 'hostid', 'name', 'key_'],
+				'itemids' => $master_itemids,
+				'editable' => true,
+				'preservekeys' => true
+			]);
+		}
+
 		$master_items = CMacrosResolverHelper::resolveItemNames($master_items);
 	}
 
@@ -1767,11 +1652,15 @@ function expandItemNamesWithMasterItems($items, $data_provider) {
 		if ($item['type'] == ITEM_TYPE_DEPENDENT) {
 			$master_itemid = $item['master_itemid'];
 			$items_index = array_search($master_itemid, $itemids);
+
 			$item['master_item'] = [
-				'itemid'		=> $master_itemid,
-				'name_expanded'	=> ($items_index === false)
-									? $master_items[$master_itemid]['name_expanded']
-									: $items[$items_index]['name_expanded']
+				'itemid' => $master_itemid,
+				'name_expanded' => ($items_index === false)
+					? $master_items[$master_itemid]['name_expanded']
+					: $items[$items_index]['name_expanded'],
+				'type' => ($items_index === false)
+					? $master_items[$master_itemid]['type']
+					: $items[$items_index]['type'],
 			];
 		}
 	}

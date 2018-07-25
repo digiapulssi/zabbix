@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,19 @@
 class CWebUser {
 
 	public static $data = null;
+
+	/**
+	 * Flag used to ignore setting authentication cookie performed checkAuthentication.
+	 */
+	static $set_cookie = true;
+
+	/**
+	 * Disable automatic cookie setting.
+	 * First checkAuthentication call (performed in initialization phase) will not be sending cookies.
+	 */
+	public static function disableSessionCookie() {
+		self::$set_cookie = false;
+	}
 
 	/**
 	 * Tries to login a user and populates self::$data on success.
@@ -112,7 +125,12 @@ class CWebUser {
 				throw new Exception();
 			}
 
-			self::setSessionCookie($sessionId);
+			if (self::$set_cookie) {
+				self::setSessionCookie($sessionId);
+			}
+			else {
+				self::$set_cookie = true;
+			}
 
 			return $sessionId;
 		}

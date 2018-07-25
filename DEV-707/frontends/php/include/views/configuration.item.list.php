@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
+
 
 require_once dirname(__FILE__).'/js/configuration.item.list.js.php';
 
@@ -107,11 +108,17 @@ foreach ($this->data['items'] as $item) {
 	}
 
 	if ($item['type'] == ITEM_TYPE_DEPENDENT) {
-		$description[] = (new CLink(CHtml::encode($item['master_item']['name_expanded']),
-			'?form=update&hostid='.$item['hostid'].'&itemid='.$item['master_item']['itemid']
-		))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass(ZBX_STYLE_TEAL);
+		if ($item['master_item']['type'] == ITEM_TYPE_HTTPTEST) {
+			$description[] = CHtml::encode($item['master_item']['name_expanded']);
+		}
+		else {
+			$description[] = (new CLink(CHtml::encode($item['master_item']['name_expanded']),
+				'?form=update&hostid='.$item['hostid'].'&itemid='.$item['master_item']['itemid']
+			))
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->addClass(ZBX_STYLE_TEAL);
+		}
+
 		$description[] = NAME_DELIMITER;
 	}
 

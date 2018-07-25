@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -573,8 +573,8 @@ class CPageFilter {
 				}
 			}
 
-			// select remembered selection
-			if ($hostId === null) {
+			// Select stored hostid, ignore zero value ('All hosts').
+			if ($hostId === null && $this->_profileIds['hostid'] > 0) {
 				$hostId = $this->_profileIds['hostid'];
 			}
 

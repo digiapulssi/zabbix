@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -189,24 +189,23 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 						'javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
 						'create_var("zbx_filter", '.CJs::encodeJson($subfilterName.'['.$id.']').', null, true);'
 					)),
-				SPACE,
+				' ',
 				new CSup($element['count'])
-			]))->addClass(ZBX_STYLE_SUBFILTER_ENABLED);
+			]))
+				->addClass(ZBX_STYLE_SUBFILTER)
+				->addClass(ZBX_STYLE_SUBFILTER_ENABLED);
 		}
 		// isn't activated
 		else {
 			// subfilter has 0 items
 			if ($element['count'] == 0) {
-				$output[] = (new CSpan($element['name']))->addClass(ZBX_STYLE_GREY);
-				$output[] = SPACE;
-				$output[] = new CSup($element['count']);
+				$output[] = (new CSpan([
+					(new CSpan($element['name']))->addClass(ZBX_STYLE_GREY),
+					' ',
+					new CSup($element['count'])
+				]))->addClass(ZBX_STYLE_SUBFILTER);
 			}
 			else {
-				// this level has no active subfilters
-				$nspan = $subfilter
-					? new CSup('+'.$element['count'])
-					: new CSup($element['count']);
-
 				$link = (new CSpan($element['name']))
 					->addClass(ZBX_STYLE_LINK_ACTION)
 					->onClick(CHtml::encode(
@@ -218,16 +217,14 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 						');'
 					));
 
-				$output[] = $link;
-				$output[] = SPACE;
-				$output[] = $nspan;
+				$output[] = (new CSpan([
+					$link,
+					' ',
+					new CSup(($subfilter ? '+' : '').$element['count'])
+				]))->addClass(ZBX_STYLE_SUBFILTER);
 			}
 		}
-
-		$output[] = '&nbsp;&nbsp;&nbsp;';
 	}
-
-	array_pop($output);
 
 	return $output;
 }
@@ -1515,6 +1512,18 @@ function getTriggerFormData(array $data) {
 		if (count($hosts) > 0 && !in_array(['hostid' => $data['hostid']], $hosts)) {
 			$host = reset($hosts);
 			$data['hostid'] = $host['hostid'];
+		}
+	}
+
+	if ($data['hostid'] && (!array_key_exists('groupid', $data) || !$data['groupid'])) {
+		$db_hostgroups = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'hostids' => $data['hostid'],
+			'templateids' => $data['hostid']
+		]);
+
+		if ($db_hostgroups) {
+			$data['groupid'] = $db_hostgroups[0]['groupid'];
 		}
 	}
 

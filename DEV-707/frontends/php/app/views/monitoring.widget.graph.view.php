@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 
 if ($data['only_footer']) {
 	$output = [
-		'footer' => (new CList([_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString()
+		'footer' => (new CList([_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString(),
+		'period_string' => $data['period_string']
 	];
 }
 elseif ($data['graph']['unavailable_object']) {
@@ -54,7 +55,7 @@ if ($data['widget']['initial_load'] == 1) {
 				'var content = jQuery("#"+img_id).closest(".dashbrd-grid-widget-content"),'.
 					'property_zone_height = timeControl.objectList[img_id]["objDims"]["graphPropertyZoneHeight"],'.
 					'new_width = content.width(),'.
-					'new_height = content.height() - 10,'.
+					'new_height = content.height() - 4,'.
 					'src = jQuery("#"+img_id).attr("src");'.
 
 				'if (typeof src === "undefined") {'.
@@ -95,6 +96,10 @@ if ($data['widget']['initial_load'] == 1) {
 		'footer' => (new CList([_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString(),
 		'script_inline' => $script
 	];
+
+	if (array_key_exists('period_string', $data)) {
+		$output['period_string'] = $data['period_string'];
+	}
 }
 
 if (($messages = getMessages()) !== null) {

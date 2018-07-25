@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -419,6 +419,19 @@ function getMenuPopupRefresh(options) {
 						dataType: 'script',
 						success: function(js) { js }
 					});
+
+					jQuery('a', obj.closest('.action-menu')).each(function() {
+						var link = jQuery(this);
+
+						if (link.data('value') == currentRate) {
+							link.addClass('selected');
+						}
+						else {
+							link.removeClass('selected');
+						}
+					});
+
+					obj.closest('.action-menu').fadeOut(100);
 				}
 				else {
 					var url = new Curl('zabbix.php');
@@ -471,7 +484,7 @@ function getMenuPopupRefresh(options) {
 	});
 
 	return [{
-		label: options.multiplier ? t('Refresh time multiplier') : t('Refresh time'),
+		label: options.multiplier ? t('Refresh interval multiplier') : t('Refresh interval'),
 		items: items
 	}];
 }

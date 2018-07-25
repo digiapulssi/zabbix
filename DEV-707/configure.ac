@@ -1,6 +1,6 @@
 dnl
 dnl Zabbix
-dnl Copyright (C) 2001-2017 Zabbix SIA
+dnl Copyright (C) 2001-2018 Zabbix SIA
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([Zabbix],[3.4.4rc1])
+AC_INIT([Zabbix],[3.4.12rc1])
 AC_CONFIG_SRCDIR(src/zabbix_server/server.c)
 AM_INIT_AUTOMAKE([subdir-objects])
 
@@ -244,6 +244,69 @@ if test "x$zbx_sival_int" != "x"; then
 else
   AC_MSG_ERROR(Unable to find integer field name in union sigval of struct siginfo_t)
 fi
+
+AC_MSG_CHECKING(for res_ninit)
+AC_TRY_LINK(
+[
+#ifdef HAVE_SYS_TYPES_H
+#	include <sys/types.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#	include <netinet/in.h>
+#endif
+#ifdef HAVE_ARPA_NAMESER_H
+#	include <arpa/nameser.h>
+#endif
+#ifdef HAVE_RESOLV_H
+#	include <resolv.h>
+#endif
+#ifndef C_IN
+#	define C_IN	ns_c_in
+#endif	/* C_IN */
+#ifndef T_SOA
+#	define T_SOA	ns_t_soa
+#endif	/* T_SOA */
+],
+[
+	struct __res_state	res_state_local;
+
+	res_ninit(&res_state_local);
+],
+AC_DEFINE(HAVE_RES_NINIT,1,[Define to 1 if 'res_ninit' exists.])
+AC_MSG_RESULT(yes),
+AC_MSG_RESULT(no))
+
+AC_MSG_CHECKING(for res_ndestroy)
+AC_TRY_LINK(
+[
+#ifdef HAVE_SYS_TYPES_H
+#	include <sys/types.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#	include <netinet/in.h>
+#endif
+#ifdef HAVE_ARPA_NAMESER_H
+#	include <arpa/nameser.h>
+#endif
+#ifdef HAVE_RESOLV_H
+#	include <resolv.h>
+#endif
+#ifndef C_IN
+#	define C_IN	ns_c_in
+#endif	/* C_IN */
+#ifndef T_SOA
+#	define T_SOA	ns_t_soa
+#endif	/* T_SOA */
+],
+[
+	struct __res_state	res_state_local;
+
+	res_ninit(&res_state_local);
+	res_ndestroy(&res_state_local);
+],
+AC_DEFINE(HAVE_RES_NDESTROY,1,[Define to 1 if 'res_ndestroy' exists.])
+AC_MSG_RESULT(yes),
+AC_MSG_RESULT(no))
 
 AC_MSG_CHECKING(for union semun)
 AC_TRY_COMPILE(
@@ -1353,6 +1416,8 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	AC_SUBST(OPENIPMI_CFLAGS)
 fi
 
+AM_CONDITIONAL(HAVE_IPMI, [test "x$have_ipmi" = "xyes"])
+
 dnl Check if Zabbix internal IPC services are used
 have_ipcservice="no"
 if test "x$have_ipmi" = "xyes"; then
@@ -1382,17 +1447,6 @@ if test "x$have_ipcservice" = "xyes"; then
 		PROXY_LIBS="$PROXY_LIBS $LIBEVENT_LIBS"
 	fi
 fi
-
-dnl Check for libpcre, used by Zabbix for regular expressions
-LIBPCRE_CHECK_CONFIG([no])
-if test "x$found_libpcre" != "xyes"; then
-	AC_MSG_ERROR([Unable to use libpcre (libpcre check failed)])
-fi
-CFLAGS="$CFLAGS $LIBPCRE_CFLAGS"
-LDFLAGS="$LDFLAGS $LIBPCRE_LDFLAGS"
-LIBS="$LIBS $LIBPCRE_LIBS"
-
-AC_SUBST(LIBPCRE_CFLAGS)
 
 dnl Check for mbed TLS (PolarSSL) libpolarssl [by default - skip]
 LIBMBEDTLS_CHECK_CONFIG([no])
@@ -1520,6 +1574,24 @@ dnl Starting from 2.0 agent can do web monitoring
 AGENT_LDFLAGS="$AGENT_LDFLAGS $LIBCURL_LDFLAGS"
 AGENT_LIBS="$AGENT_LIBS $LIBCURL_LIBS"
 
+dnl Check for libpcre, used by Zabbix for regular expressions
+if test "x$server" = "xyes" || test "x$proxy" = "xyes" || test "x$agent" = "xyes"; then
+	LIBPCRE_CHECK_CONFIG([no])
+	if test "x$found_libpcre" != "xyes"; then
+		AC_MSG_ERROR([Unable to use libpcre (libpcre check failed)])
+	fi
+fi
+
+CFLAGS="$CFLAGS $LIBPCRE_CFLAGS"
+LDFLAGS="$LDFLAGS $LIBPCRE_LDFLAGS"
+if test "x$ARCH" = "xosx"; then
+	LIBS="$LIBPCRE_LIBS $LIBS"
+else
+	LIBS="$LIBS $LIBPCRE_LIBS"
+fi
+
+AC_SUBST(LIBPCRE_CFLAGS)
+
 found_iconv="no"
 dnl Check for libiconv [by default - skip]
 LIBICONV_CHECK_CONFIG([no])
@@ -1624,6 +1696,7 @@ AC_OUTPUT([
 	src/libs/zbxregexp/Makefile
 	src/libs/zbxtasks/Makefile
 	src/libs/zbxipcservice/Makefile
+	src/libs/zbxhistory/Makefile
 	src/zabbix_agent/Makefile
 	src/zabbix_get/Makefile
 	src/zabbix_sender/Makefile

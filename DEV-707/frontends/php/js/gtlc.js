@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -301,19 +301,28 @@ var timeControl = {
 		}
 
 		var widget = widgets[0],
-			url = new Curl('zabbix.php');
+			url = new Curl('zabbix.php'),
+			post_args = {
+				uniqueid: widget['uniqueid'],
+				only_footer: 1
+			};
+
+		if (widget.type === 'graph') {
+			post_args.period = this.timeline.period();
+		}
 
 		url.setArgument('action', 'widget.graph.view');
 		jQuery.ajax({
 			url: url.getUrl(),
 			method: 'POST',
-			data: {
-				uniqueid: widget['uniqueid'],
-				only_footer: 1
-			},
+			data: post_args,
 			dataType: 'json',
 			success: function(resp) {
 				widget['content_footer'].html(resp.footer);
+
+				if ('period_string' in resp) {
+					jQuery('h4 span', widget['content_header']).text(resp.period_string);
+				}
 			}
 		});
 	},
@@ -526,7 +535,7 @@ var CTimeLine = Class.create({
 
 	period: function(period) {
 		if (empty(period)) {
-			return this._period;
+			return this.is_selectall_period ? this.maxperiod : this._period;
 		}
 
 		this.is_selectall_period = (period == this.maxperiod);
@@ -716,7 +725,7 @@ var CScrollBar = Class.create({
 	},
 
 	navigateLeft: function(e, left) {
-		if (this.disabled) {
+		if (this.disabled || timeControl.timeline.is_selectall_period) {
 			return false;
 		}
 
@@ -753,7 +762,7 @@ var CScrollBar = Class.create({
 	},
 
 	navigateRight: function(e, right) {
-		if (this.disabled) {
+		if (this.disabled || timeControl.timeline.is_selectall_period) {
 			return false;
 		}
 

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -383,9 +383,12 @@ function PopUp(url, width, height, form_name) {
 	return false;
 }
 
-function redirect(uri, method, needle, invert_needle) {
+function redirect(uri, method, needle, invert_needle, add_sid) {
+	if (typeof add_sid === 'undefined') {
+		add_sid = true;
+	}
 	method = method || 'get';
-	var url = new Curl(uri);
+	var url = new Curl(uri, add_sid);
 
 	if (method.toLowerCase() == 'get') {
 		window.location = url.getUrl();

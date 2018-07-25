@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ static int	get_function_parameter_int(zbx_uint64_t hostid, const char *parameter
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_get_param_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL, NULL,
@@ -143,7 +143,7 @@ static int	get_function_parameter_uint64(zbx_uint64_t hostid, const char *parame
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_get_param_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL, NULL,
@@ -172,7 +172,7 @@ static int	get_function_parameter_float(zbx_uint64_t hostid, const char *paramet
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_get_param_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL, NULL,
@@ -203,7 +203,7 @@ static int	get_function_parameter_str(zbx_uint64_t hostid, const char *parameter
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (*value = get_param_dyn(parameters, Nparam)))
+	if (NULL == (*value = zbx_function_get_param_dyn(parameters, Nparam)))
 		goto out;
 
 	ret = substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL, NULL,
@@ -879,7 +879,7 @@ static int	evaluate_SUM(char *value, DC_ITEM *item, const char *parameters, time
 			result.ui64 += values.values[i].value.ui64;
 	}
 
-	zbx_vc_history_value2str(value, MAX_BUFFER_LEN, &result, item->value_type);
+	zbx_history_value2str(value, MAX_BUFFER_LEN, &result, item->value_type);
 	ret = SUCCEED;
 out:
 	zbx_history_record_vector_destroy(&values, item->value_type);
@@ -1034,7 +1034,7 @@ static int	evaluate_LAST(char *value, DC_ITEM *item, const char *parameters, tim
 	{
 		if (arg1 <= values.values_num)
 		{
-			zbx_vc_history_value2str(value, MAX_BUFFER_LEN, &values.values[arg1 - 1].value,
+			zbx_history_value2str(value, MAX_BUFFER_LEN, &values.values[arg1 - 1].value,
 					item->value_type);
 			ret = SUCCEED;
 		}
@@ -1132,7 +1132,7 @@ static int	evaluate_MIN(char *value, DC_ITEM *item, const char *parameters, time
 					index = i;
 			}
 		}
-		zbx_vc_history_value2str(value, MAX_BUFFER_LEN, &values.values[index].value, item->value_type);
+		zbx_history_value2str(value, MAX_BUFFER_LEN, &values.values[index].value, item->value_type);
 
 		ret = SUCCEED;
 	}
@@ -1231,7 +1231,7 @@ static int	evaluate_MAX(char *value, DC_ITEM *item, const char *parameters, time
 					index = i;
 			}
 		}
-		zbx_vc_history_value2str(value, MAX_BUFFER_LEN, &values.values[index].value, item->value_type);
+		zbx_history_value2str(value, MAX_BUFFER_LEN, &values.values[index].value, item->value_type);
 
 		ret = SUCCEED;
 	}
@@ -1352,7 +1352,7 @@ static int	evaluate_PERCENTILE(char *value, DC_ITEM *item, const char *parameter
 		else
 			index = (int)ceil(values.values_num * (percentage / 100));
 
-		zbx_vc_history_value2str(value, MAX_BUFFER_LEN, &values.values[index - 1].value, item->value_type);
+		zbx_history_value2str(value, MAX_BUFFER_LEN, &values.values[index - 1].value, item->value_type);
 
 		ret = SUCCEED;
 	}
@@ -1463,7 +1463,7 @@ static int	evaluate_DELTA(char *value, DC_ITEM *item, const char *parameters, ti
 			result.dbl = values.values[index_max].value.dbl - values.values[index_min].value.dbl;
 		}
 
-		zbx_vc_history_value2str(value, MAX_BUFFER_LEN, &result, item->value_type);
+		zbx_history_value2str(value, MAX_BUFFER_LEN, &result, item->value_type);
 
 		ret = SUCCEED;
 	}
