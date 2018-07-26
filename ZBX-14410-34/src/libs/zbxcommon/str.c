@@ -4193,7 +4193,7 @@ static int	zbx_token_parse_macro(const char *expression, const char *macro, zbx_
 static int	zbx_token_parse_function(const char *expression, const char *func,
 		zbx_strloc_t *func_loc, zbx_strloc_t *func_param)
 {
-	size_t	par_l, par_r;
+	size_t	par_l, par_r = 0;
 
 	if (SUCCEED != zbx_function_validate(func, &par_l, &par_r, NULL, 0))
 		return FAIL;
