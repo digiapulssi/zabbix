@@ -106,7 +106,7 @@ class ZabbixJMXConnectorFactory
 			}
 
 			if (null == result)
-				logger.trace("no connector after {} seconds", timeout);
+				logger.trace("no connector acquired after {} seconds", timeout);
 			else
 				logger.trace("connector acquired");
 		}

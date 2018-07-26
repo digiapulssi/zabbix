@@ -66,7 +66,7 @@ public class JavaGateway
 			ServerSocket socket = new ServerSocket(listenPort, 0, listenIP);
 			socket.setReuseAddress(true);
 
-			logger.info("listening on {}:{}", socket.getInetAddress(), socket.getLocalPort());
+			logger.info("Zabbix Java Gateway listening on host \"{}:{}\"", socket.getInetAddress(), socket.getLocalPort());
 
 			int startPollers = ConfigurationManager.getIntegerParameterValue(ConfigurationManager.START_POLLERS);
 			ExecutorService threadPool = new ThreadPoolExecutor(
@@ -82,7 +82,7 @@ public class JavaGateway
 		}
 		catch (Exception e)
 		{
-			logger.error("caught fatal exception: {}", ZabbixException.getRootCauseMessage(e));
+			logger.error("Zabbix Java Gateway caught a fatal exception: {}", ZabbixException.getRootCauseMessage(e));
 			logger.debug("error caused by", e);
 		}
 	}

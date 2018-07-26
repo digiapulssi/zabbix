@@ -44,7 +44,7 @@ class ConfigurationManager
 					@Override
 					public void execute(Object value)
 					{
-						logger.debug("received {} configuration parameter, daemonizing", PID_FILE);
+						logger.debug("received configuration parameter 'PID_FILE' with value '{}', daemonizing", PID_FILE);
 
 						File pidFile = (File)value;
 
@@ -86,7 +86,7 @@ class ConfigurationManager
 
 			if (null != property)
 			{
-				logger.debug("found {} configuration parameter with value '{}'", parameter.getName(), property);
+				logger.debug("configuration manager found configuration parameter '{}' with value '{}'", parameter.getName(), property);
 				parameter.setValue(property);
 			}
 		}

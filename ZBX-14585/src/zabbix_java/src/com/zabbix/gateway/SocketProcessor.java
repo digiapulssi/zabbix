@@ -44,7 +44,7 @@ class SocketProcessor implements Runnable
 		BinaryProtocolSpeaker speaker = null;
 		InetAddress ipaddr = socket.getInetAddress();
 
-		logger.debug("starting to process incoming connection ({})", ipaddr);
+		logger.debug("starting to process incoming connection on host \"{}\"", ipaddr);
 
 		try
 		{
@@ -61,7 +61,7 @@ class SocketProcessor implements Runnable
 			else
 				throw new ZabbixException("bad request tag value: '%s'", request.getString(ItemChecker.JSON_TAG_REQUEST));
 
-			logger.debug("dispatched request to class {}", checker.getClass().getName());
+			logger.debug("socket processor dispatched request to class {} on host \"{}\"", new Object[] {checker.getClass().getName(), ipaddr});
 			JSONArray values = checker.getValues();
 
 			JSONObject response = new JSONObject();
@@ -73,7 +73,7 @@ class SocketProcessor implements Runnable
 		catch (Exception e1)
 		{
 			String error = ZabbixException.getRootCauseMessage(e1);
-			logger.warn("error processing request: {} ({})", new Object[] {error, ipaddr});
+			logger.warn("socket processor on host \"{}\" failed: {}", new Object[] {ipaddr, error});
 			logger.debug("error caused by", e1);
 
 			try
@@ -86,7 +86,7 @@ class SocketProcessor implements Runnable
 			}
 			catch (Exception e2)
 			{
-				logger.warn("error sending failure notification: {}", ZabbixException.getRootCauseMessage(e1));
+				logger.warn("socket processor encountered an error while sending failure notification: {}", ZabbixException.getRootCauseMessage(e1));
 				logger.debug("error caused by", e2);
 			}
 		}
@@ -96,6 +96,6 @@ class SocketProcessor implements Runnable
 			try { if (null != socket) socket.close(); } catch (Exception e) { }
 		}
 
-		logger.debug("finished processing incoming connection ({})", ipaddr);
+		logger.debug("socket processor finished processing incoming connection on host \"{}\"", ipaddr);
 	}
 }

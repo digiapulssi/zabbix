@@ -132,7 +132,7 @@ class JMXItemChecker extends ItemChecker
 
 			if (-1 != sep)
 			{
-				logger.trace("data object '{}' '{}' contains composite data", key, attributeName);
+				logger.trace("attribute '{}' of data object '{}' contains composite data", new Object[] {attributeName, key);
 
 				realAttributeName = attributeName.substring(0, sep);
 				fieldNames = attributeName.substring(sep + 1);
@@ -143,8 +143,8 @@ class JMXItemChecker extends ItemChecker
 			// unescape possible dots or backslashes that were escaped by user
 			realAttributeName = HelperFunctionChest.unescapeUserInput(realAttributeName);
 
-			logger.trace("attributeName:'{}'", realAttributeName);
-			logger.trace("fieldNames:'{}'", fieldNames);
+			logger.trace("data object '{}' attribute name: '{}'", new Object[] {key, realAttributeName});
+			logger.trace("data object '{}' field names: '{}'", new Object[] {key, fieldNames});
 
 			return getPrimitiveAttributeValue(mbsc.getAttribute(objectName, realAttributeName), fieldNames);
 		}
@@ -171,7 +171,7 @@ class JMXItemChecker extends ItemChecker
 
 			for (ObjectName name : mbsc.queryNames(filter, null))
 			{
-				logger.trace("discovered object '{}'", name);
+				logger.trace("JMX discovery using mode '{}': discovered object '{}'", new Object[] {modeName, name});
 
 				if (DISCOVERY_MODE_ATTRIBUTES == mode)
 					discoverAttributes(counters, name);
@@ -189,7 +189,7 @@ class JMXItemChecker extends ItemChecker
 
 	private String getPrimitiveAttributeValue(Object dataObject, String fieldNames) throws ZabbixException
 	{
-		logger.trace("drilling down with data object '{}' and field names '{}'", dataObject, fieldNames);
+		logger.trace("getting attribute values for data object '{}' and field names '{}'", dataObject, fieldNames);
 
 		if (null == dataObject)
 			throw new ZabbixException("data object is null");
@@ -204,7 +204,7 @@ class JMXItemChecker extends ItemChecker
 
 		if (dataObject instanceof CompositeData)
 		{
-			logger.trace("'{}' contains composite data", dataObject);
+			logger.trace("data object '{}' contains composite data", dataObject);
 
 			CompositeData comp = (CompositeData)dataObject;
 
@@ -234,24 +234,24 @@ class JMXItemChecker extends ItemChecker
 	{
 		for (MBeanAttributeInfo attrInfo : mbsc.getMBeanInfo(name).getAttributes())
 		{
-			logger.trace("discovered attribute '{}'", attrInfo.getName());
+			logger.trace("discovered attribute '{}' in data object '{}'", new Object[] {attrInfo.getName(), name});
 
 			if (!attrInfo.isReadable())
 			{
-				logger.trace("attribute not readable, skipping");
+				logger.trace("attribute '{}' of data object '{}' not readable, skipping", new Object[] {attrInfo.getName(), name});
 				continue;
 			}
 
 			try
 			{
-				logger.trace("looking for attributes of primitive types");
+				logger.trace("looking for attributes of primitive types in data object '{}'", name);
 				String descr = (attrInfo.getName().equals(attrInfo.getDescription()) ? null : attrInfo.getDescription());
 				findPrimitiveAttributes(counters, name, descr, attrInfo.getName(), mbsc.getAttribute(name, attrInfo.getName()));
 			}
 			catch (Exception e)
 			{
-				Object[] logInfo = {name, attrInfo.getName(), ZabbixException.getRootCauseMessage(e)};
-				logger.warn("attribute processing '{},{}' failed: {}", logInfo);
+				Object[] logInfo = {attrInfo.getName(), name, ZabbixException.getRootCauseMessage(e)};
+				logger.warn("failed to process attribute '{}' of data object '{}': {}", logInfo);
 				logger.debug("error caused by", e);
 			}
 		}
@@ -295,11 +295,11 @@ class JMXItemChecker extends ItemChecker
 
 	private void findPrimitiveAttributes(JSONArray counters, ObjectName name, String descr, String attrPath, Object attribute) throws JSONException
 	{
-		logger.trace("drilling down with attribute path '{}'", attrPath);
+		logger.trace("finding attributes for data object '{}' and attribute path '{}'", new Object[] {name, attrPath});
 
 		if (isPrimitiveAttributeType(attribute.getClass()))
 		{
-			logger.trace("found attribute of a primitive type: {}", attribute.getClass());
+			logger.trace("found attribute of a primitive type '{}' in data object '{}'", new Object[] {attribute.getClass(), name});
 
 			JSONObject counter = new JSONObject();
 
@@ -313,7 +313,7 @@ class JMXItemChecker extends ItemChecker
 		}
 		else if (attribute instanceof CompositeData)
 		{
-			logger.trace("found attribute of a composite type: {}", attribute.getClass());
+			logger.trace("found attribute of a composite type '{}' in data object '{}'", new Object[] {attribute.getClass(), name});
 
 			CompositeData comp = (CompositeData)attribute;
 
@@ -322,10 +322,10 @@ class JMXItemChecker extends ItemChecker
 		}
 		else if (attribute instanceof TabularDataSupport || attribute.getClass().isArray())
 		{
-			logger.trace("found attribute of a known, unsupported type: {}", attribute.getClass());
+			logger.trace("found attribute of a known unsupported type '{}' in data object '{}'", new Object[] {attribute.getClass(), name});
 		}
 		else
-			logger.trace("found attribute of an unknown, unsupported type: {}", attribute.getClass());
+			logger.trace("found attribute of an unknown unsupported type '{}' in data object '{}'", new Object[] {attribute.getClass(), name});
 	}
 
 	private boolean isPrimitiveAttributeType(Class<?> clazz)

@@ -83,9 +83,9 @@ abstract class ItemChecker
 
 		try
 		{
-			logger.debug("getting value for item '{}'", key);
+			logger.debug("getting JSON value for item '{}'", key);
 			String text = getStringValue(key);
-			logger.debug("received value '{}' for item '{}'", text, key);
+			logger.debug("received JSON value '{}' for item '{}'", text, key);
 			value.put(JSON_TAG_VALUE, text);
 		}
 		catch (Exception e1)
