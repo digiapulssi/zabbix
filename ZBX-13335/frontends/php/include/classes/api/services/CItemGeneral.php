@@ -777,6 +777,7 @@ abstract class CItemGeneral extends CApiService {
 
 		if ($this instanceof CItem || $this instanceof CItemPrototype) {
 			$new_items = $this->inheritDependentItems($new_items);
+			$this->validateDependentItems($new_items);
 		}
 
 		// Inheriting items from the templates.
@@ -1630,7 +1631,7 @@ abstract class CItemGeneral extends CApiService {
 						&& array_key_exists($dependency_level, $items_added[$root_itemid])) {
 					$find_itemids += $items_added[$root_itemid][$dependency_level];
 				}
-				$find_itemids = $data_provider->get([
+				$find_itemids = $this->get([
 					'output' => ['itemid'],
 					'filter' => ['master_itemid' => array_keys($find_itemids)],
 					'preservekeys' => true
