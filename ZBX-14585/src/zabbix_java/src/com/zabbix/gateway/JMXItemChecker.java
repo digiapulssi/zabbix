@@ -132,7 +132,7 @@ class JMXItemChecker extends ItemChecker
 
 			if (-1 != sep)
 			{
-				logger.trace("attribute '{}' of data object '{}' contains composite data", new Object[] {attributeName, key);
+				logger.trace("attribute '{}' of data object '{}' contains composite data", new Object[] {attributeName, key});
 
 				realAttributeName = attributeName.substring(0, sep);
 				fieldNames = attributeName.substring(sep + 1);
@@ -171,7 +171,7 @@ class JMXItemChecker extends ItemChecker
 
 			for (ObjectName name : mbsc.queryNames(filter, null))
 			{
-				logger.trace("JMX discovery using mode '{}': discovered object '{}'", new Object[] {modeName, name});
+				logger.trace("JMX discovery using mode '{}': discovered object '{}'", new Object[] {mode, name});
 
 				if (DISCOVERY_MODE_ATTRIBUTES == mode)
 					discoverAttributes(counters, name);
