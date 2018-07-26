@@ -415,8 +415,7 @@ class CItem extends CItemGeneral {
 		$this->validateDependentItems($items);
 
 		$this->createReal($items);
-		$host_items = $this->inherit($items);
-		$this->validateDependentItems($host_items);
+		$this->inherit($items);
 
 		return ['itemids' => zbx_objectValues($items, 'itemid')];
 	}
@@ -519,8 +518,7 @@ class CItem extends CItemGeneral {
 		$this->validateDependentItems($items);
 
 		$this->updateReal($items);
-		$host_items = $this->inherit($items);
-		$this->validateDependentItems($host_items);
+		$this->inherit($items);
 
 		return ['itemids' => zbx_objectValues($items, 'itemid')];
 	}
@@ -695,8 +693,7 @@ class CItem extends CItemGeneral {
 		}
 		unset($tpl_item);
 
-		$host_items = $this->inherit($tpl_items, $data['hostids']);
-		$this->validateDependentItems($host_items);
+		$this->inherit($tpl_items, $data['hostids']);
 
 		return true;
 	}

@@ -731,17 +731,14 @@ abstract class CItemGeneral extends CApiService {
 	 * @return array
 	 */
 	protected function inherit(array $items, array $hostids = null) {
-		// Store current level of inherited items data to be able to return last level for dependet item validation.
-		static $host_items = [];
-
 		if (!$items) {
-			return $host_items;
+			return;
 		}
 
 		// Prepare the child items.
 		$new_items = $this->prepareInheritedItems($items, $hostids);
 		if (!$new_items) {
-			return $host_items;
+			return;
 		}
 
 		$ins_items = [];
@@ -776,8 +773,11 @@ abstract class CItemGeneral extends CApiService {
 			$this->updateReal($upd_items);
 		}
 
-		$new_items = $this->inheritDependentItems(array_merge($upd_items, $ins_items));
-		$host_items = $new_items;
+		$new_items = array_merge($upd_items, $ins_items);
+
+		if ($this instanceof CItem || $this instanceof CItemPrototype) {
+			$new_items = $this->inheritDependentItems($new_items);
+		}
 
 		// Inheriting items from the templates.
 		$tpl_items = DBselect(
@@ -800,7 +800,7 @@ abstract class CItemGeneral extends CApiService {
 		}
 
 		// Inheriting items from the templates.
-		return $this->inherit($new_items);
+		$this->inherit($new_items);
 	}
 
 	/**
