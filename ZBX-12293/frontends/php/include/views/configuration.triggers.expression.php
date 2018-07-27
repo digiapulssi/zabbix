@@ -79,10 +79,7 @@ if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) 
 			$paramTypeElement = null;
 
 			if ($paramId == 0
-				|| ($paramId == 1
-					&& ($data['function'] === 'regexp'
-						|| $data['function'] === 'iregexp'
-						|| $data['function'] === 'str'))) {
+					|| ($paramId == 1 && in_array($data['function'], ['regexp', 'iregexp', 'str']))) {
 				if (isset($paramFunction['M'])) {
 					$paramTypeElement = new CComboBox('paramtype', $this->data['paramtype'], null, $paramFunction['M']);
 				}
@@ -92,8 +89,7 @@ if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) 
 				}
 			}
 
-			if ($paramId == 1 && ($data['function'] !== 'str' || $data['function'] === 'strlen')
-					&& $data['function'] !== 'regexp' && $data['function'] !== 'iregexp') {
+			if ($paramId == 1 && !in_array($data['function'], ['regexp', 'iregexp', 'str'])) {
 				$paramTypeElement = _('Time');
 				$paramField = (new CTextBox('params['.$paramId.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
 			}
