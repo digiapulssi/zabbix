@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc25
+
+Bug fixes:
+..F....... [403] fixed time shifts for value selection in incident details and particular test data pages for DNS and DNSSEC services (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc24
 
 Bug fixes:
