@@ -180,7 +180,7 @@ class testPageReportsTriggerTop extends CWebTest {
 			$this->zbxTestClickButtonMultiselect('groupids_');
 			$this->zbxTestLaunchOverlayDialog('Host groups');
 			$this->zbxTestClickLinkTextWait($data['host_group']);
-			$this->zbxTestWaitUntilElementNotVisible(WebDriverBy::xpath("//div[@id='overlay_dialogue']"));
+			$this->zbxTestWaitUntilElementNotVisible(WebDriverBy::xpath('//div[@id="overlay_dialogue"]'));
 			$this->zbxTestMultiselectAssertSelected('groupids_', $data['host_group']);
 		}
 
@@ -191,14 +191,14 @@ class testPageReportsTriggerTop extends CWebTest {
 				'ZBX6648 All Triggers', 'ZBX6648 Disabled Triggers', 'ZBX6648 Enabled Triggers']
 			);
 			$this->zbxTestDropdownSelect('groupid', 'Zabbix servers');
-			$this->zbxTestClickXpathWait('//a[contains(@id,"spanid")][text()="'.$data['host'].'"]');
-			$this->zbxTestWaitUntilElementNotVisible(WebDriverBy::xpath("//div[@id='overlay_dialogue']"));
+			$this->zbxTestClickXpathWait('//div[@id="overlay_dialogue"]//a[text()="'.$data['host'].'"]');
+			$this->zbxTestWaitUntilElementNotVisible(WebDriverBy::xpath('//div[@id="overlay_dialogue"]'));
 			$this->zbxTestMultiselectAssertSelected('hostids_', $data['host']);
 		}
 
 		if (array_key_exists('severities', $data)) {
 			foreach ($data['severities'] as $severity) {
-				$severity_id = $this->zbxTestGetAttributeValue('//label[text()=\''.$severity.'\']', 'for');
+				$severity_id = $this->zbxTestGetAttributeValue('//label[text()="'.$severity.'"]', 'for');
 				$this->zbxTestClick($severity_id);
 			}
 		}
@@ -211,15 +211,17 @@ class testPageReportsTriggerTop extends CWebTest {
 			foreach ($data['date'] as $i => $full_date) {
 				$this->zbxTestInputTypeOverwrite($i, $full_date);
 			}
-			$this->zbxTestClickXpathWait('//button[@id="apply"][text()="Apply"]');
+			$this->zbxTestClickWait('apply');
 		}
 
 		$this->zbxTestWaitForPageToLoad();
 		if (array_key_exists('result', $data)) {
+			$this->zbxTestWaitUntilElementPresent(WebDriverBy::xpath('//tbody//td[2]//a'));
 			$this->zbxTestTextPresent($data['result']);
 		}
 		else {
-			$this->zbxTestAssertElementText('//tr[@class=\'nothing-to-show\']/td', 'No data found.');
+			$this->zbxTestWaitUntilElementVisible(WebDriverBy::xpath('//tr[@class="nothing-to-show"]'));
+			$this->zbxTestAssertElementText('//tr[@class="nothing-to-show"]/td', 'No data found.');
 		}
 	}
 }

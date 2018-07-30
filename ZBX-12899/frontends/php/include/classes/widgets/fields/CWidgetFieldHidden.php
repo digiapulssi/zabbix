@@ -19,29 +19,17 @@
 **/
 
 
-/**
- * URL widget form.
- */
-class CWidgetFormUrl extends CWidgetForm {
+class CWidgetFieldHidden extends CWidgetField {
 
-	public function __construct($data) {
-		parent::__construct($data, WIDGET_URL);
+	/**
+	 * Hidden widget field. Will not be displayed for user. Can contain string, int or id type value.
+	 *
+	 * @param string $name       field name in form
+	 * @param int    $save_type  ZBX_WIDGET_FIELD_TYPE_ constant. Defines how field will be saved in database.
+	 */
+	public function __construct($name, $save_type) {
+		parent::__construct($name, null);
 
-		// URL field
-		$field_url = (new CWidgetFieldUrl('url', _('URL')))
-			->setFlags(CWidgetField::FLAG_NOT_EMPTY | CWidgetField::FLAG_LABEL_ASTERISK);
-
-		if (array_key_exists('url', $this->data)) {
-			$field_url->setValue($this->data['url']);
-		}
-		$this->fields[] = $field_url;
-
-		// dynamic item
-		$field_dynamic = (new CWidgetFieldCheckBox('dynamic', _('Dynamic item')))->setDefault(WIDGET_SIMPLE_ITEM);
-
-		if (array_key_exists('dynamic', $this->data)) {
-			$field_dynamic->setValue($this->data['dynamic']);
-		}
-		$this->fields[] = $field_dynamic;
+		$this->setSaveType($save_type);
 	}
 }
