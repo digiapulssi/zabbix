@@ -434,6 +434,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 
 				$widgetid = $widget['widgetid'];
 				$fields = self::convertWidgetFields($widget['fields']);
+				$fields_orig = $fields;
 
 				$rf_rate = (array_key_exists('rf_rate', $fields))
 					? ($fields['rf_rate'] == -1)
@@ -443,7 +444,7 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 
 				$widget_form = CWidgetConfig::getForm($widget['type'], CJs::encodeJson($fields));
 				if ($widget_form->validate()) {
-					$fields = $widget_form->getFieldsData();
+					$fields = $widget_form->getFieldsData(true);
 				}
 
 				$grid_widgets[] = [
@@ -457,7 +458,8 @@ class CControllerDashboardView extends CControllerDashboardAbstract {
 						'height' => (int) $widget['height']
 					],
 					'rf_rate' => (int) CProfile::get('web.dashbrd.widget.rf_rate', $rf_rate, $widgetid),
-					'fields' => $fields
+					'fields' => $fields,
+					'fields_orig' => $fields_orig
 				];
 			}
 		}

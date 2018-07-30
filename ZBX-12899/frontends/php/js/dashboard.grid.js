@@ -461,8 +461,8 @@
 			ajax_data['name'] = widget['header'];
 		}
 		// display widget with yet unsaved changes
-		if (typeof widget['fields'] !== 'undefined' && Object.keys(widget['fields']).length != 0) {
-			ajax_data['fields'] = JSON.stringify(widget['fields']);
+		if (typeof widget['fields_orig'] !== 'undefined' && Object.keys(widget['fields_orig']).length != 0) {
+			ajax_data['fields'] = JSON.stringify(widget['fields_orig']);
 		}
 		if (typeof(widget['dynamic']) !== 'undefined') {
 			ajax_data['dynamic_hostid'] = widget['dynamic']['hostid'];
@@ -558,6 +558,25 @@
 		updateWidgetContent($obj, data, widget);
 	}
 
+	function objectsToDottedKeys(fields) {
+		var res = {};
+
+		$.each(fields, function(name, value) {
+			if (typeof value === 'object') {
+				$.each(value, function(index, val) {
+					$.each(val, function(key, v) {
+						res[name + '.' + key + '.' + index] = v;
+					});
+				});
+			}
+			else {
+				res[name] = value;
+			}
+		});
+
+		return res;
+	}
+
 	function updateWidgetConfig($obj, data, widget) {
 		var	url = new Curl('zabbix.php'),
 			fields = $('form', data.dialogue['body']).serializeJSON(),
@@ -570,6 +589,8 @@
 
 		delete fields['type'];
 		delete fields['name'];
+
+		fields = objectsToDottedKeys(fields);
 
 		url.setArgument('action', 'dashboard.widget.check');
 
@@ -602,7 +623,8 @@
 								'header': name,
 								'pos': pos,
 								'rf_rate': 0,
-								'fields': fields
+								'fields': fields,
+								'fields_orig': fields
 							},
 							add_new_widget = function() {
 								methods.addWidget.call($obj, widget_data);
@@ -638,6 +660,7 @@
 
 						widget['header'] = name;
 						widget['fields'] = fields;
+						widget['fields_orig'] = fields;
 						doAction('afterUpdateWidgetConfig', $obj, data, null);
 						updateWidgetDynamic($obj, data, widget);
 						refreshWidget($obj, data, widget);
@@ -1104,6 +1127,7 @@
 				'initial_load': true,
 				'ready': false,
 				'fields': {},
+				'fields_orig': {},
 				'storage': {}
 			}, widget);
 

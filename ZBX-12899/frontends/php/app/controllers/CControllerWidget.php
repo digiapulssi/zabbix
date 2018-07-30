@@ -105,8 +105,6 @@ abstract class CControllerWidget extends CController {
 				foreach ($errors as $error) {
 					info($error);
 				}
-
-				$ret = false;
 			}
 		}
 

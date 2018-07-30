@@ -28,10 +28,9 @@ class CControllerWidgetNavTreeItemEdit extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'depth' => 'ge 0|le '.WIDGET_NAVIGATION_TREE_MAX_DEPTH,
-			'map_mapid' => 'db sysmaps.sysmapid',
-			'map_name' => 'required|string',
-			'map_id' => 'int32'
+			'name' => 'required|string',
+			'sysmapid' => 'db sysmaps.sysmapid',
+			'depth' => 'ge 0|le '.WIDGET_NAVIGATION_TREE_MAX_DEPTH
 		];
 
 		$ret = $this->validateInput($fields);
@@ -48,9 +47,7 @@ class CControllerWidgetNavTreeItemEdit extends CController {
 	}
 
 	protected function doAction() {
-		$map_item_name = $this->getInput('map_name', '');
-		$map_mapid = $this->getInput('map_mapid', 0);
-		$map_id = $this->getInput('map_id', 0);
+		$sysmapid = $this->getInput('sysmapid', 0);
 		$depth = $this->getInput('depth', 1);
 
 		// build form
@@ -60,34 +57,31 @@ class CControllerWidgetNavTreeItemEdit extends CController {
 			->setName('widget_dialogue_form');
 
 		$formList = new CFormList();
-		$formList->addRow(
-			_('Name'),
-			(new CTextBox('map.name.'.$map_id, $map_item_name))
+		$formList->addRow(_('Name'),
+			(new CTextBox('name', $this->getInput('name', '')))
 				->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
 				->setAttribute('autofocus', 'autofocus')
 		);
 
-		$sysmap_id = 0;
-		$sysmap_caption = '';
+		$sysmap = ['sysmapid' => 0, 'name' => ''];
 
-		if ($map_mapid) {
-			$maps = API::Map()->get([
-				'sysmapids' => [$map_mapid],
+		if ($sysmapid != 0) {
+			$sysmaps = API::Map()->get([
+				'sysmapids' => [$sysmapid],
 				'output' => ['name', 'sysmapid']
 			]);
 
-			if (($map = reset($maps)) !== false) {
-				$sysmap_caption = $map['name'];
-				$sysmap_id = $map['sysmapid'];
+			if ($sysmaps) {
+				$sysmap = $sysmaps[0];
 			}
 			else {
-				$sysmap_caption = _('Inaccessible map');
+				$sysmap['name'] = _('Inaccessible map');
 			}
 		}
 
-		$formList->addVar('linked_map_id', $sysmap_id);
+		$formList->addVar('sysmapid', $sysmap['sysmapid']);
 		$formList->addRow(_('Linked map'), [
-			(new CTextBox('caption', $sysmap_caption, true))
+			(new CTextBox('sysmapname', $sysmap['name'], true))
 				->setAttribute('onChange',
 					'javascript: if(jQuery("#'.$form->getName().' input[type=text]:first").val() === ""){'.
 						'jQuery("#widget_dialogue_form input[type=text]:first").val(this.value);}')
@@ -101,8 +95,8 @@ class CControllerWidgetNavTreeItemEdit extends CController {
 						'srcfld1' => 'sysmapid',
 						'srcfld2' => 'name',
 						'dstfrm' => $form->getName(),
-						'dstfld1' => 'linked_map_id',
-						'dstfld2' => 'caption'
+						'dstfld1' => 'sysmapid',
+						'dstfld2' => 'sysmapname'
 					]).', null, this);'
 				)
 		]);

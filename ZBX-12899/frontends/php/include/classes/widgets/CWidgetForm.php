@@ -105,14 +105,28 @@ class CWidgetForm {
 	/**
 	 * Returns widget fields data as array.
 	 *
+	 * @param bool $orig  Returns dotted keys unconverted.
+	 *
 	 * @return array  Key/value pairs where key is field name and value is it's data.
 	 */
-	public function getFieldsData() {
+	public function getFieldsData($orig = false) {
 		$data = [];
 
 		foreach ($this->fields as $field) {
 			/* @var $field CWidgetField */
-			$data[$field->getName()] = $field->getValue();
+			$name = $field->getName();
+			$value = $field->getValue();
+
+			if ($orig && is_array($value)) {
+				foreach ($value as $index => $val) {
+					foreach ($val as $key => $v) {
+						$data[$name.'.'.$key.'.'.$index] = $v;
+					}
+				}
+			}
+			else {
+				$data[$name] = $value;
+			}
 		}
 
 		return $data;

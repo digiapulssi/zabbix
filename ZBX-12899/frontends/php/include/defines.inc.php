@@ -22,7 +22,7 @@
 define('ZABBIX_VERSION',		'4.0.0alpha10');
 define('ZABBIX_API_VERSION',	'4.0.0');
 define('ZABBIX_EXPORT_VERSION',	'4.0');
-define('ZABBIX_DB_VERSION',		3050123);
+define('ZABBIX_DB_VERSION',		3050124);
 
 define('ZABBIX_COPYRIGHT_FROM',	'2001');
 define('ZABBIX_COPYRIGHT_TO',	'2018');
@@ -1144,14 +1144,15 @@ define('API_TIME_UNIT',			19);
 define('API_URL',				20);
 
 // flags
-define('API_REQUIRED',			0x01);
-define('API_NOT_EMPTY',			0x02);
-define('API_ALLOW_NULL',		0x04);
-define('API_NORMALIZE',			0x08);
-define('API_DEPRECATED',		0x10);
-define('API_ALLOW_USER_MACRO',	0x20);
-define('API_ALLOW_COUNT',		0x40);
-define('API_ALLOW_LLD_MACRO',	0x80);
+define('API_REQUIRED',			0x0001);
+define('API_NOT_EMPTY',			0x0002);
+define('API_ALLOW_NULL',		0x0004);
+define('API_NORMALIZE',			0x0008);
+define('API_DEPRECATED',		0x0010);
+define('API_ALLOW_USER_MACRO',	0x0020);
+define('API_ALLOW_COUNT',		0x0040);
+define('API_ALLOW_LLD_MACRO',	0x0080);
+define('API_PRESERVE_KEYS',		0x0100);
 
 // JSON error codes.
 if (!defined('JSON_ERROR_NONE')) {

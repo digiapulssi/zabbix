@@ -225,6 +225,20 @@ foreach ($data['dialogue']['fields'] as $field) {
 			$severities
 		);
 	}
+	elseif ($field instanceof CWidgetFieldNavTree) {
+		$navtree_items = $field->getValue();
+		$field_name = $field->getName();
+
+		foreach ($navtree_items as $i => $navtree_item) {
+			$form->addVar($field_name.'['.$i.'][name]', $navtree_item['name']);
+			$form->addVar($field_name.'['.$i.'][order]', $navtree_item['order']);
+			$form->addVar($field_name.'['.$i.'][parent]', $navtree_item['parent']);
+			$form->addVar($field_name.'['.$i.'][sysmapid]', array_key_exists('sysmapid', $navtree_item)
+				? $navtree_item['sysmapid']
+				: 0
+			);
+		}
+	}
 	elseif ($field instanceof CWidgetFieldTags) {
 		$tags = $field->getValue();
 
