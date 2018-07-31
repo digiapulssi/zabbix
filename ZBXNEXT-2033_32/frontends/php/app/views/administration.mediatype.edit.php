@@ -75,7 +75,7 @@ $mediaTypeFormList
 	->addRow(_('Authentication'),
 		(new CRadioButtonList('smtp_authentication', (int) $data['smtp_authentication']))
 			->addValue(_('None'), SMTP_AUTHENTICATION_NONE)
-			->addValue(_('Normal password'), SMTP_AUTHENTICATION_NORMAL)
+			->addValue(_('Username and password'), SMTP_AUTHENTICATION_NORMAL)
 			->setModern(true)
 	)
 	->addRow(_('Remedy Service URL'),

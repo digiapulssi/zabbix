@@ -25,7 +25,7 @@
 #include "dbcache.h"
 #include "../events.h"
 
-#define ZBX_TASKMANAGER_TIMEOUT		5
+#define ZBX_TASKMANAGER_TIMEOUT	5
 
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
@@ -36,68 +36,27 @@ extern int		server_num, process_num;
  *                                                                            *
  * Purpose: close the specified problem event and remove task                 *
  *                                                                            *
- * Parameters: taskid            - [IN] the task identifier                   *
- *             triggerid         - [IN] the source trigger id                 *
+ * Parameters: triggerid         - [IN] the source trigger id                 *
  *             eventid           - [IN] the problem eventid to close          *
  *             userid            - [IN] the user that requested to close the  *
  *                                      problem                               *
- *             locked_triggerids - [IN] the locked trigger identifiers        *
  *                                                                            *
  ******************************************************************************/
-static void	tm_execute_task_close_problem(zbx_uint64_t taskid, zbx_uint64_t triggerid, zbx_uint64_t eventid,
-		zbx_uint64_t userid, zbx_vector_uint64_t *locked_triggerids)
+static void	tm_execute_task_close_problem(zbx_uint64_t triggerid, zbx_uint64_t eventid, zbx_uint64_t userid)
 {
 	const char	*__function_name = "tm_execute_task_close_problem";
 
 	DB_RESULT	result;
-	DC_TRIGGER	trigger;
-	int		errcode;
-	zbx_timespec_t	ts;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() taskid:" ZBX_FS_UI64 " eventid:" ZBX_FS_UI64, __function_name,
-			taskid, eventid);
-
-	DBbegin();
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() eventid:" ZBX_FS_UI64, __function_name, eventid);
 
 	result = DBselect("select null from problem where eventid=" ZBX_FS_UI64 " and r_eventid is null", eventid);
 
 	/* check if the task hasn't been already closed by another process */
 	if (NULL != DBfetch(result))
-	{
-		DCconfig_get_triggers_by_triggerids(&trigger, &triggerid, &errcode, 1);
+		zbx_close_problem(triggerid, eventid, userid);
 
-		if (SUCCEED == errcode)
-		{
-			zbx_vector_ptr_t	trigger_diff;
-
-			zbx_vector_ptr_create(&trigger_diff);
-
-			zbx_append_trigger_diff(&trigger_diff, triggerid, trigger.priority,
-					ZBX_FLAGS_TRIGGER_DIFF_RECALCULATE_PROBLEM_COUNT, trigger.value,
-					TRIGGER_STATE_NORMAL, 0, NULL);
-
-			zbx_timespec(&ts);
-
-			close_event(eventid, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, triggerid,
-					&ts, userid, 0, 0, trigger.description, trigger.expression_orig,
-					trigger.recovery_expression_orig, trigger.priority, trigger.type, NULL,
-					ZBX_TRIGGER_CORRELATION_NONE, "");
-
-			process_trigger_events(&trigger_diff, locked_triggerids, ZBX_EVENTS_SKIP_CORRELATION);
-			DCconfig_triggers_apply_changes(&trigger_diff);
-			zbx_save_trigger_changes(&trigger_diff);
-
-			zbx_vector_ptr_clear_ext(&trigger_diff, (zbx_clean_func_t)zbx_trigger_diff_free);
-			zbx_vector_ptr_destroy(&trigger_diff);
-		}
-
-		DCconfig_clean_triggers(&trigger, &errcode, 1);
-	}
 	DBfree_result(result);
-
-	DBexecute("delete from task where taskid=" ZBX_FS_UI64, taskid);
-
-	DBcommit();
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -120,7 +79,7 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 
 	DB_ROW			row;
 	DB_RESULT		result;
-	int			ret = FAIL;
+	int			ret = FAIL, remove_task = 0;
 	zbx_uint64_t		userid, triggerid, eventid;
 	zbx_vector_uint64_t	triggerids, locked_triggerids;
 
@@ -129,33 +88,46 @@ static int	tm_try_task_close_problem(zbx_uint64_t taskid)
 	zbx_vector_uint64_create(&triggerids);
 	zbx_vector_uint64_create(&locked_triggerids);
 
-	result = DBselect("select a.userid,a.eventid,e.objectid"
-				" from task_close_problem tcp,acknowledges a"
+	result = DBselect("select a.userid,e.eventid,e.objectid"
+				" from task_close_problem tcp"
+				" left join acknowledges a"
+					" on a.acknowledgeid=tcp.acknowledgeid"
 				" left join events e"
 					" on a.eventid=e.eventid"
-				" where tcp.taskid=" ZBX_FS_UI64
-					" and tcp.acknowledgeid=a.acknowledgeid",
+				" where tcp.taskid=" ZBX_FS_UI64,
 			taskid);
 
 	if (NULL != (row = DBfetch(result)))
 	{
-		ZBX_STR2UINT64(triggerid, row[2]);
-		zbx_vector_uint64_append(&triggerids, triggerid);
-		DCconfig_lock_triggers_by_triggerids(&triggerids, &locked_triggerids);
-
-		/* only close the problem if source trigger was successfully locked */
-		if (0 != locked_triggerids.values_num)
+		if (SUCCEED != DBis_null(row[1]))
 		{
-			ZBX_STR2UINT64(userid, row[0]);
-			ZBX_STR2UINT64(eventid, row[1]);
-			tm_execute_task_close_problem(taskid, triggerid, eventid, userid, &locked_triggerids);
+			ZBX_STR2UINT64(triggerid, row[2]);
+			zbx_vector_uint64_append(&triggerids, triggerid);
+			DCconfig_lock_triggers_by_triggerids(&triggerids, &locked_triggerids);
 
-			DCconfig_unlock_triggers(&locked_triggerids);
+			/* only close the problem if source trigger was successfully locked */
+			if (0 != locked_triggerids.values_num)
+			{
+				ZBX_STR2UINT64(userid, row[0]);
+				ZBX_STR2UINT64(eventid, row[1]);
 
-			ret = SUCCEED;
+				tm_execute_task_close_problem(triggerid, eventid, userid);
+				remove_task = 1;
+
+				ret = SUCCEED;
+			}
 		}
+		else
+			remove_task = 1;
 	}
 	DBfree_result(result);
+
+	/* remove the task if it was executed or related event was deleted before task was processed */
+	if (1 == remove_task)
+		DBexecute("delete from task where taskid=" ZBX_FS_UI64, taskid);
+
+	if (0 != locked_triggerids.values_num)
+		DCconfig_unlock_triggers(&locked_triggerids);
 
 	zbx_vector_uint64_destroy(&locked_triggerids);
 	zbx_vector_uint64_destroy(&triggerids);
@@ -248,5 +220,9 @@ ZBX_THREAD_ENTRY(taskmanager_thread, args)
 
 		zbx_setproctitle("%s [processed %d task(s) in " ZBX_FS_DBL " sec, idle %d sec]",
 				get_process_type_string(process_type), tasks_num, sec2 - sec1, sleeptime);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 }

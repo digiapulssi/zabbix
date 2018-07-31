@@ -18,47 +18,18 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-
-require_once dirname(__FILE__).'/../../include/classes/import/readers/CImportReader.php';
-require_once dirname(__FILE__).'/../../include/classes/import/readers/CXmlImportReader.php';
-
-class class_cxmlimportreader extends PHPUnit_Framework_TestCase {
-
-	public static function provider() {
-		return [
-			[
-				<<< XML
-<root>
-	<tag>tag</tag>
-	<empty_tag></empty_tag>
-	<empty />
-	<array>
-		<tag>tag</tag>
-	</array>
-</root>
-XML
-				,
-				[
-					'root' => [
-						'tag' => 'tag',
-						'empty_tag' => '',
-						'empty' => '',
-						'array' => [
-							'tag' => 'tag'
-						]
-					]
-				],
-			],
-		];
-	}
+/**
+ * A class that allows changing message of an Exception without recreating it.
+ */
+class CExceptionHelper extends Exception {
 
 	/**
-	 * @dataProvider provider
+	 * Set exception message.
+	 *
+	 * @param Exception $exception				Exception to be updated.
+	 * @param string    $message				Message to be set.
 	 */
-	public function test_readXml($xml, $expectedResult) {
-		$reader = new CXmlImportReader();
-		$array = $reader->read($xml);
-
-		$this->assertTrue($array === $expectedResult);
+	public static function setMessage(Exception $exception, $message) {
+		$exception->message = $message;
 	}
 }

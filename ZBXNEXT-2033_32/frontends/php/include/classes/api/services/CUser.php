@@ -70,7 +70,7 @@ class CUser extends CApiService {
 			'searchWildcardsEnabled'	=> null,
 			// output
 			'output'					=> API_OUTPUT_EXTEND,
-			'editable'					=> null,
+			'editable'					=> false,
 			'selectUsrgrps'				=> null,
 			'selectMedias'				=> null,
 			'selectMediatypes'			=> null,
@@ -262,6 +262,10 @@ class CUser extends CApiService {
 				}
 
 				$dbUser = $dbUsers[$user['userid']];
+			}
+
+			if (array_key_exists('url', $user) && $user['url'] && !CHtmlUrlValidator::validate($user['url'], false)) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
 			// check if user alias
@@ -1024,7 +1028,7 @@ class CUser extends CApiService {
 	}
 
 	public function logout() {
-		$sessionId = CWebUser::$data['sessionid'];
+		$sessionId = self::$userData['sessionid'];
 
 		$session = DBfetch(DBselect(
 			'SELECT s.userid'.

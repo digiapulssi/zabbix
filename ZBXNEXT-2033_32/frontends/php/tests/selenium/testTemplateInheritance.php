@@ -22,6 +22,8 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
 /**
  * Test the creation of inheritance of new objects on a previously linked template.
+ *
+ * @backup items
  */
 class testTemplateInheritance extends CWebTest {
 
@@ -38,14 +40,6 @@ class testTemplateInheritance extends CWebTest {
 	 * @var string
 	 */
 	protected $hostName = 'Template inheritance test host';
-
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testTemplateInheritance_setup() {
-		DBsave_tables('items');
-	}
 
 	public function testTemplateInheritance_linkHost(){
 		$sql = "select hostid from hosts where host='Template App Zabbix Agent';";
@@ -226,7 +220,7 @@ class testTemplateInheritance extends CWebTest {
 		$this->zbxTestInputType('expression', '{Inheritance test template:key-item-inheritance-test.last(0)}=0');
 		$this->zbxTestCheckboxSelect('type');
 		$this->zbxTestInputType('comments', 'comments');
-		$this->zbxTestInputType('url', 'url');
+		$this->zbxTestInputType('url', 'zabbix.php');
 		$this->zbxTestClickXpath("//label[@for='priority_2']");
 		$this->zbxTestCheckboxSelect('status', false);
 
@@ -246,7 +240,7 @@ class testTemplateInheritance extends CWebTest {
 		$this->assertTrue($this->zbxTestCheckboxSelected('recovery_mode_0'));
 		$this->zbxTestAssertElementPresentXpath("//input[@id='recovery_mode_0'][@disabled]");
 		$this->zbxTestAssertElementText('//*[@name="comments"]', 'comments');
-		$this->zbxTestAssertElementValue('url', 'url');
+		$this->zbxTestAssertElementValue('url', 'zabbix.php');
 		$this->assertTrue($this->zbxTestCheckboxSelected('priority_2'));
 		$this->assertFalse($this->zbxTestCheckboxSelected('status'));
 		$this->zbxTestTextPresent('Parent triggers');
@@ -443,7 +437,7 @@ class testTemplateInheritance extends CWebTest {
 		$this->zbxTestInputType('expression', '{Inheritance test template:item-discovery-prototype.last(0)}=0');
 		$this->zbxTestCheckboxSelect('type');
 		$this->zbxTestInputType('comments', 'comments');
-		$this->zbxTestInputType('url', 'url');
+		$this->zbxTestInputType('url', 'zabbix.php');
 		$this->zbxTestClickXpath("//label[@for='priority_2']");
 		$this->zbxTestCheckboxSelect('status', false);
 
@@ -472,7 +466,7 @@ class testTemplateInheritance extends CWebTest {
 		$this->assertTrue($this->zbxTestCheckboxSelected('recovery_mode_0'));
 		$this->zbxTestAssertElementPresentXpath("//input[@id='recovery_mode_0'][@disabled]");
 		$this->zbxTestAssertElementText('//*[@name="comments"]', 'comments');
-		$this->zbxTestAssertElementValue('url', 'url');
+		$this->zbxTestAssertElementValue('url', 'zabbix.php');
 		$this->assertTrue($this->zbxTestCheckboxSelected('priority_2'));
 		$this->assertFalse($this->zbxTestCheckboxSelected('status'));
 		$this->zbxTestTextPresent('Parent triggers');
@@ -556,12 +550,5 @@ class testTemplateInheritance extends CWebTest {
 		$this->zbxTestTextPresent('Parent graphs');
 		$this->zbxTestTextPresent($this->templateName);
 
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testTemplateInheritance_teardown() {
-		DBrestore_tables('items');
 	}
 }

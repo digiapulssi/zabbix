@@ -334,7 +334,7 @@ ZBX_MUTEX_NAME  zbx_mutex_create_per_process_name(const ZBX_MUTEX_NAME prefix)
 	size = size + 1; /* for terminating '\0' */
 
 	name = zbx_malloc(NULL, sizeof(wchar_t) * size);
-	(void)_snwprintf_s(name, sizeof(wchar_t) * size, size, format, prefix, pid);
+	(void)_snwprintf_s(name, size, size - 1, format, prefix, pid);
 	name[size - 1] = L'\0';
 
 	return name;

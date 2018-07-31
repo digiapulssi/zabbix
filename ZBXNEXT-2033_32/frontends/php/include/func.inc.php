@@ -331,6 +331,17 @@ function zbxAddSecondsToUnixtime($sec, $unixtime) {
 }
 
 /*************** CONVERTING ******************/
+/**
+ * Convert the Windows new line (CR+LF) to Linux style line feed (LF).
+ *
+ * @param string $string  Input string that will be converted.
+ *
+ * @return string
+ */
+function CRLFtoLF($string) {
+	return str_replace("\r\n", "\n", $string);
+}
+
 function rgb2hex($color) {
 	$HEX = [
 		dechex($color[0]),
@@ -620,10 +631,12 @@ function convert_units($options = []) {
 
 	if (in_array($options['units'], $blackList) || (zbx_empty($options['units'])
 			&& ($options['convert'] == ITEM_CONVERT_WITH_UNITS))) {
-		if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD) {
-			$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
+		if (preg_match('/^\-?\d+\.\d+$/', $options['value'])) {
+			if (abs($options['value']) >= ZBX_UNITS_ROUNDOFF_THRESHOLD) {
+				$options['value'] = round($options['value'], ZBX_UNITS_ROUNDOFF_UPPER_LIMIT);
+			}
+			$options['value'] = sprintf('%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f', $options['value']);
 		}
-		$options['value'] = sprintf('%.'.ZBX_UNITS_ROUNDOFF_LOWER_LIMIT.'f', $options['value']);
 		$options['value'] = preg_replace('/^([\-0-9]+)(\.)([0-9]*)[0]+$/U', '$1$2$3', $options['value']);
 		$options['value'] = rtrim($options['value'], '.');
 
@@ -1785,6 +1798,36 @@ function makeMessageBox($good, array $messages, $title = null, $show_close_box =
 }
 
 /**
+ * Filters messages that can be displayed to user based on defines (see ZBX_SHOW_TECHNICAL_ERRORS) and user settings.
+ *
+ * @param array $messages	List of messages to filter.
+ *
+ * @return array
+ */
+function filter_messages(array $messages = []) {
+	if (!ZBX_SHOW_TECHNICAL_ERRORS && CWebUser::getType() != USER_TYPE_SUPER_ADMIN && !CWebUser::getDebugMode()) {
+		$filtered_messages = [];
+		$generic_exists = false;
+
+		foreach ($messages as $message) {
+			if (array_key_exists('src', $message) && ($message['src'] === 'sql' || $message['src'] === 'php')) {
+				if (!$generic_exists) {
+					$message['message'] = _('System error occurred. Please contact Zabbix administrator.');
+					$filtered_messages[] = $message;
+					$generic_exists = true;
+				}
+			}
+			else {
+				$filtered_messages[] = $message;
+			}
+		}
+		$messages = $filtered_messages;
+	}
+
+	return $messages;
+}
+
+/**
  * Returns the message box when messages are present; null otherwise
  *
  * @global array $ZBX_MESSAGES
@@ -1795,7 +1838,9 @@ function getMessages()
 {
 	global $ZBX_MESSAGES;
 
-	$message_box = isset($ZBX_MESSAGES) && $ZBX_MESSAGES ? makeMessageBox(false, $ZBX_MESSAGES) : null;
+	$message_box = (isset($ZBX_MESSAGES) && $ZBX_MESSAGES)
+		? makeMessageBox(false, filter_messages($ZBX_MESSAGES))
+		: null;
 
 	$ZBX_MESSAGES = [];
 
@@ -1818,7 +1863,7 @@ function show_messages($good = false, $okmsg = null, $errmsg = null) {
 	$imageMessages = [];
 
 	$title = $good ? $okmsg : $errmsg;
-	$messages = isset($ZBX_MESSAGES) ? $ZBX_MESSAGES : [];
+	$messages = isset($ZBX_MESSAGES) ? filter_messages($ZBX_MESSAGES) : [];
 
 	$ZBX_MESSAGES = [];
 
@@ -1918,7 +1963,13 @@ function info($msgs) {
 	}
 }
 
-function error($msgs) {
+/*
+ * Add an error to global message array.
+ *
+ * @param string | array $msg	Error message text.
+ * @param string		 $src	The source of error message.
+ */
+function error($msgs, $src = '') {
 	global $ZBX_MESSAGES;
 
 	if (!isset($ZBX_MESSAGES)) {
@@ -1928,7 +1979,11 @@ function error($msgs) {
 	$msgs = zbx_toArray($msgs);
 
 	foreach ($msgs as $msg) {
-		$ZBX_MESSAGES[] = ['type' => 'error', 'message' => $msg];
+		$ZBX_MESSAGES[] = [
+			'type' => 'error',
+			'message' => $msg,
+			'src' => $src
+		];
 	}
 }
 
@@ -1947,7 +2002,7 @@ function clear_messages($count = null) {
 		$ZBX_MESSAGES = [];
 	}
 
-	return $result;
+	return $result ? filter_messages($result) : $result;
 }
 
 function fatal_error($msg) {
@@ -2312,5 +2367,5 @@ function zbx_err_handler($errno, $errstr, $errfile, $errline) {
 	}
 
 	// Don't show the call to this handler function.
-	error($errstr.' ['.CProfiler::getInstance()->formatCallStack().']');
+	error($errstr.' ['.CProfiler::getInstance()->formatCallStack().']', 'php');
 }

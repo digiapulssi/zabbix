@@ -198,5 +198,9 @@ retry_autoreg_host:
 				get_process_type_string(process_type), records, sec, CONFIG_PROXYDATA_FREQUENCY);
 
 		zbx_sleep_loop(CONFIG_PROXYDATA_FREQUENCY);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 }

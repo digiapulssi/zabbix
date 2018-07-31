@@ -43,6 +43,9 @@
 
 #define ZBX_TRIGGER_DEPENDENCY_LEVELS_MAX	32
 
+#define ZBX_TRIGGER_DEPENDENCY_FAIL		1
+#define ZBX_TRIGGER_DEPENDENCY_UNRESOLVED	2
+
 #define ZBX_SNMPTRAP_LOGGING_ENABLED	1
 
 #define ZBX_EXPAND_MACROS		1
@@ -463,6 +466,8 @@ int	DCconfig_lock_triggers_by_history_items(zbx_vector_ptr_t *history_items, zbx
 void	DCconfig_lock_triggers_by_triggerids(zbx_vector_uint64_t *triggerids_in, zbx_vector_uint64_t *triggerids_out);
 void	DCconfig_unlock_triggers(const zbx_vector_uint64_t *triggerids);
 void	DCconfig_unlock_all_triggers(void);
+int	DCconfig_lock_lld_rule(zbx_uint64_t lld_ruleid);
+void	DCconfig_unlock_lld_rule(zbx_uint64_t lld_ruleid);
 void	DCconfig_get_triggers_by_itemids(zbx_hashset_t *trigger_info, zbx_vector_ptr_t *trigger_order,
 		const zbx_uint64_t *itemids, const zbx_timespec_t *timespecs, char **errors, int itemids_num,
 		unsigned char expand);
@@ -597,5 +602,16 @@ typedef struct
 zbx_hc_item_t;
 
 void	zbx_free_tag(zbx_tag_t *tag);
+
+
+typedef struct
+{
+	zbx_uint64_t		triggerid;
+	unsigned char		status;
+	zbx_vector_uint64_t	masterids;
+}
+zbx_trigger_dep_t;
+
+void	zbx_dc_get_trigger_dependencies(const zbx_vector_uint64_t *triggerids, zbx_vector_ptr_t *deps);
 
 #endif

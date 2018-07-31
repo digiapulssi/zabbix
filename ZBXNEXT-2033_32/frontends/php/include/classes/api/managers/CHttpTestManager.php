@@ -283,6 +283,31 @@ class CHttpTestManager {
 			info(_s('Updated: Web scenario "%1$s" on "%2$s".', $httpTest['name'], $httpTest['hostname']));
 		}
 
+		/*
+		 * Unset unchanged properties, otherwise, host web scenarios will inherit them and their custom applications
+		 * will be overwritten.
+		 */
+		$properties_to_compare = ['applicationid', 'ssl_cert_file', 'ssl_key_password', 'ssl_key_file', 'verify_peer',
+			'verify_host'
+		];
+
+		foreach ($httpTests as &$httpTest) {
+			foreach ($properties_to_compare as $property) {
+				// Do not compare unexisting properties.
+				if (!array_key_exists($property, $httpTest)) {
+					continue;
+				}
+
+				// Unset unchanged properties.
+				if (($property === 'applicationid'
+						&& bccomp($httpTest[$property], $dbHttpTest[$httpTest['httptestid']][$property]) == 0)
+						|| $httpTest[$property] === $dbHttpTest[$httpTest['httptestid']][$property]) {
+					unset($httpTest[$property]);
+				}
+			}
+		}
+		unset($httpTest);
+
 		return $httpTests;
 	}
 
@@ -397,23 +422,32 @@ class CHttpTestManager {
 				if (isset($hostHttpTest['byTemplateId'][$httpTestId])) {
 					$exHttpTest = $hostHttpTest['byTemplateId'][$httpTestId];
 
-					// need to check templateid here too in case we update linked http test to name that already exists on linked host
+					/*
+					 * 'templateid' needs to be checked here too in case we update linked httptest to name
+					 * that already exists on a linked host.
+					 */
 					if (isset($httpTest['name']) && isset($hostHttpTest['byName'][$httpTest['name']])
 							&& !idcmp($exHttpTest['templateid'], $hostHttpTest['byName'][$httpTest['name']]['templateid'])) {
 						$host = DBfetch(DBselect('SELECT h.name FROM hosts h WHERE h.hostid='.zbx_dbstr($hostId)));
-						throw new Exception(_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name']));
+						throw new Exception(
+							_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name'])
+						);
 					}
 				}
 				// update by name
-				else if (isset($hostHttpTest['byName'][$httpTest['name']])) {
+				elseif (isset($hostHttpTest['byName'][$httpTest['name']])) {
 					$exHttpTest = $hostHttpTest['byName'][$httpTest['name']];
-					if ($exHttpTest['templateid'] > 0 || !$this->compareHttpSteps($httpTest, $exHttpTest)) {
-						$host = DBfetch(DBselect('SELECT h.name FROM hosts h WHERE h.hostid='.zbx_dbstr($hostId)));
-						throw new Exception(_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name']));
-					}
 
-					$this->createLinkageBetweenHttpTests($httpTestId, $exHttpTest['httptestid']);
-					continue;
+					if (bccomp($exHttpTest['templateid'], $httpTestId) == 0 || !$this->compareHttpSteps($httpTest, $exHttpTest)) {
+						$host = DBfetch(DBselect('SELECT h.name FROM hosts h WHERE h.hostid='.zbx_dbstr($hostId)));
+						throw new Exception(
+							_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name'])
+						);
+					}
+					elseif ($this->compareHttpProperties($httpTest, $exHttpTest)) {
+						$this->createLinkageBetweenHttpTests($httpTestId, $exHttpTest['httptestid']);
+						continue;
+					}
 				}
 
 				$newHttpTest = $httpTest;
@@ -441,6 +475,24 @@ class CHttpTestManager {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Compare properties for http tests.
+	 *
+	 * @param array $httpTest			Current http test properties.
+	 * @param array $exHttpTest			Existing http test properties to compare with.
+	 *
+	 * @return bool
+	 */
+	protected function compareHttpProperties(array $httpTest, array $exHttpTest) {
+		return ($httpTest['headers'] === $exHttpTest['headers']
+				&& $httpTest['variables'] === $exHttpTest['variables']
+				&& $httpTest['http_proxy'] === $exHttpTest['http_proxy']
+				&& $httpTest['agent'] === $exHttpTest['agent']
+				&& $httpTest['retries'] == $exHttpTest['retries']
+				&& $httpTest['delay'] === $exHttpTest['delay']
+				&& bccomp($httpTest['applicationid'], $exHttpTest['applicationid']) == 0);
 	}
 
 	/**
@@ -542,17 +594,21 @@ class CHttpTestManager {
 	 */
 	protected function getHttpTestsMapsByHostIds(array $hostIds) {
 		$hostHttpTests = [];
+
 		foreach ($hostIds as $hostid) {
 			$hostHttpTests[$hostid] = ['byName' => [], 'byTemplateId' => []];
 		}
 
 		$dbCursor = DBselect(
-			'SELECT ht.httptestid,ht.name,ht.hostid,ht.templateid'.
+			'SELECT ht.httptestid,ht.name,ht.applicationid,ht.delay,ht.variables,ht.agent,ht.hostid,ht.templateid,'.
+				'ht.http_proxy,ht.retries,ht.headers'.
 			' FROM httptest ht'.
 			' WHERE '.dbConditionInt('ht.hostid', $hostIds)
 		);
+
 		while ($dbHttpTest = DBfetch($dbCursor)) {
 			$hostHttpTests[$dbHttpTest['hostid']]['byName'][$dbHttpTest['name']] = $dbHttpTest;
+
 			if ($dbHttpTest['templateid']) {
 				$hostHttpTests[$dbHttpTest['hostid']]['byTemplateId'][$dbHttpTest['templateid']] = $dbHttpTest;
 			}
@@ -619,7 +675,10 @@ class CHttpTestManager {
 			}
 		}
 		if (!empty($httpTestsUpdate)) {
-			$this->update($httpTestsUpdate);
+			$updated_http_tests = $this->update($httpTestsUpdate);
+			foreach ($updated_http_tests as $updated_http_test) {
+				$httpTests[$updated_http_test['httptestid']] = $updated_http_test;
+			}
 		}
 
 		return $httpTests;

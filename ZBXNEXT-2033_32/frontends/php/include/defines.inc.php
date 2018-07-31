@@ -19,8 +19,8 @@
 **/
 
 
-define('ZABBIX_VERSION',		'3.2.7');
-define('ZABBIX_API_VERSION',	'3.2.7');
+define('ZABBIX_VERSION',		'3.2.11');
+define('ZABBIX_API_VERSION',	'3.2.11');
 define('ZABBIX_EXPORT_VERSION',	'3.2');
 define('ZABBIX_DB_VERSION',		3020000);
 
@@ -107,6 +107,8 @@ define('ZBX_DB_MAX_ID', '9223372036854775807');
 // maximum number of records for create() or update() API calls
 define('ZBX_DB_MAX_INSERTS', 10000);
 
+define('ZBX_SHOW_TECHNICAL_ERRORS', false);
+
 define('PAGE_TYPE_HTML',				0);
 define('PAGE_TYPE_IMAGE',				1);
 define('PAGE_TYPE_XML',					2);
@@ -140,9 +142,14 @@ define('O_NO',		2);
 
 define('P_SYS',				1);
 define('P_UNSET_EMPTY',		2);
+define('P_CRLF',			4);
 define('P_ACT',				16);
 define('P_NZERO',			32);
 define('P_NO_TRIM',			64);
+define('ZBX_URI_VALID_SCHEMES', 'http,https,ftp,file,mailto,tel,ssh');
+
+// Validate URI against schemes whitelist defined in ZBX_URI_VALID_SCHEMES.
+define('VALIDATE_URI_SCHEMES', true);
 
 //	misc parameters
 define('IMAGE_FORMAT_PNG',	'PNG');
@@ -859,10 +866,11 @@ define('HOST_INVENTORY_DISABLED',	-1);
 define('HOST_INVENTORY_MANUAL',		0);
 define('HOST_INVENTORY_AUTOMATIC',	1);
 
-define('EXPRESSION_HOST_UNKNOWN',		'#ERROR_HOST#');
-define('EXPRESSION_HOST_ITEM_UNKNOWN',	'#ERROR_ITEM#');
-define('EXPRESSION_NOT_A_MACRO_ERROR',	'#ERROR_MACRO#');
-define('EXPRESSION_FUNCTION_UNKNOWN',	'#ERROR_FUNCTION#');
+define('EXPRESSION_HOST_UNKNOWN',			'#ERROR_HOST#');
+define('EXPRESSION_HOST_ITEM_UNKNOWN',		'#ERROR_ITEM#');
+define('EXPRESSION_NOT_A_MACRO_ERROR',		'#ERROR_MACRO#');
+define('EXPRESSION_FUNCTION_UNKNOWN',		'#ERROR_FUNCTION#');
+define('EXPRESSION_UNSUPPORTED_VALUE_TYPE',	'#ERROR_VALUE_TYPE#');
 
 /**
  * @deprecated use either a literal space " " or a non-breakable space "&nbsp;" instead
@@ -888,6 +896,7 @@ define('ZBX_PREG_MACRO_NAME', '([A-Z0-9\._]+)');
 define('ZBX_PREG_MACRO_NAME_LLD', '([A-Z0-9\._]+)');
 define('ZBX_PREG_INTERNAL_NAMES', '([0-9a-zA-Z_\. \-]+)'); // !!! Don't forget sync code with C !!!
 define('ZBX_PREG_NUMBER', '([\-+]?[0-9]+[.]?[0-9]*['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)');
+define('ZBX_PREG_INT', '([\-+]?[0-9]+['.ZBX_BYTE_SUFFIXES.ZBX_TIME_SUFFIXES.']?)');
 define('ZBX_PREG_DEF_FONT_STRING', '/^[0-9\.:% ]+$/');
 define('ZBX_PREG_DNS_FORMAT', '([0-9a-zA-Z_\.\-$]|\{\$?'.ZBX_PREG_MACRO_NAME.'\})*');
 define('ZBX_PREG_HOST_FORMAT', ZBX_PREG_INTERNAL_NAMES);
@@ -1334,3 +1343,15 @@ if (function_exists('bcscale')) {
 
 // Maximum number of tags to display in events list.
 define('EVENTS_LIST_TAGS_COUNT', 3);
+
+// HTTP headers
+/*
+ * Value of HTTP X-Frame-options header.
+ *
+ * Supported options:
+ *  - SAMEORIGIN (string) - compatible with rfc7034.
+ *  - DENY (string) - compatible with rfc7034.
+ *  - a list (string) of comma-separated hostnames. If hostname is not between allowed, the SAMEORIGIN option is used.
+ *  - null - disable X-Frame-options header.
+ */
+define('X_FRAME_OPTIONS', 'SAMEORIGIN');

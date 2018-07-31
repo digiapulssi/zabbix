@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-07 01:30+0300\n"
+"POT-Creation-Date: 2017-09-11 23:33+0300\n"
 "PO-Revision-Date: 2017-06-14 17:11+0300\n"
 "Last-Translator: 岂几 <tom3000@126.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -49,7 +49,7 @@ msgid "%1$d day"
 msgid_plural "%1$d days"
 msgstr[0] "%1$d 天"
 
-#: include/blocks.inc.php:802
+#: include/blocks.inc.php:804
 #, c-format
 msgid "%1$d of %2$d issue is shown"
 msgid_plural "%1$d of %2$d issues are shown"
@@ -153,11 +153,7 @@ msgstr "(无agent代理程序)"
 msgid "0 - use default port"
 msgstr "0 - 使用默认端口"
 
-#: include/triggers.inc.php:1745 include/triggers.inc.php:1747
-#: include/triggers.inc.php:1748 include/triggers.inc.php:1750
-#: include/triggers.inc.php:1752 include/triggers.inc.php:1755
-#: include/triggers.inc.php:1759 include/triggers.inc.php:1760
-#: include/triggers.inc.php:1773
+#: include/triggers.inc.php:1722
 msgid "0 or 1"
 msgstr "0 或 1"
 
@@ -236,7 +232,7 @@ msgstr "最后和前一个值之前的绝对差异不是 N"
 msgid "Acceptable SLA"
 msgstr "可接受的SLA"
 
-#: include/func.inc.php:1682
+#: include/func.inc.php:1684
 msgid "Access denied"
 msgstr "访问拒绝"
 
@@ -244,13 +240,13 @@ msgstr "访问拒绝"
 msgid "Access denied!"
 msgstr "访问拒绝!"
 
-#: include/classes/api/services/CUser.php:1071
+#: include/classes/api/services/CUser.php:1075
 #, c-format
 msgid "Account is blocked for %s seconds"
 msgstr "帐号被锁定%s秒"
 
 #: include/actions.inc.php:153 include/actions.inc.php:337
-#: include/blocks.inc.php:661 include/blocks.inc.php:826
+#: include/blocks.inc.php:661 include/blocks.inc.php:828
 #: include/classes/screens/CScreenProblem.php:679
 #: include/classes/screens/CScreenProblem.php:857 include/events.inc.php:267
 #: include/events.inc.php:435 include/views/configuration.action.edit.php:1105
@@ -321,7 +317,7 @@ msgstr "确认"
 #: include/views/configuration.item.prototype.edit.php:273
 #: include/views/configuration.maintenance.edit.php:105
 #: include/views/configuration.services.edit.php:99
-#: include/views/configuration.services.edit.php:142
+#: include/views/configuration.services.edit.php:144
 #: include/views/configuration.template.edit.php:404
 #: include/views/configuration.trigger.prototype.edit.php:159
 #: include/views/configuration.trigger.prototype.edit.php:348
@@ -342,7 +338,7 @@ msgstr "确认"
 #: include/views/monitoring.slideconf.edit.php:205
 #: include/views/monitoring.sysmap.edit.php:229
 #: include/views/monitoring.sysmap.edit.php:290
-#: include/views/monitoring.sysmap.edit.php:320 services.php:482
+#: include/views/monitoring.sysmap.edit.php:320 services.php:447
 #: tr_logform.php:248 tr_logform.php:276
 msgid "Action"
 msgstr "动作"
@@ -384,7 +380,7 @@ msgstr[0] "激活 禁用激活 禁用"
 msgid "Action disabled due to deletion of user group."
 msgstr "已经禁用了用户组的删除操作。"
 
-#: include/classes/api/services/CUser.php:1435
+#: include/classes/api/services/CUser.php:1439
 msgid "Action disabled due to deletion of user."
 msgstr "已经禁用了用户的删除操作。"
 
@@ -403,7 +399,7 @@ msgstr "动作日志"
 msgid "Action updated"
 msgstr "动作已更新"
 
-#: include/blocks.inc.php:662 include/blocks.inc.php:827
+#: include/blocks.inc.php:662 include/blocks.inc.php:829
 #: include/classes/screens/CScreenProblem.php:680
 #: include/classes/screens/CScreenProblem.php:858 include/events.inc.php:268
 #: include/menu.inc.php:228 include/views/configuration.action.edit.php:24
@@ -505,8 +501,8 @@ msgstr "启用直到"
 #: include/views/configuration.maintenance.edit.php:158
 #: include/views/configuration.maintenance.edit.php:225
 #: include/views/configuration.services.edit.php:128
-#: include/views/configuration.services.edit.php:317
-#: include/views/configuration.services.edit.php:354
+#: include/views/configuration.services.edit.php:319
+#: include/views/configuration.services.edit.php:356
 #: include/views/configuration.template.edit.php:464
 #: include/views/configuration.template.edit.php:516
 #: include/views/configuration.trigger.prototype.edit.php:76
@@ -609,7 +605,7 @@ msgstr "管理"
 msgid "Advanced labels"
 msgstr "高级标签"
 
-#: include/blocks.inc.php:659 include/blocks.inc.php:824
+#: include/blocks.inc.php:659 include/blocks.inc.php:826
 #: include/events.inc.php:265 include/events.inc.php:435
 #: include/events.inc.php:438 tr_status.php:492
 msgid "Age"
@@ -1255,7 +1251,7 @@ msgstr "加拿大 (136 字节)"
 #: include/views/configuration.action.edit.php:1139
 #: include/views/configuration.action.edit.php:1696
 #: include/views/configuration.maintenance.edit.php:168
-#: include/views/configuration.services.parent.list.php:70
+#: include/views/configuration.services.parent.list.php:85
 #: include/views/conf.import.php:115
 #: include/views/js/administration.general.housekeeper.edit.js.php:40
 #: include/views/js/administration.general.trigger.options.js.php:13
@@ -1321,12 +1317,12 @@ msgstr "无法添加关联"
 msgid "Cannot add correlation condition"
 msgstr "无法添加关联条件"
 
-#: include/classes/api/services/CTrigger.php:974
+#: include/classes/api/services/CTrigger.php:984
 #: include/classes/api/services/CTriggerPrototype.php:832
 msgid "Cannot add dependency from a host to a template."
 msgstr "无法添加自主机到模板的依赖"
 
-#: include/classes/api/services/CDiscoveryRule.php:716
+#: include/classes/api/services/CDiscoveryRule.php:726
 #: include/triggers.inc.php:510
 #, c-format
 msgid "Cannot add dependency from trigger \"%1$s:%2$s\" to non existing trigger \"%3$s:%4$s\"."
@@ -1352,7 +1348,7 @@ msgstr "无法添加群组"
 msgid "Cannot add group."
 msgstr "无法添加组。"
 
-#: hosts.php:458
+#: hosts.php:452
 msgid "Cannot add host"
 msgstr "无法添加主机"
 
@@ -1492,19 +1488,19 @@ msgstr "无法变更授权方式为Zabbix内部"
 msgid "Cannot clear history"
 msgstr "无法清除历史"
 
-#: include/classes/api/services/CDiscoveryRule.php:1334
+#: include/classes/api/services/CDiscoveryRule.php:1344
 msgid "Cannot clone graph prototypes."
 msgstr "无法克隆图形原型"
 
-#: include/classes/api/services/CDiscoveryRule.php:1382
+#: include/classes/api/services/CDiscoveryRule.php:1392
 msgid "Cannot clone host prototypes."
 msgstr "无法克隆主机原型。"
 
-#: include/classes/api/services/CDiscoveryRule.php:1216
+#: include/classes/api/services/CDiscoveryRule.php:1226
 msgid "Cannot clone item prototypes."
 msgstr "无法克隆监控项原型"
 
-#: include/classes/api/services/CDiscoveryRule.php:629
+#: include/classes/api/services/CDiscoveryRule.php:639
 msgid "Cannot clone trigger prototypes."
 msgstr "无法克隆触发器原型"
 
@@ -1547,12 +1543,12 @@ msgstr "在自动发现的主机\"%1$s\"上不能创建主机模板"
 msgid "Cannot create another database connection."
 msgstr "无法创建其他的数据库连接."
 
-#: include/classes/api/services/CTrigger.php:1008
+#: include/classes/api/services/CTrigger.php:1018
 #: include/classes/api/services/CTriggerPrototype.php:863
 msgid "Cannot create circular dependencies."
 msgstr "不能创建环形的依赖关系。"
 
-#: include/classes/api/services/CTrigger.php:980
+#: include/classes/api/services/CTrigger.php:990
 msgid "Cannot create dependency on trigger itself."
 msgstr "不能创建触发器本身的依赖."
 
@@ -1578,7 +1574,7 @@ msgstr "无法创建同名为\"%s\"的图标映射."
 msgid "Cannot create new application, web scenario is already assigned to application."
 msgstr "无法创建新的应用集, web 场景已分配给应用集."
 
-#: include/js.inc.php:204
+#: include/js.inc.php:201
 msgid "Cannot create new element"
 msgstr "无法创建新组件"
 
@@ -1590,7 +1586,7 @@ msgstr "无法创建新的模板"
 msgid "Cannot create the configuration file."
 msgstr "无法创建配置文件。"
 
-#: include/classes/api/services/CUser.php:1399
+#: include/classes/api/services/CUser.php:1403
 #, c-format
 msgid "Cannot delete Zabbix internal user \"%1$s\", try disabling that user."
 msgstr "无法删除Zabbix内部用户 \"%1$s\", 试试停用这个用户."
@@ -1608,7 +1604,7 @@ msgstr[0] "无法删除分类"
 msgid "Cannot delete correlation"
 msgstr "无法删除关联"
 
-#: include/classes/api/services/CTrigger.php:878
+#: include/classes/api/services/CTrigger.php:888
 #: include/classes/api/services/CTriggerPrototype.php:629
 msgid "Cannot delete dependency"
 msgstr "无法删除依赖关系"
@@ -1652,7 +1648,7 @@ msgid "Cannot delete group"
 msgid_plural "Cannot delete groups"
 msgstr[0] "无法删除组"
 
-#: hosts.php:696 hosts.php:709
+#: hosts.php:690 hosts.php:703
 msgid "Cannot delete host"
 msgstr "无法删除主机"
 
@@ -1783,7 +1779,7 @@ msgstr "无法删除模板的监控项"
 msgid "Cannot delete templated items."
 msgstr "无法删除模板监控项."
 
-#: include/classes/api/services/CTrigger.php:1390
+#: include/classes/api/services/CTrigger.php:1400
 #: include/classes/api/services/CTriggerPrototype.php:534
 #, c-format
 msgid "Cannot delete templated trigger \"%1$s:%2$s\"."
@@ -1814,7 +1810,7 @@ msgstr "无法删除触发器"
 msgid "Cannot delete user"
 msgstr "无法删除用户"
 
-#: include/classes/api/services/CUser.php:969
+#: include/classes/api/services/CUser.php:973
 msgid "Cannot delete user media."
 msgstr "无法删除用户报警媒介."
 
@@ -1843,7 +1839,7 @@ msgid_plural "Cannot disable discovery rules"
 msgstr[0] "无法禁用自动发现规则"
 
 #: app/controllers/CControllerProxyHostDisable.php:76 hostgroups.php:303
-#: hosts.php:740
+#: hosts.php:734
 msgid "Cannot disable host"
 msgid_plural "Cannot disable hosts"
 msgstr[0] "无法禁用主机"
@@ -1897,7 +1893,7 @@ msgid_plural "Cannot enable discovery rules"
 msgstr[0] "无法启用自动发现规则"
 
 #: app/controllers/CControllerProxyHostEnable.php:76 hostgroups.php:302
-#: hosts.php:739
+#: hosts.php:733
 msgid "Cannot enable host"
 msgid_plural "Cannot enable hosts"
 msgstr[0] "无法启用主机"
@@ -1966,8 +1962,8 @@ msgstr "无法找到主机 \"%1$s\" 用于聚合图形 \"%2$s\"."
 msgid "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "在 \"%4$s\"上无法针对自动发现规则 \"%3$s\"上的\"%2$s\"主机模板找到主机组 \"%1$s\""
 
-#: include/classes/api/services/CDiscoveryRule.php:1112
-#: include/classes/api/services/CDiscoveryRule.php:1198
+#: include/classes/api/services/CDiscoveryRule.php:1122
+#: include/classes/api/services/CDiscoveryRule.php:1208
 #: include/classes/api/services/CItemGeneral.php:98 include/items.inc.php:356
 #: include/items.inc.php:415
 #, c-format
@@ -2029,7 +2025,7 @@ msgstr "无法找到地图 \"%1$s\" 用于地图 \"%2$s\"."
 msgid "Cannot find map \"%1$s\" used in screen \"%2$s\"."
 msgstr "无法找到地图 \"%1$s\" 用于聚合图形 \"%2$s\"."
 
-#: include/js.inc.php:187
+#: include/js.inc.php:184
 msgid "Cannot find objects with name"
 msgstr "无法找到有名称的物件"
 
@@ -2063,7 +2059,7 @@ msgstr "无法在\"%4$s\"上找到由自动发现规则 \"%3$s\"上的 \"%2$s\"�
 msgid "Cannot format Tree. Check logic structure in service links."
 msgstr "无法形成树状格式. 检查服务链接的逻辑结构."
 
-#: services.php:487
+#: services.php:452
 msgid "Cannot format tree."
 msgstr "无法形成树状格式"
 
@@ -2097,7 +2093,7 @@ msgstr "不能包含视图文件 \"%s\"."
 msgid "Cannot insert trigger expression"
 msgstr "不能插入触发器表达式"
 
-#: include/classes/api/services/CUser.php:758
+#: include/classes/api/services/CUser.php:762
 msgid "Cannot insert user media."
 msgstr "不能插入用户报警媒介"
 
@@ -2110,11 +2106,11 @@ msgstr "无法链接模板"
 msgid "Cannot link template."
 msgstr "无法链接到模板。"
 
-#: include/classes/api/services/CUser.php:1112
+#: include/classes/api/services/CUser.php:1116
 msgid "Cannot login."
 msgstr "无法登陆"
 
-#: include/classes/api/services/CUser.php:1037
+#: include/classes/api/services/CUser.php:1041
 msgid "Cannot logout."
 msgstr "不能登出"
 
@@ -2139,17 +2135,17 @@ msgstr "无法批量更新模板的显示名称"
 msgid "Cannot pass duplicate template IDs for the linkage: %s."
 msgstr "不能传递重复的模板IDs给链接: %s."
 
-#: include/classes/db/DB.php:803
+#: include/classes/db/DB.php:815
 #, c-format
 msgid "Cannot perform delete statement on table \"%1$s\" without where condition."
 msgstr "不能完成没有where条件的删除描述式在表 \"%1$s\" 上."
 
-#: include/classes/db/DB.php:516
+#: include/classes/db/DB.php:528
 #, c-format
 msgid "Cannot perform update statement on table \"%1$s\" without values."
 msgstr "不能完成没有值的更新表达式料表 \"%1$s\" 上."
 
-#: include/classes/db/DB.php:529
+#: include/classes/db/DB.php:541
 #, c-format
 msgid "Cannot perform update statement on table \"%1$s\" without where condition."
 msgstr "不能完成没有条件的更新描述式在表 \"%1$s\" 上."
@@ -2178,7 +2174,7 @@ msgstr "不能读取响应, 检查与Zabbix服务器 \"%1$s\" 的连接."
 msgid "Cannot remove all items, at least one item should remain."
 msgstr "无法删除所有的监控项，至少一个监控项应该保留."
 
-#: include/classes/api/services/CUser.php:271
+#: include/classes/api/services/CUser.php:275
 msgid "Cannot rename guest user."
 msgstr "无法重新命名访客用户."
 
@@ -2254,8 +2250,8 @@ msgstr "无法设置 \"模板序列号\" 为聚合图形 \"%1$s\"."
 msgid "Cannot set inventory fields for disabled inventory."
 msgstr "无法设置审计字段为已经禁止的审计."
 
-#: include/classes/api/services/CScreenItem.php:575
-#: include/classes/api/services/CScreenItem.php:601
+#: include/classes/api/services/CScreenItem.php:577
+#: include/classes/api/services/CScreenItem.php:603
 msgid "Cannot set resource ID for screen element."
 msgstr "无法设置聚合图形元素的资源ID."
 
@@ -2345,22 +2341,22 @@ msgstr "无法更新主机组 \"%2$s\"的\"%1$s\"."
 msgid "Cannot update \"%1$s\" for item \"%2$s\"."
 msgstr "无法更新 \"%1$s\" 为监控项 \"%2$s\"."
 
-#: include/classes/api/services/CTriggerGeneral.php:639
+#: include/classes/api/services/CTriggerGeneral.php:643
 #, c-format
 msgid "Cannot update \"%1$s\" for templated trigger \"%2$s\"."
 msgstr "触发器模板 \"%2$s\" 无法更新 \"%1$s\""
 
-#: include/classes/api/services/CTriggerGeneral.php:645
+#: include/classes/api/services/CTriggerGeneral.php:649
 #, c-format
 msgid "Cannot update \"%1$s\" for templated trigger prototype \"%2$s\"."
 msgstr "\"%2$s\" 触发器模板\"%1$s\" 无法更新"
 
-#: include/classes/api/services/CTriggerGeneral.php:638
+#: include/classes/api/services/CTriggerGeneral.php:642
 #, c-format
 msgid "Cannot update \"%1$s\" for trigger \"%2$s\"."
 msgstr "无法更新 \"%1$s\" 为触发器 \"%2$s\"."
 
-#: include/classes/api/services/CTriggerGeneral.php:644
+#: include/classes/api/services/CTriggerGeneral.php:648
 #, c-format
 msgid "Cannot update \"%1$s\" for trigger prototype \"%2$s\"."
 msgstr "无法更新触发器模板\"%2$s\"的\"%1$s\""
@@ -2375,9 +2371,9 @@ msgstr "无法更新 \"%2$s\"在发现的主机\"%1$s\"。"
 msgid "Cannot update \"%2$s\" for a discovered item \"%1$s\"."
 msgstr "无法更新 \"%2$s\"在发现的监控项 \"%1$s\"。"
 
-#: include/classes/api/services/CTriggerGeneral.php:691
-#: include/classes/api/services/CTrigger.php:731
-#: include/classes/api/services/CTrigger.php:840
+#: include/classes/api/services/CTriggerGeneral.php:699
+#: include/classes/api/services/CTrigger.php:741
+#: include/classes/api/services/CTrigger.php:850
 #, c-format
 msgid "Cannot update \"%2$s\" for a discovered trigger \"%1$s\"."
 msgstr "无法更新 \"%2$s\" 在发现的触发器\"%1$s\"。"
@@ -2467,7 +2463,7 @@ msgstr "无法更新群组."
 msgid "Cannot update groups for discovered host \"%1$s\"."
 msgstr "对于被自动发现的主机\"%1$s\"无法更新其主机组"
 
-#: hosts.php:445
+#: hosts.php:439
 msgid "Cannot update host"
 msgstr "无法更新主机"
 
@@ -2480,7 +2476,7 @@ msgid "Cannot update host prototype"
 msgid_plural "Cannot update host prototypes"
 msgstr[0] "无法更新主机模板"
 
-#: hosts.php:432
+#: hosts.php:426
 msgid "Cannot update hosts"
 msgstr "无法更新主机"
 
@@ -2582,7 +2578,7 @@ msgstr "对于被自动发现的主机 \"%1$s\"无法更新其模板"
 msgid "Cannot update trigger"
 msgstr "无法更新触发器"
 
-#: include/classes/api/services/CTriggerGeneral.php:1585
+#: include/classes/api/services/CTriggerGeneral.php:1593
 #, c-format
 msgid "Cannot update trigger \"%1$s\": %2$s."
 msgstr "无法更新触发器 \"%1$s\": %2$s "
@@ -2592,7 +2588,7 @@ msgid "Cannot update trigger prototype"
 msgid_plural "Cannot update trigger prototypes"
 msgstr[0] "无法更新触发器模板"
 
-#: include/classes/api/services/CTriggerGeneral.php:1441
+#: include/classes/api/services/CTriggerGeneral.php:1449
 #, c-format
 msgid "Cannot update trigger prototype \"%1$s\": %2$s."
 msgstr "无法更新触发器模板 \"%1$s\": %2$s。"
@@ -2605,7 +2601,7 @@ msgstr "无法更新触发器模板"
 msgid "Cannot update user"
 msgstr "无法更新用户"
 
-#: include/classes/api/services/CUser.php:838
+#: include/classes/api/services/CUser.php:842
 msgid "Cannot update user media."
 msgstr "无法更新用户媒介."
 
@@ -2657,7 +2653,7 @@ msgid "Certificate"
 msgstr "证书"
 
 #: include/classes/screens/CScreenBase.php:405
-#: include/classes/screens/CScreenBuilder.php:515
+#: include/classes/screens/CScreenBuilder.php:519
 #: include/classes/screens/CScreenMap.php:61
 #: include/views/configuration.services.edit.php:51
 #: include/views/hostmacros.php:100 include/views/js/hostmacros.js.php:37
@@ -2676,7 +2672,7 @@ msgid "Change password"
 msgstr "修改密码"
 
 #: include/forms.inc.php:364 include/items.inc.php:129
-#: include/triggers.inc.php:1722 include/views/configuration.item.edit.php:303
+#: include/views/configuration.item.edit.php:303
 #: include/views/configuration.item.massupdate.php:220
 #: include/views/configuration.item.prototype.edit.php:217
 msgid "Character"
@@ -2793,7 +2789,7 @@ msgstr "中文 (zh_CN)"
 msgid "Chinese (zh_TW)"
 msgstr "中文 (zh_TW)"
 
-#: include/classes/api/services/CMapElement.php:72
+#: include/classes/api/services/CMapElement.php:80
 #, c-format
 msgid "Circular link cannot be created for map element \"%s\"."
 msgstr "不能创建拓扑图组件 \"%s\"的环形链接"
@@ -2868,9 +2864,9 @@ msgstr "时钟"
 msgid "Clone"
 msgstr "克隆"
 
-#: include/func.inc.php:1779 include/views/js/monitoring.sysmaps.js.php:185
+#: include/func.inc.php:1781 include/views/js/monitoring.sysmaps.js.php:185
 #: include/views/js/monitoring.sysmaps.js.php:286
-#: include/views/js/monitoring.sysmaps.js.php:375 tr_testexpr.php:193
+#: include/views/js/monitoring.sysmaps.js.php:375 tr_testexpr.php:194
 msgid "Close"
 msgstr "关闭"
 
@@ -2978,7 +2974,7 @@ msgstr "对于动作\"%1$s\"条件\"%2$s\"不可以应用于计算式\"%3$s\"中
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for correlation \"%1$s\"."
 msgstr "在关联\"%1$s\"中，条件\"%2$s\"无法使用公式 \"%3$s\" "
 
-#: include/classes/api/services/CDiscoveryRule.php:972
+#: include/classes/api/services/CDiscoveryRule.php:982
 #, c-format
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"%1$s\"."
 msgstr "对于自动发现规则\"%1$s\"条件\"%2$s\"不可以应用于计算式\"%3$s\"中"
@@ -2993,7 +2989,7 @@ msgstr "对于动作\"%1$s\"应用于计算式 \"%3$s\"中的\"%2$s\"条件未�
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for correlation \"%1$s\" is not defined."
 msgstr "在关联项 \"%1$s\" 中 条件 \"%2$s\" 在表达式 \"%3$s\"没有被使用"
 
-#: include/classes/api/services/CDiscoveryRule.php:971
+#: include/classes/api/services/CDiscoveryRule.php:981
 #, c-format
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for discovery rule \"%1$s\" is not defined."
 msgstr "对于自动发现规则\"%1$s\"应用于计算表达式 \"%3$s\"中的条件 \"%2$s\"未被定义"
@@ -3544,7 +3540,7 @@ msgstr "创建 Web 场景（首先选择主机）"
 msgid "Created: Application \"%1$s\" on \"%2$s\"."
 msgstr "已创建: 应用集 \"%1$s\" 于 \"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:791
+#: include/classes/api/services/CDiscoveryRule.php:801
 #, c-format
 msgid "Created: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "已创建: 发现规则 \"%1$s\" 于 \"%2$s\"."
@@ -3648,7 +3644,7 @@ msgid "Custom label"
 msgstr "自定义标签"
 
 #: include/classes/api/services/CMap.php:654
-#: include/classes/api/services/CMap.php:1080
+#: include/classes/api/services/CMap.php:1084
 #, c-format
 msgid "Custom label for map \"%2$s\" elements of type \"%1$s\" may not be empty."
 msgstr "自定义标签地图 \"%2$s\" 类型元素 \"%1$s\" 不能为空."
@@ -4303,7 +4299,7 @@ msgstr "已删除"
 msgid "Deleted: Application \"%1$s\" on \"%2$s\"."
 msgstr "已删除: 应用集 \"%1$s\" 于 \"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:420
+#: include/classes/api/services/CDiscoveryRule.php:430
 #, c-format
 msgid "Deleted: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "已删除: 发现规则 \"%1$s\" 于 \"%2$s\"."
@@ -4323,7 +4319,7 @@ msgstr "已删除: 主机 \"%1$s\"."
 msgid "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "已删除：主机原型 \"%1$s\" 于 \"%2$s\"。"
 
-#: include/classes/api/services/CItem.php:669
+#: include/classes/api/services/CItem.php:671
 #, c-format
 msgid "Deleted: Item \"%1$s\" on \"%2$s\"."
 msgstr "已删除: 监控项 \"%1$s\" 于 \"%2$s\"."
@@ -4380,7 +4376,7 @@ msgstr "差量 (每秒速率)"
 msgid "Deny"
 msgstr "拒绝"
 
-#: include/views/configuration.services.edit.php:334
+#: include/views/configuration.services.edit.php:336
 #: include/views/configuration.trigger.prototype.edit.php:568
 #: include/views/configuration.trigger.prototype.edit.php:585
 #: include/views/configuration.triggers.edit.php:590
@@ -4436,7 +4432,7 @@ msgid "Description updated"
 msgstr "描述已经更新"
 
 #: app/views/administration.mediatype.list.php:62 include/actions.inc.php:1448
-#: include/blocks.inc.php:496 include/func.inc.php:1751
+#: include/blocks.inc.php:496 include/func.inc.php:1753
 #: include/views/administration.auditlogs.list.php:68
 #: include/views/configuration.action.edit.php:401
 #: include/views/configuration.action.edit.php:405
@@ -4623,7 +4619,7 @@ msgstr "禁用所选定的web场景？"
 #: include/html.inc.php:338 include/httptest.inc.php:46
 #: include/items.inc.php:158 include/items.inc.php:161
 #: include/items.inc.php:205 include/triggers.inc.php:1128
-#: include/triggers.inc.php:1972 include/users.inc.php:85
+#: include/triggers.inc.php:2041 include/users.inc.php:85
 #: include/views/administration.general.other.edit.php:50
 #: include/views/administration.usergroups.list.php:37
 #: include/views/administration.usergroups.list.php:67
@@ -4732,7 +4728,7 @@ msgstr "发现规则\"%1$s\"已存在于 \"%2$s\"."
 msgid "Discovery rule \"%1$s\" already exists."
 msgstr "发现规则\"%1$s\"已存在"
 
-#: include/classes/api/services/CDiscoveryRule.php:1016
+#: include/classes/api/services/CDiscoveryRule.php:1026
 #, c-format
 msgid "Discovery rule \"%1$s:%2$s\" has incorrect lifetime: \"%3$s\". (min: %4$d, max: %5$d, user macro allowed)"
 msgstr "探索规则\"%1$s:%2$s\" 有错误的存活时间: \"%3$s\". (最小: %4$d, 最大: %5$d, 可用用户宏)"
@@ -4807,13 +4803,13 @@ msgstr "显示数据图"
 msgid "Display stacked graph"
 msgstr "显示堆叠数据图"
 
-#: include/actions.inc.php:1529 include/func.inc.php:1570 queue.php:284
+#: include/actions.inc.php:1529 include/func.inc.php:1572 queue.php:284
 #: search.php:256 search.php:357 search.php:498
 #, c-format
 msgid "Displaying %1$s of %2$s found"
 msgstr "显示 已自动发现的 %2$s中的%1$s"
 
-#: include/func.inc.php:1573
+#: include/func.inc.php:1575
 #, c-format
 msgid "Displaying %1$s to %2$s of %3$s found"
 msgstr "在 %3$s 中打印 %1$s 到 %2$s "
@@ -4853,8 +4849,8 @@ msgstr "下载配置文件"
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: include/classes/screens/CScreenDiscovery.php:129
 #: include/classes/screens/CScreenDiscovery.php:258
-#: include/views/configuration.services.edit.php:153
-#: include/views/configuration.services.edit.php:195
+#: include/views/configuration.services.edit.php:155
+#: include/views/configuration.services.edit.php:197
 msgid "Downtime"
 msgstr "断线时间"
 
@@ -4906,7 +4902,7 @@ msgid "Duplicate \"name\" value \"%1$s\" for application prototype in item proto
 msgstr " \"%2$s\"与\"%1$s\"的名字有冲突。"
 
 #: include/classes/api/services/CMap.php:399
-#: include/classes/api/services/CMap.php:815
+#: include/classes/api/services/CMap.php:819
 #, c-format
 msgid "Duplicate \"name\" value \"%1$s\" for map."
 msgstr "拓扑图 %1$s 名字重复。"
@@ -4923,7 +4919,7 @@ msgstr "复制聚合图形的\"name\"值\"%1$s\""
 msgid "Duplicate \"name\" value \"%1$s\" for value map."
 msgstr "复制拓扑图的\"name\"值\"%1$s\"。"
 
-#: include/classes/api/services/CTrigger.php:1150
+#: include/classes/api/services/CTrigger.php:1160
 #, c-format
 msgid "Duplicate dependencies in trigger \"%1$s\"."
 msgstr "重复依赖关系在触发器 \"%1$s\" 中."
@@ -4965,13 +4961,13 @@ msgstr "\"%2$s\" 与 \"%1$s\" 的mapping 值冲突"
 msgid "Duplicate severity name \"%s\"."
 msgstr "重复的严重性名称\"%s\"."
 
-#: include/classes/api/services/CUser.php:279
+#: include/classes/api/services/CUser.php:283
 #, c-format
 msgid "Duplicate user alias \"%s\"."
 msgstr "重复的用户别名\"%s\"."
 
 #: include/classes/api/services/CMap.php:508
-#: include/classes/api/services/CMap.php:930
+#: include/classes/api/services/CMap.php:934
 #, c-format
 msgid "Duplicate userid \"%1$s\" in users for map \"%2$s\"."
 msgstr "用户ID \"%1$s\" 与 \"%2$s\" 冲突"
@@ -4983,7 +4979,7 @@ msgid "Duplicate userid \"%1$s\" in users for screen \"%2$s\"."
 msgstr "用户ID \"%1$s\" 聚合图形的用户 \"%2$s\" 冲突"
 
 #: include/classes/api/services/CMap.php:583
-#: include/classes/api/services/CMap.php:1004
+#: include/classes/api/services/CMap.php:1008
 #, c-format
 msgid "Duplicate usrgrpid \"%1$s\" in user groups for map \"%2$s\"."
 msgstr "用户组ID \"%1$s\" 与 \"%2$s\" 冲突"
@@ -5115,12 +5111,12 @@ msgstr "空的关联ID。"
 msgid "Empty filter condition formula ID for action \"%1$s\"."
 msgstr "针对动作\"%1$s\"的过滤器条件表达式ID为空"
 
-#: include/classes/api/services/CDiscoveryRule.php:999
+#: include/classes/api/services/CDiscoveryRule.php:1009
 #, c-format
 msgid "Empty filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "针对自动发现规则 \"%1$s\"的过滤器条件表达式ID为空"
 
-#: include/classes/api/services/CDiscoveryRule.php:991
+#: include/classes/api/services/CDiscoveryRule.php:1001
 #, c-format
 msgid "Empty filter condition macro for discovery rule \"%1$s\"."
 msgstr "针对自动发现规则 \"%1$s\"的过滤器条件宏变量为空"
@@ -5159,7 +5155,7 @@ msgstr "空主机"
 #: include/classes/api/services/CItemPrototype.php:703
 #: include/classes/api/services/CMap.php:348
 #: include/classes/api/services/CMap.php:374
-#: include/classes/api/services/CMap.php:773
+#: include/classes/api/services/CMap.php:777
 #: include/classes/api/services/CMediatype.php:174
 #: include/classes/api/services/CMediatype.php:379
 #: include/classes/api/services/CProxy.php:446
@@ -5172,13 +5168,13 @@ msgstr "空主机"
 #: include/classes/api/services/CService.php:498
 #: include/classes/api/services/CTemplate.php:540
 #: include/classes/api/services/CTrigger.php:642
-#: include/classes/api/services/CTrigger.php:709
-#: include/classes/api/services/CTrigger.php:818
+#: include/classes/api/services/CTrigger.php:719
+#: include/classes/api/services/CTrigger.php:828
 #: include/classes/api/services/CTriggerPrototype.php:513
 #: include/classes/api/services/CUserGroup.php:596
 #: include/classes/api/services/CUserMacro.php:366
 #: include/classes/api/services/CUserMacro.php:534
-#: include/classes/api/services/CUser.php:519
+#: include/classes/api/services/CUser.php:523
 #: include/classes/api/services/CValueMap.php:271
 #: include/classes/api/services/CValueMap.php:324
 #: include/classes/api/services/CValueMap.php:391
@@ -5191,7 +5187,7 @@ msgstr "空的输入参数."
 msgid "Empty input parameters."
 msgstr "所输入的参数为空."
 
-#: include/classes/api/services/CMap.php:781
+#: include/classes/api/services/CMap.php:785
 msgid "Empty map ID."
 msgstr "空的拓扑图ID。"
 
@@ -5374,7 +5370,7 @@ msgstr "启用所选定的web场景?"
 #: include/discovery.inc.php:107 include/html.inc.php:334
 #: include/httptest.inc.php:45 include/items.inc.php:158
 #: include/items.inc.php:161 include/items.inc.php:202
-#: include/triggers.inc.php:1969
+#: include/triggers.inc.php:2038
 #: include/views/administration.usergroups.edit.php:64
 #: include/views/administration.usergroups.edit.php:78
 #: include/views/administration.usergroups.edit.php:79
@@ -5440,7 +5436,7 @@ msgstr "错误: %1$s"
 msgid "Event"
 msgstr "事件"
 
-#: include/classes/screens/CScreenHistory.php:164
+#: include/classes/screens/CScreenHistory.php:171
 msgid "Event ID"
 msgstr "事件ID"
 
@@ -5621,11 +5617,11 @@ msgstr "导出到CSV"
 #: include/views/configuration.triggers.list.php:94
 #: include/views/js/configuration.triggers.edit.js.php:40
 #: trigger_prototypes.php:38 trigger_prototypes.php:49 triggers.php:41
-#: triggers.php:52 tr_logform.php:276 tr_logform.php:333 tr_testexpr.php:146
+#: triggers.php:52 tr_logform.php:276 tr_logform.php:333 tr_testexpr.php:147
 msgid "Expression"
 msgstr "表达式"
 
-#: tr_testexpr.php:50
+#: tr_testexpr.php:51
 msgid "Expression Variable Elements"
 msgstr "表达式变量组成"
 
@@ -5744,7 +5740,7 @@ msgstr "二月"
 msgid "Field"
 msgstr "栏位"
 
-#: include/classes/db/DB.php:322
+#: include/classes/db/DB.php:334
 #, c-format
 msgid "Field \"%1$s\" cannot be set to NULL."
 msgstr "字段 \"%1$s\"不能被设置为空"
@@ -5887,7 +5883,7 @@ msgstr "芬兰语 (fi_FI)"
 msgid "First"
 msgstr "第一个"
 
-#: include/func.inc.php:1530
+#: include/func.inc.php:1532
 msgctxt "page navigation"
 msgid "First"
 msgstr "首"
@@ -5962,10 +5958,10 @@ msgid "Friday"
 msgstr "周五"
 
 #: app/views/report.services.php:62
-#: include/views/configuration.services.edit.php:254
-#: include/views/configuration.services.edit.php:284
+#: include/views/configuration.services.edit.php:256
+#: include/views/configuration.services.edit.php:286
 #: include/views/js/monitoring.sysmaps.js.php:318
-#: include/views/reports.toptriggers.php:69 report2.php:484 report4.php:191
+#: include/views/reports.toptriggers.php:69 report2.php:403 report4.php:191
 #: services.php:188 services.php:194
 msgid "From"
 msgstr "自从"
@@ -6066,7 +6062,7 @@ msgstr "全局值"
 msgid "Go to"
 msgstr "到"
 
-#: app/views/system.warning.php:26 include/func.inc.php:1695
+#: app/views/system.warning.php:26 include/func.inc.php:1697
 msgid "Go to dashboard"
 msgstr "转到仪表板"
 
@@ -6083,7 +6079,7 @@ msgstr "梯度线"
 #: include/views/monitoring.charts.php:33
 #: include/views/monitoring.history.php:77
 #: include/views/monitoring.screen.constructor.edit.php:136 latest.php:496
-#: latest.php:673 report2.php:501
+#: latest.php:673 report2.php:420
 msgid "Graph"
 msgstr "图形"
 
@@ -6533,7 +6529,7 @@ msgstr "横向对齐"
 #: app/views/monitoring.widget.hosts.view.php:120 httpconf.php:184
 #: httpconf.php:331 httpconf.php:389 httpconf.php:440
 #: include/actions.inc.php:46 include/audit.inc.php:27
-#: include/blocks.inc.php:654 include/blocks.inc.php:822
+#: include/blocks.inc.php:654 include/blocks.inc.php:824
 #: include/classes/api/services/CHttpTest.php:415
 #: include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenHostgroupTriggers.php:135
@@ -6571,7 +6567,7 @@ msgstr "横向对齐"
 #: include/views/monitoring.slides.php:79
 #: include/views/reports.toptriggers.php:107 items.php:719 items.php:1047
 #: items.php:1080 jsLoader.php:141 latest.php:404 latest.php:424 popup.php:480
-#: popup.php:517 popup.php:1216 queue.php:248 report2.php:474 report2.php:497
+#: popup.php:517 popup.php:1216 queue.php:248 report2.php:393 report2.php:416
 #: search.php:125 tr_status.php:495 tr_status.php:757
 msgid "Host"
 msgid_plural "Hosts"
@@ -6608,11 +6604,11 @@ msgstr "主机IP地址"
 msgid "Host access"
 msgstr "主机存取"
 
-#: hosts.php:457
+#: hosts.php:451
 msgid "Host added"
 msgstr "已添加主机"
 
-#: include/classes/api/services/CHostInterface.php:813
+#: include/classes/api/services/CHostInterface.php:824
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "主机不能有超过一个同类型的默认接口."
 
@@ -6620,18 +6616,18 @@ msgstr "主机不能有超过一个同类型的默认接口."
 msgid "Host count"
 msgstr "主机计数"
 
-#: hosts.php:696 hosts.php:709
+#: hosts.php:690 hosts.php:703
 msgid "Host deleted"
 msgstr "主机已删除"
 
 #: app/controllers/CControllerProxyHostDisable.php:73 hostgroups.php:300
-#: hosts.php:737
+#: hosts.php:731
 msgid "Host disabled"
 msgid_plural "Hosts disabled"
 msgstr[0] "主机已被禁用"
 
 #: app/controllers/CControllerProxyHostEnable.php:73 hostgroups.php:299
-#: hosts.php:736
+#: hosts.php:730
 msgid "Host enabled"
 msgid_plural "Hosts enabled"
 msgstr[0] "主机已启用"
@@ -6650,7 +6646,7 @@ msgstr[0] "主机已启用"
 #: include/views/js/monitoring.sysmaps.js.php:20
 #: include/views/js/monitoring.sysmaps.js.php:26
 #: include/views/js/monitoring.sysmaps.js.php:74 jsLoader.php:144
-#: report2.php:394 report2.php:444 search.php:288
+#: report2.php:340 report2.php:363 search.php:288
 msgid "Host group"
 msgstr "主机群组"
 
@@ -6844,7 +6840,7 @@ msgstr "主机时间"
 msgid "Host update failed."
 msgstr "主机更新失败."
 
-#: hosts.php:444
+#: hosts.php:438
 msgid "Host updated"
 msgstr "主机已更新"
 
@@ -6917,7 +6913,7 @@ msgstr "维修中主机"
 msgid "Hosts location"
 msgstr "主机位置"
 
-#: hosts.php:426
+#: hosts.php:420
 msgid "Hosts updated"
 msgstr "主机已更新"
 
@@ -7190,7 +7186,7 @@ msgstr "图标"
 msgid "Identification of the system. Returns string"
 msgstr "识别系统。返回 字符串"
 
-#: include/func.inc.php:1685 include/func.inc.php:1704
+#: include/func.inc.php:1687 include/func.inc.php:1706
 msgid "If you think this message is wrong, please consult your administrators about getting the necessary permissions."
 msgstr "假如您认为这个信息是错的, 请咨询您的管理员关于如何取得需要的权限."
 
@@ -7260,7 +7256,7 @@ msgstr "立即地"
 msgid "Import"
 msgstr "导入"
 
-#: conf.import.php:182 map.import.php:182 screen.import.php:182
+#: conf.import.php:186 map.import.php:186 screen.import.php:186
 msgid "Import failed"
 msgstr "导入失败"
 
@@ -7268,7 +7264,7 @@ msgstr "导入失败"
 msgid "Import file"
 msgstr "导入文件"
 
-#: conf.import.php:182 map.import.php:182 screen.import.php:182
+#: conf.import.php:186 map.import.php:186 screen.import.php:186
 msgid "Imported successfully"
 msgstr "已成功导入"
 
@@ -7330,13 +7326,13 @@ msgid "Incoming traffic statistics on network interface. Returns integer"
 msgstr "网络接口上传流量统计。返回 整数"
 
 #: include/classes/api/services/CMap.php:434
-#: include/classes/api/services/CMap.php:871
+#: include/classes/api/services/CMap.php:875
 #, c-format
 msgid "Incorrect \"height\" value for map \"%1$s\"."
 msgstr "拓扑图 \"%1$s\" 高度值错误。"
 
 #: include/classes/api/services/CMap.php:568
-#: include/classes/api/services/CMap.php:990
+#: include/classes/api/services/CMap.php:994
 #, c-format
 msgid "Incorrect \"permission\" value \"%1$s\" in user groups for map \"%2$s\"."
 msgstr "拓扑图 \"%2$s\" 用户组 \"permission\" 的值 \"%1$s\" 冲突"
@@ -7348,7 +7344,7 @@ msgid "Incorrect \"permission\" value \"%1$s\" in user groups for screen \"%2$s\
 msgstr "聚合图形 \"%2$s\" 用户组 \"permission\" 的值 \"%1$s\" 冲突"
 
 #: include/classes/api/services/CMap.php:493
-#: include/classes/api/services/CMap.php:916
+#: include/classes/api/services/CMap.php:920
 #, c-format
 msgid "Incorrect \"permission\" value \"%1$s\" in users for map \"%2$s\"."
 msgstr "拓扑图 \"%2$s\" 用户 \"permission\" 的值 \"%1$s\" 冲突"
@@ -7360,7 +7356,7 @@ msgid "Incorrect \"permission\" value \"%1$s\" in users for screen \"%2$s\"."
 msgstr "聚合图形  \"%2$s\" 权限值  \"%1$s\"  异常。"
 
 #: include/classes/api/services/CMap.php:453
-#: include/classes/api/services/CMap.php:877
+#: include/classes/api/services/CMap.php:881
 #, c-format
 msgid "Incorrect \"private\" value \"%1$s\" for map \"%2$s\"."
 msgstr "拓扑图 \"%2$s\" 的\"private\" “%1$s\" 值错误。"
@@ -7377,7 +7373,7 @@ msgid "Incorrect \"soft\" field value for dependency for service \"%1$s\"."
 msgstr "在服务 \"%1$s\" 依赖了\"soft\"栏位的错误数据."
 
 #: include/classes/api/services/CMap.php:428
-#: include/classes/api/services/CMap.php:865
+#: include/classes/api/services/CMap.php:869
 #, c-format
 msgid "Incorrect \"width\" value for map \"%1$s\"."
 msgstr "拓扑图的宽度值 \"%1$s\" 错误。"
@@ -7386,10 +7382,10 @@ msgstr "拓扑图的宽度值 \"%1$s\" 错误。"
 #: include/classes/api/services/CMap.php:648
 #: include/classes/api/services/CMap.php:664
 #: include/classes/api/services/CMap.php:674
-#: include/classes/api/services/CMap.php:1063
-#: include/classes/api/services/CMap.php:1072
-#: include/classes/api/services/CMap.php:1089
-#: include/classes/api/services/CMap.php:1101
+#: include/classes/api/services/CMap.php:1067
+#: include/classes/api/services/CMap.php:1076
+#: include/classes/api/services/CMap.php:1093
+#: include/classes/api/services/CMap.php:1105
 #, c-format
 msgid "Incorrect %1$s label type value for map \"%2$s\"."
 msgstr "映射 \"%2$s\" 中存在错误的 %1$s 标签类型数据."
@@ -7573,11 +7569,11 @@ msgstr "函数传入了错误的参数"
 #: include/classes/api/services/CItemGeneral.php:200
 #: include/classes/api/services/CMap.php:463
 #: include/classes/api/services/CMap.php:537
-#: include/classes/api/services/CMap.php:735
-#: include/classes/api/services/CMap.php:798
-#: include/classes/api/services/CMap.php:886
-#: include/classes/api/services/CMap.php:959
-#: include/classes/api/services/CMap.php:1164
+#: include/classes/api/services/CMap.php:739
+#: include/classes/api/services/CMap.php:802
+#: include/classes/api/services/CMap.php:890
+#: include/classes/api/services/CMap.php:963
+#: include/classes/api/services/CMap.php:1172
 #: include/classes/api/services/CMediatype.php:181
 #: include/classes/api/services/CMediatype.php:412
 #: include/classes/api/services/CScreen.php:526
@@ -7605,7 +7601,7 @@ msgstr "方法传入了错误的参数。"
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "监控项\"%1$s\" 出现了错误的身份验证协议."
 
-#: include/classes/api/services/CHostInterface.php:656
+#: include/classes/api/services/CHostInterface.php:667
 msgid "Incorrect bulk value for interface."
 msgstr "接口的值不正确"
 
@@ -7643,7 +7639,7 @@ msgstr "模板名称\"%1$s\"使用了不正确的名称."
 msgid "Incorrect conditions for action \"%1$s\"."
 msgstr "动作\"%1$s\"的条件不正确"
 
-#: include/classes/api/services/CDiscoveryRule.php:965
+#: include/classes/api/services/CDiscoveryRule.php:975
 #, c-format
 msgid "Incorrect conditions for discovery rule \"%1$s\"."
 msgstr "自动发现规则\"%1$s\"的条件不正确."
@@ -7662,7 +7658,7 @@ msgstr "动作\"%1$s\": %3$s自定义的表达式\"%2$s\" 不正确."
 msgid "Incorrect custom expression \"%2$s\" for correlation \"%1$s\": %3$s."
 msgstr "在关联项\"%1$s\": %3$s中使用了错误的表达式\"%2$s\"。"
 
-#: include/classes/api/services/CDiscoveryRule.php:970
+#: include/classes/api/services/CDiscoveryRule.php:980
 #, c-format
 msgid "Incorrect custom expression \"%2$s\" for discovery rule \"%1$s\": %3$s."
 msgstr "自动发现规则\"%1$s\": %3$s自定义的表达式 \"%2$s\"不正确."
@@ -7685,7 +7681,7 @@ msgstr "错误的事件对象值."
 msgid "Incorrect eventsource value."
 msgstr "错误的事件源的值."
 
-#: include/classes/db/DB.php:536 include/classes/db/DB.php:810
+#: include/classes/db/DB.php:548 include/classes/db/DB.php:822
 #, c-format
 msgid "Incorrect field \"%1$s\" name or value in where statement for table \"%2$s\"."
 msgstr "不正确的栏位名称\"%1$s\"或用于资料表\"%2$s\"的where描述式的值."
@@ -7703,7 +7699,7 @@ msgstr "错误的文件上传."
 msgid "Incorrect filter condition formula ID for action \"%1$s\"."
 msgstr "动作\"%1$s\"的过滤器条件计算式ID不正确."
 
-#: include/classes/api/services/CDiscoveryRule.php:1000
+#: include/classes/api/services/CDiscoveryRule.php:1010
 #, c-format
 msgid "Incorrect filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "自动发现规则\"%1$s\"的条件计算式ID不正确."
@@ -7713,7 +7709,7 @@ msgstr "自动发现规则\"%1$s\"的条件计算式ID不正确."
 msgid "Incorrect filter condition formula ID given for correlation \"%1$s\"."
 msgstr "错误的过滤条件公式给出相关ID \"%1$s\" 。"
 
-#: include/classes/api/services/CDiscoveryRule.php:992
+#: include/classes/api/services/CDiscoveryRule.php:1002
 #, c-format
 msgid "Incorrect filter condition macro for discovery rule \"%1$s\"."
 msgstr "自动发现规则\"%1$s\"的过滤器条件宏变量不正确"
@@ -7723,7 +7719,7 @@ msgstr "自动发现规则\"%1$s\"的过滤器条件宏变量不正确"
 msgid "Incorrect filter condition operator for action \"%1$s\"."
 msgstr "动作\"%1$s\"过滤器条件行为不正确."
 
-#: include/classes/api/services/CDiscoveryRule.php:1004
+#: include/classes/api/services/CDiscoveryRule.php:1014
 #, c-format
 msgid "Incorrect filter condition operator for discovery rule \"%1$s\"."
 msgstr "自动发现规则\"%1$s\"的过滤器条件行为不正确"
@@ -7743,12 +7739,12 @@ msgstr "web场景\"%2$s\"的步骤 \"%1$s\"的跳转值不正确."
 msgid "Incorrect function is used"
 msgstr "使用了错误的函数"
 
-#: include/classes/api/services/CScreenItem.php:697
+#: include/classes/api/services/CScreenItem.php:699
 #, c-format
 msgid "Incorrect graph ID \"%1$s\" provided for screen element."
 msgstr "聚合图形元素中使用了不正确的数据图ID\"%1$s\""
 
-#: include/classes/api/services/CScreenItem.php:714
+#: include/classes/api/services/CScreenItem.php:716
 #, c-format
 msgid "Incorrect graph prototype ID \"%1$s\" provided for screen element."
 msgstr "聚合图形元素中使用了不正确的数据图模板ID\"%1$s\"。"
@@ -7767,12 +7763,12 @@ msgstr "组模板ID不正确"
 msgid "Incorrect group prototypes for host prototype \"%1$s\"."
 msgstr "主机模板 \"%1$s\"使用了不正确的组模板"
 
-#: include/classes/api/services/CScreenItem.php:680
+#: include/classes/api/services/CScreenItem.php:682
 #, c-format
 msgid "Incorrect host ID \"%1$s\" provided for screen element."
 msgstr "聚合图形中使用了不正确的主机ID\"%1$s\"。"
 
-#: include/classes/api/services/CScreenItem.php:663
+#: include/classes/api/services/CScreenItem.php:665
 #, c-format
 msgid "Incorrect host group ID \"%1$s\" provided for screen element."
 msgstr "聚合图形元素使用了不正确主机组ID \"%1$s\"。"
@@ -7804,12 +7800,12 @@ msgstr "错误的图片索引"
 msgid "Incorrect input parameters."
 msgstr "不正确的输入参数"
 
-#: include/classes/api/services/CHostInterface.php:581
+#: include/classes/api/services/CHostInterface.php:592
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "提供了错误的DNS参数\"%s\"."
 
-#: include/classes/api/services/CHostInterface.php:624
+#: include/classes/api/services/CHostInterface.php:635
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "提供了错误的端口\"%s\"."
@@ -7824,7 +7820,7 @@ msgstr "错误的资产纪录栏位\"%s\"."
 msgid "Incorrect inventory mode in action operation."
 msgstr "要执行的动作库存方式是不正确的。"
 
-#: include/classes/api/services/CScreenItem.php:732
+#: include/classes/api/services/CScreenItem.php:734
 #, c-format
 msgid "Incorrect item ID \"%1$s\" provided for screen element."
 msgstr "聚合图形元素应用了不正确的监控项目ID \"%1$s\" 。"
@@ -7833,15 +7829,19 @@ msgstr "聚合图形元素应用了不正确的监控项目ID \"%1$s\" 。"
 msgid "Incorrect item for axis value."
 msgstr "错误的项目轴线值."
 
-#: include/classes/api/services/CTriggerGeneral.php:1355
+#: include/classes/api/services/CTriggerGeneral.php:1363
 #, c-format
 msgid "Incorrect item key \"%1$s\" provided for trigger expression on \"%2$s\"."
 msgstr "提供错误的项目键值\"%1$s\"给\"%2$s\"上的触发器表达式."
 
-#: include/classes/api/services/CScreenItem.php:749
+#: include/classes/api/services/CScreenItem.php:751
 #, c-format
 msgid "Incorrect item prototype ID \"%1$s\" provided for screen element."
 msgstr "图表元素应用了不正确的监控项目模板ID\"%1$s\" "
+
+#: include/triggers.inc.php:1275 tr_testexpr.php:37
+msgid "Incorrect item value type"
+msgstr ""
 
 #: include/classes/validators/CFunctionValidator.php:282
 #, c-format
@@ -7888,16 +7888,16 @@ msgstr "错误的维护期间(至少要5分钟)"
 msgid "Incorrect maintenance week period"
 msgstr "错误的维护周期间"
 
-#: include/classes/api/services/CScreenItem.php:766
+#: include/classes/api/services/CScreenItem.php:768
 #, c-format
 msgid "Incorrect map ID \"%1$s\" provided for screen element."
 msgstr "图表元素中应用了不正确的拓扑图ID\"%1$s\""
 
-#: include/classes/api/services/CMap.php:782
+#: include/classes/api/services/CMap.php:786
 msgid "Incorrect map ID."
 msgstr "错误的拓扑图ID"
 
-#: include/classes/api/services/CScreenItem.php:642
+#: include/classes/api/services/CScreenItem.php:644
 msgid "Incorrect max columns provided for screen element."
 msgstr "聚合图形的最大列数不正确."
 
@@ -7981,7 +7981,7 @@ msgstr "错误的隐私协议对于监控项\"%1$s\"."
 msgid "Incorrect regular expression \"%1$s\": \"%2$s\""
 msgstr "不正确的正则表达式 \"%1$s\": \"%2$s\""
 
-#: include/classes/api/services/CScreenItem.php:494
+#: include/classes/api/services/CScreenItem.php:496
 msgid "Incorrect resource type provided for screen item."
 msgstr "提供了不正确的资源类型给聚合图形项目."
 
@@ -7995,7 +7995,7 @@ msgstr "收到了来自于zabbix服务器\"%1$s\"的错误应答."
 msgid "Incorrect retrieve mode value for step \"%1$s\" of web scenario \"%2$s\"."
 msgstr "场景\"%2$s\"的步骤\"%1$s\"应用了不正确的模式值."
 
-#: include/classes/api/services/CScreenItem.php:795
+#: include/classes/api/services/CScreenItem.php:797
 #, c-format
 msgid "Incorrect screen ID \"%1$s\" provided for screen element."
 msgstr "聚合图形应用了不正确的聚合图形ID \"%1$s\""
@@ -8047,7 +8047,7 @@ msgstr "主机模板 \"%1$s\"的状态值不正确."
 msgid "Incorrect status for service \"%1$s\"."
 msgstr "服务\"%1$s\"存在错误的状态."
 
-#: include/classes/api/services/CScreenItem.php:648
+#: include/classes/api/services/CScreenItem.php:650
 msgid "Incorrect style provided for screen element."
 msgstr "指定的聚合图形元素样式不正确."
 
@@ -8059,7 +8059,7 @@ msgstr "模板的聚合图形ID错误。"
 msgid "Incorrect templated web scenario step count."
 msgstr "模板Web方案步骤计数不正确。"
 
-#: include/classes/api/services/CUser.php:312
+#: include/classes/api/services/CUser.php:316
 #, c-format
 msgid "Incorrect theme for user \"%1$s\"."
 msgstr "用户\"%1$s\"的主题错误"
@@ -8094,13 +8094,13 @@ msgstr "错误的触发器表达式"
 msgid "Incorrect trigger expression."
 msgstr "错误的触发器表达式."
 
-#: include/classes/api/services/CTriggerGeneral.php:1147
+#: include/classes/api/services/CTriggerGeneral.php:1155
 #: include/triggers.inc.php:612
 #, c-format
 msgid "Incorrect trigger expression. Host \"%1$s\" does not exist or you have no access to this host."
 msgstr "错误的触发器表达式. 主机 \"%1$s\"不存在或您不能存取此主机."
 
-#: include/classes/api/services/CTriggerGeneral.php:1148
+#: include/classes/api/services/CTriggerGeneral.php:1156
 msgid "Incorrect trigger expression. Trigger expression elements should not belong to a template and a host simultaneously."
 msgstr "错误的触发器表达式. 触发器表达式组件不该同时属于一个模板和一个主机."
 
@@ -8112,16 +8112,16 @@ msgstr "错误的触发器表达式. 触发器表达式组件不该同时属于�
 msgid "Incorrect trigger function \"%1$s\" provided in expression."
 msgstr "用了错误的触发器方程序\"%1$s\"于表达式中."
 
-#: include/classes/api/services/CTriggerGeneral.php:1153
+#: include/classes/api/services/CTriggerGeneral.php:1161
 #, c-format
 msgid "Incorrect trigger prototype expression. Host \"%1$s\" does not exist or you have no access to this host."
 msgstr "触发器的模板表达式错误。主机\"%1$s\"不存在或您没有权限访问它."
 
-#: include/classes/api/services/CTriggerGeneral.php:1154
+#: include/classes/api/services/CTriggerGeneral.php:1162
 msgid "Incorrect trigger prototype expression. Trigger prototype expression elements should not belong to a template and a host simultaneously."
 msgstr "触发器模板表达式错误。触发器表达式元素不应该同时属于一个模板和一个主机."
 
-#: include/func.inc.php:1015
+#: include/func.inc.php:1017
 msgid "Incorrect type of asort_by_key."
 msgstr "错误的asort_by_key类型."
 
@@ -8135,13 +8135,13 @@ msgstr "动作\"%1$s\"的计算类型不正确."
 msgid "Incorrect type of calculation for correlation \"%1$s\"."
 msgstr "\"%1$s\"的关联项计算类型错误。"
 
-#: include/classes/api/services/CDiscoveryRule.php:958
+#: include/classes/api/services/CDiscoveryRule.php:968
 #, c-format
 msgid "Incorrect type of calculation for discovery rule \"%1$s\"."
 msgstr "自动发现规则 \"%1$s\"的计算类型不正确."
 
 #: include/classes/api/services/CMap.php:529
-#: include/classes/api/services/CMap.php:951
+#: include/classes/api/services/CMap.php:955
 #, c-format
 msgid "Incorrect user ID specified for map \"%1$s\"."
 msgstr "拓扑图 \"%1$s\" 用户ID错误。"
@@ -8153,7 +8153,7 @@ msgid "Incorrect user ID specified for screen \"%1$s\"."
 msgstr "聚合图形 \"%1$s\" 用户ID错误。"
 
 #: include/classes/api/services/CMap.php:600
-#: include/classes/api/services/CMap.php:1021
+#: include/classes/api/services/CMap.php:1025
 #, c-format
 msgid "Incorrect user group ID specified for map \"%1$s\"."
 msgstr "拓扑图 \"%1$s\" 用户组ID错误。"
@@ -8196,23 +8196,23 @@ msgstr "错误的用户群组."
 msgid "Incorrect value \"%1$s\" for \"%2$s\" field."
 msgstr "字段 \"%2$s\"的值 \"%1$s\"不正确."
 
-#: include/classes/api/services/CScreenItem.php:623
+#: include/classes/api/services/CScreenItem.php:625
 #: include/validate.inc.php:320
 #, c-format
 msgid "Incorrect value \"%1$s\" for \"%2$s\" field: must be between %3$s and %4$s."
 msgstr "字段 \"%2$s\"的值 \"%1$s\"不正确:必须在%3$s到%4$s之间"
 
-#: include/classes/db/DB.php:352
+#: include/classes/db/DB.php:364
 #, c-format
 msgid "Incorrect value \"%1$s\" for float field \"%2$s\"."
 msgstr "错误的值\"%1$s\"于浮点栏位\"%2$s\"中."
 
-#: include/classes/db/DB.php:346
+#: include/classes/db/DB.php:358
 #, c-format
 msgid "Incorrect value \"%1$s\" for int field \"%2$s\"."
 msgstr "错误的值\"%1$s\"于整数栏位\"%2$s\"中."
 
-#: include/classes/db/DB.php:340
+#: include/classes/db/DB.php:352
 #, c-format
 msgid "Incorrect value \"%1$s\" for unsigned int field \"%2$s\"."
 msgstr "错误的值\"%1$s\"于无正负的整数栏位\"%2$s\"中."
@@ -8288,20 +8288,20 @@ msgstr "\"%2$s\" 中 媒体值 \"%3$s\" 的 \"%1$s\" 值错误。"
 #: include/classes/api/services/CTriggerGeneral.php:241
 #: include/classes/api/services/CTriggerGeneral.php:247
 #: include/classes/api/services/CTriggerGeneral.php:257
-#: include/classes/api/services/CTriggerGeneral.php:529
-#: include/classes/api/services/CTriggerGeneral.php:537
-#: include/classes/api/services/CTriggerGeneral.php:555
-#: include/classes/api/services/CTriggerGeneral.php:562
-#: include/classes/api/services/CTriggerGeneral.php:569
-#: include/classes/api/services/CTriggerGeneral.php:575
-#: include/classes/api/services/CTriggerGeneral.php:583
-#: include/classes/api/services/CTriggerGeneral.php:761
-#: include/classes/api/services/CTriggerGeneral.php:770
+#: include/classes/api/services/CTriggerGeneral.php:533
+#: include/classes/api/services/CTriggerGeneral.php:541
+#: include/classes/api/services/CTriggerGeneral.php:559
+#: include/classes/api/services/CTriggerGeneral.php:566
+#: include/classes/api/services/CTriggerGeneral.php:573
+#: include/classes/api/services/CTriggerGeneral.php:579
+#: include/classes/api/services/CTriggerGeneral.php:587
+#: include/classes/api/services/CTriggerGeneral.php:769
 #: include/classes/api/services/CTriggerGeneral.php:778
-#: include/classes/api/services/CTriggerGeneral.php:788
+#: include/classes/api/services/CTriggerGeneral.php:786
 #: include/classes/api/services/CTriggerGeneral.php:796
-#: include/classes/api/services/CTriggerGeneral.php:802
+#: include/classes/api/services/CTriggerGeneral.php:804
 #: include/classes/api/services/CTriggerGeneral.php:810
+#: include/classes/api/services/CTriggerGeneral.php:818
 #: include/classes/validators/CNewValidator.php:88
 #: include/classes/validators/CNewValidator.php:260
 #: include/classes/validators/CNewValidator.php:272
@@ -8337,7 +8337,7 @@ msgid "Indonesian (id_ID)"
 msgstr "印度尼西亚 (id_ID)"
 
 #: include/actions.inc.php:1299 include/actions.inc.php:1448
-#: include/blocks.inc.php:660 include/blocks.inc.php:825
+#: include/blocks.inc.php:660 include/blocks.inc.php:827
 #: include/classes/html/CFormList.php:74
 #: include/classes/screens/CScreenActions.php:132
 #: include/classes/screens/CScreenProblem.php:675
@@ -8404,7 +8404,7 @@ msgstr "安装名称"
 msgid "Interface"
 msgstr "接口"
 
-#: include/classes/api/services/CHostInterface.php:833
+#: include/classes/api/services/CHostInterface.php:844
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "接口是链接到\"%2$s\"上的监控项\"%1$s\"."
@@ -8457,11 +8457,11 @@ msgstr "内部数据存储时间（天）"
 #: include/classes/api/services/CTriggerGeneral.php:299
 #: include/classes/api/services/CTriggerGeneral.php:437
 #: include/classes/api/services/CTriggerGeneral.php:500
-#: include/classes/api/services/CTriggerGeneral.php:649
-#: include/classes/api/services/CTriggerGeneral.php:873
-#: include/classes/api/services/CTriggerGeneral.php:981
-#: include/classes/api/services/CTriggerGeneral.php:1158
-#: include/classes/api/services/CTriggerGeneral.php:1520
+#: include/classes/api/services/CTriggerGeneral.php:653
+#: include/classes/api/services/CTriggerGeneral.php:881
+#: include/classes/api/services/CTriggerGeneral.php:989
+#: include/classes/api/services/CTriggerGeneral.php:1166
+#: include/classes/api/services/CTriggerGeneral.php:1528
 #: include/classes/core/CJsonRpc.php:203
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
@@ -8488,7 +8488,7 @@ msgstr "IE浏览器"
 #: include/views/configuration.item.massupdate.php:333
 #: include/views/configuration.item.prototype.edit.php:273
 #: include/views/configuration.item.prototype.list.php:44
-#: include/views/configuration.services.edit.php:142 latest.php:407
+#: include/views/configuration.services.edit.php:144 latest.php:407
 msgid "Interval"
 msgstr "间隔"
 
@@ -8675,16 +8675,16 @@ msgid "Invalid maintenance period"
 msgstr "无效的维护周期."
 
 #: include/classes/api/services/CScreenItem.php:154
-#: include/classes/api/services/CScreenItem.php:269
-#: include/classes/api/services/CScreenItem.php:333
+#: include/classes/api/services/CScreenItem.php:270
+#: include/classes/api/services/CScreenItem.php:335
 #: include/classes/api/services/CScript.php:427
 #: include/classes/api/services/CService.php:200
 #: include/classes/api/services/CService.php:371
 #: include/classes/api/services/CService.php:1218
-#: include/classes/api/services/CUser.php:693
-#: include/classes/api/services/CUser.php:713
-#: include/classes/api/services/CUser.php:871
-#: include/classes/api/services/CUser.php:916
+#: include/classes/api/services/CUser.php:697
+#: include/classes/api/services/CUser.php:717
+#: include/classes/api/services/CUser.php:875
+#: include/classes/api/services/CUser.php:920
 #: include/classes/core/CJsonRpc.php:199
 msgid "Invalid method parameters."
 msgstr "无效的方法参数."
@@ -8763,7 +8763,7 @@ msgstr "资产纪录模式"
 msgid "Is online?"
 msgstr "是否在线?"
 
-#: include/blocks.inc.php:655 include/blocks.inc.php:823
+#: include/blocks.inc.php:655 include/blocks.inc.php:825
 msgid "Issue"
 msgstr "问题"
 
@@ -8786,7 +8786,7 @@ msgstr "不能查找用户密码."
 msgid "Italian (it_IT)"
 msgstr "意大利语 (it_IT)"
 
-#: include/audit.inc.php:36 include/classes/screens/CScreenHistory.php:155
+#: include/audit.inc.php:36 include/classes/screens/CScreenHistory.php:162
 #: include/classes/screens/CScreenPlainText.php:42 include/forms.inc.php:1007
 #: include/views/configuration.graph.edit.php:149
 #: include/views/configuration.graph.edit.php:213
@@ -8814,7 +8814,7 @@ msgstr "键值为 \"%1$s\"的监控项已存在于 \"%2$s\", 继承自其他模�
 msgid "Item \"%1$s\" already exists on \"%2$s\"."
 msgstr "监控项\"%1$s\"已经存在于\"%2$s\"."
 
-#: include/classes/api/services/CItem.php:845
+#: include/classes/api/services/CItem.php:847
 #, c-format
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "监控项\"%1$s\"不能填入一个不存在的主机资产纪录栏位号码\"%2$d\". 选择为: 从0(不填入)到%3$d."
@@ -9155,7 +9155,7 @@ msgstr "语言"
 msgid "Last"
 msgstr "末"
 
-#: include/func.inc.php:1557
+#: include/func.inc.php:1559
 msgctxt "page navigation"
 msgid "Last"
 msgstr "末"
@@ -9316,14 +9316,14 @@ msgstr "链接指示器"
 msgid "Link new templates"
 msgstr "链接指示器"
 
-#: include/classes/api/services/CMap.php:745
-#: include/classes/api/services/CMap.php:1174
+#: include/classes/api/services/CMap.php:749
+#: include/classes/api/services/CMap.php:1182
 #, c-format
 msgid "Link selementid1 field is pointing to a nonexistent map selement ID \"%1$s\" for map \"%2$s\"."
 msgstr "链接栏位selementid1是为拓扑图\"%2$s\"指向不存在的拓扑图 selement ID \"%1$s\"."
 
-#: include/classes/api/services/CMap.php:753
-#: include/classes/api/services/CMap.php:1182
+#: include/classes/api/services/CMap.php:757
+#: include/classes/api/services/CMap.php:1190
 #, c-format
 msgid "Link selementid2 field is pointing to a nonexistent map selement ID \"%1$s\" for map \"%2$s\"."
 msgstr "链接栏位selementid2是为拓扑图\"%2$s\"指向不存在的拓扑图 selement ID \"%1$s\"."
@@ -9408,7 +9408,7 @@ msgstr "全网页加载时间（秒）。返回浮点型"
 msgid "Local"
 msgstr "本地"
 
-#: include/classes/screens/CScreenHistory.php:156
+#: include/classes/screens/CScreenHistory.php:163
 #: include/views/monitoring.screen.constructor.edit.php:612
 msgid "Local time"
 msgstr "当地时间"
@@ -9426,7 +9426,7 @@ msgid "Location longitude"
 msgstr "位置经度"
 
 #: include/forms.inc.php:365 include/items.inc.php:131
-#: include/triggers.inc.php:1723 include/views/configuration.item.edit.php:304
+#: include/views/configuration.item.edit.php:304
 #: include/views/configuration.item.massupdate.php:221
 #: include/views/configuration.item.prototype.edit.php:218
 msgid "Log"
@@ -9478,19 +9478,19 @@ msgstr "日志与SNMP采集器不符"
 msgid "Logged in as"
 msgstr "登录为"
 
-#: auditlogs.php:130 include/func.inc.php:1692 include/func.inc.php:1707
+#: auditlogs.php:130 include/func.inc.php:1694 include/func.inc.php:1709
 #: include/menu.inc.php:306 include/views/administration.auditlogs.list.php:39
 #: include/views/administration.authentication.edit.php:102
 #: include/views/administration.users.list.php:78
 msgid "Login"
 msgstr "登录"
 
-#: include/classes/api/services/CUser.php:1150
+#: include/classes/api/services/CUser.php:1154
 #, c-format
 msgid "Login failed \"%s\"."
 msgstr "登录失败\"%s\"."
 
-#: include/classes/api/services/CUser.php:1117
+#: include/classes/api/services/CUser.php:1121
 #, c-format
 msgid "Login name \"%1$s\" does not match the name \"%2$s\" used to pass HTTP authentication."
 msgstr "登陆名\"%1$s\"未能匹配HTTP认证所使用的用户名 \"%2$s\""
@@ -9499,9 +9499,9 @@ msgstr "登陆名\"%1$s\"未能匹配HTTP认证所使用的用户名 \"%2$s\""
 msgid "Login name or password is incorrect!"
 msgstr "登陆名或密码错误!"
 
-#: include/classes/api/services/CUser.php:1006
-#: include/classes/api/services/CUser.php:1022
-#: include/classes/api/services/CUser.php:1065
+#: include/classes/api/services/CUser.php:1010
+#: include/classes/api/services/CUser.php:1026
+#: include/classes/api/services/CUser.php:1069
 msgid "Login name or password is incorrect."
 msgstr "登录名称或密码是错误的."
 
@@ -9659,12 +9659,12 @@ msgstr "维护类型"
 msgid "Maintenance updated"
 msgstr "维护已更新"
 
-#: include/blocks.inc.php:713 include/triggers.inc.php:2140
+#: include/blocks.inc.php:713 include/triggers.inc.php:2209
 #: include/views/inventory.host.view.php:47
 msgid "Maintenance with data collection"
 msgstr "进行数据收集的维护"
 
-#: include/blocks.inc.php:712 include/triggers.inc.php:2139
+#: include/blocks.inc.php:712 include/triggers.inc.php:2208
 #: include/views/inventory.host.view.php:46
 msgid "Maintenance without data collection"
 msgstr "不进行数据收集的维护"
@@ -9695,15 +9695,15 @@ msgid "Map"
 msgstr "拓扑图"
 
 #: include/classes/api/services/CMap.php:412
-#: include/classes/api/services/CMap.php:831
+#: include/classes/api/services/CMap.php:835
 #, c-format
 msgid "Map \"%1$s\" already exists."
 msgstr "拓扑图\"%1$s\"已经存在。"
 
 #: include/classes/api/services/CMap.php:502
 #: include/classes/api/services/CMap.php:577
-#: include/classes/api/services/CMap.php:924
-#: include/classes/api/services/CMap.php:998
+#: include/classes/api/services/CMap.php:928
+#: include/classes/api/services/CMap.php:1002
 #, c-format
 msgid "Map \"%1$s\" is public and read-only sharing is disallowed."
 msgstr "拓扑图 \"%1$s\" 为公开只读不允许共享。"
@@ -9720,12 +9720,12 @@ msgstr "拓扑图已更新!返回?"
 msgid "Map label type"
 msgstr "拓朴图标签类型"
 
-#: include/classes/api/services/CMap.php:801
+#: include/classes/api/services/CMap.php:805
 msgid "Map name cannot be empty."
 msgstr "地图名称不能为空"
 
 #: include/classes/api/services/CMap.php:441
-#: include/classes/api/services/CMap.php:849
+#: include/classes/api/services/CMap.php:853
 msgid "Map owner cannot be empty."
 msgstr "地图的所有者不能为空。"
 
@@ -10253,7 +10253,7 @@ msgstr "NTLM"
 #: popup.php:1035 popup.php:1064 popup.php:1223 popup.php:1360 popup.php:1435
 #: popup.php:1539 popup.php:1611 popup.php:1679 popup.php:1730 popup.php:1756
 #: popup.php:1775 popup.php:1799 popup.php:1831 popup_usrgrp.php:88
-#: queue.php:249 report2.php:498 screenconf.php:50 services.php:40
+#: queue.php:249 report2.php:417 screenconf.php:50 services.php:40
 #: slideconf.php:36 sysmaps.php:48 trigger_prototypes.php:37 triggers.php:40
 #: tr_logform.php:39 tr_logform.php:317 tr_status.php:496
 msgid "Name"
@@ -10370,7 +10370,7 @@ msgstr "新的操作"
 msgid "New regular expression"
 msgstr "新的正则表达式"
 
-#: include/views/configuration.services.edit.php:314
+#: include/views/configuration.services.edit.php:316
 msgid "New service time"
 msgstr "新的服务时间"
 
@@ -10381,7 +10381,7 @@ msgid "Next step"
 msgstr "下一步"
 
 #: include/classes/screens/CScreenProblem.php:904 include/events.inc.php:512
-#: include/events.inc.php:569 include/func.inc.php:2004
+#: include/events.inc.php:569 include/func.inc.php:2006
 #: include/triggers.inc.php:1124 include/triggers.inc.php:1129
 #: include/views/administration.users.list.php:98
 #: include/views/administration.users.list.php:102
@@ -10438,7 +10438,7 @@ msgstr "\"%1$s\" 没有返回组"
 msgid "No \"%1$s\" given for host prototype."
 msgstr "主机模板的\"%1$s\"未配置"
 
-#: include/classes/api/services/CMap.php:780
+#: include/classes/api/services/CMap.php:784
 #, c-format
 msgid "No \"%1$s\" given for map."
 msgstr "\"%1$s\" 在拓扑图中未定义。"
@@ -10476,7 +10476,7 @@ msgstr "web场景的\"%1$s\"未配置."
 msgid "No \"%2$s\" given for a filter condition of action \"%1$s\"."
 msgstr "动作\"%1$s\"的过滤器条件未配置 \"%2$s\" "
 
-#: include/classes/api/services/CDiscoveryRule.php:1008
+#: include/classes/api/services/CDiscoveryRule.php:1018
 #, c-format
 msgid "No \"%2$s\" given for a filter condition of discovery rule \"%1$s\"."
 msgstr "自动发现规则\"%1$s\"的过滤器条件的\"%2$s\"未配置"
@@ -10491,7 +10491,7 @@ msgstr "主机模板\"%1$s\"的\"%2$s\"未配置"
 msgid "No \"%2$s\" given for the filter of action \"%1$s\"."
 msgstr "动作 \"%1$s\"的过滤器未配置\"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:976
+#: include/classes/api/services/CDiscoveryRule.php:986
 #, c-format
 msgid "No \"%2$s\" given for the filter of discovery rule \"%1$s\"."
 msgstr "自动发现规则 \"%1$s\"的过滤器未配置\"%2$s\"."
@@ -10519,7 +10519,7 @@ msgstr "没有发现指定的SNMP团体名"
 msgid "No SNMP interfaces found."
 msgstr "没有发现SNMP接口."
 
-#: include/classes/api/services/CScreenItem.php:609
+#: include/classes/api/services/CScreenItem.php:611
 msgid "No URL provided for screen element."
 msgstr "没有提供URL给聚合图形组件。"
 
@@ -10593,7 +10593,7 @@ msgstr "在周期T期间没有接收到数据，则 N = 1，否则 N = 0"
 msgid "No data received during period of time T, then N NOT 1, 0 - otherwise"
 msgstr "在周期T期间没有接收到数据，则 N 不是 1，否则 N = 0"
 
-#: include/classes/api/services/CHostInterface.php:809
+#: include/classes/api/services/CHostInterface.php:820
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr "在\"%2$s\"上的\"%1$s\"类型无默认接口."
@@ -10608,7 +10608,7 @@ msgstr "没有细节"
 msgid "No discovery rule ID given for host prototype \"%1$s\"."
 msgstr "主机模板 \"%1$s\"上没有给定的自动发现规则ID"
 
-#: include/classes/api/services/CDiscoveryRule.php:441
+#: include/classes/api/services/CDiscoveryRule.php:451
 msgid "No discovery rule IDs given."
 msgstr "没有所称的自动发现规则ID"
 
@@ -10623,7 +10623,7 @@ msgstr "没有所称的自动发现规则ID"
 msgid "No encryption"
 msgstr "非加密"
 
-#: include/blocks.inc.php:761 include/blocks.inc.php:848 tr_status.php:604
+#: include/blocks.inc.php:763 include/blocks.inc.php:850 tr_status.php:604
 msgid "No events"
 msgstr "没有事件"
 
@@ -10636,7 +10636,7 @@ msgstr "没有指定给动作操作命令\"%s\"的执行目标."
 msgid "No file was uploaded."
 msgstr "没有文件上传."
 
-#: include/classes/api/services/CScreenItem.php:530
+#: include/classes/api/services/CScreenItem.php:532
 msgid "No graph ID provided for screen element."
 msgstr "没有提供图形ID给聚合图形组件."
 
@@ -10645,7 +10645,7 @@ msgstr "没有提供图形ID给聚合图形组件."
 msgid "No graph item with graphid \"%s\"."
 msgstr "没有图形ID\"%s\"的图形项目."
 
-#: include/classes/api/services/CScreenItem.php:539
+#: include/classes/api/services/CScreenItem.php:541
 msgid "No graph prototype ID provided for screen element."
 msgstr "没有图表元素指定的数据图模板ID."
 
@@ -10653,7 +10653,7 @@ msgstr "没有图表元素指定的数据图模板ID."
 msgid "No graphs added."
 msgstr "未添加数据图."
 
-#: include/classes/api/services/CDiscoveryRule.php:444
+#: include/classes/api/services/CDiscoveryRule.php:454
 msgid "No host IDs given."
 msgstr "没有所知的主机IDs"
 
@@ -10666,7 +10666,7 @@ msgstr "没有所知的宏\"%1$s\"的主机."
 msgid "No host group ID for group prototype."
 msgstr "组模板没有主机组ID."
 
-#: include/classes/api/services/CScreenItem.php:512
+#: include/classes/api/services/CScreenItem.php:514
 msgid "No host group ID provided for screen element."
 msgstr "没有提供主机群组给聚合图形组件。"
 
@@ -10684,7 +10684,7 @@ msgstr "未选定主机."
 msgid "No host with hostid \"%s\"."
 msgstr "没有含主机ID\"%s\"的主机."
 
-#: include/classes/api/services/CMapElement.php:68
+#: include/classes/api/services/CMapElement.php:76
 #, c-format
 msgid "No icon for map element \"%s\"."
 msgstr "没有对应组件\"%s\"的图标."
@@ -10720,12 +10720,12 @@ msgstr "主机\"%s\" 没有提供接口."
 msgid "No inventory mode specified for action operation."
 msgstr "要执行的动作的库存模式没有被设定。"
 
-#: include/classes/api/services/CScreenItem.php:559
-#: include/classes/api/services/CScreenItem.php:569
+#: include/classes/api/services/CScreenItem.php:561
+#: include/classes/api/services/CScreenItem.php:571
 msgid "No item ID provided for screen element."
 msgstr "聚合图形组件没有提供监控项 ID。              "
 
-#: include/classes/api/services/CScreenItem.php:549
+#: include/classes/api/services/CScreenItem.php:551
 msgid "No item prototype ID provided for screen element."
 msgstr "聚合图形元素没有配置项目模板ID。"
 
@@ -10747,7 +10747,7 @@ msgstr "没有已定义的监控项."
 msgid "No macros found."
 msgstr "未发现宏"
 
-#: include/classes/api/services/CScreenItem.php:582
+#: include/classes/api/services/CScreenItem.php:584
 msgid "No map ID provided for screen element."
 msgstr "没有提供拓扑图ID给聚合图形组件."
 
@@ -10764,8 +10764,8 @@ msgstr "没有找到匹配"
 msgid "No operation type given for correlation \"%1$s\"."
 msgstr "关联项 \"%1$s\" 没有操作类型"
 
-#: include/classes/api/services/CUser.php:1079
-#: include/classes/api/services/CUser.php:1207
+#: include/classes/api/services/CUser.php:1083
+#: include/classes/api/services/CUser.php:1211
 msgid "No permissions for system access."
 msgstr "没有系统访问权限。"
 
@@ -10781,8 +10781,8 @@ msgstr "没有系统访问权限。"
 #: include/classes/api/services/CCorrelation.php:710
 #: include/classes/api/services/CCorrelation.php:914
 #: include/classes/api/services/CDiscoveryRule.php:355
-#: include/classes/api/services/CDiscoveryRule.php:449
-#: include/classes/api/services/CDiscoveryRule.php:454
+#: include/classes/api/services/CDiscoveryRule.php:459
+#: include/classes/api/services/CDiscoveryRule.php:464
 #: include/classes/api/services/CDRule.php:177
 #: include/classes/api/services/CDRule.php:296
 #: include/classes/api/services/CDRule.php:323
@@ -10807,7 +10807,7 @@ msgstr "没有系统访问权限。"
 #: include/classes/api/services/CHostInterface.php:241
 #: include/classes/api/services/CHostInterface.php:257
 #: include/classes/api/services/CHostInterface.php:400
-#: include/classes/api/services/CHostInterface.php:637
+#: include/classes/api/services/CHostInterface.php:648
 #: include/classes/api/services/CHost.php:1489
 #: include/classes/api/services/CHost.php:1673
 #: include/classes/api/services/CHost.php:1788
@@ -10836,10 +10836,10 @@ msgstr "没有系统访问权限。"
 #: include/classes/api/services/CMaintenance.php:456
 #: include/classes/api/services/CMaintenance.php:553
 #: include/classes/api/services/CMapElement.php:58
-#: include/classes/api/services/CMapElement.php:117
-#: include/classes/api/services/CMapElement.php:188
+#: include/classes/api/services/CMapElement.php:125
+#: include/classes/api/services/CMapElement.php:196
 #: include/classes/api/services/CMap.php:360
-#: include/classes/api/services/CMap.php:791
+#: include/classes/api/services/CMap.php:795
 #: include/classes/api/services/CMediatype.php:405
 #: include/classes/api/services/CProxy.php:165
 #: include/classes/api/services/CProxy.php:257
@@ -10847,8 +10847,8 @@ msgstr "没有系统访问权限。"
 #: include/classes/api/services/CProxy.php:758
 #: include/classes/api/services/CProxy.php:789
 #: include/classes/api/services/CProxy.php:849
-#: include/classes/api/services/CScreenItem.php:392
-#: include/classes/api/services/CScreenItem.php:490
+#: include/classes/api/services/CScreenItem.php:394
+#: include/classes/api/services/CScreenItem.php:492
 #: include/classes/api/services/CScreen.php:771
 #: include/classes/api/services/CScreen.php:1238
 #: include/classes/api/services/CScript.php:287
@@ -10861,24 +10861,25 @@ msgstr "没有系统访问权限。"
 #: include/classes/api/services/CTemplateScreen.php:684
 #: include/classes/api/services/CTemplateScreen.php:747
 #: include/classes/api/services/CTemplateScreen.php:753
-#: include/classes/api/services/CTriggerGeneral.php:707
-#: include/classes/api/services/CTrigger.php:724
-#: include/classes/api/services/CTrigger.php:753
-#: include/classes/api/services/CTrigger.php:833
-#: include/classes/api/services/CTrigger.php:1369
+#: include/classes/api/services/CTriggerGeneral.php:715
+#: include/classes/api/services/CTrigger.php:734
+#: include/classes/api/services/CTrigger.php:763
+#: include/classes/api/services/CTrigger.php:843
+#: include/classes/api/services/CTrigger.php:1379
 #: include/classes/api/services/CTriggerPrototype.php:528
 #: include/classes/api/services/CTriggerPrototype.php:752
 #: include/classes/api/services/CTriggerPrototype.php:770
 #: include/classes/api/services/CUserMacro.php:680
-#: include/classes/api/services/CUser.php:700
-#: include/classes/api/services/CUser.php:879
-#: include/classes/api/services/CUser.php:899
-#: include/classes/api/services/CUser.php:958
-#: include/classes/api/services/CUser.php:1364
+#: include/classes/api/services/CUser.php:704
+#: include/classes/api/services/CUser.php:883
+#: include/classes/api/services/CUser.php:903
+#: include/classes/api/services/CUser.php:962
+#: include/classes/api/services/CUser.php:1368
 #: include/classes/api/services/CValueMap.php:287
 #: include/classes/api/services/CValueMap.php:414
+#: include/classes/screens/CScreenHistory.php:113
 #: include/classes/screens/CScreenHttpTestDetails.php:46
-#: include/func.inc.php:1670 scripts_exec.php:85
+#: include/func.inc.php:1672 scripts_exec.php:85
 msgid "No permissions to referred object or it does not exist!"
 msgstr "没有权限退回物件的或其不存在!"
 
@@ -10908,7 +10909,7 @@ msgstr "没有指定的公钥文件"
 msgid "No recipients for action operation message."
 msgstr "没有动作操作信息的收受者。"
 
-#: include/classes/api/services/CScreenItem.php:590
+#: include/classes/api/services/CScreenItem.php:592
 msgid "No screen ID provided for screen element."
 msgstr "没有提供聚合图形ID给聚合图形组件."
 
@@ -10971,10 +10972,6 @@ msgstr "无"
 msgid "Normal"
 msgstr "正常"
 
-#: app/views/administration.mediatype.edit.php:75
-msgid "Normal password"
-msgstr "普通密码"
-
 #: include/html.inc.php:178
 msgid "Normal view"
 msgstr "正常视图"
@@ -10988,13 +10985,13 @@ msgstr "非确认"
 msgid "Not Templated items"
 msgstr "非模板监控项"
 
-#: include/classes/api/services/CTrigger.php:1053
+#: include/classes/api/services/CTrigger.php:1063
 #: include/classes/api/services/CTriggerPrototype.php:911
 #, c-format
 msgid "Not all templates are linked to \"%s\"."
 msgstr "并非所有的模板都连接到\"%s\"."
 
-#: include/classes/api/services/CUser.php:334
+#: include/classes/api/services/CUser.php:338
 msgid "Not allowed to set password for user \"guest\"."
 msgstr "不允许设定用户\"guest\"的密码."
 
@@ -11015,9 +11012,9 @@ msgstr "未分类"
 msgid "Not supported"
 msgstr "不支持的"
 
-#: include/views/configuration.services.edit.php:142
-#: include/views/configuration.services.edit.php:249
-#: include/views/configuration.services.parent.list.php:50
+#: include/views/configuration.services.edit.php:144
+#: include/views/configuration.services.edit.php:251
+#: include/views/configuration.services.parent.list.php:57
 msgid "Note"
 msgstr "备注"
 
@@ -11216,17 +11213,15 @@ msgid "Number or percentage of inodes. Returns integer for number; float for per
 msgstr "数或inode的百分比。返回数字，如果是浮点则是百分比"
 
 #: include/forms.inc.php:363 include/items.inc.php:127
-#: include/triggers.inc.php:1721 include/views/configuration.item.edit.php:302
+#: include/triggers.inc.php:1720 include/views/configuration.item.edit.php:302
 #: include/views/configuration.item.massupdate.php:219
 #: include/views/configuration.item.prototype.edit.php:216
 msgid "Numeric (float)"
 msgstr "浮点数"
 
-#: include/triggers.inc.php:1720 include/triggers.inc.php:1736
-#: include/triggers.inc.php:1740 include/triggers.inc.php:1751
-#: include/triggers.inc.php:1756 include/triggers.inc.php:1761
-msgid "Numeric (integer 64bit)"
-msgstr "数字(64位整数)"
+#: include/triggers.inc.php:1721
+msgid "Numeric (integer)"
+msgstr ""
 
 #: include/forms.inc.php:362 include/items.inc.php:125
 #: include/views/configuration.item.edit.php:301
@@ -11311,7 +11306,7 @@ msgstr "关"
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: include/classes/html/CTriggersInfo.php:76
 #: include/views/administration.users.list.php:111
-#: include/views/js/conf.import.js.php:24 report2.php:500
+#: include/views/js/conf.import.js.php:24 report2.php:419
 msgid "Ok"
 msgstr "正常"
 
@@ -11346,8 +11341,8 @@ msgstr "其中的一个对象被留下没有主机组."
 msgid "One time only"
 msgstr "一次性"
 
-#: include/views/configuration.services.edit.php:158
-#: include/views/configuration.services.edit.php:196
+#: include/views/configuration.services.edit.php:160
+#: include/views/configuration.services.edit.php:198
 msgid "One-time downtime"
 msgstr "单次停机"
 
@@ -11395,15 +11390,15 @@ msgstr "只有超级管理员可以更新全局宏."
 msgid "Only Super Admins can update icon maps."
 msgstr "只有超级管理员可以更新图标映射."
 
-#: include/classes/api/services/CUser.php:689
+#: include/classes/api/services/CUser.php:693
 msgid "Only Zabbix Admins can add user media."
 msgstr "只有超级管理员可以添加用户报警媒介."
 
-#: include/classes/api/services/CUser.php:867
+#: include/classes/api/services/CUser.php:871
 msgid "Only Zabbix Admins can change user media."
 msgstr "只有超级管理员可以用改变户报警媒介."
 
-#: include/classes/api/services/CUser.php:948
+#: include/classes/api/services/CUser.php:952
 msgid "Only Zabbix Admins can remove user media."
 msgstr "只有超级管理员可以移除用户报警媒介."
 
@@ -11412,7 +11407,7 @@ msgid "Only Zabbix agent, SNMPv1, SNMPv2 and SNMPv3 checks can be made unique."
 msgstr "只有Zabbix代理, SNMPv1,SNMPv2 和 SNMPv3检查才是独特的."
 
 #: include/classes/api/services/CMap.php:445
-#: include/classes/api/services/CMap.php:853
+#: include/classes/api/services/CMap.php:857
 msgid "Only administrators can set map owner."
 msgstr "只有管理员才可以设置拓扑图的所有人。"
 
@@ -12039,7 +12034,7 @@ msgstr "期间"
 
 #: include/forms.inc.php:1739
 #: include/views/configuration.maintenance.edit.php:105
-#: include/views/configuration.services.edit.php:192
+#: include/views/configuration.services.edit.php:194
 msgid "Period type"
 msgstr "期间类型"
 
@@ -12137,7 +12132,7 @@ msgstr "填入主机资产纪录栏位"
 msgid "Port"
 msgstr "端口"
 
-#: include/classes/api/services/CHostInterface.php:621
+#: include/classes/api/services/CHostInterface.php:632
 msgid "Port cannot be empty for host interface."
 msgstr "主机接口的端口不能为空."
 
@@ -12275,7 +12270,7 @@ msgstr "问题显示"
 msgid "Problem expression"
 msgstr "问题表现形式"
 
-#: jsrpc.php:116
+#: jsrpc.php:117
 msgid "Problem on"
 msgstr "问题在"
 
@@ -12298,7 +12293,7 @@ msgstr "问题, 如果至少一个下层有一个问题"
 #: app/views/report.services.php:63 chart4.php:165 include/maps.inc.php:528
 #: include/maps.inc.php:609 include/maps.inc.php:698 include/menu.inc.php:53
 #: include/views/common.filter.trigger.php:37
-#: include/views/inventory.host.view.php:147 jsLoader.php:206 report2.php:499
+#: include/views/inventory.host.view.php:147 jsLoader.php:206 report2.php:418
 #: search.php:130 search.php:234 search.php:291 search.php:341
 msgid "Problems"
 msgstr "问题"
@@ -12620,7 +12615,7 @@ msgstr "远程命令"
 #: include/views/configuration.item.prototype.edit.php:302
 #: include/views/configuration.maintenance.edit.php:119
 #: include/views/configuration.services.edit.php:116
-#: include/views/configuration.services.edit.php:174
+#: include/views/configuration.services.edit.php:176
 #: include/views/configuration.trigger.prototype.edit.php:206
 #: include/views/configuration.trigger.prototype.edit.php:396
 #: include/views/configuration.trigger.prototype.edit.php:482
@@ -12794,7 +12789,7 @@ msgstr "重设确认"
 msgid "Reset defaults"
 msgstr "重设预设"
 
-#: jsrpc.php:111
+#: jsrpc.php:112
 msgid "Resolved"
 msgstr "已解决"
 
@@ -12839,7 +12834,7 @@ msgstr "响应时间"
 #: include/classes/debug/CProfiler.php:157
 #: include/views/administration.general.regularexpressions.edit.php:112
 #: include/views/administration.general.regularexpressions.edit.php:117
-#: tr_testexpr.php:146 tr_testexpr.php:183
+#: tr_testexpr.php:147 tr_testexpr.php:184
 msgid "Result"
 msgstr "结果"
 
@@ -12851,7 +12846,7 @@ msgstr "结果为假"
 msgid "Result is TRUE"
 msgstr "结果为真"
 
-#: tr_testexpr.php:50
+#: tr_testexpr.php:51
 msgid "Result type"
 msgstr "结果类型"
 
@@ -13101,13 +13096,13 @@ msgstr "SQL count: %1$s (selects: %2$s | executes: %3$s)"
 msgid "SQL query"
 msgstr "SQL查询"
 
-#: include/classes/db/DB.php:820
+#: include/classes/db/DB.php:832
 #, c-format
 msgid "SQL statement execution has failed \"%1$s\""
 msgstr "SQL描述式执行已失败: \"%1$s\""
 
-#: include/classes/db/DB.php:441 include/classes/db/DB.php:488
-#: include/classes/db/DB.php:547
+#: include/classes/db/DB.php:453 include/classes/db/DB.php:500
+#: include/classes/db/DB.php:559
 #, c-format
 msgid "SQL statement execution has failed \"%1$s\"."
 msgstr "SQL描述式执行已失败: \"%1$s\"."
@@ -13211,17 +13206,17 @@ msgstr "聚合图形\"%1$s\"已存在于模板\"%2$s\"中."
 msgid "Screen \"%1$s\" already exists."
 msgstr "聚合图形\"%1$s\"已存在."
 
-#: include/classes/api/services/CScreenItem.php:934
+#: include/classes/api/services/CScreenItem.php:936
 #, c-format
 msgid "Screen \"%1$s\" cell X - %2$s Y - %3$s is already taken."
 msgstr "图表\"%1$s\" 单元格X-%2$s Y - %3$s已经使用."
 
-#: include/classes/api/services/CScreenItem.php:841
+#: include/classes/api/services/CScreenItem.php:843
 #, c-format
 msgid "Screen \"%1$s\" column span in cell X - %2$s Y - %3$s is incorrect."
 msgstr "图表 \"%1$s\"单元格X - %2$s Y - %3$s列合并不正确."
 
-#: include/classes/api/services/CScreenItem.php:890
+#: include/classes/api/services/CScreenItem.php:892
 #, c-format
 msgid "Screen \"%1$s\" column span in cell X - %2$s Y - %3$s is too big."
 msgstr "图表 \"%1$s\"单元格X - %2$s Y - %3$s太大."
@@ -13234,12 +13229,12 @@ msgstr "图表 \"%1$s\"单元格X - %2$s Y - %3$s太大."
 msgid "Screen \"%1$s\" is public and read-only sharing is disallowed."
 msgstr "聚合图形 \"%1$s\" 只读，不能共享。"
 
-#: include/classes/api/services/CScreenItem.php:827
+#: include/classes/api/services/CScreenItem.php:829
 #, c-format
 msgid "Screen \"%1$s\" row span in cell X - %2$s Y - %3$s is incorrect."
 msgstr "图表\"%1$s\"单元格X - %2$s Y - %3$s行合并不正确. "
 
-#: include/classes/api/services/CScreenItem.php:877
+#: include/classes/api/services/CScreenItem.php:879
 #, c-format
 msgid "Screen \"%1$s\" row span in cell X - %2$s Y - %3$s is too big."
 msgstr "图表\"%1$s\"单元格X - %2$s Y - %3$s行合并太大."
@@ -13376,8 +13371,9 @@ msgid "Search pattern is empty"
 msgstr "查找式样为空"
 
 #: include/forms.inc.php:1885 include/maintenances.inc.php:112
+msgctxt "adjective"
 msgid "Second"
-msgstr "秒"
+msgstr ""
 
 #: include/hosts.inc.php:434
 msgid "Secondary POC cell"
@@ -13572,8 +13568,8 @@ msgstr "服务器时间"
 
 #: include/actions.inc.php:72
 #: include/views/configuration.services.child.list.php:38
-#: include/views/configuration.services.edit.php:333
-#: include/views/configuration.services.parent.list.php:35 services.php:481
+#: include/views/configuration.services.edit.php:335
+#: include/views/configuration.services.parent.list.php:35 services.php:446
 #: srv_status.php:142
 msgid "Service"
 msgstr "服务"
@@ -13618,7 +13614,7 @@ msgstr "服务端口"
 msgid "Service start time must be less than end time."
 msgstr "服务的开始时间不能晚于截止时间."
 
-#: include/views/configuration.services.edit.php:183
+#: include/views/configuration.services.edit.php:185
 msgid "Service times"
 msgstr "服务次数"
 
@@ -13638,7 +13634,7 @@ msgstr "服务"
 msgid "Services form a circular dependency."
 msgstr "服务形成了一个环."
 
-#: include/classes/api/services/CUser.php:1201
+#: include/classes/api/services/CUser.php:1205
 msgid "Session terminated, re-login, please."
 msgstr "会话已中断, 请重新登录."
 
@@ -13647,7 +13643,7 @@ msgid "Set host inventory mode"
 msgstr "设置主机清单模式"
 
 #: include/classes/screens/CScreenEvents.php:33
-#: include/classes/screens/CScreenHistory.php:161
+#: include/classes/screens/CScreenHistory.php:168
 #: include/classes/screens/CScreenProblem.php:672
 #: include/classes/screens/CScreenProblem.php:850
 #: include/triggers.inc.php:1094 include/views/configuration.item.list.php:139
@@ -13675,8 +13671,8 @@ msgid "Sharing"
 msgstr "分享"
 
 #: include/classes/api/services/CMap.php:483
-#: include/classes/api/services/CMap.php:906
-#: include/classes/api/services/CMap.php:980
+#: include/classes/api/services/CMap.php:910
+#: include/classes/api/services/CMap.php:984
 #, c-format
 msgid "Sharing option \"%1$s\" is missing a value for map \"%2$s\"."
 msgstr "共享选项 \"%1$s\" 没有在拓补图中指定值 \"%2$s\" 。"
@@ -13689,7 +13685,7 @@ msgid "Sharing option \"%1$s\" is missing a value for screen \"%2$s\"."
 msgstr "共享选项 \"%1$s\" 没有在聚合图形中指定值 \"%2$s\" 。"
 
 #: app/views/monitoring.problem.view.php:79
-#: include/views/js/monitoring.sysmaps.js.php:24 report2.php:526
+#: include/views/js/monitoring.sysmaps.js.php:24 report2.php:445
 #: tr_status.php:626 tr_status.php:631
 msgid "Show"
 msgstr "查看"
@@ -13980,7 +13976,7 @@ msgstr "依此排序触发器:"
 msgid "Sorting by field \"%1$s\" not allowed."
 msgstr "依栏位\"%1$s\"排序是不允许的."
 
-#: include/classes/screens/CScreenHistory.php:158
+#: include/classes/screens/CScreenHistory.php:165
 msgid "Source"
 msgstr "来源 "
 
@@ -14071,7 +14067,7 @@ msgid "Status (descending)"
 msgstr "状态(降序)"
 
 #: include/views/configuration.services.child.list.php:39
-#: include/views/configuration.services.parent.list.php:35 services.php:483
+#: include/views/configuration.services.parent.list.php:35 services.php:448
 msgid "Status calculation"
 msgstr "状态统计"
 
@@ -14310,12 +14306,12 @@ msgstr "总合"
 msgid "TRUE"
 msgstr "真"
 
-#: include/classes/db/DB.php:216
+#: include/classes/db/DB.php:228
 #, c-format
 msgid "Table \"%1$s\" does not exist."
 msgstr "表\"%1$s\" 不存在."
 
-#: include/classes/db/DB.php:389
+#: include/classes/db/DB.php:401
 #, c-format
 msgid "Table \"%1$s\" doesn't have a field named \"%2$s\"."
 msgstr "表\"%1$s\"不能有栏位名为\"%2$s\"."
@@ -14380,7 +14376,7 @@ msgstr "Telnet"
 #: include/forms.inc.php:478 include/forms.inc.php:794
 #: include/views/configuration.template.edit.php:37
 #: include/views/configuration.template.edit.php:388
-#: include/views/configuration.trigger.prototype.list.php:62 report2.php:295
+#: include/views/configuration.trigger.prototype.list.php:62 report2.php:268
 #: search.php:408
 msgid "Template"
 msgstr "模板"
@@ -14415,7 +14411,7 @@ msgstr "模板不能重复链接到其它模板, 即使透过其它模板."
 msgid "Template deleted"
 msgstr "模板已删除"
 
-#: report2.php:263
+#: report2.php:236
 msgid "Template group"
 msgstr "模板群组"
 
@@ -14441,7 +14437,7 @@ msgstr "模板图表\"%1$s\"已经存在."
 msgid "Template screens"
 msgstr "模板聚合图形"
 
-#: report2.php:328
+#: report2.php:301
 msgid "Template trigger"
 msgstr "模板触发器"
 
@@ -14507,7 +14503,7 @@ msgstr "模板\"%1$s\"自主机\"%2$s\"断连."
 #: include/views/configuration.trigger.prototype.edit.php:416
 #: include/views/configuration.triggers.edit.php:247
 #: include/views/configuration.triggers.edit.php:433 tr_testexpr.php:25
-#: tr_testexpr.php:132 tr_testexpr.php:192
+#: tr_testexpr.php:133 tr_testexpr.php:193
 msgid "Test"
 msgstr "测试"
 
@@ -14519,7 +14515,7 @@ msgstr "测试认证"
 msgid "Test confirmation"
 msgstr "测试确认"
 
-#: tr_testexpr.php:138
+#: tr_testexpr.php:139
 msgid "Test data"
 msgstr "测试数据"
 
@@ -14533,7 +14529,7 @@ msgid "Test string"
 msgstr "测试字符串"
 
 #: include/forms.inc.php:366 include/items.inc.php:133
-#: include/triggers.inc.php:1724 include/views/configuration.item.edit.php:305
+#: include/views/configuration.item.edit.php:305
 #: include/views/configuration.item.massupdate.php:222
 #: include/views/configuration.item.prototype.edit.php:219
 msgid "Text"
@@ -14544,12 +14540,12 @@ msgstr "文本"
 msgid "The \"%1$s.%2$s\" method must be called without the \"auth\" parameter."
 msgstr "\"%1$s.%2$s\"方法只能被以不带 \"auth\"进行调用."
 
-#: include/classes/api/services/CScreenItem.php:958
+#: include/classes/api/services/CScreenItem.php:960
 #, c-format
 msgid "The X coordinate of screen element located at X - %1$s and Y - %2$s of screen \"%3$s\" is too big."
 msgstr "图表\"%3$s\"上的位于X坐标为%1$s坐标为%2$s的图表元素的X坐标值太大."
 
-#: include/classes/api/services/CScreenItem.php:970
+#: include/classes/api/services/CScreenItem.php:972
 #, c-format
 msgid "The Y coordinate of screen element located at X - %1$s and Y - %2$s of screen \"%3$s\" is too big."
 msgstr "图表\"%3$s\"上的位于X坐标为%1$s坐标为%2$s的图表元素的Y坐标值太大."
@@ -14655,11 +14651,11 @@ msgstr "这栏位是由项目\"%s\"自动填入的."
 msgid "This month"
 msgstr "本月"
 
-#: include/classes/screens/CScreenBuilder.php:623
+#: include/classes/screens/CScreenBuilder.php:627
 msgid "This screen column is not empty. Delete it?"
 msgstr "这聚合图形-列不是空白. 删除它?"
 
-#: include/classes/screens/CScreenBuilder.php:577
+#: include/classes/screens/CScreenBuilder.php:581
 msgid "This screen row is not empty. Delete it?"
 msgstr "这聚合图形-行不是空白. 删除它?"
 
@@ -14685,8 +14681,8 @@ msgid "Thursday"
 msgstr "周四"
 
 #: app/views/report.services.php:62
-#: include/views/configuration.services.edit.php:255
-#: include/views/configuration.services.edit.php:298
+#: include/views/configuration.services.edit.php:257
+#: include/views/configuration.services.edit.php:300
 #: include/views/reports.toptriggers.php:70 report4.php:191 services.php:202
 #: services.php:208
 msgid "Till"
@@ -14702,9 +14698,9 @@ msgstr "直到"
 #: include/events.inc.php:438 include/events.inc.php:590
 #: include/views/administration.auditacts.list.php:47
 #: include/views/administration.auditlogs.list.php:61
-#: include/views/configuration.services.edit.php:288
-#: include/views/configuration.services.edit.php:302
-#: include/views/configuration.services.edit.php:335
+#: include/views/configuration.services.edit.php:290
+#: include/views/configuration.services.edit.php:304
+#: include/views/configuration.services.edit.php:337
 #: include/views/configuration.triggers.expression.php:85
 #: include/views/configuration.triggers.expression.php:93 jsLoader.php:134
 #: popup_trexpr.php:33 popup_trexpr.php:130 tr_status.php:490
@@ -14765,14 +14761,14 @@ msgstr "PHP的时区未设置(配置参数\"date.timezone\")."
 msgid "Timeout"
 msgstr "超时"
 
-#: include/classes/screens/CScreenHistory.php:154
-#: include/classes/screens/CScreenHistory.php:269
+#: include/classes/screens/CScreenHistory.php:161
+#: include/classes/screens/CScreenHistory.php:276
 #: include/classes/screens/CScreenPlainText.php:42
 #: include/classes/screens/CScreenPlainText.php:53
 msgid "Timestamp"
 msgstr "时间戳"
 
-#: include/views/js/monitoring.sysmaps.js.php:318 report2.php:485
+#: include/views/js/monitoring.sysmaps.js.php:318 report2.php:404
 msgid "To"
 msgstr "到"
 
@@ -14865,7 +14861,7 @@ msgstr "趋势（日）"
 #: include/views/js/monitoring.sysmaps.js.php:88
 #: include/views/js/monitoring.sysmaps.js.php:356
 #: include/views/reports.toptriggers.php:107 jsLoader.php:143 jsLoader.php:213
-#: services.php:484 tr_logform.php:27 tr_logform.php:159 tr_logform.php:381
+#: services.php:449 tr_logform.php:27 tr_logform.php:159 tr_logform.php:381
 msgid "Trigger"
 msgstr "触发器"
 
@@ -14874,7 +14870,7 @@ msgstr "触发器"
 msgid "Trigger \"%1$s\" already exists on \"%2$s\"."
 msgstr "触发器\"%1$s\"已存在于\"%2$s\"."
 
-#: include/classes/api/services/CTriggerGeneral.php:1512
+#: include/classes/api/services/CTriggerGeneral.php:1520
 #, c-format
 msgid "Trigger \"%1$s\" belongs to templates with different linkages."
 msgstr "触发器\"%1$s\"属于不同的联系，以模板。"
@@ -14888,7 +14884,7 @@ msgstr "触发器\"%1$s\"相依于一个不存在的触发器\"%2$s\"."
 msgid "Trigger added"
 msgstr "触发器已添加"
 
-#: include/classes/api/services/CTrigger.php:1096
+#: include/classes/api/services/CTrigger.php:1106
 msgid "Trigger cannot be dependent on a trigger that is inherited from it."
 msgstr "触发器不能依赖从它继承的一个触发器."
 
@@ -14984,12 +14980,12 @@ msgstr "触发器类型"
 msgid "Trigger prototype \"%1$s\" already exists on \"%2$s\"."
 msgstr "在\"%2$s\"中触发器原型模板\"%1$s\"重复。"
 
-#: include/classes/api/services/CTriggerGeneral.php:1516
+#: include/classes/api/services/CTriggerGeneral.php:1524
 #, c-format
 msgid "Trigger prototype \"%1$s\" belongs to templates with different linkages."
 msgstr "触发器原型模板\"%1$s\"属于不同的联系，以模板。"
 
-#: include/classes/api/services/CTriggerGeneral.php:1435
+#: include/classes/api/services/CTriggerGeneral.php:1443
 #, c-format
 msgid "Trigger prototype \"%1$s\" contains item prototypes from multiple discovery rules."
 msgstr "触发器模板\"%1$s\"中包含了来自多个自动发现规则的项目模板."
@@ -14999,7 +14995,7 @@ msgstr "触发器模板\"%1$s\"中包含了来自多个自动发现规则的项�
 msgid "Trigger prototype \"%1$s\" depends on trigger \"%2$s\", which does not exist."
 msgstr "触发器模板 \"%1$s\" 依赖于触发器 \"%2$s\" ,但它不存在。"
 
-#: include/classes/api/services/CTriggerGeneral.php:1430
+#: include/classes/api/services/CTriggerGeneral.php:1438
 #, c-format
 msgid "Trigger prototype \"%1$s\" must contain at least one item prototype."
 msgstr "触发器模板 \"%1$s\"必须至少包含一个项目模板."
@@ -15138,7 +15134,7 @@ msgstr "土耳其语 (tr_TR)"
 msgid "Two elements should be selected"
 msgstr "两个组件必需被选择"
 
-#: include/classes/api/services/CItem.php:906
+#: include/classes/api/services/CItem.php:908
 #, c-format
 msgid "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
 msgstr "两个项目 (\"%1$s\"和\"%2$s\")不能填入一个主机资产纪录栏位\"%3$s\", 这会造成冲突."
@@ -15169,7 +15165,7 @@ msgstr "两个项目 (\"%1$s\"和\"%2$s\")不能填入一个主机资产纪录�
 #: include/views/configuration.item.prototype.edit.php:273
 #: include/views/configuration.item.prototype.list.php:47
 #: include/views/configuration.maintenance.list.php:59
-#: include/views/configuration.services.edit.php:142
+#: include/views/configuration.services.edit.php:144
 #: include/views/inventory.host.list.php:68
 #: include/views/js/monitoring.sysmaps.js.php:15
 #: include/views/js/monitoring.sysmaps.js.php:212
@@ -15258,7 +15254,7 @@ msgid "URL C"
 msgstr "URL C"
 
 #: include/classes/api/services/CMap.php:726
-#: include/classes/api/services/CMap.php:1155
+#: include/classes/api/services/CMap.php:1159
 #, c-format
 msgid "URL name should be unique for map \"%1$s\"."
 msgstr "URL名称应该是拓扑图 \"%1$s\" 中唯一的。"
@@ -15272,7 +15268,7 @@ msgid "URL parameter name is empty."
 msgstr "URL 参数名为空."
 
 #: include/classes/api/services/CMap.php:720
-#: include/classes/api/services/CMap.php:1149
+#: include/classes/api/services/CMap.php:1153
 #, c-format
 msgid "URL should have both \"name\" and \"url\" fields for map \"%1$s\"."
 msgstr "拓扑图 \"%1$s\" URL、名称为必填项。"
@@ -15359,7 +15355,7 @@ msgstr "单位"
 #: include/maintenances.inc.php:39 include/maps.inc.php:39
 #: include/regexp.inc.php:236 include/screens.inc.php:57
 #: include/triggers.inc.php:68 include/triggers.inc.php:180
-#: include/triggers.inc.php:1969 include/users.inc.php:66
+#: include/triggers.inc.php:2038 include/users.inc.php:66
 #: include/users.inc.php:88 include/views/configuration.triggers.list.php:43
 #: include/views/js/configuration.discovery.edit.js.php:189
 msgid "Unknown"
@@ -15500,7 +15496,7 @@ msgstr "组模板不支持参数\"%1$s\""
 msgid "Unsupported parameter \"%2$s\" for a filter condition of action \"%1$s\"."
 msgstr "动作\"%1$s\"的过滤器条件不支持参数\"%2$s\""
 
-#: include/classes/api/services/CDiscoveryRule.php:1009
+#: include/classes/api/services/CDiscoveryRule.php:1019
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for a filter condition of discovery rule \"%1$s\"."
 msgstr "自动发现规则 \"%1$s\"的过滤器条件不支持参数\"%2$s\""
@@ -15520,7 +15516,7 @@ msgstr "主机模板%1$s主机资产不支持参数\"%2$s\"."
 msgid "Unsupported parameter \"%2$s\" for the filter of action \"%1$s\"."
 msgstr "动作\"%1$s\"的过滤器不支持参数\"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:977
+#: include/classes/api/services/CDiscoveryRule.php:987
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for the filter of discovery rule \"%1$s\"."
 msgstr "自动发现规则\"%1$s\"的过滤器不支持参数\"%2$s\"."
@@ -15572,7 +15568,7 @@ msgstr "上"
 #: include/views/configuration.item.prototype.edit.php:417
 #: include/views/configuration.maintenance.edit.php:155
 #: include/views/configuration.maintenance.edit.php:215
-#: include/views/configuration.services.edit.php:348
+#: include/views/configuration.services.edit.php:350
 #: include/views/configuration.template.edit.php:499
 #: include/views/configuration.trigger.prototype.edit.php:598
 #: include/views/configuration.trigger.prototype.massupdate.php:163
@@ -15643,7 +15639,7 @@ msgstr "已更新: %s"
 msgid "Updated: Application \"%1$s\" on \"%2$s\"."
 msgstr "已更新: 应用程序\"%1$s\"于\"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:875
+#: include/classes/api/services/CDiscoveryRule.php:885
 #, c-format
 msgid "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "已更新: 自动发现规则\"%1$s\"于\"%2$s\"."
@@ -15678,8 +15674,8 @@ msgstr "上层拓扑图"
 
 #: include/classes/screens/CScreenDiscovery.php:129
 #: include/classes/screens/CScreenDiscovery.php:255
-#: include/views/configuration.services.edit.php:148
-#: include/views/configuration.services.edit.php:194
+#: include/views/configuration.services.edit.php:150
+#: include/views/configuration.services.edit.php:196
 msgid "Uptime"
 msgstr "在线时间"
 
@@ -15728,22 +15724,22 @@ msgstr "用户"
 
 #: include/classes/api/services/CUserGroup.php:461
 #: include/classes/api/services/CUserGroup.php:650
-#: include/classes/api/services/CUser.php:287
+#: include/classes/api/services/CUser.php:291
 #, c-format
 msgid "User \"%1$s\" cannot be without user group."
 msgstr ""
 
-#: include/classes/api/services/CUser.php:546
+#: include/classes/api/services/CUser.php:550
 #, c-format
 msgid "User \"%1$s\" is map \"%2$s\" owner."
 msgstr "拓扑图\"%2$s\"的所有者为\"%1$s\"。"
 
-#: include/classes/api/services/CUser.php:570
+#: include/classes/api/services/CUser.php:574
 #, c-format
 msgid "User \"%1$s\" is screen \"%2$s\" owner."
 msgstr "聚合图  \"%2$s\"形的所有者为\"%1$s\""
 
-#: include/classes/api/services/CUser.php:592
+#: include/classes/api/services/CUser.php:596
 #, c-format
 msgid "User \"%1$s\" is slide show \"%2$s\" owner."
 msgstr "幻灯片 \"%2$s\"的所有者为\"%1$s\"。"
@@ -15834,7 +15830,7 @@ msgid "User group for database down message \"%1$s\"."
 msgstr "用户组被用于接收数据库宕机信息\"%1$s\"."
 
 #: include/classes/api/services/CMap.php:549
-#: include/classes/api/services/CMap.php:971
+#: include/classes/api/services/CMap.php:975
 #, c-format
 msgid "User group sharing is missing parameters: %1$s for map \"%2$s\"."
 msgstr "拓扑图 \"%2$s\" 用户组共享找不到参数 %1$s"
@@ -15855,7 +15851,7 @@ msgstr "聚合图形 \"%2$s\" 用户组共享找不到参数 %1$s"
 msgid "User groups"
 msgstr "用户群组"
 
-#: include/classes/api/services/CUser.php:1377
+#: include/classes/api/services/CUser.php:1381
 msgid "User is not allowed to delete himself."
 msgstr "用户是不允许删除自己"
 
@@ -15866,12 +15862,12 @@ msgstr "用户是不允许删除自己"
 msgid "User macro missing parameters: %1$s"
 msgstr "用户宏缺少参数： %1$s"
 
-#: include/classes/api/services/CUser.php:301
+#: include/classes/api/services/CUser.php:305
 #, c-format
 msgid "User may not modify GUI access for himself by becoming a member of user group \"%s\"."
 msgstr "用户不能因为成为用户群组 \"%s\"的成员而帮自己修改GUI存取."
 
-#: include/classes/api/services/CUser.php:305
+#: include/classes/api/services/CUser.php:309
 #, c-format
 msgid "User may not modify system status for himself by becoming a member of user group \"%s\"."
 msgstr "用户不能因为成为用户群组 \"%s\"的成员而帮自己修改系统状态."
@@ -15914,7 +15910,7 @@ msgid "User sessions"
 msgstr "用户会话"
 
 #: include/classes/api/services/CMap.php:474
-#: include/classes/api/services/CMap.php:897
+#: include/classes/api/services/CMap.php:901
 #, c-format
 msgid "User sharing is missing parameters: %1$s for map \"%2$s\"."
 msgstr "拓扑图 \"%2$s\" 用户共享缺少参数 %1$s "
@@ -15936,7 +15932,7 @@ msgstr "用户类型"
 msgid "User updated"
 msgstr "用户已更新"
 
-#: include/classes/api/services/CUser.php:349
+#: include/classes/api/services/CUser.php:353
 #, c-format
 msgid "User with alias \"%s\" already exists."
 msgstr "使用别名\"%s\"的用户已存在."
@@ -15949,6 +15945,10 @@ msgstr "使用别名\"%s\"的用户已存在."
 #: include/views/general.login.php:51 index.php:30
 msgid "Username"
 msgstr "用户名称"
+
+#: app/views/administration.mediatype.edit.php:75
+msgid "Username and password"
+msgstr ""
 
 #: include/menu.inc.php:282
 #: include/views/administration.usergroups.edit.php:54
@@ -16163,41 +16163,41 @@ msgstr "VMware 虚拟机在线时间, <url> - VMware 服务 URL, <uuid> - VMware
 
 #: include/blocks.inc.php:495 include/classes/graphdraw/CPieGraphDraw.php:303
 #: include/classes/screens/CScreenEvents.php:32
-#: include/classes/screens/CScreenHistory.php:166
-#: include/classes/screens/CScreenHistory.php:270
+#: include/classes/screens/CScreenHistory.php:173
+#: include/classes/screens/CScreenHistory.php:277
 #: include/classes/screens/CScreenPlainText.php:53
 #: include/views/administration.general.macros.edit.php:33
 #: include/views/administration.general.valuemapping.edit.php:46
 #: include/views/hostmacros.php:50 include/views/monitoring.history.php:147
-#: tr_testexpr.php:50
+#: tr_testexpr.php:51
 #, c-format
 msgid "Value"
 msgstr "ֵ值"
 
 #: include/classes/api/services/CMap.php:695
-#: include/classes/api/services/CMap.php:1124
+#: include/classes/api/services/CMap.php:1128
 #, c-format
 msgid "Value \"%1$s\" is invalid for parameter \"grid_align\". Choices are: \"%2$s\" and \"%3$s\""
 msgstr "参数\"grid_align\"的值\"%1$s\"是无效的. 可用的是: \"%2$s\"和\"%3$s\""
 
 #: include/classes/api/services/CMap.php:706
-#: include/classes/api/services/CMap.php:1135
+#: include/classes/api/services/CMap.php:1139
 #, c-format
 msgid "Value \"%1$s\" is invalid for parameter \"grid_show\". Choices are: \"%2$s\" and \"%3$s\"."
 msgstr "参数 \"grid_show \"的值 \"%1$s \"是无效的. 可用的是: \"%2$s \"和 \"%3$s\"."
 
 #: include/classes/api/services/CMap.php:685
-#: include/classes/api/services/CMap.php:1114
+#: include/classes/api/services/CMap.php:1118
 #, c-format
 msgid "Value \"%1$s\" is invalid for parameter \"grid_show\". Choices are: \"%2$s\"."
 msgstr "参数 \"grid_show \"的值 \"%1$s\"是无效的. 可用的是: \"%2$s\""
 
-#: include/classes/db/DB.php:332
+#: include/classes/db/DB.php:344
 #, c-format
 msgid "Value \"%1$s\" is too long for field \"%2$s\" - %3$d characters. Allowed length is %4$d characters."
 msgstr "栏位\"%2$s\"的值\"%1$s\"太长 - %3$d字元. 容许的长度是%4$d字符."
 
-#: include/classes/db/DB.php:361
+#: include/classes/db/DB.php:373
 #, c-format
 msgid "Value \"%1$s\" is too long for field \"%2$s\" - %3$d characters. Allowed length is 2048 characters."
 msgstr "栏位\"%2$s\"的值\"%1$s\"太长 - %3$d 字元. 容许的长度是2048字符."
@@ -16580,15 +16580,15 @@ msgstr "错误的主机栏位\"%1$s\"."
 msgid "Wrong fields for image \"%1$s\"."
 msgstr "错误的图像栏位\"%1$s\"."
 
-#: include/classes/api/services/CMapElement.php:495
+#: include/classes/api/services/CMapElement.php:503
 msgid "Wrong fields for linktrigger delete."
 msgstr "错误的连接触发器删除栏位."
 
-#: include/classes/api/services/CMapElement.php:470
+#: include/classes/api/services/CMapElement.php:478
 msgid "Wrong fields for linktrigger update."
 msgstr "错误的连接触发器更新栏位."
 
-#: include/classes/api/services/CMapElement.php:435
+#: include/classes/api/services/CMapElement.php:443
 msgid "Wrong fields for linktrigger."
 msgstr "字段错误连接触发器."
 
@@ -16600,7 +16600,7 @@ msgstr "字段错误连接触发器."
 msgid "Wrong fields for macro \"%1$s\"."
 msgstr "错误的宏栏位\"%1$s\"."
 
-#: include/classes/api/services/CMapElement.php:179
+#: include/classes/api/services/CMapElement.php:187
 msgid "Wrong fields for map link."
 msgstr "错误的图像连接栏位."
 
@@ -16626,12 +16626,12 @@ msgid "Wrong fields for time for service \"%1$s\"."
 msgstr "错误的服务\"%1$s\"其时间栏位."
 
 #: include/classes/api/services/CTriggerGeneral.php:495
-#: include/classes/api/services/CTriggerGeneral.php:643
+#: include/classes/api/services/CTriggerGeneral.php:647
 msgid "Wrong fields for trigger prototype."
 msgstr "错误的触发的原型字段。"
 
 #: include/classes/api/services/CTriggerGeneral.php:490
-#: include/classes/api/services/CTriggerGeneral.php:637
+#: include/classes/api/services/CTriggerGeneral.php:641
 msgid "Wrong fields for trigger."
 msgstr "错误的触发器栏位."
 
@@ -16639,6 +16639,16 @@ msgstr "错误的触发器栏位."
 #, c-format
 msgid "Wrong fields for user \"%s\"."
 msgstr "错误的用户栏位\"%s\"."
+
+#: include/classes/api/services/CMapElement.php:70
+#: include/classes/api/services/CMap.php:731
+#: include/classes/api/services/CMap.php:1164
+#: include/classes/api/services/CScreenItem.php:1016
+#: include/classes/api/services/CTriggerGeneral.php:515
+#: include/classes/api/services/CTriggerGeneral.php:668
+#: include/classes/api/services/CUser.php:268
+msgid "Wrong value for url field."
+msgstr ""
 
 #: include/views/js/monitoring.sysmaps.js.php:154
 msgid "X"
@@ -16699,7 +16709,7 @@ msgstr "每年"
 
 #: include/blocks.inc.php:504 include/classes/screens/CScreenProblem.php:904
 #: include/classes/screens/CScreenServerInfo.php:31 include/events.inc.php:503
-#: include/events.inc.php:562 include/func.inc.php:2004
+#: include/events.inc.php:562 include/func.inc.php:2006
 #: include/triggers.inc.php:1123 include/triggers.inc.php:1130
 #: include/views/administration.general.valuemapping.list.php:60
 #: include/views/administration.users.list.php:96
@@ -16717,7 +16727,7 @@ msgstr "是"
 msgid "Yesterday"
 msgstr "昨天"
 
-#: include/func.inc.php:1684
+#: include/func.inc.php:1686
 #, c-format
 msgid "You are logged in as \"%1$s\"."
 msgstr "\"%1$s\" 欢迎登入."
@@ -16726,12 +16736,12 @@ msgstr "\"%1$s\" 欢迎登入."
 msgid "You are not able to choose some of the languages, because locales for them are not installed on the web server."
 msgstr "您无法选择某些语言, 因为这些语言并未安装在web服务器上。"
 
-#: include/classes/api/services/CUser.php:317
+#: include/classes/api/services/CUser.php:321
 #, c-format
 msgid "You are not allowed to alter privileges for user \"%s\"."
 msgstr "您未被允许来帮用户\"%s\"转换优先权."
 
-#: include/func.inc.php:1701
+#: include/func.inc.php:1703
 msgid "You are not logged in"
 msgstr "您还没有登录。"
 
@@ -16787,13 +16797,17 @@ msgstr "您没有权限来更新其它用户."
 msgid "You do not have permissions to update user or user does not exist."
 msgstr "您没有权限来来更新用户或用户不存在."
 
-#: include/func.inc.php:1684
+#: include/func.inc.php:1686
 msgid "You have no permissions to access this page."
 msgstr "你没有权限来访问这个页面."
 
-#: include/func.inc.php:1703
+#: include/func.inc.php:1705
 msgid "You must login to view this page."
 msgstr "您必需登录才能浏览此页面."
+
+#: include/classes/db/DB.php:143
+msgid "Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system."
+msgstr ""
 
 #: index.php:25
 msgid "ZABBIX"
@@ -16874,7 +16888,7 @@ msgstr "Zabbix主机IP或端口并未设置！"
 msgid "Zabbix server details"
 msgstr "zabbix 服务器 详细信息"
 
-#: jsrpc.php:180
+#: jsrpc.php:181
 msgid "Zabbix server is not running: the information displayed may not be current."
 msgstr "Zabbix server is not running: the information displayed may not be current."
 
@@ -16939,7 +16953,7 @@ msgstr "agent代理程序"
 
 #: include/classes/graphdraw/CLineGraphDraw.php:2026
 #: include/classes/html/CSeverity.php:49
-#: include/classes/pagefilter/CPageFilter.php:842
+#: include/classes/pagefilter/CPageFilter.php:849
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
 #: include/classes/screens/CScreenHostgroupTriggers.php:110
 #: include/classes/screens/CScreenHostTriggers.php:109
@@ -16952,8 +16966,8 @@ msgstr "agent代理程序"
 #: include/views/configuration.triggers.list.php:41
 #: include/views/configuration.triggers.list.php:48
 #: include/views/js/configuration.graph.edit.js.php:55 report2.php:221
-#: report2.php:267 report2.php:299 report2.php:332 report2.php:402
-#: report2.php:448 report4.php:87 report4.php:283
+#: report2.php:240 report2.php:272 report2.php:305 report2.php:348
+#: report2.php:367 report4.php:87 report4.php:283
 msgid "all"
 msgstr "所有"
 
@@ -17029,10 +17043,10 @@ msgstr "闪烁"
 #: include/classes/api/services/CProxy.php:664
 #: include/classes/api/services/CProxy.php:670
 #: include/classes/api/services/CTriggerGeneral.php:247
-#: include/classes/api/services/CTriggerGeneral.php:537
-#: include/classes/api/services/CTriggerGeneral.php:569
-#: include/classes/api/services/CTriggerGeneral.php:778
-#: include/classes/api/services/CTriggerGeneral.php:796
+#: include/classes/api/services/CTriggerGeneral.php:541
+#: include/classes/api/services/CTriggerGeneral.php:573
+#: include/classes/api/services/CTriggerGeneral.php:786
+#: include/classes/api/services/CTriggerGeneral.php:804
 #: include/classes/validators/CNewValidator.php:88
 #: include/classes/validators/hostgroup/CHostGroupNameValidator.php:41
 msgid "cannot be empty"
@@ -17068,7 +17082,7 @@ msgstr "日"
 msgid "dd"
 msgstr "dd"
 
-#: include/classes/pagefilter/CPageFilter.php:734
+#: include/classes/pagefilter/CPageFilter.php:741
 #: include/classes/setup/CSetupWizard.php:320
 #: include/views/js/monitoring.slideconf.edit.js.php:13
 #: include/views/monitoring.slideconf.edit.php:130
@@ -17125,8 +17139,8 @@ msgctxt "hour short"
 msgid "h"
 msgstr "h"
 
-#: include/html.inc.php:780 include/views/configuration.services.edit.php:269
-#: include/views/configuration.services.edit.php:277
+#: include/html.inc.php:780 include/views/configuration.services.edit.php:271
+#: include/views/configuration.services.edit.php:279
 msgid "hh"
 msgstr "hh"
 
@@ -17136,22 +17150,22 @@ msgid "hh.mm"
 msgstr "hh.mm"
 
 #: include/classes/api/services/CMap.php:618
-#: include/classes/api/services/CMap.php:1040
+#: include/classes/api/services/CMap.php:1044
 msgid "host"
 msgstr "主机"
 
 #: include/classes/api/services/CMap.php:614
-#: include/classes/api/services/CMap.php:1036
+#: include/classes/api/services/CMap.php:1040
 msgid "host group"
 msgstr "主机群组"
 
 #: include/classes/api/services/CMap.php:609
-#: include/classes/api/services/CMap.php:1030
+#: include/classes/api/services/CMap.php:1034
 msgid "icon"
 msgstr "图标"
 
 #: include/classes/api/services/CMap.php:630
-#: include/classes/api/services/CMap.php:1052
+#: include/classes/api/services/CMap.php:1056
 msgid "image"
 msgstr "图片"
 
@@ -17239,7 +17253,7 @@ msgid "maintenance"
 msgstr "维护"
 
 #: include/classes/api/services/CMap.php:626
-#: include/classes/api/services/CMap.php:1048
+#: include/classes/api/services/CMap.php:1052
 msgid "map"
 msgstr "拓扑图"
 
@@ -17274,8 +17288,8 @@ msgid "minimum length is %1$s characters"
 msgstr ""
 
 #: include/html.inc.php:765 include/html.inc.php:788
-#: include/views/configuration.services.edit.php:273
-#: include/views/configuration.services.edit.php:281
+#: include/views/configuration.services.edit.php:275
+#: include/views/configuration.services.edit.php:283
 msgid "mm"
 msgstr "mm"
 
@@ -17330,8 +17344,8 @@ msgid "not running"
 msgstr "非运行中"
 
 #: hostinventoriesoverview.php:75
-#: include/classes/pagefilter/CPageFilter.php:780
-#: include/classes/pagefilter/CPageFilter.php:842 include/forms.inc.php:1022
+#: include/classes/pagefilter/CPageFilter.php:787
+#: include/classes/pagefilter/CPageFilter.php:849 include/forms.inc.php:1022
 #: include/views/monitoring.screen.php:60 slides.php:198
 msgid "not selected"
 msgstr "非所选的"
@@ -17411,9 +17425,10 @@ msgstr "记住所选的"
 
 #: include/services.inc.php:72 include/services.inc.php:75
 #: include/services.inc.php:163
-#: include/views/configuration.services.parent.list.php:40
 #: include/views/configuration.services.parent.list.php:42
-#: include/views/configuration.services.parent.list.php:43
+#: include/views/configuration.services.parent.list.php:45
+#: include/views/configuration.services.parent.list.php:47
+#: include/views/configuration.services.parent.list.php:48
 msgid "root"
 msgstr "root"
 
@@ -17439,7 +17454,7 @@ msgstr "秒"
 msgid "selected"
 msgstr "选择"
 
-#: include/views/configuration.services.edit.php:252
+#: include/views/configuration.services.edit.php:254
 msgid "short description"
 msgstr "简要描述"
 
@@ -17447,10 +17462,10 @@ msgstr "简要描述"
 #: include/classes/api/services/CHost.php:1579
 #: include/classes/api/services/CHost.php:1588
 #: include/classes/api/services/CHost.php:1594
-#: include/classes/api/services/CTriggerGeneral.php:529
-#: include/classes/api/services/CTriggerGeneral.php:555
-#: include/classes/api/services/CTriggerGeneral.php:770
-#: include/classes/api/services/CTriggerGeneral.php:788
+#: include/classes/api/services/CTriggerGeneral.php:533
+#: include/classes/api/services/CTriggerGeneral.php:559
+#: include/classes/api/services/CTriggerGeneral.php:778
+#: include/classes/api/services/CTriggerGeneral.php:796
 msgid "should be empty"
 msgstr "可能是空的"
 
@@ -17490,7 +17505,7 @@ msgid "the tag \"%1$s\" is missing"
 msgstr "标签 \"%1$s\" 丢失"
 
 #: include/classes/api/services/CMap.php:622
-#: include/classes/api/services/CMap.php:1044 include/events.inc.php:34
+#: include/classes/api/services/CMap.php:1048 include/events.inc.php:34
 #: include/events.inc.php:63
 msgid "trigger"
 msgstr "触发器"
@@ -17499,11 +17514,11 @@ msgstr "触发器"
 msgid "trigger does not allow manual closing"
 msgstr "触发器不允许手动关闭"
 
-#: include/classes/api/services/CTriggerGeneral.php:1442
+#: include/classes/api/services/CTriggerGeneral.php:1450
 msgid "trigger prototype cannot be moved to another template or host"
 msgstr "触发器原型无法移动到另外一个模板或者主机"
 
-#: include/classes/api/services/CTriggerGeneral.php:1587
+#: include/classes/api/services/CTriggerGeneral.php:1595
 msgid "trigger with linkages cannot be moved to another template or host"
 msgstr "触发器原型以及关联项无法移动到另外一个模板或者主机"
 
@@ -17541,12 +17556,12 @@ msgstr "异常的文本 \"%1$s\""
 #: include/classes/api/services/CHost.php:1534
 #: include/classes/api/services/CProxy.php:645
 #: include/classes/api/services/CProxy.php:652
-#: include/classes/api/services/CTriggerGeneral.php:563
-#: include/classes/api/services/CTriggerGeneral.php:576
-#: include/classes/api/services/CTriggerGeneral.php:584
-#: include/classes/api/services/CTriggerGeneral.php:762
-#: include/classes/api/services/CTriggerGeneral.php:803
+#: include/classes/api/services/CTriggerGeneral.php:567
+#: include/classes/api/services/CTriggerGeneral.php:580
+#: include/classes/api/services/CTriggerGeneral.php:588
+#: include/classes/api/services/CTriggerGeneral.php:770
 #: include/classes/api/services/CTriggerGeneral.php:811
+#: include/classes/api/services/CTriggerGeneral.php:819
 #, c-format
 msgid "unexpected value \"%1$s\""
 msgstr "\"%1$s\" 值异常"

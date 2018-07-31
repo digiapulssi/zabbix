@@ -79,7 +79,7 @@ function getLocales() {
 		'sk_SK' => ['name' => _('Slovak (sk_SK)'),	'display' => true],
 		'es_ES' => ['name' => _('Spanish (es_ES)'),	'display' => false],
 		'sv_SE' => ['name' => _('Swedish (sv_SE)'),	'display' => false],
-		'tr_TR' => ['name' => _('Turkish (tr_TR)'),	'display' => false],
+		'tr_TR' => ['name' => _('Turkish (tr_TR)'),	'display' => true],
 		'uk_UA' => ['name' => _('Ukrainian (uk_UA)'),	'display' => true],
 		'vi_VN' => ['name' => _('Vietnamese (vi_VN)'),	'display' => false]
 	];
@@ -92,7 +92,7 @@ function getLocales() {
  * @return array a list of possible locale names
  */
 function zbx_locale_variants($language) {
-	if ((stristr($_SERVER['SERVER_SOFTWARE'], 'win32') !== false) || (stristr($_SERVER['SERVER_SOFTWARE'], 'win64') !== false)) {
+	if (strtolower(substr(PHP_OS, 0, 3)) === 'win') {
 		return zbx_locale_variants_win($language);
 	}
 	else {

@@ -28,4 +28,7 @@ extern int	CONFIG_TRAPPER_TIMEOUT;
 
 ZBX_THREAD_ENTRY(trapper_thread, args);
 
+void	init_proxy_history_lock(void);
+void	free_proxy_history_lock(void);
+
 #endif

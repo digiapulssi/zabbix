@@ -1449,6 +1449,18 @@ function getTriggerFormData(array $data) {
 		}
 	}
 
+	if ($data['hostid'] && (!array_key_exists('groupid', $data) || !$data['groupid'])) {
+		$db_hostgroups = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'hostids' => $data['hostid'],
+			'templateids' => $data['hostid']
+		]);
+
+		if ($db_hostgroups) {
+			$data['groupid'] = $db_hostgroups[0]['groupid'];
+		}
+	}
+
 	if ((!empty($data['triggerid']) && !isset($_REQUEST['form_refresh'])) || $data['limited']) {
 		$data['expression'] = $trigger['expression'];
 		$data['recovery_expression'] = $trigger['recovery_expression'];
@@ -1882,7 +1894,7 @@ function get_timeperiod_form() {
 
 			$cmbCount = new CComboBox('new_timeperiod[every]', $new_timeperiod['every']);
 			$cmbCount->addItem(1, _('First'));
-			$cmbCount->addItem(2, _('Second'));
+			$cmbCount->addItem(2, _x('Second', 'adjective'));
 			$cmbCount->addItem(3, _('Third'));
 			$cmbCount->addItem(4, _('Fourth'));
 			$cmbCount->addItem(5, _('Last'));

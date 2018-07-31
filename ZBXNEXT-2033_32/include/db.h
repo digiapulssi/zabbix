@@ -274,8 +274,8 @@ DB_TRIGGER;
 
 typedef struct
 {
-	DB_TRIGGER		trigger;
 	zbx_uint64_t		eventid;
+	DB_TRIGGER		trigger;
 	zbx_uint64_t		objectid;
 	int			source;
 	int			object;
@@ -289,7 +289,6 @@ typedef struct
 #define ZBX_FLAGS_DB_EVENT_UNSET		0x0000
 #define ZBX_FLAGS_DB_EVENT_CREATE		0x0001
 #define ZBX_FLAGS_DB_EVENT_NO_ACTION		0x0002
-#define ZBX_FLAGS_DB_EVENT_LINKED	0x0004
 	zbx_uint64_t		flags;
 }
 DB_EVENT;
@@ -402,6 +401,22 @@ typedef struct
 	zbx_escalation_status_t	status;
 }
 DB_ESCALATION;
+
+typedef struct
+{
+	zbx_uint64_t	actionid;
+	char		*name;
+	char		*shortdata;
+	char		*longdata;
+	char		*r_shortdata;
+	char		*r_longdata;
+	int		esc_period;
+	unsigned char	eventsource;
+	unsigned char	maintenance_mode;
+	unsigned char	recovery;
+	unsigned char	status;
+}
+DB_ACTION;
 
 int	DBconnect(int flag);
 void	DBinit(void);
@@ -522,16 +537,18 @@ void	DBdelete_graphs(zbx_vector_uint64_t *graphids);
 void	DBdelete_hosts(zbx_vector_uint64_t *hostids);
 void	DBdelete_hosts_with_prototypes(zbx_vector_uint64_t *hostids);
 
-int	DBupdate_itservices(zbx_vector_ptr_t *trigger_diff);
+int	DBupdate_itservices(const zbx_vector_ptr_t *trigger_diff);
 int	DBremove_triggers_from_itservices(zbx_uint64_t *triggerids, int triggerids_num);
 
-void	zbx_create_itservices_lock();
-void	zbx_destroy_itservices_lock();
+void	zbx_create_itservices_lock(void);
+void	zbx_destroy_itservices_lock(void);
 
 void	DBadd_condition_alloc(char **sql, size_t *sql_alloc, size_t *sql_offset, const char *fieldname,
 		const zbx_uint64_t *values, const int num);
 void	DBadd_str_condition_alloc(char **sql, size_t *sql_alloc, size_t *sql_offset, const char *fieldname,
 		const char **values, const int num);
+
+int	zbx_check_user_permissions(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid);
 
 const char	*zbx_host_string(zbx_uint64_t hostid);
 const char	*zbx_host_key_string(zbx_uint64_t itemid);
@@ -648,5 +665,9 @@ zbx_host_availability_t;
 
 int	zbx_sql_add_host_availability(char **sql, size_t *sql_alloc, size_t *sql_offset,
 		const zbx_host_availability_t *ha);
+
+/* event support */
+void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events);
+void	zbx_db_free_event(DB_EVENT *event);
 
 #endif

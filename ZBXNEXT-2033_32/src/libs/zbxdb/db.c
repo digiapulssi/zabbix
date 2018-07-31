@@ -407,11 +407,11 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	/* set to prior to the connection. MySQL allows changing connection	*/
 	/* options on an open connection, so setting it here is safe.		*/
 
-	if (0 != mysql_options(conn, MYSQL_OPT_RECONNECT, &mysql_reconnect))
+	if (ZBX_DB_OK == ret && 0 != mysql_options(conn, MYSQL_OPT_RECONNECT, &mysql_reconnect))
 		zabbix_log(LOG_LEVEL_WARNING, "Cannot set MySQL reconnect option.");
 
 	/* in contrast to "set names utf8" results of this call will survive auto-reconnects */
-	if (0 != mysql_set_character_set(conn, "utf8"))
+	if (ZBX_DB_OK == ret && 0 != mysql_set_character_set(conn, "utf8"))
 		zabbix_log(LOG_LEVEL_WARNING, "cannot set MySQL character set to \"utf8\"");
 
 	if (ZBX_DB_OK == ret && 0 != mysql_autocommit(conn, 1))
@@ -481,10 +481,14 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 				(text *)connect, (ub4)strlen(connect),
 				OCI_DEFAULT);
 
-		if (OCI_SUCCESS == err)
+		switch (err)
 		{
-			err = OCIAttrGet((void *)oracle.svchp, OCI_HTYPE_SVCCTX, (void *)&oracle.srvhp, (ub4 *)0,
-					OCI_ATTR_SERVER, oracle.errhp);
+			case OCI_SUCCESS_WITH_INFO:
+				zabbix_log(LOG_LEVEL_WARNING, "%s", zbx_oci_error(err, NULL));
+				/* break; is not missing here */
+			case OCI_SUCCESS:
+				err = OCIAttrGet((void *)oracle.svchp, OCI_HTYPE_SVCCTX, (void *)&oracle.srvhp,
+						(ub4 *)0, OCI_ATTR_SERVER, oracle.errhp);
 		}
 
 		if (OCI_SUCCESS != err)
@@ -839,7 +843,7 @@ int	zbx_db_commit(void)
 	}
 
 	if (1 == txn_error)
-		goto rollback;
+		return ZBX_DB_FAIL; /* commit called on failed transaction */
 
 #if defined(HAVE_IBM_DB2)
 	if (SUCCEED != zbx_ibm_db2_success(SQLEndTran(SQL_HANDLE_DBC, ibm_db2.hdbc, SQL_COMMIT)))
@@ -861,19 +865,14 @@ int	zbx_db_commit(void)
 	rc = zbx_db_execute("%s", "commit;");
 #endif
 
-	if (ZBX_DB_FAIL == rc)
-	{
-rollback:
-		zabbix_log(LOG_LEVEL_DEBUG, "commit called on failed transaction, doing a rollback instead");
-		return zbx_db_rollback();
-	}
+	if (ZBX_DB_OK > rc)
+		return rc; /* commit failed */
 
 #ifdef HAVE_SQLITE3
 	zbx_mutex_unlock(&sqlite_access);
 #endif
 
-	if (ZBX_DB_DOWN != rc)	/* ZBX_DB_OK or number of changes */
-		txn_level--;
+	txn_level--;
 
 	return rc;
 }
@@ -889,7 +888,7 @@ rollback:
  ******************************************************************************/
 int	zbx_db_rollback(void)
 {
-	int	rc = ZBX_DB_OK, last_txn_error;
+	int	rc = ZBX_DB_OK;
 #ifdef HAVE_ORACLE
 	sword	err;
 #endif
@@ -900,8 +899,6 @@ int	zbx_db_rollback(void)
 				" Please report it to Zabbix Team.");
 		assert(0);
 	}
-
-	last_txn_error = txn_error;
 
 	/* allow rollback of failed transaction */
 	txn_error = 0;
@@ -933,10 +930,9 @@ int	zbx_db_rollback(void)
 	zbx_mutex_unlock(&sqlite_access);
 #endif
 
-	if (ZBX_DB_DOWN != rc)	/* ZBX_DB_FAIL or ZBX_DB_OK or number of changes */
-		txn_level--;
-	else
-		txn_error = last_txn_error;	/* in case of DB down we will repeat this operation */
+	/* There is no way to recover from rollback errors, so there is no need to preserve transaction level / error. */
+	txn_level = 0;
+	txn_error = 0;
 
 	return rc;
 }
