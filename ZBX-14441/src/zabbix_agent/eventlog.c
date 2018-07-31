@@ -294,17 +294,27 @@ static int	zbx_get_eventlog_message(const wchar_t *wsource, HANDLE eventlog_hand
 
 	pELR = (EVENTLOGRECORD *)zbx_malloc((void *)pELR, buffer_size);
 
-	while (0 == ReadEventLog(eventlog_handle, EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ, which,
-			pELR, buffer_size, &dwRead, &dwNeeded))
+	while (ERROR_SUCCESS == dwErr)
 	{
-		if (ERROR_INSUFFICIENT_BUFFER != (dwErr = GetLastError()))
+		if (0 == ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, which,
+				pELR, buffer_size, &dwRead, &dwNeeded))
 		{
-			zabbix_log(LOG_LEVEL_DEBUG, "%s(): %s", __function_name, strerror_from_system(dwErr));
-			goto out;
+			if (ERROR_INSUFFICIENT_BUFFER == (dwErr = GetLastError()))
+			{
+				dwErr = ERROR_SUCCESS;
+				buffer_size = dwNeeded;
+				pELR = (EVENTLOGRECORD*)zbx_realloc((void*)pELR, buffer_size);
+			}
+			else
+			{
+				if (ERROR_HANDLE_EOF != dwErr)
+				{
+					zabbix_log(LOG_LEVEL_DEBUG, "%s(): %s",
+							__function_name, strerror_from_system(dwErr));
+					goto out;
+				}
+			}
 		}
-
-		buffer_size = dwNeeded;
-		pELR = (EVENTLOGRECORD *)zbx_realloc((void *)pELR, buffer_size);
 	}
 
 	*out_severity = pELR->EventType;				/* return event type */
