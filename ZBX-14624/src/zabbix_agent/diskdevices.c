@@ -19,6 +19,9 @@
 
 #ifndef _WINDOWS
 
+#define _GNU_SOURCE
+
+#include <sys/mman.h>
 #include "common.h"
 #include "diskdevices.h"
 #include "stats.h"
@@ -189,6 +192,76 @@ end:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%p", __function_name, device);
 
 	return device;
+}
+
+int collector_diskdevice_remove(const char* devname)
+{
+	const char* __function_name = "collector_diskdevice_remove";
+	int devidx = -1;
+	int ret = FAIL;
+
+	assert(devname);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() devname:'%s'", __function_name, devname);
+
+	LOCK_DISKSTATS;
+
+	/* at the point where collector_diskdevice_remove() is called, device collector ought to be up and running */
+	if (0 == DISKDEVICE_COLLECTOR_STARTED(collector))
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "%s(): collector is not started", __function_name);
+		goto end;
+	}
+
+	if (1 > diskdevices->count)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "%s(): collector is empty", __function_name);
+		goto end;
+	}
+
+	for (int i = 0; i < diskdevices->count; i++)
+	{
+		if (0 == strcmp(devname, diskdevices->device[i].name))
+		{
+			devidx = i;
+			zabbix_log(LOG_LEVEL_DEBUG, "%s(): device '%s' found at position %d",
+					__function_name, devname, i);
+			break;
+		}
+	}
+
+	if (0 <= devidx)
+	{
+		memset(&diskdevices->device[devidx], 0, sizeof(ZBX_SINGLE_DISKDEVICE_DATA));
+
+		for (int i = devidx; i < diskdevices->count; i++)
+			diskdevices->device[i] = diskdevices->device[i + 1];
+
+		size_t old_size = sizeof(ZBX_DISKDEVICES_DATA) + (sizeof(ZBX_SINGLE_DISKDEVICE_DATA) *
+				(diskdevices->max_diskdev - 1));
+		size_t new_size = old_size - sizeof(ZBX_SINGLE_DISKDEVICE_DATA);
+		void* tmp = mremap(diskdevices, old_size, new_size, MREMAP_MAYMOVE);
+
+		if (MAP_FAILED == tmp)
+		{
+			zabbix_log(LOG_LEVEL_WARNING,
+					"%s() could not resize device collection while removing device '%s'",
+					__function_name, devname);
+			ret = NOTSUPPORTED;
+			goto end;
+		}
+
+		diskdevices = tmp;
+		(diskdevices->count)--;
+	}
+
+	ret = SUCCEED;
+end:
+	UNLOCK_DISKSTATS;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, devname);
+
+	return ret;
 }
 
 #endif	/* _WINDOWS */

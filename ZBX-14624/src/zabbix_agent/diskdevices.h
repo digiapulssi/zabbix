@@ -58,6 +58,7 @@ typedef struct c_diskdevices_data
 
 ZBX_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_get(const char *devname);
 ZBX_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_add(const char *devname);
+int				collector_diskdevice_remove(const char* devname);
 void				collect_stats_diskdevices();
 
 #endif
