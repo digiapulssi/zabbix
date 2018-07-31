@@ -21,7 +21,6 @@
 #include "sysinfo.h"
 #include "zbxregexp.h"
 
-#include "log.h"
 #include "comms.h"
 #include "cfg.h"
 
@@ -57,11 +56,11 @@ static int	get_http_page(const char *host, const char *path, unsigned short port
 			ZBX_TCP_SEC_UNENCRYPTED, NULL, NULL)))
 	{
 		zbx_snprintf(request, sizeof(request),
-				"GET /%s HTTP/1.1\r\n"
+				"GET %s%s HTTP/1.1\r\n"
 				"Host: %s\r\n"
 				"Connection: close\r\n"
 				"\r\n",
-				path, host);
+				'/' != *path ? "/" : "", path, host);
 
 		if (SUCCEED == (ret = zbx_tcp_send_raw(&s, request)))
 		{
@@ -78,7 +77,6 @@ static int	get_http_page(const char *host, const char *path, unsigned short port
 	if (FAIL == ret)
 	{
 		*error = zbx_dsprintf(NULL, "HTTP get error: %s", zbx_socket_strerror());
-		zabbix_log(LOG_LEVEL_DEBUG, "%s", *error);
 		return SYSINFO_RET_FAIL;
 	}
 
