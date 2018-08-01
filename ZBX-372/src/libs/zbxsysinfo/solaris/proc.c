@@ -46,6 +46,48 @@ typedef struct
 }
 zbx_sysinfo_proc_t;
 
+#ifndef HAVE_ZONE_H
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_solaris_version_get                                          *
+ *                                                                            *
+ * Purpose: get Solaris version at runtime                                    *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     major_version - [OUT] major version (e.g. 5)                           *
+ *     minor_version - [OUT] minor version (e.g. 9 for Solaris 9, 10 for      *
+ *                           Solaris 10, 11 for Solaris 11)                   *
+ * Return value:                                                              *
+ *     SUCCEED - no errors, FAIL - an error occurred                          *
+ *                                                                            *
+ ******************************************************************************/
+static int	zbx_solaris_version_get(unsigned int *major_version, unsigned int *minor_version)
+{
+	const char	*__function_name = "zbx_solaris_version_get";
+	int		res;
+	struct utsname	name;
+
+	if (-1 == (res = uname(&name)))
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "%s(): uname() failed: %s", __function_name, zbx_strerror(errno));
+
+		return FAIL;
+	}
+
+	/* expected result in name.release: "5.9" - Solaris 9, "5.10" - Solaris 10, "5.11" - Solaris 11 */
+
+	if (2 != sscanf(name.release, "%u.%u", major_version, minor_version))
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "%s(): sscanf() failed on: \"%s\"", __function_name, name.release);
+		THIS_SHOULD_NEVER_HAPPEN;
+
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+#endif
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_sysinfo_proc_free                                            *
@@ -497,48 +539,6 @@ static int	proc_match_zone(const zbx_sysinfo_proc_t *proc, zbx_uint64_t flags, z
 		return SUCCEED;
 
 	return FAIL;
-}
-#endif
-
-#ifndef HAVE_ZONE_H
-/******************************************************************************
- *                                                                            *
- * Function: zbx_solaris_version_get                                          *
- *                                                                            *
- * Purpose: get Solaris version at runtime                                    *
- *                                                                            *
- * Parameters:                                                                *
- *     major_version - [OUT] major version (e.g. 5)                           *
- *     minor_version - [OUT] minor version (e.g. 9 for Solaris 9, 10 for      *
- *                           Solaris 10, 11 for Solaris 11)                   *
- * Return value:                                                              *
- *     SUCCEED - no errors, FAIL - an error occurred                          *
- *                                                                            *
- ******************************************************************************/
-static int	zbx_solaris_version_get(unsigned int *major_version, unsigned int *minor_version)
-{
-	const char	*__function_name = "zbx_solaris_version_get";
-	int		res;
-	struct utsname	name;
-
-	if (-1 == (res = uname(&name)))
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "%s(): uname() failed: %s", __function_name, zbx_strerror(errno));
-
-		return FAIL;
-	}
-
-	/* expected result in name.release: "5.9" - Solaris 9, "5.10" - Solaris 10, "5.11" - Solaris 11 */
-
-	if (2 != sscanf(name.release, "%u.%u", major_version, minor_version))
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "%s(): sscanf() failed on: \"%s\"", __function_name, name.release);
-		THIS_SHOULD_NEVER_HAPPEN;
-
-		return FAIL;
-	}
-
-	return SUCCEED;
 }
 #endif
 
