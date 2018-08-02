@@ -78,8 +78,7 @@ if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) 
 		if ($paramFunction['T'] == T_ZBX_INT) {
 			$paramTypeElement = null;
 
-			if ($paramId == 0
-					|| ($paramId == 1 && in_array($data['function'], ['regexp', 'iregexp', 'str']))) {
+			if ($paramId == 0 || ($paramId == 1 && in_array($data['function'], ['regexp', 'iregexp', 'str']))) {
 				if (isset($paramFunction['M'])) {
 					$paramTypeElement = new CComboBox('paramtype', $this->data['paramtype'], null, $paramFunction['M']);
 				}
