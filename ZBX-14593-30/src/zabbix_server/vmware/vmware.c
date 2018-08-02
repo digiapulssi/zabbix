@@ -4893,7 +4893,6 @@ clean:
 	xmlSetStructuredErrorFunc(NULL, NULL);
 	xmlXPathFreeContext(xpathCtx);
 	xmlFreeDoc(doc);
-
 out:
 	return ret;
 }
