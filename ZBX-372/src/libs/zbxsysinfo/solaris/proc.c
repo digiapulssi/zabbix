@@ -142,7 +142,7 @@ static int	zbx_detect_zone_support(void)
  * Purpose: frees process data structure                                      *
  *                                                                            *
  ******************************************************************************/
-void	zbx_sysinfo_proc_free(zbx_sysinfo_proc_t *proc)
+static void	zbx_sysinfo_proc_free(zbx_sysinfo_proc_t *proc)
 {
 	zbx_free(proc->name);
 	zbx_free(proc->cmdline);
