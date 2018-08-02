@@ -211,7 +211,7 @@ $functions = [
 		'operators' => ['<', '<=', '>', '>=', '=', '<>']
 	],
 	'diff' => [
-		'description' => _('diff() - Difference between last and preceding values (1 - match, 0 - no match)'),
+		'description' => _('diff() - Difference between last and preceding values (1 - true, 0 - false)'),
 		'allowed_types' => $allowedTypesAny,
 		'operators' => ['=', '<>']
 	],
@@ -278,7 +278,7 @@ $functions = [
 		'operators' => ['<', '<=', '>', '>=', '=', '<>']
 	],
 	'fuzzytime' => [
-		'description' => _('fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - match, 0 - no match)'),
+		'description' => _('fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)'),
 		'params' => $param1Sec,
 		'allowed_types' => $allowedTypesAny,
 		'operators' => ['=', '<>']
@@ -323,7 +323,7 @@ $functions = [
 		'operators' => ['<', '<=', '>', '>=', '=', '<>']
 	],
 	'nodata' => [
-		'description' => _('nodata() - No data received during period of time T (1 - match, 0 - no match)'),
+		'description' => _('nodata() - No data received during period of time T (1 - true, 0 - false)'),
 		'params' => $param1Sec,
 		'allowed_types' => $allowedTypesAny,
 		'operators' => ['=', '<>']
