@@ -1725,6 +1725,7 @@ error:
 		OCIDefine	*defnp = NULL;
 		ub4		char_semantics;
 		ub2		col_width = 0, data_type = 0;
+		ub1		cform = SQLCS_NCHAR;
 
 		/* request a parameter descriptor in the select-list */
 		err = OCIParamGet((void *)result->stmthp, OCI_HTYPE_STMT, oracle.errhp, (void **)&parmdp, (ub4)counter);
@@ -1734,6 +1735,16 @@ error:
 			/* retrieve the data type for the column */
 			err = OCIAttrGet((void *)parmdp, OCI_DTYPE_PARAM, (dvoid *)&data_type, (ub4 *)NULL,
 					(ub4)OCI_ATTR_DATA_TYPE, (OCIError *)oracle.errhp);
+		}
+
+		if (SQLT_CLOB == data_type || SQLT_CHR == data_type || SQLT_VCS == data_type)
+		{
+			if (OCI_SUCCESS == err)
+			{
+				/* set the character set attribute to the correct value for NCHAR data types */
+				err = OCIAttrSet(&defnp, (ub4)OCI_HTYPE_DEFINE, (void*)&cform, (ub4)0,
+						(ub4)OCI_ATTR_CHARSET_FORM, (OCIError*)oracle.errhp);
+			}
 		}
 
 		if (SQLT_CLOB == data_type)
