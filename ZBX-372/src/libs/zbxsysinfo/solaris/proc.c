@@ -403,11 +403,10 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 #ifdef HAVE_ZONE_H
 		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_CURRENT;
 #else
-		/* agent has been compiled on Solaris 9 or earlier where zones are not supported */
-
 		if (SUCCEED == zbx_detect_zone_support())
 		{
-			/* But now this agent is running on a system with zone support. This agent cannot limit */
+			/* Agent has been compiled on Solaris 9 or earlier where zones are not supported */
+			/* but now it is running on a system with zone support. This agent cannot limit */
 			/* results to only current zone. */
 
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "The fifth parameter value \"current\" cannot be used"
@@ -877,11 +876,10 @@ int	PROC_CPU_UTIL(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (NULL == (flags = get_rparam(request, 5)) || '\0' == *flags || 0 == strcmp(flags, "current"))
 	{
 #ifndef HAVE_ZONE_H
-		/* agent has been compiled on Solaris 9 or earlier where zones are not supported */
-
 		if (SUCCEED == zbx_detect_zone_support())
 		{
-			/* But now this agent is running on a system with zone support. This agent cannot limit */
+			/* Agent has been compiled on Solaris 9 or earlier where zones are not supported */
+			/* but now it is running on a system with zone support. This agent cannot limit */
 			/* results to only current zone. */
 
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "The sixth parameter value \"current\" cannot be used"
