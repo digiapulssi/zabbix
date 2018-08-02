@@ -79,6 +79,7 @@ require_once dirname(__FILE__).'/testFormAdministrationMediaTypes.php';
 require_once dirname(__FILE__).'/testFormAdministrationScripts.php';
 require_once dirname(__FILE__).'/testFormAdministrationUserCreate.php';
 require_once dirname(__FILE__).'/testFormAdministrationUserGroups.php';
+require_once dirname(__FILE__).'/testFormConfigDiscovery.php';
 require_once dirname(__FILE__).'/testFormConfigTriggerSeverity.php';
 require_once dirname(__FILE__).'/testFormDiscoveryRule.php';
 require_once dirname(__FILE__).'/testFormEventCorrelation.php';
@@ -187,6 +188,7 @@ class SeleniumTests {
 		$suite->addTestSuite('testFormAdministrationScripts');
 		$suite->addTestSuite('testFormAdministrationUserCreate');
 		$suite->addTestSuite('testFormAdministrationUserGroups');
+		$suite->addTestSuite('testFormConfigDiscovery');
 		$suite->addTestSuite('testFormConfigTriggerSeverity');
 		$suite->addTestSuite('testFormDiscoveryRule');
 		$suite->addTestSuite('testFormEventCorrelation');
