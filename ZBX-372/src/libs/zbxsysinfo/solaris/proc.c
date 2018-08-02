@@ -47,6 +47,9 @@ typedef struct
 zbx_sysinfo_proc_t;
 
 #ifndef HAVE_ZONE_H
+/* helper functions for case if agent is compiled on Solaris 9 or earlier where zones are not supported */
+/* but is running on a newer Solaris where zones are supported */
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_solaris_version_get                                          *
@@ -85,6 +88,50 @@ static int	zbx_solaris_version_get(unsigned int *major_version, unsigned int *mi
 	}
 
 	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_detect_zone_support                                          *
+ *                                                                            *
+ * Purpose: find if zones are supported                                       *
+ *                                                                            *
+ * Return value:                                                              *
+ *     SUCCEED - zones supported                                              *
+ *     FAIL - zones not supported or error occurred. For our purposes error   *
+ *            counts as no support for zones.                                 *
+ *                                                                            *
+ ******************************************************************************/
+static int	zbx_detect_zone_support(void)
+{
+#define ZBX_ZONE_SUPPORT_UNKNOWN	0
+#define ZBX_ZONE_SUPPORT_YES		1
+#define ZBX_ZONE_SUPPORT_NO		2
+
+	static int	zone_support = ZBX_ZONE_SUPPORT_UNKNOWN;
+	unsigned int	major, minor;
+
+	switch (zone_support)
+	{
+		case ZBX_ZONE_SUPPORT_NO:
+			return FAIL;
+		case ZBX_ZONE_SUPPORT_YES:
+			return SUCCEED;
+		default:
+			/* zones are supported in Solaris 10 and later (minimum version is "5.10") */
+
+			if (SUCCEED == zbx_solaris_version_get(&major, &minor) &&
+					((5 == major && 10 <= minor) || 5 < major))
+			{
+				zone_support = ZBX_ZONE_SUPPORT_YES;
+				return SUCCEED;
+			}
+			else	/* failure to get Solaris version also results in "zones not supported" */
+			{
+				zone_support = ZBX_ZONE_SUPPORT_NO;
+				return FAIL;
+			}
+	}
 }
 #endif
 
@@ -305,32 +352,6 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	int		zoneflag;
 #endif
 
-#ifndef HAVE_ZONE_H
-	/* this code is for case if agent has been compiled on Solaris 9 or earlier where zones are not supported */
-	/* but the agent is running on a newer Solaris where zones are supported */
-
-#	define ZBX_ZONE_SUPPORT_UNKNOWN	0
-#	define ZBX_ZONE_SUPPORT_YES	1
-#	define ZBX_ZONE_SUPPORT_NO	2
-
-	static int	zone_support = ZBX_ZONE_SUPPORT_UNKNOWN;
-
-	if (ZBX_ZONE_SUPPORT_UNKNOWN == zone_support)
-	{
-		unsigned int	major, minor;
-
-		/* zones are supported in Solaris 10 and later (minimum version is "5.10") */
-
-		if (SUCCEED == zbx_solaris_version_get(&major, &minor) && ((5 == major && 10 <= minor) || 5 < major))
-		{
-			zone_support = ZBX_ZONE_SUPPORT_YES;
-		}
-		else	/* failure to get Solaris version also results in "zones not supported" */
-		{
-			zone_support = ZBX_ZONE_SUPPORT_NO;
-		}
-	}
-#endif
 	if (5 < request->nparam)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
@@ -384,7 +405,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 #else
 		/* agent has been compiled on Solaris 9 or earlier where zones are not supported */
 
-		if (ZBX_ZONE_SUPPORT_YES == zone_support)
+		if (SUCCEED == zbx_detect_zone_support())
 		{
 			/* But now this agent is running on a system with zone support. This agent cannot limit */
 			/* results to only current zone. */
@@ -797,32 +818,6 @@ int	PROC_CPU_UTIL(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_uint64_t	zoneflag;
 	zbx_timespec_t	ts_timeout, ts;
 
-#ifndef HAVE_ZONE_H
-	/* this code is for case if agent has been compiled on Solaris 9 or earlier where zones are not supported */
-	/* but the agent is running on a newer Solaris where zones are supported */
-
-#	define ZBX_ZONE_SUPPORT_UNKNOWN	0
-#	define ZBX_ZONE_SUPPORT_YES	1
-#	define ZBX_ZONE_SUPPORT_NO	2
-
-	static int	zone_support = ZBX_ZONE_SUPPORT_UNKNOWN;
-
-	if (ZBX_ZONE_SUPPORT_UNKNOWN == zone_support)
-	{
-		unsigned int	major, minor;
-
-		/* zones are supported in Solaris 10 and later (minimum version is "5.10") */
-
-		if (SUCCEED == zbx_solaris_version_get(&major, &minor) && ((5 == major && 10 <= minor) || 5 < major))
-		{
-			zone_support = ZBX_ZONE_SUPPORT_YES;
-		}
-		else	/* failure to get Solaris version also results in "zones not supported" */
-		{
-			zone_support = ZBX_ZONE_SUPPORT_NO;
-		}
-	}
-#endif
 	/* proc.cpu.util[<procname>,<username>,(user|system),<cmdline>,(avg1|avg5|avg15),(current|all)] */
 	if (6 < request->nparam)
 	{
@@ -884,7 +879,7 @@ int	PROC_CPU_UTIL(AGENT_REQUEST *request, AGENT_RESULT *result)
 #ifndef HAVE_ZONE_H
 		/* agent has been compiled on Solaris 9 or earlier where zones are not supported */
 
-		if (ZBX_ZONE_SUPPORT_YES == zone_support)
+		if (SUCCEED == zbx_detect_zone_support())
 		{
 			/* But now this agent is running on a system with zone support. This agent cannot limit */
 			/* results to only current zone. */
