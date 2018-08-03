@@ -340,7 +340,7 @@ out:
 
 int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	char		tmp[MAX_STRING_LEN], *procname, *proccomm, *param, *flags;
+	char		tmp[MAX_STRING_LEN], *procname, *proccomm, *param, *zone_parameter;
 	DIR		*dir;
 	struct dirent	*entries;
 	zbx_stat_t	buf;
@@ -398,7 +398,8 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	proccomm = get_rparam(request, 3);
 
-	if (NULL == (flags = get_rparam(request, 4)) || '\0' == *flags || 0 == strcmp(flags, "current"))
+	if (NULL == (zone_parameter = get_rparam(request, 4)) || '\0' == *zone_parameter
+			|| 0 == strcmp(zone_parameter, "current"))
 	{
 #ifdef HAVE_ZONE_H
 		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_CURRENT;
@@ -417,7 +418,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		}
 #endif
 	}
-	else if (0 == strcmp(flags, "all"))
+	else if (0 == strcmp(zone_parameter, "all"))
 	{
 #ifdef HAVE_ZONE_H
 		zoneflag = ZBX_PROCSTAT_FLAGS_ZONE_ALL;
