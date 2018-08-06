@@ -2286,23 +2286,31 @@ static int	DBcopy_trigger_to_host(zbx_uint64_t *new_triggerid, zbx_uint64_t host
  * Purpose: get a list of dependent triggers and mapping of the template id   *
  *          on the trigger id                                                 *
  *                                                                            *
- * Parameters: trids        - [IN] array of trigger identifiers from database *
- *             trids_num    - [IN] trigger count in trids array               *
- *             dep_list_ids - [OUT] list of dependent triggers                *
- *             dep_map_ids  - [OUT] map of trigger id and template trigger id *
+ * Parameters: hostid    - [IN] host identificator from database              *
+ *             trids     - [IN] array of trigger identifiers from database    *
+ *             trids_num - [IN] trigger count in trids array                  *
+ *             links     - [OUT] list of dependent triggers                   *
  *                                                                            *
  ******************************************************************************/
-static void	DBadd_template_dependencies_for_new_triggers_map_id(const zbx_uint64_t *trids, int trids_num,
-		zbx_vector_uint64_pair_t *dep_list_ids, zbx_vector_uint64_pair_t *map_ids)
+static void	DBadd_template_dependencies_for_new_triggers_map_id(zbx_uint64_t hostid, const zbx_uint64_t *trids,
+		int trids_num, zbx_vector_uint64_pair_t *links)
 {
-	DB_RESULT		result;
-	DB_ROW			row;
-	zbx_uint64_pair_t	map_id, dep_list_id;
-	char			*sql = NULL;
-	size_t			sql_alloc = 512, sql_offset;
+	DB_RESULT			result;
+	DB_ROW				row;
+	zbx_uint64_pair_t		map_id, dep_list_id;
+	char				*sql = NULL;
+	size_t				sql_alloc = 512, sql_offset;
+	zbx_vector_uint64_pair_t	dep_list_ids, map_ids;
+	zbx_vector_uint64_t		all_templ_ids;
+	zbx_uint64_t			templateid_down, templateid_up,
+					triggerid_down, triggerid_up,
+					hst_triggerid, tpl_triggerid;
+	int				i, j;
 
-	zbx_vector_uint64_pair_create(dep_list_ids);
-	zbx_vector_uint64_pair_create(map_ids);
+	zbx_vector_uint64_create(&all_templ_ids);
+	zbx_vector_uint64_pair_create(&dep_list_ids);
+	zbx_vector_uint64_pair_create(&map_ids);
+	zbx_vector_uint64_pair_create(links);
 	sql = zbx_malloc(sql, sql_alloc);
 
 	sql_offset = 0;
@@ -2318,25 +2326,24 @@ static void	DBadd_template_dependencies_for_new_triggers_map_id(const zbx_uint64
 	{
 		ZBX_STR2UINT64(dep_list_id.first, row[0]);
 		ZBX_STR2UINT64(dep_list_id.second, row[1]);
-		zbx_vector_uint64_pair_append(dep_list_ids, dep_list_id);
+		zbx_vector_uint64_pair_append(&dep_list_ids, dep_list_id);
+		zbx_vector_uint64_append(&all_templ_ids, dep_list_id.first);
+		zbx_vector_uint64_append(&all_templ_ids, dep_list_id.second);
 
 	}
 	DBfree_result(result);
 
+	zbx_vector_uint64_sort(&all_templ_ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(&all_templ_ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
 	sql_offset = 0;
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 			"select t.triggerid, t.templateid"
 			" from triggers t,functions f,items i"
-			" where t.triggerid=f.triggerid and f.itemid=i.itemid and");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.templateid", &dep_list_ids->values->first,
-			dep_list_ids->values_num * 2);
-
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
-			" and exists(select null"
-			" from items ii, functions ff"
-			" where i.hostid = ii.hostid and ii.itemid = ff.itemid and");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "ff.triggerid", trids, 1);	/* for identify the host only */
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, ")");				/* one trigger id is enough */
+			" where t.triggerid=f.triggerid and f.itemid=i.itemid and i.hostid=" ZBX_FS_UI64
+			" and", hostid);
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.templateid", all_templ_ids.values,
+			all_templ_ids.values_num);
 
 	result = DBselect("%s", sql);
 
@@ -2344,46 +2351,12 @@ static void	DBadd_template_dependencies_for_new_triggers_map_id(const zbx_uint64
 	{
 		ZBX_STR2UINT64(map_id.first, row[0]);
 		ZBX_DBROW2UINT64(map_id.second, row[1]);
-		zbx_vector_uint64_pair_append(map_ids, map_id);
+		zbx_vector_uint64_pair_append(&map_ids, map_id);
 	}
 	DBfree_result(result);
 
 	zbx_free(sql);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: DBadd_template_dependencies_for_new_triggers                     *
- *                                                                            *
- * Purpose: update trigger dependencies for specified host                    *
- *                                                                            *
- * Parameters: trids - array of trigger identifiers from database             *
- *             trids_num - trigger count in trids array                       *
- *                                                                            *
- * Return value: upon successful completion return SUCCEED                    *
- *                                                                            *
- * Author: Eugene Grigorjev                                                   *
- *                                                                            *
- * Comments: !!! Don't forget to sync the code with PHP !!!                   *
- *                                                                            *
- ******************************************************************************/
-static int	DBadd_template_dependencies_for_new_triggers(zbx_uint64_t *trids, int trids_num)
-{
-	int				i, j;
-	zbx_uint64_t			templateid_down, templateid_up,
-					triggerid_down, triggerid_up,
-					hst_triggerid, tpl_triggerid,
-					triggerdepid;
-	zbx_db_insert_t			db_insert;
-	zbx_vector_uint64_pair_t	links, dep_list_ids, map_ids;
-
-
-	if (0 == trids_num)
-		return SUCCEED;
-
-	zbx_vector_uint64_pair_create(&links);
-
-	DBadd_template_dependencies_for_new_triggers_map_id(trids, trids_num, &dep_list_ids, &map_ids);
+	zbx_vector_uint64_destroy(&all_templ_ids);
 
 	for (i = 0; i < dep_list_ids.values_num; i++)
 	{
@@ -2409,9 +2382,43 @@ static int	DBadd_template_dependencies_for_new_triggers(zbx_uint64_t *trids, int
 		{
 			zbx_uint64_pair_t	link = {triggerid_down, triggerid_up};
 
-			zbx_vector_uint64_pair_append(&links, link);
+			zbx_vector_uint64_pair_append(links, link);
 		}
 	}
+
+	zbx_vector_uint64_pair_destroy(&map_ids);
+	zbx_vector_uint64_pair_destroy(&dep_list_ids);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DBadd_template_dependencies_for_new_triggers                     *
+ *                                                                            *
+ * Purpose: update trigger dependencies for specified host                    *
+ *                                                                            *
+ * Parameters: hostid    - [IN] host identificator from database              *
+ *             trids     - [IN] array of trigger identifiers from database    *
+ *             trids_num - [IN] trigger count in trids array                  *
+ *                                                                            *
+ * Return value: upon successful completion return SUCCEED                    *
+ *                                                                            *
+ * Author: Eugene Grigorjev                                                   *
+ *                                                                            *
+ * Comments: !!! Don't forget to sync the code with PHP !!!                   *
+ *                                                                            *
+ ******************************************************************************/
+static int	DBadd_template_dependencies_for_new_triggers(zbx_uint64_t hostid, zbx_uint64_t *trids, int trids_num)
+{
+	int				i;
+	zbx_uint64_t			triggerdepid;
+	zbx_db_insert_t			db_insert;
+	zbx_vector_uint64_pair_t	links;
+
+
+	if (0 == trids_num)
+		return SUCCEED;
+
+	DBadd_template_dependencies_for_new_triggers_map_id(hostid, trids, trids_num, &links);
 
 	if (0 < links.values_num)
 	{
@@ -2431,8 +2438,6 @@ static int	DBadd_template_dependencies_for_new_triggers(zbx_uint64_t *trids, int
 	}
 
 	zbx_vector_uint64_pair_destroy(&links);
-	zbx_vector_uint64_pair_destroy(&map_ids);
-	zbx_vector_uint64_pair_destroy(&dep_list_ids);
 
 	return SUCCEED;
 }
@@ -3581,7 +3586,7 @@ static int	DBcopy_template_triggers(zbx_uint64_t hostid, const zbx_vector_uint64
 	DBfree_result(result);
 
 	if (SUCCEED == res)
-		res = DBadd_template_dependencies_for_new_triggers(trids, trids_num);
+		res = DBadd_template_dependencies_for_new_triggers(hostid, trids, trids_num);
 
 	zbx_free(trids);
 
