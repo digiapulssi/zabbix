@@ -2338,7 +2338,7 @@ static void	DBadd_template_dependencies_for_new_triggers_map_id(zbx_uint64_t hos
 
 	sql_offset = 0;
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-			"select t.triggerid, t.templateid"
+			"select t.triggerid,t.templateid"
 			" from triggers t,functions f,items i"
 			" where t.triggerid=f.triggerid and f.itemid=i.itemid and i.hostid=" ZBX_FS_UI64
 			" and", hostid);
