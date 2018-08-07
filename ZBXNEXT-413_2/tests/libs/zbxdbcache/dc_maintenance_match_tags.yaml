@@ -532,6 +532,23 @@ in:
         value: 5
 out:
   return: FAIL
+---
+test case: Maintenance tags with not matching event tags (7)
+in:
+  maintenance:
+    tags_evaltype: and/or
+    tags:  
+      - tag: a
+        value: 1
+        operator: equal
+      - tag: c
+        value: 3
+        operator: equal
+  tags:
+      - tag: a
+        value: 1
+out:
+  return: FAIL
 ...
 
 

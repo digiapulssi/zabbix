@@ -1184,6 +1184,9 @@ static int	dc_maintenance_match_tags_andor(const zbx_dc_maintenance_t *maintenan
 			return FAIL;
 	}
 
+	if (mt_pos != maintenance->tags.values_num)
+		return FAIL;
+
 	return SUCCEED;
 }
 
