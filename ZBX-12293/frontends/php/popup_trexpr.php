@@ -526,7 +526,7 @@ foreach ($data['functions'] as $id => $f) {
 	}
 }
 
-if ($data['selectedFunction'] === null) {
+if ($data['insert'] === null && $data['selectedFunction'] === null) {
 	error(_s('Function "%1$s" cannot be used with selected item "%2$s"',
 		$data['functions'][$function]['description'],
 		$data['description']
