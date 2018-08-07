@@ -1869,7 +1869,7 @@ int	check_vcenter_hv_perfcounter(AGENT_REQUEST *request, const char *username, c
 	}
 
 	/* FAIL is returned if counter already exists */
-	if (SUCCEED == zbx_vmware_service_add_perf_counter(service, "HostSystem", hv->id, counterid))
+	if (SUCCEED == zbx_vmware_service_add_perf_counter(service, "HostSystem", hv->id, counterid, "*"))
 	{
 		ret = SYSINFO_RET_OK;
 		goto unlock;
@@ -2974,7 +2974,7 @@ int	check_vcenter_vm_perfcounter(AGENT_REQUEST *request, const char *username, c
 	}
 
 	/* FAIL is returned if counter already exists */
-	if (SUCCEED == zbx_vmware_service_add_perf_counter(service, "VirtualMachine", vm->id, counterid))
+	if (SUCCEED == zbx_vmware_service_add_perf_counter(service, "VirtualMachine", vm->id, counterid, "*"))
 	{
 		ret = SYSINFO_RET_OK;
 		goto unlock;

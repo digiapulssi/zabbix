@@ -806,6 +806,7 @@ static void	vmware_shared_perf_entity_clean(zbx_vmware_perf_entity_t *entity)
 	zbx_vector_ptr_clear_ext(&entity->counters, (zbx_mem_free_func_t)vmware_perf_counter_shared_free);
 	zbx_vector_ptr_destroy(&entity->counters);
 
+	__vm_mem_free_func(entity->instance);
 	__vm_mem_free_func(entity->type);
 	__vm_mem_free_func(entity->id);
 }
@@ -1325,6 +1326,7 @@ static void	vmware_data_free(zbx_vmware_data_t *data)
 static void	vmware_perf_entity_free(zbx_vmware_perf_entity_t *entity)
 {
 	/* entities allocated on heap do not use counters vector */
+	zbx_free(entity->instance);
 	zbx_free(entity->type);
 	zbx_free(entity->id);
 	zbx_free(entity);
@@ -3629,6 +3631,7 @@ out:
  *             id       - [IN] the performance entity id                      *
  *             counters - [IN] NULL terminated list of performance counters   *
  *                             to be monitored for this entity                *
+ *             instance - [IN] the performance counter instance name          *
  *             now      - [IN] the current timestamp                          *
  *                                                                            *
  * Comments: The performance counters are specified by their path:            *
@@ -3636,7 +3639,7 @@ out:
  *                                                                            *
  ******************************************************************************/
 static void	vmware_service_add_perf_entity(zbx_vmware_service_t *service, const char *type, const char *id,
-		const char **counters, int now)
+		const char **counters, const char *instance, int now)
 {
 	const char			*__function_name = "vmware_service_add_perf_entity";
 
@@ -3665,7 +3668,8 @@ static void	vmware_service_add_perf_entity(zbx_vmware_service_t *service, const 
 		}
 
 		zbx_vector_ptr_sort(&pentity->counters, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
-		pentity->refresh = 0;
+		pentity->refresh = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
+		pentity->instance = vmware_shared_strdup(instance);
 	}
 
 	pentity->last_seen = now;
@@ -3721,12 +3725,12 @@ static void	vmware_service_update_perf_entities(zbx_vmware_service_t *service)
 	zbx_hashset_iter_reset(&service->data->hvs, &iter);
 	while (NULL != (hv = zbx_hashset_iter_next(&iter)))
 	{
-		vmware_service_add_perf_entity(service, "HostSystem", hv->id, hv_perfcounters, now);
+		vmware_service_add_perf_entity(service, "HostSystem", hv->id, hv_perfcounters, "*", now);
 
 		for (i = 0; i < hv->vms.values_num; i++)
 		{
 			vm = hv->vms.values[i];
-			vmware_service_add_perf_entity(service, "VirtualMachine", vm->id, vm_perfcounters, now);
+			vmware_service_add_perf_entity(service, "VirtualMachine", vm->id, vm_perfcounters, "*", now);
 			zabbix_log(LOG_LEVEL_TRACE, "%s() for type: VirtualMachine hv id: %s hv uuid: %s linked vm id:"
 					" %s vm uuid: %s", __function_name, hv->id, hv->uuid, vm->id, vm->uuid);
 		}
@@ -3737,7 +3741,7 @@ static void	vmware_service_update_perf_entities(zbx_vmware_service_t *service)
 		for (i = 0; i < hv->datastores.values_num; i++)
 		{
 			zbx_vmware_datastore_t	*ds = hv->datastores.values[i];
-			vmware_service_add_perf_entity(service, "Datastore", ds->id, ds_perfcounters, now);
+			vmware_service_add_perf_entity(service, "Datastore", ds->id, ds_perfcounters, "", now);
 			zabbix_log(LOG_LEVEL_TRACE, "%s() for type: Datastore hv id: %s hv uuid: %s linked ds id:"
 					" %s ds name: %s ds uuid: %s", __function_name, hv->id, hv->uuid, ds->id,
 					ds->name, ds->uuid);
@@ -4122,6 +4126,7 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 		local_entity->type = zbx_strdup(NULL, entity->type);
 		local_entity->id = zbx_strdup(NULL, entity->id);
 		local_entity->refresh = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
+		local_entity->instance = zbx_strdup(NULL, entity->instance);
 
 		zbx_vector_ptr_append(&entities, local_entity);
 	}
@@ -4199,8 +4204,7 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:metricId><ns0:counterId>" ZBX_FS_UI64
 					"</ns0:counterId><ns0:instance>%s</ns0:instance></ns0:metricId>",
-					counter->counterid, ZBX_VMWARE_PERF_INTERVAL_NONE == entity->refresh ?
-					"" : "*");
+					counter->counterid, entity->instance);
 
 			counter->state |= ZBX_VMWARE_COUNTER_UPDATING;
 		}
@@ -4221,6 +4225,8 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 	zbx_vector_ptr_clear_ext(&entities, (zbx_mem_free_func_t)vmware_perf_entity_free);
 	zbx_vector_ptr_destroy(&entities);
+
+	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP request: %s", __function_name, tmp);
 
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
 	{
@@ -4447,6 +4453,7 @@ out:
  *             type      - [IN] the entity type                               *
  *             id        - [IN] the entity id                                 *
  *             counterid - [IN] the performance counter id                    *
+ *             instance  - [IN] the performance counter instance name         *
  *                                                                            *
  * Return value: SUCCEED - the entity counter was added to monitoring list.   *
  *               FAIL    - the performance counter of the specified entity    *
@@ -4454,7 +4461,7 @@ out:
  *                                                                            *
  ******************************************************************************/
 int	zbx_vmware_service_add_perf_counter(zbx_vmware_service_t *service, const char *type, const char *id,
-		zbx_uint64_t counterid)
+		zbx_uint64_t counterid, const char *instance)
 {
 	const char			*__function_name = "zbx_vmware_service_start_monitoring";
 	zbx_vmware_perf_entity_t	*pentity, entity;
@@ -4467,6 +4474,7 @@ int	zbx_vmware_service_add_perf_counter(zbx_vmware_service_t *service, const cha
 	{
 		entity.refresh = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
 		entity.last_seen = 0;
+		entity.instance = vmware_shared_strdup(instance);
 		entity.type = vmware_shared_strdup(type);
 		entity.id = vmware_shared_strdup(id);
 		zbx_vector_ptr_create_ext(&entity.counters, __vm_mem_malloc_func, __vm_mem_realloc_func,
