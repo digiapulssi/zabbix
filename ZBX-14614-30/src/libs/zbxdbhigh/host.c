@@ -2281,18 +2281,18 @@ static int	DBcopy_trigger_to_host(zbx_uint64_t *new_triggerid, zbx_uint64_t host
 
 /******************************************************************************
  *                                                                            *
- * Function: DBadd_template_dependencies_for_new_triggers_map_id              *
+ * Function: DBresolve_template_trigger_dependencies                          *
  *                                                                            *
- * Purpose: get a list of dependent triggers and mapping of the template id   *
- *          on the trigger id                                                 *
+ * Purpose: resolves trigger dependencies for the specified triggers based on *
+ *          host and linked templates                                         *
  *                                                                            *
  * Parameters: hostid    - [IN] host identificator from database              *
  *             trids     - [IN] array of trigger identifiers from database    *
  *             trids_num - [IN] trigger count in trids array                  *
- *             links     - [OUT] list of dependent triggers                   *
+ *             links     - [OUT] pairs of trigger dependencies  (down,up)     *
  *                                                                            *
  ******************************************************************************/
-static void	DBadd_template_dependencies_for_new_triggers_map_id(zbx_uint64_t hostid, const zbx_uint64_t *trids,
+static void	DBresolve_template_trigger_dependencies(zbx_uint64_t hostid, const zbx_uint64_t *trids,
 		int trids_num, zbx_vector_uint64_pair_t *links)
 {
 	DB_RESULT			result;
@@ -2340,8 +2340,11 @@ static void	DBadd_template_dependencies_for_new_triggers_map_id(zbx_uint64_t hos
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 			"select t.triggerid,t.templateid"
 			" from triggers t,functions f,items i"
-			" where t.triggerid=f.triggerid and f.itemid=i.itemid and i.hostid=" ZBX_FS_UI64
-			" and", hostid);
+			" where t.triggerid=f.triggerid"
+				" and f.itemid=i.itemid"
+				" and i.hostid=" ZBX_FS_UI64
+				" and",
+				hostid);
 	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.templateid", all_templ_ids.values,
 			all_templ_ids.values_num);
 
@@ -2363,6 +2366,10 @@ static void	DBadd_template_dependencies_for_new_triggers_map_id(zbx_uint64_t hos
 		templateid_down = dep_list_ids.values[i].first;
 		templateid_up = dep_list_ids.values[i].second;
 
+		/* Convert template ids to corresponding trigger ids.         */
+		/* If template trigger depends on host trigger rather than    */
+		/* template trigger then up id conversion will fail and the   */
+		/* original value (host trigger id) will be used as intended. */
 		triggerid_down = 0;
 		triggerid_up = templateid_up;
 
@@ -2414,11 +2421,10 @@ static int	DBadd_template_dependencies_for_new_triggers(zbx_uint64_t hostid, zbx
 	zbx_db_insert_t			db_insert;
 	zbx_vector_uint64_pair_t	links;
 
-
 	if (0 == trids_num)
 		return SUCCEED;
 
-	DBadd_template_dependencies_for_new_triggers_map_id(hostid, trids, trids_num, &links);
+	DBresolve_template_trigger_dependencies(hostid, trids, trids_num, &links);
 
 	if (0 < links.values_num)
 	{
