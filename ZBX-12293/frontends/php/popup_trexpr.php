@@ -520,7 +520,7 @@ $data = [
 
 // check if submitted function is usable with selected item
 foreach ($data['functions'] as $id => $f) {
-	if ((!$data['itemValueType'] || isset($f['allowed_types'][$data['itemValueType']])) && $id === $function) {
+	if (($data['itemValueType'] === null || isset($f['allowed_types'][$data['itemValueType']])) && $id === $function) {
 		$data['selectedFunction'] = $id;
 		break;
 	}
