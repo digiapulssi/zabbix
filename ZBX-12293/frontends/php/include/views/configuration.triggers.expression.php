@@ -117,7 +117,7 @@ else {
 	$expressionForm->addVar('paramtype', PARAM_TYPE_TIME);
 }
 
-$expressionFormList->addRow('N', [
+$expressionFormList->addRow(_('Result'), [
 		new CComboBox('operator', $data['operator'], null,
 			array_combine($data['functions'][$data['function']]['operators'],
 				$data['functions'][$data['function']]['operators']
