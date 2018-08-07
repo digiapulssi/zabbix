@@ -276,7 +276,7 @@ static int	zbx_get_eventlog_message(const wchar_t *wsource, HANDLE eventlog_hand
 	const char	*__function_name = "zbx_get_eventlog_message";
 	int		buffer_size = 512;
 	EVENTLOGRECORD	*pELR = NULL;
-	DWORD		dwRead, dwNeeded, dwErr;
+	DWORD		dwRead, dwNeeded, dwErr = ERROR_SUCCESS;
 	wchar_t 	*pEventMessageFile = NULL, *pParamMessageFile = NULL, *pFile = NULL, *pNextFile = NULL, *pCh,
 			*aInsertStrings[MAX_INSERT_STRS];
 	HINSTANCE	hLib = NULL, hParamLib = NULL;
