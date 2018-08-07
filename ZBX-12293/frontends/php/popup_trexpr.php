@@ -185,30 +185,30 @@ $functions = [
 	'abschange' => [
 		'description' => _('abschange() - Absolute difference between last and previous value'),
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'avg' => [
 		'description' => _('avg() - Average value of a period T'),
 		'params' => $param1SecCount,
 		'allowed_types' => $allowedTypesNumeric,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'delta' => [
 		'description' => _('delta() - Difference between MAX and MIN value of a period T'),
 		'params' => $param1SecCount,
 		'allowed_types' => $allowedTypesNumeric,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'change' => [
 		'description' => _('change() - Difference between last and previous value'),
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'count' => [
 		'description' => _('count() - Number of successfully retrieved values V (which fulfill operator O) for period T'),
 		'params' => $param3SecVal,
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'diff' => [
 		'description' => _('diff() - Difference between last and preceding values (1 - true, 0 - false)'),
@@ -219,30 +219,30 @@ $functions = [
 		'description' => _('last() - Last (most recent) T value'),
 		'params' => $param1SecCount,
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'max' => [
 		'description' => _('max() - Maximum value for period T'),
 		'params' => $param1SecCount,
 		'allowed_types' => $allowedTypesNumeric,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'min' => [
 		'description' => _('min() - Minimum value for period T'),
 		'params' => $param1SecCount,
 		'allowed_types' => $allowedTypesNumeric,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'percentile' => [
 		'description' => _('percentile() - Percentile P of a period T'),
 		'params' => $param3SecPercent,
 		'allowed_types' => $allowedTypesNumeric,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'prev' => [
 		'description' => _('prev() - Previous value'),
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'str' => [
 		'description' => _('str() - Find string V in last (most recent) value (1 - found, 0 - not found)'),
@@ -254,28 +254,28 @@ $functions = [
 		'description' => _('strlen() - Length of last (most recent) T value in characters'),
 		'params' => $param1SecCount,
 		'allowed_types' => $allowedTypesStr,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'sum' => [
 		'description' => _('sum() - Sum of values of a period T'),
 		'params' => $param1SecCount,
 		'allowed_types' => $allowedTypesNumeric,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'date' => [
 		'description' => _('date() - Current date'),
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'dayofweek' => [
 		'description' => _('dayofweek() - Day of week'),
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'dayofmonth' => [
 		'description' => _('dayofmonth() - Day of month'),
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'fuzzytime' => [
 		'description' => _('fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)'),
@@ -304,7 +304,7 @@ $functions = [
 	'logseverity' => [
 		'description' => _('logseverity() - Log severity of the last log entry'),
 		'allowed_types' => $allowedTypesLog,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'logsource' => [
 		'description' => _('logsource() - Log source of the last log entry matching parameter T (1 - match, 0 - no match)'),
@@ -315,12 +315,12 @@ $functions = [
 	'now' => [
 		'description' => _('now() - Number of seconds since the Epoch'),
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'time' => [
 		'description' => _('time() - Current time'),
 		'allowed_types' => $allowedTypesAny,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'nodata' => [
 		'description' => _('nodata() - No data received during period of time T (1 - true, 0 - false)'),
@@ -338,13 +338,13 @@ $functions = [
 		'description' => _('forecast() - Forecast for next t seconds based on period T'),
 		'params' => $paramForecast,
 		'allowed_types' => $allowedTypesNumeric,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'timeleft' => [
 		'description' => _('timeleft() - Time to reach threshold estimated based on period T'),
 		'params' => $paramTimeleft,
 		'allowed_types' => $allowedTypesNumeric,
-		'operators' => ['<', '<=', '>', '>=', '=', '<>']
+		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	]
 ];
 order_result($functions, 'description');
