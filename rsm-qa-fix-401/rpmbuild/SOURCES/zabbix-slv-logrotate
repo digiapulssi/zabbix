@@ -1,0 +1,23 @@
+/var/log/zabbix/slv/*.log {
+	rotate 2
+	dateext
+	daily
+	size=64M
+	notifempty
+	copytruncate
+	postrotate
+		echo -n "" > $1
+	endscript
+}
+
+/var/log/zabbix/rsm.slv.err {
+	rotate 2
+	dateext
+	daily
+	size=64M
+	notifempty
+	copytruncate
+	postrotate
+		echo -n "" > $1
+	endscript
+}
