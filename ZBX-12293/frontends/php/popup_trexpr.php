@@ -535,7 +535,7 @@ if ($data['insert'] === null && $data['selectedFunction'] === null) {
 
 // remove functions that not correspond to chosen item
 foreach ($data['functions'] as $id => $f) {
-	if ($data['itemValueType'] && !isset($f['allowed_types'][$data['itemValueType']])) {
+	if ($data['itemValueType'] !== null && !isset($f['allowed_types'][$data['itemValueType']])) {
 		unset($data['functions'][$id]);
 
 		// Take first available function from list and change to first available operator for that function.
