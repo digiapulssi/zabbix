@@ -1433,7 +1433,8 @@ static int	vmware_service_authenticate(zbx_vmware_service_t *service, CURL *easy
 
 		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
-		if (FAIL == (err = zbx_xml_try_read_value(page.data, ZBX_XPATH_FAULTSTRING(), &xml_value, error)))
+		if (FAIL == (err = zbx_xml_try_read_value(page.data, ZBX_XPATH_FAULTSTRING(), &xml_value, error))
+				&& NULL == *error)
 		{
 			/* Successfully authenticated with vcenter service manager. */
 			/* Set the service type and return with success.            */
@@ -1441,7 +1442,7 @@ static int	vmware_service_authenticate(zbx_vmware_service_t *service, CURL *easy
 			ret = SUCCEED;
 			goto out;
 		}
-		else if (NOTSUPPORTED == err)
+		else if (FAIL == err && NULL != *error)
 		{
 			goto out;
 		}
@@ -4833,11 +4834,10 @@ static void	libxml_handle_error(void *user_data, xmlErrorPtr err)
  * Parameters: data   - [IN] XML data                                         *
  *             xpath  - [IN] XML XPath                                        *
  *             value  - [OUT] selected xml node value                         *
- *             error  - [OUT] reason of the return code NOTSUPPORTED          *
+ *             error  - [OUT] error of xml or xpath formats                   *
  *                                                                            *
  * Return: SUCCEED - select xpath successfully, result stored in 'value'      *
-+ *        FAIL - failed select xpath expression                              *
-+ *        NOTSUPPORTED - invalid xml or xpath expression                     *
+ *         FAIL - failed select xpath expression                              *
  *                                                                            *
  ******************************************************************************/
 int	zbx_xml_try_read_value(const char *data, const char *xpath, char **value, char **error)
@@ -4860,7 +4860,6 @@ int	zbx_xml_try_read_value(const char *data, const char *xpath, char **value, ch
 			*error = zbx_dsprintf(*error, "Received response has no valid XML data.");
 
 		xmlSetStructuredErrorFunc(NULL, NULL);
-		ret = NOTSUPPORTED;
 		goto out;
 	}
 
@@ -4871,7 +4870,6 @@ int	zbx_xml_try_read_value(const char *data, const char *xpath, char **value, ch
 		if (NULL != error)
 			*error = zbx_dsprintf(*error, "Invalid xpath expression: \"%s\".", xpath);
 
-		ret = NOTSUPPORTED;
 		goto clean;
 	}
 
