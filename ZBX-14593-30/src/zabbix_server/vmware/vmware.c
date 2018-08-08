@@ -1410,7 +1410,7 @@ static int	vmware_service_authenticate(zbx_vmware_service_t *service, CURL *easy
 
 	if (ZBX_VMWARE_TYPE_UNKNOWN == service->type)
 	{
-		char	*xml_value;
+		char	*xml_value = NULL;
 
 		/* try to detect the service type first using vCenter service manager object */
 		zbx_snprintf(xml, sizeof(xml), ZBX_POST_VMWARE_AUTH,
@@ -1433,17 +1433,15 @@ static int	vmware_service_authenticate(zbx_vmware_service_t *service, CURL *easy
 
 		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
-		if (FAIL == (err = zbx_xml_try_read_value(page.data, ZBX_XPATH_FAULTSTRING(), &xml_value, error))
-				&& NULL == *error)
+		if (FAIL == zbx_xml_try_read_value(page.data, ZBX_XPATH_FAULTSTRING(), &xml_value, error))
+			goto out;
+
+		if (NULL == xml_value)
 		{
 			/* Successfully authenticated with vcenter service manager. */
 			/* Set the service type and return with success.            */
 			service->type = ZBX_VMWARE_TYPE_VCENTER;
 			ret = SUCCEED;
-			goto out;
-		}
-		else if (FAIL == err && NULL != *error)
-		{
 			goto out;
 		}
 
@@ -4873,6 +4871,8 @@ int	zbx_xml_try_read_value(const char *data, const char *xpath, char **value, ch
 		goto clean;
 	}
 
+	ret = SUCCEED;
+
 	if (0 != xmlXPathNodeSetIsEmpty(xpathObj->nodesetval))
 		goto clean;
 
@@ -4882,7 +4882,6 @@ int	zbx_xml_try_read_value(const char *data, const char *xpath, char **value, ch
 	{
 		*value = zbx_strdup(NULL, (const char *)val);
 		xmlFree(val);
-		ret = SUCCEED;
 	}
 clean:
 	if (NULL != xpathObj)
