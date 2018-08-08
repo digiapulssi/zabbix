@@ -4826,7 +4826,7 @@ static void	libxml_handle_error(void *user_data, xmlErrorPtr err)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_xml_read_value                                               *
+ * Function: zbx_xml_try_read_value                                           *
  *                                                                            *
  * Purpose: retrieve a value from xml data and return status of operation     *
  *                                                                            *
@@ -4857,7 +4857,7 @@ int	zbx_xml_try_read_value(const char *data, const char *xpath, char **value, ch
 	if (NULL == (doc = xmlReadMemory(data, strlen(data), ZBX_VM_NONAME_XML, NULL, ZBX_XML_PARSE_OPTS)))
 	{
 		if (NULL != error)
-			*error = zbx_dsprintf(*error, "Received value is not XML");
+			*error = zbx_dsprintf(*error, "Received response has no valid XML data.");
 
 		xmlSetStructuredErrorFunc(NULL, NULL);
 		ret = NOTSUPPORTED;
@@ -4869,7 +4869,7 @@ int	zbx_xml_try_read_value(const char *data, const char *xpath, char **value, ch
 	if (NULL == (xpathObj = xmlXPathEvalExpression((const xmlChar *)xpath, xpathCtx)))
 	{
 		if (NULL != error)
-			*error = zbx_dsprintf(*error, "Invalid xpath expression: \"%s\"", xpath);
+			*error = zbx_dsprintf(*error, "Invalid xpath expression: \"%s\".", xpath);
 
 		ret = NOTSUPPORTED;
 		goto clean;
