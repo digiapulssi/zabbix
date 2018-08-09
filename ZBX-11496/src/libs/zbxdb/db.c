@@ -1742,7 +1742,7 @@ error:
 			if (OCI_SUCCESS == err)
 			{
 				/* set the character set attribute to the correct value for NCHAR data types */
-				err = OCIAttrSet(&defnp, (ub4)OCI_HTYPE_DEFINE, (void*)&cform, (ub4)0,
+				err = OCIAttrSet((dvoid*)result->stmthp, (ub4)OCI_HTYPE_DEFINE, (void*)&cform, (ub4)0,
 						(ub4)OCI_ATTR_CHARSET_FORM, (OCIError*)oracle.errhp);
 			}
 		}
