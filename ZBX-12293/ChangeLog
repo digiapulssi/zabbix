@@ -1,8 +1,25 @@
-Changes for 3.0.20rc1
+Changes for 3.0.21rc1
 
 New features:
 
 Bug fixes:
+.......PS. [ZBX-14593] fixed error message for invalid vmware endpoint (MVekslers)
+........S. [ZBX-14614] fixed trigger dependency link to the template instead of the host during the discovery action (MVekslers)
+...G...... [ZBX-372] added "zone" parameter to proc.num[] item for Solaris (viktors)
+........S. [ZBX-14410] fixed output of information about the error for expressions with functions of triggers or calculated items (MVekslers)
+..F....... [ZBX-14433] fixed several problems in displaying of X axis on the graphs (Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.20
+
+3.0.20rc1 was released as 3.0.20 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.20rc1
+
+Bug fixes:
+........S. [ZBX-14548] fixed the disk usage counters reading for ESX/ESXi hosts (MVekslers)
+..F....... [ZBX-9236] fixed timeselector period used to select 'all' values of particular item (miks)
 ...G...... [ZBX-13393] fixed agent compilation error on AlphaServer Tru64 5.1B (Andris)
 .......PS. [ZBX-14566] fixed possible data loss due to MariaDB server restart (vso)
 .......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
@@ -1971,9 +1988,19 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
 
 --------------------------------------------------------------------------------
-Changes for 2.2.23rc1
+Changes for 2.2.24rc1
 
 New features:
+
+Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.2.23
+
+2.2.23rc1 was released as 2.2.23 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.23rc1
 
 Bug fixes:
 .......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
