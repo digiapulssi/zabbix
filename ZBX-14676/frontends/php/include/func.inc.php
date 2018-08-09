@@ -1375,14 +1375,19 @@ function zbx_str2links($text) {
 		preg_match_all('#https?://[^\n\t\r ]+#u', $line, $matches, PREG_OFFSET_CAPTURE);
 
 		$start = 0;
+
 		foreach ($matches[0] as $match) {
-			$result[] = mb_substr($line, $start, $match[1] - $start);
-			$result[] = new CLink($match[0], $match[0]);
-			$start = $match[1] + mb_strlen($match[0]);
+			if (($pos = mb_strpos($line, $match[0], $start)) !== false) {
+				$result[] = mb_substr($line, $start, $pos - $start);
+				$result[] = new CLink(CHTML::encode($match[0]), $match[0]);
+				$start = $pos + mb_strlen($match[0]);
+			}
 		}
+
 		$result[] = mb_substr($line, $start);
 		$result[] = BR();
 	}
+
 	array_pop($result);
 
 	return $result;
