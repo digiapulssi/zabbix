@@ -30,6 +30,8 @@ abstract class ItemChecker
 {
 	private static final Logger logger = LoggerFactory.getLogger(ItemChecker.class);
 
+	public Boolean network_error = false;
+
 	static final String JSON_TAG_DATA = "data";
 	static final String JSON_TAG_ERROR = "error";
 	static final String JSON_TAG_KEYS = "keys";
@@ -39,6 +41,7 @@ abstract class ItemChecker
 	static final String JSON_TAG_USERNAME = "username";
 	static final String JSON_TAG_VALUE = "value";
 	static final String JSON_TAG_JMX_ENDPOINT = "jmx_endpoint";
+	static final String JSON_TAG_NETWORK_RESULT = "network_error";
 
 	static final String JSON_REQUEST_INTERNAL = "java gateway internal";
 	static final String JSON_REQUEST_JMX = "java gateway jmx";

@@ -99,6 +99,7 @@
 #define ZBX_PROTO_TAG_MAX		"max"
 #define ZBX_PROTO_TAG_SESSION		"session"
 #define ZBX_PROTO_TAG_ID		"id"
+#define ZBX_PROTO_TAG_NETWORK_RESULT	"network_error"
 
 #define ZBX_PROTO_VALUE_FAILED		"failed"
 #define ZBX_PROTO_VALUE_SUCCESS		"success"

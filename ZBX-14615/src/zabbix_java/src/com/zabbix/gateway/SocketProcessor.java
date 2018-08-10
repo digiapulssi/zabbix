@@ -43,14 +43,13 @@ class SocketProcessor implements Runnable
 		logger.debug("starting to process incoming connection");
 
 		BinaryProtocolSpeaker speaker = null;
+		ItemChecker checker = null;
 
 		try
 		{
 			speaker = new BinaryProtocolSpeaker(socket);
 
 			JSONObject request = new JSONObject(speaker.getRequest());
-
-			ItemChecker checker;
 
 			if (request.getString(ItemChecker.JSON_TAG_REQUEST).equals(ItemChecker.JSON_REQUEST_INTERNAL))
 				checker = new InternalItemChecker(request);
@@ -65,6 +64,7 @@ class SocketProcessor implements Runnable
 			JSONObject response = new JSONObject();
 			response.put(ItemChecker.JSON_TAG_RESPONSE, ItemChecker.JSON_RESPONSE_SUCCESS);
 			response.put(ItemChecker.JSON_TAG_DATA, values);
+			response.put(ItemChecker.JSON_TAG_NETWORK_RESULT, ItemChecker.JSON_RESPONSE_SUCCESS);
 
 			speaker.sendResponse(response.toString());
 		}
@@ -79,6 +79,10 @@ class SocketProcessor implements Runnable
 				JSONObject response = new JSONObject();
 				response.put(ItemChecker.JSON_TAG_RESPONSE, ItemChecker.JSON_RESPONSE_FAILED);
 				response.put(ItemChecker.JSON_TAG_ERROR, error);
+				response.put(ItemChecker.JSON_TAG_NETWORK_RESULT,
+					(checker.getClass() == JMXItemChecker.class && true == checker.network_error)
+						? ItemChecker.JSON_RESPONSE_FAILED
+						: ItemChecker.JSON_RESPONSE_SUCCESS);
 
 				speaker.sendResponse(response.toString());
 			}

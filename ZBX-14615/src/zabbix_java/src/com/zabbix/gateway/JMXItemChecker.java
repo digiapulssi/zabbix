@@ -57,6 +57,12 @@ class JMXItemChecker extends ItemChecker
 
 		try
 		{
+			if (null == request.getString(JSON_TAG_JMX_ENDPOINT))
+			{
+				network_error = true;
+				throw new IllegalArgumentException("JMX endpoint URL cannot be empty");
+			}
+
 			url = new JMXServiceURL(request.getString(JSON_TAG_JMX_ENDPOINT));
 			jmxc = null;
 			mbsc = null;
@@ -65,7 +71,10 @@ class JMXItemChecker extends ItemChecker
 			password = request.optString(JSON_TAG_PASSWORD, null);
 
 			if (null != username && null == password || null == username && null != password)
+			{
+				network_error = true;
 				throw new IllegalArgumentException("Both JMX endpoint username and password should be either present or empty");
+			}
 		}
 		catch (Exception e)
 		{
@@ -90,6 +99,12 @@ class JMXItemChecker extends ItemChecker
 
 			jmxc = ZabbixJMXConnectorFactory.connect(url, env);
 			mbsc = jmxc.getMBeanServerConnection();
+
+			if (null == jmxc || null == mbsc)
+			{
+				network_error = true;
+				throw new ZabbixException("Cannot establish connection to JMX endpoint.");
+			}
 
 			for (String key : keys)
 				values.put(getJSONValue(key));

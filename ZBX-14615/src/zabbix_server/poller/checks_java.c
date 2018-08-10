@@ -31,7 +31,9 @@ static int	parse_response(AGENT_RESULT *results, int *errcodes, int num, char *r
 	const char		*p;
 	struct zbx_json_parse	jp, jp_data, jp_row;
 	char			*value = NULL;
+	char			*net_result = NULL;
 	size_t			value_alloc = 0;
+	size_t			net_result_alloc = 0;
 	int			i, ret = GATEWAY_ERROR;
 
 	if (SUCCEED == zbx_json_open(response, &jp))
@@ -69,19 +71,22 @@ static int	parse_response(AGENT_RESULT *results, int *errcodes, int num, char *r
 					goto exit;
 				}
 
-				if (SUCCEED == zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_VALUE, &value, &value_alloc))
+				if (SUCCEED == zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_VALUE, &value,
+						&value_alloc))
 				{
 					set_result_type(&results[i], ITEM_VALUE_TYPE_TEXT, value);
 					errcodes[i] = SUCCEED;
 				}
-				else if (SUCCEED == zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_ERROR, &value, &value_alloc))
+				else if (SUCCEED == zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_ERROR, &value,
+						&value_alloc))
 				{
 					SET_MSG_RESULT(&results[i], zbx_strdup(NULL, value));
 					errcodes[i] = NOTSUPPORTED;
 				}
 				else
 				{
-					SET_MSG_RESULT(&results[i], zbx_strdup(NULL, "Cannot get item value or error message"));
+					SET_MSG_RESULT(&results[i], zbx_strdup(NULL,
+							"Cannot get item value or error message"));
 					errcodes[i] = AGENT_ERROR;
 				}
 			}
@@ -91,9 +96,17 @@ static int	parse_response(AGENT_RESULT *results, int *errcodes, int num, char *r
 		else if (0 == strcmp(value, ZBX_PROTO_VALUE_FAILED))
 		{
 			if (SUCCEED == zbx_json_value_by_name(&jp, ZBX_PROTO_TAG_ERROR, error, max_error_len))
-				ret = NOTSUPPORTED;
+				if (SUCCEED == zbx_json_value_by_name(&jp, ZBX_PROTO_TAG_NETWORK_RESULT, net_result,
+						net_result_alloc))
+					if (0 == strcmp(net_result, ZBX_PROTO_VALUE_FAILED))
+						ret = NETWORK_ERROR;
+					else
+						ret = NOTSUPPORTED;
+				else
+					zbx_strlcpy(error, "Cannot get network status data", max_error_len);
 			else
-				zbx_strlcpy(error, "Cannot get error message describing reasons for failure", max_error_len);
+				zbx_strlcpy(error, "Cannot get error message describing reasons for failure",
+						max_error_len);
 
 			goto exit;
 		}
@@ -175,7 +188,8 @@ void	get_values_java(unsigned char request, const DC_ITEM *items, AGENT_RESULT *
 			}
 		}
 
-		zbx_json_addstring(&json, ZBX_PROTO_TAG_REQUEST, ZBX_PROTO_VALUE_JAVA_GATEWAY_JMX, ZBX_JSON_TYPE_STRING);
+		zbx_json_addstring(&json, ZBX_PROTO_TAG_REQUEST, ZBX_PROTO_VALUE_JAVA_GATEWAY_JMX,
+				ZBX_JSON_TYPE_STRING);
 
 		if ('\0' != *items[j].username)
 		{
