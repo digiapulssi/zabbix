@@ -3,6 +3,7 @@ Changes for 3.0.21rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-12293] renamed trigger functions by adding function name at the beginning and removing the operator and "N" and placing operator in a separate field allowing two new operators "<=" and ">=" for selection (Ivo)
 .......PS. [ZBX-14593] fixed error message for invalid vmware endpoint (MVekslers)
 ........S. [ZBX-14614] fixed trigger dependency link to the template instead of the host during the discovery action (MVekslers)
 ...G...... [ZBX-372] added "zone" parameter to proc.num[] item for Solaris (viktors)
