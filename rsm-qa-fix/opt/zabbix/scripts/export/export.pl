@@ -1343,7 +1343,7 @@ sub __get_false_positives
 		my $details = $row_ref->[0];
 		my $clock = $row_ref->[1];
 		my ($eventid) = ($details =~ /^([0-9]+): /);
-		my $status = ($details =~ m/unmark/i ? 'Activated' : 'Deactivated');
+		my $status = ($details =~ m/unmark/i ? 'Deactivated' : 'Activated');
 
 		push(@result, {'clock' => $clock, 'eventid' => $eventid, 'status' => $status});
 	}
