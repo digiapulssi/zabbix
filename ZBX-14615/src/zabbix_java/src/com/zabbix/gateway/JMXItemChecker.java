@@ -60,7 +60,7 @@ class JMXItemChecker extends ItemChecker
 			if (null == request.getString(JSON_TAG_JMX_ENDPOINT))
 			{
 				network_error = true;
-				throw new IllegalArgumentException("JMX endpoint URL cannot be empty");
+				throw new IllegalArgumentException("JMX endpoint URL cannot be empty.");
 			}
 
 			url = new JMXServiceURL(request.getString(JSON_TAG_JMX_ENDPOINT));
