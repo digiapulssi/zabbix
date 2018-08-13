@@ -2917,3 +2917,77 @@ out:
 
 	return ret;
 }
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_db_lock_maintenanceids                                       *
+ *                                                                            *
+ * Purpose: locks the specified maintenances in share mode                    *
+ *                                                                            *
+ * Parameters: maintenanceids - [IN/OUT] in - the maintenance ids to lock     *
+ *                                       out - locked mainteance ids          *
+ *                                       The output vector will be less than  *
+ *                                       input vector only if some of the     *
+ *                                       specified maintenances were removed. *
+ *                                                                            *
+ * Comments: Depending on database backend this function either does shared   *
+ *           row locks or shared table locks.                                 *
+ *                                                                            *
+ ******************************************************************************/
+void   zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids)
+{
+	char		*sql = NULL;
+	size_t		sql_alloc = 0, sql_offset = 0;
+	zbx_uint64_t	maintenanceid;
+	int		i;
+	DB_RESULT	result;
+	DB_ROW		row;
+
+#if defined(HAVE_MYSQL)
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
+			"select maintenanceid from maintenances where");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
+			maintenanceids->values_num);
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid lock in share mode");
+
+#elif defined(HAVE_IBM_DB2)
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select maintenanceid from maintenances where");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
+			maintenanceids->values_num);
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid with rs use and keep share locks");
+
+#elif defined(HAVE_ORACLE)
+	DBexecute("lock table maintenances in share mode");
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select maintenanceid from maintenances where");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
+			maintenanceids->values_num);
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid");
+
+#elif defined(HAVE_POSTGRESQL)
+	/* using table level locks instead of row level locks because the latter have reader preference, */
+	/* which could lead to theoretical situation when server blocks out frontend from maintenances   */
+	DBexecute("lock table maintenances in share mode");
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select maintenanceid from maintenances where");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
+			maintenanceids->values_num);
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid");
+#endif
+
+	result = DBselect("%s", sql);
+	zbx_free(sql);
+
+	i = 0;
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(maintenanceid, row[0]);
+
+		while (maintenanceid != maintenanceids->values[i])
+			zbx_vector_uint64_remove(maintenanceids, i);
+		i++;
+	}
+
+	while (i != maintenanceids->values_num)
+		zbx_vector_uint64_remove_noorder(maintenanceids, i);
+
+	DBfree_result(result);
+}
