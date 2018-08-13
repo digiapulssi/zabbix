@@ -23,6 +23,7 @@
 #include "sysinc.h"
 #include "zbxtypes.h"
 #include "version.h"
+#include "md5.h"
 
 #ifndef va_copy
 #	if defined(__va_copy)
@@ -1288,6 +1289,7 @@ int	zbx_function_param_quote(char **param, int forced);
 int	zbx_function_validate_parameters(const char *expr, size_t *length);
 int	zbx_function_find(const char *expr, size_t *func_pos, size_t *par_l, size_t *par_r,
 		char *error, int max_error_len);
+char	*zbx_function_get_param_dyn(const char *params, int Nparam);
 
 void	zbx_alarm_flag_set(void);
 void	zbx_alarm_flag_clear(void);
@@ -1307,13 +1309,14 @@ int	zbx_alarm_timed_out(void);
 int	zbx_strcmp_natural(const char *s1, const char *s2);
 
 /* tokens used in expressions */
-#define ZBX_TOKEN_OBJECTID	0x00001
-#define ZBX_TOKEN_MACRO		0x00002
-#define ZBX_TOKEN_LLD_MACRO	0x00004
-#define ZBX_TOKEN_USER_MACRO	0x00008
-#define ZBX_TOKEN_FUNC_MACRO	0x00010
-#define ZBX_TOKEN_SIMPLE_MACRO	0x00020
-#define ZBX_TOKEN_REFERENCE	0x00040
+#define ZBX_TOKEN_OBJECTID		0x00001
+#define ZBX_TOKEN_MACRO			0x00002
+#define ZBX_TOKEN_LLD_MACRO		0x00004
+#define ZBX_TOKEN_USER_MACRO		0x00008
+#define ZBX_TOKEN_FUNC_MACRO		0x00010
+#define ZBX_TOKEN_SIMPLE_MACRO		0x00020
+#define ZBX_TOKEN_REFERENCE		0x00040
+#define ZBX_TOKEN_LLD_FUNC_MACRO	0x00080
 
 /* additional token flags */
 #define ZBX_TOKEN_NUMERIC	0x08000
@@ -1391,6 +1394,7 @@ typedef union
 	zbx_token_macro_t		lld_macro;
 	zbx_token_user_macro_t		user_macro;
 	zbx_token_func_macro_t		func_macro;
+	zbx_token_func_macro_t		lld_func_macro;
 	zbx_token_simple_macro_t	simple_macro;
 	zbx_token_reference_t		reference;
 }
@@ -1481,6 +1485,9 @@ const char	*zbx_variant_value_desc(const zbx_variant_t *value);
 const char	*zbx_variant_type_desc(const zbx_variant_t *value);
 
 int	zbx_validate_value_dbl(double value);
+
+#define ZBX_DATA_SESSION_TOKEN_SIZE	(MD5_DIGEST_SIZE * 2)
+char	*zbx_create_token(zbx_uint64_t seed);
 
 #endif
 
