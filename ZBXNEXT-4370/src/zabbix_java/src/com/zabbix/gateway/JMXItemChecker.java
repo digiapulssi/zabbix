@@ -141,9 +141,6 @@ class JMXItemChecker extends ItemChecker
 			else
 				realAttributeName = attributeName;
 
-			// unescape possible dots or backslashes that were escaped by user
-			realAttributeName = HelperFunctionChest.unescapeUserInput(realAttributeName);
-
 			logger.trace("attributeName:'{}'", realAttributeName);
 			logger.trace("fieldNames:'{}'", fieldNames);
 
@@ -228,9 +225,6 @@ class JMXItemChecker extends ItemChecker
 			}
 			else
 				dataObjectName = fieldNames;
-
-			// unescape possible dots or backslashes that were escaped by user
-			dataObjectName = HelperFunctionChest.unescapeUserInput(dataObjectName);
 
 			return getPrimitiveAttributeValue(comp.get(dataObjectName), newFieldNames);
 		}
