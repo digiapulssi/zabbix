@@ -33,19 +33,39 @@ class testFormHostPrototype extends CWebTest {
 	public static function getCreateValidationData() {
 		return [
 			[
-				// Create host prototype with empty name.
+			// Create host prototype with empty name.
 				[
 					'error' => 'Page received incorrect data',
 					'error_message' => 'Incorrect value for field "Host name": cannot be empty.',
 					'check_db' => false
 				]
 			],
-				// Create host prototype with space in name field.
+			// Create host prototype with space in name field.
 			[
 				[
 					'name' => ' ',
 					'error' => 'Page received incorrect data',
 					'error_message' => 'Incorrect value for field "Host name": cannot be empty.',
+				]
+			],
+			// Create host prototype with invalid name.
+			[
+				[
+					'name' => 'Host prototype {#3}',
+					'hostgroup' => 'Discovered hosts',
+					'error' => 'Cannot add host prototype',
+					'error_message' => 'Host prototype with host name "Host prototype {#3}" already exists in discovery rule "Discovery rule 1".',
+					'check_db' => false
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype with existen visible {#NAME}',
+					'visible_name' => 'Host prototype visible name',
+					'hostgroup' => 'Discovered hosts',
+					'error' => 'Cannot add host prototype',
+					'error_message' => 'Host prototype with visible name "Host prototype visible name" already exists in discovery rule "Discovery rule 1".',
+					'check_db' => false
 				]
 			],
 			[
@@ -57,16 +77,25 @@ class testFormHostPrototype extends CWebTest {
 			],
 			[
 				[
-					'name' => 'Host prototype {#GROUP_EMPTY}',
+					'name' => 'Host prototype without macro in name',
 					'error' => 'Cannot add host prototype',
-					'error_message' => 'Host prototype "Host prototype {#GROUP_EMPTY}" cannot be without host group',
+					'error_message' => 'Host name for host prototype "Host prototype without macro in name" must contain macros',
 				]
 			],
 			[
 				[
-					'name' => 'Host prototype without macro in name',
+					'name' => 'Host prototype with / in name',
+					'hostgroup' => 'Linux servers',
 					'error' => 'Cannot add host prototype',
-					'error_message' => 'Host name for host prototype "Host prototype without macro in name" must contain macros',
+					'error_message' => 'Incorrect characters used for host "Host prototype with / in name".',
+				]
+			],
+			// Create host prototype with invalid group.
+			[
+				[
+					'name' => 'Host prototype {#GROUP_EMPTY}',
+					'error' => 'Cannot add host prototype',
+					'error_message' => 'Host prototype "Host prototype {#GROUP_EMPTY}" cannot be without host group',
 				]
 			],
 			[
@@ -78,14 +107,6 @@ class testFormHostPrototype extends CWebTest {
 					],
 					'error' => 'Cannot add host prototype',
 					'error_message' => 'Host name for host prototype "Host prototype without macro in group prototype" must contain macros',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype with / in name',
-					'hostgroup' => 'Linux servers',
-					'error' => 'Cannot add host prototype',
-					'error_message' => 'Incorrect characters used for host "Host prototype with / in name".',
 				]
 			],
 			[
@@ -104,7 +125,7 @@ class testFormHostPrototype extends CWebTest {
 	}
 
 	/**
-	 * Test validation of host prototype creation
+	 * Test validation of host prototype creation.
 	 *
 	 * @dataProvider getCreateValidationData
 	 */
@@ -115,6 +136,10 @@ class testFormHostPrototype extends CWebTest {
 
 		if (array_key_exists('name', $data)) {
 			$this->zbxTestInputType('host', $data['name']);
+		}
+
+		if (array_key_exists('visible_name', $data)) {
+			$this->zbxTestInputType('name', $data['visible_name']);
 		}
 
 		$this->zbxTestTabSwitch('Groups');
@@ -142,6 +167,163 @@ class testFormHostPrototype extends CWebTest {
 		if (!array_key_exists('check_db', $data) || $data['check_db'] === true ) {
 			$this->assertEquals(0, DBcount('SELECT NULL FROM hosts WHERE flags=2 AND name='.zbx_dbstr($data['name'])));
 		}
+	}
+
+	public static function getValidationData() {
+		return [
+			[
+				[
+					'name' => '',
+					'error' => 'Page received incorrect data',
+					'error_message' => 'Incorrect value for field "Host name": cannot be empty.'
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype {#3}',
+					'hostgroup' => 'Discovered hosts',
+					'error_message' => 'Host prototype with host name "Host prototype {#3}" already exists in discovery rule "Discovery rule 1".'
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype with existen visible {#NAME}',
+					'visible_name' => 'Host prototype visible name',
+					'error_message' => 'Host prototype with visible name "Host prototype visible name" already exists in discovery rule "Discovery rule 1".'
+				]
+			],
+			[
+				[
+					'name' => 'Кириллица Прототип хоста {#FSNAME}',
+					'error_message' => 'Incorrect characters used for host "Кириллица Прототип хоста {#FSNAME}".'
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype without macro in name',
+					'error_message' => 'Host name for host prototype "Host prototype without macro in name" must contain macros'
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype with / in name',
+					'error_message' => 'Incorrect characters used for host "Host prototype with / in name".'
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype {#GROUP_EMPTY}',
+					'clear_groups' => true,
+					'error_message' => 'Host prototype "Host prototype {#GROUP_EMPTY}" cannot be without host group'
+				]
+			],
+			[
+				[
+					'name' => 'Host prototype without macro in group prototype',
+					'clear_groups' => true,
+					'group_prototypes' => [
+						'Group prototype'
+					],
+					'error_message' => 'Host name for host prototype "Host prototype without macro in group prototype" must contain macros'
+				]
+			],
+			[
+				[
+					'name' => '{#HOST} prototype with duplicated Group prototypes',
+					'group_prototypes' => [
+						'Group prototype',
+						'Group prototype'
+					],
+					'error_message' => 'Duplicate group prototype name "Group prototype" for host prototype "{#HOST} prototype with duplicated Group prototypes".'
+				]
+			]
+		];
+	}
+
+	/**
+	 * Test form validation.
+	 */
+	public function executeValidation($data, $action) {
+		$sql_hash = 'SELECT * FROM hosts ORDER BY hostid';
+		$old_hash = DBhash($sql_hash);
+
+		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
+
+		switch ($action) {
+			case 'update':
+				$update_prototype = 'Host prototype {#2}';
+				$this->zbxTestClickLinkTextWait($update_prototype);
+				break;
+
+			case 'clone':
+				$clone_prototype = 'Host prototype {#1}';
+				$this->zbxTestClickLinkTextWait($clone_prototype);
+				$this->zbxTestClickWait('clone');
+				break;
+		}
+
+		if (array_key_exists('name', $data)) {
+			$this->zbxTestInputClearAndTypeByXpath('//input[@id="host"]', $data['name']);
+		}
+
+		if (array_key_exists('visible_name', $data)) {
+			$this->zbxTestInputClearAndTypeByXpath('//input[@id="name"]', $data['visible_name']);
+		}
+
+		$this->zbxTestTabSwitch('Groups');
+
+		if (array_key_exists('clear_groups', $data) ) {
+			$this->zbxTestMultiselectClear('group_links_');
+		}
+
+		if (array_key_exists('group_prototypes', $data)) {
+			foreach ($data['group_prototypes'] as $i => $group) {
+				$this->zbxTestInputClearAndTypeByXpath('//*[@name="group_prototypes['.$i.'][name]"]', $group);
+				$this->zbxTestClick('group_prototype_add');
+			}
+		}
+
+		// Press action button.
+		switch ($action) {
+			case 'update':
+				$this->zbxTestClickWait('update');
+				if (!array_key_exists('error', $data)) {
+					$data['error'] = 'Cannot update host prototype';
+				}
+				break;
+
+			case 'clone':
+				$this->zbxTestClickWait('add');
+				if (!array_key_exists('error', $data)) {
+					$data['error'] = 'Cannot add host prototype';
+				}
+				break;
+		}
+
+		// Check the results in frontend.
+		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
+		$this->zbxTestTextPresentInMessageDetails($data['error_message']);
+		$this->zbxTestCheckFatalErrors();
+
+		$this->assertEquals($old_hash, DBhash($sql_hash));
+	}
+
+	/**
+	 * Test host prototype form validation when updating.
+	 *
+	 * @dataProvider getValidationData
+	 */
+	public function testFormHostPrototype_UpdateValidation($data) {
+		$this->executeValidation($data, 'update');
+	}
+
+	/**
+	 * Test host prototype form validation when cloning.
+	 *
+	 * @dataProvider getValidationData
+	 */
+	public function testFormHostPrototype_CloneValidation($data) {
+		$this->executeValidation($data, 'clone');
 	}
 
 	public static function getCreateData() {
@@ -173,7 +355,7 @@ class testFormHostPrototype extends CWebTest {
 	 */
 	public function testFormHostPrototype_Create($data) {
 		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID.'&form=create');
-		$this->zbxTestInputType('host', $data['name']);
+		$this->zbxTestInputTypeWait('host', $data['name']);
 
 		if (array_key_exists('visible_name', $data)) {
 			$this->zbxTestInputType('name', $data['visible_name']);
@@ -190,7 +372,7 @@ class testFormHostPrototype extends CWebTest {
 
 		if (array_key_exists('group_prototype', $data)) {
 			$this->zbxTestInputTypeByXpath('//*[@name="group_prototypes[0][name]"]', $data['group_prototype']);
-		}
+			}
 
 		if (array_key_exists('template', $data)) {
 			$this->zbxTestTabSwitch('Templates');
@@ -202,7 +384,7 @@ class testFormHostPrototype extends CWebTest {
 
 		if (array_key_exists('inventory', $data)) {
 			$this->zbxTestTabSwitch('Host inventory');
-			$this->zbxTestClickXpath('//label[text()="'.$data['inventory'].'"]');
+			$this->zbxTestClickXpathWait('//label[text()="'.$data['inventory'].'"]');
 		}
 
 		$this->zbxTestClick('add');
@@ -211,7 +393,8 @@ class testFormHostPrototype extends CWebTest {
 
 		if (array_key_exists('visible_name', $data)) {
 			$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$data['visible_name'].'"]');
-		}else{
+		}
+		else {
 			$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$data['name'].'"]');
 		}
 		$this->zbxTestCheckFatalErrors();
@@ -220,123 +403,35 @@ class testFormHostPrototype extends CWebTest {
 		$this->checkFormFields($data);
 
 		// Check the results in DB.
-		$this->assertEquals(1, DBcount('SELECT NULL FROM hosts WHERE host = '.zbx_dbstr($data['name'])));
-	}
-
-	public static function getUpdateValidationData() {
-		return [
-			[
-				[
-					'name' => ' ',
-					'error' => 'Page received incorrect data',
-					'error_message' => 'Incorrect value for field "Host name": cannot be empty.',
-				]
-			],
-			[
-				[
-					'name' => 'Кириллица Прототип хоста {#FSNAME}',
-					'error' => 'Cannot update host prototype',
-					'error_message' => 'Incorrect characters used for host "Кириллица Прототип хоста {#FSNAME}".',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype {#GROUP_EMPTY}',
-					'error' => 'Cannot update host prototype',
-					'error_message' => 'Host prototype "Host prototype {#GROUP_EMPTY}" cannot be without host group',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype without macro in name',
-					'error' => 'Cannot update host prototype',
-					'error_message' => 'Host name for host prototype "Host prototype without macro in name" must contain macros',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype without macro in group prototype',
-					'clear_groups' => false,
-					'group_prototypes' => [
-						'Group prototype'
-					],
-					'error' => 'Cannot update host prototype',
-					'error_message' => 'Host name for host prototype "Host prototype without macro in group prototype" must contain macros',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype with / in name',
-					'error' => 'Cannot update host prototype',
-					'error_message' => 'Incorrect characters used for host "Host prototype with / in name".',
-				]
-			],
-			[
-				[
-					'name' => '{#HOST} prototype with duplicated Group prototypes',
-					'clear_groups' => false,
-					'group_prototypes' => [
-						'Group prototype',
-						'Group prototype'
-					],
-					'error' => 'Cannot update host prototype',
-					'error_message' => 'Duplicate group prototype name "Group prototype" for host prototype "{#HOST} prototype with duplicated Group prototypes".',
-				]
-			]
-		];
-	}
-
-	/**
-	 * Test update with fields validation of host prototype.
-	 * @dataProvider getUpdateValidationData
-	 */
-	public function testFormHostPrototype_UpdateValidation($data) {
-		$old_name = 'Host prototype {#2}';
-
-		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
-		$this->zbxTestClickLinkTextWait($old_name);
-		$this->zbxTestCheckHeader('Host prototypes');
-		$this->zbxTestInputTypeOverwrite('host', $data['name']);
-		$this->zbxTestTabSwitch('Groups');
-
-		if (!array_key_exists('clear_groups', $data) || $data['clear_groups'] === true ) {
-			$this->zbxTestMultiselectClear('group_links_');
-		}
-
-		if (array_key_exists('group_prototypes', $data)) {
-			foreach ($data['group_prototypes'] as $i => $group) {
-				$this->zbxTestInputClearAndTypeByXpath('//*[@name="group_prototypes['.$i.'][name]"]', $group);
-				$this->zbxTestClick('group_prototype_add');
-			}
-		}
-
-		$this->zbxTestClick('update');
-
-		// Check the results in frontend.
-		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
-		$this->zbxTestTextPresentInMessageDetails($data['error_message']);
-		$this->zbxTestCheckFatalErrors();
-
-		$this->assertEquals(0, DBcount('SELECT NULL FROM hosts WHERE flags=2 AND name='.zbx_dbstr($data['name'])));
-		$this->assertEquals(1, DBcount('SELECT NULL FROM hosts WHERE flags=2 AND name='.zbx_dbstr($old_name)));
+		$this->assertEquals(1, DBcount('SELECT NULL FROM hosts WHERE host='.zbx_dbstr($data['name'])));
 	}
 
 	/**
 	 * Test update without any modification of host prototype.
 	 */
 	public function testFormHostPrototype_SimpleUpdate() {
-		$host = 'Host prototype {#2}';
+		$sql = 'SELECT name'.
+				' FROM hosts'.
+				' WHERE hostid IN ('.
+					'SELECT hostid'.
+					' FROM host_discovery'.
+					' WHERE parent_itemid='.self::DISCRULEID.
+					')'.
+				'LIMIT 2';
 		$sql_hash = 'SELECT * FROM hosts ORDER BY hostid';
 		$old_hash = DBhash($sql_hash);
 
 		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
-		$this->zbxTestClickLinkTextWait($host);
+		foreach (DBdata($sql, false) as $host) {
+			$host = $host[0];
+			$this->zbxTestClickLinkTextWait($host['name']);
+			$this->zbxTestWaitForPageToLoad();
+			$this->zbxTestClickWait('update');
 
-		$this->zbxTestClick('update');
-
-		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host prototype updated');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$host.'"]');
-		$this->zbxTestCheckFatalErrors();
+			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host prototype updated');
+			$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$host['name'].'"]');
+			$this->zbxTestCheckFatalErrors();
+		}
 
 		$this->assertEquals($old_hash, DBhash($sql_hash));
 	}
@@ -351,14 +446,13 @@ class testFormHostPrototype extends CWebTest {
 					'hostgroup'=> 'Virtual machines',
 					'group_prototype'=> 'New test {#MACRO}',
 					'template' => 'Template OS Windows',
-					'inventory' => 'Automatic',
+					'inventory' => 'Automatic'
 				]
 			],
 			[
 				[
-					'old_name' => 'Host prototype visible name',
 					'old_visible_name' => 'Host prototype visible name',
-					'visible_name' => 'New prototype visible name',
+					'visible_name' => 'New prototype visible name'
 				]
 			]
 		];
@@ -369,9 +463,10 @@ class testFormHostPrototype extends CWebTest {
 	 *
 	 * @dataProvider getUpdateData
 	 */
-	public function testFormHostPrototype_UpdateAll($data) {
+	public function testFormHostPrototype_Update($data) {
 		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
-		$this->zbxTestClickLinkTextWait($data['old_name']);
+		$host = array_key_exists('old_visible_name', $data) ? $data['old_visible_name'] : $data['old_name'];
+		$this->zbxTestClickLinkTextWait($host);
 
 		// Change name and visible name.
 		if (array_key_exists('name', $data)) {
@@ -398,7 +493,7 @@ class testFormHostPrototype extends CWebTest {
 		// Change template.
 		if (array_key_exists('template', $data)) {
 			$this->zbxTestTabSwitch('Templates');
-			$this->zbxTestClickXpath('//button[contains(@onclick,"unlink")]');
+			$this->zbxTestClickXpathWait('//button[contains(@onclick,"unlink")]');
 			$this->zbxTestClickButtonMultiselect('add_templates_');
 			$this->zbxTestLaunchOverlayDialog('Templates');
 			$this->zbxTestClickLinkText($data['template']);
@@ -408,7 +503,7 @@ class testFormHostPrototype extends CWebTest {
 		// Change inventory mode.
 		if (array_key_exists('inventory', $data)) {
 			$this->zbxTestTabSwitch('Host inventory');
-			$this->zbxTestClickXpath('//label[text()="'.$data['inventory'].'"]');
+			$this->zbxTestClickXpathWait('//label[text()="'.$data['inventory'].'"]');
 		}
 
 		$this->zbxTestClick('update');
@@ -434,108 +529,6 @@ class testFormHostPrototype extends CWebTest {
 			$this->assertEquals(1, DBcount('SELECT NULL FROM hosts WHERE name = '.zbx_dbstr($data['visible_name'])));
 			$this->assertEquals(0, DBcount('SELECT NULL FROM hosts WHERE name = '.zbx_dbstr($data['old_visible_name'])));
 		}
-	}
-
-	public static function getCloneValidationData() {
-		return [
-			[
-				[
-					'name' => ' ',
-					'error' => 'Page received incorrect data',
-					'error_message' => 'Incorrect value for field "Host name": cannot be empty.',
-				]
-			],
-			[
-				[
-					'name' => 'Кириллица Прототип хоста {#FSNAME}',
-					'error' => 'Cannot add host prototype',
-					'error_message' => 'Incorrect characters used for host "Кириллица Прототип хоста {#FSNAME}".',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype {#GROUP_EMPTY}',
-					'error' => 'Cannot add host prototype',
-					'error_message' => 'Host prototype "Host prototype {#GROUP_EMPTY}" cannot be without host group',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype without macro in name',
-					'error' => 'Cannot add host prototype',
-					'error_message' => 'Host name for host prototype "Host prototype without macro in name" must contain macros',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype without macro in group prototype',
-					'clear_groups' => false,
-					'group_prototypes' => [
-						'Group prototype'
-					],
-					'error' => 'Cannot add host prototype',
-					'error_message' => 'Host name for host prototype "Host prototype without macro in group prototype" must contain macros',
-				]
-			],
-			[
-				[
-					'name' => 'Host prototype with / in name',
-					'error' => 'Cannot add host prototype',
-					'error_message' => 'Incorrect characters used for host "Host prototype with / in name".',
-				]
-			],
-			[
-				[
-					'name' => '{#HOST} prototype with duplicated Group prototypes',
-					'clear_groups' => false,
-					'group_prototypes' => [
-						'Group prototype',
-						'Group prototype'
-					],
-					'error' => 'Cannot add host prototype',
-					'error_message' => 'Duplicate group prototype name "Group prototype" for host prototype "{#HOST} prototype with duplicated Group prototypes".',
-				]
-			]
-		];
-	}
-
-	/**
-	 * Test clone of a host prototype with fields validation.
-	 *
-	 * @dataProvider getCloneValidationData
-	 */
-	public function testFormHostPrototype_CloneValidation($data) {
-		$hostname = 'Host prototype {#1}';
-
-		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
-		$this->zbxTestClickLinkTextWait($hostname);
-		$this->zbxTestClick('clone');
-
-		$this->zbxTestInputTypeOverwrite('host', $data['name']);
-		$this->zbxTestTabSwitch('Groups');
-
-		if (!array_key_exists('clear_groups', $data) || $data['clear_groups'] === true ) {
-			$this->zbxTestMultiselectClear('group_links_');
-		}
-
-		if (array_key_exists('group_prototypes', $data)) {
-			foreach ($data['group_prototypes'] as $i => $group) {
-				$this->zbxTestInputClearAndTypeByXpath('//*[@name="group_prototypes['.$i.'][name]"]', $group);
-				$this->zbxTestClick('group_prototype_add');
-			}
-		}
-
-		$this->zbxTestClick('add');
-
-		// Check the results in frontend.
-		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
-		$this->zbxTestTextPresentInMessageDetails($data['error_message']);
-		$this->zbxTestCheckFatalErrors();
-
-		$this->assertEquals(0, DBcount('SELECT NULL FROM hosts WHERE flags=2 AND name='.zbx_dbstr($data['name'])));
-		$this->assertEquals(1, DBcount('SELECT NULL FROM hosts WHERE flags=2 AND name='.zbx_dbstr($hostname)));
-
-		$this->zbxTestClick('add');
 	}
 
 	public static function getCloneData() {
@@ -595,13 +588,10 @@ class testFormHostPrototype extends CWebTest {
 
 		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCRULEID);
 		$this->zbxTestClickLinkTextWait($hostname);
-		$this->zbxTestClick('clone');
-		$this->zbxTestInputTypeOverwrite('host', $data['name']);
+		$this->zbxTestClickWait('clone');
 
 		// Change name and visible name.
-		if (array_key_exists('name', $data)) {
-			$this->zbxTestInputTypeOverwrite('host', $data['name']);
-		}
+		$this->zbxTestInputTypeOverwrite('host', $data['name']);
 		if (array_key_exists('visible_name', $data)) {
 			$this->zbxTestInputType('name', $data['visible_name']);
 		}
@@ -612,7 +602,7 @@ class testFormHostPrototype extends CWebTest {
 		$this->zbxTestTabSwitch('Groups');
 		// Change host group.
 		if (array_key_exists('hostgroup', $data)) {
-			$this->zbxTestClickXpath('//span[@class="subfilter-disable-btn"]');
+			$this->zbxTestClickXpathWait('//span[@class="subfilter-disable-btn"]');
 			$this->zbxTestMultiselectClear('group_links_');
 			$this->zbxTestClickButtonMultiselect('group_links_');
 			$this->zbxTestLaunchOverlayDialog('Host groups');
@@ -635,7 +625,7 @@ class testFormHostPrototype extends CWebTest {
 		// Change inventory mode.
 		if (array_key_exists('inventory', $data)) {
 			$this->zbxTestTabSwitch('Host inventory');
-			$this->zbxTestClickXpath('//label[text()="'.$data['inventory'].'"]');
+			$this->zbxTestClickXpathWait('//label[text()="'.$data['inventory'].'"]');
 		}
 
 		$this->zbxTestClick('add');
@@ -645,8 +635,9 @@ class testFormHostPrototype extends CWebTest {
 
 		if (array_key_exists('visible_name', $data)) {
 			$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$data['visible_name'].'"]');
-			$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$data['visible_name'].'"]');
-		}else{
+			$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$hostname.'"]');
+		}
+		else {
 			$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$data['name'].'"]');
 			$this->zbxTestAssertElementPresentXpath('//a[contains(@href, "form") and text()="'.$hostname.'"]');
 		}
@@ -659,19 +650,19 @@ class testFormHostPrototype extends CWebTest {
 	}
 
 	private function checkFormFields($data) {
-		if (array_key_exists('name', $data) && !array_key_exists('visible_name', $data)) {
-			$this->zbxTestClickLinkTextWait($data['name']);
-			$this->zbxTestAssertElementValue('host', $data['name']);
-		}
-
 		if (array_key_exists('visible_name', $data)) {
 			$this->zbxTestClickLinkTextWait($data['visible_name']);
 			$this->zbxTestAssertElementValue('name', $data['visible_name']);
 		}
-		// Should be uncommented when ZBX-14618 is resolved
-		// if (array_key_exists('checkbox', $data)) {
-		// $this->assertEquals($data['checkbox'], $this->zbxTestCheckboxSelected('status'));
-		// }
+		else {
+			$this->zbxTestClickLinkTextWait($data['name']);
+			$this->zbxTestAssertElementValue('host', $data['name']);
+		}
+
+//		TODO: Should be uncommented when ZBX-14618 is resolved
+//		if (array_key_exists('checkbox', $data)) {
+//			$this->assertEquals($data['checkbox'], $this->zbxTestCheckboxSelected('status'));
+//		}
 
 		if (array_key_exists('hostgroup', $data)) {
 			$this->zbxTestTabSwitch('Groups');
@@ -689,7 +680,6 @@ class testFormHostPrototype extends CWebTest {
 		if (array_key_exists('inventory', $data)) {
 			$this->zbxTestTabSwitch('Host inventory');
 			$this->zbxTestAssertElementPresentXpath('//label[text()="'.$data['inventory'].'"]/../input[@checked]');
-
 		}
 	}
 
