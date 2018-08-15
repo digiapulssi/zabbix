@@ -193,6 +193,9 @@ typedef struct
 	/* The last vmware service access time. If a service is not accessed for a day it is removed */
 	int			lastaccess;
 
+	/* the maximum number of historical metrics that can be queried */
+	int			history_max_query_metrics;
+
 	/* the vmware service instance contents */
 	char			*contents;
 

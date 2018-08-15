@@ -1316,24 +1316,6 @@ static void	vmware_data_free(zbx_vmware_data_t *data)
 
 /******************************************************************************
  *                                                                            *
- * Function: vmware_perf_entity_free                                          *
- *                                                                            *
- * Purpose: frees vmware peformance entity and the resources allocated by it  *
- *                                                                            *
- * Parameters: entity - [IN] the entity to free                               *
- *                                                                            *
- ******************************************************************************/
-static void	vmware_perf_entity_free(zbx_vmware_perf_entity_t *entity)
-{
-	/* entities allocated on heap do not use counters vector */
-	zbx_free(entity->instance);
-	zbx_free(entity->type);
-	zbx_free(entity->id);
-	zbx_free(entity);
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: vmware_counter_free                                              *
  *                                                                            *
  * Purpose: frees vmware performance counter and the resources allocated by   *
@@ -3691,8 +3673,7 @@ static void	vmware_service_update_perf_entities(zbx_vmware_service_t *service)
 {
 	const char			*__function_name = "vmware_service_update_perf_entities";
 
-	int				now, i;
-	zbx_vmware_perf_entity_t	*entity;
+	int				i;
 	zbx_vmware_hv_t			*hv;
 	zbx_vmware_vm_t			*vm;
 	zbx_hashset_iter_t		iter;
@@ -3719,18 +3700,17 @@ static void	vmware_service_update_perf_entities(zbx_vmware_service_t *service)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	now = time(NULL);
-
 	/* update current performance entities */
 	zbx_hashset_iter_reset(&service->data->hvs, &iter);
 	while (NULL != (hv = zbx_hashset_iter_next(&iter)))
 	{
-		vmware_service_add_perf_entity(service, "HostSystem", hv->id, hv_perfcounters, "*", now);
+		vmware_service_add_perf_entity(service, "HostSystem", hv->id, hv_perfcounters, "*", service->lastcheck);
 
 		for (i = 0; i < hv->vms.values_num; i++)
 		{
 			vm = hv->vms.values[i];
-			vmware_service_add_perf_entity(service, "VirtualMachine", vm->id, vm_perfcounters, "*", now);
+			vmware_service_add_perf_entity(service, "VirtualMachine", vm->id, vm_perfcounters, "*",
+					service->lastcheck);
 			zabbix_log(LOG_LEVEL_TRACE, "%s() for type: VirtualMachine hv id: %s hv uuid: %s linked vm id:"
 					" %s vm uuid: %s", __function_name, hv->id, hv->uuid, vm->id, vm->uuid);
 		}
@@ -3741,21 +3721,11 @@ static void	vmware_service_update_perf_entities(zbx_vmware_service_t *service)
 		for (i = 0; i < hv->datastores.values_num; i++)
 		{
 			zbx_vmware_datastore_t	*ds = hv->datastores.values[i];
-			vmware_service_add_perf_entity(service, "Datastore", ds->id, ds_perfcounters, "", now);
+			vmware_service_add_perf_entity(service, "Datastore", ds->id, ds_perfcounters, "",
+					service->lastcheck);
 			zabbix_log(LOG_LEVEL_TRACE, "%s() for type: Datastore hv id: %s hv uuid: %s linked ds id:"
 					" %s ds name: %s ds uuid: %s", __function_name, hv->id, hv->uuid, ds->id,
 					ds->name, ds->uuid);
-		}
-	}
-
-	/* remove old entities */
-	zbx_hashset_iter_reset(&service->entities, &iter);
-	while (NULL != (entity = zbx_hashset_iter_next(&iter)))
-	{
-		if (0 != entity->last_seen && entity->last_seen < now)
-		{
-			vmware_shared_perf_entity_clean(entity);
-			zbx_hashset_iter_remove(&iter);
 		}
 	}
 
@@ -4067,6 +4037,174 @@ static void	vmware_service_copy_perf_data(zbx_vmware_service_t *service, zbx_vec
 
 /******************************************************************************
  *                                                                            *
+ * Function: vmware_service_retrieve_perf_counters                            *
+ *                                                                            *
+ * Purpose: retrieves performance counter values from vmware service          *
+ *                                                                            *
+ * Parameters: service      - [IN] the vmware service                         *
+ *             easyhandle   - [IN] prepared cURL connection handle            *
+ *             entities     - [IN] the performance collector entities to      *
+ *                                 retrieve counters for                      *
+ *             limit        - [IN/OUT] the maximum number of counters per     *
+ *                                 query. Optional, can be NULL.              *
+ *             perfdata     - [OUT] the performance counter values            *
+ *             error        - [OUT] the error message                         *
+ *                                                                            *
+ * Return value: SUCCEED - the performance counter values were retrieved      *
+ *               FAIL    - otherwise, error contains error message.           *
+ *                                                                            *
+ ******************************************************************************/
+static int	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service, CURL *easyhandle,
+		zbx_vector_ptr_t *entities, int *limit, zbx_vector_ptr_t *perfdata, char **error)
+{
+	const char	*__function_name = "vmware_service_retrieve_perf_counters";
+
+	char		*tmp = NULL;
+	size_t		tmp_alloc = 0, tmp_offset;
+	int		i, j, ret = FAIL, err, opt, start_counter = 0, counters_max;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	counters_max = (NULL != limit ? *limit : INT_MAX);
+
+	while (0 != entities->values_num)
+	{
+		int	counters_num = 0;
+
+		tmp_offset = 0;
+		zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, ZBX_POST_VSPHERE_HEADER);
+		zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:QueryPerf>");
+		zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:_this type=\"PerformanceManager\">%s</ns0:_this>",
+				vmware_service_objects[service->type].performance_manager);
+
+		zbx_vmware_lock();
+
+		for (i = entities->values_num - 1; 0 <= i && counters_num < counters_max;)
+		{
+			char				*id_esc;
+			zbx_vmware_perf_entity_t	*entity = (zbx_vmware_perf_entity_t *)entities->values[i];
+
+			id_esc = xml_escape_dyn(entity->id);
+
+			/* add entity performance counter request */
+			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:querySpec>"
+					"<ns0:entity type=\"%s\">%s</ns0:entity>", entity->type, id_esc);
+
+			zbx_free(id_esc);
+
+			if (ZBX_VMWARE_PERF_INTERVAL_NONE == entity->refresh)
+			{
+				time_t	st_raw;
+				struct	tm st;
+				char	st_str[ZBX_XML_DATETIME];
+
+				/* add startTime for entity performance counter request for decrease XML data load */
+				st_raw = zbx_time() - SEC_PER_HOUR;
+				st = *gmtime(&st_raw);
+				strftime(st_str, sizeof(st_str), "%Y-%m-%dT%XZ", &st);
+				zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:startTime>%s</ns0:startTime>",
+						st_str);
+			}
+
+			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:maxSample>1</ns0:maxSample>");
+
+			for (j = start_counter; j < entity->counters.values_num && counters_num < counters_max; j++)
+			{
+				zbx_vmware_perf_counter_t	*counter;
+
+				counter = (zbx_vmware_perf_counter_t *)entity->counters.values[j];
+
+				zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset,
+						"<ns0:metricId><ns0:counterId>" ZBX_FS_UI64
+						"</ns0:counterId><ns0:instance>%s</ns0:instance></ns0:metricId>",
+						counter->counterid, entity->instance);
+
+				counter->state |= ZBX_VMWARE_COUNTER_UPDATING;
+
+				counters_num++;
+			}
+
+			if (j == entity->counters.values_num)
+			{
+				start_counter = 0;
+				i--;
+			}
+			else
+				start_counter = j;
+
+
+			if (ZBX_VMWARE_PERF_INTERVAL_NONE != entity->refresh)
+			{
+				zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:intervalId>%d</ns0:intervalId>",
+					entity->refresh);
+			}
+
+			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "</ns0:querySpec>");
+		}
+
+		zbx_vmware_unlock();
+
+		zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, "</ns0:QueryPerf>");
+		zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, ZBX_POST_VSPHERE_FOOTER);
+
+		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP request: %s", __function_name, tmp);
+
+		if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
+		{
+			*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
+			goto out;
+		}
+
+		page.offset = 0;
+
+		if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
+		{
+			*error = zbx_strdup(*error, curl_easy_strerror(err));
+			goto out;
+		}
+
+		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
+
+		if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
+		{
+			if (NULL == limit || 1 == counters_max)
+				goto out;
+
+			/* try to catch                                                                     */
+			/*        This operation is restricted by the administrator - & apos;               */
+			/*        vpxd.stats.maxQueryMetrics & apos ;. Contact your system administrator.   */
+			/* error to reduce amount of queried metrics                                        */
+			if (NULL == strstr(*error, "vpxd.stats.maxQueryMetrics"))
+			{
+				goto out;
+			}
+
+			zbx_free(*error);
+			counters_max /= 2;
+			continue;
+		}
+
+		if (NULL != limit)
+			*limit = counters_max;
+
+		/* parse performance data into local memory */
+		vmware_service_parse_perf_data(perfdata, page.data);
+
+		while (entities->values_num > i + 1)
+			zbx_vector_ptr_remove_noorder(entities, entities->values_num - 1);
+	}
+
+	ret = SUCCEED;
+out:
+	zbx_free(tmp);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: vmware_service_update_perf                                       *
  *                                                                            *
  * Purpose: updates vmware statistics data                                    *
@@ -4080,16 +4218,18 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 	CURL				*easyhandle = NULL;
 	struct curl_slist		*headers = NULL;
-	int				err, opt, i, j, ret = FAIL;
-	char				*error = NULL, *tmp = NULL;
-	size_t				tmp_alloc = 0, tmp_offset = 0;
-	zbx_vector_ptr_t		entities;
-	zbx_vmware_perf_entity_t	*entity, *local_entity;
-	zbx_vmware_perf_counter_t	*counter;
+	int				err, opt, i, ret = FAIL;
+	char				*error = NULL;
+	zbx_vector_ptr_t		entities, hist_entities;
+	zbx_vmware_perf_entity_t	*entity;
 	zbx_hashset_iter_t		iter;
 	zbx_vector_ptr_t		perfdata;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() '%s'@'%s'", __function_name, service->username, service->url);
+
+	zbx_vector_ptr_create(&entities);
+	zbx_vector_ptr_create(&hist_entities);
+	zbx_vector_ptr_create(&perfdata);
 
 	if (NULL == (easyhandle = curl_easy_init()))
 	{
@@ -4111,24 +4251,27 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 	/* update performance counter refresh rate for entities */
 
-	/* create a local list of entities with zero refresh rate */
-	zbx_vector_ptr_create(&entities);
-
 	zbx_vmware_lock();
 
 	zbx_hashset_iter_reset(&service->entities, &iter);
 	while (NULL != (entity = zbx_hashset_iter_next(&iter)))
 	{
+		/* remove old entities */
+		if (0 != entity->last_seen && entity->last_seen < service->lastcheck)
+		{
+			vmware_shared_perf_entity_clean(entity);
+			zbx_hashset_iter_remove(&iter);
+			continue;
+		}
+
 		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN != entity->refresh)
 			continue;
 
-		local_entity = zbx_malloc(NULL, sizeof(zbx_vmware_perf_entity_t));
-		local_entity->type = zbx_strdup(NULL, entity->type);
-		local_entity->id = zbx_strdup(NULL, entity->id);
-		local_entity->refresh = ZBX_VMWARE_PERF_INTERVAL_UNKNOWN;
-		local_entity->instance = zbx_strdup(NULL, entity->instance);
-
-		zbx_vector_ptr_append(&entities, local_entity);
+		/* Entities are removed only during performance counter update and no two */
+		/* performance counter updates for one service can happen simultaneously. */
+		/* This means for refresh update we can safely use reference to entity    */
+		/* outside vmware lock.                                                   */
+		zbx_vector_ptr_append(&entities, entity);
 	}
 
 	zbx_vmware_unlock();
@@ -4136,38 +4279,24 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 	/* get refresh rates */
 	for (i = 0; i < entities.values_num; i++)
 	{
-		local_entity = entities.values[i];
+		entity = entities.values[i];
 
-		if (SUCCEED != vmware_service_get_perf_counter_refreshrate(service, easyhandle, local_entity->type,
-				local_entity->id, &local_entity->refresh, &error))
+		if (SUCCEED != vmware_service_get_perf_counter_refreshrate(service, easyhandle, entity->type,
+				entity->id, &entity->refresh, &error))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "cannot get refresh rate for %s \"%s\": %s", local_entity->type,
-					local_entity->id, error);
+			zabbix_log(LOG_LEVEL_WARNING, "cannot get refresh rate for %s \"%s\": %s", entity->type,
+					entity->id, error);
 			zbx_free(error);
 		}
 	}
 
-	/* update refresh rates and create performance query request */
-	zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, ZBX_POST_VSPHERE_HEADER);
-	zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:QueryPerf>");
-	zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:_this type=\"PerformanceManager\">%s</ns0:_this>",
-			vmware_service_objects[service->type].performance_manager);
+	zbx_vector_ptr_clear(&entities);
 
 	zbx_vmware_lock();
 
-	/* update entity refresh rate */
-	for (i = 0; i < entities.values_num; i++)
-	{
-		if (NULL != (entity = zbx_hashset_search(&service->entities, entities.values[i])))
-			entity->refresh = ((zbx_vmware_perf_entity_t *)entities.values[i])->refresh;
-	}
-
-	/* create performance collector request */
 	zbx_hashset_iter_reset(&service->entities, &iter);
 	while (NULL != (entity = zbx_hashset_iter_next(&iter)))
 	{
-		char	*id_esc;
-
 		if (ZBX_VMWARE_PERF_INTERVAL_UNKNOWN == entity->refresh)
 		{
 			zabbix_log(LOG_LEVEL_DEBUG, "skipping performance entity with zero refresh rate "
@@ -4175,85 +4304,29 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 			continue;
 		}
 
-		id_esc = xml_escape_dyn(entity->id);
-
-		/* add entity performance counter request */
-		zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:querySpec>"
-				"<ns0:entity type=\"%s\">%s</ns0:entity>", entity->type, id_esc);
-
-		zbx_free(id_esc);
-
 		if (ZBX_VMWARE_PERF_INTERVAL_NONE == entity->refresh)
-		{
-			time_t st_raw;
-			struct tm st;
-			char st_str[ZBX_XML_DATETIME];
-
-			/* add startTime for entity performance counter request for decrease XML data load */
-			st_raw = zbx_time() - SEC_PER_HOUR;
-			st = *gmtime(&st_raw);
-			strftime(st_str, sizeof(st_str), "%Y-%m-%dT%XZ", &st);
-			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:startTime>%s</ns0:startTime>",st_str);
-		}
-
-		zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:maxSample>1</ns0:maxSample>");
-
-		for (j = 0; j < entity->counters.values_num; j++)
-		{
-			counter = (zbx_vmware_perf_counter_t *)entity->counters.values[j];
-
-			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:metricId><ns0:counterId>" ZBX_FS_UI64
-					"</ns0:counterId><ns0:instance>%s</ns0:instance></ns0:metricId>",
-					counter->counterid, entity->instance);
-
-			counter->state |= ZBX_VMWARE_COUNTER_UPDATING;
-		}
-
-		if (ZBX_VMWARE_PERF_INTERVAL_NONE != entity->refresh)
-		{
-			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:intervalId>%d</ns0:intervalId>",
-				entity->refresh);
-		}
-
-		zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "</ns0:querySpec>");
+			zbx_vector_ptr_append(&hist_entities, entity);
+		else
+			zbx_vector_ptr_append(&entities, entity);
 	}
 
 	zbx_vmware_unlock();
 
-	zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, "</ns0:QueryPerf>");
-	zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, ZBX_POST_VSPHERE_FOOTER);
+	if (FAIL == vmware_service_retrieve_perf_counters(service, easyhandle, &entities, NULL, &perfdata, &error))
+		goto clean;
 
-	zbx_vector_ptr_clear_ext(&entities, (zbx_mem_free_func_t)vmware_perf_entity_free);
-	zbx_vector_ptr_destroy(&entities);
-
-	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP request: %s", __function_name, tmp);
-
-	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
+	if (FAIL == vmware_service_retrieve_perf_counters(service, easyhandle, &hist_entities,
+			&service->history_max_query_metrics, &perfdata, &error))
 	{
-		error = zbx_dsprintf(error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
 		goto clean;
 	}
 
-	page.offset = 0;
+	ret = SUCCEED;
 
-	if (CURLE_OK == (err = curl_easy_perform(easyhandle)))
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
-
-		/* parse performance data into local memory */
-		zbx_vector_ptr_create(&perfdata);
-		vmware_service_parse_perf_data(&perfdata, page.data);
-		ret = SUCCEED;
-	}
-	else
-		error = zbx_strdup(error, curl_easy_strerror(err));
 clean:
-	zbx_free(tmp);
-
 	curl_slist_free_all(headers);
 	curl_easy_cleanup(easyhandle);
 out:
-
 	zbx_vmware_lock();
 
 	if (FAIL == ret)
@@ -4274,13 +4347,11 @@ out:
 
 	zbx_vmware_unlock();
 
-	if (FAIL != ret)
-	{
-		/* free performance data in local memory */
-		zbx_vector_ptr_clear_ext(&perfdata, (zbx_mem_free_func_t)vmware_free_perfdata);
-		zbx_vector_ptr_destroy(&perfdata);
-	}
+	zbx_vector_ptr_clear_ext(&perfdata, (zbx_mem_free_func_t)vmware_free_perfdata);
+	zbx_vector_ptr_destroy(&perfdata);
 
+	zbx_vector_ptr_destroy(&hist_entities);
+	zbx_vector_ptr_destroy(&entities);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(): processed " ZBX_FS_SIZE_T " bytes of data", __function_name,
 			(zbx_fs_size_t)page.offset);
@@ -4381,6 +4452,7 @@ zbx_vmware_service_t	*zbx_vmware_get_service(const char* url, const char* userna
 	service->type = ZBX_VMWARE_TYPE_UNKNOWN;
 	service->state = ZBX_VMWARE_STATE_NEW;
 	service->lastaccess = now;
+	service->history_max_query_metrics = 256;
 	service->eventlog_last_key = ZBX_VMWARE_EVENT_KEY_UNINITIALIZED;
 
 	zbx_hashset_create_ext(&service->entities, 100, vmware_perf_entity_hash_func,  vmware_perf_entity_compare_func,
