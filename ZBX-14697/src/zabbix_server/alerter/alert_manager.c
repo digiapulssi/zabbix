@@ -1917,8 +1917,6 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 						manager.dbstatus = ZBX_DB_DOWN;
 					}
 				}
-
-
 			}
 
 			if (ZBX_DB_OK == manager.dbstatus)
