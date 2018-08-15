@@ -765,6 +765,6 @@ typedef struct
 }
 zbx_proxy_diff_t;
 
-void   zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids);
+void	zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids);
 
 #endif

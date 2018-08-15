@@ -2934,7 +2934,7 @@ out:
  *           row locks or shared table locks.                                 *
  *                                                                            *
  ******************************************************************************/
-void   zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids)
+void	zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids)
 {
 	char		*sql = NULL;
 	size_t		sql_alloc = 0, sql_offset = 0;
