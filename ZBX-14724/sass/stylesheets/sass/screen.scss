@@ -646,14 +646,19 @@ article {
 		& > span {
 			display: inline-block;
 			line-height: 1;
-			padding: 4px 7px;
+			padding: 3px 7px;
 
 			a {
 				display: inline-block;
 				max-width: 200px;
 				overflow: hidden;
+				padding: 1px 0;
 				text-overflow: ellipsis;
-				vertical-align: top;
+				vertical-align: text-bottom;
+
+				&:hover {
+					padding-bottom: 0;
+				}
 			}
 		}
 	}

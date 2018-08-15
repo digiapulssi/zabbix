@@ -468,13 +468,16 @@ article, main {
     .filter-breadcrumb > li:first-child > span {
       display: inline-block;
       line-height: 1;
-      padding: 4px 7px; }
+      padding: 3px 7px; }
       .filter-breadcrumb > li:first-child > span a {
         display: inline-block;
         max-width: 200px;
         overflow: hidden;
+        padding: 1px 0;
         text-overflow: ellipsis;
-        vertical-align: top; }
+        vertical-align: text-bottom; }
+        .filter-breadcrumb > li:first-child > span a:hover {
+          padding-bottom: 0; }
   .filter-breadcrumb + .filter-space {
     margin-top: -28px; }
 
