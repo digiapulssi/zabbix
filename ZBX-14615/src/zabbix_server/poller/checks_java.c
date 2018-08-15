@@ -96,16 +96,20 @@ static int	parse_response(AGENT_RESULT *results, int *errcodes, int num, char *r
 		else if (0 == strcmp(value, ZBX_PROTO_VALUE_FAILED))
 		{
 			if (SUCCEED == zbx_json_value_by_name(&jp, ZBX_PROTO_TAG_ERROR, error, max_error_len))
+			{
 				if (SUCCEED == zbx_json_value_by_name(&jp, ZBX_PROTO_TAG_NETWORK_STATUS, net_status,
 						net_status_alloc))
+				{
 					if (0 == strcmp(net_status, ZBX_PROTO_VALUE_NETWORK_ERROR))
 						ret = NETWORK_ERROR;
 					else if (0 == strcmp(net_status, ZBX_PROTO_VALUE_GATEWAY_ERROR))
 						ret = GATEWAY_ERROR;
 					else
 						ret = NOTSUPPORTED;
+				}
 				else
 					zbx_strlcpy(error, "Cannot get network status data", max_error_len);
+			}
 			else
 				zbx_strlcpy(error, "Cannot get error message describing reasons for failure",
 						max_error_len);
