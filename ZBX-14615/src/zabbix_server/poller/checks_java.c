@@ -108,7 +108,7 @@ static int	parse_response(AGENT_RESULT *results, int *errcodes, int num, char *r
 						ret = NOTSUPPORTED;
 				}
 				else
-					zbx_strlcpy(error, "Cannot get network status data", max_error_len);
+					ret = NOTSUPPORTED;
 			}
 			else
 				zbx_strlcpy(error, "Cannot get error message describing reasons for failure",
