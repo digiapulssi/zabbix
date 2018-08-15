@@ -1909,13 +1909,10 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 			}
 			else
 			{
-				if (0 != zbx_db_txn_level())
+				if (0 != zbx_db_txn_level() && ZBX_DB_OK > zbx_db_rollback())
 				{
-					if (ZBX_DB_OK > zbx_db_rollback())
-					{
-						DBclose();
-						manager.dbstatus = ZBX_DB_DOWN;
-					}
+					manager.dbstatus = ZBX_DB_DOWN;
+					DBclose();
 				}
 			}
 
