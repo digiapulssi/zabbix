@@ -99,10 +99,12 @@
 #define ZBX_PROTO_TAG_MAX		"max"
 #define ZBX_PROTO_TAG_SESSION		"session"
 #define ZBX_PROTO_TAG_ID		"id"
-#define ZBX_PROTO_TAG_NETWORK_RESULT	"network_error"
+#define ZBX_PROTO_TAG_NETWORK_STATUS	"network_status"
 
 #define ZBX_PROTO_VALUE_FAILED		"failed"
 #define ZBX_PROTO_VALUE_SUCCESS		"success"
+#define ZBX_PROTO_VALUE_NETWORK_ERROR	"network_error"
+#define ZBX_PROTO_VALUE_GATEWAY_ERROR	"gateway_error"
 
 #define ZBX_PROTO_VALUE_GET_ACTIVE_CHECKS	"active checks"
 #define ZBX_PROTO_VALUE_PROXY_CONFIG		"proxy config"

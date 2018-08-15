@@ -31,6 +31,13 @@ class SocketProcessor implements Runnable
 	private static final Logger logger = LoggerFactory.getLogger(SocketProcessor.class);
 
 	private Socket socket;
+	public static ThreadLocal<String> net_status = new ThreadLocal<String>()
+	{
+		@Override protected String initialValue()
+		{
+			return ItemChecker.JSON_RESPONSE_SUCCESS;
+		}
+	};
 
 	SocketProcessor(Socket socket)
 	{
@@ -64,7 +71,7 @@ class SocketProcessor implements Runnable
 			JSONObject response = new JSONObject();
 			response.put(ItemChecker.JSON_TAG_RESPONSE, ItemChecker.JSON_RESPONSE_SUCCESS);
 			response.put(ItemChecker.JSON_TAG_DATA, values);
-			response.put(ItemChecker.JSON_TAG_NETWORK_RESULT, ItemChecker.JSON_RESPONSE_SUCCESS);
+			response.put(ItemChecker.JSON_TAG_NETWORK_STATUS, SocketProcessor.net_status.get());
 
 			speaker.sendResponse(response.toString());
 		}
@@ -79,10 +86,7 @@ class SocketProcessor implements Runnable
 				JSONObject response = new JSONObject();
 				response.put(ItemChecker.JSON_TAG_RESPONSE, ItemChecker.JSON_RESPONSE_FAILED);
 				response.put(ItemChecker.JSON_TAG_ERROR, error);
-				response.put(ItemChecker.JSON_TAG_NETWORK_RESULT,
-					(checker.getClass() == JMXItemChecker.class && true == checker.network_error)
-						? ItemChecker.JSON_RESPONSE_FAILED
-						: ItemChecker.JSON_RESPONSE_SUCCESS);
+				response.put(ItemChecker.JSON_TAG_NETWORK_STATUS, SocketProcessor.net_status.get());
 
 				speaker.sendResponse(response.toString());
 			}

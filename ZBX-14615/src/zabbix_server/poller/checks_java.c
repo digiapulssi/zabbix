@@ -31,9 +31,9 @@ static int	parse_response(AGENT_RESULT *results, int *errcodes, int num, char *r
 	const char		*p;
 	struct zbx_json_parse	jp, jp_data, jp_row;
 	char			*value = NULL;
-	char			*net_result = NULL;
+	char			*net_status = NULL;
 	size_t			value_alloc = 0;
-	size_t			net_result_alloc = 0;
+	size_t			net_status_alloc = 0;
 	int			i, ret = GATEWAY_ERROR;
 
 	if (SUCCEED == zbx_json_open(response, &jp))
@@ -96,10 +96,12 @@ static int	parse_response(AGENT_RESULT *results, int *errcodes, int num, char *r
 		else if (0 == strcmp(value, ZBX_PROTO_VALUE_FAILED))
 		{
 			if (SUCCEED == zbx_json_value_by_name(&jp, ZBX_PROTO_TAG_ERROR, error, max_error_len))
-				if (SUCCEED == zbx_json_value_by_name(&jp, ZBX_PROTO_TAG_NETWORK_RESULT, net_result,
-						net_result_alloc))
-					if (0 == strcmp(net_result, ZBX_PROTO_VALUE_FAILED))
+				if (SUCCEED == zbx_json_value_by_name(&jp, ZBX_PROTO_TAG_NETWORK_STATUS, net_status,
+						net_status_alloc))
+					if (0 == strcmp(net_status, ZBX_PROTO_VALUE_NETWORK_ERROR))
 						ret = NETWORK_ERROR;
+					else if (0 == strcmp(net_status, ZBX_PROTO_VALUE_GATEWAY_ERROR))
+						ret = GATEWAY_ERROR;
 					else
 						ret = NOTSUPPORTED;
 				else

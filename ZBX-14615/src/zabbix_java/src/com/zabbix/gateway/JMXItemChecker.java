@@ -59,7 +59,7 @@ class JMXItemChecker extends ItemChecker
 		{
 			if (null == request.getString(JSON_TAG_JMX_ENDPOINT))
 			{
-				network_error = true;
+				SocketProcessor.net_status.set(ItemChecker.JSON_RESPONSE_GATEWAY_ERROR);
 				throw new IllegalArgumentException("JMX endpoint URL cannot be empty.");
 			}
 
@@ -72,7 +72,7 @@ class JMXItemChecker extends ItemChecker
 
 			if (null != username && null == password || null == username && null != password)
 			{
-				network_error = true;
+				SocketProcessor.net_status.set(ItemChecker.JSON_RESPONSE_GATEWAY_ERROR);
 				throw new IllegalArgumentException("Both JMX endpoint username and password should be either present or empty");
 			}
 		}
@@ -102,7 +102,7 @@ class JMXItemChecker extends ItemChecker
 
 			if (null == jmxc || null == mbsc)
 			{
-				network_error = true;
+				SocketProcessor.net_status.set(ItemChecker.JSON_RESPONSE_NETWORK_ERROR);
 				throw new ZabbixException("Cannot establish connection to JMX endpoint.");
 			}
 
