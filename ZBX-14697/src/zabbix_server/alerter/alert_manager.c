@@ -1907,13 +1907,10 @@ ZBX_THREAD_ENTRY(alert_manager_thread, args)
 				zabbix_log(LOG_LEVEL_ERR, "database is down: reconnecting in %d seconds",
 						ZBX_DB_WAIT_DOWN);
 			}
-			else
+			else if (0 != zbx_db_txn_level() && ZBX_DB_OK > zbx_db_rollback())
 			{
-				if (0 != zbx_db_txn_level() && ZBX_DB_OK > zbx_db_rollback())
-				{
-					manager.dbstatus = ZBX_DB_DOWN;
-					DBclose();
-				}
+				manager.dbstatus = ZBX_DB_DOWN;
+				DBclose();
 			}
 
 			if (ZBX_DB_OK == manager.dbstatus)
