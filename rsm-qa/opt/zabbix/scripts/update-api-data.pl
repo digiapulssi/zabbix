@@ -2078,7 +2078,7 @@ sub __get_rdds_str_itemids
 		$tld,
 		$probe,
 		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_ip'},
-		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_ip'},
+		$services{'rdds'}{+JSON_INTERFACE_RDDS80}{'key_ip'},
 		$services{'rdds'}{+JSON_INTERFACE_RDAP}{'key_ip'});
 }
 

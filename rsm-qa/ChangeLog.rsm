@@ -1,3 +1,10 @@
+Changes for rsm1.1.0rc26
+
+Bug fixes:
+....I..... [409] fixed data export switching falsePositiveChanges activated/deactivated (yurii)
+....I..... [407] fixed "targetIp" generation for RDDS80 subservice in SLA API measurment file (yurii)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc25
 
 Bug fixes:
