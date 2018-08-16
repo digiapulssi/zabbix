@@ -5,9 +5,11 @@ use warnings;
 use Config::Tiny;
 use File::Path qw(make_path remove_tree);
 use base 'Exporter';
+use Config '%Config';
 
 our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_server_id get_rsm_local_key
-		get_rsm_local_id rsm_targets_prepare rsm_targets_apply rsm_targets_delete get_db_tls_settings);
+		get_rsm_local_id rsm_targets_prepare rsm_targets_apply rsm_targets_delete get_db_tls_settings
+		sig_name);
 
 use constant RSM_SERVER_KEY_PREFIX => 'server_';
 use constant RSM_DEFAULT_CONFIG_FILE => '/opt/zabbix/scripts/rsm.conf';
@@ -255,6 +257,14 @@ sub get_db_tls_settings($)
 	}
 
 	return $db_tls_settings eq "" ? "mysql_ssl=0" : "mysql_ssl=1$db_tls_settings";
+}
+
+my @sig_names;
+@sig_names[split(' ', $Config{sig_num})] = split(' ', $Config{sig_name});
+
+sub sig_name
+{
+	return "SIG" . $sig_names[shift];
 }
 
 1;
