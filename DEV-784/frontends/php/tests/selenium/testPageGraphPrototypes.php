@@ -24,15 +24,16 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
  * @backup graphs
  */
 class testPageGraphPrototypes extends CWebTest {
-	/**
-	 * Item prototype id used in test.
-	 */
-	const DISCRULEID = 33800;
 
 	/**
-	 * Item prototype id used in test.
+	 * Discovery rule "testFormDiscoveryRule" id used in test.
 	 */
-	const ITEMPROTOID = 23804;
+	const DISCOVERY_RULE_ID = 33800;
+
+	/**
+	 * Item prototype "testFormItemReuse" id used in test belong to discovery rule "testFormDiscoveryRule".
+	 */
+	const ITEM_PROTOTYPE_ID = 23804;
 
 	/**
 	 * Get text of elements by xpath.
@@ -50,93 +51,114 @@ class testPageGraphPrototypes extends CWebTest {
 		return $result;
 	}
 
-	private function getDbColumn($sql) {
-		$result = [];
-		foreach (DBfetchArray(DBSelect($sql)) as $row) {
-			$result[] = reset($row);
-		}
-		return $result;
-	}
-
+	/**
+	 * Get all graph prototypes from Discovery rule "testFormDiscoveryRule"
+	 * with item prototype "testFormItemReuse".
+	 */
 	private $sql_graph_prototypes =
-		'SELECT name'.
+		'SELECT name, graphid, width, height, graphtype'.
 			' FROM graphs'.
 			' WHERE graphid IN ('.
 				'SELECT graphid'.
 				' FROM graphs_items'.
-				' WHERE itemid='.self::ITEMPROTOID.
+				' WHERE itemid='.self::ITEM_PROTOTYPE_ID.
 			')';
 
 	public function testPageGraphPrototypes_CheckLayout() {
-
-		$this->zbxTestLogin('graphs.php?parent_discoveryid='.self::DISCRULEID);
+		$this->zbxTestLogin('graphs.php?parent_discoveryid='.self::DISCOVERY_RULE_ID);
 		$this->zbxTestCheckTitle('Configuration of graph prototypes');
 		$this->zbxTestCheckHeader('Graph prototypes');
-		// Check "Create correlation" button.
+		// Check create button.
 		$this->zbxTestAssertElementText('//button[contains(@data-url, "form")]', 'Create graph prototype');
 
 		// Check table headers.
-		$this->assertEquals(['', 'Name', 'Width', 'Height', 'Graph type'],
-				$this->getTextOfElements("//thead/tr/th")
+		$this->assertEquals(['Name', 'Width', 'Height', 'Graph type'], $this->getTextOfElements("//thead/tr/th[not(@class)]")
 		);
 
-		// Check the correlation names in frontend
-		$graph_prototypes = $this->getDbColumn($this->sql_graph_prototypes);
-		$this->zbxTestTextPresent($graph_prototypes);
+		// Check graph prototype number in breadcrumb.
+		$graphs = DBdata($this->sql_graph_prototypes);
+		$i = count($graphs);
+		$get_number = $this->zbxTestGetText('//ul[contains(@class, "filter-breadcrumb")]//a[text()="Graph prototypes"]/..//sup');
+		$this->assertEquals($get_number, $i);
+
+		// Check graph prototype configuration parameters in table.
+		$types = ['Normal', 'Stacked', 'Pie', 'Exploded'];
+		foreach ($graphs as $graph) {
+			$graph = $graph[0];
+			// Check the graph names and get graph row in table.
+			$element = $this->webDriver->findElement(WebDriverBy::xpath('//table[@class="list-table"]/tbody'
+							.'//a[text()="'.$graph['name'].'"]/../..'));
+			// Check width value.
+			$this->assertEquals($graph['width'], $element->findElement(WebDriverBy::xpath('./td[3]'))->getText());
+			// Check height value.
+			$this->assertEquals($graph['height'], $element->findElement(WebDriverBy::xpath('./td[4]'))->getText());
+			// Check graph type value.
+			$this->assertEquals($types[$graph['graphtype']], $element->findElement(WebDriverBy::xpath('./td[5]'))->getText());
+		}
 
 		// Check table footer to make sure that results are found
-		$i = count($graph_prototypes);
+		$this->zbxTestAssertElementText("//span[@id='selected_count']", '0 selected');
 		$this->zbxTestAssertElementText("//div[@class='table-stats']", 'Displaying '.$i.' of '.$i.' found');
 		$this->zbxTestTextNotPresent('Displaying 0 of 0 found');
-		$this->zbxTestAssertElementText("//span[@id='selected_count']", '0 selected');
-	}
-
-	// Returns graph prototype ids
-	public static function getSimpleDeleteData() {
-		return DBdata(
-			'SELECT graphid'.
-				' FROM graphs_items'.
-				' WHERE itemid='.self::ITEMPROTOID.
-				' LIMIT 2'
-		);
 	}
 
 	/**
-	 * @dataProvider getSimpleDeleteData
+	 * Returns graph prototype ids.
 	 */
-	public function testPageGraphPrototypes_SimpleDelete($data) {
-		$graphid = $data['graphid'];
-
-		$this->zbxTestLogin('graphs.php?parent_discoveryid='.self::DISCRULEID);
-		$this->zbxTestCheckTitle('Configuration of graph prototypes');
-
-		$this->zbxTestCheckboxSelect('group_graphid_'.$graphid);
-		$this->zbxTestClickButton('graph.massdelete');
-
-		$this->zbxTestAcceptAlert();
-
-		$this->zbxTestCheckTitle('Configuration of graph prototypes');
-		$this->zbxTestCheckHeader('Graph prototypes');
-		$this->zbxTestTextPresent('Graph prototypes deleted');
-
-		$sql = 'SELECT NULL FROM graphs_items WHERE graphid='.$graphid;
-		$this->assertEquals(0, DBcount($sql));
+	public static function getDeleteData() {
+		return [
+			[
+				[
+					'graphs' => 2
+				]
+			],
+			[
+				[
+					'graphs' => 'all'
+				]
+			]
+		];
 	}
 
-	public function testPageGraphPrototypes_MassDelete() {
-		$this->zbxTestLogin('graphs.php?parent_discoveryid='.self::DISCRULEID);
+	/**
+	 * Delete certain count of graph prototypes or all.
+	 *
+	 * @dataProvider getDeleteData
+	 */
+	public function testPageGraphPrototypes_Delete($data) {
+		$this->zbxTestLogin('graphs.php?parent_discoveryid='.self::DISCOVERY_RULE_ID);
 		$this->zbxTestCheckTitle('Configuration of graph prototypes');
 
-		$this->zbxTestCheckboxSelect('all_graphs');
-		$this->zbxTestClickButton('graph.massdelete');
+		if ($data['graphs'] != 'all') {
+			// Get random N graph prototypes, where N is count.
+			$values = DBfetchArray(DBselect($this->sql_graph_prototypes));
+			shuffle($values);
+			$values = array_slice($values, 0, (int) $data['graphs']);
 
+			// Select obtained graph prototypes.
+			foreach ($values as $graph) {
+				$this->zbxTestCheckboxSelect('group_graphid_'.$graph['graphid']);
+				$graphids[] = $graph['graphid'];
+			}
+			$this->zbxTestAssertElementText("//span[@id='selected_count']", $data['graphs'].' selected');
+
+			$sql = 'SELECT NULL FROM graphs_items WHERE graphid IN ('.implode(',', $graphids).')';
+		}
+		else {
+			$this->zbxTestCheckboxSelect('all_graphs');
+			$sql = $this->sql_graph_prototypes;
+			$this->zbxTestAssertElementText("//span[@id='selected_count']", DBcount($sql).' selected');
+		}
+
+		$this->zbxTestClickButton('graph.massdelete');
 		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of graph prototypes');
 		$this->zbxTestCheckHeader('Graph prototypes');
-		$this->zbxTestTextPresent('Graph prototypes deleted');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Graph prototypes deleted');
+		$this->zbxTestCheckFatalErrors();
 
-		$this->assertEquals(0, DBcount($this->sql_graph_prototypes));
+		$this->assertEquals(0, DBcount($sql));
 	}
 
 	/**
