@@ -1,6 +1,7 @@
 Changes for rsm1.0.7rc5
 
 Bug fixes:
+....I..... [sub-330] added signal handling that from now on will cause Data Export script exit with error (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.0.7rc4

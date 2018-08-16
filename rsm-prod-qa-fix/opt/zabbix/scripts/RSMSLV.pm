@@ -94,7 +94,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_avail_valuemaps slv_stats_reset
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled get_test_start_time
 		uint_value_exists
-		get_real_services_period dbg info wrn fail
+		get_real_services_period dbg info wrn set_on_fail fail
 		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
 		write_file
@@ -2553,9 +2553,23 @@ sub wrn
 	__log('warning', join('', @_));
 }
 
+my $on_fail_cb;
+
+sub set_on_fail
+{
+	$on_fail_cb = shift;
+}
+
 sub fail
 {
 	__log('err', join('', @_));
+
+	if ($on_fail_cb)
+	{
+		__log('debug', "script failed, calling \"on fail\" callback...");
+		$on_fail_cb->();
+		__log('debug', "\"on fail\" callback finished");
+	}
 
 	slv_exit(E_FAIL);
 }
