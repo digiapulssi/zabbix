@@ -2943,34 +2943,21 @@ void	zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids)
 	DB_RESULT	result;
 	DB_ROW		row;
 
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select maintenanceid from maintenances where");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
+			maintenanceids->values_num);
 #if defined(HAVE_MYSQL)
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
-			"select maintenanceid from maintenances where");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
-			maintenanceids->values_num);
 	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid lock in share mode");
-
 #elif defined(HAVE_IBM_DB2)
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select maintenanceid from maintenances where");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
-			maintenanceids->values_num);
 	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid with rs use and keep share locks");
-
 #elif defined(HAVE_ORACLE)
-	DBexecute("lock table maintenances in share mode");
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select maintenanceid from maintenances where");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
-			maintenanceids->values_num);
 	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid");
-
+	DBexecute("lock table maintenances in share mode");
 #elif defined(HAVE_POSTGRESQL)
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid");
 	/* using table level locks instead of row level locks because the latter have reader preference, */
 	/* which could lead to theoretical situation when server blocks out frontend from maintenances   */
 	DBexecute("lock table maintenances in share mode");
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "select maintenanceid from maintenances where");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "maintenanceid", maintenanceids->values,
-			maintenanceids->values_num);
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid");
 #endif
 
 	result = DBselect("%s", sql);
@@ -2985,9 +2972,8 @@ void	zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids)
 			zbx_vector_uint64_remove(maintenanceids, i);
 		i++;
 	}
+	DBfree_result(result);
 
 	while (i != maintenanceids->values_num)
 		zbx_vector_uint64_remove_noorder(maintenanceids, i);
-
-	DBfree_result(result);
 }
