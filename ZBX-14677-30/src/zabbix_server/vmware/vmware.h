@@ -77,8 +77,11 @@ typedef struct
 	/* the performance counters to monitor */
 	zbx_vector_ptr_t	counters;
 
-	/* the performance counter instance name */
-	char			*instance;
+	/* the performance counter query instance name */
+	char			*query_instance;
+
+	/* error information */
+	char			*error;
 }
 zbx_vmware_perf_entity_t;
 
@@ -193,9 +196,6 @@ typedef struct
 	/* The last vmware service access time. If a service is not accessed for a day it is removed */
 	int			lastaccess;
 
-	/* the maximum number of historical metrics that can be queried */
-	int			history_max_query_metrics;
-
 	/* the vmware service instance contents */
 	char			*contents;
 
@@ -220,6 +220,7 @@ zbx_vmware_service_t;
 typedef struct
 {
 	zbx_vector_ptr_t	services;
+	zbx_hashset_t		strpool;
 }
 zbx_vmware_t;
 

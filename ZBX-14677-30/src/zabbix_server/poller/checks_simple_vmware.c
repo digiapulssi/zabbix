@@ -218,6 +218,12 @@ static int	vmware_service_get_counter_value_by_id(zbx_vmware_service_t *service,
 		goto out;
 	}
 
+	if (NULL != entity->error)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, entity->error));
+		goto out;
+	}
+
 	if (FAIL == (i = zbx_vector_ptr_bsearch(&entity->counters, &counterid, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC)))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Performance counter data was not found."));
