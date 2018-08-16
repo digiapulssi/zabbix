@@ -2950,14 +2950,11 @@ void	zbx_db_lock_maintenanceids(zbx_vector_uint64_t *maintenanceids)
 	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid lock in share mode");
 #elif defined(HAVE_IBM_DB2)
 	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid with rs use and keep share locks");
-#elif defined(HAVE_ORACLE)
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid");
-	DBexecute("lock table maintenances in share mode");
-#elif defined(HAVE_POSTGRESQL)
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid");
+#else
 	/* using table level locks instead of row level locks because the latter have reader preference, */
-	/* which could lead to theoretical situation when server blocks out frontend from maintenances   */
+	/* which could lead to theoretical situation when server blocks out frontend from maintenances in PostgreSQL */
 	DBexecute("lock table maintenances in share mode");
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, " order by maintenanceid");
 #endif
 
 	result = DBselect("%s", sql);
