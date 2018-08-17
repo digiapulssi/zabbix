@@ -564,9 +564,17 @@
 		$.each(fields, function(name, value) {
 			if (typeof value === 'object') {
 				$.each(value, function(index, val) {
-					$.each(val, function(key, v) {
-						res[name + '.' + key + '.' + index] = v;
-					});
+					if (typeof val === 'object') {
+						$.each(val, function(key, v) {
+							res[name + '.' + key + '.' + index] = v;
+						});
+					}
+					else {
+						if (typeof res[name] === 'undefined') {
+							res[name] = [];
+						}
+						res[name].push(val);
+					}
 				});
 			}
 			else {
