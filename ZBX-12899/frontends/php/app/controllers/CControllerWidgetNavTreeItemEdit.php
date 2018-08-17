@@ -54,7 +54,8 @@ class CControllerWidgetNavTreeItemEdit extends CController {
 		$form = (new CForm('post'))
 			->cleanItems()
 			->setId('widget_dialogue_form')
-			->setName('widget_dialogue_form');
+			->setName('widget_dialogue_form')
+			->addItem((new CInput('submit', 'submit'))->addStyle('display: none;'));
 
 		$formList = new CFormList();
 		$formList->addRow(_('Name'),

@@ -620,9 +620,15 @@ jQuery(function($) {
 														$('[name="navtree.name.' + id + '"]', $obj).val(resp['name']);
 														$('[name="navtree.sysmapid.' + id + '"]', $obj)
 															.val(resp['sysmapid']);
-														$('[data-id=' + id + '] > .tree-row > .content > .item-name',
-																$obj
-															)
+														var row = $('[data-id=' + id + ']', $obj);
+														if (+resp['sysmapid'] == 0) {
+															row.addClass('no-map');
+														}
+														else {
+															row.removeClass('no-map');
+														}
+
+														$('> .tree-row > .content > .item-name', row)
 															.empty()
 															.attr('title', resp['name'])
 															.append($('<span/>').text(resp['name']));
@@ -689,7 +695,8 @@ jQuery(function($) {
 										});
 
 										return false;
-									}
+									},
+									'isSubmit': true
 								},
 								{
 									'title': t('Cancel'),
