@@ -49,7 +49,7 @@ int	SYSTEM_CPU_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	SET_UI64_RESULT(result, (int)buf.online_lcpus);
+	SET_UI64_RESULT(result, (int)buf.online_cpus);
 
 	return SYSINFO_RET_OK;
 #else
