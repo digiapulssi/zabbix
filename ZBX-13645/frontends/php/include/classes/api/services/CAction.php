@@ -2008,6 +2008,10 @@ class CAction extends CApiService {
 			}
 			else {
 				foreach ($action['operations'] as $operation) {
+					if (array_key_exists('operationid', $operation)) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect input parameters.'));
+					}
+
 					$operationsToValidate[] = $operation;
 				}
 			}
