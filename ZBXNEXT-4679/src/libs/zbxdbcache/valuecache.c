@@ -62,10 +62,17 @@
 
 static zbx_mem_info_t	*vc_mem = NULL;
 
-static zbx_mutex_t	vc_lock = ZBX_MUTEX_NULL;
+static zbx_rwlock_t	vc_lock = ZBX_MUTEX_NULL;
 
-/* flag indicating that the cache was explicitly locked by this process */
-static int	vc_locked = 0;
+enum
+{
+	ZBX_VC_LOCK_NONE,
+	ZBX_VC_LOCK_READ,
+	ZBX_VC_LOCK_WRITE
+};
+
+/* current calue cache lock type */
+static int	vc_current_lock = ZBX_VC_LOCK_NONE;
 
 /* value cache enable/disable flags */
 #define ZBX_VC_DISABLED		0
@@ -216,20 +223,6 @@ typedef struct
 }
 zbx_vc_cache_t;
 
-/* the item weight data, used to determine if item can be removed from cache */
-typedef struct
-{
-	/* a pointer to the value cache item */
-	zbx_vc_item_t	*item;
-
-	/* the item 'weight' - <number of hits> / <number of cache records> */
-	double		weight;
-}
-zbx_vc_item_weight_t;
-
-ZBX_VECTOR_DECL(vc_itemweight, zbx_vc_item_weight_t);
-ZBX_VECTOR_IMPL(vc_itemweight, zbx_vc_item_weight_t);
-
 /* the value cache */
 static zbx_vc_cache_t	*vc_cache = NULL;
 
@@ -244,30 +237,80 @@ static void	vch_item_clean_cache(zbx_vc_item_t *item);
 
 /******************************************************************************
  *                                                                            *
- * Function: vc_try_lock                                                      *
+ * Function: vc_lock_for_write                                                *
  *                                                                            *
- * Purpose: locks the cache unless it was explicitly locked externally with   *
- *          zbx_vc_lock() call.                                               *
+ * Purpose: locks the cache for write operations                              *
  *                                                                            *
  ******************************************************************************/
-static void	vc_try_lock(void)
+static void	vc_lock_for_write(void)
 {
-	if (ZBX_VC_ENABLED == vc_state && 0 == vc_locked)
-		zbx_mutex_lock(vc_lock);
+	if (ZBX_VC_ENABLED == vc_state)
+	{
+		zbx_rwlock_wrlock(vc_lock);
+		vc_current_lock = ZBX_VC_LOCK_WRITE;
+	}
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: vc_try_unlock                                                    *
+ * Function: vc_lock_for_read                                                 *
  *                                                                            *
- * Purpose: unlocks the cache locked by vc_try_lock() function unless it was  *
- *          explicitly locked externally with zbx_vc_lock() call.             *
+ * Purpose: locks the cache for read operations                               *
  *                                                                            *
  ******************************************************************************/
-static void	vc_try_unlock(void)
+static void	vc_lock_for_read(void)
 {
-	if (ZBX_VC_ENABLED == vc_state && 0 == vc_locked)
-		zbx_mutex_unlock(vc_lock);
+	if (ZBX_VC_ENABLED == vc_state)
+	{
+		zbx_rwlock_rdlock(vc_lock);
+		vc_current_lock = ZBX_VC_LOCK_READ;
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: vc_unlock                                                        *
+ *                                                                            *
+ * Purpose: unlocks the cache locked by vc_lock_() functions                  *
+ *                                                                            *
+ ******************************************************************************/
+static void	vc_unlock(void)
+{
+	if (ZBX_VC_ENABLED == vc_state)
+	{
+		vc_current_lock = ZBX_VC_LOCK_NONE;
+		zbx_rwlock_unlock(vc_lock);
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: vc_lock_upgrade_for_write                                        *
+ *                                                                            *
+ * Purpose: Upgrades existing lock to write lock if cache was locked for read.*
+ *                                                                            *
+ * Comments: As this function performs unlock/lock there is possibility that  *
+ *           other process have changed cache contents. This means while the  *
+ *           current item cannot be removed because of reference counting,    *
+ *           its contents might have been changed.                            *
+ *                                                                            *
+ ******************************************************************************/
+static void	vc_lock_upgrade_for_write()
+{
+	if (ZBX_VC_ENABLED == vc_state)
+	{
+		switch (vc_current_lock)
+		{
+			case ZBX_VC_LOCK_NONE:
+				THIS_SHOULD_NEVER_HAPPEN;
+				exit(EXIT_FAILURE);
+			case ZBX_VC_LOCK_WRITE:
+				return;
+		}
+
+		vc_unlock();
+		vc_lock_for_write();
+	}
 }
 
 /*********************************************************************************
@@ -540,17 +583,17 @@ static int	vc_strpool_compare_func(const void *d1, const void *d2)
 
 /******************************************************************************
  *                                                                            *
- * Function: vc_item_weight_compare_func                                      *
+ * Function: vc_item_compare_by_values_num_func                               *
  *                                                                            *
- * Purpose: compares two item weight data structures by their 'weight'        *
- *                                                                            *
- * Parameters: d1   - [IN] the first item weight data structure               *
- *             d2   - [IN] the second item weight data structure              *
+ * Purpose: compares two items by the number of cached values                 *
  *                                                                            *
  ******************************************************************************/
-static int	vc_item_weight_compare_func(const zbx_vc_item_weight_t *d1, const zbx_vc_item_weight_t *d2)
+static int	vc_item_compare_by_values_num_func(const void *d1, const void *d2)
 {
-	ZBX_RETURN_IF_NOT_EQUAL(d1->weight, d2->weight);
+	zbx_vc_item_t	*i1 = *(zbx_vc_item_t **)d1;
+	zbx_vc_item_t	*i2 = *(zbx_vc_item_t **)d2;
+
+	ZBX_RETURN_IF_NOT_EQUAL(i2->values_total, i1->values_total);
 
 	return 0;
 }
@@ -708,11 +751,11 @@ static void	vc_warn_low_memory(void)
  ******************************************************************************/
 static void	vc_release_space(zbx_vc_item_t *source_item, size_t space)
 {
-	zbx_hashset_iter_t		iter;
-	zbx_vc_item_t			*item;
-	int				timestamp, i;
-	size_t				freed = 0;
-	zbx_vector_vc_itemweight_t	items;
+	zbx_hashset_iter_t	iter;
+	zbx_vc_item_t		*item;
+	int			timestamp, i;
+	size_t			freed = 0;
+	zbx_vector_ptr_t	items;
 
 	timestamp = time(NULL) - ZBX_VC_ITEM_EXPIRE_PERIOD;
 
@@ -742,7 +785,7 @@ static void	vc_release_space(zbx_vc_item_t *source_item, size_t space)
 	vc_warn_low_memory();
 
 	/* remove items with least hits/size ratio */
-	zbx_vector_vc_itemweight_create(&items);
+	zbx_vector_ptr_create(&items);
 
 	zbx_hashset_iter_reset(&vc_cache->items, &iter);
 
@@ -751,26 +794,20 @@ static void	vc_release_space(zbx_vc_item_t *source_item, size_t space)
 		/* don't remove the item that requested the space and also keep */
 		/* items currently being accessed                               */
 		if (0 == item->refcount)
-		{
-			zbx_vc_item_weight_t	weight = {.item = item};
-
-			if (0 < item->values_total)
-				weight.weight = (double)item->hits / item->values_total;
-
-			zbx_vector_vc_itemweight_append_ptr(&items, &weight);
-		}
+			zbx_vector_ptr_append(&items, item);
 	}
 
-	zbx_vector_vc_itemweight_sort(&items, (zbx_compare_func_t)vc_item_weight_compare_func);
+	/* sort items by number of cached values in descending order */
+	zbx_vector_ptr_sort(&items, (zbx_compare_func_t)vc_item_compare_by_values_num_func);
 
 	for (i = 0; i < items.values_num && freed < space; i++)
 	{
-		item = items.values[i].item;
+		item = (zbx_vc_item_t *)items.values[i];
 
 		freed += vch_item_free_cache(item) + sizeof(zbx_vc_item_t);
 		zbx_hashset_remove_direct(&vc_cache->items, item);
 	}
-	zbx_vector_vc_itemweight_destroy(&items);
+	zbx_vector_ptr_destroy(&items);
 }
 
 /******************************************************************************
@@ -1137,7 +1174,10 @@ static void	vc_item_release(zbx_vc_item_t *item)
 static void	vc_item_update_db_cached_from(zbx_vc_item_t *item, int timestamp)
 {
 	if (0 == item->db_cached_from || timestamp < item->db_cached_from)
+	{
+		vc_lock_upgrade_for_write();
 		item->db_cached_from = timestamp;
+	}
 }
 
 /******************************************************************************************************************
@@ -1200,7 +1240,10 @@ static void	vch_item_update_range(zbx_vc_item_t *item, int range, int now)
 		range = VC_MIN_RANGE;
 
 	if (item->daily_range < range)
+	{
+		vc_lock_upgrade_for_write();
 		item->daily_range = range;
+	}
 
 	hour = (now / SEC_PER_HOUR) & 0xff;
 
@@ -1209,6 +1252,7 @@ static void	vch_item_update_range(zbx_vc_item_t *item, int range, int now)
 
 	if (item->active_range < item->daily_range || ZBX_VC_RANGE_SYNC_PERIOD < diff)
 	{
+		vc_lock_upgrade_for_write();
 		item->active_range = item->daily_range;
 		item->daily_range = range;
 		item->range_sync_hour = hour;
@@ -1907,7 +1951,7 @@ static int	vch_item_cache_values_by_time(zbx_vc_item_t *item, int range_start)
 
 		zbx_vector_history_record_create(&records);
 
-		vc_try_unlock();
+		vc_unlock();
 
 		if (SUCCEED == (ret = vc_db_read_values_by_time(item->itemid, item->value_type, &records,
 				range_start, range_end)))
@@ -1916,7 +1960,7 @@ static int	vch_item_cache_values_by_time(zbx_vc_item_t *item, int range_start)
 					(zbx_compare_func_t)zbx_history_record_compare_asc_func);
 		}
 
-		vc_try_lock();
+		vc_lock_for_write();
 
 		if (SUCCEED == ret)
 		{
@@ -1997,7 +2041,7 @@ static int	vch_item_cache_values_by_time_and_count(zbx_vc_item_t *item, int rang
 		else
 			range_end = time(NULL);
 
-		vc_try_unlock();
+		vc_unlock();
 
 		zbx_vector_history_record_create(&records);
 
@@ -2016,7 +2060,7 @@ static int	vch_item_cache_values_by_time_and_count(zbx_vc_item_t *item, int rang
 					(zbx_compare_func_t)zbx_history_record_compare_asc_func);
 		}
 
-		vc_try_lock();
+		vc_lock_for_write();
 
 		if (SUCCEED == ret)
 		{
@@ -2158,6 +2202,7 @@ out:
 		if (0 == seconds)
 		{
 			/* not enough data in db to fulfill a count based request request */
+			vc_lock_upgrade_for_write();
 			item->active_range = 0;
 			item->daily_range = 0;
 			item->status = ZBX_ITEM_STATUS_CACHED_ALL;
@@ -2245,7 +2290,9 @@ static int	vch_item_get_values(zbx_vc_item_t *item, zbx_vector_history_record_t 
 	hits = values->values_num - records_read;
 	misses = records_read;
 
+	/* TODO: decide what to do with item statistics
 	vc_update_statistics(item, hits, misses);
+	*/
 
 	ret = SUCCEED;
 out:
@@ -2307,7 +2354,7 @@ int	zbx_vc_init(char **error)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (SUCCEED != zbx_mutex_create(&vc_lock, ZBX_MUTEX_VALUECACHE, error))
+	if (SUCCEED != zbx_rwlock_create(&vc_lock, ZBX_RWLOCK_VALUECACHE, error))
 		goto out;
 
 	size_reserved = zbx_mem_required_size(1, "value cache size", "ValueCacheSize");
@@ -2375,7 +2422,7 @@ void	zbx_vc_destroy(void)
 
 	if (NULL != vc_cache)
 	{
-		zbx_mutex_destroy(&vc_lock);
+		zbx_rwlock_destroy(&vc_lock);
 
 		zbx_hashset_destroy(&vc_cache->items);
 		zbx_hashset_destroy(&vc_cache->strpool);
@@ -2408,7 +2455,7 @@ void	zbx_vc_reset(void)
 		zbx_vc_item_t		*item;
 		zbx_hashset_iter_t	iter;
 
-		vc_try_lock();
+		vc_lock_for_write();
 
 		zbx_hashset_iter_reset(&vc_cache->items, &iter);
 		while (NULL != (item = (zbx_vc_item_t *)zbx_hashset_iter_next(&iter)))
@@ -2424,7 +2471,7 @@ void	zbx_vc_reset(void)
 		vc_cache->mode_time = 0;
 		vc_cache->last_warning_time = 0;
 
-		vc_try_unlock();
+		vc_unlock();
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -2457,7 +2504,7 @@ int	zbx_vc_add_values(zbx_vector_ptr_t *history)
 
 	expire_timestamp = time(NULL) - ZBX_VC_ITEM_EXPIRE_PERIOD;
 
-	vc_try_lock();
+	vc_lock_for_write();
 
 	for (i = 0; i < history->values_num; i++)
 	{
@@ -2489,7 +2536,7 @@ int	zbx_vc_add_values(zbx_vector_ptr_t *history)
 		}
 	}
 
-	vc_try_unlock();
+	vc_unlock();
 
 	return SUCCEED;
 }
@@ -2529,7 +2576,7 @@ int	zbx_vc_get_values(zbx_uint64_t itemid, int value_type, zbx_vector_history_re
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() itemid:" ZBX_FS_UI64 " value_type:%d seconds:%d count:%d sec:%d ns:%d",
 			__function_name, itemid, value_type, seconds, count, ts->sec, ts->ns);
 
-	vc_try_lock();
+	vc_lock_for_read();
 
 	if (ZBX_VC_DISABLED == vc_state)
 		goto out;
@@ -2539,12 +2586,20 @@ int	zbx_vc_get_values(zbx_uint64_t itemid, int value_type, zbx_vector_history_re
 
 	if (NULL == (item = (zbx_vc_item_t *)zbx_hashset_search(&vc_cache->items, &itemid)))
 	{
-		if (ZBX_VC_MODE_NORMAL == vc_cache->mode)
+		if (ZBX_VC_MODE_NORMAL != vc_cache->mode)
 		{
 			zbx_vc_item_t   new_item = {.itemid = itemid, .value_type = value_type};
 
-			if (NULL == (item = (zbx_vc_item_t *)zbx_hashset_insert(&vc_cache->items, &new_item, sizeof(zbx_vc_item_t))))
-				goto out;
+			vc_lock_upgrade_for_write();
+
+			if (NULL == (item = (zbx_vc_item_t *)zbx_hashset_search(&vc_cache->items, &itemid)))
+			{
+				if (NULL == (item = (zbx_vc_item_t *)zbx_hashset_insert(&vc_cache->items, &new_item,
+						sizeof(zbx_vc_item_t))))
+				{
+					goto out;
+				}
+			}
 		}
 		else
 			goto out;
@@ -2564,20 +2619,22 @@ out:
 
 		cache_used = 0;
 
-		vc_try_unlock();
+		vc_unlock();
 
 		ret = vc_db_get_values(itemid, value_type, values, seconds, count, ts);
 
-		vc_try_lock();
+		vc_lock_for_write();
 
+		/* TODO: decide what to do with statistics that cannot be updated within read lock
 		if (SUCCEED == ret)
 			vc_update_statistics(NULL, 0, values->values_num);
+		*/
 	}
 
 	if (NULL != item)
 		vc_item_release(item);
 
-	vc_try_unlock();
+	vc_unlock();
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s count:%d cached:%d",
 			__function_name, zbx_result_string(ret), values->values_num, cache_used);
@@ -2645,7 +2702,7 @@ int	zbx_vc_get_statistics(zbx_vc_stats_t *stats)
 	if (ZBX_VC_DISABLED == vc_state)
 		return FAIL;
 
-	vc_try_lock();
+	vc_lock_for_read();
 
 	stats->hits = vc_cache->hits;
 	stats->misses = vc_cache->misses;
@@ -2654,42 +2711,9 @@ int	zbx_vc_get_statistics(zbx_vc_stats_t *stats)
 	stats->total_size = vc_mem->total_size;
 	stats->free_size = vc_mem->free_size;
 
-	vc_try_unlock();
+	vc_unlock();
 
 	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_vc_lock                                                      *
- *                                                                            *
- * Purpose: locks the cache for batch usage                                   *
- *                                                                            *
- * Comments: Use zbx_vc_lock()/zbx_vc_unlock to explicitly lock/unlock cache  *
- *           for batch usage. The cache is automatically locked during every  *
- *           API call using the cache unless it was explicitly locked with    *
- *           zbx_vc_lock() function by the same process.                      *
- *                                                                            *
- ******************************************************************************/
-void	zbx_vc_lock(void)
-{
-	zbx_mutex_lock(vc_lock);
-	vc_locked = 1;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_vc_unlock                                                    *
- *                                                                            *
- * Purpose: unlocks cache after it has been locked with zbx_vc_lock()         *
- *                                                                            *
- * Comments: See zbx_vc_lock() function.                                      *
- *                                                                            *
- ******************************************************************************/
-void	zbx_vc_unlock(void)
-{
-	vc_locked = 0;
-	zbx_mutex_unlock(vc_lock);
 }
 
 /******************************************************************************
