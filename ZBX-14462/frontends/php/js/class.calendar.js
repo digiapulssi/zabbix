@@ -366,7 +366,7 @@ calendar.prototype = {
 			date = datetime[0].split('-'),
 			time = (datetime.length > 1) ? datetime[1].split(':') : new Array();
 
-		// By defualt open calendar with current time.
+		// Open calendar with current time by default.
 		this.sdt = new CDate();
 
 		if (date.length === 3 && this.setSDateDMY(date[2], date[1], date[0])) {
@@ -704,7 +704,7 @@ calendar.prototype = {
 		addListener(this.clndr_yeardown, 'click', this.yeardown.bindAsEventListener(this));
 		addListener(this.clndr_yearup, 'click', this.yearup.bindAsEventListener(this));
 
-		// Active section setter
+		// Active section setter.
 		var cal_obj = this;
 		jQuery(this.sections).each(function(index, item) {
 			jQuery(item, cal_obj.clndr_calendar)
