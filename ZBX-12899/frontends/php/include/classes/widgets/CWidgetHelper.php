@@ -371,7 +371,7 @@ class CWidgetHelper {
 	/**
 	 * @param CWidgetFieldNavTree $field
 	 *
-	 * @return CTable
+	 * @return array
 	 */
 	public static function getNavTree($field) {
 		$navtree = [];

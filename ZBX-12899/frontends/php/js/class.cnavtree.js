@@ -710,7 +710,7 @@ jQuery(function($) {
 			 * @param {object}  item
 			 * @param {numeric} depth
 			 * @param {bool}    editable     Eeither item in edit-mode will be editable. Root item is not editable.
-			 * @param {booln}   isEditMode   Indicates either dashboard is in edit mode.
+			 * @param {bool}   isEditMode   Indicates either dashboard is in edit mode.
 			 *
 			 * @returns {object}
 			 */
