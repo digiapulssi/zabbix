@@ -76,6 +76,7 @@ calendar.prototype = {
 	clndr_yeardown: null,		// html bttn obj
 	timeobject: null,			// Input field with selected time. Source and destination of selected date.
 	is_visible: false,			// State of calendar visibility.
+	has_user_time: false,		// Confirms, if time was selected from input field.
 	hl_month: null,				// highlighted month number
 	hl_year: null,				// highlighted year number
 	hl_day: null,				// highlighted days number
@@ -368,22 +369,22 @@ calendar.prototype = {
 
 		// Open calendar with current time by default.
 		this.sdt = new CDate();
+		this.has_user_time = false;
 
 		if (date.length === 3 && this.setSDateDMY(date[2], date[1], date[0])) {
+			this.sdt.setTimeObject(null, null, null, 0, 0, 0);
+
 			// Set time to calendar, so time doesn't change when selecting different date.
-			if (time.length === 2 || time.length === 3) {
-				if (time[0] > -1 && time[0] < 24) {
-					this.sdt.setHours(time[0]);
-				}
+			if ((time.length === 2 || time.length === 3)
+					&& time[0] > -1 && time[0] < 24
+					&& time[1] > -1 && time[1] < 60) {
+				this.has_user_time = true;
+				this.sdt.setHours(time[0]);
+				this.sdt.setMinutes(time[1]);
 
-				if (time[1] > -1 && time[1] < 60) {
-					this.sdt.setMinutes(time[1]);
-				}
-
-				if (time.length === 3) {
-					if (time[2] > -1 && time[2] < 60) {
-						this.sdt.setSeconds(time[2]);
-					}
+				if (time.length === 3
+						&& time[2] > -1 && time[2] < 60) {
+					this.sdt.setSeconds(time[2]);
 				}
 			}
 		}
@@ -486,7 +487,28 @@ calendar.prototype = {
 	},
 
 	syncSDT: function() {
-		this.sdt.setTimeObject(this.year, this.month, this.day);
+		var hours = 0,
+			minutes = 0,
+			seconds = 0;
+
+		if (this.has_user_time) {
+			// If time was present in input field, use it.
+			hours = this.sdt.getHours();
+			minutes = this.sdt.getMinutes();
+			seconds = this.sdt.getSeconds();
+		}
+		else {
+			var cdt = new CDate();
+
+			// If today was selected, use currnet time. Othervise use 00:00:00.
+			if (cdt.getFullYear() === this.year && cdt.getMonth() === this.month && cdt.getDate() === this.day) {
+				hours = cdt.getHours();
+				minutes = cdt.getMinutes();
+				seconds = cdt.getSeconds();
+			}
+		}
+
+		this.sdt.setTimeObject(this.year, this.month, this.day, hours, minutes, seconds);
 	},
 
 	setCDate: function() {
