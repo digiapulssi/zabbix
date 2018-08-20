@@ -4389,9 +4389,8 @@ out:
 	{
 		zbx_hashset_iter_reset(&service->entities, &iter);
 		while (NULL != (entity = zbx_hashset_iter_next(&iter)))
-		{
 			entity->error = vmware_shared_strdup(error);
-		}
+
 		zbx_free(error);
 	}
 	else
