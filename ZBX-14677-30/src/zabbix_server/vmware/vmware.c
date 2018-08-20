@@ -4380,7 +4380,6 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 			&perfdata);
 
 	ret = SUCCEED;
-
 clean:
 	curl_slist_free_all(headers);
 	curl_easy_cleanup(easyhandle);
