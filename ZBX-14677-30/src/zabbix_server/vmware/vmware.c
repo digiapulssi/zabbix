@@ -4139,8 +4139,8 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 
 		tmp_offset = 0;
 		zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, ZBX_POST_VSPHERE_HEADER);
-		zbx_strcpy_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:QueryPerf>");
-		zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:_this type=\"PerformanceManager\">%s</ns0:_this>",
+		zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:QueryPerf>"
+				"<ns0:_this type=\"PerformanceManager\">%s</ns0:_this>",
 				vmware_service_objects[service->type].performance_manager);
 
 		zbx_vmware_lock();
