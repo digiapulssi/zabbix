@@ -4033,7 +4033,7 @@ out:
 static void	vmware_perf_data_add_error(zbx_vector_ptr_t *perfdata, const char *type, const char *id,
 		const char *error)
 {
-	zbx_vmware_perf_data_t 	*data;
+	zbx_vmware_perf_data_t	*data;
 
 	data = zbx_malloc(NULL, sizeof(zbx_vmware_perf_data_t));
 
@@ -4121,7 +4121,7 @@ static void	vmware_service_copy_perf_data(zbx_vmware_service_t *service, zbx_vec
 static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service, CURL *easyhandle,
 		zbx_vector_ptr_t *entities, int counters_max, zbx_vector_ptr_t *perfdata)
 {
-	const char	*__function_name = "vmware_service_retrieve_perf_counters";
+	const char			*__function_name = "vmware_service_retrieve_perf_counters";
 
 	char				*tmp = NULL, *error = NULL;
 	size_t				tmp_alloc = 0, tmp_offset;
@@ -4223,7 +4223,8 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 				entity = (zbx_vmware_perf_entity_t *)entities->values[j];
 				vmware_perf_data_add_error(perfdata, entity->type, entity->id, curl_easy_strerror(err));
 			}
-			goto out;
+
+			break;
 		}
 
 		page.offset = 0;
@@ -4236,7 +4237,7 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 				vmware_perf_data_add_error(perfdata, entity->type, entity->id, curl_easy_strerror(err));
 			}
 
-			goto out;
+			break;
 		}
 
 		zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
@@ -4248,8 +4249,9 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 				entity = (zbx_vmware_perf_entity_t *)entities->values[j];
 				vmware_perf_data_add_error(perfdata, entity->type, entity->id, error);
 			}
+
 			zbx_free(error);
-			goto out;
+			break;
 		}
 
 		/* parse performance data into local memory */
@@ -4258,7 +4260,7 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 		while (entities->values_num > i + 1)
 			zbx_vector_ptr_remove_noorder(entities, entities->values_num - 1);
 	}
-out:
+
 	zbx_free(tmp);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
