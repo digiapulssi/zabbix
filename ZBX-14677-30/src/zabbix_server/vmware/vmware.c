@@ -1135,7 +1135,7 @@ static zbx_vmware_data_t	*vmware_data_shared_dup(zbx_vmware_data_t *src)
 	zbx_hashset_create_ext(&data->vms_index, 100, vmware_vm_hash, vmware_vm_compare, NULL, __vm_mem_malloc_func,
 			__vm_mem_realloc_func, __vm_mem_free_func);
 
-	data->error =  vmware_shared_strdup(src->error);
+	data->error = vmware_shared_strdup(src->error);
 
 	for (i = 0; i < src->clusters.values_num; i++)
 		zbx_vector_ptr_append(&data->clusters, vmware_cluster_shared_dup(src->clusters.values[i]));
