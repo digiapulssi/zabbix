@@ -382,8 +382,7 @@ calendar.prototype = {
 				this.sdt.setHours(time[0]);
 				this.sdt.setMinutes(time[1]);
 
-				if (time.length === 3
-						&& time[2] > -1 && time[2] < 60) {
+				if (time.length === 3 && time[2] > -1 && time[2] < 60) {
 					this.sdt.setSeconds(time[2]);
 				}
 			}
@@ -500,7 +499,7 @@ calendar.prototype = {
 		else {
 			var cdt = new CDate();
 
-			// If today was selected, use currnet time. Othervise use 00:00:00.
+			// If today was selected, use current time. Otherwise use 00:00:00.
 			if (cdt.getFullYear() === this.year && cdt.getMonth() === this.month && cdt.getDate() === this.day) {
 				hours = cdt.getHours();
 				minutes = cdt.getMinutes();
