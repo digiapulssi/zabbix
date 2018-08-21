@@ -36,22 +36,6 @@ class testPageGraphPrototypes extends CWebTest {
 	const ITEM_PROTOTYPE_ID = 23804;
 
 	/**
-	 * Get text of elements by xpath.
-	 *
-	 * @param string $xpath	xpath selector
-	 *
-	 * @return array
-	 */
-	private function getTextOfElements($xpath) {
-		$result = [];
-		$elements = $this->webDriver->findElements(WebDriverBy::xpath($xpath));
-		foreach ($elements as $element) {
-			$result[] = $element->getText();
-		}
-		return $result;
-	}
-
-	/**
 	 * Get all graph prototypes from Discovery rule "testFormDiscoveryRule"
 	 * with item prototype "testFormItemReuse".
 	 */
@@ -64,6 +48,23 @@ class testPageGraphPrototypes extends CWebTest {
 				' WHERE itemid='.self::ITEM_PROTOTYPE_ID.
 			')';
 
+	/**
+	 * Get text of elements by xpath.
+	 *
+	 * @param string $xpath	xpath selector
+	 *
+	 * @return array
+	 */
+	private function getTextOfElements($xpath) {
+		$result = [];
+
+		foreach ($this->webDriver->findElements(WebDriverBy::xpath($xpath)) as $element) {
+			$result[] = $element->getText();
+		}
+
+		return $result;
+	}
+
 	public function testPageGraphPrototypes_CheckLayout() {
 		$this->zbxTestLogin('graphs.php?parent_discoveryid='.self::DISCOVERY_RULE_ID);
 		$this->zbxTestCheckTitle('Configuration of graph prototypes');
@@ -72,14 +73,16 @@ class testPageGraphPrototypes extends CWebTest {
 		$this->zbxTestAssertElementText('//button[contains(@data-url, "form")]', 'Create graph prototype');
 
 		// Check table headers.
-		$this->assertEquals(['Name', 'Width', 'Height', 'Graph type'], $this->getTextOfElements("//thead/tr/th[not(@class)]")
+		$this->assertEquals(['Name', 'Width', 'Height', 'Graph type'],
+				$this->getTextOfElements("//thead/tr/th[not(@class)]")
 		);
 
 		// Check graph prototype number in breadcrumb.
 		$graphs = DBdata($this->sql_graph_prototypes);
-		$i = count($graphs);
-		$get_number = $this->zbxTestGetText('//ul[contains(@class, "filter-breadcrumb")]//a[text()="Graph prototypes"]/..//sup');
-		$this->assertEquals($get_number, $i);
+		$count = count($graphs);
+		$xpath = '//ul[contains(@class, "filter-breadcrumb")]//a[text()="Graph prototypes"]/..//sup';
+		$get_number = $this->zbxTestGetText($xpath);
+		$this->assertEquals($get_number, $count);
 
 		// Check graph prototype configuration parameters in table.
 		$types = ['Normal', 'Stacked', 'Pie', 'Exploded'];
@@ -87,18 +90,21 @@ class testPageGraphPrototypes extends CWebTest {
 			$graph = $graph[0];
 			// Check the graph names and get graph row in table.
 			$element = $this->webDriver->findElement(WebDriverBy::xpath('//table[@class="list-table"]/tbody'
-							.'//a[text()="'.$graph['name'].'"]/../..'));
+					.'//a[text()="'.$graph['name'].'"]/../..')
+			);
 			// Check width value.
 			$this->assertEquals($graph['width'], $element->findElement(WebDriverBy::xpath('./td[3]'))->getText());
 			// Check height value.
 			$this->assertEquals($graph['height'], $element->findElement(WebDriverBy::xpath('./td[4]'))->getText());
 			// Check graph type value.
-			$this->assertEquals($types[$graph['graphtype']], $element->findElement(WebDriverBy::xpath('./td[5]'))->getText());
+			$this->assertEquals($types[$graph['graphtype']],
+					$element->findElement(WebDriverBy::xpath('./td[5]'))->getText()
+			);
 		}
 
 		// Check table footer to make sure that results are found
 		$this->zbxTestAssertElementText("//span[@id='selected_count']", '0 selected');
-		$this->zbxTestAssertElementText("//div[@class='table-stats']", 'Displaying '.$i.' of '.$i.' found');
+		$this->zbxTestAssertElementText("//div[@class='table-stats']", 'Displaying '.$count.' of '.$count.' found');
 		$this->zbxTestTextNotPresent('Displaying 0 of 0 found');
 	}
 
@@ -133,13 +139,13 @@ class testPageGraphPrototypes extends CWebTest {
 			// Get random N graph prototypes, where N is count.
 			$values = DBfetchArray(DBselect($this->sql_graph_prototypes));
 			shuffle($values);
-			$values = array_slice($values, 0, (int) $data['graphs']);
 
 			// Select obtained graph prototypes.
-			foreach ($values as $graph) {
+			foreach (array_slice($values, 0, (int)$data['graphs']) as $graph) {
 				$this->zbxTestCheckboxSelect('group_graphid_'.$graph['graphid']);
 				$graphids[] = $graph['graphid'];
 			}
+
 			$this->zbxTestAssertElementText("//span[@id='selected_count']", $data['graphs'].' selected');
 
 			$sql = 'SELECT NULL FROM graphs_items WHERE graphid IN ('.implode(',', $graphids).')';
@@ -168,14 +174,14 @@ class testPageGraphPrototypes extends CWebTest {
 		$item_id = 15026;
 		$parent_discovery_id = 15016;
 
-		$sql_hash =
-			'SELECT *'.
+		$sql_hash = 'SELECT *'.
 				' FROM graphs'.
 				' WHERE graphid IN ('.
 					'SELECT graphid'.
 					' FROM graphs_items'.
 					' WHERE itemid='.$item_id.
 				')';
+
 		$old_hash = DBhash($sql_hash);
 
 		$this->zbxTestLogin('graphs.php?parent_discoveryid='.$parent_discovery_id);
