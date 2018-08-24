@@ -67,11 +67,6 @@ abstract class ItemChecker
 		}
 	}
 
-	String	getEndPoint()
-	{
-		return null;
-	}
-
 	JSONArray getValues() throws ZabbixException
 	{
 		JSONArray values = new JSONArray();

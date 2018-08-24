@@ -43,13 +43,14 @@ class SocketProcessor implements Runnable
 		logger.debug("starting to process incoming connection");
 
 		BinaryProtocolSpeaker speaker = null;
-		ItemChecker checker = null;
 
 		try
 		{
 			speaker = new BinaryProtocolSpeaker(socket);
 
 			JSONObject request = new JSONObject(speaker.getRequest());
+
+			ItemChecker checker;
 
 			if (request.getString(ItemChecker.JSON_TAG_REQUEST).equals(ItemChecker.JSON_REQUEST_INTERNAL))
 				checker = new InternalItemChecker(request);
@@ -70,15 +71,7 @@ class SocketProcessor implements Runnable
 		catch (Exception e1)
 		{
 			String error = ZabbixException.getRootCauseMessage(e1);
-
-			if (null != checker && null != checker.getEndPoint())
-			{
-				logger.warn("error processing request from '{}' to '{}': {}",
-						new Object[] {socket.getInetAddress().toString(), checker.getEndPoint(), error});
-			}
-			else
-				logger.warn("error processing request from '{}': {}", socket.getInetAddress().toString(), error);
-
+			logger.warn("error processing request: {}", error);
 			logger.debug("error caused by", e1);
 
 			try
