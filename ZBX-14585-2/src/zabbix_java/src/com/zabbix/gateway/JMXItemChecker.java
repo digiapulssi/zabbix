@@ -73,11 +73,6 @@ class JMXItemChecker extends ItemChecker
 		}
 	}
 
-	String	getEndPoint()
-	{
-		return url.toString();
-	}
-
 	@Override
 	JSONArray getValues() throws ZabbixException
 	{
@@ -198,6 +193,12 @@ class JMXItemChecker extends ItemChecker
 		}
 		else
 			throw new ZabbixException("key ID '%s' is not supported", item.getKeyId());
+	}
+
+	@Override
+	String	getEndPoint()
+	{
+		return url.toString();
 	}
 
 	private String getPrimitiveAttributeValue(Object dataObject, String fieldNames) throws Exception
