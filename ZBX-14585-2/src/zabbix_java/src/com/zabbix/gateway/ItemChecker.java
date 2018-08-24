@@ -106,5 +106,10 @@ abstract class ItemChecker
 		return value;
 	}
 
+	String	getEndPoint()
+	{
+		return null;
+	}
+
 	protected abstract String getStringValue(String key) throws Exception;
 }

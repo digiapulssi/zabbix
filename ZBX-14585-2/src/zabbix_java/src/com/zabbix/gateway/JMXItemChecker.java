@@ -73,6 +73,11 @@ class JMXItemChecker extends ItemChecker
 		}
 	}
 
+	String	getEndPoint()
+	{
+		return url.toString();
+	}
+
 	@Override
 	JSONArray getValues() throws ZabbixException
 	{
