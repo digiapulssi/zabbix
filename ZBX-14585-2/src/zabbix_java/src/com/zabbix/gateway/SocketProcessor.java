@@ -85,6 +85,9 @@ class SocketProcessor implements Runnable
 			{
 				JSONObject response = new JSONObject();
 				response.put(ItemChecker.JSON_TAG_RESPONSE, ItemChecker.JSON_RESPONSE_FAILED);
+				if (null != checker && null != checker.getEndPoint())
+					error = error + ": " + checker.getEndPoint();
+
 				response.put(ItemChecker.JSON_TAG_ERROR, error);
 
 				speaker.sendResponse(response.toString());
