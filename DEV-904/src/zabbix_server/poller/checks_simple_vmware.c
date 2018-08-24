@@ -19,7 +19,7 @@
 
 #include "common.h"
 
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 
 #include "log.h"
 #include "zbxjson.h"
@@ -3080,4 +3080,4 @@ out:
 	return ret;
 }
 
-#endif	/* defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL) */
+#endif	/* defined(HAVE_VMWARE) */

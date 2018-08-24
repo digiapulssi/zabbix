@@ -88,7 +88,7 @@ ZBX_MEM_FUNC_IMPL(__vm, vmware_mem)
 
 static zbx_vmware_t	*vmware = NULL;
 
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 
 /* according to libxml2 changelog XML_PARSE_HUGE option was introduced in version 2.7.0 */
 #if 20700 <= LIBXML_VERSION	/* version 2.7.0 */
@@ -741,7 +741,7 @@ static void	vmware_hv_shared_clean(zbx_vmware_hv_t *hv)
 		vmware_shared_strfree(hv->clusterid);
 
 	if (NULL != hv->datacenter_name)
-		__vm_mem_free_func(hv->datacenter_name);
+		vmware_shared_strfree(hv->datacenter_name);
 
 	vmware_props_shared_free(hv->props, ZBX_VMWARE_HVPROPS_NUM);
 }
@@ -4779,7 +4779,7 @@ out:
 int	zbx_vmware_service_get_counterid(zbx_vmware_service_t *service, const char *path,
 		zbx_uint64_t *counterid)
 {
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 	const char		*__function_name = "zbx_vmware_service_get_perfcounterid";
 	zbx_vmware_counter_t	*counter;
 	int			ret = FAIL;
@@ -4922,7 +4922,7 @@ int	zbx_vmware_init(char **error)
 	memset(vmware, 0, sizeof(zbx_vmware_t));
 
 	VMWARE_VECTOR_CREATE(&vmware->services, ptr);
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 	zbx_hashset_create_ext(&vmware->strpool, 100, vmware_strpool_hash_func, vmware_strpool_compare_func, NULL,
 		__vm_mem_malloc_func, __vm_mem_realloc_func, __vm_mem_free_func);
 #endif
@@ -4945,7 +4945,7 @@ void	zbx_vmware_destroy(void)
 	const char	*__function_name = "zbx_vmware_destroy";
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 	zbx_hashset_destroy(&vmware->strpool);
 #endif
 	zbx_mutex_destroy(&vmware_lock);
@@ -4968,7 +4968,7 @@ void	zbx_vmware_destroy(void)
  ******************************************************************************/
 ZBX_THREAD_ENTRY(vmware_thread, args)
 {
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 	int			i, now, task, next_update, updated_services = 0, removed_services = 0,
 				old_updated_services = 0, old_removed_services = 0, sleeptime = -1;
 	zbx_vmware_service_t	*service = NULL;
@@ -5171,7 +5171,7 @@ int	zbx_vmware_get_statistics(zbx_vmware_stats_t *stats)
 	return SUCCEED;
 }
 
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 
 /*
  * XML support

@@ -35,7 +35,7 @@ typedef struct
 }
 zbx_vmcheck_t;
 
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 #	define VMCHECK_FUNC(func)	func
 #else
 #	define VMCHECK_FUNC(func)	NULL
@@ -190,7 +190,7 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 	}
 	else if (0 == strcmp(request.key, ZBX_VMWARE_PREFIX "eventlog"))
 	{
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 		if (SYSINFO_RET_OK == check_vcenter_eventlog(&request, item, result, add_results))
 			ret = SUCCEED;
 #else

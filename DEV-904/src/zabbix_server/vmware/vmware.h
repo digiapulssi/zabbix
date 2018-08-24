@@ -244,7 +244,7 @@ void	zbx_vmware_unlock(void);
 
 int	zbx_vmware_get_statistics(zbx_vmware_stats_t *stats);
 
-#if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
+#if defined(HAVE_VMWARE)
 
 zbx_vmware_service_t	*zbx_vmware_get_service(const char* url, const char* username, const char* password);
 
@@ -374,6 +374,6 @@ int	zbx_xml_try_read_value(const char *data, const char *xpath, char **value, ch
 #define ZBX_VMWARE_TYPE_VSPHERE	1
 #define ZBX_VMWARE_TYPE_VCENTER	2
 
-#endif	/* defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL) */
+#endif	/* defined(HAVE_VMWARE) */
 
 #endif	/* ZABBIX_VMWARE_H */

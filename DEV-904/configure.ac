@@ -1607,6 +1607,10 @@ dnl Starting from 2.0 agent can do web monitoring
 AGENT_LDFLAGS="$AGENT_LDFLAGS $LIBCURL_LDFLAGS"
 AGENT_LIBS="$AGENT_LIBS $LIBCURL_LIBS"
 
+if test "x$found_curl" = "xyes" && test "x$have_libxml2" = "xyes"; then
+	AC_DEFINE(HAVE_VMWARE, 1, [Define to 1 if vmware module is available.])
+fi
+
 dnl Check for libpcre, used by Zabbix for regular expressions
 if test "x$server" = "xyes" || test "x$proxy" = "xyes" || test "x$agent" = "xyes"; then
 	LIBPCRE_CHECK_CONFIG([no])

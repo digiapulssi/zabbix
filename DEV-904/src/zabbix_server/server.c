@@ -519,7 +519,7 @@ static void	zbx_validate_config(ZBX_TASK_EX *task)
 			"cURL library"));
 #endif
 
-#if !defined(HAVE_LIBXML2) || !defined(HAVE_LIBCURL)
+#if !defined(HAVE_VMWARE)
 	err |= (FAIL == check_cfg_feature_int("StartVMwareCollectors", CONFIG_VMWARE_FORKS, "VMware support"));
 
 	/* parameters VMwareFrequency, VMwarePerfFrequency, VMwareCacheSize, VMwareTimeout are not checked here */
@@ -895,7 +895,7 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 #else
 #	define LIBCURL_FEATURE_STATUS	" NO"
 #endif
-#if defined(HAVE_LIBCURL) && defined(HAVE_LIBXML2)
+#if defined(HAVE_VMWARE)
 #	define VMWARE_FEATURE_STATUS	"YES"
 #else
 #	define VMWARE_FEATURE_STATUS	" NO"
