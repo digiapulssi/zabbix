@@ -2107,13 +2107,10 @@ out:
  *                                                                            *
  * Function: vmware_vm_get_file_systems                                       *
  *                                                                            *
- * Purpose: gets virtual machine network interface devices                    *
+ * Purpose: gets the parameters of virtual machine disks                      *
  *                                                                            *
  * Parameters: vm      - [OUT] the virtual machine                            *
  *             details - [IN] a xml string containing virtual machine data    *
- *                                                                            *
- * Comments: The network interface devices are taken from vm device list      *
- *           filtered by macAddress key.                                      *
  *                                                                            *
  ******************************************************************************/
 static void	vmware_vm_get_file_systems(zbx_vmware_vm_t *vm, const char *details)
