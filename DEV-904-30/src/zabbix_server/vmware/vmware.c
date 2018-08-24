@@ -3593,7 +3593,9 @@ static int	vmware_service_get_maxquerymetrics(CURL *easyhandle, int *max_qm, cha
 
 	const char	*__function_name = "vmware_service_get_maxquerymetrics";
 
-	int		err, opt, ret = FAIL;
+	CURLoption	opt;
+	CURLcode	err;
+	int		ret = FAIL;
 	char		*val;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
