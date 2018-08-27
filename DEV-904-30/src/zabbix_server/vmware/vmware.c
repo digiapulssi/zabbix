@@ -4209,7 +4209,7 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 	int				i, j, err, opt, start_counter = 0;
 	zbx_vmware_perf_entity_t	*entity;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() counters_max:%d", __function_name, counters_max);
 
 	if (0 == counters_max)
 		counters_max = INT_MAX;
