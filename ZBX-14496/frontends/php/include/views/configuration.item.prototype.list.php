@@ -33,20 +33,24 @@ $itemForm = (new CForm())
 	->setName('items')
 	->addVar('parent_discoveryid', $this->data['parent_discoveryid']);
 
+$link = (new CUrl('disc_prototypes.php'))
+	->setArgument('parent_discoveryid', $data['parent_discoveryid'])
+	->getUrl();
+
 // create table
 $itemTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
 			(new CCheckBox('all_items'))->onClick("checkAll('".$itemForm->getName()."', 'all_items', 'group_itemid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Name'),'name', $this->data['sort'], $this->data['sortorder']),
-		make_sorting_header(_('Key'), 'key_', $this->data['sort'], $this->data['sortorder']),
-		make_sorting_header(_('Interval'), 'delay', $this->data['sort'], $this->data['sortorder']),
-		make_sorting_header(_('History'), 'history', $this->data['sort'], $this->data['sortorder']),
-		make_sorting_header(_('Trends'), 'trends', $this->data['sort'], $this->data['sortorder']),
-		make_sorting_header(_('Type'), 'type', $this->data['sort'], $this->data['sortorder']),
+		make_sorting_header(_('Name'),'name', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('Key'), 'key_', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('Interval'), 'delay', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('History'), 'history', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('Trends'), 'trends', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('Type'), 'type', $this->data['sort'], $this->data['sortorder'], $link),
 		_('Applications'),
-		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'])
+		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'], $link)
 	]);
 
 foreach ($this->data['items'] as $item) {

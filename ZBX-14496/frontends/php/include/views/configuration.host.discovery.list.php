@@ -32,21 +32,25 @@ $discoveryForm = (new CForm())
 	->setName('discovery')
 	->addVar('hostid', $this->data['hostid']);
 
+$link = (new CUrl('host_discovery.php'))
+	->setArgument('hostid', $data['hostid'])
+	->getUrl();
+
 // create table
 $discoveryTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
 			(new CCheckBox('all_items'))->onClick("checkAll('".$discoveryForm->getName()."', 'all_items', 'g_hostdruleid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder']),
+		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder'], $link),
 		_('Items'),
 		_('Triggers'),
 		_('Graphs'),
 		($data['host']['flags'] == ZBX_FLAG_DISCOVERY_NORMAL) ? _('Hosts') : null,
-		make_sorting_header(_('Key'), 'key_', $this->data['sort'], $this->data['sortorder']),
-		make_sorting_header(_('Interval'), 'delay', $this->data['sort'], $this->data['sortorder']),
-		make_sorting_header(_('Type'), 'type', $this->data['sort'], $this->data['sortorder']),
-		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder']),
+		make_sorting_header(_('Key'), 'key_', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('Interval'), 'delay', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('Type'), 'type', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'], $link),
 		$data['showInfoColumn'] ? _('Info') : null
 	]);
 

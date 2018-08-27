@@ -47,10 +47,10 @@ $actionTable = (new CTableInfo())
 			(new CCheckBox('all_items'))
 				->onClick("checkAll('".$actionForm->getName()."', 'all_items', 'g_actionid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder']),
+		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder'], 'actionconf.php'),
 		_('Conditions'),
 		_('Operations'),
-		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'])
+		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'], 'actionconf.php')
 	]);
 
 if ($this->data['actions']) {
