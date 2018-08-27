@@ -331,7 +331,7 @@ static void	vmware_shared_strfree(char *str)
 		"/*[local-name()='val']/*[local-name()='" property "']"
 
 #define ZBX_XPATH_MAXQUERYMETRICS()									\
-	"/*/*/*/*/*[local-name()='value' and ../*[local-name()='key']='config.vpxd.stats.maxQueryMetrics']"
+	"/*/*/*/*[*[local-name()='key']='config.vpxd.stats.maxQueryMetrics']/*[local-name()='value']"
 
 typedef struct
 {
