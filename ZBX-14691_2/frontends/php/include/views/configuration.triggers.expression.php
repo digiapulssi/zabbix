@@ -83,7 +83,7 @@ if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) 
 					$paramTypeElement = new CComboBox('paramtype', $this->data['paramtype'], null, $paramFunction['M']);
 				}
 				else {
-					$expressionForm->addVar('paramtype', PARAM_TYPE_TIME);
+					$expressionForm->addItem((new CVar('paramtype', PARAM_TYPE_TIME))->removeId());
 					$paramTypeElement = _('Time');
 				}
 			}
@@ -109,7 +109,7 @@ if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) 
 			$expressionFormList->addRow($paramFunction['C'],
 				(new CTextBox('params['.$paramId.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			);
-			$expressionForm->addVar('paramtype', PARAM_TYPE_TIME);
+			$expressionForm->addItem((new CVar('paramtype', PARAM_TYPE_TIME))->removeId());
 		}
 	}
 }
