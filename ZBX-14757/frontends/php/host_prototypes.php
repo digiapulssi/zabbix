@@ -144,11 +144,13 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		'status' => getRequest('status', HOST_STATUS_NOT_MONITORED),
 		'groupLinks' => [],
 		'groupPrototypes' => [],
-		'templates' => getRequest('templates', []),
-		'inventory' => [
-			'inventory_mode' => getRequest('inventory_mode')
-		]
+		'templates' => getRequest('templates', [])
 	];
+
+	if (getRequest('inventory_mode') == HOST_INVENTORY_MANUAL
+			|| getRequest('inventory_mode') == HOST_INVENTORY_AUTOMATIC) {
+		$newHostPrototype['inventory'] = ['inventory_mode' => getRequest('inventory_mode')];
+	}
 
 	// add custom group prototypes
 	foreach (getRequest('group_prototypes', []) as $groupPrototype) {
@@ -318,7 +320,7 @@ if (isset($_REQUEST['form'])) {
 	// host prototype edit form
 	$templateids = [];
 
-	if (getRequest('hostid') && !getRequest('form_refresh')) {
+	if (getRequest('hostid') && (!getRequest('form_refresh') || $hostPrototype['templateid'])) {
 		$data['host_prototype'] = array_merge($data['host_prototype'], $hostPrototype);
 
 		if (!array_key_exists('inventory_mode', $data['host_prototype']['inventory'])) {
