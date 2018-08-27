@@ -35,7 +35,7 @@ $itemForm = (new CForm())
 	->setName('hosts')
 	->addVar('parent_discoveryid', $this->data['parent_discoveryid']);
 
-$link = (new CUrl('host_prototypes.php'))
+$url = (new CUrl('host_prototypes.php'))
 	->setArgument('parent_discoveryid', $data['parent_discoveryid'])
 	->getUrl();
 
@@ -45,9 +45,9 @@ $hostTable = (new CTableInfo())
 		(new CColHeader(
 			(new CCheckBox('all_hosts'))->onClick("checkAll('".$itemForm->getName()."', 'all_hosts', 'group_hostid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder'], $link),
+		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder'], $url),
 		_('Templates'),
-		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'], $link)
+		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'], $url)
 	]);
 
 foreach ($this->data['hostPrototypes'] as $hostPrototype) {
