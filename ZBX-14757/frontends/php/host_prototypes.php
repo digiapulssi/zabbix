@@ -147,8 +147,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		'templates' => getRequest('templates', [])
 	];
 
-	if (getRequest('inventory_mode') == HOST_INVENTORY_MANUAL
-			|| getRequest('inventory_mode') == HOST_INVENTORY_AUTOMATIC) {
+	if (hasRequest('inventory_mode')) {
 		$newHostPrototype['inventory'] = ['inventory_mode' => getRequest('inventory_mode')];
 	}
 
