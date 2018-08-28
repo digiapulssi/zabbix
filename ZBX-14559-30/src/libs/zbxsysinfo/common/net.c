@@ -524,7 +524,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	res_state_local.retry = retry;
 
 	res = res_nsend(&res_state_local, buf, res, answer.buffer, sizeof(answer.buffer));
-#	if HAVE_RES_NDESTROY
+#	ifdef HAVE_RES_NDESTROY
 	res_ndestroy(&res_state_local);
 #	else
 	res_nclose(&res_state_local);
