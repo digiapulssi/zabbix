@@ -92,11 +92,11 @@ $triggersTable = (new CTableInfo())
 		(new CColHeader(
 			(new CCheckBox('all_triggers'))->onClick("checkAll('".$triggersForm->getName()."', 'all_triggers', 'g_triggerid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Severity'), 'priority', $this->data['sort'], $this->data['sortorder'], $url),
+		make_sorting_header(_('Severity'), 'priority', $data['sort'], $data['sortorder'], $url),
 		($this->data['hostid'] == 0) ? _('Host') : null,
-		make_sorting_header(_('Name'), 'description', $this->data['sort'], $this->data['sortorder'], $url),
+		make_sorting_header(_('Name'), 'description', $data['sort'], $data['sortorder'], $url),
 		_('Expression'),
-		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'], $url),
+		make_sorting_header(_('Status'), 'status', $data['sort'], $data['sortorder'], $url),
 		$this->data['showInfoColumn'] ? _('Info') : null
 	]);
 

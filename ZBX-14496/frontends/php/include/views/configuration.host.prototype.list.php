@@ -45,9 +45,9 @@ $hostTable = (new CTableInfo())
 		(new CColHeader(
 			(new CCheckBox('all_hosts'))->onClick("checkAll('".$itemForm->getName()."', 'all_hosts', 'group_hostid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder'], $url),
+		make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], $url),
 		_('Templates'),
-		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder'], $url)
+		make_sorting_header(_('Status'), 'status', $data['sort'], $data['sortorder'], $url)
 	]);
 
 foreach ($this->data['hostPrototypes'] as $hostPrototype) {
