@@ -63,11 +63,13 @@ if (!empty($this->data['parent_discoveryid'])) {
 
 $expressionFormList->addRow(_('Item'), $item);
 
-$functionComboBox = new CComboBox('expr_type', $this->data['expr_type'], 'submit()');
-foreach ($this->data['functions'] as $id => $f) {
-	$functionComboBox->addItem($id, $f['description']);
+$function_combobox = new CComboBox('function', $data['function'], 'submit()');
+
+foreach ($data['functions'] as $id => $function) {
+	$function_combobox->addItem($id, $function['description']);
 }
-$expressionFormList->addRow(_('Function'), $functionComboBox);
+
+$expressionFormList->addRow(_('Function'), $function_combobox);
 
 if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) {
 	foreach ($this->data['functions'][$this->data['selectedFunction']]['params'] as $paramId => $paramFunction) {
@@ -76,11 +78,7 @@ if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) 
 		if ($paramFunction['T'] == T_ZBX_INT) {
 			$paramTypeElement = null;
 
-			if ($paramId == 0
-				|| ($paramId == 1
-					&& (substr($this->data['expr_type'], 0, 6) == 'regexp'
-						|| substr($this->data['expr_type'], 0, 7) == 'iregexp'
-						|| (substr($this->data['expr_type'], 0, 3) == 'str' && substr($this->data['expr_type'], 0, 6) != 'strlen')))) {
+			if ($paramId == 0 || ($paramId == 1 && in_array($data['function'], ['regexp', 'iregexp', 'str']))) {
 				if (isset($paramFunction['M'])) {
 					$paramTypeElement = new CComboBox('paramtype', $this->data['paramtype'], null, $paramFunction['M']);
 				}
@@ -90,10 +88,7 @@ if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) 
 				}
 			}
 
-			if ($paramId == 1
-					&& (substr($this->data['expr_type'], 0, 3) != 'str' || substr($this->data['expr_type'], 0, 6) == 'strlen')
-					&& substr($this->data['expr_type'], 0, 6) != 'regexp'
-					&& substr($this->data['expr_type'], 0, 7) != 'iregexp') {
+			if ($paramId == 1 && !in_array($data['function'], ['regexp', 'iregexp', 'str'])) {
 				$paramTypeElement = _('Time');
 				$paramField = (new CTextBox('params['.$paramId.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
 			}
@@ -122,7 +117,16 @@ else {
 	$expressionForm->addVar('paramtype', PARAM_TYPE_TIME);
 }
 
-$expressionFormList->addRow('N', (new CTextBox('value', $this->data['value']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH));
+$expressionFormList->addRow(_('Result'), [
+		new CComboBox('operator', $data['operator'], null,
+			array_combine($data['functions'][$data['function']]['operators'],
+				$data['functions'][$data['function']]['operators']
+			)
+		),
+		' ',
+		(new CTextBox('value', $data['value']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
+	]
+);
 
 // append tabs to form
 $expressionTab = (new CTabView())->addTab('expressionTab', _('Trigger expression condition'), $expressionFormList);

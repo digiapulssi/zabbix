@@ -15,33 +15,24 @@
 		<?php } ?>
 	}
 
-	jQuery(document).ready(function() {
-		'use strict';
+	jQuery(function($) {
+		function setReadOnly() {
+			var selected_fn = $('#function option:selected');
 
-		jQuery('#paramtype').change(function() {
-			if (jQuery('#expr_type option:selected').val().substr(0, 4) == 'last'
-					|| jQuery('#expr_type option:selected').val().substr(0, 6) == 'strlen'
-					|| jQuery('#expr_type option:selected').val().substr(0, 4) == 'band') {
-				if (jQuery('#paramtype option:selected').val() == <?php echo PARAM_TYPE_COUNTS; ?>) {
-					jQuery('#params_0').removeAttr('readonly');
+			if (selected_fn.val() === 'last' || selected_fn.val() === 'strlen' || selected_fn.val() === 'band') {
+				if ($('#paramtype option:selected').val() == <?= PARAM_TYPE_COUNTS ?>) {
+					$('#params_0').removeAttr('readonly');
 				}
 				else {
-					jQuery('#params_0').attr('readonly', 'readonly');
+					$('#params_0').attr('readonly', 'readonly');
 				}
 			}
-		});
+		}
 
-		jQuery(document).ready(function() {
-			if (jQuery('#expr_type option:selected').val().substr(0, 4) == 'last'
-					|| jQuery('#expr_type option:selected').val().substr(0, 6) == 'strlen'
-					|| jQuery('#expr_type option:selected').val().substr(0, 4) == 'band') {
-				if (jQuery('#paramtype option:selected').val() == <?php echo PARAM_TYPE_COUNTS; ?>) {
-					jQuery('#params_0').removeAttr('readonly');
-				}
-				else {
-					jQuery('#params_0').attr('readonly', 'readonly');
-				}
-			}
+		setReadOnly();
+
+		$('#paramtype').change(function() {
+			setReadOnly();
 		});
 	});
 </script>
