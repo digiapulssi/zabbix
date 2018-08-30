@@ -415,12 +415,12 @@ static void	hk_history_update(zbx_hk_history_rule_t *rules, int now)
 
 				if (SUCCEED != is_time_suffix(tmp, &history, ZBX_LENGTH_UNLIMITED))
 				{
-					zabbix_log(LOG_LEVEL_DEBUG, "invalid history storage '%s' for itemid '%s'", tmp,
-							row[0]);
+					zabbix_log(LOG_LEVEL_WARNING, "invalid history storage '%s' for itemid '%s'",
+							tmp, row[0]);
 				}
 				else if (0 != history && ZBX_HK_HISTORY_MIN > history)
 				{
-					zabbix_log(LOG_LEVEL_DEBUG, "history storage too low for itemid '%s'", row[0]);
+					zabbix_log(LOG_LEVEL_WARNING, "history storage too low for itemid '%s'", row[0]);
 				}
 				else
 					hk_history_item_update(rule, now, itemid, history);
@@ -442,12 +442,12 @@ static void	hk_history_update(zbx_hk_history_rule_t *rules, int now)
 
 				if (SUCCEED != is_time_suffix(tmp, &trends, ZBX_LENGTH_UNLIMITED))
 				{
-					zabbix_log(LOG_LEVEL_DEBUG, "invalid trends storage '%s' for itemid '%s'", tmp,
-							row[0]);
+					zabbix_log(LOG_LEVEL_WARNING, "invalid trends storage '%s' for itemid '%s'",
+							tmp, row[0]);
 				}
 				else if (0 != trends && ZBX_HK_TRENDS_MIN > trends)
 				{
-					zabbix_log(LOG_LEVEL_DEBUG, "trends storage too low for itemid '%s'", row[0]);
+					zabbix_log(LOG_LEVEL_WARNING, "trends storage too low for itemid '%s'", row[0]);
 				}
 				else
 					hk_history_item_update(rule, now, itemid, trends);
