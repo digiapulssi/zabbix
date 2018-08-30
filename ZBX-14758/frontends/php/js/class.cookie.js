@@ -26,30 +26,32 @@ var cookie = {
 
 		for (var i = 0; i < allCookies.length; i++) {
 			var cookiePair = allCookies[i].split('=');
-			this.cookies[cookiePair[0]] = cookiePair[1];
+			this.cookies[decodeURIComponent(cookiePair[0])] = decodeURIComponent(cookiePair[1]);
 		}
 	},
 
 	create: function(name, value, days) {
 		var expires = '';
 
-		if (typeof(days) != 'undefined') {
+		if (typeof(days) !== 'undefined') {
 			var date = new Date();
 			date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
 			expires = '; expires=' + date.toGMTString();
 		}
 
-		document.cookie = name + '=' + value + expires + (location.protocol == 'https:' ? '; secure' : '');
+		document.cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value) + expires +
+			(location.protocol === 'https:' ? '; secure' : '');
 
-		// apache header size limit
+		// Apache header size limit.
 		if (document.cookie.length > 8000) {
-			document.cookie = name + '=;';
+			document.cookie = encodeURIComponent(name) + '=;';
 			alert(locale['S_MAX_COOKIE_SIZE_REACHED']);
 			return false;
 		}
 		else {
 			this.cookies[name] = value;
 		}
+
 		return true;
 	},
 
@@ -105,18 +107,20 @@ var cookie = {
 			return this.cookies[name];
 		}
 		else if (document.cookie.indexOf(name) != -1) {
-			var nameEQ = name + '=';
+			var nameEQ = encodeURIComponent(name) + '=';
 			var ca = document.cookie.split(';');
+
 			for (var i = 0; i < ca.length; i++) {
 				var c = ca[i];
 				while (c.charAt(0) == ' ') {
 					c = c.substring(1, c.length);
 				}
 				if (c.indexOf(nameEQ) == 0) {
-					return this.cookies[name] = c.substring(nameEQ.length, c.length);
+					return this.cookies[name] = decodeURIComponent(c.substring(nameEQ.length, c.length));
 				}
 			}
 		}
+
 		return null;
 	},
 
