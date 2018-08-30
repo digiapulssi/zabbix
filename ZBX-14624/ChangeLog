@@ -1,3 +1,36 @@
+Changes for 3.0.22rc1
+
+New features:
+
+Bug fixes:
+..F....... [ZBX-13015] fixed X axis labels with DST transition in the displayed period (Sasha)
+........S. [ZBX-14778] fixed housekeeper attempting to remove history of discovery rules/prototypes (wiper)
+.......PS. [ZBX-14775] fixed configuration of the maximum available count of aggregated metrics in a single request to vmware vCenter (MVekslers)
+..F....... [ZBX-14676] fixed displaying links containing UTF-8 characters (Ivo)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.21
+
+3.0.21rc1 was released as 3.0.21 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.21rc1
+
+Bug fixes:
+.......PS. [ZBX-14677] fixed vmware performance counter retrieval on installations with large number of datastores (wiper)
+..F....... [ZBX-12293] renamed trigger functions by adding function name at the beginning and removing the operator and "N" and placing operator in a separate field allowing two new operators "<=" and ">=" for selection (Ivo)
+.......PS. [ZBX-14593] fixed error message for invalid vmware endpoint (MVekslers)
+........S. [ZBX-14614] fixed trigger dependency link to the template instead of the host during the discovery action (MVekslers)
+...G...... [ZBX-372] added "zone" parameter to proc.num[] item for Solaris (viktors)
+........S. [ZBX-14410] fixed output of information about the error for expressions with functions of triggers or calculated items (MVekslers)
+..F....... [ZBX-14433] fixed several problems in displaying of X axis on the graphs (Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.20
+
+3.0.20rc1 was released as 3.0.20 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.20rc1
 
 Bug fixes:
@@ -1969,6 +2002,18 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ...G...... [ZBX-7413] fixed inconsistency of config file handling for loading and checking userparameters and aliases before starting the daemon (igors)
 ...G...... [ZBX-7412] fixed alias parsing; colon symbols are now supported in alias parameters (Juris)
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
+
+--------------------------------------------------------------------------------
+Changes for 2.2.24rc1
+
+New features:
+
+Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.2.23
+
+2.2.23rc1 was released as 2.2.23 without any changes
 
 --------------------------------------------------------------------------------
 Changes for 2.2.23rc1
