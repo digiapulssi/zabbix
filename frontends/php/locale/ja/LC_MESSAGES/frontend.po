@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2018-05-05 18:21+0300\n"
-"Last-Translator: Kodai <kodai74@gmail.com>\n"
+"POT-Creation-Date: 2018-08-28 17:56+0300\n"
+"PO-Revision-Date: 2018-08-29 03:55+0300\n"
+"Last-Translator: Atsushi <a.tanaka77@gmail.com>\n"
 "Language-Team: Zabbix\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1525537310.000000\n"
+"X-POOTLE-MTIME: 1535507709.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -218,22 +218,6 @@ msgstr "AES"
 msgid "AND"
 msgstr "AND"
 
-#: popup_trexpr.php:186
-msgid "Absolute difference between last and previous value is < N"
-msgstr "最新値と前回値の絶対値の差 < N"
-
-#: popup_trexpr.php:194
-msgid "Absolute difference between last and previous value is = N"
-msgstr "最新値と前回値の絶対値の差 = N"
-
-#: popup_trexpr.php:190
-msgid "Absolute difference between last and previous value is > N"
-msgstr "最新値と前回値の絶対値の差 > N"
-
-#: popup_trexpr.php:198
-msgid "Absolute difference between last and previous value is NOT N"
-msgstr "最新値と前回値の絶対値の差 NOT N"
-
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: srv_status.php:147
@@ -333,7 +317,7 @@ msgstr "障害対応コメント"
 #: include/views/configuration.host.prototype.edit.php:262
 #: include/views/configuration.httpconf.edit.php:191
 #: include/views/configuration.item.edit.php:341
-#: include/views/configuration.item.edit.php:552
+#: include/views/configuration.item.edit.php:557
 #: include/views/configuration.item.massupdate.php:262
 #: include/views/configuration.item.massupdate.php:376
 #: include/views/configuration.item.prototype.edit.php:263
@@ -515,8 +499,8 @@ msgstr "終了日時"
 #: include/views/configuration.httpconf.popup.php:149
 #: include/views/configuration.httpconf.popup.php:198
 #: include/views/configuration.item.edit.php:390
-#: include/views/configuration.item.edit.php:657
-#: include/views/configuration.item.edit.php:695
+#: include/views/configuration.item.edit.php:662
+#: include/views/configuration.item.edit.php:700
 #: include/views/configuration.item.massupdate.php:348
 #: include/views/configuration.item.massupdate.php:414
 #: include/views/configuration.item.prototype.edit.php:299
@@ -782,7 +766,7 @@ msgid "Allow manual close"
 msgstr "手動でのクローズ許可"
 
 #: include/views/configuration.host.discovery.edit.php:253
-#: include/views/configuration.item.edit.php:469
+#: include/views/configuration.item.edit.php:474
 #: include/views/configuration.item.massupdate.php:487
 #: include/views/configuration.item.prototype.edit.php:342
 msgid "Allowed hosts"
@@ -872,7 +856,7 @@ msgstr "アプリケーションプロトタイプ"
 msgid "Application updated"
 msgstr "アプリケーションを更新しました"
 
-#: include/classes/api/services/CItemGeneral.php:555
+#: include/classes/api/services/CItemGeneral.php:558
 #, c-format
 msgid "Application with ID \"%1$s\" is not available on \"%2$s\"."
 msgstr "\"%2$s\"にID\"%1$s\"を持つアプリケーションは使用できません。"
@@ -888,7 +872,7 @@ msgstr "applicationid \"%1$s\"のアプリケーションが存在しません�
 #: include/views/configuration.host.edit.php:323
 #: include/views/configuration.host.list.php:65
 #: include/views/configuration.host.list.php:256
-#: include/views/configuration.item.edit.php:502
+#: include/views/configuration.item.edit.php:507
 #: include/views/configuration.item.list.php:65
 #: include/views/configuration.item.prototype.edit.php:358
 #: include/views/configuration.item.prototype.list.php:49
@@ -1164,22 +1148,6 @@ msgstr "利用可能"
 msgid "Average"
 msgstr "軽度の障害"
 
-#: popup_trexpr.php:202
-msgid "Average value of a period T is < N"
-msgstr "期間Tの値の平均値 < N"
-
-#: popup_trexpr.php:212
-msgid "Average value of a period T is = N"
-msgstr "期間Tの値の平均値 = N"
-
-#: popup_trexpr.php:207
-msgid "Average value of a period T is > N"
-msgstr "期間Tの値の平均値 > N"
-
-#: popup_trexpr.php:217
-msgid "Average value of a period T is NOT N"
-msgstr "期間Tの値の平均値 NOT N"
-
 #: include/classes/setup/CSetupWizard.php:121
 #: include/classes/setup/CSetupWizard.php:324
 msgid "Back"
@@ -1217,14 +1185,6 @@ msgstr "Bind DN"
 #: include/views/administration.authentication.edit.php:92
 msgid "Bind password"
 msgstr "Bind password"
-
-#: popup_trexpr.php:588
-msgid "Bitwise AND of last (most recent) T value and mask is = N"
-msgstr "最新(T秒前/T個前)の値とマスクのANDビット演算 = N"
-
-#: popup_trexpr.php:593
-msgid "Bitwise AND of last (most recent) T value and mask is NOT N"
-msgstr "最新(T秒前/T個前)の値とマスクのANDビット演算  NOT N"
 
 #: adm.triggerdisplayoptions.php:38 adm.triggerdisplayoptions.php:39
 #: adm.triggerdisplayoptions.php:40 adm.triggerdisplayoptions.php:41
@@ -1307,7 +1267,7 @@ msgstr "証明書"
 #: app/views/monitoring.widget.problems.view.php:100
 #: include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:831
-#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:316
+#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:320
 #: include/events.inc.php:516 tr_status.php:682
 msgid "CLOSING"
 msgstr "クローズ"
@@ -1474,7 +1434,7 @@ msgstr "ホストのプロトタイプを追加できません"
 msgid "Cannot add image"
 msgstr "イメージを追加できません"
 
-#: items.php:725
+#: items.php:724
 msgid "Cannot add item"
 msgstr "アイテムを追加できません"
 
@@ -1598,7 +1558,7 @@ msgstr "認証方式をLDAPに変更できません"
 msgid "Cannot change authentication method to Zabbix internal"
 msgstr "認証方式をZabbix内部データベースに変更できません"
 
-#: httpconf.php:198 httpconf.php:507 items.php:766 items.php:1122
+#: httpconf.php:198 httpconf.php:507 items.php:765 items.php:1121
 msgid "Cannot clear history"
 msgstr "ヒストリを削除できません"
 
@@ -1639,7 +1599,7 @@ msgid "Cannot copy graph"
 msgid_plural "Cannot copy graphs"
 msgstr[0] "グラフをコピーできません"
 
-#: items.php:1078
+#: items.php:1077
 msgid "Cannot copy item"
 msgid_plural "Cannot copy items"
 msgstr[0] "アイテムをコピーできません"
@@ -1808,7 +1768,7 @@ msgstr "アイテムのプロトタイプを削除できません"
 msgid "Cannot delete item prototypes"
 msgstr "アイテムのプロトタイプを削除できません"
 
-#: items.php:1152
+#: items.php:1151
 msgid "Cannot delete items"
 msgstr "アイテムを削除できません"
 
@@ -1959,7 +1919,7 @@ msgid "Cannot disable host"
 msgid_plural "Cannot disable hosts"
 msgstr[0] "ホストを無効にできません"
 
-#: applications.php:175 items.php:1038
+#: applications.php:175 items.php:1037
 msgid "Cannot disable item"
 msgid_plural "Cannot disable items"
 msgstr[0] "アイテムを無効にできません"
@@ -2013,7 +1973,7 @@ msgid "Cannot enable host"
 msgid_plural "Cannot enable hosts"
 msgstr[0] "ホストを有効にできません"
 
-#: applications.php:174 items.php:1037
+#: applications.php:174 items.php:1036
 msgid "Cannot enable item"
 msgid_plural "Cannot enable items"
 msgstr[0] "アイテムを有効にできません"
@@ -2208,7 +2168,7 @@ msgstr "JSファイル\"%s\"を読み込めません。"
 msgid "Cannot include view file \"%s\"."
 msgstr "ビューファイル\"%s\"を読み込めません。"
 
-#: popup_trexpr.php:896
+#: popup_trexpr.php:616
 msgid "Cannot insert trigger expression"
 msgstr "トリガー条件式を追加できません"
 
@@ -2327,7 +2287,7 @@ msgstr "グラフ\"%2$s\"に\"%1$s\"を設定できません。"
 msgid "Cannot set \"%1$s\" for graph prototype \"%2$s\"."
 msgstr "グラフのプロトタイプ\"%2$s\"に\"%1$s\"を設定できません。"
 
-#: include/classes/api/services/CItemGeneral.php:268
+#: include/classes/api/services/CItemGeneral.php:271
 #, c-format
 msgid "Cannot set \"%1$s\" for item \"%2$s\"."
 msgstr "アイテム\"%2$s\"に\"%1$s\"を設定できません。"
@@ -2598,7 +2558,7 @@ msgstr "イメージを更新できません"
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "ディスカバリされたホスト\"%1$s\"のインターフェースを更新できません。"
 
-#: items.php:728
+#: items.php:727
 msgid "Cannot update item"
 msgstr "アイテムを更新できません"
 
@@ -2607,7 +2567,7 @@ msgid "Cannot update item prototype"
 msgid_plural "Cannot update item prototypes"
 msgstr[0] "アイテムのプロトタイプを更新できません"
 
-#: items.php:1014
+#: items.php:1013
 msgid "Cannot update items"
 msgstr "アイテムを更新できません"
 
@@ -2821,9 +2781,9 @@ msgstr "条件式の\"%1$s\"から始まる部分を確認してください。"
 msgid "Check of pre-requisites"
 msgstr "前提条件のチェック"
 
-#: include/classes/api/services/CItemGeneral.php:365
-#: include/classes/api/services/CItemGeneral.php:372
-#: include/classes/api/services/CItemGeneral.php:379
+#: include/classes/api/services/CItemGeneral.php:368
+#: include/classes/api/services/CItemGeneral.php:375
+#: include/classes/api/services/CItemGeneral.php:382
 msgid "Check the key, please. Default example was passed."
 msgstr "キーを確認してください。デフォルトの例は使用できました。"
 
@@ -2926,7 +2886,7 @@ msgid "Clear history"
 msgstr "ヒストリを削除"
 
 #: include/views/configuration.httpconf.edit.php:284
-#: include/views/configuration.item.edit.php:682
+#: include/views/configuration.item.edit.php:687
 msgid "Clear history and trends"
 msgstr "ヒストリとトレンドを削除"
 
@@ -2955,7 +2915,7 @@ msgstr "時刻"
 #: include/views/configuration.hostgroups.edit.php:84
 #: include/views/configuration.host.prototype.edit.php:438
 #: include/views/configuration.httpconf.edit.php:277
-#: include/views/configuration.item.edit.php:677
+#: include/views/configuration.item.edit.php:682
 #: include/views/configuration.item.prototype.edit.php:519
 #: include/views/configuration.maintenance.edit.php:217
 #: include/views/configuration.template.edit.php:501
@@ -3577,7 +3537,7 @@ msgstr "アイコンのマッピングの作成"
 
 #: include/classes/helpers/CMenuPopupHelper.php:290
 #: include/classes/helpers/CMenuPopupHelper.php:312
-#: include/views/configuration.item.list.php:28 items.php:1158
+#: include/views/configuration.item.list.php:28 items.php:1157
 msgid "Create item"
 msgstr "アイテムの作成"
 
@@ -3667,22 +3627,6 @@ msgstr "作成: \"%2$s\"のホストのプロトタイプ\"%1$s\"。"
 msgid "Critical"
 msgstr "クリティカル"
 
-#: popup_trexpr.php:432
-msgid "Current date is < N"
-msgstr "現在の年月日 < N"
-
-#: popup_trexpr.php:440
-msgid "Current date is = N"
-msgstr "現在の年月日 = N"
-
-#: popup_trexpr.php:436
-msgid "Current date is > N"
-msgstr "現在の年月日 > N"
-
-#: popup_trexpr.php:444
-msgid "Current date is NOT N"
-msgstr "現在の年月日 NOT N"
-
 #: include/views/js/configuration.action.edit.js.php:65
 #: include/views/js/configuration.action.edit.js.php:219
 msgid "Current host"
@@ -3691,22 +3635,6 @@ msgstr "現在のホスト"
 #: include/views/reports.toptriggers.php:80
 msgid "Current month"
 msgstr "今月"
-
-#: popup_trexpr.php:562
-msgid "Current time is < N"
-msgstr "現在の時刻 < N"
-
-#: popup_trexpr.php:570
-msgid "Current time is = N"
-msgstr "現在の時刻 = N"
-
-#: popup_trexpr.php:566
-msgid "Current time is > N"
-msgstr "現在の時刻 > N"
-
-#: popup_trexpr.php:574
-msgid "Current time is NOT N"
-msgstr "現在の時刻 NOT N"
 
 #: include/classes/setup/CSetupWizard.php:162
 msgid "Current value"
@@ -3840,8 +3768,8 @@ msgstr "ダッシュボード \"%1$s\"のセル X - %2$s Y - %3$s は使用中�
 
 #: include/classes/api/services/CDashboard.php:568
 #, c-format
-msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is ouf of bounds."
-msgstr "ダッシュボード \"%1$s\"のセル X - %2$s Y - %3$s内のウィジェットは使用できません。"
+msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is out of bounds."
+msgstr "ダッシュボード\"%1$s\"のセル X - %2$s Y - %3$s のウィジェットは範囲外です。"
 
 #: app/controllers/CControllerDashbrdWidgetUpdate.php:238
 msgid "Dashboard created"
@@ -3883,7 +3811,7 @@ msgstr "データ"
 msgid "Data cache statistics. Cache - one of values (modes: all, float, uint, str, log, text), history (modes: pfree, total, used, free), trend (modes: pfree, total, used, free), text (modes: pfree, total, used, free)."
 msgstr "データキャッシュの統計。cache - values (mode: all, float, uint, str, log, text)、history (mode: pfree, total, used, free)、trend (mode: pfree, total, used, free)、text (mode: pfree, total, used, free)。"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2854
+#: include/classes/graphdraw/CLineGraphDraw.php:2652
 #: include/classes/graphdraw/CPieGraphDraw.php:805
 #, c-format
 msgid "Data from %1$s. Generated in %2$s sec."
@@ -3974,42 +3902,10 @@ msgstr "日"
 msgid "Day of month"
 msgstr "日"
 
-#: popup_trexpr.php:464
-msgid "Day of month is < N"
-msgstr "現在の月の日付 < N"
-
-#: popup_trexpr.php:472
-msgid "Day of month is = N"
-msgstr "現在の月の日付 = N"
-
-#: popup_trexpr.php:468
-msgid "Day of month is > N"
-msgstr "現在の月の日付 > N"
-
-#: popup_trexpr.php:476
-msgid "Day of month is NOT N"
-msgstr "現在の月の日付 NOT N"
-
 #: include/forms.inc.php:1876 include/forms.inc.php:1935
 #: include/forms.inc.php:1988
 msgid "Day of week"
 msgstr "曜日"
-
-#: popup_trexpr.php:448
-msgid "Day of week is < N"
-msgstr "現在の曜日 < N"
-
-#: popup_trexpr.php:456
-msgid "Day of week is = N"
-msgstr "現在の曜日 = N"
-
-#: popup_trexpr.php:452
-msgid "Day of week is > N"
-msgstr "現在の曜日 > N"
-
-#: popup_trexpr.php:460
-msgid "Day of week is NOT N"
-msgstr "現在の曜日 NOT N"
 
 #: include/forms.inc.php:2044
 msgid "Days"
@@ -4212,7 +4108,7 @@ msgstr "アイコンのマッピングを削除しますか？"
 msgid "Delete item prototype?"
 msgstr "アイテムのプロトタイプを削除しますか？"
 
-#: include/views/configuration.item.edit.php:687
+#: include/views/configuration.item.edit.php:692
 msgid "Delete item?"
 msgstr "アイテムを削除しますか？"
 
@@ -4510,7 +4406,7 @@ msgstr "配布ステータス"
 #: include/views/configuration.host.discovery.edit.php:257
 #: include/views/configuration.host.edit.php:283
 #: include/views/configuration.host.massupdate.php:147
-#: include/views/configuration.item.edit.php:534
+#: include/views/configuration.item.edit.php:539
 #: include/views/configuration.item.massupdate.php:604
 #: include/views/configuration.item.prototype.edit.php:376
 #: include/views/configuration.maintenance.edit.php:95
@@ -4561,54 +4457,6 @@ msgstr "デバイスの割り込み回数。整数値を返す。"
 #: discoveryconf.php:42 include/views/configuration.discovery.edit.php:77
 msgid "Device uniqueness criteria"
 msgstr "デバイスの固有性を特定する基準"
-
-#: popup_trexpr.php:222
-msgid "Difference between MAX and MIN value of a period T is < N"
-msgstr "期間Tの間の最大値と最小値の差 < N"
-
-#: popup_trexpr.php:232
-msgid "Difference between MAX and MIN value of a period T is = N"
-msgstr "期間Tの間の最大値と最小値の差 = N"
-
-#: popup_trexpr.php:227
-msgid "Difference between MAX and MIN value of a period T is > N"
-msgstr "期間Tの間の最大値と最小値の差 > N"
-
-#: popup_trexpr.php:237
-msgid "Difference between MAX and MIN value of a period T is NOT N"
-msgstr "期間Tの間の最大値と最小値の差 NOT N"
-
-#: popup_trexpr.php:480
-msgid "Difference between item timestamp value and Zabbix server timestamp is over T seconds, then N = 0, 1 - otherwise"
-msgstr "アイテムのタイムスタンプとZabbixサーバーのタイムスタンプの差がT秒以上の場合 N=0、その他の場合 N=1"
-
-#: popup_trexpr.php:485
-msgid "Difference between item timestamp value and Zabbix server timestamp is over T seconds, then N NOT 0, 1 - otherwise"
-msgstr "アイテムのタイムスタンプとZabbixサーバーのタイムスタンプの差がT秒以上の場合 N NOT 0、その他の場合 N=1"
-
-#: popup_trexpr.php:278
-msgid "Difference between last and preceding values, then N = 1, 0 - otherwise"
-msgstr "最新値と前回値が異なる N = 1、その他の場合 N = 0 (=条件)"
-
-#: popup_trexpr.php:282
-msgid "Difference between last and preceding values, then N NOT 1, 0 - otherwise"
-msgstr "最新値と前回値が異なる N = 1、その他の場合 N = 0 (#条件)"
-
-#: popup_trexpr.php:242
-msgid "Difference between last and previous value is < N"
-msgstr "最新値と前回値の差 < N"
-
-#: popup_trexpr.php:250
-msgid "Difference between last and previous value is = N"
-msgstr "最新値と前回値の差 = N"
-
-#: popup_trexpr.php:246
-msgid "Difference between last and previous value is > N"
-msgstr "最新値と前回値の差 > N"
-
-#: popup_trexpr.php:254
-msgid "Difference between last and previous value is NOT N"
-msgstr "最新値と前回値の差 NOT N"
 
 #: include/views/monitoring.screen.list.php:73
 msgid "Dimension (cols x rows)"
@@ -5146,8 +4994,8 @@ msgstr "実効値"
 msgid "Elasticsearch error: %1$s."
 msgstr "Elasticsearchエラー: %1$s。"
 
-#: include/classes/api/managers/CHistoryManager.php:984
-#: include/classes/api/managers/CHistoryManager.php:993
+#: include/classes/api/managers/CHistoryManager.php:985
+#: include/classes/api/managers/CHistoryManager.php:994
 #, c-format
 msgid "Elasticsearch url is not set for type: %1$s."
 msgstr "次の型のためのElasticsearchのURLが設定されていません: %1$s。"
@@ -5465,7 +5313,7 @@ msgstr "選択したWebシナリオを有効にしますか？"
 #: include/views/configuration.host.list.php:122
 #: include/views/configuration.host.massupdate.php:171
 #: include/views/configuration.httpconf.edit.php:135
-#: include/views/configuration.item.edit.php:543
+#: include/views/configuration.item.edit.php:548
 #: include/views/configuration.triggers.edit.php:559 popup_media.php:130
 #: tr_logform.php:391
 msgid "Enabled"
@@ -5512,21 +5360,13 @@ msgstr "イベント"
 msgid "Event ID"
 msgstr "イベントID"
 
-#: popup_trexpr.php:510
-msgid "Event ID of last log entry matching regular expression T, then N = 1, 0 - otherwise"
-msgstr "最新のログのイベントIDが正規表現と一致 N = 1、その他の場合 N = 0 (=条件)"
-
-#: popup_trexpr.php:515
-msgid "Event ID of last log entry matching regular expression T, then N NOT 1, 0 - otherwise"
-msgstr "最新のログのイベントIDが正規表現と一致 N = 1、その他の場合 N = 0 (#条件)"
-
 #: app/controllers/CControllerAcknowledgeCreate.php:194
 #: include/actions.inc.php:57
 msgid "Event acknowledged"
 msgid_plural "Events acknowledged"
 msgstr[0] "障害対応済"
 
-#: app/controllers/CControllerAcknowledgeEdit.php:210
+#: app/controllers/CControllerAcknowledgeEdit.php:209
 #: app/views/monitoring.acknowledge.edit.php:89
 msgid "Event acknowledgements"
 msgstr "障害対応コメント入力"
@@ -5935,14 +5775,6 @@ msgstr "フィルター"
 msgid "Filters"
 msgstr "フィルター"
 
-#: popup_trexpr.php:382
-msgid "Find string V in last (most recent) value. N = 1 - if found, 0 - otherwise"
-msgstr "最新値に文字列Vが存在する場合N = 1、その他の場合 N = 0 (=条件)"
-
-#: popup_trexpr.php:387
-msgid "Find string V in last (most recent) value. N NOT 1 - if found, 0 - otherwise"
-msgstr "最新値に文字列Vが存在する場合N = 1、その他の場合 N = 0 (#条件)"
-
 #: include/classes/items/CHelpItems.php:297
 #: include/classes/items/CHelpItems.php:595
 msgid "Find string in a file. Returns 0 - match not found; 1 - found"
@@ -6020,22 +5852,6 @@ msgstr "フォントサイズ"
 msgid "For guest, password must be empty"
 msgstr "ゲストのパスワードは空白である必要があります"
 
-#: popup_trexpr.php:598
-msgid "Forecast for next t seconds based on period T is < N"
-msgstr "期間Tをもとにした次のt秒の予測値 < N"
-
-#: popup_trexpr.php:608
-msgid "Forecast for next t seconds based on period T is = N"
-msgstr "期間Tをもとにした次のt秒の予測値 = N"
-
-#: popup_trexpr.php:603
-msgid "Forecast for next t seconds based on period T is > N"
-msgstr "期間Tをもとにした次のt秒の予測値 > N"
-
-#: popup_trexpr.php:613
-msgid "Forecast for next t seconds based on period T is NOT N"
-msgstr "期間Tをもとにした次のt秒の予測値 NOT N"
-
 #: include/views/configuration.httpconf.popup.php:113
 msgid "Form data"
 msgstr "フォームデータ"
@@ -6098,11 +5914,11 @@ msgid "Fullscreen"
 msgstr "フルスクリーン"
 
 #: include/views/configuration.graph.edit.php:294
-#: include/views/configuration.triggers.expression.php:70
+#: include/views/configuration.triggers.expression.php:72
 msgid "Function"
 msgstr "関数"
 
-#: popup_trexpr.php:817
+#: popup_trexpr.php:531
 #, c-format
 msgid "Function \"%1$s\" cannot be used with selected item \"%2$s\""
 msgstr "関数\"%1$s\"は選択されたアイテム\"%2$s\"と一緒に使用できません"
@@ -6509,7 +6325,8 @@ msgstr "メンテナンス対象のホストグループ"
 msgid "H:i"
 msgstr "H:i"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1634
+#: include/classes/graphdraw/CLineGraphDraw.php:1408
+#: include/classes/graphdraw/CLineGraphDraw.php:1415
 #: include/translateDefines.inc.php:34
 msgid "H:i:s"
 msgstr "H:i:s"
@@ -6617,12 +6434,12 @@ msgid "History"
 msgstr "ヒストリ"
 
 #: httpconf.php:191 httpconf.php:198 httpconf.php:495 httpconf.php:507
-#: items.php:759 items.php:766 items.php:1110 items.php:1122
+#: items.php:758 items.php:765 items.php:1109 items.php:1121
 msgid "History cleared"
 msgstr "ヒストリを削除しました"
 
 #: include/views/configuration.httpconf.edit.php:285
-#: include/views/configuration.item.edit.php:683
+#: include/views/configuration.item.edit.php:688
 msgid "History clearing can take a long time. Continue?"
 msgstr "ヒストリの削除には時間を要します。実行しますか？"
 
@@ -6698,8 +6515,8 @@ msgstr "横位置"
 #: include/views/monitoring.screen.constructor.edit.php:418
 #: include/views/monitoring.screen.php:75
 #: include/views/monitoring.slides.php:79
-#: include/views/reports.toptriggers.php:105 items.php:759 items.php:1109
-#: items.php:1142 jsLoader.php:156 latest.php:411 latest.php:431 popup.php:475
+#: include/views/reports.toptriggers.php:105 items.php:758 items.php:1108
+#: items.php:1141 jsLoader.php:156 latest.php:411 latest.php:431 popup.php:475
 #: popup.php:512 popup.php:1203 queue.php:248 report2.php:420 report2.php:443
 #: search.php:125 tr_status.php:496 tr_status.php:752
 msgid "Host"
@@ -7651,13 +7468,13 @@ msgstr "設定項目が間違っています"
 #: include/classes/api/services/CHostInterface.php:233
 #: include/classes/api/services/CHostInterface.php:422
 #: include/classes/api/services/CItemGeneral.php:217
-#: include/classes/api/services/CItemGeneral.php:1156
-#: include/classes/api/services/CItemGeneral.php:1174
-#: include/classes/api/services/CItemGeneral.php:1194
-#: include/classes/api/services/CItemGeneral.php:1217
-#: include/classes/api/services/CItemGeneral.php:1230
-#: include/classes/api/services/CItemGeneral.php:1259
-#: include/classes/api/services/CItemGeneral.php:1273
+#: include/classes/api/services/CItemGeneral.php:1159
+#: include/classes/api/services/CItemGeneral.php:1177
+#: include/classes/api/services/CItemGeneral.php:1197
+#: include/classes/api/services/CItemGeneral.php:1220
+#: include/classes/api/services/CItemGeneral.php:1233
+#: include/classes/api/services/CItemGeneral.php:1262
+#: include/classes/api/services/CItemGeneral.php:1276
 #: include/classes/api/services/CMapElement.php:46
 #: include/classes/api/services/CMapElement.php:117
 #: include/classes/api/services/CMapElement.php:129
@@ -7685,7 +7502,7 @@ msgstr "不正な引数が関数に渡されました。"
 msgid "Incorrect arguments passed to method."
 msgstr "入力項目が正しくありません。"
 
-#: include/classes/api/services/CItemGeneral.php:524
+#: include/classes/api/services/CItemGeneral.php:527
 #, c-format
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "アイテム\"%1$s\"の認証プロトコルが正しくありません。"
@@ -8034,7 +7851,7 @@ msgstr "親サービスが正しくありません。"
 msgid "Incorrect port range."
 msgstr "ポートの範囲が正しくありません。"
 
-#: include/classes/api/services/CItemGeneral.php:533
+#: include/classes/api/services/CItemGeneral.php:536
 #, c-format
 msgid "Incorrect privacy protocol for item \"%1$s\"."
 msgstr "アイテム\"%1$s\"のプライバシープロトコルが正しくありません。"
@@ -8217,7 +8034,7 @@ msgstr "ユーザーグループが正しくありません。"
 #: include/classes/api/services/CDRule.php:497
 #: include/classes/api/services/CDRule.php:558
 #: include/classes/api/services/CDRule.php:571
-#: include/classes/api/services/CItemGeneral.php:464
+#: include/classes/api/services/CItemGeneral.php:467
 #: include/classes/validators/CNewValidator.php:107
 #: include/classes/validators/CNewValidator.php:119
 #: include/classes/validators/CNewValidator.php:131
@@ -8333,33 +8150,33 @@ msgstr "メディアタイプ\"%3$s\"のためのフィールド\"%2$s\"内の�
 #: include/classes/api/services/CHttpTest.php:999
 #: include/classes/api/services/CHttpTest.php:1095
 #: include/classes/api/services/CItemGeneral.php:183
-#: include/classes/api/services/CItemGeneral.php:279
-#: include/classes/api/services/CItemGeneral.php:415
-#: include/classes/api/services/CItemGeneral.php:427
-#: include/classes/api/services/CItemGeneral.php:434
-#: include/classes/api/services/CItemGeneral.php:446
-#: include/classes/api/services/CItemGeneral.php:452
-#: include/classes/api/services/CItemGeneral.php:458
-#: include/classes/api/services/CItemGeneral.php:471
-#: include/classes/api/services/CItemGeneral.php:1179
-#: include/classes/api/services/CItemGeneral.php:1185
-#: include/classes/api/services/CItemGeneral.php:1199
-#: include/classes/api/services/CItemGeneral.php:1204
-#: include/classes/api/services/CItemGeneral.php:1222
-#: include/classes/api/services/CItemGeneral.php:1235
-#: include/classes/api/services/CItemGeneral.php:1242
-#: include/classes/api/services/CItemGeneral.php:1248
-#: include/classes/api/services/CItemGeneral.php:1264
-#: include/classes/api/services/CItemGeneral.php:1278
-#: include/classes/api/services/CItemGeneral.php:1473
-#: include/classes/api/services/CItemGeneral.php:1510
-#: include/classes/api/services/CItemGeneral.php:1516
-#: include/classes/api/services/CItemGeneral.php:1533
-#: include/classes/api/services/CItemGeneral.php:1539
-#: include/classes/api/services/CItemGeneral.php:1613
-#: include/classes/api/services/CItemGeneral.php:1622
-#: include/classes/api/services/CItemGeneral.php:1729
-#: include/classes/api/services/CItemGeneral.php:1736
+#: include/classes/api/services/CItemGeneral.php:282
+#: include/classes/api/services/CItemGeneral.php:418
+#: include/classes/api/services/CItemGeneral.php:430
+#: include/classes/api/services/CItemGeneral.php:437
+#: include/classes/api/services/CItemGeneral.php:449
+#: include/classes/api/services/CItemGeneral.php:455
+#: include/classes/api/services/CItemGeneral.php:461
+#: include/classes/api/services/CItemGeneral.php:474
+#: include/classes/api/services/CItemGeneral.php:1182
+#: include/classes/api/services/CItemGeneral.php:1188
+#: include/classes/api/services/CItemGeneral.php:1202
+#: include/classes/api/services/CItemGeneral.php:1207
+#: include/classes/api/services/CItemGeneral.php:1225
+#: include/classes/api/services/CItemGeneral.php:1238
+#: include/classes/api/services/CItemGeneral.php:1245
+#: include/classes/api/services/CItemGeneral.php:1251
+#: include/classes/api/services/CItemGeneral.php:1267
+#: include/classes/api/services/CItemGeneral.php:1281
+#: include/classes/api/services/CItemGeneral.php:1476
+#: include/classes/api/services/CItemGeneral.php:1513
+#: include/classes/api/services/CItemGeneral.php:1519
+#: include/classes/api/services/CItemGeneral.php:1536
+#: include/classes/api/services/CItemGeneral.php:1542
+#: include/classes/api/services/CItemGeneral.php:1616
+#: include/classes/api/services/CItemGeneral.php:1625
+#: include/classes/api/services/CItemGeneral.php:1732
+#: include/classes/api/services/CItemGeneral.php:1739
 #: include/classes/api/services/CItem.php:716
 #: include/classes/api/services/CItem.php:724
 #: include/classes/api/services/CItemPrototype.php:946
@@ -8494,7 +8311,7 @@ msgstr "継承したマクロとホストマクロ"
 msgid "Inherited and template macros"
 msgstr "継承したマクロとテンプレートマクロ"
 
-#: include/views/configuration.triggers.expression.php:132
+#: include/views/configuration.triggers.expression.php:136
 msgid "Insert"
 msgstr "挿入"
 
@@ -8694,8 +8511,8 @@ msgstr "内部イベントデータの保存期間が正しくありません：
 
 #: disc_prototypes.php:276 disc_prototypes.php:281 disc_prototypes.php:294
 #: host_discovery.php:196 host_discovery.php:201 host_discovery.php:214
-#: items.php:459 items.php:464 items.php:477 items.php:789 items.php:794
-#: items.php:807
+#: items.php:459 items.php:464 items.php:477 items.php:788 items.php:793
+#: items.php:806
 #, c-format
 msgid "Invalid interval \"%1$s\"."
 msgstr "更新間隔\"%1$s\"が正しくありません。"
@@ -8940,8 +8757,8 @@ msgstr "イタリア語 (it_IT)"
 #: include/views/configuration.triggers.expression.php:64
 #: include/views/monitoring.screen.constructor.edit.php:235
 #: include/views/monitoring.screen.constructor.edit.php:365
-#: include/views/monitoring.screen.constructor.edit.php:626 items.php:758
-#: items.php:1109 items.php:1142 tr_logform.php:339
+#: include/views/monitoring.screen.constructor.edit.php:626 items.php:757
+#: items.php:1108 items.php:1141 tr_logform.php:339
 msgid "Item"
 msgstr "アイテム"
 
@@ -8971,7 +8788,7 @@ msgstr "アイテム\"%1$s\"はフィールド番号が存在しないホスト�
 msgid "Item \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "アイテム\"%1$s\"はテンプレート\"%2$s\"に存在しません。"
 
-#: include/classes/api/services/CItemGeneral.php:1474
+#: include/classes/api/services/CItemGeneral.php:1477
 #, c-format
 msgid "Item \"%1$s\" does not exist or you have no access to this item"
 msgstr "アイテム\"%1$s\"が存在しないかアクセス権限がありません"
@@ -8979,23 +8796,23 @@ msgstr "アイテム\"%1$s\"が存在しないかアクセス権限がありま�
 #: include/items.inc.php:537
 #, c-format
 msgid "Item \"%1$s\" has master item and cannot be copied."
-msgstr ""
+msgstr "アイテム\"%1$s\"はマスターアイテムを持っているのでコピーできません。"
 
 #: include/classes/import/CConfigurationImport.php:699
 #, c-format
 msgid "Item \"%1$s\" on \"%2$s\": application \"%3$s\" does not exist."
 msgstr "\"%2$s\"上のアイテム\"%1$s\": アプリケーション\"%3$s\"は存在しません。"
 
-#: include/classes/api/services/CItemGeneral.php:515
+#: include/classes/api/services/CItemGeneral.php:518
 #, c-format
 msgid "Item \"%1$s:%2$s\" has invalid port: \"%3$s\"."
 msgstr "アイテム\"%1$s:%2$s\"のポート\"%3$s\"は正しくありません。"
 
-#: items.php:725
+#: items.php:724
 msgid "Item added"
 msgstr "アイテムを追加しました"
 
-#: items.php:1077
+#: items.php:1076
 msgid "Item copied"
 msgid_plural "Items copied"
 msgstr[0] "アイテムをコピーしました"
@@ -9008,12 +8825,12 @@ msgstr "アイテム数"
 msgid "Item deleted"
 msgstr "アイテムを削除しました"
 
-#: applications.php:172 items.php:1035
+#: applications.php:172 items.php:1034
 msgid "Item disabled"
 msgid_plural "Items disabled"
 msgstr[0] "アイテムを無効にしました"
 
-#: applications.php:171 items.php:1034
+#: applications.php:171 items.php:1033
 msgid "Item enabled"
 msgid_plural "Items enabled"
 msgstr[0] "アイテムを有効にしました"
@@ -9022,11 +8839,11 @@ msgstr[0] "アイテムを有効にしました"
 msgid "Item in \"not supported\" state"
 msgstr "アイテムが\"取得不可\"の状態"
 
-#: popup_trexpr.php:891
+#: popup_trexpr.php:611
 msgid "Item not selected"
 msgstr "アイテムが選択されていません"
 
-#: include/classes/api/services/CItemGeneral.php:1169
+#: include/classes/api/services/CItemGeneral.php:1172
 #, c-format
 msgid "Item pre-processing is missing parameters: %1$s"
 msgstr "アイテムの保存前処理の引数が設定されていません：%1$s"
@@ -9045,7 +8862,7 @@ msgstr "アイテムのプロトタイプ"
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", inherited from another template."
 msgstr "アイテムのプロトタイプ\"%1$s\"は\"%2$s\"にすでに存在します(他のテンプレートからの継承)。"
 
-#: include/classes/api/services/CItemGeneral.php:1006
+#: include/classes/api/services/CItemGeneral.php:1009
 #, c-format
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", linked to another rule."
 msgstr "アイテムのプロトタイプ\"%1$s\"は\"%2$s\"にすでに存在します(別のルールでリンク済)。"
@@ -9086,15 +8903,15 @@ msgstr "アイテムのプロトタイプ"
 msgid "Item prototypes deleted"
 msgstr "アイテムのプロトタイプを削除しました"
 
-#: items.php:728
+#: items.php:727
 msgid "Item updated"
 msgstr "アイテムを更新しました"
 
-#: include/classes/api/services/CItemGeneral.php:348
+#: include/classes/api/services/CItemGeneral.php:351
 msgid "Item uses host interface from non-parent host."
 msgstr "アイテムが親ホストのものではないホストインターフェースを使用しています。"
 
-#: include/classes/api/services/CItemGeneral.php:351
+#: include/classes/api/services/CItemGeneral.php:354
 msgid "Item uses incorrect interface type."
 msgstr "アイテムに正しくないインターフェースタイプが設定されています。"
 
@@ -9102,49 +8919,49 @@ msgstr "アイテムに正しくないインターフェースタイプが設定
 msgid "Item values"
 msgstr "アイテムの値"
 
-#: include/classes/api/services/CItemGeneral.php:320
+#: include/classes/api/services/CItemGeneral.php:323
 msgid "Item will not be refreshed. Please enter a correct update interval."
 msgstr "アイテムは更新されません。正しい更新間隔を設定してください。"
 
-#: include/classes/api/services/CItemGeneral.php:303
+#: include/classes/api/services/CItemGeneral.php:306
 msgid "Item will not be refreshed. Specified update interval requires having at least one either flexible or scheduling interval."
-msgstr ""
+msgstr "アイテムはリフレッシュされません。更新間隔として少なくとも1つの例外設定か定期設定の更新間隔を指定してください。"
 
-#: include/classes/api/services/CItemGeneral.php:308
+#: include/classes/api/services/CItemGeneral.php:311
 msgid "Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used."
-msgstr ""
+msgstr "アイテムはリフレッシュされません。更新間隔は1sから1dでなければなりません。また定期設定や例外設定の更新間隔を使用できます。"
 
 #: include/classes/api/services/CDashboard.php:727
 #, c-format
 msgid "Item with ID \"%1$s\" is not available."
 msgstr "ID \"%1$s\"のアイテムは使用できません。"
 
-#: include/classes/api/services/CItemGeneral.php:656
+#: include/classes/api/services/CItemGeneral.php:659
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as a discovery rule."
 msgstr "キー\"%1$s\"が設定されたアイテムは\"%2$s\"にディスカバリルールとしてすでに存在します。"
 
-#: include/classes/api/services/CItemGeneral.php:662
+#: include/classes/api/services/CItemGeneral.php:665
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item created from item prototype."
 msgstr "キー\"%1$s\"が設定されたアイテムはホスト\"%2$s\"にプロトタイプから生成されたアイテムとしてすでに存在します。"
 
-#: include/classes/api/services/CItemGeneral.php:659
+#: include/classes/api/services/CItemGeneral.php:662
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item prototype."
 msgstr "キー\"%1$s\"が設定されたアイテムはホスト\"%2$s\"にプロトタイプとしてすでに存在します。"
 
-#: include/classes/api/services/CItemGeneral.php:653
+#: include/classes/api/services/CItemGeneral.php:656
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item."
 msgstr "キー\"%1$s\"が設定されたアイテムはホスト\"%2$s\"にすでに存在します。"
 
-#: include/classes/api/services/CItemGeneral.php:665
+#: include/classes/api/services/CItemGeneral.php:668
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as unknown item element."
 msgstr "キー\"%1$s\"が設定されたアイテムはホスト\"%2$s\"に不明なアイテムとしてすでに存在します。"
 
-#: include/classes/api/services/CItemGeneral.php:1397
+#: include/classes/api/services/CItemGeneral.php:1400
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\"."
 msgstr "キー\"%1$s\"が設定されたアイテムは指定したホスト\"%2$s\"にすでに存在します。"
@@ -9164,13 +8981,13 @@ msgstr "キー\"%1$s\"が設定されたアイテムは指定したホスト\"%2
 #: include/views/configuration.template.list.php:57
 #: include/views/configuration.template.list.php:158
 #: include/views/conf.import.php:34 include/views/inventory.host.view.php:164
-#: include/views/inventory.host.view.php:175 items.php:1384 popup.php:76
+#: include/views/inventory.host.view.php:175 items.php:1383 popup.php:76
 #: queue.php:103 search.php:135 search.php:164 search.php:193 search.php:410
 #: search.php:438 search.php:467
 msgid "Items"
 msgstr "アイテム"
 
-#: items.php:1152
+#: items.php:1151
 msgid "Items deleted"
 msgstr "アイテムを削除しました"
 
@@ -9178,7 +8995,7 @@ msgstr "アイテムを削除しました"
 msgid "Items list"
 msgstr "アイテムのリスト"
 
-#: items.php:1014
+#: items.php:1013
 msgid "Items updated"
 msgstr "アイテムを更新しました"
 
@@ -9285,7 +9102,7 @@ msgstr "存在しなくなったリソースの保持期間"
 msgid "Key"
 msgstr "キー"
 
-#: include/classes/api/services/CItemGeneral.php:400
+#: include/classes/api/services/CItemGeneral.php:403
 #, c-format
 msgid "Key \"%1$s\" does not match <grpmax|grpmin|grpsum|grpavg>[\"Host group(s)\", \"Item key\", \"<last|min|max|avg|sum|count>\", \"parameter\"]."
 msgstr "キー\"%1$s\"が<grpmax|grpmin|grpsum|grpavg>[\"Host group(s)\", \"Item key\", \"<last|min|max|avg|sum|count>\", \"parameter\"]とマッチしません。"
@@ -9359,22 +9176,6 @@ msgstr "最終週"
 msgctxt "page navigation"
 msgid "Last"
 msgstr "最後"
-
-#: popup_trexpr.php:286
-msgid "Last (most recent) T value is < N"
-msgstr "最新(T秒前/T個前)の値 < N"
-
-#: popup_trexpr.php:296
-msgid "Last (most recent) T value is = N"
-msgstr "最新(T秒前/T個前)の値 = N"
-
-#: popup_trexpr.php:291
-msgid "Last (most recent) T value is > N"
-msgstr "最新(T秒前/T個前)の値 > N"
-
-#: popup_trexpr.php:301
-msgid "Last (most recent) T value is NOT N"
-msgstr "最新(T秒前/T個前)の値 NOT N"
 
 #: srv_status.php:38
 msgid "Last 24 hours"
@@ -9474,22 +9275,6 @@ msgstr "左"
 #: include/items.inc.php:1534
 msgid "Left trim"
 msgstr "先頭文字列削除"
-
-#: popup_trexpr.php:392
-msgid "Length of last (most recent) T value in characters is < N"
-msgstr "最新(T秒前/T個前)の文字列の長さ < N"
-
-#: popup_trexpr.php:402
-msgid "Length of last (most recent) T value in characters is = N"
-msgstr "最新(T秒前/T個前)の文字列の長さ = N"
-
-#: popup_trexpr.php:397
-msgid "Length of last (most recent) T value in characters is > N"
-msgstr "最新(T秒前/T個前)の文字列の長さ > N"
-
-#: popup_trexpr.php:407
-msgid "Length of last (most recent) T value in characters is NOT N"
-msgstr "最新(T秒前/T個前)の文字列の長さ NOT N"
 
 #: adm.gui.php:40 include/views/administration.general.gui.edit.php:43
 msgid "Limit for search and filter results"
@@ -9662,30 +9447,6 @@ msgstr "ログローテーションに対応したログファイル監視。ロ
 msgid "Log file monitoring. Returns log"
 msgstr "ログファイル監視。ログ値を返す。"
 
-#: popup_trexpr.php:520
-msgid "Log severity of the last log entry is < N"
-msgstr "最新のログの深刻度 < N"
-
-#: popup_trexpr.php:528
-msgid "Log severity of the last log entry is = N"
-msgstr "最新のログの深刻度 = N"
-
-#: popup_trexpr.php:524
-msgid "Log severity of the last log entry is > N"
-msgstr "最新のログの深刻度 > N"
-
-#: popup_trexpr.php:532
-msgid "Log severity of the last log entry is NOT N"
-msgstr "最新のログの深刻度 NOT N"
-
-#: popup_trexpr.php:536
-msgid "Log source of the last log entry matching parameter T, then N = 1, 0 - otherwise"
-msgstr "最新のイベントログのログソースに文字列Tと一致 N = 1、その他の場合 N = 0"
-
-#: popup_trexpr.php:541
-msgid "Log source of the last log entry matching parameter T, then N NOT 1, 0 - otherwise"
-msgstr "最新のイベントログのログソースに文字列Tと一致 N NOT 1、その他の場合 N = 0"
-
 #: include/views/configuration.item.edit.php:446
 #: include/views/configuration.item.massupdate.php:462
 #: include/views/configuration.item.prototype.edit.php:318
@@ -9734,7 +9495,7 @@ msgstr "Lost"
 msgid "Low-level discovery rule in \"not supported\" state"
 msgstr "ローレベルディスカバリが\"取得不可\"の状態"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1625
+#: include/classes/graphdraw/CLineGraphDraw.php:1376
 msgid "M"
 msgstr "M"
 
@@ -9932,7 +9693,7 @@ msgstr "マップの要素の引数が設定されていません：%1$s"
 
 #: sysmap.php:102
 msgid "Map is updated! Return?"
-msgstr "マップが更新されています！ 戻りますか？"
+msgstr "マップを更新しました！一覧画面へ戻りますか？"
 
 #: include/views/monitoring.sysmap.edit.php:184
 msgid "Map label type"
@@ -10062,22 +9823,6 @@ msgstr "OSがサポートしている最大プロセス数。整数値を返す�
 msgid "Maximum time period to display is %1$s day."
 msgid_plural "Maximum time period to display is %1$s days."
 msgstr[0] "表示できる最大の期間は%1$s日です。"
-
-#: popup_trexpr.php:306
-msgid "Maximum value for period T is < N"
-msgstr "期間Tの値の最大値 < N"
-
-#: popup_trexpr.php:316
-msgid "Maximum value for period T is = N"
-msgstr "期間Tの値の最大値 = N"
-
-#: popup_trexpr.php:311
-msgid "Maximum value for period T is > N"
-msgstr "期間Tの値の最大値 > N"
-
-#: popup_trexpr.php:321
-msgid "Maximum value for period T is NOT N"
-msgstr "期間Tの値の最大値 NOT N"
 
 #: include/forms.inc.php:1916 include/func.inc.php:120
 #: include/func.inc.php:257 jsLoader.php:132
@@ -10258,22 +10003,6 @@ msgstr[0] "表示できる最小の期間は%1$s分です。"
 #: include/views/monitoring.sysmap.edit.php:228
 msgid "Minimum trigger severity"
 msgstr "最小のトリガー深刻度"
-
-#: popup_trexpr.php:326
-msgid "Minimum value for period T is < N"
-msgstr "期間Tの値の最小値 < N"
-
-#: popup_trexpr.php:336
-msgid "Minimum value for period T is = N"
-msgstr "期間Tの値の最小値 = N"
-
-#: popup_trexpr.php:331
-msgid "Minimum value for period T is > N"
-msgstr "期間Tの値の最小値 > N"
-
-#: popup_trexpr.php:341
-msgid "Minimum value for period T is NOT N"
-msgstr "期間Tの値の最小値 NOT N"
 
 #: include/forms.inc.php:2048
 msgid "Minutes"
@@ -10467,7 +10196,7 @@ msgstr "NTLM"
 #: include/views/configuration.httpconf.popup.php:86
 #: include/views/configuration.httpconf.popup.php:146
 #: include/views/configuration.item.edit.php:61
-#: include/views/configuration.item.edit.php:549
+#: include/views/configuration.item.edit.php:554
 #: include/views/configuration.item.list.php:58
 #: include/views/configuration.item.list.php:158
 #: include/views/configuration.item.massupdate.php:259
@@ -10583,7 +10312,7 @@ msgid "New"
 msgstr "新規"
 
 #: include/views/configuration.httpconf.edit.php:72
-#: include/views/configuration.item.edit.php:491
+#: include/views/configuration.item.edit.php:496
 #: include/views/configuration.item.prototype.edit.php:347
 msgid "New application"
 msgstr "アプリケーションの作成"
@@ -10760,11 +10489,11 @@ msgstr "IPMIインターフェースが設定されていません"
 msgid "No JMX interfaces found."
 msgstr "JMXインターフェースが設定されていません。"
 
-#: include/classes/api/services/CItemGeneral.php:503
+#: include/classes/api/services/CItemGeneral.php:506
 msgid "No SNMP OID specified."
 msgstr "SNMP OIDが設定されていません。"
 
-#: include/classes/api/services/CItemGeneral.php:509
+#: include/classes/api/services/CItemGeneral.php:512
 msgid "No SNMP community specified."
 msgstr "SNMPコミュニティ名が設定されていません。"
 
@@ -10797,7 +10526,7 @@ msgstr "実行するアクションのコマンド\"%s\"に認証のタイプが
 msgid "No authentication user name specified for action operation command \"%s\"."
 msgstr "実行するアクションのコマンド\"%s\"に認証ユーザー名が設定されていません。"
 
-#: include/classes/api/services/CItemGeneral.php:481
+#: include/classes/api/services/CItemGeneral.php:484
 msgid "No authentication user name specified."
 msgstr "認証ユーザー名が設定されていません。"
 
@@ -10833,14 +10562,6 @@ msgstr "データ収集なし"
 #: include/classes/html/CTableInfo.php:30
 msgid "No data found."
 msgstr "データがありません。"
-
-#: popup_trexpr.php:578
-msgid "No data received during period of time T, then N = 1, 0 - otherwise"
-msgstr "期間Tの間にデータが存在しない N= 1、それ以外 N = 0"
-
-#: popup_trexpr.php:583
-msgid "No data received during period of time T, then N NOT 1, 0 - otherwise"
-msgstr "期間Tの間にデータが存在しない N NOT 1、それ以外 N NOT 0"
 
 #: app/controllers/CControllerWidgetClockView.php:76
 msgid "No data."
@@ -10954,7 +10675,7 @@ msgstr "イメージは存在しません"
 msgid "No interface found"
 msgstr "インターフェースが見つかりません。"
 
-#: include/classes/api/services/CItemGeneral.php:345
+#: include/classes/api/services/CItemGeneral.php:348
 msgid "No interface found."
 msgstr "インターフェースが見つかりません。"
 
@@ -11089,7 +10810,7 @@ msgstr "システムへのアクセス権がありません。"
 #: include/classes/api/services/CImage.php:480
 #: include/classes/api/services/CImage.php:498
 #: include/classes/api/services/CItemGeneral.php:175
-#: include/classes/api/services/CItemGeneral.php:260
+#: include/classes/api/services/CItemGeneral.php:263
 #: include/classes/api/services/CItem.php:552
 #: include/classes/api/services/CItemPrototype.php:720
 #: include/classes/api/services/CMaintenance.php:261
@@ -11152,7 +10873,7 @@ msgstr "システムへのアクセス権がありません。"
 #: include/classes/helpers/CMapHelper.php:84
 #: include/classes/screens/CScreenHistory.php:113
 #: include/classes/screens/CScreenHttpTestDetails.php:46
-#: include/func.inc.php:1718 items.php:1222 scripts_exec.php:90
+#: include/func.inc.php:1718 items.php:1221 scripts_exec.php:90
 msgid "No permissions to referred object or it does not exist!"
 msgstr "対象が存在しないか、アクセス権がありません！"
 
@@ -11161,7 +10882,7 @@ msgstr "対象が存在しないか、アクセス権がありません！"
 msgid "No private key file specified for action operation command \"%s\"."
 msgstr "実行するアクションのコマンド\"%s\"に秘密鍵ファイルが設定されていません。"
 
-#: include/classes/api/services/CItemGeneral.php:489
+#: include/classes/api/services/CItemGeneral.php:492
 msgid "No private key file specified."
 msgstr "秘密鍵ファイルが設定されていません。"
 
@@ -11174,7 +10895,7 @@ msgstr "プロキシなし"
 msgid "No public key file specified for action operation command \"%s\"."
 msgstr "実行するアクションのコマンド\"%s\"に公開鍵ファイルが設定されていません。"
 
-#: include/classes/api/services/CItemGeneral.php:486
+#: include/classes/api/services/CItemGeneral.php:489
 msgid "No public key file specified."
 msgstr "公開鍵ファイルが設定されていません。"
 
@@ -11206,7 +10927,7 @@ msgstr "プロキシにステータスが設定されていません。"
 msgid "No target selected"
 msgstr "何も選択されていません"
 
-#: graphs.php:371 items.php:1082
+#: graphs.php:371 items.php:1081
 msgid "No target selected."
 msgstr "何も選択されていません。"
 
@@ -11237,8 +10958,8 @@ msgstr "論理値ではないフラグは廃止予定です。"
 #: include/views/configuration.host.list.php:217
 #: include/views/configuration.host.list.php:229
 #: include/views/configuration.host.list.php:232
-#: include/views/configuration.item.edit.php:496
-#: include/views/configuration.item.edit.php:510
+#: include/views/configuration.item.edit.php:501
+#: include/views/configuration.item.edit.php:515
 #: include/views/configuration.item.prototype.edit.php:354
 #: include/views/configuration.item.prototype.edit.php:369
 #: include/views/configuration.trigger.prototype.edit.php:266
@@ -11257,6 +10978,10 @@ msgstr "ノーマル"
 #: include/html.inc.php:178
 msgid "Normal view"
 msgstr "通常表示"
+
+#: include/locales.inc.php:73
+msgid "Norwegian (nb_NO)"
+msgstr "ノルウェー語 (nb_NO)"
 
 #: include/actions.inc.php:153 include/actions.inc.php:337
 #: include/views/configuration.action.edit.php:1122
@@ -11396,22 +11121,6 @@ msgstr "VMwareハイパーバイザー上のプロセッサスレッド数、<ur
 msgid "Number of processors on VMware virtual machine, <url> - VMware service URL, <uuid> - VMware virtual machine host name"
 msgstr "VMware仮想マシン上のプロセッサ数、<url> - VMwareサービスURL、<uuid> - VMware仮想マシンのホスト名"
 
-#: popup_trexpr.php:546
-msgid "Number of seconds since the Epoch is < N"
-msgstr "エポック時間からの経過秒数 < N"
-
-#: popup_trexpr.php:554
-msgid "Number of seconds since the Epoch is = N"
-msgstr "エポック時間からの経過秒数 = N"
-
-#: popup_trexpr.php:550
-msgid "Number of seconds since the Epoch is > N"
-msgstr "エポック時間からの経過秒数 > N"
-
-#: popup_trexpr.php:558
-msgid "Number of seconds since the Epoch is NOT N"
-msgstr "エポック時間からの経過秒数 NOT N"
-
 #: include/views/monitoring.slideconf.list.php:57
 msgid "Number of slides"
 msgstr "スライド数"
@@ -11424,22 +11133,6 @@ msgstr "ステータス変更の回数"
 #: include/views/configuration.httpconf.list.php:80
 msgid "Number of steps"
 msgstr "ステップ数"
-
-#: popup_trexpr.php:258
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is < N"
-msgstr "期間T内に含まれる(条件Oを満たす)値Vの個数 < N"
-
-#: popup_trexpr.php:268
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is = N"
-msgstr "期間T内に含まれる(条件Oを満たす)値Vの個数 = N"
-
-#: popup_trexpr.php:263
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is > N"
-msgstr "期間T内に含まれる(条件Oを満たす)値Vの個数 > N"
-
-#: popup_trexpr.php:273
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is NOT N"
-msgstr "期間T内に含まれる(条件Oを満たす)値Vの個数 NOT N"
 
 #: include/blocks.inc.php:449
 msgid "Number of triggers (enabled/disabled [problem/ok])"
@@ -11711,7 +11404,7 @@ msgstr "管理者だけがスライドショーの所有者を設定できます
 msgid "Only items assigned to enabled hosts are counted"
 msgstr "有効なホストのアイテムのみカウント"
 
-#: include/classes/api/services/CItemGeneral.php:1284
+#: include/classes/api/services/CItemGeneral.php:1287
 msgid "Only one change step is allowed."
 msgstr "変更できるのは1つのステップだけです。"
 
@@ -12140,7 +11833,7 @@ msgstr "POP"
 #: app/views/monitoring.widget.problems.view.php:100 chart5.php:199
 #: include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:831
-#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:316
+#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:320
 #: include/events.inc.php:516 include/maps.inc.php:428
 #: include/maps.inc.php:513 include/maps.inc.php:607 include/maps.inc.php:709
 #: include/triggers.inc.php:173 include/views/monitoring.overview.items.php:32
@@ -12199,7 +11892,7 @@ msgid "Parameter \"%1$s\" is deprecated."
 msgstr "パラメータ\"%1$s\"は廃止予定です。"
 
 #: include/classes/debug/CProfiler.php:182
-#: include/views/configuration.item.edit.php:550
+#: include/views/configuration.item.edit.php:555
 #: include/views/configuration.item.massupdate.php:260
 #: include/views/configuration.item.prototype.edit.php:390
 msgid "Parameters"
@@ -12320,22 +12013,6 @@ msgstr "ピーク時のメモリ使用量: %1$s"
 msgid "Percentage"
 msgstr "パーセンテージ"
 
-#: popup_trexpr.php:346
-msgid "Percentile P of a period T is < N"
-msgstr "期間TのパーセンテージP < N"
-
-#: popup_trexpr.php:356
-msgid "Percentile P of a period T is = N"
-msgstr "期間TのパーセンテージP = N"
-
-#: popup_trexpr.php:351
-msgid "Percentile P of a period T is > N"
-msgstr "期間TのパーセンテージP > N"
-
-#: popup_trexpr.php:361
-msgid "Percentile P of a period T is NOT N"
-msgstr "期間TのパーセンテージP NOT N"
-
 #: graphs.php:53 include/views/configuration.graph.edit.php:125
 msgid "Percentile line (left)"
 msgstr "パーセンタイルライン (左)"
@@ -12391,7 +12068,7 @@ msgstr "権限"
 msgid "Permissions can be assigned for user groups only."
 msgstr "権限はユーザーグループにのみ割り当てることができます。"
 
-#: include/locales.inc.php:73
+#: include/locales.inc.php:74
 msgid "Persian (fa_IR)"
 msgstr "ペルシャ語 (fa_IR)"
 
@@ -12442,11 +12119,11 @@ msgstr "要素名を指定してください。"
 msgid "Points"
 msgstr "端点"
 
-#: include/locales.inc.php:74
+#: include/locales.inc.php:75
 msgid "Polish (pl_PL)"
 msgstr "ポーランド語 (pl_PL)"
 
-#: include/views/configuration.item.edit.php:530
+#: include/views/configuration.item.edit.php:535
 msgid "Populates host inventory field"
 msgstr "ホストインベントリフィールドの自動設定"
 
@@ -12478,11 +12155,11 @@ msgstr "ホストインターフェースのポートは必須項目です。"
 msgid "Port range"
 msgstr "ポートの範囲"
 
-#: include/locales.inc.php:75
+#: include/locales.inc.php:76
 msgid "Portuguese (pt_BR)"
 msgstr "ポルトガル語 (pt_BR)"
 
-#: include/locales.inc.php:76
+#: include/locales.inc.php:77
 msgid "Portuguese (pt_PT)"
 msgstr "ポルトガル語 (pt_PT)"
 
@@ -12503,12 +12180,12 @@ msgstr "ポスト形式"
 msgid "Pre-installation summary"
 msgstr "インストール事前準備概要"
 
-#: include/views/configuration.item.edit.php:669
+#: include/views/configuration.item.edit.php:674
 #: include/views/configuration.item.prototype.edit.php:509
 msgid "Preprocessing"
 msgstr "保存前処理"
 
-#: include/views/configuration.item.edit.php:664
+#: include/views/configuration.item.edit.php:669
 #: include/views/configuration.item.massupdate.php:356
 #: include/views/configuration.item.prototype.edit.php:504
 msgid "Preprocessing steps"
@@ -12519,22 +12196,6 @@ msgstr "保存前処理のステップ"
 #: include/views/configuration.graph.edit.php:374
 msgid "Preview"
 msgstr "プレビュー"
-
-#: popup_trexpr.php:366
-msgid "Previous value is < N"
-msgstr "前回の値 < N"
-
-#: popup_trexpr.php:374
-msgid "Previous value is = N"
-msgstr "前回の値 = N"
-
-#: popup_trexpr.php:370
-msgid "Previous value is > N"
-msgstr "前回の値 > N"
-
-#: popup_trexpr.php:378
-msgid "Previous value is NOT N"
-msgstr "前回の値 NOT N"
 
 #: include/hosts.inc.php:399
 msgid "Primary POC cell"
@@ -12787,7 +12448,7 @@ msgstr "更新待ちアイテムのキュー"
 #: app/views/monitoring.widget.problems.view.php:84
 #: include/classes/screens/CScreenEvents.php:134
 #: include/classes/screens/CScreenProblem.php:815
-#: include/classes/screens/CScreenProblem.php:958 include/events.inc.php:321
+#: include/classes/screens/CScreenProblem.php:958 include/events.inc.php:325
 #: include/events.inc.php:500 tr_status.php:687
 msgid "RESOLVED"
 msgstr "解決済"
@@ -12944,22 +12605,6 @@ msgstr "正規表現"
 msgid "Regular expression \"%s\" already exists."
 msgstr "正規表現\"%s\"はすでに存在します。"
 
-#: popup_trexpr.php:490
-msgid "Regular expression V matching last value in period T, then N = 1, 0 - otherwise"
-msgstr "最新(T秒前/T個前)の値が正規表現Vに一致する場合 N = 1、その他の場合 N = 0 (=条件)"
-
-#: popup_trexpr.php:500
-msgid "Regular expression V matching last value in period T, then N = 1, 0 - otherwise (non case-sensitive)"
-msgstr "最新(T秒前/T個前)の値が正規表現Vに一致する場合 N = 1、その他の場合 N = 0 (=条件、大文字小文字を区別しない)"
-
-#: popup_trexpr.php:495
-msgid "Regular expression V matching last value in period T, then N NOT 1, 0 - otherwise"
-msgstr "最新(T秒前/T個前)の値が正規表現Vに一致する場合 N = 1、その他の場合 N = 0 (#条件)"
-
-#: popup_trexpr.php:505
-msgid "Regular expression V matching last value in period T, then N NOT 1, 0 - otherwise (non case-sensitive)"
-msgstr "最新(T秒前/T個前)の値が正規表現Vに一致する場合 N = 1、その他の場合 N = 0 (#条件、大文字小文字を区別しない)"
-
 #: adm.regexps.php:147
 msgid "Regular expression added"
 msgstr "正規表現を追加しました"
@@ -13023,7 +12668,7 @@ msgstr "リモートコマンド"
 #: include/views/configuration.host.discovery.edit.php:327
 #: include/views/configuration.httpconf.edit.php:232
 #: include/views/configuration.item.edit.php:382
-#: include/views/configuration.item.edit.php:646
+#: include/views/configuration.item.edit.php:651
 #: include/views/configuration.item.massupdate.php:339
 #: include/views/configuration.item.massupdate.php:407
 #: include/views/configuration.item.prototype.edit.php:292
@@ -13245,7 +12890,8 @@ msgstr "レスポンスタイム"
 #: include/classes/debug/CProfiler.php:183
 #: include/views/administration.general.regularexpressions.edit.php:112
 #: include/views/administration.general.regularexpressions.edit.php:117
-#: tr_testexpr.php:147 tr_testexpr.php:184
+#: include/views/configuration.triggers.expression.php:120 tr_testexpr.php:147
+#: tr_testexpr.php:184
 msgid "Result"
 msgstr "結果"
 
@@ -13327,7 +12973,7 @@ msgstr "右"
 msgid "Right trim"
 msgstr "末尾文字列削除"
 
-#: include/locales.inc.php:77
+#: include/locales.inc.php:78
 msgid "Romanian (ro_RO)"
 msgstr "ルーマニア語 (ro_RO)"
 
@@ -13398,7 +13044,7 @@ msgstr "ホストでリモートコマンドを実行"
 msgid "Run specified command on the host. Returns text result of the command; 1 - with mode as nowait (regardless of command result)"
 msgstr "ホスト上で指定したコマンドの実行。コマンドの実行結果のテキスト値を返す。モードでnowaitを指定した場合はコマンドの実行結果に関わらず1を返す。"
 
-#: include/locales.inc.php:78
+#: include/locales.inc.php:79
 msgid "Russian (ru_RU)"
 msgstr "ロシア語 (ru_RU)"
 
@@ -13487,7 +13133,7 @@ msgstr "SNMPインターフェース"
 msgid "SNMP trap"
 msgstr "SNMPトラップ"
 
-#: include/classes/api/services/CItemGeneral.php:497
+#: include/classes/api/services/CItemGeneral.php:500
 msgid "SNMP trap key is invalid."
 msgstr "SNMPトラップのキーが正しくありません。"
 
@@ -14261,7 +13907,7 @@ msgstr "コメント未入力のみ表示"
 msgid "Show unavailable maps"
 msgstr "使用不可なマップの表示"
 
-#: include/views/configuration.item.edit.php:468
+#: include/views/configuration.item.edit.php:472
 #: include/views/configuration.item.massupdate.php:478
 #: include/views/configuration.item.prototype.edit.php:341
 msgid "Show value"
@@ -14420,7 +14066,7 @@ msgstr "スライドショー"
 msgid "Slides"
 msgstr "スライド"
 
-#: include/locales.inc.php:79
+#: include/locales.inc.php:80
 msgid "Slovak (sk_SK)"
 msgstr "スロバキア語 (sk_SK)"
 
@@ -14498,7 +14144,7 @@ msgstr "ソース"
 msgid "Source type"
 msgstr "ソースの種類"
 
-#: include/locales.inc.php:80
+#: include/locales.inc.php:81
 msgid "Spanish (es_ES)"
 msgstr "スペイン語(es_ES)"
 
@@ -14700,22 +14346,6 @@ msgstr "成功の監査"
 msgid "Sum of incoming and outgoing traffic statistics on network interface. Returns integer"
 msgstr "ネットワークインターフェースの送受信合計値。整数値を返す。"
 
-#: popup_trexpr.php:412
-msgid "Sum of values of a period T is < N"
-msgstr "期間Tの値の合計値 < N"
-
-#: popup_trexpr.php:422
-msgid "Sum of values of a period T is = N"
-msgstr "期間Tの値の合計値 = N"
-
-#: popup_trexpr.php:417
-msgid "Sum of values of a period T is > N"
-msgstr "期間Tの値の合計値 > N"
-
-#: popup_trexpr.php:427
-msgid "Sum of values of a period T is NOT N"
-msgstr "期間Tの値の合計値 NOT N"
-
 #: include/func.inc.php:212
 msgid "Sun"
 msgstr "日"
@@ -14750,7 +14380,7 @@ msgstr "スワップアウト（メモリからデバイスへ）の統計。 �
 msgid "Swap space size in bytes or in percentage from total. Returns integer for bytes; float for percentage"
 msgstr "スワップ容量のサイズ。バイト単位であれば整数値を返し、パーセンテージであれば浮動小数点値を返す。"
 
-#: include/locales.inc.php:81
+#: include/locales.inc.php:82
 msgid "Swedish (sv_SE)"
 msgstr "スウェーデン語 (sv_SE)"
 
@@ -15237,8 +14867,8 @@ msgstr "終了"
 #: include/views/configuration.services.edit.php:290
 #: include/views/configuration.services.edit.php:304
 #: include/views/configuration.services.edit.php:337
-#: include/views/configuration.triggers.expression.php:89
-#: include/views/configuration.triggers.expression.php:97 jsLoader.php:149
+#: include/views/configuration.triggers.expression.php:87
+#: include/views/configuration.triggers.expression.php:92 jsLoader.php:149
 #: popup_trexpr.php:33 popup_trexpr.php:130 tr_status.php:491
 msgid "Time"
 msgstr "時間"
@@ -15252,8 +14882,8 @@ msgid "Time (descending)"
 msgstr "時間 (降順)"
 
 #: include/classes/items/CHelpItems.php:951
-msgid "Time a particular Zabbix process or a group of processes (identified by <type> and <num>) spent in <state> in percentage."
-msgstr "特定のZabbixのプロセスもしくはプロセスグループ(<type>や<num>で特定できるもの)が<state>で消費している時間のパーセンテージ。"
+msgid "Time a particular Zabbix process or a group of processes (identified by <type> and <mode>) spent in <state> in percentage."
+msgstr "特定のZabbixのプロセスもしくはプロセスグループ(<type>や<mode>で特定できるもの)が<state>で消費している時間のパーセンテージ。"
 
 #: include/classes/items/CHelpItems.php:955
 msgid "Time of proxy last access. Name - proxy name. Param - lastaccess. Unix timestamp."
@@ -15267,22 +14897,6 @@ msgstr "期間"
 #: popup_trexpr.php:115 popup_trexpr.php:126 popup_trexpr.php:149
 msgid "Time shift"
 msgstr "タイムシフト"
-
-#: popup_trexpr.php:618
-msgid "Time to reach threshold estimated based on period T is < N"
-msgstr "期間Tをもとにした閾値への予想到達時間 < N"
-
-#: popup_trexpr.php:628
-msgid "Time to reach threshold estimated based on period T is = N"
-msgstr "期間Tをもとにした閾値への予想到達時間 = N"
-
-#: popup_trexpr.php:623
-msgid "Time to reach threshold estimated based on period T is > N"
-msgstr "期間Tをもとにした閾値への予想到達時間 > N"
-
-#: popup_trexpr.php:633
-msgid "Time to reach threshold estimated based on period T is NOT N"
-msgstr "期間Tをもとにした閾値への予想到達時間 NOT N"
 
 #: include/classes/widgets/CClockWidgetForm.php:31
 #: include/views/monitoring.screen.constructor.edit.php:604
@@ -15467,7 +15081,7 @@ msgstr "トリガーイベントとアラートのデータ保存期間"
 msgid "Trigger event and alert data storage period \"%1$s\"."
 msgstr "トリガーイベントとアラートのデータ保存期間 \"%1$s\"。"
 
-#: include/views/configuration.triggers.expression.php:128
+#: include/views/configuration.triggers.expression.php:132
 msgid "Trigger expression condition"
 msgstr "トリガー条件式の状態"
 
@@ -15652,7 +15266,7 @@ msgstr "火"
 msgid "Tuesday"
 msgstr "火曜"
 
-#: include/locales.inc.php:82
+#: include/locales.inc.php:83
 msgid "Turkish (tr_TR)"
 msgstr "トルコ語 (tr_TR)"
 
@@ -15746,7 +15360,7 @@ msgstr "計算のタイプ"
 msgid "Type of information"
 msgstr "データ型"
 
-#: include/classes/api/services/CItemGeneral.php:409
+#: include/classes/api/services/CItemGeneral.php:412
 msgid "Type of information must be \"Numeric (unsigned)\" or \"Numeric (float)\" for aggregate items."
 msgstr "Zabbixアグリゲートを利用する場合はデータ型を\"数値(整数)\"か\"数値(浮動小数)\"に設定してください。"
 
@@ -15821,7 +15435,7 @@ msgstr "URL"
 msgid "USA (160 characters)"
 msgstr "USA (160文字)"
 
-#: include/locales.inc.php:83
+#: include/locales.inc.php:84
 msgid "Ukrainian (uk_UA)"
 msgstr "ウクライナ語 (uk_UA)"
 
@@ -15918,7 +15532,7 @@ msgstr "不明なエラー"
 msgid "Unknown function."
 msgstr "不明な関数。"
 
-#: include/triggers.inc.php:1322 popup_trexpr.php:736 tr_testexpr.php:34
+#: include/triggers.inc.php:1322 popup_trexpr.php:457 tr_testexpr.php:34
 msgid "Unknown host item, no such item in selected host"
 msgstr "不明なアイテム。選択したホストにそのようなアイテムは存在しません"
 
@@ -16100,7 +15714,7 @@ msgstr "Up"
 #: include/views/configuration.host.prototype.edit.php:436
 #: include/views/configuration.httpconf.edit.php:293
 #: include/views/configuration.httpconf.popup.php:192
-#: include/views/configuration.item.edit.php:691
+#: include/views/configuration.item.edit.php:696
 #: include/views/configuration.item.massupdate.php:614
 #: include/views/configuration.item.prototype.edit.php:518
 #: include/views/configuration.maintenance.edit.php:155
@@ -16854,7 +16468,7 @@ msgstr "縦"
 msgid "Vertical align"
 msgstr "縦位置"
 
-#: include/locales.inc.php:84
+#: include/locales.inc.php:85
 msgid "Vietnamese (vi_VN)"
 msgstr "ベトナム語 (vi_VN)"
 
@@ -17460,7 +17074,7 @@ msgid "a number is too large"
 msgstr "数字が大きすぎます"
 
 #: include/classes/api/services/CDRule.php:320
-#: include/classes/api/services/CItemGeneral.php:1205
+#: include/classes/api/services/CItemGeneral.php:1208
 #: include/classes/api/services/CScreen.php:423
 msgid "a numeric value is expected"
 msgstr "数値で指定してください"
@@ -17483,6 +17097,10 @@ msgstr "時間の単位を指定してください"
 msgid "a user macro is expected"
 msgstr "ユーザーマクロを指定してください"
 
+#: popup_trexpr.php:186
+msgid "abschange() - Absolute difference between last and previous value"
+msgstr "abschange() - 最新値と前回値との絶対的な差分"
+
 #: include/forms.inc.php:484
 msgid "affects only filtered data"
 msgstr "フィルターしたデータにのみ影響があります"
@@ -17491,7 +17109,7 @@ msgstr "フィルターしたデータにのみ影響があります"
 msgid "agent"
 msgstr "エージェント"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2027
+#: include/classes/graphdraw/CLineGraphDraw.php:1840
 #: include/classes/html/CSeverity.php:49
 #: include/classes/pagefilter/CPageFilter.php:849
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
@@ -17569,13 +17187,21 @@ msgstr "自動登録"
 msgid "auto-registered host"
 msgstr "自動登録ホスト"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2009
-#: include/classes/graphdraw/CLineGraphDraw.php:2031
+#: include/classes/graphdraw/CLineGraphDraw.php:1822
+#: include/classes/graphdraw/CLineGraphDraw.php:1844
 #: include/classes/graphdraw/CPieGraphDraw.php:335 include/graphs.inc.php:85
 #: include/views/js/configuration.graph.edit.js.php:50
 #: include/views/js/configuration.graph.edit.js.php:58
 msgid "avg"
 msgstr "平均"
+
+#: popup_trexpr.php:191
+msgid "avg() - Average value of a period T"
+msgstr "avg() - 期間Tの値の平均値"
+
+#: popup_trexpr.php:332
+msgid "band() - Bitwise AND of last (most recent) T value and mask"
+msgstr "band() - 最新または直近の値とマスクとのビットでのANDの値"
 
 #: include/views/administration.general.trigger.options.edit.php:36
 #: include/views/administration.general.trigger.options.edit.php:43
@@ -17606,14 +17232,14 @@ msgstr "変更できません"
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1506
 #: include/classes/api/services/CHttpTest.php:999
-#: include/classes/api/services/CItemGeneral.php:427
-#: include/classes/api/services/CItemGeneral.php:447
-#: include/classes/api/services/CItemGeneral.php:453
-#: include/classes/api/services/CItemGeneral.php:459
-#: include/classes/api/services/CItemGeneral.php:1179
-#: include/classes/api/services/CItemGeneral.php:1199
-#: include/classes/api/services/CItemGeneral.php:1222
-#: include/classes/api/services/CItemGeneral.php:1235
+#: include/classes/api/services/CItemGeneral.php:430
+#: include/classes/api/services/CItemGeneral.php:450
+#: include/classes/api/services/CItemGeneral.php:456
+#: include/classes/api/services/CItemGeneral.php:462
+#: include/classes/api/services/CItemGeneral.php:1182
+#: include/classes/api/services/CItemGeneral.php:1202
+#: include/classes/api/services/CItemGeneral.php:1225
+#: include/classes/api/services/CItemGeneral.php:1238
 #: include/classes/api/services/CMapElement.php:122
 #: include/classes/api/services/CMapElement.php:147
 #: include/classes/api/services/CMapElement.php:185
@@ -17649,15 +17275,19 @@ msgstr "空白は指定できません"
 msgid "cannot perform Scroll API request, data could be truncated"
 msgstr "スクロールAPIリクエストを実行できません。データは切り捨てられます"
 
+#: popup_trexpr.php:203
+msgid "change() - Difference between last and previous value"
+msgstr "change() - 最新値と前回値との差分"
+
 #: include/classes/parsers/CConditionFormula.php:188
 #, c-format
 msgid "check expression starting from \"%1$s\""
 msgstr "\"%1$s\"から始まる条件式を確認してください"
 
 #: include/classes/api/services/CHostGeneral.php:1036
-#: include/classes/api/services/CItemGeneral.php:1511
-#: include/classes/api/services/CItemGeneral.php:1517
-#: include/classes/api/services/CItemGeneral.php:1730
+#: include/classes/api/services/CItemGeneral.php:1514
+#: include/classes/api/services/CItemGeneral.php:1520
+#: include/classes/api/services/CItemGeneral.php:1733
 #: include/classes/import/CConfigurationImport.php:2534
 msgid "circular item dependency is not allowed"
 msgstr "循環するアイテムの依存関係は許可されていません"
@@ -17665,6 +17295,10 @@ msgstr "循環するアイテムの依存関係は許可されていません"
 #: include/views/hostmacros.php:38
 msgid "configure"
 msgstr "グローバルマクロ設定"
+
+#: popup_trexpr.php:208
+msgid "count() - Number of successfully retrieved values V (which fulfill operator O) for period T"
+msgstr "count() - 期間Tで収集された値V(オペレータOを満たす)の数"
 
 #: include/func.inc.php:579 jsLoader.php:102
 msgctxt "day short"
@@ -17674,6 +17308,18 @@ msgstr "d"
 #: chart4.php:129 chart5.php:143
 msgid "d.M"
 msgstr "m/d"
+
+#: popup_trexpr.php:266
+msgid "date() - Current date"
+msgstr "date() - 現在の日付"
+
+#: popup_trexpr.php:276
+msgid "dayofmonth() - Day of month"
+msgstr "dayofmonth() - 月内の日付"
+
+#: popup_trexpr.php:271
+msgid "dayofweek() - Day of week"
+msgstr "dayofweek() - 曜日(月曜 - 1、日曜 - 7)"
 
 #: app/views/monitoring.problem.view.php:165
 #: include/views/common.filter.trigger.php:90
@@ -17692,6 +17338,10 @@ msgstr "dd"
 msgid "default"
 msgstr "デフォルト"
 
+#: popup_trexpr.php:197
+msgid "delta() - Difference between MAX and MIN value of a period T"
+msgstr "delta() - 期間Tでの最大値と最小値の差分"
+
 #: include/classes/widgets/CActionLogWidgetForm.php:31
 #: include/classes/widgets/CActionLogWidgetForm.php:33
 #: include/classes/widgets/CActionLogWidgetForm.php:35
@@ -17702,6 +17352,10 @@ msgstr "デフォルト"
 #: include/classes/widgets/CProblemsWidgetForm.php:119
 msgid "descending"
 msgstr "降順"
+
+#: popup_trexpr.php:214
+msgid "diff() - Difference between last and preceding values (1 - true, 0 - false)"
+msgstr "diff() - 最新値と前回値の差の有無 (1 - 有、0 - 無)"
 
 #: include/classes/validators/CApiInputValidator.php:818
 msgid "directory or script name cannot be empty"
@@ -17744,13 +17398,21 @@ msgstr "条件式が指定されていません"
 msgid "failed to parse JSON"
 msgstr "JSONの解析に失敗しました"
 
-#: include/classes/api/services/CItemGeneral.php:1243
+#: include/classes/api/services/CItemGeneral.php:1246
 msgid "first parameter is expected"
 msgstr "最初のパラメータを指定してください"
 
 #: jsLoader.php:97
 msgid "fixed"
 msgstr "fixed"
+
+#: popup_trexpr.php:338
+msgid "forecast() - Forecast for next t seconds based on period T"
+msgstr "forecast() - 期間Tに基づく次のt秒の予測値"
+
+#: popup_trexpr.php:281
+msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
+msgstr "fuzzytime() - アイテムのタイムスタンプとZabbixサーバーのタイムスタンプとの差がT秒以上か (0 - T秒以上、1 - それ以外)"
 
 #: include/views/configuration.item.edit.php:411
 #: include/views/configuration.item.edit.php:416
@@ -17785,7 +17447,7 @@ msgstr "ホスト"
 msgid "host group"
 msgstr "ホストグループ"
 
-#: include/classes/api/services/CItemGeneral.php:1534
+#: include/classes/api/services/CItemGeneral.php:1537
 msgid "hostid of dependent item and master item should match"
 msgstr "依存アイテムとマスターアイテムのhostidを一致させてください"
 
@@ -17832,7 +17494,7 @@ msgstr "アドレスの範囲 \"%1$s\"が正しくありません"
 msgid "invalid byte sequence in UTF-8"
 msgstr "UTF-8のバイトシーケンスが正しくありません"
 
-#: include/classes/api/services/CItemGeneral.php:279
+#: include/classes/api/services/CItemGeneral.php:282
 #: include/classes/graphdraw/CLineGraphDraw.php:113
 msgid "invalid delay"
 msgstr "更新間隔が正しくありません"
@@ -17856,6 +17518,10 @@ msgstr "正規表現が正しくありません"
 msgid "invalid trend storage period"
 msgstr "トレンドデータの保存期間が正しくありません"
 
+#: popup_trexpr.php:293
+msgid "iregexp() - Regular expression V matching last value in period T (non case-sensitive; 1 - match, 0 - no match)"
+msgstr "iregexp() - 期間T内の最新値の正規表現Vチェック (大文字小文字区別なし; 1 - 見つかった、0 - それ以外)"
+
 #: include/classes/validators/CApiInputValidator.php:1146
 msgid "is not enclosed in {} or is malformed"
 msgstr "{}で括られていないか不正な値です"
@@ -17868,13 +17534,17 @@ msgstr "アイテム"
 msgid "key is empty"
 msgstr "キーが設定されていません"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2007
+#: include/classes/graphdraw/CLineGraphDraw.php:1820
 #: include/classes/graphdraw/CPieGraphDraw.php:330 include/graphs.inc.php:82
 #: include/views/js/configuration.graph.edit.js.php:52
 msgid "last"
 msgstr "最新値"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2144
+#: popup_trexpr.php:219
+msgid "last() - Last (most recent) T value"
+msgstr "last() - 最新値"
+
+#: include/classes/graphdraw/CLineGraphDraw.php:1957
 msgid "left"
 msgstr "左"
 
@@ -17883,13 +17553,25 @@ msgstr "左"
 msgid "like"
 msgstr "含まれる"
 
-#: include/views/configuration.item.edit.php:591
+#: include/views/configuration.item.edit.php:596
 #: include/views/configuration.item.massupdate.php:297
 #: include/views/configuration.item.prototype.edit.php:431
 #: include/views/js/common.item.edit.js.php:140
 #: include/views/js/configuration.item.massupdate.js.php:154
 msgid "list of characters"
 msgstr "文字列のリスト"
+
+#: popup_trexpr.php:299
+msgid "logeventid() - Event ID of last log entry matching regular expression T (1 - match, 0 - no match)"
+msgstr "logeventid() - 最新ログのイベントIDの正規表現Tとのマッチング (1 - 一致する、0 - 一致しない)"
+
+#: popup_trexpr.php:305
+msgid "logseverity() - Log severity of the last log entry"
+msgstr "logseverity() - 最新ログの深刻度"
+
+#: popup_trexpr.php:310
+msgid "logsource() - Log source of the last log entry matching parameter T (1 - match, 0 - no match)"
+msgstr "logsource() - 最新ログのソースのパラメーターTとのマッチング (1 - 一致する、0 - 一致しない)"
 
 #: include/events.inc.php:68
 msgid "low-level discovery rule"
@@ -17905,7 +17587,9 @@ msgctxt "month short"
 msgid "m"
 msgstr "m"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1628
+#: include/classes/graphdraw/CLineGraphDraw.php:1376
+#: include/classes/graphdraw/CLineGraphDraw.php:1384
+#: include/classes/graphdraw/CLineGraphDraw.php:1391
 msgid "m-d"
 msgstr "m/d"
 
@@ -17935,34 +17619,42 @@ msgstr "マップ"
 msgid "matches"
 msgstr "一致する"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2010
-#: include/classes/graphdraw/CLineGraphDraw.php:2024
+#: include/classes/graphdraw/CLineGraphDraw.php:1823
+#: include/classes/graphdraw/CLineGraphDraw.php:1837
 #: include/classes/graphdraw/CPieGraphDraw.php:326 include/graphs.inc.php:80
 #: include/views/js/configuration.graph.edit.js.php:51
 #: include/views/js/configuration.graph.edit.js.php:59
 msgid "max"
 msgstr "最大"
 
-#: include/classes/api/services/CItemGeneral.php:1614
+#: popup_trexpr.php:225
+msgid "max() - Maximum value for period T"
+msgstr "max() - 期間Tでの最大値"
+
+#: include/classes/api/services/CItemGeneral.php:1617
 msgid "maximum dependent items count reached"
 msgstr "依存アイテムの数が最大数に達しました"
 
 #: include/classes/api/services/CHostGeneral.php:1043
-#: include/classes/api/services/CItemGeneral.php:1540
-#: include/classes/api/services/CItemGeneral.php:1623
-#: include/classes/api/services/CItemGeneral.php:1737
+#: include/classes/api/services/CItemGeneral.php:1543
+#: include/classes/api/services/CItemGeneral.php:1626
+#: include/classes/api/services/CItemGeneral.php:1740
 #: include/classes/import/CConfigurationImport.php:2491
 #: include/classes/import/CConfigurationImport.php:2550
 msgid "maximum number of dependency levels reached"
 msgstr "依存レベルの数が最大数に達しました\""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2008
-#: include/classes/graphdraw/CLineGraphDraw.php:2021
+#: include/classes/graphdraw/CLineGraphDraw.php:1821
+#: include/classes/graphdraw/CLineGraphDraw.php:1834
 #: include/classes/graphdraw/CPieGraphDraw.php:322 include/graphs.inc.php:78
 #: include/views/js/configuration.graph.edit.js.php:49
 #: include/views/js/configuration.graph.edit.js.php:57
 msgid "min"
 msgstr "最小"
+
+#: popup_trexpr.php:231
+msgid "min() - Minimum value for period T"
+msgstr "min() - 期間Tでの最小値"
 
 #: include/classes/api/services/CHost.php:1518
 #, c-format
@@ -18022,10 +17714,14 @@ msgstr "新規"
 msgid "new event tag"
 msgstr "新しいイベントのタグ"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2102
+#: include/classes/graphdraw/CLineGraphDraw.php:1915
 #: include/classes/graphdraw/CPieGraphDraw.php:356
 msgid "no data"
 msgstr "データなし"
+
+#: popup_trexpr.php:326
+msgid "nodata() - No data received during period of time T (1 - true, 0 - false)"
+msgstr "nodata() - 期間Tの間取得データなし (1 - 取得データなし、0 - それ以外)"
 
 #: include/actions.inc.php:31
 msgid "not in"
@@ -18047,7 +17743,11 @@ msgstr "選択されていません"
 msgid "now"
 msgstr "現在"
 
-#: include/views/configuration.item.edit.php:564
+#: popup_trexpr.php:316
+msgid "now() - Number of seconds since the Epoch"
+msgstr "now() - エポックを基準とした経過秒数"
+
+#: include/views/configuration.item.edit.php:569
 #: include/views/configuration.item.massupdate.php:273
 #: include/views/configuration.item.prototype.edit.php:404
 #: include/views/js/common.item.edit.js.php:131
@@ -18111,7 +17811,7 @@ msgstr "on"
 msgid "other"
 msgstr "その他"
 
-#: include/views/configuration.item.edit.php:579
+#: include/views/configuration.item.edit.php:584
 #: include/views/configuration.item.massupdate.php:286
 #: include/views/configuration.item.prototype.edit.php:419
 #: include/views/js/common.item.edit.js.php:49
@@ -18119,7 +17819,7 @@ msgstr "その他"
 msgid "output"
 msgstr "出力"
 
-#: include/views/configuration.item.edit.php:597
+#: include/views/configuration.item.edit.php:602
 #: include/views/configuration.item.massupdate.php:303
 #: include/views/configuration.item.prototype.edit.php:437
 #: include/views/js/common.item.edit.js.php:148
@@ -18127,7 +17827,7 @@ msgstr "出力"
 msgid "path"
 msgstr "パス"
 
-#: include/views/configuration.item.edit.php:602
+#: include/views/configuration.item.edit.php:607
 #: include/views/configuration.item.massupdate.php:308
 #: include/views/configuration.item.prototype.edit.php:442
 #: include/views/js/common.item.edit.js.php:48
@@ -18136,10 +17836,22 @@ msgstr "パス"
 msgid "pattern"
 msgstr "パターン"
 
+#: popup_trexpr.php:237
+msgid "percentile() - Percentile P of a period T"
+msgstr "percentile() - 期間TでのパーセンタイルP"
+
+#: popup_trexpr.php:243
+msgid "prev() - Previous value"
+msgstr "prev() - 前回値"
+
 #: include/page_header.php:149 include/views/general.warning.php:21
 #, c-format
 msgid "refreshed every %1$s sec."
 msgstr "%1$s秒ごとに更新。"
+
+#: popup_trexpr.php:287
+msgid "regexp() - Regular expression V matching last value in period T (1 - match, 0 - no match)"
+msgstr "regexp() - 期間T内の最新値の正規表現Vチェック (1 - 見つかった、0 - それ以外)"
 
 #: include/views/configuration.host.discovery.edit.php:323
 #: include/views/js/configuration.host.discovery.edit.js.php:24
@@ -18150,7 +17862,7 @@ msgstr "正規表現"
 msgid "remember selected"
 msgstr "選択を記憶"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2144
+#: include/classes/graphdraw/CLineGraphDraw.php:1957
 msgid "right"
 msgstr "右"
 
@@ -18168,7 +17880,7 @@ msgctxt "second short"
 msgid "s"
 msgstr "s"
 
-#: include/classes/api/services/CItemGeneral.php:1249
+#: include/classes/api/services/CItemGeneral.php:1252
 msgid "second parameter is expected"
 msgstr "第2引数を指定してください"
 
@@ -18186,10 +17898,10 @@ msgstr "短い説明"
 #: include/classes/api/services/CHost.php:1546
 #: include/classes/api/services/CHttpTest.php:984
 #: include/classes/api/services/CHttpTest.php:1095
-#: include/classes/api/services/CItemGeneral.php:434
-#: include/classes/api/services/CItemGeneral.php:472
-#: include/classes/api/services/CItemGeneral.php:1264
-#: include/classes/api/services/CItemGeneral.php:1278
+#: include/classes/api/services/CItemGeneral.php:437
+#: include/classes/api/services/CItemGeneral.php:475
+#: include/classes/api/services/CItemGeneral.php:1267
+#: include/classes/api/services/CItemGeneral.php:1281
 #: include/classes/api/services/CTriggerGeneral.php:533
 #: include/classes/api/services/CTriggerGeneral.php:559
 #: include/classes/api/services/CTriggerGeneral.php:778
@@ -18201,11 +17913,23 @@ msgstr "空にしてください"
 msgid "show icon mappings"
 msgstr "アイコンのマッピングを表示"
 
-#: include/views/configuration.item.edit.php:466
+#: include/views/configuration.item.edit.php:469
 #: include/views/configuration.item.massupdate.php:473
 #: include/views/configuration.item.prototype.edit.php:339
 msgid "show value mappings"
 msgstr "値のマッピングの表示"
+
+#: popup_trexpr.php:248
+msgid "str() - Find string V in last (most recent) value (1 - found, 0 - not found)"
+msgstr "str() - 最新値からの文字列V検索 (1 - 見つかった、0 - それ以外)"
+
+#: popup_trexpr.php:254
+msgid "strlen() - Length of last (most recent) T value in characters"
+msgstr "strlen() - 最新値の文字数での文字列の長さ"
+
+#: popup_trexpr.php:260
+msgid "sum() - Sum of values of a period T"
+msgstr "sum() - 期間Tでの合計値"
 
 #: app/views/monitoring.dashboard.config.php:178
 #: app/views/monitoring.dashboard.config.php:205
@@ -18249,6 +17973,14 @@ msgstr "パラメータ \"%1$s\"が指定されていません"
 #, c-format
 msgid "the tag \"%1$s\" is missing"
 msgstr "タグ\"%1$s\"が設定されていません"
+
+#: popup_trexpr.php:321
+msgid "time() - Current time"
+msgstr "time() - 現在時刻"
+
+#: popup_trexpr.php:344
+msgid "timeleft() - Time to reach threshold estimated based on period T"
+msgstr "timeleft() - 期間Tに基づく閾値に達するまでの時間"
 
 #: include/classes/api/services/CMap.php:841
 #: include/classes/api/services/CMap.php:1283 include/events.inc.php:34
@@ -18307,7 +18039,7 @@ msgstr "テキスト\"%1$s\"が間違っています"
 #: include/classes/api/services/CEvent.php:551
 #: include/classes/api/services/CHost.php:1480
 #: include/classes/api/services/CHost.php:1486
-#: include/classes/api/services/CItemGeneral.php:1186
+#: include/classes/api/services/CItemGeneral.php:1189
 #: include/classes/api/services/CProxy.php:572
 #: include/classes/api/services/CProxy.php:579
 #: include/classes/api/services/CTriggerGeneral.php:567

@@ -2,18 +2,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2013-09-11 18:19+0300\n"
-"Last-Translator: altmir <rmircea@birotec.ro>\n"
+"POT-Creation-Date: 2018-08-28 17:56+0300\n"
+"PO-Revision-Date: 2018-06-22 17:43+0300\n"
+"Last-Translator: Anonymous Pootle User\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2);;\n"
-"X-Generator: Pootle 2.5.0\n"
+"X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1378916396.0\n"
+"X-POOTLE-MTIME: 1529682196.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -240,22 +240,6 @@ msgstr "AES"
 msgid "AND"
 msgstr "ȘI"
 
-#: popup_trexpr.php:186
-msgid "Absolute difference between last and previous value is < N"
-msgstr "Diferența absolută dintre ultima și valoarea anterioară este < N"
-
-#: popup_trexpr.php:194
-msgid "Absolute difference between last and previous value is = N"
-msgstr "Diferența absolută dintre ultima și valoarea anterioară este = N"
-
-#: popup_trexpr.php:190
-msgid "Absolute difference between last and previous value is > N"
-msgstr "Diferența absolută dintre ultima și valoarea anterioară este > N"
-
-#: popup_trexpr.php:198
-msgid "Absolute difference between last and previous value is NOT N"
-msgstr "Diferența absolută dintre ultima și valoarea anterioară NU este = N"
-
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: srv_status.php:147
@@ -357,7 +341,7 @@ msgstr "Confirmări"
 #: include/views/configuration.host.prototype.edit.php:262
 #: include/views/configuration.httpconf.edit.php:191
 #: include/views/configuration.item.edit.php:341
-#: include/views/configuration.item.edit.php:552
+#: include/views/configuration.item.edit.php:557
 #: include/views/configuration.item.massupdate.php:262
 #: include/views/configuration.item.massupdate.php:376
 #: include/views/configuration.item.prototype.edit.php:263
@@ -543,8 +527,8 @@ msgstr "Activ până la"
 #: include/views/configuration.httpconf.popup.php:149
 #: include/views/configuration.httpconf.popup.php:198
 #: include/views/configuration.item.edit.php:390
-#: include/views/configuration.item.edit.php:657
-#: include/views/configuration.item.edit.php:695
+#: include/views/configuration.item.edit.php:662
+#: include/views/configuration.item.edit.php:700
 #: include/views/configuration.item.massupdate.php:348
 #: include/views/configuration.item.massupdate.php:414
 #: include/views/configuration.item.prototype.edit.php:299
@@ -810,7 +794,7 @@ msgid "Allow manual close"
 msgstr ""
 
 #: include/views/configuration.host.discovery.edit.php:253
-#: include/views/configuration.item.edit.php:469
+#: include/views/configuration.item.edit.php:474
 #: include/views/configuration.item.massupdate.php:487
 #: include/views/configuration.item.prototype.edit.php:342
 msgid "Allowed hosts"
@@ -903,7 +887,7 @@ msgstr ""
 msgid "Application updated"
 msgstr "Aplicație actualizată"
 
-#: include/classes/api/services/CItemGeneral.php:555
+#: include/classes/api/services/CItemGeneral.php:558
 #, c-format
 msgid "Application with ID \"%1$s\" is not available on \"%2$s\"."
 msgstr "Aplicația cu ID \"%1$s\" nu este disponibilă pe \"%2$s\"."
@@ -919,7 +903,7 @@ msgstr ""
 #: include/views/configuration.host.edit.php:323
 #: include/views/configuration.host.list.php:65
 #: include/views/configuration.host.list.php:256
-#: include/views/configuration.item.edit.php:502
+#: include/views/configuration.item.edit.php:507
 #: include/views/configuration.item.list.php:65
 #: include/views/configuration.item.prototype.edit.php:358
 #: include/views/configuration.item.prototype.list.php:49
@@ -1199,22 +1183,6 @@ msgstr "Disponibil"
 msgid "Average"
 msgstr "Mediu"
 
-#: popup_trexpr.php:202
-msgid "Average value of a period T is < N"
-msgstr "Valoarea medie a unei perioade T este < N"
-
-#: popup_trexpr.php:212
-msgid "Average value of a period T is = N"
-msgstr "Valoarea medie a unei perioade T este = N"
-
-#: popup_trexpr.php:207
-msgid "Average value of a period T is > N"
-msgstr "Valoarea medie a unei perioade T este > N"
-
-#: popup_trexpr.php:217
-msgid "Average value of a period T is NOT N"
-msgstr "Valoarea medie a unei perioade T NU este = N"
-
 #: include/classes/setup/CSetupWizard.php:121
 #: include/classes/setup/CSetupWizard.php:324
 msgid "Back"
@@ -1252,14 +1220,6 @@ msgstr "Bind DN"
 #: include/views/administration.authentication.edit.php:92
 msgid "Bind password"
 msgstr "Parolă asociată"
-
-#: popup_trexpr.php:588
-msgid "Bitwise AND of last (most recent) T value and mask is = N"
-msgstr "Operațiunea ȘI a ultimei (cea mai recentă) valori T și mască este = N"
-
-#: popup_trexpr.php:593
-msgid "Bitwise AND of last (most recent) T value and mask is NOT N"
-msgstr "Operațiunea ȘI a ultimei (cea mai recentă) valori T și mască NU este = N"
 
 #: adm.triggerdisplayoptions.php:38 adm.triggerdisplayoptions.php:39
 #: adm.triggerdisplayoptions.php:40 adm.triggerdisplayoptions.php:41
@@ -1342,7 +1302,7 @@ msgstr ""
 #: app/views/monitoring.widget.problems.view.php:100
 #: include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:831
-#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:316
+#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:320
 #: include/events.inc.php:516 tr_status.php:682
 msgid "CLOSING"
 msgstr ""
@@ -1512,7 +1472,7 @@ msgstr "Nu se poate adăuga prototipul serverului"
 msgid "Cannot add image"
 msgstr "Nu se poate adăuga imaginea"
 
-#: items.php:725
+#: items.php:724
 msgid "Cannot add item"
 msgstr "Nu se poate adăuga elementul"
 
@@ -1636,7 +1596,7 @@ msgstr "Nu se poate schimba metoda de autentificare la LDAP"
 msgid "Cannot change authentication method to Zabbix internal"
 msgstr "Nu se poate schimba metoda de autentificare la Zabbix intern"
 
-#: httpconf.php:198 httpconf.php:507 items.php:766 items.php:1122
+#: httpconf.php:198 httpconf.php:507 items.php:765 items.php:1121
 msgid "Cannot clear history"
 msgstr "Nu se poate șterge istoricul"
 
@@ -1679,7 +1639,7 @@ msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
-#: items.php:1078
+#: items.php:1077
 msgid "Cannot copy item"
 msgid_plural "Cannot copy items"
 msgstr[0] ""
@@ -1860,7 +1820,7 @@ msgstr "Nu se poate șterge prototipul itemului"
 msgid "Cannot delete item prototypes"
 msgstr "Nu se pot şterge prototipurile de element"
 
-#: items.php:1152
+#: items.php:1151
 msgid "Cannot delete items"
 msgstr "Nu se pot șterge elementele"
 
@@ -2033,7 +1993,7 @@ msgstr[0] "Nu se poate dezactiva serverul"
 msgstr[1] "Nu se pot dezactiva servererele"
 msgstr[2] "Nu se pot dezactiva servererele"
 
-#: applications.php:175 items.php:1038
+#: applications.php:175 items.php:1037
 msgid "Cannot disable item"
 msgid_plural "Cannot disable items"
 msgstr[0] "Nu se poate dezactiva elementul"
@@ -2105,7 +2065,7 @@ msgstr[0] "Nu se poate activa srverul"
 msgstr[1] "Nu se pot activa serverele"
 msgstr[2] "Nu se pot activa serverele"
 
-#: applications.php:174 items.php:1037
+#: applications.php:174 items.php:1036
 msgid "Cannot enable item"
 msgid_plural "Cannot enable items"
 msgstr[0] "Nu se poate activa elementul"
@@ -2314,7 +2274,7 @@ msgstr ""
 msgid "Cannot include view file \"%s\"."
 msgstr "Nu se poate include vezi fișier \"%s\"."
 
-#: popup_trexpr.php:896
+#: popup_trexpr.php:616
 msgid "Cannot insert trigger expression"
 msgstr "Nu se poate introduce expresia trigger"
 
@@ -2433,7 +2393,7 @@ msgstr ""
 msgid "Cannot set \"%1$s\" for graph prototype \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:268
+#: include/classes/api/services/CItemGeneral.php:271
 #, c-format
 msgid "Cannot set \"%1$s\" for item \"%2$s\"."
 msgstr "Nu se poate seta \"%1$s\" pentru elementul \"%2$s\"."
@@ -2707,7 +2667,7 @@ msgstr "Nu se poate actualiza imaginea"
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "Nu se poate actualiza interfața pentru serverul detectat \"%1$s\"."
 
-#: items.php:728
+#: items.php:727
 msgid "Cannot update item"
 msgstr "Nu se poate actualiza elementul"
 
@@ -2719,7 +2679,7 @@ msgstr[0] "Nu se poate actualiza prototipul item"
 msgstr[1] "Nu se poate actualiza prototipul item"
 msgstr[2] "Nu se poate actualiza prototipul item"
 
-#: items.php:1014
+#: items.php:1013
 msgid "Cannot update items"
 msgstr "Nu se pot actualiza elementele"
 
@@ -2936,9 +2896,9 @@ msgstr "Verifică partea din expresie care începe de la \"%1$s\"."
 msgid "Check of pre-requisites"
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:365
-#: include/classes/api/services/CItemGeneral.php:372
-#: include/classes/api/services/CItemGeneral.php:379
+#: include/classes/api/services/CItemGeneral.php:368
+#: include/classes/api/services/CItemGeneral.php:375
+#: include/classes/api/services/CItemGeneral.php:382
 msgid "Check the key, please. Default example was passed."
 msgstr "Vă rugăm să verificați cheia. A fost folosit exemplul implicit."
 
@@ -3041,7 +3001,7 @@ msgid "Clear history"
 msgstr ""
 
 #: include/views/configuration.httpconf.edit.php:284
-#: include/views/configuration.item.edit.php:682
+#: include/views/configuration.item.edit.php:687
 msgid "Clear history and trends"
 msgstr "Șterge istoric și tendințe"
 
@@ -3070,7 +3030,7 @@ msgstr "Ceas"
 #: include/views/configuration.hostgroups.edit.php:84
 #: include/views/configuration.host.prototype.edit.php:438
 #: include/views/configuration.httpconf.edit.php:277
-#: include/views/configuration.item.edit.php:677
+#: include/views/configuration.item.edit.php:682
 #: include/views/configuration.item.prototype.edit.php:519
 #: include/views/configuration.maintenance.edit.php:217
 #: include/views/configuration.template.edit.php:501
@@ -3698,7 +3658,7 @@ msgstr "Creează mapare icon"
 
 #: include/classes/helpers/CMenuPopupHelper.php:290
 #: include/classes/helpers/CMenuPopupHelper.php:312
-#: include/views/configuration.item.list.php:28 items.php:1158
+#: include/views/configuration.item.list.php:28 items.php:1157
 msgid "Create item"
 msgstr "Creează element"
 
@@ -3788,22 +3748,6 @@ msgstr "Creat: Prototip server \"%1$s\" pe \"%2$s\"."
 msgid "Critical"
 msgstr "Critic"
 
-#: popup_trexpr.php:432
-msgid "Current date is < N"
-msgstr "Data curentă este < N"
-
-#: popup_trexpr.php:440
-msgid "Current date is = N"
-msgstr "Data curentă este = N"
-
-#: popup_trexpr.php:436
-msgid "Current date is > N"
-msgstr "Data curentă este > N"
-
-#: popup_trexpr.php:444
-msgid "Current date is NOT N"
-msgstr "Data curentă NU este N"
-
 #: include/views/js/configuration.action.edit.js.php:65
 #: include/views/js/configuration.action.edit.js.php:219
 msgid "Current host"
@@ -3812,22 +3756,6 @@ msgstr "Serverul curent"
 #: include/views/reports.toptriggers.php:80
 msgid "Current month"
 msgstr ""
-
-#: popup_trexpr.php:562
-msgid "Current time is < N"
-msgstr "Timpul curent este < N"
-
-#: popup_trexpr.php:570
-msgid "Current time is = N"
-msgstr "Timpul curent este = N"
-
-#: popup_trexpr.php:566
-msgid "Current time is > N"
-msgstr "Timpul curent este > N"
-
-#: popup_trexpr.php:574
-msgid "Current time is NOT N"
-msgstr "Timpul curent NU este N"
 
 #: include/classes/setup/CSetupWizard.php:162
 msgid "Current value"
@@ -3961,7 +3889,7 @@ msgstr ""
 
 #: include/classes/api/services/CDashboard.php:568
 #, c-format
-msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is ouf of bounds."
+msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is out of bounds."
 msgstr ""
 
 #: app/controllers/CControllerDashbrdWidgetUpdate.php:238
@@ -4006,7 +3934,7 @@ msgstr "Date"
 msgid "Data cache statistics. Cache - one of values (modes: all, float, uint, str, log, text), history (modes: pfree, total, used, free), trend (modes: pfree, total, used, free), text (modes: pfree, total, used, free)."
 msgstr "Date statistice cache. Cache - una din valorile (moduri: all, float, uint, str, log, text), istoric (modes: pfree, total, used, free), trend (modes: pfree, total, used, free), text (modes: pfree, total, used, free)."
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2854
+#: include/classes/graphdraw/CLineGraphDraw.php:2652
 #: include/classes/graphdraw/CPieGraphDraw.php:805
 #, c-format
 msgid "Data from %1$s. Generated in %2$s sec."
@@ -4097,42 +4025,10 @@ msgstr "Zi"
 msgid "Day of month"
 msgstr "Ziua lunii"
 
-#: popup_trexpr.php:464
-msgid "Day of month is < N"
-msgstr "Ziua din lună este < N"
-
-#: popup_trexpr.php:472
-msgid "Day of month is = N"
-msgstr "Ziua din lună este = N"
-
-#: popup_trexpr.php:468
-msgid "Day of month is > N"
-msgstr "Ziua din lună este > N"
-
-#: popup_trexpr.php:476
-msgid "Day of month is NOT N"
-msgstr "Ziua din lună NU este N"
-
 #: include/forms.inc.php:1876 include/forms.inc.php:1935
 #: include/forms.inc.php:1988
 msgid "Day of week"
 msgstr "Ziua săptămânii"
-
-#: popup_trexpr.php:448
-msgid "Day of week is < N"
-msgstr "Ziua săptămânii este < N"
-
-#: popup_trexpr.php:456
-msgid "Day of week is = N"
-msgstr "Ziua săptămânii este = N"
-
-#: popup_trexpr.php:452
-msgid "Day of week is > N"
-msgstr "Ziua săptămânii este > N"
-
-#: popup_trexpr.php:460
-msgid "Day of week is NOT N"
-msgstr "Ziua săptămânii NU este N"
 
 #: include/forms.inc.php:2044
 msgid "Days"
@@ -4335,7 +4231,7 @@ msgstr "Ștergere harta icoanei?"
 msgid "Delete item prototype?"
 msgstr "Ștergere prototip de element?"
 
-#: include/views/configuration.item.edit.php:687
+#: include/views/configuration.item.edit.php:692
 msgid "Delete item?"
 msgstr "Ștergere element?"
 
@@ -4635,7 +4531,7 @@ msgstr "Stare de implementare"
 #: include/views/configuration.host.discovery.edit.php:257
 #: include/views/configuration.host.edit.php:283
 #: include/views/configuration.host.massupdate.php:147
-#: include/views/configuration.item.edit.php:534
+#: include/views/configuration.item.edit.php:539
 #: include/views/configuration.item.massupdate.php:604
 #: include/views/configuration.item.prototype.edit.php:376
 #: include/views/configuration.maintenance.edit.php:95
@@ -4686,54 +4582,6 @@ msgstr ""
 #: discoveryconf.php:42 include/views/configuration.discovery.edit.php:77
 msgid "Device uniqueness criteria"
 msgstr "Criteriu unic al echipamentului"
-
-#: popup_trexpr.php:222
-msgid "Difference between MAX and MIN value of a period T is < N"
-msgstr "Diferența între valoarea MAX și MIN a perioadei T este < N"
-
-#: popup_trexpr.php:232
-msgid "Difference between MAX and MIN value of a period T is = N"
-msgstr "Diferența între valoarea MAX și MIN a perioadei T este = N"
-
-#: popup_trexpr.php:227
-msgid "Difference between MAX and MIN value of a period T is > N"
-msgstr "Diferența între valoarea MAX și MIN a perioadei T este > N"
-
-#: popup_trexpr.php:237
-msgid "Difference between MAX and MIN value of a period T is NOT N"
-msgstr "Diferența între valoarea MAX și MIN a perioadei T NU este N"
-
-#: popup_trexpr.php:480
-msgid "Difference between item timestamp value and Zabbix server timestamp is over T seconds, then N = 0, 1 - otherwise"
-msgstr ""
-
-#: popup_trexpr.php:485
-msgid "Difference between item timestamp value and Zabbix server timestamp is over T seconds, then N NOT 0, 1 - otherwise"
-msgstr ""
-
-#: popup_trexpr.php:278
-msgid "Difference between last and preceding values, then N = 1, 0 - otherwise"
-msgstr "Diferența între ultima valoare si valorile precedente, apoi N = 1, 0 - altfel"
-
-#: popup_trexpr.php:282
-msgid "Difference between last and preceding values, then N NOT 1, 0 - otherwise"
-msgstr "Diferența între ultima valoare si valorile precedente, apoi N NU 1, 0 - altfel"
-
-#: popup_trexpr.php:242
-msgid "Difference between last and previous value is < N"
-msgstr "Diferența dintre ultima valoare si valoarea anterioară este < N"
-
-#: popup_trexpr.php:250
-msgid "Difference between last and previous value is = N"
-msgstr "Diferența dintre ultima valoare si valoarea anterioară este = N"
-
-#: popup_trexpr.php:246
-msgid "Difference between last and previous value is > N"
-msgstr "Diferența dintre ultima valoare si valoarea anterioară este > N"
-
-#: popup_trexpr.php:254
-msgid "Difference between last and previous value is NOT N"
-msgstr "Diferența dintre ultima valoare si valoarea anterioară NU este N"
 
 #: include/views/monitoring.screen.list.php:73
 msgid "Dimension (cols x rows)"
@@ -5275,8 +5123,8 @@ msgstr ""
 msgid "Elasticsearch error: %1$s."
 msgstr ""
 
-#: include/classes/api/managers/CHistoryManager.php:984
-#: include/classes/api/managers/CHistoryManager.php:993
+#: include/classes/api/managers/CHistoryManager.php:985
+#: include/classes/api/managers/CHistoryManager.php:994
 #, c-format
 msgid "Elasticsearch url is not set for type: %1$s."
 msgstr ""
@@ -5594,7 +5442,7 @@ msgstr ""
 #: include/views/configuration.host.list.php:122
 #: include/views/configuration.host.massupdate.php:171
 #: include/views/configuration.httpconf.edit.php:135
-#: include/views/configuration.item.edit.php:543
+#: include/views/configuration.item.edit.php:548
 #: include/views/configuration.triggers.edit.php:559 popup_media.php:130
 #: tr_logform.php:391
 msgid "Enabled"
@@ -5641,14 +5489,6 @@ msgstr "Eveniment"
 msgid "Event ID"
 msgstr "Eveniment ID"
 
-#: popup_trexpr.php:510
-msgid "Event ID of last log entry matching regular expression T, then N = 1, 0 - otherwise"
-msgstr "Evenimentul ID a ultimei logări se potrivește cu expresia uzuală T, atunci N = 1, 0 - altfel"
-
-#: popup_trexpr.php:515
-msgid "Event ID of last log entry matching regular expression T, then N NOT 1, 0 - otherwise"
-msgstr "Evenimentul ID a ultimei logări se potrivește cu expresia uzuală T, atunci N NU 1, 0 - altfel"
-
 #: app/controllers/CControllerAcknowledgeCreate.php:194
 #: include/actions.inc.php:57
 #, fuzzy
@@ -5658,7 +5498,7 @@ msgstr[0] "Eveniment confirmat"
 msgstr[1] "Eveniment confirmat"
 msgstr[2] "Eveniment confirmat"
 
-#: app/controllers/CControllerAcknowledgeEdit.php:210
+#: app/controllers/CControllerAcknowledgeEdit.php:209
 #: app/views/monitoring.acknowledge.edit.php:89
 msgid "Event acknowledgements"
 msgstr ""
@@ -6067,14 +5907,6 @@ msgstr "Filtru"
 msgid "Filters"
 msgstr ""
 
-#: popup_trexpr.php:382
-msgid "Find string V in last (most recent) value. N = 1 - if found, 0 - otherwise"
-msgstr "Găseste șirul V in ultima (cea mai recentă) valoare. N = 1 - dacă e găsit, 0 - altfel"
-
-#: popup_trexpr.php:387
-msgid "Find string V in last (most recent) value. N NOT 1 - if found, 0 - otherwise"
-msgstr "Găseste șirul V in ultima (cea mai recentă) valoare. N NU 1 - dacă e găsit, 0 - altfel"
-
 #: include/classes/items/CHelpItems.php:297
 #: include/classes/items/CHelpItems.php:595
 msgid "Find string in a file. Returns 0 - match not found; 1 - found"
@@ -6152,22 +5984,6 @@ msgstr ""
 msgid "For guest, password must be empty"
 msgstr "Pentru invitat, parola trebuie să fie nulă"
 
-#: popup_trexpr.php:598
-msgid "Forecast for next t seconds based on period T is < N"
-msgstr ""
-
-#: popup_trexpr.php:608
-msgid "Forecast for next t seconds based on period T is = N"
-msgstr ""
-
-#: popup_trexpr.php:603
-msgid "Forecast for next t seconds based on period T is > N"
-msgstr ""
-
-#: popup_trexpr.php:613
-msgid "Forecast for next t seconds based on period T is NOT N"
-msgstr ""
-
 #: include/views/configuration.httpconf.popup.php:113
 msgid "Form data"
 msgstr ""
@@ -6230,11 +6046,11 @@ msgid "Fullscreen"
 msgstr "Pe tot ecranul"
 
 #: include/views/configuration.graph.edit.php:294
-#: include/views/configuration.triggers.expression.php:70
+#: include/views/configuration.triggers.expression.php:72
 msgid "Function"
 msgstr "Funcție"
 
-#: popup_trexpr.php:817
+#: popup_trexpr.php:531
 #, c-format
 msgid "Function \"%1$s\" cannot be used with selected item \"%2$s\""
 msgstr "Funcția \"%1$s\" nu poate fi folosită cu itemul selectat \"%2$s\""
@@ -6646,7 +6462,8 @@ msgstr "Grupuri în mentenanță"
 msgid "H:i"
 msgstr "H:m"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1634
+#: include/classes/graphdraw/CLineGraphDraw.php:1408
+#: include/classes/graphdraw/CLineGraphDraw.php:1415
 #: include/translateDefines.inc.php:34
 msgid "H:i:s"
 msgstr "H:m:s"
@@ -6754,12 +6571,12 @@ msgid "History"
 msgstr "Istoric"
 
 #: httpconf.php:191 httpconf.php:198 httpconf.php:495 httpconf.php:507
-#: items.php:759 items.php:766 items.php:1110 items.php:1122
+#: items.php:758 items.php:765 items.php:1109 items.php:1121
 msgid "History cleared"
 msgstr "Istoric șters"
 
 #: include/views/configuration.httpconf.edit.php:285
-#: include/views/configuration.item.edit.php:683
+#: include/views/configuration.item.edit.php:688
 msgid "History clearing can take a long time. Continue?"
 msgstr "Golirea istoricului poate lua o perioadă lungă de timp. Continuare?"
 
@@ -6835,8 +6652,8 @@ msgstr "Aliniere orizontală"
 #: include/views/monitoring.screen.constructor.edit.php:418
 #: include/views/monitoring.screen.php:75
 #: include/views/monitoring.slides.php:79
-#: include/views/reports.toptriggers.php:105 items.php:759 items.php:1109
-#: items.php:1142 jsLoader.php:156 latest.php:411 latest.php:431 popup.php:475
+#: include/views/reports.toptriggers.php:105 items.php:758 items.php:1108
+#: items.php:1141 jsLoader.php:156 latest.php:411 latest.php:431 popup.php:475
 #: popup.php:512 popup.php:1203 queue.php:248 report2.php:420 report2.php:443
 #: search.php:125 tr_status.php:496 tr_status.php:752
 #, fuzzy
@@ -7798,13 +7615,13 @@ msgstr "Argumente incorecte trimise funcției"
 #: include/classes/api/services/CHostInterface.php:233
 #: include/classes/api/services/CHostInterface.php:422
 #: include/classes/api/services/CItemGeneral.php:217
-#: include/classes/api/services/CItemGeneral.php:1156
-#: include/classes/api/services/CItemGeneral.php:1174
-#: include/classes/api/services/CItemGeneral.php:1194
-#: include/classes/api/services/CItemGeneral.php:1217
-#: include/classes/api/services/CItemGeneral.php:1230
-#: include/classes/api/services/CItemGeneral.php:1259
-#: include/classes/api/services/CItemGeneral.php:1273
+#: include/classes/api/services/CItemGeneral.php:1159
+#: include/classes/api/services/CItemGeneral.php:1177
+#: include/classes/api/services/CItemGeneral.php:1197
+#: include/classes/api/services/CItemGeneral.php:1220
+#: include/classes/api/services/CItemGeneral.php:1233
+#: include/classes/api/services/CItemGeneral.php:1262
+#: include/classes/api/services/CItemGeneral.php:1276
 #: include/classes/api/services/CMapElement.php:46
 #: include/classes/api/services/CMapElement.php:117
 #: include/classes/api/services/CMapElement.php:129
@@ -7832,7 +7649,7 @@ msgstr "Argumente incorecte trimise funcției."
 msgid "Incorrect arguments passed to method."
 msgstr "Argumente incorecte trimise metodei."
 
-#: include/classes/api/services/CItemGeneral.php:524
+#: include/classes/api/services/CItemGeneral.php:527
 #, c-format
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "Protocol de autentificare incorect pentru itemul \"%1$s\"."
@@ -8181,7 +7998,7 @@ msgstr "Serviciu părinte incorect."
 msgid "Incorrect port range."
 msgstr "Gamă port incorectă."
 
-#: include/classes/api/services/CItemGeneral.php:533
+#: include/classes/api/services/CItemGeneral.php:536
 #, c-format
 msgid "Incorrect privacy protocol for item \"%1$s\"."
 msgstr "Protocol intimitate incorect pentru item \"%1$s\"."
@@ -8364,7 +8181,7 @@ msgstr "Grup utilizator incorect."
 #: include/classes/api/services/CDRule.php:497
 #: include/classes/api/services/CDRule.php:558
 #: include/classes/api/services/CDRule.php:571
-#: include/classes/api/services/CItemGeneral.php:464
+#: include/classes/api/services/CItemGeneral.php:467
 #: include/classes/validators/CNewValidator.php:107
 #: include/classes/validators/CNewValidator.php:119
 #: include/classes/validators/CNewValidator.php:131
@@ -8480,33 +8297,33 @@ msgstr ""
 #: include/classes/api/services/CHttpTest.php:999
 #: include/classes/api/services/CHttpTest.php:1095
 #: include/classes/api/services/CItemGeneral.php:183
-#: include/classes/api/services/CItemGeneral.php:279
-#: include/classes/api/services/CItemGeneral.php:415
-#: include/classes/api/services/CItemGeneral.php:427
-#: include/classes/api/services/CItemGeneral.php:434
-#: include/classes/api/services/CItemGeneral.php:446
-#: include/classes/api/services/CItemGeneral.php:452
-#: include/classes/api/services/CItemGeneral.php:458
-#: include/classes/api/services/CItemGeneral.php:471
-#: include/classes/api/services/CItemGeneral.php:1179
-#: include/classes/api/services/CItemGeneral.php:1185
-#: include/classes/api/services/CItemGeneral.php:1199
-#: include/classes/api/services/CItemGeneral.php:1204
-#: include/classes/api/services/CItemGeneral.php:1222
-#: include/classes/api/services/CItemGeneral.php:1235
-#: include/classes/api/services/CItemGeneral.php:1242
-#: include/classes/api/services/CItemGeneral.php:1248
-#: include/classes/api/services/CItemGeneral.php:1264
-#: include/classes/api/services/CItemGeneral.php:1278
-#: include/classes/api/services/CItemGeneral.php:1473
-#: include/classes/api/services/CItemGeneral.php:1510
-#: include/classes/api/services/CItemGeneral.php:1516
-#: include/classes/api/services/CItemGeneral.php:1533
-#: include/classes/api/services/CItemGeneral.php:1539
-#: include/classes/api/services/CItemGeneral.php:1613
-#: include/classes/api/services/CItemGeneral.php:1622
-#: include/classes/api/services/CItemGeneral.php:1729
-#: include/classes/api/services/CItemGeneral.php:1736
+#: include/classes/api/services/CItemGeneral.php:282
+#: include/classes/api/services/CItemGeneral.php:418
+#: include/classes/api/services/CItemGeneral.php:430
+#: include/classes/api/services/CItemGeneral.php:437
+#: include/classes/api/services/CItemGeneral.php:449
+#: include/classes/api/services/CItemGeneral.php:455
+#: include/classes/api/services/CItemGeneral.php:461
+#: include/classes/api/services/CItemGeneral.php:474
+#: include/classes/api/services/CItemGeneral.php:1182
+#: include/classes/api/services/CItemGeneral.php:1188
+#: include/classes/api/services/CItemGeneral.php:1202
+#: include/classes/api/services/CItemGeneral.php:1207
+#: include/classes/api/services/CItemGeneral.php:1225
+#: include/classes/api/services/CItemGeneral.php:1238
+#: include/classes/api/services/CItemGeneral.php:1245
+#: include/classes/api/services/CItemGeneral.php:1251
+#: include/classes/api/services/CItemGeneral.php:1267
+#: include/classes/api/services/CItemGeneral.php:1281
+#: include/classes/api/services/CItemGeneral.php:1476
+#: include/classes/api/services/CItemGeneral.php:1513
+#: include/classes/api/services/CItemGeneral.php:1519
+#: include/classes/api/services/CItemGeneral.php:1536
+#: include/classes/api/services/CItemGeneral.php:1542
+#: include/classes/api/services/CItemGeneral.php:1616
+#: include/classes/api/services/CItemGeneral.php:1625
+#: include/classes/api/services/CItemGeneral.php:1732
+#: include/classes/api/services/CItemGeneral.php:1739
 #: include/classes/api/services/CItem.php:716
 #: include/classes/api/services/CItem.php:724
 #: include/classes/api/services/CItemPrototype.php:946
@@ -8641,7 +8458,7 @@ msgstr ""
 msgid "Inherited and template macros"
 msgstr ""
 
-#: include/views/configuration.triggers.expression.php:132
+#: include/views/configuration.triggers.expression.php:136
 msgid "Insert"
 msgstr "Inserează"
 
@@ -8841,8 +8658,8 @@ msgstr ""
 
 #: disc_prototypes.php:276 disc_prototypes.php:281 disc_prototypes.php:294
 #: host_discovery.php:196 host_discovery.php:201 host_discovery.php:214
-#: items.php:459 items.php:464 items.php:477 items.php:789 items.php:794
-#: items.php:807
+#: items.php:459 items.php:464 items.php:477 items.php:788 items.php:793
+#: items.php:806
 #, c-format
 msgid "Invalid interval \"%1$s\"."
 msgstr ""
@@ -9087,8 +8904,8 @@ msgstr "Italiană (it)"
 #: include/views/configuration.triggers.expression.php:64
 #: include/views/monitoring.screen.constructor.edit.php:235
 #: include/views/monitoring.screen.constructor.edit.php:365
-#: include/views/monitoring.screen.constructor.edit.php:626 items.php:758
-#: items.php:1109 items.php:1142 tr_logform.php:339
+#: include/views/monitoring.screen.constructor.edit.php:626 items.php:757
+#: items.php:1108 items.php:1141 tr_logform.php:339
 msgid "Item"
 msgstr "Item"
 
@@ -9118,7 +8935,7 @@ msgstr "Itemul \"%1$s\" nu poate popula un server lipsă cu număr câmp inventa
 msgid "Item \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "Itemul \"%1$s\" nu există pe șablonul \"%2$s\"."
 
-#: include/classes/api/services/CItemGeneral.php:1474
+#: include/classes/api/services/CItemGeneral.php:1477
 #, c-format
 msgid "Item \"%1$s\" does not exist or you have no access to this item"
 msgstr ""
@@ -9133,16 +8950,16 @@ msgstr ""
 msgid "Item \"%1$s\" on \"%2$s\": application \"%3$s\" does not exist."
 msgstr "Itemul \"%1$s\" pe \"%2$s\": aplicația \"%3$s\" nu există."
 
-#: include/classes/api/services/CItemGeneral.php:515
+#: include/classes/api/services/CItemGeneral.php:518
 #, c-format
 msgid "Item \"%1$s:%2$s\" has invalid port: \"%3$s\"."
 msgstr "Itemul \"%1$s:%2$s\" are un port invalid: \"%3$s\"."
 
-#: items.php:725
+#: items.php:724
 msgid "Item added"
 msgstr "Item adăugat"
 
-#: items.php:1077
+#: items.php:1076
 msgid "Item copied"
 msgid_plural "Items copied"
 msgstr[0] ""
@@ -9157,14 +8974,14 @@ msgstr "Numărătoare item"
 msgid "Item deleted"
 msgstr "Item șters"
 
-#: applications.php:172 items.php:1035
+#: applications.php:172 items.php:1034
 msgid "Item disabled"
 msgid_plural "Items disabled"
 msgstr[0] "Element dezactivat"
 msgstr[1] "Elemente dezactivate"
 msgstr[2] "Elemente dezactivate"
 
-#: applications.php:171 items.php:1034
+#: applications.php:171 items.php:1033
 msgid "Item enabled"
 msgid_plural "Items enabled"
 msgstr[0] "Item activat"
@@ -9175,11 +8992,11 @@ msgstr[2] "Itemi activați"
 msgid "Item in \"not supported\" state"
 msgstr "Item în stare \"nesuportată\""
 
-#: popup_trexpr.php:891
+#: popup_trexpr.php:611
 msgid "Item not selected"
 msgstr "Item neselectat"
 
-#: include/classes/api/services/CItemGeneral.php:1169
+#: include/classes/api/services/CItemGeneral.php:1172
 #, c-format
 msgid "Item pre-processing is missing parameters: %1$s"
 msgstr ""
@@ -9198,7 +9015,7 @@ msgstr "Prototip item"
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", inherited from another template."
 msgstr "Prototip item \"%1$s\" există deja pe \"%2$s\", moștenit de la alt șablon."
 
-#: include/classes/api/services/CItemGeneral.php:1006
+#: include/classes/api/services/CItemGeneral.php:1009
 #, c-format
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", linked to another rule."
 msgstr ""
@@ -9242,15 +9059,15 @@ msgstr "Prototipuri item"
 msgid "Item prototypes deleted"
 msgstr "Prototipuri item șterse"
 
-#: items.php:728
+#: items.php:727
 msgid "Item updated"
 msgstr "Item actualizat"
 
-#: include/classes/api/services/CItemGeneral.php:348
+#: include/classes/api/services/CItemGeneral.php:351
 msgid "Item uses host interface from non-parent host."
 msgstr "Itemul folosește interfața serverului dintr-un server ne-părinte."
 
-#: include/classes/api/services/CItemGeneral.php:351
+#: include/classes/api/services/CItemGeneral.php:354
 msgid "Item uses incorrect interface type."
 msgstr "Itemul folosește un tip de interfață incorectă."
 
@@ -9258,15 +9075,15 @@ msgstr "Itemul folosește un tip de interfață incorectă."
 msgid "Item values"
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:320
+#: include/classes/api/services/CItemGeneral.php:323
 msgid "Item will not be refreshed. Please enter a correct update interval."
 msgstr "Itemul nu va fi actualizat. Va rugăm să introduceți un interval de actualizare corect."
 
-#: include/classes/api/services/CItemGeneral.php:303
+#: include/classes/api/services/CItemGeneral.php:306
 msgid "Item will not be refreshed. Specified update interval requires having at least one either flexible or scheduling interval."
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:308
+#: include/classes/api/services/CItemGeneral.php:311
 msgid "Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used."
 msgstr ""
 
@@ -9275,32 +9092,32 @@ msgstr ""
 msgid "Item with ID \"%1$s\" is not available."
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:656
+#: include/classes/api/services/CItemGeneral.php:659
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as a discovery rule."
 msgstr "Item cu cheia \"%1$s\" deja există pe \"%2$s\" ca o regulă de detecție."
 
-#: include/classes/api/services/CItemGeneral.php:662
+#: include/classes/api/services/CItemGeneral.php:665
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item created from item prototype."
 msgstr "Item cu cheia \"%1$s\" deja există pe \"%2$s\" ca și un item creat dintr-un prototip item. "
 
-#: include/classes/api/services/CItemGeneral.php:659
+#: include/classes/api/services/CItemGeneral.php:662
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item prototype."
 msgstr "Item cu cheia \"%1$s\" deja există pe \"%2$s\" ca și un prototip item."
 
-#: include/classes/api/services/CItemGeneral.php:653
+#: include/classes/api/services/CItemGeneral.php:656
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item."
 msgstr "Item cu cheia \"%1$s\" deja există pe \"%2$s\" ca și un item."
 
-#: include/classes/api/services/CItemGeneral.php:665
+#: include/classes/api/services/CItemGeneral.php:668
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as unknown item element."
 msgstr "Item cu cheia \"%1$s\" deja există pe \"%2$s\" ca și un element item necunoscut."
 
-#: include/classes/api/services/CItemGeneral.php:1397
+#: include/classes/api/services/CItemGeneral.php:1400
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\"."
 msgstr "Item cu cheia \"%1$s\" deja există pe \"%2$s\"."
@@ -9320,13 +9137,13 @@ msgstr "Item cu cheia \"%1$s\" deja există pe \"%2$s\"."
 #: include/views/configuration.template.list.php:57
 #: include/views/configuration.template.list.php:158
 #: include/views/conf.import.php:34 include/views/inventory.host.view.php:164
-#: include/views/inventory.host.view.php:175 items.php:1384 popup.php:76
+#: include/views/inventory.host.view.php:175 items.php:1383 popup.php:76
 #: queue.php:103 search.php:135 search.php:164 search.php:193 search.php:410
 #: search.php:438 search.php:467
 msgid "Items"
 msgstr "Itemi"
 
-#: items.php:1152
+#: items.php:1151
 msgid "Items deleted"
 msgstr "Itemi ștersi"
 
@@ -9334,7 +9151,7 @@ msgstr "Itemi ștersi"
 msgid "Items list"
 msgstr "Lista itemi"
 
-#: items.php:1014
+#: items.php:1013
 msgid "Items updated"
 msgstr "Itemi actualizați"
 
@@ -9441,7 +9258,7 @@ msgstr ""
 msgid "Key"
 msgstr "Cheie"
 
-#: include/classes/api/services/CItemGeneral.php:400
+#: include/classes/api/services/CItemGeneral.php:403
 #, c-format
 msgid "Key \"%1$s\" does not match <grpmax|grpmin|grpsum|grpavg>[\"Host group(s)\", \"Item key\", \"<last|min|max|avg|sum|count>\", \"parameter\"]."
 msgstr "Cheia \"%1$s\" nu se potrivește <grpmax|grpmin|grpsum|grpavg>[\"Host group(s)\", \"Item key\", \"<last|min|max|avg|sum|count>\", \"parameter\"]."
@@ -9515,22 +9332,6 @@ msgstr "Ultima"
 msgctxt "page navigation"
 msgid "Last"
 msgstr "Ultima"
-
-#: popup_trexpr.php:286
-msgid "Last (most recent) T value is < N"
-msgstr "Ultima (cea mai recentă) valoare T este < N"
-
-#: popup_trexpr.php:296
-msgid "Last (most recent) T value is = N"
-msgstr "Ultima (cea mai recentă) valoare T este = N"
-
-#: popup_trexpr.php:291
-msgid "Last (most recent) T value is > N"
-msgstr "Ultima (cea mai recentă) valoare T este > N"
-
-#: popup_trexpr.php:301
-msgid "Last (most recent) T value is NOT N"
-msgstr "Ultima (cea mai recentă) valoare T NU este N"
 
 #: srv_status.php:38
 msgid "Last 24 hours"
@@ -9630,22 +9431,6 @@ msgstr "Stânga"
 #: include/items.inc.php:1534
 msgid "Left trim"
 msgstr ""
-
-#: popup_trexpr.php:392
-msgid "Length of last (most recent) T value in characters is < N"
-msgstr "Lungimea ultimei (celei mai recente) valori T în caractere este < N"
-
-#: popup_trexpr.php:402
-msgid "Length of last (most recent) T value in characters is = N"
-msgstr "Lungimea ultimei (celei mai recente) valori T în caractere este = N"
-
-#: popup_trexpr.php:397
-msgid "Length of last (most recent) T value in characters is > N"
-msgstr "Lungimea ultimei (celei mai recente) valori T în caractere este > N"
-
-#: popup_trexpr.php:407
-msgid "Length of last (most recent) T value in characters is NOT N"
-msgstr "Lungimea ultimei (celei mai recente) valori T în caractere NU este N"
 
 #: adm.gui.php:40 include/views/administration.general.gui.edit.php:43
 msgid "Limit for search and filter results"
@@ -9818,30 +9603,6 @@ msgstr ""
 msgid "Log file monitoring. Returns log"
 msgstr ""
 
-#: popup_trexpr.php:520
-msgid "Log severity of the last log entry is < N"
-msgstr "Severitatea înregitrării la ultima autentificare de intrare este < N"
-
-#: popup_trexpr.php:528
-msgid "Log severity of the last log entry is = N"
-msgstr "Severitatea înregitrării la ultima autentificare de intrare este = N"
-
-#: popup_trexpr.php:524
-msgid "Log severity of the last log entry is > N"
-msgstr "Severitatea înregitrării la ultima autentificare de intrare este > N"
-
-#: popup_trexpr.php:532
-msgid "Log severity of the last log entry is NOT N"
-msgstr "Severitatea înregitrării la ultima autentificare de intrare NU este N"
-
-#: popup_trexpr.php:536
-msgid "Log source of the last log entry matching parameter T, then N = 1, 0 - otherwise"
-msgstr "Sursa ultimei autentificări la intrare se potrivește cu parametrul T, apoi N = 1, 0 - altfel"
-
-#: popup_trexpr.php:541
-msgid "Log source of the last log entry matching parameter T, then N NOT 1, 0 - otherwise"
-msgstr "Sursa ultimei autentificări la intrare se potrivește cu parametrul T, apoi N NU este 1, 0 - altfel"
-
 #: include/views/configuration.item.edit.php:446
 #: include/views/configuration.item.massupdate.php:462
 #: include/views/configuration.item.prototype.edit.php:318
@@ -9890,7 +9651,7 @@ msgstr "Pierdut"
 msgid "Low-level discovery rule in \"not supported\" state"
 msgstr "Nivel scăzut al regulii de detecție în stare \"nu este acceptată\""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1625
+#: include/classes/graphdraw/CLineGraphDraw.php:1376
 msgid "M"
 msgstr ""
 
@@ -10221,22 +9982,6 @@ msgstr[0] "Perioada maximă de timp pentru afișare este %1$s zile."
 msgstr[1] "Perioada maximă de timp pentru afișare este %1$s zile."
 msgstr[2] "Perioada maximă de timp pentru afișare este %1$s zile."
 
-#: popup_trexpr.php:306
-msgid "Maximum value for period T is < N"
-msgstr "Valoarea maximă pentru perioada T este < N"
-
-#: popup_trexpr.php:316
-msgid "Maximum value for period T is = N"
-msgstr "Valoarea maximă pentru perioada T este = N"
-
-#: popup_trexpr.php:311
-msgid "Maximum value for period T is > N"
-msgstr "Valoarea maximă pentru perioada T este > N"
-
-#: popup_trexpr.php:321
-msgid "Maximum value for period T is NOT N"
-msgstr "Valoarea maximă pentru perioada T NU este N"
-
 #: include/forms.inc.php:1916 include/func.inc.php:120
 #: include/func.inc.php:257 jsLoader.php:132
 msgid "May"
@@ -10425,22 +10170,6 @@ msgstr[2] ""
 #: include/views/monitoring.sysmap.edit.php:228
 msgid "Minimum trigger severity"
 msgstr "Severitate minimă trigger"
-
-#: popup_trexpr.php:326
-msgid "Minimum value for period T is < N"
-msgstr "Valoarea minimă pentru perioada T este < N"
-
-#: popup_trexpr.php:336
-msgid "Minimum value for period T is = N"
-msgstr "Valoarea maximă pentru perioada T este = N"
-
-#: popup_trexpr.php:331
-msgid "Minimum value for period T is > N"
-msgstr "Valoarea minimă pentru perioada T este < N"
-
-#: popup_trexpr.php:341
-msgid "Minimum value for period T is NOT N"
-msgstr "Valoarea minimă pentru perioada T NU este N"
 
 #: include/forms.inc.php:2048
 msgid "Minutes"
@@ -10634,7 +10363,7 @@ msgstr ""
 #: include/views/configuration.httpconf.popup.php:86
 #: include/views/configuration.httpconf.popup.php:146
 #: include/views/configuration.item.edit.php:61
-#: include/views/configuration.item.edit.php:549
+#: include/views/configuration.item.edit.php:554
 #: include/views/configuration.item.list.php:58
 #: include/views/configuration.item.list.php:158
 #: include/views/configuration.item.massupdate.php:259
@@ -10750,7 +10479,7 @@ msgid "New"
 msgstr "Nou"
 
 #: include/views/configuration.httpconf.edit.php:72
-#: include/views/configuration.item.edit.php:491
+#: include/views/configuration.item.edit.php:496
 #: include/views/configuration.item.prototype.edit.php:347
 msgid "New application"
 msgstr "Aplicație nouă"
@@ -10927,11 +10656,11 @@ msgstr "Nicio interfață IPMI găsită."
 msgid "No JMX interfaces found."
 msgstr "Nicio interfață JMX găsită."
 
-#: include/classes/api/services/CItemGeneral.php:503
+#: include/classes/api/services/CItemGeneral.php:506
 msgid "No SNMP OID specified."
 msgstr "Niciun SNMP OID specificat."
 
-#: include/classes/api/services/CItemGeneral.php:509
+#: include/classes/api/services/CItemGeneral.php:512
 msgid "No SNMP community specified."
 msgstr "Nicio comunitate SNMP specificată."
 
@@ -10964,7 +10693,7 @@ msgstr "Niciun tip de autentificare specificat pentru comanda de acțiune a oper
 msgid "No authentication user name specified for action operation command \"%s\"."
 msgstr "Niciun nume de utilizator specificat pentru comanda de acțiune a operațiunii \"%s\"."
 
-#: include/classes/api/services/CItemGeneral.php:481
+#: include/classes/api/services/CItemGeneral.php:484
 msgid "No authentication user name specified."
 msgstr "Niciun nume de utilizator specificat."
 
@@ -11000,14 +10729,6 @@ msgstr "Nicio colecție de date"
 #: include/classes/html/CTableInfo.php:30
 msgid "No data found."
 msgstr ""
-
-#: popup_trexpr.php:578
-msgid "No data received during period of time T, then N = 1, 0 - otherwise"
-msgstr "Nicio dată primită în timpul perioadei de timp T, atunci N = 1, 0 -  altfel "
-
-#: popup_trexpr.php:583
-msgid "No data received during period of time T, then N NOT 1, 0 - otherwise"
-msgstr "Nicio dată primită în timpul perioadei de timp T, atunci N NU este 1, 0 - altfel"
 
 #: app/controllers/CControllerWidgetClockView.php:76
 msgid "No data."
@@ -11121,7 +10842,7 @@ msgstr "Nicio imagine"
 msgid "No interface found"
 msgstr "Nicio interfață găsită"
 
-#: include/classes/api/services/CItemGeneral.php:345
+#: include/classes/api/services/CItemGeneral.php:348
 msgid "No interface found."
 msgstr "Nicio interfață găsită."
 
@@ -11256,7 +10977,7 @@ msgstr "Nicio permisiune de acces la sistem."
 #: include/classes/api/services/CImage.php:480
 #: include/classes/api/services/CImage.php:498
 #: include/classes/api/services/CItemGeneral.php:175
-#: include/classes/api/services/CItemGeneral.php:260
+#: include/classes/api/services/CItemGeneral.php:263
 #: include/classes/api/services/CItem.php:552
 #: include/classes/api/services/CItemPrototype.php:720
 #: include/classes/api/services/CMaintenance.php:261
@@ -11319,7 +11040,7 @@ msgstr "Nicio permisiune de acces la sistem."
 #: include/classes/helpers/CMapHelper.php:84
 #: include/classes/screens/CScreenHistory.php:113
 #: include/classes/screens/CScreenHttpTestDetails.php:46
-#: include/func.inc.php:1718 items.php:1222 scripts_exec.php:90
+#: include/func.inc.php:1718 items.php:1221 scripts_exec.php:90
 msgid "No permissions to referred object or it does not exist!"
 msgstr "Nicio permisiune la obiectul menționat sau acesta nu există!"
 
@@ -11328,7 +11049,7 @@ msgstr "Nicio permisiune la obiectul menționat sau acesta nu există!"
 msgid "No private key file specified for action operation command \"%s\"."
 msgstr "Nu a fost specificat niciun fișier cu cheie privată pentru comanda de acțiune a operațiunii \"%s\"."
 
-#: include/classes/api/services/CItemGeneral.php:489
+#: include/classes/api/services/CItemGeneral.php:492
 msgid "No private key file specified."
 msgstr "Nu a fost specificat nici un fișier cu cheie privată."
 
@@ -11341,7 +11062,7 @@ msgstr "Fără proxy"
 msgid "No public key file specified for action operation command \"%s\"."
 msgstr "Nu a fost specificat niciun fișier cu cheie publică pentru comanda de acțiune a operațiunii \"%s\"."
 
-#: include/classes/api/services/CItemGeneral.php:486
+#: include/classes/api/services/CItemGeneral.php:489
 msgid "No public key file specified."
 msgstr "Nu a fost specificat nici un fișier cu cheie publică."
 
@@ -11373,7 +11094,7 @@ msgstr "Niciun status pentru proxy."
 msgid "No target selected"
 msgstr "Nu a fost selectată nicio țintă"
 
-#: graphs.php:371 items.php:1082
+#: graphs.php:371 items.php:1081
 msgid "No target selected."
 msgstr "Nu a fost selectată nicio țintă."
 
@@ -11404,8 +11125,8 @@ msgstr ""
 #: include/views/configuration.host.list.php:217
 #: include/views/configuration.host.list.php:229
 #: include/views/configuration.host.list.php:232
-#: include/views/configuration.item.edit.php:496
-#: include/views/configuration.item.edit.php:510
+#: include/views/configuration.item.edit.php:501
+#: include/views/configuration.item.edit.php:515
 #: include/views/configuration.item.prototype.edit.php:354
 #: include/views/configuration.item.prototype.edit.php:369
 #: include/views/configuration.trigger.prototype.edit.php:266
@@ -11424,6 +11145,10 @@ msgstr "Normal"
 #: include/html.inc.php:178
 msgid "Normal view"
 msgstr "Vizualizare normală"
+
+#: include/locales.inc.php:73
+msgid "Norwegian (nb_NO)"
+msgstr ""
 
 #: include/actions.inc.php:153 include/actions.inc.php:337
 #: include/views/configuration.action.edit.php:1122
@@ -11563,22 +11288,6 @@ msgstr "Număr threaduri procesor pe VMware hypervisor, <url> - VMware service U
 msgid "Number of processors on VMware virtual machine, <url> - VMware service URL, <uuid> - VMware virtual machine host name"
 msgstr "Numărul de procesoare pe mașina virtuală VMware, <url> - VMware service URL, <uuid> - VMware numne server mașină virtuală"
 
-#: popup_trexpr.php:546
-msgid "Number of seconds since the Epoch is < N"
-msgstr "Numărul secundelor de când Epoch este < N"
-
-#: popup_trexpr.php:554
-msgid "Number of seconds since the Epoch is = N"
-msgstr "Numărul secundelor de când Epoch este = N"
-
-#: popup_trexpr.php:550
-msgid "Number of seconds since the Epoch is > N"
-msgstr "Numărul secundelor de când Epoch este > N"
-
-#: popup_trexpr.php:558
-msgid "Number of seconds since the Epoch is NOT N"
-msgstr "Numărul secundelor de când Epoch NU este N"
-
 #: include/views/monitoring.slideconf.list.php:57
 msgid "Number of slides"
 msgstr ""
@@ -11591,22 +11300,6 @@ msgstr "Numărul schimbărilor de status"
 #: include/views/configuration.httpconf.list.php:80
 msgid "Number of steps"
 msgstr "Număr de pași"
-
-#: popup_trexpr.php:258
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is < N"
-msgstr "Numărul de găsiri a valorilor V (care satisfac operatorul O) pentru perioada T este < N"
-
-#: popup_trexpr.php:268
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is = N"
-msgstr "Numărul de găsiri a valorilor V (care satisfac operatorul O) pentru perioada T este = N"
-
-#: popup_trexpr.php:263
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is > N"
-msgstr "Numărul de găsiri a valorilor V (care satisfac operatorul O) pentru perioada T este > N"
-
-#: popup_trexpr.php:273
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is NOT N"
-msgstr "Numărul de găsiri a valorilor V (care satisfac operatorul O) pentru perioada T NU este N"
 
 #: include/blocks.inc.php:449
 msgid "Number of triggers (enabled/disabled [problem/ok])"
@@ -11878,7 +11571,7 @@ msgstr ""
 msgid "Only items assigned to enabled hosts are counted"
 msgstr "Numai itemii desemnați să activeze servere sunt numărați"
 
-#: include/classes/api/services/CItemGeneral.php:1284
+#: include/classes/api/services/CItemGeneral.php:1287
 msgid "Only one change step is allowed."
 msgstr ""
 
@@ -12309,7 +12002,7 @@ msgstr "POP"
 #: app/views/monitoring.widget.problems.view.php:100 chart5.php:199
 #: include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:831
-#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:316
+#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:320
 #: include/events.inc.php:516 include/maps.inc.php:428
 #: include/maps.inc.php:513 include/maps.inc.php:607 include/maps.inc.php:709
 #: include/triggers.inc.php:173 include/views/monitoring.overview.items.php:32
@@ -12368,7 +12061,7 @@ msgid "Parameter \"%1$s\" is deprecated."
 msgstr ""
 
 #: include/classes/debug/CProfiler.php:182
-#: include/views/configuration.item.edit.php:550
+#: include/views/configuration.item.edit.php:555
 #: include/views/configuration.item.massupdate.php:260
 #: include/views/configuration.item.prototype.edit.php:390
 msgid "Parameters"
@@ -12489,22 +12182,6 @@ msgstr ""
 msgid "Percentage"
 msgstr ""
 
-#: popup_trexpr.php:346
-msgid "Percentile P of a period T is < N"
-msgstr ""
-
-#: popup_trexpr.php:356
-msgid "Percentile P of a period T is = N"
-msgstr ""
-
-#: popup_trexpr.php:351
-msgid "Percentile P of a period T is > N"
-msgstr ""
-
-#: popup_trexpr.php:361
-msgid "Percentile P of a period T is NOT N"
-msgstr ""
-
 #: graphs.php:53 include/views/configuration.graph.edit.php:125
 msgid "Percentile line (left)"
 msgstr "Linie procentuala (stânga)"
@@ -12560,7 +12237,7 @@ msgstr "Permisiuni"
 msgid "Permissions can be assigned for user groups only."
 msgstr "Persmisiunea poate fi atribuită doar grupurilor de utilizatori."
 
-#: include/locales.inc.php:73
+#: include/locales.inc.php:74
 msgid "Persian (fa_IR)"
 msgstr "Persian (fa_IR)"
 
@@ -12611,11 +12288,11 @@ msgstr ""
 msgid "Points"
 msgstr ""
 
-#: include/locales.inc.php:74
+#: include/locales.inc.php:75
 msgid "Polish (pl_PL)"
 msgstr "Poloneză (pl_PL)"
 
-#: include/views/configuration.item.edit.php:530
+#: include/views/configuration.item.edit.php:535
 msgid "Populates host inventory field"
 msgstr "Populare câmp server inventar"
 
@@ -12647,11 +12324,11 @@ msgstr "Portul nu pot fi nul pentru interfața serverului."
 msgid "Port range"
 msgstr "Interval port"
 
-#: include/locales.inc.php:75
+#: include/locales.inc.php:76
 msgid "Portuguese (pt_BR)"
 msgstr "Portugheză (pt_BR)"
 
-#: include/locales.inc.php:76
+#: include/locales.inc.php:77
 msgid "Portuguese (pt_PT)"
 msgstr "Portugheză (pt_BR)"
 
@@ -12672,12 +12349,12 @@ msgstr ""
 msgid "Pre-installation summary"
 msgstr ""
 
-#: include/views/configuration.item.edit.php:669
+#: include/views/configuration.item.edit.php:674
 #: include/views/configuration.item.prototype.edit.php:509
 msgid "Preprocessing"
 msgstr ""
 
-#: include/views/configuration.item.edit.php:664
+#: include/views/configuration.item.edit.php:669
 #: include/views/configuration.item.massupdate.php:356
 #: include/views/configuration.item.prototype.edit.php:504
 msgid "Preprocessing steps"
@@ -12688,22 +12365,6 @@ msgstr ""
 #: include/views/configuration.graph.edit.php:374
 msgid "Preview"
 msgstr "Previzualizare"
-
-#: popup_trexpr.php:366
-msgid "Previous value is < N"
-msgstr "Valoarea anterioară este < N"
-
-#: popup_trexpr.php:374
-msgid "Previous value is = N"
-msgstr "Valoarea anterioară este = N"
-
-#: popup_trexpr.php:370
-msgid "Previous value is > N"
-msgstr "Valoarea anterioară este > N"
-
-#: popup_trexpr.php:378
-msgid "Previous value is NOT N"
-msgstr "Valoarea anterioară NU este N"
 
 #: include/hosts.inc.php:399
 msgid "Primary POC cell"
@@ -12959,7 +12620,7 @@ msgstr ""
 #: app/views/monitoring.widget.problems.view.php:84
 #: include/classes/screens/CScreenEvents.php:134
 #: include/classes/screens/CScreenProblem.php:815
-#: include/classes/screens/CScreenProblem.php:958 include/events.inc.php:321
+#: include/classes/screens/CScreenProblem.php:958 include/events.inc.php:325
 #: include/events.inc.php:500 tr_status.php:687
 msgid "RESOLVED"
 msgstr ""
@@ -13116,22 +12777,6 @@ msgstr "Expresie uzuală"
 msgid "Regular expression \"%s\" already exists."
 msgstr "Expresia uzuală \"%s\" deja există."
 
-#: popup_trexpr.php:490
-msgid "Regular expression V matching last value in period T, then N = 1, 0 - otherwise"
-msgstr "Expresia uzuală V se potrivește cu ultima valoare în perioada T, astfel N = 1, 0 - altfel"
-
-#: popup_trexpr.php:500
-msgid "Regular expression V matching last value in period T, then N = 1, 0 - otherwise (non case-sensitive)"
-msgstr "Expresia uzuală V se potrivește cu ultima valoare în perioada T, astfel N = 1, 0 - altfel (non case-sensitive)"
-
-#: popup_trexpr.php:495
-msgid "Regular expression V matching last value in period T, then N NOT 1, 0 - otherwise"
-msgstr "Expresia uzuală V se potrivește cu ultima valoare în perioada T, astfel N NU este 1, 0 - altfel"
-
-#: popup_trexpr.php:505
-msgid "Regular expression V matching last value in period T, then N NOT 1, 0 - otherwise (non case-sensitive)"
-msgstr "Expresia uzuală V se potrivește cu ultima valoare în perioada T, astfel N NU este 1, 0 - altfel (non case-sensitive)"
-
 #: adm.regexps.php:147
 msgid "Regular expression added"
 msgstr "Expresie uzuală adăugată"
@@ -13197,7 +12842,7 @@ msgstr "Comandă de la distanță"
 #: include/views/configuration.host.discovery.edit.php:327
 #: include/views/configuration.httpconf.edit.php:232
 #: include/views/configuration.item.edit.php:382
-#: include/views/configuration.item.edit.php:646
+#: include/views/configuration.item.edit.php:651
 #: include/views/configuration.item.massupdate.php:339
 #: include/views/configuration.item.massupdate.php:407
 #: include/views/configuration.item.prototype.edit.php:292
@@ -13419,7 +13064,8 @@ msgstr "Timp de răspuns"
 #: include/classes/debug/CProfiler.php:183
 #: include/views/administration.general.regularexpressions.edit.php:112
 #: include/views/administration.general.regularexpressions.edit.php:117
-#: tr_testexpr.php:147 tr_testexpr.php:184
+#: include/views/configuration.triggers.expression.php:120 tr_testexpr.php:147
+#: tr_testexpr.php:184
 msgid "Result"
 msgstr "Rezultat"
 
@@ -13501,7 +13147,7 @@ msgstr "Dreapta"
 msgid "Right trim"
 msgstr ""
 
-#: include/locales.inc.php:77
+#: include/locales.inc.php:78
 msgid "Romanian (ro_RO)"
 msgstr "Română (ro_RO)"
 
@@ -13572,7 +13218,7 @@ msgstr "Execută comenzile de la distanță pe servere"
 msgid "Run specified command on the host. Returns text result of the command; 1 - with mode as nowait (regardless of command result)"
 msgstr ""
 
-#: include/locales.inc.php:78
+#: include/locales.inc.php:79
 msgid "Russian (ru_RU)"
 msgstr "Rusă (ru_RU)"
 
@@ -13661,7 +13307,7 @@ msgstr "Interfață SNMP"
 msgid "SNMP trap"
 msgstr "SNMP ttrap"
 
-#: include/classes/api/services/CItemGeneral.php:497
+#: include/classes/api/services/CItemGeneral.php:500
 msgid "SNMP trap key is invalid."
 msgstr "Cheie SNMP trap invalidă."
 
@@ -14438,7 +14084,7 @@ msgstr ""
 msgid "Show unavailable maps"
 msgstr ""
 
-#: include/views/configuration.item.edit.php:468
+#: include/views/configuration.item.edit.php:472
 #: include/views/configuration.item.massupdate.php:478
 #: include/views/configuration.item.prototype.edit.php:341
 msgid "Show value"
@@ -14597,7 +14243,7 @@ msgstr "Prezentări"
 msgid "Slides"
 msgstr "Slides"
 
-#: include/locales.inc.php:79
+#: include/locales.inc.php:80
 msgid "Slovak (sk_SK)"
 msgstr "Slovacă (sk_SK)"
 
@@ -14675,7 +14321,7 @@ msgstr "Sursă"
 msgid "Source type"
 msgstr ""
 
-#: include/locales.inc.php:80
+#: include/locales.inc.php:81
 msgid "Spanish (es_ES)"
 msgstr "Spaniolă (es_ES)"
 
@@ -14877,22 +14523,6 @@ msgstr "Verificare reușită"
 msgid "Sum of incoming and outgoing traffic statistics on network interface. Returns integer"
 msgstr ""
 
-#: popup_trexpr.php:412
-msgid "Sum of values of a period T is < N"
-msgstr "Suma valorilor unei perioade T este < N"
-
-#: popup_trexpr.php:422
-msgid "Sum of values of a period T is = N"
-msgstr "Suma valorilor unei perioade T este = N"
-
-#: popup_trexpr.php:417
-msgid "Sum of values of a period T is > N"
-msgstr "Suma valorilor unei perioade T este > N"
-
-#: popup_trexpr.php:427
-msgid "Sum of values of a period T is NOT N"
-msgstr "Suma valorilor unei perioade T NU este N"
-
 #: include/func.inc.php:212
 msgid "Sun"
 msgstr "Dum"
@@ -14927,7 +14557,7 @@ msgstr ""
 msgid "Swap space size in bytes or in percentage from total. Returns integer for bytes; float for percentage"
 msgstr ""
 
-#: include/locales.inc.php:81
+#: include/locales.inc.php:82
 msgid "Swedish (sv_SE)"
 msgstr "Suedeză (sv_SE)"
 
@@ -15420,8 +15050,8 @@ msgstr "Până când"
 #: include/views/configuration.services.edit.php:290
 #: include/views/configuration.services.edit.php:304
 #: include/views/configuration.services.edit.php:337
-#: include/views/configuration.triggers.expression.php:89
-#: include/views/configuration.triggers.expression.php:97 jsLoader.php:149
+#: include/views/configuration.triggers.expression.php:87
+#: include/views/configuration.triggers.expression.php:92 jsLoader.php:149
 #: popup_trexpr.php:33 popup_trexpr.php:130 tr_status.php:491
 msgid "Time"
 msgstr "Timp"
@@ -15435,8 +15065,8 @@ msgid "Time (descending)"
 msgstr "Timp (descendent)"
 
 #: include/classes/items/CHelpItems.php:951
-msgid "Time a particular Zabbix process or a group of processes (identified by <type> and <num>) spent in <state> in percentage."
-msgstr "Cronometrează un anumit proces Zabbix sau un grup de procese (identificate de <type> și <num>) petrecut în <state> în procente. "
+msgid "Time a particular Zabbix process or a group of processes (identified by <type> and <mode>) spent in <state> in percentage."
+msgstr ""
 
 #: include/classes/items/CHelpItems.php:955
 msgid "Time of proxy last access. Name - proxy name. Param - lastaccess. Unix timestamp."
@@ -15450,22 +15080,6 @@ msgstr "Perioadă de timp"
 #: popup_trexpr.php:115 popup_trexpr.php:126 popup_trexpr.php:149
 msgid "Time shift"
 msgstr "Timp rămas"
-
-#: popup_trexpr.php:618
-msgid "Time to reach threshold estimated based on period T is < N"
-msgstr ""
-
-#: popup_trexpr.php:628
-msgid "Time to reach threshold estimated based on period T is = N"
-msgstr ""
-
-#: popup_trexpr.php:623
-msgid "Time to reach threshold estimated based on period T is > N"
-msgstr ""
-
-#: popup_trexpr.php:633
-msgid "Time to reach threshold estimated based on period T is NOT N"
-msgstr ""
 
 #: include/classes/widgets/CClockWidgetForm.php:31
 #: include/views/monitoring.screen.constructor.edit.php:604
@@ -15656,7 +15270,7 @@ msgstr "Eveniment trigger și avertizare perioadă de stocare a datelor"
 msgid "Trigger event and alert data storage period \"%1$s\"."
 msgstr ""
 
-#: include/views/configuration.triggers.expression.php:128
+#: include/views/configuration.triggers.expression.php:132
 msgid "Trigger expression condition"
 msgstr "Condiție expresie trigger"
 
@@ -15844,7 +15458,7 @@ msgstr "Mar"
 msgid "Tuesday"
 msgstr "Marți"
 
-#: include/locales.inc.php:82
+#: include/locales.inc.php:83
 msgid "Turkish (tr_TR)"
 msgstr "Turcă (tr_TR)"
 
@@ -15938,7 +15552,7 @@ msgstr "Tip de calcul"
 msgid "Type of information"
 msgstr "Tip de informație"
 
-#: include/classes/api/services/CItemGeneral.php:409
+#: include/classes/api/services/CItemGeneral.php:412
 msgid "Type of information must be \"Numeric (unsigned)\" or \"Numeric (float)\" for aggregate items."
 msgstr ""
 
@@ -16013,7 +15627,7 @@ msgstr "URL-uri"
 msgid "USA (160 characters)"
 msgstr "USA (160 caractere)"
 
-#: include/locales.inc.php:83
+#: include/locales.inc.php:84
 msgid "Ukrainian (uk_UA)"
 msgstr "Ucraineană (uk_UA)"
 
@@ -16110,7 +15724,7 @@ msgstr "Eroare necunoscută"
 msgid "Unknown function."
 msgstr "Funcție necunoscută."
 
-#: include/triggers.inc.php:1322 popup_trexpr.php:736 tr_testexpr.php:34
+#: include/triggers.inc.php:1322 popup_trexpr.php:457 tr_testexpr.php:34
 msgid "Unknown host item, no such item in selected host"
 msgstr "Item server necunoscut, nu există asemenea item în serverul selectat"
 
@@ -16292,7 +15906,7 @@ msgstr "Sus"
 #: include/views/configuration.host.prototype.edit.php:436
 #: include/views/configuration.httpconf.edit.php:293
 #: include/views/configuration.httpconf.popup.php:192
-#: include/views/configuration.item.edit.php:691
+#: include/views/configuration.item.edit.php:696
 #: include/views/configuration.item.massupdate.php:614
 #: include/views/configuration.item.prototype.edit.php:518
 #: include/views/configuration.maintenance.edit.php:155
@@ -17053,7 +16667,7 @@ msgstr "Vertical"
 msgid "Vertical align"
 msgstr "Aliniere verticală"
 
-#: include/locales.inc.php:84
+#: include/locales.inc.php:85
 msgid "Vietnamese (vi_VN)"
 msgstr "Vietnameză (vi_VN)"
 
@@ -17663,7 +17277,7 @@ msgid "a number is too large"
 msgstr ""
 
 #: include/classes/api/services/CDRule.php:320
-#: include/classes/api/services/CItemGeneral.php:1205
+#: include/classes/api/services/CItemGeneral.php:1208
 #: include/classes/api/services/CScreen.php:423
 msgid "a numeric value is expected"
 msgstr ""
@@ -17686,6 +17300,10 @@ msgstr ""
 msgid "a user macro is expected"
 msgstr ""
 
+#: popup_trexpr.php:186
+msgid "abschange() - Absolute difference between last and previous value"
+msgstr ""
+
 #: include/forms.inc.php:484
 msgid "affects only filtered data"
 msgstr ""
@@ -17694,7 +17312,7 @@ msgstr ""
 msgid "agent"
 msgstr "agent"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2027
+#: include/classes/graphdraw/CLineGraphDraw.php:1840
 #: include/classes/html/CSeverity.php:49
 #: include/classes/pagefilter/CPageFilter.php:849
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
@@ -17772,13 +17390,21 @@ msgstr "autoînregistrare"
 msgid "auto-registered host"
 msgstr "server autoînregistrare"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2009
-#: include/classes/graphdraw/CLineGraphDraw.php:2031
+#: include/classes/graphdraw/CLineGraphDraw.php:1822
+#: include/classes/graphdraw/CLineGraphDraw.php:1844
 #: include/classes/graphdraw/CPieGraphDraw.php:335 include/graphs.inc.php:85
 #: include/views/js/configuration.graph.edit.js.php:50
 #: include/views/js/configuration.graph.edit.js.php:58
 msgid "avg"
 msgstr "avg"
+
+#: popup_trexpr.php:191
+msgid "avg() - Average value of a period T"
+msgstr ""
+
+#: popup_trexpr.php:332
+msgid "band() - Bitwise AND of last (most recent) T value and mask"
+msgstr ""
 
 #: include/views/administration.general.trigger.options.edit.php:36
 #: include/views/administration.general.trigger.options.edit.php:43
@@ -17809,14 +17435,14 @@ msgstr ""
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1506
 #: include/classes/api/services/CHttpTest.php:999
-#: include/classes/api/services/CItemGeneral.php:427
-#: include/classes/api/services/CItemGeneral.php:447
-#: include/classes/api/services/CItemGeneral.php:453
-#: include/classes/api/services/CItemGeneral.php:459
-#: include/classes/api/services/CItemGeneral.php:1179
-#: include/classes/api/services/CItemGeneral.php:1199
-#: include/classes/api/services/CItemGeneral.php:1222
-#: include/classes/api/services/CItemGeneral.php:1235
+#: include/classes/api/services/CItemGeneral.php:430
+#: include/classes/api/services/CItemGeneral.php:450
+#: include/classes/api/services/CItemGeneral.php:456
+#: include/classes/api/services/CItemGeneral.php:462
+#: include/classes/api/services/CItemGeneral.php:1182
+#: include/classes/api/services/CItemGeneral.php:1202
+#: include/classes/api/services/CItemGeneral.php:1225
+#: include/classes/api/services/CItemGeneral.php:1238
 #: include/classes/api/services/CMapElement.php:122
 #: include/classes/api/services/CMapElement.php:147
 #: include/classes/api/services/CMapElement.php:185
@@ -17852,21 +17478,29 @@ msgstr ""
 msgid "cannot perform Scroll API request, data could be truncated"
 msgstr ""
 
+#: popup_trexpr.php:203
+msgid "change() - Difference between last and previous value"
+msgstr ""
+
 #: include/classes/parsers/CConditionFormula.php:188
 #, c-format
 msgid "check expression starting from \"%1$s\""
 msgstr ""
 
 #: include/classes/api/services/CHostGeneral.php:1036
-#: include/classes/api/services/CItemGeneral.php:1511
-#: include/classes/api/services/CItemGeneral.php:1517
-#: include/classes/api/services/CItemGeneral.php:1730
+#: include/classes/api/services/CItemGeneral.php:1514
+#: include/classes/api/services/CItemGeneral.php:1520
+#: include/classes/api/services/CItemGeneral.php:1733
 #: include/classes/import/CConfigurationImport.php:2534
 msgid "circular item dependency is not allowed"
 msgstr ""
 
 #: include/views/hostmacros.php:38
 msgid "configure"
+msgstr ""
+
+#: popup_trexpr.php:208
+msgid "count() - Number of successfully retrieved values V (which fulfill operator O) for period T"
 msgstr ""
 
 #: include/func.inc.php:579 jsLoader.php:102
@@ -17877,6 +17511,18 @@ msgstr "z"
 #: chart4.php:129 chart5.php:143
 msgid "d.M"
 msgstr "z.L"
+
+#: popup_trexpr.php:266
+msgid "date() - Current date"
+msgstr ""
+
+#: popup_trexpr.php:276
+msgid "dayofmonth() - Day of month"
+msgstr ""
+
+#: popup_trexpr.php:271
+msgid "dayofweek() - Day of week"
+msgstr ""
 
 #: app/views/monitoring.problem.view.php:165
 #: include/views/common.filter.trigger.php:90
@@ -17895,6 +17541,10 @@ msgstr "zz"
 msgid "default"
 msgstr "implicit"
 
+#: popup_trexpr.php:197
+msgid "delta() - Difference between MAX and MIN value of a period T"
+msgstr ""
+
 #: include/classes/widgets/CActionLogWidgetForm.php:31
 #: include/classes/widgets/CActionLogWidgetForm.php:33
 #: include/classes/widgets/CActionLogWidgetForm.php:35
@@ -17904,6 +17554,10 @@ msgstr "implicit"
 #: include/classes/widgets/CProblemsWidgetForm.php:117
 #: include/classes/widgets/CProblemsWidgetForm.php:119
 msgid "descending"
+msgstr ""
+
+#: popup_trexpr.php:214
+msgid "diff() - Difference between last and preceding values (1 - true, 0 - false)"
 msgstr ""
 
 #: include/classes/validators/CApiInputValidator.php:818
@@ -17947,13 +17601,21 @@ msgstr ""
 msgid "failed to parse JSON"
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:1243
+#: include/classes/api/services/CItemGeneral.php:1246
 msgid "first parameter is expected"
 msgstr ""
 
 #: jsLoader.php:97
 msgid "fixed"
 msgstr "remediat"
+
+#: popup_trexpr.php:338
+msgid "forecast() - Forecast for next t seconds based on period T"
+msgstr ""
+
+#: popup_trexpr.php:281
+msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
+msgstr ""
 
 #: include/views/configuration.item.edit.php:411
 #: include/views/configuration.item.edit.php:416
@@ -17988,7 +17650,7 @@ msgstr "server"
 msgid "host group"
 msgstr "grup server"
 
-#: include/classes/api/services/CItemGeneral.php:1534
+#: include/classes/api/services/CItemGeneral.php:1537
 msgid "hostid of dependent item and master item should match"
 msgstr ""
 
@@ -18035,7 +17697,7 @@ msgstr ""
 msgid "invalid byte sequence in UTF-8"
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:279
+#: include/classes/api/services/CItemGeneral.php:282
 #: include/classes/graphdraw/CLineGraphDraw.php:113
 msgid "invalid delay"
 msgstr ""
@@ -18059,6 +17721,10 @@ msgstr ""
 msgid "invalid trend storage period"
 msgstr ""
 
+#: popup_trexpr.php:293
+msgid "iregexp() - Regular expression V matching last value in period T (non case-sensitive; 1 - match, 0 - no match)"
+msgstr ""
+
 #: include/classes/validators/CApiInputValidator.php:1146
 msgid "is not enclosed in {} or is malformed"
 msgstr ""
@@ -18071,13 +17737,17 @@ msgstr "item"
 msgid "key is empty"
 msgstr "cheia este goală"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2007
+#: include/classes/graphdraw/CLineGraphDraw.php:1820
 #: include/classes/graphdraw/CPieGraphDraw.php:330 include/graphs.inc.php:82
 #: include/views/js/configuration.graph.edit.js.php:52
 msgid "last"
 msgstr "ultima"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2144
+#: popup_trexpr.php:219
+msgid "last() - Last (most recent) T value"
+msgstr ""
+
+#: include/classes/graphdraw/CLineGraphDraw.php:1957
 msgid "left"
 msgstr ""
 
@@ -18086,12 +17756,24 @@ msgstr ""
 msgid "like"
 msgstr "ca și"
 
-#: include/views/configuration.item.edit.php:591
+#: include/views/configuration.item.edit.php:596
 #: include/views/configuration.item.massupdate.php:297
 #: include/views/configuration.item.prototype.edit.php:431
 #: include/views/js/common.item.edit.js.php:140
 #: include/views/js/configuration.item.massupdate.js.php:154
 msgid "list of characters"
+msgstr ""
+
+#: popup_trexpr.php:299
+msgid "logeventid() - Event ID of last log entry matching regular expression T (1 - match, 0 - no match)"
+msgstr ""
+
+#: popup_trexpr.php:305
+msgid "logseverity() - Log severity of the last log entry"
+msgstr ""
+
+#: popup_trexpr.php:310
+msgid "logsource() - Log source of the last log entry matching parameter T (1 - match, 0 - no match)"
 msgstr ""
 
 #: include/events.inc.php:68
@@ -18108,7 +17790,9 @@ msgctxt "month short"
 msgid "m"
 msgstr "l"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1628
+#: include/classes/graphdraw/CLineGraphDraw.php:1376
+#: include/classes/graphdraw/CLineGraphDraw.php:1384
+#: include/classes/graphdraw/CLineGraphDraw.php:1391
 msgid "m-d"
 msgstr ""
 
@@ -18138,34 +17822,42 @@ msgstr "hartă"
 msgid "matches"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2010
-#: include/classes/graphdraw/CLineGraphDraw.php:2024
+#: include/classes/graphdraw/CLineGraphDraw.php:1823
+#: include/classes/graphdraw/CLineGraphDraw.php:1837
 #: include/classes/graphdraw/CPieGraphDraw.php:326 include/graphs.inc.php:80
 #: include/views/js/configuration.graph.edit.js.php:51
 #: include/views/js/configuration.graph.edit.js.php:59
 msgid "max"
 msgstr "max"
 
-#: include/classes/api/services/CItemGeneral.php:1614
+#: popup_trexpr.php:225
+msgid "max() - Maximum value for period T"
+msgstr ""
+
+#: include/classes/api/services/CItemGeneral.php:1617
 msgid "maximum dependent items count reached"
 msgstr ""
 
 #: include/classes/api/services/CHostGeneral.php:1043
-#: include/classes/api/services/CItemGeneral.php:1540
-#: include/classes/api/services/CItemGeneral.php:1623
-#: include/classes/api/services/CItemGeneral.php:1737
+#: include/classes/api/services/CItemGeneral.php:1543
+#: include/classes/api/services/CItemGeneral.php:1626
+#: include/classes/api/services/CItemGeneral.php:1740
 #: include/classes/import/CConfigurationImport.php:2491
 #: include/classes/import/CConfigurationImport.php:2550
 msgid "maximum number of dependency levels reached"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2008
-#: include/classes/graphdraw/CLineGraphDraw.php:2021
+#: include/classes/graphdraw/CLineGraphDraw.php:1821
+#: include/classes/graphdraw/CLineGraphDraw.php:1834
 #: include/classes/graphdraw/CPieGraphDraw.php:322 include/graphs.inc.php:78
 #: include/views/js/configuration.graph.edit.js.php:49
 #: include/views/js/configuration.graph.edit.js.php:57
 msgid "min"
 msgstr "min"
+
+#: popup_trexpr.php:231
+msgid "min() - Minimum value for period T"
+msgstr ""
 
 #: include/classes/api/services/CHost.php:1518
 #, c-format
@@ -18225,10 +17917,14 @@ msgstr "nou"
 msgid "new event tag"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2102
+#: include/classes/graphdraw/CLineGraphDraw.php:1915
 #: include/classes/graphdraw/CPieGraphDraw.php:356
 msgid "no data"
 msgstr "fără date"
+
+#: popup_trexpr.php:326
+msgid "nodata() - No data received during period of time T (1 - true, 0 - false)"
+msgstr ""
 
 #: include/actions.inc.php:31
 msgid "not in"
@@ -18250,7 +17946,11 @@ msgstr "neselectat"
 msgid "now"
 msgstr "acum"
 
-#: include/views/configuration.item.edit.php:564
+#: popup_trexpr.php:316
+msgid "now() - Number of seconds since the Epoch"
+msgstr ""
+
+#: include/views/configuration.item.edit.php:569
 #: include/views/configuration.item.massupdate.php:273
 #: include/views/configuration.item.prototype.edit.php:404
 #: include/views/js/common.item.edit.js.php:131
@@ -18314,7 +18014,7 @@ msgstr "pornit"
 msgid "other"
 msgstr "altul"
 
-#: include/views/configuration.item.edit.php:579
+#: include/views/configuration.item.edit.php:584
 #: include/views/configuration.item.massupdate.php:286
 #: include/views/configuration.item.prototype.edit.php:419
 #: include/views/js/common.item.edit.js.php:49
@@ -18322,7 +18022,7 @@ msgstr "altul"
 msgid "output"
 msgstr ""
 
-#: include/views/configuration.item.edit.php:597
+#: include/views/configuration.item.edit.php:602
 #: include/views/configuration.item.massupdate.php:303
 #: include/views/configuration.item.prototype.edit.php:437
 #: include/views/js/common.item.edit.js.php:148
@@ -18330,7 +18030,7 @@ msgstr ""
 msgid "path"
 msgstr ""
 
-#: include/views/configuration.item.edit.php:602
+#: include/views/configuration.item.edit.php:607
 #: include/views/configuration.item.massupdate.php:308
 #: include/views/configuration.item.prototype.edit.php:442
 #: include/views/js/common.item.edit.js.php:48
@@ -18339,10 +18039,22 @@ msgstr ""
 msgid "pattern"
 msgstr ""
 
+#: popup_trexpr.php:237
+msgid "percentile() - Percentile P of a period T"
+msgstr ""
+
+#: popup_trexpr.php:243
+msgid "prev() - Previous value"
+msgstr ""
+
 #: include/page_header.php:149 include/views/general.warning.php:21
 #, c-format
 msgid "refreshed every %1$s sec."
 msgstr "actualizare la fiecare %1$s sec."
+
+#: popup_trexpr.php:287
+msgid "regexp() - Regular expression V matching last value in period T (1 - match, 0 - no match)"
+msgstr ""
 
 #: include/views/configuration.host.discovery.edit.php:323
 #: include/views/js/configuration.host.discovery.edit.js.php:24
@@ -18353,7 +18065,7 @@ msgstr ""
 msgid "remember selected"
 msgstr "amintire selecție"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2144
+#: include/classes/graphdraw/CLineGraphDraw.php:1957
 msgid "right"
 msgstr ""
 
@@ -18371,7 +18083,7 @@ msgctxt "second short"
 msgid "s"
 msgstr "s"
 
-#: include/classes/api/services/CItemGeneral.php:1249
+#: include/classes/api/services/CItemGeneral.php:1252
 msgid "second parameter is expected"
 msgstr ""
 
@@ -18389,10 +18101,10 @@ msgstr "descriere scurtă"
 #: include/classes/api/services/CHost.php:1546
 #: include/classes/api/services/CHttpTest.php:984
 #: include/classes/api/services/CHttpTest.php:1095
-#: include/classes/api/services/CItemGeneral.php:434
-#: include/classes/api/services/CItemGeneral.php:472
-#: include/classes/api/services/CItemGeneral.php:1264
-#: include/classes/api/services/CItemGeneral.php:1278
+#: include/classes/api/services/CItemGeneral.php:437
+#: include/classes/api/services/CItemGeneral.php:475
+#: include/classes/api/services/CItemGeneral.php:1267
+#: include/classes/api/services/CItemGeneral.php:1281
 #: include/classes/api/services/CTriggerGeneral.php:533
 #: include/classes/api/services/CTriggerGeneral.php:559
 #: include/classes/api/services/CTriggerGeneral.php:778
@@ -18404,11 +18116,23 @@ msgstr ""
 msgid "show icon mappings"
 msgstr "arată mapări iconițe"
 
-#: include/views/configuration.item.edit.php:466
+#: include/views/configuration.item.edit.php:469
 #: include/views/configuration.item.massupdate.php:473
 #: include/views/configuration.item.prototype.edit.php:339
 msgid "show value mappings"
 msgstr "arată mapări valori"
+
+#: popup_trexpr.php:248
+msgid "str() - Find string V in last (most recent) value (1 - found, 0 - not found)"
+msgstr ""
+
+#: popup_trexpr.php:254
+msgid "strlen() - Length of last (most recent) T value in characters"
+msgstr ""
+
+#: popup_trexpr.php:260
+msgid "sum() - Sum of values of a period T"
+msgstr ""
 
 #: app/views/monitoring.dashboard.config.php:178
 #: app/views/monitoring.dashboard.config.php:205
@@ -18451,6 +18175,14 @@ msgstr ""
 #: include/classes/import/validators/CXmlValidatorGeneral.php:125
 #, c-format
 msgid "the tag \"%1$s\" is missing"
+msgstr ""
+
+#: popup_trexpr.php:321
+msgid "time() - Current time"
+msgstr ""
+
+#: popup_trexpr.php:344
+msgid "timeleft() - Time to reach threshold estimated based on period T"
 msgstr ""
 
 #: include/classes/api/services/CMap.php:841
@@ -18510,7 +18242,7 @@ msgstr ""
 #: include/classes/api/services/CEvent.php:551
 #: include/classes/api/services/CHost.php:1480
 #: include/classes/api/services/CHost.php:1486
-#: include/classes/api/services/CItemGeneral.php:1186
+#: include/classes/api/services/CItemGeneral.php:1189
 #: include/classes/api/services/CProxy.php:572
 #: include/classes/api/services/CProxy.php:579
 #: include/classes/api/services/CTriggerGeneral.php:567

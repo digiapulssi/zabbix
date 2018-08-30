@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2017-11-17 05:02+0300\n"
+"POT-Creation-Date: 2018-08-28 17:56+0300\n"
+"PO-Revision-Date: 2018-08-09 08:50+0300\n"
 "Last-Translator: JONGKWON <jkkim.photo@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: ko\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1510887755.000000\n"
+"X-POOTLE-MTIME: 1533797421.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -218,22 +218,6 @@ msgstr "AES"
 msgid "AND"
 msgstr "AND"
 
-#: popup_trexpr.php:186
-msgid "Absolute difference between last and previous value is < N"
-msgstr "최근값과 그 이전값의 차가 N 보다 작다"
-
-#: popup_trexpr.php:194
-msgid "Absolute difference between last and previous value is = N"
-msgstr "최근값과 그 이전값의 차가 N 과 같다"
-
-#: popup_trexpr.php:190
-msgid "Absolute difference between last and previous value is > N"
-msgstr "최근값과 그 이전값의 차가 N 보다 크다"
-
-#: popup_trexpr.php:198
-msgid "Absolute difference between last and previous value is NOT N"
-msgstr "최근값과 그 이전값의 차가 N 이 아니다"
-
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: srv_status.php:147
@@ -333,7 +317,7 @@ msgstr "장애대응 코멘트"
 #: include/views/configuration.host.prototype.edit.php:262
 #: include/views/configuration.httpconf.edit.php:191
 #: include/views/configuration.item.edit.php:341
-#: include/views/configuration.item.edit.php:552
+#: include/views/configuration.item.edit.php:557
 #: include/views/configuration.item.massupdate.php:262
 #: include/views/configuration.item.massupdate.php:376
 #: include/views/configuration.item.prototype.edit.php:263
@@ -515,8 +499,8 @@ msgstr "종료시간"
 #: include/views/configuration.httpconf.popup.php:149
 #: include/views/configuration.httpconf.popup.php:198
 #: include/views/configuration.item.edit.php:390
-#: include/views/configuration.item.edit.php:657
-#: include/views/configuration.item.edit.php:695
+#: include/views/configuration.item.edit.php:662
+#: include/views/configuration.item.edit.php:700
 #: include/views/configuration.item.massupdate.php:348
 #: include/views/configuration.item.massupdate.php:414
 #: include/views/configuration.item.prototype.edit.php:299
@@ -782,7 +766,7 @@ msgid "Allow manual close"
 msgstr "수동으로 클로즈 허가"
 
 #: include/views/configuration.host.discovery.edit.php:253
-#: include/views/configuration.item.edit.php:469
+#: include/views/configuration.item.edit.php:474
 #: include/views/configuration.item.massupdate.php:487
 #: include/views/configuration.item.prototype.edit.php:342
 msgid "Allowed hosts"
@@ -872,7 +856,7 @@ msgstr "어플리케이션 프로토타입"
 msgid "Application updated"
 msgstr "어플리케이션을 갱신하였습니다"
 
-#: include/classes/api/services/CItemGeneral.php:555
+#: include/classes/api/services/CItemGeneral.php:558
 #, c-format
 msgid "Application with ID \"%1$s\" is not available on \"%2$s\"."
 msgstr "\"%2$s\"에 ID \"%1$s\" 를 가진 어플리케이션은 이용할 수 없습니다."
@@ -888,7 +872,7 @@ msgstr "applicationid \"%1$s\"의 어플리케이션이 없습니다."
 #: include/views/configuration.host.edit.php:323
 #: include/views/configuration.host.list.php:65
 #: include/views/configuration.host.list.php:256
-#: include/views/configuration.item.edit.php:502
+#: include/views/configuration.item.edit.php:507
 #: include/views/configuration.item.list.php:65
 #: include/views/configuration.item.prototype.edit.php:358
 #: include/views/configuration.item.prototype.list.php:49
@@ -1164,22 +1148,6 @@ msgstr "감시 중"
 msgid "Average"
 msgstr "가벼운 장애"
 
-#: popup_trexpr.php:202
-msgid "Average value of a period T is < N"
-msgstr "기간T 값의 평균치 < N"
-
-#: popup_trexpr.php:212
-msgid "Average value of a period T is = N"
-msgstr "기간T 값의 평균치 = N"
-
-#: popup_trexpr.php:207
-msgid "Average value of a period T is > N"
-msgstr "기간T 값의 평균치 > N"
-
-#: popup_trexpr.php:217
-msgid "Average value of a period T is NOT N"
-msgstr "기간T 값의 평균치 NOT N"
-
 #: include/classes/setup/CSetupWizard.php:121
 #: include/classes/setup/CSetupWizard.php:324
 msgid "Back"
@@ -1217,14 +1185,6 @@ msgstr "Bind DN"
 #: include/views/administration.authentication.edit.php:92
 msgid "Bind password"
 msgstr "Bind password"
-
-#: popup_trexpr.php:588
-msgid "Bitwise AND of last (most recent) T value and mask is = N"
-msgstr "최신 (T초 전/T개 전)의 값과 마스크의 AND 비트 연산 = N"
-
-#: popup_trexpr.php:593
-msgid "Bitwise AND of last (most recent) T value and mask is NOT N"
-msgstr "최신 (T초 전/T개 전)의 값과 마스크의 NOT N"
 
 #: adm.triggerdisplayoptions.php:38 adm.triggerdisplayoptions.php:39
 #: adm.triggerdisplayoptions.php:40 adm.triggerdisplayoptions.php:41
@@ -1307,10 +1267,10 @@ msgstr "증명서"
 #: app/views/monitoring.widget.problems.view.php:100
 #: include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:831
-#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:316
+#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:320
 #: include/events.inc.php:516 tr_status.php:682
 msgid "CLOSING"
-msgstr "클로즈"
+msgstr "클로징"
 
 #: triggers.php:591
 msgid "CONFIGURATION OF TRIGGERS"
@@ -1474,7 +1434,7 @@ msgstr "호스트 프로토타입을 추가할 수 없습니다"
 msgid "Cannot add image"
 msgstr "이미지를 추가할 수 없습니다"
 
-#: items.php:725
+#: items.php:724
 msgid "Cannot add item"
 msgstr "아이템을 추가할 수 없습니다"
 
@@ -1598,7 +1558,7 @@ msgstr "인증방법을 LDAP로 변경할 수 없습니다"
 msgid "Cannot change authentication method to Zabbix internal"
 msgstr "인증방법을 Zabbix 내부 데이터베이스로 변경할 수 없습니다"
 
-#: httpconf.php:198 httpconf.php:507 items.php:766 items.php:1122
+#: httpconf.php:198 httpconf.php:507 items.php:765 items.php:1121
 msgid "Cannot clear history"
 msgstr "히스토리를 정리할 수 없습니다"
 
@@ -1639,7 +1599,7 @@ msgid "Cannot copy graph"
 msgid_plural "Cannot copy graphs"
 msgstr[0] "그래프를 복사할 수 없습니다"
 
-#: items.php:1078
+#: items.php:1077
 msgid "Cannot copy item"
 msgid_plural "Cannot copy items"
 msgstr[0] "아이템을 복사할 수 없습니다"
@@ -1808,7 +1768,7 @@ msgstr "아이템 프로토타입을 삭제할 수 없습니다"
 msgid "Cannot delete item prototypes"
 msgstr "아이템 프로토타입을 삭제할 수 없습니다"
 
-#: items.php:1152
+#: items.php:1151
 msgid "Cannot delete items"
 msgstr "아이템을 삭제할 수 없습니다"
 
@@ -1959,7 +1919,7 @@ msgid "Cannot disable host"
 msgid_plural "Cannot disable hosts"
 msgstr[0] "호스트를 비활성화 할 수 없습니다."
 
-#: applications.php:175 items.php:1038
+#: applications.php:175 items.php:1037
 msgid "Cannot disable item"
 msgid_plural "Cannot disable items"
 msgstr[0] "아이템을 비활성화 할 수 없습니다."
@@ -2013,7 +1973,7 @@ msgid "Cannot enable host"
 msgid_plural "Cannot enable hosts"
 msgstr[0] "호스트를 활성화 할 수 없습니다."
 
-#: applications.php:174 items.php:1037
+#: applications.php:174 items.php:1036
 msgid "Cannot enable item"
 msgid_plural "Cannot enable items"
 msgstr[0] "아이템을 활성화 할 수 없습니다."
@@ -2208,7 +2168,7 @@ msgstr "\"%s\" JS파일을 읽을 수 없습니다."
 msgid "Cannot include view file \"%s\"."
 msgstr "뷰 파일 \"%s\"을 읽을 수 없습니다."
 
-#: popup_trexpr.php:896
+#: popup_trexpr.php:616
 msgid "Cannot insert trigger expression"
 msgstr "트리거 조건식을 추가할 수 없습니다"
 
@@ -2327,7 +2287,7 @@ msgstr "그래프 \"%2$s\"에 \"%1$s\"를 설정할 수 없습니다."
 msgid "Cannot set \"%1$s\" for graph prototype \"%2$s\"."
 msgstr "그래프의 프로토타입 \"%2$s\"에 \"%1$s\"를 설정할 수 없습니다."
 
-#: include/classes/api/services/CItemGeneral.php:268
+#: include/classes/api/services/CItemGeneral.php:271
 #, c-format
 msgid "Cannot set \"%1$s\" for item \"%2$s\"."
 msgstr "아이템\"%2$s\"에 \"%1$s\"를 설정할 수 없습니다."
@@ -2598,7 +2558,7 @@ msgstr "이미지를 갱신할 수 없습니다"
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "발견된 호스트 \"%1$s\"의 인터페이스를 갱신할 수 없습니다"
 
-#: items.php:728
+#: items.php:727
 msgid "Cannot update item"
 msgstr "아이템을 갱신할 수 없습니다"
 
@@ -2607,7 +2567,7 @@ msgid "Cannot update item prototype"
 msgid_plural "Cannot update item prototypes"
 msgstr[0] "아이템의 프로토타입을 갱신할 수 없습니다"
 
-#: items.php:1014
+#: items.php:1013
 msgid "Cannot update items"
 msgstr "아이템을 갱신할 수 없습니다"
 
@@ -2821,9 +2781,9 @@ msgstr "조건식 \"%1$s\" 에서 시작된 부분을 확인해 주십시오."
 msgid "Check of pre-requisites"
 msgstr "전제조건의 체크"
 
-#: include/classes/api/services/CItemGeneral.php:365
-#: include/classes/api/services/CItemGeneral.php:372
-#: include/classes/api/services/CItemGeneral.php:379
+#: include/classes/api/services/CItemGeneral.php:368
+#: include/classes/api/services/CItemGeneral.php:375
+#: include/classes/api/services/CItemGeneral.php:382
 msgid "Check the key, please. Default example was passed."
 msgstr "키를 확인해주십시오. 디폴트 예제는 이용되었습니다."
 
@@ -2926,7 +2886,7 @@ msgid "Clear history"
 msgstr "히스토리를 삭제"
 
 #: include/views/configuration.httpconf.edit.php:284
-#: include/views/configuration.item.edit.php:682
+#: include/views/configuration.item.edit.php:687
 msgid "Clear history and trends"
 msgstr "히스토리와 트렌드를 삭제"
 
@@ -2955,7 +2915,7 @@ msgstr "시각"
 #: include/views/configuration.hostgroups.edit.php:84
 #: include/views/configuration.host.prototype.edit.php:438
 #: include/views/configuration.httpconf.edit.php:277
-#: include/views/configuration.item.edit.php:677
+#: include/views/configuration.item.edit.php:682
 #: include/views/configuration.item.prototype.edit.php:519
 #: include/views/configuration.maintenance.edit.php:217
 #: include/views/configuration.template.edit.php:501
@@ -3577,7 +3537,7 @@ msgstr "아이콘 매핑 작성"
 
 #: include/classes/helpers/CMenuPopupHelper.php:290
 #: include/classes/helpers/CMenuPopupHelper.php:312
-#: include/views/configuration.item.list.php:28 items.php:1158
+#: include/views/configuration.item.list.php:28 items.php:1157
 msgid "Create item"
 msgstr "아이템 작성"
 
@@ -3667,22 +3627,6 @@ msgstr "작성: \"%2$s\" 호스트 프로토타입\"%1$s\"."
 msgid "Critical"
 msgstr "크리티컬"
 
-#: popup_trexpr.php:432
-msgid "Current date is < N"
-msgstr "현재년월일 < N"
-
-#: popup_trexpr.php:440
-msgid "Current date is = N"
-msgstr "현재년월일 = N"
-
-#: popup_trexpr.php:436
-msgid "Current date is > N"
-msgstr "현재년월일 > N"
-
-#: popup_trexpr.php:444
-msgid "Current date is NOT N"
-msgstr "현재년월일 NOT N"
-
 #: include/views/js/configuration.action.edit.js.php:65
 #: include/views/js/configuration.action.edit.js.php:219
 msgid "Current host"
@@ -3691,22 +3635,6 @@ msgstr "현재 호스트"
 #: include/views/reports.toptriggers.php:80
 msgid "Current month"
 msgstr "이번 달"
-
-#: popup_trexpr.php:562
-msgid "Current time is < N"
-msgstr "현재 시각 < N"
-
-#: popup_trexpr.php:570
-msgid "Current time is = N"
-msgstr "현재 시각 = N"
-
-#: popup_trexpr.php:566
-msgid "Current time is > N"
-msgstr "현재 시각 > N"
-
-#: popup_trexpr.php:574
-msgid "Current time is NOT N"
-msgstr "현재 시각 NOT N"
 
 #: include/classes/setup/CSetupWizard.php:162
 msgid "Current value"
@@ -3840,8 +3768,8 @@ msgstr "대시보드 \"%1$s\"의 셀 X - %2$s Y - %3$s 는 사용중입니다."
 
 #: include/classes/api/services/CDashboard.php:568
 #, c-format
-msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is ouf of bounds."
-msgstr "대시보드 \"%1$s\"의 셀 X - %2$s Y - %3$s내의 위젯은 사용할 수 없습니다."
+msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is out of bounds."
+msgstr ""
 
 #: app/controllers/CControllerDashbrdWidgetUpdate.php:238
 msgid "Dashboard created"
@@ -3883,7 +3811,7 @@ msgstr "데이터"
 msgid "Data cache statistics. Cache - one of values (modes: all, float, uint, str, log, text), history (modes: pfree, total, used, free), trend (modes: pfree, total, used, free), text (modes: pfree, total, used, free)."
 msgstr "데이터캐쉬 통계. cache - values (mode: all, float, uint, str, log, text), history (mode: pfree, total, used, free), trend (mode: pfree, total, used, free), text (mode: pfree, total, used, free)."
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2854
+#: include/classes/graphdraw/CLineGraphDraw.php:2652
 #: include/classes/graphdraw/CPieGraphDraw.php:805
 #, c-format
 msgid "Data from %1$s. Generated in %2$s sec."
@@ -3974,42 +3902,10 @@ msgstr "일"
 msgid "Day of month"
 msgstr "일"
 
-#: popup_trexpr.php:464
-msgid "Day of month is < N"
-msgstr "이번 월의 날짜 < N"
-
-#: popup_trexpr.php:472
-msgid "Day of month is = N"
-msgstr "이번 월의 날짜 = N"
-
-#: popup_trexpr.php:468
-msgid "Day of month is > N"
-msgstr "이번 월의 날짜 > N"
-
-#: popup_trexpr.php:476
-msgid "Day of month is NOT N"
-msgstr "이번 월의 날짜 NOT N"
-
 #: include/forms.inc.php:1876 include/forms.inc.php:1935
 #: include/forms.inc.php:1988
 msgid "Day of week"
 msgstr "요일"
-
-#: popup_trexpr.php:448
-msgid "Day of week is < N"
-msgstr "현재 요일 < N"
-
-#: popup_trexpr.php:456
-msgid "Day of week is = N"
-msgstr "현재 요일 = N"
-
-#: popup_trexpr.php:452
-msgid "Day of week is > N"
-msgstr "현재 요일 > N"
-
-#: popup_trexpr.php:460
-msgid "Day of week is NOT N"
-msgstr "현재 요일 NOT N"
 
 #: include/forms.inc.php:2044
 msgid "Days"
@@ -4212,7 +4108,7 @@ msgstr "아이콘 매핑를 삭제하시겠습니까?"
 msgid "Delete item prototype?"
 msgstr "아이템 프로토타입을 삭제하시겠습니까?"
 
-#: include/views/configuration.item.edit.php:687
+#: include/views/configuration.item.edit.php:692
 msgid "Delete item?"
 msgstr "아이템를 삭제하시겠습니까?"
 
@@ -4510,7 +4406,7 @@ msgstr "배포상태"
 #: include/views/configuration.host.discovery.edit.php:257
 #: include/views/configuration.host.edit.php:283
 #: include/views/configuration.host.massupdate.php:147
-#: include/views/configuration.item.edit.php:534
+#: include/views/configuration.item.edit.php:539
 #: include/views/configuration.item.massupdate.php:604
 #: include/views/configuration.item.prototype.edit.php:376
 #: include/views/configuration.maintenance.edit.php:95
@@ -4561,54 +4457,6 @@ msgstr "디바이스의 인터럽트 횟수. integer를 리턴."
 #: discoveryconf.php:42 include/views/configuration.discovery.edit.php:77
 msgid "Device uniqueness criteria"
 msgstr "디바이스의 고유성을 특정하는 기준"
-
-#: popup_trexpr.php:222
-msgid "Difference between MAX and MIN value of a period T is < N"
-msgstr "기간T 동안의 최대값과 최소값의 차 < N"
-
-#: popup_trexpr.php:232
-msgid "Difference between MAX and MIN value of a period T is = N"
-msgstr "기간T 동안의 최대값과 최소값의 차 = N"
-
-#: popup_trexpr.php:227
-msgid "Difference between MAX and MIN value of a period T is > N"
-msgstr "기간T 동안의 최대값과 최소값의 차 > N"
-
-#: popup_trexpr.php:237
-msgid "Difference between MAX and MIN value of a period T is NOT N"
-msgstr "기간T 동안의 최대값과 최소값의 차 NOT N"
-
-#: popup_trexpr.php:480
-msgid "Difference between item timestamp value and Zabbix server timestamp is over T seconds, then N = 0, 1 - otherwise"
-msgstr "아이템의 타임스탬프와 Zabbix서버의 타임스탬프의 차이가 T초 이상인 경우 N=0, 그 외의 경우 N=1"
-
-#: popup_trexpr.php:485
-msgid "Difference between item timestamp value and Zabbix server timestamp is over T seconds, then N NOT 0, 1 - otherwise"
-msgstr "아이템의 타임스탬프와 Zabbix서버의 타임스탬프의 차이가 T초 이상인 경우 N NOT 0, 그 외의 경우 N=1"
-
-#: popup_trexpr.php:278
-msgid "Difference between last and preceding values, then N = 1, 0 - otherwise"
-msgstr "최신값과 이전값이 다름 N = 1, 그 외의 경우 N = 0 (=조건)"
-
-#: popup_trexpr.php:282
-msgid "Difference between last and preceding values, then N NOT 1, 0 - otherwise"
-msgstr "최신값과 이전값이 다름 N = 1, 그 외의 경우 N = 0 (#조건)"
-
-#: popup_trexpr.php:242
-msgid "Difference between last and previous value is < N"
-msgstr "최신값과 이전값의 차 < N"
-
-#: popup_trexpr.php:250
-msgid "Difference between last and previous value is = N"
-msgstr "최신값과 이전값의 차 = N"
-
-#: popup_trexpr.php:246
-msgid "Difference between last and previous value is > N"
-msgstr "최신값과 이전값의 차 > N"
-
-#: popup_trexpr.php:254
-msgid "Difference between last and previous value is NOT N"
-msgstr "최신값과 이전값의 차 NOT N"
 
 #: include/views/monitoring.screen.list.php:73
 msgid "Dimension (cols x rows)"
@@ -5147,8 +4995,8 @@ msgstr "실효값"
 msgid "Elasticsearch error: %1$s."
 msgstr ""
 
-#: include/classes/api/managers/CHistoryManager.php:984
-#: include/classes/api/managers/CHistoryManager.php:993
+#: include/classes/api/managers/CHistoryManager.php:985
+#: include/classes/api/managers/CHistoryManager.php:994
 #, c-format
 msgid "Elasticsearch url is not set for type: %1$s."
 msgstr ""
@@ -5466,7 +5314,7 @@ msgstr "선택한 Web시나리오를 활성화 하시겠습니까?"
 #: include/views/configuration.host.list.php:122
 #: include/views/configuration.host.massupdate.php:171
 #: include/views/configuration.httpconf.edit.php:135
-#: include/views/configuration.item.edit.php:543
+#: include/views/configuration.item.edit.php:548
 #: include/views/configuration.triggers.edit.php:559 popup_media.php:130
 #: tr_logform.php:391
 msgid "Enabled"
@@ -5513,21 +5361,13 @@ msgstr "이벤트"
 msgid "Event ID"
 msgstr "이벤트ID"
 
-#: popup_trexpr.php:510
-msgid "Event ID of last log entry matching regular expression T, then N = 1, 0 - otherwise"
-msgstr "최신 로그 이벤트ID가 정규표현식과 일치 N = 1, 그 외의 경우 N = 0 (=조건)"
-
-#: popup_trexpr.php:515
-msgid "Event ID of last log entry matching regular expression T, then N NOT 1, 0 - otherwise"
-msgstr "최신 로그 이벤트ID가 정규표현식과 일치 N = 1, 그 외의 경우 N = 0 (#조건)"
-
 #: app/controllers/CControllerAcknowledgeCreate.php:194
 #: include/actions.inc.php:57
 msgid "Event acknowledged"
 msgid_plural "Events acknowledged"
 msgstr[0] "장애대응 완료"
 
-#: app/controllers/CControllerAcknowledgeEdit.php:210
+#: app/controllers/CControllerAcknowledgeEdit.php:209
 #: app/views/monitoring.acknowledge.edit.php:89
 msgid "Event acknowledgements"
 msgstr "장애대응 코멘트 입력"
@@ -5936,14 +5776,6 @@ msgstr "필터"
 msgid "Filters"
 msgstr "필터"
 
-#: popup_trexpr.php:382
-msgid "Find string V in last (most recent) value. N = 1 - if found, 0 - otherwise"
-msgstr "최신값에 문자열 V가 존재하는 경우 N = 1, 그 외의 경우 N = 0 (=조건)"
-
-#: popup_trexpr.php:387
-msgid "Find string V in last (most recent) value. N NOT 1 - if found, 0 - otherwise"
-msgstr "최신값에 문자열 V가 존재하는 경우N = 1, 그 외의 경우 N = 0 (#조건)"
-
 #: include/classes/items/CHelpItems.php:297
 #: include/classes/items/CHelpItems.php:595
 msgid "Find string in a file. Returns 0 - match not found; 1 - found"
@@ -6021,22 +5853,6 @@ msgstr "폰트 사이즈"
 msgid "For guest, password must be empty"
 msgstr "게스트의 패스워드는 비어있어야 합니다"
 
-#: popup_trexpr.php:598
-msgid "Forecast for next t seconds based on period T is < N"
-msgstr "기간T를 기준으로 한 다음 t초의 예측값 < N"
-
-#: popup_trexpr.php:608
-msgid "Forecast for next t seconds based on period T is = N"
-msgstr "기간T를 기준으로 한 다음 t초의 예측값 = N"
-
-#: popup_trexpr.php:603
-msgid "Forecast for next t seconds based on period T is > N"
-msgstr "기간T를 기준으로 한 다음 t초의 예측값 > N"
-
-#: popup_trexpr.php:613
-msgid "Forecast for next t seconds based on period T is NOT N"
-msgstr "기간T를 기준으로 한 다음 t초의 예측값 NOT N"
-
 #: include/views/configuration.httpconf.popup.php:113
 msgid "Form data"
 msgstr "폼 데이터"
@@ -6099,11 +5915,11 @@ msgid "Fullscreen"
 msgstr "풀스크린"
 
 #: include/views/configuration.graph.edit.php:294
-#: include/views/configuration.triggers.expression.php:70
+#: include/views/configuration.triggers.expression.php:72
 msgid "Function"
 msgstr "기능"
 
-#: popup_trexpr.php:817
+#: popup_trexpr.php:531
 #, c-format
 msgid "Function \"%1$s\" cannot be used with selected item \"%2$s\""
 msgstr "함수\"%1$s\"는 선택된 아이템 \"%2$s\"와 함께 사용할 수 없습니다"
@@ -6510,7 +6326,8 @@ msgstr "메인터넌스 대상의 호스트 그룹"
 msgid "H:i"
 msgstr "H:i"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1634
+#: include/classes/graphdraw/CLineGraphDraw.php:1408
+#: include/classes/graphdraw/CLineGraphDraw.php:1415
 #: include/translateDefines.inc.php:34
 msgid "H:i:s"
 msgstr "H:i:s"
@@ -6618,12 +6435,12 @@ msgid "History"
 msgstr "이력"
 
 #: httpconf.php:191 httpconf.php:198 httpconf.php:495 httpconf.php:507
-#: items.php:759 items.php:766 items.php:1110 items.php:1122
+#: items.php:758 items.php:765 items.php:1109 items.php:1121
 msgid "History cleared"
 msgstr "이력이 삭제되었습니다"
 
 #: include/views/configuration.httpconf.edit.php:285
-#: include/views/configuration.item.edit.php:683
+#: include/views/configuration.item.edit.php:688
 msgid "History clearing can take a long time. Continue?"
 msgstr "이력 삭제에 시간이 걸릴 수도 있습니다. 계속하시겠습니까?"
 
@@ -6699,8 +6516,8 @@ msgstr "가로 위치"
 #: include/views/monitoring.screen.constructor.edit.php:418
 #: include/views/monitoring.screen.php:75
 #: include/views/monitoring.slides.php:79
-#: include/views/reports.toptriggers.php:105 items.php:759 items.php:1109
-#: items.php:1142 jsLoader.php:156 latest.php:411 latest.php:431 popup.php:475
+#: include/views/reports.toptriggers.php:105 items.php:758 items.php:1108
+#: items.php:1141 jsLoader.php:156 latest.php:411 latest.php:431 popup.php:475
 #: popup.php:512 popup.php:1203 queue.php:248 report2.php:420 report2.php:443
 #: search.php:125 tr_status.php:496 tr_status.php:752
 msgid "Host"
@@ -7652,13 +7469,13 @@ msgstr "설정항목이 잘못되어 있습니다."
 #: include/classes/api/services/CHostInterface.php:233
 #: include/classes/api/services/CHostInterface.php:422
 #: include/classes/api/services/CItemGeneral.php:217
-#: include/classes/api/services/CItemGeneral.php:1156
-#: include/classes/api/services/CItemGeneral.php:1174
-#: include/classes/api/services/CItemGeneral.php:1194
-#: include/classes/api/services/CItemGeneral.php:1217
-#: include/classes/api/services/CItemGeneral.php:1230
-#: include/classes/api/services/CItemGeneral.php:1259
-#: include/classes/api/services/CItemGeneral.php:1273
+#: include/classes/api/services/CItemGeneral.php:1159
+#: include/classes/api/services/CItemGeneral.php:1177
+#: include/classes/api/services/CItemGeneral.php:1197
+#: include/classes/api/services/CItemGeneral.php:1220
+#: include/classes/api/services/CItemGeneral.php:1233
+#: include/classes/api/services/CItemGeneral.php:1262
+#: include/classes/api/services/CItemGeneral.php:1276
 #: include/classes/api/services/CMapElement.php:46
 #: include/classes/api/services/CMapElement.php:117
 #: include/classes/api/services/CMapElement.php:129
@@ -7686,7 +7503,7 @@ msgstr "잘못된 인수의 값이 함수에 전달되었습니다."
 msgid "Incorrect arguments passed to method."
 msgstr "입력항목이 올바르지 않습니다."
 
-#: include/classes/api/services/CItemGeneral.php:524
+#: include/classes/api/services/CItemGeneral.php:527
 #, c-format
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "아이템 \"%1$s\"의 인증 프로토콜이 올바르지 않습니다."
@@ -8035,7 +7852,7 @@ msgstr "상위 서비스가 올바르지 않습니다."
 msgid "Incorrect port range."
 msgstr "포트의 범위가 올바르지 않습니다."
 
-#: include/classes/api/services/CItemGeneral.php:533
+#: include/classes/api/services/CItemGeneral.php:536
 #, c-format
 msgid "Incorrect privacy protocol for item \"%1$s\"."
 msgstr "아이템 \"%1$s\"의 프라이버시 프로토콜이 올바르지 않습니다."
@@ -8218,7 +8035,7 @@ msgstr "유저 그룹이 올바르지 않습니다."
 #: include/classes/api/services/CDRule.php:497
 #: include/classes/api/services/CDRule.php:558
 #: include/classes/api/services/CDRule.php:571
-#: include/classes/api/services/CItemGeneral.php:464
+#: include/classes/api/services/CItemGeneral.php:467
 #: include/classes/validators/CNewValidator.php:107
 #: include/classes/validators/CNewValidator.php:119
 #: include/classes/validators/CNewValidator.php:131
@@ -8334,33 +8151,33 @@ msgstr "미디어 타입 \"%3$s\"를 위한 필드 \"%2$s\"내의 값 \"%1$s\"�
 #: include/classes/api/services/CHttpTest.php:999
 #: include/classes/api/services/CHttpTest.php:1095
 #: include/classes/api/services/CItemGeneral.php:183
-#: include/classes/api/services/CItemGeneral.php:279
-#: include/classes/api/services/CItemGeneral.php:415
-#: include/classes/api/services/CItemGeneral.php:427
-#: include/classes/api/services/CItemGeneral.php:434
-#: include/classes/api/services/CItemGeneral.php:446
-#: include/classes/api/services/CItemGeneral.php:452
-#: include/classes/api/services/CItemGeneral.php:458
-#: include/classes/api/services/CItemGeneral.php:471
-#: include/classes/api/services/CItemGeneral.php:1179
-#: include/classes/api/services/CItemGeneral.php:1185
-#: include/classes/api/services/CItemGeneral.php:1199
-#: include/classes/api/services/CItemGeneral.php:1204
-#: include/classes/api/services/CItemGeneral.php:1222
-#: include/classes/api/services/CItemGeneral.php:1235
-#: include/classes/api/services/CItemGeneral.php:1242
-#: include/classes/api/services/CItemGeneral.php:1248
-#: include/classes/api/services/CItemGeneral.php:1264
-#: include/classes/api/services/CItemGeneral.php:1278
-#: include/classes/api/services/CItemGeneral.php:1473
-#: include/classes/api/services/CItemGeneral.php:1510
-#: include/classes/api/services/CItemGeneral.php:1516
-#: include/classes/api/services/CItemGeneral.php:1533
-#: include/classes/api/services/CItemGeneral.php:1539
-#: include/classes/api/services/CItemGeneral.php:1613
-#: include/classes/api/services/CItemGeneral.php:1622
-#: include/classes/api/services/CItemGeneral.php:1729
-#: include/classes/api/services/CItemGeneral.php:1736
+#: include/classes/api/services/CItemGeneral.php:282
+#: include/classes/api/services/CItemGeneral.php:418
+#: include/classes/api/services/CItemGeneral.php:430
+#: include/classes/api/services/CItemGeneral.php:437
+#: include/classes/api/services/CItemGeneral.php:449
+#: include/classes/api/services/CItemGeneral.php:455
+#: include/classes/api/services/CItemGeneral.php:461
+#: include/classes/api/services/CItemGeneral.php:474
+#: include/classes/api/services/CItemGeneral.php:1182
+#: include/classes/api/services/CItemGeneral.php:1188
+#: include/classes/api/services/CItemGeneral.php:1202
+#: include/classes/api/services/CItemGeneral.php:1207
+#: include/classes/api/services/CItemGeneral.php:1225
+#: include/classes/api/services/CItemGeneral.php:1238
+#: include/classes/api/services/CItemGeneral.php:1245
+#: include/classes/api/services/CItemGeneral.php:1251
+#: include/classes/api/services/CItemGeneral.php:1267
+#: include/classes/api/services/CItemGeneral.php:1281
+#: include/classes/api/services/CItemGeneral.php:1476
+#: include/classes/api/services/CItemGeneral.php:1513
+#: include/classes/api/services/CItemGeneral.php:1519
+#: include/classes/api/services/CItemGeneral.php:1536
+#: include/classes/api/services/CItemGeneral.php:1542
+#: include/classes/api/services/CItemGeneral.php:1616
+#: include/classes/api/services/CItemGeneral.php:1625
+#: include/classes/api/services/CItemGeneral.php:1732
+#: include/classes/api/services/CItemGeneral.php:1739
 #: include/classes/api/services/CItem.php:716
 #: include/classes/api/services/CItem.php:724
 #: include/classes/api/services/CItemPrototype.php:946
@@ -8495,7 +8312,7 @@ msgstr "계승한 매크로와 호스트 매크로"
 msgid "Inherited and template macros"
 msgstr "계승한 매크로와 템플릿 매크로"
 
-#: include/views/configuration.triggers.expression.php:132
+#: include/views/configuration.triggers.expression.php:136
 msgid "Insert"
 msgstr "삽입"
 
@@ -8695,8 +8512,8 @@ msgstr "내부 이벤트 데이터의 보존기간이 올바르지 않습니다 
 
 #: disc_prototypes.php:276 disc_prototypes.php:281 disc_prototypes.php:294
 #: host_discovery.php:196 host_discovery.php:201 host_discovery.php:214
-#: items.php:459 items.php:464 items.php:477 items.php:789 items.php:794
-#: items.php:807
+#: items.php:459 items.php:464 items.php:477 items.php:788 items.php:793
+#: items.php:806
 #, c-format
 msgid "Invalid interval \"%1$s\"."
 msgstr "갱신간격 \"%1$s\"가 올바르지 않습니다."
@@ -8941,8 +8758,8 @@ msgstr "이탈리아어 (it_IT)"
 #: include/views/configuration.triggers.expression.php:64
 #: include/views/monitoring.screen.constructor.edit.php:235
 #: include/views/monitoring.screen.constructor.edit.php:365
-#: include/views/monitoring.screen.constructor.edit.php:626 items.php:758
-#: items.php:1109 items.php:1142 tr_logform.php:339
+#: include/views/monitoring.screen.constructor.edit.php:626 items.php:757
+#: items.php:1108 items.php:1141 tr_logform.php:339
 msgid "Item"
 msgstr "아이템"
 
@@ -8972,7 +8789,7 @@ msgstr "아이템\"%1$s\"는 항목번호가 존재하지 않는 호스트 인�
 msgid "Item \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "아이템\"%1$s\"는 템플릿\"%2$s\"에 존재하지 않습니다."
 
-#: include/classes/api/services/CItemGeneral.php:1474
+#: include/classes/api/services/CItemGeneral.php:1477
 #, c-format
 msgid "Item \"%1$s\" does not exist or you have no access to this item"
 msgstr "아이템 \"%1$s\"가 존재하지 않거나 접속권한이 없습니다"
@@ -8987,16 +8804,16 @@ msgstr ""
 msgid "Item \"%1$s\" on \"%2$s\": application \"%3$s\" does not exist."
 msgstr "\"%2$s\" 상의 아이템 \"%1$s\": 어플리케이션 \"%3$s\"는 존재하지 않습니다."
 
-#: include/classes/api/services/CItemGeneral.php:515
+#: include/classes/api/services/CItemGeneral.php:518
 #, c-format
 msgid "Item \"%1$s:%2$s\" has invalid port: \"%3$s\"."
 msgstr "아이템 \"%1$s:%2$s\"의 포트 \"%3$s\"는 올바르지 않습니다."
 
-#: items.php:725
+#: items.php:724
 msgid "Item added"
 msgstr "아이템을 추가하였습니다"
 
-#: items.php:1077
+#: items.php:1076
 msgid "Item copied"
 msgid_plural "Items copied"
 msgstr[0] "아이템을 복사하였습니다"
@@ -9009,12 +8826,12 @@ msgstr "아이템 수"
 msgid "Item deleted"
 msgstr "아이템을 삭제하였습니다"
 
-#: applications.php:172 items.php:1035
+#: applications.php:172 items.php:1034
 msgid "Item disabled"
 msgid_plural "Items disabled"
 msgstr[0] "아이템을 비활성화 하였습니다"
 
-#: applications.php:171 items.php:1034
+#: applications.php:171 items.php:1033
 msgid "Item enabled"
 msgid_plural "Items enabled"
 msgstr[0] "아이템을 활성화 하였습니다"
@@ -9023,11 +8840,11 @@ msgstr[0] "아이템을 활성화 하였습니다"
 msgid "Item in \"not supported\" state"
 msgstr "아이템이 \"습득불가\" 상태"
 
-#: popup_trexpr.php:891
+#: popup_trexpr.php:611
 msgid "Item not selected"
 msgstr "아이템이 선택되어 있지 않습니다"
 
-#: include/classes/api/services/CItemGeneral.php:1169
+#: include/classes/api/services/CItemGeneral.php:1172
 #, c-format
 msgid "Item pre-processing is missing parameters: %1$s"
 msgstr "아이템 보존 처리의 파라미터가 설정되어 있지 않습니다 : %1$s"
@@ -9046,7 +8863,7 @@ msgstr "아이템 프로토타입"
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", inherited from another template."
 msgstr "아이템 프로토타입\"%1$s\"는 \"%2$s\"에 이미 존재합니다 (다른 템플릿에서의 계승)."
 
-#: include/classes/api/services/CItemGeneral.php:1006
+#: include/classes/api/services/CItemGeneral.php:1009
 #, c-format
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", linked to another rule."
 msgstr ""
@@ -9087,15 +8904,15 @@ msgstr "아이템 프로토타입"
 msgid "Item prototypes deleted"
 msgstr "아이템 프로토타입을 삭제하였습니다"
 
-#: items.php:728
+#: items.php:727
 msgid "Item updated"
 msgstr "아이템을 갱신하였습니다"
 
-#: include/classes/api/services/CItemGeneral.php:348
+#: include/classes/api/services/CItemGeneral.php:351
 msgid "Item uses host interface from non-parent host."
 msgstr "아이템이 상위 호스트의 것이 아닌 호스트 인터페이스를 이용하고 있습니다."
 
-#: include/classes/api/services/CItemGeneral.php:351
+#: include/classes/api/services/CItemGeneral.php:354
 msgid "Item uses incorrect interface type."
 msgstr "아이템에 올바르지 않은 인터페이스 타입이 설정되어있습니다."
 
@@ -9103,15 +8920,15 @@ msgstr "아이템에 올바르지 않은 인터페이스 타입이 설정되어�
 msgid "Item values"
 msgstr "아이템의 값"
 
-#: include/classes/api/services/CItemGeneral.php:320
+#: include/classes/api/services/CItemGeneral.php:323
 msgid "Item will not be refreshed. Please enter a correct update interval."
 msgstr "아이템은 갱신되지 않습니다. 올바른 갱신간격을 설정해 주십시오."
 
-#: include/classes/api/services/CItemGeneral.php:303
+#: include/classes/api/services/CItemGeneral.php:306
 msgid "Item will not be refreshed. Specified update interval requires having at least one either flexible or scheduling interval."
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:308
+#: include/classes/api/services/CItemGeneral.php:311
 msgid "Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used."
 msgstr ""
 
@@ -9120,32 +8937,32 @@ msgstr ""
 msgid "Item with ID \"%1$s\" is not available."
 msgstr "ID \"%1$s\"의 아이템은 사용할 수 없습니다."
 
-#: include/classes/api/services/CItemGeneral.php:656
+#: include/classes/api/services/CItemGeneral.php:659
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as a discovery rule."
 msgstr "키\"%1$s\"가 설정된 아이템은 \"%2$s\"에 디스커버리 규칙으로서 이미 존재합니다."
 
-#: include/classes/api/services/CItemGeneral.php:662
+#: include/classes/api/services/CItemGeneral.php:665
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item created from item prototype."
 msgstr "키\"%1$s\"가 설정된 아이템은 호스트 \"%2$s\"에 프로토타입에서 생성된 아이템으로서 이미 존재합니다."
 
-#: include/classes/api/services/CItemGeneral.php:659
+#: include/classes/api/services/CItemGeneral.php:662
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item prototype."
 msgstr "키\"%1$s\"가 설정된 아이템은 호스트\"%2$s\"에 프로토타입으로서 이미 존재합니다."
 
-#: include/classes/api/services/CItemGeneral.php:653
+#: include/classes/api/services/CItemGeneral.php:656
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item."
 msgstr "키\"%1$s\"가 설정된 아이템은 호스트\"%2$s\"에 이미 존재합니다."
 
-#: include/classes/api/services/CItemGeneral.php:665
+#: include/classes/api/services/CItemGeneral.php:668
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as unknown item element."
 msgstr "키\"%1$s\"가 설정된 아이템은 호스트\"%2$s\"에 알 수 없는 아이템으로서 이미 존재합니다."
 
-#: include/classes/api/services/CItemGeneral.php:1397
+#: include/classes/api/services/CItemGeneral.php:1400
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\"."
 msgstr "키\"%1$s\"가 설정된 아이템은 지정한 호스트 \"%2$s\"에 이미 존재합니다."
@@ -9165,13 +8982,13 @@ msgstr "키\"%1$s\"가 설정된 아이템은 지정한 호스트 \"%2$s\"에 �
 #: include/views/configuration.template.list.php:57
 #: include/views/configuration.template.list.php:158
 #: include/views/conf.import.php:34 include/views/inventory.host.view.php:164
-#: include/views/inventory.host.view.php:175 items.php:1384 popup.php:76
+#: include/views/inventory.host.view.php:175 items.php:1383 popup.php:76
 #: queue.php:103 search.php:135 search.php:164 search.php:193 search.php:410
 #: search.php:438 search.php:467
 msgid "Items"
 msgstr "아이템"
 
-#: items.php:1152
+#: items.php:1151
 msgid "Items deleted"
 msgstr "아이템을 삭제하였습니다"
 
@@ -9179,7 +8996,7 @@ msgstr "아이템을 삭제하였습니다"
 msgid "Items list"
 msgstr "아이템 리스트"
 
-#: items.php:1014
+#: items.php:1013
 msgid "Items updated"
 msgstr "아이템을 갱신하였습니다"
 
@@ -9286,7 +9103,7 @@ msgstr "lost된 리소스의 보존기간"
 msgid "Key"
 msgstr "키"
 
-#: include/classes/api/services/CItemGeneral.php:400
+#: include/classes/api/services/CItemGeneral.php:403
 #, c-format
 msgid "Key \"%1$s\" does not match <grpmax|grpmin|grpsum|grpavg>[\"Host group(s)\", \"Item key\", \"<last|min|max|avg|sum|count>\", \"parameter\"]."
 msgstr "키\"%1$s\"가 <grpmax|grpmin|grpsum|grpavg>[\"Host group(s)\", \"Item key\", \"<last|min|max|avg|sum|count>\", \"parameter\"]와 매치하지 않습니다."
@@ -9360,22 +9177,6 @@ msgstr "최근"
 msgctxt "page navigation"
 msgid "Last"
 msgstr "최근"
-
-#: popup_trexpr.php:286
-msgid "Last (most recent) T value is < N"
-msgstr "최근 (T초전/T개전)의 값 < N"
-
-#: popup_trexpr.php:296
-msgid "Last (most recent) T value is = N"
-msgstr "최근 (T초전/T개전)의 값 = N"
-
-#: popup_trexpr.php:291
-msgid "Last (most recent) T value is > N"
-msgstr "최근 (T초전/T개전)의 값 > N"
-
-#: popup_trexpr.php:301
-msgid "Last (most recent) T value is NOT N"
-msgstr "최신 (T초전/T개전)의 값 NOT N"
 
 #: srv_status.php:38
 msgid "Last 24 hours"
@@ -9475,22 +9276,6 @@ msgstr "왼쪽"
 #: include/items.inc.php:1534
 msgid "Left trim"
 msgstr "왼쪽 trim"
-
-#: popup_trexpr.php:392
-msgid "Length of last (most recent) T value in characters is < N"
-msgstr "최신(T초전/T개전)의 문자열 길이 < N"
-
-#: popup_trexpr.php:402
-msgid "Length of last (most recent) T value in characters is = N"
-msgstr "최신(T초전/T개전)의 문자열 길이 = N"
-
-#: popup_trexpr.php:397
-msgid "Length of last (most recent) T value in characters is > N"
-msgstr "최신(T초전/T개전)의 문자열 길이 > N"
-
-#: popup_trexpr.php:407
-msgid "Length of last (most recent) T value in characters is NOT N"
-msgstr "최신(T초전/T개전)의 문자열 길이 NOT N"
 
 #: adm.gui.php:40 include/views/administration.general.gui.edit.php:43
 msgid "Limit for search and filter results"
@@ -9663,30 +9448,6 @@ msgstr "로그 로테이션에 대응한 로그파일 감시. 로그 값을 리�
 msgid "Log file monitoring. Returns log"
 msgstr "로그파일 감시. 로그 값을 리턴."
 
-#: popup_trexpr.php:520
-msgid "Log severity of the last log entry is < N"
-msgstr "최근 로그의 심각도 < N"
-
-#: popup_trexpr.php:528
-msgid "Log severity of the last log entry is = N"
-msgstr "최근 로그의 심각도 = N"
-
-#: popup_trexpr.php:524
-msgid "Log severity of the last log entry is > N"
-msgstr "최근 로그의 심각도 > N"
-
-#: popup_trexpr.php:532
-msgid "Log severity of the last log entry is NOT N"
-msgstr "최근 로그의 심각도 NOT N"
-
-#: popup_trexpr.php:536
-msgid "Log source of the last log entry matching parameter T, then N = 1, 0 - otherwise"
-msgstr "최근 이벤트 로그의 로그소스에 문자열 T와 일치 N = 1, 그 외의 경우 N = 0"
-
-#: popup_trexpr.php:541
-msgid "Log source of the last log entry matching parameter T, then N NOT 1, 0 - otherwise"
-msgstr "최근 이벤트 로그의 로그소스에 문자열 T와 일치 N NOT 1, 그 외의 경우 N = 0"
-
 #: include/views/configuration.item.edit.php:446
 #: include/views/configuration.item.massupdate.php:462
 #: include/views/configuration.item.prototype.edit.php:318
@@ -9735,7 +9496,7 @@ msgstr "불명"
 msgid "Low-level discovery rule in \"not supported\" state"
 msgstr "Low-level 디스커버리가 \"취득불가\" 상태"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1625
+#: include/classes/graphdraw/CLineGraphDraw.php:1376
 msgid "M"
 msgstr "M"
 
@@ -10064,22 +9825,6 @@ msgid "Maximum time period to display is %1$s day."
 msgid_plural "Maximum time period to display is %1$s days."
 msgstr[0] "표시 가능한 최대 기간은 %1$s일 입니다."
 
-#: popup_trexpr.php:306
-msgid "Maximum value for period T is < N"
-msgstr "기간T 값의 최대치 < N"
-
-#: popup_trexpr.php:316
-msgid "Maximum value for period T is = N"
-msgstr "기간T 값의 최대치 = N"
-
-#: popup_trexpr.php:311
-msgid "Maximum value for period T is > N"
-msgstr "기간T 값의 최대치 > N"
-
-#: popup_trexpr.php:321
-msgid "Maximum value for period T is NOT N"
-msgstr "기간T 값의 최대치 NOT N"
-
 #: include/forms.inc.php:1916 include/func.inc.php:120
 #: include/func.inc.php:257 jsLoader.php:132
 msgid "May"
@@ -10259,22 +10004,6 @@ msgstr[0] "표시가능한 최소 기간은 %1$s분 입니다."
 #: include/views/monitoring.sysmap.edit.php:228
 msgid "Minimum trigger severity"
 msgstr "최소 트리거 심각도"
-
-#: popup_trexpr.php:326
-msgid "Minimum value for period T is < N"
-msgstr "기간T 값의 최소치 < N"
-
-#: popup_trexpr.php:336
-msgid "Minimum value for period T is = N"
-msgstr "기간T 값의 최소치 = N"
-
-#: popup_trexpr.php:331
-msgid "Minimum value for period T is > N"
-msgstr "기간T 값의 최소치 > N"
-
-#: popup_trexpr.php:341
-msgid "Minimum value for period T is NOT N"
-msgstr "기간T 값의 최소치 NOT N"
 
 #: include/forms.inc.php:2048
 msgid "Minutes"
@@ -10468,7 +10197,7 @@ msgstr "NTLM"
 #: include/views/configuration.httpconf.popup.php:86
 #: include/views/configuration.httpconf.popup.php:146
 #: include/views/configuration.item.edit.php:61
-#: include/views/configuration.item.edit.php:549
+#: include/views/configuration.item.edit.php:554
 #: include/views/configuration.item.list.php:58
 #: include/views/configuration.item.list.php:158
 #: include/views/configuration.item.massupdate.php:259
@@ -10584,7 +10313,7 @@ msgid "New"
 msgstr "새로 만들기"
 
 #: include/views/configuration.httpconf.edit.php:72
-#: include/views/configuration.item.edit.php:491
+#: include/views/configuration.item.edit.php:496
 #: include/views/configuration.item.prototype.edit.php:347
 msgid "New application"
 msgstr "어플리케이션 작성"
@@ -10761,11 +10490,11 @@ msgstr "IPMI인터페이스가 설정되어 있지 않습니다"
 msgid "No JMX interfaces found."
 msgstr "JMX인터페이스가 설정되어 있지 않습니다"
 
-#: include/classes/api/services/CItemGeneral.php:503
+#: include/classes/api/services/CItemGeneral.php:506
 msgid "No SNMP OID specified."
 msgstr "SNMP OID가 설정되어 있지 않습니다"
 
-#: include/classes/api/services/CItemGeneral.php:509
+#: include/classes/api/services/CItemGeneral.php:512
 msgid "No SNMP community specified."
 msgstr "SNMP커뮤니티 이름이 설정되어 있지 않습니다"
 
@@ -10798,7 +10527,7 @@ msgstr "실행하는 액션 커맨드 \"%s\"에 인증 타입이 설정되어 �
 msgid "No authentication user name specified for action operation command \"%s\"."
 msgstr "실행하는 액션 커맨드 \"%s\"에 인증 사용자명이 설정되어 있지 않습니다"
 
-#: include/classes/api/services/CItemGeneral.php:481
+#: include/classes/api/services/CItemGeneral.php:484
 msgid "No authentication user name specified."
 msgstr "인증사용자 명이 설정되어 있지 않습니다"
 
@@ -10834,14 +10563,6 @@ msgstr "데이터수집 없음"
 #: include/classes/html/CTableInfo.php:30
 msgid "No data found."
 msgstr "데이터를 찾을 수 없음."
-
-#: popup_trexpr.php:578
-msgid "No data received during period of time T, then N = 1, 0 - otherwise"
-msgstr "기간T의 기간에 데이터가 존재하지 않음 N= 1, 그 외 N = 0"
-
-#: popup_trexpr.php:583
-msgid "No data received during period of time T, then N NOT 1, 0 - otherwise"
-msgstr "기간T의 기간에 데이터가 존재하지 않음 N NOT 1, 그 외 N NOT 0"
 
 #: app/controllers/CControllerWidgetClockView.php:76
 msgid "No data."
@@ -10955,7 +10676,7 @@ msgstr "이미지는 존재하지 않습니다"
 msgid "No interface found"
 msgstr "인터페이스를 찾을 수 없습니다."
 
-#: include/classes/api/services/CItemGeneral.php:345
+#: include/classes/api/services/CItemGeneral.php:348
 msgid "No interface found."
 msgstr "인터페이스를 찾을 수 없습니다."
 
@@ -11090,7 +10811,7 @@ msgstr "시스템 액세스 권한이 없습니다."
 #: include/classes/api/services/CImage.php:480
 #: include/classes/api/services/CImage.php:498
 #: include/classes/api/services/CItemGeneral.php:175
-#: include/classes/api/services/CItemGeneral.php:260
+#: include/classes/api/services/CItemGeneral.php:263
 #: include/classes/api/services/CItem.php:552
 #: include/classes/api/services/CItemPrototype.php:720
 #: include/classes/api/services/CMaintenance.php:261
@@ -11153,7 +10874,7 @@ msgstr "시스템 액세스 권한이 없습니다."
 #: include/classes/helpers/CMapHelper.php:84
 #: include/classes/screens/CScreenHistory.php:113
 #: include/classes/screens/CScreenHttpTestDetails.php:46
-#: include/func.inc.php:1718 items.php:1222 scripts_exec.php:90
+#: include/func.inc.php:1718 items.php:1221 scripts_exec.php:90
 msgid "No permissions to referred object or it does not exist!"
 msgstr "대상이 존재하지 않거나, 액세스 권한이 없습니다!"
 
@@ -11162,7 +10883,7 @@ msgstr "대상이 존재하지 않거나, 액세스 권한이 없습니다!"
 msgid "No private key file specified for action operation command \"%s\"."
 msgstr "실행하는 액션 커맨드 \"%s\"에 비밀키 파일이 설정되어 있지 않습니다"
 
-#: include/classes/api/services/CItemGeneral.php:489
+#: include/classes/api/services/CItemGeneral.php:492
 msgid "No private key file specified."
 msgstr "비밀키 파일이 설정되어 있지 않습니다"
 
@@ -11175,7 +10896,7 @@ msgstr "프록시 없음"
 msgid "No public key file specified for action operation command \"%s\"."
 msgstr "실행하는 액션 커맨드 \"%s\"에 공개키 파일이 설정되어 있지 않습니다"
 
-#: include/classes/api/services/CItemGeneral.php:486
+#: include/classes/api/services/CItemGeneral.php:489
 msgid "No public key file specified."
 msgstr "공개키 파일이 설정되어 있지 않습니다"
 
@@ -11207,7 +10928,7 @@ msgstr "프록시에 상태가 설정되어 있지 않습니다"
 msgid "No target selected"
 msgstr "아무 것도 선택되어 있지 않습니다"
 
-#: graphs.php:371 items.php:1082
+#: graphs.php:371 items.php:1081
 msgid "No target selected."
 msgstr "아무 것도 선택되어 있지 않습니다."
 
@@ -11238,8 +10959,8 @@ msgstr "boolean이 아닌 플래그는 폐지될 예정입니다."
 #: include/views/configuration.host.list.php:217
 #: include/views/configuration.host.list.php:229
 #: include/views/configuration.host.list.php:232
-#: include/views/configuration.item.edit.php:496
-#: include/views/configuration.item.edit.php:510
+#: include/views/configuration.item.edit.php:501
+#: include/views/configuration.item.edit.php:515
 #: include/views/configuration.item.prototype.edit.php:354
 #: include/views/configuration.item.prototype.edit.php:369
 #: include/views/configuration.trigger.prototype.edit.php:266
@@ -11258,6 +10979,10 @@ msgstr "일반"
 #: include/html.inc.php:178
 msgid "Normal view"
 msgstr "일반 표시"
+
+#: include/locales.inc.php:73
+msgid "Norwegian (nb_NO)"
+msgstr ""
 
 #: include/actions.inc.php:153 include/actions.inc.php:337
 #: include/views/configuration.action.edit.php:1122
@@ -11397,22 +11122,6 @@ msgstr "VMware 하이퍼바이저 상의 프로세서 스레드 수, <url> - VMw
 msgid "Number of processors on VMware virtual machine, <url> - VMware service URL, <uuid> - VMware virtual machine host name"
 msgstr "VMware가상 머신 상의 프로세서 수, <url> - VMware서비스URL, <uuid> - VMware가상 머신의 호스트 이름"
 
-#: popup_trexpr.php:546
-msgid "Number of seconds since the Epoch is < N"
-msgstr "Epoch 시간의 경과 초 < N"
-
-#: popup_trexpr.php:554
-msgid "Number of seconds since the Epoch is = N"
-msgstr "Epoch 시간의 경과 초 = N"
-
-#: popup_trexpr.php:550
-msgid "Number of seconds since the Epoch is > N"
-msgstr "Epoch 시간의 경과 초 > N"
-
-#: popup_trexpr.php:558
-msgid "Number of seconds since the Epoch is NOT N"
-msgstr "Epoch 시간의 경과 초 NOT N"
-
 #: include/views/monitoring.slideconf.list.php:57
 msgid "Number of slides"
 msgstr "슬라이드 수"
@@ -11425,22 +11134,6 @@ msgstr "상태 변경 횟수"
 #: include/views/configuration.httpconf.list.php:80
 msgid "Number of steps"
 msgstr "스텝 수"
-
-#: popup_trexpr.php:258
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is < N"
-msgstr "기간T내에 포함되는(조건0을 만족)값V의 개수 < N"
-
-#: popup_trexpr.php:268
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is = N"
-msgstr "기간T내에 포함되는(조건0을 만족)값V의 개수 = N"
-
-#: popup_trexpr.php:263
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is > N"
-msgstr "기간T내에 포함되는(조건0을 만족)값V의 개수 > N"
-
-#: popup_trexpr.php:273
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is NOT N"
-msgstr "기간T내에 포함되는(조건0을 만족)값V의 개수 NOT N"
 
 #: include/blocks.inc.php:449
 msgid "Number of triggers (enabled/disabled [problem/ok])"
@@ -11712,7 +11405,7 @@ msgstr "관리자만 슬라이드쇼의 소유자를 설정할 수 있습니다.
 msgid "Only items assigned to enabled hosts are counted"
 msgstr "활성화된 호스트의 아이템만 카운트"
 
-#: include/classes/api/services/CItemGeneral.php:1284
+#: include/classes/api/services/CItemGeneral.php:1287
 msgid "Only one change step is allowed."
 msgstr "변경가능한 것은 1개의 스탭뿐입니다."
 
@@ -12141,7 +11834,7 @@ msgstr "POP"
 #: app/views/monitoring.widget.problems.view.php:100 chart5.php:199
 #: include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:831
-#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:316
+#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:320
 #: include/events.inc.php:516 include/maps.inc.php:428
 #: include/maps.inc.php:513 include/maps.inc.php:607 include/maps.inc.php:709
 #: include/triggers.inc.php:173 include/views/monitoring.overview.items.php:32
@@ -12200,7 +11893,7 @@ msgid "Parameter \"%1$s\" is deprecated."
 msgstr "파라미터 \"%1$s\"는 폐지될 예정입니다."
 
 #: include/classes/debug/CProfiler.php:182
-#: include/views/configuration.item.edit.php:550
+#: include/views/configuration.item.edit.php:555
 #: include/views/configuration.item.massupdate.php:260
 #: include/views/configuration.item.prototype.edit.php:390
 msgid "Parameters"
@@ -12321,22 +12014,6 @@ msgstr "피크 때의 메모리 사용량 : %1$s"
 msgid "Percentage"
 msgstr "백분율"
 
-#: popup_trexpr.php:346
-msgid "Percentile P of a period T is < N"
-msgstr "기간T의 백분율P < N"
-
-#: popup_trexpr.php:356
-msgid "Percentile P of a period T is = N"
-msgstr "기간T의 백분율P = N"
-
-#: popup_trexpr.php:351
-msgid "Percentile P of a period T is > N"
-msgstr "기간T의 백분율P > N"
-
-#: popup_trexpr.php:361
-msgid "Percentile P of a period T is NOT N"
-msgstr "기간T의 백분율P NOT N"
-
 #: graphs.php:53 include/views/configuration.graph.edit.php:125
 msgid "Percentile line (left)"
 msgstr "백분위 선 (왼쪽)"
@@ -12392,7 +12069,7 @@ msgstr "권한"
 msgid "Permissions can be assigned for user groups only."
 msgstr "권한은 사용자그룹만 할당할 수 있습니다."
 
-#: include/locales.inc.php:73
+#: include/locales.inc.php:74
 msgid "Persian (fa_IR)"
 msgstr "페르시아어 (fa_IR)"
 
@@ -12443,11 +12120,11 @@ msgstr "요소 명을 지정해주세요."
 msgid "Points"
 msgstr "포인트"
 
-#: include/locales.inc.php:74
+#: include/locales.inc.php:75
 msgid "Polish (pl_PL)"
 msgstr "폴란드어 (pl_PL)"
 
-#: include/views/configuration.item.edit.php:530
+#: include/views/configuration.item.edit.php:535
 msgid "Populates host inventory field"
 msgstr "호스트 인벤토리 필드의 자동설정"
 
@@ -12479,11 +12156,11 @@ msgstr "호스트 인터페이스의 포트는 필수항목입니다."
 msgid "Port range"
 msgstr "포트 범위"
 
-#: include/locales.inc.php:75
+#: include/locales.inc.php:76
 msgid "Portuguese (pt_BR)"
 msgstr "포르투갈어 (pt_BR)"
 
-#: include/locales.inc.php:76
+#: include/locales.inc.php:77
 msgid "Portuguese (pt_PT)"
 msgstr "포르투갈어 (pt_PT)"
 
@@ -12504,12 +12181,12 @@ msgstr "포스트 형식"
 msgid "Pre-installation summary"
 msgstr "설치 사전 준비 요약"
 
-#: include/views/configuration.item.edit.php:669
+#: include/views/configuration.item.edit.php:674
 #: include/views/configuration.item.prototype.edit.php:509
 msgid "Preprocessing"
 msgstr "보존하기 전의 처리"
 
-#: include/views/configuration.item.edit.php:664
+#: include/views/configuration.item.edit.php:669
 #: include/views/configuration.item.massupdate.php:356
 #: include/views/configuration.item.prototype.edit.php:504
 msgid "Preprocessing steps"
@@ -12520,22 +12197,6 @@ msgstr "보존하기 전의 처리 스탭"
 #: include/views/configuration.graph.edit.php:374
 msgid "Preview"
 msgstr "미리보기"
-
-#: popup_trexpr.php:366
-msgid "Previous value is < N"
-msgstr "이전값 < N"
-
-#: popup_trexpr.php:374
-msgid "Previous value is = N"
-msgstr "이전값 = N"
-
-#: popup_trexpr.php:370
-msgid "Previous value is > N"
-msgstr "이전값 > N"
-
-#: popup_trexpr.php:378
-msgid "Previous value is NOT N"
-msgstr "이전값 NOT N"
 
 #: include/hosts.inc.php:399
 msgid "Primary POC cell"
@@ -12788,7 +12449,7 @@ msgstr "갱신 대기 아이템의 큐"
 #: app/views/monitoring.widget.problems.view.php:84
 #: include/classes/screens/CScreenEvents.php:134
 #: include/classes/screens/CScreenProblem.php:815
-#: include/classes/screens/CScreenProblem.php:958 include/events.inc.php:321
+#: include/classes/screens/CScreenProblem.php:958 include/events.inc.php:325
 #: include/events.inc.php:500 tr_status.php:687
 msgid "RESOLVED"
 msgstr "해결됨"
@@ -12945,22 +12606,6 @@ msgstr "정규표현식"
 msgid "Regular expression \"%s\" already exists."
 msgstr "정규표현식 \"%s\"는 이미 존재합니다."
 
-#: popup_trexpr.php:490
-msgid "Regular expression V matching last value in period T, then N = 1, 0 - otherwise"
-msgstr "최신(T초전/T개전)의 값이 정규표현식 V에 일치하는 경우 N = 1, 그 외의 경우 N = 0 (=조건)"
-
-#: popup_trexpr.php:500
-msgid "Regular expression V matching last value in period T, then N = 1, 0 - otherwise (non case-sensitive)"
-msgstr "최신(T초전/T개전)의 값이 정규표현식 V에 일치하는 경우 N = 1, 그 외의 경우 N = 0 (=조건, 대문자 소문자를 구별하지 않음)"
-
-#: popup_trexpr.php:495
-msgid "Regular expression V matching last value in period T, then N NOT 1, 0 - otherwise"
-msgstr "최신(T초전/T개전)의 값이 정규표현식 V에 일치하는 경우 N = 1, 그 외의 경우 N = 0 (#조건)"
-
-#: popup_trexpr.php:505
-msgid "Regular expression V matching last value in period T, then N NOT 1, 0 - otherwise (non case-sensitive)"
-msgstr "최신(T초전/T개전)의 값이 정규표현식 V에 일치하는 경우 N = 1, 그 외의 경우 N = 0 (#조건, 대문자 소문자를 구별하지 않음)"
-
 #: adm.regexps.php:147
 msgid "Regular expression added"
 msgstr "정규표현식을 추가하였습니다"
@@ -13024,7 +12669,7 @@ msgstr "원격 명령"
 #: include/views/configuration.host.discovery.edit.php:327
 #: include/views/configuration.httpconf.edit.php:232
 #: include/views/configuration.item.edit.php:382
-#: include/views/configuration.item.edit.php:646
+#: include/views/configuration.item.edit.php:651
 #: include/views/configuration.item.massupdate.php:339
 #: include/views/configuration.item.massupdate.php:407
 #: include/views/configuration.item.prototype.edit.php:292
@@ -13246,7 +12891,8 @@ msgstr "응답 시간"
 #: include/classes/debug/CProfiler.php:183
 #: include/views/administration.general.regularexpressions.edit.php:112
 #: include/views/administration.general.regularexpressions.edit.php:117
-#: tr_testexpr.php:147 tr_testexpr.php:184
+#: include/views/configuration.triggers.expression.php:120 tr_testexpr.php:147
+#: tr_testexpr.php:184
 msgid "Result"
 msgstr "결과"
 
@@ -13328,7 +12974,7 @@ msgstr "오른쪽"
 msgid "Right trim"
 msgstr "오른쪽 trim"
 
-#: include/locales.inc.php:77
+#: include/locales.inc.php:78
 msgid "Romanian (ro_RO)"
 msgstr "루마니아어 (ro_RO)"
 
@@ -13399,7 +13045,7 @@ msgstr "호스트에서 리모트 커맨드를 실행"
 msgid "Run specified command on the host. Returns text result of the command; 1 - with mode as nowait (regardless of command result)"
 msgstr "호스트 상에서 지정한 커맨드를 실행. 커맨드의 실행결과의 text값을 리턴. 모드로 nowait를 지정한 경우엔 커맨드의 실행결과에 관계 없이 1을 리턴."
 
-#: include/locales.inc.php:78
+#: include/locales.inc.php:79
 msgid "Russian (ru_RU)"
 msgstr "러시아어 (ru_RU)"
 
@@ -13488,7 +13134,7 @@ msgstr "SNMP 인터페이스"
 msgid "SNMP trap"
 msgstr "SNMP 트랩"
 
-#: include/classes/api/services/CItemGeneral.php:497
+#: include/classes/api/services/CItemGeneral.php:500
 msgid "SNMP trap key is invalid."
 msgstr "SNMP 트랩키가 올바르지 않습니다."
 
@@ -14262,7 +13908,7 @@ msgstr "대응하지 않은 항목만 표시하기"
 msgid "Show unavailable maps"
 msgstr "사용불가 맵의 표시"
 
-#: include/views/configuration.item.edit.php:468
+#: include/views/configuration.item.edit.php:472
 #: include/views/configuration.item.massupdate.php:478
 #: include/views/configuration.item.prototype.edit.php:341
 msgid "Show value"
@@ -14421,7 +14067,7 @@ msgstr "슬라이드쇼"
 msgid "Slides"
 msgstr "슬라이드"
 
-#: include/locales.inc.php:79
+#: include/locales.inc.php:80
 msgid "Slovak (sk_SK)"
 msgstr "슬로바키아어 (sk_SK)"
 
@@ -14499,7 +14145,7 @@ msgstr "소스"
 msgid "Source type"
 msgstr "소스의 종류"
 
-#: include/locales.inc.php:80
+#: include/locales.inc.php:81
 msgid "Spanish (es_ES)"
 msgstr "스페인어 (es_ES)"
 
@@ -14701,22 +14347,6 @@ msgstr "성공 감사"
 msgid "Sum of incoming and outgoing traffic statistics on network interface. Returns integer"
 msgstr "네트워크 인터페이스의 송수신합계치. integer를 리턴."
 
-#: popup_trexpr.php:412
-msgid "Sum of values of a period T is < N"
-msgstr "기간T 값의 합계치 < N"
-
-#: popup_trexpr.php:422
-msgid "Sum of values of a period T is = N"
-msgstr "기간T 값의 합계치 = N"
-
-#: popup_trexpr.php:417
-msgid "Sum of values of a period T is > N"
-msgstr "기간T 값의 합계치 > N"
-
-#: popup_trexpr.php:427
-msgid "Sum of values of a period T is NOT N"
-msgstr "기간T 값의 합계치 NOT N"
-
 #: include/func.inc.php:212
 msgid "Sun"
 msgstr "일"
@@ -14751,7 +14381,7 @@ msgstr "스와이프 아웃 (메모리에서 디바이스로) 의 통계. intege
 msgid "Swap space size in bytes or in percentage from total. Returns integer for bytes; float for percentage"
 msgstr "스왑 용량의 사이즈. 바이트 단위라면 integer를 리턴하고 퍼센트라면 float를 리턴."
 
-#: include/locales.inc.php:81
+#: include/locales.inc.php:82
 msgid "Swedish (sv_SE)"
 msgstr "스웨덴어 (sv_SE)"
 
@@ -15238,8 +14868,8 @@ msgstr "종료"
 #: include/views/configuration.services.edit.php:290
 #: include/views/configuration.services.edit.php:304
 #: include/views/configuration.services.edit.php:337
-#: include/views/configuration.triggers.expression.php:89
-#: include/views/configuration.triggers.expression.php:97 jsLoader.php:149
+#: include/views/configuration.triggers.expression.php:87
+#: include/views/configuration.triggers.expression.php:92 jsLoader.php:149
 #: popup_trexpr.php:33 popup_trexpr.php:130 tr_status.php:491
 msgid "Time"
 msgstr "시각"
@@ -15253,8 +14883,8 @@ msgid "Time (descending)"
 msgstr "시간 (내림차순)"
 
 #: include/classes/items/CHelpItems.php:951
-msgid "Time a particular Zabbix process or a group of processes (identified by <type> and <num>) spent in <state> in percentage."
-msgstr "특정 Zabbix의 프로세스 혹은 프로세스 그룹(<type>이나 <num>에서 특정가능한 것)이 <state>에서 소비된 시간의 퍼센트."
+msgid "Time a particular Zabbix process or a group of processes (identified by <type> and <mode>) spent in <state> in percentage."
+msgstr ""
 
 #: include/classes/items/CHelpItems.php:955
 msgid "Time of proxy last access. Name - proxy name. Param - lastaccess. Unix timestamp."
@@ -15268,22 +14898,6 @@ msgstr "기간"
 #: popup_trexpr.php:115 popup_trexpr.php:126 popup_trexpr.php:149
 msgid "Time shift"
 msgstr "타임 시프트"
-
-#: popup_trexpr.php:618
-msgid "Time to reach threshold estimated based on period T is < N"
-msgstr "기간 T를 기준으로 한 허용값의 예상도달시간 < N"
-
-#: popup_trexpr.php:628
-msgid "Time to reach threshold estimated based on period T is = N"
-msgstr "기간 T를 기준으로 한 허용값의 예상도달시간 = N"
-
-#: popup_trexpr.php:623
-msgid "Time to reach threshold estimated based on period T is > N"
-msgstr "기간 T를 기준으로 한 허용값의 예상도달시간 > N"
-
-#: popup_trexpr.php:633
-msgid "Time to reach threshold estimated based on period T is NOT N"
-msgstr "기간 T를 기준으로 한 허용값의 예상도달시간 NOT N"
 
 #: include/classes/widgets/CClockWidgetForm.php:31
 #: include/views/monitoring.screen.constructor.edit.php:604
@@ -15468,7 +15082,7 @@ msgstr "트리거 이벤트와 알림의 데이터 보존기간"
 msgid "Trigger event and alert data storage period \"%1$s\"."
 msgstr "트리거 이벤트와 통지 데이터의 보존기간 \"%1$s\"."
 
-#: include/views/configuration.triggers.expression.php:128
+#: include/views/configuration.triggers.expression.php:132
 msgid "Trigger expression condition"
 msgstr "트리거조건식의 상태"
 
@@ -15653,7 +15267,7 @@ msgstr "화"
 msgid "Tuesday"
 msgstr "화"
 
-#: include/locales.inc.php:82
+#: include/locales.inc.php:83
 msgid "Turkish (tr_TR)"
 msgstr "터키어 (tr_TR)"
 
@@ -15747,7 +15361,7 @@ msgstr "계산 종류"
 msgid "Type of information"
 msgstr "데이터형"
 
-#: include/classes/api/services/CItemGeneral.php:409
+#: include/classes/api/services/CItemGeneral.php:412
 msgid "Type of information must be \"Numeric (unsigned)\" or \"Numeric (float)\" for aggregate items."
 msgstr "Zabbix어그리게이트를 이용하는 경우 데이터형을 \"수치(unsigned)\"나 \"수치 (float)\"로 설정해주십시오."
 
@@ -15822,7 +15436,7 @@ msgstr "URL"
 msgid "USA (160 characters)"
 msgstr "USA (160문자)"
 
-#: include/locales.inc.php:83
+#: include/locales.inc.php:84
 msgid "Ukrainian (uk_UA)"
 msgstr "우크라이나어 (uk_UA)"
 
@@ -15919,7 +15533,7 @@ msgstr "알 수 없는 에러"
 msgid "Unknown function."
 msgstr "알 수 없는 함수."
 
-#: include/triggers.inc.php:1322 popup_trexpr.php:736 tr_testexpr.php:34
+#: include/triggers.inc.php:1322 popup_trexpr.php:457 tr_testexpr.php:34
 msgid "Unknown host item, no such item in selected host"
 msgstr "알 수 없는 아이템. 선택한 호스트에 그런 아이템은 존재하지 않습니다"
 
@@ -16101,7 +15715,7 @@ msgstr "Up"
 #: include/views/configuration.host.prototype.edit.php:436
 #: include/views/configuration.httpconf.edit.php:293
 #: include/views/configuration.httpconf.popup.php:192
-#: include/views/configuration.item.edit.php:691
+#: include/views/configuration.item.edit.php:696
 #: include/views/configuration.item.massupdate.php:614
 #: include/views/configuration.item.prototype.edit.php:518
 #: include/views/configuration.maintenance.edit.php:155
@@ -16855,7 +16469,7 @@ msgstr "세로"
 msgid "Vertical align"
 msgstr "세로 위치"
 
-#: include/locales.inc.php:84
+#: include/locales.inc.php:85
 msgid "Vietnamese (vi_VN)"
 msgstr "베트남어 (vi_VN)"
 
@@ -17461,7 +17075,7 @@ msgid "a number is too large"
 msgstr "숫자가 너무 큽니다"
 
 #: include/classes/api/services/CDRule.php:320
-#: include/classes/api/services/CItemGeneral.php:1205
+#: include/classes/api/services/CItemGeneral.php:1208
 #: include/classes/api/services/CScreen.php:423
 msgid "a numeric value is expected"
 msgstr "숫자로 지정해주세요"
@@ -17484,6 +17098,10 @@ msgstr "시간의 단위를 지정해주세요"
 msgid "a user macro is expected"
 msgstr "유저 매크로를 지정해주세요"
 
+#: popup_trexpr.php:186
+msgid "abschange() - Absolute difference between last and previous value"
+msgstr ""
+
 #: include/forms.inc.php:484
 msgid "affects only filtered data"
 msgstr "필터링된 데이만 영향을 받습니다"
@@ -17492,7 +17110,7 @@ msgstr "필터링된 데이만 영향을 받습니다"
 msgid "agent"
 msgstr "에이전트"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2027
+#: include/classes/graphdraw/CLineGraphDraw.php:1840
 #: include/classes/html/CSeverity.php:49
 #: include/classes/pagefilter/CPageFilter.php:849
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
@@ -17570,13 +17188,21 @@ msgstr "자동 등록"
 msgid "auto-registered host"
 msgstr "자동등록 호스트"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2009
-#: include/classes/graphdraw/CLineGraphDraw.php:2031
+#: include/classes/graphdraw/CLineGraphDraw.php:1822
+#: include/classes/graphdraw/CLineGraphDraw.php:1844
 #: include/classes/graphdraw/CPieGraphDraw.php:335 include/graphs.inc.php:85
 #: include/views/js/configuration.graph.edit.js.php:50
 #: include/views/js/configuration.graph.edit.js.php:58
 msgid "avg"
 msgstr "평균"
+
+#: popup_trexpr.php:191
+msgid "avg() - Average value of a period T"
+msgstr ""
+
+#: popup_trexpr.php:332
+msgid "band() - Bitwise AND of last (most recent) T value and mask"
+msgstr ""
 
 #: include/views/administration.general.trigger.options.edit.php:36
 #: include/views/administration.general.trigger.options.edit.php:43
@@ -17607,14 +17233,14 @@ msgstr "변경할 수 없습니다"
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1506
 #: include/classes/api/services/CHttpTest.php:999
-#: include/classes/api/services/CItemGeneral.php:427
-#: include/classes/api/services/CItemGeneral.php:447
-#: include/classes/api/services/CItemGeneral.php:453
-#: include/classes/api/services/CItemGeneral.php:459
-#: include/classes/api/services/CItemGeneral.php:1179
-#: include/classes/api/services/CItemGeneral.php:1199
-#: include/classes/api/services/CItemGeneral.php:1222
-#: include/classes/api/services/CItemGeneral.php:1235
+#: include/classes/api/services/CItemGeneral.php:430
+#: include/classes/api/services/CItemGeneral.php:450
+#: include/classes/api/services/CItemGeneral.php:456
+#: include/classes/api/services/CItemGeneral.php:462
+#: include/classes/api/services/CItemGeneral.php:1182
+#: include/classes/api/services/CItemGeneral.php:1202
+#: include/classes/api/services/CItemGeneral.php:1225
+#: include/classes/api/services/CItemGeneral.php:1238
 #: include/classes/api/services/CMapElement.php:122
 #: include/classes/api/services/CMapElement.php:147
 #: include/classes/api/services/CMapElement.php:185
@@ -17650,15 +17276,19 @@ msgstr "공백으로 지정할 수 없습니다"
 msgid "cannot perform Scroll API request, data could be truncated"
 msgstr ""
 
+#: popup_trexpr.php:203
+msgid "change() - Difference between last and previous value"
+msgstr ""
+
 #: include/classes/parsers/CConditionFormula.php:188
 #, c-format
 msgid "check expression starting from \"%1$s\""
 msgstr "\"%1$s\"에서 시작되는 조건식을 확인해주세요."
 
 #: include/classes/api/services/CHostGeneral.php:1036
-#: include/classes/api/services/CItemGeneral.php:1511
-#: include/classes/api/services/CItemGeneral.php:1517
-#: include/classes/api/services/CItemGeneral.php:1730
+#: include/classes/api/services/CItemGeneral.php:1514
+#: include/classes/api/services/CItemGeneral.php:1520
+#: include/classes/api/services/CItemGeneral.php:1733
 #: include/classes/import/CConfigurationImport.php:2534
 msgid "circular item dependency is not allowed"
 msgstr "모순된 아이템의 의존관계는 허가되지 않습니다."
@@ -17668,6 +17298,10 @@ msgstr "모순된 아이템의 의존관계는 허가되지 않습니다."
 msgid "configure"
 msgstr "설정"
 
+#: popup_trexpr.php:208
+msgid "count() - Number of successfully retrieved values V (which fulfill operator O) for period T"
+msgstr ""
+
 #: include/func.inc.php:579 jsLoader.php:102
 msgctxt "day short"
 msgid "d"
@@ -17676,6 +17310,18 @@ msgstr "d"
 #: chart4.php:129 chart5.php:143
 msgid "d.M"
 msgstr "m/d"
+
+#: popup_trexpr.php:266
+msgid "date() - Current date"
+msgstr ""
+
+#: popup_trexpr.php:276
+msgid "dayofmonth() - Day of month"
+msgstr ""
+
+#: popup_trexpr.php:271
+msgid "dayofweek() - Day of week"
+msgstr ""
 
 #: app/views/monitoring.problem.view.php:165
 #: include/views/common.filter.trigger.php:90
@@ -17694,6 +17340,10 @@ msgstr "dd"
 msgid "default"
 msgstr "기본"
 
+#: popup_trexpr.php:197
+msgid "delta() - Difference between MAX and MIN value of a period T"
+msgstr ""
+
 #: include/classes/widgets/CActionLogWidgetForm.php:31
 #: include/classes/widgets/CActionLogWidgetForm.php:33
 #: include/classes/widgets/CActionLogWidgetForm.php:35
@@ -17704,6 +17354,10 @@ msgstr "기본"
 #: include/classes/widgets/CProblemsWidgetForm.php:119
 msgid "descending"
 msgstr "내림차순"
+
+#: popup_trexpr.php:214
+msgid "diff() - Difference between last and preceding values (1 - true, 0 - false)"
+msgstr ""
 
 #: include/classes/validators/CApiInputValidator.php:818
 msgid "directory or script name cannot be empty"
@@ -17746,13 +17400,21 @@ msgstr "조건식이 지정되어있지 않습니다."
 msgid "failed to parse JSON"
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:1243
+#: include/classes/api/services/CItemGeneral.php:1246
 msgid "first parameter is expected"
 msgstr "첫 파라미터를 지정해주세요"
 
 #: jsLoader.php:97
 msgid "fixed"
 msgstr "fixed"
+
+#: popup_trexpr.php:338
+msgid "forecast() - Forecast for next t seconds based on period T"
+msgstr ""
+
+#: popup_trexpr.php:281
+msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
+msgstr ""
 
 #: include/views/configuration.item.edit.php:411
 #: include/views/configuration.item.edit.php:416
@@ -17787,7 +17449,7 @@ msgstr "호스트"
 msgid "host group"
 msgstr "호스트 그룹"
 
-#: include/classes/api/services/CItemGeneral.php:1534
+#: include/classes/api/services/CItemGeneral.php:1537
 msgid "hostid of dependent item and master item should match"
 msgstr "의존 아이템과 마스터아이템의 hostid를 일치시켜주세요"
 
@@ -17834,7 +17496,7 @@ msgstr "주소 범위 \"%1$s\"가 올바르지 않습니다"
 msgid "invalid byte sequence in UTF-8"
 msgstr "UTF-8의 바이트 시퀀스가 올바르지 않습니다"
 
-#: include/classes/api/services/CItemGeneral.php:279
+#: include/classes/api/services/CItemGeneral.php:282
 #: include/classes/graphdraw/CLineGraphDraw.php:113
 msgid "invalid delay"
 msgstr "갱신간격이 올바르지 않습니다"
@@ -17858,6 +17520,10 @@ msgstr "정규표현식이 올바르지 않습니다"
 msgid "invalid trend storage period"
 msgstr "트렌드 데이터의 보존기간이 올바르지 않습니다"
 
+#: popup_trexpr.php:293
+msgid "iregexp() - Regular expression V matching last value in period T (non case-sensitive; 1 - match, 0 - no match)"
+msgstr ""
+
 #: include/classes/validators/CApiInputValidator.php:1146
 msgid "is not enclosed in {} or is malformed"
 msgstr "{}로 포함되어 있지 않거나 잘못된 값입니다"
@@ -17870,13 +17536,17 @@ msgstr "아이템"
 msgid "key is empty"
 msgstr "키가 설정되지 않았습니다."
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2007
+#: include/classes/graphdraw/CLineGraphDraw.php:1820
 #: include/classes/graphdraw/CPieGraphDraw.php:330 include/graphs.inc.php:82
 #: include/views/js/configuration.graph.edit.js.php:52
 msgid "last"
 msgstr "최신값"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2144
+#: popup_trexpr.php:219
+msgid "last() - Last (most recent) T value"
+msgstr ""
+
+#: include/classes/graphdraw/CLineGraphDraw.php:1957
 msgid "left"
 msgstr "왼쪽"
 
@@ -17885,13 +17555,25 @@ msgstr "왼쪽"
 msgid "like"
 msgstr "포함"
 
-#: include/views/configuration.item.edit.php:591
+#: include/views/configuration.item.edit.php:596
 #: include/views/configuration.item.massupdate.php:297
 #: include/views/configuration.item.prototype.edit.php:431
 #: include/views/js/common.item.edit.js.php:140
 #: include/views/js/configuration.item.massupdate.js.php:154
 msgid "list of characters"
 msgstr "문자열의 리스트"
+
+#: popup_trexpr.php:299
+msgid "logeventid() - Event ID of last log entry matching regular expression T (1 - match, 0 - no match)"
+msgstr ""
+
+#: popup_trexpr.php:305
+msgid "logseverity() - Log severity of the last log entry"
+msgstr ""
+
+#: popup_trexpr.php:310
+msgid "logsource() - Log source of the last log entry matching parameter T (1 - match, 0 - no match)"
+msgstr ""
 
 #: include/events.inc.php:68
 msgid "low-level discovery rule"
@@ -17907,7 +17589,9 @@ msgctxt "month short"
 msgid "m"
 msgstr "m"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1628
+#: include/classes/graphdraw/CLineGraphDraw.php:1376
+#: include/classes/graphdraw/CLineGraphDraw.php:1384
+#: include/classes/graphdraw/CLineGraphDraw.php:1391
 msgid "m-d"
 msgstr "m/d"
 
@@ -17937,34 +17621,42 @@ msgstr "맵"
 msgid "matches"
 msgstr "일치한다"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2010
-#: include/classes/graphdraw/CLineGraphDraw.php:2024
+#: include/classes/graphdraw/CLineGraphDraw.php:1823
+#: include/classes/graphdraw/CLineGraphDraw.php:1837
 #: include/classes/graphdraw/CPieGraphDraw.php:326 include/graphs.inc.php:80
 #: include/views/js/configuration.graph.edit.js.php:51
 #: include/views/js/configuration.graph.edit.js.php:59
 msgid "max"
 msgstr "최대"
 
-#: include/classes/api/services/CItemGeneral.php:1614
+#: popup_trexpr.php:225
+msgid "max() - Maximum value for period T"
+msgstr ""
+
+#: include/classes/api/services/CItemGeneral.php:1617
 msgid "maximum dependent items count reached"
 msgstr "의존 아이템수가 최대 수에 도달하였습니다"
 
 #: include/classes/api/services/CHostGeneral.php:1043
-#: include/classes/api/services/CItemGeneral.php:1540
-#: include/classes/api/services/CItemGeneral.php:1623
-#: include/classes/api/services/CItemGeneral.php:1737
+#: include/classes/api/services/CItemGeneral.php:1543
+#: include/classes/api/services/CItemGeneral.php:1626
+#: include/classes/api/services/CItemGeneral.php:1740
 #: include/classes/import/CConfigurationImport.php:2491
 #: include/classes/import/CConfigurationImport.php:2550
 msgid "maximum number of dependency levels reached"
 msgstr "의존 레벨 수가 최대수에 도달하였습니다"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2008
-#: include/classes/graphdraw/CLineGraphDraw.php:2021
+#: include/classes/graphdraw/CLineGraphDraw.php:1821
+#: include/classes/graphdraw/CLineGraphDraw.php:1834
 #: include/classes/graphdraw/CPieGraphDraw.php:322 include/graphs.inc.php:78
 #: include/views/js/configuration.graph.edit.js.php:49
 #: include/views/js/configuration.graph.edit.js.php:57
 msgid "min"
 msgstr "최소"
+
+#: popup_trexpr.php:231
+msgid "min() - Minimum value for period T"
+msgstr ""
 
 #: include/classes/api/services/CHost.php:1518
 #, c-format
@@ -18024,10 +17716,14 @@ msgstr "신규"
 msgid "new event tag"
 msgstr "새로운 이벤트의 태그"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2102
+#: include/classes/graphdraw/CLineGraphDraw.php:1915
 #: include/classes/graphdraw/CPieGraphDraw.php:356
 msgid "no data"
 msgstr "데이터 없음"
+
+#: popup_trexpr.php:326
+msgid "nodata() - No data received during period of time T (1 - true, 0 - false)"
+msgstr ""
 
 #: include/actions.inc.php:31
 msgid "not in"
@@ -18049,7 +17745,11 @@ msgstr "선택되지 않음"
 msgid "now"
 msgstr "현재"
 
-#: include/views/configuration.item.edit.php:564
+#: popup_trexpr.php:316
+msgid "now() - Number of seconds since the Epoch"
+msgstr ""
+
+#: include/views/configuration.item.edit.php:569
 #: include/views/configuration.item.massupdate.php:273
 #: include/views/configuration.item.prototype.edit.php:404
 #: include/views/js/common.item.edit.js.php:131
@@ -18113,7 +17813,7 @@ msgstr "on"
 msgid "other"
 msgstr "그 외"
 
-#: include/views/configuration.item.edit.php:579
+#: include/views/configuration.item.edit.php:584
 #: include/views/configuration.item.massupdate.php:286
 #: include/views/configuration.item.prototype.edit.php:419
 #: include/views/js/common.item.edit.js.php:49
@@ -18121,7 +17821,7 @@ msgstr "그 외"
 msgid "output"
 msgstr "출력"
 
-#: include/views/configuration.item.edit.php:597
+#: include/views/configuration.item.edit.php:602
 #: include/views/configuration.item.massupdate.php:303
 #: include/views/configuration.item.prototype.edit.php:437
 #: include/views/js/common.item.edit.js.php:148
@@ -18129,7 +17829,7 @@ msgstr "출력"
 msgid "path"
 msgstr "경로"
 
-#: include/views/configuration.item.edit.php:602
+#: include/views/configuration.item.edit.php:607
 #: include/views/configuration.item.massupdate.php:308
 #: include/views/configuration.item.prototype.edit.php:442
 #: include/views/js/common.item.edit.js.php:48
@@ -18138,10 +17838,22 @@ msgstr "경로"
 msgid "pattern"
 msgstr "패턴"
 
+#: popup_trexpr.php:237
+msgid "percentile() - Percentile P of a period T"
+msgstr ""
+
+#: popup_trexpr.php:243
+msgid "prev() - Previous value"
+msgstr ""
+
 #: include/page_header.php:149 include/views/general.warning.php:21
 #, c-format
 msgid "refreshed every %1$s sec."
 msgstr "%1$s 초 마다 갱신"
+
+#: popup_trexpr.php:287
+msgid "regexp() - Regular expression V matching last value in period T (1 - match, 0 - no match)"
+msgstr ""
 
 #: include/views/configuration.host.discovery.edit.php:323
 #: include/views/js/configuration.host.discovery.edit.js.php:24
@@ -18152,7 +17864,7 @@ msgstr "정규 표현"
 msgid "remember selected"
 msgstr "선택상태를 보존"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2144
+#: include/classes/graphdraw/CLineGraphDraw.php:1957
 msgid "right"
 msgstr "오른쪽"
 
@@ -18170,7 +17882,7 @@ msgctxt "second short"
 msgid "s"
 msgstr "s"
 
-#: include/classes/api/services/CItemGeneral.php:1249
+#: include/classes/api/services/CItemGeneral.php:1252
 msgid "second parameter is expected"
 msgstr "2번째 파라미터를 지정해주세요"
 
@@ -18188,10 +17900,10 @@ msgstr "짧은 설명"
 #: include/classes/api/services/CHost.php:1546
 #: include/classes/api/services/CHttpTest.php:984
 #: include/classes/api/services/CHttpTest.php:1095
-#: include/classes/api/services/CItemGeneral.php:434
-#: include/classes/api/services/CItemGeneral.php:472
-#: include/classes/api/services/CItemGeneral.php:1264
-#: include/classes/api/services/CItemGeneral.php:1278
+#: include/classes/api/services/CItemGeneral.php:437
+#: include/classes/api/services/CItemGeneral.php:475
+#: include/classes/api/services/CItemGeneral.php:1267
+#: include/classes/api/services/CItemGeneral.php:1281
 #: include/classes/api/services/CTriggerGeneral.php:533
 #: include/classes/api/services/CTriggerGeneral.php:559
 #: include/classes/api/services/CTriggerGeneral.php:778
@@ -18203,11 +17915,23 @@ msgstr "비워주십시오"
 msgid "show icon mappings"
 msgstr "아이콘의 매핑을 표시"
 
-#: include/views/configuration.item.edit.php:466
+#: include/views/configuration.item.edit.php:469
 #: include/views/configuration.item.massupdate.php:473
 #: include/views/configuration.item.prototype.edit.php:339
 msgid "show value mappings"
 msgstr "값 매핑의 표시"
+
+#: popup_trexpr.php:248
+msgid "str() - Find string V in last (most recent) value (1 - found, 0 - not found)"
+msgstr ""
+
+#: popup_trexpr.php:254
+msgid "strlen() - Length of last (most recent) T value in characters"
+msgstr ""
+
+#: popup_trexpr.php:260
+msgid "sum() - Sum of values of a period T"
+msgstr ""
 
 #: app/views/monitoring.dashboard.config.php:178
 #: app/views/monitoring.dashboard.config.php:205
@@ -18251,6 +17975,14 @@ msgstr "파라미터 \"%1$s\" 가 없습니다"
 #, c-format
 msgid "the tag \"%1$s\" is missing"
 msgstr "태그 \"%1$s\"를 찾을 수 없습니다"
+
+#: popup_trexpr.php:321
+msgid "time() - Current time"
+msgstr ""
+
+#: popup_trexpr.php:344
+msgid "timeleft() - Time to reach threshold estimated based on period T"
+msgstr ""
 
 #: include/classes/api/services/CMap.php:841
 #: include/classes/api/services/CMap.php:1283 include/events.inc.php:34
@@ -18309,7 +18041,7 @@ msgstr "텍스트 \"%1$s\"가 잘못되었습니다."
 #: include/classes/api/services/CEvent.php:551
 #: include/classes/api/services/CHost.php:1480
 #: include/classes/api/services/CHost.php:1486
-#: include/classes/api/services/CItemGeneral.php:1186
+#: include/classes/api/services/CItemGeneral.php:1189
 #: include/classes/api/services/CProxy.php:572
 #: include/classes/api/services/CProxy.php:579
 #: include/classes/api/services/CTriggerGeneral.php:567
