@@ -1,3 +1,9 @@
+Changes for rsm1.0.7rc6
+
+Bug fixes:
+....I..... [sub-392] added handling of case when TLD state file is removed from SLA API data directory (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.7rc5
 
 Bug fixes:

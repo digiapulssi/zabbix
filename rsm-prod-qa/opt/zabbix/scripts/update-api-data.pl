@@ -151,6 +151,8 @@ foreach my $service (keys(%services))
 
 	$services{$service}{'avail_key'} = "rsm.slv.$service.avail";
 	$services{$service}{'rollweek_key'} = "rsm.slv.$service.rollweek";
+
+	dbg("$service delay: ", $services{$service}{'delay'});
 }
 
 my $now = time();
@@ -362,14 +364,24 @@ foreach (@server_keys)
 
 			my $ah_tld = ah_get_api_tld($tld);
 
+			my $state_file_exists;
 			my $json_state_ref;
 
-			# for services that we do not process at this time (e. g. RDDS)
-			# keep their data to correctly calculate TLD state later
+			# for services that we do not process at this time
+			# (e. g. RDDS) keep their current state
 			if (ah_state_file_json($tld, \$json_state_ref) != AH_SUCCESS)
 			{
+				# if there is no state file we need to consider full
+				# cycle for each of the services to get correct states
+
+				$state_file_exists = 0;
+
 				$json_state_ref->{'tld'} = $tld;
 				$json_state_ref->{'testedServices'} = {};
+			}
+			else
+			{
+				$state_file_exists = 1;
 			}
 
 			# find out which services are disabled, for others get lastclock
@@ -378,8 +390,22 @@ foreach (@server_keys)
 				my $service_from = $services{$service}{'from'};
 				my $service_till = $services{$service}{'till'};
 
+				my $delay = $services{$service}{'delay'};
+
+				my $avail_key = $services{$service}{'avail_key'};
+				my $rollweek_key = $services{$service}{'rollweek_key'};
+
 				# not the right time for this service/delay yet
-				next if (!$service_from || !$service_till);
+				if (!$service_from || !$service_till)
+				{
+					next unless ($state_file_exists == 0);
+
+					dbg("$service: there is no state file, consider previous cycle");
+
+					# but since there is no state file we need to consider previous cycle
+					$service_from = cycle_start($till - $delay, $delay);
+					$service_till = cycle_end($till - $delay, $delay);
+				}
 
 				if (tld_service_enabled($tld, $service) != SUCCESS)
 				{
@@ -459,10 +485,6 @@ foreach (@server_keys)
 				}
 
 				dbg("lastclock:$lastclock");
-
-				my $delay = $services{$service}{'delay'};
-				my $avail_key = $services{$service}{'avail_key'};
-				my $rollweek_key = $services{$service}{'rollweek_key'};
 
 				my $hostid = get_hostid($tld);
 				my $avail_itemid = get_itemid_by_hostid($hostid, $avail_key);
