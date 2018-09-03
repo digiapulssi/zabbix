@@ -23,7 +23,9 @@
 
 #ifdef _AIX
 
+#ifndef XINTFRAC	/* defined in IBM AIX 7.1 libperfstat.h, not defined in AIX 6.1 */
 #define XINTFRAC	((double)_system_configuration.Xint / (double)_system_configuration.Xfrac)
+#endif
 
 static int		last_clock = 0;
 /* --- kthr --- */
