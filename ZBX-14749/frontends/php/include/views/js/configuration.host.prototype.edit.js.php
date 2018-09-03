@@ -44,7 +44,7 @@
 		<?php endforeach ?>
 
 		<?php if ($hostPrototype['templateid']): ?>
-			jQuery("#tbl_group_prototypes").find('input, .button').prop("disabled", "disabled");
+			jQuery("#tbl_group_prototypes").find('input, .button').prop("readonly", "readonly");
 		<?php endif ?>
 	});
 </script>
