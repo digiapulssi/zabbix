@@ -51,7 +51,7 @@ static zbx_uint64_t	last_user = 0;			/* raw total number of clock ticks spent in
 static zbx_uint64_t	last_sys = 0;			/* raw total number of clock ticks spent in system mode */
 static zbx_uint64_t	last_idle = 0;			/* raw total number of clock ticks spent idle */
 static zbx_uint64_t	last_wait = 0;			/* raw total number of clock ticks spent waiting for I/O */
-static zbx_uint64_t	last_timebase_last = 0;		/* most recent cpu time base */
+static zbx_uint64_t	last_timebase_last = 0;		/* most recent processor time base timestamp */
 static zbx_uint64_t	last_pool_idle_time = 0;	/* number of clock ticks a processor in the shared pool was idle */
 static zbx_uint64_t	last_idle_donated_purr = 0;	/* number of idle cycles donated by a dedicated partition enabled for donation */
 static zbx_uint64_t	last_busy_donated_purr = 0;	/* number of busy cycles donated by a dedicated partition enabled for donation */
@@ -93,9 +93,9 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 
 	now = (int)time(NULL);
 
-	/* retrieve the metrics
+	/* Retrieve metrics from AIX libperfstat APIs.
 	 * Upon successful completion, the number of structures filled is returned.
-	 * If unsuccessful, a value of -1 is returned and the errno global variable is set */
+	 * If unsuccessful, a value of -1 is returned and the errno global variable is set. */
 #ifdef _AIXVERSION_530
 	if (-1 == perfstat_partition_total(NULL, &lparstats, sizeof(lparstats), 1))
 	{
@@ -193,7 +193,10 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 		}
 #endif	/* HAVE_AIXOSLEVEL_530006 */
 
+		/* interval betwen timestamps of current and previous measurements */
 		dtimebase = lparstats.timebase_last - last_timebase_last;
+
+		/* entitled_proc_capacity = number of processor units this partition is entitled to receive */
 		vmstat->ent = (double)lparstats.entitled_proc_capacity / 100.0;
 
 		if (lparstats.type.b.shared_enabled)
@@ -236,7 +239,8 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 			if (lparstats.type.b.pool_util_authority)
 			{
 				/* Available Pool Processor (app) */
-				vmstat->cpu_app = (double)(lparstats.pool_idle_time - last_pool_idle_time) / (XINTFRAC * (double)dtimebase);
+				vmstat->cpu_app = (double)(lparstats.pool_idle_time - last_pool_idle_time) /
+						(XINTFRAC * (double)dtimebase);
 			}
 		}
 #else	/* not _AIXVERSION_530 */
