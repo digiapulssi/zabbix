@@ -55,9 +55,20 @@ class JMXItemChecker extends ItemChecker
 	{
 		super(request);
 
+		String jmx_endpoint;
+
 		try
 		{
-			url = new JMXServiceURL(request.getString(JSON_TAG_JMX_ENDPOINT));
+			jmx_endpoint = request.getString(JSON_TAG_JMX_ENDPOINT);
+		}
+		catch (Exception e)
+		{
+			throw new ZabbixException(e);
+		}
+
+		try
+		{
+			url = new JMXServiceURL(jmx_endpoint);
 			jmxc = null;
 			mbsc = null;
 
@@ -69,7 +80,7 @@ class JMXItemChecker extends ItemChecker
 		}
 		catch (Exception e)
 		{
-			throw new ZabbixException(e);
+			throw new ZabbixException("%s: %s", e, jmx_endpoint);
 		}
 	}
 
