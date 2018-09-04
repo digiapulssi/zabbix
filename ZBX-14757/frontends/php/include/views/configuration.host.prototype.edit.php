@@ -367,7 +367,7 @@ $inventoryFormList = (new CFormList('inventorylist'))
 			->addValue(_('Disabled'), HOST_INVENTORY_DISABLED)
 			->addValue(_('Manual'), HOST_INVENTORY_MANUAL)
 			->addValue(_('Automatic'), HOST_INVENTORY_AUTOMATIC)
-			->setEnabled($hostPrototype['templateid'] == 0)
+			->setReadonly($hostPrototype['templateid'] != 0)
 			->setModern(true)
 	);
 

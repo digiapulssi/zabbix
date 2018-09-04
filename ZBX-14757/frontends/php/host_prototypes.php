@@ -338,7 +338,6 @@ if (isset($_REQUEST['form'])) {
 		}
 	}
 
-	// host prototype edit form
 	$templateids = [];
 
 	// Add parent templates.
