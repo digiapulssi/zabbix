@@ -574,7 +574,7 @@ class CHostPrototype extends CHostBase {
 			}
 
 			// inventory
-			if (array_key_exists('inventory', $hostPrototype)) {
+			if (isset($hostPrototype['inventory']) ) {
 				$inventory = zbx_array_mintersect(['inventory_mode'], $hostPrototype['inventory']);
 				$inventory['hostid'] = $hostPrototype['hostid'];
 

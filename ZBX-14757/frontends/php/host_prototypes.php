@@ -144,12 +144,11 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		'status' => getRequest('status', HOST_STATUS_NOT_MONITORED),
 		'groupLinks' => [],
 		'groupPrototypes' => [],
-		'templates' => getRequest('templates', [])
+		'templates' => getRequest('templates', []),
+		'inventory' => [
+			'inventory_mode' => getRequest('inventory_mode')
+		]
 	];
-
-	if (hasRequest('inventory_mode')) {
-		$newHostPrototype['inventory'] = ['inventory_mode' => getRequest('inventory_mode')];
-	}
 
 	// add custom group prototypes
 	foreach (getRequest('group_prototypes', []) as $groupPrototype) {
