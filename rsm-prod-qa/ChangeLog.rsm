@@ -1,3 +1,9 @@
+Changes for rsm1.0.7rc7
+
+New features:
+....I..... [sub-330] added description of SLA API and Data Export option --max-children (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.7rc6
 
 Bug fixes:

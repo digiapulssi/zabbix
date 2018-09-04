@@ -40,7 +40,7 @@ sub fill_test_data_dns($$$);
 sub fill_test_data_rdds($$);
 sub match_clocks_with_results($$);
 
-parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'maxproc=n', 'server-key=s');
+parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'max-children=n', 'server-key=s');
 
 # do not write any logs
 setopt('nolog');
@@ -279,7 +279,7 @@ if (!$from)
 	slv_exit(SUCCESS);
 }
 
-my $fm = new Parallel::ForkManager(opt('maxproc') ? getopt('maxproc') : 64);
+my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
 
 # go through all the databases
 foreach (@server_keys)
@@ -2352,6 +2352,10 @@ is supported as seconds (i. e. 0.5, 1, 1.5 are valid).
 =item B<--server-key> key
 
 Specify the key of the server to handle (e. g. server_2). It must be listed in rsm.conf .
+
+=item B<--max-children> n
+
+Specify maximum number of child processes to run in parallel.
 
 =item B<--debug>
 
