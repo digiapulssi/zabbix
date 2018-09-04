@@ -2469,6 +2469,10 @@ Move forward specified number of seconds from the date specified with --date.
 
 Implies option --dry-run.
 
+=item B<--max-children> n
+
+Specify maximum number of child processes to run in parallel.
+
 =item B<--help>
 
 Print a brief help message and exit.
