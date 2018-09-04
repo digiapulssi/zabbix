@@ -151,13 +151,15 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 		vmstat->cs = (double)(cpustats.pswitch - last_pswitch) / (double)(now - last_clock);
 
 #ifdef _AIXVERSION_530
-		/* --- cpu ---- */
+		/* number of CPU ticks since the last measurement in different modes */
 		dpcpu_us = lparstats.puser - last_puser;
 		dpcpu_sy = lparstats.psys  - last_psys;
 		dpcpu_id = lparstats.pidle - last_pidle;
 		dpcpu_wa = lparstats.pwait - last_pwait;
 
-		delta_purr = pcputime = dpcpu_us + dpcpu_sy + dpcpu_id + dpcpu_wa;
+		/* total number of CPU ticks since the last measurement in different modes */
+		delta_purr = dpcpu_us + dpcpu_sy + dpcpu_id + dpcpu_wa;
+		pcputime = delta_purr;
 #endif	/* _AIXVERSION_530 */
 		dlcpu_us = cpustats.user - last_user;
 		dlcpu_sy = cpustats.sys  - last_sys;
@@ -196,7 +198,10 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 		/* interval betwen timestamps of current and previous measurements */
 		dtimebase = lparstats.timebase_last - last_timebase_last;
 
-		/* entitled_proc_capacity = number of processor units this partition is entitled to receive */
+		/* 'perfstat_partition_total_t' element 'entitled_proc_capacity' is "number of processor units this */
+		/* partition is entitled to receive". It is expressed as multiplied by 100 and rounded to integer, */
+		/* therefore we divide it by 100 and convert to floating point number to get its real value, as */
+		/* shown by 'lparstat' command. */
 		vmstat->ent = (double)lparstats.entitled_proc_capacity / 100.0;
 
 		if (lparstats.type.b.shared_enabled)
