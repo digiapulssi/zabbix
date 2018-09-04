@@ -69,7 +69,7 @@ check_fields($fields);
 // permissions
 if (getRequest('parent_discoveryid')) {
 	$discoveryRule = API::DiscoveryRule()->get([
-		'itemids' => $_REQUEST['parent_discoveryid'],
+		'itemids' => getRequest('parent_discoveryid'),
 		'output' => API_OUTPUT_EXTEND,
 		'selectHosts' => ['flags'],
 		'editable' => true
@@ -87,7 +87,7 @@ if (getRequest('parent_discoveryid')) {
 			'selectGroupPrototypes' => API_OUTPUT_EXTEND,
 			'selectTemplates' => ['templateid', 'name'],
 			'selectParentHost' => ['hostid'],
-			'selectInventory' => API_OUTPUT_EXTEND,
+			'selectInventory' => ['inventory_mode'],
 			'editable' => true
 		]);
 		$hostPrototype = reset($hostPrototype);
@@ -261,7 +261,7 @@ $config = select_config();
 /*
  * Display
  */
-if (isset($_REQUEST['form'])) {
+if (hasRequest('form')) {
 	$data = [
 		'discovery_rule' => $discoveryRule,
 		'host_prototype' => [
@@ -300,7 +300,7 @@ if (isset($_REQUEST['form'])) {
 
 	if (getRequest('group_links')) {
 		$data['groups'] = API::HostGroup()->get([
-			'output' => API_OUTPUT_EXTEND,
+			'output' => ['groupid', 'name'],
 			'groupids' => getRequest('group_links'),
 			'editable' => true,
 			'preservekeys' => true
@@ -326,7 +326,7 @@ if (isset($_REQUEST['form'])) {
 			}
 
 			$data['groups'] = API::HostGroup()->get([
-				'output' => API_OUTPUT_EXTEND,
+				'output' => ['groupid', 'name'],
 				'groupids' => zbx_objectValues($data['host_prototype']['groupLinks'], 'groupid'),
 				'editable' => true,
 				'preservekeys' => true
