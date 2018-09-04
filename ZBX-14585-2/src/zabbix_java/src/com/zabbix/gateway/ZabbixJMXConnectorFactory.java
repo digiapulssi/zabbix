@@ -120,7 +120,7 @@ class ZabbixJMXConnectorFactory
 		}
 
 		if (null == result)
-			throw new SocketTimeoutException("connection timed out");
+			throw new SocketTimeoutException("Connection timed out");
 
 		if (result instanceof JMXConnector)
 			return (JMXConnector)result;
