@@ -269,7 +269,7 @@ if (isset($_REQUEST['form'])) {
 			'templateid' => getRequest('hostid') ? $hostPrototype['templateid'] : 0,
 			'host' => getRequest('host'),
 			'name' => getRequest('name'),
-			'status' => getRequest('status', HOST_STATUS_MONITORED),
+			'status' => getRequest('status', HOST_STATUS_NOT_MONITORED),
 			'templates' => [],
 			'inventory' => [
 				'inventory_mode' => getRequest('inventory_mode', $config['default_inventory_mode'])
@@ -331,6 +331,10 @@ if (isset($_REQUEST['form'])) {
 				'editable' => true,
 				'preservekeys' => true
 			]);
+		}
+		else {
+			// Set default values for new host prototype.
+			$data['host_prototype']['status'] = HOST_STATUS_MONITORED;
 		}
 	}
 

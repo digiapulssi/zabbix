@@ -41,6 +41,10 @@ $frmHost = (new CForm())
 	->addVar('parent_discoveryid', $discoveryRule['itemid'])
 	->addVar('tls_accept', $parentHost['tls_accept']);
 
+if ($hostPrototype['hostid'] != 0) {
+	$frmHost->addVar('hostid', $hostPrototype['hostid']);
+}
+
 $hostList = new CFormList('hostlist');
 
 if ($hostPrototype['templateid'] && $data['parents']) {
@@ -59,10 +63,6 @@ if ($hostPrototype['templateid'] && $data['parents']) {
 	}
 	array_pop($parents);
 	$hostList->addRow(_('Parent discovery rules'), $parents);
-}
-
-if (isset($hostPrototype['hostid'])) {
-	$frmHost->addVar('hostid', $hostPrototype['hostid']);
 }
 
 $hostTB = (new CTextBox('host', $hostPrototype['host'], (bool) $hostPrototype['templateid']))
