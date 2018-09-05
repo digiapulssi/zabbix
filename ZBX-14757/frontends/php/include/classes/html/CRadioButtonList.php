@@ -41,6 +41,7 @@ class CRadioButtonList extends CList {
 		$this->enabled = true;
 		$this->values = [];
 		$this->modern = false;
+		$this->readonly = false;
 		$this->setId(zbx_formatDomId($name));
 	}
 
