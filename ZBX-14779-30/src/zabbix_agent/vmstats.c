@@ -24,6 +24,7 @@
 #ifdef _AIX
 
 #ifndef XINTFRAC	/* defined in IBM AIX 7.1 libperfstat.h, not defined in AIX 6.1 */
+#include <sys/systemcfg.h>
 #define XINTFRAC	((double)_system_configuration.Xint / (double)_system_configuration.Xfrac)
 #endif
 
@@ -151,13 +152,13 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 		vmstat->cs = (double)(cpustats.pswitch - last_pswitch) / (double)(now - last_clock);
 
 #ifdef _AIXVERSION_530
-		/* number of CPU ticks since the last measurement in different modes */
+		/* number of CPU ticks since the last measurement by mode */
 		dpcpu_us = lparstats.puser - last_puser;
 		dpcpu_sy = lparstats.psys  - last_psys;
 		dpcpu_id = lparstats.pidle - last_pidle;
 		dpcpu_wa = lparstats.pwait - last_pwait;
 
-		/* total number of CPU ticks since the last measurement in different modes */
+		/* total number of CPU ticks since the last measurement */
 		delta_purr = dpcpu_us + dpcpu_sy + dpcpu_id + dpcpu_wa;
 		pcputime = delta_purr;
 #endif	/* _AIXVERSION_530 */
@@ -195,7 +196,7 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 		}
 #endif	/* HAVE_AIXOSLEVEL_530006 */
 
-		/* interval betwen timestamps of current and previous measurements */
+		/* interval between timestamps of current and previous measurements */
 		dtimebase = lparstats.timebase_last - last_timebase_last;
 
 		/* 'perfstat_partition_total_t' element 'entitled_proc_capacity' is "number of processor units this */
