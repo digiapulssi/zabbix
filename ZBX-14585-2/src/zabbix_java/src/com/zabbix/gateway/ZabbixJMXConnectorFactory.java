@@ -110,6 +110,10 @@ class ZabbixJMXConnectorFactory
 			else
 				logger.trace("connector acquired");
 		}
+		catch (SecurityException e)
+		{
+			throw e;
+		}
 		catch (InterruptedException e)
 		{
 			InterruptedIOException e2 = new InterruptedIOException(e.getMessage());
