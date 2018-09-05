@@ -74,9 +74,6 @@ class JMXItemChecker extends ItemChecker
 
 			username = request.optString(JSON_TAG_USERNAME, null);
 			password = request.optString(JSON_TAG_PASSWORD, null);
-
-			if (null != username && null == password || null == username && null != password)
-				throw new IllegalArgumentException("Both JMX endpoint username and password should be either present or empty");
 		}
 		catch (Exception e)
 		{
