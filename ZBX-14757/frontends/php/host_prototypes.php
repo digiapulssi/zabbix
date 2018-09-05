@@ -340,7 +340,7 @@ if (hasRequest('form')) {
 	$templateids = [];
 
 	// Add parent templates.
-	if ($data['host_prototype']['templateid']) {
+	if ($data['host_prototype']['templateid'] != 0) {
 		$data['parents'] = [];
 		$hostPrototypeId = $data['host_prototype']['templateid'];
 		while ($hostPrototypeId) {
