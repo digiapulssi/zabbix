@@ -71,7 +71,7 @@ class SocketProcessor implements Runnable
 		catch (Exception e1)
 		{
 			String error = ZabbixException.getRootCauseMessage(e1);
-			logger.warn("error processing request: {}",  error);
+			logger.warn("error processing request: {}", error);
 			logger.debug("error caused by", e1);
 
 			try
