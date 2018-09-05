@@ -109,11 +109,13 @@ class JMXItemChecker extends ItemChecker
 		{
 			JSONObject value = new JSONObject();
 
-			for (String key : keys)
+			logger.warn("cannot process keys '{}': {}: {}", new Object[] {keys, ZabbixException.getRootCauseMessage(e1), url});
+			logger.debug("error caused by", e1);
+
+			for (int i = 0; i < keys.size(); i++)
 			{
 				try
 				{
-					logger.debug("caught security exception for item '{}'", key, e1);
 					value.put(JSON_TAG_ERROR, ZabbixException.getRootCauseMessage(e1));
 					values.put(value);
 				}
