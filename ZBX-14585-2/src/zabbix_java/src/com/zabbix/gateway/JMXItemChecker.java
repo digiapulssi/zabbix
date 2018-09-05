@@ -109,20 +109,19 @@ class JMXItemChecker extends ItemChecker
 			logger.warn("cannot process keys '{}': {}: {}", new Object[] {keys, ZabbixException.getRootCauseMessage(e1), url});
 			logger.debug("error caused by", e1);
 
-			for (int i = 0; i < keys.size(); i++)
+			try
 			{
-				try
-				{
-					value.put(JSON_TAG_ERROR, ZabbixException.getRootCauseMessage(e1));
-					values.put(value);
-				}
-				catch (JSONException e2)
-				{
-					Object[] logInfo = {JSON_TAG_ERROR, e1.getMessage(), ZabbixException.getRootCauseMessage(e2)};
-					logger.warn("cannot add JSON attribute '{}' with message '{}': {}", logInfo);
-					logger.debug("error caused by", e2);
-				}
+				value.put(JSON_TAG_ERROR, ZabbixException.getRootCauseMessage(e1));
 			}
+			catch (JSONException e2)
+			{
+				Object[] logInfo = {JSON_TAG_ERROR, e1.getMessage(), ZabbixException.getRootCauseMessage(e2)};
+				logger.warn("cannot add JSON attribute '{}' with message '{}': {}", logInfo);
+				logger.debug("error caused by", e2);
+			}
+
+			for (int i = 0; i < keys.size(); i++)
+					values.put(value);
 		}
 		catch (Exception e)
 		{
