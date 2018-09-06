@@ -23,40 +23,6 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 class testFormAdministrationAuthentication extends CWebTest {
 	public function getAuthenticationData() {
 		return [
-			// HTTP authentication (default login form - 'Zabbix login form')
-			[
-				[
-					'default_auth' => 'Internal',
-					'http_auth_enabled' => true,
-					'http_login_form' => 'Zabbix login form',
-					'user' => 'Admin',
-					'password' => 'zabbix',
-					'http_case_sensitive' => true,
-					'file' => 'pwfile',
-					'pages' => [
-						[
-							'page' => 'index.php?form=default',
-							'action' => 'login',
-							'target' => 'dashboard'
-						]
-					],
-					'db_check' => [
-						'authentication_type'	=> '0',
-						'ldap_host'				=> '',
-						'ldap_port'				=> '389',
-						'ldap_base_dn'			=> '',
-						'ldap_bind_dn'			=> '',
-						'ldap_bind_password'	=> '',
-						'ldap_search_attribute'	=> '',
-						'http_auth_enabled'		=> '1',
-						'http_login_form'		=> '0',
-						'http_strip_domains'	=> '',
-						'http_case_sensitive'	=> '1',
-						'ldap_configured'		=> '0',
-						'ldap_case_sensitive'	=> '1'
-					]
-				]
-			],
 			// Zabbix DB authentication
 			[
 				[
@@ -66,6 +32,36 @@ class testFormAdministrationAuthentication extends CWebTest {
 					'pages' => [
 						[
 							'page' => 'index.php?form=default',
+							'action' => 'login',
+							'target' => 'dashboard'
+						],
+						[
+							'page' => 'zabbix.php?action=dashboard.view',
+							'action' => 'login',
+							'target' => 'error',
+							'error' => 'You are not logged in'
+						],
+						[
+							'page' => 'index.php',
+							'action' => 'login',
+							'target' => 'dashboard'
+						],
+						// ZBXNEXT-4573, 32 subissue
+//						[
+//							'page' => 'index_http.php',
+//							'action' => 'login',
+//							'target' => 'dashboard'
+//						],
+						// Redirect HTTP login page, open GUI page.
+						[
+							'page' => 'adm.gui.php',
+							'action' => 'login',
+							'target' => 'error',
+							'error' => 'You are not logged in'
+						],
+						// Login after logout.
+						[
+							'page' => 'index.php?reconnect=1&form=default',
 							'action' => 'login',
 							'target' => 'dashboard'
 						]
@@ -93,7 +89,6 @@ class testFormAdministrationAuthentication extends CWebTest {
 					'default_auth' => 'Internal',
 					'http_auth_enabled' => true,
 					'http_login_form' => 'HTTP login form',
-					'http_domain' => 'local.com',
 					'user' => 'Admin',
 					'password' => '123456',
 					'db_password' => 'zabbix',
@@ -106,7 +101,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 							'target' => 'dashboard'
 						],
 						// Redirect HTTP login page, open Host page.
-						// uncomment after ZBX-14774 will be resolved.
+						// wait for ZBX-14774.
 //						[
 //							'page' => 'hosts.php?ddreset=1',
 //							'action' => 'login_http',
@@ -129,6 +124,12 @@ class testFormAdministrationAuthentication extends CWebTest {
 							'page' => 'index.php?reconnect=1&form=default',
 							'action' => 'login',
 							'target' => 'dashboard'
+						],
+						// Redirect HTTP login page, open GUI page.
+						[
+							'page' => 'adm.gui.php',
+							'action' => 'login_http_domain',
+							'target' => 'gui'
 						]
 					],
 					'db_check' => [
@@ -141,7 +142,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 						'ldap_search_attribute'	=> '',
 						'http_auth_enabled'		=> '1',
 						'http_login_form'		=> '1',
-						'http_strip_domains'	=> 'local.com',
+						'http_strip_domains'	=> '',
 						'http_case_sensitive'	=> '1',
 						'ldap_configured'		=> '0',
 						'ldap_case_sensitive'	=> '1'
@@ -156,46 +157,30 @@ class testFormAdministrationAuthentication extends CWebTest {
 					'http_login_form' => 'HTTP login form',
 					'http_domain' => 'local.com',
 					'user' => 'Admin@local.com',
+					'password' => '123456',
 					'file' => 'htaccess',
+					'db_password' => 'zabbix',
 					'pages' => [
 						[
-							'page' => 'index.php?form=default',
+							'page' => 'zabbix.php?action=dashboard.view',
 							'action' => 'login_http_domain',
 							'target' => 'dashboard'
 						],
-					],
-					'db_check' => [
-						'authentication_type'	=> '0',
-						'ldap_host'				=> '',
-						'ldap_port'				=> '389',
-						'ldap_base_dn'			=> '',
-						'ldap_bind_dn'			=> '',
-						'ldap_bind_password'	=> '',
-						'ldap_search_attribute'	=> '',
-						'http_auth_enabled'		=> '1',
-						'http_login_form'		=> '1',
-						'http_strip_domains'	=> 'local.com',
-						'http_case_sensitive'	=> '1',
-						'ldap_configured'		=> '0',
-						'ldap_case_sensitive'	=> '1'
-					]
-				]
-			],
-			// HTTP authentication - Check domain (@local.com).
-			[
-				[
-					'default_auth' => 'Internal',
-					'http_auth_enabled' => true,
-					'http_login_form' => 'HTTP login form',
-					'http_domain' => 'local.com',
-					'user' => 'Admin@local.com',
-					'file' => 'htaccess',
-					'pages' => [
 						[
-							'page' => 'index.php?form=default',
-							'action' => 'login_http_domain',
+							'page' => 'index.php',
+							'action' => 'login_http',
 							'target' => 'dashboard'
 						],
+						[
+							'page' => 'index_http.php',
+							'action' => 'login_http',
+							'target' => 'dashboard'
+						],
+						[
+							'page' => 'index.php?form=default',
+							'action' => 'login',
+							'target' => 'dashboard'
+						]
 					],
 					'db_check' => [
 						'authentication_type'	=> '0',
@@ -227,6 +212,11 @@ class testFormAdministrationAuthentication extends CWebTest {
 					'pages' => [
 						[
 							'page' => 'index.php?form=default',
+							'action' => 'login',
+							'target' => 'dashboard'
+						],
+						[
+							'page' => 'zabbix.php?action=dashboard.view',
 							'action' => 'login_http_domain',
 							'target' => 'dashboard'
 						],
@@ -237,7 +227,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 							'error' => 'Access denied'
 						],
 						// Redirect HTTP login page, open Host page.
-						// uncomment after ZBX-14774 will be resolved.
+						// wait for ZBX-14774.
 //						[
 //							'page' => 'hosts.php?ddreset=1',
 //							'action' => 'login_http',
@@ -292,7 +282,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 					'pages' => [
 						[
 							'page' => 'index.php?form=default',
-							'action' => 'login_http_domain',
+							'action' => 'login',
 							'target' => 'dashboard'
 						],
 						[
@@ -302,12 +292,17 @@ class testFormAdministrationAuthentication extends CWebTest {
 							'error' => 'Access denied'
 						],
 						// Redirect HTTP login page, open Host page.
-						// uncomment after ZBX-14774 will be resolved.
+						// wait for ZBX-14774.
 //						[
 //							'page' => 'hosts.php?ddreset=1',
 //							'action' => 'login_http',
 //							'target' => 'hosts'
 //						],
+						[
+							'page' => 'zabbix.php?action=dashboard.view',
+							'action' => 'login_http_domain',
+							'target' => 'dashboard'
+						],
 						// Redirect to HTTP login page.
 						[
 							'page' => 'index.php',
@@ -537,16 +532,16 @@ class testFormAdministrationAuthentication extends CWebTest {
 
 				if (array_key_exists('action', $check)) {
 					$action = $check['action'];
-					// Login with HTTP - user/password is sending in url
+					// HTTP login - user/password is sending in url
 					if ($action === 'login_http') {
 						$parts = explode('//', PHPUNIT_URL.$check['page'], 2);
 						$url = $parts[0].'//'.$data['user'].':'.$data['password'].'@'.$parts[1];
 						$this->webDriver->get($url);
 					}
-					elseif ($action === 'login_http_domain') {
+					elseif ($action === 'login_http_domain' || $check['target'] === 'error') {
 						$this->zbxTestOpen($check['page']);
 					}
-					elseif ($action === 'login') {
+					elseif ($action === 'login' && $check['target'] !== 'error') {
 						$this->zbxTestOpen($check['page']);
 						$this->zbxTestWaitForPageToLoad();
 						// Check button 'Sign in with HTTP'.
@@ -576,6 +571,9 @@ class testFormAdministrationAuthentication extends CWebTest {
 					}
 					elseif ($target === 'hosts') {
 						$this->zbxTestCheckHeader('Hosts');
+					}
+					elseif ($target === 'gui') {
+						$this->zbxTestCheckHeader('GUI');
 					}
 					elseif ($target === 'error') {
 						$this->zbxTestAssertElementPresentXpath('//output[@class="msg-bad msg-global"][text()="'.
