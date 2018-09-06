@@ -416,7 +416,7 @@ $divTabs->addTab('encryptionTab', _('Encryption'), $encryption_form_list);
 /*
  * footer
  */
-if (isset($hostPrototype['hostid'])) {
+if ($hostPrototype['hostid'] != 0) {
 	$btnDelete = new CButtonDelete(
 		_('Delete selected host prototype?'),
 		url_param('form').url_param('hostid').url_param('parent_discoveryid')
