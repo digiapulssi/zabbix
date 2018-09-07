@@ -242,23 +242,20 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 		vmstat->cpu_id = (double)dpcpu_id * 100.0 / (double)pcputime;
 		vmstat->cpu_wa = (double)dpcpu_wa * 100.0 / (double)pcputime;
 
-		if (lparstats.type.b.shared_enabled)
+		/* Physical Processor Consumed */
+		vmstat->cpu_pc = (double)delta_purr / (double)dtimebase;
+
+		/* Percentage of Entitlement Consumed */
+		vmstat->cpu_ec = (double)(vmstat->cpu_pc / vmstat->ent) * 100.0;
+
+		/* Logical Processor Utilization */
+		vmstat->cpu_lbusy = (double)(dlcpu_us + dlcpu_sy) * 100.0 / (double)lcputime;
+
+		if (lparstats.type.b.shared_enabled && lparstats.type.b.pool_util_authority)
 		{
-			/* Physical Processor Consumed */
-			vmstat->cpu_pc = (double)delta_purr / (double)dtimebase;
-
-			/* Percentage of Entitlement Consumed */
-			vmstat->cpu_ec = (double)(vmstat->cpu_pc / vmstat->ent) * 100.0;
-
-			/* Logical Processor Utilization */
-			vmstat->cpu_lbusy = (double)(dlcpu_us + dlcpu_sy) * 100.0 / (double)lcputime;
-
-			if (lparstats.type.b.pool_util_authority)
-			{
-				/* Available Pool Processor (app) */
-				vmstat->cpu_app = (double)(lparstats.pool_idle_time - last_pool_idle_time) /
-						(XINTFRAC * (double)dtimebase);
-			}
+			/* Available Pool Processor (app) */
+			vmstat->cpu_app = (double)(lparstats.pool_idle_time - last_pool_idle_time) /
+					(XINTFRAC * (double)dtimebase);
 		}
 #else	/* not _AIXVERSION_530 */
 
