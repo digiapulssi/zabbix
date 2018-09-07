@@ -48,6 +48,8 @@ static zbx_uint64_t	last_syscall = 0;		/* number of system calls executed */
 static zbx_uint64_t	last_pswitch = 0;		/* number of process switches (change in currently running */
 							/* process) */
 /* --- cpu ---- */
+/* Raw numbers of ticks are readings from forward-ticking counters. */
+/* Only difference between 2 readings is meaningful. */
 static zbx_uint64_t	last_puser = 0;			/* raw number of physical processor ticks in user mode */
 static zbx_uint64_t	last_psys = 0;			/* raw number of physical processor ticks in system mode */
 static zbx_uint64_t	last_pidle = 0;			/* raw number of physical processor ticks idle */
@@ -205,7 +207,7 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 		}
 #endif	/* HAVE_AIXOSLEVEL_530006 */
 
-		/* interval between timestamps of current and previous measurements */
+		/* number of physical processor tics between current and previous measurement */
 		dtimebase = lparstats.timebase_last - last_timebase_last;
 
 		/* 'perfstat_partition_total_t' element 'entitled_proc_capacity' is "number of processor units this */
