@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-22 20:29+0300\n"
+"POT-Creation-Date: 2018-08-28 17:56+0300\n"
 "PO-Revision-Date: 2018-02-27 10:14+0300\n"
 "Last-Translator: Kubiakm <mk.naumburg@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -230,22 +230,6 @@ msgstr "AES"
 msgid "AND"
 msgstr "UND"
 
-#: popup_trexpr.php:186
-msgid "Absolute difference between last and previous value is < N"
-msgstr "Der Unterschied zwischen dem letzten und vorletzten Wert ist < N"
-
-#: popup_trexpr.php:194
-msgid "Absolute difference between last and previous value is = N"
-msgstr "Der Unterschied zwischen dem letzten und vorletzten Wert ist = N"
-
-#: popup_trexpr.php:190
-msgid "Absolute difference between last and previous value is > N"
-msgstr "Der Unterschied zwischen dem letzten und vorletzten Wert ist > N"
-
-#: popup_trexpr.php:198
-msgid "Absolute difference between last and previous value is NOT N"
-msgstr "Der Unterschied zwischen dem letzten und vorletzten Wert ist NICHT N"
-
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: srv_status.php:147
@@ -346,7 +330,7 @@ msgstr "Bestätigungen"
 #: include/views/configuration.host.prototype.edit.php:262
 #: include/views/configuration.httpconf.edit.php:191
 #: include/views/configuration.item.edit.php:341
-#: include/views/configuration.item.edit.php:552
+#: include/views/configuration.item.edit.php:557
 #: include/views/configuration.item.massupdate.php:262
 #: include/views/configuration.item.massupdate.php:376
 #: include/views/configuration.item.prototype.edit.php:263
@@ -531,8 +515,8 @@ msgstr "Aktiv bis"
 #: include/views/configuration.httpconf.popup.php:149
 #: include/views/configuration.httpconf.popup.php:198
 #: include/views/configuration.item.edit.php:390
-#: include/views/configuration.item.edit.php:657
-#: include/views/configuration.item.edit.php:695
+#: include/views/configuration.item.edit.php:662
+#: include/views/configuration.item.edit.php:700
 #: include/views/configuration.item.massupdate.php:348
 #: include/views/configuration.item.massupdate.php:414
 #: include/views/configuration.item.prototype.edit.php:299
@@ -798,7 +782,7 @@ msgid "Allow manual close"
 msgstr "Händisches Schließen zulassen"
 
 #: include/views/configuration.host.discovery.edit.php:253
-#: include/views/configuration.item.edit.php:469
+#: include/views/configuration.item.edit.php:474
 #: include/views/configuration.item.massupdate.php:487
 #: include/views/configuration.item.prototype.edit.php:342
 msgid "Allowed hosts"
@@ -890,7 +874,7 @@ msgstr "Kategorie Prototyp"
 msgid "Application updated"
 msgstr "Kategorie geändert"
 
-#: include/classes/api/services/CItemGeneral.php:555
+#: include/classes/api/services/CItemGeneral.php:558
 #, c-format
 msgid "Application with ID \"%1$s\" is not available on \"%2$s\"."
 msgstr "Kategorie mit ID \"%1$s\" ist nicht verfügbar auf \"%2$s\"."
@@ -906,7 +890,7 @@ msgstr "Kategorie mit Kategorie-ID \"%1$s\" existiert nicht."
 #: include/views/configuration.host.edit.php:323
 #: include/views/configuration.host.list.php:65
 #: include/views/configuration.host.list.php:256
-#: include/views/configuration.item.edit.php:502
+#: include/views/configuration.item.edit.php:507
 #: include/views/configuration.item.list.php:65
 #: include/views/configuration.item.prototype.edit.php:358
 #: include/views/configuration.item.prototype.list.php:49
@@ -1185,22 +1169,6 @@ msgstr "Verfügbar"
 msgid "Average"
 msgstr "Durchschnitt"
 
-#: popup_trexpr.php:202
-msgid "Average value of a period T is < N"
-msgstr "Durchschnittswert im Zeitraum T ist < N"
-
-#: popup_trexpr.php:212
-msgid "Average value of a period T is = N"
-msgstr "Durchschnittswert im Zeitraum T ist = N"
-
-#: popup_trexpr.php:207
-msgid "Average value of a period T is > N"
-msgstr "Durchnittswert im Zeitraum T ist > N"
-
-#: popup_trexpr.php:217
-msgid "Average value of a period T is NOT N"
-msgstr "Durchnittswert im Zeitraum T ist NICHT N"
-
 #: include/classes/setup/CSetupWizard.php:121
 #: include/classes/setup/CSetupWizard.php:324
 msgid "Back"
@@ -1238,14 +1206,6 @@ msgstr "Bind-DN"
 #: include/views/administration.authentication.edit.php:92
 msgid "Bind password"
 msgstr "Bind-Passwort"
-
-#: popup_trexpr.php:588
-msgid "Bitwise AND of last (most recent) T value and mask is = N"
-msgstr "Bitweises UND des letzen (jüngsten) T-Werts mit der Maske N"
-
-#: popup_trexpr.php:593
-msgid "Bitwise AND of last (most recent) T value and mask is NOT N"
-msgstr "Bitweises UND des letzen (jüngsten) T-Werts mit der Maske NICHT N"
 
 #: adm.triggerdisplayoptions.php:38 adm.triggerdisplayoptions.php:39
 #: adm.triggerdisplayoptions.php:40 adm.triggerdisplayoptions.php:41
@@ -1329,7 +1289,7 @@ msgstr "ZERTIFIKAT"
 #: app/views/monitoring.widget.problems.view.php:100
 #: include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:831
-#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:316
+#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:320
 #: include/events.inc.php:516 tr_status.php:682
 msgid "CLOSING"
 msgstr "SCHLIESSEN"
@@ -1498,7 +1458,7 @@ msgstr "Kann Hostprototyp nicht hinzufügen"
 msgid "Cannot add image"
 msgstr "Kann Bild nicht hinzufügen"
 
-#: items.php:725
+#: items.php:724
 msgid "Cannot add item"
 msgstr "Kann Datenpunkt nicht hinzufügen"
 
@@ -1623,7 +1583,7 @@ msgid "Cannot change authentication method to Zabbix internal"
 msgstr "Kann Authentifizierungsmethode nicht auf Zabbix-intern ändern"
 
 # Das heißt sonst nirgends "Verlauf", oder?
-#: httpconf.php:198 httpconf.php:507 items.php:766 items.php:1122
+#: httpconf.php:198 httpconf.php:507 items.php:765 items.php:1121
 msgid "Cannot clear history"
 msgstr "Kann Verlauf nicht leeren"
 
@@ -1665,7 +1625,7 @@ msgid_plural "Cannot copy graphs"
 msgstr[0] "Kann Schaubild nicht kopieren"
 msgstr[1] "Kann Schaubilder nicht kopieren"
 
-#: items.php:1078
+#: items.php:1077
 msgid "Cannot copy item"
 msgid_plural "Cannot copy items"
 msgstr[0] "Kann Element nicht kopieren"
@@ -1839,7 +1799,7 @@ msgstr "Kann Datenpunktprototyp nicht löschen"
 msgid "Cannot delete item prototypes"
 msgstr "Kann Datenpunktprototypen nicht löschen"
 
-#: items.php:1152
+#: items.php:1151
 msgid "Cannot delete items"
 msgstr "Kann Datenpunkte nicht löschen"
 
@@ -1999,7 +1959,7 @@ msgid_plural "Cannot disable hosts"
 msgstr[0] "Kann Host nicht deaktivieren"
 msgstr[1] "Kann Hosts nicht deaktivieren"
 
-#: applications.php:175 items.php:1038
+#: applications.php:175 items.php:1037
 msgid "Cannot disable item"
 msgid_plural "Cannot disable items"
 msgstr[0] "Kann Datenpunkt nicht deaktivieren"
@@ -2062,7 +2022,7 @@ msgid_plural "Cannot enable hosts"
 msgstr[0] "Kann Host nicht aktivieren"
 msgstr[1] "Kann Hosts nicht aktivieren"
 
-#: applications.php:174 items.php:1037
+#: applications.php:174 items.php:1036
 msgid "Cannot enable item"
 msgid_plural "Cannot enable items"
 msgstr[0] "Kann Datenpunkt nicht aktivieren"
@@ -2264,7 +2224,7 @@ msgstr "Kann JS-File nicht einschließen \"%s\"."
 msgid "Cannot include view file \"%s\"."
 msgstr "Kann die Datei \"%s\" nicht einbinden."
 
-#: popup_trexpr.php:896
+#: popup_trexpr.php:616
 msgid "Cannot insert trigger expression"
 msgstr "Kann Auslöser Ausdruck nicht einfügen"
 
@@ -2383,7 +2343,7 @@ msgstr "Kann \"%1$s\"\" für Graph \"%2$s\" nicht setzen."
 msgid "Cannot set \"%1$s\" for graph prototype \"%2$s\"."
 msgstr "Kann \"%1$s\"\" für Graphprototypen \"%2$s\" nicht setzen."
 
-#: include/classes/api/services/CItemGeneral.php:268
+#: include/classes/api/services/CItemGeneral.php:271
 #, c-format
 msgid "Cannot set \"%1$s\" for item \"%2$s\"."
 msgstr "Kann \"%1$s\" nicht setzen für Datenpunkt \"%2$s\"."
@@ -2655,7 +2615,7 @@ msgstr "Kann Bild nicht ändern"
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "Schnittstelle für per Suchlauf entdeckten Host \"%1$s\" nicht aktualisierbar."
 
-#: items.php:728
+#: items.php:727
 msgid "Cannot update item"
 msgstr "Kann Datenpunkt nicht ändern"
 
@@ -2665,7 +2625,7 @@ msgid_plural "Cannot update item prototypes"
 msgstr[0] "Kann Datenpunkt-Prototyp nicht aktualisieren"
 msgstr[1] "Kann Datenpunkt-Prototypen nicht aktualisieren"
 
-#: items.php:1014
+#: items.php:1013
 msgid "Cannot update items"
 msgstr "Kann Datenpunkte nicht ändern"
 
@@ -2881,9 +2841,9 @@ msgstr "Prüfen Sie den Teil des Ausdrucks der bei \"%1$s\" beginnt."
 msgid "Check of pre-requisites"
 msgstr "Voraussetzungen werden geprüft"
 
-#: include/classes/api/services/CItemGeneral.php:365
-#: include/classes/api/services/CItemGeneral.php:372
-#: include/classes/api/services/CItemGeneral.php:379
+#: include/classes/api/services/CItemGeneral.php:368
+#: include/classes/api/services/CItemGeneral.php:375
+#: include/classes/api/services/CItemGeneral.php:382
 msgid "Check the key, please. Default example was passed."
 msgstr "Bitte überprüfen Sie den Schlüssel. Standard-Beispiel wurde absolviert."
 
@@ -2986,7 +2946,7 @@ msgid "Clear history"
 msgstr "Verlauf löschen"
 
 #: include/views/configuration.httpconf.edit.php:284
-#: include/views/configuration.item.edit.php:682
+#: include/views/configuration.item.edit.php:687
 msgid "Clear history and trends"
 msgstr "Verlauf und Trends leeren"
 
@@ -3015,7 +2975,7 @@ msgstr "Uhr"
 #: include/views/configuration.hostgroups.edit.php:84
 #: include/views/configuration.host.prototype.edit.php:438
 #: include/views/configuration.httpconf.edit.php:277
-#: include/views/configuration.item.edit.php:677
+#: include/views/configuration.item.edit.php:682
 #: include/views/configuration.item.prototype.edit.php:519
 #: include/views/configuration.maintenance.edit.php:217
 #: include/views/configuration.template.edit.php:501
@@ -3641,7 +3601,7 @@ msgstr "Neue Symbolzuordnung"
 
 #: include/classes/helpers/CMenuPopupHelper.php:290
 #: include/classes/helpers/CMenuPopupHelper.php:312
-#: include/views/configuration.item.list.php:28 items.php:1158
+#: include/views/configuration.item.list.php:28 items.php:1157
 msgid "Create item"
 msgstr "Neuer Datenpunkt"
 
@@ -3732,22 +3692,6 @@ msgstr "Hostprototyp \"%1$s\" auf \"%2$s\" erstellt."
 msgid "Critical"
 msgstr "Kritisch"
 
-#: popup_trexpr.php:432
-msgid "Current date is < N"
-msgstr "Heutiges Datum < N"
-
-#: popup_trexpr.php:440
-msgid "Current date is = N"
-msgstr "Heutiges Datum = N"
-
-#: popup_trexpr.php:436
-msgid "Current date is > N"
-msgstr "Heutiges Datum > N"
-
-#: popup_trexpr.php:444
-msgid "Current date is NOT N"
-msgstr "Heutiges Datum NICHT N"
-
 #: include/views/js/configuration.action.edit.js.php:65
 #: include/views/js/configuration.action.edit.js.php:219
 msgid "Current host"
@@ -3756,22 +3700,6 @@ msgstr "Aktueller Host"
 #: include/views/reports.toptriggers.php:80
 msgid "Current month"
 msgstr "Aktueller Monat"
-
-#: popup_trexpr.php:562
-msgid "Current time is < N"
-msgstr "Momentane Zeit < N"
-
-#: popup_trexpr.php:570
-msgid "Current time is = N"
-msgstr "Momentane Zeit = N"
-
-#: popup_trexpr.php:566
-msgid "Current time is > N"
-msgstr "Momentane Zeit > N"
-
-#: popup_trexpr.php:574
-msgid "Current time is NOT N"
-msgstr "Momentane Zeit NICHT N"
 
 #: include/classes/setup/CSetupWizard.php:162
 msgid "Current value"
@@ -3906,8 +3834,8 @@ msgstr "Dashboard \"%1$s\" Zelle X - %2$s Y - %3$s ist bereits vergeben."
 
 #: include/classes/api/services/CDashboard.php:568
 #, c-format
-msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is ouf of bounds."
-msgstr "Dashboard \"%1$s\" Widget in Zelle X - %2$s Y - %3$s ist außerhalb des zulässigen Bereichs."
+msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is out of bounds."
+msgstr ""
 
 #: app/controllers/CControllerDashbrdWidgetUpdate.php:238
 msgid "Dashboard created"
@@ -3951,7 +3879,7 @@ msgstr "Wert"
 msgid "Data cache statistics. Cache - one of values (modes: all, float, uint, str, log, text), history (modes: pfree, total, used, free), trend (modes: pfree, total, used, free), text (modes: pfree, total, used, free)."
 msgstr "Daten-Cache-Statistik. Cache - Werte (Modi: all, float, uint, str, log, text), Historie (Modi: pfree, total, used, free), Trend (Modi:  pfree, total, used, free), Text (Modi: pfree, total, used, free)."
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2854
+#: include/classes/graphdraw/CLineGraphDraw.php:2652
 #: include/classes/graphdraw/CPieGraphDraw.php:805
 #, c-format
 msgid "Data from %1$s. Generated in %2$s sec."
@@ -4042,42 +3970,10 @@ msgstr "Tag"
 msgid "Day of month"
 msgstr "Tag des Monats"
 
-#: popup_trexpr.php:464
-msgid "Day of month is < N"
-msgstr "Tag des Monats < N"
-
-#: popup_trexpr.php:472
-msgid "Day of month is = N"
-msgstr "Tag des Monats = N"
-
-#: popup_trexpr.php:468
-msgid "Day of month is > N"
-msgstr "Tag des Monats > N"
-
-#: popup_trexpr.php:476
-msgid "Day of month is NOT N"
-msgstr "Tag des Monats NICHT N"
-
 #: include/forms.inc.php:1876 include/forms.inc.php:1935
 #: include/forms.inc.php:1988
 msgid "Day of week"
 msgstr "Wochentag"
-
-#: popup_trexpr.php:448
-msgid "Day of week is < N"
-msgstr "Wochentag < N"
-
-#: popup_trexpr.php:456
-msgid "Day of week is = N"
-msgstr "Wochentag = N"
-
-#: popup_trexpr.php:452
-msgid "Day of week is > N"
-msgstr "Wochentag > N"
-
-#: popup_trexpr.php:460
-msgid "Day of week is NOT N"
-msgstr "Wochentag NICHT N"
 
 #: include/forms.inc.php:2044
 msgid "Days"
@@ -4280,7 +4176,7 @@ msgstr "Symbolzuordnung löschen?"
 msgid "Delete item prototype?"
 msgstr "Datenpunkt Prototyp löschen?"
 
-#: include/views/configuration.item.edit.php:687
+#: include/views/configuration.item.edit.php:692
 msgid "Delete item?"
 msgstr "Datenpunkt löschen?"
 
@@ -4579,7 +4475,7 @@ msgstr "Verteilungsstatus"
 #: include/views/configuration.host.discovery.edit.php:257
 #: include/views/configuration.host.edit.php:283
 #: include/views/configuration.host.massupdate.php:147
-#: include/views/configuration.item.edit.php:534
+#: include/views/configuration.item.edit.php:539
 #: include/views/configuration.item.massupdate.php:604
 #: include/views/configuration.item.prototype.edit.php:376
 #: include/views/configuration.maintenance.edit.php:95
@@ -4630,54 +4526,6 @@ msgstr "Geräteunterbrechungen. Rückgabewert Ganzzahl"
 #: discoveryconf.php:42 include/views/configuration.discovery.edit.php:77
 msgid "Device uniqueness criteria"
 msgstr "Eindeutigkeitsmerkmal des Hosts"
-
-#: popup_trexpr.php:222
-msgid "Difference between MAX and MIN value of a period T is < N"
-msgstr "Unterschied zwischen MAX- und MIN-Wert im Zeitraum T < N"
-
-#: popup_trexpr.php:232
-msgid "Difference between MAX and MIN value of a period T is = N"
-msgstr "Unterschied zwischen MAX- und MIN-Wert im Zeitraum T = N"
-
-#: popup_trexpr.php:227
-msgid "Difference between MAX and MIN value of a period T is > N"
-msgstr "Unterschied zwischen MAX- und MIN-Wert im Zeitraum T > N"
-
-#: popup_trexpr.php:237
-msgid "Difference between MAX and MIN value of a period T is NOT N"
-msgstr "Unterschied zwischen MAX- und MIN-Wert im Zeitraum T NICHT N"
-
-#: popup_trexpr.php:480
-msgid "Difference between item timestamp value and Zabbix server timestamp is over T seconds, then N = 0, 1 - otherwise"
-msgstr "Unterschied zwischen Datenpunkt Zeitstempel-Wert und Zabbix Server Zeitstempel ist über T Sekunden, dann N = 0, 1 - sonst"
-
-#: popup_trexpr.php:485
-msgid "Difference between item timestamp value and Zabbix server timestamp is over T seconds, then N NOT 0, 1 - otherwise"
-msgstr ""
-
-#: popup_trexpr.php:278
-msgid "Difference between last and preceding values, then N = 1, 0 - otherwise"
-msgstr "Differenz zwischen letzten und vorherigen Werten, dann N = 1, sonst 0"
-
-#: popup_trexpr.php:282
-msgid "Difference between last and preceding values, then N NOT 1, 0 - otherwise"
-msgstr "Differenz zwischen letzten und vorherigen Werten, dann N NICHT 1, sonst 0"
-
-#: popup_trexpr.php:242
-msgid "Difference between last and previous value is < N"
-msgstr "Unterschied zwischen letztem und vorletztem Wert ist kleiner als N"
-
-#: popup_trexpr.php:250
-msgid "Difference between last and previous value is = N"
-msgstr "Unterschied zwischen letztem und vorletztem Wert ist N"
-
-#: popup_trexpr.php:246
-msgid "Difference between last and previous value is > N"
-msgstr "Unterschied zwischen letztem und vorletztem Wert ist größer N"
-
-#: popup_trexpr.php:254
-msgid "Difference between last and previous value is NOT N"
-msgstr "Unterschied zwischen letztem und vorletztem Wert ist nicht N"
 
 #: include/views/monitoring.screen.list.php:73
 msgid "Dimension (cols x rows)"
@@ -5219,8 +5067,8 @@ msgstr "Effektivwert"
 msgid "Elasticsearch error: %1$s."
 msgstr ""
 
-#: include/classes/api/managers/CHistoryManager.php:984
-#: include/classes/api/managers/CHistoryManager.php:993
+#: include/classes/api/managers/CHistoryManager.php:985
+#: include/classes/api/managers/CHistoryManager.php:994
 #, c-format
 msgid "Elasticsearch url is not set for type: %1$s."
 msgstr ""
@@ -5541,7 +5389,7 @@ msgstr "Ausgewählte Web-Szenarien aktivieren?"
 #: include/views/configuration.host.list.php:122
 #: include/views/configuration.host.massupdate.php:171
 #: include/views/configuration.httpconf.edit.php:135
-#: include/views/configuration.item.edit.php:543
+#: include/views/configuration.item.edit.php:548
 #: include/views/configuration.triggers.edit.php:559 popup_media.php:130
 #: tr_logform.php:391
 msgid "Enabled"
@@ -5588,14 +5436,6 @@ msgstr "Ereignis"
 msgid "Event ID"
 msgstr "Ereignis-ID"
 
-#: popup_trexpr.php:510
-msgid "Event ID of last log entry matching regular expression T, then N = 1, 0 - otherwise"
-msgstr "Ereignis-ID des letzten auf regulären Ausdruck T passenden Protokolleintrags, dann N = 1, sonst 0"
-
-#: popup_trexpr.php:515
-msgid "Event ID of last log entry matching regular expression T, then N NOT 1, 0 - otherwise"
-msgstr "Ereignis-ID des letzten auf regulären Ausdruck T passenden Protokolleintrags, dann N NICHT 1, sonst 0"
-
 #: app/controllers/CControllerAcknowledgeCreate.php:194
 #: include/actions.inc.php:57
 msgid "Event acknowledged"
@@ -5603,7 +5443,7 @@ msgid_plural "Events acknowledged"
 msgstr[0] "Ereignis bestätigt"
 msgstr[1] "Ereignisse bestätigt"
 
-#: app/controllers/CControllerAcknowledgeEdit.php:210
+#: app/controllers/CControllerAcknowledgeEdit.php:209
 #: app/views/monitoring.acknowledge.edit.php:89
 msgid "Event acknowledgements"
 msgstr "Ereignis Bestätigungen"
@@ -6013,14 +5853,6 @@ msgstr "Filtern"
 msgid "Filters"
 msgstr "Filter"
 
-#: popup_trexpr.php:382
-msgid "Find string V in last (most recent) value. N = 1 - if found, 0 - otherwise"
-msgstr "Suche string V in letztem Wert, N = 1 bei Treffer, 0 bei keinem Treffer"
-
-#: popup_trexpr.php:387
-msgid "Find string V in last (most recent) value. N NOT 1 - if found, 0 - otherwise"
-msgstr "Finde Text V in letztem (jüngstem) Wert. N NICHT 1 - wenn gefunden, sonst 0"
-
 #: include/classes/items/CHelpItems.php:297
 #: include/classes/items/CHelpItems.php:595
 msgid "Find string in a file. Returns 0 - match not found; 1 - found"
@@ -6098,22 +5930,6 @@ msgstr "Schriftgröße"
 msgid "For guest, password must be empty"
 msgstr "Für den Gast muss das Passwort leer bleiben"
 
-#: popup_trexpr.php:598
-msgid "Forecast for next t seconds based on period T is < N"
-msgstr "Vorhersage für die nächsten t Sekunden basierend auf der Periode T ist <N"
-
-#: popup_trexpr.php:608
-msgid "Forecast for next t seconds based on period T is = N"
-msgstr "Prognose für die nächsten t Sekunden anhand der Periodendauer T = N"
-
-#: popup_trexpr.php:603
-msgid "Forecast for next t seconds based on period T is > N"
-msgstr "Prognose für das nächste t Sekunden anhand der Periodendauer T ist > N"
-
-#: popup_trexpr.php:613
-msgid "Forecast for next t seconds based on period T is NOT N"
-msgstr "Prognose für das nächste t Sekunden anhand der Periodendauer T ist nicht N"
-
 #: include/views/configuration.httpconf.popup.php:113
 msgid "Form data"
 msgstr "Formulardaten"
@@ -6177,11 +5993,11 @@ msgid "Fullscreen"
 msgstr "Vollbild"
 
 #: include/views/configuration.graph.edit.php:294
-#: include/views/configuration.triggers.expression.php:70
+#: include/views/configuration.triggers.expression.php:72
 msgid "Function"
 msgstr "Funktion"
 
-#: popup_trexpr.php:817
+#: popup_trexpr.php:531
 #, c-format
 msgid "Function \"%1$s\" cannot be used with selected item \"%2$s\""
 msgstr "Funktion \"%1$s\" mit ausgewähltem Datenpunkt \"%2$s\" nicht verwendbar"
@@ -6592,7 +6408,8 @@ msgstr "Gruppen in Wartung"
 msgid "H:i"
 msgstr "H:i"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1634
+#: include/classes/graphdraw/CLineGraphDraw.php:1408
+#: include/classes/graphdraw/CLineGraphDraw.php:1415
 #: include/translateDefines.inc.php:34
 msgid "H:i:s"
 msgstr "H:i:s"
@@ -6701,12 +6518,12 @@ msgid "History"
 msgstr "Verlauf"
 
 #: httpconf.php:191 httpconf.php:198 httpconf.php:495 httpconf.php:507
-#: items.php:759 items.php:766 items.php:1110 items.php:1122
+#: items.php:758 items.php:765 items.php:1109 items.php:1121
 msgid "History cleared"
 msgstr "Verlauf geleert"
 
 #: include/views/configuration.httpconf.edit.php:285
-#: include/views/configuration.item.edit.php:683
+#: include/views/configuration.item.edit.php:688
 msgid "History clearing can take a long time. Continue?"
 msgstr "Es dauert eine Weile, den Verlauf zu leeren. Fortfahren?"
 
@@ -6782,8 +6599,8 @@ msgstr "Horizontale Ausrichtung"
 #: include/views/monitoring.screen.constructor.edit.php:418
 #: include/views/monitoring.screen.php:75
 #: include/views/monitoring.slides.php:79
-#: include/views/reports.toptriggers.php:105 items.php:759 items.php:1109
-#: items.php:1142 jsLoader.php:156 latest.php:411 latest.php:431 popup.php:475
+#: include/views/reports.toptriggers.php:105 items.php:758 items.php:1108
+#: items.php:1141 jsLoader.php:156 latest.php:411 latest.php:431 popup.php:475
 #: popup.php:512 popup.php:1203 queue.php:248 report2.php:420 report2.php:443
 #: search.php:125 tr_status.php:496 tr_status.php:752
 msgid "Host"
@@ -7740,13 +7557,13 @@ msgstr "Der Funktion wurden falsche/fehlerhafte Argumente übergeben"
 #: include/classes/api/services/CHostInterface.php:233
 #: include/classes/api/services/CHostInterface.php:422
 #: include/classes/api/services/CItemGeneral.php:217
-#: include/classes/api/services/CItemGeneral.php:1156
-#: include/classes/api/services/CItemGeneral.php:1174
-#: include/classes/api/services/CItemGeneral.php:1194
-#: include/classes/api/services/CItemGeneral.php:1217
-#: include/classes/api/services/CItemGeneral.php:1230
-#: include/classes/api/services/CItemGeneral.php:1259
-#: include/classes/api/services/CItemGeneral.php:1273
+#: include/classes/api/services/CItemGeneral.php:1159
+#: include/classes/api/services/CItemGeneral.php:1177
+#: include/classes/api/services/CItemGeneral.php:1197
+#: include/classes/api/services/CItemGeneral.php:1220
+#: include/classes/api/services/CItemGeneral.php:1233
+#: include/classes/api/services/CItemGeneral.php:1262
+#: include/classes/api/services/CItemGeneral.php:1276
 #: include/classes/api/services/CMapElement.php:46
 #: include/classes/api/services/CMapElement.php:117
 #: include/classes/api/services/CMapElement.php:129
@@ -7774,7 +7591,7 @@ msgstr "Falsche/fehlerhafte Argumente an Funktion übergeben."
 msgid "Incorrect arguments passed to method."
 msgstr "Methode erhielt falsche/fehlerhafte Argumente."
 
-#: include/classes/api/services/CItemGeneral.php:524
+#: include/classes/api/services/CItemGeneral.php:527
 #, c-format
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "Unzulässiges Authentifzierungsprotokoll für Datenpunkt \"%1$s\"."
@@ -8123,7 +7940,7 @@ msgstr "Falscher übergeordneter Dienst."
 msgid "Incorrect port range."
 msgstr "Falscher Port-Bereich."
 
-#: include/classes/api/services/CItemGeneral.php:533
+#: include/classes/api/services/CItemGeneral.php:536
 #, c-format
 msgid "Incorrect privacy protocol for item \"%1$s\"."
 msgstr "Unzulässiges Authentifizierungsprotokoll für Datenpunkt \"%1$s\"."
@@ -8306,7 +8123,7 @@ msgstr "Falsche Benutzergruppe."
 #: include/classes/api/services/CDRule.php:497
 #: include/classes/api/services/CDRule.php:558
 #: include/classes/api/services/CDRule.php:571
-#: include/classes/api/services/CItemGeneral.php:464
+#: include/classes/api/services/CItemGeneral.php:467
 #: include/classes/validators/CNewValidator.php:107
 #: include/classes/validators/CNewValidator.php:119
 #: include/classes/validators/CNewValidator.php:131
@@ -8422,33 +8239,33 @@ msgstr "Falscher Wert \"%1$s\" im Feld \"%2$s\" für Medientyp \"%3$s\"."
 #: include/classes/api/services/CHttpTest.php:999
 #: include/classes/api/services/CHttpTest.php:1095
 #: include/classes/api/services/CItemGeneral.php:183
-#: include/classes/api/services/CItemGeneral.php:279
-#: include/classes/api/services/CItemGeneral.php:415
-#: include/classes/api/services/CItemGeneral.php:427
-#: include/classes/api/services/CItemGeneral.php:434
-#: include/classes/api/services/CItemGeneral.php:446
-#: include/classes/api/services/CItemGeneral.php:452
-#: include/classes/api/services/CItemGeneral.php:458
-#: include/classes/api/services/CItemGeneral.php:471
-#: include/classes/api/services/CItemGeneral.php:1179
-#: include/classes/api/services/CItemGeneral.php:1185
-#: include/classes/api/services/CItemGeneral.php:1199
-#: include/classes/api/services/CItemGeneral.php:1204
-#: include/classes/api/services/CItemGeneral.php:1222
-#: include/classes/api/services/CItemGeneral.php:1235
-#: include/classes/api/services/CItemGeneral.php:1242
-#: include/classes/api/services/CItemGeneral.php:1248
-#: include/classes/api/services/CItemGeneral.php:1264
-#: include/classes/api/services/CItemGeneral.php:1278
-#: include/classes/api/services/CItemGeneral.php:1473
-#: include/classes/api/services/CItemGeneral.php:1510
-#: include/classes/api/services/CItemGeneral.php:1516
-#: include/classes/api/services/CItemGeneral.php:1533
-#: include/classes/api/services/CItemGeneral.php:1539
-#: include/classes/api/services/CItemGeneral.php:1613
-#: include/classes/api/services/CItemGeneral.php:1622
-#: include/classes/api/services/CItemGeneral.php:1729
-#: include/classes/api/services/CItemGeneral.php:1736
+#: include/classes/api/services/CItemGeneral.php:282
+#: include/classes/api/services/CItemGeneral.php:418
+#: include/classes/api/services/CItemGeneral.php:430
+#: include/classes/api/services/CItemGeneral.php:437
+#: include/classes/api/services/CItemGeneral.php:449
+#: include/classes/api/services/CItemGeneral.php:455
+#: include/classes/api/services/CItemGeneral.php:461
+#: include/classes/api/services/CItemGeneral.php:474
+#: include/classes/api/services/CItemGeneral.php:1182
+#: include/classes/api/services/CItemGeneral.php:1188
+#: include/classes/api/services/CItemGeneral.php:1202
+#: include/classes/api/services/CItemGeneral.php:1207
+#: include/classes/api/services/CItemGeneral.php:1225
+#: include/classes/api/services/CItemGeneral.php:1238
+#: include/classes/api/services/CItemGeneral.php:1245
+#: include/classes/api/services/CItemGeneral.php:1251
+#: include/classes/api/services/CItemGeneral.php:1267
+#: include/classes/api/services/CItemGeneral.php:1281
+#: include/classes/api/services/CItemGeneral.php:1476
+#: include/classes/api/services/CItemGeneral.php:1513
+#: include/classes/api/services/CItemGeneral.php:1519
+#: include/classes/api/services/CItemGeneral.php:1536
+#: include/classes/api/services/CItemGeneral.php:1542
+#: include/classes/api/services/CItemGeneral.php:1616
+#: include/classes/api/services/CItemGeneral.php:1625
+#: include/classes/api/services/CItemGeneral.php:1732
+#: include/classes/api/services/CItemGeneral.php:1739
 #: include/classes/api/services/CItem.php:716
 #: include/classes/api/services/CItem.php:724
 #: include/classes/api/services/CItemPrototype.php:946
@@ -8583,7 +8400,7 @@ msgstr "Geerbte und Host-Makros"
 msgid "Inherited and template macros"
 msgstr "Vererbte und Vorlagen Makros"
 
-#: include/views/configuration.triggers.expression.php:132
+#: include/views/configuration.triggers.expression.php:136
 msgid "Insert"
 msgstr "Einfügen"
 
@@ -8783,8 +8600,8 @@ msgstr "Ungültige interne Daten-Speicherdauer: %1$s."
 
 #: disc_prototypes.php:276 disc_prototypes.php:281 disc_prototypes.php:294
 #: host_discovery.php:196 host_discovery.php:201 host_discovery.php:214
-#: items.php:459 items.php:464 items.php:477 items.php:789 items.php:794
-#: items.php:807
+#: items.php:459 items.php:464 items.php:477 items.php:788 items.php:793
+#: items.php:806
 #, c-format
 msgid "Invalid interval \"%1$s\"."
 msgstr "Ungültiges Intervall \"%1$s\"."
@@ -9029,8 +8846,8 @@ msgstr "Italienisch (it_IT)"
 #: include/views/configuration.triggers.expression.php:64
 #: include/views/monitoring.screen.constructor.edit.php:235
 #: include/views/monitoring.screen.constructor.edit.php:365
-#: include/views/monitoring.screen.constructor.edit.php:626 items.php:758
-#: items.php:1109 items.php:1142 tr_logform.php:339
+#: include/views/monitoring.screen.constructor.edit.php:626 items.php:757
+#: items.php:1108 items.php:1141 tr_logform.php:339
 msgid "Item"
 msgstr "Datenpunkt"
 
@@ -9060,7 +8877,7 @@ msgstr "Datenpunkt \"%1$s\" kann das fehlende Inventarfeld Nummer \"%2$d\" nicht
 msgid "Item \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "Datenpunkt \"%1$s\" existiert nicht in Vorlage \"%2$s\"."
 
-#: include/classes/api/services/CItemGeneral.php:1474
+#: include/classes/api/services/CItemGeneral.php:1477
 #, c-format
 msgid "Item \"%1$s\" does not exist or you have no access to this item"
 msgstr "Datenpunkt \"%1$s\" ist nicht vorhanden oder Sie haben keinen Zugriff auf diesen"
@@ -9075,16 +8892,16 @@ msgstr ""
 msgid "Item \"%1$s\" on \"%2$s\": application \"%3$s\" does not exist."
 msgstr "Datenpunkt \"%1$s\" auf \"%2$s\": Kategorie \"%3$s\" existiert nicht."
 
-#: include/classes/api/services/CItemGeneral.php:515
+#: include/classes/api/services/CItemGeneral.php:518
 #, c-format
 msgid "Item \"%1$s:%2$s\" has invalid port: \"%3$s\"."
 msgstr "Datenpunkt \"%1$s:%2$s\" hat ungültigen Port: \"%3$s\"."
 
-#: items.php:725
+#: items.php:724
 msgid "Item added"
 msgstr "Datenpunkt hinzugefügt"
 
-#: items.php:1077
+#: items.php:1076
 msgid "Item copied"
 msgid_plural "Items copied"
 msgstr[0] "Datenpunkt kopiert"
@@ -9098,13 +8915,13 @@ msgstr "Anzahl der Datenpunkte"
 msgid "Item deleted"
 msgstr "Elemente gelöscht"
 
-#: applications.php:172 items.php:1035
+#: applications.php:172 items.php:1034
 msgid "Item disabled"
 msgid_plural "Items disabled"
 msgstr[0] "Datenpunkt deaktiviert"
 msgstr[1] "Datenpunkte deaktiviert"
 
-#: applications.php:171 items.php:1034
+#: applications.php:171 items.php:1033
 msgid "Item enabled"
 msgid_plural "Items enabled"
 msgstr[0] "Datenpunkt aktiviert"
@@ -9114,11 +8931,11 @@ msgstr[1] "Datenpunkte aktiviert"
 msgid "Item in \"not supported\" state"
 msgstr "Element im Zustand \"nicht unterstützt\""
 
-#: popup_trexpr.php:891
+#: popup_trexpr.php:611
 msgid "Item not selected"
 msgstr "Datenpunkt nicht ausgewählt"
 
-#: include/classes/api/services/CItemGeneral.php:1169
+#: include/classes/api/services/CItemGeneral.php:1172
 #, c-format
 msgid "Item pre-processing is missing parameters: %1$s"
 msgstr ""
@@ -9137,7 +8954,7 @@ msgstr "Elementen-Prototyp"
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", inherited from another template."
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:1006
+#: include/classes/api/services/CItemGeneral.php:1009
 #, c-format
 msgid "Item prototype \"%1$s\" already exists on \"%2$s\", linked to another rule."
 msgstr ""
@@ -9179,15 +8996,15 @@ msgstr "Elementen-Prototypen"
 msgid "Item prototypes deleted"
 msgstr "Datenpunkt-Prototypen gelöscht"
 
-#: items.php:728
+#: items.php:727
 msgid "Item updated"
 msgstr "Element geändert"
 
-#: include/classes/api/services/CItemGeneral.php:348
+#: include/classes/api/services/CItemGeneral.php:351
 msgid "Item uses host interface from non-parent host."
 msgstr "Element nutzt Hostschnittstelle eines nicht übergeordneten Hosts."
 
-#: include/classes/api/services/CItemGeneral.php:351
+#: include/classes/api/services/CItemGeneral.php:354
 msgid "Item uses incorrect interface type."
 msgstr "Schnittstellentyp ist ungeeignet für dieses Element."
 
@@ -9195,15 +9012,15 @@ msgstr "Schnittstellentyp ist ungeeignet für dieses Element."
 msgid "Item values"
 msgstr "Datenpunktwerte"
 
-#: include/classes/api/services/CItemGeneral.php:320
+#: include/classes/api/services/CItemGeneral.php:323
 msgid "Item will not be refreshed. Please enter a correct update interval."
 msgstr "Element wird nicht geändert. Bitte ein korrektes Zeitintervall angeben."
 
-#: include/classes/api/services/CItemGeneral.php:303
+#: include/classes/api/services/CItemGeneral.php:306
 msgid "Item will not be refreshed. Specified update interval requires having at least one either flexible or scheduling interval."
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:308
+#: include/classes/api/services/CItemGeneral.php:311
 msgid "Item will not be refreshed. Update interval should be between 1s and 1d. Also Scheduled/Flexible intervals can be used."
 msgstr ""
 
@@ -9212,32 +9029,32 @@ msgstr ""
 msgid "Item with ID \"%1$s\" is not available."
 msgstr "Datenpunkt mit ID \"%1$s\" ist nicht verfügbar."
 
-#: include/classes/api/services/CItemGeneral.php:656
+#: include/classes/api/services/CItemGeneral.php:659
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as a discovery rule."
 msgstr "Element mit Schlüssel \"%1$s\" existiert bereits auf \"%2$s\" als Suchlauf."
 
-#: include/classes/api/services/CItemGeneral.php:662
+#: include/classes/api/services/CItemGeneral.php:665
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item created from item prototype."
 msgstr "Element mit Schlüssel \"%1$s\" existiert bereits auf \"%2$s\" als Prototyp-basierter Datenpunkt."
 
-#: include/classes/api/services/CItemGeneral.php:659
+#: include/classes/api/services/CItemGeneral.php:662
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item prototype."
 msgstr "Element mit Schlüssel \"%1$s\" existiert bereits auf \"%2$s\" als Datenpunktprototyp."
 
-#: include/classes/api/services/CItemGeneral.php:653
+#: include/classes/api/services/CItemGeneral.php:656
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as an item."
 msgstr "Element mit Schlüssel \"%1$s\" existiert bereits auf \"%2$s\" als Datenpunkt."
 
-#: include/classes/api/services/CItemGeneral.php:665
+#: include/classes/api/services/CItemGeneral.php:668
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\" as unknown item element."
 msgstr "Element mit Schlüssel \"%1$s\" existiert bereits auf \"%2$s\" als unbekanntes Element. "
 
-#: include/classes/api/services/CItemGeneral.php:1397
+#: include/classes/api/services/CItemGeneral.php:1400
 #, c-format
 msgid "Item with key \"%1$s\" already exists on \"%2$s\"."
 msgstr "Datenpunkt mit Schlüssel \"%1$s\" existiert bereits auf \"%2$s\"."
@@ -9257,13 +9074,13 @@ msgstr "Datenpunkt mit Schlüssel \"%1$s\" existiert bereits auf \"%2$s\"."
 #: include/views/configuration.template.list.php:57
 #: include/views/configuration.template.list.php:158
 #: include/views/conf.import.php:34 include/views/inventory.host.view.php:164
-#: include/views/inventory.host.view.php:175 items.php:1384 popup.php:76
+#: include/views/inventory.host.view.php:175 items.php:1383 popup.php:76
 #: queue.php:103 search.php:135 search.php:164 search.php:193 search.php:410
 #: search.php:438 search.php:467
 msgid "Items"
 msgstr "Datenpunkte"
 
-#: items.php:1152
+#: items.php:1151
 msgid "Items deleted"
 msgstr "Datenpunkte gelöscht"
 
@@ -9271,7 +9088,7 @@ msgstr "Datenpunkte gelöscht"
 msgid "Items list"
 msgstr "Datenpunktliste"
 
-#: items.php:1014
+#: items.php:1013
 msgid "Items updated"
 msgstr "Datenpunkte geändert"
 
@@ -9378,7 +9195,7 @@ msgstr ""
 msgid "Key"
 msgstr "Schlüssel"
 
-#: include/classes/api/services/CItemGeneral.php:400
+#: include/classes/api/services/CItemGeneral.php:403
 #, c-format
 msgid "Key \"%1$s\" does not match <grpmax|grpmin|grpsum|grpavg>[\"Host group(s)\", \"Item key\", \"<last|min|max|avg|sum|count>\", \"parameter\"]."
 msgstr "Schlüssel \"%1$s\" entspricht nicht <grpmax|grpmin|grpsum|grpavg>[\"Host-Gruppe(n)\", \"Schlüssel\", \"<last|min|max|avg|sum|count>\", \"Parameter\"]."
@@ -9453,22 +9270,6 @@ msgstr "Letzter"
 msgctxt "page navigation"
 msgid "Last"
 msgstr "Letzte"
-
-#: popup_trexpr.php:286
-msgid "Last (most recent) T value is < N"
-msgstr "Letzter (jüngster) Wert T ist < N"
-
-#: popup_trexpr.php:296
-msgid "Last (most recent) T value is = N"
-msgstr "Letzter (jüngster) Wert T ist = N"
-
-#: popup_trexpr.php:291
-msgid "Last (most recent) T value is > N"
-msgstr "Letzter (jüngster) Wert T ist > N"
-
-#: popup_trexpr.php:301
-msgid "Last (most recent) T value is NOT N"
-msgstr "Letzter (jüngster) Wert T ist NICHT N"
 
 #: srv_status.php:38
 msgid "Last 24 hours"
@@ -9568,22 +9369,6 @@ msgstr "Links"
 #: include/items.inc.php:1534
 msgid "Left trim"
 msgstr ""
-
-#: popup_trexpr.php:392
-msgid "Length of last (most recent) T value in characters is < N"
-msgstr "Zeichenlänge des letzten (jüngsten) Werts T ist < N"
-
-#: popup_trexpr.php:402
-msgid "Length of last (most recent) T value in characters is = N"
-msgstr "Zeichenlänge des letzten (jüngsten) Werts T ist = N"
-
-#: popup_trexpr.php:397
-msgid "Length of last (most recent) T value in characters is > N"
-msgstr "Zeichenlänge des letzten (jüngsten) Werts T ist > N"
-
-#: popup_trexpr.php:407
-msgid "Length of last (most recent) T value in characters is NOT N"
-msgstr "Zeichenlänge des letzten (jüngsten) Werts T ist NICHT N"
 
 #: adm.gui.php:40 include/views/administration.general.gui.edit.php:43
 msgid "Limit for search and filter results"
@@ -9756,30 +9541,6 @@ msgstr ""
 msgid "Log file monitoring. Returns log"
 msgstr ""
 
-#: popup_trexpr.php:520
-msgid "Log severity of the last log entry is < N"
-msgstr "Schweregrad des letzten Protokolleintrags ist < N"
-
-#: popup_trexpr.php:528
-msgid "Log severity of the last log entry is = N"
-msgstr "Schweregrad des letzten Protokolleintrags ist = N"
-
-#: popup_trexpr.php:524
-msgid "Log severity of the last log entry is > N"
-msgstr "Schweregrad des letzten Protokolleintrags ist > N"
-
-#: popup_trexpr.php:532
-msgid "Log severity of the last log entry is NOT N"
-msgstr "Schweregrad des letzten Protokolleintrags ist NICHT N"
-
-#: popup_trexpr.php:536
-msgid "Log source of the last log entry matching parameter T, then N = 1, 0 - otherwise"
-msgstr "Quelle des letzten Protokolleintrags entspricht T, dann N = 1, sonst 0"
-
-#: popup_trexpr.php:541
-msgid "Log source of the last log entry matching parameter T, then N NOT 1, 0 - otherwise"
-msgstr "Quelle des letzten Protokolleintrags entspricht T, dann N NICHT 1, sonst 0"
-
 #: include/views/configuration.item.edit.php:446
 #: include/views/configuration.item.massupdate.php:462
 #: include/views/configuration.item.prototype.edit.php:318
@@ -9828,7 +9589,7 @@ msgstr "Verloren"
 msgid "Low-level discovery rule in \"not supported\" state"
 msgstr "Objektsuchlauf-Regel im Zustand \"nicht unterstützt\""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1625
+#: include/classes/graphdraw/CLineGraphDraw.php:1376
 msgid "M"
 msgstr "Mo"
 
@@ -10159,22 +9920,6 @@ msgid_plural "Maximum time period to display is %1$s days."
 msgstr[0] "Maximal darstellbare Zeitspanne ist %1$s Tag."
 msgstr[1] "Maximal darstellbare Zeitspanne ist %1$s Tage."
 
-#: popup_trexpr.php:306
-msgid "Maximum value for period T is < N"
-msgstr "Maximaler Wert im Zeitraum T ist < N"
-
-#: popup_trexpr.php:316
-msgid "Maximum value for period T is = N"
-msgstr "Maximaler Wert im Zeitraum T ist = N"
-
-#: popup_trexpr.php:311
-msgid "Maximum value for period T is > N"
-msgstr "Maximaler Wert im Zeitraum T ist > N"
-
-#: popup_trexpr.php:321
-msgid "Maximum value for period T is NOT N"
-msgstr "Maximaler Wert im Zeitraum T ist NICHT N"
-
 #: include/forms.inc.php:1916 include/func.inc.php:120
 #: include/func.inc.php:257 jsLoader.php:132
 msgid "May"
@@ -10358,22 +10103,6 @@ msgstr[1] "Anzuzeigende Mindestzeit ist %1$s Minutne."
 #: include/views/monitoring.sysmap.edit.php:228
 msgid "Minimum trigger severity"
 msgstr ""
-
-#: popup_trexpr.php:326
-msgid "Minimum value for period T is < N"
-msgstr "Minimaler Wert im Zeitraum T ist < N"
-
-#: popup_trexpr.php:336
-msgid "Minimum value for period T is = N"
-msgstr "Minimaler Wert im Zeitraum T ist = N"
-
-#: popup_trexpr.php:331
-msgid "Minimum value for period T is > N"
-msgstr "Minimaler Wert im Zeitraum T ist > N"
-
-#: popup_trexpr.php:341
-msgid "Minimum value for period T is NOT N"
-msgstr "Minimaler Wert im Zeitraum T ist NICHT N"
 
 #: include/forms.inc.php:2048
 msgid "Minutes"
@@ -10567,7 +10296,7 @@ msgstr "NTLM"
 #: include/views/configuration.httpconf.popup.php:86
 #: include/views/configuration.httpconf.popup.php:146
 #: include/views/configuration.item.edit.php:61
-#: include/views/configuration.item.edit.php:549
+#: include/views/configuration.item.edit.php:554
 #: include/views/configuration.item.list.php:58
 #: include/views/configuration.item.list.php:158
 #: include/views/configuration.item.massupdate.php:259
@@ -10683,7 +10412,7 @@ msgid "New"
 msgstr "Neu"
 
 #: include/views/configuration.httpconf.edit.php:72
-#: include/views/configuration.item.edit.php:491
+#: include/views/configuration.item.edit.php:496
 #: include/views/configuration.item.prototype.edit.php:347
 msgid "New application"
 msgstr "Neue Kategorie"
@@ -10860,11 +10589,11 @@ msgstr "Keine IPMI-Schnittstellen gefunden."
 msgid "No JMX interfaces found."
 msgstr "Keine JMX-Schnittstellen gefunden."
 
-#: include/classes/api/services/CItemGeneral.php:503
+#: include/classes/api/services/CItemGeneral.php:506
 msgid "No SNMP OID specified."
 msgstr "Keine SNMP OID angegeben."
 
-#: include/classes/api/services/CItemGeneral.php:509
+#: include/classes/api/services/CItemGeneral.php:512
 msgid "No SNMP community specified."
 msgstr "SNMP-Community ist nicht angegeben."
 
@@ -10897,7 +10626,7 @@ msgstr "Kein Authentifizierungs-Typ festgelegt für Kommando \"%s\" in Aktionsop
 msgid "No authentication user name specified for action operation command \"%s\"."
 msgstr "Kein Authentifizierungs-Benutzername festgelegt für Kommando \"%s\" in Aktionsoperation."
 
-#: include/classes/api/services/CItemGeneral.php:481
+#: include/classes/api/services/CItemGeneral.php:484
 msgid "No authentication user name specified."
 msgstr "Kein Benutzername für Authentifizierung angegeben."
 
@@ -10934,14 +10663,6 @@ msgstr "Ohne Datensammlung"
 #: include/classes/html/CTableInfo.php:30
 msgid "No data found."
 msgstr "Keine Daten gefunden."
-
-#: popup_trexpr.php:578
-msgid "No data received during period of time T, then N = 1, 0 - otherwise"
-msgstr "Keine Daten empfangen im Zeitraum T, dann N = 1, sonst 0"
-
-#: popup_trexpr.php:583
-msgid "No data received during period of time T, then N NOT 1, 0 - otherwise"
-msgstr "Keine Daten empfangen im Zeitraum T, dann N NICHT 1, sonst 0"
 
 #: app/controllers/CControllerWidgetClockView.php:76
 msgid "No data."
@@ -11055,7 +10776,7 @@ msgstr "Kein Bild"
 msgid "No interface found"
 msgstr "Keine Schnittstelle gefunden"
 
-#: include/classes/api/services/CItemGeneral.php:345
+#: include/classes/api/services/CItemGeneral.php:348
 msgid "No interface found."
 msgstr "Keine Schnittstelle gefunden."
 
@@ -11190,7 +10911,7 @@ msgstr "Keine Berechtigung zum Zugriff auf die Oberfläche."
 #: include/classes/api/services/CImage.php:480
 #: include/classes/api/services/CImage.php:498
 #: include/classes/api/services/CItemGeneral.php:175
-#: include/classes/api/services/CItemGeneral.php:260
+#: include/classes/api/services/CItemGeneral.php:263
 #: include/classes/api/services/CItem.php:552
 #: include/classes/api/services/CItemPrototype.php:720
 #: include/classes/api/services/CMaintenance.php:261
@@ -11253,7 +10974,7 @@ msgstr "Keine Berechtigung zum Zugriff auf die Oberfläche."
 #: include/classes/helpers/CMapHelper.php:84
 #: include/classes/screens/CScreenHistory.php:113
 #: include/classes/screens/CScreenHttpTestDetails.php:46
-#: include/func.inc.php:1718 items.php:1222 scripts_exec.php:90
+#: include/func.inc.php:1718 items.php:1221 scripts_exec.php:90
 msgid "No permissions to referred object or it does not exist!"
 msgstr "Keine Berechtigungen für dieses bestimmte Objekt oder es existiert nicht!"
 
@@ -11262,7 +10983,7 @@ msgstr "Keine Berechtigungen für dieses bestimmte Objekt oder es existiert nich
 msgid "No private key file specified for action operation command \"%s\"."
 msgstr "Keine Datei mit privatem Schlüssel festgelegt für das Kommando \"%s\" der Aktionsoperation."
 
-#: include/classes/api/services/CItemGeneral.php:489
+#: include/classes/api/services/CItemGeneral.php:492
 msgid "No private key file specified."
 msgstr "Keine Datei mit privatem Schlüssel angegeben."
 
@@ -11275,7 +10996,7 @@ msgstr "Kein Proxy"
 msgid "No public key file specified for action operation command \"%s\"."
 msgstr "Keine Datei mit öffentlichem Schlüssel festgelegt für das Kommando \"%s\" der Aktionsoperation."
 
-#: include/classes/api/services/CItemGeneral.php:486
+#: include/classes/api/services/CItemGeneral.php:489
 msgid "No public key file specified."
 msgstr "Keine Datei mit öffentlichem Schlüssel angegeben."
 
@@ -11307,7 +11028,7 @@ msgstr "Kein Status für Proxy."
 msgid "No target selected"
 msgstr "Kein Ziel ausgewählt"
 
-#: graphs.php:371 items.php:1082
+#: graphs.php:371 items.php:1081
 msgid "No target selected."
 msgstr "Kein Ziel ausgewählt."
 
@@ -11338,8 +11059,8 @@ msgstr "Nicht boolesche Markierungen sind veraltet."
 #: include/views/configuration.host.list.php:217
 #: include/views/configuration.host.list.php:229
 #: include/views/configuration.host.list.php:232
-#: include/views/configuration.item.edit.php:496
-#: include/views/configuration.item.edit.php:510
+#: include/views/configuration.item.edit.php:501
+#: include/views/configuration.item.edit.php:515
 #: include/views/configuration.item.prototype.edit.php:354
 #: include/views/configuration.item.prototype.edit.php:369
 #: include/views/configuration.trigger.prototype.edit.php:266
@@ -11358,6 +11079,10 @@ msgstr "Normal"
 #: include/html.inc.php:178
 msgid "Normal view"
 msgstr "Normale Ansicht"
+
+#: include/locales.inc.php:73
+msgid "Norwegian (nb_NO)"
+msgstr ""
 
 #: include/actions.inc.php:153 include/actions.inc.php:337
 #: include/views/configuration.action.edit.php:1122
@@ -11499,22 +11224,6 @@ msgstr ""
 msgid "Number of processors on VMware virtual machine, <url> - VMware service URL, <uuid> - VMware virtual machine host name"
 msgstr "Anzahl der Prozessoren auf virtueller VMware-Maschine, <url>-VMware Dienst-URL, <uuid>-VMware VM-Host-Name"
 
-#: popup_trexpr.php:546
-msgid "Number of seconds since the Epoch is < N"
-msgstr "Zahl der Sekunden seit 1.1.1970 ist < N"
-
-#: popup_trexpr.php:554
-msgid "Number of seconds since the Epoch is = N"
-msgstr "Zahl der Sekunden seit 1.1.1970 ist = N"
-
-#: popup_trexpr.php:550
-msgid "Number of seconds since the Epoch is > N"
-msgstr "Zahl der Sekunden seit 1.1.1970 ist > N"
-
-#: popup_trexpr.php:558
-msgid "Number of seconds since the Epoch is NOT N"
-msgstr "Zahl der Sekunden seit 1.1.1970 ist NICHT N"
-
 #: include/views/monitoring.slideconf.list.php:57
 msgid "Number of slides"
 msgstr "Anzahl Folien"
@@ -11527,22 +11236,6 @@ msgstr "Anzahl der Statusänderungen"
 #: include/views/configuration.httpconf.list.php:80
 msgid "Number of steps"
 msgstr "Anzahl der Schritte"
-
-#: popup_trexpr.php:258
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is < N"
-msgstr "Zahl erfolgreich empfangener Werte V (die Operator O erfüllen) im Zeitraum T ist < N"
-
-#: popup_trexpr.php:268
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is = N"
-msgstr "Zahl erfolgreich empfangener Werte V (die Operator O erfüllen) im Zeitraum T ist = N"
-
-#: popup_trexpr.php:263
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is > N"
-msgstr "Zahl erfolgreich empfangener Werte V (die Operator O erfüllen) im Zeitraum T ist > N"
-
-#: popup_trexpr.php:273
-msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is NOT N"
-msgstr "Zahl erfolgreich empfangener Werte V (die Operator O erfüllen) im Zeitraum T ist NICHT N"
 
 #: include/blocks.inc.php:449
 msgid "Number of triggers (enabled/disabled [problem/ok])"
@@ -11814,7 +11507,7 @@ msgstr "Nur Administratoren können Slide-Show Besitzer festgelegt."
 msgid "Only items assigned to enabled hosts are counted"
 msgstr "Nur Datenpunkte, die mit aktiven Hosts verbunden sind, werden gezählt"
 
-#: include/classes/api/services/CItemGeneral.php:1284
+#: include/classes/api/services/CItemGeneral.php:1287
 msgid "Only one change step is allowed."
 msgstr "Nur eine Änderungschritt ist zulässig."
 
@@ -12247,7 +11940,7 @@ msgstr "POP"
 #: app/views/monitoring.widget.problems.view.php:100 chart5.php:199
 #: include/classes/screens/CScreenEvents.php:129
 #: include/classes/screens/CScreenProblem.php:831
-#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:316
+#: include/classes/screens/CScreenProblem.php:972 include/events.inc.php:320
 #: include/events.inc.php:516 include/maps.inc.php:428
 #: include/maps.inc.php:513 include/maps.inc.php:607 include/maps.inc.php:709
 #: include/triggers.inc.php:173 include/views/monitoring.overview.items.php:32
@@ -12306,7 +11999,7 @@ msgid "Parameter \"%1$s\" is deprecated."
 msgstr "Parameter \"%1$s\" ist veraltet."
 
 #: include/classes/debug/CProfiler.php:182
-#: include/views/configuration.item.edit.php:550
+#: include/views/configuration.item.edit.php:555
 #: include/views/configuration.item.massupdate.php:260
 #: include/views/configuration.item.prototype.edit.php:390
 msgid "Parameters"
@@ -12428,22 +12121,6 @@ msgstr "Höchstwert Speichernutzung: %1$s"
 msgid "Percentage"
 msgstr "Prozentsatz"
 
-#: popup_trexpr.php:346
-msgid "Percentile P of a period T is < N"
-msgstr ""
-
-#: popup_trexpr.php:356
-msgid "Percentile P of a period T is = N"
-msgstr ""
-
-#: popup_trexpr.php:351
-msgid "Percentile P of a period T is > N"
-msgstr ""
-
-#: popup_trexpr.php:361
-msgid "Percentile P of a period T is NOT N"
-msgstr ""
-
 #: graphs.php:53 include/views/configuration.graph.edit.php:125
 msgid "Percentile line (left)"
 msgstr "Perzentilenstrich (links)"
@@ -12499,7 +12176,7 @@ msgstr "Berechtigungen"
 msgid "Permissions can be assigned for user groups only."
 msgstr "Berechtigungen können nur Benutzergruppen zugewiesen werden."
 
-#: include/locales.inc.php:73
+#: include/locales.inc.php:74
 msgid "Persian (fa_IR)"
 msgstr "Persisch (fa_IR)"
 
@@ -12550,11 +12227,11 @@ msgstr ""
 msgid "Points"
 msgstr "Punkte"
 
-#: include/locales.inc.php:74
+#: include/locales.inc.php:75
 msgid "Polish (pl_PL)"
 msgstr "Polnisch (pl_PL)"
 
-#: include/views/configuration.item.edit.php:530
+#: include/views/configuration.item.edit.php:535
 msgid "Populates host inventory field"
 msgstr "Befüllt das Inventarfeld des Hosts"
 
@@ -12586,11 +12263,11 @@ msgstr "Port einer Hostschnittstelle darf nicht leer sein."
 msgid "Port range"
 msgstr "Port-Bereich"
 
-#: include/locales.inc.php:75
+#: include/locales.inc.php:76
 msgid "Portuguese (pt_BR)"
 msgstr "Portugiesisch (pt_BR)"
 
-#: include/locales.inc.php:76
+#: include/locales.inc.php:77
 msgid "Portuguese (pt_PT)"
 msgstr "Portugiesisch (pt_PT)"
 
@@ -12611,12 +12288,12 @@ msgstr "Beitragstyp"
 msgid "Pre-installation summary"
 msgstr "Zusammenfassung vor Installation"
 
-#: include/views/configuration.item.edit.php:669
+#: include/views/configuration.item.edit.php:674
 #: include/views/configuration.item.prototype.edit.php:509
 msgid "Preprocessing"
 msgstr "Präprozessor"
 
-#: include/views/configuration.item.edit.php:664
+#: include/views/configuration.item.edit.php:669
 #: include/views/configuration.item.massupdate.php:356
 #: include/views/configuration.item.prototype.edit.php:504
 msgid "Preprocessing steps"
@@ -12627,22 +12304,6 @@ msgstr ""
 #: include/views/configuration.graph.edit.php:374
 msgid "Preview"
 msgstr "Vorschau"
-
-#: popup_trexpr.php:366
-msgid "Previous value is < N"
-msgstr "Vorheriger Wert ist < N"
-
-#: popup_trexpr.php:374
-msgid "Previous value is = N"
-msgstr "Vorheriger Wert ist = N"
-
-#: popup_trexpr.php:370
-msgid "Previous value is > N"
-msgstr "Vorheriger Wert ist > N"
-
-#: popup_trexpr.php:378
-msgid "Previous value is NOT N"
-msgstr "Vorheriger Wert ist NICHT N"
 
 #: include/hosts.inc.php:399
 msgid "Primary POC cell"
@@ -12898,7 +12559,7 @@ msgstr "Warteschlange zur Aktualisierung anstehender Datenpunkte"
 #: app/views/monitoring.widget.problems.view.php:84
 #: include/classes/screens/CScreenEvents.php:134
 #: include/classes/screens/CScreenProblem.php:815
-#: include/classes/screens/CScreenProblem.php:958 include/events.inc.php:321
+#: include/classes/screens/CScreenProblem.php:958 include/events.inc.php:325
 #: include/events.inc.php:500 tr_status.php:687
 msgid "RESOLVED"
 msgstr "ERLEDIGT"
@@ -13055,22 +12716,6 @@ msgstr "Regulärer Ausdruck"
 msgid "Regular expression \"%s\" already exists."
 msgstr "Regulärer Ausdruck \"%s\" existiert bereits."
 
-#: popup_trexpr.php:490
-msgid "Regular expression V matching last value in period T, then N = 1, 0 - otherwise"
-msgstr "Regulärer Ausdruck V, der auf letzten Wert im Zeitraum T passt, dann N = 1, sonst 0"
-
-#: popup_trexpr.php:500
-msgid "Regular expression V matching last value in period T, then N = 1, 0 - otherwise (non case-sensitive)"
-msgstr "Regulärer Ausdruck V, der auf letzten Wert im Zeitraum T passt, dann N = 1, sonst 0 (Groß-/Kleinschreibung egal)"
-
-#: popup_trexpr.php:495
-msgid "Regular expression V matching last value in period T, then N NOT 1, 0 - otherwise"
-msgstr "Regulärer Ausdruck V, der auf letzten Wert im Zeitraum T passt, dann N NICHT 1, sonst 0"
-
-#: popup_trexpr.php:505
-msgid "Regular expression V matching last value in period T, then N NOT 1, 0 - otherwise (non case-sensitive)"
-msgstr "Regulärer Ausdruck V, der auf letzten Wert im Zeitraum T passt, dann N NICHT 1, sonst 0 (Groß-/Kleinschreibung egal)"
-
 #: adm.regexps.php:147
 msgid "Regular expression added"
 msgstr "Regulärer Ausdruck hinzugefügt"
@@ -13135,7 +12780,7 @@ msgstr "Befehl ausführen"
 #: include/views/configuration.host.discovery.edit.php:327
 #: include/views/configuration.httpconf.edit.php:232
 #: include/views/configuration.item.edit.php:382
-#: include/views/configuration.item.edit.php:646
+#: include/views/configuration.item.edit.php:651
 #: include/views/configuration.item.massupdate.php:339
 #: include/views/configuration.item.massupdate.php:407
 #: include/views/configuration.item.prototype.edit.php:292
@@ -13359,7 +13004,8 @@ msgstr "Antwortzeit"
 #: include/classes/debug/CProfiler.php:183
 #: include/views/administration.general.regularexpressions.edit.php:112
 #: include/views/administration.general.regularexpressions.edit.php:117
-#: tr_testexpr.php:147 tr_testexpr.php:184
+#: include/views/configuration.triggers.expression.php:120 tr_testexpr.php:147
+#: tr_testexpr.php:184
 msgid "Result"
 msgstr "Ergebnis"
 
@@ -13441,7 +13087,7 @@ msgstr "Rechts"
 msgid "Right trim"
 msgstr ""
 
-#: include/locales.inc.php:77
+#: include/locales.inc.php:78
 msgid "Romanian (ro_RO)"
 msgstr "Rumänisch (ro_RO)"
 
@@ -13513,7 +13159,7 @@ msgstr "Befehle ausführen auf Hosts"
 msgid "Run specified command on the host. Returns text result of the command; 1 - with mode as nowait (regardless of command result)"
 msgstr ""
 
-#: include/locales.inc.php:78
+#: include/locales.inc.php:79
 msgid "Russian (ru_RU)"
 msgstr "Russisch (ru_RU)"
 
@@ -13604,7 +13250,7 @@ msgstr "SNMP-Schnittstellen"
 msgid "SNMP trap"
 msgstr "SNMP-Trap"
 
-#: include/classes/api/services/CItemGeneral.php:497
+#: include/classes/api/services/CItemGeneral.php:500
 msgid "SNMP trap key is invalid."
 msgstr "Schlüssel für SNMP-Trap ist unzulässig."
 
@@ -14380,7 +14026,7 @@ msgstr "Nur Unbestätigte anzeigen"
 msgid "Show unavailable maps"
 msgstr ""
 
-#: include/views/configuration.item.edit.php:468
+#: include/views/configuration.item.edit.php:472
 #: include/views/configuration.item.massupdate.php:478
 #: include/views/configuration.item.prototype.edit.php:341
 msgid "Show value"
@@ -14541,7 +14187,7 @@ msgstr "Vorführung"
 msgid "Slides"
 msgstr "Seiten"
 
-#: include/locales.inc.php:79
+#: include/locales.inc.php:80
 msgid "Slovak (sk_SK)"
 msgstr "Slovakisch (sk_SK)"
 
@@ -14619,7 +14265,7 @@ msgstr "Quelle"
 msgid "Source type"
 msgstr "Quellen Typ"
 
-#: include/locales.inc.php:80
+#: include/locales.inc.php:81
 msgid "Spanish (es_ES)"
 msgstr "Spanisch (es_ES)"
 
@@ -14824,22 +14470,6 @@ msgstr "Erfolgreiche Anmeldung"
 msgid "Sum of incoming and outgoing traffic statistics on network interface. Returns integer"
 msgstr ""
 
-#: popup_trexpr.php:412
-msgid "Sum of values of a period T is < N"
-msgstr "Summe aller Werte im Zeitraum T ist < N"
-
-#: popup_trexpr.php:422
-msgid "Sum of values of a period T is = N"
-msgstr "Summe aller Werte im Zeitraum T ist gleich N"
-
-#: popup_trexpr.php:417
-msgid "Sum of values of a period T is > N"
-msgstr "Summe aller Werte im Zeitraum T ist > N"
-
-#: popup_trexpr.php:427
-msgid "Sum of values of a period T is NOT N"
-msgstr "Summe aller Werte im Zeitraum T ist NICHT N"
-
 #: include/func.inc.php:212
 msgid "Sun"
 msgstr "So"
@@ -14874,7 +14504,7 @@ msgstr ""
 msgid "Swap space size in bytes or in percentage from total. Returns integer for bytes; float for percentage"
 msgstr ""
 
-#: include/locales.inc.php:81
+#: include/locales.inc.php:82
 msgid "Swedish (sv_SE)"
 msgstr "Schwedisch (sv_SE)"
 
@@ -15366,8 +14996,8 @@ msgstr "Bis"
 #: include/views/configuration.services.edit.php:290
 #: include/views/configuration.services.edit.php:304
 #: include/views/configuration.services.edit.php:337
-#: include/views/configuration.triggers.expression.php:89
-#: include/views/configuration.triggers.expression.php:97 jsLoader.php:149
+#: include/views/configuration.triggers.expression.php:87
+#: include/views/configuration.triggers.expression.php:92 jsLoader.php:149
 #: popup_trexpr.php:33 popup_trexpr.php:130 tr_status.php:491
 msgid "Time"
 msgstr "Zeit"
@@ -15381,8 +15011,8 @@ msgid "Time (descending)"
 msgstr "Zeit (absteigend)"
 
 #: include/classes/items/CHelpItems.php:951
-msgid "Time a particular Zabbix process or a group of processes (identified by <type> and <num>) spent in <state> in percentage."
-msgstr "Prozentuale Dauer, welche ein bestimmter Zabbix-Prozess oder eine Gruppe von Prozessen (identifiziert durch <type>und <num>), im Status <state> verbrachte."
+msgid "Time a particular Zabbix process or a group of processes (identified by <type> and <mode>) spent in <state> in percentage."
+msgstr ""
 
 #: include/classes/items/CHelpItems.php:955
 msgid "Time of proxy last access. Name - proxy name. Param - lastaccess. Unix timestamp."
@@ -15396,22 +15026,6 @@ msgstr "Zeitspanne"
 #: popup_trexpr.php:115 popup_trexpr.php:126 popup_trexpr.php:149
 msgid "Time shift"
 msgstr "Zeitverschiebung"
-
-#: popup_trexpr.php:618
-msgid "Time to reach threshold estimated based on period T is < N"
-msgstr ""
-
-#: popup_trexpr.php:628
-msgid "Time to reach threshold estimated based on period T is = N"
-msgstr ""
-
-#: popup_trexpr.php:623
-msgid "Time to reach threshold estimated based on period T is > N"
-msgstr ""
-
-#: popup_trexpr.php:633
-msgid "Time to reach threshold estimated based on period T is NOT N"
-msgstr ""
 
 #: include/classes/widgets/CClockWidgetForm.php:31
 #: include/views/monitoring.screen.constructor.edit.php:604
@@ -15599,7 +15213,7 @@ msgstr ""
 msgid "Trigger event and alert data storage period \"%1$s\"."
 msgstr ""
 
-#: include/views/configuration.triggers.expression.php:128
+#: include/views/configuration.triggers.expression.php:132
 msgid "Trigger expression condition"
 msgstr "Bedingung für Auslöserausdruck"
 
@@ -15785,7 +15399,7 @@ msgstr "Di"
 msgid "Tuesday"
 msgstr "Dienstag"
 
-#: include/locales.inc.php:82
+#: include/locales.inc.php:83
 msgid "Turkish (tr_TR)"
 msgstr "Türkisch (tr_TR)"
 
@@ -15879,7 +15493,7 @@ msgstr "Ermittlungsart"
 msgid "Type of information"
 msgstr "Informationstyp"
 
-#: include/classes/api/services/CItemGeneral.php:409
+#: include/classes/api/services/CItemGeneral.php:412
 msgid "Type of information must be \"Numeric (unsigned)\" or \"Numeric (float)\" for aggregate items."
 msgstr ""
 
@@ -15954,7 +15568,7 @@ msgstr "URLs"
 msgid "USA (160 characters)"
 msgstr "USA (160 Zeichen)"
 
-#: include/locales.inc.php:83
+#: include/locales.inc.php:84
 msgid "Ukrainian (uk_UA)"
 msgstr "Ukrainisch (uk_UA)"
 
@@ -16051,7 +15665,7 @@ msgstr "Unbekannter Fehler"
 msgid "Unknown function."
 msgstr "Unbekannte Funktion."
 
-#: include/triggers.inc.php:1322 popup_trexpr.php:736 tr_testexpr.php:34
+#: include/triggers.inc.php:1322 popup_trexpr.php:457 tr_testexpr.php:34
 msgid "Unknown host item, no such item in selected host"
 msgstr "Ausgewählter Host enthält keinen solchen Datenpunkt"
 
@@ -16234,7 +15848,7 @@ msgstr "Erreichbar"
 #: include/views/configuration.host.prototype.edit.php:436
 #: include/views/configuration.httpconf.edit.php:293
 #: include/views/configuration.httpconf.popup.php:192
-#: include/views/configuration.item.edit.php:691
+#: include/views/configuration.item.edit.php:696
 #: include/views/configuration.item.massupdate.php:614
 #: include/views/configuration.item.prototype.edit.php:518
 #: include/views/configuration.maintenance.edit.php:155
@@ -16991,7 +16605,7 @@ msgstr "vertikal"
 msgid "Vertical align"
 msgstr "Vertikale Ausrichtung"
 
-#: include/locales.inc.php:84
+#: include/locales.inc.php:85
 msgid "Vietnamese (vi_VN)"
 msgstr "Vietnamesisch (Vi_VN)"
 
@@ -17600,7 +17214,7 @@ msgid "a number is too large"
 msgstr "eine Zahl ist zu groß"
 
 #: include/classes/api/services/CDRule.php:320
-#: include/classes/api/services/CItemGeneral.php:1205
+#: include/classes/api/services/CItemGeneral.php:1208
 #: include/classes/api/services/CScreen.php:423
 msgid "a numeric value is expected"
 msgstr "ein numerischer Wert erwartet"
@@ -17623,6 +17237,10 @@ msgstr "Zeiteinheit erwartet"
 msgid "a user macro is expected"
 msgstr "ein Benutzermakro wird erwartet"
 
+#: popup_trexpr.php:186
+msgid "abschange() - Absolute difference between last and previous value"
+msgstr ""
+
 #: include/forms.inc.php:484
 msgid "affects only filtered data"
 msgstr "betrifft nur gefilterte Daten"
@@ -17631,7 +17249,7 @@ msgstr "betrifft nur gefilterte Daten"
 msgid "agent"
 msgstr "Agent"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2027
+#: include/classes/graphdraw/CLineGraphDraw.php:1840
 #: include/classes/html/CSeverity.php:49
 #: include/classes/pagefilter/CPageFilter.php:849
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
@@ -17709,13 +17327,21 @@ msgstr "Automatische Registrierung"
 msgid "auto-registered host"
 msgstr "Automatisch registrierter Host"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2009
-#: include/classes/graphdraw/CLineGraphDraw.php:2031
+#: include/classes/graphdraw/CLineGraphDraw.php:1822
+#: include/classes/graphdraw/CLineGraphDraw.php:1844
 #: include/classes/graphdraw/CPieGraphDraw.php:335 include/graphs.inc.php:85
 #: include/views/js/configuration.graph.edit.js.php:50
 #: include/views/js/configuration.graph.edit.js.php:58
 msgid "avg"
 msgstr "durchschn."
+
+#: popup_trexpr.php:191
+msgid "avg() - Average value of a period T"
+msgstr ""
+
+#: popup_trexpr.php:332
+msgid "band() - Bitwise AND of last (most recent) T value and mask"
+msgstr ""
 
 #: include/views/administration.general.trigger.options.edit.php:36
 #: include/views/administration.general.trigger.options.edit.php:43
@@ -17746,14 +17372,14 @@ msgstr "nicht änderbar"
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1506
 #: include/classes/api/services/CHttpTest.php:999
-#: include/classes/api/services/CItemGeneral.php:427
-#: include/classes/api/services/CItemGeneral.php:447
-#: include/classes/api/services/CItemGeneral.php:453
-#: include/classes/api/services/CItemGeneral.php:459
-#: include/classes/api/services/CItemGeneral.php:1179
-#: include/classes/api/services/CItemGeneral.php:1199
-#: include/classes/api/services/CItemGeneral.php:1222
-#: include/classes/api/services/CItemGeneral.php:1235
+#: include/classes/api/services/CItemGeneral.php:430
+#: include/classes/api/services/CItemGeneral.php:450
+#: include/classes/api/services/CItemGeneral.php:456
+#: include/classes/api/services/CItemGeneral.php:462
+#: include/classes/api/services/CItemGeneral.php:1182
+#: include/classes/api/services/CItemGeneral.php:1202
+#: include/classes/api/services/CItemGeneral.php:1225
+#: include/classes/api/services/CItemGeneral.php:1238
 #: include/classes/api/services/CMapElement.php:122
 #: include/classes/api/services/CMapElement.php:147
 #: include/classes/api/services/CMapElement.php:185
@@ -17789,15 +17415,19 @@ msgstr "darf nicht leer sein"
 msgid "cannot perform Scroll API request, data could be truncated"
 msgstr ""
 
+#: popup_trexpr.php:203
+msgid "change() - Difference between last and previous value"
+msgstr ""
+
 #: include/classes/parsers/CConditionFormula.php:188
 #, c-format
 msgid "check expression starting from \"%1$s\""
 msgstr "Prüfen des Ausdrucks beginnend bei \"%1$s\""
 
 #: include/classes/api/services/CHostGeneral.php:1036
-#: include/classes/api/services/CItemGeneral.php:1511
-#: include/classes/api/services/CItemGeneral.php:1517
-#: include/classes/api/services/CItemGeneral.php:1730
+#: include/classes/api/services/CItemGeneral.php:1514
+#: include/classes/api/services/CItemGeneral.php:1520
+#: include/classes/api/services/CItemGeneral.php:1733
 #: include/classes/import/CConfigurationImport.php:2534
 msgid "circular item dependency is not allowed"
 msgstr "zirkuläre Datenpunkt Abhängigkeit ist nicht zulässig"
@@ -17805,6 +17435,10 @@ msgstr "zirkuläre Datenpunkt Abhängigkeit ist nicht zulässig"
 #: include/views/hostmacros.php:38
 msgid "configure"
 msgstr "konfigurieren"
+
+#: popup_trexpr.php:208
+msgid "count() - Number of successfully retrieved values V (which fulfill operator O) for period T"
+msgstr ""
 
 #: include/func.inc.php:579 jsLoader.php:102
 msgctxt "day short"
@@ -17814,6 +17448,18 @@ msgstr "T"
 #: chart4.php:129 chart5.php:143
 msgid "d.M"
 msgstr "d.M"
+
+#: popup_trexpr.php:266
+msgid "date() - Current date"
+msgstr ""
+
+#: popup_trexpr.php:276
+msgid "dayofmonth() - Day of month"
+msgstr ""
+
+#: popup_trexpr.php:271
+msgid "dayofweek() - Day of week"
+msgstr ""
 
 #: app/views/monitoring.problem.view.php:165
 #: include/views/common.filter.trigger.php:90
@@ -17832,6 +17478,10 @@ msgstr "TT"
 msgid "default"
 msgstr "Standard"
 
+#: popup_trexpr.php:197
+msgid "delta() - Difference between MAX and MIN value of a period T"
+msgstr ""
+
 #: include/classes/widgets/CActionLogWidgetForm.php:31
 #: include/classes/widgets/CActionLogWidgetForm.php:33
 #: include/classes/widgets/CActionLogWidgetForm.php:35
@@ -17842,6 +17492,10 @@ msgstr "Standard"
 #: include/classes/widgets/CProblemsWidgetForm.php:119
 msgid "descending"
 msgstr "absteigend"
+
+#: popup_trexpr.php:214
+msgid "diff() - Difference between last and preceding values (1 - true, 0 - false)"
+msgstr ""
 
 #: include/classes/validators/CApiInputValidator.php:818
 msgid "directory or script name cannot be empty"
@@ -17884,13 +17538,21 @@ msgstr "Ausdruck ist leer"
 msgid "failed to parse JSON"
 msgstr ""
 
-#: include/classes/api/services/CItemGeneral.php:1243
+#: include/classes/api/services/CItemGeneral.php:1246
 msgid "first parameter is expected"
 msgstr "erster Parameter erwartet"
 
 #: jsLoader.php:97
 msgid "fixed"
 msgstr "fest"
+
+#: popup_trexpr.php:338
+msgid "forecast() - Forecast for next t seconds based on period T"
+msgstr ""
+
+#: popup_trexpr.php:281
+msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
+msgstr ""
 
 #: include/views/configuration.item.edit.php:411
 #: include/views/configuration.item.edit.php:416
@@ -17925,7 +17587,7 @@ msgstr "Host"
 msgid "host group"
 msgstr "Host-Gruppe"
 
-#: include/classes/api/services/CItemGeneral.php:1534
+#: include/classes/api/services/CItemGeneral.php:1537
 msgid "hostid of dependent item and master item should match"
 msgstr "Host-ID des abhängigen Datenpunktes und Haupt-Datenpunkt sollten übereinstimmen"
 
@@ -17972,7 +17634,7 @@ msgstr "Ungültige Adressbereich \"%1$s\""
 msgid "invalid byte sequence in UTF-8"
 msgstr "ungültigen Byte-Sequenz in UTF-8"
 
-#: include/classes/api/services/CItemGeneral.php:279
+#: include/classes/api/services/CItemGeneral.php:282
 #: include/classes/graphdraw/CLineGraphDraw.php:113
 msgid "invalid delay"
 msgstr "ungültige Verzögerung"
@@ -17996,6 +17658,10 @@ msgstr "Ungültiger regulärer Ausdruck"
 msgid "invalid trend storage period"
 msgstr "Ungültige Speicherdauer für Tendenzen"
 
+#: popup_trexpr.php:293
+msgid "iregexp() - Regular expression V matching last value in period T (non case-sensitive; 1 - match, 0 - no match)"
+msgstr ""
+
 #: include/classes/validators/CApiInputValidator.php:1146
 msgid "is not enclosed in {} or is malformed"
 msgstr "ist nicht in {} eingeschlossen oder falsch formatiert"
@@ -18008,13 +17674,17 @@ msgstr "Datenpunkt"
 msgid "key is empty"
 msgstr "Schlüssel ist leer"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2007
+#: include/classes/graphdraw/CLineGraphDraw.php:1820
 #: include/classes/graphdraw/CPieGraphDraw.php:330 include/graphs.inc.php:82
 #: include/views/js/configuration.graph.edit.js.php:52
 msgid "last"
 msgstr "letzte"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2144
+#: popup_trexpr.php:219
+msgid "last() - Last (most recent) T value"
+msgstr ""
+
+#: include/classes/graphdraw/CLineGraphDraw.php:1957
 msgid "left"
 msgstr "links"
 
@@ -18023,13 +17693,25 @@ msgstr "links"
 msgid "like"
 msgstr "genauso wie"
 
-#: include/views/configuration.item.edit.php:591
+#: include/views/configuration.item.edit.php:596
 #: include/views/configuration.item.massupdate.php:297
 #: include/views/configuration.item.prototype.edit.php:431
 #: include/views/js/common.item.edit.js.php:140
 #: include/views/js/configuration.item.massupdate.js.php:154
 msgid "list of characters"
 msgstr "Liste der Zeichen"
+
+#: popup_trexpr.php:299
+msgid "logeventid() - Event ID of last log entry matching regular expression T (1 - match, 0 - no match)"
+msgstr ""
+
+#: popup_trexpr.php:305
+msgid "logseverity() - Log severity of the last log entry"
+msgstr ""
+
+#: popup_trexpr.php:310
+msgid "logsource() - Log source of the last log entry matching parameter T (1 - match, 0 - no match)"
+msgstr ""
 
 #: include/events.inc.php:68
 msgid "low-level discovery rule"
@@ -18045,7 +17727,9 @@ msgctxt "month short"
 msgid "m"
 msgstr "m"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1628
+#: include/classes/graphdraw/CLineGraphDraw.php:1376
+#: include/classes/graphdraw/CLineGraphDraw.php:1384
+#: include/classes/graphdraw/CLineGraphDraw.php:1391
 msgid "m-d"
 msgstr ""
 
@@ -18075,34 +17759,42 @@ msgstr "Karte"
 msgid "matches"
 msgstr "übereinstimmend"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2010
-#: include/classes/graphdraw/CLineGraphDraw.php:2024
+#: include/classes/graphdraw/CLineGraphDraw.php:1823
+#: include/classes/graphdraw/CLineGraphDraw.php:1837
 #: include/classes/graphdraw/CPieGraphDraw.php:326 include/graphs.inc.php:80
 #: include/views/js/configuration.graph.edit.js.php:51
 #: include/views/js/configuration.graph.edit.js.php:59
 msgid "max"
 msgstr "max."
 
-#: include/classes/api/services/CItemGeneral.php:1614
+#: popup_trexpr.php:225
+msgid "max() - Maximum value for period T"
+msgstr ""
+
+#: include/classes/api/services/CItemGeneral.php:1617
 msgid "maximum dependent items count reached"
 msgstr "maximale Anzahl abhängiger Datenpunkte erreicht"
 
 #: include/classes/api/services/CHostGeneral.php:1043
-#: include/classes/api/services/CItemGeneral.php:1540
-#: include/classes/api/services/CItemGeneral.php:1623
-#: include/classes/api/services/CItemGeneral.php:1737
+#: include/classes/api/services/CItemGeneral.php:1543
+#: include/classes/api/services/CItemGeneral.php:1626
+#: include/classes/api/services/CItemGeneral.php:1740
 #: include/classes/import/CConfigurationImport.php:2491
 #: include/classes/import/CConfigurationImport.php:2550
 msgid "maximum number of dependency levels reached"
 msgstr "maximale Anzahl von Abhängigkeitsebenen erreicht"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2008
-#: include/classes/graphdraw/CLineGraphDraw.php:2021
+#: include/classes/graphdraw/CLineGraphDraw.php:1821
+#: include/classes/graphdraw/CLineGraphDraw.php:1834
 #: include/classes/graphdraw/CPieGraphDraw.php:322 include/graphs.inc.php:78
 #: include/views/js/configuration.graph.edit.js.php:49
 #: include/views/js/configuration.graph.edit.js.php:57
 msgid "min"
 msgstr "min."
+
+#: popup_trexpr.php:231
+msgid "min() - Minimum value for period T"
+msgstr ""
 
 #: include/classes/api/services/CHost.php:1518
 #, c-format
@@ -18162,10 +17854,14 @@ msgstr "neu"
 msgid "new event tag"
 msgstr "Neues Ereignis-Marker"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2102
+#: include/classes/graphdraw/CLineGraphDraw.php:1915
 #: include/classes/graphdraw/CPieGraphDraw.php:356
 msgid "no data"
 msgstr "Keine Daten"
+
+#: popup_trexpr.php:326
+msgid "nodata() - No data received during period of time T (1 - true, 0 - false)"
+msgstr ""
 
 #: include/actions.inc.php:31
 msgid "not in"
@@ -18187,7 +17883,11 @@ msgstr "nicht ausgewählt"
 msgid "now"
 msgstr "jetzt"
 
-#: include/views/configuration.item.edit.php:564
+#: popup_trexpr.php:316
+msgid "now() - Number of seconds since the Epoch"
+msgstr ""
+
+#: include/views/configuration.item.edit.php:569
 #: include/views/configuration.item.massupdate.php:273
 #: include/views/configuration.item.prototype.edit.php:404
 #: include/views/js/common.item.edit.js.php:131
@@ -18252,7 +17952,7 @@ msgstr "an"
 msgid "other"
 msgstr "andere"
 
-#: include/views/configuration.item.edit.php:579
+#: include/views/configuration.item.edit.php:584
 #: include/views/configuration.item.massupdate.php:286
 #: include/views/configuration.item.prototype.edit.php:419
 #: include/views/js/common.item.edit.js.php:49
@@ -18260,7 +17960,7 @@ msgstr "andere"
 msgid "output"
 msgstr "Leistung"
 
-#: include/views/configuration.item.edit.php:597
+#: include/views/configuration.item.edit.php:602
 #: include/views/configuration.item.massupdate.php:303
 #: include/views/configuration.item.prototype.edit.php:437
 #: include/views/js/common.item.edit.js.php:148
@@ -18268,7 +17968,7 @@ msgstr "Leistung"
 msgid "path"
 msgstr "Pfad"
 
-#: include/views/configuration.item.edit.php:602
+#: include/views/configuration.item.edit.php:607
 #: include/views/configuration.item.massupdate.php:308
 #: include/views/configuration.item.prototype.edit.php:442
 #: include/views/js/common.item.edit.js.php:48
@@ -18277,10 +17977,22 @@ msgstr "Pfad"
 msgid "pattern"
 msgstr "Muster"
 
+#: popup_trexpr.php:237
+msgid "percentile() - Percentile P of a period T"
+msgstr ""
+
+#: popup_trexpr.php:243
+msgid "prev() - Previous value"
+msgstr ""
+
 #: include/page_header.php:149 include/views/general.warning.php:21
 #, c-format
 msgid "refreshed every %1$s sec."
 msgstr "aktualisiert alle %1$s sec."
+
+#: popup_trexpr.php:287
+msgid "regexp() - Regular expression V matching last value in period T (1 - match, 0 - no match)"
+msgstr ""
 
 #: include/views/configuration.host.discovery.edit.php:323
 #: include/views/js/configuration.host.discovery.edit.js.php:24
@@ -18291,7 +18003,7 @@ msgstr "Regulärer Ausdruck"
 msgid "remember selected"
 msgstr "Auswahl merken"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2144
+#: include/classes/graphdraw/CLineGraphDraw.php:1957
 msgid "right"
 msgstr "rechts"
 
@@ -18309,7 +18021,7 @@ msgctxt "second short"
 msgid "s"
 msgstr "s"
 
-#: include/classes/api/services/CItemGeneral.php:1249
+#: include/classes/api/services/CItemGeneral.php:1252
 msgid "second parameter is expected"
 msgstr "Zweiter Parameter erwartet"
 
@@ -18327,10 +18039,10 @@ msgstr "Kurzbeschreibung"
 #: include/classes/api/services/CHost.php:1546
 #: include/classes/api/services/CHttpTest.php:984
 #: include/classes/api/services/CHttpTest.php:1095
-#: include/classes/api/services/CItemGeneral.php:434
-#: include/classes/api/services/CItemGeneral.php:472
-#: include/classes/api/services/CItemGeneral.php:1264
-#: include/classes/api/services/CItemGeneral.php:1278
+#: include/classes/api/services/CItemGeneral.php:437
+#: include/classes/api/services/CItemGeneral.php:475
+#: include/classes/api/services/CItemGeneral.php:1267
+#: include/classes/api/services/CItemGeneral.php:1281
 #: include/classes/api/services/CTriggerGeneral.php:533
 #: include/classes/api/services/CTriggerGeneral.php:559
 #: include/classes/api/services/CTriggerGeneral.php:778
@@ -18342,11 +18054,23 @@ msgstr "Sollte leer sein"
 msgid "show icon mappings"
 msgstr "Zeige Symbolzuordnung"
 
-#: include/views/configuration.item.edit.php:466
+#: include/views/configuration.item.edit.php:469
 #: include/views/configuration.item.massupdate.php:473
 #: include/views/configuration.item.prototype.edit.php:339
 msgid "show value mappings"
 msgstr "Wert-Zuordnung zeigen"
+
+#: popup_trexpr.php:248
+msgid "str() - Find string V in last (most recent) value (1 - found, 0 - not found)"
+msgstr ""
+
+#: popup_trexpr.php:254
+msgid "strlen() - Length of last (most recent) T value in characters"
+msgstr ""
+
+#: popup_trexpr.php:260
+msgid "sum() - Sum of values of a period T"
+msgstr ""
 
 #: app/views/monitoring.dashboard.config.php:178
 #: app/views/monitoring.dashboard.config.php:205
@@ -18390,6 +18114,14 @@ msgstr "der Parameter \"%1$s\" fehlt"
 #, c-format
 msgid "the tag \"%1$s\" is missing"
 msgstr "Marker \"%1$s\" fehlt"
+
+#: popup_trexpr.php:321
+msgid "time() - Current time"
+msgstr ""
+
+#: popup_trexpr.php:344
+msgid "timeleft() - Time to reach threshold estimated based on period T"
+msgstr ""
 
 #: include/classes/api/services/CMap.php:841
 #: include/classes/api/services/CMap.php:1283 include/events.inc.php:34
@@ -18448,7 +18180,7 @@ msgstr "unerwarteter Text \"%1$s\""
 #: include/classes/api/services/CEvent.php:551
 #: include/classes/api/services/CHost.php:1480
 #: include/classes/api/services/CHost.php:1486
-#: include/classes/api/services/CItemGeneral.php:1186
+#: include/classes/api/services/CItemGeneral.php:1189
 #: include/classes/api/services/CProxy.php:572
 #: include/classes/api/services/CProxy.php:579
 #: include/classes/api/services/CTriggerGeneral.php:567

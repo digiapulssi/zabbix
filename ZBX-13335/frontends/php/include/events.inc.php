@@ -394,7 +394,7 @@ function make_popup_eventlist($trigger, $eventid_till, $backurl, array $config, 
 
 		$div->addItem(
 			(new CDiv())
-				->addItem(new CLink($trigger['url'], $trigger_url))
+				->addItem(new CLink(CHTML::encode($trigger['url']), $trigger_url))
 				->addClass(ZBX_STYLE_OVERLAY_DESCR_URL)
 				->addStyle('max-width: 500px')
 		);

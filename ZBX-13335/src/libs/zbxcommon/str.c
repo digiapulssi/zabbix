@@ -1957,23 +1957,6 @@ const char	*zbx_item_value_type_string(zbx_item_value_type_t value_type)
 	}
 }
 
-const char	*zbx_item_data_type_string(zbx_item_data_type_t data_type)
-{
-	switch (data_type)
-	{
-		case ITEM_DATA_TYPE_DECIMAL:
-			return "Decimal";
-		case ITEM_DATA_TYPE_OCTAL:
-			return "Octal";
-		case ITEM_DATA_TYPE_HEXADECIMAL:
-			return "Hexadecimal";
-		case ITEM_DATA_TYPE_BOOLEAN:
-			return "Boolean";
-		default:
-			return "unknown";
-	}
-}
-
 const char	*zbx_interface_type_string(zbx_interface_type_t type)
 {
 	switch (type)
@@ -3843,7 +3826,7 @@ static int	zbx_function_validate(const char *expr, size_t *par_l, size_t *par_r,
 		if (SUCCEED == function_match_parenthesis(expr, *par_l, par_r, &lpp_offset, &lpp_len))
 			return SUCCEED;
 
-		if (*par_l > *par_r && NULL != error)
+		if (NULL != error && *par_l > *par_r)
 		{
 			zbx_snprintf(error, max_error_len, "Incorrect function '%.*s' expression. "
 				"Check expression part starting from: %.*s",
