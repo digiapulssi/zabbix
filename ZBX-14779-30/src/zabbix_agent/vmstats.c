@@ -26,6 +26,9 @@
 #ifndef XINTFRAC	/* defined in IBM AIX 7.1 libperfstat.h, not defined in AIX 6.1 */
 #include <sys/systemcfg.h>
 #define XINTFRAC	((double)_system_configuration.Xint / (double)_system_configuration.Xfrac)
+	/* Example of XINTFRAC = 125.000000 / 64.000000 = 1.953125. Apparently XINTFRAC is a period (in nanoseconds) */
+	/* of CPU ticks on a machine. For example, 1.953125 could mean there is 1.953125 nanoseconds between ticks */
+	/* and number of ticks in second is 1.0 / (1.953125 * 10^-9) = 512000000. So, tick frequency is 512 MHz. */
 #endif
 
 static int		last_clock = 0;
@@ -42,7 +45,8 @@ static zbx_uint64_t	last_scans = 0;			/* number of page scans by clock */
 /* -- faults -- */
 static zbx_uint64_t	last_devintrs = 0;		/* number of device interrupts */
 static zbx_uint64_t	last_syscall = 0;		/* number of system calls executed */
-static zbx_uint64_t	last_pswitch = 0;		/* number of process switches (change in currently running process) */
+static zbx_uint64_t	last_pswitch = 0;		/* number of process switches (change in currently running */
+							/* process) */
 /* --- cpu ---- */
 static zbx_uint64_t	last_puser = 0;			/* raw number of physical processor ticks in user mode */
 static zbx_uint64_t	last_psys = 0;			/* raw number of physical processor ticks in system mode */
@@ -53,11 +57,16 @@ static zbx_uint64_t	last_sys = 0;			/* raw total number of clock ticks spent in 
 static zbx_uint64_t	last_idle = 0;			/* raw total number of clock ticks spent idle */
 static zbx_uint64_t	last_wait = 0;			/* raw total number of clock ticks spent waiting for I/O */
 static zbx_uint64_t	last_timebase_last = 0;		/* most recent processor time base timestamp */
-static zbx_uint64_t	last_pool_idle_time = 0;	/* number of clock ticks a processor in the shared pool was idle */
-static zbx_uint64_t	last_idle_donated_purr = 0;	/* number of idle cycles donated by a dedicated partition enabled for donation */
-static zbx_uint64_t	last_busy_donated_purr = 0;	/* number of busy cycles donated by a dedicated partition enabled for donation */
-static zbx_uint64_t	last_idle_stolen_purr = 0;	/* number of idle cycles stolen by the hypervisor from a dedicated partition */
-static zbx_uint64_t	last_busy_stolen_purr = 0;	/* number of busy cycles stolen by the hypervisor from a dedicated partition */
+static zbx_uint64_t	last_pool_idle_time = 0;	/* number of clock ticks a processor in the shared pool was */
+							/* idle */
+static zbx_uint64_t	last_idle_donated_purr = 0;	/* number of idle cycles donated by a dedicated partition */
+							/* enabled for donation */
+static zbx_uint64_t	last_busy_donated_purr = 0;	/* number of busy cycles donated by a dedicated partition */
+							/* enabled for donation */
+static zbx_uint64_t	last_idle_stolen_purr = 0;	/* number of idle cycles stolen by the hypervisor from */
+							/* a dedicated partition */
+static zbx_uint64_t	last_busy_stolen_purr = 0;	/* number of busy cycles stolen by the hypervisor from */
+							/* a dedicated partition */
 /* --- disk --- */
 static zbx_uint64_t	last_xfers = 0;			/* total number of transfers to/from disk */
 static zbx_uint64_t	last_wblks = 0;			/* 512 bytes blocks written to all disks */
