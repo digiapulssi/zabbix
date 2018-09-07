@@ -121,7 +121,7 @@ class JMXItemChecker extends ItemChecker
 			}
 
 			for (int i = 0; i < keys.size(); i++)
-					values.put(value);
+				values.put(value);
 		}
 		catch (Exception e)
 		{
