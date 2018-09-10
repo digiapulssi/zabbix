@@ -414,7 +414,7 @@ class CHttpTestManager {
 					$exHttpTest = $hostHttpTest['byName'][$httpTest['name']];
 
 					if (bccomp($exHttpTest['templateid'], $httpTestId) == 0
-							|| bccomp($exHttpTest['templateid'], '0') != 0
+							|| $exHttpTest['templateid'] != 0
 							|| !$this->compareHttpSteps($httpTest, $exHttpTest)) {
 						$host = DBfetch(DBselect('SELECT h.name FROM hosts h WHERE h.hostid='.zbx_dbstr($hostId)));
 						throw new Exception(
