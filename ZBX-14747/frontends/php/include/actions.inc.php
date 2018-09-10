@@ -1617,7 +1617,6 @@ function getEventDetailsActions(array $event) {
  * @return array
  */
 function getSingleEventActions(array $event, array $r_events, array $alerts) {
-	$action_count = 0;
 	$has_uncomplete_action = false;
 	$has_failed_action = false;
 	$mediatypeids = [];
@@ -1645,7 +1644,6 @@ function getSingleEventActions(array $event, array $r_events, array $alerts) {
 		$ack['action_type'] = ZBX_EVENT_HISTORY_MANUAL_UPDATE;
 		$actions[] = $ack;
 
-		$action_count++;
 		$userids[$ack['userid']] = true;
 	}
 
@@ -1656,8 +1654,6 @@ function getSingleEventActions(array $event, array $r_events, array $alerts) {
 				|| bccomp($alert['eventid'], $event['r_eventid']) == 0) {
 			$alert['action_type'] = ZBX_EVENT_HISTORY_ALERT;
 			$actions[] = $alert;
-
-			$action_count++;
 
 			if ($alert['alerttype'] == ALERT_TYPE_MESSAGE) {
 				if ($alert['mediatypeid'] != 0) {
@@ -1686,7 +1682,7 @@ function getSingleEventActions(array $event, array $r_events, array $alerts) {
 
 	return [
 		'actions' => array_values($actions),
-		'count' => $action_count,
+		'count' => count($actions),
 		'has_uncomplete_action' => $has_uncomplete_action,
 		'has_failed_action' => $has_failed_action,
 		'mediatypeids' => $mediatypeids,
