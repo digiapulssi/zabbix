@@ -1343,6 +1343,9 @@ define('RSM_SLV_EPP_AVAIL',					'rsm.slv.epp.avail');
 define('RSM_SLV_DNSSEC_AVAIL',				'rsm.slv.dnssec.avail');
 define('RSM_SLV_RDDS_RTT',					'rsm.slv.rdds.rtt.pfailed');
 
+// "RSM Service Availability" value mapping:
+define('DOWN',	0);	// Down
+
 // SLA reports graph names
 define('DNS_SERVICE_AVAILABILITY_GRAPH_1',		'DNS Service Availability - Accumulated minutes of downtime');
 define('DNS_NS_AVAILABILITY_GRAPH_1',			'DNS NS Availability - [$NS$] Accumulated minutes of downtime');
@@ -1395,13 +1398,9 @@ define('MIN_PROBE_OK_RESULT_PERCENTAGE',	49);
 
 // SLA monitoring calculated items keys
 define('CALCULATED_ITEM_DNS_FAIL',				'rsm.configvalue[RSM.INCIDENT.DNS.FAIL]');
-define('CALCULATED_ITEM_DNS_RECOVERY',			'rsm.configvalue[RSM.INCIDENT.DNS.RECOVER]');
 define('CALCULATED_ITEM_DNSSEC_FAIL',			'rsm.configvalue[RSM.INCIDENT.DNSSEC.FAIL]');
-define('CALCULATED_ITEM_DNSSEC_RECOVERY',		'rsm.configvalue[RSM.INCIDENT.DNSSEC.RECOVER]');
 define('CALCULATED_ITEM_RDDS_FAIL',				'rsm.configvalue[RSM.INCIDENT.RDDS.FAIL]');
-define('CALCULATED_ITEM_RDDS_RECOVERY',			'rsm.configvalue[RSM.INCIDENT.RDDS.RECOVER]');
 define('CALCULATED_ITEM_EPP_FAIL',				'rsm.configvalue[RSM.INCIDENT.EPP.FAIL]');
-define('CALCULATED_ITEM_EPP_RECOVERY',			'rsm.configvalue[RSM.INCIDENT.EPP.RECOVER]');
 define('CALCULATED_ITEM_DNS_DELAY',				'rsm.configvalue[RSM.DNS.UDP.DELAY]');
 define('CALCULATED_ITEM_RDDS_DELAY',			'rsm.configvalue[RSM.RDDS.DELAY]');
 define('CALCULATED_ITEM_EPP_DELAY',				'rsm.configvalue[RSM.EPP.DELAY]');

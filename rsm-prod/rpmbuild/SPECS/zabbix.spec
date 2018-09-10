@@ -222,6 +222,7 @@ Requires:			perl-LWP-Protocol-https, perl-JSON-XS, perl-Expect
 Requires:			perl-Redis, perl-File-Pid, perl-DateTime-Format-RFC3339
 Requires:			perl-Text-CSV_XS, perl-Types-Serialiser
 Requires:			perl-Path-Tiny
+Requires:			perl-Parallel-ForkManager
 %endif
 AutoReq:			no
 

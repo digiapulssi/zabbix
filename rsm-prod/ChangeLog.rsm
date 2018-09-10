@@ -1,3 +1,59 @@
+Changes for rsm1.0.7
+
+rsm1.0.7rc7 was released as rsm1.0.7 without any changes
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc7
+
+New features:
+....I..... [sub-330] added description of SLA API and Data Export option --max-children (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc6
+
+Bug fixes:
+....I..... [sub-392] added handling of case when TLD state file is removed from SLA API data directory (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc5
+
+Bug fixes:
+....I..... [sub-330] added signal handling that from now on will cause Data Export script exit with error (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc4
+
+Bug fixes:
+....I..... [sub-392] fixed incorrect data in SLA API state file when it is not yet time to process RDDS data (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc3
+
+Bug fixes:
+....I..... [392] fixed incorrect data generated in RDDS measurements file (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc2
+
+New features:
+....I..... [354] implemented better solution for parallel execution of SLA API script to help with hanging (gleb)
+....I..... [sub-330] implemented better solution for parallel execution of Data Export script (gleb)
+
+Bug fixes:
+....I..... [363] fixed DNSSEC availability calculation to follow DNS logic, required successful number of Name Servers (dimir)
+....I..... [sub-326] fixed undefined subroutine call in Data Export script (gleb)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.0.7rc1
+
+New features:
+....I..... [330] added functionality to exit with non-zero code if child fails to Data Export script (dimir)
+
+Bug fixes:
+..F.I..... [326] fixed representation of incident start and end times in the frontend and SLA API (gleb)
+....I...S. [337, sub-329] fixed server trying to apply database upgrade patch it was not supposed to apply and failing when started with a new database (gleb)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.0.6
 
 rsm1.0.6rc3 was released as rsm1.0.6 without any changes
