@@ -2709,7 +2709,8 @@ int	is_uoct(const char *str)
  *                                                                            *
  * Function: is_uhex                                                          *
  *                                                                            *
- * Purpose: check if the string is unsigned hexadecimal                       *
+ * Purpose: check if the string is unsigned hexadecimal representation of     *
+ *          data in the form "0-9, a-f or A-F"                                *
  *                                                                            *
  * Parameters: str - string to check                                          *
  *                                                                            *

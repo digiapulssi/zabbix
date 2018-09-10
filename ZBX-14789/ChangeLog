@@ -4,6 +4,10 @@ New features:
 A.F....... [ZBX-1357] enabled Portuguese (Portugal) translation to be displayed by default (zalex_ua)
 
 Bug fixes:
+........S. [ZBX-14812] fixed hexadecimal to decimal preprocessing step to allow pairs of hexadecimal digits separated by space or new line (vso)
+..F....... [ZBX-14496] fixed unauthorized request error when sorting list after enabling/disabling elements (agriscenko)
+........S. [ZBX-14614] fixed server template linking with triggers having no dependencies (MVekslers)
+...G...... [ZBX-6565,ZBX-13645,ZBX-14559] fixed agent on AIX 6.1 TL0, 7.1 TL0: system.stat[memory,avm], compilation, crash on net.dns[] items (Andris)
 ..F....... [ZBX-13015] fixed X axis labels with DST transition in the displayed period (Sasha)
 ........S. [ZBX-14777] increased severity of housekeeper logs in the case of invalid history/trends intervals (wiper)
 ........S. [ZBX-14778] fixed housekeeper attempting to remove history of discovery rules/prototypes (wiper)
@@ -1340,9 +1344,10 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 --------------------------------------------------------------------------------
 Changes for 3.0.22rc1
 
-New features:
-
 Bug fixes:
+..F....... [ZBX-14496] fixed unauthorized request error when sorting list after enabling/disabling elements (agriscenko)
+........S. [ZBX-14614] fixed server template linking with triggers having no dependencies (MVekslers)
+...G...... [ZBX-6565,ZBX-13645,ZBX-14559] fixed agent on AIX 6.1 TL0, 7.1 TL0: system.stat[memory,avm], compilation, crash on net.dns[] items (Andris)
 ..F....... [ZBX-13015] fixed X axis labels with DST transition in the displayed period (Sasha)
 ........S. [ZBX-14778] fixed housekeeper attempting to remove history of discovery rules/prototypes (wiper)
 .......PS. [ZBX-14775] fixed configuration of the maximum available count of aggregated metrics in a single request to vmware vCenter (MVekslers)
