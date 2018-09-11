@@ -37,9 +37,8 @@ class testFormAdministrationAuthentication extends CWebTest {
 						],
 						[
 							'page' => 'zabbix.php?action=dashboard.view',
-							'action' => 'login',
-							'target' => 'error',
-							'error' => 'You are not logged in'
+							'guest' => true,
+							'target' => 'dashboard'
 						],
 						[
 							'page' => 'index.php',
@@ -57,7 +56,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 							'page' => 'adm.gui.php',
 							'action' => 'login',
 							'target' => 'error',
-							'error' => 'You are not logged in'
+							'error' => 'Access denied'
 						],
 						// Login after logout.
 						[
@@ -163,7 +162,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 					'pages' => [
 						[
 							'page' => 'zabbix.php?action=dashboard.view',
-							'action' => 'login_http_domain',
+							'guest' => true,
 							'target' => 'dashboard'
 						],
 						[
@@ -217,7 +216,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 						],
 						[
 							'page' => 'zabbix.php?action=dashboard.view',
-							'action' => 'login_http_domain',
+							'guest' => true,
 							'target' => 'dashboard'
 						],
 						[
@@ -522,12 +521,18 @@ class testFormAdministrationAuthentication extends CWebTest {
 		$this->zbxTestWaitForPageToLoad();
 		$this->webDriver->manage()->deleteAllCookies();
 
-		$alias = $this->UserName($data['user']);
-
 		if (array_key_exists('pages', $data)) {
 			foreach ($data['pages'] as $check) {
 				if (!array_key_exists('page', $check)) {
 					continue;
+				}
+
+				if (array_key_exists('guest', $check) && $check['guest'] === true) {
+					$alias = 'guest';
+					$this->zbxTestOpen($check['page']);
+				}
+				else {
+					$alias = $this->UserName($data['user']);
 				}
 
 				if (array_key_exists('action', $check)) {
