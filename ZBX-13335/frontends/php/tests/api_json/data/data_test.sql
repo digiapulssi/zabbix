@@ -220,3 +220,23 @@ INSERT INTO sysmap_user (sysmapuserid, sysmapid, userid, permission) VALUES (1, 
 INSERT INTO sysmap_user (sysmapuserid, sysmapid, userid, permission) VALUES (2, 10003, 5, 3);
 INSERT INTO sysmap_user (sysmapuserid, sysmapid, userid, permission) VALUES (3, 10004, 5, 3);
 INSERT INTO sysmaps_elements (selementid, sysmapid, elementid, elementtype, iconid_off, iconid_on, label, label_location, x, y, iconid_disabled, iconid_maintenance, elementsubtype, areatype, width, height, viewtype, use_iconmap, application) VALUES (7, 10001, 0, 4, 151, NULL, 'New element', -1, 189, 77, NULL, NULL, 0, 0, 200, 200, 0, 1, '');
+
+-- dependent items
+INSERT INTO hosts (hostid, host, name, status, description) VALUES (99006, 'Dependent items template 1', 'Dependent items template 1', 3, '');
+INSERT INTO hosts (hostid, host, name, status, description) VALUES (99007, 'Dependent items template 2', 'Dependent items template 2', 3, '');
+INSERT INTO hosts (hostid, host, name, status, description) VALUES (99008, 'Dependent items host 1', 'Dependent items host 1', 0, '');
+INSERT INTO interface (interfaceid, hostid, main, type, useip, ip, dns, port, bulk) VALUES (99008, 99008,1, 1, 1, '127.0.0.1', 'localhost', 10051, 1);
+INSERT INTO hosts_templates (hosttemplateid, hostid, templateid) VALUES (50006, 99007, 99006);
+INSERT INTO hosts_templates (hosttemplateid, hostid, templateid) VALUES (50007, 99008, 99007);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40553, 99006, NULL, NULL, 2, 3, 'item.0', 'item.0', '0', '90d', 0, '', '', 0, NULL);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40554, 99006, NULL, NULL, 2, 3, 'item.1', 'item.1', '0', '90d', 0, '', '', 0, NULL);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40565, 99007, 40553, NULL, 2, 3, 'item.0', 'item.0', '0', '90d', 0, '', '', 0, NULL);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40566, 99007, 40554, NULL, 2, 3, 'item.1', 'item.1', '0', '90d', 0, '', '', 0, NULL);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40569, 99007, NULL, NULL, 18, 3, 'item.2', 'item2', '0', '90d', 0, '', '', 0, 40566);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40571, 99007, NULL, NULL, 18, 3, 'item.3', 'item3', '0', '90d', 0, '', '', 0, 40569);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40573, 99007, NULL, NULL, 18, 3, 'item.4', 'item4', '0', '90d', 0, '', '', 0, 40571);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40567, 99008, 40565, NULL, 2, 3, 'item.0', 'item.0', '0', '90d', 0, '', '', 0, NULL);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40568, 99008, 40566, NULL, 2, 3, 'item.1', 'item.1', '0', '90d', 0, '', '', 0, NULL);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40570, 99008, 40569, NULL, 18, 3, 'item.2', 'item2', '0', '90d', 0, '', '', 0, 40568);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40572, 99008, 40571, NULL, 18, 3, 'item.3', 'item3', '0', '90d', 0, '', '', 0, 40570);
+INSERT INTO items (itemid, hostid, templateid, interfaceid, type, value_type, name, key_, delay, history, status, params, description, flags, master_itemid) VALUES (40574, 99008, 40573, NULL, 18, 3, 'item.4', 'item4', '0', '90d', 0, '', '', 0, 40572);
