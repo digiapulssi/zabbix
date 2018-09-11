@@ -106,7 +106,7 @@ var cookie = {
 		if (typeof(this.cookies[name]) !== 'undefined') {
 			return this.cookies[name];
 		}
-		else if (document.cookie.indexOf(name) != -1) {
+		else if (document.cookie.indexOf(encodeURIComponent(name)) != -1) {
 			var nameEQ = encodeURIComponent(name) + '=';
 			var ca = document.cookie.split(';');
 
