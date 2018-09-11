@@ -269,11 +269,11 @@ class CUser extends CApiService {
 			'passwd' =>			['type' => API_STRING_UTF8, 'flags' => API_NOT_EMPTY, 'length' => 255],
 			'url' =>			['type' => API_URL, 'length' => DB::getFieldLength('users', 'url')],
 			'autologin' =>		['type' => API_INT32, 'in' => '0,1'],
-			'autologout' =>		['type' => API_TIME_UNIT, 'in' => '0,90:'.SEC_PER_DAY],
+			'autologout' =>		['type' => API_TIME_UNIT, 'flags' => API_NOT_EMPTY, 'in' => '0,90:'.SEC_PER_DAY],
 			'lang' =>			['type' => API_STRING_UTF8, 'flags' => API_NOT_EMPTY, 'length' => DB::getFieldLength('users', 'lang')],
 			'theme' =>			['type' => API_STRING_UTF8, 'in' => $valid_themes, 'length' => DB::getFieldLength('users', 'theme')],
 			'type' =>			['type' => API_INT32, 'in' => implode(',', [USER_TYPE_ZABBIX_USER, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN])],
-			'refresh' =>		['type' => API_TIME_UNIT, 'in' => '0:'.SEC_PER_HOUR],
+			'refresh' =>		['type' => API_TIME_UNIT, 'flags' => API_NOT_EMPTY, 'in' => '0:'.SEC_PER_HOUR],
 			'rows_per_page' =>	['type' => API_INT32, 'in' => '1:999999'],
 			'usrgrps' =>		['type' => API_OBJECTS, 'flags' => API_REQUIRED | API_NOT_EMPTY, 'uniq' => [['usrgrpid']], 'fields' => [
 				'usrgrpid' =>		['type' => API_ID, 'flags' => API_REQUIRED]
@@ -374,11 +374,11 @@ class CUser extends CApiService {
 			'passwd' =>			['type' => API_STRING_UTF8, 'flags' => API_NOT_EMPTY, 'length' => 255],
 			'url' =>			['type' => API_URL, 'length' => DB::getFieldLength('users', 'url')],
 			'autologin' =>		['type' => API_INT32, 'in' => '0,1'],
-			'autologout' =>		['type' => API_TIME_UNIT, 'in' => '0,90:'.SEC_PER_DAY],
+			'autologout' =>		['type' => API_TIME_UNIT, 'flags' => API_NOT_EMPTY, 'in' => '0,90:'.SEC_PER_DAY],
 			'lang' =>			['type' => API_STRING_UTF8, 'flags' => API_NOT_EMPTY, 'length' => DB::getFieldLength('users', 'lang')],
 			'theme' =>			['type' => API_STRING_UTF8, 'in' => $valid_themes, 'length' => DB::getFieldLength('users', 'theme')],
 			'type' =>			['type' => API_INT32, 'in' => implode(',', [USER_TYPE_ZABBIX_USER, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN])],
-			'refresh' =>		['type' => API_TIME_UNIT, 'in' => '0:'.SEC_PER_HOUR],
+			'refresh' =>		['type' => API_TIME_UNIT, 'flags' => API_NOT_EMPTY, 'in' => '0:'.SEC_PER_HOUR],
 			'rows_per_page' =>	['type' => API_INT32, 'in' => '1:999999'],
 			'usrgrps' =>		['type' => API_OBJECTS, 'flags' => API_NOT_EMPTY, 'uniq' => [['usrgrpid']], 'fields' => [
 				'usrgrpid' =>		['type' => API_ID, 'flags' => API_REQUIRED]
@@ -1157,6 +1157,22 @@ class CUser extends CApiService {
 			$config['authentication_type']
 		);
 
+		// Check if user is blocked.
+		if ($db_user['attempt_failed'] >= ZBX_LOGIN_ATTEMPTS) {
+			$time_left = ZBX_LOGIN_BLOCK - (time() - $db_user['attempt_clock']);
+
+			if ($time_left > 0) {
+				self::exception(ZBX_API_ERROR_PARAMETERS,
+					_n('Account is blocked for %1$s second.', 'Account is blocked for %1$s seconds.', $time_left)
+				);
+			}
+
+			DB::update('users', [
+				'values' => ['attempt_clock' => time()],
+				'where' => ['userid' => $db_user['userid']]
+			]);
+		}
+
 		try {
 			switch ($group_to_auth_map[$db_user['gui_access']]) {
 				case ZBX_AUTH_LDAP:
@@ -1203,27 +1219,28 @@ class CUser extends CApiService {
 
 	/**
 	 * Method is ONLY for internal use!
-	 * Sign in user by alias. Return array with signed in user data.
+	 * Login user by alias. Return array with user data.
 	 *
-	 * @param array  $alias              User authentication data.
-	 * @param string $alias['user']      Authenticated user alias value.
-	 * @param string $alias['password']  Any string. Is used in sessionid generation.
-	 * @param bool   $api_call           Check is method called via API call or from local php file.
+	 * @param string $alias      Authenticated user alias value.
+	 * @param bool   $api_call   Check is method called via API call or from local php file.
 	 *
 	 * @return array
 	 */
-	public function loginHttp($user, $api_call = true) {
+	public function loginHttp($alias, $api_call = true) {
 		if ($api_call) {
 			return self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect method "%1$s.%2$s".', 'user', 'loginHttp'));
 		}
 
 		$config = select_config();
-		$db_user = $this->findByAlias($user['user'], ($config['http_case_sensitive'] == ZBX_AUTH_CASE_SENSITIVE),
+		$db_user = $this->findByAlias($alias, ($config['http_case_sensitive'] == ZBX_AUTH_CASE_SENSITIVE),
 			$config['authentication_type']
 		);
 
 		unset($db_user['passwd']);
-		$db_user = $this->createSession($user, $db_user);
+		$db_user = $this->createSession([
+			'user' => $alias,
+			'password' => mt_rand()
+		], $db_user);
 		self::$userData = $db_user;
 
 		$this->addAuditDetails(AUDIT_ACTION_LOGIN, AUDIT_RESOURCE_USER);
@@ -1503,23 +1520,6 @@ class CUser extends CApiService {
 		}
 
 		$db_user = reset($db_users);
-
-		// Check if user is blocked.
-		if ($db_user['attempt_failed'] >= ZBX_LOGIN_ATTEMPTS) {
-			$time_left = ZBX_LOGIN_BLOCK - (time() - $db_user['attempt_clock']);
-
-			if ($time_left > 0) {
-				self::exception(ZBX_API_ERROR_PARAMETERS,
-					_n('Account is blocked for %1$s second.', 'Account is blocked for %1$s seconds.', $time_left)
-				);
-			}
-
-			DB::update('users', [
-				'values' => ['attempt_clock' => time()],
-				'where' => ['userid' => $db_user['userid']]
-			]);
-		}
-
 		$usrgrps = $this->getUserGroupsData($db_user['userid']);
 
 		if ($usrgrps['users_status'] == GROUP_STATUS_DISABLED) {

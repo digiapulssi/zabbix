@@ -1457,6 +1457,8 @@ output {
 	}
 }
 
+.hidden {display: none !important;}
+
 .multiselect-wrapper {
 	position: relative;
 	vertical-align: top;
@@ -4174,10 +4176,12 @@ $form-icon-btn: (
 	border-bottom: none;
 }
 .svg-graph-selection {
-	fill: $yellow;
-	fill-opacity: 0.35;
-	stroke-color: rgba($dark-yellow,0.6);
+	fill: rgba($yellow,0.35);
+	stroke: rgba($dark-yellow,0.6);
 	stroke-width: 1px;
+}
+.svg-graph-selection-text {
+	fill: $font-color;
 }
 .svg-helper {
 	stroke-opacity: 0.35;
@@ -4187,13 +4191,6 @@ $form-icon-btn: (
 .svg-point-highlight {
 	fill: $font-color;
 	fill-opacity: 0.5;
-}
-.svg-graph-hintbox-item-color {
-	margin: 3px 10px 3px 3px;
-	width: 10px;
-	height: 10px;
-	float: left;
-	display: block;
 }
 
 .svg-graph-preview {
@@ -4255,6 +4252,8 @@ $form-icon-btn: (
 	display: block;
 	font-size: 12px;
 	line-height: 18px;
+	white-space: nowrap;
+	min-width: 145px;
 
 	.table-paging {
 		min-height: 18px;
@@ -4270,6 +4269,18 @@ $form-icon-btn: (
 	.list-table tbody tr:last-child td {
 		border-bottom-style: none;
 		box-shadow: none;
+	}
+
+	li {
+		padding-left: 23px;
+
+		.svg-graph-hintbox-item-color {
+			margin: 3px 10px 3px -20px;
+			width: 10px;
+			height: 10px;
+			float: left;
+			display: block;
+		}
 	}
 }
 
@@ -4599,7 +4610,6 @@ a.link-action {
 	background-color: $ui-bg-selected-color;
 	margin: 1px 3px 1px 0;
 	padding: 2px 3px;
-	text-align: center;
 	line-height: 1em;
 	max-width: 133px;
 	vertical-align: middle;
@@ -4643,10 +4653,6 @@ a.link-action {
 	}
 }
 
-.na-bg.blink-hidden {
-	background-color: rgba(0, 0, 0, 0.0);
-}
-
 td.na-bg {
 	~ td.na-bg {
 		border-left: 1px dotted $table-border-color;
@@ -4667,10 +4673,6 @@ td.na-bg {
 	}
 }
 
-.normal-bg.blink-hidden {
-	background-color: rgba(0, 0, 0, 0.0);
-}
-
 td.normal-bg {
 	@extend td.na-bg;
 }
@@ -4682,10 +4684,6 @@ td.normal-bg {
 	input[type="radio"]:checked + label {
 		color: darken($alt-dark-blue, 45%);
 	}
-}
-
-.info-bg.blink-hidden {
-	background-color: rgba(0, 0, 0, 0.0);
 }
 
 td.info-bg {
@@ -4706,10 +4704,6 @@ td.info-bg {
 	}
 }
 
-.average-bg.blink-hidden {
-	background-color: rgba(0, 0, 0, 0.0);
-}
-
 td.average-bg {
 	@extend td.na-bg;
 }
@@ -4721,10 +4715,6 @@ td.average-bg {
 	input[type="radio"]:checked + label {
 		color: darken($alt-yellow, 45%);
 	}
-}
-
-.warning-bg.blink-hidden {
-	background-color: rgba(0, 0, 0, 0.0);
 }
 
 td.warning-bg {
@@ -4745,10 +4735,6 @@ td.warning-bg {
 	}
 }
 
-.high-bg.blink-hidden {
-	background-color: rgba(0, 0, 0, 0.0);
-}
-
 td.high-bg {
 	@extend td.na-bg;
 }
@@ -4767,8 +4753,25 @@ td.high-bg {
 	}
 }
 
-.disaster-bg.blink-hidden {
-	background-color: rgba(0, 0, 0, 0.0);
+.na-bg,
+.normal-bg,
+.info-bg,
+.average-bg,
+.warning-bg,
+.high-bg,
+.disaster-bg {
+
+	a {
+		transition: none;
+	}
+
+	&.blink-hidden {
+		background-color: transparent;
+
+		a {
+			color: $font-color;
+		}
+	}
 }
 
 td.disaster-bg {
@@ -5577,8 +5580,8 @@ svg {
 
 		> div {
 			position: relative;
-			padding: 1px 22px 1px 1px;
-			background-color: lighten($ui-bg-selected-color, 10%);
+			padding: 1px 18px 1px 1px;
+			background-color: $ui-bg-selected-color;
 			border-radius: 2px;
 
 			> span {
@@ -5594,13 +5597,14 @@ svg {
 				width: 85px;
 			}
 
-			> .remove-btn {
-				color: #ffffff;
-				right: 2px;
-				top: 3px;
+			> .subfilter-disable-btn {
+				border: none !important;
+				right: 0px;
+				top: 0px;
 
-				&:active {
-					background-color: lighten($ui-bg-selected-color, 100%);
+				&:focus,
+				&:hover {
+					background: none;
 				}
 			}
 		}
