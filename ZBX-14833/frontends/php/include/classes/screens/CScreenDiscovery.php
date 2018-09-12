@@ -57,7 +57,7 @@ class CScreenDiscovery extends CScreenBase {
 
 		// discovery rules
 		$options = [
-			'output' => ['druleid', 'name'],
+			'output' => ['druleid', 'proxy_hostid', 'name'],
 			'selectDHosts' => ['dhostid', 'status', 'lastup', 'lastdown'],
 			'filter' => ['status' => DRULE_STATUS_ACTIVE]
 		];
@@ -73,11 +73,10 @@ class CScreenDiscovery extends CScreenBase {
 
 		// discovery services
 		$options = [
-			'selectHosts' => ['hostid', 'name', 'status'],
 			'output' => ['dserviceid', 'type', 'key_', 'port', 'status', 'lastup', 'lastdown', 'ip', 'dns'],
+			'selectHosts' => ['hostid', 'proxy_hostid', 'name', 'status'],
 			'sortfield' => $sort_field,
-			'sortorder' => $sort_order,
-			'limitSelects' => 1
+			'sortorder' => $sort_order
 		];
 		if ($druleid > 0) {
 			$options['druleids'] = $druleid;
@@ -156,12 +155,13 @@ class CScreenDiscovery extends CScreenBase {
 
 				foreach ($dhosts[$dhost['dhostid']]['dservices'] as $dservice) {
 					$dservice = $dservices[$dservice['dserviceid']];
+					$host_name = '';
 
-					$hostName = '';
-
-					$host = reset($dservices[$dservice['dserviceid']]['hosts']);
-					if (!is_null($host)) {
-						$hostName = $host['name'];
+					foreach ($dservice['hosts'] as $host) {
+						if (bccomp($drule['proxy_hostid'], $host['proxy_hostid']) == 0) {
+							$host_name = $host['name'];
+							break;
+						}
 					}
 
 					if ($primary_ip !== '') {
@@ -183,7 +183,7 @@ class CScreenDiscovery extends CScreenBase {
 							'dns' => $dservice['dns'],
 							'type' => $htype,
 							'class' => $hclass,
-							'host' => $hostName,
+							'host' => $host_name,
 							'time' => $htime,
 						];
 					}
