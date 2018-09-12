@@ -27,6 +27,7 @@ class testDependentItems extends CZabbixTest {
 		return [
 			[
 				'error' => 'Incorrect value for field "master_itemid": maximum number of dependency levels reached.',
+				'method' => 'item.update',
 				'request_data' => [
 					'itemid' => 40554,
 					'type' => ITEM_TYPE_DEPENDENT,
@@ -35,9 +36,37 @@ class testDependentItems extends CZabbixTest {
 			],
 			[
 				'error' => 'Incorrect value for field "master_itemid": circular item dependency is not allowed.',
+				'method' => 'item.update',
 				'request_data' => [
 					'itemid' => 40569,
 					'master_itemid' => 40573
+				]
+			],
+			[
+				'error' => 'Incorrect value for field "master_itemid": should be empty.',
+				'method' => 'item.update',
+				'request_data' => [
+					'itemid' => 40575,
+					'master_itemid' => 40574
+				]
+			],
+			[
+				'error' => 'Incorrect value for field "master_itemid": maximum number of dependency levels reached.',
+				'method' => 'item.update',
+				'request_data' => [
+					'itemid' => 40575,
+					'type' => ITEM_TYPE_DEPENDENT,
+					'master_itemid' => 40574
+				]
+			],
+			[
+				'error' => 'Incorrect value for field "master_itemid": maximum number of dependency levels reached.',
+				'method' => 'template.update',
+				'request_data' => [
+					'templateid' => 99009,
+					'hosts' => [
+						['hostid' => 99008]
+					]
 				]
 			]
 		];
@@ -46,8 +75,8 @@ class testDependentItems extends CZabbixTest {
 	/**
 	* @dataProvider dataProvider
 	*/
-	public function testUpdate($error, $request_data) {
-		$result = $this->api_acall('item.update', $request_data, $debug);
+	public function testUpdate($error, $method, $request_data) {
+		$result = $this->api_acall($method, $request_data, $debug);
 		$message = array_key_exists('error', $result) ? json_encode($result['error']) : '';
 
 		if ($error) {
