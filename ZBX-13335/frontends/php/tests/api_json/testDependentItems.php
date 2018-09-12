@@ -21,6 +21,9 @@
 
 require_once dirname(__FILE__).'/../include/class.czabbixtest.php';
 
+/**
+ * @backup items
+ */
 class testDependentItems extends CZabbixTest {
 
 	public static function getUpdateData() {
@@ -76,6 +79,58 @@ class testDependentItems extends CZabbixTest {
 	* @dataProvider getUpdateData
 	*/
 	public function testDependentItems_Update($error, $method, $request_data) {
+		$result = $this->api_acall($method, $request_data, $debug);
+		$message = array_key_exists('error', $result) ? json_encode($result['error']) : '';
+
+		if ($error) {
+			$this->assertArrayHasKey('error', $result, json_encode($result));
+			$this->assertArrayHasKey('data', $result['error'], $message);
+			$this->assertEquals($error, $result['error']['data']);
+		}
+		else {
+			$this->assertArrayNotHasKey('error', $result, $message);
+		}
+	}
+
+	public static function getCreateData() {
+		$items = [];
+
+		for ($index = 3; $index < 1000; $index++) {
+			$items[] = [
+				'name' => 'dependent_'.$index,
+				'key_' => 'dependent_'.$index,
+				'hostid' => 99009,
+				'interfaceid' => null,
+				'type' => ITEM_TYPE_DEPENDENT,
+				'value_type' => ITEM_VALUE_TYPE_UINT64,
+				'delay' => 0,
+				'history' => '90d',
+				'status' => ITEM_STATUS_ACTIVE,
+				'params' => '',
+				'description' => '',
+				'flags' => 0,
+				'master_itemid' => 40581
+			];
+		}
+
+		return [
+			[
+				'error' => 'Incorrect value for field "master_itemid": maximum dependent items count reached.',
+				'method' => 'item.create',
+				'request_data' => $items
+			],
+			[
+				'error' => false,
+				'method' => 'item.create',
+				'request_data' => array_slice($items, 1)
+			]
+		];
+	}
+
+	/**
+	* @dataProvider getCreateData
+	*/
+	public function testDependentItems_Create($error, $method, $request_data) {
 		$result = $this->api_acall($method, $request_data, $debug);
 		$message = array_key_exists('error', $result) ? json_encode($result['error']) : '';
 
