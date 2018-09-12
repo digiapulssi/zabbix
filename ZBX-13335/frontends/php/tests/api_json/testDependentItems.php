@@ -23,7 +23,7 @@ require_once dirname(__FILE__).'/../include/class.czabbixtest.php';
 
 class testDependentItems extends CZabbixTest {
 
-	public static function dataProvider() {
+	public static function getUpdateData() {
 		return [
 			[
 				'error' => 'Incorrect value for field "master_itemid": maximum number of dependency levels reached.',
@@ -73,16 +73,16 @@ class testDependentItems extends CZabbixTest {
 	}
 
 	/**
-	* @dataProvider dataProvider
+	* @dataProvider getUpdateData
 	*/
-	public function testUpdate($error, $method, $request_data) {
+	public function testDependentItems_Update($error, $method, $request_data) {
 		$result = $this->api_acall($method, $request_data, $debug);
 		$message = array_key_exists('error', $result) ? json_encode($result['error']) : '';
 
 		if ($error) {
 			$this->assertArrayHasKey('error', $result, json_encode($result));
 			$this->assertArrayHasKey('data', $result['error'], $message);
-			$this->assertSame($error, $result['error']['data']);
+			$this->assertEquals($error, $result['error']['data']);
 		}
 		else {
 			$this->assertArrayNotHasKey('error', $result, $message);

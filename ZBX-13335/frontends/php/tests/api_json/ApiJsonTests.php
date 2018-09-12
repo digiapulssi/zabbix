@@ -45,6 +45,7 @@ class ApiJsonTests {
 		$suite->addTestSuite('testAPIInfo');
 		$suite->addTestSuite('testApplication');
 		$suite->addTestSuite('testConfiguration');
+		$suite->addTestSuite('testDependentItems');
 		$suite->addTestSuite('testHostGroup');
 		$suite->addTestSuite('testIconMap');
 		$suite->addTestSuite('testProxy');
@@ -55,7 +56,6 @@ class ApiJsonTests {
 		$suite->addTestSuite('testValuemap');
 		$suite->addTestSuite('testWebScenario');
 		$suite->addTestSuite('testMap');
-		$suite->addTestSuite('testDependentItems');
 
 		return $suite;
 	}
