@@ -67,17 +67,21 @@ var cookie = {
 
 		var tmp_index = 0
 		var result = true;
+
+		list = encodeURIComponent(list);
+
 		while (list.length > 0) {
 			list_part = list.substr(0, 4000);
 			list = list.substr(4000);
 			if (list.length > 0) {
-				tmp_index = list_part.lastIndexOf(',');
+				tmp_index = list_part.lastIndexOf('%');
 				if (tmp_index > -1) {
-					list = list_part.substring(tmp_index+1) + list;
-					list_part = list_part.substring(0, tmp_index + 1);
+					list = list_part.substring(tmp_index + 3) + list;
+					list_part = list_part.substring(0, tmp_index + 3);
 				}
 			}
-			result = this.create(name + '_' + part, list_part, days);
+
+			result = this.create(name + '_' + part, decodeURIComponent(list_part), days);
 			part++;
 
 			if (!result) {
