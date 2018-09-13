@@ -1856,6 +1856,8 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "eventid", eventids.values, eventids.values_num);
 		result = DBselect("%s", sql);
 
+		zbx_vector_uint64_pair_reserve(&rec_escalations, eventids.values_num);
+
 		/* 3.3. Store the escalationids corresponding to the OK events in 'rec_escalations'. */
 		while (NULL != (row = DBfetch(result)))
 		{
