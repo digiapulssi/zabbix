@@ -1718,7 +1718,7 @@ int	zbx_interval_preproc(const char *interval_str, int *simple_interval, zbx_cus
 			if (SUCCEED != (ret = scheduler_interval_parse(new_interval, interval_str,
 					(NULL == delim ? (int)strlen(interval_str) : delim - interval_str))))
 			{
-				zbx_free(new_interval);
+				scheduler_interval_free(new_interval);
 				interval_type = "scheduling";
 				goto out;
 			}
@@ -2709,7 +2709,8 @@ int	is_uoct(const char *str)
  *                                                                            *
  * Function: is_uhex                                                          *
  *                                                                            *
- * Purpose: check if the string is unsigned hexadecimal                       *
+ * Purpose: check if the string is unsigned hexadecimal representation of     *
+ *          data in the form "0-9, a-f or A-F"                                *
  *                                                                            *
  * Parameters: str - string to check                                          *
  *                                                                            *

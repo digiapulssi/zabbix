@@ -44,7 +44,7 @@
  *               If filename fails to pass, 0 is returned.                    *
  *                                                                            *
  ******************************************************************************/
-static int	filename_matches(const char *fname, const regex_t *regex_incl, const regex_t *regex_excl)
+static int	filename_matches(const char *fname, const zbx_regexp_t *regex_incl, const zbx_regexp_t *regex_excl)
 {
 	return ((NULL == regex_incl || 0 == zbx_regexp_match_precompiled(fname, regex_incl)) &&
 			(NULL == regex_excl || 0 != zbx_regexp_match_precompiled(fname, regex_excl)));
@@ -83,7 +83,7 @@ static int	queue_directory(zbx_vector_ptr_t *list, char *path, int depth, int ma
 		return SUCCEED;
 	}
 
-	return FAIL;		/* 'path' did not go into 'list' - don't forget to free 'path' in the caller */
+	return FAIL;	/* 'path' did not go into 'list' - don't forget to free 'path' in the caller */
 }
 
 /******************************************************************************
@@ -102,18 +102,19 @@ static int	queue_directory(zbx_vector_ptr_t *list, char *path, int depth, int ma
  ******************************************************************************/
 static int	compare_descriptors(const void *file_a, const void *file_b)
 {
-	const zbx_file_descriptor_t *fa, *fb;
+	const zbx_file_descriptor_t	*fa, *fb;
 
-	fa = *((zbx_file_descriptor_t**)file_a);
-	fb = *((zbx_file_descriptor_t**)file_b);
+	fa = *((zbx_file_descriptor_t **)file_a);
+	fb = *((zbx_file_descriptor_t **)file_b);
 
 	return (fa->st_ino != fb->st_ino || fa->st_dev != fb->st_dev);
 }
 
-static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, regex_t **regex_incl,
-		regex_t **regex_excl, int *mode, int *max_depth, char **dir, zbx_stat_t *status)
+static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, zbx_regexp_t **regex_incl,
+		zbx_regexp_t **regex_excl, int *mode, int *max_depth, char **dir, zbx_stat_t *status)
 {
-	char	*dir_param, *regex_incl_str, *regex_excl_str, *mode_str, *max_depth_str, *error = NULL;
+	char		*dir_param, *regex_incl_str, *regex_excl_str, *mode_str, *max_depth_str;
+	const char	*error = NULL;
 
 	if (5 < request->nparam)
 	{
@@ -135,30 +136,20 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, rege
 
 	if (NULL != regex_incl_str && '\0' != *regex_incl_str)
 	{
-		*regex_incl = (regex_t*)zbx_malloc(*regex_incl, sizeof(regex_t));
-
-		if (SUCCEED != zbx_regexp_compile(regex_incl_str, REG_EXTENDED | REG_NEWLINE | REG_NOSUB, *regex_incl,
-				&error))
+		if (SUCCEED != zbx_regexp_compile(regex_incl_str, regex_incl, &error))
 		{
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL,
 					"Invalid regular expression in second parameter: %s", error));
-			zbx_free(error);
-			zbx_free(*regex_incl);
 			return FAIL;
 		}
 	}
 
 	if (NULL != regex_excl_str && '\0' != *regex_excl_str)
 	{
-		*regex_excl = (regex_t*)zbx_malloc(*regex_excl, sizeof(regex_t));
-
-		if (SUCCEED != zbx_regexp_compile(regex_excl_str, REG_EXTENDED | REG_NEWLINE | REG_NOSUB, *regex_excl,
-				&error))
+		if (SUCCEED != zbx_regexp_compile(regex_excl_str, regex_excl, &error))
 		{
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL,
 					"Invalid regular expression in third parameter: %s", error));
-			zbx_free(error);
-			zbx_free(*regex_excl);
 			return FAIL;
 		}
 	}
@@ -216,19 +207,13 @@ static int	prepare_parameters(AGENT_REQUEST *request, AGENT_RESULT *result, rege
 	return SUCCEED;
 }
 
-static void	regex_incl_excl_free(regex_t *regex_incl, regex_t *regex_excl)
+static void	regex_incl_excl_free(zbx_regexp_t *regex_incl, zbx_regexp_t *regex_excl)
 {
 	if (NULL != regex_incl)
-	{
 		zbx_regexp_free(regex_incl);
-		zbx_free(regex_incl);
-	}
 
 	if (NULL != regex_excl)
-	{
 		zbx_regexp_free(regex_excl);
-		zbx_free(regex_excl);
-	}
 }
 
 static void	list_vector_destroy(zbx_vector_ptr_t *list)
@@ -267,7 +252,7 @@ static void	descriptors_vector_destroy(zbx_vector_ptr_t *descriptors)
  *                                                                            *
  *****************************************************************************/
 #ifdef _WINDOWS
-#define		DW2UI64(h,l) 	((zbx_uint64_t)h << 32 | l)
+#define	DW2UI64(h,l) ((zbx_uint64_t)h << 32 | l)
 static int	get_file_info_by_handle(wchar_t *wpath, BY_HANDLE_FILE_INFORMATION *link_info, char **error)
 {
 	HANDLE	file_handle;
@@ -315,7 +300,7 @@ static int	link_processed(DWORD attrib, wchar_t *wpath, zbx_vector_ptr_t *descri
 		return SUCCEED;
 	}
 
-	/* A file is a hard link only*/
+	/* A file is a hard link only */
 	if (1 < link_info.nNumberOfLinks)
 	{
 		/* skip file if inode was already processed (multiple hardlinks) */
@@ -344,7 +329,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_uint64_t		size = 0;
 	zbx_vector_ptr_t	list;
 	zbx_stat_t		status;
-	regex_t			*regex_incl = NULL, *regex_excl = NULL;
+	zbx_regexp_t		*regex_incl = NULL, *regex_excl = NULL;
 	zbx_directory_item_t	*item;
 	zbx_vector_ptr_t	descriptors;
 
@@ -361,11 +346,11 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	while (0 < list.values_num)
 	{
-		char			*name, *error = NULL;
-		wchar_t			*wpath;
-		zbx_uint64_t		cluster_size = 0;
-		HANDLE			handle;
-		WIN32_FIND_DATA		data;
+		char		*name, *error = NULL;
+		wchar_t		*wpath;
+		zbx_uint64_t	cluster_size = 0;
+		HANDLE		handle;
+		WIN32_FIND_DATA	data;
 
 		item = list.values[--list.values_num];
 
@@ -446,7 +431,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 					{
 						zbx_uint64_t	file_size, mod;
 
-						file_size = ((zbx_uint64_t)size_high << 32) | size_low;
+						file_size = DW2UI64(size_high, size_low);
 
 						if (SIZE_MODE_DISK == mode && 0 != (mod = file_size % cluster_size))
 							file_size += cluster_size - mod;
@@ -454,6 +439,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 						size += file_size;
 					}
 				}
+
 				zbx_free(path);
 			}
 			else if (SUCCEED != queue_directory(&list, path, item->depth, max_depth))
@@ -464,7 +450,8 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 			zbx_free(wpath);
 			zbx_free(name);
 
-		} while (0 != FindNextFile(handle, &data));
+		}
+		while (0 != FindNextFile(handle, &data));
 
 		if (0 == FindClose(handle))
 		{
@@ -497,7 +484,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_vector_ptr_t	list, descriptors;
 	zbx_directory_item_t	*item;
 	zbx_stat_t		status;
-	regex_t			*regex_incl = NULL, *regex_excl = NULL;
+	zbx_regexp_t		*regex_incl = NULL, *regex_excl = NULL;
 	DIR 			*directory;
 	struct dirent 		*entry;
 	zbx_file_descriptor_t	*file;
@@ -517,7 +504,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 	{
 		if (SIZE_MODE_APPARENT == mode)
 			size += (zbx_uint64_t)status.st_size;
-		else		/* must be SIZE_MODE_DISK */
+		else	/* must be SIZE_MODE_DISK */
 			size += (zbx_uint64_t)status.st_blocks * DISK_BLOCK_SIZE;
 	}
 

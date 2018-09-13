@@ -295,6 +295,10 @@ function make_small_eventlist($startEvent, $backurl) {
 
 	$actions = makeEventsActions($events, true);
 
+	if ($config['event_ack_enable']) {
+		$acknowledges = makeEventsAcknowledges($events, $backurl);
+	}
+
 	foreach ($events as $index => $event) {
 		$duration = ($event['r_eventid'] != 0)
 			? zbx_date2age($event['clock'], $event['r_clock'])
@@ -331,10 +335,6 @@ function make_small_eventlist($startEvent, $backurl) {
 		addTriggerValueStyle($cell_status, $value, $value_clock,
 			$config['event_ack_enable'] ? (bool) $event['acknowledges'] : false
 		);
-
-		if ($config['event_ack_enable']) {
-			$acknowledges = makeEventsAcknowledges($events, $backurl);
-		}
 
 		$table->addRow([
 			(new CLink(zbx_date2str(DATE_TIME_FORMAT_SECONDS, $event['clock']),
@@ -394,7 +394,7 @@ function make_popup_eventlist($trigger, $eventid_till, $backurl, array $config, 
 
 		$div->addItem(
 			(new CDiv())
-				->addItem(new CLink($trigger['url'], $trigger_url))
+				->addItem(new CLink(CHTML::encode($trigger['url']), $trigger_url))
 				->addClass(ZBX_STYLE_OVERLAY_DESCR_URL)
 				->addStyle('max-width: 500px')
 		);

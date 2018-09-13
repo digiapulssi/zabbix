@@ -8847,7 +8847,7 @@ char	*zbx_dc_expand_user_macros(const char *text, zbx_uint64_t *hostids, int hos
  * Comments: The returned expression must be freed by the caller.             *
  *                                                                            *
  ******************************************************************************/
-static char	*dc_expression_expand_user_macros(const char *expression, char **error)
+static char	*dc_expression_expand_user_macros(const char *expression)
 {
 	zbx_vector_uint64_t	functionids, hostids;
 	char			*out;
@@ -8863,7 +8863,7 @@ static char	*dc_expression_expand_user_macros(const char *expression, char **err
 
 	if (NULL != strstr(out, "{$"))
 	{
-		*error = zbx_strdup(*error, "cannot evaluate expression: invalid macro value");
+		zabbix_log(LOG_LEVEL_DEBUG, "cannot evaluate expression: invalid macro value");
 		zbx_free(out);
 	}
 
@@ -8880,7 +8880,6 @@ static char	*dc_expression_expand_user_macros(const char *expression, char **err
  * Purpose: expand user macros in trigger expression                          *
  *                                                                            *
  * Parameters: expression - [IN] the expression to expand                     *
- *             error      - [OUT] the error message                           *
  *                                                                            *
  * Return value: The expanded expression or NULL in the case of error.        *
  *               If NULL is returned the error message is set.                *
@@ -8890,13 +8889,13 @@ static char	*dc_expression_expand_user_macros(const char *expression, char **err
  *           dc_expression_expand_user_macros() function for external usage.  *
  *                                                                            *
  ******************************************************************************/
-char	*DCexpression_expand_user_macros(const char *expression, char **error)
+char	*DCexpression_expand_user_macros(const char *expression)
 {
 	char	*expression_ex;
 
 	LOCK_CACHE;
 
-	expression_ex = dc_expression_expand_user_macros(expression, error);
+	expression_ex = dc_expression_expand_user_macros(expression);
 
 	UNLOCK_CACHE;
 
@@ -9497,7 +9496,6 @@ void	DCget_status(zbx_vector_ptr_t *hosts_monitored, zbx_vector_ptr_t *hosts_not
 void	DCget_expressions_by_names(zbx_vector_ptr_t *expressions, const char * const *names, int names_num)
 {
 	int			i, iname;
-	ZBX_DC_EXPRESSION	*expression;
 	ZBX_DC_REGEXP		*regexp, search_regexp;
 
 	LOCK_CACHE;
@@ -9511,19 +9509,13 @@ void	DCget_expressions_by_names(zbx_vector_ptr_t *expressions, const char * cons
 			for (i = 0; i < regexp->expressionids.values_num; i++)
 			{
 				zbx_uint64_t		expressionid = regexp->expressionids.values[i];
-				zbx_expression_t	*rxp;
+				ZBX_DC_EXPRESSION	*expression;
 
 				if (NULL == (expression = zbx_hashset_search(&config->expressions, &expressionid)))
 					continue;
 
-				rxp = zbx_malloc(NULL, sizeof(zbx_expression_t));
-				rxp->name = zbx_strdup(NULL, regexp->name);
-				rxp->expression = zbx_strdup(NULL, expression->expression);
-				rxp->exp_delimiter = expression->delimiter;
-				rxp->case_sensitive = expression->case_sensitive;
-				rxp->expression_type = expression->type;
-
-				zbx_vector_ptr_append(expressions, rxp);
+				add_regexp_ex(expressions, regexp->name, expression->expression, expression->type,
+						expression->delimiter, expression->case_sensitive);
 			}
 		}
 	}

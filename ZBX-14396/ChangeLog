@@ -1,3 +1,86 @@
+Changes for 3.4.14rc1
+
+New features:
+A.F....... [ZBX-1357] enabled Portuguese (Portugal) translation to be displayed by default (zalex_ua)
+
+Bug fixes:
+........S. [ZBX-14812] fixed hexadecimal to decimal preprocessing step to allow pairs of hexadecimal digits separated by space or new line (vso)
+..F....... [ZBX-14496] fixed unauthorized request error when sorting list after enabling/disabling elements (agriscenko)
+........S. [ZBX-14614] fixed server template linking with triggers having no dependencies (MVekslers)
+...G...... [ZBX-6565,ZBX-13645,ZBX-14559] fixed agent on AIX 6.1 TL0, 7.1 TL0: system.stat[memory,avm], compilation, crash on net.dns[] items (Andris)
+..F....... [ZBX-13015] fixed X axis labels with DST transition in the displayed period (Sasha)
+........S. [ZBX-14777] increased severity of housekeeper logs in the case of invalid history/trends intervals (wiper)
+........S. [ZBX-14778] fixed housekeeper attempting to remove history of discovery rules/prototypes (wiper)
+.......PS. [ZBX-14771] fixed memory leak in poller if scheduling interval is invalid (vso)
+.......PS. [ZBX-14775] fixed configuration of the maximum available count of aggregated metrics in a single request to vmware vCenter (MVekslers)
+..F....... [ZBX-14676] fixed displaying links containing UTF-8 characters (Ivo)
+...G...PS. [ZBX-14756] fixed zbxregexp library not compiling with old versions of pcre; thanks to Simon Matter for the patch (yurii)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.13
+
+3.4.13rc2 was released as 3.4.13 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.4.13rc2
+
+Bug fixes:
+.......PS. [ZBX-14765] fixed vmware incorrect memory release (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.13rc1
+
+New features:
+...G...PS. [ZBX-13730] replaced pcreposix library with pcre, lowered backtracking limit, fixed libevent build issues (yurii)
+
+Bug fixes:
+.......PS. [ZBX-14677] fixed vmware performance counter retrieval on installations with large number of datastores (wiper)
+........S. [ZBX-14697] fixed memory leak in alert manager when connection to database was lost (vso)
+..F....... [ZBX-12293] renamed trigger functions by adding function name at the beginning and removing the operator and "N" and placing operator in a separate field allowing two new operators "<=" and ">=" for selection (Ivo)
+...G...PS. [ZBX-13730] fixed incorrect behavior of zbxregexp library when reusing latest regular expression (yurii)
+.......PS. [ZBX-14593] fixed error message for invalid vmware endpoint (MVekslers)
+........S. [ZBX-14614] fixed trigger dependency link to the template instead of the host during the discovery action (MVekslers)
+...G...... [ZBX-372] added "zone" parameter to proc.num[] item for Solaris (viktors)
+..F....... [ZBX-14631] fixed typo in string: ouf, not out (vasilijs)
+........S. [ZBX-14410] fixed output of information about the error for expressions with functions of triggers or calculated items (MVekslers)
+..F....... [ZBX-14433] fixed several problems in displaying of X axis on the graphs (Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.12
+
+3.4.12rc1 was released as 3.4.12 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.4.12rc1
+
+Bug fixes:
+........S. [ZBX-14548] fixed the disk usage counters reading for ESX/ESXi hosts (MVekslers)
+..F....... [ZBX-9236] fixed timeselector period used to select 'all' values of particular item (miks)
+...G...... [ZBX-13393] fixed agent compilation error on AlphaServer Tru64 5.1B (Andris)
+..F....... [ZBX-13165] fixed Y-axis small value gradation issue in graphs (Ivo)
+..F....... [ZBX-14575] fixed Norwegian locale key for windows (vmurzins)
+.......PS. [ZBX-14566] fixed possible data loss due to MariaDB server restart (vso)
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
+....I..... [ZBX-14370] fixed deleting of files after compiling a program (make clean) for Solaris (MVekslers)
+..F....... [ZBX-14519] fixed displaying timeline points of days in Problems widget (vasilijs)
+..F....... [ZBX-14491] fixed link "show value mappings", which leads to no permission page (vasilijs)
+........S. [ZBX-12380] improved function parameter parsing for trigger functions (MVekslers)
+..F....... [ZBX-13641] disabled preprocessing update for discovered items (vasilijs)
+A......... [ZBX-13732] fixed status change for linked template items through parent template if host assigned (agriscenko)
+..F....... [ZBX-14432] removed redundant code and improved performance in event details screen (miks)
+........S. [ZBX-14410] improved error message handling in zbx_function_find() (MVekslers)
+........S. [ZBX-14500] fixed crash when reporting unknown triggers and using $1-$9 macros at the same time (vso)
+..F....... [ZBX-12104] added limit ZBX_HISTORY_PERIOD for {ITEM.VALUE} macro resolving in trigger name (gcalenko)
+..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
+
+--------------------------------------------------------------------------------
+Changes for 3.4.11
+
+New features:
+A.F....... [ZBX-1357] added and enabled Norwegian translation to be displayed by default (zalex_ua)
+A.F....... [ZBX-1357] updated English (United States), French, Hebrew, Japanese, Portuguese (Brazil), Russian, Ukrainian translations; thanks to Zabbix translators (zalex_ua)
+
+--------------------------------------------------------------------------------
 Changes for 3.4.11rc1
 
 Bug fixes:
@@ -1257,6 +1340,62 @@ A......... [ZBX-10030] fixed API action update method request with only "actioni
 A......... [ZBX-10049] fixed optional field validation in drule.update API method (Gunars)
 ..F....PS. [ZBX-10076] fixed text information containing non-ASCII characters being saved incorrectly to IBM DB2 database in case of system locale misconfiguration (gleb, Oleg)
 ..F....... [ZBX-9989] optimized SQL queries for graphs building (Gunars, Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.22rc1
+
+Bug fixes:
+..F....... [ZBX-14496] fixed unauthorized request error when sorting list after enabling/disabling elements (agriscenko)
+........S. [ZBX-14614] fixed server template linking with triggers having no dependencies (MVekslers)
+...G...... [ZBX-6565,ZBX-13645,ZBX-14559] fixed agent on AIX 6.1 TL0, 7.1 TL0: system.stat[memory,avm], compilation, crash on net.dns[] items (Andris)
+..F....... [ZBX-13015] fixed X axis labels with DST transition in the displayed period (Sasha)
+........S. [ZBX-14778] fixed housekeeper attempting to remove history of discovery rules/prototypes (wiper)
+.......PS. [ZBX-14775] fixed configuration of the maximum available count of aggregated metrics in a single request to vmware vCenter (MVekslers)
+..F....... [ZBX-14676] fixed displaying links containing UTF-8 characters (Ivo)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.21
+
+3.0.21rc1 was released as 3.0.21 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.21rc1
+
+Bug fixes:
+.......PS. [ZBX-14677] fixed vmware performance counter retrieval on installations with large number of datastores (wiper)
+..F....... [ZBX-12293] renamed trigger functions by adding function name at the beginning and removing the operator and "N" and placing operator in a separate field allowing two new operators "<=" and ">=" for selection (Ivo)
+.......PS. [ZBX-14593] fixed error message for invalid vmware endpoint (MVekslers)
+........S. [ZBX-14614] fixed trigger dependency link to the template instead of the host during the discovery action (MVekslers)
+...G...... [ZBX-372] added "zone" parameter to proc.num[] item for Solaris (viktors)
+........S. [ZBX-14410] fixed output of information about the error for expressions with functions of triggers or calculated items (MVekslers)
+..F....... [ZBX-14433] fixed several problems in displaying of X axis on the graphs (Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.20
+
+3.0.20rc1 was released as 3.0.20 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.20rc1
+
+Bug fixes:
+........S. [ZBX-14548] fixed the disk usage counters reading for ESX/ESXi hosts (MVekslers)
+..F....... [ZBX-9236] fixed timeselector period used to select 'all' values of particular item (miks)
+...G...... [ZBX-13393] fixed agent compilation error on AlphaServer Tru64 5.1B (Andris)
+.......PS. [ZBX-14566] fixed possible data loss due to MariaDB server restart (vso)
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
+..F....... [ZBX-14491] fixed link "show value mappings", which leads to no permission page (vasilijs)
+........S. [ZBX-12380] improved function parameter parsing for trigger functions (MVekslers)
+..F....... [ZBX-14432] removed redundant code in event details screen (miks)
+........S. [ZBX-14410] improved error message handling in zbx_function_find() (MVekslers)
+..F....... [ZBX-12104] added limit ZBX_HISTORY_PERIOD for {ITEM.VALUE} macro resolving in trigger name (gcalenko)
+..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.19
+
+New features:
+A.F....... [ZBX-1357] updated English (United States), Japanese, Korean translations; thanks to Zabbix translators (zalex_ua)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.19rc1
@@ -3210,11 +3349,22 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
 
 --------------------------------------------------------------------------------
-Changes for 2.2.23rc1
+Changes for 2.2.24rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.2.23
+
+2.2.23rc1 was released as 2.2.23 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.23rc1
+
+Bug fixes:
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
 
 --------------------------------------------------------------------------------
 Changes for 2.2.22
