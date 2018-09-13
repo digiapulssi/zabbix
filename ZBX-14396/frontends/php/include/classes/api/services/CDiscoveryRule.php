@@ -1122,13 +1122,13 @@ class CDiscoveryRule extends CItemGeneral {
 		$dstDiscovery['itemid'] = $newDiscovery['itemids'][0];
 
 		// copy prototypes
-		$newPrototypes = $this->copyItemPrototypes($srcDiscovery, $dstDiscovery, $dstHost);
+		$new_prototypeids = $this->copyItemPrototypes($srcDiscovery, $dstDiscovery, $dstHost);
 
 		// if there were prototypes defined, clone everything else
-		if ($newPrototypes) {
+		if ($new_prototypeids) {
 			// fetch new prototypes
 			$dstDiscovery['items'] = API::ItemPrototype()->get([
-				'itemids' => $newPrototypes['itemids'],
+				'itemids' => $new_prototypeids,
 				'output' => ['itemid', 'type', 'snmp_community', 'snmp_oid', 'hostid', 'name', 'key_', 'delay',
 					'history', 'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_securityname',
 					'snmpv3_securitylevel', 'snmpv3_authpassphrase', 'snmpv3_privpassphrase', 'formula', 'error',
@@ -1155,7 +1155,7 @@ class CDiscoveryRule extends CItemGeneral {
 
 	/**
 	 * Copies all of the item prototypes from the source discovery to the target
-	 * discovery rule.
+	 * discovery rule. Return array of created item prototype ids.
 	 *
 	 * @throws APIException if prototype saving fails
 	 *
@@ -1180,8 +1180,10 @@ class CDiscoveryRule extends CItemGeneral {
 			'discoveryids' => $srcDiscovery['itemid'],
 			'preservekeys' => true
 		]);
+		$new_itemids = [];
+		$itemkey_to_id = [];
+		$create_items = [];
 
-		$rs = [];
 		if ($prototypes) {
 			$create_order = [];
 			$src_itemid_to_key = [];
@@ -1199,8 +1201,6 @@ class CDiscoveryRule extends CItemGeneral {
 			}
 			asort($create_order);
 
-			$itemkey_to_id = [];
-			$create_items = [];
 			$current_dependency = reset($create_order);
 
 			foreach ($create_order as $key => $dependency_level) {
@@ -1211,7 +1211,9 @@ class CDiscoveryRule extends CItemGeneral {
 					if (!$created_itemids) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _('Cannot clone item prototypes.'));
 					}
+
 					$created_itemids = $created_itemids['itemids'];
+					$new_itemids = array_merge($new_itemids, $created_itemids);
 
 					foreach ($create_items as $index => $created_item) {
 						$itemkey_to_id[$created_item['key_']] = $created_itemids[$index];
@@ -1274,12 +1276,18 @@ class CDiscoveryRule extends CItemGeneral {
 				$create_items[] = $prototype;
 			}
 
-			if ($create_items && !API::ItemPrototype()->create($create_items)) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _('Cannot clone item prototypes.'));
+			if ($create_items) {
+				$created_itemids = API::ItemPrototype()->create($create_items);
+
+				if (!$created_itemids) {
+					self::exception(ZBX_API_ERROR_PARAMETERS, _('Cannot clone item prototypes.'));
+				}
+
+				$new_itemids = array_merge($new_itemids, $created_itemids['itemids']);
 			}
 		}
 
-		return true;
+		return $new_itemids;
 	}
 
 	/**
