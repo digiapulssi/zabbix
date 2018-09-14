@@ -1126,14 +1126,7 @@ class CDiscoveryRule extends CItemGeneral {
 			// fetch new prototypes
 			$dstDiscovery['items'] = API::ItemPrototype()->get([
 				'itemids' => $new_prototypeids,
-				'output' => ['itemid', 'type', 'snmp_community', 'snmp_oid', 'hostid', 'name', 'key_', 'delay',
-					'history', 'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_securityname',
-					'snmpv3_securitylevel', 'snmpv3_authpassphrase', 'snmpv3_privpassphrase', 'formula', 'error',
-					'lastlogsize', 'logtimefmt', 'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username',
-					'password', 'publickey', 'privatekey', 'mtime', 'flags', 'interfaceid', 'port', 'description',
-					'inventory_link', 'lifetime', 'snmpv3_authprotocol', 'snmpv3_privprotocol', 'state',
-					'snmpv3_contextname', 'evaltype', 'jmx_endpoint', 'master_itemid'
-				],
+				'output' => ['itemid','key_'],
 				'preservekeys' => true
 			]);
 
