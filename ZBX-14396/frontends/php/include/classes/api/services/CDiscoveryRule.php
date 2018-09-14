@@ -1145,7 +1145,7 @@ class CDiscoveryRule extends CItemGeneral {
 		}
 
 		// copy host prototypes
-		$this->copyHostPrototypes($srcDiscovery, $dstDiscovery);
+		$this->copyHostPrototypes($discoveryid, $dstDiscovery);
 
 		return true;
 	}
@@ -1408,16 +1408,16 @@ class CDiscoveryRule extends CItemGeneral {
 	 * Copies all of the host prototypes from the source discovery to the target
 	 * discovery rule.
 	 *
-	 * @throws APIException if prototype saving fails
+	 * @throws APIException if prototype saving fails.
 	 *
-	 * @param array $srcDiscovery   The source discovery rule to copy from
-	 * @param array $dstDiscovery   The target discovery rule to copy to
+	 * @param int   $srcid          The source discovery rule id to copy from.
+	 * @param array $dstDiscovery   The target discovery rule to copy to.
 	 *
 	 * @return array
 	 */
-	protected function copyHostPrototypes(array $srcDiscovery, array $dstDiscovery) {
+	protected function copyHostPrototypes($srcid, array $dstDiscovery) {
 		$prototypes = API::HostPrototype()->get([
-			'discoveryids' => $srcDiscovery['itemid'],
+			'discoveryids' => $srcid,
 			'output' => ['host', 'name', 'status'],
 			'selectGroupLinks' => ['groupid'],
 			'selectGroupPrototypes' => ['name'],
