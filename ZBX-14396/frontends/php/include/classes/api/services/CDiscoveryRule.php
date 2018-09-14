@@ -535,13 +535,12 @@ class CDiscoveryRule extends CItemGeneral {
 	 * @throws APIException if trigger saving fails
 	 *
 	 * @param array $srcDiscovery    The source discovery rule to copy from
-	 * @param array $dstDiscovery    The target discovery rule to copy to
 	 * @param array $srcHost         The host the source discovery belongs to
 	 * @param array $dstHost         The host the target discovery belongs to
 	 *
 	 * @return array
 	 */
-	protected function copyTriggerPrototypes(array $srcDiscovery, array $dstDiscovery, array $srcHost, array $dstHost) {
+	protected function copyTriggerPrototypes(array $srcDiscovery, array $srcHost, array $dstHost) {
 		$srcTriggers = API::TriggerPrototype()->get([
 			'discoveryids' => $srcDiscovery['itemid'],
 			'output' => ['triggerid', 'expression', 'description', 'url', 'status', 'priority', 'comments',
@@ -556,15 +555,15 @@ class CDiscoveryRule extends CItemGeneral {
 			'preservekeys' => true
 		]);
 
-		if (!$srcTriggers) {
-			return [];
-		}
-
 		foreach ($srcTriggers as $id => $trigger) {
 			// Skip trigger prototypes with web items and remove them from source.
 			if (httpItemExists($trigger['items'])) {
 				unset($srcTriggers[$id]);
 			}
+		}
+
+		if (!$srcTriggers) {
+			return [];
 		}
 
 		/*
@@ -599,7 +598,7 @@ class CDiscoveryRule extends CItemGeneral {
 			['sources' => ['expression', 'recovery_expression']]
 		);
 		foreach ($dstTriggers as $id => &$trigger) {
-			unset($dstTriggers[$id]['triggerid'], $dstTriggers[$id]['templateid']);
+			unset($trigger['triggerid'], $trigger['templateid']);
 
 			// Update the destination expressions.
 			$trigger['expression'] = triggerExpressionReplaceHost($trigger['expression'], $srcHost['host'],
@@ -1144,7 +1143,7 @@ class CDiscoveryRule extends CItemGeneral {
 			$this->copyGraphPrototypes($srcDiscovery, $dstDiscovery);
 
 			// copy triggers
-			$this->copyTriggerPrototypes($srcDiscovery, $dstDiscovery, $srcHost, $dstHost);
+			$this->copyTriggerPrototypes($srcDiscovery, $srcHost, $dstHost);
 		}
 
 		// copy host prototypes
