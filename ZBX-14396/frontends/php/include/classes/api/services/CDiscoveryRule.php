@@ -700,15 +700,13 @@ class CDiscoveryRule extends CItemGeneral {
 									$new_trigger_prototype['src_host'],
 									$new_trigger_prototype['new_host']
 								);
-								error(_s(
+								self::exception(ZBX_API_ERROR_PARAMETERS, _s(
 									'Cannot add dependency from trigger "%1$s:%2$s" to non existing trigger "%3$s:%4$s".',
 									$trigger_prototype['description'],
 									$trigger_prototype['expression'],
 									$dep_triggers[$dep_triggerid]['description'],
 									$expr2
 								));
-
-								return false;
 							}
 						}
 					}
