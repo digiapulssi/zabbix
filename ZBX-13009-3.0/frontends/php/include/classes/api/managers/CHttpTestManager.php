@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -282,31 +282,6 @@ class CHttpTestManager {
 		while ($httpTest = DBfetch($dbCursor)) {
 			info(_s('Updated: Web scenario "%1$s" on "%2$s".', $httpTest['name'], $httpTest['hostname']));
 		}
-
-		/*
-		 * Unset unchanged properties, otherwise, host web scenarios will inherit them and their custom applications
-		 * will be overwritten.
-		 */
-		$properties_to_compare = ['applicationid', 'ssl_cert_file', 'ssl_key_password', 'ssl_key_file', 'verify_peer',
-			'verify_host'
-		];
-
-		foreach ($httpTests as &$httpTest) {
-			foreach ($properties_to_compare as $property) {
-				// Do not compare unexisting properties.
-				if (!array_key_exists($property, $httpTest)) {
-					continue;
-				}
-
-				// Unset unchanged properties.
-				if (($property === 'applicationid'
-						&& bccomp($httpTest[$property], $dbHttpTest[$httpTest['httptestid']][$property]) == 0)
-						|| $httpTest[$property] === $dbHttpTest[$httpTest['httptestid']][$property]) {
-					unset($httpTest[$property]);
-				}
-			}
-		}
-		unset($httpTest);
 
 		return $httpTests;
 	}

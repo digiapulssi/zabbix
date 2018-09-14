@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -353,12 +353,6 @@ static void	hk_history_item_update(zbx_hk_history_rule_t *rule, int now, zbx_uin
  * Parameters: rule  - [IN/OUT] the history housekeeping rule                 *
  *             now   - [IN] the current timestamp                             *
  *                                                                            *
- * Author: Andris Zeila                                                       *
- *                                                                            *
- * Comments: This function is called to release resources allocated by        *
- *           history housekeeping rule after housekeeping was disabled        *
- *           for the table referred by this rule.                             *
- *                                                                            *
  ******************************************************************************/
 static void	hk_history_update(zbx_hk_history_rule_t *rules, int now)
 {
@@ -368,8 +362,10 @@ static void	hk_history_update(zbx_hk_history_rule_t *rules, int now)
 	result = DBselect(
 			"select i.itemid,i.value_type,i.history,i.trends"
 			" from items i,hosts h"
-			" where i.hostid=h.hostid"
+			" where i.flags in (%d,%d)"
+				" and i.hostid=h.hostid"
 				" and h.status in (%d,%d)",
+			ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED,
 			HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED);
 
 	while (NULL != (row = DBfetch(result)))
@@ -675,9 +671,12 @@ static int	housekeeping_cleanup()
 #elif defined(HAVE_POSTGRESQL)
 			d = DBexecute(
 					"delete from %s"
-					" where ctid = any(array(select ctid from %s"
+					" where %s=" ZBX_FS_UI64 " and"
+						" ctid = any(array(select ctid from %s"
 						" where %s=" ZBX_FS_UI64 " limit %d))",
 					housekeeper.tablename,
+					housekeeper.field,
+					housekeeper.value,
 					housekeeper.tablename,
 					housekeeper.field,
 					housekeeper.value,

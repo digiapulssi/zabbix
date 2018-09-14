@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -384,7 +384,7 @@ var CTimeLine = Class.create({
 
 	period: function(period) {
 		if (empty(period)) {
-			return this._period;
+			return this.is_selectall_period ? this.maxperiod : this._period;
 		}
 
 		this.is_selectall_period = (period == this.maxperiod);
@@ -572,7 +572,7 @@ var CScrollBar = Class.create({
 	},
 
 	navigateLeft: function(e, left) {
-		if (this.disabled) {
+		if (this.disabled || timeControl.timeline.is_selectall_period) {
 			return false;
 		}
 
@@ -609,7 +609,7 @@ var CScrollBar = Class.create({
 	},
 
 	navigateRight: function(e, right) {
-		if (this.disabled) {
+		if (this.disabled || timeControl.timeline.is_selectall_period) {
 			return false;
 		}
 

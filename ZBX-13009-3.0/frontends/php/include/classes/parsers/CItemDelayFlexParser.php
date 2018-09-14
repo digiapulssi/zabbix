@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1462,7 +1462,7 @@ class CItemDelayFlexParser {
 							}
 
 							$this->intervals[$i]['interval'] .= $minutes_from;
-							$this->intervals[$i]['h'][$minutes]['from'] .= $minutes_from;
+							$this->intervals[$i]['m'][$minutes]['from'] .= $minutes_from;
 
 							$state = self::STATE_NEW;
 

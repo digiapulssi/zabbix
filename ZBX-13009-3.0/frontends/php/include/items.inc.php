@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1037,7 +1037,8 @@ function item_get_history($db_item, $clock, $ns) {
 		$sql = 'SELECT MAX(clock) AS clock'.
 				' FROM '.$table.
 				' WHERE itemid='.zbx_dbstr($db_item['itemid']).
-					' AND clock<'.zbx_dbstr($clock);
+					' AND clock<'.zbx_dbstr($clock).
+					(ZBX_HISTORY_PERIOD ? ' AND clock>='.zbx_dbstr($clock - ZBX_HISTORY_PERIOD) : '');
 		if (null != ($row = DBfetch(DBselect($sql)))) {
 			$max_clock = $row['clock'];
 		}

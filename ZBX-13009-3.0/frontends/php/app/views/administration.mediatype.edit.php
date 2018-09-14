@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,12 +115,13 @@ $mediaTypeFormList->addRow(_('GSM modem'),
 
 // create password field
 if ($data['passwd'] != '') {
+	// Disabling 'passwd' field prevents stored passwords autofill by browser.
 	$passwdField = [
-		(new CButton('chPass_btn', _('Change password')))
-			->onClick('this.style.display="none"; $("passwd").show().focus();'),
+		(new CButton('chPass_btn', _('Change password'))),
 		(new CPassBox('passwd', $data['passwd']))
 			->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			->addStyle('display: none;')
+			->setAttribute('disabled', 'disabled')
 	];
 }
 else {

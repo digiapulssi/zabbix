@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2205,7 +2205,7 @@ static void	get_trigger_function_value(const char *expression, char **replace_to
 	if (SUCCEED != ret || '.' != *p++)
 		goto fail;
 
-	if (SUCCEED != zbx_function_validate(p, &par_l, &par_r) || '}' != p[par_r + 1])
+	if (SUCCEED != zbx_function_validate(p, &par_l, &par_r, NULL, 0) || '}' != p[par_r + 1])
 		goto fail;
 
 	p[par_l] = '\0';
@@ -2351,6 +2351,23 @@ static void	wrap_negative_double_suffix(char **replace_to, size_t *replace_to_al
 	(*replace_to)[0] = '(';
 	(*replace_to)[replace_to_len + 1] = ')';
 	(*replace_to)[replace_to_len + 2] = '\0';
+}
+
+static const char	*zbx_dobject_status2str(int st)
+{
+	switch (st)
+	{
+		case DOBJECT_STATUS_UP:
+			return "UP";
+		case DOBJECT_STATUS_DOWN:
+			return "DOWN";
+		case DOBJECT_STATUS_DISCOVER:
+			return "DISCOVERED";
+		case DOBJECT_STATUS_LOST:
+			return "LOST";
+		default:
+			return "UNKNOWN";
+	}
 }
 
 /******************************************************************************
@@ -2907,7 +2924,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 							"h.status")))
 					{
 						replace_to = zbx_strdup(replace_to,
-								DOBJECT_STATUS_UP == atoi(replace_to) ? "UP" : "DOWN");
+								zbx_dobject_status2str(atoi(replace_to)));
 					}
 				}
 				else if (0 == strcmp(m, MVAR_DISCOVERY_DEVICE_UPTIME))
@@ -2944,7 +2961,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 							"s.status")))
 					{
 						replace_to = zbx_strdup(replace_to,
-								DOBJECT_STATUS_UP == atoi(replace_to) ? "UP" : "DOWN");
+								zbx_dobject_status2str(atoi(replace_to)));
 					}
 				}
 				else if (0 == strcmp(m, MVAR_DISCOVERY_SERVICE_UPTIME))
@@ -4181,7 +4198,7 @@ static int	substitute_discovery_macros_simple(char *data, char **replace_to, siz
 		return FAIL;
 
 	/* a trigger function with parameters */
-	if (SUCCEED != zbx_function_validate(pr, &par_l, &par_r))
+	if (SUCCEED != zbx_function_validate(pr, &par_l, &par_r, NULL, 0))
 		return FAIL;
 
 	pr += par_r + 1;

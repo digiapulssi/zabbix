@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -328,9 +328,10 @@ elseif ($resourceType == SCREEN_RESOURCE_PLAIN_TEXT) {
 	$id = 0;
 
 	$items = API::Item()->get([
-		'itemids' => $resourceId,
+		'output' => ['itemid', 'hostid', 'key_', 'name'],
 		'selectHosts' => ['name'],
-		'output' => ['itemid', 'hostid', 'key_', 'name']
+		'itemids' => $resourceId,
+		'webitems' => true
 	]);
 
 	if ($items) {

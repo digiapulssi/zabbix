@@ -1,8 +1,175 @@
-Changes for 3.0.15rc1
+Changes for 3.0.23rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 3.0.22
+
+3.0.22rc1 was released as 3.0.22 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.22rc1
+
+Bug fixes:
+..F....... [ZBX-14496] fixed unauthorized request error when sorting list after enabling/disabling elements (agriscenko)
+........S. [ZBX-14614] fixed server template linking with triggers having no dependencies (MVekslers)
+...G...... [ZBX-6565,ZBX-13645,ZBX-14559] fixed agent on AIX 6.1 TL0, 7.1 TL0: system.stat[memory,avm], compilation, crash on net.dns[] items (Andris)
+..F....... [ZBX-13015] fixed X axis labels with DST transition in the displayed period (Sasha)
+........S. [ZBX-14778] fixed housekeeper attempting to remove history of discovery rules/prototypes (wiper)
+.......PS. [ZBX-14775] fixed configuration of the maximum available count of aggregated metrics in a single request to vmware vCenter (MVekslers)
+..F....... [ZBX-14676] fixed displaying links containing UTF-8 characters (Ivo)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.21
+
+3.0.21rc1 was released as 3.0.21 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.21rc1
+
+Bug fixes:
+.......PS. [ZBX-14677] fixed vmware performance counter retrieval on installations with large number of datastores (wiper)
+..F....... [ZBX-12293] renamed trigger functions by adding function name at the beginning and removing the operator and "N" and placing operator in a separate field allowing two new operators "<=" and ">=" for selection (Ivo)
+.......PS. [ZBX-14593] fixed error message for invalid vmware endpoint (MVekslers)
+........S. [ZBX-14614] fixed trigger dependency link to the template instead of the host during the discovery action (MVekslers)
+...G...... [ZBX-372] added "zone" parameter to proc.num[] item for Solaris (viktors)
+........S. [ZBX-14410] fixed output of information about the error for expressions with functions of triggers or calculated items (MVekslers)
+..F....... [ZBX-14433] fixed several problems in displaying of X axis on the graphs (Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.20
+
+3.0.20rc1 was released as 3.0.20 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.20rc1
+
+Bug fixes:
+........S. [ZBX-14548] fixed the disk usage counters reading for ESX/ESXi hosts (MVekslers)
+..F....... [ZBX-9236] fixed timeselector period used to select 'all' values of particular item (miks)
+...G...... [ZBX-13393] fixed agent compilation error on AlphaServer Tru64 5.1B (Andris)
+.......PS. [ZBX-14566] fixed possible data loss due to MariaDB server restart (vso)
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
+..F....... [ZBX-14491] fixed link "show value mappings", which leads to no permission page (vasilijs)
+........S. [ZBX-12380] improved function parameter parsing for trigger functions (MVekslers)
+..F....... [ZBX-14432] removed redundant code in event details screen (miks)
+........S. [ZBX-14410] improved error message handling in zbx_function_find() (MVekslers)
+..F....... [ZBX-12104] added limit ZBX_HISTORY_PERIOD for {ITEM.VALUE} macro resolving in trigger name (gcalenko)
+..F....... [ZBX-14402] fixed internal item parameter that does not match documentation (vasilijs)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.19
+
+New features:
+A.F....... [ZBX-1357] updated English (United States), Japanese, Korean translations; thanks to Zabbix translators (zalex_ua)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.19rc1
+
+Bug fixes:
+..F....... [ZBX-11861] fixed filter by trigger not being reset when accessing Events from a global search result (agriscenko)
+...G...... [ZBX-6046] fixed the functions 'net.if.*' for Solaris with empty 64 bits counters (MVekslers)
+A.F....... [ZBX-13355] fixed media type a required password field successfully passing validation while being empty and prevented auto-filling stored passwords by browser (Ivo)
+.D........ [ZBX-14398] improved "Server" parameter description in Zabbix agent configuration file (vso)
+.......PS. [ZBX-14447] reverted ZBX-13788 fix because of broken server-proxy compatibility between minor versions (wiper)
+...G...... [ZBX-12250] fixed logrt[] item to analyze log file from start if no log files match and no log files were seen before (Andris)
+...G...... [ZBX-12070] fixed "proc.num" and "proc.mem" items calculation of values when zabbix_agentd called in test mode (Sergejs)
+........S. [ZBX-14423] fixed use of initialized variable during application discovery (vso)
+.......PS. [ZBX-12990] improved "vmware.hv.datastore.size" through usage the performance counters (MVekslers)
+.......PS. [ZBX-13765] fixed discovered host status update if it was down and a service was discovered on that host (Andris)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.18
+
+3.0.18rc1 was released as 3.0.18 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.18rc1
+
+Bug fixes:
+..F....... [ZBX-13549] fixed displaying of not monitored triggers in maps (miks)
+........S. [ZBX-14333] fixed {ESC.HISTORY} and action log not to display colon without target host when executed on Zabbix server (vso)
+........S. [ZBX-13043] removed error message for when user has defined media but all of them are disabled (viktors)
+A.F....... [ZBX-13774] fixed creating and updating items with multiple specific scheduling intervals (Ivo)
+..F....... [ZBX-12175] fixed subfilter entries with long names going off the screen (agriscenko, Andzs)
+..F....... [ZBX-12644] fixed filter being partially reset when using pagination in availability report page (Ivo)
+..F....... [ZBX-12882] fixed in popup window being allowed to select applications from different hosts when editing item mass update form (agriscenko)
+.......PS. [ZBX-13788] fixed host availability stuck in unknown state after proxy changes (wiper)
+........S. [ZBX-12372] fixed duplication of prefix "/" for second parameter "path" in items "web.page.*" (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.17
+
+3.0.17rc2 was released as 3.0.17 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.17rc2
+
+Bug fixes:
+...G...... [ZBX-13781] fixed possible crash in the function "web.page.get" of Zabbix Agentd (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.17rc1
+
+Bug fixes:
+..F....... [ZBX-14336] fixed persistent xss vulnerability in services (vjaceslavs)
+..F....... [ZBX-12425] fixed selection of web items in the "Plain text" screen element (Sasha)
+...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)
+........S. [ZBX-13766] fixed comparison of two large float numbers in expressions (Sergejs)
+.......PS. [ZBX-13481] fixed incorrect parsing of BITS data type in SNMP response (vso)
+A.F....... [ZBX-13742] fixed parsing of the operator "not" in trigger expression (Sasha)
+A.F....... [ZBX-13680] fixed action not being cloned due to existing operation id being submitted (agriscenko)
+...G...PS. [ZBX-13660] fixed data types passed to is_ushort() for converting PID, port and process number (Andris)
+..F....... [ZBX-12935,ZBX-13539] fixed displaying of floating point values under the "Latest data" page (Sasha)
+..F....... [ZBX-13500] fixed fractional values in triggers being misinterpreted without a leading 0 (agriscenko)
+..F....... [ZBX-13561] fixed incorrectly displayed pie graph when first item has no data (Ivo)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.16
+
+3.0.16rc1 was released as 3.0.16 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.16rc1
+
+New features:
+A.F....... [ZBX-1357] updated Chinese (China), Czech, English (United States), Japanese, Korean, Russian, Turkish, Ukrainian translations; thanks to Zabbix translators (zalex_ua)
+
+Bug fixes:
+..F....... [ZBX-13542] fixed http steps on template not inheriting hosts application setting (nikita)
+........S. [ZBX-13339] improved deallocation of memory (MVekslers)
+..F....... [ZBX-13412] fixed JS error and wrong form behaviour when changing item type, type of information, data type (agriscenko)
+..F....... [ZBX-13257] fixed display of the latest item in Audit log (agriscenko)
+...G...PS. [ZBX-13351] improved OpenSSL error messages (viktors)
+.......PS. [ZBX-13362] fixed potentially wrong rows deleting by housekeeper in PostgreSQL (Sergejs)
+....I..... [ZBX-13472] fixed description of "Server" and "ServerActive" configuration options (Sasha)
+........S. [ZBX-13455] added frontend error message when templates cannot be linked to LLD host (viktors)
+..F....... [ZBX-13434] fixed incorrect trigger dependencies being set after copying triggers to multiple hosts; thanks to Kotaro Miyashita for the patch (Ivo)
+..F....... [ZBX-13342] fixed order by query in frontend Maintenance tab (agriscenko)
+A......... [ZBX-6167] fixed partial updating in maintenance.update (ashubin)
+...G...... [ZBX-13062] banned using of mutex in threads of metrics collection (MVekslers)
+........S. [ZBX-13236] fixed error message of function parameters parse (MVekslers)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.15
+
+3.0.15rc1 was released as 3.0.15 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.15rc1
+
+Bug fixes:
+....I..... [ZBX-13398] fixed configure script for Debian GNU/Linux "buster" and "sid" to work with PostgreSQL (viktors)
+.......PS. [ZBX-13441] fixed crashes in case of failures (e.g. timeouts) during VMware hypervisor discovery (gleb)
+........S. [ZBX-12643] improved error log message in case Zabbix server database cannot be used due to empty "users" table (vso)
+A......... [ZBX-13325] fixed trend.get() method with Oracle backend (Sasha)
+...G...... [ZBX-13055] fixed problems with DNS resolver interface on NetBSD (valdis)
+..F....... [ZBX-13345] removed SID from URL in screen edit mode (miks)
+...G...... [ZBX-13246] fixed processing of command line arguments which are longer than 2KB for proc.num and proc.mem items on AIX (viktors)
+...G...... [ZBX-13254] fixed 'skip' parameter behaviour for log[], log.count[], logrt[], logrt.count[] items in case log files initially do not exist (Andris)
+...G...... [ZBX-13253] fixed losing the 1st record by log[] and logrt[] items if 'skip' parameter is used and log file initially is empty (Andris)
 A......... [ZBX-12991] removed default values for "active_since" and "active_till" fields in maintenance.create API method (Ivo)
 ..F....... [ZBX-11305] fixed color and label for event status on event details page (gcalenko)
 ..F....... [ZBX-13085] fixed trigger mass update form redirect to trigger list on attempt to attach dependent trigger if there was errors in previous submit attempts (gcalenko)
@@ -881,7 +1048,7 @@ A......... [ZBX-9975] fixed undefined index when updating trigger prototype (Gun
 ........S. [ZBX-9959] fixed JSON validation: produce an error on invalid escape sequences in a string value (dimir)
 A.F....... [ZBX-7202] fixed action disabling when deleting user or user group (Gunars)
 ..F....... [ZBX-9970] removed service label from configuration popup menu (Gunars)
-..F....... [ZBX-9945] fixed updating of "Device uniqueness criterias" while editing discovery checks (Sasha, Cemeris)
+..F....... [ZBX-9945] fixed updating of "Device uniqueness criterias" while editing discovery checks (Cemeris, Sasha)
 ...G...... [ZBX-9967] fixed agent compilation error on NetBSD 7 (dimir)
 .D........ [ZBX-9347] added information about zabbix_sender input file format to the man page (dimir, Richlv)
 
@@ -890,7 +1057,7 @@ Changes for 3.0.0alpha3
 
 New features:
 A.FGI..PS. [ZBXNEXT-1263] added encryption support for communications between Zabbix components (Alexei, Andris, asaveljevs, dimir, gleb, Ivo, Oleg, wiper)
-..F....... [ZBXNEXT-2662] implemented on-click navigation for sub menus (Alex)
+..F....... [ZBXNEXT-2662] implemented on-click navigation for sub menus (Alexei)
 ........S. [ZBXNEXT-2844] added multiple escalator support (wiper)
 .......PS. [ZBXNEXT-2988] reduced the number of poller configuration cache locks by 1/3 (wiper)
 A.F.I...S. [ZBXNEXT-2163] implemented argument support for script media type (Ivo, wiper)
@@ -912,9 +1079,9 @@ Bug fixes:
 ........S. [ZBX-7006] implemented trend cache cleanup procedure which forces hourly flush of deleted, disabled or rarely updated item trends (dimir, gleb)
 ........S. [ZBX-9889] fixed vmware.eventlog item values to have unique timestamps in history table (dimir)
 ..F....... [ZBX-9919] fixed y scale calculation for linear graphs (Cemeris)
-..F....... [ZBX-9898] improved database exception messages (Sasha, Cemeris)
+..F....... [ZBX-9898] improved database exception messages (Cemeris, Sasha)
 ..F....... [ZBX-9900] marked first parameter for proc_info item as mandatory (Cemeris)
-..F....... [ZBX-9902] fixed undefined variables "mediatype" and "users" in mediatype properties (Sasha, Cemeris)
+..F....... [ZBX-9902] fixed undefined variables "mediatype" and "users" in mediatype properties (Cemeris, Sasha)
 ...G...PS. [ZBX-9864] fixed compilation warnings regarding SIZE_T_MAX under NetBSD (Sasha)
 ..F....... [ZBX-9862] added meta tag "msapplication-config" to prevent MSIE11 requesting browserconfig.xml (Gunars)
 A......... [ZBX-9340] fixed "data" property not being returned by API when error is generated on DB level (Gunars)
@@ -926,7 +1093,7 @@ A......... [ZBX-9866] fixed error field being needlessly copied for LLD rule whe
 ...G...... [ZBX-8899] fixed retrieval of sensor readings on Linux 2.6 and higher (gleb, wiper)
 ...G...... [ZBX-9917] fixed log message when opening windows eventlog (wiper)
 .......PS. [ZBX-9855] fixed SNMP dynamic index cache refresh when SNMP OID changes (dimir)
-..F....... [ZBX-8820] fixed trimming of new acknowledge messages (Sasha, Cemeris)
+..F....... [ZBX-8820] fixed trimming of new acknowledge messages (Cemeris, Sasha)
 ...G...... [ZBX-9740] improved proc.num for protected Windows processes (gleb)
 .......PS. [ZBX-9793] fixed handling of opaque types in SNMP (asaveljevs)
 ...G...... [ZBX-9847] fixed possible Zabbix agent crash when executing system.cpu.discovery (dimir)
@@ -1221,7 +1388,7 @@ A.F....... [ZBX-1357] updated Brazilian Portuguese, Chinese (Taiwan), Czech, Dut
 Bug fixes:
 ..F....... [ZBX-9375] fixed "Group" and "Host" dropdowns not setting values in "Events" page when navigating from trigger menu pop-up link and fixed availability reports filter dropdowns mistakenly using "Dropdown first entry" config (Ivo)
 ........S. [ZBX-9703] fixed a memory leak in SSH checks when configured public and/or private key is not a regular file (Sandis)
-...G...... [ZBX-9605] fixed an issue with start lines and end lines in vfs.file.regexp[] and vfs.file.regmatch[] (Gleb)
+...G...... [ZBX-9605] fixed an issue with start lines and end lines in vfs.file.regexp[] and vfs.file.regmatch[] (gleb)
 ..F....... [ZBX-9332] fixed correct display of green circle in maps and showing more unacknowledged problems than total number of problems (Ivo)
 ..F....... [ZBX-9381] removed 'groupid' parameter from global search URLs sometimes causing inaccessible forms due to insufficient permissions (Ivo)
 ........S. [ZBX-9623] fixed possible SQL error when network discovery rule and LLD rule are processed at the same time (dimir)
@@ -1292,7 +1459,7 @@ New features:
 .......PS. [ZBXNEXT-2354] separated VMware performance collector based statistic retrieval from VMware data retrieval and added items to monitor custom performance counters (wiper)
 A.F....... [ZBX-1357] enabled Chinese (China) locale to be displayed by default (Richlv)
 A.F....... [ZBX-1357] updated Brazilian Portuguese, Chinese (China), Japanese, Korean, Polish, Russian and Slovak translations; thanks to Zabbix translators (Richlv)
-A.F....PS. [ZBXNEXT-2160] added support for extended IP ranges in network discovery and action conditions (Ivo, Sasha, Wiper)
+A.F....PS. [ZBXNEXT-2160] added support for extended IP ranges in network discovery and action conditions (Ivo, Sasha, wiper)
 
 Bug fixes:
 ...G...PS. [ZBX-9284] added Zabbix log file locking to avoid incomplete logging on log file rotation (igors)
@@ -1304,7 +1471,7 @@ Bug fixes:
 ..F....... [ZBX-9257] changed displaying host list from vertical to horizontal if trigger belongs to multiple hosts in Monitoring->Trigger status page (Ivo)
 ........S. [ZBX-9285] fixed memory leak when processing host prototypes (Sasha)
 .......PS. [ZBX-9279] optimized VMware requests to reduce amount of transferred data (wiper)
-..F....... [ZBX-9087] fixed DB_ID validation expression to properly validate upper bound of received value and fixed various front-end forms not properly validating IDs (Krists, Ivo)
+..F....... [ZBX-9087] fixed DB_ID validation expression to properly validate upper bound of received value and fixed various front-end forms not properly validating IDs (Ivo, Krists)
 .......PS. [ZBX-7719] added configurable timeout for VMware data gathering requests (wiper)
 ...G...... [ZBX-9241] fixed possible vfs.fs.discovery item crash on AIX systems (wiper)
 .......PS. [ZBX-9104] fixed repeated error messaging if SSH channel failed to close (igors)
@@ -1635,7 +1802,7 @@ A.F.I..... [ZBX-8406] fixed typos "overriden" to "overridden", "occurence" to "o
 A.F....... [ZBX-8397] removed outdated queue related code from frontend and API (Krists)
 ........S. [ZBX-8359] changed servers timer processes title line to display amount of hosts that have changed maintenance status; active maintenance period count is no longer displayed (Juris)
 ..F....... [ZBX-8375] fixed multiple issues in various forms: removed duplicate hidden fields, added missing field translations, added JS confirmation message encoding and fixed displaying submitted values on failure (Ivo)
-..F....... [ZBX-8240] fixed multiselect input placeholder behaviour on IE8, input cursor issue and removed "clear field" button for multiselect in IE10+ (Oleg, Krists)
+..F....... [ZBX-8240] fixed multiselect input placeholder behaviour on IE8, input cursor issue and removed "clear field" button for multiselect in IE10+ (Krists, Oleg)
 ..F....... [ZBXNEXT-1782] fixed testing of trigger expressions that contain nested parentheses (Pavels)
 ...G...... [ZBX-8270] fixed disk space reporting for large AIX file systems (>= 16 TB) (Andris)
 .......PS. [ZBX-8422] removed PHP mutex locking from server code because of not being used and incompatible licensing issues (wiper)
@@ -1779,7 +1946,7 @@ Bug fixes:
 ..F....... [ZBX-8212] it is not possible to add triggers from templates to maps anymore (Andrejs)
 A......... [ZBX-8227] fixed the "applicationids" parameter in trigger.get overriding the "groupids" parameter (Pavels)
 A......... [ZBX-8169] fixed SLA period calculation to account for DST changes (Krists)
-...G...PS. [ZBX-8172] fixed numeric value extraction from json data to ensure compatibility with third party tools that sends data as numeric values instead of strings (wiper).
+...G...PS. [ZBX-8172] fixed numeric value extraction from json data to ensure compatibility with third party tools that sends data as numeric values instead of strings (wiper)
 .......P.. [ZBX-8048] fixed bug where proxy would truncate execute scripts of telnet, SSH and database monitoring items to 2kB (Juris)
 A......... [ZBX-8193] changed web scenario default timeout to 15 (Nikolaj)
 ........S. [ZBX-6190] added a more informative message to return when an item does not have enough information to perform nodata() calculations (Juris)
@@ -1850,11 +2017,33 @@ A......... [ZBX-4772] fixed possibility to pass incorrect host status value (Ivo
 ........S. [ZBX-7204] fixed timestamp order of events generated during network discovery (igors)
 
 --------------------------------------------------------------------------------
-Changes for 2.2.22rc1
+Changes for 2.2.24rc1
 
 New features:
 
 Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 2.2.23
+
+2.2.23rc1 was released as 2.2.23 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.23rc1
+
+Bug fixes:
+.......PS. [ZBX-13010] fixed crash of poller processes in ODBC checks, simplified code (Andris, wiper)
+
+--------------------------------------------------------------------------------
+Changes for 2.2.22
+
+2.2.22rc1 was released as 2.2.22 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 2.2.22rc1
+
+Bug fixes:
+...G...... [ZBX-13781] fixed CRLF injection in Zabbix Agentd (MVekslers)
 
 --------------------------------------------------------------------------------
 Changes for 2.2.21
@@ -2218,7 +2407,7 @@ A.F....... [ZBX-1357] updated Brazilian Portuguese, Czech, French, Japanese, Pol
 .....J.... [ZBX-8839] added timeout configuration option to Java gateway (asaveljevs)
 
 Bug fixes:
-...G...... [ZBX-9605] fixed an issue with start lines and end lines in vfs.file.regexp[] and vfs.file.regmatch[] (Gleb)
+...G...... [ZBX-9605] fixed an issue with start lines and end lines in vfs.file.regexp[] and vfs.file.regmatch[] (gleb)
 ..F....... [ZBX-9332] fixed correct display of green circle in maps and showing more unacknowledged problems than total number of problems (Ivo)
 ..F....... [ZBX-8895] improved trigger count calculation and removed unnecessary query, thanks to Alexey Pustovalov (Krists)
 ..F....... [ZBX-9381] removed 'groupid' parameter from global search URLs sometimes causing inaccessible forms due to insufficient permissions (Ivo)
@@ -2270,7 +2459,7 @@ Bug fixes:
 ...G...... [ZBX-9232] fixed processing of eventlog messages to avoid incomplete messaging for events which description could not be found (igors)
 ........S. [ZBX-9285] fixed memory leak when processing host prototypes (Sasha)
 .......PS. [ZBX-9279] optimized VMware requests to reduce amount of transferred data (wiper)
-..F....... [ZBX-9087] fixed DB_ID validation expression to properly validate upper bound of received value and fixed various front-end forms not properly validating IDs (Krists, Ivo)
+..F....... [ZBX-9087] fixed DB_ID validation expression to properly validate upper bound of received value and fixed various front-end forms not properly validating IDs (Ivo, Krists)
 .......PS. [ZBX-7719] added configurable timeout for VMware data gathering requests (wiper)
 ...G...... [ZBX-9241] fixed possible vfs.fs.discovery item crash on AIX systems (wiper)
 .......PS. [ZBX-9104] fixed repeated error messaging if SSH channel failed to close (igors)
@@ -2411,7 +2600,7 @@ A.......S. [ZBX-8473] improved performance of deleting triggers by API and serve
 A.F....... [ZBX-1357] updated Brazilian Portuguese, Japanese, Polish, Slovak and Spanish translations; thanks to Zabbix translators (Richlv)
 
 Bug fixes:
-........S. [ZBX-7721] added support for discovering more than 100 hypervisors on large vcenter installations to vmware collector (wiper, dimir)
+........S. [ZBX-7721] added support for discovering more than 100 hypervisors on large vcenter installations to vmware collector (dimir, wiper)
 ...G...PS. [ZBX-8629] fixed crash in get_string() function when checking "Database monitor" items (asaveljevs)
 ....IJ.... [ZBX-4800] replaced JSON.org library with Android JSON library; thanks to Volker Fröhlich for legal research (asaveljevs)
 .........T [ZBX-4800] fixed typo in item name in "Template JMX Generic": "mpTenured" -> "mp Tenured" (asaveljevs)
@@ -2629,7 +2818,7 @@ A.F....... [ZBX-7832] fixed screen item row- and colspans not being adjusted whe
 ........S. [ZBX-7897] fixed memory leak in trapper for log file items (Juris)
 ..F.....S. [ZBX-7872] removed discovery item prototype from calculation of required performace (NVPS) (igors)
 ........S. [ZBX-5778] removed counting items in queue if host is in maintenance with no data collection (igors)
-..F.....I. [ZBX-7849] fixed not being able to save actions with a "Maintenance status" condition after upgrading from 2.0 (Pavels)
+..F....... [ZBX-7849] fixed not being able to save actions with a "Maintenance status" condition after upgrading from 2.0 (Pavels)
 A......... [ZBX-6151] fixed graph prototype and trigger prototype validation so item prototypes are no longer allowed from multiple discovery rules and fixed graph and graph prototype update validation allowing to pass only 'gitemid' parameter without 'itemid' (Ivo)
 ........S. [ZBX-7737] fixed host inventory item update order to prevent database deadlocks (Juris)
 ........S. [ZBX-5804] added overflow/wrapping detection to calculated items (Juris)
@@ -2698,7 +2887,7 @@ Changes for 2.2.2rc1
 
 New features:
 .......PS. [ZBX-7649] synchronize ICMP checks based on item interface. This should reduce the number of fping invocations in most cases (wiper)
-..F.....S. [ZBXNEXT-2069] added HOST.PORT macro support to internal/trigger based notifications and also to trigger names/descriptions (wiper, Oleg)
+..F.....S. [ZBXNEXT-2069] added HOST.PORT macro support to internal/trigger based notifications and also to trigger names/descriptions (Oleg, wiper)
 A.F....... [ZBX-1357] updated American English, Czech, French, Greek, Hungarian, Italian, Japanese, Russian, Slovak, Turkish and Ukrainian translations; thanks to Zabbix translators (Richlv)
 
 Bug fixes:
@@ -2910,7 +3099,7 @@ New features:
 Bug fixes:
 ...G...PS. [ZBX-7125] fixed improper reading of configuration files in case there were problems with included files; we now exit with failure (asaveljevs)
 ..F....... [ZBX-7257] improved config file validation (Eduard)
-..F....... [ZBX-7249] changed setup pre-requisites values "yes" to "on" and "no" to "off", fixed numeric value validation and port text alignment (Pavels, Ivo)
+..F....... [ZBX-7249] changed setup pre-requisites values "yes" to "on" and "no" to "off", fixed numeric value validation and port text alignment (Ivo, Pavels)
 ..F....... [ZBX-7267] implement menu popup in trigger top 100 page for hosts and triggers columns (Eduard)
 ..F....... [ZBX-7260] fixed "Wrong RPC call to JS RPC" error when acknowledging trigger and changing group or host in screen element (Ivo)
 ..F....... [ZBX-6129] fixed changing the status of triggers and trigger prototype working incorrectly if they no longer exist (Pavels)
@@ -2955,7 +3144,7 @@ Changes for 2.1.8
 New features:
 .....J.... [ZBX-6404] added support for values of type java.lang.Double when toString() returns them in scientific format (asaveljevs)
 .......PS. [ZBXNEXT-78] added support for scientific notation for received values and item multipliers for items of type "Numeric (float)" (asaveljevs)
-...G...PS. [ZBXNEXT-1855] dynamic display of process current activity and statistics in "ps" and "top" (igors, Andris, wiper)
+...G...PS. [ZBXNEXT-1855] dynamic display of process current activity and statistics in "ps" and "top" (Andris, igors, wiper)
 ..F.....S. [ZBXNEXT-1806] changed the way nth day and nth week are calculated in maintenances (asaveljevs, Pavels)
 ..F....... [ZBX-7097] changed dashboard drag'n'drop widget placeholder color in the dark orange and dark blue themes (Pavels)
 A.F....... [ZBX-1357] updated Dutch, Finnish, Indonesian, Italian, Lithuanian, Persian, Portuguese (Portugal), Russian and Slovak translations; thanks to Zabbix translators (Richlv)
@@ -3116,7 +3305,7 @@ Bug fixes:
 ..F....... [ZBX-6903] fixed template name trim (Eduard, Sasha)
 A.F....... [ZBX-6899] specified source parameter in SQL from events table (Vitalij)
 ..F....... [ZBX-6893] fixed prototype name error ($1 -> {#FSNAME}) on adding new prototype in the graph prototype form in the item prototype selection template (Vitalij)
-..F....... [ZBX-6816] improved permission validation on multiple pages (Ivo, Guntis)
+..F....... [ZBX-6816] improved permission validation on multiple pages (Guntis, Ivo)
 ...G...... [ZBXNEXT-1056] improved active check error messages to proclaim active checks working again before complaining about a missing host (wiper)
 .......P.. [ZBX-6249] fixed data loss in proxy "Data sender" process caused by unfinished transactions; thanks to MATSUDA Daiki for patch (Andris)
 ..F....... [ZBX-6838] fixed not being able to select all host groups in the filter (Pavels)
@@ -3136,7 +3325,7 @@ New features:
 ...G...... [ZBXNEXT-1528] added net.if.in, net.if.out and net.if.total item support on HP-UX platform (igors)
 
 Bug fixes:
-..F....... [ZBX-6888] fixed javascript error in popups with "select all" checkbox
+..F....... [ZBX-6888] fixed javascript error in popups with "select all" checkbox (Vitalij)
 .......P.. [ZBX-6897] fixed synchronization of the "httptest" configuration table (Sasha)
 ........S. [ZBX-6898] fixed processing of queue request; items that are not checked will be included in the queue (Sasha)
 ........S. [ZBX-6889] fixed processing of availability data by the server (Sasha)
@@ -3230,13 +3419,13 @@ A.F.....S. [ZBXNEXT-1] added support of {host:key.last/min/avg/max()} macros in 
 ..F....... [ZBXNEXT-1712] improved create button for applications, items, triggers and web scenarios (Eduard)
 ..F....... [ZBXNEXT-1712] removed useless host name field in applications, items and web scenarios (Eduard)
 ........S. [ZBXNEXT-384] added support of new notification macros {ACTION.*} and {EVENT.RECOVERY.*}; {EVENT.*} macros now return information of the event which triggered an action (Sasha)
-...G...PS. [ZBXNEXT-1105] added logging of used configuration file name for agentd, server and proxy daemons (Aleksej)
+...G...PS. [ZBXNEXT-1105] added logging of used configuration file name for agentd, server and proxy daemons (aleksej)
 A.F.....S. [ZBXNEXT-1575] implemented internal event and notification support (Pavels, Sasha)
 ..F....... [ZBXNEXT-1575] the error icon in the item, LLD rule and trigger lists will no longer be displayed for disabled objects (Pavels)
 A.F.....S. [ZBXNEXT-1575] new triggers will now be created in OK state (Pavels, Sasha)
 ..F....... [ZBXNEXT-1575] the status indicator in the trigger list will also display the "Unknown" status (Pavels)
 ........S. [ZBXNEXT-1575] implemented new notification macros: {ITEM.STATE<1-9>}, {LLDRULE.ID}, {LLDRULE.NAME}, {LLDRULE.DESCRIPTION}, {LLDRULE.KEY}, {LLDRULE.STATE} and {TRIGGER.STATE} (Sasha)
-...G...... [ZBXNEXT-579] added support of net.if.discovery for FreeBSD, NetBSD and OpenBSD (Aleksej)
+...G...... [ZBXNEXT-579] added support of net.if.discovery for FreeBSD, NetBSD and OpenBSD (aleksej)
 ..F....PS. [ZBXNEXT-300] added support of IPMI discrete sensors (Andris, Sasha, Toms)
 ..F....... [ZBXNEXT-1659] added support of anti-aliased normal and bold lines for graphs and map connectors (Alexei)
 ..F....... [ZBXNEXT-1399] implemented multiselect in dashboard configuration (Eduard)
@@ -3346,8 +3535,8 @@ A......... [ZBX-6530] formatted some exception messages in CImage.php which wher
 ...G...... [ZBX-4590] added support for multibyte path to logrt items on Windows (dimir)
 ..F....... [ZBX-6460] fixed HTML entity encoding in condition names in action configuration page (Eduard)
 .......PS. [ZBX-6435] fixed compiler warnings (Andris)
-..F.....S. [ZBX-6305] fixed display name support in email sender (wiper, Andris)
-..F....... [ZBX-6480] fixed default timeout being shown instead of the stored one in web scenario step properties(Toms)
+..F.....S. [ZBX-6305] fixed display name support in email sender (Andris, wiper)
+..F....... [ZBX-6480] fixed default timeout being shown instead of the stored one in web scenario step properties (Toms)
 ....I..... [ZBX-5532] updated 1.8 time format to 2.0 for "services_times" table (Sasha)
 ..F....... [ZBX-1511] fixed division by zero in graphs (Oleg)
 ..F....... [ZBX-1950] fixed no values in graphs (Oleg)
@@ -3612,7 +3801,7 @@ A......... [ZBX-5656] fixed maintenance.create and maintenance.update methods "t
 ..F....... [ZBX-9281] fixed undefined offset in template screens when resource is URL (Ivo)
 ..F....... [ZBX-4633] fixed host inventories not displaying all filtered results when record count exceeds global limit (Ivo)
 ...G...PS. [ZBX-9284] added Zabbix log file locking to avoid incomplete logging on log file rotation (igors)
-..F....... [ZBX-9087] fixed DB_ID validation expression to properly validate upper bound of received value and fixed various front-end forms not properly validating IDs (Krists, Ivo)
+..F....... [ZBX-9087] fixed DB_ID validation expression to properly validate upper bound of received value and fixed various front-end forms not properly validating IDs (Ivo, Krists)
 ...G...... [ZBX-9241] fixed possible vfs.fs.discovery item crash on AIX systems (wiper)
 .......PS. [ZBX-9104] fixed repeated error messaging if SSH channel failed to close (igors)
 ........S. [ZBX-8993] added check for a valid reference of a global regular expression in LLD rules (igors)
@@ -4126,7 +4315,7 @@ A.F....... [ZBX-4247] fixed processing of trigger expression if item key contain
 ..F....... [ZBX-5759] fixed Oracle ORA-01002 SQL error on items bulk actions (Toms)
 ..F....... [ZBX-5639] fixed global options "dropdown first entry" and "remember selected" in availability reports (Oleg)
 ..F....... [ZBX-5639] improved sdii() debugging function (Toms)
-A.F.....S. [ZBX-5816] fixed undefined index in Monitoring > Events, when favorite trigger has been deleted (Toms, Sasha)
+A.F.....S. [ZBX-5816] fixed undefined index in Monitoring > Events, when favorite trigger has been deleted (Sasha, Toms)
 ..F....... [ZBX-5771] fixed acknowledge tick mark lost on "overview" page (Oleg)
 ..F....... [ZBX-5821] fixed 2.0 xml format template import (Oleg)
 ........S. [ZBX-5791] fixed possible SQL errors when linking groups to a host (Sasha)
@@ -4673,7 +4862,7 @@ A.F....... [ZBX-4890] fixed creating hosts by administrators (Pavels)
 ..F....... [ZBX-4862] fixed Error when trying to remove additional templates in the host mass update form (Toms)
 ....I..... [ZBX-3929] removed deprecated Switch module from gen_schema.pl and get_data.pl scripts (Sasha)
 ..F....... [ZBX-4738] fixed several checkboxes state not being saved after an unsuccessful item mass update (Pavels)
-..F....... [ZBX-4865] fixed error bar in case of error with words longer than screen (Toms, Pavels)
+..F....... [ZBX-4865] fixed error bar in case of error with words longer than screen (Pavels, Toms)
 ........S. [ZBX-4840] improved slow SQL queries in processing of {ITEM.VALUE} and {ITEM.LOG.*} macros (Sasha)
 ..F....... [ZBX-4572] fixed incorrect value input in GUI configuration form raising critical error (Vedmak)
 ..F....... [ZBX-4841] fixed inability to select other but the first of the discovery checks for a discovery rule in popup.php (Toms)
@@ -4770,7 +4959,7 @@ Bug fixes:
 A.F....... [ZBX-4333] fixed trigger inheritance when calling trigger.update whithout a trigger expression (Pavels)
 ..F....... [ZBX-4333] fixed host trigger mass update (Pavels)
 ..F....... [ZBX-4333] fixed trigger dependency copying (Pavels)
-.......S.. [ZBX-4629] fixed processing Y axis min/max values for graph prototypes (Sasha)
+........S. [ZBX-4629] fixed processing Y axis min/max values for graph prototypes (Sasha)
 ..F....... [ZBX-4641] fixed errors in a "Discovery checks" popup (Sasha)
 A.F....... [ZBX-4202] fixed SQL performance in tr_status.php - combined similar queries, user data SQL access only once, triggerids retrieval optimization (Toms)
 A.F....... [ZBX-4647] fixed trigger and item prototype inheritance (Pavels)
@@ -4881,7 +5070,7 @@ A......... [ZBX-4448] fixed proxy interface validation (Pavels)
 ..F....... [ZBX-4455] fixed the 'sortorder' field validation in the IT services form (Pavels)
 ..F....... [ZBX-4427] fixed map element host group highlighting (Pavels)
 ..F....... [ZBX-4446] fixed event duration calculation (Pavels)
-........S. [ZBX-2806] fixed possible double notification messages (dimir,Sasha)
+........S. [ZBX-2806] fixed possible double notification messages (dimir, Sasha)
 A......... [ZBX-4425] fixed unsetting interface when performing Item::udpate requests (Pavels)
 ..F....... [ZBX-4436] fixed wrong sql query in discovery popup (Slava)
 ....I..... [ZBX-4429] fixed problem with wrong mysql comment tag and warning in mysql function when  update to 1.9.8 (Slava)
@@ -5016,7 +5205,7 @@ Bug fixes:
  - [ZBX-3493] fixed warnings when removing and clearing a template (Alexei)
  - [ZBX-4143] fixed cases with upgrade patch sometimes attempting to reference tables that were not created yet (Richlv, Sasha)
  - [ZBX-3618] extended allowed syntax for host interface DNS names (Vedmak)
- - [ZBX-3999] fixed map border (Alex, Sasha, Eduard)
+ - [ZBX-3999] fixed map border (Alexei, Sasha, Eduard)
  - [ZBX-3946] fixed errors when create trigger with dependencies (Vedmak)
  - [ZBX-3921] fixed change link shown for maps in slide show (Vedmak)
  - [ZBX-4082] fixed error in Monitoring->Triggers when acknowledges are disabled (Vedmak)
@@ -5316,7 +5505,7 @@ A......... [ZBX-6582] fixed that {ITEM.VALUE} and {ITEM.LASTVALUE} macro was not
 ..F....... [ZBX-6484] fixed bar report calculation (Oleg)
 ..F....... [ZBX-1236] added right side y axis support in bar reports (Oleg)
 ..F....... [ZBX-6474] fixed {ITEM.VALUE} macro expanding in trigger names (Oleg)
-...G...PS. [ZBX-6342] fixed LDAP check that caused server crash when LDAP is running but no DIT has been defined (Aleksej)
+...G...PS. [ZBX-6342] fixed LDAP check that caused server crash when LDAP is running but no DIT has been defined (aleksej)
 ..F....... [ZBX-6329] fixed form with "0" in trigger expression parser (Eduard)
 ..F....... [ZBX-6306] fixed frontend layout for latest Google Chrome 25 (Eduard)
 ..F....... [ZBX-6258] updated Japanese translation; thanks to Kodai Terashima (Richlv)
@@ -5544,7 +5733,7 @@ A.F....... [ZBX-2859] fixed possibility to successfully delete zero regular expr
 ..F....... [ZBX-2843] made dashboard and slideshow popup menus have dynamic width (sanja)
 A.F....... [ZBX-4279] added an error message when trying to delete an item, that's being used as a min/max Y axis value for graphs (Pavels)
 ..F....... [ZBX-4375] updated Russian translation; thanks to Alexey Pustovalov (Richlv)
-........S. [ZBX-4360] fixed trapper compilation error on FreeBSD 7.3 (asaveljevs,dimir)
+........S. [ZBX-4360] fixed trapper compilation error on FreeBSD 7.3 (asaveljevs, dimir)
 A.F....... [ZBX-4249] fixed trigger wizard when inserting macro multiple times (Vedmak)
 ..F....... [ZBX-4351] updated French translation; thanks to Joseph Bueno (Richlv)
 ..F....... [ZBX-4353] updated Japanese translation; thanks to Kodai Terashima (Richlv)

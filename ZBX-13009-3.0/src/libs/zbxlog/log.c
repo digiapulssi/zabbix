@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #ifdef _WINDOWS
 #	include "messages.h"
 #	include "service.h"
+#	include "sysinfo.h"
 static HANDLE		system_log_handle = INVALID_HANDLE_VALUE;
 #endif
 
@@ -248,12 +249,18 @@ static void	unlock_log(void)
 #else
 static void	lock_log(void)
 {
-	LOCK_LOG;
+#ifdef ZABBIX_AGENT
+	if (0 == (ZBX_MUTEX_LOGGING_DENIED & get_thread_global_mutex_flag()))
+#endif
+		LOCK_LOG;
 }
 
 static void	unlock_log(void)
 {
-	UNLOCK_LOG;
+#ifdef ZABBIX_AGENT
+	if (0 == (ZBX_MUTEX_LOGGING_DENIED & get_thread_global_mutex_flag()))
+#endif
+		UNLOCK_LOG;
 }
 #endif
 

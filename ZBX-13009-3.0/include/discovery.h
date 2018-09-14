@@ -1,7 +1,7 @@
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include "zbxjson.h"
 #include "comms.h"
 
-void	discovery_update_host(DB_DHOST *dhost, const char *ip, int status, int now);
+void	discovery_update_host(DB_DHOST *dhost, int status, int now);
 void	discovery_update_service(DB_DRULE *drule, DB_DCHECK *dcheck, DB_DHOST *dhost,
 		const char *ip, const char *dns, int port, int status, const char *value, int now);
 #endif

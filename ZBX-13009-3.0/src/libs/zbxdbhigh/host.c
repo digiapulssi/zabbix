@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -717,8 +717,7 @@ clean:
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
-		char *error, size_t max_error_len)
+static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids, char *error, size_t max_error_len)
 {
 	const char	*__function_name = "validate_host";
 	DB_RESULT	tresult;
@@ -727,7 +726,7 @@ static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
 	DB_ROW		hrow;
 	char		*sql = NULL, *name_esc;
 	size_t		sql_alloc = 256, sql_offset;
-	ZBX_GRAPH_ITEMS *gitems = NULL, *chd_gitems = NULL;
+	ZBX_GRAPH_ITEMS	*gitems = NULL, *chd_gitems = NULL;
 	size_t		gitems_alloc = 0, gitems_num = 0,
 			chd_gitems_alloc = 0, chd_gitems_num = 0;
 	int		ret = SUCCEED, i;
@@ -917,7 +916,7 @@ static int	validate_host(zbx_uint64_t hostid, zbx_vector_uint64_t *templateids,
 	zbx_free(gitems);
 	zbx_free(chd_gitems);
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s():%s", __function_name, zbx_result_string(ret));
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
 }
@@ -2282,12 +2281,139 @@ static int	DBcopy_trigger_to_host(zbx_uint64_t *new_triggerid, zbx_uint64_t host
 
 /******************************************************************************
  *                                                                            *
+ * Function: DBresolve_template_trigger_dependencies                          *
+ *                                                                            *
+ * Purpose: resolves trigger dependencies for the specified triggers based on *
+ *          host and linked templates                                         *
+ *                                                                            *
+ * Parameters: hostid    - [IN] host identificator from database              *
+ *             trids     - [IN] array of trigger identifiers from database    *
+ *             trids_num - [IN] trigger count in trids array                  *
+ *             links     - [OUT] pairs of trigger dependencies  (down,up)     *
+ *                                                                            *
+ ******************************************************************************/
+static void	DBresolve_template_trigger_dependencies(zbx_uint64_t hostid, const zbx_uint64_t *trids,
+		int trids_num, zbx_vector_uint64_pair_t *links)
+{
+	DB_RESULT			result;
+	DB_ROW				row;
+	zbx_uint64_pair_t		map_id, dep_list_id;
+	char				*sql = NULL;
+	size_t				sql_alloc = 512, sql_offset;
+	zbx_vector_uint64_pair_t	dep_list_ids, map_ids;
+	zbx_vector_uint64_t		all_templ_ids;
+	zbx_uint64_t			templateid_down, templateid_up,
+					triggerid_down, triggerid_up,
+					hst_triggerid, tpl_triggerid;
+	int				i, j;
+
+	zbx_vector_uint64_create(&all_templ_ids);
+	zbx_vector_uint64_pair_create(&dep_list_ids);
+	zbx_vector_uint64_pair_create(links);
+	sql = zbx_malloc(sql, sql_alloc);
+
+	sql_offset = 0;
+	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
+			"select distinct td.triggerid_down,td.triggerid_up"
+			" from triggers t,trigger_depends td"
+			" where t.templateid in (td.triggerid_up,td.triggerid_down) and");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.triggerid", trids, trids_num);
+
+	result = DBselect("%s", sql);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(dep_list_id.first, row[0]);
+		ZBX_STR2UINT64(dep_list_id.second, row[1]);
+		zbx_vector_uint64_pair_append(&dep_list_ids, dep_list_id);
+		zbx_vector_uint64_append(&all_templ_ids, dep_list_id.first);
+		zbx_vector_uint64_append(&all_templ_ids, dep_list_id.second);
+
+	}
+	DBfree_result(result);
+
+	if (0 == dep_list_ids.values_num)	/* not all trigger template have a dependency trigger */
+	{
+		zbx_vector_uint64_destroy(&all_templ_ids);
+		zbx_vector_uint64_pair_destroy(&dep_list_ids);
+		zbx_free(sql);
+		return;
+	}
+
+	zbx_vector_uint64_pair_create(&map_ids);
+	zbx_vector_uint64_sort(&all_templ_ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+	zbx_vector_uint64_uniq(&all_templ_ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+
+	sql_offset = 0;
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+			"select t.triggerid,t.templateid"
+			" from triggers t,functions f,items i"
+			" where t.triggerid=f.triggerid"
+				" and f.itemid=i.itemid"
+				" and i.hostid=" ZBX_FS_UI64
+				" and",
+				hostid);
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.templateid", all_templ_ids.values,
+			all_templ_ids.values_num);
+
+	result = DBselect("%s", sql);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(map_id.first, row[0]);
+		ZBX_DBROW2UINT64(map_id.second, row[1]);
+		zbx_vector_uint64_pair_append(&map_ids, map_id);
+	}
+	DBfree_result(result);
+
+	zbx_free(sql);
+	zbx_vector_uint64_destroy(&all_templ_ids);
+
+	for (i = 0; i < dep_list_ids.values_num; i++)
+	{
+		templateid_down = dep_list_ids.values[i].first;
+		templateid_up = dep_list_ids.values[i].second;
+
+		/* Convert template ids to corresponding trigger ids.         */
+		/* If template trigger depends on host trigger rather than    */
+		/* template trigger then up id conversion will fail and the   */
+		/* original value (host trigger id) will be used as intended. */
+		triggerid_down = 0;
+		triggerid_up = templateid_up;
+
+		for (j = 0; j < map_ids.values_num; j++)
+		{
+			hst_triggerid = map_ids.values[j].first;
+			tpl_triggerid = map_ids.values[j].second;
+
+			if (tpl_triggerid == templateid_down)
+				triggerid_down = hst_triggerid;
+
+			if (tpl_triggerid == templateid_up)
+				triggerid_up = hst_triggerid;
+		}
+
+		if (0 != triggerid_down)
+		{
+			zbx_uint64_pair_t	link = {triggerid_down, triggerid_up};
+
+			zbx_vector_uint64_pair_append(links, link);
+		}
+	}
+
+	zbx_vector_uint64_pair_destroy(&map_ids);
+	zbx_vector_uint64_pair_destroy(&dep_list_ids);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: DBadd_template_dependencies_for_new_triggers                     *
  *                                                                            *
  * Purpose: update trigger dependencies for specified host                    *
  *                                                                            *
- * Parameters: trids - array of trigger identifiers from database             *
- *             trids_num - trigger count in trids array                       *
+ * Parameters: hostid    - [IN] host identificator from database              *
+ *             trids     - [IN] array of trigger identifiers from database    *
+ *             trids_num - [IN] trigger count in trids array                  *
  *                                                                            *
  * Return value: upon successful completion return SUCCEED                    *
  *                                                                            *
@@ -2296,92 +2422,17 @@ static int	DBcopy_trigger_to_host(zbx_uint64_t *new_triggerid, zbx_uint64_t host
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-static int	DBadd_template_dependencies_for_new_triggers(zbx_uint64_t *trids, int trids_num)
+static int	DBadd_template_dependencies_for_new_triggers(zbx_uint64_t hostid, zbx_uint64_t *trids, int trids_num)
 {
-	DB_RESULT			result;
-	DB_ROW				row;
-	int				alloc = 16, count = 0, i;
-	zbx_uint64_t			*hst_triggerids = NULL, *tpl_triggerids = NULL,
-					templateid, triggerid,
-					templateid_down, templateid_up,
-					triggerid_down, triggerid_up,
-					triggerdepid;
-	char				*sql = NULL;
-	size_t				sql_alloc = 512, sql_offset;
+	int				i;
+	zbx_uint64_t			triggerdepid;
 	zbx_db_insert_t			db_insert;
 	zbx_vector_uint64_pair_t	links;
-
 
 	if (0 == trids_num)
 		return SUCCEED;
 
-	zbx_vector_uint64_pair_create(&links);
-
-	sql = zbx_malloc(sql, sql_alloc);
-	tpl_triggerids = zbx_malloc(tpl_triggerids, alloc * sizeof(zbx_uint64_t));
-	hst_triggerids = zbx_malloc(hst_triggerids, alloc * sizeof(zbx_uint64_t));
-
-	sql_offset = 0;
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
-			"select triggerid,templateid"
-			" from triggers"
-			" where");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "triggerid", trids, trids_num);
-
-	result = DBselect("%s", sql);
-
-	while (NULL != (row = DBfetch(result)))
-	{
-		ZBX_STR2UINT64(triggerid, row[0]);
-		ZBX_DBROW2UINT64(templateid, row[1]);
-
-		if (alloc == count)
-		{
-			alloc += 16;
-			hst_triggerids = zbx_realloc(hst_triggerids, alloc * sizeof(zbx_uint64_t));
-			tpl_triggerids = zbx_realloc(tpl_triggerids, alloc * sizeof(zbx_uint64_t));
-		}
-
-		hst_triggerids[count] = triggerid;
-		tpl_triggerids[count] = templateid;
-		count++;
-	}
-	DBfree_result(result);
-
-	sql_offset = 0;
-	zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset,
-			"select distinct td.triggerid_down,td.triggerid_up"
-			" from triggers t,trigger_depends td"
-			" where t.templateid in (td.triggerid_up,td.triggerid_down)"
-				" and");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.triggerid", trids, trids_num);
-
-	result = DBselect("%s", sql);
-
-	while (NULL != (row = DBfetch(result)))
-	{
-		ZBX_STR2UINT64(templateid_down, row[0]);
-		ZBX_STR2UINT64(templateid_up, row[1]);
-
-		triggerid_down = 0;
-		triggerid_up = templateid_up;
-
-		for (i = 0; i < count; i++)
-		{
-			if (tpl_triggerids[i] == templateid_down)
-				triggerid_down = hst_triggerids[i];
-			if (tpl_triggerids[i] == templateid_up)
-				triggerid_up = hst_triggerids[i];
-		}
-
-		if (0 != triggerid_down)
-		{
-			zbx_uint64_pair_t	link = {triggerid_down, triggerid_up};
-
-			zbx_vector_uint64_pair_append(&links, link);
-		}
-	}
-	DBfree_result(result);
+	DBresolve_template_trigger_dependencies(hostid, trids, trids_num, &links);
 
 	if (0 < links.values_num)
 	{
@@ -2399,10 +2450,6 @@ static int	DBadd_template_dependencies_for_new_triggers(zbx_uint64_t *trids, int
 		zbx_db_insert_execute(&db_insert);
 		zbx_db_insert_clean(&db_insert);
 	}
-
-	zbx_free(hst_triggerids);
-	zbx_free(tpl_triggerids);
-	zbx_free(sql);
 
 	zbx_vector_uint64_pair_destroy(&links);
 
@@ -2457,15 +2504,14 @@ static void	get_templates_by_hostid(zbx_uint64_t hostid, zbx_vector_uint64_t *te
  * Comments: !!! Don't forget to sync the code with PHP !!!                   *
  *                                                                            *
  ******************************************************************************/
-int	DBdelete_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *del_templateids)
+int	DBdelete_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *del_templateids, char **error)
 {
 	const char		*__function_name = "DBdelete_template_elements";
 
-	char			*sql = NULL;
+	char			*sql = NULL, err[MAX_STRING_LEN];
 	size_t			sql_alloc = 128, sql_offset = 0;
 	zbx_vector_uint64_t	templateids;
 	int			i, index, res = SUCCEED;
-	char			error[MAX_STRING_LEN];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -2489,9 +2535,9 @@ int	DBdelete_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *del_tem
 	if (0 == del_templateids->values_num)
 		goto clean;
 
-	if (SUCCEED != (res = validate_linked_templates(&templateids, error, sizeof(error))))
+	if (SUCCEED != (res = validate_linked_templates(&templateids, err, sizeof(err))))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot unlink template: %s", error);
+		*error = zbx_strdup(NULL, err);
 		goto clean;
 	}
 
@@ -3554,7 +3600,7 @@ static int	DBcopy_template_triggers(zbx_uint64_t hostid, const zbx_vector_uint64
 	DBfree_result(result);
 
 	if (SUCCEED == res)
-		res = DBadd_template_dependencies_for_new_triggers(trids, trids_num);
+		res = DBadd_template_dependencies_for_new_triggers(hostid, trids, trids_num);
 
 	zbx_free(trids);
 
@@ -4550,13 +4596,13 @@ static void	DBcopy_template_httptests(zbx_uint64_t hostid, const zbx_vector_uint
  * Return value: upon successful completion return SUCCEED                    *
  *                                                                            *
  ******************************************************************************/
-int	DBcopy_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *lnk_templateids)
+int	DBcopy_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *lnk_templateids, char **error)
 {
 	const char		*__function_name = "DBcopy_template_elements";
 	zbx_vector_uint64_t	templateids;
 	zbx_uint64_t		hosttemplateid;
 	int			i, res = SUCCEED;
-	char			error[MAX_STRING_LEN], *template_names;
+	char			*template_names, err[MAX_STRING_LEN];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -4582,23 +4628,21 @@ int	DBcopy_template_elements(zbx_uint64_t hostid, zbx_vector_uint64_t *lnk_templ
 
 	zbx_vector_uint64_sort(&templateids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 
-	if (SUCCEED != (res = validate_linked_templates(&templateids, error, sizeof(error))))
+	if (SUCCEED != (res = validate_linked_templates(&templateids, err, sizeof(err))))
 	{
 		template_names = get_template_names(lnk_templateids);
 
-		zabbix_log(LOG_LEVEL_WARNING, "cannot link template(s) %s to host \"%s\": %s",
-				template_names, zbx_host_string(hostid), error);
+		*error = zbx_dsprintf(NULL, "%s to host \"%s\": %s", template_names, zbx_host_string(hostid), err);
 
 		zbx_free(template_names);
 		goto clean;
 	}
 
-	if (SUCCEED != (res = validate_host(hostid, lnk_templateids, error, sizeof(error))))
+	if (SUCCEED != (res = validate_host(hostid, lnk_templateids, err, sizeof(err))))
 	{
 		template_names = get_template_names(lnk_templateids);
 
-		zabbix_log(LOG_LEVEL_WARNING, "cannot link template(s) %s to host \"%s\": %s",
-				template_names, zbx_host_string(hostid), error);
+		*error = zbx_dsprintf(NULL, "%s to host \"%s\": %s", template_names, zbx_host_string(hostid), err);
 
 		zbx_free(template_names);
 		goto clean;

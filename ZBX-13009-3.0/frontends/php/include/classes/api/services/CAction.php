@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -2008,6 +2008,10 @@ class CAction extends CApiService {
 			}
 			else {
 				foreach ($action['operations'] as $operation) {
+					if (array_key_exists('operationid', $operation)) {
+						self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect input parameters.'));
+					}
+
 					$operationsToValidate[] = $operation;
 				}
 			}

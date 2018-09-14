@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -465,8 +465,8 @@ class CMediatype extends CApiService {
 					MEDIA_TYPE_EMAIL => ['smtp_server', 'smtp_helo', 'smtp_email'],
 					MEDIA_TYPE_EXEC => ['exec_path'],
 					MEDIA_TYPE_SMS => ['gsm_modem'],
-					MEDIA_TYPE_JABBER => ['username'],
-					MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username']
+					MEDIA_TYPE_JABBER => ['username', 'passwd'],
+					MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username', 'passwd']
 				];
 
 				foreach ($optional_fields_by_type[$db_mediatype['type']] as $field) {
@@ -792,8 +792,8 @@ class CMediatype extends CApiService {
 			MEDIA_TYPE_EMAIL => ['smtp_server', 'smtp_helo', 'smtp_email'],
 			MEDIA_TYPE_EXEC => ['exec_path'],
 			MEDIA_TYPE_SMS => ['gsm_modem'],
-			MEDIA_TYPE_JABBER => ['username'],
-			MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username']
+			MEDIA_TYPE_JABBER => ['username', 'passwd'],
+			MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username', 'passwd']
 		];
 
 		foreach ($required_fields_by_type[$mediatype['type']] as $field) {
