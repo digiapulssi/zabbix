@@ -2564,20 +2564,18 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 					"acknowledgeid"
 				" from escalations"
 				" where %s and nextcheck<=%d"
-				" order by actionid,triggerid,itemid,escalationid", filter, now);
+				" order by actionid,triggerid,itemid,escalationid", filter,
+				now + CONFIG_ESCALATOR_FREQUENCY);
 	zbx_free(filter);
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		int		esc_nextcheck;
-		zbx_uint64_t	esc_r_eventid;
+		int	esc_nextcheck;
 
 		esc_nextcheck = atoi(row[5]);
-		ZBX_DBROW2UINT64(esc_r_eventid, row[4]);
 
-		/* Skip escalations that must be checked later and that are not recovered */
-		/* (corresponding OK event hasn't occurred yet, see process_actions()).   */
-		if (esc_nextcheck > now && 0 == esc_r_eventid)
+		/* skip escalations that must be checked in next CONFIG_ESCALATOR_FREQUENCY period */
+		if (esc_nextcheck > now)
 		{
 			if (esc_nextcheck < *nextcheck)
 				*nextcheck = esc_nextcheck;
@@ -2587,7 +2585,7 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 
 		escalation = (DB_ESCALATION *)zbx_malloc(NULL, sizeof(DB_ESCALATION));
 		escalation->nextcheck = esc_nextcheck;
-		escalation->r_eventid = esc_r_eventid;
+		ZBX_DBROW2UINT64(escalation->r_eventid, row[4]);
 		ZBX_STR2UINT64(escalation->escalationid, row[0]);
 		ZBX_STR2UINT64(escalation->actionid, row[1]);
 		ZBX_DBROW2UINT64(escalation->triggerid, row[2]);
