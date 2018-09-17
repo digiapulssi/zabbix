@@ -20,6 +20,8 @@
 #include "common.h"
 #include "log.h"
 #include "eventlog.h"
+#include "zbxregexp.h"
+
 
 #define	DEFAULT_EVENT_CONTENT_SIZE 256
 
@@ -264,230 +266,6 @@ static void	zbx_translate_message_params(char **message, HINSTANCE hLib)
 			zbx_free(param);
 		}
 	}
-}
-
-#define MAX_INSERT_STRS 100
-
-/* get Nth error from event log. 1 is the first. */
-static int	zbx_get_eventlog_message(const wchar_t *wsource, HANDLE eventlog_handle, DWORD which, char **out_source,
-		char **out_message, unsigned short *out_severity, unsigned long *out_timestamp,
-		unsigned long *out_eventid)
-{
-	const char	*__function_name = "zbx_get_eventlog_message";
-	int		buffer_size = 512;
-	EVENTLOGRECORD	*pELR = NULL;
-	DWORD		dwRead, dwNeeded, dwErr = ERROR_SUCCESS;
-	wchar_t 	*pEventMessageFile = NULL, *pParamMessageFile = NULL, *pFile = NULL, *pNextFile = NULL, *pCh,
-			*aInsertStrings[MAX_INSERT_STRS];
-	HINSTANCE	hLib = NULL, hParamLib = NULL;
-	long		i, err = 0;
-	int		ret = FAIL;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() lastlogsize:%lu", __function_name, which);
-
-	*out_source = NULL;
-	*out_message = NULL;
-	*out_severity = 0;
-	*out_timestamp = 0;
-	*out_eventid = 0;
-	memset(aInsertStrings, 0, sizeof(aInsertStrings));
-
-	pELR = (EVENTLOGRECORD *)zbx_malloc((void *)pELR, buffer_size);
-
-	while (ERROR_SUCCESS == dwErr)
-	{
-		if (0 == ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, which,
-				pELR, buffer_size, &dwRead, &dwNeeded))
-		{
-			if (ERROR_INSUFFICIENT_BUFFER == (dwErr = GetLastError()))
-			{
-				dwErr = ERROR_SUCCESS;
-				buffer_size = dwNeeded;
-				pELR = (EVENTLOGRECORD*)zbx_realloc((void*)pELR, buffer_size);
-			}
-			else
-			{
-				if (ERROR_HANDLE_EOF != dwErr)
-				{
-					zabbix_log(LOG_LEVEL_DEBUG, "%s(): %s",
-							__function_name, strerror_from_system(dwErr));
-					goto out;
-				}
-			}
-		}
-	}
-
-	*out_severity = pELR->EventType;				/* return event type */
-	*out_timestamp = pELR->TimeGenerated;				/* return timestamp */
-	*out_eventid = pELR->EventID & 0xffff;
-	*out_source = zbx_unicode_to_utf8((wchar_t *)(pELR + 1));	/* copy source name */
-
-	/* get message file names */
-	zbx_get_message_files(wsource, (wchar_t *)(pELR + 1), &pEventMessageFile, &pParamMessageFile);
-
-	/* prepare insert string array */
-	if (0 < pELR->NumStrings)
-	{
-		pCh = (wchar_t *)((unsigned char *)pELR + pELR->StringOffset);
-
-		for (i = 0; i < pELR->NumStrings && i < MAX_INSERT_STRS; i++)
-		{
-			aInsertStrings[i] = pCh;
-			pCh += wcslen(pCh) + 1;
-		}
-	}
-
-	err = FAIL;
-
-	for (pFile = pEventMessageFile; NULL != pFile && err != SUCCEED; pFile = pNextFile)
-	{
-		if (NULL != (pNextFile = wcschr(pFile, TEXT(';'))))
-		{
-			*pNextFile = '\0';
-			pNextFile++;
-		}
-
-		if (NULL != (hLib = zbx_load_message_file(pFile)))
-		{
-			if (NULL != (*out_message = zbx_format_message(hLib, pELR->EventID, aInsertStrings)))
-			{
-				err = SUCCEED;
-
-				if (NULL != (hParamLib = zbx_load_message_file(pParamMessageFile)))
-				{
-					zbx_translate_message_params(out_message, hParamLib);
-					FreeLibrary(hParamLib);
-				}
-			}
-
-			FreeLibrary(hLib);
-		}
-	}
-
-	zbx_free(pEventMessageFile);
-	zbx_free(pParamMessageFile);
-
-	if (SUCCEED != err)
-	{
-		*out_message = zbx_strdcatf(*out_message, "The description for Event ID:%lu in Source:'%s'"
-				" cannot be found. The local computer may not have the necessary registry"
-				" information or message DLL files to display messages from a remote computer.",
-				*out_eventid, NULL == *out_source ? "" : *out_source);
-
-		if (0 < pELR->NumStrings)
-		{
-			char	*buf;
-
-			*out_message = zbx_strdcat(*out_message, " The following information is part of the event: ");
-
-			for (i = 0, pCh = (wchar_t *)((unsigned char *)pELR + pELR->StringOffset);
-					i < pELR->NumStrings;
-					i++, pCh += wcslen(pCh) + 1)
-			{
-				if (0 < i)
-					*out_message = zbx_strdcat(*out_message, "; ");
-
-				buf = zbx_unicode_to_utf8(pCh);
-				*out_message = zbx_strdcat(*out_message, buf);
-				zbx_free(buf);
-			}
-		}
-	}
-
-	ret = SUCCEED;
-out:
-	zbx_free(pELR);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return ret;
-}
-
-int	process_eventlog(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
-		char **out_source, unsigned short *out_severity, char **out_message,
-		unsigned long *out_eventid, unsigned char skip_old_data)
-{
-	const char	*__function_name = "process_eventlog";
-	int		ret = FAIL;
-	HANDLE		eventlog_handle;
-	wchar_t 	*wsource;
-	zbx_uint64_t	i, FirstID, LastID;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() source:'%s' lastlogsize:" ZBX_FS_UI64, __function_name, source,
-			*lastlogsize);
-
-	/* From MSDN documentation:                                                                         */
-	/* The RecordNumber member of EVENTLOGRECORD contains the record number for the event log record.   */
-	/* The very first record written to an event log is record number 1, and other records are          */
-	/* numbered sequentially. If the record number reaches ULONG_MAX, the next record number will be 0, */
-	/* not 1; however, you use zero to seek to the record.                                              */
-	/*                                                                                                  */
-	/* This RecordNumber wraparound is handled simply by using 64bit integer to calculate record        */
-	/* numbers and then converting to DWORD values.                                                     */
-
-	*out_timestamp = 0;
-	*out_source = NULL;
-	*out_severity = 0;
-	*out_message = NULL;
-	*out_eventid = 0;
-
-	if (NULL == source || '\0' == *source)
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot open eventlog with empty name");
-		return ret;
-	}
-
-	wsource = zbx_utf8_to_unicode(source);
-
-	if (SUCCEED != zbx_open_eventlog(wsource, &eventlog_handle, &FirstID, &LastID))
-	{
-		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s': %s", source,
-				strerror_from_system(GetLastError()));
-		goto out;
-	}
-
-	if (1 == skip_old_data)
-	{
-		*lastlogsize = LastID;
-		zabbix_log(LOG_LEVEL_DEBUG, "skipping existing data: lastlogsize:" ZBX_FS_UI64, *lastlogsize);
-		goto finish;
-	}
-
-	/* Having lastlogsize greater than LastID means that there was oldest event record */
-	/* (FirstID) wraparound. In this case we must also wrap the lastlogsize value.     */
-	if (*lastlogsize > LastID)
-		*lastlogsize = (DWORD)*lastlogsize;
-
-	/* if the lastlogsize is still outside log record interval reset it to the oldest record number, */
-	/* otherwise set FirstID to the next record after lastlogsize, which is the first event record   */
-	/* to read                                                                                       */
-	if (*lastlogsize > LastID || *lastlogsize < FirstID)
-		*lastlogsize = FirstID;
-	else
-		FirstID = *lastlogsize + 1;
-
-	for (i = FirstID; i <= LastID; i++)
-	{
-		/* convert to DWORD to handle possible event record number wraparound */
-		DWORD	dwRecordNumber = (DWORD)i;
-
-		if (SUCCEED == zbx_get_eventlog_message(wsource, eventlog_handle, dwRecordNumber, out_source,
-				out_message, out_severity, out_timestamp, out_eventid))
-		{
-			/* storing full (not truncated to DWORD) lastlogsize value makes  */
-			/* easier to do event record number calculations during next call */
-			*lastlogsize = i;
-			break;
-		}
-	}
-finish:
-	zbx_close_eventlog(eventlog_handle);
-	ret = SUCCEED;
-out:
-	zbx_free(wsource);
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return ret;
 }
 
 /* open eventlog using API 6 and return the number of records */
@@ -992,4 +770,492 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
 	return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: seek_eventlog                                                    *
+ *                                                                            *
+ * Purpose: the first pointer offset for read Event Log file                  *
+ *                                                                            *
+ * Parameters: eventlog_handle - [IN] the handle to the event log to be read  *
+ *             FirstID         - [IN] the first Event log record to be parse  *
+ *             dwReadDirection - [IN] FirstID position - the first or second  *
+ *                                    half of the Event Log file              *
+ *             LastID          - [IN] position of last record in EventLog     *
+ *             fl_source       - [IN] the name of the Event Log file          *
+ *             pELRs           - [IN/OUT] buffer for read of data of EventLog *
+ *             buffer_size     - [IN/OUT] size of the pELRs                   *
+ *             dwRead          - [OUT] the number of bytes read from EventLog *
+ *             dwErr           - [OUT] result of the pointer shift attempt    *
+ *                                     state                                  *
+ *             error           - [OUT] the error message in the case of       *
+ *                                     failure                                *
+ *                                                                            *
+ * Return value: SUCCEED - the operation has completed successfully           *
+ *               FAIL    - the operation has failed                           *
+ *                                                                            *
+ ******************************************************************************/
+static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dwReadDirection,
+		zbx_uint64_t LastID, const char *fl_source, BYTE **pELRs, int *buffer_size, DWORD *dwRead, DWORD *dwErr,
+		char **error)
+{
+	const char	*__function_name="seek_eventlog";
+	BYTE		*pEndOfRecords, *pELR;
+	DWORD		dwRecordNumber, dwNeeded;
+	zbx_uint64_t	skip_count = 0;
+
+	if (0 == dwReadDirection)	/* we will read log from first record */
+		return SUCCEED;
+
+	if (LastID < FirstID)		/* no one new records */
+	{
+		*dwErr = ERROR_HANDLE_EOF;
+		return SUCCEED;
+	}
+
+	/* convert to DWORD to handle possible event record number wraparound */
+	dwRecordNumber = (DWORD)FirstID;
+
+	*dwErr = ERROR_SUCCESS;
+
+	while (ERROR_SUCCESS == *dwErr)
+	{
+		if (ReadEventLog(eventlog_handle, EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ, dwRecordNumber, *pELRs,
+				*buffer_size, dwRead, &dwNeeded))
+		{
+			return SUCCEED;
+		}
+
+		if (ERROR_INVALID_PARAMETER == (*dwErr = GetLastError()))
+		{
+			break;
+		}
+		else if (ERROR_HANDLE_EOF == *dwErr)
+		{
+			return SUCCEED;
+		}
+		else if (ERROR_INSUFFICIENT_BUFFER == *dwErr)
+		{
+			*buffer_size = dwNeeded;
+			*pELRs = (BYTE *)zbx_realloc((void *)*pELRs, *buffer_size);
+			*dwErr = ERROR_SUCCESS;
+		}
+		else
+		{
+			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", fl_source,
+					strerror_from_system(*dwErr));
+			return FAIL;
+		}
+	}
+
+	/* Fallback implementation of the first seek for read pointer of EventLog. */
+	if (ERROR_INVALID_PARAMETER == *dwErr && EVENTLOG_BACKWARDS_READ == dwReadDirection)
+	{
+		if (LastID == FirstID)
+			skip_count = 1;
+		else
+			skip_count = LastID - FirstID;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): fallback dwErr=%d skip_count="ZBX_FS_UI64, __function_name,
+				*dwErr, skip_count);
+	}
+
+	*dwErr = ERROR_SUCCESS;
+
+	while (0 < skip_count && ERROR_SUCCESS == *dwErr && EVENTLOG_BACKWARDS_READ == dwReadDirection)
+	{
+		if (!ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | dwReadDirection, 0, *pELRs, *buffer_size,
+				dwRead, &dwNeeded))
+		{
+			if (ERROR_INSUFFICIENT_BUFFER == (*dwErr = GetLastError()))
+			{
+				*dwErr = ERROR_SUCCESS;
+				*buffer_size = dwNeeded;
+				*pELRs = (BYTE *)zbx_realloc((void *)*pELRs, *buffer_size);
+				continue;
+			}
+			else if (ERROR_HANDLE_EOF != *dwErr)
+				break;
+
+			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", fl_source,
+					strerror_from_system(*dwErr));
+			return FAIL;
+		}
+
+		pELR = *pELRs;
+		pEndOfRecords = *pELRs + *dwRead;
+		*dwRead = 0;	/* we can't reuse the buffer value because of the sort order */
+
+		while (pELR < pEndOfRecords)
+		{
+			if (0 == --skip_count)
+				break;
+
+			pELR += ((PEVENTLOGRECORD)pELR)->Length;
+		}
+	}
+
+	if (EVENTLOG_BACKWARDS_READ == dwReadDirection && ERROR_HANDLE_EOF == *dwErr)
+		*dwErr = ERROR_SUCCESS;
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_parse_eventlog_message                                       *
+ *                                                                            *
+ * Purpose: details parse of a single Event Log record                        *
+ *                                                                            *
+ * Parameters: wsource       - [IN] EventLog file name                        *
+ *             pELR          - [IN] buffer with single Event Log Record       *
+ *             out_source    - [OUT] the ELR detail                           *
+ *             out_message   - [OUT] the ELR detail                           *
+ *             out_severity  - [OUT] the ELR detail                           *
+ *             out_timestamp - [OUT] the ELR detail                           *
+ *             out_eventid   - [OUT] the ELR detail                           *
+ *                                                                            *
+ ******************************************************************************/
+#define MAX_INSERT_STRS 100
+static void	zbx_parse_eventlog_message(const wchar_t *wsource, const EVENTLOGRECORD *pELR, char **out_source,
+		char **out_message, unsigned short *out_severity, unsigned long *out_timestamp,
+		unsigned long *out_eventid)
+{
+	const char	*__function_name = "zbx_parse_eventlog_message";
+	wchar_t 	*pEventMessageFile = NULL, *pParamMessageFile = NULL, *pFile = NULL, *pNextFile = NULL, *pCh,
+			*aInsertStrings[MAX_INSERT_STRS];
+	HINSTANCE	hLib = NULL, hParamLib = NULL;
+	long		i;
+	int		err;
+
+	memset(aInsertStrings, 0, sizeof(aInsertStrings));
+
+	*out_message = NULL;
+	*out_severity = pELR->EventType;				/* return event type */
+	*out_timestamp = pELR->TimeGenerated;				/* return timestamp */
+	*out_eventid = pELR->EventID & 0xffff;
+	*out_source = zbx_unicode_to_utf8((wchar_t *)(pELR + 1));	/* copy source name */
+
+	/* get message file names */
+	zbx_get_message_files(wsource, (wchar_t *)(pELR + 1), &pEventMessageFile, &pParamMessageFile);
+
+	/* prepare insert string array */
+	if (0 < pELR->NumStrings)
+	{
+		pCh = (wchar_t *)((unsigned char *)pELR + pELR->StringOffset);
+
+		for (i = 0; i < pELR->NumStrings && i < MAX_INSERT_STRS; i++)
+		{
+			aInsertStrings[i] = pCh;
+			pCh += wcslen(pCh) + 1;
+		}
+	}
+
+	err = FAIL;
+
+	for (pFile = pEventMessageFile; NULL != pFile && err != SUCCEED; pFile = pNextFile)
+	{
+		if (NULL != (pNextFile = wcschr(pFile, TEXT(';'))))
+		{
+			*pNextFile = '\0';
+			pNextFile++;
+		}
+
+		if (NULL != (hLib = zbx_load_message_file(pFile)))
+		{
+			if (NULL != (*out_message = zbx_format_message(hLib, pELR->EventID, aInsertStrings)))
+			{
+				err = SUCCEED;
+
+				if (NULL != (hParamLib = zbx_load_message_file(pParamMessageFile)))
+				{
+					zbx_translate_message_params(out_message, hParamLib);
+					FreeLibrary(hParamLib);
+				}
+			}
+
+			FreeLibrary(hLib);
+		}
+	}
+
+	zbx_free(pEventMessageFile);
+	zbx_free(pParamMessageFile);
+
+	if (SUCCEED != err)
+	{
+		*out_message = zbx_strdcatf(*out_message, "The description for Event ID:%lu in Source:'%s'"
+				" cannot be found. The local computer may not have the necessary registry"
+				" information or message DLL files to display messages from a remote computer.",
+				*out_eventid, NULL == *out_source ? "" : *out_source);
+
+		if (0 < pELR->NumStrings)
+		{
+			char	*buf;
+
+			*out_message = zbx_strdcat(*out_message, " The following information is part of the event: ");
+
+			for (i = 0, pCh = (wchar_t *)((unsigned char *)pELR + pELR->StringOffset);
+					i < pELR->NumStrings;
+					i++, pCh += wcslen(pCh) + 1)
+			{
+				if (0 < i)
+					*out_message = zbx_strdcat(*out_message, "; ");
+
+				buf = zbx_unicode_to_utf8(pCh);
+				*out_message = zbx_strdcat(*out_message, buf);
+				zbx_free(buf);
+			}
+		}
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+
+	return;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: process_eventslog                                                *
+ *                                                                            *
+ * Purpose:  batch processing of Event Log file                               *
+ *                                                                            *
+ * Parameters: server           - [IN] IP or Hostname of Zabbix server        *
+ *             port             - [IN] port of Zabbix server                  *
+ *             fl_source        - [IN] the name of the Event Log file         *
+ *             regexps          - [IN] set of regexp rules for Event Log test *
+ *             pattern          - [IN] buffer for read of data of EventLog    *
+ *             key_severity     - [IN] severity of logged data sources        *
+ *             key_source       - [IN] name of logged data source             *
+ *             key_logeventid   - [IN] the application-specific identifier    *
+ *                                     for the event                          *
+ *             metric           - [IN] input parameters for EventLog process  *
+ *             cb_process_value - [IN] callback function for sending data to  *
+ *                                     the server                             *
+ *             lastlogsize_sent - [OUT] position of the last record sent to   *
+ *                                      the server                            *
+ *             error            - [OUT] the error message in the case of      *
+ *                                     failure                                *
+ *                                                                            *
+ * Return value: SUCCEED - the operation has completed successfully           *
+ *               FAIL    - the operation has failed                           *
+ *                                                                            *
+ ******************************************************************************/
+int	process_eventslog(char *server, unsigned short port, const char *fl_source, zbx_vector_ptr_t *regexps,
+		const char *pattern, const char *key_severity, const char *key_source, const char *key_logeventid,
+		ZBX_ACTIVE_METRIC *metric, int rate, zbx_process_value_t cb_process_value,
+		zbx_uint64_t *lastlogsize_sent, char **error)
+{
+	const char	*str_severity, *__function_name = "process_eventslog";
+	int		ret = FAIL;
+	HANDLE		eventlog_handle = NULL;
+	wchar_t 	*wsource;
+	zbx_uint64_t	FirstID, LastID, lastlogsize;
+	int		buffer_size = 64 * ZBX_KIBIBYTE;
+	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr = ERROR_SUCCESS;
+	BYTE		*pELR = NULL, *pEndOfRecords, *pELRs = NULL;
+	int		s_count, p_count, send_err = SUCCEED;
+	unsigned long	logeventid, timestamp = 0;
+	unsigned short	severity;
+	char		*source, *value, str_logeventid[8];
+
+	lastlogsize = metric->lastlogsize;
+	zabbix_log(LOG_LEVEL_WARNING, "In %s() source:'%s' lastlogsize:" ZBX_FS_UI64, __function_name, fl_source,
+			lastlogsize);
+
+	/* From MSDN documentation:                                                                         */
+	/* The RecordNumber member of EVENTLOGRECORD contains the record number for the event log record.   */
+	/* The very first record written to an event log is record number 1, and other records are          */
+	/* numbered sequentially. If the record number reaches ULONG_MAX, the next record number will be 0, */
+	/* not 1; however, you use zero to seek to the record.                                              */
+	/*                                                                                                  */
+	/* This RecordNumber wraparound is handled simply by using 64bit integer to calculate record        */
+	/* numbers and then converting to DWORD values.                                                     */
+
+	if (NULL == fl_source || '\0' == *fl_source)
+	{
+		*error = zbx_strdup(*error, "Cannot open eventlog with empty name.");
+		return ret;
+	}
+
+	wsource = zbx_utf8_to_unicode(fl_source);
+
+	if (SUCCEED != zbx_open_eventlog(wsource, &eventlog_handle, &FirstID, &LastID))
+	{
+		*error = zbx_dsprintf(*error, "Cannot open eventlog '%s': %s.", fl_source,
+				strerror_from_system(GetLastError()));
+		goto out;
+	}
+
+	if (1 == metric->skip_old_data)
+	{
+		metric->lastlogsize = LastID;
+		zabbix_log(LOG_LEVEL_DEBUG, "skipping existing data: lastlogsize:" ZBX_FS_UI64, metric->lastlogsize);
+		goto finish;
+	}
+
+	/* Having lastlogsize greater than LastID means that there was oldest event record */
+	/* (FirstID) wraparound. In this case we must also wrap the lastlogsize value.     */
+	if (lastlogsize > LastID)
+		lastlogsize = (DWORD)lastlogsize;
+
+	dwReadDirection = ((LastID - FirstID) / 2) > lastlogsize ? EVENTLOG_FORWARDS_READ : EVENTLOG_BACKWARDS_READ;
+
+	/* if the lastlogsize is still outside log record interval reset it to the oldest record number, */
+	/* otherwise set FirstID to the next record after lastlogsize, which is the first event record   */
+	/* to read                                                                                       */
+	if (lastlogsize > LastID || lastlogsize < FirstID)
+	{
+		lastlogsize = FirstID;
+		dwReadDirection = 0;
+	}
+	else
+		FirstID = lastlogsize + 1;
+
+	pELRs = (BYTE*)zbx_malloc((void *)pELRs, buffer_size);
+
+	if (SUCCEED != seek_eventlog(eventlog_handle, FirstID, dwReadDirection, LastID, fl_source, &pELRs,
+			&buffer_size, &dwRead, &dwErr, error))
+	{
+		goto out;
+	}
+
+	if (ERROR_HANDLE_EOF == dwErr)
+		goto finish;
+
+	s_count = 0;
+	p_count = 0;
+
+	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: dwRead=%d dwErr = %d FirstID = "
+			ZBX_FS_UI64" LastID = "ZBX_FS_UI64" lastlogsize="ZBX_FS_UI64, __function_name, dwRead, dwErr,
+			FirstID, LastID, lastlogsize);
+
+	/* Read blocks of records until you reach the end of the log or an           */
+	/* error occurs. The records are read from oldest to newest. If the buffer   */
+	/* is not big enough to hold a complete event record, reallocate the buffer. */
+	while (ERROR_SUCCESS == dwErr)
+	{
+		if (0 == dwRead && !ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0, pELRs,
+				buffer_size, &dwRead, &dwNeeded))
+		{
+			if (ERROR_INSUFFICIENT_BUFFER == (dwErr = GetLastError()))
+			{
+				dwErr = ERROR_SUCCESS;
+				buffer_size = dwNeeded;
+				pELRs = (BYTE *)zbx_realloc((void *)pELRs, buffer_size);
+				continue;
+			}
+			else if (ERROR_HANDLE_EOF == dwErr)
+				break;
+
+			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", fl_source,
+							strerror_from_system(dwErr));
+			goto out;
+		}
+
+		pELR = pELRs;
+		pEndOfRecords = pELR + dwRead;
+		zabbix_log(LOG_LEVEL_TRACE, "%s(): state before buffer parsing: dwRead = %d RecordNumber = %d"
+				"FirstID = "ZBX_FS_UI64" LastID = "ZBX_FS_UI64" lastlogsize="ZBX_FS_UI64,
+				__function_name, dwRead, ((PEVENTLOGRECORD)pELR)->RecordNumber, FirstID, LastID,
+				lastlogsize);
+		dwRead = 0;
+
+		while (pELR < pEndOfRecords)
+		{
+			/* for prevent mismatch compare of RecordNumber due to wraparound, we are looking for using '=' */
+			if (0 != timestamp || (DWORD)FirstID == ((PEVENTLOGRECORD)pELR)->RecordNumber)
+			{
+				/* increase counter only for records >= FirstID (start point for the search) */
+				if (0 == timestamp)
+					lastlogsize = FirstID;
+				else
+					lastlogsize += 1;
+
+				zbx_parse_eventlog_message(wsource, (EVENTLOGRECORD *)pELR, &source, &value, &severity,
+						&timestamp, &logeventid);
+
+				switch (severity)
+				{
+					case EVENTLOG_SUCCESS:
+					case EVENTLOG_INFORMATION_TYPE:
+						severity = ITEM_LOGTYPE_INFORMATION;
+						str_severity = INFORMATION_TYPE;
+						break;
+					case EVENTLOG_WARNING_TYPE:
+						severity = ITEM_LOGTYPE_WARNING;
+						str_severity = WARNING_TYPE;
+						break;
+					case EVENTLOG_ERROR_TYPE:
+						severity = ITEM_LOGTYPE_ERROR;
+						str_severity = ERROR_TYPE;
+						break;
+					case EVENTLOG_AUDIT_FAILURE:
+						severity = ITEM_LOGTYPE_FAILURE_AUDIT;
+						str_severity = AUDIT_FAILURE;
+						break;
+					case EVENTLOG_AUDIT_SUCCESS:
+						severity = ITEM_LOGTYPE_SUCCESS_AUDIT;
+						str_severity = AUDIT_SUCCESS;
+						break;
+				}
+
+				zbx_snprintf(str_logeventid, sizeof(str_logeventid), "%lu", logeventid);
+
+				if (SUCCEED == regexp_match_ex(regexps, value, pattern, ZBX_CASE_SENSITIVE) &&
+						SUCCEED == regexp_match_ex(regexps, str_severity, key_severity,
+								ZBX_IGNORE_CASE) &&
+						SUCCEED == regexp_match_ex(regexps, source, key_source, ZBX_IGNORE_CASE) &&
+						SUCCEED == regexp_match_ex(regexps, str_logeventid, key_logeventid,
+								ZBX_CASE_SENSITIVE))
+				{
+					send_err = cb_process_value(server, port, CONFIG_HOSTNAME, metric->key_orig, value,
+							ITEM_STATE_NORMAL, &lastlogsize, NULL, &timestamp, source, &severity,
+							&logeventid, metric->flags | ZBX_METRIC_FLAG_PERSISTENT);
+
+					if (SUCCEED == send_err)
+					{
+						*lastlogsize_sent = lastlogsize;
+						s_count++;
+					}
+				}
+				p_count++;
+
+				zbx_free(source);
+				zbx_free(value);
+
+				if (SUCCEED == send_err)
+				{
+					metric->lastlogsize = lastlogsize;
+				}
+				else
+				{
+					/* buffer is full, stop processing active checks */
+					/* till the buffer is cleared */
+					lastlogsize = metric->lastlogsize;
+					break;
+				}
+
+				/* do not flood Zabbix server if file grows too fast */
+				if (s_count >= (rate * metric->refresh))
+					break;
+
+				/* do not flood local system if file grows too fast */
+				if (p_count >= (4 * rate * metric->refresh))
+					break;
+
+			}
+
+			pELR += ((PEVENTLOGRECORD)pELR)->Length;
+		}
+	}
+
+finish:
+	ret = SUCCEED;
+out:
+	zbx_close_eventlog(eventlog_handle);
+	zbx_free(wsource);
+	zbx_free(pELRs);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
 

@@ -24,6 +24,9 @@
 #	error "This module is only available for Windows OS"
 #endif
 
+#include "zbxalgo.h"
+#include "active.h"
+
 #define EVT_VARIANT_TYPE_ARRAY	128
 #define EVT_VARIANT_TYPE_MASK	0x7f
 
@@ -175,6 +178,17 @@ typedef enum	_EVT_VARIANT_TYPE
 	EvtVarTypeEvtXml = 35
 }
 EVT_VARIANT_TYPE;
+
+
+typedef int (*zbx_process_value_t)(const char *server, unsigned short port, const char *host, const char *key,
+		const char *value, unsigned char state, zbx_uint64_t *lastlogsize, int *mtime, unsigned long *timestamp,
+		const char *source, unsigned short *severity, unsigned long *logeventid, unsigned char flags);
+
+int	process_eventslog(char *server, unsigned short port, const char *fl_source, zbx_vector_ptr_t *regexps,
+		const char *pattern, const char *key_severity, const char *key_source, const char *key_logeventid,
+		ZBX_ACTIVE_METRIC *metric, int rate, zbx_process_value_t cb_process_value,
+		zbx_uint64_t *lastlogsize_sent, char **error);
+
 
 int			process_eventlog(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 			char **out_source, unsigned short *out_severity, char **out_message, unsigned long *out_eventid,
