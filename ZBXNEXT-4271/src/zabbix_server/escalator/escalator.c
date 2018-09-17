@@ -2563,8 +2563,8 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 	result = DBselect("select escalationid,actionid,triggerid,eventid,r_eventid,nextcheck,esc_step,status,itemid,"
 					"acknowledgeid"
 				" from escalations"
-				" where %s"
-				" order by actionid,triggerid,itemid,escalationid", filter);
+				" where %s and nextcheck<=%d"
+				" order by actionid,triggerid,itemid,escalationid", filter, now);
 	zbx_free(filter);
 
 	while (NULL != (row = DBfetch(result)))

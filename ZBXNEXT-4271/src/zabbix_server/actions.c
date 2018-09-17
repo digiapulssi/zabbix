@@ -1910,9 +1910,9 @@ void	process_actions(const DB_EVENT *events, size_t events_num, zbx_vector_uint6
 		for (j = 0; j < rec_escalations.values_num; j++)
 		{
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-					"update escalations set r_eventid=" ZBX_FS_UI64
+					"update escalations set r_eventid=" ZBX_FS_UI64 ",nextcheck=%d"
 					" where escalationid=" ZBX_FS_UI64 ";\n",
-					rec_escalations.values[j].second, rec_escalations.values[j].first);
+					rec_escalations.values[j].second, (int)time(NULL), rec_escalations.values[j].first);
 
 			DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
 		}
