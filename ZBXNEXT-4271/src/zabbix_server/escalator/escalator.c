@@ -1501,7 +1501,7 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 
 	/* schedule nextcheck for sleeping escalations */
 	if (ESCALATION_STATUS_SLEEP == escalation->status)
-		escalation->nextcheck = time(NULL) + SEC_PER_MIN;
+		escalation->nextcheck = time(NULL) + SEC_PER_HOUR;
 
 	zbx_free(tmp);
 
@@ -2352,7 +2352,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 			}
 			else if (ESCALATION_STATUS_SLEEP == escalation->status)
 			{
-				escalation->nextcheck = time(NULL) + SEC_PER_MIN;
+				escalation->nextcheck = time(NULL) + SEC_PER_HOUR;
 			}
 			else
 			{
