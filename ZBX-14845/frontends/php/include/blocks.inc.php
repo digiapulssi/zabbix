@@ -404,7 +404,7 @@ function make_system_status($filter, $backurl) {
 		$groupRow = new CRow();
 
 		$name = new CLink($group['name'], 'tr_status.php?filter_rst=1&groupid='.$group['groupid'].'&hostid=0'.
-			'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM.'&lol=4'
+			'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM
 		);
 
 		$groupRow->addItem($name);

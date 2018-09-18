@@ -240,7 +240,7 @@ foreach ($groups as $group) {
 	$group_row = new CRow();
 
 	$name = new CLink($group['name'], 'tr_status.php?filter_rst=1&groupid='.$group['groupid'].'&hostid=0'.
-		'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM.'&lol=1'
+		'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM
 	);
 	$group_row->addItem($name);
 	$group_row->addItem((new CCol($hosts_data[$group['groupid']]['ok']))->addClass(ZBX_STYLE_NORMAL_BG));
@@ -277,7 +277,7 @@ foreach ($groups as $group) {
 				$r->addItem(
 					(new CCol(
 						new CLink($host_data['host'], 'tr_status.php?filter_rst=1&groupid='.$group['groupid'].
-							'&hostid='.$hostid.'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM.'&lol=2')
+							'&hostid='.$hostid.'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM)
 					))->addClass(ZBX_STYLE_NOWRAP)
 				);
 
@@ -332,7 +332,7 @@ foreach ($groups as $group) {
 
 			$r = new CRow();
 			$r->addItem(new CLink($host_data['host'], 'tr_status.php?filter_rst=1&groupid='.$group['groupid'].
-				'&hostid='.$hostid.'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM.'&lol=3'
+				'&hostid='.$hostid.'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM
 			));
 
 			foreach ($problematic_host_list[$host['hostid']]['severities'] as $severity => $trigger_count) {
