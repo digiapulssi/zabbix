@@ -103,7 +103,7 @@ if (hasRequest('filter_set')) {
 	CProfile::update('web.tr_status.filter.status_change_days', getRequest('status_change_days', 14),
 		PROFILE_TYPE_INT
 	);
-	CProfile::update('web.tr_status.filter.application', getRequest('application'), PROFILE_TYPE_STR);
+	CProfile::update('web.tr_status.filter.application', getRequest('application', ''), PROFILE_TYPE_STR);
 
 	// show events
 	$showEvents = getRequest('show_events', EVENTS_OPTION_NOEVENT);
