@@ -444,7 +444,10 @@ function DBselect($query, $limit = null, $offset = 0) {
 		$DB['TRANSACTION_NO_FAILED_SQLS'] = false;
 	}
 
-	CProfiler::getInstance()->profileSql(microtime(true) - $time_start, $query);
+	if (CWebUser::getDebugMode()) {
+		CProfiler::getInstance()->profileSql(microtime(true) - $time_start, $query);
+	}
+
 	return $result;
 }
 
@@ -569,7 +572,10 @@ function DBexecute($query, $skip_error_messages = 0) {
 		$DB['TRANSACTION_NO_FAILED_SQLS'] = false;
 	}
 
-	CProfiler::getInstance()->profileSql(microtime(true) - $time_start, $query);
+	if (CWebUser::getDebugMode()) {
+		CProfiler::getInstance()->profileSql(microtime(true) - $time_start, $query);
+	}
+
 	return (bool) $result;
 }
 

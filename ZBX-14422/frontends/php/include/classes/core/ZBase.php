@@ -134,6 +134,7 @@ class ZBase {
 				$this->loadConfigFile();
 				$this->initDB();
 				$this->initLocales();
+				CProfiler::getInstance()->disableSqlLogging();
 				break;
 
 			case self::EXEC_MODE_SETUP:

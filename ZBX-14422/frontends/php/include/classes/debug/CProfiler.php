@@ -43,6 +43,13 @@ class CProfiler {
 	protected $sqlQueryLog = [];
 
 	/**
+	 * Whether SQL query logging is enabled.
+	 *
+	 * @var bool
+	 */
+	private static $sql_logging = true;
+
+	/**
 	 * Total time of all performed sql queries.
 	 *
 	 * @var float
@@ -197,14 +204,20 @@ class CProfiler {
 	}
 
 	/**
+	 * Disable SQL query logging.
+	 */
+	public static function disableSqlLogging() {
+		self::$sql_logging = false;
+	}
+
+	/**
 	 * Store sql query data.
 	 *
 	 * @param float  $time
 	 * @param string $sql
 	 */
 	public function profileSql($time, $sql) {
-		if (!is_null(CWebUser::$data) && isset(CWebUser::$data['debug_mode'])
-				&& CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_DISABLED) {
+		if (!self::$sql_logging) {
 			return;
 		}
 
@@ -227,11 +240,6 @@ class CProfiler {
 	 * @param array  $result
 	 */
 	public function profileApiCall($class, $method, $params, $result) {
-		if (!is_null(CWebUser::$data) && isset(CWebUser::$data['debug_mode'])
-				&& CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_DISABLED) {
-			return;
-		}
-
 		$backtrace = debug_backtrace();
 
 		// Use the file name and line number from the first call to the API wrapper object.
