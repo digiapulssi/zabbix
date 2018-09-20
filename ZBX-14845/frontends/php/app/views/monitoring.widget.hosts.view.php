@@ -239,9 +239,8 @@ foreach ($groups as $group) {
 
 	$group_row = new CRow();
 
-	$name = new CLink($group['name'],
-		'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid=0&show_maintenance=1'
-	);
+	$name = new CLink($group['name'], 'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid=0');
+
 	$group_row->addItem($name);
 	$group_row->addItem((new CCol($hosts_data[$group['groupid']]['ok']))->addClass(ZBX_STYLE_NORMAL_BG));
 
@@ -276,8 +275,9 @@ foreach ($groups as $group) {
 				$r = new CRow();
 				$r->addItem(
 					(new CCol(
-						new CLink($host_data['host'], 'tr_status.php?filter_set=1&groupid='.$group['groupid'].
-							'&hostid='.$hostid.'&show_maintenance=1')
+						new CLink($host_data['host'],
+							'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid='.$hostid
+						)
 					))->addClass(ZBX_STYLE_NOWRAP)
 				);
 
@@ -332,7 +332,7 @@ foreach ($groups as $group) {
 
 			$r = new CRow();
 			$r->addItem(new CLink($host_data['host'],
-				'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid='.$hostid.'&show_maintenance=1'
+				'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid='.$hostid
 			));
 
 			foreach ($problematic_host_list[$host['hostid']]['severities'] as $severity => $trigger_count) {

@@ -94,7 +94,7 @@ if (hasRequest('filter_set')) {
 		PROFILE_TYPE_INT
 	);
 	CProfile::update('web.tr_status.filter.show_details', getRequest('show_details', 0), PROFILE_TYPE_INT);
-	CProfile::update('web.tr_status.filter.show_maintenance', getRequest('show_maintenance', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.tr_status.filter.show_maintenance', getRequest('show_maintenance', 1), PROFILE_TYPE_INT);
 	CProfile::update('web.tr_status.filter.show_severity', getRequest('show_severity', TRIGGER_SEVERITY_NOT_CLASSIFIED),
 		PROFILE_TYPE_INT
 	);

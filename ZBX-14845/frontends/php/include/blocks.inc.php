@@ -403,9 +403,7 @@ function make_system_status($filter, $backurl) {
 	foreach ($groups as $group) {
 		$groupRow = new CRow();
 
-		$name = new CLink($group['name'],
-			'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid=0&show_maintenance=1'
-		);
+		$name = new CLink($group['name'], 'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid=0');
 
 		$groupRow->addItem($name);
 
