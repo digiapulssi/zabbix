@@ -2298,7 +2298,8 @@ static zbx_vmware_vm_t	*vmware_service_create_vm(zbx_vmware_service_t *service, 
 	vm->uuid = value;
 	vm->id = zbx_strdup(NULL, id);
 
-	vm->props = xml_read_props(details, vm_propmap, ZBX_VMWARE_VMPROPS_NUM);
+	if (NULL == (vm->props = xml_read_props(details, vm_propmap, ZBX_VMWARE_VMPROPS_NUM)))
+		goto out;
 
 	vmware_vm_get_nic_devices(vm, details);
 	vmware_vm_get_disk_devices(vm, details);
@@ -2602,7 +2603,8 @@ static int	vmware_service_init_hv(zbx_vmware_service_t *service, CURL *easyhandl
 	if (SUCCEED != vmware_service_get_hv_data(service, easyhandle, id, &details, error))
 		goto out;
 
-	hv->props = xml_read_props(details, hv_propmap, ZBX_VMWARE_HVPROPS_NUM);
+	if (NULL == (hv->props = xml_read_props(details, hv_propmap, ZBX_VMWARE_HVPROPS_NUM)))
+		goto out;
 
 	if (NULL == hv->props[ZBX_VMWARE_HVPROP_HW_UUID])
 		goto out;
