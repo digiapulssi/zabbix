@@ -1133,6 +1133,60 @@ static int	get_trigger_severity_name(unsigned char severity, char **name)
 
 /******************************************************************************
  *                                                                            *
+ * Function: remedy_init_ticket                                               *
+ *                                                                            *
+ * Purpose: initializes ticket properties                                     *
+ *                                                                            *
+ ******************************************************************************/
+static void	remedy_init_ticket(zbx_ticket_t *ticket, const char *incident_number, const char *status,
+		const char *assignee, int is_new, const DB_MEDIATYPE *mediatype)
+{
+	const char	*ptr;
+	size_t		url_alloc = 0, url_offset = 0;
+
+	ticket->ticketid = zbx_strdup(NULL, incident_number);
+	ticket->is_new = is_new;
+
+	if (NULL != status)
+	{
+		ticket->status = zbx_strdup(NULL, status);
+
+		if (0 == strcmp(status, ZBX_REMEDY_STATUS_CLOSED) ||
+				0 == strcmp(status, ZBX_REMEDY_STATUS_CANCELLED))
+		{
+			ticket->action = ZBX_TICKET_ACTION_CREATE;
+		}
+		else if (0 == strcmp(status, ZBX_REMEDY_STATUS_RESOLVED))
+		{
+			ticket->action = ZBX_TICKET_ACTION_REOPEN;
+		}
+		else
+		{
+			ticket->action = ZBX_TICKET_ACTION_UPDATE;
+		}
+	}
+	else
+		ticket->action = ZBX_TICKET_ACTION_NONE;
+
+	if (NULL != assignee)
+		ticket->assignee = zbx_strdup(NULL, assignee);
+
+	ticket->clock = remedy_get_ticket_creation_time(ticket->ticketid);
+
+	if (NULL != (ptr = strstr(mediatype->smtp_server, "://")) &&
+			NULL != (ptr = strchr(ptr + 3, '/')))
+	{
+		zbx_strncpy_alloc(&ticket->url, &url_alloc, &url_offset, mediatype->smtp_server,
+				ptr - mediatype->smtp_server);
+		zbx_snprintf_alloc(&ticket->url, &url_alloc, &url_offset,
+				"/arsys/forms/onbmc-s/SHR:LandingConsole/Default Administrator View/"
+				"?mode=search&F304255500=HPD:Help Desk&F1000000076=FormOpenNoAppList"
+				"&F303647600=SearchTicketWithQual&F304255610='1000000161'='%s'", incident_number);
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: remedy_process_event                                             *
  *                                                                            *
  * Purpose: processes event by either creating, reopening or just updating    *
@@ -1455,23 +1509,11 @@ out:
 			DBcommit();
 		}
 
-		if (NULL != ticket)
+		if (NULL != ticket && NULL != incident_number)
 		{
-			const char	*assignee;
-
-			ticket->eventid = eventid;
-			ticket->is_new = is_new;
-			if (NULL != incident_status)
-				ticket->status = zbx_strdup(NULL, incident_status);
-			if (NULL != incident_number)
-				ticket->ticketid = zbx_strdup(NULL, incident_number);
-
-			if (1 != is_new)
-			{
-				assignee = remedy_fields_get_value(fields, ARRSIZE(fields), ZBX_REMEDY_FIELD_ASSIGNEE);
-				if (NULL != assignee)
-					ticket->assignee = zbx_strdup(NULL, assignee);
-			}
+			remedy_init_ticket(ticket, incident_number, incident_status,
+					remedy_fields_get_value(fields, ARRSIZE(fields), ZBX_REMEDY_FIELD_ASSIGNEE),
+					is_new, media);
 		}
 	}
 
@@ -1573,32 +1615,26 @@ int	zbx_remedy_query_events(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tic
 	for (i = 0; i < eventids->values_num; i++)
 	{
 		zbx_ticket_t	*ticket;
+		char		*externalid = NULL;
 
 		ticket = zbx_malloc(NULL, sizeof(zbx_ticket_t));
 		memset(ticket, 0, sizeof(zbx_ticket_t));
 
 		ticket->eventid = eventids->values[i];
 
-		if (SUCCEED == remedy_get_last_ticketid(ticket->eventid, &ticket->ticketid) &&
+		if (SUCCEED == remedy_get_last_ticketid(ticket->eventid, &externalid) &&
 				SUCCEED == remedy_query_ticket(mediatype.smtp_server, mediatype.smtp_helo,
 				mediatype.username, mediatype.passwd, ticket->ticketid, fields, ARRSIZE(fields),
 				&ticket->error))
 		{
-			const char *status, *assignee;
-
-			status = remedy_fields_get_value(fields, ARRSIZE(fields), ZBX_REMEDY_FIELD_STATUS);
-			assignee = remedy_fields_get_value(fields, ARRSIZE(fields), ZBX_REMEDY_FIELD_ASSIGNEE);
-
-			if (NULL != status)
-				ticket->status = zbx_strdup(NULL, status);
-
-			if (NULL != assignee)
-				ticket->assignee = zbx_strdup(NULL, assignee);
-
-			ticket->clock = remedy_get_ticket_creation_time(ticket->ticketid);
+			remedy_init_ticket(ticket, externalid,
+					remedy_fields_get_value(fields, ARRSIZE(fields), ZBX_REMEDY_FIELD_STATUS),
+					remedy_fields_get_value(fields, ARRSIZE(fields), ZBX_REMEDY_FIELD_ASSIGNEE),
+					0, &mediatype);
 		}
 
 		zbx_vector_ptr_append(tickets, ticket);
+		zbx_free(externalid);
 	}
 
 	ret = SUCCEED;
@@ -1670,11 +1706,8 @@ int	zbx_remedy_acknowledge_events(zbx_uint64_t userid, zbx_vector_ptr_t *acknowl
 
 		ticket->eventid = ack->eventid;
 
-		if (SUCCEED == remedy_process_event(ack->eventid, userid, row[0], ack->subject, ack->message,
-				&mediatype, ZBX_REMEDY_PROCESS_MANUAL, ticket, &ticket->error))
-		{
-			ticket->clock = remedy_get_ticket_creation_time(ticket->ticketid);
-		}
+		remedy_process_event(ack->eventid, userid, row[0], ack->subject, ack->message, &mediatype,
+				ZBX_REMEDY_PROCESS_MANUAL, ticket, &ticket->error);
 
 		zbx_vector_ptr_append(tickets, ticket);
 	}
@@ -1705,6 +1738,7 @@ void	zbx_free_ticket(zbx_ticket_t *ticket)
 	zbx_free(ticket->status);
 	zbx_free(ticket->error);
 	zbx_free(ticket->assignee);
+	zbx_free(ticket->url);
 	zbx_free(ticket);
 }
 

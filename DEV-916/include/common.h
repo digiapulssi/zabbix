@@ -620,6 +620,12 @@ const char	*zbx_item_logtype_string(unsigned char logtype);
 #define MEDIA_TYPE_STATUS_ACTIVE	0
 #define MEDIA_TYPE_STATUS_DISABLED	1
 
+/* allowed external help desk service actions when acknowledging problems */
+#define ZBX_TICKET_ACTION_NONE		0
+#define ZBX_TICKET_ACTION_CREATE	1
+#define ZBX_TICKET_ACTION_REOPEN	2
+#define ZBX_TICKET_ACTION_UPDATE	3
+
 /* SMTP security options */
 #define SMTP_SECURITY_NONE	0
 #define SMTP_SECURITY_STARTTLS	1

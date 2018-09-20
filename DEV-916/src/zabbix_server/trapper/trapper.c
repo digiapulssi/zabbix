@@ -545,20 +545,25 @@ static void	format_media_response(struct zbx_json *json, zbx_vector_ptr_t *ticke
 		zbx_json_addstring(json, "externalid", (NULL != ticket->ticketid ? ticket->ticketid : ""),
 				ZBX_JSON_TYPE_STRING);
 
-		zbx_json_addstring(json, "status", (NULL != ticket->status ? ticket->status : ""),
-				ZBX_JSON_TYPE_STRING);
+		if (NULL != ticket->status)
+			zbx_json_addstring(json, "status", ticket->status, ZBX_JSON_TYPE_STRING);
 
-		zbx_json_addstring(json, "error", (NULL != ticket->error ? ticket->error : ""),
-				ZBX_JSON_TYPE_STRING);
+		if (NULL != ticket->error)
+			zbx_json_addstring(json, "error", ticket->error, ZBX_JSON_TYPE_STRING);
 
-		zbx_json_addstring(json, "assignee", (NULL != ticket->assignee ? ticket->assignee : ""),
-				ZBX_JSON_TYPE_STRING);
+		if (NULL != ticket->assignee)
+			zbx_json_addstring(json, "assignee", ticket->assignee, ZBX_JSON_TYPE_STRING);
+
+		if (NULL != ticket->url)
+			zbx_json_addstring(json, "url", ticket->url, ZBX_JSON_TYPE_STRING);
+
+		zbx_json_adduint64(json, "action", (zbx_uint64_t)ticket->action);
 
 		zbx_snprintf(buf, sizeof(buf), "%d", ticket->clock);
 		zbx_json_addstring(json, "clock", buf, ZBX_JSON_TYPE_INT);
 
 		if (ZBX_MEDIA_RESPONSE_QUERY != response_type)
-			zbx_json_adduint64(json, "new", ticket->is_new);
+			zbx_json_adduint64(json, "new", (zbx_uint64_t)ticket->is_new);
 
 		zbx_json_close(json);
 	}
