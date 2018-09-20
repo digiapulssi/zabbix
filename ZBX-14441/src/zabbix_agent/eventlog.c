@@ -19,9 +19,9 @@
 
 #include "common.h"
 #include "log.h"
-#include "eventlog.h"
 #include "zbxregexp.h"
-
+#include "winmeta.h"
+#include "eventlog.h"
 
 #define	DEFAULT_EVENT_CONTENT_SIZE 256
 
@@ -54,7 +54,7 @@ static const wchar_t	*RENDER_ITEMS[] = {
 
 /* open event logger and return number of records */
 static int	zbx_open_eventlog(LPCTSTR wsource, HANDLE *eventlog_handle, zbx_uint64_t *FirstID,
-		zbx_uint64_t *LastID)
+		zbx_uint64_t *LastID, DWORD *dwErr)
 {
 	const char	*__function_name = "zbx_open_eventlog";
 	wchar_t		reg_path[MAX_PATH];
@@ -70,16 +70,23 @@ static int	zbx_open_eventlog(LPCTSTR wsource, HANDLE *eventlog_handle, zbx_uint6
 	StringCchPrintf(reg_path, MAX_PATH, EVENTLOG_REG_PATH TEXT("%s"), wsource);
 
 	if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, reg_path, 0, KEY_READ, &hk))
+	{
+		*dwErr = GetLastError();
 		goto out;
+	}
 
 	RegCloseKey(hk);
 
 	if (NULL == (*eventlog_handle = OpenEventLog(NULL, wsource)))	/* open log file */
+	{
+		*dwErr = GetLastError();
 		goto out;
+	}
 
 	if (0 == GetNumberOfEventLogRecords(*eventlog_handle, &dwNumRecords) ||
 			0 == GetOldestEventLogRecord(*eventlog_handle, &dwOldestRecord))
 	{
+		*dwErr = GetLastError();
 		CloseEventLog(*eventlog_handle);
 		*eventlog_handle = NULL;
 		goto out;
@@ -270,7 +277,7 @@ static void	zbx_translate_message_params(char **message, HINSTANCE hLib)
 
 /* open eventlog using API 6 and return the number of records */
 static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *render_context,
-		zbx_uint64_t *FirstID, zbx_uint64_t *LastID)
+		zbx_uint64_t *FirstID, zbx_uint64_t *LastID, char **error)
 {
 	const char	*__function_name = "zbx_open_eventlog6";
 	EVT_HANDLE	log = NULL;
@@ -294,17 +301,16 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 	/* try to open the desired log */
 	if (NULL == (log = EvtOpenLog(NULL, wsource, EvtOpenChannelPath)))
 	{
+		status = GetLastError();
 		tmp_str = zbx_unicode_to_utf8(wsource);
-		zabbix_log(LOG_LEVEL_WARNING, "cannot open eventlog '%s':%s", tmp_str,
-				strerror_from_system(GetLastError()));
+		*error = zbx_dsprintf(*error, "cannot open eventlog '%s':%s", tmp_str, strerror_from_system(status));
 		goto out;
 	}
 
 	/* obtain the number of records in the log */
 	if (TRUE != EvtGetLogInfo(log, EvtLogNumberOfLogRecords, sizeof(var), &var, &size_required))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "EvtGetLogInfo failed:%s",
-				strerror_from_system(GetLastError()));
+		*error = zbx_dsprintf(*error, "EvtGetLogInfo failed:%s", strerror_from_system(GetLastError()));
 		goto out;
 	}
 
@@ -317,7 +323,7 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 	/* create the system render */
 	if (NULL == (*render_context = EvtCreateRenderContext(RENDER_ITEMS_COUNT, RENDER_ITEMS, EvtRenderContextValues)))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "EvtCreateRenderContext failed:%s", strerror_from_system(GetLastError()));
+		*error = zbx_dsprintf(*error, "EvtCreateRenderContext failed:%s", strerror_from_system(GetLastError()));
 		goto out;
 	}
 
@@ -326,9 +332,9 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 	if (NULL == tmp_all_event_query)
 	{
 		if (ERROR_EVT_CHANNEL_NOT_FOUND == (status = GetLastError()))
-			zabbix_log(LOG_LEVEL_WARNING, "EvtQuery channel missed:%s", strerror_from_system(status));
+			*error = zbx_dsprintf(*error, "EvtQuery channel missed:%s", strerror_from_system(status));
 		else
-			zabbix_log(LOG_LEVEL_WARNING, "EvtQuery failed:%s", strerror_from_system(status));
+			*error = zbx_dsprintf(*error, "EvtQuery failed:%s", strerror_from_system(status));
 
 		goto out;
 	}
@@ -352,9 +358,9 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 			&size_required, &bookmarkedCount))
 	{
 		/* information exceeds the allocated space */
-		if (ERROR_INSUFFICIENT_BUFFER != GetLastError())
+		if (ERROR_INSUFFICIENT_BUFFER != (status = GetLastError()))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "EvtRender failed:%s", strerror_from_system(GetLastError()));
+			*error = zbx_dsprintf(*error, "EvtRender failed:%s", strerror_from_system(status));
 			goto out;
 		}
 
@@ -364,7 +370,7 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 		if (TRUE != EvtRender(*render_context, event_bookmark, EvtRenderEventValues, size, renderedContent,
 				&size_required, &bookmarkedCount))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "EvtRender failed:%s", strerror_from_system(GetLastError()));
+			*error = zbx_dsprintf(*error, "EvtRender failed:%s", strerror_from_system(GetLastError()));
 			goto out;
 		}
 	}
@@ -395,7 +401,8 @@ out:
 }
 
 /* get handles of eventlog */
-static int	zbx_get_handle_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *query)
+static int	zbx_get_handle_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *query,
+		char **error)
 {
 	const char	*__function_name = "zbx_get_handle_eventlog6";
 	wchar_t		*event_query = NULL;
@@ -414,9 +421,10 @@ static int	zbx_get_handle_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlo
 	if (NULL == *query)
 	{
 		if (ERROR_EVT_CHANNEL_NOT_FOUND == (status = GetLastError()))
-			zabbix_log(LOG_LEVEL_WARNING, "EvtQuery channel missed:%s", strerror_from_system(status));
+			*error = zbx_dsprintf(*error, "EvtQuery channel missed:%s", strerror_from_system(status));
 		else
-			zabbix_log(LOG_LEVEL_WARNING, "EvtQuery failed:%s", strerror_from_system(status));
+			*error = zbx_dsprintf(*error, "EvtQuery failed:%s", strerror_from_system(status));
+
 		goto out;
 	}
 
@@ -431,7 +439,7 @@ out:
 
 /* initialize event logs with Windows API version 6 */
 int	initialize_eventlog6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
-		zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query)
+		zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query, char **error)
 {
 	const char	*__function_name = "initialize_eventlog6";
 	wchar_t		*wsource = NULL;
@@ -442,19 +450,19 @@ int	initialize_eventlog6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint
 
 	if (NULL == source || '\0' == *source)
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot open eventlog with empty name.");
+		*error = zbx_dsprintf(*error, "cannot open eventlog with empty name.");
 		goto out;
 	}
 
 	wsource = zbx_utf8_to_unicode(source);
 
-	if (SUCCEED != zbx_open_eventlog6(wsource, lastlogsize, render_context, FirstID, LastID))
+	if (SUCCEED != zbx_open_eventlog6(wsource, lastlogsize, render_context, FirstID, LastID, error))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s'", source);
 		goto out;
 	}
 
-	if (SUCCEED != zbx_get_handle_eventlog6(wsource, lastlogsize, query))
+	if (SUCCEED != zbx_get_handle_eventlog6(wsource, lastlogsize, query, error))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot get eventlog handle '%s'", source);
 		goto out;
@@ -528,19 +536,40 @@ out:
 	return out_message;
 }
 
-/* obtain a particular message from a desired eventlog */
-static int	zbx_get_eventlog_message6(const wchar_t *wsource, zbx_uint64_t *which, unsigned short *out_severity,
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_parse_eventlog_message6                                      *
+ *                                                                            *
+ * Purpose: details parse of a single EventLog record                         *
+ *                                                                            *
+ * Parameters: wsource        - [IN] EventLog file name                       *
+ *             render_context - [IN] the handle to the rendering context      *
+ *             event_bookmark - [IN/OUT] the handle of Event record for parse *
+ *             which          - [IN/OUT] the position of the EventLog record  *
+ *             out_severity   - [OUT] the ELR detail                          *
+ *             out_timestamp  - [OUT] the ELR detail                          *
+ *             out_provider   - [OUT] the ELR detail                          *
+ *             out_source     - [OUT] the ELR detail                          *
+ *             out_message    - [OUT] the ELR detail                          *
+ *             out_eventid    - [OUT] the ELR detail                          *
+ *             out_keywords   - [OUT] the ELR detail                          *
+ *             error          - [OUT] the error message in the case of        *
+ *                                    failure                                 *
+ *                                                                            *
+ * Return value: SUCCEED - the operation has completed successfully           *
+ *               FAIL    - the operation has failed                           *
+ *                                                                            *
+ ******************************************************************************/
+static int	zbx_parse_eventlog_message6(const wchar_t *wsource, EVT_HANDLE *render_context,
+		EVT_HANDLE *event_bookmark, zbx_uint64_t *which, unsigned short *out_severity,
 		unsigned long *out_timestamp, char **out_provider, char **out_source, char **out_message,
-		unsigned long *out_eventid, EVT_HANDLE *render_context, EVT_HANDLE *query, zbx_uint64_t *keywords)
+		unsigned long *out_eventid, zbx_uint64_t *out_keywords, char **error)
 {
-	const char		*__function_name = "zbx_get_eventlog_message6";
-	EVT_HANDLE		event_bookmark = NULL;
+	const char		*__function_name = "zbx_parse_eventlog_message6";
 	EVT_VARIANT*		renderedContent = NULL;
 	const wchar_t		*pprovider = NULL;
 	char			*tmp_str = NULL;
-	DWORD			size = DEFAULT_EVENT_CONTENT_SIZE;
-	DWORD			bookmarkedCount = 0;
-	DWORD			require = 0;
+	DWORD			size = DEFAULT_EVENT_CONTENT_SIZE, bookmarkedCount = 0, require = 0, dwErr;
 	const zbx_uint64_t	sec_1970 = 116444736000000000;
 	const zbx_uint64_t	success_audit = 0x20000000000000;
 	const zbx_uint64_t	failure_audit = 0x10000000000000;
@@ -548,69 +577,45 @@ static int	zbx_get_eventlog_message6(const wchar_t *wsource, zbx_uint64_t *which
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() EventRecordID:" ZBX_FS_UI64, __function_name, *which);
 
-	if (NULL == *query)
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "%s() no EvtQuery handle", __function_name);
-		goto out;
-	}
-
-	/* get the entries */
-	if (TRUE != EvtNext(*query, 1, &event_bookmark, INFINITE, 0, &require))
-	{
-		/* The event reading query had less items than we calculated before. */
-		/* Either the eventlog was cleaned or our calculations were wrong.   */
-		/* Either way we can safely abort the query by setting NULL value    */
-		/* and returning success, which is interpreted as empty eventlog.    */
-		if (ERROR_NO_MORE_ITEMS == GetLastError())
-		{
-			ret = SUCCEED;
-		}
-		else
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "EvtNext failed: %s, EventRecordID:" ZBX_FS_UI64,
-				strerror_from_system(GetLastError()), *which);
-		}
-		goto out;
-	}
-
 	/* obtain the information from the selected events */
 
 	renderedContent = (EVT_VARIANT *)zbx_malloc((void *)renderedContent, size);
 
-	if (TRUE != EvtRender(*render_context, event_bookmark, EvtRenderEventValues, size, renderedContent,
+	if (TRUE != EvtRender(*render_context, *event_bookmark, EvtRenderEventValues, size, renderedContent,
 			&require, &bookmarkedCount))
 	{
 		/* information exceeds the space allocated */
-		if (ERROR_INSUFFICIENT_BUFFER != GetLastError())
+		if (ERROR_INSUFFICIENT_BUFFER != (dwErr = GetLastError()))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "EvtRender failed: %s", strerror_from_system(GetLastError()));
+			*error = zbx_dsprintf(*error, "EvtRender failed: %s", strerror_from_system(dwErr));
 			goto out;
 		}
 
 		renderedContent = (EVT_VARIANT *)zbx_realloc((void *)renderedContent, require);
 		size = require;
 
-		if (TRUE != EvtRender(*render_context, event_bookmark, EvtRenderEventValues, size, renderedContent,
+		if (TRUE != EvtRender(*render_context, *event_bookmark, EvtRenderEventValues, size, renderedContent,
 				&require, &bookmarkedCount))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "EvtRender failed: %s", strerror_from_system(GetLastError()));
+			*error = zbx_dsprintf(*error, "EvtRender failed: %s", strerror_from_system(GetLastError()));
 			goto out;
 		}
 	}
 
 	pprovider = VAR_PROVIDER_NAME(renderedContent);
 	*out_provider = zbx_unicode_to_utf8(pprovider);
+	*out_source = NULL;
 
 	if (NULL != VAR_SOURCE_NAME(renderedContent))
 	{
 		*out_source = zbx_unicode_to_utf8(VAR_SOURCE_NAME(renderedContent));
 	}
 
-	*keywords = VAR_KEYWORDS(renderedContent) & (success_audit | failure_audit);
+	*out_keywords = VAR_KEYWORDS(renderedContent) & (success_audit | failure_audit);
 	*out_severity = VAR_LEVEL(renderedContent);
 	*out_timestamp = (unsigned long)((VAR_TIME_CREATED(renderedContent) - sec_1970) / 10000000);
 	*out_eventid = VAR_EVENT_ID(renderedContent);
-	*out_message = expand_message6(pprovider, event_bookmark);
+	*out_message = expand_message6(pprovider, *event_bookmark);
 
 	tmp_str = zbx_unicode_to_utf8(wsource);
 
@@ -650,7 +655,8 @@ static int	zbx_get_eventlog_message6(const wchar_t *wsource, zbx_uint64_t *which
 						if (0 < i)
 							*out_message = zbx_strdcat(*out_message, "; ");
 
-						data = zbx_unicode_to_utf8(VAR_EVENT_DATA_STRING_ARRAY(renderedContent, i));
+						data = zbx_unicode_to_utf8(VAR_EVENT_DATA_STRING_ARRAY(renderedContent,
+								i));
 						*out_message = zbx_strdcatf(*out_message, "%s", data);
 						zbx_free(data);
 					}
@@ -668,8 +674,9 @@ static int	zbx_get_eventlog_message6(const wchar_t *wsource, zbx_uint64_t *which
 
 	ret = SUCCEED;
 out:
-	if (NULL != event_bookmark)
-		EvtClose(event_bookmark);
+	EvtClose(*event_bookmark);
+	*event_bookmark = NULL;
+
 	zbx_free(tmp_str);
 	zbx_free(renderedContent);
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
@@ -677,66 +684,214 @@ out:
 	return ret;
 }
 
-/* process eventlog with Windows API version 6 */
-int	process_eventlog6(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
-		char **out_provider, char **out_source, unsigned short *out_severity, char **out_message,
-		unsigned long *out_eventid, zbx_uint64_t *FirstID, zbx_uint64_t *LastID, EVT_HANDLE *render_context,
-		EVT_HANDLE *query, zbx_uint64_t *keywords, unsigned char skip_old_data)
+/******************************************************************************
+ *                                                                            *
+ * Function: process_eventslog6                                               *
+ *                                                                            *
+ * Purpose:  batch processing of Event Log file                               *
+ *                                                                            *
+ * Parameters: server           - [IN] IP or Hostname of Zabbix server        *
+ *             port             - [IN] port of Zabbix server                  *
+ *             fl_source        - [IN] the name of the Event Log file         *
+ *             render_context   - [IN] the handle to the rendering context    *
+ *             query            - [IN] the handle to the query results        *
+ *             lastlogsize      - [IN] position of the last processed record  *
+ *             FirstID          - [IN] first record in the EventLog file      *
+ *             LastID           - [IN] last record in the EventLog file       *
+ *             regexps          - [IN] set of regexp rules for Event Log test *
+ *             pattern          - [IN] buffer for read of data of EventLog    *
+ *             key_severity     - [IN] severity of logged data sources        *
+ *             key_source       - [IN] name of logged data source             *
+ *             key_logeventid   - [IN] the application-specific identifier    *
+ *                                     for the event                          *
+ *             rate             - [IN] threshold of records count at a time   *
+ *             cb_process_value - [IN] callback function for sending data to  *
+ *                                     the server                             *
+ *             metric           - [IN/OUT] parameters for EventLog process    *
+ *             lastlogsize_sent - [OUT] position of the last record sent to   *
+ *                                      the server                            *
+ *             error            - [OUT] the error message in the case of      *
+ *                                      failure                               *
+ *                                                                            *
+ * Return value: SUCCEED - the operation has completed successfully           *
+ *               FAIL    - the operation has failed                           *
+ *                                                                            *
+ ******************************************************************************/
+int	process_eventslog6(const char *server, unsigned short port, const char *fl_source, EVT_HANDLE *render_context,
+		EVT_HANDLE *query, zbx_uint64_t lastlogsize, zbx_uint64_t FirstID, zbx_uint64_t LastID,
+		zbx_vector_ptr_t *regexps, const char *pattern, const char *key_severity, const char *key_source,
+		const char *key_logeventid, int rate, zbx_process_value_t cb_process_value, ZBX_ACTIVE_METRIC *metric,
+		zbx_uint64_t *lastlogsize_sent, char **error)
 {
-	const char	*__function_name = "process_eventlog6";
-	zbx_uint64_t	i = 0;
-	zbx_uint64_t	reading_startpoint = 0;
-	wchar_t		*wsource = NULL;
-	int		ret = FAIL;
+#	define EVT_ARRAY_SIZE	100
 
-	*out_timestamp	= 0;
-	*out_provider	= NULL;
-	*out_source	= NULL;
-	*out_severity	= 0;
-	*out_message	= NULL;
-	*out_eventid	= 0;
+	const char	*str_severity, *__function_name = "process_eventslog6";
+	zbx_uint64_t	keywords, i, reading_startpoint = 0;
+	wchar_t		*wsource = NULL;
+	int		s_count = 0, p_count = 0, send_err = SUCCEED, ret = FAIL;
+	DWORD		require = 0, dwErr = ERROR_SUCCESS;
+
+	unsigned long	evt_timestamp, evt_eventid;
+	char		*evt_provider, *evt_source, *evt_message, str_logeventid[8];
+	unsigned short	evt_severity;
+	EVT_HANDLE	event_bookmarks[EVT_ARRAY_SIZE];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() source: '%s' previous lastlogsize: " ZBX_FS_UI64 ", FirstID: "
-			ZBX_FS_UI64 ", LastID: " ZBX_FS_UI64, __function_name, source, *lastlogsize, *FirstID,
-			*LastID);
-
-	wsource = zbx_utf8_to_unicode(source);
+			ZBX_FS_UI64 ", LastID: " ZBX_FS_UI64, __function_name, fl_source, lastlogsize, FirstID,
+			LastID);
 
 	/* update counters */
-	if (1 == skip_old_data)
+	if (1 == metric->skip_old_data)
 	{
-		(*lastlogsize) = *LastID - 1;
-		zabbix_log(LOG_LEVEL_DEBUG, "skipping existing data: lastlogsize:" ZBX_FS_UI64,
-				*lastlogsize);
-		ret = SUCCEED;
+		metric->lastlogsize = LastID - 1;
+		metric->skip_old_data = 0;
+		zabbix_log(LOG_LEVEL_DEBUG, "skipping existing data: lastlogsize:" ZBX_FS_UI64, lastlogsize);
+		goto finish;
+	}
+
+	if (NULL == *query)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "%s() no EvtQuery handle", __function_name);
 		goto out;
 	}
-	else if (*lastlogsize >= *FirstID && *lastlogsize < *LastID)
-		reading_startpoint = (*lastlogsize) + 1;
+
+	if (lastlogsize >= FirstID && lastlogsize < LastID)
+		reading_startpoint = lastlogsize + 1;
 	else
-		reading_startpoint = *FirstID;
+		reading_startpoint = FirstID;
 
-	if (reading_startpoint == *LastID)
-	{
-		ret = SUCCEED;
-		goto out;
-	}
+	if (reading_startpoint == LastID)	/* FirstID start from 1 (not from 0) */
+		goto finish;
 
-	/* cycle through the new records */
-	for (i = reading_startpoint; i < *LastID; i++)
+	wsource = zbx_utf8_to_unicode(fl_source);
+
+	while (ERROR_SUCCESS == dwErr)
 	{
-		if (SUCCEED == zbx_get_eventlog_message6(wsource, &i, out_severity, out_timestamp, out_provider,
-				out_source, out_message, out_eventid, render_context, query, keywords))
+		/* get the entries */
+		if (TRUE != EvtNext(*query, EVT_ARRAY_SIZE, event_bookmarks, INFINITE, 0, &require))
 		{
-			/* update lastlogsize only if we really did read eventlog message */
-			if (NULL != *out_message)
-				*lastlogsize = i;
+			/* The event reading query had less items than we calculated before. */
+			/* Either the eventlog was cleaned or our calculations were wrong.   */
+			/* Either way we can safely abort the query by setting NULL value    */
+			/* and returning success, which is interpreted as empty eventlog.    */
+			if (ERROR_NO_MORE_ITEMS == (dwErr = GetLastError()))
+				continue;
 
-			ret = SUCCEED;
+			*error = zbx_dsprintf(*error, "EvtNext failed: %s, EventRecordID:" ZBX_FS_UI64,
+					strerror_from_system(dwErr), lastlogsize + 1);
 			goto out;
 		}
+
+		for (i = 0; i < require; i++)
+		{
+			lastlogsize += 1;
+
+			if (SUCCEED != zbx_parse_eventlog_message6(wsource, render_context, &event_bookmarks[i],
+					&lastlogsize, &evt_severity, &evt_timestamp, &evt_provider, &evt_source,
+					&evt_message, &evt_eventid, &keywords, error))
+			{
+				goto out;
+			}
+
+			switch (evt_severity)
+			{
+				case WINEVENT_LEVEL_LOG_ALWAYS:
+				case WINEVENT_LEVEL_INFO:
+					if (0 != (keywords & WINEVENT_KEYWORD_AUDIT_FAILURE))
+					{
+						evt_severity = ITEM_LOGTYPE_FAILURE_AUDIT;
+						str_severity = AUDIT_FAILURE;
+						break;
+					}
+					else if (0 != (keywords & WINEVENT_KEYWORD_AUDIT_SUCCESS))
+					{
+						evt_severity = ITEM_LOGTYPE_SUCCESS_AUDIT;
+						str_severity = AUDIT_SUCCESS;
+						break;
+					}
+					else
+						evt_severity = ITEM_LOGTYPE_INFORMATION;
+						str_severity = INFORMATION_TYPE;
+						break;
+				case WINEVENT_LEVEL_WARNING:
+					evt_severity = ITEM_LOGTYPE_WARNING;
+					str_severity = WARNING_TYPE;
+					break;
+				case WINEVENT_LEVEL_ERROR:
+					evt_severity = ITEM_LOGTYPE_ERROR;
+					str_severity = ERROR_TYPE;
+					break;
+				case WINEVENT_LEVEL_CRITICAL:
+					evt_severity = ITEM_LOGTYPE_CRITICAL;
+					str_severity = CRITICAL_TYPE;
+					break;
+				case WINEVENT_LEVEL_VERBOSE:
+					evt_severity = ITEM_LOGTYPE_VERBOSE;
+					str_severity = VERBOSE_TYPE;
+					break;
+			}
+
+			zbx_snprintf(str_logeventid, sizeof(str_logeventid), "%lu", evt_eventid);
+
+			if (SUCCEED == regexp_match_ex(regexps, evt_message, pattern, ZBX_CASE_SENSITIVE) &&
+					SUCCEED == regexp_match_ex(regexps, str_severity, key_severity,
+							ZBX_IGNORE_CASE) &&
+					SUCCEED == regexp_match_ex(regexps, evt_provider, key_source,
+							ZBX_IGNORE_CASE) &&
+					SUCCEED == regexp_match_ex(regexps, str_logeventid, key_logeventid,
+							ZBX_CASE_SENSITIVE))
+			{
+				send_err = cb_process_value(server, port, CONFIG_HOSTNAME, metric->key_orig, evt_message,
+						ITEM_STATE_NORMAL, &lastlogsize, NULL, &evt_timestamp, evt_provider,
+						&evt_severity, &evt_eventid,
+						metric->flags | ZBX_METRIC_FLAG_PERSISTENT);
+
+				if (SUCCEED == send_err)
+				{
+					*lastlogsize_sent = lastlogsize;
+					s_count++;
+				}
+			}
+			p_count++;
+
+			zbx_free(evt_source);
+			zbx_free(evt_provider);
+			zbx_free(evt_message);
+
+			if (SUCCEED == send_err)
+			{
+				metric->lastlogsize = lastlogsize;
+			}
+			else
+			{
+				/* buffer is full, stop processing active checks */
+				/* till the buffer is cleared */
+				lastlogsize = metric->lastlogsize;
+				break;
+			}
+
+			/* do not flood Zabbix server if file grows too fast */
+			if (s_count >= (rate * metric->refresh))
+				break;
+
+			/* do not flood local system if file grows too fast */
+			if (p_count >= (4 * rate * metric->refresh))
+				break;
+
+		}
+
+		if (i < require)
+			dwErr = ERROR_NO_MORE_ITEMS;
 	}
+finish:
+	ret = SUCCEED;
 out:
+	for (i = 0; i < require; i++)
+	{
+		if (NULL != event_bookmarks[i])
+			EvtClose(event_bookmarks[i]);
+	}
+
 	zbx_free(wsource);
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
@@ -803,7 +958,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 	DWORD		dwRecordNumber, dwNeeded;
 	zbx_uint64_t	skip_count = 0;
 
-	if (0 == dwReadDirection)	/* we will read log from first record */
+	if (0 == dwReadDirection)	/* we will read EvenLog from the first record */
 		return SUCCEED;
 
 	if (LastID < FirstID)		/* no one new records */
@@ -1027,9 +1182,10 @@ static void	zbx_parse_eventlog_message(const wchar_t *wsource, const EVENTLOGREC
  *             key_source       - [IN] name of logged data source             *
  *             key_logeventid   - [IN] the application-specific identifier    *
  *                                     for the event                          *
- *             metric           - [IN] input parameters for EventLog process  *
+ *             rate             - [IN] threshold of records count at a time   *
  *             cb_process_value - [IN] callback function for sending data to  *
  *                                     the server                             *
+ *             metric           - [IN/OUT] parameters for EventLog process    *
  *             lastlogsize_sent - [OUT] position of the last record sent to   *
  *                                      the server                            *
  *             error            - [OUT] the error message in the case of      *
@@ -1039,9 +1195,9 @@ static void	zbx_parse_eventlog_message(const wchar_t *wsource, const EVENTLOGREC
  *               FAIL    - the operation has failed                           *
  *                                                                            *
  ******************************************************************************/
-int	process_eventslog(char *server, unsigned short port, const char *fl_source, zbx_vector_ptr_t *regexps,
+int	process_eventslog(const char *server, unsigned short port, const char *fl_source, zbx_vector_ptr_t *regexps,
 		const char *pattern, const char *key_severity, const char *key_source, const char *key_logeventid,
-		ZBX_ACTIVE_METRIC *metric, int rate, zbx_process_value_t cb_process_value,
+		int rate, zbx_process_value_t cb_process_value, ZBX_ACTIVE_METRIC *metric,
 		zbx_uint64_t *lastlogsize_sent, char **error)
 {
 	const char	*str_severity, *__function_name = "process_eventslog";
@@ -1050,15 +1206,15 @@ int	process_eventslog(char *server, unsigned short port, const char *fl_source, 
 	wchar_t 	*wsource;
 	zbx_uint64_t	FirstID, LastID, lastlogsize;
 	int		buffer_size = 64 * ZBX_KIBIBYTE;
-	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr = ERROR_SUCCESS;
-	BYTE		*pELR = NULL, *pEndOfRecords, *pELRs = NULL;
+	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr;
+	BYTE		*pELR, *pEndOfRecords, *pELRs = NULL;
 	int		s_count, p_count, send_err = SUCCEED;
 	unsigned long	logeventid, timestamp = 0;
 	unsigned short	severity;
 	char		*source, *value, str_logeventid[8];
 
 	lastlogsize = metric->lastlogsize;
-	zabbix_log(LOG_LEVEL_WARNING, "In %s() source:'%s' lastlogsize:" ZBX_FS_UI64, __function_name, fl_source,
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() source:'%s' lastlogsize:" ZBX_FS_UI64, __function_name, fl_source,
 			lastlogsize);
 
 	/* From MSDN documentation:                                                                         */
@@ -1078,16 +1234,16 @@ int	process_eventslog(char *server, unsigned short port, const char *fl_source, 
 
 	wsource = zbx_utf8_to_unicode(fl_source);
 
-	if (SUCCEED != zbx_open_eventlog(wsource, &eventlog_handle, &FirstID, &LastID))
+	if (SUCCEED != zbx_open_eventlog(wsource, &eventlog_handle, &FirstID, &LastID, &dwErr))
 	{
-		*error = zbx_dsprintf(*error, "Cannot open eventlog '%s': %s.", fl_source,
-				strerror_from_system(GetLastError()));
+		*error = zbx_dsprintf(*error, "Cannot open eventlog '%s': %s.", fl_source, strerror_from_system(dwErr));
 		goto out;
 	}
 
 	if (1 == metric->skip_old_data)
 	{
 		metric->lastlogsize = LastID;
+		metric->skip_old_data = 0;
 		zabbix_log(LOG_LEVEL_DEBUG, "skipping existing data: lastlogsize:" ZBX_FS_UI64, metric->lastlogsize);
 		goto finish;
 	}
@@ -1133,8 +1289,8 @@ int	process_eventslog(char *server, unsigned short port, const char *fl_source, 
 	/* is not big enough to hold a complete event record, reallocate the buffer. */
 	while (ERROR_SUCCESS == dwErr)
 	{
-		if (0 == dwRead && !ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0, pELRs,
-				buffer_size, &dwRead, &dwNeeded))
+		if (0 == dwRead && !ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
+				pELRs, buffer_size, &dwRead, &dwNeeded))
 		{
 			if (ERROR_INSUFFICIENT_BUFFER == (dwErr = GetLastError()))
 			{
