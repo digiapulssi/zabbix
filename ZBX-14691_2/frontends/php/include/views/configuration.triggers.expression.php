@@ -93,9 +93,10 @@ if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) 
 				$paramField = (new CTextBox('params['.$paramId.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
 			}
 			else {
-				$paramField = ($this->data['paramtype'] == PARAM_TYPE_COUNTS)
+				$paramValue = str_replace('#', '', $paramValue);
+				$paramField = ($this->data['paramtype'] == PARAM_TYPE_COUNTS && is_numeric($paramValue))
 					? (new CNumericBox('params['.$paramId.']', (int) $paramValue, 10))
-						->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
+						->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 					: (new CTextBox('params['.$paramId.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
 			}
 
