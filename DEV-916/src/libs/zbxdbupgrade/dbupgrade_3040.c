@@ -78,6 +78,32 @@ static int	DBpatch_3040007(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3040008(void)
+{
+	const ZBX_FIELD	field = {"mediatypeid", NULL, NULL, NULL, 0, ZBX_TYPE_ID, 0, 0};
+
+	return DBadd_field("ticket", &field);
+}
+
+
+static int	DBpatch_3040009(void)
+{
+	DB_ROW		row;
+	DB_RESULT	result;
+	int		ret = FAIL;
+
+	/* MEDIA_TYPE_REMEDY - 101, MEDIA_TYPE_STATUS_ACTIVE- 0 */
+	result = DBselect("select mediatypeid from media_type where type=101 and status=0");
+	if (NULL != (row = DBfetch(result)))
+	{
+		if (ZBX_DB_OK <= DBexecute("update ticket set mediatypeid=%s", row[0]))
+			ret = SUCCEED;
+	}
+	DBfree_result(result);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3040)
@@ -92,5 +118,7 @@ DBPATCH_ADD(3040004, 0, 0)
 DBPATCH_ADD(3040005, 0, 0)
 DBPATCH_ADD(3040006, 0, 0)
 DBPATCH_ADD(3040007, 0, 0)
+DBPATCH_ADD(3040008, 0, 0)
+DBPATCH_ADD(3040009, 0, 0)
 
 DBPATCH_END()
