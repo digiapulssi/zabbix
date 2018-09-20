@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -952,78 +952,6 @@ static void	remedy_register_ticket(const char *ticketnumber, zbx_uint64_t eventi
 
 /******************************************************************************
  *                                                                            *
- * Function: remedy_clean_mediatype                                           *
- *                                                                            *
- * Purpose: releases resource allocated to store mediatype properties         *
- *                                                                            *
- * Parameters: media   - [IN] the mediatype data                              *
- *                                                                            *
- ******************************************************************************/
-static void	remedy_clean_mediatype(DB_MEDIATYPE *media)
-{
-	zbx_free(media->description);
-	zbx_free(media->exec_path);
-	zbx_free(media->gsm_modem);
-	zbx_free(media->smtp_server);
-	zbx_free(media->smtp_helo);
-	zbx_free(media->smtp_email);
-	zbx_free(media->username);
-	zbx_free(media->passwd);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: remedy_get_mediatype                                             *
- *                                                                            *
- * Purpose: reads the first active remedy media type from database            *
- *                                                                            *
- * Parameters: media   - [IN] the mediatype data                              *
- *                                                                            *
- * Return value: SUCCEED - the media type was read successfully               *
- *               FAIL - otherwise                                             *
- *                                                                            *
- * Comments: This function allocates memory to store mediatype properties     *
- *           which must be freed later with remedy_clean_mediatype() function.*
- *                                                                            *
- ******************************************************************************/
-static int	remedy_get_mediatype(DB_MEDIATYPE *media)
-{
-	const char	*__function_name = "remedy_get_mediatype";
-	DB_RESULT	result;
-	DB_ROW		row;
-	int		ret = FAIL;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
-	result = DBselect("select smtp_server,smtp_helo,smtp_email,username,passwd,mediatypeid,exec_path"
-				" from media_type"
-				" where type=%d and status=%d",
-				MEDIA_TYPE_REMEDY, MEDIA_TYPE_STATUS_ACTIVE);
-
-	if (NULL != (row = DBfetch(result)))
-	{
-		media->description = NULL;
-		media->gsm_modem = NULL;
-		media->smtp_server = zbx_strdup(media->smtp_server, row[0]);
-		media->smtp_helo = zbx_strdup(media->smtp_helo, row[1]);
-		media->smtp_email = zbx_strdup(media->smtp_email, row[2]);
-		media->username = zbx_strdup(media->username, row[3]);
-		media->passwd = zbx_strdup(media->passwd, row[4]);
-		ZBX_STR2UINT64(media->mediatypeid, row[5]);
-		media->exec_path = zbx_strdup(media->exec_path, row[6]);
-
-		ret = SUCCEED;
-	}
-
-	DBfree_result(result);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return ret;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: remedy_get_ticket_creation_time                                  *
  *                                                                            *
  * Purpose: retrieves the creation time of the specified ticket               *
@@ -1579,25 +1507,20 @@ int	zbx_remedy_process_alert(zbx_uint64_t eventid, zbx_uint64_t userid, const ch
  * Purpose: retrieves status of Remedy incidents associated to the specified  *
  *          events                                                            *
  *                                                                            *
- * Parameters: eventids   - [IN] the events to query                          *
+ * Parameters: mediatype  - [IN] the remedy mediatype data                    *
+ *             eventids   - [IN] the events to query                          *
  *             tickets    - [OUT] the incident data                           *
- *             error      - [OUT] the error description                       *
- *                                                                            *
- * Return value: SUCCEED - the operation was completed successfully.          *
- *                         Per event query status can be determined by        *
- *                         inspecting ticketids contents.                     *
- *               FAIL - otherwise                                             *
+ *             error      - [OUT] the error messagee                          *
  *                                                                            *
  * Comments: The caller must free the error description if it was set and     *
  *           tickets vector contents.                                         *
  *                                                                            *
  ******************************************************************************/
-int	zbx_remedy_query_events(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tickets, char **error)
+void	zbx_remedy_query_events(const DB_MEDIATYPE *mediatype, zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tickets,
+		char **error)
 {
-	const char		*__function_name = "zbx_remedy_query_events";
-
-	int			ret = FAIL, i;
-	DB_MEDIATYPE		mediatype = {0};
+	const char	*__function_name = "zbx_remedy_query_events";
+	int		i;
 
 	zbx_remedy_field_t	fields[] = {
 			{ZBX_REMEDY_FIELD_STATUS, NULL},
@@ -1605,12 +1528,6 @@ int	zbx_remedy_query_events(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tic
 	};
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
-	if (SUCCEED != remedy_get_mediatype(&mediatype))
-	{
-		*error = zbx_dsprintf(*error, "Failed to find apropriate media type");
-		goto out;
-	}
 
 	for (i = 0; i < eventids->values_num; i++)
 	{
@@ -1623,8 +1540,8 @@ int	zbx_remedy_query_events(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tic
 		ticket->eventid = eventids->values[i];
 
 		if (SUCCEED == remedy_get_last_ticketid(ticket->eventid, &externalid) &&
-				SUCCEED == remedy_query_ticket(mediatype.smtp_server, mediatype.smtp_helo,
-				mediatype.username, mediatype.passwd, ticket->ticketid, fields, ARRSIZE(fields),
+				SUCCEED == remedy_query_ticket(mediatype->smtp_server, mediatype->smtp_helo,
+				mediatype->username, mediatype->passwd, ticket->ticketid, fields, ARRSIZE(fields),
 				&ticket->error))
 		{
 			remedy_init_ticket(ticket, externalid,
@@ -1637,14 +1554,9 @@ int	zbx_remedy_query_events(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tic
 		zbx_free(externalid);
 	}
 
-	ret = SUCCEED;
-
-	remedy_clean_mediatype(&mediatype);
 	remedy_fields_clean_values(fields, ARRSIZE(fields));
-out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
-	return ret;
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 /******************************************************************************
@@ -1654,7 +1566,9 @@ out:
  * Purpose: acknowledges events in Remedy service with specified message      *
  *          subjects and contents                                             *
  *                                                                            *
- * Parameters: userid        - [IN] the user acknowledging events             *
+ * Parameters: mediatype     - [IN] the remedy mediatype data                 *
+ *             media         - [IN] the user media                            *
+ *             userid        - [IN] the user acknowledging events             *
  *             acknowledges  - [IN] the event acknowledgment data             *
  *             tickets       - [OUT] the incident data                        *
  *             error         - [OUT] the error description                    *
@@ -1666,35 +1580,14 @@ out:
  *           tickets vector contents.                                         *
  *                                                                            *
  ******************************************************************************/
-int	zbx_remedy_acknowledge_events(zbx_uint64_t userid, zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets,
-		char **error)
+void	zbx_remedy_acknowledge_events(const DB_MEDIATYPE *mediatype, const zbx_media_t *media, zbx_uint64_t userid,
+		zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets, char **error)
 {
 	const char	*__function_name = "zbx_remedy_acknowledge_events";
 
-	int		i, ret = FAIL;
-	DB_MEDIATYPE	mediatype = {0};
-	DB_RESULT	result;
-	DB_ROW		row;
+	int		i;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
-	if (SUCCEED != remedy_get_mediatype(&mediatype))
-	{
-		*error = zbx_dsprintf(*error, "Failed to find apropriate media type");
-		goto out;
-	}
-
-	result = DBselect("select sendto from media"
-			" where mediatypeid=" ZBX_FS_UI64
-				" and userid=" ZBX_FS_UI64,
-				mediatype.mediatypeid, userid);
-
-	if (NULL == (row = DBfetch(result)))
-	{
-		*error = zbx_dsprintf(*error, "Failed to find apropriate media type for current user");
-		DBfree_result(result);
-		goto out;
-	}
 
 	for (i = 0; i < acknowledges->values_num; i++)
 	{
@@ -1703,59 +1596,15 @@ int	zbx_remedy_acknowledge_events(zbx_uint64_t userid, zbx_vector_ptr_t *acknowl
 
 		ticket = zbx_malloc(NULL, sizeof(zbx_ticket_t));
 		memset(ticket, 0, sizeof(zbx_ticket_t));
-
 		ticket->eventid = ack->eventid;
 
-		remedy_process_event(ack->eventid, userid, row[0], ack->subject, ack->message, &mediatype,
+		remedy_process_event(ack->eventid, userid, media->sendto, ack->subject, ack->message, mediatype,
 				ZBX_REMEDY_PROCESS_MANUAL, ticket, &ticket->error);
 
 		zbx_vector_ptr_append(tickets, ticket);
 	}
 
-	DBfree_result(result);
-
-	ret = SUCCEED;
-out:
-	remedy_clean_mediatype(&mediatype);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
-
-	return ret;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_free_ticket                                                  *
- *                                                                            *
- * Purpose: frees the ticket data                                             *
- *                                                                            *
- * Parameters: ticket   - [IN] the ticket to free                             *
- *                                                                            *
- ******************************************************************************/
-void	zbx_free_ticket(zbx_ticket_t *ticket)
-{
-	zbx_free(ticket->ticketid);
-	zbx_free(ticket->status);
-	zbx_free(ticket->error);
-	zbx_free(ticket->assignee);
-	zbx_free(ticket->url);
-	zbx_free(ticket);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_free_acknowledge                                             *
- *                                                                            *
- * Purpose: frees the acknowledgment data                                     *
- *                                                                            *
- * Parameters: ack   - [IN] the acknowledgment to free                        *
- *                                                                            *
- ******************************************************************************/
-void	zbx_free_acknowledge(zbx_acknowledge_t *ack)
-{
-	zbx_free(ack->subject);
-	zbx_free(ack->message);
-	zbx_free(ack);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
 #else

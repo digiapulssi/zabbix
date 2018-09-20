@@ -7,6 +7,7 @@ libzbxmedia_a_SOURCES = \
 			eztexting.c \
 			jabber.c \
 			sms.c \
-			remedy.c
+			remedy.c \
+			xmedia.c
 
 libzbxmedia_a_CFLAGS = @JABBER_CPPFLAGS@ @LIBXML2_CFLAGS@

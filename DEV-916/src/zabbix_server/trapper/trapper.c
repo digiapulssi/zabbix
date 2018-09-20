@@ -621,7 +621,7 @@ static int	recv_media_query(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		zbx_vector_uint64_append(&eventids, eventid);
 	}
 
-	if (SUCCEED != (ret = zbx_remedy_query_events(&eventids, &tickets, &error)))
+	if (SUCCEED != (ret = zbx_xmedia_query_events(user.userid, &eventids, &tickets, &error)))
 	{
 		zbx_send_response_raw(sock, ret, error, CONFIG_TIMEOUT);
 		zbx_free(error);
@@ -719,7 +719,7 @@ static int	recv_media_acknowledge(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		zbx_free(eventid);
 	}
 
-	if (SUCCEED != (ret = zbx_remedy_acknowledge_events(user.userid, &acknowledges, &tickets, &error)))
+	if (SUCCEED != (ret = zbx_xmedia_acknowledge_events(user.userid, &acknowledges, &tickets, &error)))
 	{
 		zbx_send_response_raw(sock, ret, error, CONFIG_TIMEOUT);
 		zbx_free(error);
