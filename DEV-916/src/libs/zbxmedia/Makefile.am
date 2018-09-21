@@ -8,6 +8,7 @@ libzbxmedia_a_SOURCES = \
 			jabber.c \
 			sms.c \
 			remedy.c \
-			xmedia.c
+			xmedia.c \
+			servicenow.c
 
 libzbxmedia_a_CFLAGS = @JABBER_CPPFLAGS@ @LIBXML2_CFLAGS@

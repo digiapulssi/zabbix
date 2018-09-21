@@ -1527,6 +1527,8 @@ void	zbx_remedy_query_events(const DB_MEDIATYPE *mediatype, zbx_vector_uint64_t 
 			{ZBX_REMEDY_FIELD_ASSIGNEE, NULL}
 	};
 
+	ZBX_UNUSED(error);
+
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	for (i = 0; i < eventids->values_num; i++)
@@ -1547,7 +1549,7 @@ void	zbx_remedy_query_events(const DB_MEDIATYPE *mediatype, zbx_vector_uint64_t 
 			remedy_init_ticket(ticket, externalid,
 					remedy_fields_get_value(fields, ARRSIZE(fields), ZBX_REMEDY_FIELD_STATUS),
 					remedy_fields_get_value(fields, ARRSIZE(fields), ZBX_REMEDY_FIELD_ASSIGNEE),
-					0, &mediatype);
+					0, mediatype);
 		}
 
 		zbx_vector_ptr_append(tickets, ticket);
@@ -1586,6 +1588,8 @@ void	zbx_remedy_acknowledge_events(const DB_MEDIATYPE *mediatype, const zbx_medi
 	const char	*__function_name = "zbx_remedy_acknowledge_events";
 
 	int		i;
+
+	ZBX_UNUSED(error);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
