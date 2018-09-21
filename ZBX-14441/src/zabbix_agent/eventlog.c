@@ -760,7 +760,7 @@ int	process_eventslog6(const char *server, unsigned short port, const char *fl_s
 	else
 		reading_startpoint = FirstID;
 
-	if (reading_startpoint == LastID)	/* FirstID start from 1 (not from 0) */
+	if (reading_startpoint == LastID)	/* LastID = FirstID + count */
 		goto finish;
 
 	wsource = zbx_utf8_to_unicode(fl_source);
