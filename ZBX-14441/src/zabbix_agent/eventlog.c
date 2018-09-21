@@ -705,7 +705,7 @@ out:
  *             key_logeventid   - [IN] the application-specific identifier    *
  *                                     for the event                          *
  *             rate             - [IN] threshold of records count at a time   *
- *             cb_process_value - [IN] callback function for sending data to  *
+ *             process_value_cb - [IN] callback function for sending data to  *
  *                                     the server                             *
  *             metric           - [IN/OUT] parameters for EventLog process    *
  *             lastlogsize_sent - [OUT] position of the last record sent to   *
@@ -720,7 +720,7 @@ out:
 int	process_eventslog6(const char *server, unsigned short port, const char *fl_source, EVT_HANDLE *render_context,
 		EVT_HANDLE *query, zbx_uint64_t lastlogsize, zbx_uint64_t FirstID, zbx_uint64_t LastID,
 		zbx_vector_ptr_t *regexps, const char *pattern, const char *key_severity, const char *key_source,
-		const char *key_logeventid, int rate, zbx_process_value_t cb_process_value, ZBX_ACTIVE_METRIC *metric,
+		const char *key_logeventid, int rate, zbx_process_value_t process_value_cb, ZBX_ACTIVE_METRIC *metric,
 		zbx_uint64_t *lastlogsize_sent, char **error)
 {
 #	define EVT_ARRAY_SIZE	100
@@ -841,7 +841,7 @@ int	process_eventslog6(const char *server, unsigned short port, const char *fl_s
 					SUCCEED == regexp_match_ex(regexps, str_logeventid, key_logeventid,
 							ZBX_CASE_SENSITIVE))
 			{
-				send_err = cb_process_value(server, port, CONFIG_HOSTNAME, metric->key_orig, evt_message,
+				send_err = process_value_cb(server, port, CONFIG_HOSTNAME, metric->key_orig, evt_message,
 						ITEM_STATE_NORMAL, &lastlogsize, NULL, &evt_timestamp, evt_provider,
 						&evt_severity, &evt_eventid,
 						metric->flags | ZBX_METRIC_FLAG_PERSISTENT);
@@ -1183,7 +1183,7 @@ static void	zbx_parse_eventlog_message(const wchar_t *wsource, const EVENTLOGREC
  *             key_logeventid   - [IN] the application-specific identifier    *
  *                                     for the event                          *
  *             rate             - [IN] threshold of records count at a time   *
- *             cb_process_value - [IN] callback function for sending data to  *
+ *             process_value_cb - [IN] callback function for sending data to  *
  *                                     the server                             *
  *             metric           - [IN/OUT] parameters for EventLog process    *
  *             lastlogsize_sent - [OUT] position of the last record sent to   *
@@ -1197,7 +1197,7 @@ static void	zbx_parse_eventlog_message(const wchar_t *wsource, const EVENTLOGREC
  ******************************************************************************/
 int	process_eventslog(const char *server, unsigned short port, const char *fl_source, zbx_vector_ptr_t *regexps,
 		const char *pattern, const char *key_severity, const char *key_source, const char *key_logeventid,
-		int rate, zbx_process_value_t cb_process_value, ZBX_ACTIVE_METRIC *metric,
+		int rate, zbx_process_value_t process_value_cb, ZBX_ACTIVE_METRIC *metric,
 		zbx_uint64_t *lastlogsize_sent, char **error)
 {
 	const char	*str_severity, *__function_name = "process_eventslog";
@@ -1363,7 +1363,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 						SUCCEED == regexp_match_ex(regexps, str_logeventid, key_logeventid,
 								ZBX_CASE_SENSITIVE))
 				{
-					send_err = cb_process_value(server, port, CONFIG_HOSTNAME, metric->key_orig, value,
+					send_err = process_value_cb(server, port, CONFIG_HOSTNAME, metric->key_orig, value,
 							ITEM_STATE_NORMAL, &lastlogsize, NULL, &timestamp, source, &severity,
 							&logeventid, metric->flags | ZBX_METRIC_FLAG_PERSISTENT);
 
