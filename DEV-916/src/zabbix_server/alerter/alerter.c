@@ -349,6 +349,8 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 
 	alerter_register(&alerter_socket);
 
+	DBconnect(ZBX_DB_CONNECT_NORMAL);
+
 	time_stat = zbx_time();
 
 	zbx_setproctitle("%s #%d started", get_process_type_string(process_type), process_num);
