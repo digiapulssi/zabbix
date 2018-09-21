@@ -349,7 +349,6 @@ static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata
 {
 	size_t	r_size = size * nmemb;
 
-	ZBX_UNUSED(ptr);
 	ZBX_UNUSED(userdata);
 
 	zbx_strncpy_alloc(&page.data, &page.alloc, &page.offset, ptr, r_size);
