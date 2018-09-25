@@ -311,6 +311,47 @@ static void	alerter_process_remedy(zbx_ipc_socket_t *socket, zbx_ipc_message_t *
 
 /******************************************************************************
  *                                                                            *
+ * Function: alerter_process_servicenow                                           *
+ *                                                                            *
+ * Purpose: processes remedy alert                                            *
+ *                                                                            *
+ * Parameters: socket      - [IN] the connections socket                      *
+ *             ipc_message - [IN] the ipc message with media type and alert   *
+ *                                data                                        *
+ *                                                                            *
+ ******************************************************************************/
+static void	alerter_process_servicenow(zbx_ipc_socket_t *socket, zbx_ipc_message_t *ipc_message)
+{
+	zbx_uint64_t	eventid, userid;
+	char		*subject, *message, *smtp_server, *smtp_helo, *smtp_email, *username, *password, *error = NULL;
+	int		ret;
+	DB_MEDIATYPE	mt;
+
+	zbx_alerter_deserialize_servicenow(ipc_message->data, &eventid, &userid, &subject, &message, &smtp_server,
+			&smtp_helo, &smtp_email, &username, &password);
+
+	memset(&mt, 0, sizeof(mt));
+	mt.smtp_server = smtp_server;
+	mt.smtp_helo = smtp_helo;
+	mt.smtp_email = smtp_email;
+	mt.username = username;
+	mt.passwd = password;
+
+	ret = zbx_servicenow_process_alert(eventid, userid, subject, message, &mt, &error);
+	alerter_send_result(socket, ret, (SUCCEED == ret ? NULL : error));
+
+	zbx_free(subject);
+	zbx_free(message);
+	zbx_free(smtp_server);
+	zbx_free(smtp_helo);
+	zbx_free(smtp_email);
+	zbx_free(username);
+	zbx_free(password);
+	zbx_free(error);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: main_alerter_loop                                                *
  *                                                                            *
  * Purpose: periodically check table alerts and send notifications if needed  *
@@ -415,6 +456,9 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 				break;
 			case ZBX_IPC_ALERTER_REMEDY:
 				alerter_process_remedy(&alerter_socket, &message);
+				break;
+			case ZBX_IPC_ALERTER_SERVICENOW:
+				alerter_process_servicenow(&alerter_socket, &message);
 				break;
 		}
 

@@ -68,6 +68,7 @@ void	media_clear(zbx_media_t *media)
  *                                                                            *
  * Parameters: userid    - [IN] the user id                                   *
  *             mediatype - [OUT] the mediatype data                           *
+ *             media     - [OUT] the user media data                          *
  *                                                                            *
  * Return value: SUCCEED - the media type was read successfully               *
  *               FAIL - otherwise                                             *
@@ -162,10 +163,9 @@ void	zbx_free_acknowledge(zbx_acknowledge_t *ack)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_remedy_query_events                                          *
+ * Function: zbx_xmedia_query_events                                          *
  *                                                                            *
- * Purpose: retrieves status of Remedy incidents associated to the specified  *
- *          events                                                            *
+ * Purpose: retrieves status of incidents associated to the specified events  *
  *                                                                            *
  * Parameters: userid     - [IN] the user querying events                     *
  *             eventids   - [IN] the events to query                          *
@@ -174,8 +174,8 @@ void	zbx_free_acknowledge(zbx_acknowledge_t *ack)
  *                                                                            *
  * Return value: SUCCEED - the operation was completed successfully.          *
  *                         Per event query status can be determined by        *
- *                         inspecting ticketids contents.                     *
- *               FAIL - otherwise                                             *
+ *                         inspecting tickets contents.                       *
+ *               FAIL   - otherwise                                           *
  *                                                                            *
  * Comments: The caller must free the error description if it was set and     *
  *           tickets vector contents.                                         *
@@ -186,7 +186,7 @@ int	zbx_xmedia_query_events(zbx_uint64_t userid, zbx_vector_uint64_t *eventids, 
 {
 	const char		*__function_name = "zbx_xmedia_query_events";
 
-	int			ret = FAIL;
+	int			ret;
 	DB_MEDIATYPE		mediatype = {0};
 	zbx_media_t		media = {0};
 
@@ -194,23 +194,24 @@ int	zbx_xmedia_query_events(zbx_uint64_t userid, zbx_vector_uint64_t *eventids, 
 
 	if (SUCCEED != mediatype_get(userid, &mediatype, &media))
 	{
-		*error = zbx_dsprintf(*error, "Failed to find apropriate media type");
+		*error = zbx_dsprintf(*error, "Failed to find appropriate media type");
 		goto out;
 	}
 
 	switch (mediatype.type)
 	{
 		case MEDIA_TYPE_REMEDY:
-			zbx_remedy_query_events(&mediatype, eventids, tickets, error);
+			zbx_remedy_query_events(&mediatype, eventids, tickets);
+			ret = SUCCEED;
 			break;
 		case MEDIA_TYPE_SERVICENOW:
-			/* TODO: servicenow impl */
+			zbx_servicenow_query_events(&mediatype, eventids, tickets);
+			ret = SUCCEED;
 			break;
 		default:
-			THIS_SHOULD_NEVER_HAPPEN;
+			*error = zbx_dsprintf(*error, "Unsupported external media type %d", mediatype.type);
+			ret = FAIL;
 	}
-
-	ret = SUCCEED;
 
 	mediatype_clear(&mediatype);
 	media_clear(&media);
@@ -224,7 +225,7 @@ out:
  *                                                                            *
  * Function: zbx_xmedia_acknowledge_events                                    *
  *                                                                            *
- * Purpose: acknowledges events in Remedy service with specified message      *
+ * Purpose: acknowledges events in external service with specified message    *
  *          subjects and contents                                             *
  *                                                                            *
  * Parameters: userid        - [IN] the user acknowledging events             *
@@ -242,7 +243,7 @@ out:
 int	zbx_xmedia_acknowledge_events(zbx_uint64_t userid, zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets,
 		char **error)
 {
-	const char	*__function_name = "zbx_remedy_acknowledge_events";
+	const char	*__function_name = "zbx_xmedia_acknowledge_events";
 
 	int		ret = FAIL;
 	DB_MEDIATYPE	mediatype = {0};
@@ -259,17 +260,18 @@ int	zbx_xmedia_acknowledge_events(zbx_uint64_t userid, zbx_vector_ptr_t *acknowl
 	switch (mediatype.type)
 	{
 		case MEDIA_TYPE_REMEDY:
-			zbx_remedy_acknowledge_events(&mediatype, &media, userid, acknowledges, tickets, error);
+			zbx_remedy_acknowledge_events(&mediatype, &media, userid, acknowledges, tickets);
+			ret = SUCCEED;
 			break;
 		case MEDIA_TYPE_SERVICENOW:
-			/* TODO: servicenow impl */
+			zbx_servicenow_acknowledge_events(&mediatype, userid, acknowledges, tickets);
+			ret = SUCCEED;
 			break;
 		default:
-			THIS_SHOULD_NEVER_HAPPEN;
+			*error = zbx_dsprintf(*error, "Unsupported external media type %d", mediatype.type);
+			ret = FAIL;
 
 	}
-
-	ret = SUCCEED;
 
 	mediatype_clear(&mediatype);
 	media_clear(&media);
@@ -277,4 +279,290 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_xmedia_get_incident_by_eventid                               *
+ *                                                                            *
+ * Purpose: gets id of the ticket directly linked to the specified event      *
+ *                                                                            *
+ * Parameters: eventid      - [IN] event id                                   *
+ *                                                                            *
+ * Return value: the ticket id or NULL if no ticket was directly linked to    *
+ *               the specified event                                          *
+ *                                                                            *
+ * Comments: The returned ticked id must be freed later by the caller.        *
+ *                                                                            *
+ ******************************************************************************/
+char	*zbx_xmedia_get_incident_by_eventid(zbx_uint64_t eventid)
+{
+	const char	*__function_name = "zbx_xmedia_get_incident_by_eventid";
+	DB_RESULT	result;
+	DB_ROW		row;
+	char		*ticketid = NULL;
+
+	/* first check if the event is linked to an incident */
+	result = DBselect("select externalid from ticket"
+			" where eventid=" ZBX_FS_UI64
+			" order by clock desc,ticketid desc", eventid);
+
+	if (NULL != (row = DBfetch(result)))
+		ticketid = zbx_strdup(NULL, row[0]);
+
+	DBfree_result(result);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, (NULL != ticketid ? ticketid : "FAIL"));
+
+	return ticketid;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_xmedia_get_incident_by_triggerid                             *
+ *                                                                            *
+ * Purpose: gets id of the last ticket linked to an event generated by the    *
+ *          specified trigger                                                 *
+ *                                                                            *
+ * Parameters: triggerid      - [IN] trigger id                               *
+ *                                                                            *
+ * Return value: the ticket id or NULL if no ticket was found                 *
+ *                                                                            *
+ * Comments: The returned ticked id must be freed later by the caller.        *
+ *                                                                            *
+ ******************************************************************************/
+char	*zbx_xmedia_get_incident_by_triggerid(zbx_uint64_t triggerid)
+{
+	const char	*__function_name = "zbx_xmedia_get_incident_by_triggerid";
+	DB_RESULT	result;
+	DB_ROW		row;
+	char		*sql = NULL, *ticketid = NULL;
+	size_t		sql_alloc = 0, sql_offset = 0;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() " ZBX_FS_UI64, __function_name, triggerid);
+
+	/* find the latest ticket id which was created for the specified trigger */
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+			"select externalid,clock from ticket"
+				" where triggerid=" ZBX_FS_UI64
+				" order by clock desc,ticketid desc",
+				triggerid);
+
+	result = DBselectN(sql, 1);
+
+	if (NULL != (row = DBfetch(result)))
+		ticketid = zbx_strdup(NULL, row[0]);
+
+	DBfree_result(result);
+
+	zbx_free(sql);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, (NULL != ticketid ? ticketid : "FAIL"));
+
+	return ticketid;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_xmedia_register_incident                                     *
+ *                                                                            *
+ * Purpose: registers external incident created in response to Zabbix event   *
+ *                                                                            *
+ * Parameters: ticketnumber   - [IN] the ticket number                        *
+ *             eventid        - [IN] the linked event id                      *
+ *             triggerid      - [IN] the event trigger id                     *
+ *             action         - [IN] the performed action                     *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_xmedia_register_incident(const char *incident, zbx_uint64_t eventid, zbx_uint64_t triggerid,
+		zbx_uint64_t mediatypeid, int action)
+{
+	zbx_uint64_t	ticketid;
+	char 		*ticketnumber_esc;
+	int		is_new;
+
+	ticketid = DBget_maxid_num("ticket", 1);
+	ticketnumber_esc = DBdyn_escape_string(incident);
+	is_new = (ZBX_XMEDIA_ACTION_CREATE == action ? 1 : 0);
+
+	DBexecute("insert into ticket (ticketid,externalid,eventid,triggerid,mediatypeid,clock,new) values"
+					" (" ZBX_FS_UI64 ",'%s'," ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ",%d,%d)",
+					ticketid, ticketnumber_esc, eventid, triggerid, mediatypeid, time(NULL),
+					is_new);
+	zbx_free(ticketnumber_esc);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_xmedia_acknowledge_event                                     *
+ *                                                                            *
+ * Purpose: acknowledges event with appropriate message                       *
+ *                                                                            *
+ * Parameters: eventid   - [IN] the event to acknowledge                      *
+ *             userid    - [IN] the user the alert is assigned to             *
+ *             incident  - [IN] the number of corresponding incident          *
+ *             action    - [IN] the performed action, see ZBX_XMEDIA_ACTION_? *
+ *                                                                            *
+ * Return value: SUCCEED - the event was acknowledged                         *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_xmedia_acknowledge_event(zbx_uint64_t eventid, zbx_uint64_t userid, const char *incident, int action)
+{
+	const char	*__function_name = "zbx_xmedia_acknowledge_event";
+
+	int		ret = FAIL;
+	char		*sql = NULL, *message, *message_esc;
+	size_t		sql_offset = 0, sql_alloc = 0;
+	zbx_uint64_t	ackid;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	switch (action)
+	{
+		case ZBX_XMEDIA_ACTION_CREATE:
+			message = zbx_dsprintf(NULL, "Created a new incident %s", incident);
+			break;
+		case ZBX_XMEDIA_ACTION_REOPEN:
+			message = zbx_dsprintf(NULL, "Reopened resolved incident %s", incident);
+			break;
+		case ZBX_XMEDIA_ACTION_COMMENT:
+			message = zbx_dsprintf(NULL, "Commented incident %s", incident);
+			break;
+		default:
+			goto out;
+	}
+
+	ackid = DBget_maxid("acknowledges");
+	message_esc = DBdyn_escape_string(message);
+
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "insert into acknowledges"
+			" (acknowledgeid,userid,eventid,clock,message) values"
+			" (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ",%d,'%s');\n",
+			ackid, userid, eventid, time(NULL), message_esc);
+
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "update events set acknowledged=1"
+			" where eventid=" ZBX_FS_UI64, eventid);
+
+	if (ZBX_DB_OK <= DBexecute("%s", sql))
+		ret = SUCCEED;
+
+	zbx_free(sql);
+	zbx_free(message_esc);
+	zbx_free(message);
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_xmedia_get_ticket_creation_time                                  *
+ *                                                                            *
+ * Purpose: retrieves the creation time of the specified ticket               *
+ *                                                                            *
+ * Parameters: externalid    - [IN] the ticket external id                    *
+ *                                                                            *
+ * Return value: the ticket creation time in seconds or 0 if the ticket was   *
+ *               not found                                                    *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_xmedia_get_ticket_creation_time(const char *externalid)
+{
+	int		clock = 0;
+	DB_RESULT	result;
+	DB_ROW		row;
+	char		*incident_number;
+
+	incident_number = DBdyn_escape_string(externalid);
+
+	/* read the incident creation time */
+	result = DBselect("select clock from ticket where externalid='%s' and new=1",
+			incident_number);
+
+	zbx_free(incident_number);
+
+	if (NULL != (row = DBfetch(result)))
+		clock = atoi(row[0]);
+
+	DBfree_result(result);
+
+	return clock;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_xmedia_get_last_ticketid                                     *
+ *                                                                            *
+ * Purpose: retrieves either the ticket directly linked to the specified      *
+ *          event or the last ticket created in response to the event         *
+ *          source trigger                                                    *
+ *                                                                            *
+ * Parameters: eventid  - [IN] the event                                      *
+ *             incident - [OUT] the linked incident number                    *
+ *                                                                            *
+ * Return value: SUCCEED - the incident was retrieved successfully            *
+ *               FAIL - otherwise                                             *
+ *                                                                            *
+ * Comments: This function allocates memory to store incident number          *
+ *           which must be freed later.                                       *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, char **incident)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	if (NULL == (*incident = zbx_xmedia_get_incident_by_eventid(eventid)))
+	{
+		zbx_uint64_t	triggerid;
+
+		/* get the event source trigger id */
+		result = DBselect("select objectid from events"
+				" where source=%d"
+					" and object=%d"
+					" and eventid=" ZBX_FS_UI64,
+					EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, eventid);
+
+		if (NULL != (row = DBfetch(result)))
+		{
+			ZBX_STR2UINT64(triggerid, row[0]);
+
+			*incident = zbx_xmedia_get_incident_by_triggerid(triggerid);
+		}
+
+		DBfree_result(result);
+	}
+
+	return NULL != *incident ? SUCCEED : FAIL;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_xmedia_add_error_tickets                                     *
+ *                                                                            *
+ * Purpose: adds corresponding error ticket for every event with the          *
+ *          specified error message                                           *
+ *                                                                            *
+ * Parameters: eventids - [IN] the event identifiers                          *
+ *             error    - [IN] the error message                              *
+ *             tickets  - [OUT] the tickets                                   *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_xmedia_add_error_tickets(const zbx_vector_uint64_t *eventids, const char *error, zbx_vector_ptr_t *tickets)
+{
+	int	i;
+
+	for (i = 0; i < eventids->values_num; i++)
+	{
+		zbx_ticket_t	*ticket;
+
+		memset(ticket, 0, sizeof(zbx_ticket_t));
+		ticket->eventid = eventids->values[i];
+		ticket = zbx_malloc(NULL, sizeof(zbx_ticket_t));
+
+		ticket->error = zbx_strdup(NULL, error);
+		zbx_vector_ptr_append(tickets, ticket);
+	}
 }

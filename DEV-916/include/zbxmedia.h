@@ -89,15 +89,40 @@ void	zbx_media_clear(zbx_media_t *media);
 
 int	zbx_remedy_process_alert(zbx_uint64_t eventid, zbx_uint64_t userid, const char *sendto, const char *subject,
 		const char *message, const struct DB_MEDIATYPE *mediatype, char **error);
-void	zbx_remedy_query_events(const DB_MEDIATYPE *mediatype, zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tickets,
-		char **error);
+void	zbx_remedy_query_events(const DB_MEDIATYPE *mediatype, zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tickets);
 void	zbx_remedy_acknowledge_events(const DB_MEDIATYPE *mediatype, const zbx_media_t *media, zbx_uint64_t userid,
-		zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets, char **error);
+		zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets);
+
+int	zbx_servicenow_process_alert(zbx_uint64_t eventid, zbx_uint64_t userid, const char *subject,
+		const char *message, const struct DB_MEDIATYPE *mediatype, char **error);
+void	zbx_servicenow_query_events(const DB_MEDIATYPE *mediatype, zbx_vector_uint64_t *eventids,
+		zbx_vector_ptr_t *tickets);
+void	zbx_servicenow_acknowledge_events(const DB_MEDIATYPE *mediatype, zbx_uint64_t userid,
+		zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets);
+
+
+/* defines current state of event processing - automated (alerts) or manual (frontend) */
+#define ZBX_XMEDIA_PROCESS_MANUAL	0
+#define ZBX_XMEDIA_PROCESS_AUTOMATED	1
+
+/* incident action invoked when processing event */
+#define ZBX_XMEDIA_ACTION_NONE		0
+#define ZBX_XMEDIA_ACTION_CREATE	1
+#define ZBX_XMEDIA_ACTION_REOPEN	2
+#define ZBX_XMEDIA_ACTION_COMMENT	3
+#define ZBX_XMEDIA_ACTION_RESOLVE	4
 
 int	zbx_xmedia_query_events(zbx_uint64_t userid, zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tickets,
 		char **error);
 int	zbx_xmedia_acknowledge_events(zbx_uint64_t userid, zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets,
 		char **error);
-
+char	*zbx_xmedia_get_incident_by_eventid(zbx_uint64_t eventid);
+char	*zbx_xmedia_get_incident_by_triggerid(zbx_uint64_t triggerid);
+void	zbx_xmedia_register_incident(const char *incident, zbx_uint64_t eventid, zbx_uint64_t triggerid,
+		zbx_uint64_t mediatypeid, int action);
+int	zbx_xmedia_acknowledge_event(zbx_uint64_t eventid, zbx_uint64_t userid, const char *ticketnumber,
+		int status);
+int	zbx_xmedia_get_ticket_creation_time(const char *externalid);
+int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, char **externalid);
 
 #endif

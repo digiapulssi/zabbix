@@ -685,9 +685,6 @@ typedef int (*zbx_macro_value_validator_func_t)(const char *value);
 char	*zbx_dc_expand_user_macros(const char *text, zbx_uint64_t *hostids, int hostids_num,
 		zbx_macro_value_validator_func_t validator_func);
 
-void	zbx_dc_get_hostids_by_functionids(const zbx_uint64_t *functionids, int functionids_num,
-		zbx_vector_uint64_t *hostids);
-
 void	DCdump_configuration(ZBX_DC_CONFIG *config);
 
 #endif
