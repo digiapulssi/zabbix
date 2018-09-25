@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-28 17:56+0300\n"
+"POT-Creation-Date: 2018-09-25 19:00+0300\n"
 "PO-Revision-Date: 2018-06-22 17:42+0300\n"
 "Last-Translator: Anonymous Pootle User\n"
 "Language-Team: NL\n"
@@ -238,7 +238,7 @@ msgid "Acceptable SLA"
 msgstr "Aanvaardbare SLA"
 
 #: app/views/monitoring.dashboard.sharing_form.js.php:27
-#: include/func.inc.php:1730 jsLoader.php:206
+#: include/func.inc.php:1740 jsLoader.php:206
 msgid "Access denied"
 msgstr ""
 
@@ -838,7 +838,7 @@ msgstr "Iedere character string meegenomen"
 #: include/views/configuration.application.list.php:60
 #: include/views/configuration.httpconf.edit.php:62
 #: include/views/configuration.httpconf.edit.php:67
-#: include/views/configuration.httpconf.list.php:85
+#: include/views/configuration.httpconf.list.php:89
 #: include/views/inventory.host.view.php:174
 #: include/views/js/monitoring.sysmaps.js.php:189
 #: include/views/monitoring.overview.items.php:78
@@ -890,9 +890,9 @@ msgstr ""
 #: include/views/configuration.host.list.php:65
 #: include/views/configuration.host.list.php:256
 #: include/views/configuration.item.edit.php:507
-#: include/views/configuration.item.list.php:65
+#: include/views/configuration.item.list.php:69
 #: include/views/configuration.item.prototype.edit.php:358
-#: include/views/configuration.item.prototype.list.php:49
+#: include/views/configuration.item.prototype.list.php:53
 #: include/views/configuration.template.edit.php:184
 #: include/views/configuration.template.list.php:56
 #: include/views/configuration.template.list.php:154
@@ -1022,7 +1022,7 @@ msgstr ""
 
 #: app/views/administration.mediatype.edit.php:185 httpconf.php:45
 #: include/views/configuration.httpconf.edit.php:80
-#: include/views/configuration.httpconf.list.php:82
+#: include/views/configuration.httpconf.list.php:86
 msgid "Attempts"
 msgstr ""
 
@@ -1056,7 +1056,7 @@ msgstr "Augustus"
 #: app/views/administration.mediatype.edit.php:78 include/menu.inc.php:273
 #: include/views/administration.authentication.edit.php:22
 #: include/views/configuration.httpconf.edit.php:270
-#: include/views/configuration.httpconf.list.php:83
+#: include/views/configuration.httpconf.list.php:87
 msgid "Authentication"
 msgstr "Authenticatie"
 
@@ -2937,8 +2937,8 @@ msgstr "Circulair linken van sjablonen is niet toegestaan."
 msgid "Clear"
 msgstr "Wissen"
 
-#: include/views/configuration.httpconf.list.php:161
-#: include/views/configuration.item.list.php:312
+#: include/views/configuration.httpconf.list.php:165
+#: include/views/configuration.item.list.php:316
 msgid "Clear history"
 msgstr ""
 
@@ -2984,7 +2984,7 @@ msgstr "Klok"
 msgid "Clone"
 msgstr "Kloon"
 
-#: include/func.inc.php:1827 include/views/js/monitoring.sysmaps.js.php:259
+#: include/func.inc.php:1837 include/views/js/monitoring.sysmaps.js.php:259
 #: include/views/js/monitoring.sysmaps.js.php:408
 #: include/views/js/monitoring.sysmaps.js.php:529
 #: include/views/js/monitoring.sysmaps.js.php:625
@@ -3429,8 +3429,8 @@ msgstr "Coordinaten"
 
 #: include/views/configuration.copy.elements.php:105
 #: include/views/configuration.graph.list.php:147
-#: include/views/configuration.item.list.php:315
-#: include/views/configuration.triggers.list.php:238 jsLoader.php:173
+#: include/views/configuration.item.list.php:319
+#: include/views/configuration.triggers.list.php:242 jsLoader.php:173
 msgid "Copy"
 msgstr "Kopie"
 
@@ -3539,9 +3539,9 @@ msgstr ""
 msgid "Create dependent item"
 msgstr ""
 
-#: include/views/configuration.host.prototype.list.php:158
-#: include/views/configuration.item.prototype.list.php:152
-#: include/views/configuration.trigger.prototype.list.php:170
+#: include/views/configuration.host.prototype.list.php:162
+#: include/views/configuration.item.prototype.list.php:156
+#: include/views/configuration.trigger.prototype.list.php:174
 msgid "Create disabled"
 msgstr ""
 
@@ -3551,14 +3551,14 @@ msgid "Create discovery rule"
 msgstr "Maak discovery regel aan"
 
 #: include/views/configuration.host.prototype.edit.php:176
-#: include/views/configuration.host.prototype.list.php:46
-#: include/views/configuration.host.prototype.list.php:155
+#: include/views/configuration.host.prototype.list.php:50
+#: include/views/configuration.host.prototype.list.php:159
 #: include/views/configuration.item.prototype.edit.php:383
-#: include/views/configuration.item.prototype.list.php:50
-#: include/views/configuration.item.prototype.list.php:149
+#: include/views/configuration.item.prototype.list.php:54
+#: include/views/configuration.item.prototype.list.php:153
 #: include/views/configuration.trigger.prototype.edit.php:525
-#: include/views/configuration.trigger.prototype.list.php:45
-#: include/views/configuration.trigger.prototype.list.php:167
+#: include/views/configuration.trigger.prototype.list.php:49
+#: include/views/configuration.trigger.prototype.list.php:171
 msgid "Create enabled"
 msgstr ""
 
@@ -3872,7 +3872,7 @@ msgstr "Data"
 msgid "Data cache statistics. Cache - one of values (modes: all, float, uint, str, log, text), history (modes: pfree, total, used, free), trend (modes: pfree, total, used, free), text (modes: pfree, total, used, free)."
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2652
+#: include/classes/graphdraw/CLineGraphDraw.php:2677
 #: include/classes/graphdraw/CPieGraphDraw.php:805
 #, c-format
 msgid "Data from %1$s. Generated in %2$s sec."
@@ -4083,17 +4083,17 @@ msgstr "Vertraagd door"
 #: include/views/configuration.correlation.list.php:121
 #: include/views/configuration.discovery.list.php:89
 #: include/views/configuration.graph.list.php:149
-#: include/views/configuration.host.discovery.list.php:163
+#: include/views/configuration.host.discovery.list.php:167
 #: include/views/configuration.hostgroups.list.php:153
 #: include/views/configuration.host.list.php:297
-#: include/views/configuration.host.prototype.list.php:161
-#: include/views/configuration.httpconf.list.php:164
-#: include/views/configuration.item.list.php:317
-#: include/views/configuration.item.prototype.list.php:155
+#: include/views/configuration.host.prototype.list.php:165
+#: include/views/configuration.httpconf.list.php:168
+#: include/views/configuration.item.list.php:321
+#: include/views/configuration.item.prototype.list.php:159
 #: include/views/configuration.maintenance.list.php:97
 #: include/views/configuration.template.list.php:192
-#: include/views/configuration.trigger.prototype.list.php:174
-#: include/views/configuration.triggers.list.php:240
+#: include/views/configuration.trigger.prototype.list.php:178
+#: include/views/configuration.triggers.list.php:244
 #: include/views/monitoring.screen.list.php:112
 #: include/views/monitoring.slideconf.list.php:89
 #: include/views/monitoring.sysmap.list.php:82 jsLoader.php:114
@@ -4153,11 +4153,11 @@ msgstr "Grafiek-prototype verwijderen?"
 msgid "Delete graph?"
 msgstr "Grafiek verwijderen?"
 
-#: include/views/configuration.item.list.php:313
+#: include/views/configuration.item.list.php:317
 msgid "Delete history of selected items?"
 msgstr "Geschiedenis van geslecteerde items verwijderen?"
 
-#: include/views/configuration.httpconf.list.php:162
+#: include/views/configuration.httpconf.list.php:166
 msgid "Delete history of selected web scenarios?"
 msgstr "Historie van geselecteerde webdraaiboeken verwijderen?"
 
@@ -4222,7 +4222,7 @@ msgid "Delete selected dashboards?"
 msgstr ""
 
 #: include/views/configuration.discovery.list.php:89
-#: include/views/configuration.host.discovery.list.php:164
+#: include/views/configuration.host.discovery.list.php:168
 msgid "Delete selected discovery rules?"
 msgstr "Geselecteerde discovery regels verwijderen?"
 
@@ -4255,7 +4255,7 @@ msgstr "Geselecteerde hostgroepen verwijderen?"
 msgid "Delete selected host prototype?"
 msgstr "Geselecteerde host-prototype verwijderen?"
 
-#: include/views/configuration.host.prototype.list.php:162
+#: include/views/configuration.host.prototype.list.php:166
 msgid "Delete selected host prototypes?"
 msgstr "Geselecteerde host-prototypen verwijderen?"
 
@@ -4271,11 +4271,11 @@ msgstr "Geselecteerde hosts verwijderen?"
 msgid "Delete selected image?"
 msgstr "Geselecteerderde afbeelding verwijderen?"
 
-#: include/views/configuration.item.prototype.list.php:156
+#: include/views/configuration.item.prototype.list.php:160
 msgid "Delete selected item prototypes?"
 msgstr "Geselecteerde item-prototypen verwijderen?"
 
-#: include/views/configuration.item.list.php:317
+#: include/views/configuration.item.list.php:321
 msgid "Delete selected items?"
 msgstr "Geselecteerde items verwijderen?"
 
@@ -4323,11 +4323,11 @@ msgstr "Geselecteerde slide shows verwijderen?"
 msgid "Delete selected templates?"
 msgstr "Geselecteerde sjablonen verwijderen?"
 
-#: include/views/configuration.trigger.prototype.list.php:175
+#: include/views/configuration.trigger.prototype.list.php:179
 msgid "Delete selected trigger prototypes?"
 msgstr "Geselecteerde trigger-prototypen verwijderen?"
 
-#: include/views/configuration.triggers.list.php:240
+#: include/views/configuration.triggers.list.php:244
 msgid "Delete selected triggers?"
 msgstr "Geselecteerde trigger verwijderen?"
 
@@ -4354,7 +4354,7 @@ msgstr[1] "Geselecteerde value mapping verwijderen? Het wordt gebruikt voor item
 msgid "Delete selected value maps?"
 msgstr ""
 
-#: include/views/configuration.httpconf.list.php:164
+#: include/views/configuration.httpconf.list.php:168
 msgid "Delete selected web scenarios?"
 msgstr "Geselecteerde webdraaiboeken verwijderen?"
 
@@ -4450,8 +4450,8 @@ msgstr ""
 
 #: include/triggers.inc.php:876
 #: include/views/configuration.services.edit.php:125
-#: include/views/configuration.trigger.prototype.list.php:91
-#: include/views/configuration.triggers.list.php:151 popup.php:1139
+#: include/views/configuration.trigger.prototype.list.php:95
+#: include/views/configuration.triggers.list.php:155 popup.php:1139
 #: tr_status.php:507
 msgid "Depends on"
 msgstr "Afhankelijk van"
@@ -4492,7 +4492,7 @@ msgid "Description updated"
 msgstr "Beschrijven bijgewerkt"
 
 #: app/views/administration.mediatype.list.php:62 include/actions.inc.php:1530
-#: include/blocks.inc.php:418 include/func.inc.php:1799
+#: include/blocks.inc.php:418 include/func.inc.php:1809
 #: include/views/administration.auditlogs.list.php:68
 #: include/views/configuration.action.edit.php:399
 #: include/views/configuration.action.edit.php:403
@@ -4536,11 +4536,11 @@ msgstr ""
 #: include/views/configuration.application.list.php:142
 #: include/views/configuration.correlation.list.php:120
 #: include/views/configuration.discovery.list.php:88
-#: include/views/configuration.host.discovery.list.php:160
+#: include/views/configuration.host.discovery.list.php:164
 #: include/views/configuration.host.list.php:294
-#: include/views/configuration.httpconf.list.php:160
-#: include/views/configuration.item.list.php:311
-#: include/views/configuration.triggers.list.php:237
+#: include/views/configuration.httpconf.list.php:164
+#: include/views/configuration.item.list.php:315
+#: include/views/configuration.triggers.list.php:241
 msgid "Disable"
 msgstr "Uitschakelen"
 
@@ -4586,7 +4586,7 @@ msgid "Disable selected correlations?"
 msgstr ""
 
 #: include/views/configuration.discovery.list.php:88
-#: include/views/configuration.host.discovery.list.php:161
+#: include/views/configuration.host.discovery.list.php:165
 msgid "Disable selected discovery rules?"
 msgstr "Geselecteerde discovery regeles uitschakelen?"
 
@@ -4594,7 +4594,7 @@ msgstr "Geselecteerde discovery regeles uitschakelen?"
 msgid "Disable selected groups?"
 msgstr "Geselecteerde groepen uitschakelen?"
 
-#: include/views/configuration.host.prototype.list.php:159
+#: include/views/configuration.host.prototype.list.php:163
 msgid "Disable selected host prototypes?"
 msgstr "Geselecteerde host-prototypes uitschakelen?"
 
@@ -4602,11 +4602,11 @@ msgstr "Geselecteerde host-prototypes uitschakelen?"
 msgid "Disable selected hosts?"
 msgstr "Geselecteerde hosts uitschakelen?"
 
-#: include/views/configuration.item.prototype.list.php:153
+#: include/views/configuration.item.prototype.list.php:157
 msgid "Disable selected item prototypes?"
 msgstr "Geselecteerde item-prototypen uitschakelen?"
 
-#: include/views/configuration.item.list.php:311
+#: include/views/configuration.item.list.php:315
 msgid "Disable selected items?"
 msgstr "Geselecteerde items uitschakelen?"
 
@@ -4614,15 +4614,15 @@ msgstr "Geselecteerde items uitschakelen?"
 msgid "Disable selected media types?"
 msgstr "Geselecteerde media types uitschakelen?"
 
-#: include/views/configuration.trigger.prototype.list.php:171
+#: include/views/configuration.trigger.prototype.list.php:175
 msgid "Disable selected trigger prototypes?"
 msgstr "Geselecteerde trigger-prototypen uitschakelen?"
 
-#: include/views/configuration.triggers.list.php:237
+#: include/views/configuration.triggers.list.php:241
 msgid "Disable selected triggers?"
 msgstr "Geselecteerde trigger uitschakelen?"
 
-#: include/views/configuration.httpconf.list.php:160
+#: include/views/configuration.httpconf.list.php:164
 msgid "Disable selected web scenarios?"
 msgstr "Geselecteerde webdraaiboeken uitschakelen?"
 
@@ -4813,13 +4813,13 @@ msgstr ""
 msgid "Display stacked graph"
 msgstr "Toon gestapelde grafiek"
 
-#: include/actions.inc.php:1613 include/func.inc.php:1618 queue.php:283
+#: include/actions.inc.php:1613 include/func.inc.php:1628 queue.php:283
 #: search.php:256 search.php:357 search.php:498
 #, c-format
 msgid "Displaying %1$s of %2$s found"
 msgstr "Weergave %1$s van %2$s gevonden"
 
-#: include/func.inc.php:1621
+#: include/func.inc.php:1631
 #, c-format
 msgid "Displaying %1$s to %2$s of %3$s found"
 msgstr ""
@@ -5241,11 +5241,11 @@ msgstr ""
 #: include/views/configuration.application.list.php:141
 #: include/views/configuration.correlation.list.php:119
 #: include/views/configuration.discovery.list.php:87
-#: include/views/configuration.host.discovery.list.php:157
+#: include/views/configuration.host.discovery.list.php:161
 #: include/views/configuration.host.list.php:293
-#: include/views/configuration.httpconf.list.php:159
-#: include/views/configuration.item.list.php:310
-#: include/views/configuration.triggers.list.php:236
+#: include/views/configuration.httpconf.list.php:163
+#: include/views/configuration.item.list.php:314
+#: include/views/configuration.triggers.list.php:240
 msgid "Enable"
 msgstr "Activeer"
 
@@ -5306,7 +5306,7 @@ msgid "Enable selected correlations?"
 msgstr ""
 
 #: include/views/configuration.discovery.list.php:87
-#: include/views/configuration.host.discovery.list.php:158
+#: include/views/configuration.host.discovery.list.php:162
 msgid "Enable selected discovery rules?"
 msgstr "Geselecteerde ontdekkingsregels activeren?"
 
@@ -5314,7 +5314,7 @@ msgstr "Geselecteerde ontdekkingsregels activeren?"
 msgid "Enable selected groups?"
 msgstr "Geselecteerde groepen activeren?"
 
-#: include/views/configuration.host.prototype.list.php:156
+#: include/views/configuration.host.prototype.list.php:160
 msgid "Enable selected host prototypes?"
 msgstr "Geselecteerde host-prototypes inschakelen?"
 
@@ -5323,11 +5323,11 @@ msgstr "Geselecteerde host-prototypes inschakelen?"
 msgid "Enable selected hosts?"
 msgstr "Geselecteerde hosts activeren?"
 
-#: include/views/configuration.item.prototype.list.php:150
+#: include/views/configuration.item.prototype.list.php:154
 msgid "Enable selected item prototypes?"
 msgstr "Geselecteerde item-prototypen inschakelen?"
 
-#: include/views/configuration.item.list.php:310
+#: include/views/configuration.item.list.php:314
 msgid "Enable selected items?"
 msgstr "Geselecteerde items activeren?"
 
@@ -5335,15 +5335,15 @@ msgstr "Geselecteerde items activeren?"
 msgid "Enable selected media types?"
 msgstr "Geselecteerde media types activeren?"
 
-#: include/views/configuration.trigger.prototype.list.php:168
+#: include/views/configuration.trigger.prototype.list.php:172
 msgid "Enable selected trigger prototypes?"
 msgstr "Geselecteerde trigger-prototypen inschakelen?"
 
-#: include/views/configuration.triggers.list.php:236
+#: include/views/configuration.triggers.list.php:240
 msgid "Enable selected triggers?"
 msgstr "Geselecteerde triggers activeren?"
 
-#: include/views/configuration.httpconf.list.php:159
+#: include/views/configuration.httpconf.list.php:163
 msgid "Enable selected web scenarios?"
 msgstr "Geselecteerde webdraaiboeken inschakelen?"
 
@@ -5589,17 +5589,17 @@ msgstr "Exporteren naar CSV"
 #: include/views/administration.general.iconmap.edit.php:48
 #: include/views/administration.general.regularexpressions.edit.php:44
 #: include/views/administration.general.regularexpressions.edit.php:117
-#: include/views/configuration.item.list.php:159
+#: include/views/configuration.item.list.php:163
 #: include/views/configuration.trigger.prototype.edit.php:153
 #: include/views/configuration.trigger.prototype.edit.php:162
 #: include/views/configuration.trigger.prototype.edit.php:264
 #: include/views/configuration.trigger.prototype.edit.php:351
-#: include/views/configuration.trigger.prototype.list.php:44
+#: include/views/configuration.trigger.prototype.list.php:48
 #: include/views/configuration.triggers.edit.php:174
 #: include/views/configuration.triggers.edit.php:183
 #: include/views/configuration.triggers.edit.php:287
 #: include/views/configuration.triggers.edit.php:372
-#: include/views/configuration.triggers.list.php:94
+#: include/views/configuration.triggers.list.php:98
 #: include/views/js/configuration.triggers.edit.js.php:40
 #: trigger_prototypes.php:38 trigger_prototypes.php:49 triggers.php:42
 #: triggers.php:53 tr_logform.php:295 tr_logform.php:352 tr_testexpr.php:147
@@ -5867,7 +5867,7 @@ msgstr "Fins (fi_FI)"
 msgid "First"
 msgstr "Eerst"
 
-#: include/func.inc.php:1578
+#: include/func.inc.php:1588
 msgctxt "page navigation"
 msgid "First"
 msgstr "Eerst"
@@ -6065,7 +6065,7 @@ msgstr ""
 msgid "Go to"
 msgstr "Ga naar"
 
-#: app/views/system.warning.php:26 include/func.inc.php:1743
+#: app/views/system.warning.php:26 include/func.inc.php:1753
 msgid "Go to dashboard"
 msgstr "Ga naar instrumentenbord"
 
@@ -6203,7 +6203,7 @@ msgstr ""
 
 #: include/html.inc.php:479 include/views/configuration.graph.edit.php:28
 #: include/views/configuration.graph.list.php:24
-#: include/views/configuration.host.discovery.list.php:135
+#: include/views/configuration.host.discovery.list.php:139
 #: include/views/configuration.host.edit.php:508
 #: include/views/configuration.template.edit.php:339 popup.php:92
 msgid "Graph prototypes"
@@ -6247,7 +6247,7 @@ msgstr "Grafiek met dezelfde naam maar andere soort bestaat reeds."
 #: include/html.inc.php:395 include/menu.inc.php:79
 #: include/views/configuration.graph.edit.php:25
 #: include/views/configuration.graph.list.php:41
-#: include/views/configuration.host.discovery.list.php:44
+#: include/views/configuration.host.discovery.list.php:48
 #: include/views/configuration.host.edit.php:406
 #: include/views/configuration.host.list.php:68
 #: include/views/configuration.host.list.php:268
@@ -6409,7 +6409,7 @@ msgid "HTTP authentication"
 msgstr "HTTP authenticatie"
 
 #: include/views/configuration.httpconf.edit.php:102
-#: include/views/configuration.httpconf.list.php:84
+#: include/views/configuration.httpconf.list.php:88
 msgid "HTTP proxy"
 msgstr "HTTP proxy"
 
@@ -6494,8 +6494,8 @@ msgstr "Hoog"
 #: include/classes/widgets/CProblemsWidgetForm.php:36
 #: include/forms.inc.php:436 include/forms.inc.php:837
 #: include/views/administration.general.housekeeper.edit.php:98
-#: include/views/configuration.item.list.php:62
-#: include/views/configuration.item.prototype.list.php:46 items.php:163
+#: include/views/configuration.item.list.php:66
+#: include/views/configuration.item.prototype.list.php:50 items.php:163
 #: jsLoader.php:220 latest.php:415 latest.php:557 latest.php:716
 msgid "History"
 msgstr "Geschiedenis"
@@ -6566,11 +6566,11 @@ msgstr "Horizontale uitlijning"
 #: include/views/configuration.host.massupdate.php:340
 #: include/views/configuration.host.prototype.edit.php:181
 #: include/views/configuration.httpconf.list.php:52
-#: include/views/configuration.httpconf.list.php:77
-#: include/views/configuration.item.list.php:57
+#: include/views/configuration.httpconf.list.php:81
+#: include/views/configuration.item.list.php:61
 #: include/views/configuration.triggers.list.php:66
-#: include/views/configuration.triggers.list.php:92
-#: include/views/configuration.triggers.list.php:114
+#: include/views/configuration.triggers.list.php:96
+#: include/views/configuration.triggers.list.php:118
 #: include/views/inventory.host.list.php:65
 #: include/views/inventory.host.view.php:160
 #: include/views/inventory.host.view.php:173
@@ -6832,7 +6832,7 @@ msgid "Host prototype with visible name \"%1$s\" already exists."
 msgstr "Host prototype met zichtbare naam \"%1$s\" bestaat reeds."
 
 #: include/html.inc.php:490
-#: include/views/configuration.host.discovery.list.php:103
+#: include/views/configuration.host.discovery.list.php:107
 #: include/views/configuration.host.edit.php:528
 #: include/views/configuration.host.prototype.edit.php:30
 #: include/views/configuration.host.prototype.list.php:23
@@ -6910,7 +6910,7 @@ msgstr "Er bestaat reeds een host met de zichtbare naam \"%s\"."
 #: include/items.inc.php:994 include/menu.inc.php:138 include/menu.inc.php:204
 #: include/views/configuration.copy.elements.php:47
 #: include/views/configuration.graph.list.php:78
-#: include/views/configuration.host.discovery.list.php:45
+#: include/views/configuration.host.discovery.list.php:49
 #: include/views/configuration.host.edit.php:25
 #: include/views/configuration.hostgroups.edit.php:62
 #: include/views/configuration.hostgroups.list.php:55
@@ -7142,7 +7142,7 @@ msgstr "Iconen"
 msgid "Identification of the system. Returns string"
 msgstr ""
 
-#: include/func.inc.php:1733 include/func.inc.php:1752
+#: include/func.inc.php:1743 include/func.inc.php:1762
 msgid "If you think this message is wrong, please consult your administrators about getting the necessary permissions."
 msgstr "Als u denkt dat dit bericht foutis, neem dan contact op met uw beheerders over het verkrijgen van de nodige toestemmingen.Als u denkt dat dit bericht foutis, neem dan contact op met uw beheerders over het verkrijgen van de nodige toestemmingen.Als u denkt dat dit bericht foutis, neem dan contact op met uw beheerders over het verkrijgen van de nodige toestemmingen.Als u denkt dat dit bericht foutis, neem dan contact op met uw beheerders over het verkrijgen van de nodige toestemmingen."
 
@@ -8351,16 +8351,16 @@ msgstr "Indonesisch (id_ID)"
 #: include/classes/screens/CScreenProblem.php:765
 #: include/views/administration.auditacts.list.php:53
 #: include/views/configuration.application.list.php:62
-#: include/views/configuration.host.discovery.list.php:50
+#: include/views/configuration.host.discovery.list.php:54
 #: include/views/configuration.hostgroups.list.php:58
 #: include/views/configuration.host.list.php:76
-#: include/views/configuration.httpconf.list.php:87
-#: include/views/configuration.item.list.php:67
+#: include/views/configuration.httpconf.list.php:91
+#: include/views/configuration.item.list.php:71
 #: include/views/configuration.trigger.prototype.edit.php:164
 #: include/views/configuration.trigger.prototype.edit.php:353
 #: include/views/configuration.triggers.edit.php:185
 #: include/views/configuration.triggers.edit.php:374
-#: include/views/configuration.triggers.list.php:96 latest.php:422
+#: include/views/configuration.triggers.list.php:100 latest.php:422
 #: tr_status.php:490
 msgid "Info"
 msgstr "Info"
@@ -8491,13 +8491,13 @@ msgstr "Internet Explorer"
 
 #: include/forms.inc.php:847 include/views/configuration.discovery.list.php:53
 #: include/views/configuration.host.discovery.edit.php:204
-#: include/views/configuration.host.discovery.list.php:47
-#: include/views/configuration.httpconf.list.php:81
+#: include/views/configuration.host.discovery.list.php:51
+#: include/views/configuration.httpconf.list.php:85
 #: include/views/configuration.item.edit.php:341
-#: include/views/configuration.item.list.php:61
+#: include/views/configuration.item.list.php:65
 #: include/views/configuration.item.massupdate.php:374
 #: include/views/configuration.item.prototype.edit.php:263
-#: include/views/configuration.item.prototype.list.php:45
+#: include/views/configuration.item.prototype.list.php:49
 #: include/views/configuration.services.edit.php:144 latest.php:414
 msgid "Interval"
 msgstr "Interval"
@@ -8969,7 +8969,7 @@ msgid "Item prototype with ID \"%1$s\" is not available."
 msgstr ""
 
 #: include/html.inc.php:457
-#: include/views/configuration.host.discovery.list.php:121
+#: include/views/configuration.host.discovery.list.php:125
 #: include/views/configuration.host.edit.php:455
 #: include/views/configuration.item.prototype.edit.php:22
 #: include/views/configuration.item.prototype.list.php:23
@@ -9048,7 +9048,7 @@ msgstr "Item met de sleutel \"%1$s\" bestaat reeds op \"%2$s\"."
 #: include/views/configuration.application.list.php:61
 #: include/views/configuration.application.list.php:121
 #: include/views/configuration.graph.edit.php:357
-#: include/views/configuration.host.discovery.list.php:42
+#: include/views/configuration.host.discovery.list.php:46
 #: include/views/configuration.host.edit.php:346
 #: include/views/configuration.host.list.php:66
 #: include/views/configuration.host.list.php:260
@@ -9170,11 +9170,11 @@ msgstr ""
 
 #: disc_prototypes.php:45 host_discovery.php:50 include/forms.inc.php:467
 #: include/views/configuration.host.discovery.edit.php:63
-#: include/views/configuration.host.discovery.list.php:46
+#: include/views/configuration.host.discovery.list.php:50
 #: include/views/configuration.item.edit.php:89
-#: include/views/configuration.item.list.php:60
+#: include/views/configuration.item.list.php:64
 #: include/views/configuration.item.prototype.edit.php:79
-#: include/views/configuration.item.prototype.list.php:44
+#: include/views/configuration.item.prototype.list.php:48
 #: include/views/js/configuration.discovery.edit.js.php:54 items.php:45
 #: popup.php:993 popup.php:1211
 msgid "Key"
@@ -9250,7 +9250,7 @@ msgstr "Taal"
 msgid "Last"
 msgstr "Laatst"
 
-#: include/func.inc.php:1605
+#: include/func.inc.php:1615
 msgctxt "page navigation"
 msgid "Last"
 msgstr "Laatste"
@@ -9535,7 +9535,7 @@ msgstr "Log tijd formaat"
 msgid "Log unmatched SNMP traps"
 msgstr "Log niet overeenkomende SNMP-traps"
 
-#: auditlogs.php:123 include/func.inc.php:1740 include/func.inc.php:1755
+#: auditlogs.php:123 include/func.inc.php:1750 include/func.inc.php:1765
 #: include/menu.inc.php:302 include/views/administration.auditlogs.list.php:39
 #: include/views/administration.authentication.edit.php:102
 #: include/views/administration.users.list.php:78
@@ -9845,11 +9845,11 @@ msgid "Mask"
 msgstr "Masker"
 
 #: include/views/configuration.host.list.php:296
-#: include/views/configuration.item.list.php:316
+#: include/views/configuration.item.list.php:320
 #: include/views/configuration.item.massupdate.php:610
-#: include/views/configuration.trigger.prototype.list.php:173
+#: include/views/configuration.trigger.prototype.list.php:177
 #: include/views/configuration.trigger.prototype.massupdate.php:159
-#: include/views/configuration.triggers.list.php:239
+#: include/views/configuration.triggers.list.php:243
 #: include/views/configuration.triggers.massupdate.php:153
 msgid "Mass update"
 msgstr "Bulk bijwerken"
@@ -9896,7 +9896,7 @@ msgstr ""
 msgid "Maximum number of processes supported by OS. Returns integer"
 msgstr ""
 
-#: include/func.inc.php:2578
+#: include/func.inc.php:2588
 #, c-format
 msgid "Maximum time period to display is %1$s day."
 msgid_plural "Maximum time period to display is %1$s days."
@@ -10074,7 +10074,7 @@ msgstr ""
 msgid "Minimum severity"
 msgstr "Minimale ernst"
 
-#: include/func.inc.php:2571
+#: include/func.inc.php:2581
 #, c-format
 msgid "Minimum time period to display is %1$s minute."
 msgid_plural "Minimum time period to display is %1$s minutes."
@@ -10262,7 +10262,7 @@ msgstr "NTLM"
 #: include/views/configuration.graph.edit.php:290
 #: include/views/configuration.graph.list.php:79
 #: include/views/configuration.host.discovery.edit.php:44
-#: include/views/configuration.host.discovery.list.php:41
+#: include/views/configuration.host.discovery.list.php:45
 #: include/views/configuration.host.edit.php:565
 #: include/views/configuration.host.edit.php:637
 #: include/views/configuration.hostgroups.list.php:37
@@ -10271,21 +10271,21 @@ msgstr "NTLM"
 #: include/views/configuration.host.list.php:64
 #: include/views/configuration.host.prototype.edit.php:234
 #: include/views/configuration.host.prototype.edit.php:262
-#: include/views/configuration.host.prototype.list.php:44
+#: include/views/configuration.host.prototype.list.php:48
 #: include/views/configuration.httpconf.edit.php:57
 #: include/views/configuration.httpconf.edit.php:117
 #: include/views/configuration.httpconf.edit.php:184
-#: include/views/configuration.httpconf.list.php:79
+#: include/views/configuration.httpconf.list.php:83
 #: include/views/configuration.httpconf.popup.php:86
 #: include/views/configuration.httpconf.popup.php:146
 #: include/views/configuration.item.edit.php:61
 #: include/views/configuration.item.edit.php:554
-#: include/views/configuration.item.list.php:58
-#: include/views/configuration.item.list.php:158
+#: include/views/configuration.item.list.php:62
+#: include/views/configuration.item.list.php:162
 #: include/views/configuration.item.massupdate.php:259
 #: include/views/configuration.item.prototype.edit.php:49
 #: include/views/configuration.item.prototype.edit.php:389
-#: include/views/configuration.item.prototype.list.php:43
+#: include/views/configuration.item.prototype.list.php:47
 #: include/views/configuration.maintenance.edit.php:36
 #: include/views/configuration.maintenance.list.php:34
 #: include/views/configuration.maintenance.list.php:58
@@ -10295,11 +10295,11 @@ msgstr "NTLM"
 #: include/views/configuration.template.list.php:55
 #: include/views/configuration.trigger.prototype.edit.php:60
 #: include/views/configuration.trigger.prototype.edit.php:540
-#: include/views/configuration.trigger.prototype.list.php:43
+#: include/views/configuration.trigger.prototype.list.php:47
 #: include/views/configuration.trigger.prototype.massupdate.php:54
 #: include/views/configuration.triggers.edit.php:78
 #: include/views/configuration.triggers.edit.php:574
-#: include/views/configuration.triggers.list.php:93
+#: include/views/configuration.triggers.list.php:97
 #: include/views/configuration.triggers.massupdate.php:57
 #: include/views/inventory.host.list.php:67
 #: include/views/js/monitoring.sysmaps.js.php:143
@@ -10466,10 +10466,10 @@ msgstr ""
 #: include/triggers.inc.php:1174 include/triggers.inc.php:1180
 #: include/views/administration.users.list.php:100
 #: include/views/administration.users.list.php:104
-#: include/views/configuration.host.prototype.list.php:127
-#: include/views/configuration.httpconf.list.php:133
-#: include/views/configuration.item.prototype.list.php:81
-#: include/views/configuration.trigger.prototype.list.php:124
+#: include/views/configuration.host.prototype.list.php:131
+#: include/views/configuration.httpconf.list.php:137
+#: include/views/configuration.item.prototype.list.php:85
+#: include/views/configuration.trigger.prototype.list.php:128
 #: include/views/configuration.trigger.prototype.massupdate.php:152
 #: include/views/configuration.triggers.massupdate.php:146 tr_status.php:589
 msgid "No"
@@ -10956,7 +10956,7 @@ msgstr ""
 #: include/classes/helpers/CMapHelper.php:84
 #: include/classes/screens/CScreenHistory.php:113
 #: include/classes/screens/CScreenHttpTestDetails.php:46
-#: include/func.inc.php:1718 items.php:1221 scripts_exec.php:90
+#: include/func.inc.php:1728 items.php:1221 scripts_exec.php:90
 msgid "No permissions to referred object or it does not exist!"
 msgstr ""
 
@@ -11213,7 +11213,7 @@ msgid "Number of status changes"
 msgstr "Aantal keren veranderd"
 
 #: include/classes/screens/CScreenHttpTest.php:120
-#: include/views/configuration.httpconf.list.php:80
+#: include/views/configuration.httpconf.list.php:84
 msgid "Number of steps"
 msgstr ""
 
@@ -12359,9 +12359,9 @@ msgstr ""
 #: include/classes/widgets/CProblemsWidgetForm.php:117
 #: include/classes/widgets/CProblemsWidgetForm.php:118
 #: include/classes/widgets/CSystemWidgetForm.php:55
-#: include/views/configuration.item.list.php:208
-#: include/views/configuration.trigger.prototype.list.php:139
-#: include/views/configuration.triggers.list.php:209
+#: include/views/configuration.item.list.php:212
+#: include/views/configuration.trigger.prototype.list.php:143
+#: include/views/configuration.triggers.list.php:213
 #: include/views/js/monitoring.sysmaps.js.php:207 tr_status.php:563
 msgid "Problem"
 msgstr ""
@@ -12621,9 +12621,9 @@ msgstr ""
 #: include/actions.inc.php:1422 include/actions.inc.php:1500
 #: include/actions.inc.php:1583 include/classes/screens/CScreenProblem.php:876
 #: include/views/administration.users.edit.php:306
-#: include/views/configuration.item.list.php:209
-#: include/views/configuration.trigger.prototype.list.php:140
-#: include/views/configuration.triggers.list.php:210 tr_status.php:564
+#: include/views/configuration.item.list.php:213
+#: include/views/configuration.trigger.prototype.list.php:144
+#: include/views/configuration.triggers.list.php:214 tr_status.php:564
 msgid "Recovery"
 msgstr ""
 
@@ -13857,13 +13857,13 @@ msgstr ""
 #: include/classes/widgets/CProblemsWidgetForm.php:115
 #: include/classes/widgets/CProblemsWidgetForm.php:116
 #: include/classes/widgets/CSystemWidgetForm.php:63
-#: include/triggers.inc.php:1144 include/views/configuration.item.list.php:157
+#: include/triggers.inc.php:1144 include/views/configuration.item.list.php:161
 #: include/views/configuration.trigger.prototype.edit.php:65
-#: include/views/configuration.trigger.prototype.list.php:42
+#: include/views/configuration.trigger.prototype.list.php:46
 #: include/views/configuration.trigger.prototype.massupdate.php:41
 #: include/views/configuration.triggers.edit.php:92
 #: include/views/configuration.triggers.list.php:34
-#: include/views/configuration.triggers.list.php:91
+#: include/views/configuration.triggers.list.php:95
 #: include/views/configuration.triggers.massupdate.php:44
 #: include/views/reports.toptriggers.php:60
 #: include/views/reports.toptriggers.php:105 popup.php:1030 tr_logform.php:351
@@ -14239,7 +14239,7 @@ msgstr "Spanish (es_ES)"
 msgid "Specified script does not exist or you do not have rights on it for action operation command."
 msgstr ""
 
-#: include/views/configuration.item.list.php:71
+#: include/views/configuration.item.list.php:75
 msgid "Specify some filter condition to see the items."
 msgstr ""
 
@@ -14299,16 +14299,16 @@ msgstr ""
 #: include/views/configuration.correlation.list.php:56
 #: include/views/configuration.discovery.list.php:33
 #: include/views/configuration.discovery.list.php:55
-#: include/views/configuration.host.discovery.list.php:49
+#: include/views/configuration.host.discovery.list.php:53
 #: include/views/configuration.host.list.php:73
 #: include/views/configuration.host.massupdate.php:168
 #: include/views/configuration.httpconf.list.php:31
-#: include/views/configuration.httpconf.list.php:86
-#: include/views/configuration.item.list.php:66
-#: include/views/configuration.item.list.php:160
+#: include/views/configuration.httpconf.list.php:90
+#: include/views/configuration.item.list.php:70
+#: include/views/configuration.item.list.php:164
 #: include/views/configuration.item.massupdate.php:454
 #: include/views/configuration.triggers.list.php:46
-#: include/views/configuration.triggers.list.php:95 popup.php:1031
+#: include/views/configuration.triggers.list.php:99 popup.php:1031
 #: popup.php:1214 srv_status.php:143 tr_status.php:489
 msgid "Status"
 msgstr "Status"
@@ -14358,7 +14358,7 @@ msgid "Step"
 msgstr ""
 
 #: include/classes/screens/CScreenHttpTest.php:145
-#: include/views/configuration.httpconf.list.php:113
+#: include/views/configuration.httpconf.list.php:117
 #, c-format
 msgid "Step \"%1$s\" [%2$s of %3$s] failed: %4$s"
 msgstr ""
@@ -14484,7 +14484,7 @@ msgstr ""
 msgid "System default"
 msgstr ""
 
-#: include/func.inc.php:1848
+#: include/func.inc.php:1858
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr ""
 
@@ -14621,7 +14621,7 @@ msgstr ""
 #: include/forms.inc.php:458 include/forms.inc.php:827
 #: include/views/configuration.template.edit.php:37
 #: include/views/configuration.template.edit.php:388
-#: include/views/configuration.trigger.prototype.list.php:62 report2.php:295
+#: include/views/configuration.trigger.prototype.list.php:66 report2.php:295
 #: search.php:408
 msgid "Template"
 msgstr "Template"
@@ -14729,7 +14729,7 @@ msgstr ""
 #: include/views/configuration.host.list.php:72
 #: include/views/configuration.host.massupdate.php:341
 #: include/views/configuration.host.prototype.edit.php:322
-#: include/views/configuration.host.prototype.list.php:45
+#: include/views/configuration.host.prototype.list.php:49
 #: include/views/configuration.template.edit.php:22
 #: include/views/configuration.template.list.php:23
 #: include/views/conf.import.php:30 popup.php:40 search.php:295 search.php:321
@@ -15085,8 +15085,8 @@ msgstr ""
 
 #: include/forms.inc.php:455 include/forms.inc.php:842
 #: include/views/administration.general.housekeeper.edit.php:114
-#: include/views/configuration.item.list.php:63
-#: include/views/configuration.item.prototype.list.php:47 items.php:164
+#: include/views/configuration.item.list.php:67
+#: include/views/configuration.item.prototype.list.php:51 items.php:164
 #: latest.php:416
 msgid "Trends"
 msgstr "Trends"
@@ -15263,7 +15263,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: include/html.inc.php:467
-#: include/views/configuration.host.discovery.list.php:128
+#: include/views/configuration.host.discovery.list.php:132
 #: include/views/configuration.host.edit.php:483
 #: include/views/configuration.template.edit.php:318
 #: include/views/configuration.trigger.prototype.edit.php:25
@@ -15310,12 +15310,12 @@ msgstr "trigger bijgewerkt"
 #: app/views/monitoring.problem.view.php:130 include/forms.inc.php:439
 #: include/html.inc.php:385 include/menu.inc.php:74
 #: include/triggers.inc.php:757 include/views/configuration.action.list.php:31
-#: include/views/configuration.host.discovery.list.php:43
+#: include/views/configuration.host.discovery.list.php:47
 #: include/views/configuration.host.edit.php:374
 #: include/views/configuration.host.list.php:67
 #: include/views/configuration.host.list.php:264
-#: include/views/configuration.item.list.php:59
-#: include/views/configuration.item.list.php:229
+#: include/views/configuration.item.list.php:63
+#: include/views/configuration.item.list.php:233
 #: include/views/configuration.template.edit.php:229
 #: include/views/configuration.template.list.php:58
 #: include/views/configuration.template.list.php:162
@@ -15394,17 +15394,17 @@ msgstr "Twee items (\"%1$s\" en \"%2$s\") kunnen niet beiden het host inventory 
 #: include/views/configuration.host.discovery.edit.php:52
 #: include/views/configuration.host.discovery.edit.php:59
 #: include/views/configuration.host.discovery.edit.php:204
-#: include/views/configuration.host.discovery.list.php:48
+#: include/views/configuration.host.discovery.list.php:52
 #: include/views/configuration.item.edit.php:70
 #: include/views/configuration.item.edit.php:75
 #: include/views/configuration.item.edit.php:341
-#: include/views/configuration.item.list.php:64
+#: include/views/configuration.item.list.php:68
 #: include/views/configuration.item.massupdate.php:41
 #: include/views/configuration.item.massupdate.php:373
 #: include/views/configuration.item.prototype.edit.php:58
 #: include/views/configuration.item.prototype.edit.php:63
 #: include/views/configuration.item.prototype.edit.php:263
-#: include/views/configuration.item.prototype.list.php:48
+#: include/views/configuration.item.prototype.list.php:52
 #: include/views/configuration.maintenance.list.php:59
 #: include/views/configuration.services.edit.php:144
 #: include/views/inventory.host.list.php:68
@@ -15618,7 +15618,7 @@ msgstr "Onbekende actie"
 #: include/classes/screens/CScreenHttpTestDetails.php:111
 #: include/classes/screens/CScreenHttpTestDetails.php:183
 #: include/classes/screens/CScreenHttpTest.php:142
-#: include/views/configuration.httpconf.list.php:117
+#: include/views/configuration.httpconf.list.php:121
 msgid "Unknown error"
 msgstr ""
 
@@ -15643,7 +15643,7 @@ msgid "Unknown resource"
 msgstr "Onbekende bron"
 
 #: include/classes/screens/CScreenHttpTest.php:150
-#: include/views/configuration.httpconf.list.php:119
+#: include/views/configuration.httpconf.list.php:123
 #, c-format
 msgid "Unknown step failed: %1$s"
 msgstr ""
@@ -16749,8 +16749,8 @@ msgstr ""
 msgid "Without triggers"
 msgstr ""
 
-#: include/views/configuration.item.list.php:56
-#: include/views/configuration.item.prototype.list.php:42
+#: include/views/configuration.item.list.php:60
+#: include/views/configuration.item.prototype.list.php:46
 msgid "Wizard"
 msgstr ""
 
@@ -16930,10 +16930,10 @@ msgstr "Jaarlijks"
 #: include/triggers.inc.php:1173 include/triggers.inc.php:1179
 #: include/views/administration.general.valuemapping.list.php:60
 #: include/views/administration.users.list.php:98
-#: include/views/configuration.host.prototype.list.php:127
-#: include/views/configuration.httpconf.list.php:133
-#: include/views/configuration.item.prototype.list.php:81
-#: include/views/configuration.trigger.prototype.list.php:124
+#: include/views/configuration.host.prototype.list.php:131
+#: include/views/configuration.httpconf.list.php:137
+#: include/views/configuration.item.prototype.list.php:85
+#: include/views/configuration.trigger.prototype.list.php:128
 #: include/views/configuration.trigger.prototype.massupdate.php:153
 #: include/views/configuration.triggers.massupdate.php:147 tr_status.php:589
 msgid "Yes"
@@ -16944,7 +16944,7 @@ msgstr "Ja"
 msgid "Yesterday"
 msgstr ""
 
-#: include/func.inc.php:1732
+#: include/func.inc.php:1742
 #, c-format
 msgid "You are logged in as \"%1$s\"."
 msgstr ""
@@ -16953,7 +16953,7 @@ msgstr ""
 msgid "You are not able to choose some of the languages, because locales for them are not installed on the web server."
 msgstr "Je kunt een aantal talen niet selecteren omdat de locales hiervoor ontbreken op de webserver."
 
-#: include/func.inc.php:1749
+#: include/func.inc.php:1759
 msgid "You are not logged in"
 msgstr ""
 
@@ -17006,7 +17006,7 @@ msgstr ""
 msgid "You do not have permissions to create users."
 msgstr "Je hebt onvoldoende rechten om gebruikers aan te maken."
 
-#: include/func.inc.php:1732
+#: include/func.inc.php:1742
 msgid "You have no permissions to access this page."
 msgstr ""
 
@@ -17014,7 +17014,7 @@ msgstr ""
 msgid "You have unsaved changes."
 msgstr ""
 
-#: include/func.inc.php:1751
+#: include/func.inc.php:1761
 msgid "You must login to view this page."
 msgstr "Je moet inloggen om deze pagina te bekijken."
 
@@ -17205,7 +17205,7 @@ msgstr ""
 msgid "agent"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1840
+#: include/classes/graphdraw/CLineGraphDraw.php:1865
 #: include/classes/html/CSeverity.php:49
 #: include/classes/pagefilter/CPageFilter.php:849
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
@@ -17283,8 +17283,8 @@ msgstr ""
 msgid "auto-registered host"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1822
-#: include/classes/graphdraw/CLineGraphDraw.php:1844
+#: include/classes/graphdraw/CLineGraphDraw.php:1847
+#: include/classes/graphdraw/CLineGraphDraw.php:1869
 #: include/classes/graphdraw/CPieGraphDraw.php:335 include/graphs.inc.php:85
 #: include/views/js/configuration.graph.edit.js.php:50
 #: include/views/js/configuration.graph.edit.js.php:58
@@ -17631,7 +17631,7 @@ msgstr ""
 msgid "key is empty"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1820
+#: include/classes/graphdraw/CLineGraphDraw.php:1845
 #: include/classes/graphdraw/CPieGraphDraw.php:330 include/graphs.inc.php:82
 #: include/views/js/configuration.graph.edit.js.php:52
 msgid "last"
@@ -17641,7 +17641,7 @@ msgstr "laatste"
 msgid "last() - Last (most recent) T value"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1957
+#: include/classes/graphdraw/CLineGraphDraw.php:1982
 msgid "left"
 msgstr ""
 
@@ -17717,8 +17717,8 @@ msgstr "kaart"
 msgid "matches"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1823
-#: include/classes/graphdraw/CLineGraphDraw.php:1837
+#: include/classes/graphdraw/CLineGraphDraw.php:1848
+#: include/classes/graphdraw/CLineGraphDraw.php:1862
 #: include/classes/graphdraw/CPieGraphDraw.php:326 include/graphs.inc.php:80
 #: include/views/js/configuration.graph.edit.js.php:51
 #: include/views/js/configuration.graph.edit.js.php:59
@@ -17742,8 +17742,8 @@ msgstr ""
 msgid "maximum number of dependency levels reached"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1821
-#: include/classes/graphdraw/CLineGraphDraw.php:1834
+#: include/classes/graphdraw/CLineGraphDraw.php:1846
+#: include/classes/graphdraw/CLineGraphDraw.php:1859
 #: include/classes/graphdraw/CPieGraphDraw.php:322 include/graphs.inc.php:78
 #: include/views/js/configuration.graph.edit.js.php:49
 #: include/views/js/configuration.graph.edit.js.php:57
@@ -17812,7 +17812,7 @@ msgstr ""
 msgid "new event tag"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1915
+#: include/classes/graphdraw/CLineGraphDraw.php:1940
 #: include/classes/graphdraw/CPieGraphDraw.php:356
 msgid "no data"
 msgstr "geen data"
@@ -17960,7 +17960,7 @@ msgstr ""
 msgid "remember selected"
 msgstr "selectie onthouden"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1957
+#: include/classes/graphdraw/CLineGraphDraw.php:1982
 msgid "right"
 msgstr ""
 
