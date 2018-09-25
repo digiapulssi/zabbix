@@ -43,13 +43,6 @@ class CProfiler {
 	protected $sqlQueryLog = [];
 
 	/**
-	 * Whether SQL query logging is enabled.
-	 *
-	 * @var bool
-	 */
-	private static $sql_logging = true;
-
-	/**
 	 * Total time of all performed sql queries.
 	 *
 	 * @var float
@@ -204,23 +197,12 @@ class CProfiler {
 	}
 
 	/**
-	 * Disable SQL query logging.
-	 */
-	public static function disableSqlLogging() {
-		self::$sql_logging = false;
-	}
-
-	/**
 	 * Store sql query data.
 	 *
 	 * @param float  $time
 	 * @param string $sql
 	 */
 	public function profileSql($time, $sql) {
-		if (!self::$sql_logging) {
-			return;
-		}
-
 		$time = round($time, 6);
 
 		$this->sqlTotalTime += $time;

@@ -444,7 +444,8 @@ function DBselect($query, $limit = null, $offset = 0) {
 		$DB['TRANSACTION_NO_FAILED_SQLS'] = false;
 	}
 
-	if (CWebUser::getDebugMode()) {
+	if (CApiService::$userData !== null && array_key_exists('debug_mode', CApiService::$userData)
+			&& CApiService::$userData['debug_mode'] == GROUP_DEBUG_MODE_ENABLED) {
 		CProfiler::getInstance()->profileSql(microtime(true) - $time_start, $query);
 	}
 
@@ -572,7 +573,8 @@ function DBexecute($query, $skip_error_messages = 0) {
 		$DB['TRANSACTION_NO_FAILED_SQLS'] = false;
 	}
 
-	if (CWebUser::getDebugMode()) {
+	if (CApiService::$userData !== null && array_key_exists('debug_mode', CApiService::$userData)
+			&& CApiService::$userData['debug_mode'] == GROUP_DEBUG_MODE_ENABLED) {
 		CProfiler::getInstance()->profileSql(microtime(true) - $time_start, $query);
 	}
 
