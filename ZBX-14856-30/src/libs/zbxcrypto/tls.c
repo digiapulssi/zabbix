@@ -3085,6 +3085,12 @@ void	zbx_tls_init_child(void)
 #define ZBX_CIPHERS_CERT_ECDHE		"EECDH+aRSA+AES128:"
 #define ZBX_CIPHERS_CERT		"RSA+aRSA+AES128"
 
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+	/* TLS_AES_256_GCM_SHA384 is excluded from client ciphersuite list for PSK based connections. */
+	/* By default, in TLS 1.3 only *-SHA256 ciphersuites work with PSK. */
+#	define ZBX_CIPHERS_PSK_TLS13	"TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256"
+#endif
+
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL	/* OpenSSL 1.1.0 or newer */
 #	define ZBX_CIPHERS_PSK_ECDHE	"kECDHEPSK+AES128:"
 #	define ZBX_CIPHERS_PSK		"kPSK+AES128"
@@ -3385,6 +3391,14 @@ void	zbx_tls_init_child(void)
 		else
 			ciphers = ZBX_CIPHERS_PSK;
 
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+		if (1 != SSL_CTX_set_ciphersuites(ctx_psk, ZBX_CIPHERS_PSK_TLS13))
+		{
+			zbx_snprintf_alloc(&error, &error_alloc, &error_offset, "cannot set list of PSK TLS 1.3"
+					"  ciphersuites:");
+			goto out;
+		}
+#endif
 		if (1 != SSL_CTX_set_cipher_list(ctx_psk, ciphers))
 		{
 			zbx_snprintf_alloc(&error, &error_alloc, &error_offset, "cannot set list of PSK ciphersuites:");
@@ -3443,6 +3457,9 @@ out1:
 #undef ZBX_CIPHERS_CERT
 #undef ZBX_CIPHERS_PSK_ECDHE
 #undef ZBX_CIPHERS_PSK
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+#	undef ZBX_CIPHERS_PSK_TLS13
+#endif
 }
 #endif
 
