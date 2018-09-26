@@ -221,6 +221,9 @@ ZBX_THREAD_LOCAL static size_t			psk_identity_len_for_cb	= 0;
 ZBX_THREAD_LOCAL static char			*psk_for_cb		= NULL;
 ZBX_THREAD_LOCAL static size_t			psk_len_for_cb		= 0;
 static int					init_done 		= 0;
+/* variables for capturing PSK identity from server callback function */
+ZBX_THREAD_LOCAL static int			incoming_connection_has_psk = 0;
+ZBX_THREAD_LOCAL static char			incoming_connection_psk_id[PSK_MAX_IDENTITY_LEN + 1];
 /* buffer for messages produced by zbx_openssl_info_cb() */
 ZBX_THREAD_LOCAL char				info_buf[256];
 #endif
@@ -1409,6 +1412,8 @@ static unsigned int	zbx_psk_server_cb(SSL *ssl, const char *identity, unsigned c
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() requested PSK identity \"%s\"", __function_name, identity);
 
+	incoming_connection_has_psk = 1;
+
 	/* try PSK from configuration file first (it is already in binary form) */
 
 	if (0 < my_psk_identity_len && 0 == strcmp(my_psk_identity, identity))
@@ -1429,7 +1434,7 @@ static unsigned int	zbx_psk_server_cb(SSL *ssl, const char *identity, unsigned c
 				/* this should have been prevented by validation in frontend or API */
 				zabbix_log(LOG_LEVEL_WARNING, "cannot convert PSK to binary form for PSK identity"
 						" \"%s\"", identity);
-				return 0;	/* fail */
+				goto fail;
 			}
 
 			psk_loc = (char *)psk_buf;
@@ -1443,7 +1448,7 @@ static unsigned int	zbx_psk_server_cb(SSL *ssl, const char *identity, unsigned c
 						__function_name, identity);
 			}
 
-			return 0;	/* PSK not found */
+			goto fail;
 		}
 	}
 
@@ -1453,14 +1458,16 @@ static unsigned int	zbx_psk_server_cb(SSL *ssl, const char *identity, unsigned c
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "PSK associated with PSK identity \"%s\" does not fit into"
 					" %u-byte buffer", identity, max_psk_len);
-			return 0;	/* fail */
+			goto fail;
 		}
 
 		memcpy(psk, psk_loc, psk_len);
+		zbx_strlcpy(incoming_connection_psk_id, identity, sizeof(incoming_connection_psk_id));
 
 		return (unsigned int)psk_len;	/* success */
 	}
-
+fail:
+	incoming_connection_psk_id[0] = '\0';
 	return 0;	/* PSK not found */
 }
 #endif
@@ -4856,6 +4863,8 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 	s->tls_ctx = zbx_malloc(s->tls_ctx, sizeof(zbx_tls_context_t));
 	s->tls_ctx->ctx = NULL;
 
+	incoming_connection_has_psk = 0;	/* assume certificate-based connection by default */
+
 	if ((ZBX_TCP_SEC_TLS_CERT | ZBX_TCP_SEC_TLS_PSK) == (tls_accept & (ZBX_TCP_SEC_TLS_CERT | ZBX_TCP_SEC_TLS_PSK)))
 	{
 		/* common case in trapper - be ready for all types of incoming connections but possible also in */
@@ -5007,12 +5016,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 
 	cipher_name = SSL_get_cipher(s->tls_ctx->ctx);
 
-#if OPENSSL_VERSION_NUMBER >= 0x1010000fL	/* OpenSSL 1.1.0 or newer */
-	if (0 == strncmp("ECDHE-PSK-", cipher_name, ZBX_CONST_STRLEN("ECDHE-PSK-")) ||
-			0 == strncmp("PSK-", cipher_name, ZBX_CONST_STRLEN("PSK-")))
-#else
-	if (0 == strncmp("PSK-", cipher_name, ZBX_CONST_STRLEN("PSK-")))
-#endif
+	if (1 == incoming_connection_has_psk)
 	{
 		s->connection_type = ZBX_TCP_SEC_TLS_PSK;
 	}
@@ -5483,6 +5487,7 @@ int	zbx_tls_get_attr_cert(const zbx_socket_t *s, zbx_tls_conn_attr_t *attr)
  *     GnuTLS makes it asymmetric - see documentation for                     *
  *     gnutls_psk_server_get_username() and gnutls_psk_client_get_hint()      *
  *     (the latter function is not used in Zabbix).                           *
+ *     Implementation for OpenSSL is server-side only, too.                   *
  *                                                                            *
  ******************************************************************************/
 int	zbx_tls_get_attr_psk(const zbx_socket_t *s, zbx_tls_conn_attr_t *attr)
@@ -5496,8 +5501,13 @@ int	zbx_tls_get_attr_psk(const zbx_socket_t *s, zbx_tls_conn_attr_t *attr)
 	else
 		return FAIL;
 #elif defined(HAVE_OPENSSL)
-	if (NULL != (attr->psk_identity = SSL_get_psk_identity(s->tls_ctx->ctx)))
+	/* SSL_get_psk_identity() is not used here. It works with TLS 1.2, */
+	/* but returns NULL with TLS 1.3 in OpenSSL 1.1.1 */
+	if ('\0' != incoming_connection_psk_id[0])
+	{
+		attr->psk_identity = incoming_connection_psk_id;
 		attr->psk_identity_len = strlen(attr->psk_identity);
+	}
 	else
 		return FAIL;
 #endif
