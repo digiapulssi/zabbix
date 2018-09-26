@@ -56,10 +56,8 @@ typedef struct
 	char		*assignee;
 	/* the ticket URL in the external service */
 	char		*url;
-	/* the allowed action - create/update/reopen */
+	/* the allowed or performed action - create/reopen/update */
 	int		action;
-	/* 1 if a new ticket was created, 0 otherwise, set only for zbx_remedy_acknowledge_events() request */
-	int		is_new;
 	/* the ticket creation time, set only for zbx_remedy_query_events() request */
 	int		clock;
 
@@ -109,7 +107,7 @@ void	zbx_servicenow_acknowledge_events(const DB_MEDIATYPE *mediatype, zbx_uint64
 #define ZBX_XMEDIA_ACTION_NONE		0
 #define ZBX_XMEDIA_ACTION_CREATE	1
 #define ZBX_XMEDIA_ACTION_REOPEN	2
-#define ZBX_XMEDIA_ACTION_COMMENT	3
+#define ZBX_XMEDIA_ACTION_UPDATE	3
 #define ZBX_XMEDIA_ACTION_RESOLVE	4
 
 int	zbx_xmedia_query_events(zbx_uint64_t userid, zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *tickets,

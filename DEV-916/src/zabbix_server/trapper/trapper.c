@@ -43,9 +43,6 @@
 #define ZBX_MAX_SECTION_ENTRIES		4
 #define ZBX_MAX_ENTRY_ATTRIBUTES	3
 
-#define ZBX_MEDIA_RESPONSE_QUERY	0
-#define ZBX_MEDIA_RESPONSE_ACKNOWLEDGE	1
-
 extern unsigned char	process_type, program_type;
 extern int		server_num, process_num;
 extern size_t		(*find_psk_in_cache)(const unsigned char *, unsigned char *, size_t);
@@ -525,7 +522,7 @@ out:
  *           freed later with zbx_json_free() function.                       *
  *                                                                            *
  ******************************************************************************/
-static void	format_media_response(struct zbx_json *json, zbx_vector_ptr_t *tickets, int response_type)
+static void	format_media_response(struct zbx_json *json, zbx_vector_ptr_t *tickets)
 {
 	int	i;
 	char	buf[32];
@@ -561,9 +558,6 @@ static void	format_media_response(struct zbx_json *json, zbx_vector_ptr_t *ticke
 
 		zbx_snprintf(buf, sizeof(buf), "%d", ticket->clock);
 		zbx_json_addstring(json, "clock", buf, ZBX_JSON_TYPE_INT);
-
-		if (ZBX_MEDIA_RESPONSE_QUERY != response_type)
-			zbx_json_adduint64(json, "new", (zbx_uint64_t)ticket->is_new);
 
 		zbx_json_close(json);
 	}
@@ -628,7 +622,7 @@ static int	recv_media_query(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		goto clean;
 	}
 
-	format_media_response(&json, &tickets, ZBX_MEDIA_RESPONSE_QUERY);
+	format_media_response(&json, &tickets);
 
 	zbx_tcp_send_raw(sock, json.buffer);
 
@@ -726,7 +720,7 @@ static int	recv_media_acknowledge(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		goto clean;
 	}
 
-	format_media_response(&json, &tickets, ZBX_MEDIA_RESPONSE_ACKNOWLEDGE);
+	format_media_response(&json, &tickets);
 
 	zbx_tcp_send_raw(sock, json.buffer);
 

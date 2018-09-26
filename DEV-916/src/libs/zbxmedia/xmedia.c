@@ -426,8 +426,8 @@ int	zbx_xmedia_acknowledge_event(zbx_uint64_t eventid, zbx_uint64_t userid, cons
 		case ZBX_XMEDIA_ACTION_REOPEN:
 			message = zbx_dsprintf(NULL, "Reopened resolved incident %s", incident);
 			break;
-		case ZBX_XMEDIA_ACTION_COMMENT:
-			message = zbx_dsprintf(NULL, "Commented incident %s", incident);
+		case ZBX_XMEDIA_ACTION_UPDATE:
+			message = zbx_dsprintf(NULL, "Updated incident %s", incident);
 			break;
 		default:
 			goto out;

@@ -813,28 +813,29 @@ static void	remedy_update_ticket(zbx_ticket_t *ticket, const char *incident_numb
 	size_t		url_alloc = 0, url_offset = 0;
 
 	ticket->ticketid = zbx_strdup(NULL, incident_number);
-	ticket->is_new = (ZBX_XMEDIA_ACTION_CREATE == action ? 1 : 0);
 
-	if (NULL != status)
+	if (ZBX_TICKET_ACTION_NONE == (ticket->action = action))
 	{
-		ticket->status = zbx_strdup(NULL, status);
+		/* calculated allowed action based on incident status */
+		if (NULL != status)
+		{
+			ticket->status = zbx_strdup(NULL, status);
 
-		if (0 == strcmp(status, ZBX_REMEDY_STATUS_CLOSED) ||
-				0 == strcmp(status, ZBX_REMEDY_STATUS_CANCELLED))
-		{
-			ticket->action = ZBX_TICKET_ACTION_CREATE;
-		}
-		else if (0 == strcmp(status, ZBX_REMEDY_STATUS_RESOLVED))
-		{
-			ticket->action = ZBX_TICKET_ACTION_REOPEN;
-		}
-		else
-		{
-			ticket->action = ZBX_TICKET_ACTION_UPDATE;
+			if (0 == strcmp(status, ZBX_REMEDY_STATUS_CLOSED) ||
+					0 == strcmp(status, ZBX_REMEDY_STATUS_CANCELLED))
+			{
+				ticket->action = ZBX_TICKET_ACTION_CREATE;
+			}
+			else if (0 == strcmp(status, ZBX_REMEDY_STATUS_RESOLVED))
+			{
+				ticket->action = ZBX_TICKET_ACTION_REOPEN;
+			}
+			else
+			{
+				ticket->action = ZBX_TICKET_ACTION_UPDATE;
+			}
 		}
 	}
-	else
-		ticket->action = ZBX_TICKET_ACTION_NONE;
 
 	if (NULL != assignee)
 		ticket->assignee = zbx_strdup(NULL, assignee);
@@ -1026,7 +1027,7 @@ static int	remedy_process_event(zbx_uint64_t eventid, zbx_uint64_t userid, const
 			if (0 != strcmp(status, ZBX_REMEDY_STATUS_CLOSED) &&
 					0 != strcmp(status, ZBX_REMEDY_STATUS_CANCELLED))
 			{
-				action = ZBX_XMEDIA_ACTION_COMMENT;
+				action = ZBX_XMEDIA_ACTION_UPDATE;
 				incident_status = zbx_strdup(NULL, status);
 
 				remedy_fields_set_value(fields, ARRSIZE(fields), ZBX_REMEDY_STATUS_WORK_INFO_SUMMARY,

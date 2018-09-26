@@ -650,7 +650,7 @@ static int	servicenow_update_problem(zbx_servicenow_conn_t *conn, char **inciden
 			*action = ZBX_XMEDIA_ACTION_REOPEN;
 		}
 		else
-			*action = ZBX_XMEDIA_ACTION_COMMENT;
+			*action = ZBX_XMEDIA_ACTION_UPDATE;
 
 		ret = servicenow_update_incident(conn, *incident, new_state,
 				(ZBX_XMEDIA_PROCESS_AUTOMATED == mode ? subject : message), error);
@@ -681,29 +681,29 @@ static void	servicenow_update_ticket(zbx_ticket_t *ticket, const char *incident,
 	size_t		url_alloc = 0, url_offset = 0;
 
 	ticket->ticketid = zbx_strdup(NULL, incident);
-	ticket->is_new = (ZBX_XMEDIA_ACTION_CREATE == action ? 1 : 0);
 
-	/* calculated allowed action based on incident status */
-	if (NULL != status)
+	if (ZBX_TICKET_ACTION_NONE == (ticket->action = action))
 	{
-		ticket->status = zbx_strdup(NULL, status);
+		/* calculated allowed action based on incident status */
+		if (NULL != status)
+		{
+			ticket->status = zbx_strdup(NULL, status);
 
-		if (0 == strcmp(status, ZBX_SERVICENOW_STATE_CLOSED) ||
-				0 == strcmp(status, ZBX_SERVICENOW_STATE_CANCELLED))
-		{
-			ticket->action = ZBX_TICKET_ACTION_CREATE;
-		}
-		else if (0 == strcmp(status, ZBX_SERVICENOW_STATE_RESOLVED))
-		{
-			ticket->action = ZBX_TICKET_ACTION_REOPEN;
-		}
-		else
-		{
-			ticket->action = ZBX_TICKET_ACTION_UPDATE;
+			if (0 == strcmp(status, ZBX_SERVICENOW_STATE_CLOSED) ||
+					0 == strcmp(status, ZBX_SERVICENOW_STATE_CANCELLED))
+			{
+				ticket->action = ZBX_TICKET_ACTION_CREATE;
+			}
+			else if (0 == strcmp(status, ZBX_SERVICENOW_STATE_RESOLVED))
+			{
+				ticket->action = ZBX_TICKET_ACTION_REOPEN;
+			}
+			else
+			{
+				ticket->action = ZBX_TICKET_ACTION_UPDATE;
+			}
 		}
 	}
-	else
-		ticket->action = ZBX_TICKET_ACTION_NONE;
 
 	if (NULL != assignee)
 		ticket->assignee = zbx_strdup(NULL, assignee);
