@@ -31,7 +31,6 @@
 #include "zbxmedia.h"
 #include "zbxserver.h"
 
-
 #include "../../zabbix_server/vmware/vmware.h"
 
 #if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
@@ -431,6 +430,8 @@ static int	remedy_create_ticket(const char *url, const char *proxy, const char *
 			ZBX_REMEDY_ACTION_CREATE, summary_esc, notes_esc, urgency_esc, service_name_esc,
 			service_id_esc, ci_esc, ci_id_esc, loginid_esc, company_esc, serviceclass_esc);
 
+	zabbix_log(LOG_LEVEL_TRACE, "Soap post: %s", xml);
+
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, xml)))
 	{
 		*error = zbx_dsprintf(*error, "Cannot set cURL option [%d]: %s", opt, curl_easy_strerror(err));
@@ -548,6 +549,8 @@ static int	remedy_query_ticket(const char *url, const char *proxy, const char *u
 
 	xml = zbx_dsprintf(xml, ZBX_POST_REMEDY_QUERY_SERVICE, user_esc, password_esc, externalid);
 
+	zabbix_log(LOG_LEVEL_TRACE, "Soap post: %s", xml);
+
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, xml)))
 	{
 		*error = zbx_dsprintf(*error, "Cannot set cURL option [%d]: %s", opt, curl_easy_strerror(err));
@@ -562,7 +565,8 @@ static int	remedy_query_ticket(const char *url, const char *proxy, const char *u
 
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_LN1("faultstring"))))
 	{
-		if (0 == strncmp(*error, ZBX_REMEDY_ERROR_INVALID_INCIDENT, sizeof(ZBX_REMEDY_ERROR_INVALID_INCIDENT)))
+		if (0 == strncmp(*error, ZBX_REMEDY_ERROR_INVALID_INCIDENT,
+				ZBX_CONST_STRLEN(ZBX_REMEDY_ERROR_INVALID_INCIDENT)))
 		{
 			/* in the case of invalid incident number error we return SUCCEED with NULL */
 			/* incident number field value                                              */
@@ -671,6 +675,8 @@ static int	remedy_modify_ticket(const char *url, const char *proxy, const char *
 			ZBX_HELPDESK_MODIFY_SERVICE_CLOSE
 			ZBX_SOAP_BODY_CLOSE
 			ZBX_SOAP_ENVELOPE_CLOSE);
+
+	zabbix_log(LOG_LEVEL_TRACE, "Soap post: %s", xml);
 
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, xml)))
 	{
@@ -843,7 +849,7 @@ static void	remedy_update_ticket(zbx_ticket_t *ticket, const char *incident_numb
 		zbx_snprintf_alloc(&ticket->url, &url_alloc, &url_offset,
 				"/arsys/forms/onbmc-s/SHR:LandingConsole/Default Administrator View/"
 				"?mode=search&F304255500=HPD:Help Desk&F1000000076=FormOpenNoAppList"
-				"&F303647600=SearchTicketWithQual&F304255610='1000000161'='%s'", incident_number);
+				"&F303647600=SearchTicketWithQual&F304255610='1000000161'=\"%s\"", incident_number);
 	}
 }
 
@@ -1270,7 +1276,7 @@ void	zbx_remedy_query_events(const DB_MEDIATYPE *mediatype, zbx_vector_uint64_t 
 
 		if (SUCCEED == zbx_xmedia_get_last_ticketid(ticket->eventid, &externalid) &&
 				SUCCEED == remedy_query_ticket(mediatype->smtp_server, mediatype->smtp_helo,
-				mediatype->username, mediatype->passwd, ticket->ticketid, fields, ARRSIZE(fields),
+				mediatype->username, mediatype->passwd, externalid, fields, ARRSIZE(fields),
 				&ticket->error))
 		{
 			remedy_update_ticket(ticket, externalid,
