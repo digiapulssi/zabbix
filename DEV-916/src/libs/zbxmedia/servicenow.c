@@ -36,7 +36,7 @@
 #define ZBX_SERVICENOW_STATE_CANCELLED	"Cancelled"
 #define ZBX_SERVICENOW_STATE_RESOLVED	"Resolved"
 
-#define ZBX_SERVICENOW_REOPEN_STATE	"queued"
+#define ZBX_SERVICENOW_REOPEN_STATE	"inprogress"
 
 
 #define ZBX_SERVICENOW_DB_NONE			0x00
@@ -214,7 +214,7 @@ static int	servicenow_invoke(zbx_servicenow_conn_t *conn, const char *path, cons
 	struct zbx_json_parse	jp, jp_error;
 
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() url:%s/%s", __function_name, conn->base_url, path);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() url:%s%s", __function_name, conn->base_url, path);
 	zabbix_log(LOG_LEVEL_TRACE, "post:%s", ZBX_NULL2EMPTY_STR(data));
 
 	if (NULL != data)
@@ -395,8 +395,8 @@ static int	servicenow_create_incident(zbx_servicenow_conn_t *conn, const char *a
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() short_description:'%s' work_notes:'%s' configuration_item:'%s'"
 			" priority:%d", __function_name, short_description, work_notes, configuration_item, priority);
 
-	zbx_snprintf_alloc(&path, &path_alloc, &path_offset, "/u_integration_web_services_incident?"
-			"sysparm_display_value=true", incident);
+	zbx_strcpy_alloc(&path, &path_alloc, &path_offset, "/u_integration_web_services_incident?"
+			"sysparm_display_value=true");
 
 	zbx_json_init(&json, 1024);
 	zbx_json_addstring(&json, "u_assignment_group", assignment_group, ZBX_JSON_TYPE_STRING);
@@ -424,19 +424,31 @@ static int	servicenow_create_incident(zbx_servicenow_conn_t *conn, const char *a
 				{
 					/* parse out incident number from display_value 'Incident: <number>' */
 					if (0 == strncmp(buf, "Incident: ", 10))
-						*incident = zbx_strdup(NULL, buf + 10);
+						*incident = zbx_strdup(*incident, buf + 10);
 
 					zbx_free(buf);
 				}
-				out_alloc = 0;
-			}
 
-			zbx_json_value_by_name_dyn(&jp_result, "sys_id", sysid, &out_alloc);
+				if (SUCCEED == zbx_json_value_by_name_dyn(&jp_sysid, "link", &buf, &out_alloc))
+				{
+					char	*ptr;
+
+					ptr = strrchr(buf, '/');
+					*sysid = zbx_strdup(*sysid, ptr + 1);
+					zbx_free(buf);
+				}
+			}
 		}
 
 		if (NULL == *incident)
 		{
 			*error = zbx_strdup(NULL, "Cannot retrieve created incident number");
+			ret = FAIL;
+		}
+
+		if (NULL == *sysid)
+		{
+			*error = zbx_strdup(NULL, "Cannot retrieve created incident internal number");
 			ret = FAIL;
 		}
 	}
@@ -481,8 +493,8 @@ static int	servicenow_update_incident(zbx_servicenow_conn_t *conn, const char *i
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() incident:%s state:'%s' work_notes:'%s'", __function_name, incident,
 			ZBX_NULL2EMPTY_STR(state), work_notes);
 
-	zbx_snprintf_alloc(&path, &path_alloc, &path_offset, "/u_integration_web_services_incident?"
-			"sysparm_display_value=true", incident);
+	zbx_strcpy_alloc(&path, &path_alloc, &path_offset, "/u_integration_web_services_incident?"
+			"sysparm_display_value=true");
 
 	zbx_json_init(&json, 1024);
 	zbx_json_addstring(&json, "u_servicenow_number", incident, ZBX_JSON_TYPE_STRING);
@@ -619,11 +631,11 @@ static int	servicenow_update_problem(zbx_servicenow_conn_t *conn, char **inciden
 				break;
 		}
 
-		zbx_free(*incident);
 		if (SUCCEED == (ret = servicenow_create_incident(conn, mediatype->smtp_email, subject, message,
 				host.host, priority, sysid, incident, error)))
 		{
 			*action = ZBX_XMEDIA_ACTION_CREATE;
+
 		}
 	}
 	else
@@ -633,7 +645,7 @@ static int	servicenow_update_problem(zbx_servicenow_conn_t *conn, char **inciden
 		if (0 == strcmp(*state, ZBX_SERVICENOW_STATE_RESOLVED))
 		{
 			new_state = ZBX_SERVICENOW_REOPEN_STATE;
-			*state = zbx_strdup(*state, ZBX_SERVICENOW_STATE_QUEUED);
+			*state = zbx_strdup(*state, ZBX_SERVICENOW_STATE_INPROGRESS);
 
 			*action = ZBX_XMEDIA_ACTION_REOPEN;
 		}
@@ -785,6 +797,15 @@ static int	servicenow_process_event(zbx_uint64_t eventid, zbx_uint64_t userid, c
 			/* check if any database updates must be done afterwards */
 			if (SUCCEED == ret)
 			{
+				if (ZBX_XMEDIA_ACTION_CREATE == action)
+				{
+					/* reset assignee & state for created events */
+					assignee = zbx_strdup(assignee, "");
+					state = zbx_strdup(state, ZBX_SERVICENOW_STATE_QUEUED);
+
+					db_action |= ZBX_SERVICENOW_DB_REGISTER_INCIDENT;
+				}
+
 				if (0 == is_registered)
 					db_action |= ZBX_SERVICENOW_DB_REGISTER_INCIDENT;
 
