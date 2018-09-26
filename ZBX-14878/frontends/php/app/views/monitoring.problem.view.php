@@ -246,6 +246,7 @@ if ($data['action'] == 'problem.view') {
 		->addVar('action', 'problem.view')
 		->addVar('fullscreen', $data['fullscreen'])
 		->addVar('page', $data['page'])
+		->addVar('filter_maintenance', 0)
 		->addColumn($filter_column1)
 		->addColumn($filter_column2);
 
