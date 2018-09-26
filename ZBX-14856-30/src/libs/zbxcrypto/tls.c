@@ -4848,6 +4848,9 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 #if defined(_WINDOWS)
 	double		sec;
 #endif
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+	const unsigned char	session_id_context[] = { 'Z', 'b', 'x' };
+#endif
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	s->tls_ctx = zbx_malloc(s->tls_ctx, sizeof(zbx_tls_context_t));
@@ -4938,6 +4941,13 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 		}
 	}
 
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+	if (1 != SSL_set_session_id_context(s->tls_ctx->ctx, session_id_context, sizeof(session_id_context)))
+	{
+		*error = zbx_strdup(*error, "cannot set session_id_context");
+		goto out;
+	}
+#endif
 	if (1 != SSL_set_fd(s->tls_ctx->ctx, s->socket))
 	{
 		*error = zbx_strdup(*error, "cannot set socket for TLS context");
