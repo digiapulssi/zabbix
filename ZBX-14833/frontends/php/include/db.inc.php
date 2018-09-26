@@ -853,10 +853,12 @@ function check_db_fields($dbFields, &$args) {
  * @param array  $values		array of numerical values sorted in ascending order to be included in WHERE
  * @param bool   $notIn			builds inverted condition
  * @param bool   $sort			values mandatory must be sorted
+ * @param bool   $quote
+ * @param bool   $zero_to_null
  *
  * @return string
  */
-function dbConditionInt($fieldName, array $values, $notIn = false, $sort = true) {
+function dbConditionInt($fieldName, array $values, $notIn = false, $sort = true, $quote = true, $zero_to_null = false) {
 	$MAX_EXPRESSIONS = 950; // maximum  number of values for using "IN (id1>,<id2>,...,<idN>)"
 	$MIN_NUM_BETWEEN = 4; // minimum number of consecutive values for using "BETWEEN <id1> AND <idN>"
 
@@ -864,7 +866,16 @@ function dbConditionInt($fieldName, array $values, $notIn = false, $sort = true)
 		return '1=0';
 	}
 
-	$values = array_keys(array_flip($values));
+	$values = array_flip($values);
+
+	$has_zero = false;
+
+	if ($zero_to_null && array_key_exists(0, $values)) {
+		$has_zero = true;
+		unset($values[0]);
+	}
+
+	$values = array_keys($values);
 
 	if ($sort) {
 		natsort($values);
@@ -876,28 +887,17 @@ function dbConditionInt($fieldName, array $values, $notIn = false, $sort = true)
 	$data = [];
 
 	for ($i = 0, $size = count($values); $i < $size; $i++) {
-		$between = [];
-
 		// analyze by chunk
-		if (isset($values[$i + $MIN_NUM_BETWEEN])
-				&& bccomp(bcadd($values[$i], $MIN_NUM_BETWEEN), $values[$i + $MIN_NUM_BETWEEN]) == 0) {
-			for ($sizeMinBetween = $i + $MIN_NUM_BETWEEN; $i < $sizeMinBetween; $i++) {
+		if ($i + $MIN_NUM_BETWEEN < $size && bcsub($values[$i + $MIN_NUM_BETWEEN], $values[$i]) == $MIN_NUM_BETWEEN) {
+			$between = array_slice($values, $i, $MIN_NUM_BETWEEN);
+
+			// analyze by one
+			for ($i += $MIN_NUM_BETWEEN; $i < $size && bcsub($values[$i], $values[$i - 1]) == 1; $i++) {
 				$between[] = $values[$i];
 			}
 
-			$i--; // shift 1 back
-
-			// analyze by one
-			for (; $i < $size; $i++) {
-				if (isset($values[$i + 1]) && bccomp(bcadd($values[$i], 1), $values[$i + 1]) == 0) {
-					$between[] = $values[$i + 1];
-				}
-				else {
-					break;
-				}
-			}
-
 			$betweens[] = $between;
+			$i--;
 		}
 		else {
 			$data[] = $values[$i];
@@ -917,33 +917,57 @@ function dbConditionInt($fieldName, array $values, $notIn = false, $sort = true)
 		foreach ($betweens as $between) {
 			$between = $operatorNot.$fieldName.' BETWEEN '.zbx_dbstr($between[0]).' AND '.zbx_dbstr(end($between));
 
-			$condition .= $condition ? $operatorAnd.$between : $between;
+			$condition .= ($condition !== '') ? $operatorAnd.$between : $between;
 		}
 	}
 
-	if ($dataSize == 1) {
-		$operator = $notIn ? '!=' : '=';
+	$operatorNot = $notIn ? ' NOT' : '';
+	$chunks = array_chunk($data, $MAX_EXPRESSIONS);
+	$chunk_count = (int) $has_zero + count($betweens) + count($chunks);
 
-		$condition .= ($condition ? $operatorAnd : '').$fieldName.$operator.zbx_dbstr($data[0]);
-	}
-	else {
-		$operatorNot = $notIn ? ' NOT' : '';
-		$data = array_chunk($data, $MAX_EXPRESSIONS);
+	foreach ($chunks as $chunk) {
+		if (count($chunk) == 1) {
+			$operator = $notIn ? '!=' : '=';
 
-		foreach ($data as $chunk) {
+			$condition .= $quote
+				? ($condition !== '' ? $operatorAnd : '').$fieldName.$operator.zbx_dbstr($chunk[0])
+				: ($condition !== '' ? $operatorAnd : '').$fieldName.$operator.$chunk[0];
+		}
+		else {
 			$chunkIns = '';
 
 			foreach ($chunk as $value) {
-				$chunkIns .= ','.zbx_dbstr($value);
+				$chunkIns .= $quote ? ','.zbx_dbstr($value) : ','.$value;
 			}
 
 			$chunkIns = $fieldName.$operatorNot.' IN ('.substr($chunkIns, 1).')';
 
-			$condition .= $condition ? $operatorAnd.$chunkIns : $chunkIns;
+			$condition .= ($condition !== '') ? $operatorAnd.$chunkIns : $chunkIns;
 		}
 	}
 
-	return (($dataSize && $betweenSize) || $betweenSize > 1 || $dataSize > $MAX_EXPRESSIONS) ? '('.$condition.')' : $condition;
+	if ($has_zero) {
+		$condition .= ($condition !== '') ? $operatorAnd : '';
+		$condition .= $fieldName;
+		$condition .= $notIn ? ' IS NOT NULL' : ' IS NULL';
+	}
+
+	return (!$notIn && $chunk_count > 1) ? '('.$condition.')' : $condition;
+}
+
+/**
+ * Takes an initial part of SQL query and appends a generated WHERE condition.
+ *
+ * @param string $fieldName		field name to be used in SQL WHERE condition
+ * @param array  $values		array of numerical values sorted in ascending order to be included in WHERE
+ * @param bool   $notIn			builds inverted condition
+ * @param bool   $sort			values mandatory must be sorted
+ * @param bool   $quote
+ *
+ * @return string
+ */
+function dbConditionId($fieldName, array $values, $notIn = false, $sort = true, $quote = true) {
+	return dbConditionInt($fieldName, $values, $notIn, $sort, $quote, true);
 }
 
 /**

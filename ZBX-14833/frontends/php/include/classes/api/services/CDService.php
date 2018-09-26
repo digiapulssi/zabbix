@@ -254,43 +254,71 @@ class CDService extends CApiService {
 		}
 
 		// selectHosts
-		if (!is_null($options['selectHosts'])) {
-			if ($options['selectHosts'] != API_OUTPUT_COUNT) {
-				$relationMap = new CRelationMap();
-				// discovered items
-				$dbRules = DBselect(
-					'SELECT ds.dserviceid,i.hostid'.
-						' FROM dservices ds,interface i'.
-						' WHERE '.dbConditionInt('ds.dserviceid', $dserviceIds).
-						' AND ds.ip=i.ip'
-				);
-				while ($rule = DBfetch($dbRules)) {
-					$relationMap->addRelation($rule['dserviceid'], $rule['hostid']);
+		if ($options['selectHosts'] !== null) {
+			$dservices = DBfetchArray(DBselect(
+				'SELECT ds.dserviceid,ds.ip,dr.proxy_hostid'.
+				' FROM dservices ds'.
+				' LEFT JOIN dhosts dh ON ds.dhostid=dh.dhostid'.
+				' LEFT JOIN drules dr ON dr.druleid=dh.druleid'.
+				' WHERE '.dbConditionId('ds.dserviceid', $dserviceIds)
+			));
+
+			$proxyids = [];
+
+			foreach ($dservices as $dservice) {
+				$proxyids[$dservice['proxy_hostid']] = true;
+			}
+
+			$hosts = API::Host()->get([
+				'output' => ($options['selectHosts'] == API_OUTPUT_COUNT)
+					? ['proxy_hostid']
+					: $this->outputExtend($options['selectHosts'], ['proxy_hostid']),
+				'selectInterfaces' => ['ip'],
+				'proxyids' => array_keys($proxyids),
+				'preservekeys' => true,
+				'sortfield' => 'status'
+			]);
+			if ($options['limitSelects'] !== null) {
+				order_result($hosts, 'hostid');
+			}
+
+			foreach ($dservices as $dservice) {
+				if (!array_key_exists('hosts', $result[$dservice['dserviceid']])) {
+					$result[$dservice['dserviceid']]['hosts'] = ($options['selectHosts'] == API_OUTPUT_COUNT)
+						? 0
+						: [];
 				}
 
-				$hosts = API::Host()->get([
-					'output' => $options['selectHosts'],
-					'hostids' => $relationMap->getRelatedIds(),
-					'preservekeys' => true,
-					'sortfield' => 'status'
-				]);
-				if (!is_null($options['limitSelects'])) {
-					order_result($hosts, 'hostid');
-				}
-				$result = $relationMap->mapMany($result, $hosts, 'hosts', $options['limitSelects']);
-			}
-			else {
-				$hosts = API::Host()->get([
-					'dserviceids' => $dserviceIds,
-					'countOutput' => true,
-					'groupCount' => true
-				]);
-				$hosts = zbx_toHash($hosts, 'hostid');
-				foreach ($result as $dserviceid => $dservice) {
-					if (isset($hosts[$dserviceid]))
-						$result[$dserviceid]['hosts'] = $hosts[$dserviceid]['rowscount'];
-					else
-						$result[$dserviceid]['hosts'] = 0;
+				foreach ($hosts as $host) {
+					if (bccomp($dservice['proxy_hostid'], $host['proxy_hostid']) == 0) {
+						foreach ($host['interfaces'] as $interface) {
+							if ($dservice['ip'] === $interface['ip']) {
+								if ($options['selectHosts'] != API_OUTPUT_COUNT) {
+									if (!$this->outputIsRequested('proxy_hostid', $options['selectHosts'])) {
+										unset($host['proxy_hostid']);
+									}
+									if (!$this->outputIsRequested('hostid', $options['selectHosts'])) {
+										unset($host['hostid']);
+									}
+									unset($host['interfaces']);
+								}
+
+								if (count($result[$dservice['dserviceid']]['hosts']) == $options['limitSelects']
+										&& $options['limitSelects'] !== null) {
+									break 2;
+								}
+
+								if ($options['selectHosts'] == API_OUTPUT_COUNT) {
+									$result[$dservice['dserviceid']]['hosts']++;
+								}
+								else {
+									$result[$dservice['dserviceid']]['hosts'][] = $host;
+								}
+
+								break;
+							}
+						}
+					}
 				}
 			}
 		}

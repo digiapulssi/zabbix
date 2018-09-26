@@ -75,6 +75,7 @@ class CScreenDiscovery extends CScreenBase {
 		$options = [
 			'output' => ['dserviceid', 'type', 'key_', 'port', 'status', 'lastup', 'lastdown', 'ip', 'dns'],
 			'selectHosts' => ['hostid', 'proxy_hostid', 'name', 'status'],
+			'limitSelects' => 1,
 			'sortfield' => $sort_field,
 			'sortorder' => $sort_order
 		];
@@ -157,11 +158,8 @@ class CScreenDiscovery extends CScreenBase {
 					$dservice = $dservices[$dservice['dserviceid']];
 					$host_name = '';
 
-					foreach ($dservice['hosts'] as $host) {
-						if (bccomp($drule['proxy_hostid'], $host['proxy_hostid']) == 0) {
-							$host_name = $host['name'];
-							break;
-						}
+					if ($dservice['hosts']) {
+						$host_name = $dservice['hosts'][0]['name'];
 					}
 
 					if ($primary_ip !== '') {
@@ -184,7 +182,7 @@ class CScreenDiscovery extends CScreenBase {
 							'type' => $htype,
 							'class' => $hclass,
 							'host' => $host_name,
-							'time' => $htime,
+							'time' => $htime
 						];
 					}
 
