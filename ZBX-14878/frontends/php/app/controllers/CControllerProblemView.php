@@ -53,9 +53,9 @@ class CControllerProblemView extends CController {
 			'filter_age' =>				'int32',
 			'filter_inventory' =>		'array',
 			'filter_tags' =>			'array',
-			'filter_maintenance' =>		'in 1',
-			'filter_unacknowledged' =>	'in 1',
-			'filter_details' =>			'in 1',
+			'filter_maintenance' =>		'in 0,1',
+			'filter_unacknowledged' =>	'in 0,1',
+			'filter_details' =>			'in 0,1',
 			'period' =>					'ge '.ZBX_MIN_PERIOD.'|le '.ZBX_MAX_PERIOD,
 			'stime' =>					'time',
 			'isNow' =>					'in 0,1'
@@ -148,7 +148,7 @@ class CControllerProblemView extends CController {
 			}
 			CProfile::updateArray('web.problem.filter.tags.tag', $filter_tags['tags'], PROFILE_TYPE_STR);
 			CProfile::updateArray('web.problem.filter.tags.value', $filter_tags['values'], PROFILE_TYPE_STR);
-			CProfile::update('web.problem.filter.maintenance', $this->getInput('filter_maintenance', 0),
+			CProfile::update('web.problem.filter.maintenance', $this->getInput('filter_maintenance', 1),
 				PROFILE_TYPE_INT
 			);
 			CProfile::update('web.problem.filter.unacknowledged', $this->getInput('filter_unacknowledged', 0),

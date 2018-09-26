@@ -33,20 +33,26 @@ $table = (new CTableInfo())
 $url_group = (new CUrl('zabbix.php'))
 	->setArgument('action', 'problem.view')
 	->setArgument('filter_set', 1)
-	->setArgument('filter_show', TRIGGERS_OPTION_RECENT_PROBLEM)
 	->setArgument('filter_groupids', null)
 	->setArgument('filter_hostids', $data['filter']['hostids'])
-	->setArgument('filter_problem', $data['filter']['problem'])
-	->setArgument('filter_maintenance', ($data['filter']['maintenance'] == 1) ? 1 : null)
+	->setArgument('filter_problem', ($data['filter']['problem'] !== '') ? $data['filter']['problem'] : null)
+	->setArgument('filter_maintenance', ($data['filter']['maintenance'] == 0) ? 0 : null)
+	->setArgument('filter_unacknowledged', ($data['filter']['ext_ack'] == EXTACK_OPTION_UNACK)
+		? EXTACK_OPTION_UNACK
+		: null
+	)
 	->setArgument('fullscreen', $data['fullscreen'] ? '1' : null);
 $url_host = (new CUrl('zabbix.php'))
 	->setArgument('action', 'problem.view')
 	->setArgument('filter_set', 1)
-	->setArgument('filter_show', TRIGGERS_OPTION_RECENT_PROBLEM)
 	->setArgument('filter_groupids', null)
 	->setArgument('filter_hostids', null)
-	->setArgument('filter_problem', $data['filter']['problem'])
-	->setArgument('filter_maintenance', ($data['filter']['maintenance'] == 1) ? 1 : null)
+	->setArgument('filter_problem', ($data['filter']['problem'] !== '') ? $data['filter']['problem'] : null)
+	->setArgument('filter_maintenance', ($data['filter']['maintenance'] == 0) ? 0 : null)
+	->setArgument('filter_unacknowledged', ($data['filter']['ext_ack'] == EXTACK_OPTION_UNACK)
+		? EXTACK_OPTION_UNACK
+		: null
+	)
 	->setArgument('fullscreen', $data['fullscreen'] ? '1' : null);
 
 foreach ($data['groups'] as $group) {

@@ -72,12 +72,12 @@ if (hasRequest('filter_set')) {
 	CProfile::update('web.overview.filter.show_severity', getRequest('show_severity', TRIGGER_SEVERITY_NOT_CLASSIFIED),
 		PROFILE_TYPE_INT
 	);
-	CProfile::update('web.overview.filter.txt_select', getRequest('txt_select'), PROFILE_TYPE_STR);
+	CProfile::update('web.overview.filter.txt_select', getRequest('txt_select', ''), PROFILE_TYPE_STR);
 	CProfile::update('web.overview.filter.status_change', getRequest('status_change', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.overview.filter.status_change_days', getRequest('status_change_days', 14),
 		PROFILE_TYPE_INT
 	);
-	CProfile::update('web.overview.filter.application', getRequest('application'), PROFILE_TYPE_STR);
+	CProfile::update('web.overview.filter.application', getRequest('application', ''), PROFILE_TYPE_STR);
 
 	// ack status
 	if ($config['event_ack_enable'] == EVENT_ACK_ENABLED) {

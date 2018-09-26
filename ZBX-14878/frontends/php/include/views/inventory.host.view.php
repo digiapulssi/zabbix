@@ -138,11 +138,11 @@ $overviewFormList->addRow(_('Monitoring'),
 	new CHorList([
 		new CLink(_('Web'), 'zabbix.php?action=web.view&hostid='.$data['host']['hostid'].url_param('groupid')),
 		new CLink(_('Latest data'),
-			'latest.php?form=1&select=&show_details=1&filter_set=Filter&hostids[]='.$data['host']['hostid']
+			'latest.php?form=1&show_details=1&filter_set=Filter&hostids[]='.$data['host']['hostid']
 		),
 		new CLink(_('Triggers'),
-			'tr_status.php?filter_set=1&show_triggers=2&ack_status=1&show_events=1&show_events=0&show_details=1'.
-			'&txt_select=&show_maintenance=1&hostid='.$data['host']['hostid'].url_param('groupid')
+			'tr_status.php?filter_set=1&show_triggers='.TRIGGERS_OPTION_ALL.'&hostid='.$data['host']['hostid'].
+			url_param('groupid')
 		),
 		new CLink(_('Problems'),
 			(new CUrl('zabbix.php'))
