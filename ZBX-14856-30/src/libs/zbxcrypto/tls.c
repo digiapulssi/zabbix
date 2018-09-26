@@ -4849,7 +4849,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 	double		sec;
 #endif
 #if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
-	const unsigned char	session_id_context[] = { 'Z', 'b', 'x' };
+	const unsigned char	session_id_context[] = {'Z', 'b', 'x'};
 #endif
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
