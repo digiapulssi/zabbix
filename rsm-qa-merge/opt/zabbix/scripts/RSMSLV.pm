@@ -77,7 +77,7 @@ our ($result, $dbh, $tld, $server_key);
 our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
-		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR RESULT_TIMESTAMP_SHIFT PROBE_ONLINE_STR PROBE_OFFLINE_STR
 		PROBE_NORESULT_STR AVAIL_SHIFT_BACK PROBE_ONLINE_SHIFT
@@ -2488,15 +2488,14 @@ sub uint_value_exists
 # Input:
 #
 # [
-#   {'dns' => 60},
-#   {'rdds' => 300}
+#   {'dns' => {'delay' => 60}},
+#   {'rdds' => {'delay' => 300}}
 # ]
 #
 # Output:
 #
 # [
-#   {'dns' => 60, 'from' => 1234234200, 'till' => 1234234259},	# <- test period found
-#   {'rdds' => 300}						# <- test period not found
+#   {'dns' => {'delay' => 60, 'from' => 1234234200, 'till' => 1234234259}}	# <- test period found for 'dns' but not for 'rdds'
 # ]
 #
 # The return value is min($from), max($till) from all found periods
@@ -2648,9 +2647,23 @@ sub wrn
 	__log('warning', join('', @_));
 }
 
+my $on_fail_cb;
+
+sub set_on_fail
+{
+	$on_fail_cb = shift;
+}
+
 sub fail
 {
 	__log('err', join('', @_));
+
+	if ($on_fail_cb)
+	{
+		__log('debug', "script failed, calling \"on fail\" callback...");
+		$on_fail_cb->();
+		__log('debug', "\"on fail\" callback finished");
+	}
 
 	slv_exit(E_FAIL);
 }
