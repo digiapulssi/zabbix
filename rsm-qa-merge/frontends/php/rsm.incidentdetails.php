@@ -268,15 +268,9 @@ if ($mainEvent) {
 		}
 	}
 
-<<<<<<< .working
 	$mainEventFromTime = $mainEvent['clock'] - $mainEvent['clock'] % $delayTime - ($failCount - 1) * $delayTime;
 	$original_main_event_from_time = $mainEventFromTime;
 	$mainEventFromTime -= (DISPLAY_CYCLES_BEFORE_RECOVERY * $delayTime);
-||||||| .merge-left.r79333
-	$mainEventFromTime -= $failCount * $delayTime;
-=======
-	$mainEventFromTime = $mainEvent['clock'] - $mainEvent['clock'] % $delayTime - ($failCount - 1) * $delayTime;
->>>>>>> .merge-right.r85188
 
 	if (getRequest('filter_set')) {
 		$fromTime = ($mainEventFromTime >= zbxDateToTime($data['filter_from']))
@@ -304,13 +298,7 @@ if ($mainEvent) {
 	));
 
 	if ($endEvent) {
-<<<<<<< .working
 		$endEventToTime = $endEvent['clock'] - ($endEvent['clock'] % $delayTime) + (DISPLAY_CYCLES_AFTER_RECOVERY * $delayTime);
-||||||| .merge-left.r79333
-		$endEventToTime = $endEvent['clock'] + ($recoveryCount * $delayTime);
-=======
-		$endEventToTime = $endEvent['clock'] - $endEvent['clock'] % $delayTime + $delayTime;
->>>>>>> .merge-right.r85188
 		if (getRequest('filter_set')) {
 			$toTime = ($endEventToTime >= zbxDateToTime($data['filter_to']))
 				? zbxDateToTime($data['filter_to'])
@@ -354,7 +342,6 @@ if ($mainEvent) {
 	$data['tests'] = [];
 	$printed = []; // Prevent listing of repeated tests before incident start time. This can happen right after delay is changed.
 	while ($test = DBfetch($tests)) {
-<<<<<<< .working
 		if ($test['clock'] > $original_main_event_from_time || !array_key_exists($test['clock'], $printed)) {
 			$printed[$test['clock']] = true;
 			$data['tests'][] = array(
@@ -367,55 +354,6 @@ if ($mainEvent) {
 	}
 	unset($printed);
 
-||||||| .merge-left.r79333
-		$data['tests'][] = array(
-			'clock' => $test['clock'],
-			'value' => $test['value']
-		);
-	}
-	CArrayHelper::sort($data['tests'], ['clock']);
-
-	// time correction after pagination
-	$firstElement = reset($data['tests']);
-	$lastElement = end($data['tests']);
-	$fromTime = $firstElement['clock'] - $failCount * $delayTime;
-	$toTime = $lastElement['clock'] + $recoveryCount * $delayTime + SEC_PER_MIN;
-
-	$tempTests = $data['tests'];
-	$startEventExist = false;
-	$endEventExist = false;
-
-	foreach ($data['tests'] as &$test) {
-		$newClock = $test['clock'] - $test['clock'] % 60;
-
-		if (!$startEventExist && $mainEventClock == $newClock) {
-			$test['startEvent'] = true;
-			$startEventExist = true;
-		}
-		else {
-			$test['startEvent'] = false;
-		}
-
-		if ($endEvent && !$endEventExist && $endEventClock == $newClock) {
-			$test['endEvent'] = $endEvent['value'];
-			$endEventExist = true;
-		}
-		else {
-			$test['endEvent'] = TRIGGER_VALUE_TRUE;
-		}
-	}
-	unset($test);
-
-=======
-		$data['tests'][] = array(
-			'clock' => $test['clock'] - $test['clock'] % $delayTime,
-			'value' => $test['value'],
-			'startEvent' => $mainEvent['clock'] == $test['clock'] ? true : false,
-			'endEvent' => $endEvent && $endEvent['clock'] == $test['clock'] ? $endEvent['value'] : TRIGGER_VALUE_TRUE
-		);
-	}
-
->>>>>>> .merge-right.r85188
 	$slvs = DBselect(
 		'SELECT h.value,h.clock'.
 		' FROM history h'.
@@ -431,7 +369,6 @@ if ($mainEvent) {
 		while ($slv) {
 			$latest = $slv;
 
-<<<<<<< .working
 			if (!($slv = DBfetch($slvs)) || $slv['clock'] > $test['clock']) {
 				$test['slv'] = sprintf('%.3f', $latest['value']);
 				break;
@@ -453,29 +390,6 @@ if ($mainEvent) {
 		if ($test_value_mapping) {
 			foreach ($test_value_mapping[0]['mappings'] as $val) {
 				$data['test_value_mapping'][$val['value']] = $val['newvalue'];
-||||||| .merge-left.r79333
-		foreach ($tempTests as $key => $test) {
-			if ($slv['clock'] == $test['clock']) {
-				$data['tests'][$key]['slv'] = $slvValue;
-				unset($tempTests[$key]);
-				continue;
-			}
-
-			if ($old && $slv['clock'] > $test['clock']) {
-				$data['tests'][$key]['slv'] = $slvValue;
-				unset($tempTests[$key]);
-				continue;
-			}
-
-			$old = true;
-
-			if ($slv['clock'] < $test['clock']) {
-				break;
-=======
-			if (!($slv = DBfetch($slvs)) || $slv['clock'] > $test['clock'] + $delayTime) {
-				$test['slv'] = sprintf('%.3f', $latest['value']);
-				break;
->>>>>>> .merge-right.r85188
 			}
 		}
 	}
