@@ -1021,7 +1021,7 @@ abstract class CItemGeneral extends CApiService {
 				}
 				else {
 					unset($new_item['itemid']);
-					if ($class === 'CItemPrototype') {
+					if ($class === 'CItemPrototype' && array_key_exists($chd_host['hostid'], $chd_ruleids)) {
 						$new_item['ruleid'] = $chd_ruleids[$chd_host['hostid']][$tpl_item['ruleid']];
 					}
 				}
