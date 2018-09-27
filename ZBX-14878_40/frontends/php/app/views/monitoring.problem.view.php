@@ -322,7 +322,8 @@ if ($data['action'] == 'problem.view') {
 		->setProfile($data['profileIdx'])
 		->setActiveTab($data['active_tab'])
 		->addFormItem((new CVar('action', 'problem.view'))->removeId())
-		->addFormItem((new CVar('page', $data['page']))->removeId());
+		->addFormItem((new CVar('page', $data['page']))->removeId())
+		->addVar('filter_show_timeline', 0);
 
 	if ($data['filter']['show'] == TRIGGERS_OPTION_ALL) {
 		$filter->addTimeSelector($screen->timeline['from'], $screen->timeline['to']);

@@ -54,11 +54,11 @@ class CControllerProblemView extends CController {
 			'filter_evaltype' =>		'in '.TAG_EVAL_TYPE_AND_OR.','.TAG_EVAL_TYPE_OR,
 			'filter_tags' =>			'array',
 			'filter_show_tags' =>		'in '.PROBLEMS_SHOW_TAGS_NONE.','.PROBLEMS_SHOW_TAGS_1.','.PROBLEMS_SHOW_TAGS_2.','.PROBLEMS_SHOW_TAGS_3,
-			'filter_show_suppressed' =>	'in 1',
-			'filter_unacknowledged' =>	'in 1',
+			'filter_show_suppressed' =>	'in 0,1',
+			'filter_unacknowledged' =>	'in 0,1',
 			'filter_compact_view' =>	'in 1',
-			'filter_show_timeline' =>	'in 1',
-			'filter_details' =>			'in 1',
+			'filter_show_timeline' =>	'in 0,1',
+			'filter_details' =>			'in 0,1',
 			'filter_highlight_row' =>	'in 1',
 			'filter_tag_name_format' =>	'in '.PROBLEMS_TAG_NAME_FULL.','.PROBLEMS_TAG_NAME_SHORTENED.','.PROBLEMS_TAG_NAME_NONE,
 			'filter_tag_priority' =>	'string',
@@ -189,7 +189,7 @@ class CControllerProblemView extends CController {
 			CProfile::update('web.problem.filter.compact_view', $this->getInput('filter_compact_view', 0),
 				PROFILE_TYPE_INT
 			);
-			CProfile::update('web.problem.filter.show_timeline', $this->getInput('filter_show_timeline', 0),
+			CProfile::update('web.problem.filter.show_timeline', $this->getInput('filter_show_timeline', 1),
 				PROFILE_TYPE_INT
 			);
 			CProfile::update('web.problem.filter.details', $this->getInput('filter_details', 0), PROFILE_TYPE_INT);
@@ -320,12 +320,16 @@ class CControllerProblemView extends CController {
 				'show_suppressed' => CProfile::get('web.problem.filter.show_suppressed', 0),
 				'unacknowledged' => CProfile::get('web.problem.filter.unacknowledged', 0),
 				'compact_view' => CProfile::get('web.problem.filter.compact_view', 0),
-				'show_timeline' => CProfile::get('web.problem.filter.show_timeline', 1),
+
 				'details' => CProfile::get('web.problem.filter.details', 0),
 				'highlight_row' => CProfile::get('web.problem.filter.highlight_row', 0)
 			],
 			'active_tab' => $active_tab
 		];
+
+		$data['filter']['show_timeline'] = ($data['filter']['compact_view'] == 0)
+			? CProfile::get('web.problem.filter.show_timeline', 1)
+			: 0;
 
 		if ($data['filter']['show'] == TRIGGERS_OPTION_ALL) {
 			$timeselector_options = [

@@ -124,7 +124,6 @@ $overviewFormList->addRow(_('Monitoring'),
 		new CLink(_('Latest data'),
 			(new CUrl('latest.php'))
 				->setArgument('form', '1')
-				->setArgument('select', '')
 				->setArgument('show_details', '1')
 				->setArgument('filter_set', 'Filter')
 				->setArgument('hostids[]', $data['host']['hostid'])

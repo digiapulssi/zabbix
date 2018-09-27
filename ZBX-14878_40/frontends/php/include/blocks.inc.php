@@ -327,13 +327,25 @@ function makeSystemStatus(array $filter, array $data, array $config, $backurl) {
 	$url_group = (new CUrl('zabbix.php'))
 		->setArgument('action', 'problem.view')
 		->setArgument('filter_set', 1)
-		->setArgument('filter_show', TRIGGERS_OPTION_RECENT_PROBLEM)
 		->setArgument('filter_groupids', null)
 		->setArgument('filter_hostids', array_key_exists('hostids', $filter) ? $filter['hostids'] : null)
-		->setArgument('filter_name', array_key_exists('problem', $filter) ? $filter['problem'] : null)
+		->setArgument('filter_name', (array_key_exists('problem', $filter) && $filter['problem'] !== '')
+			? $filter['problem']
+			: null
+		)
 		->setArgument('filter_show_suppressed',
 			(array_key_exists('show_suppressed', $filter) && $filter['show_suppressed'] == 1)
 				? 1
+				: null
+		)
+		->setArgument('filter_unacknowledged',
+			(array_key_exists('ext_ack', $filter) && $filter['ext_ack'] == EXTACK_OPTION_UNACK)
+				? EXTACK_OPTION_UNACK
+				: null
+		)
+		->setArgument('filter_show_timeline',
+			(array_key_exists('show_timeline', $filter) && $filter['show_timeline'] == 0)
+				? 0
 				: null
 		);
 

@@ -34,23 +34,29 @@ $table = (new CTableInfo())
 $url_group = (new CUrl('zabbix.php'))
 	->setArgument('action', 'problem.view')
 	->setArgument('filter_set', 1)
-	->setArgument('filter_show', TRIGGERS_OPTION_RECENT_PROBLEM)
 	->setArgument('filter_groupids', null)
 	->setArgument('filter_hostids', $data['filter']['hostids'])
-	->setArgument('filter_name', $data['filter']['problem'])
+	->setArgument('filter_name', ($data['filter']['problem'] !== '') ? $data['filter']['problem'] : null)
 	->setArgument('filter_show_suppressed', ($data['filter']['show_suppressed'] == ZBX_PROBLEM_SUPPRESSED_TRUE)
 		? ZBX_PROBLEM_SUPPRESSED_TRUE
+		: null
+	)
+	->setArgument('filter_unacknowledged', ($data['filter']['ext_ack'] == EXTACK_OPTION_UNACK)
+		? EXTACK_OPTION_UNACK
 		: null
 	);
 $url_host = (new CUrl('zabbix.php'))
 	->setArgument('action', 'problem.view')
 	->setArgument('filter_set', 1)
-	->setArgument('filter_show', TRIGGERS_OPTION_RECENT_PROBLEM)
 	->setArgument('filter_groupids', null)
 	->setArgument('filter_hostids', null)
-	->setArgument('filter_name', $data['filter']['problem'])
+	->setArgument('filter_name', ($data['filter']['problem'] !== '') ? $data['filter']['problem'] : null)
 	->setArgument('filter_show_suppressed', ($data['filter']['show_suppressed'] == ZBX_PROBLEM_SUPPRESSED_TRUE)
 		? ZBX_PROBLEM_SUPPRESSED_TRUE
+		: null
+	)
+	->setArgument('filter_unacknowledged', ($data['filter']['ext_ack'] == EXTACK_OPTION_UNACK)
+		? EXTACK_OPTION_UNACK
 		: null
 	);
 
