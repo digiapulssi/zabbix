@@ -43,7 +43,7 @@ var cookie = {
 			(location.protocol === 'https:' ? '; secure' : '');
 
 		// Apache header size limit.
-	if (document.cookie.length > 81920) {
+		if (document.cookie.length > 81920) {
 			document.cookie = encodeURIComponent(name) + '=;';
 			alert(locale['S_MAX_COOKIE_SIZE_REACHED']);
 			return false;
@@ -56,43 +56,52 @@ var cookie = {
 	},
 
 	createArray: function(name, value, days) {
-		var list = value.join(',');
-		var list_part = '';
-		var part = 1;
-		var part_count = parseInt(this.read(name + '_parts'), 10);
+		var part_string = '',
+			part_length = 0,
+			part = 0,
+			prev_part_count = parseInt(this.read(name + '_parts'), 10);
 
-		if (is_null(part_count)) {
-			part_count = 1;
+		if (is_null(prev_part_count)) {
+			prev_part_count = 1;
 		}
 
-		var tmp_index = 0
-		var result = true;
+		for (var i = 0; i < value.length; i++) {
+			var is_last = (i === value.length - 1),
+				curr_value = value[i];
 
-		list = encodeURIComponent(list);
+			if (!is_last) {
+				curr_value += ',';
+			}
 
-		while (list.length > 0) {
-			list_part = list.substr(0, 4000);
-			list = list.substr(4000);
-			if (list.length > 0) {
-				tmp_index = list_part.lastIndexOf('%');
-				if (tmp_index > -1) {
-					list = list_part.substring(tmp_index + 3) + list;
-					list_part = list_part.substring(0, tmp_index + 3);
+			var encoded_curr_value = encodeURIComponent(curr_value),
+				curr_length = encoded_curr_value.length;
+
+			if (part_length + curr_length <= 4000) {
+				part_string += curr_value;
+				part_length += curr_length;
+			}
+			else {
+				part++;
+
+				if (!this.create(name + '_' + part, part_string, days)) {
+					break;
 				}
+
+				part_string = curr_value;
+				part_length = curr_length;
 			}
 
-			result = this.create(name + '_' + part, decodeURIComponent(list_part), days);
-			part++;
-
-			if (!result) {
-				break;
+			if (is_last) {
+				part++;
+				this.create(name + '_' + part, part_string, days);
 			}
 		}
-		this.create(name + '_parts', part - 1, days);
 
-		while (part <= part_count) {
-			this.erase(name + '_' + part);
+		this.create(name + '_parts', part, days);
+
+		while (part < prev_part_count) {
 			part++;
+			this.erase(name + '_' + part);
 		}
 	},
 
