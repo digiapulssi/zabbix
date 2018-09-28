@@ -73,8 +73,7 @@ var cookie = {
 				curr_value += ',';
 			}
 
-			var encoded_curr_value = encodeURIComponent(curr_value),
-				curr_length = encoded_curr_value.length;
+			var curr_length = encodeURIComponent(curr_value).length;
 
 			if (part_length + curr_length <= 4000) {
 				part_string += curr_value;
