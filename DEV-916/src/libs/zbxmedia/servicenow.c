@@ -764,7 +764,8 @@ static int	servicenow_process_event(zbx_uint64_t eventid, zbx_uint64_t userid, c
 	if (NULL == (row = DBfetch(result)))
 	{
 		*error = zbx_strdup(*error, "Cannot find corresponding event in database");
-		goto out;
+		DBfree_result(result);
+		return FAIL;
 	}
 
 	ZBX_STR2UINT64(triggerid, row[2]);
