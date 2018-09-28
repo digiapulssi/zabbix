@@ -288,6 +288,7 @@ out:
  * Purpose: gets id of the ticket directly linked to the specified event      *
  *                                                                            *
  * Parameters: eventid      - [IN] event id                                   *
+ *             mediatypeid  - [IN] media type id                              *
  *                                                                            *
  * Return value: the ticket id or NULL if no ticket was directly linked to    *
  *               the specified event                                          *
@@ -295,7 +296,7 @@ out:
  * Comments: The returned ticked id must be freed later by the caller.        *
  *                                                                            *
  ******************************************************************************/
-char	*zbx_xmedia_get_incident_by_eventid(zbx_uint64_t eventid)
+char	*zbx_xmedia_get_incident_by_eventid(zbx_uint64_t eventid, zbx_uint64_t mediatypeid)
 {
 	const char	*__function_name = "zbx_xmedia_get_incident_by_eventid";
 	DB_RESULT	result;
@@ -305,7 +306,8 @@ char	*zbx_xmedia_get_incident_by_eventid(zbx_uint64_t eventid)
 	/* first check if the event is linked to an incident */
 	result = DBselect("select externalid from ticket"
 			" where eventid=" ZBX_FS_UI64
-			" order by clock desc,ticketid desc", eventid);
+				" and mediatypeid=" ZBX_FS_UI64
+			" order by clock desc,ticketid desc", eventid, mediatypeid);
 
 	if (NULL != (row = DBfetch(result)))
 		ticketid = zbx_strdup(NULL, row[0]);
@@ -325,13 +327,14 @@ char	*zbx_xmedia_get_incident_by_eventid(zbx_uint64_t eventid)
  *          specified trigger                                                 *
  *                                                                            *
  * Parameters: triggerid      - [IN] trigger id                               *
+ *             mediatypeid    - [IN] media type id                            *
  *                                                                            *
  * Return value: the ticket id or NULL if no ticket was found                 *
  *                                                                            *
  * Comments: The returned ticked id must be freed later by the caller.        *
  *                                                                            *
  ******************************************************************************/
-char	*zbx_xmedia_get_incident_by_triggerid(zbx_uint64_t triggerid)
+char	*zbx_xmedia_get_incident_by_triggerid(zbx_uint64_t triggerid, zbx_uint64_t mediatypeid)
 {
 	const char	*__function_name = "zbx_xmedia_get_incident_by_triggerid";
 	DB_RESULT	result;
@@ -345,8 +348,9 @@ char	*zbx_xmedia_get_incident_by_triggerid(zbx_uint64_t triggerid)
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
 			"select externalid,clock from ticket"
 				" where triggerid=" ZBX_FS_UI64
+					" and mediatypeid=" ZBX_FS_UI64
 				" order by clock desc,ticketid desc",
-				triggerid);
+				triggerid, mediatypeid);
 
 	result = DBselectN(sql, 1);
 
@@ -499,8 +503,9 @@ int	zbx_xmedia_get_ticket_creation_time(const char *externalid)
  *          event or the last ticket created in response to the event         *
  *          source trigger                                                    *
  *                                                                            *
- * Parameters: eventid  - [IN] the event                                      *
- *             incident - [OUT] the linked incident number                    *
+ * Parameters: eventid     - [IN] the event                                   *
+ *             mediatypeid - [IN] media type id                               *
+ *             incident    - [OUT] the linked incident number                 *
  *                                                                            *
  * Return value: SUCCEED - the incident was retrieved successfully            *
  *               FAIL - otherwise                                             *
@@ -509,12 +514,12 @@ int	zbx_xmedia_get_ticket_creation_time(const char *externalid)
  *           which must be freed later.                                       *
  *                                                                            *
  ******************************************************************************/
-int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, char **incident)
+int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, zbx_uint64_t mediatypeid, char **incident)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 
-	if (NULL == (*incident = zbx_xmedia_get_incident_by_eventid(eventid)))
+	if (NULL == (*incident = zbx_xmedia_get_incident_by_eventid(eventid, mediatypeid)))
 	{
 		zbx_uint64_t	triggerid;
 
@@ -529,7 +534,7 @@ int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, char **incident)
 		{
 			ZBX_STR2UINT64(triggerid, row[0]);
 
-			*incident = zbx_xmedia_get_incident_by_triggerid(triggerid);
+			*incident = zbx_xmedia_get_incident_by_triggerid(triggerid, mediatypeid);
 		}
 
 		DBfree_result(result);

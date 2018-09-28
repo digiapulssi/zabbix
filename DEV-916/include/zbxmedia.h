@@ -114,13 +114,13 @@ int	zbx_xmedia_query_events(zbx_uint64_t userid, zbx_vector_uint64_t *eventids, 
 		char **error);
 int	zbx_xmedia_acknowledge_events(zbx_uint64_t userid, zbx_vector_ptr_t *acknowledges, zbx_vector_ptr_t *tickets,
 		char **error);
-char	*zbx_xmedia_get_incident_by_eventid(zbx_uint64_t eventid);
-char	*zbx_xmedia_get_incident_by_triggerid(zbx_uint64_t triggerid);
+char	*zbx_xmedia_get_incident_by_eventid(zbx_uint64_t eventid, zbx_uint64_t mediatypeid);
+char	*zbx_xmedia_get_incident_by_triggerid(zbx_uint64_t triggerid, zbx_uint64_t mediatypeid);
 void	zbx_xmedia_register_incident(const char *incident, zbx_uint64_t eventid, zbx_uint64_t triggerid,
 		zbx_uint64_t mediatypeid, int action);
 int	zbx_xmedia_acknowledge_event(zbx_uint64_t eventid, zbx_uint64_t userid, const char *ticketnumber,
 		int status);
 int	zbx_xmedia_get_ticket_creation_time(const char *externalid);
-int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, char **externalid);
+int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, zbx_uint64_t mediatypeid, char **externalid);
 
 #endif
