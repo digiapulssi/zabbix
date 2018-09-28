@@ -21,10 +21,10 @@
 
 			if (selected_fn.val() === 'last' || selected_fn.val() === 'strlen' || selected_fn.val() === 'band') {
 				if ($('#paramtype option:selected').val() == <?= PARAM_TYPE_COUNTS ?>) {
-					$('#params_0').removeAttr('readonly');
+					$('#params_last').removeAttr('readonly');
 				}
 				else {
-					$('#params_0').attr('readonly', 'readonly');
+					$('#params_last').attr('readonly', 'readonly');
 				}
 			}
 		}
