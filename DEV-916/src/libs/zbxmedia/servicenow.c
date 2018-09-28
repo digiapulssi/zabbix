@@ -708,6 +708,9 @@ static void	servicenow_update_ticket(zbx_ticket_t *ticket, const char *incident,
 	if (NULL != assignee)
 		ticket->assignee = zbx_strdup(NULL, assignee);
 
+	if (NULL != status)
+		ticket->status = zbx_strdup(NULL, status);
+
 	ticket->clock = zbx_xmedia_get_ticket_creation_time(ticket->ticketid);
 
 	if (NULL != (ptr = strstr(mediatype->smtp_server, "://")) &&
