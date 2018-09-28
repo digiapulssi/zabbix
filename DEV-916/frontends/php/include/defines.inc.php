@@ -577,6 +577,13 @@ define('MEDIA_TYPE_SMS',		2);
 define('MEDIA_TYPE_JABBER',		3);
 define('MEDIA_TYPE_EZ_TEXTING',	100);
 define('MEDIA_TYPE_REMEDY',		101);
+define('MEDIA_TYPE_SERVICENOW',	102);
+
+// External ticketing service actions.
+define('ZBX_TICKET_ACTION_NONE', 0);
+define('ZBX_TICKET_ACTION_CREATE', 1);
+define('ZBX_TICKET_ACTION_REOPEN', 2);
+define('ZBX_TICKET_ACTION_UPDATE', 3);
 
 define('SMTP_CONNECTION_SECURITY_NONE',		0);
 define('SMTP_CONNECTION_SECURITY_STARTTLS',	1);

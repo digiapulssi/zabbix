@@ -52,6 +52,10 @@ class CControllerMediatypeEdit extends CController {
 			'remedy_proxy' =>			'db media_type.smtp_helo',
 			'remedy_mapping' =>			'db media_type.smtp_email',
 			'remedy_company' =>			'db media_type.exec_path',
+			'snow_username' =>			'db media_type.username',
+			'snow_url' =>				'db media_type.smtp_server',
+			'snow_proxy' =>				'db media_type.smtp_helo',
+			'snow_group' =>				'db media_type.smtp_email',
 			'passwd' =>					'db media_type.passwd',
 			'status' =>					'db media_type.status|in '.MEDIA_TYPE_STATUS_ACTIVE.','.MEDIA_TYPE_STATUS_DISABLED,
 			'maxsessions' =>			'db media_type.maxsessions',
@@ -135,6 +139,10 @@ class CControllerMediatypeEdit extends CController {
 			'remedy_mapping' => '',
 			'remedy_company' => '',
 			'remedy_username' => '',
+			'snow_url' => 'localhost',
+			'snow_proxy' => '',
+			'snow_group' => '',
+			'snow_username' => '',
 			'maxsessions' => $db_defaults['maxsessions'],
 			'maxattempts' => $db_defaults['maxattempts'],
 			'attempt_interval' => $db_defaults['attempt_interval'],
@@ -195,6 +203,13 @@ class CControllerMediatypeEdit extends CController {
 					$data['remedy_company'] = $this->mediatype['exec_path'];
 					$data['remedy_username'] = $this->mediatype['username'];
 					break;
+
+				case MEDIA_TYPE_SERVICENOW:
+					$data['snow_url'] = $this->mediatype['smtp_server'];
+					$data['snow_proxy'] = $this->mediatype['smtp_helo'];
+					$data['snow_group'] = $this->mediatype['smtp_email'];
+					$data['snow_username'] = $this->mediatype['username'];
+					break;
 			}
 		}
 
@@ -222,6 +237,10 @@ class CControllerMediatypeEdit extends CController {
 			'remedy_mapping',
 			'remedy_company',
 			'remedy_username',
+			'snow_url',
+			'snow_proxy',
+			'snow_group',
+			'snow_username',
 			'passwd',
 			'status',
 			'maxsessions',

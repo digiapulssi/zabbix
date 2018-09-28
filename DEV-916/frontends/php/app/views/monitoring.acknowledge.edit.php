@@ -29,13 +29,17 @@ $form_list = (new CFormList())
 			->setAttribute('autofocus', 'autofocus')
 	);
 
-if (CRemedyService::$enabled && (CRemedyService::$severity & (1 << $data['event']['triggerSeverity']))
+if (CExternalService::$enabled && (CExternalService::$severity & (1 << $data['event']['triggerSeverity']))
 		&& $data['event']['value'] == TRIGGER_VALUE_TRUE) {
-	$ticket_status_message = (!$data['ticket'] || $data['ticket']['status'] === 'Closed'
-			|| $data['ticket']['status'] === 'Cancelled'
-	)
-		? _('Create ticket')
-		: [_('Update ticket').' ', $data['ticket']['link']];
+	if (!$data['ticket'] || $data['ticket']['status'] === 'Closed' || $data['ticket']['status'] === 'Cancelled') {
+		$ticket_status_message = _('Create ticket');
+	}
+	elseif ($data['ticket']['status'] === 'Resolved') {
+		$ticket_status_message = _('Reopen ticket');
+	}
+	else {
+		$ticket_status_message = [_('Update ticket').' ', $data['ticket']['link']];
+	}
 
 	$form_list->addRow($ticket_status_message,
 		(new CCheckBox('ticket_status'))->setChecked($data['ticket_status'])
@@ -103,13 +107,14 @@ $form = (new CForm())
 			->addVar('eventids', $data['eventids'])
 			->addVar('backurl', $data['backurl']);
 
-// Create a Remedy ticket block before the actual form.
-if (CRemedyService::$enabled && $data['ticket']) {
+// Create an external ticket block before the actual form.
+if (CExternalService::$enabled && $data['ticket']) {
 	$widget = new CWidget();
 
 	$ticket = (new CFormList())->addRow(_('Ticket'), $data['ticket']['link']);
 
-	if ($data['ticket']['assignee']) {
+	// media.query might not return assignee for Remedy service for new tickets.
+	if (array_key_exists('assignee', $data) && $data['ticket']['assignee'] !== '') {
 		$ticket->addRow(_('Assignee'), $data['ticket']['assignee']);
 	}
 

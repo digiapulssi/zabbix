@@ -21,7 +21,7 @@
 					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #smtp_security, #smtp_authentication')
 						.closest('li')
 						.show();
-					$('#exec_path, #gsm_modem, #jabber_username, #eztext_username, #eztext_limit, #exec_params_table, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping')
+					$('#exec_path, #gsm_modem, #jabber_username, #eztext_username, #eztext_limit, #exec_params_table, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping, #snow_url, #snow_username, #snow_proxy, #snow_group')
 						.closest('li')
 						.hide();
 					$('#eztext_link').hide();
@@ -34,7 +34,7 @@
 
 				case '<?= MEDIA_TYPE_EXEC ?>':
 					$('#exec_path, #exec_params_table').closest('li').show();
-					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #gsm_modem, #jabber_username, #eztext_username, #eztext_limit, #passwd, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping')
+					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #gsm_modem, #jabber_username, #eztext_username, #eztext_limit, #passwd, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping, #snow_url, #snow_username, #snow_proxy, #snow_group')
 						.closest('li')
 						.hide();
 					$('#eztext_link').hide();
@@ -43,7 +43,7 @@
 
 				case '<?= MEDIA_TYPE_SMS ?>':
 					$('#gsm_modem').closest('li').show();
-					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #jabber_username, #eztext_username, #eztext_limit, #passwd, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping')
+					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #jabber_username, #eztext_username, #eztext_limit, #passwd, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping, #snow_url, #snow_username, #snow_proxy, #snow_group')
 						.closest('li')
 						.hide();
 					$('#eztext_link').hide();
@@ -52,7 +52,7 @@
 
 				case '<?= MEDIA_TYPE_JABBER ?>':
 					$('#jabber_username, #passwd').closest('li').show();
-					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #gsm_modem, #eztext_username, #eztext_limit, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping')
+					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #gsm_modem, #eztext_username, #eztext_limit, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping, #snow_url, #snow_username, #snow_proxy, #snow_group')
 						.closest('li')
 						.hide();
 					$('#eztext_link').hide();
@@ -62,7 +62,7 @@
 				case '<?= MEDIA_TYPE_EZ_TEXTING ?>':
 					$('#eztext_username, #eztext_limit, #passwd').closest('li').show();
 					$('#eztext_link').show();
-					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #gsm_modem, #jabber_username, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping')
+					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #gsm_modem, #jabber_username, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping, #snow_url, #snow_username, #snow_proxy, #snow_group')
 						.closest('li')
 						.hide();
 					setMaxSessionsType(media_type);
@@ -72,7 +72,18 @@
 					$('#remedy_url, #remedy_username, #passwd, #remedy_proxy, #remedy_company, #remedy_mapping')
 						.closest('li')
 						.show();
-					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #gsm_modem, #jabber_username, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #eztext_username, #eztext_limit')
+					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #gsm_modem, #jabber_username, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #eztext_username, #eztext_limit, #snow_url, #snow_username, #snow_proxy, #snow_group')
+						.closest('li')
+						.hide();
+					$('#eztext_link').hide();
+					setMaxSessionsType(media_type);
+					break;
+
+				case '<?= MEDIA_TYPE_SERVICENOW ?>':
+					$('#snow_url, #snow_username, #snow_proxy, #snow_group, #passwd')
+						.closest('li')
+						.show();
+					$('#smtp_server, #smtp_port, #smtp_helo, #smtp_email, #exec_path, #gsm_modem, #jabber_username, #smtp_verify_peer, #smtp_verify_host, #smtp_username, #smtp_security, #smtp_authentication, #exec_params_table, #eztext_username, #eztext_limit, #remedy_url, #remedy_username, #remedy_proxy, #remedy_company, #remedy_mapping')
 						.closest('li')
 						.hide();
 					$('#eztext_link').hide();
@@ -109,7 +120,8 @@
 			$(this).trimValues([
 				'#description', '#smtp_server', '#smtp_port', '#smtp_helo', '#smtp_email', '#exec_path', '#gsm_modem',
 				'#jabber_username', '#eztext_username', '#smtp_username', '#maxsessions', '#remedy_url',
-				'#remedy_proxy', '#remedy_company', '#remedy_mapping'
+				'#remedy_proxy', '#remedy_company', '#remedy_mapping', '#snow_url', '#snow_username', '#snow_proxy',
+				'#snow_group'
 			]);
 		});
 

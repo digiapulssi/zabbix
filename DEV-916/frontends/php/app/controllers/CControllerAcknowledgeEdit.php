@@ -104,10 +104,10 @@ class CControllerAcknowledgeEdit extends CController {
 				];
 				order_result($data['acknowledges'], 'clock', ZBX_SORT_DOWN);
 
-				CRemedyService::init(['triggerSeverity' => $data['event']['triggerSeverity']]);
+				CExternalService::init(['triggerSeverity' => $data['event']['triggerSeverity']]);
 
-				if (CRemedyService::$enabled) {
-					$data['ticket'] = CRemedyService::mediaQuery($events[0]['eventid']);
+				if (CExternalService::$enabled) {
+					$data['ticket'] = CExternalService::mediaQuery($events[0]['eventid']);
 					$data['ticket_status'] = $this->hasInput('ticket_status')
 						? $this->getInput('ticket_status')
 						: false;

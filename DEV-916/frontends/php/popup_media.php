@@ -37,20 +37,21 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
 $fields = [
-	'dstfrm'=>		[T_ZBX_STR, O_MAND,P_SYS,	NOT_EMPTY,		null],
-
-	'media'=>		[T_ZBX_INT, O_OPT,	P_SYS,	null,			null],
-	'mediatypeid'=>	[T_ZBX_INT, O_OPT,	P_SYS,	DB_ID,			'isset({add})'],
-	'sendto'=>		[T_ZBX_STR, O_OPT,	null,	NOT_EMPTY,		'isset({add})'],
-	'period' =>		[T_ZBX_TP,  O_OPT,  null,   null,  'isset({add})', _('When active')],
-	'active'=>		[T_ZBX_INT, O_OPT,	null,	IN([MEDIA_STATUS_ACTIVE, MEDIA_STATUS_DISABLED]), null],
-
-	'severity'=>	[T_ZBX_INT, O_OPT,	null,	NOT_EMPTY,	null],
-/* actions */
-	'add'=>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
-/* other */
-	'form'=>		[T_ZBX_STR, O_OPT, P_SYS,	null,	null],
-	'form_refresh'=>[T_ZBX_INT, O_OPT, null,	null,	null]
+	'dstfrm'		=>	[T_ZBX_STR, O_MAND,P_SYS,	NOT_EMPTY,		null],
+	'media'			=>	[T_ZBX_INT, O_OPT,	P_SYS,	null,			null],
+	'mediatypeid'	=>	[T_ZBX_INT, O_OPT,	P_SYS,	DB_ID,			'isset({add})'],
+	'type'			=>	[T_ZBX_STR, O_OPT,	null,	null,			'isset({add})'],
+	'sendto'		=>	[T_ZBX_STR, O_OPT,	null,	NOT_EMPTY,
+							'(isset({add}) && ({type} != "'.MEDIA_TYPE_SERVICENOW.'"))'
+						],
+	'period'		=>	[T_ZBX_TP,  O_OPT,  null,   null,  'isset({add})', _('When active')],
+	'active'		=>	[T_ZBX_INT, O_OPT,	null,	IN([MEDIA_STATUS_ACTIVE, MEDIA_STATUS_DISABLED]), null],
+	'severity'		=>	[T_ZBX_INT, O_OPT,	null,	NOT_EMPTY,	null],
+	/* actions */
+	'add'			=>	[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
+	/* other */
+	'form'			=>	[T_ZBX_STR, O_OPT, P_SYS,	null,	null],
+	'form_refresh'	=>	[T_ZBX_INT, O_OPT, null,	null,	null]
 ];
 check_fields($fields);
 
@@ -98,19 +99,26 @@ else {
 $media = getRequest('media', -1);
 $sendto = getRequest('sendto', '');
 $mediatypeid = getRequest('mediatypeid', 0);
+$type = getRequest('type', '');
 $active = getRequest('active', MEDIA_STATUS_ACTIVE);
 $period = getRequest('period', ZBX_DEFAULT_INTERVAL);
 
 $mediatypes = API::MediaType()->get([
-	'output' => ['description'],
-	'preservekeys' => true
+	'output' => ['mediatypeid', 'type', 'description']
 ]);
 CArrayHelper::sort($mediatypes, ['description']);
 
-foreach ($mediatypes as &$mediatype) {
-	$mediatype = $mediatype['description'];
+$mediatypes_cmb = [];
+$mediatypes_ids = [];
+
+foreach ($mediatypes as $mediatype) {
+	$mediatypes_cmb[$mediatype['mediatypeid']] = $mediatype['description'];
+	$mediatypes_ids[$mediatype['mediatypeid']] = $mediatype['type'];
 }
-unset($mediatype);
+
+if ($type === '') {
+	$type = reset($mediatypes_ids);
+}
 
 $frm_row = (new CList())->addClass(ZBX_STYLE_LIST_CHECK_RADIO);
 
@@ -123,7 +131,7 @@ for ($severity = TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity < TRIGGER_SEVERITY_C
 }
 
 $frmMedia = (new CFormList(_('Media')))
-	->addRow(_('Type'), new CComboBox('mediatypeid', $mediatypeid, null, $mediatypes))
+	->addRow(_('Type'), new CComboBox('mediatypeid', $mediatypeid, null, $mediatypes_cmb))
 	->addRow(_('Send to'), (new CTextBox('sendto', $sendto, false, 100))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH))
 	->addRow(_('When active'), (new CTextBox('period', $period, false, 1024))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH))
 	->addRow(_('Use if severity'), $frm_row)
@@ -139,6 +147,7 @@ $mediaTab = (new CTabView())
 	));
 
 $form = (new CForm())
+	->addVar('type', $type)
 	->addVar('media', $media)
 	->addVar('dstfrm', $_REQUEST['dstfrm'])
 	->addItem($mediaTab);
@@ -147,5 +156,7 @@ $widget = (new CWidget())
 	->setTitle(_('Media'))
 	->addItem($form)
 	->show();
+
+include('include/views/js/popup_media.js.php');
 
 require_once dirname(__FILE__).'/include/page_footer.php';

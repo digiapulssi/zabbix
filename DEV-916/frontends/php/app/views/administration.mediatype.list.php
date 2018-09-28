@@ -89,9 +89,16 @@ foreach ($data['mediatypes'] as $mediaType) {
 
 		case MEDIA_TYPE_REMEDY:
 			$details =
-				_('Remedy Service URL').': "'.$mediaType['smtp_server'].'", '.
+				_('Service URL').': "'.$mediaType['smtp_server'].'", '.
 				_('Username').': "'.$mediaType['username'].'", '.
 				_('Company name').': "'.$mediaType['exec_path'].'"';
+			break;
+
+		case MEDIA_TYPE_SERVICENOW:
+			$details =
+				_('Service URL').': "'.$mediaType['smtp_server'].'", '.
+				_('Username').': "'.$mediaType['username'].'", '.
+				_('Assignment group').': "'.$mediaType['smtp_email'].'"';
 			break;
 
 		default:

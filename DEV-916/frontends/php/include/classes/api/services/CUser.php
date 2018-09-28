@@ -280,7 +280,7 @@ class CUser extends CApiService {
 			]],
 			'user_medias' =>	['type' => API_OBJECTS, 'fields' => [
 				'mediatypeid' =>	['type' => API_ID, 'flags' => API_REQUIRED],
-				'sendto' =>			['type' => API_STRING_UTF8, 'flags' => API_REQUIRED | API_NOT_EMPTY, 'length' => DB::getFieldLength('media', 'sendto')],
+				'sendto' =>			['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('media', 'sendto')],
 				'active' =>			['type' => API_INT32, 'in' => implode(',', [MEDIA_STATUS_ACTIVE, MEDIA_STATUS_DISABLED])],
 				'severity' =>		['type' => API_INT32, 'in' => '0:63'],
 				'period' =>			['type' => API_TIME_PERIOD, 'flags' => API_ALLOW_USER_MACRO, 'length' => DB::getFieldLength('media', 'period')]
@@ -380,7 +380,7 @@ class CUser extends CApiService {
 			]],
 			'user_medias' =>	['type' => API_OBJECTS, 'fields' => [
 				'mediatypeid' =>	['type' => API_ID, 'flags' => API_REQUIRED],
-				'sendto' =>			['type' => API_STRING_UTF8, 'flags' => API_REQUIRED | API_NOT_EMPTY, 'length' => DB::getFieldLength('media', 'sendto')],
+				'sendto' =>			['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('media', 'sendto')],
 				'active' =>			['type' => API_INT32, 'in' => implode(',', [MEDIA_STATUS_ACTIVE, MEDIA_STATUS_DISABLED])],
 				'severity' =>		['type' => API_INT32, 'in' => '0:63'],
 				'period' =>			['type' => API_TIME_PERIOD, 'flags' => API_ALLOW_USER_MACRO, 'length' => DB::getFieldLength('media', 'period')]
@@ -507,12 +507,12 @@ class CUser extends CApiService {
 	/**
 	 * Check for valid media types.
 	 *
-	 * @param array $users
+	 * @param array $users                   [IN/OUT]
 	 * @param array $users[]['user_medias']  (optional)
 	 *
 	 * @throws APIException  if user media type is not exists.
 	 */
-	private function checkMediaTypes(array $users) {
+	private function checkMediaTypes(array &$users) {
 		$mediatypeids = [];
 
 		foreach ($users as $user) {
@@ -530,7 +530,7 @@ class CUser extends CApiService {
 		$mediatypeids = array_keys($mediatypeids);
 
 		$db_mediatypes = DB::select('media_type', [
-			'output' => [],
+			'output' => ['type'],
 			'mediatypeids' => $mediatypeids,
 			'preservekeys' => true
 		]);
@@ -542,6 +542,23 @@ class CUser extends CApiService {
 				);
 			}
 		}
+
+		foreach ($users as &$user) {
+			if (array_key_exists('user_medias', $user)) {
+				foreach ($user['user_medias'] as &$media) {
+					if ($db_mediatypes[$media['mediatypeid']]['type'] == MEDIA_TYPE_SERVICENOW) {
+						$media['sendto'] = '';
+					}
+					elseif (!array_key_exists('sendto', $media) || $media['sendto'] === '') {
+						self::exception(ZBX_API_ERROR_PARAMETERS,
+							_s('Incorrect value for field "%1$s": %2$s.', 'sendto', _('cannot be empty'))
+						);
+					}
+				}
+				unset($media);
+			}
+		}
+		unset($user);
 	}
 
 	/**

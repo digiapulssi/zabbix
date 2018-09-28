@@ -71,7 +71,7 @@ class CControllerAcknowledgeCreate extends CController {
 
 		/*
 		 * Select events with trigger IDs if there is a need to close problems, to find all other related events
-		 * or create a Remedy ticket. The only time that it's not required, when we acknowlege single problem
+		 * or create a external ticket. The only time that it's not required, when we acknowlege single problem
 		 * and do nothing else.
 		 */
 		if ($acknowledge_type == ZBX_ACKNOWLEDGE_PROBLEM || $close_problem == ZBX_ACKNOWLEDGE_ACTION_CLOSE_PROBLEM
@@ -86,7 +86,7 @@ class CControllerAcknowledgeCreate extends CController {
 				'preservekeys' => true
 			];
 
-			// Additionally select trigger data for Remedy.
+			// Additionally select trigger data for external service.
 			if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
 				$options['selectRelatedObject'] = ['priority', 'description', 'expression'];
 			}
@@ -96,15 +96,15 @@ class CControllerAcknowledgeCreate extends CController {
 			$triggerids = zbx_objectValues($events, 'objectid');
 		}
 
-		// Create or update and incident on Remedy for current event.
+		// Create or update and incident on external service for current event.
 		if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
 			$event = reset($events);
-			CRemedyService::init(['triggerSeverity' => $event['relatedObject']['priority']]);
+			CExternalService::init(['triggerSeverity' => $event['relatedObject']['priority']]);
 
-			if (CRemedyService::$enabled) {
+			if (CExternalService::$enabled) {
 				$event_trigger_name = CMacrosResolverHelper::resolveTriggerName($event['relatedObject']);
 
-				$result = (bool) CRemedyService::mediaAcknowledge([
+				$result = (bool) CExternalService::mediaAcknowledge([
 					'eventid' => $event['eventid'],
 					'message' => $this->getInput('message', ''),
 					'subject' => $event_trigger_name

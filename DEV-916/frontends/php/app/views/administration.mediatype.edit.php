@@ -51,7 +51,8 @@ $cmbType = new CComboBox('type', $data['type'], null, [
 ]);
 $cmbType->addItemsInGroup(_('Commercial'), [
 	MEDIA_TYPE_EZ_TEXTING => _('Ez Texting'),
-	MEDIA_TYPE_REMEDY => _('Remedy Service')
+	MEDIA_TYPE_REMEDY => _('Remedy Service'),
+	MEDIA_TYPE_SERVICENOW => _('ServiceNow')
 ]);
 $cmbTypeRow = [$cmbType];
 $ez_texting_link = (new CLink('https://app.eztexting.com', 'https://app.eztexting.com/'))
@@ -84,11 +85,17 @@ $mediaTypeFormList
 			->addValue(_('Username and password'), SMTP_AUTHENTICATION_NORMAL)
 			->setModern(true)
 	)
-	->addRow(_('Remedy Service URL'),
+	->addRow(_('Service URL'),
 		(new CTextBox('remedy_url', $data['remedy_url']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+	)
+	->addRow(_('Service URL'),
+		(new CTextBox('snow_url', $data['snow_url']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_('Username'),
 		(new CTextBox('remedy_username', $data['remedy_username']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
+	)
+	->addRow(_('Username'),
+		(new CTextBox('snow_username', $data['snow_username']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 	)
 	->addRow(_('Username'), (new CTextBox('smtp_username', $data['smtp_username']))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH))
 	->addRow(_('Script name'), (new CTextBox('exec_path', $data['exec_path']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH));
@@ -162,6 +169,14 @@ $mediaTypeFormList
 	)
 	->addRow(_('Services mapping'),
 		(new CTextBox('remedy_mapping', $data['remedy_mapping']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+	)
+	// ServiceNow
+	->addRow(_('Proxy'), (new CTextBox('snow_proxy', $data['snow_proxy']))
+		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+		->setAttribute('placeholder', 'http://[username[:password]@]proxy.example.com[:port]')
+	)
+	->addRow(_('Assignment group'),
+		(new CTextBox('snow_group', $data['snow_group']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_('Enabled'),
 		(new CCheckBox('status', MEDIA_TYPE_STATUS_ACTIVE))->setChecked(MEDIA_TYPE_STATUS_ACTIVE == $data['status'])

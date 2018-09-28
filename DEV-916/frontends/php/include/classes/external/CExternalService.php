@@ -19,28 +19,21 @@
 **/
 
 
-class CRemedyService {
+class CExternalService {
 
 	/**
-	 * Minimum required event trigger severity to enable Remedy service.
+	 * Minimum required event trigger severity to enable external service.
 	 *
 	 * @constant
 	 */
 	const minTriggerSeverity = TRIGGER_SEVERITY_WARNING;
 
 	/**
-	 * Remedy service status.
+	 * External service status.
 	 *
 	 * @var bool
 	 */
 	public static $enabled = false;
-
-	/**
-	 * URL to Remedy Server.
-	 *
-	 * @var string
-	 */
-	protected static $webFormUrl;
 
 	/**
 	 * Media severity.
@@ -50,10 +43,10 @@ class CRemedyService {
 	public static $severity;
 
 	/**
-	 * Initialize the Remedy service. First check if event trigger severity corresponds to minimum required severity to
-	 * create, update or request a ticket. Then check if current user has Remedy service as media type.
+	 * Initialize the external service. First check if event trigger severity corresponds to minimum required severity
+	 * to create, update or request a ticket. Then check if current user has the external service set in his media.
 	 * If everything so far is ok, in next step check if Zabbix server is online. In case it's not possible to connect
-	 * to Zabbix server, it's not possibe to start the Remedy Service and return false with error message from
+	 * to Zabbix server, it's not possibe to start the external Service and return false with error message from
 	 * Zabbix server.
 	 *
 	 * @param array  $event							An array of event data.
@@ -66,11 +59,11 @@ class CRemedyService {
 
 		if (array_key_exists('triggerSeverity', $event) && $event['triggerSeverity'] >= self::minTriggerSeverity) {
 			$mediatype = API::MediaType()->get([
-				'output' => ['mediatypeid', 'smtp_server'],
+				'output' => ['mediatypeid'],
 				'selectMedia' => ['mediaid', 'userid', 'active', 'severity'],
 				'userids' => [CWebUser::$data['userid']],
 				'filter' => [
-					'type' => MEDIA_TYPE_REMEDY,
+					'type' => [MEDIA_TYPE_SERVICENOW, MEDIA_TYPE_REMEDY],
 					'status' => MEDIA_TYPE_STATUS_ACTIVE
 				],
 				'limit' => 1
@@ -103,32 +96,6 @@ class CRemedyService {
 				return false;
 			}
 
-			/*
-			 * If trigger severity is valid, media type is set up as Remedy Service and is enabled, then next check if
-			 * Remedy Service URL is valid.
-			 */
-			$server = parse_url($mediatype['smtp_server']);
-
-			// check if Remedy Servcie URL is valid
-			if (isset($server['scheme'])) {
-				self::$webFormUrl = $server['scheme'].'://';
-
-				if (isset($server['user']) && $server['user'] && isset($server['pass']) && $server['pass']) {
-					self::$webFormUrl .= $server['user'].':'.$server['pass'].'@';
-				}
-
-				self::$webFormUrl .= $server['host'];
-
-				if (isset($server['port']) && $server['port']) {
-					self::$webFormUrl .= ':'.$server['port'];
-				}
-
-				// Link to web form in Remedy Service.
-				self::$webFormUrl .= '/arsys/forms/onbmc-s/SHR%3ALandingConsole/Default+Administrator+View/'.
-					'?mode=search&F304255500=HPD%3AHelp+Desk&F1000000076=FormOpenNoAppList'.
-					'&F303647600=SearchTicketWithQual&F304255610=\'1000000161\'%3D';
-			}
-
 			// Check if server is online to do further requests to it.
 			$zabbixServer = new CZabbixServer(
 				$ZBX_SERVER,
@@ -141,7 +108,7 @@ class CRemedyService {
 
 			if (!self::$enabled) {
 				if (!CSession::keyExists('messageError')) {
-					CSession::setValue('messageError', _('Cannot start Remedy Service'));
+					CSession::setValue('messageError', _('Cannot start external service'));
 				}
 
 				if (!CSession::keyExists('messages')) {
@@ -154,16 +121,15 @@ class CRemedyService {
 	}
 
 	/**
-	 * Query Zabbix server about an existing event.
-	 * Returns false if Remedy service is not enabled, no event data was passed, error connecting to Zabbix server or
-	 * something went wrong with actual ticket.
-	 * If query was success, receive array of raw ticket data from Zabbix server and then process each field.
-	 * Returns array of processed ticket data (link to ticket, correct time format etc).
+	 * Query Zabbix server about an existing event. Returns false if external service is not enabled, no event data was
+	 * passed, error connecting to Zabbix server or something went wrong with actual ticket. If query was success,
+	 * receive array of raw ticket data from Zabbix server and then process each field. Returns array of processed
+	 * ticket data (link to ticket, correct time format etc).
 	 *
 	 * @global string $ZBX_SERVER
 	 * @global string $ZBX_SERVER_PORT
 	 *
-	 * @param int    $eventid
+	 * @param int     $eventid
 	 *
 	 * @return bool|array
 	 */
@@ -182,8 +148,8 @@ class CRemedyService {
 		);
 
 		$ticket = $zabbixServer->mediaQuery([$eventid], get_cookie('zbx_sessionid'));
-
 		$zabbixServerError = $zabbixServer->getError();
+
 		if ($zabbixServerError) {
 			CSession::setValue('messages', [['type' => 'error', 'message' => $zabbixServerError]]);
 
@@ -194,32 +160,31 @@ class CRemedyService {
 		else {
 			$ticket = zbx_toHash($ticket, 'eventid');
 
-			if ($ticket[$eventid]['error']) {
+			if (array_key_exists('error', $ticket[$eventid]) && $ticket[$eventid]['error'] !== '') {
 				CSession::setValue('messages', [['type' => 'error', 'message' => $ticket[$eventid]['error']]]);
 
 				self::$enabled = false;
 
 				return self::$enabled;
 			}
-			elseif ($ticket[$eventid]['externalid']) {
+			elseif ($ticket[$eventid]['externalid'] !== '') {
 				return self::getDetails($ticket[$eventid]);
 			}
 		}
 	}
 
 	/**
-	 * Send event data to Remedy service to create or update a ticket.
-	 * Returns false if Remedy service is not enabled, no event data was passed, error connecting to Zabbix server or
-	 * something went wrong with actual ticket.
-	 * If operation was success, receive array of raw ticket data from Zabbix server and then process each field.
-	 * Returns array of processed ticket data (link to ticket, correct time format etc).
+	 * Send event data to external service to create, update or reopen a ticket. Returns false if external service is
+	 * not enabled, no event data was passed, error connecting to Zabbix server or something went wrong with actual
+	 * ticket. If operation was success, receive array of raw ticket data from Zabbix server and then process each
+	 * field. Returns array of processed ticket data (link to ticket, correct time format etc).
 	 *
 	 * @global string $ZBX_SERVER
 	 * @global string $ZBX_SERVER_PORT
 	 *
-	 * @param string $event['eventid']		An existing event ID.
-	 * @param string $event['message']		User message when acknowledging event.
-	 * @param string $event['subject']		Trigger status 'OK' or 'PROBLEM'
+	 * @param string $event['eventid']  An existing event ID.
+	 * @param string $event['message']  User message when acknowledging event.
+	 * @param string $event['subject']  Trigger status 'OK' or 'PROBLEM'
 	 *
 	 * @return bool|array
 	 */
@@ -238,7 +203,6 @@ class CRemedyService {
 		);
 
 		$tickets = $zabbixServer->mediaAcknowledge([$event], get_cookie('zbx_sessionid'));
-
 		$zabbixServerError = $zabbixServer->getError();
 
 		if ($zabbixServerError) {
@@ -252,17 +216,26 @@ class CRemedyService {
 			$tickets = zbx_toHash($tickets, 'eventid');
 			$eventid = $event['eventid'];
 
-			if ($tickets[$eventid]['error']) {
+			if (array_key_exists('error', $tickets[$eventid]) && $tickets[$eventid]['error'] !== '') {
 				CSession::setValue('messages', [['type' => 'error', 'message' => $tickets[$eventid]['error']]]);
 
 				self::$enabled = false;
 
 				return self::$enabled;
 			}
-			elseif ($tickets[$eventid]['externalid']) {
-				$messageSuccess = $tickets[$eventid]['new']
-					? _s('Ticket "%1$s" has been created.', $tickets[$eventid]['externalid'])
-					: _s('Ticket "%1$s" has been updated.', $tickets[$eventid]['externalid']);
+			elseif ($tickets[$eventid]['externalid'] !== '') {
+				switch ($tickets[$eventid]['action']) {
+					case ZBX_TICKET_ACTION_CREATE:
+						$messageSuccess = _s('Ticket "%1$s" has been created.', $tickets[$eventid]['externalid']);
+						break;
+
+					case ZBX_TICKET_ACTION_UPDATE:
+						$messageSuccess = _s('Ticket "%1$s" has been updated.', $tickets[$eventid]['externalid']);
+						break;
+
+					case ZBX_TICKET_ACTION_REOPEN:
+						$messageSuccess = _s('Ticket "%1$s" has been reopened.', $tickets[$eventid]['externalid']);
+				}
 
 				CSession::setValue('messages', [['type' => 'info', 'message' => $messageSuccess]]);
 
@@ -272,24 +245,33 @@ class CRemedyService {
 	}
 
 	/**
-	 * Creates Remedy ticket link and converts clock to readable time format and returns array of ticket data.
+	 * Creates external service ticket link and converts clock to readable time format and returns array of ticket data.
 	 *
-	 * @param array $data		Remedy ticket data.
+	 * @param array $data  External service ticket data.
 	 *
 	 * @return array
 	 */
 	protected static function getDetails(array $data) {
 		$ticketid = $data['externalid'];
-
-		$link = new CLink($ticketid, self::$webFormUrl.'"'.$ticketid.'"', null, null, true);
+		$link = new CLink($ticketid, $data['url'], null, null, true);
 		$link->setTarget('_blank');
 
-		return [
+		$return = [
 			'ticketId' => $ticketid,
 			'link' => $link,
 			'created' => zbx_date2str(DATE_TIME_FORMAT_SECONDS, $data['clock']),
-			'status' => $data['status'],
-			'assignee' => $data['assignee']
 		];
+
+		// media.acknowledge might not return status for Remedy service.
+		if (array_key_exists('status', $data)) {
+			$return['status'] = $data['status'];
+		}
+
+		// media.acknowledge and media.query might not return assignee for Remedy service for new tickets.
+		if (array_key_exists('assignee', $data)) {
+			$return['assignee'] = $data['assignee'];
+		}
+
+		return $return;
 	}
 }

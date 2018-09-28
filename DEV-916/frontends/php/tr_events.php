@@ -150,15 +150,15 @@ $config = select_config();
 
 // ticket details
 $ticket_details_widget = null;
-CRemedyService::init(['triggerSeverity' => $trigger['priority']]);
+CExternalService::init(['triggerSeverity' => $trigger['priority']]);
 
-if (CRemedyService::$enabled) {
-	$ticket = CRemedyService::mediaQuery($event['eventid']);
+if (CExternalService::$enabled) {
+	$ticket = CExternalService::mediaQuery($event['eventid']);
 
 	if ($ticket) {
 		$ticket_table = (new CTableInfo())->addRow([_('Ticket'), $ticket['link']]);
 
-		if ($ticket['assignee']) {
+		if (array_key_exists('assignee', $ticket) && $ticket['assignee'] !== '') {
 			$ticket_table->addRow([_('Assignee'), $ticket['assignee']]);
 		}
 

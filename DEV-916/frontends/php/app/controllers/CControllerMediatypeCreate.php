@@ -45,6 +45,10 @@ class CControllerMediatypeCreate extends CController {
 			'remedy_proxy' =>			'db media_type.smtp_helo',
 			'remedy_mapping' =>			'db media_type.smtp_email',
 			'remedy_company' =>			'db media_type.exec_path',
+			'snow_username' =>			'db media_type.username',
+			'snow_url' =>				'db media_type.smtp_server',
+			'snow_proxy' =>				'db media_type.smtp_helo',
+			'snow_group' =>				'db media_type.smtp_email',
 			'passwd' =>					'db media_type.passwd',
 			'status' =>					'db media_type.status|in '.MEDIA_TYPE_STATUS_ACTIVE.','.MEDIA_TYPE_STATUS_DISABLED,
 			'maxsessions' =>			'db media_type.maxsessions',
@@ -164,6 +168,26 @@ class CControllerMediatypeCreate extends CController {
 
 				if ($this->hasInput('remedy_username')) {
 					$mediatype['username'] = $this->getInput('remedy_username');
+				}
+				break;
+
+			case MEDIA_TYPE_SERVICENOW:
+				$this->getInputs($mediatype, ['passwd']);
+
+				if ($this->hasInput('snow_url')) {
+					$mediatype['smtp_server'] = $this->getInput('snow_url');
+				}
+
+				if ($this->hasInput('snow_proxy')) {
+					$mediatype['smtp_helo'] = $this->getInput('snow_proxy');
+				}
+
+				if ($this->hasInput('snow_group')) {
+					$mediatype['smtp_email'] = $this->getInput('snow_group');
+				}
+
+				if ($this->hasInput('snow_username')) {
+					$mediatype['username'] = $this->getInput('snow_username');
 				}
 				break;
 		}

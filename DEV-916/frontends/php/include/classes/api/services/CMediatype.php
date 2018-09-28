@@ -358,6 +358,18 @@ class CMediatype extends CApiService {
 						}
 					}
 					break;
+
+				case MEDIA_TYPE_SERVICENOW:
+					foreach (['smtp_server', 'username', 'passwd', 'smtp_email'] as $field) {
+						if ($mediatype[$field] === '' || $mediatype[$field] === null) {
+							self::exception(ZBX_API_ERROR_PARAMETERS, _s(
+								'Field "%1$s" is missing a value for media type "%2$s".',
+								$field,
+								$mediatype['description']
+							));
+						}
+					}
+					break;
 			}
 
 			// Validate optional 'status' field.
@@ -541,7 +553,8 @@ class CMediatype extends CApiService {
 					MEDIA_TYPE_SMS => ['gsm_modem'],
 					MEDIA_TYPE_JABBER => ['username'],
 					MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username'],
-					MEDIA_TYPE_REMEDY => ['smtp_server', 'smtp_email', 'exec_path', 'username', 'passwd']
+					MEDIA_TYPE_REMEDY => ['smtp_server', 'smtp_email', 'exec_path', 'username', 'passwd'],
+					MEDIA_TYPE_SERVICENOW => ['smtp_server', 'smtp_email', 'username', 'passwd']
 				];
 
 				foreach ($optional_fields_by_type[$db_mediatype['type']] as $field) {
@@ -806,10 +819,10 @@ class CMediatype extends CApiService {
 	 * @param array		$mediatypes							Multidimensional array with media types data.
 	 * @param int		$mediatypes['type']					E-mail, Script, SMS, Jabber, Ez Texting and Remedy Service.
 	 * @param string	$mediatypes['description']			Name of the media type.
-	 * @param string	$mediatypes['smtp_server']			Used for e-mail and Remedy Service URL.
+	 * @param string	$mediatypes['smtp_server']			Used for e-mail and external service URL.
 	 * @param int		$mediatypes['smtp_port']			Used for e-mail only.
-	 * @param string	$mediatypes['smtp_helo']			Used for e-mail and Remedy Service Proxy.
-	 * @param string	$mediatypes['smtp_email']			Used for e-mail and Remedy Service mapping.
+	 * @param string	$mediatypes['smtp_helo']			Used for e-mail and external service proxy.
+	 * @param string	$mediatypes['smtp_email']			Used for e-mail, Remedy Service mapping and ServiceNow assignment group.
 	 * @param int		$mediatypes['smtp_security']		SMTP connection security.
 	 * @param int		$mediatypes['smtp_verify_peer']		SMTP verify peer.
 	 * @param int		$mediatypes['smtp_verify_host']		SMTP verify host.
@@ -817,8 +830,8 @@ class CMediatype extends CApiService {
 	 * @param string	$mediatypes['exec_path']			Used for scripts, Ez Texting, Remedy Service company name.
 	 * @param string	$mediatypes['exec_params']			Script parameters.
 	 * @param string	$mediatypes['gsm_modem']			Used for SMS only.
-	 * @param string	$mediatypes['username']				Used for Jabber, Ez Texting and Remedy Service.
-	 * @param string	$mediatypes['passwd']				Used for Jabber, Ez Texting and Remedy Service.
+	 * @param string	$mediatypes['username']				Used for Jabber, Ez Texting and external service.
+	 * @param string	$mediatypes['passwd']				Used for Jabber, Ez Texting and external Service.
 	 * @param int		$mediatypes['status']				Status of the media type (enabled/disabled).
 	 * @param int		$mediatypes['maxsessions']			Limit of simultaneously processed alerts.
 	 * @param int		$mediatypes['maxattempts']			Maximum attempts to deliver alert successfully.
@@ -841,12 +854,12 @@ class CMediatype extends CApiService {
 	 *
 	 * @param array		$mediatypes							Multidimensional array with media types data.
 	 * @param int		$mediatypes['mediatypeid']			ID of the media type.
-	 * @param int		$mediatypes['type']					E-mail, Script, SMS, Jabber, Ez Texting and Remedy Service.
+	 * @param int		$mediatypes['type']					E-mail, Script, SMS, Jabber, Ez Texting and external service.
 	 * @param string	$mediatypes['description']			Name of the media type.
-	 * @param string	$mediatypes['smtp_server']			Used for e-mail and Remedy Service URL.
+	 * @param string	$mediatypes['smtp_server']			Used for e-mail and external service URL.
 	 * @param int		$mediatypes['smtp_port']			Used for e-mail only.
-	 * @param string	$mediatypes['smtp_helo']			Used for e-mail and Remedy Service Proxy.
-	 * @param string	$mediatypes['smtp_email']			Used for e-mail and Remedy Service mapping.
+	 * @param string	$mediatypes['smtp_helo']			Used for e-mail and external service proxy.
+	 * @param string	$mediatypes['smtp_email']			Used for e-mail, Remedy Service mapping and ServiceNow assignment group.
 	 * @param int		$mediatypes['smtp_security']		SMTP connection security
 	 * @param int		$mediatypes['smtp_verify_peer']		SMTP verify peer
 	 * @param int		$mediatypes['smtp_verify_host']		SMTP verify host
@@ -854,8 +867,8 @@ class CMediatype extends CApiService {
 	 * @param string	$mediatypes['exec_path']			Used for scripts, Ez Texting, Remedy Service company name.
 	 * @param string	$mediatypes['exec_params']			Script parameters.
 	 * @param string	$mediatypes['gsm_modem']			Used for SMS only.
-	 * @param string	$mediatypes['username']				Used for Jabber, Ez Texting and Remedy Service.
-	 * @param string	$mediatypes['passwd']				Used for Jabber, Ez Texting and Remedy Service.
+	 * @param string	$mediatypes['username']				Used for Jabber, Ez Texting and external service.
+	 * @param string	$mediatypes['passwd']				Used for Jabber, Ez Texting and external service.
 	 * @param int		$mediatypes['status']				Status of the media type (enabled/disabled).
 	 * @param int		$mediatypes['maxsessions']			Limit of simultaneously processed alerts.
 	 * @param int		$mediatypes['maxattempts']			Maximum attempts to deliver alert successfully.
@@ -943,7 +956,8 @@ class CMediatype extends CApiService {
 			MEDIA_TYPE_SMS => ['gsm_modem'],
 			MEDIA_TYPE_JABBER => ['username'],
 			MEDIA_TYPE_EZ_TEXTING => ['exec_path', 'username'],
-			MEDIA_TYPE_REMEDY => ['smtp_server', 'smtp_email', 'exec_path', 'username', 'passwd']
+			MEDIA_TYPE_REMEDY => ['smtp_server', 'smtp_email', 'exec_path', 'username', 'passwd'],
+			MEDIA_TYPE_SERVICENOW => ['smtp_server', 'smtp_email', 'username', 'passwd']
 		];
 		$message_text_limit_validator = new CLimitedSetValidator(array(
 			'values' => array(EZ_TEXTING_LIMIT_USA, EZ_TEXTING_LIMIT_CANADA)
