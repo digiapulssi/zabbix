@@ -127,7 +127,7 @@ foreach my $service (keys(%services))
 	{
 		if (!$cfg_dns_delay)
 		{
-			$cfg_dns_delay = get_macro_dns_udp_delay();
+			$cfg_dns_delay = get_dns_udp_delay($check_from);
 			$cfg_dns_minns = get_macro_minns();
 			$cfg_dns_valuemaps = get_valuemaps('dns');
 		}
@@ -135,26 +135,32 @@ foreach my $service (keys(%services))
 		$services{$service}{'delay'} = $cfg_dns_delay;
 		$services{$service}{'minns'} = $cfg_dns_minns;
 		$services{$service}{'valuemaps'} = $cfg_dns_valuemaps;
-		$services{$service}{'key_status'} = 'rsm.dns.udp[{$RSM.TLD}]'; # 0 - down, 1 - up
+		$services{$service}{'key_statuses'} = ['rsm.dns.udp[{$RSM.TLD}]']; # 0 - down, 1 - up
 		$services{$service}{'key_rtt'} = 'rsm.dns.udp.rtt[{$RSM.TLD},';
 	}
 	elsif ($service eq 'rdds')
 	{
-		$services{$service}{'delay'} = get_macro_rdds_delay();
-		$services{$service}{'valuemaps'} = get_valuemaps($service);
-		$services{$service}{'key_status'} = 'rsm.rdds[{$RSM.TLD}'; # 0 - down, 1 - up, 2 - only 43, 3 - only 80
-		$services{$service}{'key_43_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
-		$services{$service}{'key_43_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
-		$services{$service}{'key_43_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
-		$services{$service}{'key_80_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
-		$services{$service}{'key_80_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+		$services{$service}{'delay'} = get_rdds_delay($check_from);
+		$services{$service}{'key_statuses'} = ['rsm.rdds[{$RSM.TLD}', 'rdap['];
 
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'} = get_valuemaps('rdds');
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
+
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'valuemaps'} = $services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'};
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
+		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+
+		$services{$service}{+JSON_INTERFACE_RDAP}{'valuemaps'} = get_valuemaps('rdap');
+		$services{$service}{+JSON_INTERFACE_RDAP}{'key_rtt'} = 'rdap.rtt';
+		$services{$service}{+JSON_INTERFACE_RDAP}{'key_ip'} = 'rdap.ip';
 	}
 	elsif ($service eq 'epp')
 	{
-		$services{$service}{'delay'} = get_macro_epp_delay();
+		$services{$service}{'delay'} = get_epp_delay($check_from);
 		$services{$service}{'valuemaps'} = get_valuemaps($service);
-		$services{$service}{'key_status'} = 'rsm.epp[{$RSM.TLD},'; # 0 - down, 1 - up
+		$services{$service}{'key_statuses'} = ['rsm.epp[{$RSM.TLD},']; # 0 - down, 1 - up
 		$services{$service}{'key_ip'} = 'rsm.epp.ip[{$RSM.TLD}]';
 		$services{$service}{'key_rtt'} = 'rsm.epp.rtt[{$RSM.TLD},';
 	}
@@ -264,54 +270,6 @@ if ($check_till > $max_till)
 	wrn(sprintf("the specified period (%s) is in the future, please wait for %s", selected_period($check_from, $check_till), $left_str));
 
 	slv_exit(SUCCESS);
-}
-
-foreach my $service (keys(%services))
-{
-	if ($service eq 'dns' || $service eq 'dnssec')
-	{
-		if (!$cfg_dns_delay)
-		{
-			$cfg_dns_delay = get_dns_udp_delay($check_from);
-			$cfg_dns_minns = get_macro_minns();
-			$cfg_dns_valuemaps = get_valuemaps('dns');
-		}
-
-		$services{$service}{'delay'} = $cfg_dns_delay;
-		$services{$service}{'minns'} = $cfg_dns_minns;
-		$services{$service}{'valuemaps'} = $cfg_dns_valuemaps;
-		$services{$service}{'key_statuses'} = ['rsm.dns.udp[{$RSM.TLD}]']; # 0 - down, 1 - up
-		$services{$service}{'key_rtt'} = 'rsm.dns.udp.rtt[{$RSM.TLD},';
-	}
-	elsif ($service eq 'rdds')
-	{
-		$services{$service}{'delay'} = get_rdds_delay($check_from);
-		$services{$service}{'key_statuses'} = ['rsm.rdds[{$RSM.TLD}', 'rdap['];
-
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'} = get_valuemaps('rdds');
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
-
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'valuemaps'} = $services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'};
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
-
-		$services{$service}{+JSON_INTERFACE_RDAP}{'valuemaps'} = get_valuemaps('rdap');
-		$services{$service}{+JSON_INTERFACE_RDAP}{'key_rtt'} = 'rdap.rtt';
-		$services{$service}{+JSON_INTERFACE_RDAP}{'key_ip'} = 'rdap.ip';
-	}
-	elsif ($service eq 'epp')
-	{
-		$services{$service}{'delay'} = get_epp_delay($check_from);
-		$services{$service}{'valuemaps'} = get_valuemaps($service);
-		$services{$service}{'key_statuses'} = ['rsm.epp[{$RSM.TLD},']; # 0 - down, 1 - up
-		$services{$service}{'key_ip'} = 'rsm.epp.ip[{$RSM.TLD}]';
-		$services{$service}{'key_rtt'} = 'rsm.epp.rtt[{$RSM.TLD},';
-	}
-
-	$services{$service}{'avail_key'} = "rsm.slv.$service.avail";
-	$services{$service}{'rollweek_key'} = "rsm.slv.$service.rollweek";
 }
 
 my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 1);	# consider last cycle
@@ -472,7 +430,7 @@ foreach (@server_keys)
 					$service_till = cycle_end($till - $delay, $delay);
 				}
 
-				if (tld_service_enabled($tld, $service) != SUCCESS)
+				if (tld_service_enabled($tld, $service, $service_from, $service_till) != SUCCESS)
 				{
 					if (opt('dry-run'))
 					{
@@ -654,11 +612,7 @@ foreach (@server_keys)
 				if (scalar(@$incidents) != 0 && $incidents->[0]->{'false_positive'} == 0 &&
 						!defined($incidents->[0]->{'end'}))
 				{
-					if ($incidents->[0]->{'false_positive'} == 0 and not defined($incidents->[0]->{'end'}))
-					{
-						$alarmed_status = JSON_VALUE_ALARMED_YES;
-						$json_state_ref->{'status'} = JSON_VALUE_DOWN;
-					}
+					$alarmed_status = JSON_VALUE_ALARMED_YES;
 				}
 				else
 				{
@@ -2653,7 +2607,7 @@ sub __get_config_minclock
 
 	# todo phase 1: remove moving 1 day back, this was needed for Data Export, not SLA API!
 	# move a day back since this is collected once a day
-	#$minclock -= 86400;$from
+	#$minclock -= 86400;
 
 	return truncate_from($minclock);
 }
