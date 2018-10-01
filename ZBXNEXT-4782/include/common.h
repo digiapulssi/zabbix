@@ -735,7 +735,8 @@ while (0)
 
 #define THIS_SHOULD_NEVER_HAPPEN	zbx_error("ERROR [file:%s,line:%d] "				\
 							"Something impossible has just happened.",	\
-							__FILE__, __LINE__)
+							__FILE__, __LINE__);				\
+					zbx_backtrace();
 
 #define MIN_ZABBIX_PORT 1024u
 #define MAX_ZABBIX_PORT 65535u
@@ -1002,6 +1003,7 @@ int	is_ip(const char *ip);
 int	zbx_validate_hostname(const char *hostname);
 
 void	zbx_on_exit(void); /* calls exit() at the end! */
+void	zbx_backtrace(void);
 
 int	int_in_list(char *list, int value);
 int	ip_in_list(const char *list, const char *ip);
