@@ -17,9 +17,12 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 var cookie = {
 	cookies: [],
 	prefix:	null,
+	// Encoding valus separated by a comma (%2C), makes the cookie very large in size. A dot, however remains a dot.
+	delimiter: '.',
 
 	init: function() {
 		var allCookies = document.cookie.split('; ');
@@ -70,7 +73,7 @@ var cookie = {
 				curr_value = value[i];
 
 			if (!is_last) {
-				curr_value += ',';
+				curr_value += this.delimiter;
 			}
 
 			var curr_length = encodeURIComponent(curr_value).length;
@@ -153,7 +156,7 @@ var cookie = {
 			list_part = this.read(name + '_' + part);
 			part++;
 		}
-		var range = (list != '') ? list.split(',') : [];
+		var range = (list != '') ? list.split(this.delimiter) : [];
 		return range;
 	},
 
