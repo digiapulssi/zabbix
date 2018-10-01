@@ -71,48 +71,51 @@ foreach ($data['functions'] as $id => $function) {
 
 $expressionFormList->addRow(_('Function'), $function_combobox);
 
-if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) {
+if (array_key_exists('params', $data['functions'][$data['selectedFunction']])) {
 	$paramid = 0;
-	foreach ($this->data['functions'][$this->data['selectedFunction']]['params'] as $param_name => $paramFunction) {
-		if (array_key_exists($param_name, $this->data['params'])) {
-			$paramValue = $this->data['params'][$param_name];
+
+	foreach ($data['functions'][$data['selectedFunction']]['params'] as $param_name => $param_function) {
+		if (array_key_exists($param_name, $data['params'])) {
+			$param_value = $data['params'][$param_name];
 		}
 		else {
-			$paramValue = array_key_exists($paramid, $this->data['params']) ? $this->data['params'][$paramid] : null;
+			$param_value = array_key_exists($paramid, $data['params']) ? $data['params'][$paramid] : null;
 		}
 
-		if ($paramFunction['T'] == T_ZBX_INT) {
-			$paramTypeElement = null;
+		if ($param_function['T'] == T_ZBX_INT) {
+			$param_type_element = null;
 
 			if (in_array($param_name, ['last'])) {
-				if ($this->data['paramtype'] == PARAM_TYPE_COUNTS && $paramValue[0] === '#') {
-					$paramValue = substr($paramValue, 1);
+				if ($data['paramtype'] == PARAM_TYPE_COUNTS && $param_value[0] === '#') {
+					$param_value = substr($param_value, 1);
 				}
-				if (isset($paramFunction['M'])) {
-					$paramTypeElement = new CComboBox('paramtype', $this->data['paramtype'], null, $paramFunction['M']);
+				if (array_key_exists('M', $param_function)) {
+					$param_type_element = new CComboBox('paramtype', $data['paramtype'], null, $param_function['M']);
 				}
 				else {
 					$expressionForm->addItem((new CVar('paramtype', PARAM_TYPE_TIME))->removeId());
-					$paramTypeElement = _('Time');
+					$param_type_element = _('Time');
 				}
 			}
 			elseif (in_array($param_name, ['shift'])) {
-				$paramTypeElement = _('Time');
+				$param_type_element = _('Time');
 			}
-			$paramField = (new CTextBox('params['.$param_name.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
 
-			$expressionFormList->addRow($paramFunction['C'], [
-				$paramField,
+			$param_field = (new CTextBox('params['.$param_name.']', $param_value))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
+
+			$expressionFormList->addRow($param_function['C'], [
+				$param_field,
 				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-				$paramTypeElement
+				$param_type_element
 			]);
 		}
 		else {
-			$expressionFormList->addRow($paramFunction['C'],
-				(new CTextBox('params['.$param_name.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
+			$expressionFormList->addRow($param_function['C'],
+				(new CTextBox('params['.$param_name.']', $param_value))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			);
 			$expressionForm->addItem((new CVar('paramtype', PARAM_TYPE_TIME))->removeId());
 		}
+
 		$paramid++;
 	}
 }
