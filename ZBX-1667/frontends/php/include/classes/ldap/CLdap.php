@@ -72,7 +72,7 @@ class CLdap {
 
 		// set protocol version and dependend options
 		if ($this->cnf['version']) {
-			if (!ldap_set_option($this->ds, LDAP_OPT_PROTOCOL_VERSION, $this->cnf['version'])) {
+			if (!@ldap_set_option($this->ds, LDAP_OPT_PROTOCOL_VERSION, $this->cnf['version'])) {
 				error('Setting LDAP Protocol version '.$this->cnf['version'].' failed.');
 			}
 			else {
