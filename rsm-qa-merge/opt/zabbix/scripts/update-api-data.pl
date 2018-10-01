@@ -430,7 +430,7 @@ foreach (@server_keys)
 					$service_till = cycle_end($till - $delay, $delay);
 				}
 
-				if (tld_service_enabled($tld, $service, $service_from, $service_till) != SUCCESS)
+				if (!tld_service_enabled($tld, $service, $service_from, $service_till))
 				{
 					if (opt('dry-run'))
 					{
