@@ -701,6 +701,7 @@ void	*__zbx_mem_malloc(const char *file, int line, zbx_mem_info_t *info, const v
 		zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] %s(): please increase %s configuration parameter",
 				file, line, __function_name, info->mem_param);
 		zbx_mem_dump_stats(LOG_LEVEL_CRIT, info);
+		zbx_backtrace();
 		exit(EXIT_FAILURE);
 	}
 
@@ -739,6 +740,7 @@ void	*__zbx_mem_realloc(const char *file, int line, zbx_mem_info_t *info, void *
 		zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] %s(): please increase %s configuration parameter",
 				file, line, __function_name, info->mem_param);
 		zbx_mem_dump_stats(LOG_LEVEL_CRIT, info);
+		zbx_backtrace();
 		exit(EXIT_FAILURE);
 	}
 

@@ -24,5 +24,6 @@
 
 const char	*get_signal_name(int sig);
 void		print_fatal_info(int sig, siginfo_t *siginfo, void *context);
+void		zbx_backtrace(void);
 
 #endif
