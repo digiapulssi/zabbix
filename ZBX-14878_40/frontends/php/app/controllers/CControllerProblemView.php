@@ -320,7 +320,6 @@ class CControllerProblemView extends CController {
 				'show_suppressed' => CProfile::get('web.problem.filter.show_suppressed', 0),
 				'unacknowledged' => CProfile::get('web.problem.filter.unacknowledged', 0),
 				'compact_view' => CProfile::get('web.problem.filter.compact_view', 0),
-
 				'details' => CProfile::get('web.problem.filter.details', 0),
 				'highlight_row' => CProfile::get('web.problem.filter.highlight_row', 0)
 			],
