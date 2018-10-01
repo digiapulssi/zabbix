@@ -21,6 +21,89 @@
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
 class testPageOverview extends CWebTest {
+
+	public function getSuppressedProblemsData() {
+		return [
+			[
+				[
+					'group' => 'Group for problem suppression test',
+					'type' => 'Triggers',
+					'show_suppressed' => true,
+					'result_host' => 'Host for suppression',
+					'result_trigger' => 'Trigger for suppression'
+				]
+			],
+			[
+				[
+					'group' => 'Group for problem suppression test',
+					'type' => 'Triggers',
+					'show_suppressed' => false,
+					'no_result' => 'No data found.'
+
+				]
+			],
+			[
+				[
+					'group' => 'Group for problem suppression test',
+					'type' => 'Data',
+					'show_suppressed' => true,
+					'result_host' => 'Host for suppression',
+					'result_item' => 'Trapper for suppression'
+				]
+			],
+			[
+				[
+					'group' => 'Group for problem suppression test',
+					'type' => 'Data',
+					'show_suppressed' => false,
+					'result' => 'No data found.',
+					'result_host' => 'Host for suppression',
+					'result_item' => 'Trapper for suppression'
+				]
+			]
+		];
+	}
+
+	/**
+	 *
+	 * @dataProvider getSuppressedProblemsData
+	 */
+	public function testPageOverview_SuppressedProblems($data) {
+		$this->zbxTestLogin('overview.php');
+		$this->zbxTestClickButtonText('Reset');
+		$this->zbxTestDropdownSelect('groupid', $data['group']);
+		$this->zbxTestDropdownSelect('type', $data['type']);
+		$this->zbxTestCheckboxSelect('show_suppressed', $data['show_suppressed']);
+		$this->zbxTestClickButtonText('Apply');
+
+		if ($data['type'] == 'Triggers'){
+
+			if ($data['show_suppressed'] == true){
+				$this->zbxTestAssertElementPresentXpath('.//th/a[text()="'.$data['result_host'].'"]');
+				$this->zbxTestAssertElementPresentXpath('.//div[@class="vertical_rotation_inner"][text()="'.$data['result_trigger'].'"]');
+				$this->zbxTestAssertElementPresentXpath('.//table[@class="list-table"]//td[contains(@class, average-bg)]');
+			}
+
+			if ($data['show_suppressed'] == false){
+				$this->zbxTestAssertElementPresentXpath('.//tr[@class="nothing-to-show"]/td[text()="'.$data['no_result'].'"]');
+			}
+
+		} else {
+
+			if ($data['show_suppressed'] == true){
+				$this->zbxTestAssertElementPresentXpath('.//th/a[text()="'.$data['result_host'].'"]');
+				$this->zbxTestAssertElementPresentXpath('.//div[@class="vertical_rotation_inner"][text()="'.$data['result_item'].'"]');
+				$this->zbxTestAssertElementPresentXpath('.//table[@class="list-table"]//td[@class="average-bg cursor-pointer nowrap"]');
+			}
+
+			if ($data['show_suppressed'] == false){
+				$this->zbxTestAssertElementPresentXpath('.//th/a[text()="'.$data['result_host'].'"]');
+				$this->zbxTestAssertElementPresentXpath('.//div[@class="vertical_rotation_inner"][text()="'.$data['result_item'].'"]');
+				$this->zbxTestAssertElementPresentXpath('.//table[@class="list-table"]//td[@class="cursor-pointer nowrap"]');
+			}
+		}
+	}
+
 	public function testPageOverview_CheckLayout() {
 		$this->zbxTestLogin('overview.php');
 		$this->zbxTestCheckTitle('Overview [refreshed every 30 sec.]');
