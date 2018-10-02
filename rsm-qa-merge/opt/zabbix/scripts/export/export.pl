@@ -278,7 +278,17 @@ foreach my $tld_for_a_child_to_process (@{$tlds_ref})
 {
 		goto WAIT_CHILDREN if ($child_failed);	# break from both server and TLD loops
 
-		$fm->start() and next;	# start a new child and send parent to the next iteration
+		
+		my $pid;
+
+		# start a new child and send parent to the next iteration
+
+		if (($pid = $fm->start()))
+		{
+			$tldmap{$pid} = $tld_for_a_child_to_process;
+
+			next;
+		}
 
 		$tld = $tld_for_a_child_to_process;
 
