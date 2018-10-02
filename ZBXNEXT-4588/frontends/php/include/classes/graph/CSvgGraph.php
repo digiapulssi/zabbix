@@ -544,6 +544,17 @@ class CSvgGraph extends CSvg {
 			}
 		}
 
+		// If all displayed values are on same height, this position should be vertically centered.
+		if ($this->left_y_min == $this->left_y_max) {
+			$this->left_y_min -= 0.1;
+			$this->left_y_max += 0.1;
+		}
+
+		if ($this->right_y_min == $this->right_y_max) {
+			$this->right_y_min -= 0.1;
+			$this->right_y_max += 0.1;
+		}
+
 		// Define canvas dimensions and offsets, except canvas height and bottom offset.
 		$approx_width = 10;
 
@@ -670,6 +681,7 @@ class CSvgGraph extends CSvg {
 	protected function getValueGrid($min, $max) {
 		$res = [];
 
+		$grid_rows = (abs($min) == abs($max)) ? 4 : 5;
 		$decimals = strlen(substr(strrchr($max, '.'), 1));
 		$decimals = $decimals > 4 ? 4 : $decimals;
 		$decimals = $decimals < 2 ? 2 : $decimals;
@@ -682,7 +694,7 @@ class CSvgGraph extends CSvg {
 
 			if ($mul >= 1) {
 				if ($delta) {
-					for($i = 0; $delta >= $i; $i += $delta / 5) {
+					for ($i = 0; $delta >= $i; $i += $delta / $grid_rows) {
 						$res[] = sprintf('%.'.$decimals.'f', $i + $min10);
 					}
 				}
