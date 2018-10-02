@@ -165,10 +165,10 @@ class CControllerWidgetGraphView extends CControllerWidget {
 
 				// get graph
 				$graph = API::Graph()->get([
-					'graphids' => $resourceid,
 					'output' => API_OUTPUT_EXTEND,
-					'selectHosts' => ['hostid'],
 					'selectGraphItems' => API_OUTPUT_EXTEND,
+					'selectHosts' => ['hostid'],
+					'graphids' => $resourceid,
 					'expandName' => true
 				]);
 				$graph = reset($graph);
@@ -248,9 +248,9 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH) {
 				// get graph, used below
 				$graph = API::Graph()->get([
-					'graphids' => $resourceid,
 					'output' => API_OUTPUT_EXTEND,
 					'selectHosts' => ['name'],
+					'graphids' => $resourceid,
 					'expandName' => true
 				]);
 				$graph = reset($graph);
