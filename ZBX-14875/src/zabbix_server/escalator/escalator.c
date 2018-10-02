@@ -1213,7 +1213,6 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 	ZBX_USER_MSG	*user_msg = NULL;
 	zbx_uint64_t	operationid;
 	unsigned char	operationtype, evaltype, operations = 0;
-	char		*tmp = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1243,10 +1242,12 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		char	*tmp;
+
 		ZBX_STR2UINT64(operationid, row[0]);
 		operationtype = (unsigned char)atoi(row[1]);
 
-		tmp = zbx_strdup(tmp, row[2]);
+		tmp = zbx_strdup(NULL, row[2]);
 		substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &tmp, MACRO_TYPE_COMMON,
 				NULL, 0);
 		if (SUCCEED != is_time_suffix(tmp, &esc_period, ZBX_LENGTH_UNLIMITED))
@@ -1305,6 +1306,7 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 			zabbix_log(LOG_LEVEL_DEBUG, "Conditions do not match our event. Do not execute operation.");
 
 		operations = 1;
+		zbx_free(tmp);
 	}
 	DBfree_result(result);
 
@@ -1346,8 +1348,6 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 	/* schedule nextcheck for sleeping escalations */
 	if (ESCALATION_STATUS_SLEEP == escalation->status)
 		escalation->nextcheck = time(NULL) + SEC_PER_MIN;
-
-	zbx_free(tmp);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
