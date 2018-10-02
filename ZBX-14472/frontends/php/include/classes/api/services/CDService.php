@@ -260,14 +260,15 @@ class CDService extends CApiService {
 				// discovered items
 				$dbRules = DBselect(
 					'SELECT ds.dserviceid,i.hostid'.
-						' FROM dservices ds '.
-						' INNER JOIN interface i ON ds.ip=i.ip '.
-						' LEFT OUTER JOIN hosts ht ON ht.hostid = i.hostid '.
-						' LEFT OUTER JOIN dhosts dh ON dh.dhostid = ds.dhostid '.
-						' LEFT OUTER JOIN drules dr ON dr.druleid = dh.druleid '.
-						' LEFT OUTER JOIN hosts h ON h.proxy_hostid = dr.proxy_hostid and i.hostid = h.hostid '.
-						' WHERE '.dbConditionInt('ds.dserviceid', $dserviceIds).
-						'  AND (i.hostid = h.hostid OR (ht.proxy_hostid is null AND dr.proxy_hostid is null))'
+					' FROM dservices ds'.
+					' JOIN interface i ON ds.ip=i.ip'.
+					' JOIN hosts ih ON ih.hostid=i.hostid'.
+					' JOIN dhosts dh ON dh.dhostid=ds.dhostid'.
+					' JOIN drules dr ON dr.druleid=dh.druleid'.
+					' WHERE '.dbConditionInt('ds.dserviceid', $dserviceIds).
+						' AND (dr.proxy_hostid=ih.proxy_hostid'.
+							' OR (ih.proxy_hostid is null AND dr.proxy_hostid is null)'.
+						')'
 				);
 				while ($rule = DBfetch($dbRules)) {
 					$relationMap->addRelation($rule['dserviceid'], $rule['hostid']);
