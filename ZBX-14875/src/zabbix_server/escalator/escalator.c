@@ -1334,7 +1334,6 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 		{
 			escalation->status = ESCALATION_STATUS_SLEEP;
 			escalation->nextcheck = time(NULL) + SEC_PER_MIN;
-
 		}
 		else
 			escalation->status = ESCALATION_STATUS_COMPLETED;
