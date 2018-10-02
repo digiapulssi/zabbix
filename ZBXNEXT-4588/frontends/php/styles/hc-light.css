@@ -3870,6 +3870,7 @@ svg {
 .overrides-list {
   display: table;
   width: 90%;
+  max-width: 738px;
   padding-left: 15px; }
   .overrides-list .overrides-list-item {
     display: table-row; }
