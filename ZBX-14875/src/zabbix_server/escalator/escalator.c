@@ -1217,41 +1217,24 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (0 == action->esc_period)
-	{
-		result = DBselect(
-				"select o.operationid,o.operationtype,o.esc_period,o.evaltype,"
-					"m.operationid,m.default_msg,m.subject,m.message,m.mediatypeid"
-				" from operations o"
-					" left join opmessage m"
-						" on m.operationid=o.operationid"
-				" where o.actionid=" ZBX_FS_UI64
-					" and o.operationtype in (%d,%d)"
-					" and o.recovery=%d",
-				action->actionid,
-				OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND, ZBX_OPERATION_MODE_NORMAL);
-	}
-	else
-	{
-		escalation->esc_step++;
+	escalation->esc_step++;
 
-		result = DBselect(
-				"select o.operationid,o.operationtype,o.esc_period,o.evaltype,"
-					"m.operationid,m.default_msg,m.subject,m.message,m.mediatypeid"
-				" from operations o"
-					" left join opmessage m"
-						" on m.operationid=o.operationid"
-				" where o.actionid=" ZBX_FS_UI64
-					" and o.operationtype in (%d,%d)"
-					" and o.esc_step_from<=%d"
-					" and (o.esc_step_to=0 or o.esc_step_to>=%d)"
-					" and o.recovery=%d",
-				action->actionid,
-				OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND,
-				escalation->esc_step,
-				escalation->esc_step,
-				ZBX_OPERATION_MODE_NORMAL);
-	}
+	result = DBselect(
+			"select o.operationid,o.operationtype,o.esc_period,o.evaltype,"
+				"m.operationid,m.default_msg,m.subject,m.message,m.mediatypeid"
+			" from operations o"
+				" left join opmessage m"
+					" on m.operationid=o.operationid"
+			" where o.actionid=" ZBX_FS_UI64
+				" and o.operationtype in (%d,%d)"
+				" and o.esc_step_from<=%d"
+				" and (o.esc_step_to=0 or o.esc_step_to>=%d)"
+				" and o.recovery=%d",
+			action->actionid,
+			OPERATION_TYPE_MESSAGE, OPERATION_TYPE_COMMAND,
+			escalation->esc_step,
+			escalation->esc_step,
+			ZBX_OPERATION_MODE_NORMAL);
 
 	while (NULL != (row = DBfetch(result)))
 	{
