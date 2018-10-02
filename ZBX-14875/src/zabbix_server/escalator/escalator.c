@@ -1340,14 +1340,15 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 		}
 		else
 		{
-			escalation->status = (ZBX_ACTION_RECOVERY_OPERATIONS == action->recovery ?
-					ESCALATION_STATUS_SLEEP : ESCALATION_STATUS_COMPLETED);
+			if (ZBX_ACTION_RECOVERY_OPERATIONS == action->recovery)
+			{
+				escalation->status = ESCALATION_STATUS_SLEEP;
+				escalation->nextcheck = time(NULL) + SEC_PER_MIN;
+			}
+			else
+				escalation->status = ESCALATION_STATUS_COMPLETED;
 		}
 	}
-
-	/* schedule nextcheck for sleeping escalations */
-	if (ESCALATION_STATUS_SLEEP == escalation->status)
-		escalation->nextcheck = time(NULL) + SEC_PER_MIN;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
