@@ -1209,13 +1209,18 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 	const char	*__function_name = "escalation_execute_operations";
 	DB_RESULT	result;
 	DB_ROW		row;
-	int		next_esc_period = 0, esc_period;
+	int		next_esc_period = 0, esc_period, default_esc_period;
 	ZBX_USER_MSG	*user_msg = NULL;
 	zbx_uint64_t	operationid;
 	unsigned char	operationtype, evaltype, operations = 0;
 	char		*tmp = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	if (0 == action->esc_period)
+		default_esc_period = SEC_PER_HOUR;
+	else
+		default_esc_period = action->esc_period;
 
 	escalation->esc_step++;
 
@@ -1254,7 +1259,7 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 		evaltype = (unsigned char)atoi(row[3]);
 
 		if (0 == esc_period)
-			esc_period = action->esc_period;
+			esc_period = default_esc_period;
 
 		if (0 == next_esc_period || next_esc_period > esc_period)
 			next_esc_period = esc_period;
@@ -1305,10 +1310,9 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 
 	flush_user_msg(&user_msg, escalation->esc_step, event, NULL, action->actionid);
 
-	if (0 == action->esc_period)
+	if (EVENT_SOURCE_DISCOVERY == action->eventsource || EVENT_SOURCE_AUTO_REGISTRATION == action->eventsource)
 	{
-		escalation->status = (ZBX_ACTION_RECOVERY_OPERATIONS == action->recovery ? ESCALATION_STATUS_SLEEP :
-				ESCALATION_STATUS_COMPLETED);
+		escalation->status = ESCALATION_STATUS_COMPLETED;
 	}
 	else
 	{
@@ -1329,7 +1333,7 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 
 		if (1 == operations)
 		{
-			next_esc_period = (0 != next_esc_period) ? next_esc_period : action->esc_period;
+			next_esc_period = (0 != next_esc_period) ? next_esc_period : default_esc_period;
 			escalation->nextcheck = time(NULL) + next_esc_period;
 		}
 		else
