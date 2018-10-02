@@ -1216,11 +1216,7 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (0 == action->esc_period)
-		default_esc_period = SEC_PER_HOUR;
-	else
-		default_esc_period = action->esc_period;
-
+	default_esc_period = 0 == action->esc_period ? SEC_PER_HOUR : action->esc_period;
 	escalation->esc_step++;
 
 	result = DBselect(
