@@ -1312,11 +1312,7 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 
 	flush_user_msg(&user_msg, escalation->esc_step, event, NULL, action->actionid);
 
-	if (EVENT_SOURCE_DISCOVERY == action->eventsource || EVENT_SOURCE_AUTO_REGISTRATION == action->eventsource)
-	{
-		escalation->status = ESCALATION_STATUS_COMPLETED;
-	}
-	else
+	if (EVENT_SOURCE_TRIGGERS == action->eventsource || EVENT_SOURCE_INTERNAL == action->eventsource)
 	{
 		if (0 == operations)
 		{
@@ -1338,17 +1334,17 @@ static void	escalation_execute_operations(DB_ESCALATION *escalation, const DB_EV
 			next_esc_period = (0 != next_esc_period) ? next_esc_period : default_esc_period;
 			escalation->nextcheck = time(NULL) + next_esc_period;
 		}
-		else
+		else if (ZBX_ACTION_RECOVERY_OPERATIONS == action->recovery)
 		{
-			if (ZBX_ACTION_RECOVERY_OPERATIONS == action->recovery)
-			{
-				escalation->status = ESCALATION_STATUS_SLEEP;
-				escalation->nextcheck = time(NULL) + SEC_PER_MIN;
-			}
-			else
-				escalation->status = ESCALATION_STATUS_COMPLETED;
+			escalation->status = ESCALATION_STATUS_SLEEP;
+			escalation->nextcheck = time(NULL) + SEC_PER_MIN;
+
 		}
+		else
+			escalation->status = ESCALATION_STATUS_COMPLETED;
 	}
+	else
+		escalation->status = ESCALATION_STATUS_COMPLETED;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
