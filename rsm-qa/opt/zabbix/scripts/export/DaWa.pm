@@ -151,7 +151,7 @@ sub dw_get_id
 	return $_csv_catalogs{$id_type}{$name} if ($_csv_catalogs{$id_type}{$name});
 
 	# LOCK
-	__slv_lock();
+	__slv_lock() unless (opt('dry-run'));
 
 	# search for ID in the database, it might have been added by other process
 	my $rows_ref = db_select("select id from rsm_$id_type where name='$name'");
@@ -159,7 +159,7 @@ sub dw_get_id
 	if (scalar(@{$rows_ref}) > 1)
 	{
 		# UNLOCK
-		__slv_unlock();
+		__slv_unlock() unless (opt('dry-run'));
 		fail("THIS_SHOULD_NEVER_HAPPEN: more than one \"$name\" record in table \"rsm_$id_type\"");
 	}
 
@@ -174,7 +174,7 @@ sub dw_get_id
 	}
 
 	# UNLOCK
-	__slv_unlock();
+	__slv_unlock() unless (opt('dry-run'));
 
 	fail("ID overflow of catalog \"$id_type\": $id") unless (__dw_check_id($id_type, $id) == SUCCESS);
 

@@ -48,7 +48,7 @@ sub __no_status_result($$$$$;$);
 sub __get_probe_statuses($$$$$;$);
 sub __get_status_itemids($$);
 
-parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'maxproc=n');
+parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'max-children=n', 'server-key=s');
 
 # do not write any logs
 setopt('nolog');
@@ -73,7 +73,7 @@ if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_TMP_DIR, AH_BASE_DIR)
 my $config = get_rsm_config();
 set_slv_config($config);
 
-my @server_keys = get_rsm_server_keys($config);
+my @server_keys = (opt('server-key') ? getopt('server-key') : get_rsm_server_keys($config));
 
 db_connect();
 
@@ -268,6 +268,8 @@ foreach my $service (keys(%services))
 
 	$services{$service}{'avail_key'} = "rsm.slv.$service.avail";
 	$services{$service}{'rollweek_key'} = "rsm.slv.$service.rollweek";
+
+	dbg("$service delay: ", $services{$service}{'delay'});
 }
 
 my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 1);	# consider last cycle
@@ -275,6 +277,11 @@ my ($from, $till) = get_real_services_period(\%services, $check_from, $check_til
 if (opt('print-period'))
 {
 	info("selected period: ", selected_period($from, $till));
+	foreach my $service (keys(%services))
+	{
+		next if (!defined($services{$service}{'from'}));
+		info("  $service\t: ", selected_period($services{$service}{'from'}, $services{$service}{'till'}));
+	}
 }
 else
 {
@@ -288,7 +295,7 @@ if (!$from)
 	slv_exit(SUCCESS);
 }
 
-my $fm = new Parallel::ForkManager(opt('maxproc') ? getopt('maxproc') : 64);
+my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
 
 # go through all the databases
 foreach (@server_keys)
@@ -380,16 +387,50 @@ foreach (@server_keys)
 
 			my $ah_tld = ah_get_api_tld($tld);
 
+			my $state_file_exists;
 			my $json_state_ref;
 
-			$json_state_ref->{'tld'} = $tld;
-			$json_state_ref->{'status'} = JSON_VALUE_UP;
-			$json_state_ref->{'testedServices'} = {};
+			# for services that we do not process at this time
+			# (e. g. RDDS) keep their current state
+			if (ah_state_file_json($tld, \$json_state_ref) != AH_SUCCESS)
+			{
+				# if there is no state file we need to consider full
+				# cycle for each of the services to get correct states
+
+				$state_file_exists = 0;
+
+				$json_state_ref->{'tld'} = $tld;
+				$json_state_ref->{'testedServices'} = {};
+			}
+			else
+			{
+				$state_file_exists = 1;
+			}
 
 			# find out which services are disabled, for others get lastclock
 			foreach my $service (keys(%services))
 			{
-				if (!tld_service_enabled($tld, $service, $from, $till))
+				my $service_from = $services{$service}{'from'};
+				my $service_till = $services{$service}{'till'};
+
+				my $delay = $services{$service}{'delay'};
+
+				my $avail_key = $services{$service}{'avail_key'};
+				my $rollweek_key = $services{$service}{'rollweek_key'};
+
+				# not the right time for this service/delay yet
+				if (!$service_from || !$service_till)
+				{
+					next unless ($state_file_exists == 0);
+
+					dbg("$service: there is no state file, consider previous cycle");
+
+					# but since there is no state file we need to consider previous cycle
+					$service_from = cycle_start($till - $delay, $delay);
+					$service_till = cycle_end($till - $delay, $delay);
+				}
+
+				if (!tld_service_enabled($tld, $service, $service_from, $service_till))
 				{
 					if (opt('dry-run'))
 					{
@@ -465,17 +506,6 @@ foreach (@server_keys)
 				}
 
 				dbg("lastclock:$lastclock");
-
-				my $delay = $services{$service}{'delay'};
-				my $service_from = $services{$service}{'from'};
-				my $service_till = $services{$service}{'till'};
-				my $avail_key = $services{$service}{'avail_key'};
-				my $rollweek_key = $services{$service}{'rollweek_key'};
-
-				if (!$service_from || !$service_till)
-				{
-					fail("INTERNAL ERROR, CANNOT CONTINUE WITHOUT DEFINED SERVICE CYCLE PERIOD");
-				}
 
 				my $hostid = get_hostid($tld);
 				my $avail_itemid = get_itemid_by_hostid($hostid, $avail_key);
@@ -583,7 +613,6 @@ foreach (@server_keys)
 						!defined($incidents->[0]->{'end'}))
 				{
 					$alarmed_status = JSON_VALUE_ALARMED_YES;
-					$json_state_ref->{'status'} = JSON_VALUE_DOWN;
 				}
 				else
 				{
@@ -1235,6 +1264,17 @@ foreach (@server_keys)
 					);
 				}
 			} # foreach my $service
+
+			# finally, set TLD state
+			$json_state_ref->{'status'} = JSON_VALUE_UP;
+			foreach my $service (values(%{$json_state_ref->{'testedServices'}}))
+			{
+				if ($service->{'status'} eq JSON_VALUE_DOWN)
+				{
+					$json_state_ref->{'status'} = JSON_VALUE_DOWN;
+					last;
+				}
+			}
 
 			if (ah_save_state($ah_tld, $json_state_ref) != AH_SUCCESS)
 			{
@@ -2644,6 +2684,14 @@ Print data to the screen, do not write anything to the filesystem.
 
 Issue a warning in case an SQL query takes more than specified number of seconds. A floating-point number
 is supported as seconds (i. e. 0.5, 1, 1.5 are valid).
+
+=item B<--server-key> key
+
+Specify the key of the server to handle (e. g. server_2). It must be listed in rsm.conf .
+
+=item B<--max-children> n
+
+Specify maximum number of child processes to run in parallel.
 
 =item B<--debug>
 
