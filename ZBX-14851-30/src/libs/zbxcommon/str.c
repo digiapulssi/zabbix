@@ -2651,13 +2651,13 @@ size_t	zbx_strlen_utf8(const char *text)
 size_t	zbx_utf8_char_len(const char *text)
 {
 	if (0 == (*text & 0x80))		/* ASCII */
-		return 1;
+		return ZBX_UTF8_CHAR1;
 	else if (0xc0 == (*text & 0xe0))	/* 11000010-11011111 starts a 2-byte sequence */
-		return 2;
+		return ZBX_UTF8_CHAR2;
 	else if (0xe0 == (*text & 0xf0))	/* 11100000-11101111 starts a 3-byte sequence */
-		return 3;
+		return ZBX_UTF8_CHAR3;
 	else if (0xf0 == (*text & 0xf8))	/* 11110000-11110100 starts a 4-byte sequence */
-		return 4;
+		return ZBX_UTF8_CHAR4;
 	return 0;				/* not a valid UTF-8 character */
 }
 
