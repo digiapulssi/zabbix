@@ -22,7 +22,7 @@ $auditWidget = (new CWidget())->setTitle(_('Audit log'));
 
 // header
 // create filter
-$filterForm = new CFilter('web.auditlogs.filter.state');
+$filterForm = new CFilter('web.auditlogs.filter.state', new CUrl('auditlogs.php'));
 
 $filterColumn = new CFormList();
 $filterColumn->addRow(_('User'), [

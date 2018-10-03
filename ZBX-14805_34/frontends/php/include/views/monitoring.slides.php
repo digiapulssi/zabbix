@@ -93,7 +93,7 @@ $controls
 $header->addItem($controls);
 $widget->setControls($header);
 
-$filter = (new CFilter('web.slides.filter.state'))->addNavigator();
+$filter = (new CFilter('web.slides.filter.state', new CUrl()))->addNavigator();
 $widget->addItem($filter);
 
 $widget->addItem(

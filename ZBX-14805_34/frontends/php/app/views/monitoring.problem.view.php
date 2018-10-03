@@ -242,7 +242,11 @@ if ($data['action'] == 'problem.view') {
 	$filter_column2
 		->addRow(_('Show details'), (new CCheckBox('filter_details'))->setChecked($data['filter']['details'] == 1));
 
-	$filter = (new CFilter('web.problem.filter.state'))
+	$filter = (new CFilter('web.problem.filter.state',
+		(new CUrl('zabbix.php'))
+			->setArgument('action', 'problem.view')
+			->setArgument('fullscreen', $data['fullscreen'])
+	))
 		->addVar('action', 'problem.view')
 		->addVar('fullscreen', $data['fullscreen'])
 		->addVar('page', $data['page'])

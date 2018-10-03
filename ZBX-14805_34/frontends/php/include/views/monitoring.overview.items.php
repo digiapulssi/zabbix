@@ -69,8 +69,10 @@ $widget = (new CWidget())
 	);
 
 // filter
-$filter = (new CFilter('web.overview.filter.state'))
-	->addVar('fullscreen', $this->data['fullscreen']);
+$filter = (new CFilter('web.overview.filter.state',
+	(new CUrl('overview.php'))->setArgument('fullscreen', $data['fullscreen'])
+))
+	->addVar('fullscreen', $data['fullscreen']);
 
 $column = new CFormList();
 

@@ -31,7 +31,7 @@ $hostInventoryWidget = (new CWidget())
 	);
 
 // filter
-$filterForm = new CFilter('web.hostinventories.filter.state');
+$filterForm = new CFilter('web.hostinventories.filter.state', new CUrl('hostinventories.php'));
 
 $filterColumn = new CFormList();
 
