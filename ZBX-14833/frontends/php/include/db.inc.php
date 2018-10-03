@@ -906,7 +906,6 @@ function dbConditionInt($fieldName, array $values, $notIn = false, $sort = true,
 
 	// concatenate conditions
 	$dataSize = count($data);
-	$betweenSize = count($betweens);
 
 	$condition = '';
 	$operatorAnd = $notIn ? ' AND ' : ' OR ';
@@ -915,7 +914,9 @@ function dbConditionInt($fieldName, array $values, $notIn = false, $sort = true,
 		$operatorNot = $notIn ? 'NOT ' : '';
 
 		foreach ($betweens as $between) {
-			$between = $operatorNot.$fieldName.' BETWEEN '.zbx_dbstr($between[0]).' AND '.zbx_dbstr(end($between));
+			$between = $quote
+				? $operatorNot.$fieldName.' BETWEEN '.zbx_dbstr($between[0]).' AND '.zbx_dbstr(end($between))
+				: $operatorNot.$fieldName.' BETWEEN '.$between[0].' AND '.end($between);
 
 			$condition .= ($condition !== '') ? $operatorAnd.$between : $between;
 		}
