@@ -114,6 +114,7 @@ ZBX_THREAD_ENTRY(preprocessing_worker_thread, args)
 	char			*error = NULL;
 	zbx_ipc_socket_t	socket;
 	zbx_ipc_message_t	message;
+	double			time_now, time_file = 0;
 
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
@@ -142,7 +143,12 @@ ZBX_THREAD_ENTRY(preprocessing_worker_thread, args)
 
 	for (;;)
 	{
-		zbx_handle_log();
+		/* handle log rotate less often than once a second */
+		if (1.0 < (time_now = zbx_time())- time_file)
+		{
+			time_file = time_now;
+			zbx_handle_log();
+		}
 
 		update_selfmon_counter(ZBX_PROCESS_STATE_IDLE);
 
