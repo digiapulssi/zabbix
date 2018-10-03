@@ -1,8 +1,27 @@
-Changes for 3.0.22rc1
+Changes for 3.0.23rc1
 
 New features:
 
 Bug fixes:
+..F....... [ZBX-14650] fixed web.page.regexp item parameters description (gcalenko)
+.......PS. [ZBX-14882] fixed crash in vmware collector when receiving invalid xml (vso)
+.......PS. [ZBX-14853] fixed error of vmware items caused by misconfigured vmware maxQueryMetrics parameter (MVekslers)
+..F....... [ZBX-14845] fixed filter in triggers status page not being reset when navigating from dashboard and host inventory (agriscenko)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.22
+
+3.0.22rc1 was released as 3.0.22 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.22rc1
+
+Bug fixes:
+..F....... [ZBX-14496] fixed unauthorized request error when sorting list after enabling/disabling elements (agriscenko)
+........S. [ZBX-14614] fixed server template linking with triggers having no dependencies (MVekslers)
+...G...... [ZBX-6565,ZBX-13645,ZBX-14559] fixed agent on AIX 6.1 TL0, 7.1 TL0: system.stat[memory,avm], compilation, crash on net.dns[] items (Andris)
+..F....... [ZBX-13015] fixed X axis labels with DST transition in the displayed period (Sasha)
+........S. [ZBX-14778] fixed housekeeper attempting to remove history of discovery rules/prototypes (wiper)
 .......PS. [ZBX-14775] fixed configuration of the maximum available count of aggregated metrics in a single request to vmware vCenter (MVekslers)
 ..F....... [ZBX-14676] fixed displaying links containing UTF-8 characters (Ivo)
 
