@@ -1,3 +1,20 @@
+Changes for 3.0.23rc1
+
+New features:
+
+Bug fixes:
+..F....... [ZBX-14727] fixed selection of data for trigger overview, data overview and graphs if first drop down entry is "none" (Ivo)
+..F....... [ZBX-14650] fixed web.page.regexp item parameters description (gcalenko)
+.......PS. [ZBX-14882] fixed crash in vmware collector when receiving invalid xml (vso)
+.......PS. [ZBX-14853] fixed error of vmware items caused by misconfigured vmware maxQueryMetrics parameter (MVekslers)
+..F....... [ZBX-14845] fixed filter in triggers status page not being reset when navigating from dashboard and host inventory (agriscenko)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.22
+
+3.0.22rc1 was released as 3.0.22 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.22rc1
 
 Bug fixes:
