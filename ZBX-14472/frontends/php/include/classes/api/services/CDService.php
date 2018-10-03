@@ -266,8 +266,12 @@ class CDService extends CApiService {
 					' JOIN dhosts dh ON dh.dhostid=ds.dhostid'.
 					' JOIN drules dr ON dr.druleid=dh.druleid'.
 					' WHERE '.dbConditionInt('ds.dserviceid', $dserviceIds).
-						' AND (dr.proxy_hostid=ih.proxy_hostid'.
-							' OR (ih.proxy_hostid is null AND dr.proxy_hostid is null)'.
+						' AND ('.
+							'dr.proxy_hostid=ih.proxy_hostid'.
+							' OR ('.
+								'ih.proxy_hostid is null'.
+								' AND dr.proxy_hostid is null'.
+							')'.
 						')'
 				);
 				while ($rule = DBfetch($dbRules)) {
