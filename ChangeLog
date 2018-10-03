@@ -3,7 +3,7 @@ Changes for 3.0.23rc1
 New features:
 
 Bug fixes:
-..F....... [ZBX-14727] fixed selection of data for trigger overview, data overview and graphs if fist drop down entry is "none" (Ivo)
+..F....... [ZBX-14727] fixed selection of data for trigger overview, data overview and graphs if first drop down entry is "none" (Ivo)
 ..F....... [ZBX-14650] fixed web.page.regexp item parameters description (gcalenko)
 .......PS. [ZBX-14882] fixed crash in vmware collector when receiving invalid xml (vso)
 .......PS. [ZBX-14853] fixed error of vmware items caused by misconfigured vmware maxQueryMetrics parameter (MVekslers)
