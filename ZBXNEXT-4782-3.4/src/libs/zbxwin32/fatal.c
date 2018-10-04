@@ -79,11 +79,6 @@ static void	print_register(const char *name, unsigned __int32 value)
 	zabbix_log(LOG_LEVEL_CRIT, "%-7s = %16lx = %20lu = %20ld", name, value, value, value);
 }
 
-void	zbx_backtrace(void)
-{
-	zabbix_log(LOG_LEVEL_CRIT, "backtrace is not available for this platform");
-}
-
 static void	print_fatal_info(CONTEXT *pctx)
 {
 	zabbix_log(LOG_LEVEL_CRIT, "====== Fatal information: ======");
@@ -109,6 +104,10 @@ static void	print_fatal_info(CONTEXT *pctx)
 
 typedef BOOL (WINAPI *SymGetLineFromAddrW64_func_t)(HANDLE, DWORD64, PDWORD, PIMAGEHLP_LINE64);
 typedef BOOL (WINAPI *SymFromAddr_func_t)(HANDLE a, DWORD64 b , PDWORD64 c, PSYMBOL_INFO d);
+
+void	zbx_backtrace(void)
+{
+}
 
 static void	print_backtrace(CONTEXT *pctx)
 {
