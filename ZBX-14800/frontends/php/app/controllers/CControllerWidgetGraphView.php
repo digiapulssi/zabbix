@@ -167,9 +167,8 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				$graph = API::Graph()->get([
 					'output' => API_OUTPUT_EXTEND,
 					'selectGraphItems' => API_OUTPUT_EXTEND,
-					'selectHosts' => ['hostid'],
-					'graphids' => $resourceid,
-					'expandName' => true
+					'selectHosts' => ['hostid', 'name'],
+					'graphids' => $resourceid
 				]);
 				$graph = reset($graph);
 
@@ -206,11 +205,11 @@ class CControllerWidgetGraphView extends CControllerWidget {
 							$graph['ymin_type'] = GRAPH_YAXIS_TYPE_CALCULATED;
 						}
 					}
-
-					$graph['hosts'] = $hosts;
 				}
 
 				if ($graph) {
+					$graph['hosts'] = $hosts;
+
 					// Search if there are any items available for this dynamic host.
 					$new_dynamic = getSameGraphItemsForHost(
 						$graph['gitems'],
@@ -218,7 +217,15 @@ class CControllerWidgetGraphView extends CControllerWidget {
 						false
 					);
 
-					if (!$new_dynamic) {
+					if ($new_dynamic) {
+						// Add destination host data required by CMacrosResolver::resolveGraphPositionalMacros().
+						$new_dynamic = reset($new_dynamic);
+						$new_dynamic['host'] = $host['name'];
+						$new_dynamic['hostid'] = $host['hostid'];
+
+						$graph['name'] = CMacrosResolverHelper::resolveGraphName($graph['name'], [$new_dynamic]);
+					}
+					else {
 						$unavailable_object = true;
 					}
 				}
