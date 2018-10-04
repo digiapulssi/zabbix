@@ -1,6 +1,7 @@
 Changes for 3.4.15rc1
 
 New features:
+.......PS. [ZBXNEXT-4782] improve out of memory error message by adding statistics and backtrace; improve something impossible has just happened error message by adding backtrace (vso)
 
 Bug fixes:
 ..F....... [ZBX-14811] fixed color of the host name in the title of the Screens (vasilijs)
@@ -1369,6 +1370,7 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 Changes for 3.0.23rc1
 
 New features:
+.......PS. [ZBXNEXT-4782] improve out of memory error message by adding statistics and backtrace; improve something impossible has just happened error message by adding backtrace (vso)
 
 Bug fixes:
 ..F....... [ZBX-14811] fixed color of the host name in the title of the Screens (vasilijs)
