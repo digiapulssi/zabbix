@@ -79,6 +79,11 @@ static void	print_register(const char *name, unsigned __int32 value)
 	zabbix_log(LOG_LEVEL_CRIT, "%-7s = %16lx = %20lu = %20ld", name, value, value, value);
 }
 
+void	zbx_backtrace(void)
+{
+	zabbix_log(LOG_LEVEL_CRIT, "backtrace is not available for this platform");
+}
+
 static void	print_fatal_info(CONTEXT *pctx)
 {
 	zabbix_log(LOG_LEVEL_CRIT, "====== Fatal information: ======");
