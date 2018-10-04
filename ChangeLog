@@ -3,6 +3,7 @@ Changes for 3.0.23rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-14689] fixed updating of the Graph list of host when selecting a group of hosts (vasilijs)
 ..F....... [ZBX-14803] fixed incorrect profile update causing page filter to sometimes show duplicate values (Ivo)
 ..F....... [ZBX-14727] fixed selection of data for trigger overview, data overview and graphs if first drop down entry is "none" (Ivo)
 ..F....... [ZBX-14650] fixed web.page.regexp item parameters description (gcalenko)
