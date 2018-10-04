@@ -27,6 +27,8 @@
 
 #ifndef HAVE_SQLITE3
 
+extern unsigned char program_type;
+
 static int	DBpatch_3040000(void)
 {
 	return SUCCEED;
@@ -90,16 +92,19 @@ static int	DBpatch_3040009(void)
 {
 	DB_ROW		row;
 	DB_RESULT	result;
-	int		ret = FAIL;
+	int		ret = SUCCEED;
 
-	/* MEDIA_TYPE_REMEDY - 101, MEDIA_TYPE_STATUS_ACTIVE- 0 */
-	result = DBselect("select mediatypeid from media_type where type=101 and status=0");
-	if (NULL != (row = DBfetch(result)))
+	if (ZBX_PROGRAM_TYPE_SERVER == program_type)
 	{
-		if (ZBX_DB_OK <= DBexecute("update ticket set mediatypeid=%s", row[0]))
-			ret = SUCCEED;
+		/* MEDIA_TYPE_REMEDY - 101, MEDIA_TYPE_STATUS_ACTIVE- 0 */
+		result = DBselect("select mediatypeid from media_type where type=101 and status=0");
+		if (NULL != (row = DBfetch(result)))
+		{
+			if (ZBX_DB_OK > DBexecute("update ticket set mediatypeid=%s", row[0]))
+				ret = FAIL;
+		}
+		DBfree_result(result);
 	}
-	DBfree_result(result);
 
 	return ret;
 }
