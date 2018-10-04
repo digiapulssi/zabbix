@@ -733,10 +733,14 @@ do				\
 }				\
 while (0)
 
-#define THIS_SHOULD_NEVER_HAPPEN	zbx_error("ERROR [file:%s,line:%d] "				\
-							"Something impossible has just happened.",	\
-							__FILE__, __LINE__);				\
-					zbx_backtrace();
+#define THIS_SHOULD_NEVER_HAPPEN										\
+														\
+do														\
+{														\
+	zbx_error("ERROR [file:%s,line:%d] Something impossible has just happened.", __FILE__, __LINE__);	\
+	zbx_backtrace();											\
+}														\
+while (0)
 
 #define MIN_ZABBIX_PORT 1024u
 #define MAX_ZABBIX_PORT 65535u
