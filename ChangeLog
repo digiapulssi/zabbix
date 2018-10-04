@@ -3,6 +3,7 @@ Changes for 3.0.23rc1
 New features:
 
 Bug fixes:
+..F....... [ZBX-14811] fixed color of the host name in the title of the Screens (vasilijs)
 ..F....... [ZBX-14776] fixed sorting when changing status of media type (vasilijs)
 ..F....... [ZBX-14757] fixed fields becoming writable upon form refresh in host prototype form (vmurzins)
 ..F....... [ZBX-14689] fixed updating of the Graph list of host when selecting a group of hosts (vasilijs)
