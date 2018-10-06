@@ -452,6 +452,9 @@ static void	zbx_set_defaults(void)
 
 	if (NULL == CONFIG_SOCKET_PATH)
 		CONFIG_SOCKET_PATH = zbx_strdup(CONFIG_SOCKET_PATH, "/tmp");
+
+	if (0 != CONFIG_IPMIPOLLER_FORKS)
+		CONFIG_IPMIMANAGER_FORKS = 1;
 }
 
 /******************************************************************************
@@ -1007,9 +1010,6 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	DCsync_configuration(ZBX_DBSYNC_INIT);
 
 	DBclose();
-
-	if (0 != CONFIG_IPMIPOLLER_FORKS)
-		CONFIG_IPMIMANAGER_FORKS = 1;
 
 	threads_num = CONFIG_CONFSYNCER_FORKS + CONFIG_POLLER_FORKS
 			+ CONFIG_UNREACHABLE_POLLER_FORKS + CONFIG_TRAPPER_FORKS + CONFIG_PINGER_FORKS
