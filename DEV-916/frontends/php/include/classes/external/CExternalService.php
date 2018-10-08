@@ -252,12 +252,12 @@ class CExternalService {
 	 * @return array
 	 */
 	protected static function getDetails(array $data) {
-		$ticketid = $data['externalid'];
-		$link = new CLink($ticketid, $data['url'], null, null, true);
-		$link->setTarget('_blank');
+		$link = (array_key_exists('url', $data) && $data['url'] !== '')
+			? (new CLink($data['externalid'], $data['url'], null, null, true))->setTarget('_blank')
+			: $data['externalid'];
 
 		$return = [
-			'ticketId' => $ticketid,
+			'ticketId' => $data['externalid'],
 			'link' => $link,
 			'created' => zbx_date2str(DATE_TIME_FORMAT_SECONDS, $data['clock']),
 		];
