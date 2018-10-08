@@ -1032,9 +1032,9 @@ void	zbx_servicenow_query_events(const DB_MEDIATYPE *mediatype, zbx_vector_uint6
 	{
 		zbx_ticket_t	*ticket;
 
+		ticket = zbx_malloc(NULL, sizeof(zbx_ticket_t));
 		memset(ticket, 0, sizeof(zbx_ticket_t));
 		ticket->eventid = eventids->values[i];
-		ticket = zbx_malloc(NULL, sizeof(zbx_ticket_t));
 
 		ticket->error = zbx_strdup(NULL, "Zabbix server is built without ServiceNow ticket support");
 		zbx_vector_ptr_append(tickets, ticket);
@@ -1055,9 +1055,9 @@ void	zbx_servicenow_acknowledge_events(const DB_MEDIATYPE *mediatype, zbx_uint64
 		zbx_ticket_t		*ticket;
 
 
+		ticket = zbx_malloc(NULL, sizeof(zbx_ticket_t));
 		memset(ticket, 0, sizeof(zbx_ticket_t));
 		ticket->eventid = ack->eventid;
-		ticket = zbx_malloc(NULL, sizeof(zbx_ticket_t));
 
 		ticket->error = zbx_strdup(NULL, "Zabbix server is built without ServiceNow ticket support");
 		zbx_vector_ptr_append(tickets, ticket);

@@ -543,31 +543,3 @@ int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, zbx_uint64_t mediatypeid,
 	return NULL != *incident ? SUCCEED : FAIL;
 }
 
-/******************************************************************************
- *                                                                            *
- * Function: zbx_xmedia_add_error_tickets                                     *
- *                                                                            *
- * Purpose: adds corresponding error ticket for every event with the          *
- *          specified error message                                           *
- *                                                                            *
- * Parameters: eventids - [IN] the event identifiers                          *
- *             error    - [IN] the error message                              *
- *             tickets  - [OUT] the tickets                                   *
- *                                                                            *
- ******************************************************************************/
-void	zbx_xmedia_add_error_tickets(const zbx_vector_uint64_t *eventids, const char *error, zbx_vector_ptr_t *tickets)
-{
-	int	i;
-
-	for (i = 0; i < eventids->values_num; i++)
-	{
-		zbx_ticket_t	*ticket;
-
-		memset(ticket, 0, sizeof(zbx_ticket_t));
-		ticket->eventid = eventids->values[i];
-		ticket = zbx_malloc(NULL, sizeof(zbx_ticket_t));
-
-		ticket->error = zbx_strdup(NULL, error);
-		zbx_vector_ptr_append(tickets, ticket);
-	}
-}
