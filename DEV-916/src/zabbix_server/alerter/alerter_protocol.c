@@ -316,7 +316,7 @@ void	zbx_alerter_deserialize_remedy(const unsigned char *data, zbx_uint64_t *eve
 
 zbx_uint32_t	zbx_alerter_serialize_servicenow(unsigned char **data, zbx_uint64_t eventid, zbx_uint64_t userid,
 		const char *subject, const char *message, const char *smtp_server, const char *smtp_helo,
-		const char *smtp_email, const char *username, const char *password)
+		const char *smtp_email, const char *username, const char *password, zbx_uint64_t mediatypeid)
 {
 	unsigned char	*ptr;
 	zbx_uint32_t	data_len = 0, subject_len, message_len, smtp_server_len, smtp_helo_len,
@@ -324,6 +324,7 @@ zbx_uint32_t	zbx_alerter_serialize_servicenow(unsigned char **data, zbx_uint64_t
 
 	zbx_serialize_prepare_value(data_len, eventid);
 	zbx_serialize_prepare_value(data_len, userid);
+	zbx_serialize_prepare_value(data_len, mediatypeid);
 	zbx_serialize_prepare_str(data_len, subject);
 	zbx_serialize_prepare_str(data_len, message);
 
@@ -338,6 +339,7 @@ zbx_uint32_t	zbx_alerter_serialize_servicenow(unsigned char **data, zbx_uint64_t
 	ptr = *data;
 	ptr += zbx_serialize_value(ptr, eventid);
 	ptr += zbx_serialize_value(ptr, userid);
+	ptr += zbx_serialize_value(ptr, mediatypeid);
 	ptr += zbx_serialize_str(ptr, subject, subject_len);
 	ptr += zbx_serialize_str(ptr, message, message_len);
 
@@ -352,12 +354,13 @@ zbx_uint32_t	zbx_alerter_serialize_servicenow(unsigned char **data, zbx_uint64_t
 
 void	zbx_alerter_deserialize_servicenow(const unsigned char *data, zbx_uint64_t *eventid, zbx_uint64_t *userid,
 		char **subject, char **message, char **smtp_server, char **smtp_helo, char **smtp_email,
-		char **username, char **password)
+		char **username, char **password, zbx_uint64_t *mediatypeid)
 {
 	zbx_uint32_t	len;
 
 	data += zbx_deserialize_value(data, eventid);
 	data += zbx_deserialize_value(data, userid);
+	data += zbx_deserialize_value(data, mediatypeid);
 	data += zbx_deserialize_str(data, subject, len);
 	data += zbx_deserialize_str(data, message, len);
 	data += zbx_deserialize_str(data, smtp_server, len);

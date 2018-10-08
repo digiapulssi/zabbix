@@ -322,15 +322,16 @@ static void	alerter_process_remedy(zbx_ipc_socket_t *socket, zbx_ipc_message_t *
  ******************************************************************************/
 static void	alerter_process_servicenow(zbx_ipc_socket_t *socket, zbx_ipc_message_t *ipc_message)
 {
-	zbx_uint64_t	eventid, userid;
+	zbx_uint64_t	eventid, userid, mediatypeid;
 	char		*subject, *message, *smtp_server, *smtp_helo, *smtp_email, *username, *password, *error = NULL;
 	int		ret;
 	DB_MEDIATYPE	mt;
 
 	zbx_alerter_deserialize_servicenow(ipc_message->data, &eventid, &userid, &subject, &message, &smtp_server,
-			&smtp_helo, &smtp_email, &username, &password);
+			&smtp_helo, &smtp_email, &username, &password, &mediatypeid);
 
 	memset(&mt, 0, sizeof(mt));
+	mt.mediatypeid = mediatypeid;
 	mt.smtp_server = smtp_server;
 	mt.smtp_helo = smtp_helo;
 	mt.smtp_email = smtp_email;

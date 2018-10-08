@@ -1731,7 +1731,8 @@ static int	am_process_alert(zbx_am_t *manager, zbx_am_alerter_t *alerter, zbx_am
 			command = ZBX_IPC_ALERTER_SERVICENOW;
 			data_len = zbx_alerter_serialize_servicenow(&data, alert->eventid, alert->userid, alert->subject,
 					alert->message, mediatype->smtp_server, mediatype->smtp_helo,
-					mediatype->smtp_email, mediatype->username, mediatype->passwd);
+					mediatype->smtp_email, mediatype->username, mediatype->passwd,
+					mediatype->mediatypeid);
 			break;
 		default:
 			am_db_update_alert(manager, alert->alertid, ALERT_STATUS_FAILED, 0, "unsupported media type");
