@@ -2106,6 +2106,7 @@ void	zbx_update_resolver_conf(void)
 
 #undef ZBX_RESOLV_CONF_FILE
 }
+#endif
 
 /******************************************************************************
  *                                                                            *
@@ -2131,4 +2132,3 @@ void	zbx_update_env(double time_now)
 #endif
 	}
 }
-#endif
