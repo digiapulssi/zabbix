@@ -687,8 +687,6 @@ static void	servicenow_update_ticket(zbx_ticket_t *ticket, const char *incident,
 		/* calculated allowed action based on incident status */
 		if (NULL != status)
 		{
-			ticket->status = zbx_strdup(NULL, status);
-
 			if (0 == strcmp(status, ZBX_SERVICENOW_STATE_CLOSED) ||
 					0 == strcmp(status, ZBX_SERVICENOW_STATE_CANCELLED))
 			{
