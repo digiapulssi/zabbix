@@ -278,15 +278,17 @@ static void	alerter_process_exec(zbx_ipc_socket_t *socket, zbx_ipc_message_t *ip
  ******************************************************************************/
 static void	alerter_process_remedy(zbx_ipc_socket_t *socket, zbx_ipc_message_t *ipc_message)
 {
-	zbx_uint64_t	eventid, userid;
+	zbx_uint64_t	eventid, userid, mediatypeid;
 	char		*sendto, *subject, *message, *smtp_server, *smtp_helo, *smtp_email, *username, *password,
 			*exec_path, *error = NULL;
 	int		ret;
 	DB_MEDIATYPE	mt;
 
 	zbx_alerter_deserialize_remedy(ipc_message->data, &eventid, &userid, &sendto, &subject, &message, &smtp_server,
-			&smtp_helo, &smtp_email, &username, &password, &exec_path);
+			&smtp_helo, &smtp_email, &username, &password, &exec_path, &mediatypeid);
 
+	memset(&mt, 0, sizeof(mt));
+	mt.mediatypeid = mediatypeid;
 	mt.smtp_server = smtp_server;
 	mt.smtp_helo = smtp_helo;
 	mt.smtp_email = smtp_email;

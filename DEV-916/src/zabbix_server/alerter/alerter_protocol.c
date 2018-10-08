@@ -257,7 +257,7 @@ void	zbx_alerter_deserialize_exec(const unsigned char *data, zbx_uint64_t *alert
 zbx_uint32_t	zbx_alerter_serialize_remedy(unsigned char **data, zbx_uint64_t eventid, zbx_uint64_t userid,
 		const char *sendto, const char *subject, const char *message, const char *smtp_server,
 		const char *smtp_helo, const char *smtp_email, const char *username, const char *password,
-		const char *exec_path)
+		const char *exec_path, zbx_uint64_t mediatypeid)
 {
 	unsigned char	*ptr;
 	zbx_uint32_t	data_len = 0, sendto_len, subject_len, message_len, smtp_server_len, smtp_helo_len,
@@ -265,6 +265,7 @@ zbx_uint32_t	zbx_alerter_serialize_remedy(unsigned char **data, zbx_uint64_t eve
 
 	zbx_serialize_prepare_value(data_len, eventid);
 	zbx_serialize_prepare_value(data_len, userid);
+	zbx_serialize_prepare_value(data_len, mediatypeid);
 	zbx_serialize_prepare_str(data_len, sendto);
 	zbx_serialize_prepare_str(data_len, subject);
 	zbx_serialize_prepare_str(data_len, message);
@@ -281,6 +282,7 @@ zbx_uint32_t	zbx_alerter_serialize_remedy(unsigned char **data, zbx_uint64_t eve
 	ptr = *data;
 	ptr += zbx_serialize_value(ptr, eventid);
 	ptr += zbx_serialize_value(ptr, userid);
+	ptr += zbx_serialize_value(ptr, mediatypeid);
 	ptr += zbx_serialize_str(ptr, sendto, sendto_len);
 	ptr += zbx_serialize_str(ptr, subject, subject_len);
 	ptr += zbx_serialize_str(ptr, message, message_len);
@@ -297,12 +299,13 @@ zbx_uint32_t	zbx_alerter_serialize_remedy(unsigned char **data, zbx_uint64_t eve
 
 void	zbx_alerter_deserialize_remedy(const unsigned char *data, zbx_uint64_t *eventid, zbx_uint64_t *userid,
 		char **sendto, char **subject, char **message, char **smtp_server, char **smtp_helo, char **smtp_email,
-		char **username, char **password, char **exec_path)
+		char **username, char **password, char **exec_path, zbx_uint64_t *mediatypeid)
 {
 	zbx_uint32_t	len;
 
 	data += zbx_deserialize_value(data, eventid);
 	data += zbx_deserialize_value(data, userid);
+	data += zbx_deserialize_value(data, mediatypeid);
 	data += zbx_deserialize_str(data, sendto, len);
 	data += zbx_deserialize_str(data, subject, len);
 	data += zbx_deserialize_str(data, message, len);

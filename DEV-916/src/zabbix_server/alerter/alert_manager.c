@@ -1725,7 +1725,7 @@ static int	am_process_alert(zbx_am_t *manager, zbx_am_alerter_t *alerter, zbx_am
 			data_len = zbx_alerter_serialize_remedy(&data, alert->eventid, alert->userid, alert->sendto,
 					alert->subject, alert->message, mediatype->smtp_server, mediatype->smtp_helo,
 					mediatype->smtp_email, mediatype->username, mediatype->passwd,
-					mediatype->exec_path);
+					mediatype->exec_path, mediatype->mediatypeid);
 			break;
 		case MEDIA_TYPE_SERVICENOW:
 			command = ZBX_IPC_ALERTER_SERVICENOW;
