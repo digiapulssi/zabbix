@@ -1988,7 +1988,7 @@ try_again:
 	}
 	DBfree_result(result);
 
-	if (ZBX_MAX_HRECORDS == *records_num)
+	if (ZBX_MAX_HRECORDS == *records_num - records_num_last)
 		*more = ZBX_PROXY_DATA_MORE;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%d lastid:" ZBX_FS_UI64 " more:%d size:" ZBX_FS_SIZE_T,
