@@ -430,6 +430,12 @@ function make_popup_eventlist($trigger, $eventid_till, $backurl, array $config, 
 		$options = [
 			'output' => ['eventid', 'r_eventid', 'clock', 'ns', 'objectid'],
 			'selectTags' => ['tag', 'value'],
+			'nopermissions' => true
+		];
+
+		// Events are selected in 2 steps to optimize SQL query.
+		$options['eventids'] = array_keys(API::Event()->get([
+			'output' => [],
 			'source' => EVENT_SOURCE_TRIGGERS,
 			'object' => EVENT_OBJECT_TRIGGER,
 			'eventid_till' => $eventid_till,
@@ -437,8 +443,10 @@ function make_popup_eventlist($trigger, $eventid_till, $backurl, array $config, 
 			'value' => TRIGGER_VALUE_TRUE,
 			'sortfield' => ['eventid'],
 			'sortorder' => ZBX_SORT_DOWN,
-			'limit' => ZBX_WIDGET_ROWS
-		];
+			'limit' => ZBX_WIDGET_ROWS,
+			'preservekeys' => true
+		]));
+
 		if ($config['event_ack_enable']) {
 			$options['select_acknowledges'] = ['userid', 'clock', 'message', 'action'];
 		}

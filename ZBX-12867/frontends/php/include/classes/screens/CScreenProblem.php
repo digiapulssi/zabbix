@@ -92,6 +92,22 @@ class CScreenProblem extends CScreenBase {
 	 * @return array
 	 */
 	private static function getDataEvents(array $options) {
+		if (array_key_exists('hostids', $options)) {
+			// $options are rewritten to optimize SQL query.
+			$hosts_triggers_options = [
+				'output' => [],
+				'hostids' => $options['hostids'],
+				'preservekeys' => true
+			];
+			if ($options['objectids']) {
+				$hosts_triggers_options['triggerids'] = $options['objectids'];
+			}
+
+			$options['objectids'] = array_keys(API::Trigger()->get($hosts_triggers_options));
+			$options['nopermissions'] = true;
+			unset($options['hostids']);
+		}
+
 		return API::Event()->get([
 			'output' => ['eventid', 'objectid', 'clock', 'ns'],
 			'source' => EVENT_SOURCE_TRIGGERS,
