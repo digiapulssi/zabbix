@@ -713,7 +713,7 @@ static void	servicenow_update_ticket(zbx_ticket_t *ticket, const char *incident,
 
 	ticket->clock = zbx_xmedia_get_ticket_creation_time(ticket->ticketid);
 
-	if (NULL != (ptr = strstr(mediatype->smtp_server, "://")) &&
+	if (NULL != sysid && NULL != (ptr = strstr(mediatype->smtp_server, "://")) &&
 			NULL != (ptr = strchr(ptr + 3, '/')))
 	{
 		zbx_strncpy_alloc(&ticket->url, &url_alloc, &url_offset, mediatype->smtp_server,
