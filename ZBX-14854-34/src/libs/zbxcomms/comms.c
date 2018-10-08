@@ -2106,4 +2106,29 @@ void	zbx_update_resolver_conf(void)
 
 #undef ZBX_RESOLV_CONF_FILE
 }
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_update_env                                                   *
+ *                                                                            *
+ * Purpose: throttling of update "/etc/resolv.conf" and "stdio" to the new    *
+ *          log file after rotation                                           *
+ *                                                                            *
+ * Parameters: time_now - [IN] the time for compare in seconds                *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_update_env(double time_now)
+{
+	static double	time_file = 0;
+
+	/* handle /etc/resolv.conf update and log rotate less often than once a second */
+	if (1.0 < time_now - time_file)
+	{
+		time_file = time_now;
+		zbx_handle_log();
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();
+#endif
+	}
+}
 #endif
