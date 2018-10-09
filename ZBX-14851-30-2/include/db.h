@@ -84,7 +84,7 @@ struct	_DC_TRIGGER;
 
 #define HOST_HOST_LEN			MAX_ZBX_HOSTNAME_LEN
 #define HOST_HOST_LEN_MAX		(HOST_HOST_LEN + 1)
-#define HOST_NAME_LEN			128
+#define HOST_NAME_LEN			128	/* max number of UTF-8 characters in table 'hosts', column 'name' */
 #define HOST_ERROR_LEN			2048
 #define HOST_ERROR_LEN_MAX		(HOST_ERROR_LEN + 1)
 #define HOST_IPMI_USERNAME_LEN		16
