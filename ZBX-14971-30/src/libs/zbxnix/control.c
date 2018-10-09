@@ -21,7 +21,6 @@
 
 static int	parse_log_level_options(const char *opt, size_t len, unsigned int *scope, unsigned int *data)
 {
-	unsigned short	num = 0;
 	const char	*rtc_options;
 
 	rtc_options = opt + len;
@@ -38,20 +37,23 @@ static int	parse_log_level_options(const char *opt, size_t len, unsigned int *sc
 	}
 	else if (0 != isdigit(*(++rtc_options)))
 	{
+		unsigned int	pid = 0;
+
 		/* convert PID */
-		if (FAIL == is_ushort(rtc_options, &num) || 0 == num)
+		if (FAIL == is_uint31(rtc_options, &pid) || 0 == pid)
 		{
 			zbx_error("invalid log level control target: invalid or unsupported process identifier");
 			return FAIL;
 		}
 
 		*scope = ZBX_RTC_LOG_SCOPE_FLAG | ZBX_RTC_LOG_SCOPE_PID;
-		*data = num;
+		*data = pid;
 	}
 	else
 	{
-		char	*proc_name = NULL, *proc_num;
-		int	proc_type;
+		unsigned short	num = 0;
+		char		*proc_name = NULL, *proc_num;
+		int		proc_type;
 
 		if ('\0' == *rtc_options)
 		{
