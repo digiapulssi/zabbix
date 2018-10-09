@@ -695,7 +695,7 @@ static int	remedy_modify_ticket(const char *url, const char *proxy, const char *
 
 	ret = SUCCEED;
 out:
-	remedy_fields_clean_values(fields, ARRSIZE(fields));
+	remedy_fields_clean_values(fields, fields_num);
 
 	curl_easy_cleanup(easyhandle);
 	curl_slist_free_all(headers);
