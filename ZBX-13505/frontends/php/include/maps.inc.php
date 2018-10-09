@@ -1451,19 +1451,6 @@ function separateMapElements($sysmap) {
 function drawMapConnectors(&$im, $map, $mapInfo, $drawAll = false) {
 	$selements = $map['selements'];
 
-	// Find monitored triggers.
-	$triggerids = [];
-	foreach ($map['links'] as $link) {
-		$triggerids = array_merge($triggerids, zbx_objectValues($link['linktriggers'], 'triggerid'));
-	}
-	$monitored_triggers = API::Trigger()->get([
-		'output' => [],
-		'triggerids' => $triggerids,
-		'monitored' => true,
-		'nopermissions' => true,
-		'preservekeys' => true
-	]);
-
 	foreach ($map['links'] as $link) {
 		$selement1 = $selements[$link['selementid1']];
 		$selement2 = $selements[$link['selementid2']];
@@ -1514,7 +1501,7 @@ function drawMapConnectors(&$im, $map, $mapInfo, $drawAll = false) {
 
 			$triggers = [];
 			foreach ($linktriggers as $link_trigger) {
-				if (!array_key_exists($link_trigger['triggerid'], $monitored_triggers)) {
+				if (!$link_trigger['monitored']) {
 					continue;
 				}
 
@@ -1774,7 +1761,7 @@ function drawMapLinkLabels(&$im, $map, $mapInfo, $resolveMacros, $graphtheme) {
 
 			$triggers = [];
 			foreach ($linktriggers as $link_trigger) {
-				if ($link_trigger['triggerid'] == 0) {
+				if (!$link_trigger['monitored']) {
 					continue;
 				}
 				$id = $link_trigger['linktriggerid'];
@@ -2372,4 +2359,30 @@ function get_parent_sysmaps($sysmapid) {
 	}
 
 	return [];
+}
+
+/**
+ * Function extends link triggers adding boolean property 'monitored'.
+ *
+ * @param array $map
+ */
+function resolveMapLinksTriggersState(&$map) {
+	$triggerids = [];
+	foreach ($map['links'] as $link) {
+		$triggerids = array_merge($triggerids, zbx_objectValues($link['linktriggers'], 'triggerid'));
+	}
+	$monitored_triggers = API::Trigger()->get([
+		'output' => [],
+		'triggerids' => $triggerids,
+		'monitored' => true,
+		'nopermissions' => true,
+		'preservekeys' => true
+	]);
+
+	foreach ($map['links'] as $linkid => $link) {
+		foreach ($link['linktriggers'] as $link_triggerid => $link_trigger) {
+			$map['links'][$linkid]['linktriggers'][$link_triggerid]['monitored']
+				= array_key_exists($link_trigger['triggerid'], $monitored_triggers);
+		}
+	}
 }
