@@ -1,8 +1,13 @@
 Changes for 3.4.15rc1
 
 New features:
+.......PS. [ZBXNEXT-4782] improve out of memory error message by adding statistics and backtrace; improve something impossible has just happened error message by adding backtrace (vso)
 
 Bug fixes:
+..F....... [ZBX-14811] fixed color of the host name in the title of the Screens (vasilijs)
+..F....... [ZBX-14776] fixed sorting when changing status of media type (vasilijs)
+..F....... [ZBX-14757] fixed fields becoming writable upon form refresh in host prototype form (vmurzins)
+..F....... [ZBX-14689] fixed updating of the Graph list of host when selecting a group of hosts (vasilijs)
 ..F....... [ZBX-14803] fixed incorrect profile update causing page filter to sometimes show duplicate values (Ivo)
 ..F....... [ZBX-14727] fixed selection of data for trigger overview and graphs if first drop down entry is "none" (Ivo)
 ..F....... [ZBX-14650] fixed web.page.regexp item parameters description (gcalenko)
@@ -1365,8 +1370,13 @@ A......... [ZBX-10049] fixed optional field validation in drule.update API metho
 Changes for 3.0.23rc1
 
 New features:
+.......PS. [ZBXNEXT-4782] improve out of memory error message by adding statistics and backtrace; improve something impossible has just happened error message by adding backtrace (vso)
 
 Bug fixes:
+..F....... [ZBX-14811] fixed color of the host name in the title of the Screens (vasilijs)
+..F....... [ZBX-14776] fixed sorting when changing status of media type (vasilijs)
+..F....... [ZBX-14757] fixed fields becoming writable upon form refresh in host prototype form (vmurzins)
+..F....... [ZBX-14689] fixed updating of the Graph list of host when selecting a group of hosts (vasilijs)
 ..F....... [ZBX-14803] fixed incorrect profile update causing page filter to sometimes show duplicate values (Ivo)
 ..F....... [ZBX-14727] fixed selection of data for trigger overview, data overview and graphs if first drop down entry is "none" (Ivo)
 ..F....... [ZBX-14650] fixed web.page.regexp item parameters description (gcalenko)
