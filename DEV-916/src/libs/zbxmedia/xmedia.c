@@ -192,7 +192,7 @@ int	zbx_xmedia_query_events(zbx_uint64_t userid, zbx_vector_uint64_t *eventids, 
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-	if (SUCCEED != mediatype_get(userid, &mediatype, &media))
+	if (SUCCEED != (ret = mediatype_get(userid, &mediatype, &media)))
 	{
 		*error = zbx_dsprintf(*error, "Failed to find appropriate media type");
 		goto out;
@@ -202,11 +202,9 @@ int	zbx_xmedia_query_events(zbx_uint64_t userid, zbx_vector_uint64_t *eventids, 
 	{
 		case MEDIA_TYPE_REMEDY:
 			zbx_remedy_query_events(&mediatype, eventids, tickets);
-			ret = SUCCEED;
 			break;
 		case MEDIA_TYPE_SERVICENOW:
 			zbx_servicenow_query_events(&mediatype, eventids, tickets);
-			ret = SUCCEED;
 			break;
 		default:
 			*error = zbx_dsprintf(*error, "Unsupported external media type %d", mediatype.type);
