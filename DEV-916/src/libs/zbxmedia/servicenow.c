@@ -433,8 +433,8 @@ static int	servicenow_create_incident(zbx_servicenow_conn_t *conn, const char *a
 				{
 					char	*ptr;
 
-					ptr = strrchr(buf, '/');
-					*sysid = zbx_strdup(*sysid, ptr + 1);
+					if (NULL != (ptr = strrchr(buf, '/')))
+						*sysid = zbx_strdup(*sysid, ptr + 1);
 					zbx_free(buf);
 				}
 			}
