@@ -414,19 +414,16 @@ static int	servicenow_create_incident(zbx_servicenow_conn_t *conn, const char *a
 
 		if (SUCCEED == zbx_json_brackets_by_name(&jp, "result", &jp_result))
 		{
-			size_t	out_alloc = 0;
-
 			if (SUCCEED == zbx_json_brackets_by_name(&jp_result, "sys_target_sys_id", &jp_sysid))
 			{
 				char	*buf = NULL;
+				size_t	out_alloc = 0;
 
 				if (SUCCEED == zbx_json_value_by_name_dyn(&jp_sysid, "display_value", &buf, &out_alloc))
 				{
 					/* parse out incident number from display_value 'Incident: <number>' */
 					if (0 == strncmp(buf, "Incident: ", 10))
 						*incident = zbx_strdup(*incident, buf + 10);
-
-					zbx_free(buf);
 				}
 
 				if (SUCCEED == zbx_json_value_by_name_dyn(&jp_sysid, "link", &buf, &out_alloc))
@@ -435,8 +432,9 @@ static int	servicenow_create_incident(zbx_servicenow_conn_t *conn, const char *a
 
 					if (NULL != (ptr = strrchr(buf, '/')))
 						*sysid = zbx_strdup(*sysid, ptr + 1);
-					zbx_free(buf);
 				}
+
+				zbx_free(buf);
 			}
 		}
 
