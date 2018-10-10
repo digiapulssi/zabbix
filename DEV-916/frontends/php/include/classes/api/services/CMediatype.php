@@ -69,7 +69,7 @@ class CMediatype extends CApiService {
 			// output
 			'output'					=> API_OUTPUT_EXTEND,
 			'selectUsers'				=> null,
-			'selectMedia'				=> null,
+			'selectMedias'				=> null,
 			'countOutput'				=> false,
 			'groupCount'				=> false,
 			'preservekeys'				=> false,
@@ -1005,19 +1005,41 @@ class CMediatype extends CApiService {
 		}
 
 		// adding media
-		if ($options['selectMedia'] !== null && $options['selectMedia'] != API_OUTPUT_COUNT) {
-			$relationMap = $this->createRelationMap($result, 'mediatypeid', 'mediaid', 'media');
+		if ($options['selectMedias'] !== null && $options['selectMedias'] != API_OUTPUT_COUNT) {
+			$medias = API::getApiService()->select('media', [
+				'output' => $this->outputExtend($options['selectMedias'], ['mediatypeid']),
+				'filter' => ['userid' => $options['userids'], 'mediatypeid' => array_keys($result)],
+				'preservekeys' => true
+			]);
 
 			$users = API::User()->get([
 				'output' => [],
-				'selectMedias' => $options['selectMedia'],
-				'mediaids' => $relationMap->getRelatedIds(),
-				'userids' => $options['userids']
+				'mediaids' => array_keys($medias),
+				'preservekeys' => true
 			]);
 
-			$medias = zbx_toHash($users[0]['medias'], 'mediaid');
+			foreach ($medias as $key => $media) {
+				if (!array_key_exists($media['userid'], $users)) {
+					unset($medias[$key]);
+				}
+			}
 
-			$result = $relationMap->mapMany($result, $medias, 'media');
+			foreach ($result as &$row) {
+				if (!array_key_exists('medias', $row)) {
+					$row['medias'] = [];
+				}
+
+				foreach ($medias as $media) {
+					if (bccomp($row['mediatypeid'], $media['mediatypeid']) == 0) {
+						if (!$this->outputIsRequested('mediatypeid', $options['selectMedias'])) {
+							unset($media['mediatypeid']);
+						}
+
+						$row['medias'][] = $media;
+					}
+				}
+			}
+			unset($row);
 		}
 
 		return $result;

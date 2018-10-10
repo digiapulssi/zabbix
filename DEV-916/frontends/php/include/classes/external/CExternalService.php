@@ -60,7 +60,7 @@ class CExternalService {
 		if (array_key_exists('triggerSeverity', $event) && $event['triggerSeverity'] >= self::minTriggerSeverity) {
 			$mediatype = API::MediaType()->get([
 				'output' => ['mediatypeid'],
-				'selectMedia' => ['mediaid', 'userid', 'active', 'severity'],
+				'selectMedias' => ['mediaid', 'userid', 'active', 'severity'],
 				'userids' => [CWebUser::$data['userid']],
 				'filter' => [
 					'type' => [MEDIA_TYPE_SERVICENOW, MEDIA_TYPE_REMEDY],
@@ -77,13 +77,13 @@ class CExternalService {
 			$mediatype = reset($mediatype);
 
 			// Check if there are any medias at all.
-			if (!$mediatype['media']) {
+			if (!$mediatype['medias']) {
 				return false;
 			}
 
 			// Get first enabled media for this user.
 			$media_active = false;
-			foreach ($mediatype['media'] as $media) {
+			foreach ($mediatype['medias'] as $media) {
 				if ($media['userid'] == CWebUser::$data['userid'] && $media['active'] == MEDIA_TYPE_STATUS_ACTIVE) {
 					$media_active = true;
 					self::$severity = $media['severity'];
