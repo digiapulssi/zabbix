@@ -21,48 +21,49 @@
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
 class testFormAdministrationAuthentication extends CWebTest {
-	public function getAuthenticationData() {
+
+	public function getHttpAuthenticationData() {
 		return [
-			// Zabbix DB authentication
+			// HTTP authentication disabled, default zabbix login form.
 			[
 				[
-					'default_auth' => 'Internal',
 					'user' => 'Admin',
 					'password' => 'zabbix',
+					'http_authentication' => [
+						'http_enabled' => false
+					],
 					'pages' => [
-						[
-							'page' => 'index.php?form=default',
-							'action' => 'login',
-							'target' => 'dashboard'
-						],
 						[
 							'page' => 'zabbix.php?action=dashboard.view',
 							'guest' => true,
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
+						],
+						[
+							'page' => 'index.php?form=default',
+							'action' => 'login',
+							'target' => 'Dashboard'
 						],
 						[
 							'page' => 'index.php',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
-						// ZBXNEXT-4573, 32 subissue
-//						[
-//							'page' => 'index_http.php',
-//							'action' => 'login',
-//							'target' => 'dashboard'
-//						],
-						// Redirect HTTP login page, open GUI page.
+						// Redirect to default zabbix login form, if open HTTP login form.
+						[
+							'page' => 'index_http.php',
+							'action' => 'login',
+							'target' => 'Dashboard'
+						],
+						// Couldn't open GUI page due access.
 						[
 							'page' => 'adm.gui.php',
-							'action' => 'login',
-							'target' => 'error',
 							'error' => 'Access denied'
 						],
 						// Login after logout.
 						[
 							'page' => 'index.php?reconnect=1&form=default',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						]
 					],
 					'db_check' => [
@@ -82,53 +83,181 @@ class testFormAdministrationAuthentication extends CWebTest {
 					]
 				]
 			],
-			// HTTP authentication (default login form - 'HTTP login form')
+			// HTTP authentication enabled, but file isn't created.
 			[
 				[
-					'default_auth' => 'Internal',
-					'http_auth_enabled' => true,
-					'http_login_form' => 'HTTP login form',
 					'user' => 'Admin',
-					'password' => '123456',
-					'db_password' => 'zabbix',
-					'file' => 'pwfile',
+					'password' => 'zabbix',
+					'http_authentication' => [
+						'http_enabled' => true
+					],
 					'pages' => [
-						// No redirect - default zabbix login page.
+						[
+							'page' => 'zabbix.php?action=dashboard.view',
+							'guest' => true,
+							'target' => 'Dashboard'
+						],
 						[
 							'page' => 'index.php?form=default',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
-						// Redirect HTTP login page, open Host page.
-						// wait for ZBX-14774.
-//						[
-//							'page' => 'hosts.php?ddreset=1',
-//							'action' => 'login_http',
-//							'target' => 'hosts'
-//						],
-						// Redirect to HTTP login page.
 						[
 							'page' => 'index.php',
-							'action' => 'login_http',
-							'target' => 'dashboard'
+							'action' => 'login',
+							'target' => 'Dashboard'
 						],
-						// HTTP login page.
+						// Redirect to default zabbix login form, if open HTTP login form.
 						[
 							'page' => 'index_http.php',
-							'action' => 'login_http',
-							'target' => 'dashboard'
+							'error' => 'You are not logged in'
+						],
+						// Couldn't open GUI page due access.
+						[
+							'page' => 'adm.gui.php',
+							'error' => 'Access denied'
 						],
 						// Login after logout.
 						[
 							'page' => 'index.php?reconnect=1&form=default',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
+						]
+					],
+					'db_check' => [
+						'authentication_type'	=> '0',
+						'ldap_host'				=> '',
+						'ldap_port'				=> '389',
+						'ldap_base_dn'			=> '',
+						'ldap_bind_dn'			=> '',
+						'ldap_bind_password'	=> '',
+						'ldap_search_attribute'	=> '',
+						'http_auth_enabled'		=> '1',
+						'http_login_form'		=> '0',
+						'http_strip_domains'	=> '',
+						'http_case_sensitive'	=> '1',
+						'ldap_configured'		=> '0',
+						'ldap_case_sensitive'	=> '1'
+					]
+				]
+			],
+			// HTTP authentication enabled (default login form is set to 'Zabbix login form').
+			[
+				[
+					'user' => 'Admin',
+					'password' => '123456',
+					'db_password' => 'zabbix',
+					'file' => 'pwfile',
+					'http_authentication' => [
+						'http_enabled' => true,
+						'http_login_form' => 'Zabbix login form'
+					],
+					'pages' => [
+						[
+							'page' => 'zabbix.php?action=dashboard.view',
+							'guest' => true,
+							'target' => 'Dashboard'
 						],
-						// Redirect HTTP login page, open GUI page.
+						// No redirect - sign in through default zabbix login form.
+						[
+							'page' => 'index.php?form=default',
+							'action' => 'login',
+							'target' => 'Dashboard'
+						],
+						// No redirect - sign in through default zabbix login form.
+						[
+							'page' => 'index.php',
+							'action' => 'login',
+							'target' => 'Dashboard'
+						],
+						// Redirect to HTTP login form and user is signed on Dashboard page.
+						[
+							'page' => 'index_http.php',
+							'action' => 'login_http',
+							'target' => 'Dashboard'
+						],
+						// Sign in through zabbix login form after logout.
+						[
+							'page' => 'index.php?reconnect=1&form=default',
+							'action' => 'login',
+							'target' => 'Dashboard'
+						],
+						// Couldn't open Hosts page due access.
+						[
+							'page' => 'hosts.php?ddreset=1',
+							'error' => 'Access denied'
+						],
+						// Couldn't open GUI page due access.
 						[
 							'page' => 'adm.gui.php',
-							'action' => 'login_http_domain',
-							'target' => 'gui'
+							'error' => 'Access denied'
+						]
+					],
+					'db_check' => [
+						'authentication_type'	=> '0',
+						'ldap_host'				=> '',
+						'ldap_port'				=> '389',
+						'ldap_base_dn'			=> '',
+						'ldap_bind_dn'			=> '',
+						'ldap_bind_password'	=> '',
+						'ldap_search_attribute'	=> '',
+						'http_auth_enabled'		=> '1',
+						'http_login_form'		=> '0',
+						'http_strip_domains'	=> '',
+						'http_case_sensitive'	=> '1',
+						'ldap_configured'		=> '0',
+						'ldap_case_sensitive'	=> '1'
+					]
+				]
+			],
+			// HTTP authentication enabled (default login form is set to 'HTTP login form').
+			[
+				[
+					'user' => 'Admin',
+					'password' => '123456',
+					'db_password' => 'zabbix',
+					'file' => 'pwfile',
+					'http_authentication' => [
+						'http_enabled' => true,
+						'http_login_form' => 'HTTP login form'
+					],
+					'pages' => [
+						// No redirect - default zabbix login form.
+						[
+							'page' => 'index.php?form=default',
+							'action' => 'login',
+							'target' => 'Dashboard'
+						],
+//						// wait for ZBX-14774.
+//						// Redirect to HTTP login form and user is signed on hosts page.
+//						[
+//							'page' => 'hosts.php?ddreset=1',
+//							'action' => 'login_http',
+//							'target' => 'Hosts'
+//						],
+						// Redirect to HTTP login form and user is signed on dashboard page.
+						[
+							'page' => 'index.php',
+							'action' => 'login_http',
+							'target' => 'Dashboard'
+						],
+						// Redirect to dashboard page and user is signed.
+						[
+							'page' => 'index_http.php',
+							'action' => 'login_http',
+							'target' => 'Dashboard'
+						],
+						// Sign in through zabbix login form after logout.
+						[
+							'page' => 'index.php?reconnect=1&form=default',
+							'action' => 'login',
+							'target' => 'Dashboard'
+						],
+						// Redirect to HTTP login form and user is signed on GUI page.
+						[
+							'page' => 'adm.gui.php',
+							'action' => 'login_http',
+							'target' => 'GUI'
 						]
 					],
 					'db_check' => [
@@ -151,34 +280,35 @@ class testFormAdministrationAuthentication extends CWebTest {
 			// HTTP authentication - Check domain (@local.com).
 			[
 				[
-					'default_auth' => 'Internal',
-					'http_auth_enabled' => true,
-					'http_login_form' => 'HTTP login form',
-					'http_domain' => 'local.com',
 					'user' => 'Admin@local.com',
 					'password' => '123456',
 					'file' => 'htaccess',
 					'db_password' => 'zabbix',
+					'http_authentication' => [
+						'http_enabled' => true,
+						'http_login_form' => 'HTTP login form',
+						'http_domain' => 'local.com',
+					],
 					'pages' => [
 						[
 							'page' => 'zabbix.php?action=dashboard.view',
 							'guest' => true,
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
 						[
 							'page' => 'index.php',
 							'action' => 'login_http',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
 						[
 							'page' => 'index_http.php',
 							'action' => 'login_http',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
 						[
 							'page' => 'index.php?form=default',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						]
 					],
 					'db_check' => [
@@ -201,54 +331,53 @@ class testFormAdministrationAuthentication extends CWebTest {
 			// HTTP authentication - Login with user admin-zabbix (Zabbix Admin).
 			[
 				[
-					'default_auth' => 'Internal',
-					'http_auth_enabled' => true,
-					'http_login_form' => 'HTTP login form',
-					'http_domain' => 'local.com',
 					'user' => 'local.com\\admin-zabbix',
 					'password' => 'zabbix',
 					'file' => 'htaccess',
+					'http_authentication' => [
+						'http_enabled' => true,
+						'http_login_form' => 'HTTP login form',
+						'http_domain' => 'local.com'
+					],
 					'pages' => [
 						[
 							'page' => 'index.php?form=default',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
 						[
 							'page' => 'zabbix.php?action=dashboard.view',
 							'guest' => true,
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
 						[
 							'page' => 'users.php',
-							'action' => 'login_http_domain',
-							'target' => 'error',
 							'error' => 'Access denied'
 						],
-						// Redirect HTTP login page, open Host page.
-						// wait for ZBX-14774.
+//						// Redirect to HTTP login form and user is signed on hosts page.
+//						// wait for ZBX-14774.
 //						[
 //							'page' => 'hosts.php?ddreset=1',
 //							'action' => 'login_http',
-//							'target' => 'hosts'
+//							'target' => 'Hosts'
 //						],
-						// Redirect to HTTP login page.
+						// Redirect to HTTP login form and user is signed on dashboard page.
 						[
 							'page' => 'index.php',
 							'action' => 'login_http',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
-						// HTTP login page.
+						// Redirect to dashboard page and user is signed.
 						[
 							'page' => 'index_http.php',
 							'action' => 'login_http',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
 						// Login after logout.
 						[
 							'page' => 'index.php?reconnect=1&form=default',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						]
 					],
 					'db_check' => [
@@ -271,27 +400,25 @@ class testFormAdministrationAuthentication extends CWebTest {
 			// HTTP authentication - Login with user test-user (Zabbix User),
 			[
 				[
-					'default_auth' => 'Internal',
-					'http_auth_enabled' => true,
-					'http_login_form' => 'HTTP login form',
-					'http_domain' => 'local.com',
 					'user' => 'local.com\\test-user',
 					'password' => 'zabbix',
 					'file' => 'htaccess',
+					'http_authentication' => [
+						'http_enabled' => true,
+						'http_login_form' => 'HTTP login form',
+						'http_domain' => 'local.com'
+					],
 					'pages' => [
 						[
 							'page' => 'index.php?form=default',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
 						[
 							'page' => 'users.php',
-							'action' => 'login_http_domain',
-							'target' => 'error',
 							'error' => 'Access denied'
 						],
-						// Redirect HTTP login page, open Host page.
-						// wait for ZBX-14774.
+//						// wait for ZBX-14774.
 //						[
 //							'page' => 'hosts.php?ddreset=1',
 //							'action' => 'login_http',
@@ -299,26 +426,23 @@ class testFormAdministrationAuthentication extends CWebTest {
 //						],
 						[
 							'page' => 'zabbix.php?action=dashboard.view',
-							'action' => 'login_http_domain',
-							'target' => 'dashboard'
+							'action' => 'login_http',
+							'target' => 'Dashboard'
 						],
-						// Redirect to HTTP login page.
 						[
 							'page' => 'index.php',
 							'action' => 'login_http',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
-						// HTTP login page.
 						[
 							'page' => 'index_http.php',
 							'action' => 'login_http',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						],
-						// Login after logout.
 						[
 							'page' => 'index.php?reconnect=1&form=default',
 							'action' => 'login',
-							'target' => 'dashboard'
+							'target' => 'Dashboard'
 						]
 					],
 					'db_check' => [
@@ -337,23 +461,178 @@ class testFormAdministrationAuthentication extends CWebTest {
 						'ldap_case_sensitive'	=> '1'
 					]
 				]
-			],
-			// LDAP authentication
+			]
+		];
+	}
+
+	/**
+	 * @dataProvider getHttpAuthenticationData
+	 * @backup config
+	 *
+	 * Internal authentication with HTTP settings.
+	 */
+	public function testFormAdministrationAuthentication_HttpAuthentication($data) {
+		$this->zbxTestLogin('zabbix.php?action=authentication.edit&ddreset=1');
+		$this->zbxTestCheckHeader('Authentication');
+		$this->zbxTestCheckTitle('Configuration of authentication');
+
+		// Configuration at 'HTTP settings' tab.
+		if (array_key_exists('http_authentication', $data)) {
+			$http_auth = $data['http_authentication'];
+
+			$this->zbxTestTabSwitch('HTTP settings');
+
+			// Check disabled or enabled fields in form for HTTP auth.
+			$fields_xpath = ['//select[@id="http_login_form"]', '//input[@id="http_strip_domains"]', '//input[@id="http_case_sensitive"]'];
+			if (array_key_exists('http_enabled', $http_auth) && $http_auth['http_enabled'] === true) {
+				$this->zbxTestCheckboxSelect('http_auth_enabled');
+				foreach ($fields_xpath as $xpath) {
+					$this->AssertTrue($this->zbxTestIsEnabled($xpath));
+				}
+			}
+			else {
+				foreach ($fields_xpath as $xpath) {
+					$this->AssertFalse($this->zbxTestIsEnabled($xpath));
+				}
+			}
+
+			if (array_key_exists('http_login_form', $http_auth)) {
+				$this->zbxTestDropdownSelect('http_login_form', $http_auth['http_login_form']);
+			}
+
+			if (array_key_exists('http_domain', $http_auth)) {
+				$this->zbxTestInputType('http_strip_domains', $http_auth['http_domain']);
+			}
+
+			if (array_key_exists('http_case_sensitive', $http_auth)) {
+				$this->zbxTestCheckboxSelect('http_case_sensitive', $http_auth['http_case_sensitive']);
+			}
+		}
+
+		// File .htaccess creation.
+		if (array_key_exists('file', $data)) {
+			if ($data['file'] === 'htaccess') {
+				$this->assertTrue(file_put_contents(PHPUNIT_BASEDIR.'.htaccess', 'SetEnv REMOTE_USER "'.
+						$data['user'].'"') !== false);
+			}
+			elseif ($data['file'] === 'pwfile') {
+				$this->assertTrue(exec('htpasswd -c -b "'.PHPUNIT_BASEDIR.'../.pwd" "'.$data['user'].'" "'.
+						$data['password'].'" > /dev/null 2>&1') !== false);
+				$content = '<Files index_http.php>'."\n".
+						'	AuthType Basic'."\n".
+						'	AuthName "Password Required"'."\n".
+						'	AuthUserFile "'.PHPUNIT_BASEDIR.'../.pwd"'."\n".
+						'	Require valid-user'."\n".
+						'</Files>';
+				$this->assertTrue(file_put_contents(PHPUNIT_BASEDIR.'.htaccess', $content) !== false);
+			}
+		}
+
+		$this->zbxTestClick('update');
+		$this->zbxTestCheckFatalErrors();
+		// Check DB configuration.
+		$sql = 'SELECT authentication_type, ldap_host, ldap_port, ldap_base_dn, ldap_bind_dn, ldap_bind_password, '.
+				'ldap_search_attribute, http_auth_enabled, http_login_form, http_strip_domains, '.
+				'http_case_sensitive, ldap_configured, ldap_case_sensitive'.
+				' FROM config';
+		$result = DBdata($sql, false);
+		$this->assertEquals($data['db_check'], $result[0][0]);
+
+		$this->zbxTestLogout();
+		$this->zbxTestWaitForPageToLoad();
+		$this->webDriver->manage()->deleteAllCookies();
+
+		// Check authentication on pages.
+		if (array_key_exists('pages', $data)) {
+			foreach ($data['pages'] as $check) {
+
+				if (array_key_exists('guest', $check) && $check['guest'] === true) {
+					$alias = 'guest';
+					$this->zbxTestOpen($check['page']);
+				}
+				else {
+					$alias = $this->UserName($data['user']);
+				}
+
+				// Login for non guest user.
+				if (array_key_exists('action', $check)) {
+					$action = $check['action'];
+					// HTTP login - username and password is sending in url.
+					if ($action === 'login_http') {
+						$this->httpAuthentication($data['user'], $data['password'], $check['page']);
+					}
+					// Sign in using the default zabbix login form.
+					elseif ($action === 'login') {
+						$this->zbxTestOpen($check['page']);
+						$this->zbxTestWaitForPageToLoad();
+
+						// Check button 'Sign in with HTTP'.
+						if (isset($data['http_authentication']['http_enabled']) && $data['http_authentication']['http_enabled'] === true) {
+							$this->zbxTestAssertElementPresentXpath('//a[@href="index_http.php"][text()="Sign in with HTTP"]');
+						}
+						else {
+							$this->zbxTestAssertElementNotPresentXpath('//a[@href="index_http.php"][text()="Sign in with HTTP"]');
+						}
+
+						$this->zbxTestInputTypeWait('name', $alias);
+						if (!array_key_exists('db_password', $data)) {
+							$data['db_password'] = $data['password'];
+						}
+						$this->zbxTestInputTypeWait('password', $data['db_password']);
+						$this->zbxTestClick('enter');
+					}
+				}
+
+				if (array_key_exists('error', $check)) {
+					$this->zbxTestOpen($check['page']);
+					$this->zbxTestAssertElementPresentXpath('//output[@class="msg-bad msg-global"][text()="'.$check['error'].'"]');
+
+					$this->httpAuthentication($data['user'], $data['password'], $check['page']);
+					$this->zbxTestAssertElementPresentXpath('//output[@class="msg-bad msg-global"][text()="'.$check['error'].'"]');
+					continue;
+				}
+
+				// Check page header after successful login.
+				if (array_key_exists('target', $check)) {
+					$this->zbxTestCheckHeader($check['target']);
+				}
+
+				// Check user data in DB after login.
+				$session = $this->webDriver->manage()->getCookieNamed(ZBX_SESSION_NAME);
+				$user_data = DBfetch(DBselect('SELECT alias FROM users WHERE userid = ('.
+						'SELECT DISTINCT userid FROM sessions WHERE sessionid='.zbx_dbstr($session['value']).')'));
+				$this->assertEquals($user_data['alias'], $alias);
+
+				$this->zbxTestLogout();
+				$this->zbxTestWaitForPageToLoad();
+				$this->webDriver->manage()->deleteAllCookies();
+			}
+		}
+	}
+
+	public function getLdapAuthenticationData() {
+		return [
 			[
 				[
-					'default_auth' => 'LDAP',
+					'error' => 'Incorrect value for field "authentication_type": LDAP is not configured.'
+				]
+			],
+			[
+				[
 					'user' => 'Admin',
 					'password' => 'zabbix',
-					'ldap_enabled' => true,
-					'ldap_host' => 'ldap.forumsys.com',
-					'ldap_port' => '389',
-					'ldap_base_dn' => 'dc=example,dc=com',
-					'ldap_search_attribute' => 'uid',
-					'ldap_bind_dn' => 'cn=read-only-admin,dc=example,dc=com',
-					'ldap_case_sensitive' => true,
-					'ldap_bind_password' => 'password',
-					'ldap_test_user' => 'galieleo',
-					'ldap_test_password' => 'password',
+					'ldap_authentication' => [
+						'ldap_enabled' => true,
+						'ldap_host' => 'ldap.forumsys.com',
+						'ldap_port' => '389',
+						'ldap_base_dn' => 'dc=example,dc=com',
+						'ldap_search_attribute' => 'uid',
+						'ldap_bind_dn' => 'cn=read-only-admin,dc=example,dc=com',
+						'ldap_case_sensitive' => true,
+						'ldap_bind_password' => 'password',
+						'ldap_test_user' => 'galieleo',
+						'ldap_test_password' => 'password'
+					],
 					'db_check' => [
 						'authentication_type'	=> '1',
 						'ldap_host'				=> 'ldap.forumsys.com',
@@ -375,123 +654,52 @@ class testFormAdministrationAuthentication extends CWebTest {
 	}
 
 	/**
-	 * @dataProvider getAuthenticationData
+	 * @dataProvider getLdapAuthenticationData
 	 * @backup config
+	 *
+	 * LDAP authentication with LDAP settings.
 	 */
-	public function testFormAdministrationAuthentication_Authentication($data) {
+	public function testFormAdministrationAuthentication_LdapAuthentication($data) {
 		$this->zbxTestLogin('zabbix.php?action=authentication.edit&ddreset=1');
 		$this->zbxTestCheckHeader('Authentication');
 		$this->zbxTestCheckTitle('Configuration of authentication');
 
-		// Configuration at 'Authentication' tab.
-		if (array_key_exists('default_auth', $data)) {
-			$this->zbxTestClick('tab_auth');
-			// Select default authentication Internal / LDAP.
-			if ($data['default_auth'] === 'Internal') {
-				$this->zbxTestClickXpathWait('//label[@for="authentication_type_0"]');
-			}
-			else {
-				$this->zbxTestClickXpathWait('//label[@for="authentication_type_1"]');
-			}
-		}
-
-		// Configuration at 'HTTP settings' tab.
-		$keys = [];
-		foreach (array_keys($data) as $key) {
-			if (strpos($key, 'http_') === 0) {
-				$this->zbxTestClick('tab_http');
-				break;
-			}
-		}
-
-		if (array_key_exists('http_auth_enabled', $data) && $data['http_auth_enabled'] === true) {
-			$this->zbxTestCheckboxSelect('http_auth_enabled');
-		}
-
-		if (array_key_exists('http_login_form', $data)) {
-			$this->zbxTestWaitForPageToLoad();
-			if ($this->zbxTestIsEnabled('//select[@id="http_login_form"]')) {
-				$this->zbxTestDropdownSelect('http_login_form', $data['http_login_form']);
-			}
-		}
-
-		if (array_key_exists('http_domain', $data)) {
-			if ($this->zbxTestIsEnabled('//input[@id="http_strip_domains"]')) {
-				$this->zbxTestInputType('http_strip_domains', $data['http_domain']);
-			}
-		}
-
-		if (array_key_exists('http_case_sensitive', $data) && $data['http_case_sensitive'] === true) {
-			if ($this->zbxTestIsEnabled('//input[@id="http_case_sensitive"]')) {
-				$this->zbxTestCheckboxSelect('http_case_sensitive');
-			}
-		}
+		$this->zbxTestClickXpathWait('//label[@for="authentication_type_1"]');
 
 		// Configuration at 'LDAP settings' tab.
-		$keys = [];
-		foreach (array_keys($data) as $key) {
-			if (strpos($key, 'ldap_') === 0) {
-				$this->zbxTestClick('tab_ldap');
-				break;
+		if (array_key_exists('ldap_authentication', $data)) {
+			$ldap_auth = $data['ldap_authentication'];
+
+			$this->zbxTestTabSwitch('LDAP settings');
+			if (array_key_exists('ldap_enabled', $ldap_auth)) {
+				$this->zbxTestCheckboxSelect('ldap_configured', $ldap_auth['ldap_enabled']);
 			}
-		}
-
-		if (array_key_exists('ldap_enabled', $data) && $data['ldap_enabled'] === true) {
-			$this->zbxTestCheckboxSelect('ldap_configured');
-		}
-
-		if (array_key_exists('ldap_host', $data)) {
-			$this->zbxTestInputType('ldap_host', $data['ldap_host']);
-		}
-
-		if (array_key_exists('ldap_port', $data)) {
-			$this->zbxTestInputType('ldap_port', $data['ldap_port']);
-		}
-
-		if (array_key_exists('ldap_base_dn', $data)) {
-			$this->zbxTestInputType('ldap_base_dn', $data['ldap_base_dn']);
-		}
-
-		if (array_key_exists('ldap_search_attribute', $data)) {
-			$this->zbxTestInputType('ldap_search_attribute', $data['ldap_search_attribute']);
-		}
-
-		if (array_key_exists('ldap_bind_dn', $data)) {
-			$this->zbxTestInputType('ldap_bind_dn', $data['ldap_bind_dn']);
-		}
-
-		if (array_key_exists('ldap_case_sensitive', $data) && $data['ldap_case_sensitive'] === true) {
-			$this->zbxTestCheckboxSelect('ldap_case_sensitive');
-		}
-
-		if (array_key_exists('ldap_bind_password', $data)) {
-			$this->zbxTestInputType('ldap_bind_password', $data['ldap_bind_password']);
-		}
-
-		if (array_key_exists('ldap_test_user', $data)) {
-			$this->zbxTestInputType('ldap_test_user', $data['ldap_test_user']);
-		}
-
-		if (array_key_exists('ldap_test_password', $data)) {
-			$this->zbxTestInputType('ldap_test_password', $data['ldap_test_password']);
-		}
-
-		// File .htaccess creation.
-		if (array_key_exists('file', $data)) {
-			if ($data['file'] === 'htaccess') {
-				$this->assertTrue(file_put_contents(PHPUNIT_BASEDIR.'.htaccess', 'SetEnv REMOTE_USER "'.
-						$data['user'].'"') !== false);
+			if (array_key_exists('ldap_host', $ldap_auth)) {
+				$this->zbxTestInputType('ldap_host', $ldap_auth['ldap_host']);
 			}
-			elseif ($data['file'] === 'pwfile') {
-				$this->assertTrue(exec('htpasswd -c -b "'.PHPUNIT_BASEDIR.'../.pwd" "'.$data['user'].'" "'.
-						$data['password'].'" > /dev/null 2>&1') !== false);
-				$content = '<Files index_http.php>'."\n".
-						'	AuthType Basic'."\n".
-						'	AuthName "Password Required"'."\n".
-						'	AuthUserFile "'.PHPUNIT_BASEDIR.'../.pwd"'."\n".
-						'	Require valid-user'."\n".
-						'</Files>';
-				$this->assertTrue(file_put_contents(PHPUNIT_BASEDIR.'.htaccess', $content) !== false);
+			if (array_key_exists('ldap_port', $ldap_auth)) {
+				$this->zbxTestInputType('ldap_port', $ldap_auth['ldap_port']);
+			}
+			if (array_key_exists('ldap_base_dn', $ldap_auth)) {
+				$this->zbxTestInputType('ldap_base_dn', $ldap_auth['ldap_base_dn']);
+			}
+			if (array_key_exists('ldap_search_attribute', $ldap_auth)) {
+				$this->zbxTestInputType('ldap_search_attribute', $ldap_auth['ldap_search_attribute']);
+			}
+			if (array_key_exists('ldap_bind_dn', $ldap_auth)) {
+				$this->zbxTestInputType('ldap_bind_dn', $ldap_auth['ldap_bind_dn']);
+			}
+			if (array_key_exists('ldap_case_sensitive', $ldap_auth)) {
+				$this->zbxTestCheckboxSelect('ldap_case_sensitive', $ldap_auth['ldap_case_sensitive']);
+			}
+			if (array_key_exists('ldap_bind_password', $ldap_auth)) {
+				$this->zbxTestInputType('ldap_bind_password', $ldap_auth['ldap_bind_password']);
+			}
+			if (array_key_exists('ldap_test_user', $ldap_auth)) {
+				$this->zbxTestInputType('ldap_test_user', $ldap_auth['ldap_test_user']);
+			}
+			if (array_key_exists('ldap_test_password', $ldap_auth)) {
+				$this->zbxTestInputType('ldap_test_password', $ldap_auth['ldap_test_password']);
 			}
 		}
 
@@ -516,91 +724,12 @@ class testFormAdministrationAuthentication extends CWebTest {
 			$result = DBdata($sql, false);
 			$this->assertEquals($data['db_check'], $result[0][0]);
 		}
+	}
 
-		$this->zbxTestLogout();
-		$this->zbxTestWaitForPageToLoad();
-		$this->webDriver->manage()->deleteAllCookies();
-
-		if (array_key_exists('pages', $data)) {
-			foreach ($data['pages'] as $check) {
-				if (!array_key_exists('page', $check)) {
-					continue;
-				}
-
-				if (array_key_exists('guest', $check) && $check['guest'] === true) {
-					$alias = 'guest';
-					$this->zbxTestOpen($check['page']);
-				}
-				else {
-					$alias = $this->UserName($data['user']);
-				}
-
-				if (array_key_exists('action', $check)) {
-					$action = $check['action'];
-					// HTTP login - user/password is sending in url
-					if ($action === 'login_http') {
-						$parts = explode('//', PHPUNIT_URL.$check['page'], 2);
-						$url = $parts[0].'//'.$data['user'].':'.$data['password'].'@'.$parts[1];
-						$this->webDriver->get($url);
-					}
-					elseif ($action === 'login_http_domain' || $check['target'] === 'error') {
-						$this->zbxTestOpen($check['page']);
-					}
-					elseif ($action === 'login' && $check['target'] !== 'error') {
-						$this->zbxTestOpen($check['page']);
-						$this->zbxTestWaitForPageToLoad();
-						// Check button 'Sign in with HTTP'.
-						if (!array_key_exists('http_auth_enabled', $data)) {
-							$this->zbxTestAssertElementNotPresentXpath('//a[@href="index_http.php"]'.
-									'[text()="Sign in with HTTP"]');
-						}
-						elseif (array_key_exists('http_auth_enabled', $data) || $data['http_auth_enabled'] === true) {
-							$this->zbxTestAssertElementPresentXpath('//a[@href="index_http.php"]'.
-									'[text()="Sign in with HTTP"]');
-						}
-
-						$this->zbxTestInputTypeWait('name', $alias);
-						if (!array_key_exists('db_password', $data)) {
-							$data['db_password'] = $data['password'];
-						}
-						$this->zbxTestInputTypeWait('password', $data['db_password']);
-						$this->zbxTestClick('enter');
-					}
-				}
-
-				// Check page after login.
-				if (array_key_exists('target', $check)) {
-					$target = $check['target'];
-					if ($target === 'dashboard') {
-						$this->zbxTestCheckHeader('Dashboard');
-					}
-					elseif ($target === 'hosts') {
-						$this->zbxTestCheckHeader('Hosts');
-					}
-					elseif ($target === 'gui') {
-						$this->zbxTestCheckHeader('GUI');
-					}
-					elseif ($target === 'error') {
-						$this->zbxTestAssertElementPresentXpath('//output[@class="msg-bad msg-global"][text()="'.
-								$check['error'].'"]');
-						continue;
-					}
-				}
-
-				// Check user after login.
-				if ($data['default_auth'] !== 'LDAP') {
-					$session = $this->webDriver->manage()->getCookieNamed(ZBX_SESSION_NAME);
-					$user_data = DBfetch(DBselect('SELECT alias FROM users WHERE userid = ('.
-							'SELECT DISTINCT userid FROM sessions WHERE sessionid='.zbx_dbstr($session['value']).')'));
-
-					$this->assertEquals($user_data['alias'], $alias);
-				}
-
-				$this->zbxTestLogout();
-				$this->zbxTestWaitForPageToLoad();
-				$this->webDriver->manage()->deleteAllCookies();
-			}
-		}
+	private function httpAuthentication($user, $password, $url) {
+		$parts = explode('//', PHPUNIT_URL.$url, 2);
+		$full_url = $parts[0].'//'.$user.':'.$password.'@'.$parts[1];
+		$this->webDriver->get($full_url);
 	}
 
 	private function isAlertPresent() {
