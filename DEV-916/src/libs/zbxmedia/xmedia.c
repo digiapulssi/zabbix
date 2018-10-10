@@ -94,7 +94,7 @@ static int	mediatype_get(zbx_uint64_t userid, DB_MEDIATYPE *mediatype, zbx_media
 					" and mt.mediatypeid=m.mediatypeid"
 					" and m.userid=" ZBX_FS_UI64
 					" and m.active=%d"
-					" order by type desc",
+					" order by type desc,mediatypeid asc",
 				MEDIA_TYPE_REMEDY, MEDIA_TYPE_SERVICENOW, MEDIA_TYPE_STATUS_ACTIVE, userid,
 				MEDIA_STATUS_ACTIVE);
 
