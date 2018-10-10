@@ -257,6 +257,7 @@ class CExternalService {
 			'ticketId' => $data['externalid'],
 			'link' => $link,
 			'created' => zbx_date2str(DATE_TIME_FORMAT_SECONDS, $data['clock']),
+			'action' => $data['action']
 		];
 
 		// media.acknowledge might not return status for Remedy service.
