@@ -965,9 +965,8 @@ void	zbx_strcpy_alloc(char **str, size_t *alloc_len, size_t *offset, const char 
 void	zbx_chrcpy_alloc(char **str, size_t *alloc_len, size_t *offset, char c);
 
 /* secure string copy */
-#define strscpy(x, y)		zbx_strlcpy(x, y, sizeof(x))
-#define strscat(x, y)		zbx_strlcat(x, y, sizeof(x))
-#define strscpy_utf8(x, y)	zbx_strlcpy_utf8(x, y, sizeof(x))
+#define strscpy(x, y)	zbx_strlcpy(x, y, sizeof(x))
+#define strscat(x, y)	zbx_strlcat(x, y, sizeof(x))
 size_t	zbx_strlcpy(char *dst, const char *src, size_t siz);
 void	zbx_strlcat(char *dst, const char *src, size_t siz);
 size_t	zbx_strlcpy_utf8(char *dst, const char *src, size_t size);
@@ -1078,16 +1077,7 @@ void	zbx_strupper(char *str);
 #if defined(_WINDOWS) || defined(HAVE_ICONV)
 char	*convert_to_utf8(char *in, size_t in_size, const char *encoding);
 #endif	/* HAVE_ICONV */
-typedef enum
-{
-	ZBX_UTF8_CHAR1 = 1,
-	ZBX_UTF8_CHAR2,
-	ZBX_UTF8_CHAR3,
-	ZBX_UTF8_CHAR4,
-	/* the max supported size of char for UTF8 */
-	ZBX_UTF8_CHAR_MAX = ZBX_UTF8_CHAR4
-}
-zbx_utf8_size_type_t;
+#define ZBX_MAX_BYTES_IN_UTF8_CHAR	4
 size_t	zbx_utf8_char_len(const char *text);
 size_t	zbx_strlen_utf8(const char *text);
 size_t	zbx_strlen_utf8_nchars(const char *text, size_t utf8_maxlen);
