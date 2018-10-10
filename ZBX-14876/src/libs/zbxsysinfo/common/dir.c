@@ -193,23 +193,42 @@ static int	prepare_common_parameters(const AGENT_REQUEST *request, AGENT_RESULT 
 	return SUCCEED;
 }
 
-static int	prepare_mode_parameter(const AGENT_REQUEST *request, AGENT_RESULT *result, int *mode)
+static int	prepare_mode_parameters(const AGENT_REQUEST *request, AGENT_RESULT *result, int *size_mode,
+		int *regex_mode)
 {
-	char	*mode_str;
+	char	*size_mode_str, *regex_mode_str;
 
-	mode_str = get_rparam(request, 3);
+	size_mode_str = get_rparam(request, 3);
 
-	if (NULL == mode_str || '\0' == *mode_str || 0 == strcmp(mode_str, "apparent"))	/* <mode> default value */
+	if (NULL == size_mode_str || '\0' == *size_mode_str || 0 == strcmp(size_mode_str, "apparent"))
 	{
-		*mode = SIZE_MODE_APPARENT;
+		/* item parameter <mode> default value */
+		*size_mode = SIZE_MODE_APPARENT;
 	}
-	else if (0 == strcmp(mode_str, "disk"))
+	else if (0 == strcmp(size_mode_str, "disk"))
 	{
-		*mode = SIZE_MODE_DISK;
+		*size_mode = SIZE_MODE_DISK;
 	}
 	else
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter."));
+		return FAIL;
+	}
+
+	regex_mode_str = get_rparam(request, 5);
+
+	if (NULL == regex_mode_str || '\0' == *regex_mode_str || 0 == strcmp(regex_mode_str, "file"))
+	{
+		/* item parameter <regex_mode> default value */
+		*regex_mode = REGEX_MODE_FILE;
+	}
+	else if (0 == strcmp(regex_mode_str, "path"))
+	{
+		*regex_mode = REGEX_MODE_PATH;
+	}
+	else
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid sixth parameter."));
 		return FAIL;
 	}
 
@@ -492,7 +511,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_directory_item_t	*item;
 	zbx_vector_ptr_t	descriptors;
 
-	if (SUCCEED != prepare_mode_parameter(request, result, &mode))
+	if (SUCCEED != prepare_mode_parameters(request, result, &mode))
 		return ret;
 
 	if (SUCCEED != prepare_common_parameters(request, result, &regex_incl, &regex_excl, &max_depth, &dir, &status,
@@ -641,22 +660,24 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	const char		*__function_name = "vfs_dir_size";
 	char			*dir = NULL;
-	int			mode, max_depth, ret = SYSINFO_RET_FAIL;
+	int			size_mode, max_depth, regex_mode, ret = SYSINFO_RET_FAIL;
 	zbx_uint64_t		size = 0;
 	zbx_vector_ptr_t	list, descriptors;
 	zbx_directory_item_t	*item;
 	zbx_stat_t		status;
 	zbx_regexp_t		*regex_incl = NULL, *regex_excl = NULL;
-	DIR 			*directory;
-	struct dirent 		*entry;
+	DIR			*directory;
+	struct dirent		*entry;
 	zbx_file_descriptor_t	*file;
 
-	if (SUCCEED != prepare_mode_parameter(request, result, &mode))
+	if (SUCCEED != prepare_mode_parameters(request, result, &size_mode, &regex_mode))
 		return ret;
 
 	if (SUCCEED != prepare_common_parameters(request, result, &regex_incl, &regex_excl, &max_depth, &dir, &status,
-			4, 5))
+			4, 6))
+	{
 		goto err1;
+	}
 
 	zbx_vector_ptr_create(&descriptors);
 	zbx_vector_ptr_create(&list);
@@ -668,7 +689,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (0 != filename_matches(dir, regex_incl, regex_excl))
 	{
-		if (SIZE_MODE_APPARENT == mode)
+		if (SIZE_MODE_APPARENT == size_mode)
 			size += (zbx_uint64_t)status.st_size;
 		else	/* must be SIZE_MODE_DISK */
 			size += (zbx_uint64_t)status.st_blocks * DISK_BLOCK_SIZE;
@@ -707,9 +728,16 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 			if (0 == lstat(path, &status))
 			{
+				char	*path_str;
+
+				if (REGEX_MODE_FILE == regex_mode)
+					path_str = zbx_strdup(NULL, entry->d_name);
+				else
+					path_str = zbx_strdup(NULL, path);
+
 				if ((0 != S_ISREG(status.st_mode) || 0 != S_ISLNK(status.st_mode) ||
 						0 != S_ISDIR(status.st_mode)) &&
-						0 != filename_matches(entry->d_name, regex_incl, regex_excl))
+						0 != filename_matches(path_str, regex_incl, regex_excl))
 				{
 					if (0 != S_ISREG(status.st_mode) && 1 < status.st_nlink)
 					{
@@ -725,17 +753,20 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 						{
 							zbx_free(file);
 							zbx_free(path);
+							zbx_free(path_str);
 							continue;
 						}
 
 						zbx_vector_ptr_append(&descriptors, file);
 					}
 
-					if (SIZE_MODE_APPARENT == mode)
+					if (SIZE_MODE_APPARENT == size_mode)
 						size += (zbx_uint64_t)status.st_size;
 					else	/* must be SIZE_MODE_DISK */
 						size += (zbx_uint64_t)status.st_blocks * DISK_BLOCK_SIZE;
 				}
+
+				zbx_free(path_str);
 
 				if (!(0 != S_ISDIR(status.st_mode) && SUCCEED == queue_directory(&list, path,
 						item->depth, max_depth)))

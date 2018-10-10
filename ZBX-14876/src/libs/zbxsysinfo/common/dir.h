@@ -27,6 +27,9 @@
 #define SIZE_MODE_APPARENT		0	/* bytes in file */
 #define SIZE_MODE_DISK			1	/* size on disk */
 
+#define REGEX_MODE_FILE			0	/* match filenames only */
+#define REGEX_MODE_PATH			1	/* match path string */
+
 #define TRAVERSAL_DEPTH_UNLIMITED	-1	/* directory traversal depth is not limited */
 
 typedef struct
