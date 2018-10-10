@@ -58,40 +58,37 @@ class CExternalService {
 		global $ZBX_SERVER, $ZBX_SERVER_PORT;
 
 		if (array_key_exists('triggerSeverity', $event) && $event['triggerSeverity'] >= self::minTriggerSeverity) {
-			$mediatype = API::MediaType()->get([
+			$mediatypes = API::MediaType()->get([
 				'output' => ['mediatypeid'],
 				'selectMedias' => ['mediaid', 'userid', 'active', 'severity'],
 				'userids' => [CWebUser::$data['userid']],
 				'filter' => [
 					'type' => [MEDIA_TYPE_SERVICENOW, MEDIA_TYPE_REMEDY],
 					'status' => MEDIA_TYPE_STATUS_ACTIVE
-				],
-				'limit' => 1
+				]
 			]);
 
-			if (!$mediatype) {
+			if (!$mediatypes) {
 				return false;
 			}
 
-			// Since limit is 1, get only one media type.
-			$mediatype = reset($mediatype);
-
-			// Check if there are any medias at all.
-			if (!$mediatype['medias']) {
-				return false;
-			}
-
-			// Get first enabled media for this user.
 			$media_active = false;
-			foreach ($mediatype['medias'] as $media) {
-				if ($media['userid'] == CWebUser::$data['userid'] && $media['active'] == MEDIA_TYPE_STATUS_ACTIVE) {
-					$media_active = true;
-					self::$severity = $media['severity'];
-					break;
+
+			foreach ($mediatypes as $mediatype) {
+				if (!$mediatype['medias']) {
+					continue;
+				}
+
+				foreach ($mediatype['medias'] as $media) {
+					if ($media['userid'] == CWebUser::$data['userid'] && $media['active'] == MEDIA_TYPE_STATUS_ACTIVE) {
+						$media_active = true;
+						self::$severity = $media['severity'];
+						break 2;
+					}
 				}
 			}
 
-			// at least one media should be active
+			// At least one media should be active.
 			if (!$media_active) {
 				return false;
 			}
