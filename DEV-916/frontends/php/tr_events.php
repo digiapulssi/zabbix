@@ -150,7 +150,7 @@ $config = select_config();
 
 // ticket details
 $ticket_details_widget = null;
-CExternalService::init(['triggerSeverity' => $trigger['priority']]);
+CExternalService::init();
 
 if (CExternalService::$enabled) {
 	$ticket = CExternalService::mediaQuery($event['eventid']);

@@ -22,13 +22,6 @@
 class CExternalService {
 
 	/**
-	 * Minimum required event trigger severity to enable external service.
-	 *
-	 * @constant
-	 */
-	const minTriggerSeverity = TRIGGER_SEVERITY_WARNING;
-
-	/**
 	 * External service status.
 	 *
 	 * @var bool
@@ -49,68 +42,63 @@ class CExternalService {
 	 * to Zabbix server, it's not possibe to start the external Service and return false with error message from
 	 * Zabbix server.
 	 *
-	 * @param array  $event							An array of event data.
-	 * @param string $event['triggerSeverity']		Current event trigger severity.
-	 *
 	 * @return bool
 	 */
-	public static function init(array $event) {
+	public static function init() {
 		global $ZBX_SERVER, $ZBX_SERVER_PORT;
 
-		if (array_key_exists('triggerSeverity', $event) && $event['triggerSeverity'] >= self::minTriggerSeverity) {
-			$mediatypes = API::MediaType()->get([
-				'output' => ['mediatypeid'],
-				'selectMedias' => ['mediaid', 'userid', 'active', 'severity'],
-				'userids' => [CWebUser::$data['userid']],
-				'filter' => [
-					'type' => [MEDIA_TYPE_SERVICENOW, MEDIA_TYPE_REMEDY],
-					'status' => MEDIA_TYPE_STATUS_ACTIVE
-				]
-			]);
+		$mediatypes = API::MediaType()->get([
+			'output' => ['mediatypeid'],
+			'selectMedias' => ['mediaid', 'userid', 'active', 'severity'],
+			'userids' => [CWebUser::$data['userid']],
+			'filter' => [
+				'type' => [MEDIA_TYPE_SERVICENOW, MEDIA_TYPE_REMEDY],
+				'status' => MEDIA_TYPE_STATUS_ACTIVE
+			]
+		]);
 
-			if (!$mediatypes) {
-				return false;
+		if (!$mediatypes) {
+			return false;
+		}
+
+		$media_active = false;
+
+		foreach ($mediatypes as $mediatype) {
+			if (!$mediatype['medias']) {
+				continue;
 			}
 
-			$media_active = false;
-
-			foreach ($mediatypes as $mediatype) {
-				if (!$mediatype['medias']) {
-					continue;
-				}
-
-				foreach ($mediatype['medias'] as $media) {
-					if ($media['userid'] == CWebUser::$data['userid'] && $media['active'] == MEDIA_TYPE_STATUS_ACTIVE) {
-						$media_active = true;
-						self::$severity = $media['severity'];
-						break 2;
-					}
+			foreach ($mediatype['medias'] as $media) {
+				if ($media['userid'] == CWebUser::$data['userid'] && $media['active'] == MEDIA_TYPE_STATUS_ACTIVE) {
+					$media_active = true;
+					self::$severity = $media['severity'];
+					break 2;
 				}
 			}
+		}
 
-			// At least one media should be active.
-			if (!$media_active) {
-				return false;
+		// At least one media should be active.
+		if (!$media_active) {
+			return false;
+		}
+
+		// Check if server is online to do further requests to it.
+		$zabbixServer = new CZabbixServer(
+			$ZBX_SERVER,
+			$ZBX_SERVER_PORT,
+			ZBX_SOCKET_EXTERNAL_TIMEOUT,
+			ZBX_SOCKET_BYTES_LIMIT
+		);
+
+		self::$enabled = $zabbixServer->isRunning(CWebUser::getSessionCookie());
+
+		if (!self::$enabled) {
+			if (!CSession::keyExists('messageError')) {
+				CSession::setValue('messageError', _('Cannot start external service'));
 			}
 
-			// Check if server is online to do further requests to it.
-			$zabbixServer = new CZabbixServer(
-				$ZBX_SERVER,
-				$ZBX_SERVER_PORT,
-				ZBX_SOCKET_EXTERNAL_TIMEOUT,
-				ZBX_SOCKET_BYTES_LIMIT
-			);
-
-			self::$enabled = $zabbixServer->isRunning(CWebUser::getSessionCookie());
-
-			if (!self::$enabled) {
-				if (!CSession::keyExists('messageError')) {
-					CSession::setValue('messageError', _('Cannot start external service'));
-				}
-
-				if (!CSession::keyExists('messages')) {
-					CSession::setValue('messages', [['type' => 'error', 'message' => $zabbixServer->getError()]]);
-				}
+			if (!CSession::keyExists('messages')) {
+				CSession::setValue('messages', [['type' => 'error', 'message' => $zabbixServer->getError()]]);
 			}
 		}
 

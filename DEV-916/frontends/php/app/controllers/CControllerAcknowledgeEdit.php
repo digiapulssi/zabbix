@@ -104,7 +104,7 @@ class CControllerAcknowledgeEdit extends CController {
 				];
 				order_result($data['acknowledges'], 'clock', ZBX_SORT_DOWN);
 
-				CExternalService::init(['triggerSeverity' => $data['event']['triggerSeverity']]);
+				CExternalService::init();
 
 				if (CExternalService::$enabled) {
 					$data['ticket'] = CExternalService::mediaQuery($events[0]['eventid']);

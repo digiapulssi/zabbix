@@ -88,7 +88,7 @@ class CControllerAcknowledgeCreate extends CController {
 
 			// Additionally select trigger data for external service.
 			if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
-				$options['selectRelatedObject'] = ['priority', 'description', 'expression'];
+				$options['selectRelatedObject'] = ['description', 'expression'];
 			}
 
 			$events = API::Event()->get($options);
@@ -98,10 +98,10 @@ class CControllerAcknowledgeCreate extends CController {
 
 		// Create or update and incident on external service for current event.
 		if (count($eventids) == 1 && $this->hasInput('ticket_status')) {
-			$event = reset($events);
-			CExternalService::init(['triggerSeverity' => $event['relatedObject']['priority']]);
+			CExternalService::init();
 
 			if (CExternalService::$enabled) {
+				$event = reset($events);
 				$event_trigger_name = CMacrosResolverHelper::resolveTriggerName($event['relatedObject']);
 
 				$result = (bool) CExternalService::mediaAcknowledge([
