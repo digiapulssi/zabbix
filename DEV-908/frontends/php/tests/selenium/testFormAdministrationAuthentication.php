@@ -551,7 +551,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 					$this->zbxTestOpen($check['page']);
 				}
 				else {
-					$alias = $this->UserName($data['user']);
+					$alias = $this->getUserName($data['user']);
 				}
 
 				// Login for non guest user.
@@ -559,7 +559,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 					$action = $check['action'];
 					// HTTP login - username and password is sending in url.
 					if ($action === 'login_http') {
-						$this->httpAuthentication($data['user'], $data['password'], $check['page']);
+						$this->openAsHttpUser($data['user'], $data['password'], $check['page']);
 					}
 					// Sign in using the default zabbix login form.
 					elseif ($action === 'login') {
@@ -587,7 +587,7 @@ class testFormAdministrationAuthentication extends CWebTest {
 					$this->zbxTestOpen($check['page']);
 					$this->zbxTestAssertElementPresentXpath('//output[@class="msg-bad msg-global"][text()="'.$check['error'].'"]');
 
-					$this->httpAuthentication($data['user'], $data['password'], $check['page']);
+					$this->openAsHttpUser($data['user'], $data['password'], $check['page']);
 					$this->zbxTestAssertElementPresentXpath('//output[@class="msg-bad msg-global"][text()="'.$check['error'].'"]');
 					continue;
 				}
@@ -674,39 +674,25 @@ class testFormAdministrationAuthentication extends CWebTest {
 			if (array_key_exists('ldap_enabled', $ldap_auth)) {
 				$this->zbxTestCheckboxSelect('ldap_configured', $ldap_auth['ldap_enabled']);
 			}
-			if (array_key_exists('ldap_host', $ldap_auth)) {
-				$this->zbxTestInputType('ldap_host', $ldap_auth['ldap_host']);
-			}
-			if (array_key_exists('ldap_port', $ldap_auth)) {
-				$this->zbxTestInputType('ldap_port', $ldap_auth['ldap_port']);
-			}
-			if (array_key_exists('ldap_base_dn', $ldap_auth)) {
-				$this->zbxTestInputType('ldap_base_dn', $ldap_auth['ldap_base_dn']);
-			}
-			if (array_key_exists('ldap_search_attribute', $ldap_auth)) {
-				$this->zbxTestInputType('ldap_search_attribute', $ldap_auth['ldap_search_attribute']);
-			}
-			if (array_key_exists('ldap_bind_dn', $ldap_auth)) {
-				$this->zbxTestInputType('ldap_bind_dn', $ldap_auth['ldap_bind_dn']);
-			}
 			if (array_key_exists('ldap_case_sensitive', $ldap_auth)) {
 				$this->zbxTestCheckboxSelect('ldap_case_sensitive', $ldap_auth['ldap_case_sensitive']);
 			}
-			if (array_key_exists('ldap_bind_password', $ldap_auth)) {
-				$this->zbxTestInputType('ldap_bind_password', $ldap_auth['ldap_bind_password']);
-			}
-			if (array_key_exists('ldap_test_user', $ldap_auth)) {
-				$this->zbxTestInputType('ldap_test_user', $ldap_auth['ldap_test_user']);
-			}
-			if (array_key_exists('ldap_test_password', $ldap_auth)) {
-				$this->zbxTestInputType('ldap_test_password', $ldap_auth['ldap_test_password']);
+
+			$fields = ['ldap_host', 'ldap_port', 'ldap_base_dn', 'ldap_search_attribute', 'ldap_bind_dn',
+					'ldap_bind_password', 'ldap_test_user', 'ldap_test_password'
+			];
+
+			foreach ($fields as $field) {
+				if (array_key_exists($field, $ldap_auth)) {
+					$this->zbxTestInputType($field, $ldap_auth[$field]);
+				}
 			}
 		}
 
 		$this->zbxTestClick('update');
 
 		// Accept alert message, if it exist.
-		if ($this->isAlertPresent()) {
+		if ($this->zbxTestIsAlertPresent()) {
 			$this->zbxTestAcceptAlert();
 		}
 
@@ -726,24 +712,13 @@ class testFormAdministrationAuthentication extends CWebTest {
 		}
 	}
 
-	private function httpAuthentication($user, $password, $url) {
+	private function openAsHttpUser($user, $password, $url) {
 		$parts = explode('//', PHPUNIT_URL.$url, 2);
 		$full_url = $parts[0].'//'.$user.':'.$password.'@'.$parts[1];
 		$this->webDriver->get($full_url);
 	}
 
-	private function isAlertPresent() {
-		try {
-			$alert = $this->webDriver->switchTo()->alert();
-			$alert->getText();
-			return true;
-		}
-		catch (NoAlertOpenException $e) {
-			return false;
-		}
-	}
-
-	private function UserName($alias) {
+	private function getUserName($alias) {
 		$separator = strpos($alias, '@');
 		if ($separator !== false) {
 			$alias = substr($alias, 0, $separator);

@@ -689,6 +689,17 @@ class CWebTest extends PHPUnit_Framework_TestCase {
 		$this->zbxTestWaitForPageToLoad();
 	}
 
+	public function zbxTestIsAlertPresent() {
+		try {
+			$alert = $this->webDriver->switchTo()->alert();
+			$alert->getText();
+			return true;
+		}
+		catch (NoAlertOpenException $e) {
+			return false;
+		}
+	}
+
 	public function zbxTestGetDropDownElements($dropdownId) {
 		$elements = [];
 		foreach ($this->getDropdownOptions($dropdownId) as $option) {
