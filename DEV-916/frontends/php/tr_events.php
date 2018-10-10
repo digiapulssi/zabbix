@@ -162,9 +162,11 @@ if (CExternalService::$enabled) {
 			$ticket_table->addRow([_('Assignee'), $ticket['assignee']]);
 		}
 
-		$ticket_table
-			->addRow([_('Status'), $ticket['status']])
-			->addRow([_('Created'), $ticket['created']]);
+		if (array_key_exists('status', $ticket) && $ticket['status'] !== '') {
+			$ticket_table->addRow([_('Status'), $ticket['status']]);
+		}
+
+		$ticket_table->addRow([_('Created'), $ticket['created']]);
 
 		$ticket_details_widget = (new CUiWidget(WIDGET_HAT_TICKETDETAILS, $ticket_table))
 			->setHeader(_('Ticket details'));

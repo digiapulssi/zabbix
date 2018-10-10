@@ -31,13 +31,13 @@ $form_list = (new CFormList())
 
 if (CExternalService::$enabled && (CExternalService::$severity & (1 << $data['event']['triggerSeverity']))
 		&& $data['event']['value'] == TRIGGER_VALUE_TRUE) {
-	if (!$data['ticket'] || $data['ticket']['status'] === 'Closed' || $data['ticket']['status'] === 'Cancelled') {
+	if (!$data['ticket'] || $data['ticket']['action'] == ZBX_TICKET_ACTION_CREATE) {
 		$ticket_status_message = _('Create ticket');
 	}
-	elseif ($data['ticket']['status'] === 'Resolved') {
+	elseif ($data['ticket']['action'] == ZBX_TICKET_ACTION_REOPEN) {
 		$ticket_status_message = _('Reopen ticket');
 	}
-	else {
+	elseif ($data['ticket']['action'] == ZBX_TICKET_ACTION_UPDATE) {
 		$ticket_status_message = [_('Update ticket').' ', $data['ticket']['link']];
 	}
 
