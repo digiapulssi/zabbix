@@ -120,8 +120,8 @@
 			$(this).trimValues([
 				'#description', '#smtp_server', '#smtp_port', '#smtp_helo', '#smtp_email', '#exec_path', '#gsm_modem',
 				'#jabber_username', '#eztext_username', '#smtp_username', '#maxsessions', '#remedy_url',
-				'#remedy_proxy', '#remedy_company', '#remedy_mapping', '#snow_url', '#snow_username', '#snow_proxy',
-				'#snow_group'
+				'#remedy_username', '#remedy_proxy', '#remedy_company', '#remedy_mapping', '#snow_url',
+				'#snow_username', '#snow_proxy', '#snow_group'
 			]);
 		});
 
