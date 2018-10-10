@@ -159,7 +159,6 @@ $mediaTypeFormList
 		EZ_TEXTING_LIMIT_USA => _('USA (160 characters)'),
 		EZ_TEXTING_LIMIT_CANADA => _('Canada (136 characters)')
 	]))
-	// Remedy
 	->addRow(_('Proxy'), (new CTextBox('remedy_proxy', $data['remedy_proxy']))
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 		->setAttribute('placeholder', 'http://[username[:password]@]proxy.example.com[:port]')
@@ -170,7 +169,6 @@ $mediaTypeFormList
 	->addRow(_('Services mapping'),
 		(new CTextBox('remedy_mapping', $data['remedy_mapping']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
-	// ServiceNow
 	->addRow(_('Proxy'), (new CTextBox('snow_proxy', $data['snow_proxy']))
 		->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 		->setAttribute('placeholder', 'http://[username[:password]@]proxy.example.com[:port]')

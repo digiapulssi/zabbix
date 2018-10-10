@@ -97,7 +97,7 @@ class CExternalService {
 			$zabbixServer = new CZabbixServer(
 				$ZBX_SERVER,
 				$ZBX_SERVER_PORT,
-				ZBX_SOCKET_REMEDY_TIMEOUT,
+				ZBX_SOCKET_EXTERNAL_TIMEOUT,
 				ZBX_SOCKET_BYTES_LIMIT
 			);
 
@@ -128,19 +128,19 @@ class CExternalService {
 	 *
 	 * @param int     $eventid
 	 *
-	 * @return bool|array
+	 * @return array
 	 */
 	public static function mediaQuery($eventid = null) {
 		global $ZBX_SERVER, $ZBX_SERVER_PORT;
 
 		if (!self::$enabled || $eventid === null) {
-			return false;
+			return [];
 		}
 
 		$zabbixServer = new CZabbixServer(
 			$ZBX_SERVER,
 			$ZBX_SERVER_PORT,
-			ZBX_SOCKET_REMEDY_TIMEOUT,
+			ZBX_SOCKET_EXTERNAL_TIMEOUT,
 			ZBX_SOCKET_BYTES_LIMIT
 		);
 
@@ -152,7 +152,7 @@ class CExternalService {
 
 			self::$enabled = false;
 
-			return self::$enabled;
+			return [];
 		}
 		else {
 			$ticket = zbx_toHash($ticket, 'eventid');
@@ -162,7 +162,7 @@ class CExternalService {
 
 				self::$enabled = false;
 
-				return self::$enabled;
+				return [];
 			}
 			elseif ($ticket[$eventid]['externalid'] !== '') {
 				return self::getDetails($ticket[$eventid]);
@@ -183,19 +183,19 @@ class CExternalService {
 	 * @param string $event['message']  User message when acknowledging event.
 	 * @param string $event['subject']  Trigger status 'OK' or 'PROBLEM'
 	 *
-	 * @return bool|array
+	 * @return array
 	 */
 	public static function mediaAcknowledge(array $event = []) {
 		global $ZBX_SERVER, $ZBX_SERVER_PORT;
 
 		if (!self::$enabled || !$event) {
-			return false;
+			return [];
 		}
 
 		$zabbixServer = new CZabbixServer(
 			$ZBX_SERVER,
 			$ZBX_SERVER_PORT,
-			ZBX_SOCKET_REMEDY_TIMEOUT,
+			ZBX_SOCKET_EXTERNAL_TIMEOUT,
 			ZBX_SOCKET_BYTES_LIMIT
 		);
 
@@ -207,7 +207,7 @@ class CExternalService {
 
 			self::$enabled = false;
 
-			return self::$enabled;
+			return [];
 		}
 		else {
 			$tickets = zbx_toHash($tickets, 'eventid');
@@ -218,7 +218,7 @@ class CExternalService {
 
 				self::$enabled = false;
 
-				return self::$enabled;
+				return [];
 			}
 			elseif ($tickets[$eventid]['externalid'] !== '') {
 				switch ($tickets[$eventid]['action']) {

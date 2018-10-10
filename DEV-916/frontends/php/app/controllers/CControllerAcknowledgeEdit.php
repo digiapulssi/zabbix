@@ -109,7 +109,7 @@ class CControllerAcknowledgeEdit extends CController {
 				if (CExternalService::$enabled) {
 					$data['ticket'] = CExternalService::mediaQuery($events[0]['eventid']);
 					$data['ticket_status'] = $this->hasInput('ticket_status')
-						? $this->getInput('ticket_status')
+						? (bool) $this->getInput('ticket_status')
 						: false;
 				}
 			}

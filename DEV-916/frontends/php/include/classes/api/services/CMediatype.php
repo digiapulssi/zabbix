@@ -817,7 +817,7 @@ class CMediatype extends CApiService {
 	 * Add Media types.
 	 *
 	 * @param array		$mediatypes							Multidimensional array with media types data.
-	 * @param int		$mediatypes['type']					E-mail, Script, SMS, Jabber, Ez Texting and Remedy Service.
+	 * @param int		$mediatypes['type']					E-mail, Script, SMS, Jabber, Ez Texting and external service.
 	 * @param string	$mediatypes['description']			Name of the media type.
 	 * @param string	$mediatypes['smtp_server']			Used for e-mail and external service URL.
 	 * @param int		$mediatypes['smtp_port']			Used for e-mail only.
@@ -932,7 +932,7 @@ class CMediatype extends CApiService {
 	 *
 	 * @param array		$mediatype							An array of media type data.
 	 * @param string	$mediatype['description']			Name of the media type.
-	 * @param string	$mediatype['type']					E-mail, Script, SMS, Jabber, Ez Texting and Remedy Service.
+	 * @param string	$mediatype['type']					E-mail, Script, SMS, Jabber, Ez Texting and external service.
 	 *
 	 * @throws APIException if the input is invalid.
 	 */
