@@ -503,7 +503,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	const char		*__function_name = "vfs_dir_size";
 	char			*dir = NULL;
-	int			mode, max_depth, ret = SYSINFO_RET_FAIL;
+	int			size_mode, max_depth, regex_mode, ret = SYSINFO_RET_FAIL;
 	zbx_uint64_t		size = 0;
 	zbx_vector_ptr_t	list;
 	zbx_stat_t		status;
@@ -511,12 +511,14 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_directory_item_t	*item;
 	zbx_vector_ptr_t	descriptors;
 
-	if (SUCCEED != prepare_mode_parameters(request, result, &mode))
+	if (SUCCEED != prepare_mode_parameters(request, result, &size_mode, &regex_mode))
 		return ret;
 
 	if (SUCCEED != prepare_common_parameters(request, result, &regex_incl, &regex_excl, &max_depth, &dir, &status,
-			4, 5))
+			4, 6))
+	{
 		goto err1;
+	}
 
 	zbx_vector_ptr_create(&descriptors);
 	zbx_vector_ptr_create(&list);
@@ -573,7 +575,7 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 			goto err2;
 		}
 
-		if (SIZE_MODE_DISK == mode && 0 == (cluster_size = get_cluster_size(item->path, &error)))
+		if (SIZE_MODE_DISK == size_mode && 0 == (cluster_size = get_cluster_size(item->path, &error)))
 		{
 			SET_MSG_RESULT(result, error);
 			list.values_num++;
@@ -601,7 +603,14 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 			if (0 == (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	/* not a directory */
 			{
-				if (0 != filename_matches(name, regex_incl, regex_excl))
+				char	*path_str;
+
+				if (REGEX_MODE_FILE == regex_mode)
+					path_str = zbx_strdup(NULL, name);
+				else
+					path_str = zbx_strdup(NULL, path);
+
+				if (0 != filename_matches(path_str, regex_incl, regex_excl))
 				{
 					DWORD	size_high, size_low;
 
@@ -615,13 +624,14 @@ static int	vfs_dir_size(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 						file_size = ((zbx_uint64_t)size_high << 32) | size_low;
 
-						if (SIZE_MODE_DISK == mode && 0 != (mod = file_size % cluster_size))
+						if (SIZE_MODE_DISK == size_mode && 0 != (mod = file_size % cluster_size))
 							file_size += cluster_size - mod;
 
 						size += file_size;
 					}
 				}
 				zbx_free(path);
+				zbx_free(path_str);
 			}
 			else if (SUCCEED != queue_directory(&list, path, item->depth, max_depth))
 			{
