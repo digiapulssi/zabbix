@@ -243,20 +243,28 @@ static void	update_vmstat(ZBX_VMSTAT_DATA *vmstat)
 		vmstat->cpu_wa = (double)dpcpu_wa * 100.0 / (double)pcputime;
 
 		/* Physical Processor Consumed */
+		/* Interesting values only for "shared" LPARs. */
+		/* For "dedicated" LPARs expect approximately the same value as assigned to the LPAR through HMC. */
 		vmstat->cpu_pc = (double)delta_purr / (double)dtimebase;
 
-		/* Percentage of Entitlement Consumed */
-		vmstat->cpu_ec = (double)(vmstat->cpu_pc / vmstat->ent) * 100.0;
-
-		/* Logical Processor Utilization */
-		vmstat->cpu_lbusy = (double)(dlcpu_us + dlcpu_sy) * 100.0 / (double)lcputime;
-
-		if (lparstats.type.b.shared_enabled && lparstats.type.b.pool_util_authority)
+		if (lparstats.type.b.shared_enabled)
 		{
-			/* Available Pool Processor (app) */
-			vmstat->cpu_app = (double)(lparstats.pool_idle_time - last_pool_idle_time) /
-					(XINTFRAC * (double)dtimebase);
+			/* Percentage of Entitlement Consumed */
+			vmstat->cpu_ec = (double)(vmstat->cpu_pc / vmstat->ent) * 100.0;
+
+			/* Logical Processor Utilization */
+			vmstat->cpu_lbusy = (double)(dlcpu_us + dlcpu_sy) * 100.0 / (double)lcputime;
+
+			if (lparstats.type.b.pool_util_authority)
+			{
+				/* Available Pool Processor (app) */
+				vmstat->cpu_app = (double)(lparstats.pool_idle_time - last_pool_idle_time) /
+						(XINTFRAC * (double)dtimebase);
+			}
 		}
+		else
+			vmstat->cpu_ec = 100.0;		/* trivial value for LPAR type "dedicated" */
+
 #else	/* not _AIXVERSION_530 */
 
 		/* Physical Processor Utilization */

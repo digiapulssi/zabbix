@@ -143,7 +143,7 @@ int	SYSTEM_STAT(AGENT_REQUEST *request, AGENT_RESULT *result)
 			SET_DBL_RESULT(result, collector->vmstat.cpu_pc);
 		else if (0 == strcmp(type, "ec"))
 			SET_DBL_RESULT(result, collector->vmstat.cpu_ec);
-		else if (0 == strcmp(type, "lbusy"))
+		else if (0 == strcmp(type, "lbusy") && collector->vmstat.shared_enabled)
 			SET_DBL_RESULT(result, collector->vmstat.cpu_lbusy);
 		else if (0 == strcmp(type, "app"))
 		{
