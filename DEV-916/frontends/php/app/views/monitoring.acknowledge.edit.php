@@ -114,13 +114,15 @@ if (CExternalService::$enabled && $data['ticket']) {
 	$ticket = (new CFormList())->addRow(_('Ticket'), $data['ticket']['link']);
 
 	// media.query might not return assignee for Remedy service for new tickets.
-	if (array_key_exists('assignee', $data) && $data['ticket']['assignee'] !== '') {
+	if (array_key_exists('assignee', $data['ticket']) && $data['ticket']['assignee'] !== '') {
 		$ticket->addRow(_('Assignee'), $data['ticket']['assignee']);
 	}
 
-	$ticket
-		->addRow(_('Status'), $data['ticket']['status'])
-		->addRow(_('Created'), $data['ticket']['created']);
+	if (array_key_exists('status', $data['ticket']) && $data['ticket']['status'] !== '') {
+		$ticket->addRow(_('Status'), $data['ticket']['status']);
+	}
+
+	$ticket->addRow(_('Created'), $data['ticket']['created']);
 
 	$widget->addItem((new CDiv($ticket))->addClass(ZBX_STYLE_CELL));
 
