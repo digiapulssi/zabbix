@@ -59,7 +59,7 @@ $table = (new CTableInfo())
 		(new CColHeader(
 			(new CCheckBox('all_hosts'))->onClick("checkAll('".$form->getName()."', 'all_hosts', 'hosts');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Name'), 'name', $data['sortField'], $data['sortOrder']),
+		make_sorting_header(_('Name'), 'name', $data['sortField'], $data['sortOrder'], 'hosts.php'),
 		_('Applications'),
 		_('Items'),
 		_('Triggers'),
@@ -68,7 +68,7 @@ $table = (new CTableInfo())
 		_('Web'),
 		_('Interface'),
 		_('Templates'),
-		make_sorting_header(_('Status'), 'status', $data['sortField'], $data['sortOrder']),
+		make_sorting_header(_('Status'), 'status', $data['sortField'], $data['sortOrder'], 'hosts.php'),
 		_('Availability'),
 		_('Agent encryption'),
 		_('Info')

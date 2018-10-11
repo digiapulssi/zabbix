@@ -757,7 +757,9 @@ class CLineGraphDraw extends CGraphDraw {
 				}
 			}
 			else {
-				$this->zero[$side] = $this->sizeY + $this->shiftY - (int) abs($this->m_minY[$side] / $this->unit2px[$side]);
+				$this->zero[$side] = $this->sizeY + $this->shiftY - abs(bcdiv($this->m_minY[$side],
+					$this->unit2px[$side]
+				));
 				$this->oxy[$side] = 0;
 			}
 		}
@@ -1432,6 +1434,11 @@ class CLineGraphDraw extends CGraphDraw {
 			}
 		}
 
+		// It is necessary to align the X axis after the jump from winter to summer time.
+		$prev_dst = (bool) $dt['sub']->format('I');
+		$dst_offset = $dt['sub']->getOffset();
+		$do_align = false;
+
 		$prev_time = $this->stime;
 		if ($interval['main'] == SEC_PER_MONTH) {
 			$dt_start = new DateTime();
@@ -1441,6 +1448,26 @@ class CLineGraphDraw extends CGraphDraw {
 
 		while (true) {
 			$dt['sub']->modify($modifier['sub']);
+
+			if (SEC_PER_HOUR < $interval['sub'] && $interval['sub'] < SEC_PER_DAY) {
+				if ($do_align) {
+					$hours = $interval['sub'] / SEC_PER_HOUR;
+					$hour = (int) $dt['sub']->format('H');
+					if ($hour % $hours) {
+						$dt['sub']->modify($dst_offset.' second');
+					}
+
+					$do_align = false;
+				}
+
+				$dst = (bool) $dt['sub']->format('I');
+
+				if ($dst && $prev_dst != $dst) {
+					$dst_offset -= $dt['sub']->getOffset();
+					$do_align = $interval['sub'] > abs($dst_offset);
+					$prev_dst = $dst;
+				}
+			}
 
 			if ($dt['main'] < $dt['sub']) {
 				$dt['main']->modify($modifier['main']);
