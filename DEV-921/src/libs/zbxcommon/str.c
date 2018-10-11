@@ -35,6 +35,12 @@ static const char	help_message_footer[] =
 	"Zabbix home page: <http://www.zabbix.com>\n"
 	"Documentation: <https://www.zabbix.com/documentation>";
 
+#ifdef HAVE_OPENSSL
+static const char	product_includes_openssl[] =
+	"\nThis product includes software developed by the OpenSSL Project for use\n"
+	"in the OpenSSL Toolkit (http://www.openssl.org/).";
+#endif
+
 /******************************************************************************
  *                                                                            *
  * Function: version                                                          *
@@ -53,6 +59,9 @@ void	version(void)
 	printf("%s (Zabbix) %s\n", title_message, ZABBIX_VERSION);
 	printf("Revision %s %s, compilation time: %s %s\n\n", ZABBIX_REVISION, ZABBIX_REVDATE, __DATE__, __TIME__);
 	puts(copyright_message);
+#ifdef HAVE_OPENSSL
+	puts(product_includes_openssl);
+#endif
 }
 
 /******************************************************************************
