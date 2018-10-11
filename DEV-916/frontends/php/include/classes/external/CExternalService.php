@@ -64,10 +64,6 @@ class CExternalService {
 		$media_active = false;
 
 		foreach ($mediatypes as $mediatype) {
-			if (!$mediatype['medias']) {
-				continue;
-			}
-
 			foreach ($mediatype['medias'] as $media) {
 				if ($media['userid'] == CWebUser::$data['userid'] && $media['active'] == MEDIA_TYPE_STATUS_ACTIVE) {
 					$media_active = true;
