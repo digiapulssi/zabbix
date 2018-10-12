@@ -146,6 +146,7 @@ static size_t	HEADERFUNCTION2(void *ptr, size_t size, size_t nmemb, void *userda
  * Parameters: data       - [IN] the response data                            *
  *             fields     - [IN/OUT] the array of fields to read              *
  *             fields_num - [IN] the number of items in fields array          *
+ *             error      - [OUT] the error message                           *
  *                                                                            *
  * Return value: The number of fields read                                    *
  *                                                                            *
@@ -153,20 +154,32 @@ static size_t	HEADERFUNCTION2(void *ptr, size_t size, size_t nmemb, void *userda
  *           be freed afterwards with remedy_fields_clean_values() function.  *
  *                                                                            *
  ******************************************************************************/
-static int	xml_read_remedy_fields(const char *data, zbx_remedy_field_t *fields, int fields_num)
+static int	xml_read_remedy_fields(const char *data, zbx_remedy_field_t *fields, int fields_num, char **error)
 {
 	xmlDoc		*doc;
 	xmlXPathContext	*xpathCtx;
 	xmlXPathObject	*xpathObj;
 	xmlNodeSetPtr	nodeset;
 	xmlChar		*val;
-	int		i, fields_read = 0;
+	int		i, ret = FAIL;
 
 	if (NULL == data)
+	{
+		*error = zbx_strdup(*error, "no data received");
 		goto out;
+	}
 
 	if (NULL == (doc = xmlReadMemory(data, strlen(data), "noname.xml", NULL, 0)))
+	{
+		xmlErrorPtr	pErr;
+
+		if (NULL != (pErr = xmlGetLastError()))
+			*error = zbx_dsprintf(*error, "cannot parse xml value: %s", pErr->message);
+		else
+			*error = zbx_strdup(*error, "cannot parse xml value");
+
 		goto out;
+	}
 
 	xpathCtx = xmlXPathNewContext(doc);
 
@@ -190,7 +203,6 @@ static int	xml_read_remedy_fields(const char *data, zbx_remedy_field_t *fields, 
 			{
 				fields[i].value = zbx_strdup(NULL, (char *)val);
 				xmlFree(val);
-				fields_read++;
 			}
 		}
 		xmlXPathFreeObject(xpathObj);
@@ -199,8 +211,10 @@ static int	xml_read_remedy_fields(const char *data, zbx_remedy_field_t *fields, 
 	xmlXPathFreeContext(xpathCtx);
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
+
+	ret = SUCCEED;
 out:
-	return fields_read;
+	return ret;
 }
 
 /******************************************************************************
@@ -577,11 +591,8 @@ static int	remedy_query_ticket(const char *url, const char *proxy, const char *u
 		}
 	}
 
-	xml_read_remedy_fields(page.data, fields, fields_num);
-
-	remedy_fields_set_value(fields, fields_num, ZBX_REMEDY_FIELD_INCIDENT_NUMBER, externalid);
-
-	ret = SUCCEED;
+	if (SUCCEED == (ret = xml_read_remedy_fields(page.data, fields, fields_num, error)))
+		remedy_fields_set_value(fields, fields_num, ZBX_REMEDY_FIELD_INCIDENT_NUMBER, externalid);
 out:
 	curl_easy_cleanup(easyhandle);
 	curl_slist_free_all(headers);
