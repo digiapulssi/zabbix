@@ -585,6 +585,7 @@ static int	servicenow_update_problem(zbx_servicenow_conn_t *conn, char **inciden
 {
 	int		ret, priority;
 	const char	*new_state = NULL;
+	char		*severity_name = NULL;
 
 	if (NULL == *incident || NULL == *state || 0 == strcmp(*state, ZBX_SERVICENOW_STATE_CANCELLED) ||
 			0 == strcmp(*state, ZBX_SERVICENOW_STATE_CLOSED))
@@ -621,12 +622,22 @@ static int	servicenow_update_problem(zbx_servicenow_conn_t *conn, char **inciden
 		/* map trigger severity */
 		switch (trigger_severity)
 		{
+			case TRIGGER_SEVERITY_WARNING:
+				priority = 3;
+				break;
+			case TRIGGER_SEVERITY_AVERAGE:
 			case TRIGGER_SEVERITY_HIGH:
+			case TRIGGER_SEVERITY_DISASTER:
 				priority = 2;
 				break;
 			default:
-				priority = 3;
-				break;
+				if (SUCCEED != zbx_get_trigger_severity_name(trigger_severity, &severity_name))
+					severity_name = zbx_dsprintf(severity_name, "[%d]", trigger_severity);
+
+				*error = zbx_dsprintf(*error, "Unsupported trigger severity: %s", severity_name);
+				zbx_free(severity_name);
+				ret = FAIL;
+				goto out;
 		}
 
 		if (SUCCEED == (ret = servicenow_create_incident(conn, mediatype->smtp_email, subject, message,

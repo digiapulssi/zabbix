@@ -122,5 +122,6 @@ int	zbx_xmedia_acknowledge_event(zbx_uint64_t eventid, zbx_uint64_t userid, cons
 		int status);
 int	zbx_xmedia_get_ticket_creation_time(const char *externalid);
 int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, zbx_uint64_t mediatypeid, char **externalid);
+int	zbx_get_trigger_severity_name(unsigned char severity, char **name);
 
 #endif

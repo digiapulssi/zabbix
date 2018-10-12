@@ -774,33 +774,6 @@ static void	remedy_get_service_by_host(zbx_uint64_t hostid, const char *group_na
 
 /******************************************************************************
  *                                                                            *
- * Function: get_trigger_severity_name                                        *
- *                                                                            *
- * Purpose: gets trigger severity name                                        *
- *                                                                            *
- * Parameters: severity - [IN] the trigger severity                           *
- *             name     - [OUT] the trigger serverity name                    *
- *                                                                            *
- * Return value: SUCCEED - the trigger severity name was returned             *
- *               FAIL    - otherwise.                                         *
- *                                                                            *
- ******************************************************************************/
-static int	get_trigger_severity_name(unsigned char severity, char **name)
-{
-	zbx_config_t	cfg;
-
-	if (TRIGGER_SEVERITY_COUNT <= severity)
-		return FAIL;
-
-	zbx_config_get(&cfg, ZBX_CONFIG_FLAGS_SEVERITY_NAME);
-	*name = zbx_strdup(*name, cfg.severity_name[severity]);
-	zbx_config_clean(&cfg);
-
-	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: remedy_init_ticket                                               *
  *                                                                            *
  * Purpose: initializes ticket properties                                     *
@@ -1097,7 +1070,7 @@ static int	remedy_process_event(zbx_uint64_t eventid, zbx_uint64_t userid, const
 				remedy_event = ZBX_EVENT_REMEDY_CRITICAL;
 				break;
 			default:
-				if (SUCCEED != get_trigger_severity_name(trigger_severity, &severity_name))
+				if (SUCCEED != zbx_get_trigger_severity_name(trigger_severity, &severity_name))
 					severity_name = zbx_dsprintf(severity_name, "[%d]", trigger_severity);
 
 				*error = zbx_dsprintf(*error, "Unsupported trigger severity: %s", severity_name);

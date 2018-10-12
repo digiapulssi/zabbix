@@ -541,3 +541,29 @@ int	zbx_xmedia_get_last_ticketid(zbx_uint64_t eventid, zbx_uint64_t mediatypeid,
 	return NULL != *incident ? SUCCEED : FAIL;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_get_trigger_severity_name                                    *
+ *                                                                            *
+ * Purpose: gets trigger severity name                                        *
+ *                                                                            *
+ * Parameters: severity - [IN] the trigger severity                           *
+ *             name     - [OUT] the trigger severity name                     *
+ *                                                                            *
+ * Return value: SUCCEED - the trigger severity name was returned             *
+ *               FAIL    - otherwise.                                         *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_get_trigger_severity_name(unsigned char severity, char **name)
+{
+	zbx_config_t	cfg;
+
+	if (TRIGGER_SEVERITY_COUNT <= severity)
+		return FAIL;
+
+	zbx_config_get(&cfg, ZBX_CONFIG_FLAGS_SEVERITY_NAME);
+	*name = zbx_strdup(*name, cfg.severity_name[severity]);
+	zbx_config_clean(&cfg);
+
+	return SUCCEED;
+}
