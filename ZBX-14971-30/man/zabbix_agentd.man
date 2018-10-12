@@ -56,11 +56,6 @@ Decrease log level, affects all processes if target is not specified
 Log level control targets
 .RS 4
 .TP 4
-.I pid
-Process identifier, up to 65535. For larger values specify target as "process\-type,N" (see below)
-.RE
-.RS 4
-.TP 4
 .I process\-type
 All processes of specified type (e.g., listener)
 .RE
@@ -68,6 +63,11 @@ All processes of specified type (e.g., listener)
 .TP 4
 .I process\-type,N
 Process type and number (e.g., listener,3)
+.RE
+.RS 4
+.TP 4
+.I pid
+Process identifier, up to 65535. For larger values specify target as "process\-type,N"
 .RE
 .RE
 .IP "\fB\-p\fR, \fB\-\-print\fR"
