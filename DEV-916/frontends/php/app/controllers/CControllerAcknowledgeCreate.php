@@ -24,7 +24,7 @@ class CControllerAcknowledgeCreate extends CController {
 	protected function checkInput() {
 		$fields = [
 			'eventids' =>			'required|array_db acknowledges.eventid',
-			'message' =>			'db acknowledges.message |flags '.P_CRLF,
+			'message' =>			'not_empty|db acknowledges.message |flags '.P_CRLF,
 			'ticket_status' =>		'in 1,0',
 			'acknowledge_type' =>	'in '.ZBX_ACKNOWLEDGE_SELECTED.','.ZBX_ACKNOWLEDGE_PROBLEM,
 			'close_problem' =>		'db acknowledges.action|in '.
