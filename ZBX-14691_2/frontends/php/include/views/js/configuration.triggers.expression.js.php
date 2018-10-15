@@ -14,27 +14,6 @@
 			jQuery(obj).val(value);
 		<?php } ?>
 	}
-
-	jQuery(function($) {
-		function setReadOnly() {
-			var selected_fn = $('#function option:selected');
-
-			if (selected_fn.val() === 'last' || selected_fn.val() === 'strlen' || selected_fn.val() === 'band') {
-				if ($('#paramtype option:selected').val() == <?= PARAM_TYPE_COUNTS ?>) {
-					$('#params_last').removeAttr('readonly');
-				}
-				else {
-					$('#params_last').attr('readonly', 'readonly');
-				}
-			}
-		}
-
-		setReadOnly();
-
-		$('#paramtype').change(function() {
-			setReadOnly();
-		});
-	});
 </script>
 
 <?php
