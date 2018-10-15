@@ -255,69 +255,44 @@ class CDService extends CApiService {
 
 		// selectHosts
 		if ($options['selectHosts'] !== null) {
-			$dservices = DBfetchArray(DBselect(
-				'SELECT ds.dserviceid,ds.ip,dr.proxy_hostid'.
-				' FROM dservices ds'.
-				' LEFT JOIN dhosts dh ON ds.dhostid=dh.dhostid'.
-				' LEFT JOIN drules dr ON dr.druleid=dh.druleid'.
-				' WHERE '.dbConditionId('ds.dserviceid', $dserviceIds)
-			));
-
-			$proxyids = [];
-
-			foreach ($dservices as $dservice) {
-				$proxyids[$dservice['proxy_hostid']] = true;
+			foreach ($result as $dserviceid => $dservice) {
+				$result[$dserviceid]['hosts'] = ($options['selectHosts'] == API_OUTPUT_COUNT) ? 0 : [];
 			}
 
-			$hosts = API::Host()->get([
-				'output' => ($options['selectHosts'] == API_OUTPUT_COUNT)
-					? ['proxy_hostid']
-					: $this->outputExtend($options['selectHosts'], ['proxy_hostid']),
-				'selectInterfaces' => ['ip'],
-				'proxyids' => array_keys($proxyids),
-				'preservekeys' => true,
-				'sortfield' => 'status'
+			$db_services = DBselect(
+				'SELECT DISTINCT ds.dserviceid,h.hostid'.
+				' FROM dservices ds,dchecks dc,drules dr,hosts h,interface i'.
+				' WHERE ds.dcheckid=dc.dcheckid'.
+					' AND dc.druleid=dr.druleid'.
+					' AND (dr.proxy_hostid=h.proxy_hostid OR (dr.proxy_hostid IS NULL AND h.proxy_hostid IS NULL))'.
+					' AND h.hostid=i.hostid'.
+					' AND ds.ip=i.ip'.
+					' AND '.dbConditionInt('ds.dserviceid', $dserviceIds)
+			);
+
+			$host_services = [];
+
+			while ($db_service = DBfetch($db_services)) {
+				$host_services[$db_service['hostid']][] = $db_service['dserviceid'];
+			}
+
+			$db_hosts = API::Host()->get([
+				'output' => ($options['selectHosts'] == API_OUTPUT_COUNT) ? [] : $options['selectHosts'],
+				'hostids' => array_keys($host_services),
+				'sortfield' => 'hostid',
+				'preservekeys' => true
 			]);
-			if ($options['limitSelects'] !== null) {
-				order_result($hosts, 'hostid');
-			}
 
-			foreach ($dservices as $dservice) {
-				if (!array_key_exists('hosts', $result[$dservice['dserviceid']])) {
-					$result[$dservice['dserviceid']]['hosts'] = ($options['selectHosts'] == API_OUTPUT_COUNT)
-						? 0
-						: [];
-				}
+			$db_hosts = $this->unsetExtraFields($db_hosts, ['hostid'], $options['selectHosts']);
 
-				foreach ($hosts as $host) {
-					if (bccomp($dservice['proxy_hostid'], $host['proxy_hostid']) == 0) {
-						foreach ($host['interfaces'] as $interface) {
-							if ($dservice['ip'] === $interface['ip']) {
-								if ($options['selectHosts'] != API_OUTPUT_COUNT) {
-									if (!$this->outputIsRequested('proxy_hostid', $options['selectHosts'])) {
-										unset($host['proxy_hostid']);
-									}
-									if (!$this->outputIsRequested('hostid', $options['selectHosts'])) {
-										unset($host['hostid']);
-									}
-									unset($host['interfaces']);
-								}
-
-								if (count($result[$dservice['dserviceid']]['hosts']) == $options['limitSelects']
-										&& $options['limitSelects'] !== null) {
-									break 2;
-								}
-
-								if ($options['selectHosts'] == API_OUTPUT_COUNT) {
-									$result[$dservice['dserviceid']]['hosts']++;
-								}
-								else {
-									$result[$dservice['dserviceid']]['hosts'][] = $host;
-								}
-
-								break;
-							}
-						}
+			foreach ($db_hosts as $hostid => $db_host) {
+				foreach ($host_services[$hostid] as $dserviceid) {
+					if ($options['selectHosts'] == API_OUTPUT_COUNT) {
+						$result[$dserviceid]['hosts']++;
+					}
+					elseif ($options['limitSelects'] === null
+							|| count($result[$dserviceid]['hosts']) < $options['limitSelects']) {
+						$result[$dserviceid]['hosts'][] = $db_host;
 					}
 				}
 			}
