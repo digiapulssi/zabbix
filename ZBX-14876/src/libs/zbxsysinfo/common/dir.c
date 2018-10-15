@@ -325,14 +325,10 @@ static int	parse_age_parameter(char *text, time_t *time_out, time_t now)
 }
 
 static int	prepare_count_parameters(const AGENT_REQUEST *request, AGENT_RESULT *result, int *types_out,
-		zbx_uint64_t *min_size, zbx_uint64_t *max_size, time_t *min_time, time_t *max_time)
+		zbx_uint64_t *min_size, zbx_uint64_t *max_size, time_t *min_time, time_t *max_time, int *regex_mode)
 {
-	int	types_incl;
-	int	types_excl;
-	char	*min_size_str;
-	char	*max_size_str;
-	char	*min_age_str;
-	char	*max_age_str;
+	int	types_incl, types_excl;
+	char	*min_size_str, *max_size_str, *min_age_str, *max_age_str, *regex_mode_str;
 	time_t	now;
 
 	types_incl = etypes_to_mask(get_rparam(request, 3), result);
@@ -376,6 +372,23 @@ static int	prepare_count_parameters(const AGENT_REQUEST *request, AGENT_RESULT *
 	if (SUCCEED != parse_age_parameter(max_age_str, min_time, now))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Invalid maximum age \"%s\".", max_age_str));
+		return FAIL;
+	}
+
+	regex_mode_str = get_rparam(request, 10);
+
+	if (NULL == regex_mode_str || '\0' == *regex_mode_str || 0 == strcmp(regex_mode_str, "file"))
+	{
+		/* item parameter <regex_mode> default value */
+		*regex_mode = REGEX_MODE_FILE;
+	}
+	else if (0 == strcmp(regex_mode_str, "path"))
+	{
+		*regex_mode = REGEX_MODE_PATH;
+	}
+	else
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid eleventh parameter."));
 		return FAIL;
 	}
 
@@ -991,23 +1004,28 @@ static int	vfs_dir_count(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	const char		*__function_name = "vfs_dir_count";
 	char			*dir = NULL;
-	int			types, max_depth, ret = SYSINFO_RET_FAIL;
+	int			types, max_depth, regex_mode, ret = SYSINFO_RET_FAIL;
 	int			count = 0;
 	zbx_vector_ptr_t	list;
 	zbx_directory_item_t	*item;
 	zbx_stat_t		status;
 	zbx_regexp_t		*regex_incl = NULL, *regex_excl = NULL;
-	DIR 			*directory;
-	struct dirent 		*entry;
+	DIR			*directory;
+	struct dirent		*entry;
 	zbx_uint64_t		min_size = 0, max_size = 0x7FFFffffFFFFffff;
 	time_t			min_time = 0, max_time = 0x7fffffff;
 
-	if (SUCCEED != prepare_count_parameters(request, result, &types, &min_size, &max_size, &min_time, &max_time))
+	if (SUCCEED != prepare_count_parameters(request, result, &types, &min_size, &max_size, &min_time, &max_time,
+			&regex_mode))
+	{
 		return ret;
+	}
 
 	if (SUCCEED != prepare_common_parameters(request, result, &regex_incl, &regex_excl, &max_depth, &dir, &status,
-			5, 10))
+			5, 11))
+	{
 		goto err1;
+	}
 
 	zbx_vector_ptr_create(&list);
 
@@ -1047,7 +1065,14 @@ static int	vfs_dir_count(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 			if (0 == lstat(path, &status))
 			{
-				if (0 != filename_matches(entry->d_name, regex_incl, regex_excl) && (
+				char	*path_str;
+
+				if (REGEX_MODE_FILE == regex_mode)
+					path_str = zbx_strdup(NULL, entry->d_name);
+				else
+					path_str = zbx_strdup(NULL, path);
+
+				if (0 != filename_matches(path_str, regex_incl, regex_excl) && (
 						(S_ISREG(status.st_mode)  && 0 != (types & DET_FILE)) ||
 						(S_ISDIR(status.st_mode)  && 0 != (types & DET_DIR)) ||
 						(S_ISLNK(status.st_mode)  && 0 != (types & DET_SYM)) ||
@@ -1062,6 +1087,8 @@ static int	vfs_dir_count(AGENT_REQUEST *request, AGENT_RESULT *result)
 				{
 					++count;
 				}
+
+				zbx_free(path_str);
 
 				if (!(0 != S_ISDIR(status.st_mode) && SUCCEED == queue_directory(&list, path,
 						item->depth, max_depth)))
