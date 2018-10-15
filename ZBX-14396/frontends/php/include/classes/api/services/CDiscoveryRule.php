@@ -1125,8 +1125,8 @@ class CDiscoveryRule extends CItemGeneral {
 		if ($new_prototypeids) {
 			// fetch new prototypes
 			$dstDiscovery['items'] = API::ItemPrototype()->get([
+				'output' => ['itemid', 'key_'],
 				'itemids' => $new_prototypeids,
-				'output' => ['itemid','key_'],
 				'preservekeys' => true
 			]);
 
